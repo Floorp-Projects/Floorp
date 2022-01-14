@@ -13,14 +13,13 @@ const {
 const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 const Actions = require("devtools/client/netmonitor/src/actions/index");
 const {
-  getSelectedRequest,
+  getClickedRequest,
 } = require("devtools/client/netmonitor/src/selectors/index");
 const {
   getUrlQuery,
   parseQueryString,
   writeHeaderText,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
-
 const { button, div, input, label, textarea } = dom;
 
 const CUSTOM_HEADERS = L10N.getStr("netmonitor.custom.headers");
@@ -42,37 +41,88 @@ const CUSTOM_SEND = L10N.getStr("netmonitor.custom.send");
 class HTTPCustomRequestPanel extends Component {
   static get propTypes() {
     return {
-      connector: PropTypes.object,
+      connector: PropTypes.object.isRequired,
       request: PropTypes.object,
       sendCustomRequest: PropTypes.func.isRequired,
     };
   }
 
-  render() {
-    const { request = {}, sendCustomRequest } = this.props;
-    const {
-      method,
-      customQueryValue,
-      requestHeaders,
-      requestPostData,
-      url,
-    } = request;
+  constructor(props) {
+    super(props);
 
-    let headers = "";
-    if (requestHeaders) {
-      headers = requestHeaders.customHeadersValue
-        ? requestHeaders.customHeadersValue
-        : writeHeaderText(requestHeaders.headers).trim();
+    const { request } = props;
+
+    this.state = {
+      method: request ? request.method : "",
+      url: request ? request.url : "",
+      headers: {
+        customHeadersValue: "",
+        headers: request ? request.requestHeaders.headers : [],
+      },
+      requestPostData: request
+        ? request.requestPostData?.postData.text || ""
+        : "",
+    };
+
+    this.handleInputChange = this.handleInputChange.bind(this);
+    this.handleHeadersChange = this.handleHeadersChange.bind(this);
+  }
+
+  /**
+   * Parse a text representation of a name[divider]value list with
+   * the given name regex and divider character.
+   *
+   * @param {string} text - Text of list
+   * @return {array} array of headers info {name, value}
+   */
+  parseRequestText(text, namereg, divider) {
+    const regex = new RegExp(`(${namereg})\\${divider}\\s*(\\S.*)`);
+    const pairs = [];
+
+    for (const line of text.split("\n")) {
+      const matches = regex.exec(line);
+      if (matches) {
+        const [, name, value] = matches;
+        pairs.push({ name, value });
+      }
     }
+    return pairs;
+  }
+
+  handleInputChange(event) {
+    const target = event.target;
+    const value = target.value;
+    const name = target.name;
+
+    this.setState({
+      [name]: value,
+    });
+  }
+
+  handleHeadersChange(event) {
+    const target = event.target;
+    const value = target.value;
+
+    this.setState({
+      // Parse text representation of multiple HTTP headers
+      headers: {
+        customHeadersValue: value || "",
+        headers: this.parseRequestText(value, "\\S+?", ":"),
+      },
+    });
+  }
+
+  render() {
+    const { sendCustomRequest } = this.props;
+    const { method, requestPostData, url, headers } = this.state;
+
+    const formattedHeaders = headers.customHeadersValue
+      ? headers.customHeadersValue
+      : writeHeaderText(headers.headers).trim();
+
     const queryArray = url ? parseQueryString(getUrlQuery(url)) : [];
-    let params = customQueryValue;
-    if (!params) {
-      params = queryArray
-        ? queryArray.map(({ name, value }) => name + "=" + value).join("\n")
-        : "";
-    }
-    const postData = requestPostData?.postData.text
-      ? requestPostData.postData.text
+    const queryParams = queryArray
+      ? queryArray.map(({ name, value }) => name + "=" + value).join("\n")
       : "";
 
     return div(
@@ -87,7 +137,7 @@ class HTTPCustomRequestPanel extends Component {
               {
                 className: "devtools-button",
                 id: "http-custom-request-send-button",
-                onClick: sendCustomRequest,
+                onClick: () => sendCustomRequest(this.state),
               },
               CUSTOM_SEND
             )
@@ -109,7 +159,8 @@ class HTTPCustomRequestPanel extends Component {
           input({
             className: "http-custom-method-value",
             id: "http-custom-method-value",
-            onChange: evt => {},
+            name: "method",
+            onChange: this.handleInputChange,
             onBlur: () => {},
             value: method,
           }),
@@ -124,12 +175,13 @@ class HTTPCustomRequestPanel extends Component {
           input({
             className: "http-custom-url-value",
             id: "http-custom-url-value",
-            onChange: evt => {},
+            name: "url",
+            onChange: this.handleInputChange,
             value: url || "http://",
           })
         ),
         // Hide query field when there is no params
-        params
+        queryParams
           ? div(
               {
                 className: "tabpanel-summary-container http-custom-section",
@@ -145,9 +197,10 @@ class HTTPCustomRequestPanel extends Component {
               textarea({
                 className: "tabpanel-summary-input",
                 id: "http-custom-query-value",
-                onChange: evt => {},
+                name: "queryParams",
+                onChange: () => {},
                 rows: 4,
-                value: params,
+                value: queryParams,
                 wrap: "off",
               })
             )
@@ -167,9 +220,10 @@ class HTTPCustomRequestPanel extends Component {
           textarea({
             className: "tabpanel-summary-input",
             id: "http-custom-headers-value",
-            onChange: evt => {},
+            name: "headers",
+            onChange: this.handleHeadersChange,
             rows: 8,
-            value: headers,
+            value: formattedHeaders,
             wrap: "off",
           })
         ),
@@ -188,9 +242,10 @@ class HTTPCustomRequestPanel extends Component {
           textarea({
             className: "tabpanel-summary-input",
             id: "http-custom-postdata-value",
-            onChange: evt => {},
+            name: "requestPostData",
+            onChange: this.handleInputChange,
             rows: 6,
-            value: postData,
+            value: requestPostData,
             wrap: "off",
           })
         )
@@ -200,9 +255,9 @@ class HTTPCustomRequestPanel extends Component {
 }
 
 module.exports = connect(
-  state => ({ request: getSelectedRequest(state) }),
+  state => ({ request: getClickedRequest(state) }),
   (dispatch, props) => ({
-    sendCustomRequest: () =>
-      dispatch(Actions.sendCustomRequest(props.connector)),
+    sendCustomRequest: request =>
+      dispatch(Actions.sendHTTPCustomRequest(props.connector, request)),
   })
 )(HTTPCustomRequestPanel);

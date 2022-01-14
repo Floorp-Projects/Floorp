@@ -248,7 +248,8 @@ class RequestListContextMenu {
       connector,
       cloneRequest,
       openDetailsPanelTab,
-      openDetailsHTTPCustomRequestTab,
+      openHTTPCustomRequestTab,
+      closeHTTPCustomRequestTab,
       sendCustomRequest,
       openStatistics,
       openRequestInTab,
@@ -332,7 +333,8 @@ class RequestListContextMenu {
             cloneRequest(id);
             openDetailsPanelTab();
           } else {
-            openDetailsHTTPCustomRequestTab();
+            closeHTTPCustomRequestTab();
+            openHTTPCustomRequestTab();
           }
         });
       },
