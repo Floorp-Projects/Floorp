@@ -1,4 +1,4 @@
-[Exposed=(Window,Worker,Worklet)]
+[Exposed=(Window,Worker,Worklet), Pref="dom.streams.expose.ReadableStreamDefaultController"]
 interface ReadableStreamDefaultController {
   readonly attribute unrestricted double? desiredSize;
 
