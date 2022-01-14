@@ -47,6 +47,7 @@ treeherder:
         'M-gli': 'Mochitests with WebGL over IPC'
         'M-spi': 'Mochitests with socket process'
         'M-spi-nw': 'Mochitests with networking on socket process'
+        'M-spi-nw-fis': 'Mochitests with networking on socket process with fission enabled'
         'M-spi-nw-1proc': 'Mochitests with networking on socket process without e10s'
         'M-swr': 'Mochitests with software webrender enabled'
         'M-swr-a11y-checks': 'Mochitests with software webrender and accessibility checks enabled'
