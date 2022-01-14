@@ -15,6 +15,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
+import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.wallpapers.Wallpaper
@@ -40,7 +42,8 @@ class WallpaperSettingsFragment : Fragment() {
                         onSelectWallpaper = { selectedWallpaper: Wallpaper ->
                             currentWallpaper = selectedWallpaper
                             wallpaperManager.currentWallpaper = selectedWallpaper
-                        }
+                        },
+                        onViewWallpaper = { findNavController().navigate(R.id.homeFragment) },
                     )
                 }
             }
