@@ -220,7 +220,8 @@ class DrawTargetWebgl : public DrawTarget {
                 Maybe<DeviceColor> aMaskColor = Nothing(),
                 RefPtr<TextureHandle>* aHandle = nullptr,
                 bool aTransformed = true, bool aClipped = true,
-                bool aAccelOnly = false, bool aForceUpdate = false);
+                bool aAccelOnly = false, bool aForceUpdate = false,
+                const StrokeOptions* aStrokeOptions = nullptr);
 
   void MarkChanged();
 
