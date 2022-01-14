@@ -12,7 +12,7 @@ job-defaults:
             default: null
     tier:
         by-variant:
-            fission(-xorigin)?:
+            fission-xorigin:
                 by-test-platform:
                     linux.*64.*-qr/debug: 1
                     default: 2
@@ -53,8 +53,10 @@ mochitest-plain:
         - fission
         - fission-xorigin
         - socketprocess_networking
+        - socketprocess_networking+fission
         - wayland
         - webrender-sw
+        - webrender-sw+fission
     run-on-projects:
         by-variant:
             fission:
@@ -74,6 +76,10 @@ mochitest-plain:
                 by-test-platform:
                     (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
                     default: []
+            socketprocess_networking+fission:
+                by-test-platform:
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
+                    default: []
             wayland:
                 by-test-platform:
                     linux1804-64-qr/debug: built-projects
@@ -81,6 +87,10 @@ mochitest-plain:
             webrender-sw:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
+                    linux1804-64-qr/debug: built-projects
+                    default: []
+            webrender-sw+fission:
+                by-test-platform:
                     linux1804-64-qr/debug: built-projects
                     default: []
             aab:
@@ -468,13 +478,15 @@ mochitest-plain-gpu:
     loopback-video: true
     variants:
         - fission
-        - socketprocess_networking
         - wayland
         - webrender-sw
+        - webrender-sw+fission
     run-on-projects:
         by-variant:
-            fission: []
-            socketprocess_networking: []
+            fission:
+                by-test-platform:
+                    android.*/.*: []
+                    default: built-projects
             wayland:
                 by-test-platform:
                     linux.*64-qr/debug: built-projects
@@ -484,6 +496,10 @@ mochitest-plain-gpu:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux.*64-qr/debug: built-projects
                     default: []
+            webrender-sw+fission:
+                by-test-platform:
+                    linux.*64-qr/debug: built-projects
+                    default: []
             default:
                 by-test-platform:
                     .*-tsan-qr/opt: ['trunk']
@@ -491,12 +507,9 @@ mochitest-plain-gpu:
                     default: built-projects
     virtualization: virtual-with-gpu
     tier:
-        by-variant:
-            fission: 2
-            default:
-                by-test-platform:
-                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
-                    default: default
+        by-test-platform:
+            android-em-7.0-x86_64-qr/debug-isolated-process: 3
+            default: default
     mozharness:
         mochitest-flavor: plain
         extra-options:
