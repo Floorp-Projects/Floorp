@@ -7,7 +7,6 @@
  * @module reducers/threads
  */
 
-import { sortBy } from "lodash";
 import { createSelector } from "reselect";
 
 export function initialThreadsState() {
@@ -81,8 +80,15 @@ export const getThreads = createSelector(
 export const getAllThreads = createSelector(
   getMainThread,
   getThreads,
-  (mainThread, threads) =>
-    [mainThread, ...sortBy(threads, thread => thread.name)].filter(Boolean)
+  (mainThread, threads) => {
+    const orderedThreads = Array.from(threads).sort((threadA, threadB) => {
+      if (threadA.name === threadB.name) {
+        return 0;
+      }
+      return threadA.name < threadB.name ? -1 : 1;
+    });
+    return [mainThread, ...orderedThreads].filter(Boolean);
+  }
 );
 
 export function getThread(state, threadActor) {
