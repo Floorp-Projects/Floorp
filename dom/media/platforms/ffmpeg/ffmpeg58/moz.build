@@ -12,7 +12,6 @@ UNIFIED_SOURCES += [
 ]
 LOCAL_INCLUDES += [
     '..',
-    '/media/ffvpx',
     'include',
 ]
 
@@ -32,6 +31,5 @@ if CONFIG['MOZ_WAYLAND']:
   UNIFIED_SOURCES += [
     '../FFmpegVideoFramePool.cpp',
   ]
-  USE_LIBS += ['mozva']
 
 FINAL_LIBRARY = 'xul'
