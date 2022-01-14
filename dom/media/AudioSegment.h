@@ -445,6 +445,13 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
       return;
     }
 
+    if (!mChunks.IsEmpty() &&
+        mChunks.LastElement().CanCombineWithFollowing(aChunk)) {
+      mChunks.LastElement().mDuration += aChunk.GetDuration();
+      mDuration += aChunk.GetDuration();
+      return;
+    }
+
     chunk = AppendChunk(aChunk.mDuration);
   }
   void ApplyVolume(float aVolume);
