@@ -39,7 +39,7 @@ XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
  *     Unique id of a given context for the provided type.
  *     For CONTEXT_DESCRIPTOR_TYPES.ALL, id can be ommitted.
  *     For CONTEXT_DESCRIPTOR_TYPES.TOP_BROWSING_CONTEXT, the id should be a
- *     browserId.
+ *     WindowManager UUID created by `getIdForBrowser`.
  */
 
 // Enum of ContextDescriptor types.
