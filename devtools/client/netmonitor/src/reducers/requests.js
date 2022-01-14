@@ -33,6 +33,8 @@ function Requests() {
     requests: [],
     // Selected request ID
     selectedId: null,
+    // Right click request represents the last request that was clicked
+    clickedRequestId: null,
     // @backward-compact { version 85 } The preselectedId can either be
     // the actor id on old servers, or the resourceId on new ones.
     preselectedId: null,
@@ -76,14 +78,9 @@ function requestsReducer(state = Requests(), action) {
 
     // Select specific request.
     case SELECT_REQUEST: {
-      // Selected request represents the last request that was clicked
-      // before the context menu is shown
-      const clickedRequest = state.requests.find(
-        needle => needle.id === action.id
-      );
       return {
         ...state,
-        clickedRequest,
+        clickedRequestId: action.id,
         selectedId: action.id,
       };
     }
@@ -98,12 +95,9 @@ function requestsReducer(state = Requests(), action) {
     }
 
     case RIGHT_CLICK_REQUEST: {
-      const clickedRequest = state.requests.find(
-        needle => needle.id === action.id
-      );
       return {
         ...state,
-        clickedRequest,
+        clickedRequestId: action.id,
       };
     }
 

@@ -25,6 +25,7 @@ const {
   getDisplayedRequests,
   getColumns,
   getSelectedRequest,
+  getClickedRequest,
 } = require("devtools/client/netmonitor/src/selectors/index");
 
 loader.lazyRequireGetter(
@@ -453,7 +454,7 @@ module.exports = connect(
     networkDetailsOpen: state.ui.networkDetailsOpen,
     networkDetailsWidth: state.ui.networkDetailsWidth,
     networkDetailsHeight: state.ui.networkDetailsHeight,
-    clickedRequest: state.requests.clickedRequest,
+    clickedRequest: getClickedRequest(state),
     displayedRequests: getDisplayedRequests(state),
     firstRequestStartedMs: state.requests.firstStartedMs,
     selectedActionBarTabId: state.ui.selectedActionBarTabId,
