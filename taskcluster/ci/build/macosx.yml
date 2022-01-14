@@ -118,12 +118,16 @@ macosx64-asan-fuzzing/opt:
     description: "MacOS X x64 Cross-compile Fuzzing ASAN"
     index:
         job-name: macosx64-fuzzing-asan-opt
+    attributes:
+        # The gtest libxul contains libFuzzer targets
+        skip-verify-test-packaging: true
     treeherder:
         platform: osx-cross/asan
         symbol: Bof
     worker:
         max-run-time: 5400
         env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing
     run:
         config:
@@ -149,12 +153,15 @@ macosx64-fuzzing/debug:
         job-name: macosx64-fuzzing-debug
     attributes:
         enable-full-crashsymbols: true
+        # The gtest libxul contains libFuzzer targets
+        skip-verify-test-packaging: true
     treeherder:
         platform: osx-cross/debug
         symbol: Bf
     worker:
         max-run-time: 5400
         env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
             PERFHERDER_EXTRA_OPTIONS: fuzzing
     run:
         config:
