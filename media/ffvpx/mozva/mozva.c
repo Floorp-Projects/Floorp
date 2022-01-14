@@ -87,8 +87,6 @@ static VAStatus (*vaTerminateFn)(VADisplay dpy);
 static VAStatus (*vaInitializeFn)(VADisplay dpy, int* major_version, /* out */
                                   int* minor_version /* out */);
 static VAStatus (*vaSetDriverNameFn)(VADisplay dpy, char* driver_name);
-static int (*vaMaxNumEntrypointsFn)(VADisplay dpy);
-static VAStatus (*vaQueryConfigEntrypointsFn)(VADisplay dpy, VAProfile profile, VAEntrypoint *entrypoint_list, int *num_entrypoints);
 
 int LoadVALibrary() {
   static pthread_mutex_t sVALock = PTHREAD_MUTEX_INITIALIZER;
@@ -134,8 +132,6 @@ int LoadVALibrary() {
     GET_FUNC(vaTerminate, sVALib);
     GET_FUNC(vaInitialize, sVALib);
     GET_FUNC(vaSetDriverName, sVALib);
-    GET_FUNC(vaMaxNumEntrypoints, sVALib);
-    GET_FUNC(vaQueryConfigEntrypoints, sVALib);
 
     sVALoaded =
         (IS_FUNC_LOADED(vaDestroyBuffer) && IS_FUNC_LOADED(vaBeginPicture) &&
@@ -154,9 +150,7 @@ int LoadVALibrary() {
          IS_FUNC_LOADED(vaSyncSurface) && IS_FUNC_LOADED(vaCreateImage) &&
          IS_FUNC_LOADED(vaGetImage) && IS_FUNC_LOADED(vaMapBuffer) &&
          IS_FUNC_LOADED(vaUnmapBuffer) && IS_FUNC_LOADED(vaTerminate) &&
-         IS_FUNC_LOADED(vaInitialize) && IS_FUNC_LOADED(vaSetDriverName) &&
-         IS_FUNC_LOADED(vaMaxNumEntrypoints) &&
-         IS_FUNC_LOADED(vaQueryConfigEntrypoints));
+         IS_FUNC_LOADED(vaInitialize) && IS_FUNC_LOADED(vaSetDriverName));
   }
   pthread_mutex_unlock(&sVALock);
   return sVALoaded;
@@ -405,20 +399,6 @@ VAStatus vaInitialize(VADisplay dpy, int* major_version, /* out */
 VAStatus vaSetDriverName(VADisplay dpy, char* driver_name) {
   if (LoadVALibrary()) {
     return vaSetDriverNameFn(dpy, driver_name);
-  }
-  return VA_STATUS_ERROR_UNIMPLEMENTED;
-}
-
-int vaMaxNumEntrypoints(VADisplay dpy) {
-  if (LoadVALibrary()) {
-    return vaMaxNumEntrypointsFn(dpy);
-  }
-  return 0;
-}
-
-VAStatus vaQueryConfigEntrypoints(VADisplay dpy, VAProfile profile, VAEntrypoint *entrypoint_list, int *num_entrypoints) {
-  if (LoadVALibrary()) {
-    return vaQueryConfigEntrypointsFn(dpy, profile, entrypoint_list, num_entrypoints);
   }
   return VA_STATUS_ERROR_UNIMPLEMENTED;
 }
