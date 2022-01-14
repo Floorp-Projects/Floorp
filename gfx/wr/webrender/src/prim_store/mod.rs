@@ -91,12 +91,6 @@ impl PrimitiveOpacity {
             is_opaque: alpha >= 1.0,
         }
     }
-
-    pub fn combine(self, other: PrimitiveOpacity) -> PrimitiveOpacity {
-        PrimitiveOpacity{
-            is_opaque: self.is_opaque && other.is_opaque
-        }
-    }
 }
 
 /// For external images, it's not possible to know the
