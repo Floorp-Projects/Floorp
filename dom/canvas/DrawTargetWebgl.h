@@ -25,14 +25,15 @@ namespace gfx {
 class DataSourceSurface;
 class DrawTargetSkia;
 class DrawTargetWebgl;
+class PathSkia;
 class SourceSurfaceSkia;
 
 class TextureHandle;
 class SharedTexture;
 class SharedTextureHandle;
 class StandaloneTexture;
-class GlyphCacheEntry;
 class GlyphCache;
+class PathCache;
 
 // DrawTargetWebgl implements a subset of the DrawTarget API suitable for use
 // by CanvasRenderingContext2D. It maps these to a client WebGL context so that
@@ -84,6 +85,8 @@ class DrawTargetWebgl : public DrawTarget {
   UserDataKey mGlyphCacheKey = {0};
   // List of all GlyphCaches currently allocated to fonts.
   LinkedList<GlyphCache> mGlyphCaches;
+  // Cache of rasterized paths.
+  UniquePtr<PathCache> mPathCache;
   // Collection of allocated shared texture pages that may be shared amongst
   // many handles.
   std::vector<RefPtr<SharedTexture>> mSharedTextures;
