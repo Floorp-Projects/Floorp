@@ -5,9 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """
-Utility functions for the glean_parser-based code generator
+Utitlity functions for the glean_parser-based code generator
 """
-import copy
 
 
 def generate_ping_ids(objs):
@@ -53,14 +52,3 @@ def generate_metric_ids(objs):
             metric_id += 1
 
     return lambda metric: metric_id_mapping[(metric.category, metric.name)]
-
-
-def get_metrics(objs):
-    """
-    Returns *just* the metrics in a set of Glean objects
-    """
-    ret = copy.copy(objs)
-    for category in ["pings", "tags"]:
-        if ret.get(category):
-            del ret[category]
-    return ret
