@@ -215,22 +215,25 @@ void UtilityProcessManager::CleanShutdown() { DestroyProcess(); }
 
 void UtilityProcessManager::DestroyProcess() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  mQueuedPrefs.Clear();
+  if (mObserver) {
+    Preferences::RemoveObserver(mObserver, "");
+  }
+
+  mObserver = nullptr;
+  mProcessParent = nullptr;
+  sSingleton = nullptr;
+
   if (!mProcess) {
     return;
   }
 
   mProcess->Shutdown();
   mProcess = nullptr;
-  mProcessParent = nullptr;
-  mQueuedPrefs.Clear();
-
-  Preferences::RemoveObserver(mObserver, "");
-  mObserver = nullptr;
 
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::UtilityProcessStatus, "Destroyed"_ns);
-
-  sSingleton = nullptr;
 }
 
 Maybe<base::ProcessId> UtilityProcessManager::ProcessPid() {
