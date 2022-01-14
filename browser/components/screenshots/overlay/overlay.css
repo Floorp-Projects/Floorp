@@ -1,0 +1,126 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:-moz-native-anonymous #screenshots-overlay-container {
+  /*
+  Content CSS applying to the html element can impact the overlay.
+  To avoid that, possible cases have been set to initial.
+  */
+  text-transform: initial;
+  text-indent: initial;
+  letter-spacing: initial;
+  word-spacing: initial;
+  color: initial;
+  direction: initial;
+  writing-mode: initial;
+}
+
+/**
+ * Overlay content is position: fixed as we need to allow for the possiblily
+ * of the document scrolling or changing size while the overlay is visible
+ */
+:-moz-native-anonymous #screenshots-overlay-container {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
+:-moz-native-anonymous #screenshots-overlay-container[hidden] {
+  display: none;
+}
+
+:-moz-native-anonymous #screenshots-overlay-container[dragging] {
+  cursor: grabbing;
+}
+
+:-moz-native-anonymous #screenshots-cancel-button {
+  background-color: transparent;
+  width: fit-content;
+  cursor: pointer;
+  outline: none;
+  border-radius: 3px;
+  border: 1px #9b9b9b solid;
+  color: #fff;
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, "segoe ui", "helvetica neue", helvetica, ubuntu, roboto, noto, arial, sans-serif;
+  font-size: 16px;
+  margin-top: 40px;
+  padding: 10px 25px;
+}
+
+:-moz-native-anonymous .fixed-container {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  justify-content: center;
+  inset-inline-start: 0;
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+
+:-moz-native-anonymous .face-container {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+
+:-moz-native-anonymous .face {
+  width: 62px;
+  height: 62px;
+  display: block;
+  background-image: url("chrome://browser/content/screenshots/icon-welcome-face-without-eyes.svg");
+}
+
+:-moz-native-anonymous .eye {
+  background-color: #fff;
+  width: 10px;
+  height: 14px;
+  position: absolute;
+  border-radius: 100%;
+  overflow: hidden;
+  inset-inline-start: 16px;
+  top: 19px;
+}
+
+:-moz-native-anonymous .eyeball {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: #000;
+  border-radius: 50%;
+  inset-inline-start: 2px;
+  top: 4px;
+  z-index: 10;
+}
+
+:-moz-native-anonymous .left {
+  margin-inline-start: 0;
+}
+
+:-moz-native-anonymous .right {
+  margin-inline-start: 20px;
+}
+
+:-moz-native-anonymous .preview-instructions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse 125mm cubic-bezier(0.07, 0.95, 0, 1);
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "segoe ui", "helvetica neue", helvetica, ubuntu, roboto, noto, arial, sans-serif;
+  font-size: 24px;
+  line-height: 32px;
+  text-align: center;
+  padding-top: 20px;
+  width: 400px;
+  user-select: none;
+}
