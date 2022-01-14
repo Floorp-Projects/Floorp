@@ -9,19 +9,6 @@ const EventEmitter = require("devtools/shared/event-emitter");
 
 const BROWSERTOOLBOX_FISSION_ENABLED = "devtools.browsertoolbox.fission";
 
-const {
-  LegacyProcessesWatcher,
-} = require("devtools/shared/commands/target/legacy-target-watchers/legacy-processes-watcher");
-const {
-  LegacyServiceWorkersWatcher,
-} = require("devtools/shared/commands/target/legacy-target-watchers/legacy-serviceworkers-watcher");
-const {
-  LegacySharedWorkersWatcher,
-} = require("devtools/shared/commands/target/legacy-target-watchers/legacy-sharedworkers-watcher");
-const {
-  LegacyWorkersWatcher,
-} = require("devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher");
-
 class TargetCommand extends EventEmitter {
   #selectedTargetFront;
   /**
@@ -88,29 +75,7 @@ class TargetCommand extends EventEmitter {
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
     this._onTargetSelected = this._onTargetSelected.bind(this);
 
-    this.legacyImplementation = {
-      process: new LegacyProcessesWatcher(
-        this,
-        this._onTargetAvailable,
-        this._onTargetDestroyed
-      ),
-      worker: new LegacyWorkersWatcher(
-        this,
-        this._onTargetAvailable,
-        this._onTargetDestroyed
-      ),
-      shared_worker: new LegacySharedWorkersWatcher(
-        this,
-        this._onTargetAvailable,
-        this._onTargetDestroyed
-      ),
-      service_worker: new LegacyServiceWorkersWatcher(
-        this,
-        this._onTargetAvailable,
-        this._onTargetDestroyed,
-        this.commands
-      ),
-    };
+    this.legacyImplementation = {};
 
     // Public flag to allow listening for workers even if the fission pref is off
     // This allows listening for workers in the content toolbox outside of fission contexts
@@ -466,7 +431,16 @@ class TargetCommand extends EventEmitter {
         if (!isTargetSwitching) {
           await this.watcherFront.watchTargets(type);
         }
-      } else if (this.legacyImplementation[type]) {
+      } else if (LegacyTargetWatchers[type]) {
+        // Instantiate the legacy listener only once for each TargetCommand, and reuse it if we stop and restart listening
+        if (!this.legacyImplementation[type]) {
+          this.legacyImplementation[type] = new LegacyTargetWatchers[type](
+            this,
+            this._onTargetAvailable,
+            this._onTargetDestroyed,
+            this.commands
+          );
+        }
         await this.legacyImplementation[type].listen();
       } else {
         throw new Error(`Unsupported target type '${type}'`);
@@ -1085,6 +1059,28 @@ TargetCommand.TYPES = TargetCommand.prototype.TYPES = {
 };
 TargetCommand.ALL_TYPES = TargetCommand.prototype.ALL_TYPES = Object.values(
   TargetCommand.TYPES
+);
+
+const LegacyTargetWatchers = {};
+loader.lazyRequireGetter(
+  LegacyTargetWatchers,
+  TargetCommand.TYPES.PROCESS,
+  "devtools/shared/commands/target/legacy-target-watchers/legacy-processes-watcher"
+);
+loader.lazyRequireGetter(
+  LegacyTargetWatchers,
+  TargetCommand.TYPES.WORKER,
+  "devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher"
+);
+loader.lazyRequireGetter(
+  LegacyTargetWatchers,
+  TargetCommand.TYPES.SHARED_WORKER,
+  "devtools/shared/commands/target/legacy-target-watchers/legacy-sharedworkers-watcher"
+);
+loader.lazyRequireGetter(
+  LegacyTargetWatchers,
+  TargetCommand.TYPES.SERVICE_WORKER,
+  "devtools/shared/commands/target/legacy-target-watchers/legacy-serviceworkers-watcher"
 );
 
 module.exports = TargetCommand;

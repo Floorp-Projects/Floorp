@@ -69,4 +69,4 @@ class LegacyProcessesWatcher {
   }
 }
 
-module.exports = { LegacyProcessesWatcher };
+module.exports = LegacyProcessesWatcher;
