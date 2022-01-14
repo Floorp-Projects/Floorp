@@ -99,8 +99,10 @@ public class GeckoScreenOrientation {
    * Enable Gecko screen orientation events on update.
    */
   public void enableNotifications() {
-    update();
+    // We should notify Gecko of current orientation information at force.
+    mScreenOrientation = ScreenOrientation.NONE;
     mShouldNotify = true;
+    update();
   }
 
   /*
