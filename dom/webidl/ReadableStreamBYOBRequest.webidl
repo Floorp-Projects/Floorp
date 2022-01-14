@@ -1,4 +1,4 @@
-[Exposed=(Window,Worker,Worklet)]
+[Exposed=(Window,Worker,Worklet), Pref="dom.streams.expose.ReadableStreamBYOBRequest"]
 interface ReadableStreamBYOBRequest {
   readonly attribute ArrayBufferView? view;
 
