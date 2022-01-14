@@ -11,11 +11,12 @@ const L10N = new LocalizationHelper(
 
 const Editor = require("devtools/client/shared/sourceeditor/editor");
 const beautify = require("devtools/shared/jsbeautify/beautify");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const CONTAINER_WIDTH = 500;
 
-class EventTooltip {
+class EventTooltip extends EventEmitter {
   /**
    * Set the content of a provided HTMLTooltip instance to display a list of event
    * listeners, with their event type, capturing argument and a link to the code
@@ -31,6 +32,8 @@ class EventTooltip {
    *        The nodeFront we're displaying event listeners for.
    */
   constructor(tooltip, eventListenerInfos, toolbox, nodeFront) {
+    super();
+
     this._tooltip = tooltip;
     this._toolbox = toolbox;
     this._eventEditors = new WeakMap();
@@ -313,7 +316,14 @@ class EventTooltip {
     } else {
       await this._nodeFront.disableEventListener(id);
     }
-    this._tooltip.emitForTests("event-tooltip-listener-toggled");
+    this.emit("event-tooltip-listener-toggled", {
+      hasDisabledEventListeners:
+        // No need to query the other checkboxes if the handled checkbox is unchecked
+        !checkbox.checked ||
+        this._tooltip.doc.querySelector(
+          `input.event-tooltip-listener-toggle-checkbox:not(:checked)`
+        ) !== null,
+    });
   }
 
   /**
@@ -358,6 +368,7 @@ class EventTooltip {
       this._tooltip.eventTooltip = null;
     }
 
+    this.clearEvents();
     if (this._eventListenersAbortController) {
       this._eventListenersAbortController.abort();
       this._eventListenersAbortController = null;
