@@ -201,7 +201,7 @@ var Troubleshoot = {
 // when done, it must pass its data to the callback.  The resulting snapshot
 // object will contain a name => data entry for each provider.
 var dataProviders = {
-  application: function application(done) {
+  application: async function application(done) {
     let data = {
       name: Services.appinfo.name,
       osVersion:
@@ -222,7 +222,7 @@ var dataProviders = {
     };
 
     if (Services.sysinfo.getProperty("name") == "Windows_NT") {
-      if (Services.sysinfo.processInfo.isWindowsSMode) {
+      if ((await Services.sysinfo.processInfo).isWindowsSMode) {
         data.osVersion += " S";
       }
     }
