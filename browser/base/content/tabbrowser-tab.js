@@ -651,11 +651,6 @@
       this.muteReason = aMuteReason || null;
 
       gBrowser._tabAttrModified(this, ["muted"]);
-
-      let event = new CustomEvent("TabMuteChange", {
-        detail: { tab: this },
-      });
-      this.dispatchEvent(event);
     }
 
     setUserContextId(aUserContextId) {
