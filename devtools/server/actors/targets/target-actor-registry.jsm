@@ -91,7 +91,8 @@ var TargetActorRegistry = {
         (sessionContext.type == "all" &&
           actor.typeName === "parentProcessTarget") ||
         (sessionContext.type == "browser-element" &&
-          actor.browserId == sessionContext.browserId) ||
+          (actor.browserId == sessionContext.browserId ||
+            actor.openerBrowserId == sessionContext.browserId)) ||
         (sessionContext.type == "webextension" &&
           actor.addonId == sessionContext.addonId);
       if (isMatchingPrefix && isMatchingContext) {

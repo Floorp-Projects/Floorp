@@ -188,6 +188,7 @@ const TabDescriptorActor = ActorClassWithSpec(tabDescriptorSpec, {
         this.conn,
         createBrowserElementSessionContext(this._browser, {
           isServerTargetSwitchingEnabled: config.isServerTargetSwitchingEnabled,
+          isPopupDebuggingEnabled: config.isPopupDebuggingEnabled,
         })
       );
       this.manage(this.watcher);
