@@ -156,7 +156,7 @@ add_task(async function test_reset_user_pref() {
       [PREF_BOOLEAN_DEFAULT_TRUE, false],
       [PREF_STRING_LOCALIZED_MISSING, "user-value"],
     ],
-    });
+  });
 
   await AboutConfigTest.withNewTab(async function() {
     // Click reset.
