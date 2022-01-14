@@ -58,6 +58,10 @@ add_task(async function() {
     ["click [x]", "mousedown [x]", "mouseup [x]"],
     "The expected events are displayed, all enabled"
   );
+  ok(
+    !eventTooltipBadge.classList.contains("has-disabled-events"),
+    "The event badge does not have the has-disabled-events class"
+  );
 
   const [
     clickHeader,
@@ -72,10 +76,35 @@ add_task(async function() {
     ["click [x]", "mousedown []", "mouseup [x]"],
     "mousedown checkbox was unchecked"
   );
+  ok(
+    eventTooltipBadge.classList.contains("has-disabled-events"),
+    "Unchecking an event applied the has-disabled-events class to the badge"
+  );
   await safeSynthesizeMouseEventAtCenterInContentPage("#target");
   data = await getTargetElementHandledEventData();
   is(data.click, 2, `target handled another "click" event…`);
   is(data.mousedown, 1, `… but not a mousedown one`);
+
+  info(
+    "Check that the event badge style is reset when re-enabling all disabled events"
+  );
+  await toggleEventListenerCheckbox(tooltip, mousedownHeader);
+  Assert.deepEqual(
+    getAsciiHeadersViz(tooltip),
+    ["click [x]", "mousedown [x]", "mouseup [x]"],
+    "mousedown checkbox is checked again"
+  );
+  ok(
+    !eventTooltipBadge.classList.contains("has-disabled-events"),
+    "The event badge does not have the has-disabled-events class after re-enabling disabled event"
+  );
+  info("Disable mousedown again for the rest of the test");
+  await toggleEventListenerCheckbox(tooltip, mousedownHeader);
+  Assert.deepEqual(
+    getAsciiHeadersViz(tooltip),
+    ["click [x]", "mousedown []", "mouseup [x]"],
+    "mousedown checkbox is unchecked again"
+  );
 
   info("Uncheck the click event checkbox");
   await toggleEventListenerCheckbox(tooltip, clickHeader);
@@ -83,6 +112,10 @@ add_task(async function() {
     getAsciiHeadersViz(tooltip),
     ["click []", "mousedown []", "mouseup [x]"],
     "click checkbox was unchecked"
+  );
+  ok(
+    eventTooltipBadge.classList.contains("has-disabled-events"),
+    "event badge still has the has-disabled-events class"
   );
   await safeSynthesizeMouseEventAtCenterInContentPage("#target");
   data = await getTargetElementHandledEventData();
@@ -123,6 +156,10 @@ add_task(async function() {
     getAsciiHeadersViz(tooltip),
     ["click []", "mousedown [x]", "mouseup []"],
     "mousedown checkbox is checked again"
+  );
+  ok(
+    eventTooltipBadge.classList.contains("has-disabled-events"),
+    "event badge still has the has-disabled-events class"
   );
   await safeSynthesizeMouseEventAtCenterInContentPage("#target");
   data = await getTargetElementHandledEventData();
@@ -229,7 +266,9 @@ function getHeaderCheckbox(headerEl) {
 }
 
 async function toggleEventListenerCheckbox(tooltip, headerEl) {
-  const onEventToggled = tooltip.once("event-tooltip-listener-toggled");
+  const onEventToggled = tooltip.eventTooltip.once(
+    "event-tooltip-listener-toggled"
+  );
   const checkbox = getHeaderCheckbox(headerEl);
   const previousValue = checkbox.checked;
   EventUtils.synthesizeMouseAtCenter(

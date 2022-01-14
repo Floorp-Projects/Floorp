@@ -91,3 +91,12 @@
   background-color: var(--badge-scrollable-active-background-color);
   color: var(--theme-selection-color);
 }
+
+.inspector-badge.has-disabled-events {
+  font-style: italic;
+}
+
+.inspector-badge.has-disabled-events::before {
+  content: "*";
+  padding-inline-end: 2px;
+}
