@@ -7837,6 +7837,21 @@ static bool PCCountProfiling_ScriptContents(JSContext* cx, unsigned argc,
   return true;
 }
 
+static bool NukeCCW(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() != 1 || !args[0].isObject() ||
+      !IsCrossCompartmentWrapper(&args[0].toObject())) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_ARGS,
+                              "nukeCCW");
+    return false;
+  }
+
+  NukeCrossCompartmentWrapper(cx, &args[0].toObject());
+  args.rval().setUndefined();
+  return true;
+}
+
 // clang-format off
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
@@ -8834,6 +8849,10 @@ JS_FN_HELP("isSmallFunction", IsSmallFunction, 1, 0,
 "getExceptionInfo(fun)",
 "  Calls the given function and returns information about the exception it"
 "  throws. Returns null if the function didn't throw an exception."),
+
+    JS_FN_HELP("nukeCCW", NukeCCW, 1, 0,
+"nukeCCW(wrapper)",
+"  Nuke a CrossCompartmentWrapper, which turns it into a DeadProxyObject."),
 
     JS_FS_HELP_END
 };
