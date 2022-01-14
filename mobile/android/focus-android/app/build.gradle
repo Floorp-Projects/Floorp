@@ -11,7 +11,7 @@ import com.android.build.OutputFile
 import groovy.json.JsonOutput
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
 
     if (project.hasProperty("testBuildType")) {
         // Allowing to configure the test build type via command line flag (./gradlew -PtestBuildType=beta ..)
@@ -22,7 +22,7 @@ android {
     defaultConfig {
         applicationId "org.mozilla"
         minSdkVersion 21
-        targetSdkVersion 30
+        targetSdkVersion 31
         versionCode 11 // This versionCode is "frozen" for local builds. For "release" builds we
                        // override this with a generated versionCode at build time.
         versionName "98.0"
