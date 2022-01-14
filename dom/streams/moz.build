@@ -12,6 +12,7 @@ EXPORTS.mozilla.dom += [
     "ByteLengthQueuingStrategy.h",
     "ByteStreamHelpers.h",
     "CountQueuingStrategy.h",
+    "NativeUnderlyingSource.h",
     "QueueWithSizes.h",
     "ReadableByteStreamController.h",
     "ReadableStream.h",

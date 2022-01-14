@@ -372,8 +372,19 @@ MOZ_CAN_RUN_SCRIPT extern void SetUpReadableByteStreamController(
     UnderlyingSourceStartCallbackHelper* aStartAlgorithm,
     UnderlyingSourcePullCallbackHelper* aPullAlgorithm,
     UnderlyingSourceCancelCallbackHelper* aCancelAlgorithm,
-    double aHighWaterMark, Maybe<uint64_t> aAutoAllocateChunkSize,
+    UnderlyingSourceErrorCallbackHelper* aErrorAlgorithm, double aHighWaterMark,
+    Maybe<uint64_t> aAutoAllocateChunkSize, ErrorResult& aRv);
+
+extern void ReadableByteStreamControllerCallPullIfNeeded(
+    JSContext* aCx, ReadableByteStreamController* aController,
     ErrorResult& aRv);
+
+void SetUpReadableByteStreamControllerFromUnderlyingSource(
+    JSContext* aCx, ReadableStream* aStream,
+    BodyStreamHolder* aUnderlyingSource, ErrorResult& aRv);
+
+void ReadableByteStreamControllerClearAlgorithms(
+    ReadableByteStreamController* aController);
 
 }  // namespace mozilla::dom
 
