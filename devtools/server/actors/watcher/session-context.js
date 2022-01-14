@@ -56,6 +56,9 @@ function createBrowserElementSessionContext(browserElement, config) {
     // Nowaday, it should always be enabled except for WebExtension special
     // codepath and some tests.
     isServerTargetSwitchingEnabled: config.isServerTargetSwitchingEnabled,
+    // Should we instantiate targets for popups opened in distinct tabs/windows?
+    // Driven by devtools.popups.debug=true preference.
+    isPopupDebuggingEnabled: config.isPopupDebuggingEnabled,
   };
 }
 

@@ -2193,6 +2193,10 @@ pref("devtools.target-switching.server.enabled", true);
 // remote frames).
 pref("devtools.every-frame-target.enabled", true);
 
+// Controls the hability to debug popups from the same DevTools
+// of the original tab the popups are coming from
+pref("devtools.popups.debug", false);
+
 // Toolbox Button preferences
 pref("devtools.command-button-pick.enabled", true);
 pref("devtools.command-button-frames.enabled", true);
