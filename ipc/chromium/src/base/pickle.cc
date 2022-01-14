@@ -79,6 +79,8 @@ struct Copier<T, sizeof(uint64_t), false> {
 template <typename T, size_t size>
 struct Copier<T, size, true> {
   static void Copy(T* dest, const char* iter) {
+    // The pointer ought to be properly aligned.
+    DCHECK_EQ((((uintptr_t)iter) & (MOZ_ALIGNOF(T) - 1)), 0);
     *dest = *reinterpret_cast<const T*>(iter);
   }
 };
@@ -609,8 +611,22 @@ bool Pickle::WriteBytesZeroCopy(void* data, uint32_t data_len,
                                 uint32_t capacity) {
   BeginWrite(data_len, sizeof(memberAlignmentType));
 
+  uint32_t new_capacity = AlignInt(capacity);
+#ifndef MOZ_MEMORY
+  if (new_capacity > capacity) {
+    // If the buffer we were given is not large enough to contain padding
+    // after the data, reallocate it to make it so. When using jemalloc,
+    // we're guaranteed the buffer size is going to be at least 4-bytes
+    // aligned, so we skip realloc altogether. Even with other allocators,
+    // the realloc is likely not necessary, but we don't take chances.
+    // At least with ASan, it does matter to realloc to inform ASan we're
+    // going to use more data from the buffer (and let it actually realloc
+    // if it needs to).
+    data = realloc(data, new_capacity);
+  }
+#endif
   buffers_.WriteBytesZeroCopy(reinterpret_cast<char*>(data), data_len,
-                              capacity);
+                              new_capacity);
 
   EndWrite(data_len);
   return true;
