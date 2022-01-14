@@ -5,34 +5,30 @@
 
 package org.mozilla.gecko.gfx;
 
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.process.GeckoProcessManager;
+import org.mozilla.gecko.process.GeckoServiceChildProcess;
 
 /* package */ final class SurfaceAllocator {
   private static final String LOGTAG = "SurfaceAllocator";
 
-  private static SurfaceAllocatorConnection sConnection;
+  private static ISurfaceAllocator sAllocator;
 
   private static synchronized void ensureConnection() throws Exception {
-    if (sConnection != null) {
+    if (sAllocator != null) {
       return;
     }
 
-    sConnection = new SurfaceAllocatorConnection();
-    final Intent intent = new Intent();
-    intent.setClassName(
-        GeckoAppShell.getApplicationContext(), "org.mozilla.gecko.gfx.SurfaceAllocatorService");
+    if (GeckoAppShell.isParentProcess()) {
+      sAllocator = GeckoProcessManager.getInstance().getSurfaceAllocator();
+    } else {
+      sAllocator = GeckoServiceChildProcess.getSurfaceAllocator();
+    }
 
-    // FIXME: may not want to auto create
-    if (!GeckoAppShell.getApplicationContext()
-        .bindService(intent, sConnection, Context.BIND_AUTO_CREATE)) {
+    if (sAllocator == null) {
       throw new Exception("Failed to connect to surface allocator service!");
     }
   }
@@ -46,10 +42,9 @@ import org.mozilla.gecko.annotation.WrapForJNI;
       if (singleBufferMode && !GeckoSurfaceTexture.isSingleBufferSupported()) {
         return null;
       }
-      final ISurfaceAllocator allocator = sConnection.getAllocator();
-      final GeckoSurface surface = allocator.acquireSurface(width, height, singleBufferMode);
+      final GeckoSurface surface = sAllocator.acquireSurface(width, height, singleBufferMode);
       if (surface != null && !surface.inProcess()) {
-        allocator.configureSync(surface.initSyncSurface(width, height));
+        sAllocator.configureSync(surface.initSyncSurface(width, height));
       }
       return surface;
     } catch (final Exception e) {
@@ -69,7 +64,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 
     // Release the SurfaceTexture on the other side
     try {
-      sConnection.getAllocator().releaseSurface(surface.getHandle());
+      sAllocator.releaseSurface(surface.getHandle());
     } catch (final RemoteException e) {
       Log.w(LOGTAG, "Failed to release surface texture", e);
     }
@@ -92,35 +87,9 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 
     // Release the SurfaceTexture on the other side
     try {
-      sConnection.getAllocator().sync(upstream);
+      sAllocator.sync(upstream);
     } catch (final RemoteException e) {
       Log.w(LOGTAG, "Failed to sync texture", e);
-    }
-  }
-
-  private static final class SurfaceAllocatorConnection implements ServiceConnection {
-    private ISurfaceAllocator mAllocator;
-
-    public synchronized ISurfaceAllocator getAllocator() {
-      while (mAllocator == null) {
-        try {
-          this.wait();
-        } catch (final InterruptedException e) {
-        }
-      }
-
-      return mAllocator;
-    }
-
-    @Override
-    public synchronized void onServiceConnected(final ComponentName name, final IBinder service) {
-      mAllocator = ISurfaceAllocator.Stub.asInterface(service);
-      this.notifyAll();
-    }
-
-    @Override
-    public synchronized void onServiceDisconnected(final ComponentName name) {
-      mAllocator = null;
     }
   }
 }
