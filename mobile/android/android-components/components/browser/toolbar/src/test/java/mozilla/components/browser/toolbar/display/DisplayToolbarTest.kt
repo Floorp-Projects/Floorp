@@ -5,6 +5,7 @@
 package mozilla.components.browser.toolbar.display
 
 import android.graphics.Color
+import android.os.Build
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.core.view.isGone
@@ -41,6 +42,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.robolectric.util.ReflectionHelpers
 
 @RunWith(AndroidJUnit4::class)
 class DisplayToolbarTest {
@@ -649,18 +651,42 @@ class DisplayToolbarTest {
         assertNull(displayToolbar.views.securityIndicator.colorFilter)
 
         displayToolbar.colors = displayToolbar.colors.copy(
-            securityIconSecure = Color.TRANSPARENT,
-            securityIconInsecure = Color.TRANSPARENT
-        )
-
-        assertNull(displayToolbar.views.securityIndicator.colorFilter)
-
-        displayToolbar.colors = displayToolbar.colors.copy(
             securityIconSecure = Color.BLUE,
             securityIconInsecure = Color.BLUE
         )
 
         assertNotNull(displayToolbar.views.securityIndicator.colorFilter)
+    }
+
+    @Test
+    fun `color filter is set with transparent when securityIconColor changes to transparent and api version is lower than 23`() {
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", 22)
+        val (_, displayToolbar) = createDisplayToolbar()
+
+        assertNull(displayToolbar.views.securityIndicator.colorFilter)
+
+        displayToolbar.colors = displayToolbar.colors.copy(
+            securityIconSecure = Color.TRANSPARENT,
+            securityIconInsecure = Color.TRANSPARENT
+        )
+
+        assertNotNull(displayToolbar.views.securityIndicator.colorFilter)
+    }
+
+    @Test
+    fun `color filter is cleared when securityIconColor changes to transparent and api version is bigger than 22`() {
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", 23)
+
+        val (_, displayToolbar) = createDisplayToolbar()
+
+        assertNull(displayToolbar.views.securityIndicator.colorFilter)
+
+        displayToolbar.colors = displayToolbar.colors.copy(
+            securityIconSecure = Color.TRANSPARENT,
+            securityIconInsecure = Color.TRANSPARENT
+        )
+
+        assertNull(displayToolbar.views.securityIndicator.colorFilter)
     }
 
     @Test

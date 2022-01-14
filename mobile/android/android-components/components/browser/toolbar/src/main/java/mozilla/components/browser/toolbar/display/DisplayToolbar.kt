@@ -8,6 +8,7 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.util.TypedValue
 import android.view.View
 import android.view.accessibility.AccessibilityEvent
@@ -500,7 +501,7 @@ class DisplayToolbar internal constructor(
             Toolbar.SiteSecurity.INSECURE -> colors.securityIconInsecure
             Toolbar.SiteSecurity.SECURE -> colors.securityIconSecure
         }
-        if (color == Color.TRANSPARENT) {
+        if (color == Color.TRANSPARENT && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             views.securityIndicator.clearColorFilter()
         } else {
             views.securityIndicator.setColorFilter(color)
