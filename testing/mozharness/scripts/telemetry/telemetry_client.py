@@ -188,6 +188,9 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
             os.path.join(dirs["abs_blob_upload_dir"], "report.html"),
             "--log-xunit",
             os.path.join(dirs["abs_blob_upload_dir"], "report.xml"),
+            # Symbols for crash reports
+            "--symbols-path",
+            self.symbols_path,
             # Enable tracing output to log transmission protocol
             "-vv",
         ]
