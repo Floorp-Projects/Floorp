@@ -91,17 +91,6 @@ CRLiteState.prototype.QueryInterface = ChromeUtils.generateQI([
   "nsICRLiteState",
 ]);
 
-class CRLiteCoverage {
-  constructor(b64LogID, minTimestamp, maxTimestamp) {
-    this.b64LogID = b64LogID;
-    this.minTimestamp = minTimestamp;
-    this.maxTimestamp = maxTimestamp;
-  }
-}
-CRLiteCoverage.prototype.QueryInterface = ChromeUtils.generateQI([
-  "nsICRLiteCoverage",
-]);
-
 class CertInfo {
   constructor(cert, subject) {
     this.cert = cert;
@@ -674,22 +663,10 @@ class CRLiteFilters {
         log.warn("trying to install more than one full CRLite filter?");
       }
       let filter = fullFiltersDownloaded[0];
-
-      let coverage = [];
-      if (filter.coverage) {
-        for (let entry of filter.coverage) {
-          coverage.push(
-            new CRLiteCoverage(
-              entry.LogID,
-              entry.MinTimestamp,
-              entry.MaxTimestamp
-            )
-          );
-        }
-      }
-
+      let timestamp = Math.floor(filter.effectiveTimestamp / 1000);
+      log.debug(`setting CRLite filter timestamp to ${timestamp}`);
       await new Promise(resolve => {
-        certList.setFullCRLiteFilter(filter.bytes, coverage, rv => {
+        certList.setFullCRLiteFilter(filter.bytes, timestamp, rv => {
           log.debug(`setFullCRLiteFilter: ${rv}`);
           resolve();
         });
