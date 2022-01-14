@@ -17,6 +17,8 @@
 namespace mozilla {
 namespace dom {
 
+class ReadableStream;
+class ReadableStreamDefaultReader;
 class WeakWorkerRef;
 
 class FetchStreamReader final : public nsIOutputStreamCallback,
@@ -43,8 +45,13 @@ class FetchStreamReader final : public nsIOutputStreamCallback,
   // cancellation reason.
   void CloseAndRelease(JSContext* aCx, nsresult aStatus);
 
+#ifdef MOZ_DOM_STREAMS
+  void StartConsuming(JSContext* aCx, ReadableStream* aStream,
+                      ReadableStreamDefaultReader** aReader, ErrorResult& aRv);
+#else
   void StartConsuming(JSContext* aCx, JS::HandleObject aStream,
                       JS::MutableHandle<JSObject*> aReader, ErrorResult& aRv);
+#endif
 
  private:
   explicit FetchStreamReader(nsIGlobalObject* aGlobal);
@@ -61,7 +68,11 @@ class FetchStreamReader final : public nsIOutputStreamCallback,
 
   RefPtr<WeakWorkerRef> mWorkerRef;
 
+#ifdef MOZ_DOM_STREAMS
+  RefPtr<ReadableStreamDefaultReader> mReader;
+#else
   JS::Heap<JSObject*> mReader;
+#endif
 
   nsTArray<uint8_t> mBuffer;
   uint32_t mBufferRemaining;

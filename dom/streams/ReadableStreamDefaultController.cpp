@@ -9,6 +9,7 @@
 #include "js/Value.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ReadableStream.h"
@@ -39,6 +40,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStreamDefaultController)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReadableStreamDefaultController)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCancelAlgorithm, mStrategySizeAlgorithm,
                                   mPullAlgorithm, mStream)
+  tmp->mQueue.clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -69,8 +71,7 @@ NS_INTERFACE_MAP_END_INHERITING(ReadableStreamController)
 ReadableStreamDefaultController::ReadableStreamDefaultController(
     nsIGlobalObject* aGlobal)
     : ReadableStreamController(aGlobal) {
-  // Add |MOZ_COUNT_CTOR(ReadableStreamDefaultController);| for a non-refcounted
-  // object.
+  mozilla::HoldJSObjects(this);
 }
 
 ReadableStreamDefaultController::~ReadableStreamDefaultController() {
@@ -79,6 +80,7 @@ ReadableStreamDefaultController::~ReadableStreamDefaultController() {
   //         having entries in its queue.
   //
   //         This needs to be verified as not indicating some other issue.
+  mozilla::DropJSObjects(this);
   mQueue.clear();
 }
 
@@ -183,7 +185,7 @@ Nullable<double> ReadableStreamDefaultController::GetDesiredSize() {
 //       As far as I know, this isn't currently visible, but we need to keep
 //       this in mind. This is a weakness of this current implementation, and
 //       I'd prefer to have a better answer here eventually.
-static void ReadableStreamDefaultControllerClearAlgorithms(
+void ReadableStreamDefaultControllerClearAlgorithms(
     ReadableStreamDefaultController* aController) {
   // Step 1.
   aController->SetPullAlgorithm(nullptr);

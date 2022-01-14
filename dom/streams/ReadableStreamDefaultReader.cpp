@@ -129,10 +129,12 @@ ReadableStreamDefaultReader::Constructor(const GlobalObject& aGlobal,
   return reader.forget();
 }
 
-static bool CreateValueDonePair(JSContext* aCx, JS::HandleValue aValue,
-                                bool aDone,
+static bool CreateValueDonePair(JSContext* aCx, bool forAuthorCode,
+                                JS::HandleValue aValue, bool aDone,
                                 JS::MutableHandleValue aReturnValue) {
-  JS::RootedObject obj(aCx, JS_NewPlainObject(aCx));
+  JS::RootedObject obj(
+      aCx, forAuthorCode ? JS_NewPlainObject(aCx)
+                         : JS_NewObjectWithGivenProto(aCx, nullptr, nullptr));
   if (!obj) {
     return false;
   }
@@ -148,46 +150,34 @@ static bool CreateValueDonePair(JSContext* aCx, JS::HandleValue aValue,
   return true;
 }
 
-// https://streams.spec.whatwg.org/#default-reader-read
-struct Read_ReadRequest : public ReadRequest {
- public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Read_ReadRequest, ReadRequest)
-
-  RefPtr<Promise> mPromise;
-
-  explicit Read_ReadRequest(Promise* aPromise) : mPromise(aPromise) {}
-
-  void ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
-                  ErrorResult& aRv) override {
-    // Step 1.
-    JS::RootedValue resolvedValue(aCx);
-    if (!CreateValueDonePair(aCx, aChunk, false, &resolvedValue)) {
-      aRv.StealExceptionFromJSContext(aCx);
-      return;
-    }
-    mPromise->MaybeResolve(resolvedValue);
+void Read_ReadRequest::ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
+                                  ErrorResult& aRv) {
+  // Step 1.
+  JS::RootedValue resolvedValue(aCx);
+  if (!CreateValueDonePair(aCx, mForAuthorCode, aChunk, false,
+                           &resolvedValue)) {
+    aRv.StealExceptionFromJSContext(aCx);
+    return;
   }
+  mPromise->MaybeResolve(resolvedValue);
+}
 
-  void CloseSteps(JSContext* aCx, ErrorResult& aRv) override {
-    // Step 1.
-    JS::RootedValue undefined(aCx, JS::UndefinedValue());
-    JS::RootedValue resolvedValue(aCx);
-    if (!CreateValueDonePair(aCx, undefined, true, &resolvedValue)) {
-      aRv.StealExceptionFromJSContext(aCx);
-      return;
-    }
-    mPromise->MaybeResolve(resolvedValue);
+void Read_ReadRequest::CloseSteps(JSContext* aCx, ErrorResult& aRv) {
+  // Step 1.
+  JS::RootedValue undefined(aCx, JS::UndefinedValue());
+  JS::RootedValue resolvedValue(aCx);
+  if (!CreateValueDonePair(aCx, mForAuthorCode, undefined, true,
+                           &resolvedValue)) {
+    aRv.StealExceptionFromJSContext(aCx);
+    return;
   }
+  mPromise->MaybeResolve(resolvedValue);
+}
 
-  void ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> e,
-                  ErrorResult& aRv) override {
-    mPromise->MaybeReject(e);
-  }
-
- protected:
-  virtual ~Read_ReadRequest() = default;
-};
+void Read_ReadRequest::ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> e,
+                                  ErrorResult& aRv) {
+  mPromise->MaybeReject(e);
+}
 
 NS_IMPL_CYCLE_COLLECTION(ReadRequest)
 NS_IMPL_CYCLE_COLLECTION_INHERITED(Read_ReadRequest, ReadRequest, mPromise)

@@ -9,6 +9,11 @@
 
 #include "jsapi.h"
 #include "js/Stream.h"
+#include "mozilla/AlreadyAddRefed.h"
+#ifdef MOZ_DOM_STREAMS
+#  include "mozilla/dom/BindingDeclarations.h"
+#  include "mozilla/dom/NativeUnderlyingSource.h"
+#endif
 #include "nsIAsyncInputStream.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIObserver.h"
@@ -28,9 +33,17 @@ namespace dom {
 
 class BodyStream;
 class WeakWorkerRef;
+class ReadableStream;
+
+class BodyStreamUnderlyingSourcePullCallbackHelper;
+class BodyStreamUnderlyingSourceCancelCallbackHelper;
+class BodyStreamUnderlyingSourceErrorCallbackHelper;
 
 class BodyStreamHolder : public nsISupports {
   friend class BodyStream;
+  friend class BodyStreamUnderlyingSourcePullCallbackHelper;
+  friend class BodyStreamUnderlyingSourceCancelCallbackHelper;
+  friend class BodyStreamUnderlyingSourceErrorCallbackHelper;
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -42,20 +55,36 @@ class BodyStreamHolder : public nsISupports {
 
   virtual void MarkAsRead() = 0;
 
+#ifndef MOZ_DOM_STREAMS
   virtual void SetReadableStreamBody(JSObject* aBody) = 0;
-
   virtual JSObject* GetReadableStreamBody() = 0;
+#else
+  virtual void SetReadableStreamBody(ReadableStream* aBody) = 0;
+  virtual ReadableStream* GetReadableStreamBody() = 0;
+#endif
 
  protected:
   virtual ~BodyStreamHolder() = default;
 
  private:
   void StoreBodyStream(BodyStream* aBodyStream);
+#ifdef MOZ_DOM_STREAMS
+  already_AddRefed<BodyStream> TakeBodyStream() {
+    MOZ_ASSERT_IF(mStreamCreated, mBodyStream);
+    return mBodyStream.forget();
+  }
+#else
   void ForgetBodyStream();
+#endif
+  BodyStream* GetBodyStream() { return mBodyStream; }
 
+#ifdef MOZ_DOM_STREAMS
+  RefPtr<BodyStream> mBodyStream;
+#else
   // Raw pointer because BodyStream keeps BodyStreamHolder alive and it
   // nullifies this stream before being released.
   BodyStream* mBodyStream;
+#endif
 
 #ifdef DEBUG
   bool mStreamCreated = false;
@@ -65,7 +94,12 @@ class BodyStreamHolder : public nsISupports {
 class BodyStream final : public nsIInputStreamCallback,
                          public nsIObserver,
                          public nsSupportsWeakReference,
-                         private JS::ReadableStreamUnderlyingSource {
+#ifndef MOZ_DOM_STREAMS
+                         private JS::ReadableStreamUnderlyingSource
+#else
+                         public NativeUnderlyingSource
+#endif
+{
   friend class BodyStreamHolder;
 
  public:
@@ -81,14 +115,19 @@ class BodyStream final : public nsIInputStreamCallback,
 
   void Close();
 
+#ifdef MOZ_DOM_STREAMS
+  static nsresult RetrieveInputStream(BodyStreamHolder* aStream,
+                                      nsIInputStream** aInputStream);
+#else
   static nsresult RetrieveInputStream(
       JS::ReadableStreamUnderlyingSource* aUnderlyingReadableStreamSource,
       nsIInputStream** aInputStream);
+#endif
 
  private:
   BodyStream(nsIGlobalObject* aGlobal, BodyStreamHolder* aStreamHolder,
              nsIInputStream* aInputStream);
-  ~BodyStream();
+  ~BodyStream() = default;
 
 #ifdef DEBUG
   void AssertIsOnOwningThread();
@@ -96,6 +135,35 @@ class BodyStream final : public nsIInputStreamCallback,
   void AssertIsOnOwningThread() {}
 #endif
 
+#ifdef MOZ_DOM_STREAMS
+ public:
+  // Cancel Callback
+  virtual already_AddRefed<Promise> CancelCallback(
+      JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
+      ErrorResult& aRv) override;
+
+  // Pull Callback
+  virtual already_AddRefed<Promise> PullCallback(
+      JSContext* aCx, ReadableStreamController& aController,
+      ErrorResult& aRv) override;
+
+  void ErrorCallback() override;
+
+ private:
+  // Fills a buffer with bytes from the stream.
+  void WriteIntoReadRequestBuffer(JSContext* aCx, ReadableStream* aStream,
+                                  void* aBuffer, size_t aLength,
+                                  size_t* aByteWritten);
+
+  void EnqueueChunkWithSizeIntoStream(JSContext* aCx, ReadableStream* aStream,
+                                      uint64_t bytes, ErrorResult& aRv);
+
+  void ErrorPropagation(JSContext* aCx, const MutexAutoLock& aProofOfLock,
+                        ReadableStream* aStream, nsresult aRv);
+
+  void CloseAndReleaseObjects(JSContext* aCx, const MutexAutoLock& aProofOfLock,
+                              ReadableStream* aStream);
+#else
   void requestData(JSContext* aCx, JS::HandleObject aStream,
                    size_t aDesiredSize) override;
 
@@ -117,7 +185,8 @@ class BodyStream final : public nsIInputStreamCallback,
                         JS::HandleObject aStream, nsresult aRv);
 
   void CloseAndReleaseObjects(JSContext* aCx, const MutexAutoLock& aProofOfLock,
-                              JS::HandleObject aSteam);
+                              JS::HandleObject aStream);
+#endif
 
   class WorkerShutdown;
 
