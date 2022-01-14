@@ -1060,18 +1060,6 @@ void nsIFrame::RemoveDisplayItemDataForDeletion() {
     delete userDataTable;
   }
 
-  if (IsSubDocumentFrame()) {
-    const nsSubDocumentFrame* subdoc =
-        static_cast<const nsSubDocumentFrame*>(this);
-    nsFrameLoader* frameLoader = subdoc->FrameLoader();
-    if (frameLoader && frameLoader->GetRemoteBrowser()) {
-      // This is a remote browser that is going away, notify it that it is now
-      // hidden
-      frameLoader->GetRemoteBrowser()->UpdateEffects(
-          mozilla::dom::EffectsInfo::FullyHidden());
-    }
-  }
-
   for (nsDisplayItem* i : DisplayItems()) {
     if (i->GetDependentFrame() == this && !i->HasDeletedFrame()) {
       i->Frame()->MarkNeedsDisplayItemRebuild();
