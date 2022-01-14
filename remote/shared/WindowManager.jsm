@@ -105,6 +105,35 @@ class WindowManager {
   }
 
   /**
+   * Retrieve a the browser element corresponding to the provided unique id,
+   * previously generated via getIdForBrowser.
+   *
+   * TODO: To avoid creating strong references on browser elements and
+   * potentially leaking those elements, this method loops over all windows and
+   * all tabs. It should be replaced by a faster implementation in Bug 1750065.
+   *
+   * @param {String} id
+   *     A browser unique id created by getIdForBrowser.
+   * @return {xul:browser}
+   *     The <xul:browser> corresponding to the provided id. Will return null if
+   *     no matching browser element is found.
+   */
+  getBrowserById(id) {
+    for (const win of this.windows) {
+      const tabBrowser = browser.getTabBrowser(win);
+      if (tabBrowser && tabBrowser.tabs) {
+        for (let i = 0; i < tabBrowser.tabs.length; ++i) {
+          const contentBrowser = browser.getBrowserForTab(tabBrowser.tabs[i]);
+          if (this.getIdForBrowser(contentBrowser) == id) {
+            return contentBrowser;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
    * A set of properties describing a window and that should allow to uniquely
    * identify it. The described window can either be a Chrome Window or a
    * Content Window.
@@ -162,6 +191,19 @@ class WindowManager {
       this._windowHandles.set(key, uuid.substring(1, uuid.length - 1));
     }
     return this._windowHandles.get(key);
+  }
+
+  /**
+   * Retrieve an id for the browser element owning the provided browsing
+   * context.
+   *
+   * @param {BrowsingContext} browsingContext
+   *     The browsing context for which we want to retrieve the (browser) uuid.
+   * @return {String} The unique id for the browser owning the browsing context.
+   */
+  getBrowserIdForBrowsingContext(browsingContext) {
+    const contentBrowser = browsingContext.top.embedderElement;
+    return this.getIdForBrowser(contentBrowser);
   }
 
   /**
