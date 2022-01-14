@@ -136,6 +136,8 @@ struct DrawOptions {
                                      operation. */
 };
 
+struct StoredStrokeOptions;
+
 /**
  * This structure is used to send stroke options that are used in stroking
  * operations.
@@ -169,15 +171,44 @@ struct StrokeOptions {
   JoinStyle mLineJoin;       //!< Join style used for joining lines.
   CapStyle mLineCap;         //!< Cap style used for capping lines.
 
+  StoredStrokeOptions* Clone() const;
+
   bool operator==(const StrokeOptions& aOther) const {
     return mLineWidth == aOther.mLineWidth &&
            mMiterLimit == aOther.mMiterLimit &&
-           mDashPattern == aOther.mDashPattern &&
            mDashLength == aOther.mDashLength &&
+           (!mDashLength || (mDashPattern && aOther.mDashPattern &&
+                             !memcmp(mDashPattern, aOther.mDashPattern,
+                                     mDashLength * sizeof(Float)))) &&
            mDashOffset == aOther.mDashOffset && mLineJoin == aOther.mLineJoin &&
            mLineCap == aOther.mLineCap;
   }
 };
+
+/**
+ * Heap-allocated variation of StrokeOptions that ensures dash patterns are
+ * properly allocated and destroyed even if the source was stack-allocated.
+ */
+struct StoredStrokeOptions : public StrokeOptions {
+  explicit StoredStrokeOptions(const StrokeOptions& aOptions)
+      : StrokeOptions(aOptions) {
+    if (mDashLength) {
+      Float* pattern = new Float[mDashLength];
+      memcpy(pattern, mDashPattern, mDashLength * sizeof(Float));
+      mDashPattern = pattern;
+    }
+  }
+
+  ~StoredStrokeOptions() {
+    if (mDashPattern) {
+      delete[] mDashPattern;
+    }
+  }
+};
+
+inline StoredStrokeOptions* StrokeOptions::Clone() const {
+  return new StoredStrokeOptions(*this);
+}
 
 /**
  * This structure supplies additional options for calls to DrawSurface.

@@ -345,10 +345,12 @@ class PathCacheEntry : public CacheEntryImpl<PathCacheEntry> {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathCacheEntry, override)
 
   PathCacheEntry(const SkPath& aPath, Pattern* aPattern,
-                 const Matrix& aTransform, const IntRect& aBounds,
-                 const Point& aOrigin, HashNumber aHash);
+                 StoredStrokeOptions* aStrokeOptions, const Matrix& aTransform,
+                 const IntRect& aBounds, const Point& aOrigin,
+                 HashNumber aHash);
 
   bool MatchesPath(const SkPath& aPath, const Pattern* aPattern,
+                   const StrokeOptions* aStrokeOptions,
                    const Matrix& aTransform, const IntRect& aBounds,
                    HashNumber aHash);
 
@@ -364,17 +366,18 @@ class PathCacheEntry : public CacheEntryImpl<PathCacheEntry> {
   Point mOrigin;
   // The pattern used to rasterize the path, if not a mask
   UniquePtr<Pattern> mPattern;
+  // The StrokeOptions used for stroked paths, if applicable
+  UniquePtr<StoredStrokeOptions> mStrokeOptions;
 };
 
 class PathCache : public CacheImpl<PathCacheEntry> {
  public:
   PathCache() = default;
 
-  already_AddRefed<PathCacheEntry> FindOrInsertEntry(const SkPath& aPath,
-                                                     const Pattern* aPattern,
-                                                     const Matrix& aTransform,
-                                                     const IntRect& aBounds,
-                                                     const Point& aOrigin);
+  already_AddRefed<PathCacheEntry> FindOrInsertEntry(
+      const SkPath& aPath, const Pattern* aPattern,
+      const StrokeOptions* aStrokeOptions, const Matrix& aTransform,
+      const IntRect& aBounds, const Point& aOrigin);
 };
 
 }  // namespace mozilla::gfx
