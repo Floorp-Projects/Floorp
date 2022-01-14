@@ -103,6 +103,8 @@ class _ExperimentManager {
     for (const rollout of restoredRollouts) {
       this.setExperimentActive(rollout);
     }
+
+    this.observe();
   }
 
   /**
