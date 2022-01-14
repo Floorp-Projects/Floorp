@@ -20,12 +20,11 @@ JSObject* TransferArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aObject) {
   // Step 1.
   MOZ_ASSERT(!JS::IsDetachedArrayBufferObject(aObject));
 
-  // Step 2+3.
-  uint8_t* bufferData = nullptr;
-  size_t bufferLength = 0;
-  bool isSharedMemory = false;
-  JS::GetArrayBufferLengthAndData(aObject, &bufferLength, &isSharedMemory,
-                                  &bufferData);
+  // Step 3 (Reordered)
+  size_t bufferLength = JS::GetArrayBufferByteLength(aObject);
+
+  // Step 2 (Reordered)
+  void* bufferData = JS::StealArrayBufferContents(aCx, aObject);
 
   // Step 4.
   if (!JS::DetachArrayBuffer(aCx, aObject)) {
