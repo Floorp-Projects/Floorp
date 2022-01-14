@@ -329,6 +329,9 @@ void* DrawTargetWebgl::GetNativeSurface(NativeSurfaceType aType) {
 already_AddRefed<SourceSurface> DrawTargetWebgl::Snapshot() {
   // If already using the Skia fallback, then just snapshot that.
   if (mSkiaValid) {
+    if (mSkiaLayer) {
+      FlattenSkia();
+    }
     return mSkia->Snapshot();
   }
 
@@ -403,14 +406,16 @@ void DrawTargetWebgl::MarkChanged() {
 bool DrawTargetWebgl::LockBits(uint8_t** aData, IntSize* aSize,
                                int32_t* aStride, SurfaceFormat* aFormat,
                                IntPoint* aOrigin) {
-  if (mSkiaValid) {
+  // Can only access pixels if there is valid, flattened Skia data.
+  if (mSkiaValid && !mSkiaLayer) {
     return mSkia->LockBits(aData, aSize, aStride, aFormat, aOrigin);
   }
   return false;
 }
 
 void DrawTargetWebgl::ReleaseBits(uint8_t* aData) {
-  if (mSkiaValid) {
+  // Can only access pixels if there is valid, flattened Skia data.
+  if (mSkiaValid && !mSkiaLayer) {
     mSkia->ReleaseBits(aData);
   }
 }
@@ -556,7 +561,20 @@ void DrawTargetWebgl::CopySurface(SourceSurface* aSurface,
                                   const IntRect& aSourceRect,
                                   const IntPoint& aDestination) {
   if (mSkiaValid) {
-    MarkSkiaChanged();
+    if (mSkiaLayer) {
+      if (IntRect(aDestination, aSourceRect.Size()).Contains(GetRect())) {
+        // If the the destination would override the entire layer, discard the
+        // layer.
+        mSkiaLayer = false;
+      } else if (!IsOpaque(aSurface->GetFormat())) {
+        // If the surface is not opaque, copying it into the layer results in
+        // unintended blending rather than a copy to the destination.
+        FlattenSkia();
+      }
+    } else {
+      // If there is no layer, copying is safe.
+      MarkSkiaChanged();
+    }
     mSkia->CopySurface(aSurface, aSourceRect, aDestination);
     return;
   }
@@ -679,7 +697,7 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
       return false;
     }
     // Invalidate the WebGL target and prepare the Skia target for drawing.
-    MarkSkiaChanged();
+    MarkSkiaChanged(aOptions);
     if (aTransformed) {
       // If transforms are requested, then just translate back to FillRect.
       if (aMaskColor) {
@@ -1183,7 +1201,7 @@ void DrawTargetWebgl::Fill(const Path* aPath, const Pattern& aPattern,
   if (skiaPath.isRect(&rect)) {
     DrawRect(SkRectToRect(rect), aPattern, aOptions);
   } else {
-    MarkSkiaChanged();
+    MarkSkiaChanged(aOptions);
     mSkia->Fill(aPath, aPattern, aOptions);
   }
 }
@@ -1205,7 +1223,7 @@ void DrawTargetWebgl::Mask(const Pattern& aSource, const Pattern& aMask,
   if (!SupportsDrawOptions(aOptions) ||
       aMask.GetType() != PatternType::SURFACE ||
       aSource.GetType() != PatternType::COLOR) {
-    MarkSkiaChanged();
+    MarkSkiaChanged(aOptions);
     mSkia->Mask(aSource, aMask, aOptions);
     return;
   }
@@ -1219,7 +1237,7 @@ void DrawTargetWebgl::MaskSurface(const Pattern& aSource, SourceSurface* aMask,
                                   Point aOffset, const DrawOptions& aOptions) {
   if (!SupportsDrawOptions(aOptions) ||
       aSource.GetType() != PatternType::COLOR) {
-    MarkSkiaChanged();
+    MarkSkiaChanged(aOptions);
     mSkia->MaskSurface(aSource, aMask, aOffset, aOptions);
   } else {
     auto sourceColor = static_cast<const ColorPattern&>(aSource).mColor;
@@ -1356,7 +1374,7 @@ void DrawTargetWebgl::StrokeRect(const Rect& aRect, const Pattern& aPattern,
     return;
   }
 
-  MarkSkiaChanged();
+  MarkSkiaChanged(aOptions);
   mSkia->StrokeRect(aRect, aPattern, aStrokeOptions, aOptions);
 }
 
@@ -1364,7 +1382,7 @@ void DrawTargetWebgl::StrokeLine(const Point& aStart, const Point& aEnd,
                                  const Pattern& aPattern,
                                  const StrokeOptions& aStrokeOptions,
                                  const DrawOptions& aOptions) {
-  MarkSkiaChanged();
+  MarkSkiaChanged(aOptions);
   mSkia->StrokeLine(aStart, aEnd, aPattern, aStrokeOptions, aOptions);
 }
 
@@ -1381,7 +1399,7 @@ void DrawTargetWebgl::Stroke(const Path* aPath, const Pattern& aPattern,
     return;
   }
 
-  MarkSkiaChanged();
+  MarkSkiaChanged(aOptions);
   mSkia->Stroke(aPath, aPattern, aStrokeOptions, aOptions);
 }
 
@@ -1390,7 +1408,7 @@ void DrawTargetWebgl::StrokeGlyphs(ScaledFont* aFont,
                                    const Pattern& aPattern,
                                    const StrokeOptions& aStrokeOptions,
                                    const DrawOptions& aOptions) {
-  MarkSkiaChanged();
+  MarkSkiaChanged(aOptions);
   mSkia->StrokeGlyphs(aFont, aBuffer, aPattern, aStrokeOptions, aOptions);
 }
 
@@ -1649,7 +1667,7 @@ void DrawTargetWebgl::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
                         handle->GetFormat() == SurfaceFormat::A8 ? Some(color)
                                                                  : Nothing(),
                         &handle, false, true, true)) {
-            MarkSkiaChanged();
+            MarkSkiaChanged(aOptions);
             mSkia->FillGlyphs(aFont, aBuffer, aPattern, aOptions);
           }
           return;
@@ -1704,8 +1722,25 @@ void DrawTargetWebgl::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
 
   // If not able to cache the text run to a texture, then just fall back to
   // drawing with the Skia target.
-  MarkSkiaChanged();
+  MarkSkiaChanged(aOptions);
   mSkia->FillGlyphs(aFont, aBuffer, aPattern, aOptions);
+}
+
+void DrawTargetWebgl::MarkSkiaChanged(const DrawOptions& aOptions) {
+  if (aOptions.mCompositionOp == CompositionOp::OP_OVER) {
+    // Layering is only supporting for the default source-over composition op.
+    if (!mSkiaValid) {
+      // If the Skia context needs initialization, clear it and enable layering.
+      mSkia->Clear();
+      mSkiaValid = true;
+      mSkiaLayer = true;
+    }
+    // The WebGL context is no longer up-to-date.
+    mWebglValid = false;
+  } else {
+    // For other composition ops, just overwrite the Skia data.
+    MarkSkiaChanged();
+  }
 }
 
 // Attempts to read the contents of the WebGL context into the Skia target.
@@ -1730,6 +1765,28 @@ void DrawTargetWebgl::ReadIntoSkia() {
     }
   }
   mSkiaValid = true;
+  // The Skia data is flat after reading, so disable any layering.
+  mSkiaLayer = false;
+}
+
+// Reads data from the WebGL context and blends it with the current Skia layer.
+void DrawTargetWebgl::FlattenSkia() {
+  if (!mSkiaValid || !mSkiaLayer) {
+    return;
+  }
+  if (!mWebgl->IsContextLost()) {
+    RefPtr<DataSourceSurface> base =
+        Factory::CreateDataSourceSurface(mSize, mFormat);
+    if (base) {
+      DataSourceSurface::ScopedMap baseMap(base, DataSourceSurface::WRITE);
+      if (baseMap.IsMapped() &&
+          ReadInto(baseMap.GetData(), baseMap.GetStride())) {
+        mSkia->BlendSurface(base, GetRect(), IntPoint(),
+                            CompositionOp::OP_DEST_OVER);
+      }
+    }
+  }
+  mSkiaLayer = false;
 }
 
 // Attempts to draw the contents of the Skia target into the WebGL context.
@@ -1747,9 +1804,12 @@ bool DrawTargetWebgl::FlushFromSkia() {
     RefPtr<SourceSurface> skiaSnapshot = mSkia->Snapshot();
     if (skiaSnapshot) {
       SurfacePattern pattern(skiaSnapshot, ExtendMode::CLAMP);
+      // If there is a layer, blend the snapshot with the WebGL context,
+      // otherwise copy it.
       DrawRect(Rect(GetRect()), pattern,
-               DrawOptions(1.0f, CompositionOp::OP_SOURCE), Nothing(),
-               &mSnapshotTexture, false, false, false, true);
+               DrawOptions(1.0f, mSkiaLayer ? CompositionOp::OP_OVER
+                                            : CompositionOp::OP_SOURCE),
+               Nothing(), &mSnapshotTexture, false, false, false, true);
     }
   }
   return true;
@@ -1818,7 +1878,7 @@ already_AddRefed<FilterNode> DrawTargetWebgl::CreateFilter(FilterType aType) {
 void DrawTargetWebgl::DrawFilter(FilterNode* aNode, const Rect& aSourceRect,
                                  const Point& aDestPoint,
                                  const DrawOptions& aOptions) {
-  MarkSkiaChanged();
+  MarkSkiaChanged(aOptions);
   mSkia->DrawFilter(aNode, aSourceRect, aDestPoint, aOptions);
 }
 
