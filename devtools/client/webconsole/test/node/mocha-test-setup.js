@@ -57,6 +57,10 @@ global.loader = {
       "devtools/client/shared/telemetry",
       "devtools/client/shared/screenshot",
       "devtools/client/shared/focus",
+      "devtools/shared/commands/target/legacy-target-watchers/legacy-processes-watcher",
+      "devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher",
+      "devtools/shared/commands/target/legacy-target-watchers/legacy-sharedworkers-watcher",
+      "devtools/shared/commands/target/legacy-target-watchers/legacy-serviceworkers-watcher",
     ];
     if (!excluded.includes(path)) {
       if (!Array.isArray(names)) {
@@ -64,8 +68,13 @@ global.loader = {
       }
 
       for (const name of names) {
-        const module = require(path);
-        global[name] = destruct ? module[name] : module;
+        Object.defineProperty(global, name, {
+          get() {
+            const module = require(path);
+            return destruct ? module[name] : module;
+          },
+          configurable: true,
+        });
       }
     }
   },
