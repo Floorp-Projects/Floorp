@@ -17,6 +17,7 @@ const PREF_NUMBER_DEFAULT_ZERO = "accessibility.typeaheadfind.casesensitive";
 const PREF_STRING_DEFAULT_EMPTY = "browser.helperApps.neverAsk.openFile";
 const PREF_STRING_DEFAULT_NOTEMPTY = "accessibility.typeaheadfind.soundURL";
 const PREF_STRING_DEFAULT_NOTEMPTY_VALUE = "beep";
+const PREF_STRING_LOCALIZED_MISSING = "intl.menuitems.alwaysappendaccesskeys";
 
 // Other preference names used in tests.
 const PREF_NEW = "test.aboutconfig.new";

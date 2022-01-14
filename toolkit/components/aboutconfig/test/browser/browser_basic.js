@@ -44,5 +44,9 @@ add_task(async function test_load_settings() {
       this.getRow("test.aboutconfig.userValueLikeLocalized").value,
       "chrome://test/locale/testing.properties"
     );
+
+    // Test to see if empty string when value matches
+    // /^chrome:\/\/.+\/locale\/.+\.properties/ and an exception is thrown.
+    Assert.equal(this.getRow(PREF_STRING_LOCALIZED_MISSING).value, "");
   });
 });
