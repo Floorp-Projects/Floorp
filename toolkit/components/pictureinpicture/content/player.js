@@ -41,11 +41,13 @@ const BOTTOM_RIGHT_QUADRANT = 4;
  * @param {WindowGlobalParent} wgp
  *   The WindowGlobalParent that is hosting the originating video.
  * @param {ContentDOMReference} videoRef
- *    A reference to the video element that a Picture-in-Picture window
- *    is being created for
+ *   A reference to the video element that a Picture-in-Picture window
+ *   is being created for
+ * @param {DOMElement} tab
+ *   A reference to the tab associated with the Picture-in-Picture window
  */
-function setupPlayer(id, wgp, videoRef) {
-  Player.init(id, wgp, videoRef);
+function setupPlayer(id, wgp, videoRef, tab) {
+  Player.init(id, wgp, videoRef, tab);
 }
 
 /**
@@ -123,10 +125,12 @@ let Player = {
    * @param {WindowGlobalParent} wgp
    *   The WindowGlobalParent that is hosting the originating video.
    * @param {ContentDOMReference} videoRef
-   *    A reference to the video element that a Picture-in-Picture window
-   *    is being created for
+   *   A reference to the video element that a Picture-in-Picture window
+   *   is being created for
+   * @param {DOMElement} tab
+   *   A reference to the tab associated with the Picture-in-Picture window
    */
-  init(id, wgp, videoRef) {
+  init(id, wgp, videoRef, tab) {
     this.id = id;
 
     let holder = document.querySelector(".player-holder");
@@ -162,6 +166,13 @@ let Player = {
     // If the content process hosting the video crashes, let's
     // just close the window for now.
     browser.addEventListener("oop-browser-crashed", this);
+
+    // Add mute listener to tab
+    tab.addEventListener("TabMuteChange", this);
+    let muted = tab.getAttribute("muted");
+    if (muted) {
+      this.actor.sendAsyncMessage("PictureInPicture:Mute");
+    }
 
     this.revealControls(false);
 
@@ -295,6 +306,11 @@ let Player = {
 
       case "unload": {
         this.uninit();
+        break;
+      }
+
+      case "TabMuteChange": {
+        this.onTabMuteChange(event);
         break;
       }
     }
@@ -578,6 +594,17 @@ let Player = {
    */
   onCommand(event) {
     this.closePipWindow({ reason: "player-shortcut" });
+  },
+
+  onTabMuteChange(event) {
+    let { tab } = event.detail;
+    let muted = tab.getAttribute("muted");
+    setIsMutedState(muted);
+    if (muted) {
+      this.actor.sendAsyncMessage("PictureInPicture:Mute");
+    } else {
+      this.actor.sendAsyncMessage("PictureInPicture:Unmute");
+    }
   },
 
   get controls() {
