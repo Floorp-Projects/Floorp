@@ -481,40 +481,12 @@ static void ReadableStreamDefaultControllerCallPullIfNeeded(
   RefPtr<UnderlyingSourcePullCallbackHelper> pullAlgorithm(
       aController->GetPullAlgorithm());
 
-  // Pre-allocate a promise which we may end up discarding or rejecting.
-  // We do this here in order to avoid having to try allocating on a
-  // failure path after the callback is called.
-  RefPtr<Promise> maybeRejectPromise =
-      Promise::Create(aController->GetParentObject(), aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-
   RefPtr<Promise> pullPromise =
       pullAlgorithm ? pullAlgorithm->PullCallback(aCx, *aController, aRv)
                     : Promise::CreateResolvedWithUndefined(
                           aController->GetParentObject(), aRv);
-
-  // The below failure handling code is all about implmenting WebIDL promise
-  // rejection semantics until
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1726595 is fixed.
-  //
-  // Since this function can be called as part of a native promise handler,
-  // which has no way right now to signal error, and to ape what we do in the SM
-  // Streams implementation,
-  //  https://searchfox.org/mozilla-central/source/js/src/builtin/streams/MiscellaneousOperations-inl.h#37
-  //
-
-  // Inform the ErrorResult that we're handling a JS exception if it happened.
-  aRv.WouldReportJSException();
-
-  // We want to convert callback throw to a rejected promise.
   if (aRv.Failed()) {
-    MOZ_ASSERT(!pullPromise);
-
-    // Use the previously allocated promise now.
-    pullPromise = maybeRejectPromise;
-    pullPromise->MaybeReject(std::move(aRv));
+    return;
   }
 
   // Step 7 + 8:
