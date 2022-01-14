@@ -1200,23 +1200,49 @@ const LegacyListeners = {
 // Each module added here should be a function that will receive the resource, the target, …
 // and perform some transformation on the resource before it will be emitted.
 // This is a good place to handle backward compatibility and manual resource marshalling.
-const ResourceTransformers = {
-  [ResourceCommand.TYPES
-    .CONSOLE_MESSAGE]: require("devtools/shared/commands/resource/transformers/console-messages"),
-  [ResourceCommand.TYPES
-    .ERROR_MESSAGE]: require("devtools/shared/commands/resource/transformers/error-messages"),
-  [ResourceCommand.TYPES
-    .CACHE_STORAGE]: require("devtools/shared/commands/resource/transformers/storage-cache.js"),
-  [ResourceCommand.TYPES
-    .COOKIE]: require("devtools/shared/commands/resource/transformers/storage-cookie.js"),
-  [ResourceCommand.TYPES
-    .INDEXED_DB]: require("devtools/shared/commands/resource/transformers/storage-indexed-db.js"),
-  [ResourceCommand.TYPES
-    .LOCAL_STORAGE]: require("devtools/shared/commands/resource/transformers/storage-local-storage.js"),
-  [ResourceCommand.TYPES
-    .SESSION_STORAGE]: require("devtools/shared/commands/resource/transformers/storage-session-storage.js"),
-  [ResourceCommand.TYPES
-    .NETWORK_EVENT]: require("devtools/shared/commands/resource/transformers/network-events"),
-  [ResourceCommand.TYPES
-    .THREAD_STATE]: require("devtools/shared/commands/resource/transformers/thread-states"),
-};
+const ResourceTransformers = {};
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.CONSOLE_MESSAGE,
+  "devtools/shared/commands/resource/transformers/console-messages"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.ERROR_MESSAGE,
+  "devtools/shared/commands/resource/transformers/error-messages"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.CACHE_STORAGE,
+  "devtools/shared/commands/resource/transformers/storage-cache.js"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.COOKIE,
+  "devtools/shared/commands/resource/transformers/storage-cookie.js"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.INDEXED_DB,
+  "devtools/shared/commands/resource/transformers/storage-indexed-db.js"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.LOCAL_STORAGE,
+  "devtools/shared/commands/resource/transformers/storage-local-storage.js"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.SESSION_STORAGE,
+  "devtools/shared/commands/resource/transformers/storage-session-storage.js"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.NETWORK_EVENT,
+  "devtools/shared/commands/resource/transformers/network-events"
+);
+loader.lazyRequireGetter(
+  ResourceTransformers,
+  ResourceCommand.TYPES.THREAD_STATE,
+  "devtools/shared/commands/resource/transformers/thread-states"
+);
