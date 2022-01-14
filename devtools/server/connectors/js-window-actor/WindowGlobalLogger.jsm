@@ -54,6 +54,7 @@ const WindowGlobalLogger = {
       "BrowsingContext.browserId: " + browsingContext.browserId,
       "BrowsingContext.id: " + browsingContext.id,
       "innerWindowId: " + windowGlobal.innerWindowId,
+      "opener.id: " + browsingContext.opener?.id,
       "pid: " + windowGlobal.osPid,
       "isClosed: " + windowGlobal.isClosed,
       "isInProcess: " + windowGlobal.isInProcess,

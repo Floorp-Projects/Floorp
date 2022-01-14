@@ -238,10 +238,16 @@ class TargetCommand extends EventEmitter {
       // We only consider the top level target to be switched
       const isDestroyedTargetSwitching = target == this.targetFront;
       const isServiceWorker = target.targetType === this.TYPES.SERVICE_WORKER;
+      const isPopup = target.targetForm.isPopup;
 
-      // Only notify about service worker targets if this.destroyServiceWorkersOnNavigation
-      // is true
-      if (!isServiceWorker || this.destroyServiceWorkersOnNavigation) {
+      // Never destroy the popup targets when the top level target is destroyed
+      // as the popup follow a different lifecycle.
+      // Also avoid destroying service worker targets for similar reason,
+      // unless this.destroyServiceWorkersOnNavigation is true.
+      if (
+        !isPopup &&
+        (!isServiceWorker || this.destroyServiceWorkersOnNavigation)
+      ) {
         this._onTargetDestroyed(target, {
           isTargetSwitching: isDestroyedTargetSwitching,
           // Do not destroy service worker front as we may want to keep using it.

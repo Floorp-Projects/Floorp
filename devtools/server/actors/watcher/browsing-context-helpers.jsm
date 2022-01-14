@@ -60,6 +60,9 @@ const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
  *        Also, there is some race conditions where browsingContext.currentWindowGlobal
  *        is null, while the callsite may have a reference to the WindowGlobal.
  */
+// The goal of this method is to gather all checks done against BrowsingContext and WindowGlobal interfaces
+// which leads it to be a lengthy method. So disable the complexity rule which is counter productive here.
+// eslint-disable-next-line complexity
 function isBrowsingContextPartOfContext(
   browsingContext,
   sessionContext,
@@ -122,9 +125,18 @@ function isBrowsingContextPartOfContext(
     return true;
   }
   if (sessionContext.type == "browser-element") {
-    if (browsingContext.browserId != sessionContext.browserId) {
+    // Check if the document is:
+    // - part of the Browser element, or,
+    // - a popup originating from the browser element (the popup being loaded in a distinct browser element)
+    const isMatchingTheBrowserElement =
+      browsingContext.browserId == sessionContext.browserId;
+    if (
+      !isMatchingTheBrowserElement &&
+      !isPopupToDebug(browsingContext, sessionContext)
+    ) {
       return false;
     }
+
     // For client-side target switching, only mention the "remote frames".
     // i.e. the frames which are in a distinct process compared to their parent document
     // If there is no parent, this is most likely the top level document which we want to ignore.
@@ -160,6 +172,33 @@ function isBrowsingContextPartOfContext(
     return principal.addonId == sessionContext.addonId;
   }
   throw new Error("Unsupported session context type: " + sessionContext.type);
+}
+
+/**
+ * Return true for popups to debug when debugging a browser-element.
+ *
+ * @param {BrowsingContext} browsingContext
+ *        The browsing context we want to check if it is part of debugged context
+ * @param {Object} sessionContext
+ *        WatcherActor's session context. This helps know what is the overall debugged scope.
+ *        See watcher actor constructor for more info.
+ */
+function isPopupToDebug(browsingContext, sessionContext) {
+  // If enabled, create targets for popups (i.e. window.open() calls).
+  // If the opener is the tab we are currently debugging, accept the WindowGlobal and create a target for it.
+  //
+  // Note that it is important to do this check *after* the isInitialDocument one.
+  // Popups end up involving three WindowGlobals:
+  // - a first WindowGlobal loading an initial about:blank document (so isInitialDocument is true)
+  // - a second WindowGlobal which looks exactly as the first one
+  // - a final WindowGlobal which loads the URL passed to window.open() (so isInitialDocument is false)
+  //
+  // For now, we only instantiate a target for the last WindowGlobal.
+  return (
+    sessionContext.isPopupDebuggingEnabled &&
+    browsingContext.opener &&
+    browsingContext.opener.browserId == sessionContext.browserId
+  );
 }
 
 /**

@@ -28,6 +28,7 @@ const {
 
 const SERVER_TARGET_SWITCHING_ENABLED_PREF =
   "devtools.target-switching.server.enabled";
+const POPUP_DEBUG_PREF = "devtools.popups.debug";
 
 /**
  * DescriptorFront for tab targets.
@@ -97,8 +98,13 @@ class TabDescriptorFront extends DescriptorMixin(
   }
 
   getWatcher() {
+    const isPopupDebuggingEnabled = Services.prefs.getBoolPref(
+      POPUP_DEBUG_PREF,
+      false
+    );
     return super.getWatcher({
       isServerTargetSwitchingEnabled: this.isServerTargetSwitchingEnabled(),
+      isPopupDebuggingEnabled,
     });
   }
 
