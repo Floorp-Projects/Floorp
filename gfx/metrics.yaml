@@ -17,6 +17,9 @@ paint:
     type: timing_distribution
     description: >
       The time to build a Gecko display list.
+    metadata: &metadata
+      tags:
+        - "Core :: Graphics"
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1728423
     data_reviews:
