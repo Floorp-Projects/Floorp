@@ -30,3 +30,10 @@ pings_yamls = [
     "toolkit/components/glean/tests/test_pings.yaml",
     "toolkit/mozapps/update/pings.yaml",
 ]
+
+# The list of tags that are allowed in the above to files, and their
+# descriptions. Currently we restrict to a set scraped from bugzilla
+# (via `./mach update-glean-tags`)
+tags_yamls = [
+    "toolkit/components/glean/tags.yaml",
+]

@@ -12,7 +12,7 @@ FOG_ROOT_PATH = path.abspath(
     path.join(path.dirname(__file__), path.pardir, path.pardir)
 )
 sys.path.append(FOG_ROOT_PATH)
-from metrics_index import metrics_yamls
+from metrics_index import metrics_yamls, tags_yamls
 
 # Shenanigans to import run_glean_parser
 sys.path.append(path.join(FOG_ROOT_PATH, "build_scripts", "glean_parser_ext"))
@@ -35,8 +35,8 @@ def test_no_metrics_expired():
         app_version = version_file.read().strip()
 
     options = run_glean_parser.get_parser_options(app_version)
-    metrics_paths = [Path(x) for x in metrics_yamls]
-    all_objs = parser.parse_objects(metrics_paths, options)
+    paths = [Path(x) for x in metrics_yamls] + [Path(x) for x in tags_yamls]
+    all_objs = parser.parse_objects(paths, options)
     assert not util.report_validation_errors(all_objs)
     assert not lint.lint_metrics(all_objs.value, options)
 
