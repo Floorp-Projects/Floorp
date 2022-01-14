@@ -65,6 +65,32 @@ add_task(async function testMonochromaticList() {
     "Colorways section contains monochromatic theme"
   );
 
+  // Check that themes are sorted according to their position in the config.
+
+  // Collect all builtin colorway themes that are not expired.
+  const isColorwayTheme = id => id.endsWith("-colorway@mozilla.org");
+
+  let builtInThemeIds = Array.from(BuiltInThemes.builtInThemeMap.keys()).filter(
+    id => isColorwayTheme(id) && !BuiltInThemes.themeIsExpired(id)
+  );
+
+  // Collect all about:addons colorway card ids.
+  let colorwayIds = Array.from(
+    colorwayList.querySelectorAll("addon-card"),
+    card => card.getAttribute("addon-id")
+  );
+
+  // Check that last item is the test theme we installed. If so, we remove it
+  // so we can properly compare arrays.
+  Assert.equal(colorwayIds.pop(), "test-colorway@mozilla.org");
+
+  // Compare colorway themes in config to colorway themes rendered on page.
+  Assert.deepEqual(
+    colorwayIds,
+    builtInThemeIds,
+    "Both arrays should be the same"
+  );
+
   // Check that the test theme is in the enabled section.
   let addon = await AddonManager.getAddonByID("test-colorway@mozilla.org");
   let enabledSection = getSection(doc, "enabled");
