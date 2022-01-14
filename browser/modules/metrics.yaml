@@ -20,6 +20,9 @@ browser.engagement:
       the foreground, only if it is receiving these interaction events.
 
       Migrated from Telemetry's `browser.engagement.active_ticks`.
+    metadata: &metadata
+      tags:
+        - "Firefox :: General"
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1376942  # Telemetry
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1545172  # Telemetry
@@ -46,6 +49,7 @@ browser.engagement:
 
       Migrated from Telemetry's
       `browser.engagement.total_uri_count_normal_and_private_mode`.
+    metadata: *metadata
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1535169  # Telemetry
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1741674
