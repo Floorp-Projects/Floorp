@@ -408,7 +408,12 @@ class SourcesManager extends EventEmitter {
         contentType: data.contentType,
       };
     }
-
+    if (partial) {
+      return {
+        content: "",
+        contentType: "",
+      };
+    }
     return this._fetchURLContents(url, partial, canUseCache);
   }
 
