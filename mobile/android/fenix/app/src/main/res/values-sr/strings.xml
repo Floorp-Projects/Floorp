@@ -23,8 +23,6 @@
 
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">1 отворен језичак. Додирните за пребацивање језичака.</string>
-    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s отворених језичака. Додирните за пребацивање језичака.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d изабран</string>
@@ -57,7 +55,9 @@
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Прикажи све</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description">Прикажи дугме свих сачуваних обележивача</string>
+    <string name="recently_saved_show_all_content_description_2">Прикажи све сачуване обележиваче</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Прикажи дугме свих сачуваних обележивача</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s производи Mozilla.</string>
@@ -112,15 +112,14 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Нови приватни језичак</string>
 
-    <!-- Heading for the Top Sites block -->
-    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Популарне странице</string>
-
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Скочи назад</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Прикажи све</string>
 
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Прикажи све недавне језичке</string>
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
     The first parameter is the count for number of sites in the group.  This number will always be more than one. -->
     <string moz:removedIn="96" name="recent_tabs_search_term_count" tools:ignore="UnusedResources">Сајтови: %1$s</string>
@@ -128,9 +127,21 @@
         %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
     <string name="recent_tabs_search_term_count_2">%d сајтови</string>
 
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Недавно посећено</string>
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string moz:removedIn="96" name="history_metadata_header_3" tools:ignore="UnusedResources">Недавне претраге</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">Уклони</string>
+
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">Прикажи сва прошла истраживања</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Прикажи дугме за сва прошла истраживања</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -143,8 +154,6 @@
     <string name="browser_menu_refresh">Освежи</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Заустави</string>
-    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Забелешка</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">Уреди забелешку</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -207,6 +216,10 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Уреди</string>
 
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">Прилагоди почетну</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">Прилагоди почетну страну</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Почетни екран</string>
@@ -251,6 +264,14 @@
     <string name="search_engine_suggestions_title">Претражи %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Претражи директно из адресне траке</string>
+
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_title_2">Шта је ново у Firefox-у</string>
+    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_section_home_title_2">Прилагођена Firefox почетна страна</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_title_2">Недавне претраге</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -331,6 +352,8 @@
     <string name="preferences_toolbar">Алатна трака</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Тема</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Почетна страна</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Гестикулације</string>
     <!-- Preference for settings related to visual options -->
@@ -396,6 +419,20 @@
     <string name="customize_addon_collection_user_hint">Власник колекције (Кориснички ID)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Колекција додатака је промењена. Затварам апликацију да би промене ступиле на снагу…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Скочи назад</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">Недавни обележивачи</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Недавно посећено</string>
+    <!-- Title for the customize home screen settings section for recent searches. Recent searches
+     is a section where users see a list of groups of tabs that they have visited in the past few days -->
+    <string moz:removedIn="96" name="customize_toggle_recent_searches" tools:ignore="UnusedResources">Недавне претраге</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -505,8 +542,6 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Укључите Sync</string>
-    <!-- Preference for pairing -->
-    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Скенирајте код за упаривање у Firefox-у за рачунаре</string>
     <!-- Preference for account login -->
     <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">Пријава</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -585,6 +620,13 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Затвори</string>
 
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d сајт</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d сајтова</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Недавно затворени језичци</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -607,6 +649,10 @@
     <string name="tab_view_list">Листа</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Мрежа</string>
+    <!-- Option for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups">Претраживачке групе</string>
+    <!-- Summary text for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups_summary">Групиши сродне сајтове</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Затвори језичак</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -618,6 +664,18 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">После једног месеца</string>
 
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Самостално затварај отворене језичке</string>
+
+    <!-- Opening screen -->
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Почетни екран</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Почетна страна</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Последњи језичак</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Почетна страна након четири сата мировања</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Затвори ручно</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -668,8 +726,6 @@
     <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">Отворени језичци</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">Сачувај у збирку</string>
-    <!-- Text shown in the menu for the collection selector -->
-    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Изабери</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Дели све језичке</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -747,6 +803,9 @@
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string moz:removedIn="96" name="tab_tray_save_to_collection" tools:ignore="UnusedResources">Сачувај</string>
 
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title_1">Други језичци</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Обриши историјат</string>
@@ -823,8 +882,6 @@
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
     <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">Мени са забелешкама</string>
-    <!-- Screen title for editing bookmarks -->
-    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Уреди забелешку</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">Изабери фасциклу</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1116,6 +1173,10 @@
     <string name="qr_scanner_dialog_positive">ДОЗВОЛИ</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">ОДБИЈ</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">Веб адреса није исправна.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">У реду</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Да ли сте сигурни да желите обрисати збирку %1$s?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
@@ -1430,6 +1491,9 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Брише колачиће постављене преусмеравањем на познате страница за праћење.</string>
 
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Сазнајте више</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Подршка</string>
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
@@ -1494,6 +1558,9 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Аутоматски попуњавајте корисничка имена и лозинке када користите друге апликације на свом уређају.</string>
 
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Додај пријаву</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Синхронизуј пријаве</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
@@ -1556,6 +1623,8 @@
     <string name="saved_login_copy_username">Копирај корисничко</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">Обриши корисничко име</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Очисти име машине</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string moz:removedIn="96" name="saved_login_copy_site" tools:ignore="UnusedResources">Копирај страницу</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1722,6 +1791,14 @@
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Пребаците <b>%1$s</b> на УКЉУЧЕНО]]></string>
 
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection_2">Веза је безбедна</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection_2">Веза није безбедна</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">Обриши колачиће и податке сајта</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[Да ли сте сигурни да желите очистити колачиће и податке сајта <b>%s</b>?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Јесте ли сигурни да желите да избришете све дозволе на свим веб страницама?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1761,8 +1838,14 @@
     <string moz:removedIn="96" name="discard_changes" tools:ignore="UnusedResources">Одбаците измене</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Уређивање</string>
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Додај нову пријаву</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Потребна је лозинка</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Корисничко име је потребно</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Име машине је потребно</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Гласовна претрага</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1770,6 +1853,11 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Пријава са овим корисничким именом већ постоји</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.primer.rs</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">Веб адресе морају садржати &quot;https://&quot; или &quot;http://&quot;</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1797,7 +1885,9 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Важи, разумем</string>
 
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">Најпосећенији врхунски сајтови</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Назив</string>
 	<!-- Hint for renaming title of a top site -->
 	<string name="top_site_name_hint">Назив омиљене странице</string>
@@ -1809,12 +1899,18 @@
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
     <string name="inactive_tabs_title">Неактивни језичци</string>
-    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string moz:removedIn="95" name="inactive_tabs_description" tools:ignore="UnusedResources">Језичци су овде доступни %s дана. Након тога ће бити аутоматски затворени.</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 дана</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 недеља</string>
+
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">Затвори све неактивне језичке</string>
+
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Самостално затвори након једног месеца?</string>
+
+    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
+    <string name="inactive_tabs_survey_send_button">Пошаљи</string>
+    <!-- Content description for inactive tabs survey close button -->
+    <string name="inactive_tabs_survey_close_button_content_description">Затвори</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Подешава самостално отварање адреса са страница, мејлова и порука унутар Firefox-a.</string>
@@ -1831,4 +1927,17 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Затвори</string>
 
-    </resources>
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">Надахнујуће приче</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_categories_header">Приче по теми</string>
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">Откријте више</string>
+    <!-- Title of an app feature. Smaller than a heading.-->
+    <string name="pocket_stories_feature_title">Покреће Pocket.</string>
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">Део Firefox породице. %s</string>
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">Сазнајте више</string>
+</resources>
