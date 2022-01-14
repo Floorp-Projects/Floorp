@@ -221,6 +221,16 @@ checkbox {
   stroke: var(--in-content-page-background);
 }
 
+@media (prefers-contrast) {
+  #category-more-from-mozilla:hover > .category-icon {
+    stroke: var(--in-content-button-background-hover);
+  }
+
+  #category-more-from-mozilla[selected] > .category-icon {
+    stroke: var(--in-content-button-background-hover);
+  }
+}
+
 /* All panes */
 
 .info-icon,
