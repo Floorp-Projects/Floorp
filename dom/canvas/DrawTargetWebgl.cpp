@@ -1190,13 +1190,16 @@ void DrawTargetWebgl::FillRect(const Rect& aRect, const Pattern& aPattern,
                                const DrawOptions& aOptions) {
   if (SupportsPattern(aPattern)) {
     DrawRect(aRect, aPattern, aOptions);
+  } else if (!mWebglValid) {
+    MarkSkiaChanged(aOptions);
+    mSkia->FillRect(aRect, aPattern, aOptions);
   } else {
     // If the pattern is unsupported, then transform the rect to a path so it
     // can be cached.
     SkPath skiaPath;
     skiaPath.addRect(RectToSkRect(aRect));
     RefPtr<PathSkia> path = new PathSkia(skiaPath, FillRule::FILL_WINDING);
-    Fill(path, aPattern, aOptions);
+    DrawPath(path, aPattern, aOptions);
   }
 }
 
@@ -1250,34 +1253,42 @@ static inline bool HasMatchingScale(const Matrix& aTransform1,
 // Determines if an existing path cache entry matches an incoming path and
 // pattern.
 bool PathCacheEntry::MatchesPath(const SkPath& aPath, const Pattern* aPattern,
+                                 const StrokeOptions* aStrokeOptions,
                                  const Matrix& aTransform,
                                  const IntRect& aBounds, HashNumber aHash) {
   if (aHash != mHash || !HasMatchingScale(aTransform, mTransform) ||
       aBounds.Size() != mBounds.Size() || aPath == mPath) {
     return false;
   }
-  return !aPattern ? !mPattern : mPattern && *aPattern == *mPattern;
+  return (!aPattern ? !mPattern : mPattern && *aPattern == *mPattern) &&
+         (!aStrokeOptions
+              ? !mStrokeOptions
+              : mStrokeOptions && *aStrokeOptions == *mStrokeOptions);
 }
 
 PathCacheEntry::PathCacheEntry(const SkPath& aPath, Pattern* aPattern,
+                               StoredStrokeOptions* aStrokeOptions,
                                const Matrix& aTransform, const IntRect& aBounds,
                                const Point& aOrigin, HashNumber aHash)
     : CacheEntryImpl<PathCacheEntry>(aTransform, aBounds, aHash),
       mPath(aPath),
       mOrigin(aOrigin),
-      mPattern(aPattern) {}
+      mPattern(aPattern),
+      mStrokeOptions(aStrokeOptions) {}
 
 // Attempt to find a matching entry in the path cache. If one isn't found,
 // a new entry will be created. The caller should check whether the contained
 // texture handle is valid to determine if it will need to render the text run
 // or just reuse the cached texture.
 already_AddRefed<PathCacheEntry> PathCache::FindOrInsertEntry(
-    const SkPath& aPath, const Pattern* aPattern, const Matrix& aTransform,
+    const SkPath& aPath, const Pattern* aPattern,
+    const StrokeOptions* aStrokeOptions, const Matrix& aTransform,
     const IntRect& aBounds, const Point& aOrigin) {
   HashNumber hash =
       PathCacheEntry::HashPath(aPath, aPattern, aTransform, aBounds);
   for (const RefPtr<PathCacheEntry>& entry : mEntries) {
-    if (entry->MatchesPath(aPath, aPattern, aTransform, aBounds, hash)) {
+    if (entry->MatchesPath(aPath, aPattern, aStrokeOptions, aTransform, aBounds,
+                           hash)) {
       return do_AddRef(entry);
     }
   }
@@ -1288,8 +1299,15 @@ already_AddRefed<PathCacheEntry> PathCache::FindOrInsertEntry(
       return nullptr;
     }
   }
-  RefPtr<PathCacheEntry> entry =
-      new PathCacheEntry(aPath, pattern, aTransform, aBounds, aOrigin, hash);
+  StoredStrokeOptions* strokeOptions = nullptr;
+  if (aStrokeOptions) {
+    strokeOptions = aStrokeOptions->Clone();
+    if (!strokeOptions) {
+      return nullptr;
+    }
+  }
+  RefPtr<PathCacheEntry> entry = new PathCacheEntry(
+      aPath, pattern, strokeOptions, aTransform, aBounds, aOrigin, hash);
   mEntries.insertFront(entry);
   return entry.forget();
 }
@@ -1304,16 +1322,22 @@ void DrawTargetWebgl::Fill(const Path* aPath, const Pattern& aPattern,
   // Draw the path as a simple rectangle with a supported pattern when possible.
   if (skiaPath.isRect(&rect) && SupportsPattern(aPattern)) {
     DrawRect(SkRectToRect(rect), aPattern, aOptions);
-    return;
+  } else {
+    DrawPath(aPath, aPattern, aOptions);
   }
+}
 
+void DrawTargetWebgl::DrawPath(const Path* aPath, const Pattern& aPattern,
+                               const DrawOptions& aOptions,
+                               const StrokeOptions* aStrokeOptions) {
   // If there is a WebGL context, then try to cache the path to avoid slow
   // fallbacks.
   if (mWebglValid && SupportsDrawOptions(aOptions)) {
     // Get the transformed bounds for the path and conservatively check if the
     // bounds overlap the canvas.
-    Rect bounds =
-        aPath->GetBounds(mTransform).Intersect(Rect(mSkia->GetRect()));
+    const PathSkia* pathSkia = static_cast<const PathSkia*>(aPath);
+    Rect bounds = pathSkia->GetFastBounds(mTransform, aStrokeOptions)
+                      .Intersect(Rect(mSkia->GetRect()));
     if (bounds.IsEmpty()) {
       return;
     }
@@ -1330,9 +1354,9 @@ void DrawTargetWebgl::Fill(const Path* aPath, const Pattern& aPattern,
     }
     // Look for an existing path cache entry, if possible, or otherwise create
     // one.
-    RefPtr<PathCacheEntry> entry =
-        mPathCache->FindOrInsertEntry(skiaPath, color ? nullptr : &aPattern,
-                                      mTransform, intBounds, bounds.TopLeft());
+    RefPtr<PathCacheEntry> entry = mPathCache->FindOrInsertEntry(
+        pathSkia->GetPath(), color ? nullptr : &aPattern, aStrokeOptions,
+        mTransform, intBounds, bounds.TopLeft());
     if (entry) {
       RefPtr<TextureHandle> handle = entry->GetHandle();
       if (handle && handle->IsValid()) {
@@ -1369,7 +1393,11 @@ void DrawTargetWebgl::Fill(const Path* aPath, const Pattern& aPattern,
           static const ColorPattern maskPattern(
               DeviceColor(1.0f, 1.0f, 1.0f, 1.0f));
           const Pattern& cachePattern = color ? maskPattern : aPattern;
-          pathDT->Fill(aPath, cachePattern, drawOptions);
+          if (aStrokeOptions) {
+            pathDT->Stroke(aPath, cachePattern, *aStrokeOptions, drawOptions);
+          } else {
+            pathDT->Fill(aPath, cachePattern, drawOptions);
+          }
           RefPtr<SourceSurface> pathSurface = pathDT->Snapshot();
           if (pathSurface) {
             SurfacePattern pathPattern(
@@ -1396,7 +1424,11 @@ void DrawTargetWebgl::Fill(const Path* aPath, const Pattern& aPattern,
   // There was no path cache entry available to use, so fall back to drawing the
   // path with Skia.
   MarkSkiaChanged(aOptions);
-  mSkia->Fill(aPath, aPattern, aOptions);
+  if (aStrokeOptions) {
+    mSkia->Stroke(aPath, aPattern, *aStrokeOptions, aOptions);
+  } else {
+    mSkia->Fill(aPath, aPattern, aOptions);
+  }
 }
 
 void DrawTargetWebgl::DrawSurface(SourceSurface* aSurface, const Rect& aDest,
@@ -1561,14 +1593,20 @@ void DrawTargetWebgl::StrokeRect(const Rect& aRect, const Pattern& aPattern,
                                  const DrawOptions& aOptions) {
   // TODO: Support other stroke options. Ensure that we only stroke with the
   // default settings for now.
-  if (aStrokeOptions == StrokeOptions()) {
+  if (aStrokeOptions == StrokeOptions() && mTransform.PreservesDistance()) {
     DrawRect(aRect, aPattern, aOptions, Nothing(), nullptr, true, true, false,
              false, &aStrokeOptions);
-    return;
+  } else if (!mWebglValid || !SupportsPattern(aPattern)) {
+    MarkSkiaChanged(aOptions);
+    mSkia->StrokeRect(aRect, aPattern, aStrokeOptions, aOptions);
+  } else {
+    // If the stroke options are unsupported, then transform the rect to a path
+    // so it can be cached.
+    SkPath skiaPath;
+    skiaPath.addRect(RectToSkRect(aRect));
+    RefPtr<PathSkia> path = new PathSkia(skiaPath, FillRule::FILL_WINDING);
+    DrawPath(path, aPattern, aOptions, &aStrokeOptions);
   }
-
-  MarkSkiaChanged(aOptions);
-  mSkia->StrokeRect(aRect, aPattern, aStrokeOptions, aOptions);
 }
 
 void DrawTargetWebgl::StrokeLine(const Point& aStart, const Point& aEnd,
@@ -1589,11 +1627,12 @@ void DrawTargetWebgl::Stroke(const Path* aPath, const Pattern& aPattern,
   SkRect rect;
   if (skiaPath.isRect(&rect)) {
     StrokeRect(SkRectToRect(rect), aPattern, aStrokeOptions, aOptions);
-    return;
+  } else if (!mWebglValid) {
+    MarkSkiaChanged(aOptions);
+    mSkia->Stroke(aPath, aPattern, aStrokeOptions, aOptions);
+  } else {
+    DrawPath(aPath, aPattern, aOptions, &aStrokeOptions);
   }
-
-  MarkSkiaChanged(aOptions);
-  mSkia->Stroke(aPath, aPattern, aStrokeOptions, aOptions);
 }
 
 void DrawTargetWebgl::StrokeGlyphs(ScaledFont* aFont,

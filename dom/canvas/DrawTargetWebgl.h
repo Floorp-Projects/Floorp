@@ -227,6 +227,9 @@ class DrawTargetWebgl : public DrawTarget {
                 bool aTransformed = true, bool aClipped = true,
                 bool aAccelOnly = false, bool aForceUpdate = false,
                 const StrokeOptions* aStrokeOptions = nullptr);
+  void DrawPath(const Path* aPath, const Pattern& aPattern,
+                const DrawOptions& aOptions,
+                const StrokeOptions* aStrokeOptions = nullptr);
 
   void MarkChanged();
 
