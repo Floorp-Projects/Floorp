@@ -17,6 +17,9 @@ power:
     type: counter
     description: >
       Total CPU time used by all processes in ms.
+    metadata: &metadata
+      tags:
+        - "Core :: DOM: Content Processes"
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1736040
     data_reviews:
@@ -32,6 +35,7 @@ power:
     type: counter
     description: >
       Total GPU time used by all processes in ms.
+    metadata: *metadata
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1743176
     data_reviews:
