@@ -424,7 +424,7 @@ bool DrawTargetWebgl::CreateShaders() {
   if (!mVertexBuffer) {
     mVertexBuffer = mWebgl->CreateBuffer();
     static const float rectData[8] = {0.0f, 0.0f, 1.0f, 0.0f,
-                                      0.0f, 1.0f, 1.0f, 1.0f};
+                                      1.0f, 1.0f, 0.0f, 1.0f};
     mWebgl->BindVertexArray(mVertexArray.get());
     mWebgl->BindBuffer(LOCAL_GL_ARRAY_BUFFER, mVertexBuffer.get());
     mWebgl->RawBufferData(LOCAL_GL_ARRAY_BUFFER,
@@ -646,7 +646,8 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
                                Maybe<DeviceColor> aMaskColor,
                                RefPtr<TextureHandle>* aHandle,
                                bool aTransformed, bool aClipped,
-                               bool aAccelOnly, bool aForceUpdate) {
+                               bool aAccelOnly, bool aForceUpdate,
+                               const StrokeOptions* aStrokeOptions) {
   if (aRect.IsEmpty()) {
     return true;
   }
@@ -683,6 +684,8 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
       // If transforms are requested, then just translate back to FillRect.
       if (aMaskColor) {
         mSkia->Mask(ColorPattern(*aMaskColor), aPattern, aOptions);
+      } else if (aStrokeOptions) {
+        mSkia->StrokeRect(aRect, aPattern, *aStrokeOptions, aOptions);
       } else {
         mSkia->FillRect(aRect, aPattern, aOptions);
       }
@@ -698,6 +701,8 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
         } else {
           mSkia->Mask(ColorPattern(*aMaskColor), aPattern, aOptions);
         }
+      } else if (aStrokeOptions) {
+        mSkia->StrokeRect(aRect, aPattern, *aStrokeOptions, aOptions);
       } else {
         mSkia->FillRect(aRect, aPattern, aOptions);
       }
@@ -808,7 +813,8 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
       mWebgl->UniformData(LOCAL_GL_FLOAT_VEC4, mSolidProgramColor, false,
                           {(const uint8_t*)colorData, sizeof(colorData)});
       // Finally draw the colored rectangle.
-      mWebgl->DrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+      mWebgl->DrawArrays(
+          aStrokeOptions ? LOCAL_GL_LINE_LOOP : LOCAL_GL_TRIANGLE_FAN, 0, 4);
       break;
     }
     case PatternType::SURFACE: {
@@ -1071,7 +1077,8 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
                           {(const uint8_t*)texBounds, sizeof(texBounds)});
 
       // Finally draw the image rectangle.
-      mWebgl->DrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+      mWebgl->DrawArrays(
+          aStrokeOptions ? LOCAL_GL_LINE_LOOP : LOCAL_GL_TRIANGLE_FAN, 0, 4);
       break;
     }
     default:
@@ -1341,6 +1348,14 @@ void DrawTargetWebgl::SetTransform(const Matrix& aTransform) {
 void DrawTargetWebgl::StrokeRect(const Rect& aRect, const Pattern& aPattern,
                                  const StrokeOptions& aStrokeOptions,
                                  const DrawOptions& aOptions) {
+  // TODO: Support other stroke options. Ensure that we only stroke with the
+  // default settings for now.
+  if (aStrokeOptions == StrokeOptions()) {
+    DrawRect(aRect, aPattern, aOptions, Nothing(), nullptr, true, true, false,
+             false, &aStrokeOptions);
+    return;
+  }
+
   MarkSkiaChanged();
   mSkia->StrokeRect(aRect, aPattern, aStrokeOptions, aOptions);
 }
@@ -1356,6 +1371,16 @@ void DrawTargetWebgl::StrokeLine(const Point& aStart, const Point& aEnd,
 void DrawTargetWebgl::Stroke(const Path* aPath, const Pattern& aPattern,
                              const StrokeOptions& aStrokeOptions,
                              const DrawOptions& aOptions) {
+  if (!aPath || aPath->GetBackendType() != BackendType::SKIA) {
+    return;
+  }
+  const auto& skiaPath = static_cast<const PathSkia*>(aPath)->GetPath();
+  SkRect rect;
+  if (skiaPath.isRect(&rect)) {
+    StrokeRect(SkRectToRect(rect), aPattern, aStrokeOptions, aOptions);
+    return;
+  }
+
   MarkSkiaChanged();
   mSkia->Stroke(aPath, aPattern, aStrokeOptions, aOptions);
 }
