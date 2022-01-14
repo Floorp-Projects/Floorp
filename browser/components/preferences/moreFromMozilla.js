@@ -74,7 +74,9 @@ var gMoreFromMozillaPane = {
           id: "fxMobile",
           type: "link",
           label_string_id: "more-from-moz-learn-more-link",
-          actionURL: "https://www.mozilla.org/firefox/browsers/mobile/",
+          actionURL: AppConstants.isChinaRepack()
+            ? "https://www.firefox.com.cn/browsers/mobile/"
+            : "https://www.mozilla.org/firefox/browsers/mobile/",
         },
         qrcode: {
           title: {
@@ -87,7 +89,9 @@ var gMoreFromMozillaPane = {
             label: {
               string_id: "more-from-moz-qr-code-box-firefox-mobile-button",
             },
-            actionURL: "https://www.mozilla.org/en-US/firefox/mobile/get-app",
+            actionURL: AppConstants.isChinaRepack()
+              ? "https://www.firefox.com.cn/mobile/get-app/"
+              : "https://www.mozilla.org/firefox/mobile/get-app",
           },
         },
       },
@@ -199,10 +203,18 @@ var gMoreFromMozillaPane = {
         );
 
         let img = template.querySelector(".qr-code-box-image");
+        // Append QRCode image source by template. For CN region
+        // simple template, we want a CN specific QRCode
         img.src =
           product.qrcode.image_src_prefix +
           "-" +
           this.getTemplateName() +
+          `${
+            AppConstants.isChinaRepack() &&
+            this.getTemplateName().includes("simple")
+              ? "-cn"
+              : ""
+          }` +
           ".svg";
 
         // Note that the QR code image itself is _not_ a link; this is a link that

@@ -135,6 +135,10 @@ var whitelist = [
     file:
       "chrome://browser/content/preferences/more-from-mozilla-qr-code-simple.svg",
   },
+  {
+    file:
+      "chrome://browser/content/preferences/more-from-mozilla-qr-code-simple-cn.svg",
+  },
 
   { file: "resource://gre/greprefs.js" },
 
