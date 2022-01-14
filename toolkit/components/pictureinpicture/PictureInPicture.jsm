@@ -349,13 +349,7 @@ var PictureInPicture = {
 
     tab.addEventListener("TabSwapPictureInPicture", this);
 
-    // set mute state based on tab
-    let muted = tab.getAttribute("muted");
-    if (muted) {
-      win.setIsMutedState(muted);
-    }
-
-    win.setupPlayer(gNextWindowID.toString(), wgp, videoData.videoRef, tab);
+    win.setupPlayer(gNextWindowID.toString(), wgp, videoData.videoRef);
     gNextWindowID++;
 
     this.weakWinToBrowser.set(win, browser);
