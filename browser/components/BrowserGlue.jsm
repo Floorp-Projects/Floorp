@@ -666,9 +666,6 @@ let JSWINDOWACTORS = {
   },
 
   ScreenshotsComponent: {
-    parent: {
-      moduleURI: "resource:///modules/ScreenshotsUtils.jsm",
-    },
     child: {
       moduleURI: "resource:///actors/ScreenshotsComponentChild.jsm",
     },
