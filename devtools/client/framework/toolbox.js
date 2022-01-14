@@ -744,6 +744,18 @@ Toolbox.prototype = {
         ],
       });
     }
+
+    // If a new popup is debugged, automagically switch the toolbox to become
+    // an independant window so that we can easily keep debugging the new tab.
+    // Only do that if that's not the current top level, otherwise it means
+    // we opened a toolbox dedicated to the popup.
+    if (
+      targetFront.targetForm.isPopup &&
+      !targetFront.isTopLevel &&
+      this.descriptorFront.isLocalTab
+    ) {
+      await this.switchHostToTab(targetFront.targetForm.browsingContextID);
+    }
   },
 
   async _onTargetSelected({ targetFront }) {
@@ -1751,8 +1763,11 @@ Toolbox.prototype = {
 
   // Called whenever the chrome send a message
   _onBrowserMessage: function(event) {
-    if (event.data && event.data.name === "switched-host") {
+    if (event.data?.name === "switched-host") {
       this._onSwitchedHost(event.data);
+    }
+    if (event.data?.name === "switched-host-to-tab") {
+      this._onSwitchedHostToTab(event.data.browsingContextID);
     }
   },
 
@@ -3573,6 +3588,25 @@ Toolbox.prototype = {
     return this.once("host-changed");
   },
 
+  /**
+   * Request to Firefox UI to move the toolbox to another tab.
+   * This is used when we move a toolbox to a new popup opened by the tab we were currently debugging.
+   * We also move the toolbox back to the original tab we were debugging if we select it via Firefox tabs.
+   *
+   * @param {String} tabBrowsingContextID
+   *        The BrowsingContext ID of the tab we want to move to.
+   * @returns {Promise<undefined>}
+   *        This will resolve only once we moved to the new tab.
+   */
+  switchHostToTab(tabBrowsingContextID) {
+    this.postMessage({
+      name: "switch-host-to-tab",
+      tabBrowsingContextID,
+    });
+
+    return this.once("switched-host-to-tab");
+  },
+
   _onSwitchedHost: function({ hostType }) {
     this._hostType = hostType;
 
@@ -3591,6 +3625,25 @@ Toolbox.prototype = {
       .add(this._getTelemetryHostId());
 
     this.component.setCurrentHostType(hostType);
+  },
+
+  /**
+   * Event handler fired when the toolbox was moved to another tab.
+   * This fires when the toolbox itself requests to be moved to another tab,
+   * but also when we select the original tab where the toolbox originally was.
+   *
+   * @param {String} browsingContextID
+   *        The BrowsingContext ID of the tab the toolbox has been moved to.
+   */
+  _onSwitchedHostToTab(browsingContextID) {
+    const targets = this.commands.targetCommand.getAllTargets([
+      this.commands.targetCommand.TYPES.FRAME,
+    ]);
+    const target = targets.find(
+      target => target.browsingContextID == browsingContextID
+    );
+
+    this.commands.targetCommand.selectTarget(target);
   },
 
   /**
