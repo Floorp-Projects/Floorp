@@ -586,6 +586,7 @@ namespace JS {
   D(XPCONNECT_SHUTDOWN, 53)                                            \
   D(DOCSHELL, 54)                                                      \
   D(HTML_PARSER, 55)                                                   \
+  D(DOM_TESTUTILS, 56)                                                 \
                                                                        \
   /* Reasons reserved for embeddings. */                               \
   D(RESERVED1, FIRST_RESERVED_REASON)                                  \
