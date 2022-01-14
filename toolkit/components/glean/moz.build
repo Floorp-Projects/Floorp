@@ -94,6 +94,7 @@ include("metrics_index.py")
 # The yamls arrays are relative to topsrcdir, so we need to transform:
 metrics_yamls = ["../../../" + x for x in metrics_yamls]
 pings_yamls = ["../../../" + x for x in pings_yamls]
+tags_yamls = ["../../../" + x for x in tags_yamls]
 # If you change the length of this deps list, update DEPS_LEN in run_glean_parser.py
 deps = [
     "metrics_index.py",
@@ -117,7 +118,7 @@ GeneratedFile(
     "api/src/metrics.rs",
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     flags=[CONFIG["MOZ_APP_VERSION"]],
-    inputs=deps + metrics_yamls,
+    inputs=deps + metrics_yamls + tags_yamls,
 )
 
 GeneratedFile(
@@ -125,7 +126,7 @@ GeneratedFile(
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="cpp_metrics",
     flags=[CONFIG["MOZ_APP_VERSION"]],
-    inputs=deps + metrics_yamls,
+    inputs=deps + metrics_yamls + tags_yamls,
 )
 
 GeneratedFile(
@@ -133,14 +134,14 @@ GeneratedFile(
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="js_metrics",
     flags=[CONFIG["MOZ_APP_VERSION"]],
-    inputs=deps + metrics_yamls,
+    inputs=deps + metrics_yamls + tags_yamls,
 )
 
 GeneratedFile(
     "api/src/pings.rs",
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     flags=[CONFIG["MOZ_APP_VERSION"]],
-    inputs=deps + pings_yamls,
+    inputs=deps + pings_yamls + tags_yamls,
 )
 
 GeneratedFile(
@@ -148,7 +149,7 @@ GeneratedFile(
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="cpp_metrics",
     flags=[CONFIG["MOZ_APP_VERSION"]],
-    inputs=deps + pings_yamls,
+    inputs=deps + pings_yamls + tags_yamls,
 )
 
 GeneratedFile(
@@ -156,7 +157,7 @@ GeneratedFile(
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="js_metrics",
     flags=[CONFIG["MOZ_APP_VERSION"]],
-    inputs=deps + pings_yamls,
+    inputs=deps + pings_yamls + tags_yamls,
 )
 
 # Glean Interface For Firefox Telemetry Maps from Glean MetricId to Telemetry ProbeId
@@ -166,7 +167,7 @@ GeneratedFile(
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="gifft_map",
     flags=[CONFIG["MOZ_APP_VERSION"], "Event"],
-    inputs=deps + metrics_yamls,
+    inputs=deps + metrics_yamls + tags_yamls,
 )
 
 GeneratedFile(
@@ -174,7 +175,7 @@ GeneratedFile(
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="gifft_map",
     flags=[CONFIG["MOZ_APP_VERSION"], "Histogram"],
-    inputs=deps + metrics_yamls,
+    inputs=deps + metrics_yamls + tags_yamls,
 )
 
 GeneratedFile(
@@ -182,7 +183,7 @@ GeneratedFile(
     script="build_scripts/glean_parser_ext/run_glean_parser.py",
     entry_point="gifft_map",
     flags=[CONFIG["MOZ_APP_VERSION"], "Scalar"],
-    inputs=deps + metrics_yamls,
+    inputs=deps + metrics_yamls + tags_yamls,
 )
 
 DIRS += [
