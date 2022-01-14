@@ -164,6 +164,7 @@
 #include "mozilla/dom/StorageNotifierService.h"
 #include "mozilla/dom/StorageUtils.h"
 #include "mozilla/dom/TabMessageTypes.h"
+#include "mozilla/dom/TestUtils.h"
 #include "mozilla/dom/Timeout.h"
 #include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/TimeoutManager.h"
@@ -1429,6 +1430,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCacheStorage)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVRDisplays)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTestUtils)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDebuggerNotificationManager)
 
@@ -1535,6 +1537,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCacheStorage)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mVRDisplays)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTestUtils)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDebuggerNotificationManager)
 
@@ -7477,6 +7480,15 @@ void nsGlobalWindowInner::StructuredClone(
     const StructuredSerializeOptions& aOptions,
     JS::MutableHandle<JS::Value> aRetval, ErrorResult& aError) {
   nsContentUtils::StructuredClone(aCx, this, aValue, aOptions, aRetval, aError);
+}
+
+already_AddRefed<mozilla::dom::TestUtils> nsGlobalWindowInner::TestUtils() {
+  if (!mTestUtils) {
+    mTestUtils = new class TestUtils(AsGlobal());
+  }
+
+  RefPtr<class TestUtils> ref = mTestUtils;
+  return ref.forget();
 }
 
 nsresult nsGlobalWindowInner::Dispatch(

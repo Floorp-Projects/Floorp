@@ -71,6 +71,7 @@ class ServiceWorkerDescriptor;
 class ServiceWorkerRegistration;
 class ServiceWorkerRegistrationDescriptor;
 struct StructuredSerializeOptions;
+class TestUtils;
 class WorkerDocumentListener;
 class WorkerLocation;
 class WorkerNavigator;
@@ -298,6 +299,8 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase,
 
   already_AddRefed<cache::CacheStorage> GetCaches(ErrorResult& aRv);
 
+  already_AddRefed<mozilla::dom::TestUtils> TestUtils();
+
   bool WindowInteractionAllowed() const;
 
   void AllowWindowInteraction();
@@ -332,6 +335,7 @@ class WorkerGlobalScope : public WorkerGlobalScopeBase,
   RefPtr<Performance> mPerformance;
   RefPtr<IDBFactory> mIndexedDB;
   RefPtr<cache::CacheStorage> mCacheStorage;
+  RefPtr<class TestUtils> mTestUtils;
   RefPtr<DebuggerNotificationManager> mDebuggerNotificationManager;
   uint32_t mWindowInteractionsAllowed = 0;
 };

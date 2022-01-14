@@ -933,6 +933,7 @@ WEBIDL_FILES = [
     "TCPSocket.webidl",
     "TCPSocketErrorEvent.webidl",
     "TCPSocketEvent.webidl",
+    "TestUtils.webidl",
     "Text.webidl",
     "TextClause.webidl",
     "TextDecoder.webidl",

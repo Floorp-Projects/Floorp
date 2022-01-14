@@ -129,6 +129,7 @@ class SharedWorker;
 class Selection;
 class SpeechSynthesis;
 class Timeout;
+class TestUtils;
 class U2F;
 class VisualViewport;
 class VRDisplay;
@@ -914,6 +915,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
                        JS::MutableHandle<JS::Value> aRetval,
                        mozilla::ErrorResult& aError);
 
+  already_AddRefed<mozilla::dom::TestUtils> TestUtils();
+
   // ChromeWindow bits.  Do NOT call these unless your window is in
   // fact chrome.
   uint16_t WindowState();
@@ -1439,6 +1442,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   nsTObserverArray<RefPtr<mozilla::dom::SharedWorker>> mSharedWorkers;
 
   RefPtr<mozilla::dom::VisualViewport> mVisualViewport;
+
+  RefPtr<mozilla::dom::TestUtils> mTestUtils;
 
   // The document's principals and CSP are only stored if
   // FreeInnerObjects has been called.

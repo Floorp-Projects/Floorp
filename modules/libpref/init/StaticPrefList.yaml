@@ -3532,6 +3532,12 @@
   value: false
   mirror: always
 
+# To enable TestUtils interface on WPT
+- name: dom.testing.testutils.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: dom.textMetrics.actualBoundingBox.enabled
   type: bool
   value: true
