@@ -39,7 +39,7 @@ def set_worker_type(config, tasks):
             str(config.params["level"]) == "3"
             and task["attributes"]["build-type"]
             in ("nightly", "beta", "release", "android-test-nightly", "beta-mozillaonline", "release-mozillaonline")
-            and config.params["tasks_for"] in ("cron", "github-release", "action")
+            and config.params["tasks_for"] in ("cron", "action")
         ):
             worker_type = "signing"
         task["worker-type"] = worker_type
@@ -52,7 +52,7 @@ def set_signing_type(config, tasks):
         signing_type = "dep-signing"
         if (
             str(config.params["level"]) == "3"
-            and config.params["tasks_for"] in ("cron", "github-release", "action")
+            and config.params["tasks_for"] in ("cron", "action")
         ):
             if task["attributes"]["build-type"] in ("beta", "release"):
                 signing_type = "fennec-production-signing"
@@ -67,7 +67,7 @@ def set_index(config, tasks):
     for task in tasks:
         index = {}
         if (
-            config.params["tasks_for"] in ("cron", "github-release", "action")
+            config.params["tasks_for"] in ("cron", "action")
             and task["attributes"]["build-type"]
             in ("nightly", "debut", "nightly-simulation", "beta", "release")
         ):

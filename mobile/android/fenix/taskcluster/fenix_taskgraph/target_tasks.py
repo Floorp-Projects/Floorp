@@ -10,14 +10,8 @@ from taskgraph.target_tasks import _target_task
 @_target_task('release')
 def target_tasks_default(full_task_graph, parameters, graph_config):
 
-    # TODO Use shipping-phase once we retire github-releases
+    # TODO Use shipping-phase
     def filter(task, parameters):
-        # Mark-as-shipped is always red on github-release and it confuses people.
-        # This task cannot be green if we kick off a release through github-releases, so
-        # let's exlude that task there.
-        if task.kind == "mark-as-shipped" and parameters["tasks_for"] == "github-release":
-            return False
-
         return task.attributes.get("release-type", "") == parameters["release_type"]
 
     return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]

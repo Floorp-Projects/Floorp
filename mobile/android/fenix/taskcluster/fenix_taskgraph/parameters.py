@@ -31,28 +31,3 @@ def get_decision_parameters(graph_config, parameters):
     pr_number = os.environ.get("MOBILE_PULL_REQUEST_NUMBER", None)
     parameters["pull_request_number"] = None if pr_number is None else int(pr_number)
     parameters.setdefault("next_version", None)
-
-    # TODO: Remove this block once github-releases are not supported anymore
-    if parameters["tasks_for"] == "github-release":
-        parameters["target_tasks_method"] = "release"
-
-        version_string = parameters["version"]
-        version_in_file = read_version_file()
-        if version_string != version_in_file:
-            raise ValueError("Version given in tag ({}) does not match the one in version.txt ({})".format(version_string, version_in_file))
-
-        version = FenixVersion.parse(version_string)
-        if version.is_beta:
-            next_version = version.bump("beta_number")
-            release_type = "beta"
-        elif version.is_release:
-            next_version = version.bump("patch_number")
-            release_type = "release"
-        elif version.is_release_candidate:
-            next_version = version.bump("release_candidate_number")
-            release_type = "release"
-        else:
-            raise ValueError("Unsupported version type: {}".format(version.version_type))
-
-        parameters["next_version"] = str(next_version)
-        parameters["release_type"] = release_type

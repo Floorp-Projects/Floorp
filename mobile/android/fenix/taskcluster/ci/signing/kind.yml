@@ -28,7 +28,7 @@ job-template:
     signing-format: autograph_apk
     index:
         by-tasks-for:
-            (action|cron|github-release):
+            (action|cron):
                 by-build-type:
                     (nightly|debug|nightly-simulation|beta|beta-mozillaonline|release|release-mozillaonline):
                         type: signing
