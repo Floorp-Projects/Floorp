@@ -1682,17 +1682,6 @@
 
     <issue
         id="UnusedResources"
-        message="The resource `R.color.mozac_feature_readerview_text_color` appears to be unused"
-        errorLine1="    &lt;color name=&quot;mozac_feature_readerview_text_color&quot;>@color/primary_text_light_theme&lt;/color>"
-        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/colors.xml"
-            line="308"
-            column="12"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
         message="The resource `R.color.nightly_launcher_background` appears to be unused"
         errorLine1="    &lt;color name=&quot;nightly_launcher_background&quot;>#220033&lt;/color>"
         errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
