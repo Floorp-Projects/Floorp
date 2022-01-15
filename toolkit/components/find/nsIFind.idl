@@ -5,8 +5,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIWordBreaker;
-
 webidl Range;
 
 [scriptable, uuid(40aba110-2a56-4678-be90-e2c17a9ae7d7)]
