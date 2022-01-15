@@ -4,5 +4,5 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:color="@color/top_site_pager_dot_selected" android:state_selected="true" />
-    <item android:color="@color/top_site_pager_dot" />
+    <item android:color="@color/fx_mobile_action_color_indicator_inactive" />
 </selector>

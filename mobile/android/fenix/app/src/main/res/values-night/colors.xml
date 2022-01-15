@@ -44,7 +44,7 @@
     <!-- Scroll indicator active -->
     <color name="fx_mobile_action_color_indicator_active" tools:ignore="UnusedResources">@color/photonLightGrey90</color>
     <!-- Scroll indicator inactive -->
-    <color name="fx_mobile_action_color_indicator_inactive" tools:ignore="UnusedResources">@color/photonDarkGrey05</color>
+    <color name="fx_mobile_action_color_indicator_inactive">@color/photonDarkGrey05</color>
 
     <!-- Text -->
     <!-- Primary text -->
@@ -146,7 +146,6 @@
     <color name="tab_history_item_selected_background_normal_theme">@color/tab_tray_item_selected_background_dark_theme</color>
 
     <!--Top site colors -->
-    <color name="top_site_pager_dot">@color/photonDarkGrey40</color>
     <color name="top_site_pager_dot_selected">@color/photonDarkGrey05</color>
     <color name="top_site_pin_icon_color">@color/photonLightGrey20</color>
     <color name="top_sites_border_color">@color/photonDarkGrey90</color>

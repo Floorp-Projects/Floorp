@@ -44,7 +44,7 @@
     <!-- Scroll indicator active -->
     <color name="fx_mobile_action_color_indicator_active" tools:ignore="UnusedResources">@color/photonLightGrey50</color>
     <!-- Scroll indicator inactive -->
-    <color name="fx_mobile_action_color_indicator_inactive" tools:ignore="UnusedResources">@color/photonLightGrey30</color>
+    <color name="fx_mobile_action_color_indicator_inactive">@color/photonLightGrey30</color>
 
     <!-- Text -->
     <!-- Primary text -->
@@ -216,7 +216,6 @@
     <color name="bookmark_favicon_background">#DFDFE3</color>
 
     <!-- Top site colors -->
-    <color name="top_site_pager_dot">@color/photonLightGrey30</color>
     <color name="top_site_pager_dot_selected">@color/photonLightGrey50</color>
     <color name="top_site_pin_icon_color">@color/photonDarkGrey80</color>
     <color name="top_sites_border_color">@color/photonLightGrey30</color>
