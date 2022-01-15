@@ -505,6 +505,11 @@ static already_AddRefed<SourceSurface> GetSurfaceFromElement(
     flags |= nsLayoutUtils::SFE_ALLOW_NON_PREMULT;
   }
 
+  if (aOptions.mColorSpaceConversion == ColorSpaceConversion::None &&
+      aElement.IsHTMLElement(nsGkAtoms::img)) {
+    flags |= nsLayoutUtils::SFE_NO_COLORSPACE_CONVERSION;
+  }
+
   SurfaceFromElementResult res =
       nsLayoutUtils::SurfaceFromElement(&aElement, flags);
 
@@ -1825,6 +1830,10 @@ CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
 
   if (mOptions.mPremultiplyAlpha == PremultiplyAlpha::None) {
     frameFlags |= imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
+  }
+
+  if (mOptions.mColorSpaceConversion == ColorSpaceConversion::None) {
+    frameFlags |= imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION;
   }
 
   RefPtr<SourceSurface> surface =

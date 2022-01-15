@@ -225,8 +225,9 @@ SafeRefPtr<IDBTransaction> IDBTransaction::Create(
           }
         });
     if (NS_WARN_IF(!workerRef)) {
-      // Silence the destructor assertion if we never made this object live.
 #ifdef DEBUG
+      // Silence the destructor assertions if we never made this object live.
+      transaction->mReadyState = ReadyState::Finished;
       transaction->mSentCommitOrAbort.Flip();
 #endif
       return nullptr;
@@ -350,11 +351,11 @@ void IDBTransaction::OnRequestFinished(
       return;
     }
 
-    if (mReadyState == ReadyState::Inactive) {
-      mReadyState = ReadyState::Committing;
-    }
-
     if (aRequestCompletedSuccessfully) {
+      if (mReadyState == ReadyState::Inactive) {
+        mReadyState = ReadyState::Committing;
+      }
+
       if (NS_SUCCEEDED(mAbortCode)) {
         SendCommit(true);
       } else {
@@ -362,7 +363,8 @@ void IDBTransaction::OnRequestFinished(
       }
     } else {
       // Don't try to send any more messages to the parent if the request actor
-      // was killed.
+      // was killed. Set our state accordingly to Finished.
+      mReadyState = ReadyState::Finished;
       mSentCommitOrAbort.Flip();
       IDB_LOG_MARK_CHILD_TRANSACTION(
           "Request actor was killed, transaction will be aborted",
