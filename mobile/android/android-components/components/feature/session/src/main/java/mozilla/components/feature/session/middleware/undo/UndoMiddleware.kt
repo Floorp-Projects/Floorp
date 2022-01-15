@@ -101,7 +101,9 @@ class UndoMiddleware(
 
         val tag = UUID.randomUUID().toString()
 
-        val selectionToRestore = selectedTabId?.let { recoverableTabs.find { it.id == selectedTabId }?.id }
+        val selectionToRestore = selectedTabId?.let {
+            recoverableTabs.find { it.state.id == selectedTabId }?.state?.id
+        }
 
         context.dispatch(
             UndoAction.AddRecoverableTabs(tag, recoverableTabs, selectionToRestore)

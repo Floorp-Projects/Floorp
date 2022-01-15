@@ -60,23 +60,23 @@ class RestoringBrowsingSessionsTest {
         val tab1 = state.tabs[0]
         val tab2 = state.tabs[1]
 
-        assertEquals("497e5d15-c03d-434e-8b06-9186886c42ed", tab1.id)
-        assertEquals("The Mozilla Manifesto", tab1.title)
-        assertNull(tab1.contextId)
-        assertNull(tab1.parentId)
-        assertFalse(tab1.readerState.active)
-        assertNull(tab1.readerState.activeUrl)
-        assertEquals(0, tab1.lastAccess)
-        assertNotNull(tab1.state)
+        assertEquals("497e5d15-c03d-434e-8b06-9186886c42ed", tab1.state.id)
+        assertEquals("The Mozilla Manifesto", tab1.state.title)
+        assertNull(tab1.state.contextId)
+        assertNull(tab1.state.parentId)
+        assertFalse(tab1.state.readerState.active)
+        assertNull(tab1.state.readerState.activeUrl)
+        assertEquals(0, tab1.state.lastAccess)
+        assertNotNull(tab1.engineSessionState)
 
-        assertEquals("55a0b8ce-d2ef-4a19-b921-5d28fbe6906f", tab2.id)
-        assertEquals("Download Firefox Browser — Fast, Private & Free — from Mozilla", tab2.title)
-        assertNull(tab1.contextId)
-        assertNull(tab1.parentId)
-        assertFalse(tab2.readerState.active)
-        assertNull(tab2.readerState.activeUrl)
-        assertEquals(1608115274898, tab2.lastAccess)
-        assertNotNull(tab2.state)
+        assertEquals("55a0b8ce-d2ef-4a19-b921-5d28fbe6906f", tab2.state.id)
+        assertEquals("Download Firefox Browser — Fast, Private & Free — from Mozilla", tab2.state.title)
+        assertNull(tab1.state.contextId)
+        assertNull(tab1.state.parentId)
+        assertFalse(tab2.state.readerState.active)
+        assertNull(tab2.state.readerState.activeUrl)
+        assertEquals(1608115274898, tab2.state.lastAccess)
+        assertNotNull(tab2.engineSessionState)
     }
 
     /**
@@ -104,7 +104,7 @@ class RestoringBrowsingSessionsTest {
             assertEquals(4, state!!.tabs.size)
             assertEquals("b1c1b5b1-3fea-4151-be11-e1989ff4e43c", state.selectedTabId)
 
-            state.tabs[0].apply {
+            state.tabs[0].state.apply {
                 assertEquals("f40b3385-7e75-47b3-9c54-15a02afa27a4", id)
                 assertEquals("Fox - Wikipedia", title)
                 assertEquals("https://en.m.wikipedia.org/wiki/Fox", url)
@@ -116,7 +116,7 @@ class RestoringBrowsingSessionsTest {
                 assertNotNull(state)
             }
 
-            state.tabs[1].apply {
+            state.tabs[1].state.apply {
                 assertEquals("c0c7939d-b0be-408e-97f2-ef45bc8fb36e", id)
                 assertEquals("Google workers announce plans to unionize - The Verge", title)
                 assertEquals("https://www.theverge.com/2021/1/4/22212347/google-employees-contractors-announce-union-cwa-alphabet", url)
@@ -128,7 +128,7 @@ class RestoringBrowsingSessionsTest {
                 assertNotNull(state)
             }
 
-            state.tabs[2].apply {
+            state.tabs[2].state.apply {
                 assertEquals("b1c1b5b1-3fea-4151-be11-e1989ff4e43c", id)
                 assertEquals("Discover stories on Pocket", title)
                 assertEquals("https://getpocket.com/explore?src=ff_android&cdn=0", url)
@@ -140,7 +140,7 @@ class RestoringBrowsingSessionsTest {
                 assertNotNull(state)
             }
 
-            state.tabs[3].apply {
+            state.tabs[3].state.apply {
                 assertEquals("ebca3522-5625-4791-9c13-46d0138a375b", id)
                 assertEquals("20 striking findings from 2020", title)
                 assertEquals("moz-extension://c182f1be-1c1b-4305-a329-63268bb4b424/readerview.html?url=https%3A%2F%2Fwww.pewresearch.org%2Ffact-tank%2F2020%2F12%2F11%2F20-striking-findings-from-2020%2F&id=137438953514", url)
@@ -179,7 +179,7 @@ class RestoringBrowsingSessionsTest {
             assertEquals(2, state!!.tabs.size)
             assertEquals("cbea9370-719e-47ef-931b-dee03f15761f", state.selectedTabId)
 
-            state.tabs[0].apply {
+            state.tabs[0].state.apply {
                 assertEquals("ae4e089e-7efe-4f7f-a2c5-290308119f64", id)
                 assertEquals("Projects - Brew Your Own", title)
                 assertEquals("https://byo.com/projects/", url)
@@ -191,7 +191,7 @@ class RestoringBrowsingSessionsTest {
                 assertNotNull(state)
             }
 
-            state.tabs[1].apply {
+            state.tabs[1].state.apply {
                 assertEquals("cbea9370-719e-47ef-931b-dee03f15761f", id)
                 assertEquals("Samsung officially confirms Galaxy S21 event for January 14th", title)
                 assertEquals("https://www.theverge.com/2021/1/3/22206649/samsung-officially-confirms-galaxy-s21-event-on-january-14th", url)
@@ -230,7 +230,7 @@ class RestoringBrowsingSessionsTest {
             assertEquals(2, state!!.tabs.size)
             assertEquals("7f4fd2c9-2bb1-4c23-a06c-7fbd2b78922f", state.selectedTabId)
 
-            state.tabs[0].apply {
+            state.tabs[0].state.apply {
                 assertEquals("0e556bb8-9120-48af-bc93-2bba0d4ec346", id)
                 assertEquals("The Air Horner", title)
                 assertEquals("https://airhorner.com/", url)
@@ -242,7 +242,7 @@ class RestoringBrowsingSessionsTest {
                 assertNotNull(state)
             }
 
-            state.tabs[1].apply {
+            state.tabs[1].state.apply {
                 assertEquals("7f4fd2c9-2bb1-4c23-a06c-7fbd2b78922f", id)
                 assertEquals("", title)
                 assertEquals("https://www.wikipedia.org/", url)
@@ -281,7 +281,7 @@ class RestoringBrowsingSessionsTest {
             assertEquals(2, state!!.tabs.size)
             assertEquals("7f4fd2c9-2bb1-4c23-a06c-7fbd2b78922f", state.selectedTabId)
 
-            state.tabs[0].apply {
+            state.tabs[0].state.apply {
                 assertEquals("0e556bb8-9120-48af-bc93-2bba0d4ec346", id)
                 assertEquals("The Air Horner", title)
                 assertEquals("https://airhorner.com/", url)
@@ -294,7 +294,7 @@ class RestoringBrowsingSessionsTest {
                 assertNotNull(state)
             }
 
-            state.tabs[1].apply {
+            state.tabs[1].state.apply {
                 assertEquals("7f4fd2c9-2bb1-4c23-a06c-7fbd2b78922f", id)
                 assertEquals("", title)
                 assertEquals("https://www.wikipedia.org/", url)

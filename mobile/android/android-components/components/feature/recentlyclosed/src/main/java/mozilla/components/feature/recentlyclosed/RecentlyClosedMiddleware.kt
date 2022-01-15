@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.recentlyclosed
 
-import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +16,7 @@ import mozilla.components.browser.state.action.UndoAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.recover.RecoverableTab
-import mozilla.components.concept.engine.Engine
+import mozilla.components.browser.state.state.recover.TabState
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
@@ -27,10 +26,8 @@ import mozilla.components.lib.state.Store
  * [BrowserState.closedTabs] with the [RecentlyClosedTabsStorage].
  */
 class RecentlyClosedMiddleware(
-    applicationContext: Context,
+    private val storage: Lazy<Storage>,
     private val maxSavedTabs: Int,
-    private val engine: Engine,
-    private val storage: Lazy<Storage> = lazy { RecentlyClosedTabsStorage(applicationContext, engine = engine) },
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : Middleware<BrowserState, BrowserAction> {
 
@@ -47,7 +44,7 @@ class RecentlyClosedMiddleware(
                     // private tabs.
                     context.store.dispatch(
                         RecentlyClosedAction.AddClosedTabsAction(
-                            context.state.undoHistory.tabs.filter { tab -> !tab.private }
+                            context.state.undoHistory.tabs.filter { tab -> !tab.state.private }
                         )
                     )
                 }
@@ -59,7 +56,7 @@ class RecentlyClosedMiddleware(
                     // the clear call above.
                     context.store.dispatch(
                         RecentlyClosedAction.AddClosedTabsAction(
-                            context.state.undoHistory.tabs.filter { tab -> !tab.private }
+                            context.state.undoHistory.tabs.filter { tab -> !tab.state.private }
                         )
                     )
                 }
@@ -122,22 +119,22 @@ class RecentlyClosedMiddleware(
         /**
          * Returns an observable list of recently closed tabs as List of [RecoverableTab]s.
          */
-        fun getTabs(): Flow<List<RecoverableTab>>
+        suspend fun getTabs(): Flow<List<TabState>>
 
         /**
          * Removes the given saved [RecoverableTab].
          */
-        fun removeTab(recentlyClosedTab: RecoverableTab)
+        suspend fun removeTab(recentlyClosedTab: TabState)
 
         /**
          * Removes all saved [RecoverableTab]s.
          */
-        fun removeAllTabs()
+        suspend fun removeAllTabs()
 
         /**
          * Adds up to [maxTabs] [TabSessionState]s to storage, and then prunes storage to keep only
          * the newest [maxTabs].
          */
-        fun addTabsToCollectionWithMax(tab: List<RecoverableTab>, maxTabs: Int)
+        suspend fun addTabsToCollectionWithMax(tabs: List<RecoverableTab>, maxTabs: Int)
     }
 }

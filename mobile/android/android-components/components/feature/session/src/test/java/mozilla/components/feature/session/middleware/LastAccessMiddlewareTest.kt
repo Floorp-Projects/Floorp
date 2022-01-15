@@ -13,6 +13,7 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.test.ext.joinBlocking
@@ -298,8 +299,14 @@ class LastAccessMiddlewareTest {
             middleware = listOf(LastAccessMiddleware())
         )
         val recoverableTabs = listOf(
-            RecoverableTab(url = "https://firefox.com", id = "1", lastAccess = lastAccess),
-            RecoverableTab(url = "https://mozilla.org", id = "2", lastAccess = lastAccess)
+            RecoverableTab(
+                engineSessionState = null,
+                state = TabState(url = "https://firefox.com", id = "1", lastAccess = lastAccess)
+            ),
+            RecoverableTab(
+                engineSessionState = null,
+                state = TabState(url = "https://mozilla.org", id = "2", lastAccess = lastAccess)
+            )
         )
 
         store.dispatch(

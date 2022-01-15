@@ -96,7 +96,7 @@ class SessionStorageTest {
 
         // Read it back and filter using predicate
         val restoredState = storage.restore {
-            it.contextId == "context"
+            it.state.contextId == "context"
         }
         assertNotNull(restoredState!!)
 
@@ -176,24 +176,28 @@ class SessionStorageTest {
         assertNotNull(browsingSession)
         assertEquals(2, browsingSession!!.tabs.size)
 
-        val first = browsingSession.tabs[0]
-        val second = browsingSession.tabs[1]
+        browsingSession.tabs[0].state.apply {
+            assertEquals("https://www.mozilla.org/en-US/firefox/", url)
+            assertEquals(
+                "Firefox - Protect your life online with privacy-first products — Mozilla",
+                title
+            )
+            assertEquals("e4bc40f1-6da5-4da2-8e32-352f2acdc2bb", id)
+            assertNull(parentId)
+            assertEquals(0, lastAccess)
+            assertNotNull(readerState)
+            assertFalse(readerState.active)
+        }
 
-        assertEquals("https://www.mozilla.org/en-US/firefox/", first.url)
-        assertEquals("Firefox - Protect your life online with privacy-first products — Mozilla", first.title)
-        assertEquals("e4bc40f1-6da5-4da2-8e32-352f2acdc2bb", first.id)
-        assertNull(first.parentId)
-        assertEquals(0, first.lastAccess)
-        assertNotNull(first.readerState)
-        assertFalse(first.readerState.active)
-
-        assertEquals("https://en.m.wikipedia.org/wiki/Mona_Lisa", second.url)
-        assertEquals("Mona Lisa - Wikipedia", second.title)
-        assertEquals("c367f2ec-c456-4184-9e47-6ed102a3c32c", second.id)
-        assertNull(second.parentId)
-        assertEquals(1599582163154, second.lastAccess)
-        assertNotNull(second.readerState)
-        assertFalse(second.readerState.active)
+        browsingSession.tabs[1].state.apply {
+            assertEquals("https://en.m.wikipedia.org/wiki/Mona_Lisa", url)
+            assertEquals("Mona Lisa - Wikipedia", title)
+            assertEquals("c367f2ec-c456-4184-9e47-6ed102a3c32c", id)
+            assertNull(parentId)
+            assertEquals(1599582163154, lastAccess)
+            assertNotNull(readerState)
+            assertFalse(readerState.active)
+        }
     }
 
     /**
@@ -224,25 +228,35 @@ class SessionStorageTest {
         assertNotNull(browsingSession)
         assertEquals(2, browsingSession!!.tabs.size)
 
-        val first = browsingSession.tabs[0]
-        val second = browsingSession.tabs[1]
+        browsingSession.tabs[0].state.apply {
+            assertEquals("https://www.theverge.com/", url)
+            assertEquals("The Verge", title)
+            assertEquals("28f428ba-2b19-4c24-993b-763fda2be65c", id)
+            assertNull(parentId)
+            assertEquals(1599815361779, lastAccess)
+            assertNotNull(readerState)
+            assertFalse(readerState.active)
+        }
 
-        assertEquals("https://www.theverge.com/", first.url)
-        assertEquals("The Verge", first.title)
-        assertEquals("28f428ba-2b19-4c24-993b-763fda2be65c", first.id)
-        assertNull(first.parentId)
-        assertEquals(1599815361779, first.lastAccess)
-        assertNotNull(first.readerState)
-        assertFalse(first.readerState.active)
-
-        assertEquals("https://www.theverge.com/2020/9/10/21429838/google-android-11-go-edition-devices-2gb-ram-20-percent", second.url)
-        assertEquals("Android 11 Go is available today, and it will launch apps 20 percent faster", second.title)
-        assertEquals("d6facb8a-0775-45a1-8bc1-2397e2d2bc53", second.id)
-        assertEquals("28f428ba-2b19-4c24-993b-763fda2be65c", second.parentId)
-        assertEquals(1599815364500, second.lastAccess)
-        assertNotNull(second.readerState)
-        assertTrue(second.readerState.active)
-        assertEquals("https://www.theverge.com/2020/9/10/21429838/google-android-11-go-edition-devices-2gb-ram-20-percent", second.readerState.activeUrl)
+        browsingSession.tabs[1].state.apply {
+            assertEquals(
+                "https://www.theverge.com/2020/9/10/21429838/google-android-11-go-edition-devices-2gb-ram-20-percent",
+                url
+            )
+            assertEquals(
+                "Android 11 Go is available today, and it will launch apps 20 percent faster",
+                title
+            )
+            assertEquals("d6facb8a-0775-45a1-8bc1-2397e2d2bc53", id)
+            assertEquals("28f428ba-2b19-4c24-993b-763fda2be65c", parentId)
+            assertEquals(1599815364500, lastAccess)
+            assertNotNull(readerState)
+            assertTrue(readerState.active)
+            assertEquals(
+                "https://www.theverge.com/2020/9/10/21429838/google-android-11-go-edition-devices-2gb-ram-20-percent",
+                readerState.activeUrl
+            )
+        }
     }
 
     @Test
@@ -292,26 +306,27 @@ class SessionStorageTest {
         assertNotNull(browsingSession)
         assertEquals(2, browsingSession!!.tabs.size)
 
-        val first = browsingSession.tabs[0]
-        val second = browsingSession.tabs[1]
+        browsingSession.tabs[0].state.apply {
+            assertEquals("https://www.mozilla.org", url)
+            assertEquals("Mozilla", title)
+            assertEquals("first-tab", id)
+            assertNull(parentId)
+            assertEquals(101010, lastAccess)
+            assertNotNull(readerState)
+            assertNull(contextId)
+            assertFalse(readerState.active)
+        }
 
-        assertEquals("https://www.mozilla.org", first.url)
-        assertEquals("Mozilla", first.title)
-        assertEquals("first-tab", first.id)
-        assertNull(first.parentId)
-        assertEquals(101010, first.lastAccess)
-        assertNotNull(first.readerState)
-        assertNull(first.contextId)
-        assertFalse(first.readerState.active)
-
-        assertEquals("https://www.firefox.com", second.url)
-        assertEquals("Firefox", second.title)
-        assertEquals("second-tab", second.id)
-        assertEquals("first-tab", second.parentId)
-        assertEquals(12345678, second.lastAccess)
-        assertEquals("Work", second.contextId)
-        assertNotNull(second.readerState)
-        assertTrue(second.readerState.active)
+        browsingSession.tabs[1].state.apply {
+            assertEquals("https://www.firefox.com", url)
+            assertEquals("Firefox", title)
+            assertEquals("second-tab", id)
+            assertEquals("first-tab", parentId)
+            assertEquals(12345678, lastAccess)
+            assertEquals("Work", contextId)
+            assertNotNull(readerState)
+            assertTrue(readerState.active)
+        }
     }
 
     @Test
@@ -335,8 +350,8 @@ class SessionStorageTest {
         assertNotNull(browsingSession!!)
 
         assertEquals(2, browsingSession.tabs.size)
-        assertEquals("https://www.mozilla.org", browsingSession.tabs[0].url)
-        assertEquals("https://getpocket.com", browsingSession.tabs[1].url)
+        assertEquals("https://www.mozilla.org", browsingSession.tabs[0].state.url)
+        assertEquals("https://getpocket.com", browsingSession.tabs[1].state.url)
 
         // Selected tab doesn't exist so we take to most recently accessed one, or
         // the first one if all tabs have the same last access value.
@@ -345,16 +360,16 @@ class SessionStorageTest {
 }
 
 internal fun TabSessionState.assertSameAs(tab: RecoverableTab) {
-    assertEquals(content.url, tab.url)
-    assertEquals(content.title, tab.title)
-    assertEquals(id, tab.id)
-    assertEquals(parentId, tab.parentId)
-    assertEquals(contextId, tab.contextId)
-    assertEquals(lastAccess, tab.lastAccess)
-    assertEquals(readerState, tab.readerState)
-    assertEquals(content.private, tab.private)
+    assertEquals(content.url, tab.state.url)
+    assertEquals(content.title, tab.state.title)
+    assertEquals(id, tab.state.id)
+    assertEquals(parentId, tab.state.parentId)
+    assertEquals(contextId, tab.state.contextId)
+    assertEquals(lastAccess, tab.state.lastAccess)
+    assertEquals(readerState, tab.state.readerState)
+    assertEquals(content.private, tab.state.private)
     assertEquals(
         (engineState.engineSessionState as? FakeEngineSessionState)?.value ?: "---",
-        (tab.state as FakeEngineSessionState).value
+        (tab.engineSessionState as FakeEngineSessionState).value
     )
 }

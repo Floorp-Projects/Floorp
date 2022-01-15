@@ -46,8 +46,8 @@ class CompareSessionParsersTest(
         snapshot1.tabs.forEachIndexed { index, item1 ->
             val item2 = snapshot2.tabs[index]
 
-            assertEquals(item1.url, item2.url)
-            assertEquals(item1.title, item2.title)
+            assertEquals(item1.state.url, item2.state.url)
+            assertEquals(item1.state.title, item2.state.title)
         }
     }
 
@@ -94,6 +94,6 @@ class CompareSessionParsersTest(
 }
 
 private fun RecoverableBrowserState.selectedTabIndex(): Int {
-    val tab = tabs.firstOrNull { tab -> tab.id == selectedTabId } ?: return -1
+    val tab = tabs.firstOrNull { tab -> tab.state.id == selectedTabId } ?: return -1
     return tabs.indexOf(tab)
 }

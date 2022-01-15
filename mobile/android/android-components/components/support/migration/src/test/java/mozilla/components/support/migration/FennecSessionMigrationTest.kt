@@ -25,77 +25,77 @@ class FennecSessionMigrationTest {
         val snapshot = (result as Result.Success).value
 
         assertEquals(6, snapshot.tabs.size)
-        assertEquals(snapshot.tabs[5].id, snapshot.selectedTabId)
+        assertEquals(snapshot.tabs[5].state.id, snapshot.selectedTabId)
 
         snapshot.tabs[0].also {
             assertEquals(
                 "https://en.m.wikipedia.org/wiki/James_Park_Woods",
-                it.url
+                it.state.url
             )
 
             assertEquals(
                 "James Park Woods - Wikipedia",
-                it.title
+                it.state.title
             )
         }
 
         snapshot.tabs[1].also {
             assertEquals(
                 "https://m.youtube.com/watch?v=fBbKagy1dD8",
-                it.url
+                it.state.url
             )
 
             assertEquals(
                 "35 DIY IDEAS YOU NEED IN YOUR LIFE RIGHT NOW - YouTube",
-                it.title
+                it.state.title
             )
         }
 
         snapshot.tabs[2].also {
             assertEquals(
                 "about:addons",
-                it.url
+                it.state.url
             )
 
             assertEquals(
                 "Add-ons",
-                it.title
+                it.state.title
             )
         }
 
         snapshot.tabs[3].also {
             assertEquals(
                 "about:firefox",
-                it.url
+                it.state.url
             )
 
             assertEquals(
                 "About Fennec",
-                it.title
+                it.state.title
             )
         }
 
         snapshot.tabs[4].also {
             assertEquals(
                 "https://www.theverge.com/2019/9/18/20871860/huawei-mate-30-photos-videos-leak-watch-gt-2-fitness-band-tv-android-tablet-harmony-os",
-                it.url
+                it.state.url
             )
 
             assertEquals(
                 "Huawei’s Thursday event lineup apparently leaks in full",
-                it.title
+                it.state.title
             )
         }
 
         snapshot.tabs[5].also {
             assertEquals(
                 "https://www.microsoft.com/de-de/p/surface-pro-6/8ZCNC665SLQ5?activetab=pivot%3aoverviewtab",
-                it.url
+                it.state.url
             )
 
             assertEquals(
                 "Entdecken Sie das Surface Pro 6 – Ultraleicht und vielseitig – Microsoft Surface",
-                it.title
+                it.state.title
             )
         }
     }
@@ -122,17 +122,17 @@ class FennecSessionMigrationTest {
         assertTrue(result is Result.Success)
         val snapshot = (result as Result.Success).value
         assertEquals(1, snapshot.tabs.size)
-        assertEquals(snapshot.tabs[0].id, snapshot.selectedTabId)
+        assertEquals(snapshot.tabs[0].state.id, snapshot.selectedTabId)
 
         snapshot.tabs[0].also {
             assertEquals(
                 "https://en.m.wikipedia.org/wiki/Main_Page",
-                it.url
+                it.state.url
             )
 
             assertEquals(
                 "Wikipedia, the free encyclopedia",
-                it.title
+                it.state.title
             )
         }
     }
@@ -156,29 +156,29 @@ class FennecSessionMigrationTest {
         assertTrue(result is Result.Success)
         val snapshot = (result as Result.Success).value
         assertEquals(2, snapshot.tabs.size)
-        assertEquals(snapshot.tabs[1].id, snapshot.selectedTabId)
+        assertEquals(snapshot.tabs[1].state.id, snapshot.selectedTabId)
 
         snapshot.tabs[0].also {
             assertEquals(
                 "https://en.m.wikipedia.org/wiki/Climbing",
-                it.url
+                it.state.url
             )
 
             assertEquals(
                 "Climbing - Wikipedia",
-                it.title
+                it.state.title
             )
         }
 
         snapshot.tabs[1].also {
             assertEquals(
                 "https://www.mozilla.org/en-US/firefox/accounts/",
-                it.url
+                it.state.url
             )
 
             assertEquals(
                 "There is a way to protect your privacy. Join Firefox.",
-                it.title
+                it.state.title
             )
         }
     }
@@ -192,7 +192,7 @@ class FennecSessionMigrationTest {
         assertTrue(result is Result.Success)
         val snapshot = (result as Result.Success).value
         assertEquals(21, snapshot.tabs.size)
-        assertEquals(snapshot.tabs[12].id, snapshot.selectedTabId)
+        assertEquals(snapshot.tabs[12].state.id, snapshot.selectedTabId)
     }
 
     /**
@@ -210,29 +210,29 @@ class FennecSessionMigrationTest {
         assertTrue(result is Result.Success)
         val snapshot = (result as Result.Success).value
         assertEquals(2, snapshot.tabs.size)
-        assertEquals(snapshot.tabs[1].id, snapshot.selectedTabId)
+        assertEquals(snapshot.tabs[1].state.id, snapshot.selectedTabId)
 
         snapshot.tabs[0].also {
             assertEquals(
                 "https://www.spiegel.de/",
-                it.url
+                it.state.url
             )
 
             assertEquals(
                 "DER SPIEGEL | Online-Nachrichten",
-                it.title
+                it.state.title
             )
         }
 
         snapshot.tabs[1].also {
             assertEquals(
                 "https://www.spiegel.de/politik/deutschland/fdp-parteivorstand-spricht-lindner-nach-kemmerich-wahl-vertrauen-aus-a-47e0a21c-7617-4549-b6dc-716c0363cbc2",
-                it.url
+                it.state.url
             )
 
             assertEquals(
                 "FDP-Parteivorstand spricht Lindner Vertrauen aus - DER SPIEGEL - Politik",
-                it.title
+                it.state.title
             )
         }
     }
@@ -263,17 +263,17 @@ class FennecSessionMigrationTest {
         assertTrue(result is Result.Success)
         val snapshot = (result as Result.Success).value
         assertEquals(1, snapshot.tabs.size)
-        assertEquals(snapshot.tabs[0].id, snapshot.selectedTabId)
+        assertEquals(snapshot.tabs[0].state.id, snapshot.selectedTabId)
 
         snapshot.tabs[0].also {
             assertEquals(
                 "https://www.mozilla.org/",
-                it.url
+                it.state.url
             )
 
             assertEquals(
                 "https://www.mozilla.org/",
-                it.title
+                it.state.title
             )
         }
     }

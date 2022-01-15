@@ -20,3 +20,32 @@ interface EngineSessionState {
      */
     fun writeTo(writer: JsonWriter)
 }
+
+/**
+ * An interface describing a storage layer for an [EngineSessionState].
+ */
+interface EngineSessionStateStorage {
+    /**
+     * Writes a [state] with a provided [uuid] as its identifier.
+     *
+     * @return A boolean flag indicating if the write was a success.
+     */
+    suspend fun write(uuid: String, state: EngineSessionState): Boolean
+
+    /**
+     * Reads an [EngineSessionState] given a provided [uuid] as its identifier.
+     *
+     * @return A [EngineSessionState] if one is present for the given [uuid], `null` otherwise.
+     */
+    suspend fun read(uuid: String): EngineSessionState?
+
+    /**
+     * Deletes persisted [EngineSessionState] for a given [uuid].
+     */
+    suspend fun delete(uuid: String)
+
+    /**
+     * Deletes all persisted [EngineSessionState] instances.
+     */
+    suspend fun deleteAll()
+}

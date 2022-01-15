@@ -191,8 +191,8 @@ class TabCollectionStorageTest {
             matches(session1, sessions[0])
             matches(session2, sessions[1])
 
-            assertEquals(session1.id, sessions[0].id)
-            assertEquals(session2.id, sessions[1].id)
+            assertEquals(session1.id, sessions[0].state.id)
+            assertEquals(session2.id, sessions[1].state.id)
         }
 
         getAllCollections().let { collections ->
@@ -207,14 +207,14 @@ class TabCollectionStorageTest {
             assertNotEquals(session1, sessions[0])
             assertNotEquals(session2, sessions[1])
 
-            assertNotEquals(session1.id, sessions[0].id)
-            assertNotEquals(session2.id, sessions[1].id)
+            assertNotEquals(session1.id, sessions[0].state.id)
+            assertNotEquals(session2.id, sessions[1].state.id)
 
-            assertEquals(session1.content.url, sessions[0].url)
-            assertEquals(session2.content.url, sessions[1].url)
+            assertEquals(session1.content.url, sessions[0].state.url)
+            assertEquals(session2.content.url, sessions[1].state.url)
 
-            assertEquals(session1.content.title, sessions[0].title)
-            assertEquals(session2.content.title, sessions[1].title)
+            assertEquals(session1.content.title, sessions[0].state.title)
+            assertEquals(session2.content.title, sessions[1].state.title)
         }
     }
 
@@ -485,11 +485,11 @@ class FakeEngineSessionState : EngineSessionState {
  */
 
 private fun matches(state: TabSessionState, tab: RecoverableTab) {
-    assertEquals(state.content.url, tab.url)
-    assertEquals(state.content.title, tab.title)
-    assertEquals(state.id, tab.id)
-    assertEquals(state.parentId, tab.parentId)
-    assertEquals(state.contextId, tab.contextId)
-    assertEquals(state.lastAccess, tab.lastAccess)
-    assertEquals(state.readerState, tab.readerState)
+    assertEquals(state.content.url, tab.state.url)
+    assertEquals(state.content.title, tab.state.title)
+    assertEquals(state.id, tab.state.id)
+    assertEquals(state.parentId, tab.state.parentId)
+    assertEquals(state.contextId, tab.state.contextId)
+    assertEquals(state.lastAccess, tab.state.lastAccess)
+    assertEquals(state.readerState, tab.state.readerState)
 }

@@ -37,7 +37,7 @@ class FakeEngine(
     override fun createSession(private: Boolean, contextId: String?): EngineSession =
         throw UnsupportedOperationException()
 
-    override fun createSessionState(json: JSONObject) = FakeEngineSessionState("")
+    override fun createSessionState(json: JSONObject) = FakeEngineSessionState(json.getString("engine"))
 
     override fun createSessionStateFrom(reader: JsonReader): EngineSessionState {
         if (expectToRestoreRealEngineSessionState) {

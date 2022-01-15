@@ -2,46 +2,42 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.recentlyclosed.db
+package mozilla.components.feature.recentlyclosed
 
 import android.content.Context
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.runBlocking
+import mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabDao
+import mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabEntity
+import mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabsDatabase
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 import java.util.UUID
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
-@ExperimentalCoroutinesApi
+@RunWith(AndroidJUnit4::class)
 class RecentlyClosedTabDaoTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
 
     private lateinit var database: RecentlyClosedTabsDatabase
     private lateinit var tabDao: RecentlyClosedTabDao
-    private lateinit var executor: ExecutorService
-
-    @get:Rule
-    val instantExecutorRule = InstantTaskExecutorRule()
 
     @Before
     fun setUp() {
         database =
             Room.inMemoryDatabaseBuilder(context, RecentlyClosedTabsDatabase::class.java).build()
         tabDao = database.recentlyClosedTabDao()
-        executor = Executors.newSingleThreadExecutor()
     }
 
     @Test
-    fun testAddingTabs() = runBlockingTest {
+    fun testAddingTabs() = runBlocking(Dispatchers.IO) {
         val tab1 = RecentlyClosedTabEntity(
             title = "RecentlyClosedTab One",
             url = "https://www.mozilla.org",
@@ -65,10 +61,11 @@ class RecentlyClosedTabDaoTest {
             assertEquals(tab1, this[0])
             assertEquals(tab2, this[1])
         }
+        Unit
     }
 
     @Test
-    fun testRemovingTab() = runBlockingTest {
+    fun testRemovingTab() = runBlocking(Dispatchers.IO) {
         val tab1 = RecentlyClosedTabEntity(
             title = "RecentlyClosedTab One",
             url = "https://www.mozilla.org",
@@ -93,10 +90,11 @@ class RecentlyClosedTabDaoTest {
             assertEquals(1, this.size)
             assertEquals(tab2, this[0])
         }
+        Unit
     }
 
     @Test
-    fun testRemovingAllTabs() = runBlockingTest {
+    fun testRemovingAllTabs() = runBlocking(Dispatchers.IO) {
         RecentlyClosedTabEntity(
             title = "RecentlyClosedTab One",
             url = "https://www.mozilla.org",
@@ -120,11 +118,11 @@ class RecentlyClosedTabDaoTest {
         tabDao.getTabs().first().apply {
             assertEquals(0, this.size)
         }
+        Unit
     }
 
     @After
     fun tearDown() {
         database.close()
-        executor.shutdown()
     }
 }

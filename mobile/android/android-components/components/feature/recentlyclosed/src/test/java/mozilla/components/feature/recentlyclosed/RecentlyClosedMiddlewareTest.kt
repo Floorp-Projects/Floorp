@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.action.TabListAction
@@ -15,6 +16,7 @@ import mozilla.components.browser.state.action.UndoAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.session.middleware.undo.UndoMiddleware
@@ -23,7 +25,6 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -56,16 +57,19 @@ class RecentlyClosedMiddlewareTest {
 
     // Test tab
     private val closedTab = RecoverableTab(
-        id = "tab-id",
-        title = "Mozilla",
-        url = "https://mozilla.org",
-        lastAccess = 1234
+        engineSessionState = null,
+        state = TabState(
+            id = "tab-id",
+            title = "Mozilla",
+            url = "https://mozilla.org",
+            lastAccess = 1234
+        )
     )
 
     @Test
-    fun `closed tab storage stores the provided tab on add tab action`() {
+    fun `closed tab storage stores the provided tab on add tab action`() = runBlocking {
         val storage = mockStorage()
-        val middleware = RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope)
+        val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
         val store = BrowserStore(
             initialState = BrowserState(),
@@ -82,9 +86,9 @@ class RecentlyClosedMiddlewareTest {
     }
 
     @Test
-    fun `closed tab storage adds normal tabs removed with TabListAction`() {
+    fun `closed tab storage adds normal tabs removed with TabListAction`() = runBlocking {
         val storage = mockStorage()
-        val middleware = RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope)
+        val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
         val tab = createTab("https://www.mozilla.org", private = false, id = "1234")
         val tab2 = createTab("https://www.firefox.com", private = false, id = "5678")
@@ -108,24 +112,24 @@ class RecentlyClosedMiddlewareTest {
             eq(5)
         )
         assertEquals(2, closedTabCaptor.value.size)
-        assertEquals(tab.content.title, closedTabCaptor.value[0].title)
-        assertEquals(tab.content.url, closedTabCaptor.value[0].url)
-        assertEquals(tab2.content.title, closedTabCaptor.value[1].title)
-        assertEquals(tab2.content.url, closedTabCaptor.value[1].url)
+        assertEquals(tab.content.title, closedTabCaptor.value[0].state.title)
+        assertEquals(tab.content.url, closedTabCaptor.value[0].state.url)
+        assertEquals(tab2.content.title, closedTabCaptor.value[1].state.title)
+        assertEquals(tab2.content.url, closedTabCaptor.value[1].state.url)
         assertEquals(
             tab.engineState.engineSessionState,
-            closedTabCaptor.value[0].state
+            closedTabCaptor.value[0].engineSessionState
         )
         assertEquals(
             tab2.engineState.engineSessionState,
-            closedTabCaptor.value[1].state
+            closedTabCaptor.value[1].engineSessionState
         )
     }
 
     @Test
-    fun `closed tab storage adds a normal tab removed with TabListAction`() {
+    fun `closed tab storage adds a normal tab removed with TabListAction`() = runBlocking {
         val storage = mockStorage()
-        val middleware = RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope)
+        val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
         val tab = createTab("https://www.mozilla.org", private = false, id = "1234")
 
@@ -148,18 +152,18 @@ class RecentlyClosedMiddlewareTest {
             eq(5)
         )
         assertEquals(1, closedTabCaptor.value.size)
-        assertEquals(tab.content.title, closedTabCaptor.value[0].title)
-        assertEquals(tab.content.url, closedTabCaptor.value[0].url)
+        assertEquals(tab.content.title, closedTabCaptor.value[0].state.title)
+        assertEquals(tab.content.url, closedTabCaptor.value[0].state.url)
         assertEquals(
             tab.engineState.engineSessionState,
-            closedTabCaptor.value[0].state
+            closedTabCaptor.value[0].engineSessionState
         )
     }
 
     @Test
-    fun `closed tab storage does not add a private tab removed with TabListAction`() {
+    fun `closed tab storage does not add a private tab removed with TabListAction`() = runBlocking {
         val storage = mockStorage()
-        val middleware = RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope)
+        val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
         val tab = createTab("https://www.mozilla.org", private = true, id = "1234")
 
@@ -179,9 +183,9 @@ class RecentlyClosedMiddlewareTest {
     }
 
     @Test
-    fun `closed tab storage adds all normals tab removed with TabListAction RemoveAllNormalTabsAction`() {
+    fun `closed tab storage adds all normals tab removed with TabListAction RemoveAllNormalTabsAction`() = runBlocking {
         val storage = mockStorage()
-        val middleware = RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope)
+        val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
         val tab = createTab("https://www.mozilla.org", private = false, id = "1234")
         val tab2 = createTab("https://www.firefox.com", private = true, id = "3456")
@@ -205,18 +209,18 @@ class RecentlyClosedMiddlewareTest {
             eq(5)
         )
         assertEquals(1, closedTabCaptor.value.size)
-        assertEquals(tab.content.title, closedTabCaptor.value[0].title)
-        assertEquals(tab.content.url, closedTabCaptor.value[0].url)
+        assertEquals(tab.content.title, closedTabCaptor.value[0].state.title)
+        assertEquals(tab.content.url, closedTabCaptor.value[0].state.url)
         assertEquals(
             tab.engineState.engineSessionState,
-            closedTabCaptor.value[0].state
+            closedTabCaptor.value[0].engineSessionState
         )
     }
 
     @Test
-    fun `closed tab storage adds all normal tabs and no private tabs removed with TabListAction RemoveAllTabsAction`() {
+    fun `closed tab storage adds all normal tabs and no private tabs removed with TabListAction RemoveAllTabsAction`() = runBlocking {
         val storage = mockStorage()
-        val middleware = RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope)
+        val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
         val tab = createTab("https://www.mozilla.org", private = false, id = "1234")
         val tab2 = createTab("https://www.firefox.com", private = true, id = "3456")
@@ -240,18 +244,18 @@ class RecentlyClosedMiddlewareTest {
             eq(5)
         )
         assertEquals(1, closedTabCaptor.value.size)
-        assertEquals(tab.content.title, closedTabCaptor.value[0].title)
-        assertEquals(tab.content.url, closedTabCaptor.value[0].url)
+        assertEquals(tab.content.title, closedTabCaptor.value[0].state.title)
+        assertEquals(tab.content.url, closedTabCaptor.value[0].state.url)
         assertEquals(
             tab.engineState.engineSessionState,
-            closedTabCaptor.value[0].state
+            closedTabCaptor.value[0].engineSessionState
         )
     }
 
     @Test
-    fun `closed tabs storage adds tabs closed one after the other without clear actions in between`() {
+    fun `closed tabs storage adds tabs closed one after the other without clear actions in between`() = runBlocking {
         val storage = mockStorage()
-        val middleware = RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope)
+        val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
         val store = BrowserStore(
             middleware = listOf(UndoMiddleware(mainScope = scope), middleware)
@@ -289,27 +293,28 @@ class RecentlyClosedMiddlewareTest {
 
         tabs[0].also { tab ->
             assertEquals(1, tab.size)
-            assertEquals("tab2", tab[0].id)
+            assertEquals("tab2", tab[0].state.id)
         }
         tabs[1].also { tab ->
             assertEquals(1, tab.size)
-            assertEquals("tab3", tab[0].id)
+            assertEquals("tab3", tab[0].state.id)
         }
         tabs[2].also { tab ->
             assertEquals(1, tab.size)
-            assertEquals("tab1", tab[0].id)
+            assertEquals("tab1", tab[0].state.id)
         }
         tabs[3].also { tab ->
             assertEquals(1, tab.size)
-            assertEquals("tab5", tab[0].id)
+            assertEquals("tab5", tab[0].state.id)
         }
+        Unit
     }
 
     @Test
-    fun `fetch the tabs from the recently closed storage and load into browser state on initialize tab state action`() {
-        val storage = mockStorage(tabs = listOf(closedTab))
+    fun `fetch the tabs from the recently closed storage and load into browser state on initialize tab state action`() = runBlocking {
+        val storage = mockStorage(tabs = listOf(closedTab.state))
 
-        val middleware = RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope)
+        val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
         val store = BrowserStore(initialState = BrowserState(), middleware = listOf(middleware))
 
         // Wait for Init action of store to be processed
@@ -320,40 +325,40 @@ class RecentlyClosedMiddlewareTest {
         store.waitUntilIdle()
 
         verify(storage).getTabs()
-        assertEquals(closedTab, store.state.closedTabs[0])
+        assertEquals(closedTab.state, store.state.closedTabs[0])
     }
 
     @Test
-    fun `recently closed storage removes the provided tab on remove tab action`() {
+    fun `recently closed storage removes the provided tab on remove tab action`() = runBlocking {
         val storage = mockStorage()
-        val middleware = RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope)
+        val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
 
         val store = BrowserStore(
             initialState = BrowserState(
                 closedTabs = listOf(
-                    closedTab
+                    closedTab.state
                 )
             ),
             middleware = listOf(middleware)
         )
 
-        store.dispatch(RecentlyClosedAction.RemoveClosedTabAction(closedTab)).joinBlocking()
+        store.dispatch(RecentlyClosedAction.RemoveClosedTabAction(closedTab.state)).joinBlocking()
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
-        verify(storage).removeTab(closedTab)
+        verify(storage).removeTab(closedTab.state)
     }
 
     @Test
-    fun `recently closed storage removes all tabs on remove all tabs action`() {
+    fun `recently closed storage removes all tabs on remove all tabs action`() = runBlocking {
         val storage = mockStorage()
-        val middleware = RecentlyClosedMiddleware(testContext, 5, engine, lazy { storage }, scope)
+        val middleware = RecentlyClosedMiddleware(lazy { storage }, 5, scope)
         val store = BrowserStore(
             initialState = BrowserState(
                 closedTabs = listOf(
-                    closedTab
+                    closedTab.state
                 )
             ),
             middleware = listOf(middleware)
@@ -369,8 +374,8 @@ class RecentlyClosedMiddlewareTest {
     }
 }
 
-private fun mockStorage(
-    tabs: List<RecoverableTab> = emptyList()
+private suspend fun mockStorage(
+    tabs: List<TabState> = emptyList()
 ): RecentlyClosedMiddleware.Storage {
     val storage: RecentlyClosedMiddleware.Storage = mock()
 

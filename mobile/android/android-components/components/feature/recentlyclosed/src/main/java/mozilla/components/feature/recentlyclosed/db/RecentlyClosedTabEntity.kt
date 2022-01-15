@@ -4,16 +4,10 @@
 
 package mozilla.components.feature.recentlyclosed.db
 
-import android.util.AtomicFile
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import mozilla.components.browser.state.state.recover.RecoverableTab
-import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.EngineSessionState
-import mozilla.components.support.ktx.util.readAndDeserialize
-import org.json.JSONObject
-import java.io.File
+import mozilla.components.browser.state.state.recover.TabState
 
 /**
  * Internal entity representing recently closed tabs.
@@ -38,37 +32,17 @@ internal data class RecentlyClosedTabEntity(
     @ColumnInfo(name = "created_at")
     var createdAt: Long
 ) {
-    internal fun toRecoverableTab(filesDir: File, engine: Engine): RecoverableTab {
-        return RecoverableTab(
+    internal fun asTabState(): TabState {
+        return TabState(
             id = uuid,
             title = title,
             url = url,
-            state = getEngineSessionState(engine, filesDir),
             lastAccess = createdAt
         )
     }
-
-    private fun getEngineSessionState(engine: Engine, filesDir: File): EngineSessionState? {
-        val jsonObject = getStateFile(filesDir).readAndDeserialize { json ->
-            JSONObject(json)
-        }
-        return jsonObject?.let { engine.createSessionState(it) }
-    }
-
-    internal fun getStateFile(filesDir: File): AtomicFile {
-        return AtomicFile(File(getStateDirectory(filesDir), uuid))
-    }
-
-    companion object {
-        internal fun getStateDirectory(filesDir: File): File {
-            return File(filesDir, "mozac.feature.recentlyclosed").apply {
-                mkdirs()
-            }
-        }
-    }
 }
 
-internal fun RecoverableTab.toRecentlyClosedTabEntity(): RecentlyClosedTabEntity {
+internal fun TabState.toRecentlyClosedTabEntity(): RecentlyClosedTabEntity {
     return RecentlyClosedTabEntity(
         uuid = id,
         title = title,

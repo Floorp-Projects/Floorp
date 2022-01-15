@@ -171,7 +171,7 @@ internal object TabListReducer {
                     TabListAction.RestoreAction.RestoreLocation.AT_INDEX -> mutableListOf<TabSessionState>().apply {
                         addAll(state.tabs)
                         restoredTabs.forEachIndexed { index, restoredTab ->
-                            val tabIndex = action.tabs[index].index
+                            val tabIndex = action.tabs[index].state.index
                             val restoreIndex =
                                 if (tabIndex > size || tabIndex < 0) {
                                     size

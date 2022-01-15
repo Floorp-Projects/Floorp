@@ -264,7 +264,7 @@ class UndoMiddlewareTest {
 
         assertNull(store.state.undoHistory.selectedTabId)
         assertEquals(1, store.state.undoHistory.tabs.size)
-        assertEquals("https://reddit.com/r/firefox", store.state.undoHistory.tabs[0].url)
+        assertEquals("https://reddit.com/r/firefox", store.state.undoHistory.tabs[0].state.url)
         assertEquals(2, store.state.tabs.size)
 
         store.dispatch(
@@ -273,8 +273,8 @@ class UndoMiddlewareTest {
 
         assertEquals("pocket", store.state.undoHistory.selectedTabId)
         assertEquals(2, store.state.undoHistory.tabs.size)
-        assertEquals("https://www.mozilla.org", store.state.undoHistory.tabs[0].url)
-        assertEquals("https://getpocket.com", store.state.undoHistory.tabs[1].url)
+        assertEquals("https://www.mozilla.org", store.state.undoHistory.tabs[0].state.url)
+        assertEquals("https://getpocket.com", store.state.undoHistory.tabs[1].state.url)
         assertEquals(0, store.state.tabs.size)
 
         testDispatcher.withDispatchingPaused {
@@ -324,8 +324,8 @@ class UndoMiddlewareTest {
         assertEquals("https://reddit.com/r/firefox", store.state.tabs[0].content.url)
         assertEquals("pocket", store.state.undoHistory.selectedTabId)
         assertEquals(2, store.state.undoHistory.tabs.size)
-        assertEquals("https://www.mozilla.org", store.state.undoHistory.tabs[0].url)
-        assertEquals("https://getpocket.com", store.state.undoHistory.tabs[1].url)
+        assertEquals("https://www.mozilla.org", store.state.undoHistory.tabs[0].state.url)
+        assertEquals("https://getpocket.com", store.state.undoHistory.tabs[1].state.url)
 
         waitDispatcher.advanceTimeBy(70000)
         waitDispatcher.advanceUntilIdle()

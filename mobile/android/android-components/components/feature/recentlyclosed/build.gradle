@@ -39,7 +39,7 @@ android {
     }
 
     sourceSets {
-        androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
+        test.assets.srcDirs += files("$projectDir/schemas".toString())
     }
 }
 
@@ -47,6 +47,7 @@ dependencies {
     implementation project(':concept-engine')
 
     implementation project(':browser-state')
+    implementation project(':browser-session-storage')
 
     implementation project(':support-ktx')
     implementation project(':support-base')
@@ -70,15 +71,6 @@ dependencies {
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.kotlin_coroutines
     testImplementation Dependencies.testing_coroutines
-
-    androidTestImplementation project(":support-test-fakes")
-    androidTestImplementation project(':support-android-test')
-    androidTestImplementation Dependencies.androidx_room_testing
-    androidTestImplementation Dependencies.androidx_arch_core_testing
-    androidTestImplementation Dependencies.androidx_test_core
-    androidTestImplementation Dependencies.androidx_test_runner
-    androidTestImplementation Dependencies.androidx_test_rules
-    androidTestImplementation Dependencies.testing_coroutines
 }
 
 apply from: '../../../publish.gradle'

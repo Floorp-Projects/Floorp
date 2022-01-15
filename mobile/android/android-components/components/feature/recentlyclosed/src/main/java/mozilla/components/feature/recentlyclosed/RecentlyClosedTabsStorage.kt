@@ -6,109 +6,121 @@ package mozilla.components.feature.recentlyclosed
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
+import mozilla.components.browser.session.storage.FileEngineSessionStateStorage
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
+import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSessionStateStorage
 import mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabsDatabase
 import mozilla.components.feature.recentlyclosed.db.toRecentlyClosedTabEntity
-import mozilla.components.support.ktx.java.io.truncateDirectory
-import mozilla.components.support.ktx.util.streamJSON
-import java.io.File
+import mozilla.components.support.base.log.logger.Logger
+
+/**
+ * Wraps exceptions that are caught by [RecentlyClosedTabsStorage].
+ * Instances of this class are submitted via [CrashReporting]. This wrapping helps easily identify
+ * exceptions related to [RecentlyClosedTabsStorage].
+ */
+private class RecentlyClosedTabsStorageException(e: Exception) : Exception(e)
 
 /**
  * A storage implementation that saves snapshots of recently closed tabs / sessions.
  */
-internal class RecentlyClosedTabsStorage(
+class RecentlyClosedTabsStorage(
     context: Context,
-    private val engine: Engine,
-    private val scope: CoroutineScope = CoroutineScope(IO)
+    engine: Engine,
+    private val crashReporting: CrashReporting,
+    private val engineStateStorage: EngineSessionStateStorage = FileEngineSessionStateStorage(context, engine)
 ) : RecentlyClosedMiddleware.Storage {
-    private val filesDir by lazy { context.filesDir }
+    private val logger = Logger("RecentlyClosedTabsStorage")
 
     @VisibleForTesting
     internal var database: Lazy<RecentlyClosedTabsDatabase> =
         lazy { RecentlyClosedTabsDatabase.get(context) }
 
     /**
-     * Returns an observable list of [RecoverableTab]s.
+     * Returns an observable list of [TabState]s.
      */
-    override fun getTabs(): Flow<List<RecoverableTab>> {
-        return database.value.recentlyClosedTabDao().getTabs().map { list ->
-            list.map { it.toRecoverableTab(filesDir, engine) }
+    @Suppress("TooGenericExceptionCaught")
+    override suspend fun getTabs(): Flow<List<TabState>> {
+        return try {
+            database.value.recentlyClosedTabDao().getTabs().map { list ->
+                list.map { it.asTabState() }
+            }
+        } catch (e: Exception) {
+            crashReporting.submitCaughtException(RecentlyClosedTabsStorageException(e))
+            flowOf()
         }
     }
 
     /**
-     * Removes the given [RecoverableTab].
+     * Removes the given [TabState].
      */
-    override fun removeTab(recentlyClosedTab: RecoverableTab) {
+    override suspend fun removeTab(recentlyClosedTab: TabState) {
         val entity = recentlyClosedTab.toRecentlyClosedTabEntity()
-        entity.getStateFile(filesDir).delete()
+        engineStateStorage.delete(entity.uuid)
         database.value.recentlyClosedTabDao().deleteTab(entity)
     }
 
     /**
-     * Removes all [RecoverableTab]s.
+     * Removes all [TabState]s.
      */
-    override fun removeAllTabs() {
-        getStateDirectory(filesDir).truncateDirectory()
+    override suspend fun removeAllTabs() {
+        engineStateStorage.deleteAll()
         database.value.recentlyClosedTabDao().removeAllTabs()
-    }
-
-    private fun getStateDirectory(filesDir: File): File {
-        return File(filesDir, "mozac.feature.recentlyclosed").apply {
-            mkdirs()
-        }
     }
 
     /**
      * Adds up to [maxTabs] [TabSessionState]s to storage, and then prunes storage to keep only the newest [maxTabs].
      */
-    override fun addTabsToCollectionWithMax(
-        tab: List<RecoverableTab>,
+    @Suppress("TooGenericExceptionCaught")
+    override suspend fun addTabsToCollectionWithMax(
+        tabs: List<RecoverableTab>,
         maxTabs: Int
     ) {
-        tab.takeLast(maxTabs).forEach {
-            addTabState(it)
+        try {
+            tabs.takeLast(maxTabs).forEach { addTabState(it) }
+            pruneTabsWithMax(maxTabs)
+        } catch (e: Exception) {
+            crashReporting.submitCaughtException(RecentlyClosedTabsStorageException(e))
         }
-        pruneTabsWithMax(maxTabs)
     }
 
-    private fun pruneTabsWithMax(maxTabs: Int) = scope.launch {
-        database.value.recentlyClosedTabDao().getTabs().collect {
-            // No pruning required
-            if (it.size <= maxTabs) return@collect
+    /**
+     * @return An [EngineSessionStateStorage] instance used to persist engine state of tabs.
+     */
+    fun engineStateStorage(): EngineSessionStateStorage {
+        return engineStateStorage
+    }
 
-            it.subList(maxTabs, it.size).forEach { entity ->
-                entity.getStateFile(filesDir).delete()
-                database.value.recentlyClosedTabDao().deleteTab(entity)
-            }
+    private suspend fun pruneTabsWithMax(maxTabs: Int) {
+        val tabs = database.value.recentlyClosedTabDao().getTabs().first()
+
+        // No pruning required
+        if (tabs.size <= maxTabs) return
+
+        tabs.subList(maxTabs, tabs.size).forEach { entity ->
+            engineStateStorage.delete(entity.uuid)
+            database.value.recentlyClosedTabDao().deleteTab(entity)
         }
     }
 
     @VisibleForTesting
-    internal fun addTabState(
-        tab: RecoverableTab
-    ) {
-        val entity = tab.toRecentlyClosedTabEntity()
-
-        val success = entity.getStateFile(filesDir).streamJSON {
-            val state = tab.state
-            if (state == null) {
-                beginObject().endObject()
-            } else {
-                state.writeTo(this)
+    internal suspend fun addTabState(tab: RecoverableTab) {
+        val entity = tab.state.toRecentlyClosedTabEntity()
+        // Even if engine session state persistence fails, degrade gracefully by storing the tab
+        // itself in the db - that will allow user to restore it with a "fresh" engine state.
+        // That's a form of data loss, but not much we can do here other than log.
+        tab.engineSessionState?.let {
+            if (!engineStateStorage.write(entity.uuid, it)) {
+                logger.warn("Failed to write engine session state for tab UUID = ${entity.uuid}")
             }
         }
-
-        if (success) {
-            database.value.recentlyClosedTabDao().insertTab(entity)
-        }
+        database.value.recentlyClosedTabDao().insertTab(entity)
     }
 }

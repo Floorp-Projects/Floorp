@@ -80,14 +80,14 @@ private fun Result.Success<RecoverableBrowserState>.filter(
     logger: Logger,
     crashReporter: CrashReporting
 ): Result.Success<RecoverableBrowserState> {
-    var selectedIndex = value.selectedTabId?.let { id -> value.tabs.indexOfFirst { tab -> tab.id == id } } ?: -1
+    var selectedIndex = value.selectedTabId?.let { id -> value.tabs.indexOfFirst { tab -> tab.state.id == id } } ?: -1
 
     logger.debug("Filtering migrated sessions (size=${value.tabs.size}, index=$selectedIndex)")
 
     val tabs = value.tabs.mapIndexedNotNull { index, item ->
         when {
             // We filter out about:home tabs since Fenix does not handle those URLs.
-            item.url == ABOUT_HOME -> {
+            item.state.url == ABOUT_HOME -> {
                 logger.debug("- Filtering about:home URL")
                 if (index < selectedIndex) {
                     selectedIndex--
@@ -97,13 +97,13 @@ private fun Result.Success<RecoverableBrowserState>.filter(
 
             // We rewrite about:reader URLs to their actual URLs. Fenix does not handle about:reader
             // URLs, but it can load the original URL.
-            item.url.startsWith(ABOUT_READER) -> {
+            item.state.url.startsWith(ABOUT_READER) -> {
                 try {
-                    val url = Uri.decode(item.url.substring(ABOUT_READER.length))
+                    val url = Uri.decode(item.state.url.substring(ABOUT_READER.length))
 
-                    logger.debug("- Rewriting about:reader URL (${item.url}): $url")
+                    logger.debug("- Rewriting about:reader URL (${item.state.url}): $url")
 
-                    item.copy(url = url)
+                    item.copy(state = item.state.copy(url = url))
                 } catch (e: Exception) {
                     crashReporter.submitCaughtException(e)
                     null
@@ -123,7 +123,7 @@ private fun Result.Success<RecoverableBrowserState>.filter(
     return Result.Success(
         RecoverableBrowserState(
             tabs,
-            tabs.getOrNull(selectedIndex)?.id
+            tabs.getOrNull(selectedIndex)?.state?.id
         )
     )
 }

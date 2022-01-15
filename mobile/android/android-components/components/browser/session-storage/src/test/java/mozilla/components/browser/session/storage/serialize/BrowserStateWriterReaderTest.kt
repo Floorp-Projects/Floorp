@@ -60,12 +60,12 @@ class BrowserStateWriterReaderTest {
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab!!)
 
-        assertEquals("https://www.mozilla.org", restoredTab.url)
-        assertEquals("Mozilla", restoredTab.title)
-        assertEquals("work", restoredTab.contextId)
-        assertEquals(engineState, restoredTab.state)
-        assertFalse(restoredTab.readerState.active)
-        assertNull(restoredTab.readerState.activeUrl)
+        assertEquals("https://www.mozilla.org", restoredTab.state.url)
+        assertEquals("Mozilla", restoredTab.state.title)
+        assertEquals("work", restoredTab.state.contextId)
+        assertEquals(engineState, restoredTab.engineSessionState)
+        assertFalse(restoredTab.state.readerState.active)
+        assertNull(restoredTab.state.readerState.activeUrl)
     }
 
     @Test
@@ -92,8 +92,8 @@ class BrowserStateWriterReaderTest {
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab!!)
 
-        assertTrue(restoredTab.readerState.active)
-        assertEquals("https://www.example.org", restoredTab.readerState.activeUrl)
+        assertTrue(restoredTab.state.readerState.active)
+        assertEquals("https://www.example.org", restoredTab.state.readerState.activeUrl)
     }
 
     @Test
@@ -114,10 +114,10 @@ class BrowserStateWriterReaderTest {
         val reader = BrowserStateReader()
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab!!)
-        assertEquals(SessionState.Source.Internal.None, restoredTab.source)
+        assertEquals(SessionState.Source.Internal.None, restoredTab.state.source)
 
-        assertEquals("https://www.mozilla.org", restoredTab.url)
-        assertEquals("Mozilla", restoredTab.title)
+        assertEquals("https://www.mozilla.org", restoredTab.state.url)
+        assertEquals("Mozilla", restoredTab.state.title)
     }
 
     @Test
@@ -148,8 +148,8 @@ class BrowserStateWriterReaderTest {
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab!!)
 
-        assertNotNull(restoredTab.historyMetadata)
-        assertEquals(tab.content.url, restoredTab.historyMetadata!!.url)
+        assertNotNull(restoredTab.state.historyMetadata)
+        assertEquals(tab.content.url, restoredTab.state.historyMetadata!!.url)
     }
 
     @Test
@@ -178,9 +178,9 @@ class BrowserStateWriterReaderTest {
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab!!)
 
-        assertNotNull(restoredTab.source)
-        assertTrue(restoredTab.source is SessionState.Source.External.CustomTab)
-        with(restoredTab.source as SessionState.Source.External.CustomTab) {
+        assertNotNull(restoredTab.state.source)
+        assertTrue(restoredTab.state.source is SessionState.Source.External.CustomTab)
+        with(restoredTab.state.source as SessionState.Source.External.CustomTab) {
             assertEquals("com.mozilla.test", this.caller!!.packageId)
             assertEquals(PackageCategory.PRODUCTIVITY, this.caller!!.category)
         }
@@ -212,9 +212,9 @@ class BrowserStateWriterReaderTest {
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab!!)
 
-        assertNotNull(restoredTab.source)
-        assertTrue(restoredTab.source is SessionState.Source.External.ActionView)
-        with(restoredTab.source as SessionState.Source.External.ActionView) {
+        assertNotNull(restoredTab.state.source)
+        assertTrue(restoredTab.state.source is SessionState.Source.External.ActionView)
+        with(restoredTab.state.source as SessionState.Source.External.ActionView) {
             assertEquals("com.mozilla.test", this.caller!!.packageId)
             assertEquals(PackageCategory.UNKNOWN, this.caller!!.category)
         }
@@ -244,9 +244,9 @@ class BrowserStateWriterReaderTest {
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab!!)
 
-        assertNotNull(restoredTab.source)
-        assertTrue(restoredTab.source is SessionState.Source.External.ActionSend)
-        with(restoredTab.source as SessionState.Source.External.ActionSend) {
+        assertNotNull(restoredTab.state.source)
+        assertTrue(restoredTab.state.source is SessionState.Source.External.ActionSend)
+        with(restoredTab.state.source as SessionState.Source.External.ActionSend) {
             assertNull(this.caller)
         }
     }
@@ -275,9 +275,9 @@ class BrowserStateWriterReaderTest {
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab!!)
 
-        assertEquals("https://www.mozilla.org", restoredTab.lastMediaAccessState.lastMediaUrl)
-        assertEquals(333L, restoredTab.lastMediaAccessState.lastMediaAccess)
-        assertTrue(restoredTab.lastMediaAccessState.mediaSessionActive)
+        assertEquals("https://www.mozilla.org", restoredTab.state.lastMediaAccessState.lastMediaUrl)
+        assertEquals(333L, restoredTab.state.lastMediaAccessState.lastMediaAccess)
+        assertTrue(restoredTab.state.lastMediaAccessState.mediaSessionActive)
     }
 
     @Test
@@ -305,7 +305,7 @@ class BrowserStateWriterReaderTest {
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab!!)
 
-        assertEquals(currentTime, restoredTab.createdAt)
+        assertEquals(currentTime, restoredTab.state.createdAt)
     }
 
     @Test
@@ -331,7 +331,7 @@ class BrowserStateWriterReaderTest {
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab!!)
 
-        assertNotNull(restoredTab.createdAt)
+        assertNotNull(restoredTab.state.createdAt)
     }
 
     @Test
@@ -358,7 +358,7 @@ class BrowserStateWriterReaderTest {
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab!!)
 
-        assertEquals("test search", restoredTab.searchTerm)
+        assertEquals("test search", restoredTab.state.searchTerm)
     }
 
     @Test
@@ -384,7 +384,7 @@ class BrowserStateWriterReaderTest {
         val restoredTab = reader.readTab(engine, file)
         assertNotNull(restoredTab!!)
 
-        assertEquals("", restoredTab.searchTerm)
+        assertEquals("", restoredTab.state.searchTerm)
     }
 }
 

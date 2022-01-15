@@ -12,7 +12,7 @@ internal object RecentlyClosedReducer {
         return when (action) {
             is RecentlyClosedAction.AddClosedTabsAction -> {
                 state.copy(
-                    closedTabs = state.closedTabs + action.tabs
+                    closedTabs = state.closedTabs + action.tabs.map { it.state }
                 )
             }
             is RecentlyClosedAction.PruneClosedTabsAction -> {

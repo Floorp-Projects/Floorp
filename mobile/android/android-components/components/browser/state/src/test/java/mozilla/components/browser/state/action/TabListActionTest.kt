@@ -16,6 +16,7 @@ import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.getGroupById
 import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
@@ -512,10 +513,22 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    RecoverableTab(id = "a", url = "https://www.mozilla.org", private = false),
-                    RecoverableTab(id = "b", url = "https://www.firefox.com", private = true),
-                    RecoverableTab(id = "c", url = "https://www.example.org", private = true),
-                    RecoverableTab(id = "d", url = "https://getpocket.com", private = false)
+                    RecoverableTab(
+                        engineSessionState = null,
+                        state = TabState(id = "a", url = "https://www.mozilla.org", private = false)
+                    ),
+                    RecoverableTab(
+                        engineSessionState = null,
+                        state = TabState(id = "b", url = "https://www.firefox.com", private = true)
+                    ),
+                    RecoverableTab(
+                        engineSessionState = null,
+                        state = TabState(id = "c", url = "https://www.example.org", private = true)
+                    ),
+                    RecoverableTab(
+                        engineSessionState = null,
+                        state = TabState(id = "d", url = "https://getpocket.com", private = false)
+                    )
                 ),
                 selectedTabId = "d",
                 restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING
@@ -547,8 +560,14 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    RecoverableTab(id = "c", url = "https://www.example.org", private = true),
-                    RecoverableTab(id = "d", url = "https://getpocket.com", private = false)
+                    RecoverableTab(
+                        engineSessionState = null,
+                        state = TabState(id = "c", url = "https://www.example.org", private = true)
+                    ),
+                    RecoverableTab(
+                        engineSessionState = null,
+                        state = TabState(id = "d", url = "https://getpocket.com", private = false)
+                    )
                 ),
                 selectedTabId = "d",
                 restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING
@@ -580,8 +599,14 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    RecoverableTab(id = "c", url = "https://www.example.org", private = true),
-                    RecoverableTab(id = "d", url = "https://getpocket.com", private = false)
+                    RecoverableTab(
+                        engineSessionState = null,
+                        state = TabState(id = "c", url = "https://www.example.org", private = true)
+                    ),
+                    RecoverableTab(
+                        engineSessionState = null,
+                        state = TabState(id = "d", url = "https://getpocket.com", private = false)
+                    )
                 ),
                 selectedTabId = "d",
                 restoreLocation = TabListAction.RestoreAction.RestoreLocation.END
@@ -612,8 +637,14 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    RecoverableTab(id = "c", url = "https://www.example.org", private = true),
-                    RecoverableTab(id = "d", url = "https://getpocket.com", private = false)
+                    RecoverableTab(
+                        engineSessionState = null,
+                        state = TabState(id = "c", url = "https://www.example.org", private = true)
+                    ),
+                    RecoverableTab(
+                        engineSessionState = null,
+                        state = TabState(id = "d", url = "https://getpocket.com", private = false)
+                    )
                 ),
                 selectedTabId = "d",
                 restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING
@@ -644,8 +675,14 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    RecoverableTab(id = "c", url = "https://www.example.org", private = true),
-                    RecoverableTab(id = "d", url = "https://getpocket.com", private = false)
+                    RecoverableTab(
+                        engineSessionState = null,
+                        state = TabState(id = "c", url = "https://www.example.org", private = true)
+                    ),
+                    RecoverableTab(
+                        engineSessionState = null,
+                        state = TabState(id = "d", url = "https://getpocket.com", private = false)
+                    )
                 ),
                 selectedTabId = "d",
                 restoreLocation = TabListAction.RestoreAction.RestoreLocation.END
@@ -676,8 +713,8 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    RecoverableTab(id = "c", url = "https://www.example.org", private = true),
-                    RecoverableTab(id = "d", url = "https://getpocket.com", private = false)
+                    RecoverableTab(engineSessionState = null, state = TabState(id = "c", url = "https://www.example.org", private = true)),
+                    RecoverableTab(engineSessionState = null, state = TabState(id = "d", url = "https://getpocket.com", private = false))
                 ),
                 selectedTabId = null,
                 restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING
@@ -708,7 +745,7 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    RecoverableTab(id = "c", url = "https://www.example.org", index = 0),
+                    RecoverableTab(engineSessionState = null, state = TabState(id = "c", url = "https://www.example.org", index = 0)),
                 ),
                 selectedTabId = null,
                 restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX
@@ -737,7 +774,7 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    RecoverableTab(id = "c", url = "https://www.example.org", index = 1),
+                    RecoverableTab(engineSessionState = null, state = TabState(id = "c", url = "https://www.example.org", index = 1)),
                 ),
                 selectedTabId = null,
                 restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX
@@ -766,7 +803,7 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    RecoverableTab(id = "c", url = "https://www.example.org", index = 2),
+                    RecoverableTab(engineSessionState = null, state = TabState(id = "c", url = "https://www.example.org", index = 2)),
                 ),
                 selectedTabId = null,
                 restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX
@@ -795,7 +832,7 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    RecoverableTab(id = "c", url = "https://www.example.org", index = 4),
+                    RecoverableTab(engineSessionState = null, state = TabState(id = "c", url = "https://www.example.org", index = 4)),
                 ),
                 selectedTabId = null,
                 restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX
@@ -824,8 +861,8 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    RecoverableTab(id = "c", url = "https://www.example.org", index = 3),
-                    RecoverableTab(id = "d", url = "https://www.example.org", index = 0),
+                    RecoverableTab(engineSessionState = null, state = TabState(id = "c", url = "https://www.example.org", index = 3)),
+                    RecoverableTab(engineSessionState = null, state = TabState(id = "d", url = "https://www.example.org", index = 0)),
                 ),
                 selectedTabId = null,
                 restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX
@@ -855,8 +892,8 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    RecoverableTab(id = "c", url = "https://www.example.org", index = 0),
-                    RecoverableTab(id = "d", url = "https://www.example.org", index = 0),
+                    RecoverableTab(engineSessionState = null, state = TabState(id = "c", url = "https://www.example.org", index = 0)),
+                    RecoverableTab(engineSessionState = null, state = TabState(id = "d", url = "https://www.example.org", index = 0)),
                 ),
                 selectedTabId = null,
                 restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX
@@ -886,8 +923,8 @@ class TabListActionTest {
         store.dispatch(
             TabListAction.RestoreAction(
                 tabs = listOf(
-                    RecoverableTab(id = "c", url = "https://www.example.org", index = -1),
-                    RecoverableTab(id = "d", url = "https://www.example.org"),
+                    RecoverableTab(engineSessionState = null, state = TabState(id = "c", url = "https://www.example.org", index = -1)),
+                    RecoverableTab(engineSessionState = null, state = TabState(id = "d", url = "https://www.example.org")),
                 ),
                 selectedTabId = null,
                 restoreLocation = TabListAction.RestoreAction.RestoreLocation.AT_INDEX

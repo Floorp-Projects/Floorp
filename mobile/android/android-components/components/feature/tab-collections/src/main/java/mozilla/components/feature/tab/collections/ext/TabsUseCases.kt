@@ -35,13 +35,13 @@ operator fun TabsUseCases.RestoreUseCase.invoke(
         // We were unable to restore the tab. Let the app know so that it can workaround that
         onFailure()
     } else {
-        invoke(listOf(item), item.id)
+        invoke(listOf(item), item.state.id)
 
         if (updateLastAccess) {
-            store.dispatch(LastAccessAction.UpdateLastAccessAction(item.id))
+            store.dispatch(LastAccessAction.UpdateLastAccessAction(item.state.id))
         }
 
-        onTabRestored(item.id)
+        onTabRestored(item.state.id)
     }
 }
 
@@ -73,13 +73,13 @@ operator fun TabsUseCases.RestoreUseCase.invoke(
         return
     }
 
-    invoke(tabs, selectTabId = tabs.firstOrNull()?.id)
+    invoke(tabs, selectTabId = tabs.firstOrNull()?.state?.id)
 
     if (!updateLastAccess) {
         return
     }
 
-    val restoredTabIds = tabs.map { it.id }
+    val restoredTabIds = tabs.map { it.state.id }
     restoredTabIds.forEach { tabId ->
         store.dispatch(LastAccessAction.UpdateLastAccessAction(tabId))
     }

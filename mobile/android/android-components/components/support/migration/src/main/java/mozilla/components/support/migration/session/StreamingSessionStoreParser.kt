@@ -8,6 +8,7 @@ import android.util.JsonReader
 import android.util.JsonToken
 import mozilla.components.browser.session.storage.RecoverableBrowserState
 import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
 import mozilla.components.support.migration.Result
 import java.io.File
 import java.io.IOException
@@ -75,7 +76,7 @@ internal object StreamingSessionStoreParser {
 
         return RecoverableBrowserState(
             sessions,
-            sessions.getOrNull(selection)?.id
+            sessions.getOrNull(selection)?.state?.id
         )
     }
 
@@ -221,9 +222,12 @@ internal object StreamingSessionStoreParser {
 
         return parsedUrl?.let { url ->
             RecoverableTab(
-                id = UUID.randomUUID().toString(),
-                url = url,
-                title = parsedTitle?.ifEmpty { url } ?: url
+                engineSessionState = null,
+                state = TabState(
+                    id = UUID.randomUUID().toString(),
+                    url = url,
+                    title = parsedTitle?.ifEmpty { url } ?: url
+                )
             )
         }
     }

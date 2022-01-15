@@ -30,6 +30,7 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.state.content.ShareInternetResourceState
 import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
@@ -118,7 +119,7 @@ sealed class RecentlyClosedAction : BrowserAction() {
      *
      * @property tab the [RecoverableTab] to remove
      */
-    data class RemoveClosedTabAction(val tab: RecoverableTab) : RecentlyClosedAction()
+    data class RemoveClosedTabAction(val tab: TabState) : RecentlyClosedAction()
 
     /**
      * Removes all [RecoverableTab]s from the [BrowserState.closedTabs] list.
@@ -133,7 +134,7 @@ sealed class RecentlyClosedAction : BrowserAction() {
     /**
      * Updates [BrowserState.closedTabs] to register the given list of [ClosedTab].
      */
-    data class ReplaceTabsAction(val tabs: List<RecoverableTab>) : RecentlyClosedAction()
+    data class ReplaceTabsAction(val tabs: List<TabState>) : RecentlyClosedAction()
 }
 
 /**

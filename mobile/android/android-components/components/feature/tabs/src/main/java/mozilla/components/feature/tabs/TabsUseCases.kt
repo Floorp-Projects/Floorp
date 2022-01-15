@@ -18,9 +18,11 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
+import mozilla.components.concept.engine.EngineSessionStateStorage
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.feature.session.SessionUseCases.LoadUrlUseCase
 
@@ -356,7 +358,7 @@ class TabsUseCases(
         ) = withContext(Dispatchers.IO) {
             val now = System.currentTimeMillis()
             val state = storage.restore {
-                val lastActiveTime = maxOf(it.lastAccess, it.createdAt)
+                val lastActiveTime = maxOf(it.state.lastAccess, it.state.createdAt)
                 now - lastActiveTime <= tabTimeoutInMs
             }
             if (state != null) {
@@ -368,14 +370,22 @@ class TabsUseCases(
         }
 
         /**
-         * Restores the given [RecoverableTab] and updates the selected tab if [updateSelection] is
+         * Restores the given [TabState] and updates the selected tab if [updateSelection] is
          * `true`.
          */
-        operator fun invoke(tab: RecoverableTab, updateSelection: Boolean = true) {
-            invoke(listOf(tab))
+        suspend operator fun invoke(
+            tab: TabState,
+            engineStateReader: EngineSessionStateStorage,
+            updateSelection: Boolean = true
+        ) = withContext(Dispatchers.IO) {
+            val recoverableTab = RecoverableTab(
+                state = tab,
+                engineSessionState = engineStateReader.read(tab.id)
+            )
+            invoke(listOf(recoverableTab))
 
             if (updateSelection) {
-                selectTab(tab.id)
+                selectTab(recoverableTab.state.id)
             }
         }
     }

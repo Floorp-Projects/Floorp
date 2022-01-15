@@ -14,6 +14,7 @@ import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.storage.HistoryMetadataKey
@@ -98,14 +99,14 @@ private fun JsonReader.browsingSession(
         // In the first version we only saved the selected index in the list of all tabs instead
         // of the ID of the selected tab. If we come across such an older version then we try
         // to find the tab and determine the selected ID ourselves.
-        selectedTabId = tabs?.getOrNull(selectedIndex)?.id
+        selectedTabId = tabs?.getOrNull(selectedIndex)?.state?.id
     }
 
     return if (tabs != null && tabs.isNotEmpty()) {
         // Check if selected tab still exists after restoring/filtering and
         // use most recently accessed tab otherwise.
-        if (tabs.find { it.id == selectedTabId } == null) {
-            selectedTabId = tabs.sortedByDescending { it.lastAccess }.first().id
+        if (tabs.find { it.state.id == selectedTabId } == null) {
+            selectedTabId = tabs.sortedByDescending { it.state.lastAccess }.first().state.id
         }
 
         RecoverableBrowserState(tabs, selectedTabId)
@@ -155,9 +156,11 @@ private fun JsonReader.tab(
     endObject()
 
     return tab?.copy(
-        state = engineSessionState,
-        id = if (restoreSessionId) tab.id else UUID.randomUUID().toString(),
-        parentId = if (restoreParentId) tab.parentId else null
+        engineSessionState = engineSessionState,
+        state = tab.state.copy(
+            id = if (restoreSessionId) tab.state.id else UUID.randomUUID().toString(),
+            parentId = if (restoreParentId) tab.state.parentId else null
+        )
     )
 }
 
@@ -217,34 +220,36 @@ private fun JsonReader.tabSession(): RecoverableTab {
     endObject()
 
     return RecoverableTab(
-        id = requireNotNull(id),
-        parentId = parentId,
-        url = requireNotNull(url),
-        title = requireNotNull(title),
-        searchTerm = requireNotNull(searchTerm),
-        contextId = contextId,
-        state = null, // This will be deserialized and added separately
-        readerState = ReaderState(
-            active = readerStateActive ?: false,
-            activeUrl = readerActiveUrl
-        ),
-        historyMetadata = if (historyMetadataUrl != null) {
-            HistoryMetadataKey(
-                historyMetadataUrl,
-                historyMetadataSearchTerm,
-                historyMetadataReferrerUrl
-            )
-        } else {
-            null
-        },
-        private = false, // We never serialize private sessions
-        lastAccess = lastAccess ?: 0,
-        createdAt = createdAt ?: 0,
-        lastMediaAccessState = LastMediaAccessState(
-            lastMediaUrl ?: "",
-            lastMediaAccess = lastMediaAccess ?: 0,
-            mediaSessionActive = mediaSessionActive ?: false
-        ),
-        source = SessionState.Source.restore(sourceId, externalSourcePackageId, externalSourceCategory)
+        engineSessionState = null, // This will be deserialized and added separately
+        state = TabState(
+            id = requireNotNull(id),
+            parentId = parentId,
+            url = requireNotNull(url),
+            title = requireNotNull(title),
+            searchTerm = requireNotNull(searchTerm),
+            contextId = contextId,
+            readerState = ReaderState(
+                active = readerStateActive ?: false,
+                activeUrl = readerActiveUrl
+            ),
+            historyMetadata = if (historyMetadataUrl != null) {
+                HistoryMetadataKey(
+                    historyMetadataUrl,
+                    historyMetadataSearchTerm,
+                    historyMetadataReferrerUrl
+                )
+            } else {
+                null
+            },
+            private = false, // We never serialize private sessions
+            lastAccess = lastAccess ?: 0,
+            createdAt = createdAt ?: 0,
+            lastMediaAccessState = LastMediaAccessState(
+                lastMediaUrl ?: "",
+                lastMediaAccess = lastMediaAccess ?: 0,
+                mediaSessionActive = mediaSessionActive ?: false
+            ),
+            source = SessionState.Source.restore(sourceId, externalSourcePackageId, externalSourceCategory)
+        )
     )
 }

@@ -6,6 +6,7 @@ package mozilla.components.support.migration.session
 
 import mozilla.components.browser.session.storage.RecoverableBrowserState
 import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
 import mozilla.components.support.migration.Result
 import org.json.JSONException
 import org.json.JSONObject
@@ -39,7 +40,7 @@ internal object InMemorySessionStoreParser {
             val index = tab.getInt("index")
             val entries = tab.getJSONArray("entries")
             if (index < 1 || entries.length() < index) {
-                // This tab has no entries at all. Let's just stkip it.
+                // This tab has no entries at all. Let's just skip it.
                 continue
             }
 
@@ -55,9 +56,12 @@ internal object InMemorySessionStoreParser {
 
             sessions.add(
                 RecoverableTab(
-                    id = UUID.randomUUID().toString(),
-                    url = url,
-                    title = title
+                    engineSessionState = null,
+                    state = TabState(
+                        id = UUID.randomUUID().toString(),
+                        url = url,
+                        title = title
+                    )
                 )
             )
 
@@ -69,7 +73,7 @@ internal object InMemorySessionStoreParser {
         return Result.Success(
             RecoverableBrowserState(
                 sessions,
-                sessions.getOrNull(selection)?.id
+                sessions.getOrNull(selection)?.state?.id
             )
         )
     }
