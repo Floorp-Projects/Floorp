@@ -9,6 +9,7 @@
 #include "js/Value.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ReadableStream.h"
@@ -39,6 +40,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStreamDefaultController)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReadableStreamDefaultController)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCancelAlgorithm, mStrategySizeAlgorithm,
                                   mPullAlgorithm, mStream)
+  tmp->mQueue.clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -69,8 +71,7 @@ NS_INTERFACE_MAP_END_INHERITING(ReadableStreamController)
 ReadableStreamDefaultController::ReadableStreamDefaultController(
     nsIGlobalObject* aGlobal)
     : ReadableStreamController(aGlobal) {
-  // Add |MOZ_COUNT_CTOR(ReadableStreamDefaultController);| for a non-refcounted
-  // object.
+  mozilla::HoldJSObjects(this);
 }
 
 ReadableStreamDefaultController::~ReadableStreamDefaultController() {
@@ -79,6 +80,7 @@ ReadableStreamDefaultController::~ReadableStreamDefaultController() {
   //         having entries in its queue.
   //
   //         This needs to be verified as not indicating some other issue.
+  mozilla::DropJSObjects(this);
   mQueue.clear();
 }
 
@@ -183,7 +185,7 @@ Nullable<double> ReadableStreamDefaultController::GetDesiredSize() {
 //       As far as I know, this isn't currently visible, but we need to keep
 //       this in mind. This is a weakness of this current implementation, and
 //       I'd prefer to have a better answer here eventually.
-static void ReadableStreamDefaultControllerClearAlgorithms(
+void ReadableStreamDefaultControllerClearAlgorithms(
     ReadableStreamDefaultController* aController) {
   // Step 1.
   aController->SetPullAlgorithm(nullptr);
@@ -424,18 +426,18 @@ class PullIfNeededNativePromiseHandler final : public PromiseNativeHandler {
       mController->SetPullAgain(false);
 
       // Step 7.2.2
-      IgnoredErrorResult rv;
+      ErrorResult rv;
       ReadableStreamDefaultControllerCallPullIfNeeded(
           aCx, MOZ_KnownLive(mController), rv);
-      // Not Sure How To Handle Errors Inside Native Callbacks,
-      (void)NS_WARN_IF(rv.Failed());
+
+      (void)rv.MaybeSetPendingException(aCx);
     }
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
     // Step 8.1
-    IgnoredErrorResult rv;
+    ErrorResult rv;
     ReadableStreamDefaultControllerError(aCx, mController, aValue, rv);
     (void)rv.MaybeSetPendingException(aCx, "PullIfNeeded Rejected Error");
   }
@@ -479,40 +481,12 @@ static void ReadableStreamDefaultControllerCallPullIfNeeded(
   RefPtr<UnderlyingSourcePullCallbackHelper> pullAlgorithm(
       aController->GetPullAlgorithm());
 
-  // Pre-allocate a promise which we may end up discarding or rejecting.
-  // We do this here in order to avoid having to try allocating on a
-  // failure path after the callback is called.
-  RefPtr<Promise> maybeRejectPromise =
-      Promise::Create(aController->GetParentObject(), aRv);
-  if (aRv.Failed()) {
-    return;
-  }
-
   RefPtr<Promise> pullPromise =
       pullAlgorithm ? pullAlgorithm->PullCallback(aCx, *aController, aRv)
                     : Promise::CreateResolvedWithUndefined(
                           aController->GetParentObject(), aRv);
-
-  // The below failure handling code is all about implmenting WebIDL promise
-  // rejection semantics until
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1726595 is fixed.
-  //
-  // Since this function can be called as part of a native promise handler,
-  // which has no way right now to signal error, and to ape what we do in the SM
-  // Streams implementation,
-  //  https://searchfox.org/mozilla-central/source/js/src/builtin/streams/MiscellaneousOperations-inl.h#37
-  //
-
-  // Inform the ErrorResult that we're handling a JS exception if it happened.
-  aRv.WouldReportJSException();
-
-  // We want to convert callback throw to a rejected promise.
   if (aRv.Failed()) {
-    MOZ_ASSERT(!pullPromise);
-
-    // Use the previously allocated promise now.
-    pullPromise = maybeRejectPromise;
-    pullPromise->MaybeReject(std::move(aRv));
+    return;
   }
 
   // Step 7 + 8:
@@ -552,9 +526,7 @@ class StartPromiseNativeHandler final : public PromiseNativeHandler {
     ErrorResult rv;
     RefPtr<ReadableStreamDefaultController> stackController = mController;
     ReadableStreamDefaultControllerCallPullIfNeeded(aCx, stackController, rv);
-    if (rv.Failed()) {
-      MOZ_CRASH("Error Handling Not Clear Inside Promise Callback");
-    }
+    (void)rv.MaybeSetPendingException(aCx, "StartPromise Resolved Error");
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {

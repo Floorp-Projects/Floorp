@@ -18,6 +18,10 @@
 #include "mozilla/dom/BodyStream.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/FetchStreamReader.h"
+#ifdef MOZ_DOM_STREAMS
+#  include "mozilla/dom/ReadableStream.h"
+#  include "mozilla/dom/ReadableStreamDefaultReaderBinding.h"
+#endif
 #include "mozilla/dom/RequestBinding.h"
 
 class nsIGlobalObject;
@@ -39,7 +43,8 @@ class BlobImpl;
 class InternalRequest;
 class
     OwningBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString;
-class ReadableStream;
+
+class ReadableStreamDefaultReader;
 class RequestOrUSVString;
 class WorkerPrivate;
 
@@ -158,9 +163,7 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
   }
 
 #ifdef MOZ_DOM_STREAMS
-  already_AddRefed<ReadableStream> GetBody(ErrorResult& aRv) {
-    MOZ_CRASH("MOZ_DOM_STREAMS:NYI");
-  }
+  already_AddRefed<ReadableStream> GetBody(JSContext* aCx, ErrorResult& aRv);
 #else
   void GetBody(JSContext* aCx, JS::MutableHandle<JSObject*> aBodyOut,
                ErrorResult& aRv);
@@ -171,6 +174,14 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
 
   const nsAString& BodyLocalPath() const;
 
+#ifdef MOZ_DOM_STREAMS
+  // If the body contains a ReadableStream body object, this method produces a
+  // tee() of it.
+  void MaybeTeeReadableStreamBody(JSContext* aCx, ReadableStream** aBodyOut,
+                                  FetchStreamReader** aStreamReader,
+                                  nsIInputStream** aInputStream,
+                                  ErrorResult& aRv);
+#else
   // If the body contains a ReadableStream body object, this method produces a
   // tee() of it.
   void MaybeTeeReadableStreamBody(JSContext* aCx,
@@ -178,6 +189,7 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
                                   FetchStreamReader** aStreamReader,
                                   nsIInputStream** aInputStream,
                                   ErrorResult& aRv);
+#endif
 
   // Utility public methods accessed by various runnables.
 
@@ -210,11 +222,19 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
     mFetchStreamReader = nullptr;
   }
 
+#ifndef MOZ_DOM_STREAMS
   void SetReadableStreamBody(JSObject* aBody) override {
     mReadableStreamBody = aBody;
   }
-
   JSObject* GetReadableStreamBody() override { return mReadableStreamBody; }
+#else
+  void SetReadableStreamBody(ReadableStream* aBody) override {
+    mReadableStreamBody = aBody;
+  }
+  ReadableStream* GetReadableStreamBody() override {
+    return mReadableStreamBody;
+  }
+#endif
 
   void MarkAsRead() override { mBodyUsed = true; }
 
@@ -233,26 +253,44 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
   // Always set whenever the FetchBody is created on the worker thread.
   WorkerPrivate* mWorkerPrivate;
 
+#ifdef MOZ_DOM_STREAMS
+  // This is the ReadableStream exposed to content. It's underlying source is a
+  // BodyStream object. This needs to be traversed by subclasses.
+  RefPtr<ReadableStream> mReadableStreamBody;
+
+  // This is the Reader used to retrieve data from the body. This needs to be
+  // traversed by subclasses.
+  RefPtr<ReadableStreamDefaultReader> mReadableStreamReader;
+#else
   // This is the ReadableStream exposed to content. It's underlying source is a
   // BodyStream object.
   JS::Heap<JSObject*> mReadableStreamBody;
 
   // This is the Reader used to retrieve data from the body.
   JS::Heap<JSObject*> mReadableStreamReader;
+#endif
   RefPtr<FetchStreamReader> mFetchStreamReader;
 
   explicit FetchBody(nsIGlobalObject* aOwner);
 
   virtual ~FetchBody();
 
+#ifdef MOZ_DOM_STREAMS
+  void SetReadableStreamBody(JSContext* aCx, ReadableStream* aBody);
+#else
   void SetReadableStreamBody(JSContext* aCx, JSObject* aBody);
+#endif
 
  private:
   Derived* DerivedClass() const {
     return static_cast<Derived*>(const_cast<FetchBody*>(this));
   }
 
+#ifdef MOZ_DOM_STREAMS
+  void LockStream(JSContext* aCx, ReadableStream* aStream, ErrorResult& aRv);
+#else
   void LockStream(JSContext* aCx, JS::HandleObject aStream, ErrorResult& aRv);
+#endif
 
   bool IsOnTargetThread() { return NS_IsMainThread() == !mWorkerPrivate; }
 

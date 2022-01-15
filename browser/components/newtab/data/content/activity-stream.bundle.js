@@ -2135,7 +2135,7 @@ class ASRouterAdminInner extends react__WEBPACK_IMPORTED_MODULE_3___default.a.Pu
       className: "icon icon-small-spacer icon-info"
     }), " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("span", null, "Need help using these tools? Check out our", " ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("a", {
       target: "blank",
-      href: "https://github.com/mozilla/activity-stream/blob/master/content-src/asrouter/docs/debugging-docs.md"
+      href: "https://firefox-source-docs.mozilla.org/browser/components/newtab/content-src/asrouter/docs/index.html"
     }, "documentation"))), this.getSection()));
   }
 

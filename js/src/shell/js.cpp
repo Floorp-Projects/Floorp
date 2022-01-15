@@ -7100,21 +7100,6 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool NukeCCW(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  if (args.length() != 1 || !args[0].isObject() ||
-      !IsCrossCompartmentWrapper(&args[0].toObject())) {
-    JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
-                              JSSMSG_INVALID_ARGS, "nukeCCW");
-    return false;
-  }
-
-  NukeCrossCompartmentWrapper(cx, &args[0].toObject());
-  args.rval().setUndefined();
-  return true;
-}
-
 static bool NukeAllCCWs(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -9571,10 +9556,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "         purposes. If this property is omitted, supply no principal.\n"
 "      systemPrincipal: If true, use the shell's trusted principals for the\n"
 "         new realm. This creates a realm that's marked as a 'system' realm."),
-
-    JS_FN_HELP("nukeCCW", NukeCCW, 1, 0,
-"nukeCCW(wrapper)",
-"  Nuke a CrossCompartmentWrapper, which turns it into a DeadProxyObject."),
 
     JS_FN_HELP("nukeAllCCWs", NukeAllCCWs, 0, 0,
 "nukeAllCCWs()",
