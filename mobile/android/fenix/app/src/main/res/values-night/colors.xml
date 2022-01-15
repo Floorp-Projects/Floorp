@@ -113,9 +113,8 @@
     <color name="disabled_normal_theme">@color/photonLightGrey05A40</color>
     <color name="toggle_off_knob_normal_theme">@color/toggle_off_knob_dark_theme</color>
     <color name="toggle_off_track_normal_theme">@color/toggle_off_track_dark_theme</color>
-    <color name="accent_on_dark_background_normal_theme">@color/photonViolet40</color>
     <color name="toolbar_divider_color_normal_theme">@color/photonDarkGrey10</color>
-    <color name="fill_link_from_clipboard_normal_theme">@color/accent_on_dark_background_normal_theme</color>
+    <color name="fill_link_from_clipboard_normal_theme">@color/photonViolet40</color>
     <color name="sync_disconnected_icon_fill_normal_theme">#FFF36E</color>
     <color name="sync_disconnected_background_normal_theme">#5B5846</color>
     <color name="swipe_delete_background_normal_theme">@color/photonDarkGrey20</color>

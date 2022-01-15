@@ -62,7 +62,7 @@
         <item name="scrimStart">@color/fx_mobile_layer_color_scrim_start</item>
         <item name="scrimEnd">@color/fx_mobile_layer_color_scrim_end</item>
         <item name="snackbar">@color/fx_mobile_action_color_primary</item>
-        <item name="accentUsedOnDarkBackground">@color/accent_on_dark_background_normal_theme</item>
+        <item name="accentUsedOnDarkBackground">@color/fx_mobile_text_color_accent</item>
         <item name="toolbarStartGradient">@color/fx_mobile_layer_color_1</item>
         <item name="toolbarCenterGradient">@color/fx_mobile_layer_color_1</item>
         <item name="toolbarEndGradient">@color/fx_mobile_layer_color_1</item>
