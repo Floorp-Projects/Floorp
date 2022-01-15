@@ -36,6 +36,11 @@ public class GeckoScreenOrientation {
     LANDSCAPE_PRIMARY(1 << 2),
     LANDSCAPE_SECONDARY(1 << 3),
     LANDSCAPE(LANDSCAPE_PRIMARY.value | LANDSCAPE_SECONDARY.value),
+    ANY(
+        PORTRAIT_PRIMARY.value
+            | PORTRAIT_SECONDARY.value
+            | LANDSCAPE_PRIMARY.value
+            | LANDSCAPE_SECONDARY.value),
     DEFAULT(1 << 4);
 
     public final short value;
