@@ -299,8 +299,8 @@
     <color name="search_view_hint_color">@color/photonDarkGrey05</color>
 
     <!-- Tab Counter colors -->
-    <color name="mozac_ui_tabcounter_default_tint">@color/primary_text_light_theme</color>
-    <color name="mozac_ui_tabcounter_default_text">@color/primary_text_light_theme</color>
+    <color name="mozac_ui_tabcounter_default_tint" tools:ignore="UnusedResources">@color/primary_text_light_theme</color>
+    <color name="mozac_ui_tabcounter_default_text" tools:ignore="UnusedResources">@color/primary_text_light_theme</color>
 
     <!-- App Spinners colors -->
     <color name="spinner_selected_item">#1415141A</color>

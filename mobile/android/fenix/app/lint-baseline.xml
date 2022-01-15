@@ -1704,28 +1704,6 @@
 
     <issue
         id="UnusedResources"
-        message="The resource `R.color.mozac_ui_tabcounter_default_tint` appears to be unused"
-        errorLine1="    &lt;color name=&quot;mozac_ui_tabcounter_default_tint&quot;>@color/primary_text_light_theme&lt;/color>"
-        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/colors.xml"
-            line="342"
-            column="12"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
-        message="The resource `R.color.mozac_ui_tabcounter_default_text` appears to be unused"
-        errorLine1="    &lt;color name=&quot;mozac_ui_tabcounter_default_text&quot;>@color/primary_text_light_theme&lt;/color>"
-        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/colors.xml"
-            line="343"
-            column="12"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
         message="The resource `R.dimen.mozac_browser_menu_corner_radius` appears to be unused"
         errorLine1="    &lt;dimen name=&quot;mozac_browser_menu_corner_radius&quot;>8dp&lt;/dimen>"
         errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
