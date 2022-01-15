@@ -23,10 +23,7 @@
     <string name="no_private_tabs_description">Tab privat Anda akan muncul di sini.</string>
 
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="open_tab_tray_single">1 tab terbuka. Ketuk untuk beralih tab.</string>
-
-    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s tab terbuka. Ketuk untuk beralih tab.</string>
+    <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">1 tab terbuka. Ketuk untuk beralih tab.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d terpilih</string>
@@ -41,21 +38,17 @@
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Simpan tab terpilih ke koleksi</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
-    <string name="tab_tray_item_selected_multiselect_content_description">%1$s dipilih</string>
+    <string moz:removedIn="96" name="tab_tray_item_selected_multiselect_content_description" tools:ignore="UnusedResources">%1$s dipilih</string>
     <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
-    <string name="tab_tray_item_unselected_multiselect_content_description">%1$s tidak dipilih</string>
+    <string moz:removedIn="96" name="tab_tray_item_unselected_multiselect_content_description" tools:ignore="UnusedResources">%1$s tidak dipilih</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
-    <string name="tab_tray_exit_multiselect_content_description">Keluar dari mode seleksi ganda</string>
+    <string moz:removedIn="96" name="tab_tray_exit_multiselect_content_description" tools:ignore="UnusedResources">Keluar dari mode seleksi ganda</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->
-    <string name="tab_tray_enter_multiselect_content_description">Memasuki mode seleksi ganda, pilih tab untuk menyimpannya ke koleksi</string>
+    <string moz:removedIn="96" name="tab_tray_enter_multiselect_content_description" tools:ignore="UnusedResources">Memasuki mode seleksi ganda, pilih tab untuk menyimpannya ke koleksi</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Terpilih</string>
 
     <!-- Home - Recently saved bookmarks -->
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">Baru saja disimpan</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="recently_bookmarked" tools:ignore="UnusedResources">Baru saja dimarkahi</string>
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Markah terbaru</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
@@ -63,14 +56,16 @@
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">Tampilkan semua</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description">Tampilkan tombol semua markah tersimpan</string>
+    <string name="recently_saved_show_all_content_description_2">Tampilkan semua markah tersimpan</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">Tampilkan tombol semua markah tersimpan</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s diproduksi oleh Mozilla.</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
-    <string name="private_browsing_title">Anda berada dalam sesi pribadi</string>
+    <string moz:removedIn="96" name="private_browsing_title" tools:ignore="UnusedResources">Anda berada dalam sesi pribadi</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">%1$s menghapus riwayat pencarian dan penjelajahan dari tab privat ketika Anda menutupnya atau keluar dari aplikasi. Ketika hal ini tidak membuat Anda jadi anonim pada situs Web atau penyedia jasa Internet Anda, ini akan mempermudah dalam menjaga apa yang Anda lakukan daring secara privat dari orang lain yang menggunakan peranti ini.</string>
@@ -78,7 +73,7 @@
        Mitos umum tentang penjelajahan privat
     </string>
     <!-- Delete session button to erase your history in a private session -->
-    <string name="private_browsing_delete_session">Hapus sesi</string>
+    <string moz:removedIn="96" name="private_browsing_delete_session" tools:ignore="UnusedResources">Hapus sesi</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
@@ -121,17 +116,16 @@
     <string name="tab_tray_inactive_auto_close_body">Firefox dapat menutup tab yang belum Anda lihat selama sebulan terakhir.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Tutup</string>
+
     <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_turn_on_auto_close_button">Nyalakan Tutup-Otomatis</string>
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">Nyalakan tutup-otomatis</string>
+
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Tab baru</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Tab pribadi baru</string>
-
-    <!-- Heading for the Top Sites block -->
-    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Situs teratas</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -140,34 +134,38 @@
     <string name="recent_tabs_show_all">Tampilkan semua</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description">Tampilkan tombol semua tab terbaru</string>
+    <string name="recent_tabs_show_all_content_description_2">Tampilkan tombol semua tab terbaru</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">Tampilkan semua tab terbaru</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Pencarian Anda untuk \&quot;%1$s\&quot;</string>
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        The first parameter is the count for number of sites in the group.  This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count">Situs: %1$s</string>
+    The first parameter is the count for number of sites in the group.  This number will always be more than one. -->
+    <string moz:removedIn="96" name="recent_tabs_search_term_count" tools:ignore="UnusedResources">Situs: %1$s</string>
+
+    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
+        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
+    <string name="recent_tabs_search_term_count_2">%d situs</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">Penjelajahan terakhir</string>
-
+    <string name="history_metadata_header_2">Baru dikunjungi</string>
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string moz:removedIn="94" name="history_metadata_header_2" tools:ignore="UnusedResources">Baru dikunjungi</string>
-    <!-- Header text for a section on the home screen that displays grouped highlights from the
-         user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header_3">Pencarian terkini</string>
+    <string moz:removedIn="96" name="history_metadata_header_3" tools:ignore="UnusedResources">Pencarian terkini</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">Hapus</string>
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description">Tampilkan tombol semua eksplorasi lampau</string>
+    <string name="past_explorations_show_all_content_description_2">Tampilkan semua eksplorasi lampau</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">Tampilkan tombol semua eksplorasi lampau</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Buka Tab</string>
+    <string moz:removedIn="96" name="browser_tabs_button" tools:ignore="UnusedResources">Buka Tab</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Kembali</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -176,14 +174,12 @@
     <string name="browser_menu_refresh">Segarkan</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Hentikan</string>
-    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Markah</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string name="browser_menu_edit_bookmark">Edit markah</string>
+    <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">Edit markah</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Pengaya</string>
     <!-- Browser menu button that opens the addon extensions manager -->
-    <string name="browser_menu_extensions">Ekstensi</string>
+    <string moz:removedIn="96" name="browser_menu_extensions" tools:ignore="UnusedResources">Ekstensi</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Tidak ada pengaya di sini</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -207,13 +203,13 @@
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Temukan di laman</string>
     <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">Tab pribadi</string>
+    <string moz:removedIn="96" name="browser_menu_private_tab" tools:ignore="UnusedResources">Tab pribadi</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Simpan ke koleksi</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Bagikan</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">Bagikan dengan…</string>
+    <string moz:removedIn="96" name="menu_share_with" tools:ignore="UnusedResources">Bagikan dengan…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Buka di %1$s</string>
@@ -233,7 +229,7 @@
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Buka di Aplikasi</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string name="browser_menu_read_appearance">Tampilan</string>
+    <string moz:removedIn="96" name="browser_menu_read_appearance" tools:ignore="UnusedResources">Tampilan</string>
 
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Ubahsuai tampilan pembaca</string>
@@ -252,13 +248,13 @@
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">Tidak dapat terhubung. Skema URL yang tidak dapat dikenali.</string>
+    <string moz:removedIn="96" name="unknown_scheme_error_message" tools:ignore="UnusedResources">Tidak dapat terhubung. Skema URL yang tidak dapat dikenali.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Bahasa yang dipilih</string>
     <!-- Content description for search icon -->
-    <string name="a11y_search_icon_content_description">Pencarian</string>
+    <string moz:removedIn="96" name="a11y_search_icon_content_description" tools:ignore="UnusedResources">Pencarian</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">Ikuti bahasa peranti</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -273,7 +269,7 @@
     <string name="search_shortcuts_engine_settings">Setelan mesin pencari</string>
 
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_engines_search_with">Saat ini, cari dengan:</string>
+    <string moz:removedIn="96" name="search_engines_search_with" tools:ignore="UnusedResources">Saat ini, cari dengan:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Isi tautan dari papan klip</string>
 
@@ -330,7 +326,7 @@
     <!-- Title for the settings page-->
     <string name="settings">Setelan</string>
     <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">Dasar</string>
+    <string moz:removedIn="96" name="preferences_category_basics" tools:ignore="UnusedResources">Dasar</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">Umum</string>
     <!-- Preference category for all links about Fenix -->
@@ -342,26 +338,26 @@
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Bilah alamat</string>
     <!-- Preference linking to help about Fenix -->
-    <string name="preferences_help">Bantuan</string>
+    <string moz:removedIn="96" name="preferences_help" tools:ignore="UnusedResources">Bantuan</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Beri nilai di Google Play</string>
     <!-- Preference for giving feedback about Fenix -->
-    <string name="preferences_feedback">Berikan umpan balik</string>
+    <string moz:removedIn="96" name="preferences_feedback" tools:ignore="UnusedResources">Berikan umpan balik</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">Tentang %1$s</string>
     <!-- Preference linking to the your rights SUMO page -->
-    <string name="preferences_your_rights">Hak Anda</string>
+    <string moz:removedIn="96" name="preferences_your_rights" tools:ignore="UnusedResources">Hak Anda</string>
     <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">Sandi</string>
+    <string moz:removedIn="96" name="preferences_passwords" tools:ignore="UnusedResources">Sandi</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">Kartu kredit dan alamat</string>
+    <string moz:removedIn="96" name="preferences_credit_cards_addresses" tools:ignore="UnusedResources">Kartu kredit dan alamat</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Setel sebagai peramban baku</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Tingkat Lanjut</string>
     <!-- Preference category for privacy settings -->
-    <string name="preferences_category_privacy">Privasi</string>
+    <string moz:removedIn="96" name="preferences_category_privacy" tools:ignore="UnusedResources">Privasi</string>
 
 
     <!-- Preference category for privacy and security settings -->
@@ -389,13 +385,11 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Akun</string>
     <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">Masuk</string>
+    <string moz:removedIn="96" name="preferences_sign_in" tools:ignore="UnusedResources">Masuk</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Bilah alat</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
-    <!-- Preference for customizing the home screen -->
-    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Beranda</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home_2">Beranda</string>
     <!-- Preference for gestures based actions -->
@@ -415,9 +409,9 @@
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Pengumpulan data</string>
     <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">Pemberitahuan privasi</string>
+    <string moz:removedIn="96" name="preferences_privacy_link" tools:ignore="UnusedResources">Pemberitahuan privasi</string>
     <!-- Preference category for developer tools -->
-    <string name="developer_tools_category">Perangkat pengembang</string>
+    <string moz:removedIn="96" name="developer_tools_category" tools:ignore="UnusedResources">Perangkat pengembang</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Pengawakutuan jarak jauh melalui USB</string>
     <!-- Preference title for switch preference to show search engines -->
@@ -470,17 +464,13 @@
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Lompat kembali</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Baru saja disimpan</string>
-    <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string moz:removedIn="94" name="customize_toggle_recently_bookmarked" tools:ignore="UnusedResources">Baru saja dimarkahi</string>
-    <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks">Markah terbaru</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
-    <string moz:removedIn="94" name="customize_toggle_recently_visited" tools:ignore="UnusedResources">Baru dikunjungi</string>
+    <string name="customize_toggle_recently_visited">Baru dikunjungi</string>
     <!-- Title for the customize home screen settings section for recent searches. Recent searches
      is a section where users see a list of groups of tabs that they have visited in the past few days -->
-    <string name="customize_toggle_recent_searches">Pencarian terkini</string>
+    <string moz:removedIn="96" name="customize_toggle_recent_searches" tools:ignore="UnusedResources">Pencarian terkini</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
@@ -539,21 +529,21 @@
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Tab Diterima</string>
     <!-- When multiple tabs have been received -->
-    <string name="fxa_tabs_received_notification_name">Tab Diterima</string>
+    <string moz:removedIn="96" name="fxa_tabs_received_notification_name" tools:ignore="UnusedResources">Tab Diterima</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Tab dari %s</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
-    <string name="preferences_tracking_protection_settings">Perlindungan Pelacakan</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_settings" tools:ignore="UnusedResources">Perlindungan Pelacakan</string>
     <!-- Preference switch for tracking protection -->
-    <string name="preferences_tracking_protection">Perlindungan Pelacakan</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection" tools:ignore="UnusedResources">Perlindungan Pelacakan</string>
     <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">Blokir konten dan skrip yang melacak Anda secara daring</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_description" tools:ignore="UnusedResources">Blokir konten dan skrip yang melacak Anda secara daring</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Kekecualian</string>
     <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">Perlindungan Pelacakan tidak aktif untuk situs web ini</string>
+    <string moz:removedIn="96" name="preferences_tracking_protection_exceptions_description" tools:ignore="UnusedResources">Perlindungan Pelacakan tidak aktif untuk situs web ini</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Nyalakan untuk semua situs</string>
 
@@ -563,7 +553,7 @@
     <string name="exceptions_empty_message_learn_more_link">Pelajari lebih lanjut</string>
 
     <!-- Preference switch for Telemetry -->
-    <string name="preferences_telemetry">Telemetri</string>
+    <string moz:removedIn="96" name="preferences_telemetry" tools:ignore="UnusedResources">Telemetri</string>
 
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Data penggunaan dan teknis</string>
@@ -572,7 +562,7 @@
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Data pemasaran</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string name="preferences_marketing_data_description">Bagikan data mengenai fitur yang Anda gunakan pada %1$s dengan Leanplum, vendor pemasaran seluler kami.</string>
+    <string moz:removedIn="96" name="preferences_marketing_data_description" tools:ignore="UnusedResources">Bagikan data mengenai fitur yang Anda gunakan pada %1$s dengan Leanplum, vendor pemasaran seluler kami.</string>
     <!-- Preference description for marketing data collection -->
     <string name="preferences_marketing_data_description2">Bagikan data penggunaan dasar dengan Adjust, vendor pemasaran seluler kami</string>
     <!-- Title for studies preferences -->
@@ -580,24 +570,22 @@
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">Izinkan Mozilla untuk memasang dan menjalankan kajian</string>
     <!-- Title for experiments preferences -->
-    <string name="preference_experiments">Eksperimen</string>
+    <string moz:removedIn="96" name="preference_experiments" tools:ignore="UnusedResources">Eksperimen</string>
     <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">Izinkan Mozilla untuk memasang dan mengumpulkan data untuk fitur eksperimental</string>
+    <string moz:removedIn="96" name="preference_experiments_summary" tools:ignore="UnusedResources">Izinkan Mozilla untuk memasang dan mengumpulkan data untuk fitur eksperimental</string>
     <!-- Preference switch for crash reporter -->
-    <string name="preferences_crash_reporter">Pelapor kerusakan</string>
+    <string moz:removedIn="96" name="preferences_crash_reporter" tools:ignore="UnusedResources">Pelapor kerusakan</string>
     <!-- Preference switch for Mozilla location service -->
-    <string name="preferences_mozilla_location_service">Layanan lokasi Mozilla</string>
+    <string moz:removedIn="96" name="preferences_mozilla_location_service" tools:ignore="UnusedResources">Layanan lokasi Mozilla</string>
 
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preferences_fenix_health_report">Laporan kesehatan %s</string>
+    <string moz:removedIn="96" name="preferences_fenix_health_report" tools:ignore="UnusedResources">Laporan kesehatan %s</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Aktifkan Sinkronisasi</string>
-    <!-- Preference for pairing -->
-    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Pindai kode pemasangan di Firefox desktop</string>
     <!-- Preference for account login -->
-    <string name="preferences_sync_sign_in">Masuk</string>
+    <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">Masuk</string>
 
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Masuk untuk menghubungkan ulang</string>
@@ -608,9 +596,9 @@
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[Pindai kode QR yang ditunjukkan di <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">Buka Kamera</string>
+    <string moz:removedIn="96" name="pair_open_camera" tools:ignore="UnusedResources">Buka Kamera</string>
     <!-- Button to cancel pairing -->
-    <string name="pair_cancel">Batal</string>
+    <string moz:removedIn="96" name="pair_cancel" tools:ignore="UnusedResources">Batal</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -641,9 +629,9 @@
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
-    <string name="library_sessions">Sesi</string>
+    <string moz:removedIn="96" name="library_sessions" tools:ignore="UnusedResources">Sesi</string>
     <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">Tangkapan Layar</string>
+    <string moz:removedIn="96" name="library_screenshots" tools:ignore="UnusedResources">Tangkapan Layar</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Unduhan</string>
     <!-- Option in library to open Bookmarks page -->
@@ -661,15 +649,15 @@
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">Tab baru</string>
     <!-- Option in Library to find text in page -->
-    <string name="library_find_in_page">Temukan di laman</string>
+    <string moz:removedIn="96" name="library_find_in_page" tools:ignore="UnusedResources">Temukan di laman</string>
     <!-- Option in Library to open Reading List -->
-    <string name="library_reading_list">Daftar Baca</string>
+    <string moz:removedIn="96" name="library_reading_list" tools:ignore="UnusedResources">Daftar Baca</string>
     <!-- Menu Item Label for Search in Library -->
-    <string name="library_search">Cari</string>
+    <string moz:removedIn="96" name="library_search" tools:ignore="UnusedResources">Cari</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Setelan</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">Menu item riwayat</string>
+    <string moz:removedIn="96" name="content_description_history_menu" tools:ignore="UnusedResources">Menu item riwayat</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Tutup</string>
 
@@ -721,20 +709,12 @@
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Tutup otomatis tab terbuka</string>
 
     <!-- Opening screen -->
-    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Mulai dari Beranda</string>
     <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
     <string name="preferences_opening_screen">Layar pembuka</string>
-    <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Setelah empat jam</string>
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">Beranda</string>
-    <!-- Option for always starting on the home screen -->
-    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Selalu</string>
     <!-- Option for always opening the user's last-open tab when re-opening the app -->
     <string name="opening_screen_last_tab">Tab terakhir</string>
-    <!-- Option for never starting on the home screen -->
-    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Tidak Pernah</string>
     <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
     <string name="opening_screen_after_four_hours_of_inactivity">Beranda setelah empat jam tidak aktif</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
@@ -774,7 +754,7 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Buka tab</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">Sesi pribadi</string>
+    <string moz:removedIn="96" name="tabs_header_private_title" tools:ignore="UnusedResources">Sesi pribadi</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Tab privat</string>
     <!-- Title for the list of tabs in the synced tabs -->
@@ -788,11 +768,9 @@
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
     <string name="tab_drawer_fab_sync">Sinkron</string>
     <!-- Text shown as the title of the open tab tray -->
-    <string name="tab_tray_title">Tab Terbuka</string>
+    <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">Tab Terbuka</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
-    <string name="tab_tray_menu_item_save">Simpan ke koleksi</string>
-    <!-- Text shown in the menu for the collection selector -->
-    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Pilih</string>
+    <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">Simpan ke koleksi</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Bagikan semua tab</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -806,11 +784,11 @@
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Tutup semua tab</string>
     <!-- Shortcut action to open new tab -->
-    <string name="tab_tray_menu_open_new_tab">Tab baru</string>
+    <string moz:removedIn="96" name="tab_tray_menu_open_new_tab" tools:ignore="UnusedResources">Tab baru</string>
     <!-- Shortcut action to open the home screen -->
-    <string name="tab_tray_menu_home">Buka beranda</string>
+    <string moz:removedIn="96" name="tab_tray_menu_home" tools:ignore="UnusedResources">Buka beranda</string>
     <!-- Shortcut action to toggle private mode -->
-    <string name="tab_tray_menu_toggle">Alihkan mode tab</string>
+    <string moz:removedIn="96" name="tab_tray_menu_toggle" tools:ignore="UnusedResources">Alihkan mode tab</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_bookmark">Markah</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
@@ -830,25 +808,25 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Buka menu tab</string>
     <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">Tutup semua tab</string>
+    <string moz:removedIn="96" name="tabs_menu_close_all_tabs" tools:ignore="UnusedResources">Tutup semua tab</string>
     <!-- Open tabs menu item to share all tabs -->
-    <string name="tabs_menu_share_tabs">Bagikan tab</string>
+    <string moz:removedIn="96" name="tabs_menu_share_tabs" tools:ignore="UnusedResources">Bagikan tab</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Simpan tab ke koleksi</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Menu tab</string>
     <!-- Tab menu item to share the tab -->
-    <string name="tab_share">Bagikan tab</string>
+    <string moz:removedIn="96" name="tab_share" tools:ignore="UnusedResources">Bagikan tab</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string name="current_session_delete">Hapus</string>
+    <string moz:removedIn="96" name="current_session_delete" tools:ignore="UnusedResources">Hapus</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
-    <string name="current_session_save">Simpan</string>
+    <string moz:removedIn="96" name="current_session_save" tools:ignore="UnusedResources">Simpan</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_share">Bagikan</string>
+    <string moz:removedIn="96" name="current_session_share" tools:ignore="UnusedResources">Bagikan</string>
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string name="current_session_image">Gambar sesi terkini</string>
+    <string moz:removedIn="96" name="current_session_image" tools:ignore="UnusedResources">Gambar sesi terkini</string>
     <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">Simpan ke koleksi</string>
+    <string moz:removedIn="96" name="save_to_collection" tools:ignore="UnusedResources">Simpan ke koleksi</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Hapus koleksi</string>
     <!-- Text for the menu button to rename a collection -->
@@ -870,10 +848,8 @@
     <string name="pwa_site_controls_title_private">%1$s (Mode Privat)</string>
 
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
-    <string name="tab_tray_save_to_collection">Simpan</string>
+    <string moz:removedIn="96" name="tab_tray_save_to_collection" tools:ignore="UnusedResources">Simpan</string>
 
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string moz:removedIn="94" name="tab_tray_header_title" tools:ignore="UnusedResources">Lainnya</string>
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
     <string name="tab_tray_header_title_1">Tab lainnya</string>
 
@@ -881,36 +857,28 @@
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Hapus riwayat</string>
     <!-- Text for the dialog to confirm clearing all history -->
-    <string name="history_delete_all_dialog">Yakin akan menghapus riwayat Anda?</string>
+    <string moz:removedIn="96" name="history_delete_all_dialog" tools:ignore="UnusedResources">Yakin akan menghapus riwayat Anda?</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">Riwayat Dihapus</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
     <string name="history_delete_single_item_snackbar">%1$s terhapus</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
-    <string name="history_clear_dialog">Bersihkan</string>
-    <!-- History overflow menu copy button -->
-    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">Salin</string>
-    <!-- History overflow menu share button -->
-    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">Bagikan</string>
-    <!-- History overflow menu open in new tab button -->
-    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Buka di tab baru</string>
-    <!-- History overflow menu open in private tab button -->
-    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Buka di tab pribadi</string>
-    <!-- Text for the button to delete a single history item -->
-    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">Hapus</string>
+    <string moz:removedIn="96" name="history_clear_dialog" tools:ignore="UnusedResources">Bersihkan</string>
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">Hapus</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d terpilih</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
-    <string name="history_delete_some">Hapus %1$d item</string>
+    <string moz:removedIn="96" name="history_delete_some" tools:ignore="UnusedResources">Hapus %1$d item</string>
 
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">Hari Ini</string>
     <!-- Text for the header that groups the history for yesterday -->
     <string name="history_yesterday">Kemarin</string>
     <!-- Text for the header that groups the history for last 24 hours -->
-    <string name="history_24_hours">24 jam terakhir</string>
+    <string moz:removedIn="96" name="history_24_hours" tools:ignore="UnusedResources">24 jam terakhir</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">7 hari terakhir</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -932,7 +900,7 @@
     <string name="download_multi_select_title">%1$d terpilih</string>
 
     <!-- History overflow menu open in new tab button -->
-    <string name="download_menu_open">Buka</string>
+    <string moz:removedIn="96" name="download_menu_open" tools:ignore="UnusedResources">Buka</string>
 
 
     <!-- Text for the button to remove a single download item -->
@@ -943,7 +911,7 @@
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Maaf. %1$s tidak dapat memuat halaman.</string>
     <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">Anda dapat coba mengembalikan atau menutup tab di bawah ini.</string>
+    <string moz:removedIn="96" name="tab_crash_description" tools:ignore="UnusedResources">Anda dapat coba mengembalikan atau menutup tab di bawah ini.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Kirim laporan kerusakan ke Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
@@ -953,24 +921,22 @@
     <string name="tab_crash_restore">Pulihkan tab</string>
 
     <!-- Content Description for session item menu button -->
-    <string name="content_description_session_menu">Opsi sesi</string>
+    <string moz:removedIn="96" name="content_description_session_menu" tools:ignore="UnusedResources">Opsi sesi</string>
 
     <!-- Content Description for session item share button -->
-    <string name="content_description_session_share">Bagikan sesi</string>
+    <string moz:removedIn="96" name="content_description_session_share" tools:ignore="UnusedResources">Bagikan sesi</string>
 
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
-    <string name="bookmark_menu_content_description">Menu markah</string>
-    <!-- Screen title for editing bookmarks -->
-    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Edit markah</string>
+    <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">Menu markah</string>
     <!-- Screen title for selecting a bookmarks folder -->
-    <string name="bookmark_select_folder">Pilih folder</string>
+    <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">Pilih folder</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Yakin akan menghapus folder ini?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s akan menghapus item terpilih.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
-    <string name="bookmark_delete_folder_snackbar">%1$s terhapus</string>
+    <string moz:removedIn="96" name="bookmark_delete_folder_snackbar" tools:ignore="UnusedResources">%1$s terhapus</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Tambah folder</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -980,7 +946,7 @@
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">Ubah</string>
     <!-- Bookmark overflow menu select button -->
-    <string name="bookmark_menu_select_button">Pilih</string>
+    <string moz:removedIn="96" name="bookmark_menu_select_button" tools:ignore="UnusedResources">Pilih</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">Salin</string>
     <!-- Bookmark overflow menu share button -->
@@ -1030,7 +996,7 @@
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
-    <string name="permissions_header">Izin</string>
+    <string moz:removedIn="96" name="permissions_header" tools:ignore="UnusedResources">Izin</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Buka Pengaturan</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
@@ -1040,7 +1006,7 @@
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Disarankan</string>
     <!-- button that allows editing site permissions settings -->
-    <string name="quick_settings_sheet_manage_site_permissions">Kelola izin situs</string>
+    <string moz:removedIn="96" name="quick_settings_sheet_manage_site_permissions" tools:ignore="UnusedResources">Kelola izin situs</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Hapus izin</string>
     <!-- Button label for clearing a site permission-->
@@ -1059,6 +1025,8 @@
     <string name="preference_phone_feature_notification">Pemberitahuan</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Penyimpanan Persisten</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Kuki lintas situs</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">Konten yang diatur DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -1150,14 +1118,14 @@
 
     <!-- Share -->
     <!-- Share screen header -->
-    <string name="share_header">Kirim dan Bagikan</string>
+    <string moz:removedIn="96" name="share_header" tools:ignore="UnusedResources">Kirim dan Bagikan</string>
     <!-- Share screen header -->
     <string name="share_header_2">Bagikan</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Bagikan</string>
     <!-- Sub-header in the dialog to share a link to another app -->
-    <string name="share_link_subheader">Bagikan tautan</string>
+    <string moz:removedIn="96" name="share_link_subheader" tools:ignore="UnusedResources">Bagikan tautan</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Kirim ke peranti</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1195,17 +1163,17 @@
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">Sesi penjelajahan pribadi</string>
+    <string moz:removedIn="96" name="notification_pbm_channel_name" tools:ignore="UnusedResources">Sesi penjelajahan pribadi</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text">Hapus tab pribadi</string>
+    <string moz:removedIn="96" name="notification_pbm_delete_text" tools:ignore="UnusedResources">Hapus tab pribadi</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Tutup tab privat</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string name="notification_pbm_action_open">Buka</string>
+    <string moz:removedIn="96" name="notification_pbm_action_open" tools:ignore="UnusedResources">Buka</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string name="notification_pbm_action_delete_and_open">Hapus dan Buka</string>
+    <string moz:removedIn="96" name="notification_pbm_action_delete_and_open" tools:ignore="UnusedResources">Hapus dan Buka</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="notification_powered_by_channel_name">Diberdayakan Oleh</string>
+    <string moz:removedIn="96" name="notification_powered_by_channel_name" tools:ignore="UnusedResources">Diberdayakan Oleh</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Pemasaran</string>
     <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
@@ -1221,19 +1189,19 @@
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">Nama koleksi berubah</string>
     <!-- Text shown in snackbar when user deletes a tab -->
-    <string name="snackbar_tab_deleted">Tab dihapus</string>
+    <string moz:removedIn="96" name="snackbar_tab_deleted" tools:ignore="UnusedResources">Tab dihapus</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
-    <string name="snackbar_tabs_deleted">Tab dihapus</string>
+    <string moz:removedIn="96" name="snackbar_tabs_deleted" tools:ignore="UnusedResources">Tab dihapus</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">Tab ditutup</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Tab ditutup</string>
     <!-- Text shown in snackbar when user closes tabs -->
-    <string name="snackbar_message_tabs_closed">Tab ditutup!</string>
+    <string moz:removedIn="96" name="snackbar_message_tabs_closed" tools:ignore="UnusedResources">Tab ditutup!</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Markah tersimpan!</string>
     <!-- Text shown in snackbar action for viewing bookmarks -->
-    <string name="snackbar_message_bookmarks_view">Tampilkan</string>
+    <string moz:removedIn="96" name="snackbar_message_bookmarks_view" tools:ignore="UnusedResources">Tampilkan</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Ditambahkan ke situs teratas!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1241,15 +1209,15 @@
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Tab pribadi ditutup</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string name="snackbar_private_tabs_deleted">Tab pribadi dihapus</string>
+    <string moz:removedIn="96" name="snackbar_private_tabs_deleted" tools:ignore="UnusedResources">Tab pribadi dihapus</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">URUNGKAN</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string name="snackbar_top_site_removed">Situs dihapus</string>
+    <string moz:removedIn="96" name="snackbar_top_site_removed" tools:ignore="UnusedResources">Situs dihapus</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_undo">Urungkan</string>
+    <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">Urungkan</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_confirm">Konfirmasi</string>
+    <string moz:removedIn="96" name="a11y_dialog_deleted_confirm" tools:ignore="UnusedResources">Konfirmasi</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Izinkan %1$s untuk membuka %2$s</string>
@@ -1257,6 +1225,10 @@
     <string name="qr_scanner_dialog_positive">IZINKAN</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">TOLAK</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">Alamat web tidak valid.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">OK</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Yakin ingin menghapus %1$s?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
@@ -1265,8 +1237,6 @@
     <string name="delete_tab_and_collection_dialog_title">Hapus %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Hapus</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Batal</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Memasuki mode layar penuh</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1295,10 +1265,10 @@
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d alamat situs</string>
     <!-- Title for history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">Riwayat</string>
+    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_title" tools:ignore="UnusedResources">Riwayat</string>
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
-    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d laman</string>
+    <string moz:removedIn="96" name="preferences_delete_browsing_data_browsing_history_subtitle" tools:ignore="UnusedResources">%d laman</string>
 
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Kuki</string>
@@ -1318,7 +1288,7 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Hapus data penjelajahan saat keluar</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">Otomatis menghapus data penjelajahan ketika Anda memilih &quot;Keluar&quot; pada menu utama</string>
+    <string moz:removedIn="96" name="preference_summary_delete_browsing_data_on_quit" tools:ignore="UnusedResources">Otomatis menghapus data penjelajahan ketika Anda memilih &quot;Keluar&quot; pada menu utama</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Otomatis menghapus data penjelajahan ketika Anda memilih \&quot;Keluar\&quot; pada menu utama</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -1371,14 +1341,7 @@
     <string name="onboarding_header">Selamat datang di %s!</string>
 
     <!-- text for the Firefox Accounts section header -->
-    <string name="onboarding_fxa_section_header">Sudah memiliki akun?</string>
-    <!-- text for the "What's New" onboarding card header -->
-    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">Lihat apa yang baru</string>
-    <!-- text for the "what's new" onboarding card description
-    The first parameter is the short name of the app (e.g. Firefox) -->
-    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">Punya pertanyaan mengenai desain ulang %s? Ingin tahu apa saja yang berubah?</string>
-    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">Dapatkan jawabannya di sini</string>
+    <string moz:removedIn="96" name="onboarding_fxa_section_header" tools:ignore="UnusedResources">Sudah memiliki akun?</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Sinkronkan Firefox antar perangkat</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1386,19 +1349,19 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_3">Anda masuk sebagai %s di peramban Firefox lainnya pada perangkat ini. Apakah Anda ingin masuk dengan akun tersebut?</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_auto_signin_header_3" tools:ignore="UnusedResources">Anda masuk sebagai %s di peramban Firefox lainnya pada perangkat ini. Apakah Anda ingin masuk dengan akun tersebut?</string>
     <!-- text for the button to confirm automatic sign-in -->
-    <string name="onboarding_firefox_account_auto_signin_confirm">Ya, masukkan saya</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_auto_signin_confirm" tools:ignore="UnusedResources">Ya, masukkan saya</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
-    <string name="onboarding_firefox_account_signing_in">Masuk…</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_signing_in" tools:ignore="UnusedResources">Masuk…</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Daftar</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string name="onboarding_firefox_account_stay_signed_out">Tetap keluar</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_stay_signed_out" tools:ignore="UnusedResources">Tetap keluar</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sinkronisasi aktif</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
-    <string name="onboarding_firefox_account_automatic_signin_failed">Gagal masuk</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_automatic_signin_failed" tools:ignore="UnusedResources">Gagal masuk</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Privasi selalu aktif</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
@@ -1408,7 +1371,7 @@
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description_3">Seimbang untuk privasi dan kinerja. Halaman dimuat secara normal.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_button">Ketat (disarankan)</string>
+    <string moz:removedIn="96" name="onboarding_tracking_protection_strict_button" tools:ignore="UnusedResources">Ketat (disarankan)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Ketat</string>
     <!-- text for strict blocking option button description -->
@@ -1417,15 +1380,6 @@
     <string name="onboarding_toolbar_placement_header_1">Pilih penempatan bilah alat Anda</string>
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">Letakkan bilah alat agar mudah dijangkau. Tetap di bawah, atau pindahkan ke atas.</string>
-    <!-- text for the private browsing onboarding card header -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">Menjelajah dengan privat</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">Buka tab pribadi sekali: Ketuk ikon %s.</string>
-    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">Selalu buka tab pribadi: Perbarui pengaturan penjelajahan pribadi Anda.</string>
-    <!-- text for the private browsing onbording card button, that launches settings -->
-    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">Buka pengaturan</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Privasi Anda</string>
     <!-- text for the privacy notice onboarding card description
@@ -1433,9 +1387,6 @@
     <string name="onboarding_privacy_notice_description2">Kami merancang %s agar Anda dapat mengendalikan apa saja yang Anda bagikan secara daring dan apa yang Anda bagikan kepada kami.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Pelajari pemberitahuan privasi kami</string>
-
-    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Tutup</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Mulai menjelajah</string>
@@ -1475,7 +1426,7 @@
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[Tidak ada akun? <u>Buat satu</u> untuk menyinkronkan Firefox antar perangkat.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefox akan berhenti menyinkronkan dengan akun Anda, tetapi tidak akan menghapus data penjelajahan Anda di peranti ini.</string>
+    <string moz:removedIn="96" name="sign_out_confirmation_message" tools:ignore="UnusedResources">Firefox akan berhenti menyinkronkan dengan akun Anda, tetapi tidak akan menghapus data penjelajahan Anda di peranti ini.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s akan berhenti menyinkronkan dengan akun Anda, tetapi tidak akan menghapus data penjelajahan Anda di peranti ini.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1533,7 +1484,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Hanya di tab Pribadi</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Hanya di tab Ubahsuai</string>
+    <string moz:removedIn="96" name="preference_enhanced_tracking_protection_custom_tracking_content_3" tools:ignore="UnusedResources">Hanya di tab Ubahsuai</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Penambang Kripto</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1564,8 +1515,6 @@
     <string name="etp_tracking_content_title">Pelacakan Konten</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Menghentikan iklan, video, dan konten lain dari luar yang memuat kode pelacakan. Dapat memengaruhi beberapa fungsionalitas situs web.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Setiap kali perisai berwarna ungu, %s telah memblokir pelacak pada sebuah situs. Ketuk untuk info lebih lanjut.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Perlindungan DIAKTIFKAN untuk situs ini</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1576,9 +1525,9 @@
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Arahkan kembali</string>
     <!-- About page Your rights link text -->
-    <string name="about_your_rights">Hak anda</string>
+    <string moz:removedIn="96" name="about_your_rights" tools:ignore="UnusedResources">Hak anda</string>
     <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">Pustaka sumber terbuka yang kami gunakan</string>
+    <string moz:removedIn="96" name="about_open_source_licenses" tools:ignore="UnusedResources">Pustaka sumber terbuka yang kami gunakan</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Apa yang baru di %s</string>
     <!-- Open source licenses page title
@@ -1615,9 +1564,9 @@
     <string name="about_debug_menu_toast_done">Menu debug diaktifkan</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string name="tab_counter_content_description_one_tab">1 tab</string>
+    <string moz:removedIn="96" name="tab_counter_content_description_one_tab" tools:ignore="UnusedResources">1 tab</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string name="tab_counter_content_description_multi_tab">%d tab</string>
+    <string moz:removedIn="96" name="tab_counter_content_description_multi_tab" tools:ignore="UnusedResources">%d tab</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -1652,8 +1601,6 @@
     <string name="preferences_passwords_save_logins_ask_to_save">Minta untuk menyimpan</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Jangan pernah simpan</string>
-    <!-- Preference for autofilling saved logins in Fenix -->
-    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Isi Otomatis</string>
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Isi-otomatis di %1$s</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
@@ -1671,9 +1618,9 @@
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Sinkronkan log masuk antar perangkat</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string name="preferences_passwords_sync_logins_reconnect">Hubungkan kembali</string>
+    <string moz:removedIn="96" name="preferences_passwords_sync_logins_reconnect" tools:ignore="UnusedResources">Hubungkan kembali</string>
     <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">Masuk ke Sync</string>
+    <string moz:removedIn="96" name="preferences_passwords_sync_logins_sign_in" tools:ignore="UnusedResources">Masuk ke Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Info masuk tersimpan</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1691,9 +1638,9 @@
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Cari log masuk</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
-    <string name="preferences_passwords_saved_logins_alphabetically">Alfabetis</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_alphabetically" tools:ignore="UnusedResources">Alfabetis</string>
     <!-- Option to sort logins list by most recently used -->
-    <string name="preferences_passwords_saved_logins_recently_used">Baru saja digunakan</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_recently_used" tools:ignore="UnusedResources">Baru saja digunakan</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Situs</string>
     <!-- The header for the username for a login -->
@@ -1701,25 +1648,25 @@
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Kata sandi</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin">Masukkan kembali PIN Anda</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin" tools:ignore="UnusedResources">Masukkan kembali PIN Anda</string>
     <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">Buka kunci untuk melihat info masuk Anda yang tersimpan</string>
+    <string moz:removedIn="96" name="preferences_passwords_saved_logins_enter_pin_description" tools:ignore="UnusedResources">Buka kunci untuk melihat info masuk Anda yang tersimpan</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning">Sambungan ini tidak aman. Info masuk yang diketikkan di sini bisa diketahui orang lain.</string>
+    <string moz:removedIn="96" name="logins_insecure_connection_warning" tools:ignore="UnusedResources">Sambungan ini tidak aman. Info masuk yang diketikkan di sini bisa diketahui orang lain.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning_learn_more">Pelajari lebih lanjut</string>
+    <string moz:removedIn="96" name="logins_insecure_connection_warning_learn_more" tools:ignore="UnusedResources">Pelajari lebih lanjut</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">Ingin %s menyimpan info masuk ini?</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save" tools:ignore="UnusedResources">Ingin %s menyimpan info masuk ini?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string name="logins_doorhanger_save_confirmation">Simpan</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save_confirmation" tools:ignore="UnusedResources">Simpan</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string name="logins_doorhanger_save_dont_save">Jangan simpan</string>
+    <string moz:removedIn="96" name="logins_doorhanger_save_dont_save" tools:ignore="UnusedResources">Jangan simpan</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">Sandi disalin ke papan klip</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">Nama pengguna disalin ke papan klip</string>
     <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string name="logins_site_copied">Situs disalin ke clipboard</string>
+    <string moz:removedIn="96" name="logins_site_copied" tools:ignore="UnusedResources">Situs disalin ke clipboard</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Salin sandi</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
@@ -1731,7 +1678,7 @@
     <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
     <string name="saved_login_clear_hostname">Hapus nama host</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string name="saved_login_copy_site">Salin situs</string>
+    <string moz:removedIn="96" name="saved_login_copy_site" tools:ignore="UnusedResources">Salin situs</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
     <string name="saved_login_open_site">Buka situs di peramban</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -1792,7 +1739,7 @@
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Nama pada Kartu</string>
     <!-- The header for the nickname for a credit card -->
-    <string name="credit_cards_card_nickname">Nama Alias Kartu</string>
+    <string moz:removedIn="96" name="credit_cards_card_nickname" tools:ignore="UnusedResources">Nama Alias Kartu</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">Hapus kartu</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
@@ -1847,17 +1794,17 @@
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string formatted="false" name="search_add_custom_engine_search_string_example">Ganti kueir dengan “%s”. Contoh:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
-    <string name="search_add_custom_engine_learn_more_label">Pelajari Lebih Lanjut</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_label" tools:ignore="UnusedResources">Pelajari Lebih Lanjut</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Rincian mesin pencari kustom</string>
     <!-- Accessibility description for the 'Learn more' link -->
-    <string name="search_add_custom_engine_learn_more_description">Tautan untuk pelajari lebih lanjut</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_learn_more_description" tools:ignore="UnusedResources">Tautan untuk pelajari lebih lanjut</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Masukkan nama mesin pencari</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string name="search_add_custom_engine_error_existing_name">Mesin pencari dengan nama “%s” sudah ada.</string>
+    <string moz:removedIn="96" name="search_add_custom_engine_error_existing_name" tools:ignore="UnusedResources">Mesin pencari dengan nama “%s” sudah ada.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Masukkan kata pencarian</string>
     <!-- Text shown when a user leaves out the required template string -->
@@ -1897,10 +1844,10 @@
     <string name="quick_settings_sheet_secure_connection_2">Sambungan aman</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">Sambungan tidak aman</string>
-    <!-- Label that indicates a site is using a secure connection -->
-    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Sambungan Aman</string>
-    <!-- Label that indicates a site is using a insecure connection -->
-    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Sambungan Tidak Aman</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">Bersihkan kuki dan data situs</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[Yakin ingin menghapus semua kuki dan data untuk situs <b>%s</b>?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Yakin ingin menghapus semua izin di semua situs?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1910,7 +1857,7 @@
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Tidak ada pengecualian situs</string>
     <!-- Label for the Pocket default top site -->
-    <string name="pocket_top_articles">Artikel Teratas</string>
+    <string moz:removedIn="96" name="pocket_top_articles" tools:ignore="UnusedResources">Artikel Teratas</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Yakin akan menghapus markah ini?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
@@ -1937,7 +1884,7 @@
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Simpan perubahan untuk masuk</string>
     <!--  The button description to discard changes to an edited login. -->
-    <string name="discard_changes">Batalkan perubahan</string>
+    <string moz:removedIn="96" name="discard_changes" tools:ignore="UnusedResources">Batalkan perubahan</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Ubah</string>
     <!--  The page title for adding new login. -->
@@ -1958,8 +1905,6 @@
 
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
-    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
-    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">Alamat web harus berisi &quot;https://&quot; atau &quot;http://&quot;</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
     <string name="add_login_hostname_invalid_text_3">Alamat web harus berisi &quot;https://&quot; atau &quot;http://&quot;</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
@@ -1993,10 +1938,6 @@
 
     <!-- Label for the preference to show the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_3">Situs teratas yang paling banyak dikunjungi</string>
-    <!-- Label for the show most visited top sites preference -->
-    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Tampilkan situs teratas yang paling sering dikunjungi</string>
-    <!-- Label for the show most visited sites preference -->
-    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Tampilkan situs yang paling sering dikunjungi</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nama</string>
@@ -2012,12 +1953,6 @@
     <string name="inactive_tabs_title">Tab nonaktif</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Hapus semua tab nonaktif</string>
-    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Tab tersedia di sini selama %s. Setelah itu, tab akan otomatis ditutup.</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 hari</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 pekan</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
@@ -2027,21 +1962,27 @@
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">AKTIFKAN TUTUP OTOMATIS</string>
 
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">Tutup-otomatis diaktifkan</string>
+
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Bantu kami menjadi lebih baik</string>
+    <string name="inactive_tabs_survey_header_1">Bantu menyempurnakan Firefox</string>
+
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Mengapa Anda mematikan fitur tab nonaktif?</string>
+    <string name="inactive_tabs_survey_content">Mengapa Anda mematikan fitur tab nonaktif?</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_not_interested_option" tools:ignore="UnusedResources">Tidak tertarik dengan fiturnya</string>
+    <string name="inactive_tabs_survey_do_not_understand">Saya tidak mengerti cara kerjanya</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Waktu nonaktif terlalu lama</string>
+    <string name="inactive_tabs_survey_do_it_myself">Saya ingin membersihkan tab lama saya sendiri</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Waktu nonaktif terlalu singkat</string>
+    <string name="inactive_tabs_survey_time_too_long_option_1">Jangka waktu dua minggu terlalu lama</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option_1">Jangka waktu dua minggu terlalu singkat</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Kirim</string>
+    <string name="inactive_tabs_survey_send_button">Kirim</string>
     <!-- Content description for inactive tabs survey close button -->
-    <string name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Tutup</string>
+    <string name="inactive_tabs_survey_close_button_content_description">Tutup</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Setel tautan dari situs web, surel, dan pesan untuk secara otomatis dibuka di Firefox.</string>
@@ -2059,8 +2000,6 @@
     <string name="privacy_content_close_button_content_description">Tutup</string>
 
     <!-- Pocket recommended stories -->
-    <!-- Header text for a section on the home screen. -->
-    <string moz:removedIn="94" name="pocket_stories_header" tools:ignore="UnusedResources">Cerita yang menggugah pikiran</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_header_1">Cerita yang menggugah pikiran</string>
     <!-- Header text for a section on the home screen. -->
