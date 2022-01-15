@@ -50,7 +50,7 @@
     <!-- Primary text -->
     <color name="fx_mobile_text_color_primary">@color/photonLightGrey05</color>
     <!-- Secondary text -->
-    <color name="fx_mobile_text_color_secondary" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
+    <color name="fx_mobile_text_color_secondary">@color/photonLightGrey40</color>
     <!-- Disabled text -->
     <color name="fx_mobile_text_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey05A40</color>
     <!-- Warning text -->
@@ -134,7 +134,6 @@
     <color name="mozac_widget_favicon_border_normal_theme">@color/photonDarkGrey10</color>
 
     <!-- Tab tray -->
-    <color name="tab_tray_item_url_normal_theme">@color/photonLightGrey60</color>
     <color name="tab_tray_item_background_normal_theme">@color/photonDarkGrey80</color>
     <color name="tab_tray_item_selected_background_normal_theme">@color/tab_tray_item_selected_background_dark_theme</color>
     <color name="tab_tray_item_divider_normal_theme">@color/photonDarkGrey10</color>

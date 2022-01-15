@@ -50,7 +50,7 @@
     <!-- Primary text -->
     <color name="fx_mobile_text_color_primary">@color/photonDarkGrey90</color>
     <!-- Secondary text -->
-    <color name="fx_mobile_text_color_secondary" tools:ignore="UnusedResources">@color/photonDarkGrey05</color>
+    <color name="fx_mobile_text_color_secondary">@color/photonDarkGrey05</color>
     <!-- Disabled text -->
     <color name="fx_mobile_text_color_disabled" tools:ignore="UnusedResources">@color/photonDarkGrey90A40</color>
     <!-- Warning text -->
@@ -201,7 +201,6 @@
     <color name="recently_used_share_theme">@color/photonLightGrey30</color>
 
     <!-- Tab tray -->
-    <color name="tab_tray_item_url_normal_theme">@color/photonDarkGrey05</color>
     <color name="tab_tray_item_background_normal_theme">@color/photonLightGrey10</color>
     <color name="tab_tray_item_selected_background_normal_theme">#E5DFF4</color>
     <color name="tab_tray_item_divider_normal_theme">@color/photonLightGrey30</color>
