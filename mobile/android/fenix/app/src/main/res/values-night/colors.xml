@@ -90,7 +90,7 @@
 
     <!-- Border -->
     <!-- Default, Divider, Dotted -->
-    <color name="fx_mobile_border_color_default" tools:ignore="UnusedResources">@color/photonDarkGrey05</color>
+    <color name="fx_mobile_border_color_default">@color/photonDarkGrey05</color>
     <!-- Onboarding -->
     <color name="fx_mobile_border_color_inverted" tools:ignore="UnusedResources">@color/photonLightGrey30</color>
     <!-- Form parts -->
@@ -136,7 +136,6 @@
     <!-- Tab tray -->
     <color name="tab_tray_item_background_normal_theme">@color/photonDarkGrey80</color>
     <color name="tab_tray_item_selected_background_normal_theme">@color/tab_tray_item_selected_background_dark_theme</color>
-    <color name="tab_tray_item_divider_normal_theme">@color/photonDarkGrey10</color>
     <color name="tab_tray_heading_icon_inactive_normal_theme">@color/photonLightGrey05</color>
     <color name="tab_tray_heading_icon_menu_normal_theme">@color/photonLightGrey05</color>
     <color name="tab_tray_item_thumbnail_background_normal_theme">@color/photonDarkGrey50</color>

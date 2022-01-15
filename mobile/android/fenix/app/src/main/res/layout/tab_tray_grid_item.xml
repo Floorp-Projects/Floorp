@@ -28,7 +28,7 @@ A FrameLayout here is an efficient way of having a views stack while allowing:
         app:cardBackgroundColor="@color/fx_mobile_layer_color_2"
         app:cardCornerRadius="@dimen/tab_tray_grid_item_border_radius"
         app:cardElevation="0dp"
-        app:strokeColor="@color/tab_tray_item_divider_normal_theme"
+        app:strokeColor="@color/fx_mobile_border_color_default"
         app:strokeWidth="1dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -84,7 +84,7 @@ A FrameLayout here is an efficient way of having a views stack while allowing:
                 android:id="@+id/horizonatal_divider"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:background="@color/photonLightGrey30"
+                android:background="@color/fx_mobile_border_color_default"
                 app:layout_constraintTop_toBottomOf="@+id/mozac_browser_tabstray_title" />
 
             <androidx.cardview.widget.CardView
