@@ -209,7 +209,6 @@
     <color name="recently_used_share_theme">@color/photonLightGrey30</color>
 
     <!-- Tab tray -->
-    <color name="tab_tray_item_text_normal_theme">@color/primary_text_normal_theme</color>
     <color name="tab_tray_item_url_normal_theme">@color/photonDarkGrey05</color>
     <color name="tab_tray_item_background_normal_theme">@color/photonLightGrey10</color>
     <color name="tab_tray_item_selected_background_normal_theme">#E5DFF4</color>

@@ -60,7 +60,7 @@ A FrameLayout here is an efficient way of having a views stack while allowing:
                 android:paddingVertical="5dp"
                 android:requiresFadingEdge="horizontal"
                 android:singleLine="true"
-                android:textColor="@color/tab_tray_item_text_normal_theme"
+                android:textColor="@color/primary_text_normal_theme"
                 android:textSize="14sp"
                 android:visibility="visible"
                 app:layout_constraintEnd_toStartOf="@id/mozac_browser_tabstray_close"
@@ -78,7 +78,7 @@ A FrameLayout here is an efficient way of having a views stack while allowing:
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/ic_close"
-                app:tint="@color/tab_tray_item_text_normal_theme" />
+                app:tint="@color/primary_text_normal_theme" />
 
             <View
                 android:id="@+id/horizonatal_divider"

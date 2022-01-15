@@ -67,7 +67,7 @@
         android:layout_marginTop="24dp"
         android:layout_marginStart="12dp"
         android:ellipsize="end"
-        android:textColor="@color/tab_tray_item_text_normal_theme"
+        android:textColor="@color/primary_text_normal_theme"
         android:textSize="16sp"
         android:maxLines="2"
         tools:text="Firefox"
@@ -104,6 +104,6 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_close"
-        app:tint="@color/tab_tray_item_text_normal_theme" />
+        app:tint="@color/primary_text_normal_theme" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
