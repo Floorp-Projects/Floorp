@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:background="@drawable/favicon_background"
-        android:backgroundTint="@color/accent_normal_theme"
+        android:backgroundTint="@color/fx_mobile_layer_color_accent"
         android:elevation="1dp"
         android:padding="8dp"
         app:srcCompat="@drawable/mozac_ic_check" />
