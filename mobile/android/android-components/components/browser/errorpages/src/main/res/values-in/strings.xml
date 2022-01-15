@@ -300,4 +300,8 @@
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
     <string name="mozac_browser_errorpages_httpsonly_title">Situs Aman Tidak Tersedia</string>
-    </resources>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Anda telah mengaktifkan Mode Hanya HTTPS untuk keamanan yang ditingkatkan tetapi versi HTTPS <em>%1$s</em> tidak tersedia.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Lanjutkan ke Situs HTTP</string>
+</resources>
