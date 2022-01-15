@@ -5,6 +5,7 @@
 "use strict";
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
+const Services = require("Services");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
@@ -48,10 +49,18 @@ function NetworkDetailsBar({
     return null;
   }
 
+  const newEditAndResendPref = Services.prefs.getBoolPref(
+    "devtools.netmonitor.features.newEditAndResend"
+  );
+
   return div(
     { className: "network-details-bar" },
-    !request.isCustom
-      ? TabboxPanel({
+    request.isCustom && !newEditAndResendPref
+      ? CustomRequestPanel({
+          connector,
+          request,
+        })
+      : TabboxPanel({
           activeTabId,
           cloneSelectedRequest,
           connector,
@@ -62,10 +71,6 @@ function NetworkDetailsBar({
           toggleNetworkDetails,
           openNetworkDetails,
           targetSearchResult,
-        })
-      : CustomRequestPanel({
-          connector,
-          request,
         })
   );
 }

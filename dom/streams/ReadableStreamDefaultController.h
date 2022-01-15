@@ -170,6 +170,9 @@ extern void ReadableStreamDefaultControllerError(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
+extern void ReadableStreamDefaultControllerClearAlgorithms(
+    ReadableStreamDefaultController* aController);
+
 }  // namespace dom
 }  // namespace mozilla
 

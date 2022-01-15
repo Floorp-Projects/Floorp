@@ -24,6 +24,32 @@ namespace dom {
 class Promise;
 class ReadableStream;
 
+// https://streams.spec.whatwg.org/#default-reader-read
+struct Read_ReadRequest : public ReadRequest {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Read_ReadRequest, ReadRequest)
+
+  RefPtr<Promise> mPromise;
+  /* This allows Gecko Internals to create objects with null prototypes, to hide
+   * promise resolution from Object.prototype.then */
+  bool mForAuthorCode = true;
+
+  explicit Read_ReadRequest(Promise* aPromise, bool aForAuthorCode = true)
+      : mPromise(aPromise), mForAuthorCode(aForAuthorCode) {}
+
+  void ChunkSteps(JSContext* aCx, JS::Handle<JS::Value> aChunk,
+                  ErrorResult& aRv) override;
+
+  void CloseSteps(JSContext* aCx, ErrorResult& aRv) override;
+
+  void ErrorSteps(JSContext* aCx, JS::Handle<JS::Value> e,
+                  ErrorResult& aRv) override;
+
+ protected:
+  virtual ~Read_ReadRequest() = default;
+};
+
 class ReadableStreamDefaultReader final : public ReadableStreamGenericReader,
                                           public nsWrapperCache
 

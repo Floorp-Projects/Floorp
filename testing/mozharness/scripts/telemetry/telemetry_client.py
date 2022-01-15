@@ -192,6 +192,10 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
             "-vv",
         ]
 
+        # Symbols for crash reports
+        if self.symbols_path:
+            cmd.extend(["--symbols-path", self.symbols_path])
+
         cmd.extend(["--setpref={}".format(p) for p in self.config["extra_prefs"]])
 
         if not self.config["e10s"]:

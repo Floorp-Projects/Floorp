@@ -3509,6 +3509,36 @@
   value: false
   mirror: always
 
+# DOM Streams Prefs
+
+## Exposure Prefs: To ensure the DOM Streams don't expose more
+# than existing JS Streams implementation, we want to hide some
+# interfaces from the global until later.
+- name: dom.streams.expose.ReadableByteStreamController
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: dom.streams.expose.ReadableStreamBYOBReader
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: dom.streams.expose.ReadableStreamBYOBRequest
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: dom.streams.expose.ReadableStreamDefaultController
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: dom.streams.expose.ReadableStreamDefaultReader
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # For area and anchor elements with target=_blank and no rel set to
 # opener/noopener.
 - name: dom.targetBlankNoOpener.enabled

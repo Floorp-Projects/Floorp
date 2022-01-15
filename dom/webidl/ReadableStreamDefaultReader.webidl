@@ -1,4 +1,3 @@
-
 typedef (ReadableStreamDefaultReader or ReadableStreamBYOBReader) ReadableStreamReader;
 
 
@@ -11,7 +10,8 @@ interface mixin ReadableStreamGenericReader {
   Promise<void> cancel(optional any reason);
 };
 
-[Exposed=(Window,Worker,Worklet)]
+[Exposed=(Window,Worker,Worklet),
+Pref="dom.streams.expose.ReadableStreamDefaultReader"]
 interface ReadableStreamDefaultReader {
   [Throws]
   constructor(ReadableStream stream);
