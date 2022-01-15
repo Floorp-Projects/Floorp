@@ -128,7 +128,8 @@ RefPtr<MozPromise<bool, bool, false>> LockScreenOrientation(
       }
     }
     default:
-      return nullptr;
+      NS_WARNING("Unsupported screen orientation type");
+      return MozPromise<bool, bool, false>::CreateAndReject(false, __func__);
   }
 }
 
