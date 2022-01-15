@@ -132,7 +132,7 @@ class NativeLayerWayland final : public NativeLayer {
   const RefPtr<SurfacePoolHandleWayland> GetSurfacePoolHandle() {
     return mSurfacePoolHandle;
   };
-  void SetBufferTransformFlipped(bool aFlipped);
+  void SetBufferTransformFlipped(bool aFlippedX, bool aFlippedY);
   void SetSubsurfacePosition(int aX, int aY);
   void SetViewportSourceRect(const gfx::Rect aSourceRect);
   void SetViewportDestinationSize(int aWidth, int aHeight);
@@ -172,7 +172,8 @@ class NativeLayerWayland final : public NativeLayer {
   wl_subsurface* mWlSubsurface = nullptr;
   wl_callback* mCallback = nullptr;
   wp_viewport* mViewport = nullptr;
-  bool mBufferTransformFlipped = false;
+  bool mBufferTransformFlippedX = false;
+  bool mBufferTransformFlippedY = false;
   gfx::IntPoint mSubsurfacePosition = gfx::IntPoint(0, 0);
   gfx::Rect mViewportSourceRect = gfx::Rect(-1, -1, -1, -1);
   gfx::IntSize mViewportDestinationSize = gfx::IntSize(-1, -1);
