@@ -68,11 +68,11 @@ class TelemetryLifecycleObserver(
             crashedTabs = crashedTabs
         )
     }
-}
 
-private data class TabState(
-    val timestamp: Long = Clock.elapsedRealtime(),
-    val totalTabs: Int,
-    val crashedTabs: Int,
-    val activeEngineTabs: Int
-)
+    private data class TabState(
+        val timestamp: Long = Clock.elapsedRealtime(),
+        val totalTabs: Int,
+        val crashedTabs: Int,
+        val activeEngineTabs: Int
+    )
+}

@@ -25,6 +25,7 @@ import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
@@ -212,22 +213,24 @@ class DefaultSessionControlControllerTest {
     @Test
     fun `handleCollectionOpenTabClicked with existing selected tab`() {
         val recoverableTab = RecoverableTab(
-            id = "test",
-            parentId = null,
-            url = "https://www.mozilla.org",
-            title = "Mozilla",
-            state = null,
-            contextId = null,
-            readerState = ReaderState(),
-            lastAccess = 0,
-            private = false
+            engineSessionState = null,
+            state = TabState(
+                id = "test",
+                parentId = null,
+                url = "https://www.mozilla.org",
+                title = "Mozilla",
+                contextId = null,
+                readerState = ReaderState(),
+                lastAccess = 0,
+                private = false
+            )
         )
 
         val tab = mockk<ComponentTab> {
             every { restore(activity, engine, restoreSessionId = false) } returns recoverableTab
         }
 
-        val restoredTab = createTab(id = recoverableTab.id, url = recoverableTab.url)
+        val restoredTab = createTab(id = recoverableTab.state.id, url = recoverableTab.state.url)
         val otherTab = createTab(id = "otherTab", url = "https://mozilla.org")
         store.dispatch(TabListAction.AddTabAction(otherTab)).joinBlocking()
         store.dispatch(TabListAction.SelectTabAction(otherTab.id)).joinBlocking()
@@ -243,22 +246,24 @@ class DefaultSessionControlControllerTest {
     @Test
     fun `handleCollectionOpenTabClicked without existing selected tab`() {
         val recoverableTab = RecoverableTab(
-            id = "test",
-            parentId = null,
-            url = "https://www.mozilla.org",
-            title = "Mozilla",
-            state = null,
-            contextId = null,
-            readerState = ReaderState(),
-            lastAccess = 0,
-            private = false
+            engineSessionState = null,
+            state = TabState(
+                id = "test",
+                parentId = null,
+                url = "https://www.mozilla.org",
+                title = "Mozilla",
+                contextId = null,
+                readerState = ReaderState(),
+                lastAccess = 0,
+                private = false
+            )
         )
 
         val tab = mockk<ComponentTab> {
             every { restore(activity, engine, restoreSessionId = false) } returns recoverableTab
         }
 
-        val restoredTab = createTab(id = recoverableTab.id, url = recoverableTab.url)
+        val restoredTab = createTab(id = recoverableTab.state.id, url = recoverableTab.state.url)
         store.dispatch(TabListAction.AddTabAction(restoredTab)).joinBlocking()
 
         createController().handleCollectionOpenTabClicked(tab)

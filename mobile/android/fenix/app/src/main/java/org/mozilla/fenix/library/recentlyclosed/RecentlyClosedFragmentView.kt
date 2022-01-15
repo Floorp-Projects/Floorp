@@ -10,13 +10,13 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
-import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.ComponentRecentlyClosedBinding
 import org.mozilla.fenix.library.LibraryPageView
 import org.mozilla.fenix.selection.SelectionInteractor
 
-interface RecentlyClosedInteractor : SelectionInteractor<RecoverableTab> {
+interface RecentlyClosedInteractor : SelectionInteractor<TabState> {
     /**
      * Called when the view more history option is tapped.
      */
@@ -27,7 +27,7 @@ interface RecentlyClosedInteractor : SelectionInteractor<RecoverableTab> {
      *
      * @param tab the recently closed tab to delete.
      */
-    fun onDelete(tab: RecoverableTab)
+    fun onDelete(tab: TabState)
 }
 
 /**

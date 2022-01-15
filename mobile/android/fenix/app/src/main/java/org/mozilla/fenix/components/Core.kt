@@ -38,6 +38,7 @@ import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.readerview.ReaderViewMiddleware
 import mozilla.components.feature.recentlyclosed.RecentlyClosedMiddleware
+import mozilla.components.feature.recentlyclosed.RecentlyClosedTabsStorage
 import mozilla.components.feature.search.middleware.AdsTelemetryMiddleware
 import mozilla.components.feature.search.middleware.SearchMiddleware
 import mozilla.components.feature.search.region.RegionMiddleware
@@ -193,7 +194,7 @@ class Core(
         val middlewareList =
             mutableListOf(
                 LastAccessMiddleware(),
-                RecentlyClosedMiddleware(context, RECENTLY_CLOSED_MAX, engine),
+                RecentlyClosedMiddleware(recentlyClosedTabsStorage, RECENTLY_CLOSED_MAX),
                 DownloadMiddleware(context, DownloadService::class.java),
                 ReaderViewMiddleware(),
                 TelemetryMiddleware(
@@ -310,6 +311,8 @@ class Core(
      * The storage component to sync and persist tabs in a Firefox Sync account.
      */
     val lazyRemoteTabsStorage = lazyMonitored { RemoteTabsStorage() }
+
+    val recentlyClosedTabsStorage = lazyMonitored { RecentlyClosedTabsStorage(context, engine, crashReporter) }
 
     // For most other application code (non-startup), these wrappers are perfectly fine and more ergonomic.
     val historyStorage: PlacesHistoryStorage get() = lazyHistoryStorage.value

@@ -12,6 +12,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
@@ -120,6 +121,8 @@ class RecentlyClosedFragment : LibraryPageFragment<RecoverableTab>(), UserIntera
             activity = activity as HomeActivity,
             tabsUseCases = requireComponents.useCases.tabsUseCases,
             metrics = metrics,
+            recentlyClosedTabsStorage = requireComponents.core.recentlyClosedTabsStorage.value,
+            lifecycleScope = lifecycleScope,
             openToBrowser = ::openItem
         )
         recentlyClosedInteractor = RecentlyClosedFragmentInteractor(recentlyClosedController)
@@ -135,11 +138,11 @@ class RecentlyClosedFragment : LibraryPageFragment<RecoverableTab>(), UserIntera
         _recentlyClosedFragmentView = null
     }
 
-    private fun openItem(tab: RecoverableTab, mode: BrowsingMode? = null) {
+    private fun openItem(url: String, mode: BrowsingMode? = null) {
         mode?.let { (activity as HomeActivity).browsingModeManager.mode = it }
 
         (activity as HomeActivity).openToBrowserAndLoad(
-            searchTermOrURL = tab.url,
+            searchTermOrURL = url,
             newTab = true,
             from = BrowserDirection.FromRecentlyClosed
         )

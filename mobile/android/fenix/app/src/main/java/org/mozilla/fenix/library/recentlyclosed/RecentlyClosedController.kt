@@ -6,10 +6,13 @@ package org.mozilla.fenix.library.recentlyclosed
 
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.RecentlyClosedAction
-import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.ShareData
+import mozilla.components.feature.recentlyclosed.RecentlyClosedTabsStorage
 import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -20,15 +23,15 @@ import org.mozilla.fenix.components.metrics.MetricController
 
 @Suppress("TooManyFunctions")
 interface RecentlyClosedController {
-    fun handleOpen(tab: RecoverableTab, mode: BrowsingMode? = null)
-    fun handleOpen(tabs: Set<RecoverableTab>, mode: BrowsingMode? = null)
-    fun handleDelete(tab: RecoverableTab)
-    fun handleDelete(tabs: Set<RecoverableTab>)
-    fun handleShare(tabs: Set<RecoverableTab>)
+    fun handleOpen(tab: TabState, mode: BrowsingMode? = null)
+    fun handleOpen(tabs: Set<TabState>, mode: BrowsingMode? = null)
+    fun handleDelete(tab: TabState)
+    fun handleDelete(tabs: Set<TabState>)
+    fun handleShare(tabs: Set<TabState>)
     fun handleNavigateToHistory()
-    fun handleRestore(item: RecoverableTab)
-    fun handleSelect(tab: RecoverableTab)
-    fun handleDeselect(tab: RecoverableTab)
+    fun handleRestore(item: TabState)
+    fun handleSelect(tab: TabState)
+    fun handleDeselect(tab: TabState)
     fun handleBackPressed(): Boolean
 }
 
@@ -37,16 +40,18 @@ class DefaultRecentlyClosedController(
     private val navController: NavController,
     private val browserStore: BrowserStore,
     private val recentlyClosedStore: RecentlyClosedFragmentStore,
+    private val recentlyClosedTabsStorage: RecentlyClosedTabsStorage,
     private val tabsUseCases: TabsUseCases,
     private val activity: HomeActivity,
     private val metrics: MetricController,
-    private val openToBrowser: (item: RecoverableTab, mode: BrowsingMode?) -> Unit
+    private val lifecycleScope: CoroutineScope,
+    private val openToBrowser: (url: String, mode: BrowsingMode?) -> Unit
 ) : RecentlyClosedController {
-    override fun handleOpen(tab: RecoverableTab, mode: BrowsingMode?) {
-        openToBrowser(tab, mode)
+    override fun handleOpen(tab: TabState, mode: BrowsingMode?) {
+        openToBrowser(tab.url, mode)
     }
 
-    override fun handleOpen(tabs: Set<RecoverableTab>, mode: BrowsingMode?) {
+    override fun handleOpen(tabs: Set<TabState>, mode: BrowsingMode?) {
         if (mode == BrowsingMode.Normal) {
             metrics.track(Event.RecentlyClosedTabsMenuOpenInNormalTab)
         } else if (mode == BrowsingMode.Private) {
@@ -56,26 +61,26 @@ class DefaultRecentlyClosedController(
         tabs.forEach { tab -> handleOpen(tab, mode) }
     }
 
-    override fun handleSelect(tab: RecoverableTab) {
+    override fun handleSelect(tab: TabState) {
         if (recentlyClosedStore.state.selectedTabs.isEmpty()) {
             metrics.track(Event.RecentlyClosedTabsEnterMultiselect)
         }
         recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.Select(tab))
     }
 
-    override fun handleDeselect(tab: RecoverableTab) {
+    override fun handleDeselect(tab: TabState) {
         if (recentlyClosedStore.state.selectedTabs.size == 1) {
             metrics.track(Event.RecentlyClosedTabsExitMultiselect)
         }
         recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.Deselect(tab))
     }
 
-    override fun handleDelete(tab: RecoverableTab) {
+    override fun handleDelete(tab: TabState) {
         metrics.track(Event.RecentlyClosedTabsDeleteTab)
         browserStore.dispatch(RecentlyClosedAction.RemoveClosedTabAction(tab))
     }
 
-    override fun handleDelete(tabs: Set<RecoverableTab>) {
+    override fun handleDelete(tabs: Set<TabState>) {
         metrics.track(Event.RecentlyClosedTabsMenuDelete)
         recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.DeselectAll)
         tabs.forEach { tab ->
@@ -91,7 +96,7 @@ class DefaultRecentlyClosedController(
         )
     }
 
-    override fun handleShare(tabs: Set<RecoverableTab>) {
+    override fun handleShare(tabs: Set<TabState>) {
         metrics.track(Event.RecentlyClosedTabsMenuShare)
         val shareData = tabs.map { ShareData(url = it.url, title = it.title) }
         navController.navigate(
@@ -101,18 +106,19 @@ class DefaultRecentlyClosedController(
         )
     }
 
-    override fun handleRestore(item: RecoverableTab) {
-        metrics.track(Event.RecentlyClosedTabsOpenTab)
+    override fun handleRestore(item: TabState) {
+        lifecycleScope.launch {
+            metrics.track(Event.RecentlyClosedTabsOpenTab)
+            tabsUseCases.restore(item, recentlyClosedTabsStorage.engineStateStorage())
 
-        tabsUseCases.restore(item)
+            browserStore.dispatch(
+                RecentlyClosedAction.RemoveClosedTabAction(item)
+            )
 
-        browserStore.dispatch(
-            RecentlyClosedAction.RemoveClosedTabAction(item)
-        )
-
-        activity.openToBrowser(
-            from = BrowserDirection.FromRecentlyClosed
-        )
+            activity.openToBrowser(
+                from = BrowserDirection.FromRecentlyClosed
+            )
+        }
     }
 
     override fun handleBackPressed(): Boolean {

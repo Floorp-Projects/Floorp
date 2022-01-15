@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.library.recentlyclosed
 
-import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
@@ -23,9 +23,9 @@ class RecentlyClosedFragmentStore(initialState: RecentlyClosedFragmentState) :
  * `RecentlyClosedFragmentState` through the reducer.
  */
 sealed class RecentlyClosedFragmentAction : Action {
-    data class Change(val list: List<RecoverableTab>) : RecentlyClosedFragmentAction()
-    data class Select(val tab: RecoverableTab) : RecentlyClosedFragmentAction()
-    data class Deselect(val tab: RecoverableTab) : RecentlyClosedFragmentAction()
+    data class Change(val list: List<TabState>) : RecentlyClosedFragmentAction()
+    data class Select(val tab: TabState) : RecentlyClosedFragmentAction()
+    data class Deselect(val tab: TabState) : RecentlyClosedFragmentAction()
     object DeselectAll : RecentlyClosedFragmentAction()
 }
 
@@ -34,8 +34,8 @@ sealed class RecentlyClosedFragmentAction : Action {
  * @property items List of recently closed tabs to display
  */
 data class RecentlyClosedFragmentState(
-    val items: List<RecoverableTab> = emptyList(),
-    val selectedTabs: Set<RecoverableTab>
+    val items: List<TabState> = emptyList(),
+    val selectedTabs: Set<TabState>
 ) : State
 
 /**

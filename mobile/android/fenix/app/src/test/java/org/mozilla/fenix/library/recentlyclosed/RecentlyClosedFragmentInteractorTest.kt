@@ -6,7 +6,7 @@ package org.mozilla.fenix.library.recentlyclosed
 
 import io.mockk.mockk
 import io.mockk.verify
-import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
 import org.junit.Before
 import org.junit.Test
 
@@ -26,7 +26,7 @@ class RecentlyClosedFragmentInteractorTest {
 
     @Test
     fun onDelete() {
-        val tab = RecoverableTab(id = "tab-id", title = "Mozilla", url = "mozilla.org", lastAccess = 1L)
+        val tab = TabState(id = "tab-id", title = "Mozilla", url = "mozilla.org", lastAccess = 1L)
         interactor.onDelete(tab)
 
         verify {

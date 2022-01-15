@@ -45,9 +45,9 @@ class SearchTermTabGroupMiddleware : Middleware<BrowserState, BrowserAction> {
             }
             is TabListAction.RestoreAction -> {
                 action.tabs.forEach { tab ->
-                    tab.historyMetadata?.searchTerm?.let { searchTerm ->
+                    tab.state.historyMetadata?.searchTerm?.let { searchTerm ->
                         context.dispatch(
-                            TabGroupAction.AddTabAction(SEARCH_TERM_TAB_GROUPS, searchTerm, tab.id)
+                            TabGroupAction.AddTabAction(SEARCH_TERM_TAB_GROUPS, searchTerm, tab.state.id)
                         )
                     }
                 }

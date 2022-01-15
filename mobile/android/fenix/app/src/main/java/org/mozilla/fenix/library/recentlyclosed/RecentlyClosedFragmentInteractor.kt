@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.library.recentlyclosed
 
-import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
 
 /**
  * Interactor for the recently closed screen
@@ -14,7 +14,7 @@ class RecentlyClosedFragmentInteractor(
     private val recentlyClosedController: RecentlyClosedController
 ) : RecentlyClosedInteractor {
 
-    override fun onDelete(tab: RecoverableTab) {
+    override fun onDelete(tab: TabState) {
         recentlyClosedController.handleDelete(tab)
     }
 
@@ -22,15 +22,15 @@ class RecentlyClosedFragmentInteractor(
         recentlyClosedController.handleNavigateToHistory()
     }
 
-    override fun open(item: RecoverableTab) {
+    override fun open(item: TabState) {
         recentlyClosedController.handleRestore(item)
     }
 
-    override fun select(item: RecoverableTab) {
+    override fun select(item: TabState) {
         recentlyClosedController.handleSelect(item)
     }
 
-    override fun deselect(item: RecoverableTab) {
+    override fun deselect(item: TabState) {
         recentlyClosedController.handleDeselect(item)
     }
 }

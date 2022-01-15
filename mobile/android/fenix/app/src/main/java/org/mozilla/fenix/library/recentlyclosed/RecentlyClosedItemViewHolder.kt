@@ -6,7 +6,7 @@ package org.mozilla.fenix.library.recentlyclosed
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.HistoryListItemBinding
 import org.mozilla.fenix.ext.hideAndDisable
@@ -16,12 +16,12 @@ import org.mozilla.fenix.selection.SelectionHolder
 class RecentlyClosedItemViewHolder(
     view: View,
     private val recentlyClosedFragmentInteractor: RecentlyClosedFragmentInteractor,
-    private val selectionHolder: SelectionHolder<RecoverableTab>,
+    private val selectionHolder: SelectionHolder<TabState>,
 ) : RecyclerView.ViewHolder(view) {
 
     private val binding = HistoryListItemBinding.bind(view)
 
-    private var item: RecoverableTab? = null
+    private var item: TabState? = null
 
     init {
         binding.historyLayout.overflowView.apply {
@@ -34,7 +34,7 @@ class RecentlyClosedItemViewHolder(
         }
     }
 
-    fun bind(item: RecoverableTab) {
+    fun bind(item: TabState) {
         binding.historyLayout.titleView.text =
             item.title.ifEmpty { item.url }
         binding.historyLayout.urlView.text = item.url

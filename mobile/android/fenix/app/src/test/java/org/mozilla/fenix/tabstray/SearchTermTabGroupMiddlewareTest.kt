@@ -16,6 +16,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabGroup
 import mozilla.components.browser.state.state.TabPartition
 import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.browser.state.state.recover.TabState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.lib.state.MiddlewareContext
@@ -86,9 +87,12 @@ class SearchTermTabGroupMiddlewareTest {
             TabListAction.RestoreAction(
                 listOf(
                     RecoverableTab(
-                        id = "testId",
-                        url = "url",
-                        historyMetadata = HistoryMetadataKey("url", "search term", "url")
+                        engineSessionState = null,
+                        state = TabState(
+                            id = "testId",
+                            url = "url",
+                            historyMetadata = HistoryMetadataKey("url", "search term", "url")
+                        )
                     )
                 ),
                 restoreLocation = TabListAction.RestoreAction.RestoreLocation.BEGINNING
