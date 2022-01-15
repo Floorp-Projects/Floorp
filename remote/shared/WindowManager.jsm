@@ -14,8 +14,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 
   AppInfo: "chrome://remote/content/marionette/appinfo.js",
-  browser: "chrome://remote/content/marionette/browser.js",
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
+  TabManager: "chrome://remote/content/shared/TabManager.jsm",
   TimedPromise: "chrome://remote/content/marionette/sync.js",
   waitForEvent: "chrome://remote/content/marionette/sync.js",
   waitForObserverTopic: "chrome://remote/content/marionette/sync.js",
@@ -28,30 +28,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  */
 class WindowManager {
   constructor() {
-    // Maps browser's permanentKey to uuid: WeakMap.<Object, string>
-    this._windowHandles = new WeakMap();
     // Maps ChromeWindow to uuid: WeakMap.<Object, string>
     this._chromeWindowHandles = new WeakMap();
-  }
-
-  get windowHandles() {
-    const windowHandles = [];
-
-    for (const win of this.windows) {
-      const tabBrowser = browser.getTabBrowser(win);
-
-      // Only return handles for browser windows
-      if (tabBrowser && tabBrowser.tabs) {
-        for (const tab of tabBrowser.tabs) {
-          const winId = this.getIdForBrowser(browser.getBrowserForTab(tab));
-          if (winId !== null) {
-            windowHandles.push(winId);
-          }
-        }
-      }
-    }
-
-    return windowHandles;
   }
 
   get chromeWindowHandles() {
@@ -88,11 +66,11 @@ class WindowManager {
 
       // Otherwise check if the chrome window has a tab browser, and that it
       // contains a tab with the wanted window handle.
-      const tabBrowser = browser.getTabBrowser(win);
+      const tabBrowser = TabManager.getTabBrowser(win);
       if (tabBrowser && tabBrowser.tabs) {
         for (let i = 0; i < tabBrowser.tabs.length; ++i) {
-          let contentBrowser = browser.getBrowserForTab(tabBrowser.tabs[i]);
-          let contentWindowId = this.getIdForBrowser(contentBrowser);
+          let contentBrowser = TabManager.getBrowserForTab(tabBrowser.tabs[i]);
+          let contentWindowId = TabManager.getIdForBrowser(contentBrowser);
 
           if (contentWindowId == handle) {
             return this.getWindowProperties(win, { tabIndex: i });
@@ -137,31 +115,9 @@ class WindowManager {
     return {
       win,
       id: this.getIdForWindow(win),
-      hasTabBrowser: !!browser.getTabBrowser(win),
+      hasTabBrowser: !!TabManager.getTabBrowser(win),
       tabIndex: options.tabIndex,
     };
-  }
-
-  /**
-   * Retrieves an id for the given xul browser element. The id is a dynamically
-   * generated uuid associated with the permanentKey property of the given
-   * browser element.
-   *
-   * @param {xul:browser} browserElement
-   *     The <xul:browser> for which we want to retrieve the id.
-   * @return {String} The unique id for this browser.
-   */
-  getIdForBrowser(browserElement) {
-    if (browserElement === null) {
-      return null;
-    }
-
-    const key = browserElement.permanentKey;
-    if (!this._windowHandles.has(key)) {
-      const uuid = Services.uuid.generateUUID().toString();
-      this._windowHandles.set(key, uuid.substring(1, uuid.length - 1));
-    }
-    return this._windowHandles.get(key);
   }
 
   /**

@@ -18,7 +18,9 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/BindingCallContext.h"
 #include "mozilla/dom/ByteStreamHelpers.h"
+#include "mozilla/dom/BodyStream.h"
 #include "mozilla/dom/ModuleMapKey.h"
+#include "mozilla/dom/NativeUnderlyingSource.h"
 #include "mozilla/dom/QueueWithSizes.h"
 #include "mozilla/dom/QueuingStrategyBinding.h"
 #include "mozilla/dom/ReadIntoRequest.h"
@@ -69,13 +71,13 @@ namespace dom {
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStream)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReadableStream)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal, mController, mReader,
-                                  mErrorAlgorithm)
+                                  mErrorAlgorithm, mNativeUnderlyingSource)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   tmp->mStoredError.setNull();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ReadableStream)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal, mController, mReader,
-                                    mErrorAlgorithm)
+                                    mErrorAlgorithm, mNativeUnderlyingSource)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ReadableStream)
@@ -143,6 +145,25 @@ bool ReadableStreamHasDefaultReader(ReadableStream* aStream) {
   // Step 3. If reader implements ReadableStreamDefaultReader, return true.
   // Step 4. Return false.
   return reader->IsDefault();
+}
+
+void ReadableStream::SetNativeUnderlyingSource(
+    BodyStreamHolder* aUnderlyingSource) {
+  mNativeUnderlyingSource = aUnderlyingSource;
+}
+
+void ReadableStream::ReleaseObjects() {
+  SetNativeUnderlyingSource(nullptr);
+
+  SetErrorAlgorithm(nullptr);
+
+  if (mController->IsByte()) {
+    ReadableByteStreamControllerClearAlgorithms(mController->AsByte());
+    return;
+  }
+
+  MOZ_ASSERT(mController->IsDefault());
+  ReadableStreamDefaultControllerClearAlgorithms(mController->AsDefault());
 }
 
 // Streams Spec: 4.2.4: https://streams.spec.whatwg.org/#rs-prototype
@@ -847,8 +868,27 @@ already_AddRefed<ReadableStream> CreateReadableByteStream(
   // Step 4. Perform ? SetUpReadableByteStreamController(stream, controller,
   // startAlgorithm, pullAlgorithm, cancelAlgorithm, 0, undefined).
   SetUpReadableByteStreamController(aCx, stream, controller, aStartAlgorithm,
-                                    aPullAlgorithm, aCancelAlgorithm, 0,
-                                    mozilla::Nothing(), aRv);
+                                    aPullAlgorithm, aCancelAlgorithm, nullptr,
+                                    0, mozilla::Nothing(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // Return stream.
+  return stream.forget();
+}
+
+MOZ_CAN_RUN_SCRIPT
+already_AddRefed<ReadableStream> ReadableStream::Create(
+    JSContext* aCx, nsIGlobalObject* aGlobal,
+    BodyStreamHolder* aUnderlyingSource, ErrorResult& aRv) {
+  RefPtr<ReadableStream> stream = new ReadableStream(aGlobal);
+
+  stream->SetNativeUnderlyingSource(aUnderlyingSource);
+
+  SetUpReadableByteStreamControllerFromUnderlyingSource(aCx, stream,
+                                                        aUnderlyingSource, aRv);
+
   if (aRv.Failed()) {
     return nullptr;
   }

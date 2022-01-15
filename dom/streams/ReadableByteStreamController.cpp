@@ -29,6 +29,7 @@
 #include "mozilla/dom/ReadableStreamGenericReader.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIGlobalObject.h"
 #include "nsISupports.h"
@@ -1083,7 +1084,7 @@ static void ReadableByteStreamControllerRespondInReadableState(
 
   // Step 4. Perform
   // !ReadableByteStreamControllerShiftPendingPullInto(controller).
-  ReadableByteStreamControllerShiftPendingPullInto(aController);
+  (void)ReadableByteStreamControllerShiftPendingPullInto(aController);
 
   // Step 5. Let remainderSize be pullIntoDescriptor’s bytes filled mod
   // pullIntoDescriptor’s element size.
@@ -1681,8 +1682,8 @@ void SetUpReadableByteStreamController(
     UnderlyingSourceStartCallbackHelper* aStartAlgorithm,
     UnderlyingSourcePullCallbackHelper* aPullAlgorithm,
     UnderlyingSourceCancelCallbackHelper* aCancelAlgorithm,
-    double aHighWaterMark, Maybe<uint64_t> aAutoAllocateChunkSize,
-    ErrorResult& aRv) {
+    UnderlyingSourceErrorCallbackHelper* aErrorAlgorithm, double aHighWaterMark,
+    Maybe<uint64_t> aAutoAllocateChunkSize, ErrorResult& aRv) {
   // Step 1. Assert: stream.[[controller]] is undefined.
   MOZ_ASSERT(!aStream->Controller());
 
@@ -1720,6 +1721,9 @@ void SetUpReadableByteStreamController(
   // Step 10. Set controller.[[cancelAlgorithm]] to cancelAlgorithm.
   aController->SetCancelAlgorithm(aCancelAlgorithm);
 
+  // Not Specified.
+  aStream->SetErrorAlgorithm(aErrorAlgorithm);
+
   // Step 11. Set controller.[[autoAllocateChunkSize]] to autoAllocateChunkSize.
   aController->SetAutoAllocateChunkSize(aAutoAllocateChunkSize);
 
@@ -1753,6 +1757,58 @@ void SetUpReadableByteStreamController(
   // Step 16+17
   startPromise->AppendNativeHandler(
       new ByteStreamStartPromiseNativeHandler(aController));
+}
+
+// This is gently modelled on the pre-existing
+// SetUpExternalReadableByteStreamController, but specialized to the
+// BodyStreamUnderlyingSource model vs. the External streams of the JS
+// implementation.
+//
+// https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller-from-underlying-source
+MOZ_CAN_RUN_SCRIPT
+void SetUpReadableByteStreamControllerFromUnderlyingSource(
+    JSContext* aCx, ReadableStream* aStream,
+    BodyStreamHolder* aUnderlyingSource, ErrorResult& aRv) {
+  // Step 1.
+  RefPtr<ReadableByteStreamController> controller =
+      new ReadableByteStreamController(aStream->GetParentObject());
+
+  // Step 2.
+  RefPtr<UnderlyingSourceStartCallbackHelper> startAlgorithm;
+
+  // Step 3.
+  RefPtr<UnderlyingSourcePullCallbackHelper> pullAlgorithm;
+
+  // Step 4
+  RefPtr<UnderlyingSourceCancelCallbackHelper> cancelAlgorithm;
+
+  // Not Specified
+  RefPtr<UnderlyingSourceErrorCallbackHelper> errorAlgorithm;
+
+  // Step 5. Intentionally skipped: No startAlgorithm for
+  // BodyStreamUnderlyingSources. Step 6.
+  pullAlgorithm =
+      new BodyStreamUnderlyingSourcePullCallbackHelper(aUnderlyingSource);
+
+  // Step 7.
+  cancelAlgorithm =
+      new BodyStreamUnderlyingSourceCancelCallbackHelper(aUnderlyingSource);
+
+  // Not Specified
+  errorAlgorithm =
+      new BodyStreamUnderlyingSourceErrorCallbackHelper(aUnderlyingSource);
+
+  // Step 8
+  Maybe<double> autoAllocateChunkSize = mozilla::Nothing();
+  // Step 9 (Skipped)
+
+  // Not Specified: Native underlying sources always use 0.0 high water mark.
+  double highWaterMark = 0.0;
+
+  // Step 10.
+  SetUpReadableByteStreamController(
+      aCx, aStream, controller, startAlgorithm, pullAlgorithm, cancelAlgorithm,
+      errorAlgorithm, highWaterMark, autoAllocateChunkSize, aRv);
 }
 
 }  // namespace dom
