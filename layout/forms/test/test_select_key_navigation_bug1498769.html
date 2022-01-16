@@ -19,18 +19,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498769
     SimpleTest.waitForFocus(function() {
       [...document.querySelectorAll('select')].forEach(function(e) {
         e.focus();
-        is(e.selectedIndex, 1, "the 'selected' attribute is respected");
+        const description = ` (size ${e.size})`;
+        is(e.selectedIndex, 1, "the 'selected' attribute is respected" + description);
         if (kIsMac && e.size == "1") {
           // On OSX, UP/DOWN opens the dropdown menu rather than changing
           // the value so we skip the rest of this test there in this case.
           return;
         }
         synthesizeKey("VK_DOWN", {});
-        is(e.selectedIndex, 2, "VK_DOWN selected the first option below");
+        is(e.selectedIndex, 2, "VK_DOWN selected the first option below" + description);
         synthesizeKey("VK_UP", {});
-        is(e.selectedIndex, 0, "VK_UP skips the display:none/contents option");
+        is(e.selectedIndex, 0, "VK_UP skips the display:none/contents option" + description);
         synthesizeKey("VK_DOWN", {});
-        is(e.selectedIndex, 2, "VK_DOWN skips the display:none/contents option");
+        is(e.selectedIndex, 2, "VK_DOWN skips the display:none/contents option" + description);
       });
       SimpleTest.finish();
     });
