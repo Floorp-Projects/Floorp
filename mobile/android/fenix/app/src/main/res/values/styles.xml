@@ -76,7 +76,6 @@
         <item name="onboardingSelected">@color/onboarding_illustration_selected_normal_theme</item>
         <item name="onboardingDeselected">@color/onboarding_illustration_deselected_normal_theme</item>
         <item name="addOnPrivateBrowsingExteriorCircleBackground">@color/add_on_private_browsing_exterior_circle_background_normal_theme</item>
-        <item name="addOnPrivateBrowsingInteriorIconBackground">@color/photonWhite</item>
         <item name="mozacPromptLoginEditTextCursorColor">@color/prompt_login_edit_text_cursor_color_normal_theme</item>
         <item name="awesomeBarIndicatorColor">@color/search_suggestion_indicator_icon_color_normal_theme</item>
         <item name="awesomeBarIndicatorBookmarkColor">@color/search_suggestion_indicator_icon_bookmark_color_normal_theme</item>
@@ -253,7 +252,6 @@
         <item name="onboardingSelected">@color/accent_private_theme</item>
         <item name="onboardingDeselected">@color/onboarding_illustration_deselected_private_theme</item>
         <item name="addOnPrivateBrowsingExteriorCircleBackground">@color/accent_private_theme</item>
-        <item name="addOnPrivateBrowsingInteriorIconBackground">@color/photonWhite</item>
         <item name="mozacPromptLoginEditTextCursorColor">@color/prompt_login_edit_text_cursor_color_private_theme</item>
         <item name="awesomeBarIndicatorColor">@color/photonGreen60</item>
         <item name="awesomeBarIndicatorBookmarkColor">@color/photonBlue40</item>

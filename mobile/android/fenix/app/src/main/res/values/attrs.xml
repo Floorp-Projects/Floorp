@@ -53,7 +53,6 @@
     <attr name="onboardingSelected" format="reference"/>
     <attr name="onboardingDeselected" format="reference"/>
     <attr name="addOnPrivateBrowsingExteriorCircleBackground" format="reference"/>
-    <attr name="addOnPrivateBrowsingInteriorIconBackground" format="reference"/>
     <attr name="awesomeBarIndicatorColor" format="reference|color"/>
     <attr name="awesomeBarIndicatorBookmarkColor" format="reference|color"/>
 
