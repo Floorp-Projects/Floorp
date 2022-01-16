@@ -166,7 +166,6 @@
     <color name="onboarding_card_background_start_gradient_private_theme">@color/photonViolet60</color>
     <color name="onboarding_card_background_end_gradient_private_theme">@color/photonPurple50</color>
     <color name="onboarding_illustration_deselected_private_theme">#99FBFBFE</color>
-    <color name="add_on_private_browsing_exterior_circle_background_private_theme">@color/accent_private_theme</color>
     <color name="prompt_login_edit_text_cursor_color_private_theme">@color/photonViolet50</color>
 
     <!-- Tab Tray -->
