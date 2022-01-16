@@ -308,14 +308,10 @@ HTMLComboboxAccessible::HTMLComboboxAccessible(nsIContent* aContent,
   mGenericTypes |= eCombobox;
   mStateFlags |= eNoKidsFromDOM;
 
-  nsComboboxControlFrame* comboFrame = do_QueryFrame(GetFrame());
-  if (comboFrame) {
-    nsIFrame* listFrame = comboFrame->GetDropDown();
-    if (listFrame) {
-      mListAccessible = new HTMLComboboxListAccessible(mParent, mContent, mDoc);
-      Document()->BindToDocument(mListAccessible, nullptr);
-      AppendChild(mListAccessible);
-    }
+  if ((nsComboboxControlFrame*)do_QueryFrame(GetFrame())) {
+    mListAccessible = new HTMLComboboxListAccessible(mParent, mContent, mDoc);
+    Document()->BindToDocument(mListAccessible, nullptr);
+    AppendChild(mListAccessible);
   }
 }
 
@@ -457,16 +453,6 @@ HTMLComboboxListAccessible::HTMLComboboxListAccessible(LocalAccessible* aParent,
 
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLComboboxAccessible: LocalAccessible
-
-nsIFrame* HTMLComboboxListAccessible::GetFrame() const {
-  nsIFrame* frame = HTMLSelectListAccessible::GetFrame();
-  nsComboboxControlFrame* comboBox = do_QueryFrame(frame);
-  if (comboBox) {
-    return comboBox->GetDropDown();
-  }
-
-  return nullptr;
-}
 
 role HTMLComboboxListAccessible::NativeRole() const {
   return roles::COMBOBOX_LIST;

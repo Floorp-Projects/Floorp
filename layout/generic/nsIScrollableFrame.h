@@ -143,9 +143,8 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   /**
    * Return the width for non-disappearing scrollbars.
    */
-  virtual nscoord GetNondisappearingScrollbarWidth(
-      nsPresContext* aPresContext, gfxContext* aRC,
-      mozilla::WritingMode aWM) = 0;
+  static nscoord GetNondisappearingScrollbarWidth(nsPresContext*,
+                                                  mozilla::WritingMode);
   /**
    * Get the layout size of this frame.
    * Note that this is a value which is not expanded by the minimum scale size.
