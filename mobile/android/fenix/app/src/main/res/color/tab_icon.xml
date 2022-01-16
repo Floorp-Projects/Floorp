@@ -4,5 +4,5 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:color="@color/fx_mobile_icon_color_active" android:state_selected="true" />
-    <item android:color="@color/tab_tray_heading_icon_inactive_normal_theme" />
+    <item android:color="@color/fx_mobile_icon_color_primary_inactive" />
 </selector>
