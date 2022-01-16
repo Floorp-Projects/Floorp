@@ -13,8 +13,7 @@
   --downloads-item-disabled-opacity: 0.6;
 }
 
-@keyfocus@ @itemFocused@,
-@keyfocus@ #downloadsSummary:focus,
+#downloadsPanel[keyfocus] :is(#downloadsListBox:focus > richlistitem[selected], #downloadsSummary:focus),
 .downloadButton:focus {
   outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
