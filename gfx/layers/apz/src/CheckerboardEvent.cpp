@@ -21,14 +21,16 @@ namespace layers {
 
 const char* CheckerboardEvent::sDescriptions[] = {
     "page",
-    "painted critical displayport",
     "painted displayport",
     "requested displayport",
     "viewport",
 };
 
 const char* CheckerboardEvent::sColors[] = {
-    "brown", "darkgreen", "lightgreen", "yellow", "red",
+    "brown",
+    "lightgreen",
+    "yellow",
+    "red",
 };
 
 CheckerboardEvent::CheckerboardEvent(bool aRecordTrace)
