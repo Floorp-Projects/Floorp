@@ -82,7 +82,7 @@ function checkLibraryPaneVisibility(library, selectedPane) {
       "Bookmark/History tree is hidden"
     );
     Assert.ok(
-      !library.document.getElementById("downloadsRichListBox").hidden,
+      !library.document.getElementById("downloadsListBox").hidden,
       "Downloads are shown"
     );
   } else {
@@ -91,7 +91,7 @@ function checkLibraryPaneVisibility(library, selectedPane) {
       "Bookmark/History tree is shown"
     );
     Assert.ok(
-      library.document.getElementById("downloadsRichListBox").hidden,
+      library.document.getElementById("downloadsListBox").hidden,
       "Downloads are hidden"
     );
   }

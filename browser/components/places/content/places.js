@@ -168,7 +168,7 @@ var PlacesOrganizer = {
       DOWNLOADS_QUERY,
       () =>
         new DownloadsPlacesView(
-          document.getElementById("downloadsRichListBox"),
+          document.getElementById("downloadsListBox"),
           false
         ),
       {
