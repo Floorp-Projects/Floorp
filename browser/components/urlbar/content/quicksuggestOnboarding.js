@@ -145,9 +145,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.close();
   });
   addSubmitListener(document.getElementById("onboardingNext"), () => {
+    window.arguments[0].visitedMain = true;
     document.getElementById("introduction-section").classList.add("inactive");
     document.getElementById("main-section").classList.add("active");
-    window.arguments[0].visitedMain = true;
+    document.body.setAttribute("aria-labelledby", "main-title");
+    let ariaDescribedBy = "main-description";
+    if (variation?.mainPrivacyFirst) {
+      ariaDescribedBy += " main-privacy-first";
+    }
+    document.body.setAttribute("aria-describedby", ariaDescribedBy);
   });
   addSubmitListener(document.getElementById("onboardingLearnMore"), () => {
     window.arguments[0].choice = ONBOARDING_CHOICE.LEARN_MORE_2;
