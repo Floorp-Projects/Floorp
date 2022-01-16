@@ -33,7 +33,7 @@
 void dav1d_data_ref(Dav1dData *dst, const Dav1dData *src);
 
 /**
- * Copy the source properties to the destitionatin and increase the
+ * Copy the source properties to the destination and increase the
  * user_data's reference count (if it's not NULL).
  */
 void dav1d_data_props_copy(Dav1dDataProps *dst, const Dav1dDataProps *src);

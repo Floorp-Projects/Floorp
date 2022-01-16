@@ -26,7 +26,7 @@
  */
 
 #include "common/intops.h"
-#include "src/ppc/types.h"
+#include "src/ppc/dav1d_types.h"
 #include "src/cpu.h"
 #include "src/looprestoration.h"
 

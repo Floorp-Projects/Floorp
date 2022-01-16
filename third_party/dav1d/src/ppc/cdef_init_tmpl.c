@@ -32,7 +32,7 @@
 #include "src/cdef.h"
 #include "src/cpu.h"
 
-#include "src/ppc/types.h"
+#include "src/ppc/dav1d_types.h"
 
 #if BITDEPTH == 8
 static inline i16x8 vconstrain(const i16x8 diff, const int16_t threshold,

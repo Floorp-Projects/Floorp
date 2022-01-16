@@ -128,7 +128,8 @@ static void lr_sbrow(const Dav1dFrameContext *const f, pixel *p, const int y,
     // TODO Support chroma subsampling.
     const int shift_hor = 7 - ss_hor;
 
-    pixel pre_lr_border[2][128 + 8 /* maximum sbrow height is 128 + 8 rows offset */][4];
+    /* maximum sbrow height is 128 + 8 rows offset */
+    ALIGN_STK_16(pixel, pre_lr_border, 2, [128 + 8][4]);
     const Av1RestorationUnit *lr[2];
 
     enum LrEdgeFlags edges = (y > 0 ? LR_HAVE_TOP : 0) | LR_HAVE_RIGHT;
