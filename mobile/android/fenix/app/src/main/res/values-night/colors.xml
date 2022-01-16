@@ -130,7 +130,6 @@
     <color name="search_suggestion_indicator_icon_bookmark_color_normal_theme">@color/photonBlue40</color>
     <color name="recently_used_share_theme">@color/photonDarkGrey10</color>
 
-    <color name="mozac_widget_favicon_border_normal_theme">@color/photonDarkGrey10</color>
 
     <!-- Tab tray -->
     <color name="tab_tray_item_background_normal_theme">@color/photonDarkGrey80</color>
