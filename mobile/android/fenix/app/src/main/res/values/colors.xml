@@ -191,7 +191,7 @@
     <color name="sync_disconnected_background_normal_theme">#FFFDE2</color>
     <color name="swipe_delete_background_normal_theme">@color/photonLightGrey30</color>
     <color name="onboarding_illustration_selected_normal_theme">@color/photonViolet70</color>
-    <color name="onboarding_illustration_deselected_normal_theme">#9915141A</color>
+    <color name="onboarding_illustration_deselected_normal_theme">@color/photonDarkGrey90A60</color>
     <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/photonViolet70</color>
     <color name="prompt_login_edit_text_cursor_color_normal_theme">@color/photonInk20</color>
     <color name="search_suggestion_indicator_icon_color_normal_theme">@color/photonGreen70</color>
