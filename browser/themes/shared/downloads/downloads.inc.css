@@ -2,15 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%filter substitution
-
-%define keyfocus #downloadsPanel[keyfocus]
-%define notKeyfocus #downloadsPanel:not([keyfocus])
-%define item #downloadsListBox > richlistitem
-%define itemFinished @item@[state="1"]
-%define itemNotFinished @item@:not([state="1"])
-%define itemFocused #downloadsListBox:focus > richlistitem[selected]
-
 /*** Panel and outer controls ***/
 
 #downloadsListBox {
@@ -39,7 +30,7 @@
   pointer-events: none;
 }
 
-@item@ {
+#downloadsListBox > richlistitem {
   /* Leave space for the 32x32 icon with 16px vertical padding, and/or
    * the text in the item, with the same padding, whichever is bigger: */
   height: max(48px, calc(16px + 2em));
@@ -54,33 +45,33 @@
   border-radius: 4px;
 }
 
-@itemFinished@[exists].hoveringMainArea:hover,
-@item@:is(.openWhenFinished).hoveringMainArea:hover,
-@item@[verdict]:hover,
-@item@:hover:is(.openWhenFinished),
+#downloadsListBox > richlistitem[state="1"][exists].hoveringMainArea:hover,
+#downloadsListBox > richlistitem.openWhenFinished.hoveringMainArea:hover,
+#downloadsListBox > richlistitem[verdict]:hover,
+#downloadsListBox > richlistitem.openWhenFinished:hover,
 .downloadsPanelFooterButton:hover,
-@keyfocus@ @itemFocused@,
+#downloadsPanel[keyfocus] #downloadsListBox:focus > richlistitem[selected],
 #downloadsHistory:focus {
   background-color: var(--panel-item-hover-bgcolor);
 }
 
-@itemFinished@[exists].hoveringMainArea:hover:active,
-@item@:is(.openWhenFinished).hoveringMainArea:hover:active,
+#downloadsListBox > richlistitem[state="1"][exists].hoveringMainArea:hover:active,
+#downloadsListBox > richlistitem.openWhenFinished.hoveringMainArea:hover:active,
 .downloadsPanelFooterButton[open="true"],
-@item@[verdict]:hover:active {
+#downloadsListBox > richlistitem[verdict]:hover:active {
   background-color: var(--panel-item-active-bgcolor);
 }
 
-@item@[verdict="Insecure"] .downloadDetails,
-@item@[verdict="Malware"] .downloadDetails {
+#downloadsListBox > richlistitem[verdict="Insecure"] .downloadDetails,
+#downloadsListBox > richlistitem[verdict="Malware"] .downloadDetails {
   color: #C50042;
   /* The details text usually gets an opacity reduction, but for the error
      states we disable that, because it would reduce the contrast too much. */
   opacity: inherit;
 }
 
-:root[lwt-popup-brighttext] @item@[verdict="Insecure"] .downloadDetails,
-:root[lwt-popup-brighttext] @item@[verdict="Malware"] .downloadDetails {
+:root[lwt-popup-brighttext] #downloadsListBox > richlistitem[verdict="Insecure"] .downloadDetails,
+:root[lwt-popup-brighttext] #downloadsListBox > richlistitem[verdict="Malware"] .downloadDetails {
   color: #FF848B;
 }
 
@@ -93,7 +84,7 @@
   margin-top: 1.5em;
 }
 
-@notKeyfocus@ .downloadsPanelFooterButton:-moz-focusring {
+#downloadsPanel:not([keyfocus]) .downloadsPanelFooterButton:-moz-focusring {
   outline: none;
 }
 
@@ -125,12 +116,12 @@
   height: var(--downloads-item-height);
 }
 
-@item@ {
+#downloadsListBox > richlistitem {
   background: transparent;
   color: inherit;
 }
 
-@item@:last-child {
+#downloadsListBox > richlistitem:last-child {
   margin-bottom: 0;
 }
 
@@ -156,18 +147,18 @@
 /* When hovering the mouse pointer over the item, instead of the normal message
    we display a more detailed one. For blocked downloads the entire area shows
    the hover message, for other downloads only the main area does. */
-@item@[verdict]:hover > .downloadMainArea > .downloadContainer > .downloadDetailsNormal,
-@item@[verdict]:not(:hover) > .downloadMainArea > .downloadContainer > .downloadDetailsHover,
+#downloadsListBox > richlistitem[verdict]:hover > .downloadMainArea > .downloadContainer > .downloadDetailsNormal,
+#downloadsListBox > richlistitem[verdict]:not(:hover) > .downloadMainArea > .downloadContainer > .downloadDetailsHover,
 .downloadMainArea:hover > .downloadContainer > .downloadDetailsNormal,
-@item@:not([verdict]) > .downloadMainArea:not(:hover) > .downloadContainer > .downloadDetailsHover {
+#downloadsListBox > richlistitem:not([verdict]) > .downloadMainArea:not(:hover) > .downloadContainer > .downloadDetailsHover {
   display: none;
 }
 
 /* When hovering the action button in particular, instead of the usual hover
    message we display the command associated with the button. */
-@item@.downloadHoveringButton > .downloadMainArea > .downloadContainer > .downloadDetailsNormal,
-@item@.downloadHoveringButton > .downloadMainArea > .downloadContainer > .downloadDetailsHover,
-@item@:not(.downloadHoveringButton) > .downloadMainArea > .downloadContainer > .downloadDetailsButtonHover {
+#downloadsListBox > richlistitem.downloadHoveringButton > .downloadMainArea > .downloadContainer > .downloadDetailsNormal,
+#downloadsListBox > richlistitem.downloadHoveringButton > .downloadMainArea > .downloadContainer > .downloadDetailsHover,
+#downloadsListBox > richlistitem:not(.downloadHoveringButton) > .downloadMainArea > .downloadContainer > .downloadDetailsButtonHover {
   display: none;
 }
 
