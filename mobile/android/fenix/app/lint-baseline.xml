@@ -1682,17 +1682,6 @@
 
     <issue
         id="UnusedResources"
-        message="The resource `R.color.nightly_launcher_background` appears to be unused"
-        errorLine1="    &lt;color name=&quot;nightly_launcher_background&quot;>#220033&lt;/color>"
-        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/colors.xml"
-            line="319"
-            column="12"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
         message="The resource `R.dimen.mozac_browser_menu_corner_radius` appears to be unused"
         errorLine1="    &lt;dimen name=&quot;mozac_browser_menu_corner_radius&quot;>8dp&lt;/dimen>"
         errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
