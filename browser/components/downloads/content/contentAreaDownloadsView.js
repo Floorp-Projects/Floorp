@@ -10,14 +10,14 @@ const { PrivateBrowsingUtils } = ChromeUtils.import(
 
 var ContentAreaDownloadsView = {
   init() {
-    let box = document.getElementById("downloadsRichListBox");
+    let box = document.getElementById("downloadsListBox");
     box.addEventListener(
       "InitialDownloadsLoaded",
       () => {
         // Set focus to Downloads list once it is created
         // And prevent it from showing the focus ring around the richlistbox (Bug 1702694)
         document
-          .getElementById("downloadsRichListBox")
+          .getElementById("downloadsListBox")
           .focus({ preventFocusRing: true });
       },
       { once: true }

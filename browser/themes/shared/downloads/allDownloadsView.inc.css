@@ -4,12 +4,12 @@
 
 %filter substitution
 
-%define item #downloadsRichListBox > richlistitem
+%define item #downloadsListBox > richlistitem
 %define itemFocused @item@[selected]
 
 /*** View and outer controls ***/
 
-#downloadsRichListBox {
+#downloadsListBox {
   /** The default listbox appearance comes with an unwanted margin. **/
   appearance: none;
   margin: 0;

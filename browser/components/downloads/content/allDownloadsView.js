@@ -880,7 +880,7 @@ function goUpdateDownloadCommands() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-  let richListBox = document.getElementById("downloadsRichListBox");
+  let richListBox = document.getElementById("downloadsListBox");
   richListBox.addEventListener("scroll", function(event) {
     return this._placesView.onScroll();
   });

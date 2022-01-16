@@ -61,7 +61,7 @@
     --download-progress-fill-color: SelectedItem;
   }
 
-  #downloadsRichListBox richlistitem[selected] .downloadProgress::-moz-progress-bar {
+  #downloadsListBox richlistitem[selected] .downloadProgress::-moz-progress-bar {
     --download-progress-fill-color: ButtonText;
   }
 }

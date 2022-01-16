@@ -211,7 +211,7 @@
 
 /* Downloads pane */
 
-#downloadsRichListBox {
+#downloadsListBox {
   color: var(--organizer-color);
   background-color: var(--organizer-content-background);
 }
