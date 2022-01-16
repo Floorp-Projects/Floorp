@@ -261,7 +261,6 @@
     <color name="device_foreground">@color/photonInk80</color>
 
     <!-- Launcher Icon colors -->
-    <color name="debug_launcher_background">@color/photonInk20</color>
     <color name="ic_launcher_background">#FDFDFD</color>
 
     <!-- Button Colors -->
