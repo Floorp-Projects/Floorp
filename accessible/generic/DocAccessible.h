@@ -336,6 +336,11 @@ class DocAccessible : public HyperTextAccessibleWrap,
   void ContentInserted(nsIContent* aStartChildNode, nsIContent* aEndChildNode);
 
   /**
+   * @see nsAccessibilityService::ScheduleAccessibilitySubtreeUpdate
+   */
+  void ScheduleTreeUpdate(nsIContent* aContent);
+
+  /**
    * Update the tree on content removal.
    */
   void ContentRemoved(LocalAccessible* aAccessible);
@@ -489,6 +494,11 @@ class DocAccessible : public HyperTextAccessibleWrap,
    * invalidate their containers later.
    */
   void ProcessInvalidationList();
+
+  /**
+   * Process mPendingUpdates
+   */
+  void ProcessPendingUpdates();
 
   /**
    * Called from NotificationController to process this doc's
@@ -717,6 +727,11 @@ class DocAccessible : public HyperTextAccessibleWrap,
   nsClassHashtable<nsPtrHashKey<LocalAccessible>,
                    nsTArray<RefPtr<LocalAccessible>>>
       mARIAOwnsHash;
+
+  /**
+   * Keeps a list of pending subtrees to update post-refresh.
+   */
+  nsTArray<RefPtr<nsIContent>> mPendingUpdates;
 
   /**
    * Used to process notification from core and accessible events.
