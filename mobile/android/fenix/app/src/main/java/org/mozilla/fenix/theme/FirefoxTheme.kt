@@ -68,7 +68,9 @@ private val darkColorPalette = FirefoxColors(
     textAccent = PhotonColors.Violet40,
     textInverted = PhotonColors.White,
     iconPrimary = PhotonColors.LightGrey05,
+    iconPrimaryInactive = PhotonColors.LightGrey05A60,
     iconSecondary = PhotonColors.LightGrey40,
+    iconActive = PhotonColors.Violet40,
     iconDisabled = PhotonColors.LightGrey70,
     iconInverted = PhotonColors.White,
     iconNotice = PhotonColors.Blue30,
@@ -117,7 +119,9 @@ private val lightColorPalette = FirefoxColors(
     textAccent = PhotonColors.Violet70,
     textInverted = PhotonColors.White,
     iconPrimary = PhotonColors.DarkGrey90,
+    iconPrimaryInactive = PhotonColors.DarkGrey90A60,
     iconSecondary = PhotonColors.DarkGrey05,
+    iconActive = PhotonColors.Ink20,
     iconDisabled = PhotonColors.LightGrey70,
     iconInverted = PhotonColors.White,
     iconNotice = PhotonColors.Blue30,
@@ -171,7 +175,9 @@ class FirefoxColors(
     textAccent: Color,
     textInverted: Color,
     iconPrimary: Color,
+    iconPrimaryInactive: Color,
     iconSecondary: Color,
+    iconActive: Color,
     iconDisabled: Color,
     iconInverted: Color,
     iconNotice: Color,
@@ -280,8 +286,14 @@ class FirefoxColors(
     // Primary icon
     var iconPrimary by mutableStateOf(iconPrimary)
         private set
+    // Inactive tab
+    var iconPrimaryInactive by mutableStateOf(iconPrimaryInactive)
+        private set
     // Secondary icon
     var iconSecondary by mutableStateOf(iconSecondary)
+        private set
+    // Active tab
+    var iconActive by mutableStateOf(iconActive)
         private set
     // Disabled icon
     var iconDisabled by mutableStateOf(iconDisabled)
@@ -363,7 +375,9 @@ class FirefoxColors(
         textAccent = other.textAccent
         textInverted = other.textInverted
         iconPrimary = other.iconPrimary
+        iconPrimaryInactive = other.iconPrimaryInactive
         iconSecondary = other.iconSecondary
+        iconActive = other.iconActive
         iconDisabled = other.iconDisabled
         iconInverted = other.iconInverted
         iconNotice = other.iconNotice
@@ -412,7 +426,9 @@ class FirefoxColors(
         textAccent = textAccent,
         textInverted = textInverted,
         iconPrimary = iconPrimary,
+        iconPrimaryInactive = iconPrimaryInactive,
         iconSecondary = iconSecondary,
+        iconActive = iconActive,
         iconDisabled = iconDisabled,
         iconInverted = iconInverted,
         iconNotice = iconNotice,
