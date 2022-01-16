@@ -273,7 +273,7 @@
         <item name="tabTrayThumbnailIcon">@color/tab_tray_item_thumbnail_icon_normal_theme</item>
 
         <!-- Tab History -->
-        <item name="tabHistoryItemSelectedBackground">@color/tab_history_item_selected_background_private_theme</item>
+        <item name="tabHistoryItemSelectedBackground">@color/tab_tray_item_selected_background_dark_theme</item>
 
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark_private</item>

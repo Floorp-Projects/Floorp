@@ -173,9 +173,6 @@
     <!-- Tab Tray -->
     <color name="tab_tray_item_media_background_private_theme">@color/photonViolet50</color>
 
-    <!-- Tab History -->
-    <color name="tab_history_item_selected_background_private_theme">@color/tab_tray_item_selected_background_dark_theme</color>
-
     <!-- Normal theme colors for light mode -->
     <color name="primary_text_normal_theme">@color/primary_text_light_theme</color>
     <color name="secondary_text_normal_theme">@color/photonGrey50</color>
