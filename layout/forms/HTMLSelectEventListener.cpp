@@ -278,6 +278,16 @@ int32_t HTMLSelectEventListener::ItemsPerPage() const {
   return AssertedCast<int32_t>(size - 1u);
 }
 
+void HTMLSelectEventListener::OptionValueMightHaveChanged(
+    nsIContent* aMutatingNode) {
+#ifdef ACCESSIBILITY
+  if (nsAccessibilityService* acc = PresShell::GetAccessibilityService()) {
+    acc->ComboboxOptionMaybeChanged(mElement->OwnerDoc()->GetPresShell(),
+                                    aMutatingNode);
+  }
+#endif
+}
+
 void HTMLSelectEventListener::AttributeChanged(dom::Element* aElement,
                                                int32_t aNameSpaceID,
                                                nsAtom* aAttribute,
@@ -285,6 +295,8 @@ void HTMLSelectEventListener::AttributeChanged(dom::Element* aElement,
                                                const nsAttrValue* aOldValue) {
   if (aElement->IsHTMLElement(nsGkAtoms::option) &&
       aNameSpaceID == kNameSpaceID_None && aAttribute == nsGkAtoms::label) {
+    // A11y has its own mutation listener for this so no need to do
+    // OptionValueMightHaveChanged().
     ComboboxMightHaveChanged();
   }
 }
@@ -292,6 +304,7 @@ void HTMLSelectEventListener::AttributeChanged(dom::Element* aElement,
 void HTMLSelectEventListener::CharacterDataChanged(
     nsIContent* aContent, const CharacterDataChangeInfo&) {
   if (nsContentUtils::IsInSameAnonymousTree(mElement, aContent)) {
+    OptionValueMightHaveChanged(aContent);
     ComboboxMightHaveChanged();
   }
 }
@@ -299,28 +312,36 @@ void HTMLSelectEventListener::CharacterDataChanged(
 void HTMLSelectEventListener::ContentRemoved(nsIContent* aChild,
                                              nsIContent* aPreviousSibling) {
   if (nsContentUtils::IsInSameAnonymousTree(mElement, aChild)) {
+    OptionValueMightHaveChanged(aChild);
     ComboboxMightHaveChanged();
   }
 }
 
 void HTMLSelectEventListener::ContentAppended(nsIContent* aFirstNewContent) {
   if (nsContentUtils::IsInSameAnonymousTree(mElement, aFirstNewContent)) {
+    OptionValueMightHaveChanged(aFirstNewContent);
     ComboboxMightHaveChanged();
   }
 }
 
 void HTMLSelectEventListener::ContentInserted(nsIContent* aChild) {
   if (nsContentUtils::IsInSameAnonymousTree(mElement, aChild)) {
+    OptionValueMightHaveChanged(aChild);
     ComboboxMightHaveChanged();
   }
 }
 
 void HTMLSelectEventListener::ComboboxMightHaveChanged() {
   if (nsIFrame* f = mElement->GetPrimaryFrame()) {
+    PresShell* ps = f->PresShell();
     // nsComoboxControlFrame::Reflow updates the selected text. AddOption /
     // RemoveOption / etc takes care of keeping the displayed index up to date.
-    f->PresShell()->FrameNeedsReflow(f, IntrinsicDirty::StyleChange,
-                                     NS_FRAME_IS_DIRTY);
+    ps->FrameNeedsReflow(f, IntrinsicDirty::StyleChange, NS_FRAME_IS_DIRTY);
+#ifdef ACCESSIBILITY
+    if (nsAccessibilityService* acc = PresShell::GetAccessibilityService()) {
+      acc->ScheduleAccessibilitySubtreeUpdate(ps, mElement);
+    }
+#endif
   }
 }
 
