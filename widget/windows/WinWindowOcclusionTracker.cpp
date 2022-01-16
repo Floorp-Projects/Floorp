@@ -372,6 +372,20 @@ bool WinWindowOcclusionTracker::IsInWinWindowOcclusionThread() {
          sTracker->mThread->thread_id() == PlatformThread::CurrentId();
 }
 
+void WinWindowOcclusionTracker::EnsureDisplayStatusObserver() {
+  if (mDisplayStatusObserver) {
+    return;
+  }
+  mDisplayStatusObserver = DisplayStatusObserver::Create(this);
+}
+
+void WinWindowOcclusionTracker::EnsureSessionChangeObserver() {
+  if (mSessionChangeObserver) {
+    return;
+  }
+  mSessionChangeObserver = SessionChangeObserver::Create(this);
+}
+
 void WinWindowOcclusionTracker::Enable(nsBaseWidget* aWindow, HWND aHwnd) {
   MOZ_ASSERT(NS_IsMainThread());
   LOG(LogLevel::Info, "WinWindowOcclusionTracker::Enable() aWindow %p aHwnd %p",
@@ -432,8 +446,14 @@ WinWindowOcclusionTracker::WinWindowOcclusionTracker(base::Thread* aThread)
   MOZ_ASSERT(NS_IsMainThread());
   LOG(LogLevel::Info, "WinWindowOcclusionTracker::WinWindowOcclusionTracker()");
 
-  mDisplayStatusObserver = DisplayStatusObserver::Create(this);
-  mSessionChangeObserver = SessionChangeObserver::Create(this);
+  if (StaticPrefs::
+          widget_windows_window_occlusion_tracking_display_state_enabled()) {
+    mDisplayStatusObserver = DisplayStatusObserver::Create(this);
+  }
+  if (StaticPrefs::
+          widget_windows_window_occlusion_tracking_session_lock_enabled()) {
+    mSessionChangeObserver = SessionChangeObserver::Create(this);
+  }
   mSerializedTaskDispatcher = new SerializedTaskDispatcher();
 }
 

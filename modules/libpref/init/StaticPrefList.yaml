@@ -12610,7 +12610,7 @@
 
 - name: widget.windows.window_occlusion_tracking_display_state.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 - name: widget.windows.window_occlusion_tracking_session_lock.enabled
