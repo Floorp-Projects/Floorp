@@ -4888,12 +4888,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       mCheckerboardEvent->UpdateRendertraceProperty(
           CheckerboardEvent::PaintedDisplayPort, GetPaintedRect(aLayerMetrics),
           str);
-      if (!aLayerMetrics.GetCriticalDisplayPort().IsEmpty()) {
-        mCheckerboardEvent->UpdateRendertraceProperty(
-            CheckerboardEvent::PaintedCriticalDisplayPort,
-            aLayerMetrics.GetCriticalDisplayPort() +
-                aLayerMetrics.GetLayoutScrollOffset());
-      }
     }
   }
 
