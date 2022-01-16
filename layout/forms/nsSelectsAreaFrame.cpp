@@ -49,22 +49,6 @@ void nsSelectsAreaFrame::Reflow(nsPresContext* aPresContext,
                "Must have an nsListControlFrame!  Frame constructor is "
                "broken");
 
-  bool isInDropdownMode = list->IsInDropDownMode();
-
-  // See similar logic in nsListControlFrame::Reflow and
-  // nsListControlFrame::ReflowAsDropdown.  We need to match it here.
-  WritingMode wm = aReflowInput.GetWritingMode();
-  nscoord oldBSize;
-  if (isInDropdownMode) {
-    // Store the block size now in case it changes during
-    // nsBlockFrame::Reflow for some odd reason.
-    if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
-      oldBSize = BSize(wm);
-    } else {
-      oldBSize = NS_UNCONSTRAINEDSIZE;
-    }
-  }
-
   nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
 
   // Check whether we need to suppress scrollbar updates.  We want to do
@@ -76,9 +60,7 @@ void nsSelectsAreaFrame::Reflow(nsPresContext* aPresContext,
     // comboboxes, we'll also need it if our block size changed.  If
     // we're going to do a second pass, suppress scrollbar updates for
     // this pass.
-    if (newBSizeOfARow != mBSizeOfARow ||
-        (isInDropdownMode &&
-         (oldBSize != aDesiredSize.BSize(wm) || oldBSize != BSize(wm)))) {
+    if (newBSizeOfARow != mBSizeOfARow) {
       mBSizeOfARow = newBSizeOfARow;
       list->SetSuppressScrollbarUpdate(true);
     }

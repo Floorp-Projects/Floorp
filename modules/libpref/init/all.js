@@ -1034,7 +1034,6 @@ pref("dom.forms.selectSearch", false);
 #else
   pref("dom.forms.select.customstyling", true);
 #endif
-pref("dom.select_popup_in_parent.enabled", false);
 
 pref("dom.cycle_collector.incremental", true);
 

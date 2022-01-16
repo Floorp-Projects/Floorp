@@ -341,43 +341,49 @@ template bool nsTextFrameUtils::IsSkippableCharacterForTransformText(
 template bool nsTextFrameUtils::IsSkippableCharacterForTransformText(
     char16_t aChar);
 
-uint32_t nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(
-    Text* aText, const nsStyleText* aStyleText) {
-  const nsTextFragment* frag = &aText->TextFragment();
+template <typename CharT>
+static uint32_t DoComputeApproximateLengthWithWhitespaceCompression(
+    const CharT* aChars, uint32_t aLength, const nsStyleText* aStyleText) {
   // This is an approximation so we don't really need anything
   // too fancy here.
   uint32_t len;
   if (aStyleText->WhiteSpaceIsSignificant()) {
-    len = frag->GetLength();
-  } else {
-    bool is2b = frag->Is2b();
-    union {
-      const char* s1b;
-      const char16_t* s2b;
-    } u;
-    if (is2b) {
-      u.s2b = frag->Get2b();
-    } else {
-      u.s1b = frag->Get1b();
-    }
-    bool prevWS = true;  // more important to ignore blocks with
-                         // only whitespace than get inline boundaries
-                         // exactly right
-    len = 0;
-    for (uint32_t i = 0, i_end = frag->GetLength(); i < i_end; ++i) {
-      char16_t c = is2b ? u.s2b[i] : u.s1b[i];
-      if (c == ' ' || c == '\n' || c == '\t' || c == '\r') {
-        if (!prevWS) {
-          ++len;
-        }
-        prevWS = true;
-      } else {
+    return aLength;
+  }
+  bool prevWS = true;  // more important to ignore blocks with
+                       // only whitespace than get inline boundaries
+                       // exactly right
+  len = 0;
+  for (uint32_t i = 0; i < aLength; ++i) {
+    CharT c = aChars[i];
+    if (c == ' ' || c == '\n' || c == '\t' || c == '\r') {
+      if (!prevWS) {
         ++len;
-        prevWS = false;
       }
+      prevWS = true;
+    } else {
+      ++len;
+      prevWS = false;
     }
   }
   return len;
+}
+
+uint32_t nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(
+    Text* aText, const nsStyleText* aStyleText) {
+  const nsTextFragment* frag = &aText->TextFragment();
+  if (frag->Is2b()) {
+    return DoComputeApproximateLengthWithWhitespaceCompression(
+        frag->Get2b(), frag->GetLength(), aStyleText);
+  }
+  return DoComputeApproximateLengthWithWhitespaceCompression(
+      frag->Get1b(), frag->GetLength(), aStyleText);
+}
+
+uint32_t nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(
+    const nsAString& aString, const nsStyleText* aStyleText) {
+  return DoComputeApproximateLengthWithWhitespaceCompression(
+      aString.BeginReading(), aString.Length(), aStyleText);
 }
 
 bool nsSkipCharsRunIterator::NextRun() {

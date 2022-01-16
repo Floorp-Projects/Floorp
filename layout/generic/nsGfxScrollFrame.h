@@ -382,8 +382,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
       nsIScrollableFrame::ScrollbarSizesOptions aOptions =
           nsIScrollableFrame::ScrollbarSizesOptions::NONE) const;
   nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState);
-  nscoord GetNondisappearingScrollbarWidth(nsBoxLayoutState* aState,
-                                           mozilla::WritingMode aVerticalWM);
   bool IsPhysicalLTR() const {
     return mOuter->GetWritingMode().IsPhysicalLTR();
   }
@@ -988,12 +986,6 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     nsBoxLayoutState bls(aPresContext, aRC, 0);
     return GetDesiredScrollbarSizes(&bls);
   }
-  nscoord GetNondisappearingScrollbarWidth(nsPresContext* aPresContext,
-                                           gfxContext* aRC,
-                                           mozilla::WritingMode aWM) final {
-    nsBoxLayoutState bls(aPresContext, aRC, 0);
-    return mHelper.GetNondisappearingScrollbarWidth(&bls, aWM);
-  }
   nsSize GetLayoutSize() const final { return mHelper.GetLayoutSize(); }
   nsRect GetScrolledRect() const final { return mHelper.GetScrolledRect(); }
   nsRect GetScrollPortRect() const final { return mHelper.GetScrollPortRect(); }
@@ -1461,12 +1453,6 @@ class nsXULScrollFrame final : public nsBoxFrame,
                                     gfxContext* aRC) final {
     nsBoxLayoutState bls(aPresContext, aRC, 0);
     return GetDesiredScrollbarSizes(&bls);
-  }
-  nscoord GetNondisappearingScrollbarWidth(nsPresContext* aPresContext,
-                                           gfxContext* aRC,
-                                           mozilla::WritingMode aWM) final {
-    nsBoxLayoutState bls(aPresContext, aRC, 0);
-    return mHelper.GetNondisappearingScrollbarWidth(&bls, aWM);
   }
   nsSize GetLayoutSize() const final { return mHelper.GetLayoutSize(); }
   nsRect GetScrolledRect() const final { return mHelper.GetScrolledRect(); }
