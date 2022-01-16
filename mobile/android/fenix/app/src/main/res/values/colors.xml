@@ -188,7 +188,6 @@
     <color name="sync_disconnected_icon_fill_normal_theme">@color/photonYellow70</color>
     <color name="sync_disconnected_background_normal_theme">#FFFDE2</color>
     <color name="swipe_delete_background_normal_theme">@color/photonLightGrey30</color>
-    <color name="onboarding_card_background_end_gradient_normal_theme">@color/photonViolet40</color>
     <color name="onboarding_illustration_selected_normal_theme">@color/photonViolet70</color>
     <color name="onboarding_illustration_deselected_normal_theme">#9915141A</color>
     <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/photonViolet70</color>
