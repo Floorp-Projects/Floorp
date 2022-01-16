@@ -12,7 +12,6 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
-#include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/StaticPtr.h"
 #include "nsHashtablesFwd.h"
 
@@ -121,11 +120,6 @@ void WinEventObserver::Destroy() {
 // static
 already_AddRefed<DisplayStatusObserver> DisplayStatusObserver::Create(
     DisplayStatusListener* aListener) {
-  if (!StaticPrefs::
-          widget_windows_window_occlusion_tracking_display_state_enabled()) {
-    return nullptr;
-  }
-
   WinEventHub::Ensure();
   RefPtr<DisplayStatusObserver> observer = new DisplayStatusObserver(aListener);
   WinEventHub::Get()->AddObserver(observer);
@@ -172,11 +166,6 @@ void DisplayStatusObserver::OnWinEventProc(HWND aHwnd, UINT aMsg,
 // static
 already_AddRefed<SessionChangeObserver> SessionChangeObserver::Create(
     SessionChangeListener* aListener) {
-  if (!StaticPrefs::
-          widget_windows_window_occlusion_tracking_session_lock_enabled()) {
-    return nullptr;
-  }
-
   WinEventHub::Ensure();
   RefPtr<SessionChangeObserver> observer = new SessionChangeObserver(aListener);
   WinEventHub::Get()->AddObserver(observer);
