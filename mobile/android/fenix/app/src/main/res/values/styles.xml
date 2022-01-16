@@ -68,7 +68,7 @@
         <item name="toolbarStartGradient">@color/fx_mobile_layer_color_1</item>
         <item name="toolbarCenterGradient">@color/fx_mobile_layer_color_1</item>
         <item name="toolbarEndGradient">@color/fx_mobile_layer_color_1</item>
-        <item name="toolbarDivider">@color/toolbar_divider_color_normal_theme</item>
+        <item name="toolbarDivider">@color/fx_mobile_border_color_primary</item>
         <item name="fillLinkFromClipboard">@color/fill_link_from_clipboard_normal_theme</item>
         <item name="syncDisconnected">@color/sync_disconnected_icon_fill_normal_theme</item>
         <item name="syncDisconnectedBackground">@color/sync_disconnected_background_normal_theme</item>
