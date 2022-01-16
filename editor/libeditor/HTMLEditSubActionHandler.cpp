@@ -2000,10 +2000,18 @@ nsresult HTMLEditor::HandleInsertLinefeed(const EditorDOMPoint& aPointToBreak,
     return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
   }
   MOZ_ASSERT(pointToInsert.IsSetAndValid());
-  MOZ_ASSERT_IF(
-      !pointToInsert.IsInTextNode(),
-      HTMLEditUtils::CanNodeContain(*pointToInsert.ContainerAsContent(),
-                                    *nsGkAtoms::textTagName));
+
+  // The node may not be able to have a text node so that we need to check it
+  // here.
+  if (!pointToInsert.IsInTextNode() &&
+      !HTMLEditUtils::CanNodeContain(*pointToInsert.ContainerAsContent(),
+                                     *nsGkAtoms::textTagName)) {
+    NS_WARNING(
+        "HTMLEditor::HandleInsertLinefeed() couldn't insert a linefeed because "
+        "the insertion position couldn't have text nodes");
+    return NS_ERROR_EDITOR_NO_EDITABLE_RANGE;
+  }
+
   RefPtr<Document> document = GetDocument();
   MOZ_ASSERT(document);
   if (NS_WARN_IF(!document)) {
