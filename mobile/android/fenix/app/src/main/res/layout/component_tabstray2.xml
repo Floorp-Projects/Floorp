@@ -121,7 +121,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/tab_layout"
         app:srcCompat="@drawable/ic_menu"
-        app:tint="@color/tab_tray_heading_icon_menu_normal_theme" />
+        app:tint="@color/fx_mobile_icon_color_primary" />
 
     <View
         android:id="@+id/divider"
