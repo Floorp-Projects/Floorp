@@ -8,7 +8,7 @@
   padding: 18px;
 }
 
-#downloadsRichListBox:empty {
+#downloadsListBox:empty {
   border-color: transparent;
   background-color: transparent;
 }

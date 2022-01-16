@@ -27,7 +27,7 @@ add_task(async function test_indicatorDrop() {
     win.close();
   });
 
-  let listBox = win.document.getElementById("downloadsRichListBox");
+  let listBox = win.document.getElementById("downloadsListBox");
   ok(listBox, "download list box present");
 
   await simulateDropAndCheck(win, listBox, [httpUrl("file1.txt")]);
