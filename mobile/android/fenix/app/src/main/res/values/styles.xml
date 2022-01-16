@@ -60,7 +60,7 @@
         <item name="neutral">@color/neutral_normal_theme</item>
         <item name="neutralFaded">@color/neutral_faded_normal_theme</item>
         <item name="destructive">@color/destructive_normal_theme</item>
-        <item name="disabled">@color/disabled_normal_theme</item>
+        <item name="disabled">@color/fx_mobile_text_color_disabled</item>
         <item name="scrimStart">@color/fx_mobile_layer_color_scrim_start</item>
         <item name="scrimEnd">@color/fx_mobile_layer_color_scrim_end</item>
         <item name="snackbar">@color/fx_mobile_action_color_primary</item>
