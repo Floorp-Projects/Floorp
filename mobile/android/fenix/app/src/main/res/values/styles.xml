@@ -249,7 +249,7 @@
         <item name="syncDisconnectedBackground">@color/sync_disconnected_background_private_theme</item>
         <item name="swipeDeleteBackground">@color/swipe_delete_background_private_theme</item>
         <item name="onboardingDarkGradientStartBackground">@color/photonViolet60</item>
-        <item name="onboardingDarkGradientEndBackground">@color/onboarding_card_background_end_gradient_private_theme</item>
+        <item name="onboardingDarkGradientEndBackground">@color/photonPurple50</item>
         <item name="onboardingSelected">@color/accent_private_theme</item>
         <item name="onboardingDeselected">@color/onboarding_illustration_deselected_private_theme</item>
         <item name="addOnPrivateBrowsingExteriorCircleBackground">@color/accent_private_theme</item>
