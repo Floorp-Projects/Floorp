@@ -24,6 +24,12 @@ ProfiledThreadData::ProfiledThreadData(
   MOZ_COUNT_CTOR(ProfiledThreadData);
 }
 
+ProfiledThreadData::ProfiledThreadData(
+    mozilla::profiler::ThreadRegistrationInfo&& aThreadInfo)
+    : mThreadInfo(std::move(aThreadInfo)) {
+  MOZ_COUNT_CTOR(ProfiledThreadData);
+}
+
 ProfiledThreadData::~ProfiledThreadData() {
   MOZ_COUNT_DTOR(ProfiledThreadData);
 }
