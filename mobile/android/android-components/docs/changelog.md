@@ -22,7 +22,11 @@ permalink: /changelog/
   * Extend `DefaultTopSitesStorage` to accept a `TopSitesProvider` for fetching top sites. [#11483](https://github.com/mozilla-mobile/android-components/issues/11483)
   
 * **service-contile**
-  * Adds a `ContileTopSitesProvider` that implements `TopSitesProvider` for returning top sites from the Contile services API. [#11483](https://github.com/mozilla-mobile/android-components/issues/11483) 
+  * Adds a `ContileTopSitesProvider` that implements `TopSitesProvider` for returning top sites from the Contile services API. [#11483](https://github.com/mozilla-mobile/android-components/issues/11483)
+
+* **service-glean**
+  * 🆙 Updated Glean to version 43.0.2 ([changelog](https://github.com/mozilla/glean/releases/tag/v43.0.2))
+    * Includes new `build_date` metric
 
 # 97.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v96.0.0...v97.0.0)
