@@ -4014,10 +4014,9 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
             } else if (mType == FormControlType::InputPassword) {
               if (nsTextControlFrame* textControlFrame =
                       do_QueryFrame(GetPrimaryFrame())) {
-                auto* showPassword = textControlFrame->GetShowPasswordButton();
-                if (showPassword &&
-                    aVisitor.mEvent->mOriginalTarget == showPassword) {
-                  SetShowPassword(!ShowPassword());
+                auto* reveal = textControlFrame->GetRevealButton();
+                if (reveal && aVisitor.mEvent->mOriginalTarget == reveal) {
+                  SetRevealPassword(!RevealPassword());
                   // TODO(emilio): This should focus the input, but calling
                   // SetFocus(this, FLAG_NOSCROLL) for some reason gets us into
                   // an inconsistent state where we're focused but don't match
@@ -6701,7 +6700,7 @@ bool HTMLInputElement::HasCachedSelection() {
              state->GetSelectionProperties().GetEnd();
 }
 
-void HTMLInputElement::SetShowPassword(bool aValue) {
+void HTMLInputElement::SetRevealPassword(bool aValue) {
   if (NS_WARN_IF(mType != FormControlType::InputPassword)) {
     return;
   }
@@ -6712,7 +6711,7 @@ void HTMLInputElement::SetShowPassword(bool aValue) {
   }
 }
 
-bool HTMLInputElement::ShowPassword() const {
+bool HTMLInputElement::RevealPassword() const {
   if (NS_WARN_IF(mType != FormControlType::InputPassword)) {
     return false;
   }

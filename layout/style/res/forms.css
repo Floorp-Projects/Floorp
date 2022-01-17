@@ -961,7 +961,7 @@ input[type=number] > div > div > div:hover {
 }
 
 input::-moz-search-clear-button,
-input::-moz-text-control-show-password-button {
+input::-moz-reveal {
   display: block;
   cursor: default;
   width: 1em;
@@ -975,17 +975,17 @@ input::-moz-text-control-show-password-button {
   background-size: contain;
 }
 
-input::-moz-text-control-show-password-button {
+input::-moz-reveal {
   background-image: url("resource://gre-resources/password.svg");
   -moz-context-properties: fill;
   fill: currentColor;
 }
 
-input:-moz-revealed::-moz-text-control-show-password-button {
+input:-moz-revealed::-moz-reveal {
   background-image: url("resource://gre-resources/password-hide.svg");
 }
 
-input:-moz-value-empty::-moz-text-control-show-password-button,
+input:-moz-value-empty::-moz-reveal,
 input:-moz-value-empty::-moz-search-clear-button {
   visibility: hidden;
 }

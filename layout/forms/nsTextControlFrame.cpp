@@ -181,7 +181,7 @@ void nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
   aPostDestroyData.AddAnonymousContent(mRootNode.forget());
   aPostDestroyData.AddAnonymousContent(mPlaceholderDiv.forget());
   aPostDestroyData.AddAnonymousContent(mPreviewDiv.forget());
-  aPostDestroyData.AddAnonymousContent(mShowPasswordButton.forget());
+  aPostDestroyData.AddAnonymousContent(mRevealButton.forget());
 
   nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
@@ -446,16 +446,15 @@ nsresult nsTextControlFrame::CreateAnonymousContent(
   // background on the placeholder doesn't obscure the caret.
   aElements.AppendElement(mRootNode);
 
-  if (StaticPrefs::layout_forms_input_type_show_password_button_enabled() &&
+  if (StaticPrefs::layout_forms_reveal_password_button_enabled() &&
       IsPasswordTextControl()) {
-    mShowPasswordButton =
-        MakeAnonElement(PseudoStyleType::mozTextControlShowPasswordButton,
-                        nullptr, nsGkAtoms::button);
-    mShowPasswordButton->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_hidden,
-                                 u"true"_ns, false);
-    mShowPasswordButton->SetAttr(kNameSpaceID_None, nsGkAtoms::tabindex,
-                                 u"-1"_ns, false);
-    aElements.AppendElement(mShowPasswordButton);
+    mRevealButton =
+        MakeAnonElement(PseudoStyleType::mozReveal, nullptr, nsGkAtoms::button);
+    mRevealButton->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_hidden,
+                           u"true"_ns, false);
+    mRevealButton->SetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, u"-1"_ns,
+                           false);
+    aElements.AppendElement(mRevealButton);
   }
 
   rv = UpdateValueDisplay(false);
@@ -581,8 +580,8 @@ void nsTextControlFrame::AppendAnonymousContentTo(
     aElements.AppendElement(mPreviewDiv);
   }
 
-  if (mShowPasswordButton) {
-    aElements.AppendElement(mShowPasswordButton);
+  if (mRevealButton) {
+    aElements.AppendElement(mRevealButton);
   }
 
   aElements.AppendElement(mRootNode);
@@ -672,7 +671,7 @@ static bool IsButtonBox(const nsIFrame* aFrame) {
   auto pseudoType = aFrame->Style()->GetPseudoType();
   return pseudoType == PseudoStyleType::mozNumberSpinBox ||
          pseudoType == PseudoStyleType::mozSearchClearButton ||
-         pseudoType == PseudoStyleType::mozTextControlShowPasswordButton;
+         pseudoType == PseudoStyleType::mozReveal;
 }
 
 void nsTextControlFrame::Reflow(nsPresContext* aPresContext,

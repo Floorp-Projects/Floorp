@@ -7749,8 +7749,8 @@
   value: false
   mirror: always
 
-# Enables the Show Password button inside a <input type=password>.
-- name: layout.forms.input-type-show-password-button.enabled
+# Enables the Reveal Password button inside a <input type=password>.
+- name: layout.forms.reveal-password-button.enabled
   type: bool
   value: false
   mirror: always
