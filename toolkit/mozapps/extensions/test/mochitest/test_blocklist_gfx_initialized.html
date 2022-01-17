@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test gfx blocklist is initialized</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+add_task(async function check_GfxBlocklistRS_initialized() {
+    // We have extensive xpcshell tests to ensure the blocklist works
+    // correctly. Here we just want to ensure the blocklist is indeed
+    // initialized in a regular browser setup.
+    // In fact, calling GfxBlocklistRS.checkForEntries() in order to test
+    // specific functionality would lazily initialize the blocklist, negating
+    // the value of this test.
+    let initialized = await SpecialPowers.spawnChrome([], async () => {
+        const { BlocklistPrivate } = ChromeUtils.import(
+            "resource://gre/modules/Blocklist.jsm"
+        );
+
+        return BlocklistPrivate.GfxBlocklistRS._initialized;
+    });
+
+    ok(initialized, "Gfx Blocklist was initialized")
+});
+  </script>
+</head>
+<body>
+</body>
+</html>
