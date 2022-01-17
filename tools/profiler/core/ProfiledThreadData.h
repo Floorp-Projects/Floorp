@@ -51,9 +51,8 @@ struct ThreadStreamingContext;
 // when the profiler is stopped.
 class ProfiledThreadData final {
  public:
-  ProfiledThreadData(
-      const mozilla::profiler::ThreadRegistrationInfo& aThreadInfo,
-      nsIEventTarget* aEventTarget);
+  explicit ProfiledThreadData(
+      const mozilla::profiler::ThreadRegistrationInfo& aThreadInfo);
   ~ProfiledThreadData();
 
   void NotifyUnregistered(uint64_t aBufferPosition) {

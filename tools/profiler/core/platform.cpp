@@ -3032,7 +3032,7 @@ static void locked_profiler_stream_json_for_this_process(
       const ThreadRegistrationInfo threadInfo{"AndroidUI (JVM)",
                                               ProfilerThreadId{}, false,
                                               CorePS::ProcessStartTime()};
-      ProfiledThreadData profiledThreadData(threadInfo, nullptr);
+      ProfiledThreadData profiledThreadData(threadInfo);
       profiledThreadData.StreamJSON(
           javaBuffer, nullptr, aWriter, CorePS::ProcessName(aLock),
           CorePS::ETLDplus1(aLock), CorePS::ProcessStartTime(), aSinceTime,
@@ -4521,12 +4521,9 @@ static ProfilingStack* locked_register_thread(
       ThreadRegistry::OffThreadRef::RWFromAnyThreadWithLock
           lockedRWFromAnyThread = aOffThreadRef.LockedRWFromAnyThread();
 
-      nsCOMPtr<nsIEventTarget> eventTarget =
-          lockedRWFromAnyThread->GetEventTarget();
       ProfiledThreadData* profiledThreadData = ActivePS::AddLiveProfiledThread(
-          aLock,
-          MakeUnique<ProfiledThreadData>(
-              aOffThreadRef.UnlockedConstReaderCRef().Info(), eventTarget));
+          aLock, MakeUnique<ProfiledThreadData>(
+                     aOffThreadRef.UnlockedConstReaderCRef().Info()));
       lockedRWFromAnyThread->SetProfilingFeaturesAndData(
           threadProfilingFeatures, profiledThreadData, aLock);
 
@@ -5356,9 +5353,8 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
     if (threadProfilingFeatures != ThreadProfilingFeatures::NotProfiled) {
       ThreadRegistry::OffThreadRef::RWFromAnyThreadWithLock lockedThreadData =
           offThreadRef.LockedRWFromAnyThread();
-      nsCOMPtr<nsIEventTarget> eventTarget = lockedThreadData->GetEventTarget();
       ProfiledThreadData* profiledThreadData = ActivePS::AddLiveProfiledThread(
-          aLock, MakeUnique<ProfiledThreadData>(info, eventTarget));
+          aLock, MakeUnique<ProfiledThreadData>(info));
       lockedThreadData->SetProfilingFeaturesAndData(threadProfilingFeatures,
                                                     profiledThreadData, aLock);
       if (ActivePS::FeatureJS(aLock)) {
