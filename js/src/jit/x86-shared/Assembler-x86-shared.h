@@ -215,6 +215,7 @@ class CPUInfo {
   static bool bmi1Present;
   static bool bmi2Present;
   static bool lzcntPresent;
+  static bool avx2Present;
 
   static void SetSSEVersion();
 
@@ -242,6 +243,7 @@ class CPUInfo {
   static bool IsBMI1Present() { return bmi1Present; }
   static bool IsBMI2Present() { return bmi2Present; }
   static bool IsLZCNTPresent() { return lzcntPresent; }
+  static bool IsAVX2Present() { return avx2Present; }
 
   // The SSE flags can become set at startup when we JIT non-JS code eagerly;
   // thus we must reset the flags before setting any flags explicitly during
@@ -1180,6 +1182,7 @@ class AssemblerX86Shared : public AssemblerShared {
   static bool SupportsFastUnalignedFPAccesses() { return true; }
   static bool SupportsWasmSimd() { return CPUInfo::IsSSE41Present(); }
   static bool HasAVX() { return CPUInfo::IsAVXPresent(); }
+  static bool HasAVX2() { return CPUInfo::IsAVX2Present(); }
 
   static bool HasRoundInstruction(RoundingMode mode) {
     switch (mode) {
