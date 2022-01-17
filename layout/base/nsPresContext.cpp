@@ -20,7 +20,6 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
-#include "mozilla/dom/ContentParent.h"
 
 #include "base/basictypes.h"
 
@@ -47,7 +46,6 @@
 #include "nsLayoutUtils.h"
 #include "nsViewManager.h"
 #include "mozilla/RestyleManager.h"
-#include "SurfaceCacheUtils.h"
 #include "gfxPlatform.h"
 #include "nsFontFaceLoader.h"
 #include "mozilla/AnimationEventDispatcher.h"
@@ -412,62 +410,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
   tmp->Destroy();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-// Set to true when ThemeChanged needs to be called on mTheme.  This is used
-// because mTheme is a service, so there's no need to notify it from more than
-// one prescontext.
-static bool sPendingThemeChange = false;
-static widget::ThemeChangeKind sPendingThemeChangeKind{0};
 
 bool nsPresContext::IsChrome() const {
   return Document()->IsInChromeDocShell();
-}
-
-static void HandleGlobalThemeChange() {
-  if (!sPendingThemeChange) {
-    MOZ_ASSERT(uint8_t(sPendingThemeChangeKind) == 0);
-    return;
-  }
-  sPendingThemeChange = false;
-  auto kind =
-      std::exchange(sPendingThemeChangeKind, widget::ThemeChangeKind(0));
-
-  // Tell the theme that it changed, so it can flush any handles to stale theme
-  // data.
-  //
-  // We can use the *DoNotUseDirectly functions directly here, because we want
-  // to notify all possible themes in a given process (but just once).
-  if (XRE_IsParentProcess() ||
-      !StaticPrefs::widget_non_native_theme_enabled()) {
-    if (nsCOMPtr<nsITheme> theme = do_GetNativeThemeDoNotUseDirectly()) {
-      theme->ThemeChanged();
-    }
-  }
-  if (nsCOMPtr<nsITheme> theme = do_GetBasicNativeThemeDoNotUseDirectly()) {
-    theme->ThemeChanged();
-  }
-
-  // Clear all cached LookAndFeel colors.
-  LookAndFeel::Refresh();
-
-  // Reset default background and foreground colors for the document since they
-  // may be using system colors.
-  PreferenceSheet::Refresh();
-
-  // Vector images (SVG) may be using theme colors so we discard all cached
-  // surfaces. (We could add a vector image only version of DiscardAll, but
-  // in bug 940625 we decided theme changes are rare enough not to bother.)
-  image::SurfaceCacheUtils::DiscardAll();
-
-  if (XRE_IsParentProcess()) {
-    ContentParent::BroadcastThemeUpdate(kind);
-  }
-
-  nsContentUtils::AddScriptRunner(
-      NS_NewRunnableFunction("HandleGlobalThemeChange", [] {
-        if (nsCOMPtr<nsIObserverService> obs = services::GetObserverService()) {
-          obs->NotifyObservers(nullptr, "look-and-feel-changed", nullptr);
-        }
-      }));
 }
 
 void nsPresContext::GetUserPreferences() {
@@ -907,7 +852,7 @@ void nsPresContext::AttachPresShell(mozilla::PresShell* aPresShell) {
   // Have to update PresContext's mDocument before calling any other methods.
   mDocument = doc;
 
-  HandleGlobalThemeChange();
+  LookAndFeel::HandleGlobalThemeChange();
 
   // Initialize our state from the user preferences, now that we
   // have a presshell, and hence a document.
@@ -1588,7 +1533,6 @@ void nsPresContext::ThemeChanged(widget::ThemeChangeKind aKind) {
   PROFILER_MARKER_TEXT("ThemeChanged", LAYOUT, MarkerStack::Capture(), ""_ns);
 
   mPendingThemeChangeKind |= unsigned(aKind);
-  sPendingThemeChangeKind |= aKind;
 
   if (!mPendingThemeChanged) {
     nsCOMPtr<nsIRunnable> ev =
@@ -1597,9 +1541,7 @@ void nsPresContext::ThemeChanged(widget::ThemeChangeKind aKind) {
     RefreshDriver()->AddEarlyRunner(ev);
     mPendingThemeChanged = true;
   }
-
-  sPendingThemeChange = true;
-  sPendingThemeChangeKind |= aKind;
+  MOZ_ASSERT(LookAndFeel::HasPendingGlobalThemeChange());
 }
 
 void nsPresContext::ThemeChangedInternal() {
@@ -1610,7 +1552,7 @@ void nsPresContext::ThemeChangedInternal() {
   const auto kind = widget::ThemeChangeKind(mPendingThemeChangeKind);
   mPendingThemeChangeKind = 0;
 
-  HandleGlobalThemeChange();
+  LookAndFeel::HandleGlobalThemeChange();
 
   // Changes to system metrics and other look and feel values can change media
   // queries on them.

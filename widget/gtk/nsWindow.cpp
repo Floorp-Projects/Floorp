@@ -4812,15 +4812,15 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
 }
 
 void nsWindow::OnDPIChanged() {
+  // Update menu's font size etc.
+  // This affects style / layout because it affects system font sizes.
   if (mWidgetListener) {
     if (PresShell* presShell = mWidgetListener->GetPresShell()) {
       presShell->BackingScaleFactorChanged();
-      // Update menu's font size etc.
-      // This affects style / layout because it affects system font sizes.
-      presShell->ThemeChanged(ThemeChangeKind::StyleAndLayout);
     }
     mWidgetListener->UIResolutionChanged();
   }
+  NotifyThemeChanged(ThemeChangeKind::StyleAndLayout);
 }
 
 void nsWindow::OnCheckResize() { mPendingConfigures++; }
@@ -4862,11 +4862,11 @@ void nsWindow::OnScaleChanged() {
   if (mWidgetListener) {
     if (PresShell* presShell = mWidgetListener->GetPresShell()) {
       presShell->BackingScaleFactorChanged();
-      // This affects style / layout because it affects system font sizes.
-      // Update menu's font size etc.
-      presShell->ThemeChanged(ThemeChangeKind::StyleAndLayout);
     }
   }
+  // This affects style / layout because it affects system font sizes.
+  // Update menu's font size etc.
+  NotifyThemeChanged(ThemeChangeKind::StyleAndLayout);
 
   DispatchResized();
 
