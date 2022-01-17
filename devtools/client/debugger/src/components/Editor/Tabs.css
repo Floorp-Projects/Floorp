@@ -75,10 +75,16 @@
   transform: scaleX(1);
 }
 
-.source-tab .img.prettyPrint,
-.source-tab .img.blackBox {
+.source-tab .img:is(.prettyPrint,.blackBox) {
   mask-size: 14px;
+}
+
+.source-tab .img.prettyPrint {
   background-color: currentColor;
+}
+
+.source-tab .img.source-icon.blackBox {
+  background-color: var(--red-40);
 }
 
 .source-tab .filename {
