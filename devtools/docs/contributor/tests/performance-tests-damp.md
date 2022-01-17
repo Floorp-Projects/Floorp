@@ -48,7 +48,7 @@ to focus on just one subtest run:
 ## How to run it on try?
 
 ```bash
-./mach try fuzzy --query "'linux64-shippable/ 'damp" --rebuild 6
+./mach try fuzzy --query "'test-linux1804-64-shippable-qr/ 'damp" --rebuild 6
 ```
 * Linux appears to build and run quickly, and offers quite stable results over the other OSes.
 The vast majority of performance issues for DevTools are OS agnostic, so it doesn't really matter which one you run them on.
