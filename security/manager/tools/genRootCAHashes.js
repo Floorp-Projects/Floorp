@@ -19,6 +19,7 @@ const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const FILENAME_OUTPUT = "RootHashes.inc";
 const FILENAME_TRUST_ANCHORS = "KnownRootHashes.json";
@@ -232,7 +233,12 @@ if (arguments.length != 1) {
   );
 }
 
-var trustAnchorsFile = FileUtils.getFile("CurWorkD", [FILENAME_TRUST_ANCHORS]);
+var trustAnchorsFile = new FileUtils.File(
+  PathUtils.join(
+    Services.dirsvc.get("CurWorkD", Ci.nsIFile).path,
+    FILENAME_TRUST_ANCHORS
+  )
+);
 var rootHashesFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
 rootHashesFile.initWithPath(arguments[0]);
 
