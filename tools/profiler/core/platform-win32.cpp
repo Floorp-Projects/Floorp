@@ -121,10 +121,30 @@ uint64_t RunningTimes::ConvertRawToJson(uint64_t aRawValue) {
   return (aRawValue * GHZ_PER_MHZ + (GHZ_PER_MHZ / 2u)) / cycleTimeFrequencyMHz;
 }
 
+static RunningTimes GetProcessRunningTimesDiff(
+    PSLockRef aLock, RunningTimes& aPreviousRunningTimesToBeUpdated) {
+  AUTO_PROFILER_STATS(GetProcessRunningTimes);
+
+  static const HANDLE processHandle = GetCurrentProcess();
+
+  RunningTimes newRunningTimes;
+  {
+    AUTO_PROFILER_STATS(GetProcessRunningTimes_QueryProcessCycleTime);
+    if (ULONG64 cycles; QueryProcessCycleTime(processHandle, &cycles) != 0) {
+      newRunningTimes.SetThreadCPUDelta(cycles);
+    }
+    newRunningTimes.SetPostMeasurementTimeStamp(TimeStamp::Now());
+  };
+
+  const RunningTimes diff = newRunningTimes - aPreviousRunningTimesToBeUpdated;
+  aPreviousRunningTimesToBeUpdated = newRunningTimes;
+  return diff;
+}
+
 static RunningTimes GetThreadRunningTimesDiff(
     PSLockRef aLock,
     ThreadRegistration::UnlockedRWForLockedProfiler& aThreadData) {
-  AUTO_PROFILER_STATS(GetRunningTimes);
+  AUTO_PROFILER_STATS(GetThreadRunningTimes);
 
   const mozilla::profiler::PlatformData& platformData =
       aThreadData.PlatformDataCRef();
@@ -132,7 +152,7 @@ static RunningTimes GetThreadRunningTimesDiff(
 
   const RunningTimes newRunningTimes = GetRunningTimesWithTightTimestamp(
       [profiledThread](RunningTimes& aRunningTimes) {
-        AUTO_PROFILER_STATS(GetRunningTimes_QueryThreadCycleTime);
+        AUTO_PROFILER_STATS(GetThreadRunningTimes_QueryThreadCycleTime);
         if (ULONG64 cycles;
             QueryThreadCycleTime(profiledThread, &cycles) != 0) {
           aRunningTimes.ResetThreadCPUDelta(cycles);
