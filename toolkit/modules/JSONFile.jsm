@@ -245,8 +245,10 @@ JSONFile.prototype = {
 
         // Move the original file to a backup location, ignoring errors.
         try {
-          let uniquePath = await PathUtils.createUniquePath(
-            this.path + ".corrupt"
+          let uniquePath = await IOUtils.createUniqueFile(
+            PathUtils.parent(this.path),
+            PathUtils.filename(this.path) + ".corrupt",
+            0o600
           );
           await IOUtils.move(this.path, uniquePath);
           this._recordTelemetry("load", cleansedBasename, "invalid_json");
