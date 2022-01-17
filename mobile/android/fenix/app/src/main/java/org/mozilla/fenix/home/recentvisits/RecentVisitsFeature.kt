@@ -17,6 +17,8 @@ import mozilla.components.concept.storage.HistoryHighlightWeights
 import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.FeatureFlags.historyImprovementFeatures
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentStore
@@ -24,6 +26,7 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGrou
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItemInternal.HistoryGroupInternal
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItemInternal.HistoryHighlightInternal
+import org.mozilla.fenix.utils.Settings.Companion.SEARCH_GROUP_MINIMUM_SITES
 import kotlin.math.max
 
 @VisibleForTesting internal const val MAX_RESULTS_TOTAL = 9
@@ -48,6 +51,7 @@ class RecentVisitsFeature(
     private val historyHighlightsStorage: Lazy<PlacesHistoryStorage>,
     private val scope: CoroutineScope,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val historyImprovementFeatures: Boolean = FeatureFlags.historyImprovementFeatures,
 ) : LifecycleAwareFeature {
 
     private var job: Job? = null
@@ -207,6 +211,13 @@ class RecentVisitsFeature(
                     groupName = it.key,
                     groupItems = it.value
                 )
+            }
+            .filter {
+                if (historyImprovementFeatures) {
+                    it.groupItems.size >= SEARCH_GROUP_MINIMUM_SITES
+                } else {
+                    true
+                }
             }
     }
 

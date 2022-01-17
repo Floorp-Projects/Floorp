@@ -27,6 +27,7 @@ import mozilla.components.support.ktx.android.content.stringPreference
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.FeatureFlags.historyImprovementFeatures
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
@@ -75,6 +76,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         const val THREE_DAYS_MS = 3 * ONE_DAY_MS
         const val ONE_WEEK_MS = 60 * 60 * 24 * 7 * 1000L
         const val ONE_MONTH_MS = (60 * 60 * 24 * 365 * 1000L) / 12
+
+        /**
+         * The minimum number a search groups should contain.
+         * Filtering is applied depending on the [historyImprovementFeatures] flag value.
+         */
+        const val SEARCH_GROUP_MINIMUM_SITES: Int = 2
 
         private fun Action.toInt() = when (this) {
             Action.BLOCKED -> BLOCKED_INT

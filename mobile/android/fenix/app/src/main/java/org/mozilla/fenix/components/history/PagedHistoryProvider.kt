@@ -17,6 +17,7 @@ import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.history.HistoryDataSource
 import org.mozilla.fenix.library.history.HistoryItemTimeGroup
 import org.mozilla.fenix.perf.runBlockingIncrement
+import org.mozilla.fenix.utils.Settings.Companion.SEARCH_GROUP_MINIMUM_SITES
 import kotlin.math.abs
 
 private const val BUFFER_TIME = 15000 /* 15 seconds in ms */
@@ -89,6 +90,7 @@ interface PagedHistoryProvider {
 class DefaultPagedHistoryProvider(
     private val historyStorage: PlacesHistoryStorage,
     private val showHistorySearchGroups: Boolean = FeatureFlags.showHistorySearchGroups,
+    private val historyImprovementFeatures: Boolean = FeatureFlags.historyImprovementFeatures,
 ) : PagedHistoryProvider {
 
     val urlSet = Array<MutableSet<String>>(HistoryItemTimeGroup.values().size) { mutableSetOf() }
@@ -136,6 +138,7 @@ class DefaultPagedHistoryProvider(
                 // in the case of a pull to refresh.
                 if (historyGroups == null || offset == 0) {
                     historyGroups = historyStorage.getHistoryMetadataSince(Long.MIN_VALUE)
+                        .asSequence()
                         .sortedByDescending { it.createdAt }
                         .filter { it.key.searchTerm != null }
                         .groupBy { it.key.searchTerm!! }
@@ -146,6 +149,14 @@ class DefaultPagedHistoryProvider(
                                 items = items.map { it.toHistoryDBMetadata() }
                             )
                         }
+                        .filter {
+                            if (historyImprovementFeatures) {
+                                it.items.size >= SEARCH_GROUP_MINIMUM_SITES
+                            } else {
+                                true
+                            }
+                        }
+                        .toList()
                 }
 
                 history = getHistoryAndSearchGroups(offset, numberOfItems)
