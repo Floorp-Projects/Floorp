@@ -35,6 +35,7 @@ import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.utils.ThreadUtils
+import org.mozilla.focus.GleanMetrics.BrowserSearch
 import org.mozilla.focus.GleanMetrics.SearchBar
 import org.mozilla.focus.R
 import org.mozilla.focus.databinding.FragmentUrlinputBinding
@@ -588,6 +589,7 @@ class UrlInputFragment :
                     SearchBar.PerformedSearchExtra(defaultSearchEngineName)
                 )
                 TelemetryWrapper.searchEnterEvent()
+                BrowserSearch.searchCount["action"].add()
             }
         }
     }
@@ -652,6 +654,7 @@ class UrlInputFragment :
         }
 
         TelemetryWrapper.searchSelectEvent(isSuggestion)
+        BrowserSearch.searchCount["suggestion"].add()
     }
 
     private fun openUrl(url: String, searchTerms: String?) {

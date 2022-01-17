@@ -178,6 +178,30 @@ browser.search:
       - android-probes@mozilla.com
     expires: "2022-07-01"
 
+  search_count:
+    type: labeled_counter
+    description: |
+      The labels for this counter are `<search-engine-name>.<source>`.
+
+      If the search engine is bundled with Focus `search-engine-name` will be
+      the name of the search engine. If it's a custom search engine (defined:
+      https://github.com/mozilla-mobile/fenix/issues/1607) the value will be
+      `custom`.
+
+      `source` will be: `action`, `suggestion`
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/6229
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/6238
+    data_sensitivity:
+      - technical
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-01-17"
+
 mozilla_products:
   has_fenix_installed:
     type: boolean
