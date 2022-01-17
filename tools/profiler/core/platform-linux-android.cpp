@@ -297,6 +297,25 @@ uint64_t RunningTimes::ConvertRawToJson(uint64_t aRawValue) {
   return aRawValue;
 }
 
+static RunningTimes GetProcessRunningTimesDiff(
+    PSLockRef aLock, RunningTimes& aPreviousRunningTimesToBeUpdated) {
+  AUTO_PROFILER_STATS(GetProcessRunningTimes);
+
+  RunningTimes newRunningTimes;
+  {
+    AUTO_PROFILER_STATS(GetProcessRunningTimes_clock_gettime);
+    if (timespec ts; clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == 0) {
+      newRunningTimes.SetThreadCPUDelta(uint64_t(ts.tv_sec) * 1'000'000'000u +
+                                        uint64_t(ts.tv_nsec));
+    }
+    newRunningTimes.SetPostMeasurementTimeStamp(TimeStamp::Now());
+  };
+
+  const RunningTimes diff = newRunningTimes - aPreviousRunningTimesToBeUpdated;
+  aPreviousRunningTimesToBeUpdated = newRunningTimes;
+  return diff;
+}
+
 static RunningTimes GetThreadRunningTimesDiff(
     PSLockRef aLock,
     ThreadRegistration::UnlockedRWForLockedProfiler& aThreadData) {
