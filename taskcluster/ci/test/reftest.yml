@@ -50,13 +50,12 @@ crashtest:
         - fission
         - wayland
         - webrender-sw
+        - webrender-sw+fission
     run-on-projects:
         by-variant:
             fission:
                 by-test-platform:
-                    (windows10|linux1804)-64-qr/opt: ['autoland']
-                    (windows10|linux1804)-64-shippable-qr/opt: ['mozilla-central']
-                    (windows10|linux1804)-64-qr/debug: ['trunk']
+                    (windows10|linux1804|macosx1).*-qr/.*: ['trunk']
                     default: []
             wayland:
                 by-test-platform:
@@ -66,6 +65,14 @@ crashtest:
             webrender-sw:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
+                    macosx101.*64-qr/debug: built-projects
+                    linux.*-64-qr/debug: built-projects
+                    linux.*-64(-tsan|-asan)-qr/opt: built-projects
+                    windows10-64-2004-asan-qr/opt: built-projects
+                    windows10-64-2004-qr/debug: built-projects
+                    default: []
+            webrender-sw+fission:
+                by-test-platform:
                     macosx101.*64-qr/debug: built-projects
                     linux.*-64-qr/debug: built-projects
                     linux.*-64(-tsan|-asan)-qr/opt: built-projects
@@ -137,7 +144,10 @@ jsreftest:
     variants: ['fission']
     run-on-projects:
         by-variant:
-            fission: []
+            fission:
+                by-test-platform:
+                    android.*/.*: []
+                    default: built-projects
             default:
                 by-test-platform:
                     android-hw-.*-aarch64(?:-shippable)?-qr/.*: ['mozilla-central', 'release']
@@ -167,13 +177,17 @@ reftest:
         - fission
         - wayland
         - webrender-sw
+        - webrender-sw+fission
     run-on-projects:
         by-variant:
             fission:
                 by-test-platform:
-                    (linux.*64|windows10-64)(-shippable)?-qr/(debug|opt): ['trunk']
-                    linux.*64-asan-qr/opt: ['trunk']
-                    default: []
+                    android.*/.*: []
+                    linux.*asan/opt: []
+                    windows10-aarch64-qr/opt: []
+                    .*(mingwclang|-asan|-tsan|10-32|7-32).*: built-projects
+                    (linux|windows|macos|android-em)(?!.*-qr).*: []
+                    default: built-projects
             wayland:
                 by-test-platform:
                     linux1804-64-qr/debug: built-projects
@@ -188,13 +202,20 @@ reftest:
                     windows10-64-2004(-asan)?-qr/opt: built-projects
                     windows7-32(?:-shippable)?-qr/opt: built-projects
                     default: []
+            webrender-sw+fission:
+                by-test-platform:
+                    linux1804-64-qr/debug: built-projects
+                    linux1804-64(-asan|-tsan)-qr/opt: built-projects
+                    macosx101.*64-qr/debug: built-projects
+                    windows10-64-2004(-asan)?-qr/opt: built-projects
+                    windows7-32(?:-shippable)?-qr/opt: built-projects
+                    default: []
             default:
                 by-test-platform:
-                    windows10-aarch64-qr/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                    windows10-aarch64-qr/.*: []
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     linux.*asan/opt: []
                     .*(mingwclang|-asan|-tsan|10-32|7-32).*: built-projects
-                    windows10-aarch64-qr/opt: built-projects
                     android.*: built-projects
                     (linux|windows|macos|android-em)(?!.*-qr).*: []
                     default: built-projects
