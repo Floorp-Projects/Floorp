@@ -14047,8 +14047,10 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-imgur.manifest
-   * **playback version**: 5.1.1
+   * **playback pageset manifest**: mitm7-linux-firefox-imgur.manifest
+   * **playback version**: 7.0.4
+   * **preferences**: {"media.autoplay.default": 5, "media.autoplay.ask-permission": true, "media.autoplay.blocking_policy": 1, "media.autoplay.block-webaudio": true, "media.allowed-to-play.enabled": false, "media.block-autoplay-until-in-foreground": true}
+   * **secondary url**: `<https://imgur.com/gallery/L13Ci>`__
    * **test url**: `<https://imgur.com/gallery/m5tYJL6>`__
    * **type**: pageload
    * **unit**: ms
