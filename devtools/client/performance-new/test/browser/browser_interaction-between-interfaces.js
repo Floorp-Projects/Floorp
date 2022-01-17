@@ -305,6 +305,7 @@ add_task(async function test_change_in_about_profiling() {
           CPU Utilization
           Audio Callback Tracing
           IPC Messages
+          Process CPU Utilization
         `
       );
     }
