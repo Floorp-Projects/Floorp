@@ -54,7 +54,6 @@ class ActivityTest {
         verify(decorView).systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
         verify(decorView).systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
         // verify that the immersive mode restoration is set as expected
-        verify(window.decorView.viewTreeObserver).addOnWindowFocusChangeListener(any())
         verify(window.decorView).setOnSystemUiVisibilityChangeListener(any())
     }
 
@@ -65,15 +64,13 @@ class ActivityTest {
         verify(window).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         verify(decorView).systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
         verify(decorView).systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-        verify(window.decorView.viewTreeObserver, never()).addOnWindowFocusChangeListener(any())
         verify(window.decorView, never()).setOnSystemUiVisibilityChangeListener(any())
     }
 
     @Test
-    fun `check enableImmersiveModeRestore sets focus and insets listeners`() {
+    fun `check enableImmersiveModeRestore sets insets listeners`() {
         activity.enableImmersiveModeRestore()
 
-        verify(window.decorView.viewTreeObserver).addOnWindowFocusChangeListener(any())
         verify(window.decorView).setOnSystemUiVisibilityChangeListener(any())
     }
 
@@ -98,26 +95,6 @@ class ActivityTest {
     }
 
     @Test
-    fun `check enableImmersiveModeRestore set focus listener has the correct behavior`() {
-        val focusListenerCaptor = argumentCaptor<ViewTreeObserver.OnWindowFocusChangeListener>()
-
-        activity.enableImmersiveModeRestore()
-        verify(window.decorView.viewTreeObserver).addOnWindowFocusChangeListener(focusListenerCaptor.capture())
-
-        focusListenerCaptor.value.onWindowFocusChanged(false)
-        // If the activity is not focused restoration is needed.
-        // Cannot test if "setAsImmersive()" was called it being an extension function but we can check the effect of that call.
-        verify(window, never()).addFlags(anyInt())
-        verify(decorView, never()).systemUiVisibility = anyInt()
-        verify(decorView, never()).systemUiVisibility = anyInt()
-
-        focusListenerCaptor.value.onWindowFocusChanged(true)
-        verify(window).addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        verify(decorView).systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
-        verify(decorView).systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-    }
-
-    @Test
     fun `check exitImmersiveModeIfNeeded sets the correct flags`() {
         val attributes = mock(WindowManager.LayoutParams::class.java)
         `when`(window.attributes).thenReturn(attributes)
@@ -129,7 +106,6 @@ class ActivityTest {
         verify(decorView, never()).systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN.inv()
         verify(decorView, never()).systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION.inv()
         verify(decorView, never()).setOnSystemUiVisibilityChangeListener(null)
-        verify(window.decorView.viewTreeObserver, never()).removeOnWindowFocusChangeListener(any())
 
         attributes.flags = WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 
@@ -137,13 +113,11 @@ class ActivityTest {
 
         verify(window).clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         verify(decorView, times(2)).systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
-        verify(window.decorView.viewTreeObserver).removeOnWindowFocusChangeListener(any())
         verify(decorView).setOnSystemUiVisibilityChangeListener(null)
-        verify(window.decorView.viewTreeObserver).removeOnWindowFocusChangeListener(any())
     }
 
     @Test
-    fun `check exitImmersiveModeIfNeeded correctly cleanups inset and focus listeners`() {
+    fun `check exitImmersiveModeIfNeeded correctly cleanups the insets listeners`() {
         val attributes = mock(WindowManager.LayoutParams::class.java)
         `when`(window.attributes).thenReturn(attributes)
         attributes.flags = 0
@@ -151,12 +125,10 @@ class ActivityTest {
         activity.exitImmersiveModeIfNeeded()
 
         verify(decorView, never()).setOnSystemUiVisibilityChangeListener(null)
-        verify(window.decorView.viewTreeObserver, never()).removeOnWindowFocusChangeListener(any())
 
         attributes.flags = WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
         activity.exitImmersiveModeIfNeeded()
 
         verify(decorView).setOnSystemUiVisibilityChangeListener(null)
-        verify(window.decorView.viewTreeObserver).removeOnWindowFocusChangeListener(any())
     }
 }
