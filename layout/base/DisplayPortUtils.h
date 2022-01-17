@@ -184,8 +184,10 @@ class DisplayPortUtils {
    * @return the display port for the given element which should be used for
    * visibility testing purposes, relative to the scroll frame.
    *
-   * If low-precision buffers are enabled, this is the critical display port;
-   * otherwise, it's the same display port returned by GetDisplayPort().
+   * This is the display port computed with a multipler of 1 which is the normal
+   * display port unless low-precision buffers are enabled. If low-precision
+   * buffers are enabled then GetDisplayPort() uses a multiplier to expand the
+   * displayport, so this will differ from GetDisplayPort.
    */
   static bool GetDisplayPortForVisibilityTesting(nsIContent* aContent,
                                                  nsRect* aResult);
@@ -232,18 +234,6 @@ class DisplayPortUtils {
   static void SetDisplayPortBase(nsIContent* aContent, const nsRect& aBase);
   static void SetDisplayPortBaseIfNotSet(nsIContent* aContent,
                                          const nsRect& aBase);
-
-  /**
-   * Get the critical display port for the given element.
-   */
-  static bool GetCriticalDisplayPort(
-      nsIContent* aContent, nsRect* aResult,
-      const DisplayPortOptions& aOptions = DisplayPortOptions());
-
-  /**
-   * Check whether the given element has a critical display port.
-   */
-  static bool HasCriticalDisplayPort(nsIContent* aContent);
 
   /**
    * Remove the displayport for the given element.
