@@ -536,7 +536,14 @@ class LookAndFeel {
 
   static void SetData(widget::FullLookAndFeel&& aTables);
   static void NotifyChangedAllWindows(widget::ThemeChangeKind);
-
+  static bool HasPendingGlobalThemeChange() {
+    return sGlobalThemeChanged;
+  }
+  static void HandleGlobalThemeChange() {
+    if (MOZ_UNLIKELY(HasPendingGlobalThemeChange())) {
+      DoHandleGlobalThemeChange();
+    }
+  }
   static void EnsureColorSchemesInitialized() {
     if (!sColorSchemeInitialized) {
       RecomputeColorSchemes();
@@ -550,6 +557,12 @@ class LookAndFeel {
  protected:
   static void RecomputeColorSchemes();
   static bool sColorSchemeInitialized;
+
+  static void DoHandleGlobalThemeChange();
+  // Set to true when ThemeChanged needs to be called on mTheme (and other global LookAndFeel.  This is used
+  // because mTheme is a service, so there's no need to notify it from more than
+  // one prescontext.
+  static bool sGlobalThemeChanged;
 };
 
 }  // namespace mozilla

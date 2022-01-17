@@ -1668,12 +1668,7 @@ void nsBaseWidget::NotifySizeMoveDone() {
 }
 
 void nsBaseWidget::NotifyThemeChanged(ThemeChangeKind aKind) {
-  if (!mWidgetListener) {
-    return;
-  }
-  if (PresShell* presShell = mWidgetListener->GetPresShell()) {
-    presShell->ThemeChanged(aKind);
-  }
+  LookAndFeel::NotifyChangedAllWindows(aKind);
 }
 
 void nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowFocusRings) {
