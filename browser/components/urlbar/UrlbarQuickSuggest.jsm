@@ -235,6 +235,11 @@ class Suggestions {
 
     let win = BrowserWindowTracker.getTopWindow();
 
+    // Don't show the dialog on top of about:welcome for new users.
+    if (win.gBrowser?.currentURI?.spec == "about:welcome") {
+      return false;
+    }
+
     let variationType;
     try {
       // An error happens if the pref is not in user prefs.
