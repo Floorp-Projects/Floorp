@@ -767,18 +767,6 @@ void DisplayPortUtils::SetDisplayPortBaseIfNotSet(nsIContent* aContent,
   }
 }
 
-bool DisplayPortUtils::GetCriticalDisplayPort(
-    nsIContent* aContent, nsRect* aResult, const DisplayPortOptions& aOptions) {
-  if (StaticPrefs::layers_low_precision_buffer()) {
-    return GetDisplayPortImpl(aContent, aResult, 1.0f, aOptions);
-  }
-  return false;
-}
-
-bool DisplayPortUtils::HasCriticalDisplayPort(nsIContent* aContent) {
-  return GetCriticalDisplayPort(aContent, nullptr);
-}
-
 void DisplayPortUtils::RemoveDisplayPort(nsIContent* aContent) {
   aContent->RemoveProperty(nsGkAtoms::DisplayPort);
   aContent->RemoveProperty(nsGkAtoms::DisplayPortMargins);

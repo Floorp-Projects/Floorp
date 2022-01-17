@@ -87,7 +87,6 @@ struct FrameMetrics {
         mCompositionBounds(0, 0, 0, 0),
         mCompositionBoundsWidthIgnoringScrollbars(0),
         mDisplayPort(0, 0, 0, 0),
-        mCriticalDisplayPort(0, 0, 0, 0),
         mScrollableRect(0, 0, 0, 0),
         mCumulativeResolution(),
         mDevPixelsPerCSSPixel(1),
@@ -116,7 +115,6 @@ struct FrameMetrics {
            mCompositionBoundsWidthIgnoringScrollbars ==
                aOther.mCompositionBoundsWidthIgnoringScrollbars &&
            mDisplayPort.IsEqualEdges(aOther.mDisplayPort) &&
-           mCriticalDisplayPort.IsEqualEdges(aOther.mCriticalDisplayPort) &&
            mScrollableRect.IsEqualEdges(aOther.mScrollableRect) &&
            mCumulativeResolution == aOther.mCumulativeResolution &&
            mDevPixelsPerCSSPixel == aOther.mDevPixelsPerCSSPixel &&
@@ -299,12 +297,6 @@ struct FrameMetrics {
   }
 
   const CSSRect& GetDisplayPort() const { return mDisplayPort; }
-
-  void SetCriticalDisplayPort(const CSSRect& aCriticalDisplayPort) {
-    mCriticalDisplayPort = aCriticalDisplayPort;
-  }
-
-  const CSSRect& GetCriticalDisplayPort() const { return mCriticalDisplayPort; }
 
   void SetCumulativeResolution(
       const LayoutDeviceToLayerScale& aCumulativeResolution) {
@@ -541,14 +533,6 @@ struct FrameMetrics {
   //   width = scrollPort.width + 200, height = scrollPort.height + 200 }
   // where scrollPort = CalculateCompositedSizeInCssPixels().
   CSSRect mDisplayPort;
-
-  // If non-empty, the area of a frame's contents that is considered critical
-  // to paint. Area outside of this area (i.e. area inside mDisplayPort, but
-  // outside of mCriticalDisplayPort) is considered low-priority, and may be
-  // painted with lower precision, or not painted at all.
-  //
-  // The same restrictions for mDisplayPort apply here.
-  CSSRect mCriticalDisplayPort;
 
   // The scrollable bounds of a frame. This is determined by reflow.
   // Ordinarily the x and y will be 0 and the width and height will be the
