@@ -3967,8 +3967,8 @@ static bool is_top_level_mouse_exit(GdkWindow* aWindow,
                                     GdkEventCrossing* aEvent) {
   auto x = gint(aEvent->x_root);
   auto y = gint(aEvent->y_root);
-  GdkDisplay* display = gdk_window_get_display(aWindow);
-  GdkWindow* winAtPt = gdk_display_get_window_at_pointer(display, &x, &y);
+  GdkDevice* pointer = GdkGetPointer();
+  GdkWindow* winAtPt = gdk_device_get_window_at_position(pointer, &x, &y);
   if (!winAtPt) return true;
   GdkWindow* topLevelAtPt = gdk_window_get_toplevel(winAtPt);
   GdkWindow* topLevelWidget = gdk_window_get_toplevel(aWindow);
@@ -7609,8 +7609,8 @@ static gboolean leave_notify_event_cb(GtkWidget* widget,
   // avoid generating spurious mouse exit events.
   auto x = gint(event->x_root);
   auto y = gint(event->y_root);
-  GdkDisplay* display = gtk_widget_get_display(widget);
-  GdkWindow* winAtPt = gdk_display_get_window_at_pointer(display, &x, &y);
+  GdkDevice* pointer = GdkGetPointer();
+  GdkWindow* winAtPt = gdk_device_get_window_at_position(pointer, &x, &y);
   if (winAtPt == event->window) {
     return TRUE;
   }
