@@ -86,6 +86,10 @@ class FFmpegVideoDecoder<LIBAV_VER>
   AVCodec* FindVAAPICodec();
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
   bool GetVAAPISurfaceDescriptor(VADRMPRIMESurfaceDescriptor* aVaDesc);
+  void AddAcceleratedFormats(nsTArray<AVCodecID>& aCodecList,
+                             AVCodecID aCodecID, AVVAAPIHWConfig* hwconfig);
+  nsTArray<AVCodecID> GetAcceleratedFormats();
+  bool IsFormatAccelerated(AVCodecID aCodecID) const;
 
   MediaResult CreateImageVAAPI(int64_t aOffset, int64_t aPts, int64_t aDuration,
                                MediaDataDecoder::DecodedData& aResults);
@@ -100,6 +104,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
   VADisplay mDisplay;
   bool mUseDMABufSurfaces;
   UniquePtr<VideoFramePool> mVideoFramePool;
+  static nsTArray<AVCodecID> mAcceleratedFormats;
 #endif
   RefPtr<KnowsCompositor> mImageAllocator;
   RefPtr<ImageContainer> mImageContainer;
