@@ -1,6 +1,32 @@
 Flags
 =====
 
+#### <code>--allow-hosts <var>ALLOW_HOSTS</var>...</code>
+
+Values of the `Host` header to allow for incoming requests.
+
+By default the value of <var>HOST</var> is allowed. If `--allow-hosts`
+is provided, exactly the given values will be permitted. For example
+`--allow-host geckodriver.test webdriver.local` will allow requests
+with `Host` set to `geckodriver.test` or `webdriver.local`.
+
+Requests with `Host` set to an IP address are always allowed.
+
+#### <code>--allow-origins <var>ALLOW_ORIGINS</var>...</code>
+
+Values of the `Origin` header to allow for incoming requests.
+
+`Origin` is set by web browsers for all `POST` requests, and most
+other cross-origin requests. By default any request with an `Origin`
+header is rejected to protect against malicious websites trying to
+access geckodriver running on the local machine.
+
+If `--allow-origins` is provided, web services running on the given
+origin will be able to make requests to geckodriver. For example
+`--allow-origins https://webdriver.test:8080` will allow a web-based
+service on the origin with scheme `https`, hostname `webdriver.test`,
+and port `8080` to access the geckodriver instance.
+
 #### <code>&#x2D;&#x2D;android-storage <var>ANDROID_STORAGE</var></code>
 
 **Deprecation warning**: This argument is deprecated and planned to be removed
@@ -132,7 +158,6 @@ Port to use for the WebDriver server.  Defaults to 4444.
 
 A helpful trick is that it is possible to bind to 0 to get the
 system to atomically assign a free port.
-
 
 #### <code>&#x2D;&#x2D;jsdebugger</code>
 
