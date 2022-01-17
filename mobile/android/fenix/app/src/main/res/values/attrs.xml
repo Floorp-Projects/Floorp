@@ -10,6 +10,8 @@
     <attr name="textAccent" format="reference" />
     <!-- Active tab -->
     <attr name="iconActive" format="reference" />
+    <!-- Default, Divider, Dotted -->
+    <attr name="borderPrimary" format="reference" />
 
     <!-- Color palette attributes -->
     <attr name="primaryText" format="reference" />
@@ -29,7 +31,6 @@
     <attr name="disabled" format="reference" />
     <attr name="scrimStart" format="reference"/>
     <attr name="scrimEnd" format="reference"/>
-    <attr name="toolbarDivider" format="reference"/>
     <attr name="preferenceSectionHeader" format="reference"/>
 
     <!-- Color used in DefaultToolbarMenu for buttons placed at the end of menu items -->

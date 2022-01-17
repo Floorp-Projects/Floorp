@@ -38,6 +38,8 @@
         <item name="textAccent">@color/fx_mobile_text_color_accent</item>
         <!-- Active tab -->
         <item name="iconActive">@color/fx_mobile_icon_color_active</item>
+        <!-- Default, Divider, Dotted -->
+        <item name="borderPrimary">@color/fx_mobile_border_color_primary</item>
 
         <!-- Active thumb color & Active track color (30% transparency) -->
         <item name="colorControlActivated">@color/accent_high_contrast_normal_theme</item>
@@ -69,7 +71,6 @@
         <item name="toolbarStartGradient">@color/fx_mobile_layer_color_1</item>
         <item name="toolbarCenterGradient">@color/fx_mobile_layer_color_1</item>
         <item name="toolbarEndGradient">@color/fx_mobile_layer_color_1</item>
-        <item name="toolbarDivider">@color/fx_mobile_border_color_primary</item>
         <item name="fillLinkFromClipboard">@color/fill_link_from_clipboard_normal_theme</item>
         <item name="syncDisconnected">@color/sync_disconnected_icon_fill_normal_theme</item>
         <item name="syncDisconnectedBackground">@color/sync_disconnected_background_normal_theme</item>
@@ -217,6 +218,8 @@
         <item name="textAccent">@color/fx_mobile_private_text_color_accent</item>
         <!-- Active tab -->
         <item name="iconActive">@color/fx_mobile_private_icon_color_active</item>
+        <!-- Default, Divider, Dotted -->
+        <item name="borderPrimary">@color/fx_mobile_private_border_color_primary</item>
 
         <!-- Inactive thumb color -->
         <item name="colorSwitchThumbNormal">@color/toggle_off_knob_dark_theme</item>
@@ -246,7 +249,6 @@
         <item name="toolbarStartGradient">@color/fx_mobile_private_layer_color_4_start</item>
         <item name="toolbarCenterGradient">@color/fx_mobile_private_layer_color_4_center</item>
         <item name="toolbarEndGradient">@color/fx_mobile_private_layer_color_4_end</item>
-        <item name="toolbarDivider">@color/fx_mobile_private_border_color_primary</item>
         <item name="fillLinkFromClipboard">@color/accent_high_contrast_private_theme</item>
         <item name="syncDisconnected">@color/sync_disconnected_icon_fill_private_theme</item>
         <item name="syncDisconnectedBackground">@color/sync_disconnected_background_private_theme</item>

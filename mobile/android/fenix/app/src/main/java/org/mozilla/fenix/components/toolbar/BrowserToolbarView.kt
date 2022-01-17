@@ -109,7 +109,7 @@ class BrowserToolbarView(
                 )
                 val separatorColor = ContextCompat.getColor(
                     context,
-                    ThemeManager.resolveAttribute(R.attr.toolbarDivider, context)
+                    ThemeManager.resolveAttribute(R.attr.borderPrimary, context)
                 )
 
                 display.urlFormatter = { url -> URLStringUtils.toDisplayUrl(url) }
