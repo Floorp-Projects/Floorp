@@ -218,6 +218,31 @@ const TestCasesNewMimetypesPrefEnabled = [
   },
 ];
 
+const TestCasesDeletedFile = [
+  {
+    name: "Deleted PDF download with improvements pref enabled",
+    prefEnabled: true,
+    deleted: true,
+    downloads: [
+      {
+        state: DownloadsCommon.DOWNLOAD_FINISHED,
+        contentType: "application/pdf",
+        target: {},
+      },
+    ],
+    expected: {
+      menu: [
+        MENU_ITEMS.alwaysOpenInSystemViewer,
+        MENU_ITEMS.openReferrer,
+        MENU_ITEMS.copyLocation,
+        MENU_ITEMS.separator,
+        MENU_ITEMS.delete,
+        MENU_ITEMS.clearList,
+      ],
+    },
+  },
+];
+
 add_task(async function test_setUp() {
   // remove download files, empty out collections
   let downloadList = await Downloads.getList(Downloads.ALL);
@@ -299,11 +324,27 @@ for (let testData of TestCasesNewMimetypesPrefEnabled) {
   add_task(tmp[testData.name]);
 }
 
+for (let testData of TestCasesDeletedFile) {
+  if (testData.skip) {
+    info("Skipping test:" + testData.name);
+    continue;
+  }
+  // use the 'name' property of each test case as the test function name
+  // so we get useful logs
+  let tmp = {
+    async [testData.name]() {
+      await testDownloadContextMenu(testData);
+    },
+  };
+  add_task(tmp[testData.name]);
+}
+
 async function testDownloadContextMenu({
   overrideExtension = null,
   downloads = [],
   expected,
   prefEnabled,
+  deleted,
 }) {
   info(
     `Setting browser.download.improvements_to_download_panel to ${prefEnabled}`
@@ -315,9 +356,19 @@ async function testDownloadContextMenu({
   // prepare downloads
   await prepareDownloads(downloads, overrideExtension);
   let downloadList = await Downloads.getList(Downloads.PUBLIC);
-  let [firstDownload] = await downloadList.getAll();
-  info("Download succeeded? " + firstDownload.succeeded);
-  info("Download target exists? " + firstDownload.target.exists);
+  let all = await downloadList.getAll();
+  for (let dl of all) {
+    info("Download succeeded? " + dl.succeeded);
+    if (deleted) {
+      let { path } = dl.target;
+      await IOUtils.setPermissions(path, 0o660);
+      await IOUtils.remove(path, { ignoreAbsent: true });
+      await dl.removePartialData();
+      await dl.refresh();
+      await dl.finalize();
+    }
+    info("Download target exists? " + dl.target.exists);
+  }
 
   // open panel
   await task_openPanel();
