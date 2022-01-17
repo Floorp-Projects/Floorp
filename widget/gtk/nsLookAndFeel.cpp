@@ -68,7 +68,8 @@ static LazyLogModule gLnfLog("LookAndFeel");
                     (int)((c).blue * 255), (int)((c).alpha * 255)))
 
 static bool sIgnoreChangedSettings = false;
-static void settings_changed_cb(GtkSettings*, GParamSpec*, void*) {
+
+static void OnSettingsChange() {
   if (sIgnoreChangedSettings) {
     return;
   }
@@ -78,7 +79,63 @@ static void settings_changed_cb(GtkSettings*, GParamSpec*, void*) {
   widget::IMContextWrapper::OnThemeChanged();
 }
 
+static void settings_changed_cb(GtkSettings*, GParamSpec*, void*) {
+  OnSettingsChange();
+}
+
 static bool sCSDAvailable;
+
+static nsCString GVariantToString(GVariant* aVariant) {
+  nsCString ret;
+  gchar* s = g_variant_print(aVariant, TRUE);
+  if (s) {
+    ret.Assign(s);
+    g_free(s);
+  }
+  return ret;
+}
+
+static nsDependentCString GVariantGetString(GVariant* aVariant) {
+  gsize len = 0;
+  const gchar* v = g_variant_get_string(aVariant, &len);
+  return nsDependentCString(v, len);
+}
+
+// Observed settings for portal.
+static constexpr struct {
+  nsLiteralCString mNamespace;
+  nsLiteralCString mKey;
+} kObservedSettings[] = {
+    {"org.freedesktop.appearance"_ns, "color-scheme"_ns},
+};
+
+static void settings_changed_signal_cb(GDBusProxy* proxy, gchar* sender_name,
+                                       gchar* signal_name, GVariant* parameters,
+                                       gpointer user_data) {
+  LOGLNF("Settings Change sender=%s signal=%s params=%s\n", sender_name,
+         signal_name, GVariantToString(parameters).get());
+  if (strcmp(signal_name, "SettingChanged")) {
+    NS_WARNING("Unknown change signal for settings");
+    return;
+  }
+  RefPtr<GVariant> ns = dont_AddRef(g_variant_get_child_value(parameters, 0));
+  RefPtr<GVariant> key = dont_AddRef(g_variant_get_child_value(parameters, 1));
+  // Third parameter is the value, but we don't care about it.
+  if (!ns || !key || !g_variant_is_of_type(ns, G_VARIANT_TYPE_STRING) ||
+      !g_variant_is_of_type(key, G_VARIANT_TYPE_STRING)) {
+    MOZ_ASSERT(false, "Unexpected setting change signal parameters");
+    return;
+  }
+
+  auto nsStr = GVariantGetString(ns);
+  auto keyStr = GVariantGetString(key);
+  for (const auto& setting : kObservedSettings) {
+    if (setting.mNamespace.Equals(nsStr) && setting.mKey.Equals(keyStr)) {
+      OnSettingsChange();
+      return;
+    }
+  }
+}
 
 nsLookAndFeel::nsLookAndFeel() {
   static constexpr nsLiteralCString kObservedSettings[] = {
@@ -116,9 +173,30 @@ nsLookAndFeel::nsLookAndFeel() {
 
   sCSDAvailable =
       nsWindow::GetSystemGtkWindowDecoration() != nsWindow::GTK_DECORATION_NONE;
+
+  if (ShouldUsePortal(PortalKind::Settings)) {
+    GError* error = nullptr;
+    mDBusSettingsProxy = g_dbus_proxy_new_for_bus_sync(
+        G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, nullptr,
+        "org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
+        "org.freedesktop.portal.Settings", nullptr, &error);
+    if (mDBusSettingsProxy) {
+      g_signal_connect(mDBusSettingsProxy, "g-signal",
+                       G_CALLBACK(settings_changed_signal_cb), nullptr);
+    } else {
+      LOGLNF("Can't create DBus proxy for settings: %s\n", error->message);
+      g_error_free(error);
+    }
+  }
 }
 
 nsLookAndFeel::~nsLookAndFeel() {
+  if (mDBusSettingsProxy) {
+    g_signal_handlers_disconnect_by_func(
+        mDBusSettingsProxy, FuncToGpointer(settings_changed_signal_cb),
+        nullptr);
+    g_object_unref(mDBusSettingsProxy);
+  }
   g_signal_handlers_disconnect_by_func(
       gtk_settings_get_default(), FuncToGpointer(settings_changed_cb), nullptr);
 }
@@ -1089,6 +1167,12 @@ void nsLookAndFeel::RestoreSystemTheme() {
   if (sGtkSettingsResetProperty) {
     sGtkSettingsResetProperty(settings, "gtk-theme-name");
     sGtkSettingsResetProperty(settings, "gtk-application-prefer-dark-theme");
+    // If the prefer-dark-theme value was overridden by the dbus setting, make
+    // sure to keep it.
+    if (mSystemTheme.mPreferDarkTheme != GetPreferDarkTheme()) {
+      g_object_set(settings, "gtk-application-prefer-dark-theme",
+                   mSystemTheme.mPreferDarkTheme, nullptr);
+    }
   } else {
     g_object_set(settings, "gtk-theme-name", mSystemTheme.mName.get(),
                  "gtk-application-prefer-dark-theme",
@@ -1195,6 +1279,39 @@ void nsLookAndFeel::InitializeAltTheme() {
   });
 }
 
+Maybe<ColorScheme> nsLookAndFeel::ComputeColorSchemeSetting() {
+  if (!mDBusSettingsProxy) {
+    return Nothing();
+  }
+  GError* error = nullptr;
+  RefPtr<GVariant> variant = dont_AddRef(g_dbus_proxy_call_sync(
+      mDBusSettingsProxy, "Read",
+      g_variant_new("(ss)", "org.freedesktop.appearance", "color-scheme"),
+      G_DBUS_CALL_FLAGS_NONE, -1, nullptr, &error));
+  if (!variant) {
+    LOGLNF("color-scheme query error: %s\n", error->message);
+    g_error_free(error);
+    return Nothing();
+  }
+  LOGLNF("color-scheme query result: %s\n", GVariantToString(variant).get());
+  variant = dont_AddRef(g_variant_get_child_value(variant, 0));
+  while (variant && g_variant_is_of_type(variant, G_VARIANT_TYPE_VARIANT)) {
+    // Unbox the return value.
+    variant = dont_AddRef(g_variant_get_variant(variant));
+  }
+  if (!variant || !g_variant_is_of_type(variant, G_VARIANT_TYPE_UINT32)) {
+    MOZ_ASSERT(false, "Unexpected color-scheme query return value");
+    return Nothing();
+  }
+  if (g_variant_get_uint32(variant) == 1) {
+    return Some(ColorScheme::Dark);
+  }
+  // If we get a valid, non-dark value from DBus, even if it's "no preference",
+  // then we need to return a light color scheme, so that we properly override
+  // it on changes.
+  return Some(ColorScheme::Light);
+}
+
 void nsLookAndFeel::EnsureInit() {
   if (mInitialized) {
     return;
@@ -1225,6 +1342,18 @@ void nsLookAndFeel::EnsureInit() {
 
   // gtk does non threadsafe refcounting
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (auto scheme = ComputeColorSchemeSetting()) {
+    // DBus settings color-scheme override the default. Ensure that this happens
+    // before the mSystemTheme.Init() call so that it gets correctly picked up.
+    bool dark = *scheme == ColorScheme::Dark;
+    if (dark != GetPreferDarkTheme()) {
+      g_object_set(settings, "gtk-application-prefer-dark-theme", dark,
+                   nullptr);
+      moz_gtk_refresh();
+    }
+  }
+
   gboolean enableAnimations = false;
   g_object_get(settings, "gtk-enable-animations", &enableAnimations, nullptr);
   mPrefersReducedMotion = !enableAnimations;

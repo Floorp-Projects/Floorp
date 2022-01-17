@@ -33,6 +33,7 @@ enum class PortalKind {
   FilePicker,
   MimeHandler,
   Print,
+  Settings,
 };
 bool ShouldUsePortal(PortalKind);
 
