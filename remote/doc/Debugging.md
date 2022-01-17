@@ -29,7 +29,7 @@ you can use the `toolkit.dump.emit` [preference]:
 Logging observer notifications
 ------------------------------
 
-[System observer notifications] are used extensively throughout the
+Observer notifications are used extensively throughout the
 code and it can sometimes be useful to log these to see what is
 available and when they are fired.
 

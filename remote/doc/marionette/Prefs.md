@@ -11,7 +11,7 @@ protocol:
 Delay server startup until a modal dialogue has been clicked to
 allow time for user to set breakpoints in the [Browser Toolbox].
 
-[Browser Toolbox]: https://developer.mozilla.org/en-US/docs/Tools/Browser_Toolbox
+[Browser Toolbox]: /devtools-user/browser_toolbox/index.rst
 
 
 `marionette.log.level` (deprecated)

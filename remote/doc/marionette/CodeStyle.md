@@ -20,7 +20,7 @@ For the overall Marionette project, a few rough rules are:
 JavaScript
 ----------
 
-Marionette is written in [XPCOM] flavoured JavaScript and ships
+Marionette is written in JavaScript and ships
 as part of Firefox.  We have access to all the latest ECMAScript
 features currently in development, usually before it ships in the
 wild and we try to make use of new features when appropriate,
@@ -171,8 +171,7 @@ will be picked up on restarting Firefox.  The only notable exception
 is remote/components/Marionette.jsm, which does require
 a re-build.
 
-[XPCOM]: https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM
-[strict mode]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode
+[strict mode]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Strict_mode
 [Mozilla eslint rules]: https://searchfox.org/mozilla-central/source/.eslintrc.js
 [our own specialisations]: https://searchfox.org/mozilla-central/source/remote/marionette/.eslintrc.js
 [linter]: #linting
@@ -240,7 +239,7 @@ run the linters on the changed files before a push and abort if
 there are any problems.  This is convenient for avoiding a try run
 failing due to a stupid linting issue.
 
-[mozlint]: https://firefox-source-docs.mozilla.org/tools/lint/usage.html
-[eslint]: https://eslint.org/
-[flake8]: http://flake8.pycqa.org/en/latest/
-[enable automatic linting]: https://firefox-source-docs.mozilla.org/tools/lint/usage.html#using-a-vcs-hook
+[mozlint]: /code-quality/lint/mozlint.rst
+[eslint]: /code-quality/lint/linters/eslint.rst
+[flake8]: /code-quality/lint/linters/flake8.rst
+[enable automatic linting]: /code-quality/lint/usage.html#using-a-vcs-hook

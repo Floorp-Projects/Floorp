@@ -64,7 +64,7 @@ you can redirect all Gecko output to stdout:
 
 Our functional integration tests pop up Firefox windows sporadically,
 and a helpful tip is to suppress the window can be to use Firefox’
-[headless mode]:
+headless mode:
 
     % ./mach marionette-test -z TEST
 
@@ -131,7 +131,6 @@ Marionette when you connect manually:
 
 You should see output like `{"applicationType":"gecko","marionetteProtocol":3}`
 
-[headless mode]: https://developer.mozilla.org/en-US/Firefox/Headless_mode
 [geckodriver]: /testing/geckodriver/index.rst
 
 
@@ -151,12 +150,12 @@ This command supports a `--webdriver-arg='-vv'` argument that
 enables more detailed logging, as well as `--jsdebugger` for opening
 the Browser Toolbox.
 
-A particularly useful trick is to combine this with the [headless
-mode] for Firefox we learned about earlier:
+A particularly useful trick is to combine this with the headless
+mode for Firefox:
 
-	% MOZ_HEADLESS=1 ./mach wpt --webdriver-arg='-vv' testing/web-platform/tests/webdriver
+	% ./mach wpt --webdriver-arg='-vv' --headless testing/web-platform/tests/webdriver
 
-[WebDriver]: https://w3c.github.io/webdriver/webdriver-spec.html
+[WebDriver]: https://w3c.github.io/webdriver/
 
 
 Harness tests
