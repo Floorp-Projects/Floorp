@@ -240,7 +240,9 @@ var DownloadsViewUI = {
     );
     let canViewInternally = element.hasAttribute("viewable-internally");
     useSystemViewerItem.hidden =
-      !DownloadsCommon.openInSystemViewerItemEnabled || !canViewInternally;
+      !DownloadsCommon.openInSystemViewerItemEnabled ||
+      !canViewInternally ||
+      !download.target?.exists;
 
     alwaysUseSystemViewerItem.hidden =
       !DownloadsCommon.alwaysOpenInSystemViewerItemEnabled ||
