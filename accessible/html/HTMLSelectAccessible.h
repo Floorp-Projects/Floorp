@@ -205,7 +205,6 @@ class HTMLComboboxListAccessible : public HTMLSelectListAccessible {
   virtual ~HTMLComboboxListAccessible() {}
 
   // LocalAccessible
-  virtual nsIFrame* GetFrame() const override;
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
   virtual nsRect RelativeBounds(nsIFrame** aBoundingFrame) const override;

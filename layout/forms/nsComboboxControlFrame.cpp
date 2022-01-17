@@ -40,6 +40,9 @@
 #include "nsDisplayList.h"
 #include "nsITheme.h"
 #include "nsStyleConsts.h"
+#include "nsTextFrameUtils.h"
+#include "nsTextRunTransformations.h"
+#include "HTMLSelectEventListener.h"
 #include "mozilla/Likely.h"
 #include <algorithm>
 #include "nsTextNode.h"
@@ -53,15 +56,8 @@
 #include "gfx2DGlue.h"
 #include "mozilla/widget/nsAutoRollup.h"
 
-#ifdef XP_WIN
-#  define COMBOBOX_ROLLUP_CONSUME_EVENT 0
-#else
-#  define COMBOBOX_ROLLUP_CONSUME_EVENT 1
-#endif
-
 using namespace mozilla;
 using namespace mozilla::gfx;
-using mozilla::dom::Document;
 
 NS_IMETHODIMP
 nsComboboxControlFrame::RedisplayTextEvent::Run() {
@@ -80,35 +76,6 @@ nsComboboxControlFrame::RedisplayTextEvent::Run() {
 // The ListWasSelected code will turn off mouse-capture for the drop-down list.
 // The drop-down list does not explicitly set capture when it is in the
 // drop-down mode.
-
-/**
- * Helper class that listens to the combo boxes button. If the button is pressed
- * the combo box is toggled to open or close. this is used by Accessibility
- * which presses that button Programmatically.
- */
-class nsComboButtonListener final : public nsIDOMEventListener {
- private:
-  virtual ~nsComboButtonListener() = default;
-
- public:
-  NS_DECL_ISUPPORTS
-
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD HandleEvent(dom::Event*) override {
-    mComboBox->ShowDropDown(!mComboBox->IsDroppedDown());
-    return NS_OK;
-  }
-
-  explicit nsComboButtonListener(nsComboboxControlFrame* aCombobox) {
-    mComboBox = aCombobox;
-  }
-
-  nsComboboxControlFrame* mComboBox;
-};
-
-NS_IMPL_ISUPPORTS(nsComboButtonListener, nsIDOMEventListener)
-
-// static class data member for Bug 32920
-nsComboboxControlFrame* nsComboboxControlFrame::sFocused = nullptr;
 
 nsComboboxControlFrame* NS_NewComboboxControlFrame(PresShell* aPresShell,
                                                    ComputedStyle* aStyle,
@@ -224,16 +191,11 @@ nsComboboxControlFrame::nsComboboxControlFrame(ComputedStyle* aStyle,
     : nsBlockFrame(aStyle, aPresContext, kClassID),
       mDisplayFrame(nullptr),
       mButtonFrame(nullptr),
-      mDropdownFrame(nullptr),
       mDisplayISize(0),
       mMaxDisplayISize(0),
       mRecentSelectedIndex(NS_SKIP_NOTIFY_INDEX),
       mDisplayedIndex(-1),
-      mLastDropDownBeforeScreenBCoord(nscoord_MIN),
-      mLastDropDownAfterScreenBCoord(nscoord_MIN),
-      mDroppedDown(false),
       mInRedisplayText(false),
-      mDelayedShowDropDown(false),
       mIsOpenInParentProcess(false){REFLOW_COUNTER_INIT()}
 
       //--------------------------------------------------------------
@@ -248,7 +210,6 @@ NS_QUERYFRAME_HEAD(nsComboboxControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
   NS_QUERYFRAME_ENTRY(nsISelectControlFrame)
-  NS_QUERYFRAME_ENTRY(nsIStatefulFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
 #ifdef ACCESSIBILITY
@@ -258,204 +219,10 @@ a11y::AccType nsComboboxControlFrame::AccessibleType() {
 #endif
 
 void nsComboboxControlFrame::SetFocus(bool aOn, bool aRepaint) {
-  AutoWeakFrame weakFrame(this);
-  if (aOn) {
-    nsListControlFrame::ComboboxFocusSet();
-    sFocused = this;
-    if (mDelayedShowDropDown) {
-      ShowDropDown(true);  // might destroy us
-      if (!weakFrame.IsAlive()) {
-        return;
-      }
-    }
-  } else {
-    sFocused = nullptr;
-    mDelayedShowDropDown = false;
-    if (mDroppedDown) {
-      mDropdownFrame->ComboboxFinish(mDisplayedIndex);  // might destroy us
-      if (!weakFrame.IsAlive()) {
-        return;
-      }
-    }
-    // May delete |this|.
-    mDropdownFrame->FireOnInputAndOnChange();
-  }
-
-  if (!weakFrame.IsAlive()) {
-    return;
-  }
-
   // This is needed on a temporary basis. It causes the focus
   // rect to be drawn. This is much faster than ReResolvingStyle
   // Bug 32920
   InvalidateFrame();
-}
-
-void nsComboboxControlFrame::ShowPopup(bool aShowPopup) {
-  nsView* view = mDropdownFrame->GetView();
-  nsViewManager* viewManager = view->GetViewManager();
-
-  if (aShowPopup) {
-    nsRect rect = mDropdownFrame->GetRect();
-    rect.x = rect.y = 0;
-    viewManager->ResizeView(view, rect);
-    viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
-  } else {
-    viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-    nsRect emptyRect(0, 0, 0, 0);
-    viewManager->ResizeView(view, emptyRect);
-  }
-
-  // fire a popup dom event if it is safe to do so
-  RefPtr<mozilla::PresShell> presShell = PresContext()->GetPresShell();
-  if (presShell && nsContentUtils::IsSafeToRunScript()) {
-    nsEventStatus status = nsEventStatus_eIgnore;
-    WidgetMouseEvent event(true,
-                           aShowPopup ? eXULPopupShowing : eXULPopupHiding,
-                           nullptr, WidgetMouseEvent::eReal);
-
-    nsCOMPtr<nsIContent> content = mContent;
-    presShell->HandleDOMEventWithTarget(content, &event, &status);
-  }
-}
-
-bool nsComboboxControlFrame::ShowList(bool aShowList) {
-  nsView* view = mDropdownFrame->GetView();
-  if (aShowList) {
-    NS_ASSERTION(
-        !view->HasWidget(),
-        "We shouldn't have a widget before we need to display the popup");
-
-    // Create the widget for the drop-down list
-    view->GetViewManager()->SetViewFloating(view, true);
-
-    nsWidgetInitData widgetData;
-    widgetData.mWindowType = eWindowType_popup;
-    widgetData.mBorderStyle = eBorderStyle_default;
-    view->CreateWidgetForPopup(&widgetData);
-  } else {
-    nsIWidget* widget = view->GetWidget();
-    if (widget) {
-      // We must do this before ShowPopup in case it destroys us (bug 813442).
-      widget->CaptureRollupEvents(this, false);
-    }
-  }
-
-  AutoWeakFrame weakFrame(this);
-  ShowPopup(aShowList);  // might destroy us
-  if (!weakFrame.IsAlive()) {
-    return false;
-  }
-
-  mDroppedDown = aShowList;
-  nsIWidget* widget = view->GetWidget();
-  if (mDroppedDown) {
-    // The listcontrol frame will call back to the nsComboboxControlFrame's
-    // ListWasSelected which will stop the capture.
-    mDropdownFrame->AboutToDropDown();
-    mDropdownFrame->CaptureMouseEvents(true);
-    if (widget) {
-      widget->CaptureRollupEvents(this, true);
-    }
-  } else {
-    if (widget) {
-      view->DestroyWidget();
-    }
-  }
-
-  return weakFrame.IsAlive();
-}
-
-class nsResizeDropdownAtFinalPosition final : public nsIReflowCallback,
-                                              public Runnable {
- public:
-  explicit nsResizeDropdownAtFinalPosition(nsComboboxControlFrame* aFrame)
-      : mozilla::Runnable("nsResizeDropdownAtFinalPosition"), mFrame(aFrame) {}
-
- protected:
-  ~nsResizeDropdownAtFinalPosition() = default;
-
- public:
-  bool ReflowFinished() final {
-    Run();
-    NS_RELEASE_THIS();
-    return false;
-  }
-
-  void ReflowCallbackCanceled() final { NS_RELEASE_THIS(); }
-
-  NS_IMETHOD Run() final {
-    if (mFrame.IsAlive()) {
-      static_cast<nsComboboxControlFrame*>(mFrame.GetFrame())
-          ->AbsolutelyPositionDropDown();
-    }
-    return NS_OK;
-  }
-
-  WeakFrame mFrame;
-};
-
-void nsComboboxControlFrame::ReflowDropdown(nsPresContext* aPresContext,
-                                            const ReflowInput& aReflowInput) {
-  // All we want out of it later on, really, is the block size of a row, so we
-  // don't even need to cache mDropdownFrame's ascent or anything.  If we don't
-  // need to reflow it, just bail out here.
-  if (!aReflowInput.ShouldReflowAllKids() &&
-      !mDropdownFrame->IsSubtreeDirty()) {
-    return;
-  }
-
-  // XXXbz this will, for small-block-size dropdowns, have extra space
-  // on the appropriate edge for the scrollbar we don't show... but
-  // that's the best we can do here for now.
-  WritingMode wm = mDropdownFrame->GetWritingMode();
-  LogicalSize availSize = aReflowInput.AvailableSize(wm);
-  availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-  ReflowInput kidReflowInput(aPresContext, aReflowInput, mDropdownFrame,
-                             availSize);
-
-  // If the dropdown's intrinsic inline size is narrower than our
-  // specified inline size, then expand it out.  We want our border-box
-  // inline size to end up the same as the dropdown's so account for
-  // both sets of mComputedBorderPadding.
-  nscoord forcedISize =
-      aReflowInput.ComputedISize() +
-      aReflowInput.ComputedLogicalBorderPadding(wm).IStartEnd(wm) -
-      kidReflowInput.ComputedLogicalBorderPadding(wm).IStartEnd(wm);
-  kidReflowInput.SetComputedISize(
-      std::max(kidReflowInput.ComputedISize(), forcedISize));
-
-  // ensure we start off hidden
-  if (!mDroppedDown && HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
-    nsView* view = mDropdownFrame->GetView();
-    nsViewManager* viewManager = view->GetViewManager();
-    viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-    nsRect emptyRect(0, 0, 0, 0);
-    viewManager->ResizeView(view, emptyRect);
-  }
-
-  // Allow the child to move/size/change-visibility its view if it's currently
-  // dropped down
-  ReflowChildFlags flags = mDroppedDown ? ReflowChildFlags::Default
-                                        : ReflowChildFlags::NoMoveFrame |
-                                              ReflowChildFlags::NoSizeView;
-
-  // XXX Can this be different from the dropdown's writing mode?
-  // That would be odd!
-  // Note that we don't need to pass the true frame position or container size
-  // to ReflowChild or FinishReflowChild here; it will be positioned as needed
-  // by AbsolutelyPositionDropDown().
-  WritingMode outerWM = GetWritingMode();
-  const nsSize dummyContainerSize;
-  ReflowOutput desiredSize(aReflowInput);
-  nsReflowStatus ignoredStatus;
-  ReflowChild(mDropdownFrame, aPresContext, desiredSize, kidReflowInput,
-              outerWM, LogicalPoint(outerWM), dummyContainerSize, flags,
-              ignoredStatus);
-
-  // Set the child's width and height to its desired size
-  FinishReflowChild(mDropdownFrame, aPresContext, desiredSize, &kidReflowInput,
-                    outerWM, LogicalPoint(outerWM), dummyContainerSize, flags);
 }
 
 nsPoint nsComboboxControlFrame::GetCSSTransformTranslation() {
@@ -489,205 +256,6 @@ nsPoint nsComboboxControlFrame::GetCSSTransformTranslation() {
     }
   }
   return translation;
-}
-
-class nsAsyncRollup : public Runnable {
- public:
-  explicit nsAsyncRollup(nsComboboxControlFrame* aFrame)
-      : mozilla::Runnable("nsAsyncRollup"), mFrame(aFrame) {}
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
-    if (mFrame.IsAlive()) {
-      static_cast<nsComboboxControlFrame*>(mFrame.GetFrame())->RollupFromList();
-    }
-    return NS_OK;
-  }
-  WeakFrame mFrame;
-};
-
-class nsAsyncResize : public Runnable {
- public:
-  explicit nsAsyncResize(nsComboboxControlFrame* aFrame)
-      : mozilla::Runnable("nsAsyncResize"), mFrame(aFrame) {}
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
-    if (mFrame.IsAlive()) {
-      nsComboboxControlFrame* combo =
-          static_cast<nsComboboxControlFrame*>(mFrame.GetFrame());
-      combo->mDropdownFrame->SetSuppressScrollbarUpdate(true);
-      RefPtr<PresShell> presShell = mFrame->PresShell();
-      presShell->FrameNeedsReflow(combo->mDropdownFrame, IntrinsicDirty::Resize,
-                                  NS_FRAME_IS_DIRTY);
-      presShell->FlushPendingNotifications(FlushType::Layout);
-      if (mFrame.IsAlive()) {
-        combo = static_cast<nsComboboxControlFrame*>(mFrame.GetFrame());
-        combo->mDropdownFrame->SetSuppressScrollbarUpdate(false);
-        if (combo->mDelayedShowDropDown) {
-          combo->ShowDropDown(true);
-        }
-      }
-    }
-    return NS_OK;
-  }
-  WeakFrame mFrame;
-};
-
-// Returns the usable screen rect in app units, the rect where we can
-// draw the dropdown.
-static nsRect GetUsableScreenRect(nsPresContext* aPresContext) {
-  nsRect screen;
-
-  nsDeviceContext* context = aPresContext->DeviceContext();
-  int32_t dropdownCanOverlapOSBar =
-      LookAndFeel::GetInt(LookAndFeel::IntID::MenusCanOverlapOSBar, 0);
-  if (dropdownCanOverlapOSBar) {
-    context->GetRect(screen);
-  } else {
-    context->GetClientRect(screen);
-  }
-  return screen;
-}
-
-void nsComboboxControlFrame::GetAvailableDropdownSpace(
-    WritingMode aWM, nscoord* aBefore, nscoord* aAfter,
-    LogicalPoint* aTranslation) {
-  MOZ_ASSERT(!XRE_IsContentProcess());
-  // Note: At first glance, it appears that you could simply get the
-  // absolute bounding box for the dropdown list by first getting its
-  // view, then getting the view's nsIWidget, then asking the nsIWidget
-  // for its AbsoluteBounds.
-  // The problem with this approach, is that the dropdown list's bcoord
-  // location can change based on whether the dropdown is placed after
-  // or before the display frame.  The approach taken here is to get the
-  // absolute position of the display frame and use its location to
-  // determine if the dropdown will go offscreen.
-
-  // Normal frame geometry (eg GetOffsetTo, mRect) doesn't include transforms.
-  // In the special case that our transform is only a 2D translation we
-  // introduce this hack so that the dropdown will show up in the right place.
-  // Use null container size when converting a vector from logical to physical.
-  const nsSize nullContainerSize;
-  *aTranslation =
-      LogicalPoint(aWM, GetCSSTransformTranslation(), nullContainerSize);
-  *aBefore = 0;
-  *aAfter = 0;
-
-  nsRect screen = ::GetUsableScreenRect(PresContext());
-  nsSize containerSize = screen.Size();
-  LogicalRect logicalScreen(aWM, screen, containerSize);
-  if (mLastDropDownAfterScreenBCoord == nscoord_MIN) {
-    LogicalRect thisScreenRect(aWM, GetScreenRectInAppUnits(), containerSize);
-    mLastDropDownAfterScreenBCoord =
-        thisScreenRect.BEnd(aWM) + aTranslation->B(aWM);
-    mLastDropDownBeforeScreenBCoord =
-        thisScreenRect.BStart(aWM) + aTranslation->B(aWM);
-  }
-
-  nscoord minBCoord;
-  nsPresContext* pc =
-      PresContext()->GetInProcessRootContentDocumentPresContext();
-  nsIFrame* root = pc ? pc->PresShell()->GetRootFrame() : nullptr;
-  if (root) {
-    minBCoord = LogicalRect(aWM, root->GetScreenRectInAppUnits(), containerSize)
-                    .BStart(aWM);
-    if (mLastDropDownAfterScreenBCoord < minBCoord) {
-      // Don't allow the drop-down to be placed before the content area.
-      return;
-    }
-  } else {
-    minBCoord = logicalScreen.BStart(aWM);
-  }
-
-  nscoord after = logicalScreen.BEnd(aWM) - mLastDropDownAfterScreenBCoord;
-  nscoord before = mLastDropDownBeforeScreenBCoord - minBCoord;
-
-  // If the difference between the space before and after is less
-  // than a row-block-size, then we favor the space after.
-  if (before >= after) {
-    nscoord rowBSize = mDropdownFrame->GetBSizeOfARow();
-    if (before < after + rowBSize) {
-      before -= rowBSize;
-    }
-  }
-
-  *aAfter = after;
-  *aBefore = before;
-}
-
-nsComboboxControlFrame::DropDownPositionState
-nsComboboxControlFrame::AbsolutelyPositionDropDown() {
-  if (XRE_IsContentProcess()) {
-    return eDropDownPositionSuppressed;
-  }
-
-  WritingMode wm = GetWritingMode();
-  LogicalPoint translation(wm);
-  nscoord before, after;
-  mLastDropDownAfterScreenBCoord = nscoord_MIN;
-  GetAvailableDropdownSpace(wm, &before, &after, &translation);
-  if (before <= 0 && after <= 0) {
-    if (IsDroppedDown()) {
-      // Hide the view immediately to minimize flicker.
-      nsView* view = mDropdownFrame->GetView();
-      view->GetViewManager()->SetViewVisibility(view, nsViewVisibility_kHide);
-      NS_DispatchToCurrentThread(new nsAsyncRollup(this));
-    }
-    return eDropDownPositionSuppressed;
-  }
-
-  LogicalSize dropdownSize = mDropdownFrame->GetLogicalSize(wm);
-  nscoord bSize = std::max(before, after);
-  if (bSize < dropdownSize.BSize(wm)) {
-    if (mDropdownFrame->GetNumDisplayRows() > 1) {
-      // The drop-down doesn't fit and currently shows more than 1 row -
-      // schedule a resize to show fewer rows.
-      NS_DispatchToCurrentThread(new nsAsyncResize(this));
-      return eDropDownPositionPendingResize;
-    }
-  } else if (bSize > (dropdownSize.BSize(wm) +
-                      mDropdownFrame->GetBSizeOfARow() * 1.5) &&
-             mDropdownFrame->GetDropdownCanGrow()) {
-    // The drop-down fits but there is room for at least 1.5 more rows -
-    // schedule a resize to show more rows if it has more rows to show.
-    // (1.5 rows for good measure to avoid any rounding issues that would
-    // lead to a loop of reflow requests)
-    NS_DispatchToCurrentThread(new nsAsyncResize(this));
-    return eDropDownPositionPendingResize;
-  }
-
-  // Position the drop-down after if there is room, otherwise place it before
-  // if there is room.  If there is no room for it on either side then place
-  // it after (to avoid overlapping UI like the URL bar).
-  bool b = dropdownSize.BSize(wm) <= after || dropdownSize.BSize(wm) > before;
-  LogicalPoint dropdownPosition(wm, 0, b ? BSize(wm) : -dropdownSize.BSize(wm));
-
-  // Don't position the view unless the position changed since it might cause
-  // a call to NotifyGeometryChange() and an infinite loop here.
-  nsSize containerSize = GetSize();
-  const LogicalPoint currentPos =
-      mDropdownFrame->GetLogicalPosition(containerSize);
-  const LogicalPoint newPos = dropdownPosition + translation;
-  if (currentPos != newPos) {
-    mDropdownFrame->SetPosition(wm, newPos, containerSize);
-    nsContainerFrame::PositionFrameView(mDropdownFrame);
-  }
-  return eDropDownPositionFinal;
-}
-
-void nsComboboxControlFrame::NotifyGeometryChange() {
-  if (XRE_IsContentProcess()) {
-    return;
-  }
-
-  // We don't need to resize if we're not dropped down since ShowDropDown
-  // does that, or if we're dirty then the reflow callback does it,
-  // or if we have a delayed ShowDropDown pending.
-  if (IsDroppedDown() && !HasAnyStateBits(NS_FRAME_IS_DIRTY) &&
-      !mDelayedShowDropDown) {
-    // Async because we're likely in a middle of a scroll here so
-    // frame/view positions are in flux.
-    RefPtr<nsResizeDropdownAtFinalPosition> resize =
-        new nsResizeDropdownAtFinalPosition(this);
-    NS_DispatchToCurrentThread(resize);
-  }
 }
 
 //----------------------------------------------------------
@@ -734,53 +302,69 @@ nscoord nsComboboxControlFrame::DropDownButtonISize() {
   return presContext->DevPixelsToAppUnits(dropdownButtonSize.width);
 }
 
+int32_t nsComboboxControlFrame::CharCountOfLargestOptionForInflation() const {
+  uint32_t maxLength = 0;
+  nsAutoString label;
+  for (auto i : IntegerRange(Select().Options()->Length())) {
+    GetOptionText(i, label);
+    maxLength = std::max(
+        maxLength,
+        nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(
+            label, StyleText()));
+  }
+  if (MOZ_UNLIKELY(maxLength > uint32_t(INT32_MAX))) {
+    return INT32_MAX;
+  }
+  return int32_t(maxLength);
+}
+
 nscoord nsComboboxControlFrame::GetIntrinsicISize(gfxContext* aRenderingContext,
                                                   IntrinsicISizeType aType) {
-  MOZ_ASSERT(mDropdownFrame, "No dropdown frame!");
+  nscoord displayISize = mDisplayFrame->IntrinsicISizeOffsets().padding;
 
-  // get the scrollbar width, we'll use this later
-  nscoord scrollbarWidth = 0;
-  nsPresContext* presContext = PresContext();
-  scrollbarWidth = mDropdownFrame->GetNondisappearingScrollbarWidth(
-      presContext, aRenderingContext, GetWritingMode());
-
-  const bool isContainSize = StyleDisplay()->IsContainSize();
-  nscoord displayISize = 0;
-  if (MOZ_LIKELY(mDisplayFrame)) {
-    if (isContainSize) {
-      // Get padding from the inline-axis
-      displayISize = mDisplayFrame->IntrinsicISizeOffsets().padding;
-    } else {
-      displayISize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                                                          mDisplayFrame, aType);
+  if (!StyleDisplay()->IsContainSize() && !StyleContent()->mContent.IsNone()) {
+    // Compute the width of each option's (potentially text-transformed) text,
+    // and use the widest one as part of our intrinsic size.
+    nscoord maxOptionSize = 0;
+    nsAutoString label;
+    nsAutoString transformedLabel;
+    RefPtr<nsFontMetrics> fm =
+        nsLayoutUtils::GetInflatedFontMetricsForFrame(this);
+    auto textTransform = StyleText()->mTextTransform.IsNone()
+                             ? Nothing()
+                             : Some(StyleText()->mTextTransform);
+    nsAtom* language = StyleFont()->mLanguage;
+    AutoTArray<bool, 50> charsToMergeArray;
+    AutoTArray<bool, 50> deletedCharsArray;
+    for (auto i : IntegerRange(Select().Options()->Length())) {
+      GetOptionText(i, label);
+      const nsAutoString* stringToUse = &label;
+      if (textTransform) {
+        transformedLabel.Truncate();
+        charsToMergeArray.SetLengthAndRetainStorage(0);
+        deletedCharsArray.SetLengthAndRetainStorage(0);
+        nsCaseTransformTextRunFactory::TransformString(
+            label, transformedLabel, textTransform,
+            /* aCaseTransformsOnly = */ false, language, charsToMergeArray,
+            deletedCharsArray);
+        stringToUse = &transformedLabel;
+      }
+      maxOptionSize = std::max(
+          maxOptionSize, nsLayoutUtils::AppUnitWidthOfStringBidi(
+                             *stringToUse, this, *fm, *aRenderingContext));
     }
+
+    displayISize += maxOptionSize;
   }
 
-  if (mDropdownFrame) {
-    nscoord dropdownContentISize;
-    const bool isUsingOverlayScrollbars = PresContext()->UseOverlayScrollbars();
-    if (aType == IntrinsicISizeType::MinISize) {
-      dropdownContentISize =
-          isContainSize ? 0 : mDropdownFrame->GetMinISize(aRenderingContext);
-      if (isUsingOverlayScrollbars) {
-        dropdownContentISize += scrollbarWidth;
-      }
-    } else {
-      NS_ASSERTION(aType == IntrinsicISizeType::PrefISize, "Unexpected type");
-      dropdownContentISize =
-          isContainSize ? 0 : mDropdownFrame->GetPrefISize(aRenderingContext);
-      if (isUsingOverlayScrollbars) {
-        dropdownContentISize += scrollbarWidth;
-      }
-    }
-    dropdownContentISize = NSCoordSaturatingSubtract(
-        dropdownContentISize, scrollbarWidth, nscoord_MAX);
-
-    displayISize = std::max(dropdownContentISize, displayISize);
-  }
-
-  // Add room for the dropmarker button if there is one.
+  // Add room for the dropmarker button (if there is one) and scrollbar on the
+  // popup.
   displayISize += DropDownButtonISize();
+  nsPresContext* pc = PresContext();
+  if (!pc->UseOverlayScrollbars()) {
+    displayISize += nsIScrollableFrame::GetNondisappearingScrollbarWidth(
+        pc, GetWritingMode());
+  }
 
   return displayISize;
 }
@@ -800,6 +384,18 @@ nscoord nsComboboxControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
   return prefISize;
 }
 
+dom::HTMLSelectElement& nsComboboxControlFrame::Select() const {
+  return *static_cast<dom::HTMLSelectElement*>(GetContent());
+}
+
+void nsComboboxControlFrame::GetOptionText(uint32_t aIndex,
+                                           nsAString& aText) const {
+  aText.Truncate();
+  if (Element* el = Select().Options()->GetElementAt(aIndex)) {
+    static_cast<dom::HTMLOptionElement*>(el)->GetRenderedLabel(aText);
+  }
+}
+
 void nsComboboxControlFrame::Reflow(nsPresContext* aPresContext,
                                     ReflowOutput& aDesiredSize,
                                     const ReflowInput& aReflowInput,
@@ -814,32 +410,19 @@ void nsComboboxControlFrame::Reflow(nsPresContext* aPresContext,
   // 3) Default block size of button is block size of display area
   // 4) Inline size of display area is whatever is left over from our
   //    inline size after allocating inline size for the button.
-  // 5) Block Size of display area is GetBSizeOfARow() on the
-  //    mDropdownFrame.
 
-  if (!mDisplayFrame || !mButtonFrame || !mDropdownFrame) {
+  if (!mDisplayFrame || !mButtonFrame) {
     NS_ERROR("Why did the frame constructor allow this to happen?  Fix it!!");
     return;
   }
 
   // Make sure the displayed text is the same as the selected option,
   // bug 297389.
-  if (!mDroppedDown) {
-    mDisplayedIndex = mDropdownFrame->GetSelectedIndex();
-  }
+  mDisplayedIndex = Select().SelectedIndex();
+
   // In dropped down mode the "selected index" is the hovered menu item,
   // we want the last selected item which is |mDisplayedIndex| in this case.
   RedisplayText();
-
-  // First reflow our dropdown so that we know how tall we should be.
-  ReflowDropdown(aPresContext, aReflowInput);
-  RefPtr<nsResizeDropdownAtFinalPosition> resize =
-      new nsResizeDropdownAtFinalPosition(this);
-  if (NS_SUCCEEDED(aPresContext->PresShell()->PostReflowCallback(resize))) {
-    // The reflow callback queue doesn't AddRef so we keep it alive until
-    // it's released in its ReflowFinished / ReflowCallbackCanceled.
-    Unused << resize.forget();
-  }
 
   WritingMode wm = aReflowInput.GetWritingMode();
 
@@ -874,7 +457,14 @@ void nsComboboxControlFrame::Reflow(nsPresContext* aPresContext,
   }
 }
 
-//--------------------------------------------------------------
+void nsComboboxControlFrame::Init(nsIContent* aContent,
+                                  nsContainerFrame* aParent,
+                                  nsIFrame* aPrevInFlow) {
+  nsBlockFrame::Init(aContent, aParent, aPrevInFlow);
+
+  mEventListener = new HTMLSelectEventListener(
+      Select(), HTMLSelectEventListener::SelectType::Combobox);
+}
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult nsComboboxControlFrame::GetFrameName(nsAString& aResult) const {
@@ -882,48 +472,11 @@ nsresult nsComboboxControlFrame::GetFrameName(nsAString& aResult) const {
 }
 #endif
 
-void nsComboboxControlFrame::ShowDropDown(bool aDoDropDown) {
-  MOZ_ASSERT(!XRE_IsContentProcess());
-  mDelayedShowDropDown = false;
-  EventStates eventStates = mContent->AsElement()->State();
-  if (aDoDropDown && eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
-    return;
-  }
-
-  if (!mDroppedDown && aDoDropDown) {
-    nsFocusManager* fm = nsFocusManager::GetFocusManager();
-    if (!fm || fm->GetFocusedElement() == GetContent()) {
-      DropDownPositionState state = AbsolutelyPositionDropDown();
-      if (state == eDropDownPositionFinal) {
-        ShowList(aDoDropDown);  // might destroy us
-      } else if (state == eDropDownPositionPendingResize) {
-        // Delay until after the resize reflow, see nsAsyncResize.
-        mDelayedShowDropDown = true;
-      }
-    } else {
-      // Delay until we get focus, see SetFocus().
-      mDelayedShowDropDown = true;
-    }
-  } else if (mDroppedDown && !aDoDropDown) {
-    ShowList(aDoDropDown);  // might destroy us
-  }
-}
-
-void nsComboboxControlFrame::SetDropDown(nsListControlFrame* aDropDownFrame) {
-  mDropdownFrame = aDropDownFrame;
-  if (!sFocused && nsContentUtils::IsFocusedContent(GetContent())) {
-    sFocused = this;
-    nsListControlFrame::ComboboxFocusSet();
-  }
-}
-
-nsIFrame* nsComboboxControlFrame::GetDropDown() { return mDropdownFrame; }
-
 ///////////////////////////////////////////////////////////////
 
 nsresult nsComboboxControlFrame::RedisplaySelectedText() {
   nsAutoScriptBlocker scriptBlocker;
-  mDisplayedIndex = mDropdownFrame->GetSelectedIndex();
+  mDisplayedIndex = Select().SelectedIndex();
   return RedisplayText();
 }
 
@@ -931,14 +484,12 @@ nsresult nsComboboxControlFrame::RedisplayText() {
   nsString previewValue;
   nsString previousText(mDisplayedOptionTextOrPreview);
 
-  auto* selectElement = static_cast<dom::HTMLSelectElement*>(GetContent());
-  selectElement->GetPreviewValue(previewValue);
+  Select().GetPreviewValue(previewValue);
   // Get the text to display
   if (!previewValue.IsEmpty()) {
     mDisplayedOptionTextOrPreview = previewValue;
   } else if (mDisplayedIndex != -1 && !StyleContent()->mContent.IsNone()) {
-    mDropdownFrame->GetOptionText(mDisplayedIndex,
-                                  mDisplayedOptionTextOrPreview);
+    GetOptionText(mDisplayedIndex, mDisplayedOptionTextOrPreview);
   } else {
     mDisplayedOptionTextOrPreview.Truncate();
   }
@@ -1027,9 +578,7 @@ int32_t nsComboboxControlFrame::GetIndexOfDisplayArea() {
 // nsISelectControlFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsComboboxControlFrame::DoneAddingChildren(bool aIsDone) {
-  return mDropdownFrame->DoneAddingChildren(aIsDone);
-}
+nsComboboxControlFrame::DoneAddingChildren(bool aIsDone) { return NS_OK; }
 
 NS_IMETHODIMP
 nsComboboxControlFrame::AddOption(int32_t aIndex) {
@@ -1037,13 +586,12 @@ nsComboboxControlFrame::AddOption(int32_t aIndex) {
     ++mDisplayedIndex;
   }
 
-  return mDropdownFrame->AddOption(aIndex);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsComboboxControlFrame::RemoveOption(int32_t aIndex) {
-  AutoWeakFrame weakThis(this);
-  if (mDropdownFrame->GetNumberOfOptions() > 0) {
+  if (Select().Options()->Length()) {
     if (aIndex < mDisplayedIndex) {
       --mDisplayedIndex;
     } else if (aIndex == mDisplayedIndex) {
@@ -1055,10 +603,7 @@ nsComboboxControlFrame::RemoveOption(int32_t aIndex) {
     mDisplayedIndex = -1;
     RedisplayText();
   }
-
-  if (!weakThis.IsAlive()) return NS_OK;
-
-  return mDropdownFrame->RemoveOption(aIndex);
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(void)
@@ -1067,8 +612,6 @@ nsComboboxControlFrame::OnSetSelectedIndex(int32_t aOldIndex,
   nsAutoScriptBlocker scriptBlocker;
   mDisplayedIndex = aNewIndex;
   RedisplayText();
-  MOZ_ASSERT(mDropdownFrame, "No dropdown frame!");
-  return mDropdownFrame->OnSetSelectedIndex(aOldIndex, aNewIndex);
 }
 
 // End nsISelectControlFrame
@@ -1088,17 +631,6 @@ nsresult nsComboboxControlFrame::HandleEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-#if COMBOBOX_ROLLUP_CONSUME_EVENT == 0
-  if (aEvent->mMessage == eMouseDown) {
-    if (GetContent() == mozilla::widget::nsAutoRollup::GetLastRollup()) {
-      // This event did a Rollup on this control - prevent it from opening
-      // the dropdown again!
-      *aEventStatus = nsEventStatus_eConsumeNoDefault;
-      return NS_OK;
-    }
-  }
-#endif
-
   // If we have style that affects how we are selected, feed event down to
   // nsIFrame::HandleEvent so that selection takes place when appropriate.
   if (IsContentDisabled()) {
@@ -1107,19 +639,12 @@ nsresult nsComboboxControlFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-nsresult nsComboboxControlFrame::SetFormProperty(nsAtom* aName,
-                                                 const nsAString& aValue) {
-  return mDropdownFrame->SetFormProperty(aName, aValue);
-}
-
 nsContainerFrame* nsComboboxControlFrame::GetContentInsertionFrame() {
-  return mInRedisplayText ? mDisplayFrame
-                          : mDropdownFrame->GetContentInsertionFrame();
+  return mInRedisplayText ? mDisplayFrame : nullptr;
 }
 
 void nsComboboxControlFrame::AppendDirectlyOwnedAnonBoxes(
     nsTArray<OwnedAnonBox>& aResult) {
-  aResult.AppendElement(OwnedAnonBox(mDropdownFrame));
   aResult.AppendElement(OwnedAnonBox(mDisplayFrame));
 }
 
@@ -1151,10 +676,9 @@ nsresult nsComboboxControlFrame::CreateAnonymousContent(
   mDisplayContent = new (nimgr) nsTextNode(nimgr);
 
   // set the value of the text node
-  mDisplayedIndex = mDropdownFrame->GetSelectedIndex();
+  mDisplayedIndex = Select().SelectedIndex();
   if (mDisplayedIndex != -1) {
-    mDropdownFrame->GetOptionText(mDisplayedIndex,
-                                  mDisplayedOptionTextOrPreview);
+    GetOptionText(mDisplayedIndex, mDisplayedOptionTextOrPreview);
   }
   ActuallyDisplayText(false);
 
@@ -1165,11 +689,7 @@ nsresult nsComboboxControlFrame::CreateAnonymousContent(
   mButtonContent = mContent->OwnerDoc()->CreateHTMLElement(nsGkAtoms::button);
   if (!mButtonContent) return NS_ERROR_OUT_OF_MEMORY;
 
-  // make someone to listen to the button. If its pressed by someone like
-  // Accessibility then open or close the combo box.
-  mButtonListener = new nsComboButtonListener(this);
-  mButtonContent->AddEventListener(u"click"_ns, mButtonListener, false, false);
-
+  // make someone to listen to the button.
   mButtonContent->SetAttr(kNameSpaceID_None, nsGkAtoms::type, u"button"_ns,
                           false);
   // Set tabindex="-1" so that the button is not tabbable
@@ -1296,24 +816,23 @@ nsIFrame* nsComboboxControlFrame::CreateFrameForDisplayNode() {
   MOZ_ASSERT(mDisplayContent);
 
   // Get PresShell
-  mozilla::PresShell* presShell = PresShell();
-  ServoStyleSet* styleSet = presShell->StyleSet();
+  mozilla::PresShell* ps = PresShell();
+  ServoStyleSet* styleSet = ps->StyleSet();
 
   // create the ComputedStyle for the anonymous block frame and text frame
-  RefPtr<ComputedStyle> computedStyle;
-  computedStyle = styleSet->ResolveInheritingAnonymousBoxStyle(
-      PseudoStyleType::mozDisplayComboboxControlFrame, mComputedStyle);
+  RefPtr<ComputedStyle> computedStyle =
+      styleSet->ResolveInheritingAnonymousBoxStyle(
+          PseudoStyleType::mozDisplayComboboxControlFrame, mComputedStyle);
 
-  RefPtr<ComputedStyle> textComputedStyle;
-  textComputedStyle =
+  RefPtr<ComputedStyle> textComputedStyle =
       styleSet->ResolveStyleForText(mDisplayContent, mComputedStyle);
 
   // Start by creating our anonymous block frame
-  mDisplayFrame = new (presShell) nsComboboxDisplayFrame(computedStyle, this);
+  mDisplayFrame = new (ps) nsComboboxDisplayFrame(computedStyle, this);
   mDisplayFrame->Init(mContent, this, nullptr);
 
   // Create a text frame and put it inside the block frame
-  nsIFrame* textFrame = NS_NewTextFrame(presShell, textComputedStyle);
+  nsIFrame* textFrame = NS_NewTextFrame(ps, textComputedStyle);
 
   // initialize the text frame
   textFrame->Init(mDisplayContent, mDisplayFrame, nullptr);
@@ -1324,28 +843,12 @@ nsIFrame* nsComboboxControlFrame::CreateFrameForDisplayNode() {
   return mDisplayFrame;
 }
 
-nsIScrollableFrame* nsComboboxControlFrame::GetScrollTargetFrame() const {
-  return mDropdownFrame;
-}
-
 void nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                          PostDestroyData& aPostDestroyData) {
-  if (sFocused == this) {
-    sFocused = nullptr;
-  }
-
   // Revoke any pending RedisplayTextEvent
   mRedisplayTextEvent.Revoke();
 
-  if (mDroppedDown) {
-    MOZ_ASSERT(mDropdownFrame, "mDroppedDown without frame");
-    nsView* view = mDropdownFrame->GetView();
-    MOZ_ASSERT(view);
-    nsIWidget* widget = view->GetWidget();
-    if (widget) {
-      widget->CaptureRollupEvents(this, false);
-    }
-  }
+  mEventListener->Detach();
 
   // Cleanup frames in popup child list
   mPopupFrames.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
@@ -1389,69 +892,6 @@ void nsComboboxControlFrame::SetInitialChildList(ChildListID aListID,
     NS_ASSERTION(mButtonFrame, "missing button frame in initial child list");
     nsBlockFrame::SetInitialChildList(aListID, aChildList);
   }
-}
-
-//----------------------------------------------------------------------
-// nsIRollupListener
-//----------------------------------------------------------------------
-bool nsComboboxControlFrame::Rollup(uint32_t aCount, bool aFlush,
-                                    const LayoutDeviceIntPoint* pos,
-                                    nsIContent** aLastRolledUp) {
-  if (aLastRolledUp) {
-    *aLastRolledUp = nullptr;
-  }
-
-  if (!mDroppedDown) {
-    return false;
-  }
-
-  bool consume = !!COMBOBOX_ROLLUP_CONSUME_EVENT;
-  AutoWeakFrame weakFrame(this);
-  mDropdownFrame->AboutToRollup();  // might destroy us
-  if (!weakFrame.IsAlive()) {
-    return consume;
-  }
-  ShowDropDown(false);  // might destroy us
-  if (weakFrame.IsAlive()) {
-    mDropdownFrame->CaptureMouseEvents(false);
-  }
-
-  if (aFlush && weakFrame.IsAlive()) {
-    // The popup's visibility doesn't update until the minimize animation has
-    // finished, so call UpdateWidgetGeometry to update it right away.
-    RefPtr<nsViewManager> viewManager =
-        mDropdownFrame->GetView()->GetViewManager();
-    viewManager->UpdateWidgetGeometry();  // might destroy us
-  }
-
-  if (!weakFrame.IsAlive()) {
-    return consume;
-  }
-
-  if (aLastRolledUp) {
-    *aLastRolledUp = GetContent();
-  }
-  return consume;
-}
-
-nsIWidget* nsComboboxControlFrame::GetRollupWidget() {
-  nsView* view = mDropdownFrame->GetView();
-  MOZ_ASSERT(view);
-  return view->GetWidget();
-}
-
-void nsComboboxControlFrame::RollupFromList() {
-  if (ShowList(false)) {
-    mDropdownFrame->CaptureMouseEvents(false);
-  }
-}
-
-int32_t nsComboboxControlFrame::UpdateRecentIndex(int32_t aIndex) {
-  int32_t index = mRecentSelectedIndex;
-  if (mRecentSelectedIndex == NS_SKIP_NOTIFY_INDEX ||
-      aIndex == NS_SKIP_NOTIFY_INDEX)
-    mRecentSelectedIndex = aIndex;
-  return index;
 }
 
 namespace mozilla {
@@ -1507,20 +947,16 @@ void nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 void nsComboboxControlFrame::PaintFocus(DrawTarget& aDrawTarget, nsPoint aPt) {
   /* Do we need to do anything? */
   EventStates eventStates = mContent->AsElement()->State();
-  if (eventStates.HasState(NS_EVENT_STATE_DISABLED) || sFocused != this) return;
+  if (eventStates.HasState(NS_EVENT_STATE_DISABLED) ||
+      !eventStates.HasState(NS_EVENT_STATE_FOCUS)) {
+    return;
+  }
 
   int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
 
   nsRect clipRect = mDisplayFrame->GetRect() + aPt;
   aDrawTarget.PushClipRect(
       NSRectToSnappedRect(clipRect, appUnitsPerDevPixel, aDrawTarget));
-
-  // REVIEW: Why does the old code paint mDisplayFrame again? We've
-  // already painted it in the children above. So clipping it here won't do
-  // us much good.
-
-  /////////////////////
-  // draw focus
 
   StrokeOptions strokeOptions;
   nsLayoutUtils::InitDashPattern(strokeOptions, StyleBorderStyle::Dotted);
@@ -1540,22 +976,17 @@ void nsComboboxControlFrame::PaintFocus(DrawTarget& aDrawTarget, nsPoint aPt) {
 //---------------------------------------------------------
 NS_IMETHODIMP
 nsComboboxControlFrame::OnOptionSelected(int32_t aIndex, bool aSelected) {
-  if (mDroppedDown) {
-    mDropdownFrame->OnOptionSelected(aIndex, aSelected);
+  if (aSelected) {
+    nsAutoScriptBlocker blocker;
+    mDisplayedIndex = aIndex;
+    RedisplayText();
   } else {
-    if (aSelected) {
-      nsAutoScriptBlocker blocker;
-      mDisplayedIndex = aIndex;
-      RedisplayText();
-    } else {
-      AutoWeakFrame weakFrame(this);
-      RedisplaySelectedText();
-      if (weakFrame.IsAlive()) {
-        FireValueChangeEvent();  // Fire after old option is unselected
-      }
+    AutoWeakFrame weakFrame(this);
+    RedisplaySelectedText();
+    if (weakFrame.IsAlive()) {
+      FireValueChangeEvent();  // Fire after old option is unselected
     }
   }
-
   return NS_OK;
 }
 
@@ -1563,51 +994,4 @@ void nsComboboxControlFrame::FireValueChangeEvent() {
   // Fire ValueChange event to indicate data value of combo box has changed
   nsContentUtils::AddScriptRunner(new AsyncEventDispatcher(
       mContent, u"ValueChange"_ns, CanBubble::eYes, ChromeOnlyDispatch::eNo));
-}
-
-void nsComboboxControlFrame::OnContentReset() {
-  mDropdownFrame->OnContentReset();
-}
-
-//--------------------------------------------------------
-// nsIStatefulFrame
-//--------------------------------------------------------
-UniquePtr<PresState> nsComboboxControlFrame::SaveState() {
-  UniquePtr<PresState> state = NewPresState();
-  state->droppedDown() = mDroppedDown;
-  return state;
-}
-
-NS_IMETHODIMP
-nsComboboxControlFrame::RestoreState(PresState* aState) {
-  if (!aState) {
-    return NS_ERROR_FAILURE;
-  }
-  ShowList(aState->droppedDown());  // might destroy us
-  return NS_OK;
-}
-
-// Append a suffix so that the state key for the combobox is different
-// from the state key the list control uses to sometimes save the scroll
-// position for the same Element
-void nsComboboxControlFrame::GenerateStateKey(nsIContent* aContent,
-                                              Document* aDocument,
-                                              nsACString& aKey) {
-  nsContentUtils::GenerateStateKey(aContent, aDocument, aKey);
-  if (aKey.IsEmpty()) {
-    return;
-  }
-  aKey.AppendLiteral("CCF");
-}
-
-// Fennec uses a custom combobox built-in widget.
-//
-
-/* static */
-bool nsComboboxControlFrame::ToolkitHasNativePopup() {
-#ifdef MOZ_USE_NATIVE_POPUP_WINDOWS
-  return true;
-#else
-  return false;
-#endif /* MOZ_USE_NATIVE_POPUP_WINDOWS */
 }

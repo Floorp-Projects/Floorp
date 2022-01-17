@@ -80,7 +80,7 @@ add_task(async function test_subdialog_esc_on_dropdown_does_not_close_dialog() {
     // Open dropdown
     let select = dialog._frame.contentDocument.getElementById("select");
     let shownPromise = BrowserTestUtils.waitForEvent(
-      select,
+      document.getElementById("ContentSelectDropdown"),
       "popupshowing",
       true
     );
@@ -92,7 +92,7 @@ add_task(async function test_subdialog_esc_on_dropdown_does_not_close_dialog() {
     await shownPromise;
 
     let hiddenPromise = BrowserTestUtils.waitForEvent(
-      select,
+      document.getElementById("ContentSelectDropdown"),
       "popuphiding",
       true
     );
