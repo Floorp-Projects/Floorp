@@ -57,3 +57,71 @@ add_task(async function test_fullscreen_display_none() {
     }
   );
 });
+
+add_task(async function test_fullscreen_pointerlock_conflict() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["full-screen-api.enabled", true],
+      ["full-screen-api.allow-trusted-requests-only", false],
+    ],
+  });
+
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+    let fsWarning = document.getElementById("fullscreen-warning");
+    let plWarning = document.getElementById("pointerlock-warning");
+
+    is(
+      fsWarning.getAttribute("onscreen"),
+      null,
+      "Should not show full screen warning initially."
+    );
+    is(
+      plWarning.getAttribute("onscreen"),
+      null,
+      "Should not show pointer lock warning initially."
+    );
+
+    let fsWarningShownPromise = BrowserTestUtils.waitForAttribute(
+      "onscreen",
+      fsWarning,
+      "true"
+    );
+
+    info("Entering full screen and pointer lock.");
+    await SpecialPowers.spawn(browser, [], async () => {
+      await content.document.body.requestFullscreen();
+      await content.document.body.requestPointerLock();
+    });
+
+    await fsWarningShownPromise;
+    is(
+      fsWarning.getAttribute("onscreen"),
+      "true",
+      "Should show full screen warning."
+    );
+    is(
+      plWarning.getAttribute("onscreen"),
+      null,
+      "Should not show pointer lock warning."
+    );
+
+    info("Exiting pointerlock");
+    await SpecialPowers.spawn(browser, [], async () => {
+      await content.document.exitPointerLock();
+    });
+
+    is(
+      fsWarning.getAttribute("onscreen"),
+      "true",
+      "Should still show full screen warning."
+    );
+    is(
+      plWarning.getAttribute("onscreen"),
+      null,
+      "Should not show pointer lock warning."
+    );
+
+    // Cleanup
+    await document.exitFullscreen();
+  });
+});
