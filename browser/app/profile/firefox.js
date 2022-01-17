@@ -569,6 +569,9 @@ pref("browser.search.separatePrivateDefault.ui.banner.max", 0);
 // Enables the display of the Mozilla VPN banner in private browsing windows
 pref("browser.privatebrowsing.vpnpromourl", "https://vpn.mozilla.org/?utm_source=firefox-browser&utm_medium=firefox-%CHANNEL%-browser&utm_campaign=private-browsing-vpn-link");
 
+// Whether the user is opted-in to privacy segmentation.
+pref("browser.privacySegmentation.enabled", false);
+
 pref("browser.sessionhistory.max_entries", 50);
 
 // Built-in default permissions.

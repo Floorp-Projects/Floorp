@@ -3111,3 +3111,19 @@ service_request:
     extra_keys:
       source: the source of the proxy configuration.  e.g. policy, prefs or extension_id
       type: the type for the proxy configuration source.  e.g. api or string version of nsIProtocolProxyService.proxyConfigType
+
+privacy_segmentation:
+  status:
+    description: >
+      Records value changes of the browser.privacySegmentation.enabled pref.
+      Does not record an event for the initial pref state at startup.
+    objects: ["pref"]
+    methods: ["enable", "disable"]
+    release_channel_collection: opt-out
+    record_in_processes: ["main"]
+    bug_numbers: [1748877]
+    notification_emails:
+      - pbz@mozilla.com
+      - rtestard@mozilla.com
+    expiry_version: "106"
+    products: ["firefox"]
