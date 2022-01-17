@@ -2815,6 +2815,17 @@ nsIFrame* EventStateManager::ComputeScrollTargetAndMayAdjustWheelEvent(
       canScroll = true;
     }
 
+    // Comboboxes need special care.
+    nsComboboxControlFrame* comboBox = do_QueryFrame(scrollFrame);
+    if (comboBox) {
+      if (comboBox->IsDroppedDown()) {
+        // Don't propagate to parent when drop down menu is active.
+        return canScroll ? frameToScroll : nullptr;
+      }
+      // Always propagate when not dropped down (even if focused).
+      continue;
+    }
+
     if (canScroll) {
       return frameToScroll;
     }

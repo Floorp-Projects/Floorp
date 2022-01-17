@@ -3,44 +3,33 @@
 
 "use strict";
 
-async function changeMargin(helper, scroll, value) {
-  let marginSelect = helper.get("margins-picker");
-
-  info("  current value is " + marginSelect.value);
-
-  marginSelect.focus();
-
-  if (scroll) {
-    marginSelect.scrollIntoView({ block: "center" });
-  }
-
-  marginSelect.value = value;
-  marginSelect.dispatchEvent(
-    new marginSelect.ownerGlobal.Event("input", {
-      bubbles: true,
-      composed: true,
-    })
-  );
-  marginSelect.dispatchEvent(
-    new marginSelect.ownerGlobal.Event("change", {
-      bubbles: true,
-    })
-  );
-}
-
 function changeDefaultToCustom(helper) {
-  info("Trying to change margin from default -> custom");
-  return changeMargin(helper, true, "custom");
+  let marginSelect = helper.get("margins-picker");
+  marginSelect.focus();
+  marginSelect.scrollIntoView({ block: "center" });
+  EventUtils.sendKey("space", helper.win);
+  EventUtils.sendKey("down", helper.win);
+  EventUtils.sendKey("down", helper.win);
+  EventUtils.sendKey("down", helper.win);
+  EventUtils.sendKey("return", helper.win);
 }
 
 function changeCustomToDefault(helper) {
-  info("Trying to change margin from custom -> default");
-  return changeMargin(helper, false, "default");
+  let marginSelect = helper.get("margins-picker");
+  marginSelect.focus();
+  EventUtils.sendKey("space", helper.win);
+  EventUtils.sendKey("up", helper.win);
+  EventUtils.sendKey("up", helper.win);
+  EventUtils.sendKey("up", helper.win);
+  EventUtils.sendKey("return", helper.win);
 }
 
 function changeCustomToNone(helper) {
-  info("Trying to change margin from custom -> none");
-  return changeMargin(helper, false, "none");
+  let marginSelect = helper.get("margins-picker");
+  marginSelect.focus();
+  EventUtils.sendKey("space", helper.win);
+  EventUtils.sendKey("up", helper.win);
+  EventUtils.sendKey("return", helper.win);
 }
 
 function assertPendingMarginsUpdate(helper) {
@@ -112,7 +101,7 @@ add_task(async function testCustomMarginMaxAttrsSet() {
 
     await helper.startPrint();
     await helper.openMoreSettings();
-    await changeDefaultToCustom(helper);
+    changeDefaultToCustom(helper);
 
     let marginsSelect = helper.get("margins-select");
     is(
@@ -167,7 +156,7 @@ add_task(async function testPresetMargins() {
         is(marginSelect.value, "default", "Default margins set");
         helper.assertSettingsMatch({ honorPageRuleMargins: true });
 
-        await changeDefaultToCustom(helper);
+        changeDefaultToCustom(helper);
 
         is(marginSelect.value, "custom", "Custom margins are now set");
         ok(!customMargins.hidden, "Custom margins are present");
@@ -216,7 +205,7 @@ add_task(async function testHeightError() {
   await PrintHelper.withTestPage(async helper => {
     await helper.startPrint();
     await helper.openMoreSettings();
-    await changeDefaultToCustom(helper);
+    changeDefaultToCustom(helper);
 
     await helper.assertSettingsNotChanged(
       { marginTop: 0.5, marginRight: 0.5, marginBottom: 0.5, marginLeft: 0.5 },
@@ -239,7 +228,7 @@ add_task(async function testWidthError() {
   await PrintHelper.withTestPage(async helper => {
     await helper.startPrint();
     await helper.openMoreSettings();
-    await changeDefaultToCustom(helper);
+    changeDefaultToCustom(helper);
 
     await helper.assertSettingsNotChanged(
       { marginTop: 0.5, marginRight: 0.5, marginBottom: 0.5, marginLeft: 0.5 },
@@ -262,7 +251,7 @@ add_task(async function testInvalidMarginsReset() {
   await PrintHelper.withTestPage(async helper => {
     await helper.startPrint();
     await helper.openMoreSettings();
-    await changeDefaultToCustom(helper);
+    changeDefaultToCustom(helper);
     let marginError = helper.get("error-invalid-margin");
 
     await helper.assertSettingsNotChanged(
@@ -278,13 +267,13 @@ add_task(async function testInvalidMarginsReset() {
       }
     );
 
-    await changeCustomToDefault(helper);
+    this.changeCustomToDefault(helper);
     assertNoPendingMarginsUpdate(helper);
     await BrowserTestUtils.waitForCondition(
       () => marginError.hidden,
       "Wait for margin error to be hidden"
     );
-    await changeDefaultToCustom(helper);
+    changeDefaultToCustom(helper);
     helper.assertSettingsMatch({
       marginTop: 0.5,
       marginRight: 0.5,
@@ -330,7 +319,7 @@ add_task(async function testChangeInvalidToValidUpdate() {
     await setupLetterPaper();
     await helper.startPrint();
     await helper.openMoreSettings();
-    await changeDefaultToCustom(helper);
+    changeDefaultToCustom(helper);
     await helper.awaitAnimationFrame();
     let marginError = helper.get("error-invalid-margin");
 
@@ -378,7 +367,7 @@ add_task(async function testChangeInvalidCanRevalidate() {
     await setupLetterPaper();
     await helper.startPrint();
     await helper.openMoreSettings();
-    await changeDefaultToCustom(helper);
+    changeDefaultToCustom(helper);
     await helper.awaitAnimationFrame();
     let marginError = helper.get("error-invalid-margin");
 
@@ -434,7 +423,7 @@ add_task(async function testCustomMarginsPersist() {
       { marginTop: 0.5, marginRight: 0.5, marginBottom: 0.5, marginLeft: 0.5 },
       { marginTop: 0.25, marginRight: 1, marginBottom: 2, marginLeft: 0 },
       async () => {
-        await changeDefaultToCustom(helper);
+        changeDefaultToCustom(helper);
         await helper.awaitAnimationFrame();
 
         await helper.text(helper.get("custom-margin-top"), "0.25");
@@ -534,7 +523,7 @@ add_task(async function testChangingBetweenMargins() {
       { marginLeft: 0.5 },
       async () => {
         let settingsChanged = helper.waitForSettingsEvent();
-        await changeCustomToDefault(helper);
+        changeCustomToDefault(helper);
         await settingsChanged;
       }
     );
@@ -547,7 +536,7 @@ add_task(async function testChangingBetweenMargins() {
       { marginLeft: 1 },
       async () => {
         let settingsChanged = helper.waitForSettingsEvent();
-        await changeDefaultToCustom(helper);
+        changeDefaultToCustom(helper);
         await settingsChanged;
       }
     );
@@ -560,7 +549,7 @@ add_task(async function testChangingBetweenMargins() {
       { marginLeft: 0.5 },
       async () => {
         let settingsChanged = helper.waitForSettingsEvent();
-        await changeCustomToDefault(helper);
+        changeCustomToDefault(helper);
         await settingsChanged;
       }
     );
@@ -580,7 +569,7 @@ add_task(async function testChangeHonoredInPrint() {
 
     await helper.openMoreSettings();
     helper.assertSettingsMatch({ marginRight: 0.5 });
-    await changeDefaultToCustom(helper);
+    changeDefaultToCustom(helper);
 
     await helper.withClosingFn(async () => {
       await helper.text(helper.get("custom-margin-right"), "1");
@@ -649,7 +638,7 @@ add_task(async function testRevalidateSwitchToNone() {
     await setupLetterPaper();
     await helper.startPrint();
     await helper.openMoreSettings();
-    await changeDefaultToCustom(helper);
+    changeDefaultToCustom(helper);
     await helper.awaitAnimationFrame();
 
     await helper.text(helper.get("custom-margin-bottom"), "6");
@@ -680,7 +669,7 @@ add_task(async function testRevalidateSwitchToNone() {
       { marginTop: 6, marginRight: 0.5, marginBottom: 3, marginLeft: 0.5 },
       { marginTop: 0, marginRight: 0, marginBottom: 0, marginLeft: 0 },
       async () => {
-        await changeCustomToNone(helper);
+        this.changeCustomToNone(helper);
         is(
           helper.get("margins-picker").value,
           "none",
@@ -712,7 +701,7 @@ add_task(async function testInvalidMarginResetAfterDestinationChange() {
     let destinationPicker = helper.get("printer-picker");
 
     await helper.openMoreSettings();
-    await changeDefaultToCustom(helper);
+    changeDefaultToCustom(helper);
     await helper.awaitAnimationFrame();
 
     let marginError = helper.get("error-invalid-margin");
@@ -754,7 +743,7 @@ add_task(async function testRevalidateCustomMarginsAfterPaperChanges() {
     await helper.startPrint();
     helper.dispatchSettingsChange({ paperId: "iso_a3" });
     await helper.openMoreSettings();
-    await changeDefaultToCustom(helper);
+    changeDefaultToCustom(helper);
     await helper.awaitAnimationFrame();
     let marginError = helper.get("error-invalid-margin");
 
@@ -795,7 +784,7 @@ add_task(async function testRevalidateCustomMarginsAfterOrientationChanges() {
     await setupLetterPaper();
     await helper.startPrint();
     await helper.openMoreSettings();
-    await changeDefaultToCustom(helper);
+    changeDefaultToCustom(helper);
     await helper.awaitAnimationFrame();
     let marginError = helper.get("error-invalid-margin");
 
@@ -832,7 +821,7 @@ add_task(async function testResetMarginPersists() {
     await helper.startPrint();
 
     await helper.openMoreSettings();
-    await changeDefaultToCustom(helper);
+    changeDefaultToCustom(helper);
     await helper.awaitAnimationFrame();
     let marginError = helper.get("error-invalid-margin");
 

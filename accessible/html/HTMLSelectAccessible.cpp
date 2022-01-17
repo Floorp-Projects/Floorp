@@ -16,7 +16,6 @@
 
 #include "nsCOMPtr.h"
 #include "mozilla/dom/HTMLOptionElement.h"
-#include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "nsComboboxControlFrame.h"
 #include "nsContainerFrame.h"
@@ -122,20 +121,22 @@ role HTMLSelectOptionAccessible::NativeRole() const {
 }
 
 ENameValueFlag HTMLSelectOptionAccessible::NativeName(nsString& aName) const {
-  if (auto* option = dom::HTMLOptionElement::FromNode(mContent)) {
-    option->GetAttr(nsGkAtoms::label, aName);
-    if (!aName.IsEmpty()) {
-      return eNameOK;
-    }
-    option->GetText(aName);
-    return eNameFromSubtree;
-  }
-  if (auto* group = dom::HTMLOptGroupElement::FromNode(mContent)) {
-    group->GetLabel(aName);
+  // CASE #1 -- great majority of the cases
+  // find the label attribute - this is what the W3C says we should use
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
+  if (!aName.IsEmpty()) return eNameOK;
+
+  // CASE #2 -- no label parameter, get the first child,
+  // use it if it is a text node
+  LocalAccessible* firstChild = LocalFirstChild();
+  nsIContent* text = firstChild ? firstChild->GetContent() : nullptr;
+  if (text && text->IsText()) {
+    nsTextEquivUtils::AppendTextEquivFromTextContent(text, &aName);
+    aName.CompressWhitespace();
     return aName.IsEmpty() ? eNameOK : eNameFromSubtree;
   }
-  MOZ_ASSERT_UNREACHABLE("What content do we have?");
-  return eNameFromSubtree;
+
+  return eNameOK;
 }
 
 void HTMLSelectOptionAccessible::DOMAttributeChanged(
@@ -307,10 +308,14 @@ HTMLComboboxAccessible::HTMLComboboxAccessible(nsIContent* aContent,
   mGenericTypes |= eCombobox;
   mStateFlags |= eNoKidsFromDOM;
 
-  if ((nsComboboxControlFrame*)do_QueryFrame(GetFrame())) {
-    mListAccessible = new HTMLComboboxListAccessible(mParent, mContent, mDoc);
-    Document()->BindToDocument(mListAccessible, nullptr);
-    AppendChild(mListAccessible);
+  nsComboboxControlFrame* comboFrame = do_QueryFrame(GetFrame());
+  if (comboFrame) {
+    nsIFrame* listFrame = comboFrame->GetDropDown();
+    if (listFrame) {
+      mListAccessible = new HTMLComboboxListAccessible(mParent, mContent, mDoc);
+      Document()->BindToDocument(mListAccessible, nullptr);
+      AppendChild(mListAccessible);
+    }
   }
 }
 
@@ -452,6 +457,16 @@ HTMLComboboxListAccessible::HTMLComboboxListAccessible(LocalAccessible* aParent,
 
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLComboboxAccessible: LocalAccessible
+
+nsIFrame* HTMLComboboxListAccessible::GetFrame() const {
+  nsIFrame* frame = HTMLSelectListAccessible::GetFrame();
+  nsComboboxControlFrame* comboBox = do_QueryFrame(frame);
+  if (comboBox) {
+    return comboBox->GetDropDown();
+  }
+
+  return nullptr;
+}
 
 role HTMLComboboxListAccessible::NativeRole() const {
   return roles::COMBOBOX_LIST;

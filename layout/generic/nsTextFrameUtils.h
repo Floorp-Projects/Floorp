@@ -146,9 +146,7 @@ class nsTextFrameUtils {
   }
 
   static uint32_t ComputeApproximateLengthWithWhitespaceCompression(
-      mozilla::dom::Text*, const nsStyleText*);
-  static uint32_t ComputeApproximateLengthWithWhitespaceCompression(
-      const nsAString&, const nsStyleText*);
+      mozilla::dom::Text* aText, const nsStyleText* aStyleText);
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(nsTextFrameUtils::Flags)

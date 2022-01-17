@@ -90,7 +90,7 @@ class HTMLOptionElement final : public nsGenericHTMLElement {
     }
   }
 
-  void GetLabel(nsAString& aLabel) {
+  void GetLabel(DOMString& aLabel) {
     if (!GetAttr(kNameSpaceID_None, nsGkAtoms::label, aLabel)) {
       GetText(aLabel);
     }
