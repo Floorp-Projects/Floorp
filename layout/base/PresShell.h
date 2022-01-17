@@ -1281,10 +1281,6 @@ class PresShell final : public nsStubDocumentObserver,
   // Widget notificiations
   void WindowSizeMoveDone();
 
-  void ThemeChanged(widget::ThemeChangeKind aChangeKind) {
-    mPresContext->ThemeChanged(aChangeKind);
-  }
-
   void BackingScaleFactorChanged() { mPresContext->UIResolutionChangedSync(); }
 
   /**
