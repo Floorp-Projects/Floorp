@@ -10,7 +10,9 @@ add_task(async function setup() {
   await http3_setup_tests("h3-29");
 });
 
-let Http3Listener = function() {};
+let Http3Listener = function(amount) {
+  this.amount = amount;
+};
 
 Http3Listener.prototype = {
   expectedStatus: Cr.NS_OK,
@@ -111,8 +113,7 @@ function generateContent(size) {
 // buffer side, therefore ReadSegments will be called multiple times.
 add_task(async function test_large_post() {
   let amount = 1 << 16;
-  let listener = new Http3Listener();
-  listener.amount = amount;
+  let listener = new Http3Listener(amount);
   let chan = makeChan("https://foo.example.com/post", amount);
   chan.notificationCallbacks = listener;
   await chanPromise(chan, listener);
@@ -123,9 +124,42 @@ add_task(async function test_large_post() {
 // space is freed
 add_task(async function test_large_post2() {
   let amount = 1 << 23;
-  let listener = new Http3Listener();
-  listener.amount = amount;
+  let listener = new Http3Listener(amount);
   let chan = makeChan("https://foo.example.com/post", amount);
+  chan.notificationCallbacks = listener;
+  await chanPromise(chan, listener);
+});
+
+// Send a post in the same way viaduct does in bug 1749957.
+add_task(async function test_bug1749957_bug1750056() {
+  let amount = 200; // Tests the bug as long as it's non-zero.
+  let uri = "https://foo.example.com/post";
+  let listener = new Http3Listener(amount);
+
+  let chan = NetUtil.newChannel({
+    uri,
+    loadUsingSystemPrincipal: true,
+  }).QueryInterface(Ci.nsIHttpChannel);
+
+  // https://searchfox.org/mozilla-central/rev/1920b17ac5988fcfec4e45e2a94478ebfbfc6f88/toolkit/components/viaduct/ViaductRequest.cpp#120-152
+  {
+    chan.requestMethod = "POST";
+    chan.setRequestHeader("content-length", "" + amount, /* aMerge = */ false);
+
+    let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
+      Ci.nsIStringInputStream
+    );
+    stream.data = generateContent(amount);
+    let uchan = chan.QueryInterface(Ci.nsIUploadChannel2);
+    uchan.explicitSetUploadStream(
+      stream,
+      /* aContentType = */ "",
+      /* aContentLength = */ -1,
+      "POST",
+      /* aStreamHasHeaders = */ false
+    );
+  }
+
   chan.notificationCallbacks = listener;
   await chanPromise(chan, listener);
 });
