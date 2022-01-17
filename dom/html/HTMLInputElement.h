@@ -233,8 +233,8 @@ class HTMLInputElement final : public TextControlElement,
   MOZ_CAN_RUN_SCRIPT nsresult
   SetValueFromSetRangeText(const nsAString& aValue) override;
   bool HasCachedSelection() override;
-  void SetShowPassword(bool aValue);
-  bool ShowPassword() const;
+  void SetRevealPassword(bool aValue);
+  bool RevealPassword() const;
 
   /**
    * TextEditorValueEquals() is designed for internal use so that aValue
