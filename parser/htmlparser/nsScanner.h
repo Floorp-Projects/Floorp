@@ -50,7 +50,7 @@ class nsScanner final {
    *  Use this constructor if you want i/o to be based on
    *  a file (therefore a stream) or just data you provide via Append().
    */
-  nsScanner(nsString& aFilename, bool aCreateStream);
+  nsScanner(nsIURI* aURI, bool aCreateStream);
 
   ~nsScanner();
 
@@ -124,14 +124,11 @@ class nsScanner final {
   bool CopyUnusedData(nsString& aCopyBuffer);
 
   /**
-   *  Retrieve the name of the file that the scanner is reading from.
+   *  Retrieve the URI of the file that the scanner is reading from.
    *  In some cases, it's just a given name, because the scanner isn't
    *  really reading from a file.
-   *
-   *  @update  gess 5/12/98
-   *  @return
    */
-  nsString& GetFilename(void);
+  nsIURI* GetURI(void) const { return mURI; }
 
   static void SelfTest();
 
@@ -177,7 +174,7 @@ class nsScanner final {
   nsScannerIterator
       mMarkPosition;  // The position last marked (we may rewind to here)
   nsScannerIterator mEndPosition;  // The current end of the scanner buffer
-  nsString mFilename;
+  nsCOMPtr<nsIURI> mURI;
   bool mIncremental;
   int32_t mCharsetSource;
   nsCString mCharset;

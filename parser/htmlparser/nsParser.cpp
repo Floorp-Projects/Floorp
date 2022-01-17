@@ -391,7 +391,7 @@ nsParser::CancelParsingEvents() {
  * can delay until the last moment the resolution of
  * which DTD to use (unless of course we're assigned one).
  */
-nsresult nsParser::WillBuildModel(nsString& aFilename) {
+nsresult nsParser::WillBuildModel() {
   if (!mParserContext) return NS_ERROR_HTMLPARSER_INVALIDPARSERCONTEXT;
 
   if (mInternalState == NS_ERROR_OUT_OF_MEMORY) {
@@ -701,18 +701,7 @@ nsParser::Parse(nsIURI* aURL, void* aKey) {
   nsresult result = NS_ERROR_HTMLPARSER_BADURL;
 
   if (aURL) {
-    nsAutoCString spec;
-    nsresult rv = aURL->GetSpec(spec);
-    if (rv != NS_OK) {
-      return rv;
-    }
-    nsString theName;  // Not nsAutoString due to length and usage
-    if (!CopyUTF8toUTF16(spec, theName, mozilla::fallible)) {
-      mInternalState = NS_ERROR_OUT_OF_MEMORY;
-      return mInternalState;
-    }
-
-    nsScanner* theScanner = new nsScanner(theName, false);
+    nsScanner* theScanner = new nsScanner(aURL, false);
     CParserContext* pc =
         new CParserContext(mParserContext, theScanner, aKey, mCommand);
     if (pc && theScanner) {
@@ -969,7 +958,7 @@ nsresult nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
   nsresult result = NS_OK;
 
   if (!mBlocked && mInternalState != NS_ERROR_HTMLPARSER_STOPPARSING) {
-    result = WillBuildModel(mParserContext->mScanner->GetFilename());
+    result = WillBuildModel();
     if (NS_FAILED(result)) {
       mFlags &= ~NS_PARSER_FLAG_CAN_TOKENIZE;
       return result;
