@@ -134,6 +134,33 @@ def variable_name(var: str) -> str:
         return var
 
 
+class BuildInfo:
+    def __init__(self, build_date):
+        self.build_date = build_date
+
+
+def generate_build_date(date: Optional[str]) -> str:
+    """
+    Generate the build timestamp.
+    """
+
+    ts = util.build_date(date)
+
+    data = [
+        ("year", ts.year),
+        ("month", ts.month),
+        ("day", ts.day),
+        ("hour", ts.hour),
+        ("minute", ts.minute),
+        ("second", ts.second),
+    ]
+
+    # The internal DatetimeMetricType API can take a `DateComponents` object,
+    # which lets us easily specify the timezone.
+    components = ", ".join([f"{name}: {val}" for (name, val) in data])
+    return f'DateComponents(calendar: Calendar.current, timeZone: TimeZone(abbreviation: "UTC"), {components})'  # noqa
+
+
 class Category:
     """
     Data struct holding information about a metric to be used in the template.
@@ -157,6 +184,14 @@ def output_swift(
         - namespace: The namespace to generate metrics in
         - glean_namespace: The namespace to import Glean from
         - allow_reserved: When True, this is a Glean-internal build
+        - with_buildinfo: If "true" the `GleanBuildInfo` is generated.
+          Otherwise generation of that file is skipped.
+          Defaults to "true".
+        - build_date: If set to `0` a static unix epoch time will be used.
+                      If set to a ISO8601 datetime string (e.g. `2022-01-03T17:30:00`)
+                      it will use that date.
+                      Other values will throw an error.
+                      If not set it will use the current date & time.
     """
     if options is None:
         options = {}
@@ -174,6 +209,12 @@ def output_swift(
 
     namespace = options.get("namespace", "GleanMetrics")
     glean_namespace = options.get("glean_namespace", "Glean")
+    with_buildinfo = options.get("with_buildinfo", "true").lower() == "true"
+    build_date = options.get("build_date", None)
+    build_info = None
+    if with_buildinfo:
+        build_date = generate_build_date(build_date)
+        build_info = BuildInfo(build_date=build_date)
 
     filename = "Metrics.swift"
     filepath = output_dir / filename
@@ -199,6 +240,7 @@ def output_swift(
                 namespace=namespace,
                 glean_namespace=glean_namespace,
                 allow_reserved=options.get("allow_reserved", False),
+                build_info=build_info,
             )
         )
         # Jinja2 squashes the final newline, so we explicitly add it

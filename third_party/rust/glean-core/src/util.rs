@@ -48,8 +48,7 @@ pub fn get_iso_time_string(datetime: DateTime<FixedOffset>, truncate_to: TimeUni
 ///
 /// This converts from the `Local` timezone into its fixed-offset equivalent.
 /// If a timezone outside of [-24h, +24h] is detected it corrects the timezone offset to UTC (+0).
-/// The return value will signal if the timezone offset was corrected.
-pub(crate) fn local_now_with_offset() -> (DateTime<FixedOffset>, bool) {
+pub(crate) fn local_now_with_offset() -> DateTime<FixedOffset> {
     #[cfg(target_os = "windows")]
     {
         // `Local::now` takes the user's timezone offset
@@ -84,29 +83,12 @@ pub(crate) fn local_now_with_offset() -> (DateTime<FixedOffset>, bool) {
             );
             let now: DateTime<Utc> = Utc::now();
             let utc_offset = FixedOffset::east(0);
-            return (now.with_timezone(&utc_offset), true);
+            return now.with_timezone(&utc_offset);
         }
     }
 
     let now: DateTime<Local> = Local::now();
-    (now.with_timezone(now.offset()), false)
-}
-
-/// Get the current date & time with a fixed-offset timezone.
-///
-/// This converts from the `Local` timezone into its fixed-offset equivalent.
-/// If a timezone outside of [-24h, +24h] is detected it corrects the timezone offset to UTC (+0).
-/// The corresponding error counter is incremented in this case.
-pub(crate) fn local_now_with_offset_and_record(glean: &Glean) -> DateTime<FixedOffset> {
-    let (now, is_corrected) = local_now_with_offset();
-    if is_corrected {
-        glean
-            .additional_metrics
-            .invalid_timezone_offset
-            .add(glean, 1);
-    }
-
-    now
+    now.with_timezone(now.offset())
 }
 
 /// Truncates a string, ensuring that it doesn't end in the middle of a codepoint.
@@ -297,11 +279,7 @@ mod test {
     #[test]
     fn local_now_gets_the_time() {
         let now = Local::now();
-        let (fixed_now, is_corrected) = local_now_with_offset();
-
-        // We explicitly test that NO invalid timezone offset was recorded.
-        // If it _does_ happen and fails on a developer machine or CI, we better know about it.
-        assert!(!is_corrected, "Timezone offset should be valid.");
+        let fixed_now = local_now_with_offset();
 
         // We can't compare across differing timezones, so we just compare the UTC timestamps.
         // The second timestamp should be just a few nanoseconds later.

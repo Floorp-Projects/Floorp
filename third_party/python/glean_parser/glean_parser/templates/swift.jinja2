@@ -60,6 +60,16 @@ import {{ glean_namespace }}
 // swiftlint:disable force_try
 
 extension {{ namespace }} {
+    {% if build_info %}
+    class GleanBuild {
+        private init() {
+            // Intentionally left private, no external user can instantiate a new global object.
+        }
+
+        public static let info = BuildInfo(buildDate: {{ build_info.build_date }})
+    }
+    {% endif %}
+
     {% for category in categories %}
     {% if category.contains_pings %}
     class {{ category.name|Camelize }} {

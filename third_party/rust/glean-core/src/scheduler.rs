@@ -73,7 +73,7 @@ impl MetricsPingScheduler for GleanMetricsPingScheduler {
 /// **Must** be called before draining the preinit queue.
 /// (We're at the Language Bindings' mercy for that)
 pub fn schedule(glean: &Glean) {
-    let now = local_now_with_offset().0;
+    let now = local_now_with_offset();
 
     let (cancelled_lock, _condvar) = &**TASK_CONDVAR;
     if *cancelled_lock.lock().unwrap() {
@@ -233,7 +233,7 @@ fn start_scheduler(
                     submitter.submit_metrics_ping(&glean, Some(when.reason()), now);
                     when = When::Reschedule;
                 }
-                now = local_now_with_offset().0;
+                now = local_now_with_offset();
             }
         }).expect("Unable to spawn Metrics Ping Scheduler thread.")
 }
@@ -337,7 +337,7 @@ mod test {
             |_, when| assert_eq!(when, When::Reschedule),
         );
 
-        schedule_internal(&glean, submitter, scheduler, local_now_with_offset().0);
+        schedule_internal(&glean, submitter, scheduler, local_now_with_offset());
         assert_eq!(1, submitter_count.swap(0, Ordering::Relaxed));
         assert_eq!(1, scheduler_count.swap(0, Ordering::Relaxed));
     }

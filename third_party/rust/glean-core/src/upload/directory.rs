@@ -171,7 +171,7 @@ impl PingDirectoryManager {
         if let (Some(Ok(path)), Some(Ok(body)), Ok(metadata)) =
             (lines.next(), lines.next(), lines.next().transpose())
         {
-            let headers = metadata.map(|m| process_metadata(&path, &m)).flatten();
+            let headers = metadata.and_then(|m| process_metadata(&path, &m));
             return Some((document_id.into(), path, body, headers));
         } else {
             log::warn!(
