@@ -23,6 +23,10 @@
 class nsIExpatSink;
 struct nsCatalogData;
 class RLBoxExpatSandboxData;
+namespace mozilla {
+template <typename, size_t>
+class Array;
+}
 
 class nsExpatDriver : public nsIDTD, public nsITokenizer {
   virtual ~nsExpatDriver();
@@ -71,9 +75,9 @@ class nsExpatDriver : public nsIDTD, public nsITokenizer {
   // Load up an external stream to get external entity information
   nsresult OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
                                           const char16_t* aURLStr,
-                                          const char16_t* aBaseURL,
+                                          nsIURI* aBaseURI,
                                           nsIInputStream** aStream,
-                                          nsAString& aAbsURL);
+                                          nsIURI** aAbsURI);
 
   /**
    * Pass a buffer to Expat. If Expat is blocked aBuffer should be null and
@@ -111,6 +115,34 @@ class nsExpatDriver : public nsIDTD, public nsITokenizer {
     return mInternalState == NS_ERROR_HTMLPARSER_BLOCK ||
            mInternalState == NS_ERROR_HTMLPARSER_INTERRUPTED;
   }
+
+  // Expat allows us to set the base URI for entities. It doesn't use the base
+  // URI itself, but just passes it along to all the entity handlers (just the
+  // external entity reference handler for us). It does expect the base URI as a
+  // null-terminated string, with the same character type as the parsed buffers
+  // (char16_t in our case). Because nsIURI stores a UTF-8 string we have to do
+  // a conversion to UTF-16 for Expat. We also RLBox the Expat parser, so we
+  // also do 2 copies (into RLBox sandbox, and Expat does a copy into its pool).
+  // Most of the time this base URI is unused (the external entity handler is
+  // rarely called), but when it is we also convert it back to a nsIURI, so we
+  // convert the string back to UTF-8.
+  //
+  // We'd rather not do any of these conversions and copies, so we use a (hacky)
+  // workaround. We store all base URIs in an array of nsIURIs. Instead of
+  // passing the real URI to Expat as a string, we pass it a null-terminated
+  // 2-character buffer. The first character of that buffer stores the index of
+  // the corresponding nsIURI in the array (incremented with 1 because 0 is used
+  // to terminate a string). The entity handler can then use the index from the
+  // base URI that Expat passes it to look up the right nsIURI from the array.
+  //
+  // GetExpatBaseURI pushes the nsIURI to the array, and creates the
+  // two-character buffer for it.
+  //
+  // GetBaseURI looks up the right nsIURI in the array, based on the index from
+  // the two-character buffer.
+  using ExpatBaseURI = mozilla::Array<XML_Char, 2>;
+  ExpatBaseURI GetExpatBaseURI(nsIURI* aURI);
+  nsIURI* GetBaseURI(const XML_Char* aBase) const;
 
   RLBoxExpatSandboxData* SandboxData() const;
   rlbox_sandbox_expat* Sandbox() const;
@@ -153,7 +185,7 @@ class nsExpatDriver : public nsIDTD, public nsITokenizer {
   nsCOMPtr<nsIExpatSink> mSink;
 
   const nsCatalogData* mCatalogData;  // weak
-  nsString mURISpec;
+  nsTArray<nsCOMPtr<nsIURI>> mURIs;
 
   // Used for error reporting.
   uint64_t mInnerWindowID;

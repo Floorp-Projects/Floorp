@@ -69,8 +69,7 @@ nsScanner::nsScanner(const nsAString& anHTMLString) {
  *  the scanner receives. If you pass a null filename, you
  *  can still provide data to the scanner via append.
  */
-nsScanner::nsScanner(nsString& aFilename, bool aCreateStream)
-    : mFilename(aFilename) {
+nsScanner::nsScanner(nsIURI* aURI, bool aCreateStream) : mURI(aURI) {
   MOZ_COUNT_CTOR(nsScanner);
   NS_ASSERTION(!aCreateStream, "This is always true.");
 
@@ -336,16 +335,6 @@ bool nsScanner::CopyUnusedData(nsString& aCopyBuffer) {
 
   return CopyUnicodeTo(start, end, aCopyBuffer);
 }
-
-/**
- *  Retrieve the name of the file that the scanner is reading from.
- *  In some cases, it's just a given name, because the scanner isn't
- *  really reading from a file.
- *
- *  @update  gess 5/12/98
- *  @return
- */
-nsString& nsScanner::GetFilename(void) { return mFilename; }
 
 /**
  *  Conduct self test. Actually, selftesting for this class
