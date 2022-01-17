@@ -39,8 +39,8 @@ class ContextMenuParent extends JSWindowActorParent {
     });
   }
 
-  toggleShowPassword(targetIdentifier) {
-    this.sendAsyncMessage("ContextMenu:ToggleShowPassword", {
+  toggleRevealPassword(targetIdentifier) {
+    this.sendAsyncMessage("ContextMenu:ToggleRevealPassword", {
       targetIdentifier,
     });
   }

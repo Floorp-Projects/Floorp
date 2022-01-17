@@ -160,9 +160,9 @@ class ContextMenuChild extends JSWindowActorChild {
         break;
       }
 
-      case "ContextMenu:ToggleShowPassword": {
+      case "ContextMenu:ToggleRevealPassword": {
         let target = ContentDOMReference.resolve(message.data.targetIdentifier);
-        target.showPassword = !target.showPassword;
+        target.revealPassword = !target.revealPassword;
         break;
       }
 
@@ -1067,7 +1067,7 @@ class ContextMenuChild extends JSWindowActorChild {
       context.onEditable = (editFlags & SpellCheckHelper.EDITABLE) !== 0;
       context.onPassword = (editFlags & SpellCheckHelper.PASSWORD) !== 0;
       context.passwordRevealed =
-        context.onPassword && context.target.showPassword;
+        context.onPassword && context.target.revealPassword;
       context.onSpellcheckable =
         (editFlags & SpellCheckHelper.SPELLCHECKABLE) !== 0;
 
