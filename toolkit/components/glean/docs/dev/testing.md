@@ -32,10 +32,45 @@ To turn on logging for FOG, use any of the following:
     * `logging.glean_core::*` to `5`
     * `logging.config.clear_on_startup` to `false` (or all these prefs will be cleared on startup)
 
-For more information on logging in Firefox Desktop, see the
-[Gecko Logging docs](https://developer.mozilla.org/docs/Mozilla/Developer_guide/Gecko_Logging).
+For more information on logging in Gecko, see the
+[Gecko Logging docs](/xpcom/logging).
 
-**Note:** At present Rust logging in non-main processes just doesn't work.
+User-destined logs (of the "You did something wrong" variety) might output to the
+[Browser Console](/devtools-user/browser_console/index)
+if they originate in JS land. Open via
+<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>J</kbd>, or
+<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>J</kbd>.
+
+```{admonition} Note
+At present, Rust logging in non-main processes just doesn't work.
+```
+
+### What to log, and to where?
+
+FOG covers a lot a ground (languages, layers):
+where you are determines what logging you have available.
+
+Here are some common situtations for logging:
+
+#### JS to C++
+
+If your logging is aimed at the user using the JS API
+(e.g. because the type provided isn't convertable to the necessary C++ type)
+then use the Browser Console via
+[FOG's Common's `LogToBrowserConsole`](https://searchfox.org/mozilla-central/rev/d107bc8aeadcc816ba85cb21c1a6a1aac1d4ef9f/toolkit/components/glean/bindings/private/Common.cpp#19).
+
+#### C++
+
+If you are in C++ and didn't come from JS, use `MOZ_LOG` with module `fog`.
+
+#### Rust
+
+Use the logging macros from `log`, e.g. `log::info!` or `log::error!`.
+Remember that, no matter the log level, `log::debug!` and `log::trace!`
+[will not appear in non-debug builds](/testing-rust-code/index.html#gecko-logging)
+
+If you are logging due to a situation caused by and fixable by a developer using the API,
+use `log::error!(...)`. Otherwise, use a quieter level.
 
 ## `about:glean`
 
