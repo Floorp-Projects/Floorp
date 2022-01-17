@@ -58,18 +58,15 @@ need to download a Marionette client or use the in-tree client.
     at a Python command prompt][2]
   * Start [writing and running][3] tests
   * Tips on [debugging][4] Marionette code
-  * [Get a Build][5] – Instructions on how to get a Marionette-enabled
-    build of Firefox
-  * [Download and setup the Marionette JS client][6]
-  * [Protocol definition][7]
+  * [Download and setup the Marionette JS client][5]
+  * [Protocol definition][6]
 
 [1]: /python/marionette_driver.rst
 [2]: /python/marionette_driver.rst
 [3]: PythonTests.md
 [4]: Debugging.md
-[5]: https://developer.mozilla.org/en-US/docs/Marionette/Builds
-[6]: https://github.com/mozilla-b2g/marionette_js_client
-[7]: Protocol.md
+[5]: https://github.com/mozilla-b2g/marionette_js_client
+[6]: Protocol.md
 
 
 Bugs
@@ -79,4 +76,4 @@ Please file any bugs you may find in the `Testing :: Marionette`
 component in Bugzilla.  You can view a [list of current bugs]
 to see if your problem is already being addressed.
 
-[list of current bugs]: https://bugzilla.mozilla.org/buglist.cgi?product=Testing&component=Marionette&resolution=---&list_id=1844713
+[list of current bugs]: https://bugzilla.mozilla.org/buglist.cgi?product=Testing&component=Marionette

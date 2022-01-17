@@ -59,4 +59,4 @@ ephemeral port range, which varies depending on your system and
 system configuration, but is always guaranteed to be free thus
 eliminating the risk of binding to a port that is already in use.
 
-[Firefox Nightly]: https://www.mozilla.org/en-GB/firefox/channel/desktop/#nightly
+[Firefox Nightly]: https://www.mozilla.org/firefox/channel/desktop/#nightly
