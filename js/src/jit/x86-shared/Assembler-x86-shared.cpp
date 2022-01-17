@@ -208,6 +208,7 @@ bool CPUInfo::popcntPresent = false;
 bool CPUInfo::bmi1Present = false;
 bool CPUInfo::bmi2Present = false;
 bool CPUInfo::lzcntPresent = false;
+bool CPUInfo::avx2Present = false;
 
 namespace js {
 namespace jit {
@@ -334,6 +335,8 @@ void CPUInfo::SetSSEVersion() {
 
   static constexpr int BMI1Bit = 1 << 3;
   static constexpr int BMI2Bit = 1 << 8;
+  static constexpr int AVX2Bit = 1 << 5;
   bmi1Present = (flagsEbx & BMI1Bit);
   bmi2Present = bmi1Present && (flagsEbx & BMI2Bit);
+  avx2Present = avxPresent && (flagsEbx & AVX2Bit);
 }
