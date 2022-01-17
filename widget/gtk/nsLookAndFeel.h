@@ -15,6 +15,7 @@
 
 enum WidgetNodeType : int;
 struct _GtkStyle;
+typedef struct _GDBusProxy GDBusProxy;
 
 class nsLookAndFeel final : public nsXPLookAndFeel {
  public:
@@ -51,6 +52,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   static bool WidgetUsesImage(WidgetNodeType aNodeType);
   void RecordLookAndFeelSpecificTelemetry() override;
   static bool ShouldHonorThemeScrollbarColors();
+  mozilla::Maybe<ColorScheme> ComputeColorSchemeSetting();
 
   // We use up to two themes (one light, one dark), which might have different
   // sets of fonts and colors.
@@ -141,6 +143,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   // alternative theme to the current one is preferred, but otherwise we fall
   // back to Adwaita / Adwaita Dark, respectively.
   PerThemeData mAltTheme;
+
+  GDBusProxy* mDBusSettingsProxy = nullptr;
 
   const PerThemeData& LightTheme() const {
     return mSystemTheme.mIsDark ? mAltTheme : mSystemTheme;

@@ -113,6 +113,9 @@ bool ShouldUsePortal(PortalKind aPortalKind) {
         // flatpak is enabled.
         autoBehavior = IsRunningUnderFlatpak();
         return StaticPrefs::widget_use_xdg_desktop_portal_print();
+      case PortalKind::Settings:
+        autoBehavior = true;
+        return StaticPrefs::widget_use_xdg_desktop_portal_settings();
     }
     return 2;
   }();
