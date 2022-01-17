@@ -1079,21 +1079,24 @@
               popup.setAttribute("position", "after_end");
               parent.prepend(popup);
               parent.setAttribute("type", "menu");
-              if (newTabLeftClickOpensContainersMenu) {
-                gClickAndHoldListenersOnElement.remove(parent);
-                // Update tooltip text
-                nodeToTooltipMap[parent.id] = "newTabAlwaysContainer.tooltip";
-              } else {
-                gClickAndHoldListenersOnElement.add(parent);
-                nodeToTooltipMap[parent.id] = "newTabContainer.tooltip";
-              }
+              // Update tooltip text
+              nodeToTooltipMap[parent.id] = newTabLeftClickOpensContainersMenu
+                ? "newTabAlwaysContainer.tooltip"
+                : "newTabContainer.tooltip";
             } else {
               nodeToTooltipMap[parent.id] = "newTabButton.tooltip";
               parent.removeAttribute("context", "new-tab-button-popup");
             }
-
             // evict from tooltip cache
             gDynamicTooltipCache.delete(parent.id);
+
+            // If containers and press-hold container menu are both used,
+            // add to gClickAndHoldListenersOnElement; otherwise, remove.
+            if (containersEnabled && !newTabLeftClickOpensContainersMenu) {
+              gClickAndHoldListenersOnElement.add(parent);
+            } else {
+              gClickAndHoldListenersOnElement.remove(parent);
+            }
           }
 
           break;
