@@ -20,14 +20,6 @@ pub struct AdditionalMetrics {
 
     /// A count of the pings submitted, by ping type.
     pub pings_submitted: LabeledMetric<CounterMetric>,
-
-    /// The number of times we encountered an invalid timezone offset
-    /// (outside of [-24, +24] hours).
-    ///
-    /// **Note**: This metric has an expiration date set.
-    /// However because it's statically defined here we can't specify that.
-    /// Needs to be removed after 2021-06-30.
-    pub invalid_timezone_offset: CounterMetric,
 }
 
 impl CoreMetrics {
@@ -101,15 +93,6 @@ impl AdditionalMetrics {
                 }),
                 None,
             ),
-
-            invalid_timezone_offset: CounterMetric::new(CommonMetricData {
-                name: "invalid_timezone_offset".into(),
-                category: "glean.time".into(),
-                send_in_pings: vec!["metrics".into()],
-                lifetime: Lifetime::Ping,
-                disabled: false,
-                dynamic_label: None,
-            }),
         }
     }
 }

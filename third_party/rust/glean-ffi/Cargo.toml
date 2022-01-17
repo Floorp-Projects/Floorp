@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "glean-ffi"
-version = "42.3.0"
+version = "43.0.2"
 authors = ["Jan-Erik Rediger <jrediger@mozilla.com>", "The Glean Team <glean-team@mozilla.com>"]
 include = ["/README.md", "/LICENSE", "/src", "/tests", "/Cargo.toml", "/cbindgen.toml", "/glean.h"]
 description = "FFI layer for Glean, a modern Telemetry library"
@@ -28,7 +28,7 @@ crate-type = ["lib"]
 version = "0.4.0"
 
 [dependencies.glean-core]
-version = "42.3.0"
+version = "43.0.2"
 
 [dependencies.log]
 version = "0.4.8"
