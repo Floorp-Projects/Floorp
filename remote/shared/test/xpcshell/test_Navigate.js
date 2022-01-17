@@ -6,82 +6,86 @@ const { waitForInitialNavigationCompleted } = ChromeUtils.import(
   "chrome://remote/content/shared/Navigate.jsm"
 );
 
-const mockWebProgress = {
-  onStateChangeCalled: false,
-  isLoadingDocument: false,
+class MockWebProgress {
+  constructor(browsingContext) {
+    this.browsingContext = browsingContext;
+
+    this.isLoadingDocument = false;
+    this.listener = null;
+    this.progressListenerRemoved = false;
+  }
+
   addProgressListener(listener) {
-    if (!this.isLoadingDocument) {
-      return;
+    if (this.listener) {
+      throw new Error("Cannot register listener twice");
     }
 
-    listener.onStateChange(
+    this.listener = listener;
+  }
+
+  removeProgressListener(listener) {
+    if (listener === this.listener) {
+      this.listener = null;
+      this.progressListenerRemoved = true;
+    } else {
+      throw new Error("Unknown listener");
+    }
+  }
+
+  sendStartState(options = {}) {
+    const { coop = false, isInitial = false } = options;
+
+    this.isLoadingDocument = true;
+
+    if (coop) {
+      this.browsingContext = new MockTopContext(this);
+    }
+
+    if (!this.browsingContext.currentWindowGlobal) {
+      this.browsingContext.currentWindowGlobal = {};
+    }
+    this.browsingContext.currentWindowGlobal.isInitialDocument = isInitial;
+
+    this.listener?.onStateChange(
+      this,
       null,
+      Ci.nsIWebProgressListener.STATE_START,
+      null
+    );
+  }
+
+  sendStopState() {
+    this.isLoadingDocument = false;
+    this.listener?.onStateChange(
+      this,
       null,
       Ci.nsIWebProgressListener.STATE_STOP,
       null
     );
-    this.onStateChangeCalled = true;
-  },
-  removeProgressListener(listener) {},
-};
+  }
+}
 
-const mockTopContext = {
-  get children() {
-    return [mockNestedContext];
-  },
-  currentWindowGlobal: {},
-  id: 7,
-  get top() {
-    return this;
-  },
-  webProgress: mockWebProgress,
-};
-
-const mockNestedContext = {
-  currentWindowGlobal: {},
-  id: 8,
-  parent: mockTopContext,
-  top: mockTopContext,
-  webProgress: mockWebProgress,
-};
-
-add_test(async function test_waitForInitialNavigationCompleted_isNotLoading() {
-  const browsingContext = Object.assign({}, mockTopContext);
-  await waitForInitialNavigationCompleted(browsingContext);
-  ok(
-    !browsingContext.webProgress.onStateChangeCalled,
-    "WebProgress' onStateChange hasn't been fired"
-  );
-
-  run_next_test();
-});
-
-add_test(async function test_waitForInitialNavigationCompleted_topIsLoading() {
-  const browsingContext = Object.assign({}, mockTopContext);
-  browsingContext.webProgress.isLoadingDocument = true;
-  await waitForInitialNavigationCompleted(browsingContext);
-  ok(
-    browsingContext.webProgress.onStateChangeCalled,
-    "WebProgress' onStateChange has been fired"
-  );
-
-  run_next_test();
-});
+class MockTopContext {
+  constructor(webProgress = null) {
+    this.currentWindowGlobal = { isInitialDocument: true };
+    this.id = 7;
+    this.top = this;
+    this.webProgress = webProgress || new MockWebProgress(this);
+  }
+}
 
 add_test(
-  async function test_waitForInitialNavigationCompleted_nestedIsLoading() {
-    const browsingContext = Object.assign({}, mockNestedContext);
-    const topContext = browsingContext.top;
+  async function test_waitForInitialNavigation_initialDocumentFinishedLoading() {
+    const browsingContext = new MockTopContext();
+    await waitForInitialNavigationCompleted(browsingContext);
 
-    browsingContext.webProgress.isLoadingDocument = true;
-    await waitForInitialNavigationCompleted(topContext);
     ok(
-      browsingContext.webProgress.onStateChangeCalled,
-      "WebProgress' onStateChange has been fired on the nested browsing context"
+      !browsingContext.webProgress.isLoadingDocument,
+      "Document is not loading"
     );
     ok(
-      topContext.webProgress.onStateChangeCalled,
-      "WebProgress' onStateChange has been fired on the top browsing context"
+      browsingContext.currentWindowGlobal.isInitialDocument,
+      "Is initial document"
     );
 
     run_next_test();
@@ -89,13 +93,113 @@ add_test(
 );
 
 add_test(
-  async function test_waitForInitialNavigationCompleted_missingWindowGlobal() {
-    const browsingContext = Object.assign({}, mockTopContext);
-    delete browsingContext.currentWindowGlobal;
-    await waitForInitialNavigationCompleted(browsingContext);
+  async function test_waitForInitialNavigation_initialDocumentAlreadyLoading() {
+    const browsingContext = new MockTopContext();
+    browsingContext.webProgress.sendStartState({ isInitial: true });
+
+    const completed = waitForInitialNavigationCompleted(browsingContext);
+    browsingContext.webProgress.sendStopState();
+    await completed;
+
     ok(
-      browsingContext.webProgress.onStateChangeCalled,
-      "WebProgress' onStateChange has been fired"
+      !browsingContext.webProgress.isLoadingDocument,
+      "Document is not loading"
+    );
+    ok(
+      browsingContext.currentWindowGlobal.isInitialDocument,
+      "Is initial document"
+    );
+
+    run_next_test();
+  }
+);
+
+add_test(
+  async function test_waitForInitialNavigation_initialDocumentNoWindowGlobal() {
+    const browsingContext = new MockTopContext();
+    delete browsingContext.currentWindowGlobal;
+
+    const completed = waitForInitialNavigationCompleted(browsingContext);
+    browsingContext.webProgress.sendStartState({ isInitial: true });
+    browsingContext.webProgress.sendStopState();
+    await completed;
+
+    ok(
+      !browsingContext.webProgress.isLoadingDocument,
+      "Document is not loading"
+    );
+    ok(
+      browsingContext.currentWindowGlobal.isInitialDocument,
+      "Is initial document"
+    );
+
+    run_next_test();
+  }
+);
+
+add_test(
+  async function test_waitForInitialNavigation_notInitialDocumentFinishedLoading() {
+    const browsingContext = new MockTopContext();
+    browsingContext.webProgress.sendStartState({ isInitial: false });
+    browsingContext.webProgress.sendStopState();
+
+    await waitForInitialNavigationCompleted(browsingContext);
+
+    ok(
+      !browsingContext.webProgress.isLoadingDocument,
+      "Document is not loading"
+    );
+    ok(
+      !browsingContext.currentWindowGlobal.isInitialDocument,
+      "Is not initial document"
+    );
+
+    run_next_test();
+  }
+);
+
+add_test(
+  async function test_waitForInitialNavigation_notInitialDocumentAlreadyLoading() {
+    const browsingContext = new MockTopContext();
+    browsingContext.webProgress.sendStartState({ isInitial: false });
+
+    const completed = waitForInitialNavigationCompleted(browsingContext);
+    browsingContext.webProgress.sendStopState();
+    await completed;
+
+    ok(
+      !browsingContext.webProgress.isLoadingDocument,
+      "Document is not loading"
+    );
+    ok(
+      !browsingContext.currentWindowGlobal.isInitialDocument,
+      "Is not initial document"
+    );
+
+    run_next_test();
+  }
+);
+
+add_test(
+  async function test_waitForInitialNavigation_crossOriginAlreadyLoading() {
+    const browsingContext = new MockTopContext();
+    const webProgress = browsingContext.webProgress;
+
+    browsingContext.webProgress.sendStartState({ coop: true });
+
+    const completed = waitForInitialNavigationCompleted(browsingContext);
+    browsingContext.webProgress.sendStopState();
+    await completed;
+
+    notEqual(
+      browsingContext,
+      webProgress.browsingContext,
+      "Got new browsing context"
+    );
+    ok(!webProgress.isLoadingDocument, "Document is not loading");
+    ok(
+      !webProgress.browsingContext.currentWindowGlobal.isInitialDocument,
+      "Is not initial document"
     );
 
     run_next_test();
