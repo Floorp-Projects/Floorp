@@ -100,26 +100,6 @@
       synthesizeKey("VK_DOWN");
       await p;
 
-      p = waitForEvent(EVENT_FOCUS, "cb_apple");
-      // current selected item is focused when combobox is expanded
-      synthesizeKey("VK_DOWN", { altKey: true });
-      await p;
-
-      p = waitForEvents({
-        expected: [
-          [EVENT_SELECTION, "cb_orange"],
-          stateChangeEventArgs("cb_orange", EXT_STATE_ACTIVE, true, true),
-        ],
-      });
-      // selected item is focused for expanded combobox
-      synthesizeKey("VK_UP");
-      await p;
-
-      p = waitForEvent(EVENT_FOCUS, "combobox");
-      // collapsed combobx keeps a focus
-      synthesizeKey("VK_ESCAPE");
-      await p;
-
       // no focus events for unfocused list controls when current item is
       // changed
 
@@ -141,14 +121,14 @@
 
       p = waitForEvents({
         expected: [
-          [EVENT_SELECTION, "cb_apple"],
-          stateChangeEventArgs("cb_apple", EXT_STATE_ACTIVE, true, true),
+          [EVENT_SELECTION, "cb_orange"],
+          stateChangeEventArgs("cb_orange", EXT_STATE_ACTIVE, true, true),
         ],
         unexpected: [[EVENT_FOCUS]],
       });
       // An unfocused selectable combobox gets selection change events,
       // and active state change events, but not focus.
-      getNode("cb_apple").selected = true;
+      getNode("cb_orange").selected = true;
       await p;
 
       SimpleTest.finish();
