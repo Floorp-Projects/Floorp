@@ -4250,7 +4250,7 @@ impl PicturePrimitive {
 
         // For out-of-preserve-3d pictures, the backface visibility is determined by
         // the local transform only.
-        // Note: we aren't taking the transform relativce to the parent picture,
+        // Note: we aren't taking the transform relative to the parent picture,
         // since picture tree can be more dense than the corresponding spatial tree.
         if !self.is_backface_visible {
             if let Picture3DContext::Out = self.context_3d {
