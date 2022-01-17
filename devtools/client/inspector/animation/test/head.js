@@ -269,21 +269,23 @@ const clickOnInspectIcon = async function(animationInspector, panel, index) {
 };
 
 /**
- * Click on playback rate selector to select given rate.
+ * Change playback rate selector to select given rate.
  *
  * @param {AnimationInspector} animationInspector
  * @param {DOMElement} panel
  *        #animation-container element.
  * @param {Number} rate
  */
-const clickOnPlaybackRateSelector = function(animationInspector, panel, rate) {
+const changePlaybackRateSelector = async function(
+  animationInspector,
+  panel,
+  rate
+) {
   info(`Click on playback rate selector to select ${rate}`);
   const selectEl = panel.querySelector(".playback-rate-selector");
-  const optionEl = [...selectEl.options].filter(
-    o => Number(o.value) === rate
-  )[0];
+  const optionIndex = [...selectEl.options].findIndex(o => +o.value == rate);
 
-  if (!optionEl) {
+  if (optionIndex == -1) {
     ok(
       false,
       `Could not find an option for rate ${rate} in the rate selector. ` +
@@ -292,9 +294,13 @@ const clickOnPlaybackRateSelector = function(animationInspector, panel, rate) {
     return;
   }
 
+  selectEl.focus();
+
   const win = selectEl.ownerGlobal;
-  EventUtils.synthesizeMouseAtCenter(selectEl, { type: "mousedown" }, win);
-  EventUtils.synthesizeMouseAtCenter(optionEl, { type: "mouseup" }, win);
+  while (selectEl.selectedIndex != optionIndex) {
+    const key = selectEl.selectedIndex > optionIndex ? "LEFT" : "RIGHT";
+    EventUtils.sendKey(key, win);
+  }
 };
 
 /**

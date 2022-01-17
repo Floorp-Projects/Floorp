@@ -294,14 +294,28 @@ add_task(async function testPagesPerSheetCount() {
     let pagesPerSheet = helper.get("pages-per-sheet-picker");
     ok(BrowserTestUtils.is_visible(pagesPerSheet), "Pages per sheet is shown");
     pagesPerSheet.focus();
+
+    let popupOpen = BrowserTestUtils.waitForEvent(
+      document.getElementById("ContentSelectDropdown"),
+      "popupshown"
+    );
+
     EventUtils.sendKey("space", helper.win);
-    for (let i = 0; i < 7; i++) {
-      EventUtils.sendKey("down", helper.win);
-      if (pagesPerSheet.value == 16) {
+
+    await popupOpen;
+
+    let numberMove =
+      [...pagesPerSheet.options].map(o => o.value).indexOf("16") -
+      pagesPerSheet.selectedIndex;
+
+    for (let i = 0; i < numberMove; i++) {
+      EventUtils.sendKey("down", window);
+      if (document.activeElement.value == 16) {
         break;
       }
     }
-    await helper.waitForPreview(() => EventUtils.sendKey("return", helper.win));
+
+    await helper.waitForPreview(() => EventUtils.sendKey("return", window));
 
     sheets = helper.sheetCount;
     is(sheets, 1, "There's only one sheet now");

@@ -323,10 +323,7 @@ async function doSelectTests(contentType, content) {
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.select_popup_in_parent.enabled", true],
-      ["dom.forms.select.customstyling", true],
-    ],
+    set: [["dom.forms.select.customstyling", true]],
   });
 });
 

@@ -3,20 +3,34 @@
 
 "use strict";
 
-function changeRangeTo(helper, destination) {
+async function changeRangeTo(helper, destination) {
   let rangeSelect = helper.get("range-picker");
   let options = getRangeOptions(helper);
   let numberMove =
     options.indexOf(destination) - options.indexOf(rangeSelect.value);
   let direction = numberMove > 0 ? "down" : "up";
+  if (!numberMove) {
+    return;
+  }
+
+  let input = BrowserTestUtils.waitForEvent(rangeSelect, "input");
+
+  let popupOpen = BrowserTestUtils.waitForEvent(
+    document.getElementById("ContentSelectDropdown"),
+    "popupshown"
+  );
 
   rangeSelect.focus();
   rangeSelect.scrollIntoView({ block: "center" });
   EventUtils.sendKey("space", helper.win);
+
+  await popupOpen;
   for (let i = Math.abs(numberMove); i > 0; i--) {
-    EventUtils.sendKey(direction, helper.win);
+    EventUtils.sendKey(direction, window);
   }
-  EventUtils.sendKey("return", helper.win);
+  EventUtils.sendKey("return", window);
+
+  await input;
 }
 
 function getRangeOptions(helper) {
@@ -43,7 +57,7 @@ add_task(async function testRangeResetAfterScale() {
     await helper.setupMockPrint();
 
     helper.mockFilePicker("changeRangeFromScale.pdf");
-    changeRangeTo(helper, "custom");
+    await changeRangeTo(helper, "custom");
 
     await helper.openMoreSettings();
     let scaleRadio = helper.get("percent-scale-choice");
@@ -83,7 +97,7 @@ add_task(async function testRangeResetAfterPaperSize() {
     await helper.waitForPreview(() => helper.text(percentScale, "200"));
 
     let customRange = helper.get("custom-range");
-    changeRangeTo(helper, "custom");
+    await changeRangeTo(helper, "custom");
     await BrowserTestUtils.waitForAttributeRemoval("hidden", customRange);
 
     let rangeError = helper.get("error-invalid-range");
@@ -116,7 +130,7 @@ add_task(async function testInvalidRangeResetAfterDestinationChange() {
     let customPageRange = helper.get("custom-range");
 
     await helper.assertSettingsNotChanged({ pageRanges: [] }, async () => {
-      changeRangeTo(helper, "custom");
+      await changeRangeTo(helper, "custom");
     });
     let rangeError = helper.get("error-invalid-range");
 
@@ -151,7 +165,7 @@ add_task(async function testPageRangeSets() {
 
     ok(customRange.hidden, "Custom range input is hidden");
 
-    changeRangeTo(helper, "custom");
+    await changeRangeTo(helper, "custom");
     await BrowserTestUtils.waitForAttributeRemoval("hidden", customRange);
 
     ok(!customRange.hidden, "Custom range is showing");
@@ -216,11 +230,11 @@ add_task(async function testPageRangeSelect() {
 
     let pageRangeInput = helper.get("page-range-input");
 
-    changeRangeTo(helper, "all");
+    await changeRangeTo(helper, "all");
     let pageRanges = pageRangeInput.formatPageRange();
     ok(!pageRanges.length, "Page range for all should be []");
 
-    changeRangeTo(helper, "odd");
+    await changeRangeTo(helper, "odd");
     pageRanges = pageRangeInput.formatPageRange();
     ok(
       pageRanges.length == 4 &&
@@ -228,7 +242,7 @@ add_task(async function testPageRangeSelect() {
       "Page range for odd should be [1, 1, 3, 3]"
     );
 
-    changeRangeTo(helper, "even");
+    await changeRangeTo(helper, "even");
     pageRanges = pageRangeInput.formatPageRange();
     ok(
       pageRanges.length == 2 &&
@@ -242,7 +256,7 @@ add_task(async function testRangeError() {
   await PrintHelper.withTestPage(async helper => {
     await helper.startPrint();
 
-    changeRangeTo(helper, "custom");
+    await changeRangeTo(helper, "custom");
 
     let invalidError = helper.get("error-invalid-range");
     let invalidOverflowError = helper.get("error-invalid-start-range-overflow");
@@ -265,7 +279,7 @@ add_task(async function testStartOverflowRangeError() {
   await PrintHelper.withTestPage(async helper => {
     await helper.startPrint();
 
-    changeRangeTo(helper, "custom");
+    await changeRangeTo(helper, "custom");
 
     await helper.openMoreSettings();
     let scaleRadio = helper.get("percent-scale-choice");
@@ -297,7 +311,7 @@ add_task(async function testErrorClearedAfterSwitchingToAll() {
   await PrintHelper.withTestPage(async helper => {
     await helper.startPrint();
 
-    changeRangeTo(helper, "custom");
+    await changeRangeTo(helper, "custom");
 
     let customRange = helper.get("custom-range");
     let rangeError = helper.get("error-invalid-range");
@@ -308,7 +322,7 @@ add_task(async function testErrorClearedAfterSwitchingToAll() {
     await BrowserTestUtils.waitForAttributeRemoval("hidden", rangeError);
     ok(!rangeError.hidden, "Generic error message is showing");
 
-    changeRangeTo(helper, "all");
+    await changeRangeTo(helper, "all");
 
     await BrowserTestUtils.waitForCondition(
       () => rangeError.hidden,
@@ -403,7 +417,7 @@ add_task(async function testPageCountChangeRangeNoRerender() {
         ]);
 
         await helper.waitForPreview(async () => {
-          changeRangeTo(helper, "custom");
+          await changeRangeTo(helper, "custom");
           helper.text(helper.get("custom-range"), "1");
         });
       }
@@ -460,7 +474,7 @@ add_task(async function testPageCountChangeRangeRerender() {
         ]);
 
         await helper.waitForPreview(async () => {
-          changeRangeTo(helper, "custom");
+          await changeRangeTo(helper, "custom");
           helper.text(helper.get("custom-range"), "1-");
         });
       }
