@@ -498,7 +498,7 @@ mod test {
         };
         assert_eq!(handler.test_root, test_root);
 
-        let mut profile = test_root.clone();
+        let mut profile = test_root;
         profile.push(format!("{}-geckodriver-profile", &package));
         assert_eq!(handler.profile, profile);
     }
@@ -507,7 +507,7 @@ mod test {
     #[ignore]
     fn android_handler_storage_as_app() {
         let package = "org.mozilla.geckoview_example";
-        run_handler_storage_test(&package, AndroidStorageInput::App);
+        run_handler_storage_test(package, AndroidStorageInput::App);
     }
 
     #[test]
