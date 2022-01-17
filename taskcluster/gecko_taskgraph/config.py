@@ -125,6 +125,7 @@ graph_config_schema = Schema(
             Required("mac-entitlements"): optionally_keyed_by(
                 "platform", "release-level", str
             ),
+            Required("mac-requirements"): optionally_keyed_by("platform", str),
         },
         Required("taskgraph"): {
             Optional(
