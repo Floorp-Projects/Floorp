@@ -147,6 +147,10 @@ async function runTest(url) {
   await testLink("link16", "download_page_3.txt");
   await testLink("link17", "download_page_4.txt");
   await testLink("link18", "download_page_4.txt");
+  await testLink("link19", "download_page_4.txt");
+  await testLink("link20", "download_page_4.txt");
+  await testLink("link21", "download_page_4.txt");
+  await testLink("link22", "download_page_4.txt");
 
   BrowserTestUtils.removeTab(tab);
 }
