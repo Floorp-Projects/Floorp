@@ -23,8 +23,8 @@ sealed class State {
 class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(application) {
     private val preferences: SearchSuggestionsPreferences = SearchSuggestionsPreferences(application)
 
-    private val _selectedSearchSuggestion = MutableLiveData<String>()
-    val selectedSearchSuggestion: LiveData<String> = _selectedSearchSuggestion
+    private val _selectedSearchSuggestion = MutableLiveData<String?>()
+    val selectedSearchSuggestion: LiveData<String?> = _selectedSearchSuggestion
 
     private val _searchQuery = MutableLiveData<String>()
     val searchQuery: LiveData<String> = _searchQuery
@@ -32,8 +32,8 @@ class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(ap
     private val _state = MutableLiveData<State>()
     val state: LiveData<State> = _state
 
-    private val _autocompleteSuggestion = MutableLiveData<String>()
-    val autocompleteSuggestion: LiveData<String> = _autocompleteSuggestion
+    private val _autocompleteSuggestion = MutableLiveData<String?>()
+    val autocompleteSuggestion: LiveData<String?> = _autocompleteSuggestion
 
     var alwaysSearch = false
         private set

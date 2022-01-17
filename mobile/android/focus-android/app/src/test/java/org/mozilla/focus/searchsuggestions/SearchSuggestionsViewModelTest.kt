@@ -23,7 +23,7 @@ class SearchSuggestionsViewModelTest {
     var rule: TestRule = InstantTaskExecutorRule()
 
     @Mock
-    private lateinit var observer: Observer<String>
+    private lateinit var observer: Observer<String?>
 
     private lateinit var lifecycle: LifecycleRegistry
     private lateinit var viewModel: SearchSuggestionsViewModel
