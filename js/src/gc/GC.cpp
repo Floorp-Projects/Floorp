@@ -387,7 +387,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       perZoneGCEnabled(TuningDefaults::PerZoneGCEnabled),
       numActiveZoneIters(0),
       cleanUpEverything(false),
-      grayBitsValid(false),
+      grayBitsValid(true),
       majorGCTriggerReason(JS::GCReason::NO_REASON),
       minorGCNumber(0),
       majorGCNumber(0),
