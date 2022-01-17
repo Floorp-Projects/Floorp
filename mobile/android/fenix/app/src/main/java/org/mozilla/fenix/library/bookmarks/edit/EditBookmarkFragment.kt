@@ -280,7 +280,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                     binding.inputLayoutBookmarkUrl.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
                     binding.inputLayoutBookmarkUrl.setErrorIconTintList(
                         ColorStateList.valueOf(
-                            ContextCompat.getColor(requireContext(), R.color.destructive_normal_theme)
+                            ContextCompat.getColor(requireContext(), R.color.fx_mobile_text_color_warning)
                         )
                     )
                 }

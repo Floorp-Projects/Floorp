@@ -25,9 +25,9 @@
         <item name="android:textColorLink">@color/fx_mobile_text_color_accent</item>
 
         <item name="mozacInputLayoutErrorTextColor"
-            tools:ignore="UnusedResources">@color/destructive_normal_theme</item>
+            tools:ignore="UnusedResources">@color/fx_mobile_text_color_warning</item>
         <item name="mozacInputLayoutErrorIconColor"
-            tools:ignore="UnusedResources">@color/destructive_normal_theme</item>
+            tools:ignore="UnusedResources">@color/fx_mobile_text_color_warning</item>
         <item name="mozacLoginSelectHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectPromptHeaderTextStyle</item>
         <item name="mozacSelectCreditCardHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectPromptHeaderTextStyle</item>
 
@@ -59,7 +59,7 @@
         <item name="tabRing">@color/tab_ring_normal_theme</item>
         <item name="neutral">@color/neutral_normal_theme</item>
         <item name="neutralFaded">@color/neutral_faded_normal_theme</item>
-        <item name="destructive">@color/destructive_normal_theme</item>
+        <item name="destructive">@color/fx_mobile_text_color_warning</item>
         <item name="disabled">@color/fx_mobile_text_color_disabled</item>
         <item name="scrimStart">@color/fx_mobile_layer_color_scrim_start</item>
         <item name="scrimEnd">@color/fx_mobile_layer_color_scrim_end</item>
@@ -327,8 +327,8 @@
     </style>
 
     <style name="DestructiveButton" parent="NeutralButton">
-        <item name="iconTint">@color/destructive_normal_theme</item>
-        <item name="android:textColor">@color/destructive_normal_theme</item>
+        <item name="iconTint">@color/fx_mobile_text_color_warning</item>
+        <item name="android:textColor">@color/fx_mobile_text_color_warning</item>
     </style>
 
     <style name="PositiveButton" parent="NeutralButton">

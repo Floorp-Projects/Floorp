@@ -248,7 +248,7 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login) {
                 layout.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
                 layout.setErrorIconTintList(
                     ColorStateList.valueOf(
-                        ContextCompat.getColor(requireContext(), R.color.destructive_normal_theme)
+                        ContextCompat.getColor(requireContext(), R.color.fx_mobile_text_color_warning)
                     )
                 )
             }
@@ -259,7 +259,7 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login) {
                 layout.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
                 layout.setErrorIconTintList(
                     ColorStateList.valueOf(
-                        ContextCompat.getColor(requireContext(), R.color.destructive_normal_theme)
+                        ContextCompat.getColor(requireContext(), R.color.fx_mobile_text_color_warning)
                     )
                 )
             }
@@ -282,7 +282,7 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login) {
             layout.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
             layout.setErrorIconTintList(
                 ColorStateList.valueOf(
-                    ContextCompat.getColor(requireContext(), R.color.destructive_normal_theme)
+                    ContextCompat.getColor(requireContext(), R.color.fx_mobile_text_color_warning)
                 )
             )
         }
@@ -295,7 +295,7 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login) {
             layout.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
             layout.setErrorIconTintList(
                 ColorStateList.valueOf(
-                    ContextCompat.getColor(requireContext(), R.color.destructive_normal_theme)
+                    ContextCompat.getColor(requireContext(), R.color.fx_mobile_text_color_warning)
                 )
             )
         }

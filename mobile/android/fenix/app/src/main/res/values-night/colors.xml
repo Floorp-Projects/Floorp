@@ -58,7 +58,7 @@
     <!-- Disabled text -->
     <color name="fx_mobile_text_color_disabled">@color/photonLightGrey05A40</color>
     <!-- Warning text -->
-    <color name="fx_mobile_text_color_warning" tools:ignore="UnusedResources">@color/photonRed20</color>
+    <color name="fx_mobile_text_color_warning">@color/photonRed20</color>
     <!-- Warning text on Secondary button -->
     <color name="fx_mobile_text_color_warning_button" tools:ignore="UnusedResources">@color/photonRed70</color>
     <!-- Small heading, Text link -->
@@ -131,7 +131,6 @@
     <color name="tab_ring_normal_theme">@color/accent_normal_theme</color>
     <color name="neutral_normal_theme">@color/photonGrey20</color>
     <color name="neutral_faded_normal_theme">#1FFBFBFE</color>
-    <color name="destructive_normal_theme">@color/photonRed40</color>
     <color name="toggle_off_knob_normal_theme">@color/toggle_off_knob_dark_theme</color>
     <color name="toggle_off_track_normal_theme">@color/toggle_off_track_dark_theme</color>
     <color name="fill_link_from_clipboard_normal_theme">@color/photonViolet40</color>
