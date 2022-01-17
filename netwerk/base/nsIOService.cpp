@@ -37,6 +37,7 @@
 #include "nsINode.h"
 #include "nsIWidget.h"
 #include "nsThreadUtils.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/Services.h"
@@ -514,7 +515,8 @@ nsresult nsIOService::LaunchSocketProcess() {
     return NS_OK;
   }
 
-  if (mShutdown) {
+  // We shouldn't launch socket prcess when shutdown begins.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     return NS_OK;
   }
 
