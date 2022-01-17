@@ -88,6 +88,7 @@ class HTMLSelectEventListener final : public nsStubMutationObserver,
       int32_t aFromIndex, int32_t* aFoundIndex = nullptr) const;
 
   void ComboboxMightHaveChanged();
+  void OptionValueMightHaveChanged(nsIContent* aMutatingNode);
 
   ~HTMLSelectEventListener();
 

@@ -16,6 +16,7 @@
 
 #include "nsCOMPtr.h"
 #include "mozilla/dom/HTMLOptionElement.h"
+#include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "nsComboboxControlFrame.h"
 #include "nsContainerFrame.h"
@@ -121,22 +122,20 @@ role HTMLSelectOptionAccessible::NativeRole() const {
 }
 
 ENameValueFlag HTMLSelectOptionAccessible::NativeName(nsString& aName) const {
-  // CASE #1 -- great majority of the cases
-  // find the label attribute - this is what the W3C says we should use
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
-  if (!aName.IsEmpty()) return eNameOK;
-
-  // CASE #2 -- no label parameter, get the first child,
-  // use it if it is a text node
-  LocalAccessible* firstChild = LocalFirstChild();
-  nsIContent* text = firstChild ? firstChild->GetContent() : nullptr;
-  if (text && text->IsText()) {
-    nsTextEquivUtils::AppendTextEquivFromTextContent(text, &aName);
-    aName.CompressWhitespace();
+  if (auto* option = dom::HTMLOptionElement::FromNode(mContent)) {
+    option->GetAttr(nsGkAtoms::label, aName);
+    if (!aName.IsEmpty()) {
+      return eNameOK;
+    }
+    option->GetText(aName);
+    return eNameFromSubtree;
+  }
+  if (auto* group = dom::HTMLOptGroupElement::FromNode(mContent)) {
+    group->GetLabel(aName);
     return aName.IsEmpty() ? eNameOK : eNameFromSubtree;
   }
-
-  return eNameOK;
+  MOZ_ASSERT_UNREACHABLE("What content do we have?");
+  return eNameFromSubtree;
 }
 
 void HTMLSelectOptionAccessible::DOMAttributeChanged(
