@@ -854,3 +854,11 @@ bool js::GetAggregateError(JSContext* cx, unsigned errorNumber,
   return CallSelfHostedFunction(cx, cx->names().GetAggregateError,
                                 NullHandleValue, args, error);
 }
+
+JS_PUBLIC_API mozilla::Maybe<Value> JS::GetExceptionCause(JSObject* exc) {
+  if (!exc->is<ErrorObject>()) {
+    return mozilla::Nothing();
+  }
+  auto& error = exc->as<ErrorObject>();
+  return error.getCause();
+}
