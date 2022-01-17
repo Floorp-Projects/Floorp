@@ -44,14 +44,14 @@ def run(path, server_config, session_config, timeout=0, environ=None):
     old_environ = os.environ.copy()
     try:
         with TemporaryDirectory() as cache:
-            config_path = os.path.join(cache, "wd_config.json")
-            os.environ["WDSPEC_CONFIG_FILE"] = config_path
+            os.environ["WD_HOST"] = session_config["host"]
+            os.environ["WD_PORT"] = str(session_config["port"])
+            os.environ["WD_CAPABILITIES"] = json.dumps(session_config["capabilities"])
 
-            config = session_config.copy()
-            config["wptserve"] = server_config.as_dict()
-
+            config_path = os.path.join(cache, "wd_server_config.json")
+            os.environ["WD_SERVER_CONFIG_FILE"] = config_path
             with open(config_path, "w") as f:
-                json.dump(config, f)
+                json.dump(server_config.as_dict(), f)
 
             if environ:
                 os.environ.update(environ)
