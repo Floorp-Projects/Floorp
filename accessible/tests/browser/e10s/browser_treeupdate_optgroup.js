@@ -41,7 +41,10 @@ addAccessibleTask(
         {
           COMBOBOX_LIST: [
             {
-              GROUPING: [{ COMBOBOX_OPTION: [] }, { COMBOBOX_OPTION: [] }],
+              GROUPING: [
+                { COMBOBOX_OPTION: [{ TEXT_LEAF: [] }] },
+                { COMBOBOX_OPTION: [{ TEXT_LEAF: [] }] },
+              ],
             },
             {
               COMBOBOX_OPTION: [],

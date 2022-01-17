@@ -40,7 +40,6 @@ addAccessibleTask(
       const EventUtils = ContentTaskUtils.getEventUtils(content);
       EventUtils.synthesizeKey("VK_DOWN", { altKey: true }, content);
     });
-    info("Waiting for parent focus");
     let event = await focused;
     let dropdown = event.accessible.parent;
 
@@ -65,8 +64,13 @@ addAccessibleTask(
       "select",
       "select focused after collapsed"
     );
-    EventUtils.synthesizeKey("VK_ESCAPE", {}, window);
-    info("Waiting for child focus");
+    await invokeContentTask(browser, [], () => {
+      const { ContentTaskUtils } = ChromeUtils.import(
+        "resource://testing-common/ContentTaskUtils.jsm"
+      );
+      const EventUtils = ContentTaskUtils.getEventUtils(content);
+      EventUtils.synthesizeKey("VK_ESCAPE", {}, content);
+    });
     await focused;
   },
   { iframe: true, remoteIframe: true }

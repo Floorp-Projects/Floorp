@@ -580,26 +580,8 @@ void nsCoreUtils::DispatchAccEvent(RefPtr<nsIAccessibleEvent> event) {
 }
 
 bool nsCoreUtils::IsDisplayContents(nsIContent* aContent) {
-  auto* element = Element::FromNodeOrNull(aContent);
-  return element && element->IsDisplayContents();
-}
-
-bool nsCoreUtils::CanCreateAccessibleWithoutFrame(nsIContent* aContent) {
-  auto* element = Element::FromNodeOrNull(aContent);
-  if (!element) {
-    return false;
-  }
-  if (!element->HasServoData() || Servo_Element_IsDisplayNone(element)) {
-    // Out of the flat tree or in a display: none subtree.
-    return false;
-  }
-  if (element->IsDisplayContents()) {
-    return true;
-  }
-  // We don't have a frame, but we're not display: contents either.
-  // For now, only create accessibles for <option>/<optgroup> as our combobox
-  // select code depends on it.
-  return element->IsAnyOfHTMLElements(nsGkAtoms::option, nsGkAtoms::optgroup);
+  return aContent && aContent->IsElement() &&
+         aContent->AsElement()->IsDisplayContents();
 }
 
 bool nsCoreUtils::IsDocumentVisibleConsideringInProcessAncestors(

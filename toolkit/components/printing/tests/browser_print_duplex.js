@@ -4,32 +4,24 @@
 "use strict";
 
 function changeToOption(helper, index) {
-  return helper.waitForSettingsEvent(async function() {
+  return helper.waitForSettingsEvent(function() {
     let select = helper.get("duplex-select");
     select.focus();
     select.scrollIntoView({ block: "center" });
 
-    let popupOpen = BrowserTestUtils.waitForEvent(
-      document.getElementById("ContentSelectDropdown"),
-      "popupshown"
-    );
-
     EventUtils.sendKey("space", helper.win);
-
-    await popupOpen;
-
     let selectedIndex = select.selectedIndex;
     info(`Looking for ${index} from ${selectedIndex}`);
     while (selectedIndex != index) {
       if (index > selectedIndex) {
-        EventUtils.sendKey("down", window);
+        EventUtils.sendKey("down", helper.win);
         selectedIndex++;
       } else {
-        EventUtils.sendKey("up", window);
+        EventUtils.sendKey("up", helper.win);
         selectedIndex--;
       }
     }
-    EventUtils.sendKey("return", window);
+    EventUtils.sendKey("return", helper.win);
   });
 }
 
