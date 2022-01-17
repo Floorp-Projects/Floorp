@@ -30,6 +30,7 @@ import org.mozilla.telemetry.TelemetryHolder
 import org.mozilla.telemetry.config.TelemetryConfiguration
 import org.mozilla.telemetry.event.TelemetryEvent
 import org.mozilla.telemetry.measurement.DefaultSearchMeasurement
+import org.mozilla.telemetry.measurement.SearchesMeasurement
 import org.mozilla.telemetry.net.TelemetryClient
 import org.mozilla.telemetry.ping.TelemetryCorePingBuilder
 import org.mozilla.telemetry.ping.TelemetryEventPingBuilder
@@ -77,6 +78,8 @@ object TelemetryWrapper {
         val INSTALL = "install"
         val SHOW = "show"
         val HIDE = "hide"
+        val TYPE_QUERY = "type_query"
+        val TYPE_SELECT_QUERY = "select_query"
     }
 
     private object Object {
@@ -87,6 +90,7 @@ object TelemetryWrapper {
         val SEARCH_SUGGESTION_PROMPT = "search_suggestion_prompt"
         val MAKE_DEFAULT_BROWSER_OPEN_WITH = "make_default_browser_open_with"
         val MAKE_DEFAULT_BROWSER_SETTINGS = "make_default_browser_settings"
+        val SEARCH_BAR = "search_bar"
     }
 
     private object Value {
@@ -117,6 +121,7 @@ object TelemetryWrapper {
         val SUCCESS = "success"
         val TOTAL_URI_COUNT = "total_uri_count"
         val UNIQUE_DOMAINS_COUNT = "unique_domains_count"
+        val SEARCH_SUGGESTION = "search_suggestion"
     }
 
     @JvmStatic
@@ -294,6 +299,29 @@ object TelemetryWrapper {
             .queuePing(TelemetryEventPingBuilder.TYPE)
             .queuePing(TelemetryMobileMetricsPingBuilder.TYPE)
             .scheduleUpload()
+    }
+
+    fun searchEnterEvent() {
+        val telemetry = TelemetryHolder.get()
+
+        TelemetryEvent.create(Category.ACTION, Method.TYPE_QUERY, Object.SEARCH_BAR).queue()
+
+        val searchEngine = getDefaultSearchEngineIdentifierForTelemetry(telemetry.configuration.context)
+
+        telemetry.recordSearch(SearchesMeasurement.LOCATION_ACTIONBAR, searchEngine)
+    }
+
+    fun searchSelectEvent(isSearchSuggestion: Boolean) {
+        val telemetry = TelemetryHolder.get()
+
+        TelemetryEvent
+            .create(Category.ACTION, Method.TYPE_SELECT_QUERY, Object.SEARCH_BAR)
+            .extra(Extra.SEARCH_SUGGESTION, "$isSearchSuggestion")
+            .queue()
+
+        val searchEngineIdentifier = getDefaultSearchEngineIdentifierForTelemetry(telemetry.configuration.context)
+
+        telemetry.recordSearch(SearchesMeasurement.LOCATION_SUGGESTION, searchEngineIdentifier)
     }
 
     private fun getDefaultSearchEngineIdentifierForTelemetry(context: Context): String {
