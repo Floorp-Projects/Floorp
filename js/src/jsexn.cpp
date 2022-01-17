@@ -733,6 +733,7 @@ JS_PUBLIC_API bool JS::CreateError(JSContext* cx, JSExnType type,
                                    HandleObject stack, HandleString fileName,
                                    uint32_t lineNumber, uint32_t columnNumber,
                                    JSErrorReport* report, HandleString message,
+                                   Handle<mozilla::Maybe<Value>> cause,
                                    MutableHandleValue rval) {
   cx->check(stack, fileName, message);
   AssertObjectIsSavedFrameOrWrapper(cx, stack);
@@ -744,10 +745,6 @@ JS_PUBLIC_API bool JS::CreateError(JSContext* cx, JSExnType type,
       return false;
     }
   }
-
-  // The public API doesn't (yet) support a |cause| argument, so we default to
-  // |Nothing()| here.
-  auto cause = JS::NothingHandleValue;
 
   JSObject* obj =
       js::ErrorObject::create(cx, type, stack, fileName, 0, lineNumber,

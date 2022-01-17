@@ -443,7 +443,7 @@ static bool intrinsic_CreateModuleSyntaxError(JSContext* cx, unsigned argc,
   RootedValue error(cx);
   if (!JS::CreateError(cx, JSEXN_SYNTAXERR, nullptr, filename,
                        args[1].toInt32(), args[2].toInt32(), nullptr, message,
-                       &error)) {
+                       JS::NothingHandleValue, &error)) {
     return false;
   }
 
