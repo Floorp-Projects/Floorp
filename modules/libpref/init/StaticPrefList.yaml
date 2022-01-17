@@ -12588,6 +12588,16 @@
   type: int32_t
   value: 2
   mirror: always
+
+# Whether to try to use XDG portal for settings / look-and-feel information.
+# https://flatpak.github.io/xdg-desktop-portal/#gdbus-org.freedesktop.portal.Settings
+#  - 0: never
+#  - 1: always
+#  - 2: auto
+- name: widget.use-xdg-desktop-portal.settings
+  type: int32_t
+  value: 2
+  mirror: always
 #endif
 
 #ifdef XP_WIN
