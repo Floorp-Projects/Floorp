@@ -7755,6 +7755,12 @@
   value: false
   mirror: always
 
+# Enables the Reveal Password context-menu entry.
+- name: layout.forms.reveal-password-context-menu.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Pref to control browser frame rate, in Hz. A value <= 0 means choose
 # automatically based on knowledge of the platform (or 60Hz if no platform-
 # specific information is available).
