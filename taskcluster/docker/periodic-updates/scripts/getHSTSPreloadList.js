@@ -443,7 +443,9 @@ function output(statuses) {
       "resource://gre/modules/FileUtils.jsm"
     );
 
-    let file = FileUtils.getFile("CurWorkD", [OUTPUT]);
+    let file = new FileUtils.File(
+      PathUtils.join(Services.dirsvc.get("CurWorkD", Ci.nsIfile).path, OUTPUT)
+    );
     let fos = FileUtils.openSafeFileOutputStream(file);
     writeTo(HEADER, fos);
     writeTo(getExpirationTimeString(), fos);
