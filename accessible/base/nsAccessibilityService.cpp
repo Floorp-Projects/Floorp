@@ -484,22 +484,6 @@ void nsAccessibilityService::ContentRangeInserted(PresShell* aPresShell,
   }
 }
 
-void nsAccessibilityService::ScheduleAccessibilitySubtreeUpdate(
-    PresShell* aPresShell, nsIContent* aContent) {
-  DocAccessible* document = GetDocAccessible(aPresShell);
-#ifdef A11Y_LOG
-  if (logging::IsEnabled(logging::eTree)) {
-    logging::MsgBegin("TREE", "schedule update; doc: %p", document);
-    logging::Node("content node", aContent);
-    logging::MsgEnd();
-  }
-#endif
-
-  if (document) {
-    document->ScheduleTreeUpdate(aContent);
-  }
-}
-
 void nsAccessibilityService::ContentRemoved(PresShell* aPresShell,
                                             nsIContent* aChildNode) {
   DocAccessible* document = GetDocAccessible(aPresShell);
@@ -530,27 +514,6 @@ void nsAccessibilityService::TableLayoutGuessMaybeChanged(
     if (LocalAccessible* accessible = document->GetAccessible(aContent)) {
       document->FireDelayedEvent(
           nsIAccessibleEvent::EVENT_TABLE_STYLING_CHANGED, accessible);
-    }
-  }
-}
-
-void nsAccessibilityService::ComboboxOptionMaybeChanged(
-    PresShell* aPresShell, nsIContent* aMutatingNode) {
-  DocAccessible* document = GetDocAccessible(aPresShell);
-  if (!document) {
-    return;
-  }
-
-  for (nsIContent* cur = aMutatingNode; cur; cur = cur->GetParent()) {
-    if (cur->IsHTMLElement(nsGkAtoms::option)) {
-      if (LocalAccessible* accessible = document->GetAccessible(cur)) {
-        document->FireDelayedEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE,
-                                   accessible);
-        break;
-      }
-      if (cur->IsHTMLElement(nsGkAtoms::select)) {
-        break;
-      }
     }
   }
 }
@@ -919,7 +882,7 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
   if (!frame || !frame->StyleVisibility()->IsVisible()) {
     // display:contents element doesn't have a frame, but retains the semantics.
     // All its children are unaffected.
-    if (nsCoreUtils::CanCreateAccessibleWithoutFrame(content)) {
+    if (nsCoreUtils::IsDisplayContents(content)) {
       const MarkupMapInfo* markupMap = GetMarkupMapInfoForNode(content);
       if (markupMap && markupMap->new_func) {
         RefPtr<LocalAccessible> newAcc =

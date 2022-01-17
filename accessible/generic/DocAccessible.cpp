@@ -131,7 +131,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAccessibleCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchorJumpElm)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInvalidationList)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingUpdates)
   for (const auto& ar : tmp->mARIAOwnsHash.Values()) {
     for (uint32_t i = 0; i < ar->Length(); i++) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mARIAOwnsHash entry item");
@@ -149,7 +148,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocAccessible, LocalAccessible)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAccessibleCache)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnchorJumpElm)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mInvalidationList)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingUpdates)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
   tmp->mARIAOwnsHash.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -459,7 +457,6 @@ void DocAccessible::Shutdown() {
 
   mAnchorJumpElm = nullptr;
   mInvalidationList.Clear();
-  mPendingUpdates.Clear();
 
   for (auto iter = mAccessibleCache.Iter(); !iter.Done(); iter.Next()) {
     LocalAccessible* accessible = iter.Data();
@@ -1167,25 +1164,6 @@ void DocAccessible::ContentInserted(nsIContent* aStartChildNode,
   mNotificationController->ScheduleContentInsertion(container, list);
 }
 
-void DocAccessible::ScheduleTreeUpdate(nsIContent* aContent) {
-  if (mPendingUpdates.Contains(aContent)) {
-    return;
-  }
-  mPendingUpdates.AppendElement(aContent);
-  mNotificationController->ScheduleProcessing();
-}
-
-void DocAccessible::ProcessPendingUpdates() {
-  auto updates = std::move(mPendingUpdates);
-  for (auto update : updates) {
-    if (update->GetComposedDoc() != mDocumentNode) {
-      continue;
-    }
-    // The pruning logic will take care of avoiding unnecessary notifications.
-    ContentInserted(update, update->GetNextSibling());
-  }
-}
-
 bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
   bool insert = false;
 
@@ -1200,7 +1178,7 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
     // then remove their accessibles and subtrees.
     while (nsIContent* childNode = iter.GetNextChild()) {
       if (!childNode->GetPrimaryFrame() &&
-          !nsCoreUtils::CanCreateAccessibleWithoutFrame(childNode)) {
+          !nsCoreUtils::IsDisplayContents(childNode)) {
         ContentRemoved(childNode);
       }
     }
@@ -1211,7 +1189,7 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
       for (nsIContent* childNode = aRoot->GetFirstChild(); childNode;
            childNode = childNode->GetNextSibling()) {
         if (!childNode->GetPrimaryFrame() &&
-            !nsCoreUtils::CanCreateAccessibleWithoutFrame(childNode)) {
+            !nsCoreUtils::IsDisplayContents(childNode)) {
           ContentRemoved(childNode);
         }
       }
@@ -1240,7 +1218,7 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
     // As well as removing the a11y subtree, we must also remove Accessibles
     // for DOM descendants, since some of these might be relocated Accessibles
     // and their DOM nodes are now hidden as well.
-    if (!frame && !nsCoreUtils::CanCreateAccessibleWithoutFrame(aRoot)) {
+    if (!frame && !nsCoreUtils::IsDisplayContents(aRoot)) {
       ContentRemoved(aRoot);
       return false;
     }
@@ -1302,8 +1280,7 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
   } else {
     // If there is no current accessible, and the node has a frame, or is
     // display:contents, schedule it for insertion.
-    if (aRoot->GetPrimaryFrame() ||
-        nsCoreUtils::CanCreateAccessibleWithoutFrame(aRoot)) {
+    if (aRoot->GetPrimaryFrame() || nsCoreUtils::IsDisplayContents(aRoot)) {
       // This may be a new subtree, the insertion process will recurse through
       // its descendants.
       if (!GetAccessibleOrDescendant(aRoot)) {

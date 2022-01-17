@@ -678,8 +678,6 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
                  "isn't created!");
   }
 
-  mDocument->ProcessPendingUpdates();
-
   nsTArray<CacheData> cache;
 
   // Process rendered text change notifications.

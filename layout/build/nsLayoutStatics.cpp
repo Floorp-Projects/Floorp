@@ -47,6 +47,7 @@
 #include "nsHtml5Module.h"
 #include "nsHTMLTags.h"
 #include "nsFocusManager.h"
+#include "nsListControlFrame.h"
 #include "mozilla/dom/HTMLDNSPrefetch.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/SVGElementFactory.h"
@@ -355,6 +356,7 @@ void nsLayoutStatics::Shutdown() {
   ShutdownJSEnvironment();
   nsGlobalWindowInner::ShutDown();
   nsGlobalWindowOuter::ShutDown();
+  nsListControlFrame::Shutdown();
 
   CubebUtils::ShutdownLibrary();
   WebAudioUtils::Shutdown();

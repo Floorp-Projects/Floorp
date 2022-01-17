@@ -1662,13 +1662,16 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   void FinishBuildingScrollFrame(nsContainerFrame* aScrollFrame,
                                  nsIFrame* aScrolledFrame);
 
-  void InitializeListboxSelect(nsFrameConstructorState& aState,
-                               nsContainerFrame* aScrollFrame,
-                               nsContainerFrame* aScrolledFrame,
-                               nsIContent* aContent,
-                               nsContainerFrame* aParentFrame,
-                               ComputedStyle* aComputedStyle,
-                               nsFrameList& aFrameList);
+  // InitializeSelectFrame puts scrollFrame in aFrameList if aBuildCombobox is
+  // false aBuildCombobox indicates if we are building a combobox that has a
+  // dropdown popup widget or not.
+  void InitializeSelectFrame(nsFrameConstructorState& aState,
+                             nsContainerFrame* aScrollFrame,
+                             nsContainerFrame* aScrolledFrame,
+                             nsIContent* aContent,
+                             nsContainerFrame* aParentFrame,
+                             ComputedStyle* aComputedStyle, bool aBuildCombobox,
+                             nsFrameList& aFrameList);
 
   /**
    * Recreate frames for aContent.
