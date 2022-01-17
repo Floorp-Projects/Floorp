@@ -6885,9 +6885,11 @@ FullscreenTransitionWindow::FullscreenTransitionWindow(GtkWidget* aWidget) {
              "Can't resize window smaller than 1x1.");
   gtk_window_resize(gtkWin, monitorRect.width, monitorRect.height);
 
-  GdkColor bgColor;
-  bgColor.red = bgColor.green = bgColor.blue = 0;
-  gtk_widget_modify_bg(mWindow, GTK_STATE_NORMAL, &bgColor);
+  GdkRGBA bgColor;
+  bgColor.red = bgColor.green = bgColor.blue = 0.0;
+  bgColor.alpha = 1.0;
+  gtk_widget_override_background_color(mWindow, GTK_STATE_FLAG_NORMAL,
+                                       &bgColor);
 
   gtk_widget_set_opacity(mWindow, 0.0);
   gtk_widget_show(mWindow);
