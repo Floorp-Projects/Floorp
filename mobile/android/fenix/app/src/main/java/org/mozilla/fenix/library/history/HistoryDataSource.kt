@@ -36,7 +36,7 @@ class HistoryDataSource(
     override fun loadBefore(params: LoadParams<Int>, callback: LoadCallback<History>) { /* noop */ }
 
     companion object {
-        private const val INITIAL_OFFSET = 0
+        internal const val INITIAL_OFFSET = 0
     }
 }
 
@@ -78,7 +78,8 @@ private fun HistoryDB.Group.positioned(position: Int): History.Group {
         position = position,
         items = this.items.mapIndexed { index, item -> item.positioned(index) },
         title = this.title,
-        visitedAt = this.visitedAt
+        visitedAt = this.visitedAt,
+        historyTimeGroup = this.historyTimeGroup,
     )
 }
 
@@ -89,7 +90,8 @@ private fun HistoryDB.Metadata.positioned(position: Int): History.Metadata {
         title = this.title,
         totalViewTime = this.totalViewTime,
         url = this.url,
-        visitedAt = this.visitedAt
+        visitedAt = this.visitedAt,
+        historyTimeGroup = this.historyTimeGroup,
     )
 }
 
@@ -98,6 +100,7 @@ private fun HistoryDB.Regular.positioned(position: Int): History.Regular {
         position = position,
         title = this.title,
         url = this.url,
-        visitedAt = this.visitedAt
+        visitedAt = this.visitedAt,
+        historyTimeGroup = this.historyTimeGroup,
     )
 }

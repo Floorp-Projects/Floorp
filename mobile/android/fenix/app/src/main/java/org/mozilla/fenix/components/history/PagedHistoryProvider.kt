@@ -12,7 +12,10 @@ import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.FeatureFlags.historyImprovementFeatures
 import org.mozilla.fenix.library.history.History
+import org.mozilla.fenix.library.history.HistoryDataSource
+import org.mozilla.fenix.library.history.HistoryItemTimeGroup
 import org.mozilla.fenix.perf.runBlockingIncrement
 import kotlin.math.abs
 
@@ -27,6 +30,9 @@ sealed class HistoryDB {
     abstract val title: String
     abstract val visitedAt: Long
     abstract val selected: Boolean
+    val historyTimeGroup: HistoryItemTimeGroup by lazy {
+        HistoryItemTimeGroup.timeGroupForTimestamp(visitedAt)
+    }
 
     data class Regular(
         override val title: String,
@@ -84,6 +90,9 @@ class DefaultPagedHistoryProvider(
     private val historyStorage: PlacesHistoryStorage,
     private val showHistorySearchGroups: Boolean = FeatureFlags.showHistorySearchGroups,
 ) : PagedHistoryProvider {
+
+    val urlSet = Array<MutableSet<String>>(HistoryItemTimeGroup.values().size) { mutableSetOf() }
+
     /**
      * Types of visits we currently do not display in the History UI.
      */
@@ -113,10 +122,14 @@ class DefaultPagedHistoryProvider(
         numberOfItems: Int,
         onComplete: (List<HistoryDB>) -> Unit,
     ) {
+        if (offset == HistoryDataSource.INITIAL_OFFSET) {
+            urlSet.map { it.clear() }
+        }
+
         // A PagedList DataSource runs on a background thread automatically.
         // If we run this in our own coroutineScope it breaks the PagedList
         runBlockingIncrement {
-            val history: List<HistoryDB>
+            var history: List<HistoryDB>
 
             if (showHistorySearchGroups) {
                 // We need to re-fetch all the history metadata if the offset resets back at 0
@@ -144,6 +157,13 @@ class DefaultPagedHistoryProvider(
                         excludeTypes = excludedVisitTypes
                     )
                     .map { transformVisitInfoToHistoryItem(it) }
+                    .distinctBy { Pair(it.historyTimeGroup, it.url) }
+
+                if (historyImprovementFeatures) {
+                    history = history.distinctBy { Pair(it.historyTimeGroup, it.url) }
+                        .filter { !urlSet[it.historyTimeGroup.ordinal].contains(it.url) }
+                    history.map { urlSet[it.historyTimeGroup.ordinal].add(it.url) }
+                }
             }
 
             onComplete(history)
@@ -191,7 +211,7 @@ class DefaultPagedHistoryProvider(
         numberOfItems: Int,
     ): List<HistoryDB> {
         val result = mutableListOf<HistoryDB>()
-        val history: List<HistoryDB.Regular> = historyStorage
+        var history: List<HistoryDB.Regular> = historyStorage
             .getVisitsPaginated(
                 offset.toLong(),
                 numberOfItems.toLong(),
@@ -234,6 +254,12 @@ class DefaultPagedHistoryProvider(
         }
         val historyMetadata = historyGroupsInOffset.flatMap { it.items }
 
+        if (historyImprovementFeatures) {
+            history = history.distinctBy { Pair(it.historyTimeGroup, it.url) }
+                .filter { !urlSet[it.historyTimeGroup.ordinal].contains(it.url) }
+            history.map { urlSet[it.historyTimeGroup.ordinal].add(it.url) }
+        }
+
         // Add all history items that are not in a group filtering out any matches with a history
         // metadata item.
         result.addAll(history.filter { item -> historyMetadata.find { it.url == item.url } == null })
@@ -249,8 +275,11 @@ class DefaultPagedHistoryProvider(
             }
         )
 
-        return result.removeConsecutiveDuplicates()
-            .sortedByDescending { it.visitedAt }
+        return if (historyImprovementFeatures) {
+            result.sortedByDescending { it.visitedAt }
+        } else {
+            result.removeConsecutiveDuplicates().sortedByDescending { it.visitedAt }
+        }
     }
 
     private fun transformVisitInfoToHistoryItem(visit: VisitInfo): HistoryDB.Regular {

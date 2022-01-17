@@ -22,7 +22,7 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
 class HistoryControllerTest {
-    private val historyItem = History.Regular(0, "title", "url", 0.toLong())
+    private val historyItem = History.Regular(0, "title", "url", 0.toLong(), HistoryItemTimeGroup.timeGroupForTimestamp(0))
     private val scope = TestCoroutineScope()
     private val store: HistoryFragmentStore = mockk(relaxed = true)
     private val state: HistoryFragmentState = mockk(relaxed = true)

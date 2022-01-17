@@ -30,6 +30,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.library.history.History
+import org.mozilla.fenix.library.history.HistoryItemTimeGroup
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentAction
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentDirections
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentStore
@@ -55,6 +56,7 @@ class HistoryMetadataGroupControllerTest {
         title = "Mozilla",
         url = "mozilla.org",
         visitedAt = 0,
+        historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(0),
         totalViewTime = 1,
         historyMetadataKey = historyMetadataKey
     )
@@ -63,6 +65,7 @@ class HistoryMetadataGroupControllerTest {
         title = "Firefox",
         url = "firefox.com",
         visitedAt = 0,
+        historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(0),
         totalViewTime = 1,
         historyMetadataKey = historyMetadataKey
     )

@@ -171,7 +171,11 @@ class HistoryDataSourceTest {
         return this.map {
             when (it) {
                 is TestHistory.Regular -> {
-                    HistoryDB.Regular(title = it.url, url = it.url, visitedAt = 0)
+                    HistoryDB.Regular(
+                        title = it.url,
+                        url = it.url,
+                        visitedAt = 0
+                    )
                 }
                 is TestHistory.Metadata -> {
                     HistoryDB.Metadata(
@@ -184,7 +188,8 @@ class HistoryDataSourceTest {
                 }
                 is TestHistory.Group -> {
                     HistoryDB.Group(
-                        title = it.title, visitedAt = 0,
+                        title = it.title,
+                        visitedAt = 0,
                         items = it.items.map { item ->
                             HistoryDB.Metadata(
                                 title = item,

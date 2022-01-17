@@ -137,7 +137,7 @@ class PagedHistoryProviderTest {
             HistoryDB.Regular(
                 title = visitInfo3.title!!,
                 url = visitInfo3.url,
-                visitedAt = visitInfo3.visitTime
+                visitedAt = visitInfo3.visitTime,
             )
         )
         assertEquals(results, actualResults)
@@ -495,7 +495,7 @@ class PagedHistoryProviderTest {
             HistoryDB.Regular(
                 title = "No duplicate item",
                 url = "url",
-                visitedAt = 0
+                visitedAt = 0,
             ),
         )
         assertEquals(expectedList, results)

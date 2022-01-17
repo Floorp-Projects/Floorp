@@ -18,6 +18,7 @@ import org.mozilla.fenix.databinding.HistoryMetadataGroupListItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.library.history.History
+import org.mozilla.fenix.library.history.HistoryItemTimeGroup
 import org.mozilla.fenix.library.historymetadata.interactor.HistoryMetadataGroupInteractor
 import org.mozilla.fenix.selection.SelectionHolder
 
@@ -33,6 +34,7 @@ class HistoryMetadataGroupItemViewHolderTest {
         title = "Mozilla",
         url = "mozilla.org",
         visitedAt = 0,
+        historyTimeGroup = HistoryItemTimeGroup.timeGroupForTimestamp(0),
         totalViewTime = 0,
         historyMetadataKey = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
     )

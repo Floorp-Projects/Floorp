@@ -11,7 +11,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class HistoryInteractorTest {
-    private val historyItem = History.Regular(0, "title", "url", 0.toLong())
+    private val historyItem = History.Regular(0, "title", "url", 0.toLong(), HistoryItemTimeGroup.timeGroupForTimestamp(0))
     val controller: HistoryController = mockk(relaxed = true)
     val interactor = DefaultHistoryInteractor(controller)
 
