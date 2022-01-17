@@ -836,6 +836,7 @@ def build_generic_worker_payload(config, task, task_def):
             "mac_single_file",
         ),
         Optional("entitlements-url"): str,
+        Optional("requirements-plist-url"): str,
     },
 )
 def build_scriptworker_signing_payload(config, task, task_def):
@@ -847,8 +848,9 @@ def build_scriptworker_signing_payload(config, task, task_def):
     }
     if worker.get("mac-behavior"):
         task_def["payload"]["behavior"] = worker["mac-behavior"]
-        if worker.get("entitlements-url"):
-            task_def["payload"]["entitlements-url"] = worker["entitlements-url"]
+        for attribute in ("entitlements-url", "requirements-plist-url"):
+            if worker.get(attribute):
+                task_def["payload"][attribute] = worker[attribute]
     artifacts = set(task.get("release-artifacts", []))
     for upstream_artifact in worker["upstream-artifacts"]:
         for path in upstream_artifact["paths"]:
