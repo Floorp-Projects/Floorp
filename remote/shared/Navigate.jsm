@@ -28,8 +28,11 @@ const webProgressListeners = new Set();
  *     The browsing context to check.
  */
 function waitForInitialNavigationCompleted(browsingContext) {
-  let listener;
+  // Keep a reference to the webProgress instance in case the browsing context
+  // gets replaced by a cross-group navigation.
+  const webProgress = browsingContext.webProgress;
 
+  let listener;
   return new Promise(resolve => {
     listener = new ProgressListener(resolve);
     // Keep a reference to the weak listener so it's not getting gc'ed.
@@ -37,7 +40,7 @@ function waitForInitialNavigationCompleted(browsingContext) {
 
     // Monitor the webprogress listener before checking isLoadingDocument to
     // avoid race conditions.
-    browsingContext.webProgress.addProgressListener(
+    webProgress.addProgressListener(
       listener,
       Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
         Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
@@ -46,12 +49,12 @@ function waitForInitialNavigationCompleted(browsingContext) {
     // Right after its creation a browsing context doesn't have a window global.
     const isInitial = !browsingContext.currentWindowGlobal;
 
-    if (!browsingContext.webProgress.isLoadingDocument && !isInitial) {
+    if (!webProgress.isLoadingDocument && !isInitial) {
       logger.trace("Initial navigation already completed");
       resolve();
     }
   }).finally(() => {
-    browsingContext.webProgress.removeProgressListener(
+    webProgress.removeProgressListener(
       listener,
       Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
         Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
