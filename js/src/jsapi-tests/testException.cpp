@@ -67,3 +67,26 @@ BEGIN_TEST(testException_getCausePlainObject) {
   return true;
 }
 END_TEST(testException_getCausePlainObject)
+
+BEGIN_TEST(testException_createErrorWithCause) {
+  JS::RootedString empty(cx, JS_GetEmptyString(cx));
+  JS::Rooted<mozilla::Maybe<JS::Value>> cause(
+      cx, mozilla::Some(JS::Int32Value(-1)));
+  JS::RootedValue err(cx);
+  CHECK(JS::CreateError(cx, JSEXN_ERR, nullptr, empty, 1, 1, nullptr, empty,
+                        cause, &err));
+  CHECK(err.isObject());
+  JS::Rooted<mozilla::Maybe<JS::Value>> maybeCause(
+      cx, JS::GetExceptionCause(&err.toObject()));
+  CHECK(maybeCause.isSome());
+  CHECK_SAME(*cause, *maybeCause);
+
+  CHECK(JS::CreateError(cx, JSEXN_ERR, nullptr, empty, 1, 1, nullptr, empty,
+                        JS::NothingHandleValue, &err));
+  CHECK(err.isObject());
+  maybeCause = JS::GetExceptionCause(&err.toObject());
+  CHECK(maybeCause.isNothing());
+
+  return true;
+}
+END_TEST(testException_createErrorWithCause)

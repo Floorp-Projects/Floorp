@@ -1314,7 +1314,7 @@ void ChromeUtils::CreateError(const GlobalObject& aGlobal,
 
     JS::Rooted<JS::Value> err(cx);
     if (!JS::CreateError(cx, JSEXN_ERR, stack, fileName, line, column, nullptr,
-                         message, &err)) {
+                         message, JS::NothingHandleValue, &err)) {
       return;
     }
 

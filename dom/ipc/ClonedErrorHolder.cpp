@@ -295,7 +295,7 @@ bool ClonedErrorHolder::ToErrorValue(JSContext* aCx,
       return false;
     }
     if (!JS::CreateError(aCx, mExnType, stack, filename, mLineNumber, mColumn,
-                         nullptr, message, aResult)) {
+                         nullptr, message, JS::NothingHandleValue, aResult)) {
       return false;
     }
 
