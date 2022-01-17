@@ -543,17 +543,21 @@ def glinter(
     if parser_config is None:
         parser_config = {}
 
-    if lint_yaml_files(input_filepaths, file=file, parser_config=parser_config):
-        return 1
+    errors = 0
+
+    nits = lint_yaml_files(input_filepaths, file=file, parser_config=parser_config)
+    errors += len(nits)
 
     objs = parser.parse_objects(input_filepaths, parser_config)
-
-    if util.report_validation_errors(objs):
-        return 1
+    errors += util.report_validation_errors(objs)
 
     nits = lint_metrics(objs.value, parser_config=parser_config, file=file)
-    if any(nit.check_type == CheckType.error for nit in nits):
-        return 1
-    if len(nits) == 0:
+    errors += len([nit for nit in nits if nit.check_type == CheckType.error])
+
+    if errors == 0:
         print("✨ Your metrics are Glean! ✨", file=file)
-    return 0
+        return 0
+
+    print(f"❌ Found {errors} errors.")
+
+    return 1
