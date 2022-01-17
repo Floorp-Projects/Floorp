@@ -5299,7 +5299,7 @@ void nsWindow::ConfigureGdkWindow() {
     } else {
       // Disable rendering of parent container on X11 to avoid flickering.
       if (GtkWidget* parent = gtk_widget_get_parent(mShell)) {
-        gtk_window_set_opacity(GTK_WINDOW(parent), 0.0);
+        gtk_widget_set_opacity(parent, 0.0);
       }
     }
   }
@@ -6889,7 +6889,7 @@ FullscreenTransitionWindow::FullscreenTransitionWindow(GtkWidget* aWidget) {
   bgColor.red = bgColor.green = bgColor.blue = 0;
   gtk_widget_modify_bg(mWindow, GTK_STATE_NORMAL, &bgColor);
 
-  gtk_window_set_opacity(gtkWin, 0.0);
+  gtk_widget_set_opacity(mWindow, 0.0);
   gtk_widget_show(mWindow);
 }
 
@@ -6931,7 +6931,7 @@ gboolean FullscreenTransitionData::TimeoutCallback(gpointer aData) {
   if (data->mStage == nsIWidget::eAfterFullscreenToggle) {
     opacity = 1.0 - opacity;
   }
-  gtk_window_set_opacity(GTK_WINDOW(data->mWindow->mWindow), opacity);
+  gtk_widget_set_opacity(data->mWindow->mWindow, opacity);
 
   if (!finishing) {
     return TRUE;
