@@ -6,7 +6,10 @@ from tests.support.asserts import assert_error
 @pytest.mark.parametrize(
     "headers",
     [
-        {"origin": "http://example.org"},
+        {"origin": "http://localhost"},
+        {"origin": "http://localhost:8000"},
+        {"origin": "http://127.0.0.1"},
+        {"origin": "http://127.0.0.1:8000"},
         {"origin": "null"},
         {"ORIGIN": "https://example.org"},
         {"host": "example.org:4444"},
