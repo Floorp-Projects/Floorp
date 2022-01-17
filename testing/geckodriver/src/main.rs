@@ -17,6 +17,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate serde_yaml;
+extern crate url;
 extern crate uuid;
 extern crate webdriver;
 extern crate zip;
@@ -27,7 +28,7 @@ extern crate log;
 use std::env;
 use std::fmt;
 use std::io;
-use std::net::{IpAddr, SocketAddr};
+use std::net::{IpAddr, SocketAddr, ToSocketAddrs};
 use std::path::PathBuf;
 use std::result;
 use std::str::FromStr;
@@ -59,6 +60,7 @@ use crate::command::extension_routes;
 use crate::logging::Level;
 use crate::marionette::{MarionetteHandler, MarionetteSettings};
 use mozdevice::AndroidStorageInput;
+use url::{Host, Url};
 
 const EXIT_SUCCESS: i32 = 0;
 const EXIT_USAGE: i32 = 64;
@@ -126,52 +128,145 @@ enum Operation {
     Version,
     Server {
         log_level: Option<Level>,
-        host: String,
         address: SocketAddr,
+        allow_hosts: Vec<Host>,
+        allow_origins: Vec<Url>,
         settings: MarionetteSettings,
         deprecated_storage_arg: bool,
     },
 }
 
-fn parse_args(app: &mut App) -> ProgramResult<Operation> {
-    let matches = app.get_matches_from_safe_borrow(env::args())?;
+/// Get a socket address from the provided host and port
+///
+/// # Arguments
+/// * `webdriver_host` - The hostname on which the server will listen
+/// * `webdriver_port` - The port on which the server will listen
+///
+/// When the host and port resolve to multiple addresses, prefer
+/// IPv4 addresses vs IPv6.
+fn server_address(webdriver_host: &str, webdriver_port: u16) -> ProgramResult<SocketAddr> {
+    let mut socket_addrs = match format!("{}:{}", webdriver_host, webdriver_port).to_socket_addrs()
+    {
+        Ok(addrs) => addrs.collect::<Vec<_>>(),
+        Err(e) => usage!("{}: {}:{}", e, webdriver_host, webdriver_port),
+    };
+    if socket_addrs.is_empty() {
+        usage!(
+            "Unable to resolve host: {}:{}",
+            webdriver_host,
+            webdriver_port
+        )
+    }
+    // Prefer ipv4 address
+    socket_addrs.sort_by(|a, b| {
+        let a_val = if a.ip().is_ipv4() { 0 } else { 1 };
+        let b_val = if b.ip().is_ipv4() { 0 } else { 1 };
+        a_val.partial_cmp(&b_val).expect("Comparison failed")
+    });
+    Ok(socket_addrs.remove(0))
+}
 
-    let log_level = if matches.is_present("log_level") {
-        Level::from_str(matches.value_of("log_level").unwrap()).ok()
+/// Parse a given string into a Host
+fn parse_hostname(webdriver_host: &str) -> Result<Host, url::ParseError> {
+    let host_str = if let Ok(ip_addr) = IpAddr::from_str(webdriver_host) {
+        // In this case we have an IP address as the host
+        if ip_addr.is_ipv6() {
+            // Convert to quoted form
+            format!("[{}]", &webdriver_host)
+        } else {
+            webdriver_host.into()
+        }
     } else {
-        Some(match matches.occurrences_of("verbosity") {
+        webdriver_host.into()
+    };
+
+    Host::parse(&host_str)
+}
+
+/// Get a list of default hostnames to allow
+///
+/// This only covers domain names, not IP addresses, since IP adresses
+/// are always accepted.
+fn get_default_allowed_hosts(ip: IpAddr) -> Vec<Result<Host, url::ParseError>> {
+    let localhost_is_loopback = ("localhost".to_string(), 80)
+        .to_socket_addrs()
+        .map(|addr_iter| {
+            addr_iter
+                .map(|addr| addr.ip())
+                .filter(|ip| ip.is_loopback())
+        })
+        .iter()
+        .len()
+        > 0;
+    if ip.is_loopback() && localhost_is_loopback {
+        vec![Host::parse("localhost")]
+    } else {
+        vec![]
+    }
+}
+
+fn get_allowed_hosts(
+    host: Host,
+    allow_hosts: Option<clap::Values>,
+) -> Result<Vec<Host>, url::ParseError> {
+    allow_hosts
+        .map(|hosts| hosts.map(Host::parse).collect::<Vec<_>>())
+        .unwrap_or_else(|| match host {
+            Host::Domain(_) => {
+                vec![Ok(host.clone())]
+            }
+            Host::Ipv4(ip) => get_default_allowed_hosts(IpAddr::V4(ip)),
+            Host::Ipv6(ip) => get_default_allowed_hosts(IpAddr::V6(ip)),
+        })
+        .into_iter()
+        .collect::<Result<Vec<Host>, url::ParseError>>()
+}
+
+fn get_allowed_origins(allow_origins: Option<clap::Values>) -> Result<Vec<Url>, url::ParseError> {
+    allow_origins
+        .map(|origins| {
+            origins
+                .map(Url::parse)
+                .collect::<Result<Vec<Url>, url::ParseError>>()
+        })
+        .unwrap_or_else(|| Ok(vec![]))
+}
+
+fn parse_args(app: &mut App) -> ProgramResult<Operation> {
+    let args = app.get_matches_from_safe_borrow(env::args())?;
+
+    if args.is_present("help") {
+        return Ok(Operation::Help);
+    } else if args.is_present("version") {
+        return Ok(Operation::Version);
+    }
+
+    let log_level = if args.is_present("log_level") {
+        Level::from_str(args.value_of("log_level").unwrap()).ok()
+    } else {
+        Some(match args.occurrences_of("verbosity") {
             0 => Level::Info,
             1 => Level::Debug,
             _ => Level::Trace,
         })
     };
 
-    let host = matches.value_of("webdriver_host").unwrap();
-    let port = {
-        let s = matches.value_of("webdriver_port").unwrap();
+    let webdriver_host = args.value_of("webdriver_host").unwrap();
+    let webdriver_port = {
+        let s = args.value_of("webdriver_port").unwrap();
         match u16::from_str(s) {
             Ok(n) => n,
             Err(e) => usage!("invalid --port: {}: {}", e, s),
         }
     };
-    let address = match IpAddr::from_str(host) {
-        Ok(addr) => SocketAddr::new(addr, port),
-        Err(e) => usage!("{}: {}:{}", e, host, port),
-    };
-    if !address.ip().is_loopback() {
-        usage!(
-            "invalid --host: {}. Must be a local loopback interface",
-            host
-        )
-    }
 
-    let android_storage = value_t!(matches, "android_storage", AndroidStorageInput)
-        .unwrap_or(AndroidStorageInput::Auto);
+    let android_storage =
+        value_t!(args, "android_storage", AndroidStorageInput).unwrap_or(AndroidStorageInput::Auto);
 
-    let binary = matches.value_of("binary").map(PathBuf::from);
+    let binary = args.value_of("binary").map(PathBuf::from);
 
-    let marionette_host = matches.value_of("marionette_host").unwrap();
-    let marionette_port = match matches.value_of("marionette_port") {
+    let marionette_host = args.value_of("marionette_host").unwrap();
+    let marionette_port = match args.value_of("marionette_port") {
         Some(s) => match u16::from_str(s) {
             Ok(n) => Some(n),
             Err(e) => usage!("invalid --marionette-port: {}", e),
@@ -181,7 +276,7 @@ fn parse_args(app: &mut App) -> ProgramResult<Operation> {
 
     // For Android the port on the device must be the same as the one on the
     // host. For now default to 9222, which is the default for --remote-debugging-port.
-    let websocket_port = match matches.value_of("websocket_port") {
+    let websocket_port = match args.value_of("websocket_port") {
         Some(s) => match u16::from_str(s) {
             Ok(n) => n,
             Err(e) => usage!("invalid --websocket-port: {}", e),
@@ -189,30 +284,40 @@ fn parse_args(app: &mut App) -> ProgramResult<Operation> {
         None => 9222,
     };
 
-    let op = if matches.is_present("help") {
-        Operation::Help
-    } else if matches.is_present("version") {
-        Operation::Version
-    } else {
-        let settings = MarionetteSettings {
-            binary,
-            connect_existing: matches.is_present("connect_existing"),
-            host: marionette_host.to_string(),
-            port: marionette_port,
-            websocket_port,
-            jsdebugger: matches.is_present("jsdebugger"),
-            android_storage,
-        };
-        Operation::Server {
-            log_level,
-            host: host.into(),
-            address,
-            settings,
-            deprecated_storage_arg: matches.is_present("android_storage"),
-        }
+    let host = match parse_hostname(webdriver_host) {
+        Ok(name) => name,
+        Err(e) => usage!("invalid --host {}: {}", webdriver_host, e),
     };
 
-    Ok(op)
+    let allow_hosts = match get_allowed_hosts(host, args.values_of("allow_hosts")) {
+        Ok(hosts) => hosts,
+        Err(e) => usage!("invalid --allow-hosts {}", e),
+    };
+
+    let allow_origins = match get_allowed_origins(args.values_of("allow_origins")) {
+        Ok(origins) => origins,
+        Err(e) => usage!("invalid --allow-origins {}", e),
+    };
+
+    let address = server_address(webdriver_host, webdriver_port)?;
+
+    let settings = MarionetteSettings {
+        binary,
+        connect_existing: args.is_present("connect_existing"),
+        host: marionette_host.into(),
+        port: marionette_port,
+        websocket_port,
+        jsdebugger: args.is_present("jsdebugger"),
+        android_storage,
+    };
+    Ok(Operation::Server {
+        log_level,
+        allow_hosts,
+        allow_origins,
+        address,
+        settings,
+        deprecated_storage_arg: args.is_present("android_storage"),
+    })
 }
 
 fn inner_main(app: &mut App) -> ProgramResult<()> {
@@ -222,8 +327,9 @@ fn inner_main(app: &mut App) -> ProgramResult<()> {
 
         Operation::Server {
             log_level,
-            host,
             address,
+            allow_hosts,
+            allow_origins,
             settings,
             deprecated_storage_arg,
         } => {
@@ -238,7 +344,13 @@ fn inner_main(app: &mut App) -> ProgramResult<()> {
             };
 
             let handler = MarionetteHandler::new(settings);
-            let listening = webdriver::server::start(host, address, handler, extension_routes())?;
+            let listening = webdriver::server::start(
+                address,
+                allow_hosts,
+                allow_origins,
+                handler,
+                extension_routes(),
+            )?;
             info!("Listening on {}", listening.socket);
         }
     }
@@ -361,6 +473,22 @@ fn make_app<'a, 'b>() -> App<'a, 'b> {
                 .possible_values(&["auto", "app", "internal", "sdcard"])
                 .value_name("ANDROID_STORAGE")
                 .help("Selects storage location to be used for test data (deprecated)."),
+        )
+        .arg(
+            Arg::with_name("allow_hosts")
+                .long("allow-hosts")
+                .takes_value(true)
+                .multiple(true)
+                .value_name("ALLOW_HOSTS")
+                .help("List of hostnames to allow. By default the value of --host is allowed, and in addition if that's a well known local address, other variations on well known local addresses are allowed. If --allow-hosts is provided only exactly those hosts are allowed."),
+        )
+        .arg(
+            Arg::with_name("allow_origins")
+                .long("allow-origins")
+                .takes_value(true)
+                .multiple(true)
+                .value_name("ALLOW_ORIGINS")
+                .help("List of request origins to allow. These must be formatted as scheme://host:port. By default any request with an origin header is rejected. If --allow-origins is provided then only exactly those origins are allowed."),
         )
 }
 
