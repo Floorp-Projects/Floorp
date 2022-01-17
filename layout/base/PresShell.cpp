@@ -3924,19 +3924,44 @@ void PresShell::UnsuppressAndInvalidate() {
   PROFILER_MARKER_UNTYPED("UnsuppressAndInvalidate", GRAPHICS);
 
   mPaintingSuppressed = false;
+
+  if (mPresContext->IsRootContentDocumentCrossProcess()) {
+    nsWeakPtr weakDoc = do_GetWeakReference(mDocument);
+    // Tell the parent process about the unsuppression, but make sure to have
+    // done a refresh driver tick first at least. That should improve the
+    // chances that we have something meaningful to display.
+    mPresContext->RegisterManagedPostRefreshObserver(
+        new ManagedPostRefreshObserver(
+            mPresContext, [weakDoc](bool aWasCanceled) {
+              if (aWasCanceled) {
+                return ManagedPostRefreshObserver::Unregister::Yes;
+              }
+
+              nsCOMPtr<Document> doc = do_QueryReferent(weakDoc);
+              if (!doc) {
+                return ManagedPostRefreshObserver::Unregister::Yes;
+              }
+              nsPresContext* pctx = doc->GetPresContext();
+              if (!pctx) {
+                return ManagedPostRefreshObserver::Unregister::Yes;
+              }
+
+              if (auto* bc = BrowserChild::GetFrom(doc->GetDocShell())) {
+                if (doc->IsInitialDocument()) {
+                  bc->SendDidUnsuppressPaintingNormalPriority();
+                } else {
+                  bc->SendDidUnsuppressPainting();
+                }
+              }
+
+              return ManagedPostRefreshObserver::Unregister::Yes;
+            }));
+    mPresContext->SetWantsExtraTick();
+  }
+
   if (nsIFrame* rootFrame = mFrameConstructor->GetRootFrame()) {
     // let's assume that outline on a root frame is not supported
     rootFrame->InvalidateFrame();
-  }
-
-  if (mPresContext->IsRootContentDocumentCrossProcess()) {
-    if (auto* bc = BrowserChild::GetFrom(mDocument->GetDocShell())) {
-      if (mDocument->IsInitialDocument()) {
-        bc->SendDidUnsuppressPaintingNormalPriority();
-      } else {
-        bc->SendDidUnsuppressPainting();
-      }
-    }
   }
 
   // now that painting is unsuppressed, focus may be set on the document

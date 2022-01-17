@@ -1086,6 +1086,14 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
     return mFontFeatureValuesLookup;
   }
 
+  void SetWantsExtraTick() { mWantsExtraTick = true; }
+
+  bool TakeWantsExtraTick() {
+    bool retVal = mWantsExtraTick;
+    mWantsExtraTick = false;
+    return retVal;
+  }
+
  protected:
   friend class nsRunnableMethod<nsPresContext>;
   void ThemeChangedInternal();
@@ -1369,6 +1377,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   // Has NotifyDidPaintForSubtree been called for a contentful paint?
   unsigned mHadContentfulPaintComposite : 1;
+
+  unsigned mWantsExtraTick : 1;
 
 #ifdef DEBUG
   unsigned mInitialized : 1;
