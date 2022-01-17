@@ -18,7 +18,7 @@
 #define CONFIG_RDFT 1
 #endif
 
-#ifdef MOZ_WAYLAND
+#if defined(MOZ_WAYLAND) && !defined(MOZ_FFVPX_AUDIOONLY)
 #undef CONFIG_VAAPI
 #undef CONFIG_VP8_VAAPI_HWACCEL
 #undef CONFIG_VP9_VAAPI_HWACCEL
