@@ -2264,6 +2264,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "REVEAL_PASSWORD_ENABLED",
-  "layout.forms.reveal-password-button.enabled",
+  "layout.forms.reveal-password-context-menu.enabled",
   false
 );

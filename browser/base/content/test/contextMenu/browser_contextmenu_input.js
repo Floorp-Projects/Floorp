@@ -106,7 +106,7 @@ add_task(async function test_password_input() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["signon.generation.enabled", false],
-      ["layout.forms.reveal-password-button.enabled", true],
+      ["layout.forms.reveal-password-context-menu.enabled", true],
     ],
   });
   todo(
