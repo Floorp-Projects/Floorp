@@ -219,6 +219,8 @@ mod tests {
     use std::str::FromStr;
     use std::sync::Mutex;
 
+    use chrono;
+    use log;
     use mozprofile::preferences::{Pref, PrefValue};
 
     lazy_static! {

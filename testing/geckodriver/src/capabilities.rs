@@ -905,7 +905,9 @@ mod tests {
 
         if let Some(args) = opts.args {
             let mut iter = args.iter();
-            assert!(iter.any(|arg| arg == &"--remote-debugging-port".to_owned()));
+            assert!(iter
+                .find(|&arg| arg == &"--remote-debugging-port".to_owned())
+                .is_some());
             assert_eq!(iter.next(), Some(&"1234".to_owned()));
         } else {
             assert!(false, "CLI arguments for Firefox not found");
@@ -949,7 +951,9 @@ mod tests {
 
         if let Some(args) = opts.args {
             let mut iter = args.iter();
-            assert!(iter.any(|arg| arg == &"--remote-debugging-port".to_owned()));
+            assert!(iter
+                .find(|&arg| arg == &"--remote-debugging-port".to_owned())
+                .is_some());
             assert_eq!(iter.next(), Some(&"1234".to_owned()));
         } else {
             assert!(false, "CLI arguments for Firefox not found");
@@ -1195,7 +1199,7 @@ mod tests {
         let env = Value::Number(1.into());
 
         let mut firefox_opts = Capabilities::new();
-        firefox_opts.insert("env".into(), env);
+        firefox_opts.insert("env".into(), env.into());
 
         make_options(firefox_opts, None).expect_err("invalid firefox options");
     }
