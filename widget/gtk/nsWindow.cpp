@@ -8710,8 +8710,6 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(
     return NS_OK;
   }
 
-  GdkDisplay* display = gdk_window_get_display(mGdkWindow);
-
   // When a button-press/release event is requested, create it here and put it
   // in the event queue. This will not emit a motion event - this needs to be
   // done explicitly *before* requesting a button-press/release. You will also
@@ -8742,10 +8740,7 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(
       event.button.time = GDK_CURRENT_TIME;
 
       // Get device for event source
-      GdkDeviceManager* device_manager =
-          gdk_display_get_device_manager(display);
-      event.button.device =
-          gdk_device_manager_get_client_pointer(device_manager);
+      event.button.device = GdkGetPointer();
 
       event.button.x_root = DevicePixelsToGdkCoordRoundDown(aPoint.x);
       event.button.y_root = DevicePixelsToGdkCoordRoundDown(aPoint.y);
@@ -8771,7 +8766,7 @@ nsresult nsWindow::SynthesizeNativeMouseEvent(
 #endif
       GdkScreen* screen = gdk_window_get_screen(mGdkWindow);
       GdkPoint point = DevicePixelsToGdkPointRoundDown(aPoint);
-      gdk_display_warp_pointer(display, screen, point.x, point.y);
+      gdk_device_warp(GdkGetPointer(), screen, point.x, point.y);
       return NS_OK;
     }
     case NativeMouseMessage::EnterWindow:
