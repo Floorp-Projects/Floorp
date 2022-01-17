@@ -15,6 +15,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/ByteStreamHelpers.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
@@ -74,11 +75,14 @@ NS_INTERFACE_MAP_END_INHERITING(ReadableStreamController)
 
 ReadableByteStreamController::ReadableByteStreamController(
     nsIGlobalObject* aGlobal)
-    : ReadableStreamController(aGlobal) {}
+    : ReadableStreamController(aGlobal) {
+  mozilla::HoldJSObjects(this);
+}
 
 ReadableByteStreamController::~ReadableByteStreamController() {
   ClearPendingPullIntos();
   ClearQueue();
+  mozilla::DropJSObjects(this);
 }
 
 void ReadableByteStreamController::ClearQueue() {
