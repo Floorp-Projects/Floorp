@@ -44,6 +44,16 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.tabs.remote.useCrossOriginOpenerPolicy",
   false
 );
+// Preference containing the list (comma separated) of origins that will
+// have ServiceWorkers isolated in special processes
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "serviceWorkerIsolationList",
+  "browser.tabs.remote.serviceWorkerIsolationList",
+  "",
+  false,
+  val => val.split(",")
+);
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "serializationHelper",
@@ -237,7 +247,10 @@ function validatedWebRemoteType(
 
     if (
       aIsWorker &&
-      aWorkerType === Ci.nsIE10SUtils.REMOTE_WORKER_TYPE_SERVICE
+      aWorkerType === Ci.nsIE10SUtils.REMOTE_WORKER_TYPE_SERVICE &&
+      serviceWorkerIsolationList.some(function(val) {
+        return targetPrincipal.siteOriginNoSuffix == val;
+      })
     ) {
       return `${SERVICEWORKER_REMOTE_TYPE}=${targetPrincipal.siteOrigin}`;
     }
@@ -273,7 +286,6 @@ var E10SUtils = {
   PRIVILEGEDMOZILLA_REMOTE_TYPE,
   LARGE_ALLOCATION_REMOTE_TYPE,
   FISSION_WEB_REMOTE_TYPE,
-  SERVICEWORKER_REMOTE_TYPE,
 
   /**
    * @param aURI The URI of the about page
