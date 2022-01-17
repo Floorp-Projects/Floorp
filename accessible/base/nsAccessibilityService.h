@@ -167,6 +167,14 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
                             nsIContent* aStartChild, nsIContent* aEndChild);
 
   /**
+   * Triggers a re-evaluation of the a11y tree of aContent after the next
+   * refresh. This is important because whether we create accessibles may
+   * depend on the frame tree / style.
+   */
+  void ScheduleAccessibilitySubtreeUpdate(mozilla::PresShell* aPresShell,
+                                          nsIContent* aStartChild);
+
+  /**
    * Notification used to update the accessible tree when content is removed.
    */
   void ContentRemoved(mozilla::PresShell* aPresShell, nsIContent* aChild);
@@ -176,6 +184,12 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
    */
   void TableLayoutGuessMaybeChanged(mozilla::PresShell* aPresShell,
                                     nsIContent* aContent);
+
+  /**
+   * Notifies when a combobox <option> text or label changes.
+   */
+  void ComboboxOptionMaybeChanged(mozilla::PresShell*,
+                                  nsIContent* aMutatingNode);
 
   void UpdateText(mozilla::PresShell* aPresShell, nsIContent* aContent);
 
