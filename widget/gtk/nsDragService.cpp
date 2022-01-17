@@ -381,9 +381,7 @@ nsresult nsDragService::InvokeDragSessionImpl(
   gtk_window_group_add_window(window_group, GTK_WINDOW(mHiddenWidget));
 
   // Get device for event source
-  GdkDisplay* display = gdk_display_get_default();
-  GdkDeviceManager* device_manager = gdk_display_get_device_manager(display);
-  event.button.device = gdk_device_manager_get_client_pointer(device_manager);
+  event.button.device = widget::GdkGetPointer();
 
   // start our drag.
   GdkDragContext* context =
@@ -1423,12 +1421,13 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
     // We don't have a drag end point, so guess
     gint x, y;
     GdkDisplay* display = gdk_display_get_default();
-    if (display) {
-      gint scale = mozilla::widget::ScreenHelperGTK::GetGTKMonitorScaleFactor();
-      gdk_display_get_pointer(display, nullptr, &x, &y, nullptr);
-      SetDragEndPoint(LayoutDeviceIntPoint(x * scale, y * scale));
-      LOGDRAGSERVICE(("guess drag end point %d %d\n", x * scale, y * scale));
-    }
+    GdkScreen* screen = gdk_display_get_default_screen(display);
+    GdkWindow* window = gdk_screen_get_root_window(screen);
+    gdk_window_get_device_position(window, widget::GdkGetPointer(), &x, &y,
+                                   nullptr);
+    gint scale = mozilla::widget::ScreenHelperGTK::GetGTKMonitorScaleFactor();
+    SetDragEndPoint(LayoutDeviceIntPoint(x * scale, y * scale));
+    LOGDRAGSERVICE(("guess drag end point %d %d\n", x * scale, y * scale));
   }
 
   // Either the drag was aborted or the drop occurred outside the app.
