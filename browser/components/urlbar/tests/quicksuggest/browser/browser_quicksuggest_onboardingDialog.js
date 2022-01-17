@@ -38,20 +38,25 @@ add_task(async function setup() {
 
 // When the user has already enabled the data-collection pref, the dialog should
 // not appear.
-add_task(async function onboardingShouldNotAppear() {
+add_task(async function dataCollectionAlreadyEnabled() {
   setDialogPrereqPrefs();
-
-  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
-  UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
 
   info("Calling maybeShowOnboardingDialog");
   let showed = await UrlbarQuickSuggest.maybeShowOnboardingDialog();
   Assert.ok(!showed, "The dialog was not shown");
 
-  UrlbarPrefs.clear("suggest.quicksuggest.nonsponsored");
-  UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
   UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");
+});
+
+// When the current tab is about:welcome, the dialog should not appear.
+add_task(async function aboutWelcome() {
+  setDialogPrereqPrefs();
+  await BrowserTestUtils.withNewTab("about:welcome", async () => {
+    info("Calling maybeShowOnboardingDialog");
+    let showed = await UrlbarQuickSuggest.maybeShowOnboardingDialog();
+    Assert.ok(!showed, "The dialog was not shown");
+  });
 });
 
 // Test for transition from introduction to main.
