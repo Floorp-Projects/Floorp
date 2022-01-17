@@ -246,7 +246,7 @@
         <item name="toolbarStartGradient">@color/fx_mobile_private_layer_color_4_start</item>
         <item name="toolbarCenterGradient">@color/fx_mobile_private_layer_color_4_center</item>
         <item name="toolbarEndGradient">@color/fx_mobile_private_layer_color_4_end</item>
-        <item name="toolbarDivider">@color/toolbar_divider_color_private_theme</item>
+        <item name="toolbarDivider">@color/fx_mobile_private_border_color_primary</item>
         <item name="fillLinkFromClipboard">@color/accent_high_contrast_private_theme</item>
         <item name="syncDisconnected">@color/sync_disconnected_icon_fill_private_theme</item>
         <item name="syncDisconnectedBackground">@color/sync_disconnected_background_private_theme</item>
