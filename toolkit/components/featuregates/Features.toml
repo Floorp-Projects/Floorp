@@ -113,7 +113,7 @@ preference = "network.cookie.sameSite.schemeful"
 type = "boolean"
 bug-numbers = [1651119, 1617609]
 is-public = true
-default-value = true
+default-value = false
 
 [devtools-serviceworker-debugger-support]
 title = "experimental-features-devtools-serviceworker-debugger-support"
