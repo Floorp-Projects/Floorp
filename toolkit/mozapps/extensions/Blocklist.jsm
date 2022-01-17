@@ -1435,7 +1435,11 @@ let Blocklist = {
 
   loadBlocklistAsync() {
     // Need to ensure we notify gfx of new stuff.
-    GfxBlocklistRS.checkForEntries();
+    // Geckoview calls this for each new tab (bug 1730026), so ensure we only
+    // check for entries when first initialized.
+    if (!GfxBlocklistRS._initialized) {
+      GfxBlocklistRS.checkForEntries();
+    }
     this.ExtensionBlocklist.ensureInitialized();
   },
 
