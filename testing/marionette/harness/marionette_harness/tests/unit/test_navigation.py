@@ -47,6 +47,7 @@ class BaseNavigationTestCase(WindowManagerMixin, MarionetteTestCase):
             "navigation_pushstate.html"
         )
         self.test_page_remote = self.marionette.absolute_url("test.html")
+        self.test_page_slow_coop = self.marionette.absolute_url("slow-coop")
         self.test_page_slow_resource = self.marionette.absolute_url(
             "slow_resource.html"
         )
@@ -883,6 +884,22 @@ class TestPageLoadStrategy(BaseNavigationTestCase):
         self.assertEqual(self.test_page_slow_resource, self.marionette.get_url())
         self.assertEqual("complete", self.ready_state)
         self.marionette.find_element(By.ID, "slow")
+
+    def test_none_with_new_session_waits_for_page_loaded_remoteness_change(self):
+        self.marionette.delete_session()
+        self.marionette.start_session({"pageLoadStrategy": "none"})
+
+        # Navigate will return immediately.
+        self.marionette.navigate(self.test_page_slow_coop)
+
+        # Make sure that when creating a new session right away it waits
+        # until the page has been finished loading.
+        self.marionette.delete_session()
+        self.marionette.start_session()
+
+        self.assertEqual(self.test_page_slow_coop, self.marionette.get_url())
+        self.assertEqual("complete", self.ready_state)
+        self.marionette.find_element(By.ID, "delay")
 
     def test_eager(self):
         self.marionette.delete_session()
