@@ -70,3 +70,4 @@ HTTP(..) == view-source:vs-non-ascii-in-comment-before.sjs vs-non-ascii-in-comme
 == view-source:xml-without-tags.xml xml-without-tags-ref.html
 == view-source:incomplete-xml-decl.xml incomplete-xml-decl-ref.html
 == view-source:view-source-bom.html view-source-bom-ref.html
+skip-if(Android) == bug1749522-1.txt bug1749522-1-ref.txt # Skipped on Android due to suspicion of harness bug
