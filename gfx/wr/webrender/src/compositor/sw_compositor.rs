@@ -97,7 +97,7 @@ impl SwTile {
         surface: &SwSurface,
         transform: &CompositorSurfaceTransform,
         clip_rect: &DeviceIntRect,
-    ) -> Option<(DeviceIntRect, DeviceIntRect, bool)> {
+    ) -> Option<(DeviceIntRect, DeviceIntRect, bool, bool)> {
         // Offset the valid rect to the appropriate surface origin.
         let valid = self.local_bounds(surface);
         // The destination rect is the valid rect transformed and then clipped.
@@ -120,7 +120,7 @@ impl SwTile {
            dest_rect.size().try_cast::<i32>().is_none() {
             return None;
         }
-        Some((src_rect.try_cast()?, dest_rect.try_cast()?, transform.m22 < 0.0))
+        Some((src_rect.try_cast()?, dest_rect.try_cast()?, transform.m11 < 0.0, transform.m22 < 0.0))
     }
 }
 
@@ -204,6 +204,7 @@ struct SwCompositeJob {
     dst_rect: DeviceIntRect,
     clipped_dst: DeviceIntRect,
     opaque: bool,
+    flip_x: bool,
     flip_y: bool,
     filter: ImageRendering,
     /// The total number of bands for this job
@@ -238,6 +239,7 @@ impl SwCompositeJob {
                     self.dst_rect.width(),
                     self.dst_rect.height(),
                     self.opaque,
+                    self.flip_x,
                     self.flip_y,
                     image_rendering_to_gl_filter(self.filter),
                     band_clip.min.x,
@@ -270,6 +272,7 @@ impl SwCompositeJob {
                     self.dst_rect.min.y,
                     self.dst_rect.width(),
                     self.dst_rect.height(),
+                    self.flip_x,
                     self.flip_y,
                     band_clip.min.x,
                     band_clip.min.y,
@@ -525,6 +528,7 @@ impl SwCompositeThread {
         dst_rect: DeviceIntRect,
         clip_rect: DeviceIntRect,
         opaque: bool,
+        flip_x: bool,
         flip_y: bool,
         filter: ImageRendering,
         mut graph_node: SwCompositeGraphNodeRef,
@@ -549,6 +553,7 @@ impl SwCompositeThread {
             dst_rect,
             clipped_dst,
             opaque,
+            flip_x,
             flip_y,
             filter,
             num_bands,
@@ -956,7 +961,7 @@ impl SwCompositor {
         job_queue: &mut SwCompositeJobQueue,
     ) {
         if let Some(ref composite_thread) = self.composite_thread {
-            if let Some((src_rect, dst_rect, flip_y)) = tile.composite_rects(surface, transform, clip_rect) {
+            if let Some((src_rect, dst_rect, flip_x, flip_y)) = tile.composite_rects(surface, transform, clip_rect) {
                 let source = if surface.external_image.is_some() {
                     // If the surface has an attached external image, lock any textures supplied in the descriptor.
                     match surface.composite_surface {
@@ -997,6 +1002,7 @@ impl SwCompositor {
                         dst_rect,
                         *clip_rect,
                         surface.is_opaque,
+                        flip_x,
                         flip_y,
                         filter,
                         tile.graph_node.clone(),
