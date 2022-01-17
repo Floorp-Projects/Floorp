@@ -74,6 +74,26 @@ def slow_loading_handler(request, response):
     )
 
 
+@handlers.handler
+def slow_coop_handler(request, response):
+    # Allow the test specify the delay for delivering the content
+    params = dict(urlparse.parse_qsl(request.url_parts.query))
+    delay = int(params.get("delay", 5))
+    time.sleep(delay)
+
+    # Isolate the browsing context exclusively to same-origin documents
+    response.headers.set("Cross-Origin-Opener-Policy", "same-origin")
+    response.headers.set("Cache-Control", "no-cache, no-store")
+    response.content = """<!doctype html>
+<meta charset="UTF-8">
+<title>Slow cross-origin page loading</title>
+
+<p>Delay: <span id="delay">{}</span></p>
+""".format(
+        delay
+    )
+
+
 class NotAliveError(Exception):
     """Occurs when attempting to run a function that requires the HTTPD
     to have been started, and it has not.
@@ -109,6 +129,7 @@ class FixtureServer(object):
             ("POST", "/file_upload", upload_handler),
             ("GET", "/http_auth", http_auth_handler),
             ("GET", "/slow", slow_loading_handler),
+            ("GET", "/slow-coop", slow_coop_handler),
         ]
         routes.extend(default_routes.routes)
 
