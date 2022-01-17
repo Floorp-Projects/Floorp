@@ -128,6 +128,8 @@ def bootstrap_path(path, **kwargs):
     @imports(_from="__builtin__", _import="open")
     @imports(_from="__builtin__", _import="Exception")
     def bootstrap_path(bootstrap, toolchains_base_dir, tasks, build_env, path):
+        if not path:
+            return
         path_parts = path.split("/")
 
         def try_bootstrap(exists):
