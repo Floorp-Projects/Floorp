@@ -384,8 +384,8 @@ nsresult nsDragService::InvokeDragSessionImpl(
   event.button.device = widget::GdkGetPointer();
 
   // start our drag.
-  GdkDragContext* context =
-      gtk_drag_begin(mHiddenWidget, sourceList, action, 1, &event);
+  GdkDragContext* context = gtk_drag_begin_with_coordinates(
+      mHiddenWidget, sourceList, action, 1, &event, -1, -1);
 
   nsresult rv;
   if (context) {
