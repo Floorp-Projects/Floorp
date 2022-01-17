@@ -60,12 +60,6 @@ class WinWindowOcclusionTracker final : public DisplayStatusListener,
   /// Can be called from any thread.
   static bool IsInWinWindowOcclusionThread();
 
-  /// Can only be called from the main thread.
-  void EnsureDisplayStatusObserver();
-
-  /// Can only be called from the main thread.
-  void EnsureSessionChangeObserver();
-
   // Enables notifying to widget via NotifyOcclusionState() when the occlusion
   // state has been computed.
   void Enable(nsBaseWidget* aWindow, HWND aHwnd);

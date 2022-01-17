@@ -33,16 +33,21 @@ class WinWindowOcclusionTrackerInteractiveTest : public ::testing::Test {
     }
     EXPECT_EQ(nullptr, WinWindowOcclusionTracker::Get());
 
+    mOldPrefDisplayStatus = Preferences::GetBool(PREF_DISPLAY_STATE);
+    Preferences::SetBool(PREF_DISPLAY_STATE, true);
+    mOldPrefSessionLock = Preferences::GetBool(PREF_SESSION_LOCK);
+    Preferences::SetBool(PREF_SESSION_LOCK, true);
+
     WinWindowOcclusionTracker::Ensure();
     EXPECT_NE(nullptr, WinWindowOcclusionTracker::Get());
-
-    WinWindowOcclusionTracker::Get()->EnsureDisplayStatusObserver();
-    WinWindowOcclusionTracker::Get()->EnsureSessionChangeObserver();
   }
 
   void TearDown() override {
     WinWindowOcclusionTracker::ShutDown();
     EXPECT_EQ(nullptr, WinWindowOcclusionTracker::Get());
+
+    Preferences::SetBool(PREF_DISPLAY_STATE, mOldPrefDisplayStatus);
+    Preferences::SetBool(PREF_SESSION_LOCK, mOldPrefSessionLock);
   }
 
   void SetNativeWindowBounds(HWND aHWnd, const LayoutDeviceIntRect aBounds) {
@@ -115,6 +120,8 @@ class WinWindowOcclusionTrackerInteractiveTest : public ::testing::Test {
     WinWindowOcclusionTracker::Get()->OnDisplayStateChanged(aDisplayOn);
   }
 
+  bool mOldPrefDisplayStatus = false;
+  bool mOldPrefSessionLock = false;
   RefPtr<MockWinWidget> mMockWinWidget;
 };
 
