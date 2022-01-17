@@ -44,6 +44,11 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/client/fronts/array-buffer",
   },
   {
+    types: ["blackboxing"],
+    spec: "devtools/shared/specs/blackboxing",
+    front: "devtools/client/fronts/blackboxing",
+  },
+  {
     types: ["breakpoint-list"],
     spec: "devtools/shared/specs/breakpoint-list",
     front: "devtools/client/fronts/breakpoint-list",

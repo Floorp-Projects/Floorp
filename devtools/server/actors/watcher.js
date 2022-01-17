@@ -43,6 +43,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "BlackboxingActor",
+  "devtools/server/actors/blackboxing",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "BreakpointListActor",
   "devtools/server/actors/breakpoint-list",
   true
@@ -235,6 +241,9 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           [Resources.TYPES.SERVER_SENT_EVENT]: shouldEnableAllWatchers,
           [Resources.TYPES.WEBSOCKET]: shouldEnableAllWatchers,
         },
+        // @backward-compat { version 98 } Introduced the Blackboxing actor
+        //                  The traits can be removed when removing 97 support.
+        blackboxing: true,
       },
     };
   },
@@ -651,6 +660,20 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     }
 
     return this._networkParentActor;
+  },
+
+  /**
+   * Returns the blackboxing actor.
+   *
+   * @return {Object} actor
+   *        The blackboxing actor.
+   */
+  getBlackboxingActor() {
+    if (!this._blackboxingActor) {
+      this._blackboxingActor = new BlackboxingActor(this);
+    }
+
+    return this._blackboxingActor;
   },
 
   /**
