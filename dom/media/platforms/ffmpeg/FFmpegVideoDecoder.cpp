@@ -21,6 +21,7 @@
 #  include "mozilla/layers/DMABUFSurfaceImage.h"
 #  include "mozilla/widget/DMABufLibWrapper.h"
 #  include "FFmpegVideoFramePool.h"
+#  include "va/va.h"
 #endif
 
 #include "libavutil/pixfmt.h"
@@ -57,6 +58,10 @@ typedef mozilla::layers::Image Image;
 typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 
 namespace mozilla {
+
+#ifdef MOZ_WAYLAND_USE_VAAPI
+nsTArray<AVCodecID> FFmpegVideoDecoder<LIBAV_VER>::mAcceleratedFormats;
+#endif
 
 using media::TimeUnit;
 
@@ -229,6 +234,21 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
 MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
   FFMPEG_LOG("Initialising VA-API FFmpeg decoder");
 
+  StaticMutexAutoLock mon(sMutex);
+
+  // mAcceleratedFormats is already configured so check supported
+  // formats before we do anything.
+  if (mAcceleratedFormats.Length()) {
+    if (!IsFormatAccelerated(mCodecID)) {
+      FFMPEG_LOG("  Format %s is not accelerated",
+                 mLib->avcodec_get_name(mCodecID));
+      return NS_ERROR_NOT_AVAILABLE;
+    } else {
+      FFMPEG_LOG("  Format %s is accelerated",
+                 mLib->avcodec_get_name(mCodecID));
+    }
+  }
+
   if (!mLib->IsVAAPIAvailable()) {
     FFMPEG_LOG("  libva library or symbols are missing.");
     return NS_ERROR_NOT_AVAILABLE;
@@ -241,8 +261,6 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
   }
   FFMPEG_LOG("  codec %s : %s", codec->name, codec->long_name);
 
-  StaticMutexAutoLock mon(sMutex);
-
   if (!(mCodecContext = mLib->avcodec_alloc_context3(codec))) {
     FFMPEG_LOG("  couldn't init VA-API ffmpeg context");
     return NS_ERROR_OUT_OF_MEMORY;
@@ -250,6 +268,15 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
   mCodecContext->opaque = this;
 
   InitVAAPICodecContext();
+
+  auto releaseVAAPIdecoder = MakeScopeExit([&] {
+    if (mVAAPIDeviceContext) {
+      mLib->av_buffer_unref(&mVAAPIDeviceContext);
+    }
+    if (mCodecContext) {
+      mLib->av_freep(&mCodecContext);
+    }
+  });
 
   if (!CreateVAAPIDeviceContext()) {
     mLib->av_freep(&mCodecContext);
@@ -271,7 +298,17 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
     return NS_ERROR_DOM_MEDIA_FATAL_ERR;
   }
 
+  if (mAcceleratedFormats.IsEmpty()) {
+    mAcceleratedFormats = GetAcceleratedFormats();
+    if (!IsFormatAccelerated(mCodecID)) {
+      FFMPEG_LOG("  Format %s is not accelerated",
+                 mLib->avcodec_get_name(mCodecID));
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+
   FFMPEG_LOG("  VA-API FFmpeg init successful");
+  releaseVAAPIdecoder.release();
   return NS_OK;
 }
 
@@ -374,6 +411,7 @@ RefPtr<MediaDataDecoder::InitPromise> FFmpegVideoDecoder<LIBAV_VER>::Init() {
     if (NS_SUCCEEDED(rv)) {
       return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
     }
+    mEnableHardwareDecoding = false;
   }
 #endif
 
@@ -473,6 +511,11 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
     }
 
 #  ifdef MOZ_WAYLAND_USE_VAAPI
+    // Create VideoFramePool in case we need it.
+    if (!mVideoFramePool && (mUseDMABufSurfaces || mEnableHardwareDecoding)) {
+      mVideoFramePool = MakeUnique<VideoFramePool>(mEnableHardwareDecoding);
+    }
+
     // Release unused VA-API surfaces before avcodec_receive_frame() as
     // ffmpeg recycles VASurface for HW decoding.
     if (mVideoFramePool) {
@@ -861,6 +904,181 @@ bool FFmpegVideoDecoder<LIBAV_VER>::IsHardwareAccelerated(
     nsACString& aFailureReason) const {
   return !!mVAAPIDeviceContext;
 }
+#endif
+
+#ifdef MOZ_WAYLAND_USE_VAAPI
+bool FFmpegVideoDecoder<LIBAV_VER>::IsFormatAccelerated(
+    AVCodecID aCodecID) const {
+  for (const auto& format : mAcceleratedFormats) {
+    if (format == aCodecID) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// See ffmpeg / vaapi_decode.c how CodecID is mapped to VAProfile.
+static const struct {
+  enum AVCodecID codec_id;
+  VAProfile va_profile;
+  char name[100];
+} vaapi_profile_map[] = {
+#  define MAP(c, v, n) \
+    { AV_CODEC_ID_##c, VAProfile##v, n }
+    MAP(H264, H264ConstrainedBaseline, "H264ConstrainedBaseline"),
+    MAP(H264, H264Main, "H264Main"),
+    MAP(H264, H264High, "H264High"),
+    MAP(VP8, VP8Version0_3, "VP8Version0_3"),
+    MAP(VP9, VP9Profile0, "VP9Profile0"),
+    MAP(VP9, VP9Profile2, "VP9Profile2"),
+    MAP(AV1, AV1Profile0, "AV1Profile0"),
+    MAP(AV1, AV1Profile1, "AV1Profile1"),
+#  undef MAP
+};
+
+static AVCodecID VAProfileToCodecID(VAProfile aVAProfile) {
+  for (const auto& profile : vaapi_profile_map) {
+    if (profile.va_profile == aVAProfile) {
+      return profile.codec_id;
+    }
+  }
+  return AV_CODEC_ID_NONE;
+}
+
+static const char* VAProfileName(VAProfile aVAProfile) {
+  for (const auto& profile : vaapi_profile_map) {
+    if (profile.va_profile == aVAProfile) {
+      return profile.name;
+    }
+  }
+  return nullptr;
+}
+
+// This code is adopted from mpv project va-api routine
+// determine_working_formats()
+void FFmpegVideoDecoder<LIBAV_VER>::AddAcceleratedFormats(
+    nsTArray<AVCodecID>& aCodecList, AVCodecID aCodecID,
+    AVVAAPIHWConfig* hwconfig) {
+  AVHWFramesConstraints* fc =
+      mLib->av_hwdevice_get_hwframe_constraints(mVAAPIDeviceContext, hwconfig);
+  if (!fc) {
+    FFMPEG_LOG("    failed to retrieve libavutil frame constraints");
+    return;
+  }
+  auto autoRelease =
+      MakeScopeExit([&] { mLib->av_hwframe_constraints_free(&fc); });
+
+  bool foundSupportedFormat = false;
+  for (int n = 0;
+       fc->valid_sw_formats && fc->valid_sw_formats[n] != AV_PIX_FMT_NONE;
+       n++) {
+#  ifdef MOZ_LOGGING
+    char formatDesc[1000];
+    FFMPEG_LOG("    codec %s format %s", mLib->avcodec_get_name(aCodecID),
+               mLib->av_get_pix_fmt_string(formatDesc, sizeof(formatDesc),
+                                           fc->valid_sw_formats[n]));
+#  endif
+    if (fc->valid_sw_formats[n] == AV_PIX_FMT_NV12 ||
+        fc->valid_sw_formats[n] == AV_PIX_FMT_YUV420P) {
+      foundSupportedFormat = true;
+#  ifndef MOZ_LOGGING
+      break;
+#  endif
+    }
+  }
+
+  if (!foundSupportedFormat) {
+    FFMPEG_LOG("    %s target pixel format is not supported!",
+               mLib->avcodec_get_name(aCodecID));
+    return;
+  }
+
+  if (!aCodecList.Contains(aCodecID)) {
+    aCodecList.AppendElement(aCodecID);
+  }
+}
+
+nsTArray<AVCodecID> FFmpegVideoDecoder<LIBAV_VER>::GetAcceleratedFormats() {
+  FFMPEG_LOG("FFmpegVideoDecoder::GetAcceleratedFormats()");
+
+  VAProfile* profiles = nullptr;
+  VAEntrypoint* entryPoints = nullptr;
+
+  nsTArray<AVCodecID> supportedHWCodecs(AV_CODEC_ID_NONE);
+#  ifdef MOZ_LOGGING
+  auto printCodecs = MakeScopeExit([&] {
+    FFMPEG_LOG("  Supported accelerated formats:");
+    for (unsigned i = 0; i < supportedHWCodecs.Length(); i++) {
+      FFMPEG_LOG("      %s", mLib->avcodec_get_name(supportedHWCodecs[i]));
+    }
+  });
+#  endif
+
+  AVVAAPIHWConfig* hwconfig =
+      mLib->av_hwdevice_hwconfig_alloc(mVAAPIDeviceContext);
+  if (!hwconfig) {
+    FFMPEG_LOG("  failed to get AVVAAPIHWConfig");
+    return supportedHWCodecs;
+  }
+  auto autoRelease = MakeScopeExit([&] {
+    delete[] profiles;
+    delete[] entryPoints;
+    mLib->av_freep(&hwconfig);
+  });
+
+  int maxProfiles = vaMaxNumProfiles(mDisplay);
+  int maxEntryPoints = vaMaxNumEntrypoints(mDisplay);
+  if (MOZ_UNLIKELY(maxProfiles <= 0 || maxEntryPoints <= 0)) {
+    return supportedHWCodecs;
+  }
+
+  profiles = new VAProfile[maxProfiles];
+  int numProfiles = 0;
+  VAStatus status = vaQueryConfigProfiles(mDisplay, profiles, &numProfiles);
+  if (status != VA_STATUS_SUCCESS) {
+    FFMPEG_LOG("  vaQueryConfigProfiles() failed %s", vaErrorStr(status));
+    return supportedHWCodecs;
+  }
+  numProfiles = MIN(numProfiles, maxProfiles);
+
+  entryPoints = new VAEntrypoint[maxEntryPoints];
+  for (int p = 0; p < numProfiles; p++) {
+    VAProfile profile = profiles[p];
+
+    AVCodecID codecID = VAProfileToCodecID(profile);
+    if (codecID == AV_CODEC_ID_NONE) {
+      continue;
+    }
+
+    int numEntryPoints = 0;
+    status = vaQueryConfigEntrypoints(mDisplay, profile, entryPoints,
+                                      &numEntryPoints);
+    if (status != VA_STATUS_SUCCESS) {
+      FFMPEG_LOG("  vaQueryConfigEntrypoints() failed: '%s' for profile %d",
+                 vaErrorStr(status), (int)profile);
+      continue;
+    }
+    numEntryPoints = MIN(numEntryPoints, maxEntryPoints);
+
+    FFMPEG_LOG("  Profile %s:", VAProfileName(profile));
+    for (int e = 0; e < numEntryPoints; e++) {
+      VAConfigID config = VA_INVALID_ID;
+      status = vaCreateConfig(mDisplay, profile, entryPoints[e], nullptr, 0,
+                              &config);
+      if (status != VA_STATUS_SUCCESS) {
+        FFMPEG_LOG("  vaCreateConfig() failed: '%s' for profile %d",
+                   vaErrorStr(status), (int)profile);
+        continue;
+      }
+      hwconfig->config_id = config;
+      AddAcceleratedFormats(supportedHWCodecs, codecID, hwconfig);
+      vaDestroyConfig(mDisplay, config);
+    }
+  }
+
+  return supportedHWCodecs;
+}
+
 #endif
 
 }  // namespace mozilla
