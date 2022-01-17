@@ -402,11 +402,6 @@ void WinWebAuthnManager::Register(
   mCancellationIds.erase(aTransactionId);
 
   if (hr == S_OK) {
-    nsTArray<uint8_t> attObject;
-    attObject.AppendElements(
-        pWebAuthNCredentialAttestation->pbAttestationObject,
-        pWebAuthNCredentialAttestation->cbAttestationObject);
-
     nsTArray<uint8_t> credentialId;
     credentialId.AppendElements(pWebAuthNCredentialAttestation->pbCredentialId,
                                 pWebAuthNCredentialAttestation->cbCredentialId);
@@ -455,6 +450,23 @@ void WinWebAuthnManager::Register(
                                        attestation->pX5c->cbData);
       authenticatorData.AppendElements(attestation->pbSignature,
                                        attestation->cbSignature);
+    }
+
+    nsTArray<uint8_t> attObject;
+    if (winAttestation == WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_NONE) {
+      // Zero AAGuid
+      authenticatorData.ReplaceElementsAt(32 + 1 + 4 /*AAGuid offset*/, 16,
+                                          0x0);
+
+      CryptoBuffer authData;
+      authData.Assign(authenticatorData);
+      CryptoBuffer noneAttObj;
+      CBOREncodeNoneAttestationObj(authData, noneAttObj);
+      attObject.AppendElements(noneAttObj);
+    } else {
+      attObject.AppendElements(
+          pWebAuthNCredentialAttestation->pbAttestationObject,
+          pWebAuthNCredentialAttestation->cbAttestationObject);
     }
 
     nsTArray<WebAuthnExtensionResult> extensions;
