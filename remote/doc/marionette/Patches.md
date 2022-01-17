@@ -27,7 +27,7 @@ But you can also schedule tests by selecting relevant jobs yourself:
     mach try fuzzy
 
 [Phabricator]: https://moz-conduit.readthedocs.io/en/latest/phabricator-user.html
-[commit creation guidelines]: https://mozilla-version-control-tools.readthedocs.io/en/latest/devguide/contributing.html?highlight=phabricator#submitting-patches-for-review
+[commit creation guidelines]: https://mozilla-version-control-tools.readthedocs.io/en/latest/devguide/contributing.html#submitting-patches-for-review
 [becoming a Mozilla committer]: https://www.mozilla.org/en-US/about/governance/policies/commit/
 [Firefox CI]: https://treeherder.mozilla.org/
 [try preset]: /tools/try/presets

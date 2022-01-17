@@ -47,5 +47,5 @@ them, place this in your [mozconfig]:
 
 [remote/ in central]: https://searchfox.org/mozilla-central/source/remote
 [mozconfig]: /build/buildsystem/mozconfigs.rst
-[artifact builds]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Artifact_builds
+[artifact builds]: /contributing/build/artifact_builds.rst
 [Marionette]: /testing/marionette/index.rst

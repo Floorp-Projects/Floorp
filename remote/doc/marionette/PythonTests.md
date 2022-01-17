@@ -13,8 +13,8 @@ methods that have a name starting with `test_`.
 You can additionally define [`setUp`] and [`tearDown`] instance
 methods to execute code before and after child tests, and
 [`setUpClass`]/[`tearDownClass`] for the parent test.  When you use
-these, it is important to remember calling the [`MarionetteTestCase`]
-superclass’ own `setUp`/`tearDown` methods since they handle
+these, it is important to remember calling the `MarionetteTestCase`
+superclass’ own [`setUp`]/[`tearDown`] methods since they handle
 setup/cleanup of the session.
 
 The test structure is illustrated here:
@@ -37,11 +37,11 @@ The test structure is illustrated here:
 	        MarionetteTestCase.tearDown(self)
 
 [remote protocol]: Protocol.md
-[unittest]: https://docs.python.org/2.7/library/unittest.html
-[`setUp`]: https://docs.python.org/2.7/library/unittest.html#unittest.TestCase.setUp
-[`setUpClass`]: https://docs.python.org/2.7/library/unittest.html#unittest.TestCase.setUpClass
-[`tearDown`]: https://docs.python.org/2.7/library/unittest.html#unittest.TestCase.tearDown
-[`tearDownClass`]: https://docs.python.org/2.7/library/unittest.html#unittest.TestCase.tearDownClass
+[unittest]: https://docs.python.org/3/library/unittest.html
+[`setUp`]: https://docs.python.org/3/library/unittest.html#unittest.TestCase.setUp
+[`setUpClass`]: https://docs.python.org/3/library/unittest.html#unittest.TestCase.setUpClass
+[`tearDown`]: https://docs.python.org/3/library/unittest.html#unittest.TestCase.tearDown
+[`tearDownClass`]: https://docs.python.org/3/library/unittest.html#unittest.TestCase.tearDownClass
 
 
 Test assertions
