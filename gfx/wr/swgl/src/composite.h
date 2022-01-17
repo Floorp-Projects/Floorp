@@ -248,7 +248,8 @@ static void linear_row_blit(uint16_t* dest, int span, const vec2_scalar& srcUV,
 template <bool COMPOSITE = false>
 static NO_INLINE void linear_blit(Texture& srctex, const IntRect& srcReq,
                                   Texture& dsttex, const IntRect& dstReq,
-                                  bool invertY, const IntRect& clipRect) {
+                                  bool invertX, bool invertY,
+                                  const IntRect& clipRect) {
   assert(srctex.internal_format == GL_RGBA8 ||
          srctex.internal_format == GL_R8 || srctex.internal_format == GL_RG8);
   assert(!COMPOSITE || (srctex.internal_format == GL_RGBA8 &&
@@ -268,6 +269,11 @@ static NO_INLINE void linear_blit(Texture& srctex, const IntRect& srcReq,
   vec2_scalar srcUV(srcReq.x0, srcReq.y0);
   vec2_scalar srcDUV(float(srcReq.width()) / dstReq.width(),
                      float(srcReq.height()) / dstReq.height());
+  if (invertX) {
+    // Advance to the end of the row and flip the step.
+    srcUV.x += srcReq.width();
+    srcDUV.x = -srcDUV.x;
+  }
   // Inverted Y must step downward along source rows
   if (invertY) {
     srcUV.y += srcReq.height();
@@ -345,7 +351,7 @@ void BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
   if (!srcReq.same_size(dstReq) && srctex.width >= 2 && filter == GL_LINEAR &&
       (srctex.internal_format == GL_RGBA8 || srctex.internal_format == GL_R8 ||
        srctex.internal_format == GL_RG8)) {
-    linear_blit(srctex, srcReq, dsttex, dstReq, invertY, dstReq);
+    linear_blit(srctex, srcReq, dsttex, dstReq, false, invertY, dstReq);
   } else {
     scale_blit(srctex, srcReq, dsttex, dstReq, invertY, clipRect);
   }
@@ -414,8 +420,9 @@ void* GetResourceBuffer(LockedTexture* resource, int32_t* width,
 void Composite(LockedTexture* lockedDst, LockedTexture* lockedSrc, GLint srcX,
                GLint srcY, GLsizei srcWidth, GLsizei srcHeight, GLint dstX,
                GLint dstY, GLsizei dstWidth, GLsizei dstHeight,
-               GLboolean opaque, GLboolean flip, GLenum filter, GLint clipX,
-               GLint clipY, GLsizei clipWidth, GLsizei clipHeight) {
+               GLboolean opaque, GLboolean flipX, GLboolean flipY,
+               GLenum filter, GLint clipX, GLint clipY, GLsizei clipWidth,
+               GLsizei clipHeight) {
   if (!lockedDst || !lockedSrc) {
     return;
   }
@@ -432,20 +439,25 @@ void Composite(LockedTexture* lockedDst, LockedTexture* lockedSrc, GLint srcX,
   // as used for the sampling bounds.
   IntRect clipRect = {clipX - dstX, clipY - dstY, clipX - dstX + clipWidth,
                       clipY - dstY + clipHeight};
+  // Ensure we have rows of at least 2 pixels when using the linear filter to
+  // avoid overreading the row. Force X flips onto the linear filter for now
+  // until scale_blit supports it.
+  bool useLinear =
+      srctex.width >= 2 &&
+      (flipX || (!srcReq.same_size(dstReq) && filter == GL_LINEAR));
 
   if (opaque) {
-    // Ensure we have rows of at least 2 pixels when using the linear filter
-    // to avoid overreading the row.
-    if (!srcReq.same_size(dstReq) && srctex.width >= 2 && filter == GL_LINEAR) {
-      linear_blit<false>(srctex, srcReq, dsttex, dstReq, flip, clipRect);
+    if (useLinear) {
+      linear_blit<false>(srctex, srcReq, dsttex, dstReq, flipX, flipY,
+                         clipRect);
     } else {
-      scale_blit<false>(srctex, srcReq, dsttex, dstReq, flip, clipRect);
+      scale_blit<false>(srctex, srcReq, dsttex, dstReq, flipY, clipRect);
     }
   } else {
-    if (!srcReq.same_size(dstReq) && srctex.width >= 2 && filter == GL_LINEAR) {
-      linear_blit<true>(srctex, srcReq, dsttex, dstReq, flip, clipRect);
+    if (useLinear) {
+      linear_blit<true>(srctex, srcReq, dsttex, dstReq, flipX, flipY, clipRect);
     } else {
-      scale_blit<true>(srctex, srcReq, dsttex, dstReq, flip, clipRect);
+      scale_blit<true>(srctex, srcReq, dsttex, dstReq, flipY, clipRect);
     }
   }
 }
@@ -996,10 +1008,10 @@ static void linear_row_yuv(uint32_t* dest, int span, sampler2DRect samplerY,
 static void linear_convert_yuv(Texture& ytex, Texture& utex, Texture& vtex,
                                const YUVMatrix& rgbFromYcbcr, int colorDepth,
                                const IntRect& srcReq, Texture& dsttex,
-                               const IntRect& dstReq, bool invertY,
-                               const IntRect& clipRect) {
+                               const IntRect& dstReq, bool invertX,
+                               bool invertY, const IntRect& clipRect) {
   // Compute valid dest bounds
-  IntRect dstBounds = dsttex.sample_bounds(dstReq, invertY);
+  IntRect dstBounds = dsttex.sample_bounds(dstReq);
   dstBounds.intersect(clipRect);
   // Check if sampling bounds are empty
   if (dstBounds.is_empty()) {
@@ -1015,6 +1027,11 @@ static void linear_convert_yuv(Texture& ytex, Texture& utex, Texture& vtex,
   vec2_scalar srcUV(srcReq.x0, srcReq.y0);
   vec2_scalar srcDUV(float(srcReq.width()) / dstReq.width(),
                      float(srcReq.height()) / dstReq.height());
+  if (invertX) {
+    // Advance to the end of the row and flip the step.
+    srcUV.x += srcReq.width();
+    srcDUV.x = -srcDUV.x;
+  }
   // Inverted Y must step downward along source rows
   if (invertY) {
     srcUV.y += srcReq.height();
@@ -1182,8 +1199,8 @@ void CompositeYUV(LockedTexture* lockedDst, LockedTexture* lockedY,
                   YUVRangedColorSpace colorSpace, GLuint colorDepth, GLint srcX,
                   GLint srcY, GLsizei srcWidth, GLsizei srcHeight, GLint dstX,
                   GLint dstY, GLsizei dstWidth, GLsizei dstHeight,
-                  GLboolean flip, GLint clipX, GLint clipY, GLsizei clipWidth,
-                  GLsizei clipHeight) {
+                  GLboolean flipX, GLboolean flipY, GLint clipX, GLint clipY,
+                  GLsizei clipWidth, GLsizei clipHeight) {
   if (!lockedDst || !lockedY || !lockedU || !lockedV) {
     return;
   }
@@ -1221,7 +1238,7 @@ void CompositeYUV(LockedTexture* lockedDst, LockedTexture* lockedY,
   // scaling. Further fast-paths for non-scaled video might be desirable in the
   // future.
   linear_convert_yuv(ytex, utex, vtex, rgbFromYcbcr, colorDepth, srcReq, dsttex,
-                     dstReq, flip, clipRect);
+                     dstReq, flipX, flipY, clipRect);
 }
 
 }  // extern "C"

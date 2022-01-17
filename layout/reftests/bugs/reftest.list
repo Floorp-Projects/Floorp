@@ -2112,3 +2112,4 @@ skip-if(Android||!browserIsFission) fuzzy(255-255,171000-171000) HTTP == 1743533
 == 1743560-1.html 1743560-1-ref.html
 == 1743851-1.html 1743851-1-ref.html
 pref(image.downscale-during-decode.enabled,true) == 1744468-1.html 1744468-1-ref.html # do not increase fuzz without looking, the test should be smoothly downscaled, not pixelated
+== 1750146-1.html 1750146-1-ref.html
