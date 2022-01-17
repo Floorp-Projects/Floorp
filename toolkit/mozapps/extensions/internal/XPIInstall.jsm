@@ -4050,7 +4050,8 @@ var XPIInstall = {
           // ownsTempFile so that we will cleanup later (see installAddonSet).
           try {
             let tmpDir = Services.dirsvc.get("TmpD", Ci.nsIFile).path;
-            let uniquePath = await IOUtils.createUniqueFile(tmpDir, "tmpaddon");
+            let path = PathUtils.join(tmpDir, "tmpaddon");
+            let uniquePath = PathUtils.createUniquePath(path);
             await IOUtils.copy(sourceAddon._sourceBundle.path, uniquePath);
             // Make sure to update file modification times so this is detected
             // as a new add-on.
