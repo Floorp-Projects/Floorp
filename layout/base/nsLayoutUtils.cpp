@@ -8573,9 +8573,6 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
       metrics.SetDisplayPort(CSSRect::FromAppUnits(dp));
       DisplayPortUtils::MarkDisplayPortAsPainted(aContent);
     }
-    if (DisplayPortUtils::GetCriticalDisplayPort(aContent, &dp)) {
-      metrics.SetCriticalDisplayPort(CSSRect::FromAppUnits(dp));
-    }
 
     metrics.SetHasNonZeroDisplayPortMargins(false);
     if (DisplayPortMarginsPropertyData* currentData =
@@ -8586,13 +8583,9 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
       }
     }
 
-    // Log the high-resolution display port (which is either the displayport
-    // or the critical displayport) for test purposes.
     if (IsAPZTestLoggingEnabled()) {
       LogTestDataForPaint(aLayerManager, scrollId, "displayport",
-                          StaticPrefs::layers_low_precision_buffer()
-                              ? metrics.GetCriticalDisplayPort()
-                              : metrics.GetDisplayPort());
+                          metrics.GetDisplayPort());
     }
 
     metrics.SetMinimalDisplayPort(
