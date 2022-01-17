@@ -217,6 +217,28 @@ void PathUtils::JoinRelative(const GlobalObject&, const nsAString& aBasePath,
   MOZ_ALWAYS_SUCCEEDS(path->GetPath(aResult));
 }
 
+void PathUtils::CreateUniquePath(const GlobalObject&, const nsAString& aPath,
+                                 nsString& aResult, ErrorResult& aErr) {
+  if (aPath.IsEmpty()) {
+    aErr.ThrowNotAllowedError(ERROR_EMPTY_PATH);
+    return;
+  }
+
+  nsCOMPtr<nsIFile> path = new nsLocalFile();
+  if (nsresult rv = InitFileWithPath(path, aPath); NS_FAILED(rv)) {
+    ThrowError(aErr, rv, ERROR_INITIALIZE_PATH);
+    return;
+  }
+
+  if (nsresult rv = path->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
+      NS_FAILED(rv)) {
+    ThrowError(aErr, rv, ERROR_CREATE_UNIQUE);
+    return;
+  }
+
+  MOZ_ALWAYS_SUCCEEDS(path->GetPath(aResult));
+}
+
 void PathUtils::ToExtendedWindowsPath(const GlobalObject&,
                                       const nsAString& aPath, nsString& aResult,
                                       ErrorResult& aErr) {
