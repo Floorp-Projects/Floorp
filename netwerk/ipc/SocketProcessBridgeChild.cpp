@@ -6,6 +6,7 @@
 #include "SocketProcessBridgeChild.h"
 #include "SocketProcessLogging.h"
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/Endpoint.h"
@@ -156,7 +157,8 @@ mozilla::ipc::IPCResult SocketProcessBridgeChild::RecvTest() {
 void SocketProcessBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
   LOG(("SocketProcessBridgeChild::ActorDestroy\n"));
   if (AbnormalShutdown == aWhy) {
-    if (gNeckoChild) {
+    if (gNeckoChild &&
+        !AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
       // Let NeckoParent know that the socket process connections must be
       // rebuilt.
       gNeckoChild->SendResetSocketProcessBridge();
