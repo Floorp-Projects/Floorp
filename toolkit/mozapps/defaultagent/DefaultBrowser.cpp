@@ -31,6 +31,10 @@ constexpr std::pair<std::string_view, Browser> kStringBrowserMap[]{
     {"ie", Browser::InternetExplorer},
     {"opera", Browser::Opera},
     {"brave", Browser::Brave},
+    {"yandex", Browser::Yandex},
+    {"qq-browser", Browser::QQBrowser},
+    {"360-browser", Browser::_360Browser},
+    {"sogou", Browser::Sogou},
 };
 
 static_assert(mozilla::ArrayLength(kStringBrowserMap) == kBrowserCount);
@@ -99,6 +103,13 @@ static BrowserResult GetDefaultBrowser() {
       {L"Internet Explorer", Browser::InternetExplorer},
       {L"Opera", Browser::Opera},
       {L"Brave", Browser::Brave},
+      {L"Yandex", Browser::Yandex},
+      {L"QQBrowser", Browser::QQBrowser},
+      // 360安全浏览器 UTF-16 encoding
+      {L"\u0033\u0036\u0030\u5b89\u5168\u6d4f\u89c8\u5668",
+       Browser::_360Browser},
+      // 搜狗高速浏览器 UTF-16 encoding
+      {L"\u641c\u72d7\u9ad8\u901f\u6d4f\u89c8\u5668", Browser::Sogou},
   };
 
   for (const auto& [prefix, browser] : kFriendlyNamePrefixes) {

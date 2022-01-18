@@ -13,7 +13,8 @@
 #include "mozilla/WinHeaderOnlyUtils.h"
 
 MOZ_DEFINE_ENUM_CLASS(Browser, (Unknown, Firefox, Chrome, EdgeWithEdgeHTML,
-                                EdgeWithBlink, InternetExplorer, Opera, Brave));
+                                EdgeWithBlink, InternetExplorer, Opera, Brave,
+                                Yandex, QQBrowser, _360Browser, Sogou));
 
 struct DefaultBrowserInfo {
   Browser currentDefaultBrowser;
