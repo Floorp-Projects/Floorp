@@ -796,6 +796,7 @@ static_assert(sizeof(JSRope) == sizeof(JSString),
  * The meaning of suffix:
  *   * "MaybeDeflate": for char16_t variant, characters can fit Latin1
  *   * "DontDeflate": for char16_t variant, characters don't fit Latin1
+ *   * "NonStatic": characters don't match StaticStrings
  *   * "ValidLength": length fits JSString::MAX_LENGTH
  */
 
@@ -830,6 +831,11 @@ class JSLinearString : public JSString {
 
   template <js::AllowGC allowGC, typename CharT>
   static inline JSLinearString* new_(
+      JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars,
+      size_t length, js::gc::InitialHeap heap);
+
+  template <js::AllowGC allowGC, typename CharT>
+  static inline JSLinearString* newValidLength(
       JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars,
       size_t length, js::gc::InitialHeap heap);
 
@@ -1415,6 +1421,11 @@ inline JSLinearString* NewStringCopy(
 /* Like NewStringCopyN, but doesn't try to deflate to Latin1. */
 template <js::AllowGC allowGC, typename CharT>
 extern JSLinearString* NewStringCopyNDontDeflate(
+    JSContext* cx, const CharT* s, size_t n,
+    js::gc::InitialHeap heap = js::gc::DefaultHeap);
+
+template <js::AllowGC allowGC, typename CharT>
+extern JSLinearString* NewStringCopyNDontDeflateNonStaticValidLength(
     JSContext* cx, const CharT* s, size_t n,
     js::gc::InitialHeap heap = js::gc::DefaultHeap);
 

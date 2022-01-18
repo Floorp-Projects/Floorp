@@ -116,11 +116,11 @@ JSString* ParserAtom::instantiateString(JSContext* cx, ParserAtomIndex index,
 
   JSString* str;
   if (hasLatin1Chars()) {
-    str =
-        NewStringCopyN<CanGC>(cx, reinterpret_cast<const char*>(latin1Chars()),
-                              length(), gc::TenuredHeap);
+    str = NewStringCopyNDontDeflateNonStaticValidLength<CanGC>(
+        cx, latin1Chars(), length(), gc::TenuredHeap);
   } else {
-    str = NewStringCopyN<CanGC>(cx, twoByteChars(), length(), gc::TenuredHeap);
+    str = NewStringCopyNDontDeflateNonStaticValidLength<CanGC>(
+        cx, twoByteChars(), length(), gc::TenuredHeap);
   }
   if (!str) {
     return nullptr;
