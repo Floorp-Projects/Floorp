@@ -34,6 +34,9 @@ events:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Performance
   search_bar_tapped:
     type: event
     description: |
@@ -58,6 +61,9 @@ events:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Search
   entered_url:
     type: event
     description: |
@@ -82,6 +88,9 @@ events:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Search
   performed_search:
     type: event
     description: |
@@ -112,6 +121,9 @@ events:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Search
   browser_menu_action:
     type: event
     description: |
@@ -163,6 +175,9 @@ events:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Toolbar
   default_browser_notif_tapped:
     type: event
     description: |
@@ -191,6 +206,9 @@ events:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-04-01"
+    metadata:
+      tags:
+        - Toolbar
   normal_and_private_uri_count:
     type: counter
     description: |
@@ -213,6 +231,9 @@ events:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - PrivateBrowsing
   preference_toggled:
     type: event
     description: |
@@ -259,6 +280,13 @@ events:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Bookmarks
+        - History
+        - Logins
+        - PrivateBrowsing
+        - Search
   whats_new_tapped:
     type: event
     description: |
@@ -302,6 +330,9 @@ events:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - PrivateBrowsing
   synced_tab_opened:
     type: event
     description: |
@@ -319,6 +350,9 @@ events:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - SyncTabs
   recently_closed_tabs_opened:
     type: event
     description: |
@@ -337,6 +371,9 @@ events:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Tabs
   copy_url_tapped:
     type: event
     description: |
@@ -355,6 +392,9 @@ events:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - ContextMenu
   browser_toolbar_home_tapped:
     type: event
     description: |
@@ -412,6 +452,9 @@ onboarding:
       - erichards@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Onboarding
   fxa_manual_signin:
     type: event
     description:
@@ -431,6 +474,9 @@ onboarding:
       - erichards@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Onboarding
   privacy_notice:
     type: event
     description:
@@ -449,6 +495,9 @@ onboarding:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Onboarding
   pref_toggled_toolbar_position:
     type: event
     description:
@@ -473,6 +522,9 @@ onboarding:
       - erichards@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Onboarding
   pref_toggled_tracking_prot:
     type: event
     description:
@@ -497,6 +549,9 @@ onboarding:
       - erichards@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Onboarding
   pref_toggled_theme_picker:
     type: event
     description:
@@ -521,6 +576,9 @@ onboarding:
       - erichards@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Onboarding
   finish:
     type: event
     description:
@@ -540,6 +598,9 @@ onboarding:
       - erichards@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Onboarding
 
 search_shortcuts:
   selected:
@@ -560,6 +621,10 @@ search_shortcuts:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Search
+        - Shortcuts
 
 experiments_default_browser:
   toolbar_menu_clicked:
@@ -598,6 +663,9 @@ toolbar_settings:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Toolbar
 
 context_menu:
   item_tapped:
@@ -630,6 +698,10 @@ context_menu:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - ContextMenu
+        - Sharing
 
 login_dialog:
   displayed:
@@ -647,6 +719,9 @@ login_dialog:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Logins
   cancelled:
     type: event
     description: |
@@ -662,6 +737,9 @@ login_dialog:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Logins
   saved:
     type: event
     description: |
@@ -677,6 +755,9 @@ login_dialog:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Logins
   never_save:
     type: event
     description: |
@@ -692,6 +773,9 @@ login_dialog:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Logins
 
 metrics:
   default_browser:
@@ -715,6 +799,9 @@ metrics:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Settings
   distribution_id:
     type: string
     lifetime: application
@@ -733,6 +820,9 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - China
   mobile_bookmarks_count:
     type: counter
     lifetime: application
@@ -758,6 +848,9 @@ metrics:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Bookmarks
   has_mobile_bookmarks:
     type: boolean
     lifetime: application
@@ -779,6 +872,9 @@ metrics:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Bookmarks
   desktop_bookmarks_count:
     type: counter
     lifetime: application
@@ -804,6 +900,9 @@ metrics:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Bookmarks
   has_desktop_bookmarks:
     type: boolean
     lifetime: application
@@ -823,6 +922,9 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Bookmarks
   top_sites_count:
     type: counter
     lifetime: application
@@ -848,6 +950,9 @@ metrics:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - TopSites
   has_top_sites:
     type: boolean
     lifetime: application
@@ -869,6 +974,9 @@ metrics:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - TopSites
   recently_used_pwa_count:
     type: counter
     lifetime: application
@@ -896,6 +1004,9 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - PWA
   has_recent_pwas:
     type: boolean
     lifetime: application
@@ -916,6 +1027,9 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - PWA
   search_count:
     type: labeled_counter
     description: |
@@ -949,6 +1063,9 @@ metrics:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Search
   mozilla_products:
     type: string_list
     lifetime: application
@@ -973,6 +1090,9 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Settings
   default_moz_browser:
     type: string
     lifetime: application
@@ -995,6 +1115,9 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Settings
   adjust_campaign:
     type: string
     lifetime: application
@@ -1017,6 +1140,9 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Telemetry
   adjust_ad_group:
     type: string
     lifetime: application
@@ -1039,6 +1165,9 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Telemetry
   adjust_creative:
     type: string
     lifetime: application
@@ -1061,6 +1190,9 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Telemetry
   adjust_network:
     type: string
     lifetime: application
@@ -1083,6 +1215,9 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Telemetry
   toolbar_position:
     type: string
     lifetime: application
@@ -1102,6 +1237,9 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Toolbar
   close_tab_setting:
     type: string
     lifetime: application
@@ -1121,6 +1259,9 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Tabs
   tab_view_setting:
     type: string
     lifetime: application
@@ -1140,6 +1281,9 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Tabs
   search_widget_installed:
     type: boolean
     lifetime: application
@@ -1159,6 +1303,10 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Discovery
+        - Search
   tabs_open_count:
     type: counter
     lifetime: application
@@ -1184,6 +1332,9 @@ metrics:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Tabs
   has_open_tabs:
     type: boolean
     lifetime: application
@@ -1203,6 +1354,9 @@ metrics:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Tabs
   start_reason_process_error:
     type: boolean
     description: |
@@ -1221,6 +1375,9 @@ metrics:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Performance
   start_reason_activity_error:
     type: boolean
     description: |
@@ -1239,6 +1396,9 @@ metrics:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Performance
   install_source:
     type: string
     lifetime: application
@@ -1447,6 +1607,10 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Search
+        - Settings
   remote_debugging_enabled:
     type: boolean
     description: |
@@ -1466,6 +1630,9 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Settings
   telemetry_enabled:
     type: boolean
     description: |
@@ -1487,6 +1654,10 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Telemetry
+        - Settings
   enhanced_tracking_protection:
     type: string
     description: |
@@ -1507,6 +1678,10 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - TrackingProtection
+        - Settings
   bookmarks_suggestion:
     type: boolean
     description: |
@@ -1526,6 +1701,9 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Settings
   browsing_history_suggestion:
     type: boolean
     description: |
@@ -1545,6 +1723,9 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Settings
   clipboard_suggestions_enabled:
     type: boolean
     description: |
@@ -1564,6 +1745,9 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Settings
   search_shortcuts_enabled:
     type: boolean
     description: |
@@ -1583,6 +1767,10 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Search
+        - Settings
   signed_in_sync:
     type: boolean
     description: |
@@ -1602,6 +1790,10 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Sync
+        - Settings
   sync_items:
     type: string_list
     description: |
@@ -1623,6 +1815,9 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Settings
   voice_search_enabled:
     type: boolean
     description: |
@@ -1642,6 +1837,11 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Search
+        - Voice
+        - Settings
   toolbar_position_setting:
     type: string
     description: |
@@ -1661,6 +1861,10 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Toolbar
+        - Settings
   accessibility_services:
     type: string_list
     description: |
@@ -1681,6 +1885,9 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Settings
   open_links_in_app_enabled:
     type: boolean
     description: |
@@ -1700,6 +1907,9 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Settings
   user_theme:
     type: string
     description: |
@@ -1719,6 +1929,10 @@ preferences:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Themes
+        - Settings
   inactive_tabs_enabled:
     type: boolean
     description: |
@@ -1876,6 +2090,9 @@ bookmarks_management:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-08-01"
+    metadata:
+      tags:
+        - Bookmarks
   open_in_new_tab:
     type: event
     description: |
@@ -1894,6 +2111,9 @@ bookmarks_management:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Bookmarks
   open_in_new_tabs:
     type: event
     description: |
@@ -1912,6 +2132,9 @@ bookmarks_management:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Bookmarks
   open_in_private_tab:
     type: event
     description: |
@@ -1931,6 +2154,9 @@ bookmarks_management:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Bookmarks
   open_in_private_tabs:
     type: event
     description: |
@@ -1950,6 +2176,9 @@ bookmarks_management:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Bookmarks
   edited:
     type: event
     description: |
@@ -1969,6 +2198,9 @@ bookmarks_management:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Bookmarks
   moved:
     type: event
     description: |
@@ -1988,6 +2220,9 @@ bookmarks_management:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Bookmarks
   removed:
     type: event
     description: |
@@ -2007,6 +2242,9 @@ bookmarks_management:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Bookmarks
   multi_removed:
     type: event
     description: |
@@ -2026,6 +2264,9 @@ bookmarks_management:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Bookmarks
   shared:
     type: event
     description: |
@@ -2045,6 +2286,9 @@ bookmarks_management:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Bookmarks
   copied:
     type: event
     description: |
@@ -2064,6 +2308,9 @@ bookmarks_management:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Bookmarks
   folder_add:
     type: event
     description: |
@@ -2083,6 +2330,9 @@ bookmarks_management:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Bookmarks
   folder_remove:
     type: event
     description: |
@@ -2103,6 +2353,9 @@ bookmarks_management:
       - erichards@mozilla.com
     expires: never
 
+    metadata:
+      tags:
+        - Bookmarks
 custom_tab:
   closed:
     type: event
@@ -2122,6 +2375,9 @@ custom_tab:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-06-01"
+    metadata:
+      tags:
+        - CustomTabs
   action_button:
     type: event
     description: |
@@ -2140,6 +2396,9 @@ custom_tab:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-06-01"
+    metadata:
+      tags:
+        - CustomTabs
   menu:
     type: event
     description: |
@@ -2158,6 +2417,9 @@ custom_tab:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-06-01"
+    metadata:
+      tags:
+        - CustomTabs
 
 activation:
   identifier:
@@ -2184,6 +2446,9 @@ activation:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Privacy&Security
   activation_id:
     type: uuid
     lifetime: user
@@ -2209,6 +2474,9 @@ activation:
     expires: never
     no_lint:
       - USER_LIFETIME_EXPIRATION
+    metadata:
+      tags:
+        - Privacy&Security
 
 error_page:
   visited_error:
@@ -2232,6 +2500,9 @@ error_page:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-12-01"
+    metadata:
+      tags:
+        - ErrorMessages
 
 sync_auth:
   opened:
@@ -2250,6 +2521,10 @@ sync_auth:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Toolbar
+        - Sync
   closed:
     type: event
     description: |
@@ -2266,6 +2541,10 @@ sync_auth:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Toolbar
+        - Sync
   use_email:
     type: event
     description: |
@@ -2283,6 +2562,9 @@ sync_auth:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Sync
   use_email_problem:
     type: event
     description: |
@@ -2299,6 +2581,9 @@ sync_auth:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Sync
   sign_in:
     type: event
     description: |
@@ -2318,6 +2603,9 @@ sync_auth:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Sync
   sign_out:
     type: event
     description: |
@@ -2337,6 +2625,9 @@ sync_auth:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Sync
   sign_up:
     type: event
     description: |
@@ -2356,6 +2647,9 @@ sync_auth:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Accounts
   paired:
     type: event
     description: |
@@ -2374,6 +2668,9 @@ sync_auth:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Accounts
   recovered:
     type: event
     description: |
@@ -2392,6 +2689,9 @@ sync_auth:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Accounts
   other_external:
     type: event
     description: |
@@ -2410,6 +2710,9 @@ sync_auth:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Accounts
   scan_pairing:
     type: event
     description: |
@@ -2426,6 +2729,9 @@ sync_auth:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Sync
 
 sync_account:
   opened:
@@ -2444,6 +2750,10 @@ sync_account:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Toolbar
+        - Sync
   sync_now:
     type: event
     description: |
@@ -2460,6 +2770,10 @@ sync_account:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Toolbar
+        - Sync
   send_tab:
     type: event
     description: |
@@ -2476,6 +2790,9 @@ sync_account:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - SendTab
   sign_in_to_send_tab:
     type: event
     description: |
@@ -2492,6 +2809,9 @@ sync_account:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - SendTab
 
 history:
   opened:
@@ -2510,6 +2830,9 @@ history:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - History
   removed:
     type: event
     description: |
@@ -2526,6 +2849,9 @@ history:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - History
   removed_all:
     type: event
     description: |
@@ -2542,6 +2868,9 @@ history:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - History
   shared:
     type: event
     description: |
@@ -2558,6 +2887,9 @@ history:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - History
   opened_item:
     type: event
     description: |
@@ -2574,6 +2906,9 @@ history:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - History
   opened_item_in_new_tab:
     type: event
     description: |
@@ -2590,6 +2925,9 @@ history:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - History
   opened_items_in_new_tabs:
     type: event
     description: |
@@ -2607,6 +2945,9 @@ history:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - History
   opened_item_in_private_tab:
     type: event
     description: |
@@ -2623,6 +2964,9 @@ history:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - History
   opened_items_in_private_tabs:
     type: event
     description: |
@@ -2639,6 +2983,9 @@ history:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - History
   recent_searches_tapped:
     type: event
     description: |
@@ -2729,6 +3076,9 @@ reader_mode:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - ReaderMode
   opened:
     type: event
     description: |
@@ -2747,6 +3097,9 @@ reader_mode:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - ReaderMode
   closed:
     type: event
     description: |
@@ -2765,6 +3118,9 @@ reader_mode:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - ReaderMode
   appearance:
     type: event
     description: |
@@ -2785,6 +3141,9 @@ reader_mode:
       - erichards@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - ReaderMode
 
 tabs_tray:
   opened:
@@ -2805,6 +3164,9 @@ tabs_tray:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Tabs
   closed:
     type: event
     description: |
@@ -2823,6 +3185,9 @@ tabs_tray:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Tabs
   opened_existing_tab:
     type: event
     description: |
@@ -2846,6 +3211,9 @@ tabs_tray:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Tabs
   closed_existing_tab:
     type: event
     description: |
@@ -2869,6 +3237,9 @@ tabs_tray:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Tabs
   private_mode_tapped:
     type: event
     description: |
@@ -2887,6 +3258,9 @@ tabs_tray:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Tabs
   normal_mode_tapped:
     type: event
     description: |
@@ -2905,6 +3279,9 @@ tabs_tray:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Tabs
   synced_mode_tapped:
     type: event
     description: |
@@ -2921,6 +3298,10 @@ tabs_tray:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - SyncTabs
+        - Tabs
   new_tab_tapped:
     type: event
     description: |
@@ -2939,6 +3320,9 @@ tabs_tray:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Tabs
   new_private_tab_tapped:
     type: event
     description: |
@@ -2957,6 +3341,9 @@ tabs_tray:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Tabs
   menu_opened:
     type: event
     description: |
@@ -2975,6 +3362,9 @@ tabs_tray:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Tabs
   save_to_collection:
     type: event
     description: |
@@ -2993,6 +3383,10 @@ tabs_tray:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Tabs
+        - Collections
   share_all_tabs:
     type: event
     description: |
@@ -3012,6 +3406,9 @@ tabs_tray:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Tabs
   close_all_tabs:
     type: event
     description: |
@@ -3031,6 +3428,9 @@ tabs_tray:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Tabs
   inactive_tabs_expanded:
     type: event
     description: |
@@ -3045,6 +3445,9 @@ tabs_tray:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-08-01"
+    metadata:
+      tags:
+        - Tabs
   inactive_tabs_collapsed:
     type: event
     description: |
@@ -3059,13 +3462,17 @@ tabs_tray:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-08-01"
+    metadata:
+      tags:
+        - Tabs
   has_inactive_tabs:
     type: event
     description: |
       A boolean that indicates if the user has any INACTIVE tabs.
     extra_keys:
       inactive_tabs_count:
-        description: "The number of inactive tabs the user currently has."
+        description:
+          The number of inactive tabs the user currently has.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/21903
     data_reviews:
@@ -3214,6 +3621,9 @@ collections:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Collections
   tab_restored:
     type: event
     description: |
@@ -3234,6 +3644,9 @@ collections:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Collections
   all_tabs_restored:
     type: event
     description: |
@@ -3254,6 +3667,9 @@ collections:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Collections
   tab_removed:
     type: event
     description: |
@@ -3274,6 +3690,9 @@ collections:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Collections
   shared:
     type: event
     description: |
@@ -3294,6 +3713,9 @@ collections:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Collections
   removed:
     type: event
     description: |
@@ -3314,6 +3736,9 @@ collections:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Collections
   saved:
     type: event
     description: |
@@ -3339,15 +3764,18 @@ collections:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Collections
   tabs_added:
     type: event
     description: |
       A user saved a list of tabs to an existing collection
     extra_keys:
       tabs_open:
-        description: "The number of tabs open in the current session"
+        description: The number of tabs open in the current session
       tabs_selected:
-        description: "The number of tabs added to the collection"
+        description: The number of tabs added to the collection
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/969
       - https://github.com/mozilla-mobile/fenix/issues/19923
@@ -3364,6 +3792,9 @@ collections:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Collections
   tab_select_opened:
     type: event
     description: |
@@ -3385,6 +3816,9 @@ collections:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Collections
   add_tab_button:
     type: event
     description: |
@@ -3404,6 +3838,9 @@ collections:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Collections
   long_press:
     type: event
     description: |
@@ -3423,6 +3860,9 @@ collections:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Collections
   save_button:
     type: event
     description: |
@@ -3449,6 +3889,9 @@ collections:
         description: |
           A string representing the screen from which the user pressed the save
           button. Currently one of: `browserMenu`, `homeMenu` or `home`
+    metadata:
+      tags:
+        - Collections
   rename_button:
     type: event
     description: |
@@ -3468,6 +3911,9 @@ collections:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Collections
 
 search_widget:
   new_tab_button:
@@ -3487,6 +3933,9 @@ search_widget:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Search
   voice_button:
     type: event
     description: |
@@ -3503,6 +3952,9 @@ search_widget:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Search
 
 tracking_protection:
   exception_added:
@@ -3522,6 +3974,9 @@ tracking_protection:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - TrackingProtection
   panel_settings:
     type: event
     description: |
@@ -3538,6 +3993,9 @@ tracking_protection:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - TrackingProtection
   etp_shield:
     type: event
     description: |
@@ -3554,6 +4012,9 @@ tracking_protection:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - TrackingProtection
   etp_tracker_list:
     type: event
     description: |
@@ -3571,6 +4032,9 @@ tracking_protection:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - TrackingProtection
   etp_settings:
     type: event
     description: |
@@ -3587,6 +4051,9 @@ tracking_protection:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - TrackingProtection
   etp_setting_changed:
     type: event
     description: |
@@ -3610,6 +4077,9 @@ tracking_protection:
       - android-probes@mozilla.com
     expires: "2022-02-01"
 
+    metadata:
+      tags:
+        - TrackingProtection
 tab:
   media_play:
     type: event
@@ -3629,6 +4099,9 @@ tab:
     expires: "2022-02-01"
     no_lint:
       - COMMON_PREFIX
+    metadata:
+      tags:
+        - Media
   media_pause:
     type: event
     description: |
@@ -3645,6 +4118,9 @@ tab:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Media
 
 media_notification:
   play:
@@ -3663,6 +4139,9 @@ media_notification:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Media
   pause:
     type: event
     description: |
@@ -3680,6 +4159,9 @@ media_notification:
       - android-probes@mozilla.com
     expires: "2022-02-01"
 
+    metadata:
+      tags:
+        - Media
 media_state:
   play:
     type: event
@@ -3697,6 +4179,9 @@ media_state:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Media
   pause:
     type: event
     description: |
@@ -3713,6 +4198,9 @@ media_state:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Media
   stop:
     type: event
     description: |
@@ -3729,6 +4217,9 @@ media_state:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Media
   fullscreen:
     type: event
     description: |
@@ -3744,6 +4235,9 @@ media_state:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Media
   picture_in_picture:
     type: event
     description: |
@@ -3759,6 +4253,9 @@ media_state:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Media
 
 logins:
   open_logins:
@@ -3779,6 +4276,9 @@ logins:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Logins
   open_individual_login:
     type: event
     description: |
@@ -3795,6 +4295,9 @@ logins:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Logins
   copy_login:
     type: event
     description: |
@@ -3811,6 +4314,9 @@ logins:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Logins
   view_password_login:
     type: event
     description: |
@@ -3827,6 +4333,9 @@ logins:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Logins
   save_logins_setting_changed:
     type: event
     description: |
@@ -3848,6 +4357,9 @@ logins:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Logins
   open_login_editor:
     type: event
     description: |
@@ -3864,6 +4376,9 @@ logins:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Logins
   delete_saved_login:
     type: event
     description: |
@@ -3880,6 +4395,9 @@ logins:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Logins
   save_edited_login:
     type: event
     description: |
@@ -3897,6 +4415,9 @@ logins:
       - android-probes@mozilla.com
     expires: "2022-02-01"
 
+    metadata:
+      tags:
+        - Logins
 voice_search:
   tapped:
     type: event
@@ -3914,7 +4435,10 @@ voice_search:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
-
+    metadata:
+      tags:
+        - Search
+        - Voice
 top_sites:
   open_default:
     type: event
@@ -3934,6 +4458,9 @@ top_sites:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - TopSites
   open_google_search_attribution:
     type: event
     description: |
@@ -3951,6 +4478,10 @@ top_sites:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Search
+        - TopSites
   open_baidu_search_attribution:
     type: event
     description: |
@@ -3964,6 +4495,10 @@ top_sites:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - Search
+        - TopSites
   open_frecency:
     type: event
     description: |
@@ -3982,6 +4517,9 @@ top_sites:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - TopSites
   open_pinned:
     type: event
     description: |
@@ -4000,6 +4538,9 @@ top_sites:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - TopSites
   swipe_carousel:
     type: event
     description: |
@@ -4022,6 +4563,9 @@ top_sites:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - TopSites
   long_press:
     type: event
     description: |
@@ -4044,6 +4588,9 @@ top_sites:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - TopSites
   open_in_new_tab:
     type: event
     description: |
@@ -4062,6 +4609,9 @@ top_sites:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - TopSites
   open_in_private_tab:
     type: event
     description: |
@@ -4080,6 +4630,9 @@ top_sites:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - TopSites
   remove:
     type: event
     description: |
@@ -4098,6 +4651,9 @@ top_sites:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - TopSites
   google_top_site_removed:
     type: event
     description: |
@@ -4150,6 +4706,9 @@ app_theme:
       - android-probes@mozilla.com
     expires: "2022-12-01"
 
+    metadata:
+      tags:
+        - Themes
 pocket:
   pocket_top_site_clicked:
     type: event
@@ -4171,6 +4730,10 @@ pocket:
     expires: never
     no_lint:
       - COMMON_PREFIX
+    metadata:
+      tags:
+        - PocketIntegration
+        - TopSites
   pocket_top_site_removed:
     type: event
     description: |
@@ -4187,6 +4750,10 @@ pocket:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - PocketIntegration
+        - TopSites
   home_recs_shown:
     type: event
     description: |
@@ -4295,6 +4862,9 @@ first_session:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Performance
   network:
     type: string
     send_in_pings:
@@ -4316,6 +4886,9 @@ first_session:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Performance
   adgroup:
     type: string
     send_in_pings:
@@ -4337,6 +4910,9 @@ first_session:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Telemetry
   creative:
     send_in_pings:
       - first-session
@@ -4358,6 +4934,9 @@ first_session:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Performance
   distribution_id:
     type: string
     description: |
@@ -4398,6 +4977,9 @@ first_session:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Performance
 
 browser.search:
   with_ads:
@@ -4482,6 +5064,9 @@ addons:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-08-01"
+    metadata:
+      tags:
+        - WebExtensions
   open_addon_in_toolbar_menu:
     type: event
     description: |
@@ -4504,6 +5089,9 @@ addons:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-08-01"
+    metadata:
+      tags:
+        - WebExtensions
   open_addon_setting:
     type: event
     description: |
@@ -4522,6 +5110,9 @@ addons:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-08-01"
+    metadata:
+      tags:
+        - WebExtensions
   has_installed_addons:
     type: boolean
     description: |
@@ -4543,6 +5134,9 @@ addons:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - WebExtensions
   has_enabled_addons:
     type: boolean
     description: |
@@ -4564,6 +5158,9 @@ addons:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - WebExtensions
   installed_addons:
     type: string_list
     description: |
@@ -4585,6 +5182,9 @@ addons:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - WebExtensions
   enabled_addons:
     type: string_list
     description: |
@@ -4606,6 +5206,9 @@ addons:
       - android-probes@mozilla.com
     expires: "2022-08-01"
 
+    metadata:
+      tags:
+        - WebExtensions
 perf.startup:
   cold_main_app_to_first_frame:
     type: timing_distribution
@@ -4951,6 +5554,9 @@ autoplay:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - SitePermissions
   setting_changed:
     type: event
     description: |
@@ -4973,6 +5579,9 @@ autoplay:
       - android-probes@mozilla.com
     expires: "2022-02-01"
 
+    metadata:
+      tags:
+        - SitePermissions
 storage.stats:
   query_stats_duration:
     send_in_pings:
@@ -5094,6 +5703,9 @@ progressive_web_app:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: "2022-03-01"
+    metadata:
+      tags:
+        - PWA
   install_tap:
     type: event
     description: |
@@ -5111,6 +5723,9 @@ progressive_web_app:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: "2022-03-01"
+    metadata:
+      tags:
+        - PWA
   foreground:
     type: event
     description: |
@@ -5132,6 +5747,9 @@ progressive_web_app:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: "2022-03-01"
+    metadata:
+      tags:
+        - PWA
   background:
     type: event
     description: |
@@ -5154,6 +5772,9 @@ progressive_web_app:
       - erichards@mozilla.com
     expires: "2022-03-01"
 
+    metadata:
+      tags:
+        - PWA
 tabs:
   setting_opened:
     type: event
@@ -5172,6 +5793,9 @@ tabs:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Tabs
 
 contextual_menu:
   copy_tapped:
@@ -5191,6 +5815,10 @@ contextual_menu:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - ContextMenu
+        - TextSelection
   search_tapped:
     type: event
     description: |
@@ -5208,6 +5836,10 @@ contextual_menu:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - ContextMenu
+        - TextSelection
   select_all_tapped:
     type: event
     description: |
@@ -5225,6 +5857,10 @@ contextual_menu:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - ContextMenu
+        - TextSelection
   share_tapped:
     type: event
     description: |
@@ -5242,6 +5878,10 @@ contextual_menu:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - ContextMenu
+        - TextSelection
 
 engine_tab:
   kills:
@@ -5264,6 +5904,9 @@ engine_tab:
       - android-probes@mozilla.com
       - skaspari@mozilla.com
     expires: "2022-07-01"
+    metadata:
+      tags:
+        - Performance
   kill_foreground_age:
     type: timing_distribution
     time_unit: millisecond
@@ -5282,6 +5925,9 @@ engine_tab:
       - android-probes@mozilla.com
       - skaspari@mozilla.com
     expires: "2022-07-01"
+    metadata:
+      tags:
+        - Performance
   kill_background_age:
     type: timing_distribution
     time_unit: millisecond
@@ -5300,6 +5946,9 @@ engine_tab:
       - android-probes@mozilla.com
       - skaspari@mozilla.com
     expires: "2022-07-01"
+    metadata:
+      tags:
+        - Performance
   foreground_metrics:
     type: event
     description: |
@@ -5342,6 +5991,9 @@ engine_tab:
       time_in_background:
         description: |
           Time (in milliseconds) the app was in the background.
+    metadata:
+      tags:
+        - Performance
 
 synced_tabs:
   synced_tabs_suggestion_clicked:
@@ -5359,6 +6011,9 @@ synced_tabs:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-02-01"
+    metadata:
+      tags:
+        - SyncTabs
 
 awesomebar:
   bookmark_suggestion_clicked:
@@ -5378,6 +6033,9 @@ awesomebar:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Search
   clipboard_suggestion_clicked:
     type: event
     description: |
@@ -5395,6 +6053,9 @@ awesomebar:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Search
   history_suggestion_clicked:
     type: event
     description: |
@@ -5412,6 +6073,9 @@ awesomebar:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Search
   search_action_clicked:
     type: event
     description: |
@@ -5429,6 +6093,9 @@ awesomebar:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Search
   search_suggestion_clicked:
     type: event
     description: |
@@ -5446,6 +6113,9 @@ awesomebar:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+    metadata:
+      tags:
+        - Search
   opened_tab_suggestion_clicked:
     type: event
     description: |
@@ -5464,6 +6134,9 @@ awesomebar:
       - erichards@mozilla.com
     expires: never
 
+    metadata:
+      tags:
+        - Search
 android_autofill:
   supported:
     type: boolean
@@ -5638,6 +6311,10 @@ home_menu:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-04-01"
+    metadata:
+      tags:
+        - Settings
+        - MainMenu
 
 home_screen:
   home_screen_displayed:
@@ -5654,6 +6331,9 @@ home_screen:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-04-01"
+    metadata:
+      tags:
+        - HomeScreen
   home_screen_view_count:
     type: counter
     description: |
@@ -5810,6 +6490,9 @@ set_default_newtab_experiment:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-04-01"
+    metadata:
+      tags:
+        - Experiments
   close_experiment_card_clicked:
     type: event
     description: |
@@ -5826,6 +6509,9 @@ set_default_newtab_experiment:
       - android-probes@mozilla.com
     expires: "2022-04-01"
 
+    metadata:
+      tags:
+        - Experiments
 set_default_setting_experiment:
   set_default_browser_clicked:
     type: event
@@ -5842,6 +6528,9 @@ set_default_setting_experiment:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-04-01"
+    metadata:
+      tags:
+        - Experiments
 start_on_home:
   enter_home_screen:
     type: event
@@ -5856,6 +6545,9 @@ start_on_home:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-06-16"
+    metadata:
+      tags:
+        - HomeScreen
   open_tabs_tray:
     type: event
     description: |
@@ -5869,6 +6561,10 @@ start_on_home:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-06-16"
+    metadata:
+      tags:
+        - HomeScreen
+        - Tabs
 recent_tabs:
   show_all_clicked:
     type: event
@@ -5883,6 +6579,9 @@ recent_tabs:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-06-23"
+    metadata:
+      tags:
+        - RecentTabs
   recent_tab_opened:
     type: event
     description: |
@@ -5896,6 +6595,9 @@ recent_tabs:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-06-23"
+    metadata:
+      tags:
+        - RecentTabs
   in_progress_media_tab_opened:
     type: event
     description: |
@@ -5909,6 +6611,9 @@ recent_tabs:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-06-23"
+    metadata:
+      tags:
+        - RecentTabs
   section_visible:
     type: boolean
     description: |
@@ -6024,6 +6729,9 @@ credit_cards:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-09-01"
+    metadata:
+      tags:
+        - Autofill
   deleted:
     type: counter
     description: |
@@ -6038,6 +6746,9 @@ credit_cards:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-09-01"
+    metadata:
+      tags:
+        - Autofill
   modified:
     type: event
     description: |
@@ -6051,6 +6762,9 @@ credit_cards:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-09-01"
+    metadata:
+      tags:
+        - Autofill
   form_detected:
     type: event
     description: |
@@ -6064,6 +6778,9 @@ credit_cards:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-09-01"
+    metadata:
+      tags:
+        - Autofill
   autofilled:
     type: event
     description: |
@@ -6077,6 +6794,9 @@ credit_cards:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-09-01"
+    metadata:
+      tags:
+        - Autofill
   autofill_prompt_shown:
     type: event
     description: |
@@ -6090,6 +6810,9 @@ credit_cards:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-09-01"
+    metadata:
+      tags:
+        - Autofill
   autofill_prompt_expanded:
     type: event
     description: |
@@ -6103,6 +6826,9 @@ credit_cards:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-09-01"
+    metadata:
+      tags:
+        - Autofill
   autofill_prompt_dismissed:
     type: event
     description: |
@@ -6116,6 +6842,9 @@ credit_cards:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-09-01"
+    metadata:
+      tags:
+        - Autofill
   management_add_tapped:
     type: event
     description: |
@@ -6129,6 +6858,9 @@ credit_cards:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-09-01"
+    metadata:
+      tags:
+        - Autofill
   management_card_tapped:
     type: event
     description: |
@@ -6142,6 +6874,9 @@ credit_cards:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-09-01"
+    metadata:
+      tags:
+        - Autofill
 
 search_terms:
   number_of_search_term_group:
