@@ -1,6 +1,6 @@
 # version\_check
 
-[![Build Status](https://travis-ci.com/SergioBenitez/version_check.svg?branch=master)](https://travis-ci.com/SergioBenitez/version_check)
+[![Build Status](https://github.com/SergioBenitez/version_check/workflows/CI/badge.svg)](https://github.com/SergioBenitez/version_check/actions)
 [![Current Crates.io Version](https://img.shields.io/crates/v/version_check.svg)](https://crates.io/crates/version_check)
 [![rustdocs on docs.rs](https://docs.rs/version_check/badge.svg)](https://docs.rs/version_check)
 
@@ -63,10 +63,14 @@ documentation.
 
 ## Alternatives
 
-This crate is dead simple with no dependencies. If you need something more
-and don't care about panicking if the version cannot be obtained, or if you
-don't mind adding dependencies, see
-[rustc_version](https://crates.io/crates/rustc_version).
+This crate is dead simple with no dependencies. If you need something more and
+don't care about panicking if the version cannot be obtained, or if you don't
+mind adding dependencies, see [rustc_version]. If you'd instead prefer a feature
+detection library that works by dynamically invoking `rustc` with a
+representative code sample, see [autocfg].
+
+[rustc_version]: https://crates.io/crates/rustc_version
+[autocfg]: https://crates.io/crates/autocfg
 
 ## License
 

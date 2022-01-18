@@ -15,7 +15,7 @@ under the creative commons CC-BY-SA license.
 This Rust implementation is a line-by-line port of Ulf Adams' implementation in
 C, [https://github.com/ulfjack/ryu][upstream].
 
-*Requirements: this crate supports any compiler version back to rustc 1.31; it
+*Requirements: this crate supports any compiler version back to rustc 1.36; it
 uses nothing from the Rust standard library so is usable from no_std crates.*
 
 [paper]: https://dl.acm.org/citation.cfm?id=3192369
@@ -25,6 +25,8 @@ uses nothing from the Rust standard library so is usable from no_std crates.*
 [dependencies]
 ryu = "1.0"
 ```
+
+<br>
 
 ## Example
 
@@ -36,7 +38,11 @@ fn main() {
 }
 ```
 
-## Performance
+<br>
+
+## Performance (lower is better)
+
+![performance](https://raw.githubusercontent.com/dtolnay/ryu/master/performance.png)
 
 You can run upstream's benchmarks with:
 
@@ -69,19 +75,9 @@ standard library which you can run with:
 $ cargo bench
 ```
 
-The benchmark shows Ryū approximately 4-10x faster than the standard library
+The benchmark shows Ryū approximately 2-5x faster than the standard library
 across a range of f32 and f64 inputs. Measurements are in nanoseconds per
 iteration; smaller is better.
-
-| type=f32 | 0.0  | 0.1234 | 2.718281828459045 | f32::MAX |
-|:--------:|:----:|:------:|:-----------------:|:--------:|
-| RYU      | 3ns  | 28ns   | 23ns              | 22ns     |
-| STD      | 40ns | 106ns  | 128ns             | 110ns    |
-
-| type=f64 | 0.0  | 0.1234 | 2.718281828459045 | f64::MAX |
-|:--------:|:----:|:------:|:-----------------:|:--------:|
-| RYU      | 3ns  | 50ns   | 35ns              | 32ns     |
-| STD      | 39ns | 105ns  | 128ns             | 202ns    |
 
 ## Formatting
 

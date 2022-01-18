@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "warp"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Sean McArthur <sean@seanmonstar.com>"]
 autoexamples = true
 autotests = true
@@ -35,6 +35,10 @@ codegen-units = 1
 incremental = false
 
 [[example]]
+name = "compression"
+required-features = ["compression"]
+
+[[example]]
 name = "unix_socket"
 required-features = ["tokio/uds"]
 
@@ -53,6 +57,11 @@ required-features = ["multipart"]
 [[test]]
 name = "ws"
 required-features = ["websocket"]
+[dependencies.async-compression]
+version = "0.3.1"
+features = ["brotli", "deflate", "gzip", "stream"]
+optional = true
+
 [dependencies.bytes]
 version = "0.5"
 
@@ -69,6 +78,7 @@ version = "0.2"
 
 [dependencies.hyper]
 version = "0.13"
+features = ["stream"]
 
 [dependencies.log]
 version = "0.4"
@@ -102,7 +112,7 @@ version = "0.6"
 
 [dependencies.tokio]
 version = "0.2"
-features = ["blocking", "fs", "stream", "sync", "time"]
+features = ["fs", "stream", "sync", "time"]
 
 [dependencies.tokio-rustls]
 version = "0.12.2"
@@ -125,7 +135,7 @@ version = "3.0.0"
 version = "0.3"
 
 [dev-dependencies.pretty_env_logger]
-version = "0.3"
+version = "0.4"
 
 [dev-dependencies.serde_derive]
 version = "1.0"
@@ -135,6 +145,7 @@ version = "0.2"
 features = ["macros"]
 
 [features]
+compression = ["async-compression"]
 default = ["multipart", "websocket"]
 tls = ["tokio-rustls"]
 websocket = ["tokio-tungstenite"]

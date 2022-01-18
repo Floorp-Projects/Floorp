@@ -34,7 +34,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! unicode-normalization = "0.1.3"
+//! unicode-normalization = "0.1.7"
 //! ```
 
 #![deny(missing_docs, unsafe_code)]
@@ -43,28 +43,42 @@
 
 pub use tables::UNICODE_VERSION;
 pub use decompose::Decompositions;
+pub use quick_check::{
+    IsNormalized,
+    is_nfc,
+    is_nfc_quick,
+    is_nfc_stream_safe,
+    is_nfc_stream_safe_quick,
+    is_nfd,
+    is_nfd_quick,
+    is_nfd_stream_safe,
+    is_nfd_stream_safe_quick,
+};
 pub use recompose::Recompositions;
+pub use stream_safe::StreamSafe;
 use std::str::Chars;
 
 mod decompose;
 mod normalize;
 mod recompose;
+mod quick_check;
+mod stream_safe;
 mod tables;
 
 #[cfg(test)]
 mod test;
 #[cfg(test)]
-mod testdata;
+mod normalization_tests;
 
 /// Methods for composing and decomposing characters.
 pub mod char {
     pub use normalize::{decompose_canonical, decompose_compatible, compose};
 
     /// Look up the canonical combining class of a character.
-    pub use tables::normalization::canonical_combining_class;
+    pub use tables::canonical_combining_class;
 
     /// Return whether the given character is a combining mark (`General_Category=Mark`)
-    pub use tables::normalization::is_combining_mark;
+    pub use tables::is_combining_mark;
 }
 
 
@@ -91,6 +105,11 @@ pub trait UnicodeNormalization<I: Iterator<Item=char>> {
     /// (compatibility decomposition followed by canonical composition).
     #[inline]
     fn nfkc(self) -> Recompositions<I>;
+
+    /// An Iterator over the string with Conjoining Grapheme Joiner characters
+    /// inserted according to the Stream-Safe Text Process (UAX15-D4)
+    #[inline]
+    fn stream_safe(self) -> StreamSafe<I>;
 }
 
 impl<'a> UnicodeNormalization<Chars<'a>> for &'a str {
@@ -113,6 +132,11 @@ impl<'a> UnicodeNormalization<Chars<'a>> for &'a str {
     fn nfkc(self) -> Recompositions<Chars<'a>> {
         recompose::new_compatible(self.chars())
     }
+
+    #[inline]
+    fn stream_safe(self) -> StreamSafe<Chars<'a>> {
+        StreamSafe::new(self.chars())
+    }
 }
 
 impl<I: Iterator<Item=char>> UnicodeNormalization<I> for I {
@@ -134,5 +158,10 @@ impl<I: Iterator<Item=char>> UnicodeNormalization<I> for I {
     #[inline]
     fn nfkc(self) -> Recompositions<I> {
         recompose::new_compatible(self)
+    }
+
+    #[inline]
+    fn stream_safe(self) -> StreamSafe<I> {
+        StreamSafe::new(self)
     }
 }

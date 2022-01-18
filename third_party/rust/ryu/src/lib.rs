@@ -29,7 +29,9 @@
 //! }
 //! ```
 //!
-//! ## Performance
+//! ## Performance (lower is better)
+//!
+//! ![performance](https://raw.githubusercontent.com/dtolnay/ryu/master/performance.png)
 //!
 //! You can run upstream's benchmarks with:
 //!
@@ -62,19 +64,9 @@
 //! $ cargo bench
 //! ```
 //!
-//! The benchmark shows Ryū approximately 4-10x faster than the standard library
+//! The benchmark shows Ryū approximately 2-5x faster than the standard library
 //! across a range of f32 and f64 inputs. Measurements are in nanoseconds per
 //! iteration; smaller is better.
-//!
-//! | type=f32 | 0.0  | 0.1234 | 2.718281828459045 | f32::MAX |
-//! |:--------:|:----:|:------:|:-----------------:|:--------:|
-//! | RYU      | 3ns  | 28ns   | 23ns              | 22ns     |
-//! | STD      | 40ns | 106ns  | 128ns             | 110ns    |
-//!
-//! | type=f64 | 0.0  | 0.1234 | 2.718281828459045 | f64::MAX |
-//! |:--------:|:----:|:------:|:-----------------:|:--------:|
-//! | RYU      | 3ns  | 50ns   | 35ns              | 32ns     |
-//! | STD      | 39ns | 105ns  | 128ns             | 202ns    |
 //!
 //! ## Formatting
 //!
@@ -89,7 +81,7 @@
 //! notation.
 
 #![no_std]
-#![doc(html_root_url = "https://docs.rs/ryu/1.0.6")]
+#![doc(html_root_url = "https://docs.rs/ryu/1.0.9")]
 #![allow(
     clippy::cast_lossless,
     clippy::cast_possible_truncation,
