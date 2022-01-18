@@ -1,5 +1,5 @@
 error[E0517]: attribute should be applied to a struct or union
- --> $DIR/packed-enum.rs:3:8
+ --> tests/ui/pin_project/packed-enum.rs:3:8
   |
 3 |   #[repr(packed)] //~ ERROR E0517
   |          ^^^^^^
@@ -9,7 +9,7 @@ error[E0517]: attribute should be applied to a struct or union
   | |_- not a struct or union
 
 error[E0517]: attribute should be applied to a struct or union
-  --> $DIR/packed-enum.rs:9:8
+  --> tests/ui/pin_project/packed-enum.rs:9:8
    |
 9  |   #[repr(packed)] //~ ERROR E0517
    |          ^^^^^^
@@ -19,7 +19,7 @@ error[E0517]: attribute should be applied to a struct or union
    | |_- not a struct or union
 
 error[E0517]: attribute should be applied to a struct or union
-  --> $DIR/packed-enum.rs:14:8
+  --> tests/ui/pin_project/packed-enum.rs:14:8
    |
 14 |   #[repr(packed)] //~ ERROR E0517
    |          ^^^^^^

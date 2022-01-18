@@ -13,9 +13,8 @@
 //!
 //! [https://serde.rs/derive.html]: https://serde.rs/derive.html
 
-#![doc(html_root_url = "https://docs.rs/serde_derive/1.0.130")]
+#![doc(html_root_url = "https://docs.rs/serde_derive/1.0.133")]
 #![allow(unknown_lints, bare_trait_objects)]
-#![deny(clippy::all, clippy::pedantic)]
 // Ignored clippy lints
 #![allow(
     // clippy false positive: https://github.com/rust-lang/rust-clippy/issues/7054
@@ -44,6 +43,7 @@
     clippy::indexing_slicing,
     clippy::items_after_statements,
     clippy::let_underscore_drop,
+    clippy::manual_assert,
     clippy::map_err_ignore,
     clippy::match_same_arms,
     // clippy bug: https://github.com/rust-lang/rust-clippy/issues/6984

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9
+
+- Added an `atomic-polyfill` optional dependency to compile `race` on platforms without atomics
+
 ## 1.8.0
 
 - Add `try_insert` API -- a version of `set` that returns a reference.

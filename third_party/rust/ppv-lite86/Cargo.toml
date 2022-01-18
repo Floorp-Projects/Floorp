@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "ppv-lite86"
-version = "0.2.15"
+version = "0.2.16"
 authors = ["The CryptoCorrosion Contributors"]
 description = "Implementation of the crypto-simd API for x86"
 keywords = ["crypto", "simd", "x86"]

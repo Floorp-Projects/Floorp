@@ -69,7 +69,7 @@ impl DeferredTokenStream {
 }
 
 impl TokenStream {
-    pub fn new() -> TokenStream {
+    pub fn new() -> Self {
         if inside_proc_macro() {
             TokenStream::Compiler(DeferredTokenStream::new(proc_macro::TokenStream::new()))
         } else {
@@ -408,7 +408,7 @@ pub(crate) enum Span {
 }
 
 impl Span {
-    pub fn call_site() -> Span {
+    pub fn call_site() -> Self {
         if inside_proc_macro() {
             Span::Compiler(proc_macro::Span::call_site())
         } else {
@@ -417,7 +417,7 @@ impl Span {
     }
 
     #[cfg(not(no_hygiene))]
-    pub fn mixed_site() -> Span {
+    pub fn mixed_site() -> Self {
         if inside_proc_macro() {
             Span::Compiler(proc_macro::Span::mixed_site())
         } else {
@@ -426,7 +426,7 @@ impl Span {
     }
 
     #[cfg(super_unstable)]
-    pub fn def_site() -> Span {
+    pub fn def_site() -> Self {
         if inside_proc_macro() {
             Span::Compiler(proc_macro::Span::def_site())
         } else {
@@ -575,7 +575,7 @@ pub(crate) enum Group {
 }
 
 impl Group {
-    pub fn new(delimiter: Delimiter, stream: TokenStream) -> Group {
+    pub fn new(delimiter: Delimiter, stream: TokenStream) -> Self {
         match stream {
             TokenStream::Compiler(tts) => {
                 let delimiter = match delimiter {
@@ -685,14 +685,14 @@ pub(crate) enum Ident {
 }
 
 impl Ident {
-    pub fn new(string: &str, span: Span) -> Ident {
+    pub fn new(string: &str, span: Span) -> Self {
         match span {
             Span::Compiler(s) => Ident::Compiler(proc_macro::Ident::new(string, s)),
             Span::Fallback(s) => Ident::Fallback(fallback::Ident::new(string, s)),
         }
     }
 
-    pub fn new_raw(string: &str, span: Span) -> Ident {
+    pub fn new_raw(string: &str, span: Span) -> Self {
         match span {
             Span::Compiler(s) => {
                 let p: proc_macro::TokenStream = string.parse().unwrap();
@@ -804,6 +804,14 @@ macro_rules! unsuffixed_integers {
 }
 
 impl Literal {
+    pub unsafe fn from_str_unchecked(repr: &str) -> Self {
+        if inside_proc_macro() {
+            Literal::Compiler(compiler_literal_from_str(repr).expect("invalid literal"))
+        } else {
+            Literal::Fallback(fallback::Literal::from_str_unchecked(repr))
+        }
+    }
+
     suffixed_numbers! {
         u8_suffixed => u8,
         u16_suffixed => u16,
@@ -921,29 +929,29 @@ impl FromStr for Literal {
 
     fn from_str(repr: &str) -> Result<Self, Self::Err> {
         if inside_proc_macro() {
-            #[cfg(not(no_literal_from_str))]
-            {
-                proc_macro::Literal::from_str(repr)
-                    .map(Literal::Compiler)
-                    .map_err(LexError::Compiler)
-            }
-            #[cfg(no_literal_from_str)]
-            {
-                let tokens = proc_macro_parse(repr)?;
-                let mut iter = tokens.into_iter();
-                if let (Some(proc_macro::TokenTree::Literal(literal)), None) =
-                    (iter.next(), iter.next())
-                {
-                    if literal.to_string().len() == repr.len() {
-                        return Ok(Literal::Compiler(literal));
-                    }
-                }
-                Err(LexError::call_site())
-            }
+            compiler_literal_from_str(repr).map(Literal::Compiler)
         } else {
             let literal = fallback::Literal::from_str(repr)?;
             Ok(Literal::Fallback(literal))
         }
+    }
+}
+
+fn compiler_literal_from_str(repr: &str) -> Result<proc_macro::Literal, LexError> {
+    #[cfg(not(no_literal_from_str))]
+    {
+        proc_macro::Literal::from_str(repr).map_err(LexError::Compiler)
+    }
+    #[cfg(no_literal_from_str)]
+    {
+        let tokens = proc_macro_parse(repr)?;
+        let mut iter = tokens.into_iter();
+        if let (Some(proc_macro::TokenTree::Literal(literal)), None) = (iter.next(), iter.next()) {
+            if literal.to_string().len() == repr.len() {
+                return Ok(literal);
+            }
+        }
+        Err(LexError::call_site())
     }
 }
 

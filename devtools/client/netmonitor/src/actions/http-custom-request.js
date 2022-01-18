@@ -8,10 +8,21 @@ const {
   OPEN_ACTION_BAR,
   SELECT_ACTION_BAR_TAB,
   PANELS,
-  SEND_CUSTOM_REQUEST,
   RIGHT_CLICK_REQUEST,
+  PRESELECT_REQUEST,
 } = require("devtools/client/netmonitor/src/constants");
 
+const {
+  selectRequest,
+} = require("devtools/client/netmonitor/src/actions/selection");
+
+const {
+  openNetworkDetails,
+} = require("devtools/client/netmonitor/src/actions/ui");
+
+const {
+  getRequestByChannelId,
+} = require("devtools/client/netmonitor/src/selectors/index");
 /**
  * Open the entire HTTP Custom Request panel
  * @returns {Function}
@@ -71,15 +82,23 @@ function sendHTTPCustomRequest(connector, request) {
     }
 
     if (request.requestPostData) {
-      data.body = request.requestPostData.postData.text;
+      data.body = request.requestPostData.postData?.text;
     }
 
     const { channelId } = await connector.sendHTTPRequest(data);
 
-    dispatch({
-      type: SEND_CUSTOM_REQUEST,
-      id: channelId,
-    });
+    const newRequest = getRequestByChannelId(getState(), channelId);
+    // If the new custom request is available already select the request, else
+    // preselect the request.
+    if (newRequest) {
+      await dispatch(selectRequest(newRequest.id));
+    } else {
+      await dispatch({
+        type: PRESELECT_REQUEST,
+        id: channelId,
+      });
+    }
+    dispatch(openNetworkDetails(true));
   };
 }
 

@@ -65,15 +65,18 @@
 //! }
 //! ```
 
-#![doc(html_root_url = "https://docs.rs/serde_yaml/0.8.21")]
+#![doc(html_root_url = "https://docs.rs/serde_yaml/0.8.23")]
 #![deny(missing_docs)]
 // Suppressed clippy_pedantic lints
 #![allow(
+    // buggy
+    clippy::question_mark, // https://github.com/rust-lang/rust-clippy/issues/7859
     // private Deserializer::next
     clippy::should_implement_trait,
     // things are often more readable this way
     clippy::cast_lossless,
     clippy::if_not_else,
+    clippy::manual_assert,
     clippy::match_same_arms,
     clippy::module_name_repetitions,
     clippy::needless_pass_by_value,
@@ -81,6 +84,7 @@
     clippy::redundant_else,
     clippy::single_match_else,
     // code is acceptable
+    clippy::blocks_in_if_conditions,
     clippy::cast_possible_wrap,
     clippy::cast_precision_loss,
     clippy::doc_markdown,

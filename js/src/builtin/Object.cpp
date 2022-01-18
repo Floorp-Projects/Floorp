@@ -814,9 +814,7 @@ static bool PropertyIsEnumerable(JSContext* cx, HandleObject obj, HandleId id,
 // Returns true if properties not named "__proto__" can be added to |obj|
 // with a fast path that doesn't check any properties on the prototype chain.
 static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
-  // The object must be an extensible, non-prototype object. Prototypes require
-  // extra shadowing checks for shape teleporting.
-  if (!obj->isExtensible() || obj->isUsedAsPrototype()) {
+  if (!obj->isExtensible()) {
     return false;
   }
 
@@ -912,6 +910,8 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
   // enumerable/writable/configurable data properties, try to use its shape.
   if (toWasEmpty && !hasPropsWithNonDefaultAttrs &&
       toPlain->canReuseShapeForNewProperties(fromPlain->shape())) {
+    MOZ_ASSERT(!toPlain->isUsedAsPrototype(),
+               "prototypes require extra checks for shape teleporting");
     Shape* newShape = fromPlain->shape();
     if (!toPlain->setShapeAndUpdateSlots(cx, newShape)) {
       return false;
