@@ -108,8 +108,10 @@ let WebsiteFilter = {
     let url = contentLocation.spec;
     if (contentLocation.scheme == "view-source") {
       url = contentLocation.pathQueryRef;
-    } else if (url.startsWith("about:reader")) {
-      url = decodeURIComponent(url.substr("about:reader?url=".length));
+    } else if (url.toLowerCase().startsWith("about:reader")) {
+      url = decodeURIComponent(
+        url.toLowerCase().substr("about:reader?url=".length)
+      );
     }
     if (
       contentType == Ci.nsIContentPolicy.TYPE_DOCUMENT ||
