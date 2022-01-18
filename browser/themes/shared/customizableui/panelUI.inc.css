@@ -4,9 +4,6 @@
 
 %filter substitution
 
-%define menuPanelWidth 22.35em
-%define wideMenuPanelWidth 29em
-%define standaloneSubviewWidth 30em
 %define buttonStateHoverOrFocus :not([disabled],[open],:active):is(:hover,:focus-visible)
 %define buttonStateHover :not([disabled],[open],:active):is(:hover)
 %define buttonStateFocus :not([disabled],[open],:active):focus-visible
@@ -34,6 +31,9 @@
   --panel-banner-item-active-bgcolor: var(--button-active-bgcolor);
   --panel-banner-item-update-supported-bgcolor: #2AC3A2;
   --panel-banner-item-info-icon-bgcolor: #0090ED;
+
+  --menu-panel-width: 22.35em;
+  --menu-panel-width-wide: 29em;
 
   --arrowpanel-menuitem-margin: 0 8px;
   --arrowpanel-menuitem-padding-block: 8px;
@@ -232,7 +232,7 @@ panelview .toolbaritem-combined-buttons,
 }
 
 #BMB_bookmarksPopup {
-  max-width: @standaloneSubviewWidth@;
+  max-width: 30em;
 }
 
 #BMB_bookmarksPopup menupopup {
@@ -385,20 +385,20 @@ panelview[id^=PanelUI-webext-] {
 }
 
 #customizationui-widget-multiview panelview:not([extension]) {
-  min-width: @menuPanelWidth@;
+  min-width: var(--menu-panel-width);
   max-width: 35em;
 }
 
 #customizationui-widget-multiview #appMenu-libraryView,
 #pageActionPanel panelview,
 #widget-overflow panelview {
-  min-width: @wideMenuPanelWidth@;
-  max-width: @wideMenuPanelWidth@;
+  min-width: var(--menu-panel-width-wide);
+  max-width: var(--menu-panel-width-wide);
 }
 
 /* Add 2 * 16px extra width for touch mode button padding. */
 #appMenu-popup[touchmode] panelview {
-  min-width: calc(@menuPanelWidth@ + 32px);
+  min-width: calc(var(--menu-panel-width) + 32px);
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon {
@@ -479,7 +479,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   color: @appmenuWarningColor@;
   display: flex;
   flex: 1 1 0%;
-  width: calc(@menuPanelWidth@ + 30px);
+  width: calc(var(--menu-panel-width) + 30px);
   padding-inline-start: 15px;
   border-inline-start-style: none;
   -moz-image-region: rect(0, 16px, 16px, 0);
@@ -1476,7 +1476,7 @@ toolbarpaletteitem[place="menu-panel"] > toolbaritem {
 }
 
 .widget-overflow-list {
-  width: @wideMenuPanelWidth@;
+  width: var(--menu-panel-width-wide);
 }
 
 /* In customize mode, the overflow list is constrained by its container,
@@ -1489,7 +1489,7 @@ toolbarpaletteitem[place="menu-panel"] > toolbaritem {
 toolbaritem[overflowedItem=true],
 .widget-overflow-list .toolbarbutton-1 {
   width: 100%;
-  max-width: @wideMenuPanelWidth@;
+  max-width: var(--menu-panel-width-wide);
   background-repeat: no-repeat;
   background-position: 0 center;
 }
@@ -1752,7 +1752,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 
 /* What's New panel */
 #customizationui-widget-multiview #PanelUI-whatsNew {
-  max-width: @menuPanelWidth@;
+  max-width: var(--menu-panel-width);
 }
 
 #protections-popup-main-header-label {
