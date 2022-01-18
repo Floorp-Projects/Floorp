@@ -13,6 +13,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,7 +34,7 @@ public class GleanFromJavaTest {
         WorkManagerTestInitHelper.initializeTestWorkManager(context);
         ConceptFetchHttpUploader httpClient = ConceptFetchHttpUploader.fromClient(new HttpURLConnectionClient());
         Configuration config = new Configuration(httpClient);
-        BuildInfo buildInfo = new BuildInfo("test", "test");
+        BuildInfo buildInfo = new BuildInfo("test", "test", Calendar.getInstance());
         Glean.INSTANCE.initialize(context, true, config, buildInfo);
     }
 
@@ -44,7 +45,7 @@ public class GleanFromJavaTest {
         ConceptFetchHttpUploader httpClient = ConceptFetchHttpUploader.fromClient(new HttpURLConnectionClient());
         Configuration config =
                 new Configuration(httpClient, Configuration.DEFAULT_TELEMETRY_ENDPOINT, "test-channel");
-        BuildInfo buildInfo = new BuildInfo("test", "test");
+        BuildInfo buildInfo = new BuildInfo("test", "test", Calendar.getInstance());
         Glean.INSTANCE.initialize(context, true, config, buildInfo);
     }
 
