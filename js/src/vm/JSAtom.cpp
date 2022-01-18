@@ -623,16 +623,15 @@ static MOZ_ALWAYS_INLINE JSLinearString*
 MakeLinearStringForAtomizationNonStaticValidLength(JSContext* cx,
                                                    const CharT* chars,
                                                    size_t length) {
-  return NewStringCopyN<NoGC>(cx, chars, length, gc::TenuredHeap);
+  return NewStringForAtomCopyNMaybeDeflateValidLength(cx, chars, length);
 }
 
 template <typename CharT>
-static MOZ_ALWAYS_INLINE JSLinearString* MakeUTF8AtomHelper(
+static MOZ_ALWAYS_INLINE JSLinearString* MakeUTF8AtomHelperNonStaticValidLength(
     JSContext* cx, const AtomizeUTF8CharsWrapper* chars, size_t length) {
   if (JSInlineString::lengthFits<CharT>(length)) {
     CharT* storage;
-    JSInlineString* str =
-        AllocateInlineString<NoGC>(cx, length, &storage, gc::TenuredHeap);
+    JSInlineString* str = AllocateInlineStringForAtom(cx, length, &storage);
     if (!str) {
       return nullptr;
     }
@@ -655,8 +654,7 @@ static MOZ_ALWAYS_INLINE JSLinearString* MakeUTF8AtomHelper(
   InflateUTF8CharsToBufferAndTerminate(chars->utf8, newStr.get(), length,
                                        chars->encoding);
 
-  return JSLinearString::new_<NoGC>(cx, std::move(newStr), length,
-                                    gc::TenuredHeap);
+  return JSLinearString::newForAtomValidLength(cx, std::move(newStr), length);
 }
 
 // Another variant of MakeLinearStringForAtomizationNonStaticValidLength.
@@ -668,9 +666,10 @@ MakeLinearStringForAtomizationNonStaticValidLength(
   }
 
   if (chars->encoding == JS::SmallestEncoding::UTF16) {
-    return MakeUTF8AtomHelper<char16_t>(cx, chars, length);
+    return MakeUTF8AtomHelperNonStaticValidLength<char16_t>(cx, chars, length);
   }
-  return MakeUTF8AtomHelper<JS::Latin1Char>(cx, chars, length);
+  return MakeUTF8AtomHelperNonStaticValidLength<JS::Latin1Char>(cx, chars,
+                                                                length);
 }
 
 template <typename CharT>
@@ -711,8 +710,15 @@ static MOZ_ALWAYS_INLINE JSAtom* AllocateNewPermanentAtomNonStaticValidLength(
     const AtomHasher::Lookup& lookup) {
   AutoAllocInAtomsZone ac(cx);
 
+#ifdef DEBUG
+  if constexpr (std::is_same_v<CharT, char16_t>) {
+    // Can call DontDeflate variant.
+    MOZ_ASSERT(!CanStoreCharsAsLatin1(chars, length));
+  }
+#endif
+
   JSLinearString* linear =
-      MakeLinearStringForAtomizationNonStaticValidLength(cx, chars, length);
+      NewStringForAtomCopyNDontDeflateValidLength(cx, chars, length);
   if (!linear) {
     // Do not bother with a last-ditch GC here since we are very early in
     // startup and there is no potential garbage to collect.
