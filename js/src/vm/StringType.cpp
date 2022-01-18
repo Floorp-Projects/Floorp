@@ -1535,38 +1535,6 @@ static JSLinearString* NewStringDeflated(JSContext* cx, const char16_t* s,
   return JSLinearString::new_<allowGC>(cx, std::move(news), n, heap);
 }
 
-static MOZ_ALWAYS_INLINE JSInlineString* NewInlineStringForAtomDeflated(
-    JSContext* cx, const char16_t* chars, size_t length) {
-  Latin1Char* storage;
-  JSInlineString* str = AllocateInlineStringForAtom(cx, length, &storage);
-  if (!str) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(CanStoreCharsAsLatin1(chars, length));
-  FillFromCompatible(storage, chars, length);
-  return str;
-}
-
-static JSLinearString* NewStringForAtomDeflatedValidLength(JSContext* cx,
-                                                           const char16_t* s,
-                                                           size_t n) {
-  if (JSInlineString::lengthFits<Latin1Char>(n)) {
-    return NewInlineStringForAtomDeflated(cx, s, n);
-  }
-
-  auto news = cx->make_pod_arena_array<Latin1Char>(js::StringBufferArena, n);
-  if (!news) {
-    cx->recoverFromOutOfMemory();
-    return nullptr;
-  }
-
-  MOZ_ASSERT(CanStoreCharsAsLatin1(s, n));
-  FillFromCompatible(news.get(), s, n);
-
-  return JSLinearString::newForAtomValidLength(cx, std::move(news), n);
-}
-
 template <AllowGC allowGC, typename CharT>
 JSLinearString* js::NewStringDontDeflate(
     JSContext* cx, UniquePtr<CharT[], JS::FreePolicy> chars, size_t length,
@@ -1640,8 +1608,12 @@ template JSLinearString* js::NewString<NoGC>(JSContext* cx,
 namespace js {
 
 template <AllowGC allowGC, typename CharT>
-JSLinearString* NewStringCopyNDontDeflateNonStaticValidLength(
-    JSContext* cx, const CharT* s, size_t n, gc::InitialHeap heap) {
+JSLinearString* NewStringCopyNDontDeflate(JSContext* cx, const CharT* s,
+                                          size_t n, gc::InitialHeap heap) {
+  if (JSLinearString* str = TryEmptyOrStaticString(cx, s, n)) {
+    return str;
+  }
+
   if (JSInlineString::lengthFits<CharT>(n)) {
     return NewInlineString<allowGC>(cx, mozilla::Range<const CharT>(s, n),
                                     heap);
@@ -1657,27 +1629,7 @@ JSLinearString* NewStringCopyNDontDeflateNonStaticValidLength(
 
   FillChars(news.get(), s, n);
 
-  return JSLinearString::newValidLength<allowGC>(cx, std::move(news), n, heap);
-}
-
-template JSLinearString* NewStringCopyNDontDeflateNonStaticValidLength<CanGC>(
-    JSContext* cx, const char16_t* s, size_t n, gc::InitialHeap heap);
-
-template JSLinearString* NewStringCopyNDontDeflateNonStaticValidLength<CanGC>(
-    JSContext* cx, const Latin1Char* s, size_t n, gc::InitialHeap heap);
-
-template <AllowGC allowGC, typename CharT>
-JSLinearString* NewStringCopyNDontDeflate(JSContext* cx, const CharT* s,
-                                          size_t n, gc::InitialHeap heap) {
-  if (JSLinearString* str = TryEmptyOrStaticString(cx, s, n)) {
-    return str;
-  }
-
-  if (MOZ_UNLIKELY(!JSLinearString::validateLength(cx, n))) {
-    return nullptr;
-  }
-
-  return NewStringCopyNDontDeflateNonStaticValidLength<allowGC>(cx, s, n, heap);
+  return JSLinearString::new_<allowGC>(cx, std::move(news), n, heap);
 }
 
 template JSLinearString* NewStringCopyNDontDeflate<CanGC>(JSContext* cx,
@@ -1732,54 +1684,6 @@ template JSLinearString* NewStringCopyN<CanGC>(JSContext* cx,
 template JSLinearString* NewStringCopyN<NoGC>(JSContext* cx,
                                               const Latin1Char* s, size_t n,
                                               gc::InitialHeap heap);
-
-template <typename CharT>
-JSLinearString* NewStringForAtomCopyNDontDeflateValidLength(JSContext* cx,
-                                                            const CharT* s,
-                                                            size_t n) {
-  if constexpr (std::is_same_v<CharT, char16_t>) {
-    MOZ_ASSERT(!CanStoreCharsAsLatin1(s, n));
-  }
-
-  if (JSInlineString::lengthFits<CharT>(n)) {
-    return NewInlineStringForAtom(cx, s, n);
-  }
-
-  auto news = cx->make_pod_arena_array<CharT>(js::StringBufferArena, n);
-  if (!news) {
-    cx->recoverFromOutOfMemory();
-    return nullptr;
-  }
-
-  FillChars(news.get(), s, n);
-
-  return JSLinearString::newForAtomValidLength(cx, std::move(news), n);
-}
-
-template JSLinearString* NewStringForAtomCopyNDontDeflateValidLength(
-    JSContext* cx, const char16_t* s, size_t n);
-
-template JSLinearString* NewStringForAtomCopyNDontDeflateValidLength(
-    JSContext* cx, const Latin1Char* s, size_t n);
-
-template <typename CharT>
-JSLinearString* NewStringForAtomCopyNMaybeDeflateValidLength(JSContext* cx,
-                                                             const CharT* s,
-                                                             size_t n) {
-  if constexpr (std::is_same_v<CharT, char16_t>) {
-    if (CanStoreCharsAsLatin1(s, n)) {
-      return NewStringForAtomDeflatedValidLength(cx, s, n);
-    }
-  }
-
-  return NewStringForAtomCopyNDontDeflateValidLength(cx, s, n);
-}
-
-template JSLinearString* NewStringForAtomCopyNMaybeDeflateValidLength(
-    JSContext* cx, const char16_t* s, size_t n);
-
-template JSLinearString* NewStringForAtomCopyNMaybeDeflateValidLength(
-    JSContext* cx, const Latin1Char* s, size_t n);
 
 JSLinearString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8,
                                    gc::InitialHeap heap) {
