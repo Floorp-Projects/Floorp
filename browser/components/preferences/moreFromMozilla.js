@@ -49,6 +49,10 @@ var gMoreFromMozillaPane = {
       advanced: "fxvt-113-b-na",
     };
 
+    const experiment_params = {
+      entrypoint_experiment: "morefrommozilla-experiment-1846",
+    };
+
     let pageUrl = new URL(url);
     for (let [key, val] of Object.entries(URL_PARAMS)) {
       pageUrl.searchParams.append(key, val);
@@ -60,6 +64,16 @@ var gMoreFromMozillaPane = {
         "utm_content",
         `${utm_content[option]}${hasEmail ? "-email" : ""}`
       );
+    }
+
+    // Add experiments params when user is shown an experimental UI
+    // with template value as 'simple' or 'advanced' set via Nimbus
+    if (option !== "default") {
+      pageUrl.searchParams.set(
+        "entrypoint_experiment",
+        experiment_params.entrypoint_experiment
+      );
+      pageUrl.searchParams.set("entrypoint_variation", `treatment-${option}`);
     }
     return pageUrl.toString();
   },
