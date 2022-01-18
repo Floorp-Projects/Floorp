@@ -110,6 +110,7 @@ class BodyStream final : public nsIInputStreamCallback,
 
   // This method creates a JS ReadableStream object and it assigns it to the
   // aStreamHolder calling SetReadableStreamBody().
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static void Create(JSContext* aCx, BodyStreamHolder* aStreamHolder,
                      nsIGlobalObject* aGlobal, nsIInputStream* aInputStream,
                      ErrorResult& aRv);
@@ -156,8 +157,11 @@ class BodyStream final : public nsIInputStreamCallback,
                                   void* aBuffer, size_t aLength,
                                   size_t* aByteWritten);
 
-  void EnqueueChunkWithSizeIntoStream(JSContext* aCx, ReadableStream* aStream,
-                                      uint64_t bytes, ErrorResult& aRv);
+  // This is a script boundary until Bug 1750605 is resolved and allows us
+  // to replace this with MOZ_CAN_RUN_SCRIPT.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void EnqueueChunkWithSizeIntoStream(
+      JSContext* aCx, ReadableStream* aStream, uint64_t bytes,
+      ErrorResult& aRv);
 
   void ErrorPropagation(JSContext* aCx, const MutexAutoLock& aProofOfLock,
                         ReadableStream* aStream, nsresult aRv);

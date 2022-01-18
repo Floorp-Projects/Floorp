@@ -160,7 +160,7 @@ void FetchStreamReader::CloseAndRelease(JSContext* aCx, nsresult aStatus) {
       // 3.4.3 that specified ReadableStreamCancel is: If stream.[[state]] is
       // "closed", return a new promise resolved with undefined.
       RefPtr<Promise> ignoredResultPromise =
-          mReader->Cancel(aCx, errorValue, ignoredError);
+          MOZ_KnownLive(mReader)->Cancel(aCx, errorValue, ignoredError);
       NS_WARNING_ASSERTION(!ignoredError.Failed(),
                            "Failed to cancel stream during close and release");
 #else
@@ -249,7 +249,7 @@ void FetchStreamReader::StartConsuming(JSContext* aCx, JS::HandleObject aStream,
 #endif
 
 // nsIOutputStreamCallback interface
-
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 FetchStreamReader::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
   NS_ASSERT_OWNINGTHREAD(FetchStreamReader);
@@ -289,7 +289,8 @@ FetchStreamReader::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
   RefPtr<ReadRequest> readRequest =
       new Read_ReadRequest(domPromise, /* aForAuthorCode = */ false);
 
-  ReadableStreamDefaultReaderRead(aes.cx(), mReader, readRequest, rv);
+  ReadableStreamDefaultReaderRead(aes.cx(), MOZ_KnownLive(mReader), readRequest,
+                                  rv);
   if (NS_WARN_IF(rv.Failed())) {
     // Let's close the stream.
     CloseAndRelease(aes.cx(), NS_ERROR_DOM_INVALID_STATE_ERR);

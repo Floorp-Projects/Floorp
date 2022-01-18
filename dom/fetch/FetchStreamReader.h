@@ -9,6 +9,7 @@
 
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/FetchBinding.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "nsIAsyncOutputStream.h"
@@ -43,6 +44,11 @@ class FetchStreamReader final : public nsIOutputStreamCallback,
   // provided, the reader will also be canceled.  aStatus must be a DOM error
   // as understood by DOMException because it will be provided as the
   // cancellation reason.
+  //
+  // This is a script boundary minimize annotation changes required while
+  // we figure out how to handle some more tricky annotation cases (for
+  // example, the destructor of this class. Tracking under Bug 1750656)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void CloseAndRelease(JSContext* aCx, nsresult aStatus);
 
 #ifdef MOZ_DOM_STREAMS
