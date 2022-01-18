@@ -450,7 +450,8 @@ size_t AtomsTable::sizeOfIncludingThis(
 }
 
 template <typename CharT>
-static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsNonStaticFromLookup(
+static MOZ_ALWAYS_INLINE JSAtom*
+AtomizeAndCopyCharsNonStaticValidLengthFromLookup(
     JSContext* cx, const CharT* chars, size_t length,
     const AtomHasher::Lookup& lookup, const Maybe<uint32_t>& indexValue) {
   // Try the per-Zone cache first. If we find the atom there we can avoid the
@@ -482,10 +483,6 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsNonStaticFromLookup(
     }
 
     return atom;
-  }
-
-  if (MOZ_UNLIKELY(!JSString::validateLength(cx, length))) {
-    return nullptr;
   }
 
   JSAtom* atom = cx->atoms().atomizeAndCopyCharsNonStaticValidLength(
@@ -572,9 +569,13 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyChars(
     return s;
   }
 
+  if (MOZ_UNLIKELY(!JSString::validateLength(cx, length))) {
+    return nullptr;
+  }
+
   AtomHasher::Lookup lookup(chars, length);
-  return AtomizeAndCopyCharsNonStaticFromLookup(cx, chars, length, lookup,
-                                                indexValue);
+  return AtomizeAndCopyCharsNonStaticValidLengthFromLookup(cx, chars, length,
+                                                           lookup, indexValue);
 }
 
 template <typename CharT>
@@ -810,9 +811,13 @@ JSAtom* js::Atomize(JSContext* cx, HashNumber hash, const char* bytes,
     return s;
   }
 
+  if (MOZ_UNLIKELY(!JSString::validateLength(cx, length))) {
+    return nullptr;
+  }
+
   AtomHasher::Lookup lookup(hash, chars, length);
-  return AtomizeAndCopyCharsNonStaticFromLookup(cx, chars, length, lookup,
-                                                Nothing());
+  return AtomizeAndCopyCharsNonStaticValidLengthFromLookup(cx, chars, length,
+                                                           lookup, Nothing());
 }
 
 template <typename CharT>
@@ -828,22 +833,25 @@ template JSAtom* js::AtomizeChars(JSContext* cx, const char16_t* chars,
 
 /* |chars| must not point into an inline or short string. */
 template <typename CharT>
-JSAtom* js::AtomizeCharsNonStatic(JSContext* cx, HashNumber hash,
-                                  const CharT* chars, size_t length) {
+JSAtom* js::AtomizeCharsNonStaticValidLength(JSContext* cx, HashNumber hash,
+                                             const CharT* chars,
+                                             size_t length) {
   MOZ_ASSERT(!cx->staticStrings().lookup(chars, length));
 
   AtomHasher::Lookup lookup(hash, chars, length);
-  return AtomizeAndCopyCharsNonStaticFromLookup(cx, chars, length, lookup,
-                                                Nothing());
+  return AtomizeAndCopyCharsNonStaticValidLengthFromLookup(cx, chars, length,
+                                                           lookup, Nothing());
 }
 
-template JSAtom* js::AtomizeCharsNonStatic(JSContext* cx, HashNumber hash,
-                                           const Latin1Char* chars,
-                                           size_t length);
+template JSAtom* js::AtomizeCharsNonStaticValidLength(JSContext* cx,
+                                                      HashNumber hash,
+                                                      const Latin1Char* chars,
+                                                      size_t length);
 
-template JSAtom* js::AtomizeCharsNonStatic(JSContext* cx, HashNumber hash,
-                                           const char16_t* chars,
-                                           size_t length);
+template JSAtom* js::AtomizeCharsNonStaticValidLength(JSContext* cx,
+                                                      HashNumber hash,
+                                                      const char16_t* chars,
+                                                      size_t length);
 
 static JSAtom* PermanentlyAtomizeCharsValidLength(JSContext* cx,
                                                   AtomSet& atomSet,
@@ -915,10 +923,14 @@ JSAtom* js::AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars,
     return nullptr;
   }
 
+  if (MOZ_UNLIKELY(!JSString::validateLength(cx, length))) {
+    return nullptr;
+  }
+
   AtomizeUTF8CharsWrapper chars(utf8, forCopy);
   AtomHasher::Lookup lookup(utf8Chars, utf8ByteLength, length, hash);
-  return AtomizeAndCopyCharsNonStaticFromLookup(cx, &chars, length, lookup,
-                                                Nothing());
+  return AtomizeAndCopyCharsNonStaticValidLengthFromLookup(cx, &chars, length,
+                                                           lookup, Nothing());
 }
 
 bool js::IndexToIdSlow(JSContext* cx, uint32_t index, MutableHandleId idp) {
