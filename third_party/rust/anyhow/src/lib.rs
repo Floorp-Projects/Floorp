@@ -210,7 +210,7 @@
 //! will require an explicit `.map_err(Error::msg)` when working with a
 //! non-Anyhow error type inside a function that returns Anyhow's error type.
 
-#![doc(html_root_url = "https://docs.rs/anyhow/1.0.51")]
+#![doc(html_root_url = "https://docs.rs/anyhow/1.0.52")]
 #![cfg_attr(backtrace, feature(backtrace))]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -225,6 +225,7 @@
     clippy::needless_doctest_main,
     clippy::new_ret_no_self,
     clippy::redundant_else,
+    clippy::return_self_not_must_use,
     clippy::unused_self,
     clippy::used_underscore_binding,
     clippy::wildcard_imports,
