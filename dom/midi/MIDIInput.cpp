@@ -12,6 +12,8 @@
 #include "mozilla/dom/MIDIMessageEventBinding.h"
 #include "nsDOMNavigationTiming.h"
 
+#include "MIDILog.h"
+
 namespace mozilla::dom {
 
 MIDIInput::MIDIInput(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent)
@@ -69,6 +71,7 @@ void MIDIInput::EventListenerAdded(nsAtom* aType) {
     // setting the midimessage event handler but Chrome does it even when
     // adding event listeners hence this.
     if (mPort->ConnectionState() != MIDIPortConnectionState::Open) {
+      LOG("onmidimessage event listener added, sending implicit Open");
       mPort->SendOpen();
     }
   }

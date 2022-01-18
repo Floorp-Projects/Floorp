@@ -287,6 +287,26 @@ where
         (addr, fut)
     }
 
+    /// Create a server with graceful shutdown signal.
+    ///
+    /// When the signal completes, the server will start the graceful shutdown
+    /// process.
+    pub fn try_bind_with_graceful_shutdown(
+        self,
+        addr: impl Into<SocketAddr> + 'static,
+        signal: impl Future<Output = ()> + Send + 'static,
+    ) -> Result<(SocketAddr, impl Future<Output = ()> + 'static), crate::Error> {
+        let addr = addr.into();
+        let (addr, srv) = try_bind!(self, &addr).map_err(crate::Error::new)?;
+        let srv = srv.with_graceful_shutdown(signal).map(|result| {
+            if let Err(err) = result {
+                log::error!("server error: {}", err)
+            }
+        });
+
+        Ok((addr, srv))
+    }
+
     /// Setup this `Server` with a specific stream of incoming connections.
     ///
     /// This can be used for Unix Domain Sockets, or TLS, etc.
@@ -300,6 +320,43 @@ where
     {
         let incoming = incoming.map_ok(crate::transport::LiftIo);
         self.serve_incoming2(incoming)
+    }
+
+    /// Setup this `Server` with a specific stream of incoming connections and a
+    /// signal to initiate graceful shutdown.
+    ///
+    /// This can be used for Unix Domain Sockets, or TLS, etc.
+    ///
+    /// When the signal completes, the server will start the graceful shutdown
+    /// process.
+    ///
+    /// Returns a `Future` that can be executed on any runtime.
+    pub fn serve_incoming_with_graceful_shutdown<I>(
+        self,
+        incoming: I,
+        signal: impl Future<Output = ()> + Send + 'static,
+    ) -> impl Future<Output = ()> + 'static
+    where
+        I: TryStream + Send + 'static,
+        I::Ok: AsyncRead + AsyncWrite + Send + 'static + Unpin,
+        I::Error: Into<Box<dyn StdError + Send + Sync>>,
+    {
+        let incoming = incoming.map_ok(crate::transport::LiftIo);
+        let service = into_service!(self.filter);
+        let pipeline = self.pipeline;
+
+        async move {
+            let srv =
+                HyperServer::builder(hyper::server::accept::from_stream(incoming.into_stream()))
+                    .http1_pipeline_flush(pipeline)
+                    .serve(service)
+                    .with_graceful_shutdown(signal)
+                    .await;
+
+            if let Err(err) = srv {
+                log::error!("server error: {}", err);
+            }
+        }
     }
 
     async fn serve_incoming2<I>(self, incoming: I)

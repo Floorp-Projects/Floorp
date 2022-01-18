@@ -7,6 +7,7 @@ use crate::{AssertExpression, NanPattern, V128Pattern};
 /// WAST files are not officially specified but are used in the official test
 /// suite to write official spec tests for wasm. This type represents a parsed
 /// `*.wast` file which parses a list of directives in a file.
+#[derive(Debug)]
 pub struct Wast<'a> {
     #[allow(missing_docs)]
     pub directives: Vec<WastDirective<'a>>,
@@ -51,6 +52,7 @@ impl Peek for WastDirectiveToken {
 /// It's not entirely clear to me what all of these are per se, but they're only
 /// really interesting to test harnesses mostly.
 #[allow(missing_docs)]
+#[derive(Debug)]
 pub enum WastDirective<'a> {
     Module(ast::Module<'a>),
     QuoteModule {
@@ -265,6 +267,7 @@ impl<'a> Parse<'a> for WastDirective<'a> {
 }
 
 #[allow(missing_docs)]
+#[derive(Debug)]
 pub enum WastExecute<'a> {
     Invoke(WastInvoke<'a>),
     Module(ast::Module<'a>),
@@ -294,6 +297,7 @@ impl<'a> Parse<'a> for WastExecute<'a> {
 }
 
 #[allow(missing_docs)]
+#[derive(Debug)]
 pub struct WastInvoke<'a> {
     pub span: ast::Span,
     pub module: Option<ast::Id<'a>>,
@@ -320,6 +324,7 @@ impl<'a> Parse<'a> for WastInvoke<'a> {
 }
 
 #[allow(missing_docs)]
+#[derive(Debug)]
 pub enum QuoteModule<'a> {
     Module(ast::Module<'a>),
     Quote(Vec<&'a [u8]>),

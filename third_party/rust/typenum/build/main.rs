@@ -80,8 +80,10 @@ pub fn no_std() {}
 fn main() {
     let highest: u64 = 1024;
 
-    let first2: u32 = (highest as f64).log(2.0).round() as u32 + 1;
-    let first10: u32 = (highest as f64).log(10.0) as u32 + 1;
+    // Use hardcoded values to avoid issues with cross-compilation.
+    // See https://github.com/paholg/typenum/issues/162
+    let first2: u32 = 11; // (highest as f64).log(2.0).round() as u32 + 1;
+    let first10: u32 = 4; // (highest as f64).log(10.0) as u32 + 1;
     let uints = (0..(highest + 1))
         .chain((first2..64).map(|i| 2u64.pow(i)))
         .chain((first10..20).map(|i| 10u64.pow(i)));

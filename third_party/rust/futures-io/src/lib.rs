@@ -8,7 +8,6 @@
 //! All items of this library are only available when the `std` feature of this
 //! library is activated, and it is activated by default.
 
-#![cfg_attr(all(feature = "read-initializer", feature = "std"), feature(read_initializer))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![warn(missing_debug_implementations, missing_docs, rust_2018_idioms, unreachable_pub)]
 // It cannot be included in the published code because this lints have false positives in the minimum required version.
@@ -22,9 +21,6 @@
 ))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-#[cfg(all(feature = "read-initializer", not(feature = "unstable")))]
-compile_error!("The `read-initializer` feature requires the `unstable` feature as an explicit opt-in to unstable features");
-
 #[cfg(feature = "std")]
 mod if_std {
     use std::io;
@@ -34,11 +30,6 @@ mod if_std {
 
     // Re-export some types from `std::io` so that users don't have to deal
     // with conflicts when `use`ing `futures::io` and `std::io`.
-    #[cfg(feature = "read-initializer")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "read-initializer")))]
-    #[doc(no_inline)]
-    #[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
-    pub use io::Initializer;
     #[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
     #[doc(no_inline)]
     pub use io::{Error, ErrorKind, IoSlice, IoSliceMut, Result, SeekFrom};
@@ -51,27 +42,6 @@ mod if_std {
     /// for wakeup and return if data is not yet available, rather than blocking
     /// the calling thread.
     pub trait AsyncRead {
-        /// Determines if this `AsyncRead`er can work with buffers of
-        /// uninitialized memory.
-        ///
-        /// The default implementation returns an initializer which will zero
-        /// buffers.
-        ///
-        /// This method is only available when the `read-initializer` feature of this
-        /// library is activated.
-        ///
-        /// # Safety
-        ///
-        /// This method is `unsafe` because an `AsyncRead`er could otherwise
-        /// return a non-zeroing `Initializer` from another `AsyncRead` type
-        /// without an `unsafe` block.
-        #[cfg(feature = "read-initializer")]
-        #[cfg_attr(docsrs, doc(cfg(feature = "read-initializer")))]
-        #[inline]
-        unsafe fn initializer(&self) -> Initializer {
-            Initializer::zeroing()
-        }
-
         /// Attempt to read from the `AsyncRead` into `buf`.
         ///
         /// On success, returns `Poll::Ready(Ok(num_bytes_read))`.
@@ -329,11 +299,6 @@ mod if_std {
 
     macro_rules! deref_async_read {
         () => {
-            #[cfg(feature = "read-initializer")]
-            unsafe fn initializer(&self) -> Initializer {
-                (**self).initializer()
-            }
-
             fn poll_read(
                 mut self: Pin<&mut Self>,
                 cx: &mut Context<'_>,
@@ -365,11 +330,6 @@ mod if_std {
         P: DerefMut + Unpin,
         P::Target: AsyncRead,
     {
-        #[cfg(feature = "read-initializer")]
-        unsafe fn initializer(&self) -> Initializer {
-            (**self).initializer()
-        }
-
         fn poll_read(
             self: Pin<&mut Self>,
             cx: &mut Context<'_>,
@@ -389,11 +349,6 @@ mod if_std {
 
     macro_rules! delegate_async_read_to_stdio {
         () => {
-            #[cfg(feature = "read-initializer")]
-            unsafe fn initializer(&self) -> Initializer {
-                io::Read::initializer(self)
-            }
-
             fn poll_read(
                 mut self: Pin<&mut Self>,
                 _: &mut Context<'_>,

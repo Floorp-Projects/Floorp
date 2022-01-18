@@ -13,11 +13,12 @@
 [package]
 edition = "2018"
 name = "blake2b_simd"
-version = "0.5.9"
+version = "0.5.11"
 authors = ["Jack O'Connor"]
 description = "a pure Rust BLAKE2b implementation with dynamic SIMD"
 documentation = "https://docs.rs/blake2b_simd"
 readme = "README.md"
+keywords = ["blake2b", "blake2bp", "blake2"]
 license = "MIT"
 repository = "https://github.com/oconnor663/blake2_simd"
 [dependencies.arrayref]
@@ -33,3 +34,4 @@ version = "0.1.3"
 [features]
 default = ["std"]
 std = []
+uninline_portable = []

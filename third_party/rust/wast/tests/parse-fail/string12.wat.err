@@ -1,5 +1,5 @@
 invalid unicode scalar value 0xffffffff
-     --> tests/parse-fail/string12.wat:1:3
+     --> tests/parse-fail/string12.wat:1:12
       |
     1 | "\u{ffffffff}"
-      |   ^
+      |            ^

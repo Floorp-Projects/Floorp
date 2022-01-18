@@ -1464,8 +1464,7 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
       // visual viewport is updated to account for that before we read the
       // visual viewport size.
       manager->UpdateVisualViewportSizeForPotentialScrollbarChange();
-    } else if ((oldScrollPort.Size() != newScrollPort.Size()) &&
-               !HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
+    } else if (oldScrollPort.Size() != newScrollPort.Size()) {
       // We want to make sure to send a visual viewport resize event if the
       // scrollport changed sizes for root scroll frames. The
       // MobileViewportManager will do that, but if we don't have one (ie we

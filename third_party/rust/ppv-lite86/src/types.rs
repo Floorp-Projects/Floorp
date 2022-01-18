@@ -75,7 +75,9 @@ pub trait Vec4<W> {
 /// NOTE: functions in this trait may be moved to Vec4 in any patch release. To avoid breakage,
 /// import Vec4Ext only together with Vec4, and don't qualify its methods.
 pub trait Vec4Ext<W> {
-    fn transpose4(a: Self, b: Self, c: Self, d: Self) -> (Self, Self, Self, Self) where Self: Sized;
+    fn transpose4(a: Self, b: Self, c: Self, d: Self) -> (Self, Self, Self, Self)
+    where
+        Self: Sized;
 }
 pub trait Vector<T> {
     fn to_scalars(self) -> T;
@@ -121,12 +123,7 @@ pub trait u32x4<M: Machine>:
 {
 }
 pub trait u64x2<M: Machine>:
-    BitOps64
-    + Store<vec128_storage>
-    + ArithOps
-    + Vec2<u64>
-    + MultiLane<[u64; 2]>
-    + Into<vec128_storage>
+    BitOps64 + Store<vec128_storage> + ArithOps + Vec2<u64> + MultiLane<[u64; 2]> + Into<vec128_storage>
 {
 }
 pub trait u128x1<M: Machine>:

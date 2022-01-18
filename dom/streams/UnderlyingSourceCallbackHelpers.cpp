@@ -7,7 +7,6 @@
 #include "mozilla/dom/BodyStream.h"
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
-#include "mozilla/dom/NativeUnderlyingSource.h"
 
 namespace mozilla::dom {
 

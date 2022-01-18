@@ -7,25 +7,7 @@
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-
 use std::fmt::{self, Write};
-
-// Helper functions used for Unicode normalization
-fn canonical_sort(comb: &mut [(char, u8)]) {
-    let len = comb.len();
-    for i in 0..len {
-        let mut swapped = false;
-        for j in 1..len-i {
-            let class_a = comb[j-1].1;
-            let class_b = comb[j].1;
-            if class_a != 0 && class_b != 0 && class_a > class_b {
-                comb.swap(j-1, j);
-                swapped = true;
-            }
-        }
-        if !swapped { break; }
-    }
-}
 
 #[derive(Clone)]
 enum DecompositionType {
@@ -38,27 +20,71 @@ enum DecompositionType {
 pub struct Decompositions<I> {
     kind: DecompositionType,
     iter: I,
-    buffer: Vec<(char, u8)>,
-    sorted: bool
+    done: bool,
+
+    // This buffer stores pairs of (canonical combining class, character),
+    // pushed onto the end in text order.
+    //
+    // It's split into two contiguous regions by the `ready` offset.  The first
+    // `ready` pairs are sorted and ready to emit on demand.  The "pending"
+    // suffix afterwards still needs more characters for us to be able to sort
+    // in canonical order and is not safe to emit.
+    buffer: Vec<(u8, char)>,
+    ready: usize,
 }
 
 #[inline]
 pub fn new_canonical<I: Iterator<Item=char>>(iter: I) -> Decompositions<I> {
     Decompositions {
-        iter: iter,
-        buffer: Vec::new(),
-        sorted: false,
         kind: self::DecompositionType::Canonical,
+        iter: iter,
+        done: false,
+        buffer: Vec::new(),
+        ready: 0,
     }
 }
 
 #[inline]
 pub fn new_compatible<I: Iterator<Item=char>>(iter: I) -> Decompositions<I> {
     Decompositions {
-        iter: iter,
-        buffer: Vec::new(),
-        sorted: false,
         kind: self::DecompositionType::Compatible,
+        iter: iter,
+        done: false,
+        buffer: Vec::new(),
+        ready: 0,
+    }
+}
+
+impl<I> Decompositions<I> {
+    #[inline]
+    fn push_back(&mut self, ch: char) {
+        let class = super::char::canonical_combining_class(ch);
+        if class == 0 {
+            self.sort_pending();
+        }
+        self.buffer.push((class, ch));
+    }
+
+    #[inline]
+    fn sort_pending(&mut self) {
+        if self.ready == 0 && self.buffer.is_empty() {
+            return;
+        }
+
+        // NB: `sort_by_key` is stable, so it will preserve the original text's
+        // order within a combining class.
+        self.buffer[self.ready..].sort_by_key(|k| k.0);
+        self.ready = self.buffer.len();
+    }
+
+    #[inline]
+    fn pop_front(&mut self) -> Option<char> {
+        if self.ready == 0 {
+            None
+        } else {
+            self.ready -= 1;
+            Some(self.buffer.remove(0).1)
+        }
     }
 }
 
@@ -67,66 +93,21 @@ impl<I: Iterator<Item=char>> Iterator for Decompositions<I> {
 
     #[inline]
     fn next(&mut self) -> Option<char> {
-        use self::DecompositionType::*;
-
-        match self.buffer.first() {
-            Some(&(c, 0)) => {
-                self.sorted = false;
-                self.buffer.remove(0);
-                return Some(c);
-            }
-            Some(&(c, _)) if self.sorted => {
-                self.buffer.remove(0);
-                return Some(c);
-            }
-            _ => self.sorted = false
-        }
-
-        if !self.sorted {
-            for ch in self.iter.by_ref() {
-                let buffer = &mut self.buffer;
-                let sorted = &mut self.sorted;
-                {
-                    let callback = |d| {
-                        let class =
-                            super::char::canonical_combining_class(d);
-                        if class == 0 && !*sorted {
-                            canonical_sort(buffer);
-                            *sorted = true;
-                        }
-                        buffer.push((d, class));
-                    };
-                    match self.kind {
-                        Canonical => {
-                            super::char::decompose_canonical(ch, callback)
-                        }
-                        Compatible => {
-                            super::char::decompose_compatible(ch, callback)
-                        }
-                    }
-                }
-                if *sorted {
-                    break
-                }
+        while self.ready == 0 && !self.done {
+            match (self.iter.next(), &self.kind) {
+                (Some(ch), &DecompositionType::Canonical) => {
+                    super::char::decompose_canonical(ch, |d| self.push_back(d));
+                },
+                (Some(ch), &DecompositionType::Compatible) => {
+                    super::char::decompose_compatible(ch, |d| self.push_back(d));
+                },
+                (None, _) => {
+                    self.sort_pending();
+                    self.done = true;
+                },
             }
         }
-
-        if !self.sorted {
-            canonical_sort(&mut self.buffer);
-            self.sorted = true;
-        }
-
-        if self.buffer.is_empty() {
-            None
-        } else {
-            match self.buffer.remove(0) {
-                (c, 0) => {
-                    self.sorted = false;
-                    Some(c)
-                }
-                (c, _) => Some(c),
-            }
-        }
+        self.pop_front()
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
