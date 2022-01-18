@@ -1542,9 +1542,17 @@ class AddonInstall {
         }
 
         if (this.existingAddon.isWebExtension && !this.addon.isWebExtension) {
+          // This condition is never met on regular Firefox builds.
+          // Remove it along with externalExtensionLoaders (bug 1674799).
           return Promise.reject([
             AddonManager.ERROR_UNEXPECTED_ADDON_TYPE,
             "WebExtensions may not be updated to other extension types",
+          ]);
+        }
+        if (this.existingAddon.type != this.addon.type) {
+          return Promise.reject([
+            AddonManager.ERROR_UNEXPECTED_ADDON_TYPE,
+            `Refusing to change addon type from ${this.existingAddon.type} to ${this.addon.type}`,
           ]);
         }
       }
