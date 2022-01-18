@@ -50,6 +50,7 @@
 cfg_if::cfg_if!{
     if #[cfg(feature = "std")] {
         extern crate std;
+        use std::cmp::min;
         use std::prelude::v1::*;
         use std::fmt;
         use std::error::Error;
@@ -57,6 +58,7 @@ cfg_if::cfg_if!{
     } else {
         use core::result;
         use core::fmt;
+        use core::cmp::min;
     }
 }
 
@@ -69,6 +71,9 @@ pub struct BitReader<'a> {
     /// Position from the start of the slice, counted as bits instead of bytes
     position: u64,
     relative_offset: u64,
+
+    /// Length this reader is allowed to read from the slice, counted as bits instead of bytes.
+    length: u64,
 }
 
 impl<'a> BitReader<'a> {
@@ -79,6 +84,7 @@ impl<'a> BitReader<'a> {
             bytes: bytes,
             position: 0,
             relative_offset: 0,
+            length: bytes.len() as u64 * 8,
         }
     }
 
@@ -109,6 +115,45 @@ impl<'a> BitReader<'a> {
             bytes: self.bytes,
             position: self.position,
             relative_offset: self.position,
+            length: self.length - self.position,
+        }
+    }
+
+    /// Returns a copy of current BitReader, with the difference that its position() returns
+    /// positions relative to the position of the original BitReader at the construction time, and
+    /// will not allow reading more than len bits. After construction, both readers are otherwise 
+    // completely independent, except of course for sharing the same source data.
+    ///
+    /// ```
+    /// use bitreader::BitReader;
+    /// use bitreader::BitReaderError;
+    ///
+    /// let bytes = &[0b11110000, 0b00001111];
+    /// let mut original = BitReader::new(bytes);
+    /// assert_eq!(original.read_u8(4).unwrap(), 0b1111);
+    /// assert_eq!(original.position(), 4);
+    ///
+    /// let mut relative = original.relative_reader_atmost(8);
+    /// assert_eq!(relative.position(), 0);
+    ///
+    /// assert_eq!(original.read_u8(8).unwrap(), 0);
+    /// assert_eq!(relative.read_u8(8).unwrap(), 0);
+    ///
+    /// assert_eq!(original.position(), 12);
+    /// assert_eq!(relative.position(), 8);
+    ///
+    /// assert_eq!(relative.read_u8(8).unwrap_err(), BitReaderError::NotEnoughData{
+    ///    position: 8,
+    ///    length: 8,
+    ///    requested: 8
+    /// });
+    /// ```
+    pub fn relative_reader_atmost(&self, len: u64) -> BitReader<'a> {
+        BitReader {
+            bytes: self.bytes,
+            position: self.position,
+            relative_offset: self.position,
+            length: min(self.length - self.position, len),
         }
     }
 
@@ -130,9 +175,9 @@ impl<'a> BitReader<'a> {
         let requested = output_bytes.len() as u64 * 8;
         if requested > self.remaining() {
             Err(BitReaderError::NotEnoughData {
-                position: self.position,
-                length: (self.bytes.len() * 8) as u64,
-                requested: requested,
+                position: self.position(),
+                length: self.length,
+                requested,
             })
         } else {
             for byte in output_bytes.iter_mut() {
@@ -221,10 +266,10 @@ impl<'a> BitReader<'a> {
     /// Skip arbitrary number of bits. However, you can skip at most to the end of the byte slice.
     pub fn skip(&mut self, bit_count: u64) -> Result<()> {
         let end_position = self.position + bit_count;
-        if end_position > self.bytes.len() as u64 * 8 {
+        if end_position > (self.relative_offset + self.length) {
             return Err(BitReaderError::NotEnoughData {
-                position: self.position,
-                length: (self.bytes.len() * 8) as u64,
+                position: self.position(),
+                length: self.length,
                 requested: bit_count,
             });
         }
@@ -239,8 +284,7 @@ impl<'a> BitReader<'a> {
 
     /// Returns the number of bits not yet read from the underlying slice.
     pub fn remaining(&self) -> u64 {
-        let total_bits = self.bytes.len() as u64 * 8;
-        total_bits - self.position
+        self.length - self.position
     }
 
     /// Helper to make sure the "bit cursor" is exactly at the beginning of a byte, or at specific
@@ -291,10 +335,10 @@ impl<'a> BitReader<'a> {
         }
         let start_position = self.position;
         let end_position = self.position + bit_count as u64;
-        if end_position > self.bytes.len() as u64 * 8 {
+        if end_position > (self.relative_offset + self.length) {
             return Err(BitReaderError::NotEnoughData {
-                position: self.position,
-                length: (self.bytes.len() * 8) as u64,
+                position: self.position(),
+                length: self.length,
                 requested: bit_count as u64,
             });
         }
@@ -322,8 +366,13 @@ pub type Result<T> = result::Result<T, BitReaderError>;
 pub enum BitReaderError {
     /// Requested more bits than there are left in the byte slice at the current position.
     NotEnoughData {
+        /// Current posititon in bits relative to the beginning of the reader.
         position: u64,
+
+        /// Total readable length in bits of the underlaying slice.
         length: u64,
+
+        /// Bits requested to be read.
         requested: u64,
     },
     /// Requested more bits than the returned variable can hold, for example more than 8 bits when

@@ -6,6 +6,7 @@
     clippy::let_underscore_drop,
     clippy::let_unit_value,
     clippy::missing_panics_doc,
+    clippy::missing_safety_doc,
     clippy::needless_return,
     clippy::trivially_copy_pass_by_ref,
     clippy::unused_async
@@ -1375,4 +1376,16 @@ pub mod issue169 {
     }
 
     pub fn test(_t: &dyn Trait) {}
+}
+
+// https://github.com/dtolnay/async-trait/issues/183
+pub mod issue183 {
+    #![deny(clippy::shadow_same)]
+
+    use async_trait::async_trait;
+
+    #[async_trait]
+    trait Foo {
+        async fn foo(_n: i32) {}
+    }
 }
