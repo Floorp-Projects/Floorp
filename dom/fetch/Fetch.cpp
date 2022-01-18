@@ -1742,7 +1742,7 @@ void FetchBody<Derived>::MaybeTeeReadableStreamBody(
   }
 
   nsTArray<RefPtr<ReadableStream> > branches;
-  mReadableStreamBody->Tee(aCx, branches, aRv);
+  MOZ_KnownLive(mReadableStreamBody)->Tee(aCx, branches, aRv);
   if (aRv.Failed()) {
     return;
   }

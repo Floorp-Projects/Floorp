@@ -524,7 +524,6 @@ void BodyStream::ErrorPropagation(JSContext* aCx,
 }
 
 #ifdef MOZ_DOM_STREAMS
-//
 void BodyStream::EnqueueChunkWithSizeIntoStream(JSContext* aCx,
                                                 ReadableStream* aStream,
                                                 uint64_t aAvailableData,
@@ -551,7 +550,7 @@ void BodyStream::EnqueueChunkWithSizeIntoStream(JSContext* aCx,
   }
 
   MOZ_ASSERT(aStream->Controller()->IsByte());
-  ReadableByteStreamController* byteStreamController =
+  RefPtr<ReadableByteStreamController> byteStreamController =
       aStream->Controller()->AsByte();
 
   ReadableByteStreamControllerEnqueue(aCx, byteStreamController, chunk, aRv);
