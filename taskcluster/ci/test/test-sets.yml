@@ -26,9 +26,6 @@ web-platform-tests-backlog:
     - web-platform-tests-backlog
     - web-platform-tests-reftest-backlog
 
-web-platform-tests-wdspec-headless:
-    - web-platform-tests-wdspec-headless
-
 mochitest-devtools-chrome:
     - mochitest-devtools-chrome
 
@@ -116,14 +113,8 @@ ccov-code-coverage-tests:
     - test-coverage
     - test-coverage-wpt
 
-mochitest-headless:
-    - mochitest-plain-headless
-
 mochitest-valgrind:
     - mochitest-valgrind
-
-marionette-headless:
-    - marionette-headless
 
 desktop-screenshot-capture:
     - browser-screenshots

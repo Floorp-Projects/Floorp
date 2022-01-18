@@ -57,6 +57,9 @@ mochitest-plain:
         - wayland
         - webrender-sw
         - webrender-sw+fission
+        - headless+fission
+        - headless+socketprocess_networking
+        - headless+socketprocess_networking+fission
     run-on-projects:
         by-variant:
             fission:
@@ -96,6 +99,22 @@ mochitest-plain:
             aab:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
+                    default: []
+            headless:
+                by-test-platform:
+                    linux.*64(-shippable)?-qr/opt: ['mozilla-central']
+                    default: []
+            headless+fission:
+                by-test-platform:
+                    linux.*64(-shippable)?-qr/opt: ['mozilla-central']
+                    default: []
+            headless+socketprocess_networking:
+                by-test-platform:
+                    linux.*64(-shippable)?-qr/opt: ['mozilla-central']
+                    default: []
+            headless+socketprocess_networking+fission:
+                by-test-platform:
+                    linux.*64(-shippable)?-qr/opt: ['mozilla-central']
                     default: []
             default:
                 by-test-platform:
@@ -730,55 +749,6 @@ mochitest-media-failures:
                     - --run-failures=apple_catalina
                     - --timeout-as-pass
                     - --crash-as-pass
-
-
-mochitest-plain-headless:
-    description: "Mochitest plain headless run"
-    suite:
-        name: mochitest-plain
-    treeherder-symbol: M(h)
-    loopback-video: true
-    chunks:
-        by-test-platform:
-            linux.*/debug: 16
-            default: 5
-    max-run-time: 5400
-    allow-software-gl-layers: false
-    tier: 2
-    variants:
-        - fission
-        - socketprocess_networking
-        - wayland
-        - webrender-sw
-    run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    linux.*64-qr/debug: ['trunk']
-                    linux.*64-shippable-qr/opt: ['mozilla-central']
-                    linux.*64-shippable/.*: ['mozilla-central']
-                    linux.*64/debug: ['mozilla-central']
-                    windows10-64-shippable(-qr)?/opt: ['mozilla-central']
-                    default: []
-            socketprocess_networking:
-                by-test-platform:
-                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
-                    default: []
-            wayland:
-                by-test-platform:
-                    linux.*64-qr/debug: ['mozilla-central']
-                    default: []
-            webrender-sw:
-                by-test-platform:
-                    android-em-7.0-x86_64-qr/debug: ['mozilla-central']
-                    linux.*64-qr/debug: ['mozilla-central']
-                    default: []
-            default: ['mozilla-central']
-    mozharness:
-        mochitest-flavor: plain
-        chunked: true
-        extra-options:
-            - --headless
 
 mochitest-valgrind:
     description: "Mochitest plain Valgrind run"
