@@ -312,7 +312,6 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mMaxTouchPoints(0),
       mLayersId{0},
       mEffectsInfo{EffectsInfo::FullyHidden()},
-      mOrientation(hal::eScreenOrientation_PortraitPrimary),
       mDynamicToolbarMaxHeight(0),
       mUniqueId(aTabId),
       mDidFakeShow(false),
@@ -1273,7 +1272,6 @@ mozilla::ipc::IPCResult BrowserChild::RecvUpdateDimensions(
   mChromeOffset = aDimensionInfo.chromeOffset();
   MOZ_ASSERT_IF(!IsTopLevel(), mChromeOffset == LayoutDeviceIntPoint());
 
-  mOrientation = aDimensionInfo.orientation();
   SetUnscaledInnerSize(aDimensionInfo.size());
   if (!mHasValidInnerSize && aDimensionInfo.size().width != 0 &&
       aDimensionInfo.size().height != 0) {
