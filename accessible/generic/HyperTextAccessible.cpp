@@ -206,22 +206,22 @@ uint64_t HyperTextAccessible::NativeState() const {
   return states;
 }
 
-nsIntRect HyperTextAccessible::GetBoundsInFrame(nsIFrame* aFrame,
-                                                uint32_t aStartRenderedOffset,
-                                                uint32_t aEndRenderedOffset) {
+LayoutDeviceIntRect HyperTextAccessible::GetBoundsInFrame(
+    nsIFrame* aFrame, uint32_t aStartRenderedOffset,
+    uint32_t aEndRenderedOffset) {
   nsPresContext* presContext = mDoc->PresContext();
   if (!aFrame->IsTextFrame()) {
-    return aFrame->GetScreenRectInAppUnits().ToNearestPixels(
-        presContext->AppUnitsPerDevPixel());
+    return LayoutDeviceIntRect::FromAppUnitsToNearest(
+        aFrame->GetScreenRectInAppUnits(), presContext->AppUnitsPerDevPixel());
   }
 
   // Substring must be entirely within the same text node.
   int32_t startContentOffset, endContentOffset;
   nsresult rv = RenderedToContentOffset(aFrame, aStartRenderedOffset,
                                         &startContentOffset);
-  NS_ENSURE_SUCCESS(rv, nsIntRect());
+  NS_ENSURE_SUCCESS(rv, LayoutDeviceIntRect());
   rv = RenderedToContentOffset(aFrame, aEndRenderedOffset, &endContentOffset);
-  NS_ENSURE_SUCCESS(rv, nsIntRect());
+  NS_ENSURE_SUCCESS(rv, LayoutDeviceIntRect());
 
   nsIFrame* frame;
   int32_t startContentOffsetInFrame;
@@ -229,7 +229,7 @@ nsIntRect HyperTextAccessible::GetBoundsInFrame(nsIFrame* aFrame,
   // the primary frame passed in
   rv = aFrame->GetChildFrameContainingOffset(
       startContentOffset, false, &startContentOffsetInFrame, &frame);
-  NS_ENSURE_SUCCESS(rv, nsIntRect());
+  NS_ENSURE_SUCCESS(rv, LayoutDeviceIntRect());
 
   nsRect screenRect;
   while (frame && startContentOffset < endContentOffset) {
@@ -248,13 +248,13 @@ nsIntRect HyperTextAccessible::GetBoundsInFrame(nsIFrame* aFrame,
     // Add the point where the string starts to the frameScreenRect
     nsPoint frameTextStartPoint;
     rv = frame->GetPointFromOffset(startContentOffset, &frameTextStartPoint);
-    NS_ENSURE_SUCCESS(rv, nsIntRect());
+    NS_ENSURE_SUCCESS(rv, LayoutDeviceIntRect());
 
     // Use the point for the end offset to calculate the width
     nsPoint frameTextEndPoint;
     rv = frame->GetPointFromOffset(startContentOffset + frameSubStringLength,
                                    &frameTextEndPoint);
-    NS_ENSURE_SUCCESS(rv, nsIntRect());
+    NS_ENSURE_SUCCESS(rv, LayoutDeviceIntRect());
 
     frameScreenRect.SetRectX(
         frameScreenRect.X() +
@@ -269,7 +269,8 @@ nsIntRect HyperTextAccessible::GetBoundsInFrame(nsIFrame* aFrame,
     frame = frame->GetNextContinuation();
   }
 
-  return screenRect.ToNearestPixels(presContext->AppUnitsPerDevPixel());
+  return LayoutDeviceIntRect::FromAppUnitsToNearest(
+      screenRect, presContext->AppUnitsPerDevPixel());
 }
 
 uint32_t HyperTextAccessible::DOMPointToOffset(nsINode* aNode,
@@ -1424,12 +1425,12 @@ int32_t HyperTextAccessible::OffsetAtPoint(int32_t aX, int32_t aY,
   nsIFrame* hyperFrame = GetFrame();
   if (!hyperFrame) return -1;
 
-  nsIntPoint coords =
+  LayoutDeviceIntPoint coords =
       nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordType, this);
 
   nsPresContext* presContext = mDoc->PresContext();
-  nsPoint coordsInAppUnits =
-      ToAppUnits(coords, presContext->AppUnitsPerDevPixel());
+  nsPoint coordsInAppUnits = LayoutDeviceIntPoint::ToAppUnits(
+      coords, presContext->AppUnitsPerDevPixel());
 
   nsRect frameScreenRect = hyperFrame->GetScreenRectInAppUnits();
   if (!frameScreenRect.Contains(coordsInAppUnits.x, coordsInAppUnits.y)) {
@@ -1485,15 +1486,15 @@ int32_t HyperTextAccessible::OffsetAtPoint(int32_t aX, int32_t aY,
   return -1;  // Not found
 }
 
-nsIntRect HyperTextAccessible::TextBounds(int32_t aStartOffset,
-                                          int32_t aEndOffset,
-                                          uint32_t aCoordType) {
+LayoutDeviceIntRect HyperTextAccessible::TextBounds(int32_t aStartOffset,
+                                                    int32_t aEndOffset,
+                                                    uint32_t aCoordType) {
   index_t startOffset = ConvertMagicOffset(aStartOffset);
   index_t endOffset = ConvertMagicOffset(aEndOffset);
   if (!startOffset.IsValid() || !endOffset.IsValid() ||
       startOffset > endOffset || endOffset > CharacterCount()) {
     NS_ERROR("Wrong in offset");
-    return nsIntRect();
+    return LayoutDeviceIntRect();
   }
 
   if (CharacterCount() == 0) {
@@ -1501,16 +1502,16 @@ nsIntRect HyperTextAccessible::TextBounds(int32_t aStartOffset,
     // Empty content, use our own bound to at least get x,y coordinates
     nsIFrame* frame = GetFrame();
     if (!frame) {
-      return nsIntRect();
+      return LayoutDeviceIntRect();
     }
-    return frame->GetScreenRectInAppUnits().ToNearestPixels(
-        presContext->AppUnitsPerDevPixel());
+    return LayoutDeviceIntRect::FromAppUnitsToNearest(
+        frame->GetScreenRectInAppUnits(), presContext->AppUnitsPerDevPixel());
   }
 
   int32_t childIdx = GetChildIndexAtOffset(startOffset);
-  if (childIdx == -1) return nsIntRect();
+  if (childIdx == -1) return LayoutDeviceIntRect();
 
-  nsIntRect bounds;
+  LayoutDeviceIntRect bounds;
   int32_t prevOffset = GetChildOffset(childIdx);
   int32_t offset1 = startOffset - prevOffset;
 
@@ -1540,8 +1541,9 @@ nsIntRect HyperTextAccessible::TextBounds(int32_t aStartOffset,
   // screen coordinates.
   nsPresContext* presContext = mDoc->PresContext();
   nsIFrame* rootFrame = presContext->PresShell()->GetRootFrame();
-  nsIntRect orgRectPixels =
-      rootFrame->GetScreenRectInAppUnits().ToNearestPixels(
+  LayoutDeviceIntRect orgRectPixels =
+      LayoutDeviceIntRect::FromAppUnitsToNearest(
+          rootFrame->GetScreenRectInAppUnits(),
           presContext->AppUnitsPerDevPixel());
   bounds.MoveBy(-orgRectPixels.X(), -orgRectPixels.Y());
   bounds.ScaleRoundOut(presContext->PresShell()->GetResolution());
@@ -1803,7 +1805,7 @@ LayoutDeviceIntRect HyperTextAccessible::GetCaretRect(nsIWidget** aWidget) {
     // focus.
     return LayoutDeviceIntRect();
   }
-  nsIntRect charRect = CharBounds(
+  LayoutDeviceIntRect charRect = CharBounds(
       caretOffset, nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
   if (!charRect.IsEmpty()) {
     caretRect.SetTopEdge(charRect.Y());
@@ -1945,7 +1947,7 @@ void HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
   nsIFrame* frame = GetFrame();
   if (!frame) return;
 
-  nsIntPoint coords =
+  LayoutDeviceIntPoint coords =
       nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordinateType, this);
 
   RefPtr<nsRange> domRange = nsRange::Create(mContent);
@@ -1955,8 +1957,8 @@ void HyperTextAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
   }
 
   nsPresContext* presContext = frame->PresContext();
-  nsPoint coordsInAppUnits =
-      ToAppUnits(coords, presContext->AppUnitsPerDevPixel());
+  nsPoint coordsInAppUnits = LayoutDeviceIntPoint::ToAppUnits(
+      coords, presContext->AppUnitsPerDevPixel());
 
   bool initialScrolled = false;
   nsIFrame* parentFrame = frame;
