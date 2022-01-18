@@ -170,8 +170,6 @@ const BOOTSTRAP_REASONS = {
 // to return only supported add-ons. Without these, it is possible for
 // AddonManager.getAddonsByTypes to return addons from other providers, or even
 // add-on types that are no longer supported by XPIProvider.
-// NOTE: This set should be kept in sync with the same addon type strings part of
-// the kXPIAddonTypes array defined by Blocklist.jsm.
 const ALL_XPI_TYPES = new Set([
   "dictionary",
   "extension",

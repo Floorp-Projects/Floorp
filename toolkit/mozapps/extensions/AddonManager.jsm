@@ -3423,6 +3423,34 @@ var AddonManagerPrivate = {
     AddonManagerInternal.unregisterProvider(aProvider);
   },
 
+  /**
+   * Get a list of addon types that was passed to registerProvider for the
+   * provider with the given name.
+   *
+   * @param {string} aProviderName
+   * @returns {Array<string>}
+   */
+  getAddonTypesByProvider(aProviderName) {
+    if (!gStarted) {
+      throw Components.Exception(
+        "AddonManager is not initialized",
+        Cr.NS_ERROR_NOT_INITIALIZED
+      );
+    }
+
+    for (let [provider, addonTypes] of AddonManagerInternal.typesByProvider) {
+      if (providerName(provider) === aProviderName) {
+        // Return an array because methods such as getAddonsByTypes expect
+        // aTypes to be an array.
+        return Array.from(addonTypes);
+      }
+    }
+    throw Components.Exception(
+      `No addonTypes found for provider: ${aProviderName}`,
+      Cr.NS_ERROR_INVALID_ARG
+    );
+  },
+
   markProviderSafe(aProvider) {
     AddonManagerInternal.markProviderSafe(aProvider);
   },
