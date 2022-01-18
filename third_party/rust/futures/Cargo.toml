@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.45"
 name = "futures"
-version = "0.3.18"
+version = "0.3.19"
 description = "An implementation of futures and streams featuring zero allocations,\ncomposability, and iterator-like interfaces.\n"
 homepage = "https://rust-lang.github.io/futures-rs"
 readme = "../README.md"
@@ -28,33 +28,33 @@ rustdoc-args = ["--cfg", "docsrs"]
 [package.metadata.playground]
 features = ["std", "async-await", "compat", "io-compat", "executor", "thread-pool"]
 [dependencies.futures-channel]
-version = "0.3.18"
+version = "0.3.19"
 features = ["sink"]
 default-features = false
 
 [dependencies.futures-core]
-version = "0.3.18"
+version = "0.3.19"
 default-features = false
 
 [dependencies.futures-executor]
-version = "0.3.18"
+version = "0.3.19"
 optional = true
 default-features = false
 
 [dependencies.futures-io]
-version = "0.3.18"
+version = "0.3.19"
 default-features = false
 
 [dependencies.futures-sink]
-version = "0.3.18"
+version = "0.3.19"
 default-features = false
 
 [dependencies.futures-task]
-version = "0.3.18"
+version = "0.3.19"
 default-features = false
 
 [dependencies.futures-util]
-version = "0.3.18"
+version = "0.3.19"
 features = ["sink"]
 default-features = false
 [dev-dependencies.assert_matches]
@@ -81,7 +81,6 @@ compat = ["std", "futures-util/compat"]
 default = ["std", "async-await", "executor"]
 executor = ["std", "futures-executor/std"]
 io-compat = ["compat", "futures-util/io-compat"]
-read-initializer = ["futures-io/read-initializer", "futures-util/read-initializer"]
 std = ["alloc", "futures-core/std", "futures-task/std", "futures-io/std", "futures-sink/std", "futures-util/std", "futures-util/io", "futures-util/channel"]
 thread-pool = ["executor", "futures-executor/thread-pool"]
 unstable = ["futures-core/unstable", "futures-task/unstable", "futures-channel/unstable", "futures-io/unstable", "futures-util/unstable"]

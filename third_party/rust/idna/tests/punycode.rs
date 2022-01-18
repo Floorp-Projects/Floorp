@@ -6,11 +6,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use crate::test::TestFn;
 use idna::punycode::{decode, encode_str};
-use serde_json::Value;
 use serde_json::map::Map;
+use serde_json::Value;
 use std::str::FromStr;
-use test::TestFn;
 
 fn one_test(decoded: &str, encoded: &str) {
     match decode(encoded) {

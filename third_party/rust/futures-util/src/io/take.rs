@@ -1,7 +1,5 @@
 use futures_core::ready;
 use futures_core::task::{Context, Poll};
-#[cfg(feature = "read-initializer")]
-use futures_io::Initializer;
 use futures_io::{AsyncBufRead, AsyncRead};
 use pin_project_lite::pin_project;
 use std::pin::Pin;
@@ -99,11 +97,6 @@ impl<R: AsyncRead> AsyncRead for Take<R> {
         let n = ready!(this.inner.poll_read(cx, &mut buf[..max]))?;
         *this.limit -= n as u64;
         Poll::Ready(Ok(n))
-    }
-
-    #[cfg(feature = "read-initializer")]
-    unsafe fn initializer(&self) -> Initializer {
-        self.inner.initializer()
     }
 }
 
