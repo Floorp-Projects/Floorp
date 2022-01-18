@@ -1640,12 +1640,8 @@ template JSLinearString* js::NewString<NoGC>(JSContext* cx,
 namespace js {
 
 template <AllowGC allowGC, typename CharT>
-JSLinearString* NewStringCopyNDontDeflate(JSContext* cx, const CharT* s,
-                                          size_t n, gc::InitialHeap heap) {
-  if (JSLinearString* str = TryEmptyOrStaticString(cx, s, n)) {
-    return str;
-  }
-
+JSLinearString* NewStringCopyNDontDeflateNonStaticValidLength(
+    JSContext* cx, const CharT* s, size_t n, gc::InitialHeap heap) {
   if (JSInlineString::lengthFits<CharT>(n)) {
     return NewInlineString<allowGC>(cx, mozilla::Range<const CharT>(s, n),
                                     heap);
@@ -1661,7 +1657,27 @@ JSLinearString* NewStringCopyNDontDeflate(JSContext* cx, const CharT* s,
 
   FillChars(news.get(), s, n);
 
-  return JSLinearString::new_<allowGC>(cx, std::move(news), n, heap);
+  return JSLinearString::newValidLength<allowGC>(cx, std::move(news), n, heap);
+}
+
+template JSLinearString* NewStringCopyNDontDeflateNonStaticValidLength<CanGC>(
+    JSContext* cx, const char16_t* s, size_t n, gc::InitialHeap heap);
+
+template JSLinearString* NewStringCopyNDontDeflateNonStaticValidLength<CanGC>(
+    JSContext* cx, const Latin1Char* s, size_t n, gc::InitialHeap heap);
+
+template <AllowGC allowGC, typename CharT>
+JSLinearString* NewStringCopyNDontDeflate(JSContext* cx, const CharT* s,
+                                          size_t n, gc::InitialHeap heap) {
+  if (JSLinearString* str = TryEmptyOrStaticString(cx, s, n)) {
+    return str;
+  }
+
+  if (MOZ_UNLIKELY(!JSLinearString::validateLength(cx, n))) {
+    return nullptr;
+  }
+
+  return NewStringCopyNDontDeflateNonStaticValidLength<allowGC>(cx, s, n, heap);
 }
 
 template JSLinearString* NewStringCopyNDontDeflate<CanGC>(JSContext* cx,
