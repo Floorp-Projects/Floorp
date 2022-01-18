@@ -25,7 +25,9 @@ object EngineProvider {
             val builder = GeckoRuntimeSettings.Builder()
 
             builder.crashHandler(CrashHandlerService::class.java)
-            builder.aboutConfigEnabled(AppConstants.isDevOrNightlyBuild)
+            builder.aboutConfigEnabled(
+                AppConstants.isDevOrNightlyBuild || AppConstants.isBetaBuild
+            )
 
             runtime = GeckoRuntime.create(context, builder.build())
         }
