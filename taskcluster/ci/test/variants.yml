@@ -9,6 +9,16 @@
             extra-options:
                 - "--disable-e10s"
 
+headless:
+    description: "{description} without a window"
+    suffix: "headless"
+    replace:
+        tier: 2
+    merge:
+        mozharness:
+            extra-options:
+                - "--headless"
+
 a11y-checks:
     description: "{description} with accessibility checks enabled"
     contact: jteh
