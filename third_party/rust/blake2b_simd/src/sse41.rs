@@ -70,26 +70,33 @@ macro_rules! _MM_SHUFFLE {
     };
 }
 
+// These rotations are the "simple version". For the "complicated version", see
+// https://github.com/sneves/blake2-avx2/blob/b3723921f668df09ece52dcd225a36d4a4eea1d9/blake2b-common.h#L43-L46.
+// For a discussion of the tradeoffs, see
+// https://github.com/sneves/blake2-avx2/pull/5. In short:
+// - Due to an LLVM bug (https://bugs.llvm.org/show_bug.cgi?id=44379), this
+//   version performs better on recent x86 chips.
+// - LLVM is able to optimize this version to AVX-512 rotation instructions
+//   when those are enabled.
+
 #[inline(always)]
 unsafe fn rot32(x: __m128i) -> __m128i {
-    _mm_shuffle_epi32(x, _MM_SHUFFLE!(2, 3, 0, 1))
+    _mm_or_si128(_mm_srli_epi64(x, 32), _mm_slli_epi64(x, 64 - 32))
 }
 
 #[inline(always)]
 unsafe fn rot24(x: __m128i) -> __m128i {
-    let rotate24 = _mm_setr_epi8(3, 4, 5, 6, 7, 0, 1, 2, 11, 12, 13, 14, 15, 8, 9, 10);
-    _mm_shuffle_epi8(x, rotate24)
+    _mm_or_si128(_mm_srli_epi64(x, 24), _mm_slli_epi64(x, 64 - 24))
 }
 
 #[inline(always)]
 unsafe fn rot16(x: __m128i) -> __m128i {
-    let rotate16 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 0, 1, 10, 11, 12, 13, 14, 15, 8, 9);
-    _mm_shuffle_epi8(x, rotate16)
+    _mm_or_si128(_mm_srli_epi64(x, 16), _mm_slli_epi64(x, 64 - 16))
 }
 
 #[inline(always)]
 unsafe fn rot63(x: __m128i) -> __m128i {
-    _mm_or_si128(_mm_srli_epi64(x, 63), add(x, x))
+    _mm_or_si128(_mm_srli_epi64(x, 63), _mm_slli_epi64(x, 64 - 63))
 }
 
 #[inline(always)]
