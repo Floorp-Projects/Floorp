@@ -57,8 +57,10 @@ extern JSAtom* AtomizeChars(JSContext* cx, const CharT* chars, size_t length);
 
 /* Atomize characters when the value of HashString is already known. */
 template <typename CharT>
-extern JSAtom* AtomizeCharsNonStatic(JSContext* cx, mozilla::HashNumber hash,
-                                     const CharT* chars, size_t length);
+extern JSAtom* AtomizeCharsNonStaticValidLength(JSContext* cx,
+                                                mozilla::HashNumber hash,
+                                                const CharT* chars,
+                                                size_t length);
 
 /**
  * Permanently atomize characters.
