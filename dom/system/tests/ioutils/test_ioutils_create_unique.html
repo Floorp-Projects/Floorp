@@ -1,0 +1,89 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Test the IOUtils file I/O API</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="file_ioutils_test_fixtures.js"></script>
+  <script>
+    "use strict";
+
+    const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+    const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+    function octalFormat(n) {
+      let s = n.toString(8);
+      while (s.length < 3) {
+        s = `0${s}`;
+      }
+      return `0o${s}`;
+    }
+
+    async function check(method, path, prefix, type, perms) {
+      const filename = PathUtils.filename(path);
+
+      ok(filename.startsWith(prefix), `IOUtils.${method} uses the prefix`);
+      ok(await IOUtils.exists(path), `IOUtils.${method} creates a file`);
+
+      const stat = await IOUtils.stat(path);
+      is(stat.type, type, `IOUtils.${method} creates a "${type}" file`);
+
+      is(
+        octalFormat(stat.permissions),
+        octalFormat(perms),
+        `IOUtils.${method} creates a file with the correct permissions`
+      );
+    }
+
+    add_task(async function test_createUnique() {
+      const tempDir = PathUtils.join(
+        await PathUtils.getTempDir(),
+        "test_createUnique.tmp.d"
+      );
+
+      const filesToChmod = [];
+
+      SimpleTest.registerCleanupFunction(async function test_createUnique_cleanup() {
+        for (const file of filesToChmod) {
+          if (await IOUtils.exists(file)) {
+            await IOUtils.setPermissions(file, 0o666);
+          }
+        }
+
+        await IOUtils.remove(tempDir, { recursive: true });
+      });
+
+      const isWindows = Services.appinfo.OS === "WINNT";
+
+      info("Creating a unique directory")
+      const dir = await IOUtils.createUniqueDirectory(tempDir, "unique-dir", 0o600);
+      await check("createUniqueDirectory", dir, "unique-dir", "directory", isWindows ? 0o666 : 0o600);
+
+      info("Creating a unique directory with the same prefix")
+      const dir2 = await IOUtils.createUniqueDirectory(tempDir, "unique-dir", 0o700);
+      await check("createUniqueDirectory", dir2, "unique-dir", "directory", isWindows ? 0o666 : 0o700);
+      ok(dir !== dir2, "IOUtils.createUniqueDirectory creates unique paths");
+
+      info("Creating a unique file");
+      const file = await IOUtils.createUniqueFile(tempDir, "unique-file", 0o641);
+      await check("createUniqueFile", file, "unique-file", "regular", isWindows ? 0o666 : 0o641);
+
+      info("Creating a unique file with the same prefix");
+      const file2 = await IOUtils.createUniqueFile(tempDir, "unique-file", 0o400);
+      filesToChmod.push(file2);
+      await check("createUniqueFile", file2, "unique-file", "regular", isWindows ? 0o444 : 0o400);
+    });
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+
+</html>

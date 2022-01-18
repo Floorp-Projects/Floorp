@@ -37,7 +37,6 @@ static constexpr auto ERROR_EMPTY_PATH =
 static constexpr auto ERROR_INITIALIZE_PATH = "Could not initialize path"_ns;
 static constexpr auto ERROR_GET_PARENT = "Could not get parent path"_ns;
 static constexpr auto ERROR_JOIN = "Could not append to path"_ns;
-static constexpr auto ERROR_CREATE_UNIQUE = "Could not create unique path"_ns;
 
 static void ThrowError(ErrorResult& aErr, const nsresult aResult,
                        const nsCString& aMessage) {
@@ -211,28 +210,6 @@ void PathUtils::JoinRelative(const GlobalObject&, const nsAString& aBasePath,
 
   if (nsresult rv = path->AppendRelativePath(aRelativePath); NS_FAILED(rv)) {
     ThrowError(aErr, rv, ERROR_JOIN);
-    return;
-  }
-
-  MOZ_ALWAYS_SUCCEEDS(path->GetPath(aResult));
-}
-
-void PathUtils::CreateUniquePath(const GlobalObject&, const nsAString& aPath,
-                                 nsString& aResult, ErrorResult& aErr) {
-  if (aPath.IsEmpty()) {
-    aErr.ThrowNotAllowedError(ERROR_EMPTY_PATH);
-    return;
-  }
-
-  nsCOMPtr<nsIFile> path = new nsLocalFile();
-  if (nsresult rv = InitFileWithPath(path, aPath); NS_FAILED(rv)) {
-    ThrowError(aErr, rv, ERROR_INITIALIZE_PATH);
-    return;
-  }
-
-  if (nsresult rv = path->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
-      NS_FAILED(rv)) {
-    ThrowError(aErr, rv, ERROR_CREATE_UNIQUE);
     return;
   }
 
