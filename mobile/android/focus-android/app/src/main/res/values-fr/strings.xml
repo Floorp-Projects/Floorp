@@ -642,6 +642,9 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Avancé</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Autorisations de site</string>
+
     <!-- Preference for autoplay -->
     <string name="preference_autoplay">Lire automatiquement des éléments multimédia</string>
 
