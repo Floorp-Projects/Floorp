@@ -547,7 +547,6 @@ var AddonManagerInternal = {
   managerListeners: new Set(),
   installListeners: new Set(),
   addonListeners: new Set(),
-  typeListeners: new Set(),
   pendingProviders: new Set(),
   providers: new Set(),
   providerShutdowns: new Map(),
@@ -869,11 +868,6 @@ var AddonManagerInternal = {
             type,
             providers: [aProvider],
           };
-
-          let typeListeners = new Set(this.typeListeners);
-          for (let listener of typeListeners) {
-            safeCall(() => listener.onTypeAdded(type));
-          }
         } else {
           this.types[type.id].providers.push(aProvider);
         }
@@ -914,13 +908,7 @@ var AddonManagerInternal = {
         p => p != aProvider
       );
       if (!this.types[type].providers.length) {
-        let oldType = this.types[type].type;
         delete this.types[type];
-
-        let typeListeners = new Set(this.typeListeners);
-        for (let listener of typeListeners) {
-          safeCall(() => listener.onTypeRemoved(oldType));
-        }
       }
     }
 
@@ -1089,7 +1077,6 @@ var AddonManagerInternal = {
     this.managerListeners.clear();
     this.installListeners.clear();
     this.addonListeners.clear();
-    this.typeListeners.clear();
     this.providerShutdowns.clear();
     for (let type in this.startupChanges) {
       delete this.startupChanges[type];
@@ -2946,40 +2933,6 @@ var AddonManagerInternal = {
     this.addonListeners.delete(aListener);
   },
 
-  /**
-   * Adds a new TypeListener if the listener is not already registered.
-   *
-   * @param {TypeListener} aListener
-   *         The TypeListener to add
-   */
-  addTypeListener(aListener) {
-    if (!aListener || typeof aListener != "object") {
-      throw Components.Exception(
-        "aListener must be a TypeListener object",
-        Cr.NS_ERROR_INVALID_ARG
-      );
-    }
-
-    this.typeListeners.add(aListener);
-  },
-
-  /**
-   * Removes an TypeListener if the listener is registered.
-   *
-   * @param  aListener
-   *         The TypeListener to remove
-   */
-  removeTypeListener(aListener) {
-    if (!aListener || typeof aListener != "object") {
-      throw Components.Exception(
-        "aListener must be a TypeListener object",
-        Cr.NS_ERROR_INVALID_ARG
-      );
-    }
-
-    this.typeListeners.delete(aListener);
-  },
-
   get addonTypes() {
     // A read-only wrapper around the types dictionary
     return new Proxy(this.types, {
@@ -4188,14 +4141,6 @@ var AddonManager = {
 
   removeAddonListener(aListener) {
     AddonManagerInternal.removeAddonListener(aListener);
-  },
-
-  addTypeListener(aListener) {
-    AddonManagerInternal.addTypeListener(aListener);
-  },
-
-  removeTypeListener(aListener) {
-    AddonManagerInternal.removeTypeListener(aListener);
   },
 
   get addonTypes() {

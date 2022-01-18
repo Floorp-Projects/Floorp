@@ -9,8 +9,6 @@ const IGNORE = [
   "escapeAddonURI",
   "shouldAutoUpdate",
   "getStartupChanges",
-  "addTypeListener",
-  "removeTypeListener",
   "addAddonListener",
   "removeAddonListener",
   "addInstallListener",
@@ -26,7 +24,6 @@ const IGNORE = [
   "addUpgradeListener",
   "removeUpgradeListener",
   "getInstallSourceFromHost",
-  "getInstallSourceFromPrincipal",
   "stageLangpacksForAppUpdate",
 ];
 
