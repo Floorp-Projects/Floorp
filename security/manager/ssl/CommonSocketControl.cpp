@@ -153,17 +153,15 @@ CommonSocketControl::IsAcceptableForHost(const nsACString& hostname,
   // Ensure that the server certificate covers the hostname that would
   // like to join this connection
 
-  UniqueCERTCertificate nssCert;
-
   nsCOMPtr<nsIX509Cert> cert;
   if (NS_FAILED(GetServerCert(getter_AddRefs(cert)))) {
     return NS_OK;
   }
-  if (cert) {
-    nssCert.reset(cert->GetCert());
+  if (!cert) {
+    return NS_OK;
   }
-
-  if (!nssCert) {
+  nsTArray<uint8_t> certDER;
+  if (NS_FAILED(cert->GetRawDER(certDER))) {
     return NS_OK;
   }
 
@@ -181,7 +179,7 @@ CommonSocketControl::IsAcceptableForHost(const nsACString& hostname,
   // CertVerifier::VerifySSLServerCert we need to add them here too.
   Input serverCertInput;
   mozilla::pkix::Result rv =
-      serverCertInput.Init(nssCert->derCert.data, nssCert->derCert.len);
+      serverCertInput.Init(certDER.Elements(), certDER.Length());
   if (rv != Success) {
     return NS_OK;
   }
