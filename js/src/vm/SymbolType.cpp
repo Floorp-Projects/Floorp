@@ -48,6 +48,11 @@ Symbol* Symbol::new_(JSContext* cx, JS::SymbolCode code,
   return sym;
 }
 
+Symbol* Symbol::newWellKnown(JSContext* cx, JS::SymbolCode code,
+                             HandlePropertyName description) {
+  return newInternal(cx, code, cx->runtime()->randomHashCode(), description);
+}
+
 Symbol* Symbol::for_(JSContext* cx, HandleString description) {
   RootedAtom atom(cx, AtomizeString(cx, description));
   if (!atom) {
