@@ -77,7 +77,7 @@ role OuterDocAccessible::NativeRole() const { return roles::INTERNAL_FRAME; }
 
 LocalAccessible* OuterDocAccessible::LocalChildAtPoint(
     int32_t aX, int32_t aY, EWhichChildAtPoint aWhichChild) {
-  nsIntRect docRect = Bounds();
+  LayoutDeviceIntRect docRect = Bounds();
   if (!docRect.Contains(aX, aY)) return nullptr;
 
   // Always return the inner doc as direct child accessible unless bounds
@@ -212,7 +212,7 @@ Accessible* OuterDocAccessible::ChildAt(uint32_t aIndex) const {
 
 Accessible* OuterDocAccessible::ChildAtPoint(int32_t aX, int32_t aY,
                                              EWhichChildAtPoint aWhichChild) {
-  nsIntRect docRect = Bounds();
+  LayoutDeviceIntRect docRect = Bounds();
   if (!docRect.Contains(aX, aY)) return nullptr;
 
   // Always return the inner doc as direct child accessible unless bounds

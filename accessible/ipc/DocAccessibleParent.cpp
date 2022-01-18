@@ -916,10 +916,10 @@ void DocAccessibleParent::MaybeInitWindowEmulation() {
   MOZ_ASSERT(rootDocument);
 
   bool isActive = true;
-  nsIntRect rect(CW_USEDEFAULT, CW_USEDEFAULT, 0, 0);
+  LayoutDeviceIntRect rect(CW_USEDEFAULT, CW_USEDEFAULT, 0, 0);
   if (Compatibility::IsDolphin()) {
     rect = Bounds();
-    nsIntRect rootRect = rootDocument->Bounds();
+    LayoutDeviceIntRect rootRect = rootDocument->Bounds();
     rect.MoveToX(rootRect.X() - rect.X());
     rect.MoveToY(rect.Y() - rootRect.Y());
 
