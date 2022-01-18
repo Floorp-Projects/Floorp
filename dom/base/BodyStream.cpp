@@ -9,7 +9,6 @@
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/DOMException.h"
 #ifdef MOZ_DOM_STREAMS
-#  include "mozilla/dom/NativeUnderlyingSource.h"
 #  include "mozilla/dom/ReadableStream.h"
 #  include "mozilla/dom/ReadableByteStreamController.h"
 #endif
