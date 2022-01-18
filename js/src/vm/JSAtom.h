@@ -49,13 +49,13 @@ extern JSAtom* AtomizeChars(JSContext* cx, const CharT* chars, size_t length);
 
 /* Atomize characters when the value of HashString is already known. */
 template <typename CharT>
-extern JSAtom* AtomizeChars(JSContext* cx, mozilla::HashNumber hash,
-                            const CharT* chars, size_t length);
+extern JSAtom* AtomizeCharsNonStatic(JSContext* cx, mozilla::HashNumber hash,
+                                     const CharT* chars, size_t length);
 
-template <typename CharT>
-extern JSAtom* PermanentlyAtomizeChars(JSContext* cx, AtomSet& atomSet,
-                                       mozilla::HashNumber hash,
-                                       const CharT* chars, size_t length);
+extern JSAtom* PermanentlyAtomizeCharsNonStatic(JSContext* cx, AtomSet& atomSet,
+                                                mozilla::HashNumber hash,
+                                                const Latin1Char* chars,
+                                                size_t length);
 
 /**
  * Create an atom whose contents are those of the |utf8ByteLength| code units
