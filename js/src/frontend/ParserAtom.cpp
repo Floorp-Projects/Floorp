@@ -138,9 +138,11 @@ JSAtom* ParserAtom::instantiateAtom(JSContext* cx, ParserAtomIndex index,
 
   JSAtom* atom;
   if (hasLatin1Chars()) {
-    atom = AtomizeCharsNonStatic(cx, hash(), latin1Chars(), length());
+    atom =
+        AtomizeCharsNonStaticValidLength(cx, hash(), latin1Chars(), length());
   } else {
-    atom = AtomizeCharsNonStatic(cx, hash(), twoByteChars(), length());
+    atom =
+        AtomizeCharsNonStaticValidLength(cx, hash(), twoByteChars(), length());
   }
   if (!atom) {
     return nullptr;
