@@ -21,11 +21,14 @@ var MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 registerCleanupFunction(() => MockFilePicker.cleanup());
 
+let gTempDownloadDir;
+
 add_task(async function setup() {
   // Create temp directory
   let time = new Date().getTime();
   let tempDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
   tempDir.append(time);
+  gTempDownloadDir = tempDir;
   Services.prefs.setIntPref("browser.download.folderList", 2);
   Services.prefs.setComplexValue("browser.download.dir", Ci.nsIFile, tempDir);
 
@@ -139,6 +142,7 @@ add_task(async function check_download_spam_permissions() {
 
 // Check to ensure that a link saved manually is not blocked.
 async function savelink() {
+  let publicList = await Downloads.getList(Downloads.PUBLIC);
   let menu = document.getElementById("contentAreaContextMenu");
   let popupShown = BrowserTestUtils.waitForEvent(menu, "popupshown");
   BrowserTestUtils.synthesizeMouse(
@@ -152,10 +156,18 @@ async function savelink() {
 
   await new Promise(resolve => {
     MockFilePicker.showCallback = function(fp) {
-      setTimeout(resolve, 0);
-      return Ci.nsIFilePicker.returnCancel;
+      resolve();
+      let file = gTempDownloadDir.clone();
+      file.append("file_with__funny_name.png");
+      MockFilePicker.setFiles([file]);
+      return Ci.nsIFilePicker.returnOK;
     };
     let menuitem = menu.querySelector("#context-savelink");
     menu.activateItem(menuitem);
   });
+
+  await promiseDownloadFinished(
+    publicList,
+    true // stop the download from openning
+  );
 }
