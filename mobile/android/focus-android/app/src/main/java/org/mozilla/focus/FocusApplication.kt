@@ -75,6 +75,7 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
 
             visibilityLifeCycleCallback = VisibilityLifeCycleCallback(this@FocusApplication)
             registerActivityLifecycleCallbacks(visibilityLifeCycleCallback)
+            registerComponentCallbacks(visibilityLifeCycleCallback)
 
             storeLink.start()
 

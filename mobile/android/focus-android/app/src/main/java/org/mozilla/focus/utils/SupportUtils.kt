@@ -12,6 +12,7 @@ import android.net.Uri
 import androidx.fragment.app.FragmentActivity
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.feature.customtabs.createCustomTabConfigFromIntent
+import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.activity.CustomTabActivity
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.locale.Locales
@@ -22,6 +23,8 @@ import java.util.Locale
 
 object SupportUtils {
     const val HELP_URL = "https://support.mozilla.org/kb/what-firefox-focus-android"
+    const val FOCUS_PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}"
+    const val RATE_APP_URL = "market://details?id=" + BuildConfig.APPLICATION_ID
     const val DEFAULT_BROWSER_URL = "https://support.mozilla.org/kb/set-firefox-focus-default-browser-android"
     const val PRIVACY_NOTICE_URL = "https://www.mozilla.org/privacy/firefox-focus/"
     const val PRIVACY_NOTICE_KLAR_URL = "https://www.mozilla.org/de/privacy/firefox-klar/"

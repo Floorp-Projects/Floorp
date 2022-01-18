@@ -42,6 +42,9 @@
     <string name="pref_key_privacy_notice" translatable="false"><xliff:g id="preference_key">pref_privacy_notice</xliff:g></string>
 
     <string name="pref_key_locale" translatable="false"><xliff:g id="preference_key">pref_locale</xliff:g></string>
+    <string name="pref_in_app_review_openings" translatable="false"><xliff:g id="preference_key">pref_in_app_review_openings</xliff:g></string>
+    <string name="pref_in_app_review_step" translatable="false"><xliff:g id="preference_key">pref_in_app_review_step</xliff:g></string>
+    <string name="pref_in_app_review_time" translatable="false"><xliff:g id="preference_key">pref_in_app_review_time</xliff:g></string>
 
     <string name="pref_key_screen_autocomplete" translatable="false"><xliff:g id="preference_key">pref_screen_autocomplete</xliff:g></string>
     <string name="pref_key_autocomplete_preinstalled" translatable="false"><xliff:g id="preference_key">pref_autocomplete_preinstalled</xliff:g></string>

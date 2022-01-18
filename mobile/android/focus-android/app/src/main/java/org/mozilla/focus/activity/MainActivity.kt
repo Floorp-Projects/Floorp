@@ -26,6 +26,7 @@ import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.GleanMetrics.AppOpened
 import org.mozilla.focus.GleanMetrics.Notifications
 import org.mozilla.focus.R
+import org.mozilla.focus.appreview.AppReviewUtils
 import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
@@ -105,6 +106,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             .apply()
 
         lifecycle.addObserver(navigator)
+
+        AppReviewUtils.showAppReview(this)
     }
 
     override fun onResume() {
