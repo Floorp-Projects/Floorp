@@ -22,6 +22,7 @@ import org.mozilla.focus.GleanMetrics.RecentApps
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.utils.IntentUtils
 
 /**
  * As long as a session is active this service will keep the notification (and our process) alive.
@@ -102,27 +103,30 @@ class SessionNotificationService : Service() {
     }
 
     private fun createNotificationIntent(): PendingIntent {
+        val notificationIntentFlags = IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_ONE_SHOT
         val intent = Intent(this, SessionNotificationService::class.java)
         intent.action = ACTION_ERASE
 
-        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_ONE_SHOT)
+        return PendingIntent.getService(this, 0, intent, notificationIntentFlags)
     }
 
     private fun createOpenActionIntent(): PendingIntent {
+        val openActionIntentFlags = IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_UPDATE_CURRENT
         val intent = Intent(this, MainActivity::class.java)
         intent.action = MainActivity.ACTION_OPEN
 
-        return PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        return PendingIntent.getActivity(this, 1, intent, openActionIntentFlags)
     }
 
     private fun createOpenAndEraseActionIntent(): PendingIntent {
+        val openAndEraseActionIntentFlags = IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_UPDATE_CURRENT
         val intent = Intent(this, MainActivity::class.java)
 
         intent.action = MainActivity.ACTION_ERASE
         intent.putExtra(MainActivity.EXTRA_NOTIFICATION, true)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
 
-        return PendingIntent.getActivity(this, 2, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        return PendingIntent.getActivity(this, 2, intent, openAndEraseActionIntentFlags)
     }
 
     private fun createNotificationChannelIfNeeded() {

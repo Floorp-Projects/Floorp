@@ -67,6 +67,7 @@ import org.mozilla.focus.tabs.MergeTabsMiddleware
 import org.mozilla.focus.telemetry.GleanMetricsService
 import org.mozilla.focus.telemetry.TelemetryMiddleware
 import org.mozilla.focus.topsites.DefaultTopSitesStorage
+import org.mozilla.focus.utils.IntentUtils
 import org.mozilla.focus.utils.Settings
 import java.util.Locale
 
@@ -237,7 +238,7 @@ private fun createCrashReporter(context: Context): CrashReporter {
         context,
         0,
         intent,
-        0
+        IntentUtils.defaultIntentPendingFlags
     )
 
     return CrashReporter(

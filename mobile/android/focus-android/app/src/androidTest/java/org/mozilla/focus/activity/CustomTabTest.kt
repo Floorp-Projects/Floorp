@@ -33,6 +33,7 @@ import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
 import org.mozilla.focus.testAnnotations.SmokeTest
+import org.mozilla.focus.utils.IntentUtils
 import java.io.IOException
 
 @RunWith(AndroidJUnit4ClassRunner::class)
@@ -127,7 +128,7 @@ class CustomTabTest {
         val appContext = InstrumentationRegistry.getInstrumentation()
             .targetContext
             .applicationContext
-        val pendingIntent = PendingIntent.getActivity(appContext, 0, Intent(), 0)
+        val pendingIntent = PendingIntent.getActivity(appContext, 0, Intent(), IntentUtils.defaultIntentPendingFlags)
         val customTabsIntent = CustomTabsIntent.Builder()
             .addMenuItem(MENU_ITEM_LABEL, pendingIntent)
             .addDefaultShareMenuItem()
