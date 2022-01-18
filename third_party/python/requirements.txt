@@ -90,9 +90,9 @@ colorama==0.4.4 \
     --hash=sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b \
     --hash=sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2
     # via -r requirements-mach-vendor-python.in
-compare-locales==8.1.0 \
-    --hash=sha256:286270797ce64f7a2f25e734bb437870661409884a4f0971c0bb94fdad6c1f35 \
-    --hash=sha256:3d374ff959d5de2cfd5b94caf6b0fa61445f1d8ede5af384002cb3542aacad3a
+compare-locales==8.2.1 \
+    --hash=sha256:470d50d96c68f8e147daa3d70f29a7b750adefea450c5fa07e0f666c8083d854 \
+    --hash=sha256:e6a1610151d357e74ee6c1f5e944f1868e449f83e478c84d92f7b86132f721d7
     # via
     #   -r requirements-mach-vendor-python.in
     #   fluent.migrate
