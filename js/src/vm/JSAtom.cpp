@@ -302,8 +302,8 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
         commonNames->wellKnownSymbolDescriptions();
     ImmutableSymbolPtr* symbols = reinterpret_cast<ImmutableSymbolPtr*>(wks);
     for (size_t i = 0; i < JS::WellKnownSymbolLimit; i++) {
-      HandlePropertyName description = descriptions[i];
-      JS::Symbol* symbol = JS::Symbol::new_(cx, JS::SymbolCode(i), description);
+      JS::Symbol* symbol =
+          JS::Symbol::newWellKnown(cx, JS::SymbolCode(i), descriptions[i]);
       if (!symbol) {
         ReportOutOfMemory(cx);
         return false;
