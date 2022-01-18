@@ -1,0 +1,5 @@
+likely-confusing unicode character found '\u{202e}'
+     --> tests/parse-fail/confusing-string3.wat:1:18
+      |
+    1 | (module (export "" (func 0)))
+      |                  ^

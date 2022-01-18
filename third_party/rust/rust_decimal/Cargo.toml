@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "rust_decimal"
-version = "1.18.0"
+version = "1.20.0"
 authors = ["Paul Mason <paul@form1.co.nz>"]
 exclude = ["tests/generated/*"]
 description = "A Decimal Implementation written in pure Rust suitable for financial calculations."
@@ -35,7 +35,7 @@ optional = true
 default-features = false
 
 [dependencies.arrayvec]
-version = "0.5"
+version = "0.7"
 default-features = false
 
 [dependencies.byteorder]
@@ -98,6 +98,11 @@ version = "1"
 [dev-dependencies.futures]
 version = "0.3"
 
+[dev-dependencies.serde]
+version = "1.0"
+features = ["derive"]
+default-features = false
+
 [dev-dependencies.serde_derive]
 version = "1.0"
 
@@ -120,9 +125,12 @@ maths = []
 maths-nopanic = ["maths"]
 rocket-traits = ["rocket"]
 rust-fuzz = ["arbitrary"]
-serde-arbitrary-precision = ["serde", "serde_json/arbitrary_precision"]
+serde-arbitrary-precision = ["serde-with-arbitrary-precision"]
 serde-bincode = ["serde-str"]
-serde-float = ["serde"]
-serde-str = ["serde"]
+serde-float = ["serde-with-float"]
+serde-str = ["serde-with-str"]
+serde-with-arbitrary-precision = ["serde", "serde_json/arbitrary_precision"]
+serde-with-float = ["serde"]
+serde-with-str = ["serde"]
 std = []
 tokio-pg = ["db-tokio-postgres"]

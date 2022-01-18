@@ -250,16 +250,18 @@
 //!   dynamic library libproc_macro from rustc toolchain.
 
 // Syn types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/syn/1.0.82")]
+#![doc(html_root_url = "https://docs.rs/syn/1.0.85")]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![allow(non_camel_case_types)]
 // Ignored clippy lints.
 #![allow(
+    clippy::cast_lossless,
     clippy::collapsible_match, // https://github.com/rust-lang/rust-clippy/issues/7575
     clippy::doc_markdown,
     clippy::eval_order_dependence,
     clippy::inherent_to_string,
     clippy::large_enum_variant,
+    clippy::let_underscore_drop,
     clippy::manual_assert,
     clippy::manual_map, // https://github.com/rust-lang/rust-clippy/issues/6795
     clippy::match_on_vec_items,
@@ -267,6 +269,7 @@
     clippy::needless_doctest_main,
     clippy::needless_pass_by_value,
     clippy::never_loop,
+    clippy::return_self_not_must_use,
     clippy::too_many_arguments,
     clippy::trivially_copy_pass_by_ref,
     clippy::unnecessary_unwrap,

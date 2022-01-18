@@ -1,0 +1,5 @@
+invalid character in string '\n'
+     --> tests/parse-fail/newline-in-string.wat:1:2
+      |
+    1 | "
+      |  ^

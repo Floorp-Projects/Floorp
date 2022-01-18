@@ -137,6 +137,20 @@ pub enum DataStoreError {
   }
   ```
 
+- If a field is both a source (named `source`, or has `#[source]` or `#[from]`
+  attribute) *and* is marked `#[backtrace]`, then the Error trait's
+  `backtrace()` method is forwarded to the source's backtrace.
+
+  ```rust
+  #[derive(Error, Debug)]
+  pub enum MyError {
+      Io {
+          #[backtrace]
+          source: io::Error,
+      },
+  }
+  ```
+
 - Errors may use `error(transparent)` to forward the source and Display methods
   straight through to an underlying error without adding an additional message.
   This would be appropriate for enums that need an "anything else" variant.

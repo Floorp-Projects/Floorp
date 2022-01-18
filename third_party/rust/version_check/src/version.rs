@@ -59,13 +59,13 @@ impl Version {
             .nth(0)
             .unwrap_or("")
             .split('.')
-            .map(|s| s.parse::<u16>().ok());
+            .map(|s| s.parse::<u16>());
 
         let mut mmp = [0u16; 3];
         for (i, split) in splits.enumerate() {
             mmp[i] = match (i, split) {
-                (3, _) | (_, None) => return None,
-                (_, Some(v)) => v,
+                (3, _) | (_, Err(_)) => return None,
+                (_, Ok(v)) => v,
             };
         }
 
@@ -103,8 +103,8 @@ impl Version {
     /// ```
     pub fn to_mmp(&self) -> (u16, u16, u16) {
         let major = self.0 >> 32;
-        let minor = (self.0 << 32) >> 48;
-        let patch = (self.0 << 48) >> 48;
+        let minor = self.0 >> 16;
+        let patch = self.0;
         (major as u16, minor as u16, patch as u16)
     }
 

@@ -133,7 +133,10 @@ dependencies = [
     "test-serde-str",
     "test-serde-str-float",
     "test-serde-arbitrary-precision",
-    "test-serde-arbitrary-precision-float"
+    "test-serde-arbitrary-precision-float",
+    "test-serde-with-arbitrary-precision",
+    "test-serde-with-float",
+    "test-serde-with-str",
 ]
 
 [tasks.test-macros]
@@ -225,3 +228,15 @@ args = ["test", "--workspace", "--tests", "--features=serde-arbitrary-precision"
 [tasks.test-serde-arbitrary-precision-float]
 command = "cargo"
 args = ["test", "--workspace", "--tests", "--features=serde-arbitrary-precision,serde-float", "serde", "--", "--skip", "generated"]
+
+[tasks.test-serde-with-arbitrary-precision]
+command = "cargo"
+args = ["test", "--workspace", "--tests", "--features=serde-with-arbitrary-precision", "serde", "--", "--skip", "generated"]
+
+[tasks.test-serde-with-float]
+command = "cargo"
+args = ["test", "--workspace", "--tests", "--features=serde-with-float", "serde", "--", "--skip", "generated"]
+
+[tasks.test-serde-with-str]
+command = "cargo"
+args = ["test", "--workspace", "--tests", "--features=serde-with-str", "serde", "--", "--skip", "generated"]

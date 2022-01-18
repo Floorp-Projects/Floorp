@@ -2455,7 +2455,7 @@ pub mod parsing {
             while let Type::Group(ty) = first_ty_ref {
                 first_ty_ref = &ty.elem;
             }
-            if let Type::Path(_) = first_ty_ref {
+            if let Type::Path(TypePath { qself: None, .. }) = first_ty_ref {
                 while let Type::Group(ty) = first_ty {
                     first_ty = *ty.elem;
                 }

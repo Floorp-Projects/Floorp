@@ -1,0 +1,5 @@
+likely-confusing unicode character found '\u{2066}'
+     --> tests/parse-fail/confusing-line-comment4.wat:1:13
+      |
+    1 | (module) ;; 
+      |             ^
