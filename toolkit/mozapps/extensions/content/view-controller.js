@@ -23,7 +23,7 @@ async function recordViewTelemetry(param) {
   let addon;
 
   if (
-    param in AddonManager.addonTypes ||
+    AddonManager.hasAddonType(param) ||
     ["recent", "available"].includes(param)
   ) {
     type = param;

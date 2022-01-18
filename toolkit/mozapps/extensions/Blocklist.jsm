@@ -86,7 +86,7 @@ const kRegExpRemovalRegExp = /^\/\^\(\(?|\\|\)\)?\$\/$/g;
 // The list of types provided by XPIProvider. In order to block add-ons,
 // they should be signed and their type should be part of this list.
 // NOTE: This array should be kept in sync with the same addon type strings part of
-// the ALL_EXTERNAL_TYPES set defined by XPIProvider.jsm.
+// the ALL_XPI_TYPES set defined by XPIProvider.jsm.
 const kXPIAddonTypes = [
   "extension",
   "theme",
