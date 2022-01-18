@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
+
 import mozunit
 import pytest
 
@@ -53,6 +55,18 @@ def test_filter_tasks_by_paths(patch_resolver):
                 "mochitest-plain": ["mochitest.js"],
             },
             id="two tests",
+        ),
+        pytest.param(
+            ["test/xpcshell.ini"],
+            [
+                {
+                    "flavor": "xpcshell",
+                    "srcdir_relpath": "test/xpcshell.js",
+                    "manifest_relpath": os.path.join("test", "xpcshell.ini"),
+                },
+            ],
+            {"xpcshell": ["test/xpcshell.ini"]},
+            id="mismatched path separators",
         ),
     ),
 )
