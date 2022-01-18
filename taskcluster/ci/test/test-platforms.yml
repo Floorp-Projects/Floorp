@@ -48,12 +48,9 @@ linux1804-64-qr/opt:
         - awsy
         - desktop-screenshot-capture
         - linux1804-tests
-        - marionette-headless
-        - mochitest-headless
         - mochitest-webgpu
         - web-platform-tests
         - web-platform-tests-backlog
-        - web-platform-tests-wdspec-headless
         - linux-talos-flex
         - talos
         - browsertime
@@ -64,12 +61,9 @@ linux1804-64-shippable-qr/opt:
         - awsy
         - desktop-screenshot-capture
         - linux1804-tests
-        - marionette-headless
-        - mochitest-headless
         - mochitest-webgpu
         - web-platform-tests
         - web-platform-tests-backlog
-        - web-platform-tests-wdspec-headless
         - linux-talos-flex
         - talos
         - talos-profiling
@@ -89,7 +83,6 @@ linux1804-64-asan-qr/opt:
         - linux1804-tests
         - mochitest-webgpu
         - web-platform-tests
-        - web-platform-tests-wdspec-headless
 
 linux1804-64-ccov-qr/opt:
     build-platform: linux64-ccov/opt
@@ -145,7 +138,6 @@ windows10-32-2004-shippable-qr/opt:
         - awsy
         - desktop-screenshot-capture
         - web-platform-tests
-        - web-platform-tests-wdspec-headless
         - windows32-2004-tests
 
 
@@ -155,7 +147,6 @@ windows10-32-2004-qr/opt:
         - awsy
         - desktop-screenshot-capture
         - web-platform-tests
-        - web-platform-tests-wdspec-headless
         - windows32-2004-tests
 
 windows10-32-2004-qr/debug:
@@ -212,7 +203,6 @@ windows10-64-2004-qr/debug:
     build-platform: win64/debug
     test-sets:
         - web-platform-tests
-        - web-platform-tests-wdspec-headless
         - windows10-2004-tests
 
 windows10-64-2004-qr/opt:
@@ -222,7 +212,6 @@ windows10-64-2004-qr/opt:
         - desktop-screenshot-capture
         - web-platform-tests
         - web-platform-tests-backlog
-        - web-platform-tests-wdspec-headless
         - windows10-2004-tests
         - windows10-64-2004-failure-tests
         - talos-xperf
@@ -234,7 +223,6 @@ windows10-64-2004-shippable-qr/opt:
         - desktop-screenshot-capture
         - web-platform-tests
         - web-platform-tests-backlog
-        - web-platform-tests-wdspec-headless
         - windows10-2004-tests
         - windows10-64-2004-failure-tests
         - talos-xperf
@@ -291,7 +279,6 @@ macosx1015-64-shippable-qr/opt:
         - talos-profiling
         - web-platform-tests
         - web-platform-tests-backlog
-        - web-platform-tests-wdspec-headless
 
 macosx1015-64-devedition-qr/opt:
     build-platform: macosx64-devedition/opt
@@ -306,7 +293,6 @@ macosx1015-64-qr/opt:
         - macosx1015-64-qr-tests
         - web-platform-tests
         - web-platform-tests-backlog
-        - web-platform-tests-wdspec-headless
 
 macosx1015-64-qr/debug:
     build-platform: macosx64/debug

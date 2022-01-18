@@ -212,6 +212,8 @@ web-platform-tests-wdspec:
     variants:
         - fission
         - webrender-sw
+        - headless
+        - headless+fission
     run-on-projects:
         by-variant:
             fission:
@@ -226,6 +228,13 @@ web-platform-tests-wdspec:
                     linux.*64-qr/debug: built-projects
                     windows10-64-2004-qr/debug: built-projects
                     default: []
+            headless: built-projects
+            headless+fission:
+                by-test-platform:
+                    (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
+                    (linux.*64|windows10-64-2004)(-shippable)?-qr/opt: ['trunk']
+                    linux.*64-asan(-qr)?/opt: ['trunk']
+                    default: []
             default: built-projects
     tier:
         by-variant:
@@ -239,75 +248,6 @@ web-platform-tests-wdspec:
                 by-test-platform:
                     android.*: 3
                     default: default
-    fetches:
-        toolchain:
-            by-test-platform:
-                linux.*64.*:
-                    - linux64-geckodriver
-                    - linux64-minidump-stackwalk
-                    - linux64-fix-stacks
-                linux.*32.*:
-                    - linux32-geckodriver
-                    - linux64-minidump-stackwalk
-                    - linux64-fix-stacks
-                macosx.*:
-                    - macosx64-geckodriver
-                    - macosx64-minidump-stackwalk
-                    - macosx64-fix-stacks
-                win.*-32.*:
-                    - win32-geckodriver
-                    - win32-minidump-stackwalk
-                    - win32-fix-stacks
-                win.*-64.*:
-                    - win64-geckodriver
-                    - win32-minidump-stackwalk
-                    - win32-fix-stacks
-                default:
-                    - linux64-minidump-stackwalk
-                    - linux64-fix-stacks
-                    - linux64-geckodriver
-
-
-web-platform-tests-wdspec-headless:
-    description: "Web platform webdriver-spec headless run"
-    suite:
-        name: web-platform-tests-wdspec
-    schedules-component: web-platform-tests-wdspec
-    treeherder-symbol: W(WdH)
-    chunks: 2
-    variants:
-        - fission
-        - webrender-sw
-    run-on-projects:
-        by-variant:
-            fission:
-                by-test-platform:
-                    (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
-                    (linux.*64|windows10-64-2004)(-shippable)?-qr/opt: ['trunk']
-                    linux.*64-asan(-qr)?/opt: ['trunk']
-                    default: []
-            webrender-sw: []
-            default: built-projects
-    tier:
-        by-variant:
-            fission:
-                by-test-platform:
-                    linux.*64-qr/debug: 1
-                    linux.*64(-shippable)?-qr/opt: 1
-                    windows10-64-2004(-shippable)?-qr/opt: 1
-                    default: 2
-            default: default
-    mozharness:
-        extra-options:
-            by-test-platform:
-                windows.*:
-                    - --test-type=wdspec
-                    - --headless
-                    - --headless-width=1600
-                    - --headless-height=1200
-                default:
-                    - --test-type=wdspec
-                    - --headless
     fetches:
         toolchain:
             by-test-platform:

@@ -22,16 +22,27 @@ job-defaults:
     tier:
         by-variant:
             fission: 2
+            headless: 2
             default: default
     variants:
         - fission
         - webrender-sw
+        - headless
+        - headless+fission
     run-on-projects:
         by-variant:
             fission:
                 by-test-platform:
                     (linux.*64|windows10-64)(-shippable)?(-qr)?/.*: ['trunk']
                     linux.*64-asan-qr/opt: ['trunk']
+                    default: []
+            headless:
+                by-test-platform:
+                    (linux.*64)(-shippable)?-qr/opt: built-projects
+                    default: []
+            headless+fission:
+                by-test-platform:
+                    (linux.*64)(-shippable)?-qr/opt: built-projects
                     default: []
             webrender-sw:
                 by-test-platform:
@@ -49,13 +60,3 @@ marionette:
     max-run-time: 5400
     instance-size: default
     chunks: 1
-
-marionette-headless:
-    description: "Marionette headless unittest run"
-    treeherder-symbol: MnH
-    max-run-time: 5400
-    instance-size: default
-    tier: 2
-    mozharness:
-        extra-options:
-            - --headless
