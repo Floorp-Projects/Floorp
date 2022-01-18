@@ -151,8 +151,6 @@ Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext& webgl,
                                             const GLenum target, uvec3 size,
                                             const dom::Element& elem,
                                             ErrorResult* const out_error) {
-  const auto& canvas = *webgl.GetCanvas();
-
   if (elem.IsHTMLElement(nsGkAtoms::canvas)) {
     const dom::HTMLCanvasElement* srcCanvas =
         static_cast<const dom::HTMLCanvasElement*>(&elem);
@@ -230,9 +228,8 @@ Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext& webgl,
 
   if (!sfer.mCORSUsed) {
     auto& srcPrincipal = sfer.mPrincipal;
-    nsIPrincipal* dstPrincipal = canvas.NodePrincipal();
-
-    if (!dstPrincipal->Subsumes(srcPrincipal)) {
+    nsIPrincipal* dstPrincipal = webgl.PrincipalOrNull();
+    if (!dstPrincipal || !dstPrincipal->Subsumes(srcPrincipal)) {
       webgl.EnqueueWarning("Cross-origin elements require CORS.");
       out_error->Throw(NS_ERROR_DOM_SECURITY_ERR);
       return {};

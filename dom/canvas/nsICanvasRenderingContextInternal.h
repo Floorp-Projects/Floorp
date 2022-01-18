@@ -29,6 +29,7 @@
   }
 
 class nsIDocShell;
+class nsIPrincipal;
 class nsRefreshDriver;
 
 namespace mozilla {
@@ -77,6 +78,8 @@ class nsICanvasRenderingContextInternal : public nsISupports,
   void AddPostRefreshObserverIfNecessary();
 
   nsIGlobalObject* GetParentObject() const;
+
+  nsIPrincipal* PrincipalOrNull() const;
 
   void SetOffscreenCanvas(mozilla::dom::OffscreenCanvas* aOffscreenCanvas) {
     mOffscreenCanvas = aOffscreenCanvas;
