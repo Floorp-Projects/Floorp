@@ -13,7 +13,6 @@ tabmodalprompt {
   font-size: 110%;
 }
 
-.paymentDialogContainerFrame,
 .tabmodalprompt-mainContainer {
   color: black;
   background-color: hsla(0,0%,100%,.95);
