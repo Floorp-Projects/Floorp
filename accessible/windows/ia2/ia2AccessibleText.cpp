@@ -111,7 +111,7 @@ ia2AccessibleText::get_characterExtents(long aOffset,
       (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE)
           ? nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE
           : nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
-  nsIntRect rect;
+  LayoutDeviceIntRect rect;
   auto [textAcc, hr] = LocalTextAcc();
   if (!textAcc) {
     return hr;
