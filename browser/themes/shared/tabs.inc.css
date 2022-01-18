@@ -722,7 +722,11 @@
 }
 
 .all-tabs-item:hover {
-  background-color: var(--button-hover-bgcolor);
+  background-color: var(--panel-item-hover-bgcolor);
+}
+
+.all-tabs-item:hover:active {
+  background-color: var(--panel-item-active-bgcolor);
 }
 
 .all-tabs-item:hover > .all-tabs-button,
