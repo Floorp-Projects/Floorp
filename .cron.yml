@@ -31,6 +31,8 @@ jobs:
           by-project:
               # Please update the `searchfox-index` job `mozilla-central` `when`
               # times as well if updating the times here.
+              # `l10n-bumper` job should also have enough time to finish before
+              # this job runs
               mozilla-central: [{hour: 10, minute: 0}, {hour: 22, minute: 0}]
               # No default
 
@@ -279,7 +281,12 @@ jobs:
           - mozilla-central
           - mozilla-beta
       when:
-          - {hour: 18, minute: 45}
+        by-project:
+            # 3h15m before launch of `nightly-desktop`
+            mozilla-central: [{hour: 6, minute: 45}, {hour: 18, minute: 45}]
+            # 3h15m before launch of `daily-releases`
+            mozilla-beta: [{hour: 18, minute: 45}]
+            # No default
 
     - name: system-symbols
       job:
