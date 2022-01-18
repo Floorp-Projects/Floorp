@@ -184,18 +184,19 @@ class HyperTextAccessible : public AccessibleWrap,
   int32_t OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType);
 
   /**
-   * Return a rect of the given text range relative given coordinate system.
+   * Return a rect (in dev pixels) of the given text range relative given
+   * coordinate system.
    */
-  nsIntRect TextBounds(
+  LayoutDeviceIntRect TextBounds(
       int32_t aStartOffset, int32_t aEndOffset,
       uint32_t aCoordType =
           nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
 
   /**
-   * Return a rect for character at given offset relative given coordinate
-   * system.
+   * Return a rect (in dev pixels) for character at given offset relative given
+   * coordinate system.
    */
-  nsIntRect CharBounds(int32_t aOffset, uint32_t aCoordType) {
+  LayoutDeviceIntRect CharBounds(int32_t aOffset, uint32_t aCoordType) {
     int32_t endOffset = aOffset == static_cast<int32_t>(CharacterCount())
                             ? aOffset
                             : aOffset + 1;
@@ -394,11 +395,13 @@ class HyperTextAccessible : public AccessibleWrap,
                       EWordMovementType aWordMovementType = eDefaultBehavior);
 
   /**
-   * Return the boundaries of the substring in case of textual frame or
-   * frame boundaries in case of non textual frame, offsets are ignored.
+   * Return the boundaries (in dev pixels) of the substring in case of textual
+   * frame or frame boundaries in case of non textual frame, offsets are
+   * ignored.
    */
-  nsIntRect GetBoundsInFrame(nsIFrame* aFrame, uint32_t aStartRenderedOffset,
-                             uint32_t aEndRenderedOffset);
+  LayoutDeviceIntRect GetBoundsInFrame(nsIFrame* aFrame,
+                                       uint32_t aStartRenderedOffset,
+                                       uint32_t aEndRenderedOffset);
 
   // Selection helpers
 

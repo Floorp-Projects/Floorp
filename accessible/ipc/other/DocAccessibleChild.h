@@ -143,16 +143,14 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   virtual mozilla::ipc::IPCResult RecvDefaultTextAttributes(
       const uint64_t& aID, RefPtr<AccAttributes>* aAttributes) override;
 
-  virtual mozilla::ipc::IPCResult RecvTextBounds(const uint64_t& aID,
-                                                 const int32_t& aStartOffset,
-                                                 const int32_t& aEndOffset,
-                                                 const uint32_t& aCoordType,
-                                                 nsIntRect* aRetVal) override;
+  virtual mozilla::ipc::IPCResult RecvTextBounds(
+      const uint64_t& aID, const int32_t& aStartOffset,
+      const int32_t& aEndOffset, const uint32_t& aCoordType,
+      LayoutDeviceIntRect* aRetVal) override;
 
-  virtual mozilla::ipc::IPCResult RecvCharBounds(const uint64_t& aID,
-                                                 const int32_t& aOffset,
-                                                 const uint32_t& aCoordType,
-                                                 nsIntRect* aRetVal) override;
+  virtual mozilla::ipc::IPCResult RecvCharBounds(
+      const uint64_t& aID, const int32_t& aOffset, const uint32_t& aCoordType,
+      LayoutDeviceIntRect* aRetVal) override;
 
   virtual mozilla::ipc::IPCResult RecvOffsetAtPoint(const uint64_t& aID,
                                                     const int32_t& aX,
@@ -219,10 +217,10 @@ class DocAccessibleChild : public DocAccessibleChildBase {
 
   virtual mozilla::ipc::IPCResult RecvImagePosition(
       const uint64_t& aID, const uint32_t& aCoordType,
-      nsIntPoint* aRetVal) override;
+      LayoutDeviceIntPoint* aRetVal) override;
 
-  virtual mozilla::ipc::IPCResult RecvImageSize(const uint64_t& aID,
-                                                nsIntSize* aRetVal) override;
+  virtual mozilla::ipc::IPCResult RecvImageSize(
+      const uint64_t& aID, LayoutDeviceIntSize* aRetVal) override;
 
   virtual mozilla::ipc::IPCResult RecvStartOffset(const uint64_t& aID,
                                                   uint32_t* aRetVal,
