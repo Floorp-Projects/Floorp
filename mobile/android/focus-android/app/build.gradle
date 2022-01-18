@@ -181,6 +181,12 @@ configurations {
     jnaForTest
 }
 
+configurations.all {
+    resolutionStrategy {
+        force "androidx.work:work-runtime:2.7.0"
+    }
+}
+
 dependencies {
     implementation Dependencies.androidx_appcompat
     implementation Dependencies.androidx_browser
