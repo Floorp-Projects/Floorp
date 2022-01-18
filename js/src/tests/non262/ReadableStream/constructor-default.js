@@ -1,3 +1,5 @@
+// |reftest| skip-if(!this.hasOwnProperty('ReadableStream'))
+
 // The second argument to `new ReadableStream` defaults to `{}`, so it observes
 // properties hacked onto Object.prototype.
 
