@@ -95,9 +95,9 @@ def check_headers(*headers, **kwargs):
     return checks
 
 
-@depends(linker_ldflags, target)
-def check_symbol_flags(linker_ldflags, target):
-    if target.kernel == "WINNT":
+@depends(linker_ldflags, target.kernel)
+def check_symbol_flags(linker_ldflags, kernel):
+    if kernel == "WINNT":
         # The build doesn't use the compiler to link things as of writing,
         # but some compilation checks do. When using clang-cl, the only
         # linker we really support is lld.link, but clang-cl defaults to
