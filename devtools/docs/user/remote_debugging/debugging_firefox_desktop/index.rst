@@ -11,7 +11,7 @@ This guide explains how you can use the Firefox Developer Tools to debug a diffe
 Enable remote debugging
 ***********************
 
-First, you'll need to ensure that both debugger and debuggee have the "Enable browser chrome and add-on debugging toolboxes" and "Enable remote debugging" settings checked in the :ref:`Developer Tools Settings <tool-toolbox-settings>`. If you're using `Firefox Developer Edition <https://developer.mozilla.org/en-US/docs/Mozilla/Firefox/Developer_Edition>`_, they are checked by default.
+First, you'll need to ensure that both debugger and debuggee have the "Enable browser chrome and add-on debugging toolboxes" and "Enable remote debugging" settings checked in the :ref:`Developer Tools Settings <tool-toolbox-settings>`. If you're using `Firefox Developer Edition <https://www.mozilla.org/firefox/developer/>`_, they are checked by default.
 
 .. image:: remote_debug_settings.png
   :class: border

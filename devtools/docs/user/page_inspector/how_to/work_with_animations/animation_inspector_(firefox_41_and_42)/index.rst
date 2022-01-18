@@ -3,7 +3,7 @@ Animation inspector (Firefox 41 and 42)
 =======================================
 
 .. note::
-  Note that the Animation inspector's UI was revamped in Firefox 43. To see what the Animation inspector looks like in Firefox 43 and subsequent releases, see `the main "Work with animations" page <https://developer.mozilla.org/en-US/docs/Tools/Page_Inspector/How_to/Work_with_animations#animation_inspector>`_.
+  Note that the Animation inspector's UI was revamped in Firefox 43. To see what the Animation inspector looks like in Firefox 43 and subsequent releases, see :ref:`the main "Work with animations" page <page-inspector-how-to-work-with-animations-animation-inspector>`.
 
 
 The Animation inspector enables you to:

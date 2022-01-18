@@ -13,7 +13,7 @@ The Call Tree is a sampling profiler. It periodically samples the state of the J
 .. note::
     In this article, we'll use the output of a simple program as an example. If you want to get the program to experiment with your profile, you can find it `here <https://github.com/mdn/performance-scenarios/blob/gh-pages/js-call-tree-1/>`__. You can find the specific profile we discuss `here <https://github.com/mdn/performance-scenarios/blob/gh-pages/js-call-tree-1/profile/call-tree.json>`__ - just import it to the performance tool to follow along.
 
-    There's a short page describing the structure of this program `here <https://developer.mozilla.org/en-US/docs/Tools/Performance/Examples/Sorting_algorithms_comparison>`__.
+    There's a short page describing the structure of this program :doc:`here <../examples/sorting_algorithms_comparison/index>`.
 
     Note that we use the same program - the same profile, in fact - in the documentation page for the :doc:`Flame Chart <../flame_chart/index>`.
 

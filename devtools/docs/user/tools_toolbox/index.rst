@@ -31,6 +31,8 @@ The window itself is split into two parts: a toolbar along the top, and a main p
   Since Firefox 62, you can drag and drop tabs in the main toolbar of the toolbox to reorder your tools as you wish (`Bug 1226272 <https://bugzilla.mozilla.org/show_bug.cgi?id=1226272>`_)
 
 
+.. _tools-toolbox-docking-mode:
+
 Docking mode
 ************
 
@@ -116,7 +118,6 @@ There's also a meatball menu button that consists of following options:
 - two buttons leading to documentation and community
 
 
-.. _tool-toolbox-settings:
 
 Settings
 ********

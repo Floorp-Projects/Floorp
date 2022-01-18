@@ -2,6 +2,8 @@
 Settings
 ========
 
+.. _tool-toolbox-settings:
+
 Opening Settings
 ****************
 
