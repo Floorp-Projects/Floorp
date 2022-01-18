@@ -97,3 +97,9 @@ imply_option("--enable-frame-pointers", True, when="--enable-phc")
 
 
 set_config("MOZ_PHC", True, when="--enable-phc")
+
+with only_when(depends(target.os)(lambda os: os != "WINNT")):
+    set_define("HAVE_STRNDUP", check_symbol("strndup"))
+    set_define("HAVE_POSIX_MEMALIGN", check_symbol("posix_memalign"))
+    set_define("HAVE_MEMALIGN", check_symbol("memalign"))
+    set_define("HAVE_MALLOC_USABLE_SIZE", check_symbol("malloc_usable_size"))
