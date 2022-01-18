@@ -1,5 +1,5 @@
 error: #[pin_project] attribute may not be used on #[repr(packed)] types
-  --> $DIR/packed_sneaky-2.rs:4:1
+  --> tests/ui/pin_project/packed_sneaky-2.rs:4:1
    |
 4  | / hidden_repr_macro! { //~ ERROR may not be used on #[repr(packed)] types
 5  | |     #[pin_project]
@@ -10,4 +10,4 @@ error: #[pin_project] attribute may not be used on #[repr(packed)] types
 10 | | }
    | |_^
    |
-   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `hidden_repr_macro` (in Nightly builds, run with -Z macro-backtrace for more info)

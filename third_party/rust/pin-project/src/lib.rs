@@ -42,7 +42,7 @@
     attr(deny(warnings, rust_2018_idioms, single_use_lifetimes), allow(dead_code))
 ))]
 #![warn(missing_docs, rust_2018_idioms, single_use_lifetimes, unreachable_pub)]
-#![warn(clippy::all, clippy::default_trait_access)]
+#![warn(clippy::default_trait_access, clippy::wildcard_imports)]
 // mem::take and #[non_exhaustive] requires Rust 1.40
 #![allow(clippy::mem_replace_with_default, clippy::manual_non_exhaustive)]
 #![allow(clippy::needless_doctest_main)]

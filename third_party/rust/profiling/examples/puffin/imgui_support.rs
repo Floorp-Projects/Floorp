@@ -173,12 +173,12 @@ impl ImguiManager {
         window: &winit::window::Window,
     ) {
         let mut inner_mutex_guard = self.inner.lock().unwrap();
-        let mut inner = &mut *inner_mutex_guard;
+        let inner = &mut *inner_mutex_guard;
 
         // Drop the old Ui if it exists
         if inner.ui.is_some() {
             log::warn!("a frame is already in progress, starting a new one");
-            ImguiManager::take_ui(&mut inner);
+            ImguiManager::take_ui(inner);
         }
 
         inner
