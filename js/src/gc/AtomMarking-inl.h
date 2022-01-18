@@ -35,11 +35,7 @@ MOZ_ALWAYS_INLINE bool AtomMarkingRuntime::inlinedMarkAtomInternal(
   MOZ_ASSERT(thing);
   js::gc::TenuredCell* cell = &thing->asTenured();
   MOZ_ASSERT(cell->zoneFromAnyThread()->isAtomsZone());
-
-  // The context's zone will be null during initialization of the runtime.
-  if (!cx->zone()) {
-    return true;
-  }
+  MOZ_ASSERT(cx->zone());
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
   // This doesn't check for pinned atoms since that might require taking a
