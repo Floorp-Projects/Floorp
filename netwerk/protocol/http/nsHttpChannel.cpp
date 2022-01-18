@@ -551,6 +551,15 @@ nsresult nsHttpChannel::MaybeUseHTTPSRRForUpgrade(bool aShouldUpgrade,
   }
 
   auto shouldSkipUpgradeWithHTTPSRR = [&]() -> bool {
+    // Skip using HTTPS RR to upgrade when this is not a top-level load and the
+    // loading principal is http.
+    if ((mLoadInfo->GetExternalContentPolicyType() !=
+         ExtContentPolicy::TYPE_DOCUMENT) &&
+        (mLoadInfo->GetLoadingPrincipal() &&
+         mLoadInfo->GetLoadingPrincipal()->SchemeIs("http"))) {
+      return true;
+    }
+
     nsAutoCString uriHost;
     mURI->GetAsciiHost(uriHost);
 
