@@ -1099,6 +1099,19 @@ public class GeckoSession {
                 return;
               }
 
+              if (!IntentUtils.isUriSafeForScheme(uri)) {
+                delegate.onLoadError(
+                    session,
+                    uri,
+                    new WebRequestError(
+                        WebRequestError.ERROR_MALFORMED_URI,
+                        WebRequestError.ERROR_CATEGORY_URI,
+                        null));
+                res.complete(true);
+                addMarker.run();
+                return;
+              }
+
               final String trigger = TextUtils.isEmpty(triggeringUri) ? null : triggeringUri;
               final NavigationDelegate.LoadRequest req =
                   new NavigationDelegate.LoadRequest(
