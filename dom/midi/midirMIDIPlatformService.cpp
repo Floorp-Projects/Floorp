@@ -14,6 +14,8 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/Unused.h"
 #include "nsIThread.h"
+#include "mozilla/Logging.h"
+#include "MIDILog.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -54,6 +56,7 @@ midirMIDIPlatformService::midirMIDIPlatformService()
 }
 
 midirMIDIPlatformService::~midirMIDIPlatformService() {
+  LOG("midir_impl_shutdown");
   midir_impl_shutdown(mImplementation);
   StaticMutexAutoLock lock(gBackgroundThreadMutex);
   gBackgroundThread = nullptr;
@@ -78,6 +81,8 @@ void midirMIDIPlatformService::Init() {
     mIsInitialized = true;
     midir_impl_enum_ports(mImplementation, AddPort);
     MIDIPlatformService::Get()->SendPortList();
+  } else {
+    LOG("midir_impl_init failure");
   }
 }
 
@@ -98,6 +103,8 @@ void midirMIDIPlatformService::CheckAndReceive(const nsString* aId,
   nsTArray<MIDIMessage> messages;
   messages.AppendElement(message);
 
+  LogMIDIMessage(messages, *aId, MIDIPortType::Input);
+
   nsCOMPtr<nsIRunnable> r(new ReceiveRunnable(*aId, messages));
   StaticMutexAutoLock lock(gBackgroundThreadMutex);
   if (gBackgroundThread) {
@@ -112,10 +119,14 @@ void midirMIDIPlatformService::Open(MIDIPortParent* aPort) {
   if (midir_impl_open_port(mImplementation, &id,
                            reinterpret_cast<GeckoTimeStamp*>(&openTimeStamp),
                            CheckAndReceive)) {
+    LOG("MIDI port open: %s at t=%lf", NS_ConvertUTF16toUTF8(id).get(),
+        (openTimeStamp - TimeStamp::ProcessCreation()).ToSeconds());
     nsCOMPtr<nsIRunnable> r(new SetStatusRunnable(
         aPort->MIDIPortInterface::Id(), aPort->DeviceState(),
         MIDIPortConnectionState::Open));
     NS_DispatchToCurrentThread(r);
+  } else {
+    LOG("MIDI port open: %s", NS_ConvertUTF16toUTF8(id).get());
   }
 }
 
@@ -124,6 +135,7 @@ void midirMIDIPlatformService::Stop() {
 }
 
 void midirMIDIPlatformService::ScheduleSend(const nsAString& aPortId) {
+  LOG("MIDI port schedule open %s", NS_ConvertUTF16toUTF8(aPortId).get());
   nsCOMPtr<nsIRunnable> r(new SendRunnable(aPortId));
   StaticMutexAutoLock lock(gBackgroundThreadMutex);
   if (gBackgroundThread) {
@@ -134,6 +146,7 @@ void midirMIDIPlatformService::ScheduleSend(const nsAString& aPortId) {
 void midirMIDIPlatformService::ScheduleClose(MIDIPortParent* aPort) {
   MOZ_ASSERT(aPort);
   nsString id = aPort->MIDIPortInterface::Id();
+  LOG("MIDI port schedule close %s", NS_ConvertUTF16toUTF8(id).get());
   if (aPort->ConnectionState() == MIDIPortConnectionState::Open) {
     midir_impl_close_port(mImplementation, &id);
     nsCOMPtr<nsIRunnable> r(new SetStatusRunnable(
@@ -144,8 +157,10 @@ void midirMIDIPlatformService::ScheduleClose(MIDIPortParent* aPort) {
 }
 
 void midirMIDIPlatformService::SendMessages(const nsAString& aPortId) {
+  LOG("MIDI port send message on %s", NS_ConvertUTF16toUTF8(aPortId).get());
   nsTArray<MIDIMessage> messages;
   GetMessages(aPortId, messages);
+  LogMIDIMessage(messages, aPortId, MIDIPortType::Output);
   for (const auto& message : messages) {
     midir_impl_send(mImplementation, &aPortId, &message.data());
   }

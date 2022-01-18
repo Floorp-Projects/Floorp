@@ -36,6 +36,7 @@ UNIFIED_SOURCES += [
     "MIDIAccessManager.cpp",
     "MIDIInput.cpp",
     "MIDIInputMap.cpp",
+    "MIDILog.cpp",
     "MIDIManagerChild.cpp",
     "MIDIManagerParent.cpp",
     "MIDIMessageEvent.cpp",

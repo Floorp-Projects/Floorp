@@ -15,6 +15,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Unused.h"
 #include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
+#include "MIDILog.h"
 
 using namespace mozilla::ipc;
 
@@ -72,13 +73,21 @@ bool MIDIPort::Initialize(const MIDIPortInfo& aPortInfo, bool aSysexEnabled) {
     return false;
   }
   mPort = port;
+  LOG("MIDIPort::Initialize (%s, %s)",
+      NS_ConvertUTF16toUTF8(mPort->Name()).get(),
+      MIDIPortTypeValues::strings[uint32_t(mPort->Type())].value);
   // Make sure to increase the ref count for the port, so it can be cleaned up
   // by the IPC manager.
   mPort->SetActorAlive();
   return true;
 }
 
-void MIDIPort::UnsetIPCPort() { mPort = nullptr; }
+void MIDIPort::UnsetIPCPort() {
+  LOG("MIDIPort::UnsetIPCPort (%s, %s)",
+      NS_ConvertUTF16toUTF8(mPort->Name()).get(),
+      MIDIPortTypeValues::strings[uint32_t(mPort->Type())].value);
+  mPort = nullptr;
+}
 
 void MIDIPort::GetId(nsString& aRetVal) const {
   MOZ_ASSERT(mPort);
@@ -121,6 +130,7 @@ bool MIDIPort::SysexEnabled() const {
 }
 
 already_AddRefed<Promise> MIDIPort::Open() {
+  LOG("MIDIPort::Open");
   MOZ_ASSERT(mPort);
   RefPtr<Promise> p;
   if (mOpeningPromise) {
@@ -139,6 +149,7 @@ already_AddRefed<Promise> MIDIPort::Open() {
 }
 
 already_AddRefed<Promise> MIDIPort::Close() {
+  LOG("MIDIPort::Close");
   MOZ_ASSERT(mPort);
   RefPtr<Promise> p;
   if (mClosingPromise) {
@@ -157,6 +168,7 @@ already_AddRefed<Promise> MIDIPort::Close() {
 }
 
 void MIDIPort::Notify(const void_t& aVoid) {
+  LOG("MIDIPort::notify MIDIAccess shutting down, dropping reference.");
   // If we're getting notified, it means the MIDIAccess parent object is dead.
   // Nullify our copy.
   mMIDIAccessParent = nullptr;
