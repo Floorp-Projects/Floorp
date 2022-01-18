@@ -32,6 +32,20 @@ nsIGlobalObject* nsICanvasRenderingContextInternal::GetParentObject() const {
   return nullptr;
 }
 
+nsIPrincipal* nsICanvasRenderingContextInternal::PrincipalOrNull() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mCanvasElement) {
+    return mCanvasElement->NodePrincipal();
+  }
+  if (mOffscreenCanvas) {
+    nsIGlobalObject* global = mOffscreenCanvas->GetParentObject();
+    if (global) {
+      return global->PrincipalOrNull();
+    }
+  }
+  return nullptr;
+}
+
 void nsICanvasRenderingContextInternal::RemovePostRefreshObserver() {
   if (mRefreshDriver) {
     mRefreshDriver->RemovePostRefreshObserver(this);
