@@ -272,6 +272,8 @@ BrowserToolboxLauncher.prototype = {
       MOZ_DISABLE_SAFE_MODE_KEY: "1",
       MOZ_BROWSER_TOOLBOX_PORT: String(this.port),
       MOZ_HEADLESS: null,
+      // Never enable Marionette for the new process.
+      MOZ_MARIONETTE: null,
     };
 
     // During local development, incremental builds can trigger the main process
