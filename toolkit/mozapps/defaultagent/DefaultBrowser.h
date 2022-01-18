@@ -9,18 +9,11 @@
 
 #include <string>
 
+#include "mozilla/DefineEnum.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
-enum struct Browser {
-  Unknown,
-  Firefox,
-  Chrome,
-  EdgeWithEdgeHTML,
-  EdgeWithBlink,
-  InternetExplorer,
-  Opera,
-  Brave,
-};
+MOZ_DEFINE_ENUM_CLASS(Browser, (Unknown, Firefox, Chrome, EdgeWithEdgeHTML,
+                                EdgeWithBlink, InternetExplorer, Opera, Brave));
 
 struct DefaultBrowserInfo {
   Browser currentDefaultBrowser;
