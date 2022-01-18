@@ -27,7 +27,7 @@ import java.util.concurrent.Executors
 private const val MIGRATION_TEST_DB = "migration-test"
 
 @Suppress("LargeClass")
-class PinnedSitesStorageTest {
+class OnDevicePinnedSitesStorageTest {
     private lateinit var context: Context
     private lateinit var storage: PinnedSiteStorage
     private lateinit var executor: ExecutorService
@@ -103,7 +103,7 @@ class PinnedSitesStorageTest {
         assertTrue(topSites[0] is TopSite.Pinned)
         assertEquals("Firefox", topSites[1].title)
         assertEquals("https://www.firefox.com", topSites[1].url)
-        assertTrue(topSites[1] is TopSite.Pinned)
+        assertTrue(topSites[1] is TopSite.Default)
     }
 
     @Test
