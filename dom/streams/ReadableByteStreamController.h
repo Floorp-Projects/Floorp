@@ -375,11 +375,11 @@ MOZ_CAN_RUN_SCRIPT extern void SetUpReadableByteStreamController(
     UnderlyingSourceErrorCallbackHelper* aErrorAlgorithm, double aHighWaterMark,
     Maybe<uint64_t> aAutoAllocateChunkSize, ErrorResult& aRv);
 
-extern void ReadableByteStreamControllerCallPullIfNeeded(
+MOZ_CAN_RUN_SCRIPT extern void ReadableByteStreamControllerCallPullIfNeeded(
     JSContext* aCx, ReadableByteStreamController* aController,
     ErrorResult& aRv);
 
-void SetUpReadableByteStreamControllerFromUnderlyingSource(
+MOZ_CAN_RUN_SCRIPT void SetUpReadableByteStreamControllerFromUnderlyingSource(
     JSContext* aCx, ReadableStream* aStream,
     BodyStreamHolder* aUnderlyingSource, ErrorResult& aRv);
 

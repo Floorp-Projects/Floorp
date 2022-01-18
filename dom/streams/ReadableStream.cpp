@@ -877,7 +877,6 @@ already_AddRefed<ReadableStream> CreateReadableByteStream(
   return stream.forget();
 }
 
-MOZ_CAN_RUN_SCRIPT
 already_AddRefed<ReadableStream> ReadableStream::Create(
     JSContext* aCx, nsIGlobalObject* aGlobal,
     BodyStreamHolder* aUnderlyingSource, ErrorResult& aRv) {
