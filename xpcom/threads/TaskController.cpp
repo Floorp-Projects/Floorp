@@ -144,9 +144,8 @@ constexpr PRUint32 sBaseStackSize = 2048 * 1024 - 2 * 4096;
 // of that stack is significantly less than what we expect.  To offset TSan
 // stealing our stack space from underneath us, double the default.
 //
-// Note that we don't need this for ASan/MOZ_ASAN because ASan doesn't require
-// all the thread-specific state that TSan does.
-#if defined(MOZ_TSAN)
+// Similarly, ASan requires more stack space due to red-zones.
+#if defined(MOZ_TSAN) || defined(MOZ_ASAN)
 constexpr PRUint32 sStackSize = 2 * sBaseStackSize;
 #else
 constexpr PRUint32 sStackSize = sBaseStackSize;
