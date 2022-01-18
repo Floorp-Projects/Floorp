@@ -260,16 +260,18 @@ already_AddRefed<AccAttributes> RemoteAccessible::DefaultTextAttributes() {
   return attrs.forget();
 }
 
-nsIntRect RemoteAccessible::TextBounds(int32_t aStartOffset, int32_t aEndOffset,
-                                       uint32_t aCoordType) {
-  nsIntRect rect;
+LayoutDeviceIntRect RemoteAccessible::TextBounds(int32_t aStartOffset,
+                                                 int32_t aEndOffset,
+                                                 uint32_t aCoordType) {
+  LayoutDeviceIntRect rect;
   Unused << mDoc->SendTextBounds(mID, aStartOffset, aEndOffset, aCoordType,
                                  &rect);
   return rect;
 }
 
-nsIntRect RemoteAccessible::CharBounds(int32_t aOffset, uint32_t aCoordType) {
-  nsIntRect rect;
+LayoutDeviceIntRect RemoteAccessible::CharBounds(int32_t aOffset,
+                                                 uint32_t aCoordType) {
+  LayoutDeviceIntRect rect;
   Unused << mDoc->SendCharBounds(mID, aOffset, aCoordType, &rect);
   return rect;
 }
@@ -365,14 +367,14 @@ bool RemoteAccessible::PasteText(int32_t aPosition) {
   return valid;
 }
 
-nsIntPoint RemoteAccessible::ImagePosition(uint32_t aCoordType) {
-  nsIntPoint retVal;
+LayoutDeviceIntPoint RemoteAccessible::ImagePosition(uint32_t aCoordType) {
+  LayoutDeviceIntPoint retVal;
   Unused << mDoc->SendImagePosition(mID, aCoordType, &retVal);
   return retVal;
 }
 
-nsIntSize RemoteAccessible::ImageSize() {
-  nsIntSize retVal;
+LayoutDeviceIntSize RemoteAccessible::ImageSize() {
+  LayoutDeviceIntSize retVal;
   Unused << mDoc->SendImageSize(mID, &retVal);
   return retVal;
 }
@@ -872,7 +874,7 @@ Accessible* RemoteAccessible::ChildAtPoint(
     if (target->IsOuterDoc()) {
       if (target->ChildCount() == 0) {
         // Return the OuterDoc if the requested point is within its bounds.
-        nsIntRect rect = target->Bounds();
+        LayoutDeviceIntRect rect = target->Bounds();
         if (rect.Contains(aX, aY)) {
           return target;
         }
@@ -885,7 +887,7 @@ Accessible* RemoteAccessible::ChildAtPoint(
         // process, so they stop at OOP iframes.
         if (aWhichChild == Accessible::EWhichChildAtPoint::DirectChild) {
           // Return the child document if it's within the bounds of the iframe.
-          nsIntRect docRect = target->Bounds();
+          LayoutDeviceIntRect docRect = target->Bounds();
           if (docRect.Contains(aX, aY)) {
             return childDoc;
           }
@@ -908,12 +910,12 @@ Accessible* RemoteAccessible::ChildAtPoint(
   return target;
 }
 
-nsIntRect RemoteAccessible::Bounds() const {
+LayoutDeviceIntRect RemoteAccessible::Bounds() const {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::Bounds();
   }
 
-  nsIntRect rect;
+  LayoutDeviceIntRect rect;
   Unused << mDoc->SendExtents(mID, false, &(rect.x), &(rect.y), &(rect.width),
                               &(rect.height));
   return rect;

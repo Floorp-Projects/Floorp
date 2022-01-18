@@ -406,10 +406,7 @@ class LocalAccessible : public nsISupports, public Accessible {
    */
   virtual nsRect BoundsInAppUnits() const;
 
-  /**
-   * Return boundaries in screen coordinates.
-   */
-  virtual nsIntRect Bounds() const override;
+  virtual LayoutDeviceIntRect Bounds() const override;
 
   /**
    * Return boundaries in screen coordinates in CSS pixels.
