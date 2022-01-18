@@ -167,7 +167,8 @@ var CrashManager = function(options) {
 };
 
 CrashManager.prototype = Object.freeze({
-#includesubst @OBJDIR@/GeckoProcessTypes_CrashManager_map.js
+  // gen_CrashManager.py will input the proper process map informations.
+  /* SUBST: CRASH_MANAGER_PROCESS_MAP */
 
   // A real crash.
   CRASH_TYPE_CRASH: "crash",
@@ -506,7 +507,9 @@ CrashManager.prototype = Object.freeze({
    * @return boolean True or False depending on whether ping is allowed
    **/
   isPingAllowed(processType) {
-#includesubst @OBJDIR@/GeckoProcessTypes_CrashManager_pings.js
+    // gen_CrashManager.py will input the proper process pings informations.
+
+    /* SUBST: CRASH_MANAGER_PROCESS_PINGS */
 
     // Should not even reach this because of isValidProcessType() but just in
     // case we try to be cautious
