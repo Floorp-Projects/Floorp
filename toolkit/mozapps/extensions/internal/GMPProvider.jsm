@@ -26,9 +26,6 @@ var { GMPPrefs, GMPUtils, OPEN_H264_ID, WIDEVINE_ID } = ChromeUtils.import(
   "resource://gre/modules/GMPUtils.jsm"
 );
 
-const URI_EXTENSION_STRINGS =
-  "chrome://mozapps/locale/extensions/extensions.properties";
-
 const SEC_IN_A_DAY = 24 * 60 * 60;
 // How long to wait after a user enabled EME before attempting to download CDMs.
 const GMP_CHECK_DELAY = 10 * 1000; // milliseconds
@@ -859,15 +856,7 @@ var GMPProvider = {
 
   observe(subject, topic, data) {
     if (topic == FIRST_CONTENT_PROCESS_TOPIC) {
-      AddonManagerPrivate.registerProvider(GMPProvider, [
-        new AddonManagerPrivate.AddonType(
-          "plugin",
-          URI_EXTENSION_STRINGS,
-          "type.plugin.name",
-          AddonManager.VIEW_TYPE_LIST,
-          6000
-        ),
-      ]);
+      AddonManagerPrivate.registerProvider(GMPProvider, ["plugin"]);
       Services.obs.removeObserver(this, FIRST_CONTENT_PROCESS_TOPIC);
     }
   },

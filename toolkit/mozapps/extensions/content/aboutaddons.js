@@ -1811,12 +1811,6 @@ class CategoriesBox extends customElements.get("button-group") {
   }
 
   async initialize() {
-    let addonTypesObjects = AddonManager.addonTypes;
-    let addonTypes = new Set();
-    for (let type in addonTypesObjects) {
-      addonTypes.add(type);
-    }
-
     let hiddenTypes = new Set([]);
 
     for (let button of this.children) {
@@ -1824,7 +1818,7 @@ class CategoriesBox extends customElements.get("button-group") {
       button.hidden =
         !button.isVisible || (defaultHidden && this.shouldHideCategory(name));
 
-      if (defaultHidden && addonTypes.has(name)) {
+      if (defaultHidden && AddonManager.hasAddonType(name)) {
         hiddenTypes.add(name);
       }
     }
@@ -4636,7 +4630,7 @@ customElements.define("discovery-pane", DiscoveryPane);
 
 // Define views
 gViewController.defineView("list", async type => {
-  if (!(type in AddonManager.addonTypes)) {
+  if (!AddonManager.hasAddonType(type)) {
     return null;
   }
 
