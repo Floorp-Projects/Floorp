@@ -157,8 +157,9 @@ JSAtom* ParserAtom::instantiatePermanentAtom(
   MOZ_ASSERT(!cx->zone());
 
   MOZ_ASSERT(hasLatin1Chars());
-  JSAtom* atom = PermanentlyAtomizeCharsNonStatic(cx, atomSet, hash(),
-                                                  latin1Chars(), length());
+  MOZ_ASSERT(length() <= JSString::MAX_LENGTH);
+  JSAtom* atom = PermanentlyAtomizeCharsNonStaticValidLength(
+      cx, atomSet, hash(), latin1Chars(), length());
   if (!atom) {
     return nullptr;
   }
