@@ -12,7 +12,7 @@
     android:clickable="true"
     android:focusable="true"
     android:gravity="center_vertical"
-    android:layout_marginStart="@dimen/custom_checkbox_alignment_margin">
+    android:paddingStart="@dimen/custom_checkbox_alignment_margin">
 
     <LinearLayout
         android:id="@android:id/widget_frame"

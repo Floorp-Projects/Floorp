@@ -200,6 +200,8 @@
     <string name="pref_key_top_sites_max_limit" translatable="false">pref_key_top_sites_max_limit</string>
     <!-- Whether or not the top frecent sites are shown along with pinned top sites -->
     <string name="pref_key_enable_top_frecent_sites" translatable="false">pref_key_top_frecent_sites</string>
+    <!-- Whether or not the sponsored shortcuts are shown along with the top recent sites shortcuts -->
+    <string name="pref_key_enable_contile" translatable="false">pref_key_contile</string>
 
     <!-- A value  of `true` means the PWA dialog has been showed or user already has PWAs installed -->
     <string name="pref_key_user_knows_about_pwa" translatable="false">pref_key_user_knows_about_pwa</string>

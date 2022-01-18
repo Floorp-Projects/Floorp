@@ -5,6 +5,7 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
+import androidx.preference.CheckBoxPreference
 import androidx.navigation.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
@@ -36,6 +37,12 @@ class HomeSettingsFragment : PreferenceFragmentCompat() {
     private fun setupPreferences() {
         requirePreference<SwitchPreference>(R.string.pref_key_enable_top_frecent_sites).apply {
             isChecked = context.settings().showTopFrecentSites
+            onPreferenceChangeListener = CustomizeHomeMetricsUpdater()
+        }
+
+        requirePreference<CheckBoxPreference>(R.string.pref_key_enable_contile).apply {
+            isVisible = FeatureFlags.contileFeature
+            isChecked = context.settings().showContileFeature
             onPreferenceChangeListener = CustomizeHomeMetricsUpdater()
         }
 

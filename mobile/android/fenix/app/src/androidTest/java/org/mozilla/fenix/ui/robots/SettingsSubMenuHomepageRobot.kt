@@ -50,7 +50,7 @@ class SettingsSubMenuHomepageRobot {
 }
 
 private fun mostVisitedTopSitesButton() =
-    onView(allOf(withText(R.string.top_sites_toggle_top_recent_sites_3)))
+    onView(allOf(withText(R.string.top_sites_toggle_top_recent_sites_4)))
 
 private fun jumpBackInButton() =
     onView(allOf(withText(R.string.customize_toggle_jump_back_in)))

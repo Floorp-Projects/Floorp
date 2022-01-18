@@ -7,7 +7,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <androidx.preference.SwitchPreference
         android:key="@string/pref_key_enable_top_frecent_sites"
-        android:title="@string/top_sites_toggle_top_recent_sites_3" />
+        android:title="@string/top_sites_toggle_top_recent_sites_4" />
+
+    <androidx.preference.CheckBoxPreference
+        android:dependency="@string/pref_key_enable_top_frecent_sites"
+        android:layout="@layout/checkbox_left_sub_preference"
+        android:key="@string/pref_key_enable_contile"
+        android:title="@string/customize_toggle_contile"
+        app:isPreferenceVisible="false" />
 
     <androidx.preference.SwitchPreference
         android:key="@string/pref_key_recent_tabs"

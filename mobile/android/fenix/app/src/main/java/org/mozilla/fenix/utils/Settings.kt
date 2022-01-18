@@ -1248,4 +1248,13 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         featureFlag = FeatureFlags.isPocketRecommendationsFeatureEnabled(appContext),
         default = { appContext.components.analytics.features.homeScreen.isPocketRecommendationsActive() },
     )
+
+    /**
+     * Indicates if the Contile functionality should be visible.
+     */
+    var showContileFeature by featureFlagPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_contile),
+        default = false,
+        featureFlag = FeatureFlags.contileFeature,
+    )
 }
