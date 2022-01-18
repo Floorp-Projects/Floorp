@@ -1,6 +1,6 @@
 # num_cpus
 
-[![crates.io](http://meritbadge.herokuapp.com/num_cpus)](https://crates.io/crates/num_cpus)
+[![crates.io](https://img.shields.io/crates/v/num_cpus.svg)](https://crates.io/crates/num_cpus)
 [![Travis CI Status](https://travis-ci.org/seanmonstar/num_cpus.svg?branch=master)](https://travis-ci.org/seanmonstar/num_cpus)
 [![AppVeyor status](https://ci.appveyor.com/api/projects/status/qn8t6grhko5jwno6?svg=true)](https://ci.appveyor.com/project/seanmonstar/num-cpus)
 
