@@ -808,6 +808,10 @@ class TabBase {
     }
 
     options.wantReturnValue = true;
+
+    // The scripting API (defined in `parent/ext-scripting.js`) has its own
+    // `execute()` function that calls `queryContent()` as well. Make sure to
+    // keep both in sync when relevant.
     return this.queryContent("Execute", options);
   }
 
