@@ -43,12 +43,9 @@ bool StaticStrings::init(JSContext* cx) {
   static_assert(UNIT_STATIC_LIMIT - 1 <= JSString::MAX_LATIN1_CHAR,
                 "Unit strings must fit in Latin1Char.");
 
-  using Latin1Range = mozilla::Range<const Latin1Char>;
-
   for (uint32_t i = 0; i < UNIT_STATIC_LIMIT; i++) {
     Latin1Char ch = Latin1Char(i);
-    JSLinearString* s =
-        NewInlineString<NoGC>(cx, Latin1Range(&ch, 1), gc::TenuredHeap);
+    JSLinearString* s = NewInlineStringForAtom(cx, &ch, 1);
     if (!s) {
       return false;
     }
@@ -58,8 +55,7 @@ bool StaticStrings::init(JSContext* cx) {
 
   for (uint32_t i = 0; i < NUM_LENGTH2_ENTRIES; i++) {
     Latin1Char buffer[] = {firstCharOfLength2(i), secondCharOfLength2(i)};
-    JSLinearString* s =
-        NewInlineString<NoGC>(cx, Latin1Range(buffer, 2), gc::TenuredHeap);
+    JSLinearString* s = NewInlineStringForAtom(cx, buffer, 2);
     if (!s) {
       return false;
     }
@@ -78,8 +74,7 @@ bool StaticStrings::init(JSContext* cx) {
       Latin1Char buffer[] = {Latin1Char(firstCharOfLength3(i)),
                              Latin1Char(secondCharOfLength3(i)),
                              Latin1Char(thirdCharOfLength3(i))};
-      JSLinearString* s =
-          NewInlineString<NoGC>(cx, Latin1Range(buffer, 3), gc::TenuredHeap);
+      JSLinearString* s = NewInlineStringForAtom(cx, buffer, 3);
       if (!s) {
         return false;
       }
