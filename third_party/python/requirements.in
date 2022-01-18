@@ -6,7 +6,7 @@ cbor2==4.0.1
 # define it here because it's needed by other dependencies on
 # Windows systems.
 colorama==0.4.4
-compare-locales==8.1.0
+compare-locales==8.2.1
 cookies==2.2.1
 coverage==5.1
 cram==0.7
