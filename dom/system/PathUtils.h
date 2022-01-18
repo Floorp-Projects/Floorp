@@ -41,8 +41,7 @@ class PathUtils final {
                        nsString& aResult, ErrorResult& aErr);
 
   static void Parent(const GlobalObject&, const nsAString& aPath,
-                     const int32_t aDepth, nsString& aResult,
-                     ErrorResult& aErr);
+                     nsString& aResult, ErrorResult& aErr);
 
   static void Join(const GlobalObject&, const Sequence<nsString>& aComponents,
                    nsString& aResult, ErrorResult& aErr);
