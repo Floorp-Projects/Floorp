@@ -685,6 +685,131 @@ add_task(async function test_executeScript_with_iframe_srcdoc() {
   await extension.unload();
 });
 
+add_task(async function test_executeScript_with_multiple_files() {
+  let extension = makeExtension({
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      const results = await browser.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        files: ["1.js", "2.js"],
+      });
+
+      browser.test.assertEq(
+        1,
+        results.length,
+        "got expected number of results"
+      );
+      browser.test.assertEq(
+        "value from 2.js",
+        results[0].result,
+        "got the expected result"
+      );
+      browser.test.assertEq(0, results[0].frameId, "got the expected frameId");
+
+      browser.test.notifyPass("execute-script");
+    },
+    files: {
+      "1.js": function() {
+        return "value from 1.js";
+      },
+      "2.js": function() {
+        return "value from 2.js";
+      },
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("execute-script");
+  await extension.unload();
+});
+
+add_task(async function test_executeScript_with_multiple_files_and_an_error() {
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_contains_iframe.html",
+    true
+  );
+
+  let extension = makeExtension({
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      const results = await browser.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        files: ["1.js", "2.js"],
+      });
+
+      browser.test.assertEq(
+        1,
+        results.length,
+        "got expected number of results"
+      );
+      browser.test.assertEq(null, results[0].result, "got the expected result");
+      browser.test.assertEq(0, results[0].frameId, "got the expected frameId");
+
+      browser.test.notifyPass("execute-script");
+    },
+    files: {
+      "1.js": function() {
+        throw new Error(`Thrown at ${location.pathname.split("/").pop()}`);
+      },
+      "2.js": function() {
+        return "value from 2.js";
+      },
+    },
+  });
+
+  consoleMonitor.start([{ message: /Thrown at file_contains_iframe/ }]);
+
+  await extension.startup();
+  await extension.awaitFinish("execute-script");
+  await extension.unload();
+
+  await consoleMonitor.finished();
+
+  await AppTestDelegate.removeTab(window, tab);
+});
+
+add_task(async function test_executeScript_with_file_not_in_extension() {
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_contains_iframe.html",
+    true
+  );
+
+  let extension = makeExtension({
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      await browser.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        files: ["https://example.com/script.js"],
+      });
+
+      browser.test.notifyPass("execute-script");
+    },
+  });
+
+  consoleMonitor.start([{
+    message: /Files to be injected must be within the extension/,
+  }]);
+
+  await extension.startup();
+  await extension.awaitFinish("execute-script");
+  await extension.unload();
+
+  await consoleMonitor.finished();
+
+  await AppTestDelegate.removeTab(window, tab);
+});
+
 </script>
 
 </body>
