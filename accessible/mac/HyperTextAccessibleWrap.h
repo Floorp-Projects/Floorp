@@ -29,9 +29,9 @@ class HyperTextAccessibleWrap : public HyperTextAccessible {
                               HyperTextAccessible* aEndContainer,
                               int32_t aEndOffset);
 
-  nsIntRect BoundsForRange(int32_t aStartOffset,
-                           HyperTextAccessible* aEndContainer,
-                           int32_t aEndOffset);
+  LayoutDeviceIntRect BoundsForRange(int32_t aStartOffset,
+                                     HyperTextAccessible* aEndContainer,
+                                     int32_t aEndOffset);
 
   int32_t LengthForRange(int32_t aStartOffset,
                          HyperTextAccessible* aEndContainer,

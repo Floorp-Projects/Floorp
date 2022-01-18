@@ -23,7 +23,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIURI.h"
 
-using namespace mozilla::a11y;
+namespace mozilla::a11y {
 
 NS_IMPL_ISUPPORTS_INHERITED(ImageAccessible, LinkableAccessible,
                             imgINotificationObserver)
@@ -137,7 +137,7 @@ bool ImageAccessible::DoAction(uint8_t aIndex) const {
   nsCOMPtr<nsPIDOMWindowOuter> piWindow = document->GetWindow();
   if (!piWindow) return false;
 
-  RefPtr<mozilla::dom::BrowsingContext> tmp;
+  RefPtr<dom::BrowsingContext> tmp;
   return NS_SUCCEEDED(piWindow->Open(spec, u""_ns, u""_ns,
                                      /* aLoadInfo = */ nullptr,
                                      /* aForceNoOpener = */ false,
@@ -147,13 +147,13 @@ bool ImageAccessible::DoAction(uint8_t aIndex) const {
 ////////////////////////////////////////////////////////////////////////////////
 // ImageAccessible
 
-nsIntPoint ImageAccessible::Position(uint32_t aCoordType) {
-  nsIntPoint point = Bounds().TopLeft();
+LayoutDeviceIntPoint ImageAccessible::Position(uint32_t aCoordType) {
+  LayoutDeviceIntPoint point = Bounds().TopLeft();
   nsAccUtils::ConvertScreenCoordsTo(&point.x, &point.y, aCoordType, this);
   return point;
 }
 
-nsIntSize ImageAccessible::Size() { return Bounds().Size(); }
+LayoutDeviceIntSize ImageAccessible::Size() { return Bounds().Size(); }
 
 // LocalAccessible
 already_AddRefed<AccAttributes> ImageAccessible::NativeAttributes() {
@@ -247,3 +247,5 @@ void ImageAccessible::Notify(imgIRequest* aRequest, int32_t aType,
 
   mImageRequestStatus = status;
 }
+
+}  // namespace mozilla::a11y
