@@ -24,6 +24,7 @@
 #include "nsContentPermissionHelper.h"
 #include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "ipc/IPCMessageUtils.h"
+#include "MIDILog.h"
 
 namespace mozilla::dom {
 
@@ -69,6 +70,7 @@ MIDIAccess::MIDIAccess(nsPIDOMWindowInner* aWindow, bool aSysexEnabled,
 MIDIAccess::~MIDIAccess() { Shutdown(); }
 
 void MIDIAccess::Shutdown() {
+  LOG("MIDIAccess::Shutdown");
   if (mHasShutdown) {
     return;
   }
@@ -96,6 +98,7 @@ void MIDIAccess::FireConnectionEvent(MIDIPort* aPort) {
     }
     // Check to make sure Has()/Delete() calls haven't failed.
     if (NS_WARN_IF(rv.Failed())) {
+      LOG("Inconsistency during FireConnectionEvent");
       return;
     }
   } else {
@@ -106,22 +109,26 @@ void MIDIAccess::FireConnectionEvent(MIDIPort* aPort) {
     if (aPort->Type() == MIDIPortType::Input &&
         !MIDIInputMap_Binding::MaplikeHelpers::Has(mInputMap, id, rv)) {
       if (NS_WARN_IF(rv.Failed())) {
+        LOG("Input port not found");
         return;
       }
       MIDIInputMap_Binding::MaplikeHelpers::Set(
           mInputMap, id, *(static_cast<MIDIInput*>(aPort)), rv);
       if (NS_WARN_IF(rv.Failed())) {
+        LOG("Map Set failed for input port");
         return;
       }
     } else if (aPort->Type() == MIDIPortType::Output &&
                !MIDIOutputMap_Binding::MaplikeHelpers::Has(mOutputMap, id,
                                                            rv)) {
       if (NS_WARN_IF(rv.Failed())) {
+        LOG("Output port not found");
         return;
       }
       MIDIOutputMap_Binding::MaplikeHelpers::Set(
           mOutputMap, id, *(static_cast<MIDIOutput*>(aPort)), rv);
       if (NS_WARN_IF(rv.Failed())) {
+        LOG("Map set failed for output port");
         return;
       }
     }
@@ -145,12 +152,14 @@ void MIDIAccess::MaybeCreateMIDIPort(const MIDIPortInfo& aInfo,
     }
     port = MIDIInput::Create(GetOwner(), this, aInfo, mSysexEnabled);
     if (NS_WARN_IF(!port)) {
+      LOG("Couldn't create input port");
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
     MIDIInputMap_Binding::MaplikeHelpers::Set(
         mInputMap, id, *(static_cast<MIDIInput*>(port.get())), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
+      LOG("Coudld't set input port in map");
       return;
     }
   } else if (type == MIDIPortType::Output) {
@@ -162,12 +171,14 @@ void MIDIAccess::MaybeCreateMIDIPort(const MIDIPortInfo& aInfo,
     }
     port = MIDIOutput::Create(GetOwner(), this, aInfo, mSysexEnabled);
     if (NS_WARN_IF(!port)) {
+      LOG("Couldn't create output port");
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
     MIDIOutputMap_Binding::MaplikeHelpers::Set(
         mOutputMap, id, *(static_cast<MIDIOutput*>(port.get())), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
+      LOG("Coudld't set output port in map");
       return;
     }
   } else {
@@ -191,6 +202,7 @@ void MIDIAccess::MaybeCreateMIDIPort(const MIDIPortInfo& aInfo,
 // received, that will be handled by the MIDIPort object itself, and it will
 // request removal from MIDIAccess's maps.
 void MIDIAccess::Notify(const MIDIPortList& aEvent) {
+  LOG("MIDIAcess::Notify");
   for (const auto& port : aEvent.ports()) {
     // Something went very wrong. Warn and return.
     ErrorResult rv;
