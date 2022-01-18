@@ -401,10 +401,6 @@ bool ReadableByteStreamControllerShouldCallPull(
   return false;
 }
 
-MOZ_CAN_RUN_SCRIPT void ReadableByteStreamControllerCallPullIfNeeded(
-    JSContext* aCx, ReadableByteStreamController* aController,
-    ErrorResult& aRv);
-
 // MG:XXX: There's a template hiding here for handling the difference between
 // default and byte stream, eventually?
 class ByteStreamPullIfNeededPromiseHandler final : public PromiseNativeHandler {
@@ -1769,7 +1765,6 @@ void SetUpReadableByteStreamController(
 // implementation.
 //
 // https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller-from-underlying-source
-MOZ_CAN_RUN_SCRIPT
 void SetUpReadableByteStreamControllerFromUnderlyingSource(
     JSContext* aCx, ReadableStream* aStream,
     BodyStreamHolder* aUnderlyingSource, ErrorResult& aRv) {
