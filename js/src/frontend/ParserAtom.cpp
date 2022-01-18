@@ -138,9 +138,9 @@ JSAtom* ParserAtom::instantiateAtom(JSContext* cx, ParserAtomIndex index,
 
   JSAtom* atom;
   if (hasLatin1Chars()) {
-    atom = AtomizeChars(cx, hash(), latin1Chars(), length());
+    atom = AtomizeCharsNonStatic(cx, hash(), latin1Chars(), length());
   } else {
-    atom = AtomizeChars(cx, hash(), twoByteChars(), length());
+    atom = AtomizeCharsNonStatic(cx, hash(), twoByteChars(), length());
   }
   if (!atom) {
     return nullptr;
@@ -157,8 +157,8 @@ JSAtom* ParserAtom::instantiatePermanentAtom(
   MOZ_ASSERT(!cx->zone());
 
   MOZ_ASSERT(hasLatin1Chars());
-  JSAtom* atom =
-      PermanentlyAtomizeChars(cx, atomSet, hash(), latin1Chars(), length());
+  JSAtom* atom = PermanentlyAtomizeCharsNonStatic(cx, atomSet, hash(),
+                                                  latin1Chars(), length());
   if (!atom) {
     return nullptr;
   }
