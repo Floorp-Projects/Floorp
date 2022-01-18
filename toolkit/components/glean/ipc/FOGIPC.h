@@ -62,7 +62,7 @@ RefPtr<GenericPromise> FlushAndUseFOGData();
 /**
  * ** Test-only Method **
  *
- * Trigger GPU, RDD or Socket process test instrumentation.
+ * Trigger GMP, GPU, RDD or Socket process test instrumentation.
  *
  * @param processType - one of the PROCESS_TYPE_* constants from nsIXULRuntime.
  * @param promise - a promise that will be resolved when the data has made it to
