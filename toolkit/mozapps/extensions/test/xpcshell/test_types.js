@@ -87,3 +87,31 @@ add_task(async function test_missing_addonType() {
 
   AddonManagerPrivate.unregisterProvider(provider);
 });
+
+add_task(async function test_getAddonTypesByProvider() {
+  let defaultTypes = AddonManagerPrivate.getAddonTypesByProvider("XPIProvider");
+  Assert.ok(defaultTypes.includes("extension"), `extension in ${defaultTypes}`);
+  Assert.throws(
+    () => AddonManagerPrivate.getAddonTypesByProvider(),
+    /No addonTypes found for provider: undefined/
+  );
+  Assert.throws(
+    () => AddonManagerPrivate.getAddonTypesByProvider("MaybeExistent"),
+    /No addonTypes found for provider: MaybeExistent/
+  );
+
+  const provider = { name: "MaybeExistent" };
+  AddonManagerPrivate.registerProvider(provider, ["test"]);
+  Assert.deepEqual(
+    AddonManagerPrivate.getAddonTypesByProvider("MaybeExistent"),
+    ["test"],
+    "Newly registered type returned by getAddonTypesByProvider"
+  );
+
+  AddonManagerPrivate.unregisterProvider(provider);
+
+  Assert.throws(
+    () => AddonManagerPrivate.getAddonTypesByProvider("MaybeExistent"),
+    /No addonTypes found for provider: MaybeExistent/
+  );
+});

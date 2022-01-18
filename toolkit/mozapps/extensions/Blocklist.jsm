@@ -83,17 +83,16 @@ const kEscapeSequences = /\\[^.{}]/;
 //    plus an optional ) before the )$/
 const kRegExpRemovalRegExp = /^\/\^\(\(?|\\|\)\)?\$\/$/g;
 
-// The list of types provided by XPIProvider. In order to block add-ons,
-// they should be signed and their type should be part of this list.
-// NOTE: This array should be kept in sync with the same addon type strings part of
-// the ALL_XPI_TYPES set defined by XPIProvider.jsm.
-const kXPIAddonTypes = [
-  "extension",
-  "theme",
-  "locale",
-  "dictionary",
-  "sitepermission",
-];
+// In order to block add-ons, their type should be part of this list. There
+// may be additional requirements such as requiring the add-on to be signed.
+// See the uses of kXPIAddonTypes before introducing new addon types or
+// providers that differ from the existing types.
+XPCOMUtils.defineLazyGetter(this, "kXPIAddonTypes", () => {
+  // In practice, this result is equivalent to ALL_XPI_TYPES in XPIProvider.jsm.
+  // "plugin" (from GMPProvider.jsm) is intentionally omitted, as we decided to
+  // not support blocklisting of GMP plugins in bug 1086668.
+  return AddonManagerPrivate.getAddonTypesByProvider("XPIProvider");
+});
 
 // For a given input string matcher, produce either a string to compare with,
 // a regular expression, or a set of strings to compare with.
