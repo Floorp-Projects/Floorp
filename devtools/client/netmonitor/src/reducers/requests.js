@@ -17,6 +17,7 @@ const {
   REMOVE_SELECTED_CUSTOM_REQUEST,
   RIGHT_CLICK_REQUEST,
   SELECT_REQUEST,
+  PRESELECT_REQUEST,
   SEND_CUSTOM_REQUEST,
   TOGGLE_RECORDING,
   UPDATE_REQUEST,
@@ -98,6 +99,13 @@ function requestsReducer(state = Requests(), action) {
       return {
         ...state,
         clickedRequestId: action.id,
+      };
+    }
+
+    case PRESELECT_REQUEST: {
+      return {
+        ...state,
+        preselectedId: action.id,
       };
     }
 
