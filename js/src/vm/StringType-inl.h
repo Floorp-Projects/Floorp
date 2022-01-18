@@ -301,6 +301,13 @@ MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::new_(
     return nullptr;
   }
 
+  return newValidLength<allowGC>(cx, std::move(chars), length, heap);
+}
+
+template <js::AllowGC allowGC, typename CharT>
+MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::newValidLength(
+    JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars, size_t length,
+    js::gc::InitialHeap heap) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
   JSLinearString* str = js::AllocateString<JSLinearString, allowGC>(cx, heap);
   if (!str) {
