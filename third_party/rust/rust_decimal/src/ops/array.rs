@@ -15,19 +15,19 @@ pub(crate) fn rescale_internal(value: &mut [u32; 3], value_scale: &mut u32, new_
     }
 
     if *value_scale > new_scale {
-        let mut diff = *value_scale - new_scale;
+        let mut diff = value_scale.wrapping_sub(new_scale);
         // Scaling further isn't possible since we got an overflow
         // In this case we need to reduce the accuracy of the "side to keep"
 
         // Now do the necessary rounding
         let mut remainder = 0;
-        while diff > 0 {
+        while let Some(diff_minus_one) = diff.checked_sub(1) {
             if is_all_zero(value) {
                 *value_scale = new_scale;
                 return;
             }
 
-            diff -= 1;
+            diff = diff_minus_one;
 
             // Any remainder is discarded if diff > 0 still (i.e. lost precision)
             remainder = div_by_u32(value, 10);
@@ -35,8 +35,8 @@ pub(crate) fn rescale_internal(value: &mut [u32; 3], value_scale: &mut u32, new_
         if remainder >= 5 {
             for part in value.iter_mut() {
                 let digit = u64::from(*part) + 1u64;
-                remainder = if digit > 0xFFFF_FFFF { 1 } else { 0 };
-                *part = (digit & 0xFFFF_FFFF) as u32;
+                remainder = if digit > U32_MASK { 1 } else { 0 };
+                *part = (digit & U32_MASK) as u32;
                 if remainder == 0 {
                     break;
                 }
@@ -44,16 +44,21 @@ pub(crate) fn rescale_internal(value: &mut [u32; 3], value_scale: &mut u32, new_
         }
         *value_scale = new_scale;
     } else {
-        let mut diff = new_scale - *value_scale;
+        let mut diff = new_scale.wrapping_sub(*value_scale);
         let mut working = [value[0], value[1], value[2]];
-        while diff > 0 && mul_by_10(&mut working) == 0 {
-            value.copy_from_slice(&working);
-            diff -= 1;
+        while let Some(diff_minus_one) = diff.checked_sub(1) {
+            if mul_by_10(&mut working) == 0 {
+                value.copy_from_slice(&working);
+                diff = diff_minus_one;
+            } else {
+                break;
+            }
         }
-        *value_scale = new_scale - diff;
+        *value_scale = new_scale.wrapping_sub(diff);
     }
 }
 
+#[cfg(feature = "legacy-ops")]
 pub(crate) fn add_by_internal(value: &mut [u32], by: &[u32]) -> u32 {
     let mut carry: u64 = 0;
     let vl = value.len();
@@ -92,14 +97,36 @@ pub(crate) fn add_by_internal(value: &mut [u32], by: &[u32]) -> u32 {
     carry as u32
 }
 
+pub(crate) fn add_by_internal_flattened(value: &mut [u32; 3], by: u32) -> u32 {
+    manage_add_by_internal(by, value)
+}
+
 #[inline]
-pub(crate) fn add_one_internal(value: &mut [u32]) -> u32 {
-    let mut carry: u64 = 1; // Start with one, since adding one
-    let mut sum: u64;
-    for i in value.iter_mut() {
-        sum = (*i as u64) + carry;
-        *i = (sum & U32_MASK) as u32;
-        carry = sum >> 32;
+pub(crate) fn add_one_internal(value: &mut [u32; 3]) -> u32 {
+    manage_add_by_internal(1, value)
+}
+
+// `u64 as u32` are safe because of widening and 32bits shifts
+#[inline]
+pub(crate) fn manage_add_by_internal<const N: usize>(initial_carry: u32, value: &mut [u32; N]) -> u32 {
+    let mut carry = u64::from(initial_carry);
+    let mut iter = 0..value.len();
+    let mut sum = 0;
+
+    let mut sum_fn = |local_carry: &mut u64, idx| {
+        sum = u64::from(value[idx]).wrapping_add(*local_carry);
+        value[idx] = (sum & U32_MASK) as u32;
+        *local_carry = sum.wrapping_shr(32);
+    };
+
+    if let Some(idx) = iter.next() {
+        sum_fn(&mut carry, idx);
+    }
+
+    for idx in iter {
+        if carry > 0 {
+            sum_fn(&mut carry, idx);
+        }
     }
 
     carry as u32
@@ -189,7 +216,7 @@ pub(crate) fn mul_part(left: u32, right: u32, high: u32) -> (u32, u32) {
 }
 
 // Returns remainder
-pub(crate) fn div_by_u32(bits: &mut [u32], divisor: u32) -> u32 {
+pub(crate) fn div_by_u32<const N: usize>(bits: &mut [u32; N], divisor: u32) -> u32 {
     if divisor == 0 {
         // Divide by zero
         panic!("Internal error: divide by zero");
@@ -251,7 +278,7 @@ pub(crate) fn cmp_internal(left: &[u32; 3], right: &[u32; 3]) -> core::cmp::Orde
 }
 
 #[inline]
-pub(crate) fn is_all_zero(bits: &[u32]) -> bool {
+pub(crate) fn is_all_zero<const N: usize>(bits: &[u32; N]) -> bool {
     bits.iter().all(|b| *b == 0)
 }
 

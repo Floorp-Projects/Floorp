@@ -2,6 +2,7 @@
 
 #![feature(rustc_private, test)]
 #![recursion_limit = "1024"]
+#![allow(clippy::missing_panics_doc, clippy::must_use_candidate)]
 
 extern crate test;
 

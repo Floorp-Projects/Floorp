@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/warp/0.2.2")]
+#![doc(html_root_url = "https://docs.rs/warp/0.2.3")]
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![cfg_attr(test, deny(warnings))]
@@ -106,6 +106,9 @@ pub use self::filter::Filter;
 // This otherwise shows a big dump of re-exports in the doc homepage,
 // with zero context, so just hide it from the docs. Doc examples
 // on each can show that a convenient import exists.
+#[cfg(feature = "compression")]
+#[doc(hidden)]
+pub use self::filters::compression;
 #[cfg(feature = "multipart")]
 #[doc(hidden)]
 pub use self::filters::multipart;

@@ -1,5 +1,5 @@
 error: missing #[error("...")] display attribute
- --> $DIR/missing-fmt.rs:7:5
+ --> tests/ui/missing-fmt.rs:7:5
   |
 7 |     B(usize),
   |     ^^^^^^^^

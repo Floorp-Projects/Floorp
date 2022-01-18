@@ -1651,6 +1651,9 @@ trait SpecFrom<A: Array, S> {
 #[cfg(feature = "specialization")]
 mod specialization;
 
+#[cfg(feature = "arbitrary")]
+mod arbitrary;
+
 #[cfg(feature = "specialization")]
 impl<'a, A: Array> SpecFrom<A, &'a [A::Item]> for SmallVec<A>
 where

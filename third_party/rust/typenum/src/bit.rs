@@ -16,6 +16,7 @@ pub use crate::marker_traits::Bit;
 
 /// The type-level bit 0.
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Hash, Debug, Default)]
+#[cfg_attr(feature = "scale_info", derive(scale_info::TypeInfo))]
 pub struct B0;
 
 impl B0 {
@@ -28,6 +29,7 @@ impl B0 {
 
 /// The type-level bit 1.
 #[derive(Eq, PartialEq, Ord, PartialOrd, Clone, Copy, Hash, Debug, Default)]
+#[cfg_attr(feature = "scale_info", derive(scale_info::TypeInfo))]
 pub struct B1;
 
 impl B1 {
