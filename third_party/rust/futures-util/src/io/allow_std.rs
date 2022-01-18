@@ -1,6 +1,4 @@
 use futures_core::task::{Context, Poll};
-#[cfg(feature = "read-initializer")]
-use futures_io::Initializer;
 use futures_io::{AsyncBufRead, AsyncRead, AsyncSeek, AsyncWrite, IoSlice, IoSliceMut, SeekFrom};
 use std::pin::Pin;
 use std::{fmt, io};
@@ -121,10 +119,6 @@ where
     fn read_vectored(&mut self, bufs: &mut [IoSliceMut<'_>]) -> io::Result<usize> {
         self.0.read_vectored(bufs)
     }
-    #[cfg(feature = "read-initializer")]
-    unsafe fn initializer(&self) -> Initializer {
-        self.0.initializer()
-    }
     fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
         self.0.read_to_end(buf)
     }
@@ -154,11 +148,6 @@ where
         bufs: &mut [IoSliceMut<'_>],
     ) -> Poll<io::Result<usize>> {
         Poll::Ready(Ok(try_with_interrupt!(self.0.read_vectored(bufs))))
-    }
-
-    #[cfg(feature = "read-initializer")]
-    unsafe fn initializer(&self) -> Initializer {
-        self.0.initializer()
     }
 }
 
