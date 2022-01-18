@@ -1,6 +1,10 @@
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{spanned::Spanned, visit_mut::VisitMut, *};
+use syn::{
+    parse_quote, spanned::Spanned, visit_mut::VisitMut, Error, FnArg, GenericArgument, Ident,
+    ImplItem, ImplItemMethod, ItemImpl, Pat, Path, PathArguments, Result, ReturnType, Token, Type,
+    TypePath, TypeReference,
+};
 
 use crate::utils::{parse_as_empty, prepend_underscore_to_self, ReplaceReceiver, SliceExt};
 

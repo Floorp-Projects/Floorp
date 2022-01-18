@@ -1,5 +1,6 @@
 use proc_macro2::{Delimiter, Group, Span, TokenStream, TokenTree};
 use quote::{format_ident, quote, ToTokens};
+use std::collections::BTreeSet as Set;
 use std::iter::FromIterator;
 use syn::parse::{Nothing, ParseStream};
 use syn::{
@@ -21,12 +22,26 @@ pub struct Display<'a> {
     pub fmt: LitStr,
     pub args: TokenStream,
     pub has_bonus_display: bool,
+    pub implied_bounds: Set<(usize, Trait)>,
 }
 
 #[derive(Copy, Clone)]
 pub struct Transparent<'a> {
     pub original: &'a Attribute,
     pub span: Span,
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+pub enum Trait {
+    Debug,
+    Display,
+    Octal,
+    LowerHex,
+    UpperHex,
+    Pointer,
+    Binary,
+    LowerExp,
+    UpperExp,
 }
 
 pub fn get(input: &[Attribute]) -> Result<Attrs> {
@@ -91,6 +106,7 @@ fn parse_error_attribute<'a>(attrs: &mut Attrs<'a>, attr: &'a Attribute) -> Resu
             fmt: input.parse()?,
             args: parse_token_expr(input, false)?,
             has_bonus_display: false,
+            implied_bounds: Set::new(),
         };
         if attrs.display.is_some() {
             return Err(Error::new_spanned(
@@ -186,5 +202,12 @@ impl ToTokens for Display<'_> {
         tokens.extend(quote! {
             write!(__formatter, #fmt #args)
         });
+    }
+}
+
+impl ToTokens for Trait {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let trait_name = format_ident!("{}", format!("{:?}", self));
+        tokens.extend(quote!(std::fmt::#trait_name));
     }
 }

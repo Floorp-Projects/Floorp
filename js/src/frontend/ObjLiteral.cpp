@@ -270,14 +270,6 @@ Shape* InterpretObjLiteralShape(JSContext* cx,
     return nullptr;
   }
 
-  // In rare cases involving off-thread XDR, Object.prototype is not yet marked
-  // used-as-prototype, so do that now.
-  if (MOZ_UNLIKELY(!proto->isUsedAsPrototype())) {
-    if (!JSObject::setIsUsedAsPrototype(cx, proto)) {
-      return nullptr;
-    }
-  }
-
   return SharedShape::getInitialOrPropMapShape(
       cx, &PlainObject::class_, cx->realm(), AsTaggedProto(proto),
       numFixedSlots, map, mapLength, objectFlags);

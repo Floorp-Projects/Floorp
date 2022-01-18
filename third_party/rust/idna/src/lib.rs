@@ -34,13 +34,11 @@
 
 #[macro_use]
 extern crate matches;
-extern crate unicode_bidi;
-extern crate unicode_normalization;
 
 pub mod punycode;
 mod uts46;
 
-pub use uts46::{Config, Errors};
+pub use crate::uts46::{Config, Errors, Idna};
 
 /// The [domain to ASCII](https://url.spec.whatwg.org/#concept-domain-to-ascii) algorithm.
 ///

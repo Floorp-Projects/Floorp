@@ -25,14 +25,6 @@ impl Date {
             .and_then(|date| Date::parse(&date))
     }
 
-    /// Return the original (YYYY, MM, DD).
-    fn to_ymd(&self) -> (u16, u8, u8) {
-        let y = self.0 >> 9;
-        let m = (self.0 << 23) >> 28;
-        let d = (self.0 << 27) >> 27;
-        (y as u16, m as u8, d as u8)
-    }
-
     /// Parse a release date of the form `%Y-%m-%d`. Returns `None` if `date` is
     /// not in `%Y-%m-%d` format.
     ///
@@ -47,20 +39,63 @@ impl Date {
     /// assert!(date.at_most("2016-04-20"));
     /// assert!(date.exactly("2016-04-20"));
     ///
+    /// assert!(Date::parse("2021-12-31").unwrap().exactly("2021-12-31"));
+    ///
     /// assert!(Date::parse("March 13, 2018").is_none());
     /// assert!(Date::parse("1-2-3-4-5").is_none());
+    /// assert!(Date::parse("2020-300-23120").is_none());
+    /// assert!(Date::parse("2020-12-12 1").is_none());
+    /// assert!(Date::parse("2020-10").is_none());
+    /// assert!(Date::parse("2020").is_none());
     /// ```
     pub fn parse(date: &str) -> Option<Date> {
-        let ymd: Vec<u32> = date.split("-")
-            .filter_map(|s| s.parse::<u32>().ok())
-            .collect();
-
-        if ymd.len() != 3 {
-            return None
+        let mut ymd = [0u16; 3];
+        for (i, split) in date.split('-').map(|s| s.parse::<u16>()).enumerate() {
+            ymd[i] = match (i, split) {
+                (3, _) | (_, Err(_)) => return None,
+                (_, Ok(v)) => v,
+            };
         }
 
-        let (y, m, d) = (ymd[0], ymd[1], ymd[2]);
-        Some(Date((y << 9) | ((m & 0xF) << 5) | (d & 0x1F)))
+        let (year, month, day) = (ymd[0], ymd[1], ymd[2]);
+        if year == 0 || month == 0 || month > 12 || day == 0 || day > 31 {
+            return None;
+        }
+
+        Some(Date::from_ymd(year, month as u8, day as u8))
+    }
+
+    /// Creates a `Date` from `(year, month, day)` date components.
+    ///
+    /// Does not check the validity of `year`, `month`, or `day`, but `year` is
+    /// truncated to 23 bits (% 8,388,608), `month` to 4 bits (% 16), and `day`
+    /// to 5 bits (% 32).
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use version_check::Date;
+    ///
+    /// assert!(Date::from_ymd(2021, 7, 30).exactly("2021-07-30"));
+    /// assert!(Date::from_ymd(2010, 3, 23).exactly("2010-03-23"));
+    /// assert!(Date::from_ymd(2090, 1, 31).exactly("2090-01-31"));
+    ///
+    /// // Truncation: 33 % 32 == 0x21 & 0x1F == 1.
+    /// assert!(Date::from_ymd(2090, 1, 33).exactly("2090-01-01"));
+    /// ```
+    pub fn from_ymd(year: u16, month: u8, day: u8) -> Date {
+        let year = (year as u32) << 9;
+        let month = ((month as u32) & 0xF) << 5;
+        let day = (day as u32) & 0x1F;
+        Date(year | month | day)
+    }
+
+    /// Return the original (YYYY, MM, DD).
+    fn to_ymd(&self) -> (u16, u8, u8) {
+        let y = self.0 >> 9;
+        let m = (self.0 >> 5) & 0xF;
+        let d = self.0 & 0x1F;
+        (y as u16, m as u8, d as u8)
     }
 
     /// Returns `true` if `self` occurs on or after `date`.
@@ -163,5 +198,6 @@ mod tests {
         reflexive_display!("2000-12-31");
         reflexive_display!("2090-12-31");
         reflexive_display!("1999-02-19");
+        reflexive_display!("9999-12-31");
     }
 }

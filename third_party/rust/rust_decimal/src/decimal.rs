@@ -83,7 +83,7 @@ const NEGATIVE_ONE: Decimal = Decimal {
 
 /// `UnpackedDecimal` contains unpacked representation of `Decimal` where each component
 /// of decimal-format stored in it's own field
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct UnpackedDecimal {
     pub negative: bool,
     pub scale: u32,
@@ -125,7 +125,7 @@ pub enum RoundingStrategy {
     /// is away from zero. e.g. 6.4 -> 6, 6.5 -> 7, -6.5 -> -7
     MidpointAwayFromZero,
     /// When a number is halfway between two others, it is rounded toward the nearest number that
-    /// is toward zero. e.g. 6.4 -> 6, 6.5 -> 7, -6.5 -> -6
+    /// is toward zero. e.g. 6.4 -> 6, 6.5 -> 6, -6.5 -> -6
     MidpointTowardZero,
     /// The number is always rounded toward zero. e.g. -6.8 -> -6, 6.8 -> 6
     ToZero,
@@ -1183,7 +1183,7 @@ impl Decimal {
 
     /// Returns `Some(Decimal)` number rounded to the specified number of significant digits. If
     /// the resulting number is unable to be represented by the `Decimal` number then `None` will
-    /// be returned.  
+    /// be returned.
     /// When the number of significant figures of the `Decimal` being rounded is greater than the requested
     /// number of significant digits then rounding will be performed using `MidpointNearestEven` strategy.
     ///
@@ -1224,7 +1224,7 @@ impl Decimal {
 
     /// Returns `Some(Decimal)` number rounded to the specified number of significant digits. If
     /// the resulting number is unable to be represented by the `Decimal` number then `None` will
-    /// be returned.  
+    /// be returned.
     /// When the number of significant figures of the `Decimal` being rounded is greater than the requested
     /// number of significant digits then rounding will be performed using the provided [RoundingStrategy].
     ///

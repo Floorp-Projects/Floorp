@@ -597,6 +597,7 @@ pub const RTLD_DI_TLS_MODID: ::c_int = 9;
 pub const RTLD_DI_TLS_DATA: ::c_int = 10;
 
 pub const SOCK_NONBLOCK: ::c_int = O_NONBLOCK;
+pub const PIDFD_NONBLOCK: ::c_uint = O_NONBLOCK as ::c_uint;
 
 pub const SOL_RXRPC: ::c_int = 272;
 pub const SOL_PPPOL2TP: ::c_int = 273;

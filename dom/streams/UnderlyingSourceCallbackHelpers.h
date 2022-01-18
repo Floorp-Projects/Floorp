@@ -9,7 +9,6 @@
 
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/ModuleMapKey.h"
-#include "mozilla/dom/NativeUnderlyingSource.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"

@@ -3,7 +3,7 @@ use timer;
 
 use tokio_executor::Enter;
 
-use std::cell::Cell;
+use std::cell::RefCell;
 use std::fmt;
 use std::sync::Arc;
 use std::time::Instant;
@@ -17,12 +17,18 @@ use std::time::Instant;
 /// [`Instant::now`]: https://doc.rust-lang.org/std/time/struct.Instant.html#method.now
 #[derive(Default, Clone)]
 pub struct Clock {
-    now: Option<Arc<Now>>,
+    now: Option<Arc<dyn Now>>,
+}
+
+/// A guard that resets the current `Clock` to `None` when dropped.
+#[derive(Debug)]
+pub struct DefaultGuard {
+    _p: (),
 }
 
 thread_local! {
     /// Thread-local tracking the current clock
-    static CLOCK: Cell<Option<*const Clock>> = Cell::new(None)
+    static CLOCK: RefCell<Option<Clock>> = RefCell::new(None)
 }
 
 /// Returns an `Instant` corresponding to "now".
@@ -43,8 +49,8 @@ thread_local! {
 /// let now = clock::now();
 /// ```
 pub fn now() -> Instant {
-    CLOCK.with(|current| match current.get() {
-        Some(ptr) => unsafe { (*ptr).now() },
+    CLOCK.with(|current| match current.borrow().as_ref() {
+        Some(c) => c.now(),
         None => Instant::now(),
     })
 }
@@ -53,8 +59,8 @@ impl Clock {
     /// Return a new `Clock` instance that uses the current execution context's
     /// source of time.
     pub fn new() -> Clock {
-        CLOCK.with(|current| match current.get() {
-            Some(ptr) => unsafe { (*ptr).clone() },
+        CLOCK.with(|current| match current.borrow().as_ref() {
+            Some(c) => c.clone(),
             None => Clock::system(),
         })
     }
@@ -114,26 +120,31 @@ pub fn with_default<F, R>(clock: &Clock, enter: &mut Enter, f: F) -> R
 where
     F: FnOnce(&mut Enter) -> R,
 {
+    let _guard = set_default(clock);
+
+    f(enter)
+}
+
+/// Sets `clock` as the default clock, returning a guard that unsets it on drop.
+///
+/// # Panics
+///
+/// This function panics if there already is a default clock set.
+pub fn set_default(clock: &Clock) -> DefaultGuard {
     CLOCK.with(|cell| {
         assert!(
-            cell.get().is_none(),
+            cell.borrow().is_none(),
             "default clock already set for execution context"
         );
 
-        // Ensure that the clock is removed from the thread-local context
-        // when leaving the scope. This handles cases that involve panicking.
-        struct Reset<'a>(&'a Cell<Option<*const Clock>>);
+        *cell.borrow_mut() = Some(clock.clone());
 
-        impl<'a> Drop for Reset<'a> {
-            fn drop(&mut self) {
-                self.0.set(None);
-            }
-        }
-
-        let _reset = Reset(cell);
-
-        cell.set(Some(clock as *const Clock));
-
-        f(enter)
+        DefaultGuard { _p: () }
     })
+}
+
+impl Drop for DefaultGuard {
+    fn drop(&mut self) {
+        let _ = CLOCK.try_with(|cell| cell.borrow_mut().take());
+    }
 }

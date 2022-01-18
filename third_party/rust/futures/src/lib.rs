@@ -78,7 +78,6 @@
 //! The majority of examples and code snippets in this crate assume that they are
 //! inside an async block as written above.
 
-#![cfg_attr(feature = "read-initializer", feature(read_initializer))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![warn(
     missing_debug_implementations,
@@ -98,9 +97,6 @@
 
 #[cfg(all(feature = "bilock", not(feature = "unstable")))]
 compile_error!("The `bilock` feature requires the `unstable` feature as an explicit opt-in to unstable features");
-
-#[cfg(all(feature = "read-initializer", not(feature = "unstable")))]
-compile_error!("The `read-initializer` feature requires the `unstable` feature as an explicit opt-in to unstable features");
 
 #[doc(no_inline)]
 pub use futures_core::future::{Future, TryFuture};

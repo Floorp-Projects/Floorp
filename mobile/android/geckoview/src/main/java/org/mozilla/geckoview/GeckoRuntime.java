@@ -873,6 +873,10 @@ public final class GeckoRuntime implements Parcelable {
       return ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
     } else if (geckoOrientation == ScreenOrientation.DEFAULT.value) {
       return ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+    } else if (geckoOrientation == ScreenOrientation.PORTRAIT.value) {
+      return ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT;
+    } else if (geckoOrientation == ScreenOrientation.LANDSCAPE.value) {
+      return ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
     } else if (geckoOrientation == ScreenOrientation.ANY.value) {
       return ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR;
     }

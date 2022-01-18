@@ -13,8 +13,9 @@
 edition = "2018"
 rust-version = "1.31"
 name = "proc-macro2"
-version = "1.0.33"
+version = "1.0.36"
 authors = ["David Tolnay <dtolnay@gmail.com>", "Alex Crichton <alex@alexcrichton.com>"]
+autobenches = false
 description = "A substitute implementation of the compiler's `proc_macro` API to decouple\ntoken-based libraries from the procedural macro use case.\n"
 documentation = "https://docs.rs/proc-macro2"
 readme = "README.md"

@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.45"
 name = "futures-macro"
-version = "0.3.18"
+version = "0.3.19"
 description = "The futures-rs procedural macro implementations.\n"
 homepage = "https://rust-lang.github.io/futures-rs"
 license = "MIT OR Apache-2.0"

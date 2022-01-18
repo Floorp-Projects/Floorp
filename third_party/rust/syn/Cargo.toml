@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.31"
 name = "syn"
-version = "1.0.82"
+version = "1.0.85"
 authors = ["David Tolnay <dtolnay@gmail.com>"]
 include = ["/benches/**", "/build.rs", "/Cargo.toml", "/LICENSE-APACHE", "/LICENSE-MIT", "/README.md", "/src/**", "/tests/**"]
 description = "Parser for Rust source code"
@@ -50,6 +50,9 @@ default-features = false
 [dependencies.unicode-xid]
 version = "0.2"
 [dev-dependencies.anyhow]
+version = "1.0"
+
+[dev-dependencies.automod]
 version = "1.0"
 
 [dev-dependencies.flate2]
