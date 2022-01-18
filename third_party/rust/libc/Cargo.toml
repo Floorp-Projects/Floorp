@@ -11,7 +11,7 @@
 
 [package]
 name = "libc"
-version = "0.2.109"
+version = "0.2.112"
 authors = ["The Rust Project Developers"]
 build = "build.rs"
 exclude = ["/ci/*", "/.github/*", "/.cirrus.yml", "/triagebot.toml"]

@@ -2,8 +2,6 @@ use super::DEFAULT_BUF_SIZE;
 use futures_core::future::Future;
 use futures_core::ready;
 use futures_core::task::{Context, Poll};
-#[cfg(feature = "read-initializer")]
-use futures_io::Initializer;
 use futures_io::{AsyncBufRead, AsyncRead, AsyncSeek, AsyncWrite, IoSliceMut, SeekFrom};
 use pin_project_lite::pin_project;
 use std::io::{self, Read};
@@ -143,12 +141,6 @@ impl<R: AsyncRead> AsyncRead for BufReader<R> {
         let nread = rem.read_vectored(bufs)?;
         self.consume(nread);
         Poll::Ready(Ok(nread))
-    }
-
-    // we can't skip unconditionally because of the large buffer case in read.
-    #[cfg(feature = "read-initializer")]
-    unsafe fn initializer(&self) -> Initializer {
-        self.inner.initializer()
     }
 }
 
