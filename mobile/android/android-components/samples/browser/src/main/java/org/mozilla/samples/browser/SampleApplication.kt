@@ -26,13 +26,19 @@ import mozilla.components.support.ktx.android.content.isMainProcess
 import mozilla.components.support.ktx.android.content.runOnlyInMainProcess
 import mozilla.components.support.rustlog.RustLog
 import mozilla.components.support.webextensions.WebExtensionSupport
+import java.util.Calendar
+import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 
+@Suppress("MagicNumber")
 internal object GleanBuildInfo {
     val buildInfo: BuildInfo by lazy {
         BuildInfo(
             versionCode = "0.0.1",
             versionName = "0.0.1",
+            buildDate = Calendar.getInstance(
+                TimeZone.getTimeZone("GMT+0")
+            ).also { cal -> cal.set(2019, 9, 23, 12, 52, 8) }
         )
     }
 }

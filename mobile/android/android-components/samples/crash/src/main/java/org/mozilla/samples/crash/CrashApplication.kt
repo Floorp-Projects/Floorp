@@ -25,13 +25,19 @@ import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
+import java.util.Calendar
+import java.util.TimeZone
 import java.util.UUID
 
+@Suppress("MagicNumber")
 internal object GleanBuildInfo {
     val buildInfo: BuildInfo by lazy {
         BuildInfo(
             versionCode = "0.0.1",
             versionName = "0.0.1",
+            buildDate = Calendar.getInstance(
+                TimeZone.getTimeZone("GMT+0")
+            ).also { cal -> cal.set(2019, 9, 23, 12, 52, 8) }
         )
     }
 }
