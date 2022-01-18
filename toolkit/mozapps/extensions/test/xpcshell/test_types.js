@@ -15,21 +15,6 @@ add_task(async function setup() {
   // The dumbest provider possible
   var provider = {};
 
-  var expectedAdd = "test";
-  var expectedRemove = null;
-
-  AddonManager.addTypeListener({
-    onTypeAdded(aType) {
-      Assert.equal(aType.id, expectedAdd);
-      expectedAdd = null;
-    },
-
-    onTypeRemoved(aType) {
-      Assert.equal(aType.id, expectedRemove);
-      expectedRemove = null;
-    },
-  });
-
   AddonManagerPrivate.registerProvider(provider, [
     {
       id: "test",
@@ -43,8 +28,6 @@ add_task(async function setup() {
     },
   ]);
 
-  Assert.equal(expectedAdd, null);
-
   Assert.ok("test" in types);
   Assert.equal(types.test.name, "Test");
   Assert.equal(false, "t$e%st" in types);
@@ -55,11 +38,7 @@ add_task(async function setup() {
   types.foo = "bar";
   Assert.equal(false, "foo" in types);
 
-  expectedRemove = "test";
-
   AddonManagerPrivate.unregisterProvider(provider);
-
-  Assert.equal(expectedRemove, null);
 
   Assert.equal(false, "test" in AddonManager.addonTypes);
   // The cached reference to addonTypes is live
