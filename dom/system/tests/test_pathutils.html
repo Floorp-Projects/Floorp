@@ -119,6 +119,37 @@
         "\\\\server",
         "PathUtils.parent() with a UNC server path and child component"
       );
+
+      Assert.throws(
+        () => PathUtils.parent("C:", -1),
+        /^NotSupportedError: PathUtils.parent: A depth of at least 1 is required/,
+        "PathUtils.parent() with a negative depth throws"
+      );
+      Assert.throws(
+        () => PathUtils.parent("C:", 0),
+        /^NotSupportedError: PathUtils.parent: A depth of at least 1 is required/,
+        "PathUtils.parent() with a zero depth throws"
+      );
+
+      {
+        const path = "C:\\Users\\User\\AppData\\Local\\Mozilla\\Firefox\\Profiles\\foo.default";
+
+        const expected = [
+          "C:\\Users\\User\\AppData\\Local\\Mozilla\\Firefox\\Profiles",
+          "C:\\Users\\User\\AppData\\Local\\Mozilla\\Firefox",
+          "C:\\Users\\User\\AppData\\Local\\Mozilla",
+          "C:\\Users\\User\\AppData\\Local",
+          "C:\\Users\\User\\AppData",
+          "C:\\Users\\User",
+          "C:\\Users",
+          "C:",
+          null,
+        ];
+
+        for (const [i, parent] of expected.entries()) {
+          is(PathUtils.parent(path, i + 1), parent, `PathUtils.parent() with depth=${i + 1}`)
+        }
+      }
     } else {
       is(
         PathUtils.parent("/"),
@@ -135,6 +166,37 @@
         "/var",
         "PathUtils.parent() with a 3 component path"
       );
+
+      Assert.throws(
+        () => PathUtils.parent("/", -1),
+        /^NotSupportedError: PathUtils.parent: A depth of at least 1 is required/,
+        "PathUtils.parent() with a negative depth throws"
+      );
+      Assert.throws(
+        () => PathUtils.parent("/", 0),
+        /^NotSupportedError: PathUtils.parent: A depth of at least 1 is required/,
+        "PathUtils.parent() with a zero depth throws"
+      );
+
+      {
+        const path = "/home/user/.mozilla/firefox/foo.default";
+        const expected = [
+          "/home/user/.mozilla/firefox",
+          "/home/user/.mozilla",
+          "/home/user/",
+          "/home",
+          "/",
+          null,
+        ];
+
+        for (const [i, parent] of expected.entries()) {
+          is(
+            PathUtils.parent(path, i + 1),
+            parent,
+            `PathUtils.parent() with depth=${i + 1}`
+          );
+        }
+      }
     }
   });
 
