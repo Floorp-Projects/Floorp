@@ -1888,29 +1888,6 @@ void nsHttpChannel::ProcessSSLInformation() {
     }
   }
 
-  // Send (SHA-1) signature algorithm errors to the web console
-  nsCOMPtr<nsIX509Cert> cert;
-  securityInfo->GetServerCert(getter_AddRefs(cert));
-  if (cert) {
-    UniqueCERTCertificate nssCert(cert->GetCert());
-    if (nssCert) {
-      SECOidTag tag = SECOID_GetAlgorithmTag(&nssCert->signature);
-      LOG(("Checking certificate signature: The OID tag is %i [this=%p]\n", tag,
-           this));
-      // Check to see if the signature is sha-1 based.
-      // Not including checks for SEC_OID_ISO_SHA1_WITH_RSA_SIGNATURE
-      // from http://tools.ietf.org/html/rfc2437#section-8 since I
-      // can't see reference to it outside this spec
-      if (tag == SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION ||
-          tag == SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST ||
-          tag == SEC_OID_ANSIX962_ECDSA_SHA1_SIGNATURE) {
-        nsString consoleErrorTag = u"SHA1Sig"_ns;
-        nsString consoleErrorMessage = u"SHA-1 Signature"_ns;
-        Unused << AddSecurityMessage(consoleErrorTag, consoleErrorMessage);
-      }
-    }
-  }
-
   uint16_t tlsVersion;
   nsresult rv = securityInfo->GetProtocolVersion(&tlsVersion);
   if (NS_SUCCEEDED(rv) &&
