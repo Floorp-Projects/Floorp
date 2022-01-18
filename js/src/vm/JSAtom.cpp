@@ -193,6 +193,10 @@ MOZ_ALWAYS_INLINE AtomSet::Ptr js::FrozenAtomSet::readonlyThreadsafeLookup(
   return mSet->readonlyThreadsafeLookup(l);
 }
 
+static JSAtom* PermanentlyAtomizeChars(JSContext* cx, AtomSet& atomSet,
+                                       mozilla::HashNumber hash,
+                                       const Latin1Char* chars, size_t length);
+
 bool JSRuntime::initializeAtoms(JSContext* cx) {
   JS::AutoAssertNoGC nogc;
 
@@ -261,7 +265,7 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
   }
 
   for (const auto& info : symbolDescInfo) {
-    JSAtom* atom = PermanentlyAtomizeChars(
+    JSAtom* atom = PermanentlyAtomizeCharsNonStatic(
         cx, *atomSet, info.hash,
         reinterpret_cast<const Latin1Char*>(info.content), info.length);
     if (!atom) {
@@ -816,38 +820,41 @@ template JSAtom* js::AtomizeChars(JSContext* cx, const char16_t* chars,
 
 /* |chars| must not point into an inline or short string. */
 template <typename CharT>
-JSAtom* js::AtomizeChars(JSContext* cx, HashNumber hash, const CharT* chars,
-                         size_t length) {
-  if (JSAtom* s = cx->staticStrings().lookup(chars, length)) {
-    return s;
-  }
+JSAtom* js::AtomizeCharsNonStatic(JSContext* cx, HashNumber hash,
+                                  const CharT* chars, size_t length) {
+  MOZ_ASSERT(!cx->staticStrings().lookup(chars, length));
 
   AtomHasher::Lookup lookup(hash, chars, length);
   return AtomizeAndCopyCharsFromLookup(cx, chars, length, lookup, Nothing());
 }
 
-template JSAtom* js::AtomizeChars(JSContext* cx, HashNumber hash,
-                                  const Latin1Char* chars, size_t length);
+template JSAtom* js::AtomizeCharsNonStatic(JSContext* cx, HashNumber hash,
+                                           const Latin1Char* chars,
+                                           size_t length);
 
-template JSAtom* js::AtomizeChars(JSContext* cx, HashNumber hash,
-                                  const char16_t* chars, size_t length);
+template JSAtom* js::AtomizeCharsNonStatic(JSContext* cx, HashNumber hash,
+                                           const char16_t* chars,
+                                           size_t length);
 
-template <typename CharT>
-JSAtom* js::PermanentlyAtomizeChars(JSContext* cx, AtomSet& atomSet,
-                                    HashNumber hash, const CharT* chars,
-                                    size_t length) {
+static JSAtom* PermanentlyAtomizeChars(JSContext* cx, AtomSet& atomSet,
+                                       HashNumber hash, const Latin1Char* chars,
+                                       size_t length) {
   if (JSAtom* s = cx->staticStrings().lookup(chars, length)) {
     return s;
   }
 
+  return PermanentlyAtomizeCharsNonStatic(cx, atomSet, hash, chars, length);
+}
+
+JSAtom* js::PermanentlyAtomizeCharsNonStatic(JSContext* cx, AtomSet& atomSet,
+                                             HashNumber hash,
+                                             const Latin1Char* chars,
+                                             size_t length) {
+  MOZ_ASSERT(!cx->staticStrings().lookup(chars, length));
+
   AtomHasher::Lookup lookup(hash, chars, length);
   return PermanentlyAtomizeAndCopyChars(cx, atomSet, chars, length, lookup);
 }
-
-template JSAtom* js::PermanentlyAtomizeChars(JSContext* cx, AtomSet& atomSet,
-                                             HashNumber hash,
-                                             const Latin1Char* chars,
-                                             size_t length);
 
 JSAtom* js::AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars,
                              size_t utf8ByteLength) {
