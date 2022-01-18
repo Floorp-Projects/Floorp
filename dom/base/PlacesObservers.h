@@ -55,6 +55,8 @@ class PlacesObservers {
                              PlacesWeakCallbackWrapper& aCallback);
   static void RemoveListener(uint32_t aFlags,
                              places::INativePlacesEventCallback* aCallback);
+
+  MOZ_CAN_RUN_SCRIPT static void NotifyNext();
 };
 
 }  // namespace dom
