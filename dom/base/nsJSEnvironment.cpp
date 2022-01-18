@@ -1182,7 +1182,9 @@ void CycleCollectorStats::AfterCycleCollectionSlice() {
     if (!mIdleDeadline.IsNull()) {
       if (mIdleDeadline < mEndSliceTime) {
         // This slice overflowed the idle period.
-        idleDuration = mIdleDeadline - mBeginSliceTime;
+        if (mIdleDeadline > mBeginSliceTime) {
+          idleDuration = mIdleDeadline - mBeginSliceTime;
+        }
       } else {
         idleDuration = duration;
       }
