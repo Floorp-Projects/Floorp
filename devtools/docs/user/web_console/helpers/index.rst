@@ -34,7 +34,7 @@ clear()
   Clears the console output area.
 
 clearHistory()
-  Just like a normal command line, the console command line `remembers the commands you've typed <https://developer.mozilla.org/en-US/docs/Tools/Web_Console#command_history>`_. Use this function to clear the console's command history.
+  Just like a normal command line, the console command line :ref:`remembers the commands you've typed <command_line_interpreter_execution_history>`. Use this function to clear the console's command history.
 
 .. _web_console_helpers_copy:
 

@@ -137,7 +137,7 @@ These shortcuts work whenever the toolbox is open, no matter which tool is activ
     - :kbd:`F1`
     - :kbd:`F1`
 
-  * - Toggle toolbox between the last 2 `docking modes <https://developer.mozilla.org/en-US/docs/Tools/Tools_Toolbox#docking_mode>`_
+  * - Toggle toolbox between the last 2 :ref:`docking modes <tools-toolbox-docking-mode>`
     - :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`D`
     - :kbd:`Cmd` + :kbd:`Shift` + :kbd:`D`
     - :kbd:`Ctrl` + :kbd:`Shift` + :kbd:`D`
