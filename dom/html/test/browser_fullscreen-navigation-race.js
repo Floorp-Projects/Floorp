@@ -35,19 +35,13 @@ add_task(async function navigation() {
         let button = document.getElementById("button");
         button.addEventListener("click", function() {
           button.requestFullscreen();
+          location.href = "about:blank";
         });
       </script>`,
     },
     async function(browser) {
-      let promiseFsState = waitForFullscreenState(document, true);
-      // Trigger click event
+      let promiseFsState = waitForFullscreenState(document, false, true);
       BrowserTestUtils.synthesizeMouseAtCenter("#button", {}, browser);
-      await promiseFsState;
-
-      promiseFsState = waitForFullscreenState(document, false);
-      await SpecialPowers.spawn(browser, [], async function() {
-        content.location.href = "about:blank";
-      });
       await promiseFsState;
 
       // Ensure the browser exits fullscreen state.
@@ -60,7 +54,7 @@ add_task(async function navigation() {
   );
 });
 
-async function startTests(testFun, name) {
+async function startTests(setupFun, name) {
   TEST_URLS.forEach(url => {
     add_task(async () => {
       info(`Test ${name}, url: ${url}`);
@@ -70,7 +64,9 @@ async function startTests(testFun, name) {
           url,
         },
         async function(browser) {
-          let promiseFsState = waitForFullscreenState(document, true);
+          await setupFun(browser);
+
+          let promiseFsState = waitForFullscreenState(document, false, true);
           // Trigger click event in inner most iframe
           SpecialPowers.spawn(
             browser.browsingContext.children[0].children[0],
@@ -81,11 +77,6 @@ async function startTests(testFun, name) {
               }, 0);
             }
           );
-          await promiseFsState;
-
-          // This should exit fullscreen
-          promiseFsState = waitForFullscreenState(document, false);
-          await testFun(browser);
           await promiseFsState;
 
           // Ensure the browser exits fullscreen state.
@@ -105,7 +96,13 @@ async function startTests(testFun, name) {
 
 function NavigateRemoteDocument(aBrowsingContext, aURL) {
   return SpecialPowers.spawn(aBrowsingContext, [aURL], async function(url) {
-    content.location.href = url;
+    content.document.addEventListener(
+      "fullscreenchange",
+      function() {
+        content.location.href = url;
+      },
+      { once: true }
+    );
   });
 }
 
