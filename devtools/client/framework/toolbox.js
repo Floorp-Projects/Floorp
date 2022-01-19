@@ -3355,11 +3355,6 @@ Toolbox.prototype = {
 
     try {
       const { frames } = await this.target.listFrames();
-
-      // @backward-compat { version 96 } frame.isTopLevel was added in 96.
-      for (const frame of frames) {
-        frame.isTopLevel = !frame.parentID;
-      }
       this._updateFrames({ frames });
     } catch (e) {
       console.error("Error while listing frames", e);
