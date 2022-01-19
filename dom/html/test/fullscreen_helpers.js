@@ -18,6 +18,32 @@ const TEST_URLS = [
   `http://mochi.test:8888/browser/dom/html/test/file_fullscreen-iframe-top.html`,
 ];
 
+function waitRemoteFullscreenExitEvents(aBrowsingContexts) {
+  let promises = [];
+  aBrowsingContexts.forEach(([aBrowsingContext, aName]) => {
+    promises.push(
+      SpecialPowers.spawn(aBrowsingContext, [aName], async name => {
+        return new Promise(resolve => {
+          let document = content.document;
+          document.addEventListener(
+            "fullscreenchange",
+            function changeHandler() {
+              if (document.fullscreenElement) {
+                return;
+              }
+
+              ok(true, `check remote fullscreen event (${name})`);
+              document.removeEventListener("fullscreenchange", changeHandler);
+              resolve();
+            }
+          );
+        });
+      })
+    );
+  });
+  return Promise.all(promises);
+}
+
 function waitFullscreenEvent(aDocument, aIsInFullscreen, aWaitUntil = false) {
   return new Promise(resolve => {
     function errorHandler() {
