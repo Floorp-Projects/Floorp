@@ -465,6 +465,7 @@ add_task(async function testDetailOperations() {
 add_task(async function testFullDetails() {
   Services.telemetry.clearEvents();
   let id = "addon1@mochi.test";
+  let headingId = "addon1_mochi_test-heading";
   let win = await loadInitialView("extension");
   let doc = win.document;
 
@@ -484,6 +485,15 @@ add_task(async function testFullDetails() {
   // This is now the detail card.
   card = getAddonCard(win, id);
   ok(card.hasAttribute("expanded"), "The detail card is expanded");
+
+  let cardHeading = card.querySelector("h1");
+  is(cardHeading.textContent, "Test add-on 1", "Card heading is set");
+  is(cardHeading.id, headingId, "Heading has correct id");
+  is(
+    card.querySelector(".card").getAttribute("aria-labelledby"),
+    headingId,
+    "Card is labelled by the heading"
+  );
 
   // Make sure the preview is hidden.
   preview = card.querySelector(".card-heading-image");
