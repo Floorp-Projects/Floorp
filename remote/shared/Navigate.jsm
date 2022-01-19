@@ -12,6 +12,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Log: "chrome://remote/content/shared/Log.jsm",
+  truncate: "chrome://remote/content/shared/Format.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
@@ -44,7 +45,7 @@ function waitForInitialNavigationCompleted(browsingContext) {
   // no longer loading, assume the navigation is done and return.
   if (!isInitial && !listener.isLoadingDocument) {
     logger.trace(
-      `[${browsingContext.id}] Document already finished loading: ${browsingContext.currentURI?.spec}`
+      truncate`[${browsingContext.id}] Document already finished loading: ${browsingContext.currentURI?.spec}`
     );
 
     listener.stop();
@@ -97,13 +98,13 @@ class ProgressListener {
     if (isStart) {
       this.#unloadTimer?.cancel();
       logger.trace(
-        `[${this.browsingContext.id}] Web progress state=start: ${this.currentURI?.spec}`
+        truncate`[${this.browsingContext.id}] Web progress state=start: ${this.currentURI?.spec}`
       );
     }
 
     if (isStop) {
       logger.trace(
-        `[${this.browsingContext.id}] Web progress state=stop: ${this.currentURI?.spec}`
+        truncate`this.browsingContext.id}] Web progress state=stop: ${this.currentURI?.spec}`
       );
 
       this.#resolve();
@@ -140,7 +141,9 @@ class ProgressListener {
       );
       this.#unloadTimer.initWithCallback(
         () => {
-          logger.trace("No initial navigation detected");
+          logger.trace(
+            truncate`[${this.browsingContext.id}] No navigation detected: ${this.currentURI?.spec}`
+          );
           this.#resolve();
           this.stop();
         },
