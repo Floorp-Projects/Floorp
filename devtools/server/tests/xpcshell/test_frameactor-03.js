@@ -24,8 +24,7 @@ add_task(
       Assert.equal(frames.length, 3, "Thread front has 3 frames");
     }
 
-    threadFront.resume();
-    await waitForPause(threadFront);
+    await resumeAndWaitForPause(threadFront);
     await checkFramesLength(threadFront, 2);
     {
       const { frames } = await threadFront.getFrames(0, null);
@@ -36,7 +35,7 @@ add_task(
 
       Assert.equal(frames.length, 2, "Thread front has 2 frames");
     }
-    threadFront.resume();
+    await threadFront.resume();
   })
 );
 
