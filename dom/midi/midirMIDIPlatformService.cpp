@@ -120,8 +120,7 @@ void midirMIDIPlatformService::Open(MIDIPortParent* aPort) {
     LOG("MIDI port open: %s at t=%lf", NS_ConvertUTF16toUTF8(id).get(),
         (openTimeStamp - TimeStamp::ProcessCreation()).ToSeconds());
     nsCOMPtr<nsIRunnable> r(new SetStatusRunnable(
-        aPort->MIDIPortInterface::Id(), aPort->DeviceState(),
-        MIDIPortConnectionState::Open));
+        aPort, aPort->DeviceState(), MIDIPortConnectionState::Open));
     NS_DispatchToCurrentThread(r);
   } else {
     LOG("MIDI port open failed: %s", NS_ConvertUTF16toUTF8(id).get());
@@ -148,8 +147,7 @@ void midirMIDIPlatformService::ScheduleClose(MIDIPortParent* aPort) {
   if (aPort->ConnectionState() == MIDIPortConnectionState::Open) {
     midir_impl_close_port(mImplementation, &id);
     nsCOMPtr<nsIRunnable> r(new SetStatusRunnable(
-        aPort->MIDIPortInterface::Id(), aPort->DeviceState(),
-        MIDIPortConnectionState::Closed));
+        aPort, aPort->DeviceState(), MIDIPortConnectionState::Closed));
     NS_DispatchToCurrentThread(r);
   }
 }
