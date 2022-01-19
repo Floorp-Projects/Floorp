@@ -678,6 +678,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
       break;
     case ColorID::Field:
     case ColorID::Buttonface:  // --in-content-button-background
+    case ColorID::Threedface:
     case ColorID::MozCombobox:
     case ColorID::MozCellhighlighttext:
     case ColorID::Selecteditemtext:  // --in-content-primary-button-text-color /
