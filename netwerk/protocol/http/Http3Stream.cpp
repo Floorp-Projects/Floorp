@@ -273,6 +273,7 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
       break;
     default:
       MOZ_ASSERT(false, "We are done sending this request!");
+      rv = NS_ERROR_UNEXPECTED;
       break;
   }
 
