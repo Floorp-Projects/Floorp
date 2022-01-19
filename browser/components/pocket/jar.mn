@@ -22,3 +22,4 @@ browser.jar:
   content/pocket/panels/js/home/entry.js (content/panels/js/home/entry.js)
   content/pocket/panels/js/saved/entry.js (content/panels/js/saved/entry.js)
   content/pocket/panels/js/signup/entry.js (content/panels/js/signup/entry.js)
+  content/pocket/panels/js/style-guide/entry.js (content/panels/js/style-guide/entry.js)
