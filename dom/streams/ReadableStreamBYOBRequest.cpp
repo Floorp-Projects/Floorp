@@ -21,6 +21,15 @@
 namespace mozilla {
 namespace dom {
 
+ReadableStreamBYOBRequest::ReadableStreamBYOBRequest(nsIGlobalObject* aGlobal)
+    : mGlobal(aGlobal) {
+  mozilla::HoldJSObjects(this);
+}
+
+ReadableStreamBYOBRequest::~ReadableStreamBYOBRequest() {
+  mozilla::DropJSObjects(this);
+}
+
 NS_IMPL_CYCLE_COLLECTION(ReadableStreamBYOBRequest)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ReadableStreamBYOBRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ReadableStreamBYOBRequest)
@@ -111,6 +120,11 @@ void ReadableStreamBYOBRequest::RespondWithNewView(JSContext* aCx,
   RefPtr<ReadableByteStreamController> controller(mController);
   ReadableByteStreamControllerRespondWithNewView(aCx, controller, rootedViewObj,
                                                  aRv);
+}
+
+void ReadableStreamBYOBRequest::SetController(
+    ReadableByteStreamController* aController) {
+  mController = aController;
 }
 
 }  // namespace dom
