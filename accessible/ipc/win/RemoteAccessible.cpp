@@ -223,12 +223,12 @@ uint64_t RemoteAccessible::State() {
   return state;
 }
 
-nsIntRect RemoteAccessible::Bounds() const {
+LayoutDeviceIntRect RemoteAccessible::Bounds() const {
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return RemoteAccessibleBase<RemoteAccessible>::Bounds();
   }
 
-  nsIntRect rect;
+  LayoutDeviceIntRect rect;
 
   RefPtr<IAccessible> acc;
   if (!GetCOMInterface((void**)getter_AddRefs(acc))) {

@@ -156,6 +156,15 @@ void RenderThread::ShutDownTask(layers::SynchronousTask* aTask) {
   MOZ_ASSERT(IsInRenderThread());
   LOG("RenderThread::ShutDownTask()");
 
+  {
+    // Clear RenderTextureHosts
+    MutexAutoLock lock(mRenderTextureMapLock);
+    mRenderTexturesDeferred.clear();
+    mRenderTextures.clear();
+    mSyncObjectNeededRenderTextures.clear();
+    mRenderTextureOps.clear();
+  }
+
   // Let go of our handle to the (internally ref-counted) thread pool.
   mThreadPool.Release();
   mThreadPoolLP.Release();

@@ -23,6 +23,7 @@
 #  include "mozilla/SandboxInfo.h"
 #endif
 #include "VideoUtils.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/Services.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -93,6 +94,10 @@ GeckoMediaPluginServiceParent::~GeckoMediaPluginServiceParent() {
 
 nsresult GeckoMediaPluginServiceParent::Init() {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (AppShutdown::GetCurrentShutdownPhase() != ShutdownPhase::NotInShutdown) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIObserverService> obsService =
       mozilla::services::GetObserverService();
@@ -602,6 +607,88 @@ void GeckoMediaPluginServiceParent::UpdateContentProcessGMPCapabilities() {
   if (obsService) {
     obsService->NotifyObservers(nullptr, "gmp-changed", nullptr);
   }
+}
+
+void GeckoMediaPluginServiceParent::SendFlushFOGData(
+    nsTArray<RefPtr<FlushFOGDataPromise>>& promises) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mMutex);
+
+  for (const RefPtr<GMPParent>& gmp : mPlugins) {
+    if (gmp->State() != GMPState::GMPStateLoaded) {
+      // Plugins that are not in the Loaded state have no process attached to
+      // them, and any IPC we would attempt to send them would be ignored (or
+      // result in a warning on debug builds).
+      continue;
+    }
+    RefPtr<FlushFOGDataPromise::Private> promise =
+        new FlushFOGDataPromise::Private(__func__);
+    // Direct dispatch will resolve the promise on the same thread, which is
+    // faster; FOGIPC will move execution back to the main thread.
+    promise->UseDirectTaskDispatch(__func__);
+    promises.EmplaceBack(promise);
+
+    mGMPThread->Dispatch(
+        NewRunnableMethod<ipc::ResolveCallback<ipc::ByteBuf>&&,
+                          ipc::RejectCallback&&>(
+            "GMPParent::SendFlushFOGData", gmp,
+            static_cast<void (GMPParent::*)(
+                mozilla::ipc::ResolveCallback<ipc::ByteBuf> && aResolve,
+                mozilla::ipc::RejectCallback && aReject)>(
+                &GMPParent::SendFlushFOGData),
+
+            [promise](ipc::ByteBuf&& aValue) {
+              promise->Resolve(std::move(aValue), __func__);
+            },
+            [promise](ipc::ResponseRejectReason&& aReason) {
+              promise->Reject(std::move(aReason), __func__);
+            }),
+        NS_DISPATCH_NORMAL);
+  }
+}
+
+RefPtr<PGMPParent::TestTriggerMetricsPromise>
+GeckoMediaPluginServiceParent::TestTriggerMetrics() {
+  MOZ_ASSERT(NS_IsMainThread());
+  {
+    MutexAutoLock lock(mMutex);
+    for (const RefPtr<GMPParent>& gmp : mPlugins) {
+      if (gmp->State() != GMPState::GMPStateLoaded) {
+        // Plugins that are not in the Loaded state have no process attached to
+        // them, and any IPC we would attempt to send them would be ignored (or
+        // result in a warning on debug builds).
+        continue;
+      }
+
+      RefPtr<PGMPParent::TestTriggerMetricsPromise::Private> promise =
+          new PGMPParent::TestTriggerMetricsPromise::Private(__func__);
+      // Direct dispatch will resolve the promise on the same thread, which is
+      // faster; FOGIPC will move execution back to the main thread.
+      promise->UseDirectTaskDispatch(__func__);
+
+      mGMPThread->Dispatch(
+          NewRunnableMethod<ipc::ResolveCallback<bool>&&,
+                            ipc::RejectCallback&&>(
+              "GMPParent::SendTestTriggerMetrics", gmp,
+              static_cast<void (GMPParent::*)(
+                  mozilla::ipc::ResolveCallback<bool> && aResolve,
+                  mozilla::ipc::RejectCallback && aReject)>(
+                  &PGMPParent::SendTestTriggerMetrics),
+
+              [promise](bool aValue) {
+                promise->Resolve(std::move(aValue), __func__);
+              },
+              [promise](ipc::ResponseRejectReason&& aReason) {
+                promise->Reject(std::move(aReason), __func__);
+              }),
+          NS_DISPATCH_NORMAL);
+
+      return promise;
+    }
+  }
+
+  return PGMPParent::TestTriggerMetricsPromise::CreateAndReject(
+      ipc::ResponseRejectReason::SendError, __func__);
 }
 
 RefPtr<GenericPromise> GeckoMediaPluginServiceParent::AsyncAddPluginDirectory(

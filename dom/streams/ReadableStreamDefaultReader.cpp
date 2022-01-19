@@ -138,7 +138,15 @@ static bool CreateValueDonePair(JSContext* aCx, bool forAuthorCode,
   if (!obj) {
     return false;
   }
-  if (!JS_DefineProperty(aCx, obj, "value", aValue, JSPROP_ENUMERATE)) {
+
+  // Value may need to be wrapped if stream and reader are in different
+  // compartments.
+  JS::RootedValue value(aCx, aValue);
+  if (!JS_WrapValue(aCx, &value)) {
+    return false;
+  }
+
+  if (!JS_DefineProperty(aCx, obj, "value", value, JSPROP_ENUMERATE)) {
     return false;
   }
   JS::RootedValue done(aCx, JS::BooleanValue(aDone));

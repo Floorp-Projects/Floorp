@@ -136,6 +136,7 @@ Rust is then responsible for turning the pending data into
 FOG supports messaging between the following types of child process and the parent process:
 * content children (via `PContent`
   (for now. See [bug 1641989](https://bugzilla.mozilla.org/show_bug.cgi?id=1641989))
+* gmp children (via `PGMP`)
 * gpu children (via `PGPU`)
 * rdd children (via `PRDD`)
 * socket children (via `PSocketProcess`)

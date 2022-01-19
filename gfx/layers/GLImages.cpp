@@ -85,6 +85,14 @@ SurfaceTextureImage::SurfaceTextureImage(AndroidSurfaceTextureHandle aHandle,
       mHasAlpha(aHasAlpha) {
   MOZ_ASSERT(mHandle);
 }
+
+Maybe<SurfaceDescriptor> SurfaceTextureImage::GetDesc() {
+  SurfaceDescriptor sd = SurfaceTextureDescriptor(
+      mHandle, mSize,
+      mHasAlpha ? gfx::SurfaceFormat::R8G8B8A8 : gfx::SurfaceFormat::R8G8B8X8,
+      false /* NOT continuous */, false /* do not ignore transform */);
+  return Some(sd);
+}
 #endif
 
 }  // namespace layers
