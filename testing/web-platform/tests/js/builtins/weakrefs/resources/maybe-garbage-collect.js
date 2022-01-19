@@ -11,8 +11,8 @@
  * @return {undefined}
  */
 async function maybeGarbageCollectAsync() {
-  if (typeof testUtils !== 'undefined' && testUtils.gc) {
-    await testUtils.gc();
+  if (typeof TestUtils !== 'undefined' && TestUtils.gc) {
+    await TestUtils.gc();
   } else if (self.gc) {
     // Use --expose_gc for V8 (and Node.js)
     // to pass this flag at chrome launch use: --js-flags="--expose-gc"
