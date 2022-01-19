@@ -3710,6 +3710,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
 
     if (hasPerspective) {
+      transformItem->MarkWithAssociatedPerspective();
+
       if (clipCapturedBy == ContainerItemType::Perspective) {
         clipState.Restore();
       }

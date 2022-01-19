@@ -2076,6 +2076,7 @@ impl YamlFrameReader {
             ReferenceFrameKind::Transform {
                 is_2d_scale_translation: false,
                 should_snap: false,
+                paired_with_perspective: yaml["paired-with-perspective"].as_bool().unwrap_or(false),
             }
         };
 

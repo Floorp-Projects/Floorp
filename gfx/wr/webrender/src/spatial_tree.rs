@@ -249,6 +249,7 @@ impl SceneSpatialTree {
             ReferenceFrameKind::Transform {
                 should_snap: true,
                 is_2d_scale_translation: true,
+                paired_with_perspective: false,
             },
             LayoutVector2D::zero(),
             PipelineId::dummy(),
@@ -1219,26 +1220,30 @@ impl SpatialTree {
         let node = self.get_spatial_node(node_index);
         let mut face = VisibleFace::Front;
         if let Some(mut parent_index) = node.parent {
-            //HACK: check if the parent is perspective. In CSS, a stacking context may
+            // Check if the parent is perspective. In CSS, a stacking context may
             // have both perspective and a regular transformation. Gecko translates the
             // perspective into a different `nsDisplayPerspective` and `nsDisplayTransform` items.
             // On WebRender side, we end up with 2 different reference frames:
             // one has kind of "transform", and it's parented to another of "perspective":
             // https://searchfox.org/mozilla-central/rev/72c7cef167829b6f1e24cae216fa261934c455fc/layout/generic/nsIFrame.cpp#3716
-            //
-            // A proper fix would need to pipe this information through, from CSS down to WR,
-            // so that WR knows exactly which node to check here for the back face.
-            let parent = self.get_spatial_node(parent_index);
-            if let SpatialNode {
-                parent: Some(index),
-                node_type: SpatialNodeType::ReferenceFrame(ReferenceFrameInfo {
-                    kind: ReferenceFrameKind::Perspective { .. },
-                    ..
-                }),
+            if let SpatialNodeType::ReferenceFrame(ReferenceFrameInfo { kind: ReferenceFrameKind::Transform {
+                paired_with_perspective: true,
                 ..
-            } = *parent  {
-                parent_index = index;
+            }, .. }) = node.node_type {
+                let parent = self.get_spatial_node(parent_index);
+                match parent.node_type {
+                    SpatialNodeType::ReferenceFrame(ReferenceFrameInfo {
+                        kind: ReferenceFrameKind::Perspective { .. },
+                        ..
+                    }) => {
+                        parent_index = parent.parent.unwrap();
+                    }
+                    _ => {
+                        log::error!("Unexpected parent {:?} is not perspective", parent_index);
+                    }
+                }
             }
+
             self.get_relative_transform_with_face(node_index, parent_index, Some(&mut face));
         }
         face
@@ -1359,6 +1364,7 @@ fn add_reference_frame(
         ReferenceFrameKind::Transform {
             is_2d_scale_translation: false,
             should_snap: false,
+            paired_with_perspective: false,
         },
         origin_in_parent_reference_frame,
         PipelineId::dummy(),
@@ -1653,6 +1659,7 @@ fn test_find_scroll_root_simple() {
         ReferenceFrameKind::Transform {
             is_2d_scale_translation: true,
             should_snap: true,
+            paired_with_perspective: false,
         },
         LayoutVector2D::new(0.0, 0.0),
         PipelineId::dummy(),
@@ -1686,6 +1693,7 @@ fn test_find_scroll_root_sub_scroll_frame() {
         ReferenceFrameKind::Transform {
             is_2d_scale_translation: true,
             should_snap: true,
+            paired_with_perspective: false,
         },
         LayoutVector2D::new(0.0, 0.0),
         PipelineId::dummy(),
@@ -1730,6 +1738,7 @@ fn test_find_scroll_root_not_scrollable() {
         ReferenceFrameKind::Transform {
             is_2d_scale_translation: true,
             should_snap: true,
+            paired_with_perspective: false,
         },
         LayoutVector2D::new(0.0, 0.0),
         PipelineId::dummy(),
@@ -1774,6 +1783,7 @@ fn test_find_scroll_root_too_small() {
         ReferenceFrameKind::Transform {
             is_2d_scale_translation: true,
             should_snap: true,
+            paired_with_perspective: false,
         },
         LayoutVector2D::new(0.0, 0.0),
         PipelineId::dummy(),
@@ -1819,6 +1829,7 @@ fn test_find_scroll_root_perspective() {
         ReferenceFrameKind::Transform {
             is_2d_scale_translation: true,
             should_snap: true,
+            paired_with_perspective: false,
         },
         LayoutVector2D::new(0.0, 0.0),
         PipelineId::dummy(),
@@ -1876,6 +1887,7 @@ fn test_find_scroll_root_2d_scale() {
         ReferenceFrameKind::Transform {
             is_2d_scale_translation: true,
             should_snap: true,
+            paired_with_perspective: false,
         },
         LayoutVector2D::new(0.0, 0.0),
         PipelineId::dummy(),
@@ -1900,6 +1912,7 @@ fn test_find_scroll_root_2d_scale() {
         ReferenceFrameKind::Transform {
             is_2d_scale_translation: true,
             should_snap: false,
+            paired_with_perspective: false,
         },
         LayoutVector2D::new(0.0, 0.0),
         PipelineId::dummy(),
