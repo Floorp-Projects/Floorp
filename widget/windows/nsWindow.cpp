@@ -2362,7 +2362,7 @@ void nsWindow::SetSizeModeInternal(nsSizeMode aMode, nsIScreen* aFullscreenTarge
     // also cache dimensions for restoration, so it should only
     // be called once per fullscreen request.
     nsBaseWidget::InfallibleMakeFullScreen(requestedFullscreen, aFullscreenTarget);
-  
+
     if (mIsVisible && aMode != nsSizeMode_Minimized) {
       DispatchFocusToTopLevelWindow(true);
     }
