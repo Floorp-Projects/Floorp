@@ -8193,7 +8193,7 @@
   type: bool
   mirror: always
 #if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
-  value: false
+  value: true
 #elif defined(XP_WIN) && !defined(_ARM64_)
   value: true
 #elif defined(XP_MACOSX)
