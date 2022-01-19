@@ -470,22 +470,10 @@ static nsresult OverrideAllowedForHost(
 // in order to support SPDY's cross-origin connection pooling.
 static SECStatus BlockServerCertChangeForSpdy(
     nsNSSSocketInfo* infoObject, const UniqueCERTCertificate& serverCert) {
-  // Get the existing cert. If there isn't one, then there is
-  // no cert change to worry about.
-  nsCOMPtr<nsIX509Cert> cert;
-
   if (!infoObject->IsHandshakeCompleted()) {
     // first handshake on this connection, not a
     // renegotiation.
     return SECSuccess;
-  }
-
-  infoObject->GetServerCert(getter_AddRefs(cert));
-  if (!cert) {
-    MOZ_ASSERT_UNREACHABLE(
-        "TransportSecurityInfo must have a cert implementing nsIX509Cert");
-    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
-    return SECFailure;
   }
 
   // Filter out sockets that did not neogtiate SPDY via NPN
@@ -501,20 +489,30 @@ static SECStatus BlockServerCertChangeForSpdy(
   if (NS_FAILED(rv)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("BlockServerCertChangeForSpdy failed GetNegotiatedNPN() call."
-             " Assuming spdy.\n"));
+             " Assuming spdy."));
   }
 
   // Check to see if the cert has actually changed
-  UniqueCERTCertificate c(cert->GetCert());
-  MOZ_ASSERT(c, "Somehow couldn't get underlying cert from nsIX509Cert");
-  bool sameCert = CERT_CompareCerts(c.get(), serverCert.get());
-  if (sameCert) {
+  nsCOMPtr<nsIX509Cert> cert;
+  infoObject->GetServerCert(getter_AddRefs(cert));
+  if (!cert) {
+    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+    return SECFailure;
+  }
+  nsTArray<uint8_t> certDER;
+  if (NS_FAILED(cert->GetRawDER(certDER))) {
+    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+    return SECFailure;
+  }
+  if (certDER.Length() == serverCert->derCert.len &&
+      memcmp(certDER.Elements(), serverCert->derCert.data, certDER.Length()) ==
+          0) {
     return SECSuccess;
   }
 
   // Report an error - changed cert is confirmed
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-          ("SPDY Refused to allow new cert during renegotiation\n"));
+          ("SPDY refused to allow new cert during renegotiation"));
   PR_SetError(SSL_ERROR_RENEGOTIATION_NOT_ALLOWED, 0);
   return SECFailure;
 }
