@@ -106,3 +106,35 @@ function waitForFullscreenState(
     waitForFullScreenObserver(aDocument, aIsInFullscreen, aWaitUntil),
   ]);
 }
+
+// Wait for fullscreenchange event for fullscreen exit. And wait for
+// fullscreen-painted observed conditionally.
+async function waitForFullscreenExit(aDocument) {
+  info(`waitForFullscreenExit`);
+  let promiseFsObserver = null;
+  let observer = function() {
+    if (aDocument.documentElement.hasAttribute("inDOMFullscreen")) {
+      info(`waitForFullscreenExit, fullscreen-painted, inDOMFullscreen`);
+      Services.obs.removeObserver(observer, "fullscreen-painted");
+      promiseFsObserver = waitForFullScreenObserver(aDocument, false);
+    }
+  };
+  Services.obs.addObserver(observer, "fullscreen-painted");
+
+  await waitFullscreenEvent(aDocument, false, true);
+  // If there is a fullscreen-painted observer notified for inDOMFullscreen set,
+  // we expect to have a subsequent fullscreen-painted observer notified with
+  // inDOMFullscreen unset.
+  if (promiseFsObserver) {
+    info(`waitForFullscreenExit, promiseFsObserver`);
+    return promiseFsObserver;
+  }
+
+  Services.obs.removeObserver(observer, "fullscreen-painted");
+  // If inDOMFullscreen is set we expect to have a subsequent fullscreen-painted
+  // observer notified with inDOMFullscreen unset.
+  if (aDocument.documentElement.hasAttribute("inDOMFullscreen")) {
+    info(`waitForFullscreenExit, inDOMFullscreen`);
+    return waitForFullScreenObserver(aDocument, false, true);
+  }
+}
