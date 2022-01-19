@@ -4,40 +4,39 @@
 "use strict";
 
 let gDownloadDir;
-const TestFiles = {};
 let downloads = [];
 
-async function createDownloadFile() {
+async function createDownloadFiles() {
   if (!gDownloadDir) {
     gDownloadDir = await setDownloadDir();
   }
   info("Created download directory: " + gDownloadDir);
-  TestFiles.txt = await createDownloadedFile(
-    PathUtils.join(gDownloadDir, "downloaded.txt"),
-    "Test file"
-  );
-  info("Created downloaded text file at:" + TestFiles.txt.path);
   info("Setting path for download file");
-  let target = FileUtils.getFile("TmpD", ["downloaded.txt"]);
-  target.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   downloads.push({
     state: DownloadsCommon.DOWNLOAD_FINISHED,
     contentType: "text/plain",
-    target,
+    target: await createDownloadedFile(
+      PathUtils.join(gDownloadDir, "downloaded.txt"),
+      "Test file"
+    ),
   });
-}
-
-async function prepareDownloadFiles(downloadList) {
-  // prepare downloads
-  await task_addDownloads(downloads);
-  let [download] = await downloadList.getAll();
-  info("Download succeeded? " + download.succeeded);
-  info("Download target exists? " + download.target.exists);
+  downloads.push({
+    state: DownloadsCommon.DOWNLOAD_FINISHED,
+    contentType: "text/javascript",
+    target: await createDownloadedFile(
+      PathUtils.join(gDownloadDir, "downloaded.js"),
+      "Test file"
+    ),
+  });
 }
 
 add_task(async function test_download_deleteFile() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.download.improvements_to_download_panel", true]],
+    set: [
+      ["browser.download.improvements_to_download_panel", true],
+      ["browser.download.alwaysOpenPanel", false],
+      ["browser.download.clearHistoryOnDelete", 2],
+    ],
   });
 
   // remove download files, empty out collections
@@ -45,8 +44,8 @@ add_task(async function test_download_deleteFile() {
   let downloadCount = (await downloadList.getAll()).length;
   is(downloadCount, 0, "At the start of the test, there should be 0 downloads");
   await task_resetState();
-  await createDownloadFile();
-  await prepareDownloadFiles(downloadList);
+  await createDownloadFiles();
+  await task_addDownloads(downloads);
   await task_openPanel();
   await TestUtils.waitForCondition(() => {
     let downloadsListBox = document.getElementById("downloadsListBox");
@@ -58,34 +57,59 @@ add_task(async function test_download_deleteFile() {
   let itemTarget = document.querySelector(
     "#downloadsListBox richlistitem .downloadMainArea"
   );
-
   let contextMenu = await openContextMenu(itemTarget);
   let deleteFileItem = contextMenu.querySelector(
     '[command="downloadsCmd_deleteFile"]'
   );
-
   ok(
     !BrowserTestUtils.is_hidden(deleteFileItem),
     "deleteFileItem should be visible"
   );
 
-  let target = FileUtils.getFile("TmpD", ["downloaded.txt"]);
-  ok(target.exists(), "downloaded.txt should exist");
-  info(`file path: ${target.path}`);
+  let target1 = downloads[1].target;
+  ok(target1.exists(), "downloaded.txt should exist");
+  info(`file path: ${target1.path}`);
   let hiddenPromise = BrowserTestUtils.waitForEvent(
     DownloadsPanel.panel,
     "popuphidden"
   );
 
-  deleteFileItem.click();
+  contextMenu.activateItem(deleteFileItem);
 
-  await TestUtils.waitForCondition(() => !target.exists());
+  await TestUtils.waitForCondition(() => !target1.exists());
 
   await TestUtils.waitForCondition(() => {
     let downloadsListBox = document.getElementById("downloadsListBox");
     downloadsListBox.removeAttribute("disabled");
-    return downloadsListBox.childElementCount == 0;
+    return downloadsListBox.childElementCount == 1;
   });
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.download.clearHistoryOnDelete", 0]],
+  });
+  info("trigger the context menu again");
+  let itemTarget2 = document.querySelector(
+    "#downloadsListBox richlistitem .downloadMainArea"
+  );
+  let contextMenu2 = await openContextMenu(itemTarget2);
+  ok(
+    !BrowserTestUtils.is_hidden(deleteFileItem),
+    "deleteFileItem should be visible"
+  );
+  let target2 = downloads[0].target;
+  ok(target2.exists(), "downloaded.js should exist");
+  info(`file path: ${target2.path}`);
+  contextMenu2.activateItem(deleteFileItem);
+  await TestUtils.waitForCondition(() => !target2.exists());
+
+  let downloadsListBox = document.getElementById("downloadsListBox");
+  downloadsListBox.removeAttribute("disabled");
+  Assert.greater(
+    downloadsListBox.childElementCount,
+    0,
+    "There should be a download in the list"
+  );
+
   DownloadsPanel.hidePanel();
   await hiddenPromise;
 });
