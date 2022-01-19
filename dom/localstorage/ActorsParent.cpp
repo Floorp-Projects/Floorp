@@ -2958,6 +2958,21 @@ void SnapshotGradualPrefillPrefChangedCallback(const char* aPrefName,
   gSnapshotGradualPrefill = snapshotGradualPrefill;
 }
 
+int64_t GetSnapshotPeakUsagePreincrement(bool aInitial) {
+  return aInitial ? StaticPrefs::
+                        dom_storage_snapshot_peak_usage_initial_preincrement()
+                  : StaticPrefs::
+                        dom_storage_snapshot_peak_usage_gradual_preincrement();
+}
+
+int64_t GetSnapshotPeakUsageReducedPreincrement(bool aInitial) {
+  return aInitial
+             ? StaticPrefs::
+                   dom_storage_snapshot_peak_usage_reduced_initial_preincrement()
+             : StaticPrefs::
+                   dom_storage_snapshot_peak_usage_reduced_gradual_preincrement();
+}
+
 void ClientValidationPrefChangedCallback(const char* aPrefName,
                                          void* aClosure) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -4961,15 +4976,16 @@ int64_t Datastore::AttemptToUpdateUsage(int64_t aMinSize, bool aInitial) {
   MOZ_ASSERT_IF(aInitial, aMinSize >= 0);
   MOZ_ASSERT_IF(!aInitial, aMinSize > 0);
 
-  const int64_t size = aMinSize + (aInitial ? 131072 : 4096);
+  const int64_t size = aMinSize + GetSnapshotPeakUsagePreincrement(aInitial);
 
-  if (UpdateUsage(size)) {
+  if (size && UpdateUsage(size)) {
     return size;
   }
 
-  const int64_t reducedSize = aMinSize + (aInitial ? 4096 : 1024);
+  const int64_t reducedSize =
+      aMinSize + GetSnapshotPeakUsageReducedPreincrement(aInitial);
 
-  if (UpdateUsage(reducedSize)) {
+  if (reducedSize && UpdateUsage(reducedSize)) {
     return reducedSize;
   }
 

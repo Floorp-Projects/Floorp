@@ -52,11 +52,12 @@ struct LSSnapshotInitInfo
    * The amount of storage allowed to be used by the Snapshot without requesting
    * more storage space via IncreasePeakUsage.  This is the `initialUsage` plus
    * 0 or more bytes of space.  If space was available, the increase will be the
-   * `minSize` from the PBackgroundLSSnapshot constructor plus peak usage
-   * initial pre-increment.  If the LocalStorage usage was already close to the
-   * limit, then the fallback is either the `minSize` plus peak usage reduced
-   * initial pre-increment, or `minSize`, or 0 depending on remaining available
-   * space.
+   * `minSize` from the PBackgroundLSSnapshot constructor plus the configured
+   * pre-increment (via "dom.storage.snapshot_peak_usage.initial_preincrement").
+   * If the LocalStorage total usage was already close to the limit, then the
+   * fallback is either the `minSize` plus the configured reduced pre-increment
+   * (via "dom.storage.snapshot_peak_usage.reduced_initial_preincrement"), or
+   * `minSize`, or 0 depending on remaining available space.
    */
   int64_t peakUsage;
   // See `LSSnapshot::LoadState` in `LSSnapshot.h`
