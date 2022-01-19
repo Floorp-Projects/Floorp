@@ -1,4 +1,4 @@
-// |jit-test| --no-ion; --no-baseline; --no-blinterp; skip-if: !('oomAfterAllocations' in this)
+// |jit-test| --no-ion; --no-baseline; --no-blinterp; skip-if: !('oomAfterAllocations' in this && this.hasOwnProperty("ReadableStream"))
 // Don't crash on OOM in ReadableStreamDefaultReader.prototype.read().
 
 for (let n = 1; n < 1000; n++) {
@@ -12,6 +12,6 @@ for (let n = 1; n < 1000; n++) {
   try {
     reader.read();
     n = 1000;
-  } catch {}
+  } catch { }
   resetOOMFailure();
 }

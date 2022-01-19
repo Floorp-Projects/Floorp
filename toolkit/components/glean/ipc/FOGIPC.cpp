@@ -21,6 +21,8 @@
 #include "mozilla/RDDParent.h"
 #include "mozilla/RDDProcessManager.h"
 #include "mozilla/Unused.h"
+#include "GMPPlatform.h"
+#include "GMPServiceParent.h"
 #include "nsIXULRuntime.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
@@ -120,6 +122,16 @@ void FlushAllChildData(
     promises.EmplaceBack(socketParent->SendFlushFOGData());
   }
 
+  {
+    RefPtr<gmp::GeckoMediaPluginServiceParent> gmps(
+        gmp::GeckoMediaPluginServiceParent::GetSingleton());
+    // There can be multiple Gecko Media Plugin processes, but iterating
+    // through them requires locking a mutex and the IPCs need to be sent
+    // from a different thread, so it's better to let the
+    // GeckoMediaPluginServiceParent code do it for us.
+    gmps->SendFlushFOGData(promises);
+  }
+
   if (promises.Length() == 0) {
     // No child processes at the moment. Resolve synchronously.
     fog_ipc::flush_durations.Cancel(std::move(timerId));
@@ -166,6 +178,9 @@ void SendFOGData(ipc::ByteBuf&& buf) {
     case GeckoProcessType_Content:
       mozilla::dom::ContentChild::GetSingleton()->SendFOGData(std::move(buf));
       break;
+    case GeckoProcessType_GMPlugin: {
+      gmp::SendFOGData(std::move(buf));
+    } break;
     case GeckoProcessType_GPU:
       Unused << mozilla::gfx::GPUParent::GetSingleton()->SendFOGData(
           std::move(buf));
@@ -206,6 +221,14 @@ RefPtr<GenericPromise> FlushAndUseFOGData() {
 void TestTriggerMetrics(uint32_t aProcessType,
                         const RefPtr<dom::Promise>& promise) {
   switch (aProcessType) {
+    case nsIXULRuntime::PROCESS_TYPE_GMPLUGIN: {
+      RefPtr<gmp::GeckoMediaPluginServiceParent> gmps(
+          gmp::GeckoMediaPluginServiceParent::GetSingleton());
+      gmps->TestTriggerMetrics()->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise]() { promise->MaybeResolveWithUndefined(); },
+          [promise]() { promise->MaybeRejectWithUndefined(); });
+    } break;
     case nsIXULRuntime::PROCESS_TYPE_GPU:
       gfx::GPUProcessManager::Get()->TestTriggerMetrics()->Then(
           GetCurrentSerialEventTarget(), __func__,

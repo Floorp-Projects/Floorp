@@ -168,6 +168,9 @@ class GMPParent final
   bool DeallocPGMPTimerParent(PGMPTimerParent* aActor);
 
   mozilla::ipc::IPCResult RecvPGMPContentChildDestroyed();
+
+  mozilla::ipc::IPCResult RecvFOGData(ByteBuf&& aBuf);
+
   bool IsUsed() {
     return mGMPContentChildCount > 0 || !mGetContentParentPromises.IsEmpty();
   }
