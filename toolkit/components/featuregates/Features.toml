@@ -51,7 +51,7 @@ preference = "devtools.inspector.compatibility.enabled"
 type = "boolean"
 bug-numbers = [1605154, 1605153]
 is-public = true
-default-value = {default = false, nightly = true, dev-edition = true}
+default-value = true
 
 [cookie-samesite-lax-by-default]
 title = "experimental-features-cookie-samesite-lax-by-default2"

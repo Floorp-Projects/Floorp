@@ -533,6 +533,13 @@ pref("browser.download.autohideButton", true);
 // The first download ever run in a new profile will still open the panel.
 pref("browser.download.alwaysOpenPanel", true);
 
+// Determines the behavior of the "Delete" item in the downloads context menu.
+// Valid values are 0, 1, and 2.
+//   0 - Don't remove the download from session list or history.
+//   1 - Remove the download from session list, but not history.
+//   2 - Remove the download from both session list and history.
+pref("browser.download.clearHistoryOnDelete", 0);
+
 #ifndef XP_MACOSX
   pref("browser.helperApps.deleteTempFileOnExit", true);
 #endif

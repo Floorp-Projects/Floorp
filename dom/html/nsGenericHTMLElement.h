@@ -169,9 +169,14 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   }
 
   MOZ_CAN_RUN_SCRIPT
-  void GetInnerText(mozilla::dom::DOMString& aValue,
-                    mozilla::ErrorResult& aError);
-  void SetInnerText(const nsAString& aValue);
+  void GetInnerText(mozilla::dom::DOMString& aValue, ErrorResult& aError);
+  MOZ_CAN_RUN_SCRIPT
+  void GetOuterText(mozilla::dom::DOMString& aValue, ErrorResult& aError) {
+    return GetInnerText(aValue, aError);
+  }
+  MOZ_CAN_RUN_SCRIPT void SetInnerText(const nsAString& aValue);
+  MOZ_CAN_RUN_SCRIPT void SetOuterText(const nsAString& aValue,
+                                       ErrorResult& aRv);
 
   void GetInputMode(nsAString& aValue) {
     GetEnumAttr(nsGkAtoms::inputmode, nullptr, aValue);

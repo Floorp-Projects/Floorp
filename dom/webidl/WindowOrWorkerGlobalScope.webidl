@@ -79,9 +79,3 @@ partial interface mixin WindowOrWorkerGlobalScope {
   [Throws, Pref="dom.caches.enabled", SameObject]
   readonly attribute CacheStorage caches;
 };
-
-// https://testutils.spec.whatwg.org/#the-testutils-object
-partial interface mixin WindowOrWorkerGlobalScope {
-  [Pref="dom.testing.testutils.enabled", SameObject]
-  readonly attribute TestUtils testUtils;
-};

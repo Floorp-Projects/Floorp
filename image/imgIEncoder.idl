@@ -64,6 +64,13 @@ interface imgIEncoder : nsIAsyncInputStream
   // quality=#  --  default: "92"
   //    Quality of compression, 0-100 (worst-best).
   //    Quality >= 90 prevents down-sampling of the color channels.
+  //
+  //
+  // WEBP:
+  // -----
+  //
+  // quality=#  --  default: "92"
+  //    Quality of compression, 0-100 (worst-best).
 
 
   // Possible values for input format (note that not all image formats

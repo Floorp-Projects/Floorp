@@ -4119,31 +4119,37 @@ bool IsWaylandEnabled() {
   if (!waylandDisplay) {
     return false;
   }
-  const bool gtkIsNewEnough = !gtk_check_version(3, 22, 0);
-  const bool enabled = [] {
-    if (!PR_GetEnv("DISPLAY")) {
-      // No X11 display, so try to run wayland.
+  if (!PR_GetEnv("DISPLAY")) {
+    // No X11 display, so try to run wayland.
+    return true;
+  }
+  // MOZ_ENABLE_WAYLAND is our primary Wayland on/off switch.
+  if (const char* waylandPref = PR_GetEnv("MOZ_ENABLE_WAYLAND")) {
+    return *waylandPref == '1';
+  }
+  if (const char* backendPref = PR_GetEnv("GDK_BACKEND")) {
+    if (!strncmp(backendPref, "wayland", 7)) {
+      NS_WARNING(
+          "Wayland backend should be enabled by MOZ_ENABLE_WAYLAND=1."
+          "GDK_BACKEND is a Gtk3 debug variable and may cause issues.");
       return true;
     }
-    // MOZ_ENABLE_WAYLAND is our primary Wayland on/off switch.
-    if (const char* waylandPref = PR_GetEnv("MOZ_ENABLE_WAYLAND")) {
-      return *waylandPref == '1';
-    }
-    if (const char* backendPref = PR_GetEnv("GDK_BACKEND")) {
-      if (!strncmp(backendPref, "wayland", 7)) {
-        NS_WARNING(
-            "Wayland backend should be enabled by MOZ_ENABLE_WAYLAND=1."
-            "GDK_BACKEND is a Gtk3 debug variable and may cause issues.");
-        return true;
-      }
-    }
-    return false;
-  }();
-  if (enabled && !gtkIsNewEnough) {
-    NS_WARNING(
-        "Running Wayland backend on Gtk3 < 3.22. Expect issues/glitches");
   }
-  return enabled;
+#  ifdef EARLY_BETA_OR_EARLIER
+  // Enable by default when we're running on a recent enough GTK version. We'd
+  // like to check further details like compositor version and so on ideally
+  // to make sure we don't enable it on old Mutter or what not, but we can't,
+  // so let's assume that if the user is running on a Wayland session by
+  // default we're ok, since either the distro has enabled Wayland by default,
+  // or the user has gone out of their way to use Wayland.
+  //
+  // TODO(emilio): If users hit problems, we might be able to restrict it to
+  // GNOME / KDE  / known-good-desktop environments by checking
+  // XDG_CURRENT_DESKTOP or so...
+  return !gtk_check_version(3, 24, 30);
+#  else
+  return false;
+#  endif
 }
 #endif
 

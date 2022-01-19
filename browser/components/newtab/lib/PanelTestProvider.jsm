@@ -163,16 +163,22 @@ const MESSAGES = () => [
       layout: "icon_and_message",
       category: "cfrFeatures",
       notification_text: "Personalized CFR Recommendation",
-      heading_text: { string_id: "cfr-doorhanger-firefox-send-header" },
+      heading_text: { string_id: "cfr-doorhanger-bookmark-fxa-header" },
       info_icon: {
-        label: { string_id: "cfr-doorhanger-extension-sumo-link" },
+        label: {
+          attributes: {
+            tooltiptext: { string_id: "cfr-doorhanger-fxa-close-btn-tooltip" },
+          },
+        },
         sumo_path: "https://example.com",
       },
-      text: { string_id: "cfr-doorhanger-firefox-send-body" },
+      text: { string_id: "cfr-doorhanger-bookmark-fxa-body" },
       icon: "chrome://branding/content/icon64.png",
+      icon_class: "cfr-doorhanger-large-icon",
+      persistent_doorhanger: true,
       buttons: {
         primary: {
-          label: { string_id: "cfr-doorhanger-firefox-send-ok-button" },
+          label: { string_id: "cfr-doorhanger-milestone-ok-button" },
           action: {
             type: "OPEN_URL",
             data: {

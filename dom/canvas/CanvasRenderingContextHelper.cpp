@@ -261,8 +261,9 @@ nsresult CanvasRenderingContextHelper::UpdateContext(
 nsresult CanvasRenderingContextHelper::ParseParams(
     JSContext* aCx, const nsAString& aType, const JS::Value& aEncoderOptions,
     nsAString& outParams, bool* const outUsingCustomParseOptions) {
-  // Quality parameter is only valid for the image/jpeg MIME type
-  if (aType.EqualsLiteral("image/jpeg")) {
+  // Quality parameter is only valid for the image/jpeg and image/webp MIME
+  // types.
+  if (aType.EqualsLiteral("image/jpeg") || aType.EqualsLiteral("image/webp")) {
     if (aEncoderOptions.isNumber()) {
       double quality = aEncoderOptions.toNumber();
       // Quality must be between 0.0 and 1.0, inclusive

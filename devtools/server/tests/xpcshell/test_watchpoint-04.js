@@ -26,7 +26,7 @@ add_task(
 
     await blackBox(sourceFront);
 
-    threadFront.resume();
+    await threadFront.resume();
     const packet = await executeOnNextTickAndWaitForPause(
       debuggee.runTest,
       threadFront
@@ -41,8 +41,7 @@ add_task(
     await addWatchpoint(threadFront, packet.frame, "obj", "a", "set");
 
     info(`Resume and skip the watchpoint`);
-    threadFront.resume();
-    const pausePacket = await waitForPause(threadFront);
+    const pausePacket = await resumeAndWaitForPause(threadFront);
 
     Assert.equal(
       pausePacket.frame.where.line,

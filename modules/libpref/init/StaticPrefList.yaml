@@ -3547,6 +3547,12 @@
   value: false
   mirror: always
 
+# DON'T enable, there are known issues!
+- name: dom.streams.byte_streams
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # For area and anchor elements with target=_blank and no rel set to
 # opener/noopener.
 - name: dom.targetBlankNoOpener.enabled
@@ -3943,7 +3949,11 @@
 # Maximum value of navigator.hardwareConcurrency.
 - name: dom.maxHardwareConcurrency
   type: RelaxedAtomicUint32
+#ifdef NIGHTLY_BUILD
   value: 128
+#else
+  value: 16
+#endif
   mirror: always
 
 # W3C pointer events draft.
