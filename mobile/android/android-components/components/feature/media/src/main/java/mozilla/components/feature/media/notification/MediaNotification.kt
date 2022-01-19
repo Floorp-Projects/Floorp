@@ -6,6 +6,8 @@ package mozilla.components.feature.media.notification
 
 import android.app.Notification
 import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_IMMUTABLE
+import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.Build
@@ -106,14 +108,14 @@ private suspend fun SessionState.toNotificationData(
                     context,
                     0,
                     AbstractMediaSessionService.pauseIntent(context, cls),
-                    0
+                    getNotificationFlag()
                 )
             ).build(),
             contentIntent = PendingIntent.getActivity(
                 context,
                 SharedIdsHelper.getIdForTag(context, AbstractMediaSessionService.PENDING_INTENT_TAG),
                 intent?.apply { putExtra(AbstractMediaSessionService.EXTRA_TAB_ID, id) },
-                PendingIntent.FLAG_UPDATE_CURRENT
+                getUpdateNotificationFlag()
             )
         )
         MediaSession.PlaybackState.PAUSED -> NotificationData(
@@ -128,14 +130,14 @@ private suspend fun SessionState.toNotificationData(
                     context,
                     0,
                     AbstractMediaSessionService.playIntent(context, cls),
-                    0
+                    getNotificationFlag()
                 )
             ).build(),
             contentIntent = PendingIntent.getActivity(
                 context,
                 SharedIdsHelper.getIdForTag(context, AbstractMediaSessionService.PENDING_INTENT_TAG),
                 intent?.apply { putExtra(AbstractMediaSessionService.EXTRA_TAB_ID, id) },
-                PendingIntent.FLAG_UPDATE_CURRENT
+                getUpdateNotificationFlag()
             )
         )
         // Dummy notification that is only used to satisfy the requirement to ALWAYS call
@@ -152,3 +154,15 @@ private data class NotificationData(
     val action: NotificationCompat.Action? = null,
     val contentIntent: PendingIntent? = null
 )
+
+private fun getNotificationFlag() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    FLAG_IMMUTABLE
+} else {
+    0
+}
+
+private fun getUpdateNotificationFlag() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT
+} else {
+    FLAG_UPDATE_CURRENT
+}
