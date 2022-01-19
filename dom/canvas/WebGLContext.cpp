@@ -596,6 +596,9 @@ RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext& host,
     if (kIsMacOS) {
       types[layers::SurfaceDescriptor::TSurfaceDescriptorMacIOSurface] = true;
     }
+    if (kIsAndroid) {
+      types[layers::SurfaceDescriptor::TSurfaceTextureDescriptor] = true;
+    }
     return types;
   };
 
