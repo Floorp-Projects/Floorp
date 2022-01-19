@@ -131,6 +131,7 @@ def valgrind_test(command_context, suppressions):
             "--show-possibly-lost=no",
             "--track-origins=yes",
             "--trace-children=yes",
+            "--trace-children-skip=*/dbus-launch",
             "-v",  # Enable verbosity to get the list of used suppressions
             # Avoid excessive delays in the presence of spinlocks.
             # See bug 1309851.
