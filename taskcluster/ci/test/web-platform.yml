@@ -69,10 +69,15 @@ web-platform-tests:
             android-em.*/.*: 10800
             default: 7200
     variants:
+        - dynamic-first-party-isolation+fission
         - fission
         - webrender-sw
     run-on-projects:
         by-variant:
+            dynamic-first-party-isolation+fission:
+                by-test-platform:
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['mozilla-central']
+                    default: []
             fission:
                 by-test-platform:
                     (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
@@ -141,10 +146,15 @@ web-platform-tests-reftest:
             android.*: 6
             default: 4
     variants:
+        - dynamic-first-party-isolation+fission
         - fission
         - webrender-sw
     run-on-projects:
         by-variant:
+            dynamic-first-party-isolation+fission:
+                by-test-platform:
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['mozilla-central']
+                    default: []
             fission:
                 by-test-platform:
                     (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
@@ -210,12 +220,17 @@ web-platform-tests-wdspec:
         extra-options:
             - --test-type=wdspec
     variants:
+        - dynamic-first-party-isolation+fission
         - fission
         - webrender-sw
         - headless
         - headless+fission
     run-on-projects:
         by-variant:
+            dynamic-first-party-isolation+fission:
+                by-test-platform:
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['mozilla-central']
+                    default: []
             fission:
                 by-test-platform:
                     (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
@@ -285,10 +300,15 @@ web-platform-tests-crashtest:
         extra-options:
             - --test-type=crashtest
     variants:
+        - dynamic-first-party-isolation+fission
         - fission
         - webrender-sw
     run-on-projects:
         by-variant:
+            dynamic-first-party-isolation+fission:
+                by-test-platform:
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['mozilla-central']
+                    default: []
             fission:
                 by-test-platform:
                     (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
@@ -329,10 +349,15 @@ web-platform-tests-print-reftest:
                     default: 2
             default: default
     variants:
+        - dynamic-first-party-isolation+fission
         - fission
         - webrender-sw
     run-on-projects:
         by-variant:
+            dynamic-first-party-isolation+fission:
+                by-test-platform:
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['mozilla-central']
+                    default: []
             fission:
                 by-test-platform:
                     (linux.*64|windows10-64-2004)-qr/debug: ['trunk']
@@ -384,10 +409,15 @@ test-coverage-wpt:
     treeherder-symbol: TCw
     max-run-time: 10800
     variants:
+        - dynamic-first-party-isolation+fission
         - fission
         - webrender-sw
     run-on-projects:
         by-variant:
+            dynamic-first-party-isolation+fission:
+                by-test-platform:
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['mozilla-central']
+                    default: []
             fission:
                 by-test-platform:
                     linux.*64-qr/debug: ['trunk']
