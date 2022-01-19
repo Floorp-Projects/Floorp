@@ -109,20 +109,6 @@ class WindowGlobalTargetFront extends TargetMixin(
     this._title = title;
   }
 
-  // @backward-compat { version 96 } Fx 96 dropped the attach method on all but worker targets
-  //                  This can be removed once we drop 95 support
-  async attach() {
-    if (this._attach) {
-      return this._attach;
-    }
-    this._attach = (async () => {
-      const response = await super.attach();
-
-      this.targetForm.threadActor = response.threadActor;
-    })();
-    return this._attach;
-  }
-
   async detach() {
     // When calling this.destroy() at the end of this method,
     // we will end up calling detach again from TargetMixin.destroy.
