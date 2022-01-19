@@ -96,6 +96,7 @@ nsresult X509CertValidity::FormatTime(
   PRExplodedTime explodedTime;
   PR_ExplodeTime(const_cast<PRTime&>(aTimeDate), aParamFn, &explodedTime);
   intl::DateTimeFormat::StyleBag style;
+  style.date = Some(intl::DateTimeFormat::Style::Long);
   style.time = aTimeStyle;
   return intl::AppDateTimeFormat::Format(style, &explodedTime,
                                          aFormattedTimeDate);
