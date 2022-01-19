@@ -44,12 +44,10 @@ class ReadableStreamBYOBReader final : public ReadableStreamGenericReader,
   bool IsDefault() override { return false; };
   bool IsBYOB() override { return true; }
   ReadableStreamDefaultReader* AsDefault() override {
-    MOZ_CRASH("Should have verified IsDefaultFirst");
+    MOZ_CRASH("Should have verified IsDefault first");
     return nullptr;
   }
   ReadableStreamBYOBReader* AsBYOB() override { return this; }
-
-  nsIGlobalObject* GetParentObject() const { return nullptr; }
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
