@@ -7,7 +7,6 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
   ctypes: "resource://gre/modules/ctypes.jsm",
   NativeManifests: "resource://gre/modules/NativeManifests.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -38,12 +37,12 @@ this.pkcs11 = class extends ExtensionAPI {
       );
       if (hostInfo) {
         if (AppConstants.platform === "win") {
-          hostInfo.manifest.path = OS.Path.join(
-            OS.Path.dirname(hostInfo.path),
+          hostInfo.manifest.path = PathUtils.join(
+            PathUtils.parent(hostInfo.path),
             hostInfo.manifest.path
           );
         }
-        let manifestLib = OS.Path.basename(hostInfo.manifest.path);
+        let manifestLib = PathUtils.filename(hostInfo.manifest.path);
         if (AppConstants.platform !== "linux") {
           manifestLib = manifestLib.toLowerCase(manifestLib);
         }
