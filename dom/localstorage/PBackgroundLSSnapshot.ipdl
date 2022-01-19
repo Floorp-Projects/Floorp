@@ -115,7 +115,7 @@ parent:
    * performance problems, but avoiding I/O completely might need to be done as
    * a futher optimization.
    */
-  sync IncreasePeakUsage(int64_t requestedSize, int64_t minSize)
+  sync IncreasePeakUsage(int64_t minSize)
     returns (int64_t size);
 
   // A synchronous ping to the parent actor to confirm that the parent actor
