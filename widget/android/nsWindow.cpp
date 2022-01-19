@@ -894,6 +894,9 @@ class LayerViewSupport final
   GeckoSession::Compositor::WeakRef mCompositor;
   Atomic<bool, ReleaseAcquire> mCompositorPaused;
   java::sdk::Surface::GlobalRef mSurface;
+  // Used to communicate with the gecko compositor from the UI thread.
+  // Set in NotifyCompositorCreated and cleared in NotifyCompositorSessionLost.
+  RefPtr<UiCompositorControllerChild> mUiCompositorControllerChild;
 
   struct CaptureRequest {
     explicit CaptureRequest() : mResult(nullptr) {}
@@ -1002,21 +1005,39 @@ class LayerViewSupport final
 
   bool CompositorPaused() const { return mCompositorPaused; }
 
+  /// Called from the main thread whenever the compositor has been
+  /// (re)initialized.
+  void NotifyCompositorCreated(
+      RefPtr<UiCompositorControllerChild> aUiCompositorControllerChild) {
+    MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
+    mUiCompositorControllerChild = aUiCompositorControllerChild;
+
+    if (auto window{mWindow.Access()}) {
+      nsWindow* gkWindow = window->GetNsWindow();
+      if (gkWindow) {
+        mUiCompositorControllerChild->OnCompositorSurfaceChanged(
+            gkWindow->mWidgetId, mSurface);
+      }
+    }
+
+    if (!mCompositorPaused) {
+      mUiCompositorControllerChild->Resume();
+
+      if (!mCapturePixelsResults.empty()) {
+        mUiCompositorControllerChild->RequestScreenPixels();
+      }
+    }
+  }
+
+  /// Called from the main thread whenever the compositor has been destroyed.
+  void NotifyCompositorSessionLost() {
+    MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
+    mUiCompositorControllerChild = nullptr;
+  }
+
   java::sdk::Surface::Param GetSurface() { return mSurface; }
 
  private:
-  already_AddRefed<UiCompositorControllerChild>
-  GetUiCompositorControllerChild() {
-    RefPtr<UiCompositorControllerChild> child;
-    if (auto window = mWindow.Access()) {
-      nsWindow* gkWindow = window->GetNsWindow();
-      if (gkWindow) {
-        child = gkWindow->GetUiCompositorControllerChild();
-      }
-    }
-    return child.forget();
-  }
-
   already_AddRefed<DataSourceSurface> FlipScreenPixels(
       Shmem& aMem, const ScreenIntSize& aInSize, const ScreenRect& aInRegion,
       const IntSize& aOutSize) {
@@ -1116,9 +1137,8 @@ class LayerViewSupport final
 
     mCompositorPaused = true;
 
-    if (RefPtr<UiCompositorControllerChild> child =
-            GetUiCompositorControllerChild()) {
-      child->Pause();
+    if (mUiCompositorControllerChild) {
+      mUiCompositorControllerChild->Pause();
     }
 
     if (auto lock{mWindow.Access()}) {
@@ -1139,10 +1159,9 @@ class LayerViewSupport final
   void SyncResumeCompositor() {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
-    if (RefPtr<UiCompositorControllerChild> child =
-            GetUiCompositorControllerChild()) {
+    if (mUiCompositorControllerChild) {
       mCompositorPaused = false;
-      child->Resume();
+      mUiCompositorControllerChild->Resume();
     }
   }
 
@@ -1153,17 +1172,17 @@ class LayerViewSupport final
 
     mSurface = java::sdk::Surface::GlobalRef::From(aSurface);
 
-    if (RefPtr<UiCompositorControllerChild> child =
-            GetUiCompositorControllerChild()) {
+    if (mUiCompositorControllerChild) {
       if (auto window = mWindow.Access()) {
         nsWindow* gkWindow = window->GetNsWindow();
         if (gkWindow) {
           // Send new Surface to GPU process, if one exists.
-          child->OnCompositorSurfaceChanged(gkWindow->mWidgetId, mSurface);
+          mUiCompositorControllerChild->OnCompositorSurfaceChanged(
+              gkWindow->mWidgetId, mSurface);
         }
       }
 
-      child->ResumeAndResize(aX, aY, aWidth, aHeight);
+      mUiCompositorControllerChild->ResumeAndResize(aX, aY, aWidth, aHeight);
     }
 
     mCompositorPaused = false;
@@ -1219,20 +1238,19 @@ class LayerViewSupport final
   }
 
   void SyncInvalidateAndScheduleComposite() {
-    RefPtr<UiCompositorControllerChild> child =
-        GetUiCompositorControllerChild();
-    if (!child) {
+    if (!mUiCompositorControllerChild) {
       return;
     }
 
     if (AndroidBridge::IsJavaUiThread()) {
-      child->InvalidateAndRender();
+      mUiCompositorControllerChild->InvalidateAndRender();
       return;
     }
 
     if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
       uiThread->Dispatch(NewRunnableMethod<>(
-                             "LayerViewSupport::InvalidateAndRender", child,
+                             "LayerViewSupport::InvalidateAndRender",
+                             mUiCompositorControllerChild,
                              &UiCompositorControllerChild::InvalidateAndRender),
                          nsIThread::DISPATCH_NORMAL);
     }
@@ -1241,9 +1259,8 @@ class LayerViewSupport final
   void SetMaxToolbarHeight(int32_t aHeight) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
-    if (RefPtr<UiCompositorControllerChild> child =
-            GetUiCompositorControllerChild()) {
-      child->SetMaxToolbarHeight(aHeight);
+    if (mUiCompositorControllerChild) {
+      mUiCompositorControllerChild->SetMaxToolbarHeight(aHeight);
     }
   }
 
@@ -1258,30 +1275,28 @@ class LayerViewSupport final
     if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
       uiThread->Dispatch(NS_NewRunnableFunction(
           "LayerViewSupport::SetFixedBottomOffset", [this, offset = aOffset] {
-            if (RefPtr<UiCompositorControllerChild> child =
-                    GetUiCompositorControllerChild()) {
-              child->SetFixedBottomOffset(offset);
+            if (mUiCompositorControllerChild) {
+              mUiCompositorControllerChild->SetFixedBottomOffset(offset);
             }
           }));
     }
   }
 
   void SendToolbarAnimatorMessage(int32_t aMessage) {
-    RefPtr<UiCompositorControllerChild> child =
-        GetUiCompositorControllerChild();
-    if (!child) {
+    if (!mUiCompositorControllerChild) {
       return;
     }
 
     if (AndroidBridge::IsJavaUiThread()) {
-      child->ToolbarAnimatorMessageFromUI(aMessage);
+      mUiCompositorControllerChild->ToolbarAnimatorMessageFromUI(aMessage);
       return;
     }
 
     if (RefPtr<nsThread> uiThread = GetAndroidUiThread()) {
       uiThread->Dispatch(
           NewRunnableMethod<int32_t>(
-              "LayerViewSupport::ToolbarAnimatorMessageFromUI", child,
+              "LayerViewSupport::ToolbarAnimatorMessageFromUI",
+              mUiCompositorControllerChild,
               &UiCompositorControllerChild::ToolbarAnimatorMessageFromUI,
               aMessage),
           nsIThread::DISPATCH_NORMAL);
@@ -1297,9 +1312,8 @@ class LayerViewSupport final
 
   void SetDefaultClearColor(int32_t aColor) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-    if (RefPtr<UiCompositorControllerChild> child =
-            GetUiCompositorControllerChild()) {
-      child->SetDefaultClearColor((uint32_t)aColor);
+    if (mUiCompositorControllerChild) {
+      mUiCompositorControllerChild->SetDefaultClearColor((uint32_t)aColor);
     }
   }
 
@@ -1321,9 +1335,8 @@ class LayerViewSupport final
     }
 
     if (size == 1) {
-      if (RefPtr<UiCompositorControllerChild> child =
-              GetUiCompositorControllerChild()) {
-        child->RequestScreenPixels();
+      if (mUiCompositorControllerChild) {
+        mUiCompositorControllerChild->RequestScreenPixels();
       }
     }
   }
@@ -1379,13 +1392,12 @@ class LayerViewSupport final
     }
 
     // Pixels have been copied, so Dealloc Shmem
-    if (RefPtr<UiCompositorControllerChild> child =
-            GetUiCompositorControllerChild()) {
-      child->DeallocPixelBuffer(aMem);
+    if (mUiCompositorControllerChild) {
+      mUiCompositorControllerChild->DeallocPixelBuffer(aMem);
 
       if (auto window = mWindow.Access()) {
         if (!mCapturePixelsResults.empty()) {
-          child->RequestScreenPixels();
+          mUiCompositorControllerChild->RequestScreenPixels();
         }
       }
     }
@@ -1393,9 +1405,8 @@ class LayerViewSupport final
 
   void EnableLayerUpdateNotifications(bool aEnable) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-    if (RefPtr<UiCompositorControllerChild> child =
-            GetUiCompositorControllerChild()) {
-      child->EnableLayerUpdateNotifications(aEnable);
+    if (mUiCompositorControllerChild) {
+      mUiCompositorControllerChild->EnableLayerUpdateNotifications(aEnable);
     }
   }
 
@@ -1535,6 +1546,17 @@ void GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
     mWindow->mLayerViewSupport =
         jni::NativeWeakPtrHolder<LayerViewSupport>::Attach(
             compositor, mWindow->mGeckoViewSupport, compositor);
+
+    if (RefPtr<UiCompositorControllerChild> uiCompositorController =
+            mWindow->GetUiCompositorControllerChild()) {
+      DispatchToUiThread(
+          "LayerViewSupport::NotifyCompositorCreated",
+          [lvs = mWindow->mLayerViewSupport, uiCompositorController] {
+            if (auto lvsAccess{lvs.Access()}) {
+              lvsAccess->NotifyCompositorCreated(uiCompositorController);
+            }
+          });
+    }
   }
 
   MOZ_ASSERT(mWindow->mAndroidView);
@@ -2192,17 +2214,15 @@ void nsWindow::CreateLayerManager() {
     LayoutDeviceIntRect rect = GetBounds();
     CreateCompositor(rect.Width(), rect.Height());
     if (mWindowRenderer) {
-      auto lvs(mLayerViewSupport.Access());
-      if (lvs) {
-        GetUiCompositorControllerChild()->OnCompositorSurfaceChanged(
-            mWidgetId, lvs->GetSurface());
-
-        if (!lvs->CompositorPaused()) {
-          CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
-          if (remoteRenderer) {
-            remoteRenderer->SendResumeAsync();
-          }
-        }
+      if (mLayerViewSupport.IsAttached()) {
+        DispatchToUiThread(
+            "LayerViewSupport::NotifyCompositorCreated",
+            [lvs = mLayerViewSupport,
+             uiCompositorController = GetUiCompositorControllerChild()] {
+              if (auto lvsAccess{lvs.Access()}) {
+                lvsAccess->NotifyCompositorCreated(uiCompositorController);
+              }
+            });
       }
 
       return;
@@ -2221,6 +2241,14 @@ void nsWindow::CreateLayerManager() {
 void nsWindow::NotifyCompositorSessionLost(
     mozilla::layers::CompositorSession* aSession) {
   nsBaseWidget::NotifyCompositorSessionLost(aSession);
+
+  DispatchToUiThread("nsWindow::NotifyCompositorSessionLost",
+                     [lvs = mLayerViewSupport] {
+                       if (auto lvsAccess{lvs.Access()}) {
+                         lvsAccess->NotifyCompositorSessionLost();
+                       }
+                     });
+
   RedrawAll();
 }
 
