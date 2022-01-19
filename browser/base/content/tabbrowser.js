@@ -7026,6 +7026,10 @@ var TabContextMenu = {
     document.getElementById("context_undoCloseTab").disabled =
       SessionStore.getClosedTabCount(window) == 0;
 
+    // Show/hide fullscreen context menu items and set the
+    // autohide item's checked state to mirror the autohide pref.
+    showFullScreenViewContextMenuItems(aPopupMenu);
+
     // Only one of Reload_Tab/Reload_Selected_Tabs should be visible.
     document.getElementById("context_reloadTab").hidden = multiselectionContext;
     document.getElementById(

@@ -870,24 +870,11 @@ var FullScreen = {
     for (let el of document.querySelectorAll(
       "toolbar[fullscreentoolbar=true]"
     )) {
+      // Set the inFullscreen attribute to allow specific styling
+      // in fullscreen mode
       if (aEnterFS) {
-        // Give the main nav bar and the tab bar the fullscreen context menu,
-        // otherwise remove context menu to prevent breakage
-        el.setAttribute("saved-context", el.getAttribute("context"));
-        if (el.id == "nav-bar" || el.id == "TabsToolbar") {
-          el.setAttribute("context", "autohide-context");
-        } else {
-          el.removeAttribute("context");
-        }
-
-        // Set the inFullscreen attribute to allow specific styling
-        // in fullscreen mode
         el.setAttribute("inFullscreen", true);
       } else {
-        if (el.hasAttribute("saved-context")) {
-          el.setAttribute("context", el.getAttribute("saved-context"));
-          el.removeAttribute("saved-context");
-        }
         el.removeAttribute("inFullscreen");
       }
     }
