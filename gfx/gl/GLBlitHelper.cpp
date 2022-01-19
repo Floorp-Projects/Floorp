@@ -23,9 +23,7 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "AndroidSurfaceTexture.h"
-#  include "GLImages.h"
 #  include "GLLibraryEGL.h"
-#  include "mozilla/java/GeckoSurfaceTextureWrappers.h"
 #endif
 
 #ifdef XP_MACOSX
@@ -730,6 +728,13 @@ bool GLBlitHelper::BlitSdToFramebuffer(const layers::SurfaceDescriptor& asd,
       return BlitImage(surf, destSize, destOrigin);
     }
 #endif
+#ifdef MOZ_WIDGET_ANDROID
+    case layers::SurfaceDescriptor::TSurfaceTextureDescriptor: {
+      const auto& sd = asd.get_SurfaceTextureDescriptor();
+      auto surfaceTexture = java::GeckoSurfaceTexture::Lookup(sd.handle());
+      return Blit(surfaceTexture, destSize, destOrigin);
+    }
+#endif
     default:
       return false;
   }
@@ -745,15 +750,18 @@ bool GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
       return BlitPlanarYCbCr(*data, destSize, destOrigin);
     }
 
-    case ImageFormat::SURFACE_TEXTURE:
+    case ImageFormat::SURFACE_TEXTURE: {
 #ifdef MOZ_WIDGET_ANDROID
-      return BlitImage(static_cast<layers::SurfaceTextureImage*>(srcImage),
-                       destSize, destOrigin);
+      auto* image = srcImage->AsSurfaceTextureImage();
+      MOZ_ASSERT(image);
+      auto surfaceTexture =
+          java::GeckoSurfaceTexture::Lookup(image->GetHandle());
+      return Blit(surfaceTexture, destSize, destOrigin);
 #else
       MOZ_ASSERT(false);
       return false;
 #endif
-
+    }
     case ImageFormat::MAC_IOSURFACE:
 #ifdef XP_MACOSX
       return BlitImage(srcImage->AsMacIOSurfaceImage(), destSize, destOrigin);
@@ -801,12 +809,9 @@ bool GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
 // -------------------------------------
 
 #ifdef MOZ_WIDGET_ANDROID
-bool GLBlitHelper::BlitImage(layers::SurfaceTextureImage* srcImage,
-                             const gfx::IntSize& destSize,
-                             const OriginPos destOrigin) const {
-  AndroidSurfaceTextureHandle handle = srcImage->GetHandle();
-  const auto& surfaceTexture = java::GeckoSurfaceTexture::Lookup(handle);
-
+bool GLBlitHelper::Blit(const java::GeckoSurfaceTexture::Ref& surfaceTexture,
+                        const gfx::IntSize& destSize,
+                        const OriginPos destOrigin) const {
   if (!surfaceTexture) {
     return false;
   }
@@ -827,38 +832,10 @@ bool GLBlitHelper::BlitImage(layers::SurfaceTextureImage* srcImage,
   const ScopedBindTexture savedTex(mGL, surfaceTexture->GetTexName(),
                                    LOCAL_GL_TEXTURE_EXTERNAL);
   surfaceTexture->UpdateTexImage();
-
-  gfx::Matrix4x4 transform4;
-  AndroidSurfaceTexture::GetTransformMatrix(
-      java::sdk::SurfaceTexture::Ref::From(surfaceTexture), &transform4);
-  Mat3 transform3;
-  transform3.at(0, 0) = transform4._11;
-  transform3.at(0, 1) = transform4._12;
-  transform3.at(0, 2) = transform4._14;
-  transform3.at(1, 0) = transform4._21;
-  transform3.at(1, 1) = transform4._22;
-  transform3.at(1, 2) = transform4._24;
-  transform3.at(2, 0) = transform4._41;
-  transform3.at(2, 1) = transform4._42;
-  transform3.at(2, 2) = transform4._44;
-
-  // We don't do w-divison, so if these aren't what we expect, we're probably
-  // doing something wrong.
-  MOZ_ASSERT(transform3.at(0, 2) == 0);
-  MOZ_ASSERT(transform3.at(1, 2) == 0);
-  MOZ_ASSERT(transform3.at(2, 2) == 1);
-
-  const auto& srcOrigin = srcImage->GetOriginPos();
-
-  // I honestly have no idea why this logic is flipped, but changing the
-  // source origin would mean we'd have to flip it in the compositor
-  // which makes just as little sense as this.
-  const bool yFlip = (srcOrigin == destOrigin);
-
+  const auto transform3 = Mat3::I();
+  const auto srcOrigin = OriginPos::TopLeft;
+  const bool yFlip = (srcOrigin != destOrigin);
   const auto& prog = GetDrawBlitProg({kFragHeader_TexExt, kFragBody_RGBA});
-
-  // There is no padding on these images, so we can use the GetTransformMatrix
-  // directly.
   const DrawBlitProg::BaseArgs baseArgs = {transform3, yFlip, destSize,
                                            Nothing()};
   prog->Draw(baseArgs, nullptr);
