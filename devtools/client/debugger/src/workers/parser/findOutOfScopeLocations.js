@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import findIndex from "lodash/findIndex";
-import findLastIndex from "lodash/findLastIndex";
-
 import { containsLocation, containsPosition } from "./utils/contains";
 
 import { getSymbols } from "./getSymbols";
@@ -35,38 +32,42 @@ function getLocation(func) {
 
 /**
  * Find the nearest location containing the input position and
- * return new locations without inner locations under that nearest location
+ * return inner locations under that nearest location
  *
- * @param locations Notice! The locations MUST be sorted by `sortByStart`
+ * @param {Array<Object>} locations Notice! The locations MUST be sorted by `sortByStart`
  *                  so that we can do linear time complexity operation.
+ * @returns {Array<Object>}
  */
-function removeInnerLocations(locations, position) {
+function getInnerLocations(locations, position) {
   // First, let's find the nearest position-enclosing function location,
   // which is to find the last location enclosing the position.
-  const newLocs = locations.slice();
-  const parentIndex = findLastIndex(newLocs, loc =>
-    containsPosition(loc, position)
-  );
-  if (parentIndex < 0) {
-    return newLocs;
+  let parentIndex;
+  for (let i = locations.length - 1; i >= 0; i--) {
+    const loc = locations[i];
+    if (containsPosition(loc, position)) {
+      parentIndex = i;
+      break;
+    }
   }
 
-  // Second, from the nearest location, loop locations again, stop looping
-  // once seeing the 1st location not enclosed by the nearest location
-  // to find the last inner locations inside the nearest location.
-  const innerStartIndex = parentIndex + 1;
-  const parentLoc = newLocs[parentIndex];
-  const outerBoundaryIndex = findIndex(
-    newLocs,
-    loc => !containsLocation(parentLoc, loc),
-    innerStartIndex
-  );
-  const innerBoundaryIndex =
-    outerBoundaryIndex < 0 ? newLocs.length - 1 : outerBoundaryIndex - 1;
+  if (parentIndex == undefined) {
+    return [];
+  }
+  const parentLoc = locations[parentIndex];
 
-  // Third, remove those inner functions
-  newLocs.splice(innerStartIndex, innerBoundaryIndex - parentIndex);
-  return newLocs;
+  // Then, from the nearest location, loop locations again and put locations into
+  // the innerLocations array until we get to a location not enclosed by the nearest location.
+  const innerLocations = [];
+  for (let i = parentIndex + 1; i < locations.length; i++) {
+    const loc = locations[i];
+    if (!containsLocation(parentLoc, loc)) {
+      break;
+    }
+
+    innerLocations.push(loc);
+  }
+
+  return innerLocations;
 }
 
 /**
@@ -112,16 +113,20 @@ function sortByStart(a, b) {
 function findOutOfScopeLocations(sourceId, position) {
   const { functions, comments } = findSymbols(sourceId);
   const commentLocations = comments.map(c => c.location);
-  let locations = functions
+  const locations = functions
     .map(getLocation)
     .concat(commentLocations)
     .sort(sortByStart);
-  // Must remove inner locations then filter, otherwise,
-  // we will mis-judge in-scope inner locations as out of scope.
-  locations = removeInnerLocations(locations, position).filter(
-    loc => !containsPosition(loc, position)
-  );
-  return removeOverlaps(locations);
+
+  const innerLocations = getInnerLocations(locations, position);
+  const outerLocations = locations.filter(loc => {
+    if (innerLocations.includes(loc)) {
+      return false;
+    }
+
+    return !containsPosition(loc, position);
+  });
+  return removeOverlaps(outerLocations);
 }
 
 export default findOutOfScopeLocations;
