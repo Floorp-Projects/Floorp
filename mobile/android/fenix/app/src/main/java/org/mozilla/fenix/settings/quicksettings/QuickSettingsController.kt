@@ -107,7 +107,7 @@ class DefaultQuickSettingsController(
     private val quickSettingsStore: QuickSettingsFragmentStore,
     private val browserStore: BrowserStore,
     private val ioScope: CoroutineScope,
-    private val navController: () -> NavController,
+    private val navController: NavController,
     @VisibleForTesting
     internal val sessionId: String,
     @VisibleForTesting
@@ -209,7 +209,7 @@ class DefaultQuickSettingsController(
     }
 
     override fun handleDetailsClicked() {
-        navController().popBackStack()
+        navController.popBackStack()
 
         val state = quickSettingsStore.state.trackingProtectionState
         val directions = NavGraphDirections
@@ -220,11 +220,11 @@ class DefaultQuickSettingsController(
                 gravity = context.components.settings.toolbarPosition.androidGravity,
                 sitePermissions = sitePermissions
             )
-        navController().navigate(directions)
+        navController.navigate(directions)
     }
 
     override fun handleConnectionDetailsClicked() {
-        navController().popBackStack()
+        navController.popBackStack()
 
         val state = quickSettingsStore.state.webInfoState
         val directions = ConnectionPanelDialogFragmentDirections
@@ -237,7 +237,7 @@ class DefaultQuickSettingsController(
                 gravity = context.components.settings.toolbarPosition.androidGravity,
                 sitePermissions = sitePermissions
             )
-        navController().navigate(directions)
+        navController.navigate(directions)
     }
 
     override fun handleClearSiteDataClicked(baseDomain: String) {
@@ -248,7 +248,7 @@ class DefaultQuickSettingsController(
                 Engine.BrowsingData.ALL_SITE_DATA,
             ),
         )
-        navController().popBackStack()
+        navController.popBackStack()
     }
 
     /**
@@ -293,6 +293,6 @@ class DefaultQuickSettingsController(
     private fun navigateToManagePhoneFeature(phoneFeature: PhoneFeature) {
         val directions = QuickSettingsSheetDialogFragmentDirections
             .actionGlobalSitePermissionsManagePhoneFeature(phoneFeature)
-        navController().navigate(directions)
+        navController.navigate(directions)
     }
 }
