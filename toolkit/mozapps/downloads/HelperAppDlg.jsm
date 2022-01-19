@@ -1095,7 +1095,13 @@ nsUnknownContentTypeDialog.prototype = {
         );
         this._saveToDiskTimer.initWithCallback(this, 0, nsITimer.TYPE_ONE_SHOT);
       } else {
-        this.mLauncher.setDownloadToLaunch(this.handleInternally, null);
+        let uri = this.mLauncher.source;
+        // Launch local files immediately without downloading them:
+        if (uri instanceof Ci.nsIFileURL) {
+          this.mLauncher.launchLocalFile();
+        } else {
+          this.mLauncher.setDownloadToLaunch(this.handleInternally, null);
+        }
       }
 
       // Update user pref for this mime type (if necessary). We do not

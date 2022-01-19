@@ -14,7 +14,9 @@
 #include "nsCURILoader.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIExternalProtocolService.h"
+#include "nsIObserverService.h"
 #include "mozilla/StaticPtr.h"
+#include "xpcpublic.h"
 
 static bool sInitializedOurData = false;
 StaticRefPtr<nsIFile> sOurAppFile;
@@ -288,6 +290,10 @@ nsMIMEInfoBase::LaunchWithFile(nsIFile* aFile) {
   NS_ASSERTION(mClass == eMIMEInfo,
                "nsMIMEInfoBase should have mClass == eMIMEInfo");
 
+  if (AutomationOnlyCheckIfLaunchStubbed(aFile)) {
+    return NS_OK;
+  }
+
   if (mPreferredAction == useSystemDefault) {
     return LaunchDefaultWithFile(aFile);
   }
@@ -308,6 +314,26 @@ nsMIMEInfoBase::LaunchWithFile(nsIFile* aFile) {
   }
 
   return NS_ERROR_INVALID_ARG;
+}
+
+bool nsMIMEInfoBase::AutomationOnlyCheckIfLaunchStubbed(nsIFile* aFile) {
+  // This is pretty gross and hacky, but otherwise we can't automatically
+  // test this, and we keep breaking edgecases around this, so...
+  if (!xpc::IsInAutomation()) {
+    return false;
+  }
+  nsAutoString path;
+  aFile->GetPath(path);
+  nsCOMPtr<nsISupportsPRBool> canOpen =
+      do_CreateInstance("@mozilla.org/supports-PRBool;1");
+  canOpen->SetData(true);
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+  observerService->NotifyObservers(canOpen, "test-only-opening-downloaded-file",
+                                   path.get());
+  bool data = true;
+  canOpen->GetData(&data);
+  return !data;
 }
 
 NS_IMETHODIMP

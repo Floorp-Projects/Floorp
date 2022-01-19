@@ -2800,6 +2800,9 @@ NS_IMETHODIMP nsExternalAppHandler::SetDownloadToLaunch(
 
 nsresult nsExternalAppHandler::LaunchLocalFile() {
   nsCOMPtr<nsIFileURL> fileUrl(do_QueryInterface(mSourceUrl));
+  if (!fileUrl) {
+    return NS_OK;
+  }
   Cancel(NS_BINDING_ABORTED);
   nsCOMPtr<nsIFile> file;
   nsresult rv = fileUrl->GetFile(getter_AddRefs(file));

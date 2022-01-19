@@ -35,6 +35,10 @@ nsMIMEInfoMac::LaunchWithFile(nsIFile* aFile) {
   NS_ASSERTION(mClass == eMIMEInfo, "only MIME infos are currently allowed"
                                     "to pass content by value");
 
+  if (AutomationOnlyCheckIfLaunchStubbed(aFile)) {
+    return NS_OK;
+  }
+
   if (mPreferredAction == useHelperApp) {
     // we don't yet support passing content by value (rather than reference)
     // to web apps.  at some point, we will probably want to.
