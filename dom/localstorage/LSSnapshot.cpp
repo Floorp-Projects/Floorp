@@ -26,6 +26,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/LSValue.h"
@@ -46,12 +47,6 @@
 #include "nscore.h"
 
 namespace mozilla::dom {
-
-namespace {
-
-const uint32_t kSnapshotIdleTimeoutMs = 20000;
-
-}  // namespace
 
 /**
  * Coalescing manipulation queue used by `LSSnapshot`.  Used by `LSSnapshot` to
@@ -1008,7 +1003,8 @@ LSSnapshot::Run() {
     MOZ_ASSERT(mIdleTimer);
 
     MOZ_ALWAYS_SUCCEEDS(mIdleTimer->InitWithNamedFuncCallback(
-        IdleTimerCallback, this, kSnapshotIdleTimeoutMs,
+        IdleTimerCallback, this,
+        StaticPrefs::dom_storage_snapshot_idle_timeout_ms(),
         nsITimer::TYPE_ONE_SHOT, "LSSnapshot::IdleTimerCallback"));
 
     mHasPendingIdleTimerCallback = true;
