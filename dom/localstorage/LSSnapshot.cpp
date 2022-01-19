@@ -889,11 +889,10 @@ nsresult LSSnapshot::UpdateUsage(int64_t aDelta) {
 
   int64_t newExactUsage = mExactUsage + aDelta;
   if (newExactUsage > mPeakUsage) {
-    int64_t minSize = newExactUsage - mPeakUsage;
-    int64_t requestedSize = minSize + 4096;
+    const int64_t minSize = newExactUsage - mPeakUsage;
+
     int64_t size;
-    if (NS_WARN_IF(
-            !mActor->SendIncreasePeakUsage(requestedSize, minSize, &size))) {
+    if (NS_WARN_IF(!mActor->SendIncreasePeakUsage(minSize, &size))) {
       return NS_ERROR_FAILURE;
     }
 
