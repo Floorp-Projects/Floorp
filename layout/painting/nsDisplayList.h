@@ -6321,6 +6321,12 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
     return mPrerenderDecision == PrerenderDecision::Partial;
   }
 
+  /**
+   * Mark this item as created together with `nsDisplayPerspective`.
+   * \see nsIFrame::BuildDisplayListForStackingContext().
+   */
+  void MarkWithAssociatedPerspective() { mHasAssociatedPerspective = true; }
+
   void AddSizeOfExcludingThis(nsWindowSizes&) const override;
 
   bool CreatesStackingContextHelper() override { return true; }
@@ -6367,6 +6373,9 @@ class nsDisplayTransform : public nsPaintedDisplayItem {
   bool mIsTransformSeparator : 1;
   // True if we have a transform getter.
   bool mHasTransformGetter : 1;
+  // True if this item is created together with `nsDisplayPerspective`
+  // from the same CSS stacking context.
+  bool mHasAssociatedPerspective : 1;
 };
 
 /* A display item that applies a perspective transformation to a single
