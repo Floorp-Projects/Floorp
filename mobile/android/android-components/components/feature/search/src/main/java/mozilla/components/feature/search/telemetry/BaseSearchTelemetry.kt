@@ -104,7 +104,11 @@ abstract class BaseSearchTelemetry {
             queryParam = "word",
             codeParam = "from",
             codePrefixes = listOf("1000969a"),
-            followOnParams = listOf("oq")
+            followOnParams = listOf("oq"),
+            extraAdServersRegexps = listOf(
+                "^https?://www\\.baidu\\.com/baidu\\.php?",
+                "^https?://m\\.baidu\\.com/baidu\\.php?"
+            )
         ),
         SearchProviderModel(
             name = "bing",

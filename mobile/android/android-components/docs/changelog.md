@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **feature-search**
+  * Adds the `extraAdServersRegexps` of Baidu to help sending the baidu search telemetry of ads. [#11582](https://github.com/mozilla-mobile/android-components/pull/11582)
+
 * **browser-toolbar**
   * 🚒 Bug fixed [issue #11545](https://github.com/mozilla-mobile/android-components/issues/11545) - `clearColorFilter` doesn't work on Api 21, 22, so the default white filter remains set.Use `clearColorFilter` only when the version of API is bigger than 22
 
