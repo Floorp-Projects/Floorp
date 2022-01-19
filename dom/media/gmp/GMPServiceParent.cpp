@@ -23,6 +23,7 @@
 #  include "mozilla/SandboxInfo.h"
 #endif
 #include "VideoUtils.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/Services.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPrefs_media.h"
@@ -93,6 +94,10 @@ GeckoMediaPluginServiceParent::~GeckoMediaPluginServiceParent() {
 
 nsresult GeckoMediaPluginServiceParent::Init() {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (AppShutdown::GetCurrentShutdownPhase() != ShutdownPhase::NotInShutdown) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIObserverService> obsService =
       mozilla::services::GetObserverService();
