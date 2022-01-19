@@ -31,6 +31,7 @@
 
 #include "PlatformMacros.h"
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ProfileBufferEntrySerialization.h"
@@ -72,6 +73,15 @@ typedef uint8_t* Address;
 
 // ----------------------------------------------------------------------------
 // Miscellaneous
+
+// If positive, skip stack-sampling in the sampler thread loop.
+// Users should increment it atomically when samplings should be avoided, and
+// later decrement it back. Multiple uses can overlap.
+// There could be a sampling in progress when this is first incremented, so if
+// it is critical to prevent any sampling, lock the profiler mutex instead.
+// Relaxed ordering, because it's used to request that the profiler pause
+// future sampling; this is not time critical, nor dependent on anything else.
+extern mozilla::Atomic<int, mozilla::MemoryOrdering::Relaxed> gSkipSampling;
 
 namespace mozilla {
 class JSONWriter;

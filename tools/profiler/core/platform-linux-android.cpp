@@ -583,36 +583,21 @@ void SamplerThread::Stop(PSLockRef aLock) {
 //
 // We provide no paf_child() function to run in the child after forking. This
 // is fine because we always immediately exec() after fork(), and exec()
-// clobbers all process state. (At one point we did have a paf_child()
-// function, but it caused problems related to locking gPSMutex. See bug
-// 1348374.)
+// clobbers all process state. Also, we don't want the sampler to resume in the
+// child process between fork() and exec(), it would be wasteful.
 //
 // Unfortunately all this is only doable on non-Android because Bionic doesn't
 // have pthread_atfork.
 
-// In the parent, before the fork, record IsSamplingPaused, and then pause.
-static void paf_prepare() {
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
+// In the parent, before the fork, increase gSkipSampling to ensure that
+// profiler sampling loops will be skipped. There could be one in progress now,
+// causing a small delay, but further sampling will be skipped, allowing `fork`
+// to complete.
+static void paf_prepare() { ++gSkipSampling; }
 
-  PSAutoLock lock;
-
-  if (ActivePS::Exists(lock)) {
-    ActivePS::SetWasSamplingPaused(lock, ActivePS::IsSamplingPaused(lock));
-    ActivePS::SetIsSamplingPaused(lock, true);
-  }
-}
-
-// In the parent, after the fork, return IsSamplingPaused to the pre-fork state.
-static void paf_parent() {
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  PSAutoLock lock;
-
-  if (ActivePS::Exists(lock)) {
-    ActivePS::SetIsSamplingPaused(lock, ActivePS::WasSamplingPaused(lock));
-    ActivePS::SetWasSamplingPaused(lock, false);
-  }
-}
+// In the parent, after the fork, decrease gSkipSampling to let the sampler
+// resume sampling (unless other places have made it non-zero as well).
+static void paf_parent() { --gSkipSampling; }
 
 static void PlatformInit(PSLockRef aLock) {
   // Set up the fork handlers.
