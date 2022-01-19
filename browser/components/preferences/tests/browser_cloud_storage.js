@@ -10,11 +10,6 @@ ChromeUtils.defineModuleGetter(
   "CloudStorage",
   "resource://gre/modules/CloudStorage.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "FileUtils",
-  "resource://gre/modules/FileUtils.jsm"
-);
 
 const DROPBOX_DOWNLOAD_FOLDER = "Dropbox";
 const CLOUD_SERVICES_PREF = "cloud.services.";
@@ -64,19 +59,20 @@ function registerFakePath(key, folderName) {
 
 async function mock_dropbox() {
   // Mock Dropbox Download folder in Home directory
-  let downloadFolder = FileUtils.getFile("Home", [
+  let downloadFolder = PathUtils.join(
+    Services.dirsvc.get("Home", Ci.nsIFile).path,
     DROPBOX_DOWNLOAD_FOLDER,
-    "Downloads",
-  ]);
-  if (!downloadFolder.exists()) {
-    downloadFolder.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-  }
-  console.log(downloadFolder.path);
+    "Downloads"
+  );
 
-  registerCleanupFunction(() => {
-    if (downloadFolder.exists()) {
-      downloadFolder.remove(true);
-    }
+  await IOUtils.makeDirectory(downloadFolder);
+  console.log(downloadFolder);
+
+  registerCleanupFunction(async () => {
+    await IOUtils.remove(downloadFolder, {
+      recursive: true,
+      ignoreAbsent: true,
+    });
   });
 }
 

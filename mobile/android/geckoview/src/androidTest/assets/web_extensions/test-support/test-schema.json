@@ -211,6 +211,14 @@
       },
 
       {
+        "name": "killGpuProcess",
+        "type": "function",
+        "async": true,
+        "description": "Kills the GPU process cleanly without generating a crash report.",
+        "parameters": []
+      },
+
+      {
         "name": "crashGpuProcess",
         "type": "function",
         "async": true,

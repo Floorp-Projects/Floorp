@@ -163,7 +163,8 @@ class StaticStrings {
            toSmallCharTable[c] != INVALID_SMALL_CHAR;
   }
 
-  static bool fitsInLength3Static(char c1, char c2, char c3, int* i) {
+  template <typename CharT>
+  static bool fitsInLength3Static(CharT c1, CharT c2, CharT c3, int* i) {
     static_assert(INT_STATIC_LIMIT <= 299,
                   "static int strings assumed below to be at most "
                   "three digits where the first digit is either 1 or 2");

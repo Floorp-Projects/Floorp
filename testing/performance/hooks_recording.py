@@ -31,7 +31,11 @@ def before_iterations(kw):
     else:
         site_list = site_list["desktop"]
 
-    sites = [test_site for test_site in site_list if not test_site.get("login")]
+    sites = [
+        test_site
+        for test_site in site_list
+        if not test_site.get("login") or test_site.get("login-test")
+    ]
 
     def next_site():
         for site in sites:
@@ -79,6 +83,7 @@ def before_runs(env):
         add_option(env, "browsertime.screenshot", "true")
         add_option(env, "browsertime.testName", test_site.get("name"))
         add_option(env, "browsertime.testType", test_site.get("type", "pageload"))
+        add_option(env, "browsertime.login", test_site.get("login", "false"))
 
         prefs = test_site.get("preferences", {})
         for pref, val in prefs.items():

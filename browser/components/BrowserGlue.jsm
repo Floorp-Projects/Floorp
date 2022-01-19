@@ -3223,8 +3223,9 @@ BrowserGlue.prototype = {
         // An import operation is about to run.
         let bookmarksUrl = null;
         if (restoreDefaultBookmarks) {
-          // User wants to restore bookmarks.html file from default profile folder
-          bookmarksUrl = "chrome://browser/locale/bookmarks.html";
+          // User wants to restore the default set of bookmarks shipped with the
+          // browser, those that new profiles start with.
+          bookmarksUrl = "chrome://browser/content/default-bookmarks.html";
         } else if (await IOUtils.exists(BookmarkHTMLUtils.defaultPath)) {
           bookmarksUrl = PathUtils.toFileURI(BookmarkHTMLUtils.defaultPath);
         }

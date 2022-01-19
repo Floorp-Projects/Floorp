@@ -341,6 +341,10 @@ HTMLCanvasElement::HTMLCanvasElement(
       mWriteOnly(false) {}
 
 HTMLCanvasElement::~HTMLCanvasElement() {
+  if (mOffscreenDisplay) {
+    mOffscreenDisplay->Destroy();
+  }
+
   if (mContextObserver) {
     mContextObserver->Destroy();
     mContextObserver = nullptr;

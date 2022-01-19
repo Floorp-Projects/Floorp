@@ -28,6 +28,10 @@
 #include "FetchStreamReader.h"
 #include "InternalResponse.h"
 
+#ifdef MOZ_DOM_STREAMS
+#  include "mozilla/dom/ReadableStreamDefaultReader.h"
+#endif
+
 namespace mozilla::dom {
 
 NS_IMPL_ADDREF_INHERITED(Response, FetchBody<Response>)

@@ -14,11 +14,10 @@ add_task(
       threadFront
     );
 
-    threadFront.resume();
-    const packet2 = await waitForPause(threadFront);
+    const packet2 = await resumeAndWaitForPause(threadFront);
 
     Assert.equal(packet1.frame.actor, packet2.frame.actor);
-    threadFront.resume();
+    await threadFront.resume();
   })
 );
 

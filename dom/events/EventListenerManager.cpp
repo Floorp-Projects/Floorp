@@ -31,6 +31,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/EventTimelineMarker.h"

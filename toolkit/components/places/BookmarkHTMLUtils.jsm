@@ -840,6 +840,25 @@ BookmarkImporter.prototype = {
    */
   async importFromURL(href) {
     let data = await fetchData(href);
+
+    if (this._isImportDefaults && data) {
+      // Localize default bookmarks.  Find rel="localization" links and manually
+      // localize using them.
+      let hrefs = [];
+      let links = data.head.querySelectorAll("link[rel='localization']");
+      for (let link of links) {
+        if (link.getAttribute("href")) {
+          // We need the text, not the fully qualified URL, so we use `getAttribute`.
+          hrefs.push(link.getAttribute("href"));
+        }
+      }
+
+      if (hrefs.length) {
+        let domLoc = new DOMLocalization(hrefs);
+        await domLoc.translateFragment(data.body);
+      }
+    }
+
     this._walkTreeForImport(data);
     await this._importBookmarks();
   },

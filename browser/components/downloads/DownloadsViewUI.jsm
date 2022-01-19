@@ -302,6 +302,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  DownloadsViewUI,
+  "clearHistoryOnDelete",
+  "browser.download.clearHistoryOnDelete",
+  0
+);
+
 DownloadsViewUI.BaseView = class {
   canClearDownloads(nodeContainer) {
     // Downloads can be cleared if there's at least one removable download in
@@ -1075,18 +1082,11 @@ DownloadsViewUI.DownloadElementShell.prototype = {
   },
 
   async downloadsCmd_deleteFile() {
-    let { download } = this;
-    let { path } = download.target;
-    let { succeeded } = download;
     // Remove the download from the session and history downloads, delete part files.
-    await DownloadsCommon.deleteDownload(download);
-    // Delete final files.
-    if (succeeded) {
-      // Temp files are made "read-only" by DownloadIntegration.downloadDone, so reset the permission bits to read/write.
-      // This won't be necessary after 1733587 since Downloads won't ever be temporary.
-      await IOUtils.setPermissions(path, 0o660);
-      await IOUtils.remove(path, { ignoreAbsent: true });
-    }
+    await DownloadsCommon.deleteDownloadFiles(
+      this.download,
+      DownloadsViewUI.clearHistoryOnDelete
+    );
   },
 
   downloadsCmd_openInSystemViewer() {

@@ -182,25 +182,18 @@ js::Scope* js::BaseScript::releaseEnclosingScope() {
 }
 
 void js::BaseScript::swapData(UniquePtr<PrivateScriptData>& other) {
-  PrivateScriptData* tmp = other.release();
-
   if (data_) {
-    // When disconnecting script data from the BaseScript, we must pre-barrier
-    // all edges contained in it. Those edges are no longer reachable from
-    // current location in the graph.
-    PreWriteBarrier(zone(), data_);
-
     RemoveCellMemory(this, data_->allocationSize(),
                      MemoryUse::ScriptPrivateData);
   }
 
-  std::swap(tmp, data_);
+  PrivateScriptData* old = data_;
+  data_.set(zone(), other.release());
+  other.reset(old);
 
   if (data_) {
     AddCellMemory(this, data_->allocationSize(), MemoryUse::ScriptPrivateData);
   }
-
-  other.reset(tmp);
 }
 
 js::Scope* js::BaseScript::enclosingScope() const {

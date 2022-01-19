@@ -4,11 +4,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://testutils.spec.whatwg.org/#the-testutils-object
+ * https://testutils.spec.whatwg.org/#the-testutils-namespace
  */
 
 [Exposed=(Window,Worker),
  Pref="dom.testing.testutils.enabled"]
-interface TestUtils {
+namespace TestUtils {
   [NewObject, Throws] Promise<void> gc();
 };

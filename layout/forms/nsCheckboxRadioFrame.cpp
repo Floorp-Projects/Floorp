@@ -44,6 +44,13 @@ nscoord nsCheckboxRadioFrame::DefaultSize() {
 }
 
 /* virtual */
+void nsCheckboxRadioFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                                            const nsDisplayListSet& aLists) {
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsCheckboxRadioFrame");
+  DisplayBorderBackgroundOutline(aBuilder, aLists);
+}
+
+/* virtual */
 nscoord nsCheckboxRadioFrame::GetMinISize(gfxContext* aRenderingContext) {
   nscoord result;
   DISPLAY_MIN_INLINE_SIZE(this, result);

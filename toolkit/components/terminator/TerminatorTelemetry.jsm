@@ -15,7 +15,6 @@ const { ComponentUtils } = ChromeUtils.import(
   "resource://gre/modules/ComponentUtils.jsm"
 );
 
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   this,
   "setTimeout",
@@ -63,26 +62,25 @@ nsTerminatorTelemetry.prototype = {
       //
       await new Promise(resolve => setTimeout(resolve, 3000));
 
-      let PATH = OS.Path.join(
-        OS.Constants.Path.localProfileDir,
+      let PATH = PathUtils.join(
+        Services.dirsvc.get("ProfLD", Ci.nsIFile).path,
         "ShutdownDuration.json"
       );
-      let raw;
+      let data;
       try {
-        raw = await OS.File.read(PATH, { encoding: "utf-8" });
+        data = await IOUtils.readJSON(PATH);
       } catch (ex) {
-        if (!ex.becauseNoSuchFile) {
-          throw ex;
+        if (ex instanceof DOMException && ex.name == "NotFoundError") {
+          return;
         }
-        return;
+        // Let other errors be reported by Promise's error-reporting.
+        throw ex;
       }
-      // Let other errors be reported by Promise's error-reporting.
 
       // Clean up
-      OS.File.remove(PATH);
-      OS.File.remove(PATH + ".tmp");
+      await IOUtils.remove(PATH);
+      await IOUtils.remove(PATH + ".tmp");
 
-      let data = JSON.parse(raw);
       for (let k of Object.keys(data)) {
         let id = HISTOGRAMS[k];
         try {
