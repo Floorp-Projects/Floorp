@@ -34,7 +34,7 @@ void RemovePortRunnable::RunInternal() {
 }
 
 void SetStatusRunnable::RunInternal() {
-  MIDIPlatformService::Get()->UpdateStatus(mPortId, mState, mConnection);
+  MIDIPlatformService::Get()->UpdateStatus(mPort, mState, mConnection);
 }
 
 void SendPortListRunnable::RunInternal() {
