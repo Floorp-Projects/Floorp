@@ -25,41 +25,6 @@ add_task(async function init() {
   );
 });
 
-add_task(async function navigation() {
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: `data:text/html,
-      <button id="button">Click here</button>
-      <script>
-        let button = document.getElementById("button");
-        button.addEventListener("click", function() {
-          button.requestFullscreen();
-        });
-      </script>`,
-    },
-    async function(browser) {
-      let promiseFsState = waitForFullscreenState(document, true);
-      // Trigger click event
-      BrowserTestUtils.synthesizeMouseAtCenter("#button", {}, browser);
-      await promiseFsState;
-
-      promiseFsState = waitForFullscreenState(document, false);
-      await SpecialPowers.spawn(browser, [], async function() {
-        content.location.href = "about:blank";
-      });
-      await promiseFsState;
-
-      // Ensure the browser exits fullscreen state.
-      ok(!window.fullScreen, "The chrome window should not be in fullscreen");
-      ok(
-        !document.documentElement.hasAttribute("inDOMFullscreen"),
-        "The chrome document should not be in fullscreen"
-      );
-    }
-  );
-});
-
 async function startTests(testFun, name) {
   TEST_URLS.forEach(url => {
     add_task(async () => {
@@ -103,29 +68,31 @@ async function startTests(testFun, name) {
   });
 }
 
-function NavigateRemoteDocument(aBrowsingContext, aURL) {
-  return SpecialPowers.spawn(aBrowsingContext, [aURL], async function(url) {
-    content.location.href = url;
+function RemoveElementFromRemoteDocument(aBrowsingContext, aElementId) {
+  return SpecialPowers.spawn(aBrowsingContext, [aElementId], async function(
+    id
+  ) {
+    content.document.getElementById(id).remove();
   });
 }
 
 startTests(async browser => {
   // toplevel
-  await NavigateRemoteDocument(browser.browsingContext, "about:blank");
-}, "navigation_toplevel");
+  await RemoveElementFromRemoteDocument(browser.browsingContext, "div");
+}, "document_mutation_toplevel");
 
 startTests(async browser => {
   // middle iframe
-  await NavigateRemoteDocument(
+  await RemoveElementFromRemoteDocument(
     browser.browsingContext.children[0],
-    "about:blank"
+    "div"
   );
-}, "navigation_middle_frame");
+}, "document_mutation_middle_frame");
 
 startTests(async browser => {
   // innermost iframe
-  await NavigateRemoteDocument(
+  await RemoveElementFromRemoteDocument(
     browser.browsingContext.children[0].children[0],
-    "about:blank"
+    "div"
   );
-}, "navigation_inner_frame");
+}, "document_mutation_inner_frame");
