@@ -19,8 +19,7 @@ add_task(
 
     threadFront.setBreakpoint(location, {});
 
-    await threadFront.resume();
-    const packet2 = await waitForPause(threadFront);
+    const packet2 = await resumeAndWaitForPause(threadFront);
 
     info("Paused at the breakpoint");
     Assert.equal(packet2.frame.where.actor, source.actor);

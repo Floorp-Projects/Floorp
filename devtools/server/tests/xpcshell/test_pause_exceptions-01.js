@@ -19,13 +19,11 @@ add_task(
       pauseOnExceptions: true,
       ignoreCaughtExceptions: false,
     });
-    threadFront.resume();
-
-    const packet = await waitForPause(threadFront);
+    const packet = await resumeAndWaitForPause(threadFront);
     Assert.equal(packet.why.type, "exception");
     Assert.equal(packet.why.exception, 42);
 
-    threadFront.resume();
+    await threadFront.resume();
   })
 );
 

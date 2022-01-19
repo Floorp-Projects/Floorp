@@ -39,7 +39,7 @@ add_task(
     Assert.ok(!!response2.source);
     Assert.equal(SOURCE_CONTENT, response2.source);
 
-    threadFront.resume();
+    await threadFront.resume();
   })
 );
 

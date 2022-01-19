@@ -22,7 +22,7 @@ add_task(
 
     Assert.equal(packet.why.type, "exception");
     Assert.equal(packet.why.exception, 42);
-    threadFront.resume();
+    await threadFront.resume();
   })
 );
 
