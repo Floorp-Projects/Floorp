@@ -383,7 +383,6 @@ menupopup::part(drop-indicator) {
 
 #cfr-notification-header-label {
   margin: 9px;
-  font-size: 13px;
   font-weight: 600;
 }
 
@@ -410,7 +409,7 @@ menupopup::part(drop-indicator) {
 }
 
 #contextual-feature-recommendation-notification {
-  width: 343px;
+  width: 400px;
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] {
@@ -525,11 +524,12 @@ menupopup::part(drop-indicator) {
 #contextual-feature-recommendation-notification .cfr-doorhanger-large-icon {
   width: 64px;
   height: 64px;
+  margin-inline-end: 12px;
 }
 
 #contextual-feature-recommendation-notification .popup-notification-body-container {
   width: 100%;
-  padding-bottom: 0;
+  padding-bottom: 2px;
 }
 
 #contextual-feature-recommendation-notification popupnotificationcontent {
@@ -538,13 +538,11 @@ menupopup::part(drop-indicator) {
 
 #contextual-feature-recommendation-notification description {
   margin-bottom: 0;
-  font-size: 13px;
 }
 
 #cfr-notification-footer-text-and-addon-info {
   display: block;
   padding: 10px var(--arrowpanel-padding);
-  font-size: 13px;
 }
 
 #contextual-feature-recommendation-notification[data-notification-category="addon_recommendation"] #cfr-notification-feature-steps,
@@ -561,22 +559,14 @@ menupopup::part(drop-indicator) {
 }
 
 #contextual-feature-recommendation-notification[data-notification-category="icon_and_message"] .popup-notification-description {
-  font-size: 16px;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 15px;
 }
 
 #contextual-feature-recommendation-notification[data-notification-category="icon_and_message"] popupnotificationcontent {
   display: block; /* This forces the subtitle content to wrap */
 }
 
-#contextual-feature-recommendation-notification[data-notification-category="icon_and_message"] .popup-notification-body-container {
-  padding-bottom: 20px;
-}
-
-#contextual-feature-recommendation-notification[data-notification-bucket="CFR_SOCIAL_TRACKING_PROTECTION"] .popup-notification-description {
-  font-size: 13px;
-}
 
 #cfr-notification-feature-steps {
   display: flex;
@@ -598,12 +588,6 @@ menupopup::part(drop-indicator) {
 #cfr-notification-footer-users,
 #cfr-notification-footer-learn-more-link {
   margin: 0;
-}
-
-#contextual-feature-recommendation-notification .popup-notification-learnmore-link,
-#cfr-notification-footer-users,
-#cfr-notification-footer-learn-more-link {
-  font-size: 12px;
 }
 
 #cfr-notification-footer-addon-info {
