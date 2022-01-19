@@ -3,7 +3,7 @@ _This document is intended to explain specifics in regards to test assets for th
 
 # Test application
 * Remote test page managed by Mozilla Mobile Test Engineering at https://github.com/mozilla-mobile/testapp
-* File type download page: https://storage.googleapis.com/mobile_test_assets/test_app/downloads.htm
+* File type download page: https://storage.googleapis.com/mobile_test_assets/test_app/downloads.html
 
 # Assets
 
