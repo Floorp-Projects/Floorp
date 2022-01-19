@@ -114,7 +114,7 @@
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
     <string name="mozac_feature_prompts_expand_credit_cards_content_description">展開建議的信用卡</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">折疊建議的信用卡</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">摺疊建議的信用卡</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings -->
     <string name="mozac_feature_prompts_manage_credit_cards">管理信用卡</string>
 </resources>
