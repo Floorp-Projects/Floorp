@@ -274,21 +274,25 @@ add_task(async function test_check_open_with_internal_handler() {
     };
     gBrowser.tabContainer.addEventListener("TabOpen", tabOpenListener);
 
-    let oldLaunchFile = DownloadIntegration.launchFile;
-    let waitForLaunchFileCalled = new Promise(resolve => {
-      DownloadIntegration.launchFile = async () => {
-        ok(true, "The file should be launched with an external application");
-        resolve();
-      };
-    });
-
-    downloadFinishedPromise = promiseDownloadFinished(publicList);
+    let openingPromise = TestUtils.topicObserved(
+      "test-only-opening-downloaded-file",
+      (subject, data) => {
+        subject.QueryInterface(Ci.nsISupportsPRBool);
+        // Block opening the file:
+        subject.data = false;
+        return true;
+      }
+    );
 
     info("Accepting the dialog");
     subDoc.querySelector("#unknownContentType").acceptDialog();
-    info("Waiting until DownloadIntegration.launchFile is called");
-    await waitForLaunchFileCalled;
-    DownloadIntegration.launchFile = oldLaunchFile;
+    info("Waiting until we try to open the file with an external app");
+    let [, downloadPath] = await openingPromise;
+    is(
+      downloadPath,
+      download.target.path,
+      "Path opened with external app should be the same."
+    );
 
     // Remove the first file (can't do this sooner or the second load fails):
     if (download?.target.exists) {
@@ -305,16 +309,6 @@ add_task(async function test_check_open_with_internal_handler() {
     BrowserTestUtils.removeTab(newTab);
     BrowserTestUtils.removeTab(extraTab);
 
-    // Remove the remaining file once complete.
-    download = await downloadFinishedPromise;
-    if (download?.target.exists) {
-      try {
-        info("removing " + download.target.path);
-        await IOUtils.remove(download.target.path);
-      } catch (ex) {
-        /* ignore */
-      }
-    }
     await publicList.removeFinished();
   }
   for (let mimeInfo of mimeInfosToRestore) {
