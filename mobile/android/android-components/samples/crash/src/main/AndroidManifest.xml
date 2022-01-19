@@ -18,7 +18,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat">
         <activity android:name=".CrashActivity"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
