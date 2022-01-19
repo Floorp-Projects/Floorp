@@ -61,9 +61,7 @@ class WindowGlobalTargetFront extends TargetMixin(
    * Event listener for `frameUpdate` event.
    */
   _onFrameUpdate(packet) {
-    // @backward-compat { version 96 } isTopLevel was added on the server in 96, so we
-    // can simply send `packet` when 96 hits release.
-    this.emit("frame-update", { ...packet, isTopLevel: !packet.parentID });
+    this.emit("frame-update", packet);
   }
 
   /**
