@@ -12,24 +12,17 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "nsJSEnvironment.h"
+#include "xpcpublic.h"
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TestUtils, mOwner)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(TestUtils)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(TestUtils)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TestUtils)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-JSObject* TestUtils::WrapObject(JSContext* aCx,
-                                JS::Handle<JSObject*> aGivenProto) {
-  return TestUtils_Binding::Wrap(aCx, this, aGivenProto);
-}
-
-already_AddRefed<Promise> TestUtils::Gc(ErrorResult& aRv) {
-  RefPtr<Promise> promise = Promise::Create(mOwner, aRv);
+already_AddRefed<Promise> TestUtils::Gc(const GlobalObject& aGlobal,
+                                        ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
 
   // TODO(krosylight): Ideally we could use nsJSContext::IncrementalGC to make
   // it actually async, but that's not required right now.

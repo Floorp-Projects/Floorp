@@ -16,26 +16,13 @@ class nsIGlobalObject;
 
 namespace mozilla::dom {
 
-class TestUtils final : public nsISupports, public nsWrapperCache {
+class TestUtils {
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TestUtils)
-
-  explicit TestUtils(nsIGlobalObject* aGlobal) : mOwner(aGlobal) {}
-
-  nsIGlobalObject* GetParentObject() const { return mOwner; }
-
-  JSObject* WrapObject(JSContext* aCx,
-                       JS::Handle<JSObject*> aGivenProto) override;
-
-  already_AddRefed<Promise> Gc(ErrorResult& aRv);
-
-  void Shutdown();
+  static already_AddRefed<Promise> Gc(const GlobalObject& aGlobal,
+                                      ErrorResult& aRv);
 
  private:
-  ~TestUtils() = default;
-
-  nsCOMPtr<nsIGlobalObject> mOwner;
+  ~TestUtils() = delete;
 };
 
 }  // namespace mozilla::dom
