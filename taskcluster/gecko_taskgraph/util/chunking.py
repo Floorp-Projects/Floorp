@@ -53,6 +53,7 @@ def guess_mozinfo_from_task(task):
         "fission": any("fission" in key for key in setting["runtime"].keys()),
         "headless": "-headless" in task["test-name"],
         "tsan": setting["build"].get("tsan", False),
+        "xorigin": any("xorigin" in key for key in setting["runtime"].keys()),
     }
     for platform in ("android", "linux", "mac", "win"):
         if p_os["name"].startswith(platform):
