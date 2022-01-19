@@ -3902,7 +3902,11 @@
 # Maximum value of navigator.hardwareConcurrency.
 - name: dom.maxHardwareConcurrency
   type: RelaxedAtomicUint32
+#ifdef NIGHTLY_BUILD
   value: 128
+#else
+  value: 16
+#endif
   mirror: always
 
 # W3C pointer events draft.
