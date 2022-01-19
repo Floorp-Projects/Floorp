@@ -46,12 +46,11 @@ class DefaultTopSitesStorageTest {
             coroutineContext
         )
 
-        val pinnedSite = TopSite(
+        val pinnedSite = TopSite.Pinned(
             id = 2,
             title = "Firefox",
             url = "https://firefox.com",
-            createdAt = 2,
-            type = TopSite.Type.PINNED
+            createdAt = 2
         )
 
         defaultTopSitesStorage.removeTopSite(pinnedSite)
@@ -66,12 +65,11 @@ class DefaultTopSitesStorageTest {
             coroutineContext
         )
 
-        val pinnedSite = TopSite(
+        val pinnedSite = TopSite.Pinned(
             id = 2,
             title = "Wikipedia",
             url = "https://wikipedia.com",
-            createdAt = 2,
-            type = TopSite.Type.PINNED
+            createdAt = 2
         )
         defaultTopSitesStorage.updateTopSite(
             pinnedSite,
@@ -93,19 +91,17 @@ class DefaultTopSitesStorageTest {
             coroutineContext
         )
 
-        val pinnedSite1 = TopSite(
+        val pinnedSite1 = TopSite.Pinned(
             id = 2,
             title = "Wikipedia",
             url = "https://wikipedia.com",
-            createdAt = 2,
-            type = TopSite.Type.PINNED
+            createdAt = 2
         )
-        val pinnedSite2 = TopSite(
+        val pinnedSite2 = TopSite.Pinned(
             id = 3,
             title = "Example",
             url = "https://example.com",
-            createdAt = 3,
-            type = TopSite.Type.PINNED
+            createdAt = 3
         )
 
         whenever(pinnedSitesStorage.getPinnedSites()).thenReturn(
