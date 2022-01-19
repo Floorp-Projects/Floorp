@@ -11,7 +11,7 @@ import {
   getSourceLineCount,
   isThirdParty,
   isJavaScript,
-  underRoot,
+  isDescendantOfRoot,
   isUrlExtension,
   isExtensionDirectoryPath,
   getLineText,
@@ -496,7 +496,7 @@ describe("sources", () => {
     });
   });
 
-  describe("underRoot", () => {
+  describe("isDescendantOfRoot", () => {
     const threads = [
       makeMockThread({ actor: "server0.conn1.child1/thread19" }),
     ];
@@ -505,25 +505,25 @@ describe("sources", () => {
       const source = makeMockSource(
         "resource://activity-stream/vendor/react.js"
       );
-      expect(underRoot(source, "resource://activity-stream", threads)).toBe(
-        true
-      );
+      expect(
+        isDescendantOfRoot(source, "resource://activity-stream", threads)
+      ).toBe(true);
     });
 
     it("should detect source urls under chrome:// as root", () => {
       const source = makeMockSource(
         "chrome://browser/content/contentSearchUI.js"
       );
-      expect(underRoot(source, "chrome://", threads)).toBe(true);
+      expect(isDescendantOfRoot(source, "chrome://", threads)).toBe(true);
     });
 
     it("should detect source urls if root is a thread actor Id", () => {
       const source = makeMockSource(
         "resource://activity-stream/vendor/react-dom.js"
       );
-      expect(underRoot(source, "server0.conn1.child1/thread19", threads)).toBe(
-        true
-      );
+      expect(
+        isDescendantOfRoot(source, "server0.conn1.child1/thread19", threads)
+      ).toBe(true);
     });
   });
 
