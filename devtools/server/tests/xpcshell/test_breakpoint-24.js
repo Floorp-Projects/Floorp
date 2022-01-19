@@ -185,10 +185,9 @@ async function testRemovingBreakpoint({ commands, threadFront }) {
   Assert.equal(packet.frame.where.line, 2);
   Assert.equal(packet.why.type, "breakpoint");
   threadFront.removeBreakpoint(location);
-  await threadFront.resume();
 
   info("paused at the first debugger statement");
-  const packet2 = await waitForEvent(threadFront, "paused");
+  const packet2 = await resumeAndWaitForPause(threadFront);
   Assert.equal(packet2.frame.where.line, 2);
   Assert.equal(packet2.why.type, "debuggerStatement");
   await threadFront.resume();
@@ -217,10 +216,9 @@ async function testAddingBreakpoint({ commands, threadFront }) {
   Assert.equal(packet.frame.where.line, 2);
   Assert.equal(packet.why.type, "debuggerStatement");
   threadFront.setBreakpoint(location, {});
-  await threadFront.resume();
 
   info("paused at the breakpoint at the first debugger statement");
-  const packet2 = await waitForEvent(threadFront, "paused");
+  const packet2 = await resumeAndWaitForPause(threadFront);
   Assert.equal(packet2.frame.where.line, 2);
   Assert.equal(packet2.why.type, "breakpoint");
   await threadFront.resume();

@@ -57,8 +57,7 @@ add_task(
 
     // Sanity check to ensure that the functionWithDebuggerStatement really pauses
     info("Resume and pause on the breakpoint");
-    threadFront.resume();
-    const pausedPacket = await waitForEvent(threadFront, "paused");
+    const pausedPacket = await resumeAndWaitForPause(threadFront);
     Assert.equal(pausedPacket.frame.where.line, 2);
     // The breakpoint takes over the debugger statement
     Assert.equal(pausedPacket.why.type, "breakpoint");

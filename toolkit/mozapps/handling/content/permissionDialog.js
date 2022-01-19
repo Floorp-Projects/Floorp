@@ -66,6 +66,10 @@ let dialog = {
    * If the triggering principal is null this method always returns false.
    */
   triggeringPrincipalIsTop() {
+    if (!this._principal) {
+      return false;
+    }
+
     let topContentPrincipal = this._browsingContext?.top.embedderElement
       ?.contentPrincipal;
     if (!topContentPrincipal) {
@@ -87,8 +91,9 @@ let dialog = {
     }
 
     // We only show the website address if the request didn't come from the top
-    // level frame.
-    if (this._principal?.exposablePrePath && !this.triggeringPrincipalIsTop()) {
+    // level frame. If we can't get a host to display, fall back to the copy
+    // without host.
+    if (!this.triggeringPrincipalIsTop() && this.displayPrePath) {
       if (this._preferredHandlerName) {
         return "permission-dialog-description-host-app";
       }
@@ -118,6 +123,26 @@ let dialog = {
     return "permission-dialog-remember";
   },
 
+  /**
+   * Computes the prePath to show in the prompt. It's the prePath of the site
+   * that wants to navigate to the external protocol.
+   * @returns {string|null} - prePath to show, or null if we can't derive an
+   * exposable prePath from the triggering principal.
+   */
+  get displayPrePath() {
+    if (!this._principal) {
+      return null;
+    }
+
+    // NullPrincipals don't expose a meaningful prePath. Instead use the
+    // precursorPrincipal, which the NullPrincipal was derived from.
+    if (this._principal.isNullPrincipal) {
+      return this._principal.precursorPrincipal?.exposablePrePath;
+    }
+
+    return this._principal?.exposablePrePath;
+  },
+
   async initL10n() {
     // The UI labels depend on whether we will show the application chooser next
     // or directly open the assigned protocol handler.
@@ -138,7 +163,7 @@ let dialog = {
     document.l10n.pauseObserving();
     let pendingElements = [description];
 
-    let host = this._principal?.exposablePrePath;
+    let host = this.displayPrePath;
     let scheme = this._handlerInfo.type;
 
     document.l10n.setAttributes(description, this.l10nDescriptionId, {

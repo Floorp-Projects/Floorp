@@ -1,5 +1,4 @@
 #filter substitution
-#include @BOOKMARKS_INCLUDE_PATH@
 
 #define mozilla_icon data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E %3Cpath d='M0 0h16v16H0z'/%3E %3Cpath d='M13.994 10.356H15V12h-3.171V7.741c0-1.308-.435-1.81-1.29-1.81-1.04 0-1.46.737-1.46 1.8v2.63h1.006V12H6.918V7.741c0-1.308-.435-1.81-1.291-1.81-1.039 0-1.459.737-1.459 1.8v2.63h1.441V12H1v-1.644h1.006V6.079H1V4.435h3.168v1.139a2.507 2.507 0 0 1 2.3-1.29A2.452 2.452 0 0 1 8.931 5.91 2.535 2.535 0 0 1 11.4 4.284 2.448 2.448 0 0 1 14 6.9v3.458z' fill='%23fff'/%3E %3C/svg%3E
 
@@ -14,36 +13,47 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <!DOCTYPE NETSCAPE-Bookmark-file-1>
-<meta charset="UTF-8">
-<title>@bookmarks_title@</title>
-<h1>@bookmarks_heading@</h1>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <!-- These localization links are not automatically applied to any XHR
+         response body and must be applied manually as well.  They are included
+         so that viewing the file directly shows the results. -->
+    <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="browser/profile/default-bookmarks.ftl"/>
+    <title data-l10n-id="default-bookmarks-title">default-bookmarks-title</title>
+</head>
+<body>
+<h1 data-l10n-id="default-bookmarks-heading">default-bookmarks-heading</h1>
 
 <dl><p>
-    <dt><h3 personal_toolbar_folder="true">@bookmarks_toolbarfolder@</h3></dt>
-    <dd>@bookmarks_toolbarfolder_description@
+    <dt><h3 personal_toolbar_folder="true" data-l10n-id="default-bookmarks-toolbarfolder">default-bookmarks-toolbarfolder</h3></dt>
+    <dd data-l10n-id="default-bookmarks-toolbarfolder-description">default-bookmarks-toolbarfolder-description</dd>
 #ifndef NIGHTLY_BUILD
-        <dl>
-            <p><dt><a href="https://www.mozilla.org/@AB_CD@/firefox/central/" icon="@firefox_icon@">@getting_started@</a></dt>
-        </dl>
-    <p><dt><h3>@firefox_heading@</h3></dt>
         <dl><p>
-            <dt><a href="https://support.mozilla.org/@AB_CD@/products/firefox" icon="@firefox_icon@">@firefox_get_help@</a>
-            <dt><a href="https://support.mozilla.org/@AB_CD@/kb/customize-firefox-controls-buttons-and-toolbars?utm_source=firefox-browser&utm_medium=default-bookmarks&utm_campaign=customize" icon="@firefox_icon@">@firefox_customize@</a>
-            <dt><a href="https://www.mozilla.org/@AB_CD@/contribute/" icon="@mozilla_icon@">@firefox_community@</a>
-            <dt><a href="https://www.mozilla.org/@AB_CD@/about/" icon="@mozilla_icon@">@firefox_about@</a>
-        </dl>
+            <dt><a href="https://www.mozilla.org/firefox/central/" icon="@firefox_icon@" data-l10n-id="default-bookmarks-getting-started">default-bookmarks-getting-started</a></dt>
+        </dl><p>
+    <dt><h3 data-l10n-id="default-bookmarks-firefox-heading">default-bookmarks-firefox-heading</h3></dt>
+        <dl><p>
+            <dt><a href="https://support.mozilla.org/products/firefox" icon="@firefox_icon@" data-l10n-id="default-bookmarks-firefox-get-help">default-bookmarks-firefox-get-help</a></dt>
+            <dt><a href="https://support.mozilla.org/kb/customize-firefox-controls-buttons-and-toolbars?utm_source=firefox-browser&utm_medium=default-bookmarks&utm_campaign=customize" icon="@firefox_icon@" data-l10n-id="default-bookmarks-firefox-customize">default-bookmarks-firefox-customize</a></dt>
+            <dt><a href="https://www.mozilla.org/contribute/" icon="@mozilla_icon@" data-l10n-id="default-bookmarks-firefox-community">default-bookmarks-firefox-community</a></dt>
+            <dt><a href="https://www.mozilla.org/about/" icon="@mozilla_icon@" data-l10n-id="default-bookmarks-firefox-about">default-bookmarks-firefox-about</a></dt>
+        </dl><p>
 #else
-        <dl>
-            <p><dt><a href="https://www.mozilla.org/@AB_CD@/contribute/" icon="@mozilla_icon@">@firefox_community@</a>
-        </dl>
-    <p><dt><h3>@nightly_heading@</h3></dt>
         <dl><p>
-            <dt><a href="https://blog.nightly.mozilla.org/" icon="@mozilla_icon@">@nightly_blog@</a>
-            <dt><a href="https://bugzilla.mozilla.org/" icon="@bugzilla_icon@" shortcuturl="bz">@bugzilla@</a>
-            <dt><a href="https://developer.mozilla.org/" icon="@mdn_icon@" shortcuturl="mdn">@mdn@</a>
-            <dt><a href="https://addons.mozilla.org/@AB_CD@/firefox/addon/nightly-tester-tools/" icon="@addon_icon@">@nightly_tester_tools@</a>
-            <dt><a href="about:crashes" icon="@mozilla_icon@">@crashes@</a>
-            <dt><a href="https://planet.mozilla.org/" icon="@mozilla_icon@">@planet@</a>
-        </dl>
+            <dt><a href="https://www.mozilla.org/contribute/" icon="@mozilla_icon@" data-l10n-id="default-bookmarks-firefox-community">default-bookmarks-firefox-community</a></dt>
+        </dl><p>
+    <dt><h3 data-l10n-id="default-bookmarks-nightly-heading">default-bookmarks-nightly-heading</h3></dt>
+        <dl><p>
+            <dt><a href="https://blog.nightly.mozilla.org/" icon="@mozilla_icon@" data-l10n-id="default-bookmarks-nightly-blog">default-bookmarks-nightly-blog</a></dt>
+            <dt><a href="https://bugzilla.mozilla.org/" icon="@bugzilla_icon@" shortcuturl="bz" data-l10n-id="default-bookmarks-bugzilla">default-bookmarks-bugzilla</a></dt>
+            <dt><a href="https://developer.mozilla.org/" icon="@mdn_icon@" shortcuturl="mdn" data-l10n-id="default-bookmarks-mdn">default-bookmarks-mdn</a></dt>
+            <dt><a href="https://addons.mozilla.org/firefox/addon/nightly-tester-tools/" icon="@addon_icon@" data-l10n-id="default-bookmarks-nightly-tester-tools">default-bookmarks-nightly-tester-tools</a></dt>
+            <dt><a href="about:crashes" icon="@mozilla_icon@" data-l10n-id="default-bookmarks-crashes">default-bookmarks-crashes</a></dt>
+            <dt><a href="https://planet.mozilla.org/" icon="@mozilla_icon@" data-l10n-id="default-bookmarks-planet">default-bookmarks-planet</a></dt>
+        </dl><p>
 #endif
 </dl>
+</body>
+</html>

@@ -10,7 +10,7 @@
 import { createSelector } from "reselect";
 import {
   getPrettySourceURL,
-  underRoot,
+  isDescendantOfRoot,
   getRelativeUrl,
   isGenerated,
   getPlainUrl,
@@ -841,7 +841,7 @@ const queryAllDisplayedSources = makeShallowQuery({
     ) => ({
       id: resource.id,
       displayed:
-        underRoot(resource, projectDirectoryRoot, threads) &&
+        isDescendantOfRoot(resource, projectDirectoryRoot, threads) &&
         (!resource.isExtension ||
           chromeAndExtensionsEnabled ||
           debuggeeIsWebExtension),

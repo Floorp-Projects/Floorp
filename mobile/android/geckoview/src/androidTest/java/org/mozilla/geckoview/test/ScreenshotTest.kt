@@ -29,6 +29,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Bitmap
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assume.assumeThat
+import org.junit.Assume.assumeTrue
 import java.lang.IllegalStateException
 
 private const val SCREEN_HEIGHT = 800
@@ -225,6 +226,30 @@ class ScreenshotTest : BaseSessionTest() {
 
         sessionRule.display?.let {
             assertScreenshotResult(it.capturePixels(), screenshotFile)
+        }
+    }
+
+    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
+    @Test
+    fun capturePixelsBeforeGpuProcessCrash() {
+        // We need the GPU process for this test
+        assumeTrue(sessionRule.usingGpuProcess())
+
+        val screenshotFile = getComparisonScreenshot(SCREEN_WIDTH, SCREEN_HEIGHT)
+
+        mainSession.loadTestPath(COLORS_HTML_PATH)
+        sessionRule.waitUntilCalled(object : ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onFirstContentfulPaint(session: GeckoSession) {
+            }
+        })
+
+        sessionRule.display?.let {
+            // Request screen pixels then immediately kill the GPU process
+            val result = it.capturePixels()
+            sessionRule.killGpuProcess()
+
+            assertScreenshotResult(result, screenshotFile)
         }
     }
 

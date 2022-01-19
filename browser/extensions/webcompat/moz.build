@@ -80,7 +80,6 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1610358-pcloud.com-appVersion-change.js",
     "injections/js/bug1631811-datastudio.google.com-indexedDB.js",
     "injections/js/bug1711082-m.aliexpress.com-undisable-search.js",
-    "injections/js/bug1714612-www.rfi.it-outertext.js",
     "injections/js/bug1722955-frontgate.com-ua-override.js",
     "injections/js/bug1724764-amextravel.com-window-print.js",
     "injections/js/bug1724868-news.yahoo.co.jp-ua-override.js",

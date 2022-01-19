@@ -4,7 +4,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React from "react";
-import lodash from "lodash";
 
 import { shallow, mount } from "enzyme";
 import { QuickOpenModal } from "../QuickOpenModal";
@@ -14,8 +13,6 @@ jest.mock("fuzzaldrin-plus");
 jest.unmock("lodash");
 
 import { filter } from "fuzzaldrin-plus";
-
-lodash.throttle = jest.fn(fn => fn);
 
 function generateModal(propOverrides, renderType = "shallow") {
   const props = {
@@ -61,6 +58,12 @@ function generateQuickOpenResult(title) {
     value: "",
     title,
   };
+}
+
+async function waitForUpdateResultsThrottle() {
+  await new Promise(res =>
+    setTimeout(res, QuickOpenModal.UPDATE_RESULTS_THROTTLE)
+  );
 }
 
 describe("QuickOpenModal", () => {
@@ -209,7 +212,7 @@ describe("QuickOpenModal", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  test("basic source search", () => {
+  test("basic source search", async () => {
     const { wrapper } = generateModal(
       {
         enabled: true,
@@ -221,13 +224,14 @@ describe("QuickOpenModal", () => {
       "mount"
     );
     wrapper.find("input").simulate("change", { target: { value: "somefil" } });
+    await waitForUpdateResultsThrottle();
     expect(filter).toHaveBeenCalledWith([], "somefil", {
       key: "value",
       maxResults: 100,
     });
   });
 
-  test("basic gotoSource search", () => {
+  test("basic gotoSource search", async () => {
     const { wrapper } = generateModal(
       {
         enabled: true,
@@ -242,6 +246,9 @@ describe("QuickOpenModal", () => {
     wrapper
       .find("input")
       .simulate("change", { target: { value: "somefil:33" } });
+
+    await waitForUpdateResultsThrottle();
+
     expect(filter).toHaveBeenCalledWith([], "somefil", {
       key: "value",
       maxResults: 100,
@@ -249,7 +256,7 @@ describe("QuickOpenModal", () => {
   });
 
   describe("empty symbol search", () => {
-    it("basic symbol search", () => {
+    it("basic symbol search", async () => {
       const { wrapper } = generateModal(
         {
           enabled: true,
@@ -269,7 +276,7 @@ describe("QuickOpenModal", () => {
       wrapper
         .find("input")
         .simulate("change", { target: { value: "@someFunc" } });
-
+      await waitForUpdateResultsThrottle();
       expect(filter).toHaveBeenCalledWith([], "someFunc", {
         key: "value",
         maxResults: 100,

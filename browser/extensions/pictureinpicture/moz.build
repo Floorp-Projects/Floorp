@@ -27,5 +27,12 @@ FINAL_TARGET_FILES.features["pictureinpicture@mozilla.org"]["lib"] += [
     "lib/picture_in_picture_overrides.js",
 ]
 
+FINAL_TARGET_FILES.features["pictureinpicture@mozilla.org"]["video-wrappers"] += [
+    "video-wrappers/mock-wrapper.js",
+    "video-wrappers/youtube.js",
+]
+
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
+
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Picture-in-Picture")

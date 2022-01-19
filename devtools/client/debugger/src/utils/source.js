@@ -522,20 +522,33 @@ export function getRelativeUrl(source, root) {
   return url.slice(url.indexOf(root) + root.length + 1);
 }
 
-export function underRoot(source, root, threads) {
+/**
+ * Checks if the source is descendant of the root identified by the
+ * root url specified. The root might likely be projectDirectoryRoot which
+ * is a defined by a pref that allows users restrict the source tree to
+ * a subset of sources.
+ *
+ * @params {Object} source
+ *                  The source object
+ * @params {String} rootUrl
+ *                  The url for the root node
+ * @params {Array}  threads
+ *                  A list of existing threads
+ */
+export function isDescendantOfRoot(source, rootUrl, threads) {
   // source.url doesn't include thread actor ID, so remove the thread actor ID from the root
   threads.forEach(thread => {
-    if (root.includes(thread.actor)) {
-      root = root.slice(thread.actor.length + 1);
+    if (rootUrl.includes(thread.actor)) {
+      rootUrl = rootUrl.slice(thread.actor.length + 1);
     }
   });
 
   if (source.url && source.url.includes("chrome://")) {
     const { group, path } = getURL(source);
-    return (group + path).includes(root);
+    return (group + path).includes(rootUrl);
   }
 
-  return !!source.url && source.url.includes(root);
+  return !!source.url && source.url.includes(rootUrl);
 }
 
 export function isGenerated(source) {

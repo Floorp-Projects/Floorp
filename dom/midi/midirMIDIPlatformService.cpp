@@ -50,7 +50,7 @@ StaticMutex midirMIDIPlatformService::gBackgroundThreadMutex;
 nsCOMPtr<nsIThread> midirMIDIPlatformService::gBackgroundThread;
 
 midirMIDIPlatformService::midirMIDIPlatformService()
-    : mIsInitialized(false), mImplementation(nullptr) {
+    : mImplementation(nullptr) {
   StaticMutexAutoLock lock(gBackgroundThreadMutex);
   gBackgroundThread = NS_GetCurrentThread();
 }
@@ -71,15 +71,13 @@ void midirMIDIPlatformService::AddPort(const nsString* aId,
 }
 
 void midirMIDIPlatformService::Init() {
-  if (mIsInitialized) {
+  if (mImplementation) {
     return;
   }
 
-  mImplementation = midir_impl_init();
+  mImplementation = midir_impl_init(AddPort);
 
   if (mImplementation) {
-    mIsInitialized = true;
-    midir_impl_enum_ports(mImplementation, AddPort);
     MIDIPlatformService::Get()->SendPortList();
   } else {
     LOG("midir_impl_init failure");
@@ -122,11 +120,10 @@ void midirMIDIPlatformService::Open(MIDIPortParent* aPort) {
     LOG("MIDI port open: %s at t=%lf", NS_ConvertUTF16toUTF8(id).get(),
         (openTimeStamp - TimeStamp::ProcessCreation()).ToSeconds());
     nsCOMPtr<nsIRunnable> r(new SetStatusRunnable(
-        aPort->MIDIPortInterface::Id(), aPort->DeviceState(),
-        MIDIPortConnectionState::Open));
+        aPort, aPort->DeviceState(), MIDIPortConnectionState::Open));
     NS_DispatchToCurrentThread(r);
   } else {
-    LOG("MIDI port open: %s", NS_ConvertUTF16toUTF8(id).get());
+    LOG("MIDI port open failed: %s", NS_ConvertUTF16toUTF8(id).get());
   }
 }
 
@@ -150,8 +147,7 @@ void midirMIDIPlatformService::ScheduleClose(MIDIPortParent* aPort) {
   if (aPort->ConnectionState() == MIDIPortConnectionState::Open) {
     midir_impl_close_port(mImplementation, &id);
     nsCOMPtr<nsIRunnable> r(new SetStatusRunnable(
-        aPort->MIDIPortInterface::Id(), aPort->DeviceState(),
-        MIDIPortConnectionState::Closed));
+        aPort, aPort->DeviceState(), MIDIPortConnectionState::Closed));
     NS_DispatchToCurrentThread(r);
   }
 }

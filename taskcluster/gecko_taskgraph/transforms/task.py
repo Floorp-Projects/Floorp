@@ -1464,6 +1464,26 @@ def set_defaults(config, tasks):
 
 
 @transforms.add
+def setup_raptor(config, tasks):
+    """Add options that are specific to raptor jobs (identified by suite=raptor).
+
+    This variant uses a separate set of transforms for manipulating the tests at the
+    task-level. Currently only used for setting the taskcluster proxy setting and
+    the scopes required for perftest secrets.
+    """
+    from gecko_taskgraph.transforms.test.raptor import (
+        task_transforms as raptor_transforms,
+    )
+
+    for task in tasks:
+        if task.get("extra", {}).get("suite", "") != "raptor":
+            yield task
+            continue
+
+        yield from raptor_transforms(config, [task])
+
+
+@transforms.add
 def task_name_from_label(config, tasks):
     for task in tasks:
         if "label" not in task:

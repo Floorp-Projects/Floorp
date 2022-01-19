@@ -34,7 +34,7 @@ function throttle(func, wait, scope) {
     args = null;
   };
 
-  return function() {
+  const throttledFunction = function() {
     const now = Date.now();
     const remaining = wait - (now - previous);
     args = arguments;
@@ -49,6 +49,29 @@ function throttle(func, wait, scope) {
     }
     return result;
   };
+
+  function cancel() {
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+    previous = 0;
+    args = undefined;
+    result = undefined;
+  }
+
+  function flush() {
+    if (!timeout) {
+      return result;
+    }
+    previous = 0;
+    return throttledFunction();
+  }
+
+  throttledFunction.cancel = cancel;
+  throttledFunction.flush = flush;
+
+  return throttledFunction;
 }
 
 exports.throttle = throttle;
