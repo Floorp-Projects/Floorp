@@ -2294,7 +2294,8 @@ static UINT GetCurrentShowCmd(HWND aWnd) {
   return pl.showCmd;
 }
 
-void nsWindow::SetSizeModeInternal(nsSizeMode aMode, nsIScreen* aFullscreenTarget) {
+void nsWindow::SetSizeModeInternal(nsSizeMode aMode,
+                                   nsIScreen* aFullscreenTarget) {
   // Let's not try and do anything if we're already in that state.
   // (This is needed to prevent problems when calling window.minimize(), which
   // calls us directly, and then the OS triggers another call to us.)
@@ -2361,7 +2362,8 @@ void nsWindow::SetSizeModeInternal(nsSizeMode aMode, nsIScreen* aFullscreenTarge
     // Will call hide chrome, reposition window. Note this will
     // also cache dimensions for restoration, so it should only
     // be called once per fullscreen request.
-    nsBaseWidget::InfallibleMakeFullScreen(requestedFullscreen, aFullscreenTarget);
+    nsBaseWidget::InfallibleMakeFullScreen(requestedFullscreen,
+                                           aFullscreenTarget);
 
     if (mIsVisible && aMode != nsSizeMode_Minimized) {
       DispatchFocusToTopLevelWindow(true);
@@ -2377,7 +2379,7 @@ void nsWindow::SetSizeModeInternal(nsSizeMode aMode, nsIScreen* aFullscreenTarge
     if (mWidgetListener) {
       mWidgetListener->FullscreenChanged(requestedFullscreen);
     }
-  } else if(mIsVisible && aMode != nsSizeMode_Minimized) {
+  } else if (mIsVisible && aMode != nsSizeMode_Minimized) {
     DispatchFocusToTopLevelWindow(true);
   }
 }
