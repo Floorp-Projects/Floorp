@@ -792,6 +792,27 @@ const AVAILABLE_UA_OVERRIDES = [
       },
     },
   },
+  {
+    /*
+     * Bug 1750152 - Bing settings no longer persistent when changed.
+     *
+     * This issue is caused by Bing sending a `SameSite=None` attribute for
+     * Chrome, but nothing in Firefox, which means we'll fall back to
+     * `SameSite=Lax`, causing breakage.
+     *
+     * This is a temporary solution until Bing is fixed properly.
+     */
+    id: "bug1750152",
+    platform: "desktop",
+    domain: "www.bing.com",
+    bug: "1750152",
+    config: {
+      matches: ["*://*.bing.com/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA("97.0.4692.71");
+      },
+    },
+  },
 ];
 
 module.exports = AVAILABLE_UA_OVERRIDES;
