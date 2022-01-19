@@ -49,6 +49,9 @@ ChromeUtils.defineModuleGetter(
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+});
 
 const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";
@@ -206,6 +209,11 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     if (state?.intersectionObserver) {
       state.intersectionObserver.disconnect();
     }
+
+    // ensure the sandbox created by the video is destroyed
+    this.videoWrapper?.destroy();
+    this.videoWrapper = null;
+
     // ensure we don't access the state
     this.isDestroyed = true;
   }
@@ -1377,6 +1385,37 @@ class PictureInPictureChild extends JSWindowActorChild {
   }
 
   /**
+   * Creates an instance of the PictureInPictureChildVideoWrapper class responsible
+   * for applying site-specific wrapper methods around the original video.
+   *
+   * The Picture-In-Picture add-on can use this to provide site-specific wrappers for
+   * sites that require special massaging to control.
+   *
+   * @param {Element} originatingVideo
+   *   The <video> element to wrap.
+   */
+  applyWrapper(originatingVideo) {
+    let originatingDoc = originatingVideo.ownerDocument;
+    let originatingDocumentURI = originatingDoc.documentURI;
+
+    let overrides = gSiteOverrides.find(([matcher]) => {
+      return matcher.matches(originatingDocumentURI);
+    });
+
+    // gSiteOverrides is a list of tuples where the first element is the MatchPattern
+    // for a supported site and the second is the actual overrides object for it.
+    // TODO: Remove DEBUG and NIGHTLY_BUILD checks (see Bug 1750998).
+    let wrapperPath =
+      AppConstants.NIGHTLY_BUILD && !AppConstants.DEBUG && overrides
+        ? overrides[1].videoWrapperScriptPath
+        : null;
+    this.videoWrapper = new PictureInPictureChildVideoWrapper(
+      wrapperPath,
+      originatingVideo
+    );
+  }
+
+  /**
    * Runs in an instance of PictureInPictureChild for the
    * player window's content, and not the originating video
    * content. Sets up the player so that it clones the originating
@@ -1403,6 +1442,8 @@ class PictureInPictureChild extends JSWindowActorChild {
       await this.closePictureInPicture({ reason: "setup-failure" });
       return;
     }
+
+    this.applyWrapper(originatingVideo);
 
     let loadPromise = new Promise(resolve => {
       this.contentWindow.addEventListener("load", resolve, {
@@ -1460,29 +1501,29 @@ class PictureInPictureChild extends JSWindowActorChild {
 
   play() {
     let video = this.getWeakVideo();
-    if (video) {
-      video.play();
+    if (video && this.videoWrapper) {
+      this.videoWrapper.play(video);
     }
   }
 
   pause() {
     let video = this.getWeakVideo();
-    if (video) {
-      video.pause();
+    if (video && this.videoWrapper) {
+      this.videoWrapper.pause(video);
     }
   }
 
   mute() {
     let video = this.getWeakVideo();
-    if (video) {
-      video.muted = true;
+    if (video && this.videoWrapper) {
+      this.videoWrapper.setMuted(video, true);
     }
   }
 
   unmute() {
     let video = this.getWeakVideo();
-    if (video) {
-      video.muted = false;
+    if (video && this.videoWrapper) {
+      this.videoWrapper.setMuted(video, false);
     }
   }
 
@@ -1572,7 +1613,7 @@ class PictureInPictureChild extends JSWindowActorChild {
         break;
     }
 
-    const isVideoStreaming = video.duration == +Infinity;
+    const isVideoStreaming = this.videoWrapper.getDuration(video) == +Infinity;
     var oldval, newval;
 
     try {
@@ -1581,11 +1622,16 @@ class PictureInPictureChild extends JSWindowActorChild {
           if (!this.isKeyEnabled(KEYBOARD_CONTROLS.PLAY_PAUSE)) {
             return;
           }
-          if (video.paused || video.ended) {
-            video.play();
+
+          if (
+            this.videoWrapper.getPaused(video) ||
+            this.videoWrapper.getEnded(video)
+          ) {
+            this.videoWrapper.play(video);
           } else {
-            video.pause();
+            this.videoWrapper.pause(video);
           }
+
           break;
         case "accel-w" /* Close video */:
           if (!this.isKeyEnabled(KEYBOARD_CONTROLS.CLOSE)) {
@@ -1598,29 +1644,29 @@ class PictureInPictureChild extends JSWindowActorChild {
           if (!this.isKeyEnabled(KEYBOARD_CONTROLS.VOLUME)) {
             return;
           }
-          oldval = video.volume;
-          video.volume = oldval < 0.1 ? 0 : oldval - 0.1;
-          video.muted = false;
+          oldval = this.videoWrapper.getVolume(video);
+          this.videoWrapper.setVolume(video, oldval < 0.1 ? 0 : oldval - 0.1);
+          this.videoWrapper.setMuted(video, false);
           break;
         case "upArrow" /* Volume increase */:
           if (!this.isKeyEnabled(KEYBOARD_CONTROLS.VOLUME)) {
             return;
           }
-          oldval = video.volume;
-          video.volume = oldval > 0.9 ? 1 : oldval + 0.1;
-          video.muted = false;
+          oldval = this.videoWrapper.getVolume(video);
+          this.videoWrapper.setVolume(video, oldval > 0.9 ? 1 : oldval + 0.1);
+          this.videoWrapper.setMuted(video, false);
           break;
         case "accel-downArrow" /* Mute */:
           if (!this.isKeyEnabled(KEYBOARD_CONTROLS.MUTE_UNMUTE)) {
             return;
           }
-          video.muted = true;
+          this.videoWrapper.setMuted(video, true);
           break;
         case "accel-upArrow" /* Unmute */:
           if (!this.isKeyEnabled(KEYBOARD_CONTROLS.MUTE_UNMUTE)) {
             return;
           }
-          video.muted = false;
+          this.videoWrapper.setMuted(video, false);
           break;
         case "leftArrow": /* Seek back 15 seconds */
         case "accel-leftArrow" /* Seek back 10% */:
@@ -1628,13 +1674,13 @@ class PictureInPictureChild extends JSWindowActorChild {
             return;
           }
 
-          oldval = video.currentTime;
+          oldval = this.videoWrapper.getCurrentTime(video);
           if (keystroke == "leftArrow") {
             newval = oldval - 15;
           } else {
-            newval = oldval - video.duration / 10;
+            newval = oldval - this.videoWrapper.getDuration(video) / 10;
           }
-          video.currentTime = newval >= 0 ? newval : 0;
+          this.videoWrapper.setCurrentTime(video, newval >= 0 ? newval : 0);
           break;
         case "rightArrow": /* Seek forward 15 seconds */
         case "accel-rightArrow" /* Seek forward 10% */:
@@ -1642,29 +1688,35 @@ class PictureInPictureChild extends JSWindowActorChild {
             return;
           }
 
-          oldval = video.currentTime;
-          var maxtime = video.duration;
+          oldval = this.videoWrapper.getCurrentTime(video);
+          var maxtime = this.videoWrapper.getDuration(video);
           if (keystroke == "rightArrow") {
             newval = oldval + 15;
           } else {
             newval = oldval + maxtime / 10;
           }
-          video.currentTime = newval <= maxtime ? newval : maxtime;
+          let selectedTime = newval <= maxtime ? newval : maxtime;
+          this.videoWrapper.setCurrentTime(video, selectedTime);
           break;
         case "home" /* Seek to beginning */:
           if (!this.isKeyEnabled(KEYBOARD_CONTROLS.SEEK)) {
             return;
           }
           if (!isVideoStreaming) {
-            video.currentTime = 0;
+            this.videoWrapper.setCurrentTime(video, 0);
           }
           break;
         case "end" /* Seek to end */:
           if (!this.isKeyEnabled(KEYBOARD_CONTROLS.SEEK)) {
             return;
           }
-          if (!isVideoStreaming && video.currentTime != video.duration) {
-            video.currentTime = video.duration;
+
+          let duration = this.videoWrapper.getDuration(video);
+          if (
+            !isVideoStreaming &&
+            this.videoWrapper.getCurrentTime(video) != duration
+          ) {
+            this.videoWrapper.setCurrentTime(video, duration);
           }
           break;
         default:
@@ -1672,5 +1724,250 @@ class PictureInPictureChild extends JSWindowActorChild {
     } catch (e) {
       /* ignore any exception from setting video.currentTime */
     }
+  }
+}
+
+/**
+ * The PictureInPictureChildVideoWrapper class handles providing a path to a script that
+ * defines a "site wrapper" for the original <video> (or other controls API provided
+ * by the site) to command it.
+ *
+ * This "site wrapper" provided to PictureInPictureChildVideoWrapper is a script file that
+ * defines a class called `PictureInPictureVideoWrapper` and exports it. These scripts can
+ * be found under "browser/extensions/pictureinpicture/video-wrappers" as part of the
+ * Picture-In-Picture addon.
+ *
+ * Site wrappers need to adhere to a specific interface to work properly with
+ * PictureInPictureChildVideoWrapper:
+ *
+ * - The "site wrapper" script must export a class called "PictureInPictureVideoWrapper"
+ * - Method names on a site wrapper class should match its caller's name
+ *   (i.e: PictureInPictureChildVideoWrapper.play will only call `play` on a site-wrapper,
+ *    if available)
+ */
+class PictureInPictureChildVideoWrapper {
+  #sandbox;
+  #siteWrapper;
+
+  /**
+   * Create a wrapper for the original <video>
+   *
+   * @param {String|null} videoWrapperScriptPath
+   *        Path to a wrapper script from the Picture-in-Picture addon. If a wrapper isn't
+   *        provided to the class, then we fallback on a default implementation for
+   *        commanding the original <video>.
+   * @param {HTMLVideoElement} video
+   *        The original <video> we want to create a wrapper class for.
+   */
+  constructor(videoWrapperScriptPath, video) {
+    this.#sandbox = videoWrapperScriptPath
+      ? this.#createSandbox(videoWrapperScriptPath, video)
+      : null;
+  }
+
+  /**
+   * Handles calling methods defined on the site wrapper class to perform video
+   * controls operations on the source video. If the method doesn't exist,
+   * or if an error is thrown while calling it, use a fallback implementation.
+   *
+   * @param {String} methodInfo.name
+   *        The method name to call.
+   * @param {Array} methodInfo.args
+   *        Arguments to pass to the site wrapper method being called.
+   * @param {Function} methodInfo.fallback
+   *        A fallback function that's invoked when a method doesn't exist on the site
+   *        wrapper class or an error is thrown while calling a method
+   * @param {Function} methodInfo.validateReturnVal
+   *        Validates whether or not the return value of the wrapper method is correct.
+   *        If this isn't provided or if it evaluates false for a return value, then
+   *        return null.
+   *
+   * @returns The expected output of the wrapper function.
+   *
+   */
+  #callWrapperMethod({ name, args = [], fallback = () => {}, validateRetVal }) {
+    try {
+      const wrappedMethod = this.#siteWrapper?.[name];
+      if (typeof wrappedMethod === "function") {
+        let retVal = wrappedMethod.call(this.#siteWrapper, ...args);
+
+        if (!validateRetVal) {
+          Cu.reportError(
+            `No return value validator was provided for method ${name}(). Returning null.`
+          );
+          return null;
+        }
+
+        if (!validateRetVal(retVal)) {
+          Cu.reportError(
+            `Calling method ${name}() returned an unexpected value: ${retVal}. Returning null.`
+          );
+          return null;
+        }
+
+        return retVal;
+      }
+    } catch (e) {
+      Cu.reportError(`There was an error while calling ${name}(): `, e.message);
+    }
+
+    return fallback();
+  }
+
+  /**
+   * Creates a sandbox with Xray vision to execute content code in an unprivileged
+   * context. This way, privileged code (PictureInPictureChild) can call into the
+   * sandbox to perform video controls operations on the originating video
+   * (content code) and still be protected from direct access by it.
+   *
+   * @param {String} videoWrapperScriptPath
+   *        Path to a wrapper script from the Picture-in-Picture addon.
+   * @param {HTMLVideoElement} video
+   *        The source video element whose window to create a sandbox for.
+   */
+  #createSandbox(videoWrapperScriptPath, video) {
+    const addonPolicy = WebExtensionPolicy.getByID(
+      "pictureinpicture@mozilla.org"
+    );
+    let wrapperScriptUrl = addonPolicy.getURL(videoWrapperScriptPath);
+    let originatingWin = video.ownerGlobal;
+    let originatingDoc = video.ownerDocument;
+
+    let sandbox = Cu.Sandbox([originatingDoc.nodePrincipal], {
+      sandboxName: "Picture-in-Picture video wrapper sandbox",
+      sandboxPrototype: originatingWin,
+      sameZoneAs: originatingWin,
+      wantXrays: false,
+    });
+
+    try {
+      Services.scriptloader.loadSubScript(wrapperScriptUrl, sandbox);
+    } catch (e) {
+      Cu.nukeSandbox(sandbox);
+      Cu.reportError("Error loading wrapper script for Picture-in-Picture" + e);
+      return null;
+    }
+
+    // The prototype of the wrapper class instantiated from the sandbox with Xray
+    // vision is `Object` and not actually `PictureInPictureVideoWrapper`. But we
+    // need to be able to access methods defined on this class to perform site-specific
+    // video control operations otherwise we fallback to a default implementation.
+    // Because of this, we need to "waive Xray vision" by adding `.wrappedObject` to the
+    // end.
+    this.#siteWrapper = new sandbox.PictureInPictureVideoWrapper().wrappedJSObject;
+
+    return sandbox;
+  }
+
+  #isBoolean(val) {
+    return typeof val === "boolean";
+  }
+
+  #isNumber(val) {
+    return typeof val === "number";
+  }
+
+  destroy() {
+    if (this.#sandbox) {
+      Cu.nukeSandbox(this.#sandbox);
+    }
+  }
+
+  /* Video methods to be used for video controls from the PiP window. */
+
+  play(video) {
+    return this.#callWrapperMethod({
+      name: "play",
+      args: [video],
+      fallback: () => video.play(),
+      validateRetVal: retVal => retVal == null,
+    });
+  }
+
+  pause(video) {
+    return this.#callWrapperMethod({
+      name: "pause",
+      args: [video],
+      fallback: () => video.pause(),
+      validateRetVal: retVal => retVal == null,
+    });
+  }
+
+  getPaused(video) {
+    return this.#callWrapperMethod({
+      name: "getPaused",
+      args: [video],
+      fallback: () => video.paused,
+      validateRetVal: retVal => this.#isBoolean(retVal),
+    });
+  }
+
+  getEnded(video) {
+    return this.#callWrapperMethod({
+      name: "getEnded",
+      args: [video],
+      fallback: () => video.ended,
+      validateRetVal: retVal => this.#isBoolean(retVal),
+    });
+  }
+
+  getDuration(video) {
+    return this.#callWrapperMethod({
+      name: "getDuration",
+      args: [video],
+      fallback: () => video.duration,
+      validateRetVal: retVal => this.#isNumber(retVal),
+    });
+  }
+
+  getCurrentTime(video) {
+    return this.#callWrapperMethod({
+      name: "getCurrentTime",
+      args: [video],
+      fallback: () => video.currentTime,
+      validateRetVal: retVal => this.#isNumber(retVal),
+    });
+  }
+
+  setCurrentTime(video, position) {
+    return this.#callWrapperMethod({
+      name: "setCurrentTime",
+      args: [video, position],
+      fallback: () => {
+        video.currentTime = position;
+      },
+      validateRetVal: retVal => retVal == null,
+    });
+  }
+
+  getVolume(video) {
+    return this.#callWrapperMethod({
+      name: "getVolume",
+      args: [video],
+      fallback: () => video.volume,
+      validateRetVal: retVal => this.#isNumber(retVal),
+    });
+  }
+
+  setVolume(video, volume) {
+    return this.#callWrapperMethod({
+      name: "setVolume",
+      args: [video, volume],
+      fallback: () => {
+        video.volume = volume;
+      },
+      validateRetVal: retVal => retVal == null,
+    });
+  }
+
+  setMuted(video, isMuted) {
+    return this.#callWrapperMethod({
+      name: "setMuted",
+      args: [video, isMuted],
+      fallback: () => {
+        video.muted = isMuted;
+      },
+      validateRetVal: retVal => retVal == null,
+    });
   }
 }
