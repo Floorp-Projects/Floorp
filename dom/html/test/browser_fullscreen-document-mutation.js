@@ -77,22 +77,40 @@ function RemoveElementFromRemoteDocument(aBrowsingContext, aElementId) {
 }
 
 startTests(async browser => {
+  let promiseRemoteFsState = waitRemoteFullscreenExitEvents([
+    // browsingContext, name
+    [browser.browsingContext, "toplevel"],
+  ]);
   // toplevel
   await RemoveElementFromRemoteDocument(browser.browsingContext, "div");
+  await promiseRemoteFsState;
 }, "document_mutation_toplevel");
 
 startTests(async browser => {
+  let promiseRemoteFsState = waitRemoteFullscreenExitEvents([
+    // browsingContext, name
+    [browser.browsingContext, "toplevel"],
+    [browser.browsingContext.children[0], "middle"],
+  ]);
   // middle iframe
   await RemoveElementFromRemoteDocument(
     browser.browsingContext.children[0],
     "div"
   );
+  await promiseRemoteFsState;
 }, "document_mutation_middle_frame");
 
 startTests(async browser => {
+  let promiseRemoteFsState = waitRemoteFullscreenExitEvents([
+    // browsingContext, name
+    [browser.browsingContext, "toplevel"],
+    [browser.browsingContext.children[0], "middle"],
+    [browser.browsingContext.children[0].children[0], "inner"],
+  ]);
   // innermost iframe
   await RemoveElementFromRemoteDocument(
     browser.browsingContext.children[0].children[0],
     "div"
   );
+  await promiseRemoteFsState;
 }, "document_mutation_inner_frame");
