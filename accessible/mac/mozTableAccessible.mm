@@ -227,6 +227,11 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
+- (void)expire {
+  [self invalidateColumns];
+  [super expire];
+}
+
 - (NSNumber*)moxRowCount {
   MOZ_ASSERT(mGeckoAccessible);
 
@@ -365,6 +370,9 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 - (void)invalidateColumns {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
   if (mColContainers) {
+    for (mozColumnContainer* col in mColContainers) {
+      [col expire];
+    }
     [mColContainers release];
     mColContainers = nil;
   }

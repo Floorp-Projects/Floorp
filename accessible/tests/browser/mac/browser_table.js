@@ -163,6 +163,22 @@ addAccessibleTask(
       1,
       "Last column has single child"
     );
+
+    reorder = waitForEvent(
+      EVENT_REORDER,
+      e => e.accessible.role == ROLE_DOCUMENT
+    );
+    await SpecialPowers.spawn(browser, [], () => {
+      content.document.getElementById("customers").remove();
+    });
+    await reorder;
+
+    try {
+      cols[0].getAttributeValue("AXChildren");
+      ok(false, "Getting children from column of expired table should fail");
+    } catch (e) {
+      ok(true, "Getting children from column of expired table should fail");
+    }
   }
 );
 

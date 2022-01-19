@@ -78,6 +78,9 @@
 - (void)dealloc;
 
 // override
+- (void)expire;
+
+// override
 - (NSNumber*)moxRowCount;
 
 // override
