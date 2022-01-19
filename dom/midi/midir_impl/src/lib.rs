@@ -184,8 +184,10 @@ impl MidirWrapper {
 /// This function deliberately leaks the wrapper because ownership is
 /// transfered to the C++ code. Use [midir_impl_shutdown()] to free it.
 #[no_mangle]
-pub unsafe extern "C" fn midir_impl_init() -> *mut MidirWrapper {
+pub unsafe extern "C" fn midir_impl_init(callback: unsafe extern "C" fn(id: &nsString, name: &nsString, input: bool)) -> *mut MidirWrapper {
     if let Ok(midir_impl) = MidirWrapper::new() {
+        iterate_ports(&midir_impl.ports, callback);
+
         let midir_box = Box::new(midir_impl);
         // Leak the object as it will be owned by the C++ code from now on
         Box::leak(midir_box) as *mut _
@@ -208,21 +210,6 @@ pub unsafe extern "C" fn midir_impl_shutdown(wrapper: *mut MidirWrapper) {
     // The MidirImpl object will be automatically destroyed when the contents
     // of this box are automatically dropped at the end of the function
     let _midir_box = Box::from_raw(wrapper);
-}
-
-/// Enumerate the available MIDI ports.
-///
-/// This function will be exposed to C++
-///
-/// # Safety
-///
-/// `wrapper` must be the pointer returned by [midir_impl_init()].
-#[no_mangle]
-pub unsafe extern "C" fn midir_impl_enum_ports(
-    wrapper: *mut MidirWrapper,
-    callback: unsafe extern "C" fn(id: &nsString, name: &nsString, input: bool),
-) {
-    iterate_ports(&(*wrapper).ports, callback);
 }
 
 /// Open a MIDI port.
