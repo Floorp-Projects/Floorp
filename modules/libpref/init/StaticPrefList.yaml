@@ -3511,6 +3511,46 @@
   mirror: always
   do_not_use_directly: true
 
+# The amount of snapshot peak usage which is attempted to be pre-incremented
+# during snapshot creation.
+- name: dom.storage.snapshot_peak_usage.initial_preincrement
+  type: RelaxedAtomicUint32
+  value: 131072
+  mirror: always
+
+# The amount of snapshot peak usage which is attempted to be pre-incremented
+# during snapshot creation if the LocalStorage usage was already close to the
+# limit (a fallback for dom.storage.snapshot_peak_usage.initial_preincrement).
+- name: dom.storage.snapshot_peak_usage.reduced_initial_preincrement
+  type: RelaxedAtomicUint32
+  value: 4096
+  mirror: always
+
+# The amount of snapshot peak usage which is attempted to be pre-incremented
+# beyond the specific values which are subsequently requested after snapshot
+# creation.
+- name: dom.storage.snapshot_peak_usage.gradual_preincrement
+  type: RelaxedAtomicUint32
+  value: 4096
+  mirror: always
+
+# The amount of snapshot peak usage which is attempted to be pre-incremented
+# beyond the specific values which are subsequently requested after snapshot
+# creation if the LocalStorage total usage was already close to the limit
+# (a fallback for dom.storage.snapshot_peak_usage.gradual_preincrement).
+- name: dom.storage.snapshot_peak_usage.reduced_gradual_preincrement
+  type: RelaxedAtomicUint32
+  value: 1024
+  mirror: always
+
+# How long between a snapshot becomes idle and when we actually finish the
+# snapshot. This preference is only used when "dom.storage.snapshot_reusing"
+# is true.
+- name: dom.storage.snapshot_idle_timeout_ms
+  type: uint32_t
+  value: 20000
+  mirror: always
+
 # Is support for Storage test APIs enabled?
 - name: dom.storage.testing
   type: bool
