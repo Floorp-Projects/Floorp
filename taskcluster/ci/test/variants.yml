@@ -178,3 +178,14 @@ devtools-no-eft-no-fission:
             extra-options:
                 - "--setpref=devtools.every-frame-target.enabled=false"
                 - "--setpref=fission.autostart=false"
+
+dynamic-first-party-isolation:
+    description: "{description} with dFPI enabled"
+    contact: timhuang
+    suffix: "dfpi"
+    replace:
+        tier: 3
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=network.cookie.cookieBehavior=5"
