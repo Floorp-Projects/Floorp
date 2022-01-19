@@ -527,11 +527,6 @@ void BaselineScript::trace(JSTracer* trc) {
   TraceEdge(trc, &method_, "baseline-method");
 }
 
-/* static */
-void BaselineScript::preWriteBarrier(Zone* zone, BaselineScript* script) {
-  PreWriteBarrier(zone, script);
-}
-
 void BaselineScript::Destroy(JSFreeOp* fop, BaselineScript* script) {
   MOZ_ASSERT(!script->hasPendingIonCompileTask());
 
