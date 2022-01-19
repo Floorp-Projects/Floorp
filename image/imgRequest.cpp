@@ -556,8 +556,7 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry,
   //
   // We have the original URI in the cache key though, probably we should be
   // using that instead of relying on Init() getting called.
-  auto info = nsContentUtils::GetSubresourceCacheValidationInfo(
-      aRequest, uri, nsContentUtils::SubresourceKind::Image);
+  auto info = nsContentUtils::GetSubresourceCacheValidationInfo(aRequest, uri);
 
   // Expiration time defaults to 0. We set the expiration time on our entry if
   // it hasn't been set yet.
