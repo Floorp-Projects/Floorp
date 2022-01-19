@@ -375,7 +375,7 @@ class MachSiteManager:
             # Prioritize vendored and first-party modules first.
             *self._requirements.pths_as_absolute(self._topsrcdir),
             # Then, include the virtualenv's site-packages.
-            *_deprioritize_venv_packages(environment.site_packages_dir()),
+            *_deprioritize_venv_packages(environment),
         ]
 
     def _virtualenv(self):
@@ -636,16 +636,22 @@ class CommandSiteManager:
             system_sys_path = [p for p in sys.path if p not in stdlib_paths]
             lines.extend(system_sys_path)
         elif self._site_packages_source == SitePackagesSource.VENV:
-            # When allowed to pip install to the on-disk virtualenv, ensure that its
-            # site-packages is in-scope at the end of the list.
-            site_packages_dir = self._virtualenv.site_packages_dir()
-            while site_packages_dir in lines:
-                # The virtualenv will implicitly include its own site-packages directory:
-                # we shouldn't attempt to add it twice.
-                # This branch should only be triggered when running nested Mach processes
-                # that use the same command site.
-                lines.remove(site_packages_dir)
-            lines.extend(_deprioritize_venv_packages(site_packages_dir))
+            # The virtualenv will implicitly include itself to the sys.path, so we
+            # should avoid having our sys.path-retention add it a second time.
+            # Note that some platforms include just a site's $site-packages-dir to the
+            # sys.path, while other platforms (such as Windows) add the $prefix as well.
+            # We can catch these cases by pruning all paths that start with $prefix.
+            prefix_normalized = os.path.normcase(
+                os.path.normpath(self._virtualenv.prefix)
+            )
+            lines = [
+                line
+                for line in lines
+                if not os.path.normcase(os.path.normpath(line)).startswith(
+                    prefix_normalized
+                )
+            ]
+            lines.extend(_deprioritize_venv_packages(self._virtualenv))
 
         # De-duplicate
         lines = list(OrderedDict.fromkeys(lines))
@@ -1015,21 +1021,36 @@ def _assert_pip_check(topsrcdir, pthfile_lines, virtualenv_name):
         ] = "1"
 
 
-def _deprioritize_venv_packages(site_packages_dir):
-    # Move the virtualenv's site-packages to the bottom so that vendored packages
-    # are prioritized.
-    # repr(...) is needed to ensure Windows path backslashes aren't mistaken for
-    # escape sequences.
-    # Additionally, when removing the existing "site-packages" entry, we have to
-    # do it in a case-insensitive way because, on Windows:
-    # * Python adds it as <venv>/lib/site-packages
-    # * While distutils tells us it's <venv>/Lib/site-packages
-    # * (note: on-disk, it's capitalized, so distutils is slightly more accurate).
-    return (
-        "import sys; sys.path = [p for p in sys.path if "
-        f"p.lower() != {repr(site_packages_dir)}.lower()]",
-        f"import sys; sys.path.append({repr(site_packages_dir)})",
-    )
+def _deprioritize_venv_packages(virtualenv):
+    # Virtualenvs implicitly add some "site packages" to the sys.path upon being
+    # activated. However, Mach generally wants to prioritize the existing sys.path
+    # (such as vendored packages) over packages installed to virtualenvs.
+    # So, this function moves the virtualenv's site-packages to the bottom of the sys.path
+    # at activation-time.
+
+    # Unixes only add "<venv>/lib/<site-packages-dir>", while Windows also
+    # includes "<venv>" itself.
+    implicitly_added_dirs = [
+        virtualenv.prefix,
+        virtualenv.site_packages_dir(),
+    ]
+
+    return [
+        line
+        for site_packages_dir in implicitly_added_dirs
+        # repr(...) is needed to ensure Windows path backslashes aren't mistaken for
+        # escape sequences.
+        # Additionally, when removing the existing "site-packages" folder's entry, we have
+        # to do it in a case-insensitive way because, on Windows:
+        # * Python adds it as <venv>/lib/site-packages
+        # * While distutils tells us it's <venv>/Lib/site-packages
+        # * (note: on-disk, it's capitalized, so distutils is slightly more accurate).
+        for line in (
+            "import sys; sys.path = [p for p in sys.path if "
+            f"p.lower() != {repr(site_packages_dir)}.lower()]",
+            f"import sys; sys.path.append({repr(site_packages_dir)})",
+        )
+    ]
 
 
 def _create_venv_with_pthfile(
