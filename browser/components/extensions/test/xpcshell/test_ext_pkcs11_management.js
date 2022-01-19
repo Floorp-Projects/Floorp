@@ -3,39 +3,28 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
   ctypes: "resource://gre/modules/ctypes.jsm",
   MockRegistry: "resource://testing-common/MockRegistry.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
 });
 
 do_get_profile();
-
-let tmpDir;
-let baseDir;
+let tmpDir = FileUtils.getDir("TmpD", ["PKCS11"]);
 let slug =
   AppConstants.platform === "linux" ? "pkcs11-modules" : "PKCS11Modules";
+tmpDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+let baseDir = OS.Path.join(tmpDir.path, slug);
+OS.File.makeDir(baseDir);
 
-add_task(async function setup() {
-  let tmpDir = await IOUtils.createUniqueDirectory(
-    await PathUtils.getTempDir(),
-    "PKCS11"
-  );
-
-  baseDir = PathUtils.join(tmpDir, slug);
-  await IOUtils.createDirectory(baseDir);
+registerCleanupFunction(() => {
+  tmpDir.remove(true);
 });
 
-registerCleanupFunction(async () => {
-  await IOUtils.remove(tmpDir, { recursive: true });
-});
+function getPath(filename) {
+  return OS.Path.join(baseDir, filename);
+}
 
-const testmodule = PathUtils.join(
-  PathUtils.parent(Services.dirsvc.get("CurWorkD", Ci.nsIFile).path, 5),
-  "security",
-  "manager",
-  "ssl",
-  "tests",
-  "unit",
-  "pkcs11testmodule",
-  ctypes.libraryName("pkcs11testModule")
-);
+const testmodule =
+  "../../../../../security/manager/ssl/tests/unit/pkcs11testmodule/" +
+  ctypes.libraryName("pkcs11testmodule");
 
 // This function was inspired by the native messaging test under
 // toolkit/components/extensions
@@ -50,8 +39,8 @@ async function setupManifests(modules) {
       allowed_extensions: [module.id],
     };
 
-    let manifestPath = PathUtils.join(baseDir, `${module.name}.json`);
-    await IOUtils.writeJSON(manifestPath, manifest);
+    let manifestPath = getPath(`${module.name}.json`);
+    await OS.File.writeAtomic(manifestPath, JSON.stringify(manifest));
 
     return manifestPath;
   }
@@ -89,6 +78,10 @@ async function setupManifests(modules) {
       });
 
       for (let module of modules) {
+        if (!OS.Path.winIsAbsolute(module.path)) {
+          let cwd = await OS.File.getCurrentDirectory();
+          module.path = OS.Path.join(cwd, module.path);
+        }
         let manifestPath = await writeManifest(module);
         registry.setValue(
           Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
@@ -255,16 +248,13 @@ add_task(async function test_pkcs11() {
     {
       name: "internalmodule",
       description: "Builtin Roots Module",
-      path: PathUtils.join(
-        Services.dirsvc.get("CurWorkD", Ci.nsIFile).path,
-        ctypes.libraryName("nssckbi")
-      ),
+      path: ctypes.libraryName("nssckbi"),
       id: "pkcs11@tests.mozilla.org",
     },
     {
       name: "osclientcerts",
       description: "OS Client Cert Module",
-      path: PathUtils.join(libDir.path, ctypes.libraryName("osclientcerts")),
+      path: OS.Path.join(libDir.path, ctypes.libraryName("osclientcerts")),
       id: "pkcs11@tests.mozilla.org",
     },
   ]);
