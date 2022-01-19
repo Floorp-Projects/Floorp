@@ -42,7 +42,6 @@ browser/components/enterprisepolicies/schemas/schema.jsm
 browser/components/translation/cld2/
 # generated or library files in pocket
 browser/components/pocket/content/panels/js/tmpl.js
-browser/components/pocket/content/panels/js/vendor.bundle.js
 browser/components/pocket/content/panels/js/main.bundle.js
 
 # Ignore newtab files
