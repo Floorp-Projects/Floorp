@@ -211,12 +211,6 @@ void InitPlatformAPI(GMPPlatformAPI& aPlatformAPI, GMPChild* aChild) {
   aPlatformAPI.getcurrenttime = &GetClock;
 }
 
-void SendFOGData(ipc::ByteBuf&& buf) {
-  if (sChild) {
-    sChild->SendFOGData(std::move(buf));
-  }
-}
-
 GMPThreadImpl::GMPThreadImpl() : mMutex("GMPThreadImpl"), mThread("GMPThread") {
   MOZ_COUNT_CTOR(GMPThread);
 }
