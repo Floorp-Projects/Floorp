@@ -315,11 +315,11 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
   // Baseline code for the script. Either nullptr, BaselineDisabledScriptPtr or
   // a valid BaselineScript*.
-  BaselineScript* baselineScript_ = nullptr;
+  GCStructPtr<BaselineScript*> baselineScript_;
 
   // Ion code for this script. Either nullptr, IonDisabledScriptPtr,
   // IonCompilingScriptPtr or a valid IonScript*.
-  IonScript* ionScript_ = nullptr;
+  GCStructPtr<IonScript*> ionScript_;
 
   // The size of this allocation.
   Offset endOffset_ = 0;
@@ -411,15 +411,7 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   void incWarmUpCount(uint32_t amount) { icScript_.warmUpCount_ += amount; }
   void resetWarmUpCount(uint32_t count);
 
-  void prepareForDestruction(Zone* zone) {
-    // When the script contains pointers to nursery things, the store buffer can
-    // contain entries that point into the stub space. Since we can destroy
-    // scripts outside the context of a GC, this situation could result in us
-    // trying to mark invalid store buffer entries.
-    //
-    // Defer freeing any allocated blocks until after the next minor GC.
-    jitScriptStubSpace_.freeAllAfterMinorGC(zone);
-  }
+  void prepareForDestruction(Zone* zone);
 
   JitScriptICStubSpace* jitScriptStubSpace() { return &jitScriptStubSpace_; }
 
