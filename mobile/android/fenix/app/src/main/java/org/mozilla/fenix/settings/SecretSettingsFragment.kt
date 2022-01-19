@@ -5,9 +5,6 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.widget.Toast
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
@@ -16,7 +13,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
-import kotlin.system.exitProcess
 
 class SecretSettingsFragment : PreferenceFragmentCompat() {
 
@@ -34,29 +30,10 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
-        requirePreference<SwitchPreference>(R.string.pref_key_history_metadata_feature).apply {
-            isVisible = true
-            isChecked = context.settings().historyMetadataUIFeature
-            onPreferenceChangeListener = object : SharedPreferenceUpdater() {
-                override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
-                    val result = super.onPreferenceChange(preference, newValue)
-
-                    Toast.makeText(
-                        context,
-                        getString(R.string.toast_history_metadata_feature_done),
-                        Toast.LENGTH_LONG
-                    ).show()
-
-                    Handler(Looper.getMainLooper()).postDelayed(
-                        {
-                            exitProcess(0)
-                        },
-                        EXIT_DELAY
-                    )
-
-                    return result
-                }
-            }
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_contile).apply {
+            isVisible = FeatureFlags.contileFeature
+            isChecked = context.settings().showContileFeature
+            onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
         requirePreference<SwitchPreference>(R.string.pref_key_allow_third_party_root_certs).apply {
@@ -76,9 +53,5 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             isChecked = context.settings().nimbusUsePreview
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
-    }
-
-    companion object {
-        private const val EXIT_DELAY = 3000L
     }
 }

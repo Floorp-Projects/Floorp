@@ -95,7 +95,7 @@ object FeatureFlags {
     /**
      * Enables the Contile top sites.
      */
-    const val contileFeature = false
+    val contileFeature = Config.channel.isDebug
 
     /**
      * Enables history improvement features.

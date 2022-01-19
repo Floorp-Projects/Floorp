@@ -68,7 +68,6 @@ import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.search.SearchMigration
@@ -410,7 +409,7 @@ class Core(
         DefaultTopSitesStorage(
             pinnedSitesStorage = pinnedSiteStorage,
             historyStorage = historyStorage,
-            topSitesProvider = if (FeatureFlags.contileFeature) contileTopSitesProvider else null,
+            topSitesProvider = if (context.settings().showContileFeature) contileTopSitesProvider else null,
             defaultTopSites = defaultTopSites
         )
     }
