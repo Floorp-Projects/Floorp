@@ -41,9 +41,6 @@ class midirMIDIPlatformService : public MIDIPlatformService {
                               size_t aLength, const GeckoTimeStamp* aTimeStamp,
                               uint64_t aMicros);
 
-  // True if server has been brought up already.
-  bool mIsInitialized;
-
   // Wrapper around the midir Rust implementation.
   MidirWrapper* mImplementation;
 
