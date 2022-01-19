@@ -245,12 +245,16 @@ record-websites:
     attributes:
         cron: false
     run-on-projects: []
+    scopes:
+        - secrets:get:project/releng/gecko/build/level-{level}/conditioned-profiles
+        - secrets:get:project/perftest/gecko/level-{level}/perftest-login
     run:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
             cd $MOZ_FETCHES_DIR &&
             python3.8 python/mozperftest/mozperftest/runner.py
             --flavor desktop-browser
+            --verbose
             --browsertime-binary ${MOZ_FETCHES_DIR}/firefox/firefox-bin
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
             --proxy
