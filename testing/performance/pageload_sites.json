@@ -213,6 +213,21 @@
       ]
     },
     {
+      "login": true,
+      "login-test": true,
+      "name": "facebook-login",
+      "test_url": "https://www.facebook.com",
+      "type": "interactive",
+      "test_cmds": [
+        ["setup_login", "https://www.facebook.com"],
+        ["wait.byTime", 1000],
+        ["login", ""],
+        ["measure.start", "marketplace"],
+        ["navigate", "https://www.facebook.com/marketplace"],
+        ["measure.stop", ""]
+      ]
+    },
+    {
       "login": false,
       "name": "fandom",
       "test_url": "https://www.fandom.com/articles/fallout-76-will-live-and-die-on-the-creativity-of-its-playerbase",
