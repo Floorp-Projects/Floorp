@@ -3515,7 +3515,7 @@
 # during snapshot creation.
 - name: dom.storage.snapshot_peak_usage.initial_preincrement
   type: RelaxedAtomicUint32
-  value: 131072
+  value: 16384
   mirror: always
 
 # The amount of snapshot peak usage which is attempted to be pre-incremented
@@ -3548,7 +3548,7 @@
 # is true.
 - name: dom.storage.snapshot_idle_timeout_ms
   type: uint32_t
-  value: 20000
+  value: 5000
   mirror: always
 
 # Is support for Storage test APIs enabled?
