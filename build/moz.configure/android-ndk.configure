@@ -159,7 +159,6 @@ def android_platform(target, android_version, ndk):
     return platform_dir
 
 
-add_old_configure_assignment("android_platform", android_platform)
 set_config("ANDROID_PLATFORM", android_platform)
 
 
