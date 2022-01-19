@@ -50,6 +50,8 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
 class BrowserRobot {
     private lateinit var sessionLoadedIdlingResource: SessionLoadedIdlingResource
 
+    fun waitForPageToLoad() = progressBar.waitUntilGone(waitingTime)
+
     fun verifyCurrentPrivateSession(context: Context) {
         val selectedTab = context.components.core.store.state.selectedTab
         assertTrue("Current session is private", selectedTab?.content?.private ?: false)
@@ -541,6 +543,16 @@ class BrowserRobot {
         }
     }
 
+    fun clickTabCrashedRestoreButton() {
+        assertTrue(
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/restoreTabButton"))
+                .waitForExists(waitingTime)
+        )
+
+        val tabCrashRestoreButton = mDevice.findObject(UiSelector().resourceIdMatches("$packageName:id/restoreTabButton"))
+        tabCrashRestoreButton.click()
+    }
+
     class Transition {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         private fun threeDotButton() = onView(
@@ -622,7 +634,6 @@ class BrowserRobot {
         }
 
         fun clickTabCrashedCloseButton(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-
             assertTrue(
                 mDevice.findObject(UiSelector().resourceId("$packageName:id/closeTabButton"))
                     .waitForExists(waitingTime)
@@ -654,6 +665,42 @@ class BrowserRobot {
 
             DownloadRobot().interact()
             return DownloadRobot.Transition()
+        }
+
+        fun clickStartCameraButton(interact: SitePermissionsRobot.() -> Unit): SitePermissionsRobot.Transition {
+            // Test page used for testing permissions located at https://mozilla-mobile.github.io/testapp/permissions
+            cameraButton.waitForExists(waitingTime)
+            cameraButton.click()
+
+            SitePermissionsRobot().interact()
+            return SitePermissionsRobot.Transition()
+        }
+
+        fun clickStartMicrophoneButton(interact: SitePermissionsRobot.() -> Unit): SitePermissionsRobot.Transition {
+            // Test page used for testing permissions located at https://mozilla-mobile.github.io/testapp/permissions
+            microphoneButton.waitForExists(waitingTime)
+            microphoneButton.click()
+
+            SitePermissionsRobot().interact()
+            return SitePermissionsRobot.Transition()
+        }
+
+        fun clickOpenNotificationButton(interact: SitePermissionsRobot.() -> Unit): SitePermissionsRobot.Transition {
+            // Test page used for testing permissions located at https://mozilla-mobile.github.io/testapp/permissions
+            notificationButton.waitForExists(waitingTime)
+            notificationButton.click()
+
+            SitePermissionsRobot().interact()
+            return SitePermissionsRobot.Transition()
+        }
+
+        fun clickGetLocationButton(interact: SitePermissionsRobot.() -> Unit): SitePermissionsRobot.Transition {
+            // Test page used for testing permissions located at https://mozilla-mobile.github.io/testapp/permissions
+            getLocationButton.waitForExists(waitingTime)
+            getLocationButton.click()
+
+            SitePermissionsRobot().interact()
+            return SitePermissionsRobot.Transition()
         }
     }
 }
@@ -699,13 +746,17 @@ private fun mediaPlayerPlayButton() =
             .text("Play")
     )
 
-fun clickTabCrashedRestoreButton() {
-
-    assertTrue(
-        mDevice.findObject(UiSelector().resourceId("$packageName:id/restoreTabButton"))
-            .waitForExists(waitingTime)
+private var progressBar =
+    mDevice.findObject(
+        UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_progress")
     )
 
-    val tabCrashRestoreButton = mDevice.findObject(UiSelector().resourceIdMatches("$packageName:id/restoreTabButton"))
-    tabCrashRestoreButton.click()
-}
+// Permissions test page elements & prompts
+// Test page used located at https://mozilla-mobile.github.io/testapp/permissions
+private val cameraButton = mDevice.findObject(UiSelector().text("Open camera"))
+
+private val microphoneButton = mDevice.findObject(UiSelector().text("Open microphone"))
+
+private val notificationButton = mDevice.findObject(UiSelector().text("Open notifications dialogue"))
+
+private val getLocationButton = mDevice.findObject(UiSelector().text("Get Location"))
