@@ -228,14 +228,10 @@ void MIDIPlatformService::RemoveManager(MIDIManagerParent* aManager) {
 }
 
 void MIDIPlatformService::UpdateStatus(
-    const nsAString& aPortId, const MIDIPortDeviceState& aDeviceState,
+    MIDIPortParent* aPort, const MIDIPortDeviceState& aDeviceState,
     const MIDIPortConnectionState& aConnectionState) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
-  for (const auto& port : mPorts) {
-    if (port->MIDIPortInterface::Id() == aPortId) {
-      port->SendUpdateStatus(aDeviceState, aConnectionState);
-    }
-  }
+  aPort->SendUpdateStatus(aDeviceState, aConnectionState);
 }
 
 void MIDIPlatformService::GetMessages(const nsAString& aPortId,

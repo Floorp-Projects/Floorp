@@ -52,6 +52,7 @@ struct MidiPortWrapper {
     id: String,
     name: String,
     port: MidiPort,
+    open_count: u32,
 }
 
 pub struct MidirWrapper {
@@ -78,59 +79,70 @@ impl MidirWrapper {
         ),
     ) -> Result<(), ()> {
         let id = nsid.to_string();
-        let ports = &self.ports;
         let connections = &mut self.connections;
-        let port = ports.iter().find(|e| e.id.eq(&id));
+        let port = self.ports.iter_mut().find(|e| e.id.eq(&id));
         if let Some(port) = port {
-            match &port.port {
-                MidiPort::Input(port) => {
-                    let input = MidiInput::new("WebMIDI input").map_err(|_err| ())?;
-                    let data = CallbackData {
-                        nsid: nsid.clone(),
-                        open_timestamp: timestamp,
-                    };
-                    let connection = input
-                        .connect(
-                            port,
-                            "Input connection",
-                            move |stamp, message, data| unsafe {
-                                callback(
-                                    &data.nsid,
-                                    message.as_ptr(),
-                                    message.len(),
-                                    &data.open_timestamp,
-                                    stamp,
-                                );
-                            },
-                            data,
-                        )
-                        .map_err(|_err| ())?;
-                    let connection_wrapper = MidiConnectionWrapper {
-                        id: id.clone(),
-                        connection: MidiConnection::Input(connection),
-                    };
-                    connections.push(connection_wrapper);
-                    return Ok(());
-                }
-                MidiPort::Output(port) => {
-                    let output = MidiOutput::new("WebMIDI output").map_err(|_err| ())?;
-                    let connection = output
-                        .connect(port, "Output connection")
-                        .map_err(|_err| ())?;
-                    let connection_wrapper = MidiConnectionWrapper {
-                        connection: MidiConnection::Output(connection),
-                        id: id.clone(),
-                    };
-                    connections.push(connection_wrapper);
-                    return Ok(());
-                }
+            if port.open_count == 0 {
+                let connection = match &port.port {
+                    MidiPort::Input(port) => {
+                        let input = MidiInput::new("WebMIDI input").map_err(|_err| ())?;
+                        let data = CallbackData {
+                            nsid: nsid.clone(),
+                            open_timestamp: timestamp,
+                        };
+                        let connection = input
+                            .connect(
+                                port,
+                                "Input connection",
+                                move |stamp, message, data| unsafe {
+                                    callback(
+                                        &data.nsid,
+                                        message.as_ptr(),
+                                        message.len(),
+                                        &data.open_timestamp,
+                                        stamp,
+                                    );
+                                },
+                                data,
+                            )
+                            .map_err(|_err| ())?;
+                        let connection_wrapper = MidiConnectionWrapper {
+                            id: id.clone(),
+                            connection: MidiConnection::Input(connection),
+                        };
+                        connection_wrapper
+                    }
+                    MidiPort::Output(port) => {
+                        let output = MidiOutput::new("WebMIDI output").map_err(|_err| ())?;
+                        let connection = output
+                            .connect(port, "Output connection")
+                            .map_err(|_err| ())?;
+                        let connection_wrapper = MidiConnectionWrapper {
+                            connection: MidiConnection::Output(connection),
+                            id: id.clone(),
+                        };
+                        connection_wrapper
+                    }
+                };
+
+                connections.push(connection);
             }
+
+            port.open_count += 1;
+            return Ok(());
         }
 
         Err(())
     }
 
     fn close_port(self: &mut MidirWrapper, id: &str) {
+        let port = self.ports.iter_mut().find(|e| e.id.eq(&id)).unwrap();
+        port.open_count -= 1;
+
+        if port.open_count > 0 {
+            return;
+        }
+
         let connections = &mut self.connections;
         let index = connections.iter().position(|e| e.id.eq(id)).unwrap();
         let connection_wrapper = connections.remove(index);
@@ -184,7 +196,9 @@ impl MidirWrapper {
 /// This function deliberately leaks the wrapper because ownership is
 /// transfered to the C++ code. Use [midir_impl_shutdown()] to free it.
 #[no_mangle]
-pub unsafe extern "C" fn midir_impl_init(callback: unsafe extern "C" fn(id: &nsString, name: &nsString, input: bool)) -> *mut MidirWrapper {
+pub unsafe extern "C" fn midir_impl_init(
+    callback: unsafe extern "C" fn(id: &nsString, name: &nsString, input: bool),
+) -> *mut MidirWrapper {
     if let Ok(midir_impl) = MidirWrapper::new() {
         iterate_ports(&midir_impl.ports, callback);
 
@@ -281,6 +295,7 @@ fn collect_input_ports(input: &MidiInput, wrappers: &mut Vec<MidiPortWrapper>) {
             id,
             name,
             port: MidiPort::Input(port),
+            open_count: 0,
         };
         wrappers.push(port);
     }
@@ -300,6 +315,7 @@ fn collect_output_ports(output: &MidiOutput, wrappers: &mut Vec<MidiPortWrapper>
             id,
             name,
             port: MidiPort::Output(port),
+            open_count: 0,
         };
         wrappers.push(port);
     }

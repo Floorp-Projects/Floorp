@@ -124,8 +124,8 @@ void TestMIDIPlatformService::Open(MIDIPortParent* aPort) {
   }
   // Connection events are just simulated on the background thread, no need to
   // push to IO thread.
-  nsCOMPtr<nsIRunnable> r(new SetStatusRunnable(aPort->MIDIPortInterface::Id(),
-                                                aPort->DeviceState(), s));
+  nsCOMPtr<nsIRunnable> r(
+      new SetStatusRunnable(aPort, aPort->DeviceState(), s));
   NS_DispatchToCurrentThread(r);
 }
 
@@ -135,8 +135,7 @@ void TestMIDIPlatformService::ScheduleClose(MIDIPortParent* aPort) {
     // Connection events are just simulated on the background thread, no need to
     // push to IO thread.
     nsCOMPtr<nsIRunnable> r(new SetStatusRunnable(
-        aPort->MIDIPortInterface::Id(), aPort->DeviceState(),
-        MIDIPortConnectionState::Closed));
+        aPort, aPort->DeviceState(), MIDIPortConnectionState::Closed));
     NS_DispatchToCurrentThread(r);
   }
 }

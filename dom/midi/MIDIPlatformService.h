@@ -86,9 +86,6 @@ class MIDIPlatformService {
   void UpdateStatus(MIDIPortParent* aPort,
                     const MIDIPortDeviceState& aDeviceState,
                     const MIDIPortConnectionState& aConnectionState);
-  void UpdateStatus(const nsAString& aPortId,
-                    const MIDIPortDeviceState& aDeviceState,
-                    const MIDIPortConnectionState& aConnectionState);
 
   // Adds outgoing messages to the sorted message queue, for sending later.
   void QueueMessages(const nsAString& aId, nsTArray<MIDIMessage>& aMsgs);
