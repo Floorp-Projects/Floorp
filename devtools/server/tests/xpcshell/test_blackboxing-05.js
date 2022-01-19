@@ -24,8 +24,7 @@ add_task(
       ignoreCaughtExceptions: false,
     });
 
-    threadFront.resume();
-    const packet = await waitForPause(threadFront);
+    const packet = await resumeAndWaitForPause(threadFront);
     const source = await getSourceById(threadFront, packet.frame.where.actor);
 
     Assert.equal(
@@ -47,8 +46,7 @@ add_task(
       threadFront
     );
 
-    threadFront.resume();
-    const packet2 = await waitForPause(threadFront);
+    const packet2 = await resumeAndWaitForPause(threadFront);
     const source2 = await getSourceById(threadFront, packet2.frame.where.actor);
 
     Assert.equal(

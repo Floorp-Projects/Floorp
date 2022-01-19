@@ -27,7 +27,7 @@ add_task(
       })
     );
 
-    threadFront.resume();
+    await threadFront.resume();
   })
 );
 

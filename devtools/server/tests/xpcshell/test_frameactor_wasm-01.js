@@ -32,7 +32,7 @@ add_task(
     Assert.equal(location.column > 0, true);
     Assert.equal(/^wasm:(?:[^:]*:)*?[0-9a-f]{16}$/.test(source.url), true);
 
-    threadFront.resume();
+    await threadFront.resume();
   })
 );
 

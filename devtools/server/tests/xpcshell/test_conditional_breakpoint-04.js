@@ -24,8 +24,7 @@ add_task(
     Assert.equal(packet.frame.where.line, 1);
     Assert.equal(packet.why.type, "debuggerStatement");
 
-    threadFront.resume();
-    const pausedPacket = await waitForEvent(threadFront, "paused");
+    const pausedPacket = await resumeAndWaitForPause(threadFront);
     Assert.equal(pausedPacket.frame.where.line, 4);
     Assert.equal(pausedPacket.why.type, "debuggerStatement");
 
