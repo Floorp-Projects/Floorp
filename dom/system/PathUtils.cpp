@@ -142,7 +142,8 @@ void PathUtils::Filename(const GlobalObject&, const nsAString& aPath,
 }
 
 void PathUtils::Parent(const GlobalObject&, const nsAString& aPath,
-                       nsString& aResult, ErrorResult& aErr) {
+                       const int32_t aDepth, nsString& aResult,
+                       ErrorResult& aErr) {
   if (aPath.IsEmpty()) {
     aErr.ThrowNotAllowedError(ERROR_EMPTY_PATH);
     return;
@@ -154,10 +155,18 @@ void PathUtils::Parent(const GlobalObject&, const nsAString& aPath,
     return;
   }
 
-  nsCOMPtr<nsIFile> parent;
-  if (nsresult rv = path->GetParent(getter_AddRefs(parent)); NS_FAILED(rv)) {
-    ThrowError(aErr, rv, ERROR_GET_PARENT);
+  if (aDepth <= 0) {
+    aErr.ThrowNotSupportedError("A depth of at least 1 is required");
     return;
+  }
+
+  nsCOMPtr<nsIFile> parent;
+  for (int32_t i = 0; path && i < aDepth; i++) {
+    if (nsresult rv = path->GetParent(getter_AddRefs(parent)); NS_FAILED(rv)) {
+      ThrowError(aErr, rv, ERROR_GET_PARENT);
+      return;
+    }
+    path = parent;
   }
 
   if (parent) {
