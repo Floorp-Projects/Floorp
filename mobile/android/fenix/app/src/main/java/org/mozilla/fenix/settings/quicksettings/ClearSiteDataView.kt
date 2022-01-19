@@ -14,6 +14,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
 import androidx.core.text.HtmlCompat
 import androidx.core.view.isVisible
+import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -44,7 +45,8 @@ class ClearSiteDataView(
     private val ioScope: CoroutineScope,
     val containerView: ViewGroup,
     val containerDivider: View,
-    val interactor: ClearSiteDataViewInteractor
+    val interactor: ClearSiteDataViewInteractor,
+    val navController: NavController
 ) {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -67,6 +69,7 @@ class ClearSiteDataView(
         setVisibility(true)
         binding.clearSiteData.setOnClickListener {
             askToClear()
+            navController.popBackStack()
         }
     }
 

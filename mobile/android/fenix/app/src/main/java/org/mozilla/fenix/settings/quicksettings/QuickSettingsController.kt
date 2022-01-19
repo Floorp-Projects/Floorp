@@ -248,7 +248,6 @@ class DefaultQuickSettingsController(
                 Engine.BrowsingData.ALL_SITE_DATA,
             ),
         )
-        navController.popBackStack()
     }
 
     /**
