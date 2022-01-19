@@ -17,6 +17,7 @@
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/Telemetry.h"
 #include "nsPrintfCString.h"
+#include "WinUtils.h"
 
 #undef _WIN32_WINNT
 #define _WIN32_WINNT _WIN32_WINNT_WINBLUE
@@ -986,8 +987,10 @@ GLuint DCLayerTree::CreateEGLSurfaceForCompositionSurface(
   hr = aCompositionSurface->BeginDraw(&update_rect, __uuidof(ID3D11Texture2D),
                                       (void**)getter_AddRefs(backBuf), &offset);
   if (FAILED(hr)) {
+    LayoutDeviceIntRect rect = widget::WinUtils::ToIntRect(update_rect);
+
     gfxCriticalNote << "DCompositionSurface::BeginDraw failed: "
-                    << gfx::hexa(hr);
+                    << gfx::hexa(hr) << " " << rect;
     RenderThread::Get()->HandleWebRenderError(WebRenderError::BEGIN_DRAW);
     return false;
   }
