@@ -976,7 +976,7 @@ class TargetCommand extends EventEmitter {
   }
 
   getParentTarget(targetFront) {
-    // Note that there is three temporary edgecases:
+    // Note that there are edgecases:
     // * Until bug 1741927 is fixed and we remove non-EFT codepath entirely,
     //   we may receive a `parentInnerWindowId` that doesn't relate to any target.
     //   This happens when the parent document of the targetFront is a document loaded in the
@@ -987,9 +987,6 @@ class TargetCommand extends EventEmitter {
     //   Once we can stop using getParentWindowGlobalTarget for the other edgecase we will be able to
     //   replace it with such fallback: `return this.targetFront;`.
     //   browser_target_command_frames.js will help you get things right.
-    // @backward-compat { version 96 } Fx 96 started exposing `parentInnerWindowId`
-    // * And backward compat. This targetForm attribute is new. Once we drop 95 support,
-    //   we can simply remove this last bullet point as the other two edgecase may still be valid.
     const { parentInnerWindowId } = targetFront.targetForm;
     if (parentInnerWindowId) {
       const targets = this.getAllTargets([TargetCommand.TYPES.FRAME]);
