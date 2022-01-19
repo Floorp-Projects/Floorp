@@ -35,6 +35,8 @@ treeherder:
         'Fetch': 'Fetch and store content'
         'Fxfn-l': 'Firefox functional tests (local)'
         'Fxfn-r': 'Firefox functional tests (remote)'
+        'Fxfn-l-fis': 'Firefox functional tests (local) with fission enabled'
+        'Fxfn-r-fis': 'Firefox functional tests (remote) with fission enabled'
         'iris': 'Iris testing suite'
         'l10n-bump': 'L10n Bumper'
         'M': 'Mochitests'
