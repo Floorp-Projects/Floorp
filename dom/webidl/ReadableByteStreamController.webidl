@@ -9,7 +9,9 @@
 
 [Exposed=(Window,Worker,Worklet), Pref="dom.streams.expose.ReadableByteStreamController"]
 interface ReadableByteStreamController {
+  [Throws] // Throws on OOM
   readonly attribute ReadableStreamBYOBRequest? byobRequest;
+
   readonly attribute unrestricted double? desiredSize;
 
   [Throws]
