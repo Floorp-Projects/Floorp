@@ -24,8 +24,7 @@ add_task(
     // Successful promotion won't return an error.
     Assert.equal(response.error, undefined);
 
-    threadFront.resume();
-    const packet2 = await waitForPause(threadFront);
+    const packet2 = await resumeAndWaitForPause(threadFront);
 
     // Verify that the promoted actor is returned again.
     Assert.equal(pauseGrip.actor, packet2.frame.arguments[0].actor);
@@ -38,7 +37,7 @@ add_task(
       Assert.equal(e.error, "unrecognizedPacketType");
       ok(true, "bogusRequest thrown");
     }
-    threadFront.resume();
+    await threadFront.resume();
   })
 );
 
