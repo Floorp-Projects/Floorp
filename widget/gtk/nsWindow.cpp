@@ -2501,6 +2501,8 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
         gtk_window_deiconify(GTK_WINDOW(mShell));
       } else if (mSizeState == nsSizeMode_Maximized) {
         gtk_window_unmaximize(GTK_WINDOW(mShell));
+      } else if (mSizeState == nsSizeMode_Fullscreen) {
+        MakeFullScreen(false);
       }
       break;
   }
