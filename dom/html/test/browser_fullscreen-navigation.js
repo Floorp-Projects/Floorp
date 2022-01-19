@@ -115,17 +115,28 @@ startTests(async browser => {
 }, "navigation_toplevel");
 
 startTests(async browser => {
+  let promiseRemoteFsState = waitRemoteFullscreenExitEvents([
+    // browsingContext, name
+    [browser.browsingContext, "toplevel"],
+  ]);
   // middle iframe
   await NavigateRemoteDocument(
     browser.browsingContext.children[0],
     "about:blank"
   );
+  await promiseRemoteFsState;
 }, "navigation_middle_frame");
 
 startTests(async browser => {
+  let promiseRemoteFsState = waitRemoteFullscreenExitEvents([
+    // browsingContext, name
+    [browser.browsingContext, "toplevel"],
+    [browser.browsingContext.children[0], "middle"],
+  ]);
   // innermost iframe
   await NavigateRemoteDocument(
     browser.browsingContext.children[0].children[0],
     "about:blank"
   );
+  await promiseRemoteFsState;
 }, "navigation_inner_frame");
