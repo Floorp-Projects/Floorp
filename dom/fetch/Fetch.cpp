@@ -49,6 +49,10 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 
+#ifdef MOZ_DOM_STREAMS
+#  include "mozilla/dom/ReadableStreamDefaultReader.h"
+#endif
+
 namespace mozilla::dom {
 
 namespace {
