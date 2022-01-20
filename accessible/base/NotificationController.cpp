@@ -116,31 +116,6 @@ EventTree* NotificationController::QueueMutation(LocalAccessible* aContainer) {
   return tree;
 }
 
-void NotificationController::CoalesceHideEvent(AccHideEvent* aHideEvent) {
-  LocalAccessible* parent = aHideEvent->LocalParent();
-  while (parent) {
-    if (parent->IsDoc()) {
-      break;
-    }
-
-    if (parent->HideEventTarget()) {
-      DropMutationEvent(aHideEvent);
-      break;
-    }
-
-    if (parent->ShowEventTarget()) {
-      AccShowEvent* showEvent =
-          downcast_accEvent(mMutationMap.GetEvent(parent, EventMap::ShowEvent));
-      if (showEvent->EventGeneration() < aHideEvent->EventGeneration()) {
-        DropMutationEvent(aHideEvent);
-        break;
-      }
-    }
-
-    parent = parent->LocalParent();
-  }
-}
-
 bool NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent) {
   if (aEvent->GetEventType() == nsIAccessibleEvent::EVENT_HIDE) {
     // We have to allow there to be a hide and then a show event for a target
@@ -182,9 +157,10 @@ bool NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent) {
   mMutationMap.PutEvent(aEvent);
 
   // Because we could be hiding the target of a show event we need to get rid
-  // of any such events.
+  // of any such events.  It may be possible to do less than coallesce all
+  // events, however that is easiest.
   if (aEvent->GetEventType() == nsIAccessibleEvent::EVENT_HIDE) {
-    CoalesceHideEvent(downcast_accEvent(aEvent));
+    CoalesceMutationEvents();
 
     // mLastMutationEvent will point to something other than aEvent if and only
     // if aEvent was just coalesced away.  In that case a parent accessible
@@ -426,7 +402,28 @@ void NotificationController::CoalesceMutationEvents() {
                  "mutation event list has an invalid event");
 
       AccHideEvent* hideEvent = downcast_accEvent(event);
-      CoalesceHideEvent(hideEvent);
+      LocalAccessible* parent = hideEvent->LocalParent();
+      while (parent) {
+        if (parent->IsDoc()) {
+          break;
+        }
+
+        if (parent->HideEventTarget()) {
+          DropMutationEvent(event);
+          break;
+        }
+
+        if (parent->ShowEventTarget()) {
+          AccShowEvent* showEvent = downcast_accEvent(
+              mMutationMap.GetEvent(parent, EventMap::ShowEvent));
+          if (showEvent->EventGeneration() < hideEvent->EventGeneration()) {
+            DropMutationEvent(hideEvent);
+            break;
+          }
+        }
+
+        parent = parent->LocalParent();
+      }
     }
 
     event = nextEvent;
