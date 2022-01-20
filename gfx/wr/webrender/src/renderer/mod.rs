@@ -945,7 +945,7 @@ impl Renderer {
             unsafe {
                 if let Ok(ref tracy_path) = std::env::var("WR_TRACY_PATH") {
                     let ok = tracy_rs::load(tracy_path);
-                    println!("Load tracy from {} -> {}", tracy_path, ok);
+                    info!("Load tracy from {} -> {}", tracy_path, ok);
                 }
             }
 
@@ -1334,7 +1334,7 @@ impl Renderer {
         } else if device.supports_extension("GL_EXT_debug_marker") {
             GpuDebugMethod::MarkerEXT
         } else {
-            println!("Warning: asking to enable_gpu_markers but no supporting extension was found");
+            warn!("asking to enable_gpu_markers but no supporting extension was found");
             GpuDebugMethod::None
         };
 
