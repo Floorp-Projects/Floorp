@@ -74,7 +74,7 @@ namespace mozilla {
 
 void RetainedDisplayListData::AddModifiedFrame(nsIFrame* aFrame) {
   MOZ_ASSERT(!aFrame->IsFrameModified());
-  Flags(aFrame) |= RetainedDisplayListData::FrameFlags::Modified;
+  Flags(aFrame) += RetainedDisplayListData::FrameFlag::Modified;
   mModifiedFramesCount++;
 }
 
@@ -911,15 +911,15 @@ static void TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
       nsIFrame* frame = it.Key();
       const RetainedDisplayListData::FrameFlags& flags = it.Data();
 
-      if (flags & RetainedDisplayListData::FrameFlags::Modified) {
+      if (flags.contains(RetainedDisplayListData::FrameFlag::Modified)) {
         aModifiedFrames->AppendElement(frame);
       }
 
-      if (flags & RetainedDisplayListData::FrameFlags::HasProps) {
+      if (flags.contains(RetainedDisplayListData::FrameFlag::HasProps)) {
         aFramesWithProps->AppendElement(frame);
       }
 
-      if (flags & RetainedDisplayListData::FrameFlags::HadWillChange) {
+      if (flags.contains(RetainedDisplayListData::FrameFlag::HadWillChange)) {
         aBuilder->RemoveFromWillChangeBudgets(frame);
       }
     }
