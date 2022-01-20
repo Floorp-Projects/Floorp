@@ -15,4 +15,11 @@ interface nsIWindowsPackageManager : nsISupports
  * packages installed by another user.
  */
     Array<AString> findUserInstalledPackages(in Array<AString> prefix);
+
+/* When running within a Packaged App environment, returns the
+ * InstalledDate of the Package. If called when not running within
+ * a Packaged App environment, throws NS_ERROR_NOT_IMPLEMENTED.
+ * Any other others will cause NS_ERROR_FAILURE to be thrown.
+ */
+    unsigned long long getInstalledDate();
 };
