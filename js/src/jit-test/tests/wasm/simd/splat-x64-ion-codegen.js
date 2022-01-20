@@ -7,7 +7,7 @@
 
 codegenTestX64_PTYPE_v128(
     [['f32x4.splat', 'f32', `0f c6 c0 00               shufps \\$0x00, %xmm0, %xmm0`],
-     ['f64x2.splat', 'f64', `66 0f c6 c0 00            shufpd \\$0x00, %xmm0, %xmm0`]] );
+     ['f64x2.splat', 'f64', `f2 0f 12 c0               movddup %xmm0, %xmm0`]] , {log:true});
 
 // Skip these on Win64 because the ABI differs and there's a different parameter
 // register, this changes not just the name slightly but the binary encoding in

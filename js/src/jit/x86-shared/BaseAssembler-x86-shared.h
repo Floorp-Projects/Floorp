@@ -4271,6 +4271,72 @@ class BaseAssembler : public GenericAssembler {
     twoByteOpSimd("vpsubq", VEX_PD, OP2_PSUBQ_VdqWdq, src1, src0, dst);
   }
 
+  void vbroadcastb_rr(XMMRegisterID src, XMMRegisterID dst) {
+    threeByteOpSimd("vbroadcastb", VEX_PD, OP3_VBROADCASTB_VxWx, ESCAPE_38, src,
+                    invalid_xmm, dst);
+  }
+  void vbroadcastb_mr(int32_t offset, RegisterID base, XMMRegisterID dst) {
+    threeByteOpSimd("vbroadcastb", VEX_PD, OP3_VBROADCASTB_VxWx, ESCAPE_38,
+                    offset, base, invalid_xmm, dst);
+  }
+  void vbroadcastb_mr(int32_t offset, RegisterID base, RegisterID index,
+                      int32_t scale, XMMRegisterID dst) {
+    threeByteOpSimd("vbroadcastb", VEX_PD, OP3_VBROADCASTB_VxWx, ESCAPE_38,
+                    offset, base, index, scale, invalid_xmm, dst);
+  }
+  void vbroadcastw_rr(XMMRegisterID src, XMMRegisterID dst) {
+    threeByteOpSimd("vbroadcastw", VEX_PD, OP3_VBROADCASTW_VxWx, ESCAPE_38, src,
+                    invalid_xmm, dst);
+  }
+  void vbroadcastw_mr(int32_t offset, RegisterID base, XMMRegisterID dst) {
+    threeByteOpSimd("vbroadcastw", VEX_PD, OP3_VBROADCASTW_VxWx, ESCAPE_38,
+                    offset, base, invalid_xmm, dst);
+  }
+  void vbroadcastw_mr(int32_t offset, RegisterID base, RegisterID index,
+                      int32_t scale, XMMRegisterID dst) {
+    threeByteOpSimd("vbroadcastw", VEX_PD, OP3_VBROADCASTW_VxWx, ESCAPE_38,
+                    offset, base, index, scale, invalid_xmm, dst);
+  }
+  void vbroadcastd_rr(XMMRegisterID src, XMMRegisterID dst) {
+    threeByteOpSimd("vbroadcastd", VEX_PD, OP3_VBROADCASTD_VxWx, ESCAPE_38, src,
+                    invalid_xmm, dst);
+  }
+  void vbroadcastd_mr(int32_t offset, RegisterID base, XMMRegisterID dst) {
+    threeByteOpSimd("vbroadcastd", VEX_PD, OP3_VBROADCASTD_VxWx, ESCAPE_38,
+                    offset, base, invalid_xmm, dst);
+  }
+  void vbroadcastd_mr(int32_t offset, RegisterID base, RegisterID index,
+                      int32_t scale, XMMRegisterID dst) {
+    threeByteOpSimd("vbroadcastd", VEX_PD, OP3_VBROADCASTD_VxWx, ESCAPE_38,
+                    offset, base, index, scale, invalid_xmm, dst);
+  }
+  void vbroadcastq_rr(XMMRegisterID src, XMMRegisterID dst) {
+    threeByteOpSimd("vbroadcastq", VEX_PD, OP3_VBROADCASTQ_VxWx, ESCAPE_38, src,
+                    invalid_xmm, dst);
+  }
+  void vbroadcastq_mr(int32_t offset, RegisterID base, XMMRegisterID dst) {
+    threeByteOpSimd("vbroadcastq", VEX_PD, OP3_VBROADCASTQ_VxWx, ESCAPE_38,
+                    offset, base, invalid_xmm, dst);
+  }
+  void vbroadcastq_mr(int32_t offset, RegisterID base, RegisterID index,
+                      int32_t scale, XMMRegisterID dst) {
+    threeByteOpSimd("vbroadcastq", VEX_PD, OP3_VBROADCASTQ_VxWx, ESCAPE_38,
+                    offset, base, index, scale, invalid_xmm, dst);
+  }
+  void vbroadcastss_rr(XMMRegisterID src, XMMRegisterID dst) {
+    threeByteOpSimd("vbroadcastss", VEX_PD, OP3_VBROADCASTSS_VxWd, ESCAPE_38,
+                    src, invalid_xmm, dst);
+  }
+  void vbroadcastss_mr(int32_t offset, RegisterID base, XMMRegisterID dst) {
+    threeByteOpSimd("vbroadcastss", VEX_PD, OP3_VBROADCASTSS_VxWd, ESCAPE_38,
+                    offset, base, invalid_xmm, dst);
+  }
+  void vbroadcastss_mr(int32_t offset, RegisterID base, RegisterID index,
+                       int32_t scale, XMMRegisterID dst) {
+    threeByteOpSimd("vbroadcastss", VEX_PD, OP3_VBROADCASTSS_VxWd, ESCAPE_38,
+                    offset, base, index, scale, invalid_xmm, dst);
+  }
+
   // BMI instructions:
 
   void sarxl_rrr(RegisterID src, RegisterID shift, RegisterID dst) {

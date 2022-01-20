@@ -240,7 +240,7 @@ add_task(async function test_typing_and_reload() {
 
     info("reload");
     browser.reload();
-    await BrowserTestUtils.browserLoaded(browser);
+    await BrowserTestUtils.browserLoaded(browser, false, TEST_URL);
 
     // First typing should have been recorded
     await assertDatabaseValues([
@@ -255,7 +255,7 @@ add_task(async function test_typing_and_reload() {
 
     info("reload");
     browser.reload();
-    await BrowserTestUtils.browserLoaded(browser);
+    await BrowserTestUtils.browserLoaded(browser, false, TEST_URL);
 
     // Second typing should have been recorded
     await assertDatabaseValues([

@@ -24,6 +24,7 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/gfx/Scale.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/ScopeExit.h"
@@ -268,6 +269,83 @@ static already_AddRefed<DataSourceSurface> CropAndCopyDataSourceSurface(
   return dstDataSurface.forget();
 }
 
+/*
+ * This helper function scales the data of the given DataSourceSurface,
+ *  _aSurface_, in the given area, _aCropRect_, into a new DataSourceSurface.
+ * This might return null if it can not create a new SourceSurface or it cannot
+ * read data from the given _aSurface_.
+ *
+ */
+static already_AddRefed<DataSourceSurface> ScaleDataSourceSurface(
+    DataSourceSurface* aSurface, const ImageBitmapOptions& aOptions) {
+  MOZ_ASSERT(aSurface);
+
+  const SurfaceFormat format = aSurface->GetFormat();
+  const int bytesPerPixel = BytesPerPixel(format);
+
+  const IntSize srcSize = aSurface->GetSize();
+  int32_t tmp;
+
+  CheckedInt<int32_t> checked;
+  CheckedInt<int32_t> dstWidth(
+      aOptions.mResizeWidth.WasPassed() ? aOptions.mResizeWidth.Value() : 0);
+  CheckedInt<int32_t> dstHeight(
+      aOptions.mResizeHeight.WasPassed() ? aOptions.mResizeHeight.Value() : 0);
+
+  if (!dstWidth.isValid() || !dstHeight.isValid()) {
+    return nullptr;
+  }
+
+  if (!dstWidth.value()) {
+    checked = srcSize.width * dstHeight;
+    if (!checked.isValid()) {
+      return nullptr;
+    }
+
+    tmp = ceil(checked.value() / double(srcSize.height));
+    dstWidth = tmp;
+  } else if (!dstHeight.value()) {
+    checked = srcSize.height * dstWidth;
+    if (!checked.isValid()) {
+      return nullptr;
+    }
+
+    tmp = ceil(checked.value() / double(srcSize.width));
+    dstHeight = tmp;
+  }
+
+  const IntSize dstSize(dstWidth.value(), dstHeight.value());
+  const int32_t dstStride = dstSize.width * bytesPerPixel;
+
+  // Create a new SourceSurface.
+  RefPtr<DataSourceSurface> dstDataSurface =
+      Factory::CreateDataSourceSurfaceWithStride(dstSize, format, dstStride,
+                                                 true);
+
+  if (NS_WARN_IF(!dstDataSurface)) {
+    return nullptr;
+  }
+
+  // Copy the raw data into the newly created DataSourceSurface.
+  DataSourceSurface::ScopedMap srcMap(aSurface, DataSourceSurface::READ);
+  DataSourceSurface::ScopedMap dstMap(dstDataSurface, DataSourceSurface::WRITE);
+  if (NS_WARN_IF(!srcMap.IsMapped()) || NS_WARN_IF(!dstMap.IsMapped())) {
+    return nullptr;
+  }
+
+  uint8_t* srcBufferPtr = srcMap.GetData();
+  uint8_t* dstBufferPtr = dstMap.GetData();
+
+  bool res = Scale(srcBufferPtr, srcSize.width, srcSize.height,
+                   srcMap.GetStride(), dstBufferPtr, dstSize.width,
+                   dstSize.height, dstMap.GetStride(), aSurface->GetFormat());
+  if (!res) {
+    return nullptr;
+  }
+
+  return dstDataSurface.forget();
+}
+
 static DataSourceSurface* FlipYDataSourceSurface(DataSourceSurface* aSurface) {
   MOZ_ASSERT(aSurface);
 
@@ -369,6 +447,14 @@ static already_AddRefed<SourceSurface> CreateSurfaceFromRawData(
   if (aOptions.mImageOrientation == ImageOrientation::FlipY) {
     result = FlipYDataSourceSurface(result);
 
+    if (NS_WARN_IF(!result)) {
+      return nullptr;
+    }
+  }
+
+  if (aOptions.mResizeWidth.WasPassed() || aOptions.mResizeHeight.WasPassed()) {
+    dataSurface = result->GetDataSurface();
+    result = ScaleDataSourceSurface(dataSurface, aOptions);
     if (NS_WARN_IF(!result)) {
       return nullptr;
     }
@@ -825,7 +911,8 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateImageBitmapInternal(
     }
 
     surface = dataSurface;
-    cropRect.MoveTo(0, 0);
+    cropRect.SetRect(0, 0, dataSurface->GetSize().width,
+                     dataSurface->GetSize().height);
     needToReportMemoryAllocation = true;
   }
 
@@ -839,6 +926,22 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateImageBitmapInternal(
     if (NS_WARN_IF(!surface)) {
       return nullptr;
     }
+  }
+
+  // resize if required
+  if (aOptions.mResizeWidth.WasPassed() || aOptions.mResizeHeight.WasPassed()) {
+    if (!dataSurface) {
+      dataSurface = surface->GetDataSurface();
+    };
+
+    surface = ScaleDataSourceSurface(dataSurface, aOptions);
+    if (NS_WARN_IF(!surface)) {
+      aRv.ThrowInvalidStateError("Failed to create resized image");
+      return nullptr;
+    }
+
+    needToReportMemoryAllocation = true;
+    cropRect.SetRect(0, 0, surface->GetSize().width, surface->GetSize().height);
   }
 
   if (requiresPremultiply || requiresUnpremultiply) {
@@ -1335,7 +1438,6 @@ class CreateImageBitmapFromBlob final : public DiscardableRunnable,
         mGlobalObject(aGlobal),
         mInputStream(std::move(aInputStream)),
         mCropRect(aCropRect),
-        mOriginalCropRect(aCropRect),
         mMainThreadEventTarget(aMainThreadEventTarget),
         mOptions(aOptions),
         mThread(PR_GetCurrentThread()) {}
@@ -1383,8 +1485,6 @@ class CreateImageBitmapFromBlob final : public DiscardableRunnable,
 
   nsCOMPtr<nsIInputStream> mInputStream;
   Maybe<IntRect> mCropRect;
-  Maybe<IntRect> mOriginalCropRect;
-  IntSize mSourceSize;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
   const ImageBitmapOptions mOptions;
   void* mThread;
@@ -1465,6 +1565,19 @@ already_AddRefed<Promise> ImageBitmap::Create(
           "The crop rect height passed to createImageBitmap must be nonzero");
       return promise.forget();
     }
+  }
+
+  if (aOptions.mResizeWidth.WasPassed() && aOptions.mResizeWidth.Value() == 0) {
+    aRv.ThrowInvalidStateError(
+        "The resizeWidth passed to createImageBitmap must be nonzero");
+    return promise.forget();
+  }
+
+  if (aOptions.mResizeHeight.WasPassed() &&
+      aOptions.mResizeHeight.Value() == 0) {
+    aRv.ThrowInvalidStateError(
+        "The resizeHeight passed to createImageBitmap must be nonzero");
+    return promise.forget();
   }
 
   RefPtr<ImageBitmap> imageBitmap;
@@ -1845,10 +1958,6 @@ CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
     return NS_OK;
   }
 
-  // Store the sourceSize value for the
-  // MimeTypeAndDecodeAndCropBlobCompletedMainThread call.
-  mSourceSize = surface->GetSize();
-
   // Crop the source surface if needed.
   RefPtr<SourceSurface> croppedSurface = surface;
   RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
@@ -1885,12 +1994,27 @@ CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
     dataSurface = croppedSurface->GetDataSurface();
 
     if (mCropRect.isSome()) {
-      mCropRect->MoveTo(0, 0);
+      mCropRect->SetRect(0, 0, dataSurface->GetSize().width,
+                         dataSurface->GetSize().height);
     }
   }
 
   if (mOptions.mImageOrientation == ImageOrientation::FlipY) {
     croppedSurface = FlipYDataSourceSurface(dataSurface);
+  }
+
+  if (mOptions.mResizeWidth.WasPassed() || mOptions.mResizeHeight.WasPassed()) {
+    dataSurface = croppedSurface->GetDataSurface();
+    croppedSurface = ScaleDataSourceSurface(dataSurface, mOptions);
+    if (NS_WARN_IF(!croppedSurface)) {
+      MimeTypeAndDecodeAndCropBlobCompletedMainThread(
+          nullptr, NS_ERROR_DOM_INVALID_STATE_ERR);
+      return NS_OK;
+    }
+    if (mCropRect.isSome()) {
+      mCropRect->SetRect(0, 0, croppedSurface->GetSize().width,
+                         croppedSurface->GetSize().height);
+    }
   }
 
   if (NS_WARN_IF(!croppedSurface)) {

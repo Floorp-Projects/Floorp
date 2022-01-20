@@ -534,7 +534,7 @@ nsresult nsAppShell::Init() {
       wc.hbrBackground = (HBRUSH) nullptr;
       wc.lpszMenuName = (LPCWSTR) nullptr;
       wc.lpszClassName = kWindowClass;
-      ATOM wcA = RegisterClassW(&wc);
+      [[maybe_unused]] ATOM wcA = RegisterClassW(&wc);
       MOZ_DIAGNOSTIC_ASSERT(wcA, "RegisterClassW for EventWindowClass failed");
     }
 
