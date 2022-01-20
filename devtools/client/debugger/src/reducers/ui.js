@@ -80,8 +80,9 @@ function update(state = initialUIState(), action) {
 
     case "HIGHLIGHT_LINES":
       const { start, end, sourceId } = action.location;
-      let lineRange = {};
+      let lineRange;
 
+      // Lines are one-based so the check below is fine.
       if (start && end && sourceId) {
         lineRange = { start, end, sourceId };
       }
@@ -90,7 +91,7 @@ function update(state = initialUIState(), action) {
 
     case "CLOSE_QUICK_OPEN":
     case "CLEAR_HIGHLIGHT_LINES":
-      return { ...state, highlightedLineRange: {} };
+      return { ...state, highlightedLineRange: undefined };
 
     case "OPEN_CONDITIONAL_PANEL":
       return {
