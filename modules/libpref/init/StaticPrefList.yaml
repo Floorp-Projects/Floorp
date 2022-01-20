@@ -8692,6 +8692,12 @@
     mirror: always
 #endif
 
+# Allow ffmpeg decoder to decode directly onto shmem buffer
+- name: media.ffmpeg.customized-buffer-allocation
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 #ifdef MOZ_FFMPEG
 -   name: media.ffmpeg.enabled
     type: RelaxedAtomicBool
