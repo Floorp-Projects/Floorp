@@ -698,8 +698,8 @@ function run() {
     expression_should_not_be_parseable(toggle + ": false");
   }
 
-  for (let toggle of CHROME_ONLY_QUERIES) {
-    expression_should_not_be_parseable(toggle);
+  for (let query of CHROME_ONLY_QUERIES) {
+    query_should_not_be_parseable(query);
   }
 
   {
