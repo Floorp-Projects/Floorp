@@ -1,0 +1,18 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(ad57ac40-52f0-11ec-ada8-4f671255c4aa)]
+interface nsIWindowsPackageManager : nsISupports
+{
+/* Searches for any user installed MSIX packages whose
+ * packageFamilyName matches any of the provided `aNamePrefixes`
+ * and returns them. The Windows APIs only allow querying user
+ * installed packages without elevation, so this will not see any
+ * packages installed by another user.
+ */
+    Array<AString> findUserInstalledPackages(in Array<AString> prefix);
+};
