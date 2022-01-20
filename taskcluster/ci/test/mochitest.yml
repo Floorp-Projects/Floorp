@@ -345,31 +345,11 @@ browser-screenshots:
     treeherder-symbol: M(ss)
     loopback-video: true
     test-manifest-loader: null  # don't load tests in the taskgraph
-    variants:
-        - fission
-        - socketprocess_networking
-        - wayland
-        - webrender-sw
+    variants: ["fission"]
     run-on-projects:
-        by-variant:
-            fission: []
-            socketprocess_networking: []
-            wayland:
-                by-test-platform:
-                    linux.*64/debug: ['mozilla-central']
-                    default: []
-            webrender-sw:
-                by-test-platform:
-                    linux.*64/debug: ['mozilla-central']
-                    default: []
-            default:
-                by-test-platform:
-                    windows7-32(?:-shippable)(?:-qr)?/opt: ['mozilla-central']
-                    windows10-64(?:-shippable)(?:-qr)?/opt: ['mozilla-central']
-                    (?:windows10-64|windows7-32|linux1804-64|macosx1014-64)(?:-qr)?/opt: ['autoland']
-                    linux1804-64-(?:shippable)(?:-qr)?/opt: ['mozilla-central']
-                    macosx.*64-shippable/opt: ['mozilla-central']
-                    default: []
+        by-test-platform:
+            linux1804-64.*/opt: ['trunk']
+            default: []
     max-run-time: 3600
     mozharness:
         mochitest-flavor: browser
