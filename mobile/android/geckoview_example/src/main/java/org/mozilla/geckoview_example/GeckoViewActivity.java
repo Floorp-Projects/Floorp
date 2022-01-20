@@ -1387,7 +1387,6 @@ public class GeckoViewActivity extends AppCompatActivity
   private void loadFromIntent(final Intent intent) {
     final Uri uri = intent.getData();
     if (uri != null) {
-      createNewTab();
       mTabSessionManager
           .getCurrentSession()
           .load(
