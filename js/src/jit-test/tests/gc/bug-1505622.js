@@ -3,13 +3,11 @@
 // Turn of any zeal which will disrupt GC number checks.
 gczeal(0);
 
-// Get initial heap size and limit.
-gc();
-const initialSize = gcparam("gcBytes");
-const initialMaxSize = gcparam("maxBytes");
-
 function allocUntilFail() {
-  gc();
+  gc(null, 'shrinking');
+
+  const initialSize = gcparam("gcBytes");
+  const initialMaxSize = gcparam("maxBytes");
   const initGCNumber = gcparam("majorGCNumber");
 
   // Set a small heap limit.

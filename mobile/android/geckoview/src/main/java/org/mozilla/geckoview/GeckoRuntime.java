@@ -47,7 +47,6 @@ import org.mozilla.gecko.GeckoScreenOrientation.ScreenOrientation;
 import org.mozilla.gecko.GeckoSystemStateListener;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.process.MemoryController;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.DebugConfig;
 import org.mozilla.gecko.util.EventCallback;
@@ -135,8 +134,6 @@ public final class GeckoRuntime implements Parcelable {
    * any.
    */
   public static final String CRASHED_PROCESS_TYPE_BACKGROUND_CHILD = "BACKGROUND_CHILD";
-
-  private final MemoryController mMemoryController = new MemoryController();
 
   @Retention(RetentionPolicy.SOURCE)
   @StringDef(
@@ -554,8 +551,6 @@ public final class GeckoRuntime implements Parcelable {
     if (!runtime.init(context, settings)) {
       throw new IllegalStateException("Failed to initialize GeckoRuntime");
     }
-
-    context.registerComponentCallbacks(runtime.mMemoryController);
 
     return runtime;
   }

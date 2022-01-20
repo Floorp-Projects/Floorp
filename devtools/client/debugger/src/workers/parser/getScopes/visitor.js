@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import isEmpty from "lodash/isEmpty";
 import * as t from "@babel/types";
 
 import getFunctionName from "../utils/getFunctionName";
@@ -38,7 +37,7 @@ function isGeneratedId(id) {
 
 export function parseSourceScopes(sourceId) {
   const ast = getAst(sourceId);
-  if (isEmpty(ast)) {
+  if (!ast || Object.keys(ast).length == 0) {
     return null;
   }
 

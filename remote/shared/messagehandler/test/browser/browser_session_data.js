@@ -158,6 +158,36 @@ add_task(async function test_sessionData() {
   is(sessionDataSnapshot.size, 0, "session data should be empty again");
 });
 
+add_task(async function test_sessionDataRootOnlyModule() {
+  const sessionId = "sessionData-test-rootOnly";
+
+  const rootMessageHandler = createRootMessageHandler(sessionId);
+  ok(rootMessageHandler, "Valid ROOT MessageHandler created");
+
+  await BrowserTestUtils.loadURI(
+    gBrowser,
+    "https://example.com/document-builder.sjs?html=tab"
+  );
+
+  const windowGlobalCreated = rootMessageHandler.once("message-handler-event");
+
+  // Updating the session data on the root message handler should not cause
+  // failures for other message handlers if the module only exists for root.
+  await rootMessageHandler.addSessionData({
+    moduleName: "rootOnly",
+    category: "session_data_root_only",
+    contextDescriptor: {
+      type: CONTEXT_DESCRIPTOR_TYPES.ALL,
+    },
+    values: [true],
+  });
+
+  await windowGlobalCreated;
+  ok(true, "Window global has been initialized");
+
+  rootMessageHandler.destroy();
+});
+
 function checkSessionDataItem(item, moduleName, category, contextType, value) {
   is(item.moduleName, moduleName, "Data item has the expected module name");
   is(item.category, category, "Data item has the expected category");
