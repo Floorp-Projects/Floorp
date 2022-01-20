@@ -254,9 +254,9 @@ impl FontContext {
                 let r = pixel[0];
                 let g = pixel[1];
                 let b = pixel[2];
-                print!("({}, {}, {}) ", r, g, b,);
+                debug!("({}, {}, {}) ", r, g, b,);
             }
-            println!();
+            debug!("");
         }
     }
 

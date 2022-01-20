@@ -1259,7 +1259,7 @@ impl SpatialTree {
             }
             // If running in Gecko, set RUST_LOG=webrender::spatial_tree=debug
             // to get this logging to be emitted to stderr/logcat.
-            println!("{}", std::str::from_utf8(&buf).unwrap_or("(Tree printer emitted non-utf8)"));
+            debug!("{}", std::str::from_utf8(&buf).unwrap_or("(Tree printer emitted non-utf8)"));
         }
     }
 }
