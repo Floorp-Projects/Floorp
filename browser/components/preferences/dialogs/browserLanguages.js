@@ -209,12 +209,24 @@ class OrderedListBox {
   }
 }
 
+/**
+ * The sorted select list of Locales available for the app.
+ */
 class SortedItemSelectList {
   constructor({ menulist, button, onSelect, onChange, compareFn }) {
+    /** @type {XULElement} */
     this.menulist = menulist;
+
+    /** @type {XULElement} */
     this.popup = menulist.menupopup;
+
+    /** @type {XULElement} */
     this.button = button;
+
+    /** @type {(a: LocaleDisplayInfo, b: LocaleDisplayInfo) => number} */
     this.compareFn = compareFn;
+
+    /** @type {Array<LocaleDisplayInfo>} */
     this.items = [];
 
     // This will register the "command" listener.
@@ -240,6 +252,9 @@ class SortedItemSelectList {
     });
   }
 
+  /**
+   * @param {Array<LocaleDisplayInfo>} items
+   */
   setItems(items) {
     this.items = items.sort(this.compareFn);
     this.populate();
@@ -318,6 +333,21 @@ class SortedItemSelectList {
   }
 }
 
+/**
+ * @typedef LocaleDisplayInfo
+ * @type {object}
+ * @prop {string} id - A unique ID.
+ * @prop {string} label - The localized display name.
+ * @prop {string} value - The BCP 47 locale identifier or the word "search".
+ * @prop {boolean} canRemove - Locales that are part of the packaged locales cannot be
+ *                             removed.
+ * @prop {boolean} installed - Whether or not the locale is installed.
+ */
+
+/**
+ * @param {Array<string>} localeCodes - List of BCP 47 locale identifiers.
+ * @returns {Array<LocaleDisplayInfo>}
+ */
 async function getLocaleDisplayInfo(localeCodes) {
   let availableLocales = new Set(await getAvailableLocales());
   let packagedLocales = new Set(Services.locale.packagedLocales);
@@ -337,6 +367,11 @@ async function getLocaleDisplayInfo(localeCodes) {
   });
 }
 
+/**
+ * @param {LocaleDisplayInfo} a
+ * @param {LocaleDisplayInfo} b
+ * @returns {number}
+ */
 function compareItems(a, b) {
   // Sort by installed.
   if (a.installed != b.installed) {
@@ -360,9 +395,21 @@ function compareItems(a, b) {
 }
 
 var gBrowserLanguagesDialog = {
+  /**
+   * @type {string | null} An ID used for telemetry pings. It is unique to the current
+   * opening of the browser language.
+   */
   _telemetryId: null,
   accepted: false,
+
+  /**
+   * @type {SortedItemSelectList}
+   */
   _availableLocalesUI: null,
+
+  /**
+   * @type {OrderedListBox}
+   */
   _selectedLocalesUI: null,
   selectedLocales: null,
 
@@ -419,6 +466,9 @@ var gBrowserLanguagesDialog = {
     this.initialized = true;
   },
 
+  /**
+   * @param {string[]} selectedLocales - BCP 47 locale identifiers
+   */
   async initSelectedLocales(selectedLocales) {
     this._selectedLocalesUI = new OrderedListBox({
       richlistbox: document.getElementById("selectedLocales"),
@@ -433,6 +483,11 @@ var gBrowserLanguagesDialog = {
     );
   },
 
+  /**
+   * @param {Set<string>} available - The set of available BCP 47 locale identifiers.
+   * @param {boolean} search - Whether the user opened this from "Search for more
+   *                           languages" option.
+   */
   async initAvailableLocales(available, search) {
     this._availableLocalesUI = new SortedItemSelectList({
       menulist: document.getElementById("availableLocales"),
@@ -517,6 +572,9 @@ var gBrowserLanguagesDialog = {
     );
   },
 
+  /**
+   * @param {Set<string>} available - The set of available (BCP 47) locales.
+   */
   async loadLocalesFromInstalled(available) {
     let items;
     if (available.length) {
@@ -534,6 +592,9 @@ var gBrowserLanguagesDialog = {
     this._availableLocalesUI.setItems(items);
   },
 
+  /**
+   * @param {LocaleDisplayInfo} item
+   */
   async availableLanguageSelected(item) {
     if ((await getAvailableLocales()).includes(item.value)) {
       this.recordTelemetry("add");
@@ -546,7 +607,10 @@ var gBrowserLanguagesDialog = {
     }
   },
 
-  async requestLocalLanguage(item, available) {
+  /**
+   * @param {LocaleDisplayInfo} item
+   */
+  async requestLocalLanguage(item) {
     this._selectedLocalesUI.addItem(item);
     let selectedCount = this._selectedLocalesUI.items.length;
     let availableCount = (await getAvailableLocales()).length;
@@ -561,6 +625,9 @@ var gBrowserLanguagesDialog = {
     );
   },
 
+  /**
+   * @param {LocaleDisplayInfo} item
+   */
   async requestRemoteLanguage(item) {
     this._availableLocalesUI.disableWithMessageId(
       "browser-languages-downloading"
@@ -595,6 +662,9 @@ var gBrowserLanguagesDialog = {
     this.installDictionariesForLanguage(item.value);
   },
 
+  /**
+   * @param {string} locale The BCP 47 locale identifier
+   */
   async installDictionariesForLanguage(locale) {
     try {
       let ids = await dictionaryIdsForLocale(locale);
@@ -627,10 +697,9 @@ var gBrowserLanguagesDialog = {
     document.getElementById("warning-message").hidden = true;
   },
 
-  getSelectedLocales() {
-    return this._selectedLocalesUI.items.map(item => item.value);
-  },
-
+  /**
+   * @param {LocaleDisplayInfo} item
+   */
   async selectedLocaleRemoved(item) {
     this.recordTelemetry("remove");
 
