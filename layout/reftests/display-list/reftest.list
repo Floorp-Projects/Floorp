@@ -14,9 +14,13 @@ skip-if(!retainedDisplayList||retainedDisplayListNew) == retained-dl-displayport
 skip-if(!retainedDisplayList||!asyncPan) == retained-dl-async-scrolled-1.html retained-dl-async-scrolled-1-ref.html
 skip-if(!retainedDisplayList) == retained-dl-remove-for-ancestor-change-1.html retained-dl-remove-for-ancestor-change-1-ref.html
 skip-if(!retainedDisplayList) == retained-dl-scroll-out-of-view-1.html retained-dl-scroll-out-of-view-1-ref.html
-skip-if(!retainedDisplayList) == retained-dl-displayport-1.html retained-dl-displayport-1-ref.html
 skip-if(!retainedDisplayList) == retained-dl-opacity-animation-on-ib-split.html retained-dl-opacity-animation-on-ib-split-ref.html
 skip-if(!retainedDisplayList) == 1544948-1.html 1544948-1-ref.html
+
+skip-if(!retainedDisplayListNew) == reuse-sc-style-change-1.html reuse-sc-style-change-1-ref.html
+skip-if(!retainedDisplayListNew) == reuse-sc-style-change-nested-1.html reuse-sc-style-change-nested-1-ref.html
+skip-if(!retainedDisplayListNew) == reuse-sc-style-change-abs-pos-1.html reuse-sc-style-change-abs-pos-1-ref.html
+skip-if(!retainedDisplayListNew) == reuse-sc-style-change-fixed-pos-1.html reuse-sc-style-change-fixed-pos-1-ref.html
 
 == retained-dl-wrap-list.html retained-dl-wrap-list-ref.html
 == retained-dl-zindex-1.html retained-dl-zindex-1-ref.html
