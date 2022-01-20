@@ -92,7 +92,7 @@ mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvInitDecode(
     const GMPVideoCodec& aCodecSettings, nsTArray<uint8_t>&& aCodecSpecific,
     const int32_t& aCoreCount) {
   if (!mVideoDecoder) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "!mVideoDecoder");
   }
 
   // Ignore any return code. It is OK for this to fail without killing the
@@ -106,7 +106,7 @@ mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvDecode(
     const GMPVideoEncodedFrameData& aInputFrame, const bool& aMissingFrames,
     nsTArray<uint8_t>&& aCodecSpecificInfo, const int64_t& aRenderTimeMs) {
   if (!mVideoDecoder) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "!mVideoDecoder");
   }
 
   auto f = new GMPVideoEncodedFrameImpl(aInputFrame, &mVideoHost);
@@ -130,7 +130,7 @@ mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvChildShmemForPool(
 
 mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvReset() {
   if (!mVideoDecoder) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "!mVideoDecoder");
   }
 
   // Ignore any return code. It is OK for this to fail without killing the
@@ -142,7 +142,7 @@ mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvReset() {
 
 mozilla::ipc::IPCResult GMPVideoDecoderChild::RecvDrain() {
   if (!mVideoDecoder) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "!mVideoDecoder");
   }
 
   // Ignore any return code. It is OK for this to fail without killing the
