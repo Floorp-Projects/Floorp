@@ -599,6 +599,7 @@ class nsIFrame : public nsQueryFrame {
         mForceDescendIntoIfVisible(false),
         mBuiltDisplayList(false),
         mFrameIsModified(false),
+        mHasModifiedDescendants(false),
         mHasOverrideDirtyRegion(false),
         mMayHaveWillChangeBudget(false),
         mIsPrimaryFrame(false),
@@ -4893,6 +4894,11 @@ class nsIFrame : public nsQueryFrame {
     mFrameIsModified = aFrameIsModified;
   }
 
+  bool HasModifiedDescendants() const { return mHasModifiedDescendants; }
+  void SetHasModifiedDescendants(const bool aHasModifiedDescendants) {
+    mHasModifiedDescendants = aHasModifiedDescendants;
+  }
+
   bool HasOverrideDirtyRegion() const { return mHasOverrideDirtyRegion; }
   void SetHasOverrideDirtyRegion(const bool aHasDirtyRegion) {
     mHasOverrideDirtyRegion = aHasDirtyRegion;
@@ -5128,8 +5134,22 @@ class nsIFrame : public nsQueryFrame {
    */
   bool mBuiltDisplayList : 1;
 
+  /**
+   * True if the frame has been marked modified by
+   * |MarkNeedsDisplayItemRebuild()|, usually due to a style change or reflow.
+   */
   bool mFrameIsModified : 1;
 
+  /**
+   * True if the frame has modified descendants. Set before display list
+   * preprocessing and only used during partial display list builds.
+   */
+  bool mHasModifiedDescendants : 1;
+
+  /**
+   * Used by merging based retained display lists to restrict the dirty area
+   * during partial display list builds.
+   */
   bool mHasOverrideDirtyRegion : 1;
 
   /**
