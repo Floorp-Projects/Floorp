@@ -4,7 +4,6 @@
 /* eslint-env node */
 
 module.exports = {
-  mode: "production",
   entry: {
     main: "./content/panels/js/main.js",
   },
@@ -26,5 +25,17 @@ module.exports = {
   },
   resolve: {
     extensions: [".js", ".jsx"],
+  },
+  optimization: {
+    minimize: false,
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/](react|react-dom|scheduler|object-assign)[\\/]/,
+          name: "vendor",
+          chunks: "all",
+        },
+      },
+    },
   },
 };
