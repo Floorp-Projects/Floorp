@@ -15,6 +15,9 @@ class nsWindowSizes;
 
 namespace mozilla {
 
+class nsDisplayItem;
+class nsDisplayList;
+
 /**
  * RetainedDisplayListData contains frame invalidation information. It is stored
  * in root frames, and used by RetainedDisplayListBuilder.
@@ -254,15 +257,33 @@ struct RetainedDisplayListBuilder {
                     nsIFrame** aOutModifiedAGR);
 
   nsIFrame* RootReferenceFrame() { return mBuilder.RootReferenceFrame(); }
+
+  /**
+   * Tries to perform a simple partial display list build without display list
+   * merging. In this mode, only the top-level stacking context items and their
+   * contents are reused, when the frame subtree has not been modified.
+   */
+  bool TrySimpleUpdate(const nsTArray<nsIFrame*>& aModifiedFrames,
+                       nsTArray<nsIFrame*>& aOutFramesWithProps);
+
   friend class MergeState;
 
   nsDisplayListBuilder mBuilder;
   RetainedDisplayList mList;
-  nsRect mPreviousVisibleRect;
   WeakFrame mPreviousCaret;
   RetainedDisplayListMetrics mMetrics;
+
+  // Stores reusable items collected during display list preprocessing.
+  nsTArray<nsDisplayItem*> mPreviousItems;
 };
 
+namespace RDLUtils {
+
+void AssertFrameSubtreeUnmodified(const nsIFrame* aFrame);
+void AssertDisplayItemUnmodified(nsDisplayItem* aItem);
+void AssertDisplayListUnmodified(nsDisplayList* aList);
+
+}  // namespace RDLUtils
 }  // namespace mozilla
 
 #endif  // RETAINEDDISPLAYLISTBUILDER_H_
