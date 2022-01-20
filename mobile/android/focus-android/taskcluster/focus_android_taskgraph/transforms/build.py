@@ -133,6 +133,7 @@ def add_artifacts(config, tasks):
 
         if "apk-artifact-template" in task:
             artifact_template = task.pop("apk-artifact-template")
+
             for apk in variant_config["apks"]:
                 apk_name = artifact_template["name"].format(
                     gradle_build=gradle_build,
@@ -149,6 +150,11 @@ def add_artifacts(config, tasks):
                 })
                 apks[apk["abi"]] = {
                     "name": apk_name,
+                    "github-name": artifact_template["github-name"].format(
+                        version=config.params["version"],
+                        gradle_build=gradle_build,
+                        **apk
+                    )
                 }
 
         yield task

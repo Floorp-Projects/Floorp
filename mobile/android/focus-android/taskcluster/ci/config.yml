@@ -19,6 +19,7 @@ taskgraph:
         mobile:
             name: "Focus-Android"
     cached-task-prefix: mobile.v2.focus-android
+    decision-parameters: 'focus_android_taskgraph.parameters:get_decision_parameters'
 
 workers:
     aliases:

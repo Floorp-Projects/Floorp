@@ -12,10 +12,12 @@ def register(graph_config):
     the process.
     """
     _import_modules([
+        "parameters",
         "job",
         "worker_types",
         "routes",
         "target_tasks",
+        "release_promotion",
     ])
 
 

@@ -3,29 +3,17 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-from taskgraph.target_tasks import _target_task, filter_for_tasks_for
+from taskgraph.target_tasks import _target_task
 
 
-@_target_task('default')
+@_target_task('release')
 def target_tasks_default(full_task_graph, parameters, graph_config):
-    """Target the tasks which have indicated they should be run on this project
-    via the `run_on_projects` attributes."""
+    """Target the tasks (release or beta) triggered by a shipit phase action."""
 
-    _filter = filter_for_tasks_for
+    def filter(task, parameters):
+        return task.attributes.get("release-type", "") == parameters["release_type"]
 
-    # Temporary until we move to shipit for release and beta
-    def release(task, parameters):
-        return task.attributes.get("release-type", "") == 'release'
-
-    def beta(task, parameters):
-        return task.attributes.get("release-type", "") == 'beta'
-
-    if parameters["tasks_for"] == "github-release":
-        _filter = release
-        if 'beta' in parameters["head_tag"]:
-            _filter = beta
-
-    return [l for l, t in full_task_graph.tasks.items() if _filter(t, parameters)]
+    return [l for l, t in full_task_graph.tasks.items() if filter(t, parameters)]
 
 
 @_target_task('nightly')
@@ -36,3 +24,5 @@ def target_tasks_nightly(full_task_graph, parameters, graph_config):
         return task.attributes.get("nightly-task", False)
 
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
+
+

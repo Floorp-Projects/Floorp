@@ -16,6 +16,7 @@ job-defaults:
     apk-artifact-template:
         type: file
         name: 'public/build/{gradle_build}/{abi}/target.apk'
+        github-name: '{gradle_build}-{version}-{abi}.apk'
         path: '/builds/worker/checkouts/src/app/build/outputs/apk/{gradle_build}/{gradle_build_type}/{fileName}'
     fetches:
         toolchain:
