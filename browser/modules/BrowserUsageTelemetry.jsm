@@ -24,6 +24,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  WindowsInstallsInfo:
+    "resource://gre/modules/components-utils/WindowsInstallsInfo.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   setInterval: "resource://gre/modules/Timer.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
@@ -1196,72 +1198,148 @@ let BrowserUsageTelemetry = {
    * if so then send installation telemetry.
    *
    * @param {nsIFile} [dataPathOverride] Optional, full data file path, for tests.
+   * @param {Array<string>} [msixPackagePrefixes] Optional, list of prefixes to
+            consider "existing" installs when looking at installed MSIX packages.
+            Defaults to prefixes for builds produced in Firefox automation.
    * @return {Promise}
    * @resolves When the event has been recorded, or if the data file was not found.
    * @rejects JavaScript exception on any failure.
    */
-  async reportInstallationTelemetry(dataPathOverride) {
+  async reportInstallationTelemetry(
+    dataPathOverride,
+    msixPackagePrefixes = ["Mozilla.Firefox", "Mozilla.MozillaFirefox"]
+  ) {
     if (AppConstants.platform != "win") {
       // This is a windows-only feature.
       return;
     }
 
-    let dataPath = dataPathOverride;
-    if (!dataPath) {
-      dataPath = Services.dirsvc.get("GreD", Ci.nsIFile);
-      dataPath.append("installation_telemetry.json");
-    }
-
-    let dataBytes;
-    try {
-      dataBytes = await IOUtils.read(dataPath.path);
-    } catch (ex) {
-      if (ex.name == "NotFoundError") {
-        // Many systems will not have the data file, return silently if not found as
-        // there is nothing to record.
-        return;
-      }
-      throw ex;
-    }
-    const dataString = new TextDecoder("utf-16").decode(dataBytes);
-    const data = JSON.parse(dataString);
-
     const TIMESTAMP_PREF = "app.installation.timestamp";
     const lastInstallTime = Services.prefs.getStringPref(TIMESTAMP_PREF, null);
+    const wpm = Cc["@mozilla.org/windows-package-manager;1"].createInstance(
+      Ci.nsIWindowsPackageManager
+    );
+    let installer_type = "";
+    let pfn;
+    try {
+      pfn = Services.sysinfo.getProperty("winPackageFamilyName");
+    } catch (e) {}
 
-    if (lastInstallTime && data.install_timestamp == lastInstallTime) {
-      // We've already seen this install
-      return;
+    function getInstallData() {
+      // We only care about where _any_ other install existed - no
+      // need to count more than 1.
+      const installPaths = WindowsInstallsInfo.getInstallPaths(
+        1,
+        new Set([Services.dirsvc.get("GreBinD", Ci.nsIFile).path])
+      );
+      const msixInstalls = new Set();
+      // We're just going to eat all errors here -- we don't want the event
+      // to go unsent if we were unable to look for MSIX installs.
+      try {
+        wpm
+          .findUserInstalledPackages(msixPackagePrefixes)
+          .forEach(i => msixInstalls.add(i));
+        if (pfn) {
+          msixInstalls.delete(pfn);
+        }
+      } catch (ex) {}
+      return {
+        installPaths,
+        msixInstalls,
+      };
     }
 
-    // First time seeing this install, record the timestamp.
-    Services.prefs.setStringPref(TIMESTAMP_PREF, data.install_timestamp);
+    let extra = {};
 
-    // Installation timestamp is not intended to be sent with telemetry,
-    // remove it to emphasize this point.
-    delete data.install_timestamp;
+    if (pfn) {
+      if (lastInstallTime != null) {
+        // We've already seen this install
+        return;
+      }
 
-    // Build the extra event data
-    let extra = {
-      version: data.version,
-      build_id: data.build_id,
-      admin_user: data.admin_user.toString(),
-      install_existed: data.install_existed.toString(),
-      profdir_existed: data.profdir_existed.toString(),
-    };
+      // First time seeing this install, record the timestamp.
+      Services.prefs.setStringPref(TIMESTAMP_PREF, wpm.getInstalledDate());
+      let install_data = getInstallData();
 
-    if (data.installer_type == "full") {
-      extra.silent = data.silent.toString();
-      extra.from_msi = data.from_msi.toString();
-      extra.default_path = data.default_path.toString();
+      installer_type = "msix";
+
+      // Build the extra event data
+      extra.version = AppConstants.MOZ_APP_VERSION;
+      extra.build_id = AppConstants.MOZ_BUILDID;
+      // The next few keys are static for the reasons described
+      // No way to detect whether or not we were installed by an admin
+      extra.admin_user = "false";
+      // Always false at the moment, because we create a new profile
+      // on first launch
+      extra.profdir_existed = "false";
+      // Obviously false for MSIX installs
+      extra.from_msi = "false";
+      // We have no way of knowing whether we were installed via the GUI,
+      // through the command line, or some Enterprise management tool.
+      extra.silent = "false";
+      // There's no way to change the install path for an MSIX package
+      extra.default_path = "true";
+      extra.install_existed = install_data.msixInstalls.has(pfn).toString();
+      install_data.msixInstalls.delete(pfn);
+      extra.other_inst = (!!install_data.installPaths.size).toString();
+      extra.other_msix_inst = (!!install_data.msixInstalls.size).toString();
+    } else {
+      let dataPath = dataPathOverride;
+      if (!dataPath) {
+        dataPath = Services.dirsvc.get("GreD", Ci.nsIFile);
+        dataPath.append("installation_telemetry.json");
+      }
+
+      let dataBytes;
+      try {
+        dataBytes = await IOUtils.read(dataPath.path);
+      } catch (ex) {
+        if (ex.name == "NotFoundError") {
+          // Many systems will not have the data file, return silently if not found as
+          // there is nothing to record.
+          return;
+        }
+        throw ex;
+      }
+      const dataString = new TextDecoder("utf-16").decode(dataBytes);
+      const data = JSON.parse(dataString);
+
+      if (lastInstallTime && data.install_timestamp == lastInstallTime) {
+        // We've already seen this install
+        return;
+      }
+
+      // First time seeing this install, record the timestamp.
+      Services.prefs.setStringPref(TIMESTAMP_PREF, data.install_timestamp);
+      let install_data = getInstallData();
+
+      installer_type = data.installer_type;
+
+      // Installation timestamp is not intended to be sent with telemetry,
+      // remove it to emphasize this point.
+      delete data.install_timestamp;
+
+      // Build the extra event data
+      extra.version = data.version;
+      extra.build_id = data.build_id;
+      extra.admin_user = data.admin_user.toString();
+      extra.install_existed = data.install_existed.toString();
+      extra.profdir_existed = data.profdir_existed.toString();
+      extra.other_inst = (!!install_data.installPaths.size).toString();
+      extra.other_msix_inst = (!!install_data.msixInstalls.size).toString();
+
+      if (data.installer_type == "full") {
+        extra.silent = data.silent.toString();
+        extra.from_msi = data.from_msi.toString();
+        extra.default_path = data.default_path.toString();
+      }
     }
-
     // Record the event
     Services.telemetry.setEventRecordingEnabled("installation", true);
     Services.telemetry.recordEvent(
       "installation",
       "first_seen",
-      data.installer_type,
+      installer_type,
       null,
       extra
     );
