@@ -19,7 +19,9 @@
             android:theme="@style/AppTheme"
             android:name="androidx.multidex.MultiDexApplication">
         <uses-library android:name="android.test.runner" android:required="false"/>
-        <activity android:name=".TestRunnerActivity" android:exported="true"/>
+        <activity android:name=".TestRunnerActivity"
+            android:configChanges="orientation|screenSize"
+            android:exported="true"/>
         <activity-alias android:name=".App" android:targetActivity=".TestRunnerActivity"
             android:exported="true">
             <intent-filter>
