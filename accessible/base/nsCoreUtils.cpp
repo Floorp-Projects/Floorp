@@ -255,12 +255,12 @@ nsresult nsCoreUtils::ScrollSubstringTo(nsIFrame* aFrame, nsRange* aRange,
 
 void nsCoreUtils::ScrollFrameToPoint(nsIFrame* aScrollableFrame,
                                      nsIFrame* aFrame,
-                                     const LayoutDeviceIntPoint& aPoint) {
+                                     const nsIntPoint& aPoint) {
   nsIScrollableFrame* scrollableFrame = do_QueryFrame(aScrollableFrame);
   if (!scrollableFrame) return;
 
-  nsPoint point = LayoutDeviceIntPoint::ToAppUnits(
-      aPoint, aFrame->PresContext()->AppUnitsPerDevPixel());
+  nsPoint point =
+      ToAppUnits(aPoint, aFrame->PresContext()->AppUnitsPerDevPixel());
   nsRect frameRect = aFrame->GetScreenRectInAppUnits();
   nsPoint deltaPoint = point - frameRect.TopLeft();
 
@@ -322,8 +322,8 @@ void nsCoreUtils::ConvertScrollTypeToPercents(uint32_t aScrollType,
   *aHorizontal = ScrollAxis(whereX, whenX);
 }
 
-LayoutDeviceIntPoint nsCoreUtils::GetScreenCoordsForWindow(nsINode* aNode) {
-  LayoutDeviceIntPoint coords(0, 0);
+nsIntPoint nsCoreUtils::GetScreenCoordsForWindow(nsINode* aNode) {
+  nsIntPoint coords(0, 0);
   nsCOMPtr<nsIDocShellTreeItem> treeItem(GetDocShellFor(aNode));
   if (!treeItem) return coords;
 

@@ -408,7 +408,7 @@ xpcAccessible::GetBounds(int32_t* aX, int32_t* aY, int32_t* aWidth,
 
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
-  LayoutDeviceIntRect rect;
+  nsIntRect rect;
   if (LocalAccessible* acc = IntlGeneric()->AsLocal()) {
     rect = acc->Bounds();
   } else {
