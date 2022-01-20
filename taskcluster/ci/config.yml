@@ -118,6 +118,7 @@ treeherder:
         'W-headless': 'Headless web platform tests'
         'W-headless-fis': 'Headless web platform tests with fission enabled'
         'W-swr': 'Web platform tests with software webrender enabled'
+        'W-swr-fis': 'Web platform tests with software webrender enabled'
         'W-b': 'Web platform tests (backlog)'
         'W-b-fis': 'Web platform tests (backlog) with fission enabled'
         'X': 'Xpcshell tests'
