@@ -171,14 +171,6 @@ if test -n "$_WIN32_MSVC"; then
     SKIP_PATH_CHECKS=1
     SKIP_COMPILER_CHECKS=1
     SKIP_LIBRARY_CHECKS=1
-
-    # Since we're skipping compiler and library checks, hard-code
-    # some facts here.
-
-    # Common to all MSVC environments:
-
-    AC_DEFINE(HAVE_LOCALECONV)
-    AC_CHECK_FUNCS([_getc_nolock])
 fi
 
 fi # COMPILE_ENVIRONMENT
@@ -795,7 +787,6 @@ fi
 
 dnl Checks for library functions.
 dnl ========================================================
-AC_CHECK_FUNCS([getc_unlocked _getc_nolock gmtime_r localtime_r pthread_getname_np pthread_get_name_np])
 
 dnl check for clock_gettime(), the CLOCK_MONOTONIC clock
 AC_CACHE_CHECK(for clock_gettime(CLOCK_MONOTONIC),
@@ -926,15 +917,6 @@ fi
 dnl End of C++ language/feature checks
 AC_LANG_C
 
-dnl ========================================================
-dnl =  Internationalization checks
-dnl ========================================================
-dnl
-dnl Internationalization and Locale support is different
-dnl on various UNIX platforms.  Checks for specific i18n
-dnl features go here.
-
-AC_HAVE_FUNCS(localeconv)
 fi # ! SKIP_COMPILER_CHECKS
 
 TARGET_XPCOM_ABI=
@@ -949,7 +931,6 @@ if test -n "$SKIP_COMPILER_CHECKS"; then
    dnl Windows has malloc.h
    AC_DEFINE(MALLOC_H, [<malloc.h>])
    AC_DEFINE(HAVE_FORCEINLINE)
-   AC_DEFINE(HAVE_LOCALECONV)
 fi # SKIP_COMPILER_CHECKS
 
 dnl Mozilla specific options
@@ -1052,16 +1033,6 @@ if test -n "$COMPILE_ENVIRONMENT"; then
 MOZ_CONFIG_CLANG_PLUGIN
 fi # COMPILE_ENVIRONMENT
 
-dnl ========================================================
-dnl = Support for demangling undefined symbols
-dnl ========================================================
-if test -z "$SKIP_LIBRARY_CHECKS"; then
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
-    AC_CHECK_FUNCS(__cxa_demangle, HAVE_DEMANGLE=1, HAVE_DEMANGLE=)
-    AC_LANG_RESTORE
-fi
-
 if test -z "$SKIP_COMPILER_CHECKS"; then
 
 dnl ========================================================
@@ -1158,8 +1129,6 @@ AC_SUBST(BIN_SUFFIX)
 AC_SUBST(USE_N32)
 AC_SUBST(WIN32_CONSOLE_EXE_LDFLAGS)
 AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
-
-AC_CHECK_FUNCS(posix_fadvise posix_fallocate)
 
 dnl Set various defines and substitutions
 dnl ========================================================
