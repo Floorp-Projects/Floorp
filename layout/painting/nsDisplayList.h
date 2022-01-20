@@ -1691,20 +1691,6 @@ class nsDisplayListBuilder {
    */
   nsIFrame* FindAnimatedGeometryRootFrameFor(nsIFrame* aFrame);
 
-  /**
-   * Returns true if this is a retained builder and reuse stacking contexts
-   * mode is enabled by pref.
-   */
-  bool IsReusingStackingContextItems() const {
-    return mIsReusingStackingContextItems;
-  }
-
-  /**
-   * Marks the given display item |aItem| as reused, and updates the necessary
-   * display list builder state.
-   */
-  void ReuseDisplayItem(nsDisplayItem* aItem);
-
  private:
   bool MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
                                     const nsRect& aVisibleRect,
@@ -1899,7 +1885,6 @@ class nsDisplayListBuilder {
   gfx::CompositorHitTestInfo mCompositorHitTestInfo;
 
   bool mIsForContent;
-  bool mIsReusingStackingContextItems;
 };
 
 class nsDisplayItem;
@@ -2771,44 +2756,6 @@ class nsDisplayItem : public nsDisplayItemLink {
 
   virtual const HitTestInfo& GetHitTestInfo() { return HitTestInfo::Empty(); }
 
-  enum class ReuseState : uint8_t {
-    None,
-    // Set during display list building.
-    Reusable,
-    // Set during display list preprocessing.
-    PreProcessed,
-    // Set during partial display list build.
-    Reused,
-  };
-
-  void SetReusable() {
-    MOZ_ASSERT(mReuseState == ReuseState::None ||
-               mReuseState == ReuseState::Reused);
-    mReuseState = ReuseState::Reusable;
-  }
-
-  bool IsReusable() const { return mReuseState == ReuseState::Reusable; }
-
-  void SetPreProcessed() {
-    MOZ_ASSERT(mReuseState == ReuseState::Reusable);
-    mReuseState = ReuseState::PreProcessed;
-  }
-
-  bool IsPreProcessed() const {
-    return mReuseState == ReuseState::PreProcessed;
-  }
-
-  void SetReusedItem() {
-    MOZ_ASSERT(mReuseState == ReuseState::PreProcessed);
-    mReuseState = ReuseState::Reused;
-  }
-
-  bool IsReusedItem() const { return mReuseState == ReuseState::Reused; }
-
-  void ResetReuseState() { mReuseState = ReuseState::None; }
-
-  ReuseState GetReuseState() const { return mReuseState; }
-
   nsIFrame* mFrame;  // 8
 
  private:
@@ -2837,7 +2784,7 @@ class nsDisplayItem : public nsDisplayItemLink {
   DisplayItemType mType = DisplayItemType::TYPE_ZERO;  // 1
   uint8_t mExtraPageForPageNum = 0;                    // 1
   uint16_t mPerFrameIndex = 0;                         // 2
-  ReuseState mReuseState = ReuseState::None;
+  // 2 free bytes here
   OldListIndex mOldListIndex;  // 4
   uintptr_t mOldList = 0;      // 8
 
@@ -3537,13 +3484,6 @@ class RetainedDisplayList : public nsDisplayList {
     return *this;
   }
 
-  RetainedDisplayList& operator=(nsDisplayList&& aOther) {
-    MOZ_ASSERT(!Count(), "Can only move into an empty list!");
-    MOZ_ASSERT(mOldItems.IsEmpty(), "Can only move into an empty list!");
-    AppendToTop(&aOther);
-    return *this;
-  }
-
   void DeleteAll(nsDisplayListBuilder* aBuilder) override {
     for (OldItemInfo& i : mOldItems) {
       if (i.mItem && i.mOwnsItem) {
@@ -3742,22 +3682,22 @@ class nsDisplayReflowCount : public nsPaintedDisplayItem {
   nscolor mColor;
 };
 
-#  define DO_GLOBAL_REFLOW_COUNT_DSP(_name)                                 \
-    PR_BEGIN_MACRO                                                          \
-    if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery() && \
-        PresShell()->IsPaintingFrameCounts()) {                             \
-      aLists.Outlines()->AppendNewToTop<mozilla::nsDisplayReflowCount>(     \
-          aBuilder, this, _name);                                           \
-    }                                                                       \
+#  define DO_GLOBAL_REFLOW_COUNT_DSP(_name)                                   \
+    PR_BEGIN_MACRO                                                            \
+    if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery() &&   \
+        PresShell()->IsPaintingFrameCounts()) {                               \
+      aLists.Outlines()->AppendNewToTop<nsDisplayReflowCount>(aBuilder, this, \
+                                                              _name);         \
+    }                                                                         \
     PR_END_MACRO
 
-#  define DO_GLOBAL_REFLOW_COUNT_DSP_COLOR(_name, _color)                   \
-    PR_BEGIN_MACRO                                                          \
-    if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery() && \
-        PresShell()->IsPaintingFrameCounts()) {                             \
-      aLists.Outlines()->AppendNewToTop<mozilla::nsDisplayReflowCount>(     \
-          aBuilder, this, _name, _color);                                   \
-    }                                                                       \
+#  define DO_GLOBAL_REFLOW_COUNT_DSP_COLOR(_name, _color)                     \
+    PR_BEGIN_MACRO                                                            \
+    if (!aBuilder->IsBackgroundOnly() && !aBuilder->IsForEventDelivery() &&   \
+        PresShell()->IsPaintingFrameCounts()) {                               \
+      aLists.Outlines()->AppendNewToTop<nsDisplayReflowCount>(aBuilder, this, \
+                                                              _name, _color); \
+    }                                                                         \
     PR_END_MACRO
 
 /*
@@ -4159,7 +4099,7 @@ class nsDisplayBackgroundImage : public nsPaintedDisplayItem {
   nsIFrame* GetDependentFrame() override { return mDependentFrame; }
 
   void SetDependentFrame(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) {
-    if (!aBuilder->IsRetainingDisplayList() || mDependentFrame == aFrame) {
+    if (!aBuilder->IsRetainingDisplayList()) {
       return;
     }
     mDependentFrame = aFrame;
@@ -4448,7 +4388,7 @@ class nsDisplayBackgroundColor : public nsPaintedDisplayItem {
   nsIFrame* GetDependentFrame() override { return mDependentFrame; }
 
   void SetDependentFrame(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) {
-    if (!aBuilder->IsRetainingDisplayList() || mDependentFrame == aFrame) {
+    if (!aBuilder->IsRetainingDisplayList()) {
       return;
     }
     mDependentFrame = aFrame;
