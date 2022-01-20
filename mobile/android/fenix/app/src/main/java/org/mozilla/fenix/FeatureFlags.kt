@@ -64,11 +64,6 @@ object FeatureFlags {
     val tabReorderingFeature = Config.channel.isNightlyOrDebug
 
     /**
-     * Enables showing search groupings in the History.
-     */
-    const val showHistorySearchGroups = true
-
-    /**
      * Show Pocket recommended stories on home.
      */
     fun isPocketRecommendationsFeatureEnabled(context: Context): Boolean {

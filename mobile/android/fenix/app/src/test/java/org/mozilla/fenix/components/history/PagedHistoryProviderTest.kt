@@ -30,8 +30,7 @@ class PagedHistoryProviderTest {
     fun `getHistory uses getVisitsPaginated`() {
         val provider = DefaultPagedHistoryProvider(
             historyStorage = storage,
-            showHistorySearchGroups = true,
-            false
+            historyImprovementFeatures = false,
         )
 
         val visitInfo1 = VisitInfo(
@@ -148,8 +147,7 @@ class PagedHistoryProviderTest {
     fun `history metadata matching lower bound`() {
         val provider = DefaultPagedHistoryProvider(
             historyStorage = storage,
-            showHistorySearchGroups = true,
-            false
+            historyImprovementFeatures = false,
         )
         // Oldest history visit on the page is 15 seconds (buffer time) newer than matching
         // metadata record.
@@ -221,8 +219,7 @@ class PagedHistoryProviderTest {
     fun `history metadata matching upper bound`() {
         val provider = DefaultPagedHistoryProvider(
             historyStorage = storage,
-            showHistorySearchGroups = true,
-            false
+            historyImprovementFeatures = false,
         )
         // Newest history visit on the page is 15 seconds (buffer time) older than matching
         // metadata record.
@@ -294,8 +291,7 @@ class PagedHistoryProviderTest {
     fun `redirects are filtered out from history metadata groups`() {
         val provider = DefaultPagedHistoryProvider(
             historyStorage = storage,
-            showHistorySearchGroups = true,
-            false
+            historyImprovementFeatures = false,
         )
 
         val visitInfo1 = VisitInfo(

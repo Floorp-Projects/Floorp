@@ -89,7 +89,6 @@ interface PagedHistoryProvider {
  */
 class DefaultPagedHistoryProvider(
     private val historyStorage: PlacesHistoryStorage,
-    private val showHistorySearchGroups: Boolean = FeatureFlags.showHistorySearchGroups,
     private val historyImprovementFeatures: Boolean = FeatureFlags.historyImprovementFeatures,
 ) : PagedHistoryProvider {
 
@@ -131,53 +130,32 @@ class DefaultPagedHistoryProvider(
         // A PagedList DataSource runs on a background thread automatically.
         // If we run this in our own coroutineScope it breaks the PagedList
         runBlockingIncrement {
-            var history: List<HistoryDB>
-
-            if (showHistorySearchGroups) {
-                // We need to re-fetch all the history metadata if the offset resets back at 0
-                // in the case of a pull to refresh.
-                if (historyGroups == null || offset == 0) {
-                    historyGroups = historyStorage.getHistoryMetadataSince(Long.MIN_VALUE)
-                        .asSequence()
-                        .sortedByDescending { it.createdAt }
-                        .filter { it.key.searchTerm != null }
-                        .groupBy { it.key.searchTerm!! }
-                        .map { (searchTerm, items) ->
-                            HistoryDB.Group(
-                                title = searchTerm,
-                                visitedAt = items.first().createdAt,
-                                items = items.map { it.toHistoryDBMetadata() }
-                            )
+            // We need to re-fetch all the history metadata if the offset resets back at 0
+            // in the case of a pull to refresh.
+            if (historyGroups == null || offset == 0) {
+                historyGroups = historyStorage.getHistoryMetadataSince(Long.MIN_VALUE)
+                    .asSequence()
+                    .sortedByDescending { it.createdAt }
+                    .filter { it.key.searchTerm != null }
+                    .groupBy { it.key.searchTerm!! }
+                    .map { (searchTerm, items) ->
+                        HistoryDB.Group(
+                            title = searchTerm,
+                            visitedAt = items.first().createdAt,
+                            items = items.map { it.toHistoryDBMetadata() }
+                        )
+                    }
+                    .filter {
+                        if (historyImprovementFeatures) {
+                            it.items.size >= SEARCH_GROUP_MINIMUM_SITES
+                        } else {
+                            true
                         }
-                        .filter {
-                            if (historyImprovementFeatures) {
-                                it.items.size >= SEARCH_GROUP_MINIMUM_SITES
-                            } else {
-                                true
-                            }
-                        }
-                        .toList()
-                }
-
-                history = getHistoryAndSearchGroups(offset, numberOfItems)
-            } else {
-                history = historyStorage
-                    .getVisitsPaginated(
-                        offset.toLong(),
-                        numberOfItems.toLong(),
-                        excludeTypes = excludedVisitTypes
-                    )
-                    .map { transformVisitInfoToHistoryItem(it) }
-                    .distinctBy { Pair(it.historyTimeGroup, it.url) }
-
-                if (historyImprovementFeatures) {
-                    history = history.distinctBy { Pair(it.historyTimeGroup, it.url) }
-                        .filter { !urlSet[it.historyTimeGroup.ordinal].contains(it.url) }
-                    history.map { urlSet[it.historyTimeGroup.ordinal].add(it.url) }
-                }
+                    }
+                    .toList()
             }
 
-            onComplete(history)
+            onComplete(getHistoryAndSearchGroups(offset, numberOfItems))
         }
     }
 
