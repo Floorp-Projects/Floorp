@@ -26,7 +26,7 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.Constants.PackageName.YOUTUBE_APP
+import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
@@ -34,10 +34,8 @@ import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appName
-import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
+import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
-import org.mozilla.fenix.helpers.TestHelper.isPackageInstalled
-import org.mozilla.fenix.helpers.TestHelper.returnToBrowser
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
@@ -380,17 +378,14 @@ class SmokeTest {
     @Test
     // Verifies the Open in app button when an app is installed
     fun mainMenuOpenInAppTest() {
-        val youtubeUrl = "m.youtube.com"
-        if (isPackageInstalled(YOUTUBE_APP)) {
-            navigationToolbar {
-            }.enterURLAndEnterToBrowser(youtubeUrl.toUri()) {
-                verifyNotificationDotOnMainMenu()
-            }.openThreeDotMenu {
-            }.clickOpenInApp {
-                assertExternalAppOpens(YOUTUBE_APP)
-                returnToBrowser()
-                verifyUrl(youtubeUrl)
-            }
+        val playStoreUrl = "play.google.com/store/apps/details?id=org.mozilla.fenix"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(playStoreUrl.toUri()) {
+            verifyNotificationDotOnMainMenu()
+        }.openThreeDotMenu {
+        }.clickOpenInApp {
+            assertNativeAppOpens(Constants.PackageName.GOOGLE_PLAY_SERVICES, playStoreUrl)
         }
     }
 

@@ -342,6 +342,8 @@ class ThreeDotMenuMainRobot {
             threeDotMenuRecyclerView().perform(swipeUp())
             openInAppButton().click()
 
+            mDevice.waitForIdle()
+
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
