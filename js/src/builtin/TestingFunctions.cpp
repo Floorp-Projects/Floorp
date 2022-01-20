@@ -4092,7 +4092,7 @@ JSObject* ShellAllocationMetadataBuilder::build(
     if (iter.isFunctionFrame() && iter.compartment() == cx->compartment()) {
       id = INT_TO_JSID(stackIndex);
       RootedObject callee(cx, iter.callee(cx));
-      if (!JS_DefinePropertyById(cx, stack, id, callee, 0)) {
+      if (!JS_DefinePropertyById(cx, stack, id, callee, JSPROP_ENUMERATE)) {
         oomUnsafe.crash("ShellAllocationMetadataBuilder::build");
       }
       stackIndex++;
