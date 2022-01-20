@@ -129,9 +129,12 @@ void nsMathMLTokenFrame::Reflow(nsPresContext* aPresContext,
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
     ReflowInput childReflowInput(aPresContext, aReflowInput, childFrame,
                                  availSize);
+    nsReflowStatus childStatus;
     ReflowChild(childFrame, aPresContext, childDesiredSize, childReflowInput,
-                aStatus);
-    // NS_ASSERTION(aStatus.IsComplete(), "bad status");
+                childStatus);
+    NS_ASSERTION(childStatus.IsComplete(),
+                 "We gave the child unconstrained available block-size, so its "
+                 "status should be complete!");
     SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
                                     childDesiredSize.mBoundingMetrics);
   }
