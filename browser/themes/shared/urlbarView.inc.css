@@ -1,13 +1,6 @@
-%if 0
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-%endif
-
-%filter substitution
-%define urlbarViewPadding 4px
-%define urlbarViewFaviconWidth 16px
-%define urlbarViewIconMarginEnd (var(--urlbar-icon-padding) + var(--identity-box-margin-inline))
 
 %include ../shared/urlbar/dynamicResults.inc.css
 
@@ -20,6 +13,9 @@
   --urlbarView-action-slide-in-distance: 200px;
 
   --urlbarView-item-inline-padding: var(--urlbar-icon-padding);
+
+  --urlbarView-favicon-width: 16px;
+  --urlbarView-icon-margin-end: calc(var(--urlbar-icon-padding) + var(--identity-box-margin-inline));
 }
 
 :root:-moz-lwtheme {
@@ -69,7 +65,7 @@
 }
 
 .urlbarView-results {
-  padding-block: @urlbarViewPadding@;
+  padding-block: 4px;
   white-space: nowrap;
 }
 
@@ -118,7 +114,7 @@
   padding-block-start: 18px;
   /* Compensating for the 16px bottom margin on the tip elements. */
   padding-block-end: calc(18px - 16px);
-  padding-inline-end: calc(@urlbarViewIconMarginEnd@);
+  padding-inline-end: var(--urlbarView-icon-margin-end);
 }
 
 .urlbarView-row-inner,
@@ -146,7 +142,7 @@
   /* We prioritize icons + title + action over the url, so they can grow freely,
      but the url should never disappear when it's visible */
   flex-shrink: 0;
-  max-width: calc(70% - 2 * (@urlbarViewFaviconWidth@ + (6px + 2px)));
+  max-width: calc(70% - 2 * (var(--urlbarView-favicon-width) + (6px + 2px)));
 }
 
 /* Wrap the url to a second line when the window is narrow. Do not wrap when the
@@ -164,10 +160,10 @@
   }
   /* urlbarView-url is forced to be LTR for RTL locales, so set the padding based on the browser's directionality. */
   .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url:-moz-locale-dir(ltr) {
-    padding-left: calc(var(--urlbarView-item-inline-padding) + var(--identity-box-margin-inline) + @urlbarViewFaviconWidth@);
+    padding-left: calc(var(--urlbarView-item-inline-padding) + var(--identity-box-margin-inline) + var(--urlbarView-favicon-width));
   }
   .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url:-moz-locale-dir(rtl) {
-    padding-right: calc(var(--urlbarView-item-inline-padding) + var(--identity-box-margin-inline) + @urlbarViewFaviconWidth@);
+    padding-right: calc(var(--urlbarView-item-inline-padding) + var(--identity-box-margin-inline) + var(--urlbarView-favicon-width));
   }
   /* Note: switchtab entries show the url only in override mode,
      remotetab and sponsored ones only when selected or :hover. */
@@ -182,7 +178,7 @@
   }
   .urlbarView-results[wrap] > .urlbarView-row[type=tabtosearch] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
     flex-basis: 100%;
-    margin-inline-start: calc(var(--urlbarView-item-inline-padding) + var(--identity-box-margin-inline) + @urlbarViewFaviconWidth@);
+    margin-inline-start: calc(var(--urlbarView-item-inline-padding) + var(--identity-box-margin-inline) + var(--urlbarView-favicon-width));
   }
 }
 
@@ -231,9 +227,9 @@
 /* Favicon */
 
 .urlbarView-favicon {
-  width: @urlbarViewFaviconWidth@;
-  height: @urlbarViewFaviconWidth@;
-  margin-inline-end: calc(@urlbarViewIconMarginEnd@);
+  width: var(--urlbarView-favicon-width);
+  height: var(--urlbarView-favicon-width);
+  margin-inline-end: var(--urlbarView-icon-margin-end);
   background-repeat: no-repeat;
   background-size: contain;
   object-fit: contain;
@@ -539,7 +535,7 @@
      displayed width, favicon and title will collapse as different row, the style
      will be broken. To avoid it, we specify the max displayable width for title
      explicitly. */
-  flex-basis: calc(100% - @urlbarViewFaviconWidth@ - @urlbarViewIconMarginEnd@);
+  flex-basis: calc(100% - var(--urlbarView-favicon-width) - var(--urlbarView-icon-margin-end));
   /* Move the title away from the action a little. This does not affect the
      height of the row. */
   margin-top: -0.3em;
@@ -547,7 +543,7 @@
 
 .urlbarView-row[firefox-suggest-sponsored] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
   flex-basis: 100%;
-  margin-inline-start: calc(@urlbarViewFaviconWidth@ + @urlbarViewIconMarginEnd@);
+  margin-inline-start: calc(var(--urlbarView-favicon-width) + var(--urlbarView-icon-margin-end));
   font-size: 0.73em;
   /* This value + the bottom padding control the space between the bottom edge
      of the favicon and the bottom edge of the row. The bottom padding is 1px,
