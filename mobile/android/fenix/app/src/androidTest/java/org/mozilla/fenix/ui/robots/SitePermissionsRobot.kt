@@ -46,6 +46,15 @@ class SitePermissionsRobot {
         assertTrue(allowPagePermissionButton.text.equals("Allow"))
     }
 
+    fun verifyAudioVideoPermissionPrompt(url: String) {
+        assertTrue(
+            mDevice.findObject(UiSelector().text("Allow $url to use your camera and microphone?"))
+                .waitForExists(waitingTime)
+        )
+        assertTrue(denyPagePermissionButton.text.equals("Don’t allow"))
+        assertTrue(allowPagePermissionButton.text.equals("Allow"))
+    }
+
     fun verifyLocationPermissionPrompt(url: String) {
         assertTrue(
             mDevice.findObject(UiSelector().text("Allow $url to use your location?"))

@@ -685,6 +685,15 @@ class BrowserRobot {
             return SitePermissionsRobot.Transition()
         }
 
+        fun clickStartAudioVideoButton(interact: SitePermissionsRobot.() -> Unit): SitePermissionsRobot.Transition {
+            // Test page used for testing permissions located at https://mozilla-mobile.github.io/testapp/permissions
+            audioVideoButton.waitForExists(waitingTime)
+            audioVideoButton.click()
+
+            SitePermissionsRobot().interact()
+            return SitePermissionsRobot.Transition()
+        }
+
         fun clickOpenNotificationButton(interact: SitePermissionsRobot.() -> Unit): SitePermissionsRobot.Transition {
             // Test page used for testing permissions located at https://mozilla-mobile.github.io/testapp/permissions
             notificationButton.waitForExists(waitingTime)
@@ -756,6 +765,8 @@ private var progressBar =
 private val cameraButton = mDevice.findObject(UiSelector().text("Open camera"))
 
 private val microphoneButton = mDevice.findObject(UiSelector().text("Open microphone"))
+
+private val audioVideoButton = mDevice.findObject(UiSelector().text("Camera & Microphone"))
 
 private val notificationButton = mDevice.findObject(UiSelector().text("Open notifications dialogue"))
 

@@ -27,6 +27,89 @@ class SitePermissionsTest {
 
     @SmokeTest
     @Test
+    fun audioVideoPermissionChoiceOnEachRequestTest() {
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(testPage.toUri()) {
+            waitForPageToLoad()
+        }.clickStartAudioVideoButton {
+            // allow app to record video
+            clickAppPermissionButton(true)
+            // allow app to record audio
+            clickAppPermissionButton(true)
+            verifyAudioVideoPermissionPrompt(testPageSubstring)
+        }.clickPagePermissionButton(false) {
+            verifyPageContent("Camera and Microphone not allowed")
+        }.clickStartAudioVideoButton {
+        }.clickPagePermissionButton(true) {
+            verifyPageContent("Camera and Microphone allowed")
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun rememberBlockAudioVideoPermissionChoiceTest() {
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(testPage.toUri()) {
+            waitForPageToLoad()
+        }.clickStartAudioVideoButton {
+            // allow app to record video
+            clickAppPermissionButton(true)
+            // allow app to record audio
+            clickAppPermissionButton(true)
+            verifyAudioVideoPermissionPrompt(testPageSubstring)
+            selectRememberPermissionDecision()
+        }.clickPagePermissionButton(false) {
+            verifyPageContent("Camera and Microphone not allowed")
+        }.openThreeDotMenu {
+        }.refreshPage {
+            waitForPageToLoad()
+        }.clickStartAudioVideoButton { }
+        browserScreen {
+            verifyPageContent("Camera and Microphone not allowed")
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun rememberAllowAudioVideoPermissionChoiceTest() {
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(testPage.toUri()) {
+            waitForPageToLoad()
+        }.clickStartAudioVideoButton {
+            // allow app to record video
+            clickAppPermissionButton(true)
+            // allow app to record audio
+            clickAppPermissionButton(true)
+            verifyAudioVideoPermissionPrompt(testPageSubstring)
+            selectRememberPermissionDecision()
+        }.clickPagePermissionButton(true) {
+            verifyPageContent("Camera and Microphone allowed")
+        }.openThreeDotMenu {
+        }.refreshPage {
+            waitForPageToLoad()
+        }.clickStartAudioVideoButton { }
+        browserScreen {
+            verifyPageContent("Camera and Microphone allowed")
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun blockAppUsingAudioVideoTest() {
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(testPage.toUri()) {
+        }.clickStartAudioVideoButton {
+            // allow app to record video
+            clickAppPermissionButton(false)
+            // allow app to record audio
+            clickAppPermissionButton(false)
+        }
+        browserScreen {
+            verifyPageContent("Camera and Microphone not allowed")
+        }
+    }
+
+    @Test
     fun microphonePermissionChoiceOnEachRequestTest() {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(testPage.toUri()) {
@@ -42,7 +125,6 @@ class SitePermissionsTest {
         }
     }
 
-    @SmokeTest
     @Test
     fun rememberBlockMicrophonePermissionChoiceTest() {
         navigationToolbar {
@@ -64,7 +146,6 @@ class SitePermissionsTest {
     }
 
     @Ignore("Flaky, needs investigation: https://github.com/mozilla-mobile/fenix/issues/23298")
-    @SmokeTest
     @Test
     fun rememberAllowMicrophonePermissionChoiceTest() {
         navigationToolbar {
@@ -85,7 +166,6 @@ class SitePermissionsTest {
         }
     }
 
-    @SmokeTest
     @Test
     fun blockAppUsingMicrophoneTest() {
         navigationToolbar {
@@ -98,7 +178,6 @@ class SitePermissionsTest {
         }
     }
 
-    @SmokeTest
     @Test
     fun cameraPermissionChoiceOnEachRequestTest() {
         navigationToolbar {
@@ -115,7 +194,6 @@ class SitePermissionsTest {
         }
     }
 
-    @SmokeTest
     @Test
     fun rememberBlockCameraPermissionChoiceTest() {
         navigationToolbar {
@@ -136,7 +214,6 @@ class SitePermissionsTest {
         }
     }
 
-    @SmokeTest
     @Test
     fun rememberAllowCameraPermissionChoiceTest() {
         navigationToolbar {
@@ -157,7 +234,6 @@ class SitePermissionsTest {
         }
     }
 
-    @SmokeTest
     @Test
     fun blockAppUsingCameraTest() {
         navigationToolbar {
