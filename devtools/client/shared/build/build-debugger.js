@@ -45,7 +45,6 @@ const VENDORS = [
   "devtools-environment",
   "devtools-utils",
   "fuzzaldrin-plus",
-  "lodash-move",
   "react-aria-components/src/tabs",
   "react-transition-group/Transition",
   "Svg",

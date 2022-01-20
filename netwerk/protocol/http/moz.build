@@ -122,7 +122,6 @@ UNIFIED_SOURCES += [
     "HttpTrafficAnalyzer.cpp",
     "HttpTransactionChild.cpp",
     "HttpTransactionParent.cpp",
-    "InterceptedChannel.cpp",
     "InterceptedHttpChannel.cpp",
     "NetworkMarker.cpp",
     "nsCORSListenerProxy.cpp",

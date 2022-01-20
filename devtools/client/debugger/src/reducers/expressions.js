@@ -7,8 +7,6 @@
  * @module reducers/expressions
  */
 
-import { omit } from "lodash";
-
 import { createSelector } from "reselect";
 import { prefs } from "../utils/prefs";
 
@@ -100,7 +98,11 @@ function restoreExpressions() {
 }
 
 function storeExpressions({ expressions }) {
-  prefs.expressions = expressions.map(expression => omit(expression, "value"));
+  // Return the expressions without the `value` property
+  prefs.expressions = expressions.map(({ input, updating }) => ({
+    input,
+    updating,
+  }));
 }
 
 function appendExpressionToList(state, value) {

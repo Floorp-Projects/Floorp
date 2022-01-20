@@ -251,7 +251,7 @@ void PointerEvent::GetCoalescedEvents(
       mCoalescedEvents.AppendElement(domEvent);
     }
   }
-  if (mEvent->mTarget) {
+  if (mEvent->IsTrusted() && mEvent->mTarget) {
     for (RefPtr<PointerEvent>& pointerEvent : mCoalescedEvents) {
       // Only set event target when it's null.
       if (!pointerEvent->mEvent->mTarget) {
@@ -265,7 +265,7 @@ void PointerEvent::GetCoalescedEvents(
 void PointerEvent::GetPredictedEvents(
     nsTArray<RefPtr<PointerEvent>>& aPointerEvents) {
   // XXX Add support for native predicted events, bug 1550461
-  if (mEvent->mTarget) {
+  if (mEvent->IsTrusted() && mEvent->mTarget) {
     for (RefPtr<PointerEvent>& pointerEvent : mPredictedEvents) {
       // Only set event target when it's null.
       if (!pointerEvent->mEvent->mTarget) {

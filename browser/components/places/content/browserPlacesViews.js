@@ -1757,6 +1757,9 @@ PlacesToolbar.prototype = {
         this._allowPopupShowing = false;
       }
     }
+    if (target._placesNode?.uri) {
+      PlacesUIUtils.setupSpeculativeConnection(target._placesNode.uri, window);
+    }
   },
 
   _cleanupDragDetails: function PT__cleanupDragDetails() {
@@ -1993,7 +1996,7 @@ function PlacesMenu(aPopupShowingEvent, aPlace, aOptions) {
   this._viewElt._placesView = this;
   this._addEventListeners(this._rootElt, ["popupshowing", "popuphidden"], true);
   this._addEventListeners(window, ["unload"], false);
-
+  this._addEventListeners(this._rootElt, ["mousedown"], false);
   if (AppConstants.platform === "macosx") {
     // Must walk up to support views in sub-menus, like Bookmarks Toolbar menu.
     for (let elt = this._viewElt.parentNode; elt; elt = elt.parentNode) {
@@ -2022,6 +2025,7 @@ PlacesMenu.prototype = {
       true
     );
     this._removeEventListeners(window, ["unload"], false);
+    this._removeEventListeners(this._rootElt, ["mousedown"], false);
 
     PlacesViewBase.prototype.uninit.apply(this, arguments);
   },
@@ -2036,6 +2040,9 @@ PlacesMenu.prototype = {
         break;
       case "popuphidden":
         this._onPopupHidden(aEvent);
+        break;
+      case "mousedown":
+        this._onMouseDown(aEvent);
         break;
     }
   },
@@ -2059,6 +2066,15 @@ PlacesMenu.prototype = {
     // when the folder closes because it is no longer applicable.
     popup.removeAttribute("autoopened");
     popup.removeAttribute("dragstart");
+  },
+
+  // We don't have a facility for catch "mousedown" events on the native
+  // Mac menus because Mac doesn't expose it
+  _onMouseDown(aEvent) {
+    let target = aEvent.target;
+    if (target._placesNode?.uri) {
+      PlacesUIUtils.setupSpeculativeConnection(target._placesNode.uri, window);
+    }
   },
 };
 

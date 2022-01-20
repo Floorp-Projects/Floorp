@@ -1101,6 +1101,9 @@ pref("places.frecency.unvisitedTypedBonus", 200);
 // selects "Forget About This Site".
 pref("places.forgetThisSite.clearByBaseDomain", true);
 
+// Whether to warm up network connections for places: menus and places: toolbar.
+pref("browser.places.speculativeConnect.enabled", true);
+
 // Controls behavior of the "Add Exception" dialog launched from SSL error pages
 // 0 - don't pre-populate anything
 // 1 - pre-populate site URL, but don't fetch certificate
