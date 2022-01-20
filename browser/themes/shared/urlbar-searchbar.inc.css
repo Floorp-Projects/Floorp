@@ -1,16 +1,13 @@
-%if 0
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-%endif
-
-%define urlbarMarginInline 5px
-%define urlbarSearchButtonWidth calc(16px + 2 * var(--urlbar-icon-padding))
 
 :root {
   --toolbar-field-border-color: hsla(240,5%,5%,.25);
   --toolbar-field-focus-border-color: var(--focus-outline-color);
   --urlbar-container-padding: 1px;
+  --urlbar-margin-inline: 5px;
+  --urlbar-search-button-width: calc(16px + 2 * var(--urlbar-icon-padding));
 }
 
 @media not (prefers-contrast) {
@@ -23,7 +20,7 @@
 #urlbar-container,
 #search-container {
   padding-block: 4px;
-  margin-inline: @urlbarMarginInline@;
+  margin-inline: var(--urlbar-margin-inline);
 }
 
 #search-container[cui-areatype="menu-panel"] {
@@ -144,7 +141,7 @@
 }
 
 #urlbar.searchButton > #urlbar-input-container > #urlbar-search-button {
-  width: @urlbarSearchButtonWidth@;
+  width: var(--urlbar-search-button-width);
   background-image: url(chrome://global/skin/icons/search-glass.svg);
   background-repeat: no-repeat;
   background-position: center;
@@ -176,7 +173,7 @@
 
 :root:not([chromehidden~="toolbar"]) #urlbar.searchButton:not([breakout]) > #urlbar-background,
 :root:not([chromehidden~="toolbar"]) #urlbar.searchButton:not([breakout-extend]) > #urlbar-background {
-  inset-inline-start: @urlbarSearchButtonWidth@;
+  inset-inline-start: var(--urlbar-search-button-width);
 }
 
 #urlbar-input-container {
@@ -219,14 +216,14 @@
 
 #urlbar[breakout][breakout-extend] {
   top: 0;
-  left: -@urlbarMarginInline@;
-  width: calc(100% + 2 * @urlbarMarginInline@);
+  left: calc(-1 * var(--urlbar-margin-inline));
+  width: calc(100% + 2 * var(--urlbar-margin-inline));
 }
 
 #urlbar[breakout][breakout-extend] > #urlbar-input-container {
   height: var(--urlbar-toolbar-height);
   padding-block: calc((var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2 + var(--urlbar-container-padding));
-  padding-inline: calc(@urlbarMarginInline@ + var(--urlbar-container-padding));
+  padding-inline: calc(var(--urlbar-margin-inline) + var(--urlbar-container-padding));
 }
 
 #urlbar.searchButton[breakout][breakout-extend] > #urlbar-input-container > #urlbar-search-button {
