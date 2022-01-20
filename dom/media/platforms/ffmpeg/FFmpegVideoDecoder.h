@@ -7,15 +7,22 @@
 #ifndef __FFmpegVideoDecoder_h__
 #define __FFmpegVideoDecoder_h__
 
+#include "ImageContainer.h"
 #include "FFmpegDataDecoder.h"
 #include "FFmpegLibWrapper.h"
 #include "SimpleMap.h"
+#include "mozilla/ScopeExit.h"
+#include "nsTHashSet.h"
+#if LIBAVCODEC_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MAJOR >= 56
+#  include "mozilla/layers/TextureClient.h"
+#endif
 
 struct _VADRMPRIMESurfaceDescriptor;
 typedef struct _VADRMPRIMESurfaceDescriptor VADRMPRIMESurfaceDescriptor;
 
 namespace mozilla {
 
+class ImageBufferWrapper;
 class VideoFramePool;
 
 template <int V>
@@ -41,6 +48,8 @@ class FFmpegVideoDecoder<LIBAV_VER>
                      ImageContainer* aImageContainer, bool aLowLatency,
                      bool aDisableHardwareDecoding);
 
+  ~FFmpegVideoDecoder();
+
   RefPtr<InitPromise> Init() override;
   void InitCodecContext() override;
   nsCString GetDescriptionName() const override {
@@ -55,6 +64,19 @@ class FFmpegVideoDecoder<LIBAV_VER>
   }
 
   static AVCodecID GetCodecId(const nsACString& aMimeType);
+
+#if LIBAVCODEC_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MAJOR >= 56
+  int GetVideoBuffer(struct AVCodecContext* aCodecContext, AVFrame* aFrame,
+                     int aFlags);
+  int GetVideoBufferDefault(struct AVCodecContext* aCodecContext,
+                            AVFrame* aFrame, int aFlags) {
+    mIsUsingShmemBufferForDecode = Some(false);
+    return mLib->avcodec_default_get_buffer2(aCodecContext, aFrame, aFlags);
+  }
+  void ReleaseAllocatedImage(ImageBufferWrapper* aImage) {
+    mAllocatedImages.Remove(aImage);
+  }
+#endif
 
  private:
   RefPtr<FlushPromise> ProcessFlush() override;
@@ -78,13 +100,30 @@ class FFmpegVideoDecoder<LIBAV_VER>
   MediaResult CreateImage(int64_t aOffset, int64_t aPts, int64_t aDuration,
                           MediaDataDecoder::DecodedData& aResults) const;
 
+  bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
+  bool IsHardwareAccelerated() const {
+    nsAutoCString dummy;
+    return IsHardwareAccelerated(dummy);
+  }
+
+#if LIBAVCODEC_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MAJOR >= 56
+  layers::TextureClient* AllocateTextueClientForImage(
+      struct AVCodecContext* aCodecContext, layers::PlanarYCbCrImage* aImage);
+
+  layers::PlanarYCbCrData CreateEmptyPlanarYCbCrData(
+      struct AVCodecContext* aCodecContext, const VideoInfo& aInfo);
+
+  gfx::IntSize GetAlignmentVideoFrameSize(struct AVCodecContext* aCodecContext,
+                                          int32_t aWidth,
+                                          int32_t aHeight) const;
+#endif
+
 #ifdef MOZ_WAYLAND_USE_VAAPI
   void InitHWDecodingPrefs();
   MediaResult InitVAAPIDecoder();
   bool CreateVAAPIDeviceContext();
   void InitVAAPICodecContext();
   AVCodec* FindVAAPICodec();
-  bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
   bool GetVAAPISurfaceDescriptor(VADRMPRIMESurfaceDescriptor* aVaDesc);
   void AddAcceleratedFormats(nsTArray<AVCodecID>& aCodecList,
                              AVCodecID aCodecID, AVVAAPIHWConfig* hwconfig);
@@ -128,7 +167,64 @@ class FFmpegVideoDecoder<LIBAV_VER>
 
   DurationMap mDurationMap;
   const bool mLowLatency;
+
+  // True if we're allocating shmem for ffmpeg decode buffer.
+  Maybe<Atomic<bool>> mIsUsingShmemBufferForDecode;
+
+#if LIBAVCODEC_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MAJOR >= 56
+  // These images are buffers for ffmpeg in order to store decoded data when
+  // using custom allocator for decoding. We want to explictly track all images
+  // we allocate to ensure that we won't leak any of them.
+  nsTHashSet<RefPtr<ImageBufferWrapper>> mAllocatedImages;
+#endif
 };
+
+#if LIBAVCODEC_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MAJOR >= 56
+class ImageBufferWrapper final {
+ public:
+  typedef mozilla::layers::Image Image;
+  typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageBufferWrapper)
+
+  ImageBufferWrapper(Image* aImage, void* aDecoder)
+      : mImage(aImage), mDecoder(aDecoder) {
+    MOZ_ASSERT(aImage);
+    MOZ_ASSERT(mDecoder);
+  }
+
+  PlanarYCbCrImage* AsPlanarYCbCrImage() {
+    return mImage->AsPlanarYCbCrImage();
+  }
+
+  void ReleaseBuffer() {
+    auto clear = MakeScopeExit([&]() {
+      auto* decoder = static_cast<FFmpegVideoDecoder<LIBAV_VER>*>(mDecoder);
+      decoder->ReleaseAllocatedImage(this);
+    });
+    if (!mImage) {
+      return;
+    }
+    PlanarYCbCrImage* image = mImage->AsPlanarYCbCrImage();
+    RefPtr<layers::TextureClient> texture = image->GetTextureClient(nullptr);
+    // Usually the decoded video buffer would be locked when it is allocated,
+    // and gets unlocked when we create the video data via `DoDecode`. However,
+    // sometime the buffer won't be used for the decoded data (maybe just as
+    // an internal temporary usage?) so we will need to unlock the texture here
+    // before sending it back to recycle.
+    if (!texture) {
+      NS_WARNING("Failed to get the texture client during release!");
+    } else if (texture->IsLocked()) {
+      texture->Unlock();
+    }
+  }
+
+ private:
+  ~ImageBufferWrapper() = default;
+  const RefPtr<Image> mImage;
+  void* const MOZ_NON_OWNING_REF mDecoder;
+};
+#endif
 
 }  // namespace mozilla
 
