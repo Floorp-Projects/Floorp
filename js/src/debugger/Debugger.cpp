@@ -5779,15 +5779,15 @@ class MOZ_STACK_CLASS Debugger::ObjectQuery {
     {
       // We can't tolerate the GC moving things around while we're
       // searching the heap. Check that nothing we do causes a GC.
-      Maybe<JS::AutoCheckCannotGC> maybeNoGC;
       RootedObject dbgObj(cx, dbg->object);
-      JS::ubi::RootList rootList(cx, maybeNoGC);
-      if (!rootList.init(dbgObj)) {
+      JS::ubi::RootList rootList(cx);
+      auto [ok, nogc] = rootList.init(dbgObj);
+      if (!ok) {
         ReportOutOfMemory(cx);
         return false;
       }
 
-      Traversal traversal(cx, *this, maybeNoGC.ref());
+      Traversal traversal(cx, *this, nogc);
       traversal.wantNames = false;
 
       return traversal.addStart(JS::ubi::Node(&rootList)) &&
