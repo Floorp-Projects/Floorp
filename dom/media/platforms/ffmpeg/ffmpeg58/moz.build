@@ -34,4 +34,6 @@ if CONFIG['MOZ_WAYLAND']:
   ]
   USE_LIBS += ['mozva']
 
+include("/ipc/chromium/chromium-config.mozbuild")
+
 FINAL_LIBRARY = 'xul'

@@ -307,6 +307,17 @@ class TextureData {
     return mozilla::ipc::FileDescriptor();
   }
 
+  /**
+   * Crop YCbCr planes to a smaller size. An use case is that we would need to
+   * allocate a larger size for planes in order to meet the special alignement
+   * requirement (eg. for ffmpeg video decoding), but crop planes to a correct
+   * range after allocation is done.
+   */
+  virtual bool CropYCbCrPlanes(const gfx::IntSize& aYSize,
+                               const gfx::IntSize& aCbCrSize) {
+    return false;
+  }
+
  protected:
   MOZ_COUNTED_DEFAULT_CTOR(TextureData)
 };
@@ -468,6 +479,15 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
    */
   bool CopyToTextureClient(TextureClient* aTarget, const gfx::IntRect* aRect,
                            const gfx::IntPoint* aPoint);
+
+  /**
+   * Crop YCbCr planes to a smaller size. An use case is that we would need to
+   * allocate a larger size for planes in order to meet the special alignement
+   * requirement (eg. for ffmpeg video decoding), but crop planes to a correct
+   * range after allocation is done.
+   */
+  bool CropYCbCrPlanes(const gfx::IntSize& aYSize,
+                       const gfx::IntSize& aCbCrSize);
 
   /**
    * Allocate and deallocate a TextureChild actor.
