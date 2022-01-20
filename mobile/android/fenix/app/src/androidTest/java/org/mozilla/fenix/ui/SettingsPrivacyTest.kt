@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.core.net.toUri
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
@@ -255,6 +256,30 @@ class SettingsPrivacyTest {
         }.openLoginsAndPasswordSubMenu {
         }.saveLoginsAndPasswordsOptions {
             verifySaveLoginsOptionsView()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun openWebsiteForSavedLoginTest() {
+        val loginPage = "https://mozilla-mobile.github.io/testapp/loginForm"
+        val originWebsite = "mozilla-mobile.github.io"
+        val userName = "test"
+        val password = "pass"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(loginPage.toUri()) {
+            fillAndSubmitLoginCredentials(userName, password)
+            saveLoginFromPrompt("Save")
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openLoginsAndPasswordSubMenu {
+        }.openSavedLogins {
+            verifySecurityPromptForLogins()
+            tapSetupLater()
+            viewSavedLoginDetails(userName)
+        }.goToSavedWebsite {
+            verifyUrl(originWebsite)
         }
     }
 

@@ -612,7 +612,7 @@ class SmokeTest {
             tapSetupLater()
             // Verify that the login appears correctly
             verifySavedLoginFromPrompt()
-            viewSavedLoginDetails()
+            viewSavedLoginDetails("test@example.com")
             revealPassword()
             verifyPasswordSaved("test") // failing here locally
         }

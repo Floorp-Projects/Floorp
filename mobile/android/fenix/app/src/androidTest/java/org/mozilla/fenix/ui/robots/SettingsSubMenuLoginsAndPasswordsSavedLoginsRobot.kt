@@ -9,6 +9,7 @@ import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -36,18 +37,18 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
         assertSavedLoginAppears()
     }
 
-    fun tapSetupLater() = onView(ViewMatchers.withText("Later")).perform(ViewActions.click())
+    fun tapSetupLater() = onView(withText("Later")).perform(ViewActions.click())
 
     fun verifySavedLoginFromPrompt() =
         mDevice.waitNotNull(Until.findObjects(By.text("test@example.com")))
 
-    fun verifyNotSavedLoginFromPrompt() = onView(ViewMatchers.withText("test@example.com"))
+    fun verifyNotSavedLoginFromPrompt() = onView(withText("test@example.com"))
         .check(ViewAssertions.doesNotExist())
 
-    fun verifyLocalhostExceptionAdded() = onView(ViewMatchers.withText(containsString("localhost")))
+    fun verifyLocalhostExceptionAdded() = onView(withText(containsString("localhost")))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-    fun viewSavedLoginDetails() = onView(ViewMatchers.withText("test@example.com")).click()
+    fun viewSavedLoginDetails(loginUserName: String) = onView(withText(loginUserName)).click()
 
     fun revealPassword() = onView(withId(R.id.revealPasswordButton)).click()
 
@@ -61,6 +62,13 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
             SettingsSubMenuLoginsAndPasswordRobot().interact()
             return SettingsSubMenuLoginsAndPasswordRobot.Transition()
         }
+
+        fun goToSavedWebsite(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            openWebsiteButton.click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
     }
 }
 
@@ -68,7 +76,11 @@ private fun goBackButton() =
     onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
 
 private fun assertSavedLoginsView() =
-    onView(ViewMatchers.withText("Secure your logins and passwords"))
+    onView(withText("Secure your logins and passwords"))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-private fun assertSavedLoginAppears() = onView(ViewMatchers.withText("https://accounts.google.com"))
+private fun assertSavedLoginAppears() =
+    onView(withText("https://accounts.google.com"))
+        .check(matches(isDisplayed()))
+
+private val openWebsiteButton = onView(withId(R.id.openWebAddress))

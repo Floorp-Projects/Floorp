@@ -553,6 +553,17 @@ class BrowserRobot {
         tabCrashRestoreButton.click()
     }
 
+    fun fillAndSubmitLoginCredentials(userName: String, password: String) {
+        userNameTextBox.click()
+        userNameTextBox.setText(userName)
+
+        passwordTextBox.click()
+        passwordTextBox.setText(password)
+
+        submitLoginButton.click()
+        mDevice.waitForIdle()
+    }
+
     class Transition {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         private fun threeDotButton() = onView(
@@ -771,3 +782,33 @@ private val audioVideoButton = mDevice.findObject(UiSelector().text("Camera & Mi
 private val notificationButton = mDevice.findObject(UiSelector().text("Open notifications dialogue"))
 
 private val getLocationButton = mDevice.findObject(UiSelector().text("Get Location"))
+
+// Login form test page elements
+// Test page used located at https://mozilla-mobile.github.io/testapp/loginForm
+val userNameTextBox =
+    mDevice.findObject(
+        UiSelector()
+            .index(0)
+            .resourceId("username")
+            .className("android.widget.EditText")
+            .packageName("$packageName")
+    )
+
+private val submitLoginButton =
+    mDevice.findObject(
+        UiSelector()
+            .index(2)
+            .resourceId("submit")
+            .textContains("Submit Query")
+            .className("android.widget.Button")
+            .packageName("$packageName")
+    )
+
+val passwordTextBox =
+    mDevice.findObject(
+        UiSelector()
+            .index(1)
+            .resourceId("password")
+            .className("android.widget.EditText")
+            .packageName("$packageName")
+    )
