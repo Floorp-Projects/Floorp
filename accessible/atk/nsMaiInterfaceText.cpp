@@ -69,6 +69,12 @@ void ConvertTextAttributeToAtkAttribute(const nsACString& aName,
 
 static AtkAttributeSet* ConvertToAtkTextAttributeSet(
     AccAttributes* aAttributes) {
+  if (!aAttributes) {
+    // This can happen if an Accessible dies in the content process, but the
+    // parent hasn't been udpated yet.
+    return nullptr;
+  }
+
   AtkAttributeSet* objAttributeSet = nullptr;
 
   for (auto iter : *aAttributes) {
