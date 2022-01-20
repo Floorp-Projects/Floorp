@@ -142,11 +142,14 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
   AV_FUNC(av_parser_init, AV_FUNC_AVCODEC_ALL)
   AV_FUNC(av_parser_close, AV_FUNC_AVCODEC_ALL)
   AV_FUNC(av_parser_parse2, AV_FUNC_AVCODEC_ALL)
+  AV_FUNC(avcodec_align_dimensions, AV_FUNC_AVCODEC_ALL)
   AV_FUNC(avcodec_alloc_frame, (AV_FUNC_53 | AV_FUNC_54))
   AV_FUNC(avcodec_get_frame_defaults, (AV_FUNC_53 | AV_FUNC_54))
   AV_FUNC(avcodec_free_frame, AV_FUNC_54)
   AV_FUNC(avcodec_send_packet, AV_FUNC_58)
   AV_FUNC(avcodec_receive_frame, AV_FUNC_58)
+  AV_FUNC(avcodec_default_get_buffer2,
+          (AV_FUNC_55 | AV_FUNC_56 | AV_FUNC_57 | AV_FUNC_58))
   AV_FUNC_OPTION(av_rdft_init, AV_FUNC_AVCODEC_ALL)
   AV_FUNC_OPTION(av_rdft_calc, AV_FUNC_AVCODEC_ALL)
   AV_FUNC_OPTION(av_rdft_end, AV_FUNC_AVCODEC_ALL)
@@ -159,8 +162,15 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
                           AV_FUNC_AVUTIL_57 | AV_FUNC_AVUTIL_58))
   AV_FUNC(av_frame_unref, (AV_FUNC_AVUTIL_55 | AV_FUNC_AVUTIL_56 |
                            AV_FUNC_AVUTIL_57 | AV_FUNC_AVUTIL_58))
+  AV_FUNC(av_image_check_size, AV_FUNC_AVUTIL_ALL)
+  AV_FUNC(av_image_get_buffer_size, AV_FUNC_AVUTIL_ALL)
+  AV_FUNC_OPTION(av_buffer_get_opaque,
+                 (AV_FUNC_AVUTIL_56 | AV_FUNC_AVUTIL_57 | AV_FUNC_AVUTIL_58))
+  AV_FUNC(av_buffer_create, (AV_FUNC_AVUTIL_55 | AV_FUNC_AVUTIL_56 |
+                             AV_FUNC_AVUTIL_57 | AV_FUNC_AVUTIL_58))
   AV_FUNC_OPTION(av_frame_get_colorspace, AV_FUNC_AVUTIL_ALL)
   AV_FUNC_OPTION(av_frame_get_color_range, AV_FUNC_AVUTIL_ALL)
+
 #ifdef MOZ_WAYLAND
   AV_FUNC_OPTION_SILENT(avcodec_get_hw_config, AV_FUNC_58)
   AV_FUNC_OPTION_SILENT(av_codec_iterate, AV_FUNC_58)
