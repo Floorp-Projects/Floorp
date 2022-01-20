@@ -28,7 +28,7 @@ class BookmarksUseCase(
          * one with the identical [url] already exists.
          */
         @WorkerThread
-        suspend operator fun invoke(url: String, title: String, position: Int? = null): Boolean {
+        suspend operator fun invoke(url: String, title: String, position: UInt? = null): Boolean {
             val canAdd = storage.getBookmarksWithUrl(url).firstOrNull { it.url == it.url } == null
 
             if (canAdd) {

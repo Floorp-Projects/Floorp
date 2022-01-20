@@ -99,7 +99,7 @@ fun createNimbus(context: Context, url: String?): NimbusApi {
         // Something went wrong. We'd like not to, but stability of the app is more important than
         // failing fast here.
         errorReporter("Failed to initialize Nimbus", e)
-        NimbusDisabled()
+        NimbusDisabled(context)
     }
 }
 
