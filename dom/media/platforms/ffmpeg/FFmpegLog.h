@@ -17,7 +17,4 @@
     MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, ("FFMPEG: " str, ##__VA_ARGS__))
 #endif
 
-#define FFMPEG_LOGV(...) \
-  MOZ_LOG(sPDMLog, mozilla::LogLevel::Verbose, (__VA_ARGS__))
-
 #endif  // __FFmpegLog_h__
