@@ -756,7 +756,8 @@ function processBodies(functionName, wholeBodyAttrs)
     // Hopefully these will be simplified at some point (see bug 1517829), but
     // for now we special-case functions in the mozilla::dom namespace that
     // contain locals with types ending in "Argument". Or
-    // Maybe<SomethingArgument>. It's a harsh world.
+    // Maybe<SomethingArgument>. Or Maybe<SpiderMonkeyInterfaceRooter<T>>. It's
+    // a harsh world.
     const ignoreVars = new Set();
     if (functionName.match(/mozilla::dom::/)) {
         const vars = functionBodies[0].DefineVariable.filter(
@@ -765,9 +766,11 @@ function processBodies(functionName, wholeBodyAttrs)
             v => [ v.Variable.Name[0], v.Type.Name ]
         );
 
-        const holders = vars.filter(([n, t]) => n.match(/^arg\d+_holder$/) && t.match(/Argument\b/));
+        const holders = vars.filter(
+            ([n, t]) => n.match(/^arg\d+_holder$/) &&
+                        (t.includes("Argument") || t.includes("Rooter")));
         for (const [holder,] of holders) {
-            ignoreVars.add(holder); // Ignore the older.
+            ignoreVars.add(holder); // Ignore the holder.
             ignoreVars.add(holder.replace("_holder", "")); // Ignore the "managed" arg.
         }
     }
