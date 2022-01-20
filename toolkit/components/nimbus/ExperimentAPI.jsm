@@ -446,8 +446,7 @@ class _ExperimentFeature {
     return {
       ...this.prefGetters,
       ...defaultValues,
-      ...this.getRollout()?.value,
-      ...(featureValue || null),
+      ...(featureValue ? featureValue : this.getRollout()?.value),
       ...userPrefs,
     };
   }
