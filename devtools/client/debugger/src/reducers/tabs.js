@@ -9,7 +9,6 @@
 
 import { createSelector } from "reselect";
 import { isOriginalId } from "devtools-source-map";
-import move from "lodash-move";
 
 import { isSimilarTab, persistTabs } from "../utils/tabs";
 import { makeShallowQuery } from "../utils/resource";
@@ -227,17 +226,27 @@ function updateTabList(
 }
 
 function moveTabInList(state, { url, tabIndex: newIndex }) {
-  let { tabs } = state;
+  const { tabs } = state;
   const currentIndex = tabs.findIndex(tab => tab.url == url);
-  tabs = move(tabs, currentIndex, newIndex);
-  return { tabs };
+  return moveTab(tabs, currentIndex, newIndex);
 }
 
 function moveTabInListBySourceId(state, { sourceId, tabIndex: newIndex }) {
-  let { tabs } = state;
+  const { tabs } = state;
   const currentIndex = tabs.findIndex(tab => tab.sourceId == sourceId);
-  tabs = move(tabs, currentIndex, newIndex);
-  return { tabs };
+  return moveTab(tabs, currentIndex, newIndex);
+}
+
+function moveTab(tabs, currentIndex, newIndex) {
+  const item = tabs[currentIndex];
+
+  const newTabs = Array.from(tabs);
+  // Remove the item from its current location
+  newTabs.splice(currentIndex, 1);
+  // And add it to the new one
+  newTabs.splice(newIndex, 0, item);
+
+  return { tabs: newTabs };
 }
 
 // Selectors
