@@ -128,7 +128,7 @@ function getAnnotations(functionName, body) {
 
 // Scan through a function body, pulling out all annotations and calls and
 // recording them in callgraph.txt.
-function processBody(functionName, body)
+function processBody(functionName, body, functionBodies)
 {
     if (!('PEdge' in body))
         return;
@@ -161,6 +161,13 @@ function processBody(functionName, body)
         var edgeAttrs = body.attrs[edge.Index[0]] | 0;
 
         for (var callee of getCallees(edge)) {
+            // Special-case some calls when we can derive more information about them, eg
+            // that they are a destructor that won't do anything.
+            if (callee.kind === "direct" && edgeIsNonReleasingDtor(body, edge, callee.name, functionBodies)) {
+                const block = blockIdentifier(body);
+                addToKeyedList(gcEdges, block, { Index: edge.Index, attrs: ATTR_GC_SUPPRESSED | ATTR_NONRELEASING });
+            }
+
             // Individual callees may have additional attrs. The only such
             // bit currently is that nsISupports.{AddRef,Release} are assumed
             // to never GC.
@@ -300,7 +307,7 @@ function process(functionName, functionBodies)
     }
 
     for (var body of functionBodies)
-        processBody(functionName, body);
+        processBody(functionName, body, functionBodies);
 
     // Not strictly necessary, but add an edge from the synthetic "(js-code)"
     // to RunScript to allow better stacks than just randomly selecting a
