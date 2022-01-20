@@ -95,7 +95,6 @@
 #include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/Telemetry.h"
 #include "AlternateServices.h"
-#include "InterceptedChannel.h"
 #include "NetworkMarker.h"
 #include "nsIHttpPushListener.h"
 #include "nsIX509Cert.h"
