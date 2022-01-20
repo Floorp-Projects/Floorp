@@ -1072,7 +1072,7 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
   margin-inline-start: 4px;
 }
 
-#defaultBrowserLanguage {
+#primaryBrowserLocale {
   margin-inline-start: 0;
   min-width: 20em;
 }
