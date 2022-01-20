@@ -637,6 +637,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Aurreratua</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Gunearen baimenak</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Erreprodukzio automatikoa</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Baimendu audioa eta bideoa</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Blokeatu audioa soilik</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Gomendatua</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Blokeatu audioa eta bideoa</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Esperimentuak</string>
 
@@ -775,8 +793,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">HTTPS-Only modua</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPSk konexio seguru eta zifratua eskaintzen du %1$s eta bisitatzen dituzun webguneen artean. Webgune gehienek HTTPS onartzen dute eta HTTPS-Only modua gaituta badago, orduan %1$s(e)k konexio guztiak HTTPSra bihurtuko ditu.</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">Segurtasuna areagotzeko, guneetara HTTPS erabiliz konektatzen saiatzen da automatikoki. Bisitatzen dituzun webguneetarako konexio seguru eta zifratua eskaintzen dute HTTPS konexioek.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Salbuespenak</string>
@@ -840,8 +859,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Kendu</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Berrizendatu</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">Berrizendatu</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Lasterbidearen izena</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
@@ -859,6 +883,11 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Erabili gailuaren itxura</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">Eskatu duzun guneak ez du HTTPS onartzen</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">Lehenespenez, segurtasuna areagotzeko HTTPS erabiliz konektatzen saiatzen da %1$s. Ezarpen hau aldatu edo argibide gehiago jasotzeko, zoaz Ezarpenak &gt; Pribatutasuna eta segurtasuna &gt; Segurtasuna atalera.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
