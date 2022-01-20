@@ -50,7 +50,6 @@
 #include "mozilla/StoragePrincipalHelper.h"
 #include "SerializedLoadContext.h"
 #include "nsInputStreamPump.h"
-#include "InterceptedChannel.h"
 #include "nsContentSecurityManager.h"
 #include "nsICompressConvStats.h"
 #include "mozilla/dom/Document.h"
