@@ -62,7 +62,7 @@ mozilla::ipc::IPCResult GMPVideoEncoderChild::RecvInitEncode(
     const GMPVideoCodec& aCodecSettings, nsTArray<uint8_t>&& aCodecSpecific,
     const int32_t& aNumberOfCores, const uint32_t& aMaxPayloadSize) {
   if (!mVideoEncoder) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "!mVideoDecoder");
   }
 
   // Ignore any return code. It is OK for this to fail without killing the
@@ -79,7 +79,7 @@ mozilla::ipc::IPCResult GMPVideoEncoderChild::RecvEncode(
     nsTArray<uint8_t>&& aCodecSpecificInfo,
     nsTArray<GMPVideoFrameType>&& aFrameTypes) {
   if (!mVideoEncoder) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "!mVideoDecoder");
   }
 
   auto f = new GMPVideoi420FrameImpl(aInputFrame, &mVideoHost);
@@ -105,7 +105,7 @@ mozilla::ipc::IPCResult GMPVideoEncoderChild::RecvChildShmemForPool(
 mozilla::ipc::IPCResult GMPVideoEncoderChild::RecvSetChannelParameters(
     const uint32_t& aPacketLoss, const uint32_t& aRTT) {
   if (!mVideoEncoder) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "!mVideoDecoder");
   }
 
   // Ignore any return code. It is OK for this to fail without killing the
@@ -118,7 +118,7 @@ mozilla::ipc::IPCResult GMPVideoEncoderChild::RecvSetChannelParameters(
 mozilla::ipc::IPCResult GMPVideoEncoderChild::RecvSetRates(
     const uint32_t& aNewBitRate, const uint32_t& aFrameRate) {
   if (!mVideoEncoder) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "!mVideoDecoder");
   }
 
   // Ignore any return code. It is OK for this to fail without killing the
@@ -131,7 +131,7 @@ mozilla::ipc::IPCResult GMPVideoEncoderChild::RecvSetRates(
 mozilla::ipc::IPCResult GMPVideoEncoderChild::RecvSetPeriodicKeyFrames(
     const bool& aEnable) {
   if (!mVideoEncoder) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "!mVideoDecoder");
   }
 
   // Ignore any return code. It is OK for this to fail without killing the
@@ -154,8 +154,9 @@ mozilla::ipc::IPCResult GMPVideoEncoderChild::RecvEncodingComplete() {
   }
 
   if (!mVideoEncoder) {
+    // There is not much to clean up anymore.
     Unused << Send__delete__(this);
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_OK();
   }
 
   // Ignore any return code. It is OK for this to fail without killing the

@@ -3563,7 +3563,8 @@ static gfxFloat AdvanceToNextTab(gfxFloat aX, gfxFloat aTabWidth,
                                  gfxFloat aMinAdvance) {
   // Advance aX to the next multiple of aTabWidth. We must advance
   // by at least aMinAdvance.
-  return ceil((aX + aMinAdvance) / aTabWidth) * aTabWidth;
+  gfxFloat nextPos = aX + aMinAdvance;
+  return aTabWidth > 0.0 ? ceil(nextPos / aTabWidth) * aTabWidth : nextPos;
 }
 
 void nsTextFrame::PropertyProvider::CalcTabWidths(Range aRange,

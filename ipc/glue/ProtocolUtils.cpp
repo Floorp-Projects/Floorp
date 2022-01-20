@@ -62,6 +62,11 @@ IPCResult IPCResult::Fail(NotNull<IProtocol*> actor, const char* where,
   nsPrintfCString errorMsg("%s %s\n", where, why);
   actor->GetIPCChannel()->Listener()->ProcessingError(
       HasResultCodes::MsgProcessingError, errorMsg.get());
+
+  MOZ_ASSERT_UNLESS_FUZZING(false,
+                            "Please ensure to IPC_FAIL only when in an "
+                            "unrecoverable, unexpected state.");
+
   return IPCResult(false);
 }
 
