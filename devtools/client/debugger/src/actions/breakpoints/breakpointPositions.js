@@ -7,7 +7,6 @@ import {
   isGeneratedId,
   originalToGeneratedId,
 } from "devtools-source-map";
-import { uniqBy } from "lodash";
 
 import {
   getSource,
@@ -44,8 +43,24 @@ function filterBySource(positions, sourceId) {
   return positions.filter(position => position.location.sourceId == sourceId);
 }
 
+/**
+ * Merge positions that refer to duplicated positions.
+ * Some sourcemaped positions might refer to the exact same source/line/column triple.
+ *
+ * @param {Array<{location, generatedLocation}>} positions: List of possible breakable positions
+ * @returns {Array<{location, generatedLocation}>} A new, filtered array.
+ */
 function filterByUniqLocation(positions) {
-  return uniqBy(positions, ({ location }) => makeBreakpointId(location));
+  const handledBreakpointIds = new Set();
+  return positions.filter(({ location }) => {
+    const breakpointId = makeBreakpointId(location);
+    if (handledBreakpointIds.has(breakpointId)) {
+      return false;
+    }
+
+    handledBreakpointIds.add(breakpointId);
+    return true;
+  });
 }
 
 function convertToList(results, source) {
