@@ -348,6 +348,8 @@ js_shared = dependable(False)
 moz_linker = dependable(False)
 # Same for fold_libs
 fold_libs = dependable(False)
+# And dmd
+dmd = dependable(False)
 
 include(include_project_configure)
 
