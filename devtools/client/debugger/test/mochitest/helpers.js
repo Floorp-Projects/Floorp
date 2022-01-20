@@ -25,6 +25,8 @@ const {
   resetSchemaVersion,
 } = require("devtools/client/debugger/src/utils/prefs");
 
+const { isGeneratedId } = require("devtools/client/shared/source-map/index");
+
 function log(msg, data) {
   info(`${msg} ${!data ? "" : JSON.stringify(data)}`);
 }
@@ -808,6 +810,26 @@ function getFirstBreakpointColumn(dbg, { line, sourceId }) {
   return getSelectedLocation(position, source).column;
 }
 
+function isMatchingLocation(location1, location2) {
+  return (
+    location1?.sourceId == location2?.sourceId &&
+    location1?.line == location2?.line &&
+    location1?.column == location2?.column
+  );
+}
+
+function getBreakpointForLocation(dbg, location) {
+  if (!location) {
+    return undefined;
+  }
+
+  const isGeneratedSource = isGeneratedId(location.sourceId);
+  return dbg.selectors.getBreakpointsList().find(bp => {
+    const loc = isGeneratedSource ? bp.generatedLocation : bp.location;
+    return isMatchingLocation(loc, location);
+  });
+}
+
 /**
  * Adds a breakpoint to a source at line/col.
  *
@@ -841,7 +863,7 @@ function disableBreakpoint(dbg, source, line, column) {
   column =
     column || getFirstBreakpointColumn(dbg, { line, sourceId: source.id });
   const location = { sourceId: source.id, sourceUrl: source.url, line, column };
-  const bp = dbg.selectors.getBreakpointForLocation(location);
+  const bp = getBreakpointForLocation(dbg, location);
   return dbg.actions.disableBreakpoint(getContext(dbg), bp);
 }
 
@@ -1005,7 +1027,7 @@ function removeBreakpoint(dbg, sourceId, line, column) {
   const source = dbg.selectors.getSource(sourceId);
   column = column || getFirstBreakpointColumn(dbg, { line, sourceId });
   const location = { sourceId, sourceUrl: source.url, line, column };
-  const bp = dbg.selectors.getBreakpointForLocation(location);
+  const bp = getBreakpointForLocation(dbg, location);
   return dbg.actions.removeBreakpoint(getContext(dbg), bp);
 }
 
