@@ -77,10 +77,10 @@ void DocAccessibleWrap::DoInitialUpdate() {
       MOZ_ASSERT(XRE_IsParentProcess());
       a11y::RootAccessible* rootDocument = RootAccessible();
       bool isActive = true;
-      LayoutDeviceIntRect rect(CW_USEDEFAULT, CW_USEDEFAULT, 0, 0);
+      nsIntRect rect(CW_USEDEFAULT, CW_USEDEFAULT, 0, 0);
       if (Compatibility::IsDolphin()) {
         rect = Bounds();
-        LayoutDeviceIntRect rootRect = rootDocument->Bounds();
+        nsIntRect rootRect = rootDocument->Bounds();
         rect.MoveToX(rootRect.X() - rect.X());
         rect.MoveByY(-rootRect.Y());
 

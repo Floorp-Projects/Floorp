@@ -41,7 +41,7 @@ class RemoteAccessibleWrap : public AccessibleWrap {
 
   virtual uint64_t State() override;
 
-  virtual LayoutDeviceIntRect Bounds() const override;
+  virtual nsIntRect Bounds() const override;
 
   MOZ_CAN_RUN_SCRIPT
   virtual void ScrollTo(uint32_t aHow) const override;
