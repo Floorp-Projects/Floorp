@@ -282,7 +282,6 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mHadContentfulPaint(false),
       mHadNonTickContentfulPaint(false),
       mHadContentfulPaintComposite(false),
-      mWantsExtraTick(false),
 #ifdef DEBUG
       mInitialized(false),
 #endif
@@ -409,7 +408,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
 
   tmp->Destroy();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
 
 bool nsPresContext::IsChrome() const {
   return Document()->IsInChromeDocShell();
