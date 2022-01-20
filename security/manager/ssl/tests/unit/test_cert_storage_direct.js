@@ -253,6 +253,17 @@ CRLiteState.prototype.QueryInterface = ChromeUtils.generateQI([
   "nsICRLiteState",
 ]);
 
+class CRLiteCoverage {
+  constructor(ctLogID, minTimestamp, maxTimestamp) {
+    this.b64LogID = ctLogID;
+    this.minTimestamp = minTimestamp;
+    this.maxTimestamp = maxTimestamp;
+  }
+}
+CRLiteCoverage.prototype.QueryInterface = ChromeUtils.generateQI([
+  "nsICRLiteCoverage",
+]);
+
 async function addCRLiteState(state) {
   let result = await new Promise(resolve => {
     certStorage.setCRLiteState(state, resolve);
@@ -404,15 +415,12 @@ add_task(async function test_crlite_filter() {
     false
   );
   ok(filterFile.exists(), "test filter file should exist");
+  let coverage = [];
   let filterBytes = stringToArray(readFile(filterFile));
-  // First simulate the filter being from before the certificates being tested are valid. With
-  // CRLite enabled, none of the certificates should appear to be revoked.
+  // First simualte a filter that does not cover any certificates. With CRLite
+  // enabled, none of the certificates should appear to be revoked.
   let setFullCRLiteFilterResult = await new Promise(resolve => {
-    certStorage.setFullCRLiteFilter(
-      filterBytes,
-      new Date("2017-10-28T00:00:00Z").getTime() / 1000,
-      resolve
-    );
+    certStorage.setFullCRLiteFilter(filterBytes, coverage, resolve);
   });
   Assert.equal(
     setFullCRLiteFilterResult,
@@ -445,13 +453,18 @@ add_task(async function test_crlite_filter() {
     Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
   );
 
-  // Now "replace" the filter with a more recent one. The revoked certificate should be revoked.
+  // Now replace the filter with one that covers the "valid" and "revoked"
+  // certificates. CRLite should flag the revoked certificate.
+  coverage.push(
+    new CRLiteCoverage(
+      "pLkJkLQYWBSHuxOizGdwCjw1mAT5G9+443fNDsgN3BA=",
+      0,
+      1641612275000
+    )
+  );
+
   setFullCRLiteFilterResult = await new Promise(resolve => {
-    certStorage.setFullCRLiteFilter(
-      filterBytes,
-      new Date("2019-10-28T00:00:00Z").getTime() / 1000,
-      resolve
-    );
+    certStorage.setFullCRLiteFilter(filterBytes, coverage, resolve);
   });
   Assert.equal(
     setFullCRLiteFilterResult,
