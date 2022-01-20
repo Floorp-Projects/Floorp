@@ -1112,7 +1112,8 @@ void PaymentRequest::SetOptions(const PaymentOptions& aOptions) {
 }
 
 void PaymentRequest::ResolvedCallback(JSContext* aCx,
-                                      JS::Handle<JS::Value> aValue) {
+                                      JS::Handle<JS::Value> aValue,
+                                      ErrorResult& aRv) {
   if (!InFullyActiveDocument()) {
     return;
   }
@@ -1147,7 +1148,8 @@ void PaymentRequest::ResolvedCallback(JSContext* aCx,
 }
 
 void PaymentRequest::RejectedCallback(JSContext* aCx,
-                                      JS::Handle<JS::Value> aValue) {
+                                      JS::Handle<JS::Value> aValue,
+                                      ErrorResult& aRv) {
   if (!InFullyActiveDocument()) {
     return;
   }

@@ -927,12 +927,12 @@ class ForwardReaderErrorPromiseHandler final : public PromiseNativeHandler {
       : mTeeState(aTeeState), mReader(aReader) {}
 
   MOZ_CAN_RUN_SCRIPT
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
-  }
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {}
 
   MOZ_CAN_RUN_SCRIPT
-  virtual void RejectedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override {
+  virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                ErrorResult& aRv) override {
     // Step 14.1.1
     if (mTeeState->GetReader() != mReader) {
       return;
@@ -943,9 +943,8 @@ class ForwardReaderErrorPromiseHandler final : public PromiseNativeHandler {
     // !ReadableByteStreamControllerError(branch1.[[controller]], r).
     MOZ_ASSERT(mTeeState->Branch1()->Controller()->IsByte());
     ReadableByteStreamControllerError(
-        mTeeState->Branch1()->Controller()->AsByte(), aValue, rv);
-    if (rv.MaybeSetPendingException(
-            aCx, "ReadableByteStreamTee: Error during forwardReaderError")) {
+        mTeeState->Branch1()->Controller()->AsByte(), aValue, aRv);
+    if (aRv.Failed()) {
       return;
     }
 
@@ -953,9 +952,8 @@ class ForwardReaderErrorPromiseHandler final : public PromiseNativeHandler {
     // !ReadableByteStreamControllerError(branch2.[[controller]], r).
     MOZ_ASSERT(mTeeState->Branch2()->Controller()->IsByte());
     ReadableByteStreamControllerError(
-        mTeeState->Branch2()->Controller()->AsByte(), aValue, rv);
-    if (rv.MaybeSetPendingException(
-            aCx, "ReadableByteStreamTee: Error during forwardReaderError")) {
+        mTeeState->Branch2()->Controller()->AsByte(), aValue, aRv);
+    if (aRv.Failed()) {
       return;
     }
 
