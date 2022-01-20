@@ -488,6 +488,9 @@ void ReadableByteStreamControllerCallPullIfNeeded(
       pullAlgorithm ? pullAlgorithm->PullCallback(aCx, *controller, aRv)
                     : Promise::CreateResolvedWithUndefined(
                           controller->GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return;
+  }
 
   // Steps 7+8
   RefPtr<ByteStreamPullIfNeededPromiseHandler> promiseHandler =
