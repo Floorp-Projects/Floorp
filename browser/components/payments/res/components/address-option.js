@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* import-globals-from ../../../../../browser/extensions/formautofill/content/autofillEditForms.js*/
+/* import-globals-from /browser/extensions/formautofill/content/autofillEditForms.js*/
 import ObservedPropertiesMixin from "../mixins/ObservedPropertiesMixin.js";
 import RichOption from "./rich-option.js";
 /* import-globals-from ../unprivileged-fallbacks.js */

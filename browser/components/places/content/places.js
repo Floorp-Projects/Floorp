@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* import-globals-from instantEditBookmark.js */
-/* import-globals-from ../../../../toolkit/content/contentAreaUtils.js */
-/* import-globals-from ../../downloads/content/allDownloadsView.js */
+/* import-globals-from /toolkit/content/contentAreaUtils.js */
+/* import-globals-from /browser/components/downloads/content/allDownloadsView.js */
 
 /* Shared Places Import - change other consumers if you change this: */
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
