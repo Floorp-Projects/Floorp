@@ -9,6 +9,7 @@ import android.os.Bundle
 import org.mozilla.focus.GleanMetrics.AdvancedSettings
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class AdvancedSettingsFragment :
     BaseSettingsFragment(),
@@ -32,6 +33,7 @@ class AdvancedSettingsFragment :
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+        TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
         when (key) {
             getString(R.string.pref_key_remote_debugging) -> {
                 requireComponents.engine.settings.remoteDebuggingEnabled =

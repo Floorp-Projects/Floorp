@@ -15,6 +15,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.telemetry.TelemetryWrapper
 import kotlin.collections.forEach as withEach
 
 class ExceptionsRemoveFragment : ExceptionsListFragment() {
@@ -36,6 +37,8 @@ class ExceptionsRemoveFragment : ExceptionsListFragment() {
         TrackingProtectionExceptions.selectedItemsRemoved.record(
             TrackingProtectionExceptions.SelectedItemsRemovedExtra(exceptions.size)
         )
+
+        TelemetryWrapper.removeExceptionDomains(exceptions.size)
 
         if (exceptions.isNotEmpty()) {
             launch(Main) {

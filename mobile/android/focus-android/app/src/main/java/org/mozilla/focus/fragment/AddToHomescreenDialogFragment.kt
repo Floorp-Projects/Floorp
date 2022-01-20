@@ -23,6 +23,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.shortcut.HomeScreen
 import org.mozilla.focus.shortcut.IconGenerator
+import org.mozilla.focus.telemetry.TelemetryWrapper
 
 /**
  * Fragment displaying a dialog where a user can change the title for a homescreen shortcut
@@ -85,6 +86,9 @@ class AddToHomescreenDialogFragment : DialogFragment() {
 
         addToHomescreenDialogCancelButton.setOnClickListener {
             AddToHomeScreen.cancelButtonTapped.record(NoExtras())
+
+            TelemetryWrapper.cancelAddToHomescreenShortcutEvent()
+
             dismiss()
         }
 
@@ -104,6 +108,8 @@ class AddToHomescreenDialogFragment : DialogFragment() {
                     hasEditedTitle = hasEditedTitle
                 )
             )
+
+            TelemetryWrapper.addToHomescreenShortcutEvent()
 
             PreferenceManager.getDefaultSharedPreferences(context).edit()
                 .putBoolean(

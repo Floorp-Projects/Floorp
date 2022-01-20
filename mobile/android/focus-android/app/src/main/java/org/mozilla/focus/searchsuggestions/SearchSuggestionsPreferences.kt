@@ -8,6 +8,7 @@ import android.content.Context
 import androidx.preference.PreferenceManager
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.settings
+import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class SearchSuggestionsPreferences(private val context: Context) {
     private val settings = context.settings
@@ -22,6 +23,8 @@ class SearchSuggestionsPreferences(private val context: Context) {
             .putBoolean(TOGGLED_SUGGESTIONS_PREF, true)
             .putBoolean(context.resources.getString(R.string.pref_key_show_search_suggestions), true)
             .apply()
+
+        TelemetryWrapper.respondToSearchSuggestionPrompt(true)
     }
 
     fun disableSearchSuggestions() {
@@ -29,6 +32,8 @@ class SearchSuggestionsPreferences(private val context: Context) {
             .putBoolean(TOGGLED_SUGGESTIONS_PREF, true)
             .putBoolean(context.resources.getString(R.string.pref_key_show_search_suggestions), false)
             .apply()
+
+        TelemetryWrapper.respondToSearchSuggestionPrompt(false)
     }
 
     fun dismissNoSuggestionsMessage() {

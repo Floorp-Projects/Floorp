@@ -61,6 +61,8 @@ class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
             is DownloadAction.UpdateDownloadAction -> {
                 if (action.download.status == DownloadState.Status.CANCELLED) {
                     Downloads.downloadCanceled.record(NoExtras())
+
+                    TelemetryWrapper.downloadDialogDownloadEvent(sentToDownload = false)
                 }
             }
         }
@@ -75,17 +77,25 @@ class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
         when (tab.source) {
             is SessionState.Source.External.ActionView -> {
                 AppOpened.browseIntent.record(NoExtras())
+
+                TelemetryWrapper.browseIntentEvent()
             }
             is SessionState.Source.External.ActionSend -> {
                 AppOpened.shareIntent.record(
                     AppOpened.ShareIntentExtra(tab.content.searchTerms.isNotEmpty())
                 )
+
+                TelemetryWrapper.shareIntentEvent(tab.content.searchTerms.isNotEmpty())
             }
             SessionState.Source.Internal.TextSelection -> {
                 AppOpened.textSelectionIntent.record(NoExtras())
+
+                TelemetryWrapper.textSelectionIntentEvent()
             }
             SessionState.Source.Internal.HomeScreen -> {
                 AppOpened.fromLauncherSiteShortcut.record(NoExtras())
+
+                TelemetryWrapper.openHomescreenShortcutEvent()
             }
             SessionState.Source.Internal.NewTab -> {
                 val parentTab = (tab as TabSessionState).parentId?.let { context.state.findTab(it) }

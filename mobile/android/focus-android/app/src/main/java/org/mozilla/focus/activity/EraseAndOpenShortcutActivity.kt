@@ -10,6 +10,7 @@ import android.os.Bundle
 import mozilla.components.browser.state.selector.privateTabs
 import org.mozilla.focus.GleanMetrics.AppShortcuts
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class EraseAndOpenShortcutActivity : Activity() {
 
@@ -20,6 +21,8 @@ class EraseAndOpenShortcutActivity : Activity() {
 
         val tabCount = components.store.state.privateTabs.size
         AppShortcuts.eraseOpenButtonTapped.record(AppShortcuts.EraseOpenButtonTappedExtra(tabCount))
+
+        TelemetryWrapper.eraseAndOpenShortcutEvent()
 
         val intent = Intent(this, MainActivity::class.java)
         intent.action = MainActivity.ACTION_OPEN

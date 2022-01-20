@@ -15,6 +15,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
+import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.whatsnew.WhatsNew
@@ -69,6 +70,9 @@ class SettingsFragment : BaseSettingsFragment() {
         val context = requireContext()
 
         SettingsScreen.whatsNewTapped.add()
+
+        TelemetryWrapper.openWhatsNewEvent(WhatsNew.shouldHighlightWhatsNew(context))
+
         WhatsNew.userViewedWhatsNew(context)
 
         val sumoTopic = if (AppConstants.isKlarBuild)

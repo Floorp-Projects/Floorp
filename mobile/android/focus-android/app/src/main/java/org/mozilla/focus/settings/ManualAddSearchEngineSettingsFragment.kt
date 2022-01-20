@@ -38,6 +38,7 @@ import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.search.ManualAddSearchEnginePreference
 import org.mozilla.focus.state.AppAction
+import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
@@ -82,6 +83,8 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             )
             SupportUtils.openUrlInCustomTab(requireActivity(), learnMoreUrl)
             SearchEngines.learnMoreTapped.record(NoExtras())
+
+            TelemetryWrapper.addSearchEngineLearnMoreEvent()
         }
 
         val saveSearchEngine = {
@@ -105,6 +108,8 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
                 }
             } else {
                 SearchEngines.saveEngineTapped.record(SearchEngines.SaveEngineTappedExtra(false))
+
+                TelemetryWrapper.saveCustomSearchEngineEvent(false)
             }
         }
 
@@ -218,6 +223,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
 
     private suspend fun validateSearchEngine(engineName: String, query: String, client: Client) {
         val isValidSearchQuery = isValidSearchQueryURL(client, query)
+        TelemetryWrapper.saveCustomSearchEngineEvent(isValidSearchQuery)
 
         withContext(Dispatchers.Main) {
             if (!isActive) {

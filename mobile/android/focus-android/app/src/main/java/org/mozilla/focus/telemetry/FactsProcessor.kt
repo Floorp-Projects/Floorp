@@ -47,11 +47,16 @@ object FactsProcessor {
 
         Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.CLOSE -> {
             CustomTabsToolbar.closeTabTapped.record(NoExtras())
+
+            TelemetryWrapper.closeCustomTabEvent()
         }
 
         Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.ACTION_BUTTON -> {
             CustomTabsToolbar.actionButtonTapped.record(NoExtras())
+
+            TelemetryWrapper.customTabActionButtonEvent()
         }
+
         Component.FEATURE_CONTEXTMENU to ContextMenuFacts.Items.ITEM -> {
             ContextMenu.itemTapped.record(ContextMenu.ItemTappedExtra(toContextMenuExtraKey()))
         }
@@ -59,6 +64,8 @@ object FactsProcessor {
         Component.BROWSER_MENU to BrowserMenuFacts.Items.WEB_EXTENSION_MENU_ITEM -> {
             if (metadata?.get("id") == "webcompat-reporter@mozilla.org") {
                 Browser.reportSiteIssueCounter.add()
+
+                TelemetryWrapper.reportSiteIssueEvent()
             } else {
                 // other extension action was emitted
             }

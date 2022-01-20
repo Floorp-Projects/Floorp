@@ -15,6 +15,7 @@ import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
+import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.SupportUtils
 
@@ -87,6 +88,7 @@ class MozillaSettingsFragment :
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
+        TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
         ProTips.tipsSettingChanged.record(
             ProTips.TipsSettingChangedExtra(sharedPreferences.all[key] as Boolean)
         )

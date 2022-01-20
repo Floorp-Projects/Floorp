@@ -581,6 +581,8 @@ class UrlInputFragment :
 
             openUrl(url, searchTerms)
 
+            TelemetryWrapper.urlBarEvent(isUrl)
+
             if (isUrl) {
                 SearchBar.enteredUrl.record(NoExtras())
             } else {

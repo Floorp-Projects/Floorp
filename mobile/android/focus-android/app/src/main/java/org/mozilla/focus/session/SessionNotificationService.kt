@@ -22,6 +22,7 @@ import org.mozilla.focus.GleanMetrics.RecentApps
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.IntentUtils
 
 /**
@@ -42,6 +43,9 @@ class SessionNotificationService : Service() {
 
             ACTION_ERASE -> {
                 Notifications.notificationTapped.record(NoExtras())
+
+                TelemetryWrapper.eraseNotificationEvent()
+
                 shouldSendTaskRemovedTelemetry = false
 
                 if (VisibilityLifeCycleCallback.isInBackground(this)) {
@@ -66,6 +70,8 @@ class SessionNotificationService : Service() {
         // Do not double send telemetry for notification erase event
         if (shouldSendTaskRemovedTelemetry) {
             RecentApps.appRemovedFromList.record(NoExtras())
+
+            TelemetryWrapper.eraseTaskRemoved()
         }
 
         components.tabsUseCases.removeAllTabs()

@@ -36,6 +36,7 @@ import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.settings.BaseSettingsLikeFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
+import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.ViewUtils
 import java.util.Collections
 import kotlin.coroutines.CoroutineContext
@@ -140,6 +141,9 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
                 TrackingProtectionExceptions.allowListCleared.record(
                     TrackingProtectionExceptions.AllowListClearedExtra(exceptionsListSize)
                 )
+
+                TelemetryWrapper.removeAllExceptionDomains(exceptionsListSize)
+
                 requireComponents.appStore.dispatch(
                     AppAction.NavigateUp(
                         requireComponents.store.state.selectedTabId

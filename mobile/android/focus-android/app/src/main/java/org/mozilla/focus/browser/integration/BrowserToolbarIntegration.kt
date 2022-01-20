@@ -33,6 +33,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.ext.isCustomTab
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.menu.browser.CustomTabMenu
+import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.HardwareUtils
 
 @Suppress("LongParameterList")
@@ -70,6 +71,9 @@ class BrowserToolbarIntegration(
         listener = {
             val openedTabs = store.state.tabs.size
             TabCount.eraseButtonTapped.record(TabCount.EraseButtonTappedExtra(openedTabs))
+
+            TelemetryWrapper.eraseEvent()
+
             eraseActionListener.invoke()
         }
     )
