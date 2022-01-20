@@ -33,7 +33,7 @@ class ApplicationAccessible : public AccessibleWrap {
 
   // LocalAccessible
   virtual void Shutdown() override;
-  virtual LayoutDeviceIntRect Bounds() const override;
+  virtual nsIntRect Bounds() const override;
   virtual nsRect BoundsInAppUnits() const override;
   virtual already_AddRefed<AccAttributes> NativeAttributes() override;
   virtual GroupPos GroupPosition() override;
