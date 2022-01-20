@@ -13,13 +13,6 @@
 %define menuStateMenuActive :not([disabled])[_moz-menuactive]
 %define inAnyPanel :is(:not([cui-areatype="toolbar"]), [overflowedItem=true])
 
-%define appmenuWarningBackgroundColor #FFEFBF
-%define appmenuWarningBackgroundColorHover #FFE8A2
-%define appmenuWarningBackgroundColorActive #FFE38F
-%define appmenuWarningColor black
-%define appmenuWarningBorderColor hsl(45,100%,77%)
-
-
 :root {
   --panelview-toolbarbutton-focus-box-shadow: inset 0 0 0 2px var(--focus-outline-color);
 
@@ -475,13 +468,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 .addon-banner-item {
-  background-color: @appmenuWarningBackgroundColor@;
-  color: @appmenuWarningColor@;
   display: flex;
-  flex: 1 1 0%;
-  width: calc(var(--menu-panel-width) + 30px);
-  padding-inline-start: 15px;
-  border-inline-start-style: none;
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
@@ -554,23 +541,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 /* Error states */
-
-:root[fxastatus="login-failed"] .fxa-menu-header,
-:root[fxastatus="unverified"] .fxa-menu-header {
-  background-color: @appmenuWarningBackgroundColor@;
-  color: @appmenuWarningColor@;
-  border-block: 1px solid @appmenuWarningBorderColor@;
-}
-
-:root[fxastatus="login-failed"] .fxa-menu-header:hover,
-:root[fxastatus="unverified"] .fxa-menu-header:hover {
-  background-color: @appmenuWarningBackgroundColorHover@;
-}
-
-:root[fxastatus="login-failed"] .fxa-menu-header:hover:active,
-:root[fxastatus="unverified"] .fxa-menu-header:hover:active {
-  background-color: @appmenuWarningBackgroundColorActive@;
-}
 
 #appMenu-fxa-status2 {
   display: flex;
@@ -666,8 +636,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 .addon-banner-item {
   flex: 1;
-  padding-inline-start: 15px;
-  border-inline-start-style: none;
   padding-inline: 0;
   width: auto;
 }
@@ -721,10 +689,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 %else
   font-weight: 300;
 %endif
-}
-
-.fxa-menu-header {
-  padding-block: 8px 4px;
 }
 
 #fxa-menu-header-title {
