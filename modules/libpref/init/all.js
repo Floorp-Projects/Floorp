@@ -2919,6 +2919,13 @@ pref("font.size.monospace.x-math", 13);
   // available.  Note that this is ignored if active ATOK is or older than
   // 2016 and create_native_caret is true.
   pref("intl.tsf.hack.atok.do_not_return_no_layout_error_of_composition_string", true);
+  // Whether disable "search" input scope when the ATOK is active on windows. 
+  // When "search" is set to the input scope, ATOK may stop their suggestions.
+  // To avoid it, turn this pref on, or changing the settings in ATOK.
+  // Note that if you enable this pref and you use the touch keyboard for touch
+  // screens, you cannot access some specific features for a "search" input 
+  // field.
+  pref("intl.tsf.hack.atok.search_input_scope_disabled", false);
   // Whether use available composition string rect for result of
   // ITextStoreACP::GetTextExt() even if the specified range is same as or is
   // in the range of composition string but some character rects of them are
