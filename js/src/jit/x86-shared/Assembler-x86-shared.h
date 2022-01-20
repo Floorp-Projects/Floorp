@@ -4678,6 +4678,92 @@ class AssemblerX86Shared : public AssemblerShared {
     }
   }
 
+  void vbroadcastb(const Operand& src, FloatRegister dest) {
+    MOZ_ASSERT(HasAVX2());
+    switch (src.kind()) {
+      case Operand::FPREG:
+        masm.vbroadcastb_rr(src.fpu(), dest.encoding());
+        break;
+      case Operand::MEM_REG_DISP:
+        masm.vbroadcastb_mr(src.disp(), src.base(), dest.encoding());
+        break;
+      case Operand::MEM_SCALE:
+        masm.vbroadcastb_mr(src.disp(), src.base(), src.index(), src.scale(),
+                            dest.encoding());
+        break;
+      default:
+        MOZ_CRASH("unexpected operand kind");
+    }
+  }
+  void vbroadcastw(const Operand& src, FloatRegister dest) {
+    MOZ_ASSERT(HasAVX2());
+    switch (src.kind()) {
+      case Operand::FPREG:
+        masm.vbroadcastw_rr(src.fpu(), dest.encoding());
+        break;
+      case Operand::MEM_REG_DISP:
+        masm.vbroadcastw_mr(src.disp(), src.base(), dest.encoding());
+        break;
+      case Operand::MEM_SCALE:
+        masm.vbroadcastw_mr(src.disp(), src.base(), src.index(), src.scale(),
+                            dest.encoding());
+        break;
+      default:
+        MOZ_CRASH("unexpected operand kind");
+    }
+  }
+  void vbroadcastd(const Operand& src, FloatRegister dest) {
+    MOZ_ASSERT(HasAVX2());
+    switch (src.kind()) {
+      case Operand::FPREG:
+        masm.vbroadcastd_rr(src.fpu(), dest.encoding());
+        break;
+      case Operand::MEM_REG_DISP:
+        masm.vbroadcastd_mr(src.disp(), src.base(), dest.encoding());
+        break;
+      case Operand::MEM_SCALE:
+        masm.vbroadcastd_mr(src.disp(), src.base(), src.index(), src.scale(),
+                            dest.encoding());
+        break;
+      default:
+        MOZ_CRASH("unexpected operand kind");
+    }
+  }
+  void vbroadcastq(const Operand& src, FloatRegister dest) {
+    MOZ_ASSERT(HasAVX2());
+    switch (src.kind()) {
+      case Operand::FPREG:
+        masm.vbroadcastq_rr(src.fpu(), dest.encoding());
+        break;
+      case Operand::MEM_REG_DISP:
+        masm.vbroadcastq_mr(src.disp(), src.base(), dest.encoding());
+        break;
+      case Operand::MEM_SCALE:
+        masm.vbroadcastq_mr(src.disp(), src.base(), src.index(), src.scale(),
+                            dest.encoding());
+        break;
+      default:
+        MOZ_CRASH("unexpected operand kind");
+    }
+  }
+  void vbroadcastss(const Operand& src, FloatRegister dest) {
+    MOZ_ASSERT(HasAVX2());
+    switch (src.kind()) {
+      case Operand::FPREG:
+        masm.vbroadcastss_rr(src.fpu(), dest.encoding());
+        break;
+      case Operand::MEM_REG_DISP:
+        masm.vbroadcastss_mr(src.disp(), src.base(), dest.encoding());
+        break;
+      case Operand::MEM_SCALE:
+        masm.vbroadcastss_mr(src.disp(), src.base(), src.index(), src.scale(),
+                             dest.encoding());
+        break;
+      default:
+        MOZ_CRASH("unexpected operand kind");
+    }
+  }
+
   void flushBuffer() {}
 
   // Patching.

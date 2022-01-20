@@ -21,24 +21,40 @@ void MacroAssemblerX86Shared::splatX16(Register input, FloatRegister output) {
   ScratchSimd128Scope scratch(asMasm());
 
   vmovd(input, output);
+  if (HasAVX2()) {
+    vbroadcastb(Operand(output), output);
+    return;
+  }
   zeroSimd128Int(scratch);
   vpshufb(scratch, output, output);
 }
 
 void MacroAssemblerX86Shared::splatX8(Register input, FloatRegister output) {
   vmovd(input, output);
+  if (HasAVX2()) {
+    vbroadcastw(Operand(output), output);
+    return;
+  }
   vpshuflw(0, output, output);
   vpshufd(0, output, output);
 }
 
 void MacroAssemblerX86Shared::splatX4(Register input, FloatRegister output) {
   vmovd(input, output);
+  if (HasAVX2()) {
+    vbroadcastd(Operand(output), output);
+    return;
+  }
   vpshufd(0, output, output);
 }
 
 void MacroAssemblerX86Shared::splatX4(FloatRegister input,
                                       FloatRegister output) {
   MOZ_ASSERT(input.isSingle() && output.isSimd128());
+  if (HasAVX2()) {
+    vbroadcastss(Operand(input), output);
+    return;
+  }
   asMasm().moveSimd128Float(input.asSimd128(), output);
   vshufps(0, output, output, output);
 }
@@ -46,8 +62,7 @@ void MacroAssemblerX86Shared::splatX4(FloatRegister input,
 void MacroAssemblerX86Shared::splatX2(FloatRegister input,
                                       FloatRegister output) {
   MOZ_ASSERT(input.isDouble() && output.isSimd128());
-  asMasm().moveSimd128Float(input.asSimd128(), output);
-  vshufpd(0, output, output, output);
+  vmovddup(Operand(input.asSimd128()), output);
 }
 
 void MacroAssemblerX86Shared::extractLaneInt32x4(FloatRegister input,

@@ -23,6 +23,20 @@ function codegenTestX64_v128xv128_v128_avxhack(inputs, options = {}) {
      }
 }
 
+// Utility function to test SIMD operations encoding, where the input argument
+// has the specified type (T).
+// inputs: [[type, complete-opname, expected-pattern], ...]
+function codegenTestX64_T_v128_avxhack(inputs, options = {}) {
+     for ( let [ty, op, expected] of inputs ) {
+         codegenTestX64_adhoc(wrap(options, `
+         (func (export "f") (param ${ty}) (result v128)
+           (${op} (local.get 0)))`),
+                              'f',
+                              expected,
+                              options);
+     }
+}
+
 // Simple binary ops: e.g. add, sub, mul
 codegenTestX64_v128xv128_v128_avxhack(
      [['i32x4.add', `c5 f1 fe c2               vpaddd %xmm2, %xmm1, %xmm0`],
@@ -70,3 +84,25 @@ codegenTestX64_adhoc(`(module
 c4 .. f1 22 .. 01         vpinsrq \\$0x01, %r\\w+, %xmm1, %xmm0` ); // rdi (Linux) or r8 (Win)
      
                              
+if (isAvxPresent(2)) {
+     // First i32 arg is: edi on Linux, and ecx on Windows.
+     codegenTestX64_T_v128_avxhack(
+          [['i32', 'i8x16.splat', `
+c5 f9 6e ..               vmovd %e\\w+, %xmm0
+c4 e2 79 78 c0            vpbroadcastb %xmm0, %xmm0`],
+           ['i32', 'i16x8.splat', `
+c5 f9 6e ..               vmovd %e\\w+, %xmm0
+c4 e2 79 79 c0            vpbroadcastw %xmm0, %xmm0`],
+           ['i32', 'i32x4.splat', `
+c5 f9 6e ..               vmovd %e\\w+, %xmm0
+c4 e2 79 58 c0            vpbroadcastd %xmm0, %xmm0`],
+           ['f32', 'f32x4.splat', `c4 e2 79 18 c0            vbroadcastss %xmm0, %xmm0`]]);
+
+     codegenTestX64_T_v128_avxhack(
+          [['i32', 'v128.load8_splat',
+            'c4 c2 79 78 04 ..         vpbroadcastbb \\(%r15,%r\\w+,1\\), %xmm0'],
+           ['i32', 'v128.load16_splat',
+            'c4 c2 79 79 04 ..         vpbroadcastww \\(%r15,%r\\w+,1\\), %xmm0'],
+           ['i32', 'v128.load32_splat',
+            'c4 c2 79 18 04 ..         vbroadcastssl \\(%r15,%r\\w+,1\\), %xmm0']], {memory: 1});
+}

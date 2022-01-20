@@ -1607,7 +1607,14 @@ class FunctionCompiler {
                             bytecodeIfNotAsmJS());
 
     // Generate better code (on x86)
-    if (viewType == Scalar::Float64) {
+    // If AVX2 is enabled, more broadcast operators are available.
+    if (viewType == Scalar::Float64
+#  if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
+        || (js::jit::CPUInfo::IsAVX2Present() &&
+            (viewType == Scalar::Uint8 || viewType == Scalar::Uint16 ||
+             viewType == Scalar::Float32))
+#  endif
+    ) {
       access.setSplatSimd128Load();
       return load(addr.base, &access, ValType::V128);
     }
