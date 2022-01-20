@@ -28,9 +28,6 @@ const FAKE_FEATURE_MANIFEST = {
       type: "json",
       fallbackPref: TEST_FALLBACK_PREF,
     },
-    source: {
-      type: "string",
-    },
   },
 };
 
@@ -117,63 +114,6 @@ add_task(
     Services.prefs.clearUserPref(TEST_FALLBACK_PREF);
     await doExperimentCleanup();
     sandbox.restore();
-  }
-);
-
-add_task(
-  async function test_ExperimentFeature_getAllVariables_experimentOverRemote() {
-    Services.prefs.clearUserPref(TEST_FALLBACK_PREF);
-    const { manager } = await setupForExperimentFeature();
-    const { doExperimentCleanup } = ExperimentFakes.enrollmentHelper(
-      undefined,
-      {
-        manager,
-      }
-    );
-    const featureInstance = new ExperimentFeature(
-      FEATURE_ID,
-      FAKE_FEATURE_MANIFEST
-    );
-    const recipe = ExperimentFakes.experiment("aw-experiment", {
-      branch: {
-        slug: "treatment",
-        features: [
-          {
-            featureId: FEATURE_ID,
-            value: { screens: ["test-value"] },
-          },
-        ],
-      },
-    });
-    const rollout = ExperimentFakes.rollout("aw-rollout", {
-      branch: {
-        slug: "treatment",
-        features: [
-          { featureId: FEATURE_ID, value: { screens: [], source: "rollout" } },
-        ],
-      },
-    });
-    // We're using the store in this test we need to wait for it to load
-    await manager.store.ready();
-
-    const updatePromise = new Promise(resolve =>
-      featureInstance.onUpdate((feature, reason) => {
-        if (reason === "rollout-updated") {
-          resolve();
-        }
-      })
-    );
-    manager.store.addEnrollment(recipe);
-    manager.store.addEnrollment(rollout);
-    await updatePromise;
-
-    let allVariables = featureInstance.getAllVariables();
-
-    Assert.equal(allVariables.screens.length, 1, "Returns experiment value");
-    Assert.ok(!allVariables.source, "Does not include rollout value");
-
-    await doExperimentCleanup();
-    cleanupStorePrefCache();
   }
 );
 
