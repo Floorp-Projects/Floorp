@@ -100,6 +100,47 @@ nsWindowsPackageManager::FindUserInstalledPackages(
 #endif  // __MINGW32__
 }
 
+NS_IMETHODIMP
+nsWindowsPackageManager::GetInstalledDate(uint64_t* ts) {
+#ifdef __MINGW32__
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+  // The classes we're using are only available beginning with Windows 10
+  if (!mozilla::IsWin10OrLater()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  ComPtr<ApplicationModel::IPackageStatics> pkgStatics;
+  HRESULT hr = RoGetActivationFactory(
+      HStringReference(RuntimeClass_Windows_ApplicationModel_Package).Get(),
+      IID_PPV_ARGS(&pkgStatics));
+  if (!SUCCEEDED(hr)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ComPtr<ApplicationModel::IPackage> package;
+  hr = pkgStatics->get_Current(&package);
+  if (!SUCCEEDED(hr)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ComPtr<ApplicationModel::IPackage3> package3;
+  hr = package.As(&package3);
+  if (!SUCCEEDED(hr)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  DateTime installedDate;
+  hr = package3->get_InstalledDate(&installedDate);
+  if (!SUCCEEDED(hr)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *ts = installedDate.UniversalTime;
+  return NS_OK;
+#endif  // __MINGW32__
+}
+
 }  // namespace system
 }  // namespace toolkit
 }  // namespace mozilla
