@@ -161,10 +161,6 @@ pref("security.xfocsp.errorReporting.automatic", false);
 // 2: Enable and enforce revocations via CRLite
 pref("security.pki.crlite_mode", 1);
 
-// Represents the expected certificate transparency log merge delay (including
-// the time to generate a CRLite filter). Currently 28 hours in seconds.
-pref("security.pki.crlite_ct_merge_delay_seconds", 100800);
-
 // Issuer we use to detect MitM proxies. Set to the issuer of the cert of the
 // Firefox update service. The string format is whatever NSS uses to print a DN.
 // This value is set and cleared automatically.
