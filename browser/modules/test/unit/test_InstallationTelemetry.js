@@ -3,6 +3,9 @@
  */
 "use strict";
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const { BrowserUsageTelemetry } = ChromeUtils.import(
   "resource:///modules/BrowserUsageTelemetry.jsm"
 );
@@ -36,7 +39,7 @@ function writeJsonUtf16(fileName, obj) {
 async function runReport(
   dataFile,
   installType,
-  { clearTS, setTS, assertRejects, expectExtra, expectTS }
+  { clearTS, setTS, assertRejects, expectExtra, expectTS, msixPrefixes }
 ) {
   // Setup timestamp
   if (clearTS) {
@@ -55,8 +58,13 @@ async function runReport(
       BrowserUsageTelemetry.reportInstallationTelemetry(dataFile),
       assertRejects
     );
-  } else {
+  } else if (!msixPrefixes) {
     await BrowserUsageTelemetry.reportInstallationTelemetry(dataFile);
+  } else {
+    await BrowserUsageTelemetry.reportInstallationTelemetry(
+      dataFile,
+      msixPrefixes
+    );
   }
 
   // Check events
@@ -105,6 +113,8 @@ add_task(async function testInstallationTelemetry() {
     build_id: "123",
     admin_user: "true",
     install_existed: "false",
+    other_inst: "false",
+    other_msix_inst: "false",
     profdir_existed: "false",
   };
 
@@ -145,6 +155,8 @@ add_task(async function testInstallationTelemetry() {
     build_id: "123",
     admin_user: "false",
     install_existed: "true",
+    other_inst: "false",
+    other_msix_inst: "false",
     profdir_existed: "true",
     silent: "false",
     from_msi: "false",
@@ -161,12 +173,18 @@ add_task(async function testInstallationTelemetry() {
   // Check that it doesn't generate another event when the timestamp is unchanged
   await runReport(dataFile, "full", { expectTS: "1" });
 
-  // New timestamp
+  // New timestamp and a check to make sure we can find installed MSIX packages
+  // by overriding the prefixes a bit further down.
   fullData.install_timestamp = "2";
+  // This check only works on Windows 10 and above
+  if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+    fullExtra.other_msix_inst = "true";
+  }
   await writeJsonUtf16(dataFilePath, fullData);
   await runReport(dataFile, "full", {
     expectExtra: fullExtra,
     expectTS: "2",
+    msixPrefixes: ["Microsoft"],
   });
 
   // Missing field
@@ -184,4 +202,7 @@ add_task(async function testInstallationTelemetry() {
   // Missing file, should return with no exception
   await IOUtils.remove(dataFilePath);
   await runReport(dataFile, "stub", { setTS: "3", expectTS: "3" });
+
+  // bug 1750581 tracks testing this when we're able to run tests in
+  // an MSIX package environment
 });
