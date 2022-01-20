@@ -7061,6 +7061,9 @@ bool TSFTextStore::IsGoogleJapaneseInputActive() {
   return TSFStaticSink::IsGoogleJapaneseInputActive();
 }
 
+// static
+bool TSFTextStore::IsATOKActive() { return TSFStaticSink::IsATOKActive(); }
+
 /******************************************************************************
  *  TSFTextStore::Content
  *****************************************************************************/
