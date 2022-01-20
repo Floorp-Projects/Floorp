@@ -4488,25 +4488,23 @@ bool ScrollFrameHelper::DecideScrollableLayer(
         content, &displayPort,
         DisplayPortOptions().With(DisplayportRelativeTo::ScrollFrame));
 
-    auto OverrideDirtyRect = [&](const nsRect& aRect) {
-      *aDirtyRect = aRect;
-      if (aDirtyRectHasBeenOverriden) {
-        *aDirtyRectHasBeenOverriden = true;
-      }
-    };
-
     if (usingDisplayPort) {
       // Override the dirty rectangle if the displayport has been set.
       *aVisibleRect = displayPort;
-      if (aBuilder->IsReusingStackingContextItems() ||
-          !aBuilder->IsPartialUpdate() || aBuilder->InInvalidSubtree() ||
+      if (!aBuilder->IsPartialUpdate() || aBuilder->InInvalidSubtree() ||
           mOuter->IsFrameModified()) {
-        OverrideDirtyRect(displayPort);
+        *aDirtyRect = displayPort;
+        if (aDirtyRectHasBeenOverriden) {
+          *aDirtyRectHasBeenOverriden = true;
+        }
       } else if (mOuter->HasOverrideDirtyRegion()) {
         nsRect* rect = mOuter->GetProperty(
             nsDisplayListBuilder::DisplayListBuildingDisplayPortRect());
         if (rect) {
-          OverrideDirtyRect(*rect);
+          *aDirtyRect = *rect;
+          if (aDirtyRectHasBeenOverriden) {
+            *aDirtyRectHasBeenOverriden = true;
+          }
         }
       }
     } else if (mIsRoot) {
