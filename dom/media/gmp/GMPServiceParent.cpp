@@ -1826,7 +1826,9 @@ mozilla::ipc::IPCResult GMPServiceParent::RecvGetGMPNodeId(
     const nsString& aGMPName, nsCString* aID) {
   nsresult rv = mService->GetNodeId(aOrigin, aTopLevelOrigin, aGMPName, *aID);
   if (!NS_SUCCEEDED(rv)) {
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(
+        this,
+        "GMPServiceParent::RecvGetGMPNodeId: mService->GetNodeId failed.");
   }
   return IPC_OK();
 }
