@@ -168,6 +168,21 @@ class ModuleCache {
     return module;
   }
 
+  /**
+   * Check if the given module exists for the destination.
+   *
+   * @param {String} moduleName
+   *     The name of the module.
+   * @param {Destination} destination
+   *     The destination.
+   * @returns {Boolean}
+   *     True if the module exists.
+   */
+  hasModule(moduleName, destination) {
+    const classes = this.getAllModuleClasses(moduleName, destination);
+    return classes.length != 0;
+  }
+
   toString() {
     return `[object ${this.constructor.name} ${this.messageHandler.name}]`;
   }

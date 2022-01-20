@@ -146,6 +146,19 @@ class RootMessageHandler extends MessageHandler {
       return [];
     }
 
+    const destination = {
+      type: WindowGlobalMessageHandler.type,
+      contextDescriptor: {
+        type: CONTEXT_DESCRIPTOR_TYPES.ALL,
+      },
+    };
+
+    // Don't apply session data if the module is not present
+    // for the destination.
+    if (!this._moduleCache.hasModule(moduleName, destination)) {
+      return Promise.resolve();
+    }
+
     return this.handleCommand({
       moduleName,
       commandName: "_applySessionData",
@@ -153,12 +166,7 @@ class RootMessageHandler extends MessageHandler {
         [isAdding ? "added" : "removed"]: updatedValues,
         category,
       },
-      destination: {
-        type: WindowGlobalMessageHandler.type,
-        contextDescriptor: {
-          type: CONTEXT_DESCRIPTOR_TYPES.ALL,
-        },
-      },
+      destination,
     });
   }
 }
