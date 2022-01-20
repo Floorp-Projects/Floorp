@@ -1,5 +1,3 @@
-#![allow(clippy::stable_sort_primitive)]
-
 use tokio::stream::{self, pending, Stream, StreamExt, StreamMap};
 use tokio::sync::mpsc;
 use tokio_test::{assert_ok, assert_pending, assert_ready, task};
@@ -215,8 +213,8 @@ fn new_capacity_zero() {
     let map = StreamMap::<&str, stream::Pending<()>>::new();
     assert_eq!(0, map.capacity());
 
-    let mut keys = map.keys();
-    assert!(keys.next().is_none());
+    let keys = map.keys().collect::<Vec<_>>();
+    assert!(keys.is_empty());
 }
 
 #[test]
@@ -224,8 +222,8 @@ fn with_capacity() {
     let map = StreamMap::<&str, stream::Pending<()>>::with_capacity(10);
     assert!(10 <= map.capacity());
 
-    let mut keys = map.keys();
-    assert!(keys.next().is_none());
+    let keys = map.keys().collect::<Vec<_>>();
+    assert!(keys.is_empty());
 }
 
 #[test]

@@ -6,7 +6,6 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/IntegerRange.h"
 
-#include <functional>
 #include <regex>
 #include <string>
 
@@ -93,90 +92,75 @@ static std::string ChooseDeviceReplacement(const std::string& str) {
   static const std::string GEFORCE_480 = "GeForce GTX 480";
   static const std::string GEFORCE_980 = "GeForce GTX 980";
 
-  if (Contains(str, "NVIDIA") ||
-      Contains(str, "GeForce") ||
-      Contains(str, "Quadro")) {
-    auto ret = std::invoke([&]() {
-      static const std::regex kGeForce("GeForce.*?([0-9][0-9][0-9]+)");
-      if (std::regex_search(str, m, kGeForce)) {
-        const auto modelNum = stoul(m.str(1));
-        if (modelNum >= 8000) {
-          // Tesla+: D3D10.0, SM4.0
-          return GEFORCE_8800;
-        }
-        if (modelNum >= 900) {
-          // Maxwell Gen2+: D3D12 FL12_1
-          return GEFORCE_980;
-        }
-        if (modelNum >= 400) {
-          // Fermi+: D3D12 FL11_0
-          return GEFORCE_480;
-        }
+  if (Contains(str, "GeForce") || Contains(str, "Quadro")) {
+    static const std::regex kGeForce("GeForce.*?([0-9][0-9][0-9]+)");
+    if (std::regex_search(str, m, kGeForce)) {
+      const auto modelNum = stoul(m.str(1));
+      if (modelNum >= 8000) {
         // Tesla+: D3D10.0, SM4.0
         return GEFORCE_8800;
       }
-
-      static const std::regex kQuadro("Quadro.*?([KMPVT]?)[0-9][0-9][0-9]+");
-      if (std::regex_search(str, m, kQuadro)) {
-        if (Contains(str, "RTX")) return GEFORCE_980;
-        const auto archLetter = m.str(1);
-        if (!archLetter.empty()) {
-          switch (archLetter[0]) {
-            case 'M':  // Maxwell
-            case 'P':  // Pascal
-            case 'V':  // Volta
-            case 'T':  // Turing, mobile-only
-              return GEFORCE_980;
-            case 'K':  // Kepler
-            default:
-              return GEFORCE_480;
-          }
-        }
-        return GEFORCE_8800;
+      if (modelNum >= 900) {
+        // Maxwell Gen2+: D3D12 FL12_1
+        return GEFORCE_980;
       }
-
-      /* Similarities for Titans:
-       * 780
-       * * GeForce GTX TITAN
-       * * -
-       * * Black
-       * * Z
-       * 980
-       * * GeForce GTX TITAN X
-       * 1080
-       * * Nvidia TITAN X
-       * * Nvidia TITAN Xp
-       * * Nvidia TITAN V
-       * 2080
-       * * Nvidia TITAN RTX
-       */
-      static const std::regex kTitan("TITAN( [BZXVR])?");
-      if (std::regex_search(str, m, kTitan)) {
-        char letter = ' ';
-        const auto sub = m.str(1);
-        if (sub.length()) {
-          letter = sub[1];
-        }
-        switch (letter) {
-          case ' ':
-          case 'B':
-          case 'Z':
-            return GEFORCE_480;
-          default:
-            return GEFORCE_980;
-        }
+      if (modelNum >= 400) {
+        // Fermi+: D3D12 FL11_0
+        return GEFORCE_480;
       }
-      // CI has str:"Tesla M60"
-      if (Contains(str, "Tesla")) return GEFORCE_8800;
-
-      return GEFORCE_8800;  // Unknown, but NV.
-    });
-    // On ANGLE: NVIDIA GeForce RTX 3070...
-    // On WGL: GeForce RTX 3070...
-    if (str.find("NVIDIA") == 0) {
-      ret = "NVIDIA " + ret;
+      // Tesla+: D3D10.0, SM4.0
+      return GEFORCE_8800;
     }
-    return ret;
+
+    static const std::regex kQuadro("Quadro.*?([KMPVT]?)[0-9][0-9][0-9]+");
+    if (std::regex_search(str, m, kQuadro)) {
+      if (Contains(str, "RTX")) return GEFORCE_980;
+      const auto archLetter = m.str(1);
+      if (!archLetter.empty()) {
+        switch (archLetter[0]) {
+          case 'M':  // Maxwell
+          case 'P':  // Pascal
+          case 'V':  // Volta
+          case 'T':  // Turing, mobile-only
+            return GEFORCE_980;
+          case 'K':  // Kepler
+          default:
+            return GEFORCE_480;
+        }
+      }
+      return GEFORCE_8800;  // Close enough.
+    }
+  }
+  /* Similarities for Titans:
+   * 780
+   * * GeForce GTX TITAN
+   * * -
+   * * Black
+   * * Z
+   * 980
+   * * GeForce GTX TITAN X
+   * 1080
+   * * Nvidia TITAN X
+   * * Nvidia TITAN Xp
+   * * Nvidia TITAN V
+   * 2080
+   * * Nvidia TITAN RTX
+   */
+  static const std::regex kTitan("TITAN( [BZXVR])?");
+  if (std::regex_search(str, m, kTitan)) {
+    char letter = ' ';
+    const auto sub = m.str(1);
+    if (sub.length()) {
+      letter = sub[1];
+    }
+    switch (letter) {
+      case ' ':
+      case 'B':
+      case 'Z':
+        return GEFORCE_480;
+      default:
+        return GEFORCE_980;
+    }
   }
 
   static const std::regex kNouveau("NV(1?[0-9A-F][0-9A-F])");
@@ -276,19 +260,22 @@ static std::string ChooseDeviceReplacement(const std::string& str) {
 std::string SanitizeRenderer(const std::string& str) {
   std::smatch m;
 
-  // e.g. "ANGLE (AMD, AMD Radeon(TM) Graphics Direct3D11 vs_5_0 ps_5_0, D3D11-27.20.1020.2002)"
-  static const std::regex kReAngle(
-      "ANGLE [(]([^,]*), ([^,]*)( Direct3D[^,]*), .*[)]");
+  static const std::regex kReAngle("(.*ANGLE [(])(.*)( Direct3D.*)");
   if (std::regex_match(str, m, kReAngle)) {
-    const auto& vendor = m.str(1);
-    const auto& renderer = m.str(2);
-    const auto& d3d_suffix = m.str(3);
+    auto prefix = m.str(1);
+    auto dev = m.str(2);
 
-    const auto renderer2 = ChooseDeviceReplacement(renderer);
-    return std::string("ANGLE (") + vendor + ", " + renderer2 + d3d_suffix +
-           ")";
-  } else if (Contains(str, "ANGLE")) {
-    gfxCriticalError() << "Failed to parse ANGLE renderer: " << str;
+    // ANGLE seems to do this:
+    // "GeForce RTX 3070..." => ANGLE (NVIDIA GeForce RTX 3070..."
+    static const std::regex kStripAngleVendorPrefix("(NVIDIA) (.*)");
+    std::smatch m2;
+    if (std::regex_match(dev, m2, kStripAngleVendorPrefix)) {
+      prefix += m2.str(1) + " ";
+      dev = m2.str(2);
+    }
+
+    const auto dev2 = ChooseDeviceReplacement(dev);
+    return prefix + dev2 + m.str(3);
   }
 
   static const std::regex kReOpenglEngine("(.*) OpenGL Engine");

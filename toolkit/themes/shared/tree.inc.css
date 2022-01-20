@@ -52,13 +52,11 @@ treechildren::-moz-tree-row(selected, focus) {
 }
 
 treechildren::-moz-tree-row(current, focus) {
-  outline: var(--default-focusring);
-  outline-color: SelectedItem;
-  outline-offset: calc(-1 * var(--default-focusring-width));
+  border: 1px dotted SelectedItem;
 }
 
 treechildren::-moz-tree-row(selected, current, focus) {
-  outline-color: #F3D982;
+  border: 1px dotted #F3D982;
 }
 
 /* ::::: tree cells ::::: */

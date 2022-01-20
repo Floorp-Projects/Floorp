@@ -1,9 +1,8 @@
 // |jit-test| skip-if: helperThreadCount() === 0 || !('oomTest' in this)
 
 oomTest(new Function(`function execOffThread(source) {
-    offThreadCompileModuleToStencil(source);
-    var stencil = finishOffThreadCompileModuleToStencil();
-    return instantiateModuleStencil(stencil);
+    offThreadCompileModule(source);
+    return finishOffThreadModule();
 }
 b = execOffThread("[1, 2, 3]")
 `));

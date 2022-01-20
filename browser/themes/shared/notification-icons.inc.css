@@ -308,7 +308,7 @@
 /* INSTALL ADDONS */
 
 .install-icon {
-  list-style-image: url(chrome://browser/skin/addons.svg);
+  list-style-image: url(chrome://mozapps/skin/extensions/extension.svg);
 }
 
 .install-icon.blocked-permission-icon,
@@ -327,7 +327,7 @@
 }
 
 .popup-notification-icon[popupid="addon-install-confirmation"] {
-  list-style-image: url(chrome://browser/skin/addons.svg);
+  list-style-image: url(chrome://mozapps/skin/extensions/extension.svg);
 }
 
 #addon-install-confirmation-notification[warning] .popup-notification-icon[popupid="addon-install-confirmation"] {

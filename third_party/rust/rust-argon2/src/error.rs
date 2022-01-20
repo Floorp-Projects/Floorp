@@ -6,15 +6,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use base64;
 use std::{error, fmt};
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
 /// Error type for Argon2 errors.
-#[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+#[derive(Debug, PartialEq)]
 pub enum Error {
     /// The output (hash) is too short (minimum is 4).
     OutputTooShort,
@@ -111,7 +107,7 @@ impl error::Error for Error {
         self.msg()
     }
 
-    fn cause(&self) -> Option<&dyn error::Error> {
+    fn cause(&self) -> Option<&error::Error> {
         None
     }
 }

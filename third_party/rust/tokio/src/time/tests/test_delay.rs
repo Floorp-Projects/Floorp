@@ -1,3 +1,5 @@
+#![warn(rust_2018_idioms)]
+
 use crate::park::{Park, Unpark};
 use crate::time::driver::{Driver, Entry, Handle};
 use crate::time::Clock;
@@ -351,8 +353,6 @@ fn unpark_is_delayed() {
             self.0.advance(ms(436));
             Ok(())
         }
-
-        fn shutdown(&mut self) {}
     }
 
     impl Unpark for MockUnpark {
@@ -436,8 +436,6 @@ impl Park for MockPark {
         self.0.advance(duration);
         Ok(())
     }
-
-    fn shutdown(&mut self) {}
 }
 
 impl Unpark for MockUnpark {

@@ -103,7 +103,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
   // math-depth support (used for MathML scriptlevel)
   int8_t mMathDepth;
   // MathML  mathvariant support
-  mozilla::StyleMathVariant mMathVariant;
+  uint8_t mMathVariant;
   // math-style support (used for MathML displaystyle)
   uint8_t mMathStyle;
 
@@ -689,19 +689,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePage {
   using StylePageSize = mozilla::StylePageSize;
-  using StylePageName = mozilla::StylePageName;
   nsStylePage(const nsStylePage& aOther) = default;
   nsStylePage& operator=(const nsStylePage& aOther) = default;
   explicit nsStylePage(const mozilla::dom::Document&)
-      : mSize(StylePageSize::Auto()), mPage(StylePageName::Auto()) {}
+      : mSize(StylePageSize::Auto()) {}
 
   static constexpr bool kHasTriggerImageLoads = false;
   nsChangeHint CalcDifference(const nsStylePage& aNewData) const;
 
   // page-size property.
   StylePageSize mSize;
-  // page-name property.
-  StylePageName mPage;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
@@ -927,9 +924,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::StyleArcSlice<mozilla::StyleSimpleShadow> mTextShadow;
   mozilla::StyleTextEmphasisStyle mTextEmphasisStyle;
 
-  mozilla::StyleHyphenateCharacter mHyphenateCharacter =
-      mozilla::StyleHyphenateCharacter::Auto();
-
   mozilla::StyleWordBreak EffectiveWordBreak() const {
     if (mWordBreak == mozilla::StyleWordBreak::BreakWord) {
       return mozilla::StyleWordBreak::Normal;
@@ -1067,7 +1061,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVisibility {
   mozilla::StyleImageRendering mImageRendering;
   mozilla::StyleWritingModeProperty mWritingMode;
   mozilla::StyleTextOrientation mTextOrientation;
-  mozilla::StylePrintColorAdjust mPrintColorAdjust;
+  mozilla::StyleColorAdjust mColorAdjust;
 
   bool IsVisible() const {
     return mVisible == mozilla::StyleVisibility::Visible;
@@ -1154,7 +1148,6 @@ struct StyleAnimation {
   dom::FillMode GetFillMode() const { return mFillMode; }
   StyleAnimationPlayState GetPlayState() const { return mPlayState; }
   float GetIterationCount() const { return mIterationCount; }
-  const StyleAnimationTimeline& GetTimeline() const { return mTimeline; }
 
   void SetName(already_AddRefed<nsAtom> aName) { mName = aName; }
   void SetName(nsAtom* aName) { mName = aName; }
@@ -1319,9 +1312,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     return mAnimations[aIndex % mAnimationTimingFunctionCount]
         .GetTimingFunction();
   }
-  const mozilla::StyleAnimationTimeline& GetTimeline(uint32_t aIndex) const {
-    return mAnimations[aIndex % mAnimationTimelineCount].GetTimeline();
-  }
 
   // The threshold used for extracting a shape from shape-outside: <image>.
   float mShapeImageThreshold = 0.0f;
@@ -1461,7 +1451,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
       return true;
     }
 
+#ifdef MOZ_XUL
     return DisplayOutside() == mozilla::StyleDisplayOutside::XUL;
+#else
+    return false;
+#endif
   }
 
   bool IsFloatingStyle() const { return mozilla::StyleFloat::None != mFloat; }

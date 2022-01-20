@@ -28,7 +28,6 @@ child:
   async ClearDNSCache(bool aTrrToo);
   async SetDetectedTrrURI(nsCString aURI);
   async SetDefaultTRRConnectionInfo(HttpConnectionInfoCloneArgs? aConnInfoArgs);
-  async UpdateEtcHosts(nsCString[] aHosts);
 };
 
 } //namespace net

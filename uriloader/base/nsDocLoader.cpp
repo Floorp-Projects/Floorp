@@ -246,8 +246,8 @@ nsresult nsDocLoader::AddDocLoaderAsChildOfRoot(nsDocLoader* aDocLoader) {
   return rootDocLoader->AddChildLoader(aDocLoader);
 }
 
-// TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsDocLoader::Stop(void) {
+NS_IMETHODIMP
+nsDocLoader::Stop(void) {
   nsresult rv = NS_OK;
 
   MOZ_LOG(gDocLoaderLog, LogLevel::Debug,
@@ -510,8 +510,7 @@ nsDocLoader::OnStartRequest(nsIRequest* request) {
   return NS_OK;
 }
 
-// TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP
+NS_IMETHODIMP
 nsDocLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   // Some docloaders deal with background requests in their OnStopRequest
   // override, but here we don't want to do anything with them, so return early.
@@ -1409,7 +1408,7 @@ void nsDocLoader::FireOnStatusChange(nsIWebProgress* aWebProgress,
 }
 
 bool nsDocLoader::RefreshAttempted(nsIWebProgress* aWebProgress, nsIURI* aURI,
-                                   uint32_t aDelay, bool aSameURI) {
+                                   int32_t aDelay, bool aSameURI) {
   /*
    * Returns true if the refresh may proceed,
    * false if the refresh should be blocked.

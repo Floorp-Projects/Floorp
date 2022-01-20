@@ -156,11 +156,6 @@ export interface PDFOptions {
    * @defaultValue false
    */
   omitBackground?: boolean;
-  /**
-   * Timeout in milliseconds
-   * @defaultValue 30000
-   */
-  timeout?: number;
 }
 
 /**

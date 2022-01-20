@@ -57,32 +57,32 @@ class DevToolsFrameParent extends JSWindowActorParent {
   async instantiateTarget({
     watcherActorID,
     connectionPrefix,
-    sessionContext,
+    context,
     sessionData,
   }) {
     await this.sendQuery("DevToolsFrameParent:instantiate-already-available", {
       watcherActorID,
       connectionPrefix,
-      sessionContext,
+      context,
       sessionData,
     });
   }
 
-  destroyTarget({ watcherActorID, sessionContext }) {
+  destroyTarget({ watcherActorID, context }) {
     this.sendAsyncMessage("DevToolsFrameParent:destroy", {
       watcherActorID,
-      sessionContext,
+      context,
     });
   }
 
   /**
    * Communicate to the content process that some data have been added.
    */
-  async addSessionDataEntry({ watcherActorID, sessionContext, type, entries }) {
+  async addSessionDataEntry({ watcherActorID, context, type, entries }) {
     try {
       await this.sendQuery("DevToolsFrameParent:addSessionDataEntry", {
         watcherActorID,
-        sessionContext,
+        context,
         type,
         entries,
       });
@@ -98,10 +98,10 @@ class DevToolsFrameParent extends JSWindowActorParent {
   /**
    * Communicate to the content process that some data have been removed.
    */
-  removeSessionDataEntry({ watcherActorID, sessionContext, type, entries }) {
+  removeSessionDataEntry({ watcherActorID, context, type, entries }) {
     this.sendAsyncMessage("DevToolsFrameParent:removeSessionDataEntry", {
       watcherActorID,
-      sessionContext,
+      context,
       type,
       entries,
     });

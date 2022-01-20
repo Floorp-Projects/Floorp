@@ -865,10 +865,6 @@ nsFormFillController::HandleEvent(Event* aEvent) {
     return NS_OK;
   }
 
-  if (aEvent->ShouldIgnoreChromeEventTargetListener()) {
-    return NS_OK;
-  }
-
   WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
   NS_ENSURE_STATE(internalEvent);
 

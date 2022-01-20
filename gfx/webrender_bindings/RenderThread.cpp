@@ -737,17 +737,8 @@ void RenderThread::AddRenderTextureOp(
 
   RefPtr<RenderTextureHost> texture = it->second;
   mRenderTextureOps.emplace_back(aOp, std::move(texture));
-
-  if (mRenderTextureOpsRunnable) {
-    // Runnable was already triggered
-    return;
-  }
-
-  RefPtr<nsIRunnable> runnable =
-      NewRunnableMethod("RenderThread::HandleRenderTextureOps", this,
-                        &RenderThread::HandleRenderTextureOps);
-  mRenderTextureOpsRunnable = runnable;
-  PostRunnable(runnable.forget());
+  PostRunnable(NewRunnableMethod("RenderThread::HandleRenderTextureOps", this,
+                                 &RenderThread::HandleRenderTextureOps));
 }
 
 void RenderThread::HandleRenderTextureOps() {
@@ -758,7 +749,6 @@ void RenderThread::HandleRenderTextureOps() {
   {
     MutexAutoLock lock(mRenderTextureMapLock);
     mRenderTextureOps.swap(renderTextureOps);
-    mRenderTextureOpsRunnable = nullptr;
   }
 
   for (auto& it : renderTextureOps) {
@@ -858,15 +848,9 @@ static DeviceResetReason GLenumToResetReason(GLenum aReason) {
 void RenderThread::HandleDeviceReset(const char* aWhere, GLenum aReason) {
   MOZ_ASSERT(IsInRenderThread());
 
-  if (aReason == LOCAL_GL_NO_ERROR) {
-    return;
-  }
-
   if (mHandlingDeviceReset) {
     return;
   }
-
-  mHandlingDeviceReset = true;
 
 #ifndef XP_WIN
   // On Windows, see DeviceManagerDx::MaybeResetAndReacquireDevices.
@@ -881,23 +865,27 @@ void RenderThread::HandleDeviceReset(const char* aWhere, GLenum aReason) {
     }
   }
 
-  // All RenderCompositors will be destroyed by the GPUProcessManager in
-  // either OnRemoteProcessDeviceReset via the GPUChild, or
-  // OnInProcessDeviceReset here directly.
-  // On Windows, device will be re-created before sessions re-creation.
-  gfxCriticalNote << "GFX: RenderThread detected a device reset in " << aWhere;
-  if (XRE_IsGPUProcess()) {
-    gfx::GPUParent::GetSingleton()->NotifyDeviceReset();
-  } else {
+  mHandlingDeviceReset = aReason != LOCAL_GL_NO_ERROR;
+  if (mHandlingDeviceReset) {
+    // All RenderCompositors will be destroyed by the GPUProcessManager in
+    // either OnRemoteProcessDeviceReset via the GPUChild, or
+    // OnInProcessDeviceReset here directly.
+    // On Windows, device will be re-created before sessions re-creation.
+    gfxCriticalNote << "GFX: RenderThread detected a device reset in "
+                    << aWhere;
+    if (XRE_IsGPUProcess()) {
+      gfx::GPUParent::GetSingleton()->NotifyDeviceReset();
+    } else {
 #ifndef XP_WIN
-    // FIXME(aosmond): Do we need to do this on Windows? nsWindow::OnPaint
-    // seems to do its own detection for the parent process.
-    bool guilty = aReason == LOCAL_GL_GUILTY_CONTEXT_RESET_ARB;
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "gfx::GPUProcessManager::OnInProcessDeviceReset", [guilty]() -> void {
-          gfx::GPUProcessManager::Get()->OnInProcessDeviceReset(guilty);
-        }));
+      // FIXME(aosmond): Do we need to do this on Windows? nsWindow::OnPaint
+      // seems to do its own detection for the parent process.
+      bool guilty = aReason == LOCAL_GL_GUILTY_CONTEXT_RESET_ARB;
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+          "gfx::GPUProcessManager::OnInProcessDeviceReset", [guilty]() -> void {
+            gfx::GPUProcessManager::Get()->OnInProcessDeviceReset(guilty);
+          }));
 #endif
+    }
   }
 }
 

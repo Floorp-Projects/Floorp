@@ -897,7 +897,7 @@ function hasStyleSheetWatcherSupportForTarget(targetActor) {
     sessionDataByWatcherActor.values()
   ).find(sessionData => {
     const actors = TargetActorRegistry.getTargetActors(
-      sessionData.sessionContext,
+      sessionData.context,
       sessionData.connectionPrefix
     );
     return actors.includes(targetActor);

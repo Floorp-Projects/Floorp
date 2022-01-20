@@ -79,7 +79,7 @@ class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet {
   // how many prefixes we have.
   uint32_t mTotalPrefixes;
 
-  nsCString mName;  // Set in Init() only
+  nsCString mName;
   mozilla::CorruptionCanary mCanary;
 };
 

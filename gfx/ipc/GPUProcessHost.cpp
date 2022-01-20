@@ -170,7 +170,7 @@ void GPUProcessHost::InitAfterConnect(bool aSucceeded) {
   }
 }
 
-void GPUProcessHost::Shutdown(bool aUnexpectedShutdown) {
+void GPUProcessHost::Shutdown() {
   MOZ_ASSERT(!mShutdownRequested);
 
   mListener = nullptr;
@@ -179,10 +179,6 @@ void GPUProcessHost::Shutdown(bool aUnexpectedShutdown) {
     // OnChannelClosed uses this to check if the shutdown was expected or
     // unexpected.
     mShutdownRequested = true;
-
-    if (aUnexpectedShutdown) {
-      mGPUChild->OnUnexpectedShutdown();
-    }
 
     // The channel might already be closed if we got here unexpectedly.
     if (!mChannelClosed) {
@@ -238,8 +234,6 @@ void GPUProcessHost::KillHard(const char* aReason) {
 uint64_t GPUProcessHost::GetProcessToken() const { return mProcessToken; }
 
 void GPUProcessHost::KillProcess() { KillHard("DiagnosticKill"); }
-
-void GPUProcessHost::CrashProcess() { mGPUChild->SendCrashProcess(); }
 
 void GPUProcessHost::DestroyProcess() {
   // Cancel all tasks. We don't want anything triggering after our caller

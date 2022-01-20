@@ -85,8 +85,6 @@ HWY_NOINLINE void TestAllLoadStore() {
 struct TestStoreInterleaved3 {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-// TODO(janwas): restore once segment intrinsics are available
-#if HWY_TARGET != HWY_RVV
     const size_t N = Lanes(d);
 
     RandomState rng;
@@ -126,9 +124,6 @@ struct TestStoreInterleaved3 {
         HWY_ASSERT(false);
       }
     }
-#else
-    (void)d;
-#endif
   }
 };
 
@@ -145,8 +140,6 @@ HWY_NOINLINE void TestAllStoreInterleaved3() {
 struct TestStoreInterleaved4 {
   template <class T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-// TODO(janwas): restore once segment intrinsics are available
-#if HWY_TARGET != HWY_RVV
     const size_t N = Lanes(d);
 
     RandomState rng;
@@ -189,9 +182,6 @@ struct TestStoreInterleaved4 {
         HWY_ASSERT(false);
       }
     }
-#else
-    (void)d;
-#endif
   }
 };
 
@@ -297,8 +287,8 @@ struct TestScatter {
       std::fill(expected.get(), expected.get() + range, T(0));
       std::fill(actual.get(), actual.get() + range, T(0));
       for (size_t i = 0; i < N; ++i) {
-        // Must be aligned
-        offsets[i] = static_cast<Offset>((Random32(&rng) % range) * sizeof(T));
+        offsets[i] =
+            static_cast<Offset>(Random32(&rng) % (max_bytes - sizeof(T)));
         CopyBytes<sizeof(T)>(
             bytes.get() + i * sizeof(T),
             reinterpret_cast<uint8_t*>(expected.get()) + offsets[i]);
@@ -317,7 +307,7 @@ struct TestScatter {
       for (size_t i = 0; i < N; ++i) {
         offsets[i] = static_cast<Offset>(Random32(&rng) % range);
         CopyBytes<sizeof(T)>(bytes.get() + i * sizeof(T),
-                             &expected[size_t(offsets[i])]);
+                             &expected[offsets[i]]);
       }
       const auto vindices = Load(d_offsets, offsets.get());
       ScatterIndex(data, d, actual.get(), vindices);
@@ -331,7 +321,17 @@ struct TestScatter {
 };
 
 HWY_NOINLINE void TestAllScatter() {
-  ForUIF3264(ForPartialVectors<TestScatter>());
+  // No u8,u16,i8,i16.
+  const ForPartialVectors<TestScatter> test;
+  test(uint32_t());
+  test(int32_t());
+
+#if HWY_CAP_INTEGER64
+  test(uint64_t());
+  test(int64_t());
+#endif
+
+  ForFloatTypes(test);
 }
 
 struct TestGather {
@@ -340,12 +340,11 @@ struct TestGather {
     using Offset = MakeSigned<T>;
 
     const size_t N = Lanes(d);
-    const size_t range = 4 * N;                  // number of items to gather
-    const size_t max_bytes = range * sizeof(T);  // upper bound on offset
 
     RandomState rng;
 
     // Data to be gathered from
+    const size_t max_bytes = 4 * N * sizeof(T);  // upper bound on offset
     auto bytes = AllocateAligned<uint8_t>(max_bytes);
     for (size_t i = 0; i < max_bytes; ++i) {
       bytes[i] = static_cast<uint8_t>(Random32(&rng) & 0xFF);
@@ -358,8 +357,8 @@ struct TestGather {
     for (size_t rep = 0; rep < 100; ++rep) {
       // Offsets
       for (size_t i = 0; i < N; ++i) {
-        // Must be aligned
-        offsets[i] = static_cast<Offset>((Random32(&rng) % range) * sizeof(T));
+        offsets[i] =
+            static_cast<Offset>(Random32(&rng) % (max_bytes - sizeof(T)));
         CopyBytes<sizeof(T)>(bytes.get() + offsets[i], &expected[i]);
       }
 
@@ -381,7 +380,16 @@ struct TestGather {
 };
 
 HWY_NOINLINE void TestAllGather() {
-  ForUIF3264(ForPartialVectors<TestGather>());
+  // No u8,u16,i8,i16.
+  const ForPartialVectors<TestGather> test;
+  test(uint32_t());
+  test(int32_t());
+
+#if HWY_CAP_INTEGER64
+  test(uint64_t());
+  test(int64_t());
+#endif
+  ForFloatTypes(test);
 }
 
 HWY_NOINLINE void TestAllCache() {
@@ -399,7 +407,6 @@ HWY_NOINLINE void TestAllCache() {
 HWY_AFTER_NAMESPACE();
 
 #if HWY_ONCE
-
 namespace hwy {
 HWY_BEFORE_TEST(HwyMemoryTest);
 HWY_EXPORT_AND_TEST_P(HwyMemoryTest, TestAllLoadStore);
@@ -411,11 +418,4 @@ HWY_EXPORT_AND_TEST_P(HwyMemoryTest, TestAllScatter);
 HWY_EXPORT_AND_TEST_P(HwyMemoryTest, TestAllGather);
 HWY_EXPORT_AND_TEST_P(HwyMemoryTest, TestAllCache);
 }  // namespace hwy
-
-// Ought not to be necessary, but without this, no tests run on RVV.
-int main(int argc, char** argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
-
 #endif

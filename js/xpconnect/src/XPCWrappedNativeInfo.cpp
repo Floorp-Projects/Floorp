@@ -83,12 +83,10 @@ bool XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
     callback = XPC_WN_GetterSetter;
   }
 
-  jsid name = GetName();
-  JS_MarkCrossZoneId(ccx, name);
-
   JSFunction* fun;
+  jsid name = GetName();
   if (JSID_IS_STRING(name)) {
-    fun = js::NewFunctionByIdWithReserved(ccx, callback, argc, 0, name);
+    fun = js::NewFunctionByIdWithReserved(ccx, callback, argc, 0, GetName());
   } else {
     fun = js::NewFunctionWithReserved(ccx, callback, argc, 0, nullptr);
   }
@@ -140,7 +138,20 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::GetNewOrUsed(
     return nullptr;
   }
 
-  return NewInstance(cx, map, info);
+  iface = NewInstance(cx, info);
+  if (!iface) {
+    return nullptr;
+  }
+
+  XPCNativeInterface* iface2 = map->Add(iface);
+  if (!iface2) {
+    NS_ERROR("failed to add our interface!");
+    iface = nullptr;
+  } else if (iface2 != iface) {
+    iface = iface2;
+  }
+
+  return iface.forget();
 }
 
 // static
@@ -161,7 +172,20 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::GetNewOrUsed(
     return iface.forget();
   }
 
-  return NewInstance(cx, map, info);
+  iface = NewInstance(cx, info);
+  if (!iface) {
+    return nullptr;
+  }
+
+  RefPtr<XPCNativeInterface> iface2 = map->Add(iface);
+  if (!iface2) {
+    NS_ERROR("failed to add our interface!");
+    iface = nullptr;
+  } else if (iface2 != iface) {
+    iface = iface2;
+  }
+
+  return iface.forget();
 }
 
 // static
@@ -180,8 +204,7 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::GetISupports(
 
 // static
 already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
-    JSContext* cx, IID2NativeInterfaceMap* aMap,
-    const nsXPTInterfaceInfo* aInfo) {
+    JSContext* cx, const nsXPTInterfaceInfo* aInfo) {
   // XXX Investigate lazy init? This is a problem given the
   // 'placement new' scheme - we need to at least know how big to make
   // the object. We might do a scan of methods to determine needed size,
@@ -210,23 +233,25 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
     }
   }
 
-  // Make sure the code below does not GC. This means we don't need to trace the
-  // PropertyKeys in the MemberVector, or the XPCNativeInterface we create
-  // before it's added to the map.
-  JS::AutoCheckCannotGC nogc;
-
   const uint16_t methodCount = aInfo->MethodCount();
   const uint16_t constCount = aInfo->ConstantCount();
   const uint16_t totalCount = methodCount + constCount;
 
-  using MemberVector =
-      mozilla::Vector<XPCNativeMember, 16, InfallibleAllocPolicy>;
-  MemberVector members;
-  MOZ_ALWAYS_TRUE(members.reserve(totalCount));
+  static const uint16_t MAX_LOCAL_MEMBER_COUNT = 16;
+  XPCNativeMember local_members[MAX_LOCAL_MEMBER_COUNT];
+  UniquePtr<XPCNativeMember[]> array;
+  XPCNativeMember* members;
+  if (totalCount > MAX_LOCAL_MEMBER_COUNT) {
+    array = MakeUnique<XPCNativeMember[]>(totalCount);
+    members = array.get();
+  } else {
+    members = local_members;
+  }
 
   // NOTE: since getters and setters share a member, we might not use all
   // of the member objects.
 
+  uint16_t realTotalCount = 0;
   for (unsigned int i = 0; i < methodCount; i++) {
     const nsXPTMethodInfo& info = aInfo->Method(i);
 
@@ -246,10 +271,10 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
     }
 
     if (info.IsSetter()) {
-      MOZ_ASSERT(!members.empty(), "bad setter");
+      MOZ_ASSERT(realTotalCount, "bad setter");
       // Note: ASSUMES Getter/Setter pairs are next to each other
       // This is a rule of the typelib spec.
-      XPCNativeMember* cur = &members.back();
+      XPCNativeMember* cur = &members[realTotalCount - 1];
       MOZ_ASSERT(cur->GetName() == name, "bad setter");
       MOZ_ASSERT(cur->IsReadOnlyAttribute(), "bad setter");
       MOZ_ASSERT(cur->GetIndex() == i - 1, "bad setter");
@@ -257,20 +282,19 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
     } else {
       // XXX need better way to find dups
       // MOZ_ASSERT(!LookupMemberByID(name),"duplicate method name");
-      size_t indexInInterface = members.length();
-      if (indexInInterface == XPCNativeMember::GetMaxIndexInInterface()) {
+      if (realTotalCount == XPCNativeMember::GetMaxIndexInInterface()) {
         NS_WARNING("Too many members in interface");
         return nullptr;
       }
-      XPCNativeMember cur;
-      cur.SetName(name);
+      XPCNativeMember* cur = &members[realTotalCount];
+      cur->SetName(name);
       if (info.IsGetter()) {
-        cur.SetReadOnlyAttribute(i);
+        cur->SetReadOnlyAttribute(i);
       } else {
-        cur.SetMethod(i);
+        cur->SetMethod(i);
       }
-      cur.SetIndexInInterface(indexInInterface);
-      members.infallibleAppend(cur);
+      cur->SetIndexInInterface(realTotalCount);
+      ++realTotalCount;
     }
   }
 
@@ -281,43 +305,42 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
       return nullptr;
     }
 
-    RootedString str(cx, JS_AtomizeString(cx, namestr.get()));
+    RootedString str(cx, JS_AtomizeAndPinString(cx, namestr.get()));
     if (!str) {
       NS_ERROR("bad constant name");
       return nullptr;
     }
-    jsid name = PropertyKey::fromNonIntAtom(str);
+    jsid name = PropertyKey::fromPinnedString(str);
 
     // XXX need better way to find dups
     // MOZ_ASSERT(!LookupMemberByID(name),"duplicate method/constant name");
-    size_t indexInInterface = members.length();
-    if (indexInInterface == XPCNativeMember::GetMaxIndexInInterface()) {
+    if (realTotalCount == XPCNativeMember::GetMaxIndexInInterface()) {
       NS_WARNING("Too many members in interface");
       return nullptr;
     }
-    XPCNativeMember cur;
-    cur.SetName(name);
-    cur.SetConstant(i);
-    cur.SetIndexInInterface(indexInInterface);
-    members.infallibleAppend(cur);
+    XPCNativeMember* cur = &members[realTotalCount];
+    cur->SetName(name);
+    cur->SetConstant(i);
+    cur->SetIndexInInterface(realTotalCount);
+    ++realTotalCount;
   }
 
   const char* bytes = aInfo->Name();
   if (!bytes) {
     return nullptr;
   }
-  RootedString str(cx, JS_AtomizeString(cx, bytes));
+  RootedString str(cx, JS_AtomizeAndPinString(cx, bytes));
   if (!str) {
     return nullptr;
   }
 
-  RootedId interfaceName(cx, PropertyKey::fromNonIntAtom(str));
+  RootedId interfaceName(cx, PropertyKey::fromPinnedString(str));
 
   // Use placement new to create an object with the right amount of space
   // to hold the members array
   size_t size = sizeof(XPCNativeInterface);
-  if (members.length() > 1) {
-    size += (members.length() - 1) * sizeof(XPCNativeMember);
+  if (realTotalCount > 1) {
+    size += (realTotalCount - 1) * sizeof(XPCNativeMember);
   }
   void* place = new char[size];
   if (!place) {
@@ -326,17 +349,12 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
 
   RefPtr<XPCNativeInterface> obj =
       new (place) XPCNativeInterface(aInfo, interfaceName);
+  MOZ_ASSERT(obj);
 
-  obj->mMemberCount = members.length();
+  obj->mMemberCount = realTotalCount;
   // copy valid members
-  if (!members.empty()) {
-    memcpy(obj->mMembers, members.begin(),
-           members.length() * sizeof(XPCNativeMember));
-  }
-
-  if (!aMap->AddNew(obj)) {
-    NS_ERROR("failed to add our interface!");
-    return nullptr;
+  if (realTotalCount) {
+    memcpy(obj->mMembers, members, realTotalCount * sizeof(XPCNativeMember));
   }
 
   return obj.forget();
@@ -350,23 +368,6 @@ void XPCNativeInterface::DestroyInstance(XPCNativeInterface* inst) {
 
 size_t XPCNativeInterface::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) {
   return mallocSizeOf(this);
-}
-
-void XPCNativeInterface::Trace(JSTracer* trc) {
-  JS::TraceRoot(trc, &mName, "XPCNativeInterface::mName");
-
-  for (size_t i = 0; i < mMemberCount; i++) {
-    JS::PropertyKey key = mMembers[i].GetName();
-    JS::TraceRoot(trc, &key, "XPCNativeInterface::mMembers");
-    MOZ_ASSERT(mMembers[i].GetName() == key);
-  }
-}
-
-void IID2NativeInterfaceMap::Trace(JSTracer* trc) {
-  for (Map::Enum e(mMap); !e.empty(); e.popFront()) {
-    XPCNativeInterface* iface = e.front().value();
-    iface->Trace(trc);
-  }
 }
 
 void XPCNativeInterface::DebugDump(int16_t depth) {

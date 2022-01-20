@@ -5,13 +5,10 @@
 #ifndef AccGroupInfo_h_
 #define AccGroupInfo_h_
 
-#include "nsISupportsImpl.h"
-#include "Role.h"
+#include "LocalAccessible-inl.h"
 
 namespace mozilla {
 namespace a11y {
-
-class Accessible;
 
 /**
  * Calculate and store group information.
@@ -19,10 +16,6 @@ class Accessible;
 class AccGroupInfo {
  public:
   MOZ_COUNTED_DTOR(AccGroupInfo)
-
-  AccGroupInfo() = default;
-  AccGroupInfo(AccGroupInfo&&) = default;
-  AccGroupInfo& operator=(AccGroupInfo&&) = default;
 
   /**
    * Return 1-based position in the group.
@@ -38,7 +31,7 @@ class AccGroupInfo {
    * Return a direct or logical parent of the accessible that this group info is
    * created for.
    */
-  Accessible* ConceptualParent() const { return mParent; }
+  LocalAccessible* ConceptualParent() const { return mParent; }
 
   /**
    * Update group information.
@@ -48,28 +41,51 @@ class AccGroupInfo {
   /**
    * Create group info.
    */
-  static AccGroupInfo* CreateGroupInfo(const Accessible* aAccessible);
+  static AccGroupInfo* CreateGroupInfo(const LocalAccessible* aAccessible) {
+    mozilla::a11y::role role = aAccessible->Role();
+    if (role != mozilla::a11y::roles::ROW &&
+        role != mozilla::a11y::roles::OUTLINEITEM &&
+        role != mozilla::a11y::roles::OPTION &&
+        role != mozilla::a11y::roles::LISTITEM &&
+        role != mozilla::a11y::roles::MENUITEM &&
+        role != mozilla::a11y::roles::COMBOBOX_OPTION &&
+        role != mozilla::a11y::roles::RICH_OPTION &&
+        role != mozilla::a11y::roles::CHECK_RICH_OPTION &&
+        role != mozilla::a11y::roles::PARENT_MENUITEM &&
+        role != mozilla::a11y::roles::CHECK_MENU_ITEM &&
+        role != mozilla::a11y::roles::RADIO_MENU_ITEM &&
+        role != mozilla::a11y::roles::RADIOBUTTON &&
+        role != mozilla::a11y::roles::PAGETAB &&
+        role != mozilla::a11y::roles::COMMENT) {
+      return nullptr;
+    }
+
+    AccGroupInfo* info = new AccGroupInfo(aAccessible, BaseRole(role));
+    return info;
+  }
 
   /**
    * Return a first item for the given container.
    */
-  static Accessible* FirstItemOf(const Accessible* aContainer);
+  static LocalAccessible* FirstItemOf(const LocalAccessible* aContainer);
 
   /**
    * Return total number of items in container, and if it is has nested
    * collections.
    */
-  static uint32_t TotalItemCount(Accessible* aContainer, bool* aIsHierarchical);
+  static uint32_t TotalItemCount(LocalAccessible* aContainer,
+                                 bool* aIsHierarchical);
 
   /**
    * Return next item of the same group to the given item.
    */
-  static Accessible* NextItemTo(Accessible* aItem);
+  static LocalAccessible* NextItemTo(LocalAccessible* aItem);
 
  protected:
-  AccGroupInfo(const Accessible* aItem, a11y::role aRole);
+  AccGroupInfo(const LocalAccessible* aItem, a11y::role aRole);
 
  private:
+  AccGroupInfo() = delete;
   AccGroupInfo(const AccGroupInfo&) = delete;
   AccGroupInfo& operator=(const AccGroupInfo&) = delete;
 
@@ -93,16 +109,10 @@ class AccGroupInfo {
    */
   static bool ShouldReportRelations(a11y::role aRole, a11y::role aParentRole);
 
-  /**
-   * Return ARIA level value or the default one if ARIA is missed for the
-   * given accessible.
-   */
-  static int32_t GetARIAOrDefaultLevel(const Accessible* aAccessible);
-
   uint32_t mPosInSet;
   uint32_t mSetSize;
-  Accessible* mParent;
-  const Accessible* mItem;
+  LocalAccessible* mParent;
+  const LocalAccessible* mItem;
   a11y::role mRole;
 };
 

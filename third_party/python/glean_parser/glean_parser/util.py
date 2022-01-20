@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 import sys
 import textwrap
-from typing import Any, Callable, Iterable, Sequence, Tuple, Union, Optional
+from typing import Any, Callable, Iterable, Sequence, Tuple, Union
 import urllib.request
 
 import appdirs  # type: ignore
@@ -37,20 +37,6 @@ This is only an approximation -- this should really be a recursive type.
 
 # Adapted from
 # https://stackoverflow.com/questions/34667108/ignore-dates-and-times-while-parsing-yaml
-
-
-# A wrapper around OrderedDict for Python < 3.7 (where dict ordering is not
-# maintained by default), and regular dict everywhere else.
-if sys.version_info < (3, 7):
-
-    class DictWrapper(OrderedDict):
-        pass
-
-
-else:
-
-    class DictWrapper(dict):
-        pass
 
 
 class _NoDatesSafeLoader(yaml.SafeLoader):
@@ -91,7 +77,7 @@ def yaml_load(stream):
 
     def _construct_mapping_adding_line(loader, node):
         loader.flatten_mapping(node)
-        mapping = DictWrapper(loader.construct_pairs(node))
+        mapping = OrderedDict(loader.construct_pairs(node))
         mapping.defined_in = {"line": node.start_mark.line}
         return mapping
 
@@ -110,7 +96,7 @@ def ordered_yaml_dump(data, **kwargs):
             yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, data.items()
         )
 
-    OrderedDumper.add_representer(DictWrapper, _dict_representer)
+    OrderedDumper.add_representer(OrderedDict, _dict_representer)
     return yaml.dump(data, Dumper=OrderedDumper, **kwargs)
 
 
@@ -126,7 +112,7 @@ def load_yaml_or_json(path: Path):
     """
     # If in py.test, support bits of literal JSON/YAML content
     if TESTING_MODE and isinstance(path, dict):
-        return yaml_load(yaml.dump(path))
+        return path
 
     if path.suffix == ".json":
         with path.open("r", encoding="utf-8") as fd:
@@ -327,19 +313,12 @@ def pprint_validation_error(error) -> str:
 
     description = error.schema.get("description")
     if description:
-        parts.extend(
-            ["", "Documentation for this node:", textwrap.indent(description, "    ")]
-        )
+        parts.extend(["", "Documentation for this node:", _utils.indent(description)])
 
     return "\n".join(parts)
 
 
-def format_error(
-    filepath: Union[str, Path],
-    header: str,
-    content: str,
-    lineno: Optional[int] = None,
-) -> str:
+def format_error(filepath: Union[str, Path], header: str, content: str) -> str:
     """
     Format a jsonshema validation error.
     """
@@ -347,12 +326,10 @@ def format_error(
         filepath = filepath.resolve()
     else:
         filepath = "<string>"
-    if lineno:
-        filepath = f"{filepath}:{lineno}"
     if header:
-        return f"{filepath}: {header}\n{textwrap.indent(content, '    ')}"
+        return f"{filepath}: {header}\n{_utils.indent(content)}"
     else:
-        return f"{filepath}:\n{textwrap.indent(content, '    ')}"
+        return f"{filepath}:\n{_utils.indent(content)}"
 
 
 def parse_expires(expires: str) -> datetime.date:

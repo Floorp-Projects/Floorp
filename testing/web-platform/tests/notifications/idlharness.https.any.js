@@ -8,7 +8,7 @@
 
 idl_test(
   ['notifications'],
-  ['service-workers', 'hr-time', 'html', 'dom'],
+  ['service-workers', 'html', 'dom'],
   idl_array => {
     if (self.ServiceWorkerGlobalScope) {
       idl_array.add_objects({

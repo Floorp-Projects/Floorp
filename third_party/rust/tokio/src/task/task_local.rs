@@ -29,9 +29,8 @@ use std::{fmt, thread};
 /// See [LocalKey documentation][`tokio::task::LocalKey`] for more
 /// information.
 ///
-/// [`tokio::task::LocalKey`]: struct@crate::task::LocalKey
+/// [`tokio::task::LocalKey`]: ../tokio/task/struct.LocalKey.html
 #[macro_export]
-#[cfg_attr(docsrs, doc(cfg(all(feature = "rt-util", feature = "rt-core"))))]
 macro_rules! task_local {
      // empty (base case for the recursion)
     () => {};
@@ -50,7 +49,7 @@ macro_rules! task_local {
 #[macro_export]
 macro_rules! __task_local_inner {
     ($(#[$attr:meta])* $vis:vis $name:ident, $t:ty) => {
-        $vis static $name: $crate::task::LocalKey<$t> = {
+        static $name: $crate::task::LocalKey<$t> = {
             std::thread_local! {
                 static __KEY: std::cell::RefCell<Option<$t>> = std::cell::RefCell::new(None);
             }
@@ -90,8 +89,7 @@ macro_rules! __task_local_inner {
 /// }).await;
 /// # }
 /// ```
-/// [`std::thread::LocalKey`]: struct@std::thread::LocalKey
-#[cfg_attr(docsrs, doc(cfg(all(feature = "rt-util", feature = "rt-core"))))]
+/// [`std::thread::LocalKey`]: https://doc.rust-lang.org/std/thread/struct.LocalKey.html
 pub struct LocalKey<T: 'static> {
     #[doc(hidden)]
     pub inner: thread::LocalKey<RefCell<Option<T>>>,

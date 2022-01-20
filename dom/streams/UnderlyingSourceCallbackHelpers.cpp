@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
-#include "mozilla/dom/UnderlyingSourceBinding.h"
 
 namespace mozilla::dom {
 
@@ -112,39 +111,24 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IDLUnderlyingSourceCancelCallbackHelper)
 NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourceCancelCallbackHelper)
 
 void UnderlyingSourceStartCallbackHelper::StartCallback(
-    JSContext* aCx, ReadableStreamController& aController,
+    JSContext* aCx, ReadableStreamDefaultController& aController,
     JS::MutableHandle<JS::Value> aRetVal, ErrorResult& aRv) {
   JS::RootedObject thisObj(aCx, mThisObj);
   RefPtr<UnderlyingSourceStartCallback> callback(mCallback);
-
-  ReadableStreamDefaultControllerOrReadableByteStreamController controller;
-  if (aController.IsDefault()) {
-    controller.SetAsReadableStreamDefaultController() = aController.AsDefault();
-  } else {
-    controller.SetAsReadableByteStreamController() = aController.AsByte();
-  }
-
-  return callback->Call(thisObj, controller, aRetVal, aRv,
+  return callback->Call(thisObj, aController, aRetVal, aRv,
                         "UnderlyingSource.start",
                         CallbackFunction::eRethrowExceptions);
 }
 
-MOZ_CAN_RUN_SCRIPT
 already_AddRefed<Promise> IDLUnderlyingSourcePullCallbackHelper::PullCallback(
-    JSContext* aCx, ReadableStreamController& aController, ErrorResult& aRv) {
+    JSContext* aCx, ReadableStreamDefaultController& aController,
+    ErrorResult& aRv) {
   JS::RootedObject thisObj(aCx, mThisObj);
-
-  ReadableStreamDefaultControllerOrReadableByteStreamController controller;
-  if (aController.IsDefault()) {
-    controller.SetAsReadableStreamDefaultController() = aController.AsDefault();
-  } else {
-    controller.SetAsReadableByteStreamController() = aController.AsByte();
-  }
 
   // Strong Ref
   RefPtr<UnderlyingSourcePullCallback> callback(mCallback);
   RefPtr<Promise> promise =
-      callback->Call(thisObj, controller, aRv, "UnderlyingSource.pull",
+      callback->Call(thisObj, aController, aRv, "UnderlyingSource.pull",
                      CallbackFunction::eRethrowExceptions);
 
   return promise.forget();

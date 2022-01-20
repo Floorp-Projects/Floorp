@@ -6,8 +6,7 @@ from __future__ import absolute_import
 
 import abc
 import re
-
-from pathlib import Path
+from os.path import expanduser
 from threading import Thread
 
 import sentry_sdk
@@ -49,7 +48,7 @@ class NoopErrorReporter(ErrorReporter):
         return None
 
 
-def register_sentry(argv, settings, topsrcdir: Path):
+def register_sentry(argv, settings, topsrcdir):
     if not is_telemetry_enabled(settings):
         return NoopErrorReporter()
 
@@ -68,7 +67,7 @@ def register_sentry(argv, settings, topsrcdir: Path):
     return SentryErrorReporter()
 
 
-def _process_event(sentry_event, topsrcdir: Path):
+def _process_event(sentry_event, topsrcdir):
     # Returning nothing causes the event to be dropped:
     # https://docs.sentry.io/platforms/python/configuration/filtering/#using-beforesend
     repo = _get_repository_object(topsrcdir)
@@ -114,7 +113,7 @@ def _settle_mach_module_id(sentry_event, _):
     return sentry_event
 
 
-def _patch_absolute_paths(sentry_event, topsrcdir: Path):
+def _patch_absolute_paths(sentry_event, topsrcdir):
     # As discussed here (https://bugzilla.mozilla.org/show_bug.cgi?id=1636251#c28),
     # we remove usernames from file names with a best-effort basis. The most likely
     # place for usernames to manifest in Sentry information is within absolute paths,
@@ -139,8 +138,8 @@ def _patch_absolute_paths(sentry_event, topsrcdir: Path):
 
     for (target_path, replacement) in (
         (get_state_dir(), "<statedir>"),
-        (str(topsrcdir), "<topsrcdir>"),
-        (str(Path.home()), "~"),
+        (topsrcdir, "<topsrcdir>"),
+        (expanduser("~"), "~"),
     ):
         # Sentry converts "vars" to their "representations". When paths are in local
         # variables on Windows, "C:\Users\MozillaUser\Desktop" becomes
@@ -184,14 +183,14 @@ def _delete_server_name(sentry_event, _):
     return sentry_event
 
 
-def _get_repository_object(topsrcdir: Path):
+def _get_repository_object(topsrcdir):
     try:
-        return get_repository_object(str(topsrcdir))
+        return get_repository_object(topsrcdir)
     except (InvalidRepoPath, MissingVCSTool):
         return None
 
 
-def _is_unmodified_mach_core(topsrcdir: Path):
+def _is_unmodified_mach_core(topsrcdir):
     """True if mach is unmodified compared to the public tree.
 
     To avoid submitting Sentry events for errors caused by user's

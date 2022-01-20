@@ -258,10 +258,10 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(nsIURI* aURL) {
 }
 
 /* Maybe we have a .onion URL. Treat it as trustworthy as well if
- * `dom.securecontext.allowlist_onions` is `true`.
+ * `dom.securecontext.whitelist_onions` is `true`.
  */
 bool nsMixedContentBlocker::IsPotentiallyTrustworthyOnion(nsIURI* aURL) {
-  if (!StaticPrefs::dom_securecontext_allowlist_onions()) {
+  if (!StaticPrefs::dom_securecontext_whitelist_onions()) {
     return false;
   }
 
@@ -274,8 +274,8 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyOnion(nsIURI* aURL) {
 // static
 void nsMixedContentBlocker::OnPrefChange(const char* aPref, void* aClosure) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!strcmp(aPref, "dom.securecontext.allowlist"));
-  Preferences::GetCString("dom.securecontext.allowlist",
+  MOZ_ASSERT(!strcmp(aPref, "dom.securecontext.whitelist"));
+  Preferences::GetCString("dom.securecontext.whitelist",
                           *sSecurecontextAllowlist);
 }
 
@@ -287,7 +287,7 @@ void nsMixedContentBlocker::GetSecureContextAllowList(nsACString& aList) {
     sSecurecontextAllowlistCached = true;
     sSecurecontextAllowlist = new nsCString();
     Preferences::RegisterCallbackAndCall(OnPrefChange,
-                                         "dom.securecontext.allowlist");
+                                         "dom.securecontext.whitelist");
   }
   aList = *sSecurecontextAllowlist;
 }
@@ -363,7 +363,7 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(nsIURI* aURI) {
   }
 
   // Maybe we have a .onion URL. Treat it as trustworthy as well if
-  // `dom.securecontext.allowlist_onions` is `true`.
+  // `dom.securecontext.whitelist_onions` is `true`.
   if (nsMixedContentBlocker::IsPotentiallyTrustworthyOnion(aURI)) {
     return true;
   }

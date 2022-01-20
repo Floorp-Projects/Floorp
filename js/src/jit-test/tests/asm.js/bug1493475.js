@@ -1,6 +1,6 @@
 // |jit-test| skip-if: helperThreadCount() === 0
 
-offThreadCompileToStencil("\
+offThreadCompileScript("\
     (function(stdlib, foreign) {\
         \"use asm\";\
         function() {};\

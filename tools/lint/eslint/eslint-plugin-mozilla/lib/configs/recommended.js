@@ -21,8 +21,8 @@ module.exports = {
   extends: ["eslint:recommended", "plugin:prettier/recommended"],
 
   globals: {
-    // These are all specific to Firefox unless otherwise stated.
     Cc: false,
+    // Specific to Firefox (Chrome code only).
     ChromeUtils: false,
     Ci: false,
     Components: false,
@@ -30,22 +30,22 @@ module.exports = {
     Cu: false,
     Debugger: false,
     InstallTrigger: false,
+    // Specific to Firefox
     // https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/InternalError
     InternalError: true,
-    // https://developer.mozilla.org/docs/Web/API/Window/dump
+    Intl: false,
+    SharedArrayBuffer: false,
+    StopIteration: false,
     dump: true,
     // Override the "browser" env definition of "location" to allow writing as it
     // is a writeable property.
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=1509270#c1 for more information.
     location: true,
     openDialog: false,
-    // https://developer.mozilla.org/docs/Web/API/Window/sizeToContent
+    saveStack: false,
     sizeToContent: false,
-    // structuredClone is a new global that only Firefox has currently and so isn't
-    // in ESLint's globals yet.
-    // https://developer.mozilla.org/docs/Web/API/structuredClone
-    structuredClone: false,
-    // https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/uneval
+    // Specific to Firefox
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/uneval
     uneval: false,
   },
 
@@ -58,11 +58,6 @@ module.exports = {
         "mozilla/jsm": true,
       },
       files: ["**/*.jsm", "**/*.jsm.js"],
-      globals: {
-        // Intl is defined in the browser environment, but that's disabled
-        // for jsms, add it here manually.
-        Intl: false,
-      },
       rules: {
         "mozilla/mark-exported-symbols-as-used": "error",
         // TODO: Bug 1575506 turn `builtinGlobals` on here.

@@ -94,7 +94,7 @@ add_task(
         );
       })
       .pop();
-    ok(backgroundPageFrame, "Found the frame for the background page");
+    equal(backgroundPageFrame.addonID, extension.id, "Got an extension frame");
 
     const threadFront = await addonTarget.attachThread();
 
@@ -142,9 +142,11 @@ add_task(
     Assert.deepEqual(
       {
         url: frameUpdate.frames[0].url,
+        addonID: frameUpdate.frames[0].addonID,
       },
       {
         url: bgPageURL,
+        addonID: extension.id,
       },
       "Got the expected frame update when the addon background page was loaded back"
     );

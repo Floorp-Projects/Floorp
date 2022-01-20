@@ -12821,7 +12821,7 @@ class CGUnionStruct(CGThing):
                         CGCase(
                             "e" + vars["name"],
                             CGGeneric(
-                                'JS::TraceRoot(trc, %s, "%s");\n'
+                                'JS::UnsafeTraceRoot(trc, %s, "%s");\n'
                                 % (
                                     "&mValue.m" + vars["name"] + ".Value()",
                                     "mValue.m" + vars["name"],
@@ -17458,13 +17458,13 @@ class CGDictionary(CGThing):
 
         if type.isObject():
             trace = CGGeneric(
-                'JS::TraceRoot(trc, %s, "%s");\n' % ("&" + memberData, memberName)
+                'JS::UnsafeTraceRoot(trc, %s, "%s");\n' % ("&" + memberData, memberName)
             )
             if type.nullable():
                 trace = CGIfWrapper(trace, memberData)
         elif type.isAny():
             trace = CGGeneric(
-                'JS::TraceRoot(trc, %s, "%s");\n' % ("&" + memberData, memberName)
+                'JS::UnsafeTraceRoot(trc, %s, "%s");\n' % ("&" + memberData, memberName)
             )
         elif (
             type.isSequence()

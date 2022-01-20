@@ -47,15 +47,13 @@
       this._draggingState = this.NOT_DRAGGING;
       this._scrollTimer = 0;
 
-      this.attachShadow({ mode: "open" });
-
       this.addEventListener("popupshowing", event => {
         if (event.target != this) {
           return;
         }
 
         // Make sure we generated shadow DOM to place menuitems into.
-        this.ensureInitialized();
+        this.shadowRoot;
       });
 
       this.addEventListener("DOMMenuItemActive", this);
@@ -85,15 +83,11 @@
       );
     }
 
-    ensureInitialized() {
-      this.shadowRoot;
-    }
-
     get shadowRoot() {
-      if (!super.shadowRoot.firstChild) {
+      if (!super.shadowRoot) {
         // We generate shadow DOM lazily on popupshowing event to avoid extra
         // load on the system during browser startup.
-        super.shadowRoot.appendChild(this.fragment);
+        this.attachShadow({ mode: "open" }).appendChild(this.fragment);
         this.initShadowDOM();
       }
       return super.shadowRoot;
@@ -154,7 +148,7 @@
       // shadow DOM on popupshowing, but it doesn't work for HTML:selects,
       // which are implemented via menulist elements living in the main process.
       // So make them a special case then.
-      this.ensureInitialized();
+      this.shadowRoot;
       this.classList.add("in-menulist");
 
       this.addEventListener("popupshown", () => {

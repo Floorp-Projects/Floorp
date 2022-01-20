@@ -102,7 +102,7 @@ class CPPUnitTests(object):
                 self.log.test_end(basename, status="PASS", expected="PASS")
             return result
 
-    def build_core_environment(self, env):
+    def build_core_environment(self, env, enable_webrender):
         """
         Add environment variables likely to be used across all platforms, including remote systems.
         """
@@ -112,9 +112,16 @@ class CPPUnitTests(object):
         env["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
         env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
         env["MOZ_CRASHREPORTER"] = "1"
+
+        if enable_webrender:
+            env["MOZ_WEBRENDER"] = "1"
+            env["MOZ_ACCELERATED"] = "1"
+        else:
+            env["MOZ_WEBRENDER"] = "0"
+
         return env
 
-    def build_environment(self):
+    def build_environment(self, enable_webrender=False):
         """
         Create and return a dictionary of all the appropriate env variables and values.
         On a remote system, we overload this to set different values and are missing things
@@ -123,7 +130,7 @@ class CPPUnitTests(object):
         if not os.path.isdir(self.xre_path):
             raise Exception("xre_path does not exist: %s", self.xre_path)
         env = dict(os.environ)
-        env = self.build_core_environment(env)
+        env = self.build_core_environment(env, enable_webrender)
         pathvar = ""
         libpath = self.xre_path
         if mozinfo.os == "linux":
@@ -167,6 +174,7 @@ class CPPUnitTests(object):
         xre_path,
         symbols_path=None,
         utility_path=None,
+        enable_webrender=False,
         interactive=False,
     ):
         """
@@ -190,7 +198,7 @@ class CPPUnitTests(object):
                 utility_path, symbols_path
             )
         self.log.suite_start(programs, name="cppunittest")
-        env = self.build_environment()
+        env = self.build_environment(enable_webrender)
         pass_count = 0
         fail_count = 0
         for prog in programs:
@@ -247,6 +255,13 @@ class CPPUnittestOptions(OptionParser):
             dest="utility_path",
             default=None,
             help="path to directory containing utility programs",
+        )
+        self.add_option(
+            "--enable-webrender",
+            action="store_true",
+            dest="enable_webrender",
+            default=False,
+            help="Enable the WebRender compositor in Gecko",
         )
 
 
@@ -329,6 +344,7 @@ def run_test_harness(options, args):
         options.xre_path,
         options.symbols_path,
         options.utility_path,
+        options.enable_webrender,
     )
 
     return result

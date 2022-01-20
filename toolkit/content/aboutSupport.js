@@ -148,7 +148,6 @@ var snapshotFormatters = {
       experimentTreatment: "fission-status-experiment-treatment",
       disabledByE10sEnv: "fission-status-disabled-by-e10s-env",
       enabledByEnv: "fission-status-enabled-by-env",
-      disabledByEnv: "fission-status-disabled-by-env",
       disabledBySafeMode: "fission-status-disabled-by-safe-mode",
       enabledByDefault: "fission-status-enabled-by-default",
       disabledByDefault: "fission-status-disabled-by-default",
@@ -1184,7 +1183,7 @@ var snapshotFormatters = {
       addonStudies,
       prefRollouts,
       nimbusExperiments,
-      nimbusRollouts,
+      remoteConfigs,
     } = data;
     $.append(
       $("remote-features-tbody"),
@@ -1198,13 +1197,14 @@ var snapshotFormatters = {
 
     $.append(
       $("remote-features-tbody"),
-      nimbusRollouts.map(({ userFacingName, branch }) =>
+      remoteConfigs.map(({ featureId, slug }) =>
         $.new("tr", [
-          $.new("td", [document.createTextNode(userFacingName)]),
-          $.new("td", [document.createTextNode(`(${branch.slug})`)]),
+          $.new("td", [document.createTextNode(featureId)]),
+          $.new("td", [document.createTextNode(`(${slug})`)]),
         ])
       )
     );
+
     $.append(
       $("remote-experiments-tbody"),
       [addonStudies, prefStudies, nimbusExperiments]

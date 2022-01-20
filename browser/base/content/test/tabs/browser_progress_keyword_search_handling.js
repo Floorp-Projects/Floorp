@@ -50,10 +50,6 @@ add_task(async function test_unknown_host() {
     EventUtils.synthesizeKey("KEY_Enter");
 
     await searchPromise;
-    // With parent initiated loads, we need to give XULBrowserWindow
-    // time to process the STATE_START event and set the attribute to true.
-    await new Promise(resolve => executeSoon(resolve));
-
     ok(kButton.hasAttribute("displaystop"), "Should be showing stop");
 
     await TestUtils.waitForCondition(

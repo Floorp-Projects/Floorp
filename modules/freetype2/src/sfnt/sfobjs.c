@@ -360,27 +360,17 @@
       FT_FRAME_END
     };
 
-#ifndef FT_CONFIG_OPTION_USE_BROTLI
-    FT_UNUSED( face_instance_index );
-    FT_UNUSED( woff2_num_faces );
-#endif
-
 
     face->ttc_header.tag     = 0;
     face->ttc_header.version = 0;
     face->ttc_header.count   = 0;
 
-#if defined( FT_CONFIG_OPTION_USE_ZLIB )   || \
-    defined( FT_CONFIG_OPTION_USE_BROTLI )
   retry:
-#endif
-
     offset = FT_STREAM_POS();
 
     if ( FT_READ_ULONG( tag ) )
       return error;
 
-#ifdef FT_CONFIG_OPTION_USE_ZLIB
     if ( tag == TTAG_wOFF )
     {
       FT_TRACE2(( "sfnt_open_font: file is a WOFF; synthesizing SFNT\n" ));
@@ -396,9 +386,7 @@
       stream = face->root.stream;
       goto retry;
     }
-#endif
 
-#ifdef FT_CONFIG_OPTION_USE_BROTLI
     if ( tag == TTAG_wOF2 )
     {
       FT_TRACE2(( "sfnt_open_font: file is a WOFF2; synthesizing SFNT\n" ));
@@ -417,7 +405,6 @@
       stream = face->root.stream;
       goto retry;
     }
-#endif
 
     if ( tag != 0x00010000UL &&
          tag != TTAG_ttcf    &&
@@ -1222,7 +1209,7 @@
           /* of `FT_Face', we map `available_sizes' indices to strike    */
           /* indices                                                     */
           if ( FT_NEW_ARRAY( root->available_sizes, count ) ||
-               FT_QNEW_ARRAY( sbit_strike_map, count ) )
+               FT_NEW_ARRAY( sbit_strike_map, count ) )
             goto Exit;
 
           bsize_idx = 0;
@@ -1251,7 +1238,7 @@
           }
 
           /* reduce array size to the actually used elements */
-          FT_MEM_QRENEW_ARRAY( sbit_strike_map, count, bsize_idx );
+          (void)FT_QRENEW_ARRAY( sbit_strike_map, count, bsize_idx );
 
           /* from now on, all strike indices are mapped */
           /* using `sbit_strike_map'                    */

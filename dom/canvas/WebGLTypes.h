@@ -253,29 +253,36 @@ enum class WebGLExtensionID : uint8_t {
   Max
 };
 
-class UniqueBuffer final {
+class UniqueBuffer {
   // Like UniquePtr<>, but for void* and malloc/calloc/free.
-  void* mBuffer = nullptr;
+  void* mBuffer;
 
  public:
-  static inline UniqueBuffer Take(void* buffer) {
-    UniqueBuffer ret;
-    ret.mBuffer = buffer;
-    return ret;
+  static inline UniqueBuffer Alloc(const size_t byteSize) {
+    return {malloc(byteSize)};
   }
 
-  UniqueBuffer() = default;
+  UniqueBuffer() : mBuffer(nullptr) {}
 
-  ~UniqueBuffer() {
-    reset();
+  MOZ_IMPLICIT UniqueBuffer(void* buffer) : mBuffer(buffer) {}
+
+  ~UniqueBuffer() { free(mBuffer); }
+
+  UniqueBuffer(UniqueBuffer&& other) {
+    this->mBuffer = other.mBuffer;
+    other.mBuffer = nullptr;
   }
 
-  UniqueBuffer(UniqueBuffer&& rhs) { *this = std::move(rhs); }
+  UniqueBuffer& operator=(UniqueBuffer&& other) {
+    free(this->mBuffer);
+    this->mBuffer = other.mBuffer;
+    other.mBuffer = nullptr;
+    return *this;
+  }
 
-  UniqueBuffer& operator=(UniqueBuffer&& rhs) {
-    reset();
-    this->mBuffer = rhs.mBuffer;
-    rhs.mBuffer = nullptr;
+  UniqueBuffer& operator=(void* newBuffer) {
+    free(this->mBuffer);
+    this->mBuffer = newBuffer;
     return *this;
   }
 
@@ -283,15 +290,10 @@ class UniqueBuffer final {
 
   void* get() const { return mBuffer; }
 
-  void reset() {
-    // Believe it or not, when `free` unconditional, it was showing up
-    // in profiles, nearly 20% of time spent in MethodDispatcther<UniformData>
-    // on Aquarium.
-    if (mBuffer) {
-      free(mBuffer);
-      mBuffer = nullptr;
-    }
-  }
+  explicit UniqueBuffer(const UniqueBuffer& other) =
+      delete;  // construct using std::move()!
+  UniqueBuffer& operator=(const UniqueBuffer& other) =
+      delete;  // assign using std::move()!
 };
 
 namespace webgl {

@@ -1965,17 +1965,11 @@ Inspector.prototype = {
   },
 
   onPickerPicked(nodeFront) {
-    if (this.toolbox.isDebugTargetFenix()) {
-      // When debugging a phone, as we don't have the "hover overlay", we want to provide
-      // feedback to the user so they know where they tapped
-      this.highlighters.showHighlighterTypeForNode(
-        this.highlighters.TYPES.BOXMODEL,
-        nodeFront,
-        { duration: this.HIGHLIGHTER_AUTOHIDE_TIMER }
-      );
-      return;
-    }
-    this.highlighters.hideHighlighterType(this.highlighters.TYPES.BOXMODEL);
+    this.highlighters.showHighlighterTypeForNode(
+      this.highlighters.TYPES.BOXMODEL,
+      nodeFront,
+      { duration: this.HIGHLIGHTER_AUTOHIDE_TIMER }
+    );
   },
 
   async inspectNodeActor(nodeGrip, reason) {

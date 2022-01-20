@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "RDDChild.h"
 
-#include "mozilla/FOGIPC.h"
 #include "mozilla/RDDProcessManager.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/MemoryReportRequest.h"
@@ -138,11 +137,6 @@ mozilla::ipc::IPCResult RDDChild::RecvUpdateMediaCodecsSupported(
     const PDMFactory::MediaCodecsSupported& aSupported) {
   dom::ContentParent::BroadcastMediaCodecsSupportedUpdate(
       RemoteDecodeIn::RddProcess, aSupported);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult RDDChild::RecvFOGData(ByteBuf&& aBuf) {
-  glean::FOGData(std::move(aBuf));
   return IPC_OK();
 }
 

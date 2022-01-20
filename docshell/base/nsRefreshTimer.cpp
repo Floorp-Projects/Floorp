@@ -21,11 +21,14 @@ NS_INTERFACE_MAP_BEGIN(nsRefreshTimer)
 NS_INTERFACE_MAP_END
 
 nsRefreshTimer::nsRefreshTimer(nsDocShell* aDocShell, nsIURI* aURI,
-                               nsIPrincipal* aPrincipal, int32_t aDelay)
+                               nsIPrincipal* aPrincipal, int32_t aDelay,
+                               bool aRepeat, bool aMetaRefresh)
     : mDocShell(aDocShell),
       mURI(aURI),
       mPrincipal(aPrincipal),
-      mDelay(aDelay) {}
+      mDelay(aDelay),
+      mRepeat(aRepeat),
+      mMetaRefresh(aMetaRefresh) {}
 
 nsRefreshTimer::~nsRefreshTimer() {}
 
@@ -37,7 +40,8 @@ nsRefreshTimer::Notify(nsITimer* aTimer) {
     // Get the delay count to determine load type
     uint32_t delay = 0;
     aTimer->GetDelay(&delay);
-    mDocShell->ForceRefreshURIFromTimer(mURI, mPrincipal, delay, aTimer);
+    mDocShell->ForceRefreshURIFromTimer(mURI, mPrincipal, delay, mMetaRefresh,
+                                        aTimer);
   }
   return NS_OK;
 }

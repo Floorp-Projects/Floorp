@@ -240,7 +240,7 @@ role XULMenuitemAccessible::NativeRole() const {
   return roles::MENUITEM;
 }
 
-int32_t XULMenuitemAccessible::GetLevel(bool aFast) const {
+int32_t XULMenuitemAccessible::GetLevelInternal() {
   return nsAccUtils::GetLevelForXULContainerItem(mContent);
 }
 

@@ -370,7 +370,7 @@ const snapshotHandler = new (class extends TableViewer {
       "userPersisted",
       {
         header: "User Persisted",
-        modifier: u => (u ? u : ""),
+        modifier: u => (u ? "Yes" : ""),
       },
     ],
   ]);

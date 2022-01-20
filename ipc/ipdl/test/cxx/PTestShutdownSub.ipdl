@@ -9,7 +9,7 @@ intr protocol PTestShutdownSub {
     manages PTestShutdownSubsub;
 
 both:
-    [LegacyIntr] intr StackFrame();
+    intr StackFrame();
 
 parent:
     async PTestShutdownSubsub(bool expectParentDeleted);

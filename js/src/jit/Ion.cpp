@@ -1143,11 +1143,9 @@ bool OptimizeMIR(MIRGenerator* mir) {
   ValueNumberer gvn(mir, graph);
 
   // Alias analysis is required for LICM and GVN so that we don't move
-  // loads across stores. We also use alias information when removing
-  // redundant shapeguards.
+  // loads across stores.
   if (mir->optimizationInfo().licmEnabled() ||
-      mir->optimizationInfo().gvnEnabled() ||
-      mir->optimizationInfo().eliminateRedundantShapeGuardsEnabled()) {
+      mir->optimizationInfo().gvnEnabled()) {
     {
       AutoTraceLog log(logger, TraceLogger_AliasAnalysis);
 
@@ -1441,14 +1439,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
       return false;
     }
     gs.spewPass("Bounds Check Elimination");
-    AssertGraphCoherency(graph);
-  }
-
-  if (mir->optimizationInfo().eliminateRedundantShapeGuardsEnabled()) {
-    if (!EliminateRedundantShapeGuards(graph)) {
-      return false;
-    }
-    gs.spewPass("Shape Guard Elimination");
     AssertGraphCoherency(graph);
   }
 

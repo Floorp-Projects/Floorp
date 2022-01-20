@@ -618,20 +618,10 @@ InplaceEditor.prototype = {
         selection = newValue.selection;
       }
     } else {
-      if (type === "rgb" || type === "hsl" || type === "hwb") {
+      if (type === "rgb" || type === "hsl") {
         info = {};
-        const isCSS4Color = !value.includes(",");
-        // In case the value uses the new syntax of the CSS Color 4 specification,
-        // it is split by the spaces and the slash separating the alpha value
-        // between the different color components.
-        // Example: rgb(255 0 0 / 0.5)
-        // Otherwise, the value is represented using the old color syntax and is
-        // split by the commas between the color components.
-        // Example: rgba(255, 0, 0, 0.5)
         const part =
-          value
-            .substring(range.start, selStart)
-            .split(isCSS4Color ? / ?\/ ?| / : ",").length - 1;
+          value.substring(range.start, selStart).split(",").length - 1;
         if (part === 3) {
           // alpha
           info.minValue = 0;
@@ -640,7 +630,7 @@ InplaceEditor.prototype = {
           info.minValue = 0;
           info.maxValue = 255;
         } else if (part !== 0) {
-          // hsl or hwb percentage
+          // hsl percentage
           info.minValue = 0;
           info.maxValue = 100;
 
@@ -717,14 +707,14 @@ InplaceEditor.prototype = {
    */
   _parseCSSValue: function(value, offset) {
     /* eslint-disable max-len */
-    const reSplitCSS = /(?<url>url\("?[^"\)]+"?\)?)|(?<rgb>rgba?\([^)]*\)?)|(?<hsl>hsla?\([^)]*\)?)|(?<hwb>hwb\([^)]*\)?)|(?<hex>#[\dA-Fa-f]+)|(?<number>-?\d*\.?\d+(%|[a-z]{1,4})?)|"([^"]*)"?|'([^']*)'?|([^,\s\/!\(\)]+)|(!(.*)?)/;
+    const reSplitCSS = /(url\("?[^"\)]+"?\)?)|(rgba?\([^)]*\)?)|(hsla?\([^)]*\)?)|(#[\dA-Fa-f]+)|(-?\d*\.?\d+(%|[a-z]{1,4})?)|"([^"]*)"?|'([^']*)'?|([^,\s\/!\(\)]+)|(!(.*)?)/;
     /* eslint-enable */
     let start = 0;
     let m;
 
     // retreive values from left to right until we find the one at our offset
     while ((m = reSplitCSS.exec(value)) && m.index + m[0].length < offset) {
-      value = value.substring(m.index + m[0].length);
+      value = value.substr(m.index + m[0].length);
       start += m.index + m[0].length;
       offset -= m.index + m[0].length;
     }
@@ -734,17 +724,15 @@ InplaceEditor.prototype = {
     }
 
     let type;
-    if (m.groups.url) {
+    if (m[1]) {
       type = "url";
-    } else if (m.groups.rgb) {
+    } else if (m[2]) {
       type = "rgb";
-    } else if (m.groups.hsl) {
+    } else if (m[3]) {
       type = "hsl";
-    } else if (m.groups.hwb) {
-      type = "hwb";
-    } else if (m.groups.hex) {
+    } else if (m[4]) {
       type = "hex";
-    } else if (m.groups.number) {
+    } else if (m[5]) {
       type = "num";
     }
 
@@ -758,7 +746,7 @@ InplaceEditor.prototype = {
 
   /**
    * Increment the property value for types other than
-   * number or hex, such as rgb, hsl, hwb, and file names.
+   * number or hex, such as rgb, hsl, and file names.
    *
    * @param {String} value
    *        Property value.

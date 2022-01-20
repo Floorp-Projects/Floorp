@@ -219,7 +219,7 @@ pub fn get_incoming(conn: &Connection) -> Result<Vec<(SyncGuid, IncomingState)>>
         Ok((guid, state))
     }
 
-    conn.conn().query_rows_and_then_named(sql, &[], from_row)
+    Ok(conn.conn().query_rows_and_then_named(sql, &[], from_row)?)
 }
 
 /// This is the set of actions we know how to take *locally* for incoming

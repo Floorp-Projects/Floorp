@@ -157,19 +157,15 @@ impl<'a, 'b, 'i> DeclarationParser<'i> for ScrollTimelineDescriptorsParser<'a, '
 /// The scroll-timeline source.
 ///
 /// https://drafts.csswg.org/scroll-animations/#descdef-scroll-timeline-source
-// FIXME: Bug 1733260 may drop the entire @scroll-timeline, and now we don't support source other
-// than the default value (so use #[css(skip)]).
 #[derive(Clone, Debug, Parse, PartialEq, ToCss, ToShmem)]
 pub enum Source {
     /// The scroll container.
-    #[css(skip)]
     Selector(ScrollTimelineSelector),
     /// The initial value. The scrollingElement of the Document associated with the Window that is
     /// the current global object.
     Auto,
     /// Null. However, it's not clear what is the expected behavior of this. See the spec issue:
     /// https://drafts.csswg.org/scroll-animations/#issue-0d1e73bd
-    #[css(skip)]
     None,
 }
 
@@ -186,8 +182,7 @@ impl Default for Source {
 /// definition of ScrollTimelineOptions (WebIDL API).
 /// https://drafts.csswg.org/scroll-animations/#dom-scrolltimelineoptions-orientation
 #[derive(Clone, Copy, Debug, MallocSizeOf, Eq, Parse, PartialEq, PartialOrd, ToCss, ToShmem)]
-#[repr(u8)]
-pub enum ScrollDirection {
+pub enum Orientation {
     /// The initial value.
     Auto,
     /// The direction along the block axis. This is the default value.
@@ -200,14 +195,11 @@ pub enum ScrollDirection {
     Vertical,
 }
 
-impl Default for ScrollDirection {
+impl Default for Orientation {
     fn default() -> Self {
-        ScrollDirection::Auto
+        Orientation::Auto
     }
 }
-
-// Avoid name collision in cbindgen with StyleOrientation.
-pub use self::ScrollDirection as Orientation;
 
 /// Scroll-timeline offsets. We treat None as an empty vector.
 /// value: none | <scroll-timeline-offset>#
@@ -219,7 +211,7 @@ pub struct ScrollOffsets(#[css(if_empty = "none", iterable)] Box<[ScrollTimeline
 
 impl Parse for ScrollOffsets {
     fn parse<'i, 't>(
-        _context: &ParserContext,
+        context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
         if input.try_parse(|i| i.expect_ident_matching("none")).is_ok() {
@@ -228,7 +220,7 @@ impl Parse for ScrollOffsets {
 
         Ok(ScrollOffsets(
             input
-                .parse_comma_separated(|i| ScrollTimelineOffset::parse(i))?
+                .parse_comma_separated(|i| ScrollTimelineOffset::parse(context, i))?
                 .into_boxed_slice(),
         ))
     }
@@ -238,18 +230,14 @@ impl Parse for ScrollOffsets {
 /// value: auto | <length-percentage> | <element-offset>
 ///
 /// https://drafts.csswg.org/scroll-animations/#typedef-scroll-timeline-offset
-// FIXME: Bug 1733260 may drop the entire @scroll-timeline, and now we don't support
-// <scroll-timeline-offset> other than the default value (so use #[css(skip)]).
 #[derive(Clone, Debug, Parse, PartialEq, ToCss, ToShmem)]
 pub enum ScrollTimelineOffset {
     /// The initial value. A container-based offset.
     Auto,
     /// A container-based offset with the distance indicated by the value along source's scroll
     /// range in orientation.
-    #[css(skip)]
     LengthPercentage(LengthPercentage),
     /// An element-based offset.
-    #[css(skip)]
     ElementOffset(ElementOffset),
 }
 

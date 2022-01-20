@@ -1,5 +1,8 @@
 "use strict";
 
+const { NormandyTestUtils } = ChromeUtils.import(
+  "resource://testing-common/NormandyTestUtils.jsm"
+);
 const { TelemetryEvents } = ChromeUtils.import(
   "resource://normandy/lib/TelemetryEvents.jsm"
 );
@@ -16,7 +19,7 @@ registerCleanupFunction(() => {
 });
 
 /**
- * Normal unenrollment for experiments:
+ * Normal unenrollment:
  * - set .active to false
  * - set experiment inactive in telemetry
  * - send unrollment event
@@ -25,7 +28,7 @@ add_task(async function test_set_inactive() {
   const manager = ExperimentFakes.manager();
 
   await manager.onStartup();
-  await manager.store.addEnrollment(ExperimentFakes.experiment("foo"));
+  await manager.store.addExperiment(ExperimentFakes.experiment("foo"));
 
   manager.unenroll("foo", "some-reason");
 
@@ -43,7 +46,7 @@ add_task(async function test_unenroll_opt_out() {
   const experiment = ExperimentFakes.experiment("foo");
 
   await manager.onStartup();
-  await manager.store.addEnrollment(experiment);
+  await manager.store.addExperiment(experiment);
 
   Services.prefs.setBoolPref(STUDIES_OPT_OUT_PREF, false);
 
@@ -77,7 +80,7 @@ add_task(async function test_setExperimentInactive_called() {
   const experiment = ExperimentFakes.experiment("foo");
 
   await manager.onStartup();
-  await manager.store.addEnrollment(experiment);
+  await manager.store.addExperiment(experiment);
 
   manager.unenroll("foo", "some-reason");
 
@@ -93,7 +96,7 @@ add_task(async function test_send_unenroll_event() {
   const experiment = ExperimentFakes.experiment("foo");
 
   await manager.onStartup();
-  await manager.store.addEnrollment(experiment);
+  await manager.store.addExperiment(experiment);
 
   manager.unenroll("foo", "some-reason");
 
@@ -120,7 +123,7 @@ add_task(async function test_undefined_reason() {
   const experiment = ExperimentFakes.experiment("foo");
 
   await manager.onStartup();
-  await manager.store.addEnrollment(experiment);
+  await manager.store.addExperiment(experiment);
 
   manager.unenroll("foo");
 
@@ -134,90 +137,4 @@ add_task(async function test_undefined_reason() {
     "unknown",
     "should include unknown as the reason if none was supplied"
   );
-});
-
-/**
- * Normal unenrollment for rollouts:
- * - remove stored enrollment and synced data (prefs)
- * - set rollout inactive in telemetry
- * - send unrollment event
- */
-
-add_task(async function test_remove_rollouts() {
-  const store = ExperimentFakes.store();
-  const manager = ExperimentFakes.manager(store);
-  const rollout = ExperimentFakes.rollout("foo");
-
-  sinon.stub(store, "get").returns(rollout);
-  sinon.spy(store, "updateExperiment");
-
-  await manager.onStartup();
-
-  manager.unenroll("foo", "some-reason");
-
-  Assert.ok(
-    manager.store.updateExperiment.calledOnce,
-    "Called to set the rollout as !active"
-  );
-  Assert.ok(
-    manager.store.updateExperiment.calledWith(rollout.slug, { active: false }),
-    "Called with expected parameters"
-  );
-});
-
-add_task(async function test_remove_rollout_onFinalize() {
-  const store = ExperimentFakes.store();
-  const manager = ExperimentFakes.manager(store);
-  const rollout = ExperimentFakes.rollout("foo");
-
-  sinon.stub(store, "getAllRollouts").returns([rollout]);
-  sinon.stub(store, "get").returns(rollout);
-  sinon.spy(manager, "unenroll");
-  sinon.spy(manager, "sendFailureTelemetry");
-
-  await manager.onStartup();
-
-  manager.onFinalize("NimbusTestUtils");
-
-  Assert.ok(manager.sendFailureTelemetry.notCalled, "Nothing should fail");
-  Assert.ok(manager.unenroll.calledOnce, "Should unenroll recipe not seen");
-  Assert.ok(manager.unenroll.calledWith(rollout.slug, "recipe-not-seen"));
-});
-
-add_task(async function test_rollout_telemetry_events() {
-  globalSandbox.restore();
-  const store = ExperimentFakes.store();
-  const manager = ExperimentFakes.manager(store);
-  const rollout = ExperimentFakes.rollout("foo");
-  globalSandbox.spy(TelemetryEnvironment, "setExperimentInactive");
-  globalSandbox.spy(TelemetryEvents, "sendEvent");
-
-  sinon.stub(store, "getAllRollouts").returns([rollout]);
-  sinon.stub(store, "get").returns(rollout);
-  sinon.spy(manager, "sendFailureTelemetry");
-
-  await manager.onStartup();
-
-  manager.onFinalize("NimbusTestUtils");
-
-  Assert.ok(manager.sendFailureTelemetry.notCalled, "Nothing should fail");
-  Assert.ok(
-    TelemetryEnvironment.setExperimentInactive.calledOnce,
-    "Should unenroll recipe not seen"
-  );
-  Assert.ok(
-    TelemetryEnvironment.setExperimentInactive.calledWith(rollout.slug),
-    "Should set rollout to inactive."
-  );
-  Assert.ok(
-    TelemetryEvents.sendEvent.calledWith(
-      "unenroll",
-      sinon.match.string,
-      rollout.slug,
-      sinon.match.object
-    ),
-    "Should send unenroll event for rollout."
-  );
-
-  globalSandbox.restore();
 });

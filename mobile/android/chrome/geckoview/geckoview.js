@@ -701,18 +701,7 @@ function startup() {
       name: "GeckoViewMediaControl",
       onEnable: {
         resource: "resource://gre/modules/GeckoViewMediaControl.jsm",
-        actors: {
-          MediaControlDelegate: {
-            child: {
-              moduleURI: "resource:///actors/MediaControlDelegateChild.jsm",
-              events: {
-                "MozDOMFullscreen:Entered": {},
-                "MozDOMFullscreen:Exited": {},
-              },
-            },
-            allFrames: true,
-          },
-        },
+        frameScript: "chrome://geckoview/content/GeckoViewMediaControlChild.js",
       },
     },
     {
@@ -788,7 +777,8 @@ function startup() {
     InitLater(() => {
       // It's enough to run this once to set up FOG.
       // (See also bug 1730026.)
-      Services.fog.registerCustomPings();
+      const FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
+      FOG.registerCustomPings();
     });
 
     // This should always go last, since the idle tasks (except for the ones with

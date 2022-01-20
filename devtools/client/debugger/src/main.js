@@ -56,10 +56,10 @@ async function loadInitialState() {
   );
   const tabs = { tabs: await asyncStore.tabs };
   const xhrBreakpoints = await asyncStore.xhrBreakpoints;
-  const blackboxedRanges = await asyncStore.blackboxedRanges;
+  const tabsBlackBoxed = await asyncStore.tabsBlackBoxed;
   const eventListenerBreakpoints = await asyncStore.eventListenerBreakpoints;
   const breakpoints = initialBreakpointsState(xhrBreakpoints);
-  const sources = initialSourcesState({ blackboxedRanges });
+  const sources = initialSourcesState({ tabsBlackBoxed });
 
   return {
     pendingBreakpoints,

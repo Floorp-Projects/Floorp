@@ -214,9 +214,8 @@ void nsPresContext::ForceReflowForFontInfoUpdate(bool aNeedsReframe) {
 
   // We also need to trigger restyling for ex/ch units changes to take effect,
   // if needed.
-  auto restyleHint = UsesFontMetricDependentFontUnits()
-                         ? RestyleHint::RecascadeSubtree()
-                         : RestyleHint{0};
+  auto restyleHint =
+      UsesExChUnits() ? RestyleHint::RecascadeSubtree() : RestyleHint{0};
 
   RebuildAllStyleData(changeHint, restyleHint);
 }
@@ -272,7 +271,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mPendingUIResolutionChanged(false),
       mPendingFontInfoUpdateReflowFromStyle(false),
       mIsGlyph(false),
-      mUsesFontMetricDependentFontUnits(false),
+      mUsesExChUnits(false),
       mCounterStylesDirty(true),
       mFontFeatureValuesDirty(true),
       mSuppressResizeReflow(false),
@@ -659,7 +658,7 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
       // Changes to font_rendering prefs need to trigger a reflow
       StringBeginsWith(prefName, "gfx.font_rendering."_ns)) {
     changeHint |= NS_STYLE_HINT_REFLOW;
-    if (UsesFontMetricDependentFontUnits()) {
+    if (UsesExChUnits()) {
       restyleHint |= RestyleHint::RecascadeSubtree();
     }
   }
@@ -963,11 +962,9 @@ void nsPresContext::RecomputeBrowsingContextDependentData() {
   auto oldOverride = mColorSchemeOverride;
   mColorSchemeOverride = browsingContext->Top()->PrefersColorSchemeOverride();
   if (oldOverride != mColorSchemeOverride) {
-    // We need to restyle because not only media queries have changed, system
-    // colors may as well via the prefers-color-scheme meta tag / effective
-    // color-scheme property value.
-    MediaFeatureValuesChanged({RestyleHint::RecascadeSubtree(), nsChangeHint(0),
-                               MediaFeatureChangeReason::SystemMetricsChange},
+    // This is a bit of a lie, but it's the code-path that gets taken for
+    // regular system metrics changes via ThemeChanged().
+    MediaFeatureValuesChanged({MediaFeatureChangeReason::SystemMetricsChange},
                               MediaFeatureChangePropagation::JustThisDocument);
   }
 
@@ -1680,10 +1677,6 @@ void nsPresContext::UIResolutionChangedInternalScale(double aScale) {
     AppUnitsPerDevPixelChanged();
   }
 
-  if (GetPresShell()) {
-    GetPresShell()->RefreshZoomConstraintsForScreenSizeChange();
-  }
-
   // Recursively notify all remote leaf descendants of the change.
   if (nsPIDOMWindowOuter* window = mDocument->GetWindow()) {
     NotifyChildrenUIResolutionChanged(window);
@@ -1779,7 +1772,7 @@ void nsPresContext::PostRebuildAllStyleDataEvent(
     return;
   }
   if (aRestyleHint.DefinitelyRecascadesAllSubtree()) {
-    mUsesFontMetricDependentFontUnits = false;
+    mUsesExChUnits = false;
   }
   RestyleManager()->RebuildAllStyleData(aExtraHint, aRestyleHint);
 }
@@ -1977,9 +1970,8 @@ void nsPresContext::UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont) {
   // TODO(emilio): We could be more granular if we knew which families have
   // potentially changed.
   if (!aUpdatedFont) {
-    auto hint = UsesFontMetricDependentFontUnits()
-                    ? RestyleHint::RecascadeSubtree()
-                    : RestyleHint{0};
+    auto hint =
+        UsesExChUnits() ? RestyleHint::RecascadeSubtree() : RestyleHint{0};
     PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW, hint);
     return;
   }
@@ -2590,52 +2582,46 @@ void nsPresContext::NotifyNonBlankPaint() {
 
     mFirstNonBlankPaintTime = TimeStamp::Now();
   }
-  if (IsChrome() && IsRoot()) {
-    if (nsCOMPtr<nsIWidget> rootWidget = GetRootWidget()) {
-      rootWidget->DidGetNonBlankPaint();
-    }
-  }
 }
 
 void nsPresContext::NotifyContentfulPaint() {
-  if (mHadContentfulPaint) {
-    return;
-  }
   nsRootPresContext* rootPresContext = GetRootPresContext();
   if (!rootPresContext) {
     return;
   }
-  if (!mHadNonTickContentfulPaint) {
-#ifdef MOZ_WIDGET_ANDROID
-    (new AsyncEventDispatcher(mDocument, u"MozFirstContentfulPaint"_ns,
-                              CanBubble::eYes, ChromeOnlyDispatch::eYes))
-        ->PostDOMEvent();
-#endif
-  }
-  if (!rootPresContext->RefreshDriver()->IsInRefresh()) {
+  if (!mHadContentfulPaint) {
+#if defined(MOZ_WIDGET_ANDROID)
     if (!mHadNonTickContentfulPaint) {
-      rootPresContext->RefreshDriver()
-          ->AddForceNotifyContentfulPaintPresContext(this);
-      mHadNonTickContentfulPaint = true;
+      (new AsyncEventDispatcher(mDocument, u"MozFirstContentfulPaint"_ns,
+                                CanBubble::eYes, ChromeOnlyDispatch::eYes))
+          ->PostDOMEvent();
     }
-    return;
-  }
-  mHadContentfulPaint = true;
-  mFirstContentfulPaintTransactionId =
-      Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
-  if (nsPIDOMWindowInner* innerWindow = mDocument->GetInnerWindow()) {
-    if (Performance* perf = innerWindow->GetPerformance()) {
-      TimeStamp nowTime = rootPresContext->RefreshDriver()->MostRecentRefresh(
-          /* aEnsureTimerStarted */ false);
-      MOZ_ASSERT(!nowTime.IsNull(),
-                 "Most recent refresh timestamp should exist since we are in "
-                 "a refresh driver tick");
-      MOZ_ASSERT(rootPresContext->RefreshDriver()->IsInRefresh(),
-                 "We should only notify contentful paint during refresh "
-                 "driver ticks");
-      RefPtr<PerformancePaintTiming> paintTiming = new PerformancePaintTiming(
-          perf, u"first-contentful-paint"_ns, nowTime);
-      perf->SetFCPTimingEntry(paintTiming);
+#endif
+    if (!rootPresContext->RefreshDriver()->IsInRefresh()) {
+      if (!mHadNonTickContentfulPaint) {
+        rootPresContext->RefreshDriver()
+            ->AddForceNotifyContentfulPaintPresContext(this);
+        mHadNonTickContentfulPaint = true;
+      }
+      return;
+    }
+    mHadContentfulPaint = true;
+    mFirstContentfulPaintTransactionId =
+        Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
+    if (nsPIDOMWindowInner* innerWindow = mDocument->GetInnerWindow()) {
+      if (Performance* perf = innerWindow->GetPerformance()) {
+        TimeStamp nowTime = rootPresContext->RefreshDriver()->MostRecentRefresh(
+            /* aEnsureTimerStarted */ false);
+        MOZ_ASSERT(!nowTime.IsNull(),
+                   "Most recent refresh timestamp should exist since we are in "
+                   "a refresh driver tick");
+        MOZ_ASSERT(rootPresContext->RefreshDriver()->IsInRefresh(),
+                   "We should only notify contentful paint during refresh "
+                   "driver ticks");
+        RefPtr<PerformancePaintTiming> paintTiming = new PerformancePaintTiming(
+            perf, u"first-contentful-paint"_ns, nowTime);
+        perf->SetFCPTimingEntry(paintTiming);
+      }
     }
   }
 }

@@ -76,6 +76,7 @@ add_task(async function impression_offline_dataCollectionDisabled() {
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
   await doImpressionTest({
     scenario: "offline",
+    search_query: undefined,
   });
 });
 
@@ -88,6 +89,7 @@ add_task(async function impression_offline_dataCollectionEnabled() {
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
   await doImpressionTest({
     scenario: "offline",
+    search_query: TEST_SEARCH_STRING,
   });
 });
 
@@ -102,6 +104,7 @@ add_task(async function impression_online_dataCollectionDisabled() {
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   await doImpressionTest({
     scenario: "online",
+    search_query: undefined,
   });
 });
 
@@ -116,10 +119,11 @@ add_task(async function impression_online_dataCollectionEnabled() {
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   await doImpressionTest({
     scenario: "online",
+    search_query: TEST_SEARCH_STRING,
   });
 });
 
-async function doImpressionTest({ scenario }) {
+async function doImpressionTest({ scenario, search_query }) {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     spy.resetHistory();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -145,6 +149,7 @@ async function doImpressionTest({ scenario }) {
       index,
       spy,
       scenario,
+      search_query,
     });
     QuickSuggestTestUtils.assertNoClickPing(spy);
   });
@@ -211,6 +216,7 @@ add_task(async function click_keyboard_offline_dataCollectionDisabled() {
   await doClickTest({
     useKeyboard: true,
     scenario: "offline",
+    search_query: undefined,
   });
 });
 
@@ -224,6 +230,7 @@ add_task(async function click_keyboard_offline_dataCollectionEnabled() {
   await doClickTest({
     useKeyboard: true,
     scenario: "offline",
+    search_query: TEST_SEARCH_STRING,
   });
 });
 
@@ -239,6 +246,7 @@ add_task(async function click_keyboard_online_dataCollectionDisabled() {
   await doClickTest({
     useKeyboard: true,
     scenario: "online",
+    search_query: undefined,
   });
 });
 
@@ -254,6 +262,7 @@ add_task(async function click_keyboard_online_dataCollectionEnabled() {
   await doClickTest({
     useKeyboard: true,
     scenario: "online",
+    search_query: TEST_SEARCH_STRING,
   });
 });
 
@@ -267,6 +276,7 @@ add_task(async function click_mouse_offline_dataCollectionDisabled() {
   await doClickTest({
     useKeyboard: false,
     scenario: "offline",
+    search_query: undefined,
   });
 });
 
@@ -280,6 +290,7 @@ add_task(async function click_mouse_offline_dataCollectionEnabled() {
   await doClickTest({
     useKeyboard: false,
     scenario: "offline",
+    search_query: TEST_SEARCH_STRING,
   });
 });
 
@@ -295,6 +306,7 @@ add_task(async function click_mouse_online_dataCollectionDisabled() {
   await doClickTest({
     useKeyboard: false,
     scenario: "online",
+    search_query: undefined,
   });
 });
 
@@ -310,10 +322,11 @@ add_task(async function click_mouse_online_dataCollectionEnabled() {
   await doClickTest({
     useKeyboard: false,
     scenario: "online",
+    search_query: TEST_SEARCH_STRING,
   });
 });
 
-async function doClickTest({ useKeyboard, scenario }) {
+async function doClickTest({ useKeyboard, scenario, search_query }) {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     spy.resetHistory();
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -343,6 +356,7 @@ async function doClickTest({ useKeyboard, scenario }) {
       index,
       spy,
       scenario,
+      search_query,
     });
     QuickSuggestTestUtils.assertClickPing({ index, spy, scenario });
   });

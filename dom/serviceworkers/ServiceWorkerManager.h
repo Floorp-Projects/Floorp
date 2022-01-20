@@ -44,9 +44,6 @@ class PrincipalInfo;
 
 namespace dom {
 
-extern uint32_t gServiceWorkersRegistered;
-extern uint32_t gServiceWorkersRegisteredFetch;
-
 class ContentParent;
 class ServiceWorkerInfo;
 class ServiceWorkerJobQueue;
@@ -101,8 +98,6 @@ class ServiceWorkerUpdateFinishCallback {
  * }
  */
 class ServiceWorkerManager final : public nsIServiceWorkerManager,
-                                   public nsITimerCallback,
-                                   public nsINamed,
                                    public nsIObserver {
   friend class GetRegistrationsRunnable;
   friend class GetRegistrationRunnable;
@@ -117,8 +112,6 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERVICEWORKERMANAGER
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSITIMERCALLBACK
-  NS_DECL_NSINAMED
 
   // Return true if the given principal and URI matches a registered service
   // worker which handles fetch event.
@@ -421,8 +414,6 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   };
 
   nsTArray<UniquePtr<PendingReadyData>> mPendingReadyList;
-
-  nsCOMPtr<nsITimer> mTelemetryTimer;
 };
 
 }  // namespace dom

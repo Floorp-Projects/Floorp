@@ -12,7 +12,6 @@ UNIFIED_SOURCES = [
 if CONFIG["OS_ARCH"] == "WINNT":
     UNIFIED_SOURCES += [
         "MockWinWidget.cpp",
-        "TestWinHeaderOnlyUtils.cpp",
         "TestWinWindowOcclusionTracker.cpp",
         "TestWinWindowOcclusionTrackerInteractive.cpp",
     ]

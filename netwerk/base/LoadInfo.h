@@ -264,7 +264,6 @@ class LoadInfo final : public nsILoadInfo {
   nsCOMPtr<nsIPrincipal> mPrincipalToInherit;
   nsCOMPtr<nsIPrincipal> mTopLevelPrincipal;
   nsCOMPtr<nsIURI> mResultPrincipalURI;
-  nsCOMPtr<nsIURI> mChannelCreationOriginalURI;
   nsCOMPtr<nsICSPEventListener> mCSPEventListener;
   nsCOMPtr<nsICookieJarSettings> mCookieJarSettings;
   nsCOMPtr<nsIContentSecurityPolicy> mCspToInherit;

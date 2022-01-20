@@ -120,7 +120,11 @@ pub fn calculate_offset(
 
             (align, align * columns as u32)
         }
-        TypeInner::Struct { ref members, .. } => {
+        TypeInner::Struct {
+            ref members,
+            top_level,
+            ..
+        } => {
             let mut span = 0;
             let mut align = 0;
             let mut members = members.clone();
@@ -144,7 +148,11 @@ pub fn calculate_offset(
             ty = types.insert(
                 Type {
                     name,
-                    inner: TypeInner::Struct { members, span },
+                    inner: TypeInner::Struct {
+                        top_level,
+                        members,
+                        span,
+                    },
                 },
                 ty_span,
             );

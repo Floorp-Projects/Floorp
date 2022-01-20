@@ -212,7 +212,6 @@ this.browserAction = class extends ExtensionAPI {
         view.id = this.viewId;
         view.setAttribute("flex", "1");
         view.setAttribute("extension", true);
-        view.setAttribute("neverhidden", true);
 
         document.getElementById("appMenu-viewCache").appendChild(view);
 

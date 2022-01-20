@@ -29,7 +29,6 @@
 #include "RTCDtlsTransport.h"
 #include "RTCRtpReceiver.h"
 #include "RTCDTMFSender.h"
-#include "libwebrtcglue/WebrtcCallWrapper.h"
 #include "libwebrtcglue/WebrtcGmpVideoCodec.h"
 
 namespace mozilla {
@@ -145,7 +144,7 @@ TransceiverImpl::TransceiverImpl(
     const std::string& aPCHandle, MediaTransportHandler* aTransportHandler,
     JsepTransceiver* aJsepTransceiver, nsISerialEventTarget* aMainThread,
     nsISerialEventTarget* aStsThread, dom::MediaStreamTrack* aSendTrack,
-    WebrtcCallWrapper* aCallWrapper, RTCStatsIdGenerator* aIdGenerator)
+    WebrtcCallWrapper* aCallWrapper)
     : mWindow(aWindow),
       mPCHandle(aPCHandle),
       mTransportHandler(aTransportHandler),
@@ -177,10 +176,9 @@ TransceiverImpl::TransceiverImpl(
     return;
   }
 
-  mReceiver = new RTCRtpReceiver(aWindow, aPrivacyNeeded, aPCHandle,
-                                 aTransportHandler, aJsepTransceiver,
-                                 aMainThread, mCallWrapper->mCallThread,
-                                 aStsThread, mConduit, aIdGenerator, this);
+  mReceiver = new RTCRtpReceiver(
+      aWindow, aPrivacyNeeded, aPCHandle, aTransportHandler, aJsepTransceiver,
+      aMainThread, mCallWrapper->mCallThread, aStsThread, mConduit, this);
 
   if (!IsVideo()) {
     mDtmf = new RTCDTMFSender(aWindow, this);

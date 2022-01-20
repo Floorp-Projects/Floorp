@@ -4178,8 +4178,8 @@ void nsTreeBodyFrame::ScrollCallback(nsITimer* aTimer, void* aClosure) {
   }
 }
 
-// TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
-MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsTreeBodyFrame::ScrollEvent::Run() {
+NS_IMETHODIMP
+nsTreeBodyFrame::ScrollEvent::Run() {
   if (mInner) {
     mInner->FireScrollEvent();
   }
@@ -4191,9 +4191,7 @@ void nsTreeBodyFrame::FireScrollEvent() {
   WidgetGUIEvent event(true, eScroll, nullptr);
   // scroll events fired at elements don't bubble
   event.mFlags.mBubbles = false;
-  RefPtr<nsIContent> content = GetContent();
-  RefPtr<nsPresContext> presContext = PresContext();
-  EventDispatcher::Dispatch(content, presContext, &event);
+  EventDispatcher::Dispatch(GetContent(), PresContext(), &event);
 }
 
 void nsTreeBodyFrame::PostScrollEvent() {

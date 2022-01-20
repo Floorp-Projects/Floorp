@@ -44,17 +44,7 @@ void ScreenManager::SetHelper(UniquePtr<Helper> aHelper) {
   mHelper = std::move(aHelper);
 }
 
-// static
 void ScreenManager::Refresh(nsTArray<RefPtr<Screen>>&& aScreens) {
-  if (PastShutdownPhase(ShutdownPhase::XPCOMShutdown)) {
-    // We don't refresh screen data if starting XPCOM shutdown path.
-    // GetSingleton returns invalid data since it is freed.
-    return;
-  }
-  GetSingleton().RefreshInternal(std::move(aScreens));
-}
-
-void ScreenManager::RefreshInternal(nsTArray<RefPtr<Screen>>&& aScreens) {
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("Refresh screens"));
 
   mScreenList = std::move(aScreens);
@@ -209,24 +199,20 @@ ScreenManager::ScreenForRect(int32_t aX, int32_t aY, int32_t aWidth,
 // The screen with the menubar/taskbar. This shouldn't be needed very
 // often.
 //
-already_AddRefed<Screen> ScreenManager::GetPrimaryScreen() {
+NS_IMETHODIMP
+ScreenManager::GetPrimaryScreen(nsIScreen** aPrimaryScreen) {
   if (mScreenList.IsEmpty()) {
     MOZ_LOG(sScreenLog, LogLevel::Warning,
             ("No screen available. This can happen in xpcshell."));
     RefPtr<Screen> ret = new Screen(
         LayoutDeviceIntRect(), LayoutDeviceIntRect(), 0, 0,
         DesktopToLayoutDeviceScale(), CSSToLayoutDeviceScale(), 96 /* dpi */);
-    return ret.forget();
+    ret.forget(aPrimaryScreen);
+    return NS_OK;
   }
 
   RefPtr<Screen> ret = mScreenList[0];
-  return ret.forget();
-}
-
-NS_IMETHODIMP
-ScreenManager::GetPrimaryScreen(nsIScreen** aPrimaryScreen) {
-  nsCOMPtr<nsIScreen> screen = GetPrimaryScreen();
-  screen.forget(aPrimaryScreen);
+  ret.forget(aPrimaryScreen);
   return NS_OK;
 }
 

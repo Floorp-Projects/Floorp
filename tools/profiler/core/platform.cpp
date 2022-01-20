@@ -272,18 +272,18 @@ static uint32_t AvailableFeatures() {
 }
 
 // Default features common to all contexts (even if not available).
-static constexpr uint32_t DefaultFeatures() {
+static uint32_t DefaultFeatures() {
   return ProfilerFeature::Java | ProfilerFeature::JS | ProfilerFeature::Leaf |
-         ProfilerFeature::StackWalk | ProfilerFeature::CPUUtilization |
-         ProfilerFeature::Screenshots;
+         ProfilerFeature::StackWalk | ProfilerFeature::Threads |
+         ProfilerFeature::CPUUtilization | ProfilerFeature::Screenshots;
 }
 
 // Extra default features when MOZ_PROFILER_STARTUP is set (even if not
 // available).
-static constexpr uint32_t StartupExtraDefaultFeatures() {
+static uint32_t StartupExtraDefaultFeatures() {
   // Enable file I/Os by default for startup profiles as startup is heavy on
   // I/O operations.
-  return ProfilerFeature::FileIOAll | ProfilerFeature::IPCMessages;
+  return ProfilerFeature::FileIOAll;
 }
 
 // RAII class to lock the profiler mutex.
@@ -648,6 +648,13 @@ class ActivePS {
     // Filter out any features unavailable in this platform/configuration.
     aFeatures &= AvailableFeatures();
 
+    // Always enable ProfilerFeature::Threads if we have a filter, because
+    // users sometimes ask to filter by a list of threads but forget to
+    // explicitly specify ProfilerFeature::Threads.
+    if (aFilterCount > 0) {
+      aFeatures |= ProfilerFeature::Threads;
+    }
+
     // Some features imply others.
     if (aFeatures & ProfilerFeature::FileIOAll) {
       aFeatures |= ProfilerFeature::MainThreadIO | ProfilerFeature::FileIO;
@@ -839,7 +846,8 @@ class ActivePS {
   static ThreadProfilingFeatures ProfilingFeaturesForThread(
       PSLockRef aLock, const ThreadRegistrationInfo& aInfo) {
     MOZ_ASSERT(sInstance);
-    if (sInstance->ThreadSelected(aInfo.Name())) {
+    if ((aInfo.IsMainThread() || FeatureThreads(aLock)) &&
+        sInstance->ThreadSelected(aInfo.Name())) {
       // This thread was selected by the user, record everything.
       return ThreadProfilingFeatures::Any;
     }
@@ -3077,8 +3085,7 @@ static void locked_profiler_stream_json_for_this_process(
   buffer.AddEntry(ProfileBufferEntry::CollectionEnd(collectionEndMs));
 }
 
-// Keep this internal function non-static, so it may be used by tests.
-bool do_profiler_stream_json_for_this_process(
+bool profiler_stream_json_for_this_process(
     SpliceableJSONWriter& aWriter, double aSinceTime, bool aIsShuttingDown,
     ProfilerCodeAddressService* aService) {
   LOG("profiler_stream_json_for_this_process");
@@ -3101,17 +3108,6 @@ bool do_profiler_stream_json_for_this_process(
                                                preRecordedMetaInformation,
                                                aIsShuttingDown, aService);
   return true;
-}
-
-bool profiler_stream_json_for_this_process(
-    SpliceableJSONWriter& aWriter, double aSinceTime, bool aIsShuttingDown,
-    ProfilerCodeAddressService* aService) {
-  MOZ_RELEASE_ASSERT(
-      !XRE_IsParentProcess() || NS_IsMainThread(),
-      "In the parent process, profiles should only be generated from the main "
-      "thread, otherwise they will be incomplete.");
-  return do_profiler_stream_json_for_this_process(aWriter, aSinceTime,
-                                                  aIsShuttingDown, aService);
 }
 
 // END saving/streaming code
@@ -4637,11 +4633,7 @@ static Vector<const char*> SplitAtCommas(const char* aString,
       aStorage[i] = '\0';
     }
     if (aStorage[i] == '\0') {
-      // Only add non-empty elements, otherwise ParseFeatures would later
-      // complain about unrecognized features.
-      if (currentElementStart != i) {
-        MOZ_RELEASE_ASSERT(array.append(&aStorage[currentElementStart]));
-      }
+      MOZ_RELEASE_ASSERT(array.append(&aStorage[currentElementStart]));
       currentElementStart = i + 1;
     }
   }
@@ -4824,7 +4816,7 @@ void profiler_init(void* aStackTop) {
     if (startupFeaturesBitfield && startupFeaturesBitfield[0] != '\0') {
       errno = 0;
       features = strtol(startupFeaturesBitfield, nullptr, 10);
-      if (errno == 0) {
+      if (errno == 0 && features != 0) {
         LOG("- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD = %d", features);
       } else {
         LOG("- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD not a valid integer: %s",
@@ -4833,7 +4825,7 @@ void profiler_init(void* aStackTop) {
       }
     } else {
       const char* startupFeatures = getenv("MOZ_PROFILER_STARTUP_FEATURES");
-      if (startupFeatures) {
+      if (startupFeatures && startupFeatures[0] != '\0') {
         // Interpret startupFeatures as a list of feature strings, separated by
         // commas.
         UniquePtr<char[]> featureStringStorage;
@@ -5277,10 +5269,6 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 
   MOZ_RELEASE_ASSERT(CorePS::Exists() && !ActivePS::Exists(aLock));
 
-  // Do this before the Base Profiler is stopped, to keep the existing buffer
-  // (if any) alive for our use.
-  mozilla::base_profiler_markers_detail::EnsureBufferForMainThreadAddMarker();
-
   UniquePtr<char[]> baseprofile;
   if (baseprofiler::profiler_is_active()) {
     // Note that we still hold the lock, so the sampler cannot run yet and
@@ -5594,8 +5582,6 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
   SamplerThread* samplerThread = ActivePS::Destroy(aLock);
   samplerThread->Stop(aLock);
 
-  mozilla::base_profiler_markers_detail::ReleaseBufferForMainThreadAddMarker();
-
   return samplerThread;
 }
 
@@ -5848,15 +5834,10 @@ ProfilingStack* profiler_register_thread(const char* aName,
 
 /* static */
 void ThreadRegistry::Register(ThreadRegistration::OnThreadRef aOnThreadRef) {
-  // Set the thread name (except for the main thread, which is controlled
-  // elsewhere, and influences the process name on some systems like Linux).
-  if (!aOnThreadRef.UnlockedConstReaderCRef().Info().IsMainThread()) {
-    // Make sure we have a nsThread wrapper for the current thread, and that
-    // NSPR knows its name.
-    (void)NS_GetCurrentThread();
-    NS_SetCurrentThreadName(
-        aOnThreadRef.UnlockedConstReaderCRef().Info().Name());
-  }
+  // Make sure we have a nsThread wrapper for the current thread, and that NSPR
+  // knows its name.
+  (void)NS_GetCurrentThread();
+  NS_SetCurrentThreadName(aOnThreadRef.UnlockedConstReaderCRef().Info().Name());
 
   PSAutoLock lock;
 

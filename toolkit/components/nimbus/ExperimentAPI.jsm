@@ -23,6 +23,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExperimentStore: "resource://nimbus/lib/ExperimentStore.jsm",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
+  setTimeout: "resource://gre/modules/Timer.jsm",
+  clearTimeout: "resource://gre/modules/Timer.jsm",
   FeatureManifest: "resource://nimbus/FeatureManifest.js",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
 });
@@ -127,13 +129,10 @@ const ExperimentAPI = {
   },
 
   /**
-   * Used by getExperimentMetaData and getRolloutMetaData
-   *
-   * @param {{slug: string, featureId: string}} options Enrollment identifier
-   * @param isRollout Is enrollment an experiment or a rollout
-   * @returns {object} Enrollment metadata
+   * Return experiment slug its status and the enrolled branch slug
+   * Does NOT send exposure event because you only have access to the slugs
    */
-  getEnrollmentMetaData({ slug, featureId }, isRollout) {
+  getExperimentMetaData({ slug, featureId }) {
     if (!slug && !featureId) {
       throw new Error(
         "getExperiment(options) must include a slug or a feature."
@@ -145,11 +144,7 @@ const ExperimentAPI = {
       if (slug) {
         experimentData = this._store.get(slug);
       } else if (featureId) {
-        if (isRollout) {
-          experimentData = this._store.getRolloutForFeature(featureId);
-        } else {
-          experimentData = this._store.getExperimentForFeature(featureId);
-        }
+        experimentData = this._store.getExperimentForFeature(featureId);
       }
     } catch (e) {
       Cu.reportError(e);
@@ -163,22 +158,6 @@ const ExperimentAPI = {
     }
 
     return null;
-  },
-
-  /**
-   * Return experiment slug its status and the enrolled branch slug
-   * Does NOT send exposure event because you only have access to the slugs
-   */
-  getExperimentMetaData(options) {
-    return this.getEnrollmentMetaData(options);
-  },
-
-  /**
-   * Return rollout slug its status and the enrolled branch slug
-   * Does NOT send exposure event because you only have access to the slugs
-   */
-  getRolloutMetaData(options) {
-    return this.getEnrollmentMetaData(options, true);
   },
 
   /**
@@ -345,6 +324,11 @@ class _ExperimentFeature {
       );
     }
     this._didSendExposureEvent = false;
+    this._onRemoteReady = null;
+    this._waitForRemote = new Promise(
+      resolve => (this._onRemoteReady = resolve)
+    );
+    this._listenForRemoteDefaults = this._listenForRemoteDefaults.bind(this);
     const variables = this.manifest?.variables || {};
 
     Object.keys(variables).forEach(key => {
@@ -365,6 +349,36 @@ class _ExperimentFeature {
         );
       }
     });
+
+    /**
+     * There are multiple events that can resolve the wait for remote defaults:
+     * 1. The feature can receive data via the RS update cycle
+     * 2. The RS update cycle finished; no record exists for this feature
+     * 3. User was enrolled in an experiment that targets this feature, resolve
+     * because experiments take priority.
+     */
+    ExperimentAPI._store.on(
+      "remote-defaults-finalized",
+      this._listenForRemoteDefaults
+    );
+    this.onUpdate(this._listenForRemoteDefaults);
+  }
+
+  _listenForRemoteDefaults(eventName, reason) {
+    if (
+      // When the update cycle finished
+      eventName === "remote-defaults-finalized" ||
+      // remote default or experiment available
+      reason === "experiment-updated" ||
+      reason === "remote-defaults-update"
+    ) {
+      ExperimentAPI._store.off(
+        "remote-defaults-updated",
+        this._listenForRemoteDefaults
+      );
+      this.off(this._listenForRemoteDefaults);
+      this._onRemoteReady();
+    }
   }
 
   getPreferenceName(variable) {
@@ -389,10 +403,24 @@ class _ExperimentFeature {
 
   /**
    * Wait for ExperimentStore to load giving access to experiment features that
-   * do not have a pref cache
+   * do not have a pref cache and wait for remote defaults to load from Remote
+   * Settings.
+   *
+   * @param {number} timeout Optional timeout parameter
    */
-  ready() {
-    return ExperimentAPI.ready();
+  async ready(timeout) {
+    const REMOTE_DEFAULTS_TIMEOUT_MS = 15 * 1000; // 15 seconds
+    await ExperimentAPI.ready();
+    if (ExperimentAPI._store.hasRemoteDefaultsReady()) {
+      this._onRemoteReady();
+    } else {
+      let remoteTimeoutId = setTimeout(
+        this._onRemoteReady,
+        timeout || REMOTE_DEFAULTS_TIMEOUT_MS
+      );
+      await this._waitForRemote;
+      clearTimeout(remoteTimeoutId);
+    }
   }
 
   /**
@@ -413,6 +441,10 @@ class _ExperimentFeature {
       return feature.enabled;
     }
 
+    if (isBooleanValueDefined(this.getRemoteConfig()?.enabled)) {
+      return this.getRemoteConfig().enabled;
+    }
+
     let enabled;
     try {
       enabled = this.getVariable("enabled");
@@ -421,10 +453,6 @@ class _ExperimentFeature {
     }
     if (isBooleanValueDefined(enabled)) {
       return enabled;
-    }
-
-    if (isBooleanValueDefined(this.getRollout()?.enabled)) {
-      return this.getRollout().enabled;
     }
 
     return defaultValue;
@@ -446,7 +474,7 @@ class _ExperimentFeature {
     return {
       ...this.prefGetters,
       ...defaultValues,
-      ...this.getRollout()?.value,
+      ...this.getRemoteConfig()?.variables,
       ...(featureValue || null),
       ...userPrefs,
     };
@@ -483,7 +511,7 @@ class _ExperimentFeature {
     }
 
     // Next, check remote defaults
-    const remoteValue = this.getRollout()?.value?.[variable];
+    const remoteValue = this.getRemoteConfig()?.variables?.[variable];
     if (typeof remoteValue !== "undefined") {
       return remoteValue;
     }
@@ -491,26 +519,13 @@ class _ExperimentFeature {
     return prefValue;
   }
 
-  getRollout() {
-    let remoteConfig = ExperimentAPI._store.getRolloutForFeature(
-      this.featureId
-    );
+  getRemoteConfig() {
+    let remoteConfig = ExperimentAPI._store.getRemoteConfig(this.featureId);
     if (!remoteConfig) {
       return null;
     }
 
-    if (remoteConfig.branch?.features) {
-      return remoteConfig.branch?.features.find(
-        f => f.featureId === this.featureId
-      );
-    }
-
-    // This path is deprecated and will be removed in the future
-    if (remoteConfig.branch?.feature) {
-      return remoteConfig.branch.feature;
-    }
-
-    return null;
+    return remoteConfig;
   }
 
   recordExposureEvent({ once = false } = {}) {
@@ -518,21 +533,16 @@ class _ExperimentFeature {
       return;
     }
 
-    let enrollmentData = ExperimentAPI.getExperimentMetaData({
+    let experimentData = ExperimentAPI.getExperiment({
       featureId: this.featureId,
     });
-    if (!enrollmentData) {
-      enrollmentData = ExperimentAPI.getRolloutMetaData({
-        featureId: this.featureId,
-      });
-    }
 
     // Exposure only sent if user is enrolled in an experiment
-    if (enrollmentData) {
+    if (experimentData) {
       ExperimentAPI.recordExposureEvent({
         featureId: this.featureId,
-        experimentSlug: enrollmentData.slug,
-        branchSlug: enrollmentData.branch?.slug,
+        experimentSlug: experimentData.slug,
+        branchSlug: experimentData.branch?.slug,
       });
       this._didSendExposureEvent = true;
     }
@@ -560,7 +570,7 @@ class _ExperimentFeature {
           this.prefGetters[prefName],
         ]),
       userPrefs: this._getUserPrefsValues(),
-      rollouts: this.getRollout(),
+      remoteDefaults: this.getRemoteConfig(),
     };
   }
 }

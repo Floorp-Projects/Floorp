@@ -155,7 +155,7 @@ class AboutLoginsChild extends JSWindowActorChild {
           resolve,
         };
 
-        that.sendAsyncMessage("AboutLogins:PrimaryPasswordRequest", messageId);
+        that.sendAsyncMessage("AboutLogins:MasterPasswordRequest", messageId);
 
         return gMasterPasswordPromise;
       },

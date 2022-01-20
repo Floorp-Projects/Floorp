@@ -11,6 +11,12 @@ const { TelemetryEnvironmentTesting } = ChromeUtils.import(
   "resource://testing-common/TelemetryEnvironmentTesting.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExtensionTestUtils",
+  "resource://testing-common/ExtensionXPCShellUtils.jsm"
+);
+
 SearchTestUtils.init(this);
 
 function promiseNextTick() {
@@ -30,7 +36,8 @@ add_task(async function setup() {
   do_get_profile();
 
   // We need to ensure FOG is initialized, otherwise we will panic trying to get test values.
-  Services.fog.initializeFOG();
+  let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
+  FOG.initializeFOG();
 
   // The system add-on must be installed before AddonManager is started.
   const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "app0"], true);

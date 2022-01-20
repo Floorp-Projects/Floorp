@@ -39,7 +39,6 @@ test_accept! {
     (ip_port_tuple, ("127.0.0.1".parse::<IpAddr>().unwrap(), 0)),
 }
 
-use pin_project_lite::pin_project;
 use std::pin::Pin;
 use std::sync::{
     atomic::{AtomicUsize, Ordering::SeqCst},
@@ -48,12 +47,9 @@ use std::sync::{
 use std::task::{Context, Poll};
 use tokio::stream::{Stream, StreamExt};
 
-pin_project! {
-    struct TrackPolls<S> {
-        npolls: Arc<AtomicUsize>,
-        #[pin]
-        s: S,
-    }
+struct TrackPolls<S> {
+    npolls: Arc<AtomicUsize>,
+    s: S,
 }
 
 impl<S> Stream for TrackPolls<S>
@@ -62,9 +58,11 @@ where
 {
     type Item = S::Item;
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        let this = self.project();
+        // safety: we do not move s
+        let this = unsafe { self.get_unchecked_mut() };
         this.npolls.fetch_add(1, SeqCst);
-        this.s.poll_next(cx)
+        // safety: we are pinned, and so is s
+        unsafe { Pin::new_unchecked(&mut this.s) }.poll_next(cx)
     }
 }
 
@@ -82,7 +80,7 @@ async fn no_extra_poll() {
             s: listener.incoming(),
         };
         assert_ok!(tx.send(Arc::clone(&incoming.npolls)));
-        while incoming.next().await.is_some() {
+        while let Some(_) = incoming.next().await {
             accepted_tx.send(()).unwrap();
         }
     });

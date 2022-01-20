@@ -42,6 +42,7 @@ job-defaults:
         by-test-platform:
             windows10-64.*: hardware
             default: virtual
+    python-3: true
 
 marionette:
     description: "Marionette unittest run"

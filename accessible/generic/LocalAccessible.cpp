@@ -1445,30 +1445,48 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
 
     return;
   }
-
-  if (aAttribute == nsGkAtoms::aria_level ||
-      aAttribute == nsGkAtoms::aria_setsize ||
-      aAttribute == nsGkAtoms::aria_posinset) {
-    SendCache(CacheDomain::GroupInfo, CacheUpdateType::Update);
-    return;
-  }
 }
 
-void LocalAccessible::ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
-                                        int32_t* aPosInSet) const {
-  if (!mContent) {
-    return;
+GroupPos LocalAccessible::GroupPosition() {
+  GroupPos groupPos;
+  if (!HasOwnContent()) return groupPos;
+
+  // Get group position from ARIA attributes.
+  nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_level, &groupPos.level);
+  nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_setsize,
+                           &groupPos.setSize);
+  nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_posinset,
+                           &groupPos.posInSet);
+
+  // If ARIA is missed and the accessible is visible then calculate group
+  // position from hierarchy.
+  if (State() & states::INVISIBLE) return groupPos;
+
+  // Calculate group level if ARIA is missed.
+  if (groupPos.level == 0) {
+    int32_t level = GetLevelInternal();
+    if (level != 0) {
+      groupPos.level = level;
+    } else {
+      const nsRoleMapEntry* role = this->ARIARoleMap();
+      if (role && role->Is(nsGkAtoms::heading)) {
+        groupPos.level = 2;
+      }
+    }
   }
 
-  if (aLevel) {
-    nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_level, aLevel);
+  // Calculate position in group and group size if ARIA is missed.
+  if (groupPos.posInSet == 0 || groupPos.setSize == 0) {
+    int32_t posInSet = 0, setSize = 0;
+    GetPositionAndSizeInternal(&posInSet, &setSize);
+    if (posInSet != 0 && setSize != 0) {
+      if (groupPos.posInSet == 0) groupPos.posInSet = posInSet;
+
+      if (groupPos.setSize == 0) groupPos.setSize = setSize;
+    }
   }
-  if (aSetSize) {
-    nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_setsize, aSetSize);
-  }
-  if (aPosInSet) {
-    nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_posinset, aPosInSet);
-  }
+
+  return groupPos;
 }
 
 uint64_t LocalAccessible::State() {
@@ -1978,13 +1996,7 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
       if (roleMapEntry && (roleMapEntry->role == roles::OUTLINEITEM ||
                            roleMapEntry->role == roles::LISTITEM ||
                            roleMapEntry->role == roles::ROW)) {
-        Accessible* parent = const_cast<LocalAccessible*>(this)
-                                 ->GetOrCreateGroupInfo()
-                                 ->ConceptualParent();
-        if (parent) {
-          MOZ_ASSERT(parent->IsLocal());
-          rel.AppendTarget(parent->AsLocal());
-        }
+        rel.AppendTarget(GetGroupInfo()->ConceptualParent());
       }
 
       // If this is an OOP iframe document, we can't support NODE_CHILD_OF
@@ -3095,18 +3107,10 @@ uint32_t LocalAccessible::GetActionRule() const {
 }
 
 AccGroupInfo* LocalAccessible::GetGroupInfo() const {
-  if (mBits.groupInfo && !(mStateFlags & eGroupInfoDirty)) {
-    return mBits.groupInfo;
-  }
-
-  return nullptr;
-}
-
-AccGroupInfo* LocalAccessible::GetOrCreateGroupInfo() {
   if (IsProxy()) MOZ_CRASH("This should never be called on proxy wrappers");
 
   if (mBits.groupInfo) {
-    if (mStateFlags & eGroupInfoDirty) {
+    if (HasDirtyGroupInfo()) {
       mBits.groupInfo->Update();
       mStateFlags &= ~eGroupInfoDirty;
     }
@@ -3186,17 +3190,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   if (aCacheDomain & CacheDomain::Bounds) {
     nsRect newBoundsRect = ParentRelativeBounds();
 
-    // 1. Layout might notify us of a possible bounds change when the bounds
-    // haven't really changed. Therefore, we cache the last  bounds we sent
-    // and don't send an update if they haven't changed.
-    // 2. For an initial cache push, we ignore 1)  and always send the bounds.
-    // This handles the case where this LocalAccessible was moved (but not
-    // re-created). In that case, we will have cached bounds, but we currently
-    // do an initial cache push.
-    MOZ_ASSERT(aUpdateType == CacheUpdateType::Initial || mBounds.isSome(),
-               "Incremental cache push but mBounds is not set!");
-    if (aUpdateType == CacheUpdateType::Initial ||
-        !newBoundsRect.IsEqualEdges(mBounds.value())) {
+    if (mBounds.isNothing() || !newBoundsRect.IsEqualEdges(mBounds.value())) {
       mBounds = Some(newBoundsRect);
 
       nsTArray<int32_t> boundsArray(4);
@@ -3262,44 +3256,93 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     fields->SetAttribute(nsGkAtoms::state, state);
   }
 
-  if (aCacheDomain & CacheDomain::GroupInfo) {
-    for (nsAtom* attr : {nsGkAtoms::aria_level, nsGkAtoms::aria_setsize,
-                         nsGkAtoms::aria_posinset}) {
-      int32_t value = 0;
-      if (nsCoreUtils::GetUIntAttr(mContent, attr, &value)) {
-        fields->SetAttribute(attr, value);
-      } else if (aUpdateType == CacheUpdateType::Update) {
-        fields->SetAttribute(attr, DeleteEntry());
-      }
-    }
-  }
-
-  if (aUpdateType == CacheUpdateType::Initial) {
-    // Add fields which never change and thus only need to be included in the
-    // initial cache push.
-    if (mContent->IsElement()) {
-      fields->SetAttribute(nsGkAtoms::tag, mContent->NodeInfo()->NameAtom());
-
-      if (IsTextField() || IsDateTimeField()) {
-        // Cache text input types. Accessible is recreated if this changes,
-        // so it is considered immutable.
-        if (const nsAttrValue* attr =
-                mContent->AsElement()->GetParsedAttr(nsGkAtoms::type)) {
-          RefPtr<nsAtom> inputType = attr->GetAsAtom();
-          if (inputType) {
-            fields->SetAttribute(nsGkAtoms::textInputType, inputType);
-          }
-        }
-      }
-    }
-  }
-
   return fields.forget();
 }
 
-nsAtom* LocalAccessible::TagName() const {
-  return mContent && mContent->IsElement() ? mContent->NodeInfo()->NameAtom()
-                                           : nullptr;
+void LocalAccessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
+                                                 int32_t* aSetSize) {
+  AccGroupInfo* groupInfo = GetGroupInfo();
+  if (groupInfo) {
+    *aPosInSet = groupInfo->PosInSet();
+    *aSetSize = groupInfo->SetSize();
+  }
+}
+
+int32_t LocalAccessible::GetLevelInternal() {
+  int32_t level = nsAccUtils::GetDefaultLevel(this);
+
+  if (!IsBoundToParent()) return level;
+
+  roles::Role role = Role();
+  if (role == roles::OUTLINEITEM) {
+    // Always expose 'level' attribute for 'outlineitem' accessible. The number
+    // of nested 'grouping' accessibles containing 'outlineitem' accessible is
+    // its level.
+    level = 1;
+
+    LocalAccessible* parent = this;
+    while ((parent = parent->LocalParent())) {
+      roles::Role parentRole = parent->Role();
+
+      if (parentRole == roles::OUTLINE) break;
+      if (parentRole == roles::GROUPING) ++level;
+    }
+
+  } else if (role == roles::LISTITEM) {
+    // Expose 'level' attribute on nested lists. We support two hierarchies:
+    // a) list -> listitem -> list -> listitem (nested list is a last child
+    //   of listitem of the parent list);
+    // b) list -> listitem -> group -> listitem (nested listitems are contained
+    //   by group that is a last child of the parent listitem).
+
+    // Calculate 'level' attribute based on number of parent listitems.
+    level = 0;
+    LocalAccessible* parent = this;
+    while ((parent = parent->LocalParent())) {
+      roles::Role parentRole = parent->Role();
+
+      if (parentRole == roles::LISTITEM) {
+        ++level;
+      } else if (parentRole != roles::LIST && parentRole != roles::GROUPING) {
+        break;
+      }
+    }
+
+    if (level == 0) {
+      // If this listitem is on top of nested lists then expose 'level'
+      // attribute.
+      parent = LocalParent();
+      uint32_t siblingCount = parent->ChildCount();
+      for (uint32_t siblingIdx = 0; siblingIdx < siblingCount; siblingIdx++) {
+        LocalAccessible* sibling = parent->LocalChildAt(siblingIdx);
+
+        LocalAccessible* siblingChild = sibling->LocalLastChild();
+        if (siblingChild) {
+          roles::Role lastChildRole = siblingChild->Role();
+          if (lastChildRole == roles::LIST ||
+              lastChildRole == roles::GROUPING) {
+            return 1;
+          }
+        }
+      }
+    } else {
+      ++level;  // level is 1-index based
+    }
+  } else if (role == roles::COMMENT) {
+    // For comments, count the ancestor elements with the same role to get the
+    // level.
+    level = 1;
+
+    LocalAccessible* parent = this;
+    while ((parent = parent->LocalParent())) {
+      roles::Role parentRole = parent->Role();
+      if (parentRole == roles::COMMENT) {
+        ++level;
+      }
+    }
+  }
+
+  return level;
 }
 
 void LocalAccessible::StaticAsserts() const {

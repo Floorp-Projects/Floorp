@@ -71,12 +71,9 @@ void MIDIOutput::Send(const Sequence<uint8_t>& aData,
   }
 
   nsTArray<MIDIMessage> msgArray;
-  bool ret = MIDIUtils::ParseMessages(aData, timestamp, msgArray);
-  if (!ret) {
-    aRv.ThrowTypeError("Invalid MIDI message");
-    return;
-  }
-
+  MIDIUtils::ParseMessages(aData, timestamp, msgArray);
+  // Our translation of the spec is that invalid messages in a multi-message
+  // sequence will be thrown out, but that valid messages will still be used.
   if (msgArray.IsEmpty()) {
     aRv.ThrowTypeError("Empty message array");
     return;

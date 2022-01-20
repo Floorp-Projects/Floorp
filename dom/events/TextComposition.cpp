@@ -14,7 +14,6 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/IMEStateManager.h"
-#include "mozilla/IntegerRange.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RangeBoundary.h"
@@ -151,10 +150,8 @@ void TextComposition::DispatchEvent(
   if (aDispatchEvent->mMessage == eCompositionChange) {
     aDispatchEvent->mFlags.mOnlySystemGroupDispatchInContent = true;
   }
-  RefPtr<nsINode> node = mNode;
-  RefPtr<nsPresContext> presContext = mPresContext;
-  EventDispatcher::Dispatch(node, presContext, aDispatchEvent, nullptr, aStatus,
-                            aCallBack);
+  EventDispatcher::Dispatch(mNode, mPresContext, aDispatchEvent, nullptr,
+                            aStatus, aCallBack);
 
   OnCompositionEventDispatched(aDispatchEvent);
 }
@@ -698,13 +695,9 @@ RawRangeBoundary TextComposition::GetStartRef() const {
     if (!selection) {
       continue;
     }
-    const uint32_t rangeCount = selection->RangeCount();
-    for (const uint32_t i : IntegerRange(rangeCount)) {
-      MOZ_ASSERT(selection->RangeCount() == rangeCount);
+    for (uint32_t i = 0; i < selection->RangeCount(); i++) {
       const nsRange* range = selection->GetRangeAt(i);
-      MOZ_ASSERT(range);
-      if (MOZ_UNLIKELY(NS_WARN_IF(!range)) ||
-          MOZ_UNLIKELY(NS_WARN_IF(!range->GetStartContainer()))) {
+      if (NS_WARN_IF(!range) || NS_WARN_IF(!range->GetStartContainer())) {
         continue;
       }
       if (!firstRange) {
@@ -759,13 +752,9 @@ RawRangeBoundary TextComposition::GetEndRef() const {
     if (!selection) {
       continue;
     }
-    const uint32_t rangeCount = selection->RangeCount();
-    for (const uint32_t i : IntegerRange(rangeCount)) {
-      MOZ_ASSERT(selection->RangeCount() == rangeCount);
+    for (uint32_t i = 0; i < selection->RangeCount(); i++) {
       const nsRange* range = selection->GetRangeAt(i);
-      MOZ_ASSERT(range);
-      if (MOZ_UNLIKELY(NS_WARN_IF(!range)) ||
-          MOZ_UNLIKELY(NS_WARN_IF(!range->GetEndContainer()))) {
+      if (NS_WARN_IF(!range) || NS_WARN_IF(!range->GetEndContainer())) {
         continue;
       }
       if (!lastRange) {

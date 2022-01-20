@@ -27,6 +27,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryScheduler: "resource://gre/modules/TelemetryScheduler.jsm",
 });
 
+Cu.importGlobalProperties(["Glean"]);
+
 const Utils = TelemetryUtils;
 
 const myScope = this;

@@ -20,8 +20,9 @@ loader.lazyRequireGetter(
 
 loader.lazyRequireGetter(
   this,
-  "NetworkUtils",
-  "devtools/server/actors/network-monitor/utils/network-utils.js"
+  "matchRequest",
+  "devtools/server/actors/network-monitor/network-observer",
+  true
 );
 
 class NetworkEventStackTracesWatcher {
@@ -106,9 +107,11 @@ class NetworkEventStackTracesWatcher {
       }
     }
 
+    // XXX: is window the best filter to use?
     if (
-      !NetworkUtils.matchRequest(channel, {
-        targetActor: this.targetActor,
+      !matchRequest(channel, {
+        window: this.targetActor.window,
+        matchExactWindow: this.targetActor.ignoreSubFrames,
       })
     ) {
       return;

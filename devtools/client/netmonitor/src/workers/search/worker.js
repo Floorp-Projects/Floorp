@@ -5,10 +5,7 @@
 "use strict";
 
 /* eslint-disable no-undef*/
-importScripts(
-  "resource://devtools/client/netmonitor/src/workers/search/search.js",
-  "resource://devtools/client/netmonitor/src/workers/worker-utils.js"
-);
+importScripts("./search.js", "../worker-utils.js");
 
 // Implementation of search worker (runs in worker scope).
 self.onmessage = workerHandler({ searchInResource });

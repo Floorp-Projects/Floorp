@@ -6,8 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::variant::Variant;
-use crate::version::Version;
+use version::Version;
+use variant::Variant;
 
 /// Structure that contains the decoded data.
 #[derive(Debug, Eq, PartialEq)]

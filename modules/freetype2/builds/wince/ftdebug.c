@@ -230,7 +230,7 @@
 
     /* const char*  ft2_debug = getenv( "FT2_DEBUG" ); */
 
-    const char*  ft2_debug = NULL;
+    const char*  ft2_debug = 0;
 
 
     if ( ft2_debug )

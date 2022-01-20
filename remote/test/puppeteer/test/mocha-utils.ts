@@ -229,10 +229,6 @@ console.log(
   }`
 );
 
-process.on('unhandledRejection', (reason) => {
-  throw reason;
-});
-
 export const setupTestBrowserHooks = (): void => {
   before(async () => {
     const browser = await puppeteer.launch(defaultBrowserOptions);
@@ -318,18 +314,4 @@ export const expectCookieEquals = (
   }
 
   expect(cookies).toEqual(expectedCookies);
-};
-
-export const shortWaitForArrayToHaveAtLeastNElements = async (
-  data: unknown[],
-  minLength: number,
-  attempts = 3,
-  timeout = 50
-): Promise<void> => {
-  for (let i = 0; i < attempts; i++) {
-    if (data.length >= minLength) {
-      break;
-    }
-    await new Promise((resolve) => setTimeout(resolve, timeout));
-  }
 };

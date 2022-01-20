@@ -26,7 +26,6 @@ void OptimizationInfo::initNormalOptimizationInfo() {
   eaa_ = true;
   edgeCaseAnalysis_ = true;
   eliminateRedundantChecks_ = true;
-  eliminateRedundantShapeGuards_ = true;
   inlineInterpreted_ = true;
   inlineNative_ = true;
   licm_ = true;
@@ -52,7 +51,6 @@ void OptimizationInfo::initWasmOptimizationInfo() {
   autoTruncate_ = false;
   edgeCaseAnalysis_ = false;
   eliminateRedundantChecks_ = false;
-  eliminateRedundantShapeGuards_ = false;
   scalarReplacement_ = false;  // wasm has no objects.
   sink_ = false;
 }

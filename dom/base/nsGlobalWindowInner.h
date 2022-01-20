@@ -306,16 +306,13 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   EventTarget* GetTargetForDOMEvent() override;
 
   using mozilla::dom::EventTarget::DispatchEvent;
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool DispatchEvent(
-      mozilla::dom::Event& aEvent, mozilla::dom::CallerType aCallerType,
-      mozilla::ErrorResult& aRv) override;
+  bool DispatchEvent(mozilla::dom::Event& aEvent,
+                     mozilla::dom::CallerType aCallerType,
+                     mozilla::ErrorResult& aRv) override;
 
   void GetEventTargetParent(mozilla::EventChainPreVisitor& aVisitor) override;
 
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
-  PostHandleEvent(mozilla::EventChainPostVisitor& aVisitor) override;
+  nsresult PostHandleEvent(mozilla::EventChainPostVisitor& aVisitor) override;
 
   void Suspend(bool aIncludeSubWindows = true);
   void Resume(bool aIncludeSubWindows = true);
@@ -1260,7 +1257,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   bool MaybeCallDocumentFlushedResolvers(bool aUntilExhaustion);
 
   // Try to fire the "load" event on our content embedder if we're an iframe.
-  MOZ_CAN_RUN_SCRIPT void FireFrameLoadEvent();
+  void FireFrameLoadEvent();
 
   void UpdateAutoplayPermission();
   void UpdateShortcutsPermission();

@@ -167,7 +167,6 @@ function connectRuntime(id) {
         info: {
           deviceName: deviceDescription.deviceName,
           icon,
-          isFenix: runtime.isFenix,
           name: runtimeName,
           os: deviceDescription.os,
           type: runtime.type,

@@ -743,7 +743,8 @@ class FilterNodeOpacitySoftware : public FilterNodeSoftware {
 template <typename LightType, typename LightingType>
 class FilterNodeLightingSoftware : public FilterNodeSoftware {
  public:
-#if defined(MOZILLA_INTERNAL_API) && defined(NS_BUILD_REFCNT_LOGGING)
+#if defined(MOZILLA_INTERNAL_API) && \
+    (defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING))
   // Helpers for refcounted
   const char* typeName() const override { return mTypeName; }
   size_t typeSize() const override { return sizeof(*this); }
@@ -776,7 +777,8 @@ class FilterNodeLightingSoftware : public FilterNodeSoftware {
   Float mSurfaceScale;
   Size mKernelUnitLength;
   DeviceColor mColor;
-#if defined(MOZILLA_INTERNAL_API) && defined(NS_BUILD_REFCNT_LOGGING)
+#if defined(MOZILLA_INTERNAL_API) && \
+    (defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING))
   const char* mTypeName;
 #endif
 };

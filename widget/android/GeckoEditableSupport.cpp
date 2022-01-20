@@ -410,14 +410,19 @@ static nscolor ConvertAndroidColor(uint32_t aArgb) {
 }
 
 static jni::ObjectArray::LocalRef ConvertRectArrayToJavaRectFArray(
-    const nsTArray<LayoutDeviceIntRect>& aRects) {
+    const nsTArray<LayoutDeviceIntRect>& aRects,
+    const CSSToLayoutDeviceScale aScale) {
   const size_t length = aRects.Length();
   auto rects = jni::ObjectArray::New<java::sdk::RectF>(length);
 
   for (size_t i = 0; i < length; i++) {
     const LayoutDeviceIntRect& tmp = aRects[i];
 
-    auto rect = java::sdk::RectF::New(tmp.x, tmp.y, tmp.XMost(), tmp.YMost());
+    // Character bounds in CSS units.
+    auto rect =
+        java::sdk::RectF::New(tmp.x / aScale.scale, tmp.y / aScale.scale,
+                              (tmp.x + tmp.width) / aScale.scale,
+                              (tmp.y + tmp.height) / aScale.scale);
     rects->SetElement(i, rect);
   }
   return rects;
@@ -810,7 +815,8 @@ void GeckoEditableSupport::UpdateCompositionRects() {
   auto rects = ConvertRectArrayToJavaRectFArray(
       queryTextRectsEvent.Succeeded()
           ? queryTextRectsEvent.mReply->mRectArray
-          : CopyableTArray<mozilla::LayoutDeviceIntRect>());
+          : CopyableTArray<mozilla::LayoutDeviceIntRect>(),
+      widget->GetDefaultScale());
 
   mEditable->UpdateCompositionRects(rects);
 }
@@ -1140,7 +1146,7 @@ bool GeckoEditableSupport::DoUpdateComposition(int32_t aStart, int32_t aEnd,
     string = composition->String();
   }
 
-  ALOGIME("IME: IME_SET_TEXT: text=\"%s\", length=%zu, range=%zu",
+  ALOGIME("IME: IME_SET_TEXT: text=\"%s\", length=%u, range=%zu",
           NS_ConvertUTF16toUTF8(string).get(), string.Length(),
           mIMERanges->Length());
 

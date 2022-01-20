@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-#![allow(clippy::module_name_repetitions, clippy::shadow_unrelated)]
 
 use rayon::ThreadPoolBuilder;
 use std::env;

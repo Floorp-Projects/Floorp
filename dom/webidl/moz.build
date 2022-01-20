@@ -403,7 +403,6 @@ WEBIDL_FILES = [
     "Animatable.webidl",
     "AnimationEffect.webidl",
     "AnimationEvent.webidl",
-    "AnimationFrameProvider.webidl",
     "AnimationTimeline.webidl",
     "AnonymousContent.webidl",
     "AppInfo.webidl",
@@ -478,8 +477,7 @@ WEBIDL_FILES = [
     "CSSImportRule.webidl",
     "CSSKeyframeRule.webidl",
     "CSSKeyframesRule.webidl",
-    "CSSLayerBlockRule.webidl",
-    "CSSLayerStatementRule.webidl",
+    "CSSLayerRule.webidl",
     "CSSMediaRule.webidl",
     "CSSMozDocumentRule.webidl",
     "CSSNamespaceRule.webidl",
@@ -1005,17 +1003,10 @@ WEBIDL_FILES = [
 if CONFIG["MOZ_DOM_STREAMS"]:
     WEBIDL_FILES += [
         "QueuingStrategy.webidl",
-        "ReadableByteStreamController.webidl",
         "ReadableStream.webidl",
-        "ReadableStreamBYOBReader.webidl",
-        "ReadableStreamBYOBRequest.webidl",
         "ReadableStreamDefaultController.webidl",
         "ReadableStreamDefaultReader.webidl",
-        "UnderlyingSink.webidl",
         "UnderlyingSource.webidl",
-        "WritableStream.webidl",
-        "WritableStreamDefaultController.webidl",
-        "WritableStreamDefaultWriter.webidl",
     ]
 
 if CONFIG["MOZ_WEBRTC"]:

@@ -1,4 +1,4 @@
-#![warn(rust_2018_idioms)]
+extern crate slab;
 
 use slab::*;
 
@@ -403,36 +403,6 @@ fn from_iterator_unordered() {
     assert_eq!(iter.next(), None);
 }
 
-// https://github.com/tokio-rs/slab/issues/100
-#[test]
-fn from_iterator_issue_100() {
-    let mut slab: slab::Slab<()> = vec![(1, ())].into_iter().collect();
-    assert_eq!(slab.len(), 1);
-    assert_eq!(slab.insert(()), 0);
-    assert_eq!(slab.insert(()), 2);
-    assert_eq!(slab.insert(()), 3);
-
-    let mut slab: slab::Slab<()> = vec![(1, ()), (2, ())].into_iter().collect();
-    assert_eq!(slab.len(), 2);
-    assert_eq!(slab.insert(()), 0);
-    assert_eq!(slab.insert(()), 3);
-    assert_eq!(slab.insert(()), 4);
-
-    let mut slab: slab::Slab<()> = vec![(1, ()), (3, ())].into_iter().collect();
-    assert_eq!(slab.len(), 2);
-    assert_eq!(slab.insert(()), 2);
-    assert_eq!(slab.insert(()), 0);
-    assert_eq!(slab.insert(()), 4);
-
-    let mut slab: slab::Slab<()> = vec![(0, ()), (2, ()), (3, ()), (5, ())]
-        .into_iter()
-        .collect();
-    assert_eq!(slab.len(), 4);
-    assert_eq!(slab.insert(()), 4);
-    assert_eq!(slab.insert(()), 1);
-    assert_eq!(slab.insert(()), 6);
-}
-
 #[test]
 fn clear() {
     let mut slab = Slab::new();
@@ -443,7 +413,9 @@ fn clear() {
 
     // clear full
     slab.clear();
-    assert!(slab.is_empty());
+
+    let vals: Vec<_> = slab.iter().map(|(_, r)| *r).collect();
+    assert!(vals.is_empty());
 
     assert_eq!(0, slab.len());
     assert_eq!(4, slab.capacity());
@@ -457,7 +429,9 @@ fn clear() {
 
     // clear half-filled
     slab.clear();
-    assert!(slab.is_empty());
+
+    let vals: Vec<_> = slab.iter().map(|(_, r)| *r).collect();
+    assert!(vals.is_empty());
 }
 
 #[test]
@@ -684,15 +658,4 @@ fn drain_rev() {
 
     let vals: Vec<u64> = slab.drain().rev().collect();
     assert_eq!(vals, (0..9).rev().collect::<Vec<u64>>());
-}
-
-#[test]
-fn try_remove() {
-    let mut slab = Slab::new();
-
-    let key = slab.insert(1);
-
-    assert_eq!(slab.try_remove(key), Some(1));
-    assert_eq!(slab.try_remove(key), None);
-    assert_eq!(slab.get(key), None);
 }

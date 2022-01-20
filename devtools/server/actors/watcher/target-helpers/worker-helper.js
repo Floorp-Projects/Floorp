@@ -29,7 +29,7 @@ async function createTargets(watcher) {
       .instantiateWorkerTargets({
         watcherActorID: watcher.actorID,
         connectionPrefix: watcher.conn.prefix,
-        sessionContext: watcher.sessionContext,
+        context: watcher.context,
         sessionData: watcher.sessionData,
       });
     promises.push(promise);
@@ -61,7 +61,7 @@ async function destroyTargets(watcher) {
 
     windowActor.destroyWorkerTargets({
       watcherActorID: watcher.actorID,
-      sessionContext: watcher.sessionContext,
+      context: watcher.context,
     });
   }
 }
@@ -84,7 +84,7 @@ async function addSessionDataEntry({ watcher, type, entries }) {
       .getActor(DEVTOOLS_WORKER_JS_WINDOW_ACTOR_NAME)
       .addSessionDataEntry({
         watcherActorID: watcher.actorID,
-        sessionContext: watcher.sessionContext,
+        context: watcher.context,
         type,
         entries,
       });
@@ -106,7 +106,7 @@ function removeSessionDataEntry({ watcher, type, entries }) {
       .getActor(DEVTOOLS_WORKER_JS_WINDOW_ACTOR_NAME)
       .removeSessionDataEntry({
         watcherActorID: watcher.actorID,
-        sessionContext: watcher.sessionContext,
+        context: watcher.context,
         type,
         entries,
       });

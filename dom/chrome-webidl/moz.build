@@ -33,7 +33,6 @@ with Files("Glean*.webidl"):
 
 PREPROCESSED_WEBIDL_FILES = [
     "ChromeUtils.webidl",
-    "IOUtils.webidl",
 ]
 
 WEBIDL_FILES = [
@@ -51,6 +50,7 @@ WEBIDL_FILES = [
     "FrameLoader.webidl",
     "HeapSnapshot.webidl",
     "InspectorUtils.webidl",
+    "IOUtils.webidl",
     "IteratorResult.webidl",
     "JSActor.webidl",
     "JSProcessActor.webidl",

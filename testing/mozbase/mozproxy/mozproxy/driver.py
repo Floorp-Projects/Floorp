@@ -81,12 +81,6 @@ def main():
         default=False,
         help="Run this locally (i.e. not in production).",
     )
-    parser.add_argument(
-        "--deterministic",
-        action="store_true",
-        default=False,
-        help="Enable or disable inject_deterministic script when recording.",
-    )
 
     mozlog.commandline.add_logging_group(parser)
 
@@ -150,7 +144,6 @@ def main():
                     "app": args.app,
                     "local_profile_dir": args.profiledir,
                     "verbose": args.verbose,
-                    "inject_deterministic": args.deterministic,
                 }
             )
         LOG.info("Proxy settings %s" % proxy_service)

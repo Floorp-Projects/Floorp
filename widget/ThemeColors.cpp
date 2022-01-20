@@ -9,9 +9,9 @@
 #include "mozilla/StaticPrefs_widget.h"
 #include "ThemeDrawing.h"
 
+using namespace mozilla;
 using namespace mozilla::gfx;
-
-namespace mozilla::widget {
+using namespace mozilla::widget;
 
 struct ColorPalette {
   ColorPalette(nscolor aAccent, nscolor aForeground);
@@ -231,5 +231,3 @@ nscolor ThemeColors::AdjustUnthemedScrollbarThumbColor(nscolor aFaceColor,
   }
   return RelativeLuminanceUtils::Adjust(aFaceColor, luminance);
 }
-
-}  // namespace mozilla::widget

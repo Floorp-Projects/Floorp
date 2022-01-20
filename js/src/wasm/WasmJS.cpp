@@ -269,6 +269,7 @@ bool wasm::IonDisabledByFeatures(JSContext* cx, bool* isDisabled,
   bool debug = WasmDebuggerActive(cx);
   bool functionReferences = WasmFunctionReferencesFlag(cx);
   bool gc = WasmGcFlag(cx);
+  bool exn = WasmExceptionsFlag(cx);
   if (reason) {
     char sep = 0;
     if (debug && !Append(reason, "debug", &sep)) {
@@ -280,8 +281,11 @@ bool wasm::IonDisabledByFeatures(JSContext* cx, bool* isDisabled,
     if (gc && !Append(reason, "gc", &sep)) {
       return false;
     }
+    if (exn && !Append(reason, "exceptions", &sep)) {
+      return false;
+    }
   }
-  *isDisabled = debug || functionReferences || gc;
+  *isDisabled = debug || functionReferences || gc || exn;
   return true;
 }
 
@@ -566,7 +570,7 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
 
         // Checks whether the signature of the imported exception object matches
         // the signature declared in the exception import's TagDesc.
-        if (obj->resultType() != tags[index].type.resultType()) {
+        if (obj->resultType() != tags[index].resultType()) {
           JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                    JSMSG_WASM_BAD_TAG_SIG, import.module.get(),
                                    import.field.get());
@@ -1063,7 +1067,8 @@ static JSObject* GetWasmConstructorPrototype(JSContext* cx,
 }
 
 static JSString* UTF8CharsToString(JSContext* cx, const char* chars) {
-  return NewStringCopyUTF8Z(cx, JS::ConstUTF8CharsZ(chars, strlen(chars)));
+  return NewStringCopyUTF8Z<CanGC>(cx,
+                                   JS::ConstUTF8CharsZ(chars, strlen(chars)));
 }
 
 [[nodiscard]] static bool ParseValTypes(JSContext* cx, HandleValue src,
@@ -1233,6 +1238,7 @@ static JSObject* GlobalTypeToObject(JSContext* cx, ValType type,
                                       GenericObject);
 }
 
+#  ifdef ENABLE_WASM_EXCEPTIONS
 static JSObject* TagTypeToObject(JSContext* cx,
                                  const wasm::ValTypeVector& params) {
   Rooted<IdValueVector> props(cx, IdValueVector(cx));
@@ -1248,6 +1254,8 @@ static JSObject* TagTypeToObject(JSContext* cx,
   return NewPlainObjectWithProperties(cx, props.begin(), props.length(),
                                       GenericObject);
 }
+#  endif  // ENABLE_WASM_EXCEPTIONS
+
 #endif  // ENABLE_WASM_TYPE_REFLECTIONS
 
 // ============================================================================
@@ -3070,7 +3078,7 @@ WasmTableObject* WasmTableObject::create(JSContext* cx, uint32_t initialLength,
   MOZ_ASSERT(obj->isNewborn());
 
   TableDesc td(tableType, initialLength, maximumLength, /*isAsmJS*/ false,
-               /*isImportedOrExported=*/true);
+               /*importedOrExported=*/true);
 
   SharedTable table = Table::create(cx, td, obj);
   if (!table) {
@@ -3412,8 +3420,18 @@ bool WasmTableObject::fillRange(JSContext* cx, uint32_t index, uint32_t length,
 #ifdef DEBUG
 void WasmTableObject::assertRangeNull(uint32_t index, uint32_t length) const {
   Table& tab = table();
-  for (uint32_t i = index; i < index + length; i++) {
-    MOZ_ASSERT(tab.isNull(i));
+  switch (tab.repr()) {
+    case TableRepr::Func:
+      for (uint32_t i = index; i < index + length; i++) {
+        MOZ_ASSERT(tab.getFuncRef(i).tls == nullptr);
+        MOZ_ASSERT(tab.getFuncRef(i).code == nullptr);
+      }
+      break;
+    case TableRepr::Ref:
+      for (uint32_t i = index; i < index + length; i++) {
+        MOZ_ASSERT(tab.getAnyRef(i).isNull());
+      }
+      break;
   }
 }
 #endif

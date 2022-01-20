@@ -5,6 +5,7 @@
 )]
 
 use indoc::indoc;
+use serde::serde_if_integer128;
 use serde_derive::{Deserialize, Serialize};
 use serde_yaml::Value;
 use std::collections::BTreeMap;
@@ -44,7 +45,7 @@ fn test_int() {
         ---
         256
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
 #[test]
@@ -54,7 +55,7 @@ fn test_int_max_u64() {
         ---
         18446744073709551615
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
 #[test]
@@ -64,7 +65,7 @@ fn test_int_min_i64() {
         ---
         -9223372036854775808
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
 #[test]
@@ -74,27 +75,29 @@ fn test_int_max_i64() {
         ---
         9223372036854775807
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
-#[test]
-fn test_i128_small() {
-    let thing: i128 = -256;
-    let yaml = indoc! {"
-        ---
-        -256
-    "};
-    test_serde(&thing, yaml);
-}
+serde_if_integer128! {
+    #[test]
+    fn test_i128_small() {
+        let thing: i128 = -256;
+        let yaml = indoc! {"
+            ---
+            -256
+        "};
+        test_serde(&thing, &yaml);
+    }
 
-#[test]
-fn test_u128_small() {
-    let thing: u128 = 256;
-    let yaml = indoc! {"
-        ---
-        256
-    "};
-    test_serde(&thing, yaml);
+    #[test]
+    fn test_u128_small() {
+        let thing: u128 = 256;
+        let yaml = indoc! {"
+            ---
+            256
+        "};
+        test_serde(&thing, &yaml);
+    }
 }
 
 #[test]
@@ -104,67 +107,35 @@ fn test_float() {
         ---
         25.6
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 
     let thing = 25.;
     let yaml = indoc! {"
         ---
         25.0
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 
     let thing = f64::INFINITY;
     let yaml = indoc! {"
         ---
         .inf
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 
     let thing = f64::NEG_INFINITY;
     let yaml = indoc! {"
         ---
         -.inf
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 
-    let float: f64 = serde_yaml::from_str(indoc! {"
+    let float: f64 = serde_yaml::from_str(&indoc! {"
         ---
         .nan
     "})
     .unwrap();
     assert!(float.is_nan());
-}
-
-#[test]
-fn test_float32() {
-    let thing: f32 = 25.6;
-    let yaml = indoc! {"
-        ---
-        25.6
-    "};
-    test_serde(&thing, yaml);
-
-    let thing = f32::INFINITY;
-    let yaml = indoc! {"
-        ---
-        .inf
-    "};
-    test_serde(&thing, yaml);
-
-    let thing = f32::NEG_INFINITY;
-    let yaml = indoc! {"
-        ---
-        -.inf
-    "};
-    test_serde(&thing, yaml);
-
-    let single_float: f32 = serde_yaml::from_str(indoc! {"
-        ---
-        .nan
-    "})
-    .unwrap();
-    assert!(single_float.is_nan());
-
 }
 
 #[test]
@@ -176,7 +147,7 @@ fn test_vec() {
         - 2
         - 3
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
 #[test]
@@ -189,7 +160,7 @@ fn test_map() {
         x: 1
         y: 2
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
 #[test]
@@ -211,7 +182,7 @@ fn test_basic_struct() {
         y: "hi\tquoted"
         z: true
     "#};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
 #[test]
@@ -226,7 +197,7 @@ fn test_nested_vec() {
           - 5
           - 6
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
 #[test]
@@ -247,7 +218,7 @@ fn test_nested_struct() {
         inner:
           v: 512
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
 #[test]
@@ -259,7 +230,7 @@ fn test_option() {
         - ~
         - 3
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
 #[test]
@@ -270,7 +241,7 @@ fn test_unit() {
         - ~
         - ~
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
 #[test]
@@ -285,7 +256,7 @@ fn test_unit_variant() {
         ---
         First
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
 #[test]
@@ -301,7 +272,7 @@ fn test_newtype_struct() {
         ---
         v: 1
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
 #[test]
@@ -315,7 +286,7 @@ fn test_newtype_variant() {
         ---
         Size: 127
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
 #[test]
@@ -332,7 +303,7 @@ fn test_tuple_variant() {
           - 64
           - 96
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
 #[test]
@@ -353,7 +324,7 @@ fn test_struct_variant() {
           g: 64
           b: 96
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
 #[test]
@@ -388,7 +359,7 @@ fn test_value() {
           - s
           - {}
     "};
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }
 
 #[test]
@@ -418,5 +389,5 @@ fn test_mapping() {
           b: bar
     "};
 
-    test_serde(&thing, yaml);
+    test_serde(&thing, &yaml);
 }

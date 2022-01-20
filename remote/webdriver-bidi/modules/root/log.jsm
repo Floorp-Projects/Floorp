@@ -56,10 +56,6 @@ class Log extends Module {
         throw new Error(`Unsupported event for log module ${params.event}`);
     }
   }
-
-  static get supportedEvents() {
-    return ["log.entryAdded"];
-  }
 }
 
 const log = Log;

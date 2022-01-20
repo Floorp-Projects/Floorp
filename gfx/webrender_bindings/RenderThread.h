@@ -375,9 +375,6 @@ class RenderThread final {
   // callback. On device reset we have to remove all GL related resources right
   // away.
   std::list<RefPtr<RenderTextureHost>> mRenderTexturesDeferred;
-
-  RefPtr<nsIRunnable> mRenderTextureOpsRunnable;
-
   bool mHasShutdown;
 
   bool mHandlingDeviceReset;

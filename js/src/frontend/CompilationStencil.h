@@ -47,7 +47,6 @@ class JSString;
 
 namespace js {
 
-class AtomSet;
 class JSONPrinter;
 class ModuleObject;
 
@@ -529,8 +528,6 @@ struct CompilationAtomCache {
   bool hasAtomAt(ParserAtomIndex index) const;
   bool setAtomAt(JSContext* cx, ParserAtomIndex index, JSString* atom);
   bool allocate(JSContext* cx, size_t length);
-
-  bool empty() const { return atoms_.empty(); }
 
   void stealBuffer(AtomCacheVector& atoms);
   void releaseBuffer(AtomCacheVector& atoms);
@@ -1125,8 +1122,8 @@ struct CompilationStencil {
       CompilationGCOutput& gcOutput);
 
   // Decode the special self-hosted stencil
-  [[nodiscard]] bool instantiateSelfHostedAtoms(
-      JSContext* cx, AtomSet& atomSet, CompilationAtomCache& atomCache) const;
+  [[nodiscard]] bool instantiateSelfHostedForRuntime(
+      JSContext* cx, CompilationAtomCache& atomCache) const;
   [[nodiscard]] JSScript* instantiateSelfHostedTopLevelForRealm(
       JSContext* cx, CompilationInput& input);
   [[nodiscard]] JSFunction* instantiateSelfHostedLazyFunction(
@@ -1149,13 +1146,6 @@ struct CompilationStencil {
   CompilationStencil(CompilationStencil&&) = delete;
   CompilationStencil& operator=(const CompilationStencil&) = delete;
   CompilationStencil& operator=(CompilationStencil&&) = delete;
-#ifdef DEBUG
-  ~CompilationStencil() {
-    // We can mix UniquePtr<..> and RefPtr<..>. This asserts that a UniquePtr
-    // does not delete a reference-counted stencil.
-    MOZ_ASSERT(!refCount);
-  }
-#endif
 
   static inline ScriptStencilIterable functionScriptStencils(
       const CompilationStencil& stencil, CompilationGCOutput& gcOutput);
@@ -1170,18 +1160,6 @@ struct CompilationStencil {
   }
 
   bool isModule() const;
-
-  bool hasMultipleReference() const { return refCount > 1; }
-
-  bool hasOwnedBorrow() const {
-    return storageType == StorageType::OwnedExtensible;
-  }
-
-  ExtensibleCompilationStencil* takeOwnedBorrow() {
-    MOZ_ASSERT(!hasMultipleReference());
-    MOZ_ASSERT(hasOwnedBorrow());
-    return ownedBorrowStencil.release();
-  }
 
 #ifdef DEBUG
   void assertNoExternalDependency() const;
@@ -1241,8 +1219,6 @@ struct ExtensibleCompilationStencil {
 
   RefPtr<StencilAsmJSContainer> asmJS;
 
-  explicit ExtensibleCompilationStencil(JSContext* cx, ScriptSource* source);
-
   ExtensibleCompilationStencil(JSContext* cx, CompilationInput& input);
 
   ExtensibleCompilationStencil(ExtensibleCompilationStencil&& other) noexcept
@@ -1301,7 +1277,7 @@ struct ExtensibleCompilationStencil {
   }
 
   // Steal CompilationStencil content.
-  [[nodiscard]] bool steal(JSContext* cx, RefPtr<CompilationStencil>&& other);
+  [[nodiscard]] bool steal(JSContext* cx, CompilationStencil&& other);
 
   bool isModule() const;
 

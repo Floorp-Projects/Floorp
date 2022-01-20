@@ -15,7 +15,7 @@ namespace mozilla {
 namespace gmp {
 
 [RefCounted, NeedsOtherPid]
-sync protocol PGMPContent
+intr protocol PGMPContent
 {
   manages PGMPVideoDecoder;
   manages PGMPVideoEncoder;

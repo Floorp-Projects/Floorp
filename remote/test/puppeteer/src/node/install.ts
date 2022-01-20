@@ -15,16 +15,11 @@
  */
 
 import os from 'os';
-import https, { RequestOptions } from 'https';
+import https from 'https';
 import ProgressBar from 'progress';
-import URL from 'url';
 import puppeteer from '../node.js';
 import { PUPPETEER_REVISIONS } from '../revisions.js';
 import { PuppeteerNode } from './Puppeteer.js';
-import createHttpsProxyAgent, {
-  HttpsProxyAgentOptions,
-} from 'https-proxy-agent';
-import { getProxyForUrl } from 'proxy-from-env';
 
 const supportedProducts = {
   chrome: 'Chromium',
@@ -153,32 +148,16 @@ export async function downloadBrowser(): Promise<void> {
   }
 
   function getFirefoxNightlyVersion() {
-    const firefoxVersionsUrl =
+    const firefoxVersions =
       'https://product-details.mozilla.org/1.0/firefox_versions.json';
-
-    const proxyURL = getProxyForUrl(firefoxVersionsUrl);
-
-    const requestOptions: RequestOptions = {};
-
-    if (proxyURL) {
-      const parsedProxyURL = URL.parse(proxyURL);
-
-      const proxyOptions = {
-        ...parsedProxyURL,
-        secureProxy: parsedProxyURL.protocol === 'https:',
-      } as HttpsProxyAgentOptions;
-
-      requestOptions.agent = createHttpsProxyAgent(proxyOptions);
-      requestOptions.rejectUnauthorized = false;
-    }
 
     const promise = new Promise((resolve, reject) => {
       let data = '';
       logPolitely(
-        `Requesting latest Firefox Nightly version from ${firefoxVersionsUrl}`
+        `Requesting latest Firefox Nightly version from ${firefoxVersions}`
       );
       https
-        .get(firefoxVersionsUrl, requestOptions, (r) => {
+        .get(firefoxVersions, (r) => {
           if (r.statusCode >= 400)
             return reject(new Error(`Got status code ${r.statusCode}`));
           r.on('data', (chunk) => {

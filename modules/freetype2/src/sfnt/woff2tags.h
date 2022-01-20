@@ -2,7 +2,7 @@
  *
  * woff2tags.h
  *
- *   WOFF2 Font table tags (specification).
+ *   WOFFF2 Font table tags (specification).
  *
  * Copyright (C) 2019-2021 by
  * Nikhil Ramakrishnan, David Turner, Robert Wilhelm, and Werner Lemberg.
@@ -26,12 +26,10 @@
 
 FT_BEGIN_HEADER
 
-#ifdef FT_CONFIG_OPTION_USE_BROTLI
 
-  FT_LOCAL( FT_Tag )
+  FT_LOCAL( FT_ULong )
   woff2_known_tags( FT_Byte  index );
 
-#endif
 
 FT_END_HEADER
 

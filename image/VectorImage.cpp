@@ -481,13 +481,8 @@ VectorImage::RequestRefresh(const TimeStamp& aTime) {
     return;
   }
 
-  Document* doc = mSVGDocumentWrapper->GetDocument();
-  if (!doc) {
-    // We are racing between shutdown and a refresh.
-    return;
-  }
-
-  PendingAnimationTracker* tracker = doc->GetPendingAnimationTracker();
+  PendingAnimationTracker* tracker =
+      mSVGDocumentWrapper->GetDocument()->GetPendingAnimationTracker();
   if (tracker && ShouldAnimate()) {
     tracker->TriggerPendingAnimationsOnNextTick(aTime);
   }

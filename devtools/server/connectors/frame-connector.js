@@ -38,12 +38,7 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
  * @return object
  *         A promise object that is resolved once the connection is established.
  */
-function connectToFrame(
-  connection,
-  frame,
-  onDestroy,
-  { addonId, addonBrowsingContextGroupId } = {}
-) {
+function connectToFrame(connection, frame, onDestroy, { addonId } = {}) {
   return new Promise(resolve => {
     // Get messageManager from XUL browser (which might be a specialized tunnel for RDM)
     // or else fallback to asking the frameLoader itself.
@@ -276,11 +271,7 @@ function connectToFrame(
     // when user unplug the device or we lose the connection somehow.
     EventEmitter.on(connection, "closed", destroy);
 
-    mm.sendAsyncMessage("debug:connect", {
-      prefix,
-      addonId,
-      addonBrowsingContextGroupId,
-    });
+    mm.sendAsyncMessage("debug:connect", { prefix, addonId });
   });
 }
 

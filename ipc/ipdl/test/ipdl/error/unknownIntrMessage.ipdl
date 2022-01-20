@@ -2,5 +2,5 @@
 
 intr protocol unknownIntrMessage {
 parent:
-    [LegacyIntr] intr Msg();
+    intr Msg();
 };

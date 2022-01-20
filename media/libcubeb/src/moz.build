@@ -77,7 +77,6 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     DEFINES['USE_WASAPI'] = True
     OS_LIBS += [
       "avrt",
-      "ksuser",
     ]
     if CONFIG['CC_TYPE'] == 'clang-cl':
         CXXFLAGS += ['-Wno-macro-redefined'] # '_USE_MATH_DEFINES' : macro redefinition
@@ -92,9 +91,7 @@ if CONFIG['OS_TARGET'] == 'Android':
 
 FINAL_LIBRARY = 'gkmedias'
 
-if CONFIG['MOZ_ALSA']:
-    CFLAGS += CONFIG['MOZ_ALSA_CFLAGS']
-
+CFLAGS += CONFIG['MOZ_ALSA_CFLAGS']
 CFLAGS += CONFIG['MOZ_JACK_CFLAGS']
 CFLAGS += CONFIG['MOZ_PULSEAUDIO_CFLAGS']
 

@@ -10,8 +10,9 @@ use crate::selector_map::{
     MaybeCaseInsensitiveHashMap, PrecomputedHashMap, SelectorMap, SelectorMapEntry,
 };
 use crate::selector_parser::SelectorImpl;
-use crate::AllocErr;
-use crate::{Atom, LocalName, Namespace, ShrinkIfNeeded};
+use crate::{Atom, LocalName, Namespace};
+use fallible::FallibleVec;
+use hashglobe::FailedAllocationError;
 use selectors::attr::NamespaceConstraint;
 use selectors::parser::{Combinator, Component};
 use selectors::parser::{Selector, SelectorIter};
@@ -237,21 +238,13 @@ impl InvalidationMap {
         self.other_attribute_affecting_selectors.clear();
     }
 
-    /// Shrink the capacity of hash maps if needed.
-    pub fn shrink_if_needed(&mut self) {
-        self.class_to_selector.shrink_if_needed();
-        self.id_to_selector.shrink_if_needed();
-        self.state_affecting_selectors.shrink_if_needed();
-        self.other_attribute_affecting_selectors.shrink_if_needed();
-    }
-
     /// Adds a selector to this `InvalidationMap`.  Returns Err(..) to
     /// signify OOM.
     pub fn note_selector(
         &mut self,
         selector: &Selector<SelectorImpl>,
         quirks_mode: QuirksMode,
-    ) -> Result<(), AllocErr> {
+    ) -> Result<(), FailedAllocationError> {
         debug!("InvalidationMap::note_selector({:?})", selector);
 
         let mut document_state = DocumentState::empty();
@@ -281,8 +274,7 @@ impl InvalidationMap {
                 state: document_state,
                 dependency: Dependency::for_full_selector_invalidation(selector.clone()),
             };
-            self.document_state_selectors.try_reserve(1)?;
-            self.document_state_selectors.push(dep);
+            self.document_state_selectors.try_push(dep)?;
         }
 
         Ok(())
@@ -333,7 +325,7 @@ struct SelectorDependencyCollector<'a> {
     compound_state: PerCompoundState,
 
     /// The allocation error, if we OOM.
-    alloc_error: &'a mut Option<AllocErr>,
+    alloc_error: &'a mut Option<FailedAllocationError>,
 }
 
 impl<'a> SelectorDependencyCollector<'a> {
@@ -369,7 +361,7 @@ impl<'a> SelectorDependencyCollector<'a> {
                     self.quirks_mode,
                 );
                 if let Err(alloc_error) = result {
-                    *self.alloc_error = Some(alloc_error.into());
+                    *self.alloc_error = Some(alloc_error);
                     return false;
                 }
             }
@@ -386,17 +378,21 @@ impl<'a> SelectorDependencyCollector<'a> {
         let dependency = self.dependency();
 
         let map = &mut self.map.other_attribute_affecting_selectors;
-        if let Err(err) = map.try_reserve(1) {
-            *self.alloc_error = Some(err.into());
-            return false;
+        let entry = match map.try_entry(name) {
+            Ok(entry) => entry,
+            Err(err) => {
+                *self.alloc_error = Some(err);
+                return false;
+            },
+        };
+
+        match entry.or_insert_with(SmallVec::new).try_push(dependency) {
+            Ok(..) => true,
+            Err(err) => {
+                *self.alloc_error = Some(err);
+                return false;
+            },
         }
-        let vec = map.entry(name).or_default();
-        if let Err(err) = vec.try_reserve(1) {
-            *self.alloc_error = Some(err.into());
-            return false;
-        }
-        vec.push(dependency);
-        true
     }
 
     fn dependency(&self) -> Dependency {
@@ -485,17 +481,17 @@ impl<'a> SelectorVisitor for SelectorDependencyCollector<'a> {
                 let entry = match map.try_entry(atom.0.clone(), self.quirks_mode) {
                     Ok(entry) => entry,
                     Err(err) => {
-                        *self.alloc_error = Some(err.into());
+                        *self.alloc_error = Some(err);
                         return false;
                     },
                 };
-                let vec = entry.or_insert_with(SmallVec::new);
-                if let Err(err) = vec.try_reserve(1) {
-                    *self.alloc_error = Some(err.into());
-                    return false;
+                match entry.or_insert_with(SmallVec::new).try_push(dependency) {
+                    Ok(..) => true,
+                    Err(err) => {
+                        *self.alloc_error = Some(err);
+                        return false;
+                    },
                 }
-                vec.push(dependency);
-                true
             },
             Component::NonTSPseudoClass(ref pc) => {
                 self.compound_state.element_state |= pc.state_flag();

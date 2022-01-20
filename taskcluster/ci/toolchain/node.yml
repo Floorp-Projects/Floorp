@@ -94,9 +94,7 @@ win32-node-12:
     treeherder:
         symbol: TW32(node-12)
     run:
-        toolchain-alias:
-            - win32-node
-            - win64-aarch64-node
+        toolchain-alias: win32-node
     fetches:
         fetch:
             - nodejs-12-win32

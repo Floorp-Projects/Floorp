@@ -8,11 +8,8 @@
  * Implementation of nsIFile for "unixy" systems.
  */
 
-#include "nsLocalFile.h"
-
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/FilePreferences.h"
@@ -35,7 +32,8 @@
 #  include <sys/xattr.h>
 #endif
 
-#if defined(USE_LINUX_QUOTACTL)
+#if defined(HAVE_SYS_QUOTA_H) && defined(HAVE_LINUX_QUOTA_H)
+#  define USE_LINUX_QUOTACTL
 #  include <sys/mount.h>
 #  include <sys/quota.h>
 #  include <sys/sysmacros.h>
@@ -51,6 +49,7 @@
 #include "nsIFile.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsLocalFile.h"
 #include "prproces.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsSimpleEnumerator.h"
@@ -917,7 +916,11 @@ nsLocalFile::CopyToNative(nsIFile* aNewParent, const nsACString& aNewName) {
 
 #if defined(XP_MACOSX)
     bool quarantined = true;
-    (void)HasXAttr("com.apple.quarantine"_ns, &quarantined);
+    if (getxattr(mPath.get(), "com.apple.quarantine", nullptr, 0, 0, 0) == -1) {
+      if (errno == ENOATTR) {
+        quarantined = false;
+      }
+    }
 #endif
 
     PRFileDesc* oldFD;
@@ -1003,7 +1006,7 @@ nsLocalFile::CopyToNative(nsIFile* aNewParent, const nsACString& aNewName) {
     else if (!quarantined) {
       // If the original file was not in quarantine, lift the quarantine that
       // file creation added because of LSFileQuarantineEnabled.
-      (void)newFile->DelXAttr("com.apple.quarantine"_ns);
+      removexattr(newPathName.get(), "com.apple.quarantine", 0);
     }
 #endif  // defined(XP_MACOSX)
 
@@ -1436,18 +1439,9 @@ static bool GetDeviceName(unsigned int aDeviceMajor, unsigned int aDeviceMinor,
 }
 #endif
 
-#if defined(USE_LINUX_QUOTACTL)
-template <typename StatInfoFunc, typename QuotaInfoFunc>
-nsresult nsLocalFile::GetDiskInfo(StatInfoFunc&& aStatInfoFunc,
-                                  QuotaInfoFunc&& aQuotaInfoFunc,
-                                  int64_t* aResult)
-#else
-template <typename StatInfoFunc>
-nsresult nsLocalFile::GetDiskInfo(StatInfoFunc&& aStatInfoFunc,
-                                  int64_t* aResult)
-#endif
-{
-  if (NS_WARN_IF(!aResult)) {
+NS_IMETHODIMP
+nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
+  if (NS_WARN_IF(!aDiskSpaceAvailable)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -1465,34 +1459,26 @@ nsresult nsLocalFile::GetDiskInfo(StatInfoFunc&& aStatInfoFunc,
    * F_BSIZE = block size on disk.
    * f_bavail = number of free blocks available to a non-superuser.
    * f_bfree = number of total free blocks in file system.
-   * f_blocks = number of total used or free blocks in file system.
    */
 
   if (STATFS(mPath.get(), &fs_buf) < 0) {
     // The call to STATFS failed.
 #  ifdef DEBUG
-    printf("ERROR: GetDiskInfo: STATFS call FAILED. \n");
+    printf("ERROR: GetDiskSpaceAvailable: STATFS call FAILED. \n");
 #  endif
     return NS_ERROR_FAILURE;
   }
 
-  CheckedInt64 checkedResult;
-
-  checkedResult = std::forward<StatInfoFunc>(aStatInfoFunc)(fs_buf);
-  if (!checkedResult.isValid()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aResult = checkedResult.value();
+  *aDiskSpaceAvailable = (int64_t)fs_buf.F_BSIZE * fs_buf.f_bavail;
 
 #  ifdef DEBUG_DISK_SPACE
-  printf("DiskInfo: %lu bytes\n", *aResult);
+  printf("DiskSpaceAvailable: %lu bytes\n", *aDiskSpaceAvailable);
 #  endif
 
 #  if defined(USE_LINUX_QUOTACTL)
 
   if (!FillStatCache()) {
-    // Return info from statfs
+    // Return available size from statfs
     return NS_OK;
   }
 
@@ -1509,13 +1495,13 @@ nsresult nsLocalFile::GetDiskInfo(StatInfoFunc&& aStatInfoFunc,
       && dq.dqb_valid & QIF_BLIMITS
 #    endif
       && dq.dqb_bhardlimit) {
-    checkedResult = std::forward<QuotaInfoFunc>(aQuotaInfoFunc)(dq);
-    if (!checkedResult.isValid()) {
-      return NS_ERROR_FAILURE;
-    }
-
-    if (checkedResult.value() < *aResult) {
-      *aResult = checkedResult.value();
+    int64_t QuotaSpaceAvailable = 0;
+    // dqb_bhardlimit is count of BLOCK_SIZE blocks, dqb_curspace is bytes
+    if ((BLOCK_SIZE * dq.dqb_bhardlimit) > dq.dqb_curspace)
+      QuotaSpaceAvailable =
+          int64_t(BLOCK_SIZE * dq.dqb_bhardlimit - dq.dqb_curspace);
+    if (QuotaSpaceAvailable < *aDiskSpaceAvailable) {
+      *aDiskSpaceAvailable = QuotaSpaceAvailable;
     }
   }
 #  endif
@@ -1525,52 +1511,20 @@ nsresult nsLocalFile::GetDiskInfo(StatInfoFunc&& aStatInfoFunc,
 #else
   /*
    * This platform doesn't have statfs or statvfs.  I'm sure that there's
-   * a way to check for free disk space and disk capacity on platforms that
-   * don't have statfs (I'm SURE they have df, for example).
+   * a way to check for free disk space on platforms that don't have statfs
+   * (I'm SURE they have df, for example).
    *
    * Until we figure out how to do that, lets be honest and say that this
    * command isn't implemented properly for these platforms yet.
    */
 #  ifdef DEBUG
-  printf("ERROR: GetDiskInfo: Not implemented for plaforms without statfs.\n");
+  printf(
+      "ERROR: GetDiskSpaceAvailable: Not implemented for plaforms without "
+      "statfs.\n");
 #  endif
   return NS_ERROR_NOT_IMPLEMENTED;
 
 #endif /* STATFS */
-}
-
-NS_IMETHODIMP
-nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
-  return GetDiskInfo(
-      [](const struct STATFS& aStatInfo) {
-        return aStatInfo.f_bavail * static_cast<uint64_t>(aStatInfo.F_BSIZE);
-      },
-#if defined(USE_LINUX_QUOTACTL)
-      [](const struct dqblk& aQuotaInfo) -> uint64_t {
-        // dqb_bhardlimit is count of BLOCK_SIZE blocks, dqb_curspace is bytes
-        const uint64_t hardlimit = aQuotaInfo.dqb_bhardlimit * BLOCK_SIZE;
-        if (hardlimit > aQuotaInfo.dqb_curspace) {
-          return hardlimit - aQuotaInfo.dqb_curspace;
-        }
-        return 0;
-      },
-#endif
-      aDiskSpaceAvailable);
-}
-
-NS_IMETHODIMP
-nsLocalFile::GetDiskCapacity(int64_t* aDiskCapacity) {
-  return GetDiskInfo(
-      [](const struct STATFS& aStatInfo) {
-        return aStatInfo.f_blocks * static_cast<uint64_t>(aStatInfo.F_BSIZE);
-      },
-#if defined(USE_LINUX_QUOTACTL)
-      [](const struct dqblk& aQuotaInfo) {
-        // dqb_bhardlimit is count of BLOCK_SIZE blocks
-        return aQuotaInfo.dqb_bhardlimit * BLOCK_SIZE;
-      },
-#endif
-      aDiskCapacity);
 }
 
 NS_IMETHODIMP
@@ -2276,86 +2230,6 @@ nsresult NS_NewLocalFile(const nsAString& aPath, bool aFollowLinks,
 // nsILocalFileMac
 
 #ifdef MOZ_WIDGET_COCOA
-
-NS_IMETHODIMP
-nsLocalFile::HasXAttr(const nsACString& aAttrName, bool* aHasAttr) {
-  NS_ENSURE_ARG_POINTER(aHasAttr);
-
-  nsAutoCString attrName{aAttrName};
-
-  ssize_t size = getxattr(mPath.get(), attrName.get(), nullptr, 0, 0, 0);
-  if (size == -1) {
-    if (errno == ENOATTR) {
-      *aHasAttr = false;
-    } else {
-      return NSRESULT_FOR_ERRNO();
-    }
-  } else {
-    *aHasAttr = true;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLocalFile::GetXAttr(const nsACString& aAttrName,
-                      nsTArray<uint8_t>& aAttrValue) {
-  aAttrValue.Clear();
-
-  nsAutoCString attrName{aAttrName};
-
-  ssize_t size = getxattr(mPath.get(), attrName.get(), nullptr, 0, 0, 0);
-
-  if (size == -1) {
-    return NSRESULT_FOR_ERRNO();
-  }
-
-  for (;;) {
-    aAttrValue.SetCapacity(size);
-
-    // The attribute can change between our first call and this call, so we need
-    // to re-check the size and possibly call with a larger buffer.
-    ssize_t newSize = getxattr(mPath.get(), attrName.get(),
-                               aAttrValue.Elements(), size, 0, 0);
-    if (newSize == -1) {
-      return NSRESULT_FOR_ERRNO();
-    }
-
-    if (newSize <= size) {
-      aAttrValue.SetLength(newSize);
-      break;
-    } else {
-      size = newSize;
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLocalFile::SetXAttr(const nsACString& aAttrName,
-                      const nsTArray<uint8_t>& aAttrValue) {
-  nsAutoCString attrName{aAttrName};
-
-  if (setxattr(mPath.get(), attrName.get(), aAttrValue.Elements(),
-               aAttrValue.Length(), 0, 0) == -1) {
-    return NSRESULT_FOR_ERRNO();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLocalFile::DelXAttr(const nsACString& aAttrName) {
-  nsAutoCString attrName{aAttrName};
-
-  // Ignore removing an attribute that does not exist.
-  if (removexattr(mPath.get(), attrName.get(), 0) == -1) {
-    return NSRESULT_FOR_ERRNO();
-  }
-
-  return NS_OK;
-}
 
 static nsresult MacErrorMapper(OSErr inErr) {
   nsresult outErr;

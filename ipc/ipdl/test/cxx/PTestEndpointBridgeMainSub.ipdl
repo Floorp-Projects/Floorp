@@ -12,12 +12,12 @@ namespace _ipdltest {
 intr protocol PTestEndpointBridgeMainSub {
 child:
   async Hi();
-  [LegacyIntr] intr HiRpc();
+  intr HiRpc();
 
 parent:
   async Hello();
   sync HelloSync();
-  [LegacyIntr] intr HelloRpc();
+  intr HelloRpc();
 };
 
 

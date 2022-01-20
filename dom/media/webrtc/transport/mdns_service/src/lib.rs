@@ -204,14 +204,6 @@ fn handle_mdns_socket(
     hosts: &mut HashMap<String, Vec<u8>>,
     pending_queries: &mut HashMap<String, Query>,
 ) -> bool {
-
-    // Record a simple marker to see how often this is called.
-    gecko_profiler::add_untyped_marker(
-        "handle_mdns_socket",
-        gecko_profiler::gecko_profiler_category!(Network),
-        Default::default(),
-    );
-
     match socket.recv_from(&mut buffer) {
         Ok((amt, _)) => {
             if amt > 0 {
@@ -436,10 +428,8 @@ impl MDNSService {
             }
         }
 
-        let thread_name = "mdns_service";
-        let builder = thread::Builder::new().name(thread_name.into());
+        let builder = thread::Builder::new().name("mdns_service".to_string());
         self.handle = Some(builder.spawn(move || {
-            gecko_profiler::register_thread(thread_name);
             let mdns_addr = std::net::SocketAddr::from(([224, 0, 0, 251], port));
             let mut buffer: [u8; 1024] = [0; 1024];
             let mut hosts = HashMap::new();
@@ -513,7 +503,6 @@ impl MDNSService {
                     break;
                 }
             }
-            gecko_profiler::unregister_thread();
         })?);
 
         Ok(())

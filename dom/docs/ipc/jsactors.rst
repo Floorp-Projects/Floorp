@@ -218,7 +218,7 @@ Other things exposed on a JSWindowActorParent
 ``CanonicalBrowsingContext``
 ````````````````````````````
 
-Getter: ``this.browsingcontext``.
+TODO
 
 ``WindowGlobalParent``
 ``````````````````````

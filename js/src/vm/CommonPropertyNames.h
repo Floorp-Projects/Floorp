@@ -363,12 +363,10 @@
   MACRO_(objectNull, objectNull, "[object Null]")                              \
   MACRO_(objectNumber, objectNumber, "[object Number]")                        \
   MACRO_(objectObject, objectObject, "[object Object]")                        \
-  IF_RECORD_TUPLE(MACRO_(objectRecord, objectRecord, "[object Record]"))       \
   MACRO_(objectRegExp, objectRegExp, "[object RegExp]")                        \
   MACRO_(objects, objects, "objects")                                          \
   MACRO_(objectString, objectString, "[object String]")                        \
   MACRO_(objectSymbol, objectSymbol, "[object Symbol]")                        \
-  IF_RECORD_TUPLE(MACRO_(objectTuple, objectTuple, "[object Tuple]"))          \
   MACRO_(objectUndefined, objectUndefined, "[object Undefined]")               \
   MACRO_(Object_valueOf, Object_valueOf, "Object_valueOf")                     \
   MACRO2(of, of, "of")                                                         \
@@ -570,9 +568,7 @@
   MACRO_(number, number, "number")                                             \
   MACRO_(boolean, boolean, "boolean")                                          \
   MACRO_(symbol, symbol, "symbol")                                             \
-  MACRO_(bigint, bigint, "bigint")                                             \
-  IF_RECORD_TUPLE(MACRO_(record, record, "record"))                            \
-  IF_RECORD_TUPLE(MACRO_(tuple, tuple, "tuple"))
+  MACRO_(bigint, bigint, "bigint")
 
 #define PROPERTY_NAME_IGNORE(IDPART, ID, TEXT)
 

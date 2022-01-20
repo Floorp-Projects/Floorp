@@ -12,6 +12,12 @@ const NEW_TAB_URL = `data:text/html,<title>${NEW_TAB_TITLE}</title>`;
  * the specified URL.
  */
 add_task(async function() {
+  // Disable bfcache for Fission for now.
+  // If Fission is disabled, the pref is no-op.
+  await SpecialPowers.pushPrefEnv({
+    set: [["fission.bfcacheInParent", false]],
+  });
+
   const { document, tab, window } = await openAboutDebugging();
 
   info("Open a new background tab.");

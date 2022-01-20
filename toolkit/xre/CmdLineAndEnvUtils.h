@@ -228,9 +228,11 @@ inline void EnsureCommandlineSafe(int& aArgc, CharT** aArgv,
     if (!strimatch(osintLit, arg)) {
       exit(127);
     }
+    // Strip it:
+    RemoveArg(aArgc, aArgv + 1);
 
     // Now only an acceptable argument and a parameter for it should be left:
-    arg = aArgv[2];
+    arg = aArgv[1];
     if (*arg != '-'
 #ifdef XP_WIN
         && *arg != '/'
@@ -255,7 +257,7 @@ inline void EnsureCommandlineSafe(int& aArgc, CharT** aArgv,
       exit(127);
     }
     // The param that is passed afterwards shouldn't be another switch:
-    arg = aArgv[3];
+    arg = aArgv[2];
     if (*arg == '-'
 #ifdef XP_WIN
         || *arg == '/'

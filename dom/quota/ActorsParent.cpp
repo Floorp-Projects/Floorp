@@ -157,6 +157,16 @@
 #include "prthread.h"
 #include "prtime.h"
 
+#define DISABLE_ASSERTS_FOR_FUZZING 0
+
+#if DISABLE_ASSERTS_FOR_FUZZING
+#  define ASSERT_UNLESS_FUZZING(...) \
+    do {                             \
+    } while (0)
+#else
+#  define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
+#endif
+
 // As part of bug 1536596 in order to identify the remaining sources of
 // principal info inconsistencies, we have added anonymized crash logging and
 // are temporarily making these checks occur on both debug and optimized
@@ -1653,11 +1663,12 @@ class PersistOp final : public PersistRequestBase {
 };
 
 class EstimateOp final : public QuotaRequestBase {
-  const OriginMetadata mOriginMetadata;
-  std::pair<uint64_t, uint64_t> mUsageAndLimit;
+  nsCString mGroup;
+  uint64_t mUsage;
+  uint64_t mLimit;
 
  public:
-  explicit EstimateOp(const EstimateParams& aParams);
+  explicit EstimateOp(const RequestParams& aParams);
 
  private:
   ~EstimateOp() = default;
@@ -1990,6 +2001,9 @@ TimeStamp gLastOSWake;
 using NormalOriginOpArray =
     nsTArray<CheckedUnsafePtr<NormalOriginOperationBase>>;
 StaticAutoPtr<NormalOriginOpArray> gNormalOriginOps;
+
+// Constants for temporary storage limit computing.
+static const uint32_t kDefaultChunkSizeKB = 10 * 1024;
 
 void RegisterNormalOriginOp(NormalOriginOperationBase& aNormalOriginOp) {
   AssertIsOnBackgroundThread();
@@ -2653,8 +2667,8 @@ Result<nsCOMPtr<nsIBinaryInputStream>, nsresult> GetBinaryInputStream(
 }
 
 // This method computes and returns our best guess for the temporary storage
-// limit (in bytes), based on disk capacity.
-Result<uint64_t, nsresult> GetTemporaryStorageLimit(nsIFile& aStorageDir) {
+// limit (in bytes), based on available space.
+uint64_t GetTemporaryStorageLimit(uint64_t aAvailableSpaceBytes) {
   // The fixed limit pref can be used to override temporary storage limit
   // calculation.
   if (StaticPrefs::dom_quotaManager_temporaryStorage_fixedLimit() >= 0) {
@@ -2663,14 +2677,23 @@ Result<uint64_t, nsresult> GetTemporaryStorageLimit(nsIFile& aStorageDir) {
            1024;
   }
 
-  // Check for disk capacity of user's device on which storage directory lives.
-  QM_TRY_INSPECT(const int64_t& diskCapacity,
-                 MOZ_TO_RESULT_INVOKE_MEMBER(aStorageDir, GetDiskCapacity));
+  uint64_t availableSpaceKB = aAvailableSpaceBytes / 1024;
 
-  MOZ_ASSERT(diskCapacity >= 0);
+  // Prevent division by zero below.
+  uint32_t chunkSizeKB;
+  if (StaticPrefs::dom_quotaManager_temporaryStorage_chunkSize()) {
+    chunkSizeKB = StaticPrefs::dom_quotaManager_temporaryStorage_chunkSize();
+  } else {
+    chunkSizeKB = kDefaultChunkSizeKB;
+  }
 
-  // Allow temporary storage to consume up to 50% of disk capacity.
-  return diskCapacity / 2u;
+  // Grow/shrink in chunkSizeKB units, deliberately, so that in the common case
+  // we don't shrink temporary storage and evict origin data every time we
+  // initialize.
+  availableSpaceKB = (availableSpaceKB / chunkSizeKB) * chunkSizeKB;
+
+  // Allow temporary storage to consume up to half the available space.
+  return availableSpaceKB * .50 * 1024;
 }
 
 bool IsOriginUnaccessed(const FullOriginMetadata& aFullOriginMetadata,
@@ -6367,17 +6390,30 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
 
     QM_TRY(MOZ_TO_RESULT(storageDir->InitWithPath(GetStoragePath())));
 
-    // The storage directory must exist before calling GetTemporaryStorageLimit.
+    // The storage directory must exist before calling GetDiskSpaceAvailable.
     QM_TRY_INSPECT(const bool& created, EnsureDirectory(*storageDir));
 
     Unused << created;
 
-    QM_TRY_UNWRAP(mTemporaryStorageLimit,
-                  GetTemporaryStorageLimit(*storageDir));
+    // Check for available disk space users have on their device where storage
+    // directory lives.
+    QM_TRY_INSPECT(
+        const int64_t& diskSpaceAvailable,
+        MOZ_TO_RESULT_INVOKE_MEMBER(storageDir, GetDiskSpaceAvailable));
+
+    MOZ_ASSERT(diskSpaceAvailable >= 0);
 
     QM_TRY(MOZ_TO_RESULT(LoadQuota()));
 
     mTemporaryStorageInitialized = true;
+
+    // Available disk space shouldn't be used directly for temporary storage
+    // limit calculation since available disk space is affected by existing data
+    // stored in temporary storage. So we need to increase it by the temporary
+    // storage size (that has been calculated in LoadQuota) before passing to
+    // GetTemporaryStorageLimit.
+    mTemporaryStorageLimit = GetTemporaryStorageLimit(
+        /* aAvailableSpaceBytes */ diskSpaceAvailable + mTemporaryStorageUsage);
 
     CleanupTemporaryStorage();
 
@@ -6502,8 +6538,8 @@ uint64_t QuotaManager::GetGroupLimit() const {
   // To avoid one group evicting all the rest, limit the amount any one group
   // can use to 20% resp. a fifth. To prevent individual sites from using
   // exorbitant amounts of storage where there is a lot of free space, cap the
-  // group limit to 10GB.
-  const auto x = std::min<uint64_t>(mTemporaryStorageLimit / 5, 10 GB);
+  // group limit to 2GB.
+  const uint64_t x = std::min<uint64_t>(mTemporaryStorageLimit / 5, 2 GB);
 
   // In low-storage situations, make an exception (while not exceeding the total
   // storage limit).
@@ -6511,37 +6547,27 @@ uint64_t QuotaManager::GetGroupLimit() const {
                             std::max<uint64_t>(x, 10 MB));
 }
 
-std::pair<uint64_t, uint64_t> QuotaManager::GetUsageAndLimitForEstimate(
-    const OriginMetadata& aOriginMetadata) {
+uint64_t QuotaManager::GetGroupUsage(const nsACString& aGroup) {
   AssertIsOnIOThread();
 
-  uint64_t totalGroupUsage = 0;
+  uint64_t usage = 0;
 
   {
     MutexAutoLock lock(mQuotaMutex);
 
     GroupInfoPair* pair;
-    if (mGroupInfoPairs.Get(aOriginMetadata.mGroup, &pair)) {
+    if (mGroupInfoPairs.Get(aGroup, &pair)) {
       for (const PersistenceType type : kBestEffortPersistenceTypes) {
         RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(type);
         if (groupInfo) {
-          if (type == PERSISTENCE_TYPE_DEFAULT) {
-            RefPtr<OriginInfo> originInfo =
-                groupInfo->LockedGetOriginInfo(aOriginMetadata.mOrigin);
-
-            if (originInfo && originInfo->LockedPersisted()) {
-              return std::pair(mTemporaryStorageUsage, mTemporaryStorageLimit);
-            }
-          }
-
-          AssertNoOverflow(totalGroupUsage, groupInfo->mUsage);
-          totalGroupUsage += groupInfo->mUsage;
+          AssertNoOverflow(usage, groupInfo->mUsage);
+          usage += groupInfo->mUsage;
         }
       }
     }
   }
 
-  return std::pair(totalGroupUsage, GetGroupLimit());
+  return usage;
 }
 
 uint64_t QuotaManager::GetOriginUsage(
@@ -8026,7 +8052,7 @@ bool Quota::VerifyRequestParams(const UsageRequestParams& aParams) const {
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+        ASSERT_UNLESS_FUZZING();
         return false;
       }
 
@@ -8058,7 +8084,7 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+        ASSERT_UNLESS_FUZZING();
         return false;
       }
 
@@ -8070,13 +8096,13 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
           aParams.get_InitializeTemporaryOriginParams();
 
       if (NS_WARN_IF(!IsBestEffortPersistenceType(params.persistenceType()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+        ASSERT_UNLESS_FUZZING();
         return false;
       }
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+        ASSERT_UNLESS_FUZZING();
         return false;
       }
 
@@ -8087,13 +8113,13 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
       const GetFullOriginMetadataParams& params =
           aParams.get_GetFullOriginMetadataParams();
       if (NS_WARN_IF(!IsBestEffortPersistenceType(params.persistenceType()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+        ASSERT_UNLESS_FUZZING();
         return false;
       }
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+        ASSERT_UNLESS_FUZZING();
         return false;
       }
 
@@ -8106,20 +8132,20 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+        ASSERT_UNLESS_FUZZING();
         return false;
       }
 
       if (params.persistenceTypeIsExplicit()) {
         if (NS_WARN_IF(!IsValidPersistenceType(params.persistenceType()))) {
-          MOZ_CRASH_UNLESS_FUZZING();
+          ASSERT_UNLESS_FUZZING();
           return false;
         }
       }
 
       if (params.clientTypeIsExplicit()) {
         if (NS_WARN_IF(!Client::IsValidType(params.clientType()))) {
-          MOZ_CRASH_UNLESS_FUZZING();
+          ASSERT_UNLESS_FUZZING();
           return false;
         }
       }
@@ -8133,20 +8159,20 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+        ASSERT_UNLESS_FUZZING();
         return false;
       }
 
       if (params.persistenceTypeIsExplicit()) {
         if (NS_WARN_IF(!IsValidPersistenceType(params.persistenceType()))) {
-          MOZ_CRASH_UNLESS_FUZZING();
+          ASSERT_UNLESS_FUZZING();
           return false;
         }
       }
 
       if (params.clientTypeIsExplicit()) {
         if (NS_WARN_IF(!Client::IsValidType(params.clientType()))) {
-          MOZ_CRASH_UNLESS_FUZZING();
+          ASSERT_UNLESS_FUZZING();
           return false;
         }
       }
@@ -8156,7 +8182,7 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
     case RequestParams::TClearDataParams: {
       if (BackgroundParent::IsOtherProcessActor(Manager())) {
-        MOZ_CRASH_UNLESS_FUZZING();
+        ASSERT_UNLESS_FUZZING();
         return false;
       }
 
@@ -8173,7 +8199,7 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+        ASSERT_UNLESS_FUZZING();
         return false;
       }
 
@@ -8185,7 +8211,7 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+        ASSERT_UNLESS_FUZZING();
         return false;
       }
 
@@ -8197,7 +8223,7 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
       if (NS_WARN_IF(
               !QuotaManager::IsPrincipalInfoValid(params.principalInfo()))) {
-        MOZ_CRASH_UNLESS_FUZZING();
+        ASSERT_UNLESS_FUZZING();
         return false;
       }
 
@@ -8236,7 +8262,7 @@ PQuotaUsageRequestParent* Quota::AllocPQuotaUsageRequestParent(
 #endif
 
   if (!trustParams && NS_WARN_IF(!VerifyRequestParams(aParams))) {
-    MOZ_CRASH_UNLESS_FUZZING();
+    ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
 
@@ -8303,7 +8329,7 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
 #endif
 
   if (!trustParams && NS_WARN_IF(!VerifyRequestParams(aParams))) {
-    MOZ_CRASH_UNLESS_FUZZING();
+    ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
 
@@ -8356,7 +8382,7 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
         return MakeRefPtr<PersistOp>(aParams);
 
       case RequestParams::TEstimateParams:
-        return MakeRefPtr<EstimateOp>(aParams.get_EstimateParams());
+        return MakeRefPtr<EstimateOp>(aParams);
 
       case RequestParams::TListOriginsParams:
         return MakeRefPtr<ListOriginsOp>();
@@ -8406,7 +8432,7 @@ mozilla::ipc::IPCResult Quota::RecvStartIdleMaintenance() {
   MOZ_ASSERT(actor);
 
   if (BackgroundParent::IsOtherProcessActor(actor)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+    ASSERT_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -8431,7 +8457,7 @@ mozilla::ipc::IPCResult Quota::RecvStopIdleMaintenance() {
   MOZ_ASSERT(actor);
 
   if (BackgroundParent::IsOtherProcessActor(actor)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+    ASSERT_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -8457,7 +8483,7 @@ mozilla::ipc::IPCResult Quota::RecvAbortOperationsForProcess(
   MOZ_ASSERT(actor);
 
   if (BackgroundParent::IsOtherProcessActor(actor)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+    ASSERT_UNLESS_FUZZING();
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -9719,12 +9745,15 @@ void PersistOp::GetResponse(RequestResponse& aResponse) {
   aResponse = PersistResponse();
 }
 
-EstimateOp::EstimateOp(const EstimateParams& aParams)
-    : QuotaRequestBase(/* aExclusive */ false),
-      mOriginMetadata(QuotaManager::GetInfoFromValidatedPrincipalInfo(
-                          aParams.principalInfo()),
-                      PERSISTENCE_TYPE_DEFAULT) {
+EstimateOp::EstimateOp(const RequestParams& aParams)
+    : QuotaRequestBase(/* aExclusive */ false), mUsage(0), mLimit(0) {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(aParams.type() == RequestParams::TEstimateParams);
+
+  // XXX We don't use the quota info components other than the group here.
+  mGroup = std::move(QuotaManager::GetInfoFromValidatedPrincipalInfo(
+                         aParams.get_EstimateParams().principalInfo())
+                         .mGroup);
 
   // Overwrite OriginOperationBase default values.
   mNeedsQuotaManagerInit = true;
@@ -9746,7 +9775,9 @@ nsresult EstimateOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureTemporaryStorageIsInitialized()));
 
   // Get cached usage (the method doesn't have to stat any files).
-  mUsageAndLimit = aQuotaManager.GetUsageAndLimitForEstimate(mOriginMetadata);
+  mUsage = aQuotaManager.GetGroupUsage(mGroup);
+
+  mLimit = aQuotaManager.GetGroupLimit();
 
   return NS_OK;
 }
@@ -9756,8 +9787,8 @@ void EstimateOp::GetResponse(RequestResponse& aResponse) {
 
   EstimateResponse estimateResponse;
 
-  estimateResponse.usage() = mUsageAndLimit.first;
-  estimateResponse.limit() = mUsageAndLimit.second;
+  estimateResponse.usage() = mUsage;
+  estimateResponse.limit() = mLimit;
 
   aResponse = estimateResponse;
 }
@@ -10451,7 +10482,7 @@ void OriginParser::HandleToken(const nsDependentCSubstring& aToken) {
 
     case eExpectingInMozBrowser: {
       if (aToken.Length() != 1) {
-        QM_WARNING("'%zu' is not a valid length for the inMozBrowser flag!",
+        QM_WARNING("'%d' is not a valid length for the inMozBrowser flag!",
                    aToken.Length());
 
         mError = true;

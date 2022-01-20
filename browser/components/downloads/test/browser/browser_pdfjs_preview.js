@@ -470,9 +470,7 @@ async function openDownloadPanel(expectedItemCount) {
   let richlistbox = document.getElementById("downloadsListBox");
   await task_openPanel();
   await TestUtils.waitForCondition(
-    () =>
-      richlistbox.childElementCount == expectedItemCount &&
-      !richlistbox.getAttribute("disabled")
+    () => richlistbox.childElementCount == expectedItemCount
   );
 }
 

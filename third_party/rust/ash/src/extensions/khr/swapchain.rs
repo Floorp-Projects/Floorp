@@ -4,6 +4,7 @@ use crate::RawPtr;
 use crate::{Device, Instance};
 use std::ffi::CStr;
 use std::mem;
+use std::ptr;
 
 #[derive(Clone)]
 pub struct Swapchain {
@@ -101,10 +102,20 @@ impl Swapchain {
         &self,
         swapchain: vk::SwapchainKHR,
     ) -> VkResult<Vec<vk::Image>> {
-        read_into_uninitialized_vector(|count, data| {
-            self.swapchain_fn
-                .get_swapchain_images_khr(self.handle, swapchain, count, data)
-        })
+        let mut count = 0;
+        self.swapchain_fn
+            .get_swapchain_images_khr(self.handle, swapchain, &mut count, ptr::null_mut())
+            .result()?;
+
+        let mut v = Vec::with_capacity(count as usize);
+        let err_code = self.swapchain_fn.get_swapchain_images_khr(
+            self.handle,
+            swapchain,
+            &mut count,
+            v.as_mut_ptr(),
+        );
+        v.set_len(count as usize);
+        err_code.result_with_success(v)
     }
 
     pub fn fp(&self) -> &vk::KhrSwapchainFn {

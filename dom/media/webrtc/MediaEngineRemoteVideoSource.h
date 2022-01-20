@@ -99,13 +99,16 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   static void TrimLessFitCandidates(nsTArray<CapabilityCandidate>& aSet);
 
  public:
-  explicit MediaEngineRemoteVideoSource(const MediaDevice* aMediaDevice);
+  MediaEngineRemoteVideoSource(const nsAString& aDeviceName,
+                               const nsACString& aDeviceUUID,
+                               camera::CaptureEngine aCapEngine, bool aScary);
 
   // ExternalRenderer
   int DeliverFrame(uint8_t* aBuffer,
                    const camera::VideoFrameProperties& aProps) override;
 
   // MediaEngineSource
+  dom::MediaSourceEnum GetMediaSource() const override;
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, uint64_t aWindowID,
                     const char** aOutBadConstraint) override;
@@ -124,11 +127,17 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
       const override;
   void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
 
+  nsString GetName() const override;
+
+  nsCString GetUUID() const override;
+
+  nsString GetGroupId() const override;
+
+  bool GetScary() const override { return mScary; }
+
   RefPtr<GenericNonExclusivePromise> GetFirstFramePromise() const override {
     return mFirstFramePromise;
   }
-
-  static camera::CaptureEngine CaptureEngine(dom::MediaSourceEnum aMediaSource);
 
  private:
   /**
@@ -149,6 +158,7 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
 
   int mCaptureId = -1;
   const camera::CaptureEngine mCapEngine;  // source of media (cam, screen etc)
+  const bool mScary;
 
   // mMutex protects certain members on 3 threads:
   // MediaManager, Cameras IPC and MediaTrackGraph.
@@ -223,7 +233,7 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
    */
   mutable bool mCapabilitiesAreHardcoded = false;
 
-  const RefPtr<const MediaDevice> mMediaDevice;
+  const nsString mDeviceName;
   const nsCString mDeviceUUID;
   Maybe<nsString> mFacingMode;
 };

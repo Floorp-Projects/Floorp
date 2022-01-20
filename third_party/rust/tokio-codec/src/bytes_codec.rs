@@ -1,6 +1,6 @@
-use bytes::{BufMut, Bytes, BytesMut};
+use bytes::{Bytes, BufMut, BytesMut};
+use tokio_io::_tokio_codec::{Encoder, Decoder};
 use std::io;
-use tokio_io::_tokio_codec::{Decoder, Encoder};
 
 /// A simple `Codec` implementation that just ships bytes around.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
@@ -8,9 +8,7 @@ pub struct BytesCodec(());
 
 impl BytesCodec {
     /// Creates a new `BytesCodec` for shipping around raw bytes.
-    pub fn new() -> BytesCodec {
-        BytesCodec(())
-    }
+    pub fn new() -> BytesCodec { BytesCodec(())  }
 }
 
 impl Decoder for BytesCodec {

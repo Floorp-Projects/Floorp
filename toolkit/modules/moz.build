@@ -277,7 +277,7 @@ for var in (
     "DEBUG_JS_MODULES",
     "OMNIJAR_NAME",
 ):
-    DEFINES[var] = CONFIG[var] or ""
+    DEFINES[var] = CONFIG[var]
 
 for var in (
     "MOZ_ALLOW_ADDON_SIDELOAD",

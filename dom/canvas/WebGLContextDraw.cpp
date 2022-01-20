@@ -653,7 +653,7 @@ void WebGLContext::DrawArraysInstanced(GLenum mode, GLint first,
                                        GLsizei vertCount,
                                        GLsizei instanceCount) {
   const FuncScope funcScope(*this, "drawArraysInstanced");
-  // AUTO_PROFILER_LABEL("WebGLContext::DrawArraysInstanced", GRAPHICS);
+  AUTO_PROFILER_LABEL("WebGLContext::DrawArraysInstanced", GRAPHICS);
   if (IsContextLost()) return;
   const gl::GLContext::TlsScope inTls(gl);
 
@@ -712,6 +712,7 @@ void WebGLContext::DrawArraysInstanced(GLenum mode, GLint first,
   {
     ScopedDrawCallWrapper wrapper(*this);
     if (vertCount && instanceCount) {
+      AUTO_PROFILER_LABEL("glDrawArraysInstanced", GRAPHICS);
       if (HasInstancedDrawing(*this)) {
         gl->fDrawArraysInstanced(mode, first, vertCount, instanceCount);
       } else {
@@ -829,7 +830,7 @@ void WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei indexCount,
                                          GLenum type, WebGLintptr byteOffset,
                                          GLsizei instanceCount) {
   const FuncScope funcScope(*this, "drawElementsInstanced");
-  // AUTO_PROFILER_LABEL("WebGLContext::DrawElementsInstanced", GRAPHICS);
+  AUTO_PROFILER_LABEL("WebGLContext::DrawElementsInstanced", GRAPHICS);
   if (IsContextLost()) return;
 
   const gl::GLContext::TlsScope inTls(gl);
@@ -911,6 +912,7 @@ void WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei indexCount,
       }
 
       if (indexCount && instanceCount) {
+        AUTO_PROFILER_LABEL("glDrawElementsInstanced", GRAPHICS);
         if (HasInstancedDrawing(*this)) {
           if (MOZ_UNLIKELY(collapseToDrawArrays)) {
             gl->fDrawArraysInstanced(mode, 0, 1, instanceCount);
@@ -1084,7 +1086,7 @@ bool WebGLContext::DoFakeVertexAttrib0(const uint64_t vertexCount) {
 
   ////
 
-  const auto data = UniqueBuffer::Take(malloc(dataSize));
+  const UniqueBuffer data(malloc(dataSize));
   if (!data) {
     ErrorOutOfMemory("Failed to allocate fake vertex attrib 0 array.");
     return false;

@@ -272,17 +272,6 @@ inline JSObject* ToObject(JSContext* cx, HandleValue v) {
   return js::ToObjectSlow(cx, v, false);
 }
 
-#ifdef ENABLE_RECORD_TUPLE
-inline JSObject* ToObjectOrGetObjectPayload(JSContext* cx, HandleValue v) {
-  detail::AssertArgumentsAreSane(cx, v);
-
-  if (v.hasObjectPayload()) {
-    return &v.getObjectPayload();
-  }
-  return js::ToObjectSlow(cx, v, false);
-}
-#endif
-
 /**
  * Convert a double value to UnsignedInteger (an unsigned integral type) using
  * ECMAScript-style semantics (that is, in like manner to how ECMAScript's

@@ -17,8 +17,8 @@
 
 namespace mozilla {
 
-class LocalMediaDevice;
 class MediaDevice;
+class MediaEngineSource;
 
 template <class EnumValuesStrings, class Enum>
 static Enum StringToEnum(const EnumValuesStrings& aStrings,
@@ -339,9 +339,8 @@ class MediaConstraintsHelper {
       const NormalizedConstraintSet::StringRange& aParams);
 
  protected:
-  static bool SomeSettingsFit(
-      const NormalizedConstraints& aConstraints,
-      const nsTArray<RefPtr<LocalMediaDevice>>& aDevices);
+  static bool SomeSettingsFit(const NormalizedConstraints& aConstraints,
+                              const nsTArray<RefPtr<MediaDevice>>& aDevices);
 
  public:
   static uint32_t GetMinimumFitnessDistance(
@@ -350,18 +349,17 @@ class MediaConstraintsHelper {
 
   // Apply constrains to a supplied list of devices (removes items from the
   // list)
-  static const char* SelectSettings(
-      const NormalizedConstraints& aConstraints,
-      nsTArray<RefPtr<LocalMediaDevice>>& aDevices,
-      dom::CallerType aCallerType);
+  static const char* SelectSettings(const NormalizedConstraints& aConstraints,
+                                    nsTArray<RefPtr<MediaDevice>>& aDevices,
+                                    dom::CallerType aCallerType);
 
   static const char* FindBadConstraint(
       const NormalizedConstraints& aConstraints,
-      const nsTArray<RefPtr<LocalMediaDevice>>& aDevices);
+      const nsTArray<RefPtr<MediaDevice>>& aDevices);
 
   static const char* FindBadConstraint(
       const NormalizedConstraints& aConstraints,
-      const MediaDevice* aMediaDevice);
+      const RefPtr<MediaEngineSource>& aMediaEngineSource);
 
   static void LogConstraints(const NormalizedConstraintSet& aConstraints);
 };

@@ -105,9 +105,7 @@ class DeviceManagerDx final {
       RefPtr<layers::DeviceAttachmentsD3D11>* aOutAttachments);
 
   void ImportDeviceInfo(const D3D11DeviceStatus& aDeviceStatus);
-
-  // Returns whether the device info was exported.
-  bool ExportDeviceInfo(D3D11DeviceStatus* aOut);
+  void ExportDeviceInfo(D3D11DeviceStatus* aOut);
 
   void ResetDevices();
   void InitializeDirectDraw();

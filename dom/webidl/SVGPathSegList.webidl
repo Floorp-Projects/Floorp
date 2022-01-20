@@ -10,8 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Exposed=Window,
- Pref="dom.svg.pathSeg.enabled"]
+[Exposed=Window]
 interface SVGPathSegList {
   readonly attribute unsigned long numberOfItems;
   [Throws]

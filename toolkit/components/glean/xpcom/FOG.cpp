@@ -299,24 +299,8 @@ FOG::TestResetFOG(const nsACString& aDataPathOverride,
 }
 
 NS_IMETHODIMP
-FOG::TestTriggerMetrics(uint32_t aProcessType, JSContext* aCx,
-                        mozilla::dom::Promise** aOutPromise) {
-  NS_ENSURE_ARG(aOutPromise);
-  *aOutPromise = nullptr;
-  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
-  if (NS_WARN_IF(!global)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  ErrorResult erv;
-  RefPtr<dom::Promise> promise = dom::Promise::Create(global, erv);
-  if (NS_WARN_IF(erv.Failed())) {
-    return erv.StealNSResult();
-  }
-
-  glean::TestTriggerMetrics(aProcessType, promise);
-
-  promise.forget(aOutPromise);
+FOG::TestTriggerGPUMetrics() {
+  glean::TestTriggerGPUMetrics();
   return NS_OK;
 }
 

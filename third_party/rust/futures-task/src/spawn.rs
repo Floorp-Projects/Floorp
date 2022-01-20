@@ -168,25 +168,27 @@ mod if_alloc {
         }
     }
 
-    #[cfg(not(futures_no_atomic_cas))]
-    impl<Sp: ?Sized + Spawn> Spawn for alloc::sync::Arc<Sp> {
-        fn spawn_obj(&self, future: FutureObj<'static, ()>) -> Result<(), SpawnError> {
-            (**self).spawn_obj(future)
+    cfg_target_has_atomic! {
+        use alloc::{ sync::Arc };
+
+        impl<Sp: ?Sized + Spawn> Spawn for Arc<Sp> {
+            fn spawn_obj(&self, future: FutureObj<'static, ()>) -> Result<(), SpawnError> {
+                (**self).spawn_obj(future)
+            }
+
+            fn status(&self) -> Result<(), SpawnError> {
+                (**self).status()
+            }
         }
 
-        fn status(&self) -> Result<(), SpawnError> {
-            (**self).status()
-        }
-    }
+        impl<Sp: ?Sized + LocalSpawn> LocalSpawn for Arc<Sp> {
+            fn spawn_local_obj(&self, future: LocalFutureObj<'static, ()>) -> Result<(), SpawnError> {
+                (**self).spawn_local_obj(future)
+            }
 
-    #[cfg(not(futures_no_atomic_cas))]
-    impl<Sp: ?Sized + LocalSpawn> LocalSpawn for alloc::sync::Arc<Sp> {
-        fn spawn_local_obj(&self, future: LocalFutureObj<'static, ()>) -> Result<(), SpawnError> {
-            (**self).spawn_local_obj(future)
-        }
-
-        fn status_local(&self) -> Result<(), SpawnError> {
-            (**self).status_local()
+            fn status_local(&self) -> Result<(), SpawnError> {
+                (**self).status_local()
+            }
         }
     }
 }

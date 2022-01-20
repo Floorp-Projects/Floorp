@@ -43,18 +43,12 @@
 //!
 //! ### `const_generics`
 //!
-//! **This feature requires Rust 1.51.**
+//! **This feature is unstable and requires a nightly build of the Rust toolchain.**
 //!
 //! When this feature is enabled, `SmallVec` works with any arrays of any size, not just a fixed
 //! list of sizes.
 //!
-//! ### `const_new`
-//!
-//! **This feature requires Rust 1.51.**
-//!
-//! This feature exposes the functions [`SmallVec::new_const`], [`SmallVec::from_const`], and [`smallvec_inline`] which enables the `SmallVec` to be initialized from a const context.
-//! For details, see the
-//! [Rust Reference](https://doc.rust-lang.org/reference/const_eval.html#const-functions).
+//! Tracking issue: [rust-lang/rust#44580](https://github.com/rust-lang/rust/issues/44580)
 //!
 //! ### `specialization`
 //!
@@ -77,7 +71,6 @@
 //! Tracking issue: [rust-lang/rust#34761](https://github.com/rust-lang/rust/issues/34761)
 
 #![no_std]
-#![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(feature = "specialization", allow(incomplete_features))]
 #![cfg_attr(feature = "specialization", feature(specialization))]
 #![cfg_attr(feature = "may_dangle", feature(dropck_eyepatch))]
@@ -176,52 +169,6 @@ macro_rules! smallvec {
         } else {
             $crate::SmallVec::from_vec($crate::alloc::vec![$($x,)*])
         }
-    });
-}
-
-/// Creates an inline [`SmallVec`] containing the arguments. This macro is enabled by the feature `const_new`.
-///
-/// `smallvec_inline!` allows `SmallVec`s to be defined with the same syntax as array expressions in `const` contexts.
-/// The inline storage `A` will always be an array of the size specified by the arguments.
-/// There are two forms of this macro:
-///
-/// - Create a [`SmallVec`] containing a given list of elements:
-///
-/// ```
-/// # #[macro_use] extern crate smallvec;
-/// # use smallvec::SmallVec;
-/// # fn main() {
-/// const V: SmallVec<[i32; 3]> = smallvec_inline![1, 2, 3];
-/// assert_eq!(V[0], 1);
-/// assert_eq!(V[1], 2);
-/// assert_eq!(V[2], 3);
-/// # }
-/// ```
-///
-/// - Create a [`SmallVec`] from a given element and size:
-///
-/// ```
-/// # #[macro_use] extern crate smallvec;
-/// # use smallvec::SmallVec;
-/// # fn main() {
-/// const V: SmallVec<[i32; 3]> = smallvec_inline![1; 3];
-/// assert_eq!(V, SmallVec::from_buf([1, 1, 1]));
-/// # }
-/// ```
-///
-/// Note that the behavior mimics that of array expressions, in contrast to [`smallvec`].
-#[cfg(feature = "const_new")]
-#[cfg_attr(docsrs, doc(cfg(feature = "const_new")))]
-#[macro_export]
-macro_rules! smallvec_inline {
-    // count helper: transform any expression into 1
-    (@one $x:expr) => (1usize);
-    ($elem:expr; $n:expr) => ({
-        $crate::SmallVec::<[_; $n]>::from_const([$elem; $n])
-    });
-    ($($x:expr),+ $(,)?) => ({
-        const N: usize = 0usize $(+ $crate::smallvec_inline!(@one $x))*;
-        $crate::SmallVec::<[_; N]>::from_const([$($x,)*])
     });
 }
 
@@ -408,17 +355,6 @@ union SmallVecData<A: Array> {
     heap: (*mut A::Item, usize),
 }
 
-#[cfg(all(feature = "union", feature = "const_new"))]
-impl<T, const N: usize> SmallVecData<[T; N]> {
-    #[cfg_attr(docsrs, doc(cfg(feature = "const_new")))]
-    #[inline]
-    const fn from_const(inline: MaybeUninit<[T; N]>) -> Self {
-        SmallVecData {
-            inline: core::mem::ManuallyDrop::new(inline),
-        }
-    }
-}
-
 #[cfg(feature = "union")]
 impl<A: Array> SmallVecData<A> {
     #[inline]
@@ -457,15 +393,6 @@ impl<A: Array> SmallVecData<A> {
 enum SmallVecData<A: Array> {
     Inline(MaybeUninit<A>),
     Heap((*mut A::Item, usize)),
-}
-
-#[cfg(all(not(feature = "union"), feature = "const_new"))]
-impl<T, const N: usize> SmallVecData<[T; N]> {
-    #[cfg_attr(docsrs, doc(cfg(feature = "const_new")))]
-    #[inline]
-    const fn from_const(inline: MaybeUninit<[T; N]>) -> Self {
-        SmallVecData::Inline(inline)
-    }
 }
 
 #[cfg(not(feature = "union"))]
@@ -556,7 +483,7 @@ impl<A: Array> SmallVec<A> {
     /// Construct an empty vector
     #[inline]
     pub fn new() -> SmallVec<A> {
-        // Try to detect invalid custom implementations of `Array`. Hopefully,
+        // Try to detect invalid custom implementations of `Array`. Hopefuly,
         // this check should be optimized away entirely for valid ones.
         assert!(
             mem::size_of::<A>() == A::size() * mem::size_of::<A::Item>()
@@ -798,11 +725,11 @@ impl<A: Array> SmallVec<A> {
         let len = self.len();
         let start = match range.start_bound() {
             Included(&n) => n,
-            Excluded(&n) => n.checked_add(1).expect("Range start out of bounds"),
+            Excluded(&n) => n + 1,
             Unbounded => 0,
         };
         let end = match range.end_bound() {
-            Included(&n) => n.checked_add(1).expect("Range end out of bounds"),
+            Included(&n) => n + 1,
             Excluded(&n) => n,
             Unbounded => len,
         };
@@ -1562,7 +1489,6 @@ impl<A: Array> BorrowMut<[A::Item]> for SmallVec<A> {
 }
 
 #[cfg(feature = "write")]
-#[cfg_attr(docsrs, doc(cfg(feature = "write")))]
 impl<A: Array<Item = u8>> io::Write for SmallVec<A> {
     #[inline]
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
@@ -1583,7 +1509,6 @@ impl<A: Array<Item = u8>> io::Write for SmallVec<A> {
 }
 
 #[cfg(feature = "serde")]
-#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 impl<A: Array> Serialize for SmallVec<A>
 where
     A::Item: Serialize,
@@ -1598,7 +1523,6 @@ where
 }
 
 #[cfg(feature = "serde")]
-#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 impl<'de, A: Array> Deserialize<'de> for SmallVec<A>
 where
     A::Item: Deserialize<'de>,
@@ -1802,21 +1726,6 @@ where
     #[inline]
     fn clone(&self) -> SmallVec<A> {
         SmallVec::from(self.as_slice())
-    }
-
-    fn clone_from(&mut self, source: &Self) {
-        // Inspired from `impl Clone for Vec`.
-
-        // drop anything that will not be overwritten
-        self.truncate(source.len());
-
-        // self.len <= other.len due to the truncate above, so the
-        // slices here are always in-bounds.
-        let (init, tail) = source.split_at(self.len());
-
-        // reuse the contained values' allocations/resources.
-        self.clone_from_slice(init);
-        self.extend(tail.iter().cloned());
     }
 }
 
@@ -2028,35 +1937,7 @@ impl<'a> Drop for SetLenOnDrop<'a> {
     }
 }
 
-#[cfg(feature = "const_new")]
-impl<T, const N: usize> SmallVec<[T; N]> {
-    /// Construct an empty vector.
-    ///
-    /// This is a `const` version of [`SmallVec::new`] that is enabled by the feature `const_new`, with the limitation that it only works for arrays.
-    #[cfg_attr(docsrs, doc(cfg(feature = "const_new")))]
-    #[inline]
-    pub const fn new_const() -> Self {
-        SmallVec {
-            capacity: 0,
-            data: SmallVecData::from_const(MaybeUninit::uninit()),
-        }
-    }
-
-    /// The array passed as an argument is moved to be an inline version of `SmallVec`.
-    ///
-    /// This is a `const` version of [`SmallVec::from_buf`] that is enabled by the feature `const_new`, with the limitation that it only works for arrays.
-    #[cfg_attr(docsrs, doc(cfg(feature = "const_new")))]
-    #[inline]
-    pub const fn from_const(items: [T; N]) -> Self {
-        SmallVec {
-            capacity: N,
-            data: SmallVecData::from_const(MaybeUninit::new(items)),
-        }
-    }
-}
-
-#[cfg(all(feature = "const_generics", not(doc)))]
-#[cfg_attr(docsrs, doc(cfg(feature = "const_generics")))]
+#[cfg(feature = "const_generics")]
 unsafe impl<T, const N: usize> Array for [T; N] {
     type Item = T;
     fn size() -> usize {
@@ -2064,7 +1945,7 @@ unsafe impl<T, const N: usize> Array for [T; N] {
     }
 }
 
-#[cfg(any(not(feature = "const_generics"), doc))]
+#[cfg(not(feature = "const_generics"))]
 macro_rules! impl_array(
     ($($size:expr),+) => {
         $(
@@ -2076,7 +1957,7 @@ macro_rules! impl_array(
     }
 );
 
-#[cfg(any(not(feature = "const_generics"), doc))]
+#[cfg(not(feature = "const_generics"))]
 impl_array!(
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
     26, 27, 28, 29, 30, 31, 32, 36, 0x40, 0x60, 0x80, 0x100, 0x200, 0x400, 0x600, 0x800, 0x1000,

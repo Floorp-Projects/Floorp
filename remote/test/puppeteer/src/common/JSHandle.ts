@@ -17,7 +17,7 @@
 import { assert } from './assert.js';
 import { helper, debugError } from './helper.js';
 import { ExecutionContext } from './ExecutionContext.js';
-import { Page, ScreenshotOptions } from './Page.js';
+import { Page } from './Page.js';
 import { CDPSession } from './Connection.js';
 import { KeyInput } from './USKeyboardLayout.js';
 import { FrameManager, Frame } from './FrameManager.js';
@@ -191,7 +191,7 @@ export class JSHandle<HandleObjectType = unknown> {
 
   /** Fetches a single property from the referenced object.
    */
-  async getProperty(propertyName: string): Promise<JSHandle> {
+  async getProperty(propertyName: string): Promise<JSHandle | undefined> {
     const objectHandle = await this.evaluateHandle(
       (object: Element, propertyName: string) => {
         const result = { __proto__: null };
@@ -201,8 +201,7 @@ export class JSHandle<HandleObjectType = unknown> {
       propertyName
     );
     const properties = await objectHandle.getProperties();
-    const result = properties.get(propertyName);
-    assert(result instanceof JSHandle);
+    const result = properties.get(propertyName) || null;
     await objectHandle.dispose();
     return result;
   }
@@ -351,59 +350,6 @@ export class ElementHandle<
     this._frameManager = frameManager;
   }
 
-  /**
-   * Wait for the `selector` to appear within the element. If at the moment of calling the
-   * method the `selector` already exists, the method will return immediately. If
-   * the `selector` doesn't appear after the `timeout` milliseconds of waiting, the
-   * function will throw.
-   *
-   * This method does not work across navigations or if the element is detached from DOM.
-   *
-   * @param selector - A
-   * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector}
-   * of an element to wait for
-   * @param options - Optional waiting parameters
-   * @returns Promise which resolves when element specified by selector string
-   * is added to DOM. Resolves to `null` if waiting for hidden: `true` and
-   * selector is not found in DOM.
-   * @remarks
-   * The optional parameters in `options` are:
-   *
-   * - `visible`: wait for the selected element to be present in DOM and to be
-   * visible, i.e. to not have `display: none` or `visibility: hidden` CSS
-   * properties. Defaults to `false`.
-   *
-   * - `hidden`: wait for the selected element to not be found in the DOM or to be hidden,
-   * i.e. have `display: none` or `visibility: hidden` CSS properties. Defaults to
-   * `false`.
-   *
-   * - `timeout`: maximum time to wait in milliseconds. Defaults to `30000`
-   * (30 seconds). Pass `0` to disable timeout. The default value can be changed
-   * by using the {@link Page.setDefaultTimeout} method.
-   */
-  async waitForSelector(
-    selector: string,
-    options: {
-      visible?: boolean;
-      hidden?: boolean;
-      timeout?: number;
-    } = {}
-  ): Promise<ElementHandle | null> {
-    const frame = this._context.frame();
-    const secondaryContext = await frame._secondaryWorld.executionContext();
-    const adoptedRoot = await secondaryContext._adoptElementHandle(this);
-    const handle = await frame._secondaryWorld.waitForSelector(selector, {
-      ...options,
-      root: adoptedRoot,
-    });
-    await adoptedRoot.dispose();
-    if (!handle) return null;
-    const mainExecutionContext = await frame._mainWorld.executionContext();
-    const result = await mainExecutionContext._adoptElementHandle(handle);
-    await handle.dispose();
-    return result;
-  }
-
   asElement(): ElementHandle<ElementType> | null {
     return this;
   }
@@ -465,10 +411,7 @@ export class ElementHandle<
     if (error) throw new Error(error);
   }
 
-  /**
-   * Returns the middle point within an element unless a specific offset is provided.
-   */
-  async clickablePoint(offset?: Offset): Promise<Point> {
+  private async _clickablePoint(): Promise<{ x: number; y: number }> {
     const [result, layoutMetrics] = await Promise.all([
       this._client
         .send('DOM.getContentQuads', {
@@ -478,11 +421,9 @@ export class ElementHandle<
       this._client.send('Page.getLayoutMetrics'),
     ]);
     if (!result || !result.quads.length)
-      throw new Error('Node is either not clickable or not an HTMLElement');
+      throw new Error('Node is either not visible or not an HTMLElement');
     // Filter out quads that have too small area to click into.
-    // Fallback to `layoutViewport` in case of using Firefox.
-    const { clientWidth, clientHeight } =
-      layoutMetrics.cssLayoutViewport || layoutMetrics.layoutViewport;
+    const { clientWidth, clientHeight } = layoutMetrics.layoutViewport;
     const quads = result.quads
       .map((quad) => this._fromProtocolQuad(quad))
       .map((quad) =>
@@ -490,31 +431,9 @@ export class ElementHandle<
       )
       .filter((quad) => computeQuadArea(quad) > 1);
     if (!quads.length)
-      throw new Error('Node is either not clickable or not an HTMLElement');
-    const quad = quads[0];
-    if (offset) {
-      // Return the point of the first quad identified by offset.
-      let minX = Number.MAX_SAFE_INTEGER;
-      let minY = Number.MAX_SAFE_INTEGER;
-      for (const point of quad) {
-        if (point.x < minX) {
-          minX = point.x;
-        }
-        if (point.y < minY) {
-          minY = point.y;
-        }
-      }
-      if (
-        minX !== Number.MAX_SAFE_INTEGER &&
-        minY !== Number.MAX_SAFE_INTEGER
-      ) {
-        return {
-          x: minX + offset.x,
-          y: minY + offset.y,
-        };
-      }
-    }
+      throw new Error('Node is either not visible or not an HTMLElement');
     // Return the middle point of the first quad.
+    const quad = quads[0];
     let x = 0;
     let y = 0;
     for (const point of quad) {
@@ -563,7 +482,7 @@ export class ElementHandle<
    */
   async hover(): Promise<void> {
     await this._scrollIntoViewIfNeeded();
-    const { x, y } = await this.clickablePoint();
+    const { x, y } = await this._clickablePoint();
     await this._page.mouse.move(x, y);
   }
 
@@ -574,67 +493,8 @@ export class ElementHandle<
    */
   async click(options: ClickOptions = {}): Promise<void> {
     await this._scrollIntoViewIfNeeded();
-    const { x, y } = await this.clickablePoint(options.offset);
+    const { x, y } = await this._clickablePoint();
     await this._page.mouse.click(x, y, options);
-  }
-
-  /**
-   * This method creates and captures a dragevent from the element.
-   */
-  async drag(target: Point): Promise<Protocol.Input.DragData> {
-    assert(
-      this._page.isDragInterceptionEnabled(),
-      'Drag Interception is not enabled!'
-    );
-    await this._scrollIntoViewIfNeeded();
-    const start = await this.clickablePoint();
-    return await this._page.mouse.drag(start, target);
-  }
-
-  /**
-   * This method creates a `dragenter` event on the element.
-   */
-  async dragEnter(
-    data: Protocol.Input.DragData = { items: [], dragOperationsMask: 1 }
-  ): Promise<void> {
-    await this._scrollIntoViewIfNeeded();
-    const target = await this.clickablePoint();
-    await this._page.mouse.dragEnter(target, data);
-  }
-
-  /**
-   * This method creates a `dragover` event on the element.
-   */
-  async dragOver(
-    data: Protocol.Input.DragData = { items: [], dragOperationsMask: 1 }
-  ): Promise<void> {
-    await this._scrollIntoViewIfNeeded();
-    const target = await this.clickablePoint();
-    await this._page.mouse.dragOver(target, data);
-  }
-
-  /**
-   * This method triggers a drop on the element.
-   */
-  async drop(
-    data: Protocol.Input.DragData = { items: [], dragOperationsMask: 1 }
-  ): Promise<void> {
-    await this._scrollIntoViewIfNeeded();
-    const destination = await this.clickablePoint();
-    await this._page.mouse.drop(destination, data);
-  }
-
-  /**
-   * This method triggers a dragenter, dragover, and drop on the element.
-   */
-  async dragAndDrop(
-    target: ElementHandle,
-    options?: { delay: number }
-  ): Promise<void> {
-    await this._scrollIntoViewIfNeeded();
-    const startPoint = await this.clickablePoint();
-    const targetPoint = await target.clickablePoint();
-    await this._page.mouse.dragAndDrop(startPoint, targetPoint, options);
   }
 
   /**
@@ -761,7 +621,7 @@ export class ElementHandle<
    */
   async tap(): Promise<void> {
     await this._scrollIntoViewIfNeeded();
-    const { x, y } = await this.clickablePoint();
+    const { x, y } = await this._clickablePoint();
     await this._page.touchscreen.tap(x, y);
   }
 
@@ -867,7 +727,7 @@ export class ElementHandle<
    * {@link Page.screenshot} to take a screenshot of the element.
    * If the element is detached from DOM, the method throws an error.
    */
-  async screenshot(options: ScreenshotOptions = {}): Promise<string | Buffer> {
+  async screenshot(options = {}): Promise<string | Buffer | void> {
     let needsViewportReset = false;
 
     let boundingBox = await this.boundingBox();
@@ -896,10 +756,9 @@ export class ElementHandle<
     assert(boundingBox.width !== 0, 'Node has 0 width.');
     assert(boundingBox.height !== 0, 'Node has 0 height.');
 
-    const layoutMetrics = await this._client.send('Page.getLayoutMetrics');
-    // Fallback to `layoutViewport` in case of using Firefox.
-    const { pageX, pageY } =
-      layoutMetrics.cssLayoutViewport || layoutMetrics.layoutViewport;
+    const {
+      layoutViewport: { pageX, pageY },
+    } = await this._client.send('Page.getLayoutMetrics');
 
     const clip = Object.assign({}, boundingBox);
     clip.x += pageX;
@@ -1073,35 +932,20 @@ export class ElementHandle<
   /**
    * Resolves to true if the element is visible in the current viewport.
    */
-  async isIntersectingViewport(options?: {
-    threshold?: number;
-  }): Promise<boolean> {
-    const { threshold = 0 } = options || {};
-    return await this.evaluate(async (element: Element, threshold: number) => {
-      const visibleRatio = await new Promise<number>((resolve) => {
-        const observer = new IntersectionObserver((entries) => {
-          resolve(entries[0].intersectionRatio);
-          observer.disconnect();
+  async isIntersectingViewport(): Promise<boolean> {
+    return await this.evaluate<(element: Element) => Promise<boolean>>(
+      async (element) => {
+        const visibleRatio = await new Promise((resolve) => {
+          const observer = new IntersectionObserver((entries) => {
+            resolve(entries[0].intersectionRatio);
+            observer.disconnect();
+          });
+          observer.observe(element);
         });
-        observer.observe(element);
-      });
-      return threshold === 1 ? visibleRatio === 1 : visibleRatio > threshold;
-    }, threshold);
+        return visibleRatio > 0;
+      }
+    );
   }
-}
-
-/**
- * @public
- */
-export interface Offset {
-  /**
-   * x-offset for the clickable point relative to the top-left corder of the border box.
-   */
-  x: number;
-  /**
-   * y-offset for the clickable point relative to the top-left corder of the border box.
-   */
-  y: number;
 }
 
 /**
@@ -1122,10 +966,6 @@ export interface ClickOptions {
    * @defaultValue 1
    */
   clickCount?: number;
-  /**
-   * Offset for the clickable point relative to the top-left corder of the border box.
-   */
-  offset?: Offset;
 }
 
 /**
@@ -1140,14 +980,6 @@ export interface PressOptions {
    * If specified, generates an input event with this text.
    */
   text?: string;
-}
-
-/**
- * @public
- */
-export interface Point {
-  x: number;
-  y: number;
 }
 
 function computeQuadArea(quad: Array<{ x: number; y: number }>): number {

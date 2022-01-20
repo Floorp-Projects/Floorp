@@ -63,14 +63,7 @@ from . import validate_ping
     is_flag=True,
     help=("Do not treat missing input files as an error."),
 )
-@click.option(
-    "--require-tags",
-    is_flag=True,
-    help=("Require tags to be specified for metrics and pings."),
-)
-def translate(
-    input, format, output, option, allow_reserved, allow_missing_files, require_tags
-):
+def translate(input, format, output, option, allow_reserved, allow_missing_files):
     """
     Translate metrics.yaml and pings.yaml files to other formats.
     """
@@ -88,7 +81,6 @@ def translate(
             {
                 "allow_reserved": allow_reserved,
                 "allow_missing_files": allow_missing_files,
-                "require_tags": require_tags,
             },
         )
     )
@@ -138,12 +130,7 @@ def check(schema):
     is_flag=True,
     help=("Do not treat missing input files as an error."),
 )
-@click.option(
-    "--require-tags",
-    is_flag=True,
-    help=("Require tags to be specified for metrics and pings."),
-)
-def glinter(input, allow_reserved, allow_missing_files, require_tags):
+def glinter(input, allow_reserved, allow_missing_files):
     """
     Runs a linter over the metrics.
     """
@@ -153,7 +140,6 @@ def glinter(input, allow_reserved, allow_missing_files, require_tags):
             {
                 "allow_reserved": allow_reserved,
                 "allow_missing_files": allow_missing_files,
-                "require_tags": require_tags,
             },
         )
     )

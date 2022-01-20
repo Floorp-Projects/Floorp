@@ -295,9 +295,7 @@ class MozbuildObject(ProcessExecutionMixin):
         if self._virtualenv_manager is None:
             self._virtualenv_manager = CommandSiteManager.from_environment(
                 self.topsrcdir,
-                lambda: get_state_dir(
-                    specific_to_topsrcdir=True, topsrcdir=self.topsrcdir
-                ),
+                get_state_dir(specific_to_topsrcdir=True, topsrcdir=self.topsrcdir),
                 self._virtualenv_name,
                 os.path.join(self.topobjdir, "_virtualenvs"),
             )

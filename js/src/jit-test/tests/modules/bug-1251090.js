@@ -1,3 +1,3 @@
 // |jit-test| error: Error
-offThreadCompileToStencil("");
-finishOffThreadCompileModuleToStencil();
+offThreadCompileScript("");
+finishOffThreadModule();

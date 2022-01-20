@@ -8,7 +8,6 @@ use serde::ser::{self, Impossible, Serialize};
 use serde::serde_if_integer128;
 
 /// A structure for serializing Rust values into JSON.
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 pub struct Serializer<W, F = CompactFormatter> {
     writer: W,
     formatter: F,
@@ -317,11 +316,11 @@ where
 
     #[inline]
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq> {
-        tri!(self
-            .formatter
-            .begin_array(&mut self.writer)
-            .map_err(Error::io));
         if len == Some(0) {
+            tri!(self
+                .formatter
+                .begin_array(&mut self.writer)
+                .map_err(Error::io));
             tri!(self
                 .formatter
                 .end_array(&mut self.writer)
@@ -331,6 +330,10 @@ where
                 state: State::Empty,
             })
         } else {
+            tri!(self
+                .formatter
+                .begin_array(&mut self.writer)
+                .map_err(Error::io));
             Ok(Compound::Map {
                 ser: self,
                 state: State::First,
@@ -382,11 +385,11 @@ where
 
     #[inline]
     fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap> {
-        tri!(self
-            .formatter
-            .begin_object(&mut self.writer)
-            .map_err(Error::io));
         if len == Some(0) {
+            tri!(self
+                .formatter
+                .begin_object(&mut self.writer)
+                .map_err(Error::io));
             tri!(self
                 .formatter
                 .end_object(&mut self.writer)
@@ -396,6 +399,10 @@ where
                 state: State::Empty,
             })
         } else {
+            tri!(self
+                .formatter
+                .begin_object(&mut self.writer)
+                .map_err(Error::io));
             Ok(Compound::Map {
                 ser: self,
                 state: State::First,
@@ -756,7 +763,7 @@ where
             #[cfg(feature = "arbitrary_precision")]
             Compound::Number { ref mut ser, .. } => {
                 if key == crate::number::TOKEN {
-                    tri!(value.serialize(NumberStrEmitter(ser)));
+                    tri!(value.serialize(NumberStrEmitter(&mut *ser)));
                     Ok(())
                 } else {
                     Err(invalid_number())
@@ -765,7 +772,7 @@ where
             #[cfg(feature = "raw_value")]
             Compound::RawValue { ref mut ser, .. } => {
                 if key == crate::raw::TOKEN {
-                    tri!(value.serialize(RawValueStrEmitter(ser)));
+                    tri!(value.serialize(RawValueStrEmitter(&mut *ser)));
                     Ok(())
                 } else {
                     Err(invalid_raw_value())
@@ -2142,7 +2149,6 @@ static ESCAPE: [u8; 256] = [
 /// Serialization can fail if `T`'s implementation of `Serialize` decides to
 /// fail, or if `T` contains a map with non-string keys.
 #[inline]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 pub fn to_writer<W, T>(writer: W, value: &T) -> Result<()>
 where
     W: io::Write,
@@ -2161,7 +2167,6 @@ where
 /// Serialization can fail if `T`'s implementation of `Serialize` decides to
 /// fail, or if `T` contains a map with non-string keys.
 #[inline]
-#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 pub fn to_writer_pretty<W, T>(writer: W, value: &T) -> Result<()>
 where
     W: io::Write,

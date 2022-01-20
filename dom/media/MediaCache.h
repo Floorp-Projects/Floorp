@@ -9,7 +9,6 @@
 
 #include "DecoderDoctorLogger.h"
 #include "Intervals.h"
-#include "mozilla/Monitor.h"
 #include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/MediaDebugInfoBinding.h"
@@ -28,6 +27,7 @@ namespace mozilla {
 class ChannelMediaResource;
 typedef media::IntervalSet<int64_t> MediaByteRangeSet;
 class MediaResource;
+class MonitorAutoLock;
 
 /**
  * Media applications want fast, "on demand" random access to media data,

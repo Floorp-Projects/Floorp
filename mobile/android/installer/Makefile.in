@@ -63,7 +63,7 @@ endif
 endif
 endif
 
-ifeq (Darwin,$(OS_TARGET))
+ifeq (bundle, $(MOZ_FS_LAYOUT))
 BINPATH = $(_BINPATH)
 DEFINES += -DAPPNAME=$(_APPNAME)
 else

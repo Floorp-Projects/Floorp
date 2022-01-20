@@ -245,30 +245,12 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 
 - (NSArray*)moxRows {
   // Create a new array with the list of table rows.
-  NSArray* children = [self moxChildren];
-  NSMutableArray* rows = [[[NSMutableArray alloc] init] autorelease];
-  for (mozAccessible* curr : children) {
-    if ([curr isKindOfClass:[mozTableRowAccessible class]]) {
-      [rows addObject:curr];
-    } else if ([[curr moxRole] isEqualToString:@"AXGroup"]) {
-      // Plain thead/tbody elements are removed from the core a11y tree and
-      // replaced with their subtree, but thead/tbody elements with click
-      // handlers are not -- they remain as groups. We need to expose any
-      // rows they contain as rows of the parent table.
-      [rows
-          addObjectsFromArray:[[curr moxChildren]
-                                  filteredArrayUsingPredicate:
-                                      [NSPredicate predicateWithBlock:^BOOL(
-                                                       mozAccessible* child,
-                                                       NSDictionary* bindings) {
-                                        return [child
-                                            isKindOfClass:[mozTableRowAccessible
-                                                              class]];
-                                      }]]];
-    }
-  }
-
-  return rows;
+  return [[self moxChildren]
+      filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(
+                                                   mozAccessible* child,
+                                                   NSDictionary* bindings) {
+        return [child isKindOfClass:[mozTableRowAccessible class]];
+      }]];
 }
 
 - (NSArray*)moxColumns {
@@ -373,32 +355,22 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 
 @end
 
-@interface mozTableRowAccessible ()
-- (mozTableAccessible*)getTableParent;
-@end
-
 @implementation mozTableRowAccessible
-
-- (mozTableAccessible*)getTableParent {
-  mozTableAccessible* tableParent = static_cast<mozTableAccessible*>(
-      [self moxFindAncestor:^BOOL(id curr, BOOL* stop) {
-        return [curr isKindOfClass:[mozTableAccessible class]];
-      }]);
-
-  MOZ_ASSERT(tableParent, "Table row not contained in table?");
-  return tableParent;
-}
 
 - (void)handleAccessibleEvent:(uint32_t)eventType {
   if (eventType == nsIAccessibleEvent::EVENT_REORDER) {
-    [[self getTableParent] invalidateColumns];
+    id parent = [self moxParent];
+    if ([parent isKindOfClass:[mozTableAccessible class]]) {
+      [parent invalidateColumns];
+    }
   }
 
   [super handleAccessibleEvent:eventType];
 }
 
 - (NSNumber*)moxIndex {
-  return @([[[self getTableParent] moxRows] indexOfObjectIdenticalTo:self]);
+  mozTableAccessible* parent = (mozTableAccessible*)[self moxParent];
+  return @([[parent moxRows] indexOfObjectIdenticalTo:self]);
 }
 
 @end

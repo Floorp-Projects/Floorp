@@ -152,7 +152,12 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
 
         // Write all structs
         for (handle, ty) in module.types.iter() {
-            if let TypeInner::Struct { ref members, .. } = ty.inner {
+            if let TypeInner::Struct {
+                top_level,
+                ref members,
+                ..
+            } = ty.inner
+            {
                 if let Some(member) = members.last() {
                     if let TypeInner::Array {
                         size: crate::ArraySize::Dynamic,
@@ -175,6 +180,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 self.write_struct(
                     module,
                     handle,
+                    top_level,
                     members,
                     ep_result.map(|r| (r.0, Io::Output)),
                 )?;
@@ -697,6 +703,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
         &mut self,
         module: &Module,
         handle: Handle<crate::Type>,
+        _block: bool,
         members: &[crate::StructMember],
         shader_stage: Option<(ShaderStage, Io)>,
     ) -> BackendResult {
@@ -1934,7 +1941,11 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 let var = &module.global_variables[var_handle];
                 let (offset, stride) = match module.types[var.ty].inner {
                     TypeInner::Array { stride, .. } => (0, stride),
-                    TypeInner::Struct { ref members, .. } => {
+                    TypeInner::Struct {
+                        top_level: true,
+                        ref members,
+                        ..
+                    } => {
                         let last = members.last().unwrap();
                         let stride = match module.types[last.ty].inner {
                             TypeInner::Array { stride, .. } => stride,

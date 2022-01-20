@@ -76,11 +76,6 @@ NativeLayerRootWayland::NativeLayerRootWayland(MozContainer* aContainer)
 }
 
 NativeLayerRootWayland::~NativeLayerRootWayland() {
-  GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(mContainer));
-  if (gdkWindow) {
-    GdkFrameClock* frameClock = gdk_window_get_frame_clock(gdkWindow);
-    g_signal_handlers_disconnect_by_data(frameClock, this);
-  }
   g_object_unref(mContainer);
 }
 
@@ -343,9 +338,9 @@ void NativeLayerRootWayland::UpdateLayersOnMainThread() {
   }
 
   if (!mGdkAfterPaintId && gdkWindow) {
-    GdkFrameClock* frameClock = gdk_window_get_frame_clock(gdkWindow);
+    GdkFrameClock* frame_clock = gdk_window_get_frame_clock(gdkWindow);
     mGdkAfterPaintId =
-        g_signal_connect_after(frameClock, "after-paint",
+        g_signal_connect_after(frame_clock, "after-paint",
                                G_CALLBACK(sAfterFrameClockAfterPaint), this);
   }
 }

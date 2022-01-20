@@ -21,7 +21,6 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/ipc/Shmem.h"
-#include "mozilla/gfx/Swizzle.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/OOPCanvasRenderer.h"
@@ -129,18 +128,11 @@ ClientWebGLContext::ClientWebGLContext(const bool webgl2)
 ClientWebGLContext::~ClientWebGLContext() { RemovePostRefreshObserver(); }
 
 void ClientWebGLContext::JsWarning(const std::string& utf8) const {
-  nsIGlobalObject* global = nullptr;
-  if (mCanvasElement) {
-    mozilla::dom::Document* doc = mCanvasElement->OwnerDoc();
-    if (doc) {
-      global = doc->GetScopeObject();
-    }
-  } else if (mOffscreenCanvas) {
-    global = mOffscreenCanvas->GetOwnerGlobal();
+  if (!mCanvasElement) {
+    return;
   }
-
   dom::AutoJSAPI api;
-  if (!api.Init(global)) {
+  if (!api.Init(mCanvasElement->OwnerDoc()->GetScopeObject())) {
     return;
   }
   const auto& cx = api.cx();
@@ -148,17 +140,7 @@ void ClientWebGLContext::JsWarning(const std::string& utf8) const {
 }
 
 void AutoJsWarning(const std::string& utf8) {
-  if (NS_IsMainThread()) {
-    const AutoJSContext cx;
-    JS::WarnUTF8(cx, "%s", utf8.c_str());
-    return;
-  }
-
-  JSContext* cx = dom::GetCurrentWorkerThreadJSContext();
-  if (NS_WARN_IF(!cx)) {
-    return;
-  }
-
+  const AutoJSContext cx;
   JS::WarnUTF8(cx, "%s", utf8.c_str());
 }
 
@@ -201,6 +183,7 @@ void ClientWebGLContext::EmulateLoseContext() const {
 
 void ClientWebGLContext::OnContextLoss(
     const webgl::ContextLossReason reason) const {
+  MOZ_ASSERT(NS_IsMainThread());
   JsWarning("WebGL context was lost.");
 
   if (mNotLost) {
@@ -232,8 +215,8 @@ void ClientWebGLContext::OnContextLoss(
     if (!strong) return;
     strong->Event_webglcontextlost();
   };
-  already_AddRefed<mozilla::CancelableRunnable> runnable =
-      NS_NewCancelableRunnableFunction("enqueue Event_webglcontextlost", fnRun);
+  already_AddRefed<mozilla::Runnable> runnable =
+      NS_NewRunnableFunction("enqueue Event_webglcontextlost", fnRun);
   NS_DispatchToCurrentThread(std::move(runnable));
 }
 
@@ -270,9 +253,8 @@ void ClientWebGLContext::RestoreContext(
     if (!strong) return;
     strong->Event_webglcontextrestored();
   };
-  already_AddRefed<mozilla::CancelableRunnable> runnable =
-      NS_NewCancelableRunnableFunction("enqueue Event_webglcontextrestored",
-                                       fnRun);
+  already_AddRefed<mozilla::Runnable> runnable =
+      NS_NewRunnableFunction("enqueue Event_webglcontextrestored", fnRun);
   NS_DispatchToCurrentThread(std::move(runnable));
 }
 
@@ -281,16 +263,7 @@ void ClientWebGLContext::Event_webglcontextrestored() const {
   mLossStatus = webgl::LossStatus::Ready;
   mNextError = 0;
 
-  uvec2 requestSize;
-  if (mCanvasElement) {
-    requestSize = {mCanvasElement->Width(), mCanvasElement->Height()};
-  } else if (mOffscreenCanvas) {
-    requestSize = {mOffscreenCanvas->Width(), mOffscreenCanvas->Height()};
-  } else {
-    MOZ_ASSERT_UNREACHABLE("no HTMLCanvasElement or OffscreenCanvas!");
-    return;
-  }
-
+  const uvec2 requestSize = {mCanvasElement->Width(), mCanvasElement->Height()};
   const auto mutThis = const_cast<ClientWebGLContext*>(
       this);  // TODO: Make context loss non-mutable.
   if (!mutThis->CreateHostContext(requestSize)) {
@@ -411,12 +384,6 @@ Maybe<layers::SurfaceDescriptor> ClientWebGLContext::GetFrontBuffer(
   return ret;
 }
 
-Maybe<layers::SurfaceDescriptor> ClientWebGLContext::PresentFrontBuffer(
-    WebGLFramebufferJS* const fb, const layers::TextureType type, bool webvr) {
-  Present(fb, type, webvr);
-  return GetFrontBuffer(fb, webvr);
-}
-
 void ClientWebGLContext::ClearVRSwapChain() { Run<RPROC(ClearVRSwapChain)>(); }
 
 // -
@@ -447,7 +414,7 @@ bool ClientWebGLContext::InitializeCanvasRenderer(
   if (IsContextLost()) return false;
 
   layers::CanvasRendererData data;
-  data.mContext = this;
+  data.mContext = mSharedPtrPtr;
   data.mOriginPos = gl::OriginPos::BottomLeft;
 
   const auto& options = *mInitialOptions;
@@ -463,24 +430,6 @@ bool ClientWebGLContext::InitializeCanvasRenderer(
   aRenderer->Initialize(data);
   aRenderer->SetDirty();
   return true;
-}
-
-void ClientWebGLContext::UpdateCanvasParameters() {
-  if (!mOffscreenCanvas) {
-    return;
-  }
-
-  const auto& options = *mInitialOptions;
-  const auto& size = DrawingBufferSize();
-
-  mozilla::dom::OffscreenCanvasDisplayData data;
-  data.mOriginPos = gl::OriginPos::BottomLeft;
-  data.mIsOpaque = !options.alpha;
-  data.mIsAlphaPremult = !options.alpha || options.premultipliedAlpha;
-  data.mSize = {size.x, size.y};
-  data.mDoPaintCallbacks = false;
-
-  mOffscreenCanvas->UpdateDisplayData(data);
 }
 
 layers::LayersBackend ClientWebGLContext::GetCompositorBackendType() const {
@@ -582,7 +531,6 @@ ClientWebGLContext::SetDimensions(const int32_t signedWidth,
     state.mDrawingBufferSize = Nothing();
     Run<RPROC(Resize)>(size);
 
-    UpdateCanvasParameters();
     MarkCanvasDirty();
     return NS_OK;
   }
@@ -694,7 +642,6 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
     return false;
   }
   mNotLost = pNotLost;
-  UpdateCanvasParameters();
   MarkCanvasDirty();
 
   // Init state
@@ -890,15 +837,53 @@ RefPtr<gfx::SourceSurface> ClientWebGLContext::GetFrontBufferSnapshot(
                                                         /*zero=*/true));
   };
 
-  const auto& inProcess = mNotLost->inProcess;
-  if (inProcess) {
-    const auto maybeSize = inProcess->FrontBufferSnapshotInto({});
-    if (!maybeSize) return nullptr;
-    const auto& surfSize = *maybeSize;
+  auto snapshot = [&]() -> RefPtr<gfx::DataSourceSurface> {
+    const auto& inProcess = mNotLost->inProcess;
+    if (inProcess) {
+      const auto maybeSize = inProcess->FrontBufferSnapshotInto({});
+      if (!maybeSize) return nullptr;
+      const auto& surfSize = *maybeSize;
+      const auto stride = surfSize.x * 4;
+      const auto byteSize = stride * surfSize.y;
+      const auto surf = fnNewSurf(surfSize);
+      if (!surf) return nullptr;
+      {
+        const gfx::DataSourceSurface::ScopedMap map(
+            surf, gfx::DataSourceSurface::READ_WRITE);
+        if (!map.IsMapped()) {
+          MOZ_ASSERT(false);
+          return nullptr;
+        }
+        MOZ_RELEASE_ASSERT(map.GetStride() == static_cast<int64_t>(stride));
+        auto range = Range<uint8_t>{map.GetData(), byteSize};
+        if (!inProcess->FrontBufferSnapshotInto(Some(range))) {
+          gfxCriticalNote << "ClientWebGLContext::GetFrontBufferSnapshot: "
+                             "FrontBufferSnapshotInto(some) failed after "
+                             "FrontBufferSnapshotInto(none)";
+          return nullptr;
+        }
+      }
+      return surf;
+    }
+    const auto& child = mNotLost->outOfProcess;
+    child->FlushPendingCmds();
+    webgl::FrontBufferSnapshotIpc res;
+    if (!child->SendGetFrontBufferSnapshot(&res)) {
+      res = {};
+    }
+    if (!res.shmem) return nullptr;
+
+    const auto& surfSize = res.surfSize;
+    const webgl::RaiiShmem shmem{child, res.shmem.ref()};
+    const auto& shmemBytes = shmem.ByteRange();
+    if (!surfSize.x) return nullptr;  // Zero means failure.
+
     const auto stride = surfSize.x * 4;
     const auto byteSize = stride * surfSize.y;
+
     const auto surf = fnNewSurf(surfSize);
     if (!surf) return nullptr;
+
     {
       const gfx::DataSourceSurface::ScopedMap map(
           surf, gfx::DataSourceSurface::READ_WRITE);
@@ -907,71 +892,26 @@ RefPtr<gfx::SourceSurface> ClientWebGLContext::GetFrontBufferSnapshot(
         return nullptr;
       }
       MOZ_RELEASE_ASSERT(map.GetStride() == static_cast<int64_t>(stride));
-      auto range = Range<uint8_t>{map.GetData(), byteSize};
-      if (!inProcess->FrontBufferSnapshotInto(Some(range))) {
-        gfxCriticalNote << "ClientWebGLContext::GetFrontBufferSnapshot: "
-                           "FrontBufferSnapshotInto(some) failed after "
-                           "FrontBufferSnapshotInto(none)";
-        return nullptr;
-      }
-      if (requireAlphaPremult && options.alpha && !options.premultipliedAlpha) {
-        bool rv = gfx::PremultiplyData(
-            map.GetData(), map.GetStride(), gfx::SurfaceFormat::R8G8B8A8,
-            map.GetData(), map.GetStride(), gfx::SurfaceFormat::B8G8R8A8,
-            surf->GetSize());
-        MOZ_RELEASE_ASSERT(rv, "PremultiplyData failed!");
-      } else {
-        bool rv = gfx::SwizzleData(
-            map.GetData(), map.GetStride(), gfx::SurfaceFormat::R8G8B8A8,
-            map.GetData(), map.GetStride(), gfx::SurfaceFormat::B8G8R8A8,
-            surf->GetSize());
-        MOZ_RELEASE_ASSERT(rv, "SwizzleData failed!");
-      }
+      MOZ_RELEASE_ASSERT(shmemBytes.length() == byteSize);
+      memcpy(map.GetData(), shmemBytes.begin().get(), byteSize);
     }
     return surf;
-  }
-  const auto& child = mNotLost->outOfProcess;
-  child->FlushPendingCmds();
-  webgl::FrontBufferSnapshotIpc res;
-  if (!child->SendGetFrontBufferSnapshot(&res)) {
-    res = {};
-  }
-  if (!res.shmem) return nullptr;
+  }();
+  if (!snapshot) return nullptr;
 
-  const auto& surfSize = res.surfSize;
-  const webgl::RaiiShmem shmem{child, res.shmem.ref()};
-  const auto& shmemBytes = shmem.ByteRange();
-  if (!surfSize.x) return nullptr;  // Zero means failure.
-
-  const auto stride = surfSize.x * 4;
-  const auto byteSize = stride * surfSize.y;
-
-  const auto surf = fnNewSurf(surfSize);
-  if (!surf) return nullptr;
-
-  {
-    const gfx::DataSourceSurface::ScopedMap map(
-        surf, gfx::DataSourceSurface::READ_WRITE);
-    if (!map.IsMapped()) {
-      MOZ_ASSERT(false);
-      return nullptr;
+  if (requireAlphaPremult && options.alpha && !options.premultipliedAlpha) {
+    const auto nonPremultSurf = snapshot;
+    const auto& size = nonPremultSurf->GetSize();
+    const auto format = nonPremultSurf->GetFormat();
+    snapshot =
+        gfx::Factory::CreateDataSourceSurface(size, format, /*zero=*/false);
+    if (!snapshot) {
+      gfxCriticalNote << "CreateDataSourceSurface failed for size " << size;
     }
-    MOZ_RELEASE_ASSERT(shmemBytes.length() == byteSize);
-    if (requireAlphaPremult && options.alpha && !options.premultipliedAlpha) {
-      bool rv = gfx::PremultiplyData(
-          shmemBytes.begin().get(), stride, gfx::SurfaceFormat::R8G8B8A8,
-          map.GetData(), map.GetStride(), gfx::SurfaceFormat::B8G8R8A8,
-          surf->GetSize());
-      MOZ_RELEASE_ASSERT(rv, "PremultiplyData failed!");
-    } else {
-      bool rv = gfx::SwizzleData(shmemBytes.begin().get(), stride,
-                                 gfx::SurfaceFormat::R8G8B8A8, map.GetData(),
-                                 map.GetStride(), gfx::SurfaceFormat::B8G8R8A8,
-                                 surf->GetSize());
-      MOZ_RELEASE_ASSERT(rv, "SwizzleData failed!");
-    }
+    gfxUtils::PremultiplyDataSurface(nonPremultSurf, snapshot);
   }
-  return surf;
+
+  return snapshot;
 }
 
 RefPtr<gfx::DataSourceSurface> ClientWebGLContext::BackBufferSnapshot() {
@@ -1014,18 +954,8 @@ RefPtr<gfx::DataSourceSurface> ClientWebGLContext::BackBufferSnapshot() {
   RefPtr<gfx::DataSourceSurface> surf =
       gfx::Factory::CreateDataSourceSurfaceWithStride(
           {size.x, size.y}, surfFormat, stride, /*zero=*/true);
-  if (NS_WARN_IF(!surf)) {
-    // Was this an OOM or alloc-limit? (500MB is our default resource size
-    // limit)
-    surf = gfx::Factory::CreateDataSourceSurfaceWithStride({1, 1}, surfFormat,
-                                                           4, /*zero=*/true);
-    if (!surf) {
-      // Still failed for a 1x1 size.
-      gfxCriticalError() << "CreateDataSourceSurfaceWithStride(surfFormat="
-                         << surfFormat << ") failed.";
-    }
-    return nullptr;
-  }
+  MOZ_ASSERT(surf);
+  if (NS_WARN_IF(!surf)) return nullptr;
 
   {
     const gfx::DataSourceSurface::ScopedMap map(
@@ -3983,8 +3913,6 @@ void webgl::TexUnpackBlobDesc::Shrink(const webgl::PackingInfo& pi) {
   }
 }
 
-// -
-
 void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
                                   GLint level, GLenum respecFormat,
                                   const ivec3& offset, const ivec3& isize,
@@ -4009,9 +3937,6 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
   // report if a GC is possible while any data pointers extracted from the
   // typed array are still live.
   dom::Uint8ClampedArray scopedArr;
-  const auto reset = MakeScopeExit([&] {
-    scopedArr.Reset();  // (For the hazard analysis) Done with the data.
-  });
 
   // -
   bool isDataUpload = false;
@@ -4076,6 +4001,7 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
         imageTarget, explicitSize, gfxAlphaType::NonPremult, {}, {}});
   }();
   if (!desc) {
+    scopedArr.Reset();
     return;
   }
 
@@ -4108,6 +4034,7 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
       EnqueueError(LOCAL_GL_INVALID_OPERATION,
                    "Non-DOM-Element uploads with alpha-premult"
                    " or y-flip do not support subrect selection.");
+      scopedArr.Reset();  // (For the hazard analysis) Done with the data.
       return;
     }
   }
@@ -4116,40 +4043,25 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
 
   // -
 
-  mozilla::ipc::Shmem* pShmem = nullptr;
-
   if (desc->sd) {
+    auto fallbackReason = BlitPreventReason(level, offset, pi, *desc);
+
     const auto& sd = *(desc->sd);
     const auto sdType = sd.type();
     const auto& contextInfo = mNotLost->info;
 
-    const auto fallbackReason = [&]() -> Maybe<std::string> {
-      auto fallbackReason = BlitPreventReason(level, offset, pi, *desc);
-      if (fallbackReason) return fallbackReason;
+    const bool canUploadViaSd = contextInfo.uploadableSdTypes[sdType];
+    if (!canUploadViaSd) {
+      const nsPrintfCString msg(
+          "Fast uploads for resource type %i not implemented.", int(sdType));
+      fallbackReason.reset();
+      fallbackReason.emplace(ToString(msg));
+    }
 
-      const bool canUploadViaSd = contextInfo.uploadableSdTypes[sdType];
-      if (!canUploadViaSd) {
-        const nsPrintfCString msg(
-            "Fast uploads for resource type %i not implemented.", int(sdType));
-        return Some(ToString(msg));
-      }
-
-      if (sdType == layers::SurfaceDescriptor::TSurfaceDescriptorBuffer) {
-        const auto& sdb = sd.get_SurfaceDescriptorBuffer();
-        const auto& data = sdb.data();
-        if (data.type() == layers::MemoryOrShmem::TShmem) {
-          pShmem = &data.get_Shmem();
-        } else {
-          return Some(
-              std::string{"SurfaceDescriptorBuffer data is not Shmem."});
-        }
-      }
-
-      if (StaticPrefs::webgl_disable_DOM_blit_uploads()) {
-        return Some(std::string{"DOM blit uploads are disabled."});
-      }
-      return {};
-    }();
+    if (StaticPrefs::webgl_disable_DOM_blit_uploads()) {
+      fallbackReason.reset();
+      fallbackReason.emplace("DOM blit uploads are disabled.");
+    }
 
     if (fallbackReason) {
       EnqueuePerfWarning("Missed GPU-copy fast-path: %s",
@@ -4171,60 +4083,13 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
   }
   desc->image = nullptr;
 
-  desc->Shrink(pi);
-
   // -
 
-  const bool doInlineUpload = !desc->sd;
-  // Why always de-inline SDs here?
-  // 1. This way we always send SDs down the same handling path, which
-  // should keep things from breaking if things flip between paths because of
-  // what we get handed by SurfaceFromElement etc.
-  // 2. We don't actually always grab strong-refs to the resources in the SDs,
-  // so we should try to use them sooner rather than later. Yes we should fix
-  // this, but for now let's give the SDs the best chance of lucking out, eh?
-  // :)
-  // 3. It means we don't need to write QueueParamTraits<SurfaceDescriptor>.
-  if (doInlineUpload) {
-    // We definitely want e.g. TexImage(PBO) here.
-    Run<RPROC(TexImage)>(static_cast<uint32_t>(level), respecFormat,
-                         CastUvec3(offset), pi, std::move(*desc));
-  } else {
-    // We can't handle shmems like SurfaceDescriptorBuffer inline, so use ipdl.
-    const auto& inProcess = mNotLost->inProcess;
-    if (inProcess) {
-      return inProcess->TexImage(static_cast<uint32_t>(level), respecFormat,
-                                 CastUvec3(offset), pi, *desc);
-    }
-    const auto& child = mNotLost->outOfProcess;
-    child->FlushPendingCmds();
+  desc->Shrink(pi);
 
-    // The shmem we're handling was only shared from RDD to Content, and
-    // immediately on Content receiving it, it was closed! RIP
-    // Eventually we'll be able to make shmems that can traverse multiple
-    // endpoints, but for now we need to make a new Content->WebGLParent shmem
-    // and memcpy into it. We don't use `desc` elsewhere, so just replace the
-    // Shmem buried within it with one that's valid for WebGLChild->Parent
-    // transport.
-    if (pShmem) {
-      MOZ_ASSERT(desc->sd);
-      const auto byteCount = pShmem->Size<uint8_t>();
-      const auto* const src = pShmem->get<uint8_t>();
-      const auto shmemType =
-          mozilla::ipc::SharedMemory::SharedMemoryType::TYPE_BASIC;
-      mozilla::ipc::Shmem shmemForResend;
-      if (!child->AllocShmem(byteCount, shmemType, &shmemForResend)) {
-        NS_WARNING("AllocShmem failed in TexImage");
-        return;
-      }
-      auto* const dst = shmemForResend.get<uint8_t>();
-      memcpy(dst, src, byteCount);
-      *pShmem = shmemForResend;
-    }
-
-    (void)child->SendTexImage(static_cast<uint32_t>(level), respecFormat,
-                              CastUvec3(offset), pi, std::move(*desc));
-  }
+  Run<RPROC(TexImage)>(static_cast<uint32_t>(level), respecFormat,
+                       CastUvec3(offset), pi, std::move(*desc));
+  scopedArr.Reset();  // (For the hazard analysis) Done with the data.
 }
 
 void ClientWebGLContext::RawTexImage(
@@ -4234,8 +4099,6 @@ void ClientWebGLContext::RawTexImage(
   if (IsContextLost()) return;
   Run<RPROC(TexImage)>(level, respecFormat, offset, pi, desc);
 }
-
-// -
 
 void ClientWebGLContext::CompressedTexImage(bool sub, uint8_t funcDims,
                                             GLenum imageTarget, GLint level,
@@ -5142,13 +5005,12 @@ GLenum ClientWebGLContext::ClientWaitSync(WebGLSyncJS& sync,
   const bool canBeAvailable =
       (sync.mCanBeAvailable || StaticPrefs::webgl_allow_immediate_queries());
   if (!canBeAvailable) {
-    if (!sync.mHasWarnedNotAvailable) {
+    if (timeout) {
       EnqueueWarning(
-          "ClientWaitSync must return TIMEOUT_EXPIRED until control has"
-          " returned to the user agent's main loop. (only warns once)");
-      sync.mHasWarnedNotAvailable = true;
+          "Sync object not yet queryable. Please wait for the event"
+          " loop.");
     }
-    return LOCAL_GL_TIMEOUT_EXPIRED;
+    return LOCAL_GL_WAIT_FAILED;
   }
 
   return ret;

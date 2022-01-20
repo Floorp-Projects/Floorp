@@ -2,6 +2,5 @@
 
 enableGeckoProfiling();
 var s = newGlobal();
-s.offThreadCompileToStencil('oomTest(() => {});');
-var stencil = s.finishOffThreadCompileToStencil();
-s.evalStencil(stencil);
+s.offThreadCompileScript('oomTest(() => {});');
+s.runOffThreadScript();

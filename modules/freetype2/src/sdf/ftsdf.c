@@ -204,7 +204,7 @@
   {
     FT_Memory  memory;
 
-  } SDF_TRaster, *SDF_PRaster;
+  } SDF_TRaster;
 
 
   /**************************************************************************
@@ -841,12 +841,12 @@
    *
    */
 
-  /* Return the control box of an edge.  The control box is a rectangle */
-  /* in which all the control points can fit tightly.                   */
+  /* Return the control box of a edge.  The control box is a rectangle */
+  /* in which all the control points can fit tightly.                  */
   static FT_CBox
   get_control_box( SDF_Edge  edge )
   {
-    FT_CBox  cbox   = { 0, 0, 0, 0 };
+    FT_CBox  cbox;
     FT_Bool  is_set = 0;
 
 
@@ -3706,19 +3706,25 @@
    */
 
   static FT_Error
-  sdf_raster_new( FT_Memory     memory,
-                  SDF_PRaster*  araster )
+  sdf_raster_new( FT_Memory   memory,
+                  FT_Raster*  araster)
   {
-    FT_Error     error;
-    SDF_PRaster  raster = NULL;
+    FT_Error      error  = FT_Err_Ok;
+    SDF_TRaster*  raster = NULL;
+    FT_Int        line   = __LINE__;
+
+    /* in non-debugging mode this is not used */
+    FT_UNUSED( line );
 
 
-    if ( !FT_NEW( raster ) )
+    *araster = 0;
+    if ( !FT_ALLOC( raster, sizeof ( SDF_TRaster ) ) )
+    {
       raster->memory = memory;
+      *araster       = (FT_Raster)raster;
+    }
 
-    *araster = raster;
-
-   return error;
+    return error;
   }
 
 

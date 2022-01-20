@@ -9,7 +9,7 @@ cfg_blocking_impl! {
 
     mod schedule;
     mod shutdown;
-    pub(crate) mod task;
+    mod task;
 
     use crate::runtime::Builder;
 

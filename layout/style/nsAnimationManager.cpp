@@ -16,7 +16,6 @@
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/dom/MutationObservers.h"
-#include "mozilla/dom/ScrollTimeline.h"
 
 #include "nsPresContext.h"
 #include "nsPresContextInlines.h"
@@ -49,7 +48,6 @@ using mozilla::dom::Element;
 using mozilla::dom::KeyframeEffect;
 using mozilla::dom::MutationObservers;
 using mozilla::dom::OptionalEffectTiming;
-using mozilla::dom::ScrollTimeline;
 
 ////////////////////////// nsAnimationManager ////////////////////////////
 
@@ -142,7 +140,7 @@ static void UpdateOldAnimationPropertiesWithNew(
     CSSAnimation& aOld, TimingParams&& aNewTiming,
     nsTArray<Keyframe>&& aNewKeyframes, bool aNewIsStylePaused,
     CSSAnimationProperties aOverriddenProperties,
-    ServoCSSAnimationBuilder& aBuilder, dom::AnimationTimeline* aTimeline) {
+    ServoCSSAnimationBuilder& aBuilder) {
   bool animationChanged = false;
 
   // Update the old from the new so we can keep the original object
@@ -178,22 +176,6 @@ static void UpdateOldAnimationPropertiesWithNew(
     }
   }
 
-  // Replace the timeline if
-  // 1. The old timeline is null and the new one is non-null.
-  // 2. The old timeline is non-null and the new one is null.
-  // 3. Both timelines are scroll-timeline but they have different members
-  //    (i.e. different owner documents, sources, or directions).
-  // FIXME: I believe we can do better if both are scroll-timelines, e.g. just
-  // replace the different members, instead of the entire timeline.
-  // We will do that in Bug 1738135.
-  dom::AnimationTimeline* oldTimeline = aOld.GetTimeline();
-  if (!oldTimeline != !aTimeline ||
-      (oldTimeline && aTimeline &&
-       oldTimeline->AsScrollTimeline() != aTimeline->AsScrollTimeline())) {
-    aOld.SetTimelineNoUpdate(aTimeline);
-    animationChanged = true;
-  }
-
   // Handle changes in play state. If the animation is idle, however,
   // changes to animation-play-state should *not* restart it.
   if (aOld.PlayState() != AnimationPlayState::Idle &&
@@ -214,40 +196,6 @@ static void UpdateOldAnimationPropertiesWithNew(
   if (animationChanged && aOld.IsRelevant()) {
     MutationObservers::NotifyAnimationChanged(&aOld);
   }
-}
-
-// FIXME: Bug 1737918: Update the syntax of animation-timeline, and null
-// timeline may be obsolete.
-static already_AddRefed<dom::AnimationTimeline> GetTimeline(
-    const StyleAnimationTimeline& aStyleTimeline, nsPresContext* aPresContext,
-    const NonOwningAnimationTarget& aTarget) {
-  RefPtr<dom::AnimationTimeline> timeline;
-  switch (aStyleTimeline.tag) {
-    case StyleAnimationTimeline::Tag::Timeline: {
-      nsAtom* name = aStyleTimeline.AsTimeline().AsAtom();
-      const auto* rule =
-          aPresContext->StyleSet()->ScrollTimelineRuleForName(name);
-      if (rule) {
-        // We do intentionally use the pres context's document for the owner of
-        // ScrollTimeline since it's consistent with what we do for
-        // KeyframeEffect instance.
-        RefPtr<ScrollTimeline> scrollTimeline =
-            ScrollTimeline::FromRule(*rule, aPresContext->Document(), aTarget);
-        timeline = scrollTimeline;
-      } else {
-        // Unknown timeline, so treat is as no timeline.
-        // Keep nullptr.
-      }
-      break;
-    }
-    case StyleAnimationTimeline::Tag::None:
-      // Keep nullptr.
-      break;
-    case StyleAnimationTimeline::Tag::Auto:
-      timeline = aTarget.mElement->OwnerDoc()->Timeline();
-      break;
-  }
-  return timeline.forget();
 }
 
 // Returns a new animation set up with given StyleAnimation.
@@ -278,9 +226,6 @@ static already_AddRefed<CSSAnimation> BuildAnimation(
   bool isStylePaused = aStyleDisplay.GetAnimationPlayState(animIdx) ==
                        StyleAnimationPlayState::Paused;
 
-  RefPtr<dom::AnimationTimeline> timeline =
-      GetTimeline(aStyleDisplay.GetTimeline(animIdx), aPresContext, aTarget);
-
   // Find the matching animation with animation name in the old list
   // of animations and remove the matched animation from the list.
   RefPtr<CSSAnimation> oldAnim =
@@ -297,7 +242,7 @@ static already_AddRefed<CSSAnimation> BuildAnimation(
     // In order to honor what the spec said, we'd copy more data over.
     UpdateOldAnimationPropertiesWithNew(
         *oldAnim, std::move(timing), std::move(keyframes), isStylePaused,
-        oldAnim->GetOverriddenProperties(), aBuilder, timeline);
+        oldAnim->GetOverriddenProperties(), aBuilder);
     return oldAnim.forget();
   }
 
@@ -314,7 +259,7 @@ static already_AddRefed<CSSAnimation> BuildAnimation(
   animation->SetOwningElement(
       OwningElementRef(*aTarget.mElement, aTarget.mPseudoType));
 
-  animation->SetTimelineNoUpdate(timeline);
+  animation->SetTimelineNoUpdate(aTarget.mElement->OwnerDoc()->Timeline());
   animation->SetEffectNoUpdate(effect);
 
   if (isStylePaused) {

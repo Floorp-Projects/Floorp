@@ -40,7 +40,7 @@ class gfxMacFont : public gfxFont {
   bool GetGlyphBounds(uint16_t aGID, gfxRect* aBounds, bool aTight) override;
 
   already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
-      const TextRunDrawParams& aRunParams) override;
+      mozilla::gfx::DrawTarget* aTarget) override;
 
   bool ShouldRoundXOffset(cairo_t* aCairo) const override;
 

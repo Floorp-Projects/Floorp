@@ -19,7 +19,7 @@ use crate::api::{BlobImageData, BlobImageKey, ImageData, ImageDescriptor, ImageK
 use crate::api::{BlobImageParams, BlobImageRequest, BlobImageResult, AsyncBlobImageRasterizer, BlobImageHandler};
 use crate::api::{DocumentId, PipelineId, PropertyBindingId, PropertyBindingKey, ExternalEvent};
 use crate::api::{HitTestResult, HitTesterRequest, ApiHitTester, PropertyValue, DynamicProperties};
-use crate::api::{TileSize, NotificationRequest, DebugFlags};
+use crate::api::{ScrollClamping, TileSize, NotificationRequest, DebugFlags};
 use crate::api::{GlyphDimensionRequest, GlyphIndexRequest, GlyphIndex, GlyphDimensions};
 use crate::api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation, RenderReasons};
 use crate::api::DEFAULT_TILE_SIZE;
@@ -332,12 +332,17 @@ impl Transaction {
     /// pre-scrolled offsets as provided in the display list. Larger `origin`
     /// values will cause the layer to be scrolled further towards the end of
     /// the scroll range.
-    pub fn set_scroll_offset(
+    /// If the ScrollClamping argument is set to clamp, the scroll position
+    /// is clamped to what WebRender understands to be the bounds of the
+    /// scroll range, based on the sizes of the scrollable content and the
+    /// scroll port.
+    pub fn scroll_node_with_id(
         &mut self,
+        origin: LayoutPoint,
         id: ExternalScrollId,
-        offset: LayoutVector2D,
+        clamp: ScrollClamping,
     ) {
-        self.frame_ops.push(FrameMsg::SetScrollOffset(id, offset));
+        self.frame_ops.push(FrameMsg::ScrollNodeWithId(origin, id, clamp));
     }
 
     /// Set the current quality / performance settings for this document.
@@ -797,7 +802,7 @@ pub enum FrameMsg {
     ///
     RequestHitTester(Sender<Arc<dyn ApiHitTester>>),
     ///
-    SetScrollOffset(ExternalScrollId, LayoutVector2D),
+    ScrollNodeWithId(LayoutPoint, ExternalScrollId, ScrollClamping),
     ///
     ResetDynamicProperties,
     ///
@@ -827,7 +832,7 @@ impl fmt::Debug for FrameMsg {
             FrameMsg::UpdateEpoch(..) => "FrameMsg::UpdateEpoch",
             FrameMsg::HitTest(..) => "FrameMsg::HitTest",
             FrameMsg::RequestHitTester(..) => "FrameMsg::RequestHitTester",
-            FrameMsg::SetScrollOffset(..) => "FrameMsg::SetScrollOffset",
+            FrameMsg::ScrollNodeWithId(..) => "FrameMsg::ScrollNodeWithId",
             FrameMsg::ResetDynamicProperties => "FrameMsg::ResetDynamicProperties",
             FrameMsg::AppendDynamicProperties(..) => "FrameMsg::AppendDynamicProperties",
             FrameMsg::AppendDynamicTransformProperties(..) => "FrameMsg::AppendDynamicTransformProperties",

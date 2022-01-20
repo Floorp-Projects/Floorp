@@ -1,6 +1,6 @@
 // |jit-test| exitstatus: 6; skip-if: helperThreadCount() == 0
 
-var job = offThreadCompileToStencil(`
+runOffThreadScript(offThreadCompileScript(`
     function asmModule() {
         "use asm";
         function f() {
@@ -9,9 +9,7 @@ var job = offThreadCompileToStencil(`
         }
         return f;
     }
-`);
-var stencil = finishOffThreadCompileToStencil(job);
-evalStencil(stencil);
+`));
 timeout(1);
 asmModule()();
 assertEq(true, false);

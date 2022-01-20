@@ -2658,8 +2658,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvReplyKeyEvent(
 
   // Here we convert the WidgetEvent that we received to an Event
   // to be able to dispatch it to the <browser> element as the target element.
-  RefPtr<nsPresContext> presContext =
-      mFrameElement->OwnerDoc()->GetPresContext();
+  Document* doc = mFrameElement->OwnerDoc();
+  nsPresContext* presContext = doc->GetPresContext();
   NS_ENSURE_TRUE(presContext, IPC_OK());
 
   AutoHandlingUserInputStatePusher userInpStatePusher(localEvent.IsTrusted(),
@@ -2680,8 +2680,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvReplyKeyEvent(
     }
   }
 
-  RefPtr<Element> frameElement = mFrameElement;
-  EventDispatcher::Dispatch(frameElement, presContext, &localEvent, nullptr,
+  EventDispatcher::Dispatch(mFrameElement, presContext, &localEvent, nullptr,
                             &status);
 
   if (!localEvent.DefaultPrevented() &&
@@ -2719,11 +2718,10 @@ mozilla::ipc::IPCResult BrowserParent::RecvAccessKeyNotHandled(
   NS_ENSURE_TRUE(presShell, IPC_OK());
 
   if (presShell->CanDispatchEvent()) {
-    RefPtr<nsPresContext> presContext = presShell->GetPresContext();
+    nsPresContext* presContext = presShell->GetPresContext();
     NS_ENSURE_TRUE(presContext, IPC_OK());
 
-    RefPtr<Element> frameElement = mFrameElement;
-    EventDispatcher::Dispatch(frameElement, presContext, &localEvent);
+    EventDispatcher::Dispatch(mFrameElement, presContext, &localEvent);
   }
 
   return IPC_OK();

@@ -5,7 +5,6 @@
 DevToolsModules(
     "batching.js",
     "filters.js",
-    "http-custom-request.js",
     "index.js",
     "messages.js",
     "request-blocking.js",

@@ -7,14 +7,13 @@
 #include "TouchActionHelper.h"
 
 #include "mozilla/layers/IAPZCTreeManager.h"
-#include "mozilla/PresShell.h"
-#include "mozilla/TouchEvents.h"
 #include "nsContainerFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 
-namespace mozilla::layers {
+namespace mozilla {
+namespace layers {
 
 static void UpdateAllowedBehavior(StyleTouchAction aTouchActionValue,
                                   bool aConsiderPanning,
@@ -49,7 +48,7 @@ static void UpdateAllowedBehavior(StyleTouchAction aTouchActionValue,
   }
 }
 
-static TouchBehaviorFlags GetAllowedTouchBehaviorForPoint(
+TouchBehaviorFlags TouchActionHelper::GetAllowedTouchBehavior(
     nsIWidget* aWidget, RelativeTo aRootFrame,
     const LayoutDeviceIntPoint& aPoint) {
   TouchBehaviorFlags behavior = AllowedTouchBehavior::VERTICAL_PAN |
@@ -90,7 +89,8 @@ static TouchBehaviorFlags GetAllowedTouchBehaviorForPoint(
 
   for (nsIFrame* frame = target; frame && frame->GetContent() && behavior;
        frame = frame->GetInFlowParent()) {
-    UpdateAllowedBehavior(frame->UsedTouchAction(), considerPanning, behavior);
+    UpdateAllowedBehavior(nsLayoutUtils::GetTouchActionFromFrame(frame),
+                          considerPanning, behavior);
 
     if (frame == nearestScrollableFrame) {
       // We met the scrollable element, after it we shouldn't consider
@@ -102,23 +102,5 @@ static TouchBehaviorFlags GetAllowedTouchBehaviorForPoint(
   return behavior;
 }
 
-nsTArray<TouchBehaviorFlags> TouchActionHelper::GetAllowedTouchBehavior(
-    nsIWidget* aWidget, dom::Document* aDocument,
-    const WidgetTouchEvent& aEvent) {
-  nsTArray<TouchBehaviorFlags> flags;
-  if (!aWidget || !aDocument) {
-    return flags;
-  }
-  if (PresShell* presShell = aDocument->GetPresShell()) {
-    if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
-      for (auto& touch : aEvent.mTouches) {
-        flags.AppendElement(GetAllowedTouchBehaviorForPoint(
-            aWidget, RelativeTo{rootFrame, ViewportType::Visual},
-            touch->mRefPoint));
-      }
-    }
-  }
-  return flags;
-}
-
-}  // namespace mozilla::layers
+}  // namespace layers
+}  // namespace mozilla

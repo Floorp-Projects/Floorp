@@ -244,13 +244,24 @@ void DOMEventTargetHelper::EventListenerRemoved(nsAtom* aType) {
   MaybeUpdateKeepAlive();
 }
 
+void DOMEventTargetHelper::KeepAliveIfHasListenersFor(const nsAString& aType) {
+  mKeepingAliveTypes.mStrings.AppendElement(aType);
+  MaybeUpdateKeepAlive();
+}
+
 void DOMEventTargetHelper::KeepAliveIfHasListenersFor(nsAtom* aType) {
-  mKeepingAliveTypes.AppendElement(aType);
+  mKeepingAliveTypes.mAtoms.AppendElement(aType);
+  MaybeUpdateKeepAlive();
+}
+
+void DOMEventTargetHelper::IgnoreKeepAliveIfHasListenersFor(
+    const nsAString& aType) {
+  mKeepingAliveTypes.mStrings.RemoveElement(aType);
   MaybeUpdateKeepAlive();
 }
 
 void DOMEventTargetHelper::IgnoreKeepAliveIfHasListenersFor(nsAtom* aType) {
-  mKeepingAliveTypes.RemoveElement(aType);
+  mKeepingAliveTypes.mAtoms.RemoveElement(aType);
   MaybeUpdateKeepAlive();
 }
 
@@ -258,9 +269,18 @@ void DOMEventTargetHelper::MaybeUpdateKeepAlive() {
   bool shouldBeKeptAlive = false;
 
   if (NS_SUCCEEDED(CheckCurrentGlobalCorrectness())) {
-    if (!mKeepingAliveTypes.IsEmpty()) {
-      for (uint32_t i = 0; i < mKeepingAliveTypes.Length(); ++i) {
-        if (HasListenersFor(mKeepingAliveTypes[i])) {
+    if (!mKeepingAliveTypes.mAtoms.IsEmpty()) {
+      for (uint32_t i = 0; i < mKeepingAliveTypes.mAtoms.Length(); ++i) {
+        if (HasListenersFor(mKeepingAliveTypes.mAtoms[i])) {
+          shouldBeKeptAlive = true;
+          break;
+        }
+      }
+    }
+
+    if (!shouldBeKeptAlive && !mKeepingAliveTypes.mStrings.IsEmpty()) {
+      for (uint32_t i = 0; i < mKeepingAliveTypes.mStrings.Length(); ++i) {
+        if (HasListenersFor(mKeepingAliveTypes.mStrings[i])) {
           shouldBeKeptAlive = true;
           break;
         }

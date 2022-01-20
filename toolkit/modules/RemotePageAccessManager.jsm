@@ -51,6 +51,7 @@ let RemotePageAccessManager = {
         "security.enterprise_roots.auto-enabled",
         "security.certerror.hideAddException",
       ],
+      RPMSetBoolPref: ["security.tls.version.enable-deprecated"],
       RPMGetIntPref: [
         "services.settings.clock_skew_seconds",
         "services.settings.last_update_seconds",
@@ -87,10 +88,17 @@ let RemotePageAccessManager = {
       RPMGetFormatURLPref: ["app.support.baseURL"],
       RPMGetBoolPref: [
         "security.certerror.hideAddException",
+        "security.tls.version.enable-deprecated",
+        "security.certerrors.tls.version.show-override",
         "security.xfocsp.errorReporting.automatic",
         "security.xfocsp.errorReporting.enabled",
+        "browser.proton.enabled",
       ],
-      RPMSetBoolPref: ["security.xfocsp.errorReporting.automatic"],
+      RPMSetBoolPref: [
+        "security.tls.version.enable-deprecated",
+        "security.xfocsp.errorReporting.automatic",
+      ],
+      RPMPrefIsLocked: ["security.tls.version.min"],
       RPMAddToHistogram: ["*"],
       RPMGetInnerMostURI: ["*"],
       RPMGetHttpResponseHeader: ["*"],

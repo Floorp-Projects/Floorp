@@ -6,7 +6,6 @@
 #include "AudioDriftCorrection.h"
 #include "AudioGenerator.h"
 #include "AudioVerifier.h"
-#include "mozilla/StaticPrefs_media.h"
 
 #include "gmock/gmock.h"
 #include "gtest/gtest-printers.h"
@@ -228,8 +227,7 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
   const uint32_t sampleRateTransmitter = aSourceRate;
   const uint32_t sampleRateReceiver = aTargetRate;
   const uint32_t frequency = 100;
-  const uint32_t buffering = StaticPrefs::media_clockdrift_buffering();
-  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver, buffering);
+  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver);
 
   AudioGenerator<AudioDataValue> tone(1, sampleRateTransmitter, frequency);
   AudioVerifier<AudioDataValue> inToneVerifier(sampleRateTransmitter,
@@ -299,8 +297,7 @@ void testMonoToStereoInput(uint32_t aSourceRate, uint32_t aTargetRate) {
   const uint32_t frequency = 100;
   const uint32_t sampleRateTransmitter = aSourceRate;
   const uint32_t sampleRateReceiver = aTargetRate;
-  const uint32_t buffering = StaticPrefs::media_clockdrift_buffering();
-  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver, buffering);
+  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver);
 
   AudioGenerator<AudioDataValue> tone(1, sampleRateTransmitter, frequency);
   AudioVerifier<AudioDataValue> inToneVerify(sampleRateTransmitter, frequency);
@@ -362,8 +359,7 @@ TEST(TestAudioDriftCorrection, NotEnoughFrames)
 {
   const uint32_t sampleRateTransmitter = 48000;
   const uint32_t sampleRateReceiver = 48000;
-  const uint32_t buffering = StaticPrefs::media_clockdrift_buffering();
-  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver, buffering);
+  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver);
   const uint32_t targetFrames = sampleRateReceiver / 100;
 
   for (uint32_t i = 0; i < 7; ++i) {
@@ -389,8 +385,7 @@ TEST(TestAudioDriftCorrection, CrashInAudioResampler)
 {
   const uint32_t sampleRateTransmitter = 48000;
   const uint32_t sampleRateReceiver = 48000;
-  const uint32_t buffering = StaticPrefs::media_clockdrift_buffering();
-  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver, buffering);
+  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver);
   const uint32_t targetFrames = sampleRateReceiver / 100;
 
   for (uint32_t i = 0; i < 100; ++i) {

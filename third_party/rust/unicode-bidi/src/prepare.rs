@@ -11,12 +11,13 @@
 //!
 //! <http://www.unicode.org/reports/tr9/#Preparations_for_Implicit_Processing>
 
-use core::cmp::max;
-use core::ops::Range;
-use alloc::vec::Vec;
+use std::cmp::max;
+use std::ops::Range;
 
-use super::BidiClass::{self, *};
+use super::char_data::BidiClass;
 use super::level::Level;
+
+use BidiClass::*;
 
 /// A maximal substring of characters with the same embedding level.
 ///
@@ -40,7 +41,7 @@ pub struct IsolatingRunSequence {
 /// whose matching PDI is the first character of the next level run in the sequence.
 ///
 /// Note: This function does *not* return the sequences in order by their first characters.
-#[cfg_attr(feature = "flame_it", flamer::flame)]
+#[cfg_attr(feature = "flame_it", flame)]
 pub fn isolating_run_sequences(
     para_level: Level,
     original_classes: &[BidiClass],
@@ -73,7 +74,7 @@ pub fn isolating_run_sequences(
 
         sequence.push(run);
 
-        if let RLI | LRI | FSI = end_class {
+        if matches!(end_class, RLI | LRI | FSI) {
             // Resume this sequence after the isolate.
             stack.push(sequence);
         } else {
@@ -113,7 +114,7 @@ pub fn isolating_run_sequences(
             };
 
             // Get the level of the next non-removed char after the runs.
-            let succ_level = if let RLI | LRI | FSI = original_classes[end_of_seq - 1] {
+            let succ_level = if matches!(original_classes[end_of_seq - 1], RLI | LRI | FSI) {
                 para_level
             } else {
                 match original_classes[end_of_seq..].iter().position(
@@ -163,10 +164,7 @@ fn level_runs(levels: &[Level], original_classes: &[BidiClass]) -> Vec<LevelRun>
 ///
 /// <http://www.unicode.org/reports/tr9/#X9>
 pub fn removed_by_x9(class: BidiClass) -> bool {
-    match class {
-        RLE | LRE | RLO | LRO | PDF | BN => true,
-        _ => false,
-    }
+    matches!(class, RLE | LRE | RLO | LRO | PDF | BN)
 }
 
 // For use as a predicate for `position` / `rposition`
@@ -188,7 +186,7 @@ mod tests {
     }
 
     // From <http://www.unicode.org/reports/tr9/#BD13>
-    #[rustfmt::skip]
+    #[cfg_attr(rustfmt, rustfmt_skip)]
     #[test]
     fn test_isolating_run_sequences() {
 
@@ -233,7 +231,7 @@ mod tests {
     }
 
     // From <http://www.unicode.org/reports/tr9/#X10>
-    #[rustfmt::skip]
+    #[cfg_attr(rustfmt, rustfmt_skip)]
     #[test]
     fn test_isolating_run_sequences_sos_and_eos() {
 

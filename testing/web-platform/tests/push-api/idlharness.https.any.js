@@ -8,7 +8,7 @@
 
 idl_test(
   ['push-api'],
-  ['service-workers', 'hr-time', 'html', 'dom', 'permissions'],
+  ['service-workers', 'html', 'dom'],
   async (idl_array, t) => {
     const isServiceWorker = 'ServiceWorkerGlobalScope' in self
       && self instanceof ServiceWorkerGlobalScope;

@@ -289,12 +289,19 @@ bool ShouldUsePrototypeDocument(nsIChannel* aChannel, Document* aDoc) {
   return nsContentUtils::IsChromeDoc(aDoc);
 }
 
-nsresult nsHTMLDocument::StartDocumentLoad(
-    const char* aCommand, nsIChannel* aChannel, nsILoadGroup* aLoadGroup,
-    nsISupports* aContainer, nsIStreamListener** aDocListener, bool aReset) {
+nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
+                                           nsIChannel* aChannel,
+                                           nsILoadGroup* aLoadGroup,
+                                           nsISupports* aContainer,
+                                           nsIStreamListener** aDocListener,
+                                           bool aReset, nsIContentSink* aSink) {
   if (!aCommand) {
     MOZ_ASSERT(false, "Command is mandatory");
     return NS_ERROR_INVALID_POINTER;
+  }
+  if (aSink) {
+    MOZ_ASSERT(false, "Got a sink override. Should not happen for HTML doc.");
+    return NS_ERROR_INVALID_ARG;
   }
   if (mType != eHTML) {
     MOZ_ASSERT(mType == eXHTML);
@@ -683,6 +690,7 @@ bool nsHTMLDocument::WillIgnoreCharsetOverride() {
     case kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD:
     case kCharsetFromParentFrame:
     case kCharsetFromXmlDeclaration:
+    case kCharsetFromMetaPrescan:
     case kCharsetFromMetaTag:
     case kCharsetFromChannel:
       return false;

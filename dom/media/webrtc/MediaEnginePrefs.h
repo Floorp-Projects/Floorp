@@ -7,9 +7,6 @@
 #ifndef MediaEnginePrefs_h
 #define MediaEnginePrefs_h
 
-#include <stdint.h>
-#include <string.h>
-
 namespace mozilla {
 
 /**

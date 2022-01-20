@@ -176,7 +176,7 @@ extern UniqueChars processWideModuleLoadPath;
 bool CreateAlias(JSContext* cx, const char* dstName,
                  JS::HandleObject namespaceObj, const char* srcName);
 
-enum class OffThreadJobKind { CompileScript, CompileModule, Decode };
+enum class ScriptKind { Script, ScriptStencil, DecodeScript, Module };
 
 class NonshrinkingGCObjectVector
     : public GCVector<HeapPtrObject, 0, SystemAllocPolicy> {
@@ -263,6 +263,9 @@ extern ShellContext* GetShellContext(JSContext* cx);
 
 [[nodiscard]] extern bool PrintStackTrace(JSContext* cx,
                                           JS::Handle<JSObject*> stackObj);
+
+extern JSObject* CreateScriptPrivate(JSContext* cx,
+                                     HandleString path = nullptr);
 
 } /* namespace shell */
 } /* namespace js */

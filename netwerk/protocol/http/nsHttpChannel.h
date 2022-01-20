@@ -252,7 +252,8 @@ class nsHttpChannel final : public HttpBaseChannel,
   using ChildEndpointPromise =
       MozPromise<mozilla::ipc::Endpoint<extensions::PStreamFilterChild>, bool,
                  true>;
-  [[nodiscard]] RefPtr<ChildEndpointPromise> AttachStreamFilter();
+  [[nodiscard]] RefPtr<ChildEndpointPromise> AttachStreamFilter(
+      base::ProcessId aChildProcessId);
 
  private:  // used for alternate service validation
   RefPtr<TransactionObserver> mTransactionObserver;

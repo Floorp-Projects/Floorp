@@ -3,7 +3,7 @@ use serde::de::{
     self, Deserialize, DeserializeSeed, Deserializer, EnumAccess, Error as SError, Expected,
     MapAccess, SeqAccess, Unexpected, VariantAccess, Visitor,
 };
-use serde::forward_to_deserialize_any;
+use serde::{forward_to_deserialize_any, serde_if_integer128};
 use std::fmt;
 use std::vec;
 
@@ -212,11 +212,13 @@ impl<'de> Deserializer<'de> for Value {
         self.deserialize_number(visitor)
     }
 
-    fn deserialize_i128<V>(self, visitor: V) -> Result<V::Value, Error>
-    where
-        V: Visitor<'de>,
-    {
-        self.deserialize_number(visitor)
+    serde_if_integer128! {
+        fn deserialize_i128<V>(self, visitor: V) -> Result<V::Value, Error>
+        where
+            V: Visitor<'de>,
+        {
+            self.deserialize_number(visitor)
+        }
     }
 
     fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value, Error>
@@ -247,11 +249,13 @@ impl<'de> Deserializer<'de> for Value {
         self.deserialize_number(visitor)
     }
 
-    fn deserialize_u128<V>(self, visitor: V) -> Result<V::Value, Error>
-    where
-        V: Visitor<'de>,
-    {
-        self.deserialize_number(visitor)
+    serde_if_integer128! {
+        fn deserialize_u128<V>(self, visitor: V) -> Result<V::Value, Error>
+        where
+            V: Visitor<'de>,
+        {
+            self.deserialize_number(visitor)
+        }
     }
 
     fn deserialize_f32<V>(self, visitor: V) -> Result<V::Value, Error>

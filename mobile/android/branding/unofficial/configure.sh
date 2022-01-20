@@ -4,3 +4,4 @@
 
 ANDROID_PACKAGE_NAME=org.mozilla.fennec_`echo ${USER:-unknown} | sed 's/-/_/g'`
 MOZ_APP_DISPLAYNAME="Fennec `echo ${USER:-unknown} | sed 's/-/_/g'`"
+MOZ_UPDATER=

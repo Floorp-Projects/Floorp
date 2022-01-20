@@ -278,12 +278,6 @@ class TestConfigure(unittest.TestCase):
 
         self.assertIs(sandbox["foo"](), sys)
 
-        # os.path after an import is a mix of vanilla os.path and sandbox os.path.
-        os_path = {}
-        exec_("from os.path import *", {}, os_path)
-        os_path.update(sandbox.OS.path.__dict__)
-        os_path = ReadOnlyNamespace(**os_path)
-
         exec_(
             textwrap.dedent(
                 """
@@ -295,7 +289,7 @@ class TestConfigure(unittest.TestCase):
             sandbox,
         )
 
-        self.assertEquals(sandbox["foo"](), os_path)
+        self.assertIs(sandbox["foo"](), os.path)
 
         exec_(
             textwrap.dedent(
@@ -308,7 +302,7 @@ class TestConfigure(unittest.TestCase):
             sandbox,
         )
 
-        self.assertEquals(sandbox["foo"](), os_path)
+        self.assertIs(sandbox["foo"](), os.path)
 
         exec_(
             textwrap.dedent(

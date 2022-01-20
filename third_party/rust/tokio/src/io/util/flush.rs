@@ -8,8 +8,7 @@ use std::task::{Context, Poll};
 cfg_io_util! {
     /// A future used to fully flush an I/O object.
     ///
-    /// Created by the [`AsyncWriteExt::flush`][flush] function.
-    /// [flush]: crate::io::AsyncWriteExt::flush
+    /// Created by the [`AsyncWriteExt::flush`] function.
     #[derive(Debug)]
     pub struct Flush<'a, A: ?Sized> {
         a: &'a mut A,

@@ -286,8 +286,7 @@ add_task(async function() {
 add_task(async function test_download_focus() {
   await pushPrefs(
     ["accessibility.tabfocus", 7],
-    ["browser.download.autohideButton", false],
-    ["security.dialog_enable_delay", 0]
+    ["browser.download.autohideButton", false]
   );
   await promiseButtonShown("downloads-button");
 

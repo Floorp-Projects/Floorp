@@ -555,6 +555,7 @@ class TabBase {
     const PROPS = [
       "active",
       "audible",
+      "cookieStoreId",
       "discarded",
       "hidden",
       "highlighted",
@@ -590,13 +591,6 @@ class TabBase {
         return false;
       }
     }
-
-    if (queryInfo.cookieStoreId) {
-      if (!queryInfo.cookieStoreId.includes(this.cookieStoreId)) {
-        return false;
-      }
-    }
-
     if (queryInfo.url || queryInfo.title) {
       if (!this.hasTabPermission) {
         return false;
@@ -2020,10 +2014,6 @@ class TabManagerBase {
         queryInfo.url = parseMatchPatterns([].concat(queryInfo.url), {
           restrictSchemes: false,
         });
-      }
-
-      if (queryInfo.cookieStoreId !== null) {
-        queryInfo.cookieStoreId = [].concat(queryInfo.cookieStoreId);
       }
 
       if (queryInfo.title !== null) {

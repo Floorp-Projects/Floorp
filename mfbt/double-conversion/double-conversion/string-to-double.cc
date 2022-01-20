@@ -729,17 +729,11 @@ double StringToDoubleConverter::StringToIeee(
   DOUBLE_CONVERSION_ASSERT(buffer_pos < kBufferSize);
   buffer[buffer_pos] = '\0';
 
-  // Code above ensures there are no leading zeros and the buffer has fewer than
-  // kMaxSignificantDecimalDigits characters. Trim trailing zeros.
-  Vector<const char> chars(buffer, buffer_pos);
-  chars = TrimTrailingZeros(chars);
-  exponent += buffer_pos - chars.length();
-
   double converted;
   if (read_as_double) {
-    converted = StrtodTrimmed(chars, exponent);
+    converted = Strtod(Vector<const char>(buffer, buffer_pos), exponent);
   } else {
-    converted = StrtofTrimmed(chars, exponent);
+    converted = Strtof(Vector<const char>(buffer, buffer_pos), exponent);
   }
   *processed_characters_count = static_cast<int>(current - input);
   return sign? -converted: converted;
@@ -777,42 +771,6 @@ float StringToDoubleConverter::StringToFloat(
     int* processed_characters_count) const {
   return static_cast<float>(StringToIeee(buffer, length, false,
                                          processed_characters_count));
-}
-
-
-template<>
-double StringToDoubleConverter::StringTo<double>(
-    const char* buffer,
-    int length,
-    int* processed_characters_count) const {
-    return StringToDouble(buffer, length, processed_characters_count);
-}
-
-
-template<>
-float StringToDoubleConverter::StringTo<float>(
-    const char* buffer,
-    int length,
-    int* processed_characters_count) const {
-    return StringToFloat(buffer, length, processed_characters_count);
-}
-
-
-template<>
-double StringToDoubleConverter::StringTo<double>(
-    const uc16* buffer,
-    int length,
-    int* processed_characters_count) const {
-    return StringToDouble(buffer, length, processed_characters_count);
-}
-
-
-template<>
-float StringToDoubleConverter::StringTo<float>(
-    const uc16* buffer,
-    int length,
-    int* processed_characters_count) const {
-    return StringToFloat(buffer, length, processed_characters_count);
 }
 
 }  // namespace double_conversion

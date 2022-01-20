@@ -13,9 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import type { Readable } from 'stream';
-
 import { TimeoutError } from './Errors.js';
 import { debug } from './Debug.js';
 import { CDPSession } from './Connection.js';
@@ -310,8 +307,9 @@ async function waitWithTimeout<T extends any>(
   }
 }
 
-async function getReadableAsBuffer(
-  readable: Readable,
+async function readProtocolStream(
+  client: CDPSession,
+  handle: string,
   path?: string
 ): Promise<Buffer> {
   if (!isNode && path) {
@@ -320,56 +318,33 @@ async function getReadableAsBuffer(
 
   const fs = isNode ? await importFSModule() : null;
 
+  let eof = false;
   let fileHandle: import('fs').promises.FileHandle;
 
   if (path && fs) {
     fileHandle = await fs.promises.open(path, 'w');
   }
-  const buffers = [];
-  for await (const chunk of readable) {
-    buffers.push(chunk);
-    if (fileHandle) {
-      await fs.promises.writeFile(fileHandle, chunk);
+  const bufs = [];
+  while (!eof) {
+    const response = await client.send('IO.read', { handle });
+    eof = response.eof;
+    const buf = Buffer.from(
+      response.data,
+      response.base64Encoded ? 'base64' : undefined
+    );
+    bufs.push(buf);
+    if (path && fs) {
+      await fs.promises.writeFile(fileHandle, buf);
     }
   }
-
   if (path) await fileHandle.close();
+  await client.send('IO.close', { handle });
   let resultBuffer = null;
   try {
-    resultBuffer = Buffer.concat(buffers);
+    resultBuffer = Buffer.concat(bufs);
   } finally {
     return resultBuffer;
   }
-}
-
-async function getReadableFromProtocolStream(
-  client: CDPSession,
-  handle: string
-): Promise<Readable> {
-  // TODO:
-  // This restriction can be lifted once https://github.com/nodejs/node/pull/39062 has landed
-  if (!isNode) {
-    throw new Error('Cannot create a stream outside of Node.js environment.');
-  }
-
-  const { Readable } = await import('stream');
-
-  let eof = false;
-  return new Readable({
-    async read(size: number) {
-      if (eof) {
-        return null;
-      }
-
-      const response = await client.send('IO.read', { handle, size });
-      this.push(response.data, response.base64Encoded ? 'base64' : undefined);
-      if (response.eof) {
-        eof = true;
-        await client.send('IO.close', { handle });
-        this.push(null);
-      }
-    },
-  });
 }
 
 /**
@@ -403,8 +378,7 @@ export const helper = {
   pageBindingDeliverErrorString,
   pageBindingDeliverErrorValueString,
   makePredicateString,
-  getReadableAsBuffer,
-  getReadableFromProtocolStream,
+  readProtocolStream,
   waitWithTimeout,
   waitForEvent,
   isString,

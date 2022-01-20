@@ -17,7 +17,7 @@ Front-end       |       Status       | Feature | Notes |
 --------------- | ------------------ | ------- | ----- |
 SPIR-V (binary) | :white_check_mark: | spv-in  |       |
 WGSL            | :white_check_mark: | wgsl-in | Fully validated |
-GLSL            | :ok:               | glsl-in | GLSL 440+ |
+GLSL            | :ok:               | glsl-in | |
 
 Back-end        |       Status       | Feature  | Notes |
 --------------- | ------------------ | -------- | ----- |
@@ -25,7 +25,7 @@ SPIR-V          | :white_check_mark: | spv-out  |       |
 WGSL            | :ok:               | wgsl-out |       |
 Metal           | :white_check_mark: | msl-out  |       |
 HLSL            | :ok:               | hlsl-out | Shader Model 5.0+ (DirectX 11+) |
-GLSL            | :ok:               | glsl-out | GLSL 330+ and GLSL ES 300+ |
+GLSL            | :ok:               | glsl-out |       |
 AIR             |                    |          |       |
 DXIL/DXIR       |                    |          |       |
 DXBC            |                    |          |       |

@@ -10,7 +10,6 @@
 #include <algorithm>  // For <std::stable_sort>
 #include "mozilla/AnimationComparator.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Variant.h"
@@ -157,21 +156,19 @@ struct AnimationEventInfo {
     return nullptr;
   }
 
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Dispatch(nsPresContext* aPresContext) {
-    RefPtr<dom::EventTarget> target = mTarget;
+  void Dispatch(nsPresContext* aPresContext) {
     if (mEvent.is<RefPtr<dom::AnimationPlaybackEvent>>()) {
-      auto playbackEvent = mEvent.as<RefPtr<dom::AnimationPlaybackEvent>>();
-      EventDispatcher::DispatchDOMEvent(target, nullptr /* WidgetEvent */,
-                                        playbackEvent, aPresContext,
-                                        nullptr /* nsEventStatus */);
+      EventDispatcher::DispatchDOMEvent(
+          mTarget, nullptr /* WidgetEvent */,
+          mEvent.as<RefPtr<dom::AnimationPlaybackEvent>>(), aPresContext,
+          nullptr /* nsEventStatus */);
       return;
     }
 
     MOZ_ASSERT(mEvent.is<InternalTransitionEvent>() ||
                mEvent.is<InternalAnimationEvent>());
 
-    EventDispatcher::Dispatch(target, aPresContext, AsWidgetEvent());
+    EventDispatcher::Dispatch(mTarget, aPresContext, AsWidgetEvent());
   }
 };
 
@@ -263,7 +260,7 @@ class AnimationEventDispatcher final {
     }
 
     for (auto& pending : mPendingEvents) {
-      pending.mAnimation->CachedChildIndexRef().reset();
+      pending.mAnimation->CachedChildIndexRef() = -1;
     }
 
     // FIXME: Replace with mPendingEvents.StableSort when bug 1147091 is

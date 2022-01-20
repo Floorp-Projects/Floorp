@@ -18,7 +18,6 @@
 #include "mozilla/dom/HTMLSelectElementBinding.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/MappedDeclarations.h"
-#include "mozilla/Maybe.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
 #include "nsError.h"
@@ -181,8 +180,7 @@ void HTMLSelectElement::GetAutocompleteInfo(AutocompleteInfo& aInfo) {
 void HTMLSelectElement::InsertChildBefore(nsIContent* aKid,
                                           nsIContent* aBeforeThis, bool aNotify,
                                           ErrorResult& aRv) {
-  const uint32_t index =
-      aBeforeThis ? *ComputeIndexOf(aBeforeThis) : GetChildCount();
+  int32_t index = aBeforeThis ? ComputeIndexOf(aBeforeThis) : GetChildCount();
   SafeOptionListMutation safeMutation(this, this, aKid, index, aNotify);
   nsGenericHTMLFormControlElementWithState::InsertChildBefore(aKid, aBeforeThis,
                                                               aNotify, aRv);
@@ -192,8 +190,8 @@ void HTMLSelectElement::InsertChildBefore(nsIContent* aKid,
 }
 
 void HTMLSelectElement::RemoveChildNode(nsIContent* aKid, bool aNotify) {
-  SafeOptionListMutation safeMutation(this, this, nullptr,
-                                      *ComputeIndexOf(aKid), aNotify);
+  SafeOptionListMutation safeMutation(this, this, nullptr, ComputeIndexOf(aKid),
+                                      aNotify);
   nsGenericHTMLFormControlElementWithState::RemoveChildNode(aKid, aNotify);
 }
 
@@ -449,8 +447,8 @@ int32_t HTMLSelectElement::GetOptionIndexAfter(nsIContent* aOptions) {
   nsCOMPtr<nsIContent> parent = aOptions->GetParent();
 
   if (parent) {
-    const int32_t index = parent->ComputeIndexOf_Deprecated(aOptions);
-    const int32_t count = static_cast<int32_t>(parent->GetChildCount());
+    int32_t index = parent->ComputeIndexOf(aOptions);
+    int32_t count = parent->GetChildCount();
 
     retval = GetFirstChildOptionIndex(parent, index + 1, count);
 

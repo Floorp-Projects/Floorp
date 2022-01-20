@@ -5,16 +5,23 @@
 const URL_HOST = "http://localhost";
 const PR_USEC_PER_MSEC = 1000;
 
-const { GMPExtractor, GMPInstallManager } = ChromeUtils.import(
-  "resource://gre/modules/GMPInstallManager.jsm"
+var GMPScope = ChromeUtils.import(
+  "resource://gre/modules/GMPInstallManager.jsm",
+  null
 );
+var GMPInstallManager = GMPScope.GMPInstallManager;
+
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const { FileUtils } = ChromeUtils.import(
   "resource://gre/modules/FileUtils.jsm"
 );
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
+);
+const { ServiceRequest } = ChromeUtils.import(
+  "resource://gre/modules/ServiceRequest.jsm"
 );
 const { TelemetryTestUtils } = ChromeUtils.import(
   "resource://testing-common/TelemetryTestUtils.jsm"
@@ -22,11 +29,11 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 const { UpdateUtils } = ChromeUtils.import(
   "resource://gre/modules/UpdateUtils.jsm"
 );
-const { GMPPrefs, OPEN_H264_ID } = ChromeUtils.import(
-  "resource://gre/modules/GMPUtils.jsm"
-);
-const { ProductAddonCheckerTestUtils } = ChromeUtils.import(
-  "resource://gre/modules/addons/ProductAddonChecker.jsm"
+const GMPUtils = ChromeUtils.import("resource://gre/modules/GMPUtils.jsm");
+
+var ProductAddonCheckerScope = ChromeUtils.import(
+  "resource://gre/modules/addons/ProductAddonChecker.jsm",
+  null
 );
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
@@ -62,33 +69,79 @@ add_task(async function test_prefs() {
   let addon1 = "addon1",
     addon2 = "addon2";
 
-  GMPPrefs.setString(GMPPrefs.KEY_URL, "http://not-really-used");
-  GMPPrefs.setString(GMPPrefs.KEY_URL_OVERRIDE, "http://not-really-used-2");
-  GMPPrefs.setInt(GMPPrefs.KEY_PLUGIN_LAST_UPDATE, 1, addon1);
-  GMPPrefs.setString(GMPPrefs.KEY_PLUGIN_VERSION, "2", addon1);
-  GMPPrefs.setInt(GMPPrefs.KEY_PLUGIN_LAST_UPDATE, 3, addon2);
-  GMPPrefs.setInt(GMPPrefs.KEY_PLUGIN_VERSION, 4, addon2);
-  GMPPrefs.setBool(GMPPrefs.KEY_PLUGIN_AUTOUPDATE, false, addon2);
-  GMPPrefs.setBool(GMPPrefs.KEY_CERT_CHECKATTRS, true);
-
-  Assert.equal(GMPPrefs.getString(GMPPrefs.KEY_URL), "http://not-really-used");
-  Assert.equal(
-    GMPPrefs.getString(GMPPrefs.KEY_URL_OVERRIDE),
+  GMPScope.GMPPrefs.setString(
+    GMPScope.GMPPrefs.KEY_URL,
+    "http://not-really-used"
+  );
+  GMPScope.GMPPrefs.setString(
+    GMPScope.GMPPrefs.KEY_URL_OVERRIDE,
     "http://not-really-used-2"
   );
-  Assert.equal(GMPPrefs.getInt(GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "", addon1), 1);
+  GMPScope.GMPPrefs.setInt(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, 1, addon1);
+  GMPScope.GMPPrefs.setString(
+    GMPScope.GMPPrefs.KEY_PLUGIN_VERSION,
+    "2",
+    addon1
+  );
+  GMPScope.GMPPrefs.setInt(GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE, 3, addon2);
+  GMPScope.GMPPrefs.setInt(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, 4, addon2);
+  GMPScope.GMPPrefs.setBool(
+    GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE,
+    false,
+    addon2
+  );
+  GMPScope.GMPPrefs.setBool(GMPScope.GMPPrefs.KEY_CERT_CHECKATTRS, true);
+
   Assert.equal(
-    GMPPrefs.getString(GMPPrefs.KEY_PLUGIN_VERSION, "", addon1),
+    GMPScope.GMPPrefs.getString(GMPScope.GMPPrefs.KEY_URL),
+    "http://not-really-used"
+  );
+  Assert.equal(
+    GMPScope.GMPPrefs.getString(GMPScope.GMPPrefs.KEY_URL_OVERRIDE),
+    "http://not-really-used-2"
+  );
+  Assert.equal(
+    GMPScope.GMPPrefs.getInt(
+      GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE,
+      "",
+      addon1
+    ),
+    1
+  );
+  Assert.equal(
+    GMPScope.GMPPrefs.getString(
+      GMPScope.GMPPrefs.KEY_PLUGIN_VERSION,
+      "",
+      addon1
+    ),
     "2"
   );
-  Assert.equal(GMPPrefs.getInt(GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "", addon2), 3);
-  Assert.equal(GMPPrefs.getInt(GMPPrefs.KEY_PLUGIN_VERSION, "", addon2), 4);
   Assert.equal(
-    GMPPrefs.getBool(GMPPrefs.KEY_PLUGIN_AUTOUPDATE, undefined, addon2),
+    GMPScope.GMPPrefs.getInt(
+      GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE,
+      "",
+      addon2
+    ),
+    3
+  );
+  Assert.equal(
+    GMPScope.GMPPrefs.getInt(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, "", addon2),
+    4
+  );
+  Assert.equal(
+    GMPScope.GMPPrefs.getBool(
+      GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE,
+      undefined,
+      addon2
+    ),
     false
   );
-  Assert.ok(GMPPrefs.getBool(GMPPrefs.KEY_CERT_CHECKATTRS));
-  GMPPrefs.setBool(GMPPrefs.KEY_PLUGIN_AUTOUPDATE, true, addon2);
+  Assert.ok(GMPScope.GMPPrefs.getBool(GMPScope.GMPPrefs.KEY_CERT_CHECKATTRS));
+  GMPScope.GMPPrefs.setBool(
+    GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE,
+    true,
+    addon2
+  );
 });
 
 /**
@@ -103,12 +156,9 @@ add_task(async function test_checkForAddons_uninitWithoutCheck() {
  * Tests that an uninit without an install works fine
  */
 add_test(function test_checkForAddons_uninitWithoutInstall() {
-  let myRequest = new mockRequest(200, "");
+  overrideServiceRequest(200, "");
   let installManager = new GMPInstallManager();
-  let promise = ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.checkForAddons()
-  );
+  let promise = installManager.checkForAddons();
   promise.then(res => {
     Assert.ok(res.usedFallback);
     installManager.uninit();
@@ -120,12 +170,9 @@ add_test(function test_checkForAddons_uninitWithoutInstall() {
  * Tests that no response returned rejects
  */
 add_test(function test_checkForAddons_noResponse() {
-  let myRequest = new mockRequest(200, "");
+  overrideServiceRequest(200, "");
   let installManager = new GMPInstallManager();
-  let promise = ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.checkForAddons()
-  );
+  let promise = installManager.checkForAddons();
   promise.then(res => {
     Assert.ok(res.usedFallback);
     installManager.uninit();
@@ -137,12 +184,9 @@ add_test(function test_checkForAddons_noResponse() {
  * Tests that no addons element returned resolves with no addons
  */
 add_task(async function test_checkForAddons_noAddonsElement() {
-  let myRequest = new mockRequest(200, "<updates></updates>");
+  overrideServiceRequest(200, "<updates></updates>");
   let installManager = new GMPInstallManager();
-  let res = await ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.checkForAddons()
-  );
+  let res = await installManager.checkForAddons();
   Assert.equal(res.addons.length, 0);
   installManager.uninit();
 });
@@ -151,12 +195,9 @@ add_task(async function test_checkForAddons_noAddonsElement() {
  * Tests that empty addons element returned resolves with no addons
  */
 add_task(async function test_checkForAddons_emptyAddonsElement() {
-  let myRequest = new mockRequest(200, "<updates><addons/></updates>");
+  overrideServiceRequest(200, "<updates><addons/></updates>");
   let installManager = new GMPInstallManager();
-  let res = await ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.checkForAddons()
-  );
+  let res = await installManager.checkForAddons();
   Assert.equal(res.addons.length, 0);
   installManager.uninit();
 });
@@ -165,15 +206,12 @@ add_task(async function test_checkForAddons_emptyAddonsElement() {
  * Tests that a response with the wrong root element rejects
  */
 add_test(function test_checkForAddons_wrongResponseXML() {
-  let myRequest = new mockRequest(
+  overrideServiceRequest(
     200,
     "<digits_of_pi>3.141592653589793....</digits_of_pi>"
   );
   let installManager = new GMPInstallManager();
-  let promise = ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.checkForAddons()
-  );
+  let promise = installManager.checkForAddons();
   promise.then(res => {
     Assert.ok(res.usedFallback);
     installManager.uninit();
@@ -185,12 +223,9 @@ add_test(function test_checkForAddons_wrongResponseXML() {
  * Tests that a 404 error works as expected
  */
 add_test(function test_checkForAddons_404Error() {
-  let myRequest = new mockRequest(404, "");
+  overrideServiceRequest(404, "");
   let installManager = new GMPInstallManager();
-  let promise = ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.checkForAddons()
-  );
+  let promise = installManager.checkForAddons();
   promise.then(res => {
     Assert.ok(res.usedFallback);
     installManager.uninit();
@@ -202,14 +237,11 @@ add_test(function test_checkForAddons_404Error() {
  * Tests that a xhr/ServiceRequest abort() works as expected
  */
 add_test(function test_checkForAddons_abort() {
-  let overriddenServiceRequest = new mockRequest(200, "", {
+  let overriddenServiceRequest = overrideServiceRequest(200, "", {
     dropRequest: true,
   });
   let installManager = new GMPInstallManager();
-  let promise = ProductAddonCheckerTestUtils.overrideServiceRequest(
-    overriddenServiceRequest,
-    () => installManager.checkForAddons()
-  );
+  let promise = installManager.checkForAddons();
 
   // Since the ServiceRequest is created in checkForAddons asynchronously,
   // we need to delay aborting till the request is running.
@@ -231,15 +263,9 @@ add_test(function test_checkForAddons_abort() {
  * Tests that a defensive timeout works as expected
  */
 add_test(function test_checkForAddons_timeout() {
-  let myRequest = new mockRequest(200, "", {
-    dropRequest: true,
-    timeout: true,
-  });
+  overrideServiceRequest(200, "", { dropRequest: true, timeout: true });
   let installManager = new GMPInstallManager();
-  let promise = ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.checkForAddons()
-  );
+  let promise = installManager.checkForAddons();
   promise.then(res => {
     Assert.ok(res.usedFallback);
     installManager.uninit();
@@ -255,29 +281,29 @@ add_test(function test_checkForAddons_bad_ssl() {
   // Add random stuff that cause CertUtil to require https.
   //
   let PREF_KEY_URL_OVERRIDE_BACKUP = Preferences.get(
-    GMPPrefs.KEY_URL_OVERRIDE,
+    GMPScope.GMPPrefs.KEY_URL_OVERRIDE,
     ""
   );
-  Preferences.reset(GMPPrefs.KEY_URL_OVERRIDE);
+  Preferences.reset(GMPScope.GMPPrefs.KEY_URL_OVERRIDE);
 
-  let CERTS_BRANCH_DOT_ONE = GMPPrefs.KEY_CERTS_BRANCH + ".1";
+  let CERTS_BRANCH_DOT_ONE = GMPScope.GMPPrefs.KEY_CERTS_BRANCH + ".1";
   let PREF_CERTS_BRANCH_DOT_ONE_BACKUP = Preferences.get(
     CERTS_BRANCH_DOT_ONE,
     ""
   );
   Services.prefs.setCharPref(CERTS_BRANCH_DOT_ONE, "funky value");
 
-  let myRequest = new mockRequest(200, "");
+  overrideServiceRequest(200, "");
   let installManager = new GMPInstallManager();
-  let promise = ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.checkForAddons()
-  );
+  let promise = installManager.checkForAddons();
   promise.then(res => {
     Assert.ok(res.usedFallback);
     installManager.uninit();
     if (PREF_KEY_URL_OVERRIDE_BACKUP) {
-      Preferences.set(GMPPrefs.KEY_URL_OVERRIDE, PREF_KEY_URL_OVERRIDE_BACKUP);
+      Preferences.set(
+        GMPScope.GMPPrefs.KEY_URL_OVERRIDE,
+        PREF_KEY_URL_OVERRIDE_BACKUP
+      );
     }
     if (PREF_CERTS_BRANCH_DOT_ONE_BACKUP) {
       Preferences.set(CERTS_BRANCH_DOT_ONE, PREF_CERTS_BRANCH_DOT_ONE_BACKUP);
@@ -290,12 +316,9 @@ add_test(function test_checkForAddons_bad_ssl() {
  * Tests that gettinga a funky non XML response works as expected
  */
 add_test(function test_checkForAddons_notXML() {
-  let myRequest = new mockRequest(200, "3.141592653589793....");
+  overrideServiceRequest(200, "3.141592653589793....");
   let installManager = new GMPInstallManager();
-  let promise = ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.checkForAddons()
-  );
+  let promise = installManager.checkForAddons();
 
   promise.then(res => {
     Assert.ok(res.usedFallback);
@@ -319,12 +342,9 @@ add_task(async function test_checkForAddons_singleAddon() {
     '               version="1.1"/>' +
     "  </addons>" +
     "</updates>";
-  let myRequest = new mockRequest(200, responseXML);
+  overrideServiceRequest(200, responseXML);
   let installManager = new GMPInstallManager();
-  let res = await ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.checkForAddons()
-  );
+  let res = await installManager.checkForAddons();
   Assert.equal(res.addons.length, 1);
   let gmpAddon = res.addons[0];
   Assert.equal(gmpAddon.id, "gmp-gmpopenh264");
@@ -357,12 +377,9 @@ add_task(async function test_checkForAddons_singleAddonWithSize() {
     '               version="1.1"/>' +
     "  </addons>" +
     "</updates>";
-  let myRequest = new mockRequest(200, responseXML);
+  overrideServiceRequest(200, responseXML);
   let installManager = new GMPInstallManager();
-  let res = await ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.checkForAddons()
-  );
+  let res = await installManager.checkForAddons();
   Assert.equal(res.addons.length, 1);
   let gmpAddon = res.addons[0];
   Assert.equal(gmpAddon.id, "openh264-plugin-no-at-symbol");
@@ -433,12 +450,9 @@ add_task(
       '               notversion="9.1"/>' +
       "  </addons>" +
       "</updates>";
-    let myRequest = new mockRequest(200, responseXML);
+    overrideServiceRequest(200, responseXML);
     let installManager = new GMPInstallManager();
-    let res = await ProductAddonCheckerTestUtils.overrideServiceRequest(
-      myRequest,
-      () => installManager.checkForAddons()
-    );
+    let res = await installManager.checkForAddons();
     Assert.equal(res.addons.length, 7);
     let gmpAddon = res.addons[0];
     Assert.equal(gmpAddon.id, "gmp-gmpopenh264");
@@ -494,12 +508,9 @@ add_task(async function test_checkForAddons_updatesWithAddons() {
     '               version="1.1"/>' +
     "  </addons>" +
     "</updates>";
-  let myRequest = new mockRequest(200, responseXML);
+  overrideServiceRequest(200, responseXML);
   let installManager = new GMPInstallManager();
-  let res = await ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.checkForAddons()
-  );
+  let res = await installManager.checkForAddons();
   Assert.equal(res.addons.length, 1);
   let gmpAddon = res.addons[0];
   Assert.equal(gmpAddon.id, "gmp-gmpopenh264");
@@ -520,11 +531,16 @@ add_task(async function test_checkForAddons_updatesWithAddons() {
  * checking is enabled and the signature check passes.
  */
 add_task(async function test_checkForAddons_contentSignatureSuccess() {
+  // We want the product checker to actually do a check to our test server,
+  // so revert any overrideServiceRequest changes other tests have made prior
+  //to this.
+  revertOverrideServiceRequest();
+
   Preferences.set("media.gmp-manager.checkContentSignature", true);
 
   // Store the old pref so we can restore it and avoid messing with other tests.
   let PREF_KEY_URL_OVERRIDE_BACKUP = Preferences.get(
-    GMPPrefs.KEY_URL_OVERRIDE,
+    GMPScope.GMPPrefs.KEY_URL_OVERRIDE,
     ""
   );
 
@@ -569,7 +585,7 @@ add_task(async function test_checkForAddons_contentSignatureSuccess() {
   // Override our root so that test cert chains will be valid.
   setCertRoot("content_signing_root.pem");
 
-  Preferences.set(GMPPrefs.KEY_URL_OVERRIDE, baseUri + updatePath);
+  Preferences.set(GMPScope.GMPPrefs.KEY_URL_OVERRIDE, baseUri + updatePath);
 
   const xmlFetchResultHistogram = TelemetryTestUtils.getAndClearHistogram(
     "MEDIA_GMP_UPDATE_XML_FETCH_RESULT"
@@ -599,9 +615,12 @@ add_task(async function test_checkForAddons_contentSignatureSuccess() {
 
   // Tidy up afterwards.
   if (PREF_KEY_URL_OVERRIDE_BACKUP) {
-    Preferences.set(GMPPrefs.KEY_URL_OVERRIDE, PREF_KEY_URL_OVERRIDE_BACKUP);
+    Preferences.set(
+      GMPScope.GMPPrefs.KEY_URL_OVERRIDE,
+      PREF_KEY_URL_OVERRIDE_BACKUP
+    );
   } else {
-    Preferences.reset(GMPPrefs.KEY_URL_OVERRIDE);
+    Preferences.reset(GMPScope.GMPPrefs.KEY_URL_OVERRIDE);
   }
   Preferences.set("media.gmp-manager.checkContentSignature", false);
 });
@@ -611,11 +630,16 @@ add_task(async function test_checkForAddons_contentSignatureSuccess() {
  * checking is enabled and the signature check fails.
  */
 add_task(async function test_checkForAddons_contentSignatureFailure() {
+  // We want the product checker to actually do a check to our test server,
+  // so revert any overrideServiceRequest changes other tests have made prior
+  // to this.
+  revertOverrideServiceRequest();
+
   Preferences.set("media.gmp-manager.checkContentSignature", true);
 
   // Store the old pref so we can restore it and avoid messing with other tests.
   let PREF_KEY_URL_OVERRIDE_BACKUP = Preferences.get(
-    GMPPrefs.KEY_URL_OVERRIDE,
+    GMPScope.GMPPrefs.KEY_URL_OVERRIDE,
     ""
   );
 
@@ -638,7 +662,7 @@ add_task(async function test_checkForAddons_contentSignatureFailure() {
     res.write(goodXml);
   });
 
-  Preferences.set(GMPPrefs.KEY_URL_OVERRIDE, baseUri + updatePath);
+  Preferences.set(GMPScope.GMPPrefs.KEY_URL_OVERRIDE, baseUri + updatePath);
 
   const xmlFetchResultHistogram = TelemetryTestUtils.getAndClearHistogram(
     "MEDIA_GMP_UPDATE_XML_FETCH_RESULT"
@@ -671,9 +695,12 @@ add_task(async function test_checkForAddons_contentSignatureFailure() {
 
   // Tidy up afterwards.
   if (PREF_KEY_URL_OVERRIDE_BACKUP) {
-    Preferences.set(GMPPrefs.KEY_URL_OVERRIDE, PREF_KEY_URL_OVERRIDE_BACKUP);
+    Preferences.set(
+      GMPScope.GMPPrefs.KEY_URL_OVERRIDE,
+      PREF_KEY_URL_OVERRIDE_BACKUP
+    );
   } else {
-    Preferences.reset(GMPPrefs.KEY_URL_OVERRIDE);
+    Preferences.reset(GMPScope.GMPPrefs.KEY_URL_OVERRIDE);
   }
   Preferences.set("media.gmp-manager.checkContentSignature", false);
 });
@@ -707,7 +734,7 @@ async function test_checkForAddons_installAddon(
   let data = "e~=0.5772156649";
   let zipFile = createNewZipFile(zipFileName, data);
   let hashFunc = "sha256";
-  let expectedDigest = await ProductAddonCheckerTestUtils.computeHash(
+  let expectedDigest = await ProductAddonCheckerScope.computeHash(
     hashFunc,
     zipFile.path
   );
@@ -737,12 +764,9 @@ async function test_checkForAddons_installAddon(
     "  </addons>" +
     "</updates>";
 
-  let myRequest = new mockRequest(200, responseXML);
+  overrideServiceRequest(200, responseXML);
   let installManager = new GMPInstallManager();
-  let res = await ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.checkForAddons()
-  );
+  let res = await installManager.checkForAddons();
   Assert.equal(res.addons.length, 1);
   let gmpAddon = res.addons[0];
   Assert.ok(!gmpAddon.isInstalled);
@@ -760,7 +784,6 @@ async function test_checkForAddons_installAddon(
     let extractedFile = Cc["@mozilla.org/file/local;1"].createInstance(
       Ci.nsIFile
     );
-
     extractedFile.initWithPath(extractedPath);
     Assert.ok(extractedFile.exists());
     let readData = readStringFromFile(extractedFile);
@@ -768,14 +791,26 @@ async function test_checkForAddons_installAddon(
 
     // Make sure the prefs are set correctly
     Assert.ok(
-      !!GMPPrefs.getInt(GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "", gmpAddon.id)
+      !!GMPScope.GMPPrefs.getInt(
+        GMPScope.GMPPrefs.KEY_PLUGIN_LAST_UPDATE,
+        "",
+        gmpAddon.id
+      )
     );
     Assert.equal(
-      GMPPrefs.getString(GMPPrefs.KEY_PLUGIN_VERSION, "", gmpAddon.id),
+      GMPScope.GMPPrefs.getString(
+        GMPScope.GMPPrefs.KEY_PLUGIN_VERSION,
+        "",
+        gmpAddon.id
+      ),
       "1.1"
     );
     Assert.equal(
-      GMPPrefs.getString(GMPPrefs.KEY_PLUGIN_ABI, "", gmpAddon.id),
+      GMPScope.GMPPrefs.getString(
+        GMPScope.GMPPrefs.KEY_PLUGIN_ABI,
+        "",
+        gmpAddon.id
+      ),
       UpdateUtils.ABI
     );
     // Make sure it reports as being installed
@@ -802,7 +837,11 @@ add_task(test_checkForAddons_installAddon.bind(null, "3", true, true));
  * Tests simpleCheckAndInstall when autoupdate is disabled for a GMP
  */
 add_task(async function test_simpleCheckAndInstall_autoUpdateDisabled() {
-  GMPPrefs.setBool(GMPPrefs.KEY_PLUGIN_AUTOUPDATE, false, OPEN_H264_ID);
+  GMPScope.GMPPrefs.setBool(
+    GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE,
+    false,
+    GMPUtils.OPEN_H264_ID
+  );
   let responseXML =
     '<?xml version="1.0"?>' +
     "<updates>" +
@@ -816,15 +855,16 @@ add_task(async function test_simpleCheckAndInstall_autoUpdateDisabled() {
     "  </addons>" +
     "</updates>";
 
-  let myRequest = new mockRequest(200, responseXML);
+  overrideServiceRequest(200, responseXML);
   let installManager = new GMPInstallManager();
-  let result = await ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.simpleCheckAndInstall()
-  );
+  let result = await installManager.simpleCheckAndInstall();
   Assert.equal(result.status, "nothing-new-to-install");
-  Preferences.reset(GMPPrefs.KEY_UPDATE_LAST_CHECK);
-  GMPPrefs.setBool(GMPPrefs.KEY_PLUGIN_AUTOUPDATE, true, OPEN_H264_ID);
+  Preferences.reset(GMPScope.GMPPrefs.KEY_UPDATE_LAST_CHECK);
+  GMPScope.GMPPrefs.setBool(
+    GMPScope.GMPPrefs.KEY_PLUGIN_AUTOUPDATE,
+    true,
+    GMPUtils.OPEN_H264_ID
+  );
 });
 
 /**
@@ -833,12 +873,9 @@ add_task(async function test_simpleCheckAndInstall_autoUpdateDisabled() {
 add_task(async function test_simpleCheckAndInstall_nothingToInstall() {
   let responseXML = '<?xml version="1.0"?><updates></updates>';
 
-  let myRequest = new mockRequest(200, responseXML);
+  overrideServiceRequest(200, responseXML);
   let installManager = new GMPInstallManager();
-  let result = await ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.simpleCheckAndInstall()
-  );
+  let result = await installManager.simpleCheckAndInstall();
   Assert.equal(result.status, "nothing-new-to-install");
 });
 
@@ -848,12 +885,9 @@ add_task(async function test_simpleCheckAndInstall_nothingToInstall() {
 add_task(async function test_simpleCheckAndInstall_tooFrequent() {
   let responseXML = '<?xml version="1.0"?><updates></updates>';
 
-  let myRequest = new mockRequest(200, responseXML);
+  overrideServiceRequest(200, responseXML);
   let installManager = new GMPInstallManager();
-  let result = await ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.simpleCheckAndInstall()
-  );
+  let result = await installManager.simpleCheckAndInstall();
   Assert.equal(result.status, "too-frequent-no-check");
 });
 
@@ -878,12 +912,9 @@ add_test(function test_installAddon_noServer() {
     "  </addons>" +
     "</updates>";
 
-  let myRequest = new mockRequest(200, responseXML);
+  overrideServiceRequest(200, responseXML);
   let installManager = new GMPInstallManager();
-  let checkPromise = ProductAddonCheckerTestUtils.overrideServiceRequest(
-    myRequest,
-    () => installManager.checkForAddons()
-  );
+  let checkPromise = installManager.checkForAddons();
   checkPromise.then(
     res => {
       Assert.equal(res.addons.length, 1);
@@ -914,32 +945,28 @@ add_test(function test_installAddon_noServer() {
  */
 
 add_task(async function test_GMPExtractor_paths() {
-  registerCleanupFunction(async function() {
+  let GMPExtractor = GMPScope.GMPExtractor;
+  registerCleanupFunction(function() {
     // Must stop holding on to the zip file using the JAR cache:
     let zipFile = new FileUtils.File(
-      PathUtils.join(tempDir.path, "dummy_gmp.zip")
+      OS.Path.join(tempDir.path, "dummy_gmp.zip")
     );
     Services.obs.notifyObservers(zipFile, "flush-cache-entry");
-    await IOUtils.remove(extractedDir, { recursive: true });
-    await IOUtils.remove(tempDir.path, { recursive: true });
+    extractedDir.remove(/* recursive */ true);
+    tempDir.remove(/* recursive */ true);
   });
   // Create a dir with the following in the name
   // - # -- this is used to delimit URI fragments and tests that
   //   we escape any internal URIs appropriately.
   // - 猫 -- ensure we handle non-ascii characters appropriately.
-  const srcPath = PathUtils.join(
-    Services.dirsvc.get("CurWorkD", Ci.nsIFile).path,
-    "zips",
-    "dummy_gmp.zip"
-  );
   let tempDirName = "TmpDir#猫";
   let tempDir = FileUtils.getDir("TmpD", [tempDirName], true);
-  let zipPath = PathUtils.join(tempDir.path, "dummy_gmp.zip");
-  await IOUtils.copy(srcPath, zipPath);
+  let zipPath = OS.Path.join(tempDir.path, "dummy_gmp.zip");
+  await OS.File.copy("zips/dummy_gmp.zip", zipPath, { noOverwrite: false });
   // The path inside the profile dir we'll extract to. Make sure we handle
   // the characters there too.
   let relativeExtractPath = "extracted#猫";
-  let extractor = new GMPExtractor(zipPath, [relativeExtractPath]);
+  let extractor = new GMPExtractor(zipPath, relativeExtractPath);
   let extractedPaths = await extractor.install();
   // extractedPaths should contain the files extracted. In this case we
   // should have a single file extracted to our profile dir -- the zip
@@ -953,30 +980,27 @@ add_task(async function test_GMPExtractor_paths() {
     !extractedPaths[0].includes("verified_contents.json"),
     "verified_contents.json should not be on extracted path"
   );
-  let extractedDir = PathUtils.join(
-    await PathUtils.getProfileDir(),
-    relativeExtractPath
-  );
+  let extractedDir = FileUtils.getDir("ProfD", [relativeExtractPath], false);
   Assert.ok(
-    await IOUtils.exists(extractedDir),
+    extractedDir.exists(),
     "Extraction should have created a directory"
   );
-  let extractedFile = PathUtils.join(
-    await PathUtils.getProfileDir(),
-    relativeExtractPath,
-    "dummy_file.txt"
+  let extractedFile = FileUtils.getDir(
+    "ProfD",
+    [relativeExtractPath, "dummy_file.txt"],
+    false
   );
   Assert.ok(
-    await IOUtils.exists(extractedFile),
+    extractedFile.exists(),
     "Extraction should have created dummy_file.txt"
   );
-  let unextractedFile = PathUtils.join(
-    await PathUtils.getProfileDir(),
-    relativeExtractPath,
-    "verified_contents.json"
+  let unextractedFile = FileUtils.getDir(
+    "ProfD",
+    [relativeExtractPath, "verified_contents.json"],
+    false
   );
   Assert.ok(
-    !(await IOUtils.exists(unextractedFile)),
+    !unextractedFile.exists(),
     "Extraction should not have created verified_contents.json"
   );
 });
@@ -1190,6 +1214,33 @@ mockRequest.prototype = {
     return this;
   },
 };
+
+/**
+ * Helper used to overrideServiceRequest requests (no matter to what URL) with the
+ * specified status and response.
+ * @param status The status you want to get back when a ServiceRequest request
+ *        is made.
+ * @param response The response you want to get back when a ServiceRequest
+ *        request is made.
+ */
+function overrideServiceRequest(status, response, options) {
+  overrideServiceRequest.myRequest = new mockRequest(status, response, options);
+  ProductAddonCheckerScope.CreateServiceRequest = function() {
+    return overrideServiceRequest.myRequest;
+  };
+  return overrideServiceRequest.myRequest;
+}
+
+/**
+ * Reverts any changes from overrideServiceRequest. This is used to ensure the
+ * ProductAddonChecker performs ServiceRequests. This is useful if a test
+ * needs to actually connect to a test server.
+ */
+function revertOverrideServiceRequest(status, response, options) {
+  ProductAddonCheckerScope.CreateServiceRequest = function() {
+    return new ServiceRequest();
+  };
+}
 
 /**
  * Creates a new zip file containing a file with the specified data

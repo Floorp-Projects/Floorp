@@ -13,11 +13,11 @@ mod tables;
 
 pub use self::tables::{BidiClass, UNICODE_VERSION};
 
-use core::cmp::Ordering::{Equal, Less, Greater};
-use core::char;
+use std::cmp::Ordering::{Equal, Less, Greater};
+use std::char;
 
 use self::tables::bidi_class_table;
-use crate::BidiClass::*;
+use BidiClass::*;
 
 /// Find the `BidiClass` of a single char.
 pub fn bidi_class(c: char) -> BidiClass {

@@ -10,6 +10,7 @@ import subprocess
 import sys
 
 import etlparser
+import mozfile
 import xtalos
 from xperf_analyzer import (
     ProcessStart,
@@ -41,9 +42,7 @@ def run_session_restore_analysis(debug=False, **kwargs):
 
         xperf.analyze()
 
-        results = interval.get_results()
-        if results != {}:
-            output += "%.3f\n" % (results[XPerfAttribute.RESULT])
+        output += "%.3f\n" % (interval.get_results()[XPerfAttribute.RESULT])
 
     with open(final_output_file, "w") as out:
         out.write(output)
@@ -105,7 +104,7 @@ def stop_from_config(config_file=None, debug=False, **kwargs):
     run_session_restore_analysis(csv_filename=csv_base, debug=debug, **kwargs)
 
     if not debug:
-        os.remove(csv_base)
+        mozfile.remove(csv_base)
 
 
 def main(args=sys.argv[1:]):

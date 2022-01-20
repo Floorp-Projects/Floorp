@@ -48,6 +48,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_fission.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TextEvents.h"
@@ -82,7 +83,6 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
-#include "mozilla/layers/TouchActionHelper.h"
 #include "mozilla/layers/APZCTreeManagerChild.h"
 #include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/APZEventState.h"
@@ -347,6 +347,18 @@ BrowserChild::BrowserChild(ContentChild* aManager, const TabId& aTabId,
       mCancelContentJSEpoch(0) {
   mozilla::HoldJSObjects(this);
 
+  nsWeakPtr weakPtrThis(do_GetWeakReference(
+      static_cast<nsIBrowserChild*>(this)));  // for capture by the lambda
+  mSetAllowedTouchBehaviorCallback =
+      [weakPtrThis](uint64_t aInputBlockId,
+                    const nsTArray<TouchBehaviorFlags>& aFlags) {
+        if (nsCOMPtr<nsIBrowserChild> browserChild =
+                do_QueryReferent(weakPtrThis)) {
+          static_cast<BrowserChild*>(browserChild.get())
+              ->SetAllowedTouchBehavior(aInputBlockId, aFlags);
+        }
+      };
+
   // preloaded BrowserChild should not be added to child map
   if (mUniqueId) {
     MOZ_ASSERT(NestedBrowserChildMap().find(mUniqueId) ==
@@ -411,6 +423,14 @@ void BrowserChild::SetTargetAPZC(
     const nsTArray<ScrollableLayerGuid>& aTargets) const {
   if (mApzcTreeManager) {
     mApzcTreeManager->SetTargetAPZC(aInputBlockId, aTargets);
+  }
+}
+
+void BrowserChild::SetAllowedTouchBehavior(
+    uint64_t aInputBlockId,
+    const nsTArray<TouchBehaviorFlags>& aTargets) const {
+  if (mApzcTreeManager) {
+    mApzcTreeManager->SetAllowedTouchBehavior(aInputBlockId, aTargets);
   }
 }
 
@@ -1913,11 +1933,11 @@ mozilla::ipc::IPCResult BrowserChild::RecvRealTouchEvent(
   nsTArray<TouchBehaviorFlags> allowedTouchBehaviors;
   if (localEvent.mMessage == eTouchStart && AsyncPanZoomEnabled()) {
     nsCOMPtr<Document> document = GetTopLevelDocument();
-    allowedTouchBehaviors = TouchActionHelper::GetAllowedTouchBehavior(
-        mPuppetWidget, document, localEvent);
-    if (!allowedTouchBehaviors.IsEmpty() && mApzcTreeManager) {
-      mApzcTreeManager->SetAllowedTouchBehavior(aInputBlockId,
-                                                allowedTouchBehaviors);
+    if (StaticPrefs::layout_css_touch_action_enabled()) {
+      allowedTouchBehaviors =
+          APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
+              mPuppetWidget, document, localEvent, aInputBlockId,
+              mSetAllowedTouchBehaviorCallback);
     }
     RefPtr<DisplayportSetListener> postLayerization =
         APZCCallbackHelper::SendSetTargetAPZCNotification(
@@ -2071,9 +2091,8 @@ mozilla::ipc::IPCResult BrowserChild::RecvNativeSynthesisResponse(
 }
 
 mozilla::ipc::IPCResult BrowserChild::RecvUpdateEpoch(const uint32_t& aEpoch) {
-  if (mSessionStoreListener) {
-    mSessionStoreListener->SetEpoch(aEpoch);
-  }
+  mSessionStoreListener->SetEpoch(aEpoch);
+
   return IPC_OK();
 }
 
@@ -2293,16 +2312,29 @@ bool BrowserChild::DeallocPFilePickerChild(PFilePickerChild* actor) {
   return true;
 }
 
-RefPtr<VsyncMainChild> BrowserChild::GetVsyncChild() {
+PVsyncChild* BrowserChild::AllocPVsyncChild() {
+  RefPtr<dom::VsyncChild> actor = new VsyncChild();
+  // There still has one ref-count after return, and it will be released in
+  // DeallocPVsyncChild().
+  return actor.forget().take();
+}
+
+bool BrowserChild::DeallocPVsyncChild(PVsyncChild* aActor) {
+  MOZ_ASSERT(aActor);
+
+  // This actor already has one ref-count. Please check AllocPVsyncChild().
+  RefPtr<VsyncChild> actor = dont_AddRef(static_cast<VsyncChild*>(aActor));
+  return true;
+}
+
+RefPtr<VsyncChild> BrowserChild::GetVsyncChild() {
   // Initializing mVsyncChild here turns on per-BrowserChild Vsync for a
   // given platform. Note: this only makes sense if nsWindow returns a
   // window-specific VsyncSource.
 #if defined(MOZ_WAYLAND)
   if (IsWaylandEnabled() && !mVsyncChild) {
-    mVsyncChild = MakeRefPtr<VsyncMainChild>();
-    if (!SendPVsyncConstructor(mVsyncChild)) {
-      mVsyncChild = nullptr;
-    }
+    PVsyncChild* actor = SendPVsyncConstructor();
+    mVsyncChild = static_cast<VsyncChild*>(actor);
   }
 #endif
   return mVsyncChild;
@@ -3777,7 +3809,7 @@ NS_IMETHODIMP BrowserChild::OnProgressChange64(nsIWebProgress* aWebProgress,
 
 NS_IMETHODIMP BrowserChild::OnRefreshAttempted(nsIWebProgress* aWebProgress,
                                                nsIURI* aRefreshURI,
-                                               uint32_t aMillis, bool aSameURI,
+                                               int32_t aMillis, bool aSameURI,
                                                bool* aOut) {
   NS_ENSURE_ARG_POINTER(aOut);
   *aOut = true;

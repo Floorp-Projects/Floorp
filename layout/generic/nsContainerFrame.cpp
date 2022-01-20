@@ -498,9 +498,11 @@ void nsContainerFrame::DisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
   nsIContent* newContent = mContent->GetParent();
 
   // check to see if we are anonymous content
-  // XXXbz there has GOT to be a better way of determining this!
-  int32_t offset =
-      newContent ? newContent->ComputeIndexOf_Deprecated(mContent) : 0;
+  int32_t offset = 0;
+  if (newContent) {
+    // XXXbz there has GOT to be a better way of determining this!
+    offset = newContent->ComputeIndexOf(mContent);
+  }
 
   // look up to see what selection(s) are on this frame
   UniquePtr<SelectionDetails> details =
@@ -731,6 +733,7 @@ static bool IsTopLevelWidget(nsIWidget* aWidget) {
 void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
                                             nsIFrame* aFrame, nsView* aView,
                                             gfxContext* aRC, uint32_t aFlags) {
+#ifdef MOZ_XUL
   if (!aView || !nsCSSRendering::IsCanvasFrame(aFrame) || !aView->HasWidget())
     return;
 
@@ -807,6 +810,7 @@ void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
     }
   }
   SetSizeConstraints(aPresContext, windowWidget, minSize, maxSize);
+#endif
 }
 
 void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,

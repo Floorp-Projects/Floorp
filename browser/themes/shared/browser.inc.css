@@ -1265,10 +1265,10 @@ hbox[anonid="findbar-textbox-wrapper"] toolbarbutton:not([disabled]):hover:activ
 #scrollbutton-up[part="scrollbutton-up"]:not(.menupopup-scrollbutton),
 #scrollbutton-down[part="scrollbutton-down"]:not(.menupopup-scrollbutton)
 {
-	font-size: 13.8px !important;
+	font-size: 12.3px !important;
 	padding: 0 !important;
 	margin: 0;
-	border: 2.3px solid transparent !important;
+	border: 2px solid transparent !important;
 }
 .bookmark-item{
 	margin-right: 4px !important;
@@ -1869,6 +1869,12 @@ hbox[anonid="findbar-textbox-wrapper"] toolbarbutton:not([disabled]):hover:activ
 #searchbar:not(:-moz-lwtheme)
 {
 	color: inherit !important;
+}
+
+#urlbar:hover,
+#searchbar:hover
+{
+	background-color: var(--toolbar-field-hover-background-color) !important;
 }
 
 #urlbar[focused],
@@ -4671,7 +4677,7 @@ popupnotificationcontent {
 	background-image: url("chrome://browser/skin/forward.svg");
   }
   .downloadShowMenuItem {
-	background-image: url("chrome://browser/skin/folder.png");
+	background-image: url("chrome://global/skin/icons/folder.svg");
   }
   #context-pocket,
   #context-savelinktopocket {

@@ -53,8 +53,7 @@ class WorkerErrorReport : public WorkerErrorBase, public SerializedStackHolder {
   // aWorkerPrivate is the worker thread we're on (or the main thread, if null)
   // aTarget is the worker object that we are going to fire an error at
   // (if any).
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1743443)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY static void ReportError(
+  static void ReportError(
       JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aFireAtScope,
       DOMEventTargetHelper* aTarget, UniquePtr<WorkerErrorReport> aReport,
       uint64_t aInnerWindowId,

@@ -44,7 +44,6 @@ template <typename T>
 class Sequence;
 class GPUBufferOrGPUTexture;
 enum class GPUErrorFilter : uint8_t;
-enum class GPUFeatureName : uint8_t;
 class GPULogCallback;
 }  // namespace dom
 namespace ipc {
@@ -53,9 +52,6 @@ class Shmem;
 }  // namespace ipc
 
 namespace webgpu {
-namespace ffi {
-struct WGPULimits;
-}
 class Adapter;
 class BindGroup;
 class BindGroupLayout;
@@ -70,8 +66,6 @@ class RenderBundleEncoder;
 class RenderPipeline;
 class Sampler;
 class ShaderModule;
-class SupportedFeatures;
-class SupportedLimits;
 class Texture;
 class WebGPUChild;
 
@@ -84,11 +78,8 @@ class Device final : public DOMEventTargetHelper {
   GPU_DECL_JS_WRAP(Device)
 
   const RawId mId;
-  RefPtr<SupportedFeatures> mFeatures;
-  RefPtr<SupportedLimits> mLimits;
 
-  explicit Device(Adapter* const aParent, RawId aId,
-                  UniquePtr<ffi::WGPULimits> aRawLimits);
+  explicit Device(Adapter* const aParent, RawId aId);
 
   RefPtr<WebGPUChild> GetBridge();
   static JSObject* CreateExternalArrayBuffer(JSContext* aCx, size_t aOffset,
@@ -119,9 +110,7 @@ class Device final : public DOMEventTargetHelper {
   void GetLabel(nsAString& aValue) const;
   void SetLabel(const nsAString& aLabel);
 
-  const RefPtr<SupportedFeatures>& Features() const { return mFeatures; }
-  const RefPtr<SupportedLimits>& Limits() const { return mLimits; }
-  const RefPtr<Queue>& GetQueue() const { return mQueue; }
+  const RefPtr<Queue>& GetQueue() const;
 
   already_AddRefed<Buffer> CreateBuffer(const dom::GPUBufferDescriptor& aDesc,
                                         ErrorResult& aRv);

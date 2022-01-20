@@ -817,8 +817,6 @@ cert_PkixErrorToNssCode(
     void *plContext)
 {
     int errLevel = 0;
-    (void)errLevel; /* Suppress unused var warning (Bug 1738028) */
-
     PKIX_Int32 nssErr = 0;
     PKIX_Error *errPtr = error;
 

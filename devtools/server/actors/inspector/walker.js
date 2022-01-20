@@ -2785,8 +2785,8 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return this.attachElement(rawNode);
   },
 
-  pick(doFocus, isLocalTab) {
-    this.nodePicker.pick(doFocus, isLocalTab);
+  pick(doFocus) {
+    this.nodePicker.pick(doFocus);
   },
 
   cancelPick() {

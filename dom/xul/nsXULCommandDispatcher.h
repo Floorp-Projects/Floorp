@@ -32,11 +32,8 @@ class Element;
 
 class nsXULCommandDispatcher : public nsIDOMXULCommandDispatcher,
                                public nsSupportsWeakReference {
-  using Document = mozilla::dom::Document;
-  using Element = mozilla::dom::Element;
-
  public:
-  explicit nsXULCommandDispatcher(Document* aDocument);
+  explicit nsXULCommandDispatcher(mozilla::dom::Document* aDocument);
 
   // nsISupports
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -53,21 +50,21 @@ class nsXULCommandDispatcher : public nsIDOMXULCommandDispatcher,
 
   already_AddRefed<nsPIWindowRoot> GetWindowRoot();
 
-  Element* GetRootFocusedContentAndWindow(nsPIDOMWindowOuter** aWindow);
-  nsresult MoveFocusIntoSubtree(Element*, bool aForward);
+  mozilla::dom::Element* GetRootFocusedContentAndWindow(
+      nsPIDOMWindowOuter** aWindow);
 
-  RefPtr<Document> mDocument;
+  RefPtr<mozilla::dom::Document> mDocument;
 
   class Updater {
    public:
-    Updater(Element* aElement, const nsAString& aEvents,
+    Updater(mozilla::dom::Element* aElement, const nsAString& aEvents,
             const nsAString& aTargets)
         : mElement(aElement),
           mEvents(aEvents),
           mTargets(aTargets),
           mNext(nullptr) {}
 
-    RefPtr<Element> mElement;
+    RefPtr<mozilla::dom::Element> mElement;
     nsString mEvents;
     nsString mTargets;
     Updater* mNext;

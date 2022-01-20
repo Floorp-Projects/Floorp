@@ -144,7 +144,7 @@ add_task(async function() {
   );
 
   // Load something in the main process
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:mozilla");
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:robots");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   let init = Services.ppmm.initialProcessData;

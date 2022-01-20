@@ -23,6 +23,10 @@ function run_test() {
     "state.json"
   );
 
+  // We need to ensure FOG is initialized, otherwise operations will be stuck in the pre-init queue.
+  let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
+  FOG.initializeFOG();
+
   Services.prefs.setBoolPref(
     "toolkit.telemetry.testing.overrideProductsCheck",
     true
@@ -43,7 +47,7 @@ add_task(async function test_client_id() {
   // If there is no DRS file, and no cached id, we should get a new client ID.
   await ClientID._reset();
   Services.prefs.clearUserPref(PREF_CACHED_CLIENTID);
-  await IOUtils.remove(drsPath, { ignoreAbsent: true });
+  await OS.File.remove(drsPath, { ignoreAbsent: true });
   let clientID = await ClientID.getClientID();
   Assert.equal(typeof clientID, "string");
   Assert.ok(uuidRegex.test(clientID));
@@ -51,7 +55,8 @@ add_task(async function test_client_id() {
   // We should be guarded against invalid DRS json.
   await ClientID._reset();
   Services.prefs.clearUserPref(PREF_CACHED_CLIENTID);
-  await IOUtils.writeUTF8(drsPath, "abcd", {
+  await OS.File.writeAtomic(drsPath, "abcd", {
+    encoding: "utf-8",
     tmpPath: drsPath + ".tmp",
   });
   clientID = await ClientID.getClientID();

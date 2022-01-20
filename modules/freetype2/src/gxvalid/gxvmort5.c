@@ -63,7 +63,7 @@
     *GXV_mort_subtable_type5_StateOptRecData;
 
 
-  static void
+  FT_LOCAL_DEF( void )
   gxv_mort_subtable_type5_subtable_setup( FT_UShort      table_size,
                                           FT_UShort      classTable,
                                           FT_UShort      stateArray,

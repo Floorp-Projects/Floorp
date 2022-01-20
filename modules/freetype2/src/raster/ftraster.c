@@ -2095,8 +2095,8 @@
    *   Removes an old profile from a linked list.
    */
   static void
-  DelOld( PProfileList    list,
-          const PProfile  profile )
+  DelOld( PProfileList  list,
+          PProfile      profile )
   {
     PProfile  *old, current;
 
@@ -2206,7 +2206,8 @@
                                 PProfile    left,
                                 PProfile    right )
   {
-    Long  e1, e2;
+    Long   e1, e2;
+    Byte*  target;
 
     Int  dropOutControl = left->flags & 7;
 
@@ -2239,8 +2240,6 @@
 
     if ( e2 >= 0 && e1 < ras.bWidth )
     {
-      Byte*  target;
-
       Int   c1, c2;
       Byte  f1, f2;
 
@@ -2950,11 +2949,11 @@
   FT_Outline_Get_CBox( const FT_Outline*  outline,
                        FT_BBox           *acbox )
   {
+    Long  xMin, yMin, xMax, yMax;
+
+
     if ( outline && acbox )
     {
-      Long  xMin, yMin, xMax, yMax;
-
-
       if ( outline->n_points == 0 )
       {
         xMin = 0;
@@ -3133,6 +3132,13 @@
   }
 
 
+  static void
+  ft_black_init( black_PRaster  raster )
+  {
+    FT_UNUSED( raster );
+  }
+
+
   /**** RASTER OBJECT CREATION: In standalone mode, we simply use *****/
   /****                         a static object.                  *****/
 
@@ -3150,6 +3156,7 @@
 
      *araster = (FT_Raster)&the_raster;
      FT_ZERO( &the_raster );
+     ft_black_init( &the_raster );
 
      return 0;
   }
@@ -3174,10 +3181,14 @@
     black_PRaster  raster = NULL;
 
 
+    *araster = 0;
     if ( !FT_NEW( raster ) )
+    {
       raster->memory = memory;
+      ft_black_init( raster );
 
-    *araster = raster;
+      *araster = raster;
+    }
 
     return error;
   }

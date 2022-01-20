@@ -42,6 +42,9 @@ if CONFIG["MOZ_VORBIS"]:
 if CONFIG["MOZ_TREMOR"]:
     external_dirs += ["media/libtremor"]
 
+if CONFIG["MOZ_WEBM_ENCODER"]:
+    external_dirs += ["media/libmkv"]
+
 if not CONFIG["MOZ_SYSTEM_LIBVPX"]:
     external_dirs += ["media/libvpx"]
 
@@ -67,7 +70,6 @@ if CONFIG["MOZ_JXL"]:
 external_dirs += [
     "media/kiss_fft",
     "media/libcubeb",
-    "media/libmkv",
     "media/libnestegg",
     "media/libogg",
     "media/libopus",

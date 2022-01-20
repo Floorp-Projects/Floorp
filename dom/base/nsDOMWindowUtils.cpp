@@ -35,7 +35,6 @@
 #include "nsIFrame.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/PCompositorBridgeTypes.h"
-#include "mozilla/media/MediaUtils.h"
 #include "nsQueryObject.h"
 #include "CubebDeviceEnumerator.h"
 
@@ -2718,14 +2717,14 @@ nsDOMWindowUtils::AudioDevices(uint16_t aSide, nsIArray** aDevices) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<CubebDeviceEnumerator> enumerator = Enumerator::GetInstance();
-  RefPtr<const CubebDeviceEnumerator::AudioDeviceSet> collection;
+  nsTArray<RefPtr<AudioDeviceInfo>> collection;
   if (aSide == AUDIO_INPUT) {
-    collection = enumerator->EnumerateAudioInputDevices();
+    enumerator->EnumerateAudioInputDevices(collection);
   } else {
-    collection = enumerator->EnumerateAudioOutputDevices();
+    enumerator->EnumerateAudioOutputDevices(collection);
   }
 
-  for (const auto& device : *collection) {
+  for (const auto& device : collection) {
     devices->AppendElement(device);
   }
 

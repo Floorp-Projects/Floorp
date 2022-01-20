@@ -16,7 +16,7 @@ use pin_project_lite::pin_project;
 /// # Example
 ///
 /// Create a throttled stream.
-/// ```rust,no_run
+/// ```rust,norun
 /// use std::time::Duration;
 /// use tokio::stream::StreamExt;
 /// use tokio::time::throttle;

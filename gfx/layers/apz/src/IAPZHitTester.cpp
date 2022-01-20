@@ -27,7 +27,6 @@ LayersId IAPZHitTester::GetRootLayersId() const {
 }
 
 HitTestingTreeNode* IAPZHitTester::GetRootNode() const {
-  mTreeManager->mTreeLock.AssertCurrentThreadIn();
   return mTreeManager->mRootNode;
 }
 

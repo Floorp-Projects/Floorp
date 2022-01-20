@@ -9,7 +9,6 @@
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
 #include "DOMLocalization.h"
-#include "mozilla/intl/L10nRegistry.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/Element.h"
@@ -48,11 +47,10 @@ DOMLocalization::DOMLocalization(nsIGlobalObject* aGlobal, bool aIsSync,
 }
 
 already_AddRefed<DOMLocalization> DOMLocalization::Constructor(
-    const GlobalObject& aGlobal,
-    const Sequence<dom::OwningUTF8StringOrResourceId>& aResourceIds,
+    const GlobalObject& aGlobal, const Sequence<nsCString>& aResourceIds,
     bool aIsSync, const Optional<NonNull<L10nRegistry>>& aRegistry,
     const Optional<Sequence<nsCString>>& aLocales, ErrorResult& aRv) {
-  auto ffiResourceIds{L10nRegistry::ResourceIdsToFFI(aResourceIds)};
+  nsTArray<nsCString> resIds = ToTArray<nsTArray<nsCString>>(aResourceIds);
   Maybe<nsTArray<nsCString>> locales;
 
   if (aLocales.WasPassed()) {
@@ -68,12 +66,11 @@ already_AddRefed<DOMLocalization> DOMLocalization::Constructor(
 
   if (aRegistry.WasPassed()) {
     result = ffi::localization_new_with_locales(
-        &ffiResourceIds, aIsSync, aRegistry.Value().Raw(),
-        locales.ptrOr(nullptr), getter_AddRefs(raw));
+        &resIds, aIsSync, aRegistry.Value().Raw(), locales.ptrOr(nullptr),
+        getter_AddRefs(raw));
   } else {
-    result = ffi::localization_new_with_locales(&ffiResourceIds, aIsSync,
-                                                nullptr, locales.ptrOr(nullptr),
-                                                getter_AddRefs(raw));
+    result = ffi::localization_new_with_locales(
+        &resIds, aIsSync, nullptr, locales.ptrOr(nullptr), getter_AddRefs(raw));
   }
 
   if (result) {

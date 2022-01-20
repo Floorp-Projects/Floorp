@@ -217,6 +217,15 @@ class Raptor(
                 },
             ],
             [
+                ["--enable-webrender"],
+                {
+                    "action": "store_true",
+                    "dest": "enable_webrender",
+                    "default": False,
+                    "help": "Enable the WebRender compositor in Gecko.",
+                },
+            ],
+            [
                 ["--device-name"],
                 {
                     "dest": "device_name",
@@ -457,12 +466,12 @@ class Raptor(
                 },
             ],
             [
-                ["--disable-fission"],
+                ["--enable-fission"],
                 {
-                    "action": "store_false",
-                    "dest": "fission",
-                    "default": True,
-                    "help": "Disable Fission (site isolation) in Gecko.",
+                    "action": "store_true",
+                    "dest": "enable_fission",
+                    "default": False,
+                    "help": "Enable Fission (site isolation) in Gecko.",
                 },
             ],
             [
@@ -906,8 +915,10 @@ class Raptor(
             options.extend(["--disable-perf-tuning"])
         if self.config.get("cold", False):
             options.extend(["--cold"])
-        if not self.config.get("fission", True):
-            options.extend(["--disable-fission"])
+        if self.config.get("enable_webrender", False):
+            options.extend(["--enable-webrender"])
+        if self.config.get("enable_fission", False):
+            options.extend(["--enable-fission"])
         if self.config.get("verbose", False):
             options.extend(["--verbose"])
         if self.config.get("extra_prefs"):

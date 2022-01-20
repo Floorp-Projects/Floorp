@@ -10,7 +10,6 @@
 #include <functional>
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsTArray.h"
 
 class nsIEventTarget;
 class nsITimer;
@@ -105,9 +104,6 @@ class ProxyAutoConfig : public ProxyAutoConfigBase {
           aCallback) override;
 
   bool WaitingForDNSResolve() const { return mWaitingForDNSResolve; }
-  void RegisterDNSResolveCallback(std::function<void(void)>&& aCallback) {
-    mDNSResolveCallbacks.AppendElement(std::move(aCallback));
-  }
 
  private:
   // allow 665ms for myipaddress dns queries. That's 95th percentile.
@@ -119,7 +115,6 @@ class ProxyAutoConfig : public ProxyAutoConfigBase {
   bool SrcAddress(const NetAddr* remoteAddress, nsCString& localAddress);
   bool MyIPAddressTryHost(const nsCString& hostName, unsigned int timeout,
                           const JS::CallArgs& aArgs, bool* aResult);
-  void MaybeInvokeDNSResolveCallbacks();
 
   JSContextWrapper* mJSContext{nullptr};
   bool mJSNeedsSetup{false};
@@ -132,7 +127,6 @@ class ProxyAutoConfig : public ProxyAutoConfigBase {
   nsCString mRunningHost;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
-  nsTArray<std::function<void(void)>> mDNSResolveCallbacks;
 };
 
 class RemoteProxyAutoConfig : public ProxyAutoConfigBase {

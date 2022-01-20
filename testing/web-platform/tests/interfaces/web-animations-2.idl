@@ -42,6 +42,7 @@ partial dictionary ComputedEffectTiming {
     CSSNumberish         endTime;
     CSSNumberish         activeDuration;
     CSSNumberish?        localTime;
+    CSSNumberish?        progress;
 };
 
 [Exposed=Window]

@@ -24,6 +24,7 @@
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
+#include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/SharedIntlData.h"
 #include "builtin/intl/TimeZoneDataGenerated.h"
 #include "gc/FreeOp.h"
@@ -51,8 +52,10 @@ using JS::AutoStableStringChars;
 using JS::ClippedTime;
 using JS::TimeClip;
 
+using js::intl::CallICU;
 using js::intl::DateTimeFormatOptions;
 using js::intl::FormatBuffer;
+using js::intl::IcuLocale;
 using js::intl::INITIAL_CHAR_BUFFER_SIZE;
 using js::intl::SharedIntlData;
 

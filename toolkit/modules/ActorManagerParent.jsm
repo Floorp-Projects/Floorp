@@ -410,7 +410,6 @@ let JSWINDOWACTORS = {
       },
     },
 
-    includeChrome: true,
     allFrames: true,
   },
 

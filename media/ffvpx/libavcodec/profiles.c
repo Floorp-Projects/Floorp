@@ -74,12 +74,6 @@ const AVProfile ff_h264_profiles[] = {
     { FF_PROFILE_UNKNOWN },
 };
 
-const AVProfile ff_vvc_profiles[] = {
-    { FF_PROFILE_VVC_MAIN_10,                   "Main 10" },
-    { FF_PROFILE_VVC_MAIN_10_444,               "Main 10 4:4:4" },
-    { FF_PROFILE_UNKNOWN },
-};
-
 const AVProfile ff_hevc_profiles[] = {
     { FF_PROFILE_HEVC_MAIN,                 "Main"                },
     { FF_PROFILE_HEVC_MAIN_10,              "Main 10"             },
@@ -104,6 +98,7 @@ const AVProfile ff_mpeg2_video_profiles[] = {
     { FF_PROFILE_MPEG2_SNR_SCALABLE, "SNR Scalable"       },
     { FF_PROFILE_MPEG2_MAIN,         "Main"               },
     { FF_PROFILE_MPEG2_SIMPLE,       "Simple"             },
+    { FF_PROFILE_RESERVED,           "Reserved"           },
     { FF_PROFILE_RESERVED,           "Reserved"           },
     { FF_PROFILE_UNKNOWN                                  },
 };

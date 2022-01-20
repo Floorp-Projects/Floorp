@@ -2,17 +2,15 @@
 // 1236476
 
 if (typeof oomTest !== 'function' ||
-    typeof offThreadCompileToStencil !== 'function' ||
-    typeof finishOffThreadCompileToStencil !== 'function' ||
-    typeof evalStencil !== 'function')
+    typeof offThreadCompileScript !== 'function' ||
+    typeof runOffThreadScript !== 'function')
     quit();
 
 oomTest(() => {
-    offThreadCompileToStencil(`
+    offThreadCompileScript(`
       "use asm";
       return assertEq;
     `);
-    var stencil = finishOffThreadCompileToStencil();
-    evalStencil();
+    runOffThreadScript();
 });
 

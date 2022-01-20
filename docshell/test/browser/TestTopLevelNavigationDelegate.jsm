@@ -33,7 +33,7 @@ class TopLevelNavigationDelegateChild extends JSWindowActorChild {
     docShell,
     URI,
     loadType,
-    referrerInfo,
+    referrer,
     hasPostData,
     triggeringPrincipal,
     csp

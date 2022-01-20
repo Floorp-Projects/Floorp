@@ -17,7 +17,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! rust-argon2 = "0.8"
+//! rust-argon2 = "0.5"
 //! ```
 //!
 //! And the following to your crate root:
@@ -53,16 +53,8 @@
 //!     version: Version::Version13,
 //!     mem_cost: 65536,
 //!     time_cost: 10,
-#![cfg_attr(feature = "crossbeam-utils", doc = "    lanes: 4,")]
-#![cfg_attr(
-    feature = "crossbeam-utils",
-    doc = "    thread_mode: ThreadMode::Parallel,"
-)]
-#![cfg_attr(not(feature = "crossbeam-utils"), doc = "    lanes: 1,")]
-#![cfg_attr(
-    not(feature = "crossbeam-utils"),
-    doc = "    thread_mode: ThreadMode::Sequential,"
-)]
+//!     lanes: 4,
+//!     thread_mode: ThreadMode::Parallel,
 //!     secret: &[],
 //!     ad: &[],
 //!     hash_length: 32
@@ -83,6 +75,10 @@
 //! This version uses the standard implementation and does not yet implement
 //! optimizations. Therefore, it is not the fastest implementation available.
 
+extern crate base64;
+extern crate blake2b_simd;
+extern crate crossbeam_utils;
+
 mod argon2;
 mod block;
 mod common;
@@ -98,10 +94,10 @@ mod thread_mode;
 mod variant;
 mod version;
 
-pub use crate::argon2::*;
-pub use crate::config::Config;
-pub use crate::error::Error;
-pub use crate::result::Result;
-pub use crate::thread_mode::ThreadMode;
-pub use crate::variant::Variant;
-pub use crate::version::Version;
+pub use argon2::*;
+pub use config::Config;
+pub use error::Error;
+pub use result::Result;
+pub use thread_mode::ThreadMode;
+pub use variant::Variant;
+pub use version::Version;

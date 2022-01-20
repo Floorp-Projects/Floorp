@@ -166,11 +166,11 @@
 }
 
 #urlbar[actiontype="extension"] > #urlbar-input-container > #identity-box #identity-icon {
-  list-style-image: url(chrome://browser/skin/addons.svg);
+  list-style-image: url(chrome://mozapps/skin/extensions/extension.svg);
 }
 
 #identity-box[pageproxystate="valid"].extensionPage #identity-icon {
-  list-style-image: url(chrome://browser/skin/addons.svg);
+  list-style-image: url(chrome://mozapps/skin/extensions/extension.svg);
 }
 
 #identity-box[pageproxystate="valid"].verifiedDomain #identity-icon,

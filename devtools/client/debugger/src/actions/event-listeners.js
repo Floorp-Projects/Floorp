@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+import { remove } from "lodash";
+
 import {
   getActiveEventListeners,
   getEventListenerExpanded,
@@ -9,8 +11,8 @@ import {
 } from "../selectors";
 
 async function updateBreakpoints(dispatch, client, newEvents) {
-  await client.setEventListenerBreakpoints(newEvents);
   dispatch({ type: "UPDATE_EVENT_LISTENERS", active: newEvents });
+  await client.setEventListenerBreakpoints(newEvents);
 }
 
 async function updateExpanded(dispatch, newExpanded) {
@@ -35,7 +37,8 @@ export function removeEventListenerBreakpoints(eventsToRemove) {
   return async ({ dispatch, client, getState }) => {
     const activeListenerBreakpoints = await getActiveEventListeners(getState());
 
-    const newEvents = activeListenerBreakpoints.filter(
+    const newEvents = remove(
+      activeListenerBreakpoints,
       event => !eventsToRemove.includes(event)
     );
 

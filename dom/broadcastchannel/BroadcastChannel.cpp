@@ -127,7 +127,7 @@ BroadcastChannel::BroadcastChannel(nsIGlobalObject* aGlobal,
       mState(StateActive),
       mPortUUID(aPortUUID) {
   MOZ_ASSERT(aGlobal);
-  KeepAliveIfHasListenersFor(nsGkAtoms::onmessage);
+  KeepAliveIfHasListenersFor(u"message"_ns);
 }
 
 BroadcastChannel::~BroadcastChannel() {
@@ -342,7 +342,7 @@ void BroadcastChannel::Shutdown() {
     mActor = nullptr;
   }
 
-  IgnoreKeepAliveIfHasListenersFor(nsGkAtoms::onmessage);
+  IgnoreKeepAliveIfHasListenersFor(u"message"_ns);
 }
 
 void BroadcastChannel::RemoveDocFromBFCache() {

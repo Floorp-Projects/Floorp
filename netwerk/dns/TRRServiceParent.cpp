@@ -25,8 +25,6 @@
 namespace mozilla {
 namespace net {
 
-static Atomic<TRRServiceParent*> sTRRServiceParentPtr;
-
 static const char* gTRRUriCallbackPrefs[] = {
     "network.trr.uri",  "network.trr.default_provider_uri",
     "network.trr.mode", kRolloutURIPref,
@@ -70,10 +68,8 @@ void TRRServiceParent::Init() {
                                        gTRRUriCallbackPrefs, this);
   prefsChanged(nullptr);
 
-  if (socketParent->SendPTRRServiceConstructor(
-          this, captiveIsPassed, parentalControlEnabled, suffixList)) {
-    sTRRServiceParentPtr = this;
-  }
+  Unused << socketParent->SendPTRRServiceConstructor(
+      this, captiveIsPassed, parentalControlEnabled, suffixList);
 }
 
 NS_IMETHODIMP
@@ -172,7 +168,6 @@ void TRRServiceParent::prefsChanged(const char* aName) {
 }
 
 void TRRServiceParent::ActorDestroy(ActorDestroyReason why) {
-  sTRRServiceParentPtr = nullptr;
   Preferences::UnregisterPrefixCallbacks(TRRServiceParent::PrefsChanged,
                                          gTRRUriCallbackPrefs, this);
 }
@@ -211,27 +206,6 @@ mozilla::ipc::IPCResult TRRServiceParent::RecvSetConfirmationState(
     uint32_t aNewState) {
   mConfirmationState = aNewState;
   return IPC_OK();
-}
-
-void TRRServiceParent::ReadEtcHostsFile() {
-  if (!sTRRServiceParentPtr) {
-    return;
-  }
-
-  DoReadEtcHostsFile([](const nsTArray<nsCString>* aArray) -> bool {
-    RefPtr<TRRServiceParent> service(sTRRServiceParentPtr);
-    if (service && aArray) {
-      nsTArray<nsCString> hosts(aArray->Clone());
-      NS_DispatchToMainThread(NS_NewRunnableFunction(
-          "TRRServiceParent::ReadEtcHostsFile",
-          [service, hosts = std::move(hosts)]() mutable {
-            if (service->CanSend()) {
-              Unused << service->SendUpdateEtcHosts(hosts);
-            }
-          }));
-    }
-    return !!service;
-  });
 }
 
 }  // namespace net

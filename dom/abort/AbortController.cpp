@@ -6,27 +6,12 @@
 
 #include "AbortController.h"
 #include "AbortSignal.h"
-#include "js/Value.h"
 #include "mozilla/dom/AbortControllerBinding.h"
-#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/WorkerPrivate.h"
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(AbortController)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AbortController)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal, mSignal)
-  tmp->mReason.setUndefined();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(AbortController)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal, mSignal)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(AbortController)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mReason)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AbortController, mGlobal, mSignal)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AbortController)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(AbortController)
@@ -50,9 +35,7 @@ already_AddRefed<AbortController> AbortController::Constructor(
 }
 
 AbortController::AbortController(nsIGlobalObject* aGlobal)
-    : mGlobal(aGlobal), mAborted(false), mReason(JS::UndefinedHandleValue) {
-  mozilla::HoldJSObjects(this);
-}
+    : mGlobal(aGlobal), mAborted(false) {}
 
 JSObject* AbortController::WrapObject(JSContext* aCx,
                                       JS::Handle<JSObject*> aGivenProto) {
@@ -63,14 +46,13 @@ nsIGlobalObject* AbortController::GetParentObject() const { return mGlobal; }
 
 AbortSignal* AbortController::Signal() {
   if (!mSignal) {
-    JS::Rooted<JS::Value> reason(RootingCx(), mReason);
-    mSignal = new AbortSignal(mGlobal, mAborted, reason);
+    mSignal = new AbortSignal(mGlobal, mAborted);
   }
 
   return mSignal;
 }
 
-void AbortController::Abort(JSContext* aCx, JS::Handle<JS::Value> aReason) {
+void AbortController::Abort() {
   if (mAborted) {
     return;
   }
@@ -78,12 +60,8 @@ void AbortController::Abort(JSContext* aCx, JS::Handle<JS::Value> aReason) {
   mAborted = true;
 
   if (mSignal) {
-    mSignal->SignalAbort(aReason);
-  } else {
-    mReason = aReason;
+    mSignal->SignalAbort();
   }
 }
-
-AbortController::~AbortController() { mozilla::DropJSObjects(this); }
 
 }  // namespace mozilla::dom

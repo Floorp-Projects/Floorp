@@ -3307,7 +3307,6 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* 
       HIThemeGetGrowBoxBounds(&pnt, &drawInfo, &bounds);
       aResult->SizeTo(bounds.size.width, bounds.size.height);
       *aIsOverridable = false;
-      break;
     }
     default:
       break;

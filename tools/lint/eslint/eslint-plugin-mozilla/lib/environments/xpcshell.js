@@ -32,7 +32,6 @@ const extraGlobals = [
   "byteSize",
   "gc",
   "gczeal",
-  "saveStack",
 ];
 
 module.exports = getScriptGlobals(

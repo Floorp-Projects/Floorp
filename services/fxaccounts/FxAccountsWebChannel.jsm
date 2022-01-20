@@ -10,12 +10,7 @@
  * about account state changes.
  */
 
-var EXPORTED_SYMBOLS = [
-  "EnsureFxAccountsWebChannel",
-  // These are exported for tests.
-  "FxAccountsWebChannel",
-  "FxAccountsWebChannelHelpers",
-];
+var EXPORTED_SYMBOLS = ["EnsureFxAccountsWebChannel"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"

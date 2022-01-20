@@ -391,7 +391,6 @@ NS_INTERFACE_MAP_BEGIN(DocumentLoadListener)
   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIMultiPartChannelListener)
   NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
-  NS_INTERFACE_MAP_ENTRY(nsIEarlyHintObserver)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(DocumentLoadListener)
 NS_INTERFACE_MAP_END
 
@@ -533,9 +532,6 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   loadingContext->GetOriginAttributes(attrs);
 
   mLoadIdentifier = aLoadState->GetLoadIdentifier();
-  // See description of  mFileName in nsDocShellLoadState.h
-  mIsDownload = !aLoadState->FileName().IsVoid();
-  mIsLoadingJSURI = net::SchemeIsJavascript(aLoadState->URI());
 
   // Check for infinite recursive object or iframe loads
   if (aLoadState->OriginalFrameSrc() || !mIsDocumentLoad) {
@@ -644,10 +640,6 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(mChannel);
   if (httpChannelImpl) {
     httpChannelImpl->SetWarningReporter(this);
-
-    if (mIsDocumentLoad && loadingContext->IsTop()) {
-      httpChannelImpl->SetEarlyHintObserver(this);
-    }
   }
 
   nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(mChannel);
@@ -748,10 +740,8 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   // after opening the document channel we have to kick off countermeasures.
   nsHTTPSOnlyUtils::PotentiallyFireHttpRequestToShortenTimout(this);
 
-  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
-  loadInfo->SetChannelCreationOriginalURI(aLoadState->URI());
-
   mContentParent = aContentParent;
+  mChannelCreationURI = aLoadState->URI();
   mLoadStateExternalLoadFlags = aLoadState->LoadFlags();
   mLoadStateInternalLoadFlags = aLoadState->InternalLoadFlags();
   mLoadStateLoadType = aLoadState->LoadType();
@@ -767,22 +757,6 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
     MOZ_RELEASE_ASSERT(mParentWindowContext->GetBrowsingContext() ==
                            GetLoadingBrowsingContext(),
                        "mismatched parent window context?");
-  }
-
-  // For content-initiated loads, this flag is set in nsDocShell::LoadURI.
-  // For parent-initiated loads, we have to set it here.
-  // Below comment is copied from nsDocShell::LoadURI -
-  // If we have a system triggering principal, we can assume that this load was
-  // triggered by some UI in the browser chrome, such as the URL bar or
-  // bookmark bar. This should count as a user interaction for the current sh
-  // entry, so that the user may navigate back to the current entry, from the
-  // entry that is going to be added as part of this load.
-  if (!mSupportsRedirectToRealChannel && aLoadState->TriggeringPrincipal() &&
-      aLoadState->TriggeringPrincipal()->IsSystemPrincipal()) {
-    WindowContext* topWc = loadingContext->GetTopWindowContext();
-    if (topWc && !topWc->IsDiscarded()) {
-      MOZ_ALWAYS_SUCCEEDS(topWc->SetSHEntryHasUserInteraction(true));
-    }
   }
 
   *aRv = NS_OK;
@@ -1096,10 +1070,7 @@ void DocumentLoadListener::Disconnect() {
   RefPtr<nsHttpChannel> httpChannelImpl = do_QueryObject(mChannel);
   if (httpChannelImpl) {
     httpChannelImpl->SetWarningReporter(nullptr);
-    httpChannelImpl->SetEarlyHintObserver(nullptr);
   }
-
-  mEarlyHintsPreloader.Cancel();
 
   if (auto* ctx = GetDocumentBrowsingContext()) {
     ctx->EndDocumentLoad(mDoingProcessSwitch);
@@ -1387,7 +1358,13 @@ void DocumentLoadListener::SerializeRedirectData(
     RedirectToRealChannelArgs& aArgs, bool aIsCrossProcess,
     uint32_t aRedirectFlags, uint32_t aLoadFlags,
     ContentParent* aParent) const {
-  aArgs.uri() = GetChannelCreationURI();
+  // Use the original URI of the current channel, as this is what
+  // we'll use to construct the channel in the content process.
+  aArgs.uri() = mChannelCreationURI;
+  if (!aArgs.uri()) {
+    mChannel->GetOriginalURI(getter_AddRefs(aArgs.uri()));
+  }
+
   aArgs.loadIdentifier() = mLoadIdentifier;
 
   // I previously used HttpBaseChannel::CloneLoadInfoForRedirect, but that
@@ -1577,9 +1554,9 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   MOZ_DIAGNOSTIC_ASSERT(aWillSwitchToRemote);
 
   MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
-          ("DocumentLoadListener MaybeTriggerProcessSwitch [this=%p, uri=%s"
+          ("DocumentLoadListener MaybeTriggerProcessSwitch [this=%p, uri=%s, "
            "browserid=%" PRIx64 "]",
-           this, GetChannelCreationURI()->GetSpecOrDefault().get(),
+           this, mChannelCreationURI->GetSpecOrDefault().get(),
            GetLoadingBrowsingContext()->Top()->BrowserId()));
 
   // If we're doing an <object>/<embed> load, we may be doing a document load at
@@ -1634,7 +1611,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
   }
 
   auto optionsResult = IsolationOptionsForNavigation(
-      browsingContext->Top(), parentWindow, GetChannelCreationURI(), mChannel,
+      browsingContext->Top(), parentWindow, mChannelCreationURI, mChannel,
       currentRemoteType, HasCrossOriginOpenerPolicyMismatch(),
       mLoadStateLoadType, mDocumentChannelId, mRemoteTypeOverride);
   if (optionsResult.isErr()) {
@@ -2052,7 +2029,7 @@ bool DocumentLoadListener::DocShellWillDisplayContent(nsresult aStatus) {
             ("Skipping process switch, as DocShell will not display content "
              "(status: %s) %s",
              GetStaticErrorName(aStatus),
-             GetChannelCreationURI()->GetSpecOrDefault().get()));
+             mChannelCreationURI->GetSpecOrDefault().get()));
   }
 
   // If filtering returned a failure code, then an error page will
@@ -2204,14 +2181,6 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
     return NS_OK;
   }
 
-  // PerformCSPFrameAncestorAndXFOCheck may cancel a moz-extension request that
-  // needs to be handled here. Without this, the resource would be loaded and
-  // not blocked when the real channel is created in the content process.
-  if (status == NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION && !httpChannel) {
-    DisconnectListeners(status, status);
-    return NS_OK;
-  }
-
   // If this was a failed load and we want to try fixing the uri, then
   // this will initiate a new load (and disconnect this one), and we don't
   // need to do anything else.
@@ -2265,6 +2234,10 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
 
       DisconnectListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED, true);
 
+      // XXX(anny) This is currently a dead code path because parent-controlled
+      // DC pref is off. When we enable the pref, we might get extra STATE_START
+      // progress events
+
       // Notify the docshell that it should load using the newly connected
       // channel
       browserParent->ResumeLoad(mLoadIdentifier);
@@ -2280,14 +2253,6 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
     if (mContentParent) {
       willBeRemote = true;
     }
-  }
-
-  if (httpChannel) {
-    uint32_t responseStatus;
-    Unused << httpChannel->GetResponseStatus(&responseStatus);
-    mEarlyHintsPreloader.FinalResponse(responseStatus);
-  } else {
-    mEarlyHintsPreloader.Cancel();
   }
 
   // If we're going to be delivering this channel to a remote content
@@ -2481,17 +2446,6 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   // so just update our channel and tell the callback that we're good to go.
   mChannel = aNewChannel;
 
-  // We need the original URI of the current channel to use to open the real
-  // channel in the content process. Unfortunately we overwrite the original
-  // uri of the new channel with the original pre-redirect URI, so grab
-  // a copy of it now and save it on the loadInfo corresponding to the
-  // new channel.
-  nsCOMPtr<nsILoadInfo> loadInfoFromChannel = mChannel->LoadInfo();
-  MOZ_ASSERT(loadInfoFromChannel);
-  nsCOMPtr<nsIURI> uri;
-  mChannel->GetOriginalURI(getter_AddRefs(uri));
-  loadInfoFromChannel->SetChannelCreationOriginalURI(uri);
-
   // Since we're redirecting away from aOldChannel, we should check if it
   // had a COOP mismatch, since we want the final result for this to
   // include the state of all channels we redirected through.
@@ -2539,6 +2493,12 @@ DocumentLoadListener::AsyncOnChannelRedirect(
       ("DocumentLoadListener AsyncOnChannelRedirect [this=%p] "
        "mHaveVisibleRedirect=%c",
        this, mHaveVisibleRedirect ? 'T' : 'F'));
+
+  // We need the original URI of the current channel to use to open the real
+  // channel in the content process. Unfortunately we overwrite the original
+  // uri of the new channel with the original pre-redirect URI, so grab
+  // a copy of it now.
+  aNewChannel->GetOriginalURI(getter_AddRefs(mChannelCreationURI));
 
   // Clear out our nsIParentChannel functions, since a normal parent
   // channel would actually redirect and not have those values on the new one.
@@ -2590,23 +2550,6 @@ DocumentLoadListener::AsyncOnChannelRedirect(
   return NS_OK;
 }
 
-nsIURI* DocumentLoadListener::GetChannelCreationURI() const {
-  nsCOMPtr<nsILoadInfo> channelLoadInfo = mChannel->LoadInfo();
-
-  nsCOMPtr<nsIURI> uri;
-  channelLoadInfo->GetChannelCreationOriginalURI(getter_AddRefs(uri));
-  if (uri) {
-    // See channelCreationOriginalURI for more info. We use this instead of the
-    // originalURI of the channel to help us avoid the situation when we use
-    // the URI of a redirect that has failed to happen.
-    return uri;
-  }
-
-  // Otherwise, get the original URI from the channel.
-  mChannel->GetOriginalURI(getter_AddRefs(uri));
-  return uri;
-}
-
 // This method returns the cached result of running the Cross-Origin-Opener
 // policy compare algorithm by calling ComputeCrossOriginOpenerPolicyMismatch
 bool DocumentLoadListener::HasCrossOriginOpenerPolicyMismatch() const {
@@ -2628,12 +2571,13 @@ bool DocumentLoadListener::HasCrossOriginOpenerPolicyMismatch() const {
   return isCOOPMismatch;
 }
 
-auto DocumentLoadListener::AttachStreamFilter()
+auto DocumentLoadListener::AttachStreamFilter(base::ProcessId aChildProcessId)
     -> RefPtr<ChildEndpointPromise> {
   LOG(("DocumentLoadListener AttachStreamFilter [this=%p]", this));
 
   StreamFilterRequest* request = mStreamFilterRequests.AppendElement();
   request->mPromise = new ChildEndpointPromise::Private(__func__);
+  request->mChildProcessId = aChildProcessId;
   return request->mPromise;
 }
 
@@ -2659,13 +2603,6 @@ NS_IMETHODIMP DocumentLoadListener::OnStatus(nsIRequest* aRequest,
                                       message.get());
         }));
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP DocumentLoadListener::EarlyHint(const nsACString& linkHeader) {
-  LOG(("DocumentLoadListener::EarlyHint.\n"));
-
-  mEarlyHintsPreloader.EarlyHint(linkHeader);
   return NS_OK;
 }
 

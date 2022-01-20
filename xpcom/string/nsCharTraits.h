@@ -433,10 +433,10 @@ template <class InputIterator>
 struct nsCharSourceTraits {
   typedef typename InputIterator::difference_type difference_type;
 
-  static difference_type readable_distance(const InputIterator& aFirst,
-                                           const InputIterator& aLast) {
+  static uint32_t readable_distance(const InputIterator& aFirst,
+                                    const InputIterator& aLast) {
     // assumes single fragment
-    return aLast.get() - aFirst.get();
+    return uint32_t(aLast.get() - aFirst.get());
   }
 
   static const typename InputIterator::value_type* read(
@@ -453,12 +453,13 @@ template <class CharT>
 struct nsCharSourceTraits<CharT*> {
   typedef ptrdiff_t difference_type;
 
-  static difference_type readable_distance(CharT* aStr) {
-    return nsCharTraits<CharT>::length(aStr);
+  static uint32_t readable_distance(CharT* aStr) {
+    return uint32_t(nsCharTraits<CharT>::length(aStr));
+    // return numeric_limits<uint32_t>::max();
   }
 
-  static difference_type readable_distance(CharT* aFirst, CharT* aLast) {
-    return aLast - aFirst;
+  static uint32_t readable_distance(CharT* aFirst, CharT* aLast) {
+    return uint32_t(aLast - aFirst);
   }
 
   static const CharT* read(CharT* aStr) { return aStr; }
@@ -470,14 +471,14 @@ template <class OutputIterator>
 struct nsCharSinkTraits {
   static void write(OutputIterator& aIter,
                     const typename OutputIterator::value_type* aStr,
-                    size_t aN) {
+                    uint32_t aN) {
     aIter.write(aStr, aN);
   }
 };
 
 template <class CharT>
 struct nsCharSinkTraits<CharT*> {
-  static void write(CharT*& aIter, const CharT* aStr, size_t aN) {
+  static void write(CharT*& aIter, const CharT* aStr, uint32_t aN) {
     nsCharTraits<CharT>::move(aIter, aStr, aN);
     aIter += aN;
   }

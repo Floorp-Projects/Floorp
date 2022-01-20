@@ -844,6 +844,10 @@
       ["search-textbox", "chrome://global/content/elements/search-textbox.js"],
       ["stringbundle", "chrome://global/content/elements/stringbundle.js"],
       [
+        "printpreview-toolbar",
+        "chrome://global/content/printPreviewToolbar.js",
+      ],
+      [
         "printpreview-pagination",
         "chrome://global/content/printPreviewPagination.js",
       ],

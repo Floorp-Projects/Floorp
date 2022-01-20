@@ -1,17 +1,14 @@
 // Std
-use std::{
-    borrow::Cow,
-    collections::HashMap,
-    ffi::{OsStr, OsString},
-    iter::Map,
-    slice::Iter,
-};
+use std::borrow::Cow;
+use std::collections::HashMap;
+use std::ffi::{OsStr, OsString};
+use std::iter::Map;
+use std::slice::Iter;
 
 // Internal
-use crate::{
-    args::{MatchedArg, SubCommand},
-    INVALID_UTF8,
-};
+use args::MatchedArg;
+use args::SubCommand;
+use INVALID_UTF8;
 
 /// Used to get information about the arguments that were supplied to the program at runtime by
 /// the user. New instances of this struct are obtained by using the [`App::get_matches`] family of
@@ -830,7 +827,7 @@ impl<'a> Default for Values<'a> {
         // This is never called because the iterator is empty:
         fn to_str_slice(_: &OsString) -> &str {
             unreachable!()
-        }
+        };
         Values {
             iter: EMPTY[..].iter().map(to_str_slice),
         }
@@ -889,7 +886,7 @@ impl<'a> Default for OsValues<'a> {
         // This is never called because the iterator is empty:
         fn to_str_slice(_: &OsString) -> &OsStr {
             unreachable!()
-        }
+        };
         OsValues {
             iter: EMPTY[..].iter().map(to_str_slice),
         }
@@ -949,7 +946,7 @@ impl<'a> Default for Indices<'a> {
         // This is never called because the iterator is empty:
         fn to_usize(_: &usize) -> usize {
             unreachable!()
-        }
+        };
         Indices {
             iter: EMPTY[..].iter().map(to_usize),
         }

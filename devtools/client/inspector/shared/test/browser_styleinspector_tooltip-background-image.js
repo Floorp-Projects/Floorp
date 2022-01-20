@@ -54,16 +54,8 @@ add_task(async function() {
 async function testBodyRuleView(view) {
   info("Testing tooltips in the rule view");
 
-  // XXX we have an intermittent here (Bug 1743594) where the rule view is still empty
-  // at this point. We're currently investigating what's going on and a proper way to
-  // wait in openRuleView, but for now, let's fix the intermittent by waiting until the
-  // rule view has the expected content.
-  const property = await waitFor(() =>
-    getRuleViewProperty(view, "body", "background-image")
-  );
-
   // Get the background-image property inside the rule view
-  const { valueSpan } = property;
+  const { valueSpan } = getRuleViewProperty(view, "body", "background-image");
   const uriSpan = valueSpan.querySelector(".theme-link");
 
   const previewTooltip = await assertShowPreviewTooltip(view, uriSpan);

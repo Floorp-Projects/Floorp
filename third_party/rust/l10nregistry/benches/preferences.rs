@@ -26,11 +26,7 @@ fn preferences_bench(c: &mut Criterion) {
                 let reg = fetcher.get_registry(&scenario);
                 let mut bundles =
                     reg.generate_bundles_sync(locales.clone().into_iter(), res_ids.clone());
-                for _ in 0..locales.len() {
-                    if bundles.next().is_some() {
-                        break;
-                    }
-                }
+                assert!(bundles.next().is_some());
             })
         });
 
@@ -47,11 +43,7 @@ fn preferences_bench(c: &mut Criterion) {
 
                         let mut bundles =
                             reg.generate_bundles(locales.clone().into_iter(), res_ids.clone());
-                        for _ in 0..locales.len() {
-                            if bundles.next().await.is_some() {
-                                break;
-                            }
-                        }
+                        assert!(bundles.next().await.is_some());
                     });
                 })
             });

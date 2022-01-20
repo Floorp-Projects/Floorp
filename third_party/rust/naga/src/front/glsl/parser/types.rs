@@ -61,7 +61,11 @@ impl<'source> ParsingContext<'source> {
                 let ty = parser.module.types.insert(
                     Type {
                         name: Some(ty_name.clone()),
-                        inner: TypeInner::Struct { members, span },
+                        inner: TypeInner::Struct {
+                            top_level: false,
+                            members,
+                            span,
+                        },
                     },
                     meta,
                 );

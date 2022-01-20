@@ -15,31 +15,40 @@ const beautify = require("devtools/shared/jsbeautify/beautify");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const CONTAINER_WIDTH = 500;
 
-class EventTooltip {
-  /**
-   * Set the content of a provided HTMLTooltip instance to display a list of event
-   * listeners, with their event type, capturing argument and a link to the code
-   * of the event handler.
-   *
-   * @param {HTMLTooltip} tooltip
-   *        The tooltip instance on which the event details content should be set
-   * @param {Array} eventListenerInfos
-   *        A list of event listeners
-   * @param {Toolbox} toolbox
-   *        Toolbox used to select debugger panel
-   */
-  constructor(tooltip, eventListenerInfos, toolbox) {
-    this._tooltip = tooltip;
-    this._toolbox = toolbox;
-    this._eventEditors = new WeakMap();
+/**
+ * Set the content of a provided HTMLTooltip instance to display a list of event
+ * listeners, with their event type, capturing argument and a link to the code
+ * of the event handler.
+ *
+ * @param {HTMLTooltip} tooltip
+ *        The tooltip instance on which the event details content should be set
+ * @param {Array} eventListenerInfos
+ *        A list of event listeners
+ * @param {Toolbox} toolbox
+ *        Toolbox used to select debugger panel
+ */
+function setEventTooltip(tooltip, eventListenerInfos, toolbox) {
+  const eventTooltip = new EventTooltip(tooltip, eventListenerInfos, toolbox);
+  eventTooltip.init();
+}
 
-    // Used in tests: add a reference to the EventTooltip instance on the HTMLTooltip.
-    this._tooltip.eventTooltip = this;
+function EventTooltip(tooltip, eventListenerInfos, toolbox) {
+  this._tooltip = tooltip;
+  this._eventListenerInfos = eventListenerInfos;
+  this._toolbox = toolbox;
+  this._eventEditors = new WeakMap();
 
-    this._headerClicked = this._headerClicked.bind(this);
-    this._debugClicked = this._debugClicked.bind(this);
-    this._subscriptions = [];
+  // Used in tests: add a reference to the EventTooltip instance on the HTMLTooltip.
+  this._tooltip.eventTooltip = this;
 
+  this._headerClicked = this._headerClicked.bind(this);
+  this._debugClicked = this._debugClicked.bind(this);
+  this.destroy = this.destroy.bind(this);
+  this._subscriptions = [];
+}
+
+EventTooltip.prototype = {
+  init: function() {
     const config = {
       mode: Editor.modes.js,
       lineNumbers: false,
@@ -58,7 +67,10 @@ class EventTooltip {
 
     const Bubbling = L10N.getStr("eventsTooltip.Bubbling");
     const Capturing = L10N.getStr("eventsTooltip.Capturing");
-    for (const listener of eventListenerInfos) {
+    for (const listener of this._eventListenerInfos) {
+      const phase = listener.capturing ? Capturing : Bubbling;
+      const level = listener.DOM0 ? "DOM0" : "DOM2";
+
       // Create this early so we can refer to it from a closure, below.
       const content = doc.createElementNS(XHTML_NS, "div");
 
@@ -132,6 +144,18 @@ class EventTooltip {
       attributesContainer.className = "event-tooltip-attributes-container";
       header.appendChild(attributesContainer);
 
+      if (!listener.hide.capturing) {
+        const attributesBox = doc.createElementNS(XHTML_NS, "div");
+        attributesBox.className = "event-tooltip-attributes-box";
+        attributesContainer.appendChild(attributesBox);
+
+        const capturing = doc.createElementNS(XHTML_NS, "span");
+        capturing.className = "event-tooltip-attributes";
+        capturing.textContent = phase;
+        capturing.setAttribute("title", phase);
+        attributesBox.appendChild(capturing);
+      }
+
       if (listener.tags) {
         for (const tag of listener.tags.split(",")) {
           const attributesBox = doc.createElementNS(XHTML_NS, "div");
@@ -146,18 +170,15 @@ class EventTooltip {
         }
       }
 
-      if (!listener.hide.capturing) {
+      if (!listener.hide.dom0) {
         const attributesBox = doc.createElementNS(XHTML_NS, "div");
         attributesBox.className = "event-tooltip-attributes-box";
         attributesContainer.appendChild(attributesBox);
 
-        const capturing = doc.createElementNS(XHTML_NS, "span");
-        capturing.className = "event-tooltip-attributes";
-
-        const phase = listener.capturing ? Capturing : Bubbling;
-        capturing.textContent = phase;
-        capturing.setAttribute("title", phase);
-        attributesBox.appendChild(capturing);
+        const dom0 = doc.createElementNS(XHTML_NS, "span");
+        dom0.className = "event-tooltip-attributes";
+        dom0.textContent = level;
+        attributesBox.appendChild(dom0);
       }
 
       // Content
@@ -165,6 +186,7 @@ class EventTooltip {
       this._eventEditors.set(content, {
         editor: editor,
         handler: listener.handler,
+        dom0: listener.DOM0,
         native: listener.native,
         appended: false,
         location,
@@ -179,13 +201,14 @@ class EventTooltip {
     this._tooltip.panel.innerHTML = "";
     this._tooltip.panel.appendChild(this.container);
     this._tooltip.setContentSize({ width: CONTAINER_WIDTH, height: Infinity });
-  }
+    this._tooltip.on("hidden", this.destroy);
+  },
 
-  _addContentListeners(header) {
+  _addContentListeners: function(header) {
     header.addEventListener("click", this._headerClicked);
-  }
+  },
 
-  _headerClicked(event) {
+  _headerClicked: function(event) {
     if (event.target.classList.contains("event-tooltip-debugger-icon")) {
       this._debugClicked(event);
       event.stopPropagation();
@@ -244,9 +267,9 @@ class EventTooltip {
         this._tooltip.emit("event-tooltip-ready");
       });
     }
-  }
+  },
 
-  _debugClicked(event) {
+  _debugClicked: function(event) {
     const header = event.currentTarget;
     const content = header.nextElementSibling;
 
@@ -264,12 +287,12 @@ class EventTooltip {
         location.id
       );
     }
-  }
+  },
 
   /**
    * Parse URI and return {url, line, column}; or return null if it can't be parsed.
    */
-  _parseLocation(uri) {
+  _parseLocation: function(uri) {
     if (uri && uri !== "?") {
       uri = uri.replace(/"/g, "");
 
@@ -291,10 +314,12 @@ class EventTooltip {
       return { url: uri, line: 1, column: null };
     }
     return null;
-  }
+  },
 
-  destroy() {
+  destroy: function() {
     if (this._tooltip) {
+      this._tooltip.off("hidden", this.destroy);
+
       const boxes = this.container.querySelectorAll(
         ".event-tooltip-content-box"
       );
@@ -325,8 +350,8 @@ class EventTooltip {
       unsubscribe();
     }
 
-    this._toolbox = this._tooltip = null;
-  }
-}
+    this._eventListenerInfos = this._toolbox = this._tooltip = null;
+  },
+};
 
-module.exports.EventTooltip = EventTooltip;
+module.exports.setEventTooltip = setEventTooltip;

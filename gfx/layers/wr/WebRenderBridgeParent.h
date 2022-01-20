@@ -172,8 +172,6 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent,
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvSetDefaultClearColor(
-      const uint32_t& aColor) override;
   void SetClearColor(const gfx::DeviceColor& aColor);
 
   void Pause();

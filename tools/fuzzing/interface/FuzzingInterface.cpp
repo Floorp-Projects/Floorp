@@ -7,7 +7,6 @@
  * Common code for the unified fuzzing interface
  */
 
-#include <stdarg.h>
 #include <stdlib.h>
 #include "FuzzingInterface.h"
 

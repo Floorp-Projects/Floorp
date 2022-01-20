@@ -68,10 +68,8 @@ struct IsTriviallySerializable<webgl::VertAttribPointerDesc> : std::true_type {
 };
 template <>
 struct IsTriviallySerializable<webgl::ReadPixelsDesc> : std::true_type {};
-// template <>
-// struct IsTriviallySerializable<layers::SurfaceDescriptor> : std::true_type
-// {};
-//  SurfaceDescriptorBuffer is *not* trivial.
+template <>
+struct IsTriviallySerializable<layers::SurfaceDescriptor> : std::true_type {};
 
 template <typename T>
 struct QueueParamTraits<RawBuffer<T>> {

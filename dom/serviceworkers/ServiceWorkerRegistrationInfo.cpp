@@ -509,7 +509,7 @@ void ServiceWorkerRegistrationInfo::MaybeScheduleUpdate() {
 
   // When reach the navigation fault threshold, calling unregister instead of
   // scheduling update.
-  if (mActiveWorker && !mUnregistered) {
+  if (mActiveWorker) {
     uint32_t navigationFaultCount;
     mActiveWorker->GetNavigationFaultCount(&navigationFaultCount);
     const auto navigationFaultThreshold = StaticPrefs::

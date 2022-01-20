@@ -13,6 +13,7 @@
 
 #include "mozilla/UniquePtr.h"
 
+bool GetInstallDirectory(mozilla::UniquePtr<wchar_t[]>& installPath);
 bool GetAppRegName(mozilla::UniquePtr<wchar_t[]>& aAppRegName);
 bool LaunchControlPanelDefaultPrograms();
 bool LaunchModernSettingsDialogDefaultApps();

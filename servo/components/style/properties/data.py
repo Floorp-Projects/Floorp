@@ -501,7 +501,6 @@ class Longhand(Property):
                 "OverscrollBehavior",
                 "Percentage",
                 "PositiveIntegerOrNone",
-                "PrintColorAdjust",
                 "Resize",
                 "RubyPosition",
                 "SVGOpacity",

@@ -6,7 +6,6 @@
 
 #include "Request.h"
 
-#include "js/Value.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
@@ -64,8 +63,7 @@ Request::Request(nsIGlobalObject* aOwner, SafeRefPtr<InternalRequest> aRequest,
   if (aSignal) {
     // If we don't have a signal as argument, we will create it when required by
     // content, otherwise the Request's signal must follow what has been passed.
-    JS::Rooted<JS::Value> reason(RootingCx(), aSignal->RawReason());
-    mSignal = new AbortSignal(aOwner, aSignal->Aborted(), reason);
+    mSignal = new AbortSignal(aOwner, aSignal->Aborted());
     if (!mSignal->Aborted()) {
       mSignal->Follow(aSignal);
     }
@@ -653,7 +651,7 @@ Headers* Request::Headers_() {
 
 AbortSignal* Request::GetOrCreateSignal() {
   if (!mSignal) {
-    mSignal = new AbortSignal(mOwner, false, JS::UndefinedHandleValue);
+    mSignal = new AbortSignal(mOwner, false);
   }
 
   return mSignal;

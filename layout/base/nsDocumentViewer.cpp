@@ -73,7 +73,9 @@
 #include "mozilla/ReflowInput.h"
 #include "nsIImageLoadingContent.h"
 #include "nsCopySupport.h"
-#include "nsXULPopupManager.h"
+#ifdef MOZ_XUL
+#  include "nsXULPopupManager.h"
+#endif
 
 #include "nsIClipboardHelper.h"
 
@@ -977,7 +979,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
     // onload to the document content since that would likely confuse scripts
     // on the page.
 
-    RefPtr<nsDocShell> docShell = nsDocShell::Cast(window->GetDocShell());
+    nsIDocShell* docShell = window->GetDocShell();
     NS_ENSURE_TRUE(docShell, NS_ERROR_UNEXPECTED);
 
     // Unfortunately, docShell->GetRestoringDocument() might no longer be set
@@ -1082,12 +1084,12 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
       }
 
       d->SetLoadEventFiring(true);
-      RefPtr<nsPresContext> presContext = mPresContext;
-      EventDispatcher::Dispatch(window, presContext, &event, nullptr, &status);
+      EventDispatcher::Dispatch(window, mPresContext, &event, nullptr, &status);
       d->SetLoadEventFiring(false);
 
-      if (docGroup && docShell->TreatAsBackgroundLoad()) {
-        docGroup->TryFlushIframePostMessages(docShell->GetOuterWindowID());
+      RefPtr<nsDocShell> dShell = nsDocShell::Cast(docShell);
+      if (docGroup && dShell->TreatAsBackgroundLoad()) {
+        docGroup->TryFlushIframePostMessages(dShell->GetOuterWindowID());
       }
 
       if (timing) {
@@ -1281,8 +1283,7 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
   return NS_OK;
 }
 
-MOZ_CAN_RUN_SCRIPT_BOUNDARY PermitUnloadResult
-nsDocumentViewer::DispatchBeforeUnload() {
+PermitUnloadResult nsDocumentViewer::DispatchBeforeUnload() {
   AutoDontWarnAboutSyncXHR disableSyncXHRWarning;
 
   if (!mDocument || mInPermitUnload || mInPermitUnloadPrompt) {
@@ -1290,8 +1291,7 @@ nsDocumentViewer::DispatchBeforeUnload() {
   }
 
   // First, get the script global object from the document...
-  RefPtr<nsGlobalWindowOuter> window =
-      nsGlobalWindowOuter::Cast(mDocument->GetWindow());
+  auto* window = nsGlobalWindowOuter::Cast(mDocument->GetWindow());
   if (!window) {
     // This is odd, but not fatal
     NS_WARNING("window not set for document!");
@@ -1336,10 +1336,8 @@ nsDocumentViewer::DispatchBeforeUnload() {
     Document::PageUnloadingEventTimeStamp timestamp(mDocument);
 
     mInPermitUnload = true;
-    RefPtr<nsPresContext> presContext = mPresContext;
-    // TODO: Bug 1506441
-    EventDispatcher::DispatchDOMEvent(MOZ_KnownLive(ToSupports(window)),
-                                      nullptr, event, presContext, nullptr);
+    EventDispatcher::DispatchDOMEvent(ToSupports(window), nullptr, event,
+                                      mPresContext, nullptr);
     mInPermitUnload = false;
   }
 
@@ -1400,7 +1398,7 @@ nsDocumentViewer::PageHide(bool aIsUnload) {
     NS_ENSURE_STATE(mDocument);
 
     // First, get the window from the document...
-    RefPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow();
+    nsPIDOMWindowOuter* window = mDocument->GetWindow();
 
     if (!window) {
       // Fail if no window is available...
@@ -1427,13 +1425,14 @@ nsDocumentViewer::PageHide(bool aIsUnload) {
 
     Document::PageUnloadingEventTimeStamp timestamp(mDocument);
 
-    RefPtr<nsPresContext> presContext = mPresContext;
-    EventDispatcher::Dispatch(window, presContext, &event, nullptr, &status);
+    EventDispatcher::Dispatch(window, mPresContext, &event, nullptr, &status);
   }
 
+#ifdef MOZ_XUL
   // look for open menupopups and close them after the unload event, in case
   // the unload event listeners open any new popups
   nsContentUtils::HidePopupsInDocument(mDocument);
+#endif
 
   return NS_OK;
 }
@@ -2586,12 +2585,6 @@ nsDocumentViewer::GetReloadEncodingAndSource(int32_t* aSource) {
 NS_IMETHODIMP_(void)
 nsDocumentViewer::SetReloadEncodingAndSource(const Encoding* aEncoding,
                                              int32_t aSource) {
-  MOZ_ASSERT(
-      aSource == kCharsetUninitialized ||
-      (aSource >= kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8 &&
-       aSource <=
-           kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD) ||
-      aSource == kCharsetFromFinalUserForcedAutoDetection);
   mReloadEncoding = aEncoding;
   mReloadEncodingSource = aSource;
 }
@@ -2715,6 +2708,7 @@ already_AddRefed<nsINode> nsDocumentViewer::GetPopupNode() {
 
     // get the popup node
     nsCOMPtr<nsINode> node = root->GetPopupNode();
+#ifdef MOZ_XUL
     if (!node) {
       nsPIDOMWindowOuter* rootWindow = root->GetWindow();
       if (rootWindow) {
@@ -2727,6 +2721,7 @@ already_AddRefed<nsINode> nsDocumentViewer::GetPopupNode() {
         }
       }
     }
+#endif
     return node.forget();
   }
 
@@ -2951,6 +2946,7 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   NS_ENSURE_STATE(doc);
 
   if (NS_WARN_IF(GetIsPrinting())) {
+    nsPrintJob::CloseProgressDialog(aWebProgressListener);
     return NS_ERROR_FAILURE;
   }
 
@@ -2983,8 +2979,7 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   }
   mPrintJob = printJob;
 
-  bool print_tab_modal_enabled = true;
-  if (!hadPrintJob && !print_tab_modal_enabled) {
+  if (!hadPrintJob && !StaticPrefs::print_tab_modal_enabled()) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_PREVIEW_OPENED, 1);
   }
   rv = printJob->PrintPreview(doc, aPrintSettings, aWebProgressListener,
@@ -3111,8 +3106,7 @@ nsDocumentViewer::PrintPreviewScrollToPage(int16_t aType, int32_t aPageNum) {
   if (!GetIsPrintPreview() || mPrintJob->GetIsCreatingPrintPreview())
     return NS_ERROR_FAILURE;
 
-  bool print_tab_modal_enabled = true;
-  if (!print_tab_modal_enabled) {
+  if (!StaticPrefs::print_tab_modal_enabled()) {
     return PrintPreviewScrollToPageForOldUI(aType, aPageNum);
   }
 
@@ -3317,8 +3311,7 @@ nsDocumentViewer::ExitPrintPreview() {
     return NS_OK;
   }
 
-  bool print_tab_modal_enabled = true;
-  if (!mPrintJob->HasEverPrinted() && !print_tab_modal_enabled) {
+  if (!mPrintJob->HasEverPrinted() && !StaticPrefs::print_tab_modal_enabled()) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::PRINTING_PREVIEW_CANCELLED, 1);
   }
 

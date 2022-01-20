@@ -305,7 +305,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void StartUnloadingHost(uint64_t aChildID);
   void ClearUnloadingHost(uint64_t aChildID);
 
-  bool AllowedInBFCache(const Maybe<uint64_t>& aChannelId, nsIURI* aNewURI);
+  bool AllowedInBFCache(const Maybe<uint64_t>& aChannelId);
 
   // Methods for getting and setting the active state for top level
   // browsing contexts, for the process priority manager.

@@ -3,6 +3,7 @@ use crate::io::PollEvented;
 use crate::net::unix::{Incoming, UnixStream};
 
 use mio::Ready;
+use mio_uds;
 use std::convert::TryFrom;
 use std::fmt;
 use std::io;
@@ -104,11 +105,7 @@ impl UnixListener {
         poll_fn(|cx| self.poll_accept(cx)).await
     }
 
-    /// Polls to accept a new incoming connection to this listener.
-    ///
-    /// If there is no connection to accept, `Poll::Pending` is returned and
-    /// the current task will be notified by a waker.
-    pub fn poll_accept(
+    pub(crate) fn poll_accept(
         &mut self,
         cx: &mut Context<'_>,
     ) -> Poll<io::Result<(UnixStream, SocketAddr)>> {

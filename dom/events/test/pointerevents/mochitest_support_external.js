@@ -16,7 +16,7 @@ addEventListener(
 function prepareTest() {
   SimpleTest.waitForExplicitFinish();
   SimpleTest.requestCompleteLog();
-  startTest();
+  turnOnPointerEvents(startTest);
 }
 
 function setImplicitPointerCapture(capture, callback) {
@@ -24,6 +24,16 @@ function setImplicitPointerCapture(capture, callback) {
   SpecialPowers.pushPrefEnv(
     {
       set: [["dom.w3c_pointer_events.implicit_capture", capture]],
+    },
+    callback
+  );
+}
+
+function turnOnPointerEvents(callback) {
+  console.log("SET layout.css.touch_action.enabled as TRUE");
+  SpecialPowers.pushPrefEnv(
+    {
+      set: [["layout.css.touch_action.enabled", true]],
     },
     callback
   );
@@ -250,7 +260,9 @@ function runTestInNewWindow(aFile) {
         MouseEventHelper.PEN_ID = aEvent.data.message.penId;
         TouchEventHelper.TOUCH_ID = aEvent.data.message.touchId;
 
-        executeTest(testWindow);
+        turnOnPointerEvents(() => {
+          executeTest(testWindow);
+        });
         return;
       case "RESULT":
         // Should not perform checking after SimpleTest.finish().

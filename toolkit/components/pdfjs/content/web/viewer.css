@@ -757,11 +757,6 @@
   background: none;
 }
 
-.pdfViewer.enablePermissions .textLayer span {
-  user-select: none !important;
-  cursor: not-allowed;
-}
-
 .pdfPresentationMode .pdfViewer {
   padding-bottom: 0;
 }
@@ -962,6 +957,11 @@ select {
 }
 [hidden] {
   display: none !important;
+}
+
+.pdfViewer.enablePermissions .textLayer span {
+  user-select: none !important;
+  cursor: not-allowed;
 }
 
 #viewerContainer.pdfPresentationMode:fullscreen {

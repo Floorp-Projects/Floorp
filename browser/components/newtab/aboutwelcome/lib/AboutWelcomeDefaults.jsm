@@ -21,7 +21,7 @@ const DEFAULT_WELCOME_CONTENT = {
   template: "multistage",
   transitions: true,
   background_url:
-    "chrome://activity-stream/content/data/content/assets/proton-bkg.avif",
+    "chrome://activity-stream/content/data/content/assets/proton-bkg.jpg",
   screens: [
     {
       id: "AW_PIN_FIREFOX",
@@ -130,35 +130,25 @@ const DEFAULT_WELCOME_CONTENT = {
       },
     },
     {
-      id: "AW_CHOOSE_THEME",
+      id: "AW_CHOOSE_COLORWAY",
       order: 3,
       content: {
         title: {
-          string_id: "mr1-onboarding-theme-header",
+          string_id: "mr2-onboarding-colorway-header",
         },
         subtitle: {
-          string_id: "mr1-onboarding-theme-subtitle",
+          string_id: "mr2-onboarding-colorway-subtitle",
         },
+        hideLogo: true,
         tiles: {
-          type: "theme",
+          type: "colorway",
           action: {
             theme: "<event>",
           },
-          data: [
+          defaultVariationIndex: 1,
+          systemVariations: [
             {
-              theme: "automatic",
-              label: {
-                string_id: "mr1-onboarding-theme-label-system",
-              },
-              tooltip: {
-                string_id: "mr1-onboarding-theme-tooltip-system",
-              },
-              description: {
-                string_id: "mr1-onboarding-theme-description-system",
-              },
-            },
-            {
-              theme: "light",
+              id: "light",
               label: {
                 string_id: "mr1-onboarding-theme-label-light",
               },
@@ -170,7 +160,19 @@ const DEFAULT_WELCOME_CONTENT = {
               },
             },
             {
-              theme: "dark",
+              id: "automatic",
+              label: {
+                string_id: "mr2-onboarding-theme-label-auto",
+              },
+              tooltip: {
+                string_id: "mr1-onboarding-theme-tooltip-system",
+              },
+              description: {
+                string_id: "mr1-onboarding-theme-description-system",
+              },
+            },
+            {
+              id: "dark",
               label: {
                 string_id: "mr1-onboarding-theme-label-dark",
               },
@@ -181,23 +183,123 @@ const DEFAULT_WELCOME_CONTENT = {
                 string_id: "mr1-onboarding-theme-description-dark",
               },
             },
+          ],
+          variations: [
             {
-              theme: "alpenglow",
+              id: "soft",
               label: {
-                string_id: "mr1-onboarding-theme-label-alpenglow",
+                string_id: "mr2-onboarding-colorway-label-soft",
               },
               tooltip: {
-                string_id: "mr1-onboarding-theme-tooltip-alpenglow",
+                string_id: "mr2-onboarding-theme-tooltip",
               },
               description: {
-                string_id: "mr1-onboarding-theme-description-alpenglow",
+                string_id: "mr2-onboarding-theme-description",
+              },
+            },
+            {
+              id: "balanced",
+              label: {
+                string_id: "mr2-onboarding-colorway-label-balanced",
+              },
+              tooltip: {
+                string_id: "mr2-onboarding-theme-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-theme-description",
+              },
+            },
+            {
+              id: "bold",
+              label: {
+                string_id: "mr2-onboarding-colorway-label-bold",
+              },
+              tooltip: {
+                string_id: "mr2-onboarding-theme-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-theme-description",
+              },
+            },
+          ],
+          colorways: [
+            {
+              id: "default",
+              label: {
+                string_id: "mr2-onboarding-theme-label-default",
+              },
+              tooltip: {
+                string_id: "mr2-onboarding-default-theme-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-default-theme-description",
+              },
+            },
+            {
+              id: "abstract",
+              label: "Abstract",
+              tooltip: {
+                string_id: "mr2-onboarding-colorway-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-colorway-description",
+              },
+            },
+            {
+              id: "cheers",
+              label: "Cheers",
+              tooltip: {
+                string_id: "mr2-onboarding-colorway-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-colorway-description",
+              },
+            },
+            {
+              id: "foto",
+              label: "Foto",
+              tooltip: {
+                string_id: "mr2-onboarding-colorway-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-colorway-description",
+              },
+            },
+            {
+              id: "lush",
+              label: "Lush",
+              tooltip: {
+                string_id: "mr2-onboarding-colorway-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-colorway-description",
+              },
+            },
+            {
+              id: "graffiti",
+              label: "Graffiti",
+              tooltip: {
+                string_id: "mr2-onboarding-colorway-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-colorway-description",
+              },
+            },
+            {
+              id: "elemental",
+              label: "Elemental",
+              tooltip: {
+                string_id: "mr2-onboarding-colorway-tooltip",
+              },
+              description: {
+                string_id: "mr2-onboarding-colorway-description",
               },
             },
           ],
         },
         primary_button: {
           label: {
-            string_id: "mr1-onboarding-theme-primary-button-label",
+            string_id: "mr2-onboarding-colorway-primary-button-label",
           },
           action: {
             navigate: true,
@@ -205,10 +307,30 @@ const DEFAULT_WELCOME_CONTENT = {
         },
         secondary_button: {
           label: {
-            string_id: "mr1-onboarding-theme-secondary-button-label",
+            string_id: "mr2-onboarding-colorway-secondary-button-label",
           },
           action: {
             theme: "automatic",
+            navigate: true,
+          },
+        },
+      },
+    },
+    {
+      id: "AW_THANKS",
+      order: 4,
+      autoClose: true,
+      content: {
+        hasFancyTitle: true,
+        title: { string_id: "mr2-onboarding-thank-you-header" },
+        subtitle: {
+          string_id: "mr2-onboarding-thank-you-text",
+        },
+        primary_button: {
+          label: {
+            string_id: "mr2-onboarding-start-browsing-button-label",
+          },
+          action: {
             navigate: true,
           },
         },

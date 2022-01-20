@@ -20,7 +20,6 @@ class CompositorBridgeChild;
 namespace webgpu {
 namespace ffi {
 struct WGPUClient;
-struct WGPULimits;
 struct WGPUTextureViewDescriptor;
 }  // namespace ffi
 
@@ -44,8 +43,7 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   RefPtr<AdapterPromise> InstanceRequestAdapter(
       const dom::GPURequestAdapterOptions& aOptions);
   Maybe<RawId> AdapterRequestDevice(RawId aSelfId,
-                                    const dom::GPUDeviceDescriptor& aDesc,
-                                    ffi::WGPULimits* aLimtis);
+                                    const dom::GPUDeviceDescriptor& aDesc);
   RawId DeviceCreateBuffer(RawId aSelfId,
                            const dom::GPUBufferDescriptor& aDesc);
   RawId DeviceCreateTexture(RawId aSelfId,

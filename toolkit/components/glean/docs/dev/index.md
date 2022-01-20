@@ -1,10 +1,11 @@
 # Developing Firefox on Glean
 
-```{toctree}
-:titlesonly:
-:maxdepth: 1
-:glob:
+```eval_rst
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+    :glob:
 
-Glean SDK Source <https://github.com/mozilla/glean/>
-*
+    Glean SDK Source <https://github.com/mozilla/glean/>
+    *
 ```

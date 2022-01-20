@@ -866,11 +866,6 @@ class EditorBase : public nsIEditor,
     // set to true.
     bool mDidNormalizeWhitespaces;
 
-    // Set to true by default.  If somebody inserts an HTML fragment
-    // intentionally, inline elements shouldn't be cleaned up later.  In the
-    // case this is set to false.
-    bool mNeedsToCleanUpEmptyInlineElements;
-
     /**
      * The following methods modifies some data of this struct and
      * `EditSubActionData` struct.  Currently, these are required only
@@ -918,7 +913,6 @@ class EditorBase : public nsIEditor,
       mDidDeleteEmptyParentBlocks = false;
       mRestoreContentEditableCount = false;
       mDidNormalizeWhitespaces = false;
-      mNeedsToCleanUpEmptyInlineElements = true;
     }
 
     /**

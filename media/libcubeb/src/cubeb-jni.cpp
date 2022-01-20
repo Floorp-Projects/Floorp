@@ -1,8 +1,6 @@
-/* clang-format off */
+#include "cubeb-jni-instances.h"
 #include "jni.h"
 #include <assert.h>
-#include "cubeb-jni-instances.h"
-/* clang-format on */
 
 #define AUDIO_STREAM_TYPE_MUSIC 3
 

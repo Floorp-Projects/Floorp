@@ -12,7 +12,6 @@
 #include "mozilla/intl/Calendar.h"
 #include "mozilla/intl/Collator.h"
 #include "mozilla/intl/Currency.h"
-#include "mozilla/intl/MeasureUnitGenerated.h"
 #include "mozilla/intl/TimeZone.h"
 
 #include <algorithm>
@@ -27,6 +26,7 @@
 #include "builtin/intl/DateTimeFormat.h"
 #include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
+#include "builtin/intl/MeasureUnitGenerated.h"
 #include "builtin/intl/NumberFormat.h"
 #include "builtin/intl/NumberingSystemsGenerated.h"
 #include "builtin/intl/PluralRules.h"
@@ -781,8 +781,7 @@ static ArrayObject* AvailableTimeZones(JSContext* cx) {
 }
 
 template <size_t N>
-constexpr auto MeasurementUnitNames(
-    const mozilla::intl::SimpleMeasureUnit (&units)[N]) {
+constexpr auto MeasurementUnitNames(const intl::SimpleMeasureUnit (&units)[N]) {
   std::array<const char*, N> array = {};
   for (size_t i = 0; i < N; ++i) {
     array[i] = units[i].name;
@@ -795,7 +794,7 @@ constexpr auto MeasurementUnitNames(
  */
 static ArrayObject* AvailableUnits(JSContext* cx) {
   static constexpr auto simpleMeasureUnitNames =
-      MeasurementUnitNames(mozilla::intl::simpleMeasureUnits);
+      MeasurementUnitNames(intl::simpleMeasureUnits);
 
   return CreateArrayFromSortedList(cx, simpleMeasureUnitNames);
 }

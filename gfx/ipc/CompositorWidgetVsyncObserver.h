@@ -20,8 +20,6 @@ namespace widget {
 class CompositorWidgetVsyncObserver : public VsyncObserver {
   typedef gfx::VsyncBridgeChild VsyncBridgeChild;
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorWidgetVsyncObserver, override)
-
  public:
   CompositorWidgetVsyncObserver(RefPtr<VsyncBridgeChild> aVsyncBridge,
                                 const layers::LayersId& aRootLayerTreeId);
@@ -29,8 +27,6 @@ class CompositorWidgetVsyncObserver : public VsyncObserver {
   bool NotifyVsync(const VsyncEvent& aVsync) override;
 
  private:
-  ~CompositorWidgetVsyncObserver() override;
-
   RefPtr<VsyncBridgeChild> mVsyncBridge;
   layers::LayersId mRootLayerTreeId;
 };

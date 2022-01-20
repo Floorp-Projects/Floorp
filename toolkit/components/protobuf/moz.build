@@ -142,5 +142,4 @@ if CONFIG['MOZ_USE_PTHREADS']:
 # Needed for the gzip streams.
 DEFINES['HAVE_ZLIB'] = True
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    CXXFLAGS += CONFIG['MOZ_GTK3_CFLAGS']
+CXXFLAGS += CONFIG['TK_CFLAGS']

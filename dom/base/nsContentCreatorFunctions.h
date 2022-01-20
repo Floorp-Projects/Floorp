@@ -54,6 +54,7 @@ nsresult NS_NewMathMLElement(
     mozilla::dom::Element** aResult,
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
+#ifdef MOZ_XUL
 nsresult NS_NewXULElement(
     mozilla::dom::Element** aResult,
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -63,6 +64,7 @@ nsresult NS_NewXULElement(
 void NS_TrustedNewXULElement(
     mozilla::dom::Element** aResult,
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+#endif
 
 nsresult NS_NewSVGElement(mozilla::dom::Element** aResult,
                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,

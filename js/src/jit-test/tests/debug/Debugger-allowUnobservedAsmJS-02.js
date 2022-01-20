@@ -14,9 +14,8 @@ assertEq(g.dbg.allowUnobservedAsmJS, false);
 enableLastWarning();
 
 var asmFunStr = USE_ASM + 'function f() {} return f';
-offThreadCompileToStencil("(function() {" + asmFunStr + "})");
-var stencil = finishOffThreadCompileToStencil();
-evalStencil(stencil);
+offThreadCompileScript("(function() {" + asmFunStr + "})");
+runOffThreadScript();
 
 var msg = getLastWarning().message;
 assertEq(msg === "asm.js type error: Asm.js optimizer disabled by debugger" ||

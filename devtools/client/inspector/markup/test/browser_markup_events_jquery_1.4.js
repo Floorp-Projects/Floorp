@@ -19,17 +19,23 @@ const TEST_DATA = [
       {
         type: "DOMContentLoaded",
         filename: URL_ROOT_SSL + TEST_LIB + ":32:355",
-        attributes: ["Bubbling"],
+        attributes: [
+          "Bubbling",
+          "DOM2"
+        ],
         handler: `
           function() {
             s.removeEventListener(\"DOMContentLoaded\", M, false);
             c.ready()
-          }`,
+          }`
       },
       {
         type: "load",
         filename: TEST_URL + ":29:38",
-        attributes: ["Bubbling"],
+        attributes: [
+          "Bubbling",
+          "DOM2"
+        ],
         handler: `
           () => {
             const handler1 = function liveDivDblClick() {
@@ -83,12 +89,15 @@ const TEST_DATA = [
             $(div).click(handler7);
             $(div).click(handler8);
             $(div).keydown(handler9);
-          }`,
+          }`
       },
       {
         type: "load",
         filename: URL_ROOT_SSL + TEST_LIB + ":26:107",
-        attributes: ["Bubbling"],
+        attributes: [
+          "Bubbling",
+          "DOM2"
+        ],
         handler: `
           function() {
             if (!c.isReady) {
@@ -100,9 +109,9 @@ const TEST_DATA = [
               }
               c.fn.triggerHandler && c(s).triggerHandler("ready")
             }
-          }`,
-      },
-    ],
+          }`
+      }
+    ]
   },
   {
     selector: "#testdiv",
@@ -110,31 +119,37 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":36:43",
-        attributes: ["jQuery"],
+        attributes: [
+          "jQuery"
+        ],
         handler: `
           function divClick1() {
             alert(7);
-          }`,
+          }`
       },
       {
         type: "click",
         filename: TEST_URL + ":37:43",
-        attributes: ["jQuery"],
+        attributes: [
+          "jQuery"
+        ],
         handler: `
           function divClick2() {
             alert(8);
-          }`,
+          }`
       },
       {
         type: "keydown",
         filename: TEST_URL + ":38:44",
-        attributes: ["jQuery"],
+        attributes: [
+          "jQuery"
+        ],
         handler: `
           function divKeyDown() {
             alert(9);
-          }`,
-      },
-    ],
+          }`
+      }
+    ]
   },
   {
     selector: "#livediv",
@@ -142,40 +157,52 @@ const TEST_DATA = [
       {
         type: "dblclick",
         filename: TEST_URL + ":30:49",
-        attributes: ["jQuery", "Live"],
+        attributes: [
+          "jQuery",
+          "Live"
+        ],
         handler: `
           function() {
             return a.apply(d || this, arguments)
-          }`,
+          }`
       },
       {
         type: "dblclick",
         filename: URL_ROOT_SSL + TEST_LIB + ":17:183",
-        attributes: ["jQuery", "Live"],
+        attributes: [
+          "jQuery",
+          "Live"
+        ],
         handler: `
           function() {
             return a.apply(d || this, arguments)
-          }`,
+          }`
       },
       {
         type: "dragstart",
         filename: TEST_URL + ":31:50",
-        attributes: ["jQuery", "Live"],
+        attributes: [
+          "jQuery",
+          "Live"
+        ],
         handler: `
           function() {
             return a.apply(d || this, arguments)
-          }`,
+          }`
       },
       {
         type: "dragstart",
         filename: URL_ROOT_SSL + TEST_LIB + ":17:183",
-        attributes: ["jQuery", "Live"],
+        attributes: [
+          "jQuery",
+          "Live"
+        ],
         handler: `
           function() {
             return a.apply(d || this, arguments)
-          }`,
-      },
-    ],
+          }`
+      }
+    ]
   },
 ];
 /* eslint-enable */

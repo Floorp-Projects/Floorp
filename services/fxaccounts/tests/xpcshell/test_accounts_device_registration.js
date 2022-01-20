@@ -20,7 +20,8 @@ const {
   ON_DEVICE_DISCONNECTED_NOTIFICATION,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 var { AccountState } = ChromeUtils.import(
-  "resource://gre/modules/FxAccounts.jsm"
+  "resource://gre/modules/FxAccounts.jsm",
+  null
 );
 
 initTestLogging("Trace");

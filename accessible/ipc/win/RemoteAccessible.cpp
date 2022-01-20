@@ -353,32 +353,28 @@ static bool ConvertBSTRAttributesToAccAttributes(
   return true;
 }
 
-already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    return RemoteAccessibleBase<RemoteAccessible>::Attributes();
-  }
-  RefPtr<AccAttributes> attrsObj = new AccAttributes();
+void RemoteAccessible::Attributes(RefPtr<AccAttributes>* aAttrs) const {
   RefPtr<IAccessible> acc;
   if (!GetCOMInterface((void**)getter_AddRefs(acc))) {
-    return attrsObj.forget();
+    return;
   }
 
   RefPtr<IAccessible2> acc2;
   if (FAILED(acc->QueryInterface(IID_IAccessible2,
                                  (void**)getter_AddRefs(acc2)))) {
-    return attrsObj.forget();
+    return;
   }
 
   BSTR attrs;
   HRESULT hr = acc2->get_attributes(&attrs);
   _bstr_t attrsWrap(attrs, false);
   if (FAILED(hr)) {
-    return attrsObj.forget();
+    return;
   }
 
+  *aAttrs = new AccAttributes();
   ConvertBSTRAttributesToAccAttributes(
-      nsDependentString((wchar_t*)attrs, attrsWrap.length()), attrsObj);
-  return attrsObj.forget();
+      nsDependentString((wchar_t*)attrs, attrsWrap.length()), *aAttrs);
 }
 
 nsTArray<RemoteAccessible*> RemoteAccessible::RelationByType(
@@ -857,15 +853,6 @@ Accessible* RemoteAccessible::ChildAtPoint(
     }
   }
   return proxy;
-}
-
-GroupPos RemoteAccessible::GroupPosition() {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    return RemoteAccessibleBase<RemoteAccessible>::GroupPosition();
-  }
-
-  // This is only supported when cache is enabled.
-  return GroupPos();
 }
 
 }  // namespace a11y

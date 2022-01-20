@@ -14,6 +14,9 @@ const DOMAIN = "example.com";
  * and they both set their document.domain to be "example.com".
  */
 add_task(async function test() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["print.tab_modal.enabled", false]],
+  });
   // 1. Open a new tab and wait for it to load the top level doc
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
   let browser = newTab.linkedBrowser;
@@ -51,30 +54,40 @@ add_task(async function test() {
 
   // 5. Try to print things
   ok(
-    !document.querySelector(".printPreviewBrowser"),
+    !gInPrintPreviewMode,
     "Should NOT be in print preview mode at the start of this test."
   );
 
   // Enter print preview
-  document.getElementById("cmd_print").doCommand();
-  await BrowserTestUtils.waitForCondition(() => {
-    let preview = document.querySelector(".printPreviewBrowser");
-    return preview && BrowserTestUtils.is_visible(preview);
-  });
+  let ppBrowser = PrintPreviewListener.getPrintPreviewBrowser();
 
-  let ppBrowser = document.querySelector(
-    ".printPreviewBrowser[previewtype=source]"
+  const { PrintingParent } = ChromeUtils.import(
+    "resource://gre/actors/PrintingParent.jsm"
   );
-  ok(ppBrowser, "Print preview browser was created");
+  let printPreviewEntered = new Promise(resolve => {
+    PrintingParent.setTestListener(browserPreviewing => {
+      if (browserPreviewing == ppBrowser) {
+        PrintingParent.setTestListener(null);
+        resolve();
+      }
+    });
+  });
+  document.getElementById("cmd_printPreview").doCommand();
+  await printPreviewEntered;
 
+  // Ensure we are in print preview
+  await BrowserTestUtils.waitForCondition(
+    () => gInPrintPreviewMode,
+    "Should be in print preview mode now."
+  );
   ok(true, "We did not crash.");
 
   // We haven't crashed! Exit the print preview.
-  gBrowser.getTabDialogBox(gBrowser.selectedBrowser).abortAllDialogs();
-  await BrowserTestUtils.waitForCondition(
-    () => !document.querySelector(".printPreviewBrowser")
-  );
+  await BrowserTestUtils.switchTab(gBrowser, () => {
+    PrintUtils.exitPrintPreview();
+  });
 
+  await BrowserTestUtils.waitForCondition(() => !window.gInPrintPreviewMode);
   info("We are not in print preview anymore.");
 
   BrowserTestUtils.removeTab(newTab);

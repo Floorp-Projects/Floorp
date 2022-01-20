@@ -56,7 +56,8 @@ class AboutReaderChild extends JSWindowActorChild {
           let article = await this._articlePromise;
           this.sendAsyncMessage("Reader:EnterReaderMode", article);
         } else {
-          this.closeReaderMode();
+          this._isLeavingReaderableReaderMode = this.isReaderableAboutReader;
+          this.sendAsyncMessage("Reader:LeaveReaderMode", {});
         }
         break;
 
@@ -233,13 +234,6 @@ class AboutReaderChild extends JSWindowActorChild {
       this.sendAsyncMessage("Reader:UpdateReaderButton", {
         isArticle: false,
       });
-    }
-  }
-
-  closeReaderMode() {
-    if (this.isAboutReader) {
-      this._isLeavingReaderableReaderMode = this.isReaderableAboutReader;
-      this.sendAsyncMessage("Reader:LeaveReaderMode", {});
     }
   }
 }

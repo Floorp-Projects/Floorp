@@ -53,7 +53,6 @@ already_AddRefed<WorkerCSPEventListener> WorkerCSPEventListener::Create(
 
   RefPtr<WorkerCSPEventListener> listener = new WorkerCSPEventListener();
 
-  MutexAutoLock lock(listener->mMutex);
   listener->mWorkerRef = WeakWorkerRef::Create(aWorkerPrivate, [listener]() {
     MutexAutoLock lock(listener->mMutex);
     listener->mWorkerRef = nullptr;

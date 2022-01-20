@@ -34,7 +34,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Dictionary: "resource://gre/modules/Extension.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
   Langpack: "resource://gre/modules/Extension.jsm",
-  SitePermission: "resource://gre/modules/Extension.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   JSONFile: "resource://gre/modules/JSONFile.jsm",
   TelemetrySession: "resource://gre/modules/TelemetrySession.jsm",
@@ -128,7 +127,7 @@ const XPI_PERMISSION = "install";
 
 const XPI_SIGNATURE_CHECK_PERIOD = 24 * 60 * 60;
 
-const DB_SCHEMA = 35;
+const DB_SCHEMA = 34;
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
@@ -168,13 +167,10 @@ const BOOTSTRAP_REASONS = {
   ADDON_DOWNGRADE: 8,
 };
 
-// NOTE: This set should be kept in sync with the same addon type strings part of
-// the kXPIAddonTypes array defined by Blocklist.jsm.
 const ALL_EXTERNAL_TYPES = new Set([
   "dictionary",
   "extension",
   "locale",
-  "sitepermission",
   "theme",
 ]);
 
@@ -1887,10 +1883,6 @@ class BootstrapScope {
           this.scope = Extension.getBootstrapScope();
           break;
 
-        case "sitepermission":
-          this.scope = SitePermission.getBootstrapScope();
-          break;
-
         case "locale":
           this.scope = Langpack.getBootstrapScope();
           break;
@@ -3284,6 +3276,7 @@ var XPIInternal = {
   KEY_APP_SYSTEM_PROFILE,
   KEY_APP_SYSTEM_ADDONS,
   KEY_APP_SYSTEM_DEFAULTS,
+  KEY_PROFILEDIR,
   PREF_BRANCH_INSTALLED_ADDON,
   PREF_SYSTEM_ADDON_SET,
   SystemAddonLocation,
@@ -3329,13 +3322,6 @@ var addonTypes = [
     "type.locale.name",
     AddonManager.VIEW_TYPE_LIST,
     8000
-  ),
-  new AddonManagerPrivate.AddonType(
-    "sitepermission",
-    URI_EXTENSION_STRINGS,
-    "type.sitepermission.name",
-    AddonManager.VIEW_TYPE_LIST,
-    9000
   ),
 ];
 

@@ -330,9 +330,7 @@ types.addActorType = function(name) {
         }
 
         const parentFront = ctx.marshallPool();
-        const targetFront = parentFront.isTargetFront
-          ? parentFront
-          : parentFront.targetFront;
+        const targetFront = parentFront.targetFront;
 
         // Use intermediate Class variable to please eslint requiring
         // a capital letter for all constructors.

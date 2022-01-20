@@ -8,6 +8,7 @@
 Code for parsing metrics.yaml files.
 """
 
+from collections import OrderedDict
 import functools
 from pathlib import Path
 import textwrap
@@ -18,9 +19,7 @@ from jsonschema.exceptions import ValidationError  # type: ignore
 
 from .metrics import Metric, ObjectTree
 from .pings import Ping, RESERVED_PING_NAMES
-from .tags import Tag
 from . import util
-from .util import DictWrapper
 
 
 ROOT_DIR = Path(__file__).parent
@@ -28,7 +27,6 @@ SCHEMAS_DIR = ROOT_DIR / "schemas"
 
 METRICS_ID = "moz://mozilla.org/schemas/glean/metrics/2-0-0"
 PINGS_ID = "moz://mozilla.org/schemas/glean/pings/2-0-0"
-TAGS_ID = "moz://mozilla.org/schemas/glean/tags/1-0-0"
 
 
 def _update_validator(validator):
@@ -92,7 +90,7 @@ def _load_file(
     except IndexError:
         filetype = None
 
-    if filetype not in ("metrics", "pings", "tags"):
+    if filetype not in ("metrics", "pings"):
         filetype = None
 
     for error in validate(content, filepath):
@@ -209,7 +207,7 @@ def _instantiate_metrics(
                 "Glean internal use.",
             )
             continue
-        all_objects.setdefault(category_key, DictWrapper())
+        all_objects.setdefault(category_key, OrderedDict())
 
         if not isinstance(category_val, dict):
             raise TypeError(f"Invalid content for {category_key}")
@@ -224,7 +222,6 @@ def _instantiate_metrics(
                     filepath,
                     f"On instance {category_key}.{metric_key}",
                     str(e),
-                    metric_val.defined_in["line"],
                 )
                 metric_obj = None
             else:
@@ -237,15 +234,14 @@ def _instantiate_metrics(
                         f"On instance {category_key}.{metric_key}",
                         'Only internal metrics may specify "all-pings" '
                         'in "send_in_pings"',
-                        metric_val.defined_in["line"],
                     )
                     metric_obj = None
 
             if metric_obj is not None:
                 metric_obj.no_lint = list(set(metric_obj.no_lint + global_no_lint))
 
-                if isinstance(filepath, Path):
-                    metric_obj.defined_in["filepath"] = str(filepath)
+            if isinstance(filepath, Path):
+                metric_obj.defined_in["filepath"] = str(filepath)
 
             already_seen = sources.get((category_key, metric_key))
             if already_seen is not None:
@@ -257,7 +253,6 @@ def _instantiate_metrics(
                         f"Duplicate metric name '{category_key}.{metric_key}' "
                         f"already defined in '{already_seen}'"
                     ),
-                    metric_obj.defined_in["line"],
                 )
             else:
                 all_objects[category_key][metric_key] = metric_obj
@@ -324,58 +319,6 @@ def _instantiate_pings(
             sources[ping_key] = filepath
 
 
-def _instantiate_tags(
-    all_objects: ObjectTree,
-    sources: Dict[Any, Path],
-    content: Dict[str, util.JSONType],
-    filepath: Path,
-    config: Dict[str, Any],
-) -> Generator[str, None, None]:
-    """
-    Load a list of tags.yaml files, convert the JSON information into Tag
-    objects.
-    """
-    global_no_lint = content.get("no_lint", [])
-    assert isinstance(global_no_lint, list)
-
-    for tag_key, tag_val in content.items():
-        if tag_key.startswith("$"):
-            continue
-        if tag_key == "no_lint":
-            continue
-        if not isinstance(tag_val, dict):
-            raise TypeError(f"Invalid content for tag {tag_key}")
-        tag_val["name"] = tag_key
-        try:
-            tag_obj = Tag(
-                defined_in=getattr(tag_val, "defined_in", None),
-                _validated=True,
-                **tag_val,
-            )
-        except Exception as e:
-            yield util.format_error(filepath, f"On instance '{tag_key}'", str(e))
-            continue
-
-        if tag_obj is not None:
-            tag_obj.no_lint = list(set(tag_obj.no_lint + global_no_lint))
-
-            if isinstance(filepath, Path) and tag_obj.defined_in is not None:
-                tag_obj.defined_in["filepath"] = str(filepath)
-
-        already_seen = sources.get(tag_key)
-        if already_seen is not None:
-            # We've seen this tag name already
-            yield util.format_error(
-                filepath,
-                "",
-                f"Duplicate tag name '{tag_key}' "
-                f"already defined in '{already_seen}'",
-            )
-        else:
-            all_objects.setdefault("tags", {})[tag_key] = tag_obj
-            sources[tag_key] = filepath
-
-
 def _preprocess_objects(objs: ObjectTree, config: Dict[str, Any]) -> ObjectTree:
     """
     Preprocess the object tree to better set defaults.
@@ -405,7 +348,7 @@ def parse_objects(
 ) -> Generator[str, None, ObjectTree]:
     """
     Parse one or more metrics.yaml and/or pings.yaml files, returning a tree of
-    `metrics.Metric`, `pings.Ping`, and `tags.Tag` instances.
+    `metrics.Metric` and `pings.Ping` instances.
 
     The result is a generator over any errors.  If there are no errors, the
     actual metrics can be obtained from `result.value`.  For example::
@@ -417,11 +360,11 @@ def parse_objects(
 
     The result value is a dictionary of category names to categories, where
     each category is a dictionary from metric name to `metrics.Metric`
-    instances.  There are also the special categories `pings` and `tags`
-    containing all of the `pings.Ping` and `tags.Tag` instances, respectively.
+    instances.  There is also the special category `pings` containing all
+    of the `pings.Ping` instances.
 
-    :param filepaths: list of Path objects to metrics.yaml, pings.yaml, and/or
-        tags.yaml files
+    :param filepaths: list of Path objects to metrics.yaml and/or pings.yaml
+        files
     :param config: A dictionary of options that change parsing behavior.
         Supported keys are:
 
@@ -436,7 +379,7 @@ def parse_objects(
     if config is None:
         config = {}
 
-    all_objects: ObjectTree = DictWrapper()
+    all_objects: ObjectTree = OrderedDict()
     sources: Dict[Any, Path] = {}
     filepaths = util.ensure_list(filepaths)
     for filepath in filepaths:
@@ -449,8 +392,5 @@ def parse_objects(
             yield from _instantiate_pings(
                 all_objects, sources, content, filepath, config
             )
-        elif filetype == "tags":
-            yield from _instantiate_tags(
-                all_objects, sources, content, filepath, config
-            )
+
     return _preprocess_objects(all_objects, config)

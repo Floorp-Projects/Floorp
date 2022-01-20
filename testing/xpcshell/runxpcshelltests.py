@@ -1203,6 +1203,12 @@ class XPCShellTests(object):
         else:
             self.env["MOZ_DISABLE_SOCKET_PROCESS"] = "1"
 
+        if self.enable_webrender:
+            self.env["MOZ_WEBRENDER"] = "1"
+            self.env["MOZ_ACCELERATED"] = "1"
+        else:
+            self.env["MOZ_WEBRENDER"] = "0"
+
     def buildEnvironment(self):
         """
         Create and returns a dictionary of self.env to include all the appropriate env
@@ -1513,11 +1519,12 @@ class XPCShellTests(object):
             fixedInfo[k] = v
         self.mozInfo = fixedInfo
 
-        self.mozInfo["fission"] = prefs.get("fission.autostart", True)
+        self.mozInfo["fission"] = prefs.get("fission.autostart", False)
 
         self.mozInfo["serviceworker_e10s"] = True
 
         self.mozInfo["verify"] = options.get("verify", False)
+        self.mozInfo["webrender"] = self.enable_webrender
 
         self.mozInfo["socketprocess_networking"] = prefs.get(
             "network.http.network_access_on_socket_process.enabled", False
@@ -1636,6 +1643,7 @@ class XPCShellTests(object):
         self.failure_manifest = options.get("failure_manifest")
         self.threadCount = options.get("threadCount") or NUM_THREADS
         self.jscovdir = options.get("jscovdir")
+        self.enable_webrender = options.get("enable_webrender")
         self.headless = options.get("headless")
         self.runFailures = options.get("runFailures")
         self.timeoutAsPass = options.get("timeoutAsPass")

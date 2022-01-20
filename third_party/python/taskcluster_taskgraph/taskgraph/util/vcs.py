@@ -150,10 +150,6 @@ class GitRepository(Repository):
         if ignored:
             args.append("--ignored")
 
-        # If output is empty, there are no entries of requested status, which
-        # means we are clean.
-        return not len(self.run(*args).strip())
-
     def update(self, ref):
         self.run("checkout", ref)
 

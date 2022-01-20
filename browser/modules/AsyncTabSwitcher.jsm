@@ -1148,14 +1148,6 @@ class AsyncTabSwitcher {
 
       this.noteFinishTabSwitch();
       this.switchInProgress = false;
-
-      let event = new this.window.CustomEvent("TabSwitched", {
-        bubbles: true,
-        detail: {
-          tab: this.requestedTab,
-        },
-      });
-      this.tabbrowser.dispatchEvent(event);
     }
   }
 

@@ -127,9 +127,7 @@ class nsHostResolver : public nsISupports, public AHostResolver {
                        nsResolveHostCallback* callback);
 
   nsHostRecord* InitRecord(const nsHostKey& key);
-  mozilla::net::NetworkConnectivityService* GetNCS() {
-    return mNCS;
-  }  // This is actually a singleton
+  mozilla::net::NetworkConnectivityService* GetNCS() { return mNCS; }
 
   /**
    * return a resolved hard coded loopback dns record for the specified key
@@ -300,13 +298,12 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   mozilla::TimeDuration mShortIdleTimeout;
 
   RefPtr<nsIThreadPool> mResolverThreads;
+  RefPtr<mozilla::net::NetworkConnectivityService> mNCS;
   mozilla::net::HostRecordQueue mQueue;
   mozilla::Atomic<bool> mShutdown{true};
   mozilla::Atomic<uint32_t> mNumIdleTasks{0};
   mozilla::Atomic<uint32_t> mActiveTaskCount{0};
   mozilla::Atomic<uint32_t> mActiveAnyThreadCount{0};
-  RefPtr<mozilla::net::NetworkConnectivityService>
-      mNCS;  // reference to a singleton
 
   // Set the expiration time stamps appropriately.
   void PrepareRecordExpirationAddrRecord(AddrHostRecord* rec) const;

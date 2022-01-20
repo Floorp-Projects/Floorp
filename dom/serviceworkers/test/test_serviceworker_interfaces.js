@@ -280,8 +280,6 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "WebSocket",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  "WebGLQuery",
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   "WindowClient",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "WorkerGlobalScope",

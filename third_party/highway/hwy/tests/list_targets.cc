@@ -21,9 +21,7 @@
 
 void PrintTargets(const char* msg, uint32_t targets) {
   fprintf(stderr, "%s", msg);
-  // For each bit:
-  for (uint32_t x = targets; x != 0; x = x & (x - 1)) {
-    // Extract value of least-significant bit.
+  for (unsigned x = targets; x != 0; x = x & (x - 1)) {
     fprintf(stderr, " %s", hwy::TargetName(x & (~x + 1)));
   }
   fprintf(stderr, "\n");
@@ -32,6 +30,5 @@ void PrintTargets(const char* msg, uint32_t targets) {
 int main() {
   PrintTargets("Compiled HWY_TARGETS:", HWY_TARGETS);
   PrintTargets("HWY_BASELINE_TARGETS:", HWY_BASELINE_TARGETS);
-  PrintTargets("Current CPU supports:", hwy::SupportedTargets());
   return 0;
 }

@@ -34,7 +34,6 @@ Table of Contents
 
    nontechnical-overview
    overview
-   lifetime
    utilities
    telemetry
    firefox-suggest-telemetry
@@ -42,5 +41,4 @@ Table of Contents
    experiments
    dynamic-result-types
    preferences
-   testing
    contact

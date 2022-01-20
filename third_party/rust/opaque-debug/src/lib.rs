@@ -1,9 +1,6 @@
 //! Macro for opaque `Debug` trait implementation.
 #![no_std]
 
-#[doc(hidden)]
-pub extern crate core as __core;
-
 /// Macro for defining opaque `Debug` implementation.
 ///
 /// It will use the following format: "StructName { ... }". While it's
@@ -13,9 +10,19 @@ pub extern crate core as __core;
 #[macro_export]
 macro_rules! impl_opaque_debug {
     ($struct:ty) => {
-        impl $crate::__core::fmt::Debug for $struct {
-            fn fmt(&self, f: &mut $crate::__core::fmt::Formatter)
-                -> Result<(), $crate::__core::fmt::Error>
+        #[cfg(feature = "std")]
+        impl ::std::fmt::Debug for $struct {
+            fn fmt(&self, f: &mut ::std::fmt::Formatter)
+                -> Result<(), ::std::fmt::Error>
+            {
+                write!(f, concat!(stringify!($struct), " {{ ... }}"))
+            }
+        }
+
+        #[cfg(not(feature = "std"))]
+        impl ::core::fmt::Debug for $struct {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter)
+                -> Result<(), ::core::fmt::Error>
             {
                 write!(f, concat!(stringify!($struct), " {{ ... }}"))
             }

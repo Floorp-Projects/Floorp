@@ -158,8 +158,9 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
 
   nscoord GetCheckboxRadioPrefSize() override;
 
-  static mozilla::UniquePtr<ScrollbarDrawing> DefaultPlatformScrollbarStyle();
-  static mozilla::UniquePtr<ScrollbarDrawing> ScrollbarStyle();
+  static mozilla::UniquePtr<ScrollbarDrawing>
+  DetermineScrollbarStyleSetByPrefs();
+  static mozilla::UniquePtr<ScrollbarDrawing> DetermineScrollbarStyle();
 
  protected:
   virtual ~nsNativeBasicTheme() = default;

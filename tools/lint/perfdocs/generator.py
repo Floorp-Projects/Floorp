@@ -162,13 +162,8 @@ class Generator(object):
         mainpage = read_file(
             os.path.join(self.templates_path, "index.rst"), stringify=True
         )
-
         fmt_frameworks = "\n".join(["  * :doc:`%s`" % name for name in frameworks])
-        fmt_toctree = "\n".join(["  %s" % name for name in frameworks])
-
-        fmt_mainpage = re.sub(r"{toctree_documentation}", fmt_toctree, mainpage)
-        fmt_mainpage = re.sub(r"{test_documentation}", fmt_frameworks, fmt_mainpage)
-
+        fmt_mainpage = re.sub(r"{test_documentation}", fmt_frameworks, mainpage)
         save_file(fmt_mainpage, os.path.join(perfdocs_tmpdir, "index"))
 
         return perfdocs_tmpdir

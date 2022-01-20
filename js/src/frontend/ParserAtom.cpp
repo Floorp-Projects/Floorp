@@ -132,7 +132,8 @@ JSString* ParserAtom::instantiateString(JSContext* cx, ParserAtomIndex index,
 
 JSAtom* ParserAtom::instantiateAtom(JSContext* cx, ParserAtomIndex index,
                                     CompilationAtomCache& atomCache) const {
-  MOZ_ASSERT(isInstantiatedAsJSAtom());
+  // See the comment in InstantiateMarkedAtoms for !cx->zone().
+  MOZ_ASSERT(isInstantiatedAsJSAtom() || !cx->zone());
 
   JSAtom* atom;
   if (hasLatin1Chars()) {
@@ -140,23 +141,6 @@ JSAtom* ParserAtom::instantiateAtom(JSContext* cx, ParserAtomIndex index,
   } else {
     atom = AtomizeChars(cx, hash(), twoByteChars(), length());
   }
-  if (!atom) {
-    return nullptr;
-  }
-  if (!atomCache.setAtomAt(cx, index, atom)) {
-    return nullptr;
-  }
-  return atom;
-}
-
-JSAtom* ParserAtom::instantiatePermanentAtom(
-    JSContext* cx, AtomSet& atomSet, ParserAtomIndex index,
-    CompilationAtomCache& atomCache) const {
-  MOZ_ASSERT(!cx->zone());
-
-  MOZ_ASSERT(hasLatin1Chars());
-  JSAtom* atom =
-      PermanentlyAtomizeChars(cx, atomSet, hash(), latin1Chars(), length());
   if (!atom) {
     return nullptr;
   }
@@ -1000,7 +984,8 @@ bool ParserAtomsTable::appendTo(StringBuffer& buffer,
 
 bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
                             CompilationAtomCache& atomCache) {
-  MOZ_ASSERT(cx->zone());
+  // Self-hosting JS has no zone, and it should ue JSAtom for all strings.
+  bool allowNonAtom = !!cx->zone();
 
   for (size_t i = 0; i < entries.size(); i++) {
     const auto& entry = entries[i];
@@ -1016,7 +1001,7 @@ bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
       continue;
     }
 
-    if (!entry->isInstantiatedAsJSAtom()) {
+    if (allowNonAtom && !entry->isInstantiatedAsJSAtom()) {
       if (!entry->instantiateString(cx, index, atomCache)) {
         return false;
       }
@@ -1024,33 +1009,6 @@ bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
       if (!entry->instantiateAtom(cx, index, atomCache)) {
         return false;
       }
-    }
-  }
-  return true;
-}
-
-bool InstantiateMarkedAtomsAsPermanent(JSContext* cx, AtomSet& atomSet,
-                                       const ParserAtomSpan& entries,
-                                       CompilationAtomCache& atomCache) {
-  MOZ_ASSERT(!cx->zone());
-
-  for (size_t i = 0; i < entries.size(); i++) {
-    const auto& entry = entries[i];
-    if (!entry) {
-      continue;
-    }
-    if (!entry->isUsedByStencil()) {
-      continue;
-    }
-
-    auto index = ParserAtomIndex(i);
-    if (atomCache.hasAtomAt(index)) {
-      MOZ_ASSERT(atomCache.getAtomAt(index)->isPermanentAtom());
-      continue;
-    }
-
-    if (!entry->instantiatePermanentAtom(cx, atomSet, index, atomCache)) {
-      return false;
     }
   }
   return true;

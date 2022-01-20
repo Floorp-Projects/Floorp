@@ -134,7 +134,7 @@ inline T MaybeForwarded(T t);
 inline const JSClass* MaybeForwardedObjectClass(const JSObject* obj);
 
 template <typename T>
-inline bool MaybeForwardedObjectIs(const JSObject* obj);
+inline bool MaybeForwardedObjectIs(JSObject* obj);
 
 template <typename T>
 inline T& MaybeForwardedObjectAs(JSObject* obj);

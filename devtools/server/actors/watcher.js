@@ -73,33 +73,33 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    *
    * @param {DevToolsServerConnection} conn
    *        The connection to use in order to communicate back to the client.
-   * @param {Object} sessionContext
+   * @param {Object} context
    *        Mandatory argument to define the debugged context of this actor.
    *        Note that as this object is passed to other processes and thread,
    *        this should be a serializable object.
-   * @param {String} sessionContext.type: The type of debugged context.
+   * @param {String} context.type: The type of debugged context.
    *        Can be:
    *        - "all", to debug everything in the browser.
    *        - "browser-element", to focus on one given <browser> element
    *          and all its children resources (workers, iframes,...)
-   * @param {Number} sessionContext.browserId: If this is a "browser-element" context type,
+   * @param {Number} context.browserId: If this is a "browser-element" context type,
    *        the "browserId" of the <browser> element we would like to debug.
    * @param {Object|null} config: Optional configuration object.
    * @param {Boolean} config.isServerTargetSwitchingEnabled: Flag to to know if we should
    *        spawn new top level targets for the debugged context.
    */
-  initialize: function(conn, sessionContext, config = {}) {
+  initialize: function(conn, context, config = {}) {
     protocol.Actor.prototype.initialize.call(this, conn);
-    this._sessionContext = sessionContext;
-    if (sessionContext.type == "browser-element") {
+    this._context = context;
+    if (context.type == "browser-element") {
       // Retrieve the <browser> element for the given browser ID
       const browsingContext = BrowsingContext.getCurrentTopByBrowserId(
-        sessionContext.browserId
+        context.browserId
       );
       if (!browsingContext) {
         throw new Error(
           "Unable to retrieve the <browser> element for browserId=" +
-            sessionContext.browserId
+            context.browserId
         );
       }
       this._browserElement = browsingContext.embedderElement;
@@ -129,8 +129,8 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     this.notifyResourceUpdated = this.notifyResourceUpdated.bind(this);
   },
 
-  get sessionContext() {
-    return this._sessionContext;
+  get context() {
+    return this._context;
   },
 
   /**
@@ -149,16 +149,14 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    * Helper to know if the context we are debugging has been already destroyed
    */
   isContextDestroyed() {
-    if (this.sessionContext.type == "browser-element") {
+    if (this.context.type == "browser-element") {
       return !this.browserElement.browsingContext;
-    } else if (this.sessionContext.type == "webextension") {
-      return !BrowsingContext.get(this.sessionContext.addonBrowsingContextID);
-    } else if (this.sessionContext.type == "all") {
+    } else if (this.context.type == "webextension") {
+      return !BrowsingContext.get(this.context.addonBrowsingContextID);
+    } else if (this.context.type == "all") {
       return false;
     }
-    throw new Error(
-      "Unsupported session context type: " + this.sessionContext.type
-    );
+    throw new Error("Unsupported context type: " + this.context.type);
   },
 
   get isServerTargetSwitchingEnabled() {
@@ -191,14 +189,14 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
 
   form() {
     // All target types and all resources types are supported for tab debugging and web extensions.
-    // But worker target type and most watcher classes are still disabled for the browser toolbox (sessionContext.type=all).
+    // But worker target type and most watcher classes are still disabled for the browser toolbox (context.type=all).
     // And they may also be disabled for workers once we start supporting them by the watcher.
     //
     // So keep the traits to false for all the resources that we don't support yet
     // and keep using the legacy listeners.
     const shouldEnableAllWatchers =
-      this.sessionContext.type == "browser-element" ||
-      this.sessionContext.type == "webextension";
+      this.context.type == "browser-element" ||
+      this.context.type == "webextension";
 
     return {
       actor: this.actorID,
@@ -231,8 +229,8 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           [Resources.TYPES.LOCAL_STORAGE]: shouldEnableAllWatchers,
           [Resources.TYPES.SESSION_STORAGE]: shouldEnableAllWatchers,
           [Resources.TYPES.PLATFORM_MESSAGE]: true,
-          [Resources.TYPES.NETWORK_EVENT]: true,
-          [Resources.TYPES.NETWORK_EVENT_STACKTRACE]: true,
+          [Resources.TYPES.NETWORK_EVENT]: shouldEnableAllWatchers,
+          [Resources.TYPES.NETWORK_EVENT_STACKTRACE]: shouldEnableAllWatchers,
           [Resources.TYPES.REFLOW]: true,
           [Resources.TYPES.STYLESHEET]: shouldEnableAllWatchers,
           [Resources.TYPES.SOURCE]: shouldEnableAllWatchers,
@@ -312,7 +310,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     this._currentWindowGlobalTargets.set(actor.innerWindowId, actor);
 
     // The top-level is always the same for the browser-toolbox
-    if (this.sessionContext.type == "all") {
+    if (this.context.type == "all") {
       this.emit("target-available-form", actor);
       return;
     }
@@ -426,21 +424,21 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    *        It may contain actor IDs, actor forms, to be manually marshalled by the client.
    */
   notifyResourceAvailable(resources) {
-    if (this.sessionContext.type == "webextension") {
+    if (this.context.type == "webextension") {
       this._overrideResourceBrowsingContextForWebExtension(resources);
     }
     this._emitResourcesForm("resource-available-form", resources);
   },
 
   notifyResourceDestroyed(resources) {
-    if (this.sessionContext.type == "webextension") {
+    if (this.context.type == "webextension") {
       this._overrideResourceBrowsingContextForWebExtension(resources);
     }
     this._emitResourcesForm("resource-destroyed-form", resources);
   },
 
   notifyResourceUpdated(resources) {
-    if (this.sessionContext.type == "webextension") {
+    if (this.context.type == "webextension") {
       this._overrideResourceBrowsingContextForWebExtension(resources);
     }
     this._emitResourcesForm("resource-updated-form", resources);
@@ -468,7 +466,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    */
   _overrideResourceBrowsingContextForWebExtension(resources) {
     resources.forEach(resource => {
-      resource.browsingContextID = this.sessionContext.addonBrowsingContextID;
+      resource.browsingContextID = this.context.addonBrowsingContextID;
     });
   },
 
@@ -484,7 +482,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     // Note: For browser-element debugging, the WindowGlobalTargetActor returned here is created
     // for a parent process page and lives in the parent process.
     return TargetActorRegistry.getTopLevelTargetActorForContext(
-      this.sessionContext,
+      this.context,
       this.conn.prefix
     );
   },

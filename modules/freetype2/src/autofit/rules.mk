@@ -42,14 +42,13 @@ AUTOF_DRV_SRC := $(AUTOF_DIR)/afblue.c   \
 
 # AUTOF driver headers
 #
-AUTOF_DRV_H := $(AUTOF_DRV_SRC:%c=%h)   \
-               $(AUTOF_DIR)/afcover.h   \
-               $(AUTOF_DIR)/aferrors.h  \
-               $(AUTOF_DIR)/afscript.h  \
-               $(AUTOF_DIR)/afstyles.h  \
-               $(AUTOF_DIR)/aftypes.h   \
-               $(AUTOF_DIR)/afws-decl.h \
-               $(AUTOF_DIR)/afws-iter.h
+AUTOF_DRV_H := $(AUTOF_DRV_SRC:%c=%h)  \
+               $(AUTOF_DIR)/afcover.h  \
+               $(AUTOF_DIR)/aferrors.h \
+               $(AUTOF_DIR)/afscript.h \
+               $(AUTOF_DIR)/afstyles.h \
+               $(AUTOF_DIR)/aftypes.h  \
+               $(AUTOF_DIR)/afwrtsys.h
 
 
 # AUTOF driver object(s)

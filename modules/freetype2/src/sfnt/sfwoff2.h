@@ -26,7 +26,6 @@
 
 FT_BEGIN_HEADER
 
-#ifdef FT_CONFIG_OPTION_USE_BROTLI
 
   /* Leave the first byte open to store `flag_byte'. */
 #define WOFF2_FLAGS_TRANSFORM   1 << 8
@@ -67,7 +66,6 @@ FT_BEGIN_HEADER
                    FT_Int*    face_index,
                    FT_Long*   num_faces );
 
-#endif /* FT_CONFIG_OPTION_USE_BROTLI */
 
 FT_END_HEADER
 

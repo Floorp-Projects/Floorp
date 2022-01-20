@@ -36,7 +36,8 @@ HeadlessScreenHelper::HeadlessScreenHelper() {
       new Screen(rect, rect, 24, 24, DesktopToLayoutDeviceScale(),
                  CSSToLayoutDeviceScale(), 96.0f);
   screenList.AppendElement(ret.forget());
-  ScreenManager::Refresh(std::move(screenList));
+  ScreenManager& screenManager = ScreenManager::GetSingleton();
+  screenManager.Refresh(std::move(screenList));
 }
 
 }  // namespace widget

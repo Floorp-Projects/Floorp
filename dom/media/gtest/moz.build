@@ -37,7 +37,6 @@ UNIFIED_SOURCES += [
     "TestBufferReader.cpp",
     "TestDataMutex.cpp",
     "TestDecoderBenchmark.cpp",
-    "TestDeviceInputTrack.cpp",
     "TestDriftCompensation.cpp",
     "TestDynamicResampler.cpp",
     "TestGMPUtils.cpp",
@@ -59,14 +58,21 @@ UNIFIED_SOURCES += [
     "TestRust.cpp",
     "TestTimeUnit.cpp",
     "TestVideoSegment.cpp",
-    "TestVideoTrackEncoder.cpp",
     "TestVideoUtils.cpp",
     "TestVPXDecoding.cpp",
     "TestWebMBuffered.cpp",
-    "TestWebMWriter.cpp",
     "WaitFor.cpp",
-    "YUVBufferGenerator.cpp",
 ]
+
+if CONFIG["MOZ_WEBM_ENCODER"]:
+    UNIFIED_SOURCES += [
+        "TestVideoTrackEncoder.cpp",
+        "TestWebMWriter.cpp",
+        "YUVBufferGenerator.cpp",
+    ]
+    LOCAL_INCLUDES += [
+        "/gfx/2d/",
+    ]
 
 if CONFIG["MOZ_WEBRTC"]:
     UNIFIED_SOURCES += [
@@ -122,7 +128,6 @@ LOCAL_INCLUDES += [
     "/dom/media/platforms",
     "/dom/media/platforms/agnostic",
     "/dom/media/webrtc",
-    "/gfx/2d/",
     "/security/certverifier",
 ]
 

@@ -4,6 +4,9 @@ const {
   ExperimentAPI,
   _ExperimentFeature: ExperimentFeature,
 } = ChromeUtils.import("resource://nimbus/ExperimentAPI.jsm");
+const { TestUtils } = ChromeUtils.import(
+  "resource://testing-common/TestUtils.jsm"
+);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -89,16 +92,6 @@ add_task(async function test_ExperimentFeature_getVariable_precedence() {
 
   const instance = createInstanceWithVariables(TEST_VARIABLES);
   const prefName = TEST_VARIABLES.items.fallbackPref;
-  const rollout = ExperimentFakes.rollout(`${FEATURE_ID}-rollout`, {
-    branch: {
-      features: [
-        {
-          featureId: FEATURE_ID,
-          value: { items: [4, 5, 6] },
-        },
-      ],
-    },
-  });
 
   Services.prefs.clearUserPref(prefName);
 
@@ -120,7 +113,9 @@ add_task(async function test_ExperimentFeature_getVariable_precedence() {
   );
 
   // Remote default values
-  await manager.store.addEnrollment(rollout);
+  manager.store.updateRemoteConfigs(FEATURE_ID, {
+    variables: { items: [4, 5, 6] },
+  });
 
   Assert.deepEqual(
     instance.getVariable("items"),
@@ -162,23 +157,16 @@ add_task(async function test_ExperimentFeature_getVariable_precedence() {
 
 add_task(async function test_ExperimentFeature_getVariable_partial_values() {
   const { sandbox, manager } = await setupForExperimentFeature();
+
   const instance = createInstanceWithVariables(TEST_VARIABLES);
-  const rollout = ExperimentFakes.rollout(`${FEATURE_ID}-rollout`, {
-    branch: {
-      features: [
-        {
-          featureId: FEATURE_ID,
-          value: { name: "abc" },
-        },
-      ],
-    },
-  });
 
   // Set up a pref value for .enabled,
   // a remote value for .name,
   // an experiment value for .items
   Services.prefs.setBoolPref(TEST_VARIABLES.enabled.fallbackPref, true);
-  await manager.store.addEnrollment(rollout);
+  manager.store.updateRemoteConfigs(FEATURE_ID, {
+    variables: { name: "abc" },
+  });
   const doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig(
     {
       featureId: FEATURE_ID,

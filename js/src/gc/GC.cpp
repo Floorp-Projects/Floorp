@@ -330,7 +330,7 @@ static void FreeChunkPool(ChunkPool& pool) {
     TenuredChunk* chunk = iter.get();
     iter.next();
     pool.remove(chunk);
-    MOZ_ASSERT(chunk->unused());
+    MOZ_ASSERT(!chunk->info.numArenasFreeCommitted);
     UnmapPages(static_cast<void*>(chunk), ChunkSize);
   }
   MOZ_ASSERT(pool.count() == 0);
@@ -375,7 +375,6 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       helperThreadRatio(TuningDefaults::HelperThreadRatio),
       maxHelperThreads(TuningDefaults::MaxHelperThreads),
       helperThreadCount(1),
-      createBudgetCallback(nullptr),
       rootsHash(256),
       nextCellUniqueId_(LargestTaggedNullCellPointer +
                         1),  // Ensure disjoint from null tagged pointers.
@@ -884,15 +883,6 @@ void GCRuntime::finish() {
   nursery().printTotalProfileTimes();
   stats().printTotalProfileTimes();
 }
-
-#ifdef DEBUG
-void GCRuntime::assertNoPermanentSharedThings() {
-  MOZ_ASSERT(atomsZone->cellIterUnsafe<JSAtom>(AllocKind::ATOM).done());
-  MOZ_ASSERT(
-      atomsZone->cellIterUnsafe<JSAtom>(AllocKind::FAT_INLINE_ATOM).done());
-  MOZ_ASSERT(atomsZone->cellIterUnsafe<JS::Symbol>(AllocKind::SYMBOL).done());
-}
-#endif
 
 void GCRuntime::freezePermanentSharedThings() {
   // This is called just after permanent atoms and well-known symbols have been
@@ -1412,21 +1402,16 @@ bool GCRuntime::isCompactingGCEnabled() const {
          rt->mainContextFromOwnThread()->compactingDisabledCount == 0;
 }
 
-JS_PUBLIC_API void JS::SetCreateGCSliceBudgetCallback(
-    JSContext* cx, JS::CreateSliceBudgetCallback cb) {
-  cx->runtime()->gc.createBudgetCallback = cb;
-}
-
-SliceBudget::SliceBudget(TimeBudget time, InterruptRequestFlag* interrupt)
+SliceBudget::SliceBudget(TimeBudget time, int64_t stepsPerTimeCheckArg)
     : budget(TimeBudget(time)),
-      interruptRequested(interrupt),
-      counter(StepsPerExpensiveCheck) {
+      stepsPerTimeCheck(stepsPerTimeCheckArg),
+      counter(stepsPerTimeCheckArg) {
   budget.as<TimeBudget>().deadline =
       ReallyNow() + TimeDuration::FromMilliseconds(timeBudget());
 }
 
 SliceBudget::SliceBudget(WorkBudget work)
-    : budget(work), interruptRequested(nullptr), counter(work.budget) {}
+    : budget(work), counter(work.budget) {}
 
 int SliceBudget::describe(char* buffer, size_t maxlen) const {
   if (isUnlimited()) {
@@ -1434,8 +1419,7 @@ int SliceBudget::describe(char* buffer, size_t maxlen) const {
   } else if (isWorkBudget()) {
     return snprintf(buffer, maxlen, "work(%" PRId64 ")", workBudget());
   } else {
-    return snprintf(buffer, maxlen, "%" PRId64 "ms%s", timeBudget(),
-                    interruptRequested ? ", interruptible" : "");
+    return snprintf(buffer, maxlen, "%" PRId64 "ms", timeBudget());
   }
 }
 
@@ -1447,20 +1431,11 @@ bool SliceBudget::checkOverBudget() {
     return true;
   }
 
-  if (interruptRequested && *interruptRequested) {
-    *interruptRequested = false;
-    interrupted = true;
-  }
-
-  if (interrupted) {
-    return true;
-  }
-
   if (ReallyNow() >= budget.as<TimeBudget>().deadline) {
     return true;
   }
 
-  counter = StepsPerExpensiveCheck;
+  counter = stepsPerTimeCheck;
   return false;
 }
 
@@ -1656,18 +1631,6 @@ bool GCRuntime::checkEagerAllocTrigger(const HeapSize& size,
   return true;
 }
 
-bool GCRuntime::shouldDecommit() const {
-  // If we're doing a shrinking GC we always decommit to release as much memory
-  // as possible.
-  if (cleanUpEverything) {
-    return true;
-  }
-
-  // If we are allocating heavily enough to trigger "high frequency" GC then
-  // skip decommit so that we do not compete with the mutator.
-  return !schedulingState.inHighFrequencyGCMode();
-}
-
 void GCRuntime::startDecommit() {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::DECOMMIT);
 
@@ -1681,22 +1644,25 @@ void GCRuntime::startDecommit() {
     MOZ_ASSERT(availableChunks(lock).verify());
     MOZ_ASSERT(emptyChunks(lock).verify());
 
-    // Verify that all entries in the empty chunks pool are unused.
+    // Verify that all entries in the empty chunks pool are already decommitted.
     for (ChunkPool::Iter chunk(emptyChunks(lock)); !chunk.done();
          chunk.next()) {
-      MOZ_ASSERT(chunk->unused());
+      MOZ_ASSERT(chunk->info.numArenasFreeCommitted == 0);
     }
   }
 #endif
 
-  if (!shouldDecommit()) {
+  // If we are allocating heavily enough to trigger "high frequency" GC, then
+  // skip decommit so that we do not compete with the mutator. However if we're
+  // doing a shrinking GC we always decommit to release as much memory as
+  // possible.
+  if (schedulingState.inHighFrequencyGCMode() && !cleanUpEverything) {
     return;
   }
 
   {
     AutoLockGC lock(this);
-    if (availableChunks(lock).empty() && !tooManyEmptyChunks(lock) &&
-        emptyChunks(lock).empty()) {
+    if (availableChunks(lock).empty() && !tooManyEmptyChunks(lock)) {
       return;  // Nothing to do.
     }
   }
@@ -1726,65 +1692,22 @@ void js::gc::BackgroundDecommitTask::run(AutoLockHelperThreadState& lock) {
     ChunkPool emptyChunksToFree;
     {
       AutoLockGC gcLock(gc);
-      emptyChunksToFree = gc->expireEmptyChunkPool(gcLock);
-    }
-
-    FreeChunkPool(emptyChunksToFree);
-
-    {
-      AutoLockGC gcLock(gc);
 
       // To help minimize the total number of chunks needed over time, sort the
       // available chunks list so that we allocate into more-used chunks first.
       gc->availableChunks(gcLock).sort();
 
       if (DecommitEnabled()) {
-        gc->decommitEmptyChunks(cancel_, gcLock);
         gc->decommitFreeArenas(cancel_, gcLock);
       }
+
+      emptyChunksToFree = gc->expireEmptyChunkPool(gcLock);
     }
+
+    FreeChunkPool(emptyChunksToFree);
   }
 
   gc->maybeRequestGCAfterBackgroundTask(lock);
-}
-
-static inline bool CanDecommitWholeChunk(TenuredChunk* chunk) {
-  return chunk->unused() && chunk->info.numArenasFreeCommitted != 0;
-}
-
-// Called from a background thread to decommit free arenas. Releases the GC
-// lock.
-void GCRuntime::decommitEmptyChunks(const bool& cancel, AutoLockGC& lock) {
-  Vector<TenuredChunk*, 0, SystemAllocPolicy> chunksToDecommit;
-  for (ChunkPool::Iter chunk(emptyChunks(lock)); !chunk.done(); chunk.next()) {
-    if (CanDecommitWholeChunk(chunk) && !chunksToDecommit.append(chunk)) {
-      onOutOfMallocMemory(lock);
-      return;
-    }
-  }
-
-  for (TenuredChunk* chunk : chunksToDecommit) {
-    if (cancel) {
-      break;
-    }
-
-    // Check whether something used the chunk while lock was released.
-    if (!CanDecommitWholeChunk(chunk)) {
-      continue;
-    }
-
-    // Temporarily remove the chunk while decommitting its memory so that the
-    // mutator doesn't start allocating from it when we drop the lock.
-    emptyChunks(lock).remove(chunk);
-
-    {
-      AutoUnlockGC unlock(lock);
-      chunk->decommitAllArenas();
-      MOZ_ASSERT(chunk->info.numArenasFreeCommitted == 0);
-    }
-
-    emptyChunks(lock).push(chunk);
-  }
 }
 
 // Called from a background thread to decommit free arenas. Releases the GC
@@ -1807,6 +1730,7 @@ void GCRuntime::decommitFreeArenas(const bool& cancel, AutoLockGC& lock) {
   }
 
   for (TenuredChunk* chunk : chunksToDecommit) {
+    chunk->rebuildFreeArenasList();
     chunk->decommitFreeArenas(this, cancel, lock);
   }
 }
@@ -3671,6 +3595,25 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   return result;
 }
 
+void GCRuntime::waitForBackgroundTasksBeforeSlice() {
+  gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::WAIT_BACKGROUND_THREAD);
+
+  // Background finalization and decommit are finished by definition before we
+  // can start a new major GC.
+  if (!isIncrementalGCInProgress()) {
+    assertBackgroundSweepingFinished();
+    MOZ_ASSERT(decommitTask.isIdle());
+  }
+
+  // We must also wait for background allocation to finish so we can avoid
+  // taking the GC lock when manipulating the chunks during the GC.  The
+  // background alloc task can run between slices, so we must wait for it at the
+  // start of every slice.
+  //
+  // TODO: Is this still necessary?
+  allocTask.cancelAndWait();
+}
+
 inline bool GCRuntime::mightSweepInThisSlice(bool nonIncremental) {
   MOZ_ASSERT(incrementalState < State::Sweep);
   return nonIncremental || lastMarkSlice || hasIncrementalTwoSliceZealMode();
@@ -3840,8 +3783,6 @@ void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
   AutoMaybeLeaveAtomsZone leaveAtomsZone(rt->mainContextFromOwnThread());
   AutoSetZoneSliceThresholds sliceThresholds(this);
 
-  schedulingState.updateHighFrequencyModeForReason(reason);
-
 #ifdef DEBUG
   if (IsShutdownReason(reason)) {
     marker.markQueue.clear();
@@ -3907,9 +3848,6 @@ void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
 }
 
 SliceBudget GCRuntime::defaultBudget(JS::GCReason reason, int64_t millis) {
-  // millis == 0 means use internal GC scheduling logic to come up with
-  // a duration for the slice budget. This may end up still being zero
-  // based on preferences.
   if (millis == 0) {
     if (reason == JS::GCReason::ALLOC_TRIGGER) {
       millis = defaultSliceBudgetMS();
@@ -3920,13 +3858,6 @@ SliceBudget GCRuntime::defaultBudget(JS::GCReason reason, int64_t millis) {
     }
   }
 
-  // If the embedding has registered a callback for creating SliceBudgets,
-  // then use it.
-  if (createBudgetCallback) {
-    return createBudgetCallback(reason, millis);
-  }
-
-  // Otherwise, the preference can request an unlimited duration slice.
   if (millis == 0) {
     return SliceBudget::unlimited();
   }

@@ -111,11 +111,5 @@ mozilla::ipc::IPCResult TRRServiceChild::RecvSetDefaultTRRConnectionInfo(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult TRRServiceChild::RecvUpdateEtcHosts(
-    nsTArray<nsCString>&& aHosts) {
-  TRRService::Get()->AddEtcHosts(aHosts);
-  return IPC_OK();
-}
-
 }  // namespace net
 }  // namespace mozilla

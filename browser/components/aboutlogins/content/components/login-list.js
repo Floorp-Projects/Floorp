@@ -141,14 +141,6 @@ export default class LoginList extends HTMLElement {
     this._createLoginButton.addEventListener("click", this);
   }
 
-  get #activeDescendant() {
-    const activeDescendantId = this._list.getAttribute("aria-activedescendant");
-    let activeDescendant =
-      activeDescendantId && this.shadowRoot.getElementById(activeDescendantId);
-
-    return activeDescendant;
-  }
-
   render() {
     let visibleLoginGuids = this._applyFilter();
     this._updateVisibleLoginCount(visibleLoginGuids.size);
@@ -237,7 +229,9 @@ export default class LoginList extends HTMLElement {
       section.hidden = true;
     }
 
-    let activeDescendant = this.#activeDescendant;
+    let activeDescendantId = this._list.getAttribute("aria-activedescendant");
+    let activeDescendant =
+      activeDescendantId && this.shadowRoot.getElementById(activeDescendantId);
     if (!activeDescendant || activeDescendant.hidden) {
       let visibleListItem = this._list.querySelector(
         ".login-list-item:not([hidden])"
@@ -757,8 +751,26 @@ export default class LoginList extends HTMLElement {
     }
   }
 
-  #findPreviousItem(item) {
-    let previousItem = item;
+  _handleKeyboardNavWithinList(event) {
+    if (this._list != this.shadowRoot.activeElement) {
+      return;
+    }
+
+    let isLTR = document.dir == "ltr";
+    let activeDescendantId = this._list.getAttribute("aria-activedescendant");
+    let activeDescendant =
+      activeDescendantId && this.shadowRoot.getElementById(activeDescendantId);
+    if (
+      !activeDescendant ||
+      activeDescendant.hidden ||
+      !activeDescendant.classList.contains("login-list-item")
+    ) {
+      activeDescendant =
+        this._list.querySelector(".login-list-item[data-guid]:not([hidden])") ||
+        this._list.firstElementChild;
+    }
+    let newlyFocusedItem = null;
+    let previousItem = activeDescendant;
     do {
       previousItem =
         (previousItem.tagName == "SECTION"
@@ -772,11 +784,7 @@ export default class LoginList extends HTMLElement {
         !previousItem.classList.contains("login-list-item"))
     );
 
-    return previousItem;
-  }
-
-  #findNextItem(item) {
-    let nextItem = item;
+    let nextItem = activeDescendant;
     do {
       nextItem =
         (nextItem.tagName == "SECTION"
@@ -789,111 +797,58 @@ export default class LoginList extends HTMLElement {
       (nextItem.hidden || !nextItem.classList.contains("login-list-item"))
     );
 
-    return nextItem;
-  }
-
-  #pickByDirection(ltr, rtl) {
-    return document.dir == "ltr" ? ltr : rtl;
-  }
-
-  //TODO May be we can use this fn in render(), but logic is different a bit
-  get #activeDescendantForSelection() {
-    let activeDescendant = this.#activeDescendant;
-    if (
-      !activeDescendant ||
-      activeDescendant.hidden ||
-      !activeDescendant.classList.contains("login-list-item")
-    ) {
-      activeDescendant =
-        this._list.querySelector(".login-list-item[data-guid]:not([hidden])") ||
-        this._list.firstElementChild;
-    }
-
-    return activeDescendant;
-  }
-
-  _handleKeyboardNavWithinList(event) {
-    if (this._list != this.shadowRoot.activeElement) {
-      return;
-    }
-
-    let command = null;
-
-    switch (event.type) {
-      case "keyup":
-        switch (event.key) {
-          case " ":
-          case "Enter":
-            command = "click";
-            break;
+    if (event.type == "keydown") {
+      switch (event.key) {
+        case "ArrowDown": {
+          if (!nextItem) {
+            return;
+          }
+          newlyFocusedItem = nextItem;
+          break;
         }
-        break;
-      case "keydown":
-        switch (event.key) {
-          case "ArrowDown":
-            command = "next";
-            break;
-          case "ArrowLeft":
-            command = this.#pickByDirection("previous", "next");
-            break;
-          case "ArrowRight":
-            command = this.#pickByDirection("next", "previous");
-            break;
-          case "ArrowUp":
-            command = "previous";
-            break;
+        case "ArrowLeft": {
+          let item = isLTR ? previousItem : nextItem;
+          if (!item) {
+            return;
+          }
+          newlyFocusedItem = item;
+          break;
         }
-        break;
-    }
-
-    if (command) {
-      event.preventDefault();
-
-      switch (command) {
-        case "click":
-          this.clickSelected();
+        case "ArrowRight": {
+          let item = isLTR ? nextItem : previousItem;
+          if (!item) {
+            return;
+          }
+          newlyFocusedItem = item;
           break;
-        case "next":
-          this.selectNext();
+        }
+        case "ArrowUp": {
+          if (!previousItem) {
+            return;
+          }
+          newlyFocusedItem = previousItem;
           break;
-        case "previous":
-          this.selectPrevious();
-          break;
+        }
+        default:
+          return;
+      }
+    } else if (event.type == "keyup") {
+      switch (event.key) {
+        case " ":
+        case "Enter": {
+          event.preventDefault();
+          activeDescendant.click();
+          return;
+        }
+        default:
+          return;
       }
     }
-  }
-
-  clickSelected() {
-    this.#activeDescendantForSelection?.click();
-  }
-
-  selectNext() {
-    const activeDescendant = this.#activeDescendantForSelection;
-    if (activeDescendant) {
-      this.#moveSelection(
-        activeDescendant,
-        this.#findNextItem(activeDescendant)
-      );
-    }
-  }
-
-  selectPrevious() {
-    const activeDescendant = this.#activeDescendantForSelection;
-    if (activeDescendant) {
-      this.#moveSelection(
-        activeDescendant,
-        this.#findPreviousItem(activeDescendant)
-      );
-    }
-  }
-
-  #moveSelection(from, to) {
-    if (to) {
-      this._list.setAttribute("aria-activedescendant", to.id);
-      from?.classList.remove("keyboard-selected");
-      to.classList.add("keyboard-selected");
-      to.scrollIntoView({ block: "nearest" });
-    }
+    event.preventDefault();
+    this._list.setAttribute("aria-activedescendant", newlyFocusedItem.id);
+    activeDescendant.classList.remove("keyboard-selected");
+    newlyFocusedItem.classList.add("keyboard-selected");
+    newlyFocusedItem.scrollIntoView({ block: "nearest" });
   }
 
   /**

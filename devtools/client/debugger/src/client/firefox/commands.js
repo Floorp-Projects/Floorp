@@ -318,24 +318,12 @@ async function pauseOnExceptions(
   });
 }
 
-async function blackBox(sourceActor, shouldBlackBox, ranges) {
+async function blackBox(sourceActor, isBlackBoxed, range) {
   const sourceFront = currentThreadFront().source({ actor: sourceActor.actor });
-  // If there are no ranges, the whole source is being blackboxed
-  if (!ranges.length) {
-    await toggleBlackBoxSourceFront(sourceFront, shouldBlackBox);
-    return;
-  }
-  // Blackbox the specific ranges
-  for (const range of ranges) {
-    await toggleBlackBoxSourceFront(sourceFront, shouldBlackBox, range);
-  }
-}
-
-async function toggleBlackBoxSourceFront(sourceFront, shouldBlackBox, range) {
-  if (shouldBlackBox) {
-    await sourceFront.blackBox(range);
-  } else {
+  if (isBlackBoxed) {
     await sourceFront.unblackBox(range);
+  } else {
+    await sourceFront.blackBox(range);
   }
 }
 
@@ -355,7 +343,23 @@ async function setEventListenerBreakpoints(ids) {
 }
 
 async function getEventListenerBreakpointTypes() {
-  return currentThreadFront().getAvailableEventBreakpoints();
+  let categories;
+  try {
+    categories = await currentThreadFront().getAvailableEventBreakpoints();
+
+    if (!Array.isArray(categories)) {
+      // When connecting to older browser that had our placeholder
+      // implementation of the 'getAvailableEventBreakpoints' endpoint, we
+      // actually get back an object with a 'value' property containing
+      // the categories. Since that endpoint wasn't actually backed with a
+      // functional implementation, we just bail here instead of storing the
+      // 'value' property into the categories.
+      categories = null;
+    }
+  } catch (err) {
+    // Event bps aren't supported on this firefox version.
+  }
+  return categories || [];
 }
 
 function pauseGrip(thread, func) {
@@ -391,14 +395,24 @@ async function getSourceActorBreakpointPositions({ thread, actor }, range) {
 }
 
 async function getSourceActorBreakableLines({ thread, actor }) {
+  let sourceFront;
   let actorLines = [];
   try {
     const sourceThreadFront = lookupThreadFront(thread);
-    const sourceFront = sourceThreadFront.source({ actor });
+    sourceFront = sourceThreadFront.source({ actor });
     actorLines = await sourceFront.getBreakableLines();
   } catch (e) {
-    // Exceptions could be due to the target thread being shut down.
-    console.warn(`getSourceActorBreakableLines failed: ${e}`);
+    // Handle backward compatibility
+    if (
+      e.message &&
+      e.message.match(/does not recognize the packet type getBreakableLines/)
+    ) {
+      const pos = await sourceFront.getBreakpointPositionsCompressed();
+      actorLines = Object.keys(pos).map(line => Number(line));
+    } else {
+      // Other exceptions could be due to the target thread being shut down.
+      console.warn(`getSourceActorBreakableLines failed: ${e}`);
+    }
   }
 
   return actorLines;

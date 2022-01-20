@@ -40,12 +40,9 @@ impl Registration {
 
     pub(crate) fn poll_elapsed(&self, cx: &mut task::Context<'_>) -> Poll<Result<(), Error>> {
         // Keep track of task budget
-        let coop = ready!(crate::coop::poll_proceed(cx));
+        ready!(crate::coop::poll_proceed(cx));
 
-        self.entry.poll_elapsed(cx).map(move |r| {
-            coop.made_progress();
-            r
-        })
+        self.entry.poll_elapsed(cx)
     }
 }
 

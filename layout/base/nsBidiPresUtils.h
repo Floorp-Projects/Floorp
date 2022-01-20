@@ -8,7 +8,6 @@
 #define nsBidiPresUtils_h___
 
 #include "gfxContext.h"
-#include "mozilla/intl/BidiClass.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "nsBidiUtils.h"
 #include "nsHashKeys.h"
@@ -224,7 +223,7 @@ class nsBidiPresUtils {
    */
   static nsresult FormatUnicodeText(nsPresContext* aPresContext,
                                     char16_t* aText, int32_t& aTextLength,
-                                    mozilla::intl::BidiClass aBidiClass);
+                                    nsCharType aCharType);
 
   /**
    * Reorder plain text using the Unicode Bidi algorithm and send it to
@@ -563,12 +562,11 @@ class nsBidiPresUtils {
    */
   static void RemoveBidiContinuation(BidiParagraphData* aBpd, nsIFrame* aFrame,
                                      int32_t aFirstIndex, int32_t aLastIndex);
-  static void CalculateBidiClass(mozilla::intl::Bidi* aBidiEngine,
-                                 const char16_t* aText, int32_t& aOffset,
-                                 int32_t aBidiClassLimit, int32_t& aRunLimit,
-                                 int32_t& aRunLength, int32_t& aRunCount,
-                                 mozilla::intl::BidiClass& aBidiClass,
-                                 mozilla::intl::BidiClass& aPrevBidiClass);
+  static void CalculateCharType(mozilla::intl::Bidi* aBidiEngine,
+                                const char16_t* aText, int32_t& aOffset,
+                                int32_t aCharTypeLimit, int32_t& aRunLimit,
+                                int32_t& aRunLength, int32_t& aRunCount,
+                                uint8_t& aCharType, uint8_t& aPrevCharType);
 
   static void StripBidiControlCharacters(char16_t* aText, int32_t& aTextLength);
 };

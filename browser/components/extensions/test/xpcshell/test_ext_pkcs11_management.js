@@ -204,26 +204,6 @@ add_task(async function test_pkcs11() {
         /No such PKCS#11 module osclientcerts/,
         "getModuleSlots should not work on the built-in osclientcerts module"
       );
-      await browser.test.assertRejects(
-        browser.pkcs11.installModule("ipcclientcerts", 0),
-        /No such PKCS#11 module ipcclientcerts/,
-        "installModule should not work on the built-in ipcclientcerts module"
-      );
-      await browser.test.assertRejects(
-        browser.pkcs11.uninstallModule("ipcclientcerts"),
-        /No such PKCS#11 module ipcclientcerts/,
-        "uninstallModule should not work on the built-in ipcclientcerts module"
-      );
-      await browser.test.assertRejects(
-        browser.pkcs11.isModuleInstalled("ipcclientcerts"),
-        /No such PKCS#11 module ipcclientcerts/,
-        "isModuleLoaded should not work on the built-in ipcclientcerts module"
-      );
-      await browser.test.assertRejects(
-        browser.pkcs11.getModuleSlots("ipcclientcerts"),
-        /No such PKCS#11 module ipcclientcerts/,
-        "getModuleSlots should not work on the built-in ipcclientcerts module"
-      );
       browser.test.notifyPass("pkcs11");
     } catch (e) {
       browser.test.fail(`Error: ${String(e)} :: ${e.stack}`);

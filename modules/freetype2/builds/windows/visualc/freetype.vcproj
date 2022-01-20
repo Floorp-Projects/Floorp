@@ -19,7 +19,7 @@
 			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="0"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -45,7 +45,6 @@
 				PreprocessorDefinitions="NDEBUG;WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY;DLL_EXPORT"
 				StringPooling="true"
 				RuntimeLibrary="2"
-				EnableEnhancedInstructionSet="2"
 				EnableFunctionLevelLinking="true"
 				DisableLanguageExtensions="true"
 				WarningLevel="4"
@@ -66,8 +65,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -98,7 +95,7 @@
 			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="0"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -124,7 +121,6 @@
 				PreprocessorDefinitions="NDEBUG;WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY"
 				StringPooling="true"
 				RuntimeLibrary="0"
-				EnableEnhancedInstructionSet="2"
 				EnableFunctionLevelLinking="true"
 				DisableLanguageExtensions="true"
 				WarningLevel="4"
@@ -169,7 +165,7 @@
 			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="0"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -242,7 +238,7 @@
 			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="0"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"

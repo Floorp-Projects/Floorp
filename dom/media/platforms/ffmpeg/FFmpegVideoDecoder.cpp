@@ -233,7 +233,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
     return NS_ERROR_DOM_MEDIA_FATAL_ERR;
   }
 
-  StaticMutexAutoLock mon(sMutex);
+  StaticMutexAutoLock mon(sMonitor);
 
   if (!(mCodecContext = mLib->avcodec_alloc_context3(codec))) {
     FFMPEG_LOG("Couldn't init VA-API ffmpeg context");

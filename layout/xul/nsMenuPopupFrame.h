@@ -119,8 +119,8 @@ class nsXULPopupShownEvent final : public mozilla::Runnable,
   virtual ~nsXULPopupShownEvent() = default;
 
  private:
-  const nsCOMPtr<nsIContent> mPopup;
-  const RefPtr<nsPresContext> mPresContext;
+  nsCOMPtr<nsIContent> mPopup;
+  RefPtr<nsPresContext> mPresContext;
 };
 
 class nsMenuPopupFrame final : public nsBoxFrame,
@@ -193,10 +193,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
 
   bool HasRemoteContent() const;
 
-  // Whether we should create a widget on Init().
-  bool ShouldCreateWidgetUpfront() const;
-
-  // Returns true if the popup is a panel with the noautohide attribute set to
+  // returns true if the popup is a panel with the noautohide attribute set to
   // true. These panels do not roll up automatically.
   bool IsNoAutoHide() const;
 
@@ -209,6 +206,8 @@ class nsMenuPopupFrame final : public nsBoxFrame,
 
   nsresult CreateWidgetForView(nsView* aView);
   mozilla::StyleWindowShadow GetShadowStyle();
+
+  bool IsLeafDynamic() const override;
 
   void DidSetComputedStyle(ComputedStyle* aOldStyle) override;
 
@@ -224,6 +223,9 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   // popup is being moved, and should not be flipped.
   nsresult SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove,
                             bool aSizedToPopup);
+
+  // Force the children to be generated if they have not already been generated.
+  void GenerateFrames();
 
   // called when the Enter key is pressed while the popup is open. This will
   // just pass the call down to the current menu, if any. If a current menu
@@ -613,6 +615,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   bool mIsContextMenu;  // true for context menus
   // true if we need to offset the popup to ensure it's not under the mouse
   bool mAdjustOffsetForContextMenu;
+  bool mGeneratedChildren;  // true if the contents have been created
 
   bool mMenuCanOverlapOSBar;  // can we appear over the taskbar/menubar?
   bool mShouldAutoPosition;   // Should SetPopupPosition be allowed to auto

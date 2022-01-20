@@ -1021,12 +1021,7 @@ function getDefaultFileName(
       } catch (e) {}
     }
     if (fileName) {
-      return validateFileName(
-        Services.textToSubURI.unEscapeURIForUI(
-          fileName,
-          /* dontEscape = */ true
-        )
-      );
+      return validateFileName(Services.textToSubURI.unEscapeURIForUI(fileName));
     }
   }
 
@@ -1052,10 +1047,7 @@ function getDefaultFileName(
     if (url.fileName != "") {
       // 3) Use the actual file name, if present
       return validateFileName(
-        Services.textToSubURI.unEscapeURIForUI(
-          url.fileName,
-          /* dontEscape = */ true
-        )
+        Services.textToSubURI.unEscapeURIForUI(url.fileName)
       );
     }
   } catch (e) {

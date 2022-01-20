@@ -6,7 +6,6 @@
 
 use crate::time::{delay_until, Delay, Duration, Instant};
 
-use pin_project_lite::pin_project;
 use std::fmt;
 use std::future::Future;
 use std::pin::Pin;
@@ -100,16 +99,12 @@ where
     }
 }
 
-pin_project! {
-    /// Future returned by [`timeout`](timeout) and [`timeout_at`](timeout_at).
-    #[must_use = "futures do nothing unless you `.await` or poll them"]
-    #[derive(Debug)]
-    pub struct Timeout<T> {
-        #[pin]
-        value: T,
-        #[pin]
-        delay: Delay,
-    }
+/// Future returned by [`timeout`](timeout) and [`timeout_at`](timeout_at).
+#[must_use = "futures do nothing unless you `.await` or poll them"]
+#[derive(Debug)]
+pub struct Timeout<T> {
+    value: T,
+    delay: Delay,
 }
 
 /// Error returned by `Timeout`.
@@ -151,18 +146,24 @@ where
 {
     type Output = Result<T::Output, Elapsed>;
 
-    fn poll(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
-        let me = self.project();
-
+    fn poll(mut self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
         // First, try polling the future
-        if let Poll::Ready(v) = me.value.poll(cx) {
-            return Poll::Ready(Ok(v));
+
+        // Safety: we never move `self.value`
+        unsafe {
+            let p = self.as_mut().map_unchecked_mut(|me| &mut me.value);
+            if let Poll::Ready(v) = p.poll(cx) {
+                return Poll::Ready(Ok(v));
+            }
         }
 
         // Now check the timer
-        match me.delay.poll(cx) {
-            Poll::Ready(()) => Poll::Ready(Err(Elapsed(()))),
-            Poll::Pending => Poll::Pending,
+        // Safety: X_X!
+        unsafe {
+            match self.map_unchecked_mut(|me| &mut me.delay).poll(cx) {
+                Poll::Ready(()) => Poll::Ready(Err(Elapsed(()))),
+                Poll::Pending => Poll::Pending,
+            }
         }
     }
 }

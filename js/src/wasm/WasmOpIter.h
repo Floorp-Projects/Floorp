@@ -720,25 +720,6 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   // Test whether the control-stack is empty, meaning we've consumed the final
   // end of the function body.
   bool controlStackEmpty() const { return controlStack_.empty(); }
-
-  // Find the innermost control item of a specific kind, starting to search from
-  // a certain relative depth, and returning true if such innermost control item
-  // is found. The relative depth of the found item is returned via a parameter.
-  bool controlFindInnermostFrom(LabelKind kind, uint32_t fromRelativeDepth,
-                                uint32_t* foundRelativeDepth) {
-    int32_t fromAbsoluteDepth = controlStack_.length() - fromRelativeDepth - 1;
-    for (int32_t i = fromAbsoluteDepth; i >= 0; i--) {
-      if (controlStack_[i].kind() == kind) {
-        *foundRelativeDepth = controlStack_.length() - 1 - i;
-        return true;
-      }
-    }
-    return false;
-  }
-
-  bool controlFindInnermost(LabelKind kind, uint32_t* foundRelativeDepth) {
-    return controlFindInnermostFrom(kind, 0, foundRelativeDepth);
-  }
 };
 
 template <typename Policy>
@@ -1597,7 +1578,7 @@ inline bool OpIter<Policy>::readCatch(LabelKind* kind, uint32_t* tagIndex,
     block.switchToCatch();
   }
 
-  return push(env_.tags[*tagIndex].type.resultType());
+  return push(env_.tags[*tagIndex].resultType());
 }
 
 template <typename Policy>
@@ -1671,7 +1652,7 @@ inline bool OpIter<Policy>::readThrow(uint32_t* tagIndex,
     return fail("tag index out of range");
   }
 
-  if (!popWithType(env_.tags[*tagIndex].type.resultType(), argValues)) {
+  if (!popWithType(env_.tags[*tagIndex].resultType(), argValues)) {
     return false;
   }
 
@@ -2368,7 +2349,7 @@ inline bool OpIter<Policy>::readCallIndirect(uint32_t* funcTypeIndex,
   const FuncType& funcType = env_.types->funcType(*funcTypeIndex);
 
 #ifdef WASM_PRIVATE_REFTYPES
-  if (env_.tables[*tableIndex].isImportedOrExported &&
+  if (env_.tables[*tableIndex].importedOrExported &&
       funcType.exposesTypeIndex()) {
     return fail("cannot expose indexed reference type");
   }

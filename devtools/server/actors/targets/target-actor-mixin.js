@@ -116,7 +116,7 @@ module.exports = function(targetType, targetActorSpec, implementation) {
         ) {
           this.threadActor.attach();
         }
-        this.threadActor.addEventBreakpoints(entries);
+        await this.threadActor.setActiveEventBreakpoints(entries);
       }
     },
 
@@ -133,8 +133,6 @@ module.exports = function(targetType, targetActorSpec, implementation) {
         for (const { path, method } of entries) {
           this.threadActor.removeXHRBreakpoint(path, method);
         }
-      } else if (type == EVENT_BREAKPOINTS) {
-        this.threadActor.removeEventBreakpoints(entries);
       }
 
       return Promise.resolve();

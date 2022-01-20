@@ -14,16 +14,10 @@ add_task(async function setup() {
   SnapshotScorer.overrideCurrentTimeForTests(now);
 
   await addInteractions([{ url: TEST_URL1, created_at: now }]);
-  await Snapshots.add({
-    url: TEST_URL1,
-    userPersisted: Snapshots.USER_PERSISTED.MANUAL,
-  });
+  await Snapshots.add({ url: TEST_URL1, userPersisted: true });
 
   await addInteractions([{ url: TEST_URL2, created_at: now }]);
-  await Snapshots.add({
-    url: TEST_URL2,
-    userPersisted: Snapshots.USER_PERSISTED.MANUAL,
-  });
+  await Snapshots.add({ url: TEST_URL2, userPersisted: true });
 });
 
 add_task(async function test_combining_throw_away_first() {

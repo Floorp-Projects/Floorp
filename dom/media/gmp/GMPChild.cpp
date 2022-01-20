@@ -7,7 +7,6 @@
 
 #include "base/command_line.h"
 #include "base/task.h"
-#include "ChildProfilerController.h"
 #include "ChromiumCDMAdapter.h"
 #ifdef XP_LINUX
 #  include "dlfcn.h"
@@ -33,7 +32,6 @@
 #include "nsExceptionHandler.h"
 #include "nsIFile.h"
 #include "nsReadableUtils.h"
-#include "nsThreadManager.h"
 #include "nsXULAppAPI.h"
 #include "prio.h"
 #ifdef XP_WIN
@@ -41,6 +39,10 @@
 #  include "WinUtils.h"
 #else
 #  include <unistd.h>  // for _exit()
+#endif
+
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+#  include "nsThreadManager.h"
 #endif
 
 using namespace mozilla::ipc;
@@ -160,12 +162,13 @@ bool GMPChild::Init(const nsAString& aPluginPath, base::ProcessId aParentPid,
                     mozilla::ipc::ScopedPort aPort) {
   GMP_CHILD_LOG_DEBUG("%s pluginPath=%s", __FUNCTION__,
                       NS_ConvertUTF16toUTF8(aPluginPath).get());
-
-  // GMPChild needs nsThreadManager to create the ProfilerChild thread.
-  // It is also used on debug builds for the sandbox tests.
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+  // GMPChild does not use nsThreadManager outside of tests, so only init it
+  // here for the sandbox tests.
   if (NS_WARN_IF(NS_FAILED(nsThreadManager::get().Init()))) {
     return false;
   }
+#endif
 
   if (NS_WARN_IF(!Open(std::move(aPort), aParentPid))) {
     return false;
@@ -506,7 +509,7 @@ static auto ToCString(const nsTArray<std::pair<nsCString, nsCString>>& aPairs) {
   });
 }
 
-mozilla::ipc::IPCResult GMPChild::RecvStartPlugin(const nsString& aAdapter) {
+mozilla::ipc::IPCResult GMPChild::AnswerStartPlugin(const nsString& aAdapter) {
   GMP_CHILD_LOG_DEBUG("%s", __FUNCTION__);
 
   nsCString libPath;
@@ -582,11 +585,6 @@ void GMPChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (AbnormalShutdown == aWhy) {
     NS_WARNING("Abnormal shutdown of GMP process!");
     ProcessChild::QuickExit();
-  }
-
-  if (mProfilerController) {
-    mProfilerController->Shutdown();
-    mProfilerController = nullptr;
   }
 
   CrashReporterClient::DestroySingleton();
@@ -685,13 +683,6 @@ void GMPChild::GMPContentChildActorDestroy(GMPContentChild* aGMPContentChild) {
       break;
     }
   }
-}
-
-mozilla::ipc::IPCResult GMPChild::RecvInitProfiler(
-    Endpoint<PProfilerChild>&& aEndpoint) {
-  mProfilerController =
-      mozilla::ChildProfilerController::Create(std::move(aEndpoint));
-  return IPC_OK();
 }
 
 }  // namespace gmp

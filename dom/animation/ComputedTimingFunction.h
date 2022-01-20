@@ -30,11 +30,8 @@ class ComputedTimingFunction {
   };
 
   struct StepFunc {
-    uint32_t mSteps = 1;
-    StyleStepPosition mPos = StyleStepPosition::End;
-    constexpr StepFunc() = default;
-    constexpr StepFunc(uint32_t aSteps, StyleStepPosition aPos)
-        : mSteps(aSteps), mPos(aPos){};
+    uint32_t mSteps;
+    StyleStepPosition mPos;
     bool operator==(const StepFunc& aOther) const {
       return mSteps == aOther.mSteps && mPos == aOther.mPos;
     }
@@ -49,7 +46,7 @@ class ComputedTimingFunction {
     return ComputedTimingFunction(aSteps, aPos);
   }
 
-  constexpr ComputedTimingFunction() = default;
+  ComputedTimingFunction() = default;
   explicit ComputedTimingFunction(const nsTimingFunction& aFunction) {
     Init(aFunction);
   }
@@ -112,7 +109,7 @@ class ComputedTimingFunction {
   ComputedTimingFunction(uint32_t aSteps, StyleStepPosition aPos)
       : mType(Type::Step), mSteps{aSteps, aPos} {}
 
-  Type mType = Type::Ease;
+  Type mType;
   SMILKeySpline mTimingFunction;
   StepFunc mSteps;
 };

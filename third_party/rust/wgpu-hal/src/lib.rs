@@ -55,9 +55,15 @@ compile_error!("DX12 API enabled on non-Windows OS. If your project is not using
 #[cfg(all(feature = "dx12", windows))]
 mod dx12;
 mod empty;
-#[cfg(all(feature = "gles"))]
+#[cfg(all(
+    feature = "gles",
+    any(
+        target_arch = "wasm32",
+        all(unix, not(target_os = "ios"), not(target_os = "macos"))
+    )
+))]
 mod gles;
-#[cfg(all(feature = "metal"))]
+#[cfg(all(feature = "metal", any(target_os = "macos", target_os = "ios")))]
 mod metal;
 #[cfg(feature = "vulkan")]
 mod vulkan;
@@ -67,7 +73,13 @@ pub mod api {
     #[cfg(feature = "dx12")]
     pub use super::dx12::Api as Dx12;
     pub use super::empty::Api as Empty;
-    #[cfg(feature = "gles")]
+    #[cfg(all(
+        feature = "gles",
+        any(
+            target_arch = "wasm32",
+            all(unix, not(target_os = "ios"), not(target_os = "macos"))
+        )
+    ))]
     pub use super::gles::Api as Gles;
     #[cfg(feature = "metal")]
     pub use super::metal::Api as Metal;
@@ -637,7 +649,7 @@ bitflags::bitflags! {
         /// The combination of all usages that the are guaranteed to be be ordered by the hardware.
         /// If a usage is not ordered, then even if it doesn't change between draw calls, there
         /// still need to be pipeline barriers inserted for synchronization.
-        const ORDERED = Self::INCLUSIVE.bits | Self::MAP_WRITE.bits;
+        const ORDERED = Self::INCLUSIVE.bits | Self::MAP_WRITE.bits | Self::COPY_DST.bits;
     }
 }
 
@@ -660,7 +672,7 @@ bitflags::bitflags! {
         /// The combination of all usages that the are guaranteed to be be ordered by the hardware.
         /// If a usage is not ordered, then even if it doesn't change between draw calls, there
         /// still need to be pipeline barriers inserted for synchronization.
-        const ORDERED = Self::INCLUSIVE.bits | Self::COLOR_TARGET.bits | Self::DEPTH_STENCIL_WRITE.bits | Self::STORAGE_READ.bits;
+        const ORDERED = Self::INCLUSIVE.bits | Self::COPY_DST.bits | Self::COLOR_TARGET.bits | Self::DEPTH_STENCIL_WRITE.bits | Self::STORAGE_READ.bits;
         //TODO: remove this
         const UNINITIALIZED = 0xFFFF;
     }

@@ -102,16 +102,13 @@ void TlsRecordFilter::SecretCallback(PRFileDesc* fd, PRUint16 epoch,
             SSL_GetCipherSuiteInfo(suite, &cipherinfo, sizeof(cipherinfo)));
   EXPECT_EQ(sizeof(cipherinfo), cipherinfo.length);
 
-  self->cipher_specs_.emplace_back(self->is_dtls_agent(), epoch);
+  bool is_dtls = self->agent()->variant() == ssl_variant_datagram;
+  self->cipher_specs_.emplace_back(is_dtls, epoch);
   EXPECT_TRUE(self->cipher_specs_.back().SetKeys(&cipherinfo, secret));
 }
 
-bool TlsRecordFilter::is_dtls_agent() const {
-  return agent()->variant() == ssl_variant_datagram;
-}
-
 bool TlsRecordFilter::is_dtls13() const {
-  if (!is_dtls_agent()) {
+  if (agent()->variant() != ssl_variant_datagram) {
     return false;
   }
   if (agent()->state() == TlsAgent::STATE_CONNECTED) {
@@ -140,7 +137,8 @@ TlsCipherSpec& TlsRecordFilter::spec(uint16_t write_epoch) {
   // count sequence numbers.
   EXPECT_FALSE(decrypting_) << "No spec available for epoch " << write_epoch;
   ;
-  cipher_specs_.emplace_back(is_dtls_agent(), write_epoch);
+  bool is_dtls = agent()->variant() == ssl_variant_datagram;
+  cipher_specs_.emplace_back(is_dtls, write_epoch);
   return cipher_specs_.back();
 }
 
@@ -506,7 +504,7 @@ bool TlsRecordFilter::Unprotect(const TlsRecordHeader& header,
   if (!decrypting_ || !header.is_protected()) {
     // Maintain the epoch and sequence number for plaintext records.
     uint16_t ep = 0;
-    if (is_dtls_agent()) {
+    if (agent()->variant() == ssl_variant_datagram) {
       ep = static_cast<uint16_t>(header.sequence_number() >> 48);
     }
     spec(ep).RecordUnprotected(header.sequence_number());
@@ -517,7 +515,7 @@ bool TlsRecordFilter::Unprotect(const TlsRecordHeader& header,
   }
 
   uint16_t ep = 0;
-  if (is_dtls_agent()) {
+  if (agent()->variant() == ssl_variant_datagram) {
     ep = static_cast<uint16_t>(header.sequence_number() >> 48);
     if (!spec(ep).Unprotect(header, ciphertext, plaintext, out_header)) {
       return false;
@@ -1223,32 +1221,4 @@ PacketFilter::Action SelectedCipherSuiteReplacer::FilterHandshake(
   output->Write(pos, static_cast<uint32_t>(cipher_suite_), 2);
   return CHANGE;
 }
-
-PacketFilter::Action ClientHelloPreambleCapture::FilterHandshake(
-    const HandshakeHeader& header, const DataBuffer& input,
-    DataBuffer* output) {
-  EXPECT_TRUE(header.handshake_type() == kTlsHandshakeClientHello);
-
-  if (captured_) {
-    return KEEP;
-  }
-  captured_ = true;
-
-  DataBuffer temp;
-  TlsParser parser(input);
-  EXPECT_TRUE(parser.Read(&temp, 2 + 32));     // Version + Random
-  EXPECT_TRUE(parser.ReadVariable(&temp, 1));  // Session ID
-  if (is_dtls_agent()) {
-    EXPECT_TRUE(parser.ReadVariable(&temp, 1));  // Cookie
-  }
-  EXPECT_TRUE(parser.ReadVariable(&temp, 2));  // Ciphersuites
-  EXPECT_TRUE(parser.ReadVariable(&temp, 1));  // Compression
-
-  // Copy the preamble into a new buffer
-  data_ = DataBuffer(input);
-  data_.Truncate(parser.consumed());
-
-  return KEEP;
-}
-
 }  // namespace nss_test

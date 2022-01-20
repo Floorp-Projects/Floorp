@@ -17,7 +17,6 @@
 #include "js/Id.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
-#include "wasm/WasmTlsData.h"
 
 namespace js {
 namespace jit {
@@ -162,22 +161,13 @@ struct ResumeFromException {
   uint8_t* stackPointer;
   uint8_t* target;
   uint32_t kind;
-  wasm::TlsData* tlsData;
 
   // Value to push when resuming into a |finally| block.
   // Also used by Wasm to send the exception object to the throw stub.
   JS::Value exception;
 
   BaselineBailoutInfo* bailoutInfo;
-
-#if defined(JS_CODEGEN_ARM64)
-  uint64_t padding_;
-#endif
 };
-
-#if defined(JS_CODEGEN_ARM64)
-  static_assert(sizeof(ResumeFromException) % 16 == 0, "ResumeFromException should be aligned");
-#endif
 
 void HandleException(ResumeFromException* rfe);
 

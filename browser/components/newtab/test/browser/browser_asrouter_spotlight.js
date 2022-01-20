@@ -168,17 +168,14 @@ add_task(async function test_remoteL10n_content() {
 
   // Modify the message to mix translated and un-translated content
   message = {
-    ...message,
     content: {
-      ...message.content,
-      body: {
-        ...message.content.body,
-        secondary: {
-          ...message.content.body.secondary,
-          label: "Changed Label",
-        },
+      secondary: {
+        label: "Now Now",
+        ...message.content.secondary,
       },
+      ...content,
     },
+    ...message,
   };
 
   let dispatchStub = sinon.stub();
@@ -190,11 +187,11 @@ add_task(async function test_remoteL10n_content() {
     let secondaryBtn = win.document.getElementById("secondary");
     Assert.ok(
       primaryBtn.getElementsByTagName("remote-text").length,
-      "Primary button should have a remote l10n element"
+      "Should have a remote l10n element"
     );
     Assert.ok(
-      secondaryBtn.getElementsByTagName("remote-text").length === 0,
-      "Secondary button should not have a remote l10n element"
+      secondaryBtn.getElementsByTagName("remote-text").length,
+      "Should have a remote l10n element"
     );
     Assert.equal(
       primaryBtn.getElementsByTagName("remote-text")[0].shadowRoot.textContent,
@@ -202,9 +199,10 @@ add_task(async function test_remoteL10n_content() {
       "Should have expected strings for primary btn"
     );
     Assert.equal(
-      secondaryBtn.getElementsByTagName("span")[0].textContent,
-      "Changed Label",
-      "Should have expected strings for secondary btn"
+      secondaryBtn.getElementsByTagName("remote-text")[0].shadowRoot
+        .textContent,
+      "Not Now",
+      "Should have expected strings for primary btn"
     );
 
     // Dismiss

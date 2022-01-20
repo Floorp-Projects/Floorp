@@ -39,8 +39,7 @@ class StatusBarEntry final : public LinkedListElement<RefPtr<StatusBarEntry>>,
   nsresult Init();
   void Destroy();
 
-  MOZ_CAN_RUN_SCRIPT LRESULT OnMessage(HWND hWnd, UINT msg, WPARAM wp,
-                                       LPARAM lp);
+  LRESULT OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
   const Element* GetMenu() { return mMenu; };
 
   nsresult OnComplete(imgIContainer* aImage) override;
@@ -48,8 +47,7 @@ class StatusBarEntry final : public LinkedListElement<RefPtr<StatusBarEntry>>,
  private:
   ~StatusBarEntry();
   RefPtr<mozilla::widget::IconLoader> mIconLoader;
-  // Effectively const but is cycle collected
-  MOZ_KNOWN_LIVE RefPtr<Element> mMenu;
+  RefPtr<Element> mMenu;
   NOTIFYICONDATAW mIconData;
   boolean mInitted;
 };
@@ -239,8 +237,8 @@ LRESULT StatusBarEntry::OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
       nsEventStatus status = nsEventStatus_eIgnore;
       WidgetMouseEvent event(true, eXULSystemStatusBarClick, nullptr,
                              WidgetMouseEvent::eReal);
-      RefPtr<nsPresContext> presContext = menu->PresContext();
-      EventDispatcher::Dispatch(mMenu, presContext, &event, nullptr, &status);
+      EventDispatcher::Dispatch(mMenu, menu->PresContext(), &event, nullptr,
+                                &status);
       return DefWindowProc(hWnd, msg, wp, lp);
     }
 
@@ -273,10 +271,10 @@ LRESULT StatusBarEntry::OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 
 NS_IMPL_ISUPPORTS(SystemStatusBar, nsISystemStatusBar)
 
-MOZ_CAN_RUN_SCRIPT static LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg,
-                                                      WPARAM wp, LPARAM lp) {
-  if (RefPtr<StatusBarEntry> entry =
-          (StatusBarEntry*)GetWindowLongPtr(hWnd, GWLP_USERDATA)) {
+static LRESULT CALLBACK WindowProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
+  StatusBarEntry* entry =
+      (StatusBarEntry*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+  if (entry) {
     return entry->OnMessage(hWnd, msg, wp, lp);
   }
   return TRUE;

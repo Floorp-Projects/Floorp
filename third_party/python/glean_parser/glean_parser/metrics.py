@@ -13,7 +13,6 @@ from typing import Any, Dict, List, Optional, Type, Union  # noqa
 
 
 from . import pings
-from . import tags
 from . import util
 
 
@@ -48,7 +47,6 @@ class Metric:
         description: str,
         notification_emails: List[str],
         expires: Any,
-        metadata: Optional[Dict] = None,
         data_reviews: Optional[List[str]] = None,
         version: int = 0,
         disabled: bool = False,
@@ -73,9 +71,6 @@ class Metric:
         self.description = description
         self.notification_emails = notification_emails
         self.expires = expires
-        if metadata is None:
-            metadata = {}
-        self.metadata = metadata
         if data_reviews is None:
             data_reviews = []
         self.data_reviews = data_reviews
@@ -317,8 +312,7 @@ class Event(Metric):
     def allowed_extra_keys_with_types(self):
         # Sort keys so that output is deterministic
         return sorted(
-            [(k, v.get("type", "string")) for (k, v) in self.extra_keys.items()],
-            key=lambda x: x[0],
+            [(k, v["type"]) for (k, v) in self.extra_keys.items()], key=lambda x: x[0]
         )
 
     @property
@@ -342,10 +336,6 @@ class Event(Metric):
 
 class Uuid(Metric):
     typename = "uuid"
-
-
-class Url(Metric):
-    typename = "url"
 
 
 class Jwe(Metric):
@@ -401,8 +391,4 @@ class Rate(Metric):
         super().__init__(*args, **kwargs)
 
 
-class Text(Metric):
-    typename = "text"
-
-
-ObjectTree = Dict[str, Dict[str, Union[Metric, pings.Ping, tags.Tag]]]
+ObjectTree = Dict[str, Dict[str, Union[Metric, pings.Ping]]]

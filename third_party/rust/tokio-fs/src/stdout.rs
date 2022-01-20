@@ -1,8 +1,8 @@
-use tokio_io::AsyncWrite;
+use tokio_io::{AsyncWrite};
 
 use futures::Poll;
 
-use std::io::{self, Stdout as StdStdout, Write};
+use std::io::{self, Write, Stdout as StdStdout};
 
 /// A handle to the standard output stream of a process.
 ///

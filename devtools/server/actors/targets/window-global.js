@@ -260,19 +260,10 @@ const windowGlobalTargetPrototype = {
    *        - ignoreSubFrames Boolean
    *          If true, the actor will only focus on the passed docShell and not on the whole
    *          docShell tree. This should be enabled when we have targets for all documents.
-   *        - sessionContext Object
-   *          WatcherActor's session context. This helps know what is the overall debugged scope.
-   *          See watcher actor constructor for more info.
    */
   initialize: function(
     connection,
-    {
-      docShell,
-      followWindowGlobalLifeCycle,
-      isTopLevelTarget,
-      ignoreSubFrames,
-      sessionContext,
-    }
+    { docShell, followWindowGlobalLifeCycle, isTopLevelTarget, ignoreSubFrames }
   ) {
     Actor.prototype.initialize.call(this, connection);
 
@@ -289,7 +280,6 @@ const windowGlobalTargetPrototype = {
     this.followWindowGlobalLifeCycle = followWindowGlobalLifeCycle;
     this.isTopLevelTarget = !!isTopLevelTarget;
     this.ignoreSubFrames = ignoreSubFrames;
-    this.sessionContext = sessionContext;
 
     // A map of actor names to actor instances provided by extensions.
     this._extraActors = {};
@@ -1241,7 +1231,7 @@ const windowGlobalTargetPrototype = {
   /**
    * Ensure that CSS error reporting is enabled.
    */
-  async ensureCSSErrorReportingEnabled() {
+  async ensureCSSErrorReportingEnabled(request) {
     const promises = [];
     for (const docShell of this.docShells) {
       if (docShell.cssErrorReportingEnabled) {
@@ -1736,14 +1726,6 @@ DebuggerProgressListener.prototype = {
     // This should be removed as part of Bug 1709529.
     if (this._targetActor.typeName === "parentProcessTarget") {
       docShell.browsingContext.watchedByDevTools = true;
-    }
-    // Immediately enable CSS error reports on new top level docshells, if this was already enabled.
-    // This is specific to MBT and WebExtension targets (so the isRootActor check).
-    if (
-      this._targetActor.isRootActor &&
-      this._targetActor.docShell.cssErrorReportingEnabled
-    ) {
-      docShell.cssErrorReportingEnabled = true;
     }
   },
 

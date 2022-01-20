@@ -58,6 +58,8 @@ UniquePtr<RenderCompositor> RenderCompositorD3D11SWGL::Create(
                     << log.get();
     return nullptr;
   }
+  compositor->UseForSoftwareWebRender();
+
   return MakeUnique<RenderCompositorD3D11SWGL>(compositor, aWidget, ctx);
 }
 

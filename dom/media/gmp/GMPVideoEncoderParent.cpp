@@ -281,7 +281,7 @@ mozilla::ipc::IPCResult GMPVideoEncoderParent::RecvParentShmemForPool(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult GMPVideoEncoderParent::RecvNeedShmem(
+mozilla::ipc::IPCResult GMPVideoEncoderParent::AnswerNeedShmem(
     const uint32_t& aEncodedBufferSize, Shmem* aMem) {
   ipc::Shmem mem;
 

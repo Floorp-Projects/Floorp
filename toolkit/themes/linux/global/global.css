@@ -111,7 +111,7 @@ xul|separator.groove[orient="vertical"] {
 /* Link focus outline */
 
 .text-link:-moz-focusring {
-  outline: var(--default-focusring);
+  outline: 1px dotted;
 }
 
 /* Other margins */

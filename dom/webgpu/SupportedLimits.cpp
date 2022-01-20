@@ -15,8 +15,8 @@ GPU_IMPL_CYCLE_COLLECTION(SupportedLimits, mParent)
 GPU_IMPL_JS_WRAP(SupportedLimits)
 
 SupportedLimits::SupportedLimits(Adapter* const aParent,
-                                 UniquePtr<ffi::WGPULimits>&& aLimits)
-    : ChildOf(aParent), mLimits(std::move(aLimits)) {}
+                                 const ffi::WGPULimits& aLimits)
+    : ChildOf(aParent), mLimits(new ffi::WGPULimits(aLimits)) {}
 
 SupportedLimits::~SupportedLimits() = default;
 

@@ -13,7 +13,6 @@ Services.scriptloader.loadSubScript(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
-  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
@@ -30,6 +29,3 @@ registerCleanupFunction(async () => {
   // to do it within each test.
   await UrlbarTestUtils.promisePopupClose(window);
 });
-
-const ONBOARDING_URI =
-  "chrome://browser/content/urlbar/quicksuggestOnboarding.html";

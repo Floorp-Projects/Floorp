@@ -1,10 +1,6 @@
 use std::borrow::Cow;
 
-use fluent_fallback::{
-    env::LocalesProvider,
-    types::{L10nKey, ResourceId},
-    Localization,
-};
+use fluent_fallback::{env::LocalesProvider, types::L10nKey, Localization};
 use l10nregistry::testing::{
     FileSource, MockBundleAdapter, RegistrySetup, TestEnvironment, TestFileFetcher,
 };
@@ -74,14 +70,14 @@ impl LocalesProvider for LocalesService {
 
 fn sync_localization(
     reg: &'static L10nRegistry,
-    res_ids: Vec<ResourceId>,
+    res_ids: Vec<String>,
 ) -> Localization<L10nRegistry, LocalesService> {
     Localization::with_env(res_ids, true, LocalesService, reg.clone())
 }
 
 fn async_localization(
     reg: &'static L10nRegistry,
-    res_ids: Vec<ResourceId>,
+    res_ids: Vec<String>,
 ) -> Localization<L10nRegistry, LocalesService> {
     Localization::with_env(res_ids, false, LocalesService, reg.clone())
 }

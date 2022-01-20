@@ -289,7 +289,7 @@ class TextComposition final {
   // IMEStateManager::OnDestroyPresContext(), and then, it destroy
   // this instance.
   nsPresContext* mPresContext;
-  RefPtr<nsINode> mNode;
+  nsCOMPtr<nsINode> mNode;
   RefPtr<BrowserParent> mBrowserParent;
 
   // The text node which includes the composition string.

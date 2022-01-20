@@ -7,7 +7,7 @@
  * @module reducers/expressions
  */
 
-import { omit } from "lodash";
+import { omit, zip } from "lodash";
 
 import { createSelector } from "reselect";
 import { prefs } from "../utils/prefs";
@@ -51,11 +51,11 @@ function update(state = initialExpressionState(), action) {
     case "EVALUATE_EXPRESSIONS":
       const { inputs, results } = action;
 
-      return inputs.reduce(
-        (_state, input, index) =>
+      return zip(inputs, results).reduce(
+        (_state, [input, result]) =>
           updateExpressionInList(_state, input, {
             input,
-            value: results[index],
+            value: result,
             updating: false,
           }),
         state

@@ -75,13 +75,13 @@ already_AddRefed<DataSourceSurface> GetBRGADataSourceSurfaceSync(
   return helper->GetDataSurfaceSafe();
 }
 
-class EncodingCompleteEvent final : public DiscardableRunnable {
+class EncodingCompleteEvent : public Runnable {
   virtual ~EncodingCompleteEvent() = default;
 
  public:
   explicit EncodingCompleteEvent(
       EncodeCompleteCallback* aEncodeCompleteCallback)
-      : DiscardableRunnable("EncodingCompleteEvent"),
+      : Runnable("EncodingCompleteEvent"),
         mImgSize(0),
         mType(),
         mImgData(nullptr),

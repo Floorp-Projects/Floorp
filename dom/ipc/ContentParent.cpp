@@ -325,6 +325,15 @@
 // For VP9Benchmark::sBenchmarkFpsPref
 #include "Benchmark.h"
 
+// XXX need another bug to move this to a common header.
+#ifdef DISABLE_ASSERTS_FOR_FUZZING
+#  define ASSERT_UNLESS_FUZZING(...) \
+    do {                             \
+    } while (0)
+#else
+#  define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
+#endif
+
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
 using base::KillProcess;
@@ -3752,7 +3761,7 @@ bool ContentParent::CanOpenBrowser(const IPCTabContext& aContext) {
   // On e10s we also allow UnsafeTabContext to allow service workers to open
   // windows. This is enforced in MaybeInvalidTabContext.
   if (aContext.type() != IPCTabContext::TPopupIPCTabContext) {
-    MOZ_CRASH_UNLESS_FUZZING(
+    ASSERT_UNLESS_FUZZING(
         "Unexpected IPCTabContext type.  Aborting AllocPBrowserParent.");
     return false;
   }
@@ -3762,7 +3771,7 @@ bool ContentParent::CanOpenBrowser(const IPCTabContext& aContext) {
 
     auto opener = BrowserParent::GetFrom(popupContext.openerParent());
     if (!opener) {
-      MOZ_CRASH_UNLESS_FUZZING(
+      ASSERT_UNLESS_FUZZING(
           "Got null opener from child; aborting AllocPBrowserParent.");
       return false;
     }
@@ -4987,16 +4996,22 @@ void ContentParent::NotifyUpdatedFonts(bool aFullRebuild) {
   }
 }
 
-#ifdef MOZ_WEBRTC
 PWebrtcGlobalParent* ContentParent::AllocPWebrtcGlobalParent() {
+#ifdef MOZ_WEBRTC
   return WebrtcGlobalParent::Alloc();
+#else
+  return nullptr;
+#endif
 }
 
 bool ContentParent::DeallocPWebrtcGlobalParent(PWebrtcGlobalParent* aActor) {
+#ifdef MOZ_WEBRTC
   WebrtcGlobalParent::Dealloc(static_cast<WebrtcGlobalParent*>(aActor));
   return true;
-}
+#else
+  return false;
 #endif
+}
 
 mozilla::ipc::IPCResult ContentParent::RecvSetOfflinePermission(
     const Principal& aPrincipal) {
@@ -6803,7 +6818,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAdjustWindowFocus(
     CanonicalBrowsingContext* canonicalParent = parent->Canonical();
     ContentParent* cp = cpm->GetContentProcessById(
         ContentParentId(canonicalParent->OwnerProcessId()));
-    if (cp && !processes.Get(cp)) {
+    if (!processes.Get(cp)) {
       Unused << cp->SendAdjustWindowFocus(context, aIsVisible, aActionId);
       processes.InsertOrUpdate(cp, true);
     }

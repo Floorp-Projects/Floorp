@@ -13,7 +13,6 @@ from gecko_taskgraph.transforms.bouncer_submission import craft_bouncer_product_
 from gecko_taskgraph.transforms.bouncer_submission_partners import (
     craft_partner_bouncer_product_name,
 )
-from gecko_taskgraph.util.attributes import release_level
 from gecko_taskgraph.util.partners import get_partners_to_be_published
 from gecko_taskgraph.util.schema import resolve_keyed_by
 from gecko_taskgraph.util.scriptworker import get_release_config
@@ -30,13 +29,13 @@ def make_task_worker(config, jobs):
             job,
             "worker-type",
             item_name=job["name"],
-            **{"release-level": release_level(config.params["project"])},
+            **{"release-level": config.params.release_level()},
         )
         resolve_keyed_by(
             job,
             "scopes",
             item_name=job["name"],
-            **{"release-level": release_level(config.params["project"])},
+            **{"release-level": config.params.release_level()},
         )
         resolve_keyed_by(
             job,

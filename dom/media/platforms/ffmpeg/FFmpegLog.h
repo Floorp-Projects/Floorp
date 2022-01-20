@@ -9,12 +9,7 @@
 
 #include "mozilla/Logging.h"
 
-#ifdef FFVPX_VERSION
-#  define FFMPEG_LOG(str, ...) \
-    MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, ("FFVPX: " str, ##__VA_ARGS__))
-#else
-#  define FFMPEG_LOG(str, ...) \
-    MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, ("FFMPEG: " str, ##__VA_ARGS__))
-#endif
+#define FFMPEG_LOG(...) \
+  MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 #endif  // __FFmpegLog_h__

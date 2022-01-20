@@ -28,7 +28,6 @@
 #include "ScrollbarDrawingCocoa.h"
 #include "ScrollbarDrawingGTK.h"
 #include "ScrollbarDrawingWin.h"
-#include "ScrollbarDrawingWin11.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -68,7 +67,7 @@ static StaticRefPtr<nsITheme> gRDMInstance;
 already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
   if (MOZ_UNLIKELY(!gInstance)) {
     UniquePtr<ScrollbarDrawing> scrollbarDrawing =
-        nsNativeBasicTheme::ScrollbarStyle();
+        nsNativeBasicTheme::DetermineScrollbarStyle();
 #ifdef MOZ_WIDGET_COCOA
     gInstance = new nsNativeBasicThemeCocoa(std::move(scrollbarDrawing));
 #else
@@ -88,8 +87,12 @@ already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
 
 already_AddRefed<nsITheme> do_GetRDMThemeDoNotUseDirectly() {
   if (MOZ_UNLIKELY(!gRDMInstance)) {
-    gRDMInstance =
-        new nsNativeBasicTheme(MakeUnique<ScrollbarDrawingAndroid>());
+    UniquePtr<ScrollbarDrawing> scrollbarDrawing =
+        nsNativeBasicTheme::DetermineScrollbarStyleSetByPrefs();
+    if (!scrollbarDrawing) {
+      scrollbarDrawing = MakeUnique<ScrollbarDrawingAndroid>();
+    }
+    gRDMInstance = new nsNativeBasicTheme(std::move(scrollbarDrawing));
     ClearOnShutdown(&gRDMInstance);
   }
   return do_AddRef(gRDMInstance);
@@ -120,7 +123,8 @@ void nsNativeBasicTheme::LookAndFeelChanged() {
   ThemeColors::RecomputeAccentColors();
   auto* basicTheme = static_cast<nsNativeBasicTheme*>(gInstance.get());
   if (basicTheme) {
-    basicTheme->SetScrollbarDrawing(nsNativeBasicTheme::ScrollbarStyle());
+    basicTheme->SetScrollbarDrawing(
+        nsNativeBasicTheme::DetermineScrollbarStyle());
     basicTheme->GetScrollbarDrawing().RecomputeScrollbarParams();
   }
 }
@@ -231,28 +235,22 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeButtonColors(
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
   bool isHovered = aState.HasState(NS_EVENT_STATE_HOVER);
 
-  nscolor backgroundColor = [&] {
+  const sRGBColor backgroundColor = [&] {
     if (isDisabled) {
-      return aColors.SystemNs(StyleSystemColor::MozButtondisabledface);
+      return aColors.System(StyleSystemColor::MozButtondisabledface);
     }
     if (isActive) {
-      return aColors.SystemNs(StyleSystemColor::MozButtonactiveface);
+      return aColors.System(StyleSystemColor::MozButtonactiveface);
     }
     if (isHovered) {
-      return aColors.SystemNs(StyleSystemColor::MozButtonhoverface);
+      return aColors.System(StyleSystemColor::MozButtonhoverface);
     }
-    return aColors.SystemNs(StyleSystemColor::Buttonface);
+    return aColors.System(StyleSystemColor::Buttonface);
   }();
-
-  if (aState.HasState(NS_EVENT_STATE_AUTOFILL)) {
-    backgroundColor = NS_ComposeColors(
-        backgroundColor,
-        aColors.SystemNs(StyleSystemColor::MozAutofillBackground));
-  }
 
   const sRGBColor borderColor =
       ComputeBorderColor(aState, aColors, OutlineCoversBorder::Yes);
-  return std::make_pair(sRGBColor::FromABGR(backgroundColor), borderColor);
+  return std::make_pair(backgroundColor, borderColor);
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeTextfieldColors(
@@ -909,13 +907,13 @@ void nsNativeBasicTheme::PaintProgress(nsIFrame* aFrame,
         if (!meter) {
           return 0.0;
         }
-        return meter->Position();
+        return meter->Value() / meter->Max();
       }
       auto* progress = dom::HTMLProgressElement::FromNode(aFrame->GetContent());
       if (!progress) {
         return 0.0;
       }
-      return progress->Position();
+      return progress->Value() / progress->Max();
     }();
     if (isHorizontal) {
       double clipWidth = rect.width * position;
@@ -1353,7 +1351,8 @@ nscoord nsNativeBasicTheme::GetCheckboxRadioPrefSize() {
 }
 
 /* static */
-UniquePtr<ScrollbarDrawing> nsNativeBasicTheme::ScrollbarStyle() {
+UniquePtr<ScrollbarDrawing>
+nsNativeBasicTheme::DetermineScrollbarStyleSetByPrefs() {
   switch (StaticPrefs::widget_non_native_theme_scrollbar_style()) {
     case 1:
       return MakeUnique<ScrollbarDrawingCocoa>();
@@ -1363,21 +1362,20 @@ UniquePtr<ScrollbarDrawing> nsNativeBasicTheme::ScrollbarStyle() {
       return MakeUnique<ScrollbarDrawingAndroid>();
     case 4:
       return MakeUnique<ScrollbarDrawingWin>();
-    case 5:
-      return MakeUnique<ScrollbarDrawingWin11>();
     default:
-      return DefaultPlatformScrollbarStyle();
+      return nullptr;
   }
 }
 
 /* static */
-UniquePtr<ScrollbarDrawing>
-nsNativeBasicTheme::DefaultPlatformScrollbarStyle() {
+UniquePtr<ScrollbarDrawing> nsNativeBasicTheme::DetermineScrollbarStyle() {
+  // Check if a preferred scrollbar style is set via prefs.
+  if (UniquePtr<ScrollbarDrawing> scrollbarDrawing =
+          DetermineScrollbarStyleSetByPrefs()) {
+    return scrollbarDrawing;
+  }
   // Default to native scrollbar style for each platform.
 #ifdef XP_WIN
-  if (IsWin11OrLater()) {
-    return MakeUnique<ScrollbarDrawingWin11>();
-  }
   return MakeUnique<ScrollbarDrawingWin>();
 #elif MOZ_WIDGET_COCOA
   return MakeUnique<ScrollbarDrawingCocoa>();

@@ -99,15 +99,6 @@ function createMockedObjects(createHandlerApp) {
   return mockedLauncher;
 }
 
-function createTemporarySaveDirectory() {
-  var saveDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
-  saveDir.append("testsavedir");
-  if (!saveDir.exists()) {
-    saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
-  }
-  return saveDir;
-}
-
 async function openHelperAppDialog(launcher) {
   let helperAppDialog = Cc[
     "@mozilla.org/helperapplauncherdialog;1"
@@ -287,8 +278,6 @@ async function setDownloadDir() {
   // Create this dir if it doesn't exist (ignores existing dirs)
   await IOUtils.makeDirectory(tmpDir);
   registerCleanupFunction(async function() {
-    Services.prefs.clearUserPref("browser.download.folderList");
-    Services.prefs.clearUserPref("browser.download.dir");
     try {
       await IOUtils.remove(tmpDir, { recursive: true });
     } catch (e) {
@@ -303,18 +292,4 @@ async function setDownloadDir() {
 add_task(async function test_common_initialize() {
   gDownloadDir = await setDownloadDir();
   Services.prefs.setCharPref("browser.download.loglevel", "Debug");
-  registerCleanupFunction(function() {
-    Services.prefs.clearUserPref("browser.download.loglevel");
-  });
 });
-
-async function removeAllDownloads() {
-  let publicList = await Downloads.getList(Downloads.PUBLIC);
-  let downloads = await publicList.getAll();
-  for (let download of downloads) {
-    await publicList.remove(download);
-    if (await IOUtils.exists(download.target.path)) {
-      await download.finalize(true);
-    }
-  }
-}

@@ -8,7 +8,6 @@ Transform the release-flatpak-push kind into an actual task description.
 
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.task import task_description_schema
-from gecko_taskgraph.util.attributes import release_level
 from gecko_taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema
 from gecko_taskgraph.util.scriptworker import add_scope_prefix
 
@@ -56,9 +55,9 @@ def make_task_description(config, jobs):
             job,
             "worker-type",
             item_name=job["name"],
-            **{"release-level": release_level(config.params["project"])},
+            **{"release-level": config.params.release_level()},
         )
-        if release_level(config.params["project"]) == "production":
+        if config.params.release_level() == "production":
             job.setdefault("scopes", []).append(
                 add_scope_prefix(
                     config,

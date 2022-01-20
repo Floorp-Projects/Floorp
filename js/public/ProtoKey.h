@@ -133,9 +133,7 @@
   REAL(FinalizationRegistry, OCLASP(FinalizationRegistry))                    \
   REAL(WeakRef, OCLASP(WeakRef))                                              \
   REAL(Iterator, OCLASP(Iterator))                                            \
-  REAL(AsyncIterator, OCLASP(AsyncIterator))                                  \
-  IF_RECORD_TUPLE(REAL(Record, (&RecordType::class_)))                        \
-  IF_RECORD_TUPLE(REAL(Tuple, (&TupleType::class_)))
+  REAL(AsyncIterator, OCLASP(AsyncIterator))
 
 #define JS_FOR_PROTOTYPES(REAL, IMAGINARY)                      \
   JS_FOR_PROTOTYPES_(REAL, IMAGINARY, IF_INTL(REAL, IMAGINARY), \

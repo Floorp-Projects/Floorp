@@ -190,10 +190,6 @@ NS_IMETHODIMP JSWindowActorProtocol::HandleEvent(Event* aEvent) {
     return NS_ERROR_FAILURE;
   }
 
-  if (aEvent->ShouldIgnoreChromeEventTargetListener()) {
-    return NS_OK;
-  }
-
   // Ensure our actor is present.
   RefPtr<JSActor> actor = wgc->GetExistingActor(mName);
   if (!actor) {

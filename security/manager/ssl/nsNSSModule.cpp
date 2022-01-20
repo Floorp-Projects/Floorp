@@ -30,7 +30,9 @@
 #include "nsSecureBrowserUI.h"
 #include "nsXULAppAPI.h"
 
-#include "nsCertTree.h"
+#ifdef MOZ_XUL
+#  include "nsCertTree.h"
+#endif
 
 namespace mozilla {
 namespace psm {
@@ -112,7 +114,9 @@ IMPL(nsPK11TokenDB, nullptr)
 IMPL(PKCS11ModuleDB, nullptr)
 IMPL(nsNSSCertificate, nullptr, ProcessRestriction::AnyProcess)
 IMPL(nsNSSCertificateDB, nullptr)
+#ifdef MOZ_XUL
 IMPL(nsCertTree, nullptr)
+#endif
 IMPL(nsCryptoHash, nullptr, ProcessRestriction::AnyProcess)
 IMPL(nsCryptoHMAC, nullptr, ProcessRestriction::AnyProcess)
 IMPL(nsKeyObject, nullptr, ProcessRestriction::AnyProcess)

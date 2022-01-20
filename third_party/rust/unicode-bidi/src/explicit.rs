@@ -11,16 +11,16 @@
 //!
 //! <http://www.unicode.org/reports/tr9/#Explicit_Levels_and_Directions>
 
-use alloc::vec::Vec;
-
-use super::char_data::{BidiClass::{self, *}, is_rtl};
+use super::char_data::{BidiClass, is_rtl};
 use super::level::Level;
+
+use BidiClass::*;
 
 /// Compute explicit embedding levels for one paragraph of text (X1-X8).
 ///
 /// `processing_classes[i]` must contain the `BidiClass` of the char at byte index `i`,
 /// for each char in `text`.
-#[cfg_attr(feature = "flame_it", flamer::flame)]
+#[cfg_attr(feature = "flame_it", flame)]
 pub fn compute(
     text: &str,
     para_level: Level,
@@ -46,10 +46,7 @@ pub fn compute(
                 let last_level = stack.last().level;
 
                 // X5a-X5c: Isolate initiators get the level of the last entry on the stack.
-                let is_isolate = match original_classes[i] {
-                    RLI | LRI | FSI => true,
-                    _ => false,
-                };
+                let is_isolate = matches!(original_classes[i], RLI | LRI | FSI);
                 if is_isolate {
                     levels[i] = last_level;
                     match stack.last().status {

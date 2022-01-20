@@ -10,7 +10,6 @@ import six
 import sys
 import subprocess
 import traceback
-from pathlib import Path
 from textwrap import dedent
 
 from mozboot.mozconfig import find_mozconfig
@@ -133,11 +132,7 @@ class MozconfigLoader(object):
         # directly calling sh mozconfig_loader.
         shell = "sh"
         if "MOZILLABUILD" in os.environ:
-            mozillabuild = os.environ["MOZILLABUILD"]
-            if (Path(mozillabuild) / "msys2").exists():
-                shell = mozillabuild + "/msys2/usr/bin/sh"
-            else:
-                shell = mozillabuild + "/msys/bin/sh"
+            shell = os.environ["MOZILLABUILD"] + "/msys/bin/sh"
         if sys.platform == "win32":
             shell = shell + ".exe"
 

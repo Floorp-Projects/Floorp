@@ -833,7 +833,11 @@ template JSLinearString* js::Int32ToString<NoGC>(JSContext* cx, int32_t si);
 
 JSLinearString* js::Int32ToStringPure(JSContext* cx, int32_t si) {
   AutoUnsafeCallWithABI unsafe;
-  return Int32ToString<NoGC>(cx, si);
+  JSLinearString* res = Int32ToString<NoGC>(cx, si);
+  if (!res) {
+    cx->recoverFromOutOfMemory();
+  }
+  return res;
 }
 
 JSAtom* js::Int32ToAtom(JSContext* cx, int32_t si) {
@@ -1638,9 +1642,7 @@ static JSString* NumberToStringWithBase(JSContext* cx, double d, int base) {
 
     numStr = FracNumberToCString(cx, &cbuf, d, base);
     if (!numStr) {
-      if constexpr (allowGC) {
-        ReportOutOfMemory(cx);
-      }
+      ReportOutOfMemory(cx);
       return nullptr;
     }
     MOZ_ASSERT_IF(base == 10, !cbuf.dbuf && numStr >= cbuf.sbuf &&
@@ -1675,7 +1677,11 @@ template JSString* js::NumberToString<NoGC>(JSContext* cx, double d);
 
 JSString* js::NumberToStringPure(JSContext* cx, double d) {
   AutoUnsafeCallWithABI unsafe;
-  return NumberToString<NoGC>(cx, d);
+  JSString* res = NumberToString<NoGC>(cx, d);
+  if (!res) {
+    cx->recoverFromOutOfMemory();
+  }
+  return res;
 }
 
 JSAtom* js::NumberToAtom(JSContext* cx, double d) {

@@ -66,13 +66,6 @@ bool RecordedTextureData::Lock(OpenMode aMode) {
 }
 
 void RecordedTextureData::Unlock() {
-  if ((mLockedMode == OpenMode::OPEN_READ_WRITE) &&
-      mCanvasChild->ShouldCacheDataSurface()) {
-    mSnapshot = mDT->Snapshot();
-    mDT->DetachAllSnapshots();
-    mCanvasChild->RecordEvent(RecordedCacheDataSurface(mSnapshot.get()));
-  }
-
   mCanvasChild->RecordEvent(RecordedTextureUnlock(mTextureId));
   mLockedMode = OpenMode::OPEN_NONE;
 }
@@ -84,7 +77,7 @@ already_AddRefed<gfx::DrawTarget> RecordedTextureData::BorrowDrawTarget() {
 
 void RecordedTextureData::EndDraw() {
   MOZ_ASSERT(mDT->hasOneRef());
-  MOZ_ASSERT(mLockedMode == OpenMode::OPEN_READ_WRITE);
+  MOZ_ASSERT(mLockedMode & OpenMode::OPEN_READ_WRITE);
 
   if (mCanvasChild->ShouldCacheDataSurface()) {
     mSnapshot = mDT->Snapshot();

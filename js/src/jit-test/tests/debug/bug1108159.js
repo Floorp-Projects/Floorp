@@ -8,6 +8,5 @@ for (var i = 0; i < 70000; i++)
 evaluate(s);
 var g = newGlobal({newCompartment: true});
 (new Debugger).addDebuggee(g);
-g.offThreadCompileToStencil('debugger;',{});
-var stencil = finishOffThreadCompileToStencil();
-g.evalStencil(stencil);
+g.offThreadCompileScript('debugger;',{});
+g.runOffThreadScript();

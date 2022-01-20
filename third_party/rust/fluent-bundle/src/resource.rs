@@ -1,20 +1,15 @@
 use fluent_syntax::ast;
 use fluent_syntax::parser::{parse_runtime, ParserError};
+use ouroboros::self_referencing;
 
-use self_cell::self_cell;
-
-type Resource<'s> = ast::Resource<&'s str>;
-
-self_cell!(
-    pub struct InnerFluentResource {
-        owner: String,
-
-        #[covariant]
-        dependent: Resource,
-    }
-
-    impl {Debug}
-);
+#[self_referencing]
+#[derive(Debug)]
+pub struct InnerFluentResource {
+    string: String,
+    #[borrows(string)]
+    #[covariant]
+    ast: ast::Resource<&'this str>,
+}
 
 /// A resource containing a list of localization messages.
 ///
@@ -82,17 +77,22 @@ impl FluentResource {
     pub fn try_new(source: String) -> Result<Self, (Self, Vec<ParserError>)> {
         let mut errors = None;
 
-        let res = InnerFluentResource::new(source, |source| match parse_runtime(source.as_str()) {
-            Ok(ast) => ast,
-            Err((ast, err)) => {
-                errors = Some(err);
-                ast
-            }
-        });
+        let res = InnerFluentResourceBuilder {
+            string: source,
+            ast_builder: |string: &str| match parse_runtime(string) {
+                Ok(ast) => ast,
+                Err((ast, err)) => {
+                    errors = Some(err);
+                    ast
+                }
+            },
+        }
+        .build();
 
-        match errors {
-            None => Ok(Self(res)),
-            Some(err) => Err((Self(res), err)),
+        if let Some(errors) = errors {
+            Err((Self(res), errors))
+        } else {
+            Ok(Self(res))
         }
     }
 
@@ -115,7 +115,7 @@ impl FluentResource {
     /// );
     /// ```
     pub fn source(&self) -> &str {
-        &self.0.borrow_owner()
+        &self.0.borrow_string()
     }
 
     /// Returns an iterator over [`entries`](fluent_syntax::ast::Entry) of the [`FluentResource`].
@@ -142,7 +142,7 @@ impl FluentResource {
     /// assert!(matches!(resource.entries().next(), Some(ast::Entry::Message(_))));
     /// ```
     pub fn entries(&self) -> impl Iterator<Item = &ast::Entry<&str>> {
-        self.0.borrow_dependent().body.iter()
+        self.0.borrow_ast().body.iter()
     }
 
     /// Returns an [`Entry`](fluent_syntax::ast::Entry) at the
@@ -166,6 +166,6 @@ impl FluentResource {
     /// assert!(matches!(resource.get_entry(0), Some(ast::Entry::Message(_))));
     /// ```
     pub fn get_entry(&self, idx: usize) -> Option<&ast::Entry<&str>> {
-        self.0.borrow_dependent().body.get(idx)
+        self.0.borrow_ast().body.get(idx)
     }
 }

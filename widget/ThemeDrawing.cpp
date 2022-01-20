@@ -6,12 +6,10 @@
 
 #include "ThemeDrawing.h"
 
-namespace mozilla::widget {
-
 /*static*/
 void ThemeDrawing::FillRect(DrawTarget& aDt, const LayoutDeviceRect& aRect,
                             const sRGBColor& aColor) {
-  aDt.FillRect(aRect.ToUnknownRect(), gfx::ColorPattern(ToDeviceColor(aColor)));
+  aDt.FillRect(aRect.ToUnknownRect(), ColorPattern(ToDeviceColor(aColor)));
 }
 
 /*static*/
@@ -45,18 +43,17 @@ void ThemeDrawing::PaintArrow(DrawTarget& aDrawTarget,
 
   auto center = aRect.Center().ToUnknownPoint();
 
-  RefPtr<gfx::PathBuilder> builder = aDrawTarget.CreatePathBuilder();
-  gfx::Point p =
-      center + gfx::Point(aArrowPolygonX[0] * scale, aArrowPolygonY[0] * scale);
+  RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
+  Point p =
+      center + Point(aArrowPolygonX[0] * scale, aArrowPolygonY[0] * scale);
   builder->MoveTo(p);
   for (int32_t i = 1; i < aArrowNumPoints; i++) {
-    p = center +
-        gfx::Point(aArrowPolygonX[i] * scale, aArrowPolygonY[i] * scale);
+    p = center + Point(aArrowPolygonX[i] * scale, aArrowPolygonY[i] * scale);
     builder->LineTo(p);
   }
-  RefPtr<gfx::Path> path = builder->Finish();
+  RefPtr<Path> path = builder->Finish();
 
-  aDrawTarget.Fill(path, gfx::ColorPattern(ToDeviceColor(aFillColor)));
+  aDrawTarget.Fill(path, ColorPattern(ToDeviceColor(aFillColor)));
 }
 
 void ThemeDrawing::PaintRoundedRectWithRadius(
@@ -142,19 +139,19 @@ void ThemeDrawing::PaintRoundedRectWithRadius(
     }
   }
 
-  Maybe<gfx::ColorPattern> backgroundPattern;
+  Maybe<ColorPattern> backgroundPattern;
   if (aBackgroundColor.a != 0.0f) {
     backgroundPattern.emplace(ToDeviceColor(aBackgroundColor));
   }
-  Maybe<gfx::ColorPattern> borderPattern;
+  Maybe<ColorPattern> borderPattern;
   if (borderWidth != 0.0f && aBorderColor.a != 0.0f) {
     borderPattern.emplace(ToDeviceColor(aBorderColor));
   }
 
   if (borderPattern || backgroundPattern) {
     if (radius != 0.0f) {
-      gfx::RectCornerRadii radii(radius, radius, radius, radius);
-      RefPtr<gfx::Path> roundedRect =
+      RectCornerRadii radii(radius, radius, radius, radius);
+      RefPtr<Path> roundedRect =
           MakePathForRoundedRect(aDrawTarget, rect.ToUnknownRect(), radii);
 
       if (backgroundPattern) {
@@ -162,7 +159,7 @@ void ThemeDrawing::PaintRoundedRectWithRadius(
       }
       if (borderPattern) {
         aDrawTarget.Stroke(roundedRect, *borderPattern,
-                           gfx::StrokeOptions(borderWidth));
+                           StrokeOptions(borderWidth));
       }
     } else {
       if (backgroundPattern) {
@@ -170,7 +167,7 @@ void ThemeDrawing::PaintRoundedRectWithRadius(
       }
       if (borderPattern) {
         aDrawTarget.StrokeRect(rect.ToUnknownRect(), *borderPattern,
-                               gfx::StrokeOptions(borderWidth));
+                               StrokeOptions(borderWidth));
       }
     }
   }
@@ -179,5 +176,3 @@ void ThemeDrawing::PaintRoundedRectWithRadius(
     aDrawTarget.PopClip();
   }
 }
-
-}  // namespace mozilla::widget

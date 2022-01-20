@@ -8,10 +8,7 @@ Transform the release-sign-and-push task into an actual task description.
 
 from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.base import TransformSequence
-from gecko_taskgraph.util.attributes import (
-    copy_attributes_from_dependent_job,
-    release_level,
-)
+from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
 from gecko_taskgraph.util.schema import resolve_keyed_by, optionally_keyed_by
 from gecko_taskgraph.util.treeherder import inherit_treeherder_from_dep
 from gecko_taskgraph.transforms.task import task_description_schema
@@ -58,13 +55,13 @@ def resolve_keys(config, jobs):
             job,
             "worker-type",
             item_name=job["label"],
-            **{"release-level": release_level(config.params["project"])},
+            **{"release-level": config.params.release_level()},
         )
         resolve_keyed_by(
             job,
             "scopes",
             item_name=job["label"],
-            **{"release-level": release_level(config.params["project"])},
+            **{"release-level": config.params.release_level()},
         )
         resolve_keyed_by(
             job,

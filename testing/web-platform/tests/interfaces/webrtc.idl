@@ -247,12 +247,12 @@ partial interface RTCPeerConnection {
 };
 
 dictionary RTCCertificateExpiration {
-  [EnforceRange] EpochTimeStamp expires;
+  [EnforceRange] DOMTimeStamp expires;
 };
 
 [Exposed=Window, Serializable]
 interface RTCCertificate {
-  readonly attribute EpochTimeStamp expires;
+  readonly attribute DOMTimeStamp expires;
   sequence<RTCDtlsFingerprint> getFingerprints();
 };
 
@@ -372,7 +372,8 @@ dictionary RTCRtpContributingSource {
   required unsigned long rtpTimestamp;
 };
 
-dictionary RTCRtpSynchronizationSource : RTCRtpContributingSource {};
+dictionary RTCRtpSynchronizationSource : RTCRtpContributingSource {
+};
 
 [Exposed=Window]
 interface RTCRtpTransceiver {

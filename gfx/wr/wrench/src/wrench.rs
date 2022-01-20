@@ -562,7 +562,7 @@ impl Wrench {
         &mut self,
         frame_number: u32,
         display_lists: Vec<(PipelineId, BuiltDisplayList)>,
-        scroll_offsets: &HashMap<ExternalScrollId, LayoutVector2D>,
+        scroll_offsets: &HashMap<ExternalScrollId, LayoutPoint>,
     ) {
         let root_background_color = Some(ColorF::new(1.0, 1.0, 1.0, 1.0));
 
@@ -577,7 +577,7 @@ impl Wrench {
         }
 
         for (id, offset) in scroll_offsets {
-            txn.set_scroll_offset(*id, *offset);
+            txn.scroll_node_with_id(*offset, *id, ScrollClamping::NoClamping);
         }
 
         txn.generate_frame(0, RenderReasons::TESTING);

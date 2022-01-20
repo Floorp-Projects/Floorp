@@ -637,57 +637,37 @@ Arena* TenuredChunk::allocateArena(GCRuntime* gc, Zone* zone,
     commitOnePage(gc);
     MOZ_ASSERT(info.numArenasFreeCommitted == ArenasPerPage);
   }
-
   MOZ_ASSERT(info.numArenasFreeCommitted > 0);
   Arena* arena = fetchNextFreeArena(gc);
 
   arena->init(zone, thingKind, lock);
   updateChunkListAfterAlloc(gc, lock);
-
-  verify();
-
   return arena;
-}
-
-template <size_t N>
-static inline size_t FindFirstBitSet(
-    const mozilla::BitSet<N, uint32_t>& bitset) {
-  MOZ_ASSERT(!bitset.IsEmpty());
-
-  const auto& words = bitset.Storage();
-  for (size_t i = 0; i < words.Length(); i++) {
-    uint32_t word = words[i];
-    if (word) {
-      return i * 32 + mozilla::CountTrailingZeroes32(word);
-    }
-  }
-
-  MOZ_CRASH("No bits found");
 }
 
 void TenuredChunk::commitOnePage(GCRuntime* gc) {
   MOZ_ASSERT(info.numArenasFreeCommitted == 0);
-  MOZ_ASSERT(info.numArenasFree >= ArenasPerPage);
+  MOZ_ASSERT(!info.freeArenasHead);
+  MOZ_ASSERT(info.numArenasFree > 0);
 
-  uint32_t pageIndex = FindFirstBitSet(decommittedPages);
-  MOZ_ASSERT(decommittedPages[pageIndex]);
+  unsigned offset = findDecommittedPageOffset();
+  info.lastDecommittedPageOffset = offset + 1;
 
   if (DecommitEnabled()) {
-    MarkPagesInUseSoft(pageAddress(pageIndex), PageSize);
+    MarkPagesInUseSoft(pageAddress(offset), PageSize);
   }
 
-  decommittedPages[pageIndex] = false;
-
+  size_t arenaIndex = offset * ArenasPerPage;
+  decommittedPages[offset] = false;
   for (size_t i = 0; i < ArenasPerPage; i++) {
-    size_t arenaIndex = pageIndex * ArenasPerPage + i;
-    MOZ_ASSERT(!freeCommittedArenas[arenaIndex]);
-    freeCommittedArenas[arenaIndex] = true;
-    arenas[arenaIndex].setAsNotAllocated();
-    ++info.numArenasFreeCommitted;
-    gc->updateOnArenaFree();
+    arenas[arenaIndex + i].setAsNotAllocated();
   }
 
-  verify();
+  // numArenasFreeCommitted will be updated in addArenasInPageToFreeList.
+  // No need to update numArenasFree, as the arena is still free, it just
+  // changes from decommitted to committed free. Later fetchNextFreeArena should
+  // update the numArenasFree.
+  addArenasInPageToFreeList(gc, offset);
 }
 
 inline void GCRuntime::updateOnFreeArenaAlloc(const TenuredChunkInfo& info) {
@@ -698,35 +678,47 @@ inline void GCRuntime::updateOnFreeArenaAlloc(const TenuredChunkInfo& info) {
 Arena* TenuredChunk::fetchNextFreeArena(GCRuntime* gc) {
   MOZ_ASSERT(info.numArenasFreeCommitted > 0);
   MOZ_ASSERT(info.numArenasFreeCommitted <= info.numArenasFree);
+  MOZ_ASSERT(info.freeArenasHead);
 
-  size_t index = FindFirstBitSet(freeCommittedArenas);
-  MOZ_ASSERT(freeCommittedArenas[index]);
-
-  freeCommittedArenas[index] = false;
+  Arena* arena = info.freeArenasHead;
+  info.freeArenasHead = arena->next;
   --info.numArenasFreeCommitted;
   --info.numArenasFree;
   gc->updateOnFreeArenaAlloc(info);
 
-  return &arenas[index];
+  return arena;
+}
+
+/*
+ * Search for and return the next decommitted page. Our goal is to keep
+ * lastDecommittedPageOffset "close" to a free page. We do this by setting
+ * it to the most recently freed page when we free, and forcing it to
+ * the last alloc + 1 when we allocate.
+ */
+uint32_t TenuredChunk::findDecommittedPageOffset() {
+  /* Note: lastFreeArenaOffset can be past the end of the list. */
+  for (unsigned i = info.lastDecommittedPageOffset; i < PagesPerChunk; i++) {
+    if (decommittedPages[i]) {
+      return i;
+    }
+  }
+  for (unsigned i = 0; i < info.lastDecommittedPageOffset; i++) {
+    if (decommittedPages[i]) {
+      return i;
+    }
+  }
+  MOZ_CRASH("No decommitted arenas found.");
 }
 
 // ///////////  System -> TenuredChunk Allocator  //////////////////////////////
 
 TenuredChunk* GCRuntime::getOrAllocChunk(AutoLockGCBgAlloc& lock) {
   TenuredChunk* chunk = emptyChunks(lock).pop();
-  if (chunk) {
-    // Reinitialize ChunkBase; arenas are all free and may or may not be
-    // committed.
-    SetMemCheckKind(chunk, sizeof(ChunkBase), MemCheckKind::MakeUndefined);
-    chunk->initBase(rt, nullptr);
-    MOZ_ASSERT(chunk->unused());
-  } else {
+  if (!chunk) {
     chunk = TenuredChunk::allocate(this);
     if (!chunk) {
       return nullptr;
     }
-
-    chunk->init(this, /* allMemoryCommitted = */ true);
     MOZ_ASSERT(chunk->info.numArenasFreeCommitted == 0);
   }
 
@@ -738,15 +730,8 @@ TenuredChunk* GCRuntime::getOrAllocChunk(AutoLockGCBgAlloc& lock) {
 }
 
 void GCRuntime::recycleChunk(TenuredChunk* chunk, const AutoLockGC& lock) {
-#ifdef DEBUG
-  MOZ_ASSERT(chunk->unused());
-  chunk->verify();
-#endif
-
-  // Poison ChunkBase to catch use after free.
   AlwaysPoison(chunk, JS_FREED_CHUNK_PATTERN, sizeof(ChunkBase),
                MemCheckKind::MakeNoAccess);
-
   emptyChunks(lock).push(chunk);
 }
 
@@ -760,12 +745,11 @@ TenuredChunk* GCRuntime::pickChunk(AutoLockGCBgAlloc& lock) {
     return nullptr;
   }
 
-#ifdef DEBUG
-  chunk->verify();
+  chunk->init(this);
+  MOZ_ASSERT(chunk->info.numArenasFreeCommitted == 0);
   MOZ_ASSERT(chunk->unused());
   MOZ_ASSERT(!fullChunks(lock).contains(chunk));
   MOZ_ASSERT(!availableChunks(lock).contains(chunk));
-#endif
 
   availableChunks(lock).push(chunk);
 
@@ -794,7 +778,7 @@ void BackgroundAllocTask::run(AutoLockHelperThreadState& lock) {
       if (!chunk) {
         break;
       }
-      chunk->init(gc, /* allMemoryCommitted = */ true);
+      chunk->init(gc);
     }
     chunkPool_.ref().push(chunk);
   }
@@ -811,16 +795,7 @@ TenuredChunk* TenuredChunk::allocate(GCRuntime* gc) {
   return static_cast<TenuredChunk*>(chunk);
 }
 
-static inline bool ShouldDecommitNewChunk(bool allMemoryCommitted,
-                                          const GCSchedulingState& state) {
-  if (!DecommitEnabled()) {
-    return false;
-  }
-
-  return !allMemoryCommitted || !state.inHighFrequencyGCMode();
-}
-
-void TenuredChunk::init(GCRuntime* gc, bool allMemoryCommitted) {
+void TenuredChunk::init(GCRuntime* gc) {
   /* The chunk may still have some regions marked as no-access. */
   MOZ_MAKE_MEM_UNDEFINED(this, ChunkSize);
 
@@ -833,31 +808,27 @@ void TenuredChunk::init(GCRuntime* gc, bool allMemoryCommitted) {
 
   new (this) TenuredChunk(gc->rt);
 
-  if (ShouldDecommitNewChunk(allMemoryCommitted, gc->schedulingState)) {
-    // Decommit the arenas. We do this after poisoning so that if the OS does
-    // not have to recycle the pages, we still get the benefit of poisoning.
-    decommitAllArenas();
-  } else {
-    // The chunk metadata is initialized as decommitted regardless, to avoid
-    // having to initialize the arenas at this time.
-    initAsDecommitted();
-  }
+  /*
+   * Decommit the arenas. We do this after poisoning so that if the OS does
+   * not have to recycle the pages, we still get the benefit of poisoning.
+   */
+  decommitAllArenas();
 
+#ifdef DEBUG
   verify();
+#endif
+
+  /* The rest of info fields are initialized in pickChunk. */
 }
 
 void TenuredChunk::decommitAllArenas() {
-  MOZ_ASSERT(unused());
-  MarkPagesUnusedSoft(&arenas[0], ArenasPerChunk * ArenaSize);
-  initAsDecommitted();
-}
-
-void TenuredChunkBase::initAsDecommitted() {
-  // Set the state of all arenas to free and decommitted. They might not
-  // actually be decommitted, but in that case the re-commit operation is a
-  // no-op so it doesn't matter.
   decommittedPages.SetAll();
-  freeCommittedArenas.ResetAll();
+  if (DecommitEnabled()) {
+    MarkPagesUnusedSoft(&arenas[0], ArenasPerChunk * ArenaSize);
+  }
+
+  info.freeArenasHead = nullptr;
+  info.lastDecommittedPageOffset = 0;
   info.numArenasFree = ArenasPerChunk;
   info.numArenasFreeCommitted = 0;
 }

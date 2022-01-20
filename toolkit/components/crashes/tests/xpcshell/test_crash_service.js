@@ -3,19 +3,15 @@
 
 "use strict";
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
-const { getCrashManagerNoCreate } = ChromeUtils.import(
-  "resource://gre/modules/CrashManager.jsm"
-);
-const { makeFakeAppDir } = ChromeUtils.import(
-  "resource://testing-common/AppData.jsm"
-);
+ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
+ChromeUtils.import("resource://gre/modules/Services.jsm", this);
+ChromeUtils.import("resource://testing-common/AppData.jsm", this);
+ChromeUtils.import("resource://testing-common/CrashManagerTest.jsm", this);
+var bsp = ChromeUtils.import("resource://gre/modules/CrashManager.jsm", null);
 
 add_task(async function test_instantiation() {
   Assert.ok(
-    !getCrashManagerNoCreate(),
+    !bsp.gCrashManager,
     "CrashManager global instance not initially defined."
   );
 
@@ -27,10 +23,10 @@ add_task(async function test_instantiation() {
     .getService(Ci.nsIObserver)
     .observe(null, "profile-after-change", null);
 
-  Assert.ok(getCrashManagerNoCreate(), "Profile creation makes it available.");
+  Assert.ok(bsp.gCrashManager, "Profile creation makes it available.");
   Assert.ok(Services.crashmanager, "CrashManager available via Services.");
   Assert.strictEqual(
-    getCrashManagerNoCreate(),
+    bsp.gCrashManager,
     Services.crashmanager,
     "The objects are the same."
   );
@@ -69,7 +65,7 @@ async function teardown() {
 
 async function addCrash(id, type = Ci.nsICrashService.CRASH_TYPE_CRASH) {
   let cs = Cc["@mozilla.org/crashservice;1"].getService(Ci.nsICrashService);
-  return cs.addCrash(Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT, type, id);
+  return cs.addCrash(Ci.nsICrashService.PROCESS_TYPE_CONTENT, type, id);
 }
 
 async function getCrash(crashId) {

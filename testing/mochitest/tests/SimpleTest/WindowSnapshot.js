@@ -110,7 +110,7 @@ function assertSnapshots(s1, s2, expectEqual, fuzz, s1name, s2name) {
     } else {
       report += "REFTEST   IMAGE: " + s1DataURI + "\n";
     }
-    (info || dump)(report);
+    dump(report);
   }
   return passed;
 }

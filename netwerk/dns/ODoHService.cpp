@@ -287,7 +287,6 @@ nsresult ODoHService::UpdateODoHConfigFromURI() {
   }
 
   // AsyncOpen succeeded, dismiss the guard.
-  MutexAutoLock lock(mLock);
   guard.release();
   mLoader.swap(loader);
   return rv;
@@ -365,7 +364,6 @@ void ODoHService::ODoHConfigUpdateDone(uint32_t aTTL,
                 NS_IsMainThread() || TRRService::Get()->IsOnTRRThread());
   MOZ_ASSERT_IF(XRE_IsSocketProcess(), NS_IsMainThread());
 
-  MutexAutoLock lock(mLock);
   mQueryODoHConfigInProgress = false;
   mODoHConfigs.reset();
 
@@ -491,7 +489,6 @@ void ODoHService::AppendPendingODoHRequest(ODoH* aRequest) {
                 NS_IsMainThread() || TRRService::Get()->IsOnTRRThread());
   MOZ_ASSERT_IF(XRE_IsSocketProcess(), NS_IsMainThread());
 
-  MutexAutoLock lock(mLock);
   mPendingRequests.AppendElement(aRequest);
 }
 
@@ -500,7 +497,6 @@ bool ODoHService::RemovePendingODoHRequest(ODoH* aRequest) {
                 NS_IsMainThread() || TRRService::Get()->IsOnTRRThread());
   MOZ_ASSERT_IF(XRE_IsSocketProcess(), NS_IsMainThread());
 
-  MutexAutoLock lock(mLock);
   return mPendingRequests.RemoveElement(aRequest);
 }
 

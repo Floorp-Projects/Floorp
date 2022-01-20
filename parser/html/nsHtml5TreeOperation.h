@@ -10,7 +10,6 @@
 #include "mozilla/dom/FromParser.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/Variant.h"
-#include "nsCharsetSource.h"
 
 class nsIContent;
 class nsHtml5TreeOpExecutor;
@@ -329,11 +328,13 @@ struct opDoneCreatingElement {
   };
 };
 
-struct opUpdateCharsetSource {
-  nsCharsetSource mCharsetSource;
+struct opSetDocumentCharset {
+  const mozilla::Encoding* mEncoding;
+  int32_t mCharsetSource;
 
-  explicit opUpdateCharsetSource(nsCharsetSource aCharsetSource)
-      : mCharsetSource(aCharsetSource){};
+  explicit opSetDocumentCharset(const mozilla::Encoding* aEncoding,
+                                int32_t aCharsetSource)
+      : mEncoding(aEncoding), mCharsetSource(aCharsetSource){};
 };
 
 struct opCharsetSwitchTo {
@@ -493,7 +494,7 @@ typedef mozilla::Variant<
     // Gecko-specific on-pop ops
     opMarkAsBroken, opRunScript, opRunScriptAsyncDefer,
     opPreventScriptExecution, opDoneAddingChildren, opDoneCreatingElement,
-    opUpdateCharsetSource, opCharsetSwitchTo, opUpdateStyleSheet,
+    opSetDocumentCharset, opCharsetSwitchTo, opUpdateStyleSheet,
     opProcessOfflineManifest, opMarkMalformedIfScript, opStreamEnded,
     opSetStyleLineNumber, opSetScriptLineNumberAndFreeze, opSvgLoad,
     opMaybeComplainAboutCharset, opMaybeComplainAboutDeepTree, opAddClass,

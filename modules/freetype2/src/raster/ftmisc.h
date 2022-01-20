@@ -47,8 +47,11 @@
   typedef signed long    FT_F26Dot6;
   typedef int            FT_Error;
 
-
-#define FT_STATIC_BYTE_CAST( type, var )  (type)(FT_Byte)(var)
+#define FT_MAKE_TAG( _x1, _x2, _x3, _x4 ) \
+          ( ( (FT_ULong)_x1 << 24 ) |     \
+            ( (FT_ULong)_x2 << 16 ) |     \
+            ( (FT_ULong)_x3 <<  8 ) |     \
+              (FT_ULong)_x4         )
 
 
   /* from include/freetype/ftsystem.h */

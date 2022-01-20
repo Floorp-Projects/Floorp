@@ -144,10 +144,6 @@ class MozDocumentMatcher : public nsISupports, public nsWrapperCache {
 
   Nullable<uint64_t> GetFrameID() const { return mFrameID; }
 
-  void GetOriginAttributesPatterns(JSContext* aCx,
-                                   JS::MutableHandle<JS::Value> aVal,
-                                   ErrorResult& aError) const;
-
   WebExtensionPolicy* GetParentObject() const { return mExtension; }
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::HandleObject aGivenProto) override;
@@ -175,7 +171,6 @@ class MozDocumentMatcher : public nsISupports, public nsWrapperCache {
   bool mAllFrames;
   Nullable<uint64_t> mFrameID;
   bool mMatchAboutBlank;
-  Nullable<dom::Sequence<OriginAttributesPattern>> mOriginAttributesPatterns;
 
  private:
   template <typename T, typename U>

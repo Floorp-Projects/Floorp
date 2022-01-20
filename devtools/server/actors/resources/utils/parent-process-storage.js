@@ -67,22 +67,20 @@ class ParentProcessStorage {
       ({ windowGlobal }) => this._onNewWindowGlobal(windowGlobal, true)
     );
 
-    if (watcherActor.sessionContext.type == "browser-element") {
+    if (watcherActor.context.type == "browser-element") {
       const {
         browsingContext,
         innerWindowID: innerWindowId,
       } = watcherActor.browserElement;
       await this._spawnActor(browsingContext.id, innerWindowId);
-    } else if (watcherActor.sessionContext.type == "webextension") {
+    } else if (watcherActor.context.type == "webextension") {
       const {
         addonBrowsingContextID,
         addonInnerWindowId,
-      } = watcherActor.sessionContext;
+      } = watcherActor.context;
       await this._spawnActor(addonBrowsingContextID, addonInnerWindowId);
     } else {
-      throw new Error(
-        "Unsupported session context type=" + watcherActor.sessionContext.type
-      );
+      throw new Error("Unsupported context type=" + watcherActor.context.type);
     }
   }
 
@@ -204,9 +202,9 @@ class ParentProcessStorage {
     // If the watcher is bound to one browser element (i.e. a tab), ignore
     // windowGlobals related to other browser elements
     if (
-      this.watcherActor.sessionContext.type == "browser-element" &&
+      this.watcherActor.context.type == "browser-element" &&
       windowGlobal.browsingContext.browserId !=
-        this.watcherActor.sessionContext.browserId
+        this.watcherActor.context.browserId
     ) {
       return;
     }
@@ -365,21 +363,18 @@ class StorageActorMock extends EventEmitter {
   }
 
   getAllBrowsingContexts() {
-    if (this.watcherActor.sessionContext.type == "browser-element") {
+    if (this.watcherActor.context.type == "browser-element") {
       const browsingContext = this.watcherActor.browserElement.browsingContext;
       return browsingContext
         .getAllBrowsingContextsInSubtree()
         .filter(x => !!x.currentWindowGlobal);
-    } else if (this.watcherActor.sessionContext.type == "webextension") {
+    } else if (this.watcherActor.context.type == "webextension") {
       return [
-        BrowsingContext.get(
-          this.watcherActor.sessionContext.addonBrowsingContextID
-        ),
+        BrowsingContext.get(this.watcherActor.context.addonBrowsingContextID),
       ];
     }
     throw new Error(
-      "Unsupported session context type=" +
-        this.watcherActor.sessionContext.type
+      "Unsupported context type=" + this.watcherActor.context.type
     );
   }
 
@@ -403,7 +398,7 @@ class StorageActorMock extends EventEmitter {
   }
 
   get parentActor() {
-    return { isRootActor: this.watcherActor.sessionContext.type == "all" };
+    return { isRootActor: this.watcherActor.context.type == "all" };
   }
 
   /**
@@ -414,9 +409,8 @@ class StorageActorMock extends EventEmitter {
     // If the watcher is bound to one browser element (i.e. a tab), ignore
     // updates related to other browser elements
     if (
-      this.watcherActor.sessionContext.type == "browser-element" &&
-      subject.browsingContext.browserId !=
-        this.watcherActor.sessionContext.browserId
+      this.watcherActor.context.type == "browser-element" &&
+      subject.browsingContext.browserId != this.watcherActor.context.browserId
     ) {
       return;
     }

@@ -118,7 +118,11 @@ impl Layouter {
                         return Err(InvalidBaseType(base));
                     },
                 },
-                Ti::Struct { span, ref members } => {
+                Ti::Struct {
+                    top_level: _,
+                    span,
+                    ref members,
+                } => {
                     let mut alignment = Alignment::new(1).unwrap();
                     for member in members {
                         alignment = if member.ty < ty_handle {

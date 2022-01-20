@@ -3,8 +3,6 @@ use futures::Stream;
 use std::borrow::Borrow;
 use unic_langid::LanguageIdentifier;
 
-use crate::types::ResourceId;
-
 pub type FluentBundleResult<R> = Result<FluentBundle<R>, (FluentBundle<R>, Vec<FluentError>)>;
 
 pub trait BundleIterator {
@@ -22,15 +20,11 @@ pub trait BundleGenerator {
     type Iter: Iterator<Item = FluentBundleResult<Self::Resource>>;
     type Stream: Stream<Item = FluentBundleResult<Self::Resource>>;
 
-    fn bundles_iter(&self, _locales: Self::LocalesIter, _res_ids: Vec<ResourceId>) -> Self::Iter {
+    fn bundles_iter(&self, _locales: Self::LocalesIter, _res_ids: Vec<String>) -> Self::Iter {
         unimplemented!();
     }
 
-    fn bundles_stream(
-        &self,
-        _locales: Self::LocalesIter,
-        _res_ids: Vec<ResourceId>,
-    ) -> Self::Stream {
+    fn bundles_stream(&self, _locales: Self::LocalesIter, _res_ids: Vec<String>) -> Self::Stream {
         unimplemented!();
     }
 }

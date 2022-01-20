@@ -2,7 +2,6 @@ use crate::{
     bundles::Bundles,
     env::LocalesProvider,
     generator::{BundleGenerator, BundleIterator, BundleStream},
-    types::ResourceId,
 };
 use once_cell::sync::OnceCell;
 use std::rc::Rc;
@@ -16,7 +15,7 @@ where
     generator: G,
     provider: P,
     sync: bool,
-    res_ids: Vec<ResourceId>,
+    res_ids: Vec<String>,
 }
 
 impl<G, P> Localization<G, P>
@@ -24,7 +23,7 @@ where
     G: BundleGenerator<LocalesIter = P::Iter> + Default,
     P: LocalesProvider + Default,
 {
-    pub fn new(res_ids: Vec<ResourceId>, sync: bool) -> Self {
+    pub fn new(res_ids: Vec<String>, sync: bool) -> Self {
         Self {
             bundles: OnceCell::new(),
             generator: G::default(),
@@ -40,7 +39,7 @@ where
     G: BundleGenerator<LocalesIter = P::Iter>,
     P: LocalesProvider,
 {
-    pub fn with_env(res_ids: Vec<ResourceId>, sync: bool, provider: P, generator: G) -> Self {
+    pub fn with_env(res_ids: Vec<String>, sync: bool, provider: P, generator: G) -> Self {
         Self {
             bundles: OnceCell::new(),
             generator,
@@ -54,23 +53,23 @@ where
         self.sync
     }
 
-    pub fn add_resource_id<T: Into<ResourceId>>(&mut self, res_id: T) {
-        self.res_ids.push(res_id.into());
+    pub fn add_resource_id(&mut self, res_id: String) {
+        self.res_ids.push(res_id);
         self.on_change();
     }
 
-    pub fn add_resource_ids(&mut self, res_ids: Vec<ResourceId>) {
+    pub fn add_resource_ids(&mut self, res_ids: Vec<String>) {
         self.res_ids.extend(res_ids);
         self.on_change();
     }
 
-    pub fn remove_resource_id<T: PartialEq<ResourceId>>(&mut self, res_id: T) -> usize {
-        self.res_ids.retain(|x| !res_id.eq(x));
+    pub fn remove_resource_id(&mut self, res_id: String) -> usize {
+        self.res_ids.retain(|x| *x != res_id);
         self.on_change();
         self.res_ids.len()
     }
 
-    pub fn remove_resource_ids(&mut self, res_ids: Vec<ResourceId>) -> usize {
+    pub fn remove_resource_ids(&mut self, res_ids: Vec<String>) -> usize {
         self.res_ids.retain(|x| !res_ids.contains(x));
         self.on_change();
         self.res_ids.len()

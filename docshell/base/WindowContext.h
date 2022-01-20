@@ -197,6 +197,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   bool HadLazyLoadImage() const { return GetHadLazyLoadImage(); }
 
+  bool HasActivePeerConnections();
+
   bool AllowJavascript() const { return GetAllowJavascript(); }
   bool CanExecuteScripts() const { return mCanExecuteScripts; }
 

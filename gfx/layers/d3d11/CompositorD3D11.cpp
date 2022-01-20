@@ -16,6 +16,7 @@
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/layers/Diagnostics.h"
+#include "mozilla/layers/DiagnosticsD3D11.h"
 #include "mozilla/layers/Effects.h"
 #include "mozilla/layers/HelpersD3D11.h"
 #include "nsWindowsHelpers.h"
@@ -107,7 +108,8 @@ CompositorD3D11::CompositorD3D11(widget::CompositorWidget* aWidget)
       mAllowPartialPresents(false),
       mIsDoubleBuffered(false),
       mVerifyBuffersFailed(false),
-      mUseMutexOnPresent(false) {
+      mUseMutexOnPresent(false),
+      mUseForSoftwareWebRender(false) {
   mUseMutexOnPresent = StaticPrefs::gfx_use_mutex_on_present_AtStartup();
 }
 
@@ -145,6 +147,7 @@ bool CompositorD3D11::Initialize(nsCString* const out_failureReason) {
     return false;
   }
 
+  mDiagnostics = MakeUnique<DiagnosticsD3D11>(mDevice, mContext);
   mFeatureLevel = mDevice->GetFeatureLevel();
 
   mHwnd = mWidget->AsWindows()->GetHwnd();
@@ -819,6 +822,15 @@ Maybe<IntRect> CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   if (mDevice->GetDeviceRemovedReason() != S_OK) {
     if (!mAttachments->IsDeviceReset()) {
       gfxCriticalNote << "GFX: D3D11 skip BeginFrame with device-removed.";
+
+      // If we are in the GPU process then the main process doesn't
+      // know that a device reset has happened and needs to be informed.
+      //
+      // When CompositorD3D11 is used for Software WebRender, it does not need
+      // to notify device reset. The device reset is notified by WebRender.
+      if (XRE_IsGPUProcess() && !mUseForSoftwareWebRender) {
+        GPUParent::GetSingleton()->NotifyDeviceReset();
+      }
       mAttachments->SetDeviceReset();
     }
     return Nothing();
@@ -886,6 +898,15 @@ Maybe<IntRect> CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
     }
   }
 
+  if (StaticPrefs::layers_acceleration_draw_fps()) {
+    uint32_t pixelsPerFrame = 0;
+    for (auto iter = mBackBufferInvalid.RectIter(); !iter.Done(); iter.Next()) {
+      pixelsPerFrame += iter.Get().Width() * iter.Get().Height();
+    }
+
+    mDiagnostics->Start(pixelsPerFrame);
+  }
+
   return Some(rect);
 }
 
@@ -932,6 +953,8 @@ void CompositorD3D11::EndFrame() {
     if (StaticPrefs::gfx_compositor_clearstate()) {
       mContext->ClearState();
     }
+  } else {
+    mDiagnostics->Cancel();
   }
 
   // Block until the previous frame's work has been completed.

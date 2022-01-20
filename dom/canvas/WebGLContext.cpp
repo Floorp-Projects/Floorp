@@ -17,6 +17,7 @@
 #include "gfxCrashReporterUtils.h"
 #include "gfxEnv.h"
 #include "gfxPattern.h"
+#include "gfxUtils.h"
 #include "MozFramebuffer.h"
 #include "GLBlitHelper.h"
 #include "GLContext.h"
@@ -220,19 +221,16 @@ void WebGLContext::DestroyResourcesAndContext() {
 }
 
 void ClientWebGLContext::MarkCanvasDirty() {
-  if (!mCanvasElement && !mOffscreenCanvas) return;
+  if (!mCanvasElement) return;
 
   mCapturedFrameInvalidated = true;
 
   if (mIsCanvasDirty) return;
   mIsCanvasDirty = true;
 
-  if (mCanvasElement) {
-    SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
-    mCanvasElement->InvalidateCanvasContent(nullptr);
-  } else if (mOffscreenCanvas) {
-    mOffscreenCanvas->QueueCommitToCompositor();
-  }
+  SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
+
+  mCanvasElement->InvalidateCanvasContent(nullptr);
 }
 
 void WebGLContext::OnMemoryPressure() {
@@ -485,7 +483,6 @@ UniquePtr<webgl::FormatUsageAuthority> WebGLContext::CreateFormatUsage(
 RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext& host,
                                           const webgl::InitContextDesc& desc,
                                           webgl::InitContextResult* const out) {
-  AUTO_PROFILER_LABEL("WebGLContext::Create", GRAPHICS);
   nsCString failureId = "FEATURE_FAILURE_WEBGL_UNKOWN"_ns;
   const bool forceEnabled = StaticPrefs::webgl_force_enabled();
   ScopedGfxFeatureReporter reporter("WebGL", forceEnabled);
@@ -588,7 +585,6 @@ RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext& host,
 
   const auto UploadableSdTypes = [&]() {
     webgl::EnumMask<layers::SurfaceDescriptor::Type> types;
-    types[layers::SurfaceDescriptor::TSurfaceDescriptorBuffer] = true;
     if (webgl->gl->IsANGLE()) {
       types[layers::SurfaceDescriptor::TSurfaceDescriptorD3D10] = true;
       types[layers::SurfaceDescriptor::TSurfaceDescriptorDXGIYCbCr] = true;
@@ -1017,6 +1013,7 @@ Maybe<uvec2> WebGLContext::FrontBufferSnapshotInto(
   }
   gl->fReadPixels(0, 0, size.width, size.height, LOCAL_GL_RGBA,
                   LOCAL_GL_UNSIGNED_BYTE, dest.begin().get());
+  gfxUtils::ConvertBGRAtoRGBA(dest.begin().get(), dstByteCount);
 
   return ret;
 }
@@ -1457,7 +1454,15 @@ bool ClientWebGLContext::IsXRCompatible() const { return mXRCompatible; }
 already_AddRefed<dom::Promise> ClientWebGLContext::MakeXRCompatible(
     ErrorResult& aRv) {
   const FuncScope funcScope(*this, "MakeXRCompatible");
-  nsCOMPtr<nsIGlobalObject> global = GetParentObject();
+  nsCOMPtr<nsIGlobalObject> global;
+  // TODO: Bug 1596921
+  // Should use nsICanvasRenderingContextInternal::GetParentObject
+  // once it has been updated to work in the offscreencanvas case
+  if (mCanvasElement) {
+    global = GetOwnerDoc()->GetScopeObject();
+  } else if (mOffscreenCanvas) {
+    global = mOffscreenCanvas->GetOwnerGlobal();
+  }
   if (!global) {
     aRv.ThrowInvalidAccessError(
         "Using a WebGL context that is not attached to either a canvas or an "
@@ -1495,7 +1500,7 @@ webgl::AvailabilityRunnable& ClientWebGLContext::EnsureAvailabilityRunnable()
 
 webgl::AvailabilityRunnable::AvailabilityRunnable(
     const ClientWebGLContext* const webgl)
-    : DiscardableRunnable("webgl::AvailabilityRunnable"), mWebGL(webgl) {}
+    : Runnable("webgl::AvailabilityRunnable"), mWebGL(webgl) {}
 
 webgl::AvailabilityRunnable::~AvailabilityRunnable() {
   MOZ_ASSERT(mQueries.empty());

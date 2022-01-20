@@ -12,7 +12,6 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/ReadableStream.h"
-#include "mozilla/dom/ReadableStreamController.h"
 #include "mozilla/dom/ReadableStreamDefaultController.h"
 #include "mozilla/dom/ReadableStreamDefaultControllerBinding.h"
 #include "mozilla/dom/ReadableStreamDefaultReaderBinding.h"
@@ -23,33 +22,24 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION(ReadableStreamController, mGlobal)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ReadableStreamController)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(ReadableStreamController)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamController)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
 // Note: Using the individual macros vs NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE
 // because I need to specificy a manual implementation of
 // NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN.
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStreamDefaultController)
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ReadableStreamDefaultController)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCancelAlgorithm, mStrategySizeAlgorithm,
-                                  mPullAlgorithm, mStream)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal, mCancelAlgorithm,
+                                  mStrategySizeAlgorithm, mPullAlgorithm,
+                                  mStream)
+
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(
-    ReadableStreamDefaultController, ReadableStreamController)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCancelAlgorithm, mStrategySizeAlgorithm,
-                                    mPullAlgorithm, mStream)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ReadableStreamDefaultController)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal, mCancelAlgorithm,
+                                    mStrategySizeAlgorithm, mPullAlgorithm,
+                                    mStream)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ReadableStreamDefaultController,
-                                               ReadableStreamController)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ReadableStreamDefaultController)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
   // Trace the associated queue.
   for (const auto& queueEntry : tmp->mQueue) {
@@ -57,18 +47,16 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ReadableStreamDefaultController,
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_ADDREF_INHERITED(ReadableStreamDefaultController,
-                         ReadableStreamController)
-NS_IMPL_RELEASE_INHERITED(ReadableStreamDefaultController,
-                          ReadableStreamController)
-
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ReadableStreamDefaultController)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(ReadableStreamDefaultController)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamDefaultController)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-NS_INTERFACE_MAP_END_INHERITING(ReadableStreamController)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
 ReadableStreamDefaultController::ReadableStreamDefaultController(
-    nsIGlobalObject* aGlobal)
-    : ReadableStreamController(aGlobal) {
+    nsISupports* aGlobal)
+    : mGlobal(do_QueryInterface(aGlobal)) {
   // Add |MOZ_COUNT_CTOR(ReadableStreamDefaultController);| for a non-refcounted
   // object.
 }
@@ -185,11 +173,12 @@ void ReadableStreamDefaultController::Close(JSContext* aCx, ErrorResult& aRv) {
   ReadableStreamDefaultControllerClose(aCx, this, aRv);
 }
 
-MOZ_CAN_RUN_SCRIPT static void ReadableStreamDefaultControllerCallPullIfNeeded(
+static void ReadableStreamDefaultControllerCallPullIfNeeded(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     ErrorResult& aRv);
 
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-enqueue
+MOZ_CAN_RUN_SCRIPT
 void ReadableStreamDefaultControllerEnqueue(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     JS::Handle<JS::Value> aChunk, ErrorResult& aRv) {
@@ -276,6 +265,7 @@ void ReadableStreamDefaultControllerEnqueue(
 }
 
 // https://streams.spec.whatwg.org/#rs-default-controller-close
+MOZ_CAN_RUN_SCRIPT
 void ReadableStreamDefaultController::Enqueue(JSContext* aCx,
                                               JS::Handle<JS::Value> aChunk,
                                               ErrorResult& aRv) {
@@ -293,6 +283,19 @@ void ReadableStreamDefaultController::Error(JSContext* aCx,
                                             JS::Handle<JS::Value> aError,
                                             ErrorResult& aRv) {
   ReadableStreamDefaultControllerError(aCx, this, aError, aRv);
+}
+
+// https://streams.spec.whatwg.org/#reset-queue
+void ResetQueue(ReadableStreamDefaultController* aController) {
+  // Step 1. Implicit.
+
+  // Step 2.
+  //
+  // This is described in the spec 'set queue to new empty list'
+  aController->Queue().clear();
+
+  // Step 3.
+  aController->SetQueueTotalSize(0.0);
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-should-call-pull
@@ -355,7 +358,6 @@ void ReadableStreamDefaultControllerError(
 class PullIfNeededNativePromiseHandler final : public PromiseNativeHandler {
   ~PullIfNeededNativePromiseHandler() = default;
 
-  // Virtually const, but cycle collected
   RefPtr<ReadableStreamDefaultController> mController;
 
  public:
@@ -366,8 +368,7 @@ class PullIfNeededNativePromiseHandler final : public PromiseNativeHandler {
       ReadableStreamDefaultController* aController)
       : PromiseNativeHandler(), mController(aController) {}
 
-  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(
-      JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
     // Step 7.1
     mController->SetPulling(false);
@@ -378,8 +379,7 @@ class PullIfNeededNativePromiseHandler final : public PromiseNativeHandler {
 
       // Step 7.2.2
       IgnoredErrorResult rv;
-      ReadableStreamDefaultControllerCallPullIfNeeded(
-          aCx, MOZ_KnownLive(mController), rv);
+      ReadableStreamDefaultControllerCallPullIfNeeded(aCx, mController, rv);
       // Not Sure How To Handle Errors Inside Native Callbacks,
       (void)NS_WARN_IF(rv.Failed());
     }
@@ -403,6 +403,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PullIfNeededNativePromiseHandler)
 NS_INTERFACE_MAP_END
 
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
+MOZ_CAN_RUN_SCRIPT
 static void ReadableStreamDefaultControllerCallPullIfNeeded(
     JSContext* aCx, ReadableStreamDefaultController* aController,
     ErrorResult& aRv) {
@@ -528,6 +529,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StartPromiseNativeHandler)
 NS_INTERFACE_MAP_END
 
 // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller
+MOZ_CAN_RUN_SCRIPT
 void SetUpReadableStreamDefaultController(
     JSContext* aCx, ReadableStream* aStream,
     ReadableStreamDefaultController* aController,
@@ -593,6 +595,7 @@ void SetUpReadableStreamDefaultController(
 }
 
 // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller-from-underlying-source
+MOZ_CAN_RUN_SCRIPT
 void SetupReadableStreamDefaultControllerFromUnderlyingSource(
     JSContext* aCx, ReadableStream* aStream, JS::HandleObject aUnderlyingSource,
     UnderlyingSource& aUnderlyingSourceDict, double aHighWaterMark,
@@ -630,6 +633,7 @@ void SetupReadableStreamDefaultControllerFromUnderlyingSource(
 }
 
 // https://streams.spec.whatwg.org/#rs-default-controller-private-cancel
+MOZ_CAN_RUN_SCRIPT
 already_AddRefed<Promise> ReadableStreamDefaultController::CancelSteps(
     JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv) {
   // Step 1.
@@ -651,6 +655,7 @@ already_AddRefed<Promise> ReadableStreamDefaultController::CancelSteps(
 }
 
 // https://streams.spec.whatwg.org/#rs-default-controller-private-pull
+MOZ_CAN_RUN_SCRIPT
 void ReadableStreamDefaultController::PullSteps(JSContext* aCx,
                                                 ReadRequest* aReadRequest,
                                                 ErrorResult& aRv) {

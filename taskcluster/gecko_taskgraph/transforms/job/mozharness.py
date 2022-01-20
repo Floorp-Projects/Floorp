@@ -31,7 +31,6 @@ from gecko_taskgraph.transforms.task import (
     get_branch_repo,
     get_branch_rev,
 )
-from gecko_taskgraph.util.attributes import is_try
 
 mozharness_run_schema = Schema(
     {
@@ -189,7 +188,7 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     if "job-script" in run:
         env["JOB_SCRIPT"] = run["job-script"]
 
-    if is_try(config.params):
+    if config.params.is_try():
         env["TRY_COMMIT_MSG"] = config.params["message"]
 
     # if we're not keeping artifacts, set some env variables to empty values
@@ -282,7 +281,7 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     # to commands.  Setting a variable to empty in a batch file unsets, so if
     # there is no `TRY_COMMIT_MESSAGE`, pass a space instead, so that
     # mozharness doesn't try to find the commit message on its own.
-    if is_try(config.params):
+    if config.params.is_try():
         env["TRY_COMMIT_MSG"] = config.params["message"] or "no commit message"
 
     if not job["attributes"]["build_platform"].startswith(("win", "macosx")):

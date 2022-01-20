@@ -4,6 +4,7 @@ use crate::RawPtr;
 use crate::{EntryCustom, Instance};
 use std::ffi::CStr;
 use std::mem;
+use std::ptr;
 
 #[derive(Clone)]
 pub struct Display {
@@ -31,10 +32,22 @@ impl Display {
         &self,
         physical_device: vk::PhysicalDevice,
     ) -> VkResult<Vec<vk::DisplayPropertiesKHR>> {
-        read_into_uninitialized_vector(|count, data| {
-            self.display_fn
-                .get_physical_device_display_properties_khr(physical_device, count, data)
-        })
+        let mut count = 0;
+        self.display_fn
+            .get_physical_device_display_properties_khr(
+                physical_device,
+                &mut count,
+                ptr::null_mut(),
+            )
+            .result()?;
+        let mut v = Vec::with_capacity(count as usize);
+        let err_code = self.display_fn.get_physical_device_display_properties_khr(
+            physical_device,
+            &mut count,
+            v.as_mut_ptr(),
+        );
+        v.set_len(count as usize);
+        err_code.result_with_success(v)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceDisplayPlanePropertiesKHR.html>"]
@@ -42,10 +55,27 @@ impl Display {
         &self,
         physical_device: vk::PhysicalDevice,
     ) -> VkResult<Vec<vk::DisplayPlanePropertiesKHR>> {
-        read_into_uninitialized_vector(|count, data| {
-            self.display_fn
-                .get_physical_device_display_plane_properties_khr(physical_device, count, data)
-        })
+        let mut count = 0;
+        let err_code = self
+            .display_fn
+            .get_physical_device_display_plane_properties_khr(
+                physical_device,
+                &mut count,
+                ptr::null_mut(),
+            );
+        if err_code != vk::Result::SUCCESS {
+            return Err(err_code);
+        }
+        let mut v = Vec::with_capacity(count as usize);
+        let err_code = self
+            .display_fn
+            .get_physical_device_display_plane_properties_khr(
+                physical_device,
+                &mut count,
+                v.as_mut_ptr(),
+            );
+        v.set_len(count as usize);
+        err_code.result_with_success(v)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDisplayPlaneSupportedDisplaysKHR.html>"]
@@ -54,14 +84,24 @@ impl Display {
         physical_device: vk::PhysicalDevice,
         plane_index: u32,
     ) -> VkResult<Vec<vk::DisplayKHR>> {
-        read_into_uninitialized_vector(|count, data| {
-            self.display_fn.get_display_plane_supported_displays_khr(
+        let mut count = 0;
+        self.display_fn
+            .get_display_plane_supported_displays_khr(
                 physical_device,
                 plane_index,
-                count,
-                data,
+                &mut count,
+                ptr::null_mut(),
             )
-        })
+            .result()?;
+        let mut v = Vec::with_capacity(count as usize);
+        let err_code = self.display_fn.get_display_plane_supported_displays_khr(
+            physical_device,
+            plane_index,
+            &mut count,
+            v.as_mut_ptr(),
+        );
+        v.set_len(count as usize);
+        err_code.result_with_success(v)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetDisplayModePropertiesKHR.html>"]
@@ -70,10 +110,19 @@ impl Display {
         physical_device: vk::PhysicalDevice,
         display: vk::DisplayKHR,
     ) -> VkResult<Vec<vk::DisplayModePropertiesKHR>> {
-        read_into_uninitialized_vector(|count, data| {
-            self.display_fn
-                .get_display_mode_properties_khr(physical_device, display, count, data)
-        })
+        let mut count = 0;
+        self.display_fn
+            .get_display_mode_properties_khr(physical_device, display, &mut count, ptr::null_mut())
+            .result()?;
+        let mut v = Vec::with_capacity(count as usize);
+        let err_code = self.display_fn.get_display_mode_properties_khr(
+            physical_device,
+            display,
+            &mut count,
+            v.as_mut_ptr(),
+        );
+        v.set_len(count as usize);
+        err_code.result_with_success(v)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateDisplayModeKHR.html>"]

@@ -3,15 +3,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 /// Gecko's pseudo-element definition.
-///
-/// We intentionally double-box legacy ::-moz-tree pseudo-elements to keep the
-/// size of PseudoElement (and thus selector components) small.
 #[derive(Clone, Debug, Eq, Hash, MallocSizeOf, PartialEq, ToShmem)]
 pub enum PseudoElement {
     % for pseudo in PSEUDOS:
         /// ${pseudo.value}
         % if pseudo.is_tree_pseudo_element():
-        ${pseudo.capitalized_pseudo()}(Box<Box<[Atom]>>),
+        ${pseudo.capitalized_pseudo()}(ThinBoxedSlice<Atom>),
         % else:
         ${pseudo.capitalized_pseudo()},
         % endif

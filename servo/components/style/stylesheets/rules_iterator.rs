@@ -70,7 +70,6 @@ where
             CssRule::Keyframes(_) |
             CssRule::ScrollTimeline(_) |
             CssRule::Page(_) |
-            CssRule::LayerStatement(_) |
             CssRule::FontFeatureValues(_) => None,
             CssRule::Import(ref import_rule) => {
                 let import_rule = import_rule.read_with(guard);
@@ -104,9 +103,14 @@ where
                 }
                 Some(supports_rule.rules.read_with(guard).0.iter())
             },
-            CssRule::LayerBlock(ref lock) => {
+            CssRule::Layer(ref lock) => {
+                use crate::stylesheets::layer_rule::LayerRuleKind;
+
                 let layer_rule = lock.read_with(guard);
-                Some(layer_rule.rules.read_with(guard).0.iter())
+                match layer_rule.kind {
+                    LayerRuleKind::Block { ref rules, .. } => Some(rules.read_with(guard).0.iter()),
+                    LayerRuleKind::Statement { .. } => None,
+                }
             },
         }
     }

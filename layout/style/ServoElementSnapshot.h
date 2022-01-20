@@ -16,7 +16,6 @@
 #include "nsChangeHint.h"
 #include "nsGkAtoms.h"
 #include "nsAtom.h"
-#include "MainThreadUtils.h"
 
 namespace mozilla {
 namespace dom {

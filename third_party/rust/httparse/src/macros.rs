@@ -23,7 +23,7 @@ macro_rules! expect {
 
 macro_rules! complete {
     ($e:expr) => {
-        match $e? {
+        match try!($e) {
             Status::Complete(v) => v,
             Status::Partial => return Ok(Status::Partial)
         }

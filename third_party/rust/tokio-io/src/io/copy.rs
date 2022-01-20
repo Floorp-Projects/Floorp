@@ -33,9 +33,8 @@ pub struct Copy<R, W> {
 /// consumed. On error the error is returned and the I/O objects are consumed as
 /// well.
 pub fn copy<R, W>(reader: R, writer: W) -> Copy<R, W>
-where
-    R: AsyncRead,
-    W: AsyncWrite,
+    where R: AsyncRead,
+          W: AsyncWrite,
 {
     Copy {
         reader: Some(reader),
@@ -49,9 +48,8 @@ where
 }
 
 impl<R, W> Future for Copy<R, W>
-where
-    R: AsyncRead,
-    W: AsyncWrite,
+    where R: AsyncRead,
+          W: AsyncWrite,
 {
     type Item = (u64, R, W);
     type Error = io::Error;
@@ -76,10 +74,8 @@ where
                 let writer = self.writer.as_mut().unwrap();
                 let i = try_ready!(writer.poll_write(&self.buf[self.pos..self.cap]));
                 if i == 0 {
-                    return Err(io::Error::new(
-                        io::ErrorKind::WriteZero,
-                        "write zero byte into writer",
-                    ));
+                    return Err(io::Error::new(io::ErrorKind::WriteZero,
+                                              "write zero byte into writer"));
                 } else {
                     self.pos += i;
                     self.amt += i as u64;
@@ -93,7 +89,7 @@ where
                 try_ready!(self.writer.as_mut().unwrap().poll_flush());
                 let reader = self.reader.take().unwrap();
                 let writer = self.writer.take().unwrap();
-                return Ok((self.amt, reader, writer).into());
+                return Ok((self.amt, reader, writer).into())
             }
         }
     }

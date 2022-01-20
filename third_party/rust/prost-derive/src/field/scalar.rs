@@ -3,8 +3,10 @@ use std::fmt;
 
 use anyhow::{anyhow, bail, Error};
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, ToTokens, TokenStreamExt};
-use syn::{parse_str, Ident, Lit, LitByteStr, Meta, MetaList, MetaNameValue, NestedMeta, Path};
+use quote::{quote, ToTokens};
+use syn::{
+    self, parse_str, Ident, Lit, LitByteStr, Meta, MetaList, MetaNameValue, NestedMeta, Path,
+};
 
 use crate::field::{bool_attr, set_option, tag_attr, Label};
 
@@ -80,13 +82,17 @@ impl Field {
             (None, _, _) => Kind::Plain(default),
             (Some(Label::Optional), _, _) => Kind::Optional(default),
             (Some(Label::Required), _, _) => Kind::Required(default),
-            (Some(Label::Repeated), packed, false) if packed.unwrap_or_else(|| ty.is_numeric()) => {
+            (Some(Label::Repeated), packed, false) if packed.unwrap_or(ty.is_numeric()) => {
                 Kind::Packed
             }
             (Some(Label::Repeated), _, false) => Kind::Repeated,
         };
 
-        Ok(Some(Field { ty, kind, tag }))
+        Ok(Some(Field {
+            ty: ty,
+            kind: kind,
+            tag: tag,
+        }))
     }
 
     pub fn new_oneof(attrs: &[Meta]) -> Result<Option<Field>, Error> {
@@ -125,7 +131,7 @@ impl Field {
                 }
             }
             Kind::Optional(..) => quote! {
-                if let ::core::option::Option::Some(ref value) = #ident {
+                if let ::std::option::Option::Some(ref value) = #ident {
                     #encode_fn(#tag, value, buf);
                 }
             },
@@ -194,11 +200,11 @@ impl Field {
             Kind::Plain(ref default) | Kind::Required(ref default) => {
                 let default = default.typed();
                 match self.ty {
-                    Ty::String | Ty::Bytes(..) => quote!(#ident.clear()),
+                    Ty::String | Ty::Bytes => quote!(#ident.clear()),
                     _ => quote!(#ident = #default),
                 }
             }
-            Kind::Optional(_) => quote!(#ident = ::core::option::Option::None),
+            Kind::Optional(_) => quote!(#ident = ::std::option::Option::None),
             Kind::Repeated | Kind::Packed => quote!(#ident.clear()),
         }
     }
@@ -207,8 +213,8 @@ impl Field {
     pub fn default(&self) -> TokenStream {
         match self.kind {
             Kind::Plain(ref value) | Kind::Required(ref value) => value.owned(),
-            Kind::Optional(_) => quote!(::core::option::Option::None),
-            Kind::Repeated | Kind::Packed => quote!(::prost::alloc::vec::Vec::new()),
+            Kind::Optional(_) => quote!(::std::option::Option::None),
+            Kind::Repeated | Kind::Packed => quote!(::std::vec::Vec::new()),
         }
     }
 
@@ -217,11 +223,11 @@ impl Field {
         if let Ty::Enumeration(ref ty) = self.ty {
             quote! {
                 struct #wrap_name<'a>(&'a i32);
-                impl<'a> ::core::fmt::Debug for #wrap_name<'a> {
-                    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+                impl<'a> ::std::fmt::Debug for #wrap_name<'a> {
+                    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
                         match #ty::from_i32(*self.0) {
-                            None => ::core::fmt::Debug::fmt(&self.0, f),
-                            Some(en) => ::core::fmt::Debug::fmt(&en, f),
+                            None => ::std::fmt::Debug::fmt(&self.0, f),
+                            Some(en) => ::std::fmt::Debug::fmt(&en, f),
                         }
                     }
                 }
@@ -240,19 +246,19 @@ impl Field {
         match self.kind {
             Kind::Plain(_) | Kind::Required(_) => self.debug_inner(wrapper_name),
             Kind::Optional(_) => quote! {
-                struct #wrapper_name<'a>(&'a ::core::option::Option<#inner_ty>);
-                impl<'a> ::core::fmt::Debug for #wrapper_name<'a> {
-                    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+                struct #wrapper_name<'a>(&'a ::std::option::Option<#inner_ty>);
+                impl<'a> ::std::fmt::Debug for #wrapper_name<'a> {
+                    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
                         #wrapper
-                        ::core::fmt::Debug::fmt(&self.0.as_ref().map(Inner), f)
+                        ::std::fmt::Debug::fmt(&self.0.as_ref().map(Inner), f)
                     }
                 }
             },
             Kind::Repeated | Kind::Packed => {
                 quote! {
-                    struct #wrapper_name<'a>(&'a ::prost::alloc::vec::Vec<#inner_ty>);
-                    impl<'a> ::core::fmt::Debug for #wrapper_name<'a> {
-                        fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+                    struct #wrapper_name<'a>(&'a ::std::vec::Vec<#inner_ty>);
+                    impl<'a> ::std::fmt::Debug for #wrapper_name<'a> {
+                        fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
                             let mut vec_builder = f.debug_list();
                             for v in self.0 {
                                 #wrapper
@@ -309,7 +315,7 @@ impl Field {
 
                         #[doc=#set_doc]
                         pub fn #set(&mut self, value: #ty) {
-                            self.#ident = ::core::option::Option::Some(value as i32);
+                            self.#ident = ::std::option::Option::Some(value as i32);
                         }
                     }
                 }
@@ -322,9 +328,9 @@ impl Field {
                     let push_doc = format!("Appends the provided enum value to `{}`.", ident_str);
                     quote! {
                         #[doc=#iter_doc]
-                        pub fn #ident(&self) -> ::core::iter::FilterMap<
-                            ::core::iter::Cloned<::core::slice::Iter<i32>>,
-                            fn(i32) -> ::core::option::Option<#ty>,
+                        pub fn #ident(&self) -> ::std::iter::FilterMap<
+                            ::std::iter::Cloned<::std::slice::Iter<i32>>,
+                            fn(i32) -> ::std::option::Option<#ty>,
                         > {
                             self.#ident.iter().cloned().filter_map(#ty::from_i32)
                         }
@@ -339,9 +345,9 @@ impl Field {
             let ty = self.ty.rust_ref_type();
 
             let match_some = if self.ty.is_numeric() {
-                quote!(::core::option::Option::Some(val) => val,)
+                quote!(::std::option::Option::Some(val) => val,)
             } else {
-                quote!(::core::option::Option::Some(ref val) => &val[..],)
+                quote!(::std::option::Option::Some(ref val) => &val[..],)
             };
 
             let get_doc = format!(
@@ -354,7 +360,7 @@ impl Field {
                 pub fn #ident(&self) -> #ty {
                     match self.#ident {
                         #match_some
-                        ::core::option::Option::None => #default,
+                        ::std::option::Option::None => #default,
                     }
                 }
             })
@@ -381,31 +387,8 @@ pub enum Ty {
     Sfixed64,
     Bool,
     String,
-    Bytes(BytesTy),
-    Enumeration(Path),
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum BytesTy {
-    Vec,
     Bytes,
-}
-
-impl BytesTy {
-    fn try_from_str(s: &str) -> Result<Self, Error> {
-        match s {
-            "vec" => Ok(BytesTy::Vec),
-            "bytes" => Ok(BytesTy::Bytes),
-            _ => bail!("Invalid bytes type: {}", s),
-        }
-    }
-
-    fn rust_type(&self) -> TokenStream {
-        match self {
-            BytesTy::Vec => quote! { ::prost::alloc::vec::Vec<u8> },
-            BytesTy::Bytes => quote! { ::prost::bytes::Bytes },
-        }
-    }
+    Enumeration(Path),
 }
 
 impl Ty {
@@ -425,12 +408,7 @@ impl Ty {
             Meta::Path(ref name) if name.is_ident("sfixed64") => Ty::Sfixed64,
             Meta::Path(ref name) if name.is_ident("bool") => Ty::Bool,
             Meta::Path(ref name) if name.is_ident("string") => Ty::String,
-            Meta::Path(ref name) if name.is_ident("bytes") => Ty::Bytes(BytesTy::Vec),
-            Meta::NameValue(MetaNameValue {
-                ref path,
-                lit: Lit::Str(ref l),
-                ..
-            }) if path.is_ident("bytes") => Ty::Bytes(BytesTy::try_from_str(&l.value())?),
+            Meta::Path(ref name) if name.is_ident("bytes") => Ty::Bytes,
             Meta::NameValue(MetaNameValue {
                 ref path,
                 lit: Lit::Str(ref l),
@@ -475,7 +453,7 @@ impl Ty {
             "sfixed64" => Ty::Sfixed64,
             "bool" => Ty::Bool,
             "string" => Ty::String,
-            "bytes" => Ty::Bytes(BytesTy::Vec),
+            "bytes" => Ty::Bytes,
             s if s.len() > enumeration_len && &s[..enumeration_len] == "enumeration" => {
                 let s = &s[enumeration_len..].trim();
                 match s.chars().next() {
@@ -511,16 +489,16 @@ impl Ty {
             Ty::Sfixed64 => "sfixed64",
             Ty::Bool => "bool",
             Ty::String => "string",
-            Ty::Bytes(..) => "bytes",
+            Ty::Bytes => "bytes",
             Ty::Enumeration(..) => "enum",
         }
     }
 
     // TODO: rename to 'owned_type'.
     pub fn rust_type(&self) -> TokenStream {
-        match self {
-            Ty::String => quote!(::prost::alloc::string::String),
-            Ty::Bytes(ty) => ty.rust_type(),
+        match *self {
+            Ty::String => quote!(::std::string::String),
+            Ty::Bytes => quote!(::std::vec::Vec<u8>),
             _ => self.rust_ref_type(),
         }
     }
@@ -542,7 +520,7 @@ impl Ty {
             Ty::Sfixed64 => quote!(i64),
             Ty::Bool => quote!(bool),
             Ty::String => quote!(&str),
-            Ty::Bytes(..) => quote!(&[u8]),
+            Ty::Bytes => quote!(&[u8]),
             Ty::Enumeration(..) => quote!(i32),
         }
     }
@@ -554,9 +532,9 @@ impl Ty {
         }
     }
 
-    /// Returns false if the scalar type is length delimited (i.e., `string` or `bytes`).
+    /// Returns true if the scalar type is length delimited (i.e., `string` or `bytes`).
     pub fn is_numeric(&self) -> bool {
-        !matches!(self, Ty::String | Ty::Bytes(..))
+        *self != Ty::String && *self != Ty::Bytes
     }
 }
 
@@ -606,7 +584,7 @@ pub enum DefaultValue {
 impl DefaultValue {
     pub fn from_attr(attr: &Meta) -> Result<Option<Lit>, Error> {
         if !attr.path().is_ident("default") {
-            Ok(None)
+            return Ok(None);
         } else if let Meta::NameValue(ref name_value) = *attr {
             Ok(Some(name_value.lit.clone()))
         } else {
@@ -649,11 +627,7 @@ impl DefaultValue {
 
             Lit::Bool(ref lit) if *ty == Ty::Bool => DefaultValue::Bool(lit.value),
             Lit::Str(ref lit) if *ty == Ty::String => DefaultValue::String(lit.value()),
-            Lit::ByteStr(ref lit)
-                if *ty == Ty::Bytes(BytesTy::Bytes) || *ty == Ty::Bytes(BytesTy::Vec) =>
-            {
-                DefaultValue::Bytes(lit.value())
-            }
+            Lit::ByteStr(ref lit) if *ty == Ty::Bytes => DefaultValue::Bytes(lit.value()),
 
             Lit::Str(ref lit) => {
                 let value = lit.value();
@@ -669,16 +643,16 @@ impl DefaultValue {
                     match value {
                         "inf" => {
                             return Ok(DefaultValue::Path(parse_str::<Path>(
-                                "::core::f32::INFINITY",
+                                "::std::f32::INFINITY",
                             )?));
                         }
                         "-inf" => {
                             return Ok(DefaultValue::Path(parse_str::<Path>(
-                                "::core::f32::NEG_INFINITY",
+                                "::std::f32::NEG_INFINITY",
                             )?));
                         }
                         "nan" => {
-                            return Ok(DefaultValue::Path(parse_str::<Path>("::core::f32::NAN")?));
+                            return Ok(DefaultValue::Path(parse_str::<Path>("::std::f32::NAN")?));
                         }
                         _ => (),
                     }
@@ -687,51 +661,59 @@ impl DefaultValue {
                     match value {
                         "inf" => {
                             return Ok(DefaultValue::Path(parse_str::<Path>(
-                                "::core::f64::INFINITY",
+                                "::std::f64::INFINITY",
                             )?));
                         }
                         "-inf" => {
                             return Ok(DefaultValue::Path(parse_str::<Path>(
-                                "::core::f64::NEG_INFINITY",
+                                "::std::f64::NEG_INFINITY",
                             )?));
                         }
                         "nan" => {
-                            return Ok(DefaultValue::Path(parse_str::<Path>("::core::f64::NAN")?));
+                            return Ok(DefaultValue::Path(parse_str::<Path>("::std::f64::NAN")?));
                         }
                         _ => (),
                     }
                 }
 
                 // Rust doesn't have a negative literals, so they have to be parsed specially.
-                if let Some(Ok(lit)) = value.strip_prefix('-').map(syn::parse_str::<Lit>) {
-                    match lit {
-                        Lit::Int(ref lit) if is_i32 && empty_or_is("i32", lit.suffix()) => {
-                            // Initially parse into an i64, so that i32::MIN does not overflow.
-                            let value: i64 = -lit.base10_parse()?;
-                            return Ok(i32::try_from(value).map(DefaultValue::I32)?);
+                if value.chars().next() == Some('-') {
+                    if let Ok(lit) = syn::parse_str::<Lit>(&value[1..]) {
+                        match lit {
+                            Lit::Int(ref lit) if is_i32 && empty_or_is("i32", lit.suffix()) => {
+                                // Initially parse into an i64, so that i32::MIN does not overflow.
+                                let value: i64 = -lit.base10_parse()?;
+                                return Ok(i32::try_from(value).map(DefaultValue::I32)?);
+                            }
+
+                            Lit::Int(ref lit) if is_i64 && empty_or_is("i64", lit.suffix()) => {
+                                // Initially parse into an i128, so that i64::MIN does not overflow.
+                                let value: i128 = -lit.base10_parse()?;
+                                return Ok(i64::try_from(value).map(DefaultValue::I64)?);
+                            }
+
+                            Lit::Float(ref lit)
+                                if *ty == Ty::Float && empty_or_is("f32", lit.suffix()) =>
+                            {
+                                return Ok(DefaultValue::F32(-lit.base10_parse()?));
+                            }
+
+                            Lit::Float(ref lit)
+                                if *ty == Ty::Double && empty_or_is("f64", lit.suffix()) =>
+                            {
+                                return Ok(DefaultValue::F64(-lit.base10_parse()?));
+                            }
+
+                            Lit::Int(ref lit) if *ty == Ty::Float && lit.suffix().is_empty() => {
+                                return Ok(DefaultValue::F32(-lit.base10_parse()?));
+                            }
+
+                            Lit::Int(ref lit) if *ty == Ty::Double && lit.suffix().is_empty() => {
+                                return Ok(DefaultValue::F64(-lit.base10_parse()?));
+                            }
+
+                            _ => (),
                         }
-                        Lit::Int(ref lit) if is_i64 && empty_or_is("i64", lit.suffix()) => {
-                            // Initially parse into an i128, so that i64::MIN does not overflow.
-                            let value: i128 = -lit.base10_parse()?;
-                            return Ok(i64::try_from(value).map(DefaultValue::I64)?);
-                        }
-                        Lit::Float(ref lit)
-                            if *ty == Ty::Float && empty_or_is("f32", lit.suffix()) =>
-                        {
-                            return Ok(DefaultValue::F32(-lit.base10_parse()?));
-                        }
-                        Lit::Float(ref lit)
-                            if *ty == Ty::Double && empty_or_is("f64", lit.suffix()) =>
-                        {
-                            return Ok(DefaultValue::F64(-lit.base10_parse()?));
-                        }
-                        Lit::Int(ref lit) if *ty == Ty::Float && lit.suffix().is_empty() => {
-                            return Ok(DefaultValue::F32(-lit.base10_parse()?));
-                        }
-                        Lit::Int(ref lit) if *ty == Ty::Double && lit.suffix().is_empty() => {
-                            return Ok(DefaultValue::F64(-lit.base10_parse()?));
-                        }
-                        _ => (),
                     }
                 }
                 match syn::parse_str::<Lit>(&value) {
@@ -758,21 +740,23 @@ impl DefaultValue {
 
             Ty::Bool => DefaultValue::Bool(false),
             Ty::String => DefaultValue::String(String::new()),
-            Ty::Bytes(..) => DefaultValue::Bytes(Vec::new()),
-            Ty::Enumeration(ref path) => DefaultValue::Enumeration(quote!(#path::default())),
+            Ty::Bytes => DefaultValue::Bytes(Vec::new()),
+            Ty::Enumeration(ref path) => {
+                return DefaultValue::Enumeration(quote!(#path::default()))
+            }
         }
     }
 
     pub fn owned(&self) -> TokenStream {
         match *self {
             DefaultValue::String(ref value) if value.is_empty() => {
-                quote!(::prost::alloc::string::String::new())
+                quote!(::std::string::String::new())
             }
-            DefaultValue::String(ref value) => quote!(#value.into()),
-            DefaultValue::Bytes(ref value) if value.is_empty() => quote!(Default::default()),
+            DefaultValue::String(ref value) => quote!(#value.to_owned()),
+            DefaultValue::Bytes(ref value) if value.is_empty() => quote!(::std::vec::Vec::new()),
             DefaultValue::Bytes(ref value) => {
                 let lit = LitByteStr::new(value, Span::call_site());
-                quote!(#lit.as_ref().into())
+                quote!(#lit.to_owned())
             }
 
             ref other => other.typed(),
@@ -800,8 +784,7 @@ impl ToTokens for DefaultValue {
             DefaultValue::Bool(value) => value.to_tokens(tokens),
             DefaultValue::String(ref value) => value.to_tokens(tokens),
             DefaultValue::Bytes(ref value) => {
-                let byte_str = LitByteStr::new(value, Span::call_site());
-                tokens.append_all(quote!(#byte_str as &[u8]));
+                LitByteStr::new(value, Span::call_site()).to_tokens(tokens)
             }
             DefaultValue::Enumeration(ref value) => value.to_tokens(tokens),
             DefaultValue::Path(ref value) => value.to_tokens(tokens),

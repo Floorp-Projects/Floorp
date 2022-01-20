@@ -233,13 +233,13 @@ fn page_size() -> usize {
     unsafe { libc::sysconf(libc::_SC_PAGESIZE) as usize }
 }
 
-pub fn file_len(file: RawFd) -> io::Result<u64> {
+pub fn file_len(file: RawFd) -> io::Result<usize> {
     unsafe {
         let mut stat: libc::stat = std::mem::zeroed();
 
         let result = libc::fstat(file, &mut stat);
         if result == 0 {
-            Ok(stat.st_size as u64)
+            Ok(stat.st_size as usize)
         } else {
             Err(io::Error::last_os_error())
         }

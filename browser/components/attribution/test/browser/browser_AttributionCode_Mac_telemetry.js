@@ -217,7 +217,8 @@ add_task(async function test_broken_referrer() {
     generateQuarantineGUID(),
   ].join(";");
   let bytes = new TextEncoder().encode(string);
-  await IOUtils.setMacXAttr(
+  // TODO: Bug 1736331 replace OS.File.macSetXAttr with an alternative.
+  await OS.File.macSetXAttr(
     MacAttribution.applicationPath,
     "com.apple.quarantine",
     bytes

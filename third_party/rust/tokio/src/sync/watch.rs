@@ -338,6 +338,7 @@ impl<T> Sender<T> {
         // Notify all watchers
         notify_all(&*shared);
 
+        // Return the old value
         Ok(())
     }
 

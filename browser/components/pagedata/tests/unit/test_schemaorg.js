@@ -3,23 +3,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Tests that the page data service can parse schema.org metadata into PageData.
+ * Tests that the page data service can parse schema.org metadata.
  */
 
-add_task(async function test_single_product_microdata() {
+add_task(async function test_single_product_data() {
   await verifyPageData(
     `
-      <!DOCTYPE html>
       <html>
       <head>
       <title>Product Info 1</title>
+      <meta http-equiv="Content-Type" content="text/html;charset=utf-8"></meta>
       </head>
       <body>
         <div itemscope itemtype="https://schema.org/Organization">
-          <div itemprop="employee" itemscope itemtype="https://schema.org/Person">
-            <span itemprop="name">Mr. Nested Name</span>
-          </div>
-
           <span itemprop="name">Mozilla</span>
         </div>
 
@@ -29,10 +25,8 @@ add_task(async function test_single_product_microdata() {
             <span itemprop="name">Bon Echo Microwave</span>
           </a>
 
-          <div itemprop="offers" itemscope itemtype="https://schema.org/Offer">
-            <span itemprop="price" content="3.50">£3.50</span>
-            <span itemprop="priceCurrency" content="GBP"></span>
-          </div>
+          <span itemprop="price" content="3.00">£3.00</span>
+          <span itemprop="priceCurrency" content="GBP"></span>
 
           <span itemprop="gtin" content="13572468"></span>
 
@@ -49,7 +43,7 @@ add_task(async function test_single_product_microdata() {
         [PageDataSchema.DATA_TYPE.PRODUCT]: {
           name: "Bon Echo Microwave",
           price: {
-            value: 3.5,
+            value: 3,
             currency: "GBP",
           },
         },
@@ -58,119 +52,13 @@ add_task(async function test_single_product_microdata() {
   );
 });
 
-add_task(async function test_single_product_json_ld() {
+add_task(async function test_single_multiple_data() {
   await verifyPageData(
     `
-      <!DOCTYPE html>
-      <html>
-      <head>
-      <script type="application/ld+json">
-        {
-          "@context": "http://schema.org",
-          "@type": "Organization",
-          "employee": {
-            "@type": "Person",
-            "name": "Mr. Nested Name"
-          },
-          "name": "Mozilla"
-        }
-      </script>
-      <script type="application/ld+json">
-        {
-          "@context": "https://schema.org",
-          "@type": "Product",
-          "image": "bon-echo-microwave-17in.jpg",
-          "url": "microwave.html",
-          "name": "Bon Echo Microwave",
-          "offers": {
-            "@type": "Offer",
-            "price": "3.50",
-            "priceCurrency": "GBP"
-          },
-          "gtin": "13572468",
-          "description": "The most amazing microwave in the world"
-        }
-      </script>
-      </head>
-      <body>
-      </body>
-      </html>
-    `,
-    {
-      siteName: "Mozilla",
-      description: "The most amazing microwave in the world",
-      image: BASE_URL + "/bon-echo-microwave-17in.jpg",
-      data: {
-        [PageDataSchema.DATA_TYPE.PRODUCT]: {
-          name: "Bon Echo Microwave",
-          price: {
-            value: 3.5,
-            currency: "GBP",
-          },
-        },
-      },
-    }
-  );
-});
-
-add_task(async function test_single_product_combined() {
-  await verifyPageData(
-    `
-      <!DOCTYPE html>
-      <html>
-      <head>
-      <script type="application/ld+json">
-        {
-          "@context": "https://schema.org",
-          "@type": "Product",
-          "image": "bon-echo-microwave-17in.jpg",
-          "url": "microwave.html",
-          "name": "Bon Echo Microwave",
-          "offers": {
-            "@type": "Offer",
-            "price": "3.50",
-            "priceCurrency": "GBP"
-          },
-          "gtin": "13572468",
-          "description": "The most amazing microwave in the world"
-        }
-      </script>
-      </head>
-      <body>
-        <div itemscope itemtype="https://schema.org/Organization">
-          <div itemprop="employee" itemscope itemtype="https://schema.org/Person">
-            <span itemprop="name">Mr. Nested Name</span>
-          </div>
-
-          <span itemprop="name">Mozilla</span>
-        </div>
-      </body>
-      </html>
-    `,
-    {
-      siteName: "Mozilla",
-      description: "The most amazing microwave in the world",
-      image: BASE_URL + "/bon-echo-microwave-17in.jpg",
-      data: {
-        [PageDataSchema.DATA_TYPE.PRODUCT]: {
-          name: "Bon Echo Microwave",
-          price: {
-            value: 3.5,
-            currency: "GBP",
-          },
-        },
-      },
-    }
-  );
-});
-
-add_task(async function test_single_multiple_microdata() {
-  await verifyPageData(
-    `
-      <!DOCTYPE html>
       <html>
       <head>
       <title>Product Info 2</title>
+      <meta http-equiv="Content-Type" content="text/html;charset=utf-8"></meta>
       </head>
       <body>
         <div itemscope itemtype="https://schema.org/Product">
@@ -179,10 +67,8 @@ add_task(async function test_single_multiple_microdata() {
             <span itemprop="name">Bon Echo Microwave</span>
           </a>
 
-          <div itemprop="offers" itemscope itemtype="https://schema.org/Offer">
-            <span itemprop="price" content="3.28">£3.28</span>
-            <span itemprop="priceCurrency" content="GBP"></span>
-          </div>
+          <span itemprop="price" content="3.00">£3.00</span>
+          <span itemprop="priceCurrency" content="GBP"></span>
 
           <span itemprop="gtin" content="13572468"></span>
         </div>
@@ -203,7 +89,7 @@ add_task(async function test_single_multiple_microdata() {
         [PageDataSchema.DATA_TYPE.PRODUCT]: {
           name: "Bon Echo Microwave",
           price: {
-            value: 3.28,
+            value: 3,
             currency: "GBP",
           },
         },

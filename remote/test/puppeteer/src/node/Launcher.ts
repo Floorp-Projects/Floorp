@@ -17,7 +17,6 @@ import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs';
 
-import { assert } from '../common/assert.js';
 import { BrowserFetcher } from './BrowserFetcher.js';
 import { Browser } from '../common/Browser.js';
 import { BrowserRunner } from './BrowserRunner.js';
@@ -29,13 +28,9 @@ const writeFileAsync = promisify(fs.writeFile);
 
 import {
   BrowserLaunchArgumentOptions,
-  ChromeReleaseChannel,
   PuppeteerNodeLaunchOptions,
 } from './LaunchOptions.js';
-
 import { Product } from '../common/Product.js';
-
-const tmpDir = () => process.env.PUPPETEER_TMP_DIR || os.tmpdir();
 
 /**
  * Describes a launcher - a class that is able to create and launch a browser instance.
@@ -43,7 +38,7 @@ const tmpDir = () => process.env.PUPPETEER_TMP_DIR || os.tmpdir();
  */
 export interface ProductLauncher {
   launch(object: PuppeteerNodeLaunchOptions);
-  executablePath: (string?) => string;
+  executablePath: () => string;
   defaultArgs(object: BrowserLaunchArgumentOptions);
   product: Product;
 }
@@ -71,7 +66,6 @@ class ChromeLauncher implements ProductLauncher {
       ignoreDefaultArgs = false,
       args = [],
       dumpio = false,
-      channel = null,
       executablePath = null,
       pipe = false,
       env = process.env,
@@ -83,7 +77,6 @@ class ChromeLauncher implements ProductLauncher {
       slowMo = 0,
       timeout = 30000,
       waitForInitialPage = true,
-      debuggingPort = null,
     } = options;
 
     const chromeArguments = [];
@@ -101,15 +94,9 @@ class ChromeLauncher implements ProductLauncher {
         argument.startsWith('--remote-debugging-')
       )
     ) {
-      if (pipe) {
-        assert(
-          debuggingPort === null,
-          'Browser should be launched with either pipe or debugging port - not both.'
-        );
-        chromeArguments.push('--remote-debugging-pipe');
-      } else {
-        chromeArguments.push(`--remote-debugging-port=${debuggingPort || 0}`);
-      }
+      chromeArguments.push(
+        pipe ? '--remote-debugging-pipe' : '--remote-debugging-port=0'
+      );
     }
 
     let userDataDir;
@@ -130,22 +117,13 @@ class ChromeLauncher implements ProductLauncher {
       isTempUserDataDir = false;
     } else {
       userDataDir = await mkdtempAsync(
-        path.join(tmpDir(), 'puppeteer_dev_chrome_profile-')
+        path.join(os.tmpdir(), 'puppeteer_dev_chrome_profile-')
       );
       chromeArguments.push(`--user-data-dir=${userDataDir}`);
     }
 
     let chromeExecutable = executablePath;
-
-    if (channel) {
-      // executablePath is detected by channel, so it should not be specified by user.
-      assert(
-        !executablePath,
-        '`executablePath` must not be specified when `channel` is given.'
-      );
-
-      chromeExecutable = executablePathForChannel(channel);
-    } else if (!executablePath) {
+    if (!executablePath) {
       // Use Intel x86 builds on Apple M1 until native macOS arm64
       // Chromium builds are available.
       if (os.platform() !== 'darwin' && os.arch() === 'arm64') {
@@ -174,7 +152,6 @@ class ChromeLauncher implements ProductLauncher {
       pipe: usePipe,
     });
 
-    let browser;
     try {
       const connection = await runner.setupConnection({
         usePipe,
@@ -182,7 +159,7 @@ class ChromeLauncher implements ProductLauncher {
         slowMo,
         preferredRevision: this._preferredRevision,
       });
-      browser = await Browser.create(
+      const browser = await Browser.create(
         connection,
         [],
         ignoreHTTPSErrors,
@@ -190,21 +167,13 @@ class ChromeLauncher implements ProductLauncher {
         runner.proc,
         runner.close.bind(runner)
       );
+      if (waitForInitialPage)
+        await browser.waitForTarget((t) => t.type() === 'page');
+      return browser;
     } catch (error) {
       runner.kill();
       throw error;
     }
-
-    if (waitForInitialPage) {
-      try {
-        await browser.waitForTarget((t) => t.type() === 'page', { timeout });
-      } catch (error) {
-        await browser.close();
-        throw error;
-      }
-    }
-
-    return browser;
   }
 
   defaultArgs(options: BrowserLaunchArgumentOptions = {}): string[] {
@@ -235,7 +204,6 @@ class ChromeLauncher implements ProductLauncher {
       // TODO(sadym): remove '--enable-blink-features=IdleDetection'
       // once IdleDetection is turned on by default.
       '--enable-blink-features=IdleDetection',
-      '--export-tagged-pdf',
     ];
     const {
       devtools = false,
@@ -255,12 +223,8 @@ class ChromeLauncher implements ProductLauncher {
     return chromeArguments;
   }
 
-  executablePath(channel?: ChromeReleaseChannel): string {
-    if (channel) {
-      return executablePathForChannel(channel);
-    } else {
-      return resolveExecutablePath(this).executablePath;
-    }
+  executablePath(): string {
+    return resolveExecutablePath(this).executablePath;
   }
 
   get product(): Product {
@@ -303,7 +267,6 @@ class FirefoxLauncher implements ProductLauncher {
       timeout = 30000,
       extraPrefsFirefox = {},
       waitForInitialPage = true,
-      debuggingPort = null,
     } = options;
 
     const firefoxArguments = [];
@@ -320,15 +283,8 @@ class FirefoxLauncher implements ProductLauncher {
       !firefoxArguments.some((argument) =>
         argument.startsWith('--remote-debugging-')
       )
-    ) {
-      if (pipe) {
-        assert(
-          debuggingPort === null,
-          'Browser should be launched with either pipe or debugging port - not both.'
-        );
-      }
-      firefoxArguments.push(`--remote-debugging-port=${debuggingPort || 0}`);
-    }
+    )
+      firefoxArguments.push('--remote-debugging-port=0');
 
     let userDataDir = null;
     let isTempUserDataDir = true;
@@ -380,7 +336,6 @@ class FirefoxLauncher implements ProductLauncher {
       pipe,
     });
 
-    let browser;
     try {
       const connection = await runner.setupConnection({
         usePipe: pipe,
@@ -388,7 +343,7 @@ class FirefoxLauncher implements ProductLauncher {
         slowMo,
         preferredRevision: this._preferredRevision,
       });
-      browser = await Browser.create(
+      const browser = await Browser.create(
         connection,
         [],
         ignoreHTTPSErrors,
@@ -396,21 +351,13 @@ class FirefoxLauncher implements ProductLauncher {
         runner.proc,
         runner.close.bind(runner)
       );
+      if (waitForInitialPage)
+        await browser.waitForTarget((t) => t.type() === 'page');
+      return browser;
     } catch (error) {
       runner.kill();
       throw error;
     }
-
-    if (waitForInitialPage) {
-      try {
-        await browser.waitForTarget((t) => t.type() === 'page', { timeout });
-      } catch (error) {
-        await browser.close();
-        throw error;
-      }
-    }
-
-    return browser;
   }
 
   executablePath(): string {
@@ -698,7 +645,7 @@ class FirefoxLauncher implements ProductLauncher {
 
   async _createProfile(extraPrefs: { [x: string]: unknown }): Promise<string> {
     const temporaryProfilePath = await mkdtempAsync(
-      path.join(tmpDir(), 'puppeteer_dev_firefox_profile-')
+      path.join(os.tmpdir(), 'puppeteer_dev_firefox_profile-')
     );
 
     const prefs = this.defaultPreferences(extraPrefs);
@@ -706,80 +653,6 @@ class FirefoxLauncher implements ProductLauncher {
 
     return temporaryProfilePath;
   }
-}
-
-function executablePathForChannel(channel: ChromeReleaseChannel): string {
-  const platform = os.platform();
-
-  let chromePath: string | undefined;
-  switch (platform) {
-    case 'win32':
-      switch (channel) {
-        case 'chrome':
-          chromePath = `${process.env.PROGRAMFILES}\\Google\\Chrome\\Application\\chrome.exe`;
-          break;
-        case 'chrome-beta':
-          chromePath = `${process.env.PROGRAMFILES}\\Google\\Chrome Beta\\Application\\chrome.exe`;
-          break;
-        case 'chrome-canary':
-          chromePath = `${process.env.PROGRAMFILES}\\Google\\Chrome SxS\\Application\\chrome.exe`;
-          break;
-        case 'chrome-dev':
-          chromePath = `${process.env.PROGRAMFILES}\\Google\\Chrome Dev\\Application\\chrome.exe`;
-          break;
-      }
-      break;
-    case 'darwin':
-      switch (channel) {
-        case 'chrome':
-          chromePath =
-            '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-          break;
-        case 'chrome-beta':
-          chromePath =
-            '/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta';
-          break;
-        case 'chrome-canary':
-          chromePath =
-            '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary';
-          break;
-        case 'chrome-dev':
-          chromePath =
-            '/Applications/Google Chrome Dev.app/Contents/MacOS/Google Chrome Dev';
-          break;
-      }
-      break;
-    case 'linux':
-      switch (channel) {
-        case 'chrome':
-          chromePath = '/opt/google/chrome/chrome';
-          break;
-        case 'chrome-beta':
-          chromePath = '/opt/google/chrome-beta/chrome';
-          break;
-        case 'chrome-dev':
-          chromePath = '/opt/google/chrome-unstable/chrome';
-          break;
-      }
-      break;
-  }
-
-  if (!chromePath) {
-    throw new Error(
-      `Unable to detect browser executable path for '${channel}' on ${platform}.`
-    );
-  }
-
-  // Check if Chrome exists and is accessible.
-  try {
-    fs.accessSync(chromePath);
-  } catch (error) {
-    throw new Error(
-      `Could not find Google Chrome executable for channel '${channel}' at '${chromePath}'.`
-    );
-  }
-
-  return chromePath;
 }
 
 function resolveExecutablePath(launcher: ChromeLauncher | FirefoxLauncher): {

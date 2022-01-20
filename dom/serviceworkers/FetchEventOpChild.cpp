@@ -37,7 +37,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/BackgroundChild.h"
-#include "mozilla/dom/FetchService.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/PRemoteWorkerControllerChild.h"
@@ -218,16 +217,15 @@ FetchEventOpChild::FetchEventOpChild(
     : mArgs(std::move(aArgs)),
       mInterceptedChannel(std::move(aInterceptedChannel)),
       mRegistration(std::move(aRegistration)),
-      mKeepAliveToken(std::move(aKeepAliveToken)),
-      mPreloadResponseReadyPromise(std::move(aPreloadResponseReadyPromise)) {
-  if (mPreloadResponseReadyPromise) {
+      mKeepAliveToken(std::move(aKeepAliveToken)) {
+  if (aPreloadResponseReadyPromise) {
     // This promise should be configured to use synchronous dispatch, so if it's
     // already resolved when we run this code then the callback will be called
     // synchronously and pass the preload response with the constructor message.
     //
     // Note that it's fine to capture the this pointer in the callbacks because
     // we disconnect the request in Recv__delete__().
-    mPreloadResponseReadyPromise
+    aPreloadResponseReadyPromise
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
             [this](SafeRefPtr<InternalResponse> aInternalResponse) {
@@ -242,11 +240,9 @@ FetchEventOpChild::FetchEventOpChild(
                 // have to send it in a separate message.
                 SendPreloadResponse(response);
               }
-              mPreloadResponseReadyPromise = nullptr;
               mPreloadResponseReadyPromiseRequestHolder.Complete();
             },
             [this](const CopyableErrorResult&) {
-              mPreloadResponseReadyPromise = nullptr;
               mPreloadResponseReadyPromiseRequestHolder.Complete();
             })
         ->Track(mPreloadResponseReadyPromiseRequestHolder);
@@ -273,10 +269,6 @@ mozilla::ipc::IPCResult FetchEventOpChild::RecvRespondWith(
   // Preload response is too late to be ready after we receive RespondWith, so
   // disconnect the promise.
   mPreloadResponseReadyPromiseRequestHolder.DisconnectIfExists();
-  if (mPreloadResponseReadyPromise) {
-    RefPtr<FetchService> fetchService = FetchService::GetInstance();
-    fetchService->CancelFetch(std::move(mPreloadResponseReadyPromise));
-  }
 
   switch (aResult.type()) {
     case ParentToParentFetchEventRespondWithResult::
@@ -336,10 +328,6 @@ mozilla::ipc::IPCResult FetchEventOpChild::Recv__delete__(
 
   mPromiseHolder.ResolveIfExists(true, __func__);
   mPreloadResponseReadyPromiseRequestHolder.DisconnectIfExists();
-  if (mPreloadResponseReadyPromise) {
-    RefPtr<FetchService> fetchService = FetchService::GetInstance();
-    fetchService->CancelFetch(std::move(mPreloadResponseReadyPromise));
-  }
 
   /**
    * This corresponds to the "Fire Functional Event" algorithm's step 9:

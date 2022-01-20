@@ -373,7 +373,7 @@ var State = {
           continue;
         }
         name = `${addon.name} (${addon.id})`;
-        image = "chrome://browser/skin/addons.svg";
+        image = "chrome://mozapps/skin/extensions/extension.svg";
         type = gSystemAddonIds.has(addon.id) ? "system-addon" : "addon";
       } else if (id == 0 && !tab.isWorker) {
         name = { id: "ghost-windows" };

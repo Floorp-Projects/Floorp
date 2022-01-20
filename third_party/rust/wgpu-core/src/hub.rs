@@ -964,7 +964,6 @@ impl HalApi for hal::api::Metal {
         Instance {
             name: name.to_owned(),
             metal: Some(hal_instance),
-            ..Default::default()
         }
     }
     fn hub<G: GlobalIdentityHandlerFactory>(global: &Global<G>) -> &Hub<Self, G> {

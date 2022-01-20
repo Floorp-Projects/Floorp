@@ -52,19 +52,17 @@ class FFmpegDataDecoder<LIBAV_VER>
   MediaResult DoDecode(MediaRawData* aSample, bool* aGotFrame,
                        DecodedData& aOutResults);
 
-  FFmpegLibWrapper* mLib;  // set in constructor
+  FFmpegLibWrapper* mLib;
 
-  // mCodecContext is accessed on taskqueue only, no locking needed
   AVCodecContext* mCodecContext;
   AVCodecParserContext* mCodecParser;
   AVFrame* mFrame;
   RefPtr<MediaByteBuffer> mExtraData;
-  AVCodecID mCodecID;  // set in constructor
+  AVCodecID mCodecID;
 
  protected:
-  static StaticMutex sMutex;  // used to provide critical-section locking
-                              // for calls into ffmpeg
-  const RefPtr<TaskQueue> mTaskQueue;  // set in constructor
+  static StaticMutex sMonitor;
+  const RefPtr<TaskQueue> mTaskQueue;
 
  private:
   RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
@@ -76,7 +74,7 @@ class FFmpegDataDecoder<LIBAV_VER>
   virtual int ParserFlags() const { return PARSER_FLAG_COMPLETE_FRAMES; }
 
   MozPromiseHolder<DecodePromise> mPromise;
-  media::TimeUnit mLastInputDts;  // used on Taskqueue
+  media::TimeUnit mLastInputDts;
 };
 
 }  // namespace mozilla

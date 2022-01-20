@@ -61,10 +61,7 @@ HarBuilder.prototype = {
 
     // Build entries.
     for (const file of this._options.items) {
-      const entry = await this.buildEntry(log.log, file);
-      if (entry) {
-        log.log.entries.push(entry);
-      }
+      log.log.entries.push(await this.buildEntry(log.log, file));
     }
 
     // Some data needs to be fetched from the backend during the
@@ -109,22 +106,13 @@ HarBuilder.prototype = {
     entry.startedDateTime = dateToJSON(new Date(file.startedMs));
 
     let { eventTimings } = file;
-    try {
-      if (!eventTimings && this._options.requestData) {
-        eventTimings = await this._options.requestData(file.id, "eventTimings");
-      }
-
-      entry.request = await this.buildRequest(file);
-      entry.response = await this.buildResponse(file);
-      entry.cache = await this.buildCache(file);
-    } catch (e) {
-      // Ignore any request for which we can't retrieve lazy data
-      // The request has most likely been destroyed on the server side,
-      // either because persist is disabled or the request's target/WindowGlobal/process
-      // has been destroyed.
-      console.warn("HAR builder failed on", file.url, e, e.stack);
-      return null;
+    if (!eventTimings && this._options.requestData) {
+      eventTimings = await this._options.requestData(file.id, "eventTimings");
     }
+
+    entry.request = await this.buildRequest(file);
+    entry.response = await this.buildResponse(file);
+    entry.cache = await this.buildCache(file);
     entry.timings = eventTimings ? eventTimings.timings : {};
 
     // Calculate total time by summing all timings. Note that

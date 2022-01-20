@@ -244,9 +244,7 @@ class CamerasChild final : public PCamerasChild {
   // both waiters and one will be guaranteed to get the wrong result.
   // Take this one before taking mReplyMonitor.
   Mutex mRequestMutex;
-  // Hold to wait for an async response to our calls *and* until the
-  // user of LockAndDispatch<> has read the data out. This is done by
-  // keeping the LockAndDispatch object alive.
+  // Hold to wait for an async response to our calls
   Monitor mReplyMonitor;
   // Async response valid?
   bool mReceivedReply;

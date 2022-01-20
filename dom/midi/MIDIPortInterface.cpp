@@ -18,7 +18,8 @@ mozilla::dom::MIDIPortInterface::MIDIPortInterface(
       mType((MIDIPortType)aPortInfo.type()),
       // We'll never initialize a port object that's not connected
       mDeviceState(MIDIPortDeviceState::Connected),
-      mConnectionState(MIDIPortConnectionState::Closed),
+      // Open everything on connection
+      mConnectionState(MIDIPortConnectionState::Open),
       mShuttingDown(false) {}
 
 mozilla::dom::MIDIPortInterface::~MIDIPortInterface() { Shutdown(); }

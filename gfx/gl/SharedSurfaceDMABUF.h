@@ -43,8 +43,6 @@ class SharedSurface_DMABUF final : public SharedSurface {
   virtual void ProducerReadReleaseImpl() override {}
 
   Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() override;
-
-  void WaitForBufferOwnership() override;
 };
 
 class SurfaceFactory_DMABUF : public SurfaceFactory {

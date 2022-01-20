@@ -381,9 +381,7 @@ class PeerConnectionImpl final
 
   void Close(ErrorResult& rv) { rv = Close(); }
 
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool PluginCrash(uint32_t aPluginID,
-                                               const nsAString& aPluginName);
+  bool PluginCrash(uint32_t aPluginID, const nsAString& aPluginName);
 
   void RecordEndOfCallTelemetry();
 

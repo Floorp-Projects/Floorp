@@ -820,6 +820,11 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
   void moveFloat32(FloatRegister src, FloatRegister dest) {
     as_movs(dest, src);
   }
+  void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
+    loadPtr(Address(WasmTlsReg,
+                    offsetof(wasm::TlsData, globalArea) + globalDataOffset),
+            dest);
+  }
   void loadWasmPinnedRegsFromTls() {
     loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg);
   }

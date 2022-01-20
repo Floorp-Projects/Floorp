@@ -35,7 +35,6 @@
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/BigIntType.h"
-#include "vm/ErrorObject.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "wasm/TypedObject.h"
 #include "wasm/WasmBuiltins.h"
@@ -359,17 +358,20 @@ static int32_t PerformWait(Instance* instance, PtrT byteOffset, ValT value,
   JSContext* cx = instance->tlsData()->cx;
 
   if (!instance->memory()->isShared()) {
-    ReportTrapError(cx, JSMSG_WASM_NONSHARED_WAIT);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_NONSHARED_WAIT);
     return -1;
   }
 
   if (byteOffset & (sizeof(ValT) - 1)) {
-    ReportTrapError(cx, JSMSG_WASM_UNALIGNED_ACCESS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_UNALIGNED_ACCESS);
     return -1;
   }
 
   if (byteOffset + sizeof(ValT) > instance->memory()->volatileMemoryLength()) {
-    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
 
@@ -432,12 +434,14 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
   // the spec's validation algorithm.
 
   if (byteOffset & 3) {
-    ReportTrapError(cx, JSMSG_WASM_UNALIGNED_ACCESS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_UNALIGNED_ACCESS);
     return -1;
   }
 
   if (byteOffset >= instance->memory()->volatileMemoryLength()) {
-    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
 
@@ -450,7 +454,8 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
                                       size_t(byteOffset), int64_t(count));
 
   if (woken > INT32_MAX) {
-    ReportTrapError(cx, JSMSG_WASM_WAKE_OVERFLOW);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_WAKE_OVERFLOW);
     return -1;
   }
 
@@ -564,7 +569,8 @@ inline int32_t WasmMemoryCopy(JSContext* cx, T memBase, size_t memLen,
                               I dstByteOffset, I srcByteOffset, I len,
                               F memMove) {
   if (BoundsCheckCopy(dstByteOffset, srcByteOffset, len, memLen)) {
-    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
 
@@ -651,7 +657,8 @@ template <typename T, typename F, typename I>
 inline int32_t WasmMemoryFill(JSContext* cx, T memBase, size_t memLen,
                               I byteOffset, uint32_t value, I len, F memSet) {
   if (BoundsCheckFill(byteOffset, len, memLen)) {
-    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
 
@@ -740,7 +747,8 @@ static int32_t MemoryInit(JSContext* cx, Instance* instance, I dstOffset,
       return 0;
     }
 
-    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
 
@@ -759,7 +767,8 @@ static int32_t MemoryInit(JSContext* cx, Instance* instance, I dstOffset,
   //   memoryBase[ dstOffset .. dstOffset + len - 1 ]
 
   if (BoundsCheckInit(dstOffset, srcOffset, len, memLen, segLen)) {
-    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
 
@@ -826,7 +835,8 @@ static int32_t MemoryInit(JSContext* cx, Instance* instance, I dstOffset,
   uint64_t srcOffsetLimit = uint64_t(srcOffset) + len;
 
   if (dstOffsetLimit > dstTableLen || srcOffsetLimit > srcTableLen) {
-    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
 
@@ -915,7 +925,8 @@ static void RemoveDuplicates(VectorOfIndirectStubTarget* vector) {
 bool Instance::ensureIndirectStubs(JSContext* cx,
                                    const Uint32Vector& elemFuncIndices,
                                    uint32_t srcOffset, uint32_t len,
-                                   const Tier tier, const bool tableIsPublic) {
+                                   const Tier tier,
+                                   const bool tableIsImportedOrExported) {
   const MetadataTier& metadataTier = metadata(tier);
   VectorOfIndirectStubTarget targets;
 
@@ -953,7 +964,8 @@ bool Instance::ensureIndirectStubs(JSContext* cx,
       continue;
     }
 
-    if (!tableIsPublic || getIndirectStub(funcIndex, tlsData(), tier)) {
+    if (!tableIsImportedOrExported ||
+        getIndirectStub(funcIndex, tlsData(), tier)) {
       continue;
     }
 
@@ -973,7 +985,7 @@ bool Instance::ensureIndirectStubs(JSContext* cx,
 }
 
 bool Instance::ensureIndirectStub(JSContext* cx, FuncRef* ref, const Tier tier,
-                                  const bool tableIsPublic) {
+                                  const bool tableIsImportedOrExported) {
   if (ref->isNull()) {
     return true;
   }
@@ -984,7 +996,8 @@ bool Instance::ensureIndirectStub(JSContext* cx, FuncRef* ref, const Tier tier,
     return false;
   }
 
-  return ensureIndirectStubs(cx, functionIndices, 0, 1u, tier, tableIsPublic);
+  return ensureIndirectStubs(cx, functionIndices, 0, 1u, tier,
+                             tableIsImportedOrExported);
 }
 
 bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
@@ -1006,7 +1019,7 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
     // code pointers in the table.  This ensures that either the table is
     // updated with all pointers, or with none.
     if (!ensureIndirectStubs(cx, elemFuncIndices, srcOffset, len, tier,
-                             table.isPublic())) {
+                             table.isImportedOrExported())) {
       return false;
     }
   }
@@ -1043,11 +1056,11 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
       }
     } else {
       // The function is an internal wasm function that belongs to the current
-      // instance. If table is isPublic then some other module can
+      // instance. If table is isImportedOrExported then some other module can
       // import this table and call its functions so we have to use indirect
       // stub, otherwise we can use checked call entry because we don't cross
       // instance's borders.
-      if (table.isPublic()) {
+      if (table.isImportedOrExported()) {
         code = getIndirectStub(funcIndex, tlsData(), tier);
         MOZ_ASSERT(code);
       } else {
@@ -1093,7 +1106,8 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
       return 0;
     }
 
-    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
 
@@ -1115,7 +1129,8 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
   uint64_t srcOffsetLimit = uint64_t(srcOffset) + uint64_t(len);
 
   if (dstOffsetLimit > tableLen || srcOffsetLimit > segLen) {
-    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
 
@@ -1138,7 +1153,8 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
   uint64_t offsetLimit = uint64_t(start) + uint64_t(len);
 
   if (offsetLimit > table.length()) {
-    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
 
@@ -1167,7 +1183,8 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
   const Table& table = *instance->tables()[tableIndex];
 
   if (index >= table.length()) {
-    ReportTrapError(cx, JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
     return AnyRef::invalid().forCompiledCode();
   }
 
@@ -1214,7 +1231,7 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
       // table, or the later call to fillFuncRef may want to create a new stub
       // for the better tier and may OOM anyway, and it must not.
       if (!instance->ensureIndirectStub(cx, functionForFill.address(), tier,
-                                        table.isPublic())) {
+                                        table.isImportedOrExported())) {
         return -1;
       }
 
@@ -1239,7 +1256,8 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
   Table& table = *instance->tables()[tableIndex];
 
   if (index >= table.length()) {
-    ReportTrapError(cx, JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
     return -1;
   }
 
@@ -1425,17 +1443,16 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
       .forCompiledCode();
 }
 
-/* static */ int32_t Instance::throwException(Instance* instance,
-                                              JSObject* exn) {
-  MOZ_ASSERT(SASigThrowException.failureMode == FailureMode::FailOnNegI32);
+/* static */ void* Instance::throwException(Instance* instance, JSObject* exn) {
+  MOZ_ASSERT(SASigThrowException.failureMode == FailureMode::FailOnNullPtr);
 
   JSContext* cx = instance->tlsData()->cx;
   RootedValue exnVal(cx, UnboxAnyRef(AnyRef::fromJSObject(exn)));
   cx->setPendingException(exnVal, nullptr);
 
-  // By always returning -1, we trigger a wasmTrap(Trap::ThrowReported),
+  // By always returning a nullptr, we trigger a wasmTrap(Trap::ThrowReported),
   // and use that to trigger the stack walking for this exception.
-  return -1;
+  return nullptr;
 }
 
 /* static */ uint32_t Instance::consumePendingException(Instance* instance) {
@@ -1533,7 +1550,8 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
   uint64_t src1Limit = uint64_t(src1) + uint64_t(len);
   uint64_t src2Limit = uint64_t(src2) + uint64_t(len);
   if (destLimit > memLen || src1Limit > memLen || src2Limit > memLen) {
-    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
 
@@ -2690,27 +2708,4 @@ void Instance::addSizeOfMisc(MallocSizeOf mallocSizeOf,
 
   code_->addSizeOfMiscIfNotSeen(mallocSizeOf, seenMetadata, seenCode, code,
                                 data);
-}
-
-//////////////////////////////////////////////////////////////////////////////
-//
-// Reporting of errors that are traps.
-
-void wasm::ReportTrapError(JSContext* cx, unsigned errorNumber) {
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber);
-
-  if (cx->isThrowingOutOfMemory()) {
-    return;
-  }
-
-  // Mark the exception as thrown from a trap to prevent if from being handled
-  // by wasm exception handlers.
-  RootedValue exn(cx);
-  if (!cx->getPendingException(&exn)) {
-    return;
-  }
-
-  MOZ_ASSERT(exn.isObject() && exn.toObject().is<ErrorObject>());
-  exn.toObject().as<ErrorObject>().setFromWasmTrap();
-  return;
 }

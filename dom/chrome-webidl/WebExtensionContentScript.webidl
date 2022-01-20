@@ -87,12 +87,6 @@ interface MozDocumentMatcher {
   readonly attribute sequence<MatchGlob>? excludeGlobs;
 
   /**
-   * The originAttributesPattern for which this script should be enabled for.
-   */
-  [Constant, Throws]
-  readonly attribute any originAttributesPatterns;
-
-  /**
    * The policy object for the extension that this matcher belongs to.
    */
   [Constant]
@@ -101,8 +95,6 @@ interface MozDocumentMatcher {
 
 dictionary MozDocumentMatcherInit {
   boolean allFrames = false;
-
-  sequence<OriginAttributesPatternDictionary>? originAttributesPatterns = null;
 
   boolean matchAboutBlank = false;
 

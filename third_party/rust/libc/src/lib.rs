@@ -26,7 +26,7 @@
 #![cfg_attr(feature = "rustc-dep-of-std", no_core)]
 #![cfg_attr(
     any(feature = "rustc-dep-of-std", target_os = "redox"),
-    feature(static_nobundle, native_link_modifiers, native_link_modifiers_bundle)
+    feature(static_nobundle)
 )]
 #![cfg_attr(libc_const_extern_fn, feature(const_extern_fn))]
 
@@ -63,7 +63,7 @@ cfg_if! {
         use core::clone::Clone;
         #[doc(hidden)]
         #[allow(unused_imports)]
-        use core::marker::{Copy, Send, Sync};
+        use core::marker::Copy;
         #[doc(hidden)]
         #[allow(unused_imports)]
         use core::option::Option;
@@ -85,7 +85,7 @@ cfg_if! {
         pub use core::clone::Clone;
         #[doc(hidden)]
         #[allow(unused_imports)]
-        pub use core::marker::{Copy, Send, Sync};
+        pub use core::marker::Copy;
         #[doc(hidden)]
         #[allow(unused_imports)]
         pub use core::option::Option;
@@ -123,12 +123,6 @@ cfg_if! {
 
         mod vxworks;
         pub use vxworks::*;
-    } else if #[cfg(target_os = "solid_asp3")] {
-        mod fixed_width_ints;
-        pub use fixed_width_ints::*;
-
-        mod solid;
-        pub use solid::*;
     } else if #[cfg(unix)] {
         mod fixed_width_ints;
         pub use fixed_width_ints::*;

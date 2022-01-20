@@ -39,7 +39,8 @@ class APZCFlingAccelerationTester : public APZCTreeManagerTester {
     APZEventResult result = TouchDown(apzc, aStartPoint, mcc->Time());
 
     // Allowed touch behaviours must be set after sending touch-start.
-    if (result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
+    if (result.GetStatus() != nsEventStatus_eConsumeNoDefault &&
+        StaticPrefs::layout_css_touch_action_enabled()) {
       SetDefaultAllowedTouchBehavior(apzc, result.mInputBlockId);
     }
 

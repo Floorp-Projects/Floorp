@@ -108,6 +108,9 @@ namespace workerinternals {
 // Half the size of the actual C stack, to be safe.
 #define WORKER_CONTEXT_NATIVE_STACK_LIMIT 128 * sizeof(size_t) * 1024
 
+// The maximum number of hardware concurrency, overridable via pref.
+#define MAX_HARDWARE_CONCURRENCY 8
+
 // The maximum number of threads to use for workers, overridable via pref.
 #define MAX_WORKERS_PER_DOMAIN 512
 
@@ -122,6 +125,7 @@ static_assert(MAX_WORKERS_PER_DOMAIN >= 1,
 
 #define PREF_WORKERS_PREFIX "dom.workers."
 #define PREF_WORKERS_MAX_PER_DOMAIN PREF_WORKERS_PREFIX "maxPerDomain"
+#define PREF_WORKERS_MAX_HARDWARE_CONCURRENCY "dom.maxHardwareConcurrency"
 
 #define GC_REQUEST_OBSERVER_TOPIC "child-gc-request"
 #define CC_REQUEST_OBSERVER_TOPIC "child-cc-request"
@@ -143,6 +147,7 @@ namespace {
 const uint32_t kNoIndex = uint32_t(-1);
 
 uint32_t gMaxWorkersPerDomain = MAX_WORKERS_PER_DOMAIN;
+uint32_t gMaxHardwareConcurrency = MAX_HARDWARE_CONCURRENCY;
 
 // Does not hold an owning reference.
 RuntimeService* gRuntimeService = nullptr;
@@ -1518,6 +1523,10 @@ nsresult RuntimeService::Init() {
       Preferences::GetInt(PREF_WORKERS_MAX_PER_DOMAIN, MAX_WORKERS_PER_DOMAIN);
   gMaxWorkersPerDomain = std::max(0, maxPerDomain);
 
+  int32_t maxHardwareConcurrency = Preferences::GetInt(
+      PREF_WORKERS_MAX_HARDWARE_CONCURRENCY, MAX_HARDWARE_CONCURRENCY);
+  gMaxHardwareConcurrency = std::max(0, maxHardwareConcurrency);
+
   RefPtr<OSFileConstantsService> osFileConstantsService =
       OSFileConstantsService::GetOrCreate();
   if (NS_WARN_IF(!osFileConstantsService)) {
@@ -2048,11 +2057,11 @@ uint32_t RuntimeService::ClampedHardwareConcurrency() const {
 
   // This needs to be atomic, because multiple workers, and even mainthread,
   // could race to initialize it at once.
-  static Atomic<uint32_t> unclampedHardwareConcurrency;
+  static Atomic<uint32_t> clampedHardwareConcurrency;
 
   // No need to loop here: if compareExchange fails, that just means that some
   // other worker has initialized numberOfProcessors, so we're good to go.
-  if (!unclampedHardwareConcurrency) {
+  if (!clampedHardwareConcurrency) {
     int32_t numberOfProcessors = 0;
 #if defined(XP_MACOSX)
     if (nsMacUtilsImpl::IsTCSMAvailable()) {
@@ -2067,12 +2076,12 @@ uint32_t RuntimeService::ClampedHardwareConcurrency() const {
     if (numberOfProcessors <= 0) {
       numberOfProcessors = 1;  // Must be one there somewhere
     }
-    Unused << unclampedHardwareConcurrency.compareExchange(0,
-                                                           numberOfProcessors);
+    uint32_t clampedValue =
+        std::min(uint32_t(numberOfProcessors), gMaxHardwareConcurrency);
+    Unused << clampedHardwareConcurrency.compareExchange(0, clampedValue);
   }
 
-  return std::min(uint32_t(unclampedHardwareConcurrency),
-                  StaticPrefs::dom_maxHardwareConcurrency());
+  return clampedHardwareConcurrency;
 }
 
 // nsISupports

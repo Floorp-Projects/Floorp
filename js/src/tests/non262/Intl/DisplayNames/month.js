@@ -98,6 +98,11 @@ for (let [locale, localeTests] of Object.entries(tests)) {
   assertEq(dn1.of("13"), "13");
   assertEq(dn2.of("13"), "13");
   assertEq(dn3.of("13"), undefined);
+
+  // The returned fallback is in "canonical" case.
+  assertEq(dn1.of("13.0"), "13");
+  assertEq(dn2.of("13.0"), "13");
+  assertEq(dn3.of("13.0"), undefined);
 }
 
 if (typeof reportCompare === "function")

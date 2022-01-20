@@ -697,10 +697,6 @@ void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc) {
     }
   }
 
-  if (mIID2NativeInterfaceMap) {
-    mIID2NativeInterfaceMap->Trace(trc);
-  }
-
   dom::TraceBlackJS(trc);
 }
 

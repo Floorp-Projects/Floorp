@@ -16,22 +16,18 @@ MediaStream is rendered as blackness.</p>
 <div id='log'></div>
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
-<script src=/resources/testdriver.js></script>
-<script src=/resources/testdriver-vendor.js></script>
-<script src=permission-helper.js></script>
 <script>
-const vid = document.getElementById("vid");
-const cv = document.createElement("canvas");
-promise_test(async () => {
-  await setMediaPermission("granted", ["camera"]);
-  const stream = await navigator.mediaDevices.getUserMedia({video: true});
-  if (stream.getVideoTracks()[0].enabled) {
-    stream.getVideoTracks()[0].enabled = false;
-  }
+var vid = document.getElementById("vid");
+var cv = document.createElement("canvas");
+var t = async_test("Tests that a disabled video track in a MediaStream is rendered as blackness");
+t.step(function() {
+  navigator.mediaDevices.getUserMedia({video: true})
+    .then(t.step_func(function (stream) {
+      if (stream.getVideoTracks()[0].enabled) {
+        stream.getVideoTracks()[0].enabled = false;
+      }
 
-  let resolveLoadedPromise;
-  const videoLoaded = new Promise(res => resolveLoadedPromise = res)
-  var testOnceLoadeddata = function() {
+      var testOnceLoadeddata = t.step_func(function() {
         vid.removeEventListener("loadeddata", testOnceLoadeddata, false);
         cv.width = vid.offsetWidth;
         cv.height = vid.offsetHeight;
@@ -44,13 +40,14 @@ promise_test(async () => {
           assert_equals(imageData.data[i + 2], 0, "No blue component in pixel #" + i);
           assert_equals(imageData.data[i + 3], 255, "No transparency in pixel #" + i);
         }
-        resolveLoadedPromise();
-  };
+        t.done();
+      });
 
-  vid.srcObject = stream;
-  vid.play();
-  vid.addEventListener("loadeddata", testOnceLoadeddata, false);
-}, "Tests that a disabled video track in a MediaStream is rendered as blackness");
+      vid.srcObject = stream;
+      vid.play();
+      vid.addEventListener("loadeddata", testOnceLoadeddata, false);
+    }));
+});
 </script>
 </body>
 </html>

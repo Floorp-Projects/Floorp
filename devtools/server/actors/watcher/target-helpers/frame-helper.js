@@ -39,7 +39,7 @@ async function createTargets(watcher) {
   // TODO: We should also set the flag for the "parent process" browsing context when we're
   // in the browser toolbox. This is blocked by Bug 1675763, and should be handled as part
   // of Bug 1709529.
-  if (watcher.sessionContext.type == "browser-element") {
+  if (watcher.context.type == "browser-element") {
     // The `watchedByDevTools` enables gecko behavior tied to this flag, such as:
     //  - reporting the contents of HTML loaded in the docshells
     //  - capturing stacks for the network monitor.
@@ -49,7 +49,7 @@ async function createTargets(watcher) {
   if (!browsingContextAttachedObserverByWatcher.has(watcher)) {
     // We store the browserId here as watcher.browserElement.browserId can momentary be
     // set to 0 when there's a navigation to a new browsing context.
-    const browserId = watcher.sessionContext.browserId;
+    const browserId = watcher.context.browserId;
     const onBrowsingContextAttached = browsingContext => {
       // We want to set watchedByDevTools on new top-level browsing contexts:
       // - in the case of the BrowserToolbox/BrowserConsole, that would be the browsing
@@ -59,7 +59,7 @@ async function createTargets(watcher) {
       // Then BrowsingContext will propagate to all the tree of children BrowsingContext's.
       if (
         !browsingContext.parent &&
-        (watcher.sessionContext.type != "browser-element" ||
+        (watcher.context.type != "browser-element" ||
           browserId === browsingContext.browserId)
       ) {
         browsingContext.watchedByDevTools = true;
@@ -134,7 +134,7 @@ async function createTargetForBrowsingContext({
       .instantiateTarget({
         watcherActorID: watcher.actorID,
         connectionPrefix: watcher.conn.prefix,
-        sessionContext: watcher.sessionContext,
+        context: watcher.context,
         sessionData: watcher.sessionData,
       });
   } catch (e) {
@@ -170,7 +170,7 @@ function destroyTargets(watcher) {
   );
   if (
     watcher.isServerTargetSwitchingEnabled &&
-    watcher.sessionContext.type == "browser-element"
+    watcher.context.type == "browser-element"
   ) {
     // If server side target switching is enabled, we should also destroy the top level browsing context.
     // If it is disabled, the top level target will be destroyed from the client instead.
@@ -191,11 +191,11 @@ function destroyTargets(watcher) {
       .getActor("DevToolsFrame")
       .destroyTarget({
         watcherActorID: watcher.actorID,
-        sessionContext: watcher.sessionContext,
+        context: watcher.context,
       });
   }
 
-  if (watcher.sessionContext.type == "browser-element") {
+  if (watcher.context.type == "browser-element") {
     watcher.browserElement.browsingContext.watchedByDevTools = false;
   }
 
@@ -231,7 +231,7 @@ async function addSessionDataEntry({ watcher, type, entries }) {
       .getActor("DevToolsFrame")
       .addSessionDataEntry({
         watcherActorID: watcher.actorID,
-        sessionContext: watcher.sessionContext,
+        context: watcher.context,
         type,
         entries,
       });
@@ -258,7 +258,7 @@ function removeSessionDataEntry({ watcher, type, entries }) {
       .getActor("DevToolsFrame")
       .removeSessionDataEntry({
         watcherActorID: watcher.actorID,
-        sessionContext: watcher.sessionContext,
+        context: watcher.context,
         type,
         entries,
       });
@@ -294,15 +294,15 @@ function getWatchingBrowsingContexts(watcher) {
   // Even if we aren't watching additional target, we want to process the top level target.
   // The top level target isn't returned by getFilteredRemoteBrowsingContext, so add it in both cases.
   if (
-    watcher.sessionContext.type == "browser-element" ||
-    watcher.sessionContext.type == "webextension"
+    watcher.context.type == "browser-element" ||
+    watcher.context.type == "webextension"
   ) {
     let topBrowsingContext;
-    if (watcher.sessionContext.type == "browser-element") {
+    if (watcher.context.type == "browser-element") {
       topBrowsingContext = watcher.browserElement.browsingContext;
-    } else if (watcher.sessionContext.type == "webextension") {
+    } else if (watcher.context.type == "webextension") {
       topBrowsingContext = BrowsingContext.get(
-        watcher.sessionContext.addonBrowsingContextID
+        watcher.context.addonBrowsingContextID
       );
     }
 

@@ -281,15 +281,10 @@ class Mitmproxy(Playback):
                     os.path.normpath(self.recording.recording_path),
                     "--set",
                     "websocket=false",
+                    "--scripts",
+                    os.path.join(mitm_folder, "scripts", "inject-deterministic.py"),
                 ]
             )
-            if "inject_deterministic" in self.config.keys():
-                command.extend(
-                    [
-                        "--scripts",
-                        os.path.join(mitm_folder, "scripts", "inject-deterministic.py"),
-                    ]
-                )
             self.recording.set_metadata(
                 "proxy_version", self.config["playback_version"]
             )
@@ -420,12 +415,9 @@ class Mitmproxy(Playback):
                 return
 
             if mozinfo.os == "win":
-                from mozprocess.winprocess import (
-                    ERROR_CONTROL_C_EXIT,
-                    ERROR_CONTROL_C_EXIT_DECIMAL,
-                )  # noqa
+                from mozprocess.winprocess import ERROR_CONTROL_C_EXIT  # noqa
 
-                if exit_code in [ERROR_CONTROL_C_EXIT, ERROR_CONTROL_C_EXIT_DECIMAL]:
+                if exit_code == ERROR_CONTROL_C_EXIT:
                     LOG.info(
                         "Successfully killed the mitmproxy playback process"
                         " with exit code %d" % exit_code

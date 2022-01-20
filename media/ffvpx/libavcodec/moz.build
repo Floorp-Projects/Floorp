@@ -17,22 +17,20 @@ if CONFIG['FFVPX_ASFLAGS']:
 SharedLibrary('mozavcodec')
 SOURCES += [
     'allcodecs.c',
-    'avcodec.c',
     'avdct.c',
     'avpacket.c',
     'bitstream.c',
     'bitstream_filters.c',
     'bsf.c',
     'codec_desc.c',
-    'codec_par.c',
     'dct.c',
     'dct32_fixed.c',
     'dct32_float.c',
     'decode.c',
-    'encode.c',
     'faandct.c',
     'faanidct.c',
     'fdctdsp.c',
+    'fft_fixed.c',
     'fft_fixed_32.c',
     'fft_float.c',
     'fft_init_table.c',
@@ -47,7 +45,6 @@ SOURCES += [
     'log2_tab.c',
     'mpegaudio.c',
     'mpegaudiodata.c',
-    'mpegaudiodec_common.c',
     'mpegaudiodec_fixed.c',
     'mpegaudiodecheader.c',
     'mpegaudiodsp.c',
@@ -71,11 +68,8 @@ SOURCES += [
 
 if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
     SOURCES += [
-        'av1dec.c',
         'avpicture.c',
         'bitstream_filter.c',
-        'cbs.c',
-        'cbs_av1.c',
         'golomb.c',
         'h264pred.c',
         'imgconvert.c',
@@ -104,7 +98,6 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
     ]
     if CONFIG['MOZ_WAYLAND']:
         SOURCES += [
-            'vaapi_av1.c',
             'vaapi_decode.c',
             'vaapi_vp8.c',
             'vaapi_vp9.c',

@@ -284,9 +284,9 @@ impl Debug for LexError {
 impl Display for LexError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            #[cfg(not(no_lexerror_display))]
+            #[cfg(lexerror_display)]
             LexError::Compiler(e) => Display::fmt(e, f),
-            #[cfg(no_lexerror_display)]
+            #[cfg(not(lexerror_display))]
             LexError::Compiler(_e) => Display::fmt(
                 &fallback::LexError {
                     span: fallback::Span::call_site(),
@@ -416,7 +416,7 @@ impl Span {
         }
     }
 
-    #[cfg(not(no_hygiene))]
+    #[cfg(hygiene)]
     pub fn mixed_site() -> Span {
         if inside_proc_macro() {
             Span::Compiler(proc_macro::Span::mixed_site())
@@ -436,11 +436,11 @@ impl Span {
 
     pub fn resolved_at(&self, other: Span) -> Span {
         match (self, other) {
-            #[cfg(not(no_hygiene))]
+            #[cfg(hygiene)]
             (Span::Compiler(a), Span::Compiler(b)) => Span::Compiler(a.resolved_at(b)),
 
             // Name resolution affects semantics, but location is only cosmetic
-            #[cfg(no_hygiene)]
+            #[cfg(not(hygiene))]
             (Span::Compiler(_), Span::Compiler(_)) => other,
 
             (Span::Fallback(a), Span::Fallback(b)) => Span::Fallback(a.resolved_at(b)),
@@ -450,11 +450,11 @@ impl Span {
 
     pub fn located_at(&self, other: Span) -> Span {
         match (self, other) {
-            #[cfg(not(no_hygiene))]
+            #[cfg(hygiene)]
             (Span::Compiler(a), Span::Compiler(b)) => Span::Compiler(a.located_at(b)),
 
             // Name resolution affects semantics, but location is only cosmetic
-            #[cfg(no_hygiene)]
+            #[cfg(not(hygiene))]
             (Span::Compiler(_), Span::Compiler(_)) => *self,
 
             (Span::Fallback(a), Span::Fallback(b)) => Span::Fallback(a.located_at(b)),
@@ -620,9 +620,9 @@ impl Group {
 
     pub fn span_open(&self) -> Span {
         match self {
-            #[cfg(not(no_group_open_close))]
+            #[cfg(proc_macro_span)]
             Group::Compiler(g) => Span::Compiler(g.span_open()),
-            #[cfg(no_group_open_close)]
+            #[cfg(not(proc_macro_span))]
             Group::Compiler(g) => Span::Compiler(g.span()),
             Group::Fallback(g) => Span::Fallback(g.span_open()),
         }
@@ -630,9 +630,9 @@ impl Group {
 
     pub fn span_close(&self) -> Span {
         match self {
-            #[cfg(not(no_group_open_close))]
+            #[cfg(proc_macro_span)]
             Group::Compiler(g) => Span::Compiler(g.span_close()),
-            #[cfg(no_group_open_close)]
+            #[cfg(not(proc_macro_span))]
             Group::Compiler(g) => Span::Compiler(g.span()),
             Group::Fallback(g) => Span::Fallback(g.span_close()),
         }
@@ -921,25 +921,18 @@ impl FromStr for Literal {
 
     fn from_str(repr: &str) -> Result<Self, Self::Err> {
         if inside_proc_macro() {
-            #[cfg(not(no_literal_from_str))]
+            // TODO: use libproc_macro's FromStr impl once it is available in
+            // rustc. https://github.com/rust-lang/rust/pull/84717
+            let tokens = proc_macro_parse(repr)?;
+            let mut iter = tokens.into_iter();
+            if let (Some(proc_macro::TokenTree::Literal(literal)), None) =
+                (iter.next(), iter.next())
             {
-                proc_macro::Literal::from_str(repr)
-                    .map(Literal::Compiler)
-                    .map_err(LexError::Compiler)
-            }
-            #[cfg(no_literal_from_str)]
-            {
-                let tokens = proc_macro_parse(repr)?;
-                let mut iter = tokens.into_iter();
-                if let (Some(proc_macro::TokenTree::Literal(literal)), None) =
-                    (iter.next(), iter.next())
-                {
-                    if literal.to_string().len() == repr.len() {
-                        return Ok(Literal::Compiler(literal));
-                    }
+                if literal.to_string().len() == repr.len() {
+                    return Ok(Literal::Compiler(literal));
                 }
-                Err(LexError::call_site())
             }
+            Err(LexError::call_site())
         } else {
             let literal = fallback::Literal::from_str(repr)?;
             Ok(Literal::Fallback(literal))

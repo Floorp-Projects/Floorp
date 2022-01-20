@@ -4,6 +4,7 @@ use futures_core::task::{Context, Poll};
 use futures_io::AsyncWrite;
 use futures_io::IoSlice;
 use std::io;
+use std::mem;
 use std::pin::Pin;
 
 /// Future for the
@@ -18,9 +19,8 @@ pub struct WriteAllVectored<'a, W: ?Sized + Unpin> {
 impl<W: ?Sized + Unpin> Unpin for WriteAllVectored<'_, W> {}
 
 impl<'a, W: AsyncWrite + ?Sized + Unpin> WriteAllVectored<'a, W> {
-    pub(super) fn new(writer: &'a mut W, mut bufs: &'a mut [IoSlice<'a>]) -> Self {
-        IoSlice::advance_slices(&mut bufs, 0);
-        Self { writer, bufs }
+    pub(super) fn new(writer: &'a mut W, bufs: &'a mut [IoSlice<'a>]) -> Self {
+        Self { writer, bufs: IoSlice::advance(bufs, 0) }
     }
 }
 
@@ -34,7 +34,7 @@ impl<W: AsyncWrite + ?Sized + Unpin> Future for WriteAllVectored<'_, W> {
             if n == 0 {
                 return Poll::Ready(Err(io::ErrorKind::WriteZero.into()));
             } else {
-                IoSlice::advance_slices(&mut this.bufs, n);
+                this.bufs = IoSlice::advance(mem::take(&mut this.bufs), n);
             }
         }
 

@@ -31,7 +31,6 @@
 #include "nsIWritablePropertyBag2.h"
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
-#include "ProfilerParent.h"
 #include "runnable_utils.h"
 #ifdef XP_WIN
 #  include "WMFDecoderModule.h"
@@ -248,38 +247,6 @@ void GMPParent::Crash() {
   }
 }
 
-class NotifyGMPProcessLoadedTask : public Runnable {
- public:
-  explicit NotifyGMPProcessLoadedTask(const ::base::ProcessId aProcessId,
-                                      GMPParent* aGMPParent)
-      : Runnable("NotifyGMPProcessLoadedTask"),
-        mProcessId(aProcessId),
-        mGMPParent(aGMPParent) {}
-
-  NS_IMETHOD Run() override {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    nsCOMPtr<nsISerialEventTarget> gmpEventTarget =
-        mGMPParent->GMPEventTarget();
-    if (!gmpEventTarget) {
-      return NS_ERROR_FAILURE;
-    }
-
-    ipc::Endpoint<PProfilerChild> profilerParent(
-        ProfilerParent::CreateForProcess(mProcessId));
-
-    gmpEventTarget->Dispatch(
-        NewRunnableMethod<ipc::Endpoint<mozilla::PProfilerChild>&&>(
-            "GMPParent::SendInitProfiler", mGMPParent,
-            &GMPParent::SendInitProfiler, std::move(profilerParent)));
-
-    return NS_OK;
-  }
-
-  ::base::ProcessId mProcessId;
-  const RefPtr<GMPParent> mGMPParent;
-};
-
 nsresult GMPParent::LoadProcess() {
   MOZ_ASSERT(mDirectory, "Plugin directory cannot be NULL!");
   MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
@@ -350,10 +317,8 @@ nsresult GMPParent::LoadProcess() {
     }
 #endif
 
-    NS_DispatchToMainThread(new NotifyGMPProcessLoadedTask(OtherPid(), this));
-
     // Intr call to block initialization on plugin load.
-    if (!SendStartPlugin(mAdapter)) {
+    if (!CallStartPlugin(mAdapter)) {
       GMP_PARENT_LOG_DEBUG("%s: Failed to send start to child process",
                            __FUNCTION__);
       return NS_ERROR_FAILURE;

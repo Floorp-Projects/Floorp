@@ -450,7 +450,7 @@ bool TexUnpackBlob::ConvertIfNeeded(
     return false;
   }
 
-  auto dstBuffer = UniqueBuffer::Take(calloc(1u, dstTotalBytes.value()));
+  UniqueBuffer dstBuffer = calloc(1u, (size_t)dstTotalBytes.value());
   if (!dstBuffer.get()) {
     webgl->ErrorOutOfMemory("Failed to allocate dest buffer.");
     return false;

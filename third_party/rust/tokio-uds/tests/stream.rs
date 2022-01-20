@@ -11,17 +11,15 @@ use tokio_uds::*;
 use tokio::io;
 use tokio::runtime::current_thread::Runtime;
 
-use futures::sync::oneshot;
 use futures::{Future, Stream};
+use futures::sync::oneshot;
 use tempfile::Builder;
 
 macro_rules! t {
-    ($e:expr) => {
-        match $e {
-            Ok(e) => e,
-            Err(e) => panic!("{} failed with {:?}", stringify!($e), e),
-        }
-    };
+    ($e:expr) => (match $e {
+        Ok(e) => e,
+        Err(e) => panic!("{} failed with {:?}", stringify!($e), e),
+    })
 }
 
 #[test]
@@ -35,8 +33,7 @@ fn echo() {
     let (tx, rx) = oneshot::channel();
 
     rt.spawn({
-        server
-            .incoming()
+        server.incoming()
             .into_future()
             .and_then(move |(sock, _)| {
                 tx.send(sock.unwrap()).unwrap();

@@ -1309,20 +1309,23 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(
 }
 
 // Parse an integer according to HTML spec
-template <class CharT>
+template <class StringT>
 int32_t nsContentUtils::ParseHTMLIntegerImpl(
-    const CharT* aStart, const CharT* aEnd,
-    ParseHTMLIntegerResultFlags* aResult) {
+    const StringT& aValue, ParseHTMLIntegerResultFlags* aResult) {
+  using CharT = typename StringT::char_type;
+
   int result = eParseHTMLInteger_NoFlags;
 
-  const CharT* iter = aStart;
+  typename StringT::const_iterator iter, end;
+  aValue.BeginReading(iter);
+  aValue.EndReading(end);
 
-  while (iter != aEnd && nsContentUtils::IsHTMLWhitespace(*iter)) {
+  while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {
     result |= eParseHTMLInteger_NonStandard;
     ++iter;
   }
 
-  if (iter == aEnd) {
+  if (iter == end) {
     result |= eParseHTMLInteger_Error | eParseHTMLInteger_ErrorNoValue;
     *aResult = (ParseHTMLIntegerResultFlags)result;
     return 0;
@@ -1343,7 +1346,7 @@ int32_t nsContentUtils::ParseHTMLIntegerImpl(
 
   // Check for leading zeros first.
   uint64_t leadingZeros = 0;
-  while (iter != aEnd) {
+  while (iter != end) {
     if (*iter != CharT('0')) {
       break;
     }
@@ -1353,7 +1356,7 @@ int32_t nsContentUtils::ParseHTMLIntegerImpl(
     ++iter;
   }
 
-  while (iter != aEnd) {
+  while (iter != end) {
     if (*iter >= CharT('0') && *iter <= CharT('9')) {
       value = (value * 10) + (*iter - CharT('0')) * sign;
       ++iter;
@@ -1377,7 +1380,7 @@ int32_t nsContentUtils::ParseHTMLIntegerImpl(
     result |= eParseHTMLInteger_NonStandard;
   }
 
-  if (iter != aEnd) {
+  if (iter != end) {
     result |= eParseHTMLInteger_DidNotConsumeAllInput;
   }
 
@@ -1386,15 +1389,14 @@ int32_t nsContentUtils::ParseHTMLIntegerImpl(
 }
 
 // Parse an integer according to HTML spec
-int32_t nsContentUtils::ParseHTMLInteger(const char16_t* aStart,
-                                         const char16_t* aEnd,
+int32_t nsContentUtils::ParseHTMLInteger(const nsAString& aValue,
                                          ParseHTMLIntegerResultFlags* aResult) {
-  return ParseHTMLIntegerImpl(aStart, aEnd, aResult);
+  return ParseHTMLIntegerImpl(aValue, aResult);
 }
 
-int32_t nsContentUtils::ParseHTMLInteger(const char* aStart, const char* aEnd,
+int32_t nsContentUtils::ParseHTMLInteger(const nsACString& aValue,
                                          ParseHTMLIntegerResultFlags* aResult) {
-  return ParseHTMLIntegerImpl(aStart, aEnd, aResult);
+  return ParseHTMLIntegerImpl(aValue, aResult);
 }
 
 #define SKIP_WHITESPACE(iter, end_iter, end_res)                 \
@@ -2084,18 +2086,10 @@ bool nsContentUtils::InProlog(nsINode* aNode) {
     return false;
   }
 
-  const Document* doc = parent->AsDocument();
-  const nsIContent* root = doc->GetRootElement();
-  if (!root) {
-    return true;
-  }
-  const Maybe<uint32_t> indexOfNode = doc->ComputeIndexOf(aNode);
-  const Maybe<uint32_t> indexOfRoot = doc->ComputeIndexOf(root);
-  if (MOZ_LIKELY(indexOfNode.isSome() && indexOfRoot.isSome())) {
-    return *indexOfNode < *indexOfRoot;
-  }
-  // XXX Keep the odd traditional behavior for now.
-  return indexOfNode.isNothing() && indexOfRoot.isSome();
+  Document* doc = parent->AsDocument();
+  nsIContent* root = doc->GetRootElement();
+
+  return !root || doc->ComputeIndexOf(aNode) < doc->ComputeIndexOf(root);
 }
 
 bool nsContentUtils::IsCallerChrome() {
@@ -2174,11 +2168,6 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIPrincipal* aPrincipal) {
   }
   bool isChrome = aPrincipal->IsSystemPrincipal();
   return !isChrome && ShouldResistFingerprinting();
-}
-
-/* static */
-bool nsContentUtils::ShouldResistFingerprinting(char* aChar) {
-  return ShouldResistFingerprinting();
 }
 
 inline void LogDomainAndPrefList(const char* exemptedDomainsPrefName,
@@ -2541,8 +2530,8 @@ nsresult nsContentUtils::GetInclusiveAncestors(nsINode* aNode,
 
 // static
 nsresult nsContentUtils::GetInclusiveAncestorsAndOffsets(
-    nsINode* aNode, uint32_t aOffset, nsTArray<nsIContent*>* aAncestorNodes,
-    nsTArray<Maybe<uint32_t>>* aAncestorOffsets) {
+    nsINode* aNode, int32_t aOffset, nsTArray<nsIContent*>* aAncestorNodes,
+    nsTArray<int32_t>* aAncestorOffsets) {
   NS_ENSURE_ARG_POINTER(aNode);
 
   if (!aNode->IsContent()) {
@@ -2562,7 +2551,7 @@ nsresult nsContentUtils::GetInclusiveAncestorsAndOffsets(
 
   // insert the node itself
   aAncestorNodes->AppendElement(content);
-  aAncestorOffsets->AppendElement(Some(aOffset));
+  aAncestorOffsets->AppendElement(aOffset);
 
   // insert all the ancestors
   nsIContent* child = content;
@@ -2635,8 +2624,8 @@ Element* nsContentUtils::GetCommonFlattenedTreeAncestorForStyle(
 
 /* static */
 bool nsContentUtils::PositionIsBefore(nsINode* aNode1, nsINode* aNode2,
-                                      Maybe<uint32_t>* aNode1Index,
-                                      Maybe<uint32_t>* aNode2Index) {
+                                      int32_t* aNode1Index,
+                                      int32_t* aNode2Index) {
   // Note, CompareDocumentPosition takes the latter params in different order.
   return (aNode2->CompareDocumentPosition(*aNode1, aNode2Index, aNode1Index) &
           (Node_Binding::DOCUMENT_POSITION_PRECEDING |
@@ -2646,8 +2635,8 @@ bool nsContentUtils::PositionIsBefore(nsINode* aNode1, nsINode* aNode2,
 
 /* static */
 Maybe<int32_t> nsContentUtils::ComparePoints(
-    const nsINode* aParent1, uint32_t aOffset1, const nsINode* aParent2,
-    uint32_t aOffset2, ComparePointsCache* aParent1Cache) {
+    const nsINode* aParent1, int32_t aOffset1, const nsINode* aParent2,
+    int32_t aOffset2, ComparePointsCache* aParent1Cache) {
   bool disconnected{false};
 
   const int32_t order = ComparePoints_Deprecated(
@@ -2661,9 +2650,12 @@ Maybe<int32_t> nsContentUtils::ComparePoints(
 
 /* static */
 int32_t nsContentUtils::ComparePoints_Deprecated(
-    const nsINode* aParent1, uint32_t aOffset1, const nsINode* aParent2,
-    uint32_t aOffset2, bool* aDisconnected, ComparePointsCache* aParent1Cache) {
+    const nsINode* aParent1, int32_t aOffset1, const nsINode* aParent2,
+    int32_t aOffset2, bool* aDisconnected, ComparePointsCache* aParent1Cache) {
   if (aParent1 == aParent2) {
+    // XXX This is odd.  aOffset1 and/or aOffset2 may be -1, e.g., it's result
+    //     of nsINode::ComputeIndexOf(), but this compares such invalid
+    //     offset with valid offset.
     return aOffset1 < aOffset2 ? -1 : aOffset1 > aOffset2 ? 1 : 0;
   }
 
@@ -2698,15 +2690,10 @@ int32_t nsContentUtils::ComparePoints_Deprecated(
     const nsINode* child1 = parents1.ElementAt(--pos1);
     const nsINode* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {
-      const Maybe<uint32_t> child1Index =
-          aParent1Cache ? aParent1Cache->ComputeIndexOf(parent, child1)
-                        : parent->ComputeIndexOf(child1);
-      const Maybe<uint32_t> child2Index = parent->ComputeIndexOf(child2);
-      if (MOZ_LIKELY(child1Index.isSome() && child2Index.isSome())) {
-        return *child1Index < *child2Index ? -1 : 1;
-      }
-      // XXX Keep the odd traditional behavior for now.
-      return child1Index.isNothing() && child2Index.isSome() ? -1 : 1;
+      int32_t child1index = aParent1Cache
+                                ? aParent1Cache->ComputeIndexOf(parent, child1)
+                                : parent->ComputeIndexOf(child1);
+      return child1index < parent->ComputeIndexOf(child2) ? -1 : 1;
     }
     parent = child1;
   }
@@ -2719,21 +2706,18 @@ int32_t nsContentUtils::ComparePoints_Deprecated(
 
   if (!pos1) {
     const nsINode* child2 = parents2.ElementAt(--pos2);
-    const Maybe<uint32_t> child2Index = parent->ComputeIndexOf(child2);
-    if (MOZ_UNLIKELY(NS_WARN_IF(child2Index.isNothing()))) {
-      return 1;
-    }
-    return aOffset1 <= *child2Index ? -1 : 1;
+    // XXX aOffset1 may be -1 as mentioned above.  So, why does this return
+    //     it's *before* of the valid DOM point?
+    return aOffset1 <= parent->ComputeIndexOf(child2) ? -1 : 1;
   }
 
   const nsINode* child1 = parents1.ElementAt(--pos1);
-  const Maybe<uint32_t> child1Index =
-      aParent1Cache ? aParent1Cache->ComputeIndexOf(parent, child1)
-                    : parent->ComputeIndexOf(child1);
-  if (MOZ_UNLIKELY(NS_WARN_IF(child1Index.isNothing()))) {
-    return -1;
-  }
-  return *child1Index < aOffset2 ? -1 : 1;
+  // XXX aOffset2 may be -1 as mentioned above.  So, why does this return it's
+  //     *after* of the valid DOM point?
+  int32_t child1index = aParent1Cache
+                            ? aParent1Cache->ComputeIndexOf(parent, child1)
+                            : parent->ComputeIndexOf(child1);
+  return child1index < aOffset2 ? -1 : 1;
 }
 
 // static
@@ -3136,7 +3120,7 @@ void nsContentUtils::GenerateStateKey(nsIContent* aContent, Document* aDocument,
     nsINode* parent = aContent->GetParentNode();
     nsINode* content = aContent;
     while (parent) {
-      KeyAppendInt(parent->ComputeIndexOf_Deprecated(content), aKey);
+      KeyAppendInt(parent->ComputeIndexOf(content), aKey);
       content = parent;
       parent = content->GetParentNode();
     }
@@ -3804,24 +3788,6 @@ bool nsContentUtils::IsExactSitePermDeny(nsIPrincipal* aPrincipal,
                                          const nsACString& aType) {
   return TestSitePerm(aPrincipal, aType, nsIPermissionManager::DENY_ACTION,
                       true);
-}
-
-bool nsContentUtils::HasExactSitePerm(nsIPrincipal* aPrincipal,
-                                      const nsACString& aType) {
-  if (!aPrincipal) {
-    return false;
-  }
-
-  nsCOMPtr<nsIPermissionManager> permMgr =
-      components::PermissionManager::Service();
-  NS_ENSURE_TRUE(permMgr, false);
-
-  uint32_t perm;
-  nsresult rv =
-      permMgr->TestExactPermissionFromPrincipal(aPrincipal, aType, &perm);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  return perm != nsIPermissionManager::UNKNOWN_ACTION;
 }
 
 static const char* gEventNames[] = {"event"};
@@ -5802,11 +5768,13 @@ bool nsContentUtils::IsInStableOrMetaStableState() {
 
 /* static */
 void nsContentUtils::HidePopupsInDocument(Document* aDocument) {
+#ifdef MOZ_XUL
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm && aDocument) {
     nsCOMPtr<nsIDocShellTreeItem> docShellToHide = aDocument->GetDocShell();
     if (docShellToHide) pm->HidePopupsInDocShell(docShellToHide);
   }
+#endif
 }
 
 /* static */
@@ -8225,8 +8193,6 @@ nsresult nsContentUtils::SendMouseEvent(
     contextMenuKey = (aButton == 0);
   } else if (aType.EqualsLiteral("MozMouseHittest")) {
     msg = eMouseHitTest;
-  } else if (aType.EqualsLiteral("MozMouseExploreByTouch")) {
-    msg = eMouseExploreByTouch;
   } else {
     return NS_ERROR_FAILURE;
   }
@@ -10597,7 +10563,8 @@ nsContentUtils::GetSubresourceCacheValidationInfo(nsIRequest* aRequest,
   return info;
 }
 
-nsCString nsContentUtils::TruncatedURLForDisplay(nsIURI* aURL, size_t aMaxLen) {
+nsCString nsContentUtils::TruncatedURLForDisplay(nsIURI* aURL,
+                                                 uint32_t aMaxLen) {
   nsCString spec;
   if (aURL) {
     aURL->GetSpec(spec);

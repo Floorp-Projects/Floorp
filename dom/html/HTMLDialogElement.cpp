@@ -124,12 +124,14 @@ void HTMLDialogElement::UnbindFromTree(bool aNullParent) {
 
 void HTMLDialogElement::ShowModal(ErrorResult& aError) {
   if (!IsInComposedDoc()) {
-    return aError.ThrowInvalidStateError("Dialog element is not connected");
+    aError.ThrowInvalidStateError("Dialog element is not connected");
+    return;
   }
 
   if (Open()) {
-    return aError.ThrowInvalidStateError(
+    aError.ThrowInvalidStateError(
         "Dialog element already has an 'open' attribute");
+    return;
   }
 
   AddToTopLayerIfNeeded();
@@ -189,11 +191,9 @@ void HTMLDialogElement::FocusDialog() {
     if (rv.Failed()) {
       return;
     }
-  } else if (IsInTopLayer()) {
-    if (nsFocusManager* fm = nsFocusManager::GetFocusManager()) {
-      // Clear the focus which ends up making the body gets focused
-      fm->ClearFocus(OwnerDoc()->GetWindow());
-    }
+  } else if (nsFocusManager* fm = nsFocusManager::GetFocusManager()) {
+    // Clear the focus which ends up making the body gets focused
+    fm->ClearFocus(OwnerDoc()->GetWindow());
   }
 
   // 4) Let topDocument be the active document of control's node document's

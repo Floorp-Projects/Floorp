@@ -934,6 +934,7 @@
     File.DirectoryIterator.Entry = function Entry(win_entry, parent) {
       if (
         !win_entry.dwFileAttributes ||
+        !win_entry.ftCreationTime ||
         !win_entry.ftLastAccessTime ||
         !win_entry.ftLastWriteTime
       ) {
@@ -949,6 +950,10 @@
         win_entry.dwFileAttributes & Const.FILE_ATTRIBUTE_REPARSE_POINT
       );
 
+      let winCreationDate = FILETIME_to_Date(
+        win_entry.ftCreationTime,
+        this._path
+      );
       let winLastWriteDate = FILETIME_to_Date(
         win_entry.ftLastWriteTime,
         this._path
@@ -975,6 +980,7 @@
         isDir,
         isSymLink,
         name,
+        winCreationDate,
         winLastWriteDate,
         winLastAccessDate,
         path
@@ -1021,6 +1027,7 @@
         stat.dwFileAttributes & Const.FILE_ATTRIBUTE_REPARSE_POINT
       );
 
+      let winBirthDate = FILETIME_to_Date(stat.ftCreationTime, this._path);
       let lastAccessDate = FILETIME_to_Date(stat.ftLastAccessTime, this._path);
       let lastWriteDate = FILETIME_to_Date(stat.ftLastWriteTime, this._path);
 
@@ -1038,6 +1045,7 @@
         isDir,
         isSymLink,
         size,
+        winBirthDate,
         lastAccessDate,
         lastWriteDate,
         winAttributes

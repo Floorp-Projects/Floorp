@@ -2486,8 +2486,7 @@ void gfxPlatform::InitCompositorAccelerationPrefs() {
                          "Acceleration blocked by platform")) {
     if (StaticPrefs::
             layers_acceleration_disabled_AtStartup_DoNotUseDirectly()) {
-      feature.UserDisable("Disabled by layers.acceleration.disabled=true",
-                          "FEATURE_FAILURE_COMP_PREF"_ns);
+      feature.UserDisable("Disabled by pref", "FEATURE_FAILURE_COMP_PREF"_ns);
     } else if (acceleratedEnv && *acceleratedEnv == '0') {
       feature.UserDisable("Disabled by envvar", "FEATURE_FAILURE_COMP_ENV"_ns);
     }
@@ -2645,7 +2644,7 @@ void gfxPlatform::InitWebRenderConfig() {
   if (StaticPrefs::gfx_webrender_software_d3d11_AtStartup()) {
     gfxVars::SetAllowSoftwareWebRenderD3D11(true);
   }
-  if (StaticPrefs::gfx_webrender_dcomp_video_overlay_win_AtStartup()) {
+  if (Preferences::GetBool("gfx.webrender.dcomp-video-overlay-win", false)) {
     if (IsWin10AnniversaryUpdateOrLater() &&
         gfxConfig::IsEnabled(Feature::WEBRENDER_COMPOSITOR)) {
       MOZ_ASSERT(gfxConfig::IsEnabled(Feature::WEBRENDER_DCOMP_PRESENT));

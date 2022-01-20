@@ -160,10 +160,10 @@ class GeckoViewNavigation extends GeckoViewModule {
 
     switch (aEvent) {
       case "GeckoView:GoBack":
-        this.browser.goBack(aData.userInteraction);
+        this.browser.goBack();
         break;
       case "GeckoView:GoForward":
-        this.browser.goForward(aData.userInteraction);
+        this.browser.goForward();
         break;
       case "GeckoView:GotoHistoryIndex":
         this.browser.gotoIndex(aData.index);

@@ -26,29 +26,29 @@ use std::sync::Arc;
 use std::usize;
 use std::{cmp, fmt};
 
-/// Time implementation that drives [`Delay`][delay], [`Interval`][interval], and [`Timeout`][timeout].
+/// Time implementation that drives [`Delay`], [`Interval`], and [`Timeout`].
 ///
 /// A `Driver` instance tracks the state necessary for managing time and
-/// notifying the [`Delay`][delay] instances once their deadlines are reached.
+/// notifying the [`Delay`] instances once their deadlines are reached.
 ///
-/// It is expected that a single instance manages many individual [`Delay`][delay]
+/// It is expected that a single instance manages many individual [`Delay`]
 /// instances. The `Driver` implementation is thread-safe and, as such, is able
 /// to handle callers from across threads.
 ///
-/// After creating the `Driver` instance, the caller must repeatedly call `park`
-/// or `park_timeout`. The time driver will perform no work unless `park` or
-/// `park_timeout` is called repeatedly.
+/// After creating the `Driver` instance, the caller must repeatedly call
+/// [`turn`]. The time driver will perform no work unless [`turn`] is called
+/// repeatedly.
 ///
 /// The driver has a resolution of one millisecond. Any unit of time that falls
 /// between milliseconds are rounded up to the next millisecond.
 ///
-/// When an instance is dropped, any outstanding [`Delay`][delay] instance that has not
+/// When an instance is dropped, any outstanding [`Delay`] instance that has not
 /// elapsed will be notified with an error. At this point, calling `poll` on the
-/// [`Delay`][delay] instance will result in panic.
+/// [`Delay`] instance will result in `Err` being returned.
 ///
 /// # Implementation
 ///
-/// The time driver is based on the [paper by Varghese and Lauck][paper].
+/// THe time driver is based on the [paper by Varghese and Lauck][paper].
 ///
 /// A hashed timing wheel is a vector of slots, where each slot handles a time
 /// slice. As time progresses, the timer walks over the slot for the current
@@ -73,16 +73,11 @@ use std::{cmp, fmt};
 /// When the timer processes entries at level zero, it will notify all the
 /// `Delay` instances as their deadlines have been reached. For all higher
 /// levels, all entries will be redistributed across the wheel at the next level
-/// down. Eventually, as time progresses, entries will [`Delay`][delay] instances will
+/// down. Eventually, as time progresses, entries will [`Delay`] instances will
 /// either be canceled (dropped) or their associated entries will reach level
 /// zero and be notified.
-///
-/// [paper]: http://www.cs.columbia.edu/~nahum/w6998/papers/ton97-timing-wheels.pdf
-/// [delay]: crate::time::Delay
-/// [timeout]: crate::time::Timeout
-/// [interval]: crate::time::Interval
 #[derive(Debug)]
-pub(crate) struct Driver<T: Park> {
+pub(crate) struct Driver<T> {
     /// Shared state
     inner: Arc<Inner>,
 
@@ -94,9 +89,6 @@ pub(crate) struct Driver<T: Park> {
 
     /// Source of "now" instances
     clock: Clock,
-
-    /// True if the driver is being shutdown
-    is_shutdown: bool,
 }
 
 /// Timer state shared between `Driver`, `Handle`, and `Registration`.
@@ -127,7 +119,7 @@ where
     T: Park,
 {
     /// Creates a new `Driver` instance that uses `park` to block the current
-    /// thread and `clock` to get the current `Instant`.
+    /// thread and `now` to get the current `Instant`.
     ///
     /// Specifying the source of time is useful when testing.
     pub(crate) fn new(park: T, clock: Clock) -> Driver<T> {
@@ -138,7 +130,6 @@ where
             wheel: wheel::Wheel::new(),
             park,
             clock,
-            is_shutdown: false,
         }
     }
 
@@ -229,7 +220,7 @@ where
                 // The entry's deadline is invalid, so error it and update the
                 // internal state accordingly.
                 entry.set_when_internal(None);
-                entry.error(Error::invalid());
+                entry.error();
             }
         }
     }
@@ -307,12 +298,10 @@ where
 
         Ok(())
     }
+}
 
-    fn shutdown(&mut self) {
-        if self.is_shutdown {
-            return;
-        }
-
+impl<T> Drop for Driver<T> {
+    fn drop(&mut self) {
         use std::u64;
 
         // Shutdown the stack of entries to process, preventing any new entries
@@ -323,21 +312,8 @@ where
         let mut poll = wheel::Poll::new(u64::MAX);
 
         while let Some(entry) = self.wheel.poll(&mut poll, &mut ()) {
-            entry.error(Error::shutdown());
+            entry.error();
         }
-
-        self.park.shutdown();
-
-        self.is_shutdown = true;
-    }
-}
-
-impl<T> Drop for Driver<T>
-where
-    T: Park,
-{
-    fn drop(&mut self) {
-        self.shutdown();
     }
 }
 

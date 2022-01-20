@@ -38,30 +38,12 @@ namespace dom {
 class LSValue final {
   friend struct IPC::ParamTraits<LSValue>;
 
- public:
-  enum class ConversionType : uint8_t {
-    NONE = 0u,
-    UTF16_UTF8 = 1u,
-    NUM_TYPES = 2u
-  };
-
-  enum class CompressionType : uint8_t {
-    UNCOMPRESSED = 0u,
-    SNAPPY = 1u,
-    NUM_TYPES = 2u
-  };
-
   nsCString mBuffer;
   uint32_t mUTF16Length;
-  ConversionType mConversionType;
-  CompressionType mCompressionType;
+  bool mCompressed;
 
-  explicit LSValue()
-      : mUTF16Length(0u),
-        mConversionType(ConversionType::NONE),
-        mCompressionType(CompressionType::UNCOMPRESSED) {
-    SetIsVoid(true);
-  }
+ public:
+  LSValue() : mUTF16Length(0), mCompressed(false) { SetIsVoid(true); }
 
   bool InitFromString(const nsAString& aBuffer);
 
@@ -85,29 +67,38 @@ class LSValue final {
    */
   uint32_t UTF16Length() const { return mUTF16Length; }
 
-  ConversionType GetConversionType() const { return mConversionType; }
-
-  CompressionType GetCompressionType() const { return mCompressionType; }
+  bool IsCompressed() const { return mCompressed; }
 
   bool Equals(const LSValue& aOther) const {
     return mBuffer == aOther.mBuffer &&
            mBuffer.IsVoid() == aOther.mBuffer.IsVoid() &&
            mUTF16Length == aOther.mUTF16Length &&
-           mConversionType == aOther.mConversionType &&
-           mCompressionType == aOther.mCompressionType;
+           mCompressed == aOther.mCompressed;
   }
 
   bool operator==(const LSValue& aOther) const { return Equals(aOther); }
 
   bool operator!=(const LSValue& aOther) const { return !Equals(aOther); }
 
-  constexpr const nsCString& AsCString() const { return mBuffer; }
+  operator const nsCString&() const { return mBuffer; }
+
+  operator Span<const char>() const { return mBuffer; }
 
   class Converter {
     nsString mBuffer;
 
    public:
-    explicit Converter(const LSValue& aValue);
+    explicit Converter(const LSValue& aValue) {
+      if (aValue.mBuffer.IsVoid()) {
+        mBuffer.SetIsVoid(true);
+      } else if (aValue.mCompressed) {
+        nsCString buffer;
+        MOZ_ALWAYS_TRUE(SnappyUncompress(aValue.mBuffer, buffer));
+        CopyUTF8toUTF16(buffer, mBuffer);
+      } else {
+        CopyUTF8toUTF16(aValue.mBuffer, mBuffer);
+      }
+    }
     Converter(Converter&& aOther) = default;
     ~Converter() = default;
 
@@ -124,12 +115,6 @@ class LSValue final {
 };
 
 const LSValue& VoidLSValue();
-
-/**
- * XXX: This function doesn't have to be public
- * once the support for shadow writes is removed.
- */
-bool PutCStringBytesToString(const nsACString& aSrc, nsString& aDest);
 
 }  // namespace dom
 }  // namespace mozilla

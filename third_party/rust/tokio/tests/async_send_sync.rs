@@ -203,9 +203,6 @@ async_assert_fn!(tokio::sync::Barrier::wait(_): Send & Sync);
 async_assert_fn!(tokio::sync::Mutex<u8>::lock(_): Send & Sync);
 async_assert_fn!(tokio::sync::Mutex<Cell<u8>>::lock(_): Send & Sync);
 async_assert_fn!(tokio::sync::Mutex<Rc<u8>>::lock(_): !Send & !Sync);
-async_assert_fn!(tokio::sync::Mutex<u8>::lock_owned(_): Send & Sync);
-async_assert_fn!(tokio::sync::Mutex<Cell<u8>>::lock_owned(_): Send & Sync);
-async_assert_fn!(tokio::sync::Mutex<Rc<u8>>::lock_owned(_): !Send & !Sync);
 async_assert_fn!(tokio::sync::Notify::notified(_): Send & !Sync);
 async_assert_fn!(tokio::sync::RwLock<u8>::read(_): Send & Sync);
 async_assert_fn!(tokio::sync::RwLock<u8>::write(_): Send & Sync);
@@ -259,6 +256,3 @@ async_assert_fn!(tokio::time::timeout_at(Instant, BoxFutureSync<()>): Send & Syn
 async_assert_fn!(tokio::time::timeout_at(Instant, BoxFutureSend<()>): Send & !Sync);
 async_assert_fn!(tokio::time::timeout_at(Instant, BoxFuture<()>): !Send & !Sync);
 async_assert_fn!(tokio::time::Interval::tick(_): Send & Sync);
-
-#[cfg(tokio_unstable)]
-assert_value!(tokio::sync::CancellationToken: Send & Sync);

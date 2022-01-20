@@ -33,7 +33,7 @@ class MediaTransportHandlerIPC : public MediaTransportHandler {
   void EnsureProvisionalTransport(const std::string& aTransportId,
                                   const std::string& aLocalUfrag,
                                   const std::string& aLocalPwd,
-                                  int aComponentCount) override;
+                                  size_t aComponentCount) override;
 
   void SetTargetForDefaultLocalAddressLookup(const std::string& aTargetIp,
                                              uint16_t aTargetPort) override;

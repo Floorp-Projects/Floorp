@@ -384,10 +384,7 @@
     for (var interpolationMethod of interpolationMethods) {
       var interpolationMethodContainer = createElement(container);
       for (var interpolationTest of interpolationTests) {
-        if(!interpolationTest.options.target_names ||
-           interpolationTest.options.target_names.includes(interpolationMethod.name)) {
-            [].push.apply(targets, createInterpolationTestTargets(interpolationMethod, interpolationMethodContainer, interpolationTest));
-          }
+        [].push.apply(targets, createInterpolationTestTargets(interpolationMethod, interpolationMethodContainer, interpolationTest));
       }
     }
     var compositionContainer = createElement(container);

@@ -485,7 +485,7 @@ pub enum RepeatMode {
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize, PeekPoke)]
 pub enum NinePatchBorderSource {
-    Image(ImageKey, ImageRendering),
+    Image(ImageKey),
     Gradient(Gradient),
     RadialGradient(RadialGradient),
     ConicGradient(ConicGradient),
@@ -1758,7 +1758,7 @@ impl_default_for_enums! {
     LineOrientation => Vertical,
     LineStyle => Solid,
     RepeatMode => Stretch,
-    NinePatchBorderSource => Image(ImageKey::default(), ImageRendering::Auto),
+    NinePatchBorderSource => Image(ImageKey::default()),
     BorderDetails => Normal(NormalBorder::default()),
     BorderRadiusKind => Uniform,
     BorderStyle => None,

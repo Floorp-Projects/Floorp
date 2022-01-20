@@ -6,39 +6,22 @@
 
 #include "AbortSignal.h"
 
-#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventBinding.h"
 #include "mozilla/dom/AbortSignalBinding.h"
-#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/RefPtr.h"
-#include "nsCycleCollectionParticipant.h"
 
 namespace mozilla::dom {
 
 // AbortSignalImpl
 // ----------------------------------------------------------------------------
 
-AbortSignalImpl::AbortSignalImpl(bool aAborted, JS::Handle<JS::Value> aReason)
-    : mReason(aReason), mAborted(aAborted) {
-  MOZ_ASSERT_IF(!mReason.isUndefined(), mAborted);
-}
+AbortSignalImpl::AbortSignalImpl(bool aAborted) : mAborted(aAborted) {}
 
 bool AbortSignalImpl::Aborted() const { return mAborted; }
 
-void AbortSignalImpl::GetReason(JSContext* aCx,
-                                JS::MutableHandle<JS::Value> aReason) {
-  if (!mAborted) {
-    return;
-  }
-  MaybeAssignAbortError(aCx);
-  aReason.set(mReason);
-}
-
-JS::Value AbortSignalImpl::RawReason() const { return mReason.get(); }
-
 // https://dom.spec.whatwg.org/#abortsignal-signal-abort steps 1-4
-void AbortSignalImpl::SignalAbort(JS::Handle<JS::Value> aReason) {
+void AbortSignalImpl::SignalAbort() {
   // Step 1.
   if (mAborted) {
     return;
@@ -46,7 +29,6 @@ void AbortSignalImpl::SignalAbort(JS::Handle<JS::Value> aReason) {
 
   // Step 2.
   mAborted = true;
-  mReason = aReason;
 
   // Step 3.
   // When there are multiple followers, the follower removal algorithm
@@ -66,29 +48,9 @@ void AbortSignalImpl::SignalAbort(JS::Handle<JS::Value> aReason) {
   mFollowers.Clear();
 }
 
-void AbortSignalImpl::Traverse(AbortSignalImpl* aSignal,
-                               nsCycleCollectionTraversalCallback& cb) {
+/* static */ void AbortSignalImpl::Traverse(
+    AbortSignalImpl* aSignal, nsCycleCollectionTraversalCallback& cb) {
   // To be filled in shortly.
-}
-
-void AbortSignalImpl::Unlink(AbortSignalImpl* aSignal) {
-  aSignal->mReason.setUndefined();
-}
-
-void AbortSignalImpl::MaybeAssignAbortError(JSContext* aCx) {
-  MOZ_ASSERT(mAborted);
-  if (!mReason.isUndefined()) {
-    return;
-  }
-
-  JS::Rooted<JS::Value> exception(aCx);
-  RefPtr<DOMException> dom = DOMException::Create(NS_ERROR_DOM_ABORT_ERR);
-
-  if (NS_WARN_IF(!ToJSValue(aCx, dom, &exception))) {
-    return;
-  }
-
-  mReason.set(exception);
 }
 
 // AbortSignal
@@ -111,54 +73,27 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AbortSignal)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(AbortSignal,
-                                               DOMEventTargetHelper)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mReason)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
 NS_IMPL_ADDREF_INHERITED(AbortSignal, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(AbortSignal, DOMEventTargetHelper)
 
-AbortSignal::AbortSignal(nsIGlobalObject* aGlobalObject, bool aAborted,
-                         JS::Handle<JS::Value> aReason)
-    : DOMEventTargetHelper(aGlobalObject), AbortSignalImpl(aAborted, aReason) {
-  mozilla::HoldJSObjects(this);
-}
+AbortSignal::AbortSignal(nsIGlobalObject* aGlobalObject, bool aAborted)
+    : DOMEventTargetHelper(aGlobalObject), AbortSignalImpl(aAborted) {}
 
 JSObject* AbortSignal::WrapObject(JSContext* aCx,
                                   JS::Handle<JSObject*> aGivenProto) {
   return AbortSignal_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<AbortSignal> AbortSignal::Abort(GlobalObject& aGlobal,
-                                                 JS::Handle<JS::Value> aReason,
-                                                 ErrorResult& aRv) {
+already_AddRefed<AbortSignal> AbortSignal::Abort(GlobalObject& aGlobal) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-
-  RefPtr<AbortSignal> abortSignal = new AbortSignal(global, true, aReason);
+  RefPtr<AbortSignal> abortSignal = new AbortSignal(global, true);
   return abortSignal.forget();
 }
 
-// https://dom.spec.whatwg.org/#dom-abortsignal-throwifaborted
-void AbortSignal::ThrowIfAborted(JSContext* aCx, ErrorResult& aRv) {
-  aRv.MightThrowJSException();
-
-  if (Aborted()) {
-    JS::Rooted<JS::Value> reason(aCx);
-    GetReason(aCx, &reason);
-    aRv.ThrowJSException(aCx, reason);
-  }
-}
-
 // https://dom.spec.whatwg.org/#abortsignal-signal-abort
-void AbortSignal::SignalAbort(JS::Handle<JS::Value> aReason) {
-  // Step 1, in case "signal abort" algorithm is called directly
-  if (Aborted()) {
-    return;
-  }
-
+void AbortSignal::SignalAbort() {
   // Steps 1-4.
-  AbortSignalImpl::SignalAbort(aReason);
+  AbortSignalImpl::SignalAbort();
 
   // Step 5.
   EventInit init;
@@ -170,13 +105,6 @@ void AbortSignal::SignalAbort(JS::Handle<JS::Value> aReason) {
 
   DispatchEvent(*event);
 }
-
-void AbortSignal::RunAbortAlgorithm() {
-  JS::Rooted<JS::Value> reason(RootingCx(), Signal()->RawReason());
-  SignalAbort(reason);
-}
-
-AbortSignal::~AbortSignal() { mozilla::DropJSObjects(this); }
 
 // AbortFollower
 // ----------------------------------------------------------------------------

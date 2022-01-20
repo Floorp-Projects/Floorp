@@ -545,8 +545,7 @@ double gfxFontconfigFontEntry::GetAspect(uint8_t aSizeAdjustBasis) {
       case FontSizeAdjust::Tag::IcHeight: {
         bool vertical = FontSizeAdjust::Tag(aSizeAdjustBasis) ==
                         FontSizeAdjust::Tag::IcHeight;
-        gfxFloat advance = font->GetCharAdvance(gfxFont::kWaterIdeograph,
-                                                vertical);
+        gfxFloat advance = font->GetCharAdvance(0x6C34, vertical);
         return advance > 0 ? advance / metrics.emHeight : 1.0;
       }
       default:
@@ -676,8 +675,12 @@ static void PrepareFontOptions(FcPattern* aPattern, int* aOutLoadFlags,
     }
   }
 
-  if (!FcPatternAllowsBitmaps(aPattern, fc_antialias != FcFalse,
-                              fc_hintstyle != FC_HINT_NONE)) {
+  FcBool bitmap;
+  if (FcPatternGetBool(aPattern, FC_EMBEDDED_BITMAP, 0, &bitmap) !=
+      FcResultMatch) {
+    bitmap = FcFalse;
+  }
+  if (fc_antialias && (fc_hintstyle == FC_HINT_NONE || !bitmap)) {
     loadFlags |= FT_LOAD_NO_BITMAP;
   }
 
@@ -1249,7 +1252,7 @@ gfxFontconfigFont::gfxFontconfigFont(
 gfxFontconfigFont::~gfxFontconfigFont() = default;
 
 already_AddRefed<ScaledFont> gfxFontconfigFont::GetScaledFont(
-    const TextRunDrawParams& aRunParams) {
+    mozilla::gfx::DrawTarget* aTarget) {
   if (!mAzureScaledFont) {
     mAzureScaledFont = Factory::CreateScaledFontForFontconfigFont(
         GetUnscaledFont(), GetAdjustedSize(), mFTFace, GetPattern());

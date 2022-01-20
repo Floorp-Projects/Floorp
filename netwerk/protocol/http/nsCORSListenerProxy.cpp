@@ -156,8 +156,7 @@ class nsPreflightCache {
   };
 
   struct CacheEntry : public LinkedListElement<CacheEntry> {
-    explicit CacheEntry(nsCString& aKey, bool aPrivateBrowsing)
-        : mKey(aKey), mPrivateBrowsing(aPrivateBrowsing) {
+    explicit CacheEntry(nsCString& aKey) : mKey(aKey) {
       MOZ_COUNT_CTOR(nsPreflightCache::CacheEntry);
     }
 
@@ -168,7 +167,6 @@ class nsPreflightCache {
                       const nsTArray<nsCString>& aHeaders);
 
     nsCString mKey;
-    bool mPrivateBrowsing{false};
     nsTArray<TokenTime> mMethods;
     nsTArray<TokenTime> mHeaders;
   };
@@ -187,7 +185,6 @@ class nsPreflightCache {
                        const OriginAttributes& aOriginAttributes, bool aCreate);
   void RemoveEntries(nsIURI* aURI, nsIPrincipal* aPrincipal,
                      const OriginAttributes& aOriginAttributes);
-  void PurgePrivateBrowsingEntries();
 
   void Clear();
 
@@ -210,17 +207,6 @@ static bool EnsurePreflightCache() {
   }
 
   return false;
-}
-
-void nsPreflightCache::PurgePrivateBrowsingEntries() {
-  for (auto iter = mTable.Iter(); !iter.Done(); iter.Next()) {
-    auto* entry = iter.UserData();
-    if (entry->mPrivateBrowsing) {
-      // last private browsing window closed, remove preflight cache entries
-      entry->removeFrom(sPreflightCache->mList);
-      iter.Remove();
-    }
-  }
 }
 
 void nsPreflightCache::CacheEntry::PurgeExpired(TimeStamp now) {
@@ -298,8 +284,7 @@ nsPreflightCache::CacheEntry* nsPreflightCache::GetEntry(
 
   // This is a new entry, allocate and insert into the table now so that any
   // failures don't cause items to be removed from a full cache.
-  auto newEntry =
-      MakeUnique<CacheEntry>(key, aOriginAttributes.mPrivateBrowsingId != 0);
+  auto newEntry = MakeUnique<CacheEntry>(key);
 
   NS_ASSERTION(mTable.Count() <= PREFLIGHT_CACHE_SIZE,
                "Something is borked, too many entries in the cache!");
@@ -383,14 +368,6 @@ void nsCORSListenerProxy::ClearCache() {
     return;
   }
   sPreflightCache->Clear();
-}
-
-// static
-void nsCORSListenerProxy::ClearPrivateBrowsingCache() {
-  if (!sPreflightCache) {
-    return;
-  }
-  sPreflightCache->PurgePrivateBrowsingEntries();
 }
 
 nsCORSListenerProxy::nsCORSListenerProxy(nsIStreamListener* aOuter,

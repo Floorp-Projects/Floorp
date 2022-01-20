@@ -5,8 +5,8 @@
 macro_rules! ready {
     ($e:expr $(,)?) => {
         match $e {
-            $crate::task::Poll::Ready(t) => t,
-            $crate::task::Poll::Pending => return $crate::task::Poll::Pending,
+            $crate::__private::Poll::Ready(t) => t,
+            $crate::__private::Poll::Pending => return $crate::__private::Poll::Pending,
         }
     };
 }

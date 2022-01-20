@@ -1451,10 +1451,6 @@ void ArrayMemoryView::visitApplyArray(MApplyArray* ins) {
   bool isDOMCall = false;
   auto* call = MakeCall(alloc_, addUndefined, callInfo, needsThisCheck,
                         ins->getSingleTarget(), isDOMCall);
-  if (!call) {
-    oom_ = true;
-    return;
-  }
   if (!ins->maybeCrossRealm()) {
     call->setNotCrossRealm();
   }
@@ -1497,10 +1493,6 @@ void ArrayMemoryView::visitConstructArray(MConstructArray* ins) {
   bool isDOMCall = false;
   auto* call = MakeCall(alloc_, addUndefined, callInfo, needsThisCheck,
                         ins->getSingleTarget(), isDOMCall);
-  if (!call) {
-    oom_ = true;
-    return;
-  }
   if (!ins->maybeCrossRealm()) {
     call->setNotCrossRealm();
   }
@@ -1525,8 +1517,6 @@ class ArgumentsReplacer : public MDefinitionVisitorDefaultNoop {
   MIRGraph& graph_;
   MInstruction* args_;
 
-  bool oom_ = false;
-
   TempAllocator& alloc() { return graph_.alloc(); }
 
   bool isInlinedArguments() const {
@@ -1545,8 +1535,6 @@ class ArgumentsReplacer : public MDefinitionVisitorDefaultNoop {
   void visitApplyArgsObj(MApplyArgsObj* ins);
   void visitArrayFromArgumentsObject(MArrayFromArgumentsObject* ins);
   void visitLoadFixedSlot(MLoadFixedSlot* ins);
-
-  bool oom() const { return oom_; }
 
  public:
   ArgumentsReplacer(MIRGenerator* mir, MIRGraph& graph, MInstruction* args)
@@ -1704,9 +1692,6 @@ bool ArgumentsReplacer::run() {
     break;
         MIR_OPCODE_LIST(MIR_OP)
 #undef MIR_OP
-      }
-      if (oom()) {
-        return false;
       }
     }
   }
@@ -1879,10 +1864,6 @@ void ArgumentsReplacer::visitLoadArgumentsObjectArg(
     }
 
     loadArg = MGetInlinedArgument::New(alloc(), check, actualArgs);
-    if (!loadArg) {
-      oom_ = true;
-      return;
-    }
   } else {
     // Insert bounds check.
     auto* length = MArgumentsLength::New(alloc());
@@ -1924,10 +1905,6 @@ void ArgumentsReplacer::visitLoadArgumentsObjectArgHole(
     auto* actualArgs = args_->toCreateInlinedArgumentsObject();
 
     loadArg = MGetInlinedArgumentHole::New(alloc(), index, actualArgs);
-    if (!loadArg) {
-      oom_ = true;
-      return;
-    }
   } else {
     auto* length = MArgumentsLength::New(alloc());
     ins->block()->insertBefore(ins, length);
@@ -2022,10 +1999,6 @@ void ArgumentsReplacer::visitApplyArgsObj(MApplyArgsObj* ins) {
     bool isDOMCall = false;
     auto* call = MakeCall(alloc(), addUndefined, callInfo, needsThisCheck,
                           ins->getSingleTarget(), isDOMCall);
-    if (!call) {
-      oom_ = true;
-      return;
-    }
     if (!ins->maybeCrossRealm()) {
       call->setNotCrossRealm();
     }

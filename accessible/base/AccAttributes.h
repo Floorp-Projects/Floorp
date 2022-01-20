@@ -7,7 +7,6 @@
 #define AccAttributes_h_
 
 #include "mozilla/ServoStyleConsts.h"
-#include "mozilla/a11y/AccGroupInfo.h"
 #include "mozilla/Variant.h"
 #include "nsTHashMap.h"
 #include "nsAtom.h"
@@ -68,7 +67,7 @@ class AccAttributes {
   using AttrValueType =
       Variant<bool, float, double, int32_t, RefPtr<nsAtom>, nsTArray<int32_t>,
               CSSCoord, FontSize, Color, DeleteEntry, UniquePtr<nsString>,
-              RefPtr<AccAttributes>, uint64_t, UniquePtr<AccGroupInfo>>;
+              RefPtr<AccAttributes>, uint64_t>;
   static_assert(sizeof(AttrValueType) <= 16);
   using AtomVariantMap = nsTHashMap<nsRefPtrHashKey<nsAtom>, AttrValueType>;
 
@@ -84,11 +83,10 @@ class AccAttributes {
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::a11y::AccAttributes)
 
-  template <typename T, typename std::enable_if<
-                            !std::is_convertible_v<T, nsString> &&
-                                !std::is_convertible_v<T, AccGroupInfo*> &&
-                                !std::is_convertible_v<T, nsAtom*>,
-                            bool>::type = true>
+  template <typename T,
+            typename std::enable_if<!std::is_convertible_v<T, nsString> &&
+                                        !std::is_convertible_v<T, nsAtom*>,
+                                    bool>::type = true>
   void SetAttribute(nsAtom* aAttrName, T&& aAttrValue) {
     mData.InsertOrUpdate(aAttrName, AsVariant(std::forward<T>(aAttrValue)));
   }
@@ -96,11 +94,6 @@ class AccAttributes {
   void SetAttribute(nsAtom* aAttrName, nsString&& aAttrValue) {
     UniquePtr<nsString> value = MakeUnique<nsString>();
     *value = std::forward<nsString>(aAttrValue);
-    mData.InsertOrUpdate(aAttrName, AsVariant(std::move(value)));
-  }
-
-  void SetAttribute(nsAtom* aAttrName, AccGroupInfo* aAttrValue) {
-    UniquePtr<AccGroupInfo> value(aAttrValue);
     mData.InsertOrUpdate(aAttrName, AsVariant(std::move(value)));
   }
 
@@ -145,8 +138,6 @@ class AccAttributes {
   bool GetAttribute(nsAtom* aAttrName, nsAString& aAttrValue);
 
   bool HasAttribute(nsAtom* aAttrName) { return mData.Contains(aAttrName); }
-
-  bool Remove(nsAtom* aAttrName) { return mData.Remove(aAttrName); }
 
   uint32_t Count() const { return mData.Count(); }
 

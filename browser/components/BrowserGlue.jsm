@@ -82,7 +82,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
-  ShellService: "resource:///modules/ShellService.jsm",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   TabUnloader: "resource:///modules/TabUnloader.jsm",
@@ -1982,32 +1981,18 @@ BrowserGlue.prototype = {
   // Set up a listener to enable/disable the screenshots extension
   // based on its preference.
   _monitorScreenshotsPref() {
-    const SCREENSHOTS_PREF = "extensions.screenshots.disabled";
-    const COMPONENT_PREF = "screenshots.browser.component.enabled";
+    const PREF = "extensions.screenshots.disabled";
     const ID = "screenshots@mozilla.org";
     const _checkScreenshotsPref = async () => {
       let addon = await AddonManager.getAddonByID(ID);
-      let screenshotsDisabled = Services.prefs.getBoolPref(
-        SCREENSHOTS_PREF,
-        false
-      );
-      let componentEnabled = Services.prefs.getBoolPref(COMPONENT_PREF, false);
-      if (screenshotsDisabled) {
-        if (componentEnabled) {
-          ScreenshotsUtils.uninitialize();
-        } else {
-          await addon.disable({ allowSystemAddons: true });
-        }
-      } else if (componentEnabled) {
-        ScreenshotsUtils.initialize();
+      let disabled = Services.prefs.getBoolPref(PREF, false);
+      if (disabled) {
         await addon.disable({ allowSystemAddons: true });
       } else {
         await addon.enable({ allowSystemAddons: true });
-        ScreenshotsUtils.uninitialize();
       }
     };
-    Services.prefs.addObserver(SCREENSHOTS_PREF, _checkScreenshotsPref);
-    Services.prefs.addObserver(COMPONENT_PREF, _checkScreenshotsPref);
+    Services.prefs.addObserver(PREF, _checkScreenshotsPref);
     _checkScreenshotsPref();
   },
 
@@ -2480,19 +2465,6 @@ BrowserGlue.prototype = {
         },
       },
 
-      // Report whether Firefox is the default handler for various files types,
-      // in particular, ".pdf".
-      {
-        condition: AppConstants.platform == "win",
-        task: () => {
-          Services.telemetry.keyedScalarSet(
-            "os.environment.is_default_handler",
-            ".pdf",
-            ShellService.isDefaultHandlerFor(".pdf")
-          );
-        },
-      },
-
       // Install built-in themes. We already installed the active built-in
       // theme, if any, before UI startup.
       {
@@ -2550,6 +2522,12 @@ BrowserGlue.prototype = {
           ) {
             ScreenshotsUtils.initialize();
           }
+        },
+      },
+
+      {
+        task: () => {
+          UrlbarQuickSuggest.maybeShowOnboardingDialog();
         },
       },
 
@@ -2642,7 +2620,10 @@ BrowserGlue.prototype = {
       // pre-init buffer.
       {
         task: () => {
-          Services.fog.initializeFOG();
+          let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(
+            Ci.nsIFOG
+          );
+          FOG.initializeFOG();
         },
       },
 
@@ -2679,6 +2660,12 @@ BrowserGlue.prototype = {
       {
         task: () => {
           ASRouterNewTabHook.createInstance(ASRouterDefaultConfig());
+        },
+      },
+
+      {
+        task: () => {
+          PlacesUIUtils.ensureBookmarkToolbarTelemetryListening();
         },
       },
 
@@ -3347,7 +3334,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 122;
+    const UI_VERSION = 121;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
@@ -3938,6 +3925,7 @@ BrowserGlue.prototype = {
           defaultValue
         );
       }
+      Services.prefs.clearUserPref(oldPrefName);
     }
 
     if (currentUIVersion < 109) {
@@ -4048,24 +4036,6 @@ BrowserGlue.prototype = {
       );
     }
 
-    if (currentUIVersion < 122) {
-      // Migrate xdg-desktop-portal pref from old to new prefs.
-      try {
-        const oldPref = "widget.use-xdg-desktop-portal";
-        if (Services.prefs.getBoolPref(oldPref)) {
-          Services.prefs.setIntPref(
-            "widget.use-xdg-desktop-portal.file-picker",
-            1
-          );
-          Services.prefs.setIntPref(
-            "widget.use-xdg-desktop-portal.mime-handler",
-            1
-          );
-        }
-        Services.prefs.clearUserPref(oldPref);
-      } catch (ex) {}
-    }
-
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
@@ -4139,10 +4109,7 @@ BrowserGlue.prototype = {
     if (willPrompt) {
       let win = BrowserWindowTracker.getTopWindow();
       DefaultBrowserCheck.prompt(win);
-    } else if (await UrlbarQuickSuggest.maybeShowOnboardingDialog()) {
-      return;
     }
-
     await ASRouter.waitForInitialized;
     ASRouter.sendTriggerMessage({
       browser: BrowserWindowTracker.getTopWindow()?.gBrowser.selectedBrowser,

@@ -29,7 +29,8 @@ const { PromiseUtils } = ChromeUtils.import(
 
 // We grab some additional stuff via backstage passes.
 var { AccountState } = ChromeUtils.import(
-  "resource://gre/modules/FxAccounts.jsm"
+  "resource://gre/modules/FxAccounts.jsm",
+  null
 );
 
 const ONE_HOUR_MS = 1000 * 60 * 60;

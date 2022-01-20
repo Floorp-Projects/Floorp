@@ -361,8 +361,7 @@ class QuotaManager final : public BackgroundThreadObject {
 
   uint64_t GetGroupLimit() const;
 
-  std::pair<uint64_t, uint64_t> GetUsageAndLimitForEstimate(
-      const OriginMetadata& aOriginMetadata);
+  uint64_t GetGroupUsage(const nsACString& aGroup);
 
   uint64_t GetOriginUsage(const PrincipalMetadata& aPrincipalMetadata);
 

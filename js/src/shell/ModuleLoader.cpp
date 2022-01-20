@@ -12,7 +12,6 @@
 #include "jsapi.h"
 #include "NamespaceImports.h"
 
-#include "builtin/TestingUtility.h"  // js::CreateScriptPrivate
 #include "js/MapAndSet.h"
 #include "js/Modules.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetProperty
@@ -407,7 +406,7 @@ JSObject* ModuleLoader::loadAndParse(JSContext* cx, HandleString pathArg) {
     return nullptr;
   }
 
-  RootedObject info(cx, js::CreateScriptPrivate(cx, path));
+  RootedObject info(cx, CreateScriptPrivate(cx, path));
   if (!info) {
     return nullptr;
   }

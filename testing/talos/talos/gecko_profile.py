@@ -44,18 +44,16 @@ class GeckoProfile(object):
         gecko_profile_threads = test_config.get(
             "gecko_profile_threads", "GeckoMain,Compositor"
         )
-        gecko_profile_threads += ",WR,Renderer"
+        if browser_config["enable_webrender"]:
+            gecko_profile_threads += ",WR,Renderer"
 
         # Make sure no archive already exists in the location where
         # we plan to output our profiler archive
         self.profile_arcname = os.path.join(
-            self.upload_dir, "profile_{0}.zip".format(test_config["suite"])
+            self.upload_dir, "profile_{0}.zip".format(test_config["name"])
         )
-
-        # We delete the archive if the current test is the first in the suite
-        if test_config.get("is_first_test", False):
-            LOG.info("Clearing archive {0}".format(self.profile_arcname))
-            mozfile.remove(self.profile_arcname)
+        LOG.info("Clearing archive {0}".format(self.profile_arcname))
+        mozfile.remove(self.profile_arcname)
 
         self.symbol_paths = {
             "FIREFOX": tempfile.mkdtemp(),

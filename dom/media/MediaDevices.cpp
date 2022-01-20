@@ -5,7 +5,6 @@
 #include "mozilla/dom/MediaDevices.h"
 
 #include "AudioDeviceInfo.h"
-#include "MediaEngine.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/MediaStreamBinding.h"
@@ -26,8 +25,7 @@
 
 namespace mozilla::dom {
 
-using EnumerationFlag = MediaManager::EnumerationFlag;
-using LocalMediaDeviceSetRefCnt = MediaManager::LocalMediaDeviceSetRefCnt;
+using DeviceEnumerationType = MediaManager::DeviceEnumerationType;
 
 MediaDevices::MediaDevices(nsPIDOMWindowInner* aWindow)
     : DOMEventTargetHelper(aWindow) {}
@@ -175,7 +173,8 @@ void MediaDevices::ResumeEnumerateDevices(RefPtr<Promise> aPromise) {
   RefPtr<MediaDevices> self(this);
   MediaManager::Get()->EnumerateDevices(window)->Then(
       GetCurrentSerialEventTarget(), __func__,
-      [this, self, aPromise](RefPtr<LocalMediaDeviceSetRefCnt>&& aDevices) {
+      [this, self,
+       aPromise](RefPtr<MediaManager::MediaDeviceSetRefCnt>&& aDevices) {
         nsPIDOMWindowInner* window = GetWindowIfCurrent();
         if (!window) {
           return;  // Leave Promise pending after navigation by design.
@@ -188,8 +187,8 @@ void MediaDevices::ResumeEnumerateDevices(RefPtr<Promise> aPromise) {
         nsTHashSet<nsString> exposedMicrophoneGroupIds;
         for (auto& device : *aDevices) {
           nsString label;
-          MOZ_ASSERT(device->Kind() < MediaDeviceKind::EndGuard_);
-          switch (device->Kind()) {
+          MOZ_ASSERT(device->mKind < MediaDeviceKind::EndGuard_);
+          switch (device->mKind) {
             case MediaDeviceKind::Audioinput:
               if (mCanExposeMicrophoneInfo) {
                 exposedMicrophoneGroupIds.Insert(device->mGroupID);
@@ -220,7 +219,7 @@ void MediaDevices::ResumeEnumerateDevices(RefPtr<Promise> aPromise) {
               // enumerators at compile time.
           }
           infos.AppendElement(MakeRefPtr<MediaDeviceInfo>(
-              device->mID, device->Kind(), label, device->mGroupID));
+              device->mID, device->mKind, label, device->mGroupID));
         }
         aPromise->MaybeResolve(std::move(infos));
       },
@@ -387,15 +386,15 @@ already_AddRefed<Promise> MediaDevices::SelectAudioOutput(
       ->SelectAudioOutput(owner, aOptions, aCallerType)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [this, self, p](RefPtr<LocalMediaDevice> aDevice) {
+          [this, self, p](RefPtr<MediaDevice> aDevice) {
             nsPIDOMWindowInner* window = GetWindowIfCurrent();
             if (!window) {
               return;  // Leave Promise pending after navigation by design.
             }
-            MOZ_ASSERT(aDevice->Kind() == dom::MediaDeviceKind::Audiooutput);
+            MOZ_ASSERT(aDevice->mKind == dom::MediaDeviceKind::Audiooutput);
             mExplicitlyGrantedAudioOutputIds.Insert(aDevice->mID);
             p->MaybeResolve(
-                MakeRefPtr<MediaDeviceInfo>(aDevice->mID, aDevice->Kind(),
+                MakeRefPtr<MediaDeviceInfo>(aDevice->mID, aDevice->mKind,
                                             aDevice->mName, aDevice->mGroupID));
           },
           [this, self, p](const RefPtr<MediaMgrError>& error) {
@@ -454,28 +453,29 @@ RefPtr<MediaDevices::SinkInfoPromise> MediaDevices::GetSinkDevice(
                                        ? MediaSourceEnum::Other
                                        : MediaSourceEnum::Microphone;
 
+  auto devices = MakeRefPtr<MediaManager::MediaDeviceSetRefCnt>();
   return MediaManager::Get()
       ->EnumerateDevicesImpl(GetOwner(), MediaSourceEnum::Other, audioInputType,
-                             EnumerationFlag::EnumerateAudioOutputs)
+                             MediaSinkEnum::Speaker,
+                             DeviceEnumerationType::Normal,
+                             DeviceEnumerationType::Normal, true, devices)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [aDeviceId,
-           isExposed](RefPtr<LocalMediaDeviceSetRefCnt> aDevices) mutable {
+          [aDeviceId, isExposed, devices](bool) mutable {
             RefPtr<AudioDeviceInfo> outputInfo;
             nsString groupId;
             // Check for a matching device.
-            for (const RefPtr<LocalMediaDevice>& device : *aDevices) {
-              if (device->Kind() != dom::MediaDeviceKind::Audiooutput) {
+            for (const RefPtr<MediaDevice>& device : *devices) {
+              if (device->mKind != dom::MediaDeviceKind::Audiooutput) {
                 continue;
               }
               if (aDeviceId.IsEmpty()) {
-                if (device->GetAudioDeviceInfo()->Preferred()) {
-                  outputInfo =
-                      CopyWithNullDeviceId(device->GetAudioDeviceInfo());
+                if (device->mSinkInfo->Preferred()) {
+                  outputInfo = CopyWithNullDeviceId(device->mSinkInfo);
                   break;
                 }
               } else if (aDeviceId.Equals(device->mID)) {
-                outputInfo = device->GetAudioDeviceInfo();
+                outputInfo = device->mSinkInfo;
                 groupId = device->mGroupID;
                 break;
               }
@@ -483,8 +483,8 @@ RefPtr<MediaDevices::SinkInfoPromise> MediaDevices::GetSinkDevice(
             if (outputInfo && !isExposed) {
               // Check microphone groups.
               MOZ_ASSERT(!groupId.IsEmpty());
-              for (const RefPtr<LocalMediaDevice>& device : *aDevices) {
-                if (device->Kind() != dom::MediaDeviceKind::Audioinput) {
+              for (const RefPtr<MediaDevice>& device : *devices) {
+                if (device->mKind != dom::MediaDeviceKind::Audioinput) {
                   continue;
                 }
                 if (groupId.Equals(device->mGroupID)) {
@@ -584,6 +584,7 @@ void MediaDevices::SetupDeviceChangeListener() {
 void MediaDevices::SetOndevicechange(
     mozilla::dom::EventHandlerNonNull* aCallback) {
   SetEventHandler(nsGkAtoms::ondevicechange, aCallback);
+  SetupDeviceChangeListener();
 }
 
 void MediaDevices::EventListenerAdded(nsAtom* aType) {

@@ -404,17 +404,13 @@ bool ParsePrivateDictData(
   std::vector<Operand> operands;
   bool cff2 = (out_cff->major == 2);
   bool blend_seen = false;
-  int32_t vsindex = 0;
+  uint32_t vsindex = 0;
 
   // Since a Private DICT for FDArray might not have a Local Subr (e.g. Hiragino
   // Kaku Gothic Std W8), we create an empty Local Subr here to match the size
   // of FDArray the size of |local_subrs_per_font|.
-  // For CFF2, |vsindex_per_font| gets a similar treatment.
   if (type == DICT_DATA_FDARRAY) {
     out_cff->local_subrs_per_font.push_back(new ots::CFFIndex);
-    if (cff2) {
-      out_cff->vsindex_per_font.push_back(vsindex);
-    }
   }
 
   while (dict.offset() < dict.length()) {
@@ -531,11 +527,9 @@ bool ParsePrivateDictData(
           return OTS_FAILURE();
         }
         vsindex = operands.back().first;
-        if (vsindex < 0 ||
-            vsindex >= (int32_t)out_cff->region_index_count.size()) {
+        if (vsindex >= out_cff->region_index_count.size()) {
           return OTS_FAILURE();
         }
-        out_cff->vsindex_per_font.back() = vsindex;
         break;
       }
 
@@ -546,7 +540,7 @@ bool ParsePrivateDictData(
         if (operands.size() < 1) {
           return OTS_FAILURE();
         }
-        if (vsindex >= (int32_t)out_cff->region_index_count.size()) {
+        if (vsindex >= out_cff->region_index_count.size()) {
           return OTS_FAILURE();
         }
         uint16_t k = out_cff->region_index_count.at(vsindex);
@@ -631,7 +625,6 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
   bool have_charstrings = false;
   bool have_vstore = false;
   size_t charset_offset = 0;
-  bool have_private = false;
 
   if (cff2) {
     // Parse VariationStore first, since it might be referenced in other places
@@ -646,10 +639,6 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
       // got operator
       const uint32_t op = operands.back().first;
       operands.pop_back();
-
-      if (op == 18 && type == DICT_DATA_FDARRAY) {
-        have_private = true;
-      }
 
       if (op == 24) {  // vstore
         if (type != DICT_DATA_TOPLEVEL) {
@@ -672,11 +661,6 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
     }
     operands.clear();
     dict.set_offset(dict_offset);
-
-    if (type == DICT_DATA_FDARRAY && !have_private) {
-      return OTS_FAILURE();  // CFF2 FD must have PrivateDICT entry (even if 0, 0)
-    }
-
   }
 
   while (dict.offset() < dict.length()) {

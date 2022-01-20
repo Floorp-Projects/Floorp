@@ -3,6 +3,7 @@
 
 "use strict";
 
+Cu.importGlobalProperties(["Glean"]);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -44,7 +45,8 @@ add_task(function test_setup() {
   // We need to initialize it once, otherwise operations will be stuck in the pre-init queue.
   // On Android FOG is set up through head.js.
   if (AppConstants.platform != "android") {
-    Services.fog.initializeFOG();
+    let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
+    FOG.initializeFOG();
   }
 });
 

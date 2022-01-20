@@ -54,7 +54,7 @@ add_task(async function pageImage() {
   await assertSnapshots([
     {
       url: TEST_URL1,
-      userPersisted: Snapshots.USER_PERSISTED.NO,
+      userPersisted: false,
       documentType: Interactions.DOCUMENT_TYPE.GENERIC,
     },
   ]);

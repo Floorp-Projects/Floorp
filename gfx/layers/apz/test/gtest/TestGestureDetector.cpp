@@ -33,6 +33,8 @@ class APZCGestureDetectorTester : public APZCBasicTester {
 
 #ifndef MOZ_WIDGET_ANDROID  // Currently fails on Android
 TEST_F(APZCGestureDetectorTester, Pan_After_Pinch) {
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
+
   FrameMetrics originalMetrics = GetPinchableFrameMetrics();
   apzc->SetFrameMetrics(originalMetrics);
 
@@ -58,7 +60,7 @@ TEST_F(APZCGestureDetectorTester, Pan_After_Pinch) {
       CreateSingleTouchData(firstFingerId, focusX, focusY));
   mti.mTouches.AppendElement(
       CreateSingleTouchData(secondFingerId, focusX, focusY));
-  apzc->ReceiveInputEvent(mti, Some(nsTArray<uint32_t>{kDefaultTouchBehavior}));
+  apzc->ReceiveInputEvent(mti);
   mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // Spread fingers out to enter the pinch state
@@ -130,6 +132,8 @@ TEST_F(APZCGestureDetectorTester, Pan_After_Pinch) {
 #endif
 
 TEST_F(APZCGestureDetectorTester, Pan_With_Tap) {
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
+
   FrameMetrics originalMetrics = GetPinchableFrameMetrics();
   apzc->SetFrameMetrics(originalMetrics);
 
@@ -151,7 +155,7 @@ TEST_F(APZCGestureDetectorTester, Pan_With_Tap) {
       CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_START, mcc->Time());
   mti.mTouches.AppendElement(
       CreateSingleTouchData(firstFingerId, touchX, touchY));
-  apzc->ReceiveInputEvent(mti, Some(nsTArray<uint32_t>{kDefaultTouchBehavior}));
+  apzc->ReceiveInputEvent(mti);
 
   // Start a pan, break through the threshold
   touchY += 40;
@@ -173,7 +177,7 @@ TEST_F(APZCGestureDetectorTester, Pan_With_Tap) {
       CreateSingleTouchData(firstFingerId, touchX, touchY));
   mti.mTouches.AppendElement(
       CreateSingleTouchData(secondFingerId, touchX + 10, touchY));
-  apzc->ReceiveInputEvent(mti, Some(nsTArray<uint32_t>{kDefaultTouchBehavior}));
+  apzc->ReceiveInputEvent(mti);
 
   // Lift the second finger
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_END, mcc->Time());
@@ -216,13 +220,15 @@ TEST_F(APZCGestureDetectorTester, Pan_With_Tap) {
 }
 
 TEST_F(APZCGestureDetectorTester, SecondTapIsFar_Bug1586496) {
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
+
   // Test that we receive two single-tap events when two tap gestures are
   // close in time but far in distance.
   EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, 0, apzc->GetGuid(), _))
       .Times(2);
 
   TimeDuration brief =
-      TimeDuration::FromMilliseconds(StaticPrefs::apz_max_tap_time() / 10.0);
+      TimeDuration::FromMilliseconds(StaticPrefs::apz_max_tap_time() / 10);
 
   ScreenIntPoint point(10, 10);
   Tap(apzc, point, brief);
@@ -415,7 +421,8 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, result.GetStatus());
     uint64_t blockId = result.mInputBlockId;
 
-    if (result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
+    if (StaticPrefs::layout_css_touch_action_enabled() &&
+        result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
       // SetAllowedTouchBehavior() must be called after sending touch-start.
       nsTArray<uint32_t> allowedTouchBehaviors;
       allowedTouchBehaviors.AppendElement(aBehavior);
@@ -480,7 +487,8 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, result.GetStatus());
     uint64_t blockId = result.mInputBlockId;
 
-    if (result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
+    if (StaticPrefs::layout_css_touch_action_enabled() &&
+        result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
       // SetAllowedTouchBehavior() must be called after sending touch-start.
       nsTArray<uint32_t> allowedTouchBehaviors;
       allowedTouchBehaviors.AppendElement(aBehavior);
@@ -542,11 +550,28 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
 };
 
 TEST_F(APZCLongPressTester, LongPress) {
-  DoLongPressTest(kDefaultTouchBehavior);
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
+  DoLongPressTest(mozilla::layers::AllowedTouchBehavior::NONE);
+}
+
+TEST_F(APZCLongPressTester, LongPressWithTouchAction) {
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", true);
+  DoLongPressTest(mozilla::layers::AllowedTouchBehavior::HORIZONTAL_PAN |
+                  mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN |
+                  mozilla::layers::AllowedTouchBehavior::PINCH_ZOOM);
 }
 
 TEST_F(APZCLongPressTester, LongPressPreventDefault) {
-  DoLongPressPreventDefaultTest(kDefaultTouchBehavior);
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
+  DoLongPressPreventDefaultTest(mozilla::layers::AllowedTouchBehavior::NONE);
+}
+
+TEST_F(APZCLongPressTester, LongPressPreventDefaultWithTouchAction) {
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", true);
+  DoLongPressPreventDefaultTest(
+      mozilla::layers::AllowedTouchBehavior::HORIZONTAL_PAN |
+      mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN |
+      mozilla::layers::AllowedTouchBehavior::PINCH_ZOOM);
 }
 
 TEST_F(APZCGestureDetectorTester, DoubleTap) {
@@ -682,14 +707,14 @@ TEST_F(APZCGestureDetectorTester, TapFollowedByMultipleTouches) {
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_START, mcc->Time());
   mti.mTouches.AppendElement(SingleTouchData(inputId, ParentLayerPoint(20, 20),
                                              ScreenSize(0, 0), 0, 0));
-  apzc->ReceiveInputEvent(mti, Some(nsTArray<uint32_t>{kDefaultTouchBehavior}));
+  apzc->ReceiveInputEvent(mti);
 
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_START, mcc->Time());
   mti.mTouches.AppendElement(SingleTouchData(inputId, ParentLayerPoint(20, 20),
                                              ScreenSize(0, 0), 0, 0));
   mti.mTouches.AppendElement(SingleTouchData(
       inputId + 1, ParentLayerPoint(10, 10), ScreenSize(0, 0), 0, 0));
-  apzc->ReceiveInputEvent(mti, Some(nsTArray<uint32_t>{kDefaultTouchBehavior}));
+  apzc->ReceiveInputEvent(mti);
 
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_END, mcc->Time());
   mti.mTouches.AppendElement(SingleTouchData(inputId, ParentLayerPoint(20, 20),
@@ -710,7 +735,8 @@ TEST_F(APZCGestureDetectorTester, LongPressInterruptedByWheel) {
 
   APZEventResult result = TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time());
   uint64_t touchBlockId = result.mInputBlockId;
-  if (result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
+  if (StaticPrefs::layout_css_touch_action_enabled() &&
+      result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(apzc, touchBlockId);
   }
   mcc->AdvanceByMillis(10);
@@ -754,6 +780,10 @@ TEST_F(APZCGestureDetectorTester, LongPressWithInputQueueDelay) {
   SCOPED_GFX_PREF_INT("apz.content_response_timeout", 60);
   SCOPED_GFX_PREF_INT("ui.click_hold_context_menus.delay", 30);
 
+  // Turn off touch-action to avoid having to send allowed touch actions to the
+  // input block.
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
+
   MakeApzcWaitForMainThread();
 
   MockFunction<void(std::string checkPointName)> check;
@@ -773,7 +803,6 @@ TEST_F(APZCGestureDetectorTester, LongPressWithInputQueueDelay) {
   // Simulate content response after 10ms
   mcc->AdvanceByMillis(10);
   apzc->ContentReceivedInputBlock(touchBlockId, false);
-  apzc->SetAllowedTouchBehavior(touchBlockId, {kDefaultTouchBehavior});
   apzc->ConfirmTarget(touchBlockId);
   // Ensure long-tap event happens within 20ms after that
   check.Call("pre long-tap dispatch");
@@ -787,6 +816,10 @@ TEST_F(APZCGestureDetectorTester, LongPressWithInputQueueDelay2) {
   // schedule.
   SCOPED_GFX_PREF_INT("apz.content_response_timeout", 60);
   SCOPED_GFX_PREF_INT("ui.click_hold_context_menus.delay", 30);
+
+  // Turn off touch-action to avoid having to send allowed touch actions to the
+  // input block.
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
 
   MakeApzcWaitForMainThread();
 
@@ -815,6 +848,10 @@ TEST_F(APZCGestureDetectorTester, LongPressWithInputQueueDelay3) {
   // being longer than the content response timeout.
   SCOPED_GFX_PREF_INT("apz.content_response_timeout", 30);
   SCOPED_GFX_PREF_INT("ui.click_hold_context_menus.delay", 60);
+
+  // Turn off touch-action to avoid having to send allowed touch actions to the
+  // input block.
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
 
   MakeApzcWaitForMainThread();
 

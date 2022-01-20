@@ -1,0 +1,219 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsICancelable;
+interface nsIPropertyBag2;
+
+/**
+ * Service information
+ */
+[scriptable, uuid(670ed0f9-2fa5-4544-bf1e-ea58ac179374)]
+interface nsIDNSServiceInfo : nsISupports
+{
+  /**
+   * The host name of the service. (E.g. "Android.local.")
+   * @throws NS_ERROR_NOT_INITIALIZED when getting unset value.
+   */
+  attribute AUTF8String host;
+
+  /**
+   * The IP address of the service.
+   * @throws NS_ERROR_NOT_INITIALIZED when getting unset value.
+   */
+  attribute AUTF8String address;
+
+  /**
+   * The port number of the service. (E.g. 80)
+   * @throws NS_ERROR_NOT_INITIALIZED when getting unset value.
+   */
+  attribute unsigned short port;
+
+  /**
+   * The service name of the service for display. (E.g. "My TV")
+   * @throws NS_ERROR_NOT_INITIALIZED when getting unset value.
+   */
+  attribute AUTF8String serviceName;
+
+  /**
+   * The type of the service. (E.g. "_http._tcp")
+   * @throws NS_ERROR_NOT_INITIALIZED when getting unset value.
+   */
+  attribute AUTF8String serviceType;
+
+  /**
+   * The domain name of the service. (E.g. "local.")
+   * @throws NS_ERROR_NOT_INITIALIZED when getting unset value.
+   */
+  attribute AUTF8String domainName;
+
+  /**
+   * The attributes of the service.
+   */
+  attribute nsIPropertyBag2 attributes;
+};
+
+/**
+ * The callback interface for service discovery
+ */
+[scriptable, uuid(3025b7f2-97bb-435b-b43d-26731b3f5fc4)]
+interface nsIDNSServiceDiscoveryListener : nsISupports
+{
+  /**
+   * Callback when the discovery begins.
+   * @param   aServiceType
+   *          the service type of |startDiscovery|.
+   */
+  void onDiscoveryStarted(in AUTF8String aServiceType);
+
+  /**
+   * Callback when the discovery ends.
+   * @param   aServiceType
+   *          the service type of |startDiscovery|.
+   */
+  void onDiscoveryStopped(in AUTF8String aServiceType);
+
+  /**
+   * Callback when the a service is found.
+   * @param   aServiceInfo
+   *          the info about the found service, where |serviceName|, |aServiceType|, and |domainName| are set.
+   */
+  void onServiceFound(in nsIDNSServiceInfo aServiceInfo);
+
+  /**
+   * Callback when the a service is lost.
+   * @param   aServiceInfo
+   *          the info about the lost service, where |serviceName|, |aServiceType|, and |domainName| are set.
+   */
+  void onServiceLost(in nsIDNSServiceInfo aServiceInfo);
+
+  /**
+   * Callback when the discovery cannot start.
+   * @param   aServiceType
+   *          the service type of |startDiscovery|.
+   * @param   aErrorCode
+   *          the error code.
+   */
+  void onStartDiscoveryFailed(in AUTF8String aServiceType, in long aErrorCode);
+
+  /**
+   * Callback when the discovery cannot stop.
+   * @param   aServiceType
+   *          the service type of |startDiscovery|.
+   * @param   aErrorCode
+   *          the error code.
+   */
+  void onStopDiscoveryFailed(in AUTF8String aServiceType, in long aErrorCode);
+};
+
+/**
+ * The callback interface for service registration
+ */
+[scriptable, uuid(e165e4be-abf4-4963-a66d-ed3ca116e5e4)]
+interface nsIDNSRegistrationListener : nsISupports
+{
+  const long ERROR_SERVICE_NOT_RUNNING = -65563;
+
+  /**
+   * Callback when the service is registered successfully.
+   * @param   aServiceInfo
+   *          the info about the registered service,
+   *          where |serviceName|, |aServiceType|, and |domainName| are set.
+   */
+  void onServiceRegistered(in nsIDNSServiceInfo aServiceInfo);
+
+  /**
+   * Callback when the service is unregistered successfully.
+   * @param   aServiceInfo
+   *          the info about the unregistered service.
+   */
+  void onServiceUnregistered(in nsIDNSServiceInfo aServiceInfo);
+
+  /**
+   * Callback when the service cannot be registered.
+   * @param   aServiceInfo
+   *          the info about the service to be registered.
+   * @param   aErrorCode
+   *          the error code.
+   */
+  void onRegistrationFailed(in nsIDNSServiceInfo aServiceInfo, in long aErrorCode);
+
+  /**
+   * Callback when the service cannot be unregistered.
+   * @param   aServiceInfo
+   *          the info about the registered service.
+   * @param   aErrorCode
+   *          the error code.
+   */
+  void onUnregistrationFailed(in nsIDNSServiceInfo aServiceInfo, in long aErrorCode);
+};
+
+/**
+ * The callback interface for service resolve
+ */
+[scriptable, uuid(24ee6408-648e-421d-accf-c6e5adeccf97)]
+interface nsIDNSServiceResolveListener : nsISupports
+{
+  /**
+   * Callback when the service is resolved successfully.
+   * @param   aServiceInfo
+   *          the info about the resolved service, where |host| and |port| are set.
+   */
+  void onServiceResolved(in nsIDNSServiceInfo aServiceInfo);
+
+  /**
+   * Callback when the service cannot be resolved.
+   * @param   aServiceInfo
+   *          the info about the service to be resolved.
+   * @param   aErrorCode
+   *          the error code.
+   */
+  void onResolveFailed(in nsIDNSServiceInfo aServiceInfo, in long aErrorCode);
+};
+
+/**
+ * The interface for DNS service discovery/registration/resolve
+ */
+[scriptable, uuid(6487899b-beb1-455a-ba65-e4fd465066d7)]
+interface nsIDNSServiceDiscovery : nsISupports
+{
+  /**
+   * Browse for instances of a service.
+   * @param   aServiceType
+   *          the service type to be discovered, E.g. "_http._tcp".
+   * @param   aListener
+   *          callback interface for discovery notifications.
+   * @return  An object that can be used to cancel the service discovery.
+   */
+  nsICancelable startDiscovery(in AUTF8String aServiceType, in nsIDNSServiceDiscoveryListener aListener);
+
+  /**
+   * Register a service that is discovered via |startDiscovery| and |resolveService| calls.
+   * @param   aServiceInfo
+   *          the service information to be registered.
+   *          |port| and |aServiceType| are required attributes.
+   * @param   aListener
+   *          callback interface for registration notifications.
+   * @return  An object that can be used to cancel the service registration.
+   */
+  nsICancelable registerService(in nsIDNSServiceInfo aServiceInfo, in nsIDNSRegistrationListener aListener);
+
+  /**
+   * Resolve a service name discovered via |startDiscovery| to a target host name, port number.
+   * @param   aServiceInfo
+   *          the service information to be registered.
+   *          |serviceName|, |aServiceType|, and |domainName| are required attributes as reported to the |onServiceFound| callback.
+   * @param   aListener
+   *          callback interface for registration notifications.
+   */
+  void resolveService(in nsIDNSServiceInfo aServiceInfo, in nsIDNSServiceResolveListener aListener);
+};
+
+%{ C++
+#define DNSSERVICEDISCOVERY_CONTRACT_ID \
+  "@mozilla.org/toolkit/components/mdnsresponder/dns-sd;1"
+#define DNSSERVICEINFO_CONTRACT_ID \
+  "@mozilla.org/toolkit/components/mdnsresponder/dns-info;1"
+%}

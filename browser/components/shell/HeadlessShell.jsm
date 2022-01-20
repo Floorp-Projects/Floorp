@@ -12,6 +12,7 @@ const { E10SUtils } = ChromeUtils.import(
 const { HiddenFrame } = ChromeUtils.import(
   "resource://gre/modules/HiddenFrame.jsm"
 );
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 // Refrences to the progress listeners to keep them from being gc'ed
@@ -159,7 +160,9 @@ async function takeScreenshot(
       fr.readAsArrayBuffer(blob);
     });
 
-    await IOUtils.write(path, new Uint8Array(reader.result));
+    await OS.File.writeAtomic(path, new Uint8Array(reader.result), {
+      flush: true,
+    });
     dump("Screenshot saved to: " + path + "\n");
   } catch (e) {
     dump("Failure taking screenshot: " + e + "\n");
@@ -216,39 +219,21 @@ let HeadlessShell = {
         }
       }
 
-      let urlOrFileToSave = null;
+      // Only command line argument left should be `screenshot`
+      // There could still be URLs however
       try {
-        urlOrFileToSave = cmdLine.handleFlagWithParam("screenshot", true);
+        var path = cmdLine.handleFlagWithParam("screenshot", true);
+        if (!cmdLine.length && !URLlist.length) {
+          URLlist.push(path); // Assume the user wanted to specify a URL
+          path = OS.Path.join(cmdLine.workingDirectory.path, "screenshot.png");
+        }
       } catch (e) {
-        // We know that the flag exists so we only get here if there was no parameter.
+        path = OS.Path.join(cmdLine.workingDirectory.path, "screenshot.png");
         cmdLine.handleFlag("screenshot", true); // Remove `screenshot`
       }
 
-      // Assume that the remaining arguments that do not start
-      // with a hyphen are URLs
       for (let i = 0; i < cmdLine.length; ++i) {
-        const argument = cmdLine.getArgument(i);
-        if (argument.startsWith("-")) {
-          dump(`Warning: unrecognized command line flag ${argument}\n`);
-          // To emulate the pre-nsICommandLine behavior, we ignore
-          // the argument after an unrecognized flag.
-          ++i;
-        } else {
-          URLlist.push(argument);
-        }
-      }
-
-      let path = null;
-      if (urlOrFileToSave && !URLlist.length) {
-        // URL was specified next to "-screenshot"
-        // Example: -screenshot https://www.example.com -attach-console
-        URLlist.push(urlOrFileToSave);
-      } else {
-        path = urlOrFileToSave;
-      }
-
-      if (!path) {
-        path = PathUtils.join(cmdLine.workingDirectory.path, "screenshot.png");
+        URLlist.push(cmdLine.getArgument(i)); // Assume that all remaining arguments are URLs
       }
 
       if (URLlist.length == 1) {

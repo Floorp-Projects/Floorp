@@ -31,7 +31,6 @@ esac
 
 packages="
   linux-libc-dev
-  libasound2-dev
   libstdc++-${gcc_version}-dev
   libdbus-glib-1-dev
   libdrm-dev

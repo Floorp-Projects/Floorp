@@ -107,7 +107,7 @@ var whitelist = [
   },
   {
     file: "resource://gre/localization/en-US/toolkit/printing/printDialogs.ftl",
-    platforms: ["linux", "macosx"],
+    platforms: ["macosx"],
   },
 
   // toolkit/content/aboutRights-unbranded.xhtml doesn't use aboutRights.css
@@ -141,9 +141,6 @@ var whitelist = [
   // layout/mathml/nsMathMLChar.cpp
   { file: "resource://gre/res/fonts/mathfontSTIXGeneral.properties" },
   { file: "resource://gre/res/fonts/mathfontUnicode.properties" },
-
-  // toolkit/mozapps/extensions/AddonContentPolicy.cpp
-  { file: "resource://gre/localization/en-US/toolkit/global/cspErrors.ftl" },
 
   // The l10n build system can't package string files only for some platforms.
   {

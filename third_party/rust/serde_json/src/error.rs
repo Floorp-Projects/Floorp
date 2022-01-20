@@ -234,7 +234,7 @@ pub(crate) enum ErrorCode {
     /// JSON has non-whitespace trailing characters after the value.
     TrailingCharacters,
 
-    /// Unexpected end of hex escape.
+    /// Unexpected end of hex excape.
     UnexpectedEndOfHexEscape,
 
     /// Encountered nesting of JSON maps and arrays more than 128 layers deep.

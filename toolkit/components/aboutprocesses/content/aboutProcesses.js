@@ -393,13 +393,9 @@ var View = {
       });
     } else {
       let { duration, unit } = this._getDuration(data.totalCpu);
-      if (data.totalCpu == 0) {
-        // A thread having used exactly 0ns of CPU time is not possible.
-        // When we get 0 it means the thread used less than the precision of
-        // the measurement, and it makes more sense to show '0ms' than '0ns'.
-        // This is useful on Linux where the minimum non-zero CPU time value
-        // for threads of child processes is 10ms, and on Windows ARM64 where
-        // the minimum non-zero value is 16ms.
+      if (data.totalCpu == 0 && AppConstants.platform == "win") {
+        // The minimum non zero CPU time we can get on Windows is 16ms
+        // so avoid displaying '0ns'.
         unit = "ms";
       }
       let localizedUnit = gLocalizedUnits.duration[unit];
@@ -583,7 +579,7 @@ var View = {
           image = "chrome://branding/content/icon32.png";
           break;
         case "extension":
-          image = "chrome://browser/skin/addons.svg";
+          image = "chrome://mozapps/skin/extensions/extension.svg";
           break;
         default:
           // If all favicons match, pick the shared favicon.

@@ -43,7 +43,7 @@
 /// Pinning is useful when using `select!` and stream operators that require `T:
 /// Stream + Unpin`.
 ///
-/// [`Future`]: trait@std::future::Future
+/// [`Future`]: https://doc.rust-lang.org/std/future/trait.Future.html
 /// [`Box::pin`]: #
 ///
 /// # Usage

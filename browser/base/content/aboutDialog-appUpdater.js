@@ -44,16 +44,11 @@ function appUpdater(options = {}) {
     "chrome://browser/locale/browser.properties"
   );
 
-  let manualURL = new URL(
-    Services.urlFormatter.formatURLPref("app.update.url.manual")
-  );
-
+  let manualURL = Services.urlFormatter.formatURLPref("app.update.url.manual");
   let manualLink = document.getElementById("manualLink");
-  // Strip hash and search parameters for display text.
-  manualLink.textContent = manualURL.origin + manualURL.pathname;
-  manualLink.href = manualURL.href;
-
-  document.getElementById("failedLink").href = manualURL.href;
+  manualLink.textContent = manualURL;
+  manualLink.href = manualURL;
+  document.getElementById("failedLink").href = manualURL;
 
   this._appUpdater.check();
 }

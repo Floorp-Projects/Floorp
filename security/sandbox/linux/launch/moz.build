@@ -27,8 +27,7 @@ USE_LIBS += [
 ]
 
 # For the X11 socket domain inspection in SandboxLaunch:
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
+CXXFLAGS += CONFIG["TK_CFLAGS"]
 
 FINAL_LIBRARY = "xul"
 

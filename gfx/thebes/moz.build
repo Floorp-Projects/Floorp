@@ -116,6 +116,7 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     ]
     EXPORTS.mozilla.gfx += [
         "PrintTargetPDF.h",
+        "PrintTargetPS.h",
     ]
     SOURCES += [
         "gfxFcPlatformFontList.cpp",
@@ -123,6 +124,7 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
         "gfxFT2Utils.cpp",
         "gfxPlatformGtk.cpp",
         "PrintTargetPDF.cpp",
+        "PrintTargetPS.cpp",
     ]
 
     if CONFIG["MOZ_X11"]:
@@ -270,12 +272,13 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
         if CONFIG[var]:
             DEFINES[var] = True
 
+CXXFLAGS += CONFIG["TK_CFLAGS"]
+CFLAGS += CONFIG["TK_CFLAGS"]
+
 if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("android"):
     CXXFLAGS += CONFIG["CAIRO_FT_CFLAGS"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
-    CFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
     CXXFLAGS += CONFIG["MOZ_PANGO_CFLAGS"]
 
 if CONFIG["MOZ_WAYLAND"]:

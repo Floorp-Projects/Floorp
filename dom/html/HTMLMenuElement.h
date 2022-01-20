@@ -56,7 +56,7 @@ class HTMLMenuElement final : public nsGenericHTMLElement {
     SetHTMLBoolAttr(nsGkAtoms::compact, aCompact, aError);
   }
 
-  MOZ_CAN_RUN_SCRIPT void SendShowEvent();
+  void SendShowEvent();
 
   already_AddRefed<nsIMenuBuilder> CreateBuilder();
 

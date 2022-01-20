@@ -488,6 +488,7 @@ impl<I: Iterator<Item = u32>> super::Parser<I> {
                         crate::Type {
                             name: None,
                             inner: crate::TypeInner::Struct {
+                                top_level: false,
                                 members,
                                 span: 0xFFFF, // shouldn't matter
                             },

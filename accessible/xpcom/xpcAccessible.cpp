@@ -359,7 +359,13 @@ xpcAccessible::GetAttributes(nsIPersistentProperties** aAttributes) {
 
   RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
 
-  RefPtr<AccAttributes> attributes = IntlGeneric()->Attributes();
+  RefPtr<AccAttributes> attributes;
+  if (LocalAccessible* acc = Intl()) {
+    attributes = acc->Attributes();
+  } else {
+    RemoteAccessible* proxy = IntlGeneric()->AsRemote();
+    proxy->Attributes(&attributes);
+  }
 
   nsAutoString unused;
   for (auto iter : *attributes) {

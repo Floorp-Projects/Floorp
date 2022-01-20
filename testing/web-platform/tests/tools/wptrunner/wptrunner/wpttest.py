@@ -88,7 +88,8 @@ class RunInfo(Dict[str, Any]):
                  browser_version=None,
                  browser_channel=None,
                  verify=None,
-                 extras=None):
+                 extras=None,
+                 enable_webrender=False):
         import mozinfo
         self._update_mozinfo(metadata_root)
         self.update(mozinfo.info)
@@ -121,6 +122,8 @@ class RunInfo(Dict[str, Any]):
             self.update(extras)
         if "headless" not in self:
             self["headless"] = False
+
+        self["webrender"] = enable_webrender
 
     def _update_mozinfo(self, metadata_root):
         """Add extra build information from a mozinfo.json file in a parent

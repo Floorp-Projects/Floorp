@@ -1,9 +1,8 @@
 // |jit-test| skip-if: helperThreadCount() === 0
 
 function eval(source) {
-    offThreadCompileModuleToStencil(source);
-    let stencil = finishOffThreadCompileModuleToStencil();
-    let m = instantiateModuleStencil(stencil);
+    offThreadCompileModule(source);
+    let m = finishOffThreadModule();
     m.declarationInstantiation();
     return m.evaluation();
 }

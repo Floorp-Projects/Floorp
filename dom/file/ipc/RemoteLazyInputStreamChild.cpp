@@ -155,26 +155,17 @@ RemoteLazyInputStreamChild::RemoteLazyInputStreamChild(const nsID& aID,
 RemoteLazyInputStreamChild::~RemoteLazyInputStreamChild() = default;
 
 void RemoteLazyInputStreamChild::Shutdown() {
+  MutexAutoLock lock(mMutex);
+
   RefPtr<RemoteLazyInputStreamChild> kungFuDeathGrip = this;
-  // Don't delete the pending operations inside our lock, since that might
-  // lead to a lock-ordering inversion
-  nsTArray<PendingOperation> pending;
-  {
-    MutexAutoLock lock(mMutex);
 
-    mWorkerRef = nullptr;
-    pending.SwapElements(mPendingOperations);
+  mWorkerRef = nullptr;
+  mPendingOperations.Clear();
 
-    if (mState == eActive) {
-      SendClose();
-      mState = eInactive;
-    }
+  if (mState == eActive) {
+    SendClose();
+    mState = eInactive;
   }
-  // Now release pending operations.
-  // We could let this be destroyed by scope, but I prefer
-  // to be explicit that we clear this before we drop the
-  // self-reference
-  pending.Clear();
 }
 
 void RemoteLazyInputStreamChild::ActorDestroy(

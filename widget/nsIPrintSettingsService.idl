@@ -10,6 +10,7 @@
 #include "nsISupports.idl"
 
 interface nsIPrintSettings;
+interface nsIWebBrowserPrint;
 
 %{ C++
 namespace mozilla {

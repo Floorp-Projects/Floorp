@@ -952,17 +952,19 @@ MenuItem.prototype = {
 
     let targetPattern = this.targetUrlMatchPattern;
     if (targetPattern) {
-      let targetURIs = [];
+      let targetUrls = [];
       if (contextData.onImage || contextData.onAudio || contextData.onVideo) {
         // TODO: double check if srcUrl is always set when we need it
-        targetURIs.push(Services.io.newURI(contextData.srcUrl));
+        targetUrls.push(contextData.srcUrl);
       }
-      // contextData.linkURI may be null despite contextData.onLink, when
-      // contextData.linkUrl is an invalid URL.
-      if (contextData.onLink && contextData.linkURI) {
-        targetURIs.push(contextData.linkURI);
+      if (contextData.onLink) {
+        targetUrls.push(contextData.linkUrl);
       }
-      if (!targetURIs.some(targetURI => targetPattern.matches(targetURI))) {
+      if (
+        !targetUrls.some(targetUrl =>
+          targetPattern.matches(Services.io.newURI(targetUrl))
+        )
+      ) {
         return false;
       }
     }

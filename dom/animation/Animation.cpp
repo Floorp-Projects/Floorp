@@ -493,7 +493,7 @@ void Animation::UpdatePlaybackRate(double aPlaybackRate) {
 // https://drafts.csswg.org/web-animations/#play-state
 AnimationPlayState Animation::PlayState() const {
   Nullable<TimeDuration> currentTime = GetCurrentTimeAsDuration();
-  if (currentTime.IsNull() && mStartTime.IsNull() && !Pending()) {
+  if (currentTime.IsNull() && !Pending()) {
     return AnimationPlayState::Idle;
   }
 
@@ -901,12 +901,9 @@ void Animation::TriggerNow() {
   }
 
   // If we don't have an active timeline we can't trigger the animation.
-  // For non monotonically increasing timelines, we call this function in Play()
-  // and Pause() immediately,
-  //
-  // For monotonically increasing timelines, this is a test-only method that we
-  // don't expect to be used in conjunction with animations without an active
-  // timeline so generate a warning if we do find ourselves in that situation.
+  // However, this is a test-only method that we don't expect to be used in
+  // conjunction with animations without an active timeline so generate
+  // a warning if we do find ourselves in that situation.
   if (!mTimeline || mTimeline->GetCurrentTimeAsDuration().IsNull()) {
     NS_WARNING("Failed to trigger an animation with an active timeline");
     return;
@@ -1038,8 +1035,6 @@ bool Animation::ShouldBeSynchronizedWithMainThread(
   // We check this before calling ShouldBlockAsyncTransformAnimations, partly
   // because it's cheaper, but also because it's often the most useful thing
   // to know when you're debugging performance.
-  // Note: |mSyncWithGeometricAnimations| wouldn't be set if the geometric
-  // animations use scroll-timeline.
   if (StaticPrefs::
           dom_animations_mainthread_synchronization_with_geometric_animations() &&
       mSyncWithGeometricAnimations &&
@@ -1355,15 +1350,15 @@ void Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
   AutoMutationBatchForAnimation mb(*this);
 
   bool abortedPause = mPendingState == PendingState::PausePending;
+
   double effectivePlaybackRate = CurrentOrPendingPlaybackRate();
 
   Nullable<TimeDuration> currentTime = GetCurrentTimeAsDuration();
-  Nullable<TimeDuration> seekTime;
   if (effectivePlaybackRate > 0.0 &&
       (currentTime.IsNull() || (aLimitBehavior == LimitBehavior::AutoRewind &&
                                 (currentTime.Value() < TimeDuration() ||
                                  currentTime.Value() >= EffectEnd())))) {
-    seekTime.SetValue(TimeDuration(0));
+    mHoldTime.SetValue(TimeDuration(0));
   } else if (effectivePlaybackRate < 0.0 &&
              (currentTime.IsNull() ||
               (aLimitBehavior == LimitBehavior::AutoRewind &&
@@ -1373,19 +1368,9 @@ void Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
       return aRv.ThrowInvalidStateError(
           "Can't rewind animation with infinite effect end");
     }
-    seekTime.SetValue(TimeDuration(EffectEnd()));
+    mHoldTime.SetValue(TimeDuration(EffectEnd()));
   } else if (effectivePlaybackRate == 0.0 && currentTime.IsNull()) {
-    seekTime.SetValue(TimeDuration(0));
-  }
-
-  if (!seekTime.IsNull()) {
-    if (HasFiniteTimeline()) {
-      mStartTime = seekTime;
-      mHoldTime.SetNull();
-      ApplyPendingPlaybackRate();
-    } else {
-      mHoldTime = seekTime;
-    }
+    mHoldTime.SetValue(TimeDuration(0));
   }
 
   bool reuseReadyPromise = false;
@@ -1405,8 +1390,7 @@ void Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
   // (b) If we have timing changes (specifically a change to the playbackRate)
   //     that should be applied asynchronously.
   //
-  if (mHoldTime.IsNull() && seekTime.IsNull() && !abortedPause &&
-      !mPendingPlaybackRate) {
+  if (mHoldTime.IsNull() && !abortedPause && !mPendingPlaybackRate) {
     return;
   }
 
@@ -1437,18 +1421,12 @@ void Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
   // animations if it applies.
   mSyncWithGeometricAnimations = false;
 
-  // If the animation use finite timeline, e.g. scroll timeline, we don't use
-  // pending animation tracker. Instead, we let it play immediately.
-  if (HasFiniteTimeline()) {
-    TriggerNow();
+  if (Document* doc = GetRenderedDocument()) {
+    PendingAnimationTracker* tracker =
+        doc->GetOrCreatePendingAnimationTracker();
+    tracker->AddPlayPending(*this);
   } else {
-    if (Document* doc = GetRenderedDocument()) {
-      PendingAnimationTracker* tracker =
-          doc->GetOrCreatePendingAnimationTracker();
-      tracker->AddPlayPending(*this);
-    } else {
-      TriggerOnNextTick(Nullable<TimeDuration>());
-    }
+    TriggerOnNextTick(Nullable<TimeDuration>());
   }
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
@@ -1465,24 +1443,15 @@ void Animation::Pause(ErrorResult& aRv) {
 
   AutoMutationBatchForAnimation mb(*this);
 
-  Nullable<TimeDuration> seekTime;
   // If we are transitioning from idle, fill in the current time
   if (GetCurrentTimeAsDuration().IsNull()) {
     if (mPlaybackRate >= 0.0) {
-      seekTime.SetValue(TimeDuration(0));
+      mHoldTime.SetValue(TimeDuration(0));
     } else {
       if (EffectEnd() == TimeDuration::Forever()) {
         return aRv.ThrowInvalidStateError("Can't seek to infinite effect end");
       }
-      seekTime.SetValue(TimeDuration(EffectEnd()));
-    }
-  }
-
-  if (!seekTime.IsNull()) {
-    if (HasFiniteTimeline()) {
-      mStartTime = seekTime;
-    } else {
-      mHoldTime = seekTime;
+      mHoldTime.SetValue(TimeDuration(EffectEnd()));
     }
   }
 
@@ -1499,18 +1468,12 @@ void Animation::Pause(ErrorResult& aRv) {
 
   mPendingState = PendingState::PausePending;
 
-  // If the animation use finite timeline, e.g. scroll timeline, we don't use
-  // pending animation tracker. Instead, we let it pause immediately.
-  if (HasFiniteTimeline()) {
-    TriggerNow();
+  if (Document* doc = GetRenderedDocument()) {
+    PendingAnimationTracker* tracker =
+        doc->GetOrCreatePendingAnimationTracker();
+    tracker->AddPausePending(*this);
   } else {
-    if (Document* doc = GetRenderedDocument()) {
-      PendingAnimationTracker* tracker =
-          doc->GetOrCreatePendingAnimationTracker();
-      tracker->AddPausePending(*this);
-    } else {
-      TriggerOnNextTick(Nullable<TimeDuration>());
-    }
+    TriggerOnNextTick(Nullable<TimeDuration>());
   }
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);

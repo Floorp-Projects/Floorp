@@ -1,9 +1,11 @@
 # Firefox on macOS
 
-```{toctree}
-:titlesonly:
-:maxdepth: 1
-:glob:
+```eval_rst
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+    :glob:
 
-*
+    *
+
 ```

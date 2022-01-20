@@ -38,7 +38,7 @@
 #include "vm/Shape-inl.h"
 
 using mozilla::AssertedCast;
-using mozilla::CheckedUint32;
+using mozilla::CheckedInt32;
 using mozilla::IsPowerOfTwo;
 using mozilla::PodCopy;
 using mozilla::PointerRangeSize;
@@ -300,20 +300,11 @@ OutlineTypedObject* OutlineTypedObject::createArray(JSContext* cx,
                                                     HandleRttValue rtt,
                                                     uint32_t length,
                                                     gc::InitialHeap heap) {
-  // Calculate the length of the outline storage, being careful to check for
-  // overflow. We stick to uint32_t as an implicit implementation limit.
-  CheckedUint32 byteLength = rtt->typeDef().arrayType().elementType_.size();
-  byteLength *= length;
-  byteLength += offsetOfArrayLength() + sizeof(OutlineTypedObject::ArrayLength);
-  if (!byteLength.isValid()) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_ARRAY_IMP_LIMIT);
-    return nullptr;
-  }
-
+  size_t byteLength = offsetOfArrayLength() +
+                      sizeof(OutlineTypedObject::ArrayLength) +
+                      (rtt->typeDef().arrayType().elementType_.size() * length);
   Rooted<OutlineTypedObject*> obj(
-      cx,
-      OutlineTypedObject::create(cx, rtt, size_t(byteLength.value()), heap));
+      cx, OutlineTypedObject::create(cx, rtt, byteLength, heap));
   if (!obj) {
     return nullptr;
   }

@@ -242,18 +242,20 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
   void SetMozCursor(const nsAString& aCursor);
 
   already_AddRefed<DOMStringList> MozTypesAt(uint32_t aIndex,
+                                             CallerType aCallerType,
                                              mozilla::ErrorResult& aRv) const;
 
   void MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
+                      nsIPrincipal& aSubjectPrincipal,
                       mozilla::ErrorResult& aRv);
 
   void MozSetDataAt(JSContext* aCx, const nsAString& aFormat,
                     JS::Handle<JS::Value> aData, uint32_t aIndex,
-                    mozilla::ErrorResult& aRv);
+                    nsIPrincipal& aSubjectPrincipal, mozilla::ErrorResult& aRv);
 
   void MozGetDataAt(JSContext* aCx, const nsAString& aFormat, uint32_t aIndex,
                     JS::MutableHandle<JS::Value> aRetval,
-                    mozilla::ErrorResult& aRv);
+                    nsIPrincipal& aSubjectPrincipal, mozilla::ErrorResult& aRv);
 
   bool MozUserCancelled() const { return mUserCancelled; }
 

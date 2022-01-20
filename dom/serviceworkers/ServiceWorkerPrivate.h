@@ -99,7 +99,6 @@ class ServiceWorkerPrivate final {
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ServiceWorkerPrivate)
 
   using HasThreadSafeRefCnt = std::false_type;
-  using PromiseExtensionWorkerHasListener = MozPromise<bool, nsresult, false>;
 
  protected:
   nsCycleCollectingAutoRefCnt mRefCnt;
@@ -141,10 +140,6 @@ class ServiceWorkerPrivate final {
         nsCOMPtr<nsIInterceptedChannel> aChannel, const nsAString& aClientId,
         const nsAString& aResultingClientId) = 0;
 
-    virtual RefPtr<PromiseExtensionWorkerHasListener> WakeForExtensionAPIEvent(
-        const nsAString& aExtensionAPINamespace,
-        const nsAString& aExtensionAPIEventName) = 0;
-
     virtual nsresult SpawnWorkerIfNeeded() = 0;
 
     virtual void TerminateWorker() = 0;
@@ -185,10 +180,6 @@ class ServiceWorkerPrivate final {
   nsresult SendFetchEvent(nsIInterceptedChannel* aChannel,
                           nsILoadGroup* aLoadGroup, const nsAString& aClientId,
                           const nsAString& aResultingClientId);
-
-  Result<RefPtr<PromiseExtensionWorkerHasListener>, nsresult>
-  WakeForExtensionAPIEvent(const nsAString& aExtensionAPINamespace,
-                           const nsAString& aEXtensionAPIEventName);
 
   bool MaybeStoreISupports(nsISupports* aSupports);
 

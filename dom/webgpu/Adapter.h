@@ -18,15 +18,12 @@ class Promise;
 struct GPUDeviceDescriptor;
 struct GPUExtensions;
 struct GPUFeatures;
-enum class GPUFeatureName : uint8_t;
-template <typename T>
-class Sequence;
 }  // namespace dom
 
 namespace webgpu {
+class AdapterFeatures;
 class Device;
 class Instance;
-class SupportedFeatures;
 class SupportedLimits;
 class WebGPUChild;
 namespace ffi {
@@ -40,9 +37,6 @@ class Adapter final : public ObjectBase, public ChildOf<Instance> {
 
   RefPtr<WebGPUChild> mBridge;
 
-  static Maybe<uint32_t> MakeFeatureBits(
-      const dom::Sequence<dom::GPUFeatureName>& aFeatures);
-
  private:
   ~Adapter();
   void Cleanup();
@@ -51,16 +45,16 @@ class Adapter final : public ObjectBase, public ChildOf<Instance> {
   const nsString mName;
   // Cant have them as `const` right now, since we wouldn't be able
   // to unlink them in CC unlink.
-  RefPtr<SupportedFeatures> mFeatures;
+  RefPtr<AdapterFeatures> mFeatures;
   RefPtr<SupportedLimits> mLimits;
-  const bool mIsFallbackAdapter = false;
+  const bool mIsSoftware = false;
 
  public:
   Adapter(Instance* const aParent, const ffi::WGPUAdapterInformation& aInfo);
   void GetName(nsString& out) const { out = mName; }
-  const RefPtr<SupportedFeatures>& Features() const;
+  const RefPtr<AdapterFeatures>& Features() const;
   const RefPtr<SupportedLimits>& Limits() const;
-  bool IsFallbackAdapter() const { return mIsFallbackAdapter; }
+  bool IsSoftware() const;
 
   already_AddRefed<dom::Promise> RequestDevice(
       const dom::GPUDeviceDescriptor& aDesc, ErrorResult& aRv);

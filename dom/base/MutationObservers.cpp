@@ -19,7 +19,9 @@
 #include "PLDHashTable.h"
 #include "nsCOMArray.h"
 #include "nsPIDOMWindow.h"
-#include "nsXULElement.h"
+#ifdef MOZ_XUL
+#  include "nsXULElement.h"
+#endif
 #include "nsGenericHTMLElement.h"
 #include "mozilla/AnimationTarget.h"
 #include "mozilla/Assertions.h"

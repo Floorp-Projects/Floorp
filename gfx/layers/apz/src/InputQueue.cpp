@@ -107,7 +107,9 @@ APZEventResult InputQueue::ReceiveTouchInput(
   if (aEvent.mType == MultiTouchInput::MULTITOUCH_START) {
     nsTArray<TouchBehaviorFlags> currentBehaviors;
     bool haveBehaviors = false;
-    if (mActiveTouchBlock) {
+    if (!StaticPrefs::layout_css_touch_action_enabled()) {
+      haveBehaviors = true;
+    } else if (mActiveTouchBlock) {
       haveBehaviors =
           mActiveTouchBlock->GetAllowedTouchBehaviors(currentBehaviors);
       // If the behaviours aren't set, but the main-thread response timer on
@@ -137,7 +139,9 @@ APZEventResult InputQueue::ReceiveTouchInput(
           aTarget, InputBlockState::TargetConfirmationState::eConfirmed,
           nullptr /* the block was just created so it has no events */,
           false /* not a scrollbar drag */);
-      block->SetAllowedTouchBehaviors(currentBehaviors);
+      if (StaticPrefs::layout_css_touch_action_enabled()) {
+        block->SetAllowedTouchBehaviors(currentBehaviors);
+      }
       INPQ_LOG("block %p tagged as fast-motion\n", block.get());
     } else if (aTouchBehaviors) {
       // If this block isn't started during a fast-fling, and APZCTM has

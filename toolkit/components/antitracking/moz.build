@@ -27,6 +27,7 @@ EXTRA_JS_MODULES += [
     "PurgeTrackerService.jsm",
     "TrackingDBService.jsm",
     "URLDecorationAnnotationsService.jsm",
+    "URLQueryStrippingListProcessScript.js",
     "URLQueryStrippingListService.jsm",
 ]
 

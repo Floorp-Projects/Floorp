@@ -25,7 +25,6 @@ enum AccType {
   eHTMLCaptionType,
   eHTMLCheckboxType,
   eHTMLComboboxType,
-  eHTMLDateTimeFieldType,
   eHTMLFileInputType,
   eHTMLGroupboxType,
   eHTMLHRType,

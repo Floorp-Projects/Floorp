@@ -160,6 +160,11 @@ impl crate::ImageDimension {
 
 type MemberIndex = u32;
 
+#[derive(Clone, Debug, Default, PartialEq)]
+struct Block {
+    buffer: bool,
+}
+
 bitflags::bitflags! {
     #[derive(Default)]
     struct DecorationFlags: u32 {
@@ -195,7 +200,7 @@ struct Decoration {
     desc_set: Option<spirv::Word>,
     desc_index: Option<spirv::Word>,
     specialization: Option<spirv::Word>,
-    storage_buffer: bool,
+    block: Option<Block>,
     offset: Option<spirv::Word>,
     array_stride: Option<NonZeroU32>,
     matrix_stride: Option<NonZeroU32>,
@@ -658,8 +663,11 @@ impl<I: Iterator<Item = u32>> Parser<I> {
                 inst.expect(base_words + 2)?;
                 dec.desc_index = Some(self.next()?);
             }
+            spirv::Decoration::Block => {
+                dec.block = Some(Block { buffer: false });
+            }
             spirv::Decoration::BufferBlock => {
-                dec.storage_buffer = true;
+                dec.block = Some(Block { buffer: true });
             }
             spirv::Decoration::Offset => {
                 inst.expect(base_words + 2)?;
@@ -4014,9 +4022,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
         inst.expect_at_least(2)?;
         let id = self.next()?;
         let parent_decor = self.future_decor.remove(&id);
-        let is_storage_buffer = parent_decor
-            .as_ref()
-            .map_or(false, |decor| decor.storage_buffer);
+        let block_decor = parent_decor.as_ref().and_then(|decor| decor.block.clone());
 
         self.layouter
             .update(&module.types, &module.constants)
@@ -4091,7 +4097,11 @@ impl<I: Iterator<Item = u32>> Parser<I> {
 
         span = crate::front::align_up(span, alignment);
 
-        let inner = crate::TypeInner::Struct { span, members };
+        let inner = crate::TypeInner::Struct {
+            top_level: block_decor.is_some(),
+            span,
+            members,
+        };
 
         let ty_handle = module.types.insert(
             crate::Type {
@@ -4101,7 +4111,7 @@ impl<I: Iterator<Item = u32>> Parser<I> {
             self.span_from_with_op(start),
         );
 
-        if is_storage_buffer {
+        if block_decor == Some(Block { buffer: true }) {
             self.lookup_storage_buffer_types
                 .insert(ty_handle, storage_access);
         }

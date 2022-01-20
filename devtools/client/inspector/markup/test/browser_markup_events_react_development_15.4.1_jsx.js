@@ -24,19 +24,25 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_LIB + ":17530:42",
-        attributes: ["Bubbling"],
-        handler: `function emptyFunction() {}`,
+        attributes: [
+          "Bubbling",
+          "DOM2"
+        ],
+        handler: `function emptyFunction() {}`
       },
       {
         type: "onClick",
         filename: TEST_LIB_BABEL + ":10:41",
-        attributes: ["React", "Bubbling"],
+        attributes: [
+          "Bubbling",
+          "React"
+        ],
         handler: `
           function inlineFunction() {
             alert("inlineFunction");
-          }`,
-      },
-    ],
+          }`
+      }
+    ]
   },
   {
     selector: "#externaljsx",
@@ -44,19 +50,25 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_LIB + ":17530:42",
-        attributes: ["Bubbling"],
-        handler: `function emptyFunction() {}`,
+        attributes: [
+          "Bubbling",
+          "DOM2"
+        ],
+        handler: `function emptyFunction() {}`
       },
       {
         type: "onClick",
         filename: TEST_EXTERNAL_LISTENERS + ":4:25",
-        attributes: ["React", "Bubbling"],
+        attributes: [
+          "Bubbling",
+          "React"
+        ],
         handler: `
           function externalFunction() {
             alert("externalFunction");
-          }`,
-      },
-    ],
+          }`
+      }
+    ]
   },
   {
     selector: "#externalinlinejsx",
@@ -64,28 +76,37 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_LIB + ":17530:42",
-        attributes: ["Bubbling"],
-        handler: `function emptyFunction() {}`,
+        attributes: [
+          "Bubbling",
+          "DOM2"
+        ],
+        handler: `function emptyFunction() {}`
       },
       {
         type: "onClick",
         filename: TEST_EXTERNAL_LISTENERS + ":4:25",
-        attributes: ["React", "Bubbling"],
+        attributes: [
+          "Bubbling",
+          "React"
+        ],
         handler: `
           function externalFunction() {
             alert("externalFunction");
-          }`,
+          }`
       },
       {
         type: "onMouseUp",
         filename: TEST_LIB_BABEL + ":10:41",
-        attributes: ["React", "Bubbling"],
+        attributes: [
+          "Bubbling",
+          "React"
+        ],
         handler: `
           function inlineFunction() {
             alert("inlineFunction");
-          }`,
-      },
-    ],
+          }`
+      }
+    ]
   },
   {
     selector: "#externalcapturingjsx",
@@ -93,14 +114,17 @@ const TEST_DATA = [
       {
         type: "onClickCapture",
         filename: TEST_EXTERNAL_LISTENERS + ":8:34",
-        attributes: ["React", "Capturing"],
+        attributes: [
+          "Capturing",
+          "React"
+        ],
         handler: `
           function externalCapturingFunction() {
             alert("externalCapturingFunction");
-          }`,
-      },
-    ],
-  },
+          }`
+      }
+    ]
+  }
 ];
 /* eslint-enable */
 

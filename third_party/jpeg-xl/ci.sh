@@ -558,7 +558,6 @@ cmd_coverage_report() {
     --filter '.*jxl/.*'
     --exclude '.*_test.cc'
     --exclude '.*_testonly..*'
-    --exclude '.*_debug.*'
     --exclude '.*test_utils..*'
     --object-directory "${real_build_dir}"
   )

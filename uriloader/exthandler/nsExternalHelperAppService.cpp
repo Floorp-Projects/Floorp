@@ -153,8 +153,7 @@ static nsresult UnescapeFragment(const nsACString& aFragment, nsIURI* aURI,
       do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return textToSubURI->UnEscapeURIForUI(aFragment, /* aDontEscape = */ true,
-                                        aResult);
+  return textToSubURI->UnEscapeURIForUI(aFragment, aResult);
 }
 
 /**
@@ -2017,10 +2016,14 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     }
 
 #endif
+    bool alwaysAskWhereToSave =
+        !Preferences::GetBool("browser.download.useDownloadDir") &&
+        StaticPrefs::browser_download_improvements_to_download_panel();
 
-    if (action == nsIMIMEInfo::useHelperApp ||
-        action == nsIMIMEInfo::useSystemDefault ||
-        shouldAutomaticallyHandleInternally) {
+    if ((action == nsIMIMEInfo::useHelperApp ||
+         action == nsIMIMEInfo::useSystemDefault ||
+         shouldAutomaticallyHandleInternally) &&
+        !alwaysAskWhereToSave) {
       // Check if the file is local, in which case just launch it from where it
       // is. Otherwise, set the file to launch once it's finished downloading.
       rv = mIsFileChannel ? LaunchLocalFile()
@@ -2666,8 +2669,7 @@ void nsExternalAppHandler::RequestSaveDestination(
 NS_IMETHODIMP nsExternalAppHandler::PromptForSaveDestination() {
   if (mCanceled) return NS_OK;
 
-  if (!StaticPrefs::browser_download_improvements_to_download_panel() ||
-      mForceSave) {
+  if (!StaticPrefs::browser_download_improvements_to_download_panel()) {
     mMimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
   }
 

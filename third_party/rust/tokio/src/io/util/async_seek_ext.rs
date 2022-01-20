@@ -2,9 +2,7 @@ use crate::io::seek::{seek, Seek};
 use crate::io::AsyncSeek;
 use std::io::SeekFrom;
 
-/// An extension trait which adds utility methods to [`AsyncSeek`] types.
-///
-/// As a convenience, this trait may be imported using the [`prelude`]:
+/// An extension trait which adds utility methods to `AsyncSeek` types.
 ///
 /// # Examples
 ///
@@ -27,11 +25,6 @@ use std::io::SeekFrom;
 ///     Ok(())
 /// }
 /// ```
-///
-/// See [module][crate::io] documentation for more details.
-///
-/// [`AsyncSeek`]: AsyncSeek
-/// [`prelude`]: crate::prelude
 pub trait AsyncSeekExt: AsyncSeek {
     /// Creates a future which will seek an IO object, and then yield the
     /// new position in the object and the object itself.

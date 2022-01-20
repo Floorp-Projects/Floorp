@@ -514,10 +514,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 0;
       break;
     case IntID::SwipeAnimationEnabled:
-      // Forcibly enable the swipe animation on Windows. It doesn't matter on
-      // platforms where "Drag two fingers to scroll" isn't supported since on
-      // the platforms we will never generate any swipe gesture events.
-      aResult = 1;
+      aResult = 0;
       break;
     case IntID::UseOverlayScrollbars:
       aResult = false;

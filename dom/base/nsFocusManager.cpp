@@ -62,7 +62,6 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/PointerLockManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
@@ -71,7 +70,9 @@
 #include "mozilla/StaticPrefs_full_screen_api.h"
 #include <algorithm>
 
-#include "nsIDOMXULMenuListElement.h"
+#ifdef MOZ_XUL
+#  include "nsIDOMXULMenuListElement.h"
+#endif
 
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
@@ -347,6 +348,7 @@ Element* nsFocusManager::GetFocusedDescendant(
 
 // static
 Element* nsFocusManager::GetRedirectedFocus(nsIContent* aContent) {
+#ifdef MOZ_XUL
   if (aContent->IsXULElement()) {
     nsCOMPtr<nsIDOMXULMenuListElement> menulist =
         aContent->AsElement()->AsXULMenuList();
@@ -356,6 +358,7 @@ Element* nsFocusManager::GetRedirectedFocus(nsIContent* aContent) {
       return inputField;
     }
   }
+#endif
 
   return nullptr;
 }
@@ -462,17 +465,22 @@ nsFocusManager::GetFocusedElement(Element** aFocusedElement) {
   return NS_OK;
 }
 
-uint32_t nsFocusManager::GetLastFocusMethod(nsPIDOMWindowOuter* aWindow) const {
-  nsPIDOMWindowOuter* window = aWindow ? aWindow : mFocusedWindow.get();
-  uint32_t method = window ? window->GetFocusMethod() : 0;
-  NS_ASSERTION((method & METHOD_MASK) == method, "invalid focus method");
-  return method;
-}
-
 NS_IMETHODIMP
 nsFocusManager::GetLastFocusMethod(mozIDOMWindowProxy* aWindow,
                                    uint32_t* aLastFocusMethod) {
-  *aLastFocusMethod = GetLastFocusMethod(nsPIDOMWindowOuter::From(aWindow));
+  // the focus method is stored on the inner window
+  nsCOMPtr<nsPIDOMWindowOuter> window;
+  if (aWindow) {
+    window = nsPIDOMWindowOuter::From(aWindow);
+  }
+  if (!window) {
+    window = mFocusedWindow;
+  }
+
+  *aLastFocusMethod = window ? window->GetFocusMethod() : 0;
+
+  NS_ASSERTION((*aLastFocusMethod & METHOD_MASK) == *aLastFocusMethod,
+               "invalid focus method");
   return NS_OK;
 }
 
@@ -2705,8 +2713,7 @@ class FocusBlurEvent : public Runnable {
         mIsRefocus(aIsRefocus),
         mRelatedTarget(aRelatedTarget) {}
 
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
+  NS_IMETHOD Run() override {
     InternalFocusEvent event(true, mEventMessage);
     event.mFlags.mBubbles = false;
     event.mFlags.mCancelable = false;
@@ -2716,8 +2723,8 @@ class FocusBlurEvent : public Runnable {
     return EventDispatcher::Dispatch(mTarget, mContext, &event);
   }
 
-  const nsCOMPtr<nsISupports> mTarget;
-  const RefPtr<nsPresContext> mContext;
+  nsCOMPtr<nsISupports> mTarget;
+  RefPtr<nsPresContext> mContext;
   EventMessage mEventMessage;
   bool mWindowRaised;
   bool mIsRefocus;
@@ -2739,8 +2746,7 @@ class FocusInOutEvent : public Runnable {
         mOriginalFocusedContent(aOriginalFocusedContent),
         mRelatedTarget(aRelatedTarget) {}
 
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
+  NS_IMETHOD Run() override {
     nsCOMPtr<nsIContent> originalWindowFocus =
         mOriginalFocusedWindow ? mOriginalFocusedWindow->GetFocusedElement()
                                : nullptr;
@@ -2757,8 +2763,8 @@ class FocusInOutEvent : public Runnable {
     return NS_OK;
   }
 
-  const nsCOMPtr<nsISupports> mTarget;
-  const RefPtr<nsPresContext> mContext;
+  nsCOMPtr<nsISupports> mTarget;
+  RefPtr<nsPresContext> mContext;
   EventMessage mEventMessage;
   nsCOMPtr<nsPIDOMWindowOuter> mOriginalFocusedWindow;
   nsCOMPtr<nsIContent> mOriginalFocusedContent;
@@ -3425,6 +3431,7 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
       }
     }
   } else {
+#ifdef MOZ_XUL
     if (aType != MOVEFOCUS_CARET) {
       // if there is no focus, yet a panel is open, focus the first item in
       // the panel
@@ -3433,6 +3440,7 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
         popupFrame = pm->GetTopPopup(ePopupTypePanel);
       }
     }
+#endif
     if (popupFrame) {
       // When there is a popup open, and no starting content, start the search
       // at the topmost popup.
@@ -4512,28 +4520,25 @@ nsIContent* nsFocusManager::GetNextTabbableMapArea(bool aForward,
     if (!mapContent) {
       return nullptr;
     }
+    uint32_t count = mapContent->GetChildCount();
     // First see if the the start content is in this map
-    Maybe<uint32_t> indexOfStartContent =
-        mapContent->ComputeIndexOf(aStartContent);
+
+    int32_t index = mapContent->ComputeIndexOf(aStartContent);
     int32_t tabIndex;
-    nsIContent* scanStartContent;
-    if (indexOfStartContent.isNothing() ||
-        (aStartContent->IsFocusable(&tabIndex) &&
-         tabIndex != aCurrentTabIndex)) {
+    if (index < 0 || (aStartContent->IsFocusable(&tabIndex) &&
+                      tabIndex != aCurrentTabIndex)) {
       // If aStartContent is in this map we must start iterating past it.
       // We skip the case where aStartContent has tabindex == aStartContent
       // since the next tab ordered element might be before it
       // (or after for backwards) in the child list.
-      scanStartContent =
-          aForward ? mapContent->GetFirstChild() : mapContent->GetLastChild();
-    } else {
-      scanStartContent = aForward ? aStartContent->GetNextSibling()
-                                  : aStartContent->GetPreviousSibling();
+      index = aForward ? -1 : (int32_t)count;
     }
 
-    for (nsCOMPtr<nsIContent> areaContent = scanStartContent; areaContent;
-         areaContent = aForward ? areaContent->GetNextSibling()
-                                : areaContent->GetPreviousSibling()) {
+    // GetChildAt_Deprecated will return nullptr if our index < 0 or index >=
+    // count
+    nsCOMPtr<nsIContent> areaContent;
+    while ((areaContent = mapContent->GetChildAt_Deprecated(
+                aForward ? ++index : --index)) != nullptr) {
       if (areaContent->IsFocusable(&tabIndex) && tabIndex == aCurrentTabIndex) {
         return areaContent;
       }

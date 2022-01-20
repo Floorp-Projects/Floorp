@@ -12,15 +12,14 @@ const TEST_URL = URL_ROOT_SSL + "doc_markup_events_object_listener.html";
 
 loadHelperScript("helper_events_test_runner.js");
 
-const TEST_DATA = [
-  // eslint-disable-line
+const TEST_DATA = [ // eslint-disable-line
   {
     selector: "#valid-object-listener",
     expected: [
       {
         type: "click",
         filename: TEST_URL + ":20:23",
-        attributes: ["Bubbling"],
+        attributes: ["Bubbling", "DOM2"],
         handler: `() => {\n` + `  console.log("handleEvent");\n` + `}`,
       },
     ],
@@ -31,7 +30,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":27:23",
-        attributes: ["Bubbling"],
+        attributes: ["Bubbling", "DOM2"],
         handler: `() => {\n` + `  console.log("handleEvent");\n` + `}`,
       },
     ],

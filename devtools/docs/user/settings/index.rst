@@ -106,7 +106,6 @@ Inspector
    - Hex
    - HSL(A)
    - RGB(A)
-   - HWB
    - color name
    - As authored.
 

@@ -445,15 +445,9 @@ interface nsIAccessibleEvent : nsISupports
   const unsigned long EVENT_TABLE_STYLING_CHANGED = 0x005C;
 
   /**
-   * A reorder event that has been coalesced into a mutation
-   * of an ancestor's subtree.
-   */
-  const unsigned long EVENT_INNER_REORDER = 0x005D;
-
-  /**
    * Help make sure event map does not get out-of-line.
    */
-  const unsigned long EVENT_LAST_ENTRY = 0x005E;
+  const unsigned long EVENT_LAST_ENTRY = 0x005D;
 
   /**
    * The type of event, based on the enumerated event values

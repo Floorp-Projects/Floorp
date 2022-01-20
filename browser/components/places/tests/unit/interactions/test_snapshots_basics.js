@@ -8,7 +8,6 @@
 const TEST_URL1 = "https://example.com/";
 const TEST_URL2 = "https://example.com/12345";
 const TEST_URL3 = "https://example.com/14235";
-const TEST_URL4 = "https://example.com/15234";
 const VERSION_PREF = "browser.places.snapshots.version";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -24,12 +23,11 @@ add_task(async function setup() {
     {
       url: TEST_URL1,
       documentType: Interactions.DOCUMENT_TYPE.MEDIA,
-      created_at: now - 30000,
-      updated_at: now - 30000,
+      created_at: now - 20000,
+      updated_at: now - 20000,
     },
-    { url: TEST_URL2, created_at: now - 20000, updated_at: now - 20000 },
-    { url: TEST_URL3, created_at: now - 10000, updated_at: now - 10000 },
-    { url: TEST_URL4, created_at: now, updated_at: now },
+    { url: TEST_URL2, created_at: now - 10000, updated_at: now - 10000 },
+    { url: TEST_URL3, created_at: now, updated_at: now },
   ]);
 });
 
@@ -39,42 +37,28 @@ add_task(async function test_add_simple_snapshot() {
   );
 
   await assertUrlNotification(TOPIC_ADDED, [TEST_URL2], () =>
-    Snapshots.add({
-      url: TEST_URL2,
-      userPersisted: Snapshots.USER_PERSISTED.MANUAL,
-    })
-  );
-
-  await assertUrlNotification(TOPIC_ADDED, [TEST_URL3], () =>
-    Snapshots.add({
-      url: TEST_URL3,
-      userPersisted: Snapshots.USER_PERSISTED.PINNED,
-    })
+    Snapshots.add({ url: TEST_URL2, userPersisted: true })
   );
 
   await assertSnapshots([
-    { url: TEST_URL3, userPersisted: Snapshots.USER_PERSISTED.PINNED },
-    { url: TEST_URL2, userPersisted: Snapshots.USER_PERSISTED.MANUAL },
+    { url: TEST_URL2, userPersisted: true },
     { url: TEST_URL1, documentType: Interactions.DOCUMENT_TYPE.MEDIA },
   ]);
 
   let snapshot = await Snapshots.get(TEST_URL2);
-  assertSnapshot(snapshot, {
-    url: TEST_URL2,
-    userPersisted: Snapshots.USER_PERSISTED.MANUAL,
-  });
+  assertSnapshot(snapshot, { url: TEST_URL2, userPersisted: true });
 });
 
 add_task(async function test_add_duplicate_snapshot() {
-  await Snapshots.add({ url: TEST_URL4 });
+  await Snapshots.add({ url: TEST_URL3 });
 
-  let initialSnapshot = await Snapshots.get(TEST_URL4);
+  let initialSnapshot = await Snapshots.get(TEST_URL3);
 
   await assertTopicNotObserved(TOPIC_ADDED, () =>
-    Snapshots.add({ url: TEST_URL4 })
+    Snapshots.add({ url: TEST_URL3 })
   );
 
-  let newSnapshot = await Snapshots.get(TEST_URL4);
+  let newSnapshot = await Snapshots.get(TEST_URL3);
   Assert.deepEqual(
     initialSnapshot,
     newSnapshot,
@@ -83,43 +67,25 @@ add_task(async function test_add_duplicate_snapshot() {
 
   // Check that the other snapshots have not had userPersisted changed.
   await assertSnapshots([
-    { url: TEST_URL4 },
-    { url: TEST_URL3, userPersisted: Snapshots.USER_PERSISTED.PINNED },
-    { url: TEST_URL2, userPersisted: Snapshots.USER_PERSISTED.MANUAL },
+    { url: TEST_URL3 },
+    { url: TEST_URL2, userPersisted: true },
     { url: TEST_URL1, documentType: Interactions.DOCUMENT_TYPE.MEDIA },
   ]);
 
-  info("Re-add existing snapshot to check for userPersisted value");
-  await Snapshots.add({
-    url: TEST_URL4,
-    userPersisted: Snapshots.USER_PERSISTED.MANUAL,
-  });
+  info("Re-add existing snapshot to check for userPersisted flag");
+  await Snapshots.add({ url: TEST_URL3, userPersisted: true });
 
-  newSnapshot = await Snapshots.get(TEST_URL4);
+  newSnapshot = await Snapshots.get(TEST_URL3);
   Assert.deepEqual(
-    { ...initialSnapshot, userPersisted: Snapshots.USER_PERSISTED.MANUAL },
-    newSnapshot,
-    "Snapshot should have remained the same apart from the userPersisted value"
-  );
-
-  info("Change existing snapshot userPersisted from MANUAL to PINNED");
-  await Snapshots.add({
-    url: TEST_URL4,
-    userPersisted: Snapshots.USER_PERSISTED.PINNED,
-  });
-
-  newSnapshot = await Snapshots.get(TEST_URL4);
-  Assert.deepEqual(
-    { ...initialSnapshot, userPersisted: Snapshots.USER_PERSISTED.PINNED },
+    { ...initialSnapshot, userPersisted: true },
     newSnapshot,
     "Snapshot should have remained the same apart from the userPersisted value"
   );
 
   // Check that the other snapshots have not had userPersisted changed.
   await assertSnapshots([
-    { url: TEST_URL4, userPersisted: Snapshots.USER_PERSISTED.PINNED },
-    { url: TEST_URL3, userPersisted: Snapshots.USER_PERSISTED.PINNED },
-    { url: TEST_URL2, userPersisted: Snapshots.USER_PERSISTED.MANUAL },
+    { url: TEST_URL3, userPersisted: true },
+    { url: TEST_URL2, userPersisted: true },
     { url: TEST_URL1, documentType: Interactions.DOCUMENT_TYPE.MEDIA },
   ]);
 });
@@ -160,16 +126,13 @@ add_task(async function test_delete_snapshot() {
   });
 
   info("Re-add user persisted snapshot");
-  await Snapshots.add({
-    url: TEST_URL1,
-    userPersisted: Snapshots.USER_PERSISTED.MANUAL,
-  });
+  await Snapshots.add({ url: TEST_URL1, userPersisted: true });
 
   snapshot = await Snapshots.get(TEST_URL1);
   assertSnapshot(snapshot, {
     url: TEST_URL1,
     documentType: Interactions.DOCUMENT_TYPE.MEDIA,
-    userPersisted: Snapshots.USER_PERSISTED.MANUAL,
+    userPersisted: true,
   });
 });
 

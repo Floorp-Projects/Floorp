@@ -57,10 +57,9 @@ JSObject* ReadableStreamDefaultReader::WrapObject(
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-reader-generic-initialize
-bool ReadableStreamReaderGenericInitialize(JSContext* aCx,
-                                           ReadableStreamGenericReader* aReader,
-                                           ReadableStream* aStream,
-                                           ErrorResult& aRv) {
+static bool ReadableStreamReaderGenericInitialize(
+    JSContext* aCx, ReadableStreamDefaultReader* aReader,
+    ReadableStream* aStream, ErrorResult& aRv) {
   // Step 1.
   aReader->SetStream(aStream);
 
@@ -203,8 +202,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Read_ReadRequest)
 NS_INTERFACE_MAP_END_INHERITING(ReadRequest)
 
 // https://streams.spec.whatwg.org/#readable-stream-default-reader-read
+MOZ_CAN_RUN_SCRIPT
 void ReadableStreamDefaultReaderRead(JSContext* aCx,
-                                     ReadableStreamGenericReader* aReader,
+                                     ReadableStreamDefaultReader* aReader,
                                      ReadRequest* aRequest, ErrorResult& aRv) {
   // Step 1.
   ReadableStream* stream = aReader->GetStream();
@@ -229,7 +229,7 @@ void ReadableStreamDefaultReaderRead(JSContext* aCx,
     }
 
     case ReadableStream::ReaderState::Readable: {
-      RefPtr<ReadableStreamController> controller(stream->Controller());
+      RefPtr<ReadableStreamDefaultController> controller(stream->Controller());
       MOZ_ASSERT(controller);
       controller->PullSteps(aCx, aRequest, aRv);
       return;
@@ -240,6 +240,7 @@ void ReadableStreamDefaultReaderRead(JSContext* aCx,
 // Return a raw pointer here to avoid refcounting, but make sure it's safe
 // (the object should be kept alive by the callee).
 // https://streams.spec.whatwg.org/#default-reader-read
+MOZ_CAN_RUN_SCRIPT
 already_AddRefed<Promise> ReadableStreamDefaultReader::Read(JSContext* aCx,
                                                             ErrorResult& aRv) {
   // Step 1.
@@ -266,8 +267,8 @@ already_AddRefed<Promise> ReadableStreamDefaultReader::Read(JSContext* aCx,
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-reader-generic-release
-void ReadableStreamReaderGenericRelease(ReadableStreamGenericReader* aReader,
-                                        ErrorResult& aRv) {
+static void ReadableStreamGenericRelease(ReadableStreamDefaultReader* aReader,
+                                         ErrorResult& aRv) {
   // Step 1.
   MOZ_ASSERT(aReader->GetStream());
   // Step 2.
@@ -310,11 +311,11 @@ void ReadableStreamDefaultReader::ReleaseLock(ErrorResult& aRv) {
   }
 
   // Step 3.
-  ReadableStreamReaderGenericRelease(this, aRv);
+  ReadableStreamGenericRelease(this, aRv);
 }
 
 // https://streams.spec.whatwg.org/#generic-reader-closed
-already_AddRefed<Promise> ReadableStreamGenericReader::Closed() const {
+already_AddRefed<Promise> ReadableStreamDefaultReader::Closed() const {
   // Step 1.
   return do_AddRef(mClosedPromise);
 }
@@ -322,7 +323,7 @@ already_AddRefed<Promise> ReadableStreamGenericReader::Closed() const {
 // https://streams.spec.whatwg.org/#readable-stream-reader-generic-cancel
 MOZ_CAN_RUN_SCRIPT
 static already_AddRefed<Promise> ReadableStreamGenericReaderCancel(
-    JSContext* aCx, ReadableStreamGenericReader* aReader,
+    JSContext* aCx, ReadableStreamDefaultReader* aReader,
     JS::Handle<JS::Value> aReason, ErrorResult& aRv) {
   // Step 1 (Strong ref for below call).
   RefPtr<ReadableStream> stream = aReader->GetStream();
@@ -334,7 +335,10 @@ static already_AddRefed<Promise> ReadableStreamGenericReaderCancel(
   return ReadableStreamCancel(aCx, stream, aReason, aRv);
 }
 
-already_AddRefed<Promise> ReadableStreamGenericReader::Cancel(
+// Return a raw pointer here to avoid refcounting, but make sure it's safe
+// (the object should be kept alive by the callee).
+MOZ_CAN_RUN_SCRIPT
+already_AddRefed<Promise> ReadableStreamDefaultReader::Cancel(
     JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv) {
   // Step 1.
   if (!mStream) {

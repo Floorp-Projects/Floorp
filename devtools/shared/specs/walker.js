@@ -354,7 +354,6 @@ const walkerSpec = generateActorSpec({
     pick: {
       request: {
         doFocus: Arg(0, "nullable:boolean"),
-        isLocalTab: Arg(1, "nullable:boolean"),
       },
     },
     cancelPick: {

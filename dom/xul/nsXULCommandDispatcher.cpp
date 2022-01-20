@@ -27,7 +27,6 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/ElementBinding.h"
 
 using namespace mozilla;
 using mozilla::dom::Document;
@@ -194,30 +193,29 @@ nsXULCommandDispatcher::AdvanceFocus() {
 }
 
 NS_IMETHODIMP
-nsXULCommandDispatcher::AdvanceFocusIntoSubtree(Element* aElt) {
-  return MoveFocusIntoSubtree(aElt, /* aForward = */ true);
-}
-
-NS_IMETHODIMP
 nsXULCommandDispatcher::RewindFocus() {
-  return MoveFocusIntoSubtree(nullptr, /* aForward = */ false);
-}
-
-nsresult nsXULCommandDispatcher::MoveFocusIntoSubtree(Element* aElt,
-                                                      bool aForward) {
   nsCOMPtr<nsPIDOMWindowOuter> win;
   GetRootFocusedContentAndWindow(getter_AddRefs(win));
 
   RefPtr<Element> result;
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (!fm) {
-    return NS_OK;
-  }
-  auto flags = nsFocusManager::ProgrammaticFocusFlags(dom::FocusOptions()) |
-               nsIFocusManager::FLAG_BYMOVEFOCUS;
-  auto type = aForward ? nsIFocusManager::MOVEFOCUS_FORWARD
-                       : nsIFocusManager::MOVEFOCUS_BACKWARD;
-  return fm->MoveFocus(win, aElt, type, flags, getter_AddRefs(result));
+  if (fm)
+    return fm->MoveFocus(win, nullptr, nsIFocusManager::MOVEFOCUS_BACKWARD, 0,
+                         getter_AddRefs(result));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULCommandDispatcher::AdvanceFocusIntoSubtree(Element* aElt) {
+  nsCOMPtr<nsPIDOMWindowOuter> win;
+  GetRootFocusedContentAndWindow(getter_AddRefs(win));
+
+  RefPtr<Element> result;
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm)
+    return fm->MoveFocus(win, aElt, nsIFocusManager::MOVEFOCUS_FORWARD, 0,
+                         getter_AddRefs(result));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -351,7 +349,9 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName) {
     updaters.AppendObject(content);
   }
 
-  for (nsIContent* content : updaters) {
+  for (int32_t u = 0; u < updaters.Count(); u++) {
+    nsIContent* content = updaters[u];
+
 #ifdef DEBUG
     if (MOZ_LOG_TEST(gCommandLog, LogLevel::Debug)) {
       nsAutoCString aeventnameC;
@@ -363,7 +363,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName) {
 #endif
 
     WidgetEvent event(true, eXULCommandUpdate);
-    EventDispatcher::Dispatch(MOZ_KnownLive(content), nullptr, &event);
+    EventDispatcher::Dispatch(content, nullptr, &event);
   }
   return NS_OK;
 }
@@ -417,8 +417,8 @@ nsXULCommandDispatcher::Lock() {
   return NS_OK;
 }
 
-// TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsXULCommandDispatcher::Unlock() {
+NS_IMETHODIMP
+nsXULCommandDispatcher::Unlock() {
   if (mLocked) {
     mLocked = false;
 

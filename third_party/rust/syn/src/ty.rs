@@ -412,7 +412,6 @@ pub mod parsing {
                 && !lookahead.peek(Token![self])
                 && !lookahead.peek(Token![Self])
                 && !lookahead.peek(Token![crate])
-                || input.peek(Token![dyn])
             {
                 return Err(lookahead.error());
             }
@@ -541,7 +540,15 @@ pub mod parsing {
             || lookahead.peek(Token![<])
         {
             if input.peek(Token![dyn]) {
-                let trait_object = TypeTraitObject::parse(input, allow_plus)?;
+                let mut trait_object: TypeTraitObject = input.parse()?;
+                if lifetimes.is_some() {
+                    match trait_object.bounds.iter_mut().next().unwrap() {
+                        TypeParamBound::Trait(trait_bound) => {
+                            trait_bound.lifetimes = lifetimes;
+                        }
+                        TypeParamBound::Lifetime(_) => unreachable!(),
+                    }
+                }
                 return Ok(Type::TraitObject(trait_object));
             }
 
@@ -586,12 +593,7 @@ pub mod parsing {
                 if allow_plus {
                     while input.peek(Token![+]) {
                         bounds.push_punct(input.parse()?);
-                        if !(input.peek(Ident::peek_any)
-                            || input.peek(Token![::])
-                            || input.peek(Token![?])
-                            || input.peek(Lifetime)
-                            || input.peek(token::Paren))
-                        {
+                        if input.peek(Token![>]) {
                             break;
                         }
                         bounds.push_value(input.parse()?);
@@ -628,7 +630,7 @@ pub mod parsing {
         } else if lookahead.peek(Token![!]) && !input.peek(Token![=]) {
             input.parse().map(Type::Never)
         } else if lookahead.peek(Token![impl]) {
-            TypeImplTrait::parse(input, allow_plus).map(Type::ImplTrait)
+            input.parse().map(Type::ImplTrait)
         } else if lookahead.peek(Token![_]) {
             input.parse().map(Type::Infer)
         } else if lookahead.peek(Lifetime) {
@@ -821,10 +823,7 @@ pub mod parsing {
         fn parse(input: ParseStream) -> Result<Self> {
             let (qself, mut path) = path::parsing::qpath(input, false)?;
 
-            if path.segments.last().unwrap().arguments.is_empty()
-                && (input.peek(token::Paren) || input.peek(Token![::]) && input.peek3(token::Paren))
-            {
-                input.parse::<Option<Token![::]>>()?;
+            if path.segments.last().unwrap().arguments.is_empty() && input.peek(token::Paren) {
                 let args: ParenthesizedGenericArguments = input.parse()?;
                 let parenthesized = PathArguments::Parenthesized(args);
                 path.segments.last_mut().unwrap().arguments = parenthesized;
@@ -835,13 +834,13 @@ pub mod parsing {
     }
 
     impl ReturnType {
-        #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
         pub fn without_plus(input: ParseStream) -> Result<Self> {
             let allow_plus = false;
             Self::parse(input, allow_plus)
         }
 
-        pub(crate) fn parse(input: ParseStream, allow_plus: bool) -> Result<Self> {
+        #[doc(hidden)]
+        pub fn parse(input: ParseStream, allow_plus: bool) -> Result<Self> {
             if input.peek(Token![->]) {
                 let arrow = input.parse()?;
                 let ty = ambig_ty(input, allow_plus)?;
@@ -855,16 +854,14 @@ pub mod parsing {
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for ReturnType {
         fn parse(input: ParseStream) -> Result<Self> {
-            let allow_plus = true;
-            Self::parse(input, allow_plus)
+            Self::parse(input, true)
         }
     }
 
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for TypeTraitObject {
         fn parse(input: ParseStream) -> Result<Self> {
-            let allow_plus = true;
-            Self::parse(input, allow_plus)
+            Self::parse(input, true)
         }
     }
 
@@ -878,67 +875,60 @@ pub mod parsing {
     }
 
     impl TypeTraitObject {
-        #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
         pub fn without_plus(input: ParseStream) -> Result<Self> {
             let allow_plus = false;
             Self::parse(input, allow_plus)
         }
 
         // Only allow multiple trait references if allow_plus is true.
-        pub(crate) fn parse(input: ParseStream, allow_plus: bool) -> Result<Self> {
+        #[doc(hidden)]
+        pub fn parse(input: ParseStream, allow_plus: bool) -> Result<Self> {
             Ok(TypeTraitObject {
                 dyn_token: input.parse()?,
-                bounds: Self::parse_bounds(input, allow_plus)?,
+                bounds: {
+                    let mut bounds = Punctuated::new();
+                    if allow_plus {
+                        loop {
+                            bounds.push_value(input.parse()?);
+                            if !input.peek(Token![+]) {
+                                break;
+                            }
+                            bounds.push_punct(input.parse()?);
+                            if input.peek(Token![>]) {
+                                break;
+                            }
+                        }
+                    } else {
+                        bounds.push_value(input.parse()?);
+                    }
+                    // Just lifetimes like `'a + 'b` is not a TraitObject.
+                    if !at_least_one_type(&bounds) {
+                        return Err(input.error("expected at least one type"));
+                    }
+                    bounds
+                },
             })
-        }
-
-        fn parse_bounds(
-            input: ParseStream,
-            allow_plus: bool,
-        ) -> Result<Punctuated<TypeParamBound, Token![+]>> {
-            let mut bounds = Punctuated::new();
-            loop {
-                bounds.push_value(input.parse()?);
-                if !(allow_plus && input.peek(Token![+])) {
-                    break;
-                }
-                bounds.push_punct(input.parse()?);
-                if !(input.peek(Ident::peek_any)
-                    || input.peek(Token![::])
-                    || input.peek(Token![?])
-                    || input.peek(Lifetime)
-                    || input.peek(token::Paren))
-                {
-                    break;
-                }
-            }
-            // Just lifetimes like `'a + 'b` is not a TraitObject.
-            if !at_least_one_type(&bounds) {
-                return Err(input.error("expected at least one type"));
-            }
-            Ok(bounds)
         }
     }
 
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for TypeImplTrait {
         fn parse(input: ParseStream) -> Result<Self> {
-            let allow_plus = true;
-            Self::parse(input, allow_plus)
-        }
-    }
-
-    impl TypeImplTrait {
-        #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
-        pub fn without_plus(input: ParseStream) -> Result<Self> {
-            let allow_plus = false;
-            Self::parse(input, allow_plus)
-        }
-
-        pub(crate) fn parse(input: ParseStream, allow_plus: bool) -> Result<Self> {
             Ok(TypeImplTrait {
                 impl_token: input.parse()?,
-                bounds: TypeTraitObject::parse_bounds(input, allow_plus)?,
+                // NOTE: rust-lang/rust#34511 includes discussion about whether
+                // or not + should be allowed in ImplTrait directly without ().
+                bounds: {
+                    let mut bounds = Punctuated::new();
+                    loop {
+                        bounds.push_value(input.parse()?);
+                        if !input.peek(Token![+]) {
+                            break;
+                        }
+                        bounds.push_punct(input.parse()?);
+                    }
+                    bounds
+                },
             })
         }
     }

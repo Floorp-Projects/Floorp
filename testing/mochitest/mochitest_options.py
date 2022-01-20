@@ -563,12 +563,11 @@ class MochitestArguments(ArgumentContainer):
             },
         ],
         [
-            ["--disable-fission"],
+            ["--enable-fission"],
             {
-                "action": "store_false",
-                "default": True,
-                "dest": "fission",
-                "help": "Run tests with fission (site isolation) disabled.",
+                "action": "store_true",
+                "default": False,
+                "help": "Run tests with fission (site isolation) enabled.",
             },
         ],
         [
@@ -854,6 +853,15 @@ class MochitestArguments(ArgumentContainer):
                 "type": int,
                 "default": 3600,
                 "help": "Maximum time, in seconds, to run in --verify mode.",
+            },
+        ],
+        [
+            ["--enable-webrender"],
+            {
+                "action": "store_true",
+                "dest": "enable_webrender",
+                "default": False,
+                "help": "Enable the WebRender compositor in Gecko.",
             },
         ],
         [
@@ -1156,14 +1164,8 @@ class MochitestArguments(ArgumentContainer):
                 "--disable-e10s.".format(options.flavor)
             )
 
-        # If e10s explicitly disabled and no fission option specified, disable fission
-        if (
-            (not options.e10s)
-            and options.fission
-            and ("fission.autostart=true" not in options.extraPrefs)
-            and ("fission.autostart=false" not in options.extraPrefs)
-        ):
-            options.fission = False
+        if options.enable_fission:
+            options.extraPrefs.append("fission.autostart=true")
 
         options.leakThresholds = {
             "default": options.defaultLeakThreshold,

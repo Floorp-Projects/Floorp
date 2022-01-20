@@ -24,10 +24,3 @@ derive_helper_methods = true
 [export.rename]
 "ThinVec" = "nsTArray"
 "Promise" = "dom::Promise"
-
-[export]
-# These are already exported by l10nregistry-ffi.
-exclude = [
-    "GeckoResourceId",
-    "GeckoResourceType",
-]

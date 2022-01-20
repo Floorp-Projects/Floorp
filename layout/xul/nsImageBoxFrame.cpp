@@ -82,14 +82,14 @@ class nsImageBoxFrameEvent : public Runnable {
   NS_IMETHOD Run() override;
 
  private:
-  const nsCOMPtr<nsIContent> mContent;
+  nsCOMPtr<nsIContent> mContent;
   EventMessage mMessage;
 };
 
-// TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
-MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsImageBoxFrameEvent::Run() {
-  RefPtr<nsPresContext> presContext = mContent->OwnerDoc()->GetPresContext();
-  if (!presContext) {
+NS_IMETHODIMP
+nsImageBoxFrameEvent::Run() {
+  RefPtr<nsPresContext> pres_context = mContent->OwnerDoc()->GetPresContext();
+  if (!pres_context) {
     return NS_OK;
   }
 
@@ -97,7 +97,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsImageBoxFrameEvent::Run() {
   WidgetEvent event(true, mMessage);
 
   event.mFlags.mBubbles = false;
-  EventDispatcher::Dispatch(mContent, presContext, &event, nullptr, &status);
+  EventDispatcher::Dispatch(mContent, pres_context, &event, nullptr, &status);
   return NS_OK;
 }
 

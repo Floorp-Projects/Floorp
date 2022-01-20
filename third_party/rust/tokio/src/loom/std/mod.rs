@@ -6,8 +6,6 @@ mod atomic_u32;
 mod atomic_u64;
 mod atomic_u8;
 mod atomic_usize;
-#[cfg(feature = "parking_lot")]
-mod parking_lot;
 mod unsafe_cell;
 
 pub(crate) mod cell {
@@ -43,21 +41,24 @@ pub(crate) mod rand {
 pub(crate) mod sync {
     pub(crate) use std::sync::Arc;
 
+    #[cfg(feature = "parking_lot")]
+    mod pl_wrappers;
+
     // Below, make sure all the feature-influenced types are exported for
     // internal use. Note however that some are not _currently_ named by
     // consuming code.
 
     #[cfg(feature = "parking_lot")]
     #[allow(unused_imports)]
-    pub(crate) use crate::loom::std::parking_lot::{
-        Condvar, Mutex, MutexGuard, RwLock, RwLockReadGuard, WaitTimeoutResult,
-    };
+    pub(crate) use pl_wrappers::{Condvar, Mutex};
+
+    #[cfg(feature = "parking_lot")]
+    #[allow(unused_imports)]
+    pub(crate) use parking_lot::{MutexGuard, WaitTimeoutResult};
 
     #[cfg(not(feature = "parking_lot"))]
     #[allow(unused_imports)]
-    pub(crate) use std::sync::{
-        Condvar, Mutex, MutexGuard, RwLock, RwLockReadGuard, WaitTimeoutResult,
-    };
+    pub(crate) use std::sync::{Condvar, Mutex, MutexGuard, WaitTimeoutResult};
 
     pub(crate) mod atomic {
         pub(crate) use crate::loom::std::atomic_ptr::AtomicPtr;

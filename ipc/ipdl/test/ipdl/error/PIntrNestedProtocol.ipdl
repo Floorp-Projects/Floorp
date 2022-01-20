@@ -2,5 +2,5 @@
 
 [NestedUpTo=inside_sync] intr protocol PIntrNestedProtocol {
 child:
-  [LegacyIntr] intr Msg();
+  intr Msg();
 };

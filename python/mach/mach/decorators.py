@@ -8,7 +8,6 @@ import argparse
 import collections
 import collections.abc
 
-from typing import Optional
 from .base import MachError
 from .registrar import Registrar
 from mozbuild.base import MachCommandBase
@@ -183,7 +182,7 @@ class Command(object):
             pass
     """
 
-    def __init__(self, name, metrics_path: Optional[str] = None, **kwargs):
+    def __init__(self, name, metrics_path=None, **kwargs):
         self._mach_command = _MachCommand(name=name, **kwargs)
         self._mach_command.metrics_path = metrics_path
 
@@ -218,12 +217,7 @@ class SubCommand(object):
     global_order = 0
 
     def __init__(
-        self,
-        command,
-        subcommand,
-        description=None,
-        parser=None,
-        metrics_path: Optional[str] = None,
+        self, command, subcommand, description=None, parser=None, metrics_path=None
     ):
         self._mach_command = _MachCommand(
             name=command, subcommand=subcommand, description=description, parser=parser

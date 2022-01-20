@@ -25,7 +25,6 @@
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
 #include "nsSerializationHelper.h"
-#include "OpaqueResponseUtils.h"
 
 using mozilla::ipc::BackgroundParent;
 
@@ -436,11 +435,13 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
       mProtocolVersion.Assign(nsHttp::GetProtocolVersion(version));
     }
     optionalHead = Some(*head);
-
-    if (GetOpaqueResponseBlockedReason(*head) ==
-        OpaqueResponseBlockedReason::BLOCKED_SHOULD_SNIFF) {
-      RefPtr<nsInputStreamPump> pump = do_QueryObject(mTransactionPump);
-      pump->PeekStream(GetDataForSniffer, &dataForSniffer);
+    if (mTransaction->Caps() & NS_HTTP_CALL_CONTENT_SNIFFER) {
+      nsAutoCString contentTypeOptionsHeader;
+      if (!(head->GetContentTypeOptionsHeader(contentTypeOptionsHeader) &&
+            contentTypeOptionsHeader.EqualsIgnoreCase("nosniff"))) {
+        RefPtr<nsInputStreamPump> pump = do_QueryObject(mTransactionPump);
+        pump->PeekStream(GetDataForSniffer, &dataForSniffer);
+      }
     }
   }
 

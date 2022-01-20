@@ -6,5 +6,3 @@ vendor/
 package-lock.json
 yarn.lock
 package.json
-docs-dist/
-website/

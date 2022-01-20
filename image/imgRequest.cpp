@@ -91,8 +91,6 @@ nsresult imgRequest::Init(nsIURI* aURI, nsIURI* aFinalURI,
                           mozilla::CORSMode aCORSMode,
                           nsIReferrerInfo* aReferrerInfo) {
   MOZ_ASSERT(NS_IsMainThread(), "Cannot use nsIURI off main thread!");
-  // Init() can only be called once, and that's before it can be used off
-  // mainthread
 
   LOG_FUNC(gImgLog, "imgRequest::Init");
 
@@ -696,14 +694,7 @@ imgRequest::OnStopRequest(nsIRequest* aRequest, nsresult status) {
 
   RefPtr<imgRequest> strongThis = this;
 
-  bool isMultipart = false;
-  bool newPartPending = false;
-  {
-    MutexAutoLock lock(mMutex);
-    isMultipart = mIsMultiPartChannel;
-    newPartPending = mNewPartPending;
-  }
-  if (isMultipart && newPartPending) {
+  if (mIsMultiPartChannel && mNewPartPending) {
     OnDataAvailable(aRequest, nullptr, 0, 0);
   }
 

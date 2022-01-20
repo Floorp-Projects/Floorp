@@ -1,17 +1,17 @@
-extern crate bytes;
-extern crate futures;
 extern crate tokio_codec;
 extern crate tokio_io;
+extern crate bytes;
+extern crate futures;
 
-use tokio_codec::{Decoder, FramedRead};
 use tokio_io::AsyncRead;
+use tokio_codec::{FramedRead, Decoder};
 
-use bytes::{Buf, BytesMut, IntoBuf};
-use futures::Async::{NotReady, Ready};
+use bytes::{BytesMut, Buf, IntoBuf, BigEndian};
 use futures::Stream;
+use futures::Async::{Ready, NotReady};
 
-use std::collections::VecDeque;
 use std::io::{self, Read};
+use std::collections::VecDeque;
 
 macro_rules! mock {
     ($($x:expr,)*) => {{
@@ -32,7 +32,7 @@ impl Decoder for U32Decoder {
             return Ok(None);
         }
 
-        let n = buf.split_to(4).into_buf().get_u32_be();
+        let n = buf.split_to(4).into_buf().get_u32::<BigEndian>();
         Ok(Some(n))
     }
 }
@@ -212,4 +212,5 @@ impl Read for Mock {
     }
 }
 
-impl AsyncRead for Mock {}
+impl AsyncRead for Mock {
+}

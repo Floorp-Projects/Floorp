@@ -265,7 +265,6 @@ var ChromeMigrationUtils = {
         Canary: ["Google", "Chrome SxS"],
         Edge: ["Microsoft", "Edge"],
         "Edge Beta": ["Microsoft", "Edge Beta"],
-        "360 SE": ["360se6"],
       },
       macosx: {
         Brave: ["BraveSoftware", "Brave-Browser"],
@@ -292,7 +291,7 @@ var ChromeMigrationUtils = {
 
     let rootDir;
     if (AppConstants.platform == "win") {
-      rootDir = chromeProjectName === "360 SE" ? "AppData" : "LocalAppData";
+      rootDir = "LocalAppData";
       subfolders = subfolders.concat(["User Data"]);
     } else if (AppConstants.platform == "macosx") {
       rootDir = "ULibDir";

@@ -113,7 +113,7 @@ nsCOMPtr<nsIFile> gDataDirProfile = nullptr;
 
 // These are required to allow nsXREDirProvider to be usable in xpcshell tests.
 // where gAppData is null.
-#if defined(XP_MACOSX) || defined(XP_UNIX)
+#if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_UNIX)
 static const char* GetAppName() {
   if (gAppData) {
     return gAppData->name;
@@ -122,14 +122,12 @@ static const char* GetAppName() {
 }
 #endif
 
-#ifdef XP_MACOSX
 static const char* GetAppVendor() {
   if (gAppData) {
     return gAppData->vendor;
   }
   return nullptr;
 }
-#endif
 
 nsXREDirProvider::nsXREDirProvider() : mProfileNotified(false) {
   gDirServiceProvider = this;
@@ -1112,8 +1110,14 @@ static nsresult GetRegWindowsAppDataFolder(bool aLocal, nsAString& _retval) {
 #endif
 
 static nsresult HashInstallPath(nsAString& aInstallPath, nsAString& aPathHash) {
+  const char* vendor = GetAppVendor();
+  if (vendor && vendor[0] == '\0') {
+    vendor = nullptr;
+  }
+
   mozilla::UniquePtr<NS_tchar[]> hash;
-  bool success = ::GetInstallHash(PromiseFlatString(aInstallPath).get(), hash);
+  bool success =
+      ::GetInstallHash(PromiseFlatString(aInstallPath).get(), vendor, hash);
   if (!success) {
     return NS_ERROR_FAILURE;
   }
@@ -1292,10 +1296,19 @@ nsresult nsXREDirProvider::GetUpdateRootDir(nsIFile** aResult,
   mozilla::UniquePtr<wchar_t[]> updatePath;
   HRESULT hrv;
   if (aGetOldLocation) {
-    hrv =
-        GetOldUpdateDirectory(PromiseFlatString(installPath).get(), updatePath);
+    const char* vendor = GetAppVendor();
+    if (vendor && vendor[0] == '\0') {
+      vendor = nullptr;
+    }
+    const char* appName = GetAppName();
+    if (appName && appName[0] == '\0') {
+      appName = nullptr;
+    }
+    hrv = GetUserUpdateDirectory(PromiseFlatString(installPath).get(), vendor,
+                                 appName, updatePath);
   } else {
     hrv = GetCommonUpdateDirectory(PromiseFlatString(installPath).get(),
+                                   SetPermissionsOf::BaseDirIfNotExists,
                                    updatePath);
   }
   if (FAILED(hrv)) {

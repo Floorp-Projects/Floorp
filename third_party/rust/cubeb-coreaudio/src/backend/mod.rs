@@ -2260,7 +2260,6 @@ impl Drop for AudioUnitContext {
     }
 }
 
-#[allow(clippy::non_send_fields_in_send_ty)]
 unsafe impl Send for AudioUnitContext {}
 unsafe impl Sync for AudioUnitContext {}
 
@@ -3454,7 +3453,9 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
             *started = stream.core_stream_data.start_audiounits();
         });
 
-        result?;
+        if result.is_err() {
+            return result;
+        }
 
         self.notify_state_changed(State::Started);
 
@@ -3555,7 +3556,9 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
             *set = set_volume(stream.core_stream_data.output_unit, volume);
         });
 
-        result?;
+        if result.is_err() {
+            return result;
+        }
 
         cubeb_log!(
             "Cubeb stream ({:p}) set volume to {}.",
@@ -3629,7 +3632,6 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
     }
 }
 
-#[allow(clippy::non_send_fields_in_send_ty)]
 unsafe impl<'ctx> Send for AudioUnitStream<'ctx> {}
 unsafe impl<'ctx> Sync for AudioUnitStream<'ctx> {}
 

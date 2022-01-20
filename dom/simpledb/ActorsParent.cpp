@@ -71,6 +71,16 @@
 #include "nscore.h"
 #include "prio.h"
 
+#define DISABLE_ASSERTS_FOR_FUZZING 0
+
+#if DISABLE_ASSERTS_FOR_FUZZING
+#  define ASSERT_UNLESS_FUZZING(...) \
+    do {                             \
+    } while (0)
+#else
+#  define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
+#endif
+
 namespace mozilla::dom {
 
 using namespace mozilla::dom::quota;
@@ -553,17 +563,17 @@ PBackgroundSDBConnectionParent* AllocPBackgroundSDBConnectionParent(
   }
 
   if (NS_WARN_IF(!IsValidPersistenceType(aPersistenceType))) {
-    MOZ_CRASH_UNLESS_FUZZING();
+    ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
 
   if (NS_WARN_IF(aPrincipalInfo.type() == PrincipalInfo::TNullPrincipalInfo)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+    ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
 
   if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(aPrincipalInfo))) {
-    MOZ_CRASH_UNLESS_FUZZING();
+    ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
 
@@ -793,7 +803,7 @@ bool Connection::VerifyRequestParams(const SDBRequestParams& aParams) const {
   switch (aParams.type()) {
     case SDBRequestParams::TSDBRequestOpenParams: {
       if (NS_WARN_IF(mOpen)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+        ASSERT_UNLESS_FUZZING();
         return false;
       }
 
@@ -805,7 +815,7 @@ bool Connection::VerifyRequestParams(const SDBRequestParams& aParams) const {
     case SDBRequestParams::TSDBRequestWriteParams:
     case SDBRequestParams::TSDBRequestCloseParams: {
       if (NS_WARN_IF(!mOpen)) {
-        MOZ_CRASH_UNLESS_FUZZING();
+        ASSERT_UNLESS_FUZZING();
         return false;
       }
 
@@ -865,12 +875,12 @@ PBackgroundSDBRequestParent* Connection::AllocPBackgroundSDBRequestParent(
 #endif
 
   if (NS_WARN_IF(!trustParams && !VerifyRequestParams(aParams))) {
-    MOZ_CRASH_UNLESS_FUZZING();
+    ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
 
   if (NS_WARN_IF(mRunningRequest)) {
-    MOZ_CRASH_UNLESS_FUZZING();
+    ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
 

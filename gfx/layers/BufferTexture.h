@@ -54,6 +54,9 @@ class BufferTextureData : public TextureData {
 
   BufferTextureData* AsBufferTextureData() override { return this; }
 
+  // Don't use this.
+  void SetDescriptor(BufferDescriptor&& aDesc);
+
   Maybe<gfx::IntSize> GetCbCrSize() const;
 
   Maybe<int32_t> GetYStride() const;

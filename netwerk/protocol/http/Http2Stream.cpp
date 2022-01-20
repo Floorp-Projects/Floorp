@@ -433,7 +433,7 @@ nsresult Http2Stream::ParseHttpRequestHeaders(const char* buf, uint32_t avail,
     // We don't have all the headers yet
     LOG3(
         ("Http2Stream::ParseHttpRequestHeaders %p "
-         "Need more header bytes. Len = %zd",
+         "Need more header bytes. Len = %d",
          this, mFlatHttpRequestHeaders.Length()));
     *countUsed = avail;
     return NS_OK;

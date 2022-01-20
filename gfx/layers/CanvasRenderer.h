@@ -20,7 +20,8 @@
 #include "mozilla/mozalloc.h"     // for operator delete, etc
 #include "mozilla/WeakPtr.h"      // for WeakPtr
 #include "nsISupportsImpl.h"      // for MOZ_COUNT_CTOR, etc
-#include "nsICanvasRenderingContextInternal.h"
+
+class nsICanvasRenderingContextInternal;
 
 namespace mozilla {
 namespace layers {
@@ -35,7 +36,8 @@ struct CanvasRendererData final {
   CanvasRendererData();
   ~CanvasRendererData();
 
-  WeakPtr<nsICanvasRenderingContextInternal> mContext;
+  std::weak_ptr<nsICanvasRenderingContextInternal* const>
+      mContext;  // weak_ptr to ptr (bug 1635644)
 
   // The size of the canvas content
   gfx::IntSize mSize = {0, 0};
@@ -47,7 +49,9 @@ struct CanvasRendererData final {
   gl::OriginPos mOriginPos = gl::OriginPos::TopLeft;
 
   nsICanvasRenderingContextInternal* GetContext() const {
-    return mContext.get();
+    const auto ptrToPtr = mContext.lock();
+    if (!ptrToPtr) return nullptr;
+    return *ptrToPtr;
   }
 };
 

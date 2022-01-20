@@ -8,53 +8,48 @@
 #define MOZILLA_DOM_OFFSCREENCANVAS_H_
 
 #include "gfxTypes.h"
-#include "mozilla/dom/CanvasRenderingContextHelper.h"
 #include "mozilla/dom/ImageEncoder.h"
-#include "mozilla/dom/OffscreenCanvasDisplayHelper.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/layers/LayersTypes.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
+#include "CanvasRenderingContextHelper.h"
 #include "nsCycleCollectionParticipant.h"
 
 struct JSContext;
 
 namespace mozilla {
-class CancelableRunnable;
+
 class ErrorResult;
 
 namespace gfx {
 class SourceSurface;
 }
 
-namespace dom {
-enum class OffscreenRenderingContextId : uint8_t;
-class Blob;
-class EncodeCompleteCallback;
-class OffscreenCanvasDisplayHelper;
-class ImageBitmap;
-struct ImageEncodeOptions;
+namespace layers {
+class CanvasClient;
+class CanvasRenderer;
+class ImageContainer;
+}  // namespace layers
 
-using OwningOffscreenRenderingContext = class
-    OwningImageBitmapRenderingContextOrWebGLRenderingContextOrWebGL2RenderingContextOrGPUCanvasContext;
+namespace dom {
+class Blob;
+class ImageBitmap;
 
 // This is helper class for transferring OffscreenCanvas to worker thread.
 // Because OffscreenCanvas is not thread-safe. So we cannot pass Offscreen-
 // Canvas to worker thread directly. Thus, we create this helper class and
 // store necessary data in it then pass it to worker thread.
 struct OffscreenCanvasCloneData final {
-  OffscreenCanvasCloneData(OffscreenCanvasDisplayHelper* aDisplay,
-                           uint32_t aWidth, uint32_t aHeight,
+  OffscreenCanvasCloneData(layers::CanvasRenderer* aRenderer, uint32_t aWidth,
+                           uint32_t aHeight,
                            layers::LayersBackend aCompositorBackend,
-                           layers::TextureType aTextureType, bool aNeutered,
-                           bool aIsWriteOnly);
+                           bool aNeutered, bool aIsWriteOnly);
   ~OffscreenCanvasCloneData();
 
-  RefPtr<OffscreenCanvasDisplayHelper> mDisplay;
+  RefPtr<layers::CanvasRenderer> mRenderer;
   uint32_t mWidth;
   uint32_t mHeight;
   layers::LayersBackend mCompositorBackendType;
-  layers::TextureType mTextureType;
   bool mNeutered;
   bool mIsWriteOnly;
 };
@@ -66,15 +61,11 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(OffscreenCanvas,
                                            DOMEventTargetHelper)
 
-  IMPL_EVENT_HANDLER(contextlost);
-  IMPL_EVENT_HANDLER(contextrestored);
-
   OffscreenCanvas(nsIGlobalObject* aGlobal, uint32_t aWidth, uint32_t aHeight,
                   layers::LayersBackend aCompositorBackend,
-                  layers::TextureType aTextureType,
-                  OffscreenCanvasDisplayHelper* aDisplay);
+                  layers::CanvasRenderer* aRenderer);
 
-  nsIGlobalObject* GetParentObject() const { return GetOwnerGlobal(); }
+  nsCOMPtr<nsIGlobalObject> GetParentObject() const { return GetOwnerGlobal(); }
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -85,20 +76,34 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
   void ClearResources();
 
   uint32_t Width() const { return mWidth; }
-  uint32_t Height() const { return mHeight; }
-  void SetWidth(uint32_t aWidth, ErrorResult& aRv);
-  void SetHeight(uint32_t aHeight, ErrorResult& aRv);
-  void UpdateNeuteredSize(uint32_t aWidth, uint32_t aHeight);
 
-  void GetContext(JSContext* aCx, const OffscreenRenderingContextId& aContextId,
-                  JS::Handle<JS::Value> aContextOptions,
-                  Nullable<OwningOffscreenRenderingContext>& aResult,
-                  ErrorResult& aRv);
+  uint32_t Height() const { return mHeight; }
+
+  void SetWidth(uint32_t aWidth, ErrorResult& aRv) {
+    if (mNeutered) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    if (mWidth != aWidth) {
+      mWidth = aWidth;
+      CanvasAttrChanged();
+    }
+  }
+
+  void SetHeight(uint32_t aHeight, ErrorResult& aRv) {
+    if (mNeutered) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    if (mHeight != aHeight) {
+      mHeight = aHeight;
+      CanvasAttrChanged();
+    }
+  }
 
   already_AddRefed<ImageBitmap> TransferToImageBitmap(ErrorResult& aRv);
-
-  already_AddRefed<Promise> ConvertToBlob(const ImageEncodeOptions& aOptions,
-                                          ErrorResult& aRv);
 
   already_AddRefed<Promise> ToBlob(JSContext* aCx, const nsAString& aType,
                                    JS::Handle<JS::Value> aParams,
@@ -107,8 +112,6 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
   nsICanvasRenderingContextInternal* GetContext() const {
     return mCurrentContext;
   }
-
-  CanvasContextType GetContextType() const { return mCurrentContextType; }
 
   already_AddRefed<gfx::SourceSurface> GetSurfaceSnapshot(
       gfxAlphaType* aOutAlphaType = nullptr);
@@ -122,11 +125,7 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
 
   OffscreenCanvasCloneData* ToCloneData();
 
-  void UpdateDisplayData(const OffscreenCanvasDisplayData& aData);
-
   void CommitFrameToCompositor();
-  void DequeueCommitToCompositor();
-  void QueueCommitToCompositor();
 
   virtual bool GetOpaqueAttr() override { return false; }
 
@@ -136,6 +135,10 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
 
   virtual already_AddRefed<nsICanvasRenderingContextInternal> CreateContext(
       CanvasContextType aContextType) override;
+
+  virtual already_AddRefed<nsISupports> GetContext(
+      JSContext* aCx, const nsAString& aContextId,
+      JS::Handle<JS::Value> aContextOptions, ErrorResult& aRv) override;
 
   void SetNeutered() { mNeutered = true; }
 
@@ -149,13 +152,12 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
     return mCompositorBackendType;
   }
 
+  layers::ImageContainer* GetImageContainer();
+
   bool ShouldResistFingerprinting() const;
 
  private:
   ~OffscreenCanvas();
-
-  already_AddRefed<EncodeCompleteCallback> CreateEncodeCompleteCallback(
-      nsCOMPtr<nsIGlobalObject>&& aGlobal, Promise* aPromise);
 
   void CanvasAttrChanged() {
     mAttrDirty = true;
@@ -171,11 +173,9 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
   uint32_t mHeight;
 
   layers::LayersBackend mCompositorBackendType;
-  layers::TextureType mTextureType;
 
-  RefPtr<OffscreenCanvasDisplayHelper> mDisplay;
-  RefPtr<CancelableRunnable> mPendingCommit;
-  Maybe<OffscreenCanvasDisplayData> mPendingUpdate;
+  RefPtr<layers::CanvasClient> mCanvasClient;
+  RefPtr<layers::CanvasRenderer> mCanvasRenderer;
 };
 
 }  // namespace dom

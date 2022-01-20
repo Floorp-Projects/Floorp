@@ -4,7 +4,6 @@
 
 
 from gecko_taskgraph.transforms.base import TransformSequence
-from gecko_taskgraph.util.attributes import release_level
 from gecko_taskgraph.util.scriptworker import get_release_config
 from gecko_taskgraph.util.schema import resolve_keyed_by
 
@@ -34,7 +33,7 @@ def format(config, tasks):
                 k,
                 "flatpak envs",
                 **{
-                    "release-level": release_level(config.params["project"]),
+                    "release-level": config.params.release_level(),
                     "project": config.params["project"],
                 }
             )

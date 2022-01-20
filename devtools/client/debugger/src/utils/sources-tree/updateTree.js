@@ -99,18 +99,10 @@ export function updateTree({
 
   const newSourceTree = collapseTree(uncollapsedTree);
 
-  let lazyParentMap;
-  const getParent = function(key) {
-    if (!lazyParentMap) {
-      lazyParentMap = createParentMap(newSourceTree);
-    }
-    return lazyParentMap.get(key);
-  };
-
   return {
     uncollapsedTree,
     sourceTree: newSourceTree,
-    getParent,
+    parentMap: createParentMap(newSourceTree),
   };
 }
 

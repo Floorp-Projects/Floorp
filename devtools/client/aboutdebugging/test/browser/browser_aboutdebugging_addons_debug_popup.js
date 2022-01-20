@@ -74,7 +74,14 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   consoleWrapper.dispatchEvaluateExpression("backgroundFunction()");
   await onBackgroundFunctionCalled;
 
-  clickOnAddonWidget(ADDON_ID);
+  // Find the browserAction button that will show the webextension popup.
+  const widgetId = ADDON_ID.toLowerCase().replace(/[^a-z0-9_-]/g, "_");
+  const browserActionId = widgetId + "-browser-action";
+  const browserActionEl = window.document.getElementById(browserActionId);
+  ok(browserActionEl, "Got the browserAction button from the browser UI");
+
+  info("Show the web extension popup");
+  browserActionEl.click();
 
   info("Wait until the frames list button is displayed");
   const btn = await waitFor(() =>

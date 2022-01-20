@@ -46,7 +46,6 @@ function ipred_dc_128_16bpc_neon, export=1
         urshr           v0.8h,   v0.8h,  #1
         br              x5
 4:
-        AARCH64_VALID_JUMP_TARGET
         st1             {v0.4h},  [x0], x1
         st1             {v0.4h},  [x6], x1
         subs            w4,  w4,  #4
@@ -55,7 +54,6 @@ function ipred_dc_128_16bpc_neon, export=1
         b.gt            4b
         ret
 8:
-        AARCH64_VALID_JUMP_TARGET
         st1             {v0.8h},  [x0], x1
         st1             {v0.8h},  [x6], x1
         subs            w4,  w4,  #4
@@ -64,7 +62,6 @@ function ipred_dc_128_16bpc_neon, export=1
         b.gt            8b
         ret
 160:
-        AARCH64_VALID_JUMP_TARGET
         mov             v1.16b,  v0.16b
 16:
         st1             {v0.8h, v1.8h}, [x0], x1
@@ -75,7 +72,6 @@ function ipred_dc_128_16bpc_neon, export=1
         b.gt            16b
         ret
 320:
-        AARCH64_VALID_JUMP_TARGET
         mov             v1.16b,  v0.16b
         mov             v2.16b,  v0.16b
         mov             v3.16b,  v0.16b
@@ -88,7 +84,6 @@ function ipred_dc_128_16bpc_neon, export=1
         b.gt            32b
         ret
 640:
-        AARCH64_VALID_JUMP_TARGET
         mov             v1.16b,  v0.16b
         mov             v2.16b,  v0.16b
         mov             v3.16b,  v0.16b
@@ -129,7 +124,6 @@ function ipred_v_16bpc_neon, export=1
         lsl             x1,  x1,  #1
         br              x5
 40:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.4h},  [x2]
 4:
         st1             {v0.4h},  [x0], x1
@@ -140,7 +134,6 @@ function ipred_v_16bpc_neon, export=1
         b.gt            4b
         ret
 80:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h},  [x2]
 8:
         st1             {v0.8h},  [x0], x1
@@ -151,7 +144,6 @@ function ipred_v_16bpc_neon, export=1
         b.gt            8b
         ret
 160:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h, v1.8h}, [x2]
 16:
         st1             {v0.8h, v1.8h}, [x0], x1
@@ -162,7 +154,6 @@ function ipred_v_16bpc_neon, export=1
         b.gt            16b
         ret
 320:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x2]
 32:
         st1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x0], x1
@@ -173,7 +164,6 @@ function ipred_v_16bpc_neon, export=1
         b.gt            32b
         ret
 640:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x2], #64
         sub             x1,  x1,  #64
         ld1             {v4.8h, v5.8h, v6.8h, v7.8h}, [x2]
@@ -214,7 +204,6 @@ function ipred_h_16bpc_neon, export=1
         lsl             x1,  x1,  #1
         br              x5
 4:
-        AARCH64_VALID_JUMP_TARGET
         ld4r            {v0.8h, v1.8h, v2.8h, v3.8h},  [x2], x7
         st1             {v3.4h},  [x0], x1
         st1             {v2.4h},  [x6], x1
@@ -224,7 +213,6 @@ function ipred_h_16bpc_neon, export=1
         b.gt            4b
         ret
 8:
-        AARCH64_VALID_JUMP_TARGET
         ld4r            {v0.8h, v1.8h, v2.8h, v3.8h},  [x2], x7
         st1             {v3.8h},  [x0], x1
         st1             {v2.8h},  [x6], x1
@@ -234,7 +222,6 @@ function ipred_h_16bpc_neon, export=1
         b.gt            8b
         ret
 16:
-        AARCH64_VALID_JUMP_TARGET
         ld4r            {v0.8h, v1.8h, v2.8h, v3.8h},  [x2], x7
         str             q3,  [x0, #16]
         str             q2,  [x6, #16]
@@ -248,7 +235,6 @@ function ipred_h_16bpc_neon, export=1
         b.gt            16b
         ret
 32:
-        AARCH64_VALID_JUMP_TARGET
         ld4r            {v0.8h, v1.8h, v2.8h, v3.8h},  [x2], x7
         str             q3,  [x0, #16]
         str             q2,  [x6, #16]
@@ -266,7 +252,6 @@ function ipred_h_16bpc_neon, export=1
         b.gt            32b
         ret
 64:
-        AARCH64_VALID_JUMP_TARGET
         ld4r            {v0.8h, v1.8h, v2.8h, v3.8h},  [x2], x7
         str             q3,  [x0, #16]
         str             q2,  [x6, #16]
@@ -315,7 +300,6 @@ function ipred_dc_top_16bpc_neon, export=1
         lsl             x1,  x1,  #1
         br              x5
 40:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.4h},  [x2]
         addv            h0,      v0.4h
         urshr           v0.4h,   v0.4h,   #2
@@ -329,7 +313,6 @@ function ipred_dc_top_16bpc_neon, export=1
         b.gt            4b
         ret
 80:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h},  [x2]
         addv            h0,      v0.8h
         urshr           v0.4h,   v0.4h,   #3
@@ -343,7 +326,6 @@ function ipred_dc_top_16bpc_neon, export=1
         b.gt            8b
         ret
 160:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h, v1.8h}, [x2]
         addp            v0.8h,   v0.8h,   v1.8h
         addv            h0,      v0.8h
@@ -359,7 +341,6 @@ function ipred_dc_top_16bpc_neon, export=1
         b.gt            16b
         ret
 320:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x2]
         addp            v0.8h,   v0.8h,   v1.8h
         addp            v2.8h,   v2.8h,   v3.8h
@@ -379,7 +360,6 @@ function ipred_dc_top_16bpc_neon, export=1
         b.gt            32b
         ret
 640:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x2], #64
         addp            v0.8h,   v0.8h,   v1.8h
         ld1             {v4.8h, v5.8h, v6.8h, v7.8h}, [x2]
@@ -437,14 +417,12 @@ function ipred_dc_left_16bpc_neon, export=1
         br              x5
 
 L(ipred_dc_left_h4):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.4h},  [x2]
         addv            h0,      v0.4h
         urshr           v0.4h,   v0.4h,   #2
         dup             v0.8h,   v0.h[0]
         br              x3
 L(ipred_dc_left_w4):
-        AARCH64_VALID_JUMP_TARGET
         st1             {v0.4h},  [x0], x1
         st1             {v0.4h},  [x6], x1
         subs            w4,  w4,  #4
@@ -454,14 +432,12 @@ L(ipred_dc_left_w4):
         ret
 
 L(ipred_dc_left_h8):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h},  [x2]
         addv            h0,      v0.8h
         urshr           v0.4h,   v0.4h,   #3
         dup             v0.8h,   v0.h[0]
         br              x3
 L(ipred_dc_left_w8):
-        AARCH64_VALID_JUMP_TARGET
         st1             {v0.8h},  [x0], x1
         st1             {v0.8h},  [x6], x1
         subs            w4,  w4,  #4
@@ -471,7 +447,6 @@ L(ipred_dc_left_w8):
         ret
 
 L(ipred_dc_left_h16):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h, v1.8h}, [x2]
         addp            v0.8h,   v0.8h,   v1.8h
         addv            h0,      v0.8h
@@ -480,7 +455,6 @@ L(ipred_dc_left_h16):
         dup             v1.8h,   v2.h[0]
         br              x3
 L(ipred_dc_left_w16):
-        AARCH64_VALID_JUMP_TARGET
         mov             v1.16b,  v0.16b
 1:
         st1             {v0.8h, v1.8h}, [x0], x1
@@ -492,7 +466,6 @@ L(ipred_dc_left_w16):
         ret
 
 L(ipred_dc_left_h32):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x2]
         addp            v0.8h,   v0.8h,   v1.8h
         addp            v2.8h,   v2.8h,   v3.8h
@@ -503,7 +476,6 @@ L(ipred_dc_left_h32):
         dup             v0.8h,   v4.h[0]
         br              x3
 L(ipred_dc_left_w32):
-        AARCH64_VALID_JUMP_TARGET
         mov             v1.16b,  v0.16b
         mov             v2.16b,  v0.16b
         mov             v3.16b,  v0.16b
@@ -517,7 +489,6 @@ L(ipred_dc_left_w32):
         ret
 
 L(ipred_dc_left_h64):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x2], #64
         addp            v0.8h,   v0.8h,   v1.8h
         ld1             {v4.8h, v5.8h, v6.8h, v7.8h}, [x2]
@@ -532,7 +503,6 @@ L(ipred_dc_left_h64):
         dup             v0.8h,   v4.h[0]
         br              x3
 L(ipred_dc_left_w64):
-        AARCH64_VALID_JUMP_TARGET
         mov             v1.16b,  v0.16b
         mov             v2.16b,  v0.16b
         mov             v3.16b,  v0.16b
@@ -590,13 +560,11 @@ function ipred_dc_16bpc_neon, export=1
         br              x5
 
 L(ipred_dc_h4):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.4h},  [x2], #8
         uaddlv          s0,      v0.4h
         add             x2,  x2,  #2
         br              x3
 L(ipred_dc_w4):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v1.4h},  [x2]
         add             v0.2s,   v0.2s,   v16.2s
         uaddlv          s1,      v1.4h
@@ -624,13 +592,11 @@ L(ipred_dc_w4):
         ret
 
 L(ipred_dc_h8):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h},  [x2], #16
         uaddlv          s0,      v0.8h
         add             x2,  x2,  #2
         br              x3
 L(ipred_dc_w8):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v1.8h},  [x2]
         add             v0.2s,   v0.2s,   v16.2s
         uaddlv          s1,      v1.8h
@@ -658,14 +624,12 @@ L(ipred_dc_w8):
         ret
 
 L(ipred_dc_h16):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h, v1.8h}, [x2], #32
         addp            v0.8h,   v0.8h,   v1.8h
         add             x2,  x2,  #2
         uaddlv          s0,      v0.8h
         br              x3
 L(ipred_dc_w16):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v1.8h, v2.8h}, [x2]
         add             v0.2s,   v0.2s,   v16.2s
         addp            v1.8h,   v1.8h,   v2.8h
@@ -695,7 +659,6 @@ L(ipred_dc_w16):
         ret
 
 L(ipred_dc_h32):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x2], #64
         addp            v0.8h,   v0.8h,   v1.8h
         addp            v2.8h,   v2.8h,   v3.8h
@@ -704,7 +667,6 @@ L(ipred_dc_h32):
         uaddlv          s0,      v0.8h
         br              x3
 L(ipred_dc_w32):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v1.8h, v2.8h, v3.8h, v4.8h}, [x2]
         add             v0.2s,   v0.2s,   v16.2s
         addp            v1.8h,   v1.8h,   v2.8h
@@ -738,7 +700,6 @@ L(ipred_dc_w32):
         ret
 
 L(ipred_dc_h64):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x2], #64
         addp            v0.8h,   v0.8h,   v1.8h
         ld1             {v4.8h, v5.8h, v6.8h, v7.8h}, [x2], #64
@@ -752,7 +713,6 @@ L(ipred_dc_h64):
         uaddlv          s0,      v0.8h
         br              x3
 L(ipred_dc_w64):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v1.8h, v2.8h, v3.8h, v4.8h}, [x2], #64
         add             v0.2s,   v0.2s,   v16.2s
         addp            v1.8h,   v1.8h,   v2.8h
@@ -826,7 +786,6 @@ function ipred_paeth_16bpc_neon, export=1
         lsl             x1,  x1,  #1
         br              x5
 40:
-        AARCH64_VALID_JUMP_TARGET
         ld1r            {v5.2d},  [x8]
         sub             v6.8h,   v5.8h,   v4.8h   // top - topleft
 4:
@@ -862,7 +821,6 @@ function ipred_paeth_16bpc_neon, export=1
 160:
 320:
 640:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v5.8h},  [x8], #16
         mov             w9,  w3
         // Set up pointers for four rows in parallel; x0, x6, x5, x10
@@ -962,7 +920,6 @@ function ipred_smooth_16bpc_neon, export=1
         lsl             x1,  x1,  #1
         br              x5
 40:
-        AARCH64_VALID_JUMP_TARGET
         ld1r            {v6.2d}, [x8]             // top
         ld1r            {v7.2s}, [x10]            // weights_hor
         sub             x2,  x2,  #8
@@ -1006,7 +963,6 @@ function ipred_smooth_16bpc_neon, export=1
         b.gt            4b
         ret
 80:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v6.8h}, [x8]             // top
         ld1             {v7.8b}, [x10]            // weights_hor
         sub             x2,  x2,  #8
@@ -1068,7 +1024,6 @@ function ipred_smooth_16bpc_neon, export=1
 160:
 320:
 640:
-        AARCH64_VALID_JUMP_TARGET
         add             x12, x2,  w3, uxtw #1
         sub             x1,  x1,  w3, uxtw #1
         ld1r            {v5.8h}, [x12]            // right
@@ -1165,7 +1120,6 @@ function ipred_smooth_v_16bpc_neon, export=1
         lsl             x1,  x1,  #1
         br              x5
 40:
-        AARCH64_VALID_JUMP_TARGET
         ld1r            {v6.2d}, [x2]             // top
         sub             v6.8h,   v6.8h,   v4.8h   // top-bottom
 4:
@@ -1186,7 +1140,6 @@ function ipred_smooth_v_16bpc_neon, export=1
         b.gt            4b
         ret
 80:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v6.8h}, [x2]             // top
         sub             v6.8h,   v6.8h,   v4.8h   // top-bottom
 8:
@@ -1213,7 +1166,6 @@ function ipred_smooth_v_16bpc_neon, export=1
 160:
 320:
 640:
-        AARCH64_VALID_JUMP_TARGET
         // Set up pointers for four rows in parallel; x0, x6, x5, x8
         add             x5,  x0,  x1
         add             x8,  x6,  x1
@@ -1291,7 +1243,6 @@ function ipred_smooth_h_16bpc_neon, export=1
         lsl             x1,  x1,  #1
         br              x5
 40:
-        AARCH64_VALID_JUMP_TARGET
         ld1r            {v7.2s}, [x8]             // weights_hor
         sub             x2,  x2,  #8
         mov             x7,  #-8
@@ -1314,7 +1265,6 @@ function ipred_smooth_h_16bpc_neon, export=1
         b.gt            4b
         ret
 80:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v7.8b}, [x8]             // weights_hor
         sub             x2,  x2,  #8
         mov             x7,  #-8
@@ -1343,7 +1293,6 @@ function ipred_smooth_h_16bpc_neon, export=1
 160:
 320:
 640:
-        AARCH64_VALID_JUMP_TARGET
         sub             x2,  x2,  #8
         mov             x7,  #-8
         // Set up pointers for four rows in parallel; x0, x6, x5, x10
@@ -1438,7 +1387,6 @@ function ipred_filter_\bpc\()bpc_neon
 .endif
         br              x5
 40:
-        AARCH64_VALID_JUMP_TARGET
         ldur            d0,  [x2, #2]             // top (0-3)
         sub             x2,  x2,  #4
         mov             x7,  #-4
@@ -1480,7 +1428,6 @@ function ipred_filter_\bpc\()bpc_neon
         b.gt            4b
         ret
 80:
-        AARCH64_VALID_JUMP_TARGET
         ldur            q0,  [x2, #2]             // top (0-7)
         sub             x2,  x2,  #4
         mov             x7,  #-4
@@ -1550,7 +1497,6 @@ function ipred_filter_\bpc\()bpc_neon
         ret
 160:
 320:
-        AARCH64_VALID_JUMP_TARGET
         add             x8,  x2,  #2
         sub             x2,  x2,  #4
         mov             x7,  #-4
@@ -1729,7 +1675,6 @@ function pal_pred_16bpc_neon, export=1
         sub             x6,  x6,  w9, uxtw
         br              x6
 40:
-        AARCH64_VALID_JUMP_TARGET
         add             x2,  x0,  x1
         lsl             x1,  x1,  #1
 4:
@@ -1750,7 +1695,6 @@ function pal_pred_16bpc_neon, export=1
         b.gt            4b
         ret
 80:
-        AARCH64_VALID_JUMP_TARGET
         add             x2,  x0,  x1
         lsl             x1,  x1,  #1
 8:
@@ -1777,7 +1721,6 @@ function pal_pred_16bpc_neon, export=1
         b.gt            8b
         ret
 160:
-        AARCH64_VALID_JUMP_TARGET
         add             x2,  x0,  x1
         lsl             x1,  x1,  #1
 16:
@@ -1818,7 +1761,6 @@ function pal_pred_16bpc_neon, export=1
         b.gt            16b
         ret
 320:
-        AARCH64_VALID_JUMP_TARGET
         add             x2,  x0,  x1
         lsl             x1,  x1,  #1
 32:
@@ -1857,7 +1799,6 @@ function pal_pred_16bpc_neon, export=1
         b.gt            32b
         ret
 640:
-        AARCH64_VALID_JUMP_TARGET
         add             x2,  x0,  #64
 64:
         ld1             {v4.16b, v5.16b, v6.16b, v7.16b}, [x3], #64
@@ -1922,17 +1863,16 @@ function ipred_cfl_128_16bpc_neon, export=1
         movi            v30.8h,  #0
         br              x7
 L(ipred_cfl_splat_w4):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v4.8h, v5.8h}, [x5], #32
         subs            w4,  w4,  #4
         smull           v2.4s,   v4.4h,   v1.4h  // diff = ac * alpha
         smull2          v3.4s,   v4.8h,   v1.8h
         smull           v4.4s,   v5.4h,   v1.4h
         smull2          v5.4s,   v5.8h,   v1.8h
-        cmlt            v16.4s,  v2.4s,   #0     // sign
-        cmlt            v17.4s,  v3.4s,   #0
-        cmlt            v18.4s,  v4.4s,   #0
-        cmlt            v19.4s,  v5.4s,   #0
+        sshr            v16.4s,  v2.4s,   #31    // sign = diff >> 31
+        sshr            v17.4s,  v3.4s,   #31
+        sshr            v18.4s,  v4.4s,   #31
+        sshr            v19.4s,  v5.4s,   #31
         add             v2.4s,   v2.4s,   v16.4s // diff + sign
         add             v3.4s,   v3.4s,   v17.4s
         add             v4.4s,   v4.4s,   v18.4s
@@ -1954,17 +1894,16 @@ L(ipred_cfl_splat_w4):
         b.gt            L(ipred_cfl_splat_w4)
         ret
 L(ipred_cfl_splat_w8):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v4.8h, v5.8h}, [x5], #32
         subs            w4,  w4,  #2
         smull           v2.4s,   v4.4h,   v1.4h  // diff = ac * alpha
         smull2          v3.4s,   v4.8h,   v1.8h
         smull           v4.4s,   v5.4h,   v1.4h
         smull2          v5.4s,   v5.8h,   v1.8h
-        cmlt            v16.4s,  v2.4s,   #0     // sign
-        cmlt            v17.4s,  v3.4s,   #0
-        cmlt            v18.4s,  v4.4s,   #0
-        cmlt            v19.4s,  v5.4s,   #0
+        sshr            v16.4s,  v2.4s,   #31    // sign = diff >> 31
+        sshr            v17.4s,  v3.4s,   #31
+        sshr            v18.4s,  v4.4s,   #31
+        sshr            v19.4s,  v5.4s,   #31
         add             v2.4s,   v2.4s,   v16.4s // diff + sign
         add             v3.4s,   v3.4s,   v17.4s
         add             v4.4s,   v4.4s,   v18.4s
@@ -1984,7 +1923,6 @@ L(ipred_cfl_splat_w8):
         b.gt            L(ipred_cfl_splat_w8)
         ret
 L(ipred_cfl_splat_w16):
-        AARCH64_VALID_JUMP_TARGET
         add             x7,  x5,  w3, uxtw #1
         sub             x1,  x1,  w3, uxtw #1
         mov             w9,  w3
@@ -2000,14 +1938,14 @@ L(ipred_cfl_splat_w16):
         smull2          v3.4s,   v4.8h,   v1.8h
         smull           v4.4s,   v5.4h,   v1.4h
         smull2          v5.4s,   v5.8h,   v1.8h
-        cmlt            v20.4s,  v16.4s,  #0     // sign
-        cmlt            v21.4s,  v17.4s,  #0
-        cmlt            v22.4s,  v18.4s,  #0
-        cmlt            v23.4s,  v19.4s,  #0
-        cmlt            v24.4s,  v2.4s,   #0
-        cmlt            v25.4s,  v3.4s,   #0
-        cmlt            v26.4s,  v4.4s,   #0
-        cmlt            v27.4s,  v5.4s,   #0
+        sshr            v20.4s,  v16.4s,  #31    // sign = diff >> 31
+        sshr            v21.4s,  v17.4s,  #31
+        sshr            v22.4s,  v18.4s,  #31
+        sshr            v23.4s,  v19.4s,  #31
+        sshr            v24.4s,  v2.4s,   #31
+        sshr            v25.4s,  v3.4s,   #31
+        sshr            v26.4s,  v4.4s,   #31
+        sshr            v27.4s,  v5.4s,   #31
         add             v16.4s,  v16.4s,  v20.4s // diff + sign
         add             v17.4s,  v17.4s,  v21.4s
         add             v18.4s,  v18.4s,  v22.4s
@@ -2075,21 +2013,18 @@ function ipred_cfl_top_16bpc_neon, export=1
         movi            v30.8h,  #0
         br              x7
 4:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.4h},  [x2]
         addv            h0,      v0.4h
         urshr           v0.4h,   v0.4h,   #2
         dup             v0.8h,   v0.h[0]
         b               L(ipred_cfl_splat_w4)
 8:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h},  [x2]
         addv            h0,      v0.8h
         urshr           v0.4h,   v0.4h,   #3
         dup             v0.8h,   v0.h[0]
         b               L(ipred_cfl_splat_w8)
 16:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v2.8h, v3.8h}, [x2]
         addp            v0.8h,   v2.8h,   v3.8h
         addv            h0,      v0.8h
@@ -2097,7 +2032,6 @@ function ipred_cfl_top_16bpc_neon, export=1
         dup             v0.8h,   v0.h[0]
         b               L(ipred_cfl_splat_w16)
 32:
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v2.8h, v3.8h, v4.8h, v5.8h}, [x2]
         addp            v2.8h,   v2.8h,   v3.8h
         addp            v4.8h,   v4.8h,   v5.8h
@@ -2139,7 +2073,6 @@ function ipred_cfl_left_16bpc_neon, export=1
         br              x7
 
 L(ipred_cfl_left_h4):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.4h},  [x2]
         addv            h0,      v0.4h
         urshr           v0.4h,   v0.4h,   #2
@@ -2147,7 +2080,6 @@ L(ipred_cfl_left_h4):
         br              x9
 
 L(ipred_cfl_left_h8):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h},  [x2]
         addv            h0,      v0.8h
         urshr           v0.4h,   v0.4h,   #3
@@ -2155,7 +2087,6 @@ L(ipred_cfl_left_h8):
         br              x9
 
 L(ipred_cfl_left_h16):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v2.8h, v3.8h}, [x2]
         addp            v0.8h,   v2.8h,   v3.8h
         addv            h0,      v0.8h
@@ -2164,7 +2095,6 @@ L(ipred_cfl_left_h16):
         br              x9
 
 L(ipred_cfl_left_h32):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v2.8h, v3.8h, v4.8h, v5.8h}, [x2]
         addp            v2.8h,   v2.8h,   v3.8h
         addp            v4.8h,   v4.8h,   v5.8h
@@ -2212,13 +2142,11 @@ function ipred_cfl_16bpc_neon, export=1
         br              x7
 
 L(ipred_cfl_h4):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.4h},  [x2], #8
         uaddlv          s0,      v0.4h
         add             x2,  x2,  #2
         br              x9
 L(ipred_cfl_w4):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v2.4h},  [x2]
         add             v0.2s,   v0.2s,   v16.2s
         uaddlv          s2,      v2.4h
@@ -2239,13 +2167,11 @@ L(ipred_cfl_w4):
         b               L(ipred_cfl_splat_w4)
 
 L(ipred_cfl_h8):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v0.8h},  [x2], #16
         uaddlv          s0,      v0.8h
         add             x2,  x2,  #2
         br              x9
 L(ipred_cfl_w8):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v2.8h},  [x2]
         add             v0.2s,   v0.2s,   v16.2s
         uaddlv          s2,      v2.8h
@@ -2266,14 +2192,12 @@ L(ipred_cfl_w8):
         b               L(ipred_cfl_splat_w8)
 
 L(ipred_cfl_h16):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v2.8h, v3.8h}, [x2], #32
         addp            v0.8h,   v2.8h,   v3.8h
         add             x2,  x2,  #2
         uaddlv          s0,      v0.8h
         br              x9
 L(ipred_cfl_w16):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v2.8h, v3.8h}, [x2]
         add             v0.2s,   v0.2s,   v16.2s
         addp            v2.8h,   v2.8h,   v3.8h
@@ -2295,7 +2219,6 @@ L(ipred_cfl_w16):
         b               L(ipred_cfl_splat_w16)
 
 L(ipred_cfl_h32):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v2.8h, v3.8h, v4.8h, v5.8h}, [x2], #64
         addp            v2.8h,   v2.8h,   v3.8h
         addp            v4.8h,   v4.8h,   v5.8h
@@ -2304,7 +2227,6 @@ L(ipred_cfl_h32):
         uaddlv          s0,      v0.8h
         br              x9
 L(ipred_cfl_w32):
-        AARCH64_VALID_JUMP_TARGET
         ld1             {v2.8h, v3.8h, v4.8h, v5.8h}, [x2]
         add             v0.4s,   v0.4s,   v16.4s
         addp            v2.8h,   v2.8h,   v3.8h
@@ -2365,7 +2287,6 @@ function ipred_cfl_ac_420_16bpc_neon, export=1
         br              x7
 
 L(ipred_cfl_ac_420_w4):
-        AARCH64_VALID_JUMP_TARGET
 1:      // Copy and subsample input
         ld1             {v0.8h}, [x1],  x2
         ld1             {v1.8h}, [x10], x2
@@ -2412,7 +2333,6 @@ L(ipred_cfl_ac_420_w4_calc_subtract_dc):
         ret
 
 L(ipred_cfl_ac_420_w8):
-        AARCH64_VALID_JUMP_TARGET
         cbnz            w3,  L(ipred_cfl_ac_420_w8_wpad)
 1:      // Copy and subsample input, without padding
         ld1             {v0.8h, v1.8h}, [x1],  x2
@@ -2482,14 +2402,12 @@ L(ipred_cfl_ac_420_w8_hpad):
         b               L(ipred_cfl_ac_420_w4_calc_subtract_dc)
 
 L(ipred_cfl_ac_420_w16):
-        AARCH64_VALID_JUMP_TARGET
         adr             x7,  L(ipred_cfl_ac_420_w16_tbl)
         ldrh            w3,  [x7, w3, uxtw #1]
         sub             x7,  x7,  w3, uxtw
         br              x7
 
 L(ipred_cfl_ac_420_w16_wpad0):
-        AARCH64_VALID_JUMP_TARGET
 1:      // Copy and subsample input, without padding
         ld1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x1],  x2
         ld1             {v4.8h, v5.8h, v6.8h, v7.8h}, [x10], x2
@@ -2527,7 +2445,6 @@ L(ipred_cfl_ac_420_w16_wpad0):
         b               L(ipred_cfl_ac_420_w16_hpad)
 
 L(ipred_cfl_ac_420_w16_wpad1):
-        AARCH64_VALID_JUMP_TARGET
 1:      // Copy and subsample input, padding 4
         ldr             q2,  [x1,  #32]
         ld1             {v0.8h, v1.8h}, [x1],  x2
@@ -2573,7 +2490,6 @@ L(ipred_cfl_ac_420_w16_wpad1):
         b               L(ipred_cfl_ac_420_w16_hpad)
 
 L(ipred_cfl_ac_420_w16_wpad2):
-        AARCH64_VALID_JUMP_TARGET
 1:      // Copy and subsample input, padding 8
         ld1             {v0.8h, v1.8h}, [x1],  x2
         ld1             {v2.8h, v3.8h}, [x10], x2
@@ -2605,7 +2521,6 @@ L(ipred_cfl_ac_420_w16_wpad2):
         b               L(ipred_cfl_ac_420_w16_hpad)
 
 L(ipred_cfl_ac_420_w16_wpad3):
-        AARCH64_VALID_JUMP_TARGET
 1:      // Copy and subsample input, padding 12
         ld1             {v0.8h}, [x1],  x2
         ld1             {v2.8h}, [x10], x2
@@ -2702,7 +2617,6 @@ function ipred_cfl_ac_422_16bpc_neon, export=1
         br              x7
 
 L(ipred_cfl_ac_422_w4):
-        AARCH64_VALID_JUMP_TARGET
 1:      // Copy and subsample input
         ld1             {v0.8h}, [x1],  x2
         ld1             {v1.8h}, [x10], x2
@@ -2724,7 +2638,6 @@ L(ipred_cfl_ac_422_w4):
         b               L(ipred_cfl_ac_420_w4_hpad)
 
 L(ipred_cfl_ac_422_w8):
-        AARCH64_VALID_JUMP_TARGET
         cbnz            w3,  L(ipred_cfl_ac_422_w8_wpad)
 1:      // Copy and subsample input, without padding
         ld1             {v0.8h, v1.8h}, [x1],  x2
@@ -2788,14 +2701,12 @@ L(ipred_cfl_ac_422_w8_wpad):
         b               L(ipred_cfl_ac_420_w8_hpad)
 
 L(ipred_cfl_ac_422_w16):
-        AARCH64_VALID_JUMP_TARGET
         adr             x7,  L(ipred_cfl_ac_422_w16_tbl)
         ldrh            w3,  [x7, w3, uxtw #1]
         sub             x7,  x7,  w3, uxtw
         br              x7
 
 L(ipred_cfl_ac_422_w16_wpad0):
-        AARCH64_VALID_JUMP_TARGET
 1:      // Copy and subsample input, without padding
         ld1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x1],  x2
         ld1             {v4.8h, v5.8h, v6.8h, v7.8h}, [x10], x2
@@ -2823,7 +2734,6 @@ L(ipred_cfl_ac_422_w16_wpad0):
         b               L(ipred_cfl_ac_420_w16_hpad)
 
 L(ipred_cfl_ac_422_w16_wpad1):
-        AARCH64_VALID_JUMP_TARGET
 1:      // Copy and subsample input, padding 4
         ldr             q2,  [x1,  #32]
         ld1             {v0.8h, v1.8h}, [x1],  x2
@@ -2857,7 +2767,6 @@ L(ipred_cfl_ac_422_w16_wpad1):
         b               L(ipred_cfl_ac_420_w16_hpad)
 
 L(ipred_cfl_ac_422_w16_wpad2):
-        AARCH64_VALID_JUMP_TARGET
 1:      // Copy and subsample input, padding 8
         ld1             {v0.8h, v1.8h}, [x1],  x2
         ld1             {v2.8h, v3.8h}, [x10], x2
@@ -2883,7 +2792,6 @@ L(ipred_cfl_ac_422_w16_wpad2):
         b               L(ipred_cfl_ac_420_w16_hpad)
 
 L(ipred_cfl_ac_422_w16_wpad3):
-        AARCH64_VALID_JUMP_TARGET
 1:      // Copy and subsample input, padding 12
         ld1             {v0.8h}, [x1],  x2
         ld1             {v2.8h}, [x10], x2
@@ -2950,7 +2858,6 @@ function ipred_cfl_ac_444_16bpc_neon, export=1
         br              x7
 
 L(ipred_cfl_ac_444_w4):
-        AARCH64_VALID_JUMP_TARGET
 1:      // Copy and expand input
         ld1             {v0.4h},   [x1],  x2
         ld1             {v0.d}[1], [x10], x2
@@ -2970,7 +2877,6 @@ L(ipred_cfl_ac_444_w4):
         b               L(ipred_cfl_ac_420_w4_hpad)
 
 L(ipred_cfl_ac_444_w8):
-        AARCH64_VALID_JUMP_TARGET
 1:      // Copy and expand input
         ld1             {v0.8h}, [x1],  x2
         ld1             {v1.8h}, [x10], x2
@@ -2996,7 +2902,6 @@ L(ipred_cfl_ac_444_w8):
         b               L(ipred_cfl_ac_420_w8_hpad)
 
 L(ipred_cfl_ac_444_w16):
-        AARCH64_VALID_JUMP_TARGET
         cbnz            w3,  L(ipred_cfl_ac_444_w16_wpad)
 1:      // Copy and expand input, without padding
         ld1             {v0.8h, v1.8h}, [x1],  x2
@@ -3044,7 +2949,6 @@ L(ipred_cfl_ac_444_w16_wpad):
         b               L(ipred_cfl_ac_420_w16_hpad)
 
 L(ipred_cfl_ac_444_w32):
-        AARCH64_VALID_JUMP_TARGET
         adr             x7,  L(ipred_cfl_ac_444_w32_tbl)
         ldrh            w3,  [x7, w3, uxtw] // (w3>>1) << 1
         lsr             x2,  x2,  #1 // Restore the stride to one line increments
@@ -3052,7 +2956,6 @@ L(ipred_cfl_ac_444_w32):
         br              x7
 
 L(ipred_cfl_ac_444_w32_wpad0):
-        AARCH64_VALID_JUMP_TARGET
 1:      // Copy and expand input, without padding
         ld1             {v0.8h, v1.8h, v2.8h, v3.8h}, [x1],  x2
         shl             v0.8h,   v0.8h,   #3
@@ -3073,7 +2976,6 @@ L(ipred_cfl_ac_444_w32_wpad0):
         b               L(ipred_cfl_ac_444_w32_hpad)
 
 L(ipred_cfl_ac_444_w32_wpad2):
-        AARCH64_VALID_JUMP_TARGET
 1:      // Copy and expand input, padding 8
         ld1             {v0.8h, v1.8h, v2.8h}, [x1],  x2
         shl             v2.8h,   v2.8h,   #3
@@ -3094,7 +2996,6 @@ L(ipred_cfl_ac_444_w32_wpad2):
         b               L(ipred_cfl_ac_444_w32_hpad)
 
 L(ipred_cfl_ac_444_w32_wpad4):
-        AARCH64_VALID_JUMP_TARGET
 1:      // Copy and expand input, padding 16
         ld1             {v0.8h, v1.8h}, [x1],  x2
         shl             v1.8h,   v1.8h,   #3
@@ -3115,7 +3016,6 @@ L(ipred_cfl_ac_444_w32_wpad4):
         b               L(ipred_cfl_ac_444_w32_hpad)
 
 L(ipred_cfl_ac_444_w32_wpad6):
-        AARCH64_VALID_JUMP_TARGET
 1:      // Copy and expand input, padding 24
         ld1             {v0.8h}, [x1],  x2
         shl             v0.8h,   v0.8h,   #3

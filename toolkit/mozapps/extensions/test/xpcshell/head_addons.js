@@ -1200,9 +1200,7 @@ async function mockGfxBlocklistItemsFromDisk(path) {
 
 async function mockGfxBlocklistItems(items) {
   const { generateUUID } = Services.uuid;
-  const { BlocklistPrivate } = ChromeUtils.import(
-    "resource://gre/modules/Blocklist.jsm"
-  );
+  let bsPass = ChromeUtils.import("resource://gre/modules/Blocklist.jsm", null);
   const client = RemoteSettings(
     Services.prefs.getCharPref("services.blocklist.gfx.collection"),
     { bucketNamePref: "services.blocklist.bucket" }
@@ -1223,7 +1221,7 @@ async function mockGfxBlocklistItems(items) {
   await client.db.importChanges({}, collectionTimestamp, records, {
     clear: true,
   });
-  let rv = await BlocklistPrivate.GfxBlocklistRS.checkForEntries();
+  let rv = await bsPass.GfxBlocklistRS.checkForEntries();
   return rv;
 }
 

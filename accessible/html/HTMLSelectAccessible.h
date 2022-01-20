@@ -67,6 +67,7 @@ class HTMLSelectOptionAccessible : public HyperTextAccessibleWrap {
   virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
 
+  virtual int32_t GetLevelInternal() override;
   virtual nsRect RelativeBounds(nsIFrame** aBoundingFrame) const override;
   virtual void SetSelected(bool aSelect) override;
 

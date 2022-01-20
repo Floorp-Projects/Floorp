@@ -1,47 +1,35 @@
 use fluent_bundle::FluentError;
-use fluent_fallback::types::ResourceId;
 use std::error::Error;
 use unic_langid::LanguageIdentifier;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum L10nRegistryError {
     FluentError {
-        resource_id: ResourceId,
+        path: String,
         loc: Option<(usize, usize)>,
         error: FluentError,
     },
     MissingResource {
         locale: LanguageIdentifier,
-        resource_id: ResourceId,
+        res_id: String,
     },
 }
 
 impl std::fmt::Display for L10nRegistryError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::MissingResource {
-                locale,
-                resource_id,
-            } => {
-                write!(
-                    f,
-                    "Missing resource in locale {}: {}",
-                    locale, resource_id.value
-                )
+            Self::MissingResource { locale, res_id } => {
+                write!(f, "Missing resource in locale {}: {}", locale, res_id)
             }
-            Self::FluentError {
-                resource_id,
-                loc,
-                error,
-            } => {
+            Self::FluentError { path, loc, error } => {
                 if let Some(loc) = loc {
                     write!(
                         f,
                         "Fluent Error in {}[line: {}, col: {}]: {}",
-                        resource_id.value, loc.0, loc.1, error
+                        path, loc.0, loc.1, error
                     )
                 } else {
-                    write!(f, "Fluent Error in {}: {}", resource_id.value, error)
+                    write!(f, "Fluent Error in {}: {}", path, error)
                 }
             }
         }

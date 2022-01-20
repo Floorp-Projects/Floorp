@@ -1,13 +1,13 @@
-extern crate bytes;
-extern crate futures;
 extern crate tokio_codec;
 extern crate tokio_io;
+extern crate bytes;
+extern crate futures;
 
-use bytes::{Buf, BufMut, BytesMut, IntoBuf};
-use futures::{Future, Stream};
+use futures::{Stream, Future};
 use std::io::{self, Read};
-use tokio_codec::{Decoder, Encoder, Framed, FramedParts};
+use tokio_codec::{Framed, FramedParts, Decoder, Encoder};
 use tokio_io::AsyncRead;
+use bytes::{BytesMut, Buf, BufMut, IntoBuf};
 
 const INITIAL_CAPACITY: usize = 8 * 1024;
 
@@ -45,10 +45,8 @@ struct DontReadIntoThis;
 
 impl Read for DontReadIntoThis {
     fn read(&mut self, _: &mut [u8]) -> io::Result<usize> {
-        Err(io::Error::new(
-            io::ErrorKind::Other,
-            "Read into something you weren't supposed to.",
-        ))
+        Err(io::Error::new(io::ErrorKind::Other,
+                           "Read into something you weren't supposed to."))
     }
 }
 
@@ -63,7 +61,9 @@ fn can_read_from_existing_buf() {
 
     let num = framed
         .into_future()
-        .map(|(first_num, _)| first_num.unwrap())
+        .map(|(first_num, _)| {
+            first_num.unwrap()
+        })
         .wait()
         .map_err(|e| e.0)
         .unwrap();

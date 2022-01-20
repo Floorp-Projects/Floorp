@@ -47,6 +47,7 @@ CompiledModules(
     "task.js",
     "telemetry.js",
     "text.js",
+    "timings.js",
     "ui.js",
     "url.js",
     "utils.js",

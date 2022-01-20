@@ -243,11 +243,14 @@ bool XMLDocument::SuppressParserErrorConsoleMessages() {
   return mSuppressParserErrorConsoleMessages;
 }
 
-nsresult XMLDocument::StartDocumentLoad(
-    const char* aCommand, nsIChannel* aChannel, nsILoadGroup* aLoadGroup,
-    nsISupports* aContainer, nsIStreamListener** aDocListener, bool aReset) {
-  nsresult rv = Document::StartDocumentLoad(aCommand, aChannel, aLoadGroup,
-                                            aContainer, aDocListener, aReset);
+nsresult XMLDocument::StartDocumentLoad(const char* aCommand,
+                                        nsIChannel* aChannel,
+                                        nsILoadGroup* aLoadGroup,
+                                        nsISupports* aContainer,
+                                        nsIStreamListener** aDocListener,
+                                        bool aReset, nsIContentSink* aSink) {
+  nsresult rv = Document::StartDocumentLoad(
+      aCommand, aChannel, aLoadGroup, aContainer, aDocListener, aReset, aSink);
   if (NS_FAILED(rv)) return rv;
 
   int32_t charsetSource = kCharsetFromDocTypeDefault;
@@ -265,14 +268,18 @@ nsresult XMLDocument::StartDocumentLoad(
 
   nsCOMPtr<nsIXMLContentSink> sink;
 
-  nsCOMPtr<nsIDocShell> docShell;
-  if (aContainer) {
-    docShell = do_QueryInterface(aContainer);
-    NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+  if (aSink) {
+    sink = do_QueryInterface(aSink);
+  } else {
+    nsCOMPtr<nsIDocShell> docShell;
+    if (aContainer) {
+      docShell = do_QueryInterface(aContainer);
+      NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+    }
+    rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, docShell,
+                              aChannel);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  rv = NS_NewXMLContentSink(getter_AddRefs(sink), this, aUrl, docShell,
-                            aChannel);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the parser as the stream listener for the document loader...
   rv = CallQueryInterface(mParser, aDocListener);
@@ -302,8 +309,7 @@ void XMLDocument::EndLoad() {
     // document was loaded as pure data without any presentation
     // attached to it.
     WidgetEvent event(true, eLoad);
-    // TODO: Bug 1506441
-    EventDispatcher::Dispatch(MOZ_KnownLive(ToSupports(this)), nullptr, &event);
+    EventDispatcher::Dispatch(ToSupports(this), nullptr, &event);
   }
 }
 

@@ -23,13 +23,13 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_LIB + ":17530:42",
-        attributes: ["Bubbling"],
+        attributes: ["Bubbling", "DOM2"],
         handler: `function emptyFunction() {}`,
       },
       {
         type: "onClick",
         filename: TEST_URL + ":21:33",
-        attributes: ["React", "Bubbling"],
+        attributes: ["Bubbling", "React"],
         handler: `
           function() {
             alert("inlineFunction");
@@ -43,13 +43,13 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_LIB + ":17530:42",
-        attributes: ["Bubbling"],
+        attributes: ["Bubbling", "DOM2"],
         handler: `function emptyFunction() {}`,
       },
       {
         type: "onClick",
         filename: TEST_EXTERNAL_LISTENERS + ":4:25",
-        attributes: ["React", "Bubbling"],
+        attributes: ["Bubbling", "React"],
         handler: `
           function externalFunction() {
             alert("externalFunction");
@@ -63,13 +63,13 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_LIB + ":17530:42",
-        attributes: ["Bubbling"],
+        attributes: ["Bubbling", "DOM2"],
         handler: `function emptyFunction() {}`,
       },
       {
         type: "onClick",
         filename: TEST_EXTERNAL_LISTENERS + ":4:25",
-        attributes: ["React", "Bubbling"],
+        attributes: ["Bubbling", "React"],
         handler: `
           function externalFunction() {
             alert("externalFunction");
@@ -78,7 +78,7 @@ const TEST_DATA = [
       {
         type: "onMouseUp",
         filename: TEST_URL + ":21:33",
-        attributes: ["React", "Bubbling"],
+        attributes: ["Bubbling", "React"],
         handler: `
           function() {
             alert("inlineFunction");
@@ -92,7 +92,7 @@ const TEST_DATA = [
       {
         type: "onClickCapture",
         filename: TEST_EXTERNAL_LISTENERS + ":8:34",
-        attributes: ["React", "Capturing"],
+        attributes: ["Capturing", "React"],
         handler: `
           function externalCapturingFunction() {
             alert("externalCapturingFunction");

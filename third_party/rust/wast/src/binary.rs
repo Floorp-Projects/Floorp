@@ -644,7 +644,29 @@ impl Encode for ExportKind {
 
 impl Encode for Elem<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
-        match (&self.kind, &self.payload) {
+        // Try to switch element expressions to indices if we can which uses a
+        // more MVP-compatible encoding.
+        //
+        // FIXME(WebAssembly/wabt#1447) ideally we wouldn't do this so we could
+        // be faithful to the original format.
+        let indices;
+        let mut to_encode = &self.payload;
+        if let ElemPayload::Exprs {
+            ty:
+                RefType {
+                    nullable: true,
+                    heap: HeapType::Func,
+                },
+            exprs,
+        } = &to_encode
+        {
+            if let Some(list) = extract_indices(exprs) {
+                indices = ElemPayload::Indices(list);
+                to_encode = &indices;
+            }
+        }
+
+        match (&self.kind, &to_encode) {
             (
                 ElemKind::Active {
                     table:
@@ -710,7 +732,22 @@ impl Encode for Elem<'_> {
             }
         }
 
-        self.payload.encode(e);
+        to_encode.encode(e);
+
+        fn extract_indices<'a>(indices: &[Expression<'a>]) -> Option<Vec<ItemRef<'a, kw::func>>> {
+            indices
+                .iter()
+                .map(|expr| {
+                    if expr.instrs.len() != 1 {
+                        return None;
+                    }
+                    match &expr.instrs[0] {
+                        Instruction::RefFunc(f) => Some(f.0.clone()),
+                        _ => None,
+                    }
+                })
+                .collect()
+        }
     }
 }
 

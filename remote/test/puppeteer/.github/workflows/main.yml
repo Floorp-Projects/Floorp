@@ -44,9 +44,7 @@ jobs:
         run: |
           npm run ensure-pinned-deps
           npm run lint
-          # Skipping as it's flakey and we are not currently using the new documentation site in the wild yet.
-          # See https://github.com/puppeteer/puppeteer/issues/7710 for more info
-          # npm run generate-docs
+          npm run generate-docs
           npm run ensure-correct-devtools-protocol-revision
           npm run test-types-file
 
@@ -168,7 +166,6 @@ jobs:
 
       - name: Run unit tests on Firefox
         uses: nick-invision/retry@v2
-        continue-on-error: true
         env:
           FIREFOX: true
           MOZ_WEBRENDER: 0

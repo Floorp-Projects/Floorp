@@ -12,7 +12,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "nsIWeakReferenceUtils.h"
 #include "mozilla/ThreadSafeWeakPtr.h"
 #include "mozilla/widget/WindowOcclusionState.h"
 #include "mozilla/widget/WinEventObserver.h"
@@ -256,9 +255,6 @@ class WinWindowOcclusionTracker final : public DisplayStatusListener,
 
   void Destroy();
 
-  static void CallUpdateOcclusionState(
-      std::unordered_map<HWND, OcclusionState>* aMap, bool aShowAllWindows);
-
   // Updates root windows occclusion state. If aShowAllWindows is true,
   // all non-hidden windows will be marked visible.  This is used to force
   // rendering of thumbnails.
@@ -285,7 +281,7 @@ class WinWindowOcclusionTracker final : public DisplayStatusListener,
   // Map of HWND to widget. Maintained on main thread, and used to send
   // occlusion state notifications to Windows from
   // mRootWindowHwndsOcclusionState.
-  std::unordered_map<HWND, nsWeakPtr> mHwndRootWindowMap;
+  std::unordered_map<HWND, nsBaseWidget*> mHwndRootWindowMap;
 
   // This is set by UpdateOcclusionState(). It is currently only used by tests.
   int mNumVisibleRootWindows = 0;

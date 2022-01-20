@@ -222,7 +222,16 @@ var Heartbeat = class {
         this.ratingContainer.appendChild(ratingElement);
       }
 
-      this.notice.buttonContainer.append(this.ratingContainer);
+      if (Services.prefs.getBoolPref("browser.proton.enabled")) {
+        // This will append if there aren't any .text-link elements.
+        this.notice.buttonContainer.append(this.ratingContainer);
+      } else {
+        this.notice.messageText.flex = 0;
+        this.notice.messageDetails.insertBefore(
+          this.ratingContainer,
+          this.notice.spacer
+        );
+      }
     }
 
     // Let the consumer know the notification was shown.

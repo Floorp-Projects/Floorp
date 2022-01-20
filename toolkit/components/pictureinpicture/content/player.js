@@ -208,11 +208,8 @@ let Player = {
   handleEvent(event) {
     switch (event.type) {
       case "click": {
-        // Don't run onClick if middle or right click is pressed respectively
-        if (event.button !== 1 && event.button !== 2) {
-          this.onClick(event);
-          this.controls.removeAttribute("keying");
-        }
+        this.onClick(event);
+        this.controls.removeAttribute("keying");
         break;
       }
 
@@ -302,7 +299,12 @@ let Player = {
 
   closePipWindow(closeData) {
     const { reason } = closeData;
-    PictureInPicture.closeSinglePipWindow({ reason, actorRef: this.actor });
+
+    if (PictureInPicture.isMultiPipEnabled) {
+      PictureInPicture.closeSinglePipWindow({ reason, actorRef: this.actor });
+    } else {
+      PictureInPicture.closeAllPipWindows({ reason });
+    }
   },
 
   onDblClick(event) {

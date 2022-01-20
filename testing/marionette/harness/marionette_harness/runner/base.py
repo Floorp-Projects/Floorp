@@ -429,6 +429,13 @@ class BaseMarionetteArguments(ArgumentParser):
             help="Enable Fission (site isolation) in Gecko.",
         )
         self.add_argument(
+            "--enable-webrender",
+            action="store_true",
+            dest="enable_webrender",
+            default=False,
+            help="Enable the WebRender compositor in Gecko.",
+        )
+        self.add_argument(
             "-z",
             "--headless",
             action="store_true",
@@ -644,6 +651,7 @@ class BaseMarionetteTestRunner(object):
         emulator=False,
         headless=False,
         enable_fission=False,
+        enable_webrender=False,
         **kwargs
     ):
         self._appName = None
@@ -687,6 +695,7 @@ class BaseMarionetteTestRunner(object):
         self.workspace_path = workspace or os.getcwd()
         self.verbose = verbose
         self.headless = headless
+        self.enable_webrender = enable_webrender
 
         self.enable_fission = enable_fission
         if self.enable_fission:
@@ -859,6 +868,7 @@ class BaseMarionetteTestRunner(object):
             "startup_timeout": self.startup_timeout,
             "verbose": self.verbose,
             "symbols_path": self.symbols_path,
+            "enable_webrender": self.enable_webrender,
         }
         if self.bin or self.emulator:
             kwargs.update(
@@ -1134,6 +1144,7 @@ class BaseMarionetteTestRunner(object):
                     "appname": self.appName,
                     "manage_instance": self.marionette.instance is not None,
                     "headless": self.headless,
+                    "webrender": self.enable_webrender,
                 }
             )
             self.logger.info("mozinfo updated from: {}".format(json_path))

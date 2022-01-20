@@ -18,7 +18,10 @@ LayoutDeviceIntSize ScrollbarDrawingGTK::GetMinimumWidgetSize(
     nsPresContext* aPresContext, StyleAppearance aAppearance,
     nsIFrame* aFrame) {
   MOZ_ASSERT(nsNativeTheme::IsWidgetScrollbarPart(aAppearance));
-  auto sizes = GetScrollbarSizes(aPresContext, aFrame);
+
+  const ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
+  auto sizes = GetScrollbarSizes(
+      aPresContext, style->StyleUIReset()->mScrollbarWidth, Overlay::No);
   MOZ_ASSERT(sizes.mHorizontal == sizes.mVertical);
   LayoutDeviceIntSize size{sizes.mHorizontal, sizes.mVertical};
   if (aAppearance == StyleAppearance::ScrollbarHorizontal ||

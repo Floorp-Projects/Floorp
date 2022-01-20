@@ -222,7 +222,7 @@ where
 {
     *out_error = ExternError::success();
     let res: thread::Result<(ExternError, R::Value)> = panic::catch_unwind(|| {
-        ensure_panic_hook_is_setup();
+        init_panic_handling_once();
         match callback() {
             Ok(v) => (ExternError::default(), v.into_ffi_value()),
             Err(e) => (e.into(), R::ffi_default()),
@@ -302,9 +302,8 @@ pub mod abort_on_panic {
     }
 }
 
-/// Initialize our panic handling hook to optionally log panics
 #[cfg(feature = "log_panics")]
-pub fn ensure_panic_hook_is_setup() {
+fn init_panic_handling_once() {
     use std::sync::Once;
     static INIT_BACKTRACES: Once = Once::new();
     INIT_BACKTRACES.call_once(move || {
@@ -333,9 +332,8 @@ pub fn ensure_panic_hook_is_setup() {
     });
 }
 
-/// Initialize our panic handling hook to optionally log panics
 #[cfg(not(feature = "log_panics"))]
-pub fn ensure_panic_hook_is_setup() {}
+fn init_panic_handling_once() {}
 
 /// ByteBuffer is a struct that represents an array of bytes to be sent over the FFI boundaries.
 /// There are several cases when you might want to use this, but the primary one for us

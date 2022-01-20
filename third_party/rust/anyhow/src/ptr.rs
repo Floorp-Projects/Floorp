@@ -1,4 +1,4 @@
-use alloc::boxed::Box;
+use crate::alloc::Box;
 use core::marker::PhantomData;
 use core::ptr::NonNull;
 

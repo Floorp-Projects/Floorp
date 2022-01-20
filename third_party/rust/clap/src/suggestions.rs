@@ -1,12 +1,17 @@
+use app::App;
+// Third Party
+#[cfg(feature = "suggestions")]
+use strsim;
+
 // Internal
-use crate::{app::App, fmt::Format};
+use fmt::Format;
 
 /// Produces a string from a given list of possible values which is similar to
 /// the passed in value `v` with a certain confidence.
 /// Thus in a list of possible values like ["foo", "bar"], the value "fop" will yield
 /// `Some("foo")`, whereas "blark" would yield `None`.
 #[cfg(feature = "suggestions")]
-#[cfg_attr(feature = "cargo-clippy", allow(clippy::needless_lifetimes))]
+#[cfg_attr(feature = "lints", allow(needless_lifetimes))]
 pub fn did_you_mean<'a, T: ?Sized, I>(v: &str, possible_values: I) -> Option<&'a str>
 where
     T: AsRef<str> + 'a,
@@ -36,6 +41,7 @@ where
 }
 
 /// Returns a suffix that can be empty, or is the standard 'did you mean' phrase
+#[cfg_attr(feature = "lints", allow(needless_lifetimes))]
 pub fn did_you_mean_flag_suffix<'z, T, I>(
     arg: &str,
     args_rest: &'z [&str],
@@ -56,7 +62,7 @@ where
     }
 
     subcommands
-        .iter()
+        .into_iter()
         .filter_map(|subcommand| {
             let opts = subcommand
                 .p

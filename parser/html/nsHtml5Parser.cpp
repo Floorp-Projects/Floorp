@@ -48,7 +48,7 @@ nsHtml5Parser::nsHtml5Parser()
       mFirstBuffer(new nsHtml5OwningUTF16Buffer((void*)nullptr)),
       mLastBuffer(mFirstBuffer),
       mExecutor(new nsHtml5TreeOpExecutor()),
-      mTreeBuilder(new nsHtml5TreeBuilder(mExecutor, nullptr, false)),
+      mTreeBuilder(new nsHtml5TreeBuilder(mExecutor, nullptr)),
       mTokenizer(new nsHtml5Tokenizer(mTreeBuilder.get(), false)),
       mRootContextLineNumber(1),
       mReturnToStreamParserPermitted(false) {
@@ -98,10 +98,9 @@ void nsHtml5Parser::SetDocumentCharset(NotNull<const Encoding*> aEncoding,
                                        bool aForceAutoDetection) {
   MOZ_ASSERT(!mExecutor->HasStarted(), "Document charset set too late.");
   MOZ_ASSERT(GetStreamParser(), "Setting charset on a script-only parser.");
-  GetStreamParser()->SetDocumentCharset(
-      aEncoding, (nsCharsetSource)aCharsetSource, aForceAutoDetection);
-  mExecutor->SetDocumentCharsetAndSource(aEncoding,
-                                         (nsCharsetSource)aCharsetSource);
+  GetStreamParser()->SetDocumentCharset(aEncoding, aCharsetSource,
+                                        aForceAutoDetection);
+  mExecutor->SetDocumentCharsetAndSource(aEncoding, aCharsetSource);
 }
 
 NS_IMETHODIMP
@@ -411,7 +410,7 @@ nsresult nsHtml5Parser::Parse(const nsAString& aSourceBuffer, void* aKey,
       if (!mDocWriteSpeculativeTreeBuilder) {
         // Lazily initialize if uninitialized
         mDocWriteSpeculativeTreeBuilder =
-            MakeUnique<nsHtml5TreeBuilder>(nullptr, executor->GetStage(), true);
+            MakeUnique<nsHtml5TreeBuilder>(nullptr, executor->GetStage());
         mDocWriteSpeculativeTreeBuilder->setScriptingEnabled(
             mTreeBuilder->isScriptingEnabled());
         mDocWriteSpeculativeTokenizer = MakeUnique<nsHtml5Tokenizer>(
@@ -590,7 +589,7 @@ nsresult nsHtml5Parser::ParseUntilBlocked() {
               !mExecutor->IsScriptExecuting()) {
             mTreeBuilder->Flush();
             mReturnToStreamParserPermitted = false;
-            GetStreamParser()->ContinueAfterScriptsOrEncodingCommitment(
+            GetStreamParser()->ContinueAfterScripts(
                 mTokenizer.get(), mTreeBuilder.get(), mLastWasCR);
           }
         } else {

@@ -78,7 +78,7 @@ impl ThreadPool {
     where
         F: Future,
     {
-        let mut enter = crate::runtime::enter(true);
+        let mut enter = crate::runtime::enter();
         enter.block_on(future).expect("failed to park thread")
     }
 }
@@ -91,7 +91,7 @@ impl fmt::Debug for ThreadPool {
 
 impl Drop for ThreadPool {
     fn drop(&mut self) {
-        self.spawner.shutdown();
+        self.spawner.shared.close();
     }
 }
 
@@ -107,10 +107,6 @@ impl Spawner {
         let (task, handle) = task::joinable(future);
         self.shared.schedule(task, false);
         handle
-    }
-
-    pub(crate) fn shutdown(&mut self) {
-        self.shared.close();
     }
 }
 

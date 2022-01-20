@@ -779,13 +779,7 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
     }
 
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
-      className: `screen ${this.props.id} ${screenClassName}`,
-      role: "dialog",
-      tabIndex: "-1",
-      "aria-labelledby": "mainContentHeader",
-      ref: input => {
-        this.mainContentHeader = input;
-      }
+      className: `screen ${this.props.id} ${screenClassName}`
     }, isWelcomeScreen ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "section-left"
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
@@ -829,7 +823,10 @@ class MultiStageProtonScreen extends react__WEBPACK_IMPORTED_MODULE_0___default.
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
       text: content.title
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
-      id: "mainContentHeader"
+      tabIndex: "-1",
+      ref: input => {
+        this.mainContentHeader = input;
+      }
     })), !isWelcomeScreen ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
       text: content.subtitle
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null)) : null), content.tiles && content.tiles.type === "colorway" && content.tiles.colorways ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_Colorways__WEBPACK_IMPORTED_MODULE_2__["Colorways"], {
@@ -1021,14 +1018,6 @@ function Colorways(props) {
     })
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
     text: typeof description === "object" ? description : {}
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
-    className: "sr-only colorway label",
-    id: `${id}-label`,
-    "data-l10n-args": JSON.stringify({
-      colorwayName: label
-    })
-  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__["Localized"], {
-    text: typeof description === "object" ? description : {}
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("input", {
     type: "radio",
     "data-colorway": id,
@@ -1039,8 +1028,7 @@ function Colorways(props) {
     "data-l10n-attrs": "aria-description",
     "data-l10n-args": JSON.stringify({
       colorwayName: label
-    }),
-    "aria-labelledby": `${id}-label`
+    })
   })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: `icon colorway ${colorwayId === id ? "selected" : ""} ${id}`
   })))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(VariationsCircle, {

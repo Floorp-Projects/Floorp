@@ -4,9 +4,12 @@ const { Subprocess } = ChromeUtils.import(
   "resource://gre/modules/Subprocess.jsm"
 );
 
-const TEMP_DIR = Services.dirsvc.get("TmpD", Ci.nsIFile).path;
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-const screenshotPath = PathUtils.join(TEMP_DIR, "headless_test_screenshot.png");
+const screenshotPath = OS.Path.join(
+  OS.Constants.Path.tmpDir,
+  "headless_test_screenshot.png"
+);
 
 async function runFirefox(args) {
   const XRE_EXECUTABLE_FILE = "XREExeF";
@@ -15,15 +18,15 @@ async function runFirefox(args) {
   const mochiPrefsFile = Services.dirsvc.get(NS_APP_PREFS_50_FILE, Ci.nsIFile);
   const mochiPrefsPath = mochiPrefsFile.path;
   const mochiPrefsName = mochiPrefsFile.leafName;
-  const profilePath = PathUtils.join(
-    TEMP_DIR,
+  const profilePath = OS.Path.join(
+    OS.Constants.Path.tmpDir,
     "headless_test_screenshot_profile"
   );
-  const prefsPath = PathUtils.join(profilePath, mochiPrefsName);
+  const prefsPath = OS.Path.join(profilePath, mochiPrefsName);
   const firefoxArgs = ["-profile", profilePath, "-no-remote"];
 
-  await IOUtils.makeDirectory(profilePath);
-  await IOUtils.copy(mochiPrefsPath, prefsPath);
+  await OS.File.makeDir(profilePath);
+  await OS.File.copy(mochiPrefsPath, prefsPath);
   let proc = await Subprocess.call({
     command: firefoxExe,
     arguments: firefoxArgs.concat(args),
@@ -40,29 +43,29 @@ async function runFirefox(args) {
   }
   let { exitCode } = await proc.wait();
   is(exitCode, 0, "Firefox process should exit with code 0");
-  await IOUtils.remove(profilePath, { recursive: true });
+  await OS.File.removeDir(profilePath);
 }
 
 async function testFileCreationPositive(args, path) {
   await runFirefox(args);
 
-  let saved = IOUtils.exists(path);
+  let saved = await OS.File.exists(path);
   ok(saved, "A screenshot should be saved as " + path);
   if (!saved) {
     return;
   }
 
-  let info = await IOUtils.stat(path);
+  let info = await OS.File.stat(path);
   ok(info.size > 0, "Screenshot should not be an empty file");
-  await IOUtils.remove(path);
+  await OS.File.remove(path);
 }
 
 async function testFileCreationNegative(args, path) {
   await runFirefox(args);
 
-  let saved = await IOUtils.exists(path);
+  let saved = await OS.File.exists(path);
   ok(!saved, "A screenshot should not be saved");
-  await IOUtils.remove(path);
+  await OS.File.remove(path, { ignoreAbsent: true });
 }
 
 async function testWindowSizePositive(width, height) {
@@ -80,13 +83,13 @@ async function testWindowSizePositive(width, height) {
     size,
   ]);
 
-  let saved = await IOUtils.exists(screenshotPath);
+  let saved = await OS.File.exists(screenshotPath);
   ok(saved, "A screenshot should be saved in the tmp directory");
   if (!saved) {
     return;
   }
 
-  let data = await IOUtils.read(screenshotPath);
+  let data = await OS.File.read(screenshotPath);
   await new Promise((resolve, reject) => {
     let blob = new Blob([data], { type: "image/png" });
     let reader = new FileReader();
@@ -111,19 +114,19 @@ async function testWindowSizePositive(width, height) {
     };
     reader.readAsDataURL(blob);
   });
-  await IOUtils.remove(screenshotPath);
+  await OS.File.remove(screenshotPath);
 }
 
 async function testGreen(url, path) {
   await runFirefox(["-url", url, `--screenshot=${path}`]);
 
-  let saved = await IOUtils.exists(path);
+  let saved = await OS.File.exists(path);
   ok(saved, "A screenshot should be saved in the tmp directory");
   if (!saved) {
     return;
   }
 
-  let data = await IOUtils.read(path);
+  let data = await OS.File.read(path);
   let image = await new Promise((resolve, reject) => {
     let blob = new Blob([data], { type: "image/png" });
     let reader = new FileReader();
@@ -153,5 +156,5 @@ async function testGreen(url, path) {
   }
   ok(found, "There should be a green pixel in the screenshot.");
 
-  await IOUtils.remove(path);
+  await OS.File.remove(path);
 }

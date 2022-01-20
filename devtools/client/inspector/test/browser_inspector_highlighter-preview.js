@@ -5,11 +5,10 @@
 "use strict";
 
 // Test that the highlighter is correctly displayed and picker mode is not stopped after
-// a Ctrl-click (Cmd-click on OSX).
+// a shift-click (preview)
 
 const TEST_URI = `data:text/html;charset=utf-8,
                   <p id="one">one</p><p id="two">two</p><p id="three">three</p>`;
-const IS_OSX = Services.appinfo.OS === "Darwin";
 
 add_task(async function() {
   const { inspector, toolbox } = await openInspectorForURL(TEST_URI);
@@ -40,10 +39,10 @@ add_task(async function() {
   checkPickerMode(toolbox, false);
 });
 
-async function clickElement(selector, inspector, preview) {
+async function clickElement(selector, inspector, isShift) {
   const onSelectionChanged = inspector.once("inspector-updated");
   await safeSynthesizeMouseEventAtCenterInContentPage(selector, {
-    [IS_OSX ? "metaKey" : "ctrlKey"]: preview,
+    shiftKey: isShift,
   });
   await onSelectionChanged;
 }

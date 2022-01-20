@@ -164,6 +164,8 @@ class nsAHttpConnection : public nsISupports {
   virtual nsresult GetPeerAddr(NetAddr* addr) = 0;
   virtual bool ResolvedByTRR() = 0;
   virtual bool GetEchConfigUsed() = 0;
+
+  virtual void SanityCheck() {}
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)

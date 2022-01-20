@@ -311,12 +311,15 @@
 #include "xpcprivate.h"
 #include "xpcpublic.h"
 
-#include "nsIDOMXULControlElement.h"
-#include "nsMenuPopupFrame.h"
+#ifdef MOZ_XUL
+#  include "nsIDOMXULControlElement.h"
+#  include "nsMenuPopupFrame.h"
+#endif
 
 #ifdef NS_PRINTING
 #  include "nsIPrintSettings.h"
 #  include "nsIPrintSettingsService.h"
+#  include "nsIWebBrowserPrint.h"
 #endif
 
 #ifdef MOZ_WEBSPEECH
@@ -4175,7 +4178,7 @@ void nsGlobalWindowInner::ReportError(JSContext* aCx,
 
   JS::ErrorReportBuilder jsReport(aCx);
   JS::ExceptionStack exnStack(aCx, aError, nullptr);
-  if (!jsReport.init(aCx, exnStack, JS::ErrorReportBuilder::NoSideEffects)) {
+  if (!jsReport.init(aCx, exnStack, JS::ErrorReportBuilder::WithSideEffects)) {
     return aRv.NoteJSContextException(aCx);
   }
 
@@ -4227,9 +4230,8 @@ bool nsGlobalWindowInner::DispatchEvent(Event& aEvent, CallerType aCallerType,
   RefPtr<nsPresContext> presContext = mDoc->GetPresContext();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  // TODO: Bug 1506441
   nsresult rv = EventDispatcher::DispatchDOMEvent(
-      MOZ_KnownLive(ToSupports(this)), nullptr, &aEvent, presContext, &status);
+      ToSupports(this), nullptr, &aEvent, presContext, &status);
   bool retval = !aEvent.DefaultPrevented(aCallerType);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
@@ -7179,6 +7181,7 @@ void nsGlobalWindowInner::SetBrowserDOMWindow(
 
 void nsGlobalWindowInner::NotifyDefaultButtonLoaded(Element& aDefaultButton,
                                                     ErrorResult& aError) {
+#ifdef MOZ_XUL
   // Don't snap to a disabled button.
   nsCOMPtr<nsIDOMXULControlElement> xulControl = aDefaultButton.AsXULControl();
   if (!xulControl) {
@@ -7215,6 +7218,9 @@ void nsGlobalWindowInner::NotifyDefaultButtonLoaded(Element& aDefaultButton,
   if (NS_FAILED(rv) && rv != NS_ERROR_NOT_IMPLEMENTED) {
     aError.Throw(rv);
   }
+#else
+  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
+#endif
 }
 
 ChromeMessageBroadcaster* nsGlobalWindowInner::MessageManager() {

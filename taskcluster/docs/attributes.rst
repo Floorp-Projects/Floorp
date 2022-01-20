@@ -172,6 +172,12 @@ test_manifests
 
 A list of the test manifests that run in this task.
 
+e10s
+====
+
+For test suites which distinguish whether they run with or without e10s, this
+boolean value identifies this particular run.
+
 image_name
 ==========
 

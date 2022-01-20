@@ -2,7 +2,8 @@
 use std::io::Write;
 
 // Internal
-use crate::{app::parser::Parser, INTERNAL_ERROR_MSG};
+use app::parser::Parser;
+use INTERNAL_ERROR_MSG;
 
 pub struct PowerShellGen<'a, 'b>
 where
@@ -13,7 +14,7 @@ where
 
 impl<'a, 'b> PowerShellGen<'a, 'b> {
     pub fn new(p: &'b Parser<'a, 'b>) -> Self {
-        PowerShellGen { p }
+        PowerShellGen { p: p }
     }
 
     pub fn generate_to<W: Write>(&self, buf: &mut W) {

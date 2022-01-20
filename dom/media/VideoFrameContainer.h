@@ -86,7 +86,6 @@ class VideoFrameContainer {
   void ForgetElement() { mOwner = nullptr; }
 
   uint32_t GetDroppedImageCount() {
-    MutexAutoLock lock(mMutex);
     return mImageContainer->GetDroppedImageCount();
   }
 
@@ -95,7 +94,7 @@ class VideoFrameContainer {
       const gfx::IntSize& aIntrinsicSize,
       const nsTArray<ImageContainer::NonOwningImage>& aImages);
 
-  // Non-addreffed pointer to the owner. The owner calls ForgetElement
+  // Non-addreffed pointer to the owner. The ownenr calls ForgetElement
   // to clear this reference when the owner is destroyed.
   MediaDecoderOwner* mOwner;
   RefPtr<ImageContainer> mImageContainer;

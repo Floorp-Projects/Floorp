@@ -15,6 +15,7 @@
     const test = new PeerConnectionTest(options);
     const constraints = {
       video: { mediaSource: "window" },
+      fake: false
     };
     test.setMediaConstraints([constraints], []);
     return test.run();

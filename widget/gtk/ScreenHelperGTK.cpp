@@ -208,7 +208,8 @@ void ScreenGetterGtk::RefreshScreens() {
     screenList.AppendElement(MakeScreenGtk(defaultScreen, i));
   }
 
-  ScreenManager::Refresh(std::move(screenList));
+  ScreenManager& screenManager = ScreenManager::GetSingleton();
+  screenManager.Refresh(std::move(screenList));
 }
 
 #ifdef MOZ_WAYLAND
@@ -370,7 +371,8 @@ void ScreenGetterWayland::RefreshScreens() {
     managerScreenList.AppendElement(screen);
   }
 
-  ScreenManager::Refresh(std::move(managerScreenList));
+  ScreenManager& screenManager = ScreenManager::GetSingleton();
+  screenManager.Refresh(std::move(managerScreenList));
 }
 
 int ScreenGetterWayland::GetMonitorForWindow(nsWindow* aWindow) {

@@ -19,7 +19,7 @@ class nsIPrincipal;
 class nsRefreshTimer : public nsITimerCallback, public nsINamed {
  public:
   nsRefreshTimer(nsDocShell* aDocShell, nsIURI* aURI, nsIPrincipal* aPrincipal,
-                 int32_t aDelay);
+                 int32_t aDelay, bool aRepeat, bool aMetaRefresh);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
@@ -31,6 +31,8 @@ class nsRefreshTimer : public nsITimerCallback, public nsINamed {
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   int32_t mDelay;
+  bool mRepeat;
+  bool mMetaRefresh;
 
  private:
   virtual ~nsRefreshTimer();

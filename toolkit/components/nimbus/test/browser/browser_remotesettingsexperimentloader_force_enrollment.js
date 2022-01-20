@@ -6,7 +6,10 @@
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
-const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
+const {
+  RemoteDefaultsLoader,
+  RemoteSettingsExperimentLoader,
+} = ChromeUtils.import(
   "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
 );
 const { BrowserTestUtils } = ChromeUtils.import(

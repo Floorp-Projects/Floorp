@@ -1,0 +1,15 @@
+{
+    "stages": "2",
+    "build_libcxx": false,
+    "build_type": "Release",
+    "assertions": false,
+    "cc": "cl.exe",
+    "cxx": "cl.exe",
+    "ml": "ml64.exe",
+    "patches": [
+      "llvmorg-14-init-4465-g22ea0cea595e-v2.patch",
+      "llvmorg-14-init-6706-g6404f4b5af39.patch",
+      "unpoison-thread-stacks_clang_10.patch",
+      "bug47258-extract-symbols-mbcs.patch"
+    ]
+}

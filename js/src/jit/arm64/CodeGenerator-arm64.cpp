@@ -1483,20 +1483,10 @@ void CodeGenerator::visitCompareFAndBranch(LCompareFAndBranch* comp) {
 }
 
 void CodeGenerator::visitBitAndAndBranch(LBitAndAndBranch* baab) {
-  if (baab->is64()) {
-    ARMRegister regL = toXRegister(baab->left());
-    if (baab->right()->isConstant()) {
-      masm.Tst(regL, Operand(ToInt64(baab->right())));
-    } else {
-      masm.Tst(regL, toXRegister(baab->right()));
-    }
+  if (baab->right()->isConstant()) {
+    masm.Tst(toWRegister(baab->left()), Operand(ToInt32(baab->right())));
   } else {
-    ARMRegister regL = toWRegister(baab->left());
-    if (baab->right()->isConstant()) {
-      masm.Tst(regL, Operand(ToInt32(baab->right())));
-    } else {
-      masm.Tst(regL, toWRegister(baab->right()));
-    }
+    masm.Tst(toWRegister(baab->left()), toWRegister(baab->right()));
   }
   emitBranch(baab->cond(), baab->ifTrue(), baab->ifFalse());
 }
@@ -2484,9 +2474,6 @@ void CodeGenerator::visitWasmSelect(LWasmSelect* lir) {
   }
 }
 
-// We expect to handle the cases: compare is {{U,}Int32, {U,}Int64}, Float32,
-// Double}, and select is {{U,}Int32, {U,}Int64}, Float32, Double},
-// independently.
 void CodeGenerator::visitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {
   MCompare::CompareType compTy = ins->compareType();
 
@@ -2498,14 +2485,6 @@ void CodeGenerator::visitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {
     } else {
       masm.cmp32(lhs, ToRegister(ins->rightExpr()));
     }
-  } else if (compTy == MCompare::Compare_Int64 ||
-             compTy == MCompare::Compare_UInt64) {
-    Register lhs = ToRegister(ins->leftExpr());
-    if (ins->rightExpr()->isConstant()) {
-      masm.cmpPtr(lhs, Imm64(ins->rightExpr()->toConstant()->toInt64()));
-    } else {
-      masm.cmpPtr(lhs, ToRegister(ins->rightExpr()));
-    }
   } else if (compTy == MCompare::Compare_Float32) {
     masm.compareFloat(JSOpToDoubleCondition(ins->jsop()),
                       ToFloatRegister(ins->leftExpr()),
@@ -2515,31 +2494,30 @@ void CodeGenerator::visitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {
                        ToFloatRegister(ins->leftExpr()),
                        ToFloatRegister(ins->rightExpr()));
   } else {
-    // Ref types not supported yet; v128 is not yet observed to be worth
-    // optimizing.
-    MOZ_CRASH("CodeGenerator::visitWasmCompareAndSelect: unexpected type (1)");
+    // Ref types not supported yet; Int64 takes a different path; v128 is not
+    // worth optimizing.
+    MOZ_CRASH("Unexpected type");
   }
 
   // Act on flag.
   Assembler::Condition cond = JSOpToCondition(ins->compareType(), ins->jsop());
   MIRType insTy = ins->mir()->type();
-  if (insTy == MIRType::Int32 || insTy == MIRType::Int64) {
-    Register destReg = ToRegister(ins->output());
+  if (insTy == MIRType::Int32) {
+    Register outReg = ToRegister(ins->output());
     Register trueReg = ToRegister(ins->ifTrueExpr());
     Register falseReg = ToRegister(ins->ifFalseExpr());
-    size_t size = insTy == MIRType::Int32 ? 32 : 64;
-    masm.Csel(ARMRegister(destReg, size), ARMRegister(trueReg, size),
-              ARMRegister(falseReg, size), cond);
+    masm.Csel(ARMRegister(outReg, 32), ARMRegister(trueReg, 32),
+              ARMRegister(falseReg, 32), cond);
   } else if (insTy == MIRType::Float32 || insTy == MIRType::Double) {
-    FloatRegister destReg = ToFloatRegister(ins->output());
+    FloatRegister outReg = ToFloatRegister(ins->output());
     FloatRegister trueReg = ToFloatRegister(ins->ifTrueExpr());
     FloatRegister falseReg = ToFloatRegister(ins->ifFalseExpr());
     size_t size = MIRTypeToSize(insTy) * 8;
-    masm.Fcsel(ARMFPRegister(destReg, size), ARMFPRegister(trueReg, size),
+    masm.Fcsel(ARMFPRegister(outReg, size), ARMFPRegister(trueReg, size),
                ARMFPRegister(falseReg, size), cond);
   } else {
     // See above.
-    MOZ_CRASH("CodeGenerator::visitWasmCompareAndSelect: unexpected type (2)");
+    MOZ_CRASH("Unexpected type");
   }
 }
 

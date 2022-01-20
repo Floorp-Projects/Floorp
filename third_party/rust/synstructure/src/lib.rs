@@ -346,9 +346,6 @@ pub struct BindingInfo<'a> {
     // These are used to determine which type parameters are avaliable.
     generics: &'a Generics,
     seen_generics: Vec<bool>,
-    // The original index of the binding
-    // this will not change when .filter() is called
-    index: usize,
 }
 
 impl<'a> ToTokens for BindingInfo<'a> {
@@ -437,10 +434,9 @@ pub struct VariantAst<'a> {
 pub struct VariantInfo<'a> {
     pub prefix: Option<&'a Ident>,
     bindings: Vec<BindingInfo<'a>>,
+    omitted_fields: bool,
     ast: VariantAst<'a>,
     generics: &'a Generics,
-    // The original length of `bindings` before any `.filter()` calls
-    original_length: usize,
 }
 
 /// Helper function used by the VariantInfo constructor. Walks all of the types
@@ -507,20 +503,18 @@ impl<'a> VariantInfo<'a> {
                             field,
                             generics,
                             seen_generics: get_ty_params(field, generics),
-                            index: i,
                         }
                     })
                     .collect::<Vec<_>>()
             }
         };
 
-        let original_length = bindings.len();
         VariantInfo {
             prefix,
             bindings,
+            omitted_fields: false,
             ast,
             generics,
-            original_length,
         }
     }
 
@@ -542,7 +536,7 @@ impl<'a> VariantInfo<'a> {
 
     /// True if any bindings were omitted due to a `filter` call.
     pub fn omitted_bindings(&self) -> bool {
-        self.original_length != self.bindings.len()
+        self.omitted_fields
     }
 
     /// Generates the match-arm pattern which could be used to match against this Variant.
@@ -577,17 +571,11 @@ impl<'a> VariantInfo<'a> {
                 assert!(self.bindings.is_empty());
             }
             Fields::Unnamed(..) => token::Paren(Span::call_site()).surround(&mut t, |t| {
-                let mut expected_index = 0;
                 for binding in &self.bindings {
-                    while expected_index < binding.index {
-                        quote!(_,).to_tokens(t);
-                        expected_index += 1;
-                    }
                     binding.pat().to_tokens(t);
                     quote!(,).to_tokens(t);
-                    expected_index += 1;
                 }
-                if expected_index != self.original_length {
+                if self.omitted_fields {
                     quote!(..).to_tokens(t);
                 }
             }),
@@ -598,7 +586,7 @@ impl<'a> VariantInfo<'a> {
                     binding.pat().to_tokens(t);
                     quote!(,).to_tokens(t);
                 }
-                if self.omitted_bindings() {
+                if self.omitted_fields {
                     quote!(..).to_tokens(t);
                 }
             }),
@@ -799,7 +787,11 @@ impl<'a> VariantInfo<'a> {
     where
         F: FnMut(&BindingInfo<'_>) -> bool,
     {
+        let before_len = self.bindings.len();
         self.bindings.retain(f);
+        if self.bindings.len() != before_len {
+            self.omitted_fields = true;
+        }
         self
     }
 
@@ -810,6 +802,7 @@ impl<'a> VariantInfo<'a> {
     /// Panics if the index is out of range.
     pub fn remove_binding(&mut self, idx: usize) -> &mut Self {
         self.bindings.remove(idx);
+        self.omitted_fields = true;
         self
     }
 
@@ -1968,7 +1961,7 @@ impl<'a> Structure<'a> {
 
         if self.underscore_const {
             quote! {
-                const _: () = { #generated };
+                const _: () = { #generated }
             }
         } else {
             let dummy_const: Ident = sanitize_ident(&format!(
@@ -2445,44 +2438,5 @@ impl<T: MacroResult> MacroResult for Result<T> {
             Ok(v) => v.into_result(),
             Err(err) => Err(err),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // Regression test for #48
-    #[test]
-    fn test_each_enum() {
-        let di: syn::DeriveInput = syn::parse_quote! {
-         enum A {
-             Foo(usize, bool),
-             Bar(bool, usize),
-             Baz(usize, bool, usize),
-             Quux(bool, usize, bool)
-         }
-        };
-        let mut s = Structure::new(&di);
-
-        s.filter(|bi| bi.ast().ty.to_token_stream().to_string() == "bool");
-
-        assert_eq!(
-            s.each(|bi| quote!(do_something(#bi))).to_string(),
-            quote! {
-                A::Foo(_, ref __binding_1,) => { { do_something(__binding_1) } }
-                A::Bar(ref __binding_0, ..) => { { do_something(__binding_0) } }
-                A::Baz(_, ref __binding_1, ..) => { { do_something(__binding_1) } }
-                A::Quux(ref __binding_0, _, ref __binding_2,) => {
-                    {
-                        do_something(__binding_0)
-                    }
-                    {
-                        do_something(__binding_2)
-                    }
-                }
-            }
-            .to_string()
-        );
     }
 }

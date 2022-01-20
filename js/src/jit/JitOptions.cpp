@@ -114,9 +114,6 @@ DefaultJitOptions::DefaultJitOptions() {
   // Toggles whether sink code motion is globally disabled.
   SET_DEFAULT(disableSink, true);
 
-  // Toggles whether redundant shape guard elimination is globally disabled.
-  SET_DEFAULT(disableRedundantShapeGuards, false);
-
   // Toggles whether we verify that we don't recompile with the same CacheIR.
   SET_DEFAULT(disableBailoutLoopCheck, false);
 

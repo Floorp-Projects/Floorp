@@ -934,10 +934,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
       TransactionId aTransactionId = TransactionId{0},
       const mozilla::TimeStamp& aTimeStamp = mozilla::TimeStamp());
   void NotifyRevokingDidPaint(TransactionId aTransactionId);
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FireDOMPaintEvent(
-      nsTArray<nsRect>* aList, TransactionId aTransactionId,
-      mozilla::TimeStamp aTimeStamp = mozilla::TimeStamp());
+  void FireDOMPaintEvent(nsTArray<nsRect>* aList, TransactionId aTransactionId,
+                         mozilla::TimeStamp aTimeStamp = mozilla::TimeStamp());
 
   bool IsDOMPaintEventPending();
 
@@ -1053,13 +1051,9 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   bool HasEverBuiltInvisibleText() const { return mHasEverBuiltInvisibleText; }
   void SetBuiltInvisibleText() { mHasEverBuiltInvisibleText = true; }
 
-  bool UsesFontMetricDependentFontUnits() const {
-    return mUsesFontMetricDependentFontUnits;
-  }
+  bool UsesExChUnits() const { return mUsesExChUnits; }
 
-  void SetUsesFontMetricDependentFontUnits(bool aValue) {
-    mUsesFontMetricDependentFontUnits = aValue;
-  }
+  void SetUsesExChUnits(bool aValue) { mUsesExChUnits = aValue; }
 
   bool IsDeviceSizePageSize();
 
@@ -1336,7 +1330,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   //
   // TODO(emilio): It's a bit weird that this lives here but all the other
   // relevant bits live in Device on the rust side.
-  unsigned mUsesFontMetricDependentFontUnits : 1;
+  unsigned mUsesExChUnits : 1;
 
   // Is the current mCounterStyleManager valid?
   unsigned mCounterStylesDirty : 1;

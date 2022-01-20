@@ -4,7 +4,7 @@ try {
     oomTest(function() {
       eval(`
         function eval(source) {
-          offThreadCompileModuleToStencil(source);
+          offThreadCompileModule(source);
           minorgc();
         }
         eval("");

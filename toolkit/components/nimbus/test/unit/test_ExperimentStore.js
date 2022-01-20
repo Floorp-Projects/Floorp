@@ -30,7 +30,7 @@ add_task(async function test_usageBeforeInitialization() {
   Assert.equal(store.getAll().length, 0, "It should not fail");
 
   await store.init();
-  store.addEnrollment(experiment);
+  store.addExperiment(experiment);
 
   Assert.equal(
     store.getExperimentForFeature("purple"),
@@ -52,7 +52,7 @@ add_task(async function test_event_add_experiment() {
   store.on("update:foo", updateEventCbStub);
 
   // Add some data
-  store.addEnrollment(expected);
+  store.addExperiment(expected);
 
   Assert.equal(updateEventCbStub.callCount, 1, "Called once for add");
 
@@ -74,7 +74,7 @@ add_task(async function test_event_updates_main() {
     updateEventCbStub
   );
 
-  store.addEnrollment(experiment);
+  store.addExperiment(experiment);
   store.updateExperiment("foo", { active: false });
 
   Assert.equal(
@@ -104,8 +104,8 @@ add_task(async function test_getExperimentForGroup() {
   });
 
   await store.init();
-  store.addEnrollment(ExperimentFakes.experiment("bar"));
-  store.addEnrollment(experiment);
+  store.addExperiment(ExperimentFakes.experiment("bar"));
+  store.addExperiment(experiment);
 
   Assert.equal(
     store.getExperimentForFeature("purple"),
@@ -118,7 +118,7 @@ add_task(async function test_hasExperimentForFeature() {
   const store = ExperimentFakes.store();
 
   await store.init();
-  store.addEnrollment(
+  store.addExperiment(
     ExperimentFakes.experiment("foo", {
       branch: {
         slug: "variant",
@@ -126,7 +126,7 @@ add_task(async function test_hasExperimentForFeature() {
       },
     })
   );
-  store.addEnrollment(
+  store.addExperiment(
     ExperimentFakes.experiment("foo2", {
       branch: {
         slug: "variant",
@@ -134,7 +134,7 @@ add_task(async function test_hasExperimentForFeature() {
       },
     })
   );
-  store.addEnrollment(
+  store.addExperiment(
     ExperimentFakes.experiment("bar_expired", {
       active: false,
       branch: {
@@ -173,9 +173,9 @@ add_task(async function test_getAll_getAllActive() {
 
   await store.init();
   ["foo", "bar", "baz"].forEach(slug =>
-    store.addEnrollment(ExperimentFakes.experiment(slug, { active: false }))
+    store.addExperiment(ExperimentFakes.experiment(slug, { active: false }))
   );
-  store.addEnrollment(ExperimentFakes.experiment("qux", { active: true }));
+  store.addExperiment(ExperimentFakes.experiment("qux", { active: true }));
 
   Assert.deepEqual(
     store.getAll().map(e => e.slug),
@@ -189,67 +189,14 @@ add_task(async function test_getAll_getAllActive() {
   );
 });
 
-add_task(async function test_getAll_getAllActive_no_rollouts() {
-  const store = ExperimentFakes.store();
-
-  await store.init();
-  ["foo", "bar", "baz"].forEach(slug =>
-    store.addEnrollment(ExperimentFakes.experiment(slug, { active: false }))
-  );
-  store.addEnrollment(ExperimentFakes.experiment("qux", { active: true }));
-  store.addEnrollment(ExperimentFakes.rollout("rol"));
-
-  Assert.deepEqual(
-    store.getAll().map(e => e.slug),
-    ["foo", "bar", "baz", "qux", "rol"],
-    ".getAll() should return all experiments and rollouts"
-  );
-  Assert.deepEqual(
-    store.getAllActive().map(e => e.slug),
-    ["qux"],
-    ".getAllActive() should return all experiments that are active and no rollouts"
-  );
-});
-
-add_task(async function test_getAllRollouts() {
-  const store = ExperimentFakes.store();
-
-  await store.init();
-  ["foo", "bar", "baz"].forEach(slug =>
-    store.addEnrollment(ExperimentFakes.rollout(slug))
-  );
-  store.addEnrollment(ExperimentFakes.experiment("qux", { active: true }));
-
-  Assert.deepEqual(
-    store.getAll().map(e => e.slug),
-    ["foo", "bar", "baz", "qux"],
-    ".getAll() should return all experiments and rollouts"
-  );
-  Assert.deepEqual(
-    store.getAllRollouts().map(e => e.slug),
-    ["foo", "bar", "baz"],
-    ".getAllRollouts() should return all rollouts"
-  );
-});
-
-add_task(async function test_addEnrollment_experiment() {
+add_task(async function test_addExperiment() {
   const store = ExperimentFakes.store();
   const exp = ExperimentFakes.experiment("foo");
 
   await store.init();
-  store.addEnrollment(exp);
+  store.addExperiment(exp);
 
   Assert.equal(store.get("foo"), exp, "should save experiment by slug");
-});
-
-add_task(async function test_addEnrollment_rollout() {
-  const store = ExperimentFakes.store();
-  const rollout = ExperimentFakes.rollout("foo");
-
-  await store.init();
-  store.addEnrollment(rollout);
-
-  Assert.equal(store.get("foo"), rollout, "should save rollout by slug");
 });
 
 add_task(async function test_updateExperiment() {
@@ -260,7 +207,7 @@ add_task(async function test_updateExperiment() {
   const store = ExperimentFakes.store();
 
   await store.init();
-  store.addEnrollment(experiment);
+  store.addExperiment(experiment);
   store.updateExperiment("foo", { active: false });
 
   const actual = store.get("foo");
@@ -283,7 +230,7 @@ add_task(async function test_sync_access_before_init() {
     features: [{ featureId: "newtab", enabled: "true" }],
   });
   await store.init();
-  store.addEnrollment(syncAccessExp);
+  store.addExperiment(syncAccessExp);
 
   let prefValue;
   try {
@@ -317,7 +264,7 @@ add_task(async function test_sync_access_update() {
 
   await store.init();
 
-  store.addEnrollment(experiment);
+  store.addExperiment(experiment);
   store.updateExperiment("foo", {
     branch: {
       ...experiment.branch,
@@ -354,7 +301,7 @@ add_task(async function test_sync_features_only() {
 
   await store.init();
 
-  store.addEnrollment(experiment);
+  store.addExperiment(experiment);
   store = ExperimentFakes.store();
 
   Assert.equal(store.getAll().length, 0, "cfr is not a sync access experiment");
@@ -370,7 +317,7 @@ add_task(async function test_sync_features_remotely() {
 
   await store.init();
 
-  store.addEnrollment(experiment);
+  store.addExperiment(experiment);
   store = ExperimentFakes.store();
 
   Assert.ok(
@@ -391,7 +338,7 @@ add_task(async function test_sync_access_unenroll() {
 
   await store.init();
 
-  store.addEnrollment(experiment);
+  store.addExperiment(experiment);
   store.updateExperiment("foo", { active: false });
 
   store = ExperimentFakes.store();
@@ -413,8 +360,8 @@ add_task(async function test_sync_access_unenroll_2() {
 
   await store.init();
 
-  store.addEnrollment(experiment1);
-  store.addEnrollment(experiment2);
+  store.addExperiment(experiment1);
+  store.addExperiment(experiment2);
 
   Assert.equal(store.getAll().length, 2, "2/2 experiments");
 
@@ -455,105 +402,6 @@ add_task(async function test_sync_access_unenroll_2() {
   );
 });
 
-add_task(async function test_getRolloutForFeature_fromStore() {
-  const store = ExperimentFakes.store();
-  const rollout = ExperimentFakes.rollout("foo");
-
-  await store.init();
-  store.addEnrollment(rollout);
-
-  Assert.deepEqual(
-    store.getRolloutForFeature(rollout.featureIds[0]),
-    rollout,
-    "Should return back the same rollout"
-  );
-});
-
-add_task(async function test_getRolloutForFeature_fromSyncCache() {
-  let store = ExperimentFakes.store();
-  const rollout = ExperimentFakes.rollout("foo", {
-    branch: {
-      slug: "early-startup",
-      features: [{ featureId: "aboutwelcome", value: { enabled: true } }],
-    },
-  });
-  let updatePromise = new Promise(resolve =>
-    store.on(`update:${rollout.slug}`, resolve)
-  );
-
-  await store.init();
-  store.addEnrollment(rollout);
-  await updatePromise;
-  // New uninitialized store will return data from sync cache
-  // before init
-  store = ExperimentFakes.store();
-
-  Assert.ok(
-    Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}aboutwelcome`),
-    "Sync cache is set"
-  );
-  Assert.equal(
-    store.getRolloutForFeature(rollout.featureIds[0]).slug,
-    rollout.slug,
-    "Should return back the same rollout"
-  );
-  Assert.deepEqual(
-    store.getRolloutForFeature(rollout.featureIds[0]).branch.feature,
-    rollout.branch.features[0],
-    "Should return back the same feature"
-  );
-  cleanupStorePrefCache();
-});
-
-add_task(async function test_remoteRollout() {
-  let store = ExperimentFakes.store();
-  const rollout = ExperimentFakes.rollout("foo", {
-    branch: {
-      slug: "early-startup",
-      features: [{ featureId: "aboutwelcome", value: { enabled: true } }],
-    },
-  });
-  let featureUpdateStub = sinon.stub();
-  let updatePromise = new Promise(resolve =>
-    store.on(`update:${rollout.slug}`, resolve)
-  );
-  store.on("update:aboutwelcome", featureUpdateStub);
-
-  await store.init();
-  store.addEnrollment(rollout);
-  await updatePromise;
-
-  Assert.ok(
-    Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}aboutwelcome`),
-    "Sync cache is set"
-  );
-
-  updatePromise = new Promise(resolve =>
-    store.on(`update:${rollout.slug}`, resolve)
-  );
-  store.updateExperiment(rollout.slug, { active: false });
-
-  // wait for it to be removed
-  await updatePromise;
-
-  Assert.ok(featureUpdateStub.calledTwice, "Called for add and remove");
-  Assert.ok(
-    store.get(rollout.slug),
-    "Rollout is still in the store just not active"
-  );
-  Assert.ok(
-    !store.getRolloutForFeature("aboutwelcome"),
-    "Feature rollout should not exist"
-  );
-  Assert.ok(
-    !Services.prefs.getStringPref(
-      `${SYNC_DEFAULTS_PREF_BRANCH}aboutwelcome`,
-      ""
-    ),
-    "Sync cache is cleared"
-  );
-});
-
 add_task(async function test_syncDataStore_setDefault() {
   cleanupStorePrefCache();
   const store = ExperimentFakes.store();
@@ -569,12 +417,7 @@ add_task(async function test_syncDataStore_setDefault() {
     "Pref is empty"
   );
 
-  let rollout = ExperimentFakes.rollout("foo", {
-    features: [
-      { featureId: "aboutwelcome", enabled: true, value: { remote: true } },
-    ],
-  });
-  store.addEnrollment(rollout);
+  store.updateRemoteConfigs("aboutwelcome", { remote: true });
 
   Assert.ok(
     Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}aboutwelcome`),
@@ -587,60 +430,108 @@ add_task(async function test_syncDataStore_setDefault() {
 add_task(async function test_syncDataStore_getDefault() {
   cleanupStorePrefCache();
   const store = ExperimentFakes.store();
-  const rollout = ExperimentFakes.rollout("aboutwelcome-slug", {
-    branch: {
-      features: [
-        {
-          featureId: "aboutwelcome",
-          value: { remote: true },
-        },
-      ],
-    },
-  });
 
-  await store.init();
-  await store.addEnrollment(rollout);
-
-  Assert.ok(
-    Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}aboutwelcome`)
+  Services.prefs.setStringPref(
+    `${SYNC_DEFAULTS_PREF_BRANCH}aboutwelcome`,
+    JSON.stringify({ remote: true })
   );
 
-  let restoredRollout = store.getRolloutForFeature("aboutwelcome");
+  let data = store.getRemoteConfig("aboutwelcome");
 
-  Assert.ok(restoredRollout);
-  Assert.ok(
-    restoredRollout.branch.features[0].value.remote,
-    "Restore data from pref"
-  );
+  Assert.ok(data.remote, "Restore data from pref");
 
   cleanupStorePrefCache();
 });
 
-add_task(async function test_addEnrollment_rollout() {
+add_task(async function test_updateRemoteConfigs() {
   const sandbox = sinon.createSandbox();
   const store = ExperimentFakes.store();
   const stub = sandbox.stub();
   const value = { bar: true };
-  let rollout = ExperimentFakes.rollout("foo", {
-    features: [{ featureId: "aboutwelcome", enabled: true, value }],
-  });
 
-  store._onFeatureUpdate("aboutwelcome", stub);
+  store._onFeatureUpdate("featureId", stub);
 
   await store.init();
-  store.addEnrollment(rollout);
+  store.updateRemoteConfigs("featureId", value);
 
   Assert.deepEqual(
-    store.getRolloutForFeature("aboutwelcome"),
-    rollout,
+    store.getRemoteConfig("featureId"),
+    value,
     "should return the stored value"
   );
   Assert.equal(stub.callCount, 1, "Called once on update");
   Assert.equal(
     stub.firstCall.args[1],
-    "rollout-updated",
+    "remote-defaults-update",
     "Called for correct reason"
   );
+});
+
+add_task(async function test_finalizaRemoteConfigs_cleanup() {
+  cleanupStorePrefCache();
+  const store = ExperimentFakes.store();
+
+  Services.prefs.setStringPref(
+    `${SYNC_DEFAULTS_PREF_BRANCH}unit-test-feature`,
+    JSON.stringify({ remote: true })
+  );
+
+  // We are able to sync-read data without needing to initialize the store
+  let data = store.getRemoteConfig("unit-test-feature");
+  Assert.ok(data.remote, "Restore data from pref");
+
+  // We need to initialize the store for the cleanup step
+  await store.init();
+
+  store.finalizeRemoteConfigs([]);
+  data = store.getRemoteConfig("unit-test-feature");
+
+  Assert.ok(!data, `Data was removed ${JSON.stringify(data)}`);
+
+  cleanupStorePrefCache();
+});
+
+add_task(async function test_finalizaRemoteConfigs_cleanup() {
+  cleanupStorePrefCache();
+  const store = ExperimentFakes.store();
+  await store.init();
+
+  store.updateRemoteConfigs("aboutwelcome", { remote: true });
+
+  let data = store.getRemoteConfig("aboutwelcome");
+  Assert.ok(data.remote, "Restore data from pref");
+
+  store.finalizeRemoteConfigs(["aboutwelcome"]);
+  data = store.getRemoteConfig("aboutwelcome");
+
+  Assert.ok(data.remote, "Data was kept");
+
+  cleanupStorePrefCache();
+});
+
+add_task(async function test_getAllExistingRemoteConfigIds() {
+  cleanupStorePrefCache();
+  const store = ExperimentFakes.store();
+
+  Services.prefs.setStringPref(
+    `${SYNC_DEFAULTS_PREF_BRANCH}unit-test-feature`,
+    JSON.stringify({ remote: true })
+  );
+
+  await store.init();
+
+  store.updateRemoteConfigs("aboutwelcome", { remote: true });
+  store.updateRemoteConfigs("unit-test-feature", { remote: true });
+
+  let data = store.getAllExistingRemoteConfigIds();
+
+  Assert.deepEqual(
+    data,
+    ["aboutwelcome", "unit-test-feature"],
+    "Should return ids from sync pref cache and in memory store without duplication"
+  );
+
+  cleanupStorePrefCache();
 });
 
 add_task(async function test_storeValuePerPref_noVariables() {
@@ -660,7 +551,7 @@ add_task(async function test_storeValuePerPref_noVariables() {
   });
 
   await store.init();
-  store.addEnrollment(experiment);
+  store.addExperiment(experiment);
 
   let branch = Services.prefs.getBranch(`${SYNC_DATA_PREF_BRANCH}purple.`);
 
@@ -695,7 +586,7 @@ add_task(async function test_storeValuePerPref_withVariables() {
   });
 
   await store.init();
-  store.addEnrollment(experiment);
+  store.addExperiment(experiment);
 
   let branch = Services.prefs.getBranch(`${SYNC_DATA_PREF_BRANCH}purple.`);
 
@@ -733,7 +624,7 @@ add_task(async function test_storeValuePerPref_returnsSameValue() {
   });
 
   await store.init();
-  store.addEnrollment(experiment);
+  store.addExperiment(experiment);
   let branch = Services.prefs.getBranch(`${SYNC_DATA_PREF_BRANCH}purple.`);
 
   store = ExperimentFakes.store();
@@ -789,7 +680,7 @@ add_task(async function test_storeValuePerPref_returnsSameValue_allTypes() {
   });
 
   await store.init();
-  store.addEnrollment(experiment);
+  store.addExperiment(experiment);
   let branch = Services.prefs.getBranch(`${SYNC_DATA_PREF_BRANCH}purple.`);
 
   store = ExperimentFakes.store();

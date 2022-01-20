@@ -3,13 +3,13 @@ namespace _ipdltest {
 
 intr protocol PTestRacyInterruptReplies {
 child:
-    [LegacyIntr] intr R_() returns (int replyNum);
+    intr R_() returns (int replyNum);
     async _A();
     async ChildTest();
     async __delete__();
 
 parent:
-    [LegacyIntr] intr _R() returns (int replyNum);
+    intr _R() returns (int replyNum);
     async A_();
 };
 

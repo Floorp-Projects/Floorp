@@ -24,7 +24,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/gfx/Point.h"
-#include "mozilla/intl/UnicodeScriptCodes.h"
 #include "nsCOMPtr.h"
 #include "nsColor.h"
 #include "nsTHashMap.h"
@@ -38,8 +37,8 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
+#include "nsUnicodeScriptCodes.h"
 #include "nscore.h"
-#include "DrawMode.h"
 
 // Only required for function bodys
 #include <stdlib.h>
@@ -68,6 +67,7 @@ class gfxTextRun;
 class nsIEventTarget;
 class nsITimer;
 struct gfxTextRunDrawCallbacks;
+enum class DrawMode : int;
 
 namespace mozilla {
 class SVGContextPaint;
@@ -672,7 +672,7 @@ class gfxTextRunFactory {
 class gfxFontShaper {
  public:
   typedef mozilla::gfx::DrawTarget DrawTarget;
-  typedef mozilla::intl::Script Script;
+  typedef mozilla::unicode::Script Script;
 
   enum class RoundingFlags : uint8_t { kRoundX = 0x01, kRoundY = 0x02 };
 
@@ -731,7 +731,7 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(gfxFontShaper::RoundingFlags)
  */
 class gfxShapedText {
  public:
-  typedef mozilla::intl::Script Script;
+  typedef mozilla::unicode::Script Script;
 
   gfxShapedText(uint32_t aLength, mozilla::gfx::ShapedTextFlags aFlags,
                 uint16_t aAppUnitsPerDevUnit)
@@ -1261,7 +1261,7 @@ class gfxShapedText {
  */
 class gfxShapedWord final : public gfxShapedText {
  public:
-  typedef mozilla::intl::Script Script;
+  typedef mozilla::unicode::Script Script;
 
   // Create a ShapedWord that can hold glyphs for aLength characters,
   // with mCharacterGlyphs sized appropriately.
@@ -1426,7 +1426,7 @@ class gfxFont {
 
  protected:
   using DrawTarget = mozilla::gfx::DrawTarget;
-  using Script = mozilla::intl::Script;
+  using Script = mozilla::unicode::Script;
   using SVGContextPaint = mozilla::SVGContextPaint;
 
   using RoundingFlags = gfxFontShaper::RoundingFlags;
@@ -1632,14 +1632,11 @@ class gfxFont {
     gfxFloat aveCharWidth;
     gfxFloat spaceWidth;
     gfxFloat zeroWidth;  // -1 if there was no zero glyph
-    gfxFloat ideographicWidth;  // -1 if kWaterIdeograph is not supported
 
     gfxFloat ZeroOrAveCharWidth() const {
       return zeroWidth >= 0 ? zeroWidth : aveCharWidth;
     }
   };
-  // Unicode character used as basis for 'ic' unit:
-  static constexpr uint32_t kWaterIdeograph = 0x6C34;
 
   typedef nsFontMetrics::FontOrientation Orientation;
 
@@ -1648,7 +1645,7 @@ class gfxFont {
       return GetHorizontalMetrics();
     }
     if (!mVerticalMetrics) {
-      CreateVerticalMetrics();
+      mVerticalMetrics = CreateVerticalMetrics();
     }
     return *mVerticalMetrics;
   }
@@ -1897,9 +1894,11 @@ class gfxFont {
   }
 
   virtual already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
-      const TextRunDrawParams& aRunParams) = 0;
-  already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
-      mozilla::gfx::DrawTarget* aDrawTarget);
+      DrawTarget* aTarget) = 0;
+  virtual already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFontNoGDI(
+      DrawTarget* aTarget) {
+    return GetScaledFont(aTarget);
+  }
 
   void InitializeScaledFont();
 
@@ -1960,7 +1959,7 @@ class gfxFont {
  protected:
   virtual const Metrics& GetHorizontalMetrics() = 0;
 
-  void CreateVerticalMetrics();
+  mozilla::UniquePtr<const Metrics> CreateVerticalMetrics();
 
   // Template parameters for DrawGlyphs/DrawOneGlyph, used to select
   // simplified versions of the methods in the most common cases.
@@ -2205,7 +2204,7 @@ class gfxFont {
   RefPtr<mozilla::gfx::ScaledFont> mAzureScaledFont;
 
   // For vertical metrics, created on demand.
-  mozilla::UniquePtr<Metrics> mVerticalMetrics;
+  mozilla::UniquePtr<const Metrics> mVerticalMetrics;
 
   // Table used for MathML layout.
   mozilla::UniquePtr<gfxMathTable> mMathTable;
@@ -2292,21 +2291,21 @@ class gfxFont {
 
 struct MOZ_STACK_CLASS TextRunDrawParams {
   RefPtr<mozilla::gfx::DrawTarget> dt;
-  gfxContext* context = nullptr;
-  gfxFont::Spacing* spacing = nullptr;
-  gfxTextRunDrawCallbacks* callbacks = nullptr;
-  mozilla::SVGContextPaint* runContextPaint = nullptr;
-  mozilla::gfx::Float direction = 1.0f;
-  double devPerApp = 1.0;
-  nscolor textStrokeColor = 0;
-  gfxPattern* textStrokePattern = nullptr;
-  const mozilla::gfx::StrokeOptions* strokeOpts = nullptr;
-  const mozilla::gfx::DrawOptions* drawOpts = nullptr;
-  DrawMode drawMode = DrawMode::GLYPH_FILL;
-  bool isVerticalRun = false;
-  bool isRTL = false;
-  bool paintSVGGlyphs = true;
-  bool allowGDI = true;
+  gfxContext* context;
+  gfxFont::Spacing* spacing;
+  gfxTextRunDrawCallbacks* callbacks;
+  mozilla::SVGContextPaint* runContextPaint;
+  mozilla::gfx::Float direction;
+  double devPerApp;
+  nscolor textStrokeColor;
+  gfxPattern* textStrokePattern;
+  const mozilla::gfx::StrokeOptions* strokeOpts;
+  const mozilla::gfx::DrawOptions* drawOpts;
+  DrawMode drawMode;
+  bool isVerticalRun;
+  bool isRTL;
+  bool paintSVGGlyphs;
+  bool allowGDI;
 };
 
 struct MOZ_STACK_CLASS FontDrawParams {

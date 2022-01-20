@@ -4,6 +4,7 @@ use crate::RawPtr;
 use crate::{EntryCustom, Instance};
 use std::ffi::CStr;
 use std::mem;
+use std::ptr;
 
 #[derive(Clone)]
 pub struct Surface {
@@ -50,15 +51,26 @@ impl Surface {
         physical_device: vk::PhysicalDevice,
         surface: vk::SurfaceKHR,
     ) -> VkResult<Vec<vk::PresentModeKHR>> {
-        read_into_uninitialized_vector(|count, data| {
-            self.surface_fn
-                .get_physical_device_surface_present_modes_khr(
-                    physical_device,
-                    surface,
-                    count,
-                    data,
-                )
-        })
+        let mut count = 0;
+        self.surface_fn
+            .get_physical_device_surface_present_modes_khr(
+                physical_device,
+                surface,
+                &mut count,
+                ptr::null_mut(),
+            )
+            .result()?;
+        let mut v = Vec::with_capacity(count as usize);
+        let err_code = self
+            .surface_fn
+            .get_physical_device_surface_present_modes_khr(
+                physical_device,
+                surface,
+                &mut count,
+                v.as_mut_ptr(),
+            );
+        v.set_len(count as usize);
+        err_code.result_with_success(v)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetPhysicalDeviceSurfaceCapabilitiesKHR.html>"]
@@ -83,14 +95,24 @@ impl Surface {
         physical_device: vk::PhysicalDevice,
         surface: vk::SurfaceKHR,
     ) -> VkResult<Vec<vk::SurfaceFormatKHR>> {
-        read_into_uninitialized_vector(|count, data| {
-            self.surface_fn.get_physical_device_surface_formats_khr(
+        let mut count = 0;
+        self.surface_fn
+            .get_physical_device_surface_formats_khr(
                 physical_device,
                 surface,
-                count,
-                data,
+                &mut count,
+                ptr::null_mut(),
             )
-        })
+            .result()?;
+        let mut v = Vec::with_capacity(count as usize);
+        let err_code = self.surface_fn.get_physical_device_surface_formats_khr(
+            physical_device,
+            surface,
+            &mut count,
+            v.as_mut_ptr(),
+        );
+        v.set_len(count as usize);
+        err_code.result_with_success(v)
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroySurfaceKHR.html>"]

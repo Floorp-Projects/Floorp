@@ -12,7 +12,6 @@
 
 #  include "nsString.h"
 #  include "unicode/unum.h"  // for UNumberFormat
-#  include "mozilla/intl/ICUError.h"
 
 class nsIContent;
 
@@ -70,9 +69,9 @@ class ICUUtils {
                                        nsAString& aMozString);
 
   /**
-   * Map ICUError to nsresult
+   * Map ICU UErrorCode to nsresult
    */
-  static nsresult ICUErrorToNsResult(const mozilla::intl::ICUError aError);
+  static nsresult UErrorToNsResult(const UErrorCode aErrorCode);
 
 #  if 0
   // Currently disabled because using C++ API doesn't play nicely with enabling

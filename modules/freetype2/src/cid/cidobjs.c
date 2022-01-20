@@ -157,14 +157,10 @@
   cid_size_request( FT_Size          size,
                     FT_Size_Request  req )
   {
-    FT_Error  error;
-
     PSH_Globals_Funcs  funcs;
 
 
-    error = FT_Request_Metrics( size->face, req );
-    if ( error )
-      goto Exit;
+    FT_Request_Metrics( size->face, req );
 
     funcs = cid_size_get_globals_funcs( (CID_Size)size );
 
@@ -174,8 +170,7 @@
                         size->metrics.y_scale,
                         0, 0 );
 
-  Exit:
-    return error;
+    return FT_Err_Ok;
   }
 
 
@@ -216,7 +211,7 @@
     /* release subrs */
     if ( face->subrs )
     {
-      FT_UInt  n;
+      FT_Int  n;
 
 
       for ( n = 0; n < cid->num_dicts; n++ )

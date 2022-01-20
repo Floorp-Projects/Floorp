@@ -7,7 +7,6 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/HTMLFieldSetElement.h"
 #include "mozilla/dom/HTMLFieldSetElementBinding.h"
@@ -129,13 +128,9 @@ void HTMLFieldSetElement::InsertChildBefore(nsIContent* aChild,
     } else {
       // If mFirstLegend is before aIndex, we do not change it.
       // Otherwise, mFirstLegend is now aChild.
-      const Maybe<uint32_t> indexOfRef =
-          aBeforeThis ? ComputeIndexOf(aBeforeThis) : Some(GetChildCount());
-      const Maybe<uint32_t> indexOfFirstLegend = ComputeIndexOf(mFirstLegend);
-      if ((indexOfRef.isSome() && indexOfFirstLegend.isSome() &&
-           *indexOfRef <= *indexOfFirstLegend) ||
-          // XXX Keep the odd traditional behavior for now.
-          indexOfRef.isNothing()) {
+      int32_t index =
+          aBeforeThis ? ComputeIndexOf(aBeforeThis) : GetChildCount();
+      if (index <= ComputeIndexOf(mFirstLegend)) {
         mFirstLegend = aChild;
         firstLegendHasChanged = true;
       }

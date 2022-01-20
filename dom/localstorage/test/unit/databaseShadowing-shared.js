@@ -13,13 +13,6 @@ const principalInfos = [
   { url: "https://pattern.test", attrs: { userContextId: 15 } },
 ];
 
-const surrogate = String.fromCharCode(0xdc00);
-const replacement = String.fromCharCode(0xfffd);
-const beginning = "beginning";
-const ending = "ending";
-const complexValue = beginning + surrogate + surrogate + ending;
-const corruptedValue = beginning + replacement + replacement + ending;
-
 function enableNextGenLocalStorage() {
   info("Setting pref");
 
@@ -48,7 +41,6 @@ function storeData() {
     storage.setItem("key1", "value1");
     storage.removeItem("key1");
     storage.setItem("key2", "value2");
-    storage.setItem("complexKey", complexValue);
 
     info("Closing storage");
 
@@ -92,7 +84,7 @@ function importShadowDatabase(name) {
   return true;
 }
 
-function verifyData(clearedOrigins, migrated = false) {
+function verifyData(clearedOrigins) {
   for (let i = 0; i < principalInfos.length; i++) {
     let principalInfo = principalInfos[i];
     let principal = getPrincipal(principalInfo.url, principalInfo.attrs);
@@ -105,16 +97,10 @@ function verifyData(clearedOrigins, migrated = false) {
 
     if (clearedOrigins.includes(i)) {
       ok(storage.getItem("key2") == null, "Correct value");
-      ok(storage.getItem("complexKey") == null, "Correct value");
     } else {
       ok(storage.getItem("key0") == null, "Correct value");
       ok(storage.getItem("key1") == null, "Correct value");
-      is(storage.getItem("key2"), "value2", "Correct value");
-      is(
-        storage.getItem("complexKey"),
-        migrated ? corruptedValue : complexValue,
-        "Correct value"
-      );
+      ok(storage.getItem("key2") == "value2", "Correct value");
     }
 
     info("Closing storage");

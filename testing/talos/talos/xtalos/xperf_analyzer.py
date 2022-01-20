@@ -235,8 +235,6 @@ class XPerfInterval(XPerfAttribute):
             a.process()
 
     def __str__(self):
-        if len(self.seen_evtlist) == 0:
-            return ""
         end = self.seen_evtlist[-1]
         start = self.seen_evtlist[0]
         duration = end.get_timestamp() - start.get_timestamp()
@@ -255,9 +253,6 @@ class XPerfInterval(XPerfAttribute):
         """The result of an XPerf interval is the interval's duration, in
         milliseconds. The results of the sub-attributes are also provided.
         """
-        if len(self.seen_evtlist) == 0:
-            return {}
-
         end = self.seen_evtlist[-1]
         start = self.seen_evtlist[0]
         duration = end.get_timestamp() - start.get_timestamp()

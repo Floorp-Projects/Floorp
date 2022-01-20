@@ -5,17 +5,20 @@ It depends on [glean-parser] from pypi.org
 
 [glean-parser]: https://pypi.org/project/glean-parser/
 
-To update the in-tree glean-parser change the version in `third_party/python/requirements.in`,
-then run
+To update the in-tree glean-parser run
 
 ```
-./mach vendor python
+./mach vendor python glean_parser==M.m.p
 ```
 
-```{note}
-**Important**: the glean_parser and all of its dependencies must support Python 3.5, as discussed here.
-This is the minimum version supported by mach and installed on the CI images for running tests.
-This is enforced by the version ranges declared in the Python installation manifest.
+where `M.m.p` is the version number, e.g. 1.28.0.
+
+```eval_rst
+.. note::
+
+    **Important**: the glean_parser and all of its dependencies must support Python 3.5, as discussed here.
+    This is the minimum version supported by mach and installed on the CI images for running tests.
+    This is enforced by the version ranges declared in the Python installation manifest.
 ```
 
 ## Version mismatch of the Python dependencies

@@ -138,8 +138,7 @@ nsresult RangeUtils::CompareNodeToRange(nsINode* aNode,
   // then the Node is contained (completely) by the Range.
 
   // gather up the dom point info
-  int32_t nodeStart;
-  uint32_t nodeEnd;
+  int32_t nodeStart, nodeEnd;
   nsINode* parent = aNode->GetParentNode();
   if (!parent) {
     // can't make a parent/offset pair to represent start or
@@ -147,15 +146,14 @@ nsresult RangeUtils::CompareNodeToRange(nsINode* aNode,
     // so instead represent it by (node,0) and (node,numChildren)
     parent = aNode;
     nodeStart = 0;
-    nodeEnd = aNode->GetChildCount();
+    uint32_t childCount = aNode->GetChildCount();
+    MOZ_ASSERT(childCount <= INT32_MAX,
+               "There shouldn't be over INT32_MAX children");
+    nodeEnd = static_cast<int32_t>(childCount);
   } else {
-    nodeStart = parent->ComputeIndexOf_Deprecated(aNode);
-    NS_WARNING_ASSERTION(
-        nodeStart >= 0,
-        "aNode has the parent node but it does not have aNode!");
-    nodeEnd = nodeStart + 1u;
-    MOZ_ASSERT(nodeStart < 0 || static_cast<uint32_t>(nodeStart) < nodeEnd,
-               "nodeStart should be less than nodeEnd");
+    nodeStart = parent->ComputeIndexOf(aNode);
+    nodeEnd = nodeStart + 1;
+    MOZ_ASSERT(nodeStart < nodeEnd, "nodeStart shouldn't be INT32_MAX");
   }
 
   // XXX nsContentUtils::ComparePoints() may be expensive.  If some callers
@@ -172,7 +170,7 @@ nsresult RangeUtils::CompareNodeToRange(nsINode* aNode,
   // silence the warning. (Bug 1438996)
 
   // is RANGE(start) <= NODE(start) ?
-  Maybe<int32_t> order = nsContentUtils::ComparePoints_AllowNegativeOffsets(
+  Maybe<int32_t> order = nsContentUtils::ComparePoints(
       aAbstractRange->StartRef().Container(),
       *aAbstractRange->StartRef().Offset(
           RangeBoundary::OffsetFilter::kValidOrInvalidOffsets),

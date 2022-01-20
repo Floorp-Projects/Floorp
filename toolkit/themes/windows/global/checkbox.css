@@ -30,7 +30,7 @@ checkbox:where([native]) {
 /* ..... focused state ..... */
 
 checkbox[native]:-moz-focusring > .checkbox-label-box {
-  outline: var(--default-focusring);
+  outline: 1px dotted;
 }
 
 /* ..... disabled state ..... */

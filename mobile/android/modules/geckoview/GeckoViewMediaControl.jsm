@@ -34,6 +34,11 @@ class GeckoViewMediaControl extends GeckoViewModule {
     this.controller.addEventListener("metadatachange", this, options);
     this.controller.addEventListener("playbackstatechange", this, options);
 
+    this.messageManager.addMessageListener(
+      "GeckoView:MediaControl:Fullscreen",
+      this
+    );
+
     this.registerListener([
       "GeckoView:MediaSession:Play",
       "GeckoView:MediaSession:Pause",
@@ -57,6 +62,11 @@ class GeckoViewMediaControl extends GeckoViewModule {
     this.controller.removeEventListener("positionstatechange", this);
     this.controller.removeEventListener("metadatachange", this);
     this.controller.removeEventListener("playbackstatechange", this);
+
+    this.messageManager.removeMessageListener(
+      "GeckoView:MediaControl:Fullscreen",
+      this
+    );
 
     this.unregisterListener();
   }
@@ -106,6 +116,19 @@ class GeckoViewMediaControl extends GeckoViewModule {
     }
   }
 
+  receiveMessage(aMsg) {
+    debug`receiveMessage: name=${aMsg.name}, data=${aMsg.data}`;
+
+    switch (aMsg.name) {
+      case "GeckoView:MediaControl:Fullscreen":
+        this.handleFullscreenChanged(aMsg.data);
+        break;
+      default:
+        warn`Unknown message name ${aMsg.name}`;
+        break;
+    }
+  }
+
   // eslint-disable-next-line complexity
   handleEvent(aEvent) {
     debug`handleEvent: ${aEvent.type}`;
@@ -133,6 +156,16 @@ class GeckoViewMediaControl extends GeckoViewModule {
         warn`Unknown event type ${aEvent.type}`;
         break;
     }
+  }
+
+  handleFullscreenChanged(aData) {
+    debug`handleFullscreenChanged ${aData.enabled}`;
+
+    this.eventDispatcher.sendRequest({
+      type: "GeckoView:MediaSession:Fullscreen",
+      enabled: aData.enabled,
+      metadata: aData.metadata,
+    });
   }
 
   handleActivated() {

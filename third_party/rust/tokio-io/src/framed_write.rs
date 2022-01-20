@@ -1,14 +1,14 @@
 #![allow(deprecated)]
 
-use std::fmt;
 use std::io::{self, Read};
+use std::fmt;
 
+use {AsyncRead, AsyncWrite};
 use codec::{Decoder, Encoder};
 use framed::Fuse;
-use {AsyncRead, AsyncWrite};
 
+use futures::{Async, AsyncSink, Poll, Stream, Sink, StartSend};
 use bytes::BytesMut;
-use futures::{Async, AsyncSink, Poll, Sink, StartSend, Stream};
 
 /// A `Sink` of frames encoded to an `AsyncWrite`.
 #[deprecated(since = "0.1.7", note = "Moved to tokio-codec")]
@@ -28,9 +28,8 @@ const INITIAL_CAPACITY: usize = 8 * 1024;
 const BACKPRESSURE_BOUNDARY: usize = INITIAL_CAPACITY;
 
 impl<T, E> FramedWrite<T, E>
-where
-    T: AsyncWrite,
-    E: Encoder,
+    where T: AsyncWrite,
+          E: Encoder,
 {
     /// Creates a new `FramedWrite` with the given `encoder`.
     pub fn new(inner: T, encoder: E) -> FramedWrite<T, E> {
@@ -82,9 +81,8 @@ impl<T, E> FramedWrite<T, E> {
 }
 
 impl<T, E> Sink for FramedWrite<T, E>
-where
-    T: AsyncWrite,
-    E: Encoder,
+    where T: AsyncWrite,
+          E: Encoder,
 {
     type SinkItem = E::Item;
     type SinkError = E::Error;
@@ -98,13 +96,12 @@ where
     }
 
     fn close(&mut self) -> Poll<(), Self::SinkError> {
-        Ok(self.inner.close()?)
+        Ok(try!(self.inner.close()))
     }
 }
 
 impl<T, D> Stream for FramedWrite<T, D>
-where
-    T: Stream,
+    where T: Stream,
 {
     type Item = T::Item;
     type Error = T::Error;
@@ -115,16 +112,15 @@ where
 }
 
 impl<T, U> fmt::Debug for FramedWrite<T, U>
-where
-    T: fmt::Debug,
-    U: fmt::Debug,
+    where T: fmt::Debug,
+          U: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("FramedWrite")
-            .field("inner", &self.inner.get_ref().0)
-            .field("encoder", &self.inner.get_ref().1)
-            .field("buffer", &self.inner.buffer)
-            .finish()
+         .field("inner", &self.inner.get_ref().0)
+         .field("encoder", &self.inner.get_ref().1)
+         .field("buffer", &self.inner.buffer)
+         .finish()
     }
 }
 
@@ -167,8 +163,7 @@ impl<T> FramedWrite2<T> {
 }
 
 impl<T> Sink for FramedWrite2<T>
-where
-    T: AsyncWrite + Encoder,
+    where T: AsyncWrite + Encoder,
 {
     type SinkItem = T::Item;
     type SinkError = T::Error;
@@ -177,14 +172,14 @@ where
         // If the buffer is already over 8KiB, then attempt to flush it. If after flushing it's
         // *still* over 8KiB, then apply backpressure (reject the send).
         if self.buffer.len() >= BACKPRESSURE_BOUNDARY {
-            self.poll_complete()?;
+            try!(self.poll_complete());
 
             if self.buffer.len() >= BACKPRESSURE_BOUNDARY {
                 return Ok(AsyncSink::NotReady(item));
             }
         }
 
-        self.inner.encode(item, &mut self.buffer)?;
+        try!(self.inner.encode(item, &mut self.buffer));
 
         Ok(AsyncSink::Ready)
     }
@@ -198,12 +193,8 @@ where
             let n = try_ready!(self.inner.poll_write(&self.buffer));
 
             if n == 0 {
-                return Err(io::Error::new(
-                    io::ErrorKind::WriteZero,
-                    "failed to
-                                          write frame to transport",
-                )
-                .into());
+                return Err(io::Error::new(io::ErrorKind::WriteZero, "failed to
+                                          write frame to transport").into());
             }
 
             // TODO: Add a way to `bytes` to do this w/o returning the drained
@@ -220,7 +211,7 @@ where
 
     fn close(&mut self) -> Poll<(), Self::SinkError> {
         try_ready!(self.poll_complete());
-        Ok(self.inner.shutdown()?)
+        Ok(try!(self.inner.shutdown()))
     }
 }
 

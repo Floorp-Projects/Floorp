@@ -100,3 +100,7 @@ user_pref("toolkit.telemetry.initDelay", 99999999);
 user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
 // Use a light color-scheme unless explicitly overriden.
 user_pref("layout.css.prefers-color-scheme.content-override", 1);
+// Explicitly turn off fission so we don't accidentally use the wrong default
+// value. This can be removed once harnesses and tasks assume fission by
+// default.
+user_pref("fission.autostart", false);

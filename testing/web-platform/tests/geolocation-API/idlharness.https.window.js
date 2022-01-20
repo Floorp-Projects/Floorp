@@ -5,7 +5,7 @@
 
 idl_test(
   ['geolocation-API'],
-  ['hr-time', 'html'],
+  ['html'],
   idl_array => {
     self.audio = document.createElement('audio');
     self.video = document.createElement('video');

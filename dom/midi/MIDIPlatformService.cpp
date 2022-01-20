@@ -7,9 +7,6 @@
 #include "MIDIPlatformService.h"
 #include "MIDIMessageQueue.h"
 #include "TestMIDIPlatformService.h"
-#ifdef MOZ_WEBMIDI_MIDIR_IMPL
-#  include "midirMIDIPlatformService.h"
-#endif  // MOZ_WEBMIDI_MIDIR_IMPL
 #include "mozilla/ErrorResult.h"
 #include "mozilla/StaticPrefs_midi.h"
 #include "mozilla/StaticPtr.h"
@@ -182,14 +179,10 @@ MIDIPlatformService* MIDIPlatformService::Get() {
   MOZ_ASSERT(XRE_IsParentProcess());
   ::mozilla::ipc::AssertIsOnBackgroundThread();
   if (!IsRunning()) {
-    if (StaticPrefs::midi_testing()) {
-      gMIDIPlatformService = new TestMIDIPlatformService();
-    }
-#ifdef MOZ_WEBMIDI_MIDIR_IMPL
-    else {
-      gMIDIPlatformService = new midirMIDIPlatformService();
-    }
-#endif  // MOZ_WEBMIDI_MIDIR_IMPL
+    // Uncomment once we have an actual platform library to test.
+    //
+    // if (StaticPrefs::midi_testing()) {
+    gMIDIPlatformService = new TestMIDIPlatformService();
     gMIDIPlatformService->Init();
   }
   return gMIDIPlatformService;

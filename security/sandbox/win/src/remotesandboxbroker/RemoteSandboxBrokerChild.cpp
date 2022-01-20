@@ -39,7 +39,7 @@ void RemoteSandboxBrokerChild::ActorDestroy(ActorDestroyReason aWhy) {
   XRE_ShutdownChildProcess();
 }
 
-mozilla::ipc::IPCResult RemoteSandboxBrokerChild::RecvLaunchApp(
+mozilla::ipc::IPCResult RemoteSandboxBrokerChild::AnswerLaunchApp(
     LaunchParameters&& aParams, bool* aOutOk, uint64_t* aOutHandle) {
   auto towstring = [](const nsString& s) {
     return std::wstring(s.get(), s.Length());

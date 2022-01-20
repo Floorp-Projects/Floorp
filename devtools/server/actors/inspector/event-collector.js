@@ -484,6 +484,7 @@ class JQueryEventCollector extends MainEventCollector {
               tags: "jQuery",
               hide: {
                 capturing: true,
+                dom0: true,
               },
             };
 
@@ -576,6 +577,7 @@ class JQueryLiveEventCollector extends MainEventCollector {
                 handler: handler,
                 tags: "jQuery,Live",
                 hide: {
+                  dom0: true,
                   capturing: true,
                 },
               };
@@ -686,6 +688,9 @@ class ReactEventCollector extends MainEventCollector {
             type: name,
             handler: listener,
             tags: "React",
+            hide: {
+              dom0: true,
+            },
             override: {
               capturing: name.endsWith("Capture"),
             },
@@ -829,6 +834,7 @@ class EventCollector {
    *                              // inside event bubble.
    *           hide: {            // Flags for hiding certain properties.
    *             capturing: true,
+   *             dom0: true,
    *           }
    *         }
    */
@@ -855,14 +861,10 @@ class EventCollector {
       }
 
       for (const listener of listeners) {
-        const eventObj = this.processHandlerForEvent(
-          listener,
-          dbg,
-          collector.normalizeListener
-        );
-        if (eventObj) {
-          listenerArray.push(eventObj);
+        if (collector.normalizeListener) {
+          listener.normalizeListener = collector.normalizeListener;
         }
+        this.processHandlerForEvent(listenerArray, listener, dbg);
       }
     }
 
@@ -876,13 +878,13 @@ class EventCollector {
   /**
    * Process an event listener.
    *
+   * @param  {Array} listenerArray
+   *         listenerArray contains all event objects that we have gathered
+   *         so far.
    * @param  {EventListener} listener
    *         The event listener to process.
    * @param  {Debugger} dbg
    *         Debugger instance.
-   * @param  {Function|null} normalizeListener
-   *         An optional function that will be called to retrieve data about the listener.
-   *         It should be a *Collector method.
    *
    * @return {Array}
    *         An array of objects where a typical object looks like this:
@@ -891,17 +893,17 @@ class EventCollector {
    *             handler: function() { doSomething() },
    *             origin: "http://www.mozilla.com",
    *             tags: tags,
+   *             DOM0: true,
    *             capturing: true,
    *             hide: {
-   *               capturing: true
+   *               DOM0: true
    *             },
    *             native: false
    *           }
    */
   // eslint-disable-next-line complexity
-  processHandlerForEvent(listener, dbg, normalizeListener) {
+  processHandlerForEvent(listenerArray, listener, dbg) {
     let globalDO;
-    let eventObj;
 
     try {
       const { capturing, handler } = listener;
@@ -914,6 +916,8 @@ class EventCollector {
       globalDO = dbg.addDebuggee(global);
       let listenerDO = globalDO.makeDebuggeeValue(handler);
 
+      const { normalizeListener } = listener;
+
       if (normalizeListener) {
         listenerDO = normalizeListener(listenerDO, listener);
       }
@@ -922,7 +926,7 @@ class EventCollector {
       const override = listener.override || {};
       const tags = listener.tags || "";
       const type = listener.type || "";
-      let isScriptBoundToNonScriptElement = false;
+      let dom0 = false;
       let functionSource = handler.toString();
       let line = 0;
       let column = null;
@@ -961,10 +965,10 @@ class EventCollector {
         // Scripts are provided via script tags. If it wasn't provided by a
         // script tag it must be a DOM0 event.
         if (script.source.element) {
-          isScriptBoundToNonScriptElement =
-            script.source.element.class !== "HTMLScriptElement";
+          dom0 = script.source.element.class !== "HTMLScriptElement";
+        } else {
+          dom0 = false;
         }
-
         line = script.startLine;
         column = script.startColumn;
         url = script.url;
@@ -1022,16 +1026,17 @@ class EventCollector {
       } else {
         origin =
           url +
-          (isScriptBoundToNonScriptElement || line === 0
+          (dom0 || line === 0
             ? ""
             : ":" + line + (column === null ? "" : ":" + column));
       }
 
-      eventObj = {
+      const eventObj = {
         type: override.type || type,
         handler: override.handler || functionSource.trim(),
         origin: override.origin || origin,
         tags: override.tags || tags,
+        DOM0: typeof override.dom0 !== "undefined" ? override.dom0 : dom0,
         capturing:
           typeof override.capturing !== "undefined"
             ? override.capturing
@@ -1044,17 +1049,16 @@ class EventCollector {
       // Hide the debugger icon for DOM0 and native listeners. DOM0 listeners are
       // generated dynamically from e.g. an onclick="" attribute so the script
       // doesn't actually exist.
-      if (native || isScriptBoundToNonScriptElement) {
+      if (native || dom0) {
         eventObj.hide.debugger = true;
       }
+      listenerArray.push(eventObj);
     } finally {
       // Ensure that we always remove the debuggee.
       if (globalDO) {
         dbg.removeDebuggee(globalDO);
       }
     }
-
-    return eventObj;
   }
 }
 

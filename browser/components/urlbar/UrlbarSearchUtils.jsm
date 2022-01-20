@@ -105,17 +105,15 @@ class SearchUtils {
       }
     }
 
-    // Array of perfectly matched engines. We also keep a Set for O(1) lookup.
-    let perfectMatchEngines = [];
-    let perfectMatchEngineSet = new Set();
+    // Array of fully matched engines.
+    let engines = [];
     for (let engine of await Services.search.getVisibleEngines()) {
       if (disabledEngines.includes(engine.name)) {
         continue;
       }
       let domain = engine.getResultDomain();
       if (domain.startsWith(prefix) || domain.startsWith("www." + prefix)) {
-        perfectMatchEngines.push(engine);
-        perfectMatchEngineSet.add(engine);
+        engines.push(engine);
       }
 
       if (matchAllDomainLevels) {
@@ -132,18 +130,8 @@ class SearchUtils {
       }
     }
 
-    // Build the final list of matching engines. Partial matches come after
-    // perfect matches. Partial matches may be included in the perfect matches
-    // list, so be careful not to include the same engine more than once.
-    let engines = perfectMatchEngines;
-    let engineSet = perfectMatchEngineSet;
-    for (let engine of partialMatchEngines) {
-      if (!engineSet.has(engine)) {
-        engineSet.add(engine);
-        engines.push(engine);
-      }
-    }
-    return engines;
+    // Partial matches come after perfect matches.
+    return [...engines, ...partialMatchEngines];
   }
 
   /**

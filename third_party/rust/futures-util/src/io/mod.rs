@@ -56,13 +56,10 @@ mod allow_std;
 pub use self::allow_std::AllowStdIo;
 
 mod buf_reader;
-pub use self::buf_reader::{BufReader, SeeKRelative};
+pub use self::buf_reader::BufReader;
 
 mod buf_writer;
 pub use self::buf_writer::BufWriter;
-
-mod line_writer;
-pub use self::line_writer::LineWriter;
 
 mod chain;
 pub use self::chain::Chain;

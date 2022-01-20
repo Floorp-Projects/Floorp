@@ -12,7 +12,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.BuildConfig
-import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession.ContentDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.IgnoreCrash
 
@@ -25,7 +24,7 @@ class ContentCrashTest : BaseSessionTest() {
     @Before
     fun setup() {
         assertTrue(client.connect(env.defaultTimeoutMillis))
-        client.setEvalNextCrashDump(/* expectFatal */ false, GeckoRuntime.CRASHED_PROCESS_TYPE_FOREGROUND_CHILD)
+        client.setEvalNextCrashDump(/* expectFatal */ false)
     }
 
     @IgnoreCrash

@@ -38,8 +38,9 @@
     }
     // |childFrameData| has properties with the same names as its
     // PerformanceEventTiming counterpart.
+    verifyClickEvent(childFrameData, null);
     assert_equals(childFrameData.target, 'iframe_div');
-    verifyClickEvent(childFrameData, null, false, 104, 'mousedown');
+
     assert_less_than(childFrameData.processingStart, childFrameData.clickDone,
         "The entry's processing start should be before than the child frame's clickDone.");
   }
@@ -51,18 +52,18 @@
       window.addEventListener('load', resolve);
     });
     clickTimeMin = performance.now();
-    let observedPointerDown = false;
+    let observedMouseDown = false;
     const observerPromise = new Promise(resolve => {
       new PerformanceObserver(t.step_func(entries => {
-        const pointerDowns = entries.getEntriesByName('pointerdown');
-        // Ignore the callback if there were no pointerdown entries.
-        if (pointerDowns.length === 0)
+        const mouseDowns = entries.getEntriesByName('mousedown');
+        // Ignore the callback if there were no mousedown entries.
+        if (mouseDowns.length === 0)
           return;
 
-        assert_false(observedPointerDown,
+        assert_false(observedMouseDown,
             "Observer of main frames should only capture main-frame event-timing entries");
-        validateEntries(pointerDowns);
-        observedPointerDown = true;
+        validateEntries(mouseDowns);
+        observedMouseDown = true;
         resolve();
       })).observe({type: 'event'});
     });

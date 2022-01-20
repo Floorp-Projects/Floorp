@@ -1,6 +1,5 @@
-use std::marker::PhantomPinned;
-
 use pin_project_lite::pin_project;
+use std::marker::PhantomPinned;
 
 pin_project! {
     struct Foo<T> {

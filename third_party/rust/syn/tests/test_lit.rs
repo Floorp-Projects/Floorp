@@ -1,5 +1,3 @@
-#![allow(clippy::float_cmp, clippy::non_ascii_literal)]
-
 #[macro_use]
 mod macros;
 
@@ -178,6 +176,7 @@ fn ints() {
 
 #[test]
 fn floats() {
+    #[cfg_attr(feature = "cargo-clippy", allow(float_cmp))]
     fn test_float(s: &str, value: f64, suffix: &str) {
         match lit(s) {
             Lit::Float(lit) => {
@@ -213,6 +212,12 @@ fn negative() {
     assert_eq!("-1.5", LitFloat::new("-1.5", span).to_string());
     assert_eq!("-1.5f32", LitFloat::new("-1.5f32", span).to_string());
     assert_eq!("-1.5f64", LitFloat::new("-1.5f64", span).to_string());
+}
+
+#[test]
+fn negative_overflow() {
+    assert!(syn::parse_str::<LitFloat>("-1.0e99f64").is_ok());
+    assert!(syn::parse_str::<LitFloat>("-1.0e999f64").is_err());
 }
 
 #[test]

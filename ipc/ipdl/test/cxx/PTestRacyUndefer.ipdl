@@ -11,14 +11,14 @@ child:
     async AwakenSpam();
     async AwakenRaceWinTwice();
 
-    [LegacyIntr] intr Race();
+    intr Race();
 
     async __delete__();
 
 parent:
 
-    [LegacyIntr] intr Spam();
-    [LegacyIntr] intr RaceWinTwice();
+    intr Spam();
+    intr RaceWinTwice();
 
     async Done();
 };

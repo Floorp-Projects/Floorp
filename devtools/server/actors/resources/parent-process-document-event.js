@@ -80,25 +80,24 @@ class ParentProcessDocumentEventWatcher {
   }
 
   getAllBrowsingContexts() {
-    if (this.watcherActor.sessionContext.type == "browser-element") {
+    if (this.watcherActor.context.type == "browser-element") {
       const browsingContext = this.watcherActor.browserElement.browsingContext;
       return browsingContext.getAllBrowsingContextsInSubtree();
     }
 
-    if (this.watcherActor.sessionContext.type == "all") {
+    if (this.watcherActor.context.type == "all") {
       return getAllRemoteBrowsingContexts();
     }
 
-    if (this.watcherActor.sessionContext.type == "webextension") {
+    if (this.watcherActor.context.type == "webextension") {
       return getAllRemoteBrowsingContexts().filter(
         bc =>
           bc.currentWindowGlobal.documentPrincipal.addonId ==
-          this.watcherActor.sessionContext.addonId
+          this.watcherActor.context.addonId
       );
     }
     throw new Error(
-      "Unsupported session context type=" +
-        this.watcherActor.sessionContext.type
+      "Unsupported context type=" + this.watcherActor.context.type
     );
   }
 

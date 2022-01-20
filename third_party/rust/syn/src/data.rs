@@ -313,11 +313,7 @@ pub mod parsing {
             Ok(Field {
                 attrs: input.call(Attribute::parse_outer)?,
                 vis: input.parse()?,
-                ident: Some(if input.peek(Token![_]) {
-                    input.call(Ident::parse_any)
-                } else {
-                    input.parse()
-                }?),
+                ident: Some(input.parse()?),
                 colon_token: Some(input.parse()?),
                 ty: input.parse()?,
             })

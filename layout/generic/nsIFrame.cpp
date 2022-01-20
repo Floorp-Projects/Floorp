@@ -26,7 +26,6 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/ResultExtensions.h"
@@ -171,11 +170,13 @@ const nsIFrame::FrameClassBits nsIFrame::sFrameClassBits[
     0] = {
 #define Leaf eFrameClassBitsLeaf
 #define NotLeaf eFrameClassBitsNone
+#define DynamicLeaf eFrameClassBitsDynamicLeaf
 #define FRAME_ID(class_, type_, leaf_, ...) leaf_,
 #define ABSTRACT_FRAME_ID(...)
 #include "mozilla/FrameIdList.h"
 #undef Leaf
 #undef NotLeaf
+#undef DynamicLeaf
 #undef FRAME_ID
 #undef ABSTRACT_FRAME_ID
 };
@@ -1452,10 +1453,12 @@ void nsIFrame::ReparentFrameViewTo(nsViewManager* aViewManager,
                                    nsView* aNewParentView,
                                    nsView* aOldParentView) {
   if (HasView()) {
+#ifdef MOZ_XUL
     if (IsMenuPopupFrame()) {
       // This view must be parented by the root view, don't reparent it.
       return;
     }
+#endif
     nsView* view = GetView();
     // Verify that the current parent view is what we think it is
     // nsView*  parentView;
@@ -2557,7 +2560,7 @@ auto nsIFrame::ComputeShouldPaintBackground() const -> ShouldPaintBackground {
   }
 
   if (!HonorPrintBackgroundSettings() ||
-      StyleVisibility()->mPrintColorAdjust == StylePrintColorAdjust::Exact) {
+      StyleVisibility()->mColorAdjust == StyleColorAdjust::Exact) {
     return {true, true};
   }
 
@@ -4525,12 +4528,9 @@ nsresult nsIFrame::GetDataForTableSelection(
   nsCOMPtr<nsIContent> parentContent = tableOrCellContent->GetParent();
   if (!parentContent) return NS_ERROR_FAILURE;
 
-  const int32_t offset =
-      parentContent->ComputeIndexOf_Deprecated(tableOrCellContent);
+  int32_t offset = parentContent->ComputeIndexOf(tableOrCellContent);
   // Not likely?
-  if (offset < 0) {
-    return NS_ERROR_FAILURE;
-  }
+  if (offset < 0) return NS_ERROR_FAILURE;
 
   // Everything is OK -- set the return values
   parentContent.forget(aParentContent);
@@ -5294,7 +5294,7 @@ static FrameContentRange GetRangeForFrame(const nsIFrame* aFrame) {
 
   if (type == LayoutFrameType::Br) {
     nsIContent* parent = content->GetParent();
-    const int32_t beginOffset = parent->ComputeIndexOf_Deprecated(content);
+    int32_t beginOffset = parent->ComputeIndexOf(content);
     return FrameContentRange(parent, beginOffset, beginOffset);
   }
 
@@ -5310,7 +5310,7 @@ static FrameContentRange GetRangeForFrame(const nsIFrame* aFrame) {
   // TODO(emilio): Revise this in presence of Shadow DOM / display: contents,
   // it's likely that we don't want to just walk the light tree, and we need to
   // change the representation of FrameContentRange.
-  const int32_t index = parent->ComputeIndexOf_Deprecated(content);
+  int32_t index = parent->ComputeIndexOf(content);
   MOZ_ASSERT(index >= 0);
   return FrameContentRange(parent, index, index + 1);
 }
@@ -5582,12 +5582,10 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame,
     }
   }
 
-  // Use frame edge for grid, flex, table, and non-draggable & non-editable
-  // image frames.
+  // Use frame edge for grid, flex, table, and non-editable image frames.
   const bool useFrameEdge =
       aFrame->IsFlexOrGridContainer() || aFrame->IsTableFrame() ||
       (static_cast<nsImageFrame*>(do_QueryFrame(aFrame)) &&
-       !nsContentUtils::ContentIsDraggable(aFrame->GetContent()) &&
        !aFrame->GetContent()->IsEditable());
   return FrameTarget(aFrame, useFrameEdge, false);
 }
@@ -5753,19 +5751,6 @@ StyleImageRendering nsIFrame::UsedImageRendering() const {
     style = Style();
   }
   return style->StyleVisibility()->mImageRendering;
-}
-
-// The touch-action CSS property applies to: all elements except: non-replaced
-// inline elements, table rows, row groups, table columns, and column groups.
-StyleTouchAction nsIFrame::UsedTouchAction() const {
-  if (IsFrameOfType(eLineParticipant)) {
-    return StyleTouchAction::AUTO;
-  }
-  auto& disp = *StyleDisplay();
-  if (disp.IsInternalTableStyleExceptCell()) {
-    return StyleTouchAction::AUTO;
-  }
-  return disp.mTouchAction;
 }
 
 Maybe<nsIFrame::Cursor> nsIFrame::GetCursor(const nsPoint&) {
@@ -7838,11 +7823,18 @@ nsIFrame* nsIFrame::GetContainingBlock(
 
 #ifdef DEBUG_FRAME_DUMP
 
-Maybe<uint32_t> nsIFrame::ContentIndexInContainer(const nsIFrame* aFrame) {
-  if (nsIContent* content = aFrame->GetContent()) {
-    return content->ComputeIndexInParentContent();
+int32_t nsIFrame::ContentIndexInContainer(const nsIFrame* aFrame) {
+  int32_t result = -1;
+
+  nsIContent* content = aFrame->GetContent();
+  if (content) {
+    nsIContent* parentContent = content->GetParent();
+    if (parentContent) {
+      result = parentContent->ComputeIndexOf(content);
+    }
   }
-  return Nothing();
+
+  return result;
 }
 
 nsAutoCString nsIFrame::ListTag() const {
@@ -8056,12 +8048,7 @@ nsresult nsIFrame::MakeFrameName(const nsAString& aType,
     aResult.Append(')');
   }
   aResult.Append('(');
-  Maybe<uint32_t> index = ContentIndexInContainer(this);
-  if (index.isSome()) {
-    aResult.AppendInt(*index);
-  } else {
-    aResult.AppendInt(-1);
-  }
+  aResult.AppendInt(ContentIndexInContainer(this));
   aResult.Append(')');
   return NS_OK;
 }
@@ -8148,7 +8135,7 @@ nsresult nsIFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint) {
   if (mContent) {
     nsIContent* newContent = mContent->GetParent();
     if (newContent) {
-      const int32_t newOffset = newContent->ComputeIndexOf_Deprecated(mContent);
+      int32_t newOffset = newContent->ComputeIndexOf(mContent);
 
       // Find the direction of the frame from the EmbeddingLevelProperty,
       // which is the resolved bidi level set in
@@ -8363,8 +8350,7 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                 nsIContent* parent = content->GetParent();
                 if (parent) {
                   aPos->mResultContent = parent;
-                  aPos->mContentOffset =
-                      parent->ComputeIndexOf_Deprecated(content);
+                  aPos->mContentOffset = parent->ComputeIndexOf(content);
                   aPos->mAttach = CARET_ASSOCIATE_BEFORE;
                   if ((point.x - offset.x + tempRect.x) > tempRect.width) {
                     aPos->mContentOffset++;  // go to end of this frame
@@ -8515,10 +8501,9 @@ static nsContentAndOffset FindLineBreakingFrame(nsIFrame* aFrame,
     // content. This probably shouldn't ever happen, but since it sometimes
     // does, we want to avoid crashing here.
     NS_ASSERTION(result.mContent, "Unexpected orphan content");
-    if (result.mContent) {
-      result.mOffset = result.mContent->ComputeIndexOf_Deprecated(content) +
+    if (result.mContent)
+      result.mOffset = result.mContent->ComputeIndexOf(content) +
                        (aDirection == eDirPrevious ? 1 : 0);
-    }
     return result;
   }
 
@@ -8807,9 +8792,7 @@ nsresult nsIFrame::PeekOffsetForLine(nsPeekOffsetStruct* aPos) {
     blockFrame = newBlock;
     nsAutoLineIterator iter = blockFrame->GetLineIterator();
     int32_t thisLine = iter->FindLineContaining(lineFrame);
-    if (NS_WARN_IF(thisLine < 0)) {
-      return NS_ERROR_FAILURE;
-    }
+    MOZ_ASSERT(thisLine >= 0, "Failed to find line!");
 
     int edgeCase = 0;  // no edge case. this should look at thisLine
 
@@ -11421,7 +11404,8 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
 
     result += inheritedTouchAction;
 
-    const StyleTouchAction touchAction = touchActionFrame->UsedTouchAction();
+    const StyleTouchAction touchAction =
+        nsLayoutUtils::GetTouchActionFromFrame(touchActionFrame);
     // The CSS allows the syntax auto | none | [pan-x || pan-y] | manipulation
     // so we can eliminate some combinations of things.
     if (touchAction == StyleTouchAction::AUTO) {
@@ -12150,9 +12134,11 @@ void DR_State::InitFrameTypeTable() {
   AddFrameTypeInfo(LayoutFrameType::TextInput, "textCtl", "textInput");
   AddFrameTypeInfo(LayoutFrameType::Text, "text", "text");
   AddFrameTypeInfo(LayoutFrameType::Viewport, "VP", "viewport");
+#  ifdef MOZ_XUL
   AddFrameTypeInfo(LayoutFrameType::Box, "Box", "Box");
   AddFrameTypeInfo(LayoutFrameType::Slider, "Slider", "Slider");
   AddFrameTypeInfo(LayoutFrameType::PopupSet, "PopupSet", "PopupSet");
+#  endif
   AddFrameTypeInfo(LayoutFrameType::None, "unknown", "unknown");
 }
 

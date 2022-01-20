@@ -19,11 +19,8 @@ function evalWithCacheLoadOffThread(code, ctx) {
   ctx.global.generation = 0;
   evaluate(code, ctx_save);
 
-  offThreadDecodeStencil(code, ctx);
-  ctx.global.eval(`
-stencil = finishOffThreadDecodeStencil();
-evalStencil(stencil);
-`);
+  offThreadDecodeScript(code, ctx);
+  ctx.global.eval(`runOffThreadDecodedScript()`);
 }
 
 var test;

@@ -16,6 +16,7 @@ DIRS += []
 
 h_and_cpp = [
     "Adapter",
+    "AdapterFeatures",
     "BindGroup",
     "BindGroupLayout",
     "Buffer",
@@ -40,7 +41,6 @@ h_and_cpp = [
     "RenderPipeline",
     "Sampler",
     "ShaderModule",
-    "SupportedFeatures",
     "SupportedLimits",
     "Texture",
     "TextureView",

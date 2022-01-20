@@ -1,5 +1,8 @@
 
-typedef (ReadableStreamDefaultReader or ReadableStreamBYOBReader) ReadableStreamReader;
+// This typedef should actually be the union of ReadableStreamDefaultReader
+// and ReadableStreamBYOBReader. However, we've not implmented the latter
+// yet, and so for now the typedef is subset.
+typedef ReadableStreamDefaultReader ReadableStreamReader;
 
 
 enum ReadableStreamType { "bytes" };

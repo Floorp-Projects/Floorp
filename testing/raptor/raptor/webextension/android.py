@@ -86,6 +86,7 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
             env=dict(
                 LOG_VERBOSE=1,
                 R_LOG_LEVEL=6,
+                MOZ_WEBRENDER=int(self.config["enable_webrender"]),
             ),
         )
 

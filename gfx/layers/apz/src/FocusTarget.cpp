@@ -42,9 +42,7 @@ static PresShell* GetRetargetEventPresShell(PresShell* aRootPresShell) {
   return retargetEventDoc->GetPresShell();
 }
 
-// _BOUNDARY because Dispatch() with `targets` must not handle the event.
-MOZ_CAN_RUN_SCRIPT_BOUNDARY static bool HasListenersForKeyEvents(
-    nsIContent* aContent) {
+static bool HasListenersForKeyEvents(nsIContent* aContent) {
   if (!aContent) {
     return false;
   }
@@ -62,9 +60,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY static bool HasListenersForKeyEvents(
   return false;
 }
 
-// _BOUNDARY because Dispatch() with `targets` must not handle the event.
-MOZ_CAN_RUN_SCRIPT_BOUNDARY static bool HasListenersForNonPassiveKeyEvents(
-    nsIContent* aContent) {
+static bool HasListenersForNonPassiveKeyEvents(nsIContent* aContent) {
   if (!aContent) {
     return false;
   }

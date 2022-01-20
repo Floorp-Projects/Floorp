@@ -651,9 +651,11 @@ JSObject* ReadFileList(JSContext* aCx, JSStructuredCloneReader* aReader,
 
     uint32_t zero, index;
     // |index| is the index of the first blobImpl.
-    if (!JS_ReadUint32Pair(aReader, &zero, &index) || zero != 0) {
+    if (!JS_ReadUint32Pair(aReader, &zero, &index)) {
       return nullptr;
     }
+
+    MOZ_ASSERT(zero == 0);
 
     // |aCount| is the number of BlobImpls to use from the |index|.
     for (uint32_t i = 0; i < aCount; ++i) {
@@ -770,9 +772,7 @@ JSObject* ReadFormData(JSContext* aCx, JSStructuredCloneReader* aReader,
         formData->Append(name, directory);
 
       } else {
-        if (NS_WARN_IF(tag != 0)) {
-          return nullptr;
-        }
+        MOZ_ASSERT(tag == 0);
 
         nsAutoString value;
         if (NS_WARN_IF(!value.SetLength(indexOrLengthOfString, fallible))) {

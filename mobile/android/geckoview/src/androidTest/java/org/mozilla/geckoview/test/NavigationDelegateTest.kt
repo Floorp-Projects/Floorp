@@ -5,7 +5,6 @@
 package org.mozilla.geckoview.test
 
 import android.graphics.Bitmap
-import android.os.Looper
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.util.Base64
@@ -32,7 +31,6 @@ import org.mozilla.geckoview.GeckoSession.TextInputDelegate
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.*
 import org.mozilla.geckoview.test.util.UiThreadUtils
-import kotlin.concurrent.thread
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -93,7 +91,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                     }
                 })
 
-        mainSession.load(testLoader)
+        sessionRule.session.load(testLoader)
         sessionRule.waitForPageStop()
 
         if (errorPageUrl != null) {
@@ -150,7 +148,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                     }
                 })
 
-        mainSession.loadUri(testUri)
+        sessionRule.session.loadUri(testUri)
         sessionRule.waitUntilCalled(NavigationDelegate::class, "onLoadError")
 
         if (errorPageUrl != null) {
@@ -498,7 +496,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                     }
                 })
 
-        mainSession.load(testLoader)
+        sessionRule.session.load(testLoader)
         sessionRule.waitForPageStop()
 
         sessionRule.runtime.settings.setAllowInsecureConnections(GeckoRuntimeSettings.ALLOW_ALL)
@@ -553,7 +551,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                     }
                 })
 
-        mainSession.load(testLoader)
+        sessionRule.session.load(testLoader)
         sessionRule.waitForPageStop()
 
         sessionRule.waitUntilCalled(object : ContentDelegate, NavigationDelegate {
@@ -592,7 +590,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                     }
                 })
 
-        mainSession.load(testLoader)
+        sessionRule.session.load(testLoader)
         sessionRule.waitForPageStop()
 
         sessionRule.delegateDuringNextWait(
@@ -634,8 +632,8 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         // Should match iframe URI from IFRAME_UNKNOWN_PROTOCOL
         val iframeUri = "foo://bar"
-        mainSession.loadTestPath(IFRAME_UNKNOWN_PROTOCOL)
-        mainSession.waitForPageStop()
+        sessionRule.session.loadTestPath(IFRAME_UNKNOWN_PROTOCOL)
+        sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
             @AssertCalled(count = 1)
@@ -661,7 +659,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     @Test fun trackingProtection() {
         val category = ContentBlocking.AntiTracking.TEST
         sessionRule.runtime.settings.contentBlocking.setAntiTracking(category)
-        mainSession.loadTestPath(TRACKERS_PATH)
+        sessionRule.session.loadTestPath(TRACKERS_PATH)
 
         sessionRule.waitUntilCalled(
                 object : ContentBlocking.Delegate {
@@ -680,10 +678,10 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.settings.useTrackingProtection = false
+        sessionRule.session.settings.useTrackingProtection = false
 
-        mainSession.reload()
-        mainSession.waitForPageStop()
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
                 object : ContentBlocking.Delegate {
@@ -718,7 +716,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             "https://jigsaw.w3.org/HTTP/300/301.html"
         }
 
-        mainSession.loadUri(uri)
+        sessionRule.session.loadUri(uri)
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
@@ -754,7 +752,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             IFRAME_REDIRECT_LOCAL
         }
 
-        mainSession.loadTestPath(path)
+        sessionRule.session.loadTestPath(path)
         sessionRule.waitForPageStop()
 
         // We shouldn't be firing onLoadRequest for iframes, including redirects.
@@ -827,7 +825,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.loadUri(uri)
+        sessionRule.session.loadUri(uri)
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
@@ -850,7 +848,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         val redirectUri = "intent://test"
         val uri = "https://example.org/tests/junit/simple_redirect.sjs?$redirectUri"
 
-        mainSession.loadUri(uri)
+        sessionRule.session.loadUri(uri)
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
@@ -876,10 +874,10 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.runtime.settings.contentBlocking.setSafeBrowsing(category)
 
-        mainSession.load(Loader()
+        sessionRule.session.load(Loader()
             .uri(phishingUri + "?bypass=true")
             .flags(GeckoSession.LOAD_FLAGS_BYPASS_CLASSIFIER))
-        mainSession.waitForPageStop()
+        sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
                 object : NavigationDelegate {
@@ -910,8 +908,8 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.runtime.settings.contentBlocking.setSafeBrowsing(ContentBlocking.SafeBrowsing.NONE)
 
-        mainSession.loadUri(phishingUri + "?block=false")
-        mainSession.waitForPageStop()
+        sessionRule.session.loadUri(phishingUri + "?block=false")
+        sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
                 object : NavigationDelegate {
@@ -941,8 +939,8 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.runtime.settings.contentBlocking.setSafeBrowsing(ContentBlocking.SafeBrowsing.NONE)
 
-        mainSession.loadUri(malwareUri + "?block=false")
-        mainSession.waitForPageStop()
+        sessionRule.session.loadUri(malwareUri + "?block=false")
+        sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
                 object : NavigationDelegate {
@@ -968,8 +966,8 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.runtime.settings.contentBlocking.setSafeBrowsing(ContentBlocking.SafeBrowsing.NONE)
 
-        mainSession.loadUri(unwantedUri + "?block=false")
-        mainSession.waitForPageStop()
+        sessionRule.session.loadUri(unwantedUri + "?block=false")
+        sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
                 object : NavigationDelegate {
@@ -999,8 +997,8 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         sessionRule.runtime.settings.contentBlocking.setSafeBrowsing(ContentBlocking.SafeBrowsing.NONE)
 
-        mainSession.loadUri(harmfulUri + "?block=false")
-        mainSession.waitForPageStop()
+        sessionRule.session.loadUri(harmfulUri + "?block=false")
+        sessionRule.session.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(
                 object : NavigationDelegate {
@@ -1015,13 +1013,13 @@ class NavigationDelegateTest : BaseSessionTest() {
     // Checks that the User Agent matches the user agent built in
     // nsHttpHandler::BuildUserAgent
     @Test fun defaultUserAgentMatchesActualUserAgent() {
-        var userAgent = sessionRule.waitForResult(mainSession.userAgent)
+        var userAgent = sessionRule.waitForResult(sessionRule.session.userAgent)
         assertThat("Mobile user agent should match the default user agent",
                 userAgent, equalTo(GeckoSession.getDefaultUserAgent()))
     }
 
     @Test fun desktopMode() {
-        mainSession.loadUri("https://example.com")
+        sessionRule.session.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
         val mobileSubStr = "Mobile"
@@ -1031,53 +1029,53 @@ class NavigationDelegateTest : BaseSessionTest() {
                    getUserAgent(),
                    containsString(mobileSubStr))
 
-        var userAgent = sessionRule.waitForResult(mainSession.userAgent)
+        var userAgent = sessionRule.waitForResult(sessionRule.session.userAgent)
         assertThat("User agent should be reported as mobile",
                     userAgent, containsString(mobileSubStr))
 
-        mainSession.settings.userAgentMode = GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
+        sessionRule.session.settings.userAgentMode = GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
 
-        mainSession.reload()
-        mainSession.waitForPageStop()
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
 
         assertThat("User agent should be set to desktop",
                    getUserAgent(),
                    containsString(desktopSubStr))
 
-        userAgent = sessionRule.waitForResult(mainSession.userAgent)
+        userAgent = sessionRule.waitForResult(sessionRule.session.userAgent)
         assertThat("User agent should be reported as desktop",
                     userAgent, containsString(desktopSubStr))
 
-        mainSession.settings.userAgentMode = GeckoSessionSettings.USER_AGENT_MODE_MOBILE
+        sessionRule.session.settings.userAgentMode = GeckoSessionSettings.USER_AGENT_MODE_MOBILE
 
-        mainSession.reload()
-        mainSession.waitForPageStop()
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
 
         assertThat("User agent should be set to mobile",
                    getUserAgent(),
                    containsString(mobileSubStr))
 
-        userAgent = sessionRule.waitForResult(mainSession.userAgent)
+        userAgent = sessionRule.waitForResult(sessionRule.session.userAgent)
         assertThat("User agent should be reported as mobile",
                     userAgent, containsString(mobileSubStr))
 
         val vrSubStr = "Mobile VR"
-        mainSession.settings.userAgentMode = GeckoSessionSettings.USER_AGENT_MODE_VR
+        sessionRule.session.settings.userAgentMode = GeckoSessionSettings.USER_AGENT_MODE_VR
 
-        mainSession.reload()
-        mainSession.waitForPageStop()
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
 
         assertThat("User agent should be set to VR",
                 getUserAgent(),
                 containsString(vrSubStr))
 
-        userAgent = sessionRule.waitForResult(mainSession.userAgent)
+        userAgent = sessionRule.waitForResult(sessionRule.session.userAgent)
         assertThat("User agent should be reported as VR",
                 userAgent, containsString(vrSubStr))
 
     }
 
-    private fun getUserAgent(session: GeckoSession = mainSession): String {
+    private fun getUserAgent(session: GeckoSession = sessionRule.session): String {
         return session.evaluateJS("window.navigator.userAgent") as String
     }
 
@@ -1100,7 +1098,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         // TODO: bug 1710943
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
-        mainSession.loadUri("https://example.com")
+        sessionRule.session.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
         val mobileSubStr = "Mobile"
@@ -1110,52 +1108,52 @@ class NavigationDelegateTest : BaseSessionTest() {
         assertThat("User agent should be reported as mobile",
                 getUserAgent(), containsString(mobileSubStr))
 
-        mainSession.settings.userAgentOverride = overrideUserAgent
+        sessionRule.session.settings.userAgentOverride = overrideUserAgent
 
-        mainSession.reload()
-        mainSession.waitForPageStop()
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
 
         assertThat("User agent should be reported as override",
                 getUserAgent(), equalTo(overrideUserAgent))
 
-        mainSession.settings.userAgentMode = GeckoSessionSettings.USER_AGENT_MODE_VR
+        sessionRule.session.settings.userAgentMode = GeckoSessionSettings.USER_AGENT_MODE_VR
 
-        mainSession.reload()
-        mainSession.waitForPageStop()
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
 
         assertThat("User agent should still be reported as override even when USER_AGENT_MODE is set",
                 getUserAgent(), equalTo(overrideUserAgent))
 
-        mainSession.settings.userAgentOverride = null
+        sessionRule.session.settings.userAgentOverride = null
 
-        mainSession.reload()
-        mainSession.waitForPageStop()
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
 
         assertThat("User agent should now be reported as VR",
                 getUserAgent(), containsString(vrSubStr))
 
         sessionRule.delegateDuringNextWait(object : NavigationDelegate {
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
-                mainSession.settings.userAgentOverride = overrideUserAgent
+                sessionRule.session.settings.userAgentOverride = overrideUserAgent
                 return null
             }
         })
 
-        mainSession.reload()
-        mainSession.waitForPageStop()
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
 
         assertThat("User agent should be reported as override after being set in onLoadRequest",
                 getUserAgent(), equalTo(overrideUserAgent))
 
         sessionRule.delegateDuringNextWait(object : NavigationDelegate {
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
-                mainSession.settings.userAgentOverride = null
+                sessionRule.session.settings.userAgentOverride = null
                 return null
             }
         })
 
-        mainSession.reload()
-        mainSession.waitForPageStop()
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
 
         assertThat("User agent should again be reported as VR after disabling override in onLoadRequest",
                 getUserAgent(), containsString(vrSubStr))
@@ -1166,34 +1164,34 @@ class NavigationDelegateTest : BaseSessionTest() {
         // TODO: bug 1710943
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
-        mainSession.loadTestPath(VIEWPORT_PATH)
+        sessionRule.session.loadTestPath(VIEWPORT_PATH)
         sessionRule.waitForPageStop()
 
         val desktopInnerWidth = 980.0
         val physicalWidth = 600.0
-        val pixelRatio = mainSession.evaluateJS("window.devicePixelRatio") as Double
+        val pixelRatio = sessionRule.session.evaluateJS("window.devicePixelRatio") as Double
         val mobileInnerWidth = physicalWidth / pixelRatio
         val innerWidthJs = "window.innerWidth"
 
-        var innerWidth = mainSession.evaluateJS(innerWidthJs) as Double
+        var innerWidth = sessionRule.session.evaluateJS(innerWidthJs) as Double
         assertThat("innerWidth should be equal to $mobileInnerWidth",
                 innerWidth, closeTo(mobileInnerWidth, 0.1))
 
-        mainSession.settings.viewportMode = GeckoSessionSettings.VIEWPORT_MODE_DESKTOP
+        sessionRule.session.settings.viewportMode = GeckoSessionSettings.VIEWPORT_MODE_DESKTOP
 
-        mainSession.reload()
-        mainSession.waitForPageStop()
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
 
-        innerWidth = mainSession.evaluateJS(innerWidthJs) as Double
+        innerWidth = sessionRule.session.evaluateJS(innerWidthJs) as Double
         assertThat("innerWidth should be equal to $desktopInnerWidth", innerWidth,
                 closeTo(desktopInnerWidth, 0.1))
 
-        mainSession.settings.viewportMode = GeckoSessionSettings.VIEWPORT_MODE_MOBILE
+        sessionRule.session.settings.viewportMode = GeckoSessionSettings.VIEWPORT_MODE_MOBILE
 
-        mainSession.reload()
-        mainSession.waitForPageStop()
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
 
-        innerWidth = mainSession.evaluateJS(innerWidthJs) as Double
+        innerWidth = sessionRule.session.evaluateJS(innerWidthJs) as Double
         assertThat("innerWidth should be equal to $mobileInnerWidth again",
                 innerWidth, closeTo(mobileInnerWidth, 0.1))
     }
@@ -1202,7 +1200,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         // TODO: bug 1710943
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
-        mainSession.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
+        sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
@@ -1256,7 +1254,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
         val dataUrl = "data:,Hello%2C%20World!"
-        mainSession.loadUri(dataUrl)
+        sessionRule.session.loadUri(dataUrl)
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate, ProgressDelegate {
@@ -1278,11 +1276,11 @@ class NavigationDelegateTest : BaseSessionTest() {
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
         // Test that when navigation delegate is disabled, we can still perform loads.
-        mainSession.loadTestPath(HELLO_HTML_PATH)
-        mainSession.waitForPageStop()
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.waitForPageStop()
 
-        mainSession.reload()
-        mainSession.waitForPageStop()
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
     }
 
     @NullDelegate(NavigationDelegate::class)
@@ -1292,20 +1290,20 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         // Test that if we unset the navigation delegate during a load, the load still proceeds.
         var onLocationCount = 0
-        mainSession.navigationDelegate = object : NavigationDelegate {
+        sessionRule.session.navigationDelegate = object : NavigationDelegate {
             override fun onLocationChange(session: GeckoSession, url: String?) {
                 onLocationCount++
             }
         }
-        mainSession.loadTestPath(HELLO_HTML_PATH)
-        mainSession.waitForPageStop()
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.waitForPageStop()
 
         assertThat("Should get callback for first load",
                    onLocationCount, equalTo(1))
 
-        mainSession.reload()
-        mainSession.navigationDelegate = null
-        mainSession.waitForPageStop()
+        sessionRule.session.reload()
+        sessionRule.session.navigationDelegate = null
+        sessionRule.session.waitForPageStop()
 
         assertThat("Should not get callback for second load",
                    onLocationCount, equalTo(1))
@@ -1317,7 +1315,7 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         val dataString = "<html><head><title>TheTitle</title></head><body>TheBody</body></html>"
         val mimeType = "text/html"
-        mainSession.load(Loader().data(dataString, mimeType))
+        sessionRule.session.load(Loader().data(dataString, mimeType))
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate, ProgressDelegate, ContentDelegate {
@@ -1340,7 +1338,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun loadString_noMimeType() {
-        mainSession.load(Loader().data("Hello, World!", null))
+        sessionRule.session.load(Loader().data("Hello, World!", null))
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate, ProgressDelegate {
@@ -1363,7 +1361,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         val bytes = getTestBytes(HELLO_HTML_PATH)
         assertThat("test html should have data", bytes.size, greaterThan(0))
 
-        mainSession.load(Loader().data(bytes, "text/html"))
+        sessionRule.session.load(Loader().data(bytes, "text/html"))
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate, ProgressDelegate, ContentDelegate {
@@ -1399,7 +1397,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         val bytes = getTestBytes(assetPath)
         assertThat("test data should have bytes", bytes.size, greaterThan(0))
 
-        mainSession.load(Loader().data(bytes, mimeType))
+        sessionRule.session.load(Loader().data(bytes, mimeType))
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate, ProgressDelegate {
@@ -1428,10 +1426,10 @@ class NavigationDelegateTest : BaseSessionTest() {
         // TODO: bug 1710943
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
-        mainSession.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
+        sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
         sessionRule.waitForPageStop()
 
-        mainSession.reload()
+        sessionRule.session.reload()
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
@@ -1475,10 +1473,10 @@ class NavigationDelegateTest : BaseSessionTest() {
         // TODO: bug 1710943
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
-        mainSession.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
+        sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
         sessionRule.waitForPageStop()
 
-        mainSession.loadUri("$TEST_ENDPOINT$HELLO2_HTML_PATH")
+        sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO2_HTML_PATH")
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
@@ -1488,7 +1486,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.goBack()
+        sessionRule.session.goBack()
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
@@ -1522,7 +1520,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.goForward()
+        sessionRule.session.goForward()
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : NavigationDelegate {
@@ -1574,8 +1572,8 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.loadTestPath(HELLO_HTML_PATH)
-        mainSession.loadTestPath(HELLO2_HTML_PATH)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.loadTestPath(HELLO2_HTML_PATH)
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : ProgressDelegate {
@@ -1598,12 +1596,12 @@ class NavigationDelegateTest : BaseSessionTest() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
-        mainSession.loadTestPath(NEW_SESSION_HTML_PATH)
-        mainSession.waitForPageStop()
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.session.waitForPageStop()
 
-        mainSession.evaluateJS("window.open('newSession_child.html', '_blank')")
+        sessionRule.session.evaluateJS("window.open('newSession_child.html', '_blank')")
 
-        mainSession.waitUntilCalled(object : NavigationDelegate {
+        sessionRule.session.waitUntilCalled(object : NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -1634,22 +1632,22 @@ class NavigationDelegateTest : BaseSessionTest() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
-        mainSession.loadTestPath(NEW_SESSION_HTML_PATH)
-        mainSession.waitForPageStop()
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.session.waitForPageStop()
 
-        mainSession.evaluateJS("window.open('file:///data/local/tmp', '_blank')")
+        sessionRule.session.evaluateJS("window.open('file:///data/local/tmp', '_blank')")
     }
 
     @Test fun onNewSession_calledForTargetBlankLink() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
-        mainSession.loadTestPath(NEW_SESSION_HTML_PATH)
-        mainSession.waitForPageStop()
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.session.waitForPageStop()
 
-        mainSession.evaluateJS("document.querySelector('#targetBlankLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
 
-        mainSession.waitUntilCalled(object : NavigationDelegate {
+        sessionRule.session.waitUntilCalled(object : NavigationDelegate {
             // We get two onLoadRequest calls for the link click,
             // one when loading the URL and one when opening a new window.
             @AssertCalled(count = 1, order = [1])
@@ -1675,7 +1673,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     private fun delegateNewSession(settings: GeckoSessionSettings = mainSession.settings): GeckoSession {
         val newSession = sessionRule.createClosedSession(settings)
 
-        mainSession.delegateDuringNextWait(object : NavigationDelegate {
+        sessionRule.session.delegateDuringNextWait(object : NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession> {
                 return GeckoResult.fromValue(newSession)
@@ -1692,11 +1690,11 @@ class NavigationDelegateTest : BaseSessionTest() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
-        mainSession.loadTestPath(NEW_SESSION_HTML_PATH)
-        mainSession.waitForPageStop()
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.session.waitForPageStop()
 
         val newSession = delegateNewSession()
-        mainSession.evaluateJS("document.querySelector('#targetBlankLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
         // Initial about:blank
         newSession.waitForPageStop()
         // NEW_SESSION_CHILD_HTML_PATH
@@ -1722,11 +1720,11 @@ class NavigationDelegateTest : BaseSessionTest() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
-        mainSession.loadTestPath(NEW_SESSION_HTML_PATH)
-        mainSession.waitForPageStop()
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.session.waitForPageStop()
 
         val newSession = delegateNewSession()
-        mainSession.evaluateJS("document.querySelector('#targetBlankLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
         newSession.waitForPageStop()
 
         assertThat("window.opener should be set",
@@ -1741,11 +1739,11 @@ class NavigationDelegateTest : BaseSessionTest() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
-        mainSession.loadTestPath(NEW_SESSION_HTML_PATH)
-        mainSession.waitForPageStop()
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.session.waitForPageStop()
 
         val newSession = delegateNewSession()
-        mainSession.evaluateJS("document.querySelector('#noOpenerLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#noOpenerLink').click()")
         newSession.waitForPageStop()
 
         assertThat("window.opener should not be set",
@@ -1760,10 +1758,10 @@ class NavigationDelegateTest : BaseSessionTest() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
-        mainSession.loadTestPath(NEW_SESSION_HTML_PATH)
-        mainSession.waitForPageStop()
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.session.waitForPageStop()
 
-        mainSession.delegateDuringNextWait(object : NavigationDelegate {
+        sessionRule.session.delegateDuringNextWait(object : NavigationDelegate {
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
                                        GeckoResult<AllowOrDeny>? {
@@ -1776,13 +1774,13 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.evaluateJS("document.querySelector('#targetBlankLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
 
-        mainSession.reload()
-        mainSession.waitForPageStop()
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
 
         // Assert that onNewSession was not called for the link click.
-        mainSession.forCallbacksDuringWait(object : NavigationDelegate {
+        sessionRule.session.forCallbacksDuringWait(object : NavigationDelegate {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -1805,23 +1803,23 @@ class NavigationDelegateTest : BaseSessionTest() {
         // TODO: bug 1710943
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
-        mainSession.loadTestPath(FORM_BLANK_HTML_PATH)
+        sessionRule.session.loadTestPath(FORM_BLANK_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        mainSession.evaluateJS("""
+        sessionRule.session.evaluateJS("""
             document.querySelector('input[type=text]').focus()
         """)
-        mainSession.waitUntilCalled(TextInputDelegate::class,
+        sessionRule.session.waitUntilCalled(TextInputDelegate::class,
                                             "restartInput")
 
         val time = SystemClock.uptimeMillis()
         val keyEvent = KeyEvent(time, time, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER, 0)
-        mainSession.textInput.onKeyDown(KeyEvent.KEYCODE_ENTER, keyEvent)
-        mainSession.textInput.onKeyUp(KeyEvent.KEYCODE_ENTER,
+        sessionRule.session.textInput.onKeyDown(KeyEvent.KEYCODE_ENTER, keyEvent)
+        sessionRule.session.textInput.onKeyUp(KeyEvent.KEYCODE_ENTER,
                                               KeyEvent.changeAction(keyEvent,
                                                                     KeyEvent.ACTION_UP))
 
-        mainSession.waitUntilCalled(object : NavigationDelegate {
+        sessionRule.session.waitUntilCalled(object : NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest):
                                        GeckoResult<AllowOrDeny>? {
@@ -1850,14 +1848,14 @@ class NavigationDelegateTest : BaseSessionTest() {
         val uri = "https://example.com"
         val referrer = "https://foo.org/"
 
-        mainSession.load(Loader()
+        sessionRule.session.load(Loader()
             .uri(uri)
             .referrer(referrer)
             .flags(GeckoSession.LOAD_FLAGS_NONE))
-        mainSession.waitForPageStop()
+        sessionRule.session.waitForPageStop()
 
         assertThat("Referrer should match",
-                   mainSession.evaluateJS("document.referrer") as String,
+                   sessionRule.session.evaluateJS("document.referrer") as String,
                    equalTo(referrer))
     }
 
@@ -1868,13 +1866,13 @@ class NavigationDelegateTest : BaseSessionTest() {
         val uri = "https://example.com/bar"
         val referrer = "https://example.org/"
 
-        mainSession.loadUri(referrer)
-        mainSession.waitForPageStop()
+        sessionRule.session.loadUri(referrer)
+        sessionRule.session.waitForPageStop()
 
         val newSession = sessionRule.createOpenSession()
         newSession.load(Loader()
             .uri(uri)
-            .referrer(mainSession)
+            .referrer(sessionRule.session)
             .flags(GeckoSession.LOAD_FLAGS_NONE))
         newSession.waitForPageStop()
 
@@ -1890,13 +1888,13 @@ class NavigationDelegateTest : BaseSessionTest() {
         val uri = "file:///system/etc/fonts.xml"
         val referrer = "https://example.org"
 
-        mainSession.loadUri(referrer)
-        mainSession.waitForPageStop()
+        sessionRule.session.loadUri(referrer)
+        sessionRule.session.waitForPageStop()
 
         val newSession = sessionRule.createOpenSession()
         newSession.load(Loader()
             .uri(uri)
-            .referrer(mainSession)
+            .referrer(sessionRule.session)
             .flags(GeckoSession.LOAD_FLAGS_NONE))
         newSession.waitUntilCalled(object : NavigationDelegate {
             @AssertCalled
@@ -1910,10 +1908,10 @@ class NavigationDelegateTest : BaseSessionTest() {
                                   additional: Map<String?, String?>,
                                   filter: Int = GeckoSession.HEADER_FILTER_CORS_SAFELISTED) {
         // First collect default headers with no override
-        mainSession.loadUri("$TEST_ENDPOINT/anything")
-        mainSession.waitForPageStop()
+        sessionRule.session.loadUri("$TEST_ENDPOINT/anything")
+        sessionRule.session.waitForPageStop()
 
-        val defaultContent = mainSession.evaluateJS("document.body.children[0].innerHTML") as String
+        val defaultContent = sessionRule.session.evaluateJS("document.body.children[0].innerHTML") as String
         val defaultBody = JSONObject(defaultContent)
         val defaultHeaders = defaultBody.getJSONObject("headers").asMap<String>()
 
@@ -1927,13 +1925,13 @@ class NavigationDelegateTest : BaseSessionTest() {
         }
 
         // Now load the page with the header override
-        mainSession.load(Loader()
+        sessionRule.session.load(Loader()
             .uri("$TEST_ENDPOINT/anything")
             .additionalHeaders(headers)
             .headerFilter(filter))
-        mainSession.waitForPageStop()
+        sessionRule.session.waitForPageStop()
 
-        val content = mainSession.evaluateJS("document.body.children[0].innerHTML") as String
+        val content = sessionRule.session.evaluateJS("document.body.children[0].innerHTML") as String
         val body = JSONObject(content)
         val actualHeaders = body.getJSONObject("headers").asMap<String>()
 
@@ -1971,7 +1969,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 Loader().uri("http://test-uri-equals.com")
                         .flags(GeckoSession.LOAD_FLAGS_BYPASS_CLASSIFIER)
                         .headerFilter(GeckoSession.HEADER_FILTER_UNRESTRICTED_UNSAFE)
-                        .referrer(mainSession),
+                        .referrer(sessionRule.session),
                 Loader().uri("http://test-uri-equals.com")
                         .flags(GeckoSession.LOAD_FLAGS_BYPASS_CLASSIFIER)
                         .headerFilter(GeckoSession.HEADER_FILTER_UNRESTRICTED_UNSAFE)
@@ -1979,13 +1977,13 @@ class NavigationDelegateTest : BaseSessionTest() {
                 false)
 
         testLoaderEquals(
-                Loader().referrer(mainSession)
+                Loader().referrer(sessionRule.session)
                         .data("testtest", "text/plain"),
-                Loader().referrer(mainSession)
+                Loader().referrer(sessionRule.session)
                         .data("testtest", "text/plain"),
                 true)
         testLoaderEquals(
-                Loader().referrer(mainSession)
+                Loader().referrer(sessionRule.session)
                         .data("testtest", "text/plain"),
                 Loader().referrer("test-referrer")
                         .data("testtest", "text/plain"),
@@ -2157,19 +2155,19 @@ class NavigationDelegateTest : BaseSessionTest() {
         // Disable popup blocker.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
-        mainSession.loadTestPath(NEW_SESSION_HTML_PATH)
-        mainSession.waitForPageStop()
+        sessionRule.session.loadTestPath(NEW_SESSION_HTML_PATH)
+        sessionRule.session.waitForPageStop()
 
-        mainSession.delegateDuringNextWait(object : NavigationDelegate {
+        sessionRule.session.delegateDuringNextWait(object : NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onNewSession(session: GeckoSession, uri: String): GeckoResult<GeckoSession> {
                 return GeckoResult.fromValue(sessionRule.createOpenSession())
             }
         })
 
-        mainSession.evaluateJS("document.querySelector('#targetBlankLink').click()")
+        sessionRule.session.evaluateJS("document.querySelector('#targetBlankLink').click()")
 
-        mainSession.waitUntilCalled(NavigationDelegate::class,
+        sessionRule.session.waitUntilCalled(NavigationDelegate::class,
                                             "onNewSession")
         UiThreadUtils.loopUntilIdle(sessionRule.env.defaultTimeoutMillis)
     }
@@ -2257,7 +2255,7 @@ class NavigationDelegateTest : BaseSessionTest() {
 
         assertThat("URL should match", currentUrl!!, equalTo(url))
 
-        mainSession.goBack()
+        sessionRule.session.goBack()
         sessionRule.waitForPageStop()
 
         assertThat("URL should match", currentUrl!!, endsWith(HELLO_HTML_PATH))
@@ -2265,12 +2263,12 @@ class NavigationDelegateTest : BaseSessionTest() {
                 mainSession.active,
                 equalTo(true))
 
-        mainSession.goBack()
+        sessionRule.session.goBack()
         sessionRule.waitForPageStop()
 
         assertThat("URL should match", currentUrl!!, equalTo(url))
 
-        mainSession.goBack()
+        sessionRule.session.goBack()
         sessionRule.waitForPageStop()
 
         assertThat("URL should match", currentUrl!!, endsWith(HELLO2_HTML_PATH))
@@ -2285,12 +2283,12 @@ class NavigationDelegateTest : BaseSessionTest() {
         // TODO: bug 1710943
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
-        mainSession.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
+        sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
         sessionRule.waitForPageStop()
 
-        mainSession.evaluateJS("location.hash = 'test1';")
+        sessionRule.session.evaluateJS("location.hash = 'test1';")
 
-        mainSession.waitUntilCalled(object : NavigationDelegate {
+        sessionRule.session.waitUntilCalled(object : NavigationDelegate {
             @AssertCalled(count = 0)
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -2306,9 +2304,9 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.evaluateJS("location.hash = 'test2';")
+        sessionRule.session.evaluateJS("location.hash = 'test2';")
 
-        mainSession.waitUntilCalled(object : NavigationDelegate {
+        sessionRule.session.waitUntilCalled(object : NavigationDelegate {
             @AssertCalled(count = 0)
             override fun onLoadRequest(session: GeckoSession,
                                        request: LoadRequest):
@@ -2330,7 +2328,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         // TODO: bug 1710943
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
-        mainSession.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
+        sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
         sessionRule.waitUntilCalled(object : NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
@@ -2344,7 +2342,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("Cannot go forward", canGoForward, equalTo(false))
             }
         })
-        mainSession.loadUri("$TEST_ENDPOINT$HELLO2_HTML_PATH")
+        sessionRule.session.loadUri("$TEST_ENDPOINT$HELLO2_HTML_PATH")
         sessionRule.waitUntilCalled(object : HistoryDelegate, NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onCanGoBack(session: GeckoSession, canGoBack: Boolean) {
@@ -2361,7 +2359,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("History should have two entries", state.size, equalTo(2))
             }
         })
-        mainSession.purgeHistory()
+        sessionRule.session.purgeHistory()
         sessionRule.waitUntilCalled(object : HistoryDelegate, NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onHistoryStateChange(session: GeckoSession, state: HistoryDelegate.HistoryList) {
@@ -2409,7 +2407,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         // TODO: bug 1710943
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
-        mainSession.delegateDuringNextWait(object : NavigationDelegate {
+        sessionRule.session.delegateDuringNextWait(object : NavigationDelegate {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 assertThat("URLs should match", request.uri, endsWith(forEachCall(HELLO_HTML_PATH, HELLO2_HTML_PATH)))
@@ -2428,7 +2426,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         val expectedUri = createDataUri(dataBytes, "*/*")
         val loader = Loader().data(dataBytes, "*/*")
 
-        mainSession.delegateUntilTestEnd(object : NavigationDelegate {
+        sessionRule.session.delegateUntilTestEnd(object : NavigationDelegate {
             @AssertCalled(count = 1, order = [1])
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 assertThat("URLs should match", request.uri, equalTo(expectedUri))
@@ -2447,7 +2445,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.load(loader)
+        sessionRule.session.load(loader)
         sessionRule.waitUntilCalled(NavigationDelegate::class, "onLoadError")
     }
 
@@ -2459,63 +2457,24 @@ class NavigationDelegateTest : BaseSessionTest() {
         val dataBytes = ByteArray(3 * 1024 * 1024)
         val dataUri = createDataUri(dataBytes, "*/*")
 
-        mainSession.loadTestPath(DATA_URI_PATH)
-        mainSession.waitForPageStop()
+        sessionRule.session.loadTestPath(DATA_URI_PATH)
+        sessionRule.session.waitForPageStop()
 
-        mainSession.delegateUntilTestEnd(object : NavigationDelegate {
+        sessionRule.session.delegateUntilTestEnd(object : NavigationDelegate {
             @AssertCalled(false)
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 return GeckoResult.deny()
             }
         })
 
-        mainSession.evaluateJS("document.querySelector('#largeLink').href = \"$dataUri\"")
-        mainSession.evaluateJS("document.querySelector('#largeLink').click()")
-        mainSession.waitForPageStop()
-    }
-
-    @Test
-    @NullDelegate(NavigationDelegate::class)
-    fun loadOnBackgroundThreadNullNavigationDelegate() {
-        thread {
-            // Make sure we're running in a thread without a Looper.
-            assertThat("We should not have a looper.",
-                    Looper.myLooper(), equalTo(null))
-            mainSession.loadTestPath(HELLO_HTML_PATH)
-        }
-
-        mainSession.waitUntilCalled(object : ProgressDelegate {
-            override fun onPageStop(session: GeckoSession, success: Boolean) {
-                assertThat("Page loaded successfully", success, equalTo(true))
-            }
-        })
-    }
-
-    @Test
-    fun loadOnBackgroundThread() {
-        mainSession.delegateUntilTestEnd(object : NavigationDelegate {
-            override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
-                return GeckoResult.allow()
-            }
-        })
-
-        thread {
-            // Make sure we're running in a thread without a Looper.
-            assertThat("We should not have a looper.",
-                    Looper.myLooper(), equalTo(null))
-            mainSession.loadTestPath(HELLO_HTML_PATH)
-        }
-
-        mainSession.waitUntilCalled(object : ProgressDelegate {
-            override fun onPageStop(session: GeckoSession, success: Boolean) {
-                assertThat("Page loaded successfully", success, equalTo(true))
-            }
-        })
+        sessionRule.session.evaluateJS("document.querySelector('#largeLink').href = \"$dataUri\"")
+        sessionRule.session.evaluateJS("document.querySelector('#largeLink').click()")
+        sessionRule.session.waitForPageStop()
     }
 
     @Test
     fun loadShortDataUriToplevelIndirect() {
-        mainSession.delegateUntilTestEnd(object : NavigationDelegate {
+        sessionRule.session.delegateUntilTestEnd(object : NavigationDelegate {
             @AssertCalled(count = 2)
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 return GeckoResult.allow()
@@ -2531,12 +2490,12 @@ class NavigationDelegateTest : BaseSessionTest() {
         val dataBytes = this.getTestBytes("/assets/www/images/test.gif")
         val uri = createDataUri(dataBytes, "image/*")
 
-        mainSession.loadTestPath(DATA_URI_PATH)
-        mainSession.waitForPageStop()
+        sessionRule.session.loadTestPath(DATA_URI_PATH)
+        sessionRule.session.waitForPageStop()
 
-        mainSession.evaluateJS("document.querySelector('#smallLink').href = \"$uri\"")
-        mainSession.evaluateJS("document.querySelector('#smallLink').click()")
-        mainSession.waitForPageStop()
+        sessionRule.session.evaluateJS("document.querySelector('#smallLink').href = \"$uri\"")
+        sessionRule.session.evaluateJS("document.querySelector('#smallLink').click()")
+        sessionRule.session.waitForPageStop()
     }
 
     fun createLargeHighEntropyImageDataUri() : String {
@@ -2566,7 +2525,7 @@ class NavigationDelegateTest : BaseSessionTest() {
     fun loadLongDataUriNonToplevel() {
         val dataUri = createLargeHighEntropyImageDataUri()
 
-        mainSession.delegateUntilTestEnd(object : NavigationDelegate {
+        sessionRule.session.delegateUntilTestEnd(object : NavigationDelegate {
             @AssertCalled(count = 1)
             override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
                 return GeckoResult.allow()
@@ -2579,14 +2538,14 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.loadTestPath(DATA_URI_PATH)
-        mainSession.waitForPageStop()
+        sessionRule.session.loadTestPath(DATA_URI_PATH)
+        sessionRule.session.waitForPageStop()
 
-        mainSession.evaluateJS("document.querySelector('#image').onload = () => { imageLoaded = true; }")
-        mainSession.evaluateJS("document.querySelector('#image').src = \"$dataUri\"")
+        sessionRule.session.evaluateJS("document.querySelector('#image').onload = () => { imageLoaded = true; }")
+        sessionRule.session.evaluateJS("document.querySelector('#image').src = \"$dataUri\"")
         UiThreadUtils.waitForCondition({
-          mainSession.evaluateJS("document.querySelector('#image').complete") as Boolean
+          sessionRule.session.evaluateJS("document.querySelector('#image').complete") as Boolean
         }, sessionRule.env.defaultTimeoutMillis)
-        mainSession.evaluateJS("if (!imageLoaded) throw imageLoaded")
+        sessionRule.session.evaluateJS("if (!imageLoaded) throw imageLoaded")
     }
 }

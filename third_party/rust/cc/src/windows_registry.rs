@@ -89,8 +89,6 @@ pub enum VsVers {
     Vs15,
     /// Visual Studio 16 (2019)
     Vs16,
-    /// Visual Studio 17 (2022)
-    Vs17,
 
     /// Hidden variant that should not be matched on. Callers that want to
     /// handle an enumeration of `VsVers` instances should always have a default
@@ -116,7 +114,6 @@ pub fn find_vs_version() -> Result<VsVers, String> {
 
     match env::var("VisualStudioVersion") {
         Ok(version) => match &version[..] {
-            "17.0" => Ok(VsVers::Vs17),
             "16.0" => Ok(VsVers::Vs16),
             "15.0" => Ok(VsVers::Vs15),
             "14.0" => Ok(VsVers::Vs14),
@@ -226,7 +223,7 @@ mod impl_ {
     }
 
     /// Attempt to find the tool using environment variables set by vcvars.
-    pub fn find_msvc_environment(tool: &str, target: &str) -> Option<Tool> {
+    pub fn find_msvc_environment(target: &str, tool: &str) -> Option<Tool> {
         // Early return if the environment doesn't contain a VC install.
         if env::var_os("VCINSTALLDIR").is_none() {
             return None;

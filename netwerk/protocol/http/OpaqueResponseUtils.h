@@ -21,16 +21,11 @@ namespace net {
 
 class nsHttpResponseHead;
 
-enum class OpaqueResponseBlockedReason : uint32_t {
-  ALLOWED_SAFE_LISTED,
-  BLOCKED_BLOCKLISTED_NEVER_SNIFFED,
-  BLOCKED_206_AND_BLOCKLISTED,
-  BLOCKED_NOSNIFF_AND_EITHER_BLOCKLISTED_OR_TEXTPLAIN,
-  BLOCKED_SHOULD_SNIFF
-};
+bool IsOpaqueSafeListedMIMEType(const nsACString& aContentType);
 
-OpaqueResponseBlockedReason GetOpaqueResponseBlockedReason(
-    const nsHttpResponseHead& aResponseHead);
+bool IsOpaqueBlockListedMIMEType(const nsACString& aContentType);
+
+bool IsOpaqueBlockListedNeverSniffedMIMEType(const nsACString& aContentType);
 
 // Returns a tuple of (rangeStart, rangeEnd, rangeTotal) from the input range
 // header string if succeed.

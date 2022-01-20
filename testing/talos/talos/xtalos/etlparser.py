@@ -14,6 +14,7 @@ import subprocess
 import sys
 
 from talos.xtalos import xtalos
+import six
 
 EVENTNAME_INDEX = 0
 PROCESS_INDEX = 2
@@ -76,8 +77,6 @@ def filterOutHeader(data):
         except StopIteration:
             done = True
             break
-        except UnicodeDecodeError:
-            continue
         except csv.Error:
             continue
 
@@ -121,11 +120,9 @@ def getIndex(eventName, *colNames):
 
 
 def readFile(filename):
+    print("etlparser: in readfile: %s" % filename)
     data = csv.reader(
-        open(filename, "r", encoding="cp1252"),
-        delimiter=",",
-        quotechar='"',
-        skipinitialspace=True,
+        open(filename, "rb"), delimiter=",", quotechar='"', skipinitialspace=True
     )
     data = filterOutHeader(data)
     return data
@@ -362,6 +359,7 @@ def etlparser(
     io = {}
     stage = 0
 
+    print("reading etl filename: %s" % etl_filename)
     csvname = etl2csv(xperf_path, etl_filename, debug=debug)
     for row in readFile(csvname):
         event = row[EVENTNAME_INDEX]
@@ -383,7 +381,7 @@ def etlparser(
         uploadFile(csvname)
 
     output = "thread, stage, counter, value\n"
-    for cntr in sorted(io.keys()):
+    for cntr in sorted(six.iterkeys(io)):
         output += "%s, %s\n" % (", ".join(cntr), str(io[cntr]))
     if outputFile:
         fname = "%s_thread_stats%s" % os.path.splitext(outputFile)
@@ -404,7 +402,7 @@ def etlparser(
     # interested in
     filekeys = [
         x
-        for x in files.keys()
+        for x in six.iterkeys(files)
         if (all_stages or x[2] == stages[0])
         and (all_threads or x[1].endswith("(main)"))
         and (all_stages and x[2] != stages[0] or not checkAllowlist(x[0], allowlist))
@@ -414,7 +412,7 @@ def etlparser(
         # we will use this data to upload fileIO info to blobber only for debug mode
         outputData = [
             x
-            for x in files.keys()
+            for x in six.iterkeys(files)
             if (all_stages or x[2] in [stages[0], stages[1]])
             and (
                 all_stages

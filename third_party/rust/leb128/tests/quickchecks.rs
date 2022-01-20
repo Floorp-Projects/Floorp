@@ -1,5 +1,5 @@
-use leb128;
-use quickcheck;
+extern crate leb128;
+extern crate quickcheck;
 
 use std::io;
 

@@ -51,7 +51,11 @@ class FetchDriverObserver {
       : mReporter(new ConsoleReportCollector()), mGotResponseAvailable(false) {}
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchDriverObserver);
-  void OnResponseAvailable(SafeRefPtr<InternalResponse> aResponse);
+  void OnResponseAvailable(SafeRefPtr<InternalResponse> aResponse) {
+    MOZ_ASSERT(!mGotResponseAvailable);
+    mGotResponseAvailable = true;
+    OnResponseAvailableInternal(std::move(aResponse));
+  }
 
   enum EndReason {
     eAborted,

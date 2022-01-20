@@ -279,8 +279,7 @@ class MouseInput : public InputData {
       MOUSE_DRAG_END,
       MOUSE_WIDGET_ENTER,
       MOUSE_WIDGET_EXIT,
-      MOUSE_HITTEST,
-      MOUSE_EXPLORE_BY_TOUCH
+      MOUSE_HITTEST
   ));
 
   MOZ_DEFINE_ENUM_AT_CLASS_SCOPE(

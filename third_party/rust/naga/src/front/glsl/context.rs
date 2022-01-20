@@ -418,69 +418,6 @@ impl Context {
         Ok((expr, meta))
     }
 
-    fn lower_store(
-        &mut self,
-        pointer: Handle<Expression>,
-        value: Handle<Expression>,
-        meta: Span,
-        body: &mut Block,
-    ) {
-        if let Expression::Swizzle {
-            size,
-            mut vector,
-            pattern,
-        } = self.expressions[pointer]
-        {
-            // Stores to swizzled values are not directly supported,
-            // lower them as series of per-component stores.
-            let size = match size {
-                VectorSize::Bi => 2,
-                VectorSize::Tri => 3,
-                VectorSize::Quad => 4,
-            };
-
-            if let Expression::Load { pointer } = self.expressions[vector] {
-                vector = pointer;
-            }
-
-            #[allow(clippy::needless_range_loop)]
-            for index in 0..size {
-                let dst = self.add_expression(
-                    Expression::AccessIndex {
-                        base: vector,
-                        index: pattern[index].index(),
-                    },
-                    meta,
-                    body,
-                );
-                let src = self.add_expression(
-                    Expression::AccessIndex {
-                        base: value,
-                        index: index as u32,
-                    },
-                    meta,
-                    body,
-                );
-
-                self.emit_flush(body);
-                self.emit_start();
-
-                body.push(
-                    Statement::Store {
-                        pointer: dst,
-                        value: src,
-                    },
-                    meta,
-                );
-            }
-        } else {
-            self.emit_flush(body);
-            self.emit_start();
-
-            body.push(Statement::Store { pointer, value }, meta);
-        }
-    }
-
     /// Internal implementation of [`lower`](Self::lower)
     fn lower_inner(
         &mut self,
@@ -757,18 +694,68 @@ impl Context {
                     self.implicit_conversion(parser, &mut value, value_meta, kind, width)?;
                 }
 
-                self.lower_store(pointer, value, meta, body);
+                if let Expression::Swizzle {
+                    size,
+                    mut vector,
+                    pattern,
+                } = self.expressions[pointer]
+                {
+                    // Stores to swizzled values are not directly supported,
+                    // lower them as series of per-component stores.
+                    let size = match size {
+                        VectorSize::Bi => 2,
+                        VectorSize::Tri => 3,
+                        VectorSize::Quad => 4,
+                    };
+
+                    if let Expression::Load { pointer } = self.expressions[vector] {
+                        vector = pointer;
+                    }
+
+                    #[allow(clippy::needless_range_loop)]
+                    for index in 0..size {
+                        let dst = self.add_expression(
+                            Expression::AccessIndex {
+                                base: vector,
+                                index: pattern[index].index(),
+                            },
+                            meta,
+                            body,
+                        );
+                        let src = self.add_expression(
+                            Expression::AccessIndex {
+                                base: value,
+                                index: index as u32,
+                            },
+                            meta,
+                            body,
+                        );
+
+                        self.emit_flush(body);
+                        self.emit_start();
+
+                        body.push(
+                            Statement::Store {
+                                pointer: dst,
+                                value: src,
+                            },
+                            meta,
+                        );
+                    }
+                } else {
+                    self.emit_flush(body);
+                    self.emit_start();
+
+                    body.push(Statement::Store { pointer, value }, meta);
+                }
 
                 value
             }
             HirExprKind::PrePostfix { op, postfix, expr } if ExprPos::Lhs != pos => {
-                let (pointer, _) =
-                    self.lower_expect_inner(stmt, parser, expr, ExprPos::Lhs, body)?;
-                let left = if let Expression::Swizzle { .. } = self.expressions[pointer] {
-                    pointer
-                } else {
-                    self.add_expression(Expression::Load { pointer }, meta, body)
-                };
+                let pointer = self
+                    .lower_expect_inner(stmt, parser, expr, ExprPos::Lhs, body)?
+                    .0;
+                let left = self.add_expression(Expression::Load { pointer }, meta, body);
 
                 let make_constant_inner = |kind, width| {
                     let value = match kind {
@@ -857,7 +844,10 @@ impl Context {
 
                 let value = self.add_expression(Expression::Binary { op, left, right }, meta, body);
 
-                self.lower_store(pointer, value, meta, body);
+                self.emit_flush(body);
+                self.emit_start();
+
+                body.push(Statement::Store { pointer, value }, meta);
 
                 if postfix {
                     left

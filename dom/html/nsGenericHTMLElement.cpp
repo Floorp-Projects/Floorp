@@ -15,7 +15,6 @@
 #include "mozilla/IMEContentObserver.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MappedDeclarations.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
@@ -527,7 +526,7 @@ HTMLFormElement* nsGenericHTMLElement::FindAncestorForm(
         // anonymous.  Check for this the hard way.
         for (nsIContent* child = this; child != content;
              child = child->GetParent()) {
-          NS_ASSERTION(child->ComputeIndexInParentContent().isSome(),
+          NS_ASSERTION(child->GetParent()->ComputeIndexOf(child) != -1,
                        "Walked too far?");
         }
       }
@@ -2189,7 +2188,7 @@ bool nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
 
 Result<bool, nsresult> nsGenericHTMLElement::PerformAccesskey(
     bool aKeyCausesActivation, bool aIsTrustedEvent) {
-  RefPtr<nsPresContext> presContext = GetPresContext(eForComposedDoc);
+  nsPresContext* presContext = GetPresContext(eForComposedDoc);
   if (!presContext) {
     return Err(NS_ERROR_UNEXPECTED);
   }
@@ -2264,8 +2263,8 @@ void nsGenericHTMLElement::HandleKeyboardActivation(
     return;
   }
 
-  RefPtr<nsPresContext> presContext = aVisitor.mPresContext;
-  DispatchSimulatedClick(this, aVisitor.mEvent->IsTrusted(), presContext);
+  DispatchSimulatedClick(this, aVisitor.mEvent->IsTrusted(),
+                         aVisitor.mPresContext);
   aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
 }
 
@@ -2276,9 +2275,7 @@ nsresult nsGenericHTMLElement::DispatchSimulatedClick(
                          WidgetMouseEvent::eReal);
   event.mInputSource = MouseEvent_Binding::MOZ_SOURCE_KEYBOARD;
   event.mFlags.mIsPositionless = true;
-  // TODO: Bug 1506441
-  return EventDispatcher::Dispatch(MOZ_KnownLive(ToSupports(aElement)),
-                                   aPresContext, &event);
+  return EventDispatcher::Dispatch(ToSupports(aElement), aPresContext, &event);
 }
 
 already_AddRefed<EditorBase> nsGenericHTMLElement::GetAssociatedEditor() {
@@ -2980,20 +2977,6 @@ already_AddRefed<ElementInternals> nsGenericHTMLElement::AttachInternals(
       "'%s'",
       NS_ConvertUTF16toUTF8(NodeInfo()->NameAtom()->GetUTF16String()).get()));
   return nullptr;
-}
-
-ElementInternals* nsGenericHTMLElement::GetInternals() const {
-  if (CustomElementData* data = GetCustomElementData()) {
-    return data->GetElementInternals();
-  }
-  return nullptr;
-}
-
-bool nsGenericHTMLElement::IsFormAssociatedCustomElements() const {
-  if (CustomElementData* data = GetCustomElementData()) {
-    return data->IsFormAssociated();
-  }
-  return false;
 }
 
 void nsGenericHTMLElement::GetAutocapitalize(nsAString& aValue) const {

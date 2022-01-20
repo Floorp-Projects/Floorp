@@ -642,7 +642,7 @@ void GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost) {
   }
 
   CompositorManagerChild::OnGPUProcessLost(aHost->GetProcessToken());
-  DestroyProcess(/* aUnexpectedShutdown */ true);
+  DestroyProcess();
 
   if (mUnstableProcessAttempts >
       uint32_t(StaticPrefs::layers_gpu_process_max_restarts())) {
@@ -746,14 +746,6 @@ void GPUProcessManager::HandleProcessLost() {
   for (const auto& listener : mListeners) {
     listener->OnCompositorUnexpectedShutdown();
   }
-
-  // Notify any observers that the compositor has been reinitialized,
-  // eg the ZoomConstraintsClients for parent process documents.
-  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
-  if (observerService) {
-    observerService->NotifyObservers(nullptr, "compositor-reinitialized",
-                                     nullptr);
-  }
 }
 
 void GPUProcessManager::RebuildRemoteSessions() {
@@ -820,20 +812,12 @@ void GPUProcessManager::KillProcess() {
   mProcess->KillProcess();
 }
 
-void GPUProcessManager::CrashProcess() {
+void GPUProcessManager::DestroyProcess() {
   if (!mProcess) {
     return;
   }
 
-  mProcess->CrashProcess();
-}
-
-void GPUProcessManager::DestroyProcess(bool aUnexpectedShutdown) {
-  if (!mProcess) {
-    return;
-  }
-
-  mProcess->Shutdown(aUnexpectedShutdown);
+  mProcess->Shutdown();
   mProcessToken = 0;
   mProcess = nullptr;
   mGPUChild = nullptr;
@@ -1281,14 +1265,10 @@ RefPtr<MemoryReportingProcess> GPUProcessManager::GetProcessMemoryReporter() {
   return new GPUMemoryReporter();
 }
 
-RefPtr<PGPUChild::TestTriggerMetricsPromise>
-GPUProcessManager::TestTriggerMetrics() {
+void GPUProcessManager::TestTriggerMetrics() {
   if (!NS_WARN_IF(!mGPUChild)) {
-    return mGPUChild->SendTestTriggerMetrics();
+    mGPUChild->SendTestTriggerMetrics();
   }
-
-  return PGPUChild::TestTriggerMetricsPromise::CreateAndReject(
-      ipc::ResponseRejectReason::SendError, __func__);
 }
 
 }  // namespace gfx

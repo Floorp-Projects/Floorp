@@ -257,8 +257,7 @@ class HTMLFormElement final : public nsGenericHTMLElement,
    *
    * @param aFormData the form data object
    */
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult ConstructEntryList(FormData* aFormData);
+  nsresult ConstructEntryList(FormData* aFormData);
 
   /**
    * Whether the submission of this form has been ever prevented because of
@@ -360,7 +359,7 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   MOZ_CAN_RUN_SCRIPT void RequestSubmit(nsGenericHTMLElement* aSubmitter,
                                         ErrorResult& aRv);
 
-  MOZ_CAN_RUN_SCRIPT void Reset();
+  void Reset();
 
   bool CheckValidity() { return CheckFormValidity(nullptr); }
 

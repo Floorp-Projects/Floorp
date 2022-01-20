@@ -8,6 +8,5 @@ dbg.onNewScript = function (s) {
     assertEq(s.getChildScripts().length, 1);
 };
 
-global.eval('offThreadCompileToStencil("function inner() { \\\"use asm\\\"; function xxx() {} return xxx; }");');
-global.eval('var stencil = finishOffThreadCompileToStencil();');
-global.eval('evalStencil(stencil);');
+global.eval('offThreadCompileScript("function inner() { \\\"use asm\\\"; function xxx() {} return xxx; }");');
+global.eval('runOffThreadScript();');

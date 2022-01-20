@@ -832,8 +832,8 @@ bool nsXULPopupManager::ShowPopupAsNativeMenu(nsIContent* aPopup, int32_t aXPos,
 
   popupFrame->InitializePopupAsNativeContextMenu(triggerContent, aXPos, aYPos);
 
-  RefPtr<nsPresContext> presContext = popupFrame->PresContext();
-  nsEventStatus status = FirePopupShowingEvent(pendingPopup, presContext);
+  nsEventStatus status =
+      FirePopupShowingEvent(pendingPopup, popupFrame->PresContext());
 
   // if the event was cancelled, don't open the popup, reset its state back
   // to closed and clear its trigger content.
@@ -845,6 +845,7 @@ bool nsXULPopupManager::ShowPopupAsNativeMenu(nsIContent* aPopup, int32_t aXPos,
     return true;
   }
 
+  nsPresContext* presContext = popupFrame->PresContext();
   auto scale = presContext->CSSToDevPixelScale() /
                presContext->DeviceContext()->GetDesktopToDeviceScale();
   DesktopPoint position = CSSPoint(aXPos, aYPos) * scale;
@@ -1225,14 +1226,11 @@ void nsXULPopupManager::HideMenu(nsIContent* aMenu) {
 
 // This is used to hide the popup after a transition finishes.
 class TransitionEnder final : public nsIDOMEventListener {
- private:
-  // Effectively const but is cycle collected
-  MOZ_KNOWN_LIVE RefPtr<nsIContent> mContent;
-
  protected:
   virtual ~TransitionEnder() = default;
 
  public:
+  nsCOMPtr<nsIContent> mContent;
   bool mDeselectMenu;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -1241,18 +1239,16 @@ class TransitionEnder final : public nsIDOMEventListener {
   TransitionEnder(nsIContent* aContent, bool aDeselectMenu)
       : mContent(aContent), mDeselectMenu(aDeselectMenu) {}
 
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD HandleEvent(Event* aEvent) override {
+  NS_IMETHOD HandleEvent(Event* aEvent) override {
     mContent->RemoveSystemEventListener(u"transitionend"_ns, this, false);
 
     nsMenuPopupFrame* popupFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-    if (!popupFrame) {
-      return NS_OK;
-    }
 
     // Now hide the popup. There could be other properties transitioning, but
     // we'll assume they all end at the same time and just hide the popup upon
     // the first one ending.
-    if (RefPtr<nsXULPopupManager> pm = nsXULPopupManager::GetInstance()) {
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    if (pm && popupFrame) {
       pm->HidePopupCallback(mContent, popupFrame, nullptr, nullptr,
                             popupFrame->PopupType(), mDeselectMenu);
     }
@@ -1269,6 +1265,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TransitionEnder)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION(TransitionEnder, mContent);
+
 void nsXULPopupManager::HidePopupCallback(
     nsIContent* aPopup, nsMenuPopupFrame* aPopupFrame, nsIContent* aNextPopup,
     nsIContent* aLastPopup, nsPopupType aPopupType, bool aDeselectMenu) {
@@ -1304,13 +1301,13 @@ void nsXULPopupManager::HidePopupCallback(
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent event(true, eXULPopupHidden, nullptr,
                          WidgetMouseEvent::eReal);
-  RefPtr<nsPresContext> presContext = aPopupFrame->PresContext();
-  EventDispatcher::Dispatch(aPopup, presContext, &event, nullptr, &status);
+  EventDispatcher::Dispatch(aPopup, aPopupFrame->PresContext(), &event, nullptr,
+                            &status);
   NS_ENSURE_TRUE_VOID(weakFrame.IsAlive());
 
   // Force any popups that might be anchored on elements within this popup to
   // update.
-  UpdatePopupPositions(presContext->RefreshDriver());
+  UpdatePopupPositions(aPopupFrame->PresContext()->RefreshDriver());
 
   // if there are more popups to close, look for the next one
   if (aNextPopup && aPopup != aLastPopup) {
@@ -1552,8 +1549,8 @@ nsEventStatus nsXULPopupManager::FirePopupShowingEvent(
   event.mInputSource = aPendingPopup.MouseInputSource();
   event.mRefPoint = aPendingPopup.mMousePoint;
   event.mModifiers = aPendingPopup.mModifiers;
-  RefPtr<nsIContent> popup = aPendingPopup.mPopup;
-  EventDispatcher::Dispatch(popup, aPresContext, &event, nullptr, &status);
+  EventDispatcher::Dispatch(aPendingPopup.mPopup, aPresContext, &event, nullptr,
+                            &status);
 
   return status;
 }
@@ -1561,15 +1558,18 @@ nsEventStatus nsXULPopupManager::FirePopupShowingEvent(
 void nsXULPopupManager::BeginShowingPopup(const PendingPopup& aPendingPopup,
                                           bool aIsContextMenu,
                                           bool aSelectFirstItem) {
-  RefPtr<nsIContent> popup = aPendingPopup.mPopup;
+  nsCOMPtr<nsIContent> popup = aPendingPopup.mPopup;
 
-  nsMenuPopupFrame* popupFrame =
-      do_QueryFrame(popup->GetPrimaryFrame());
-  if (!popupFrame) {
-    return;
-  }
+  nsMenuPopupFrame* popupFrame = do_QueryFrame(popup->GetPrimaryFrame());
+  if (!popupFrame) return;
 
-  RefPtr<nsPresContext> presContext = popupFrame->PresContext();
+  popupFrame->GenerateFrames();
+
+  // get the frame again
+  popupFrame = do_QueryFrame(popup->GetPrimaryFrame());
+  if (!popupFrame) return;
+
+  nsPresContext* presContext = popupFrame->PresContext();
   RefPtr<PresShell> presShell = presContext->PresShell();
   presShell->FrameNeedsReflow(popupFrame, IntrinsicDirty::TreeChange,
                               NS_FRAME_HAS_DIRTY_CHILDREN);
@@ -1793,12 +1793,12 @@ already_AddRefed<nsINode> nsXULPopupManager::GetLastTriggerNode(
     Document* aDocument, bool aIsTooltip) {
   if (!aDocument) return nullptr;
 
-  RefPtr<nsINode> node;
+  nsCOMPtr<nsINode> node;
 
   // If a pending popup is set, it means that a popupshowing event is being
   // fired. In this case, just use the cached node, as the popup is not yet in
   // the list of open popups.
-  RefPtr<nsIContent> openingPopup =
+  nsCOMPtr<nsIContent> openingPopup =
       mPendingPopup ? mPendingPopup->mPopup : nullptr;
   if (openingPopup && openingPopup->GetUncomposedDoc() == aDocument &&
       aIsTooltip == openingPopup->IsXULElement(nsGkAtoms::tooltip)) {

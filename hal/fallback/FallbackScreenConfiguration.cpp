@@ -16,10 +16,8 @@ void GetCurrentScreenConfiguration(
   fallback::GetCurrentScreenConfiguration(aScreenConfiguration);
 }
 
-RefPtr<mozilla::MozPromise<bool, bool, false>> LockScreenOrientation(
-    const hal::ScreenOrientation& aOrientation) {
-  return mozilla::MozPromise<bool, bool, false>::CreateAndReject(false,
-                                                                 __func__);
+bool LockScreenOrientation(const hal::ScreenOrientation& aOrientation) {
+  return false;
 }
 
 void UnlockScreenOrientation() {}

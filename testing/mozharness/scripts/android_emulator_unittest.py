@@ -96,6 +96,15 @@ class AndroidEmulatorTest(
                 },
             ],
             [
+                ["--enable-webrender"],
+                {
+                    "action": "store_true",
+                    "dest": "enable_webrender",
+                    "default": False,
+                    "help": "Run with WebRender enabled.",
+                },
+            ],
+            [
                 ["--enable-fission"],
                 {
                     "action": "store_true",
@@ -165,9 +174,11 @@ class AndroidEmulatorTest(
         self.device_serial = "emulator-5554"
         self.log_raw_level = c.get("log_raw_level")
         self.log_tbpl_level = c.get("log_tbpl_level")
-        # AndroidMixin uses this when launching the emulator. We only want
-        # GLES3 if we're running WebRender (default)
-        self.use_gles3 = True
+        self.enable_webrender = c.get("enable_webrender")
+        if self.enable_webrender:
+            # AndroidMixin uses this when launching the emulator. We only want
+            # GLES3 if we're running WebRender
+            self.use_gles3 = True
         self.enable_fission = c.get("enable_fission")
         self.extra_prefs = c.get("extra_prefs")
 
@@ -303,6 +314,13 @@ class AndroidEmulatorTest(
                 if self.total_chunks is not None:
                     cmd.extend(["--total-chunks", self.total_chunks])
 
+        # Only enable WebRender if the flag is enabled. All downstream harnesses
+        # are expected to force-disable WebRender if not explicitly enabled,
+        # so that we don't have it accidentally getting enabled because the
+        # underlying hardware running the test becomes part of the WR-qualified
+        # set.
+        if self.enable_webrender:
+            cmd.extend(["--enable-webrender"])
         if self.enable_fission:
             cmd.extend(["--enable-fission"])
 

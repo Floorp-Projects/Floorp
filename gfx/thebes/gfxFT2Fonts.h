@@ -27,7 +27,7 @@ class gfxFT2Font : public gfxFT2FontBase {
   FT2FontEntry* GetFontEntry();
 
   already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
-      const TextRunDrawParams& aRunParams) override;
+      DrawTarget* aTarget) override;
 
   bool ShouldHintMetrics() const override;
 

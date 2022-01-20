@@ -149,16 +149,6 @@ function getInlineOptionsBrowser(aboutAddonsBrowser) {
 }
 
 function getListStyleImage(button) {
-  // Ensure popups are initialized so that the elements are rendered and
-  // getComputedStyle works.
-  for (
-    let popup = button.closest("panel,menupopup");
-    popup;
-    popup = popup.parentElement?.closest("panel,menupopup")
-  ) {
-    popup.ensureInitialized();
-  }
-
   let style = button.ownerGlobal.getComputedStyle(button);
 
   let match = /^url\("(.*)"\)$/.exec(style.listStyleImage);

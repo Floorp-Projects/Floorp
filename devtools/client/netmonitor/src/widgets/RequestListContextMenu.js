@@ -248,7 +248,6 @@ class RequestListContextMenu {
       connector,
       cloneRequest,
       openDetailsPanelTab,
-      openDetailsHTTPCustomRequestTab,
       sendCustomRequest,
       openStatistics,
       openRequestInTab,
@@ -306,15 +305,11 @@ class RequestListContextMenu {
       visible: copySubMenu.slice(10, 14).some(subMenu => subMenu.visible),
     });
 
-    const newEditAndResendPref = Services.prefs.getBoolPref(
-      "devtools.netmonitor.features.newEditAndResend"
-    );
-
     menu.push({
       id: "request-list-context-resend-only",
       label: L10N.getStr("netmonitor.context.resend.label"),
       accesskey: L10N.getStr("netmonitor.context.resend.accesskey"),
-      visible: !!(clickedRequest && !newEditAndResendPref && !isCustom),
+      visible: !!(clickedRequest && !isCustom),
       click: () => {
         cloneRequest(id);
         sendCustomRequest();
@@ -328,12 +323,8 @@ class RequestListContextMenu {
       visible: !!(clickedRequest && !isCustom),
       click: () => {
         this.fetchRequestHeaders(id).then(() => {
-          if (!newEditAndResendPref) {
-            cloneRequest(id);
-            openDetailsPanelTab();
-          } else {
-            openDetailsHTTPCustomRequestTab();
-          }
+          cloneRequest(id);
+          openDetailsPanelTab();
         });
       },
     });

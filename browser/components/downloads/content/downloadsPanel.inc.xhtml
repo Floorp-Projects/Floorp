@@ -2,8 +2,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<commandset commandupdater="true" events="richlistbox-select"
-            oncommandupdate="goUpdateCommand('cmd_delete');">
+
+<commandset>
   <command id="downloadsCmd_doDefault"
            oncommand="goDoCommand('downloadsCmd_doDefault')"/>
   <command id="downloadsCmd_pauseResume"
@@ -113,8 +113,7 @@
   </menupopup>
 
   <panelmultiview id="downloadsPanel-multiView"
-                  mainViewId="downloadsPanel-mainView"
-                  disablekeynav="true">
+                  mainViewId="downloadsPanel-mainView">
 
     <panelview id="downloadsPanel-mainView">
       <vbox class="panel-view-body-unscrollable">

@@ -1215,10 +1215,7 @@ nsIOService::GetOffline(bool* offline) {
 }
 
 NS_IMETHODIMP
-nsIOService::SetOffline(bool offline) { return SetOfflineInternal(offline); }
-
-nsresult nsIOService::SetOfflineInternal(bool offline,
-                                         bool notifySocketProcess) {
+nsIOService::SetOffline(bool offline) {
   LOG(("nsIOService::SetOffline offline=%d\n", offline));
   // When someone wants to go online (!offline) after we got XPCOM shutdown
   // throw ERROR_NOT_AVAILABLE to prevent return to online state.
@@ -1247,7 +1244,7 @@ nsresult nsIOService::SetOfflineInternal(bool offline,
                                              NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC,
                                              offline ? u"true" : u"false");
     }
-    if (SocketProcessReady() && notifySocketProcess) {
+    if (SocketProcessReady()) {
       Unused << mSocketProcess->GetActor()->SendSetOffline(offline);
     }
   }
@@ -1581,13 +1578,6 @@ void nsIOService::SetHttpHandlerAlreadyShutingDown() {
 NS_IMETHODIMP
 nsIOService::Observe(nsISupports* subject, const char* topic,
                      const char16_t* data) {
-  if (UseSocketProcess() && SocketProcessReady() &&
-      mObserverTopicForSocketProcess.Contains(nsDependentCString(topic))) {
-    nsCString topicStr(topic);
-    nsString dataStr(data);
-    Unused << mSocketProcess->GetActor()->SendNotifyObserver(topicStr, dataStr);
-  }
-
   if (!strcmp(topic, kProfileChangeNetTeardownTopic)) {
     if (!mHttpHandlerAlreadyShutingDown) {
       mNetTearingDownStarted = PR_IntervalNow();
@@ -1595,12 +1585,12 @@ nsIOService::Observe(nsISupports* subject, const char* topic,
     mHttpHandlerAlreadyShutingDown = false;
     if (!mOffline) {
       mOfflineForProfileChange = true;
-      SetOfflineInternal(true, false);
+      SetOffline(true);
     }
   } else if (!strcmp(topic, kProfileChangeNetRestoreTopic)) {
     if (mOfflineForProfileChange) {
       mOfflineForProfileChange = false;
-      SetOfflineInternal(false, false);
+      SetOffline(false);
     }
   } else if (!strcmp(topic, kProfileDoChange)) {
     if (data && u"startup"_ns.Equals(data)) {
@@ -1630,7 +1620,7 @@ nsIOService::Observe(nsISupports* subject, const char* topic,
     }
     mHttpHandlerAlreadyShutingDown = false;
 
-    SetOfflineInternal(true, false);
+    SetOffline(true);
 
     if (mCaptivePortalService) {
       static_cast<CaptivePortalService*>(mCaptivePortalService.get())->Stop();
@@ -1656,6 +1646,17 @@ nsIOService::Observe(nsISupports* subject, const char* topic,
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1152048#c19
     nsCOMPtr<nsIRunnable> wakeupNotifier = new nsWakeupNotifier(this);
     NS_DispatchToMainThread(wakeupNotifier);
+  }
+
+  if (UseSocketProcess() &&
+      mObserverTopicForSocketProcess.Contains(nsDependentCString(topic))) {
+    nsCString topicStr(topic);
+    nsString dataStr(data);
+    auto sendObserver = [topicStr, dataStr]() {
+      Unused << gIOService->mSocketProcess->GetActor()->SendNotifyObserver(
+          topicStr, dataStr);
+    };
+    CallOrWaitForSocketProcess(sendObserver);
   }
 
   return NS_OK;

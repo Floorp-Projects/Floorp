@@ -4504,12 +4504,11 @@ cglobal blend_8bpc, 3, 7, 7, dst, ds, tmp, w, h, mask
 %define base r6-blend_avx2_table
     lea                  r6, [blend_avx2_table]
     tzcnt                wd, wm
-    movifnidn         maskq, maskmp
     movifnidn            hd, hm
+    movifnidn         maskq, maskmp
     movsxd               wq, dword [r6+wq*4]
     vpbroadcastd         m4, [base+pb_64]
     vpbroadcastd         m5, [base+pw_512]
-    sub                tmpq, maskq
     add                  wq, r6
     lea                  r6, [dsq*3]
     jmp                  wq
@@ -4522,8 +4521,9 @@ cglobal blend_8bpc, 3, 7, 7, dst, ds, tmp, w, h, mask
     psubb               xm3, xm4, xm6
     punpcklbw           xm2, xm3, xm6
     punpckhbw           xm3, xm6
-    mova                xm6, [maskq+tmpq]
+    mova                xm6, [tmpq]
     add               maskq, 4*4
+    add                tmpq, 4*4
     punpcklbw           xm0, xm6
     punpckhbw           xm1, xm6
     pmaddubsw           xm0, xm2
@@ -4546,8 +4546,9 @@ ALIGN function_align
     vpbroadcastq         m2, [dstq+dsq*2]
     vpbroadcastq         m3, [dstq+r6   ]
     mova                 m0, [maskq]
-    mova                 m6, [maskq+tmpq]
+    mova                 m6, [tmpq]
     add               maskq, 8*4
+    add                tmpq, 8*4
     vpblendd             m1, m2, 0x30
     vpblendd             m1, m3, 0xc0
     psubb                m3, m4, m0
@@ -4577,8 +4578,9 @@ ALIGN function_align
     psubb                m3, m4, m0
     punpcklbw            m2, m3, m0
     punpckhbw            m3, m0
-    mova                 m6, [maskq+tmpq]
+    mova                 m6, [tmpq]
     add               maskq, 16*2
+    add                tmpq, 16*2
     punpcklbw            m0, m1, m6
     punpckhbw            m1, m6
     pmaddubsw            m0, m2
@@ -4596,8 +4598,9 @@ ALIGN function_align
 .w32:
     mova                 m0, [maskq]
     mova                 m1, [dstq]
-    mova                 m6, [maskq+tmpq]
+    mova                 m6, [tmpq]
     add               maskq, 32
+    add                tmpq, 32
     psubb                m3, m4, m0
     punpcklbw            m2, m3, m0
     punpckhbw            m3, m0
@@ -4661,21 +4664,21 @@ ALIGN function_align
     RET
 ALIGN function_align
 .w8:
-    mova                xm3, [maskq+8*2]
+    vbroadcasti128       m4, [maskq+8*2]
 .w8_loop:
-    movq                xm0, [dstq+dsq*0]
-    vpbroadcastq        xm1, [dstq+dsq*1]
-    mova                xm2, [tmpq]
+    vpbroadcastq         m2, [dstq+dsq*0]
+    movq                xm0, [dstq+dsq*1]
+    vpblendd             m0, m2, 0x30
+    movq                xm1, [tmpq+8*1]
+    vinserti128          m1, [tmpq+8*0], 1
     add                tmpq, 8*2
-    punpcklbw           xm0, xm2
-    punpckhbw           xm1, xm2
-    pmaddubsw           xm0, xm3
-    pmaddubsw           xm1, xm3
-    pmulhrsw            xm0, xm5
-    pmulhrsw            xm1, xm5
+    punpcklbw            m0, m1
+    pmaddubsw            m0, m4
+    pmulhrsw             m0, m5
+    vextracti128        xm1, m0, 1
     packuswb            xm0, xm1
-    movq       [dstq+dsq*0], xm0
-    movhps     [dstq+dsq*1], xm0
+    movhps     [dstq+dsq*0], xm0
+    movq       [dstq+dsq*1], xm0
     lea                dstq, [dstq+dsq*2]
     sub                  hd, 2
     jg .w8_loop

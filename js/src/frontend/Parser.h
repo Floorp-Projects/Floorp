@@ -1358,10 +1358,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   enum PropertyNameContext {
     PropertyNameInLiteral,
     PropertyNameInPattern,
-    PropertyNameInClass,
-#ifdef ENABLE_RECORD_TUPLE
-    PropertyNameInRecord
-#endif
+    PropertyNameInClass
   };
   Node propertyName(YieldHandling yieldHandling,
                     PropertyNameContext propertyNameContext,
@@ -1382,11 +1379,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
   ListNodeType objectLiteral(YieldHandling yieldHandling,
                              PossibleError* possibleError);
-
-#ifdef ENABLE_RECORD_TUPLE
-  ListNodeType recordLiteral(YieldHandling yieldHandling);
-  ListNodeType tupleLiteral(YieldHandling yieldHandling);
-#endif
 
   BinaryNodeType bindingInitializer(Node lhs, DeclarationKind kind,
                                     YieldHandling yieldHandling);

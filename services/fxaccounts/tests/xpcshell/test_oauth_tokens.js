@@ -10,7 +10,8 @@ const { FxAccountsClient } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsClient.jsm"
 );
 var { AccountState } = ChromeUtils.import(
-  "resource://gre/modules/FxAccounts.jsm"
+  "resource://gre/modules/FxAccounts.jsm",
+  null
 );
 
 function promiseNotification(topic) {

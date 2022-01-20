@@ -1,16 +1,14 @@
 // |jit-test| skip-if: helperThreadCount() === 0
 
 var lfGlobal = newGlobal();
-lfGlobal.offThreadCompileToStencil(`{ let x; throw 42; }`);
-var stencil = lfGlobal.finishOffThreadCompileToStencil();
+lfGlobal.offThreadCompileScript(`{ let x; throw 42; }`);
 try {
-    lfGlobal.evalStencil(stencil);
+    lfGlobal.runOffThreadScript();
 } catch (e) {
 }
 
-lfGlobal.offThreadCompileToStencil(`function f() { { let x = 42; return x; } }`);
-stencil = lfGlobal.finishOffThreadCompileToStencil();
+lfGlobal.offThreadCompileScript(`function f() { { let x = 42; return x; } }`);
 try {
-    lfGlobal.evalStencil(stencil);
+    lfGlobal.runOffThreadScript();
 } catch (e) {
 }

@@ -22,13 +22,13 @@ class InputResultDetailTest : BaseSessionTest() {
     private val scrollWaitTimeout = 10000.0 // 10 seconds
 
     private fun setupDocument(documentPath: String) {
-        mainSession.loadTestPath(documentPath)
+        sessionRule.session.loadTestPath(documentPath)
         sessionRule.waitUntilCalled(object : ContentDelegate {
             @GeckoSessionTestRule.AssertCalled(count = 1)
             override fun onFirstContentfulPaint(session: GeckoSession) {
             }
         })
-        mainSession.flushApzRepaints()
+        sessionRule.session.flushApzRepaints()
     }
 
     private fun sendDownEvent(x: Float, y: Float): GeckoResult<InputResultDetail> {
@@ -177,7 +177,7 @@ class InputResultDetailTest : BaseSessionTest() {
             scroll.scrollTo(0, scroll.scrollHeight);
         """.trimIndent())
         assertThat("scroll", scrollPromise.value as Boolean, equalTo(true));
-        mainSession.flushApzRepaints()
+        sessionRule.session.flushApzRepaints()
     }
 
     @WithDisplay(width = 100, height = 100)

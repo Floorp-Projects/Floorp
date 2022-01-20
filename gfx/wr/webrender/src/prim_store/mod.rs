@@ -119,7 +119,7 @@ pub struct DeferredResolve {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
-pub struct ClipTaskIndex(pub u32);
+pub struct ClipTaskIndex(pub u16);
 
 impl ClipTaskIndex {
     pub const INVALID: ClipTaskIndex = ClipTaskIndex(0);

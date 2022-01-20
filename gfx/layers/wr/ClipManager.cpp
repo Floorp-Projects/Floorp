@@ -334,7 +334,7 @@ Maybe<wr::WrSpatialId> ClipManager::DefineScrollLayers(
 
   return Some(mBuilder->DefineScrollLayer(
       viewId, parent, wr::ToLayoutRect(contentRect),
-      wr::ToLayoutRect(clipBounds), wr::ToLayoutVector2D(scrollOffset),
+      wr::ToLayoutRect(clipBounds), wr::ToLayoutPoint(scrollOffset),
       wr::SpatialKey(uint64_t(scrollFrame), 0, wr::SpatialKeyKind::Scroll)));
 }
 

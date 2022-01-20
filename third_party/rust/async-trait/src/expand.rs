@@ -1,22 +1,18 @@
-use crate::lifetime::CollectLifetimes;
+use crate::lifetime::{has_async_lifetime, CollectLifetimes};
 use crate::parse::Item;
-use crate::receiver::{has_self_in_block, has_self_in_sig, mut_pat, ReplaceSelf};
-use proc_macro2::TokenStream;
-use quote::{format_ident, quote, quote_spanned, ToTokens};
-use std::collections::BTreeSet as Set;
-use syn::punctuated::Punctuated;
-use syn::visit_mut::{self, VisitMut};
-use syn::{
-    parse_quote, Attribute, Block, FnArg, GenericParam, Generics, Ident, ImplItem, Lifetime, Pat,
-    PatIdent, Receiver, ReturnType, Signature, Stmt, Token, TraitItem, Type, TypeParamBound,
-    TypePath, WhereClause,
+use crate::receiver::{
+    has_self_in_block, has_self_in_sig, has_self_in_where_predicate, ReplaceReceiver,
 };
-
-macro_rules! parse_quote_spanned {
-    ($span:expr=> $($t:tt)*) => {
-        syn::parse2(quote_spanned!($span=> $($t)*)).unwrap()
-    };
-}
+use proc_macro2::{Span, TokenStream};
+use quote::{format_ident, quote, quote_spanned, ToTokens};
+use std::mem;
+use syn::punctuated::Punctuated;
+use syn::visit_mut::VisitMut;
+use syn::{
+    parse_quote, Block, FnArg, GenericParam, Generics, Ident, ImplItem, Lifetime, Pat, PatIdent,
+    Path, Receiver, ReturnType, Signature, Stmt, Token, TraitItem, Type, TypeParam, TypeParamBound,
+    WhereClause,
+};
 
 impl ToTokens for Item {
     fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -30,12 +26,14 @@ impl ToTokens for Item {
 #[derive(Clone, Copy)]
 enum Context<'a> {
     Trait {
+        name: &'a Ident,
         generics: &'a Generics,
         supertraits: &'a Supertraits,
     },
     Impl {
         impl_generics: &'a Generics,
-        associated_type_impl_traits: &'a Set<Ident>,
+        receiver: &'a Type,
+        as_trait: &'a Path,
     },
 }
 
@@ -61,6 +59,7 @@ pub fn expand(input: &mut Item, is_local: bool) {
     match input {
         Item::Trait(input) => {
             let context = Context::Trait {
+                name: &input.ident,
                 generics: &input.generics,
                 supertraits: &input.supertraits,
             };
@@ -70,40 +69,32 @@ pub fn expand(input: &mut Item, is_local: bool) {
                     if sig.asyncness.is_some() {
                         let block = &mut method.default;
                         let mut has_self = has_self_in_sig(sig);
-                        method.attrs.push(parse_quote!(#[must_use]));
                         if let Some(block) = block {
                             has_self |= has_self_in_block(block);
-                            transform_block(context, sig, block);
-                            method.attrs.push(lint_suppress_with_body());
-                        } else {
-                            method.attrs.push(lint_suppress_without_body());
+                            transform_block(context, sig, block, has_self, is_local);
+                            method
+                                .attrs
+                                .push(parse_quote!(#[allow(clippy::used_underscore_binding)]));
                         }
                         let has_default = method.default.is_some();
                         transform_sig(context, sig, has_self, has_default, is_local);
+                        method.attrs.push(parse_quote!(#[must_use]));
                     }
                 }
             }
         }
         Item::Impl(input) => {
-            let mut lifetimes = CollectLifetimes::new("'impl", input.impl_token.span);
+            let mut lifetimes = CollectLifetimes::new("'impl");
             lifetimes.visit_type_mut(&mut *input.self_ty);
             lifetimes.visit_path_mut(&mut input.trait_.as_mut().unwrap().1);
             let params = &input.generics.params;
             let elided = lifetimes.elided;
             input.generics.params = parse_quote!(#(#elided,)* #params);
 
-            let mut associated_type_impl_traits = Set::new();
-            for inner in &input.items {
-                if let ImplItem::Type(assoc) = inner {
-                    if let Type::ImplTrait(_) = assoc.ty {
-                        associated_type_impl_traits.insert(assoc.ident.clone());
-                    }
-                }
-            }
-
             let context = Context::Impl {
                 impl_generics: &input.generics,
-                associated_type_impl_traits: &associated_type_impl_traits,
+                receiver: &input.self_ty,
+                as_trait: &input.trait_.as_ref().unwrap().1,
             };
             for inner in &mut input.items {
                 if let ImplItem::Method(method) = inner {
@@ -111,33 +102,15 @@ pub fn expand(input: &mut Item, is_local: bool) {
                     if sig.asyncness.is_some() {
                         let block = &mut method.block;
                         let has_self = has_self_in_sig(sig) || has_self_in_block(block);
-                        transform_block(context, sig, block);
+                        transform_block(context, sig, block, has_self, is_local);
                         transform_sig(context, sig, has_self, false, is_local);
-                        method.attrs.push(lint_suppress_with_body());
+                        method
+                            .attrs
+                            .push(parse_quote!(#[allow(clippy::used_underscore_binding)]));
                     }
                 }
             }
         }
-    }
-}
-
-fn lint_suppress_with_body() -> Attribute {
-    parse_quote! {
-        #[allow(
-            clippy::let_unit_value,
-            clippy::type_complexity,
-            clippy::type_repetition_in_bounds,
-            clippy::used_underscore_binding
-        )]
-    }
-}
-
-fn lint_suppress_without_body() -> Attribute {
-    parse_quote! {
-        #[allow(
-            clippy::type_complexity,
-            clippy::type_repetition_in_bounds
-        )]
     }
 }
 
@@ -168,13 +141,7 @@ fn transform_sig(
         ReturnType::Type(_, ret) => quote!(#ret),
     };
 
-    let default_span = sig
-        .ident
-        .span()
-        .join(sig.paren_token.span)
-        .unwrap_or_else(|| sig.ident.span());
-
-    let mut lifetimes = CollectLifetimes::new("'life", default_span);
+    let mut lifetimes = CollectLifetimes::new("'life");
     for arg in sig.inputs.iter_mut() {
         match arg {
             FnArg::Receiver(arg) => lifetimes.visit_receiver_mut(arg),
@@ -182,6 +149,13 @@ fn transform_sig(
         }
     }
 
+    let where_clause = sig
+        .generics
+        .where_clause
+        .get_or_insert_with(|| WhereClause {
+            where_token: Default::default(),
+            predicates: Punctuated::new(),
+        });
     for param in sig
         .generics
         .params
@@ -191,48 +165,33 @@ fn transform_sig(
         match param {
             GenericParam::Type(param) => {
                 let param = &param.ident;
-                let span = param.span();
-                where_clause_or_default(&mut sig.generics.where_clause)
+                where_clause
                     .predicates
-                    .push(parse_quote_spanned!(span=> #param: 'async_trait));
+                    .push(parse_quote!(#param: 'async_trait));
             }
             GenericParam::Lifetime(param) => {
                 let param = &param.lifetime;
-                let span = param.span();
-                where_clause_or_default(&mut sig.generics.where_clause)
+                where_clause
                     .predicates
-                    .push(parse_quote_spanned!(span=> #param: 'async_trait));
+                    .push(parse_quote!(#param: 'async_trait));
             }
             GenericParam::Const(_) => {}
         }
     }
-
-    if sig.generics.lt_token.is_none() {
-        sig.generics.lt_token = Some(Token![<](sig.ident.span()));
-    }
-    if sig.generics.gt_token.is_none() {
-        sig.generics.gt_token = Some(Token![>](sig.paren_token.span));
-    }
-
     for elided in lifetimes.elided {
         sig.generics.params.push(parse_quote!(#elided));
-        where_clause_or_default(&mut sig.generics.where_clause)
+        where_clause
             .predicates
-            .push(parse_quote_spanned!(elided.span()=> #elided: 'async_trait));
+            .push(parse_quote!(#elided: 'async_trait));
     }
-
-    sig.generics
-        .params
-        .push(parse_quote_spanned!(default_span=> 'async_trait));
-
+    sig.generics.params.push(parse_quote!('async_trait));
     if has_self {
-        let bound_span = sig.ident.span();
-        let bound = match sig.inputs.iter().next() {
+        let bound: Ident = match sig.inputs.iter().next() {
             Some(FnArg::Receiver(Receiver {
                 reference: Some(_),
                 mutability: None,
                 ..
-            })) => Ident::new("Sync", bound_span),
+            })) => parse_quote!(Sync),
             Some(FnArg::Typed(arg))
                 if match (arg.pat.as_ref(), arg.ty.as_ref()) {
                     (Pat::Ident(pat), Type::Reference(ty)) => {
@@ -241,21 +200,18 @@ fn transform_sig(
                     _ => false,
                 } =>
             {
-                Ident::new("Sync", bound_span)
+                parse_quote!(Sync)
             }
-            _ => Ident::new("Send", bound_span),
+            _ => parse_quote!(Send),
         };
-
         let assume_bound = match context {
             Context::Trait { supertraits, .. } => !has_default || has_bound(supertraits, &bound),
             Context::Impl { .. } => true,
         };
-
-        let where_clause = where_clause_or_default(&mut sig.generics.where_clause);
         where_clause.predicates.push(if assume_bound || is_local {
-            parse_quote_spanned!(bound_span=> Self: 'async_trait)
+            parse_quote!(Self: 'async_trait)
         } else {
-            parse_quote_spanned!(bound_span=> Self: ::core::marker::#bound + 'async_trait)
+            parse_quote!(Self: ::core::marker::#bound + 'async_trait)
         });
     }
 
@@ -270,21 +226,20 @@ fn transform_sig(
                     ident.by_ref = None;
                     ident.mutability = None;
                 } else {
-                    let positional = positional_arg(i, &arg.pat);
-                    let m = mut_pat(&mut arg.pat);
-                    arg.pat = parse_quote!(#m #positional);
+                    let positional = positional_arg(i);
+                    *arg.pat = parse_quote!(#positional);
                 }
             }
         }
     }
 
-    let ret_span = sig.ident.span();
     let bounds = if is_local {
-        quote_spanned!(ret_span=> 'async_trait)
+        quote!('async_trait)
     } else {
-        quote_spanned!(ret_span=> ::core::marker::Send + 'async_trait)
+        quote!(::core::marker::Send + 'async_trait)
     };
-    sig.output = parse_quote_spanned! {ret_span=>
+
+    sig.output = parse_quote! {
         -> ::core::pin::Pin<Box<
             dyn ::core::future::Future<Output = #ret> + #bounds
         >>
@@ -292,162 +247,256 @@ fn transform_sig(
 }
 
 // Input:
-//     async fn f<T>(&self, x: &T, (a, b): (A, B)) -> Ret {
-//         self + x + a + b
+//     async fn f<T>(&self, x: &T) -> Ret {
+//         self + x
 //     }
 //
 // Output:
-//     Box::pin(async move {
-//         let ___ret: Ret = {
-//             let __self = self;
-//             let x = x;
-//             let (a, b) = __arg1;
-//
-//             __self + x + a + b
-//         };
-//
-//         ___ret
-//     })
-fn transform_block(context: Context, sig: &mut Signature, block: &mut Block) {
+//     async fn f<T, AsyncTrait>(_self: &AsyncTrait, x: &T) -> Ret {
+//         _self + x
+//     }
+//     Box::pin(async_trait_method::<T, Self>(self, x))
+fn transform_block(
+    context: Context,
+    sig: &mut Signature,
+    block: &mut Block,
+    has_self: bool,
+    is_local: bool,
+) {
     if let Some(Stmt::Item(syn::Item::Verbatim(item))) = block.stmts.first() {
         if block.stmts.len() == 1 && item.to_string() == ";" {
             return;
         }
     }
 
-    let mut self_span = None;
-    let decls = sig
-        .inputs
-        .iter()
-        .enumerate()
-        .map(|(i, arg)| match arg {
-            FnArg::Receiver(Receiver {
-                self_token,
-                mutability,
-                ..
-            }) => {
-                let ident = Ident::new("__self", self_token.span);
-                self_span = Some(self_token.span);
-                quote!(let #mutability #ident = #self_token;)
+    let inner = format_ident!("__{}", sig.ident);
+    let args = sig.inputs.iter().enumerate().map(|(i, arg)| match arg {
+        FnArg::Receiver(Receiver { self_token, .. }) => quote!(#self_token),
+        FnArg::Typed(arg) => {
+            if let Pat::Ident(PatIdent { ident, .. }) = &*arg.pat {
+                quote!(#ident)
+            } else {
+                positional_arg(i).into_token_stream()
             }
-            FnArg::Typed(arg) => {
-                if let Pat::Ident(PatIdent {
-                    ident, mutability, ..
-                }) = &*arg.pat
-                {
-                    if ident == "self" {
-                        self_span = Some(ident.span());
-                        let prefixed = Ident::new("__self", ident.span());
-                        quote!(let #mutability #prefixed = #ident;)
-                    } else {
-                        quote!(let #mutability #ident = #ident;)
-                    }
-                } else {
-                    let pat = &arg.pat;
-                    let ident = positional_arg(i, pat);
-                    quote!(let #pat = #ident;)
-                }
-            }
-        })
-        .collect::<Vec<_>>();
+        }
+    });
 
-    if let Some(span) = self_span {
-        let mut replace_self = ReplaceSelf(span);
-        replace_self.visit_block_mut(block);
+    let mut standalone = sig.clone();
+    standalone.ident = inner.clone();
+
+    let generics = match context {
+        Context::Trait { generics, .. } => generics,
+        Context::Impl { impl_generics, .. } => impl_generics,
+    };
+
+    let mut outer_generics = generics.clone();
+    for p in &mut outer_generics.params {
+        match p {
+            GenericParam::Type(t) => t.default = None,
+            GenericParam::Const(c) => c.default = None,
+            GenericParam::Lifetime(_) => {}
+        }
+    }
+    if !has_self {
+        if let Some(mut where_clause) = outer_generics.where_clause {
+            where_clause.predicates = where_clause
+                .predicates
+                .into_iter()
+                .filter_map(|mut pred| {
+                    if has_self_in_where_predicate(&mut pred) {
+                        None
+                    } else {
+                        Some(pred)
+                    }
+                })
+                .collect();
+            outer_generics.where_clause = Some(where_clause);
+        }
     }
 
-    let stmts = &block.stmts;
-    let let_ret = match &mut sig.output {
-        ReturnType::Default => quote_spanned! {block.brace_token.span=>
-            #(#decls)*
-            let _: () = { #(#stmts)* };
-        },
-        ReturnType::Type(_, ret) => {
-            if contains_associated_type_impl_trait(context, ret) {
-                if decls.is_empty() {
-                    quote!(#(#stmts)*)
-                } else {
-                    quote!(#(#decls)* { #(#stmts)* })
+    let fn_generics = mem::replace(&mut standalone.generics, outer_generics);
+    standalone.generics.params.extend(fn_generics.params);
+    if let Some(where_clause) = fn_generics.where_clause {
+        standalone
+            .generics
+            .make_where_clause()
+            .predicates
+            .extend(where_clause.predicates);
+    }
+
+    if has_async_lifetime(&mut standalone, block) {
+        standalone.generics.params.push(parse_quote!('async_trait));
+    }
+
+    let mut types = standalone
+        .generics
+        .type_params()
+        .map(|param| param.ident.clone())
+        .collect::<Vec<_>>();
+
+    let mut self_bound = None::<TypeParamBound>;
+    match standalone.inputs.iter_mut().next() {
+        Some(
+            arg @ FnArg::Receiver(Receiver {
+                reference: Some(_), ..
+            }),
+        ) => {
+            let (lifetime, mutability, self_token) = match arg {
+                FnArg::Receiver(Receiver {
+                    reference: Some((_, lifetime)),
+                    mutability,
+                    self_token,
+                    ..
+                }) => (lifetime, mutability, self_token),
+                _ => unreachable!(),
+            };
+            let under_self = Ident::new("_self", self_token.span);
+            match context {
+                Context::Trait { .. } => {
+                    self_bound = Some(match mutability {
+                        Some(_) => parse_quote!(::core::marker::Send),
+                        None => parse_quote!(::core::marker::Sync),
+                    });
+                    *arg = parse_quote! {
+                        #under_self: &#lifetime #mutability AsyncTrait
+                    };
                 }
-            } else {
-                quote_spanned! {block.brace_token.span=>
-                    if let ::core::option::Option::Some(__ret) = ::core::option::Option::None::<#ret> {
-                        return __ret;
+                Context::Impl { receiver, .. } => {
+                    let mut ty = quote!(#receiver);
+                    if let Type::TraitObject(trait_object) = receiver {
+                        if trait_object.dyn_token.is_none() {
+                            ty = quote!(dyn #ty);
+                        }
+                        if trait_object.bounds.len() > 1 {
+                            ty = quote!((#ty));
+                        }
                     }
-                    #(#decls)*
-                    let __ret: #ret = { #(#stmts)* };
-                    #[allow(unreachable_code)]
-                    __ret
+                    *arg = parse_quote! {
+                        #under_self: &#lifetime #mutability #ty
+                    };
                 }
             }
         }
+        Some(arg @ FnArg::Receiver(_)) => {
+            let (self_token, mutability) = match arg {
+                FnArg::Receiver(Receiver {
+                    self_token,
+                    mutability,
+                    ..
+                }) => (self_token, mutability),
+                _ => unreachable!(),
+            };
+            let under_self = Ident::new("_self", self_token.span);
+            match context {
+                Context::Trait { .. } => {
+                    self_bound = Some(parse_quote!(::core::marker::Send));
+                    *arg = parse_quote! {
+                        #mutability #under_self: AsyncTrait
+                    };
+                }
+                Context::Impl { receiver, .. } => {
+                    *arg = parse_quote! {
+                        #mutability #under_self: #receiver
+                    };
+                }
+            }
+        }
+        Some(FnArg::Typed(arg)) => {
+            if let Pat::Ident(arg) = &mut *arg.pat {
+                if arg.ident == "self" {
+                    arg.ident = Ident::new("_self", arg.ident.span());
+                }
+            }
+        }
+        _ => {}
+    }
+
+    if let Context::Trait { name, generics, .. } = context {
+        if has_self {
+            let (_, generics, _) = generics.split_for_impl();
+            let mut self_param: TypeParam = parse_quote!(AsyncTrait: ?Sized + #name #generics);
+            if !is_local {
+                self_param.bounds.extend(self_bound);
+            }
+            let count = standalone
+                .generics
+                .params
+                .iter()
+                .take_while(|param| {
+                    if let GenericParam::Const(_) = param {
+                        false
+                    } else {
+                        true
+                    }
+                })
+                .count();
+            standalone
+                .generics
+                .params
+                .insert(count, GenericParam::Type(self_param));
+            types.push(Ident::new("Self", Span::call_site()));
+        }
+    }
+
+    if let Some(where_clause) = &mut standalone.generics.where_clause {
+        // Work around an input bound like `where Self::Output: Send` expanding
+        // to `where <AsyncTrait>::Output: Send` which is illegal syntax because
+        // `where<T>` is reserved for future use... :(
+        where_clause.predicates.insert(0, parse_quote!((): Sized));
+    }
+
+    let mut replace = match context {
+        Context::Trait { .. } => ReplaceReceiver::with(parse_quote!(AsyncTrait)),
+        Context::Impl {
+            receiver, as_trait, ..
+        } => ReplaceReceiver::with_as_trait(receiver.clone(), as_trait.clone()),
     };
-    let box_pin = quote_spanned!(block.brace_token.span=>
-        Box::pin(async move { #let_ret })
-    );
-    block.stmts = parse_quote!(#box_pin);
+    replace.visit_signature_mut(&mut standalone);
+    replace.visit_block_mut(block);
+
+    let mut generics = types;
+    let consts = standalone
+        .generics
+        .const_params()
+        .map(|param| param.ident.clone());
+    generics.extend(consts);
+
+    let allow_non_snake_case = if sig.ident != sig.ident.to_string().to_lowercase() {
+        Some(quote!(non_snake_case,))
+    } else {
+        None
+    };
+
+    let brace = block.brace_token;
+    let box_pin = quote_spanned!(brace.span=> {
+        #[allow(
+            #allow_non_snake_case
+            unused_parens, // https://github.com/dtolnay/async-trait/issues/118
+            clippy::missing_docs_in_private_items,
+            clippy::needless_lifetimes,
+            clippy::ptr_arg,
+            clippy::trivially_copy_pass_by_ref,
+            clippy::type_repetition_in_bounds,
+            clippy::used_underscore_binding,
+        )]
+        #standalone #block
+        Box::pin(#inner::<#(#generics),*>(#(#args),*))
+    });
+    *block = parse_quote!(#box_pin);
+    block.brace_token = brace;
 }
 
-fn positional_arg(i: usize, pat: &Pat) -> Ident {
-    use syn::spanned::Spanned;
-    format_ident!("__arg{}", i, span = pat.span())
+fn positional_arg(i: usize) -> Ident {
+    format_ident!("__arg{}", i)
 }
 
 fn has_bound(supertraits: &Supertraits, marker: &Ident) -> bool {
     for bound in supertraits {
         if let TypeParamBound::Trait(bound) = bound {
-            if bound.path.is_ident(marker)
-                || bound.path.segments.len() == 3
-                    && (bound.path.segments[0].ident == "std"
-                        || bound.path.segments[0].ident == "core")
-                    && bound.path.segments[1].ident == "marker"
-                    && bound.path.segments[2].ident == *marker
-            {
+            if bound.path.is_ident(marker) {
                 return true;
             }
         }
     }
     false
-}
-
-fn contains_associated_type_impl_trait(context: Context, ret: &mut Type) -> bool {
-    struct AssociatedTypeImplTraits<'a> {
-        set: &'a Set<Ident>,
-        contains: bool,
-    }
-
-    impl<'a> VisitMut for AssociatedTypeImplTraits<'a> {
-        fn visit_type_path_mut(&mut self, ty: &mut TypePath) {
-            if ty.qself.is_none()
-                && ty.path.segments.len() == 2
-                && ty.path.segments[0].ident == "Self"
-                && self.set.contains(&ty.path.segments[1].ident)
-            {
-                self.contains = true;
-            }
-            visit_mut::visit_type_path_mut(self, ty);
-        }
-    }
-
-    match context {
-        Context::Trait { .. } => false,
-        Context::Impl {
-            associated_type_impl_traits,
-            ..
-        } => {
-            let mut visit = AssociatedTypeImplTraits {
-                set: associated_type_impl_traits,
-                contains: false,
-            };
-            visit.visit_type_mut(ret);
-            visit.contains
-        }
-    }
-}
-
-fn where_clause_or_default(clause: &mut Option<WhereClause>) -> &mut WhereClause {
-    clause.get_or_insert_with(|| WhereClause {
-        where_token: Default::default(),
-        predicates: Punctuated::new(),
-    })
 }

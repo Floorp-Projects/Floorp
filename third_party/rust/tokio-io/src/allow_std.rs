@@ -1,6 +1,6 @@
+use {AsyncRead, AsyncWrite};
 use futures::{Async, Poll};
 use std::{fmt, io};
-use {AsyncRead, AsyncWrite};
 
 /// A simple wrapper type which allows types that only implement
 /// `std::io::Read` or `std::io::Write` to be used in contexts which expect
@@ -37,10 +37,7 @@ impl<T> AllowStdIo<T> {
     }
 }
 
-impl<T> io::Write for AllowStdIo<T>
-where
-    T: io::Write,
-{
+impl<T> io::Write for AllowStdIo<T> where T: io::Write {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.0.write(buf)
     }
@@ -55,19 +52,13 @@ where
     }
 }
 
-impl<T> AsyncWrite for AllowStdIo<T>
-where
-    T: io::Write,
-{
+impl<T> AsyncWrite for AllowStdIo<T> where T: io::Write {
     fn shutdown(&mut self) -> Poll<(), io::Error> {
         Ok(Async::Ready(()))
     }
 }
 
-impl<T> io::Read for AllowStdIo<T>
-where
-    T: io::Read,
-{
+impl<T> io::Read for AllowStdIo<T> where T: io::Read {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         self.0.read(buf)
     }
@@ -84,10 +75,7 @@ where
     }
 }
 
-impl<T> AsyncRead for AllowStdIo<T>
-where
-    T: io::Read,
-{
+impl<T> AsyncRead for AllowStdIo<T> where T: io::Read {
     // TODO: override prepare_uninitialized_buffer once `Read::initializer` is stable.
     // See rust-lang/rust #42788
 }

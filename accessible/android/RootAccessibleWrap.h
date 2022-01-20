@@ -21,9 +21,6 @@ class RootAccessibleWrap : public RootAccessible {
   RootAccessibleWrap(dom::Document* aDocument, PresShell* aPresShell);
   virtual ~RootAccessibleWrap();
 
-  // nsIDOMEventListener
-  NS_DECL_NSIDOMEVENTLISTENER
-
   AccessibleWrap* GetContentAccessible();
 
   AccessibleWrap* FindAccessibleById(int32_t aID);
@@ -34,10 +31,6 @@ class RootAccessibleWrap : public RootAccessible {
   // Recursively searches for the accessible ID within the proxy document tree.
   AccessibleWrap* FindAccessibleById(DocRemoteAccessibleWrap* aDocument,
                                      int32_t aID);
-
- protected:
-  virtual nsresult AddEventListeners() override;
-  virtual nsresult RemoveEventListeners() override;
 };
 
 }  // namespace a11y

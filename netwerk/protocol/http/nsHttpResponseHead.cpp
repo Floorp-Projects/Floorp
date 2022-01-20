@@ -182,8 +182,7 @@ nsresult nsHttpResponseHead::SetHeader_locked(const nsHttpAtom& atom,
   return NS_OK;
 }
 
-nsresult nsHttpResponseHead::GetHeader(const nsHttpAtom& h,
-                                       nsACString& v) const {
+nsresult nsHttpResponseHead::GetHeader(const nsHttpAtom& h, nsACString& v) {
   v.Truncate();
   RecursiveMutexAutoLock monitor(mRecursiveMutex);
   return mHeaders.GetHeader(h, v);
@@ -1240,8 +1239,7 @@ bool nsHttpResponseHead::HasContentCharset() {
   return !mContentCharset.IsEmpty();
 }
 
-bool nsHttpResponseHead::GetContentTypeOptionsHeader(
-    nsACString& aOutput) const {
+bool nsHttpResponseHead::GetContentTypeOptionsHeader(nsACString& aOutput) {
   aOutput.Truncate();
 
   nsAutoCString contentTypeOptionsHeader;

@@ -78,7 +78,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MacroForEach.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/MediaFeatureChange.h"
 #include "mozilla/MediaManager.h"
 #include "mozilla/MemoryReporting.h"
@@ -229,7 +228,6 @@
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WindowProxyHolder.h"
-#include "mozilla/dom/WorkerDocumentListener.h"
 #include "mozilla/dom/XPathEvaluator.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/nsCSPUtils.h"
@@ -416,13 +414,15 @@
 // XXX Must be included after mozilla/Encoding.h
 #include "encoding_rs.h"
 
-#include "mozilla/dom/XULBroadcastManager.h"
-#include "mozilla/dom/XULPersist.h"
-#include "nsIAppWindow.h"
-#include "nsXULPrototypeDocument.h"
-#include "nsXULCommandDispatcher.h"
-#include "nsXULPopupManager.h"
-#include "nsIDocShellTreeOwner.h"
+#ifdef MOZ_XUL
+#  include "mozilla/dom/XULBroadcastManager.h"
+#  include "mozilla/dom/XULPersist.h"
+#  include "nsIAppWindow.h"
+#  include "nsXULPrototypeDocument.h"
+#  include "nsXULCommandDispatcher.h"
+#  include "nsXULPopupManager.h"
+#  include "nsIDocShellTreeOwner.h"
+#endif
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS (1 << 1)
@@ -1253,6 +1253,14 @@ void Document::SelectorCache::NotifyExpired(SelectorCacheKey* aSelector) {
   delete aSelector;
 }
 
+Document::FrameRequest::FrameRequest(FrameRequestCallback& aCallback,
+                                     int32_t aHandle)
+    : mCallback(&aCallback), mHandle(aHandle) {
+  LogFrameRequestCallback::LogDispatch(mCallback);
+}
+
+Document::FrameRequest::~FrameRequest() = default;
+
 Document::PendingFrameStaticClone::~PendingFrameStaticClone() = default;
 
 // ==================================================================
@@ -1405,6 +1413,7 @@ Document::Document(const char* aContentType)
       mPreloadPictureDepth(0),
       mEventsSuppressed(0),
       mIgnoreDestructiveWritesCounter(0),
+      mFrameRequestCallbackCounter(0),
       mStaticCloneCount(0),
       mWindow(nullptr),
       mBFCacheEntry(nullptr),
@@ -2438,10 +2447,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMidasCommandManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAll)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocGroup)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameRequestManager)
 
   // Traverse all our nsCOMArrays.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPreloadingImages)
+
+  for (uint32_t i = 0; i < tmp->mFrameRequestCallbacks.Length(); ++i) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mFrameRequestCallbacks[i]");
+    cb.NoteXPCOMChild(tmp->mFrameRequestCallbacks[i].mCallback);
+  }
 
   // Traverse animation components
   if (tmp->mAnimationController) {
@@ -2588,7 +2601,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   delete tmp->mSubDocuments;
   tmp->mSubDocuments = nullptr;
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameRequestManager)
+  tmp->mFrameRequestCallbacks.Clear();
   MOZ_RELEASE_ASSERT(!tmp->mFrameRequestCallbacksScheduled,
                      "How did we get here without our presshell going away "
                      "first?");
@@ -3297,7 +3310,7 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                                      nsILoadGroup* aLoadGroup,
                                      nsISupports* aContainer,
                                      nsIStreamListener** aDocListener,
-                                     bool aReset) {
+                                     bool aReset, nsIContentSink* aSink) {
   if (MOZ_LOG_TEST(gDocumentLeakPRLog, LogLevel::Debug)) {
     nsCOMPtr<nsIURI> uri;
     aChannel->GetURI(getter_AddRefs(uri));
@@ -4220,7 +4233,6 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
       return;
     }
   }
-
   mDocumentL10n->AddResourceId(NS_ConvertUTF16toUTF8(href));
 
   if (mReadyState >= READYSTATE_INTERACTIVE) {
@@ -6754,13 +6766,15 @@ void Document::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
   if (aHeaderField == nsGkAtoms::refresh && !IsStaticDocument()) {
     // We get into this code before we have a script global yet, so get to our
     // container via mDocumentContainer.
-    if (mDocumentContainer) {
+    if (nsCOMPtr<nsIRefreshURI> refresher = mDocumentContainer.get()) {
       // Note: using mDocumentURI instead of mBaseURI here, for consistency
       // (used to just use the current URI of our webnavigation, but that
       // should really be the same thing).  Note that this code can run
       // before the current URI of the webnavigation has been updated, so we
       // can't assert equality here.
-      mDocumentContainer->SetupRefreshURIFromHeader(this, aData);
+      refresher->SetupRefreshURIFromHeader(mDocumentURI, NodePrincipal(),
+                                           InnerWindowID(),
+                                           NS_ConvertUTF16toUTF8(aData));
     }
   }
 
@@ -6784,14 +6798,11 @@ void Document::TryChannelCharset(nsIChannel* aChannel, int32_t& aCharsetSource,
     if (NS_SUCCEEDED(rv)) {
       const Encoding* preferred = Encoding::ForLabel(charsetVal);
       if (preferred) {
-        if (aExecutor && preferred == REPLACEMENT_ENCODING) {
-          aExecutor->ComplainAboutBogusProtocolCharset(this, false);
-        }
         aEncoding = WrapNotNull(preferred);
         aCharsetSource = kCharsetFromChannel;
         return;
       } else if (aExecutor && !charsetVal.IsEmpty()) {
-        aExecutor->ComplainAboutBogusProtocolCharset(this, true);
+        aExecutor->ComplainAboutBogusProtocolCharset(this);
       }
     }
   }
@@ -6876,7 +6887,7 @@ void Document::UpdateFrameRequestCallbackSchedulingState(
   // WouldScheduleFrameRequestCallbacks() instead of adding more stuff to this
   // condition.
   bool shouldBeScheduled =
-      WouldScheduleFrameRequestCallbacks() && !mFrameRequestManager.IsEmpty();
+      WouldScheduleFrameRequestCallbacks() && !mFrameRequestCallbacks.IsEmpty();
   if (shouldBeScheduled == mFrameRequestCallbacksScheduled) {
     // nothing to do
     return;
@@ -6897,7 +6908,8 @@ void Document::UpdateFrameRequestCallbackSchedulingState(
 
 void Document::TakeFrameRequestCallbacks(nsTArray<FrameRequest>& aCallbacks) {
   MOZ_ASSERT(aCallbacks.IsEmpty());
-  mFrameRequestManager.Take(aCallbacks);
+  aCallbacks = std::move(mFrameRequestCallbacks);
+  mCanceledFrameRequestCallbacks.clear();
   // No need to manually remove ourselves from the refresh driver; it will
   // handle that part.  But we do have to update our state.
   mFrameRequestCallbacksScheduled = false;
@@ -7954,9 +7966,8 @@ void Document::DispatchContentLoadedEvents() {
           nsEventStatus status = nsEventStatus_eIgnore;
 
           if (RefPtr<nsPresContext> context = parent->GetPresContext()) {
-            // TODO: Bug 1506441
-            EventDispatcher::Dispatch(MOZ_KnownLive(ToSupports(parent)),
-                                      context, innerEvent, event, &status);
+            EventDispatcher::Dispatch(ToSupports(parent), context, innerEvent,
+                                      event, &status);
           }
         }
       }
@@ -9006,9 +9017,12 @@ void Document::GetTitle(nsAString& aTitle) {
 
   nsAutoString tmp;
 
+#ifdef MOZ_XUL
   if (rootElement->IsXULElement()) {
     rootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::title, tmp);
-  } else {
+  } else
+#endif
+  {
     Element* title = GetTitleElement();
     if (!title) {
       return;
@@ -9026,11 +9040,13 @@ void Document::SetTitle(const nsAString& aTitle, ErrorResult& aRv) {
     return;
   }
 
+#ifdef MOZ_XUL
   if (rootElement->IsXULElement()) {
     aRv =
         rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle, true);
     return;
   }
+#endif
 
   Maybe<mozAutoDocUpdate> updateBatch;
   nsCOMPtr<Element> title = GetTitleElement();
@@ -10002,12 +10018,12 @@ void nsDOMAttributeMap::BlastSubtreeToPieces(nsINode* aNode) {
 namespace mozilla::dom {
 
 nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
-  OwningNonNull<nsINode> adoptedNode = aAdoptedNode;
+  nsINode* adoptedNode = &aAdoptedNode;
 
   // Scope firing mutation events so that we don't carry any state that
   // might be stale
   {
-    if (nsCOMPtr<nsINode> parent = adoptedNode->GetParentNode()) {
+    if (nsINode* parent = adoptedNode->GetParentNode()) {
       nsContentUtils::MaybeFireNodeRemoved(adoptedNode, parent);
     }
   }
@@ -10017,7 +10033,7 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
   switch (adoptedNode->NodeType()) {
     case ATTRIBUTE_NODE: {
       // Remove from ownerElement.
-      OwningNonNull<Attr> adoptedAttr = static_cast<Attr&>(*adoptedNode);
+      RefPtr<Attr> adoptedAttr = static_cast<Attr*>(adoptedNode);
 
       nsCOMPtr<Element> ownerElement = adoptedAttr->GetOwnerElement(rv);
       if (rv.Failed()) {
@@ -10025,11 +10041,13 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
       }
 
       if (ownerElement) {
-        OwningNonNull<Attr> newAttr =
+        RefPtr<Attr> newAttr =
             ownerElement->RemoveAttributeNode(*adoptedAttr, rv);
         if (rv.Failed()) {
           return nullptr;
         }
+
+        newAttr.swap(adoptedAttr);
       }
 
       break;
@@ -12966,12 +12984,12 @@ static nsINode* GetCorrespondingNodeInDocument(const nsINode* aOrigNode,
     return nullptr;
   }
 
-  AutoTArray<Maybe<uint32_t>, 32> indexArray;
+  nsTArray<int32_t> indexArray;
   const nsINode* current = aOrigNode;
   while (const nsINode* parent = current->GetParentNode()) {
-    Maybe<uint32_t> index = parent->ComputeIndexOf(current);
-    NS_ENSURE_TRUE(index.isSome(), nullptr);
-    indexArray.AppendElement(std::move(index));
+    int32_t index = parent->ComputeIndexOf(current);
+    MOZ_ASSERT(index >= 0);
+    indexArray.AppendElement(index);
     current = parent;
   }
   MOZ_ASSERT(current->IsDocument() || current->IsShadowRoot());
@@ -12994,8 +13012,8 @@ static nsINode* GetCorrespondingNodeInDocument(const nsINode* aOrigNode,
   if (NS_WARN_IF(!correspondingNode)) {
     return nullptr;
   }
-  for (const Maybe<uint32_t>& index : Reversed(indexArray)) {
-    correspondingNode = correspondingNode->GetChildAt_Deprecated(*index);
+  for (int32_t i : Reversed(indexArray)) {
+    correspondingNode = correspondingNode->GetChildAt_Deprecated(i);
     NS_ENSURE_TRUE(correspondingNode, nullptr);
   }
   return correspondingNode;
@@ -13040,16 +13058,13 @@ static void CachePrintSelectionRanges(const Document& aSourceDoc,
     return;
   }
 
-  const uint32_t rangeCount =
+  size_t rangeCount =
       sourceDocIsStatic ? origRanges->Length() : origSelection->RangeCount();
   auto printRanges = MakeUnique<nsTArray<RefPtr<nsRange>>>(rangeCount);
 
-  for (const uint32_t i : IntegerRange(rangeCount)) {
-    MOZ_ASSERT_IF(!sourceDocIsStatic,
-                  origSelection->RangeCount() == rangeCount);
+  for (size_t i = 0; i < rangeCount; ++i) {
     const nsRange* range = sourceDocIsStatic ? origRanges->ElementAt(i).get()
                                              : origSelection->GetRangeAt(i);
-    MOZ_ASSERT(range);
     nsINode* startContainer = range->GetStartContainer();
     nsINode* endContainer = range->GetEndContainer();
 
@@ -13195,23 +13210,31 @@ void Document::UnlinkOriginalDocumentIfStatic() {
 
 nsresult Document::ScheduleFrameRequestCallback(FrameRequestCallback& aCallback,
                                                 int32_t* aHandle) {
-  nsresult rv = mFrameRequestManager.Schedule(aCallback, aHandle);
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (mFrameRequestCallbackCounter == INT32_MAX) {
+    // Can't increment without overflowing; bail out
+    return NS_ERROR_NOT_AVAILABLE;
   }
+  int32_t newHandle = ++mFrameRequestCallbackCounter;
 
+  mFrameRequestCallbacks.AppendElement(FrameRequest(aCallback, newHandle));
   UpdateFrameRequestCallbackSchedulingState();
+
+  *aHandle = newHandle;
   return NS_OK;
 }
 
 void Document::CancelFrameRequestCallback(int32_t aHandle) {
-  if (mFrameRequestManager.Cancel(aHandle)) {
+  // mFrameRequestCallbacks is stored sorted by handle
+  if (mFrameRequestCallbacks.RemoveElementSorted(aHandle)) {
     UpdateFrameRequestCallbackSchedulingState();
+  } else {
+    Unused << mCanceledFrameRequestCallbacks.put(aHandle);
   }
 }
 
 bool Document::IsCanceledFrameRequestCallback(int32_t aHandle) const {
-  return mFrameRequestManager.IsCanceled(aHandle);
+  return !mCanceledFrameRequestCallbacks.empty() &&
+         mCanceledFrameRequestCallbacks.has(aHandle);
 }
 
 nsresult Document::GetStateObject(nsIVariant** aState) {
@@ -13680,7 +13703,7 @@ void Document::MaybeResolveReadyForIdle() {
   IgnoredErrorResult rv;
   Promise* readyPromise = GetDocumentReadyForIdle(rv);
   if (readyPromise) {
-    readyPromise->MaybeResolveWithUndefined();
+    readyPromise->MaybeResolve(this);
   }
 }
 
@@ -15126,21 +15149,7 @@ void Document::UpdateVisibilityState(DispatchVisibilityChange aDispatchEvent) {
     if (mVisibilityState == dom::VisibilityState::Visible) {
       MaybeActiveMediaComponents();
     }
-
-    bool visible = !Hidden();
-    for (auto* listener : mWorkerListeners) {
-      listener->OnVisible(visible);
-    }
   }
-}
-
-void Document::AddWorkerDocumentListener(WorkerDocumentListener* aListener) {
-  mWorkerListeners.Insert(aListener);
-  aListener->OnVisible(!Hidden());
-}
-
-void Document::RemoveWorkerDocumentListener(WorkerDocumentListener* aListener) {
-  mWorkerListeners.Remove(aListener);
 }
 
 VisibilityState Document::ComputeVisibilityState() const {
@@ -16373,14 +16382,9 @@ NS_IMPL_ISUPPORTS_INHERITED(UserInteractionTimer, Runnable, nsITimerCallback,
 }  // namespace
 
 void Document::MaybeStoreUserInteractionAsPermission() {
-  // We care about user-interaction stored only for top-level documents
-  // and documents with access to the Storage Access API
+  // We care about user-interaction stored only for top-level documents.
   if (!IsTopLevelContentDocument()) {
-    bool hasSA;
-    nsresult rv = HasStorageAccessSync(hasSA);
-    if (NS_FAILED(rv) || !hasSA) {
-      return;
-    }
+    return;
   }
 
   if (!mUserHasInteracted) {
@@ -16633,26 +16637,39 @@ Selection* Document::GetSelection(ErrorResult& aRv) {
   return nsGlobalWindowInner::Cast(window)->GetSelection(aRv);
 }
 
-nsresult Document::HasStorageAccessSync(bool& aHasStorageAccess) {
+already_AddRefed<mozilla::dom::Promise> Document::HasStorageAccess(
+    mozilla::ErrorResult& aRv) {
+  nsIGlobalObject* global = GetScopeObject();
+  if (!global) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
+
+  RefPtr<Promise> promise =
+      Promise::Create(global, aRv, Promise::ePropagateUserInteraction);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
   if (NodePrincipal()->GetIsNullPrincipal()) {
-    aHasStorageAccess = false;
-    return NS_OK;
+    promise->MaybeResolve(false);
+    return promise.forget();
   }
 
   if (CookieJarSettings()->GetBlockingAllContexts()) {
-    aHasStorageAccess = false;
-    return NS_OK;
+    promise->MaybeResolve(false);
+    return promise.forget();
   }
 
   if (IsTopLevelContentDocument()) {
-    aHasStorageAccess = true;
-    return NS_OK;
+    promise->MaybeResolve(true);
+    return promise.forget();
   }
 
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
   if (!bc) {
-    aHasStorageAccess = false;
-    return NS_OK;
+    promise->MaybeResolve(false);
+    return promise.forget();
   }
 
   RefPtr<BrowsingContext> topBC = bc->Top();
@@ -16668,42 +16685,19 @@ nsresult Document::HasStorageAccessSync(bool& aHasStorageAccess) {
     if (nsGlobalWindowOuter::Cast(topOuterWindow)
             ->GetPrincipal()
             ->Equals(NodePrincipal())) {
-      aHasStorageAccess = true;
-      return NS_OK;
+      promise->MaybeResolve(true);
+      return promise.forget();
     }
   }
 
   nsPIDOMWindowInner* inner = GetInnerWindow();
   nsGlobalWindowOuter* outer = nullptr;
-  NS_ENSURE_TRUE(inner, NS_ERROR_FAILURE);
-  outer = nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
-  NS_ENSURE_TRUE(outer, NS_ERROR_FAILURE);
-  aHasStorageAccess = outer->IsStorageAccessPermissionGranted();
-  return NS_OK;
-}
-
-already_AddRefed<mozilla::dom::Promise> Document::HasStorageAccess(
-    mozilla::ErrorResult& aRv) {
-  nsIGlobalObject* global = GetScopeObject();
-  if (!global) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-    return nullptr;
-  }
-
-  RefPtr<Promise> promise =
-      Promise::Create(global, aRv, Promise::ePropagateUserInteraction);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  bool hasStorageAccess;
-  nsresult rv = HasStorageAccessSync(hasStorageAccess);
-  if (NS_FAILED(rv)) {
-    promise->MaybeRejectWithUndefined();
+  if (inner) {
+    outer = nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
+    promise->MaybeResolve(outer->IsStorageAccessPermissionGranted());
   } else {
-    promise->MaybeResolve(hasStorageAccess);
+    promise->MaybeRejectWithUndefined();
   }
-
   return promise.forget();
 }
 
@@ -17300,10 +17294,6 @@ bool Document::AutomaticStorageAccessPermissionCanBeGranted(
     nsIPrincipal* aPrincipal) {
   nsAutoCString prefix;
   AntiTrackingUtils::CreateStoragePermissionKey(aPrincipal, prefix);
-
-  if (!ContentBlockingUserInteraction::Exists(aPrincipal)) {
-    return false;
-  }
 
   PermissionManager* permManager = PermissionManager::GetInstance();
   if (NS_WARN_IF(!permManager)) {

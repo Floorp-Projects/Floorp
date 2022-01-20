@@ -18,7 +18,7 @@ const TEST_DATA = [
       {
         type: "load",
         filename: TEST_URL,
-        attributes: ["Bubbling"],
+        attributes: ["Bubbling", "DOM0"],
         handler: "function onload(event) {\n" + "  init();\n" + "}",
       },
     ],
@@ -29,7 +29,7 @@ const TEST_DATA = [
       {
         type: "mouseover",
         filename: TEST_URL + ":48:31",
-        attributes: ["Capturing"],
+        attributes: ["Capturing", "DOM2"],
         handler:
           "function mouseoverHandler(event) {\n" +
           '  if (event.target.id !== "container") {\n' +
@@ -46,7 +46,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":55:27",
-        attributes: ["Bubbling"],
+        attributes: ["Bubbling", "DOM2"],
         handler:
           "function clickHandler(event) {\n" +
           '  const output = document.getElementById("output");\n' +
@@ -56,7 +56,7 @@ const TEST_DATA = [
       {
         type: "mouseup",
         filename: TEST_URL + ":60:29",
-        attributes: ["Bubbling"],
+        attributes: ["Bubbling", "DOM2"],
         handler:
           "function mouseupHandler(event) {\n" +
           '  const output = document.getElementById("output");\n' +
@@ -84,7 +84,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":75:35",
-        attributes: ["Bubbling"],
+        attributes: ["Bubbling", "DOM2"],
         handler:
           "function noeventsClickHandler(event) {\n" +
           '  alert("noevents has an event listener");\n' +
@@ -109,7 +109,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL,
-        attributes: ["Bubbling"],
+        attributes: ["Bubbling", "DOM0"],
         handler: "function onclick(event) {\n" + "  alert('DOM0')\n" + "}",
       },
     ],
@@ -120,7 +120,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":70:29",
-        attributes: ["Bubbling"],
+        attributes: ["Bubbling", "DOM2"],
         handler: "function(blah) {\n" + '  alert("handleEvent");\n' + "}",
       },
     ],

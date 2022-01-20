@@ -3,10 +3,6 @@
 // (https://github.com/w3c/webref)
 // Source: Push API (https://w3c.github.io/push-api/)
 
-dictionary PushPermissionDescriptor : PermissionDescriptor {
-  boolean userVisibleOnly = false;
-};
-
 [SecureContext]
 partial interface ServiceWorkerRegistration {
   readonly attribute PushManager pushManager;
@@ -18,7 +14,7 @@ interface PushManager {
 
   Promise<PushSubscription> subscribe(optional PushSubscriptionOptionsInit options = {});
   Promise<PushSubscription?> getSubscription();
-  Promise<PermissionState> permissionState(optional PushSubscriptionOptionsInit options = {});
+  Promise<PushPermissionState> permissionState(optional PushSubscriptionOptionsInit options = {});
 };
 
 [Exposed=(Window,Worker), SecureContext]
@@ -35,7 +31,7 @@ dictionary PushSubscriptionOptionsInit {
 [Exposed=(Window,Worker), SecureContext]
 interface PushSubscription {
   readonly attribute USVString endpoint;
-  readonly attribute EpochTimeStamp? expirationTime;
+  readonly attribute DOMTimeStamp? expirationTime;
   [SameObject] readonly attribute PushSubscriptionOptions options;
   ArrayBuffer? getKey(PushEncryptionKeyName name);
   Promise<boolean> unsubscribe();
@@ -45,7 +41,7 @@ interface PushSubscription {
 
 dictionary PushSubscriptionJSON {
   USVString endpoint;
-  EpochTimeStamp? expirationTime = null;
+  DOMTimeStamp? expirationTime;
   record<DOMString, USVString> keys;
 };
 
@@ -90,4 +86,10 @@ interface PushSubscriptionChangeEvent : ExtendableEvent {
 dictionary PushSubscriptionChangeEventInit : ExtendableEventInit {
   PushSubscription newSubscription = null;
   PushSubscription oldSubscription = null;
+};
+
+enum PushPermissionState {
+  "denied",
+  "granted",
+  "prompt",
 };

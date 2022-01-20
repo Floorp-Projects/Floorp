@@ -22,7 +22,6 @@ import org.json.JSONObject
 import org.junit.Assume.assumeThat
 import org.junit.Rule
 import org.junit.rules.ErrorCollector
-import org.junit.rules.RuleChain
 
 import kotlin.reflect.KClass
 
@@ -118,11 +117,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val TEST_PORT = GeckoSessionTestRule.TEST_PORT
     }
 
-    val sessionRule = GeckoSessionTestRule()
-
-    // Override this to include more `evaluate` rules in the chain
-    @get:Rule
-    open val rules = RuleChain.outerRule(sessionRule)
+    @get:Rule val sessionRule = GeckoSessionTestRule()
 
     @get:Rule var temporaryProfile = TemporaryProfileRule()
 
@@ -232,11 +227,6 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
     fun GeckoSession.flushApzRepaints() = sessionRule.flushApzRepaints(this)
 
     fun GeckoSession.promiseAllPaintsDone() = sessionRule.promiseAllPaintsDone(this)
-
-    fun GeckoSession.getLinkColor(selector: String) = sessionRule.getLinkColor(this, selector)
-
-    fun GeckoSession.setResolutionAndScaleTo(resolution: Float) =
-            sessionRule.setResolutionAndScaleTo(this, resolution)
 
     var GeckoSession.active: Boolean
             get() = sessionRule.getActive(this)

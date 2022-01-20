@@ -57,11 +57,6 @@ class RDDParent final : public PRDDParent {
 #endif
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  mozilla::ipc::IPCResult RecvFlushFOGData(FlushFOGDataResolver&& aResolver);
-
-  mozilla::ipc::IPCResult RecvTestTriggerMetrics(
-      TestTriggerMetricsResolver&& aResolve);
-
  private:
   const TimeStamp mLaunchTime;
   RefPtr<ChildProfilerController> mProfilerController;

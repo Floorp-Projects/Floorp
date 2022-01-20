@@ -23,9 +23,7 @@
 #include "mozilla/net/BackgroundChannelRegistrar.h"
 #include "mozilla/net/NeckoChild.h"
 #include "RedirectChannelRegistrar.h"
-#ifdef MOZ_AUTH_EXTENSION
-#  include "nsAuthGSSAPI.h"
-#endif
+#include "nsAuthGSSAPI.h"
 
 #include "nsNetCID.h"
 
@@ -303,9 +301,7 @@ void nsNetShutdown() {
 
   mozilla::net::BackgroundChannelRegistrar::Shutdown();
 
-#ifdef MOZ_AUTH_EXTENSION
   nsAuthGSSAPI::Shutdown();
-#endif
 
   delete gNetSniffers;
   gNetSniffers = nullptr;

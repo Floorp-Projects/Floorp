@@ -86,7 +86,7 @@ class App extends Component {
       { className: "network-monitor" },
       AppErrorBoundary(
         {
-          componentName: "Netmonitor",
+          className: "app-error-boundary",
           panel: L10N.getStr("netmonitor.label"),
         },
         !statisticsOpen

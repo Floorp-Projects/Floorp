@@ -1,7 +1,0 @@
-{
-    "build_wasm": false,
-    "wasi-compiler-rt": null,
-    "patches": [
-        "profile-g4a10504e1f70c.patch"
-    ]
-}

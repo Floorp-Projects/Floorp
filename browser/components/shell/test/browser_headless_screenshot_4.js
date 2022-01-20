@@ -1,10 +1,6 @@
 "use strict";
 
 add_task(async function() {
-  const cwdScreenshotPath = PathUtils.join(
-    Services.dirsvc.get("CurWorkD", Ci.nsIFile).path,
-    "screenshot.png"
-  );
   // Test other variations of the "window-size" argument.
   await testWindowSizePositive(800, 600);
   await testWindowSizePositive(1234);
@@ -16,7 +12,7 @@ add_task(async function() {
       "-window-size",
       "hello",
     ],
-    cwdScreenshotPath
+    "screenshot.png"
   );
   await testFileCreationNegative(
     [
@@ -26,6 +22,6 @@ add_task(async function() {
       "-window-size",
       "800,",
     ],
-    cwdScreenshotPath
+    "screenshot.png"
   );
 });

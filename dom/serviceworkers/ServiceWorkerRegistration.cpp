@@ -50,7 +50,7 @@ ServiceWorkerRegistration::ServiceWorkerRegistration(
       mDispatchedUpdateFoundId(kInvalidUpdateFoundId) {
   MOZ_DIAGNOSTIC_ASSERT(mInner);
 
-  KeepAliveIfHasListenersFor(nsGkAtoms::onupdatefound);
+  KeepAliveIfHasListenersFor(u"updatefound"_ns);
 
   mInner->SetServiceWorkerRegistration(this);
 }
@@ -125,7 +125,7 @@ void ServiceWorkerRegistration::RegistrationCleared() {
   // Our underlying registration was removed from SWM, so we
   // will never get an updatefound event again.  We can let
   // the object GC if content is not holding it alive.
-  IgnoreKeepAliveIfHasListenersFor(nsGkAtoms::onupdatefound);
+  IgnoreKeepAliveIfHasListenersFor(u"updatefound"_ns);
 }
 
 already_AddRefed<ServiceWorker> ServiceWorkerRegistration::GetInstalling()

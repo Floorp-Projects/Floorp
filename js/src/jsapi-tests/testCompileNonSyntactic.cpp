@@ -2,14 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/RefPtr.h"  // RefPtr
-#include "mozilla/Utf8.h"    // mozilla::Utf8Unit
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "js/CompilationAndEvaluation.h"  // JS::Compile
-#include "js/CompileOptions.h"  // JS::CompileOptions, JS::InstantiateOptions
-#include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileToStencilOffThread, JS::FinishCompileToStencilOffThread, JS::InstantiateGlobalStencil
-
-#include "js/SourceText.h"  // JS::Source{Ownership,Text}
+#include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 #include "vm/HelperThreads.h"
 #include "vm/Monitor.h"
@@ -94,15 +90,11 @@ bool testCompile(bool nonSyntactic) {
   OffThreadToken* token;
 
   JS::SourceText<char16_t> srcBuf;
-  RefPtr<JS::Stencil> stencil;
   CHECK(srcBuf.init(cx, src_16, length, JS::SourceOwnership::Borrowed));
 
-  CHECK(CompileToStencilOffThread(cx, options, srcBuf, task.OffThreadCallback,
-                                  &task));
+  CHECK(CompileOffThread(cx, options, srcBuf, task.OffThreadCallback, &task));
   CHECK(token = task.waitUntilDone(cx));
-  CHECK(stencil = FinishCompileToStencilOffThread(cx, token));
-  InstantiateOptions instantiateOptions(options);
-  CHECK(script = InstantiateGlobalStencil(cx, instantiateOptions, stencil));
+  CHECK(script = FinishOffThreadScript(cx, token));
   CHECK_EQUAL(script->hasNonSyntacticScope(), nonSyntactic);
 
   return true;

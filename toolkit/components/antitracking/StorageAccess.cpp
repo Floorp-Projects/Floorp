@@ -194,7 +194,8 @@ static StorageAccess InternalStorageAllowedCheckCached(
   // for this window. This avoids repeated calls to
   // InternalStorageAllowedCheck.
   nsGlobalWindowInner* win = nullptr;
-  if (aWindow) {
+  if (aWindow &&
+      StaticPrefs::privacy_antitracking_cacheStorageAllowedForWindow()) {
     win = nsGlobalWindowInner::Cast(aWindow);
 
     Maybe<StorageAccess> storageAccess =

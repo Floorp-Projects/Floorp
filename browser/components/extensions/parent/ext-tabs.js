@@ -1283,9 +1283,14 @@ this.tabs = class extends ExtensionAPI {
           PrintUtils.startPrintWindow(activeTab.linkedBrowser.browsingContext);
         },
 
-        // Legacy API
-        printPreview() {
-          return Promise.resolve(this.print());
+        async printPreview() {
+          let activeTab = getTabOrActive(null);
+          let { PrintUtils, PrintPreviewListener } = activeTab.ownerGlobal;
+          try {
+            await PrintUtils.printPreview(PrintPreviewListener);
+          } catch (ex) {
+            return Promise.reject({ message: "Print preview failed" });
+          }
         },
 
         saveAsPDF(pageSettings) {
@@ -1351,6 +1356,7 @@ this.tabs = class extends ExtensionAPI {
                 printSettings.toFileName = picker.file.path;
 
                 printSettings.printSilent = true;
+                printSettings.showPrintProgress = false;
 
                 printSettings.outputFormat =
                   Ci.nsIPrintSettings.kOutputFormatPDF;

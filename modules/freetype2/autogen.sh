@@ -110,10 +110,7 @@ check_tool_version ()
   fi
 }
 
-# Solaris 10's shell doesn't like the `!` operator to negate the exit status.
-if test -f ./builds/unix/configure.raw; then
-  :
-else
+if test ! -f ./builds/unix/configure.raw; then
   echo "You must be in the same directory as \`autogen.sh'."
   echo "Bootstrapping doesn't work if srcdir != builddir."
   exit 1
@@ -182,19 +179,15 @@ copy_submodule_files ()
   cp $DLG_SRC_DIR/* src/dlg
 }
 
-if test -d ".git"; then
-  DLG_INC_DIR=subprojects/dlg/include/dlg
-  DLG_SRC_DIR=subprojects/dlg/src/dlg
+DLG_INC_DIR=subprojects/dlg/include/dlg
+DLG_SRC_DIR=subprojects/dlg/src/dlg
 
-  if test -d "$DLG_INC_DIR"; then
-    :
-  else
-    echo "Checking out submodule in \`subprojects/dlg':"
-    git submodule init
-    git submodule update
-  fi
-
-  copy_submodule_files
+if ! test -d "$DLG_INC_DIR"; then
+  echo "Checking out submodule in \`subprojects/dlg':"
+  git submodule init
+  git submodule update
 fi
+
+copy_submodule_files
 
 # EOF

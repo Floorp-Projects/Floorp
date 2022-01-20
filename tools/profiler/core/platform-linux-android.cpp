@@ -292,11 +292,6 @@ static void StreamMetaPlatformSampleUnits(PSLockRef aLock,
   aWriter.StringProperty("threadCPUDelta", "ns");
 }
 
-/* static */
-uint64_t RunningTimes::ConvertRawToJson(uint64_t aRawValue) {
-  return aRawValue;
-}
-
 static RunningTimes GetThreadRunningTimesDiff(
     PSLockRef aLock,
     ThreadRegistration::UnlockedRWForLockedProfiler& aThreadData) {

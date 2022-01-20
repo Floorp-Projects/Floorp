@@ -795,10 +795,7 @@ this.downloads = class extends ExtensionAPI {
               let uri = Services.io.newURI(options.url);
               if (uri instanceof Ci.nsIURL) {
                 filename = DownloadPaths.sanitize(
-                  Services.textToSubURI.unEscapeURIForUI(
-                    uri.fileName,
-                    /* dontEscape = */ true
-                  )
+                  Services.textToSubURI.unEscapeURIForUI(uri.fileName)
                 );
               }
             }

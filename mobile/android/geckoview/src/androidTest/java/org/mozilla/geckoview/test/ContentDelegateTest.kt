@@ -32,7 +32,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
 @MediumTest
 class ContentDelegateTest : BaseSessionTest() {
     @Test fun titleChange() {
-        mainSession.loadTestPath(TITLE_CHANGE_HTML_PATH)
+        sessionRule.session.loadTestPath(TITLE_CHANGE_HTML_PATH)
 
         sessionRule.waitUntilCalled(object : ContentDelegate {
             @AssertCalled(count = 2)
@@ -47,7 +47,7 @@ class ContentDelegateTest : BaseSessionTest() {
         // disable test on pgo for frequently failing Bug 1543355
         assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
 
-        mainSession.loadTestPath(DOWNLOAD_HTML_PATH)
+        sessionRule.session.loadTestPath(DOWNLOAD_HTML_PATH)
 
         sessionRule.waitUntilCalled(object : NavigationDelegate, ContentDelegate {
 
@@ -395,7 +395,7 @@ class ContentDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("The script did not complete.",
-                        mainSession.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
+                        sessionRule.session.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
                         equalTo("Started"))
             }
         })
@@ -413,7 +413,7 @@ class ContentDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1)
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("The script did not complete.",
-                        mainSession.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
+                        sessionRule.session.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
                         equalTo("Started"))
             }
         })
@@ -437,7 +437,7 @@ class ContentDelegateTest : BaseSessionTest() {
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("The delegate was informed of the hang repeatedly", scriptHungReportCount, greaterThan(1))
                 assertThat("The script did complete.",
-                        mainSession.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
+                        sessionRule.session.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
                         equalTo("Finished"))
             }
         })
@@ -458,7 +458,7 @@ class ContentDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1, order = [2])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("The script did not complete.",
-                        mainSession.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
+                        sessionRule.session.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
                         equalTo("Started"))
             }
         })
@@ -479,7 +479,7 @@ class ContentDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1, order = [2])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("The script did complete.",
-                        mainSession.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
+                        sessionRule.session.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
                         equalTo("Finished"))
             }
         })
@@ -506,7 +506,7 @@ class ContentDelegateTest : BaseSessionTest() {
             @AssertCalled(count = 1, order = [3])
             override fun onPageStop(session: GeckoSession, success: Boolean) {
                 assertThat("The script did not complete.",
-                        mainSession.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
+                        sessionRule.session.evaluateJS("document.getElementById(\"content\").innerHTML") as String,
                         equalTo("Started"))
             }
         })

@@ -16,6 +16,8 @@ interface CountQueuingStrategy {
 
   readonly attribute unrestricted double highWaterMark;
 
-  [Throws]
-  readonly attribute Function size;
+  // This is currently inlined, but will need to be implemented
+  // See Bug 1734239
+  //
+  // readonly attribute Function size;
 };

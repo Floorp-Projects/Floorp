@@ -1,5 +1,6 @@
-const { BlocklistPrivate } = ChromeUtils.import(
-  "resource://gre/modules/Blocklist.jsm"
+const BlocklistGlobal = ChromeUtils.import(
+  "resource://gre/modules/Blocklist.jsm",
+  null
 );
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
@@ -32,7 +33,7 @@ function run_test() {
   );
   // This will initialize the remote settings clients for blocklists,
   // with their specific options etc.
-  BlocklistPrivate.ExtensionBlocklistRS.ensureInitialized();
+  BlocklistGlobal.ExtensionBlocklistRS.ensureInitialized();
   // Obtain one of the instantiated client for our tests.
   client = RemoteSettings("addons", { bucketName: "blocklists" });
 

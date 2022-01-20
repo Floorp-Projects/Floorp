@@ -119,10 +119,18 @@ test_description_schema = Schema(
         # The different configurations that should be run against this task, defined
         # in the TEST_VARIANTS object in the variant.py transforms.
         Optional("variants"): [str],
-        # Whether to run this task without any variants applied.
-        Required("run-without-variant"): optionally_keyed_by("test-platform", bool),
+        # Whether to run this task with e10s.  If false, run
+        # without e10s; if true, run with e10s; if 'both', run one task with and
+        # one task without e10s.  E10s tasks have "-e10s" appended to the test name
+        # and treeherder group.
+        Required("e10s"): optionally_keyed_by(
+            "test-platform", "project", Any(bool, "both")
+        ),
         # Whether the task should run with WebRender enabled or not.
         Optional("webrender"): bool,
+        Optional("webrender-run-on-projects"): optionally_keyed_by(
+            "app", Any([str], "default")
+        ),
         # The EC2 instance size to run these tests on.
         Required("instance-size"): optionally_keyed_by(
             "test-platform", Any("default", "large", "xlarge")
@@ -272,6 +280,8 @@ test_description_schema = Schema(
         # A list of artifacts to install from 'fetch' tasks. Validation deferred
         # to 'job' transforms.
         Optional("fetches"): object,
+        # Opt-in to Python 3 support
+        Optional("python-3"): bool,
         # Raptor / browsertime specific keys, defer validation to 'raptor.py'
         # transform.
         Optional("raptor"): object,
@@ -336,6 +346,7 @@ def set_defaults(config, tasks):
         else:
             task.setdefault("webrender", False)
 
+        task.setdefault("e10s", True)
         task.setdefault("try-name", task["test-name"])
         task.setdefault("os-groups", [])
         task.setdefault("run-as-administrator", False)
@@ -352,7 +363,6 @@ def set_defaults(config, tasks):
         task.setdefault("docker-image", {"in-tree": "ubuntu1804-test"})
         task.setdefault("checkout", False)
         task.setdefault("require-signed-extensions", False)
-        task.setdefault("run-without-variant", True)
         task.setdefault("variants", [])
         task.setdefault("supports-artifact-builds", True)
 
@@ -369,21 +379,16 @@ transforms.add_validate(test_description_schema)
 
 @transforms.add
 def resolve_keys(config, tasks):
-    keys = (
-        "require-signed-extensions",
-        "run-without-variant",
-    )
     for task in tasks:
-        for key in keys:
-            resolve_keyed_by(
-                task,
-                key,
-                item_name=task["test-name"],
-                enforce_single_match=False,
-                **{
-                    "release-type": config.params["release_type"],
-                },
-            )
+        resolve_keyed_by(
+            task,
+            "require-signed-extensions",
+            item_name=task["test-name"],
+            enforce_single_match=False,
+            **{
+                "release-type": config.params["release_type"],
+            },
+        )
         yield task
 
 
@@ -396,7 +401,6 @@ def run_sibling_transforms(config, tasks):
         ("raptor", lambda t: t["suite"] == "raptor"),
         ("other", None),
         ("worker", None),
-        ("fission", None),
         # These transforms should always run last as there is never any
         # difference in configuration from one chunk to another (other than
         # chunk number).
@@ -439,8 +443,11 @@ def make_job_description(config, tasks):
             label += suffix
             try_name += suffix
 
-        if "1proc" not in attributes.get("unittest_variant", ""):
+        if task["e10s"]:
             label += "-e10s"
+        else:
+            label += "-1proc"
+            try_name += "-1proc"
 
         if task["chunks"] > 1:
             label += "-{}".format(task["this-chunk"])

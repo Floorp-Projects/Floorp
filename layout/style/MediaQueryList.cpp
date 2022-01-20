@@ -28,7 +28,7 @@ MediaQueryList::MediaQueryList(Document* aDocument,
       mMatchesValid(false) {
   mMediaList = MediaList::Create(aMediaQueryList, aCallerType);
 
-  KeepAliveIfHasListenersFor(nsGkAtoms::onchange);
+  KeepAliveIfHasListenersFor(ONCHANGE_STRING);
 }
 
 MediaQueryList::~MediaQueryList() = default;
@@ -108,7 +108,7 @@ bool MediaQueryList::HasListeners() { return HasListenersFor(ONCHANGE_STRING); }
 void MediaQueryList::Disconnect() {
   DisconnectFromOwner();
 
-  IgnoreKeepAliveIfHasListenersFor(nsGkAtoms::onchange);
+  IgnoreKeepAliveIfHasListenersFor(ONCHANGE_STRING);
 }
 
 void MediaQueryList::RecomputeMatches() {

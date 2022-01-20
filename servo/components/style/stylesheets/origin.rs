@@ -10,7 +10,7 @@ use std::ops::BitOrAssign;
 /// Each style rule has an origin, which determines where it enters the cascade.
 ///
 /// <https://drafts.csswg.org/css-cascade/#cascading-origins>
-#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, ToShmem, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, ToShmem)]
 #[repr(u8)]
 pub enum Origin {
     /// <https://drafts.csswg.org/css-cascade/#cascade-origin-user-agent>

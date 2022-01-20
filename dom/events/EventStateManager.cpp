@@ -107,7 +107,9 @@
 #include "nsIDragSession.h"
 #include "mozilla/dom/DataTransfer.h"
 #include "nsContentAreaDragDrop.h"
-#include "nsTreeBodyFrame.h"
+#ifdef MOZ_XUL
+#  include "nsTreeBodyFrame.h"
+#endif
 #include "nsIController.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/ContentParent.h"
@@ -1809,9 +1811,7 @@ void EventStateManager::FireContextClick() {
       AutoHandlingUserInputStatePusher userInpStatePusher(true, &event);
 
       // dispatch to DOM
-      RefPtr<nsIContent> gestureDownContent = mGestureDownContent;
-      RefPtr<nsPresContext> presContext = mPresContext;
-      EventDispatcher::Dispatch(gestureDownContent, presContext, &event,
+      EventDispatcher::Dispatch(mGestureDownContent, mPresContext, &event,
                                 nullptr, &status);
 
       // We don't need to dispatch to frame handling because no frames
@@ -2602,10 +2602,9 @@ void EventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.mDelta = aDelta;
   event.mInputSource = aEvent->mInputSource;
 
-  RefPtr<nsPresContext> presContext = aTargetFrame->PresContext();
   nsEventStatus status = nsEventStatus_eIgnore;
-  EventDispatcher::Dispatch(targetContent, presContext, &event, nullptr,
-                            &status);
+  EventDispatcher::Dispatch(targetContent, aTargetFrame->PresContext(), &event,
+                            nullptr, &status);
   aState.mDefaultPrevented =
       event.DefaultPrevented() || status == nsEventStatus_eConsumeNoDefault;
   aState.mDefaultPreventedByContent = event.DefaultPreventedByContent();
@@ -2641,10 +2640,9 @@ void EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.mDelta = aPixelDelta;
   event.mInputSource = aEvent->mInputSource;
 
-  RefPtr<nsPresContext> presContext = aTargetFrame->PresContext();
   nsEventStatus status = nsEventStatus_eIgnore;
-  EventDispatcher::Dispatch(targetContent, presContext, &event, nullptr,
-                            &status);
+  EventDispatcher::Dispatch(targetContent, aTargetFrame->PresContext(), &event,
+                            nullptr, &status);
   aState.mDefaultPrevented =
       event.DefaultPrevented() || status == nsEventStatus_eConsumeNoDefault;
   aState.mDefaultPreventedByContent = event.DefaultPreventedByContent();
@@ -2851,13 +2849,7 @@ nsSize EventStateManager::GetScrollAmount(
   MOZ_ASSERT(aPresContext);
   MOZ_ASSERT(aEvent);
 
-  const bool isPage = aEvent->mDeltaMode == WheelEvent_Binding::DOM_DELTA_PAGE;
-  if (!aScrollableFrame) {
-    // If there is no scrollable frame, we should use root, see below.
-    aScrollableFrame =
-        aPresContext->PresShell()->GetRootScrollFrameAsScrollable();
-  }
-
+  bool isPage = (aEvent->mDeltaMode == WheelEvent_Binding::DOM_DELTA_PAGE);
   if (aScrollableFrame) {
     return isPage ? aScrollableFrame->GetPageScrollAmount()
                   : aScrollableFrame->GetLineScrollAmount();
@@ -2868,12 +2860,7 @@ nsSize EventStateManager::GetScrollAmount(
     return aPresContext->GetVisibleArea().Size();
   }
 
-  // Otherwise use root frame's font metrics.
-  //
-  // FIXME(emilio): Should this use the root element's style frame? The root
-  // frame will always have the initial font. Then again it should never matter
-  // for content, we should always have a root scrollable frame in html
-  // documents.
+  // If there is no scrollable frame, we should use root frame's information.
   nsIFrame* rootFrame = aPresContext->PresShell()->GetRootFrame();
   if (!rootFrame) {
     return nsSize(0, 0);
@@ -3080,6 +3067,7 @@ void EventStateManager::DecideGestureEvent(WidgetGestureNotifyEvent* aEvent,
       break;
     }
 
+#ifdef MOZ_XUL
     // Special check for trees
     nsTreeBodyFrame* treeFrame = do_QueryFrame(current);
     if (treeFrame) {
@@ -3091,6 +3079,7 @@ void EventStateManager::DecideGestureEvent(WidgetGestureNotifyEvent* aEvent,
       }
       break;
     }
+#endif
 
     nsIScrollableFrame* scrollableFrame = do_QueryFrame(current);
     if (scrollableFrame) {
@@ -3188,8 +3177,6 @@ void EventStateManager::PostHandleKeyboardEvent(
     return;
   }
 
-  RefPtr<nsPresContext> presContext = mPresContext;
-
   if (!aKeyboardEvent->HasBeenPostedToRemoteProcess()) {
     if (aKeyboardEvent->IsWaitingReplyFromRemoteProcess()) {
       RefPtr<BrowserParent> remote =
@@ -3214,8 +3201,8 @@ void EventStateManager::PostHandleKeyboardEvent(
         // process due to the remote browser wasn't ready.
         WidgetKeyboardEvent keyEvent(*aKeyboardEvent);
         aKeyboardEvent->MarkAsHandledInRemoteProcess();
-        RefPtr<Element> ownerElement = remote->GetOwnerElement();
-        EventDispatcher::Dispatch(ownerElement, presContext, &keyEvent);
+        EventDispatcher::Dispatch(remote->GetOwnerElement(), mPresContext,
+                                  &keyEvent);
         if (keyEvent.DefaultPrevented()) {
           aKeyboardEvent->PreventDefault(!keyEvent.DefaultPreventedByContent());
           aStatus = nsEventStatus_eConsumeNoDefault;
@@ -3253,7 +3240,7 @@ void EventStateManager::PostHandleKeyboardEvent(
           break;
         }
 
-        EnsureDocument(presContext);
+        EnsureDocument(mPresContext);
         nsFocusManager* fm = nsFocusManager::GetFocusManager();
         if (fm && mDocument) {
           // Shift focus forward or back depending on shift key
@@ -4448,8 +4435,7 @@ nsIFrame* EventStateManager::DispatchMouseOrPointerEvent(
 
   nsEventStatus status = nsEventStatus_eIgnore;
   ESMEventCB callback(targetContent);
-  RefPtr<nsPresContext> presContext = mPresContext;
-  EventDispatcher::Dispatch(targetContent, presContext, dispatchEvent.get(),
+  EventDispatcher::Dispatch(targetContent, mPresContext, dispatchEvent.get(),
                             nullptr, &status, &callback);
 
   if (mPresContext) {
@@ -4523,28 +4509,23 @@ class EnterLeaveDispatcher {
     }
   }
 
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Dispatch() {
+  void Dispatch() {
     if (mEventMessage == eMouseEnter || mEventMessage == ePointerEnter) {
       for (int32_t i = mTargets.Count() - 1; i >= 0; --i) {
         mESM->DispatchMouseOrPointerEvent(mMouseEvent, mEventMessage,
-                                          MOZ_KnownLive(mTargets[i]),
-                                          mRelatedTarget);
+                                          mTargets[i], mRelatedTarget);
       }
     } else {
       for (int32_t i = 0; i < mTargets.Count(); ++i) {
         mESM->DispatchMouseOrPointerEvent(mMouseEvent, mEventMessage,
-                                          MOZ_KnownLive(mTargets[i]),
-                                          mRelatedTarget);
+                                          mTargets[i], mRelatedTarget);
       }
     }
   }
 
-  // Nothing overwrites anything after constructor. Please remove MOZ_KnownLive
-  // and MOZ_KNOWN_LIVE if anything marked as such becomes mutable.
-  const RefPtr<EventStateManager> mESM;
+  EventStateManager* mESM;
   nsCOMArray<nsIContent> mTargets;
-  MOZ_KNOWN_LIVE nsCOMPtr<nsIContent> mRelatedTarget;
+  nsCOMPtr<nsIContent> mRelatedTarget;
   WidgetMouseEvent* mMouseEvent;
   EventMessage mEventMessage;
 };
@@ -4598,9 +4579,8 @@ void EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
                                        isPointer ? ePointerLeave : eMouseLeave);
 
   // Fire mouseout
-  nsCOMPtr<nsIContent> lastOverElement = wrapper->mLastOverElement;
   DispatchMouseOrPointerEvent(aMouseEvent, isPointer ? ePointerOut : eMouseOut,
-                              lastOverElement, aMovingInto);
+                              wrapper->mLastOverElement, aMovingInto);
   leaveDispatcher.Dispatch();
 
   wrapper->mLastOverFrame = nullptr;
@@ -6221,8 +6201,8 @@ void EventStateManager::DeltaAccumulator::InitLineOrPageDelta(
   mIsNoLineOrPageDeltaDevice = aEvent->mIsNoLineOrPageDelta;
 
   {
-    nsIFrame* frame = aESM->ComputeScrollTarget(aTargetFrame, aEvent,
-                                                COMPUTE_DEFAULT_ACTION_TARGET);
+    nsIFrame* frame = aESM->ComputeScrollTarget(
+        aTargetFrame, aEvent, COMPUTE_LEGACY_MOUSE_SCROLL_EVENT_TARGET);
     nsPresContext* pc =
         frame ? frame->PresContext() : aTargetFrame->PresContext();
     nsIScrollableFrame* scrollTarget = do_QueryFrame(frame);

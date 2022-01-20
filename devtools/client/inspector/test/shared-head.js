@@ -84,23 +84,21 @@ var openInspectorSidebarTab = async function(id) {
  * @return a promise that resolves when the inspector is ready and the rule view
  * is visible and ready
  */
-async function openRuleView() {
-  const { inspector, toolbox, highlighterTestFront } = await openInspector();
+function openRuleView() {
+  return openInspector().then(data => {
+    const view = data.inspector.getPanel("ruleview").view;
 
-  const ruleViewPanel = inspector.getPanel("ruleview");
-  await ruleViewPanel.readyPromise;
-  const view = ruleViewPanel.view;
+    // Replace the view to use a custom debounce function that can be triggered manually
+    // through an additional ".flush()" property.
+    view.debounce = manualDebounce();
 
-  // Replace the view to use a custom debounce function that can be triggered manually
-  // through an additional ".flush()" property.
-  view.debounce = manualDebounce();
-
-  return {
-    toolbox,
-    inspector,
-    highlighterTestFront,
-    view,
-  };
+    return {
+      toolbox: data.toolbox,
+      inspector: data.inspector,
+      highlighterTestFront: data.highlighterTestFront,
+      view,
+    };
+  });
 }
 
 /**

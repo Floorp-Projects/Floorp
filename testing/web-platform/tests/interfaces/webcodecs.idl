@@ -91,7 +91,7 @@ interface VideoEncoder {
   undefined reset();
   undefined close();
 
-  static Promise<VideoEncoderSupport> isConfigSupported(VideoEncoderConfig config);
+  static Promise<boolean> isConfigSupported(VideoEncoderConfig config);
 };
 
 dictionary VideoEncoderInit {

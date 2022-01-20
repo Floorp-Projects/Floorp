@@ -60,14 +60,6 @@ class PerfStats {
     RecordMeasurementInternal(aMetric, aDuration);
   }
 
-  static void RecordMeasurementCounter(Metric aMetric,
-                                       uint64_t aIncrementAmount) {
-    if (!(sCollectionMask & (1 << static_cast<uint64_t>(aMetric)))) {
-      return;
-    }
-    RecordMeasurementCounterInternal(aMetric, aIncrementAmount);
-  }
-
   template <Metric N>
   class AutoMetricRecording {
    public:
@@ -90,8 +82,6 @@ class PerfStats {
   static void RecordMeasurementStartInternal(Metric aMetric);
   static void RecordMeasurementEndInternal(Metric aMetric);
   static void RecordMeasurementInternal(Metric aMetric, TimeDuration aDuration);
-  static void RecordMeasurementCounterInternal(Metric aMetric,
-                                               uint64_t aIncrementAmount);
 
   RefPtr<PerfStatsPromise> CollectPerfStatsJSONInternal();
   nsCString CollectLocalPerfStatsJSONInternal();

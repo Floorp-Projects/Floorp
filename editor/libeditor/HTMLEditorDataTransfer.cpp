@@ -744,9 +744,6 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
     return lastInsertedPoint.inspectErr();
   }
 
-  mHTMLEditor.TopLevelEditSubActionDataRef()
-      .mNeedsToCleanUpEmptyInlineElements = false;
-
   if (!lastInsertedPoint.inspect().IsSet()) {
     return NS_OK;
   }
@@ -1897,7 +1894,8 @@ nsresult HTMLEditor::InsertFromDataTransfer(const DataTransfer* aDataTransfer,
   MOZ_ASSERT_IF(GetEditAction() == EditAction::eDrop, aDroppedAt.IsSet());
 
   ErrorResult error;
-  RefPtr<DOMStringList> types = aDataTransfer->MozTypesAt(aIndex, error);
+  RefPtr<DOMStringList> types =
+      aDataTransfer->MozTypesAt(aIndex, CallerType::System, error);
   if (error.Failed()) {
     NS_WARNING("DataTransfer::MozTypesAt() failed");
     return error.StealNSResult();

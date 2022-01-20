@@ -44,6 +44,8 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return new ConsoleAPI(consoleOptions);
 });
 
+Cu.importGlobalProperties(["Glean", "GleanPings"]);
+
 const backgroundTaskTimeoutSec = Services.prefs.getIntPref(
   "app.update.background.timeoutSec",
   10 * 60
@@ -313,7 +315,8 @@ async function runBackgroundTask() {
     "glean",
     "__dummy__",
   ]).parent.path;
-  Services.fog.initializeFOG(gleanRoot, "firefox.desktop.background.update");
+  let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
+  FOG.initializeFOG(gleanRoot, "firefox.desktop.background.update");
 
   // For convenience, mirror our loglevel.
   Services.prefs.setCharPref(

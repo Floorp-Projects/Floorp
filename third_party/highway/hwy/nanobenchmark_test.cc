@@ -14,8 +14,6 @@
 
 #include "hwy/nanobenchmark.h"
 
-#include <inttypes.h>
-#include <stdint.h>
 #include <stdio.h>
 
 #include <random>
@@ -24,13 +22,6 @@
 
 namespace hwy {
 namespace {
-
-// Governs duration of test; avoid timeout in debug builds.
-#if HWY_IS_DEBUG_BUILD
-constexpr size_t kMaxEvals = 3;
-#else
-constexpr size_t kMaxEvals = 4;
-#endif
 
 FuncOutput Div(const void*, FuncInput in) {
   // Here we're measuring the throughput because benchmark invocations are
@@ -43,12 +34,11 @@ void MeasureDiv(const FuncInput (&inputs)[N]) {
   printf("Measuring integer division (output on final two lines)\n");
   Result results[N];
   Params params;
-  params.max_evals = kMaxEvals;
+  params.max_evals = 4;  // avoid test timeout
   const size_t num_results = Measure(&Div, nullptr, inputs, N, results, params);
   for (size_t i = 0; i < num_results; ++i) {
-    printf("%5" PRIu64 ": %6.2f ticks; MAD=%4.2f%%\n",
-           static_cast<uint64_t>(results[i].input), results[i].ticks,
-           results[i].variability * 100.0);
+    printf("%5zu: %6.2f ticks; MAD=%4.2f%%\n", results[i].input,
+           results[i].ticks, results[i].variability * 100.0);
   }
 }
 
@@ -69,7 +59,7 @@ template <size_t N>
 void MeasureRandom(const FuncInput (&inputs)[N]) {
   Result results[N];
   Params p;
-  p.max_evals = kMaxEvals;
+  p.max_evals = 4;  // avoid test timeout
   p.verbose = false;
   const size_t num_results = Measure(&Random, nullptr, inputs, N, results, p);
   for (size_t i = 0; i < num_results; ++i) {
@@ -88,9 +78,3 @@ TEST(NanobenchmarkTest, RunAll) {
 
 }  // namespace
 }  // namespace hwy
-
-// Ought not to be necessary, but without this, no tests run on RVV.
-int main(int argc, char** argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

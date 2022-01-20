@@ -2019,9 +2019,7 @@ function RuleViewTool(inspector, window) {
     }
   );
 
-  // At the moment `readyPromise` is only consumed in tests (see `openRuleView`) to be
-  // notified when the ruleview was first populated to match the initial selected node.
-  this.readyPromise = this.onSelected();
+  this.onSelected();
 }
 
 RuleViewTool.prototype = {
@@ -2042,30 +2040,29 @@ RuleViewTool.prototype = {
     // let the update go through as this is needed to empty the view on
     // navigation.
     if (!this.view) {
-      return null;
+      return;
     }
 
     const isInactive =
       !this.isPanelVisible() && this.inspector.selection.nodeFront;
     if (isInactive) {
-      return null;
+      return;
     }
 
     if (
       !this.inspector.selection.isConnected() ||
       !this.inspector.selection.isElementNode()
     ) {
-      return this.view.selectElement(null);
+      this.view.selectElement(null);
+      return;
     }
 
-    if (!selectElement) {
-      return null;
+    if (selectElement) {
+      const done = this.inspector.updating("rule-view");
+      this.view
+        .selectElement(this.inspector.selection.nodeFront)
+        .then(done, done);
     }
-
-    const done = this.inspector.updating("rule-view");
-    return this.view
-      .selectElement(this.inspector.selection.nodeFront)
-      .then(done, done);
   },
 
   refresh: function() {
@@ -2124,7 +2121,7 @@ RuleViewTool.prototype = {
 
     this.view.destroy();
 
-    this.view = this.document = this.inspector = this.readyPromise = null;
+    this.view = this.document = this.inspector = null;
   },
 };
 

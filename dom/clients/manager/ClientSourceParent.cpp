@@ -219,7 +219,6 @@ void ClientSourceParent::Init() {
   // Since we validate the principal on the child side as well, any failure
   // here is treated as fatal.
   if (NS_WARN_IF(!ClientIsValidPrincipalInfo(mClientInfo.PrincipalInfo()))) {
-    mService->ForgetFutureSource(mClientInfo.ToIPC());
     KillInvalidChild();
     return;
   }

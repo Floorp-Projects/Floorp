@@ -22,7 +22,6 @@ import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
-import org.mozilla.geckoview.OrientationController;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebExtensionController;
 import org.mozilla.geckoview.WebRequestError;
@@ -83,10 +82,6 @@ public class TestRunnerActivity extends Activity {
 
   private static WebExtensionController webExtensionController() {
     return sRuntime.getWebExtensionController();
-  }
-
-  private static OrientationController orientationController() {
-    return sRuntime.getOrientationController();
   }
 
   // Keeps track of all sessions for this test runner. The top session in the deque is the
@@ -417,16 +412,6 @@ public class TestRunnerActivity extends Activity {
             finish();
           });
     }
-
-    orientationController()
-        .setDelegate(
-            new OrientationController.OrientationDelegate() {
-              @Override
-              public GeckoResult<AllowOrDeny> onOrientationLock(int aOrientation) {
-                setRequestedOrientation(aOrientation);
-                return GeckoResult.allow();
-              }
-            });
 
     mSession = createSession(/* active */ true);
     webExtensionController().setTabActive(mOwnedSessions.peek(), true);

@@ -59,7 +59,8 @@ macro_rules! _memoffset__compile_error {
 ///
 /// ## Examples
 /// ```
-/// use memoffset::span_of;
+/// #[macro_use]
+/// extern crate memoffset;
 ///
 /// #[repr(C)]
 /// struct Florp {

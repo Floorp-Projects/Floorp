@@ -48,16 +48,15 @@ struct StartInputProcessing : public ControlMessage {
       : ControlMessage(aTrack),
         mInputTrack(aTrack),
         mInputProcessing(aInputProcessing) {}
-  void Run() override { mInputProcessing->Start(mTrack->GraphImpl()); }
+  void Run() override { mInputProcessing->Start(); }
 };
 
 struct StopInputProcessing : public ControlMessage {
   const RefPtr<AudioInputProcessing> mInputProcessing;
 
-  explicit StopInputProcessing(AudioInputTrack* aTrack,
-                               AudioInputProcessing* aInputProcessing)
-      : ControlMessage(aTrack), mInputProcessing(aInputProcessing) {}
-  void Run() override { mInputProcessing->Stop(mTrack->GraphImpl()); }
+  explicit StopInputProcessing(AudioInputProcessing* aInputProcessing)
+      : ControlMessage(nullptr), mInputProcessing(aInputProcessing) {}
+  void Run() override { mInputProcessing->Stop(); }
 };
 
 struct SetPassThrough : public ControlMessage {
@@ -247,13 +246,13 @@ TEST(TestAudioTrackGraph, ErrorCallback)
   RefPtr<AudioInputProcessing> listener;
   auto started = Invoke([&] {
     inputTrack = AudioInputTrack::Create(graph);
-    listener = new AudioInputProcessing(2);
+    listener = new AudioInputProcessing(2, PRINCIPAL_HANDLE_NONE);
     inputTrack->GraphImpl()->AppendMessage(
         MakeUnique<SetPassThrough>(inputTrack, listener, true));
     inputTrack->SetInputProcessing(listener);
     inputTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(inputTrack, listener));
-    inputTrack->OpenAudioInput(deviceId, listener, PRINCIPAL_HANDLE_NONE);
+    inputTrack->OpenAudioInput(deviceId, listener);
     EXPECT_EQ(inputTrack->DeviceId().value(), deviceId);
     return graph->NotifyWhenDeviceStarted(inputTrack);
   });
@@ -280,7 +279,7 @@ TEST(TestAudioTrackGraph, ErrorCallback)
   // Clean up.
   DispatchFunction([&] {
     inputTrack->GraphImpl()->AppendMessage(
-        MakeUnique<StopInputProcessing>(inputTrack, listener));
+        MakeUnique<StopInputProcessing>(listener));
     inputTrack->CloseAudioInput();
     inputTrack->Destroy();
   });
@@ -314,14 +313,14 @@ TEST(TestAudioTrackGraph, AudioInputTrack)
     outputTrack->AddAudioOutput(reinterpret_cast<void*>(1));
     port = outputTrack->AllocateInputPort(inputTrack);
     /* Primary graph: Open Audio Input through SourceMediaTrack */
-    listener = new AudioInputProcessing(2);
+    listener = new AudioInputProcessing(2, PRINCIPAL_HANDLE_NONE);
     inputTrack->GraphImpl()->AppendMessage(
         MakeUnique<SetPassThrough>(inputTrack, listener, true));
     inputTrack->SetInputProcessing(listener);
     inputTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(inputTrack, listener));
     // Device id does not matter. Ignore.
-    inputTrack->OpenAudioInput(deviceId, listener, PRINCIPAL_HANDLE_NONE);
+    inputTrack->OpenAudioInput(deviceId, listener);
     return graph->NotifyWhenDeviceStarted(inputTrack);
   });
 
@@ -349,7 +348,7 @@ TEST(TestAudioTrackGraph, AudioInputTrack)
     outputTrack->Destroy();
     port->Destroy();
     inputTrack->GraphImpl()->AppendMessage(
-        MakeUnique<StopInputProcessing>(inputTrack, listener));
+        MakeUnique<StopInputProcessing>(listener));
     inputTrack->CloseAudioInput();
     inputTrack->Destroy();
   });
@@ -364,7 +363,7 @@ TEST(TestAudioTrackGraph, AudioInputTrack)
 
   EXPECT_EQ(estimatedFreq, inputFrequency);
   std::cerr << "PreSilence: " << preSilenceSamples << std::endl;
-  // We buffer 128 frames. See DeviceInputTrack::ProcessInput.
+  // We buffer 128 frames in passthrough mode. See AudioInputProcessing::Pull.
   EXPECT_GE(preSilenceSamples, 128U);
   // If the fallback system clock driver is doing a graph iteration before the
   // first audio driver iteration comes in, that iteration is ignored and
@@ -402,11 +401,11 @@ TEST(TestAudioTrackGraph, ReOpenAudioInput)
     outputTrack->QueueSetAutoend(false);
     outputTrack->AddAudioOutput(reinterpret_cast<void*>(1));
     port = outputTrack->AllocateInputPort(inputTrack);
-    listener = new AudioInputProcessing(2);
+    listener = new AudioInputProcessing(2, PRINCIPAL_HANDLE_NONE);
     inputTrack->SetInputProcessing(listener);
     inputTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(inputTrack, listener));
-    inputTrack->OpenAudioInput(deviceId, listener, PRINCIPAL_HANDLE_NONE);
+    inputTrack->OpenAudioInput(deviceId, listener);
     return graph->NotifyWhenDeviceStarted(inputTrack);
   });
 
@@ -459,7 +458,7 @@ TEST(TestAudioTrackGraph, ReOpenAudioInput)
   // Re-open the input to again see that no asserts go off due to bad state.
   DispatchFunction([&] {
     // Device id does not matter. Ignore.
-    inputTrack->OpenAudioInput(deviceId, listener, PRINCIPAL_HANDLE_NONE);
+    inputTrack->OpenAudioInput(deviceId, listener);
   });
 
   stream = WaitFor(cubeb->StreamInitEvent());
@@ -486,7 +485,7 @@ TEST(TestAudioTrackGraph, ReOpenAudioInput)
     outputTrack->Destroy();
     port->Destroy();
     inputTrack->GraphImpl()->AppendMessage(
-        MakeUnique<StopInputProcessing>(inputTrack, listener));
+        MakeUnique<StopInputProcessing>(listener));
     inputTrack->CloseAudioInput();
     inputTrack->Destroy();
   });
@@ -502,8 +501,7 @@ TEST(TestAudioTrackGraph, ReOpenAudioInput)
   EXPECT_EQ(estimatedFreq, inputFrequency);
   std::cerr << "PreSilence: " << preSilenceSamples << std::endl;
   // We buffer 10ms worth of frames in non-passthrough mode, plus up to 128
-  // frames as we round up to the nearest block. See
-  // AudioInputProcessing::Process and DeviceInputTrack::PrcoessInput.
+  // frames as we round up to the nearest block. See AudioInputProcessing::Pull.
   EXPECT_GE(preSilenceSamples, 128U + inputRate / 100);
   // If the fallback system clock driver is doing a graph iteration before the
   // first audio driver iteration comes in, that iteration is ignored and
@@ -556,11 +554,11 @@ TEST(TestAudioTrackGraph, AudioInputTrackDisabling)
     outputTrack->AddAudioOutput(reinterpret_cast<void*>(1));
     port = outputTrack->AllocateInputPort(inputTrack);
     /* Primary graph: Open Audio Input through SourceMediaTrack */
-    listener = new AudioInputProcessing(2);
+    listener = new AudioInputProcessing(2, PRINCIPAL_HANDLE_NONE);
     inputTrack->GraphImpl()->AppendMessage(
         MakeUnique<SetPassThrough>(inputTrack, listener, true));
     inputTrack->SetInputProcessing(listener);
-    inputTrack->OpenAudioInput(deviceId, listener, PRINCIPAL_HANDLE_NONE);
+    inputTrack->OpenAudioInput(deviceId, listener);
     inputTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(inputTrack, listener));
     return graph->NotifyWhenDeviceStarted(inputTrack);
@@ -607,7 +605,7 @@ TEST(TestAudioTrackGraph, AudioInputTrackDisabling)
     outputTrack->Destroy();
     port->Destroy();
     inputTrack->GraphImpl()->AppendMessage(
-        MakeUnique<StopInputProcessing>(inputTrack, listener));
+        MakeUnique<StopInputProcessing>(listener));
     inputTrack->CloseAudioInput();
     inputTrack->Destroy();
   });
@@ -673,14 +671,14 @@ struct AudioTrackSet {
     mOutputTrack->QueueSetAutoend(false);
     mOutputTrack->AddAudioOutput(OutputTrackKey());
     mPort = mOutputTrack->AllocateInputPort(mInputTrack);
-    mListener = new AudioInputProcessing(aInputChannelCount);
+    mListener =
+        new AudioInputProcessing(aInputChannelCount, PRINCIPAL_HANDLE_NONE);
     mInputTrack->GraphImpl()->AppendMessage(
         MakeUnique<SetPassThrough>(mInputTrack, mListener, true));
     mInputTrack->SetInputProcessing(mListener);
     mInputTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(mInputTrack, mListener));
-    mInputTrack->OpenAudioInput(mInputDeviceID, mListener,
-                                PRINCIPAL_HANDLE_NONE);
+    mInputTrack->OpenAudioInput(mInputDeviceID, mListener);
   }
 
   void Uninit() {
@@ -688,7 +686,7 @@ struct AudioTrackSet {
     mOutputTrack->Destroy();
     mPort->Destroy();
     mInputTrack->GraphImpl()->AppendMessage(
-        MakeUnique<StopInputProcessing>(mInputTrack, mListener));
+        MakeUnique<StopInputProcessing>(mListener));
     mInputTrack->CloseAudioInput();
     mInputTrack->Destroy();
 
@@ -958,13 +956,13 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
   auto primaryStarted = Invoke([&] {
     /* Primary graph: Create input track and open it */
     inputTrack = AudioInputTrack::Create(primary);
-    listener = new AudioInputProcessing(2);
+    listener = new AudioInputProcessing(2, PRINCIPAL_HANDLE_NONE);
     inputTrack->GraphImpl()->AppendMessage(
         MakeUnique<SetPassThrough>(inputTrack, listener, true));
     inputTrack->SetInputProcessing(listener);
     inputTrack->GraphImpl()->AppendMessage(
         MakeUnique<StartInputProcessing>(inputTrack, listener));
-    inputTrack->OpenAudioInput(deviceId, listener, PRINCIPAL_HANDLE_NONE);
+    inputTrack->OpenAudioInput(deviceId, listener);
     return primary->NotifyWhenDeviceStarted(inputTrack);
   });
 
@@ -1030,7 +1028,7 @@ void TestCrossGraphPort(uint32_t aInputRate, uint32_t aOutputRate,
     transmitter->Destroy();
     port->Destroy();
     inputTrack->GraphImpl()->AppendMessage(
-        MakeUnique<StopInputProcessing>(inputTrack, listener));
+        MakeUnique<StopInputProcessing>(listener));
     inputTrack->CloseAudioInput();
     inputTrack->Destroy();
   });

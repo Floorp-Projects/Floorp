@@ -109,6 +109,10 @@ void ClientManagerParent::Init() { mService->AddManager(this); }
 
 IPCResult ClientManagerParent::RecvExpectFutureClientSource(
     const IPCClientInfo& aClientInfo) {
+  if (NS_WARN_IF(!ClientIsValidPrincipalInfo(aClientInfo.principalInfo()))) {
+    return IPC_FAIL(this, "Invalid PrincipalInfo.");
+  }
+
   RefPtr<ClientManagerService> cms =
       ClientManagerService::GetOrCreateInstance();
   Unused << NS_WARN_IF(!cms->ExpectFutureSource(aClientInfo));
@@ -117,6 +121,10 @@ IPCResult ClientManagerParent::RecvExpectFutureClientSource(
 
 IPCResult ClientManagerParent::RecvForgetFutureClientSource(
     const IPCClientInfo& aClientInfo) {
+  if (NS_WARN_IF(!ClientIsValidPrincipalInfo(aClientInfo.principalInfo()))) {
+    return IPC_FAIL(this, "Invalid PrincipalInfo.");
+  }
+
   RefPtr<ClientManagerService> cms = ClientManagerService::GetInstance();
   cms->ForgetFutureSource(aClientInfo);
   return IPC_OK();

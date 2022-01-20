@@ -72,7 +72,8 @@ macro_rules! _memoffset_offset_from_unsafe {
 ///
 /// ## Examples
 /// ```
-/// use memoffset::offset_of;
+/// #[macro_use]
+/// extern crate memoffset;
 ///
 /// #[repr(C, packed)]
 /// struct Foo {
@@ -102,7 +103,8 @@ macro_rules! offset_of {
 ///
 /// ## Examples
 /// ```
-/// use memoffset::offset_of_tuple;
+/// #[macro_use]
+/// extern crate memoffset;
 ///
 /// fn main() {
 ///     assert!(offset_of_tuple!((u8, u32), 1) >= 0, "Tuples do not have a defined layout");

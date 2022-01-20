@@ -18,7 +18,8 @@ add_task(async () => {
   }
   ok(true, "GPU Process found: Let's test.");
 
-  Services.fog.testResetFOG();
+  let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
+  FOG.testResetFOG();
 
   is(
     undefined,
@@ -26,12 +27,12 @@ add_task(async () => {
     "Ensure we begin without value."
   );
 
-  await Services.fog.testTriggerMetrics(Ci.nsIXULRuntime.PROCESS_TYPE_GPU);
-  await Services.fog.testFlushAllChildren();
+  FOG.testTriggerGPUMetrics();
+  await FOG.testFlushAllChildren();
 
   is(
+    45326, // See gfx/ipc/GPUParent.cpp's RecvTestTriggerMetrics().
     Glean.testOnlyIpc.aCounter.testGetValue(),
-    Ci.nsIXULRuntime.PROCESS_TYPE_GPU,
     "Ensure the GPU-process-set value shows up in the parent process."
   );
 });

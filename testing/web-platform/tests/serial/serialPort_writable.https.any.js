@@ -155,8 +155,9 @@ serial_test(async (t, fake) => {
   const data = new Uint8Array(1024);  // Much larger than bufferSize above.
   for (let i = 0; i < data.byteLength; ++i)
     data[i] = i & 0xff;
-  const writePromise =
-      promise_rejects_exactly(t, 'Aborting.', writer.write(data));
+  let writePromise = writer.write(data).catch(reason => {
+    assert_equals(reason, 'Aborting.');
+  });
 
   await writer.abort('Aborting.');
   await writePromise;
@@ -173,11 +174,15 @@ serial_test(async (t, fake) => {
   const data = new Uint8Array(1024);  // Much larger than bufferSize above.
   for (let i = 0; i < data.byteLength; ++i)
     data[i] = i & 0xff;
-  const closed = (async () => {
-    await promise_rejects_exactly(t, 'Aborting.', writer.write(data));
-    writer.releaseLock();
-    await port.close();
-    assert_equals(port.writable, null);
+  let closed = (async () => {
+    try {
+      await writer.write(data);
+    } catch (reason) {
+      assert_equals(reason, 'Aborting.');
+      writer.releaseLock();
+      await port.close();
+      assert_equals(port.writable, null);
+    }
   })();
 
   await writer.abort('Aborting.');

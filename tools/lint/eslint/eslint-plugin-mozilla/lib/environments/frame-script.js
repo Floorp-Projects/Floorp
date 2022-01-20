@@ -29,6 +29,7 @@ module.exports = {
     RPMGetStringPref: false,
     RPMGetBoolPref: false,
     RPMSetBoolPref: false,
+    RPMPrefIsLocked: false,
     RPMGetFormatURLPref: false,
     RPMIsWindowPrivate: false,
     RPMSendAsyncMessage: false,

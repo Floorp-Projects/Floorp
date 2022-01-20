@@ -8,7 +8,7 @@
 
 idl_test(
   ['webmidi'],
-  ['html', 'dom', 'permissions'],
+  ['html', 'dom'],
   async idl_array => {
     idl_array.add_objects({
       MIDIAccess: ['access'],

@@ -57,7 +57,7 @@ class nsILineIterator {
      */
     nsRect mLineBounds;
     /** Whether the line is wrapped at the end */
-    bool mIsWrapped = false;
+    bool mIsWrapped;
   };
 
   // Return miscellaneous information about a line.

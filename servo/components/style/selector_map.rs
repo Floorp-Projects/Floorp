@@ -8,17 +8,18 @@
 use crate::applicable_declarations::ApplicableDeclarationList;
 use crate::context::QuirksMode;
 use crate::dom::TElement;
+use crate::hash::map as hash_map;
+use crate::hash::{HashMap, HashSet};
 use crate::rule_tree::CascadeLevel;
 use crate::selector_parser::SelectorImpl;
 use crate::stylist::{CascadeData, Rule};
-use crate::AllocErr;
-use crate::{Atom, LocalName, Namespace, ShrinkIfNeeded, WeakAtom};
+use crate::{Atom, LocalName, Namespace, WeakAtom};
+use fallible::FallibleVec;
+use hashglobe::FailedAllocationError;
 use precomputed_hash::PrecomputedHash;
 use selectors::matching::{matches_selector, ElementSelectorFlags, MatchingContext};
 use selectors::parser::{Combinator, Component, SelectorIter};
 use smallvec::SmallVec;
-use std::collections::hash_map;
-use std::collections::{HashMap, HashSet};
 use std::hash::{BuildHasherDefault, Hash, Hasher};
 
 /// A hasher implementation that doesn't hash anything, because it expects its
@@ -122,7 +123,10 @@ impl<T: 'static> Default for SelectorMap<T> {
     }
 }
 
-impl<T> SelectorMap<T> {
+// FIXME(Manishearth) the 'static bound can be removed when
+// our HashMap fork (hashglobe) is able to use NonZero,
+// or when stdlib gets fallible collections
+impl<T: 'static> SelectorMap<T> {
     /// Trivially constructs an empty `SelectorMap`.
     pub fn new() -> Self {
         SelectorMap {
@@ -144,15 +148,6 @@ impl<T> SelectorMap<T> {
         let mut ret = Self::new();
         ret.bucket_attributes = false;
         ret
-    }
-
-    /// Shrink the capacity of the map if needed.
-    pub fn shrink_if_needed(&mut self) {
-        self.id_hash.shrink_if_needed();
-        self.class_hash.shrink_if_needed();
-        self.attribute_hash.shrink_if_needed();
-        self.local_name_hash.shrink_if_needed();
-        self.namespace_hash.shrink_if_needed();
     }
 
     /// Clears the hashmap retaining storage.
@@ -324,7 +319,11 @@ impl SelectorMap<Rule> {
 
 impl<T: SelectorMapEntry> SelectorMap<T> {
     /// Inserts an entry into the correct bucket(s).
-    pub fn insert(&mut self, entry: T, quirks_mode: QuirksMode) -> Result<(), AllocErr> {
+    pub fn insert(
+        &mut self,
+        entry: T,
+        quirks_mode: QuirksMode,
+    ) -> Result<(), FailedAllocationError> {
         self.count += 1;
 
         // NOTE(emilio): It'd be nice for this to be a separate function, but
@@ -333,16 +332,16 @@ impl<T: SelectorMapEntry> SelectorMap<T> {
         // common path.
         macro_rules! insert_into_bucket {
             ($entry:ident, $bucket:expr) => {{
-                let vec = match $bucket {
+                match $bucket {
                     Bucket::Root => &mut self.root,
                     Bucket::ID(id) => self
                         .id_hash
                         .try_entry(id.clone(), quirks_mode)?
-                        .or_default(),
+                        .or_insert_with(SmallVec::new),
                     Bucket::Class(class) => self
                         .class_hash
                         .try_entry(class.clone(), quirks_mode)?
-                        .or_default(),
+                        .or_insert_with(SmallVec::new),
                     Bucket::Attribute { name, lower_name } |
                     Bucket::LocalName { name, lower_name } => {
                         // If the local name in the selector isn't lowercase,
@@ -365,22 +364,19 @@ impl<T: SelectorMapEntry> SelectorMap<T> {
                             &mut self.local_name_hash
                         };
                         if name != lower_name {
-                            hash.try_reserve(1)?;
-                            let vec = hash.entry(lower_name.clone()).or_default();
-                            vec.try_reserve(1)?;
-                            vec.push($entry.clone());
+                            hash.try_entry(lower_name.clone())?
+                                .or_insert_with(SmallVec::new)
+                                .try_push($entry.clone())?;
                         }
-                        hash.try_reserve(1)?;
-                        hash.entry(name.clone()).or_default()
+                        hash.try_entry(name.clone())?.or_insert_with(SmallVec::new)
                     },
-                    Bucket::Namespace(url) => {
-                        self.namespace_hash.try_reserve(1)?;
-                        self.namespace_hash.entry(url.clone()).or_default()
-                    },
+                    Bucket::Namespace(url) => self
+                        .namespace_hash
+                        .try_entry(url.clone())?
+                        .or_insert_with(SmallVec::new),
                     Bucket::Universal => &mut self.other,
-                };
-                vec.try_reserve(1)?;
-                vec.push($entry);
+                }
+                .try_push($entry)?;
             }};
         }
 
@@ -718,26 +714,24 @@ fn find_bucket<'a>(
 
 /// Wrapper for PrecomputedHashMap that does ASCII-case-insensitive lookup in quirks mode.
 #[derive(Clone, Debug, MallocSizeOf)]
-pub struct MaybeCaseInsensitiveHashMap<K: PrecomputedHash + Hash + Eq, V>(
+pub struct MaybeCaseInsensitiveHashMap<K: PrecomputedHash + Hash + Eq, V: 'static>(
     PrecomputedHashMap<K, V>,
 );
 
-impl<V> Default for MaybeCaseInsensitiveHashMap<Atom, V> {
+impl<V: 'static> Default for MaybeCaseInsensitiveHashMap<Atom, V> {
     #[inline]
     fn default() -> Self {
         MaybeCaseInsensitiveHashMap(PrecomputedHashMap::default())
     }
 }
 
-impl<V> MaybeCaseInsensitiveHashMap<Atom, V> {
+// FIXME(Manishearth) the 'static bound can be removed when
+// our HashMap fork (hashglobe) is able to use NonZero,
+// or when stdlib gets fallible collections
+impl<V: 'static> MaybeCaseInsensitiveHashMap<Atom, V> {
     /// Empty map
     pub fn new() -> Self {
         Self::default()
-    }
-
-    /// Shrink the capacity of the map if needed.
-    pub fn shrink_if_needed(&mut self) {
-        self.0.shrink_if_needed()
     }
 
     /// HashMap::try_entry
@@ -745,12 +739,11 @@ impl<V> MaybeCaseInsensitiveHashMap<Atom, V> {
         &mut self,
         mut key: Atom,
         quirks_mode: QuirksMode,
-    ) -> Result<hash_map::Entry<Atom, V>, AllocErr> {
+    ) -> Result<hash_map::Entry<Atom, V>, FailedAllocationError> {
         if quirks_mode == QuirksMode::Quirks {
             key = key.to_ascii_lowercase()
         }
-        self.0.try_reserve(1)?;
-        Ok(self.0.entry(key))
+        self.0.try_entry(key)
     }
 
     /// HashMap::is_empty

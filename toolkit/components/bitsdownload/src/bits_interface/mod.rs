@@ -226,7 +226,7 @@ impl BitsService {
                 Pretask,
             ));
         }
-        let proxy = match proxy {
+        let proxy = match proxy as i64 {
             nsIBits::PROXY_NONE => BitsProxyUsage::NoProxy,
             nsIBits::PROXY_PRECONFIG => BitsProxyUsage::Preconfig,
             nsIBits::PROXY_AUTODETECT => BitsProxyUsage::AutoDetect,

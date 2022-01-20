@@ -713,7 +713,6 @@ static bool IsInsideRuby(nsINode* aNode) {
 static bool IsSelectionInsideRuby(Selection* aSelection) {
   uint32_t rangeCount = aSelection->RangeCount();
   for (auto i : IntegerRange(rangeCount)) {
-    MOZ_ASSERT(aSelection->RangeCount() == rangeCount);
     const nsRange* range = aSelection->GetRangeAt(i);
     if (!IsInsideRuby(range->GetClosestCommonInclusiveAncestor())) {
       return false;
@@ -811,10 +810,8 @@ bool nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
     nsEventStatus status = nsEventStatus_eIgnore;
     InternalClipboardEvent evt(true, originalEventMessage);
     evt.mClipboardData = clipboardData;
-
-    RefPtr<nsPresContext> presContext = presShell->GetPresContext();
-    EventDispatcher::Dispatch(targetElement, presContext, &evt, nullptr,
-                              &status);
+    EventDispatcher::Dispatch(targetElement, presShell->GetPresContext(), &evt,
+                              nullptr, &status);
     // If the event was cancelled, don't do the clipboard operation
     doDefault = (status != nsEventStatus_eConsumeNoDefault);
   }

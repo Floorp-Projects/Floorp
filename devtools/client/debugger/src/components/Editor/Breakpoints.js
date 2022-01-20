@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import PropTypes from "prop-types";
 import React, { Component } from "react";
 import Breakpoint from "./Breakpoint";
 
@@ -13,16 +12,6 @@ import { breakpointItemActions } from "./menus/breakpoints";
 import { editorItemActions } from "./menus/editor";
 
 class Breakpoints extends Component {
-  static get propTypes() {
-    return {
-      cx: PropTypes.object,
-      breakpoints: PropTypes.array,
-      editor: PropTypes.object,
-      breakpointActions: PropTypes.object,
-      editorActions: PropTypes.object,
-      selectedSource: PropTypes.object,
-    };
-  }
   render() {
     const {
       cx,
@@ -33,7 +22,7 @@ class Breakpoints extends Component {
       editorActions,
     } = this.props;
 
-    if (!selectedSource || !breakpoints) {
+    if (!selectedSource || !breakpoints || selectedSource.isBlackBoxed) {
       return null;
     }
 

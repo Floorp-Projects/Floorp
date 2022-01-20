@@ -9,7 +9,8 @@
 
 //! This module holds deprecated assets only.
 
-use alloc::vec::Vec;
+// Doesn't worth updating API here
+#![cfg_attr(feature="cargo-clippy", allow(needless_pass_by_value))]
 
 use super::*;
 

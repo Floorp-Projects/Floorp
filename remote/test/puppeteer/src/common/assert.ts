@@ -22,7 +22,3 @@
 export const assert = (value: unknown, message?: string): void => {
   if (!value) throw new Error(message);
 };
-
-export const assertNever = (value: never, message?: string): void => {
-  if (value) throw new Error(message);
-};

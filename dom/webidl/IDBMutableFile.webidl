@@ -10,7 +10,7 @@ interface IDBMutableFile : EventTarget {
 
   readonly attribute IDBDatabase database;
 
-  [Throws, Deprecated="IDBMutableFileOpen"]
+  [Throws, UseCounter]
   IDBFileHandle open(optional FileMode mode = "readonly");
 
   attribute EventHandler onabort;

@@ -9,7 +9,6 @@ Program("mozjemalloc-info")
 SOURCES += [
     "/mfbt/Assertions.cpp",
     "/mfbt/RandomNum.cpp",
-    "/mozglue/misc/StackWalk.cpp",
     "MozjemallocInfo.cpp",
 ]
 

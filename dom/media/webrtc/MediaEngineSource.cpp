@@ -56,6 +56,8 @@ bool MediaEngineSource::IsAudio(MediaSourceEnum aSource) {
 
 bool MediaEngineSource::IsFake() const { return false; }
 
+bool MediaEngineSource::GetScary() const { return false; }
+
 nsresult MediaEngineSource::FocusOnSelectedSource() {
   return NS_ERROR_NOT_AVAILABLE;
 }

@@ -6,10 +6,9 @@
 
 //! The rule tree.
 
-use crate::applicable_declarations::{ApplicableDeclarationList, CascadePriority};
+use crate::applicable_declarations::ApplicableDeclarationList;
 use crate::properties::{LonghandIdSet, PropertyDeclarationBlock};
 use crate::shared_lock::{Locked, StylesheetGuards};
-use crate::stylesheets::layer_rule::LayerOrder;
 use servo_arc::{Arc, ArcBorrow};
 use smallvec::SmallVec;
 use std::io::{self, Write};
@@ -48,22 +47,21 @@ impl RuleTree {
         guards: &StylesheetGuards,
     ) -> StrongRuleNode
     where
-        I: Iterator<Item = (StyleSource, CascadePriority)>,
+        I: Iterator<Item = (StyleSource, CascadeLevel)>,
     {
         use self::CascadeLevel::*;
         let mut current = self.root().clone();
 
         let mut found_important = false;
 
-        let mut important_author = SmallVec::<[(StyleSource, CascadePriority); 4]>::new();
-        let mut important_user = SmallVec::<[(StyleSource, CascadePriority); 4]>::new();
-        let mut important_ua = SmallVec::<[(StyleSource, CascadePriority); 4]>::new();
+        let mut important_author = SmallVec::<[(StyleSource, ShadowCascadeOrder); 4]>::new();
+
+        let mut important_user = SmallVec::<[StyleSource; 4]>::new();
+        let mut important_ua = SmallVec::<[StyleSource; 4]>::new();
         let mut transition = None;
 
-        for (source, priority) in iter {
-            let level = priority.cascade_level();
+        for (source, level) in iter {
             debug_assert!(!level.is_important(), "Important levels handled internally");
-
             let any_important = {
                 let pdb = source.read(level.guard(guards));
                 pdb.any_important()
@@ -72,11 +70,13 @@ impl RuleTree {
             if any_important {
                 found_important = true;
                 match level {
-                    AuthorNormal { .. } => {
-                        important_author.push((source.clone(), priority.important()))
+                    AuthorNormal {
+                        shadow_cascade_order,
+                    } => {
+                        important_author.push((source.clone(), shadow_cascade_order));
                     },
-                    UANormal => important_ua.push((source.clone(), priority.important())),
-                    UserNormal => important_user.push((source.clone(), priority.important())),
+                    UANormal => important_ua.push(source.clone()),
+                    UserNormal => important_user.push(source.clone()),
                     _ => {},
                 };
             }
@@ -98,7 +98,7 @@ impl RuleTree {
                 debug_assert!(transition.is_none());
                 transition = Some(source);
             } else {
-                current = current.ensure_child(self.root(), source, priority);
+                current = current.ensure_child(self.root(), source, level);
             }
         }
 
@@ -110,8 +110,10 @@ impl RuleTree {
         // Insert important declarations, in order of increasing importance,
         // followed by any transition rule.
         //
-        // Important rules are sorted differently from unimportant ones by
-        // shadow order and cascade order.
+        // Inner shadow wins over same-tree, which wins over outer-shadow.
+        //
+        // We negate the shadow cascade order to preserve the right PartialOrd
+        // behavior.
         if !important_author.is_empty() &&
             important_author.first().unwrap().1 != important_author.last().unwrap().1
         {
@@ -127,27 +129,29 @@ impl RuleTree {
             // inside the same chunk already sorted. Seems like we could try to
             // keep a SmallVec-of-SmallVecs with the chunks and just iterate the
             // outer in reverse.
-            important_author.sort_by_key(|&(_, priority)| priority);
+            important_author.sort_by_key(|&(_, order)| -order);
         }
 
-        for (source, priority) in important_author.drain(..) {
-            current = current.ensure_child(self.root(), source, priority);
-        }
-
-        for (source, priority) in important_user.drain(..) {
-            current = current.ensure_child(self.root(), source, priority);
-        }
-
-        for (source, priority) in important_ua.drain(..) {
-            current = current.ensure_child(self.root(), source, priority);
-        }
-
-        if let Some(source) = transition {
+        for (source, shadow_cascade_order) in important_author.drain(..) {
             current = current.ensure_child(
                 self.root(),
                 source,
-                CascadePriority::new(Transitions, LayerOrder::root()),
+                AuthorImportant {
+                    shadow_cascade_order: -shadow_cascade_order,
+                },
             );
+        }
+
+        for source in important_user.drain(..) {
+            current = current.ensure_child(self.root(), source, UserImportant);
+        }
+
+        for source in important_ua.drain(..) {
+            current = current.ensure_child(self.root(), source, UAImportant);
+        }
+
+        if let Some(source) = transition {
+            current = current.ensure_child(self.root(), source, Transitions);
         }
 
         current
@@ -170,18 +174,18 @@ impl RuleTree {
     /// return the corresponding rule node representing the last inserted one.
     pub fn insert_ordered_rules<'a, I>(&self, iter: I) -> StrongRuleNode
     where
-        I: Iterator<Item = (StyleSource, CascadePriority)>,
+        I: Iterator<Item = (StyleSource, CascadeLevel)>,
     {
         self.insert_ordered_rules_from(self.root().clone(), iter)
     }
 
     fn insert_ordered_rules_from<'a, I>(&self, from: StrongRuleNode, iter: I) -> StrongRuleNode
     where
-        I: Iterator<Item = (StyleSource, CascadePriority)>,
+        I: Iterator<Item = (StyleSource, CascadeLevel)>,
     {
         let mut current = from;
-        for (source, priority) in iter {
-            current = current.ensure_child(self.root(), source, priority);
+        for (source, level) in iter {
+            current = current.ensure_child(self.root(), source, level);
         }
         current
     }
@@ -193,7 +197,6 @@ impl RuleTree {
     pub fn update_rule_at_level(
         &self,
         level: CascadeLevel,
-        layer_order: LayerOrder,
         pdb: Option<ArcBorrow<Locked<PropertyDeclarationBlock>>>,
         path: &StrongRuleNode,
         guards: &StylesheetGuards,
@@ -206,10 +209,10 @@ impl RuleTree {
 
         // First walk up until the first less-or-equally specific rule.
         let mut children = SmallVec::<[_; 10]>::new();
-        while current.cascade_priority().cascade_level() > level {
+        while current.cascade_level() > level {
             children.push((
                 current.style_source().unwrap().clone(),
-                current.cascade_priority(),
+                current.cascade_level(),
             ));
             current = current.parent().unwrap().clone();
         }
@@ -224,7 +227,7 @@ impl RuleTree {
         // to special-case (isn't hard, it's just about removing the `if` and
         // special cases, and replacing them for a `while` loop, avoiding the
         // optimizations).
-        if current.cascade_priority().cascade_level() == level {
+        if current.cascade_level() == level {
             *important_rules_changed |= level.is_important();
 
             let current_decls = current.style_source().unwrap().as_declarations();
@@ -264,7 +267,7 @@ impl RuleTree {
                     current = current.ensure_child(
                         self.root(),
                         StyleSource::from_declarations(pdb.clone_arc()),
-                        CascadePriority::new(level, layer_order),
+                        level,
                     );
                     *important_rules_changed = true;
                 }
@@ -273,7 +276,7 @@ impl RuleTree {
                     current = current.ensure_child(
                         self.root(),
                         StyleSource::from_declarations(pdb.clone_arc()),
-                        CascadePriority::new(level, layer_order),
+                        level,
                     );
                 }
             }
@@ -309,10 +312,7 @@ impl RuleTree {
         let mut children = SmallVec::<[_; 10]>::new();
         for node in iter {
             if !node.cascade_level().is_animation() {
-                children.push((
-                    node.style_source().unwrap().clone(),
-                    node.cascade_priority(),
-                ));
+                children.push((node.style_source().unwrap().clone(), node.cascade_level()));
             }
             last = node;
         }
@@ -336,7 +336,6 @@ impl RuleTree {
         let mut dummy = false;
         self.update_rule_at_level(
             CascadeLevel::Transitions,
-            LayerOrder::root(),
             Some(pdb.borrow_arc()),
             path,
             guards,

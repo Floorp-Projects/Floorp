@@ -13,8 +13,6 @@
 interface nsISupports;
 interface Variant;
 
-typedef (HTMLCanvasElement or OffscreenCanvas) CanvasSource;
-
 [Exposed=Window]
 interface HTMLCanvasElement : HTMLElement {
   [HTMLConstructor] constructor();

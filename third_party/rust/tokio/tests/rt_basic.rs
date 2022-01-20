@@ -29,7 +29,6 @@ fn spawned_task_does_not_progress_without_block_on() {
 
 #[test]
 fn no_extra_poll() {
-    use pin_project_lite::pin_project;
     use std::pin::Pin;
     use std::sync::{
         atomic::{AtomicUsize, Ordering::SeqCst},
@@ -38,12 +37,9 @@ fn no_extra_poll() {
     use std::task::{Context, Poll};
     use tokio::stream::{Stream, StreamExt};
 
-    pin_project! {
-        struct TrackPolls<S> {
-            npolls: Arc<AtomicUsize>,
-            #[pin]
-            s: S,
-        }
+    struct TrackPolls<S> {
+        npolls: Arc<AtomicUsize>,
+        s: S,
     }
 
     impl<S> Stream for TrackPolls<S>
@@ -52,9 +48,11 @@ fn no_extra_poll() {
     {
         type Item = S::Item;
         fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-            let this = self.project();
+            // safety: we do not move s
+            let this = unsafe { self.get_unchecked_mut() };
             this.npolls.fetch_add(1, SeqCst);
-            this.s.poll_next(cx)
+            // safety: we are pinned, and so is s
+            unsafe { Pin::new_unchecked(&mut this.s) }.poll_next(cx)
         }
     }
 
@@ -67,7 +65,7 @@ fn no_extra_poll() {
 
     let mut rt = rt();
 
-    rt.spawn(async move { while rx.next().await.is_some() {} });
+    rt.spawn(async move { while let Some(_) = rx.next().await {} });
     rt.block_on(async {
         tokio::task::yield_now().await;
     });

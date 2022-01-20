@@ -11,7 +11,6 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/StreamBufferSource.h"
 #include "nsCOMPtr.h"
 #include "nsICloneableInputStream.h"
 #include "nsIInputStream.h"
@@ -105,31 +104,53 @@ class MemoryBlobImpl final : public BaseBlobImpl {
     uint64_t mLength;
   };
 
-  class DataOwnerAdapter final : public StreamBufferSource {
+  class DataOwnerAdapter final : public nsIInputStream,
+                                 public nsISeekableStream,
+                                 public nsIIPCSerializableInputStream,
+                                 public nsICloneableInputStream {
     using DataOwner = MemoryBlobImpl::DataOwner;
 
    public:
-    static nsresult Create(DataOwner* aDataOwner, size_t aStart, size_t aLength,
-                           nsIInputStream** _retval);
+    static nsresult Create(DataOwner* aDataOwner, uint32_t aStart,
+                           uint32_t aLength, nsIInputStream** _retval);
 
-    Span<const char> Data() override { return mData; }
+    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
-    // This StreamBufferSource is owning, as the `mData` span references the
-    // immutable data buffer owned by `mDataOwner` which is being kept alive.
-    bool Owning() override { return true; }
-
-    // The memory usage from `DataOwner` is reported elsewhere, so we don't need
-    // to record it here.
-    size_t SizeOfExcludingThisEvenIfShared(MallocSizeOf) override { return 0; }
+    // These are mandatory.
+    NS_FORWARD_NSIINPUTSTREAM(mStream->)
+    NS_FORWARD_NSISEEKABLESTREAM(mSeekableStream->)
+    NS_FORWARD_NSITELLABLESTREAM(mSeekableStream->)
+    NS_FORWARD_NSICLONEABLEINPUTSTREAM(mCloneableInputStream->)
 
    private:
     ~DataOwnerAdapter() = default;
 
-    DataOwnerAdapter(DataOwner* aDataOwner, Span<const char> aData)
-        : mDataOwner(aDataOwner), mData(aData) {}
+    DataOwnerAdapter(DataOwner* aDataOwner, nsIInputStream* aStream,
+                     uint32_t aLength)
+        : mDataOwner(aDataOwner),
+          mStream(aStream),
+          mSeekableStream(do_QueryInterface(aStream)),
+          mSerializableInputStream(do_QueryInterface(aStream)),
+          mCloneableInputStream(do_QueryInterface(aStream)),
+          mLength(aLength) {
+      MOZ_ASSERT(
+          mSeekableStream && mSerializableInputStream && mCloneableInputStream,
+          "Somebody gave us the wrong stream!");
+    }
+
+    template <typename M>
+    void SerializeInternal(mozilla::ipc::InputStreamParams& aParams,
+                           FileDescriptorArray& aFileDescriptors,
+                           bool aDelayedStart, uint32_t aMaxSize,
+                           uint32_t* aSizeUsed, M* aManager);
 
     RefPtr<DataOwner> mDataOwner;
-    Span<const char> mData;
+    nsCOMPtr<nsIInputStream> mStream;
+    nsCOMPtr<nsISeekableStream> mSeekableStream;
+    nsCOMPtr<nsIIPCSerializableInputStream> mSerializableInputStream;
+    nsCOMPtr<nsICloneableInputStream> mCloneableInputStream;
+    uint32_t mLength;
   };
 
  private:

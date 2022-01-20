@@ -81,11 +81,6 @@ class UntrustedModulesProcessor final : public nsIObserver {
 
   using LoadsVec = Vector<glue::EnhancedModuleLoadInfo>;
 
-  // Extract the loading events from mUnprocessedModuleLoads to process and
-  // move to mProcessedModuleLoads.  It's guaranteed that the total length of
-  // mProcessedModuleLoads will not exceed |aMaxLength|.
-  LoadsVec ExtractLoadingEventsToProcess(size_t aMaxLength);
-
   class ModulesMapResultWithLoads final {
    public:
     ModulesMapResultWithLoads(Maybe<ModulesMapResult>&& aModMapResult,

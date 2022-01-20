@@ -163,11 +163,14 @@ JSObject* ImageDocument::WrapNode(JSContext* aCx,
   return ImageDocument_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsresult ImageDocument::StartDocumentLoad(
-    const char* aCommand, nsIChannel* aChannel, nsILoadGroup* aLoadGroup,
-    nsISupports* aContainer, nsIStreamListener** aDocListener, bool aReset) {
+nsresult ImageDocument::StartDocumentLoad(const char* aCommand,
+                                          nsIChannel* aChannel,
+                                          nsILoadGroup* aLoadGroup,
+                                          nsISupports* aContainer,
+                                          nsIStreamListener** aDocListener,
+                                          bool aReset, nsIContentSink* aSink) {
   nsresult rv = MediaDocument::StartDocumentLoad(
-      aCommand, aChannel, aLoadGroup, aContainer, aDocListener, aReset);
+      aCommand, aChannel, aLoadGroup, aContainer, aDocListener, aReset, aSink);
   if (NS_FAILED(rv)) {
     return rv;
   }

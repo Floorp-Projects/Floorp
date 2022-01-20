@@ -166,8 +166,6 @@ class WebDriverBiDiConnection extends WebSocketConnection {
       if (module === "session" && command === "new") {
         // TODO: Needs capability matching code
         result = RemoteAgent.webDriverBiDi.createSession(params, this);
-      } else if (module === "session" && command === "status") {
-        result = RemoteAgent.webDriverBiDi.getSessionReadinessStatus();
       } else {
         assert.session(this.session);
 

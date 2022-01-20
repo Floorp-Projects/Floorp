@@ -64,10 +64,9 @@ typedef struct FrameDecodeData {
  */
 int ff_decode_get_packet(AVCodecContext *avctx, AVPacket *pkt);
 
-/**
- * Set various frame properties from the codec context / packet data.
- */
-int ff_decode_frame_props(AVCodecContext *avctx, AVFrame *frame);
+int ff_decode_bsfs_init(AVCodecContext *avctx);
+
+void ff_decode_bsfs_uninit(AVCodecContext *avctx);
 
 /**
  * Make sure avctx.hw_frames_ctx is set. If it's not set, the function will
@@ -78,11 +77,5 @@ int ff_decode_get_hw_frames_ctx(AVCodecContext *avctx,
                                 enum AVHWDeviceType dev_type);
 
 int ff_attach_decode_data(AVFrame *frame);
-
-/**
- * Perform decoder initialization and validation.
- * Called when opening the decoder, before the AVCodec.init() call.
- */
-int ff_decode_preinit(AVCodecContext *avctx);
 
 #endif /* AVCODEC_DECODE_H */

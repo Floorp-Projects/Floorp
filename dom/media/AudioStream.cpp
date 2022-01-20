@@ -28,7 +28,6 @@
 #include "Tracing.h"
 #include "webaudio/blink/DenormalDisabler.h"
 #include "AudioThreadRegistry.h"
-#include "mozilla/StaticPrefs_media.h"
 
 // Use abort() instead of exception in SoundTouch.
 #define ST_NO_EXCEPTION_HANDLING 1
@@ -67,7 +66,7 @@ class FrameHistory {
   };
 
   template <typename T>
-  static T FramesToUs(uint32_t frames, uint32_t rate) {
+  static T FramesToUs(uint32_t frames, int rate) {
     return static_cast<T>(frames) * USECS_PER_S / rate;
   }
 
@@ -107,7 +106,7 @@ class FrameHistory {
     MOZ_ASSERT(frames >= mBaseOffset);
     while (true) {
       if (mChunks.IsEmpty()) {
-        return static_cast<int64_t>(mBasePosition);
+        return mBasePosition;
       }
       const Chunk& c = mChunks[0];
       if (frames <= mBaseOffset + c.totalFrames) {
@@ -179,15 +178,9 @@ nsresult AudioStream::EnsureTimeStretcherInitializedUnlocked() {
     // We are going to use a smaller 10ms sequence size to improve speech
     // clarity, giving more resolution at high tempo and less reverb at low
     // tempo. Maintain 15ms seekwindow and 8ms overlap for smoothness.
-    mTimeStretcher->setSetting(
-        SETTING_SEQUENCE_MS,
-        StaticPrefs::media_audio_playbackrate_soundtouch_sequence_ms());
-    mTimeStretcher->setSetting(
-        SETTING_SEEKWINDOW_MS,
-        StaticPrefs::media_audio_playbackrate_soundtouch_seekwindow_ms());
-    mTimeStretcher->setSetting(
-        SETTING_OVERLAP_MS,
-        StaticPrefs::media_audio_playbackrate_soundtouch_overlap_ms());
+    mTimeStretcher->setSetting(SETTING_SEQUENCE_MS, 10);
+    mTimeStretcher->setSetting(SETTING_SEEKWINDOW_MS, 15);
+    mTimeStretcher->setSetting(SETTING_OVERLAP_MS, 8);
   }
   return NS_OK;
 }
@@ -238,7 +231,7 @@ nsresult AudioStream::SetPreservesPitch(bool aPreservesPitch) {
     return NS_ERROR_FAILURE;
   }
 
-  if (aPreservesPitch) {
+  if (aPreservesPitch == true) {
     mTimeStretcher->setTempo(mAudioClock.GetPlaybackRate());
     mTimeStretcher->setRate(1.0f);
   } else {
@@ -352,9 +345,8 @@ void AudioStream::SetVolume(double aVolume) {
     }
   }
 
-  if (cubeb_stream_set_volume(
-          mCubebStream.get(),
-          static_cast<float>(aVolume * CubebUtils::GetVolumeScale())) !=
+  if (cubeb_stream_set_volume(mCubebStream.get(),
+                              aVolume * CubebUtils::GetVolumeScale()) !=
       CUBEB_OK) {
     LOGE("Could not change volume on cubeb stream.");
   }
@@ -488,7 +480,7 @@ int64_t AudioStream::GetPositionInFramesUnlocked() {
   if (InvokeCubeb(cubeb_stream_get_position, &position) != CUBEB_OK) {
     return -1;
   }
-  return static_cast<int64_t>(std::min<uint64_t>(position, INT64_MAX));
+  return std::min<uint64_t>(position, INT64_MAX);
 }
 
 bool AudioStream::IsValidAudioFormat(Chunk* aChunk) {
@@ -498,7 +490,11 @@ bool AudioStream::IsValidAudioFormat(Chunk* aChunk) {
     return false;
   }
 
-  return aChunk->Channels() <= 8;
+  if (aChunk->Channels() > 8) {
+    return false;
+  }
+
+  return true;
 }
 
 void AudioStream::GetUnprocessed(AudioBufferWriter& aWriter) {
@@ -508,7 +504,7 @@ void AudioStream::GetUnprocessed(AudioBufferWriter& aWriter) {
   // Flush the timestretcher pipeline, if we were playing using a playback rate
   // other than 1.0.
   if (mTimeStretcher && mTimeStretcher->numSamples()) {
-    auto* timeStretcher = mTimeStretcher;
+    auto timeStretcher = mTimeStretcher;
     aWriter.Write(
         [timeStretcher](AudioDataValue* aPtr, uint32_t aFrames) {
           return timeStretcher->receiveSamples(aPtr, aFrames);
@@ -578,7 +574,7 @@ void AudioStream::GetTimeStretched(AudioBufferWriter& aWriter) {
     }
   }
 
-  auto* timeStretcher = mTimeStretcher;
+  auto timeStretcher = mTimeStretcher;
   aWriter.Write(
       [timeStretcher](AudioDataValue* aPtr, uint32_t aFrames) {
         return timeStretcher->receiveSamples(aPtr, aFrames);

@@ -37,7 +37,8 @@ tab[visuallyselected="true"] {
 }
 
 tab:-moz-focusring > .tab-middle {
-  outline: var(--default-focusring);
+  /* Don't specify the outline-color, we should always use initial value. */
+  outline: 1px dotted;
 }
 
 tab:first-of-type[visuallyselected="true"] {

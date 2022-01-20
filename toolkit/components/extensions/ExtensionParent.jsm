@@ -298,6 +298,7 @@ const ProxyMessenger = {
       contextId: source.id,
       id: source.extensionId,
       envType: source.envType,
+      frameId: source.frameId,
       url: source.url,
     };
 
@@ -307,8 +308,6 @@ const ProxyMessenger = {
         browser && apiManager.global.tabTracker.getBrowserData(browser);
       if (data?.tabId > 0) {
         sender.tab = extension.tabManager.get(data.tabId, null)?.convert();
-        // frameId is documented to only be set if sender.tab is set.
-        sender.frameId = source.frameId;
       }
     }
 

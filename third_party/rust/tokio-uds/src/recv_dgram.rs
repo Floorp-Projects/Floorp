@@ -20,17 +20,23 @@ pub struct RecvDgram<T> {
 /// avoided.
 #[derive(Debug)]
 enum State<T> {
-    Receiving { sock: UnixDatagram, buf: T },
+    Receiving {
+        sock: UnixDatagram,
+        buf: T,
+    },
     Empty,
 }
 
 impl<T> RecvDgram<T>
 where
-    T: AsMut<[u8]>,
+    T: AsMut<[u8]>
 {
     pub(crate) fn new(sock: UnixDatagram, buf: T) -> RecvDgram<T> {
         RecvDgram {
-            st: State::Receiving { sock, buf },
+            st: State::Receiving {
+                sock,
+                buf,
+            },
         }
     }
 }
@@ -65,7 +71,9 @@ where
             panic!()
         }
 
-        if let State::Receiving { sock, buf } = mem::replace(&mut self.st, State::Empty) {
+        if let State::Receiving { sock, buf } =
+            mem::replace(&mut self.st, State::Empty)
+        {
             Ok(Async::Ready((sock, buf, received, peer)))
         } else {
             panic!()

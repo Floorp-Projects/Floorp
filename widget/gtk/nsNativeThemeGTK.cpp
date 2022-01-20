@@ -96,8 +96,9 @@ static inline gint GetMonitorScaleFactor(nsIFrame* aFrame) {
   return GetMonitorScaleFactor(aFrame->PresContext());
 }
 
-nsNativeThemeGTK::nsNativeThemeGTK()
-    : nsNativeBasicTheme(DefaultPlatformScrollbarStyle()) {
+nsNativeThemeGTK::nsNativeThemeGTK(
+    mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawingGTK)
+    : nsNativeBasicTheme(std::move(aScrollbarDrawingGTK)) {
   if (moz_gtk_init() != MOZ_GTK_SUCCESS) {
     memset(mDisabledWidgetTypes, 0xff, sizeof(mDisabledWidgetTypes));
     return;
@@ -1959,11 +1960,11 @@ already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
   static nsCOMPtr<nsITheme> inst;
 
   if (!inst) {
+    auto scrollbars = MakeUnique<ScrollbarDrawingGTK>();
     if (gfxPlatform::IsHeadless()) {
-      inst = new nsNativeBasicTheme(
-          nsNativeBasicTheme::DefaultPlatformScrollbarStyle());
+      inst = new nsNativeBasicTheme(std::move(scrollbars));
     } else {
-      inst = new nsNativeThemeGTK();
+      inst = new nsNativeThemeGTK(std::move(scrollbars));
     }
     ClearOnShutdown(&inst);
   }

@@ -3931,7 +3931,8 @@ void TestProfiler() {
     // Profile all registered threads.
     MOZ_RELEASE_ASSERT(filters.append(""));
     const uint32_t features = baseprofiler::ProfilerFeature::Leaf |
-                              baseprofiler::ProfilerFeature::StackWalk;
+                              baseprofiler::ProfilerFeature::StackWalk |
+                              baseprofiler::ProfilerFeature::Threads;
     baseprofiler::profiler_start(baseprofiler::BASE_PROFILER_DEFAULT_ENTRIES,
                                  BASE_PROFILER_DEFAULT_INTERVAL, features,
                                  filters.begin(), filters.length());

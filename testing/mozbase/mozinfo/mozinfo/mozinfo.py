@@ -78,6 +78,7 @@ info = {
     "os_version": unknown,
     "bits": unknown,
     "has_sandbox": unknown,
+    "webrender": False,
     "automation": bool(os.environ.get("MOZ_AUTOMATION", False)),
 }
 (system, node, release, version, machine, processor) = platform.uname()

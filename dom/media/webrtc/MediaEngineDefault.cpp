@@ -4,29 +4,20 @@
 
 #include "MediaEngineDefault.h"
 
-#include "AudioSegment.h"
-#include "DOMMediaStream.h"
 #include "ImageContainer.h"
 #include "ImageTypes.h"
 #include "Layers.h"
-#include "MediaEnginePrefs.h"
-#include "MediaEngineSource.h"
 #include "MediaTrackGraph.h"
 #include "MediaTrackListener.h"
 #include "MediaTrackConstraints.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/MediaManager.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/UniquePtr.h"
-#include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
-#include "nsITimer.h"
 #include "SineWaveGenerator.h"
 #include "Tracing.h"
-#include "VideoSegment.h"
-#include "VideoUtils.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "nsISupportsUtils.h"
@@ -50,24 +41,20 @@ using dom::MediaTrackSettings;
 using dom::VideoFacingModeEnum;
 
 static nsString DefaultVideoName() {
+  MOZ_ASSERT(!NS_IsMainThread());
   // For the purpose of testing we allow to change the name of the fake device
   // by pref.
   nsAutoString cameraNameFromPref;
   nsresult rv;
-  auto getPref = [&]() {
+  // Here it is preferred a "hard" block, provided by the combination of Await &
+  // InvokeAsync, instead of "soft" block, provided by sync dispatch which
+  // allows the waiting thread to spin its event loop. The latter would allow
+  // miltiple enumeration requests being processed out-of-order.
+  RefPtr<Runnable> runnable = NS_NewRunnableFunction(__func__, [&]() {
     rv = Preferences::GetString("media.getusermedia.fake-camera-name",
                                 cameraNameFromPref);
-  };
-  if (NS_IsMainThread()) {
-    getPref();
-  } else {
-    // Here it is preferred a "hard" block, instead of "soft" block provided
-    // by sync dispatch, which allows the waiting thread to spin its event
-    // loop. The latter would allow multiple enumeration requests being
-    // processed out-of-order.
-    RefPtr runnable = NS_NewRunnableFunction(__func__, getPref);
-    SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(), runnable);
-  }
+  });
+  SyncRunnable::DispatchToThread(GetMainThreadSerialEventTarget(), runnable);
 
   if (NS_SUCCEEDED(rv)) {
     return std::move(cameraNameFromPref);
@@ -78,60 +65,11 @@ static nsString DefaultVideoName() {
 /**
  * Default video source.
  */
-class MediaEngineDefaultVideoSource : public MediaEngineSource {
- public:
-  MediaEngineDefaultVideoSource();
-
-  static nsString GetGroupId();
-
-  nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
-                    const MediaEnginePrefs& aPrefs, uint64_t aWindowID,
-                    const char** aOutBadConstraint) override;
-  void SetTrack(const RefPtr<MediaTrack>& aTrack,
-                const PrincipalHandle& aPrincipal) override;
-  nsresult Start() override;
-  nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
-                       const MediaEnginePrefs& aPrefs,
-                       const char** aOutBadConstraint) override;
-  nsresult Stop() override;
-  nsresult Deallocate() override;
-
-  uint32_t GetBestFitnessDistance(
-      const nsTArray<const NormalizedConstraintSet*>& aConstraintSets)
-      const override;
-  void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
-
-  bool IsFake() const override { return true; }
-
- protected:
-  ~MediaEngineDefaultVideoSource() = default;
-
-  /**
-   * Called by mTimer when it's time to generate a new frame.
-   */
-  void GenerateFrame();
-
-  nsCOMPtr<nsITimer> mTimer;
-
-  RefPtr<layers::ImageContainer> mImageContainer;
-
-  // Current state of this source.
-  MediaEngineSourceState mState = kReleased;
-  RefPtr<layers::Image> mImage;
-  RefPtr<SourceMediaTrack> mTrack;
-  PrincipalHandle mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
-
-  MediaEnginePrefs mOpts;
-  int mCb = 16;
-  int mCr = 16;
-
-  // Main thread only.
-  const RefPtr<media::Refcountable<dom::MediaTrackSettings>> mSettings;
-};
 
 MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
     : mTimer(nullptr),
-      mSettings(MakeAndAddRef<media::Refcountable<MediaTrackSettings>>()) {
+      mSettings(MakeAndAddRef<media::Refcountable<MediaTrackSettings>>()),
+      mName(DefaultVideoName()) {
   mSettings->mWidth.Construct(
       int32_t(MediaEnginePrefs::DEFAULT_43_VIDEO_WIDTH));
   mSettings->mHeight.Construct(
@@ -143,7 +81,15 @@ MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
                                      .value));
 }
 
-nsString MediaEngineDefaultVideoSource::GetGroupId() {
+MediaEngineDefaultVideoSource::~MediaEngineDefaultVideoSource() = default;
+
+nsString MediaEngineDefaultVideoSource::GetName() const { return mName; }
+
+nsCString MediaEngineDefaultVideoSource::GetUUID() const {
+  return "1041FCBD-3F12-4F7B-9E9B-1EC556DD5676"_ns;
+}
+
+nsString MediaEngineDefaultVideoSource::GetGroupId() const {
   return u"Default Video Group"_ns;
 }
 
@@ -434,45 +380,20 @@ class AudioSourcePullListener : public MediaTrackListener {
 /**
  * Default audio source.
  */
-class MediaEngineDefaultAudioSource : public MediaEngineSource {
- public:
-  MediaEngineDefaultAudioSource() = default;
 
-  static nsString GetUUID();
-  static nsString GetGroupId();
+MediaEngineDefaultAudioSource::MediaEngineDefaultAudioSource() = default;
 
-  nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
-                    const MediaEnginePrefs& aPrefs, uint64_t aWindowID,
-                    const char** aOutBadConstraint) override;
-  void SetTrack(const RefPtr<MediaTrack>& aTrack,
-                const PrincipalHandle& aPrincipal) override;
-  nsresult Start() override;
-  nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
-                       const MediaEnginePrefs& aPrefs,
-                       const char** aOutBadConstraint) override;
-  nsresult Stop() override;
-  nsresult Deallocate() override;
+MediaEngineDefaultAudioSource::~MediaEngineDefaultAudioSource() = default;
 
-  bool IsFake() const override { return true; }
-
-  void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
-
- protected:
-  ~MediaEngineDefaultAudioSource() = default;
-
-  // Current state of this source.
-  MediaEngineSourceState mState = kReleased;
-  RefPtr<SourceMediaTrack> mTrack;
-  PrincipalHandle mPrincipalHandle = PRINCIPAL_HANDLE_NONE;
-  uint32_t mFrequency = 1000;
-  RefPtr<AudioSourcePullListener> mPullListener;
-};
-
-nsString MediaEngineDefaultAudioSource::GetUUID() {
-  return u"B7CBD7C1-53EF-42F9-8353-73F61C70C092"_ns;
+nsString MediaEngineDefaultAudioSource::GetName() const {
+  return u"Default Audio Device"_ns;
 }
 
-nsString MediaEngineDefaultAudioSource::GetGroupId() {
+nsCString MediaEngineDefaultAudioSource::GetUUID() const {
+  return "B7CBD7C1-53EF-42F9-8353-73F61C70C092"_ns;
+}
+
+nsString MediaEngineDefaultAudioSource::GetGroupId() const {
   return u"Default Audio Group"_ns;
 }
 
@@ -597,14 +518,10 @@ void AudioSourcePullListener::NotifyPull(MediaTrackGraph* aGraph,
   mTrack->AppendData(&segment);
 }
 
-MediaEngineDefault::MediaEngineDefault() = default;
-MediaEngineDefault::~MediaEngineDefault() = default;
-
 void MediaEngineDefault::EnumerateDevices(
     MediaSourceEnum aMediaSource, MediaSinkEnum aMediaSink,
     nsTArray<RefPtr<MediaDevice>>* aDevices) {
   AssertIsOnOwningThread();
-  using IsScary = MediaDevice::IsScary;
 
   if (aMediaSink == MediaSinkEnum::Speaker) {
     NS_WARNING("No default implementation for MediaSinkEnum::Speaker");
@@ -612,35 +529,25 @@ void MediaEngineDefault::EnumerateDevices(
 
   switch (aMediaSource) {
     case MediaSourceEnum::Camera: {
-      nsString name = DefaultVideoName();
-      aDevices->EmplaceBack(new MediaDevice(
-          this, aMediaSource, name, /*aRawId=*/name,
-          MediaEngineDefaultVideoSource::GetGroupId(), IsScary::No));
+      // Only supports camera video sources. See Bug 1038241.
+      auto newSource = MakeRefPtr<MediaEngineDefaultVideoSource>();
+      aDevices->AppendElement(
+          MakeRefPtr<MediaDevice>(newSource, newSource->GetName(),
+                                  NS_ConvertUTF8toUTF16(newSource->GetUUID()),
+                                  newSource->GetGroupId(), u""_ns));
       return;
     }
-    case MediaSourceEnum::Microphone:
-      aDevices->EmplaceBack(new MediaDevice(
-          this, aMediaSource, u"Default Audio Device"_ns,
-          MediaEngineDefaultAudioSource::GetUUID(),
-          MediaEngineDefaultAudioSource::GetGroupId(), IsScary::No));
+    case MediaSourceEnum::Microphone: {
+      auto newSource = MakeRefPtr<MediaEngineDefaultAudioSource>();
+      aDevices->AppendElement(
+          MakeRefPtr<MediaDevice>(newSource, newSource->GetName(),
+                                  NS_ConvertUTF8toUTF16(newSource->GetUUID()),
+                                  newSource->GetGroupId(), u""_ns));
       return;
+    }
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported source type");
       return;
-  }
-}
-
-RefPtr<MediaEngineSource> MediaEngineDefault::CreateSource(
-    const MediaDevice* aMediaDevice) {
-  MOZ_ASSERT(aMediaDevice->mEngine == this);
-  switch (aMediaDevice->mMediaSource) {
-    case MediaSourceEnum::Camera:
-      return new MediaEngineDefaultVideoSource();
-    case MediaSourceEnum::Microphone:
-      return new MediaEngineDefaultAudioSource();
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unsupported source type");
-      return nullptr;
   }
 }
 

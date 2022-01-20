@@ -67,37 +67,37 @@ class HistoryDelegateTest : BaseSessionTest() {
 
         // Since `getVisited` is called asynchronously after the page loads, we
         // can't use `waitForPageStop` here.
-        mainSession.loadUri(testUri)
-        mainSession.waitUntilCalled(GeckoSession.HistoryDelegate::class,
+        sessionRule.session.loadUri(testUri)
+        sessionRule.session.waitUntilCalled(GeckoSession.HistoryDelegate::class,
                                             "onVisited", "getVisited")
 
         // Sometimes link changes are not applied immediately, wait for a little bit
         UiThreadUtils.waitForCondition({
-            mainSession.getLinkColor("#mozilla") == VISITED_COLOR
+            sessionRule.getLinkColor(testUri, "#mozilla") == VISITED_COLOR
         }, sessionRule.env.defaultTimeoutMillis)
 
         assertThat(
             "Mozilla should be visited",
-            mainSession.getLinkColor("#mozilla"),
+            sessionRule.getLinkColor(testUri, "#mozilla"),
             equalTo(VISITED_COLOR)
         )
 
         assertThat(
             "Test Pilot should be visited",
-            mainSession.getLinkColor("#testpilot"),
+            sessionRule.getLinkColor(testUri, "#testpilot"),
             equalTo(VISITED_COLOR)
         )
 
         assertThat(
             "Bugzilla should be unvisited",
-            mainSession.getLinkColor("#bugzilla"),
+            sessionRule.getLinkColor(testUri, "#bugzilla"),
             equalTo(UNVISITED_COLOR)
         )
     }
 
     @Ignore //disable test on debug for frequent failures Bug 1544169
     @Test fun onHistoryStateChange() {
-        mainSession.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
 
         sessionRule.waitUntilCalled(object : HistoryDelegate {
             @AssertCalled(count = 1)
@@ -111,7 +111,7 @@ class HistoryDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.loadTestPath(HELLO2_HTML_PATH)
+        sessionRule.session.loadTestPath(HELLO2_HTML_PATH)
 
         sessionRule.waitUntilCalled(object : HistoryDelegate {
             @AssertCalled(count = 1)
@@ -125,7 +125,7 @@ class HistoryDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.goBack()
+        sessionRule.session.goBack()
 
         sessionRule.waitUntilCalled(object : HistoryDelegate {
             @AssertCalled(count = 1)
@@ -139,7 +139,7 @@ class HistoryDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.goForward()
+        sessionRule.session.goForward()
 
         sessionRule.waitUntilCalled(object : HistoryDelegate {
             @AssertCalled(count = 1)
@@ -153,7 +153,7 @@ class HistoryDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.gotoHistoryIndex(0)
+        sessionRule.session.gotoHistoryIndex(0)
 
         sessionRule.waitUntilCalled(object : HistoryDelegate {
             @AssertCalled(count = 1)
@@ -167,7 +167,7 @@ class HistoryDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.gotoHistoryIndex(1)
+        sessionRule.session.gotoHistoryIndex(1)
 
         sessionRule.waitUntilCalled(object : HistoryDelegate {
             @AssertCalled(count = 1)
@@ -187,7 +187,7 @@ class HistoryDelegateTest : BaseSessionTest() {
         assumeThat(sessionRule.env.isFission, equalTo(false))
 
         // This is a smaller version of the above test, in the hopes to minimize race conditions
-        mainSession.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
 
         sessionRule.waitUntilCalled(object : HistoryDelegate {
             @AssertCalled(count = 1)
@@ -201,7 +201,7 @@ class HistoryDelegateTest : BaseSessionTest() {
             }
         })
 
-        mainSession.loadTestPath(HELLO2_HTML_PATH)
+        sessionRule.session.loadTestPath(HELLO2_HTML_PATH)
 
         sessionRule.waitUntilCalled(object : HistoryDelegate {
             @AssertCalled(count = 1)

@@ -20,18 +20,12 @@ ImageBlocker::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
 
   *aShouldLoad = nsIContentPolicy::ACCEPT;
 
-  if (!aContentLocation) {
-    // Bug 1720280: Ideally we should block the load, but to avoid a potential
-    // null pointer deref, we return early in this case. Please note that
-    // the ImageBlocker only applies about http/https loads anyway.
-    return NS_OK;
-  }
-
-  // we only want to check http, https
+  // we only want to check http, https, ftp
   // for chrome:// and resources and others, no need to check.
   nsAutoCString scheme;
   aContentLocation->GetScheme(scheme);
-  if (!scheme.LowerCaseEqualsLiteral("http") &&
+  if (!scheme.LowerCaseEqualsLiteral("ftp") &&
+      !scheme.LowerCaseEqualsLiteral("http") &&
       !scheme.LowerCaseEqualsLiteral("https")) {
     return NS_OK;
   }

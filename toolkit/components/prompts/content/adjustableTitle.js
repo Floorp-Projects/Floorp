@@ -14,8 +14,7 @@ let { PromptUtils } = ChromeUtils.import(
 const AdjustableTitle = {
   _cssSnippet: `
     #titleContainer {
-      /* This gets display: flex by virtue of being a row in a subdialog, from
-        * commonDialog.css . */
+      display: flex; /* Try removing me when browser.proton.enabled goes away. */
       flex-shrink: 0;
 
       flex-direction: row;

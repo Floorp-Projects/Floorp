@@ -3237,9 +3237,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_12___default.a
           subtitle: component.header && component.header.subtitle,
           link_text: component.header && component.header.link_text,
           link_url: component.header && component.header.link_url,
-          icon: component.header && component.header.icon,
-          essentialReadsHeader: component.essentialReadsHeader,
-          editorsPicksHeader: component.editorsPicksHeader
+          icon: component.header && component.header.icon
         });
 
       case "SectionTitle":
@@ -3291,16 +3289,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_12___default.a
           dispatch: this.props.dispatch,
           items: component.properties.items,
           compact: component.properties.compact,
-          hideDescriptions: component.properties.hideDescriptions,
-          compactGrid: component.properties.compactGrid,
-          compactImages: component.properties.compactImages,
-          imageGradient: component.properties.imageGradient,
-          newSponsoredLabel: component.properties.newSponsoredLabel,
-          titleLines: component.properties.titleLines,
-          descLines: component.properties.descLines,
-          essentialReadsHeader: component.properties.essentialReadsHeader,
-          editorsPicksHeader: component.properties.editorsPicksHeader,
-          readTime: component.properties.readTime,
+          include_descriptions: !component.properties.compact,
           loadMoreEnabled: component.loadMoreEnabled,
           lastCardMessageEnabled: component.lastCardMessageEnabled,
           saveToPocketCard: component.saveToPocketCard,
@@ -3333,16 +3322,13 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_12___default.a
   }
 
   render() {
-    const {
-      locale
-    } = this.props; // Select layout render data by adding spocs and position to recommendations
-
+    // Select layout render data by adding spocs and position to recommendations
     const {
       layoutRender
     } = Object(content_src_lib_selectLayoutRender__WEBPACK_IMPORTED_MODULE_14__["selectLayoutRender"])({
       state: this.props.DiscoveryStream,
       prefs: this.props.Prefs.values,
-      locale
+      locale: this.props.locale
     });
     const {
       config
@@ -3389,28 +3375,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_12___default.a
         title: topStories.title
       }
     };
-    const privacyLinkComponent = extractComponent("PrivacyLink");
-    let learnMore = {
-      link: {
-        href: message.header.link_url,
-        message: message.header.link_text
-      }
-    };
-    let sectionTitle = message.header.title;
-    let subTitle = ""; // If we're in one of these experiments, override the default message.
-    // For now this is English only.
-
-    if (message.essentialReadsHeader || message.editorsPicksHeader) {
-      learnMore = null;
-      subTitle = "Recommended By Pocket";
-
-      if (message.essentialReadsHeader) {
-        sectionTitle = "Today’s Essential Reads";
-      } else if (message.editorsPicksHeader) {
-        sectionTitle = "Editor’s Picks";
-      }
-    } // Render a DS-style TopSites then the rest if any in a collapsible section
-
+    const privacyLinkComponent = extractComponent("PrivacyLink"); // Render a DS-style TopSites then the rest if any in a collapsible section
 
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_12___default.a.Fragment, null, this.props.DiscoveryStream.isPrivacyInfoModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_12___default.a.createElement(content_src_components_DiscoveryStreamComponents_DSPrivacyModal_DSPrivacyModal__WEBPACK_IMPORTED_MODULE_5__["DSPrivacyModal"], {
       dispatch: this.props.dispatch
@@ -3426,11 +3391,15 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_12___default.a
       dispatch: this.props.dispatch,
       id: topStories.id,
       isFixed: true,
-      learnMore: learnMore,
+      learnMore: {
+        link: {
+          href: message.header.link_url,
+          message: message.header.link_text
+        }
+      },
       privacyNoticeURL: topStories.privacyNoticeURL,
       showPrefName: topStories.pref.feed,
-      title: sectionTitle,
-      subTitle: subTitle,
+      title: message.header.title,
       eventSource: "CARDGRID"
     }, this.renderLayout(layoutRender)), this.renderLayout([{
       width: 12,
@@ -5013,8 +4982,7 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_2___default.a.P
       id,
       collapsed,
       learnMore,
-      title,
-      subTitle
+      title
     } = this.props;
     const active = menuButtonHover || showContextMenu;
     let bodyStyle;
@@ -5037,7 +5005,6 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_2___default.a.P
       };
     }
 
-    const hasSubtitleClassName = subTitle ? `has-subtitle` : ``;
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("section", {
       className: `collapsible-section ${this.props.className}${active ? " active" : ""}` // Note: data-section-id is used for web extension api tests in mozilla central
       ,
@@ -5045,7 +5012,7 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_2___default.a.P
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
       className: "section-top-bar"
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("h3", {
-      className: `section-title-container ${hasSubtitleClassName}`,
+      className: "section-title-container",
       style: titleStyle
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("span", {
       className: "section-title"
@@ -5059,11 +5026,7 @@ class _CollapsibleSection extends react__WEBPACK_IMPORTED_MODULE_2___default.a.P
       message: learnMore.link.message
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
       href: learnMore.link.href
-    })))), subTitle && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("span", {
-      className: "section-sub-title"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(content_src_components_FluentOrText_FluentOrText__WEBPACK_IMPORTED_MODULE_1__["FluentOrText"], {
-      message: subTitle
-    })))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(content_src_components_ErrorBoundary_ErrorBoundary__WEBPACK_IMPORTED_MODULE_0__["ErrorBoundary"], {
+    })))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(content_src_components_ErrorBoundary_ErrorBoundary__WEBPACK_IMPORTED_MODULE_0__["ErrorBoundary"], {
       className: "section-body-fallback"
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
       ref: this.onBodyMount,
@@ -13009,34 +12972,35 @@ var FluentOrText = __webpack_require__(26);
  // Animation time is mirrored in DSContextFooter.scss
 
 const ANIMATION_DURATION = 3000;
-const DSMessageLabel = props => {
+const DSMessageFooter = props => {
   const {
     context,
     context_type,
     display_engagement_labels,
-    engagement
+    engagement,
+    saveToPocketCard
   } = props;
   const {
     icon,
     fluentID
-  } = types["cardContextTypes"][context_type] || {};
+  } = types["cardContextTypes"][context_type] || {}; // This case is specific and already displayed to the user elsewhere.
 
-  if (!context && (context_type || display_engagement_labels && engagement)) {
-    return /*#__PURE__*/external_React_default.a.createElement(external_ReactTransitionGroup_["TransitionGroup"], {
-      component: null
-    }, /*#__PURE__*/external_React_default.a.createElement(external_ReactTransitionGroup_["CSSTransition"], {
-      key: fluentID,
-      timeout: ANIMATION_DURATION,
-      classNames: "story-animate"
-    }, engagement && !context_type ? /*#__PURE__*/external_React_default.a.createElement("div", {
-      className: "story-view-count"
-    }, engagement) : /*#__PURE__*/external_React_default.a.createElement(StatusMessage, {
-      icon: icon,
-      fluentID: fluentID
-    })));
+  if (saveToPocketCard && context_type === "pocket") {
+    return null;
   }
 
-  return null;
+  return /*#__PURE__*/external_React_default.a.createElement(external_ReactTransitionGroup_["TransitionGroup"], {
+    component: null
+  }, !context && (context_type || display_engagement_labels && engagement) && /*#__PURE__*/external_React_default.a.createElement(external_ReactTransitionGroup_["CSSTransition"], {
+    key: fluentID,
+    timeout: ANIMATION_DURATION,
+    classNames: "story-animate"
+  }, engagement && !context_type ? /*#__PURE__*/external_React_default.a.createElement("div", {
+    className: "story-view-count"
+  }, engagement) : /*#__PURE__*/external_React_default.a.createElement(StatusMessage, {
+    icon: icon,
+    fluentID: fluentID
+  })));
 };
 const StatusMessage = ({
   icon,
@@ -13053,10 +13017,9 @@ const StatusMessage = ({
 const SponsorLabel = ({
   sponsored_by_override,
   sponsor,
-  context,
-  newSponsoredLabel
+  context
 }) => {
-  const classList = `story-sponsored-label ${newSponsoredLabel || ""} clamp`; // If override is not false or an empty string.
+  const classList = "story-sponsored-label clamp"; // If override is not false or an empty string.
 
   if (sponsored_by_override) {
     return /*#__PURE__*/external_React_default.a.createElement("p", {
@@ -13097,51 +13060,21 @@ class DSContextFooter_DSContextFooter extends external_React_default.a.PureCompo
       sponsor,
       sponsored_by_override
     } = this.props;
-    const sponsorLabel = SponsorLabel({
+    return /*#__PURE__*/external_React_default.a.createElement("div", {
+      className: "story-footer"
+    }, SponsorLabel({
       sponsored_by_override,
       sponsor,
       context
-    });
-    const dsMessageLabel = DSMessageLabel({
+    }), DSMessageFooter({
       context,
       context_type,
       display_engagement_labels,
       engagement
-    });
-
-    if (sponsorLabel || dsMessageLabel) {
-      return /*#__PURE__*/external_React_default.a.createElement("div", {
-        className: "story-footer"
-      }, sponsorLabel, dsMessageLabel);
-    }
-
-    return null;
+    }));
   }
 
 }
-const DSMessageFooter = props => {
-  const {
-    context,
-    context_type,
-    engagement,
-    display_engagement_labels,
-    saveToPocketCard
-  } = props;
-  const dsMessageLabel = DSMessageLabel({
-    context,
-    context_type,
-    engagement,
-    display_engagement_labels
-  }); // This case is specific and already displayed to the user elsewhere.
-
-  if (!dsMessageLabel || saveToPocketCard && context_type === "pocket") {
-    return null;
-  }
-
-  return /*#__PURE__*/external_React_default.a.createElement("div", {
-    className: "story-footer"
-  }, dsMessageLabel);
-};
 // EXTERNAL MODULE: external "ReactRedux"
 var external_ReactRedux_ = __webpack_require__(7);
 
@@ -13172,37 +13105,36 @@ function readTimeFromWordCount(wordCount) {
 const DSSource = ({
   source,
   timeToRead,
-  newSponsoredLabel,
+  compact,
   context,
   sponsor,
   sponsored_by_override
 }) => {
-  // First try to display sponsored label or time to read here.
-  if (newSponsoredLabel) {
+  // If we are compact, try to display sponsored label or time to read here.
+  if (compact) {
     // If we can display something for spocs, do so.
     if (sponsored_by_override || sponsor || context) {
       return /*#__PURE__*/external_React_default.a.createElement(SponsorLabel, {
         context: context,
         sponsor: sponsor,
-        sponsored_by_override: sponsored_by_override,
-        newSponsoredLabel: "new-sponsored-label"
+        sponsored_by_override: sponsored_by_override
       });
-    }
-  } // If we are not a spoc, and can display a time to read value.
+    } // If we are not a spoc, and can display a time to read value.
 
 
-  if (timeToRead) {
-    return /*#__PURE__*/external_React_default.a.createElement("p", {
-      className: "source clamp time-to-read"
-    }, /*#__PURE__*/external_React_default.a.createElement(FluentOrText["FluentOrText"], {
-      message: {
-        id: `newtab-label-source-read-time`,
-        values: {
-          source,
-          timeToRead
+    if (timeToRead) {
+      return /*#__PURE__*/external_React_default.a.createElement("p", {
+        className: "source clamp time-to-read"
+      }, /*#__PURE__*/external_React_default.a.createElement(FluentOrText["FluentOrText"], {
+        message: {
+          id: `newtab-label-source-read-time`,
+          values: {
+            source,
+            timeToRead
+          }
         }
-      }
-    }));
+      }));
+    }
   } // Otherwise display a default source.
 
 
@@ -13217,7 +13149,7 @@ const DefaultMeta = ({
   title,
   excerpt,
   timeToRead,
-  newSponsoredLabel,
+  compact,
   context,
   context_type,
   cta,
@@ -13232,8 +13164,8 @@ const DefaultMeta = ({
   className: "info-wrap"
 }, /*#__PURE__*/external_React_default.a.createElement(DSSource, {
   source: source,
+  compact: compact,
   timeToRead: timeToRead,
-  newSponsoredLabel: newSponsoredLabel,
   context: context,
   sponsor: sponsor,
   sponsored_by_override: sponsored_by_override
@@ -13246,20 +13178,22 @@ const DefaultMeta = ({
   role: "link",
   className: "cta-link icon icon-arrow",
   tabIndex: "0"
-}, cta)), !newSponsoredLabel && /*#__PURE__*/external_React_default.a.createElement(DSContextFooter_DSContextFooter, {
+}, cta)), !compact && /*#__PURE__*/external_React_default.a.createElement(DSContextFooter_DSContextFooter, {
   context_type: context_type,
   context: context,
   sponsor: sponsor,
   sponsored_by_override: sponsored_by_override,
   display_engagement_labels: display_engagement_labels,
   engagement: engagement
-}), newSponsoredLabel && /*#__PURE__*/external_React_default.a.createElement(DSMessageFooter, {
+}), compact && /*#__PURE__*/external_React_default.a.createElement("div", {
+  className: "story-footer"
+}, /*#__PURE__*/external_React_default.a.createElement(DSMessageFooter, {
   context_type: context_type,
   context: null,
   display_engagement_labels: display_engagement_labels,
   engagement: engagement,
   saveToPocketCard: saveToPocketCard
-}));
+})));
 const CTAButtonMeta = ({
   display_engagement_labels,
   source,
@@ -13509,30 +13443,15 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
     }
 
     const isButtonCTA = this.props.cta_variant === "button";
+    const includeDescriptions = this.props.include_descriptions;
     const {
-      is_video,
-      saveToPocketCard,
-      hideDescriptions,
-      compactImages,
-      imageGradient,
-      titleLines = 3,
-      descLines = 3,
-      displayReadTime
+      saveToPocketCard
     } = this.props;
-    const excerpt = !hideDescriptions ? this.props.excerpt : "";
-    let timeToRead;
-
-    if (displayReadTime) {
-      timeToRead = this.props.time_to_read || readTimeFromWordCount(this.props.word_count);
-    }
-
-    const videoCardClassName = is_video ? `video-card` : ``;
-    const compactImagesClassName = compactImages ? `ds-card-compact-image` : ``;
-    const imageGradientClassName = imageGradient ? `ds-card-image-gradient` : ``;
-    const titleLinesName = `ds-card-title-lines-${titleLines}`;
-    const descLinesClassName = `ds-card-desc-lines-${descLines}`;
+    const baseClass = `ds-card ${this.props.is_video ? `video-card` : ``}`;
+    const excerpt = includeDescriptions ? this.props.excerpt : "";
+    const timeToRead = this.props.time_to_read || readTimeFromWordCount(this.props.word_count);
     return /*#__PURE__*/external_React_default.a.createElement("div", {
-      className: `ds-card ${videoCardClassName} ${videoCardClassName} ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName}`,
+      className: baseClass,
       ref: this.setContextMenuButtonHostRef
     }, /*#__PURE__*/external_React_default.a.createElement(SafeAnchor["SafeAnchor"], {
       className: "ds-card-link",
@@ -13556,6 +13475,7 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       timeToRead: timeToRead,
       context: this.props.context,
       context_type: this.props.context_type,
+      compact: this.props.compact,
       engagement: this.props.engagement,
       cta: this.props.cta,
       sponsor: this.props.sponsor,
@@ -13565,11 +13485,11 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       source: this.props.source,
       title: this.props.title,
       excerpt: excerpt,
-      newSponsoredLabel: this.props.newSponsoredLabel,
       timeToRead: timeToRead,
       context: this.props.context,
       engagement: this.props.engagement,
       context_type: this.props.context_type,
+      compact: this.props.compact,
       cta: this.props.cta,
       cta_variant: this.props.cta_variant,
       sponsor: this.props.sponsor,
@@ -13782,37 +13702,13 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
     return loadMoreEnabled && data.recommendations.length > loadMoreThreshold && !this.state.moreLoaded;
   }
 
-  renderDSSubHeader(title) {
-    return /*#__PURE__*/external_React_default.a.createElement("div", {
-      className: "section-top-bar ds-sub-header"
-    }, /*#__PURE__*/external_React_default.a.createElement("h3", {
-      className: "section-title-container"
-    }, /*#__PURE__*/external_React_default.a.createElement("span", {
-      className: "section-title"
-    }, /*#__PURE__*/external_React_default.a.createElement(FluentOrText["FluentOrText"], {
-      message: title
-    }))));
-  }
-
   renderCards() {
     let {
-      items,
-      compact
+      items
     } = this.props;
     const {
-      hideDescriptions,
       lastCardMessageEnabled,
-      saveToPocketCard,
-      loadMoreThreshold,
-      compactGrid,
-      compactImages,
-      imageGradient,
-      newSponsoredLabel,
-      titleLines,
-      descLines,
-      readTime,
-      essentialReadsHeader,
-      editorsPicksHeader
+      loadMoreThreshold
     } = this.props;
     let showLastCardMessage = lastCardMessageEnabled;
 
@@ -13837,7 +13733,6 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
         raw_image_src: rec.raw_image_src,
         word_count: rec.word_count,
         time_to_read: rec.time_to_read,
-        displayReadTime: readTime,
         title: rec.title,
         excerpt: rec.excerpt,
         url: rec.url,
@@ -13845,6 +13740,7 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
         shim: rec.shim,
         type: this.props.type,
         context: rec.context,
+        compact: this.props.compact,
         sponsor: rec.sponsor,
         sponsored_by_override: rec.sponsored_by_override,
         dispatch: this.props.dispatch,
@@ -13854,29 +13750,13 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
         bookmarkGuid: rec.bookmarkGuid,
         engagement: rec.engagement,
         display_engagement_labels: this.props.display_engagement_labels,
-        hideDescriptions: hideDescriptions,
-        saveToPocketCard: saveToPocketCard,
-        compactImages: compactImages,
-        imageGradient: imageGradient,
-        newSponsoredLabel: newSponsoredLabel,
-        titleLines: titleLines,
-        descLines: descLines,
+        include_descriptions: this.props.include_descriptions,
+        saveToPocketCard: this.props.saveToPocketCard,
         cta: rec.cta,
         cta_variant: this.props.cta_variant,
         is_video: this.props.enable_video_playheads && rec.is_video,
         is_collection: this.props.is_collection
       }));
-    } // If we have both header, inject the second one after the second row.
-    // For now this is English only.
-
-
-    if (essentialReadsHeader && editorsPicksHeader) {
-      // For compact second row is 8 cards, and regular it is 6 cards.
-      if (compact) {
-        cards.splice(8, 0, this.renderDSSubHeader("Editor’s Picks"));
-      } else {
-        cards.splice(6, 0, this.renderDSSubHeader("Editor’s Picks"));
-      }
     } // Replace last card with "you are all caught up card"
 
 
@@ -13888,11 +13768,10 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
 
 
     const variantClass = this.props.display_variant ? `ds-card-grid-${this.props.display_variant}` : ``;
-    const compactClass = compact ? `ds-card-grid-compact-variant` : ``;
-    const hideDescriptionsClassName = !hideDescriptions ? `ds-card-grid-include-descriptions` : ``;
-    const compactGridClassName = compactGrid ? `ds-card-grid-compact` : ``;
+    const compactClass = this.props.compact ? `ds-card-grid-compact-variant` : ``;
+    const includeDescriptions = this.props.include_descriptions ? `ds-card-grid-include-descriptions` : ``;
     return /*#__PURE__*/external_React_default.a.createElement("div", {
-      className: `ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${compactClass} ${hideDescriptionsClassName} ${compactGridClassName}`
+      className: `ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${compactClass} ${includeDescriptions}`
     }, cards);
   }
 

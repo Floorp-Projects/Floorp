@@ -85,5 +85,4 @@ best fit for you.
    logging
    settings
    telemetry
-   windows-usage-outside-mozillabuild
    faq

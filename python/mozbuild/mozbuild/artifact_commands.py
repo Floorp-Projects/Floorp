@@ -221,12 +221,6 @@ def artifact_clear_cache(command_context, tree=None, job=None, verbose=False):
     "BUILD is a name of a toolchain task, e.g. linux64-clang",
 )
 @CommandArgument(
-    "--from-task",
-    metavar="TASK_ID:ARTIFACT",
-    nargs="+",
-    help="Download toolchain artifact from a given task.",
-)
-@CommandArgument(
     "--tooltool-manifest",
     metavar="MANIFEST",
     help="Explicit tooltool manifest to process",
@@ -254,7 +248,6 @@ def artifact_toolchain(
     cache_dir=None,
     skip_cache=False,
     from_build=(),
-    from_task=(),
     tooltool_manifest=None,
     no_unpack=False,
     retry=0,
@@ -468,20 +461,6 @@ def artifact_toolchain(
             record = ArtifactRecord(task_id, artifact_name)
             records[record.filename] = record
 
-    # Handle the list of files of the form task_id:path from --from-task.
-    for f in from_task or ():
-        task_id, colon, name = f.partition(":")
-        if not colon:
-            self.log(
-                logging.ERROR,
-                "artifact",
-                {},
-                "Expected an argument of the form task_id:path",
-            )
-            return 1
-        record = ArtifactRecord(task_id, name)
-        records[record.filename] = record
-
     for record in six.itervalues(records):
         command_context.log(
             logging.INFO,
@@ -579,8 +558,6 @@ def artifact_toolchain(
 
     if not downloaded:
         command_context.log(logging.ERROR, "artifact", {}, "Nothing to download")
-        if from_task:
-            return 1
 
     if artifacts:
         ensureParentDir(artifact_manifest)

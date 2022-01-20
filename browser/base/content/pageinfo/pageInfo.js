@@ -324,14 +324,7 @@ async function onLoadPageInfo() {
     window.arguments[0];
 
   // Init media view
-  let imageTree = document.getElementById("imagetree");
-  imageTree.view = gImageView;
-
-  imageTree.controllers.appendController(treeController);
-
-  document
-    .getElementById("metatree")
-    .controllers.appendController(treeController);
+  document.getElementById("imagetree").view = gImageView;
 
   // Select the requested tab, if the name is specified
   await loadTab(args);
@@ -1062,27 +1055,6 @@ function formatDate(datestr, unknown) {
   return dateTimeFormatter.format(date);
 }
 
-let treeController = {
-  supportsCommand(command) {
-    return command == "cmd_copy" || command == "cmd_selectAll";
-  },
-
-  isCommandEnabled(command) {
-    return true; // not worth checking for this
-  },
-
-  doCommand(command) {
-    switch (command) {
-      case "cmd_copy":
-        doCopy();
-        break;
-      case "cmd_selectAll":
-        document.activeElement.view.selection.selectAll();
-        break;
-    }
-  },
-};
-
 function doCopy() {
   if (!gClipboardHelper) {
     return;
@@ -1119,6 +1091,14 @@ function doSelectAllMedia() {
 
   if (tree) {
     tree.view.selection.selectAll();
+  }
+}
+
+function doSelectAll() {
+  var elem = document.commandDispatcher.focusedElement;
+
+  if (elem && elem.localName == "tree") {
+    elem.view.selection.selectAll();
   }
 }
 

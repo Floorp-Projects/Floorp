@@ -20,7 +20,7 @@ cfg_io_util! {
 /// asynchronous manner, returning a future.
 pub(crate) fn write_buf<'a, W, B>(writer: &'a mut W, buf: &'a mut B) -> WriteBuf<'a, W, B>
 where
-    W: AsyncWrite + Unpin,
+    W: AsyncWrite,
     B: Buf,
 {
     WriteBuf { writer, buf }
@@ -28,13 +28,16 @@ where
 
 impl<W, B> Future for WriteBuf<'_, W, B>
 where
-    W: AsyncWrite + Unpin,
+    W: AsyncWrite,
     B: Buf,
 {
     type Output = io::Result<usize>;
 
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<usize>> {
-        let me = &mut *self;
-        Pin::new(&mut *me.writer).poll_write_buf(cx, me.buf)
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<usize>> {
+        // safety: no data is moved from self
+        unsafe {
+            let me = self.get_unchecked_mut();
+            Pin::new_unchecked(&mut *me.writer).poll_write_buf(cx, &mut me.buf)
+        }
     }
 }

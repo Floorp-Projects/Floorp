@@ -148,9 +148,6 @@ def translate_metrics(
     if parser_config.get("allow_reserved"):
         options["allow_reserved"] = True
 
-    # We don't render tags anywhere yet.
-    all_objects.value.pop("tags", None)
-
     # Write everything out to a temporary directory, and then move it to the
     # real directory, for transactional integrity.
     with tempfile.TemporaryDirectory() as tempdir:

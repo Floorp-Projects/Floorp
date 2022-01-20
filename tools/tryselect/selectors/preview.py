@@ -69,10 +69,8 @@ def duration_display(graph_cache_file, taskfile, cache_dir):
         durations["selected_duration"] + durations["dependency_duration"],
     )
 
-    if durations.get("percentile"):
-        output += "This is in the top {}% of requests\n".format(
-            100 - durations["percentile"]
-        )
+    if durations.get("quantile"):
+        output += "This is in the top {}% of requests\n".format(durations["quantile"])
 
     output += "Estimated finish in {} at {}".format(
         durations["wall_duration_seconds"], durations["eta_datetime"].strftime("%H:%M")

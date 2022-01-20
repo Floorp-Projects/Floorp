@@ -376,7 +376,19 @@ pub mod parsing {
         let begin = input.fork();
         let (qself, path) = path::parsing::qpath(input, true)?;
 
-        if qself.is_none() && input.peek(Token![!]) && !input.peek(Token![!=]) {
+        if input.peek(Token![..]) {
+            return pat_range(input, begin, qself, path);
+        }
+
+        if qself.is_some() {
+            return Ok(Pat::Path(PatPath {
+                attrs: Vec::new(),
+                qself,
+                path,
+            }));
+        }
+
+        if input.peek(Token![!]) && !input.peek(Token![!=]) {
             let mut contains_arguments = false;
             for segment in &path.segments {
                 match segment.arguments {
@@ -403,19 +415,9 @@ pub mod parsing {
         }
 
         if input.peek(token::Brace) {
-            let pat = pat_struct(input, path)?;
-            if qself.is_some() {
-                Ok(Pat::Verbatim(verbatim::between(begin, input)))
-            } else {
-                Ok(Pat::Struct(pat))
-            }
+            pat_struct(input, path).map(Pat::Struct)
         } else if input.peek(token::Paren) {
-            let pat = pat_tuple_struct(input, path)?;
-            if qself.is_some() {
-                Ok(Pat::Verbatim(verbatim::between(begin, input)))
-            } else {
-                Ok(Pat::TupleStruct(pat))
-            }
+            pat_tuple_struct(input, path).map(Pat::TupleStruct)
         } else if input.peek(Token![..]) {
             pat_range(input, begin, qself, path)
         } else {

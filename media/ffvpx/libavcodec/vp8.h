@@ -29,7 +29,6 @@
 #include <stdatomic.h>
 
 #include "libavutil/buffer.h"
-#include "libavutil/mem_internal.h"
 #include "libavutil/thread.h"
 
 #include "h264pred.h"

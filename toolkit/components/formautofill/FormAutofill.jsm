@@ -112,7 +112,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   FormAutofill,
-  "isAutofillCreditCardsEnabled",
+  "_isAutofillCreditCardsEnabled",
   ENABLED_AUTOFILL_CREDITCARDS_PREF
 );
 XPCOMUtils.defineLazyPreferenceGetter(

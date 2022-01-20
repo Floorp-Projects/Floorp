@@ -1,5 +1,6 @@
-const { BlocklistPrivate } = ChromeUtils.import(
-  "resource://gre/modules/Blocklist.jsm"
+const BlocklistGlobal = ChromeUtils.import(
+  "resource://gre/modules/Blocklist.jsm",
+  null
 );
 const { Utils: RemoteSettingsUtils } = ChromeUtils.import(
   "resource://services-settings/Utils.jsm"
@@ -28,17 +29,17 @@ add_task(async function setup() {
   );
 
   // This will initialize the remote settings clients for blocklists.
-  BlocklistPrivate.ExtensionBlocklistRS.ensureInitialized();
-  BlocklistPrivate.GfxBlocklistRS._ensureInitialized();
+  BlocklistGlobal.ExtensionBlocklistRS.ensureInitialized();
+  BlocklistGlobal.GfxBlocklistRS._ensureInitialized();
 
   // ExtensionBlocklistMLBF is covered by test_blocklist_mlbf_dump.js.
   gBlocklistClients = [
     {
-      client: BlocklistPrivate.ExtensionBlocklistRS._client,
+      client: BlocklistGlobal.ExtensionBlocklistRS._client,
       expectHasDump: IS_ANDROID,
     },
     {
-      client: BlocklistPrivate.GfxBlocklistRS._client,
+      client: BlocklistGlobal.GfxBlocklistRS._client,
       expectHasDump: !IS_ANDROID,
     },
   ];

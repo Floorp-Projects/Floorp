@@ -13,21 +13,15 @@ use core::cell::RefCell;
 use core::mem;
 use std::thread_local;
 
-use js_sys::Uint8Array;
-// We have to rename wasm_bindgen to bindgen in the Cargo.toml for backwards
-// compatibility. We have to rename it back here or else the macros will break.
-extern crate bindgen as wasm_bindgen;
 use wasm_bindgen::prelude::*;
 
 use crate::error::{BINDGEN_CRYPTO_UNDEF, BINDGEN_GRV_UNDEF};
 use crate::Error;
 
-const CHUNK_SIZE: usize = 256;
-
 #[derive(Clone, Debug)]
 enum RngSource {
     Node(NodeCrypto),
-    Browser(BrowserCrypto, Uint8Array),
+    Browser(BrowserCrypto),
 }
 
 // JsValues are always per-thread, so we initialize RngSource for each thread.
@@ -47,16 +41,15 @@ pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
 
         match source.as_ref().unwrap() {
             RngSource::Node(n) => n.random_fill_sync(dest),
-            RngSource::Browser(crypto, buf) => {
-                // getRandomValues does not work with all types of WASM memory,
-                // so we initially write to browser memory to avoid exceptions.
-                for chunk in dest.chunks_mut(CHUNK_SIZE) {
-                    // The chunk can be smaller than buf's length, so we call to
-                    // JS to create a smaller view of buf without allocation.
-                    let sub_buf = buf.subarray(0, chunk.len() as u32);
-
-                    crypto.get_random_values(&sub_buf);
-                    sub_buf.copy_to(chunk);
+            RngSource::Browser(n) => {
+                // see https://developer.mozilla.org/en-US/docs/Web/API/Crypto/getRandomValues
+                //
+                // where it says:
+                //
+                // > A QuotaExceededError DOMException is thrown if the
+                // > requested length is greater than 65536 bytes.
+                for chunk in dest.chunks_mut(65536) {
+                    n.get_random_values(chunk)
                 }
             }
         };
@@ -67,26 +60,25 @@ pub fn getrandom_inner(dest: &mut [u8]) -> Result<(), Error> {
 fn getrandom_init() -> Result<RngSource, Error> {
     if let Ok(self_) = Global::get_self() {
         // If `self` is defined then we're in a browser somehow (main window
-        // or web worker). We get `self.crypto` (called `msCrypto` on IE), so we
-        // can call `crypto.getRandomValues`. If `crypto` isn't defined, we
-        // assume we're in an older web browser and the OS RNG isn't available.
+        // or web worker). Here we want to try to use
+        // `crypto.getRandomValues`, but if `crypto` isn't defined we assume
+        // we're in an older web browser and the OS RNG isn't available.
 
-        let crypto: BrowserCrypto = match (self_.crypto(), self_.ms_crypto()) {
-            (crypto, _) if !crypto.is_undefined() => crypto.into(),
-            (_, crypto) if !crypto.is_undefined() => crypto.into(),
-            _ => return Err(BINDGEN_CRYPTO_UNDEF),
-        };
+        let crypto = self_.crypto();
+        if crypto.is_undefined() {
+            return Err(BINDGEN_CRYPTO_UNDEF);
+        }
 
         // Test if `crypto.getRandomValues` is undefined as well
+        let crypto: BrowserCrypto = crypto.into();
         if crypto.get_random_values_fn().is_undefined() {
             return Err(BINDGEN_GRV_UNDEF);
         }
 
-        let buf = Uint8Array::new_with_length(CHUNK_SIZE as u32);
-        return Ok(RngSource::Browser(crypto, buf));
+        return Ok(RngSource::Browser(crypto));
     }
 
-    return Ok(RngSource::Node(MODULE.require("crypto")));
+    return Ok(RngSource::Node(node_require("crypto")));
 }
 
 #[wasm_bindgen]
@@ -96,8 +88,6 @@ extern "C" {
     fn get_self() -> Result<Self_, JsValue>;
 
     type Self_;
-    #[wasm_bindgen(method, getter, js_name = "msCrypto", structural)]
-    fn ms_crypto(me: &Self_) -> JsValue;
     #[wasm_bindgen(method, getter, structural)]
     fn crypto(me: &Self_) -> JsValue;
 
@@ -110,19 +100,14 @@ extern "C" {
     #[wasm_bindgen(method, js_name = getRandomValues, structural, getter)]
     fn get_random_values_fn(me: &BrowserCrypto) -> JsValue;
     #[wasm_bindgen(method, js_name = getRandomValues, structural)]
-    fn get_random_values(me: &BrowserCrypto, buf: &Uint8Array);
+    fn get_random_values(me: &BrowserCrypto, buf: &mut [u8]);
+
+    #[wasm_bindgen(js_name = require)]
+    fn node_require(s: &str) -> NodeCrypto;
 
     #[derive(Clone, Debug)]
     type NodeCrypto;
 
     #[wasm_bindgen(method, js_name = randomFillSync, structural)]
     fn random_fill_sync(me: &NodeCrypto, buf: &mut [u8]);
-
-    type NodeModule;
-
-    #[wasm_bindgen(js_name = module)]
-    static MODULE: NodeModule;
-
-    #[wasm_bindgen(method)]
-    fn require(this: &NodeModule, s: &str) -> NodeCrypto;
 }

@@ -65,10 +65,6 @@ impl Park for ParkThread {
         self.inner.park_timeout(duration);
         Ok(())
     }
-
-    fn shutdown(&mut self) {
-        self.inner.shutdown();
-    }
 }
 
 // ==== impl Inner ====
@@ -192,10 +188,6 @@ impl Inner {
 
         self.condvar.notify_one()
     }
-
-    fn shutdown(&self) {
-        self.condvar.notify_all();
-    }
 }
 
 impl Default for ParkThread {
@@ -212,7 +204,7 @@ impl Unpark for UnparkThread {
     }
 }
 
-cfg_block_on! {
+cfg_blocking_impl! {
     use std::marker::PhantomData;
     use std::rc::Rc;
 
@@ -266,10 +258,6 @@ cfg_block_on! {
         fn park_timeout(&mut self, duration: Duration) -> Result<(), Self::Error> {
             self.with_current(|park_thread| park_thread.inner.park_timeout(duration))?;
             Ok(())
-        }
-
-        fn shutdown(&mut self) {
-            let _ = self.with_current(|park_thread| park_thread.inner.shutdown());
         }
     }
 

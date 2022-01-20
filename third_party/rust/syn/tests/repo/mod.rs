@@ -1,5 +1,3 @@
-#![allow(clippy::manual_assert)]
-
 mod progress;
 
 use self::progress::Progress;
@@ -10,41 +8,23 @@ use std::path::Path;
 use tar::Archive;
 use walkdir::DirEntry;
 
-const REVISION: &str = "ac2d9fc509e36d1b32513744adf58c34bcc4f43c";
+const REVISION: &str = "716394d6581b60c75cfdd88b8e5b876f2db88b62";
 
 #[rustfmt::skip]
 static EXCLUDE: &[&str] = &[
-    // TODO: impl ~const T {}
-    // https://github.com/dtolnay/syn/issues/1051
-    "src/test/ui/rfc-2632-const-trait-impl/syntax.rs",
+    // Rustc loses some attributes
+    // https://github.com/rust-lang/rust/issues/84879
+    "src/test/ui/proc-macro/issue-81555.rs",
 
     // Compile-fail expr parameter in const generic position: f::<1 + 2>()
-    "src/test/ui/const-generics/early/closing-args-token.rs",
-    "src/test/ui/const-generics/early/const-expression-parameter.rs",
+    "src/test/ui/const-generics/closing-args-token.rs",
+    "src/test/ui/const-generics/const-expression-parameter.rs",
 
     // Deprecated anonymous parameter syntax in traits
     "src/test/ui/issues/issue-13105.rs",
     "src/test/ui/issues/issue-13775.rs",
     "src/test/ui/issues/issue-34074.rs",
     "src/test/ui/proc-macro/trait-fn-args-2015.rs",
-    "src/tools/rustfmt/tests/source/trait.rs",
-    "src/tools/rustfmt/tests/target/trait.rs",
-
-    // Excessive nesting
-    "src/test/ui/issues/issue-74564-if-expr-stack-overflow.rs",
-
-    // Testing rustfmt on invalid syntax
-    "src/tools/rustfmt/tests/coverage/target/comments.rs",
-    "src/tools/rustfmt/tests/parser/issue-4126/invalid.rs",
-    "src/tools/rustfmt/tests/parser/issue_4418.rs",
-    "src/tools/rustfmt/tests/parser/unclosed-delims/issue_4466.rs",
-    "src/tools/rustfmt/tests/source/configs/disable_all_formatting/true.rs",
-    "src/tools/rustfmt/tests/source/configs/spaces_around_ranges/false.rs",
-    "src/tools/rustfmt/tests/source/configs/spaces_around_ranges/true.rs",
-    "src/tools/rustfmt/tests/source/type.rs",
-    "src/tools/rustfmt/tests/target/configs/spaces_around_ranges/false.rs",
-    "src/tools/rustfmt/tests/target/configs/spaces_around_ranges/true.rs",
-    "src/tools/rustfmt/tests/target/type.rs",
 
     // Not actually test cases
     "src/test/rustdoc-ui/test-compile-fail2.rs",
@@ -63,7 +43,7 @@ pub fn base_dir_filter(entry: &DirEntry) -> bool {
     if path.is_dir() {
         return true; // otherwise walkdir does not visit the files
     }
-    if path.extension().map_or(true, |e| e != "rs") {
+    if path.extension().map(|e| e != "rs").unwrap_or(true) {
         return false;
     }
 

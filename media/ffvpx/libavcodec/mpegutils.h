@@ -125,7 +125,6 @@ enum OutputFormat {
     FMT_H261,
     FMT_H263,
     FMT_MJPEG,
-    FMT_SPEEDHQ,
 };
 
 

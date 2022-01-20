@@ -74,7 +74,7 @@ class MediaTransportHandler {
   virtual void EnsureProvisionalTransport(const std::string& aTransportId,
                                           const std::string& aLocalUfrag,
                                           const std::string& aLocalPwd,
-                                          int aComponentCount) = 0;
+                                          size_t aComponentCount) = 0;
 
   virtual void SetTargetForDefaultLocalAddressLookup(
       const std::string& aTargetIp, uint16_t aTargetPort) = 0;

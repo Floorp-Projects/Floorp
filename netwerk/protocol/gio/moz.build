@@ -35,8 +35,7 @@ LOCAL_INCLUDES += [
 
 FINAL_LIBRARY = "xul"
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
+CXXFLAGS += CONFIG["TK_CFLAGS"]
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "Widget: Gtk")

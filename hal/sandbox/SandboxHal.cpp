@@ -82,21 +82,10 @@ void GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration) {
   fallback::GetCurrentScreenConfiguration(aScreenConfiguration);
 }
 
-RefPtr<mozilla::MozPromise<bool, bool, false>> LockScreenOrientation(
-    const hal::ScreenOrientation& aOrientation) {
-  return Hal()
-      ->SendLockScreenOrientation(aOrientation)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [=](const mozilla::MozPromise<bool, ipc::ResponseRejectReason,
-                                        true>::ResolveOrRejectValue& aValue) {
-            if (aValue.IsResolve()) {
-              return mozilla::MozPromise<bool, bool, false>::CreateAndResolve(
-                  true, __func__);
-            }
-            return mozilla::MozPromise<bool, bool, false>::CreateAndReject(
-                false, __func__);
-          });
+bool LockScreenOrientation(const hal::ScreenOrientation& aOrientation) {
+  bool allowed;
+  Hal()->SendLockScreenOrientation(aOrientation, &allowed);
+  return allowed;
 }
 
 void UnlockScreenOrientation() { Hal()->SendUnlockScreenOrientation(); }
@@ -244,23 +233,12 @@ class HalParent : public PHalParent,
   }
 
   virtual mozilla::ipc::IPCResult RecvLockScreenOrientation(
-      const ScreenOrientation& aOrientation,
-      LockScreenOrientationResolver&& aResolve) override {
+      const ScreenOrientation& aOrientation, bool* aAllowed) override {
     // FIXME/bug 777980: unprivileged content may only lock
     // orientation while fullscreen.  We should check whether the
     // request comes from an actor in a process that might be
     // fullscreen.  We don't have that information currently.
-
-    hal::LockScreenOrientation(aOrientation)
-        ->Then(GetMainThreadSerialEventTarget(), __func__,
-               [aResolve](const mozilla::MozPromise<
-                          bool, bool, false>::ResolveOrRejectValue& aValue) {
-                 if (aValue.IsResolve()) {
-                   aResolve(aValue.ResolveValue());
-                 } else {
-                   aResolve(false);
-                 }
-               });
+    *aAllowed = hal::LockScreenOrientation(aOrientation);
     return IPC_OK();
   }
 

@@ -531,7 +531,7 @@ def apply_partner_priority(config, jobs):
         config.kind.startswith(
             ("release-partner-repack", "release-partner-attribution")
         )
-        and release_level(config.params["project"]) == "production"
+        and config.params.release_level() == "production"
     ):
         priority = "medium"
     for job in jobs:

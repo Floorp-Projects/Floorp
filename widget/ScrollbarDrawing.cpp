@@ -7,7 +7,6 @@
 #include "ScrollbarDrawing.h"
 
 #include "mozilla/RelativeLuminanceUtils.h"
-#include "mozilla/StaticPrefs_widget.h"
 #include "nsContainerFrame.h"
 #include "nsDeviceContext.h"
 #include "nsIFrame.h"
@@ -15,9 +14,9 @@
 #include "nsLookAndFeel.h"
 #include "nsNativeTheme.h"
 
+using namespace mozilla;
 using namespace mozilla::gfx;
-
-namespace mozilla::widget {
+using namespace mozilla::widget;
 
 using ScrollbarParams = ScrollbarDrawing::ScrollbarParams;
 using mozilla::RelativeLuminanceUtils;
@@ -94,15 +93,7 @@ auto ScrollbarDrawing::GetScrollbarSizes(nsPresContext* aPresContext,
   return {(CSSCoord(w) * dpi).Rounded(), (CSSCoord(h) * dpi).Rounded()};
 }
 
-auto ScrollbarDrawing::GetScrollbarSizes(nsPresContext* aPresContext,
-                                         nsIFrame* aFrame) -> ScrollbarSizes {
-  auto* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-  auto width = style->StyleUIReset()->mScrollbarWidth;
-  auto overlay =
-      aPresContext->UseOverlayScrollbars() ? Overlay::Yes : Overlay::No;
-  return GetScrollbarSizes(aPresContext, width, overlay);
-}
-
+/*static*/
 bool ScrollbarDrawing::IsScrollbarTrackOpaque(nsIFrame* aFrame) {
   auto trackColor = ComputeScrollbarTrackColor(
       aFrame, *nsLayoutUtils::StyleForScrollbar(aFrame),
@@ -110,16 +101,17 @@ bool ScrollbarDrawing::IsScrollbarTrackOpaque(nsIFrame* aFrame) {
   return trackColor.a == 1.0f;
 }
 
+/*static*/
 sRGBColor ScrollbarDrawing::ComputeScrollbarTrackColor(
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aDocumentState, const Colors& aColors) {
+  const nsStyleUI* ui = aStyle.StyleUI();
   if (aColors.HighContrast()) {
     return aColors.System(StyleSystemColor::Window);
   }
   if (ShouldUseDarkScrollbar(aFrame, aStyle)) {
     return sRGBColor::FromU8(20, 20, 25, 77);
   }
-  const nsStyleUI* ui = aStyle.StyleUI();
   if (ui->mScrollbarColor.IsColors()) {
     return sRGBColor::FromABGR(
         ui->mScrollbarColor.AsColors().track.CalcColor(aStyle));
@@ -143,6 +135,7 @@ static bool ShouldUseColorForActiveDarkScrollbarThumb(nscolor aColor) {
          IsDifferentEnough(NS_GET_R(aColor), NS_GET_B(aColor));
 }
 
+/*static*/
 sRGBColor ScrollbarDrawing::ComputeScrollbarThumbColor(
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
@@ -303,6 +296,7 @@ bool ScrollbarDrawing::ShouldUseDarkScrollbar(nsIFrame* aFrame,
   return nsNativeTheme::IsDarkBackground(aFrame);
 }
 
+/*static*/
 nscolor ScrollbarDrawing::GetScrollbarButtonColor(nscolor aTrackColor,
                                                   EventStates aStates) {
   // See numbers in GetScrollbarArrowColor.
@@ -331,6 +325,7 @@ nscolor ScrollbarDrawing::GetScrollbarButtonColor(nscolor aTrackColor,
   return RelativeLuminanceUtils::Adjust(aTrackColor, luminance);
 }
 
+/*static*/
 Maybe<nscolor> ScrollbarDrawing::GetScrollbarArrowColor(nscolor aButtonColor) {
   // In Windows 10 scrollbar, there are several gray colors used:
   //
@@ -408,7 +403,8 @@ bool ScrollbarDrawing::PaintScrollbarButton(
     DrawTarget& aDrawTarget, StyleAppearance aAppearance,
     const LayoutDeviceRect& aRect, nsIFrame* aFrame,
     const ComputedStyle& aStyle, const EventStates& aElementState,
-    const EventStates& aDocumentState, const Colors& aColors, const DPIRatio&) {
+    const EventStates& aDocumentState, const Colors& aColors,
+    const DPIRatio& aDpiRatio) {
   auto [buttonColor, arrowColor] = ComputeScrollbarButtonColors(
       aFrame, aAppearance, aStyle, aElementState, aDocumentState, aColors);
   aDrawTarget.FillRect(aRect.ToUnknownRect(),
@@ -450,5 +446,3 @@ bool ScrollbarDrawing::PaintScrollbarButton(
                            kPolygonSize, arrowNumPoints, arrowColor);
   return true;
 }
-
-}  // namespace mozilla::widget

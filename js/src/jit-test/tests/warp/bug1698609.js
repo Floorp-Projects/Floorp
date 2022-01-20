@@ -2,9 +2,8 @@
 // Note: --code-coverage is a hack here to disable lazy parsing.
 
 var src = "function foo(x) { return /abc/.test(x) }";
-var job = offThreadCompileToStencil(src);
-var stencil = finishOffThreadCompileToStencil(job);
-var re = evalStencil(stencil);
+var script = offThreadCompileScript(src);
+var re = runOffThreadScript(script);
 
 for (var i = 0; i < 200; i++) {
     foo("abc");

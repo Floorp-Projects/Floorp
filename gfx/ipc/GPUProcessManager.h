@@ -12,7 +12,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/gfx/GPUProcessHost.h"
-#include "mozilla/gfx/PGPUChild.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/TaskFactory.h"
@@ -174,11 +173,8 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   // true if the message was sent, false if not.
   bool NotifyGpuObservers(const char* aTopic);
 
-  // Kills the GPU process. Used for tests and diagnostics
+  // Used for tests and diagnostics
   void KillProcess();
-
-  // Causes the GPU process to crash. Used for tests and diagnostics
-  void CrashProcess();
 
   // Returns -1 if there is no GPU process, or the platform pid for it.
   base::ProcessId GPUProcessPid();
@@ -201,7 +197,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
    *
    * Trigger GPU-process test metric instrumentation.
    */
-  RefPtr<PGPUChild::TestTriggerMetricsPromise> TestTriggerMetrics();
+  void TestTriggerMetrics();
 
  private:
   // Called from our xpcom-shutdown observer.
@@ -256,11 +252,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
 
   // Shutdown the GPU process.
   void CleanShutdown();
-  // Destroy the process and clean up resources.
-  // Setting aUnexpectedShutdown = true indicates that this is being called to
-  // clean up resources in response to an unexpected shutdown having been
-  // detected.
-  void DestroyProcess(bool aUnexpectedShutdown = false);
+  void DestroyProcess();
 
   void HandleProcessLost();
 

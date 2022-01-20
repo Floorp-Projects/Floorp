@@ -551,8 +551,6 @@ bool XPC_WN_Shared_Enumerate(JSContext* cx, HandleObject obj) {
       uint16_t index;
       if (protoSet && protoSet->FindMember(name, nullptr, &index) && index == i)
         continue;
-
-      JS_MarkCrossZoneId(cx, name);
       if (!xpc_ForcePropertyResolve(cx, obj, name)) {
         return false;
       }
@@ -1002,9 +1000,8 @@ static bool XPC_WN_Proto_Enumerate(JSContext* cx, HandleObject obj) {
     uint16_t member_count = iface->GetMemberCount();
 
     for (uint16_t k = 0; k < member_count; k++) {
-      jsid name = iface->GetMemberAt(k)->GetName();
-      JS_MarkCrossZoneId(cx, name);
-      if (!xpc_ForcePropertyResolve(cx, obj, name)) {
+      if (!xpc_ForcePropertyResolve(cx, obj,
+                                    iface->GetMemberAt(k)->GetName())) {
         return false;
       }
     }
@@ -1123,9 +1120,7 @@ static bool XPC_WN_TearOff_Enumerate(JSContext* cx, HandleObject obj) {
 
   uint16_t member_count = iface->GetMemberCount();
   for (uint16_t k = 0; k < member_count; k++) {
-    jsid name = iface->GetMemberAt(k)->GetName();
-    JS_MarkCrossZoneId(cx, name);
-    if (!xpc_ForcePropertyResolve(cx, obj, name)) {
+    if (!xpc_ForcePropertyResolve(cx, obj, iface->GetMemberAt(k)->GetName())) {
       return false;
     }
   }

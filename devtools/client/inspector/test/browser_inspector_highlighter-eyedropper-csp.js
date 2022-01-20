@@ -5,35 +5,33 @@
 
 // Test that the eyedropper opens correctly even when the page defines CSP headers.
 
+const HIGHLIGHTER_TYPE = "EyeDropper";
+const ID = "eye-dropper-";
 const TEST_URI = URL_ROOT + "doc_inspector_csp.html";
 
 add_task(async function() {
-  const { inspector, highlighterTestFront } = await openInspectorForURL(
-    TEST_URI
+  const helper = await openInspectorForURL(TEST_URI).then(
+    getHighlighterHelperFor(HIGHLIGHTER_TYPE)
   );
+  helper.prefix = ID;
+  const {
+    show,
+    hide,
+    finalize,
+    isElementHidden,
+    waitForElementAttributeSet,
+  } = helper;
 
-  const toggleButton = inspector.panelDoc.querySelector(
-    "#inspector-eyedropper-toggle"
-  );
-  toggleButton.click();
-  await TestUtils.waitForCondition(() =>
-    highlighterTestFront.isEyeDropperVisible()
-  );
+  info("Try to display the eyedropper");
+  await show("html");
 
-  ok(true, "Eye dropper is visible");
+  const hidden = await isElementHidden("root");
+  ok(!hidden, "The eyedropper is now shown");
 
-  await checkEyeDropperColorAt(
-    highlighterTestFront,
-    5,
-    5,
-    "#ff0000",
-    "The eyedropper holds the expected color for the top-level element"
-  );
+  info("Wait until the eyedropper is done taking a screenshot of the page");
+  await waitForElementAttributeSet("root", "drawn", helper);
+  ok(true, "The image data was retrieved successfully from the window");
 
-  info("Hide the eyedropper");
-  toggleButton.click();
-  await TestUtils.waitForCondition(async () => {
-    const visible = await highlighterTestFront.isEyeDropperVisible();
-    return !visible;
-  });
+  await hide();
+  finalize();
 });

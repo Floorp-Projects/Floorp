@@ -40,8 +40,7 @@ class XULBroadcastManager final {
   nsresult RemoveListener(Element* aElement);
   void AttributeChanged(Element* aElement, int32_t aNameSpaceID,
                         nsAtom* aAttribute);
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void MaybeBroadcast();
+  void MaybeBroadcast();
   void DropDocumentReference();  // notification that doc is going away
  protected:
   enum HookupAction { eHookupAdd = 0, eHookupRemove };
@@ -53,8 +52,8 @@ class XULBroadcastManager final {
   void AddListenerFor(Element& aBroadcaster, Element& aListener,
                       const nsAString& aAttr, ErrorResult& aRv);
 
-  MOZ_CAN_RUN_SCRIPT nsresult ExecuteOnBroadcastHandlerFor(
-      Element* aBroadcaster, Element* aListener, nsAtom* aAttr);
+  nsresult ExecuteOnBroadcastHandlerFor(Element* aBroadcaster,
+                                        Element* aListener, nsAtom* aAttr);
   // The out params of FindBroadcaster only have values that make sense when
   // the method returns NS_FINDBROADCASTER_FOUND.  In all other cases, the
   // values of the out params should not be relied on (though *aListener and

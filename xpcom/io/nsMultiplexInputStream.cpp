@@ -158,17 +158,9 @@ class nsMultiplexInputStream final : public nsIMultiplexInputStream,
   uint32_t mSeekableStreams;
   uint32_t mIPCSerializableStreams;
   uint32_t mCloneableStreams;
-
-  // These are Atomics so that we can check them in QueryInterface without
-  // taking a lock (to look at mStreams.Length() and the numbers above)
-  // With no streams added yet, all of these are possible
-  Atomic<bool, Relaxed> mIsSeekableStream{true};
-  Atomic<bool, Relaxed> mIsIPCSerializableStream{true};
-  Atomic<bool, Relaxed> mIsCloneableStream{true};
-
-  Atomic<bool, Relaxed> mIsAsyncInputStream{false};
-  Atomic<bool, Relaxed> mIsInputStreamLength{false};
-  Atomic<bool, Relaxed> mIsAsyncInputStreamLength{false};
+  uint32_t mAsyncInputStreams;
+  uint32_t mInputStreamLengths;
+  uint32_t mAsyncInputStreamLengths;
 };
 
 NS_IMPL_ADDREF(nsMultiplexInputStream)
@@ -228,7 +220,10 @@ nsMultiplexInputStream::nsMultiplexInputStream()
       mAsyncWaitRequestedCount(0),
       mSeekableStreams(0),
       mIPCSerializableStreams(0),
-      mCloneableStreams(0) {}
+      mCloneableStreams(0),
+      mAsyncInputStreams(0),
+      mInputStreamLengths(0),
+      mAsyncInputStreamLengths(0) {}
 
 NS_IMETHODIMP
 nsMultiplexInputStream::GetCount(uint32_t* aCount) {
@@ -871,9 +866,9 @@ nsresult nsMultiplexInputStream::AsyncWaitInternal() {
     asyncWaitFlags = mAsyncWaitFlags;
     asyncWaitRequestedCount = mAsyncWaitRequestedCount;
     asyncWaitEventTarget = mAsyncWaitEventTarget;
-
-    MOZ_ASSERT_IF(stream, NS_SUCCEEDED(mStatus));
   }
+
+  MOZ_ASSERT_IF(stream, NS_SUCCEEDED(mStatus));
 
   // If we are here it's because we are already closed, or if the current stream
   // is not async. In both case we have to execute the callback.
@@ -1040,7 +1035,6 @@ bool nsMultiplexInputStream::Deserialize(
     }
   }
 
-  MutexAutoLock lock(mLock);
   mCurrentStream = params.currentStream();
   mStatus = params.status();
   mStartedReadingCurrent = params.startedReadingCurrent();
@@ -1415,54 +1409,39 @@ void nsMultiplexInputStream::AsyncWaitCompleted(
     MAYBE_UPDATE_VALUE_REAL(x, substream)                               \
   }
 
-#define MAYBE_UPDATE_BOOL(x, y)                                         \
-  if (!x) {                                                             \
-    nsCOMPtr<y> substream = do_QueryInterface(aStream.mBufferedStream); \
-    if (substream) {                                                    \
-      x = true;                                                         \
-    }                                                                   \
-  }
-
 void nsMultiplexInputStream::UpdateQIMap(StreamData& aStream) {
-  auto length = mStreams.Length();
-
   MAYBE_UPDATE_VALUE_REAL(mSeekableStreams, aStream.mSeekableStream)
-  mIsSeekableStream = (mSeekableStreams == length);
   MAYBE_UPDATE_VALUE(mIPCSerializableStreams, nsIIPCSerializableInputStream)
-  mIsIPCSerializableStream = (mIPCSerializableStreams == length);
   MAYBE_UPDATE_VALUE(mCloneableStreams, nsICloneableInputStream)
-  mIsCloneableStream = (mCloneableStreams == length);
-  // nsMultiplexInputStream is nsIAsyncInputStream if at least 1 of the
-  // substream implements that interface
-  if (!mIsAsyncInputStream && aStream.mAsyncStream) {
-    mIsAsyncInputStream = true;
-  }
-  MAYBE_UPDATE_BOOL(mIsInputStreamLength, nsIInputStreamLength)
-  MAYBE_UPDATE_BOOL(mIsAsyncInputStreamLength, nsIAsyncInputStreamLength)
+  MAYBE_UPDATE_VALUE_REAL(mAsyncInputStreams, aStream.mAsyncStream)
+  MAYBE_UPDATE_VALUE(mInputStreamLengths, nsIInputStreamLength)
+  MAYBE_UPDATE_VALUE(mAsyncInputStreamLengths, nsIAsyncInputStreamLength)
 }
 
 #undef MAYBE_UPDATE_VALUE
-#undef MAYBE_UPDATE_VALUE_REAL
-#undef MAYBE_UPDATE_BOOL
 
-bool nsMultiplexInputStream::IsSeekable() const { return mIsSeekableStream; }
-
-bool nsMultiplexInputStream::IsIPCSerializable() const {
-  return mIsIPCSerializableStream;
+bool nsMultiplexInputStream::IsSeekable() const {
+  return mStreams.Length() == mSeekableStreams;
 }
 
-bool nsMultiplexInputStream::IsCloneable() const { return mIsCloneableStream; }
+bool nsMultiplexInputStream::IsIPCSerializable() const {
+  return mStreams.Length() == mIPCSerializableStreams;
+}
+
+bool nsMultiplexInputStream::IsCloneable() const {
+  return mStreams.Length() == mCloneableStreams;
+}
 
 bool nsMultiplexInputStream::IsAsyncInputStream() const {
   // nsMultiplexInputStream is nsIAsyncInputStream if at least 1 of the
   // substream implements that interface.
-  return mIsAsyncInputStream;
+  return !!mAsyncInputStreams;
 }
 
 bool nsMultiplexInputStream::IsInputStreamLength() const {
-  return mIsInputStreamLength;
+  return !!mInputStreamLengths;
 }
 
 bool nsMultiplexInputStream::IsAsyncInputStreamLength() const {
-  return mIsAsyncInputStreamLength;
+  return !!mAsyncInputStreamLengths;
 }

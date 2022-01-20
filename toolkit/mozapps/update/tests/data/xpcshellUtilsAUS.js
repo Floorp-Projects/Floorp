@@ -1769,11 +1769,17 @@ function getMockUpdRootDWin(aGetOldLocation) {
   }
 
   let relPathUpdates = "";
-  let dataDirectory = gCommonAppDataDir.clone();
+  let dataDirectory;
   if (aGetOldLocation) {
-    relPathUpdates += "Mozilla";
+    dataDirectory = gLocalAppDataDir.clone();
+    if (MOZ_APP_VENDOR || MOZ_APP_BASENAME) {
+      relPathUpdates += MOZ_APP_VENDOR ? MOZ_APP_VENDOR : MOZ_APP_BASENAME;
+    } else {
+      relPathUpdates += "Mozilla";
+    }
   } else {
-    relPathUpdates += "Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38";
+    dataDirectory = gCommonAppDataDir.clone();
+    relPathUpdates += "Mozilla";
   }
 
   relPathUpdates += "\\" + DIR_UPDATES + "\\" + gInstallDirPathHash;
@@ -1847,7 +1853,8 @@ function createUpdateInProgressLockFile(aDir) {
   file.append(FILE_UPDATE_IN_PROGRESS_LOCK);
   file.create(file.NORMAL_FILE_TYPE, 0o444);
   file.QueryInterface(Ci.nsILocalFileWin);
-  file.readOnly = true;
+  file.fileAttributesWin |= file.WFA_READONLY;
+  file.fileAttributesWin &= ~file.WFA_READWRITE;
   Assert.ok(file.exists(), MSG_SHOULD_EXIST + getMsgPath(file.path));
   Assert.ok(!file.isWritable(), "the lock file should not be writeable");
 }
@@ -1868,7 +1875,8 @@ function removeUpdateInProgressLockFile(aDir) {
   let file = aDir.clone();
   file.append(FILE_UPDATE_IN_PROGRESS_LOCK);
   file.QueryInterface(Ci.nsILocalFileWin);
-  file.readOnly = false;
+  file.fileAttributesWin |= file.WFA_READWRITE;
+  file.fileAttributesWin &= ~file.WFA_READONLY;
   file.remove(false);
   Assert.ok(!file.exists(), MSG_SHOULD_NOT_EXIST + getMsgPath(file.path));
 }

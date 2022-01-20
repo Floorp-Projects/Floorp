@@ -68,10 +68,13 @@
 #include "mozilla/dom/PromiseDebugging.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 
-#include "nsXULPopupManager.h"
-#include "nsXULContentUtils.h"
-#include "nsXULPrototypeCache.h"
-#include "nsXULTooltipListener.h"
+#ifdef MOZ_XUL
+#  include "nsXULPopupManager.h"
+#  include "nsXULContentUtils.h"
+#  include "nsXULPrototypeCache.h"
+#  include "nsXULTooltipListener.h"
+
+#endif
 
 #include "mozilla/dom/UIDirectionManager.h"
 
@@ -214,11 +217,13 @@ nsresult nsLayoutStatics::Initialize() {
     return rv;
   }
 
+#ifdef MOZ_XUL
   rv = nsXULPopupManager::Init();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize nsXULPopupManager");
     return rv;
   }
+#endif
 
   rv = nsFocusManager::Init();
   if (NS_FAILED(rv)) {
@@ -242,6 +247,8 @@ nsresult nsLayoutStatics::Initialize() {
   SVGElementFactory::Init();
 
   ProcessPriorityManager::Init();
+
+  PermissionManager::Startup();
 
   UIDirectionManager::Initialize();
 
@@ -309,7 +316,9 @@ void nsLayoutStatics::Shutdown() {
   Document::Shutdown();
   nsMessageManagerScriptExecutor::Shutdown();
   nsFocusManager::Shutdown();
+#ifdef MOZ_XUL
   nsXULPopupManager::Shutdown();
+#endif
   UIDirectionManager::Shutdown();
   StorageObserver::Shutdown();
   txMozillaXSLTProcessor::Shutdown();
@@ -334,9 +343,11 @@ void nsLayoutStatics::Shutdown() {
   nsRepeatService::Shutdown();
   nsStackLayout::Shutdown();
 
+#ifdef MOZ_XUL
   nsXULContentUtils::Finish();
   nsXULPrototypeCache::ReleaseGlobals();
   nsSprocketLayout::Shutdown();
+#endif
 
   SVGElementFactory::Shutdown();
   nsMathMLOperators::ReleaseTable();

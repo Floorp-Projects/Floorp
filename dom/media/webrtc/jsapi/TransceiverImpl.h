@@ -29,7 +29,6 @@ class MediaPipelineTransmit;
 class MediaPipeline;
 class MediaPipelineFilter;
 class MediaTransportHandler;
-class RTCStatsIdGenerator;
 class WebrtcCallWrapper;
 class JsepTrackNegotiatedDetails;
 
@@ -56,12 +55,14 @@ class TransceiverImpl : public nsISupports,
   /**
    * |aSendTrack| might or might not be set.
    */
-  TransceiverImpl(
-      nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
-      const std::string& aPCHandle, MediaTransportHandler* aTransportHandler,
-      JsepTransceiver* aJsepTransceiver, nsISerialEventTarget* aMainThread,
-      nsISerialEventTarget* aStsThread, dom::MediaStreamTrack* aSendTrack,
-      WebrtcCallWrapper* aCallWrapper, RTCStatsIdGenerator* aIdGenerator);
+  TransceiverImpl(nsPIDOMWindowInner* aWindow, bool aPrivacyNeeded,
+                  const std::string& aPCHandle,
+                  MediaTransportHandler* aTransportHandler,
+                  JsepTransceiver* aJsepTransceiver,
+                  nsISerialEventTarget* aMainThread,
+                  nsISerialEventTarget* aStsThread,
+                  dom::MediaStreamTrack* aSendTrack,
+                  WebrtcCallWrapper* aCallWrapper);
 
   bool IsValid() const { return !!mConduit; }
 

@@ -30,6 +30,10 @@ const BASE_TEST_MANIFEST = {
   name: "Fake extension to report",
   author: "Fake author",
   homepage_url: "https://fake.extension.url/",
+  applications: { gecko: { id: ADDON_ID } },
+  icons: {
+    32: "test-icon.png",
+  },
 };
 const DEFAULT_BUILTIN_THEME_ID = "default-theme@mozilla.org";
 const EXT_DICTIONARY_ADDON_ID = "fake-dictionary@mochi.test";
@@ -85,64 +89,26 @@ async function installTestExtension(
   type = "extension",
   manifest = {}
 ) {
-  let additionalProps = {
-    icons: {
-      32: "test-icon.png",
-    },
-  };
-
-  switch (type) {
-    case "theme":
-      additionalProps = {
-        ...additionalProps,
-        theme: {
-          colors: {
-            frame: "#a14040",
-            tab_background_text: "#fac96e",
+  const additionalProps =
+    type === "theme"
+      ? {
+          theme: {
+            colors: {
+              frame: "#a14040",
+              tab_background_text: "#fac96e",
+            },
           },
-        },
-      };
-      break;
-    case "sitepermission":
-      additionalProps = {
-        name: "WebMIDI test addon for https://mochi.test",
-        install_origins: ["https://mochi.test"],
-        site_permissions: ["midi"],
-      };
-      break;
-    case "extension":
-      break;
-    default:
-      throw new Error(`Unexpected addon type: ${type}`);
-  }
-
-  const extensionOpts = {
+        }
+      : {};
+  const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       ...BASE_TEST_MANIFEST,
       ...additionalProps,
       ...manifest,
-      browser_specific_settings: { gecko: { id } },
+      applications: { gecko: { id } },
     },
     useAddonManager: "temporary",
-  };
-
-  if (type === "sitepermission") {
-    const xpi = AddonTestUtils.createTempWebExtensionFile(extensionOpts);
-    const addon = await AddonManager.installTemporaryAddon(xpi);
-    // The extension object that ExtensionTestUtils.loadExtension returns for
-    // mochitest is pretty tight to the Extension class, and so for now this
-    // returns a more minimal `extension` test object which only provides the
-    // `unload` method.
-    //
-    // For the purpose of the abuse reports tests that are using this helper
-    // this should be already enough.
-    return {
-      addon,
-      unload: () => addon.uninstall(),
-    };
-  }
-
-  const extension = ExtensionTestUtils.loadExtension(extensionOpts);
+  });
   await extension.startup();
   return extension;
 }
@@ -356,21 +322,6 @@ const AbuseReportTestUtils = {
         listener
       );
     });
-  },
-
-  async assertFluentStrings(containerEl) {
-    // Make sure all localized elements have defined Fluent strings.
-    const localizedEls = Array.from(
-      containerEl.querySelectorAll("[data-l10n-id]")
-    );
-    ok(localizedEls.length, "Got localized elements");
-    for (let el of localizedEls) {
-      const l10nId = el.getAttribute("data-l10n-id");
-      await TestUtils.waitForCondition(
-        () => el.textContent !== "",
-        `Element with Fluent id '${l10nId}' should not be empty`
-      );
-    }
   },
 
   // Assert that the report action is hidden on the addon card

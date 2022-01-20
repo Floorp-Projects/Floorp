@@ -15,7 +15,3 @@ RCFILE = "TestDllBlocklist_NoOpEntryPoint.rc"
 
 if CONFIG["COMPILE_ENVIRONMENT"]:
     TEST_HARNESS_FILES.gtest += ["!TestDllBlocklist_NoOpEntryPoint.dll"]
-
-OS_LIBS += [
-    "uuid",
-]

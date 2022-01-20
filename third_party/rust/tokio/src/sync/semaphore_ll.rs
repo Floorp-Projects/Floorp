@@ -333,9 +333,8 @@ impl Semaphore {
 
         self.add_permits_locked(0, true);
     }
+
     /// Adds `n` new permits to the semaphore.
-    ///
-    /// The maximum number of permits is `usize::MAX >> 3`, and this function will panic if the limit is exceeded.
     pub(crate) fn add_permits(&self, n: usize) {
         if n == 0 {
             return;
@@ -750,7 +749,7 @@ impl Permit {
     /// Forgets the permit **without** releasing it back to the semaphore.
     ///
     /// After calling `forget`, `poll_acquire` is able to acquire new permit
-    /// from the semaphore.
+    /// from the sempahore.
     ///
     /// Repeatedly calling `forget` without associated calls to `add_permit`
     /// will result in the semaphore losing all permits.
@@ -854,8 +853,8 @@ impl TryAcquireError {
 impl fmt::Display for TryAcquireError {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            TryAcquireError::Closed => write!(fmt, "semaphore closed"),
-            TryAcquireError::NoPermits => write!(fmt, "no permits available"),
+            TryAcquireError::Closed => write!(fmt, "{}", "semaphore closed"),
+            TryAcquireError::NoPermits => write!(fmt, "{}", "no permits available"),
         }
     }
 }
@@ -910,17 +909,13 @@ impl Waiter {
     }
 
     /// Try to decrement the number of permits to acquire. This returns the
-    /// actual number of permits that were decremented. The delta between `n`
+    /// actual number of permits that were decremented. The delta betweeen `n`
     /// and the return has been assigned to the permit and the caller must
     /// assign these back to the semaphore.
     fn try_dec_permits_to_acquire(&self, n: usize) -> usize {
         let mut curr = WaiterState(self.state.load(Acquire));
 
         loop {
-            if curr.is_closed() {
-                return 0;
-            }
-
             if !curr.is_queued() {
                 assert_eq!(0, curr.permits_to_acquire());
             }

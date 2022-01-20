@@ -11,6 +11,7 @@
 }
 
 .fit-content {
+    height: -moz-fit-content;
     height: fit-content;
 }
 
@@ -23,6 +24,7 @@
 }
 
 .max-height-fit-content {
+    max-height: -moz-fit-content;
     max-height: fit-content;
 }
 
@@ -35,5 +37,6 @@
 }
 
 .min-height-fit-content {
+    min-height: -moz-fit-content;
     min-height: fit-content;
 }

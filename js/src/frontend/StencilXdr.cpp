@@ -738,13 +738,8 @@ template <XDRMode mode>
     XDRState<mode>* xdr, CompilationStencil& stencil) {
   MOZ_ASSERT(!stencil.asmJS);
 
-  if constexpr (mode == XDR_DECODE) {
-    const auto& options = static_cast<XDRStencilDecoder*>(xdr)->options();
-    if (options.borrowBuffer) {
-      stencil.storageType = CompilationStencil::StorageType::Borrowed;
-    } else {
-      stencil.storageType = CompilationStencil::StorageType::Owned;
-    }
+  if (mode == XDR_DECODE) {
+    stencil.storageType = CompilationStencil::StorageType::Borrowed;
   }
 
   MOZ_TRY(CodeMarker(xdr, SectionMarker::ParserAtomData));

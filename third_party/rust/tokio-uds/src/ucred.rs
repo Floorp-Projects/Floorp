@@ -12,25 +12,18 @@ pub struct UCred {
 #[cfg(any(target_os = "linux", target_os = "android"))]
 pub use self::impl_linux::get_peer_cred;
 
-#[cfg(any(
-    target_os = "dragonfly",
-    target_os = "macos",
-    target_os = "ios",
-    target_os = "freebsd",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+#[cfg(any(target_os = "dragonfly", target_os = "macos", target_os = "ios", target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))]
 pub use self::impl_macos::get_peer_cred;
 
-#[cfg(any(target_os = "solaris", target_os = "illumos"))]
+#[cfg(any(target_os = "solaris"))]
 pub use self::impl_solaris::get_peer_cred;
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
 pub mod impl_linux {
     use libc::{c_void, getsockopt, socklen_t, SOL_SOCKET, SO_PEERCRED};
-    use std::os::unix::io::AsRawFd;
     use std::{io, mem};
     use UnixStream;
+    use std::os::unix::io::AsRawFd;
 
     use libc::ucred;
 
@@ -71,19 +64,12 @@ pub mod impl_linux {
     }
 }
 
-#[cfg(any(
-    target_os = "dragonfly",
-    target_os = "macos",
-    target_os = "ios",
-    target_os = "freebsd",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+#[cfg(any(target_os = "dragonfly", target_os = "macos", target_os = "ios", target_os = "freebsd", target_os = "netbsd", target_os = "openbsd"))]
 pub mod impl_macos {
     use libc::getpeereid;
-    use std::os::unix::io::AsRawFd;
     use std::{io, mem};
     use UnixStream;
+    use std::os::unix::io::AsRawFd;
 
     pub fn get_peer_cred(sock: &UnixStream) -> io::Result<super::UCred> {
         unsafe {
@@ -102,12 +88,13 @@ pub mod impl_macos {
     }
 }
 
-#[cfg(any(target_os = "solaris", target_os = "illumos"))]
+
+#[cfg(any(target_os = "solaris"))]
 pub mod impl_solaris {
     use std::io;
     use std::os::unix::io::AsRawFd;
-    use std::ptr;
     use UnixStream;
+    use std::ptr;
 
     #[allow(non_camel_case_types)]
     enum ucred_t {}
@@ -117,10 +104,7 @@ pub mod impl_solaris {
         fn ucred_geteuid(cred: *const ucred_t) -> super::uid_t;
         fn ucred_getegid(cred: *const ucred_t) -> super::gid_t;
 
-        fn getpeerucred(
-            fd: ::std::os::raw::c_int,
-            cred: *mut *mut ucred_t,
-        ) -> ::std::os::raw::c_int;
+        fn getpeerucred(fd: ::std::os::raw::c_int, cred: *mut *mut ucred_t) -> ::std::os::raw::c_int;
     }
 
     pub fn get_peer_cred(sock: &UnixStream) -> io::Result<super::UCred> {
@@ -137,7 +121,10 @@ pub mod impl_solaris {
 
                 ucred_free(cred);
 
-                Ok(super::UCred { uid, gid })
+                Ok(super::UCred {
+                    uid,
+                    gid,
+                })
             } else {
                 Err(io::Error::last_os_error())
             }
@@ -145,23 +132,18 @@ pub mod impl_solaris {
     }
 }
 
+
 // Note that LOCAL_PEERCRED is not supported on DragonFly (yet). So do not run tests.
 #[cfg(not(target_os = "dragonfly"))]
 #[cfg(test)]
 mod test {
-    use libc::getegid;
-    use libc::geteuid;
     use UnixStream;
+    use libc::geteuid;
+    use libc::getegid;
 
     #[test]
-    #[cfg_attr(
-        target_os = "freebsd",
-        ignore = "Requires FreeBSD 12.0 or later. https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=176419"
-    )]
-    #[cfg_attr(
-        target_os = "netbsd",
-        ignore = "NetBSD does not support getpeereid() for sockets created by socketpair()"
-    )]
+    #[cfg_attr(target_os = "freebsd", ignore = "Requires FreeBSD 12.0 or later. https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=176419")]
+    #[cfg_attr(target_os = "netbsd", ignore = "NetBSD does not support getpeereid() for sockets created by socketpair()")]
     fn test_socket_pair() {
         let (a, b) = UnixStream::pair().unwrap();
         let cred_a = a.peer_cred().unwrap();

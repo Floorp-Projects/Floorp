@@ -1057,9 +1057,9 @@ class MOZ_RAII AutoSetGeneratorRunning {
         // Async generators have additionally bookkeeping which must be
         // adjusted when switching over to the running state.
         if (genObj->is<AsyncGeneratorObject>()) {
-          auto* generator = &genObj->as<AsyncGeneratorObject>();
-          asyncGenState_ = generator->state();
-          generator->setExecuting();
+          auto* asyncGenObj = &genObj->as<AsyncGeneratorObject>();
+          asyncGenState_ = asyncGenObj->state();
+          asyncGenObj->setExecuting();
         }
       } else {
         // Returning or throwing. The generator is already closed, if
@@ -1795,13 +1795,13 @@ static bool CheckResumptionValue(JSContext* cx, AbstractFramePtr frame,
         return true;
       }
 
-      Rooted<AsyncFunctionGeneratorObject*> generator(
+      Rooted<AsyncFunctionGeneratorObject*> asyncGenObj(
           cx, &genObj->as<AsyncFunctionGeneratorObject>());
 
       // 1.  `return <value>` fulfills and returns the async function's promise.
-      Rooted<PromiseObject*> promise(cx, generator->promise());
+      Rooted<PromiseObject*> promise(cx, asyncGenObj->promise());
       if (promise->state() == JS::PromiseState::Pending) {
-        if (!AsyncFunctionResolve(cx, generator, vp,
+        if (!AsyncFunctionResolve(cx, asyncGenObj, vp,
                                   AsyncFunctionResolveKind::Fulfill)) {
           return false;
         }
@@ -1809,7 +1809,7 @@ static bool CheckResumptionValue(JSContext* cx, AbstractFramePtr frame,
       vp.setObject(*promise);
 
       // 2.  The generator must be closed.
-      generator->setClosed();
+      asyncGenObj->setClosed();
     } else {
       // We're before entering the actual function code.
 

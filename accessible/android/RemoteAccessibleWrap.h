@@ -74,6 +74,8 @@ class RemoteAccessibleWrap : public AccessibleWrap {
 
   virtual void Paste() override;
 
+  virtual void ExploreByTouch(float aX, float aY) override;
+
   virtual void WrapperDOMNodeID(nsString& aDOMNodeID) override;
 
  private:

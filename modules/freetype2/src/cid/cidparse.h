@@ -78,7 +78,7 @@ FT_BEGIN_HEADER
     FT_ULong      binary_length;
 
     CID_FaceInfo  cid;
-    FT_UInt       num_dict;
+    FT_Int        num_dict;
 
   } CID_Parser;
 

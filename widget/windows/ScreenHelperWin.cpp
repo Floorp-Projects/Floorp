@@ -81,7 +81,8 @@ void ScreenHelperWin::RefreshScreens() {
   if (!result) {
     NS_WARNING("Unable to EnumDisplayMonitors");
   }
-  ScreenManager::Refresh(std::move(screens));
+  ScreenManager& screenManager = ScreenManager::GetSingleton();
+  screenManager.Refresh(std::move(screens));
 }
 
 }  // namespace widget

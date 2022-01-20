@@ -19,7 +19,6 @@
 #include "gfxUserFontSet.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/intl/UnicodeScriptCodes.h"
 #include "nsPoint.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -27,6 +26,7 @@
 #include "nsTextFrameUtils.h"
 #include "DrawMode.h"
 #include "harfbuzz/hb.h"
+#include "nsUnicodeScriptCodes.h"
 #include "nsColor.h"
 #include "nsFrameList.h"
 #include "X11UndefineNone.h"
@@ -901,7 +901,7 @@ class gfxTextRun : public gfxShapedText {
 
 class gfxFontGroup final : public gfxTextRunFactory {
  public:
-  typedef mozilla::intl::Script Script;
+  typedef mozilla::unicode::Script Script;
   typedef gfxShapedText::CompressedGlyph CompressedGlyph;
 
   static void
@@ -1508,7 +1508,7 @@ class gfxMissingFontRecorder {
   }
 
   // record this script code in our mMissingFonts bitset
-  void RecordScript(mozilla::intl::Script aScriptCode) {
+  void RecordScript(mozilla::unicode::Script aScriptCode) {
     mMissingFonts[static_cast<uint32_t>(aScriptCode) >> 5] |=
         (1 << (static_cast<uint32_t>(aScriptCode) & 0x1f));
   }
@@ -1524,7 +1524,8 @@ class gfxMissingFontRecorder {
  private:
   // Number of 32-bit words needed for the missing-script flags
   static const uint32_t kNumScriptBitsWords =
-      ((static_cast<int>(mozilla::intl::Script::NUM_SCRIPT_CODES) + 31) / 32);
+      ((static_cast<int>(mozilla::unicode::Script::NUM_SCRIPT_CODES) + 31) /
+       32);
   uint32_t mMissingFonts[kNumScriptBitsWords];
 };
 

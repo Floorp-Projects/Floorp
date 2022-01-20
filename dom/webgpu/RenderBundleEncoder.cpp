@@ -29,8 +29,7 @@ void ScopedFfiBundleTraits::release(ffi::WGPURenderBundleEncoder* raw) {
 }
 
 ffi::WGPURenderBundleEncoder* CreateRenderBundleEncoder(
-    RawId aDeviceId, const dom::GPURenderBundleEncoderDescriptor& aDesc,
-    WebGPUChild* const aBridge) {
+    RawId aDeviceId, const dom::GPURenderBundleEncoderDescriptor& aDesc) {
   ffi::WGPURenderBundleEncoderDescriptor desc = {};
   desc.sample_count = aDesc.mSampleCount;
 
@@ -57,24 +56,14 @@ ffi::WGPURenderBundleEncoder* CreateRenderBundleEncoder(
   desc.color_formats = colorFormats.data();
   desc.color_formats_length = colorFormats.size();
 
-  ipc::ByteBuf failureAction;
-  auto* bundle = ffi::wgpu_device_create_render_bundle_encoder(
-      aDeviceId, &desc, ToFFI(&failureAction));
-  // report an error only if the operation failed
-  if (!bundle &&
-      !aBridge->SendDeviceAction(aDeviceId, std::move(failureAction))) {
-    MOZ_CRASH("IPC failure");
-  }
-  return bundle;
+  return ffi::wgpu_device_create_render_bundle_encoder(aDeviceId, &desc);
 }
 
 RenderBundleEncoder::RenderBundleEncoder(
     Device* const aParent, WebGPUChild* const aBridge,
     const dom::GPURenderBundleEncoderDescriptor& aDesc)
     : ChildOf(aParent),
-      mEncoder(CreateRenderBundleEncoder(aParent->mId, aDesc, aBridge)) {
-  mValid = mEncoder.get() != nullptr;
-}
+      mEncoder(CreateRenderBundleEncoder(aParent->mId, aDesc)) {}
 
 RenderBundleEncoder::~RenderBundleEncoder() { Cleanup(); }
 
@@ -156,24 +145,6 @@ void RenderBundleEncoder::DrawIndexedIndirect(const Buffer& aIndirectBuffer,
   if (mValid) {
     ffi::wgpu_render_bundle_draw_indexed_indirect(mEncoder, aIndirectBuffer.mId,
                                                   aIndirectOffset);
-  }
-}
-
-void RenderBundleEncoder::PushDebugGroup(const nsAString& aString) {
-  if (mValid) {
-    const NS_ConvertUTF16toUTF8 utf8(aString);
-    ffi::wgpu_render_bundle_push_debug_group(mEncoder, utf8.get());
-  }
-}
-void RenderBundleEncoder::PopDebugGroup() {
-  if (mValid) {
-    ffi::wgpu_render_bundle_pop_debug_group(mEncoder);
-  }
-}
-void RenderBundleEncoder::InsertDebugMarker(const nsAString& aString) {
-  if (mValid) {
-    const NS_ConvertUTF16toUTF8 utf8(aString);
-    ffi::wgpu_render_bundle_insert_debug_marker(mEncoder, utf8.get());
   }
 }
 

@@ -88,41 +88,16 @@
   dlg_handler            ft_default_log_handler = NULL;
   FT_Custom_Log_Handler  custom_output_handler  = NULL;
 
-#endif /* FT_DEBUG_LOGGING */
+#endif /* FT_DEBUG_LOGGING*/
 
 
 #ifdef FT_DEBUG_LEVEL_ERROR
 
-#define WIN32_LEAN_AND_MEAN
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <windows.h>
-
-
-#ifdef _WIN32_WCE
-
-  FT_LOACAL_DEF( void )
-  OutputDebugStringA( LPCSTR lpOutputString )
-  {
-    int            len;
-    LPWSTR         lpOutputStringW;
-
-
-    /* allocate memory space for converted string */
-    len = MultiByteToWideChar( CP_ACP, MB_ERR_INVALID_CHARS,
-                               lpOutputString, -1, NULL, 0 );
-
-    lpOutputStringW = (LPWSTR)_alloca( len * sizeof ( WCHAR ) );
-
-    if ( !len || !lpOutputStringW )
-      return;
-
-    /* now it is safe to do the translation */
-    MultiByteToWideChar( CP_ACP, MB_ERR_INVALID_CHARS,
-                         lpOutputString, -1, lpOutputStringW, len );
-
-    OutputDebugStringW( lpOutputStringW );
-  }
-
-#endif /* _WIN32_WCE */
 
 
   /* documentation is in ftdebug.h */
@@ -131,19 +106,15 @@
   FT_Message( const char*  fmt,
               ... )
   {
-    va_list  ap;
+    static char  buf[8192];
+    va_list      ap;
 
 
     va_start( ap, fmt );
     vfprintf( stderr, fmt, ap );
-    if ( IsDebuggerPresent() )
-    {
-      static char  buf[1024];
-
-
-      vsnprintf( buf, sizeof buf, fmt, ap );
-      OutputDebugStringA( buf );
-    }
+    /* send the string to the debugger as well */
+    vsprintf( buf, fmt, ap );
+    OutputDebugStringA( buf );
     va_end( ap );
   }
 
@@ -154,19 +125,13 @@
   FT_Panic( const char*  fmt,
             ... )
   {
-    va_list  ap;
+    static char  buf[8192];
+    va_list      ap;
 
 
     va_start( ap, fmt );
-    vfprintf( stderr, fmt, ap );
-    if ( IsDebuggerPresent() )
-    {
-      static char  buf[1024];
-
-
-      vsnprintf( buf, sizeof buf, fmt, ap );
-      OutputDebugStringA( buf );
-    }
+    vsprintf( buf, fmt, ap );
+    OutputDebugStringA( buf );
     va_end( ap );
 
     exit( EXIT_FAILURE );

@@ -110,7 +110,7 @@ class GeckoViewPermission {
           device = device.QueryInterface(Ci.nsIMediaDevice);
           return {
             type: device.type,
-            id: device.rawId,
+            id: device.id,
             rawId: device.rawId,
             name: device.rawName, // unfiltered device name to show to the user
             mediaSource: device.mediaSource,
@@ -153,7 +153,7 @@ class GeckoViewPermission {
             );
             if (constraints.video) {
               const video = devices.find(
-                device => response.video === device.rawId
+                device => response.video === device.id
               );
               if (!video) {
                 throw new Error("invalid video id");
@@ -165,7 +165,7 @@ class GeckoViewPermission {
             }
             if (constraints.audio) {
               const audio = devices.find(
-                device => response.audio === device.rawId
+                device => response.audio === device.id
               );
               if (!audio) {
                 throw new Error("invalid audio id");

@@ -17,12 +17,15 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIApplicationUpdateService"
 );
 
+Cu.importGlobalProperties(["Glean"]);
+
 add_task(function test_setup() {
   // FOG needs a profile directory to put its data in.
   do_get_profile();
 
   // We need to initialize it once, otherwise operations will be stuck in the pre-init queue.
-  Services.fog.initializeFOG();
+  let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
+  FOG.initializeFOG();
 });
 
 add_task(async function test_record_update_environment() {

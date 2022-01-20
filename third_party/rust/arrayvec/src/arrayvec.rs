@@ -108,7 +108,7 @@ impl<T, const CAP: usize> ArrayVec<T, CAP> {
     /// assert_eq!(array.len(), 2);
     /// ```
     #[inline(always)]
-    pub const fn len(&self) -> usize { self.len as usize }
+    pub fn len(&self) -> usize { self.len as usize }
 
     /// Returns whether the `ArrayVec` is empty.
     ///
@@ -120,7 +120,7 @@ impl<T, const CAP: usize> ArrayVec<T, CAP> {
     /// assert_eq!(array.is_empty(), true);
     /// ```
     #[inline]
-    pub const fn is_empty(&self) -> bool { self.len() == 0 }
+    pub fn is_empty(&self) -> bool { self.len() == 0 }
 
     /// Return the capacity of the `ArrayVec`.
     ///
@@ -131,7 +131,7 @@ impl<T, const CAP: usize> ArrayVec<T, CAP> {
     /// assert_eq!(array.capacity(), 3);
     /// ```
     #[inline(always)]
-    pub const fn capacity(&self) -> usize { CAP }
+    pub fn capacity(&self) -> usize { CAP }
 
     /// Return true if the `ArrayVec` is completely filled to its capacity, false otherwise.
     ///
@@ -143,7 +143,7 @@ impl<T, const CAP: usize> ArrayVec<T, CAP> {
     /// array.push(1);
     /// assert!(array.is_full());
     /// ```
-    pub const fn is_full(&self) -> bool { self.len() == self.capacity() }
+    pub fn is_full(&self) -> bool { self.len() == self.capacity() }
 
     /// Returns the capacity left in the `ArrayVec`.
     ///
@@ -154,7 +154,7 @@ impl<T, const CAP: usize> ArrayVec<T, CAP> {
     /// array.pop();
     /// assert_eq!(array.remaining_capacity(), 1);
     /// ```
-    pub const fn remaining_capacity(&self) -> usize {
+    pub fn remaining_capacity(&self) -> usize {
         self.capacity() - self.len()
     }
 
@@ -493,38 +493,21 @@ impl<T, const CAP: usize> ArrayVec<T, CAP> {
 
         let mut g = BackshiftOnDrop { v: self, processed_len: 0, deleted_cnt: 0, original_len };
 
-        #[inline(always)]
-        fn process_one<F: FnMut(&mut T) -> bool, T, const CAP: usize, const DELETED: bool>(
-            f: &mut F,
-            g: &mut BackshiftOnDrop<'_, T, CAP>
-        ) -> bool {
+        while g.processed_len < original_len {
             let cur = unsafe { g.v.as_mut_ptr().add(g.processed_len) };
             if !f(unsafe { &mut *cur }) {
                 g.processed_len += 1;
                 g.deleted_cnt += 1;
                 unsafe { ptr::drop_in_place(cur) };
-                return false;
+                continue;
             }
-            if DELETED {
+            if g.deleted_cnt > 0 {
                 unsafe {
                     let hole_slot = g.v.as_mut_ptr().add(g.processed_len - g.deleted_cnt);
                     ptr::copy_nonoverlapping(cur, hole_slot, 1);
                 }
             }
             g.processed_len += 1;
-            true
-        }
-
-        // Stage 1: Nothing was deleted.
-        while g.processed_len != original_len {
-            if !process_one::<F, T, CAP, false>(&mut f, &mut g) {
-                break;
-            }
-        }
-
-        // Stage 2: Some elements were deleted.
-        while g.processed_len != original_len {
-            process_one::<F, T, CAP, true>(&mut f, &mut g);
         }
 
         drop(g);

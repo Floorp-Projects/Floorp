@@ -9,7 +9,6 @@
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorDOMPoint.h"
-#include "mozilla/IntegerRange.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/Result.h"
 #include "mozilla/dom/Element.h"
@@ -208,8 +207,8 @@ class MOZ_RAII AutoTransactionBatchExternal final {
 class MOZ_STACK_CLASS AutoSelectionRangeArray final {
  public:
   explicit AutoSelectionRangeArray(dom::Selection& aSelection) {
-    for (const uint32_t i : IntegerRange(aSelection.RangeCount())) {
-      MOZ_ASSERT(aSelection.GetRangeAt(i));
+    uint32_t rangeCount = aSelection.RangeCount();
+    for (uint32_t i = 0; i < rangeCount; i++) {
       mRanges.AppendElement(*aSelection.GetRangeAt(i));
     }
   }
@@ -232,8 +231,7 @@ class MOZ_STACK_CLASS AutoRangeArray final {
   void Initialize(const dom::Selection& aSelection) {
     mDirection = aSelection.GetDirection();
     mRanges.Clear();
-    for (const uint32_t i : IntegerRange(aSelection.RangeCount())) {
-      MOZ_ASSERT(aSelection.GetRangeAt(i));
+    for (uint32_t i = 0; i < aSelection.RangeCount(); i++) {
       mRanges.AppendElement(aSelection.GetRangeAt(i)->CloneRange());
       if (aSelection.GetRangeAt(i) == aSelection.GetAnchorFocusRange()) {
         mAnchorFocusRange = mRanges.LastElement();
@@ -247,14 +245,6 @@ class MOZ_STACK_CLASS AutoRangeArray final {
    * be required by `TextEditor`.
    */
   void EnsureOnlyEditableRanges(const dom::Element& aEditingHost);
-
-  /**
-   * EnsureRangesInTextNode() is designed for TextEditor to guarantee that
-   * all ranges are in its text node which is first child of the anonymous <div>
-   * element and is first child.
-   */
-  void EnsureRangesInTextNode(const dom::Text& aTextNode);
-
   static bool IsEditableRange(const dom::AbstractRange& aRange,
                               const dom::Element& aEditingHost);
 

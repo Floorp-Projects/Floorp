@@ -68,7 +68,7 @@ class nsHttpResponseHead {
                                    bool m = false);
   [[nodiscard]] nsresult SetHeader(const nsHttpAtom& h, const nsACString& v,
                                    bool m = false);
-  [[nodiscard]] nsresult GetHeader(const nsHttpAtom& h, nsACString& v) const;
+  [[nodiscard]] nsresult GetHeader(const nsHttpAtom& h, nsACString& v);
   void ClearHeader(const nsHttpAtom& h);
   void ClearHeaders();
   bool HasHeaderValue(const nsHttpAtom& h, const char* v);
@@ -139,7 +139,7 @@ class nsHttpResponseHead {
 
   bool HasContentType() const;
   bool HasContentCharset();
-  bool GetContentTypeOptionsHeader(nsACString& aOutput) const;
+  bool GetContentTypeOptionsHeader(nsACString& aOutput);
 
  private:
   [[nodiscard]] nsresult SetHeader_locked(const nsHttpAtom& atom,

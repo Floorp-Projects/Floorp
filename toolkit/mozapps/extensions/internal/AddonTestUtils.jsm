@@ -774,12 +774,13 @@ var AddonTestUtils = {
    *        The data to load.
    */
   async loadBlocklistRawData(data) {
-    const { BlocklistPrivate } = ChromeUtils.import(
-      "resource://gre/modules/Blocklist.jsm"
+    const bsPass = ChromeUtils.import(
+      "resource://gre/modules/Blocklist.jsm",
+      null
     );
     const blocklistMapping = {
-      extensions: BlocklistPrivate.ExtensionBlocklistRS,
-      extensionsMLBF: BlocklistPrivate.ExtensionBlocklistMLBF,
+      extensions: bsPass.ExtensionBlocklistRS,
+      extensionsMLBF: bsPass.ExtensionBlocklistMLBF,
     };
 
     // Since we load the specified test data, we shouldn't let the

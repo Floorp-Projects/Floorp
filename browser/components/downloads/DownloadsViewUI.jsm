@@ -15,12 +15,15 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
   DownloadUtils: "resource://gre/modules/DownloadUtils.jsm",
   DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -145,7 +148,7 @@ var DownloadsViewUI = {
       return { l10n };
     }
     return download.target.path
-      ? PathUtils.filename(download.target.path)
+      ? OS.Path.basename(download.target.path)
       : download.source.url;
   },
 
@@ -245,6 +248,9 @@ var DownloadsViewUI = {
     // "always open similar files" item instead so that users can add a new
     // mimetype to about:preferences table and set to open with system default.
     // Only appear if browser.download.improvements_to_download_panel is enabled.
+    let improvementsOn = Services.prefs.getBoolPref(
+      "browser.download.improvements_to_download_panel"
+    );
     let alwaysOpenSimilarFilesItem = contextMenu.querySelector(
       ".downloadAlwaysOpenSimilarFilesMenuItem"
     );
@@ -270,7 +276,7 @@ var DownloadsViewUI = {
       (mimeInfo.type === "text/plain" &&
         gReputationService.isBinary(download.target.path));
 
-    if (DownloadsViewUI.improvementsIsOn && !canViewInternally) {
+    if (improvementsOn && !canViewInternally) {
       alwaysOpenSimilarFilesItem.hidden =
         state !== DOWNLOAD_FINISHED || shouldNotRememberChoice;
     } else {
@@ -287,13 +293,6 @@ var DownloadsViewUI = {
     }
   },
 };
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  DownloadsViewUI,
-  "improvementsIsOn",
-  "browser.download.improvements_to_download_panel",
-  false
-);
 
 DownloadsViewUI.BaseView = class {
   canClearDownloads(nodeContainer) {
@@ -633,9 +632,13 @@ DownloadsViewUI.DownloadElementShell.prototype = {
   _updateStateInner() {
     let progressPaused = false;
 
+    let improvementsOn = Services.prefs.getBoolPref(
+      "browser.download.improvements_to_download_panel"
+    );
+
     this.element.classList.toggle(
       "openWhenFinished",
-      DownloadsViewUI.improvementsIsOn && !this.download.stopped
+      improvementsOn && !this.download.stopped
     );
 
     if (!this.download.stopped) {
@@ -653,18 +656,11 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       );
       this.lastEstimatedSecondsLeft = newEstimatedSecondsLeft;
 
-      if (
-        DownloadsViewUI.improvementsIsOn &&
-        this.download.launchWhenSucceeded
-      ) {
+      if (improvementsOn && this.download.launchWhenSucceeded) {
         status = DownloadUtils.getFormattedTimeStatus(newEstimatedSecondsLeft);
       }
-      let hoverStatus = DownloadsViewUI.improvementsIsOn
-        ? {
-            l10n: "downloading-file-click-to-open",
-          }
-        : undefined;
-      this.showStatus(status, hoverStatus);
+
+      this.showStatus(status);
     } else {
       let verdict = "";
 
@@ -1049,7 +1045,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
 
     // Do not suggest a file name if we don't know the original target.
     let targetPath = this.download.target.path
-      ? PathUtils.filename(this.download.target.path)
+      ? OS.Path.basename(this.download.target.path)
       : null;
     window.DownloadURL(this.download.source.url, targetPath, document);
   },

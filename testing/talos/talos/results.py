@@ -533,9 +533,8 @@ class BrowserLogResults(object):
             # obtain the value by converting the second line in the file.
             with open(filename, "r") as contents:
                 lines = contents.read().splitlines()
-                if len(lines) > 1:
-                    value = float(lines[1].strip())
-                    counter_results.setdefault(session_store_counter, []).append(value)
+                value = float(lines[1].strip())
+                counter_results.setdefault(session_store_counter, []).append(value)
 
     def mainthread_io(self, counter_results):
         """record mainthread IO counters in counter_results dictionary"""

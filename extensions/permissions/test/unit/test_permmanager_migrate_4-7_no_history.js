@@ -22,9 +22,10 @@ var newClassID = Services.uuid.generateUUID();
 
 var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 var oldClassID = registrar.contractIDToCID(CONTRACT_ID);
-// TODO: There was a var oldFactory = here causing linter errors as it
-// was unused. We should check if this function call is needed at all.
-Components.manager.getClassObject(Cc[CONTRACT_ID], Ci.nsIFactory);
+var oldFactory = Components.manager.getClassObject(
+  Cc[CONTRACT_ID],
+  Ci.nsIFactory
+);
 registrar.registerFactory(newClassID, "", CONTRACT_ID, factory);
 
 function cleanupFactory() {
@@ -56,11 +57,6 @@ add_task(function test() {
   } catch (e) {
     Assert.ok(true, "There wasn't a nsINavHistoryService");
   }
-
-  // We need to execute a pm method to be sure that the DB is fully
-  // initialized.
-  var pm = Services.perms;
-  Assert.ok(pm.all.length >= 0, "Permission manager not initialized?");
 
   let db = Services.storage.openDatabase(GetPermissionsFile(profile));
   db.schemaVersion = 4;

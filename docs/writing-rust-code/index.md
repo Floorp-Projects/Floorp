@@ -7,10 +7,11 @@ The [build documentation](../build/buildsystem/rust.html) explains how to add
 new Rust code to Firefox. The [test documentation](../testing-rust-code)
 explains how to test and debug Rust code in Firefox.
 
-```{toctree}
-:titlesonly:
-:maxdepth: 1
-:glob:
+```eval_rst
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+    :glob:
 
-*
+    *
 ```

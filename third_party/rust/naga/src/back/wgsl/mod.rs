@@ -1,8 +1,11 @@
+mod keywords;
 mod writer;
 
 use thiserror::Error;
 
-pub use writer::{Writer, WriterFlags};
+pub use writer::Writer;
+
+const BAKE_PREFIX: &str = "e";
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -14,16 +17,13 @@ pub enum Error {
     Unimplemented(String), // TODO: Error used only during development
     #[error("Unsupported math function: {0:?}")]
     UnsupportedMathFunction(crate::MathFunction),
-    #[error("Unsupported relational function: {0:?}")]
-    UnsupportedRelationalFunction(crate::RelationalFunction),
 }
 
 pub fn write_string(
     module: &crate::Module,
     info: &crate::valid::ModuleInfo,
-    flags: WriterFlags,
 ) -> Result<String, Error> {
-    let mut w = Writer::new(String::new(), flags);
+    let mut w = Writer::new(String::new());
     w.write(module, info)?;
     let output = w.finish();
     Ok(output)

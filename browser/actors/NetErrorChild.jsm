@@ -29,6 +29,7 @@ class NetErrorChild extends RemotePageChild {
     const exportableFunctions = [
       "RPMGetAppBuildID",
       "RPMGetInnerMostURI",
+      "RPMPrefIsLocked",
       "RPMAddToHistogram",
       "RPMRecordTelemetryEvent",
       "RPMGetHttpResponseHeader",
@@ -81,6 +82,10 @@ class NetErrorChild extends RemotePageChild {
 
   RPMGetAppBuildID() {
     return Services.appinfo.appBuildID;
+  }
+
+  RPMPrefIsLocked(aPref) {
+    return Services.prefs.prefIsLocked(aPref);
   }
 
   RPMAddToHistogram(histID, bin) {

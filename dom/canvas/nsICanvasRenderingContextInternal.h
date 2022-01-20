@@ -6,6 +6,8 @@
 #ifndef nsICanvasRenderingContextInternal_h___
 #define nsICanvasRenderingContextInternal_h___
 
+#include <memory>
+
 #include "gfxRect.h"
 #include "mozilla/gfx/2D.h"
 #include "nsISupports.h"
@@ -14,12 +16,9 @@
 #include "nsRefreshObservers.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/OffscreenCanvas.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/NotNull.h"
-#include "mozilla/WeakPtr.h"
-#include "mozilla/layers/LayersSurfaces.h"
 
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID       \
   {                                                  \
@@ -35,7 +34,6 @@ namespace mozilla {
 class nsDisplayListBuilder;
 class ClientWebGLContext;
 class PresShell;
-class WebGLFramebufferJS;
 namespace layers {
 class CanvasRenderer;
 class CompositableHandle;
@@ -52,11 +50,14 @@ class SourceSurface;
 }  // namespace mozilla
 
 class nsICanvasRenderingContextInternal : public nsISupports,
-                                          public mozilla::SupportsWeakPtr,
                                           public nsAPostRefreshObserver {
  public:
   using CanvasRenderer = mozilla::layers::CanvasRenderer;
+  using Layer = mozilla::layers::Layer;
+  using LayerManager = mozilla::layers::LayerManager;
   using WebRenderCanvasData = mozilla::layers::WebRenderCanvasData;
+  using CompositableHandle = mozilla::layers::CompositableHandle;
+  using LayerTransactionChild = mozilla::layers::LayerTransactionChild;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICANVASRENDERINGCONTEXTINTERNAL_IID)
 
@@ -76,7 +77,9 @@ class nsICanvasRenderingContextInternal : public nsISupports,
 
   void AddPostRefreshObserverIfNecessary();
 
-  nsIGlobalObject* GetParentObject() const;
+  mozilla::dom::HTMLCanvasElement* GetParentObject() const {
+    return mCanvasElement;
+  }
 
   void SetOffscreenCanvas(mozilla::dom::OffscreenCanvas* aOffscreenCanvas) {
     mOffscreenCanvas = aOffscreenCanvas;
@@ -140,13 +143,11 @@ class nsICanvasRenderingContextInternal : public nsISupports,
   virtual already_AddRefed<mozilla::layers::Image> GetAsImage() {
     return nullptr;
   }
-
   virtual bool UpdateWebRenderCanvasData(
       mozilla::nsDisplayListBuilder* aBuilder,
       WebRenderCanvasData* aCanvasData) {
     return false;
   }
-
   virtual bool InitializeCanvasRenderer(mozilla::nsDisplayListBuilder* aBuilder,
                                         CanvasRenderer* aRenderer) {
     return false;
@@ -181,25 +182,16 @@ class nsICanvasRenderingContextInternal : public nsISupports,
     return nsString();
   }
 
+  virtual void OnVisibilityChange() {}
+
   virtual void OnMemoryPressure() {}
 
   virtual void OnBeforePaintTransaction() {}
   virtual void OnDidPaintTransaction() {}
-
   virtual mozilla::layers::PersistentBufferProvider* GetBufferProvider() {
     return nullptr;
   }
-
-  virtual mozilla::Maybe<mozilla::layers::SurfaceDescriptor> GetFrontBuffer(
-      mozilla::WebGLFramebufferJS*, const bool webvr = false) {
-    return mozilla::Nothing();
-  }
-
-  virtual mozilla::Maybe<mozilla::layers::SurfaceDescriptor> PresentFrontBuffer(
-      mozilla::WebGLFramebufferJS* fb, mozilla::layers::TextureType,
-      const bool webvr = false) {
-    return GetFrontBuffer(fb, webvr);
-  }
+  virtual mozilla::ClientWebGLContext* AsWebgl() { return nullptr; }
 
   //
   // shmem support
@@ -215,6 +207,9 @@ class nsICanvasRenderingContextInternal : public nsISupports,
   RefPtr<mozilla::dom::HTMLCanvasElement> mCanvasElement;
   RefPtr<mozilla::dom::OffscreenCanvas> mOffscreenCanvas;
   RefPtr<nsRefreshDriver> mRefreshDriver;
+
+ public:
+  const std::shared_ptr<nsICanvasRenderingContextInternal* const> mSharedPtrPtr;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasRenderingContextInternal,

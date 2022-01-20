@@ -23,3 +23,4 @@ job-defaults:
                     - raptor/windows_config.py
                 default:
                     - raptor/linux_config.py
+    python-3: true

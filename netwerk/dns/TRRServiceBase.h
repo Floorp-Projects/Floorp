@@ -8,7 +8,6 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/DataMutex.h"
-#include "mozilla/net/rust_helper.h"
 #include "nsString.h"
 #include "nsIDNSService.h"
 #include "nsIProtocolProxyService2.h"
@@ -54,8 +53,7 @@ class TRRServiceBase : public nsIProxyConfigChangedCallback {
   void OnTRRModeChange();
   void OnTRRURIChange();
 
-  void DoReadEtcHostsFile(ParsingCallback aCallback);
-  virtual void ReadEtcHostsFile() = 0;
+  virtual void ReadEtcHostsFile() {}
   // Called to create a connection info that will be used by TRRServiceChannel.
   // Note that when this function is called, mDefaultTRRConnectionInfo will be
   // set to null to invalidate the connection info.

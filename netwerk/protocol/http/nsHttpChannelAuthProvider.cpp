@@ -32,9 +32,7 @@
 #include "nsHttp.h"
 #include "nsHttpBasicAuth.h"
 #include "nsHttpDigestAuth.h"
-#ifdef MOZ_AUTH_EXTENSION
-#  include "nsHttpNegotiateAuth.h"
-#endif
+#include "nsHttpNegotiateAuth.h"
 #include "nsHttpNTLMAuth.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIURL.h"
@@ -549,38 +547,6 @@ class MOZ_STACK_CLASS ChallengeParser final : Tokenizer {
   }
 };
 
-enum ChallengeRank {
-  Unknown = 0,
-  Basic = 1,
-  Digest = 2,
-  NTLM = 3,
-  Negotiate = 4,
-};
-
-ChallengeRank Rank(const nsACString& aChallenge) {
-  if (StringBeginsWith(aChallenge, "Negotiate"_ns,
-                       nsCaseInsensitiveCStringComparator)) {
-    return ChallengeRank::Negotiate;
-  }
-
-  if (StringBeginsWith(aChallenge, "NTLM"_ns,
-                       nsCaseInsensitiveCStringComparator)) {
-    return ChallengeRank::NTLM;
-  }
-
-  if (StringBeginsWith(aChallenge, "Digest"_ns,
-                       nsCaseInsensitiveCStringComparator)) {
-    return ChallengeRank::Digest;
-  }
-
-  if (StringBeginsWith(aChallenge, "Basic"_ns,
-                       nsCaseInsensitiveCStringComparator)) {
-    return ChallengeRank::Basic;
-  }
-
-  return ChallengeRank::Unknown;
-}
-
 nsresult nsHttpChannelAuthProvider::GetCredentials(
     const nsACString& aChallenges, bool proxyAuth, nsCString& creds) {
   LOG(("nsHttpChannelAuthProvider::GetCredentials"));
@@ -589,12 +555,10 @@ nsresult nsHttpChannelAuthProvider::GetCredentials(
   using AuthChallenge = struct AuthChallenge {
     nsDependentCSubstring challenge;
     uint16_t algorithm = 0;
-    ChallengeRank rank = ChallengeRank::Unknown;
 
     void operator=(const AuthChallenge& aOther) {
       challenge.Rebind(aOther.challenge, 0);
       algorithm = aOther.algorithm;
-      rank = aOther.rank;
     }
   };
 
@@ -610,7 +574,6 @@ nsresult nsHttpChannelAuthProvider::GetCredentials(
     nsAutoCString realm, domain, nonce, opaque;
     bool stale = false;
     uint16_t qop = 0;
-    ac.rank = Rank(ac.challenge);
     if (StringBeginsWith(ac.challenge, "Digest"_ns,
                          nsCaseInsensitiveCStringComparator)) {
       Unused << nsHttpDigestAuth::ParseChallenge(ac.challenge, realm, domain,
@@ -621,26 +584,8 @@ nsresult nsHttpChannelAuthProvider::GetCredentials(
   }
 
   cc.StableSort([](const AuthChallenge& lhs, const AuthChallenge& rhs) {
-    if (StaticPrefs::network_auth_choose_most_secure_challenge()) {
-      // Different auth types
-      if (lhs.rank != rhs.rank) {
-        return lhs.rank < rhs.rank ? 1 : -1;
-      }
-
-      // If they're the same auth type, and not a Digest, then we treat them
-      // as equal (don't reorder them).
-      if (lhs.rank != ChallengeRank::Digest) {
-        return 0;
-      }
-    } else {
-      // Non-digest challenges should not be reordered when the pref is off.
-      if (lhs.algorithm == 0 || rhs.algorithm == 0) {
-        return 0;
-      }
-    }
-
-    // Same algorithm.
-    if (lhs.algorithm == rhs.algorithm) {
+    // Non-digest challenges should not be reordered.
+    if (!lhs.algorithm || !rhs.algorithm || lhs.algorithm == rhs.algorithm) {
       return 0;
     }
     return lhs.algorithm < rhs.algorithm ? 1 : -1;
@@ -1168,12 +1113,9 @@ nsresult nsHttpChannelAuthProvider::GetAuthenticator(
   GetAuthType(aChallenge, authType);
 
   nsCOMPtr<nsIHttpAuthenticator> authenticator;
-#ifdef MOZ_AUTH_EXTENSION
   if (authType.EqualsLiteral("negotiate")) {
     authenticator = nsHttpNegotiateAuth::GetOrCreate();
-  } else
-#endif
-      if (authType.EqualsLiteral("basic")) {
+  } else if (authType.EqualsLiteral("basic")) {
     authenticator = nsHttpBasicAuth::GetOrCreate();
   } else if (authType.EqualsLiteral("digest")) {
     authenticator = nsHttpDigestAuth::GetOrCreate();

@@ -175,14 +175,14 @@ class ElfEntSize : public ElfValue {
 };
 
 template <typename T>
-class serializable : public T::Type64 {
+class serializable : public T::Type32 {
  public:
   serializable(){};
-  serializable(const typename T::Type64& p) : T::Type64(p){};
+  serializable(const typename T::Type32& p) : T::Type32(p){};
 
  private:
   template <typename R>
-  void init(const char* buf, size_t len, unsigned char ei_data) {
+  void init(const char* buf, size_t len, char ei_data) {
     R e;
     assert(len >= sizeof(e));
     memcpy(&e, buf, sizeof(e));
@@ -197,7 +197,7 @@ class serializable : public T::Type64 {
   }
 
   template <typename R>
-  void serialize(const char* buf, size_t len, unsigned char ei_data) {
+  void serialize(const char* buf, size_t len, char ei_data) {
     assert(len >= sizeof(R));
     if (ei_data == ELFDATA2LSB) {
       T::template swap<little_endian>(*this, *(R*)buf);
@@ -210,8 +210,7 @@ class serializable : public T::Type64 {
   }
 
  public:
-  serializable(const char* buf, size_t len, unsigned char ei_class,
-               unsigned char ei_data) {
+  serializable(const char* buf, size_t len, char ei_class, char ei_data) {
     if (ei_class == ELFCLASS32) {
       init<typename T::Type32>(buf, len, ei_data);
       return;
@@ -222,8 +221,7 @@ class serializable : public T::Type64 {
     throw std::runtime_error("Unsupported ELF class");
   }
 
-  serializable(std::ifstream& file, unsigned char ei_class,
-               unsigned char ei_data) {
+  serializable(std::ifstream& file, char ei_class, char ei_data) {
     if (ei_class == ELFCLASS32) {
       typename T::Type32 e;
       file.read((char*)&e, sizeof(e));
@@ -238,8 +236,7 @@ class serializable : public T::Type64 {
     throw std::runtime_error("Unsupported ELF class or data encoding");
   }
 
-  void serialize(std::ofstream& file, unsigned char ei_class,
-                 unsigned char ei_data) {
+  void serialize(std::ofstream& file, char ei_class, char ei_data) {
     if (ei_class == ELFCLASS32) {
       typename T::Type32 e;
       serialize<typename T::Type32>((char*)&e, sizeof(e), ei_data);
@@ -254,8 +251,7 @@ class serializable : public T::Type64 {
     throw std::runtime_error("Unsupported ELF class or data encoding");
   }
 
-  void serialize(char* buf, size_t len, unsigned char ei_class,
-                 unsigned char ei_data) {
+  void serialize(char* buf, size_t len, char ei_class, char ei_data) {
     if (ei_class == ELFCLASS32) {
       serialize<typename T::Type32>(buf, len, ei_data);
       return;
@@ -266,7 +262,7 @@ class serializable : public T::Type64 {
     throw std::runtime_error("Unsupported ELF class");
   }
 
-  static inline unsigned int size(unsigned char ei_class) {
+  static inline unsigned int size(char ei_class) {
     if (ei_class == ELFCLASS32)
       return sizeof(typename T::Type32);
     else if (ei_class == ELFCLASS64)
@@ -294,10 +290,10 @@ class Elf {
   void normalize();
   void write(std::ofstream& file);
 
-  unsigned char getClass();
-  unsigned char getData();
-  unsigned char getType();
-  unsigned char getMachine();
+  char getClass();
+  char getData();
+  char getType();
+  char getMachine();
   unsigned int getSize();
 
   void insertSegmentAfter(ElfSegment* previous, ElfSegment* segment) {
@@ -411,8 +407,7 @@ class ElfSection {
     if (next) next->markDirty();
   }
 
-  virtual void serialize(std::ofstream& file, unsigned char ei_class,
-                         unsigned char ei_data) {
+  virtual void serialize(std::ofstream& file, char ei_class, char ei_data) {
     if (getType() == SHT_NOBITS) return;
     file.seekp(getOffset());
     file.write(data, getSize());
@@ -485,9 +480,8 @@ class ElfSegment {
 
 class Elf_Ehdr : public serializable<Elf_Ehdr_Traits>, public ElfSection {
  public:
-  Elf_Ehdr(std::ifstream& file, unsigned char ei_class, unsigned char ei_data);
-  void serialize(std::ofstream& file, unsigned char ei_class,
-                 unsigned char ei_data) {
+  Elf_Ehdr(std::ifstream& file, char ei_class, char ei_data);
+  void serialize(std::ofstream& file, char ei_class, char ei_data) {
     serializable<Elf_Ehdr_Traits>::serialize(file, ei_class, ei_data);
   }
 };
@@ -495,7 +489,7 @@ class Elf_Ehdr : public serializable<Elf_Ehdr_Traits>, public ElfSection {
 class Elf_Phdr : public serializable<Elf_Phdr_Traits> {
  public:
   Elf_Phdr(){};
-  Elf_Phdr(std::ifstream& file, unsigned char ei_class, unsigned char ei_data)
+  Elf_Phdr(std::ifstream& file, char ei_class, char ei_data)
       : serializable<Elf_Phdr_Traits>(file, ei_class, ei_data){};
   bool contains(ElfSection* section) {
     unsigned int size = section->getSize();
@@ -524,8 +518,7 @@ class ElfDynamic_Section : public ElfSection {
   ElfDynamic_Section(Elf_Shdr& s, std::ifstream* file, Elf* parent);
   ~ElfDynamic_Section();
 
-  void serialize(std::ofstream& file, unsigned char ei_class,
-                 unsigned char ei_data);
+  void serialize(std::ofstream& file, char ei_class, char ei_data);
 
   ElfValue* getValueForType(unsigned int tag);
   ElfSection* getSectionForType(unsigned int tag);
@@ -552,8 +545,7 @@ class ElfSymtab_Section : public ElfSection {
  public:
   ElfSymtab_Section(Elf_Shdr& s, std::ifstream* file, Elf* parent);
 
-  void serialize(std::ofstream& file, unsigned char ei_class,
-                 unsigned char ei_data);
+  void serialize(std::ofstream& file, char ei_class, char ei_data);
 
   Elf_SymValue* lookup(const char* name,
                        unsigned int type_filter = STT(OBJECT) | STT(FUNC));
@@ -566,7 +558,7 @@ class Elf_Rel : public serializable<Elf_Rel_Traits> {
  public:
   Elf_Rel() : serializable<Elf_Rel_Traits>(){};
 
-  Elf_Rel(std::ifstream& file, unsigned char ei_class, unsigned char ei_data)
+  Elf_Rel(std::ifstream& file, char ei_class, char ei_data)
       : serializable<Elf_Rel_Traits>(file, ei_class, ei_data){};
 
   static const unsigned int sh_type = SHT_REL;
@@ -578,7 +570,7 @@ class Elf_Rela : public serializable<Elf_Rela_Traits> {
  public:
   Elf_Rela() : serializable<Elf_Rela_Traits>(){};
 
-  Elf_Rela(std::ifstream& file, unsigned char ei_class, unsigned char ei_data)
+  Elf_Rela(std::ifstream& file, char ei_class, char ei_data)
       : serializable<Elf_Rela_Traits>(file, ei_class, ei_data){};
 
   static const unsigned int sh_type = SHT_RELA;
@@ -600,8 +592,7 @@ class ElfRel_Section : public ElfSection {
     file->seekg(pos);
   }
 
-  void serialize(std::ofstream& file, unsigned char ei_class,
-                 unsigned char ei_data) {
+  void serialize(std::ofstream& file, char ei_class, char ei_data) {
     for (typename std::vector<Rel>::iterator i = rels.begin(); i != rels.end();
          ++i)
       (*i).serialize(file, ei_class, ei_data);
@@ -629,8 +620,7 @@ class ElfStrtab_Section : public ElfSection {
 
   unsigned int getStrIndex(const char* string);
 
-  void serialize(std::ofstream& file, unsigned char ei_class,
-                 unsigned char ei_data);
+  void serialize(std::ofstream& file, char ei_class, char ei_data);
 
  private:
   struct table_storage {
@@ -644,13 +634,13 @@ class ElfStrtab_Section : public ElfSection {
   std::vector<table_storage> table;
 };
 
-inline unsigned char Elf::getClass() { return ehdr->e_ident[EI_CLASS]; }
+inline char Elf::getClass() { return ehdr->e_ident[EI_CLASS]; }
 
-inline unsigned char Elf::getData() { return ehdr->e_ident[EI_DATA]; }
+inline char Elf::getData() { return ehdr->e_ident[EI_DATA]; }
 
-inline unsigned char Elf::getType() { return ehdr->e_type; }
+inline char Elf::getType() { return ehdr->e_type; }
 
-inline unsigned char Elf::getMachine() { return ehdr->e_machine; }
+inline char Elf::getMachine() { return ehdr->e_machine; }
 
 inline unsigned int Elf::getSize() {
   ElfSection* section;

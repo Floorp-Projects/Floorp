@@ -116,15 +116,11 @@
   T1_Size_Request( FT_Size          t1size,     /* T1_Size */
                    FT_Size_Request  req )
   {
-    FT_Error  error;
-
     T1_Size            size  = (T1_Size)t1size;
     PSH_Globals_Funcs  funcs = T1_Size_Get_Globals_Funcs( size );
 
 
-    error = FT_Request_Metrics( size->root.face, req );
-    if ( error )
-      goto Exit;
+    FT_Request_Metrics( size->root.face, req );
 
     if ( funcs )
       funcs->set_scale( (PSH_Globals)t1size->internal->module_data,
@@ -132,8 +128,7 @@
                         size->root.metrics.y_scale,
                         0, 0 );
 
-  Exit:
-    return error;
+    return FT_Err_Ok;
   }
 
 

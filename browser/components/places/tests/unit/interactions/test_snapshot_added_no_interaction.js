@@ -30,10 +30,7 @@ add_task(async function test_add_snapshot_no_interaction_userPersisted() {
   // userPersisted must be true to be able to add a snapshot before an
   // interaction.
   await assertUrlNotification(TOPIC_ADDED, [TEST_URL1], () =>
-    Snapshots.add({
-      url: TEST_URL1,
-      userPersisted: Snapshots.USER_PERSISTED.MANUAL,
-    })
+    Snapshots.add({ url: TEST_URL1, userPersisted: true })
   );
 
   Assert.ok(
@@ -50,7 +47,7 @@ add_task(async function test_add_snapshot_no_interaction_userPersisted() {
       title: null,
       documentType: Interactions.DOCUMENT_TYPE.GENERIC,
       firstInteractionAt: new Date(0),
-      userPersisted: Snapshots.USER_PERSISTED.MANUAL,
+      userPersisted: true,
     },
   ]);
 
@@ -75,7 +72,7 @@ add_task(async function test_add_snapshot_no_interaction_userPersisted() {
       documentType: Interactions.DOCUMENT_TYPE.MEDIA,
       firstInteractionAt: new Date(now - 10000),
       lastInteractionAt: new Date(now - 10000),
-      userPersisted: Snapshots.USER_PERSISTED.MANUAL,
+      userPersisted: true,
     },
   ]);
   await PlacesUtils.history.clear();

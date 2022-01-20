@@ -31,9 +31,6 @@ use crate::{
 use hal::CommandEncoder as _;
 use thiserror::Error;
 
-#[cfg(feature = "trace")]
-use crate::device::trace::Command as TraceCommand;
-
 const PUSH_CONSTANT_CLEAR_ARRAY: &[u32] = &[0_u32; 64];
 
 #[derive(Debug)]
@@ -103,7 +100,7 @@ pub struct CommandBuffer<A: hal::Api> {
     limits: wgt::Limits,
     support_clear_buffer_texture: bool,
     #[cfg(feature = "trace")]
-    pub(crate) commands: Option<Vec<TraceCommand>>,
+    pub(crate) commands: Option<Vec<crate::device::trace::Command>>,
 }
 
 impl<A: HalApi> CommandBuffer<A> {
@@ -325,13 +322,8 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
 
         let (mut cmd_buf_guard, _) = hub.command_buffers.write(&mut token);
         let cmd_buf = CommandBuffer::get_encoder_mut(&mut *cmd_buf_guard, encoder_id)?;
-
-        #[cfg(feature = "trace")]
-        if let Some(ref mut list) = cmd_buf.commands {
-            list.push(TraceCommand::PushDebugGroup(label.to_string()));
-        }
-
         let cmd_buf_raw = cmd_buf.encoder.open();
+
         unsafe {
             cmd_buf_raw.begin_debug_marker(label);
         }
@@ -350,13 +342,8 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
 
         let (mut cmd_buf_guard, _) = hub.command_buffers.write(&mut token);
         let cmd_buf = CommandBuffer::get_encoder_mut(&mut *cmd_buf_guard, encoder_id)?;
-
-        #[cfg(feature = "trace")]
-        if let Some(ref mut list) = cmd_buf.commands {
-            list.push(TraceCommand::InsertDebugMarker(label.to_string()));
-        }
-
         let cmd_buf_raw = cmd_buf.encoder.open();
+
         unsafe {
             cmd_buf_raw.insert_debug_marker(label);
         }
@@ -374,13 +361,8 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
 
         let (mut cmd_buf_guard, _) = hub.command_buffers.write(&mut token);
         let cmd_buf = CommandBuffer::get_encoder_mut(&mut *cmd_buf_guard, encoder_id)?;
-
-        #[cfg(feature = "trace")]
-        if let Some(ref mut list) = cmd_buf.commands {
-            list.push(TraceCommand::PopDebugGroup);
-        }
-
         let cmd_buf_raw = cmd_buf.encoder.open();
+
         unsafe {
             cmd_buf_raw.end_debug_marker();
         }

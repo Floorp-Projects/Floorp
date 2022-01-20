@@ -2289,7 +2289,7 @@ void nsTableFrame::HomogenousInsertFrames(ChildListID aListID,
       }
       nsCOMPtr<nsIContent> container = content->GetParent();
       if (MOZ_LIKELY(container)) {  // XXX need this null-check, see bug 411823.
-        const Maybe<uint32_t> newIndex = container->ComputeIndexOf(content);
+        int32_t newIndex = container->ComputeIndexOf(content);
         nsIFrame* kidFrame;
         nsTableColGroupFrame* lastColGroup = nullptr;
         if (isColGroup) {
@@ -2299,7 +2299,7 @@ void nsTableFrame::HomogenousInsertFrames(ChildListID aListID,
           kidFrame = mFrames.FirstChild();
         }
         // Important: need to start at a value smaller than all valid indices
-        Maybe<uint32_t> lastIndex;
+        int32_t lastIndex = -1;
         while (kidFrame) {
           if (isColGroup) {
             if (kidFrame == lastColGroup) {
@@ -2313,13 +2313,8 @@ void nsTableFrame::HomogenousInsertFrames(ChildListID aListID,
                  (parentContent == (content = pseudoFrame->GetContent()))) {
             pseudoFrame = pseudoFrame->PrincipalChildList().FirstChild();
           }
-          const Maybe<uint32_t> index = container->ComputeIndexOf(content);
-          // XXX Keep the odd traditional behavior in some indices are nothing
-          //     cases for now.
-          if ((index.isSome() &&
-               (lastIndex.isNothing() || *index > *lastIndex)) &&
-              (newIndex.isSome() &&
-               (index.isNothing() || *index < *newIndex))) {
+          int32_t index = container->ComputeIndexOf(content);
+          if (index > lastIndex && index < newIndex) {
             lastIndex = index;
             aPrevFrame = kidFrame;
           }

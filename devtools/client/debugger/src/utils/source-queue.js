@@ -5,33 +5,37 @@
 import { throttle } from "lodash";
 
 // This SourceQueue module is now only used for source mapped sources
-let newOriginalQueuedSources;
-let queuedOriginalSources;
+let newQueuedSources;
+let queuedSources;
 let currentWork;
 
 async function dispatchNewSources() {
-  const sources = queuedOriginalSources;
-  queuedOriginalSources = [];
-  currentWork = await newOriginalQueuedSources(sources);
+  const sources = queuedSources;
+  queuedSources = [];
+  currentWork = await newQueuedSources(sources);
 }
 
 const queue = throttle(dispatchNewSources, 100);
 
 export default {
   initialize: actions => {
-    newOriginalQueuedSources = actions.newOriginalSources;
-    queuedOriginalSources = [];
+    newQueuedSources = actions.newQueuedSources;
+    queuedSources = [];
   },
-  queueOriginalSources: sources => {
+  queue: source => {
+    queuedSources.push(source);
+    queue();
+  },
+  queueSources: sources => {
     if (sources.length > 0) {
-      queuedOriginalSources = queuedOriginalSources.concat(sources);
+      queuedSources = queuedSources.concat(sources);
       queue();
     }
   },
 
   flush: () => Promise.all([queue.flush(), currentWork]),
   clear: () => {
-    queuedOriginalSources = [];
+    queuedSources = [];
     queue.cancel();
   },
 };

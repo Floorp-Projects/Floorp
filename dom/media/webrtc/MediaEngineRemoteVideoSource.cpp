@@ -9,7 +9,6 @@
 #include "Layers.h"
 #include "MediaManager.h"
 #include "MediaTrackConstraints.h"
-#include "mozilla/dom/MediaTrackSettingsBinding.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/RefPtr.h"
@@ -33,23 +32,6 @@ using dom::MediaTrackConstraints;
 using dom::MediaTrackConstraintSet;
 using dom::MediaTrackSettings;
 using dom::VideoFacingModeEnum;
-
-/* static */
-camera::CaptureEngine MediaEngineRemoteVideoSource::CaptureEngine(
-    MediaSourceEnum aMediaSource) {
-  switch (aMediaSource) {
-    case MediaSourceEnum::Browser:
-      return camera::BrowserEngine;
-    case MediaSourceEnum::Camera:
-      return camera::CameraEngine;
-    case MediaSourceEnum::Screen:
-      return camera::ScreenEngine;
-    case MediaSourceEnum::Window:
-      return camera::WinEngine;
-    default:
-      MOZ_CRASH();
-  }
-}
 
 static Maybe<VideoFacingModeEnum> GetFacingMode(const nsString& aDeviceName) {
   // Set facing mode based on device name.
@@ -88,24 +70,25 @@ static Maybe<VideoFacingModeEnum> GetFacingMode(const nsString& aDeviceName) {
 }
 
 MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
-    const MediaDevice* aMediaDevice)
-    : mCapEngine(CaptureEngine(aMediaDevice->mMediaSource)),
+    const nsAString& aDeviceName, const nsACString& aDeviceUUID,
+    camera::CaptureEngine aCapEngine, bool aScary)
+    : mCapEngine(aCapEngine),
+      mScary(aScary),
       mMutex("MediaEngineRemoteVideoSource::mMutex"),
       mRescalingBufferPool(/* zero_initialize */ false,
                            /* max_number_of_buffers */ 1),
       mSettingsUpdatedByFrame(MakeAndAddRef<media::Refcountable<AtomicBool>>()),
       mSettings(MakeAndAddRef<media::Refcountable<MediaTrackSettings>>()),
       mFirstFramePromise(mFirstFramePromiseHolder.Ensure(__func__)),
-      mMediaDevice(aMediaDevice),
-      mDeviceUUID(NS_ConvertUTF16toUTF8(aMediaDevice->mRawID)) {
+      mDeviceName(aDeviceName),
+      mDeviceUUID(aDeviceUUID) {
   LOG("%s", __PRETTY_FUNCTION__);
   mSettings->mWidth.Construct(0);
   mSettings->mHeight.Construct(0);
   mSettings->mFrameRate.Construct(0);
   if (mCapEngine == camera::CameraEngine) {
     // Only cameras can have a facing mode.
-    Maybe<VideoFacingModeEnum> facingMode =
-        GetFacingMode(mMediaDevice->mRawName);
+    Maybe<VideoFacingModeEnum> facingMode = GetFacingMode(mDeviceName);
     if (facingMode.isSome()) {
       NS_ConvertASCIItoUTF16 facingString(
           dom::VideoFacingModeEnumValues::GetString(*facingMode));
@@ -117,6 +100,41 @@ MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
 
 MediaEngineRemoteVideoSource::~MediaEngineRemoteVideoSource() {
   mFirstFramePromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
+}
+
+dom::MediaSourceEnum MediaEngineRemoteVideoSource::GetMediaSource() const {
+  switch (mCapEngine) {
+    case camera::BrowserEngine:
+      return MediaSourceEnum::Browser;
+    case camera::CameraEngine:
+      return MediaSourceEnum::Camera;
+    case camera::ScreenEngine:
+      return MediaSourceEnum::Screen;
+    case camera::WinEngine:
+      return MediaSourceEnum::Window;
+    default:
+      MOZ_CRASH();
+  }
+}
+
+nsString MediaEngineRemoteVideoSource::GetName() const {
+  AssertIsOnOwningThread();
+
+  return mDeviceName;
+}
+
+nsCString MediaEngineRemoteVideoSource::GetUUID() const {
+  AssertIsOnOwningThread();
+
+  return mDeviceUUID;
+}
+
+nsString MediaEngineRemoteVideoSource::GetGroupId() const {
+  AssertIsOnOwningThread();
+
+  // The remote video backend doesn't implement group id. We return the device
+  // name and higher layers will correlate this with the name of audio devices.
+  return mDeviceName;
 }
 
 nsresult MediaEngineRemoteVideoSource::Allocate(
@@ -132,7 +150,7 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
   LOG("ChooseCapability(kFitness) for mCapability (Allocate) ++");
   if (!ChooseCapability(constraints, aPrefs, newCapability, kFitness)) {
     *aOutBadConstraint =
-        MediaConstraintsHelper::FindBadConstraint(constraints, mMediaDevice);
+        MediaConstraintsHelper::FindBadConstraint(constraints, this);
     return NS_ERROR_FAILURE;
   }
   LOG("ChooseCapability(kFitness) for mCapability (Allocate) --");
@@ -305,7 +323,7 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
   LOG("ChooseCapability(kFitness) for mTargetCapability (Reconfigure) ++");
   if (!ChooseCapability(constraints, aPrefs, newCapability, kFitness)) {
     *aOutBadConstraint =
-        MediaConstraintsHelper::FindBadConstraint(constraints, mMediaDevice);
+        MediaConstraintsHelper::FindBadConstraint(constraints, this);
     return NS_ERROR_INVALID_ARG;
   }
   LOG("ChooseCapability(kFitness) for mTargetCapability (Reconfigure) --");

@@ -6,7 +6,9 @@
 
 #include "AccGroupInfo.h"
 #include "DocAccessible-inl.h"
-#include "XULTreeAccessible.h"
+#ifdef MOZ_XUL
+#  include "XULTreeAccessible.h"
+#endif
 
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/dom/HTMLLabelElement.h"
@@ -293,18 +295,12 @@ LocalAccessible* SingleAccIterator::Next() {
 
 LocalAccessible* ItemIterator::Next() {
   if (mContainer) {
-    Accessible* first = AccGroupInfo::FirstItemOf(mContainer);
-    mAnchor = first ? first->AsLocal() : nullptr;
+    mAnchor = AccGroupInfo::FirstItemOf(mContainer);
     mContainer = nullptr;
     return mAnchor;
   }
 
-  if (mAnchor) {
-    Accessible* next = AccGroupInfo::NextItemTo(mAnchor);
-    mAnchor = next ? next->AsLocal() : nullptr;
-  }
-
-  return mAnchor;
+  return mAnchor ? (mAnchor = AccGroupInfo::NextItemTo(mAnchor)) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

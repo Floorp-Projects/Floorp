@@ -1,6 +1,7 @@
 #![allow(clippy::cast_lossless, clippy::cast_possible_wrap)]
 
 use indoc::indoc;
+use serde::serde_if_integer128;
 use serde_derive::Deserialize;
 use serde_yaml::Value;
 use std::collections::BTreeMap;
@@ -46,7 +47,7 @@ fn test_alias() {
         expected.insert(String::from("second"), 1);
         expected.insert(String::from("third"), 3);
     }
-    test_de(yaml, &expected);
+    test_de(&yaml, &expected);
 }
 
 #[test]
@@ -67,7 +68,7 @@ fn test_option() {
         b: None,
         c: Some(true),
     };
-    test_de(yaml, &expected);
+    test_de(&yaml, &expected);
 }
 
 #[test]
@@ -118,7 +119,7 @@ fn test_option_alias() {
         e: Some("x".to_owned()),
         f: Some(true),
     };
-    test_de(yaml, &expected);
+    test_de(&yaml, &expected);
 }
 
 #[test]
@@ -151,7 +152,7 @@ fn test_enum_alias() {
         a: E::A,
         b: E::B(1, 2),
     };
-    test_de(yaml, &expected);
+    test_de(&yaml, &expected);
 }
 
 #[test]
@@ -175,7 +176,7 @@ fn test_enum_tag() {
         a: E::A("foo".into()),
         b: E::B("bar".into()),
     };
-    test_de(yaml, &expected);
+    test_de(&yaml, &expected);
 }
 
 #[test]
@@ -192,27 +193,29 @@ fn test_number_as_string() {
     let expected = Num {
         value: "340282366920938463463374607431768211457".to_owned(),
     };
-    test_de(yaml, &expected);
+    test_de(&yaml, &expected);
 }
 
-#[test]
-fn test_i128_big() {
-    let expected: i128 = ::std::i64::MIN as i128 - 1;
-    let yaml = indoc! {"
-        ---
-        -9223372036854775809
-    "};
-    assert_eq!(expected, serde_yaml::from_str::<i128>(yaml).unwrap());
-}
+serde_if_integer128! {
+    #[test]
+    fn test_i128_big() {
+        let expected: i128 = ::std::i64::MIN as i128 - 1;
+        let yaml = indoc! {"
+            ---
+            -9223372036854775809
+        "};
+        assert_eq!(expected, serde_yaml::from_str::<i128>(&yaml).unwrap());
+    }
 
-#[test]
-fn test_u128_big() {
-    let expected: u128 = ::std::u64::MAX as u128 + 1;
-    let yaml = indoc! {"
-        ---
-        18446744073709551616
-    "};
-    assert_eq!(expected, serde_yaml::from_str::<u128>(yaml).unwrap());
+    #[test]
+    fn test_u128_big() {
+        let expected: u128 = ::std::u64::MAX as u128 + 1;
+        let yaml = indoc! {"
+            ---
+            18446744073709551616
+        "};
+        assert_eq!(expected, serde_yaml::from_str::<u128>(&yaml).unwrap());
+    }
 }
 
 #[test]
@@ -231,7 +234,7 @@ fn test_number_alias_as_string() {
         version: "1.10".to_owned(),
         value: "1.10".to_owned(),
     };
-    test_de(yaml, &expected);
+    test_de(&yaml, &expected);
 }
 
 #[test]
@@ -259,7 +262,7 @@ fn test_de_mapping() {
         serde_yaml::Value::String("bar".to_owned()),
     );
 
-    test_de(yaml, &expected);
+    test_de(&yaml, &expected);
 }
 
 #[test]
@@ -306,7 +309,7 @@ fn test_bomb() {
         expected: "string".to_owned(),
     };
 
-    assert_eq!(expected, serde_yaml::from_str::<Data>(yaml).unwrap());
+    assert_eq!(expected, serde_yaml::from_str::<Data>(&yaml).unwrap());
 }
 
 #[test]

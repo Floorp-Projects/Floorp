@@ -3,7 +3,7 @@ use std::fmt;
 use std::io;
 use std::slice;
 
-use crate::ffi::{self, Backend, Deflate, DeflateBackend, ErrorMessage, Inflate, InflateBackend};
+use crate::ffi::{self, Backend, Deflate, DeflateBackend, Inflate, InflateBackend};
 use crate::Compression;
 
 /// Raw in-memory compression stream for blocks of data.
@@ -114,10 +114,9 @@ pub enum FlushDecompress {
 }
 
 /// The inner state for an error when decompressing
-#[derive(Debug)]
-pub(crate) enum DecompressErrorInner {
-    General { msg: ErrorMessage },
-    NeedsDictionary(u32),
+#[derive(Debug, Default)]
+pub(crate) struct DecompressErrorInner {
+    pub(crate) needs_dictionary: Option<u32>,
 }
 
 /// Error returned when a decompression object finds that the input stream of
@@ -131,36 +130,26 @@ impl DecompressError {
     /// The resulting integer is the Adler-32 checksum of the dictionary
     /// required.
     pub fn needs_dictionary(&self) -> Option<u32> {
-        match self.0 {
-            DecompressErrorInner::NeedsDictionary(adler) => Some(adler),
-            _ => None,
-        }
+        self.0.needs_dictionary
     }
 }
 
 #[inline]
-pub(crate) fn decompress_failed<T>(msg: ErrorMessage) -> Result<T, DecompressError> {
-    Err(DecompressError(DecompressErrorInner::General { msg }))
+pub(crate) fn decompress_failed() -> Result<Status, DecompressError> {
+    Err(DecompressError(Default::default()))
 }
 
 #[inline]
-pub(crate) fn decompress_need_dict<T>(adler: u32) -> Result<T, DecompressError> {
-    Err(DecompressError(DecompressErrorInner::NeedsDictionary(
-        adler,
-    )))
+pub(crate) fn decompress_need_dict(adler: u32) -> Result<Status, DecompressError> {
+    Err(DecompressError(DecompressErrorInner {
+        needs_dictionary: Some(adler),
+    }))
 }
 
 /// Error returned when a compression object is used incorrectly or otherwise
 /// generates an error.
 #[derive(Debug)]
-pub struct CompressError {
-    pub(crate) msg: ErrorMessage,
-}
-
-#[inline]
-pub(crate) fn compress_failed<T>(msg: ErrorMessage) -> Result<T, CompressError> {
-    Err(CompressError { msg })
-}
+pub struct CompressError(pub(crate) ());
 
 /// Possible status results of compressing some data or successfully
 /// decompressing a block of data.
@@ -252,7 +241,7 @@ impl Compress {
     ///
     /// This constructor is only available when the `zlib` feature is used.
     /// Other backends currently do not support gzip headers for Compress.
-    #[cfg(feature = "any_zlib")]
+    #[cfg(feature = "zlib")]
     pub fn new_gzip(level: Compression, window_bits: u8) -> Compress {
         assert!(
             window_bits > 8 && window_bits < 16,
@@ -281,14 +270,13 @@ impl Compress {
     #[cfg(feature = "any_zlib")]
     pub fn set_dictionary(&mut self, dictionary: &[u8]) -> Result<u32, CompressError> {
         let stream = &mut *self.inner.inner.stream_wrapper;
-        stream.msg = std::ptr::null_mut();
         let rc = unsafe {
             assert!(dictionary.len() < ffi::uInt::max_value() as usize);
             ffi::deflateSetDictionary(stream, dictionary.as_ptr(), dictionary.len() as ffi::uInt)
         };
 
         match rc {
-            ffi::MZ_STREAM_ERROR => compress_failed(self.inner.inner.msg()),
+            ffi::MZ_STREAM_ERROR => Err(CompressError(())),
             ffi::MZ_OK => Ok(stream.adler as u32),
             c => panic!("unknown return code: {}", c),
         }
@@ -315,13 +303,12 @@ impl Compress {
     pub fn set_level(&mut self, level: Compression) -> Result<(), CompressError> {
         use libc::c_int;
         let stream = &mut *self.inner.inner.stream_wrapper;
-        stream.msg = std::ptr::null_mut();
 
         let rc = unsafe { ffi::deflateParams(stream, level.0 as c_int, ffi::MZ_DEFAULT_STRATEGY) };
 
         match rc {
             ffi::MZ_OK => Ok(()),
-            ffi::MZ_BUF_ERROR => compress_failed(self.inner.inner.msg()),
+            ffi::MZ_BUF_ERROR => Err(CompressError(())),
             c => panic!("unknown return code: {}", c),
         }
     }
@@ -423,7 +410,7 @@ impl Decompress {
     ///
     /// This constructor is only available when the `zlib` feature is used.
     /// Other backends currently do not support gzip headers for Decompress.
-    #[cfg(feature = "any_zlib")]
+    #[cfg(feature = "zlib")]
     pub fn new_gzip(window_bits: u8) -> Decompress {
         assert!(
             window_bits > 8 && window_bits < 16,
@@ -516,15 +503,16 @@ impl Decompress {
     #[cfg(feature = "any_zlib")]
     pub fn set_dictionary(&mut self, dictionary: &[u8]) -> Result<u32, DecompressError> {
         let stream = &mut *self.inner.inner.stream_wrapper;
-        stream.msg = std::ptr::null_mut();
         let rc = unsafe {
             assert!(dictionary.len() < ffi::uInt::max_value() as usize);
             ffi::inflateSetDictionary(stream, dictionary.as_ptr(), dictionary.len() as ffi::uInt)
         };
 
         match rc {
-            ffi::MZ_STREAM_ERROR => decompress_failed(self.inner.inner.msg()),
-            ffi::MZ_DATA_ERROR => decompress_need_dict(stream.adler as u32),
+            ffi::MZ_STREAM_ERROR => Err(DecompressError(Default::default())),
+            ffi::MZ_DATA_ERROR => Err(DecompressError(DecompressErrorInner {
+                needs_dictionary: Some(stream.adler as u32),
+            })),
             ffi::MZ_OK => Ok(stream.adler as u32),
             c => panic!("unknown return code: {}", c),
         }
@@ -545,16 +533,6 @@ impl Decompress {
 
 impl Error for DecompressError {}
 
-impl DecompressError {
-    /// Retrieve the implementation's message about why the operation failed, if one exists.
-    pub fn message(&self) -> Option<&str> {
-        match &self.0 {
-            DecompressErrorInner::General { msg } => msg.get(),
-            _ => None,
-        }
-    }
-}
-
 impl From<DecompressError> for io::Error {
     fn from(data: DecompressError) -> io::Error {
         io::Error::new(io::ErrorKind::Other, data)
@@ -563,25 +541,11 @@ impl From<DecompressError> for io::Error {
 
 impl fmt::Display for DecompressError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let msg = match &self.0 {
-            DecompressErrorInner::General { msg } => msg.get(),
-            DecompressErrorInner::NeedsDictionary { .. } => Some("requires a dictionary"),
-        };
-        match msg {
-            Some(msg) => write!(f, "deflate decompression error: {}", msg),
-            None => write!(f, "deflate decompression error"),
-        }
+        write!(f, "deflate decompression error")
     }
 }
 
 impl Error for CompressError {}
-
-impl CompressError {
-    /// Retrieve the implementation's message about why the operation failed, if one exists.
-    pub fn message(&self) -> Option<&str> {
-        self.msg.get()
-    }
-}
 
 impl From<CompressError> for io::Error {
     fn from(data: CompressError) -> io::Error {
@@ -591,10 +555,7 @@ impl From<CompressError> for io::Error {
 
 impl fmt::Display for CompressError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.msg.get() {
-            Some(msg) => write!(f, "deflate compression error: {}", msg),
-            None => write!(f, "deflate compression error"),
-        }
+        write!(f, "deflate decompression error")
     }
 }
 
@@ -746,7 +707,7 @@ mod tests {
         assert_eq!(&decoded[..decoder.total_out() as usize], string);
     }
 
-    #[cfg(feature = "any_zlib")]
+    #[cfg(feature = "zlib")]
     #[test]
     fn test_gzip_flate() {
         let string = "hello, hello!".as_bytes();
@@ -770,19 +731,5 @@ mod tests {
             .unwrap();
 
         assert_eq!(&decoded[..decoder.total_out() as usize], string);
-    }
-
-    #[cfg(feature = "any_zlib")]
-    #[test]
-    fn test_error_message() {
-        let mut decoder = Decompress::new(false);
-        let mut decoded = [0; 128];
-        let garbage = b"xbvxzi";
-
-        let err = decoder
-            .decompress(&*garbage, &mut decoded, FlushDecompress::Finish)
-            .unwrap_err();
-
-        assert_eq!(err.message(), Some("invalid stored block lengths"));
     }
 }

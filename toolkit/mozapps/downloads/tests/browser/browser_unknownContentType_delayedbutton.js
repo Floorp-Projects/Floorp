@@ -52,7 +52,28 @@ function waitDelay(delay) {
 
 add_task(async function test_unknownContentType_delayedbutton() {
   info("Starting browser_unknownContentType_delayedbutton.js...");
-  forcePromptForFiles("text/plain", "txt");
+
+  // If browser.download.improvements_to_download_panel pref is enabled,
+  // the unknownContentType will not appear by default.
+  // So wait an amount of time to ensure it hasn't opened.
+  let windowOpenDelay = waitDelay(1000);
+  let uctWindow = await Promise.race([
+    windowOpenDelay,
+    UCTObserver.opened.promise,
+  ]);
+  const prefEnabled = Services.prefs.getBoolPref(
+    "browser.download.improvements_to_download_panel",
+    false
+  );
+
+  if (prefEnabled) {
+    SimpleTest.is(
+      !uctWindow,
+      true,
+      "UnknownContentType window shouldn't open."
+    );
+    return;
+  }
 
   Services.ww.registerNotification(UCTObserver);
 

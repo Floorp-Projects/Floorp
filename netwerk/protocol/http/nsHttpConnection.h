@@ -6,7 +6,6 @@
 #ifndef nsHttpConnection_h__
 #define nsHttpConnection_h__
 
-#include <functional>
 #include "HttpConnectionBase.h"
 #include "nsHttpConnectionInfo.h"
 #include "nsHttpResponseHead.h"
@@ -384,8 +383,6 @@ class nsHttpConnection final : public HttpConnectionBase,
   nsCOMPtr<nsISocketTransport> mSocketTransport;
 
   bool mForWebSocket{false};
-
-  std::function<void()> mContinueHandshakeDone{nullptr};
 
  private:
   bool mThroughCaptivePortal;

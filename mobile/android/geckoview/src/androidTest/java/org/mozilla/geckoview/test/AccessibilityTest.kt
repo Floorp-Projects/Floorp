@@ -150,7 +150,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @After fun teardown() {
         sessionRule.runtime.settings.forceEnableAccessibility = false
-        mainSession.accessibility.view = null
+        sessionRule.session.accessibility.view = null
         nodeInfos.forEach { node -> node.recycle() }
     }
 
@@ -189,7 +189,7 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     @Test fun testPageLoad() {
-        mainSession.loadTestPath(INPUTS_PATH)
+        sessionRule.session.loadTestPath(INPUTS_PATH)
 
         sessionRule.waitUntilCalled(object : EventDelegate {
             @AssertCalled(count = 1)
@@ -199,7 +199,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Test fun testAccessibilityFocus() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
-        mainSession.loadTestPath(INPUTS_PATH)
+        sessionRule.session.loadTestPath(INPUTS_PATH)
         waitForInitialFocus(true)
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -245,7 +245,7 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     fun loadTestPage(page: String) {
-        mainSession.loadTestPath("/assets/www/accessibility/$page.html")
+        sessionRule.session.loadTestPath("/assets/www/accessibility/$page.html")
     }
 
     @Test fun testTextEntryNode() {
@@ -487,7 +487,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Test fun testMoveByCharacter() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
-        mainSession.loadTestPath(LOREM_IPSUM_HTML_PATH)
+        sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
         waitForInitialFocus(true)
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -517,7 +517,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Test fun testMoveByWord() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
-        mainSession.loadTestPath(LOREM_IPSUM_HTML_PATH)
+        sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
         waitForInitialFocus(true)
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -547,7 +547,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Test fun testMoveByLine() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
-        mainSession.loadTestPath(LOREM_IPSUM_HTML_PATH)
+        sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
         waitForInitialFocus(true)
 
         sessionRule.waitUntilCalled(object : EventDelegate {
@@ -577,7 +577,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Test fun testMoveByCharacterAtEdges() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
-        mainSession.loadTestPath(LOREM_IPSUM_HTML_PATH)
+        sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
         waitForInitialFocus()
 
         // Move to the first link containing "anim id".
@@ -627,7 +627,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Test fun testMoveByWordAtEdges() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
-        mainSession.loadTestPath(LOREM_IPSUM_HTML_PATH)
+        sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
         waitForInitialFocus()
 
         // Move to the first link containing "anim id".
@@ -677,7 +677,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Test fun testMoveAtEndOfTextTrailingWhitespace() {
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
-        mainSession.loadTestPath(LOREM_IPSUM_HTML_PATH)
+        sessionRule.session.loadTestPath(LOREM_IPSUM_HTML_PATH)
         waitForInitialFocus(true)
 
         sessionRule.waitUntilCalled(object : EventDelegate {

@@ -179,7 +179,9 @@
 #include "nsViewManager.h"
 #include "nsWindowSizes.h"
 
-#include "nsXULElement.h"
+#ifdef MOZ_XUL
+#  include "nsXULElement.h"
+#endif /* MOZ_XUL */
 
 #ifdef DEBUG
 #  include "nsRange.h"
@@ -3615,13 +3617,6 @@ void Element::GetAnimationsUnsorted(Element* aElement,
                "Only effects associated with an animation should be "
                "added to an element's effect set");
     Animation* animation = effect->GetAnimation();
-
-    // FIXME: Bug 1676795: Don't expose scroll-linked animations because we are
-    // not ready.
-    if (animation->GetTimeline() &&
-        animation->GetTimeline()->IsScrollTimeline()) {
-      continue;
-    }
 
     MOZ_ASSERT(animation->IsRelevant(),
                "Only relevant animations should be added to an element's "

@@ -34,9 +34,9 @@ cfg_io_driver! {
     /// stream. The write readiness event stream is only for `Ready::writable()`
     /// events.
     ///
-    /// [`new`]: method@Self::new
-    /// [`poll_read_ready`]: method@Self::poll_read_ready`
-    /// [`poll_write_ready`]: method@Self::poll_write_ready`
+    /// [`new`]: #method.new
+    /// [`poll_read_ready`]: #method.poll_read_ready`]
+    /// [`poll_write_ready`]: #method.poll_write_ready`]
     #[derive(Debug)]
     pub struct Registration {
         handle: Handle,
@@ -66,46 +66,9 @@ impl Registration {
     where
         T: Evented,
     {
-        Registration::new_with_ready(io, mio::Ready::all())
-    }
-
-    /// Registers the I/O resource with the default reactor, for a specific `mio::Ready` state.
-    /// `new_with_ready` should be used over `new` when you need control over the readiness state,
-    /// such as when a file descriptor only allows reads. This does not add `hup` or `error` so if
-    /// you are interested in those states, you will need to add them to the readiness state passed
-    /// to this function.
-    ///
-    /// An example to listen to read only
-    ///
-    /// ```rust
-    /// ##[cfg(unix)]
-    ///     mio::Ready::from_usize(
-    ///         mio::Ready::readable().as_usize()
-    ///         | mio::unix::UnixReady::error().as_usize()
-    ///         | mio::unix::UnixReady::hup().as_usize()
-    ///     );
-    /// ```
-    ///
-    /// # Return
-    ///
-    /// - `Ok` if the registration happened successfully
-    /// - `Err` if an error was encountered during registration
-    ///
-    ///
-    /// # Panics
-    ///
-    /// This function panics if thread-local runtime is not set.
-    ///
-    /// The runtime is usually set implicitly when this function is called
-    /// from a future driven by a tokio runtime, otherwise runtime can be set
-    /// explicitly with [`Handle::enter`](crate::runtime::Handle::enter) function.
-    pub fn new_with_ready<T>(io: &T, ready: mio::Ready) -> io::Result<Registration>
-    where
-        T: Evented,
-    {
         let handle = Handle::current();
         let address = if let Some(inner) = handle.inner() {
-            inner.add_source(io, ready)?
+            inner.add_source(io)?
         } else {
             return Err(io::Error::new(
                 io::ErrorKind::Other,
@@ -153,6 +116,8 @@ impl Registration {
     /// the function will always return `Ready(HUP)`. This should be treated as
     /// the end of the readiness stream.
     ///
+    /// Ensure that [`register`] has been called first.
+    ///
     /// # Return value
     ///
     /// There are several possible return values:
@@ -164,26 +129,22 @@ impl Registration {
     ///   since the last call to `poll_read_ready`.
     ///
     /// * `Poll::Ready(Err(err))` means that the registration has encountered an
-    ///   error. This could represent a permanent internal error for example.
+    ///   error. This error either represents a permanent internal error **or**
+    ///   the fact that [`register`] was not called first.
     ///
-    /// [edge-triggered]: struct@mio::Poll#edge-triggered-and-level-triggered
+    /// [`register`]: #method.register
+    /// [edge-triggered]: https://docs.rs/mio/0.6/mio/struct.Poll.html#edge-triggered-and-level-triggered
     ///
     /// # Panics
     ///
     /// This function will panic if called from outside of a task context.
     pub fn poll_read_ready(&self, cx: &mut Context<'_>) -> Poll<io::Result<mio::Ready>> {
         // Keep track of task budget
-        let coop = ready!(crate::coop::poll_proceed(cx));
+        ready!(crate::coop::poll_proceed(cx));
 
-        let v = self.poll_ready(Direction::Read, Some(cx)).map_err(|e| {
-            coop.made_progress();
-            e
-        })?;
+        let v = self.poll_ready(Direction::Read, Some(cx))?;
         match v {
-            Some(v) => {
-                coop.made_progress();
-                Poll::Ready(Ok(v))
-            }
+            Some(v) => Poll::Ready(Ok(v)),
             None => Poll::Pending,
         }
     }
@@ -194,7 +155,7 @@ impl Registration {
     /// will not notify the current task when a new event is received. As such,
     /// it is safe to call this function from outside of a task context.
     ///
-    /// [`poll_read_ready`]: method@Self::poll_read_ready
+    /// [`poll_read_ready`]: #method.poll_read_ready
     pub fn take_read_ready(&self) -> io::Result<Option<mio::Ready>> {
         self.poll_ready(Direction::Read, None)
     }
@@ -209,6 +170,8 @@ impl Registration {
     /// the function will always return `Ready(HUP)`. This should be treated as
     /// the end of the readiness stream.
     ///
+    /// Ensure that [`register`] has been called first.
+    ///
     /// # Return value
     ///
     /// There are several possible return values:
@@ -220,26 +183,22 @@ impl Registration {
     ///   since the last call to `poll_write_ready`.
     ///
     /// * `Poll::Ready(Err(err))` means that the registration has encountered an
-    ///   error. This could represent a permanent internal error for example.
+    ///   error. This error either represents a permanent internal error **or**
+    ///   the fact that [`register`] was not called first.
     ///
-    /// [edge-triggered]: struct@mio::Poll#edge-triggered-and-level-triggered
+    /// [`register`]: #method.register
+    /// [edge-triggered]: https://docs.rs/mio/0.6/mio/struct.Poll.html#edge-triggered-and-level-triggered
     ///
     /// # Panics
     ///
     /// This function will panic if called from outside of a task context.
     pub fn poll_write_ready(&self, cx: &mut Context<'_>) -> Poll<io::Result<mio::Ready>> {
         // Keep track of task budget
-        let coop = ready!(crate::coop::poll_proceed(cx));
+        ready!(crate::coop::poll_proceed(cx));
 
-        let v = self.poll_ready(Direction::Write, Some(cx)).map_err(|e| {
-            coop.made_progress();
-            e
-        })?;
+        let v = self.poll_ready(Direction::Write, Some(cx))?;
         match v {
-            Some(v) => {
-                coop.made_progress();
-                Poll::Ready(Ok(v))
-            }
+            Some(v) => Poll::Ready(Ok(v)),
             None => Poll::Pending,
         }
     }
@@ -250,7 +209,7 @@ impl Registration {
     /// will not notify the current task when a new event is received. As such,
     /// it is safe to call this function from outside of a task context.
     ///
-    /// [`poll_write_ready`]: method@Self::poll_write_ready
+    /// [`poll_write_ready`]: #method.poll_write_ready
     pub fn take_write_ready(&self) -> io::Result<Option<mio::Ready>> {
         self.poll_ready(Direction::Write, None)
     }

@@ -24,7 +24,7 @@
 #define AVUTIL_LLS_H
 
 #include "macros.h"
-#include "mem_internal.h"
+#include "mem.h"
 #include "version.h"
 
 #define MAX_VARS 32

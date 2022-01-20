@@ -7,31 +7,22 @@
 #ifndef _RTCSTATSIDGENERATOR_H_
 #define _RTCSTATSIDGENERATOR_H_
 
-#include <map>
-
 #include "mozilla/Atomics.h"
-#include "mozilla/UniquePtr.h"
 #include "nsISupportsImpl.h"
 #include "nsString.h"
-#include "nsTArray.h"
+
+#include <map>
 
 namespace mozilla {
-namespace dom {
-struct RTCStatsCollection;
-}  // namespace dom
 
 class RTCStatsIdGenerator {
  public:
   RTCStatsIdGenerator();
+  nsString Id(const nsString& aKey);
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RTCStatsIdGenerator);
-
-  void RewriteIds(
-      const nsTArray<UniquePtr<dom::RTCStatsCollection>>& aFromStats,
-      dom::RTCStatsCollection* aIntoReport);
 
  private:
   virtual ~RTCStatsIdGenerator(){};
-  nsString Id(const nsString& aKey);
   nsString Generate();
 
   const uint64_t mSalt;

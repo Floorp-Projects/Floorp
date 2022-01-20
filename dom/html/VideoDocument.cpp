@@ -25,7 +25,8 @@ class VideoDocument final : public MediaDocument {
                                      nsILoadGroup* aLoadGroup,
                                      nsISupports* aContainer,
                                      nsIStreamListener** aDocListener,
-                                     bool aReset = true) override;
+                                     bool aReset = true,
+                                     nsIContentSink* aSink = nullptr) override;
   virtual void SetScriptGlobalObject(
       nsIScriptGlobalObject* aScriptGlobalObject) override;
 
@@ -46,11 +47,14 @@ class VideoDocument final : public MediaDocument {
   RefPtr<MediaDocumentStreamListener> mStreamListener;
 };
 
-nsresult VideoDocument::StartDocumentLoad(
-    const char* aCommand, nsIChannel* aChannel, nsILoadGroup* aLoadGroup,
-    nsISupports* aContainer, nsIStreamListener** aDocListener, bool aReset) {
+nsresult VideoDocument::StartDocumentLoad(const char* aCommand,
+                                          nsIChannel* aChannel,
+                                          nsILoadGroup* aLoadGroup,
+                                          nsISupports* aContainer,
+                                          nsIStreamListener** aDocListener,
+                                          bool aReset, nsIContentSink* aSink) {
   nsresult rv = MediaDocument::StartDocumentLoad(
-      aCommand, aChannel, aLoadGroup, aContainer, aDocListener, aReset);
+      aCommand, aChannel, aLoadGroup, aContainer, aDocListener, aReset, aSink);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mStreamListener = new MediaDocumentStreamListener(this);

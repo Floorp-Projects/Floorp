@@ -300,8 +300,6 @@ struct TagType {
         bufferSize(0),
         refCount(0) {}
 
-  ResultType resultType() const { return ResultType::Vector(argTypes); }
-
   [[nodiscard]] bool computeLayout();
 
   [[nodiscard]] bool clone(const TagType& src) {
@@ -325,6 +323,8 @@ struct TagDesc {
 
   TagDesc(TagKind kind, TagType&& type, bool isExport = false)
       : kind(kind), type(std::move(type)), isExport(isExport) {}
+
+  ResultType resultType() const { return ResultType::Vector(type.argTypes); }
 };
 
 using TagDescVector = Vector<TagDesc, 0, SystemAllocPolicy>;
@@ -542,7 +542,7 @@ static_assert(MaxMemory32LimitField <= UINT64_MAX / PageSize);
 
 struct TableDesc {
   RefType elemType;
-  bool isImportedOrExported;
+  bool importedOrExported;
   bool isAsmJS;
   uint32_t globalDataOffset;
   uint32_t initialLength;
@@ -551,9 +551,9 @@ struct TableDesc {
   TableDesc() = default;
   TableDesc(RefType elemType, uint32_t initialLength,
             Maybe<uint32_t> maximumLength, bool isAsmJS,
-            bool isImportedOrExported = false)
+            bool importedOrExported = false)
       : elemType(elemType),
-        isImportedOrExported(isImportedOrExported),
+        importedOrExported(importedOrExported),
         isAsmJS(isAsmJS),
         globalDataOffset(UINT32_MAX),
         initialLength(initialLength),

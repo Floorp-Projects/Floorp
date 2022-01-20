@@ -741,9 +741,6 @@ class IdleObject final {
   ~IdleObject() = default;
 };
 
-// Disable test due to frequent failures
-#if 0
-// because test fails on multiple platforms
 TEST(ThreadUtils, IdleRunnableMethod)
 {
   {
@@ -790,7 +787,6 @@ TEST(ThreadUtils, IdleRunnableMethod)
     ASSERT_TRUE(idleInheritedSetDeadline->mSetDeadlineCalled);
   }
 }
-#endif
 
 TEST(ThreadUtils, IdleTaskRunner)
 {

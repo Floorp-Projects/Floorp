@@ -1267,9 +1267,8 @@ void nsSliderFrame::DragThumb(bool aGrabMouseEvents) {
   mDragFinished = !aGrabMouseEvents;
 
   if (aGrabMouseEvents) {
-    PresShell::SetCapturingContent(
-        GetContent(),
-        CaptureFlags::IgnoreAllowedState | CaptureFlags::PreventDragStart);
+    PresShell::SetCapturingContent(GetContent(),
+                                   CaptureFlags::IgnoreAllowedState);
   } else {
     PresShell::ReleaseCapturingContent();
   }

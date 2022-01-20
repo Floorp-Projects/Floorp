@@ -6,7 +6,6 @@
 
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLOptGroupElementBinding.h"
 #include "mozilla/dom/HTMLSelectElement.h"  // SafeOptionListMutation
@@ -59,8 +58,7 @@ Element* HTMLOptGroupElement::GetSelect() {
 void HTMLOptGroupElement::InsertChildBefore(nsIContent* aKid,
                                             nsIContent* aBeforeThis,
                                             bool aNotify, ErrorResult& aRv) {
-  const uint32_t index =
-      aBeforeThis ? *ComputeIndexOf(aBeforeThis) : GetChildCount();
+  int32_t index = aBeforeThis ? ComputeIndexOf(aBeforeThis) : GetChildCount();
   SafeOptionListMutation safeMutation(GetSelect(), this, aKid, index, aNotify);
   nsGenericHTMLElement::InsertChildBefore(aKid, aBeforeThis, aNotify, aRv);
   if (aRv.Failed()) {
@@ -70,7 +68,7 @@ void HTMLOptGroupElement::InsertChildBefore(nsIContent* aKid,
 
 void HTMLOptGroupElement::RemoveChildNode(nsIContent* aKid, bool aNotify) {
   SafeOptionListMutation safeMutation(GetSelect(), this, nullptr,
-                                      *ComputeIndexOf(aKid), aNotify);
+                                      ComputeIndexOf(aKid), aNotify);
   nsGenericHTMLElement::RemoveChildNode(aKid, aNotify);
 }
 

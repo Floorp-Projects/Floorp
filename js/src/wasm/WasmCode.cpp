@@ -18,7 +18,6 @@
 
 #include "wasm/WasmCode.h"
 
-#include "mozilla/Atomics.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/Sprintf.h"
@@ -691,30 +690,6 @@ void LazyStubSegment::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,
   *data += mallocSizeOf(this);
 }
 
-// When allocating a single stub to a page, we should not always place the stub
-// at the beginning of the page as the stubs will tend to thrash the icache by
-// creating conflicts (everything ends up in the same cache set).  Instead,
-// locate stubs at different line offsets up to 3/4 the system page size (the
-// code allocation quantum).
-//
-// This may be called on background threads, hence the atomic.
-
-static void PadCodeForSingleStub(MacroAssembler& masm) {
-  // Assume 64B icache line size
-  static uint8_t zeroes[64];
-
-  // The counter serves only to spread the code out, it has no other meaning and
-  // can wrap around.
-  static mozilla::Atomic<uint32_t, mozilla::MemoryOrdering::ReleaseAcquire>
-      counter(0);
-
-  uint32_t maxPadLines = ((gc::SystemPageSize() * 3) / 4) / sizeof(zeroes);
-  uint32_t padLines = counter++ % maxPadLines;
-  for (uint32_t i = 0; i < padLines; i++) {
-    masm.appendRawCode(zeroes, sizeof(zeroes));
-  }
-}
-
 static constexpr unsigned LAZY_STUB_LIFO_DEFAULT_CHUNK_SIZE = 8 * 1024;
 
 bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
@@ -727,10 +702,6 @@ bool LazyStubTier::createManyEntryStubs(const Uint32Vector& funcExportIndices,
   TempAllocator alloc(&lifo);
   JitContext jitContext(&alloc);
   WasmMacroAssembler masm(alloc);
-
-  if (funcExportIndices.length() == 1) {
-    PadCodeForSingleStub(masm);
-  }
 
   const MetadataTier& metadata = codeTier.metadata();
   const FuncExportVector& funcExports = metadata.funcExports;
@@ -912,10 +883,6 @@ bool LazyStubTier::createManyIndirectStubs(
   JitContext jitContext(&alloc);
   WasmMacroAssembler masm(alloc);
   AutoCreatedBy acb(masm, "LazyStubTier::createManyIndirectStubs");
-
-  if (targets.length() == 1) {
-    PadCodeForSingleStub(masm);
-  }
 
   CodeRangeVector codeRanges;
   for (const auto& target : targets) {
@@ -1350,7 +1317,7 @@ const wasm::WasmTryNote* CodeTier::lookupWasmTryNote(const void* pc) const {
   // We find the first hit (there may be multiple) to obtain the innermost
   // handler, which is why we cannot binary search here.
   for (const auto& tryNote : tryNotes) {
-    if (target > tryNote.begin && target <= tryNote.end) {
+    if (target >= tryNote.begin && target < tryNote.end) {
       return &tryNote;
     }
   }
@@ -1594,9 +1561,7 @@ struct TrapSitePCOffset {
   uint32_t operator[](size_t index) const { return trapSites[index].pcOffset; }
 };
 
-bool Code::lookupTrap(void* pc, Trap* trap1Out, Trap* trap2Out,
-                      BytecodeOffset* bytecode) const {
-  *trap1Out = *trap2Out = Trap::Limit;
+bool Code::lookupTrap(void* pc, Trap* trapOut, BytecodeOffset* bytecode) const {
   for (Tier t : tiers()) {
     const TrapSiteVectorArray& trapSitesArray = metadata(t).trapSites;
     for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
@@ -1610,19 +1575,14 @@ bool Code::lookupTrap(void* pc, Trap* trap1Out, Trap* trap2Out,
       if (BinarySearch(TrapSitePCOffset(trapSites), lowerBound, upperBound,
                        target, &match)) {
         MOZ_ASSERT(segment(t).containsCodePC(pc));
-        if (*trap1Out == Trap::Limit) {
-          *trap1Out = trap;
-        } else if (*trap2Out == Trap::Limit) {
-          *trap2Out = trap;
-        } else {
-          MOZ_CRASH("Too many traps at this address");
-        }
+        *trapOut = trap;
         *bytecode = trapSites[match].bytecode;
+        return true;
       }
     }
   }
 
-  return *trap1Out != Trap::Limit;
+  return false;
 }
 
 // When enabled, generate profiling labels for every name in funcNames_ that is

@@ -60,7 +60,9 @@
 #include "mozilla/MouseEvents.h"
 #include "nsAttrValueOrString.h"
 #include "nsQueryObject.h"
-#include "nsXULElement.h"
+#ifdef MOZ_XUL
+#  include "nsXULElement.h"
+#endif /* MOZ_XUL */
 #include "nsFrameSelection.h"
 #ifdef DEBUG
 #  include "nsRange.h"
@@ -412,7 +414,7 @@ nsIContent* nsAttrChildContentList::Item(uint32_t aIndex) {
 
 int32_t nsAttrChildContentList::IndexOf(nsIContent* aContent) {
   if (mNode) {
-    return mNode->ComputeIndexOf_Deprecated(aContent);
+    return mNode->ComputeIndexOf(aContent);
   }
 
   return -1;

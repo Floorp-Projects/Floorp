@@ -35,33 +35,33 @@ class SessionLifecycleTest : BaseSessionTest() {
         session2.close()
         session3.close()
 
-        mainSession.reload()
-        mainSession.waitForPageStop()
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
     }
 
     @Test fun open_repeated() {
         for (i in 1..5) {
-            mainSession.close()
-            mainSession.open()
+            sessionRule.session.close()
+            sessionRule.session.open()
         }
-        mainSession.reload()
-        mainSession.waitForPageStop()
+        sessionRule.session.reload()
+        sessionRule.session.waitForPageStop()
     }
 
     @Test fun open_allowCallsWhileClosed() {
-        mainSession.close()
+        sessionRule.session.close()
 
-        mainSession.loadTestPath(HELLO_HTML_PATH)
-        mainSession.reload()
+        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        sessionRule.session.reload()
 
-        mainSession.open()
-        mainSession.waitForPageStops(2)
+        sessionRule.session.open()
+        sessionRule.session.waitForPageStops(2)
     }
 
     @Test(expected = IllegalStateException::class)
     fun open_throwOnAlreadyOpen() {
         // Throw exception if retrying to open again; otherwise we would leak the old open window.
-        mainSession.open()
+        sessionRule.session.open()
     }
 
     @ClosedSessionAtStart
