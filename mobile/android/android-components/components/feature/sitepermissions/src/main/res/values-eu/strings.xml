@@ -35,4 +35,12 @@
     <string name="mozac_feature_sitepermissions_persistent_storage_title">Baimendu %1$s guneari datuak biltegiratze iraunkorrean gordetzea?</string>
     <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_media_key_system_access_title">Baimendu %1$s helbideari DRM bidez kontrolatutako edukia erreproduzitzen?</string>
+    <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
+     %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
+    <string name="mozac_feature_sitepermissions_storage_access_title">Baimendu %1$s guneari bere cookieak %2$s gunean erabiltzea?</string>
+    <!-- Message of a dialog offering more context about the cross origin storage permission.
+    %s is the name of the site URL (www.site1.example) trying to track the user's activity. -->
+    <string name="mozac_feature_sitepermissions_storage_access_message">Sarbidea blokeatu nahiko duzu ez badago garbi zergatik behar dituen datu hauek %s guneak.</string>
+    <!-- Clickable text that will open a new tab navigating the user to online documentation about specific features. -->
+    <string name="mozac_feature_sitepermissions_learn_more_title">Argibide gehiago</string>
 </resources>

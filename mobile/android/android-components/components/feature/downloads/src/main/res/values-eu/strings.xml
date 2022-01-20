@@ -44,4 +44,13 @@
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">Ezin da %1$s ireki</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Fitxategiak deskargatzeko, fitxategi eta multimediaren sarbide-baimenak behar dira. Zoaz Android-en ezarpenetara, sakatu baimenak eta sakatu baimendu.</string>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Utzi deskarga pribatuak?</string>
+    <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Fitxa pribatu guztiak orain itxiz gero, %1$s fitxategiaren deskarga bertan behera utziko da. Ziur zaude nabigatze pribatua utzi nahi duzula?</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">Utzi deskargak</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Mantendu nabigatze pribatuan</string>
 </resources>
