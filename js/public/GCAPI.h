@@ -989,6 +989,7 @@ class JS_PUBLIC_API AutoRequireNoGC {
  */
 class JS_PUBLIC_API AutoAssertNoGC : public AutoRequireNoGC {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+ protected:
   JSContext* cx_;
 
  public:
@@ -1063,13 +1064,19 @@ class JS_PUBLIC_API AutoAssertGCCallback : public AutoSuppressGCAnalysis {
 class JS_PUBLIC_API AutoCheckCannotGC : public AutoAssertNoGC {
  public:
   explicit AutoCheckCannotGC(JSContext* cx = nullptr) : AutoAssertNoGC(cx) {}
-} JS_HAZ_GC_INVALIDATED;
+#  ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  AutoCheckCannotGC(const AutoCheckCannotGC& other)
+      : AutoCheckCannotGC(other.cx_) {}
+#  else
+  AutoCheckCannotGC(const AutoCheckCannotGC& other) : AutoCheckCannotGC() {}
+#  endif
 #else
-class JS_PUBLIC_API AutoCheckCannotGC : public AutoRequireNoGC {
- public:
-  explicit AutoCheckCannotGC(JSContext* cx = nullptr) {}
-} JS_HAZ_GC_INVALIDATED;
+class JS_PUBLIC_API AutoCheckCannotGC : public AutoRequireNoGC{
+  public :
+      explicit AutoCheckCannotGC(JSContext* cx = nullptr){} AutoCheckCannotGC(
+          const AutoCheckCannotGC& other) : AutoCheckCannotGC(){}
 #endif
+} JS_HAZ_GC_INVALIDATED;
 
 extern JS_PUBLIC_API void SetLowMemoryState(JSContext* cx, bool newState);
 
