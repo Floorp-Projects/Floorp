@@ -222,13 +222,13 @@ fn prepare_prim_for_render(
         scratch,
     ) {
         if prim_instance.is_chased() {
-            println!("\tconsidered invisible");
+            info!("\tconsidered invisible");
         }
         return false;
     }
 
     if prim_instance.is_chased() {
-        println!("\tconsidered visible and ready with local pos {:?}", prim_rect.min);
+        info!("\tconsidered visible and ready with local pos {:?}", prim_rect.min);
     }
 
     #[cfg(debug_assertions)]
@@ -283,7 +283,7 @@ fn prepare_interned_prim_for_render(
 
             // Work out the device pixel size to be used to cache this line decoration.
             if is_chased {
-                println!("\tline decoration key={:?}", line_dec_data.cache_key);
+                info!("\tline decoration key={:?}", line_dec_data.cache_key);
             }
 
             // If we have a cache key, it's a wavy / dashed / dotted line. Otherwise, it's
@@ -836,7 +836,7 @@ fn prepare_interned_prim_for_render(
                 );
             } else {
                 if prim_instance.is_chased() {
-                    println!("\tBackdrop primitive culled because backdrop task was not assigned render tasks");
+                    info!("\tBackdrop primitive culled because backdrop task was not assigned render tasks");
                 }
                 prim_instance.clear_visibility();
             }
@@ -1160,7 +1160,7 @@ pub fn update_clip_task(
     let device_pixel_scale = frame_state.surfaces[pic_context.surface_index.0].device_pixel_scale;
 
     if instance.is_chased() {
-        println!("\tupdating clip task with pic rect {:?}", instance.vis.clip_chain.pic_clip_rect);
+        info!("\tupdating clip task with pic rect {:?}", instance.vis.clip_chain.pic_clip_rect);
     }
 
     // Get the device space rect for the primitive if it was unclipped.
@@ -1201,7 +1201,7 @@ pub fn update_clip_task(
         device_pixel_scale,
     ) {
         if instance.is_chased() {
-            println!("\tsegment tasks have been created for clipping: {:?}", clip_task_index);
+            info!("\tsegment tasks have been created for clipping: {:?}", clip_task_index);
         }
         clip_task_index
     } else if instance.vis.clip_chain.needs_mask {
@@ -1236,7 +1236,7 @@ pub fn update_clip_task(
             frame_state.surfaces,
         );
         if instance.is_chased() {
-            println!("\tcreated task {:?} with device rect {:?}",
+            info!("\tcreated task {:?} with device rect {:?}",
                 clip_task_id, device_rect);
         }
         // Set the global clip mask instance for this primitive.
@@ -1250,7 +1250,7 @@ pub fn update_clip_task(
         clip_task_index
     } else {
         if instance.is_chased() {
-            println!("\tno mask is needed");
+            info!("\tno mask is needed");
         }
         ClipTaskIndex::INVALID
     };

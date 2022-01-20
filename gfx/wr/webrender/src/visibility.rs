@@ -332,7 +332,7 @@ pub fn update_primitive_visibility(
             } else {
                 if prim_local_rect.width() <= 0.0 || prim_local_rect.height() <= 0.0 {
                     if prim_instance.is_chased() {
-                        println!("\tculled for zero local rectangle");
+                        info!("\tculled for zero local rectangle");
                     }
                     continue;
                 }
@@ -349,7 +349,7 @@ pub fn update_primitive_visibility(
                     Some(local_rect) => local_rect,
                     None => {
                         if prim_instance.is_chased() {
-                            println!("\tculled for being out of the local clip rectangle: {:?}",
+                            info!("\tculled for being out of the local clip rectangle: {:?}",
                                      prim_instance.clip_set.local_clip_rect);
                         }
                         continue;
@@ -394,18 +394,18 @@ pub fn update_primitive_visibility(
                     Some(clip_chain) => clip_chain,
                     None => {
                         if prim_instance.is_chased() {
-                            println!("\tunable to build the clip chain, skipping");
+                            info!("\tunable to build the clip chain, skipping");
                         }
                         continue;
                     }
                 };
 
                 if prim_instance.is_chased() {
-                    println!("\teffective clip chain from {:?} {}",
+                    info!("\teffective clip chain from {:?} {}",
                              prim_instance.vis.clip_chain.clips_range,
                              if apply_local_clip_rect { "(applied)" } else { "" },
                     );
-                    println!("\tpicture rect {:?} @{:?}",
+                    info!("\tpicture rect {:?} @{:?}",
                              prim_instance.vis.clip_chain.pic_clip_rect,
                              prim_instance.vis.clip_chain.pic_spatial_node_index,
                     );
@@ -419,7 +419,7 @@ pub fn update_primitive_visibility(
 
                 if prim_instance.vis.combined_local_clip_rect.is_empty() {
                     if prim_instance.is_chased() {
-                        println!("\tculled for zero local clip rectangle");
+                        info!("\tculled for zero local clip rectangle");
                     }
                     continue;
                 }
@@ -434,7 +434,7 @@ pub fn update_primitive_visibility(
                     }
                     None => {
                         if prim_instance.is_chased() {
-                            println!("\tculled for zero visible rectangle");
+                            info!("\tculled for zero visible rectangle");
                         }
                         continue;
                     }
@@ -513,7 +513,7 @@ pub fn update_primitive_visibility(
                 }
 
                 if prim_instance.is_chased() {
-                    println!("\tvisible with {:?}", prim_instance.vis.combined_local_clip_rect);
+                    info!("\tvisible with {:?}", prim_instance.vis.combined_local_clip_rect);
                 }
 
                 // TODO(gw): This should probably be an instance method on PrimitiveInstance?
