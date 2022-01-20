@@ -3659,15 +3659,10 @@
   mirror: always
 
 # Is support for WebVR APIs enabled?
-# Enabled by default in beta and release for Windows and OS X and for all
-# platforms in nightly and aurora.
+# Disabled everywhere, but not removed.
 - name: dom.vr.enabled
   type: RelaxedAtomicBool
-#if defined(XP_WIN) || defined(XP_DARWIN) || !defined(RELEASE_OR_BETA)
-  value: true
-#else
   value: false
-#endif
   mirror: always
 
 # Should VR sessions always be reported as supported, without first
