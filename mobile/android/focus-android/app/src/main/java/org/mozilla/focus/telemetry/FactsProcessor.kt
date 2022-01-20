@@ -85,6 +85,10 @@ object FactsProcessor {
             }
         }
 
+        Component.BROWSER_TOOLBAR to ToolbarFacts.Items.MENU -> {
+            metadata?.get("customTab")?.let { TelemetryWrapper.customTabMenuEvent() }
+        }
+
         else -> Unit
     }
 }
