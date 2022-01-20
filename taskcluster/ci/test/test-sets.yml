@@ -234,12 +234,6 @@ windows10-64-2004-ccov-tests:
     - web-platform-tests-reftest
     - web-platform-tests-wdspec
 
-windows10-64-2004-failure-tests:
-    - mochitest-browser-chrome-failures
-
-windows10-32-2004-failure-tests:
-    - xpcshell-failures
-
 mingwclang-tests-debug:
     - cppunit
     - firefox-ui-functional-local

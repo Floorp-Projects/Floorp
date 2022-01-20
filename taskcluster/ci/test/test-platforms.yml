@@ -155,7 +155,6 @@ windows10-32-2004-qr/debug:
         - web-platform-tests
         - windows-7-tests
         - windows32-2004-tests
-        - windows10-32-2004-failure-tests
 
 windows10-32-2004-mingwclang-qr/debug:
     build-platform: win32-mingwclang/debug
@@ -213,7 +212,6 @@ windows10-64-2004-qr/opt:
         - web-platform-tests
         - web-platform-tests-backlog
         - windows10-2004-tests
-        - windows10-64-2004-failure-tests
         - talos-xperf
 
 windows10-64-2004-shippable-qr/opt:
@@ -224,7 +222,6 @@ windows10-64-2004-shippable-qr/opt:
         - web-platform-tests
         - web-platform-tests-backlog
         - windows10-2004-tests
-        - windows10-64-2004-failure-tests
         - talos-xperf
 
 windows10-64-2004-devedition-qr/opt:
