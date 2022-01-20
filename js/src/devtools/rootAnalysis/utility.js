@@ -186,13 +186,8 @@ function collectBodyEdges(body)
 
 function getPredecessors(body)
 {
-    try {
-        if (!('predecessors' in body))
-            collectBodyEdges(body);
-    } catch (e) {
-        debugger;
-        printErr("body is " + body);
-    }
+    if (!('predecessors' in body))
+        collectBodyEdges(body);
     return body.predecessors;
 }
 
