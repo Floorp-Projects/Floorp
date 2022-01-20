@@ -1006,6 +1006,8 @@ var gMainPane = {
    * Update the available list of locales and select the locale that the user
    * is "selecting". This could be the currently requested locale or a locale
    * that the user would like to switch to after confirmation.
+   *
+   * @param {string} selected - The selected BCP 47 locale.
    */
   async updatePrimaryBrowserLanguageUI(selected) {
     let available = await getAvailableLocales();
@@ -1341,6 +1343,13 @@ var gMainPane = {
     );
   },
 
+  /**
+   * Open the browser languages sub dialog in either the normal mode, or search mode.
+   * The search mode is only available from the menu to change the primary browser
+   * language.
+   *
+   * @param {{ search: boolean }}
+   */
   showBrowserLanguagesSubDialog({ search }) {
     // Record the telemetry event with an id to associate related actions.
     let telemetryId = parseInt(
