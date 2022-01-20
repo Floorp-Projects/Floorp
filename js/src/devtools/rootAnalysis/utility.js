@@ -14,6 +14,7 @@ loadRelativeToScript('dumpCFG.js');
 var ATTR_GC_SUPPRESSED     = 1;
 var ATTR_CANSCRIPT_BOUNDED = 2; // Unimplemented
 var ATTR_DOM_ITERATING     = 4; // Unimplemented
+var ATTR_NONRELEASING      = 8; // ~RefPtr of value whose refcount will not go to zero
 
 var ATTRS_NONE             = 0;
 var ATTRS_ALL              = 7; // All possible bits set
