@@ -110,20 +110,6 @@ BEGIN_TEST(testSliceBudgetInterruptibleTime) {
   CHECK(!wantInterrupt);
   CHECK(budget.isOverBudget());
 
-  // Caller would handle the interrupt here. Normally, the SliceBudget would
-  // then be discarded. But it can be reset and reused, which we'll test here.
-
-  budget.reset();
-  CHECK(!budget.isOverBudget());
-  budget.step(5);
-  CHECK(!budget.isOverBudget());
-
-  // The external signal gets picked up only when isOverBudget() is called.
-  wantInterrupt = true;
-  budget.step(2000);
-  wantInterrupt = false;
-  CHECK(!budget.isOverBudget());
-
   // This doesn't test the deadline is correct as that would require waiting.
 
   return true;
