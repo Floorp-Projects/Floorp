@@ -11,6 +11,11 @@ loadScripts(
   { name: "states.js", dir: MOCHITESTS_DIR }
 );
 
+const isCacheEnabled = Services.prefs.getBoolPref(
+  "accessibility.cache.enabled",
+  false
+);
+
 /**
  * Test moving Accessibles:
  * 1. A moved Accessible keeps the same Accessible.
@@ -53,5 +58,11 @@ addAccessibleTask(
     // was moved. Ensure it is dead.
     ok(isDefunct(heading), "heading is dead");
   },
-  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+  {
+    chrome: true,
+    // Moves cause RemoteAccessible re-creation without the cache enabled.
+    topLevel: isCacheEnabled,
+    iframe: isCacheEnabled,
+    remoteIframe: isCacheEnabled,
+  }
 );

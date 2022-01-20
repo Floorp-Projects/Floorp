@@ -507,9 +507,6 @@ class DocAccessible : public HyperTextAccessibleWrap,
    */
   void ProcessBoundsChanged();
 
-  /**
-   * Only works in content process documents.
-   */
   bool IsAccessibleBeingMoved(LocalAccessible* aAcc) {
     return mMovedAccessibles.Contains(aAcc);
   }
@@ -747,8 +744,8 @@ class DocAccessible : public HyperTextAccessibleWrap,
   void SetRoleMapEntryForDoc(dom::Element* aElement);
 
   /**
-   * This must be called whenever an Accessible is moved in a content process.
-   * It keeps track of Accessibles moved during this tick.
+   * This must be called whenever an Accessible is moved if the cache is
+   * enabled. It keeps track of Accessibles moved during this tick.
    */
   void TrackMovedAccessible(LocalAccessible* aAcc);
 
@@ -758,11 +755,11 @@ class DocAccessible : public HyperTextAccessibleWrap,
   DocAccessibleChild* mIPCDoc;
 
   nsTHashSet<RefPtr<LocalAccessible>> mMaybeBoundsChanged;
-  // A set of Accessibles moved during this tick. Only used in content
-  // processes.
+  // A set of Accessibles moved during this tick. Only used if the cache is
+  // enabled.
   nsTHashSet<RefPtr<LocalAccessible>> mMovedAccessibles;
-  // A set of Accessibles inserted during this tick. Only used in content
-  // processes. This is needed to prevent insertions + moves of the same
+  // A set of Accessibles inserted during this tick. Only used if the cache is
+  // enabled. This is needed to prevent insertions + moves of the same
   // Accessible in the same tick from being tracked as moves.
   nsTHashSet<RefPtr<LocalAccessible>> mInsertedAccessibles;
 };
