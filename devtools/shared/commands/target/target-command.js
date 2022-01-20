@@ -976,7 +976,7 @@ class TargetCommand extends EventEmitter {
   }
 
   getParentTarget(targetFront) {
-    // Note that there is three temporary edgecases:
+    // Note that there are edgecases:
     // * Until bug 1741927 is fixed and we remove non-EFT codepath entirely,
     //   we may receive a `parentInnerWindowId` that doesn't relate to any target.
     //   This happens when the parent document of the targetFront is a document loaded in the
@@ -987,9 +987,6 @@ class TargetCommand extends EventEmitter {
     //   Once we can stop using getParentWindowGlobalTarget for the other edgecase we will be able to
     //   replace it with such fallback: `return this.targetFront;`.
     //   browser_target_command_frames.js will help you get things right.
-    // @backward-compat { version 96 } Fx 96 started exposing `parentInnerWindowId`
-    // * And backward compat. This targetForm attribute is new. Once we drop 95 support,
-    //   we can simply remove this last bullet point as the other two edgecase may still be valid.
     const { parentInnerWindowId } = targetFront.targetForm;
     if (parentInnerWindowId) {
       const targets = this.getAllTargets([TargetCommand.TYPES.FRAME]);
@@ -1008,13 +1005,6 @@ class TargetCommand extends EventEmitter {
     // It should be: MBT, regular tab toolbox and web extension.
     // The others which still don't support watcher don't spawn FRAME targets:
     // browser content toolbox and service workers.
-
-    // @backward-compat { version 96 } WebExtension targets only support the
-    // watcher starting with version 96. This if block can be fully removed when
-    // version 96 hits the release channel (cf. comment above).
-    if (!this.watcherFront) {
-      return null;
-    }
 
     return this.watcherFront.getParentWindowGlobalTarget(
       targetFront.browsingContextID

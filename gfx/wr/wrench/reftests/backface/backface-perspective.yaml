@@ -12,6 +12,7 @@ root:
       - type: stacking-context
         bounds: 0 0 100 100
         transform: rotate-y(-120)
+        paired-with-perspective: true
         backface-visible: false
         items:
         - type: rect

@@ -595,43 +595,49 @@ function assertAllHandlerInfosMatchDefaultHandlers() {
 /**
  * Tests the default protocol handlers imported from the locale-specific data.
  */
-add_task(async function test_default_protocol_handlers() {
-  if (
-    !Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")
-  ) {
-    info("This platform or locale does not have default handlers.");
-    return;
+add_task(
+  { skip_if: () => AppConstants.MOZ_APP_NAME == "thunderbird" },
+  async function test_default_protocol_handlers() {
+    if (
+      !Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")
+    ) {
+      info("This platform or locale does not have default handlers.");
+      return;
+    }
+
+    // This will inject the default protocol handlers for the current locale.
+    await deleteHandlerStore();
+
+    await assertAllHandlerInfosMatchDefaultHandlers();
   }
-
-  // This will inject the default protocol handlers for the current locale.
-  await deleteHandlerStore();
-
-  await assertAllHandlerInfosMatchDefaultHandlers();
-});
+);
 
 /**
  * Tests that the default protocol handlers are not imported again from the
  * locale-specific data if they already exist.
  */
-add_task(async function test_default_protocol_handlers_no_duplicates() {
-  if (
-    !Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")
-  ) {
-    info("This platform or locale does not have default handlers.");
-    return;
+add_task(
+  { skip_if: () => AppConstants.MOZ_APP_NAME == "thunderbird" },
+  async function test_default_protocol_handlers_no_duplicates() {
+    if (
+      !Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")
+    ) {
+      info("This platform or locale does not have default handlers.");
+      return;
+    }
+
+    // This will inject the default protocol handlers for the current locale.
+    await deleteHandlerStore();
+
+    // Clear the preference to force injecting again.
+    Services.prefs.clearUserPref("gecko.handlerService.defaultHandlersVersion");
+
+    await unloadHandlerStore();
+
+    // There should be no duplicate handlers in the protocols.
+    assertAllHandlerInfosMatchDefaultHandlers();
   }
-
-  // This will inject the default protocol handlers for the current locale.
-  await deleteHandlerStore();
-
-  // Clear the preference to force injecting again.
-  Services.prefs.clearUserPref("gecko.handlerService.defaultHandlersVersion");
-
-  await unloadHandlerStore();
-
-  // There should be no duplicate handlers in the protocols.
-  assertAllHandlerInfosMatchDefaultHandlers();
-});
+);
 
 /**
  * Ensures forward compatibility by checking that the "store" method preserves

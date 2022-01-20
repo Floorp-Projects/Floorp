@@ -176,6 +176,15 @@ def bootstrap_path(path, **kwargs):
                 log.debug("Cannot bootstrap %s: missing taskgraph module", label)
                 return False
             task_id = IndexSearch().should_replace_task(task, {}, None, task["index"])
+            if task_id:
+                # If we found the task in the index, use the `mach artifact toolchain`
+                # fast path.
+                flags = ["--from-task", f"{task_id}:{artifact}"]
+            else:
+                # Otherwise, use the slower path, which will print a better error than
+                # we would be able to.
+                flags = ["--from-build", label]
+
             log.info(
                 "%s bootstrapped toolchain in %s",
                 "Updating" if exists else "Installing",
@@ -189,9 +198,8 @@ def bootstrap_path(path, **kwargs):
                     "--log-no-times",
                     "artifact",
                     "toolchain",
-                    "--from-task",
-                    f"{task_id}:{artifact}",
-                ],
+                ]
+                + flags,
                 cwd=toolchains_base_dir,
                 check=True,
             )

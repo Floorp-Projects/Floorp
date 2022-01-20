@@ -1707,6 +1707,7 @@ impl DisplayListBuilder {
                 kind: di::ReferenceFrameKind::Transform {
                     is_2d_scale_translation: false,
                     should_snap: false,
+                    paired_with_perspective: false,
                 },
                 id,
                 key,

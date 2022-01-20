@@ -155,7 +155,11 @@ function run_test() {
   // OS default exists, injected default exists, explicit warning pref: false
   prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", false);
   protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
-  Assert.equal(1, protoInfo.possibleApplicationHandlers.length);
+  if (AppConstants.MOZ_APP_NAME == "thunderbird") {
+    Assert.equal(0, protoInfo.possibleApplicationHandlers.length);
+  } else {
+    Assert.equal(1, protoInfo.possibleApplicationHandlers.length);
+  }
 
   // Win7+ or Linux's GIO might not have a default mailto: handler
   if (noMailto) {
@@ -167,16 +171,19 @@ function run_test() {
   // OS default exists, injected default exists, explicit warning pref: true
   prefSvc.setBoolPref(kExternalWarningPrefPrefix + "mailto", true);
   protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
-  Assert.equal(1, protoInfo.possibleApplicationHandlers.length);
-  // Win7+ or Linux's GIO may have no default mailto: handler, so we'd ask
-  // anyway. Otherwise, the default handlers will not have stored preferred
-  // actions etc., so re-requesting them after the warning pref has changed
-  // will use the updated pref value. So both when we have and do not have
-  // a default mailto: handler, we'll ask:
-  Assert.ok(protoInfo.alwaysAskBeforeHandling);
-  // As soon as anyone actually stores updated defaults into the profile
-  // database, that default will stop tracking the warning pref.
-
+  if (AppConstants.MOZ_APP_NAME == "thunderbird") {
+    Assert.equal(0, protoInfo.possibleApplicationHandlers.length);
+  } else {
+    Assert.equal(1, protoInfo.possibleApplicationHandlers.length);
+    // Win7+ or Linux's GIO may have no default mailto: handler, so we'd ask
+    // anyway. Otherwise, the default handlers will not have stored preferred
+    // actions etc., so re-requesting them after the warning pref has changed
+    // will use the updated pref value. So both when we have and do not have
+    // a default mailto: handler, we'll ask:
+    Assert.ok(protoInfo.alwaysAskBeforeHandling);
+    // As soon as anyone actually stores updated defaults into the profile
+    // database, that default will stop tracking the warning pref.
+  }
   // Now set the value stored in RDF to true, and the pref to false, to make
   // sure we still get the right value. (Basically, same thing as above but
   // with the values reversed.)
@@ -184,8 +191,12 @@ function run_test() {
   protoInfo.alwaysAskBeforeHandling = true;
   handlerSvc.store(protoInfo);
   protoInfo = protoSvc.getProtocolHandlerInfo("mailto");
-  Assert.equal(1, protoInfo.possibleApplicationHandlers.length);
-  Assert.ok(protoInfo.alwaysAskBeforeHandling);
+  if (AppConstants.MOZ_APP_NAME == "thunderbird") {
+    Assert.equal(0, protoInfo.possibleApplicationHandlers.length);
+  } else {
+    Assert.equal(1, protoInfo.possibleApplicationHandlers.length);
+    Assert.ok(protoInfo.alwaysAskBeforeHandling);
+  }
 
   //* *************************************************************************//
   // Test Round-Trip Data Integrity

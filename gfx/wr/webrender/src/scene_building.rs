@@ -978,6 +978,7 @@ impl<'a> SceneBuilder<'a> {
             ReferenceFrameKind::Transform {
                 is_2d_scale_translation: true,
                 should_snap: true,
+                paired_with_perspective: false,
             },
             bounds.min.to_vector(),
             SpatialNodeUid::root_reference_frame(iframe_pipeline_id, instance_id),
@@ -2421,6 +2422,7 @@ impl<'a> SceneBuilder<'a> {
             ReferenceFrameKind::Transform {
                 is_2d_scale_translation: true,
                 should_snap: true,
+                paired_with_perspective: false,
             },
             LayoutVector2D::zero(),
             SpatialNodeUid::root_reference_frame(pipeline_id, instance),
