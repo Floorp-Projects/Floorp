@@ -550,10 +550,57 @@ function edgeCanGC(edge)
     return false;
 }
 
-// Search recursively through predecessors from the use of a variable's value,
-// returning whether a GC call is reachable (in the reverse direction; this
-// means that the variable use is reachable from the GC call, and therefore the
-// variable is live after the GC call), along with some additional information.
+// Search upwards through a function's control flow graph (CFG) to find a path containing:
+//
+// - a use of a variable, preceded by
+//
+// - a function call that can GC, preceded by
+//
+// - a use of the variable that shows that the live range starts at least that
+//   far back, preceded by
+//
+// - an informative use of the variable (which might be the same use), one that
+//   assigns to it a value that might contain a GC pointer (or is the start of
+//   the function for parameters or 'this'.) This is not necessary for
+//   correctness, it just makes it easier to understand why something might be
+//   a hazard. The output of the analysis will include the whole path from the
+//   informative use to the post-GC use, to make the problem as understandable
+//   as possible.
+//
+// A canonical example might be:
+//
+//     void foo() {
+//         JS::Value* val = lookupValue(); <-- informative use
+//         if (!val.isUndefined()) {       <-- any use
+//             GC();                       <-- GC call
+//         }
+//         putValue(val);                  <-- a use after a GC
+//     }
+//
+// The search is performed on an underlying CFG that we traverse in
+// breadth-first order (to find the shortest path). We build a path starting
+// from an empty path and conditionally lengthening and improving it according
+// to the computation occurring on each incoming edge. (If that path so far
+// does not have a GC call and we traverse an edge with a GC call, then we
+// lengthen the path by that edge and record it as including a GC call.) The
+// resulting path may include a point or edge more than once! For example, in:
+//
+//     void foo(JS::Value val) {
+//         for (int i = 0; i < N; i++) {
+//             GC();
+//             val = processValue(val);
+//         }
+//     }
+//
+// the path would start at the point after processValue(), go through the GC(),
+// then back to the processValue() (for the call in the previous loop
+// iteration).
+//
+// While searching, each point is annotated with a path node corresponding to
+// the best path found to that node so far. When a later search ends up at the
+// same point, the best path node is kept. (But the path that it heads may
+// include an earlier path node for the same point, as in the case above.)
+//
 // What info we want depends on whether the variable turns out to be live
 // across a GC call. We are looking for both hazards (unrooted variables live
 // across GC calls) and unnecessary roots (rooted variables that have no GC
@@ -566,200 +613,253 @@ function edgeCanGC(edge)
 //
 // If so:
 //
-//  - 'why': a path from the GC call to a use of the variable after the GC
-//    call, chained through a 'why' field in the returned edge descriptor
+//  - 'successor': a path from the GC call to a use of the variable after the GC
+//    call, chained through 'successor' field in the returned edge descriptor
 //
 //  - 'gcInfo': a direct pointer to the GC call edge
 //
-function findGCBeforeValueUse(start_body, start_point, suppressed, variable)
+function findGCBeforeValueUse(start_body, start_point, suppressed_bits, variable)
 {
+    const isGCSuppressed = Boolean(suppressed_bits & ATTR_GC_SUPPRESSED);
+
     // Scan through all edges preceding an unrooted variable use, using an
-    // explicit worklist, looking for a GC call. A worklist contains an
-    // incoming edge together with a description of where it or one of its
-    // successors GC'd (if any).
+    // explicit worklist, looking for a GC call and a preceding point where the
+    // variable is known to be live. A worklist contains an incoming edge
+    // together with a description of where it or one of its successors GC'd
+    // (if any).
 
-    var bodies_visited = new Map();
+    class Path {
+        get ProgressProperties() { return ["informativeUse", "anyUse", "gcInfo"]; }
 
-    let worklist = [{body: start_body, ppoint: start_point, preGCLive: false, gcInfo: null, why: null}];
-    while (worklist.length) {
-        // Grab an entry off of the worklist, representing a point within the
-        // CFG identified by <body,ppoint>. If this point has a descendant
-        // later in the CFG that can GC, gcInfo will be set to the information
-        // about that GC call.
-
-        var entry = worklist.pop();
-        var { body, ppoint, gcInfo, preGCLive } = entry;
-
-        // Handle the case where there are multiple ways to reach this point
-        // (traversing backwards).
-        var visited = bodies_visited.get(body);
-        if (!visited)
-            bodies_visited.set(body, visited = new Map());
-        if (visited.has(ppoint)) {
-            var seenEntry = visited.get(ppoint);
-
-            // This point already knows how to GC through some other path, so
-            // we have nothing new to learn. (The other path will consider the
-            // predecessors.)
-            if (seenEntry.gcInfo)
-                continue;
-
-            // If this worklist's entry doesn't know of any way to GC, then
-            // there's no point in continuing the traversal through it. Perhaps
-            // another edge will be found that *can* GC; otherwise, the first
-            // route to the point will traverse through predecessors.
-            //
-            // Note that this means we may visit a point more than once, if the
-            // first time we visit we don't have a known reachable GC call and
-            // the second time we do.
-            if (!gcInfo)
-                continue;
-        }
-        visited.set(ppoint, {body: body, gcInfo: gcInfo});
-
-        // Check for hitting the entry point of the current body (which may be
-        // the outer function or a loop within it.)
-        if (ppoint == body.Index[0]) {
-            if (body.BlockId.Kind == "Loop") {
-                // Propagate to outer body parents that enter the loop body.
-                if ("BlockPPoint" in body) {
-                    for (var parent of body.BlockPPoint) {
-                        var found = false;
-                        for (var xbody of functionBodies) {
-                            if (sameBlockId(xbody.BlockId, parent.BlockId)) {
-                                assert(!found);
-                                found = true;
-                                worklist.push({body: xbody, ppoint: parent.Index,
-                                               gcInfo: gcInfo, why: entry});
-                            }
-                        }
-                        assert(found);
+        constructor(successor_path, body, ppoint) {
+            Object.assign(this, {body, ppoint});
+            if (successor_path !== undefined) {
+                this.successor = successor_path;
+                for (const prop of this.ProgressProperties) {
+                    if (prop in successor_path) {
+                        this[prop] = successor_path[prop];
                     }
                 }
-
-                // Also propagate to the *end* of this loop, for the previous
-                // iteration.
-                worklist.push({body: body, ppoint: body.Index[1],
-                               gcInfo: gcInfo, why: entry});
-            } else if ((variable.Kind == "Arg" || variable.Kind == "This") && gcInfo) {
-                // The scope of arguments starts at the beginning of the
-                // function
-                return entry;
-            } else if (entry.preGCLive) {
-                // We didn't find a "good" explanation beginning of the live
-                // range, but we do know the variable was live across the GC.
-                // This can happen if the live range started when a variable is
-                // used as a retparam.
-                return entry;
             }
         }
 
-        var predecessors = getPredecessors(body);
-        if (!(ppoint in predecessors))
-            continue;
+        toString() {
+            const trail = [];
+            for (let path = this; path.ppoint; path = path.successor) {
+                trail.push(path.ppoint);
+            }
+            return trail.join();
+        }
 
-        for (var edge of predecessors[ppoint]) {
-            var source = edge.Index[0];
+        // Return -1, 0, or 1 to indicate how complete this Path is compared
+        // to another one.
+        compare(other) {
+            for (const prop of this.ProgressProperties) {
+                const a = this.hasOwnProperty(prop);
+                const b = other.hasOwnProperty(prop);
+                if (a != b) {
+                    return a - b;
+                }
+            }
+            return 0;
+        }
+    };
+
+    // In case we never find an informative use, keep track of the best path
+    // found with any use.
+    let bestPathWithAnyUse = null;
+
+    const visitor = new class extends Visitor {
+        constructor() {
+            super(functionBodies);
+        }
+
+        // Do a BFS upwards through the CFG, starting from a use of the
+        // variable and searching for a path containing a GC followed by an
+        // initializing use of the variable (or, in forward direction, a start
+        // of the variable's live range, a GC within that live range, and then
+        // a use showing that the live range extends past the GC call.)
+        // Actually, possibly two uses: any use at all, and then if available
+        // an "informative" use that is more convincing (they may be the same).
+        //
+        // The CFG is a graph (a 'body' here is acyclic, but they can contain
+        // loop nodes that bridge to additional bodies for the loop, so the
+        // overall graph can by cyclic.) That means there may be multiple paths
+        // from point A to point B, and we want paths with a GC on them. This
+        // can be thought of as searching for a "maximal GCing" path from a use
+        // A to an initialization B.
+        //
+        // This is implemented as a BFS search that when it reaches a point
+        // that has been visited before, stops if and only if the current path
+        // being advanced is a less GC-ful path. The traversal pushes a
+        // `gcInfo` token, initially empty, up through the graph and stores the
+        // maximal one visited so far at every point.
+        //
+        // Note that this means we may traverse through the same point more
+        // than once, and so in theory this scan is superlinear -- if you visit
+        // every point twice, once for a non GC path and once for a GC path, it
+        // would be 2^n. But that is unlikely to matter, since you'd need lots
+        // of split/join pairs that GC on one side and not the other, and you'd
+        // have to visit them in an unlucky order. This could be fixed by
+        // updating the gcInfo for past points in a path when a GC is found,
+        // but it hasn't been found to matter in practice yet.
+
+        next_action(prev, current) {
+            // Continue if first visit, or the new path is more complete than the old path. This
+            // could be enhanced at some point to choose paths with 'better'
+            // examples of GC (eg a call that invokes GC through concrete functions rather than going through a function pointer that is conservatively assumed to GC.)
+
+            if (!current) {
+                // This search path has been terminated.
+                return "prune";
+            }
+
+            if (current.informativeUse) {
+                // We have a path with an informative use leading to a GC
+                // leading to the starting point.
+                assert(current.gcInfo);
+                return "done";
+            }
+
+            if (prev === undefined) {
+                // first visit
+                return "continue";
+            }
+
+            if (!prev.gcInfo && current.gcInfo) {
+                // More GC.
+                return "continue";
+            } else {
+                return "prune";
+            }
+        }
+
+        merge_info(prev, current) {
+            // Keep the most complete path.
+
+            if (!prev || !current) {
+                return prev || current;
+            }
+
+            // Tie goes to the first found, since it will be shorter when doing a BFS-like search.
+            return prev.compare(current) >= 0 ? prev : current;
+        }
+
+        extend_path(edge, body, ppoint, successor_path) {
+            // Clone the successor path node and then tack on the new point. Other values
+            // will be updated during the rest of this function, according to what is
+            // happening on the edge.
+            const path = new Path(successor_path, body, ppoint);
+            if (edge === null) {
+                // Artificial edge to connect loops to their surrounding nodes in the outer body.
+                // Does not influence "completeness" of path.
+                return path;
+            }
+
+            assert(ppoint == edge.Index[0]);
 
             if (edgeEndsValueLiveRange(edge, variable, body)) {
-                // Terminate the search through this point; we thought we were
-                // within the live range, but it turns out that the variable
-                // was set to a value that we don't care about.
-                continue;
+                // Terminate the search through this point.
+                return null;
             }
 
-            var edge_kills = edgeStartsValueLiveRange(edge, variable);
-            var edge_uses = edgeUsesVariable(edge, variable, body);
+            const edge_starts = edgeStartsValueLiveRange(edge, variable);
+            const edge_uses = edgeUsesVariable(edge, variable, body);
 
-            if (edge_kills || edge_uses) {
-                if (!body.minimumUse || source < body.minimumUse)
-                    body.minimumUse = source;
+            if (edge_starts || edge_uses) {
+                if (!body.minimumUse || ppoint < body.minimumUse)
+                    body.minimumUse = ppoint;
             }
 
-            if (edge_kills) {
+            if (edge_starts) {
                 // This is a beginning of the variable's live range. If we can
                 // reach a GC call from here, then we're done -- we have a path
-                // from the beginning of the live range, through the GC call,
-                // to a use after the GC call that proves its live range
-                // extends at least that far.
-                if (gcInfo)
-                    return {body: body, ppoint: source, gcInfo: gcInfo, why: entry };
+                // from the beginning of the live range, through the GC call, to a
+                // use after the GC call that proves its live range extends at
+                // least that far.
+                if (path.gcInfo) {
+                    path.anyUse = path.anyUse || edge;
+                    path.informativeUse = path.informativeUse || edge;
+                    return path;
+                }
 
-                // Otherwise, keep searching through the graph, but truncate
-                // this particular branch of the search at this edge.
-                continue;
+                // Otherwise, truncate this particular branch of the search at this
+                // edge -- there is no GC after this use, and traversing the edge
+                // would lead to a different live range.
+                return null;
             }
 
-            var src_gcInfo = gcInfo;
-            var src_preGCLive = preGCLive;
-            if (!gcInfo && !(body.attrs[source] & ATTR_GC_SUPPRESSED) && !(suppressed & ATTR_GC_SUPPRESSED)) {
+            // The value is live across this edge. Check whether this edge can GC (if we don't have a GC yet on this path.)
+            if (!path.gcInfo && !(body.attrs[ppoint] & ATTR_GC_SUPPRESSED) && !isGCSuppressed) {
                 var gcName = edgeCanGC(edge, body);
-                if (gcName)
-                    src_gcInfo = {name:gcName, body:body, ppoint:source};
-            }
-
-            if (edge_uses) {
-                // The live range starts at least this far back, so we're done
-                // for the same reason as with edge_kills. The only difference
-                // is that a GC on this edge indicates a hazard, whereas if
-                // we're killing a live range in the GC call then it's not live
-                // *across* the call.
-                //
-                // However, we may want to generate a longer usage chain for
-                // the variable than is minimally necessary. For example,
-                // consider:
-                //
-                //   Value v = f();
-                //   if (v.isUndefined())
-                //     return false;
-                //   gc();
-                //   return v;
-                //
-                // The call to .isUndefined() is considered to be a use and
-                // therefore indicates that v must be live at that point. But
-                // it's more helpful to the user to continue the 'why' path to
-                // include the ancestor where the value was generated. So we
-                // will only return here if edge.Kind is Assign; otherwise,
-                // we'll pass a "preGCLive" value up through the worklist to
-                // remember that the variable *is* alive before the GC and so
-                // this function should be returning a true value even if we
-                // don't find an assignment.
-
-                if (src_gcInfo) {
-                    src_preGCLive = true;
-                    if (edge.Kind == 'Assign')
-                        return {body:body, ppoint:source, gcInfo:src_gcInfo, why:entry};
+                if (gcName) {
+                    path.gcInfo = {name:gcName, body, ppoint};
                 }
             }
 
-            if (edge.Kind == "Loop") {
-                // Additionally propagate the search into a loop body, starting
-                // with the exit point.
-                var found = false;
-                for (var xbody of functionBodies) {
-                    if (sameBlockId(xbody.BlockId, edge.BlockId)) {
-                        assert(!found);
-                        found = true;
-                        worklist.push({body:xbody, ppoint:xbody.Index[1],
-                                       preGCLive: src_preGCLive, gcInfo:src_gcInfo,
-                                       why:entry});
-                    }
+            // Beginning of function?
+            if (ppoint == body.Index[0] && body.BlockId.Kind != "Loop") {
+                if (path.gcInfo && (variable.Kind == "Arg" || variable.Kind == "This")) {
+                    // The scope of arguments starts at the beginning of the
+                    // function.
+                    path.anyUse = path.informativeUse = true;
                 }
-                assert(found);
-                // Don't continue to predecessors here without going through
-                // the loop. (The points in this body that enter the loop will
-                // be traversed when we reach the entry point of the loop.)
-                break;
+
+                if (path.anyUse) {
+                    // We know the variable was live across the GC. We may or
+                    // may not have found an "informative" explanation
+                    // beginning of the live range. (This can happen if the
+                    // live range started when a variable is used as a
+                    // retparam.)
+                    return path;
+                }
             }
 
-            // Propagate the search to the predecessors of this edge.
-            worklist.push({body:body, ppoint:source,
-                           preGCLive: src_preGCLive, gcInfo:src_gcInfo,
-                           why:entry});
-        }
-    }
+            if (!path.gcInfo) {
+                // We haven't reached a GC yet, so don't start looking for uses.
+                return path;
+            }
 
-    return null;
+            if (!edge_uses) {
+                // We have a GC. If this edge doesn't use the value, then there
+                // is no change to the completeness of the path.
+                return path;
+            }
+
+            // The live range starts at least this far back, so we're done for
+            // the same reason as with edge_starts. The only difference is that
+            // a GC on this edge indicates a hazard, whereas if we're killing a
+            // live range in the GC call then it's not live *across* the call.
+            //
+            // However, we may want to generate a longer usage chain for the
+            // variable than is minimally necessary. For example, consider:
+            //
+            //   Value v = f();
+            //   if (v.isUndefined())
+            //     return false;
+            //   gc();
+            //   return v;
+            //
+            // The call to .isUndefined() is considered to be a use and
+            // therefore indicates that v must be live at that point. But it's
+            // more helpful to the user to continue the 'successor' path to
+            // include the ancestor where the value was generated. So we will
+            // only stop here if edge.Kind is Assign; otherwise, we'll pass a
+            // "preGCLive" value up through the worklist to remember that the
+            // variable *is* alive before the GC and so this function should be
+            // returning a true value even if we don't find an assignment.
+
+            path.anyUse = path.anyUse || edge;
+            bestPathWithAnyUse = bestPathWithAnyUse || path;
+            if (edge.Kind == 'Assign') {
+                path.informativeUse = edge; // Done! Setting this terminates the search.
+            }
+
+            return path;
+        };
+    };
+
+    return BFS_upwards(start_body, start_point, functionBodies, visitor, new Path()) || bestPathWithAnyUse;
 }
 
 function variableLiveAcrossGC(suppressed, variable)
@@ -906,14 +1006,15 @@ function printEntryTrace(functionName, entry)
     if (!functionBodies[0].lines)
         loadPrintedLines(functionName);
 
-    while (entry) {
+    while (entry.successor) {
         var ppoint = entry.ppoint;
         var lineText = findLocation(entry.body, ppoint, {"brief": true});
 
         var edgeText = "";
-        if (entry.why && entry.why.body == entry.body) {
-            // If the next point in the trace is in the same block, look for an edge between them.
-            var next = entry.why.ppoint;
+        if (entry.successor && entry.successor.body == entry.body) {
+            // If the next point in the trace is in the same block, look for an
+            // edge between them.
+            var next = entry.successor.ppoint;
 
             if (!entry.body.edgeTable) {
                 var table = {};
@@ -947,7 +1048,7 @@ function printEntryTrace(functionName, entry)
         }
 
         print("    " + lineText + (edgeText.length ? ": " + edgeText : ""));
-        entry = entry.why;
+        entry = entry.successor;
     }
 }
 
@@ -1062,6 +1163,7 @@ function processBodies(functionName, wholeBodyAttrs)
         } else if (isUnrootedType(variable.Type)) {
             var result = variableLiveAcrossGC(suppressed, variable.Variable);
             if (result) {
+                assert(result.gcInfo);
                 var lineText = findLocation(result.gcInfo.body, result.gcInfo.ppoint);
                 if (annotations.has('Expect Hazards')) {
                     print("\nThis is expected, but '" + functionName + "'" +
