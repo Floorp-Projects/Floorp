@@ -8,8 +8,6 @@
  */
 
 import { isGeneratedId } from "devtools-source-map";
-import { isEqual } from "lodash";
-
 import { makeBreakpointId } from "../utils/breakpoint";
 
 // eslint-disable-next-line max-len
@@ -107,7 +105,9 @@ function removeXHRBreakpoint(state, action) {
 
   return {
     ...state,
-    xhrBreakpoints: xhrBreakpoints.filter(bp => !isEqual(bp, breakpoint)),
+    xhrBreakpoints: xhrBreakpoints.filter(
+      bp => bp.path !== breakpoint.path || bp.method !== breakpoint.method
+    ),
   };
 }
 
@@ -133,10 +133,6 @@ function removeBreakpoint(state, { breakpoint }) {
   const breakpoints = { ...state.breakpoints };
   delete breakpoints[id];
   return { ...state, breakpoints };
-}
-
-function isMatchingLocation(location1, location2) {
-  return isEqual(location1, location2);
 }
 
 // Selectors
@@ -178,18 +174,6 @@ export function getBreakpointsForSource(state, sourceId, line) {
   return breakpoints.filter(bp => {
     const location = isGeneratedSource ? bp.generatedLocation : bp.location;
     return location.sourceId === sourceId && (!line || line == location.line);
-  });
-}
-
-export function getBreakpointForLocation(state, location) {
-  if (!location) {
-    return undefined;
-  }
-
-  const isGeneratedSource = isGeneratedId(location.sourceId);
-  return getBreakpointsList(state).find(bp => {
-    const loc = isGeneratedSource ? bp.generatedLocation : bp.location;
-    return isMatchingLocation(loc, location);
   });
 }
 

@@ -337,12 +337,14 @@ describe("initializing with disabled pending breakpoints in prefs", () => {
       return bps && Object.values(bps).length > 0;
     });
 
-    const bp = selectors.getBreakpointForLocation(getState(), {
-      line: 5,
-      column: 2,
-      sourceUrl: source.url,
-      sourceId: source.id,
+    const bp = selectors.getBreakpointsList(getState()).find(({ location }) => {
+      return (
+        location.line == 5 &&
+        location.column == 2 &&
+        location.sourceId == source.id
+      );
     });
+
     if (!bp) {
       throw new Error("no bp");
     }
