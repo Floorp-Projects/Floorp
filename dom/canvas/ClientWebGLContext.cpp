@@ -859,11 +859,16 @@ already_AddRefed<gfx::SourceSurface> ClientWebGLContext::GetSurfaceSnapshot(
   } else {
     // Expects Opaque or Premult
     if (srcAlphaType == gfxAlphaType::NonPremult) {
-      const auto nonPremultSurf = ret;
-      const auto& size = nonPremultSurf->GetSize();
-      const auto format = nonPremultSurf->GetFormat();
-      ret = gfx::Factory::CreateDataSourceSurface(size, format, /*zero=*/false);
-      gfxUtils::PremultiplyDataSurface(nonPremultSurf, ret);
+      const gfx::DataSourceSurface::ScopedMap map(
+          ret, gfx::DataSourceSurface::READ_WRITE);
+      MOZ_RELEASE_ASSERT(map.IsMapped(), "Failed to map snapshot surface!");
+
+      const auto& size = ret->GetSize();
+      const auto format = ret->GetFormat();
+      bool rv =
+          gfx::PremultiplyData(map.GetData(), map.GetStride(), format,
+                               map.GetData(), map.GetStride(), format, size);
+      MOZ_RELEASE_ASSERT(rv, "PremultiplyData failed!");
     }
   }
 
