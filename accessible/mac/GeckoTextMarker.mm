@@ -530,7 +530,7 @@ int32_t GeckoTextMarkerRange::Length() const {
 }
 
 NSValue* GeckoTextMarkerRange::Bounds() const {
-  LayoutDeviceIntRect rect;
+  nsIntRect rect;
   if (mStart.mContainer->IsRemote() && mEnd.mContainer->IsRemote()) {
     DocAccessibleParent* ipcDoc = mStart.mContainer->AsRemote()->Document();
     Unused << ipcDoc->GetPlatformExtension()->SendBoundsForRange(

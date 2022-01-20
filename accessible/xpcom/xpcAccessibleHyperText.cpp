@@ -231,7 +231,7 @@ xpcAccessibleHyperText::GetCharacterExtents(int32_t aOffset, int32_t* aX,
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  LayoutDeviceIntRect rect;
+  nsIntRect rect;
   if (mIntl->IsLocal()) {
     rect = IntlLocal()->CharBounds(aOffset, aCoordType);
   } else {
@@ -258,7 +258,7 @@ xpcAccessibleHyperText::GetRangeExtents(int32_t aStartOffset,
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  LayoutDeviceIntRect rect;
+  nsIntRect rect;
   if (mIntl->IsLocal()) {
     rect = IntlLocal()->TextBounds(aStartOffset, aEndOffset, aCoordType);
   } else {

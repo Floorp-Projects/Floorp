@@ -689,9 +689,9 @@ struct RoleDescrComparator {
 - (NSValue*)moxFrame {
   MOZ_ASSERT(mGeckoAccessible);
 
-  LayoutDeviceIntRect rect = mGeckoAccessible->IsLocal()
-                                 ? mGeckoAccessible->AsLocal()->Bounds()
-                                 : mGeckoAccessible->AsRemote()->Bounds();
+  nsIntRect rect = mGeckoAccessible->IsLocal()
+                       ? mGeckoAccessible->AsLocal()->Bounds()
+                       : mGeckoAccessible->AsRemote()->Bounds();
   NSScreen* mainView = [[NSScreen screens] objectAtIndex:0];
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mainView);
 
@@ -906,11 +906,12 @@ struct RoleDescrComparator {
 - (void)moxPerformShowMenu {
   MOZ_ASSERT(mGeckoAccessible);
 
+  nsIntRect bounds = mGeckoAccessible->IsLocal()
+                         ? mGeckoAccessible->AsLocal()->Bounds()
+                         : mGeckoAccessible->AsRemote()->Bounds();
   // We don't need to convert this rect into mac coordinates because the
   // mouse event synthesizer expects layout (gecko) coordinates.
-  LayoutDeviceIntRect bounds = mGeckoAccessible->IsLocal()
-                                   ? mGeckoAccessible->AsLocal()->Bounds()
-                                   : mGeckoAccessible->AsRemote()->Bounds();
+  LayoutDeviceIntRect geckoRect = LayoutDeviceIntRect::FromUnknownRect(bounds);
 
   LocalAccessible* rootAcc = mGeckoAccessible->IsLocal()
                                  ? mGeckoAccessible->AsLocal()->RootAccessible()
@@ -920,8 +921,9 @@ struct RoleDescrComparator {
   id objOrView =
       GetObjectOrRepresentedView(GetNativeFromGeckoAccessible(rootAcc));
 
-  LayoutDeviceIntPoint p = LayoutDeviceIntPoint(
-      bounds.X() + (bounds.Width() / 2), bounds.Y() + (bounds.Height() / 2));
+  LayoutDeviceIntPoint p =
+      LayoutDeviceIntPoint(geckoRect.X() + (geckoRect.Width() / 2),
+                           geckoRect.Y() + (geckoRect.Height() / 2));
   nsIWidget* widget = [objOrView widget];
   widget->SynthesizeNativeMouseEvent(
       p, nsIWidget::NativeMouseMessage::ButtonDown, MouseButton::eSecondary,

@@ -10,7 +10,6 @@
 #include "mozilla/a11y/AccTypes.h"
 #include "nsString.h"
 #include "nsRect.h"
-#include "Units.h"
 
 class nsAtom;
 
@@ -158,10 +157,7 @@ class Accessible {
   virtual double MaxValue() const = 0;
   virtual double Step() const = 0;
 
-  /**
-   * Return boundaries in screen coordinates in device pixels.
-   */
-  virtual LayoutDeviceIntRect Bounds() const = 0;
+  virtual nsIntRect Bounds() const = 0;
 
   /**
    * Returns text of accessible if accessible has text role otherwise empty

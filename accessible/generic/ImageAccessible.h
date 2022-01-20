@@ -37,8 +37,8 @@ class ImageAccessible : public LinkableAccessible,
   virtual bool DoAction(uint8_t aIndex) const override;
 
   // ImageAccessible
-  LayoutDeviceIntPoint Position(uint32_t aCoordType);
-  LayoutDeviceIntSize Size();
+  nsIntPoint Position(uint32_t aCoordType);
+  nsIntSize Size();
 
  protected:
   virtual ~ImageAccessible();

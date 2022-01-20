@@ -55,7 +55,7 @@ class AccessibleWrap : public LocalAccessible {
   mozilla::java::GeckoBundle::LocalRef ToBundle(bool aSmall = false);
 
   mozilla::java::GeckoBundle::LocalRef ToBundle(
-      const uint64_t aState, const LayoutDeviceIntRect& aBounds,
+      const uint64_t aState, const nsIntRect& aBounds,
       const uint8_t aActionCount, const nsString& aName,
       const nsString& aTextValue, const nsString& aDOMNodeID,
       const nsString& aDescription,

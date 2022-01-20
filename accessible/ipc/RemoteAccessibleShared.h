@@ -94,12 +94,12 @@ void GetTextBeforeOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
 
 char16_t CharAt(int32_t aOffset);
 
-LayoutDeviceIntRect TextBounds(
+nsIntRect TextBounds(
     int32_t aStartOffset, int32_t aEndOffset,
     uint32_t aCoordType =
         nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE);
 
-LayoutDeviceIntRect CharBounds(int32_t aOffset, uint32_t aCoordType);
+nsIntRect CharBounds(int32_t aOffset, uint32_t aCoordType);
 
 int32_t OffsetAtPoint(int32_t aX, int32_t aY, uint32_t aCoordType);
 
@@ -133,9 +133,9 @@ bool DeleteText(int32_t aStartPos, int32_t aEndPos);
 
 bool PasteText(int32_t aPosition);
 
-LayoutDeviceIntPoint ImagePosition(uint32_t aCoordType);
+nsIntPoint ImagePosition(uint32_t aCoordType);
 
-LayoutDeviceIntSize ImageSize();
+nsIntSize ImageSize();
 
 uint32_t EndOffset(bool* aOk);
 
@@ -234,7 +234,7 @@ RemoteAccessible* FocusedChild();
 virtual Accessible* ChildAtPoint(
     int32_t aX, int32_t aY,
     LocalAccessible::EWhichChildAtPoint aWhichChild) override;
-LayoutDeviceIntRect Bounds() const override;
+nsIntRect Bounds() const override;
 nsIntRect BoundsInCSSPixels();
 
 void Language(nsString& aLocale);
