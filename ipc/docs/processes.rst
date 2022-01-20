@@ -96,7 +96,148 @@ The rest of the sections will explain how to compose these classes and integrate
 Process Bookkeeping
 ~~~~~~~~~~~~~~~~~~~
 
-To begin with, look at the `geckoprocesstypes generator <https://searchfox.org/mozilla-central/source/xpcom/geckoprocesstypes_generator/geckoprocesstypes/__init__.py>`_ which adds the bones for a new process (by defining enum values and so on).  It contains instructions on additional steps that are required to add the new process type.
+To begin with, look at the `geckoprocesstypes generator <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/xpcom/geckoprocesstypes_generator/geckoprocesstypes/__init__.py>`_ which adds the bones for a new process (by defining enum values and so on). Some further manual intervention is still required, and you need to follow the following checklists depending on your needs.
+
+Basic requirements
+^^^^^^^^^^^^^^^^^^
+
+* Add a new entry to the `enum WebIDLProcType <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/dom/chrome-webidl/ChromeUtils.webidl#610-638>`_
+* Update the `static_assert <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/xre/nsAppRunner.cpp#988-990>`_ call checking for boundary against ``GeckoProcessType_End``
+* Add your process to the correct ``MessageLoop::TYPE_x`` in the first ``switch(XRE_GetProcessType())`` in `XRE_InitChildProcess <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/xre/nsEmbedFunctions.cpp#572-590>`_. You can get more information about that topic in `this comment <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/ipc/chromium/src/base/message_loop.h#159-187>`_
+* Instantiate your child within the second ``switch (XRE_GetProcessType())`` in `XRE_InitChildProcess <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/xre/nsEmbedFunctions.cpp#615-671>`_
+* Add a new entry ``PROCESS_TYPE_x`` in `nsIXULRuntime interface <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/xpcom/system/nsIXULRuntime.idl#183-196>`_
+
+Graphics
+########
+
+If you need graphics-related interaction, hack into `gfxPlatform <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/gfx/thebes/gfxPlatform.cpp>`_
+
+- Add a call to your process manager init in ``gfxPlatform::Init()`` in `gfxPlatform <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/gfx/thebes/gfxPlatform.cpp#808-810>`_
+- Add a call to your process manager shutdown in ``gfxPlatform::Shutdown()`` in `gfxPlatform <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/gfx/thebes/gfxPlatform.cpp#1255-1259>`_
+
+Android
+#######
+
+You might want to talk with `#geckoview` maintainers to ensure if this is required or applicable to your new process type.
+
+- Add a new ``<service>`` entry against ``org.mozilla.gecko.process.GeckoChildProcessServices$XXX`` in the `AndroidManifest <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/mobile/android/geckoview/src/main/AndroidManifest.xml#45-81>`_
+- Add matching class inheritance from `GeckoChildProcessServices <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/mobile/android/geckoview/src/main/java/org/mozilla/gecko/process/GeckoChildProcessServices.jinja#10-13>`_
+- Add new entry in `public enum GeckoProcessType <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/mobile/android/geckoview/src/main/java/org/mozilla/gecko/process/GeckoProcessType.java#11-23>`_
+
+Crash reporting
+###############
+
+- Add new ``Xxx*Status`` `annotations <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/crashreporter/CrashAnnotations.yaml#968-971>`_ entry for your new process type description. The link here points to `UtilityProcessStatus` so you can see the similar description you have to write, but you might want to respect ordering in that file and put your new code at the appropriate place.
+- Add entry in `PROCESS_CRASH_SUBMIT_ATTEMPT <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/telemetry/Histograms.json#13403-13422>`_
+
+Process reporting
+#################
+
+Those elements will be used for exposing processes to users in some `about:` pages. You might want to ping `#fluent-reviewers` to ensure if you need your process there.
+
+- Add a `user-facing localizable name <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/locales/en-US/toolkit/global/processTypes.ftl#39-57>`_ for your process, if needed
+- Hashmap from process type to user-facing string above in `const ProcessType <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/modules/ProcessType.jsm#14-20>`_
+
+Static Components
+#################
+
+The amount of changes required here are significant, `Bug 1740485: Improve StaticComponents code generation <https://bugzilla.mozilla.org/show_bug.cgi?id=1740485>`_ tracks improving that.
+
+- Update allowance in those configuration files to match new process selector that includes your new process. When exploring those components definitions, keep in mind that you are looking at updating `processes` field in the `Classes` object. The `ProcessSelector` value will come from what the reader writes based on the instructions below. Some of these also contains several services, so you might have to ensure you have all your bases covered. Some of the components might not need to be updated as well.
+
+  + `libpref <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/modules/libpref/components.conf>`_
+  + `telemetry <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/telemetry/core/components.conf>`_
+  + `android <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/widget/android/components.conf>`_
+  + `gtk <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/widget/gtk/components.conf>`_
+  + `windows <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/widget/windows/components.conf>`_
+  + `base <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/xpcom/base/components.conf>`_
+  + `components <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/xpcom/components/components.conf>`_
+  + `ds <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/xpcom/ds/components.conf>`_
+  + `threads <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/xpcom/threads/components.conf>`_
+  + `cocoa kWidgetModule <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/widget/cocoa/nsWidgetFactory.mm#194-202>`_
+  + `build <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/xpcom/build/components.conf>`_
+  + `XPCOMinit kXPCOMModule <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/xpcom/build/XPCOMInit.cpp#172-180>`_
+
+- Within `static components generator <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/xpcom/components/gen_static_components.py>`_
+
+  + Add new definition in ``ProcessSelector`` for your new process ``ALLOW_IN_x_PROCESS = 0x..``
+  + Add new process selector masks including your new process definition
+  + Also add those into the ``PROCESSES`` structure
+
+- Within `module definition <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/xpcom/components/Module.h>`_
+
+  + Add new definition in ``enum ProcessSelector``
+  + Add new process selector mask including the new definition
+  + Update ``kMaxProcessSelector``
+
+- Within `nsComponentManager <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/xpcom/components/nsComponentManager.cpp>`_
+
+  + Add new selector match in ``ProcessSelectorMatches`` for your new process (needed?)
+  + Add new process selector for ``gProcessMatchTable`` in ``nsComponentManagerImpl::Init()``
+
+Glean telemetry
+###############
+
+- Within `FOGIPC <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/glean/ipc/FOGIPC.cpp>`_
+
+  + Add handling of your new process type within ``FlushAllChildData()`` `here <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/glean/ipc/FOGIPC.cpp#106-121>`_ and ``SendFOGData()`` `here <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/glean/ipc/FOGIPC.cpp#165-182>`_
+  + Add support for sending test metrics in ``TestTriggerMetrics()`` `here <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/glean/ipc/FOGIPC.cpp#208-232>`_
+
+- Handle process shutdown in ``register_process_shutdown()`` of `glean <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/toolkit/components/glean/api/src/ipc.rs>`_
+
+Sandboxing
+##########
+
+Sandboxing changes related to a new process can be non-trivial, so it is strongly advised that you reach to the Sandboxing team in ``#hardening`` to discuss your needs prior to making changes.
+
+Linux Sandbox
+_____________
+
+Linux sandboxing mostly works by allowing / blocking system calls for child process and redirecting (brokering) some from the child to the parent. Rules are written in a specific DSL: `BPF <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/chromium/sandbox/linux/bpf_dsl/bpf_dsl.h#21-72>`_.
+
+- Add new ``SetXXXSandbox()`` function within `linux sandbox <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/linux/Sandbox.cpp#719-748>`_
+- Within `sandbox filter <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/linux/SandboxFilter.cpp>`_
+
+  + Add new helper ``GetXXXSandboxPolicy()`` `like this one <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/linux/SandboxFilter.cpp#2036-2040>`_ called by ``SetXXXSandbox()``
+  + Derive new class `similar to this <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/linux/SandboxFilter.cpp#2000-2034>`_ inheriting ``SandboxPolicyCommon`` or ``SandboxPolicyBase`` and defining the sandboxing policy
+
+- Add new ``SandboxBrokerPolicyFactory::GetXXXProcessPolicy()`` in `sandbox broker <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/linux/broker/SandboxBrokerPolicyFactory.cpp#881-932>`_
+- Add new case handling in ``GetEffectiveSandboxLevel()`` in `sandbox launch <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/linux/launch/SandboxLaunch.cpp#243-271>`_
+- Add new entry in ``enum class ProcType`` of `sandbox reporter header <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/linux/reporter/SandboxReporterCommon.h#32-39>`_
+- Add new case handling in ``SubmitToTelemetry()`` in `sandbox reporter <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/linux/reporter/SandboxReporter.cpp#131-152>`_
+- Add new case handling in ``SandboxReportWrapper::GetProcType()`` of `sandbox reporter wrapper <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/linux/reporter/SandboxReporterWrappers.cpp#69-91>`_
+
+MacOS Sandbox
+_____________
+
+- Add new case handling in ``GeckoChildProcessHost::StartMacSandbox()`` of `GeckoChildProcessHost <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/ipc/glue/GeckoChildProcessHost.cpp#1720-1743>`_
+- Add new entry in ``enum MacSandboxType`` defined in `macOS sandbox header <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/mac/Sandbox.h#12-20>`_
+- Within `macOS sandbox core <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/mac/Sandbox.mm>`_ handle the new ``MacSandboxType`` in
+
+   + ``MacSandboxInfo::AppendAsParams()`` in the `switch statement <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/mac/Sandbox.mm#164-188>`_
+   + ``StartMacSandbox()`` in the `serie of if/else statements <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/mac/Sandbox.mm#286-436>`_. This code sets template values for the sandbox string rendering, and is running on the side of the main process.
+   + ``StartMacSandboxIfEnabled()`` in this `switch statement <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/mac/Sandbox.mm#753-782>`_. You might also need a ``GetXXXSandboxParamsFromArgs()`` that performs CLI parsing on behalf of ``StartMacSandbox()``.
+
+- Create the new sandbox definition file ``security/sandbox/mac/SandboxPolicy<XXX>.h`` for your new process ``<XXX>``, and make it exposed in the ``EXPORTS.mozilla`` section of `moz.build <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/mac/moz.build#7-13>`_. Those rules follows a specific Scheme-like language. You can learn more about it in `Apple Sandbox Guide <https://reverse.put.as/wp-content/uploads/2011/09/Apple-Sandbox-Guide-v1.0.pdf>`_ as well as on your system within ``/System/Library/Sandbox/Profiles/``.
+
+Windows Sandbox
+_______________
+
+- Introduce a new ``SandboxBroker::SetSecurityLevelForXXXProcess()`` that defines the new sandbox in both
+
+  + the sandbox broker basing yourself on that `example <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/win/src/sandboxbroker/sandboxBroker.cpp#1241-1344>`_
+  + the remote sandbox broker getting `inspired by <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/win/src/remotesandboxbroker/remoteSandboxBroker.cpp#161-165>`_
+
+- Add new case handling in ``WindowsProcessLauncher::DoSetup()`` calling ``SandboxBroker::SetSecurityLevelForXXXProcess()`` in `GeckoChildProcessHost <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/ipc/glue/GeckoChildProcessHost.cpp#1391-1470>`_. This will apply actual sandboxing rules to your process.
+
+Sandbox tests
+_____________
+
+- New process' first top level actor needs to `include PSandboxTesting <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/common/test/PSandboxTesting.ipdl>`_ and implement ``RecvInitSandboxTesting`` `like there <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/ipc/glue/UtilityProcessChild.cpp#165-174>`_.
+- Add your new process ``string_name`` in the ``processTypes`` list of `sandbox tests <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/test/browser_sandbox_test.js#17>`_
+- Add a new case in ``SandboxTest::StartTests()`` in `test core <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/common/test/SandboxTest.cpp#100-232>`_ to handle your new process
+- Add a new if branch for your new process in ``SandboxTestingChild::Bind()`` in `testing child <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/common/test/SandboxTestingChild.cpp#68-96>`_
+- Add a new ``RunTestsXXX`` function for your new process (called by ``Bind()`` above) `similar to that implementation <https://searchfox.org/mozilla-central/rev/d4b9c457db637fde655592d9e2048939b7ab2854/security/sandbox/common/test/SandboxTestingChildTests.h#333-363>`_
 
 Creating the New Process
 ~~~~~~~~~~~~~~~~~~~~~~~~
