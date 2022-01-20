@@ -541,7 +541,8 @@ static bool get_gles_status(EGLDisplay dpy,
       EGL_TRUE) {
     const char* deviceExtensions =
         eglQueryDeviceStringEXT(device, EGL_EXTENSIONS);
-    if (strstr(deviceExtensions, "EGL_MESA_device_software")) {
+    if (deviceExtensions &&
+        strstr(deviceExtensions, "EGL_MESA_device_software")) {
       record_value("MESA_ACCELERATED\nFALSE\n");
     } else {
 #ifdef MOZ_WAYLAND
