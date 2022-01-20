@@ -55,7 +55,7 @@ http://creativecommons.org/licenses/publicdomain/
   function waitForDeliveryError(request) {
     return new Promise(resolve => {
       var data = new TextEncoder("utf-8").encode(JSON.stringify(request));
-      var principal = SpecialPowers.wrap(document).nodePrincipal;
+      var principal = SpecialPowers.wrap(window).clientPrincipal;
 
       let messageId = "message-" + (idCounter++);
       reporters.set(messageId, resolve);
@@ -88,7 +88,7 @@ http://creativecommons.org/licenses/publicdomain/
         }
       });
 
-      var principal = SpecialPowers.wrap(document).nodePrincipal;
+      var principal = SpecialPowers.wrap(window).clientPrincipal;
       pushNotifier.notifyError(registration.scope, principal, "Push error",
         SpecialPowers.Ci.nsIScriptError.errorFlag);
     });
