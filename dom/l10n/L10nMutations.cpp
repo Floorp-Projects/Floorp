@@ -165,10 +165,11 @@ class L10nMutationFinalizationHandler final : public PromiseNativeHandler {
   explicit L10nMutationFinalizationHandler(nsIGlobalObject* aGlobal)
       : mGlobal(aGlobal) {}
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
-  }
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {}
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     nsTArray<nsCString> errors{
         "[dom/l10n] Errors during l10n mutation frame."_ns,
     };

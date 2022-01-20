@@ -39,7 +39,8 @@ class ReportFetchHandler final : public PromiseNativeHandler {
       const nsTArray<ReportDeliver::ReportData>& aReportData)
       : mReports(aReportData.Clone()) {}
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     if (!gReportDeliver) {
       return;
     }
@@ -76,7 +77,8 @@ class ReportFetchHandler final : public PromiseNativeHandler {
     }
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     if (gReportDeliver) {
       for (auto& report : mReports) {
         ++report.mFailures;

@@ -116,7 +116,8 @@ class AbortStepsNativePromiseHandler final : public PromiseNativeHandler {
         mStream(aStream),
         mAbortRequestPromise(aAbortRequestPromise) {}
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#writable-stream-finish-erroring
 
     // Step 13. Upon fulfillment of promise,
@@ -128,7 +129,8 @@ class AbortStepsNativePromiseHandler final : public PromiseNativeHandler {
     mStream->RejectCloseAndClosedPromiseIfNeeded();
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#writable-stream-finish-erroring
 
     // Step 14. Upon rejection of promise with reason reason,
