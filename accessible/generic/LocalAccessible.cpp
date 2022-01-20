@@ -501,7 +501,7 @@ LocalAccessible* LocalAccessible::LocalChildAtPoint(
   // If we can't find the point in a child, we will return the fallback answer:
   // we return |this| if the point is within it, otherwise nullptr.
   LocalAccessible* fallbackAnswer = nullptr;
-  LayoutDeviceIntRect rect = Bounds();
+  nsIntRect rect = Bounds();
   if (rect.Contains(aX, aY)) fallbackAnswer = this;
 
   if (nsAccUtils::MustPrune(this)) {  // Do not dig any further
@@ -611,7 +611,7 @@ LocalAccessible* LocalAccessible::LocalChildAtPoint(
   for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
     LocalAccessible* child = accessible->LocalChildAt(childIdx);
 
-    LayoutDeviceIntRect childRect = child->Bounds();
+    nsIntRect childRect = child->Bounds();
     if (childRect.Contains(aX, aY) &&
         (child->State() & states::INVISIBLE) == 0) {
       if (aWhichChild == EWhichChildAtPoint::DeepestChild) {
@@ -786,9 +786,9 @@ nsRect LocalAccessible::BoundsInAppUnits() const {
   return unionRectTwips;
 }
 
-LayoutDeviceIntRect LocalAccessible::Bounds() const {
-  return LayoutDeviceIntRect::FromAppUnitsToNearest(
-      BoundsInAppUnits(), mDoc->PresContext()->AppUnitsPerDevPixel());
+nsIntRect LocalAccessible::Bounds() const {
+  return BoundsInAppUnits().ToNearestPixels(
+      mDoc->PresContext()->AppUnitsPerDevPixel());
 }
 
 nsIntRect LocalAccessible::BoundsInCSSPixels() const {
@@ -2296,7 +2296,7 @@ void LocalAccessible::ScrollToPoint(uint32_t aCoordinateType, int32_t aX,
   nsIFrame* frame = GetFrame();
   if (!frame) return;
 
-  LayoutDeviceIntPoint coords =
+  nsIntPoint coords =
       nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordinateType, this);
 
   nsIFrame* parentFrame = frame;
