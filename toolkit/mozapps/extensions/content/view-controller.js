@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* import-globals-from ../../../content/customElements.js */
+/* import-globals-from /toolkit/content/customElements.js */
 /* import-globals-from aboutaddonsCommon.js */
 /* exported loadView */
 
