@@ -87,7 +87,8 @@ MerchantValidationEvent::MerchantValidationEvent(EventTarget* aOwner)
 }
 
 void MerchantValidationEvent::ResolvedCallback(JSContext* aCx,
-                                               JS::Handle<JS::Value> aValue) {
+                                               JS::Handle<JS::Value> aValue,
+                                               ErrorResult& aRv) {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(mRequest);
 
@@ -112,7 +113,8 @@ void MerchantValidationEvent::ResolvedCallback(JSContext* aCx,
 }
 
 void MerchantValidationEvent::RejectedCallback(JSContext* aCx,
-                                               JS::Handle<JS::Value> aValue) {
+                                               JS::Handle<JS::Value> aValue,
+                                               ErrorResult& aRv) {
   MOZ_ASSERT(mRequest);
   if (!mWaitForUpdate) {
     return;

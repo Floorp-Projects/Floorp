@@ -320,7 +320,8 @@ FetchStreamReader::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
 }
 
 void FetchStreamReader::ResolvedCallback(JSContext* aCx,
-                                         JS::Handle<JS::Value> aValue) {
+                                         JS::Handle<JS::Value> aValue,
+                                         ErrorResult& aRv) {
   if (mStreamClosed) {
     return;
   }
@@ -418,7 +419,8 @@ nsresult FetchStreamReader::WriteBuffer() {
 }
 
 void FetchStreamReader::RejectedCallback(JSContext* aCx,
-                                         JS::Handle<JS::Value> aValue) {
+                                         JS::Handle<JS::Value> aValue,
+                                         ErrorResult& aRv) {
   ReportErrorToConsole(aCx, aValue);
   CloseAndRelease(aCx, NS_ERROR_FAILURE);
 }

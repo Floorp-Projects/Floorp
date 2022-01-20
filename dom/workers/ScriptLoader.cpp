@@ -426,11 +426,11 @@ class CacheCreator final : public PromiseNativeHandler {
     mLoaders.AppendElement(std::move(aLoader));
   }
 
-  virtual void ResolvedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override;
+  virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                ErrorResult& aRv) override;
 
-  virtual void RejectedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override;
+  virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                ErrorResult& aRv) override;
 
   // Try to load from cache with aPrincipal used for cache access.
   nsresult Load(nsIPrincipal* aPrincipal);
@@ -492,11 +492,11 @@ class CacheScriptLoader final : public PromiseNativeHandler,
 
   void Load(Cache* aCache);
 
-  virtual void ResolvedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override;
+  virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                ErrorResult& aRv) override;
 
-  virtual void RejectedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override;
+  virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                ErrorResult& aRv) override;
 
  private:
   ~CacheScriptLoader() { AssertIsOnMainThread(); }
@@ -529,11 +529,11 @@ class CachePromiseHandler final : public PromiseNativeHandler {
     MOZ_ASSERT(mRunnable);
   }
 
-  virtual void ResolvedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override;
+  virtual void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                ErrorResult& aRv) override;
 
-  virtual void RejectedCallback(JSContext* aCx,
-                                JS::Handle<JS::Value> aValue) override;
+  virtual void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                ErrorResult& aRv) override;
 
  private:
   ~CachePromiseHandler() { AssertIsOnMainThread(); }
@@ -1565,7 +1565,8 @@ LoaderListener::OnStartRequest(nsIRequest* aRequest) {
 }
 
 void CachePromiseHandler::ResolvedCallback(JSContext* aCx,
-                                           JS::Handle<JS::Value> aValue) {
+                                           JS::Handle<JS::Value> aValue,
+                                           ErrorResult& aRv) {
   AssertIsOnMainThread();
   // May already have been canceled by CacheScriptLoader::Fail from
   // CancelMainThread.
@@ -1582,7 +1583,8 @@ void CachePromiseHandler::ResolvedCallback(JSContext* aCx,
 }
 
 void CachePromiseHandler::RejectedCallback(JSContext* aCx,
-                                           JS::Handle<JS::Value> aValue) {
+                                           JS::Handle<JS::Value> aValue,
+                                           ErrorResult& aRv) {
   AssertIsOnMainThread();
   // May already have been canceled by CacheScriptLoader::Fail from
   // CancelMainThread.
@@ -1679,13 +1681,15 @@ void CacheCreator::FailLoaders(nsresult aRv) {
 }
 
 void CacheCreator::RejectedCallback(JSContext* aCx,
-                                    JS::Handle<JS::Value> aValue) {
+                                    JS::Handle<JS::Value> aValue,
+                                    ErrorResult& aRv) {
   AssertIsOnMainThread();
   FailLoaders(NS_ERROR_FAILURE);
 }
 
 void CacheCreator::ResolvedCallback(JSContext* aCx,
-                                    JS::Handle<JS::Value> aValue) {
+                                    JS::Handle<JS::Value> aValue,
+                                    ErrorResult& aRv) {
   AssertIsOnMainThread();
 
   if (!aValue.isObject()) {
@@ -1802,14 +1806,16 @@ void CacheScriptLoader::Load(Cache* aCache) {
 }
 
 void CacheScriptLoader::RejectedCallback(JSContext* aCx,
-                                         JS::Handle<JS::Value> aValue) {
+                                         JS::Handle<JS::Value> aValue,
+                                         ErrorResult& aRv) {
   AssertIsOnMainThread();
   MOZ_ASSERT(mLoadInfo.mCacheStatus == ScriptLoadInfo::Uncached);
   Fail(NS_ERROR_FAILURE);
 }
 
 void CacheScriptLoader::ResolvedCallback(JSContext* aCx,
-                                         JS::Handle<JS::Value> aValue) {
+                                         JS::Handle<JS::Value> aValue,
+                                         ErrorResult& aRv) {
   AssertIsOnMainThread();
   // If we have already called 'Fail', we should not proceed.
   if (mFailed) {

@@ -3057,11 +3057,13 @@ class L10nReadyPromiseHandler final : public dom::PromiseNativeHandler {
   L10nReadyPromiseHandler(Document* aDoc, nsIWidget* aParentWindow)
       : mDocument(aDoc), mWindow(aParentWindow) {}
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     LoadNativeMenus(mDocument, mWindow);
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     // Again, this shouldn't happen, but fallback to loading the menus as is.
     NS_WARNING(
         "L10nReadyPromiseHandler rejected - loading fallback native "

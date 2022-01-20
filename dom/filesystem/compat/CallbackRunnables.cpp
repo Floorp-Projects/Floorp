@@ -160,7 +160,8 @@ void GetEntryHelper::Run() {
 }
 
 void GetEntryHelper::ResolvedCallback(JSContext* aCx,
-                                      JS::Handle<JS::Value> aValue) {
+                                      JS::Handle<JS::Value> aValue,
+                                      ErrorResult& aRv) {
   if (NS_WARN_IF(!aValue.isObject())) {
     return;
   }
@@ -225,7 +226,8 @@ void GetEntryHelper::ContinueRunning(JSObject* aObj) {
 }
 
 void GetEntryHelper::RejectedCallback(JSContext* aCx,
-                                      JS::Handle<JS::Value> aValue) {
+                                      JS::Handle<JS::Value> aValue,
+                                      ErrorResult& aRv) {
   Error(NS_ERROR_DOM_NOT_FOUND_ERR);
 }
 
