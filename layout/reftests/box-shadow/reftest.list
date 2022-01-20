@@ -41,7 +41,7 @@ fuzzy(12-15,9400-13267) == boxshadow-inset-large-offset.html boxshadow-inset-lar
 fuzzy(0-1,0-655) == 611574-1.html 611574-1-ref.html
 fuzzy(0-4,0-144) fuzzy-if(d2d,0-1,0-36) == 611574-2.html 611574-2-ref.html
 fuzzy(0-16,0-10) == fieldset.html fieldset-ref.html # minor anti-aliasing problem on Windows
-fuzzy(0-16,0-10) fails-if(!useDrawSnapshot) == fieldset-inset.html fieldset-inset-ref.html # minor anti-aliasing problem on Windows
+fuzzy(0-16,0-10) == fieldset-inset.html fieldset-inset-ref.html # minor anti-aliasing problem on Windows
 == 1178575.html 1178575-ref.html
 == 1178575-2.html 1178575-2-ref.html
 fuzzy(0-159,0-2) fails-if(!dwrite||!nativeThemePref) == 1212823-1.html 1212823-1-ref.html
