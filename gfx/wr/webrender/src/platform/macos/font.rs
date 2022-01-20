@@ -552,7 +552,7 @@ impl FontContext {
     #[allow(dead_code)]
     fn print_glyph_data(&mut self, data: &[u8], width: usize, height: usize) {
         // Rust doesn't have step_by support on stable :(
-        debug!("Width is: {:?} height: {:?}", width, height);
+        println!("Width is: {:?} height: {:?}", width, height);
         for i in 0 .. height {
             let current_height = i * width * 4;
 
@@ -561,9 +561,9 @@ impl FontContext {
                 let g = pixel[1];
                 let r = pixel[2];
                 let a = pixel[3];
-                debug!("({}, {}, {}, {}) ", r, g, b, a);
+                print!("({}, {}, {}, {}) ", r, g, b, a);
             }
-            debug!();
+            println!();
         }
     }
 
