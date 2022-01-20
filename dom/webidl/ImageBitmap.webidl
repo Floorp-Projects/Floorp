@@ -397,7 +397,7 @@ dictionary ImageBitmapOptions {
   PremultiplyAlpha premultiplyAlpha = "default";
   // options to be added  bugs: 1363861
   ColorSpaceConversion colorSpaceConversion = "default";
-  //[EnforceRange] unsigned long resizeWidth;
-  //[EnforceRange] unsigned long resizeHeight;
+  [EnforceRange] unsigned long resizeWidth;
+  [EnforceRange] unsigned long resizeHeight;
   //ResizeQuality resizeQuality = "low";
 };

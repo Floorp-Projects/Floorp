@@ -40,6 +40,7 @@ class nsAvailableMemoryWatcher final : public nsITimerCallback,
   void StartPolling(const MutexAutoLock&);
   void StopPolling(const MutexAutoLock&);
   void ShutDown(const MutexAutoLock&);
+  void UpdateCrashAnnotation(const MutexAutoLock&);
   static bool IsMemoryLow();
 
   nsCOMPtr<nsITimer> mTimer;
@@ -89,6 +90,9 @@ nsresult nsAvailableMemoryWatcher::Init() {
   mThread = thread;
 
   MutexAutoLock lock(mMutex);
+  // Set the crash annotation to its initial state.
+  UpdateCrashAnnotation(lock);
+
   StartPolling(lock);
 
   return NS_OK;
@@ -182,6 +186,7 @@ void nsAvailableMemoryWatcher::HandleLowMemory() {
   MutexAutoLock lock(mMutex);
   if (!mUnderMemoryPressure) {
     mUnderMemoryPressure = true;
+    UpdateCrashAnnotation(lock);
     // Poll more frequently under memory pressure.
     StartPolling(lock);
   }
@@ -194,6 +199,12 @@ void nsAvailableMemoryWatcher::HandleLowMemory() {
       [self = RefPtr{this}]() { self->mTabUnloader->UnloadTabAsync(); }));
 }
 
+void nsAvailableMemoryWatcher::UpdateCrashAnnotation(const MutexAutoLock&) {
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::LinuxUnderMemoryPressure,
+      mUnderMemoryPressure);
+}
+
 // If memory is not low, we may need to dispatch an
 // event for it if we have been under memory pressure.
 // We can also adjust our polling interval.
@@ -203,6 +214,7 @@ void nsAvailableMemoryWatcher::MaybeHandleHighMemory() {
     RecordTelemetryEventOnHighMemory();
     NS_NotifyOfEventualMemoryPressure(MemoryPressureState::NoPressure);
     mUnderMemoryPressure = false;
+    UpdateCrashAnnotation(lock);
   }
   StartPolling(lock);
 }

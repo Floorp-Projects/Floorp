@@ -4,8 +4,8 @@
 
 /* import-globals-from extensionControlled.js */
 /* import-globals-from preferences.js */
-/* import-globals-from ../../../toolkit/mozapps/preferences/fontbuilder.js */
-/* import-globals-from ../../base/content/aboutDialog-appUpdater.js */
+/* import-globals-from /toolkit/mozapps/preferences/fontbuilder.js */
+/* import-globals-from /browser/base/content/aboutDialog-appUpdater.js */
 /* global MozXULElement */
 
 XPCOMUtils.defineLazyModuleGetters(this, {

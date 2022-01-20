@@ -562,7 +562,8 @@ class MemoryAccessDesc {
   }
 
   void setSplatSimd128Load() {
-    MOZ_ASSERT(type() == Scalar::Float64);
+    MOZ_ASSERT(type() == Scalar::Uint8 || type() == Scalar::Uint16 ||
+               type() == Scalar::Float32 || type() == Scalar::Float64);
     MOZ_ASSERT(!isAtomic());
     MOZ_ASSERT(loadOp_ == Plain);
     loadOp_ = Splat;
