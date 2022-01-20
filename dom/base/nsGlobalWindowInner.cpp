@@ -6031,6 +6031,10 @@ nsIPrincipal* nsGlobalWindowInner::GetTopLevelAntiTrackingPrincipal() {
   return topLevelPrincipal;
 }
 
+nsIPrincipal* nsGlobalWindowInner::GetClientPrincipal() {
+  return mClientSource ? mClientSource->GetPrincipal() : nullptr;
+}
+
 //*****************************************************************************
 // nsGlobalWindowInner: Timeout Functions
 //*****************************************************************************
