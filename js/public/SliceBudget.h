@@ -19,12 +19,14 @@
 namespace js {
 
 struct JS_PUBLIC_API TimeBudget {
-  const int64_t budget;
+  const mozilla::TimeDuration budget;
   mozilla::TimeStamp deadline;  // Calculated when SliceBudget is constructed.
 
-  explicit TimeBudget(int64_t milliseconds) : budget(milliseconds) {}
-  explicit TimeBudget(mozilla::TimeDuration duration)
-      : TimeBudget(duration.ToMilliseconds()) {}
+  explicit TimeBudget(mozilla::TimeDuration duration) : budget(duration) {}
+  explicit TimeBudget(int64_t milliseconds)
+      : budget(mozilla::TimeDuration::FromMilliseconds(milliseconds)) {}
+
+  void setDeadlineFromNow();
 };
 
 struct JS_PUBLIC_API WorkBudget {
@@ -116,7 +118,9 @@ class JS_PUBLIC_API SliceBudget {
   bool isTimeBudget() const { return budget.is<TimeBudget>(); }
   bool isUnlimited() const { return budget.is<UnlimitedBudget>(); }
 
-  int64_t timeBudget() const { return budget.as<TimeBudget>().budget; }
+  int64_t timeBudget() const {
+    return budget.as<TimeBudget>().budget.ToMilliseconds();
+  }
   int64_t workBudget() const { return budget.as<WorkBudget>().budget; }
 
   mozilla::TimeStamp deadline() const {
