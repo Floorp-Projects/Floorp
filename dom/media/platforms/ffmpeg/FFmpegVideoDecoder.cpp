@@ -817,7 +817,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
   }
   do {
     if (!PrepareFrame()) {
-      NS_WARNING("FFmpeg h264 decoder failed to allocate frame.");
+      NS_WARNING("FFmpeg decoder failed to allocate frame.");
       return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
 
@@ -889,7 +889,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
                       aSample->mDuration.ToMicroseconds());
 
   if (!PrepareFrame()) {
-    NS_WARNING("FFmpeg h264 decoder failed to allocate frame.");
+    NS_WARNING("FFmpeg decoder failed to allocate frame.");
     return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
 
