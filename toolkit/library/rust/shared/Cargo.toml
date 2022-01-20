@@ -23,10 +23,6 @@ webrender_bindings = { path = "../../../../gfx/webrender_bindings" }
 cubeb-coreaudio = { git = "https://github.com/mozilla/cubeb-coreaudio-rs", rev = "dea28d0c7d9952bbf430701ee244f6a4349c98f1", optional = true }
 cubeb-pulse = { git = "https://github.com/mozilla/cubeb-pulse-rs", rev="f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02", optional = true, features=["pulse-dlopen"] }
 cubeb-sys = { version = "0.9", optional = true, features=["gecko-in-tree"] }
-audioipc2-client = { git = "https://github.com/kinetiknz/audioipc-2", rev = "978b4082bdc7d8e1aa58dd49e45cdc81beacb333", optional = true } # macos (v2) branch
-audioipc2-server = { git = "https://github.com/kinetiknz/audioipc-2", rev = "978b4082bdc7d8e1aa58dd49e45cdc81beacb333", optional = true } # macos (v2) branch
-audioipc-client = { git = "https://github.com/mozilla/audioipc-2", rev = "515bb210a93f520642fd3a60f391652680b3e988", optional = true }
-audioipc-server = { git = "https://github.com/mozilla/audioipc-2", rev = "515bb210a93f520642fd3a60f391652680b3e988", optional = true }
 encoding_glue = { path = "../../../../intl/encoding_glue" }
 authenticator = "0.3.1"
 gkrust_utils = { path = "../../../../xpcom/rust/gkrust_utils" }
@@ -78,6 +74,13 @@ qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], defau
 [target.'cfg(not(target_os = "android"))'.dependencies]
 viaduct = { git = "https://github.com/mozilla/application-services", rev = "c51b63595a27a6ef45161012323e0261475c10c9"}
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+audioipc2-client = { git = "https://github.com/kinetiknz/audioipc-2", rev = "8af513c9b0cd5dd46f6ce98e1d5349a30061d0aa", optional = true } # macos (v2) branch
+audioipc2-server = { git = "https://github.com/kinetiknz/audioipc-2", rev = "8af513c9b0cd5dd46f6ce98e1d5349a30061d0aa", optional = true } # macos (v2) branch
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+audioipc-client = { git = "https://github.com/mozilla/audioipc-2", rev = "515bb210a93f520642fd3a60f391652680b3e988", optional = true }
+audioipc-server = { git = "https://github.com/mozilla/audioipc-2", rev = "515bb210a93f520642fd3a60f391652680b3e988", optional = true }
 
 [features]
 default = []
