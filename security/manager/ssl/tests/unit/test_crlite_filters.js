@@ -8,9 +8,6 @@
 "use strict";
 do_get_profile(); // must be called before getting nsIX509CertDB
 
-const { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js"
-);
 const { RemoteSecuritySettings } = ChromeUtils.import(
   "resource://gre/modules/psm/RemoteSecuritySettings.jsm"
 );
@@ -100,6 +97,7 @@ async function syncAndDownload(filters, clear = true) {
       effectiveTimestamp: new Date(filter.timestamp).getTime(),
       parent: filter.type == "diff" ? filter.parent : undefined,
       id: filter.id,
+      coverage: filter.type == "full" ? filter.coverage : undefined,
     };
 
     await localDB.create(record);
@@ -118,7 +116,18 @@ add_task(async function test_crlite_filters_disabled() {
   Services.prefs.setBoolPref(CRLITE_FILTERS_ENABLED_PREF, false);
 
   let result = await syncAndDownload([
-    { timestamp: "2019-01-01T00:00:00Z", type: "full", id: "0000" },
+    {
+      timestamp: "2019-01-01T00:00:00Z",
+      type: "full",
+      id: "0000",
+      coverage: [
+        {
+          logID: "9lyUL9F3MCIUVBgIMJRWjuNNExkzv98MLyALzE7xZOM=",
+          minTimestamp: 0,
+          maxTimestamp: 9999999999999,
+        },
+      ],
+    },
   ]);
   equal(result, "disabled", "CRLite filter download should not have run");
 });
@@ -388,7 +397,23 @@ add_task(async function test_crlite_filters_and_check_revocation() {
   });
 
   let result = await syncAndDownload([
-    { timestamp: "2020-10-17T00:00:00Z", type: "full", id: "0000" },
+    {
+      timestamp: "2020-10-17T00:00:00Z",
+      type: "full",
+      id: "0000",
+      coverage: [
+        {
+          logID: "9lyUL9F3MCIUVBgIMJRWjuNNExkzv98MLyALzE7xZOM=",
+          minTimestamp: 0,
+          maxTimestamp: 9999999999999,
+        },
+        {
+          logID: "pLkJkLQYWBSHuxOizGdwCjw1mAT5G9+443fNDsgN3BA=",
+          minTimestamp: 0,
+          maxTimestamp: 9999999999999,
+        },
+      ],
+    },
   ]);
   equal(
     result,
@@ -573,20 +598,36 @@ add_task(async function test_crlite_filters_and_check_revocation() {
   Services.prefs.clearUserPref("security.OCSP.require");
   Services.prefs.clearUserPref("security.OCSP.enabled");
 
-  // If the earliest certificate timestamp is within the merge delay of the
-  // logs for the filter we have, it won't be looked up, and thus won't be
-  // revoked.
-  // The earliest timestamp in this certificate is in August 2020, whereas
-  // the filter timestamp is in October 2020, so setting the merge delay to
-  // this large value simluates the situation being tested.
-  Services.prefs.setIntPref(
-    "security.pki.crlite_ct_merge_delay_seconds",
-    60 * 60 * 24 * 60
+  // The revoked certificate example has one SCT from the log with ID "9ly...="
+  // at time 1598140096613 and another from the log with ID "XNx...=" at time
+  // 1598140096917. The filter we construct here fails to cover it by one
+  // millisecond in each case. The implementation will fall back to OCSP
+  // fetching. Since this would result in a crash and test failure, the
+  // Ci.nsIX509CertDB.FLAG_LOCAL_ONLY is used.
+  result = await syncAndDownload([
+    {
+      timestamp: "2020-10-17T00:00:00Z",
+      type: "full",
+      id: "0000",
+      coverage: [
+        {
+          logID: "9lyUL9F3MCIUVBgIMJRWjuNNExkzv98MLyALzE7xZOM=",
+          minTimestamp: 0,
+          maxTimestamp: 1598140096612,
+        },
+        {
+          logID: "XNxDkv7mq0VEsV6a1FbmEDf71fpH3KFzlLJe5vbHDso=",
+          minTimestamp: 1598140096917,
+          maxTimestamp: 9999999999999,
+        },
+      ],
+    },
+  ]);
+  equal(
+    result,
+    "finished;2020-10-17T00:00:00Z-full",
+    "CRLite filter download should have run"
   );
-  // Since setting the merge delay parameter this way effectively makes this
-  // certificate "too new" to be covered by the filter, the implementation
-  // would fall back to OCSP fetching. Since this would result in a crash and
-  // test failure, the Ci.nsIX509CertDB.FLAG_LOCAL_ONLY is used.
   await checkCertErrorGenericAtTime(
     certdb,
     revokedCert,
@@ -597,14 +638,24 @@ add_task(async function test_crlite_filters_and_check_revocation() {
     "us-datarecovery.com",
     Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
   );
-  Services.prefs.clearUserPref("security.pki.crlite_ct_merge_delay_seconds");
 });
 
 add_task(async function test_crlite_filters_avoid_reprocessing_filters() {
   Services.prefs.setBoolPref(CRLITE_FILTERS_ENABLED_PREF, true);
 
   let result = await syncAndDownload([
-    { timestamp: "2019-01-01T00:00:00Z", type: "full", id: "0000" },
+    {
+      timestamp: "2019-01-01T00:00:00Z",
+      type: "full",
+      id: "0000",
+      coverage: [
+        {
+          logID: "9lyUL9F3MCIUVBgIMJRWjuNNExkzv98MLyALzE7xZOM=",
+          minTimestamp: 0,
+          maxTimestamp: 9999999999999,
+        },
+      ],
+    },
     {
       timestamp: "2019-01-01T06:00:00Z",
       type: "diff",
