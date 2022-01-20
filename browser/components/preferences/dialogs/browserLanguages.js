@@ -396,11 +396,21 @@ function compareItems(a, b) {
 
 var gBrowserLanguagesDialog = {
   /**
+   * The publicly readable list of selected locales. It is only set when the dialog is
+   * accepted, and can be retrieved elsewhere by directly reading the property
+   * on gBrowserLanguagesDialog.
+   *
+   *   let { selected } = gBrowserLanguagesDialog;
+   *
+   * @type {null | Array<string>}
+   */
+  selected: null,
+
+  /**
    * @type {string | null} An ID used for telemetry pings. It is unique to the current
    * opening of the browser language.
    */
   _telemetryId: null,
-  accepted: false,
 
   /**
    * @type {SortedItemSelectList}
@@ -411,7 +421,6 @@ var gBrowserLanguagesDialog = {
    * @type {OrderedListBox}
    */
   _selectedLocalesUI: null,
-  selectedLocales: null,
 
   get downloadEnabled() {
     // Downloading langpacks isn't always supported, check the pref.
@@ -428,26 +437,32 @@ var gBrowserLanguagesDialog = {
     );
   },
 
-  beforeAccept() {
-    this.selected = this.getSelectedLocales();
-    this.accepted = true;
-  },
-
   async onLoad() {
-    document
-      .getElementById("BrowserLanguagesDialog")
-      .addEventListener("beforeaccept", () => this.beforeAccept());
-    // Maintain the previously selected locales even if we cancel out.
-    let { telemetryId, selected, search } = window.arguments[0];
+    /**
+     * @typedef {Object} Options - Options passed in to configure the subdialog.
+     * @property {string} telemetryId,
+     * @property {Array<string>} [selectedLocalesForRestart] The optional list of
+     *   previously selected locales for when a restart is required. This list is
+     *   preserved between openings of the dialog.
+     * @property {boolean} search Whether the user opened this from "Search for more
+     *   languages" option.
+     */
+
+    /** @type {Options} */
+    let {
+      telemetryId,
+      selectedLocalesForRestart,
+      search,
+    } = window.arguments[0];
+
     this._telemetryId = telemetryId;
-    this.selectedLocales = selected;
 
     // This is a list of available locales that the user selected. It's more
     // restricted than the Intl notion of `requested` as it only contains
     // locale codes for which we have matching locales available.
     // The first time this dialog is opened, populate with appLocalesAsBCP47.
     let selectedLocales =
-      this.selectedLocales || Services.locale.appLocalesAsBCP47;
+      selectedLocalesForRestart || Services.locale.appLocalesAsBCP47;
     let selectedLocaleSet = new Set(selectedLocales);
     let available = await getAvailableLocales();
     let availableSet = new Set(available);
@@ -464,6 +479,13 @@ var gBrowserLanguagesDialog = {
     await this.initAvailableLocales(available, search);
 
     this.initialized = true;
+
+    // Now the component is initialized, it's safe to accept the results.
+    document
+      .getElementById("BrowserLanguagesDialog")
+      .addEventListener("beforeaccept", () => {
+        this.selected = this._selectedLocalesUI.items.map(item => item.value);
+      });
   },
 
   /**

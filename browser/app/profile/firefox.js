@@ -2123,6 +2123,12 @@ pref("app.normandy.onsync_skew_sec", 600);
   // AMO only serves language packs for release and beta versions.
   pref("intl.multilingual.downloadEnabled", false);
 #endif
+// With the preference enabled below, switching the browser language will do a live
+// reload rather than requiring a restart. Enable bidirectional below as well to allow
+// live reloading when switching between LTR and RTL languages.
+pref("intl.multilingual.liveReload", false);
+pref("intl.multilingual.liveReloadBidirectional", false);
+
 
 // Simulate conditions that will happen when the browser
 // is running with Fission enabled. This is meant to assist
