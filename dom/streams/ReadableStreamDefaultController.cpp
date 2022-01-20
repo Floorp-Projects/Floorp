@@ -663,6 +663,9 @@ already_AddRefed<Promise> ReadableStreamDefaultController::CancelSteps(
   RefPtr<Promise> result =
       callback ? callback->CancelCallback(aCx, errorOption, aRv)
                : Promise::CreateResolvedWithUndefined(GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   // Step 3.
   ReadableStreamDefaultControllerClearAlgorithms(this);
