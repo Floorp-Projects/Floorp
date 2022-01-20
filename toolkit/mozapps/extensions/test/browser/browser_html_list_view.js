@@ -61,6 +61,7 @@ function createExtensions(manifestExtras) {
 
 add_task(async function testExtensionList() {
   let id = "test@mochi.test";
+  let headingId = "test_mochi_test-heading";
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       name: "Test extension",
@@ -94,6 +95,16 @@ add_task(async function testExtensionList() {
 
   // Check the properties of the card.
   is(card.addonNameEl.textContent, "Test extension", "The name is set");
+  is(
+    card.querySelector("h3").id,
+    headingId,
+    "The add-on name has the correct id"
+  );
+  is(
+    card.querySelector(".card").getAttribute("aria-labelledby"),
+    headingId,
+    "The card is labelled by the heading"
+  );
   let icon = card.querySelector(".addon-icon");
   ok(icon.src.endsWith("/test-icon.png"), "The icon is set");
 

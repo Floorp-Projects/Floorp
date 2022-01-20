@@ -422,9 +422,10 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
     if (mCachedData.mDynamicData.mChildCount == 0) {
       return E_NOINTERFACE;
     }
-    if (mCachedData.mDynamicData.mIA2Role == IA2_ROLE_INTERNAL_FRAME &&
+    if (!mCachedData.mStaticData.mIAHypertext &&
         mCachedData.mDynamicData.mChildCount == 1) {
-      // This is for an iframe. HandlerChildEnumerator works fine for iframes
+      // This might be an OOP iframe. (We can't check the role because it might
+      // be overridden by ARIA.) HandlerChildEnumerator works fine for iframes
       // rendered in the same content process. However, for out-of-process
       // iframes, HandlerProvider::get_AllChildren (called by
       // HandlerChildEnumerator) will fail. This is because we only send down
@@ -433,13 +434,13 @@ AccessibleHandler::QueryHandlerInterface(IUnknown* aProxyUnknown, REFIID aIid,
       // from the parent process. Because the content process is sandboxed,
       // it can't make the outgoing COM call to QI the proxy from IDispatch to
       // IAccessible2 and so it fails.
-      // Since an iframe only has one child anyway, we don't need the bulk fetch
-      // optimization offered by HandlerChildEnumerator or even IEnumVARIANT.
-      // Therefore, we explicitly tell the client this interface is not
-      // supported, which will cause the oleacc AccessibleChildren function
-      // to fall back to accChild.
-      // If we return E_NOINTERFACE here, mscom::Handler will try the COM
-      // proxy. S_FALSE signals that the proxy should not be tried.
+      // Since this Accessible only has one child anyway, we don't need the bulk
+      // fetch optimization offered by HandlerChildEnumerator or even
+      // IEnumVARIANT. Therefore, we explicitly tell the client this interface
+      // is not supported, which will cause the oleacc AccessibleChildren
+      // function to fall back to accChild. If we return E_NOINTERFACE here,
+      // mscom::Handler will try the COM proxy. S_FALSE signals that the proxy
+      // should not be tried.
       return S_FALSE;
     }
     RefPtr<IEnumVARIANT> childEnum(

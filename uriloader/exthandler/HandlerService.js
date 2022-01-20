@@ -158,6 +158,11 @@ HandlerService.prototype = {
     // don't care what's already in the file, we just want to do the
     // equivalent of appending into the database. So let's just go do that:
     for (let scheme of Object.keys(localeHandlers.schemes)) {
+      if (scheme == "mailto" && AppConstants.MOZ_APP_NAME == "thunderbird") {
+        // Thunderbird IS a mailto handler, it doesn't need handlers added.
+        continue;
+      }
+
       let existingSchemeInfo = this._store.data.schemes[scheme];
       if (!existingSchemeInfo) {
         // Haven't seen this scheme before. Default to asking which app the

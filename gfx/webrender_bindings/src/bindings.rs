@@ -2475,6 +2475,7 @@ pub struct WrStackingContextParams {
     pub reference_frame_kind: WrReferenceFrameKind,
     pub is_2d_scale_translation: bool,
     pub should_snap: bool,
+    pub paired_with_perspective: bool,
     pub scrolling_relative_to: *const u64,
     pub prim_flags: PrimitiveFlags,
     pub mix_blend_mode: MixBlendMode,
@@ -2571,8 +2572,6 @@ pub extern "C" fn wr_dp_push_stacking_context(
     // This is resolved into proper `Maybe<WrSpatialId>` inside `WebRenderAPI::PushStackingContext`.
     let mut result = WrSpatialId { id: 0 };
     if let Some(transform_binding) = transform_binding {
-        let is_2d_scale_translation = params.is_2d_scale_translation;
-        let should_snap = params.should_snap;
         let scrolling_relative_to = match unsafe { params.scrolling_relative_to.as_ref() } {
             Some(scroll_id) => {
                 debug_assert_eq!(params.reference_frame_kind, WrReferenceFrameKind::Perspective);
@@ -2583,8 +2582,9 @@ pub extern "C" fn wr_dp_push_stacking_context(
 
         let reference_frame_kind = match params.reference_frame_kind {
             WrReferenceFrameKind::Transform => ReferenceFrameKind::Transform {
-                is_2d_scale_translation,
-                should_snap,
+                is_2d_scale_translation: params.is_2d_scale_translation,
+                should_snap: params.should_snap,
+                paired_with_perspective: params.paired_with_perspective,
             },
             WrReferenceFrameKind::Perspective => ReferenceFrameKind::Perspective { scrolling_relative_to },
         };

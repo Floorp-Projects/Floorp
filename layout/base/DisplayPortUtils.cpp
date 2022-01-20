@@ -601,7 +601,7 @@ void DisplayPortUtils::InvalidateForDisplayPortChange(
 
       RetainedDisplayListData* data =
           GetOrSetRetainedDisplayListData(rootFrame);
-      data->Flags(frame) |= RetainedDisplayListData::FrameFlags::HasProps;
+      data->Flags(frame) += RetainedDisplayListData::FrameFlag::HasProps;
     } else {
       MOZ_ASSERT(rect, "this property should only store non-null values");
     }

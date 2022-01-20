@@ -1094,7 +1094,7 @@ void DocAccessible::BindToDocument(LocalAccessible* aAccessible,
     }
   }
 
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIPCDoc) {
     mInsertedAccessibles.EnsureInserted(aAccessible);
   }
 }
@@ -1414,7 +1414,7 @@ void DocAccessible::ProcessBoundsChanged() {
 }
 
 void DocAccessible::SendAccessiblesWillMove() {
-  if (!mIPCDoc || !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (!mIPCDoc) {
     return;
   }
   nsTArray<uint64_t> ids;
@@ -2345,7 +2345,7 @@ bool DocAccessible::MoveChild(LocalAccessible* aChild,
   if (curParent == aNewParent) {
     MOZ_ASSERT(aChild->IndexInParent() != aIdxInParent, "No move case");
     curParent->RelocateChild(aIdxInParent, aChild);
-    if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    if (mIPCDoc) {
       TrackMovedAccessible(aChild);
     }
 
@@ -2374,7 +2374,7 @@ bool DocAccessible::MoveChild(LocalAccessible* aChild,
 
   TreeMutation imut(aNewParent);
   aNewParent->InsertChildAt(aIdxInParent, aChild);
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+  if (mIPCDoc) {
     TrackMovedAccessible(aChild);
   }
   imut.AfterInsertion(aChild);

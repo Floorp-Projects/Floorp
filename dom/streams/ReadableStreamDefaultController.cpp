@@ -272,7 +272,12 @@ void ReadableStreamDefaultControllerEnqueue(
                   CallbackObject::eRethrowExceptions)
             : 1.0;
 
-    // Step 4.2
+    // If this is an uncatchable exception we can't continue.
+    if (aRv.IsUncatchableException()) {
+      return;
+    }
+
+    // Step 4.2:
     if (aRv.MaybeSetPendingException(
             aCx, "ReadableStreamDefaultController.enqueue")) {
       JS::RootedValue errorValue(aCx);

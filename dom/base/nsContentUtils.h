@@ -3311,16 +3311,12 @@ class nsContentUtils {
     bool mMustRevalidate = false;
   };
 
-  enum class SubresourceKind {
-    Style,
-    Image,
-  };
   /**
    * Gets cache validation info for subresources such as images or CSS
    * stylesheets.
    */
   static SubresourceCacheValidationInfo GetSubresourceCacheValidationInfo(
-      nsIRequest*, nsIURI*, SubresourceKind);
+      nsIRequest*, nsIURI*);
 
   static uint32_t SecondsFromPRTime(PRTime aTime) {
     return uint32_t(int64_t(aTime) / int64_t(PR_USEC_PER_SEC));
