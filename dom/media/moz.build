@@ -357,21 +357,9 @@ if CONFIG["MOZ_ANDROID_HLS_SUPPORT"]:
 
 if CONFIG["COMPILE_ENVIRONMENT"]:
     EXPORTS += [
-        "!audioipc2_client_ffi_generated.h",
-        "!audioipc2_server_ffi_generated.h",
         "!audioipc_client_ffi_generated.h",
         "!audioipc_server_ffi_generated.h",
     ]
-
-    CbindgenHeader(
-        "audioipc2_client_ffi_generated.h",
-        inputs=["/third_party/rust/audioipc2-client"],
-    )
-
-    CbindgenHeader(
-        "audioipc2_server_ffi_generated.h",
-        inputs=["/third_party/rust/audioipc2-server"],
-    )
 
     CbindgenHeader(
         "audioipc_client_ffi_generated.h", inputs=["/third_party/rust/audioipc-client"]
