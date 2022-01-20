@@ -1269,7 +1269,7 @@ mozilla::ipc::IPCResult ContentParent::RecvUngrabPointer(
 #if !defined(MOZ_WIDGET_GTK)
   MOZ_CRASH("This message only makes sense on GTK platforms");
 #else
-  gdk_device_ungrab(GdkGetPointer(), aTime);
+  gdk_pointer_ungrab(aTime);
   return IPC_OK();
 #endif
 }

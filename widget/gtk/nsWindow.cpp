@@ -6773,12 +6773,12 @@ void nsWindow::GrabPointer(guint32 aTime) {
   // Note that we need GDK_TOUCH_MASK below to work around a GDK/X11 bug that
   // causes touch events that would normally be received by this client on
   // other windows to be discarded during the grab.
-  retval = gdk_device_grab(
-      GdkGetPointer(), mGdkWindow, GDK_OWNERSHIP_NONE, TRUE,
+  retval = gdk_pointer_grab(
+      mGdkWindow, TRUE,
       (GdkEventMask)(GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
                      GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
                      GDK_POINTER_MOTION_MASK | GDK_TOUCH_MASK),
-      nullptr, aTime);
+      (GdkWindow*)nullptr, nullptr, aTime);
 
   if (retval == GDK_GRAB_NOT_VIEWABLE) {
     LOG("  failed: window not viewable; will retry\n");
@@ -6808,7 +6808,7 @@ void nsWindow::ReleaseGrabs(void) {
     return;
   }
 
-  gdk_device_ungrab(GdkGetPointer(), GDK_CURRENT_TIME);
+  gdk_pointer_ungrab(GDK_CURRENT_TIME);
 }
 
 GtkWidget* nsWindow::GetToplevelWidget() { return mShell; }
