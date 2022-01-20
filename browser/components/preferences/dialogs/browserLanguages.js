@@ -360,10 +360,10 @@ function compareItems(a, b) {
 }
 
 var gBrowserLanguagesDialog = {
-  telemetryId: null,
+  _telemetryId: null,
   accepted: false,
-  _availableLocales: null,
-  _selectedLocales: null,
+  _availableLocalesUI: null,
+  _selectedLocalesUI: null,
   selectedLocales: null,
 
   get downloadEnabled() {
@@ -376,7 +376,7 @@ var gBrowserLanguagesDialog = {
       "intl.ui.browserLanguage",
       method,
       "dialog",
-      this.telemetryId,
+      this._telemetryId,
       extra
     );
   },
@@ -392,7 +392,7 @@ var gBrowserLanguagesDialog = {
       .addEventListener("beforeaccept", () => this.beforeAccept());
     // Maintain the previously selected locales even if we cancel out.
     let { telemetryId, selected, search } = window.arguments[0];
-    this.telemetryId = telemetryId;
+    this._telemetryId = telemetryId;
     this.selectedLocales = selected;
 
     // This is a list of available locales that the user selected. It's more
@@ -420,7 +420,7 @@ var gBrowserLanguagesDialog = {
   },
 
   async initSelectedLocales(selectedLocales) {
-    this._selectedLocales = new OrderedListBox({
+    this._selectedLocalesUI = new OrderedListBox({
       richlistbox: document.getElementById("selectedLocales"),
       upButton: document.getElementById("up"),
       downButton: document.getElementById("down"),
@@ -428,11 +428,13 @@ var gBrowserLanguagesDialog = {
       onRemove: item => this.selectedLocaleRemoved(item),
       onReorder: () => this.recordTelemetry("reorder"),
     });
-    this._selectedLocales.setItems(await getLocaleDisplayInfo(selectedLocales));
+    this._selectedLocalesUI.setItems(
+      await getLocaleDisplayInfo(selectedLocales)
+    );
   },
 
   async initAvailableLocales(available, search) {
-    this._availableLocales = new SortedItemSelectList({
+    this._availableLocalesUI = new SortedItemSelectList({
       menulist: document.getElementById("availableLocales"),
       button: document.getElementById("add"),
       compareFn: compareItems,
@@ -467,7 +469,9 @@ var gBrowserLanguagesDialog = {
     }
 
     // Disable the dropdown while we hit the network.
-    this._availableLocales.disableWithMessageId("browser-languages-searching");
+    this._availableLocalesUI.disableWithMessageId(
+      "browser-languages-searching"
+    );
 
     // Fetch the available langpacks from AMO.
     let availableLangpacks;
@@ -502,13 +506,13 @@ var gBrowserLanguagesDialog = {
     });
 
     // Remove the search option and add the remote locales.
-    let items = this._availableLocales.items;
+    let items = this._availableLocalesUI.items;
     items.pop();
     items = items.concat(availableItems);
 
     // Update the dropdown and enable it again.
-    this._availableLocales.setItems(items);
-    this._availableLocales.enableWithMessageId(
+    this._availableLocalesUI.setItems(items);
+    this._availableLocalesUI.enableWithMessageId(
       "browser-languages-select-language"
     );
   },
@@ -527,7 +531,7 @@ var gBrowserLanguagesDialog = {
         value: "search",
       });
     }
-    this._availableLocales.setItems(items);
+    this._availableLocalesUI.setItems(items);
   },
 
   async availableLanguageSelected(item) {
@@ -543,22 +547,22 @@ var gBrowserLanguagesDialog = {
   },
 
   async requestLocalLanguage(item, available) {
-    this._selectedLocales.addItem(item);
-    let selectedCount = this._selectedLocales.items.length;
+    this._selectedLocalesUI.addItem(item);
+    let selectedCount = this._selectedLocalesUI.items.length;
     let availableCount = (await getAvailableLocales()).length;
     if (selectedCount == availableCount) {
       // Remove the installed label, they're all installed.
-      this._availableLocales.items.shift();
-      this._availableLocales.setItems(this._availableLocales.items);
+      this._availableLocalesUI.items.shift();
+      this._availableLocalesUI.setItems(this._availableLocalesUI.items);
     }
     // The label isn't always reset when the selected item is removed, so set it again.
-    this._availableLocales.enableWithMessageId(
+    this._availableLocalesUI.enableWithMessageId(
       "browser-languages-select-language"
     );
   },
 
   async requestRemoteLanguage(item) {
-    this._availableLocales.disableWithMessageId(
+    this._availableLocalesUI.disableWithMessageId(
       "browser-languages-downloading"
     );
 
@@ -580,8 +584,8 @@ var gBrowserLanguagesDialog = {
     }
 
     item.installed = true;
-    this._selectedLocales.addItem(item);
-    this._availableLocales.enableWithMessageId(
+    this._selectedLocalesUI.addItem(item);
+    this._availableLocalesUI.enableWithMessageId(
       "browser-languages-select-language"
     );
 
@@ -605,7 +609,7 @@ var gBrowserLanguagesDialog = {
 
   showError() {
     document.getElementById("warning-message").hidden = false;
-    this._availableLocales.enableWithMessageId(
+    this._availableLocalesUI.enableWithMessageId(
       "browser-languages-select-language"
     );
 
@@ -624,17 +628,17 @@ var gBrowserLanguagesDialog = {
   },
 
   getSelectedLocales() {
-    return this._selectedLocales.items.map(item => item.value);
+    return this._selectedLocalesUI.items.map(item => item.value);
   },
 
   async selectedLocaleRemoved(item) {
     this.recordTelemetry("remove");
 
-    this._availableLocales.addItem(item);
+    this._availableLocalesUI.addItem(item);
 
     // If the item we added is at the top of the list, it needs the label.
-    if (this._availableLocales.items[0] == item) {
-      this._availableLocales.addItem(await this.createInstalledLabel());
+    if (this._availableLocalesUI.items[0] == item) {
+      this._availableLocalesUI.addItem(await this.createInstalledLabel());
     }
   },
 

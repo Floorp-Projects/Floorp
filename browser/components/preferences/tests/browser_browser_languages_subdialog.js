@@ -223,8 +223,8 @@ async function selectLocale(localeCode, available, selected, dialogDoc) {
 async function openDialog(doc, search = false) {
   let dialogLoaded = promiseLoadSubDialog(BROWSER_LANGUAGES_URL);
   if (search) {
-    doc.getElementById("defaultBrowserLanguageSearch").doCommand();
-    doc.getElementById("defaultBrowserLanguage").menupopup.hidePopup();
+    doc.getElementById("primaryBrowserLocaleSearch").doCommand();
+    doc.getElementById("primaryBrowserLocale").menupopup.hidePopup();
   } else {
     doc.getElementById("manageBrowserLanguagesButton").doCommand();
   }
@@ -703,7 +703,7 @@ add_task(async function testDownloadEnabled() {
   });
   let doc = gBrowser.contentDocument;
 
-  let defaultMenulist = doc.getElementById("defaultBrowserLanguage");
+  let defaultMenulist = doc.getElementById("primaryBrowserLocale");
   ok(
     hasSearchOption(defaultMenulist.menupopup),
     "There's a search option in the General pane"
@@ -731,7 +731,7 @@ add_task(async function testDownloadDisabled() {
   });
   let doc = gBrowser.contentDocument;
 
-  let defaultMenulist = doc.getElementById("defaultBrowserLanguage");
+  let defaultMenulist = doc.getElementById("primaryBrowserLocale");
   ok(
     !hasSearchOption(defaultMenulist.menupopup),
     "There's no search option in the General pane"
@@ -775,7 +775,7 @@ add_task(async function testReorderMainPane() {
   let messageBar = doc.getElementById("confirmBrowserLanguage");
   is(messageBar.hidden, true, "The message bar is hidden at first");
 
-  let available = doc.getElementById("defaultBrowserLanguage");
+  let available = doc.getElementById("primaryBrowserLocale");
   let availableLocales = Array.from(available.menupopup.children);
   let availableCodes = availableLocales
     .map(item => item.value)
