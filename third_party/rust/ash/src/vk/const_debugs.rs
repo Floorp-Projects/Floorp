@@ -353,6 +353,7 @@ impl fmt::Debug for AttachmentLoadOp {
             Self::LOAD => Some("LOAD"),
             Self::CLEAR => Some("CLEAR"),
             Self::DONT_CARE => Some("DONT_CARE"),
+            Self::NONE_EXT => Some("NONE_EXT"),
             _ => None,
         };
         if let Some(x) = name {
@@ -367,7 +368,7 @@ impl fmt::Debug for AttachmentStoreOp {
         let name = match *self {
             Self::STORE => Some("STORE"),
             Self::DONT_CARE => Some("DONT_CARE"),
-            Self::NONE_QCOM => Some("NONE_QCOM"),
+            Self::NONE_EXT => Some("NONE_EXT"),
             _ => None,
         };
         if let Some(x) = name {
@@ -1324,6 +1325,7 @@ impl fmt::Debug for DriverId {
             Self::MOLTENVK => Some("MOLTENVK"),
             Self::COREAVI_PROPRIETARY => Some("COREAVI_PROPRIETARY"),
             Self::JUICE_PROPRIETARY => Some("JUICE_PROPRIETARY"),
+            Self::VERISILICON_PROPRIETARY => Some("VERISILICON_PROPRIETARY"),
             _ => None,
         };
         if let Some(x) = name {
@@ -2031,8 +2033,8 @@ impl fmt::Debug for GeometryInstanceFlagsKHR {
                 "TRIANGLE_FACING_CULL_DISABLE",
             ),
             (
-                GeometryInstanceFlagsKHR::TRIANGLE_FRONT_COUNTERCLOCKWISE.0,
-                "TRIANGLE_FRONT_COUNTERCLOCKWISE",
+                GeometryInstanceFlagsKHR::TRIANGLE_FLIP_FACING.0,
+                "TRIANGLE_FLIP_FACING",
             ),
             (GeometryInstanceFlagsKHR::FORCE_OPAQUE.0, "FORCE_OPAQUE"),
             (
@@ -3572,6 +3574,7 @@ impl fmt::Debug for SamplerCreateFlags {
                 SamplerCreateFlags::SUBSAMPLED_COARSE_RECONSTRUCTION_EXT.0,
                 "SUBSAMPLED_COARSE_RECONSTRUCTION_EXT",
             ),
+            (SamplerCreateFlags::RESERVED_2_EXT.0, "RESERVED_2_EXT"),
         ];
         debug_flags(f, KNOWN, self.0)
     }
@@ -4684,6 +4687,12 @@ impl fmt::Debug for StructureType {
             Self::COMMAND_BUFFER_INHERITANCE_VIEWPORT_SCISSOR_INFO_NV => {
                 Some("COMMAND_BUFFER_INHERITANCE_VIEWPORT_SCISSOR_INFO_NV")
             }
+            Self::PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_FEATURES_KHR => {
+                Some("PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_FEATURES_KHR")
+            }
+            Self::PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_PROPERTIES_KHR => {
+                Some("PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_PROPERTIES_KHR")
+            }
             Self::PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_FEATURES_EXT => {
                 Some("PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_FEATURES_EXT")
             }
@@ -4829,6 +4838,9 @@ impl fmt::Debug for StructureType {
                 Some("VERTEX_INPUT_ATTRIBUTE_DESCRIPTION_2_EXT")
             }
             Self::PHYSICAL_DEVICE_DRM_PROPERTIES_EXT => Some("PHYSICAL_DEVICE_DRM_PROPERTIES_EXT"),
+            Self::PHYSICAL_DEVICE_PRIMITIVE_TOPOLOGY_LIST_RESTART_FEATURES_EXT => {
+                Some("PHYSICAL_DEVICE_PRIMITIVE_TOPOLOGY_LIST_RESTART_FEATURES_EXT")
+            }
             Self::IMPORT_MEMORY_ZIRCON_HANDLE_INFO_FUCHSIA => {
                 Some("IMPORT_MEMORY_ZIRCON_HANDLE_INFO_FUCHSIA")
             }
@@ -4881,6 +4893,9 @@ impl fmt::Debug for StructureType {
             }
             Self::PHYSICAL_DEVICE_MULTI_DRAW_PROPERTIES_EXT => {
                 Some("PHYSICAL_DEVICE_MULTI_DRAW_PROPERTIES_EXT")
+            }
+            Self::PHYSICAL_DEVICE_PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT => {
+                Some("PHYSICAL_DEVICE_PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT")
             }
             Self::PHYSICAL_DEVICE_SUBGROUP_PROPERTIES => {
                 Some("PHYSICAL_DEVICE_SUBGROUP_PROPERTIES")
@@ -5419,15 +5434,15 @@ impl fmt::Debug for VideoBeginCodingFlagsKHR {
         debug_flags(f, KNOWN, self.0)
     }
 }
-impl fmt::Debug for VideoCapabilitiesFlagsKHR {
+impl fmt::Debug for VideoCapabilityFlagsKHR {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[
             (
-                VideoCapabilitiesFlagsKHR::PROTECTED_CONTENT.0,
+                VideoCapabilityFlagsKHR::PROTECTED_CONTENT.0,
                 "PROTECTED_CONTENT",
             ),
             (
-                VideoCapabilitiesFlagsKHR::SEPARATE_REFERENCE_IMAGES.0,
+                VideoCapabilityFlagsKHR::SEPARATE_REFERENCE_IMAGES.0,
                 "SEPARATE_REFERENCE_IMAGES",
             ),
         ];
@@ -5478,7 +5493,6 @@ impl fmt::Debug for VideoCodingControlFlagsKHR {
 impl fmt::Debug for VideoCodingQualityPresetFlagsKHR {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[
-            (VideoCodingQualityPresetFlagsKHR::DEFAULT.0, "DEFAULT"),
             (VideoCodingQualityPresetFlagsKHR::NORMAL.0, "NORMAL"),
             (VideoCodingQualityPresetFlagsKHR::POWER.0, "POWER"),
             (VideoCodingQualityPresetFlagsKHR::QUALITY.0, "QUALITY"),
@@ -5512,20 +5526,20 @@ impl fmt::Debug for VideoDecodeH264CreateFlagsEXT {
         debug_flags(f, KNOWN, self.0)
     }
 }
-impl fmt::Debug for VideoDecodeH264FieldLayoutFlagsEXT {
+impl fmt::Debug for VideoDecodeH264PictureLayoutFlagsEXT {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[
             (
-                VideoDecodeH264FieldLayoutFlagsEXT::PROGRESSIVE_PICTURES_ONLY.0,
-                "PROGRESSIVE_PICTURES_ONLY",
+                VideoDecodeH264PictureLayoutFlagsEXT::PROGRESSIVE.0,
+                "PROGRESSIVE",
             ),
             (
-                VideoDecodeH264FieldLayoutFlagsEXT::LINE_INTERLACED_PLANE.0,
-                "LINE_INTERLACED_PLANE",
+                VideoDecodeH264PictureLayoutFlagsEXT::INTERLACED_INTERLEAVED_LINES.0,
+                "INTERLACED_INTERLEAVED_LINES",
             ),
             (
-                VideoDecodeH264FieldLayoutFlagsEXT::SEPARATE_INTERLACED_PLANE.0,
-                "SEPARATE_INTERLACED_PLANE",
+                VideoDecodeH264PictureLayoutFlagsEXT::INTERLACED_SEPARATE_PLANES.0,
+                "INTERLACED_SEPARATE_PLANES",
             ),
         ];
         debug_flags(f, KNOWN, self.0)
@@ -5546,45 +5560,45 @@ impl fmt::Debug for VideoEncodeFlagsKHR {
         debug_flags(f, KNOWN, self.0)
     }
 }
-impl fmt::Debug for VideoEncodeH264CapabilitiesFlagsEXT {
+impl fmt::Debug for VideoEncodeH264CapabilityFlagsEXT {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const KNOWN: &[(Flags, &str)] = &[
-            (VideoEncodeH264CapabilitiesFlagsEXT::CABAC.0, "CABAC"),
-            (VideoEncodeH264CapabilitiesFlagsEXT::CAVLC.0, "CAVLC"),
+            (VideoEncodeH264CapabilityFlagsEXT::CABAC.0, "CABAC"),
+            (VideoEncodeH264CapabilityFlagsEXT::CAVLC.0, "CAVLC"),
             (
-                VideoEncodeH264CapabilitiesFlagsEXT::WEIGHTED_BI_PRED_IMPLICIT.0,
+                VideoEncodeH264CapabilityFlagsEXT::WEIGHTED_BI_PRED_IMPLICIT.0,
                 "WEIGHTED_BI_PRED_IMPLICIT",
             ),
             (
-                VideoEncodeH264CapabilitiesFlagsEXT::TRANSFORM_8X8.0,
+                VideoEncodeH264CapabilityFlagsEXT::TRANSFORM_8X8.0,
                 "TRANSFORM_8X8",
             ),
             (
-                VideoEncodeH264CapabilitiesFlagsEXT::CHROMA_QP_OFFSET.0,
+                VideoEncodeH264CapabilityFlagsEXT::CHROMA_QP_OFFSET.0,
                 "CHROMA_QP_OFFSET",
             ),
             (
-                VideoEncodeH264CapabilitiesFlagsEXT::SECOND_CHROMA_QP_OFFSET.0,
+                VideoEncodeH264CapabilityFlagsEXT::SECOND_CHROMA_QP_OFFSET.0,
                 "SECOND_CHROMA_QP_OFFSET",
             ),
             (
-                VideoEncodeH264CapabilitiesFlagsEXT::DEBLOCKING_FILTER_DISABLED.0,
+                VideoEncodeH264CapabilityFlagsEXT::DEBLOCKING_FILTER_DISABLED.0,
                 "DEBLOCKING_FILTER_DISABLED",
             ),
             (
-                VideoEncodeH264CapabilitiesFlagsEXT::DEBLOCKING_FILTER_ENABLED.0,
+                VideoEncodeH264CapabilityFlagsEXT::DEBLOCKING_FILTER_ENABLED.0,
                 "DEBLOCKING_FILTER_ENABLED",
             ),
             (
-                VideoEncodeH264CapabilitiesFlagsEXT::DEBLOCKING_FILTER_PARTIAL.0,
+                VideoEncodeH264CapabilityFlagsEXT::DEBLOCKING_FILTER_PARTIAL.0,
                 "DEBLOCKING_FILTER_PARTIAL",
             ),
             (
-                VideoEncodeH264CapabilitiesFlagsEXT::MULTIPLE_SLICE_PER_FRAME.0,
+                VideoEncodeH264CapabilityFlagsEXT::MULTIPLE_SLICE_PER_FRAME.0,
                 "MULTIPLE_SLICE_PER_FRAME",
             ),
             (
-                VideoEncodeH264CapabilitiesFlagsEXT::EVENLY_DISTRIBUTED_SLICE_SIZE.0,
+                VideoEncodeH264CapabilityFlagsEXT::EVENLY_DISTRIBUTED_SLICE_SIZE.0,
                 "EVENLY_DISTRIBUTED_SLICE_SIZE",
             ),
         ];

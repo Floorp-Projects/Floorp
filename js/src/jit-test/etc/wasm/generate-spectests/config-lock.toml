@@ -1,18 +1,18 @@
 [[repos]]
-name = 'threads'
-commit = 'dfdcb81a'
+name = 'spec'
+commit = 'ffb5e3b4'
 
 [[repos]]
-name = 'spec'
-commit = 'c9ed6580'
+name = 'threads'
+commit = '85b562cd'
 
 [[repos]]
 name = 'simd'
-commit = '1618b39a'
+commit = 'a78b98a6'
 
 [[repos]]
 name = 'exception-handling'
-commit = '7fcfe173'
+commit = '76419ef8'
 
 [[repos]]
 name = 'memory64'

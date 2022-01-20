@@ -22,6 +22,8 @@
 #include "mozilla/a11y/DocManager.h"
 #include "mozilla/jni/GeckoBundleUtils.h"
 #include "mozilla/widget/GeckoViewSupport.h"
+#include "mozilla/MouseEvents.h"
+#include "mozilla/dom/MouseEventBinding.h"
 
 #ifdef DEBUG
 #  include <android/log.h>
@@ -105,12 +107,12 @@ mozilla::jni::Object::LocalRef SessionAccessibility::GetNodeInfo(int32_t aID) {
 }
 
 RootAccessibleWrap* SessionAccessibility::GetRoot() {
-  auto acc(mWindow.Access());
-  if (!acc) {
+  auto gvAccessor(mWindow.Access());
+  if (!gvAccessor) {
     return nullptr;
   }
 
-  nsWindow* gkWindow = acc->GetNsWindow();
+  nsWindow* gkWindow = gvAccessor->GetNsWindow();
   if (!gkWindow) {
     return nullptr;
   }
@@ -132,7 +134,17 @@ void SessionAccessibility::Pivot(int32_t aID, int32_t aGranularity,
 }
 
 void SessionAccessibility::ExploreByTouch(int32_t aID, float aX, float aY) {
-  FORWARD_ACTION_TO_ACCESSIBLE(ExploreByTouch, aX, aY);
+  auto gvAccessor(mWindow.Access());
+  if (gvAccessor) {
+    if (nsWindow* gkWindow = gvAccessor->GetNsWindow()) {
+      WidgetMouseEvent hittest(true, eMouseExploreByTouch, gkWindow,
+                               WidgetMouseEvent::eReal);
+      hittest.mRefPoint = LayoutDeviceIntPoint::Floor(aX, aY);
+      hittest.mInputSource = dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH;
+      hittest.mFlags.mOnlyChromeDispatch = true;
+      gkWindow->DispatchInputEvent(&hittest);
+    }
+  }
 }
 
 void SessionAccessibility::NavigateText(int32_t aID, int32_t aGranularity,

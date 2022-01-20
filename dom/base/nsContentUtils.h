@@ -352,6 +352,19 @@ class nsContentUtils {
   static bool ShouldResistFingerprinting(const Document* aDoc);
   static bool ShouldResistFingerprinting(nsIChannel* aChannel);
 
+  /**
+   *Implement a legacy RFP function to provide an explination as to
+   * why they are using the original RFP call. Given that there is a gradual
+   *carry over of ShouldResistFingerprinting calls to a nuanced API, some
+   *features still require a legacy function. In this case, the context of the
+   *call is not reviewed. The intent of this is to have an explanation as to why
+   *the developer is using the legacy function call over of the nuanced one. The
+   *implementation of this function will include accepting a char* to provide
+   *the explanation o why the developer is using the legacy function as opposed
+   *to nuanced preference.
+   */
+  static bool ShouldResistFingerprinting(char* aChar);
+
   // Prevent system colors from being exposed to CSS or canvas.
   static bool UseStandinsForNativeColors();
 
@@ -432,13 +445,13 @@ class nsContentUtils {
    * This method fills |aAncestorNodes| with all ancestor nodes of |aNode|
    * including |aNode| (QI'd to nsIContent) at the zero index.
    * For each ancestor, there is a corresponding element in |aAncestorOffsets|
-   * which is the IndexOf the child in relation to its parent.
+   * which is the ComputeIndexOf the child in relation to its parent.
    *
    * This method just sucks.
    */
   static nsresult GetInclusiveAncestorsAndOffsets(
-      nsINode* aNode, int32_t aOffset, nsTArray<nsIContent*>* aAncestorNodes,
-      nsTArray<int32_t>* aAncestorOffsets);
+      nsINode* aNode, uint32_t aOffset, nsTArray<nsIContent*>* aAncestorNodes,
+      nsTArray<mozilla::Maybe<uint32_t>>* aAncestorOffsets);
 
   /**
    * Returns the closest common inclusive ancestor
@@ -497,16 +510,17 @@ class nsContentUtils {
    * Returns true if aNode1 is before aNode2 in the same connected
    * tree.
    * aNode1Index and aNode2Index are in/out arguments. If non-null, and value is
-   * not -1, that value is used instead of calling slow ComputeIndexOf on the
-   * parent node. If value is -1, the value will be set to the return value of
-   * ComputeIndexOf.
+   * Some, that value is used instead of calling slow ComputeIndexOf on the
+   * parent node. If value is Nothing, the value will be set to the return value
+   * of ComputeIndexOf.
    */
   static bool PositionIsBefore(nsINode* aNode1, nsINode* aNode2,
-                               int32_t* aNode1Index = nullptr,
-                               int32_t* aNode2Index = nullptr);
+                               mozilla::Maybe<uint32_t>* aNode1Index = nullptr,
+                               mozilla::Maybe<uint32_t>* aNode2Index = nullptr);
 
   struct ComparePointsCache {
-    int32_t ComputeIndexOf(const nsINode* aParent, const nsINode* aChild) {
+    mozilla::Maybe<uint32_t> ComputeIndexOf(const nsINode* aParent,
+                                            const nsINode* aChild) {
       if (aParent == mParent && aChild == mChild) {
         return mIndex;
       }
@@ -520,7 +534,7 @@ class nsContentUtils {
    private:
     const nsINode* mParent = nullptr;
     const nsINode* mChild = nullptr;
-    int32_t mIndex = 0;
+    mozilla::Maybe<uint32_t> mIndex;
   };
 
   /**
@@ -529,19 +543,14 @@ class nsContentUtils {
    *  Pass a cache object as aParent1Cache if you expect to repeatedly
    *  call this function with the same value as aParent1.
    *
-   *  XXX aOffset1 and aOffset2 should be uint32_t since valid offset value is
-   *      between 0 - UINT32_MAX.  However, these methods work even with
-   *      negative offset values!  E.g., when aOffset1 is -1 and aOffset is 0,
-   *      these methods return -1.  Some root callers depend on this behavior.
-   *
    *  @return -1 if point1 < point2,
    *          1 if point1 > point2,
    *          0 if point1 == point2.
    *          `Nothing` if the two nodes aren't in the same connected subtree.
    */
   static mozilla::Maybe<int32_t> ComparePoints(
-      const nsINode* aParent1, int32_t aOffset1, const nsINode* aParent2,
-      int32_t aOffset2, ComparePointsCache* aParent1Cache = nullptr);
+      const nsINode* aParent1, uint32_t aOffset1, const nsINode* aParent2,
+      uint32_t aOffset2, ComparePointsCache* aParent1Cache = nullptr);
   template <typename FPT, typename FRT, typename SPT, typename SRT>
   static mozilla::Maybe<int32_t> ComparePoints(
       const mozilla::RangeBoundaryBase<FPT, FRT>& aFirstBoundary,
@@ -558,23 +567,56 @@ class nsContentUtils {
    *
    *  Pass a cache object as aParent1Cache if you expect to repeatedly
    *  call this function with the same value as aParent1.
-   *
-   *  XXX aOffset1 and aOffset2 should be uint32_t since valid offset value is
-   *      between 0 - UINT32_MAX.  However, these methods work even with
-   *      negative offset values!  E.g., when aOffset1 is -1 and aOffset is 0,
-   *      these methods return -1.  Some root callers depend on this behavior.
-   *      On the other hand, nsINode can have ATTRCHILD_ARRAY_MAX_CHILD_COUN
-   *      (0x3FFFFF) at most.  Therefore, they can be int32_t for now.
    */
   static int32_t ComparePoints_Deprecated(
-      const nsINode* aParent1, int32_t aOffset1, const nsINode* aParent2,
-      int32_t aOffset2, bool* aDisconnected = nullptr,
+      const nsINode* aParent1, uint32_t aOffset1, const nsINode* aParent2,
+      uint32_t aOffset2, bool* aDisconnected = nullptr,
       ComparePointsCache* aParent1Cache = nullptr);
   template <typename FPT, typename FRT, typename SPT, typename SRT>
   static int32_t ComparePoints_Deprecated(
       const mozilla::RangeBoundaryBase<FPT, FRT>& aFirstBoundary,
       const mozilla::RangeBoundaryBase<SPT, SRT>& aSecondBoundary,
       bool* aDisconnected = nullptr);
+
+  /**
+   * DO NOT USE this method for comparing the points in new code.  this method
+   * emulates same result as `ComparePoints` before bug 1741148.
+   * When the old `ComparePoints` was called with offset value over `INT32_MAX`
+   * or `-1` which is used as "not found" by some API, they were treated as-is
+   * without checking whether the negative value or valid value.  Thus, this
+   * handles the negative offset cases in the special paths to keep the
+   * traditional behavior. If you want to use this in new code, it means that
+   * you **should** check the offset values and call `ComparePoints` instead.
+   */
+  static mozilla::Maybe<int32_t> ComparePoints_AllowNegativeOffsets(
+      const nsINode* aParent1, int64_t aOffset1, const nsINode* aParent2,
+      int64_t aOffset2) {
+    if (MOZ_UNLIKELY(aOffset1 < 0 || aOffset2 < 0)) {
+      // If in same container, just the offset is compared.
+      if (aParent1 == aParent2) {
+        const int32_t compOffsets =
+            aOffset1 == aOffset2 ? 0 : (aOffset1 < aOffset2 ? -1 : 1);
+        return mozilla::Some(compOffsets);
+      }
+      // Otherwise, aOffset1 is referred only when aParent2 is a descendant of
+      // aParent1.
+      if (aOffset1 < 0 && aParent2->IsInclusiveDescendantOf(aParent1)) {
+        return mozilla::Some(-1);
+      }
+      // And also aOffset2 is referred only when aParent1 is a descendant of
+      // aParent2.
+      if (aOffset2 < 0 && aParent1->IsInclusiveDescendantOf(aParent2)) {
+        return mozilla::Some(1);
+      }
+      // Otherwise, aOffset1 nor aOffset2 is referred so that any value is fine
+      // if negative.
+      return ComparePoints(
+          aParent1, aOffset1 < 0 ? UINT32_MAX : static_cast<uint32_t>(aOffset1),
+          aParent2,
+          aOffset2 < 0 ? UINT32_MAX : static_cast<uint32_t>(aOffset2));
+    }
+    return ComparePoints(aParent1, aOffset1, aParent2, aOffset2);
+  }
 
   /**
    * Brute-force search of the element subtree rooted at aContent for
@@ -660,13 +702,23 @@ class nsContentUtils {
     eParseHTMLInteger_Negative = 1 << 5,
   };
   static int32_t ParseHTMLInteger(const nsAString& aValue,
+                                  ParseHTMLIntegerResultFlags* aResult) {
+    return ParseHTMLInteger(aValue.BeginReading(), aValue.EndReading(),
+                            aResult);
+  }
+  static int32_t ParseHTMLInteger(const char16_t* aStart, const char16_t* aEnd,
                                   ParseHTMLIntegerResultFlags* aResult);
   static int32_t ParseHTMLInteger(const nsACString& aValue,
+                                  ParseHTMLIntegerResultFlags* aResult) {
+    return ParseHTMLInteger(aValue.BeginReading(), aValue.EndReading(),
+                            aResult);
+  }
+  static int32_t ParseHTMLInteger(const char* aStart, const char* aEnd,
                                   ParseHTMLIntegerResultFlags* aResult);
 
  private:
-  template <class StringT>
-  static int32_t ParseHTMLIntegerImpl(const StringT& aValue,
+  template <class CharT>
+  static int32_t ParseHTMLIntegerImpl(const CharT* aStart, const CharT* aEnd,
                                       ParseHTMLIntegerResultFlags* aResult);
 
  public:
@@ -847,6 +899,10 @@ class nsContentUtils {
   // the principal
   static bool IsExactSitePermDeny(nsIPrincipal* aPrincipal,
                                   const nsACString& aType);
+
+  // Returns true if the pref exists and is not UNKNOWN_ACTION.
+  static bool HasExactSitePerm(nsIPrincipal* aPrincipal,
+                               const nsACString& aType);
 
   // Returns true if aDoc1 and aDoc2 have equal NodePrincipal()s.
   static bool HaveEqualPrincipals(Document* aDoc1, Document* aDoc2);
@@ -1401,7 +1457,8 @@ class nsContentUtils {
    * @param aChild    The node to fire DOMNodeRemoved at.
    * @param aParent   The parent of aChild.
    */
-  static void MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent);
+  MOZ_CAN_RUN_SCRIPT static void MaybeFireNodeRemoved(nsINode* aChild,
+                                                      nsINode* aParent);
 
   /**
    * These methods create and dispatch a trusted event.
@@ -1856,13 +1913,15 @@ class nsContentUtils {
    * Will reuse the first text child if one is available. Will not reuse
    * existing cdata children.
    *
+   * TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+   *
    * @param aContent Node to set contents of.
    * @param aValue   Value to set contents to.
    * @param aTryReuse When true, the function will try to reuse an existing
    *                  textnodes rather than always creating a new one.
    */
-  static nsresult SetNodeTextContent(nsIContent* aContent,
-                                     const nsAString& aValue, bool aTryReuse);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult SetNodeTextContent(
+      nsIContent* aContent, const nsAString& aValue, bool aTryReuse);
 
   /**
    * Get the textual contents of a node. This is a concatenation of all
@@ -3272,7 +3331,7 @@ class nsContentUtils {
    *
    * Returns an empty string if aURL is null.
    */
-  static nsCString TruncatedURLForDisplay(nsIURI* aURL, uint32_t aMaxLen = 128);
+  static nsCString TruncatedURLForDisplay(nsIURI* aURL, size_t aMaxLen = 128);
 
  private:
   static bool InitializeEventTable();
@@ -3287,18 +3346,18 @@ class nsContentUtils {
                              JS::MutableHandle<JS::Value> vp,
                              bool aAllowWrapping);
 
-  static nsresult DispatchEvent(Document* aDoc, nsISupports* aTarget,
-                                const nsAString& aEventName, CanBubble,
-                                Cancelable, Composed, Trusted,
-                                bool* aDefaultAction = nullptr,
-                                ChromeOnlyDispatch = ChromeOnlyDispatch::eNo);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult DispatchEvent(
+      Document* aDoc, nsISupports* aTarget, const nsAString& aEventName,
+      CanBubble, Cancelable, Composed, Trusted, bool* aDefaultAction = nullptr,
+      ChromeOnlyDispatch = ChromeOnlyDispatch::eNo);
 
-  static nsresult DispatchEvent(Document* aDoc, nsISupports* aTarget,
-                                mozilla::WidgetEvent& aWidgetEvent,
-                                EventMessage aEventMessage, CanBubble,
-                                Cancelable, Trusted,
-                                bool* aDefaultAction = nullptr,
-                                ChromeOnlyDispatch = ChromeOnlyDispatch::eNo);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult DispatchEvent(
+      Document* aDoc, nsISupports* aTarget, mozilla::WidgetEvent& aWidgetEvent,
+      EventMessage aEventMessage, CanBubble, Cancelable, Trusted,
+      bool* aDefaultAction = nullptr,
+      ChromeOnlyDispatch = ChromeOnlyDispatch::eNo);
 
   static void InitializeModifierStrings();
 

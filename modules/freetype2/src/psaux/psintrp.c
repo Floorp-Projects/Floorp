@@ -469,7 +469,7 @@
    */
   FT_LOCAL_DEF( void )
   cf2_interpT2CharString( CF2_Font              font,
-                          CF2_Buffer            buf,
+                          const CF2_Buffer      buf,
                           CF2_OutlineCallbacks  callbacks,
                           const FT_Vector*      translation,
                           FT_Bool               doingSeac,
@@ -1899,18 +1899,17 @@
                       /*     cvi( <idx> ) of BuildCharArray with  */
                       /*     WeightVector                         */
                       {
-                        FT_Int    idx;
+                        FT_UInt   idx;
                         PS_Blend  blend = decoder->blend;
 
 
                         if ( arg_cnt != 1 || !blend )
                           goto Unexpected_OtherSubr;
 
-                        idx = cf2_stack_popInt( opStack );
+                        idx = (FT_UInt)cf2_stack_popInt( opStack );
 
-                        if ( idx < 0                             ||
-                             (FT_UInt)idx + blend->num_designs >
-                               decoder->len_buildchar            )
+                        if ( idx + blend->num_designs >
+                               decoder->len_buildchar   )
                           goto Unexpected_OtherSubr;
 
                         ft_memcpy( &decoder->buildchar[idx],
@@ -2010,17 +2009,16 @@
                       /* <val> <idx> 2 24 callothersubr               */
                       /* ==> set BuildCharArray[cvi( <idx> )] = <val> */
                       {
-                        CF2_Int   idx;
+                        CF2_UInt  idx;
                         PS_Blend  blend = decoder->blend;
 
 
                         if ( arg_cnt != 2 || !blend )
                           goto Unexpected_OtherSubr;
 
-                        idx = cf2_stack_popInt( opStack );
+                        idx = (CF2_UInt)cf2_stack_popInt( opStack );
 
-                        if ( idx < 0                                ||
-                             (FT_UInt)idx >= decoder->len_buildchar )
+                        if ( idx >= decoder->len_buildchar )
                           goto Unexpected_OtherSubr;
 
                         decoder->buildchar[idx] =
@@ -2033,17 +2031,16 @@
                       /* ==> push BuildCharArray[cvi( idx )] */
                       /*     onto T1 stack                   */
                       {
-                        CF2_Int   idx;
+                        CF2_UInt  idx;
                         PS_Blend  blend = decoder->blend;
 
 
                         if ( arg_cnt != 1 || !blend )
                           goto Unexpected_OtherSubr;
 
-                        idx = cf2_stack_popInt( opStack );
+                        idx = (CF2_UInt)cf2_stack_popInt( opStack );
 
-                        if ( idx < 0                                ||
-                             (FT_UInt)idx >= decoder->len_buildchar )
+                        if ( idx >= decoder->len_buildchar )
                           goto Unexpected_OtherSubr;
 
                         cf2_stack_pushFixed( opStack,
@@ -2185,29 +2182,29 @@
                 case cf2_escPUT:
                   {
                     CF2_F16Dot16  val;
-                    CF2_Int       idx;
+                    CF2_UInt      idx;
 
 
                     FT_TRACE4(( " put\n" ));
 
-                    idx = cf2_stack_popInt( opStack );
+                    idx = (CF2_UInt)cf2_stack_popInt( opStack );
                     val = cf2_stack_popFixed( opStack );
 
-                    if ( idx >= 0 && idx < CF2_STORAGE_SIZE )
+                    if ( idx < CF2_STORAGE_SIZE )
                       storage[idx] = val;
                   }
                   continue; /* do not clear the stack */
 
                 case cf2_escGET:
                   {
-                    CF2_Int  idx;
+                    CF2_UInt  idx;
 
 
                     FT_TRACE4(( " get\n" ));
 
-                    idx = cf2_stack_popInt( opStack );
+                    idx = (CF2_UInt)cf2_stack_popInt( opStack );
 
-                    if ( idx >= 0 && idx < CF2_STORAGE_SIZE )
+                    if ( idx < CF2_STORAGE_SIZE )
                       cf2_stack_pushFixed( opStack, storage[idx] );
                   }
                   continue; /* do not clear the stack */

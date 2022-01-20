@@ -34,9 +34,7 @@
 #include "mozilla/dom/JSActorService.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 
-#ifdef MOZ_XUL
-#  include "nsXULElement.h"
-#endif
+#include "nsXULElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -51,17 +49,13 @@ nsWindowRoot::~nsWindowRoot() {
     mListenerManager->Disconnect();
   }
 
-  if (XRE_IsContentProcess()) {
-    JSActorService::UnregisterChromeEventTarget(this);
-  }
+  JSActorService::UnregisterChromeEventTarget(this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsWindowRoot)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsWindowRoot)
-  if (XRE_IsContentProcess()) {
-    JSActorService::UnregisterChromeEventTarget(tmp);
-  }
+  JSActorService::UnregisterChromeEventTarget(tmp);
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mListenerManager)
@@ -156,7 +150,6 @@ nsresult nsWindowRoot::GetControllers(bool aForVisibleWindow,
   nsIContent* focusedContent = nsFocusManager::GetFocusedDescendant(
       mWindow, searchRange, getter_AddRefs(focusedWindow));
   if (focusedContent) {
-#ifdef MOZ_XUL
     RefPtr<nsXULElement> xulElement = nsXULElement::FromNode(focusedContent);
     if (xulElement) {
       ErrorResult rv;
@@ -164,7 +157,6 @@ nsresult nsWindowRoot::GetControllers(bool aForVisibleWindow,
       NS_IF_ADDREF(*aResult);
       return rv.StealNSResult();
     }
-#endif
 
     HTMLTextAreaElement* htmlTextArea =
         HTMLTextAreaElement::FromNode(focusedContent);
@@ -395,10 +387,8 @@ void nsWindowRoot::EnumerateBrowsers(BrowserEnumerator aEnumFunc, void* aArg) {
 already_AddRefed<EventTarget> NS_NewWindowRoot(nsPIDOMWindowOuter* aWindow) {
   nsCOMPtr<EventTarget> result = new nsWindowRoot(aWindow);
 
-  if (XRE_IsContentProcess()) {
-    RefPtr<JSActorService> wasvc = JSActorService::GetSingleton();
-    wasvc->RegisterChromeEventTarget(result);
-  }
+  RefPtr<JSActorService> wasvc = JSActorService::GetSingleton();
+  wasvc->RegisterChromeEventTarget(result);
 
   return result.forget();
 }

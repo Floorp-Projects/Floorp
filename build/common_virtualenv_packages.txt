@@ -13,8 +13,10 @@ pth:python/mozperftest
 pth:python/mozrelease
 pth:python/mozterm
 pth:python/mozversioncontrol
+pth:security/manager/tools
 pth:taskcluster
 pth:testing
+pth:testing/awsy
 pth:testing/condprofile
 pth:testing/firefox-ui/harness
 pth:testing/marionette/client
@@ -123,4 +125,5 @@ pth:toolkit/components/telemetry/tests/marionette/harness
 pth:tools
 pth:tools/moztreedocs
 pth:xpcom/ds/tools
+pth:xpcom/geckoprocesstypes_generator
 pth:xpcom/idl-parser

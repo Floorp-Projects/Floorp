@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+</head>
+<body>
+<video id="v" style="position:absolute; left:0; top:0"></video>
+<canvas id="canvas" style="position:absolute; left:0; top:0"></video>
+<script type="text/javascript">
+/**
+ * The display information in the VP8 byte stream is different from the display
+ * information in the container, and it's the incorrect one, which doesn't honer
+ * the original DAR. This test is used to check whether we will display the
+ * video frame in correct DAR.
+ */
+async function testDisplayRatioForVP8() {
+  const video = document.getElementById("v");
+  video.src = "incorrect_display_in_bytestream_vp8.webm";
+  await new Promise(r => video.oncanplay = r);
+  // Since our media pipeline sends the frame to imageBridge, the target frame
+  // may not be shown on the screen yet. So using canvas to access the target
+  // frame in the imageContainer in videoElement.
+  const canvas = document.getElementById("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+  document.documentElement.removeAttribute('class');
+};
+
+window.addEventListener("MozReftestInvalidate", testDisplayRatioForVP8);
+</script>
+</body>
+</html>

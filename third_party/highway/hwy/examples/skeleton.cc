@@ -14,7 +14,6 @@
 
 #include "hwy/examples/skeleton.h"
 
-#include <assert.h>
 #include <stdio.h>
 
 // First undef to prevent error when re-included.
@@ -35,21 +34,29 @@ namespace HWY_NAMESPACE {
 // Highway ops reside here; ADL does not find templates nor builtins.
 using namespace hwy::HWY_NAMESPACE;
 
+// For reasons unknown, optimized msan builds encounter long build times here;
+// work around it until a cause is found.
+#if HWY_COMPILER_CLANG && defined(MEMORY_SANITIZER) && defined(__OPTIMIZE__)
+#define ATTR_MSAN __attribute__((optnone))
+#else
+#define ATTR_MSAN
+#endif
+
 // Computes log2 by converting to a vector of floats. Compiled once per target.
 template <class DF>
-HWY_NOINLINE void OneFloorLog2(const DF df, const uint8_t* HWY_RESTRICT values,
-                               uint8_t* HWY_RESTRICT log2) {
+ATTR_MSAN void OneFloorLog2(const DF df, const uint8_t* HWY_RESTRICT values,
+                            uint8_t* HWY_RESTRICT log2) {
   // Type tags for converting to other element types (Rebind = same count).
   const Rebind<int32_t, DF> d32;
   const Rebind<uint8_t, DF> d8;
 
   const auto u8 = Load(d8, values);
   const auto bits = BitCast(d32, ConvertTo(df, PromoteTo(d32, u8)));
-  const auto exponent = ShiftRight<23>(bits) - Set(d32, 127);
+  const auto exponent = Sub(ShiftRight<23>(bits), Set(d32, 127));
   Store(DemoteTo(d8, exponent), d8, log2);
 }
 
-HWY_NOINLINE void CodepathDemo() {
+void CodepathDemo() {
   // Highway defaults to portability, but per-target codepaths may be selected
   // via #if HWY_TARGET == HWY_SSE4 or by testing capability macros:
 #if HWY_CAP_INTEGER64
@@ -60,12 +67,12 @@ HWY_NOINLINE void CodepathDemo() {
   printf("Target %s: %s\n", hwy::TargetName(HWY_TARGET), gather);
 }
 
-HWY_NOINLINE void FloorLog2(const uint8_t* HWY_RESTRICT values, size_t count,
-                            uint8_t* HWY_RESTRICT log2) {
+void FloorLog2(const uint8_t* HWY_RESTRICT values, size_t count,
+               uint8_t* HWY_RESTRICT log2) {
   CodepathDemo();
 
   // Second argument is necessary on RVV until it supports fractional lengths.
-  HWY_FULL(float, 4) df;
+  const ScalableTag<float, 2> df;
 
   const size_t N = Lanes(df);
   size_t i = 0;

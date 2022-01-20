@@ -229,13 +229,13 @@ bool ProcessTTF(ots::FontFile *header,
   // Don't call ots_failure() here since ~25% of fonts (250+ fonts) in
   // http://www.princexml.com/fonts/ have unexpected search_range value.
   if (font->search_range != expected_search_range) {
-    OTS_WARNING_MSG_HDR("bad search range");
+    OTS_WARNING_MSG_HDR("bad table directory searchRange");
     font->search_range = expected_search_range;  // Fix the value.
   }
 
   // entry_selector is Log2(maximum power of 2 <= numTables)
   if (font->entry_selector != max_pow2) {
-    OTS_WARNING_MSG_HDR("incorrect entrySelector for table directory");
+    OTS_WARNING_MSG_HDR("bad table directory entrySelector");
     font->entry_selector = max_pow2;  // Fix the value.
   }
 
@@ -245,7 +245,7 @@ bool ProcessTTF(ots::FontFile *header,
   const uint16_t expected_range_shift =
       16 * font->num_tables - font->search_range;
   if (font->range_shift != expected_range_shift) {
-    OTS_WARNING_MSG_HDR("bad range shift");
+    OTS_WARNING_MSG_HDR("bad table directory rangeShift");
     font->range_shift = expected_range_shift;  // the same as above.
   }
 

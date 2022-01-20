@@ -23,7 +23,7 @@ const MAX_STRING_LENGTH = 255;
 const MIN_MS_BETWEEN_SUBMITS = 30000;
 
 // The addon types currently supported by the integrated abuse report panel.
-const SUPPORTED_ADDON_TYPES = ["extension", "theme"];
+const SUPPORTED_ADDON_TYPES = ["extension", "theme", "sitepermission"];
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
@@ -114,6 +114,10 @@ const AbuseReporter = {
     }
 
     return currentTimestamp - this._lastReportTimestamp;
+  },
+
+  isSupportedAddonType(addonType) {
+    return SUPPORTED_ADDON_TYPES.includes(addonType);
   },
 
   /**

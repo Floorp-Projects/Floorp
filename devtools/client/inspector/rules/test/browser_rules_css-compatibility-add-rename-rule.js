@@ -19,7 +19,6 @@ const TEST_URI = `
   }
 </style>
 <body>
-  <div></div>
 </body>`;
 
 const TEST_DATA_INITIAL = [
@@ -47,25 +46,12 @@ const TEST_DATA_INITIAL = [
 
 const TEST_DATA_ADD_RULE = [
   {
-    selector: "div",
-    rules: [
-      {},
-      {},
-      {
-        cursor: {
-          value: "pointer",
-          expected: COMPATIBILITY_TOOLTIP_MESSAGE.default,
-        },
-      },
-    ],
-  },
-  {
     selector: "body",
     rules: [
       {
-        cursor: {
-          value: "pointer",
-          expected: COMPATIBILITY_TOOLTIP_MESSAGE.default,
+        "-moz-float-edge": {
+          value: "content-box",
+          expected: COMPATIBILITY_TOOLTIP_MESSAGE.deprecated,
         },
       },
       {
@@ -88,25 +74,12 @@ const TEST_DATA_ADD_RULE = [
 
 const TEST_DATA_RENAME_RULE = [
   {
-    selector: "div",
-    rules: [
-      {},
-      {},
-      {
-        cursor: {
-          value: "pointer",
-          expected: COMPATIBILITY_TOOLTIP_MESSAGE.default,
-        },
-      },
-    ],
-  },
-  {
     selector: "body",
     rules: [
       {
-        cursor: {
-          value: "pointer",
-          expected: COMPATIBILITY_TOOLTIP_MESSAGE.default,
+        "-moz-float-edge": {
+          value: "content-box",
+          expected: COMPATIBILITY_TOOLTIP_MESSAGE.deprecated,
         },
       },
       {
@@ -143,7 +116,7 @@ add_task(async function() {
   info(
     "Add an inheritable incompatible rule and check the compatibility status"
   );
-  await addProperty(view, 0, "cursor", "pointer");
+  await addProperty(view, 0, "-moz-float-edge", "content-box");
   await runCSSCompatibilityTests(view, inspector, TEST_DATA_ADD_RULE);
 
   info("Rename user-select to color and check the compatibility status");

@@ -34,16 +34,9 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         "build-essential",
         "libpython3-dev",
         "m4",
-        "nodejs",
         "unzip",
         "uuid",
         "zip",
-    ]
-
-    # Ubuntu and Debian don't often differ, but they do for npm.
-    DEBIAN_PACKAGES = [
-        # Comment the npm package until Debian bring it back
-        # 'npm'
     ]
 
     # These are common packages for building Firefox for Desktop
@@ -76,8 +69,6 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         self.codename = codename
 
         self.packages = list(self.COMMON_PACKAGES)
-        if self.distro == "debian":
-            self.packages += self.DEBIAN_PACKAGES
 
     def suggest_install_distutils(self):
         print(
@@ -98,9 +89,6 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     def install_browser_packages(self, mozconfig_builder, artifact_mode=False):
         # TODO: Figure out what not to install for artifact mode
         self.apt_install(*self.BROWSER_COMMON_PACKAGES)
-        modern = self.is_nasm_modern()
-        if not modern:
-            self.apt_install("nasm")
 
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         self.install_browser_packages(mozconfig_builder, artifact_mode=True)

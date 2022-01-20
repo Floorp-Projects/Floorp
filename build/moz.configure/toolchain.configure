@@ -531,7 +531,7 @@ option(
 @depends(
     host,
     vs_major_version,
-    check_build_environment,
+    build_environment,
     "VC_PATH",
     "--with-visual-studio-version",
     when=host_is_windows,
@@ -828,8 +828,12 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
                     # -m32/-m64 for the host, it's probably toolchain-prefixed,
                     # so we prioritize a raw 'gcc' instead.
                     prioritized = info.type
-
-            types = [prioritized] + [t for t in types if t != info.type]
+            if target.os != "WINNT" and host_or_target.os == "WINNT":
+                # When cross-compiling on Windows, don't prioritize. We'll fallback
+                # to checking for clang-cl first.
+                pass
+            else:
+                types = [prioritized] + [t for t in types if t != info.type]
 
         gcc = ("gcc",)
         if toolchain_prefix and host_or_target is target:
@@ -1655,7 +1659,7 @@ set_define("_LIBCPP_ALWAYS_INLINE", libcxx_override_visibility.empty)
 set_define("_LIBCPP_HIDE_FROM_ABI", libcxx_override_visibility.hide_from_abi)
 
 
-@depends(target, check_build_environment)
+@depends(target, build_environment)
 def visibility_flags(target, env):
     if target.os != "WINNT":
         if target.kernel == "Darwin":
@@ -1890,8 +1894,6 @@ def security_hardening_cflags(
 
     flags = []
     ldflags = []
-    js_flags = []
-    js_ldflags = []
 
     # WASI compiler doesn't support security hardening cflags
     if target.os == "WASI":
@@ -1904,16 +1906,11 @@ def security_hardening_cflags(
         # Require optimization for FORTIFY_SOURCE. See Bug 1417452
         # Also, undefine it before defining it just in case a distro adds it, see Bug 1418398
         if compiler_is_gccish and optimize and not asan:
-            # Don't enable FORTIFY_SOURCE on Android on the top-level, but do enable in js/
-            if target.os != "Android":
-                flags.append("-U_FORTIFY_SOURCE")
-                flags.append("-D_FORTIFY_SOURCE=2")
-            js_flags.append("-U_FORTIFY_SOURCE")
-            js_flags.append("-D_FORTIFY_SOURCE=2")
+            flags.append("-U_FORTIFY_SOURCE")
+            flags.append("-D_FORTIFY_SOURCE=2")
             if mingw_clang:
                 # mingw-clang needs to link in ssp which is not done by default
                 ldflags.append("-lssp")
-                js_ldflags.append("-lssp")
 
         # fstack-protector ------------------------------------
         # Enable only if hardening is not disabled and ASAN is
@@ -1921,8 +1918,6 @@ def security_hardening_cflags(
         if compiler_is_gccish and not asan:
             flags.append("-fstack-protector-strong")
             ldflags.append("-fstack-protector-strong")
-            js_flags.append("-fstack-protector-strong")
-            js_ldflags.append("-fstack-protector-strong")
 
             if (
                 c_compiler.type == "clang"
@@ -1932,8 +1927,6 @@ def security_hardening_cflags(
             ):
                 flags.append("-fstack-clash-protection")
                 ldflags.append("-fstack-clash-protection")
-                js_flags.append("-fstack-clash-protection")
-                js_ldflags.append("-fstack-clash-protection")
 
         # ftrivial-auto-var-init ------------------------------
         # Initialize local variables with a 0xAA pattern in clang debug builds.
@@ -1947,16 +1940,13 @@ def security_hardening_cflags(
         ):
             if c_compiler.type == "clang-cl":
                 flags.append("-Xclang")
-                js_flags.append("-Xclang")
             flags.append("-ftrivial-auto-var-init=pattern")
-            js_flags.append("-ftrivial-auto-var-init=pattern")
 
         # ASLR ------------------------------------------------
         # ASLR (dynamicbase) is enabled by default in clang-cl; but the
         # mingw-clang build requires it to be explicitly enabled
         if mingw_clang:
             ldflags.append("-Wl,--dynamicbase")
-            js_ldflags.append("-Wl,--dynamicbase")
 
         # Control Flow Guard (CFG) ----------------------------
         if (
@@ -1967,20 +1957,16 @@ def security_hardening_cflags(
             if target.cpu == "aarch64" and c_compiler.version >= "10.0.0":
                 # The added checks in clang 10 make arm64 builds crash. (Bug 1639318)
                 flags.append("-guard:cf,nochecks")
-                js_flags.append("-guard:cf,nochecks")
             else:
                 flags.append("-guard:cf")
-                js_flags.append("-guard:cf")
             # nolongjmp is needed because clang doesn't emit the CFG tables of
             # setjmp return addresses https://bugs.llvm.org/show_bug.cgi?id=40057
             ldflags.append("-guard:cf,nolongjmp")
-            js_ldflags.append("-guard:cf,nolongjmp")
 
     # ----------------------------------------------------------
     # If ASAN _is_ on, undefine FORTIFY_SOURCE just to be safe
     if asan:
         flags.append("-U_FORTIFY_SOURCE")
-        js_flags.append("-U_FORTIFY_SOURCE")
 
     # fno-common -----------------------------------------
     # Do not merge variables for ASAN; can detect some subtle bugs
@@ -1993,15 +1979,11 @@ def security_hardening_cflags(
     return namespace(
         flags=flags,
         ldflags=ldflags,
-        js_flags=js_flags,
-        js_ldflags=js_ldflags,
     )
 
 
 set_config("MOZ_HARDENING_CFLAGS", security_hardening_cflags.flags)
 set_config("MOZ_HARDENING_LDFLAGS", security_hardening_cflags.ldflags)
-set_config("MOZ_HARDENING_CFLAGS_JS", security_hardening_cflags.js_flags)
-set_config("MOZ_HARDENING_LDFLAGS_JS", security_hardening_cflags.js_ldflags)
 
 
 # Intel Control-flow Enforcement Technology
@@ -2089,7 +2071,7 @@ set_config("MOZ_CODE_COVERAGE", code_coverage)
 set_define("MOZ_CODE_COVERAGE", code_coverage)
 
 
-@depends(target, c_compiler, check_build_environment, when=code_coverage)
+@depends(target, c_compiler, build_environment, when=code_coverage)
 @imports("os")
 @imports("re")
 @imports(_from="__builtin__", _import="open")
@@ -2158,14 +2140,12 @@ def is_linker_option_enabled(target):
         return True
 
 
-option(
-    "--enable-gold",
-    env="MOZ_FORCE_GOLD",
-    help="Enable GNU Gold Linker when it is not already the default",
-    when=is_linker_option_enabled,
-)
-
-imply_option("--enable-linker", "gold", when="--enable-gold")
+@deprecated_option("--enable-gold", env="MOZ_FORCE_GOLD", when=is_linker_option_enabled)
+def enable_gold(value):
+    if value:
+        die("--enable-gold is deprecated, use --enable-linker=gold instead")
+    else:
+        die("--disable-gold is deprecated, use --enable-linker=something_else instead")
 
 
 @depends(target, developer_options)
@@ -2197,7 +2177,6 @@ def enable_linker(linker):
     "--enable-linker",
     c_compiler,
     developer_options,
-    "--enable-gold",
     extra_toolchain_flags,
     target,
     when=is_linker_option_enabled,
@@ -2205,9 +2184,7 @@ def enable_linker(linker):
 @checking("for linker", lambda x: x.KIND)
 @imports("os")
 @imports("shutil")
-def select_linker(
-    linker, c_compiler, developer_options, enable_gold, toolchain_flags, target
-):
+def select_linker(linker, c_compiler, developer_options, toolchain_flags, target):
 
     if linker:
         linker = linker[0]
@@ -2276,10 +2253,11 @@ def select_linker(
         else:
             kind = "unknown"
 
-        return namespace(
-            KIND=kind,
-            LINKER_FLAG=linker_flag,
-        )
+        if kind == "unknown" or is_valid_linker(kind):
+            return namespace(
+                KIND=kind,
+                LINKER_FLAG=linker_flag,
+            )
 
     result = try_linker(linker)
     if result is None and linker:
@@ -2287,7 +2265,6 @@ def select_linker(
 
     if (
         linker is None
-        and enable_gold.origin == "default"
         and developer_options
         and (result is None or result.KIND in ("bfd", "gold"))
     ):
@@ -2303,7 +2280,7 @@ def select_linker(
             result = tried
 
     if result is None:
-        die("Failed to find a linker")
+        die("Failed to find an adequate linker")
 
     # If an explicit linker was given, error out if what we found is different.
     if linker and not linker.startswith(result.KIND):
@@ -2864,7 +2841,7 @@ def path_remapping(value):
 
 @depends(
     target,
-    check_build_environment,
+    build_environment,
     target_sysroot.path,
     valid_windows_sdk_dir,
     vc_path,
@@ -2915,3 +2892,9 @@ def path_remappings(target, build_env, sysroot_path, windows_sdk_dir, vc_path):
                 die(f"Cannot remap paths because {p} is an ancestor of {q}")
 
     return path_remappings
+
+
+set_config("MMX_FLAGS", ["-mmmx"])
+set_config("SSE_FLAGS", ["-msse"])
+set_config("SSE2_FLAGS", ["-msse2"])
+set_config("SSSE3_FLAGS", ["-mssse3"])

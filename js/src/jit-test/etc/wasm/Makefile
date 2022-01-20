@@ -7,4 +7,4 @@ update:
 	rm -r ../../tests/wasm/spec
 	cp -R generate-spectests/tests/js ../../tests/wasm/spec
 	echo $(warning) > ../../tests/wasm/spec/README.md
-	[ ! -d ./spec-tests.patch ] || (cd ../../tests/wasm/spec && patch -u -p7 < ../../../etc/wasm/spec-tests.patch)
+	[ -f ./spec-tests.patch ] && (cd ../../tests/wasm/spec && patch -u -p7 < ../../../etc/wasm/spec-tests.patch)

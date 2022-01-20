@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
-#include "nsUnicodeProperties.h"
+#include "mozilla/intl/UnicodeProperties.h"
 
 // Verify the assertion in SQLFunctions.cpp / nextSearchCandidate that the
 // only non-ASCII characters that lower-case to ASCII ones are:
@@ -15,7 +15,7 @@ TEST(MatchAutocompleteCasing, CaseAssumption)
 {
   for (uint32_t c = 128; c < 0x110000; c++) {
     if (c != 304 && c != 8490) {
-      ASSERT_GE(mozilla::unicode::GetLowercase(c), 128U);
+      ASSERT_GE(mozilla::intl::UnicodeProperties::ToLower(c), 128U);
     }
   }
 }
@@ -24,6 +24,6 @@ TEST(MatchAutocompleteCasing, CaseAssumption)
 TEST(MatchAutocompleteCasing, CaseAssumption2)
 {
   for (uint32_t c = 0; c < 128; c++) {
-    ASSERT_LT(mozilla::unicode::GetLowercase(c), 128U);
+    ASSERT_LT(mozilla::intl::UnicodeProperties::ToLower(c), 128U);
   }
 }

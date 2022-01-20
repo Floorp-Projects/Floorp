@@ -880,6 +880,15 @@ pub type u64x2x4_sse2<S3, S4, NI> = x4<u64x2_sse2<S3, S4, NI>>;
 #[allow(non_camel_case_types)]
 pub type u128x4_sse2<S3, S4, NI> = x4<u128x1_sse2<S3, S4, NI>>;
 
+impl<S3, S4, NI> Vector<[u32; 16]> for u32x4x4_sse2<S3, S4, NI> {
+    #[inline(always)]
+    fn to_scalars(self) -> [u32; 16] {
+        unsafe {
+            core::mem::transmute(self)
+        }
+    }
+}
+
 impl<S3: Copy, S4: Copy, NI: Copy> u32x4x2<Machine86<S3, S4, NI>> for u32x4x2_sse2<S3, S4, NI>
 where
     u32x4_sse2<S3, S4, NI>: RotateEachWord32 + BSwap,
@@ -983,6 +992,8 @@ where
     Machine86<S3, S4, NI>: Machine,
     u32x4x4_sse2<S3, S4, NI>: MultiLane<[<Machine86<S3, S4, NI> as Machine>::u32x4; 4]>,
     u32x4x4_sse2<S3, S4, NI>: Vec4<<Machine86<S3, S4, NI> as Machine>::u32x4>,
+    u32x4x4_sse2<S3, S4, NI>: Vec4Ext<<Machine86<S3, S4, NI> as Machine>::u32x4>,
+    u32x4x4_sse2<S3, S4, NI>: Vector<[u32; 16]>,
 {
 }
 impl<S3: Copy, S4: Copy, NI: Copy> u64x2x4<Machine86<S3, S4, NI>> for u64x2x4_sse2<S3, S4, NI>
@@ -1004,14 +1015,6 @@ where
 {
 }
 
-impl<NI: Copy> u32x4x4<Avx2Machine<NI>> for u32x4x4_sse2<YesS3, YesS4, NI>
-where
-    u32x4_sse2<YesS3, YesS4, NI>: RotateEachWord32 + BSwap,
-    Avx2Machine<NI>: Machine,
-    u32x4x4_sse2<YesS3, YesS4, NI>: MultiLane<[<Avx2Machine<NI> as Machine>::u32x4; 4]>,
-    u32x4x4_sse2<YesS3, YesS4, NI>: Vec4<<Avx2Machine<NI> as Machine>::u32x4>,
-{
-}
 impl<NI: Copy> u64x2x4<Avx2Machine<NI>> for u64x2x4_sse2<YesS3, YesS4, NI>
 where
     u64x2_sse2<YesS3, YesS4, NI>: RotateEachWord64 + RotateEachWord32 + BSwap,
@@ -1374,65 +1377,80 @@ mod test {
 
 pub mod avx2 {
     #![allow(non_camel_case_types)]
-    use crate::soft::x4;
+    use crate::soft::{x2, x4};
     use crate::types::*;
-    use crate::x86_64::sse2::{u128x1_sse2, u32x4_sse2};
+    use crate::x86_64::sse2::{u128x1_sse2, u32x4_sse2, G0};
     use crate::x86_64::{vec256_storage, vec512_storage, Avx2Machine, YesS3, YesS4};
     use core::arch::x86_64::*;
     use core::marker::PhantomData;
     use core::ops::*;
 
     #[derive(Copy, Clone)]
-    pub struct u32x4x4_avx2<NI> {
-        x: [__m256i; 2],
+    pub struct u32x4x2_avx2<NI> {
+        x: __m256i,
         ni: PhantomData<NI>,
     }
 
-    impl<NI> u32x4x4_avx2<NI> {
+    impl<NI> u32x4x2_avx2<NI> {
         #[inline(always)]
-        fn new(x: [__m256i; 2]) -> Self {
+        fn new(x: __m256i) -> Self {
             Self { x, ni: PhantomData }
         }
     }
 
-    impl<NI> u32x4x4<Avx2Machine<NI>> for u32x4x4_avx2<NI> where NI: Copy {}
-    impl<NI> Store<vec512_storage> for u32x4x4_avx2<NI> {
+    impl<NI> u32x4x2<Avx2Machine<NI>> for u32x4x2_avx2<NI> where NI: Copy {}
+    impl<NI> Store<vec256_storage> for u32x4x2_avx2<NI> {
         #[inline(always)]
-        unsafe fn unpack(p: vec512_storage) -> Self {
-            Self::new([p.avx[0].avx, p.avx[1].avx])
+        unsafe fn unpack(p: vec256_storage) -> Self {
+            Self::new(p.avx)
         }
     }
-    impl<NI> MultiLane<[u32x4_sse2<YesS3, YesS4, NI>; 4]> for u32x4x4_avx2<NI> {
+    impl<NI> StoreBytes for u32x4x2_avx2<NI> {
         #[inline(always)]
-        fn to_lanes(self) -> [u32x4_sse2<YesS3, YesS4, NI>; 4] {
+        unsafe fn unsafe_read_le(input: &[u8]) -> Self {
+            assert_eq!(input.len(), 32);
+            Self::new(_mm256_loadu_si256(input.as_ptr() as *const _))
+        }
+        #[inline(always)]
+        unsafe fn unsafe_read_be(input: &[u8]) -> Self {
+            Self::unsafe_read_le(input).bswap()
+        }
+        #[inline(always)]
+        fn write_le(self, out: &mut [u8]) {
+            unsafe {
+                assert_eq!(out.len(), 32);
+                _mm256_storeu_si256(out.as_mut_ptr() as *mut _, self.x)
+            }
+        }
+        #[inline(always)]
+        fn write_be(self, out: &mut [u8]) {
+            self.bswap().write_le(out)
+        }
+    }
+    impl<NI> MultiLane<[u32x4_sse2<YesS3, YesS4, NI>; 2]> for u32x4x2_avx2<NI> {
+        #[inline(always)]
+        fn to_lanes(self) -> [u32x4_sse2<YesS3, YesS4, NI>; 2] {
             unsafe {
                 [
-                    u32x4_sse2::new(_mm256_extracti128_si256(self.x[0], 0)),
-                    u32x4_sse2::new(_mm256_extracti128_si256(self.x[0], 1)),
-                    u32x4_sse2::new(_mm256_extracti128_si256(self.x[1], 0)),
-                    u32x4_sse2::new(_mm256_extracti128_si256(self.x[1], 1)),
+                    u32x4_sse2::new(_mm256_extracti128_si256(self.x, 0)),
+                    u32x4_sse2::new(_mm256_extracti128_si256(self.x, 1)),
                 ]
             }
         }
         #[inline(always)]
-        fn from_lanes(x: [u32x4_sse2<YesS3, YesS4, NI>; 4]) -> Self {
+        fn from_lanes(x: [u32x4_sse2<YesS3, YesS4, NI>; 2]) -> Self {
             Self::new(unsafe {
-                [
-                    _mm256_setr_m128i(x[0].x, x[1].x),
-                    _mm256_setr_m128i(x[2].x, x[3].x),
-                ]
+                _mm256_setr_m128i(x[0].x, x[1].x)
             })
         }
     }
-    impl<NI> Vec4<u32x4_sse2<YesS3, YesS4, NI>> for u32x4x4_avx2<NI> {
+    impl<NI> Vec2<u32x4_sse2<YesS3, YesS4, NI>> for u32x4x2_avx2<NI> {
         #[inline(always)]
         fn extract(self, i: u32) -> u32x4_sse2<YesS3, YesS4, NI> {
             unsafe {
                 match i {
-                    0 => u32x4_sse2::new(_mm256_extracti128_si256(self.x[0], 0)),
-                    1 => u32x4_sse2::new(_mm256_extracti128_si256(self.x[0], 1)),
-                    2 => u32x4_sse2::new(_mm256_extracti128_si256(self.x[1], 0)),
-                    3 => u32x4_sse2::new(_mm256_extracti128_si256(self.x[1], 1)),
+                    0 => u32x4_sse2::new(_mm256_extracti128_si256(self.x, 0)),
+                    1 => u32x4_sse2::new(_mm256_extracti128_si256(self.x, 1)),
                     _ => panic!(),
                 }
             }
@@ -1441,55 +1459,21 @@ pub mod avx2 {
         fn insert(self, w: u32x4_sse2<YesS3, YesS4, NI>, i: u32) -> Self {
             Self::new(unsafe {
                 match i {
-                    0 => [_mm256_inserti128_si256(self.x[0], w.x, 0), self.x[1]],
-                    1 => [_mm256_inserti128_si256(self.x[0], w.x, 1), self.x[1]],
-                    2 => [self.x[0], _mm256_inserti128_si256(self.x[1], w.x, 0)],
-                    3 => [self.x[0], _mm256_inserti128_si256(self.x[1], w.x, 1)],
+                    0 => _mm256_inserti128_si256(self.x, w.x, 0),
+                    1 => _mm256_inserti128_si256(self.x, w.x, 1),
                     _ => panic!(),
                 }
             })
         }
     }
-    impl<NI> LaneWords4 for u32x4x4_avx2<NI> {
-        #[inline(always)]
-        fn shuffle_lane_words1230(self) -> Self {
-            Self::new(unsafe {
-                [
-                    _mm256_shuffle_epi32(self.x[0], 0b1001_0011),
-                    _mm256_shuffle_epi32(self.x[1], 0b1001_0011),
-                ]
-            })
-        }
-        #[inline(always)]
-        fn shuffle_lane_words2301(self) -> Self {
-            Self::new(unsafe {
-                [
-                    _mm256_shuffle_epi32(self.x[0], 0b0100_1110),
-                    _mm256_shuffle_epi32(self.x[1], 0b0100_1110),
-                ]
-            })
-        }
-        #[inline(always)]
-        fn shuffle_lane_words3012(self) -> Self {
-            Self::new(unsafe {
-                [
-                    _mm256_shuffle_epi32(self.x[0], 0b0011_1001),
-                    _mm256_shuffle_epi32(self.x[1], 0b0011_1001),
-                ]
-            })
-        }
-    }
-    impl<NI> BitOps32 for u32x4x4_avx2<NI> where NI: Copy {}
-    impl<NI> ArithOps for u32x4x4_avx2<NI> where NI: Copy {}
+    impl<NI> BitOps32 for u32x4x2_avx2<NI> where NI: Copy {}
+    impl<NI> ArithOps for u32x4x2_avx2<NI> where NI: Copy {}
     macro_rules! shuf_lane_bytes {
         ($name:ident, $k0:expr, $k1:expr) => {
             #[inline(always)]
             fn $name(self) -> Self {
                 Self::new(unsafe {
-                    [
-                        _mm256_shuffle_epi8(self.x[0], _mm256_set_epi64x($k0, $k1, $k0, $k1)),
-                        _mm256_shuffle_epi8(self.x[1], _mm256_set_epi64x($k0, $k1, $k0, $k1)),
-                    ]
+                    _mm256_shuffle_epi8(self.x, _mm256_set_epi64x($k0, $k1, $k0, $k1))
                 })
             }
         };
@@ -1499,21 +1483,15 @@ pub mod avx2 {
             #[inline(always)]
             fn $name(self) -> Self {
                 Self::new(unsafe {
-                    [
-                        _mm256_or_si256(
-                            _mm256_srli_epi32(self.x[0], $i as i32),
-                            _mm256_slli_epi32(self.x[0], 32 - $i as i32),
-                        ),
-                        _mm256_or_si256(
-                            _mm256_srli_epi32(self.x[1], $i as i32),
-                            _mm256_slli_epi32(self.x[1], 32 - $i as i32),
-                        ),
-                    ]
+                    _mm256_or_si256(
+                        _mm256_srli_epi32(self.x, $i as i32),
+                        _mm256_slli_epi32(self.x, 32 - $i as i32),
+                    )
                 })
             }
         };
     }
-    impl<NI: Copy> RotateEachWord32 for u32x4x4_avx2<NI> {
+    impl<NI: Copy> RotateEachWord32 for u32x4x2_avx2<NI> {
         rotr_32!(rotate_each_word_right7, 7);
         shuf_lane_bytes!(
             rotate_each_word_right8,
@@ -1535,15 +1513,12 @@ pub mod avx2 {
         );
         rotr_32!(rotate_each_word_right25, 25);
     }
-    impl<NI> BitOps0 for u32x4x4_avx2<NI> where NI: Copy {}
-    impl<NI> From<u32x4x4_avx2<NI>> for vec512_storage {
+    impl<NI> BitOps0 for u32x4x2_avx2<NI> where NI: Copy {}
+    impl<NI> From<u32x4x2_avx2<NI>> for vec256_storage {
         #[inline(always)]
-        fn from(x: u32x4x4_avx2<NI>) -> Self {
+        fn from(x: u32x4x2_avx2<NI>) -> Self {
             Self {
-                avx: [
-                    vec256_storage { avx: x.x[0] },
-                    vec256_storage { avx: x.x[1] },
-                ],
+                avx: x.x,
             }
         }
     }
@@ -1561,55 +1536,182 @@ pub mod avx2 {
             }
         };
     }
-    impl_assign!(u32x4x4_avx2, BitXorAssign, bitxor_assign, bitxor);
-    impl_assign!(u32x4x4_avx2, BitOrAssign, bitor_assign, bitor);
-    impl_assign!(u32x4x4_avx2, BitAndAssign, bitand_assign, bitand);
-    impl_assign!(u32x4x4_avx2, AddAssign, add_assign, add);
+    impl_assign!(u32x4x2_avx2, BitXorAssign, bitxor_assign, bitxor);
+    impl_assign!(u32x4x2_avx2, BitOrAssign, bitor_assign, bitor);
+    impl_assign!(u32x4x2_avx2, BitAndAssign, bitand_assign, bitand);
+    impl_assign!(u32x4x2_avx2, AddAssign, add_assign, add);
 
-    macro_rules! impl_bitop_x2 {
+    macro_rules! impl_bitop {
         ($vec:ident, $Op:ident, $op_fn:ident, $impl_fn:ident) => {
             impl<NI> $Op for $vec<NI> {
                 type Output = Self;
                 #[inline(always)]
                 fn $op_fn(self, rhs: Self) -> Self::Output {
                     Self::new(unsafe {
-                        [$impl_fn(self.x[0], rhs.x[0]), $impl_fn(self.x[1], rhs.x[1])]
+                        $impl_fn(self.x, rhs.x)
                     })
                 }
             }
         };
     }
-    impl_bitop_x2!(u32x4x4_avx2, BitXor, bitxor, _mm256_xor_si256);
-    impl_bitop_x2!(u32x4x4_avx2, BitOr, bitor, _mm256_or_si256);
-    impl_bitop_x2!(u32x4x4_avx2, BitAnd, bitand, _mm256_and_si256);
-    impl_bitop_x2!(u32x4x4_avx2, AndNot, andnot, _mm256_andnot_si256);
-    impl_bitop_x2!(u32x4x4_avx2, Add, add, _mm256_add_epi32);
+    impl_bitop!(u32x4x2_avx2, BitXor, bitxor, _mm256_xor_si256);
+    impl_bitop!(u32x4x2_avx2, BitOr, bitor, _mm256_or_si256);
+    impl_bitop!(u32x4x2_avx2, BitAnd, bitand, _mm256_and_si256);
+    impl_bitop!(u32x4x2_avx2, AndNot, andnot, _mm256_andnot_si256);
+    impl_bitop!(u32x4x2_avx2, Add, add, _mm256_add_epi32);
 
-    impl<NI> Not for u32x4x4_avx2<NI> {
+    impl<NI> Not for u32x4x2_avx2<NI> {
         type Output = Self;
         #[inline(always)]
         fn not(self) -> Self::Output {
             unsafe {
                 let f = _mm256_set1_epi8(-0x7f);
-                Self::new([f, f]) ^ self
+                Self::new(f) ^ self
             }
         }
     }
 
-    impl<NI> BSwap for u32x4x4_avx2<NI> {
+    impl<NI> BSwap for u32x4x2_avx2<NI> {
         shuf_lane_bytes!(bswap, 0x0c0d_0e0f_0809_0a0b, 0x0405_0607_0001_0203);
     }
 
-    impl<NI> From<x4<u128x1_sse2<YesS3, YesS4, NI>>> for u32x4x4_avx2<NI>
+    impl<NI> From<x2<u128x1_sse2<YesS3, YesS4, NI>, G0>> for u32x4x2_avx2<NI>
     where
         NI: Copy,
+    {
+        #[inline(always)]
+        fn from(x: x2<u128x1_sse2<YesS3, YesS4, NI>, G0>) -> Self {
+            Self::new(unsafe {
+                _mm256_setr_m128i(x.0[0].x, x.0[1].x)
+            })
+        }
+    }
+
+    impl<NI> LaneWords4 for u32x4x2_avx2<NI> {
+        #[inline(always)]
+        fn shuffle_lane_words1230(self) -> Self {
+            Self::new(unsafe {
+                _mm256_shuffle_epi32(self.x, 0b1001_0011)
+            })
+        }
+        #[inline(always)]
+        fn shuffle_lane_words2301(self) -> Self {
+            Self::new(unsafe {
+                _mm256_shuffle_epi32(self.x, 0b0100_1110)
+            })
+        }
+        #[inline(always)]
+        fn shuffle_lane_words3012(self) -> Self {
+            Self::new(unsafe {
+                _mm256_shuffle_epi32(self.x, 0b0011_1001)
+            })
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    pub type u32x4x4_avx2<NI> = x2<u32x4x2_avx2<NI>, G0>;
+    impl<NI: Copy> u32x4x4<Avx2Machine<NI>> for u32x4x4_avx2<NI> {}
+
+    impl<NI: Copy> Store<vec512_storage> for u32x4x4_avx2<NI> {
+        #[inline(always)]
+        unsafe fn unpack(p: vec512_storage) -> Self {
+            Self::new([u32x4x2_avx2::unpack(p.avx[0]), u32x4x2_avx2::unpack(p.avx[1])])
+        }
+    }
+    impl<NI: Copy> MultiLane<[u32x4_sse2<YesS3, YesS4, NI>; 4]> for u32x4x4_avx2<NI> {
+        #[inline(always)]
+        fn to_lanes(self) -> [u32x4_sse2<YesS3, YesS4, NI>; 4] {
+            let [a, b] = self.0[0].to_lanes();
+            let [c, d] = self.0[1].to_lanes();
+            [a, b, c, d]
+        }
+        #[inline(always)]
+        fn from_lanes(x: [u32x4_sse2<YesS3, YesS4, NI>; 4]) -> Self {
+            let ab = u32x4x2_avx2::from_lanes([x[0], x[1]]);
+            let cd = u32x4x2_avx2::from_lanes([x[2], x[3]]);
+            Self::new([ab, cd])
+        }
+    }
+    impl<NI: Copy> Vec4<u32x4_sse2<YesS3, YesS4, NI>> for u32x4x4_avx2<NI> {
+        #[inline(always)]
+        fn extract(self, i: u32) -> u32x4_sse2<YesS3, YesS4, NI> {
+            match i {
+                0 => self.0[0].extract(0),
+                1 => self.0[0].extract(1),
+                2 => self.0[1].extract(0),
+                3 => self.0[1].extract(1),
+                _ => panic!(),
+            }
+        }
+        #[inline(always)]
+        fn insert(self, w: u32x4_sse2<YesS3, YesS4, NI>, i: u32) -> Self {
+            Self::new(match i {
+                0 | 1 => [self.0[0].insert(w, i), self.0[1]],
+                2 | 3 => [self.0[0], self.0[1].insert(w, i - 2)],
+                _ => panic!(),
+            })
+        }
+    }
+    impl<NI: Copy> Vec4Ext<u32x4_sse2<YesS3, YesS4, NI>> for u32x4x4_avx2<NI> {
+        #[inline(always)]
+        fn transpose4(a: Self, b: Self, c: Self, d: Self) -> (Self, Self, Self, Self) {
+            /*
+             * a00:a01 a10:a11
+             * b00:b01 b10:b11
+             * c00:c01 c10:c11
+             * d00:d01 d10:d11
+             *       =>
+             * a00:b00 c00:d00
+             * a01:b01 c01:d01
+             * a10:b10 c10:d10
+             * a11:b11 c11:d11
+             */
+            unsafe {
+                let ab00 = u32x4x2_avx2::new(_mm256_permute2x128_si256(a.0[0].x, b.0[0].x, 0x20));
+                let ab01 = u32x4x2_avx2::new(_mm256_permute2x128_si256(a.0[0].x, b.0[0].x, 0x31));
+                let ab10 = u32x4x2_avx2::new(_mm256_permute2x128_si256(a.0[1].x, b.0[1].x, 0x20));
+                let ab11 = u32x4x2_avx2::new(_mm256_permute2x128_si256(a.0[1].x, b.0[1].x, 0x31));
+                let cd00 = u32x4x2_avx2::new(_mm256_permute2x128_si256(c.0[0].x, d.0[0].x, 0x20));
+                let cd01 = u32x4x2_avx2::new(_mm256_permute2x128_si256(c.0[0].x, d.0[0].x, 0x31));
+                let cd10 = u32x4x2_avx2::new(_mm256_permute2x128_si256(c.0[1].x, d.0[1].x, 0x20));
+                let cd11 = u32x4x2_avx2::new(_mm256_permute2x128_si256(c.0[1].x, d.0[1].x, 0x31));
+                (
+                    Self::new([ab00, cd00]),
+                    Self::new([ab01, cd01]),
+                    Self::new([ab10, cd10]),
+                    Self::new([ab11, cd11]),
+                )
+            }
+        }
+    }
+    impl<NI: Copy> Vector<[u32; 16]> for u32x4x4_avx2<NI> {
+        #[inline(always)]
+        fn to_scalars(self) -> [u32; 16] {
+            unsafe {
+                core::mem::transmute(self)
+            }
+        }
+    }
+    impl<NI: Copy> From<u32x4x4_avx2<NI>> for vec512_storage {
+        #[inline(always)]
+        fn from(x: u32x4x4_avx2<NI>) -> Self {
+            Self {
+                avx: [
+                    vec256_storage { avx: x.0[0].x },
+                    vec256_storage { avx: x.0[1].x },
+                ],
+            }
+        }
+    }
+    impl<NI: Copy> From<x4<u128x1_sse2<YesS3, YesS4, NI>>> for u32x4x4_avx2<NI>
     {
         #[inline(always)]
         fn from(x: x4<u128x1_sse2<YesS3, YesS4, NI>>) -> Self {
             Self::new(unsafe {
                 [
-                    _mm256_setr_m128i(x.0[0].x, x.0[1].x),
-                    _mm256_setr_m128i(x.0[2].x, x.0[3].x),
+                    u32x4x2_avx2::new(_mm256_setr_m128i(x.0[0].x, x.0[1].x)),
+                    u32x4x2_avx2::new(_mm256_setr_m128i(x.0[2].x, x.0[3].x)),
                 ]
             })
         }

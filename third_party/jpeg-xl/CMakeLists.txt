@@ -5,6 +5,7 @@
 
 # Ubuntu bionic ships with cmake 3.10.
 cmake_minimum_required(VERSION 3.10)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # Honor VISIBILITY_INLINES_HIDDEN on all types of targets.
 if(POLICY CMP0063)
@@ -122,10 +123,12 @@ set(JPEGXL_FORCE_NEON false CACHE BOOL
 
 
 # Force system dependencies.
-set(JPEGXL_FORCE_SYSTEM_GTEST false CACHE BOOL
-    "Force using system installed googletest (gtest/gmock) instead of third_party/googletest source.")
 set(JPEGXL_FORCE_SYSTEM_BROTLI false CACHE BOOL
     "Force using system installed brotli instead of third_party/brotli source.")
+set(JPEGXL_FORCE_SYSTEM_GTEST false CACHE BOOL
+    "Force using system installed googletest (gtest/gmock) instead of third_party/googletest source.")
+set(JPEGXL_FORCE_SYSTEM_LCMS2 false CACHE BOOL
+    "Force using system installed lcms2 instead of third_party/lcms source.")
 set(JPEGXL_FORCE_SYSTEM_HWY false CACHE BOOL
     "Force using system installed highway (libhwy-dev) instead of third_party/highway source.")
 
@@ -158,12 +161,12 @@ message(STATUS
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(JPEGXL_STATIC)
-  set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
   set(BUILD_SHARED_LIBS 0)
   # Clang developers say that in case to use "static" we have to build stdlib
   # ourselves; for real use case we don't care about stdlib, as it is "granted",
   # so just linking all other libraries is fine.
-  if (NOT APPLE)
+  if (NOT MSVC AND NOT APPLE)
+    set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
     set(CMAKE_EXE_LINKER_FLAGS
         "${CMAKE_EXE_LINKER_FLAGS} -static -static-libgcc -static-libstdc++")
   endif()

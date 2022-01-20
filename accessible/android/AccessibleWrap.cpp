@@ -313,7 +313,7 @@ void AccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
 
 void AccessibleWrap::ExploreByTouch(float aX, float aY) {
   a11y::Pivot pivot(RootAccessible());
-  TraversalRule rule;
+  ExploreByTouchRule rule;
 
   Accessible* maybeResult = pivot.AtPoint(aX, aY, rule);
   LocalAccessible* result = maybeResult ? maybeResult->AsLocal() : nullptr;

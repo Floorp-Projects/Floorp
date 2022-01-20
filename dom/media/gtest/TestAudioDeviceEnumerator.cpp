@@ -9,11 +9,13 @@
 #include "gtest/gtest.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/media/MediaUtils.h"
 #include "nsTArray.h"
 
 #include "MockCubeb.h"
 
 using namespace mozilla;
+using AudioDeviceSet = CubebDeviceEnumerator::AudioDeviceSet;
 
 const bool DEBUG_PRINTS = false;
 
@@ -24,23 +26,23 @@ void TestEnumeration(MockCubeb* aMock, uint32_t aExpectedDeviceCount,
   RefPtr<CubebDeviceEnumerator> enumerator =
       CubebDeviceEnumerator::GetInstance();
 
-  nsTArray<RefPtr<AudioDeviceInfo>> devices;
+  RefPtr<const AudioDeviceSet> devices;
 
   if (aType == CUBEB_DEVICE_TYPE_INPUT) {
-    enumerator->EnumerateAudioInputDevices(devices);
+    devices = enumerator->EnumerateAudioInputDevices();
   }
 
   if (aType == CUBEB_DEVICE_TYPE_OUTPUT) {
-    enumerator->EnumerateAudioOutputDevices(devices);
+    devices = enumerator->EnumerateAudioOutputDevices();
   }
 
-  EXPECT_EQ(devices.Length(), aExpectedDeviceCount)
+  EXPECT_EQ(devices->Length(), aExpectedDeviceCount)
       << "Device count is correct when enumerating";
 
   if (DEBUG_PRINTS) {
-    for (uint32_t i = 0; i < devices.Length(); i++) {
+    for (const auto& deviceInfo : *devices) {
       printf("=== Before removal\n");
-      PrintDevice(devices[i]);
+      PrintDevice(deviceInfo);
     }
   }
 
@@ -51,24 +53,24 @@ void TestEnumeration(MockCubeb* aMock, uint32_t aExpectedDeviceCount,
   }
 
   if (aType == CUBEB_DEVICE_TYPE_INPUT) {
-    enumerator->EnumerateAudioInputDevices(devices);
+    devices = enumerator->EnumerateAudioInputDevices();
   }
 
   if (aType == CUBEB_DEVICE_TYPE_OUTPUT) {
-    enumerator->EnumerateAudioOutputDevices(devices);
+    devices = enumerator->EnumerateAudioOutputDevices();
   }
 
   uint32_t newExpectedDeviceCount = aOperation == DeviceOperation::REMOVE
                                         ? aExpectedDeviceCount - 1
                                         : aExpectedDeviceCount + 1;
 
-  EXPECT_EQ(devices.Length(), newExpectedDeviceCount)
+  EXPECT_EQ(devices->Length(), newExpectedDeviceCount)
       << "Device count is correct when enumerating after operation";
 
   if (DEBUG_PRINTS) {
-    for (uint32_t i = 0; i < devices.Length(); i++) {
+    for (const auto& deviceInfo : *devices) {
       printf("=== After removal\n");
-      PrintDevice(devices[i]);
+      PrintDevice(deviceInfo);
     }
   }
 }
@@ -119,24 +121,24 @@ TEST(CubebDeviceEnumerator, EnumerateAndroid)
   RefPtr<CubebDeviceEnumerator> enumerator =
       CubebDeviceEnumerator::GetInstance();
 
-  nsTArray<RefPtr<AudioDeviceInfo>> inputDevices;
-  enumerator->EnumerateAudioInputDevices(inputDevices);
-  EXPECT_EQ(inputDevices.Length(), 1u)
+  RefPtr<const AudioDeviceSet> inputDevices =
+      enumerator->EnumerateAudioInputDevices();
+  EXPECT_EQ(inputDevices->Length(), 1u)
       << "Android always exposes a single input device.";
-  EXPECT_EQ(inputDevices[0]->MaxChannels(), 1u) << "With a single channel.";
-  EXPECT_EQ(inputDevices[0]->DeviceID(), nullptr)
+  EXPECT_EQ((*inputDevices)[0]->MaxChannels(), 1u) << "With a single channel.";
+  EXPECT_EQ((*inputDevices)[0]->DeviceID(), nullptr)
       << "It's always the default input device.";
-  EXPECT_TRUE(inputDevices[0]->Preferred())
+  EXPECT_TRUE((*inputDevices)[0]->Preferred())
       << "it's always the prefered input device.";
 
-  nsTArray<RefPtr<AudioDeviceInfo>> outputDevices;
-  enumerator->EnumerateAudioOutputDevices(outputDevices);
-  EXPECT_EQ(outputDevices.Length(), 1u)
+  RefPtr<const AudioDeviceSet> outputDevices =
+      enumerator->EnumerateAudioOutputDevices();
+  EXPECT_EQ(outputDevices->Length(), 1u)
       << "Android always exposes a single output device.";
-  EXPECT_EQ(outputDevices[0]->MaxChannels(), 2u) << "With stereo channels.";
-  EXPECT_EQ(outputDevices[0]->DeviceID(), nullptr)
+  EXPECT_EQ((*outputDevices)[0]->MaxChannels(), 2u) << "With stereo channels.";
+  EXPECT_EQ((*outputDevices)[0]->DeviceID(), nullptr)
       << "It's always the default output device.";
-  EXPECT_TRUE(outputDevices[0]->Preferred())
+  EXPECT_TRUE((*outputDevices)[0]->Preferred())
       << "it's always the prefered output device.";
 }
 #endif
@@ -147,56 +149,15 @@ TEST(CubebDeviceEnumerator, ForceNullCubebContext)
   RefPtr<CubebDeviceEnumerator> enumerator =
       CubebDeviceEnumerator::GetInstance();
 
-  nsTArray<RefPtr<AudioDeviceInfo>> inputDevices;
-  enumerator->EnumerateAudioInputDevices(inputDevices);
-  EXPECT_EQ(inputDevices.Length(), 0u)
+  RefPtr inputDevices = enumerator->EnumerateAudioInputDevices();
+  EXPECT_EQ(inputDevices->Length(), 0u)
       << "Enumeration must fail, input device list must be empty.";
 
-  nsTArray<RefPtr<AudioDeviceInfo>> outputDevices;
-  enumerator->EnumerateAudioOutputDevices(outputDevices);
-  EXPECT_EQ(outputDevices.Length(), 0u)
+  RefPtr outputDevices = enumerator->EnumerateAudioOutputDevices();
+  EXPECT_EQ(outputDevices->Length(), 0u)
       << "Enumeration must fail, output device list must be empty.";
 
   // Shutdown to clean up the null context effect
-  CubebDeviceEnumerator::Shutdown();
-}
-
-TEST(CubebDeviceEnumerator, DeviceInfoFromId)
-{
-  MockCubeb* mock = new MockCubeb();
-  mozilla::CubebUtils::ForceSetCubebContext(mock->AsCubebContext());
-
-  uint32_t device_count = 4;
-  cubeb_device_type deviceTypes[2] = {CUBEB_DEVICE_TYPE_INPUT,
-                                      CUBEB_DEVICE_TYPE_OUTPUT};
-
-  bool supportsDeviceChangeCallback[2] = {true, false};
-  for (bool supports : supportsDeviceChangeCallback) {
-    // Shutdown for `supports` to take effect
-    CubebDeviceEnumerator::Shutdown();
-    mock->SetSupportDeviceChangeCallback(supports);
-    for (cubeb_device_type& deviceType : deviceTypes) {
-      AddDevices(mock, device_count, deviceType);
-
-      cubeb_devid id_1 = reinterpret_cast<cubeb_devid>(1);
-      RefPtr<CubebDeviceEnumerator> enumerator =
-          CubebDeviceEnumerator::GetInstance();
-      RefPtr<AudioDeviceInfo> devInfo = enumerator->DeviceInfoFromID(id_1);
-      EXPECT_TRUE(devInfo) << "the device exist";
-      EXPECT_EQ(devInfo->DeviceID(), id_1) << "verify the device";
-
-      mock->RemoveDevice(id_1);
-      devInfo = enumerator->DeviceInfoFromID(id_1);
-      EXPECT_FALSE(devInfo) << "the device does not exist any more";
-
-      cubeb_devid id_5 = reinterpret_cast<cubeb_devid>(5);
-      mock->AddDevice(DeviceTemplate(id_5, deviceType));
-      devInfo = enumerator->DeviceInfoFromID(id_5);
-      EXPECT_TRUE(devInfo) << "newly added device must exist";
-      EXPECT_EQ(devInfo->DeviceID(), id_5) << "verify the device";
-    }
-  }
-  // Shutdown for `supports` to take effect
   CubebDeviceEnumerator::Shutdown();
 }
 
@@ -225,25 +186,16 @@ TEST(CubebDeviceEnumerator, DeviceInfoFromName)
       RefPtr<CubebDeviceEnumerator> enumerator =
           CubebDeviceEnumerator::GetInstance();
 
-      RefPtr<AudioDeviceInfo> devInfo =
-          enumerator->DeviceInfoFromName(NS_ConvertUTF8toUTF16(device_name));
-      EXPECT_TRUE(devInfo) << "the device exist";
-      EXPECT_EQ(devInfo->Name(), NS_ConvertUTF8toUTF16(device_name))
-          << "verify the device";
-
       EnumeratorSide side = (deviceType == CUBEB_DEVICE_TYPE_INPUT)
                                 ? EnumeratorSide::INPUT
                                 : EnumeratorSide::OUTPUT;
-      devInfo = enumerator->DeviceInfoFromName(
+      RefPtr<AudioDeviceInfo> devInfo = enumerator->DeviceInfoFromName(
           NS_ConvertUTF8toUTF16(device_name), side);
       EXPECT_TRUE(devInfo) << "the device exist";
       EXPECT_EQ(devInfo->Name(), NS_ConvertUTF8toUTF16(device_name))
           << "verify the device";
 
       mock->RemoveDevice(id_2);
-      devInfo =
-          enumerator->DeviceInfoFromName(NS_ConvertUTF8toUTF16(device_name));
-      EXPECT_FALSE(devInfo) << "the device does not exist any more";
 
       devInfo = enumerator->DeviceInfoFromName(
           NS_ConvertUTF8toUTF16(device_name), side);

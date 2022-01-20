@@ -12,12 +12,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 import errno
 import os
 import re
-import sys
-
-HERE = os.path.abspath(os.path.dirname(__file__))
-lib_path = os.path.join(HERE, "..", "..", "..", "third_party", "python")
-sys.path.append(os.path.join(lib_path, "voluptuous"))
-sys.path.append(os.path.join(lib_path, "pyyaml", "lib"))
 
 import voluptuous
 import yaml
@@ -63,7 +57,7 @@ VALID_LICENSES = [
     "Unicode",  # http://www.unicode.org/copyright.html
 ]
 
-VALID_SOURCE_HOSTS = ["gitlab", "googlesource", "github"]
+VALID_SOURCE_HOSTS = ["gitlab", "googlesource", "github", "angle"]
 
 """
 ---
@@ -121,10 +115,6 @@ updatebot:
   # Bugzilla email address for a maintainer of the library, used for needinfos
   maintainer-bz: tom@mozilla.com
 
-  # Type of git reference (commit, tag) to track updates from.
-  # If omitted, will default to tracking commits.
-  tracking: commit
-
   # The tasks that Updatebot can run. Only one of each task is currently permitted
   # optional
   tasks:
@@ -152,12 +142,27 @@ vendoring:
   url: source url (generally repository clone url)
 
   # Type of hosting for the upstream repository
-  # Valid values are 'gitlab', 'github'
+  # Valid values are 'gitlab', 'github', googlesource
   source-hosting: gitlab
+
+  # Type of git reference (commit, tag) to track updates from.
+  # If omitted, will default to tracking commits.
+  tracking: commit
 
   # Base directory of the location where the source files will live in-tree.
   # If omitted, will default to the location the moz.yaml file is in.
   vendor-directory: third_party/directory
+
+  # Allows skipping certain steps of the vendoring process.
+  # Most useful if e.g. vendoring upstream is complicated and should be done by a script
+  # The valid steps that can be skipped are listed below
+  skip-vendoring-steps:
+    - fetch
+    - exclude
+    - update-moz-yaml
+    - update-actions
+    - hg-add
+    - update-moz-build
 
   # List of patch files to apply after vendoring. Applied in the order
   # specified, and alphabetically if globbing is used. Patches must apply
@@ -367,7 +372,6 @@ def _schema_1():
             "updatebot": {
                 Required("maintainer-phab"): All(str, Length(min=1)),
                 Required("maintainer-bz"): All(str, Length(min=1)),
-                "tracking": All(str, Length(min=1)),
                 "tasks": All(
                     UpdatebotTasks(),
                     [
@@ -398,6 +402,8 @@ def _schema_1():
                     Length(min=1),
                     In(VALID_SOURCE_HOSTS, msg="Unsupported Source Hosting"),
                 ),
+                "tracking": All(str, Length(min=1)),
+                "skip-vendoring-steps": Unique([str]),
                 "vendor-directory": All(str, Length(min=1)),
                 "patches": Unique([str]),
                 "keep": Unique([str]),
@@ -423,6 +429,7 @@ def _schema_1():
                             "with": All(str, Length(min=1)),
                             "file": All(str, Length(min=1)),
                             "script": All(str, Length(min=1)),
+                            "args": All([All(str, Length(min=1))]),
                             "cwd": All(str, Length(min=1)),
                             "path": All(str, Length(min=1)),
                         }
@@ -462,19 +469,22 @@ def _schema_1_additional(filename, manifest, require_license_file=True):
     if "vendoring" in manifest and "origin" not in manifest:
         raise ValueError('"vendoring" requires an "origin"')
 
-    # If there are Updatebot tasks, then certain fields must be present and
-    # defaults need to be set.
-    if "updatebot" in manifest and "tasks" in manifest["updatebot"]:
-        if "tracking" not in manifest["updatebot"]:
-            manifest["updatebot"]["tracking"] = "commit"
+    # Only commit and tag are allowed for tracking
+    if "vendoring" in manifest:
+        if "tracking" not in manifest["vendoring"]:
+            manifest["vendoring"]["tracking"] = "commit"
         if (
-            manifest["updatebot"]["tracking"] != "commit"
-            and manifest["updatebot"]["tracking"] != "tag"
+            manifest["vendoring"]["tracking"] != "commit"
+            and manifest["vendoring"]["tracking"] != "tag"
         ):
             raise ValueError(
                 "Only commit or tag is supported for git references to track, %s was given."
-                % manifest["updatebot"]["tracking"]
+                % manifest["vendoring"]["tracking"]
             )
+
+    # If there are Updatebot tasks, then certain fields must be present and
+    # defaults need to be set.
+    if "updatebot" in manifest and "tasks" in manifest["updatebot"]:
         if "vendoring" not in manifest or "url" not in manifest["vendoring"]:
             raise ValueError(
                 "If Updatebot tasks are specified, a vendoring url must be included."
@@ -531,9 +541,13 @@ class UpdateActions(object):
                         "delete-path action must (only) specify the 'path' key"
                     )
             elif v["action"] == "run-script":
-                if "script" not in v or "cwd" not in v or len(v.keys()) != 3:
+                if "script" not in v or "cwd" not in v:
                     raise Invalid(
-                        "run-script action must (only) specify 'script' and 'cwd' keys"
+                        "run-script action must specify 'script' and 'cwd' keys"
+                    )
+                if set(v.keys()) - set(["args", "cwd", "script", "action"]) != set():
+                    raise Invalid(
+                        "run-script action may only specify 'script', 'cwd', and 'args' keys"
                     )
             else:
                 # This check occurs before the validator above, so the above is

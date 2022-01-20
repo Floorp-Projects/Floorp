@@ -126,18 +126,6 @@ function showPrefChangeContainer() {
   setFocus("#prefResetButton", "beforeend");
 }
 
-function showTls10Container() {
-  const panel = document.getElementById("enableTls10Container");
-  panel.style.display = "block";
-  document.getElementById("netErrorButtonContainer").style.display = "none";
-  const button = document.getElementById("enableTls10Button");
-  button.addEventListener("click", function enableTls10(e) {
-    RPMSetBoolPref("security.tls.version.enable-deprecated", true);
-    retryThis(button);
-  });
-  setFocus("#enableTls10Button", "beforeend");
-}
-
 function toggleCertErrorDebugInfoVisibility(shouldShow) {
   let debugInfo = document.getElementById("certificateErrorDebugInformation");
   let copyButton = document.getElementById("copyToClipboardTop");
@@ -261,22 +249,6 @@ function initPage() {
   }
 
   var err = gErrorCode;
-  // List of error pages with an illustration.
-  let illustratedErrors = [
-    "malformedURI",
-    "dnsNotFound",
-    "connectionFailure",
-    "netInterrupt",
-    "netTimeout",
-    "netReset",
-    "netOffline",
-  ];
-  if (
-    illustratedErrors.includes(err) &&
-    !RPMGetBoolPref("browser.proton.enabled")
-  ) {
-    document.body.classList.add("illustrated", err);
-  }
   if (err == "blockedByPolicy") {
     document.body.classList.add("blocked");
   }
@@ -391,51 +363,33 @@ function initPage() {
     document.getElementById("learnMoreContainer").style.display = "block";
 
     const errorCode = document.getNetErrorInfo().errorCodeString;
-    const isTlsVersionError =
-      errorCode == "SSL_ERROR_UNSUPPORTED_VERSION" ||
-      errorCode == "SSL_ERROR_PROTOCOL_VERSION_ALERT";
-    const tls10OverrideEnabled = RPMGetBoolPref(
-      "security.tls.version.enable-deprecated"
-    );
 
     if (
-      isTlsVersionError &&
-      !tls10OverrideEnabled &&
-      !RPMPrefIsLocked("security.tls.version.min")
+      errorCode == "SSL_ERROR_UNSUPPORTED_VERSION" ||
+      errorCode == "SSL_ERROR_PROTOCOL_VERSION_ALERT"
     ) {
-      // security.tls.* prefs may be reset by the user when they
-      // encounter an error, so it's important that this has a
-      // different pref branch.
-      const showOverride = RPMGetBoolPref(
-        "security.certerrors.tls.version.show-override",
-        true
-      );
+      document.getElementById("tlsVersionNotice").hidden = false;
+    }
 
-      // This is probably a TLS 1.0 server; offer to re-enable.
-      if (showOverride) {
-        showTls10Container();
-      }
-    } else {
-      const hasPrefStyleError = [
-        "interrupted", // This happens with subresources that are above the max tls
-        "SSL_ERROR_NO_CIPHERS_SUPPORTED",
-        "SSL_ERROR_NO_CYPHER_OVERLAP",
-        "SSL_ERROR_PROTOCOL_VERSION_ALERT",
-        "SSL_ERROR_SSL_DISABLED",
-        "SSL_ERROR_UNSUPPORTED_VERSION",
-      ].some(substring => {
-        return substring == errorCode;
+    const hasPrefStyleError = [
+      "interrupted", // This happens with subresources that are above the max tls
+      "SSL_ERROR_NO_CIPHERS_SUPPORTED",
+      "SSL_ERROR_NO_CYPHER_OVERLAP",
+      "SSL_ERROR_PROTOCOL_VERSION_ALERT",
+      "SSL_ERROR_SSL_DISABLED",
+      "SSL_ERROR_UNSUPPORTED_VERSION",
+    ].some(substring => {
+      return substring == errorCode;
+    });
+
+    if (hasPrefStyleError) {
+      RPMAddMessageListener("HasChangedCertPrefs", msg => {
+        if (msg.data.hasChangedCertPrefs) {
+          // Configuration overrides might have caused this; offer to reset.
+          showPrefChangeContainer();
+        }
       });
-
-      if (hasPrefStyleError) {
-        RPMAddMessageListener("HasChangedCertPrefs", msg => {
-          if (msg.data.hasChangedCertPrefs) {
-            // Configuration overrides might have caused this; offer to reset.
-            showPrefChangeContainer();
-          }
-        });
-        RPMSendAsyncMessage("GetChangedCertPrefs");
-      }
+      RPMSendAsyncMessage("GetChangedCertPrefs");
     }
   }
 
@@ -924,7 +878,7 @@ function setCertErrorDetails(event) {
         "wrongSystemTime_systemDate1"
       ).textContent = systemDate;
       if (clockSkew) {
-        document.body.classList.add("illustrated", "clockSkewError");
+        document.body.classList.add("clockSkewError");
         document.l10n.setAttributes(titleElement, "clockSkewError-title");
         let clockErrDesc = document.getElementById("ed_clockSkewError");
         desc = document.getElementById("errorShortDescText");
@@ -933,10 +887,6 @@ function setCertErrorDetails(event) {
           // eslint-disable-next-line no-unsanitized/property
           desc.innerHTML = clockErrDesc.innerHTML;
         }
-        let errorPageContainer = document.getElementById("errorPageContainer");
-        let textContainer = document.getElementById("text-container");
-        errorPageContainer.style.backgroundPosition = `left top calc(50vh - ${textContainer.clientHeight /
-          2}px)`;
       } else {
         let targetElems = document.querySelectorAll(
           "#wrongSystemTime_systemDate2"

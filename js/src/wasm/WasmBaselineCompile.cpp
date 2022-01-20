@@ -1154,7 +1154,7 @@ void BaseCompiler::startCallArgs(size_t stackArgAreaSizeUnaligned,
       masm.framePushed() +
       // Extra space we'll push to get the frame aligned
       call->frameAlignAdjustment +
-      // Extra space we'll push to get the outbound arg area 16-aligned
+      // Extra space we'll push to get the outbound arg area aligned
       (stackArgAreaSizeAligned - stackArgAreaSizeUnaligned));
 
   call->stackArgAreaSize = stackArgAreaSizeAligned;
@@ -1361,7 +1361,8 @@ CodeOffset BaseCompiler::callIndirect(uint32_t funcTypeIndex,
 
   CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Indirect);
   CalleeDesc callee = CalleeDesc::wasmTable(table, funcTypeId);
-  return masm.wasmCallIndirect(desc, callee, NeedsBoundsCheck(true));
+  return masm.wasmCallIndirect(desc, callee, NeedsBoundsCheck(true),
+                               mozilla::Nothing());
 }
 
 // Precondition: sync()
@@ -1412,12 +1413,7 @@ bool BaseCompiler::throwFrom(RegRef exn, uint32_t lineOrBytecode) {
   pushRef(exn);
 
   // ThrowException invokes a trap, and the rest is dead code.
-  if (!emitInstanceCall(lineOrBytecode, SASigThrowException)) {
-    return false;
-  }
-  freeRef(popRef());
-
-  return true;
+  return emitInstanceCall(lineOrBytecode, SASigThrowException);
 }
 
 void BaseCompiler::loadPendingException(Register dest) {
@@ -3274,6 +3270,8 @@ bool BaseCompiler::emitEnd() {
     return false;
   }
 
+  // Every label case is responsible to pop the control item at the appropriate
+  // time for the label case
   switch (kind) {
     case LabelKind::Body:
       if (!endBlock(type)) {
@@ -3295,20 +3293,24 @@ bool BaseCompiler::emitEnd() {
       if (!endBlock(type)) {
         return false;
       }
+      iter_.popEnd();
       break;
     case LabelKind::Loop:
       // The end of a loop isn't a branch target, so we can just leave its
       // results on the expression stack to be consumed by the outer block.
+      iter_.popEnd();
       break;
     case LabelKind::Then:
       if (!endIfThen(type)) {
         return false;
       }
+      iter_.popEnd();
       break;
     case LabelKind::Else:
       if (!endIfThenElse(type)) {
         return false;
       }
+      iter_.popEnd();
       break;
 #ifdef ENABLE_WASM_EXCEPTIONS
     case LabelKind::Try:
@@ -3317,11 +3319,10 @@ bool BaseCompiler::emitEnd() {
       if (!endTryCatch(type)) {
         return false;
       }
+      iter_.popEnd();
       break;
 #endif
   }
-
-  iter_.popEnd();
 
   return true;
 }
@@ -3714,7 +3715,7 @@ bool BaseCompiler::emitCatchAll() {
     return true;
   }
 
-  CatchInfo catchInfo(CatchInfo::CATCH_ALL_INDEX);
+  CatchInfo catchInfo(CatchAllIndex);
   if (!tryCatch.catchInfos.emplaceBack(catchInfo)) {
     return false;
   }
@@ -3743,16 +3744,6 @@ bool BaseCompiler::emitBodyDelegateThrowPad() {
     StackHeight savedHeight = fr.stackHeight();
     fr.setStackHeight(block.stackHeight);
     masm.bind(&block.otherLabel);
-
-    // Try-delegate does not restore the TlsData on throw, so it needs to be
-    // done here as is done in endTryCatch().
-    fr.loadTlsPtr(WasmTlsReg);
-    masm.loadWasmPinnedRegsFromTls();
-    RegRef scratch = needRef();
-    RegRef scratch2 = needRef();
-    masm.switchToWasmTlsRealm(scratch, scratch2);
-    freeRef(scratch);
-    freeRef(scratch2);
 
     // Try-delegate keeps the pending exception in the TlsData, so we extract
     // it here rather than relying on an ABI register.
@@ -3818,6 +3809,11 @@ bool BaseCompiler::emitDelegate() {
   tryNote.end = masm.currentOffset();
   tryNote.entryPoint = tryNote.end;
   tryNote.framePushed = masm.framePushed();
+
+  // Store the TlsData that was left in WasmTlsReg by the exception handling
+  // mechanism, that is this frame's TlsData but with the exception filled in
+  // TlsData::pendingException.
+  fr.storeTlsPtr(WasmTlsReg);
 
   // If the target block is a non-try block, skip over it and find the next
   // try block or the very last block (to re-throw out of the function).
@@ -3902,14 +3898,10 @@ bool BaseCompiler::endTryCatch(ResultType type) {
     tryNote.end = tryNote.entryPoint;
   }
 
-  // Explicitly restore the TlsData in case the throw was across instances.
-  fr.loadTlsPtr(WasmTlsReg);
-  masm.loadWasmPinnedRegsFromTls();
-  RegRef scratch = needRef();
-  RegRef scratch2 = needRef();
-  masm.switchToWasmTlsRealm(scratch, scratch2);
-  freeRef(scratch);
-  freeRef(scratch2);
+  // Store the TlsData that was left in WasmTlsReg by the exception handling
+  // mechanism, that is this frame's TlsData but with the exception filled in
+  // TlsData::pendingException.
+  fr.storeTlsPtr(WasmTlsReg);
 
   // Load exception pointer from TlsData and make sure that it is
   // saved before the following call will clear it.
@@ -3935,7 +3927,7 @@ bool BaseCompiler::endTryCatch(ResultType type) {
 
   bool hasCatchAll = false;
   for (CatchInfo& info : tryCatch.catchInfos) {
-    if (info.tagIndex != CatchInfo::CATCH_ALL_INDEX) {
+    if (info.tagIndex != CatchAllIndex) {
       MOZ_ASSERT(!hasCatchAll);
       masm.branch32(Assembler::Equal, index, Imm32(info.tagIndex), &info.label);
     } else {
@@ -3983,7 +3975,7 @@ bool BaseCompiler::emitThrow() {
   }
 
   const TagDesc& tagDesc = moduleEnv_.tags[exnIndex];
-  const ResultType& params = tagDesc.resultType();
+  const ResultType& params = tagDesc.type.resultType();
   const TagOffsetVector& offsets = tagDesc.type.argOffsets;
 
   // Create the new exception object that we will throw.
@@ -4056,10 +4048,6 @@ bool BaseCompiler::emitThrow() {
         if (!emitInstanceCall(lineOrBytecode, SASigPushRefIntoExn)) {
           return false;
         }
-
-        // The call result is checked by the instance call failure handling,
-        // so we do not need to use the result here.
-        freeI32(popI32());
 
         exn = popRef();
 

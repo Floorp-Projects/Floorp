@@ -8,12 +8,6 @@ The `BrowserUsageTelemetry.jsm <https://searchfox.org/mozilla-central/source/bro
 
 The measurements recording begins right after the ``SessionStore`` has finished restoring the session (i.e. restoring tabs/windows after Firefox starts).
 
-Search telemetry
-================
-This module exposes the ``recordSearch`` method, which serves as the main entry point for recording search related Telemetry. It records only the search *counts* per engine and the origin of the search, but nothing pertaining the search contents themselves.
-
-A list of the components recording search Telemetry can be found using the following `Searchfox search <https://searchfox.org/mozilla-central/search?q=recordSearch>`_.
-
 Tab and window interactions
 ===========================
 The usage telemetry module currently measures these interactions with the browser's tabs and windows:

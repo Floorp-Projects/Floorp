@@ -30,8 +30,10 @@
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/APZInputBridgeChild.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
+#include "nsHashPropertyBag.h"
 #include "nsIGfxInfo.h"
 #include "nsIObserverService.h"
+#include "nsIPropertyBag2.h"
 #include "ProfilerParent.h"
 
 namespace mozilla {
@@ -100,6 +102,8 @@ bool GPUChild::EnsureGPUReady() {
 base::ProcessHandle GPUChild::GetChildProcessHandle() {
   return mHost->GetChildProcessHandle();
 }
+
+void GPUChild::OnUnexpectedShutdown() { mUnexpectedShutdown = true; }
 
 mozilla::ipc::IPCResult GPUChild::RecvInitComplete(const GPUDeviceData& aData) {
   // We synchronously requested GPU parameters before this arrived.
@@ -263,8 +267,9 @@ mozilla::ipc::IPCResult GPUChild::RecvAddMemoryReport(
 }
 
 void GPUChild::ActorDestroy(ActorDestroyReason aWhy) {
-  if (aWhy == AbnormalShutdown) {
-    GenerateCrashReport(OtherPid());
+  if (aWhy == AbnormalShutdown || mUnexpectedShutdown) {
+    nsAutoString dumpId;
+    GenerateCrashReport(OtherPid(), &dumpId);
 
     Telemetry::Accumulate(
         Telemetry::SUBPROCESS_ABNORMAL_ABORT,
@@ -272,9 +277,13 @@ void GPUChild::ActorDestroy(ActorDestroyReason aWhy) {
         1);
 
     // Notify the Telemetry environment so that we can refresh and do a
-    // subsession split
+    // subsession split. This also notifies the crash reporter on geckoview.
     if (nsCOMPtr<nsIObserverService> obsvc = services::GetObserverService()) {
-      obsvc->NotifyObservers(nullptr, "compositor:process-aborted", nullptr);
+      RefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
+      props->SetPropertyAsBool(u"abnormal"_ns, true);
+      props->SetPropertyAsAString(u"dumpID"_ns, dumpId);
+      obsvc->NotifyObservers((nsIPropertyBag2*)props,
+                             "compositor:process-aborted", nullptr);
     }
   }
 

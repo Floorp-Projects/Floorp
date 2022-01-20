@@ -243,6 +243,54 @@ fn tabs_1() {
 }
 
 #[test]
+fn issue_32_unescaped_cdata_end() {
+    test(
+        br#"<hello>]]></hello>"#,
+        br#"
+            |StartDocument(1.0, UTF-8)
+            |StartElement(hello)
+            |Characters("]]>")
+            |EndElement(hello)
+            |EndDocument
+        "#,
+        ParserConfig::new(),
+        false
+    );
+}
+
+#[test]
+fn issue_unescaped_processing_instruction_end() {
+    test(
+        br#"<hello>?></hello>"#,
+        br#"
+            |StartDocument(1.0, UTF-8)
+            |StartElement(hello)
+            |Characters("?>")
+            |EndElement(hello)
+            |EndDocument
+        "#,
+        ParserConfig::new(),
+        false
+    );
+}
+
+#[test]
+fn issue_unescaped_empty_tag_end() {
+    test(
+        br#"<hello>/></hello>"#,
+        br#"
+            |StartDocument(1.0, UTF-8)
+            |StartElement(hello)
+            |Characters("/>")
+            |EndElement(hello)
+            |EndDocument
+        "#,
+        ParserConfig::new(),
+        false
+    );
+}
+
+#[test]
 fn issue_83_duplicate_attributes() {
     test(
         br#"<hello><some-tag a='10' a="20"></hello>"#,

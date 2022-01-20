@@ -5,7 +5,7 @@ use crate::registry::BundleAdapter;
 use crate::registry::L10nRegistry;
 use crate::source::FileFetcher;
 use async_trait::async_trait;
-use fluent_fallback::env::LocalesProvider;
+use fluent_fallback::{env::LocalesProvider, types::ResourceId};
 use fluent_testing::MockFileSystem;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -247,12 +247,12 @@ impl TestFileFetcher {
 
 #[async_trait(?Send)]
 impl FileFetcher for TestFileFetcher {
-    fn fetch_sync(&self, path: &str) -> std::io::Result<String> {
-        self.inner.fs.get_test_file_sync(path)
+    fn fetch_sync(&self, resource_id: &ResourceId) -> std::io::Result<String> {
+        self.inner.fs.get_test_file_sync(&resource_id.value)
     }
 
-    async fn fetch(&self, path: &str) -> std::io::Result<String> {
-        self.inner.fs.get_test_file_async(path).await
+    async fn fetch(&self, resource_id: &ResourceId) -> std::io::Result<String> {
+        self.inner.fs.get_test_file_async(&resource_id.value).await
     }
 }
 
@@ -312,7 +312,8 @@ impl ErrorReporter for TestEnvironment {
                 panic!("Errors: {:#?}", errors);
             }
             ErrorStrategy::Report => {
-                println!("Errors: {:#?}", errors);
+                #[cfg(test)] // Don't let printing affect benchmarks
+                eprintln!("Errors: {:#?}", errors);
             }
             ErrorStrategy::Nothing => {}
         }

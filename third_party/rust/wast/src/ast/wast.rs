@@ -93,7 +93,7 @@ pub enum WastDirective<'a> {
         module: ast::Module<'a>,
         message: &'a str,
     },
-    AssertUncaughtException {
+    AssertException {
         span: ast::Span,
         exec: WastExecute<'a>,
     },
@@ -112,7 +112,7 @@ impl WastDirective<'_> {
             | WastDirective::AssertExhaustion { span, .. }
             | WastDirective::AssertUnlinkable { span, .. }
             | WastDirective::AssertInvalid { span, .. }
-            | WastDirective::AssertUncaughtException { span, .. } => *span,
+            | WastDirective::AssertException { span, .. } => *span,
             WastDirective::Invoke(i) => i.span,
         }
     }
@@ -252,9 +252,9 @@ impl<'a> Parse<'a> for WastDirective<'a> {
                 module: parser.parens(|p| p.parse())?,
                 message: parser.parse()?,
             })
-        } else if l.peek::<kw::assert_uncaught_exception>() {
-            let span = parser.parse::<kw::assert_uncaught_exception>()?.0;
-            Ok(WastDirective::AssertUncaughtException {
+        } else if l.peek::<kw::assert_exception>() {
+            let span = parser.parse::<kw::assert_exception>()?.0;
+            Ok(WastDirective::AssertException {
                 span,
                 exec: parser.parens(|p| p.parse())?,
             })

@@ -7,8 +7,9 @@ to mirror data collection to both the Glean metric and a Telemetry probe.
 
 GIFFT should ideally be used only when the data you require for analysis still mostly lives in Telemetry,
 and should be removed promptly when no longer needed.
-Instrumentors are encouraged to have the Telemetry probe expire no later than Firefox 98
-([scheduled for 2021-12-02](https://wiki.mozilla.org/Release_Management/Calendar)).
+Instrumentors are encouraged to have the Telemetry mirror probe expire within six versions.
+(As always you can renew an expiring probe if you're still using it,
+but this will help us get closer to the time when we eventually turn Telemetry off.)
 
 **Note:** GIFFT only works for data provided via C++ or JS.
 Rust Glean metrics APIs will not mirror to Telemetry as Telemetry does not have a Rust API.

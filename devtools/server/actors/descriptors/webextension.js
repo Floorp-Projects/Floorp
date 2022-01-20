@@ -150,12 +150,14 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
         this
       );
 
+      const policy = ExtensionParent.WebExtensionPolicy.getByID(this.addonId);
       this._form = await connectToFrame(
         this.conn,
         this._browser,
         this.destroy,
         {
           addonId: this.addonId,
+          addonBrowsingContextGroupId: policy.browsingContextGroupId,
         }
       );
 

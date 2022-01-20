@@ -214,13 +214,16 @@ ImageContainer::~ImageContainer() {
   }
 }
 
-Maybe<SurfaceDescriptor> Image::GetDesc() { return {}; }
+Maybe<SurfaceDescriptor> Image::GetDesc() { return GetDescFromTexClient(); }
 
 Maybe<SurfaceDescriptor> Image::GetDescFromTexClient(
-    TextureClient* const forTc) {
-  RefPtr<TextureClient> tc = forTc;
-  if (!forTc) {
+    TextureClient* const tcOverride) {
+  RefPtr<TextureClient> tc = tcOverride;
+  if (!tcOverride) {
     tc = GetTextureClient(nullptr);
+  }
+  if (!tc) {
+    return {};
   }
 
   const auto& tcd = tc->GetInternalData();
@@ -478,6 +481,86 @@ ImageContainer::GetMacIOSurfaceRecycleAllocator() {
   return mMacIOSurfaceRecycleAllocator;
 }
 #endif
+
+// -
+// https://searchfox.org/mozilla-central/source/dom/media/ipc/RemoteImageHolder.cpp#46
+
+Maybe<PlanarYCbCrData> PlanarYCbCrData::From(
+    const SurfaceDescriptorBuffer& sdb) {
+  if (sdb.desc().type() != BufferDescriptor::TYCbCrDescriptor) {
+    return {};
+  }
+  const YCbCrDescriptor& yuvDesc = sdb.desc().get_YCbCrDescriptor();
+
+  Maybe<Range<uint8_t>> buffer;
+  const MemoryOrShmem& memOrShmem = sdb.data();
+  switch (memOrShmem.type()) {
+    case MemoryOrShmem::Tuintptr_t:
+      gfxCriticalError() << "PlanarYCbCrData::From SurfaceDescriptorBuffer w/uintptr_t unsupported.";
+      break;
+    case MemoryOrShmem::TShmem:
+      buffer.emplace(memOrShmem.get_Shmem().Range<uint8_t>());
+      break;
+    default:
+      MOZ_ASSERT(false, "Unknown MemoryOrShmem type");
+      break;
+  }
+  if (!buffer) {
+    return {};
+  }
+
+  PlanarYCbCrData yuvData;
+  yuvData.mYSize = yuvDesc.ySize();
+  yuvData.mYStride = AssertedCast<int32_t>(yuvDesc.yStride());
+  yuvData.mCbCrSize = yuvDesc.cbCrSize();
+  yuvData.mCbCrStride = AssertedCast<int32_t>(yuvDesc.cbCrStride());
+  // default mYSkip, mCbSkip, mCrSkip because not held in YCbCrDescriptor
+  yuvData.mYSkip = yuvData.mCbSkip = yuvData.mCrSkip = 0;
+  gfx::IntRect display = yuvDesc.display();
+  yuvData.mPicX = display.X();
+  yuvData.mPicY = display.Y();
+  yuvData.mPicSize = display.Size();
+  yuvData.mStereoMode = yuvDesc.stereoMode();
+  yuvData.mColorDepth = yuvDesc.colorDepth();
+  yuvData.mYUVColorSpace = yuvDesc.yUVColorSpace();
+  yuvData.mColorRange = yuvDesc.colorRange();
+
+  const auto GetPlanePtr = [&](const uint32_t beginOffset,
+        const gfx::IntSize size, const int32_t stride) -> uint8_t* {
+    if (size.width > stride) return nullptr;
+    auto bytesNeeded = CheckedInt<uintptr_t>(stride) * size.height; // Don't accept `stride*(h-1)+w`.
+    bytesNeeded += beginOffset;
+    if (!bytesNeeded.isValid() || bytesNeeded.value() > buffer->length()) {
+      gfxCriticalError() << "PlanarYCbCrData::From asked for out-of-bounds plane data.";
+      return nullptr;
+    }
+    return (buffer->begin() + beginOffset).get();
+  };
+  yuvData.mYChannel = GetPlanePtr(yuvDesc.yOffset(), yuvData.mYSize, yuvData.mYStride);
+  yuvData.mCbChannel = GetPlanePtr(yuvDesc.cbOffset(), yuvData.mCbCrSize, yuvData.mCbCrStride);
+  yuvData.mCrChannel = GetPlanePtr(yuvDesc.crOffset(), yuvData.mCbCrSize, yuvData.mCbCrStride);
+
+  if (yuvData.mYSkip || yuvData.mCbSkip || yuvData.mCrSkip ||
+      yuvData.mYSize.width < 0 || yuvData.mYSize.height < 0 ||
+      yuvData.mCbCrSize.width < 0 || yuvData.mCbCrSize.height < 0 ||
+      yuvData.mYStride < 0 || yuvData.mCbCrStride < 0 ||
+      !yuvData.mYChannel || !yuvData.mCbChannel || !yuvData.mCrChannel) {
+    gfxCriticalError() << "Unusual PlanarYCbCrData: " << yuvData.mYSkip << ","
+                       << yuvData.mCbSkip << "," << yuvData.mCrSkip << ", "
+                       << yuvData.mYSize.width << "," << yuvData.mYSize.height
+                       << ", " << yuvData.mCbCrSize.width << ","
+                       << yuvData.mCbCrSize.height << ", " << yuvData.mYStride
+                       << "," << yuvData.mCbCrStride
+                       << ", " << yuvData.mYChannel
+                       << "," << yuvData.mCbChannel
+                       << "," << yuvData.mCrChannel;
+    return {};
+  }
+
+  return Some(yuvData);
+}
+
+// -
 
 PlanarYCbCrImage::PlanarYCbCrImage()
     : Image(nullptr, ImageFormat::PLANAR_YCBCR),

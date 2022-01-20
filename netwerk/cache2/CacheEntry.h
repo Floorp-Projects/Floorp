@@ -336,7 +336,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   // Whether it should skip max size check.
   bool const mSkipSizeCheck;
   // Set when entry is doomed with AsyncDoom() or DoomAlreadyRemoved().
-  bool mIsDoomed{false};
+  Atomic<bool, Relaxed> mIsDoomed{false};
 
   // Following flags are all synchronized with the cache entry lock.
 

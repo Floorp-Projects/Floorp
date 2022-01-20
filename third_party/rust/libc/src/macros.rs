@@ -307,13 +307,13 @@ macro_rules! align_const {
     )*)
 }
 
-// This macro is used to deprecate items that should be accessed via the mach crate
+// This macro is used to deprecate items that should be accessed via the mach2 crate
 #[allow(unused_macros)]
 macro_rules! deprecated_mach {
     (pub const $id:ident: $ty:ty = $expr:expr;) => {
         #[deprecated(
             since = "0.2.55",
-            note = "Use the `mach` crate instead",
+            note = "Use the `mach2` crate instead",
         )]
         #[allow(deprecated)]
         pub const $id: $ty = $expr;
@@ -328,7 +328,7 @@ macro_rules! deprecated_mach {
     (pub type $id:ident = $ty:ty;) => {
         #[deprecated(
             since = "0.2.55",
-            note = "Use the `mach` crate instead",
+            note = "Use the `mach2` crate instead",
         )]
         #[allow(deprecated)]
         pub type $id = $ty;
@@ -340,4 +340,20 @@ macro_rules! deprecated_mach {
             );
         )*
     }
+}
+
+#[allow(unused_macros)]
+#[cfg(not(libc_ptr_addr_of))]
+macro_rules! ptr_addr_of {
+    ($place:expr) => {
+        &$place
+    };
+}
+
+#[allow(unused_macros)]
+#[cfg(libc_ptr_addr_of)]
+macro_rules! ptr_addr_of {
+    ($place:expr) => {
+        ::core::ptr::addr_of!($place)
+    };
 }

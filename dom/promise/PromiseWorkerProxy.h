@@ -187,9 +187,6 @@ class PromiseWorkerProxy : public PromiseNativeHandler,
 
   virtual ~PromiseWorkerProxy();
 
-  // If not called from Create(), be sure to hold Lock().
-  void CleanProperties();
-
   // Function pointer for calling Promise::{ResolveInternal,RejectInternal}.
   typedef void (Promise::*RunCallbackFunc)(JSContext*, JS::Handle<JS::Value>);
 

@@ -74,6 +74,9 @@ ChromeUtils.defineModuleGetter(
   "ExperimentAPI",
   "resource://nimbus/ExperimentAPI.jsm"
 );
+XPCOMUtils.defineLazyModuleGetters(this, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+});
 
 const POCKET_ONSAVERECS_PREF = "extensions.pocket.onSaveRecs";
 const POCKET_ONSAVERECS_LOCLES_PREF = "extensions.pocket.onSaveRecs.locales";
@@ -162,14 +165,12 @@ var pktUI = (function() {
       let utmSource = experiment?.branch?.slug || `control`;
 
       showPanel(
-        "about:pocket-signup?pockethost=" +
-          Services.prefs.getCharPref("extensions.pocket.site") +
-          "&utmCampaign=" +
+        "about:pocket-signup?utmCampaign=" +
           utmCampaign +
           "&utmSource=" +
           utmSource +
-          "&locale=" +
-          getUILocale(),
+          "&emailButton=" +
+          NimbusFeatures.saveToPocket.getVariable("emailButton"),
         sizes
       );
     });
@@ -200,14 +201,10 @@ var pktUI = (function() {
       const variant = "control";
       const sizes = initialPanelSize.saved[variant];
       showPanel(
-        "about:pocket-saved?pockethost=" +
-          Services.prefs.getCharPref("extensions.pocket.site") +
-          "&premiumStatus=" +
+        "about:pocket-saved?premiumStatus=" +
           (pktApi.isPremiumUser() ? "1" : "0") +
           "&fxasignedin=" +
-          (typeof userdata == "object" && userdata !== null ? "1" : "0") +
-          "&locale=" +
-          getUILocale(),
+          (typeof userdata == "object" && userdata !== null ? "1" : "0"),
         sizes
       );
     });
@@ -225,23 +222,29 @@ var pktUI = (function() {
       homeVersion = "control";
     }
     const sizes = initialPanelSize.home[homeVersion];
-    showPanel(
-      "about:pocket-home?pockethost=" +
-        Services.prefs.getCharPref("extensions.pocket.site") +
-        "&locale=" +
-        locale,
-      sizes
-    );
+    showPanel("about:pocket-home", sizes);
   }
 
   /**
    * Open a generic panel
    */
-  function showPanel(url, options) {
+  function showPanel(urlString, options) {
     resizePanel({
       width: options.width,
       height: options.height,
     });
+
+    const url = new URL(urlString);
+    // A set of params shared across all panels.
+    url.searchParams.append(
+      "layoutRefresh",
+      NimbusFeatures.saveToPocket.getVariable("layoutRefresh")
+    );
+    url.searchParams.append(
+      "pockethost",
+      Services.prefs.getCharPref("extensions.pocket.site")
+    );
+    url.searchParams.append("locale", getUILocale());
 
     // We don't have to hide and show the panel again if it's already shown
     // as if the user tries to click again on the toolbar button the overlay
@@ -249,7 +252,7 @@ var pktUI = (function() {
     var frame = getPanelFrame();
 
     // Load the frame
-    frame.setAttribute("src", url);
+    frame.setAttribute("src", url.href);
   }
 
   function onShowSignup() {
@@ -562,6 +565,8 @@ var pktUI = (function() {
     setToolbarPanelFrame,
     getPanelFrame,
     initPrefs,
+    showPanel,
+    getUILocale,
 
     openTabWithUrl,
     onOpenTabWithUrl,

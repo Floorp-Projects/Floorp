@@ -51,9 +51,7 @@ void RemoteAccessibleWrap::Shutdown() {
 // LocalAccessible
 
 already_AddRefed<AccAttributes> RemoteAccessibleWrap::Attributes() {
-  RefPtr<AccAttributes> attrs;
-  Proxy()->Attributes(&attrs);
-  return attrs.forget();
+  return Proxy()->Attributes();
 }
 
 uint32_t RemoteAccessibleWrap::ChildCount() const {
@@ -112,11 +110,6 @@ void RemoteAccessibleWrap::PivotTo(int32_t aGranularity, bool aForward,
                                    bool aInclusive) {
   Unused << Proxy()->Document()->GetPlatformExtension()->SendPivot(
       Proxy()->ID(), aGranularity, aForward, aInclusive);
-}
-
-void RemoteAccessibleWrap::ExploreByTouch(float aX, float aY) {
-  Unused << Proxy()->Document()->GetPlatformExtension()->SendExploreByTouch(
-      Proxy()->ID(), aX, aY);
 }
 
 void RemoteAccessibleWrap::NavigateText(int32_t aGranularity,

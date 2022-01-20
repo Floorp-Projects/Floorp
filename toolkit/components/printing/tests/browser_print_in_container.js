@@ -9,10 +9,6 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 );
 
 add_task(async function test() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["print.tab_modal.enabled", true]],
-  });
-
   let tab = await BrowserTestUtils.switchTab(gBrowser, function() {
     gBrowser.selectedTab = BrowserTestUtils.addTab(
       gBrowser,

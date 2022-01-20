@@ -124,6 +124,11 @@ function getKeyStatusForProtectionKeyId(session) {
   return null;
 }
 
+async function getDisplayMedia() {
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+  return navigator.mediaDevices.getDisplayMedia();
+}
+
 // Tests playing encrypted media, starting a screen capture during playback,
 // then stopping the capture while playback continues.
 async function testProtectionQueryWithCaptureDuringVideo() {
@@ -149,15 +154,12 @@ async function testProtectionQueryWithCaptureDuringVideo() {
     "Should be usable as capture hasn't started"
   );
 
-  // Start a screen capture, this should restrict output.
-  let displayMediaStreamPromise = navigator.mediaDevices.getDisplayMedia({
-    video: true,
-  });
   let keyStatusChangedPromise2 = new Promise(
     resolve => (session.onkeystatuseschange = resolve)
   );
   let [displayMediaStream] = await Promise.all([
-    displayMediaStreamPromise,
+    // Start a screen capture, this should restrict output.
+    getDisplayMedia(),
     keyStatusChangedPromise2,
   ]);
   is(
@@ -186,9 +188,7 @@ async function testProtectionQueryWithCaptureDuringVideo() {
 // stopping the screen capture while encrypted playback continues.
 async function testProtectionQueryWithCaptureStartingBeforeVideo() {
   // Start capture before setting up video.
-  let displayMediaStream = await navigator.mediaDevices.getDisplayMedia({
-    video: true,
-  });
+  let displayMediaStream = await getDisplayMedia();
 
   let video = createAndAppendVideo();
 
@@ -233,15 +233,12 @@ async function testProtectionQueryWithCaptureStartingBeforeVideo() {
 }
 
 add_task(async function setupEnvironment() {
-  // Need gesture activation for getDisplayMedia.
-  SpecialPowers.wrap(document).notifyUserGestureActivation();
-  // Need test key systems for test key system. Need relaxed navigator
-  // permissions and fake streams for getDisplayMedia.
   await SpecialPowers.pushPrefEnv({
     set: [
+      // Need test key systems for test key system.
       ["media.clearkey.test-key-systems.enabled", true],
+      // Need relaxed navigator permissions for getDisplayMedia.
       ["media.navigator.permission.disabled", true],
-      ["media.navigator.streams.fake", true],
     ],
   });
 });

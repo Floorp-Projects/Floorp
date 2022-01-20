@@ -1,11 +1,8 @@
-use core::{
-    cmp,
-    mem::{self, MaybeUninit},
-    ptr, usize,
-};
-
+use crate::buf::{limit, Chain, Limit, UninitSlice};
 #[cfg(feature = "std")]
-use std::fmt;
+use crate::buf::{writer, Writer};
+
+use core::{cmp, mem, ptr, usize};
 
 use alloc::{boxed::Box, vec::Vec};
 
@@ -29,12 +26,16 @@ use alloc::{boxed::Box, vec::Vec};
 ///
 /// assert_eq!(buf, b"hello world");
 /// ```
-pub trait BufMut {
+pub unsafe trait BufMut {
     /// Returns the number of bytes that can be written from the current
     /// position until the end of the buffer is reached.
     ///
     /// This value is greater than or equal to the length of the slice returned
-    /// by `bytes_mut`.
+    /// by `chunk_mut()`.
+    ///
+    /// Writing to a `BufMut` may involve allocating more memory on the fly.
+    /// Implementations may fail before reaching the number of bytes indicated
+    /// by this method if they encounter an allocation failure.
     ///
     /// # Examples
     ///
@@ -59,7 +60,7 @@ pub trait BufMut {
 
     /// Advance the internal cursor of the BufMut
     ///
-    /// The next call to `bytes_mut` will return a slice starting `cnt` bytes
+    /// The next call to `chunk_mut` will return a slice starting `cnt` bytes
     /// further into the underlying buffer.
     ///
     /// This function is unsafe because there is no guarantee that the bytes
@@ -72,19 +73,14 @@ pub trait BufMut {
     ///
     /// let mut buf = Vec::with_capacity(16);
     ///
-    /// unsafe {
-    ///     // MaybeUninit::as_mut_ptr
-    ///     buf.bytes_mut()[0].as_mut_ptr().write(b'h');
-    ///     buf.bytes_mut()[1].as_mut_ptr().write(b'e');
+    /// // Write some data
+    /// buf.chunk_mut()[0..2].copy_from_slice(b"he");
+    /// unsafe { buf.advance_mut(2) };
     ///
-    ///     buf.advance_mut(2);
+    /// // write more bytes
+    /// buf.chunk_mut()[0..3].copy_from_slice(b"llo");
     ///
-    ///     buf.bytes_mut()[0].as_mut_ptr().write(b'l');
-    ///     buf.bytes_mut()[1].as_mut_ptr().write(b'l');
-    ///     buf.bytes_mut()[2].as_mut_ptr().write(b'o');
-    ///
-    ///     buf.advance_mut(3);
-    /// }
+    /// unsafe { buf.advance_mut(3); }
     ///
     /// assert_eq!(5, buf.len());
     /// assert_eq!(buf, b"hello");
@@ -143,14 +139,14 @@ pub trait BufMut {
     ///
     /// unsafe {
     ///     // MaybeUninit::as_mut_ptr
-    ///     buf.bytes_mut()[0].as_mut_ptr().write(b'h');
-    ///     buf.bytes_mut()[1].as_mut_ptr().write(b'e');
+    ///     buf.chunk_mut()[0..].as_mut_ptr().write(b'h');
+    ///     buf.chunk_mut()[1..].as_mut_ptr().write(b'e');
     ///
     ///     buf.advance_mut(2);
     ///
-    ///     buf.bytes_mut()[0].as_mut_ptr().write(b'l');
-    ///     buf.bytes_mut()[1].as_mut_ptr().write(b'l');
-    ///     buf.bytes_mut()[2].as_mut_ptr().write(b'o');
+    ///     buf.chunk_mut()[0..].as_mut_ptr().write(b'l');
+    ///     buf.chunk_mut()[1..].as_mut_ptr().write(b'l');
+    ///     buf.chunk_mut()[2..].as_mut_ptr().write(b'o');
     ///
     ///     buf.advance_mut(3);
     /// }
@@ -161,54 +157,18 @@ pub trait BufMut {
     ///
     /// # Implementer notes
     ///
-    /// This function should never panic. `bytes_mut` should return an empty
-    /// slice **if and only if** `remaining_mut` returns 0. In other words,
-    /// `bytes_mut` returning an empty slice implies that `remaining_mut` will
-    /// return 0 and `remaining_mut` returning 0 implies that `bytes_mut` will
+    /// This function should never panic. `chunk_mut` should return an empty
+    /// slice **if and only if** `remaining_mut()` returns 0. In other words,
+    /// `chunk_mut()` returning an empty slice implies that `remaining_mut()` will
+    /// return 0 and `remaining_mut()` returning 0 implies that `chunk_mut()` will
     /// return an empty slice.
-    fn bytes_mut(&mut self) -> &mut [MaybeUninit<u8>];
-
-    /// Fills `dst` with potentially multiple mutable slices starting at `self`'s
-    /// current position.
     ///
-    /// If the `BufMut` is backed by disjoint slices of bytes, `bytes_vectored_mut`
-    /// enables fetching more than one slice at once. `dst` is a slice of
-    /// mutable `IoSliceMut` references, enabling the slice to be directly used with
-    /// [`readv`] without any further conversion. The sum of the lengths of all
-    /// the buffers in `dst` will be less than or equal to
-    /// `Buf::remaining_mut()`.
-    ///
-    /// The entries in `dst` will be overwritten, but the data **contained** by
-    /// the slices **will not** be modified. If `bytes_vectored_mut` does not fill every
-    /// entry in `dst`, then `dst` is guaranteed to contain all remaining slices
-    /// in `self.
-    ///
-    /// This is a lower level function. Most operations are done with other
-    /// functions.
-    ///
-    /// # Implementer notes
-    ///
-    /// This function should never panic. Once the end of the buffer is reached,
-    /// i.e., `BufMut::remaining_mut` returns 0, calls to `bytes_vectored_mut` must
-    /// return 0 without mutating `dst`.
-    ///
-    /// Implementations should also take care to properly handle being called
-    /// with `dst` being a zero length slice.
-    ///
-    /// [`readv`]: http://man7.org/linux/man-pages/man2/readv.2.html
-    #[cfg(feature = "std")]
-    fn bytes_vectored_mut<'a>(&'a mut self, dst: &mut [IoSliceMut<'a>]) -> usize {
-        if dst.is_empty() {
-            return 0;
-        }
-
-        if self.has_remaining_mut() {
-            dst[0] = IoSliceMut::from(self.bytes_mut());
-            1
-        } else {
-            0
-        }
-    }
+    /// This function may trigger an out-of-memory abort if it tries to allocate
+    /// memory and fails to do so.
+    // The `chunk_mut` method was previously called `bytes_mut`. This alias makes the
+    // rename more easily discoverable.
+    #[cfg_attr(docsrs, doc(alias = "bytes_mut"))]
+    fn chunk_mut(&mut self) -> &mut UninitSlice;
 
     /// Transfer bytes into `self` from `src` and advance the cursor by the
     /// number of bytes written.
@@ -240,8 +200,8 @@ pub trait BufMut {
             let l;
 
             unsafe {
-                let s = src.bytes();
-                let d = self.bytes_mut();
+                let s = src.chunk();
+                let d = self.chunk_mut();
                 l = cmp::min(s.len(), d.len());
 
                 ptr::copy_nonoverlapping(s.as_ptr(), d.as_mut_ptr() as *mut u8, l);
@@ -287,7 +247,7 @@ pub trait BufMut {
             let cnt;
 
             unsafe {
-                let dst = self.bytes_mut();
+                let dst = self.chunk_mut();
                 cnt = cmp::min(dst.len(), src.len() - off);
 
                 ptr::copy_nonoverlapping(src[off..].as_ptr(), dst.as_mut_ptr() as *mut u8, cnt);
@@ -298,6 +258,37 @@ pub trait BufMut {
             unsafe {
                 self.advance_mut(cnt);
             }
+        }
+    }
+
+    /// Put `cnt` bytes `val` into `self`.
+    ///
+    /// Logically equivalent to calling `self.put_u8(val)` `cnt` times, but may work faster.
+    ///
+    /// `self` must have at least `cnt` remaining capacity.
+    ///
+    /// ```
+    /// use bytes::BufMut;
+    ///
+    /// let mut dst = [0; 6];
+    ///
+    /// {
+    ///     let mut buf = &mut dst[..];
+    ///     buf.put_bytes(b'a', 4);
+    ///
+    ///     assert_eq!(2, buf.remaining_mut());
+    /// }
+    ///
+    /// assert_eq!(b"aaaa\0\0", &dst);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// This function panics if there is not enough remaining capacity in
+    /// `self`.
+    fn put_bytes(&mut self, val: u8, cnt: usize) {
+        for _ in 0..cnt {
+            self.put_u8(val);
         }
     }
 
@@ -743,7 +734,7 @@ pub trait BufMut {
         self.put_slice(&n.to_le_bytes()[0..nbytes]);
     }
 
-    /// Writes a signed n-byte integer to `self` in big-endian byte order.
+    /// Writes low `nbytes` of a signed integer to `self` in big-endian byte order.
     ///
     /// The current position is advanced by `nbytes`.
     ///
@@ -753,19 +744,19 @@ pub trait BufMut {
     /// use bytes::BufMut;
     ///
     /// let mut buf = vec![];
-    /// buf.put_int(0x010203, 3);
+    /// buf.put_int(0x0504010203, 3);
     /// assert_eq!(buf, b"\x01\x02\x03");
     /// ```
     ///
     /// # Panics
     ///
     /// This function panics if there is not enough remaining capacity in
-    /// `self`.
+    /// `self` or if `nbytes` is greater than 8.
     fn put_int(&mut self, n: i64, nbytes: usize) {
         self.put_slice(&n.to_be_bytes()[mem::size_of_val(&n) - nbytes..]);
     }
 
-    /// Writes a signed n-byte integer to `self` in little-endian byte order.
+    /// Writes low `nbytes` of a signed integer to `self` in little-endian byte order.
     ///
     /// The current position is advanced by `nbytes`.
     ///
@@ -775,14 +766,14 @@ pub trait BufMut {
     /// use bytes::BufMut;
     ///
     /// let mut buf = vec![];
-    /// buf.put_int_le(0x010203, 3);
+    /// buf.put_int_le(0x0504010203, 3);
     /// assert_eq!(buf, b"\x03\x02\x01");
     /// ```
     ///
     /// # Panics
     ///
     /// This function panics if there is not enough remaining capacity in
-    /// `self`.
+    /// `self` or if `nbytes` is greater than 8.
     fn put_int_le(&mut self, n: i64, nbytes: usize) {
         self.put_slice(&n.to_le_bytes()[0..nbytes]);
     }
@@ -878,6 +869,83 @@ pub trait BufMut {
     fn put_f64_le(&mut self, n: f64) {
         self.put_u64_le(n.to_bits());
     }
+
+    /// Creates an adaptor which can write at most `limit` bytes to `self`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bytes::BufMut;
+    ///
+    /// let arr = &mut [0u8; 128][..];
+    /// assert_eq!(arr.remaining_mut(), 128);
+    ///
+    /// let dst = arr.limit(10);
+    /// assert_eq!(dst.remaining_mut(), 10);
+    /// ```
+    fn limit(self, limit: usize) -> Limit<Self>
+    where
+        Self: Sized,
+    {
+        limit::new(self, limit)
+    }
+
+    /// Creates an adaptor which implements the `Write` trait for `self`.
+    ///
+    /// This function returns a new value which implements `Write` by adapting
+    /// the `Write` trait functions to the `BufMut` trait functions. Given that
+    /// `BufMut` operations are infallible, none of the `Write` functions will
+    /// return with `Err`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bytes::BufMut;
+    /// use std::io::Write;
+    ///
+    /// let mut buf = vec![].writer();
+    ///
+    /// let num = buf.write(&b"hello world"[..]).unwrap();
+    /// assert_eq!(11, num);
+    ///
+    /// let buf = buf.into_inner();
+    ///
+    /// assert_eq!(*buf, b"hello world"[..]);
+    /// ```
+    #[cfg(feature = "std")]
+    fn writer(self) -> Writer<Self>
+    where
+        Self: Sized,
+    {
+        writer::new(self)
+    }
+
+    /// Creates an adapter which will chain this buffer with another.
+    ///
+    /// The returned `BufMut` instance will first write to all bytes from
+    /// `self`. Afterwards, it will write to `next`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bytes::BufMut;
+    ///
+    /// let mut a = [0u8; 5];
+    /// let mut b = [0u8; 6];
+    ///
+    /// let mut chain = (&mut a[..]).chain_mut(&mut b[..]);
+    ///
+    /// chain.put_slice(b"hello world");
+    ///
+    /// assert_eq!(&a[..], b"hello");
+    /// assert_eq!(&b[..], b" world");
+    /// ```
+    fn chain_mut<U: BufMut>(self, next: U) -> Chain<Self, U>
+    where
+        Self: Sized,
+    {
+        Chain::new(self, next)
+    }
 }
 
 macro_rules! deref_forward_bufmut {
@@ -886,13 +954,8 @@ macro_rules! deref_forward_bufmut {
             (**self).remaining_mut()
         }
 
-        fn bytes_mut(&mut self) -> &mut [MaybeUninit<u8>] {
-            (**self).bytes_mut()
-        }
-
-        #[cfg(feature = "std")]
-        fn bytes_vectored_mut<'b>(&'b mut self, dst: &mut [IoSliceMut<'b>]) -> usize {
-            (**self).bytes_vectored_mut(dst)
+        fn chunk_mut(&mut self) -> &mut UninitSlice {
+            (**self).chunk_mut()
         }
 
         unsafe fn advance_mut(&mut self, cnt: usize) {
@@ -961,24 +1024,24 @@ macro_rules! deref_forward_bufmut {
     };
 }
 
-impl<T: BufMut + ?Sized> BufMut for &mut T {
+unsafe impl<T: BufMut + ?Sized> BufMut for &mut T {
     deref_forward_bufmut!();
 }
 
-impl<T: BufMut + ?Sized> BufMut for Box<T> {
+unsafe impl<T: BufMut + ?Sized> BufMut for Box<T> {
     deref_forward_bufmut!();
 }
 
-impl BufMut for &mut [u8] {
+unsafe impl BufMut for &mut [u8] {
     #[inline]
     fn remaining_mut(&self) -> usize {
         self.len()
     }
 
     #[inline]
-    fn bytes_mut(&mut self) -> &mut [MaybeUninit<u8>] {
-        // MaybeUninit is repr(transparent), so safe to transmute
-        unsafe { mem::transmute(&mut **self) }
+    fn chunk_mut(&mut self) -> &mut UninitSlice {
+        // UninitSlice is repr(transparent), so safe to transmute
+        unsafe { &mut *(*self as *mut [u8] as *mut _) }
     }
 
     #[inline]
@@ -987,12 +1050,29 @@ impl BufMut for &mut [u8] {
         let (_, b) = core::mem::replace(self, &mut []).split_at_mut(cnt);
         *self = b;
     }
+
+    #[inline]
+    fn put_slice(&mut self, src: &[u8]) {
+        self[..src.len()].copy_from_slice(src);
+        unsafe {
+            self.advance_mut(src.len());
+        }
+    }
+
+    fn put_bytes(&mut self, val: u8, cnt: usize) {
+        assert!(self.remaining_mut() >= cnt);
+        unsafe {
+            ptr::write_bytes(self.as_mut_ptr(), val, cnt);
+            self.advance_mut(cnt);
+        }
+    }
 }
 
-impl BufMut for Vec<u8> {
+unsafe impl BufMut for Vec<u8> {
     #[inline]
     fn remaining_mut(&self) -> usize {
-        usize::MAX - self.len()
+        // A vector can never have more than isize::MAX bytes
+        core::isize::MAX as usize - self.len()
     }
 
     #[inline]
@@ -1011,9 +1091,7 @@ impl BufMut for Vec<u8> {
     }
 
     #[inline]
-    fn bytes_mut(&mut self) -> &mut [MaybeUninit<u8>] {
-        use core::slice;
-
+    fn chunk_mut(&mut self) -> &mut UninitSlice {
         if self.capacity() == self.len() {
             self.reserve(64); // Grow the vec
         }
@@ -1021,13 +1099,12 @@ impl BufMut for Vec<u8> {
         let cap = self.capacity();
         let len = self.len();
 
-        let ptr = self.as_mut_ptr() as *mut MaybeUninit<u8>;
-        unsafe { &mut slice::from_raw_parts_mut(ptr, cap)[len..] }
+        let ptr = self.as_mut_ptr();
+        unsafe { &mut UninitSlice::from_raw_parts_mut(ptr, cap)[len..] }
     }
 
     // Specialize these methods so they can skip checking `remaining_mut`
     // and `advance_mut`.
-
     fn put<T: super::Buf>(&mut self, mut src: T)
     where
         Self: Sized,
@@ -1040,7 +1117,7 @@ impl BufMut for Vec<u8> {
 
             // a block to contain the src.bytes() borrow
             {
-                let s = src.bytes();
+                let s = src.chunk();
                 l = s.len();
                 self.extend_from_slice(s);
             }
@@ -1049,52 +1126,17 @@ impl BufMut for Vec<u8> {
         }
     }
 
+    #[inline]
     fn put_slice(&mut self, src: &[u8]) {
         self.extend_from_slice(src);
+    }
+
+    fn put_bytes(&mut self, val: u8, cnt: usize) {
+        let new_len = self.len().checked_add(cnt).unwrap();
+        self.resize(new_len, val);
     }
 }
 
 // The existence of this function makes the compiler catch if the BufMut
 // trait is "object-safe" or not.
 fn _assert_trait_object(_b: &dyn BufMut) {}
-
-// ===== impl IoSliceMut =====
-
-/// A buffer type used for `readv`.
-///
-/// This is a wrapper around an `std::io::IoSliceMut`, but does not expose
-/// the inner bytes in a safe API, as they may point at uninitialized memory.
-///
-/// This is `repr(transparent)` of the `std::io::IoSliceMut`, so it is valid to
-/// transmute them. However, as the memory might be uninitialized, care must be
-/// taken to not *read* the internal bytes, only *write* to them.
-#[repr(transparent)]
-#[cfg(feature = "std")]
-pub struct IoSliceMut<'a>(std::io::IoSliceMut<'a>);
-
-#[cfg(feature = "std")]
-impl fmt::Debug for IoSliceMut<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("IoSliceMut")
-            .field("len", &self.0.len())
-            .finish()
-    }
-}
-
-#[cfg(feature = "std")]
-impl<'a> From<&'a mut [u8]> for IoSliceMut<'a> {
-    fn from(buf: &'a mut [u8]) -> IoSliceMut<'a> {
-        IoSliceMut(std::io::IoSliceMut::new(buf))
-    }
-}
-
-#[cfg(feature = "std")]
-impl<'a> From<&'a mut [MaybeUninit<u8>]> for IoSliceMut<'a> {
-    fn from(buf: &'a mut [MaybeUninit<u8>]) -> IoSliceMut<'a> {
-        IoSliceMut(std::io::IoSliceMut::new(unsafe {
-            // We don't look at the contents, and `std::io::IoSliceMut`
-            // doesn't either.
-            mem::transmute::<&'a mut [MaybeUninit<u8>], &'a mut [u8]>(buf)
-        }))
-    }
-}

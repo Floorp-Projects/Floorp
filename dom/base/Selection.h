@@ -171,7 +171,7 @@ class Selection final : public nsSupportsWeakReference,
    * See `AddRangesForSelectableNodes`.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult AddRangesForUserSelectableNodes(
-      nsRange* aRange, int32_t* aOutIndex,
+      nsRange* aRange, Maybe<size_t>* aOutIndex,
       const DispatchSelectstartEvent aDispatchSelectstartEvent);
 
   /**
@@ -182,11 +182,11 @@ class Selection final : public nsSupportsWeakReference,
    *
    * @param aOutIndex points to the range last added, if at least one was added.
    *                  If aRange is already contained, it points to the range
-   *                  containing it. -1 if mStyledRanges.mRanges was empty and
-   * no range was added.
+   *                  containing it. Nothing() if mStyledRanges.mRanges was
+   *                  empty and no range was added.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult AddRangesForSelectableNodes(
-      nsRange* aRange, int32_t* aOutIndex,
+      nsRange* aRange, Maybe<size_t>* aOutIndex,
       DispatchSelectstartEvent aDispatchSelectstartEvent);
 
  public:
@@ -210,12 +210,12 @@ class Selection final : public nsSupportsWeakReference,
     CollapseInternal(InLimiter::eYes, aPoint, aRv);
   }
 
-  MOZ_CAN_RUN_SCRIPT nsresult Extend(nsINode* aContainer, int32_t aOffset);
+  MOZ_CAN_RUN_SCRIPT nsresult Extend(nsINode* aContainer, uint32_t aOffset);
 
   /**
    * See mStyledRanges.mRanges.
    */
-  nsRange* GetRangeAt(int32_t aIndex) const;
+  nsRange* GetRangeAt(uint32_t aIndex) const;
 
   // Get the anchor-to-focus range if we don't care which end is
   // anchor and which end is focus.
@@ -235,7 +235,7 @@ class Selection final : public nsSupportsWeakReference,
                                         int32_t* aOffsetUsed = nullptr) const;
 
   UniquePtr<SelectionDetails> LookUpSelection(
-      nsIContent* aContent, int32_t aContentOffset, int32_t aContentLength,
+      nsIContent* aContent, uint32_t aContentOffset, uint32_t aContentLength,
       UniquePtr<SelectionDetails> aDetailsHead, SelectionType aSelectionType,
       bool aSlowCheck);
 
@@ -308,7 +308,7 @@ class Selection final : public nsSupportsWeakReference,
    * IsCollapsed -- is the whole selection just one point, or unset?
    */
   bool IsCollapsed() const {
-    uint32_t cnt = mStyledRanges.Length();
+    size_t cnt = mStyledRanges.Length();
     if (cnt == 0) {
       return true;
     }
@@ -432,8 +432,8 @@ class Selection final : public nsSupportsWeakReference,
    *
    * @param aReturn references, not copies, of the internal ranges.
    */
-  void GetRangesForInterval(nsINode& aBeginNode, int32_t aBeginOffset,
-                            nsINode& aEndNode, int32_t aEndOffset,
+  void GetRangesForInterval(nsINode& aBeginNode, uint32_t aBeginOffset,
+                            nsINode& aEndNode, uint32_t aEndOffset,
                             bool aAllowAdjacent,
                             nsTArray<RefPtr<nsRange>>& aReturn,
                             mozilla::ErrorResult& aRv);
@@ -648,8 +648,8 @@ class Selection final : public nsSupportsWeakReference,
   //
   //    Now that overlapping ranges are disallowed, there can be a maximum of
   //    2 adjacent ranges
-  nsresult GetRangesForIntervalArray(nsINode* aBeginNode, int32_t aBeginOffset,
-                                     nsINode* aEndNode, int32_t aEndOffset,
+  nsresult GetRangesForIntervalArray(nsINode* aBeginNode, uint32_t aBeginOffset,
+                                     nsINode* aEndNode, uint32_t aEndOffset,
                                      bool aAllowAdjacent,
                                      nsTArray<nsRange*>* aRanges);
 
@@ -746,11 +746,10 @@ class Selection final : public nsSupportsWeakReference,
 
   /**
    * Set mAnchorFocusRange to mStyledRanges.mRanges[aIndex] if aIndex is a valid
-   * index. Set mAnchorFocusRange to nullptr if aIndex is negative. Otherwise,
-   * i.e., if aIndex is positive but out of bounds of mStyledRanges.mRanges, do
-   * nothing.
+   * index.
    */
-  void SetAnchorFocusRange(int32_t aIndex);
+  void SetAnchorFocusRange(size_t aIndex);
+  void RemoveAnchorFocusRange() { mAnchorFocusRange = nullptr; }
   void SelectFramesOf(nsIContent* aContent, bool aSelected) const;
 
   /**
@@ -770,12 +769,12 @@ class Selection final : public nsSupportsWeakReference,
   void SelectFramesInAllRanges(nsPresContext* aPresContext);
 
   /**
-   * @param aOutIndex points to the index of the range in mStyledRanges.mRanges.
-   * If aDidAddRange is true, it is in [0, mStyledRanges.Length()).
+   * @param aOutIndex   If some, points to the index of the range in
+   * mStyledRanges.mRanges so that it's always in [0, mStyledRanges.Length()].
+   * Otherwise, if nothing, this didn't add the range to mStyledRanges.
    */
   MOZ_CAN_RUN_SCRIPT nsresult MaybeAddTableCellRange(nsRange& aRange,
-                                                     bool* aDidAddRange,
-                                                     int32_t* aOutIndex);
+                                                     Maybe<size_t>* aOutIndex);
 
   Document* GetDocument() const;
 
@@ -805,37 +804,42 @@ class Selection final : public nsSupportsWeakReference,
      * @return the index where the point should appear in the array. In
      *         [0, `aElementArray->Length()`].
      */
-    static int32_t FindInsertionPoint(
+    static size_t FindInsertionPoint(
         const nsTArray<StyledRange>* aElementArray, const nsINode& aPointNode,
-        int32_t aPointOffset,
-        int32_t (*aComparator)(const nsINode&, int32_t, const nsRange&));
+        uint32_t aPointOffset,
+        int32_t (*aComparator)(const nsINode&, uint32_t, const nsRange&));
 
     /**
      * Works on the same principle as GetRangesForIntervalArray, however
      * instead this returns the indices into mRanges between which
      * the overlapping ranges lie.
      *
-     * @param aStartIndex will be less or equal than aEndIndex.
-     * @param aEndIndex can be in [-1, mRanges.Length()].
+     * @param aStartIndex If some, aEndIndex will also be some and the value of
+     *                    aStartIndex will be less or equal than aEndIndex.  If
+     *                    nothing, aEndIndex will also be nothing and it means
+     *                    that there is no range which in the range.
+     * @param aEndIndex   If some, the value is less than mRanges.Length().
      */
     nsresult GetIndicesForInterval(const nsINode* aBeginNode,
-                                   int32_t aBeginOffset,
-                                   const nsINode* aEndNode, int32_t aEndOffset,
-                                   bool aAllowAdjacent, int32_t& aStartIndex,
-                                   int32_t& aEndIndex) const;
+                                   uint32_t aBeginOffset,
+                                   const nsINode* aEndNode, uint32_t aEndOffset,
+                                   bool aAllowAdjacent,
+                                   Maybe<size_t>& aStartIndex,
+                                   Maybe<size_t>& aEndIndex) const;
 
     bool HasEqualRangeBoundariesAt(const nsRange& aRange,
-                                   int32_t aRangeIndex) const;
+                                   size_t aRangeIndex) const;
 
     /**
      * Preserves the sorting and disjunctiveness of mRanges.
      *
-     * @param aOutIndex will point to the index of the added range, or if aRange
-     *                  is already contained, to the one containing it. Hence
-     *                  it'll always be in [0, mRanges.Length()).
+     * @param aOutIndex If some, will point to the index of the added range, or
+     *                  if aRange is already contained, to the one containing
+     *                  it. Hence it'll always be in [0, mRanges.Length()).
+     *                  This is nothing only when the method returns an error.
      */
     MOZ_CAN_RUN_SCRIPT nsresult MaybeAddRangeAndTruncateOverlaps(
-        nsRange* aRange, int32_t* aOutIndex, Selection& aSelection);
+        nsRange* aRange, Maybe<size_t>* aOutIndex, Selection& aSelection);
 
     /**
      * GetCommonEditingHost() returns common editing host of all

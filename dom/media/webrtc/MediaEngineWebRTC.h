@@ -7,7 +7,6 @@
 #define MEDIAENGINEWEBRTC_H_
 
 #include "AudioDeviceInfo.h"
-#include "CamerasChild.h"
 #include "CubebUtils.h"
 #include "DOMMediaStream.h"
 #include "MediaEngine.h"
@@ -20,7 +19,6 @@
 #include "VideoUtils.h"
 #include "CubebDeviceEnumerator.h"
 #include "ipc/IPCMessageUtils.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticMutex.h"
@@ -41,8 +39,6 @@
 namespace mozilla {
 
 class MediaEngineWebRTC : public MediaEngine {
-  typedef MediaEngine Super;
-
  public:
   MediaEngineWebRTC();
 
@@ -54,19 +50,18 @@ class MediaEngineWebRTC : public MediaEngine {
   // before invoking Shutdown on this class.
   void Shutdown() override;
 
-  // Returns whether the host supports duplex audio track.
-  bool SupportsDuplex();
-
   void EnumerateDevices(dom::MediaSourceEnum, MediaSinkEnum,
                         nsTArray<RefPtr<MediaDevice>>*) override;
+  RefPtr<MediaEngineSource> CreateSource(const MediaDevice* aDevice) override;
 
   MediaEventSource<void>& DeviceListChangeEvent() override {
     return mDeviceListChangeEvent;
   }
+  bool IsFake() const override { return false; }
 
  private:
   ~MediaEngineWebRTC() = default;
-  void EnumerateVideoDevices(camera::CaptureEngine aCapEngine,
+  void EnumerateVideoDevices(dom::MediaSourceEnum,
                              nsTArray<RefPtr<MediaDevice>>*);
   void EnumerateMicrophoneDevices(nsTArray<RefPtr<MediaDevice>>*);
   void EnumerateSpeakerDevices(nsTArray<RefPtr<MediaDevice>>*);
@@ -75,9 +70,6 @@ class MediaEngineWebRTC : public MediaEngine {
 
   static void FakeDeviceChangeEventTimerTick(nsITimer* aTimer, void* aClosure);
 
-  // This also is set in the ctor and then never changed, but we can't make it
-  // const because we pass it to a function that takes bool* in the ctor.
-  bool mHasTabVideoSource;
   MediaEventListener mCameraListChangeListener;
   MediaEventListener mMicrophoneListChangeListener;
   MediaEventListener mSpeakerListChangeListener;

@@ -19,6 +19,9 @@
 #include "vm/SharedStencil.h"  // GCThingIndex
 #include "vm/StaticStrings.h"
 #include "vm/ThrowMsgKind.h"
+#ifdef ENABLE_RECORD_TUPLE
+#  include "vm/RecordTupleShared.h"
+#endif
 
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/GlobalObject-inl.h"
@@ -422,6 +425,19 @@ static MOZ_ALWAYS_INLINE bool GetObjectElementOperation(
 static MOZ_ALWAYS_INLINE bool GetPrimitiveElementOperation(
     JSContext* cx, JS::HandleValue receiver, int receiverIndex, HandleValue key,
     MutableHandleValue res) {
+#ifdef ENABLE_RECORD_TUPLE
+  if (receiver.isExtendedPrimitive()) {
+    RootedId id(cx);
+    if (!ToPropertyKey(cx, key, &id)) {
+      return false;
+    }
+    RootedObject obj(cx, &receiver.toExtendedPrimitive());
+    if (!ExtendedPrimitiveGetProperty(cx, obj, receiver, id, res)) {
+      return false;
+    }
+  }
+#endif
+
   // FIXME: Bug 1234324 We shouldn't be boxing here.
   RootedObject boxed(
       cx, ToObjectFromStackForPropertyAccess(cx, receiver, receiverIndex, key));

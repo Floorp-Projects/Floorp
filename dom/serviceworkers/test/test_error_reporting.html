@@ -193,7 +193,7 @@ add_task(async function get_client_storage_error() {
 
   await SpecialPowers.pushPrefEnv({"set": [
     // Make the test pass the IsOriginPotentiallyTrustworthy.
-    ["dom.securecontext.whitelist", "mochi.test"]
+    ["dom.securecontext.allowlist", "mochi.test"]
   ]});
 
   let registration;

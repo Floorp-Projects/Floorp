@@ -234,11 +234,10 @@ pub struct ClipMaskInstance {
 }
 
 // 16 bytes per instance should be enough for anyone!
+#[repr(C)]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-// Rust >= 1.57 says it's never read because it doesn't know it's used by the GPU.
-#[allow(dead_code)]
 pub struct PrimitiveInstanceData {
     data: [i32; 4],
 }

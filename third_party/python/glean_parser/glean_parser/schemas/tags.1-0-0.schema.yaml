@@ -1,0 +1,51 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: http://json-schema.org/draft-07/schema#
+title: Tags
+description: |
+  Schema for the tags.yaml files for Mozilla's Glean telemetry SDK.
+
+  The top-level of the `tags.yaml` file has a key defining the name of each
+  tag. The values contain metadata about that tag (currently just a
+  description).
+
+$id: moz://mozilla.org/schemas/glean/tags/1-0-0
+
+type: object
+
+propertyNames:
+  type: string
+  maxLength: 80
+
+properties:
+  $schema:
+    type: string
+    format: url
+
+  no_lint:
+    title: Lint checks to skip globally
+    description: |
+      This parameter lists any lint checks to skip for this whole file.
+    type: array
+    items:
+      type: string
+
+additionalProperties:
+  type: object
+  properties:
+    description:
+      title: Description
+      description: |
+        **Required.**
+
+        A textual description of this tag.
+
+        Descriptions may contain [markdown
+        syntax](https://www.markdownguide.org/basic-syntax/).
+      type: string
+  required:
+    - description
+  additionalProperties: false

@@ -20,8 +20,10 @@
 #include "nsIWebProgress.h"
 #include "prenv.h"
 #include "nsIDocShellTreeItem.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StackWalk.h"
+#include "mozilla/ToString.h"
 #include "mozilla/dom/BorrowedAttrInfo.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
@@ -857,13 +859,11 @@ void logging::Address(const char* aDescr, LocalAccessible* aAcc) {
 }
 
 void logging::Node(const char* aDescr, nsINode* aNode) {
-  nsINode* parentNode = aNode ? aNode->GetParentNode() : nullptr;
-  int32_t idxInParent = parentNode ? parentNode->ComputeIndexOf(aNode) : -1;
-
+  Maybe<uint32_t> idxInParent = aNode->ComputeIndexInParentNode();
   nsAutoString nodeDesc;
   DescribeNode(aNode, nodeDesc);
-  printf("    %s: %s, idx in parent %d\n", aDescr,
-         NS_ConvertUTF16toUTF8(nodeDesc).get(), idxInParent);
+  printf("    %s: %s, idx in parent %s\n", aDescr,
+         NS_ConvertUTF16toUTF8(nodeDesc).get(), ToString(idxInParent).c_str());
 }
 
 void logging::Document(DocAccessible* aDocument) {

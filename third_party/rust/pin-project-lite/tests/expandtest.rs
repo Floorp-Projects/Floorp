@@ -6,6 +6,8 @@ use std::{
     process::{Command, ExitStatus, Stdio},
 };
 
+const PATH: &str = "tests/expand/**/*.rs";
+
 #[rustversion::attr(not(nightly), ignore)]
 #[test]
 fn expandtest() {
@@ -13,17 +15,17 @@ fn expandtest() {
     let cargo = &*env::var("CARGO").unwrap_or_else(|_| "cargo".into());
     if !has_command(&[cargo, "expand"]) || !has_command(&[cargo, "fmt"]) {
         if is_ci {
-            panic!("expandtest requires rustfmt and cargo-expand")
+            panic!("expandtest requires rustfmt and cargo-expand");
         }
         return;
     }
 
-    let path = "tests/expand/*/*.rs";
+    let args = &["--all-features"];
     if is_ci {
-        macrotest::expand_without_refresh(path);
+        macrotest::expand_without_refresh_args(PATH, args);
     } else {
         env::set_var("MACROTEST", "overwrite");
-        macrotest::expand(path);
+        macrotest::expand_args(PATH, args);
     }
 }
 

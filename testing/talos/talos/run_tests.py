@@ -116,7 +116,10 @@ def run_tests(config, browser_config):
     tests = useBaseTestDefaults(config.get("basetest", {}), tests)
     paths = ["profile_path", "tpmanifest", "extensions", "setup", "cleanup"]
 
-    for test in tests:
+    for test_index, test in enumerate(tests):
+        test["suite"] = config["suite"]
+        if test_index == 0:
+            test["is_first_test"] = True
         # Check for profile_path, tpmanifest and interpolate based on Talos
         # root https://bugzilla.mozilla.org/show_bug.cgi?id=727711
         # Build command line from config
@@ -163,8 +166,8 @@ def run_tests(config, browser_config):
     if browser_config["subtests"]:
         browser_config["preferences"]["talos.subtests"] = browser_config["subtests"]
 
-    if browser_config.get("enable_fission", False):
-        browser_config["preferences"]["fission.autostart"] = True
+    if not browser_config.get("fission", True):
+        browser_config["preferences"]["fission.autostart"] = False
 
     browser_config["preferences"]["network.proxy.type"] = 2
     browser_config["preferences"]["network.proxy.autoconfig_url"] = (
@@ -265,13 +268,14 @@ function FindProxyForURL(url, host) {
         talos_results.add_extra_option("gecko-profile")
 
     # differentiate fission vs non-fission results in perfherder
-    if browser_config.get("enable_fission", False):
+    if browser_config.get("fission", True):
         talos_results.add_extra_option("fission")
 
     # differentiate webrender from non-webrender results
     if browser_config["preferences"].get("gfx.webrender.software", False):
         talos_results.add_extra_option("webrender-sw")
-    elif browser_config.get("enable_webrender", False):
+    else:
+        # we need to add 'webrender' so reported data is consistent
         talos_results.add_extra_option("webrender")
 
     # differentiate webgl from webgl-ipc results

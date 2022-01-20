@@ -31,7 +31,7 @@ EXPORTS.mozilla.dom += [
     "MIDIUtils.h",
 ]
 
-UNIFIED_SOURCES = [
+UNIFIED_SOURCES += [
     "MIDIAccess.cpp",
     "MIDIAccessManager.cpp",
     "MIDIInput.cpp",
@@ -54,6 +54,17 @@ UNIFIED_SOURCES = [
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
+
+if CONFIG["MOZ_WEBMIDI_MIDIR_IMPL"]:
+    DEFINES["MOZ_WEBMIDI_MIDIR_IMPL"] = True
+    DIRS += ["midir_impl"]
+    UNIFIED_SOURCES += [
+        "midirMIDIPlatformService.cpp",
+    ]
+
+    if CONFIG["OS_TARGET"] == "Linux":
+        OS_LIBS += ["asound"]  # Required by midir
+        UNIFIED_SOURCES += ["AlsaCompatibility.cpp"]
 
 FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [

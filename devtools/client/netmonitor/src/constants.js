@@ -242,6 +242,7 @@ const PANELS = {
   SECURITY: "security",
   STACK_TRACE: "stack-trace",
   TIMINGS: "timings",
+  HTTP_CUSTOM_REQUEST: "network-action-bar-HTTP-custom-request",
   SEARCH: "network-action-bar-search",
   BLOCKING: "network-action-bar-blocked",
 };

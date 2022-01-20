@@ -175,6 +175,13 @@ class RunningTimes {
       return mozilla::Some(m##name##unit);                            \
     }                                                                 \
     return mozilla::Nothing{};                                        \
+  }                                                                   \
+                                                                      \
+  constexpr mozilla::Maybe<uint64_t> GetJson##name##unit() const {    \
+    if (Is##name##unit##Known()) {                                    \
+      return mozilla::Some(ConvertRawToJson(m##name##unit));          \
+    }                                                                 \
+    return mozilla::Nothing{};                                        \
   }
 
   PROFILER_FOR_EACH_RUNNING_TIME(RUNNING_TIME_MEMBER)
@@ -219,6 +226,9 @@ class RunningTimes {
  private:
   friend mozilla::ProfileBufferEntryWriter::Serializer<RunningTimes>;
   friend mozilla::ProfileBufferEntryReader::Deserializer<RunningTimes>;
+
+  // Platform-dependent.
+  static uint64_t ConvertRawToJson(uint64_t aRawValue);
 
   mozilla::TimeStamp mPostMeasurementTimeStamp;
 

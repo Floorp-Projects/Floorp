@@ -162,14 +162,16 @@ int32_t WebrtcMediaDataEncoder::InitEncode(
 
   RefPtr<MediaDataEncoder> encoder = CreateEncoder(aCodecSettings);
   if (!encoder) {
-    return WEBRTC_VIDEO_CODEC_ERROR;
+    LOG("Fail to create encoder. Falling back to SW");
+    return WEBRTC_VIDEO_CODEC_FALLBACK_SOFTWARE;
   }
 
   InitCodecSpecficInfo(mCodecSpecific, aCodecSettings);
   LOG("Init encode, mimeType %s, mode %s", mInfo.mMimeType.get(),
       PacketModeStr(mCodecSpecific));
   if (!media::Await(do_AddRef(mTaskQueue), encoder->Init()).IsResolve()) {
-    return WEBRTC_VIDEO_CODEC_ERROR;
+    LOG("Fail to init encoder. Falling back to SW");
+    return WEBRTC_VIDEO_CODEC_FALLBACK_SOFTWARE;
   }
   mEncoder = std::move(encoder);
   return WEBRTC_VIDEO_CODEC_OK;
@@ -300,10 +302,15 @@ static already_AddRefed<VideoData> CreateVideoDataFromWebrtcVideoFrame(
       new RecyclingPlanarYCbCrImage(new BufferRecycleBin());
   image->CopyData(yCbCrData);
 
-  return VideoData::CreateFromImage(
-      image->GetSize(), 0, TimeUnit::FromMicroseconds(aFrame.timestamp_us()),
-      aDuration, image, aIsKeyFrame,
-      TimeUnit::FromMicroseconds(aFrame.timestamp()));
+  // Although webrtc::VideoFrame::timestamp_rtp_ will likely be deprecated,
+  // webrtc::EncodedImage and the VPx encoders still use it in the imported
+  // version of libwebrtc. Not using the same timestamp values generates
+  // discontinuous time and confuses the video receiver when switching from
+  // platform to libwebrtc encoder.
+  TimeUnit timestamp =
+      FramesToTimeUnit(aFrame.timestamp(), cricket::kVideoCodecClockrate);
+  return VideoData::CreateFromImage(image->GetSize(), 0, timestamp, aDuration,
+                                    image, aIsKeyFrame, timestamp);
 }
 
 static void UpdateCodecSpecificInfo(webrtc::CodecSpecificInfo& aInfo,

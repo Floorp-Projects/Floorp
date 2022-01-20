@@ -42,3 +42,8 @@ add_task(async function site_name_field_in_database() {
   let db = await PlacesUtils.promiseDBConnection();
   await db.execute(`SELECT site_name FROM moz_places`);
 });
+
+add_task(async function previews_tombstones_in_database() {
+  let db = await PlacesUtils.promiseDBConnection();
+  await db.execute(`SELECT hash FROM moz_previews_tombstones`);
+});

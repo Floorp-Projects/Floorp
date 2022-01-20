@@ -60,8 +60,8 @@ NS_IMETHODIMP WebNavigationContent::Observe(nsISupports* aSubject,
                                             char16_t const* aData) {
   if (!nsCRT::strcmp(aTopic, "chrome-event-target-created")) {
     // This notification is sent whenever a new window root is created, with the
-    // subject being an EventTarget corresponding to either an nsWindowRoot in a
-    // child process or an InProcessBrowserChildMessageManager in the parent.
+    // subject being an EventTarget corresponding to either an nsWindowRoot, or
+    // additionally also an InProcessBrowserChildMessageManager in the parent.
     // This is the same entry point used to register listeners for the JS window
     // actor API.
     if (RefPtr<dom::EventTarget> eventTarget = do_QueryObject(aSubject)) {
@@ -101,15 +101,25 @@ void WebNavigationContent::AttachListeners(dom::EventTarget* aEventTarget) {
 
 NS_IMETHODIMP
 WebNavigationContent::HandleEvent(dom::Event* aEvent) {
-  nsString type;
-  aEvent->GetType(type);
+  if (aEvent->ShouldIgnoreChromeEventTargetListener()) {
+    return NS_OK;
+  }
 
-  if (type.EqualsLiteral(u"DOMContentLoaded")) {
-    if (RefPtr<dom::Document> doc = do_QueryObject(aEvent->GetTarget())) {
-      ExtensionsChild::Get().SendDOMContentLoaded(doc->GetBrowsingContext(),
-                                                  doc->GetDocumentURI());
+#ifdef DEBUG
+  {
+    nsAutoString type;
+    aEvent->GetType(type);
+    MOZ_ASSERT(type.EqualsLiteral("DOMContentLoaded"));
+  }
+#endif
+
+  if (RefPtr<dom::Document> doc = do_QueryObject(aEvent->GetTarget())) {
+    dom::BrowsingContext* bc = doc->GetBrowsingContext();
+    if (bc && bc->IsContent()) {
+      ExtensionsChild::Get().SendDOMContentLoaded(bc, doc->GetDocumentURI());
     }
   }
+
   return NS_OK;
 }
 

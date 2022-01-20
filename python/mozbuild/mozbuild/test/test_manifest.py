@@ -143,11 +143,11 @@ updatebot:
                         "vendoring": {
                             "url": "https://example.com",
                             "source-hosting": "gitlab",
+                            "tracking": "commit",
                         },
                         "updatebot": {
                             "maintainer-phab": "tjr",
                             "maintainer-bz": "a@example.com",
-                            "tracking": "commit",
                             "tasks": [{"type": "commit-alert"}],
                         },
                     },
@@ -192,11 +192,11 @@ updatebot:
                         "vendoring": {
                             "url": "https://example.com",
                             "source-hosting": "gitlab",
+                            "tracking": "commit",
                         },
                         "updatebot": {
                             "maintainer-phab": "tjr",
                             "maintainer-bz": "a@example.com",
-                            "tracking": "commit",
                             "tasks": [
                                 {"type": "commit-alert", "frequency": "release"},
                                 {
@@ -225,6 +225,7 @@ origin:
   revision: AA001122334455
 vendoring:
   url: https://example.com
+  tracking: commit
   source-hosting: gitlab
 bugzilla:
   product: Core
@@ -232,7 +233,6 @@ bugzilla:
 updatebot:
   maintainer-phab: tjr
   maintainer-bz: a@example.com
-  tracking: commit
   tasks:
     - type: commit-alert
       frequency: release
@@ -260,12 +260,12 @@ updatebot:
                         "bugzilla": {"component": "Graphics", "product": "Core"},
                         "vendoring": {
                             "url": "https://example.com",
+                            "tracking": "commit",
                             "source-hosting": "gitlab",
                         },
                         "updatebot": {
                             "maintainer-phab": "tjr",
                             "maintainer-bz": "a@example.com",
-                            "tracking": "commit",
                             "tasks": [
                                 {
                                     "type": "vendoring",
@@ -887,6 +887,60 @@ origin:
 bugzilla:
   product: Core
   component: Graphics""".strip(),
+                ),
+                (
+                    "exception",
+                    b"""
+---
+schema: 1
+origin:
+  name: cairo
+  description: 2D Graphics Library
+  url: https://www.cairographics.org/
+  release: version 1.6.4
+  license:
+    - MPL-1.1
+    - LGPL-2.1
+  revision: AA001122334455
+bugzilla:
+  product: Core
+  component: Graphics
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
+  update-actions:
+    - action: run-script
+      cwd: '{cwd}'
+      script: 'script.py'
+      args: ['hi']
+      pattern: 'hi'
+""".strip(),
+                ),
+                (
+                    "exception",
+                    b"""
+---
+schema: 1
+origin:
+  name: cairo
+  description: 2D Graphics Library
+  url: https://www.cairographics.org/
+  release: version 1.6.4
+  license:
+    - MPL-1.1
+    - LGPL-2.1
+  revision: AA001122334455
+bugzilla:
+  product: Core
+  component: Graphics
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
+  update-actions:
+    - action: run-script
+      cwd: '{cwd}'
+      args: ['hi']
+""".strip(),
                 ),
             ]
         )

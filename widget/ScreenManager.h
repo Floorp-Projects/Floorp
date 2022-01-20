@@ -39,14 +39,16 @@ class ScreenManager final : public nsIScreenManager {
   static already_AddRefed<ScreenManager> GetAddRefedSingleton();
 
   void SetHelper(UniquePtr<Helper> aHelper);
-  void Refresh(nsTArray<RefPtr<Screen>>&& aScreens);
+  static void Refresh(nsTArray<RefPtr<Screen>>&& aScreens);
   void Refresh(nsTArray<mozilla::dom::ScreenDetails>&& aScreens);
   void CopyScreensToRemote(mozilla::dom::ContentParent* aContentParent);
+  already_AddRefed<Screen> GetPrimaryScreen();
 
  private:
   ScreenManager();
   virtual ~ScreenManager();
 
+  void RefreshInternal(nsTArray<RefPtr<Screen>>&& aScreens);
   template <class Range>
   void CopyScreensToRemoteRange(Range aRemoteRange);
   void CopyScreensToAllRemotesIfIsParent();

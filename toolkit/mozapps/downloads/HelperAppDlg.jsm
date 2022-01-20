@@ -502,15 +502,29 @@ nsUnknownContentTypeDialog.prototype = {
     this.mDialog.document.addEventListener("dialogaccept", this);
     this.mDialog.document.addEventListener("dialogcancel", this);
 
-    // Some URIs do not implement nsIURL, so we can't just QI.
     var url = this.mLauncher.source;
     if (url instanceof Ci.nsINestedURI) {
       url = url.innermostURI;
+    }
+    if (url.scheme == "blob") {
+      let origin = new URL(url.spec).origin;
+      // Origin can be "null" for blob URIs from a sandbox.
+      if (origin != "null") {
+        // `newURI` can throw (like for null) and throwing here breaks...
+        // a lot of stuff. So let's avoid doing that in case there are other
+        // edgecases we're missing here.
+        try {
+          url = Services.io.newURI(origin);
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
+      }
     }
 
     var fname = "";
     var iconPath = "goat";
     this.mSourcePath = url.prePath;
+    // Some URIs do not implement nsIURL, so we can't just QI.
     if (url instanceof Ci.nsIURL) {
       // A url, use file name from it.
       fname = iconPath = url.fileName;

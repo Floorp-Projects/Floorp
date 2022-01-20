@@ -84,7 +84,7 @@ def pkgconf_requires_private(system_nspr, nspr_minver):
 set_config("PKGCONF_REQUIRES_PRIVATE", pkgconf_requires_private)
 
 # pkg_check_modules takes care of NSPR_CFLAGS and NSPR_LIBS when using --with-system-nspr.
-@depends(check_build_environment, c_compiler, fold_libs, when=build_nspr)
+@depends(build_environment, c_compiler, fold_libs, when=build_nspr)
 def nspr_config(build_env, c_compiler, fold_libs):
     libs = ["nspr4", "plc4", "plds4"]
     if c_compiler.type == "clang-cl":

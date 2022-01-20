@@ -820,7 +820,7 @@ static bool GenerateInterpEntry(MacroAssembler& masm, const FuncExport& fe,
   masm.loadWasmPinnedRegsFromTls();
 
   masm.storePtr(WasmTlsReg,
-                Address(masm.getStackPointer(), WasmCalleeTLSOffsetBeforeCall));
+                Address(masm.getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
 
   // Call into the real function. Note that, due to the throw stub, fp, tls
   // and pinned registers may be clobbered.
@@ -1279,7 +1279,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
   masm.loadWasmPinnedRegsFromTls();
 
   masm.storePtr(WasmTlsReg,
-                Address(masm.getStackPointer(), WasmCalleeTLSOffsetBeforeCall));
+                Address(masm.getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
 
   // Call into the real function. Note that, due to the throw stub, fp, tls
   // and pinned registers may be clobbered.
@@ -1601,7 +1601,7 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
   // Load tls; from now on, WasmTlsReg is live.
   masm.movePtr(ImmPtr(inst.tlsData()), WasmTlsReg);
   masm.storePtr(WasmTlsReg,
-                Address(masm.getStackPointer(), WasmCalleeTLSOffsetBeforeCall));
+                Address(masm.getStackPointer(), WasmCalleeTlsOffsetBeforeCall));
   masm.loadWasmPinnedRegsFromTls();
 
   // Actual call.
@@ -2677,10 +2677,10 @@ bool wasm::GenerateIndirectStub(MacroAssembler& masm,
 
   // Preserve caller's TLS and callee's TLS.
   masm.storePtr(WasmTlsReg,
-                Address(masm.getStackPointer(), WasmCallerTLSOffsetAfterCall));
+                Address(masm.getStackPointer(), WasmCallerTlsOffsetAfterCall));
   masm.movePtr(WasmTableCallScratchReg0, WasmTlsReg);
   masm.storePtr(WasmTableCallScratchReg0,
-                Address(masm.getStackPointer(), WasmCalleeTLSOffsetAfterCall));
+                Address(masm.getStackPointer(), WasmCalleeTlsOffsetAfterCall));
   masm.loadWasmPinnedRegsFromTls();
   masm.switchToWasmTlsRealm(WasmTableCallIndexReg, WasmTableCallScratchReg1);
 
@@ -2699,7 +2699,7 @@ bool wasm::GenerateIndirectStub(MacroAssembler& masm,
   // Restore the caller state and return.
   PopFrame(masm);
   masm.subPtr(Imm32(wasm::TrampolineFpTag), FramePointer);
-  masm.loadPtr(Address(masm.getStackPointer(), WasmCallerTLSOffsetAfterCall),
+  masm.loadPtr(Address(masm.getStackPointer(), WasmCallerTlsOffsetAfterCall),
                WasmTlsReg);
   masm.loadWasmPinnedRegsFromTls();
   masm.switchToWasmTlsRealm(WasmTableCallIndexReg, WasmTableCallScratchReg1);
@@ -2925,13 +2925,50 @@ static bool GenerateTrapExit(MacroAssembler& masm, Label* throwLabel,
   return FinishOffsets(masm, offsets);
 }
 
+static void ClobberWasmRegsForLongJmp(MacroAssembler& masm, Register jumpReg) {
+  // Get the set of all registers that are allocatable in wasm functions
+  AllocatableGeneralRegisterSet gprs(GeneralRegisterSet::All());
+  RegisterAllocator::takeWasmRegisters(gprs);
+  // Remove the TLS register from this set as landing pads require it to be
+  // valid
+  gprs.take(WasmTlsReg);
+  // Remove a specified register that will be used for the longjmp
+  gprs.take(jumpReg);
+  // Set all of these registers to zero
+  for (GeneralRegisterIterator iter(gprs.asLiveSet()); iter.more(); ++iter) {
+    Register reg = *iter;
+    masm.xorPtr(reg, reg);
+  }
+
+  // Get the set of all floating point registers that are allocatable in wasm
+  // functions
+  AllocatableFloatRegisterSet fprs(FloatRegisterSet::All());
+  // Set all of these registers to NaN. We attempt for this to be a signalling
+  // NaN, but the bit format for signalling NaNs are implementation defined
+  // and so this is just best effort.
+  Maybe<FloatRegister> regNaN;
+  for (FloatRegisterIterator iter(fprs.asLiveSet()); iter.more(); ++iter) {
+    FloatRegister reg = *iter;
+    if (!reg.isDouble()) {
+      continue;
+    }
+    if (regNaN) {
+      masm.moveDouble(*regNaN, reg);
+      continue;
+    }
+    masm.loadConstantDouble(std::numeric_limits<double>::signaling_NaN(), reg);
+    regNaN = Some(reg);
+  }
+}
+
 // Generate a stub that restores the stack pointer to what it was on entry to
 // the wasm activation, sets the return register to 'false' and then executes a
 // return which will return from this wasm activation to the caller. This stub
 // should only be called after the caller has reported an error.
 static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
                               Offsets* offsets) {
-  Register scratch = ABINonArgReturnReg0;
+  Register scratch1 = ABINonArgReturnReg0;
+  Register scratch2 = ABINonArgReturnReg1;
 
   AssertExpectedSP(masm);
   masm.haltingAlign(CodeAlignment);
@@ -2950,7 +2987,7 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
 
   // Allocate space for exception or regular resume information.
   masm.reserveStack(sizeof(jit::ResumeFromException));
-  masm.moveStackPtrTo(scratch);
+  masm.moveStackPtrTo(scratch1);
 
   MIRTypeVector handleThrowTypes;
   MOZ_ALWAYS_TRUE(handleThrowTypes.append(MIRType::Pointer));
@@ -2963,9 +3000,9 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
 
   ABIArgMIRTypeIter i(handleThrowTypes);
   if (i->kind() == ABIArg::GPR) {
-    masm.movePtr(scratch, i->gpr());
+    masm.movePtr(scratch1, i->gpr());
   } else {
-    masm.storePtr(scratch,
+    masm.storePtr(scratch1,
                   Address(masm.getStackPointer(), i->offsetFromArgBase()));
   }
   i++;
@@ -2982,35 +3019,41 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
   Label resumeCatch, leaveWasm;
 
   masm.load32(Address(ReturnReg, offsetof(jit::ResumeFromException, kind)),
-              scratch);
+              scratch1);
 
-  masm.branch32(Assembler::Equal, scratch,
+  masm.branch32(Assembler::Equal, scratch1,
                 Imm32(jit::ResumeFromException::RESUME_WASM_CATCH),
                 &resumeCatch);
-  masm.branch32(Assembler::Equal, scratch,
+  masm.branch32(Assembler::Equal, scratch1,
                 Imm32(jit::ResumeFromException::RESUME_WASM), &leaveWasm);
 
   masm.breakpoint();
 
   // The case where a Wasm catch handler was found while unwinding the stack.
   masm.bind(&resumeCatch);
+  masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, tlsData)),
+               WasmTlsReg);
+  masm.loadWasmPinnedRegsFromTls();
+  masm.switchToWasmTlsRealm(scratch1, scratch2);
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, target)),
-               scratch);
+               scratch1);
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, framePointer)),
                FramePointer);
   masm.loadStackPtr(
       Address(ReturnReg, offsetof(ResumeFromException, stackPointer)));
-  masm.jump(scratch);
+  MoveSPForJitABI(masm);
+  ClobberWasmRegsForLongJmp(masm, scratch1);
+  masm.jump(scratch1);
 
   // No catch handler was found, so we will just return out.
   masm.bind(&leaveWasm);
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, framePointer)),
                FramePointer);
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, stackPointer)),
-               scratch);
-  masm.moveToStackPtr(scratch);
+               scratch1);
+  masm.moveToStackPtr(scratch1);
 #ifdef JS_CODEGEN_ARM64
-  masm.loadPtr(Address(scratch, 0), lr);
+  masm.loadPtr(Address(scratch1, 0), lr);
   masm.addToStackPtr(Imm32(8));
   masm.abiret();
 #else

@@ -12,7 +12,7 @@
 
 [package]
 name = "encoding_c"
-version = "0.9.7"
+version = "0.9.8"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
 build = "build.rs"
 links = "encoding_c"
@@ -21,7 +21,7 @@ homepage = "https://docs.rs/encoding_c/"
 documentation = "https://docs.rs/encoding_c/"
 readme = "README.md"
 keywords = ["ffi", "capi", "encoding", "unicode", "charset"]
-license = "MIT/Apache-2.0"
+license = "Apache-2.0 OR MIT"
 repository = "https://github.com/hsivonen/encoding_c"
 [dependencies.encoding_rs]
 version = "0.8.20"

@@ -20,6 +20,12 @@ USE_LIBS += [
     "mozglue",
 ]
 
+if CONFIG["OS_ARCH"] == "WINNT":
+    OS_LIBS += [
+        "advapi32",
+        "uuid",
+    ]
+
 if CONFIG["COMPILE_ENVIRONMENT"]:
     shared_library = "!%sTestShellEx%s" % (CONFIG["DLL_PREFIX"], CONFIG["DLL_SUFFIX"])
     TEST_HARNESS_FILES.testing.mochitest.browser.toolkit.components.aboutthirdparty.tests.browser += [

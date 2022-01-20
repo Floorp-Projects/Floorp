@@ -1,7 +1,7 @@
 Process Model
 =============
 
-The complete set of recognized process types is defined in `GeckoProcessTypes.h <https://searchfox.org/mozilla-central/source/xpcom/build/GeckoProcessTypes.h>`_.
+The complete set of recognized process types is defined in `GeckoProcessTypes <https://searchfox.org/mozilla-central/source/xpcom/geckoprocesstypes_generator/geckoprocesstypes/__init__.py>`_.
 
 For more details on how process types are added and managed by IPC, see the process creation documentation. (FIXME: being added in `<https://phabricator.services.mozilla.com/D121871>`_)
 

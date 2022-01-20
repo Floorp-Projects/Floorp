@@ -1,6 +1,6 @@
 // |jit-test| skip-if: helperThreadCount() === 0
 function eval(source) {
-    offThreadCompileModule(source);
+    offThreadCompileModuleToStencil(source);
 }
 var N = 10000;
 var left = repeat_str('(1&', N);

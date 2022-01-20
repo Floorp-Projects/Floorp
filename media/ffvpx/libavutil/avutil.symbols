@@ -26,6 +26,7 @@ av_buffer_pool_get
 av_buffer_pool_init
 av_buffer_pool_uninit
 av_buffer_realloc
+av_buffer_replace
 av_buffer_ref
 av_buffer_unref
 av_calloc
@@ -81,6 +82,9 @@ av_fifo_space
 av_find_best_pix_fmt_of_2
 av_find_info_tag
 av_find_nearest_q_idx
+#ifndef MOZ_FFVPX_AUDIOONLY
+av_film_grain_params_create_side_data
+#endif
 av_force_cpu_flags
 av_fourcc_make_string
 av_frame_alloc
@@ -173,6 +177,7 @@ av_image_fill_arrays
 av_image_fill_linesizes
 av_image_fill_max_pixsteps
 av_image_fill_pointers
+av_image_fill_plane_sizes
 av_image_get_buffer_size
 av_image_get_linesize
 av_int_list_length_for_size
@@ -303,6 +308,9 @@ av_utf8_decode
 av_util_ffversion
 av_vbprintf
 av_version_info
+#ifndef MOZ_FFVPX_AUDIOONLY
+av_video_enc_params_create_side_data
+#endif
 av_vlog
 av_write_image_line
 avpriv_alloc_fixed_dsp

@@ -16,6 +16,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/StaticRange.h"

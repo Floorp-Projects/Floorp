@@ -25,7 +25,7 @@ async function attemptFakeRefresh(browser, expectRefresh) {
   ) {
     let URI = docShell.QueryInterface(Ci.nsIWebNavigation).currentURI;
     let refresher = docShell.QueryInterface(Ci.nsIRefreshURI);
-    refresher.refreshURI(URI, null, 0, false, true);
+    refresher.refreshURI(URI, null, 0);
 
     Assert.equal(
       refresher.refreshPending,

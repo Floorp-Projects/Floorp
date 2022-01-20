@@ -1,8 +1,14 @@
 #![cfg(unix)]
-#![doc(html_root_url = "https://docs.rs/tokio-uds/0.2.5")]
-#![deny(missing_docs, warnings, missing_debug_implementations)]
+#![doc(html_root_url = "https://docs.rs/tokio-uds/0.2.7")]
+#![deny(missing_docs, missing_debug_implementations)]
 
 //! Unix Domain Sockets for Tokio.
+//!
+//! > **Note:** This crate is **deprecated in tokio 0.2.x** and has been moved
+//! > into [`tokio::net`] behind the `uds` [feature flag].
+//!
+//! [`tokio::net`]: https://docs.rs/tokio/latest/tokio/net/index.html
+//! [feature flag]: https://docs.rs/tokio/latest/tokio/index.html#feature-flags
 //!
 //! This crate provides APIs for using Unix Domain Sockets with Tokio.
 
@@ -34,5 +40,5 @@ pub use incoming::Incoming;
 pub use listener::UnixListener;
 pub use recv_dgram::RecvDgram;
 pub use send_dgram::SendDgram;
-pub use stream::{UnixStream, ConnectFuture};
+pub use stream::{ConnectFuture, UnixStream};
 pub use ucred::UCred;

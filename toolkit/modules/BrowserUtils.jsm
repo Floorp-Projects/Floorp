@@ -14,6 +14,11 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "Region",
+  "resource://gre/modules/Region.jsm"
+);
 
 var BrowserUtils = {
   /**
@@ -297,6 +302,35 @@ var BrowserUtils = {
     }
     return aEvent;
   },
+
+  // Returns true if user should see VPN promos
+  shouldShowVPNPromo() {
+    const enablePromoPref = Services.prefs.getBoolPref(
+      "browser.vpn_promo.enabled"
+    );
+    const homeRegion = Region.home || "";
+    const currentRegion = Region.current || "";
+    let avoidAdsCountries = BrowserUtils.vpnDisallowedRegions;
+    // Extra check for countries where VPNs are illegal and compliance is strongly enforced
+    let vpnIllegalCountries = ["cn", "kp", "tm"];
+    vpnIllegalCountries.forEach(country => avoidAdsCountries.add(country));
+
+    return (
+      enablePromoPref &&
+      !avoidAdsCountries.has(homeRegion.toLowerCase()) &&
+      !avoidAdsCountries.has(currentRegion.toLowerCase())
+    );
+  },
+
+  // Returns true if user should see Rally promos
+  shouldShowRallyPromo() {
+    const homeRegion = Region.home || "";
+    const currentRegion = Region.current || "";
+    const region = currentRegion || homeRegion;
+    const language = Services.locale.appLocaleAsBCP47;
+
+    return language.startsWith("en-") && region.toLowerCase() == "us";
+  },
 };
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -304,4 +338,19 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "navigationRequireUserInteraction",
   "browser.navigation.requireUserInteraction",
   false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  BrowserUtils,
+  "vpnDisallowedRegions",
+  "browser.vpn_promo.disallowed_regions",
+  "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr,ua",
+  null,
+  prefVal =>
+    new Set(
+      prefVal
+        .toLowerCase()
+        .split(/\s*,\s*/g) // split on commas, ignoring whitespace
+        .filter(v => !!v) // discard any falsey values
+    )
 );

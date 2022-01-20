@@ -35,10 +35,10 @@ struct SpiderMonkeyInterfaceObjectStorage {
 
  public:
   inline void TraceSelf(JSTracer* trc) {
-    JS::UnsafeTraceRoot(trc, &mImplObj,
-                        "SpiderMonkeyInterfaceObjectStorage.mImplObj");
-    JS::UnsafeTraceRoot(trc, &mWrappedObj,
-                        "SpiderMonkeyInterfaceObjectStorage.mWrappedObj");
+    JS::TraceRoot(trc, &mImplObj,
+                  "SpiderMonkeyInterfaceObjectStorage.mImplObj");
+    JS::TraceRoot(trc, &mWrappedObj,
+                  "SpiderMonkeyInterfaceObjectStorage.mWrappedObj");
   }
 
   inline bool inited() const { return !!mImplObj; }

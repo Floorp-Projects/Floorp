@@ -24,9 +24,8 @@ static void PrintLongString(const char* const begin, const size_t len) {
   // internal size, so long strings are truncated.
 
   const size_t chunkSize = 1000;
-  const UniqueBuffer buf(moz_xmalloc(chunkSize + 1));  // +1 for null-term
-  const auto bufBegin = (char*)buf.get();
-  bufBegin[chunkSize] = '\0';
+  auto buf = std::vector<char>(chunkSize + 1);  // +1 for null-term
+  const auto bufBegin = buf.data();
 
   auto chunkBegin = begin;
   const auto end = begin + len;

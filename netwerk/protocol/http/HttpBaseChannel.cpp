@@ -27,6 +27,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_fission.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Tokenizer.h"
@@ -2868,36 +2869,25 @@ bool HttpBaseChannel::EnsureOpaqueResponseIsAllowed() {
 
   InitiateORBTelemetry();
 
-  nsAutoCString contentType;
-  mResponseHead->ContentType(contentType);
-  if (!contentType.IsEmpty()) {
-    if (IsOpaqueSafeListedMIMEType(contentType)) {
+  switch (GetOpaqueResponseBlockedReason(*mResponseHead)) {
+    case OpaqueResponseBlockedReason::ALLOWED_SAFE_LISTED:
       ReportORBTelemetry("Allowed_SafeListed"_ns);
       return true;
-    }
-
-    if (IsOpaqueBlockListedNeverSniffedMIMEType(contentType)) {
+    case OpaqueResponseBlockedReason::BLOCKED_BLOCKLISTED_NEVER_SNIFFED:
       // XXXtt: Report To Console.
       ReportORBTelemetry("Blocked_BlockListedNeverSniffed"_ns);
       return false;
-    }
-
-    if (mResponseHead->Status() == 206 &&
-        IsOpaqueBlockListedMIMEType(contentType)) {
+    case OpaqueResponseBlockedReason::BLOCKED_206_AND_BLOCKLISTED:
       // XXXtt: Report To Console.
       ReportORBTelemetry("Blocked_206AndBlockListed"_ns);
       return false;
-    }
-
-    nsAutoCString contentTypeOptionsHeader;
-    if (mResponseHead->GetContentTypeOptionsHeader(contentTypeOptionsHeader) &&
-        contentTypeOptionsHeader.EqualsIgnoreCase("nosniff") &&
-        (IsOpaqueBlockListedMIMEType(contentType) ||
-         contentType.EqualsLiteral(TEXT_PLAIN))) {
+    case OpaqueResponseBlockedReason::
+        BLOCKED_NOSNIFF_AND_EITHER_BLOCKLISTED_OR_TEXTPLAIN:
       // XXXtt: Report To Console.
       ReportORBTelemetry("Blocked_NosniffAndEitherBlockListedOrTextPlain"_ns);
       return false;
-    }
+    default:
+      break;
   }
 
   // If it's a media subsequent request, we assume that it will only be made
@@ -3312,17 +3302,26 @@ HttpBaseChannel::SetBeConservative(bool aBeConservative) {
   return NS_OK;
 }
 
+bool HttpBaseChannel::BypassProxy() {
+  return StaticPrefs::network_proxy_allow_bypass() && LoadBypassProxy();
+}
+
 NS_IMETHODIMP
 HttpBaseChannel::GetBypassProxy(bool* aBypassProxy) {
   NS_ENSURE_ARG_POINTER(aBypassProxy);
 
-  *aBypassProxy = LoadBypassProxy();
+  *aBypassProxy = BypassProxy();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 HttpBaseChannel::SetBypassProxy(bool aBypassProxy) {
-  StoreBypassProxy(aBypassProxy);
+  if (StaticPrefs::network_proxy_allow_bypass()) {
+    StoreBypassProxy(aBypassProxy);
+  } else {
+    NS_WARNING("bypassProxy set but network.proxy.allow_bypass is disabled");
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 

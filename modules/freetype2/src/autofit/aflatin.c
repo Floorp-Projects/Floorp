@@ -2109,7 +2109,7 @@
       {
         if ( seg2->link != seg1 )
         {
-          seg1->link  = 0;
+          seg1->link  = NULL;
           seg1->serif = seg2->link;
         }
       }

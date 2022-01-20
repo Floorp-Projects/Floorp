@@ -24,6 +24,7 @@ interface nsIDOMXULCommandDispatcher : nsISupports
                                               in AString targets);
   void                      removeCommandUpdater(in Element updater);
 
+  [can_run_script]
   void                      updateCommands(in AString eventName);
 
   nsIController             getControllerForCommand(in string command);

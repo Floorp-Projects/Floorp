@@ -9,11 +9,6 @@
  */
 
 add_task(async function() {
-  // Using https-first for this test is blocked on Bug 1733420.
-  // Behind the scenes this test relies on one of the requests creating a 404
-  // which is not possible when using HTTPS with httpd.js
-  await pushPref("dom.security.https_first", false);
-
   const URL = EXAMPLE_URL + "html_single-get-page.html";
   const REQUEST =
     "http://example.com/browser/devtools/client/netmonitor/test/request_0";

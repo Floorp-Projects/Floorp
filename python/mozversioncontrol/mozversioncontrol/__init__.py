@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import subprocess
+from pathlib import Path
 
 from mozfile import which
 from mozpack.files import FileListFinder
@@ -487,7 +488,7 @@ class HgRepository(Repository):
         if _paths_equal(self.path, path):
             raise CannotDeleteFromRootOfRepositoryException()
         self._run("revert", path)
-        for f in self._run("st", "-un", path).split():
+        for f in self._run("st", "-un", path).splitlines():
             if os.path.isfile(f):
                 os.remove(f)
             else:
@@ -676,6 +677,11 @@ def get_repository_object(path, hg="hg", git="git"):
     """Get a repository object for the repository at `path`.
     If `path` is not a known VCS repository, raise an exception.
     """
+    # If we provide a path to hg that does not match the on-disk casing (e.g.,
+    # because `path` was normcased), then the hg fsmonitor extension will call
+    # watchman with that path and watchman will spew errors.
+    path = str(Path(path).resolve())
+
     if os.path.isdir(os.path.join(path, ".hg")):
         return HgRepository(path, hg=hg)
     elif os.path.exists(os.path.join(path, ".git")):

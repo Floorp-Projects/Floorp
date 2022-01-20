@@ -88,11 +88,7 @@
                      class="subviewbutton"
                      data-l10n-id="appmenuitem-print"
                      key="printKb"
-#ifdef XP_MACOSX
                      command="cmd_print"
-#else
-                     command="cmd_printPreview"
-#endif
                      />
       <toolbarbutton id="appMenu-save-file-button2"
                      class="subviewbutton"
@@ -123,11 +119,17 @@
         <toolbarbutton id="appMenu-fullscreen-button2"
                        class="subviewbutton subviewbutton-iconic"
                        data-l10n-id="appmenuitem-fullscreen"
-                       observes="View:FullScreen"
                        type="checkbox"
-                       closemenu="auto"
-                       onclick="if (event.button == 0) this.closest('panel').hidePopup();"
-                       tooltip="dynamic-shortcut-tooltip"/>
+# Note that we're custom-handling this click to make sure the panel disappears
+# before entering fullscreen, as it does some odd moving about on the screen
+# in the middle of the fullscreen transition otherwise.
+                       oncommand="
+                         this.closest('panel').hidePopup();
+                         setTimeout(() => BrowserFullScreen(), 0);
+                       "
+                       tooltip="dynamic-shortcut-tooltip">
+           <observes element="View:FullScreen" attribute="checked"/>
+        </toolbarbutton>
       </toolbaritem>
       <toolbarseparator/>
       <toolbarbutton id="appMenu-settings-button"
@@ -214,11 +216,11 @@
       <toolbarbutton id="panelMenuBookmarkThisPage"
                      class="subviewbutton"
                      command="Browser:AddBookmarkAs"
-                     onclick="PanelUI.hide();"/>
+                     />
       <toolbarbutton id="panelMenu_searchBookmarks"
                      data-l10n-id="bookmarks-search"
                      class="subviewbutton"
-                     oncommand="PlacesCommandHook.searchBookmarks(); PanelUI.hide();"/>
+                     oncommand="PlacesCommandHook.searchBookmarks();"/>
       <toolbarbutton id="panelMenu_viewBookmarksToolbar"
                      class="subviewbutton"
                      data-l10n-id="bookmarks-tools-toolbar-visibility-panel"
@@ -243,7 +245,7 @@
                    data-l10n-id="bookmarks-manage-bookmarks"
                    class="subviewbutton panel-subview-footer-button"
                    command="Browser:ShowAllBookmarks"
-                   onclick="PanelUI.hide();"/>
+                   />
   </panelview>
 
   <panelview id="PanelUI-profiler" flex="1" descriptionheightworkaround="true">
@@ -406,6 +408,7 @@
   <panelview id="PanelUI-savetopocket"
              flex="1" class="PanelUI-subView"
              remote="true"
+             neverhidden="true"
              closemenu="none">
     <vbox class="PanelUI-savetopocket-container">
     </vbox>

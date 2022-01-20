@@ -34,6 +34,41 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationTimeline)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+bool AnimationTimeline::Tick() {
+  bool needsTicks = false;
+
+  nsTArray<Animation*> animationsToRemove;
+
+  for (Animation* animation = mAnimationOrder.getFirst(); animation;
+       animation =
+           static_cast<LinkedListElement<Animation>*>(animation)->getNext()) {
+    // Skip any animations that are longer need associated with this timeline.
+    if (animation->GetTimeline() != this) {
+      // If animation has some other timeline, it better not be also in the
+      // animation list of this timeline object!
+      MOZ_ASSERT(!animation->GetTimeline());
+      animationsToRemove.AppendElement(animation);
+      continue;
+    }
+
+    needsTicks |= animation->NeedsTicks();
+    // Even if |animation| doesn't need future ticks, we should still
+    // Tick it this time around since it might just need a one-off tick in
+    // order to dispatch events.
+    animation->Tick();
+
+    if (!animation->NeedsTicks()) {
+      animationsToRemove.AppendElement(animation);
+    }
+  }
+
+  for (Animation* animation : animationsToRemove) {
+    RemoveAnimation(animation);
+  }
+
+  return needsTicks;
+}
+
 void AnimationTimeline::NotifyAnimationUpdated(Animation& aAnimation) {
   if (mAnimations.EnsureInserted(&aAnimation)) {
     if (aAnimation.GetTimeline() && aAnimation.GetTimeline() != this) {

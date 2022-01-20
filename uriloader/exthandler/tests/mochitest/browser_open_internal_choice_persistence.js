@@ -172,10 +172,12 @@ add_task(async function test_check_saving_handler_choices() {
     ensureMIMEState(testCase.preDialogState);
 
     let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
-    let loadingTab = await BrowserTestUtils.openNewForegroundTab(
+    let loadingTab = await BrowserTestUtils.openNewForegroundTab({
       gBrowser,
-      TEST_PATH + file
-    );
+      opening: TEST_PATH + file,
+      waitForLoad: false,
+      waitForStateStop: true,
+    });
     let dialogWindow = await dialogWindowPromise;
     is(
       dialogWindow.location.href,
@@ -387,10 +389,12 @@ add_task(
 
       info("Load window and tabs");
       let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
-      let loadingTab = await BrowserTestUtils.openNewForegroundTab(
+      let loadingTab = await BrowserTestUtils.openNewForegroundTab({
         gBrowser,
-        TEST_PATH + file
-      );
+        opening: TEST_PATH + file,
+        waitForLoad: false,
+        waitForStateStop: true,
+      });
 
       // See if UCT window appears in loaded tab.
       let dialogWindow = await Promise.race([

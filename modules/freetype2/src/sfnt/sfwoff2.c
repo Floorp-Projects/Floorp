@@ -26,8 +26,6 @@
 
 #include <brotli/decode.h>
 
-#endif
-
 
   /**************************************************************************
    *
@@ -108,8 +106,8 @@
     WOFF2_Table  table1 = *(WOFF2_Table*)a;
     WOFF2_Table  table2 = *(WOFF2_Table*)b;
 
-    FT_ULong  tag1 = table1->Tag;
-    FT_ULong  tag2 = table2->Tag;
+    FT_Tag  tag1 = table1->Tag;
+    FT_Tag  tag2 = table2->Tag;
 
 
     if ( tag1 > tag2 )
@@ -316,8 +314,6 @@
                     const FT_Byte*  src,
                     FT_ULong        src_size )
   {
-#ifdef FT_CONFIG_OPTION_USE_BROTLI
-
     /* this cast is only of importance on 32bit systems; */
     /* we don't validate it                              */
     FT_Offset            uncompressed_size = (FT_Offset)dst_size;
@@ -338,25 +334,13 @@
 
     FT_TRACE2(( "woff2_decompress: Brotli stream decompressed.\n" ));
     return FT_Err_Ok;
-
-#else /* !FT_CONFIG_OPTION_USE_BROTLI */
-
-    FT_UNUSED( dst );
-    FT_UNUSED( dst_size );
-    FT_UNUSED( src );
-    FT_UNUSED( src_size );
-
-    FT_ERROR(( "woff2_decompress: Brotli support not available.\n" ));
-    return FT_THROW( Unimplemented_Feature );
-
-#endif /* !FT_CONFIG_OPTION_USE_BROTLI */
   }
 
 
   static WOFF2_Table
   find_table( WOFF2_Table*  tables,
               FT_UShort     num_tables,
-              FT_ULong      tag )
+              FT_Tag        tag )
   {
     FT_Int  i;
 
@@ -2216,7 +2200,7 @@
     /* reject fonts that have multiple tables with the same tag */
     for ( nn = 1; nn < woff2.num_tables; nn++ )
     {
-      FT_ULong  tag = indices[nn]->Tag;
+      FT_Tag  tag = indices[nn]->Tag;
 
 
       if ( tag == indices[nn - 1]->Tag )
@@ -2355,6 +2339,13 @@
 #undef COMPOSITE_STREAM
 #undef BBOX_STREAM
 #undef INSTRUCTION_STREAM
+
+#else /* !FT_CONFIG_OPTION_USE_BROTLI */
+
+  /* ANSI C doesn't like empty source files */
+  typedef int  _sfwoff2_dummy;
+
+#endif /* !FT_CONFIG_OPTION_USE_BROTLI */
 
 
 /* END */

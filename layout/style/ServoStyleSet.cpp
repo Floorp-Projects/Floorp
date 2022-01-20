@@ -30,7 +30,8 @@
 #include "mozilla/dom/CSSFontFaceRule.h"
 #include "mozilla/dom/CSSFontFeatureValuesRule.h"
 #include "mozilla/dom/CSSImportRule.h"
-#include "mozilla/dom/CSSLayerRule.h"
+#include "mozilla/dom/CSSLayerBlockRule.h"
+#include "mozilla/dom/CSSLayerStatementRule.h"
 #include "mozilla/dom/CSSMediaRule.h"
 #include "mozilla/dom/CSSMozDocumentRule.h"
 #include "mozilla/dom/CSSKeyframesRule.h"
@@ -549,7 +550,6 @@ ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(PseudoStyleType aType) {
   return computedValues.forget();
 }
 
-#ifdef MOZ_XUL
 already_AddRefed<ComputedStyle> ServoStyleSet::ResolveXULTreePseudoStyle(
     dom::Element* aParentElement, nsCSSAnonBoxPseudoStaticAtom* aPseudoTag,
     ComputedStyle* aParentStyle, const AtomArray& aInputWord) {
@@ -562,7 +562,6 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveXULTreePseudoStyle(
              mRawSet.get())
       .Consume();
 }
-#endif
 
 // manage the set of style sheets in the style set
 void ServoStyleSet::AppendStyleSheet(StyleSheet& aSheet) {
@@ -947,7 +946,8 @@ void ServoStyleSet::RuleChangedInternal(StyleSheet& aSheet, css::Rule& aRule,
     CASE_FOR(Page, Page)
     CASE_FOR(Document, MozDocument)
     CASE_FOR(Supports, Supports)
-    CASE_FOR(Layer, Layer)
+    CASE_FOR(LayerBlock, LayerBlock)
+    CASE_FOR(LayerStatement, LayerStatement)
     CASE_FOR(ScrollTimeline, ScrollTimeline)
     // @namespace can only be inserted / removed when there are only other
     // @namespace and @import rules, and can't be mutated.
@@ -1188,6 +1188,12 @@ const RawServoCounterStyleRule* ServoStyleSet::CounterStyleRuleForName(
     nsAtom* aName) {
   MOZ_ASSERT(!StylistNeedsUpdate());
   return Servo_StyleSet_GetCounterStyleRule(mRawSet.get(), aName);
+}
+
+const RawServoScrollTimelineRule* ServoStyleSet::ScrollTimelineRuleForName(
+    nsAtom* aName) {
+  MOZ_ASSERT(!StylistNeedsUpdate());
+  return Servo_StyleSet_GetScrollTimelineRule(mRawSet.get(), aName);
 }
 
 already_AddRefed<gfxFontFeatureValueSet>

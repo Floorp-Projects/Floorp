@@ -3755,11 +3755,18 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
               !aVisitor.mEvent->AsFocusEvent()->mFromRaise &&
               SelectTextFieldOnFocus()) {
             if (Document* document = GetComposedDoc()) {
-              uint32_t lastFocusMethod;
-              fm->GetLastFocusMethod(document->GetWindow(), &lastFocusMethod);
-              if (lastFocusMethod & (nsIFocusManager::FLAG_BYKEY |
-                                     nsIFocusManager::FLAG_BYMOVEFOCUS) &&
-                  !(lastFocusMethod & nsIFocusManager::FLAG_BYJS)) {
+              uint32_t lastFocusMethod =
+                  fm->GetLastFocusMethod(document->GetWindow());
+              const bool shouldSelectAllOnFocus = [&] {
+                if (lastFocusMethod & nsIFocusManager::FLAG_BYMOVEFOCUS) {
+                  return true;
+                }
+                if (lastFocusMethod & nsIFocusManager::FLAG_BYJS) {
+                  return false;
+                }
+                return bool(lastFocusMethod & nsIFocusManager::FLAG_BYKEY);
+              }();
+              if (shouldSelectAllOnFocus) {
                 RefPtr<nsPresContext> presContext =
                     GetPresContext(eForComposedDoc);
                 DispatchSelectEvent(presContext);

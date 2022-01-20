@@ -13,7 +13,6 @@
 class nsIPrintSettingsService;
 class nsIWebProgressListener;
 class nsPIDOMWindowOuter;
-class PPrintProgressDialogParent;
 class PPrintSettingsDialogParent;
 
 namespace mozilla {
@@ -28,9 +27,6 @@ class PrintingParent final : public PPrintingParent {
  public:
   NS_INLINE_DECL_REFCOUNTING(PrintingParent)
 
-  mozilla::ipc::IPCResult RecvShowProgress(
-      PBrowserParent* parent, PPrintProgressDialogParent* printProgressDialog,
-      PRemotePrintJobParent* remotePrintJob, const bool& isForPrinting) final;
   mozilla::ipc::IPCResult RecvShowPrintDialog(
       PPrintSettingsDialogParent* aDialog, PBrowserParent* aParent,
       const PrintData& aData) final;
@@ -38,11 +34,6 @@ class PrintingParent final : public PPrintingParent {
   mozilla::ipc::IPCResult RecvSavePrintSettings(
       const PrintData& data, const bool& usePrinterNamePrefix,
       const uint32_t& flags, nsresult* rv) final;
-
-  PPrintProgressDialogParent* AllocPPrintProgressDialogParent() final;
-
-  bool DeallocPPrintProgressDialogParent(
-      PPrintProgressDialogParent* aActor) final;
 
   PPrintSettingsDialogParent* AllocPPrintSettingsDialogParent() final;
 

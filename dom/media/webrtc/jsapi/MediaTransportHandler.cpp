@@ -48,6 +48,17 @@
 #include <vector>
 #include <map>
 
+#ifdef MOZ_GECKO_PROFILER
+#  include "mozilla/ProfilerMarkers.h"
+
+#  define MEDIA_TRANSPORT_HANDLER_PACKET_RECEIVED(aPacket)              \
+    PROFILER_MARKER_TEXT("WebRTC Packet Received", MEDIA_RT, {},        \
+                         ProfilerString8View::WrapNullTerminatedString( \
+                             PacketTypeToString((aPacket).type())));
+#else
+#  define MEDIA_TRANSPORT_HANDLER_PACKET_RECEIVED(aPacket)
+#endif
+
 namespace mozilla {
 
 static const char* mthLogTag = "MediaTransportHandler";
@@ -77,7 +88,7 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   void EnsureProvisionalTransport(const std::string& aTransportId,
                                   const std::string& aUfrag,
                                   const std::string& aPwd,
-                                  size_t aComponentCount) override;
+                                  int aComponentCount) override;
 
   void SetTargetForDefaultLocalAddressLookup(const std::string& aTargetIp,
                                              uint16_t aTargetPort) override;
@@ -125,12 +136,10 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   void Destroy_s();
   void DestroyFinal();
   void Shutdown_s();
-  RefPtr<TransportFlow> CreateTransportFlow(const std::string& aTransportId,
-                                            bool aIsRtcp,
-                                            RefPtr<DtlsIdentity> aDtlsIdentity,
-                                            bool aDtlsClient,
-                                            const DtlsDigestList& aDigests,
-                                            bool aPrivacyRequested);
+  RefPtr<TransportFlow> CreateTransportFlow(
+      const std::string& aTransportId, bool aIsRtcp,
+      const RefPtr<DtlsIdentity>& aDtlsIdentity, bool aDtlsClient,
+      const DtlsDigestList& aDigests, bool aPrivacyRequested);
 
   struct Transport {
     RefPtr<TransportFlow> mFlow;
@@ -175,7 +184,7 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   std::set<std::string> mSignaledAddresses;
 
   // Init can only be done on main, but we want this to be usable on any thread
-  typedef MozPromise<bool, std::string, false> InitPromise;
+  using InitPromise = MozPromise<bool, std::string, false>;
   RefPtr<InitPromise> mInitPromise;
 };
 
@@ -246,7 +255,7 @@ class STSShutdownHandler : public nsISTSShutdownObserver {
   }
 
  private:
-  virtual ~STSShutdownHandler() {}
+  virtual ~STSShutdownHandler() = default;
 
   // Raw ptrs, registered on init, deregistered on destruction, all on main
   std::set<MediaTransportHandlerSTS*> mHandlers;
@@ -351,14 +360,16 @@ static nsresult addNrIceServer(const nsString& aIceUrl,
     }
 
     rv = net_GetAuthURLParser()->ParseAuthority(
-        path.get(), path.Length(), nullptr, nullptr, nullptr, nullptr, &hostPos,
-        &hostLen, &port);
+        path.get(), static_cast<int>(path.Length()), nullptr, nullptr, nullptr,
+        nullptr, &hostPos, &hostLen, &port);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!hostLen) {
       return NS_ERROR_FAILURE;
     }
-    if (hostPos > 1) /* The username was removed */
+    if (hostPos > 1) {
+      /* The username was removed */
       return NS_ERROR_FAILURE;
+    }
     path.Mid(host, hostPos, hostLen);
     // Strip off brackets around IPv6 literals
     host.Trim("[]");
@@ -723,7 +734,7 @@ void MediaTransportHandlerSTS::SetProxyConfig(
 
 void MediaTransportHandlerSTS::EnsureProvisionalTransport(
     const std::string& aTransportId, const std::string& aUfrag,
-    const std::string& aPwd, size_t aComponentCount) {
+    const std::string& aPwd, int aComponentCount) {
   MOZ_RELEASE_ASSERT(mInitPromise);
 
   mInitPromise->Then(
@@ -735,9 +746,9 @@ void MediaTransportHandlerSTS::EnsureProvisionalTransport(
 
         RefPtr<NrIceMediaStream> stream(mIceCtx->GetStream(aTransportId));
         if (!stream) {
-          CSFLogDebug(LOGTAG, "%s: Creating ICE media stream=%s components=%u",
+          CSFLogDebug(LOGTAG, "%s: Creating ICE media stream=%s components=%d",
                       mIceCtx->name().c_str(), aTransportId.c_str(),
-                      static_cast<unsigned>(aComponentCount));
+                      aComponentCount);
 
           std::ostringstream os;
           os << mIceCtx->name() << " transport-id=" << aTransportId;
@@ -1484,7 +1495,7 @@ RefPtr<TransportFlow> MediaTransportHandlerSTS::GetTransportFlow(
 
 RefPtr<TransportFlow> MediaTransportHandlerSTS::CreateTransportFlow(
     const std::string& aTransportId, bool aIsRtcp,
-    RefPtr<DtlsIdentity> aDtlsIdentity, bool aDtlsClient,
+    const RefPtr<DtlsIdentity>& aDtlsIdentity, bool aDtlsClient,
     const DtlsDigestList& aDigests, bool aPrivacyRequested) {
   nsresult rv;
   RefPtr<TransportFlow> flow = new TransportFlow(aTransportId);
@@ -1659,8 +1670,31 @@ void MediaTransportHandlerSTS::OnRtcpStateChange(TransportLayer* aLayer,
   MediaTransportHandler::OnRtcpStateChange(aLayer->flow_id(), aState);
 }
 
+constexpr static const char* PacketTypeToString(MediaPacket::Type type) {
+  switch (type) {
+    case MediaPacket::Type::UNCLASSIFIED:
+      return "UNCLASSIFIED";
+    case MediaPacket::Type::SRTP:
+      return "SRTP";
+    case MediaPacket::Type::SRTCP:
+      return "SRTCP";
+    case MediaPacket::Type::DTLS:
+      return "DTLS";
+    case MediaPacket::Type::RTP:
+      return "RTP";
+    case MediaPacket::Type::RTCP:
+      return "RTCP";
+    case MediaPacket::Type::SCTP:
+      return "SCTP";
+    default:
+      MOZ_ASSERT(false, "unreached");
+      return "";
+  }
+}
+
 void MediaTransportHandlerSTS::PacketReceived(TransportLayer* aLayer,
                                               MediaPacket& aPacket) {
+  MEDIA_TRANSPORT_HANDLER_PACKET_RECEIVED(aPacket);
   OnPacketReceived(aLayer->flow_id(), aPacket);
 }
 
@@ -1670,3 +1704,5 @@ void MediaTransportHandlerSTS::EncryptedPacketSending(TransportLayer* aLayer,
 }
 
 }  // namespace mozilla
+
+#undef MEDIA_TRANSPORT_HANDLER_PACKET_RECEIVED

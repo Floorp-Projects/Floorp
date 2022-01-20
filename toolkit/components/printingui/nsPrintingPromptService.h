@@ -20,22 +20,16 @@
 #include "nsIPrintingPromptService.h"
 #include "nsIWindowWatcher.h"
 
-// Printing Progress Includes
-#include "nsIWebProgressListener.h"
 #if !defined(XP_MACOSX)
-#  include "nsPrintProgress.h"
-
 class nsIDOMWindow;
 class nsIDialogParamBlock;
 #endif
 
-class nsPrintingPromptService final : public nsIPrintingPromptService,
-                                      public nsIWebProgressListener {
+class nsPrintingPromptService final : public nsIPrintingPromptService {
  public:
   static already_AddRefed<nsPrintingPromptService> GetSingleton();
 
   NS_DECL_NSIPRINTINGPROMPTSERVICE
-  NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_ISUPPORTS
 
  protected:
@@ -46,8 +40,6 @@ class nsPrintingPromptService final : public nsIPrintingPromptService,
  private:
 #if !defined(XP_MACOSX)
   nsCOMPtr<nsIWindowWatcher> mWatcher;
-  nsCOMPtr<nsIPrintProgress> mPrintProgress;
-  nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
 #endif
 };
 

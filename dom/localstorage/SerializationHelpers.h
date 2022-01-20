@@ -23,26 +23,45 @@ struct ParamTraits<mozilla::dom::LSSnapshot::LoadState>
           mozilla::dom::LSSnapshot::LoadState::EndGuard> {};
 
 template <>
+struct ParamTraits<mozilla::dom::LSValue::CompressionType>
+    : public ContiguousEnumSerializer<
+          mozilla::dom::LSValue::CompressionType,
+          mozilla::dom::LSValue::CompressionType::UNCOMPRESSED,
+          mozilla::dom::LSValue::CompressionType::NUM_TYPES> {};
+
+static_assert(
+    0u == static_cast<uint8_t>(mozilla::dom::LSValue::ConversionType::NONE));
+template <>
+struct ParamTraits<mozilla::dom::LSValue::ConversionType>
+    : public ContiguousEnumSerializer<
+          mozilla::dom::LSValue::ConversionType,
+          mozilla::dom::LSValue::ConversionType::NONE,
+          mozilla::dom::LSValue::ConversionType::NUM_TYPES> {};
+
+template <>
 struct ParamTraits<mozilla::dom::LSValue> {
   typedef mozilla::dom::LSValue paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mBuffer);
     WriteParam(aMsg, aParam.mUTF16Length);
-    WriteParam(aMsg, aParam.mCompressed);
+    WriteParam(aMsg, aParam.mConversionType);
+    WriteParam(aMsg, aParam.mCompressionType);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     return ReadParam(aMsg, aIter, &aResult->mBuffer) &&
            ReadParam(aMsg, aIter, &aResult->mUTF16Length) &&
-           ReadParam(aMsg, aIter, &aResult->mCompressed);
+           ReadParam(aMsg, aIter, &aResult->mConversionType) &&
+           ReadParam(aMsg, aIter, &aResult->mCompressionType);
   }
 
   static void Log(const paramType& aParam, std::wstring* aLog) {
     LogParam(aParam.mBuffer, aLog);
     LogParam(aParam.mUTF16Length, aLog);
-    LogParam(aParam.mCompressed, aLog);
+    LogParam(static_cast<uint8_t>(aParam.mConversionType), aLog);
+    LogParam(static_cast<uint8_t>(aParam.mCompressionType), aLog);
   }
 };
 

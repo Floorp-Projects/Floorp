@@ -7654,8 +7654,7 @@ void nsDisplayText::WriteDebugInfo(std::stringstream& aStream) {
 
   nsTextFrame* f = static_cast<nsTextFrame*>(mFrame);
   nsCString buf;
-  int32_t totalContentLength;
-  f->ToCString(buf, &totalContentLength);
+  f->ToCString(buf);
 
   aStream << buf.get() << "\")";
 #endif

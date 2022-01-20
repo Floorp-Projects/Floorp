@@ -5,8 +5,6 @@
  * Tests that preferences are properly set by distribution.ini
  */
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
@@ -26,9 +24,12 @@ const TOPIC_BROWSERGLUE_TEST = "browser-glue-test";
 registerCleanupFunction(async function() {
   // Remove the distribution dir, even if the test failed, otherwise all
   // next tests will use it.
-  let folderPath = OS.Path.join(OS.Constants.Path.profileDir, "distribution");
-  await OS.File.removeDir(folderPath, { ignoreAbsent: true });
-  Assert.ok(!(await OS.File.exists(folderPath)));
+  let folderPath = PathUtils.join(
+    await PathUtils.getProfileDir(),
+    "distribution"
+  );
+  await IOUtils.remove(folderPath, { ignoreAbsent: true, recursive: true });
+  Assert.ok(!(await IOUtils.exists(folderPath)));
   Services.prefs.clearUserPref("distribution.testing.loadFromProfile");
 });
 

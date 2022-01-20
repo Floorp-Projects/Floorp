@@ -205,14 +205,7 @@ var test_info_features_detect = maketest(
   "features_detect",
   function features_detect(test) {
     return (async function() {
-      if (OS.Constants.Win) {
-        // see if winBirthDate is defined
-        if ("winBirthDate" in OS.File.Info.prototype) {
-          test.ok(true, "winBirthDate is defined");
-        } else {
-          test.fail("winBirthDate not defined though we are under Windows");
-        }
-      } else if (OS.Constants.libc) {
+      if (!OS.Constants.Win && OS.Constants.libc) {
         // see if unixGroup is defined
         if ("unixGroup" in OS.File.Info.prototype) {
           test.ok(true, "unixGroup is defined");

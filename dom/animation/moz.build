@@ -19,6 +19,7 @@ EXPORTS.mozilla.dom += [
     "CSSTransition.h",
     "DocumentTimeline.h",
     "KeyframeEffect.h",
+    "ScrollTimeline.h",
 ]
 
 EXPORTS.mozilla += [
@@ -58,6 +59,7 @@ UNIFIED_SOURCES += [
     "KeyframeEffect.cpp",
     "KeyframeUtils.cpp",
     "PendingAnimationTracker.cpp",
+    "ScrollTimeline.cpp",
     "TimingParams.cpp",
 ]
 

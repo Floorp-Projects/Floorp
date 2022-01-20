@@ -123,7 +123,7 @@ impl<T: ?Sized> AtomicRefCell<T> {
                 value: unsafe { &*self.value.get() },
                 borrow,
             },
-            Err(s) => panic!(s),
+            Err(s) => panic!("{}", s),
         }
     }
 
@@ -148,7 +148,7 @@ impl<T: ?Sized> AtomicRefCell<T> {
                 value: unsafe { &mut *self.value.get() },
                 borrow,
             },
-            Err(s) => panic!(s),
+            Err(s) => panic!("{}", s),
         }
     }
 
@@ -310,7 +310,7 @@ impl<'b> AtomicBorrowRefMut<'b> {
     }
 }
 
-unsafe impl<T: ?Sized + Send + Sync> Send for AtomicRefCell<T> {}
+unsafe impl<T: ?Sized + Send> Send for AtomicRefCell<T> {}
 unsafe impl<T: ?Sized + Send + Sync> Sync for AtomicRefCell<T> {}
 
 //

@@ -1,15 +1,20 @@
 # httparse
 
-[![Build Status](https://travis-ci.org/seanmonstar/httparse.svg?branch=master)](https://travis-ci.org/seanmonstar/httparse)
-[![Coverage Status](https://coveralls.io/repos/seanmonstar/httparse/badge.svg)](https://coveralls.io/r/seanmonstar/httparse)
 [![crates.io](https://img.shields.io/crates/v/httparse.svg)](https://crates.io/crates/httparse)
+[![Released API docs](https://docs.rs/httparse/badge.svg)](https://docs.rs/httparse)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE-MIT)
+[![CI](https://github.com/seanmonstar/httparse/workflows/CI/badge.svg)](https://github.com/seanmonstar/httparse/actions?query=workflow%3ACI)
+[![Discord chat][discord-badge]][discord-url]
 
 A push parser for the HTTP 1.x protocol. Avoids allocations. No copy. **Fast.**
 
 Works with `no_std`, simply disable the `std` Cargo feature.
 
-[Documentation](https://docs.rs/httparse)
 [Changelog](https://github.com/seanmonstar/httparse/releases)
+
+
+[discord-badge]: https://img.shields.io/discord/500028886025895936.svg?logo=discord
+[discord-url]: https://discord.gg/kkwpueZ
 
 ## Usage
 

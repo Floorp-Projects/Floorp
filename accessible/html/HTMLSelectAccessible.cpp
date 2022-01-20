@@ -212,19 +212,6 @@ uint64_t HTMLSelectOptionAccessible::NativeInteractiveState() const {
                                : states::FOCUSABLE | states::SELECTABLE;
 }
 
-int32_t HTMLSelectOptionAccessible::GetLevelInternal() {
-  nsIContent* parentContent = mContent->GetParent();
-
-  int32_t level =
-      parentContent->NodeInfo()->Equals(nsGkAtoms::optgroup) ? 2 : 1;
-
-  if (level == 1 && Role() != roles::HEADING) {
-    level = 0;  // In a single level list, the level is irrelevant
-  }
-
-  return level;
-}
-
 nsRect HTMLSelectOptionAccessible::RelativeBounds(
     nsIFrame** aBoundingFrame) const {
   LocalAccessible* combobox = GetCombobox();

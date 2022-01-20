@@ -131,7 +131,7 @@ SECTION .text
 ; single rip-relative lea and then address things relative from that with
 ; 1-byte offsets as long as data is within +-128 bytes of the base pointer.
 %define o_base deint_shuf + 128
-%define o(x) (rax - (o_base) + (x))
+%define o(x) (r6 - (o_base) + (x))
 
 %macro REPX 2-*
     %xdefine %%f(x) %1
@@ -364,7 +364,7 @@ cglobal inv_txfm_add_wht_wht_4x4_8bpc, 3, 3, 4, dst, stride, c
 %macro INV_TXFM_FN 3 ; type1, type2, size
 cglobal inv_txfm_add_%1_%2_%3_8bpc, 4, 5, 0, dst, stride, c, eob, tx2
     %define %%p1 m(i%1_%3_internal_8bpc)
-    lea                 rax, [o_base]
+    lea                  r6, [o_base]
     ; Jump to the 1st txfm function if we're not taking the fast path, which
     ; in turn performs an indirect jump to the 2nd txfm function.
     lea                tx2q, [m(i%2_%3_internal_8bpc).pass2]
@@ -1019,7 +1019,7 @@ ALIGN function_align
     vinserti128          m0, m1, xm4, 1 ; in0  in3  in2  in1
     vperm2i128           m4, m1, m4, 0x31
     vinserti128          m1, m5, xm2, 1 ; in4  in7  in6  in5
-    pshufd               m3, m3, q1032  ; in12 in15 in13 in14
+    pshufd               m3, m3, q1032  ; in15 in12 in13 in14
     pshufd               m2, m4, q1032  ; in11 in8  in9  in10
 cglobal_label .main2
     vpbroadcastd         m8, [o(pd_2048)]
@@ -3029,7 +3029,7 @@ ALIGN function_align
 %endmacro
 
 cglobal inv_txfm_add_dct_dct_8x32_8bpc, 4, 4, 0, dst, stride, c, eob
-    lea                 rax, [o_base]
+    lea                  r6, [o_base]
     test               eobd, eobd
     jz .dconly
     PROLOGUE              0, 4, 16, 32*3, dst, stride, c, eob
@@ -3182,7 +3182,7 @@ cglobal_label .main_fast ; bottom half is zero
     mova [rsp+gprsize+1*32], m1
     mova                 m0, [rsp+gprsize+2*32]
     mova [rsp+gprsize+2*32], m6
-    lea                  r5, [rax-(o_base)+pw_201_4091x8]
+    lea                  r5, [r6-(o_base)+pw_201_4091x8]
     ITX_UNPACK_MULHRSW    1,  8,  6,  201, 4091,  m601, 4052 ; t16a, t31a, t23a, t24a
     ITX_UNPACK_MULHRSW   15,  9,  6,  995, 3973, m1380, 3857 ; t20a, t27a, t19a, t28a
     ITX_UNPACK_MULHRSW   14,  0,  6, 1751, 3703, m2106, 3513 ; t18a, t29a, t21a, t26a
@@ -3292,7 +3292,7 @@ cglobal_label .main
 %endmacro
 
 cglobal inv_txfm_add_dct_dct_32x8_8bpc, 4, 4, 0, dst, stride, c, eob
-    lea                 rax, [o_base]
+    lea                  r6, [o_base]
     test               eobd, eobd
     jnz .normal
     movd                xm1, [o(pw_2896x8)]
@@ -3628,7 +3628,7 @@ cglobal inv_txfm_add_identity_identity_32x8_8bpc, 4, 6, 10, dst, stride, c, eob
 %endmacro
 
 cglobal inv_txfm_add_dct_dct_16x32_8bpc, 4, 4, 0, dst, stride, c, eob
-    lea                 rax, [o_base]
+    lea                  r6, [o_base]
     test               eobd, eobd
     jz .dconly
     PROLOGUE              0, 8, 16, 32*35, dst, stride, c, eob, tmp1, tmp2, \
@@ -3992,7 +3992,7 @@ ALIGN function_align
 %endmacro
 
 cglobal inv_txfm_add_dct_dct_32x16_8bpc, 4, 4, 0, dst, stride, c, eob
-    lea                 rax, [o_base]
+    lea                  r6, [o_base]
     test               eobd, eobd
     jnz .normal
     movd                xm1, [o(pw_2896x8)]
@@ -4092,7 +4092,7 @@ ALIGN function_align
 
 cglobal inv_txfm_add_identity_identity_16x32_8bpc, 4, 5, 13, dst, stride, c, eob
 %undef cmp
-    lea                 rax, [o_base]
+    lea                  r6, [o_base]
     vpbroadcastd         m9, [o(pw_2896x8)]
     vpbroadcastd        m10, [o(pw_1697x16)]
     vpbroadcastd        m12, [o(pw_8192)]
@@ -4103,7 +4103,7 @@ cglobal inv_txfm_add_identity_identity_16x32_8bpc, 4, 5, 13, dst, stride, c, eob
     add                eobd, -279 ; if (eob > 278)
     adc                 r4b, al   ;   iteration_count++
     lea                  r3, [strideq*3]
-    mov                 rax, cq
+    mov                  r6, cq
     paddw               m11, m12, m12 ; pw_16384
 .loop:
     mova                xm0, [cq+64* 0]
@@ -4138,30 +4138,30 @@ cglobal inv_txfm_add_identity_identity_16x32_8bpc, 4, 5, 13, dst, stride, c, eob
     sub                  cq, 32
     pxor                 m0, m0
     mov                 r0d, 8
-    cmp                  cq, rax
+    cmp                  cq, r6
     ja .zero_loop
 .zero_loop_half:
-    mova         [rax+64*0], m0
-    mova         [rax+64*1], m0
-    add                 rax, 64*4
-    mova         [rax-64*2], m0
-    mova         [rax-64*1], m0
+    mova          [r6+64*0], m0
+    mova          [r6+64*1], m0
+    add                  r6, 64*4
+    mova          [r6-64*2], m0
+    mova          [r6-64*1], m0
     sub                 r0d, 2
     jg .zero_loop_half
     RET
 .zero_loop:
-    mova         [rax+32*0], m0
-    mova         [rax+32*1], m0
-    mova         [rax+32*2], m0
-    mova         [rax+32*3], m0
-    add                 rax, 32*4
+    mova          [r6+32*0], m0
+    mova          [r6+32*1], m0
+    mova          [r6+32*2], m0
+    mova          [r6+32*3], m0
+    add                  r6, 32*4
     dec                 r0d
     jg .zero_loop
     RET
 
 cglobal inv_txfm_add_identity_identity_32x16_8bpc, 4, 6, 12, dst, stride, c, eob
 %undef cmp
-    lea                 rax, [o_base]
+    lea                  r6, [o_base]
     vpbroadcastd         m9, [o(pw_2896x8)]
     vpbroadcastd        m10, [o(pw_1697x16)]
     vpbroadcastd        m11, [o(pw_2048)]
@@ -4172,7 +4172,7 @@ cglobal inv_txfm_add_identity_identity_32x16_8bpc, 4, 6, 12, dst, stride, c, eob
     lea                 r4d, [r4+r3*2]
     lea                  r3, [strideq*3]
     mov                  r5, dstq
-    mov                 rax, cq
+    mov                  r6, cq
 .loop:
     mova                xm0, [cq+32* 0]
     mova                xm1, [cq+32* 1]
@@ -4214,17 +4214,17 @@ cglobal inv_txfm_add_identity_identity_32x16_8bpc, 4, 6, 12, dst, stride, c, eob
     pxor                 m0, m0
     add                  cd, 384
 .zero_loop:
-    mova         [rax+32*0], m0
-    mova         [rax+32*1], m0
-    mova         [rax+32*2], m0
-    mova         [rax+32*3], m0
-    add                 rax, 32*4
+    mova          [r6+32*0], m0
+    mova          [r6+32*1], m0
+    mova          [r6+32*2], m0
+    mova          [r6+32*3], m0
+    add                  r6, 32*4
     sub                  cd, 128
     jge .zero_loop
     RET
 
 cglobal inv_txfm_add_dct_dct_32x32_8bpc, 4, 4, 0, dst, stride, c, eob
-    lea                 rax, [o_base]
+    lea                  r6, [o_base]
     test               eobd, eobd
     jnz .normal
     movd                xm1, [o(pw_2896x8)]
@@ -4375,7 +4375,7 @@ cglobal inv_txfm_add_identity_identity_32x32_8bpc, 4, 6, 10, dst, stride, c, eob
     lea                eobd, [eobq*2-8]
     lea                  r4, [strideq*3]
     mov                  r5, dstq
-    lea                 rax, [cq+32]
+    lea                  r6, [cq+32]
 .loop:
     mova                xm0, [cq+64* 0]
     mova                xm1, [cq+64* 1]
@@ -4412,23 +4412,23 @@ cglobal inv_txfm_add_identity_identity_32x32_8bpc, 4, 6, 10, dst, stride, c, eob
 .ret:
     pxor                 m0, m0
     mov                 r0d, 16
-    cmp                  cq, rax
+    cmp                  cq, r6
     jne .zero_loop
 .zero_loop_topleft:
-    mova         [rax-32*1], m0
-    mova         [rax+32*1], m0
-    mova         [rax+32*3], m0
-    mova         [rax+32*5], m0
-    add                 rax, 64*4
+    mova          [r6-32*1], m0
+    mova          [r6+32*1], m0
+    mova          [r6+32*3], m0
+    mova          [r6+32*5], m0
+    add                  r6, 64*4
     sub                 r0d, 4
     jg .zero_loop_topleft
     RET
 .zero_loop:
-    mova         [rax-32*1], m0
-    mova         [rax+32*0], m0
-    mova         [rax+32*1], m0
-    mova         [rax+32*2], m0
-    add                 rax, 32*4
+    mova          [r6-32*1], m0
+    mova          [r6+32*0], m0
+    mova          [r6+32*1], m0
+    mova          [r6+32*2], m0
+    add                  r6, 32*4
     dec                 r0d
     jg .zero_loop
     RET
@@ -4488,7 +4488,7 @@ cglobal inv_txfm_add_identity_identity_32x32_8bpc, 4, 6, 10, dst, stride, c, eob
 %endmacro
 
 cglobal inv_txfm_add_dct_dct_16x64_8bpc, 4, 4, 0, dst, stride, c, eob
-    lea                 rax, [o_base]
+    lea                  r6, [o_base]
     test               eobd, eobd
     jnz .normal
     movd                xm1, [o(pw_2896x8)]
@@ -4628,9 +4628,9 @@ cglobal inv_txfm_add_dct_dct_16x64_8bpc, 4, 4, 0, dst, stride, c, eob
     vinserti128          m5, [r3+32*3+ 0], 1
     vinserti128          m6, [r3+32*0+16], 1
 .fast3:
-    add                 rax, o_idct64_offset
+    add                  r6, o_idct64_offset
     call m(inv_txfm_add_dct_dct_16x64_8bpc).main_part1
-    add                 rax, 8
+    add                  r6, 8
     add               tmp1q, 32*8
     sub               tmp2q, 32*8
     mova                xm0, [r2-32*2+ 0]
@@ -4762,7 +4762,7 @@ cglobal_label .main_part1
     ret
 %define o_base pw_5 + 128
 .main_part2_pass1: ; idct64 steps 6-9 + idct16/32/64 sumsub
-    sub                 rax, o_idct64_offset + 8
+    sub                  r6, o_idct64_offset + 8
     vpbroadcastd        m11, [o(pw_1567_3784)]
     vpbroadcastd        m12, [o(pw_m3784_1567)]
     vpbroadcastd        m13, [o(pw_2896_2896)]
@@ -4810,7 +4810,7 @@ cglobal_label .main_part2_internal
     ITX_MULSUB_2W         1,  2,  6,  9, 15, 13, 14 ; t40a, t55a
     ret
 .main_part2_pass2:
-    sub                 rax, o_idct64_offset + 8
+    sub                  r6, o_idct64_offset + 8
     vpbroadcastd        m11, [o(pw_1567_3784)]
     vpbroadcastd        m12, [o(pw_m3784_1567)]
     vpbroadcastd        m13, [o(pw_2896_2896)]
@@ -4834,7 +4834,7 @@ cglobal_label .main_part2_internal
     ret
 
 cglobal inv_txfm_add_dct_dct_64x16_8bpc, 4, 4, 0, dst, stride, c, eob
-    lea                 rax, [o_base]
+    lea                  r6, [o_base]
     test               eobd, eobd
     jnz .normal
     movd                xm1, [o(pw_2896x8)]
@@ -4914,9 +4914,9 @@ cglobal inv_txfm_add_dct_dct_64x16_8bpc, 4, 4, 0, dst, stride, c, eob
     mova                 m7, [cq+32* 7]
     pxor                 m8, m8
     REPX {mova [cq+32*x], m8}, 1, 31, 17, 15, 9, 23, 25, 7
-    add                 rax, o_idct64_offset
+    add                  r6, o_idct64_offset
     call m(inv_txfm_add_dct_dct_16x64_8bpc).main_part1
-    add                 rax, 8
+    add                  r6, 8
     add               tmp1q, 32*8
     sub               tmp2q, 32*8
     mova                 m0, [cq+32* 5]
@@ -4998,7 +4998,7 @@ cglobal inv_txfm_add_dct_dct_64x16_8bpc, 4, 4, 0, dst, stride, c, eob
     RET
 
 cglobal inv_txfm_add_dct_dct_32x64_8bpc, 4, 4, 0, dst, stride, c, eob
-    lea                 rax, [o_base]
+    lea                  r6, [o_base]
     test               eobd, eobd
     jnz .normal
     movd                xm1, [o(pw_2896x8)]
@@ -5170,9 +5170,9 @@ cglobal inv_txfm_add_dct_dct_32x64_8bpc, 4, 4, 0, dst, stride, c, eob
     mova                 m5, [r8-32*1]
     mova                 m6, [r8+32*0]
 .fast4:
-    add                 rax, o_idct64_offset
+    add                  r6, o_idct64_offset
     call m(inv_txfm_add_dct_dct_16x64_8bpc).main_part1
-    add                 rax, 8
+    add                  r6, 8
     add               tmp1q, 32*8
     sub               tmp2q, 32*8
     mova                 m0, [r7-32*2]
@@ -5201,7 +5201,7 @@ cglobal inv_txfm_add_dct_dct_32x64_8bpc, 4, 4, 0, dst, stride, c, eob
     RET
 
 cglobal inv_txfm_add_dct_dct_64x32_8bpc, 4, 4, 0, dst, stride, c, eob
-    lea                 rax, [o_base]
+    lea                  r6, [o_base]
     test               eobd, eobd
     jnz .normal
     movd                xm1, [o(pw_2896x8)]
@@ -5261,10 +5261,10 @@ cglobal inv_txfm_add_dct_dct_64x32_8bpc, 4, 4, 0, dst, stride, c, eob
     pmulhrsw             m7,     [cq+64* 7]
     pxor                 m8, m8
     REPX {mova [cq+64*x], m8}, 1, 31, 17, 15, 9, 23, 25, 7
-    add                 rax, o_idct64_offset
+    add                  r6, o_idct64_offset
     call m(inv_txfm_add_dct_dct_16x64_8bpc).main_part1
     vpbroadcastd         m7, [o(pw_2896x8-(o_idct64_offset))]
-    add                 rax, 8
+    add                  r6, 8
     add               tmp1q, 32*8
     sub               tmp2q, 32*8
     pmulhrsw             m0, m7, [cq+64* 5]
@@ -5383,7 +5383,7 @@ ALIGN function_align
     ret
 
 cglobal inv_txfm_add_dct_dct_64x64_8bpc, 4, 4, 0, dst, stride, c, eob
-    lea                 rax, [o_base]
+    lea                  r6, [o_base]
     test               eobd, eobd
     jnz .normal
     movd                xm1, [o(pw_2896x8)]
@@ -5440,9 +5440,9 @@ cglobal inv_txfm_add_dct_dct_64x64_8bpc, 4, 4, 0, dst, stride, c, eob
     mova                 m7, [cq+64* 7]
     pxor                 m8, m8
     REPX {mova [cq+64*x], m8}, 1, 31, 17, 15, 9, 23, 25, 7
-    add                 rax, o_idct64_offset
+    add                  r6, o_idct64_offset
     call m(inv_txfm_add_dct_dct_16x64_8bpc).main_part1
-    add                 rax, 8
+    add                  r6, 8
     add               tmp1q, 32*8
     sub               tmp2q, 32*8
     mova                 m0, [cq+64* 5]
@@ -5535,9 +5535,9 @@ cglobal inv_txfm_add_dct_dct_64x64_8bpc, 4, 4, 0, dst, stride, c, eob
     mova                 m5, [r3-32*1] ; 23
     mova                 m6, [r3+32*0] ; 25
 .fast3:
-    add                 rax, o_idct64_offset
+    add                  r6, o_idct64_offset
     call m(inv_txfm_add_dct_dct_16x64_8bpc).main_part1
-    add                 rax, 8
+    add                  r6, 8
     add               tmp1q, 32*8
     sub               tmp2q, 32*8
     mova                 m0, [r2-32*2] ;  5

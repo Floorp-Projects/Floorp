@@ -127,7 +127,8 @@ impl Token {
     pub fn contains_char_data(&self) -> bool {
         match *self {
             Token::Whitespace(_) | Token::Chunk(_) | Token::Character(_) | Token::CommentEnd |
-            Token::TagEnd | Token::EqualsSign | Token::DoubleQuote | Token::SingleQuote => true,
+            Token::TagEnd | Token::EqualsSign | Token::DoubleQuote | Token::SingleQuote | Token::CDataEnd | 
+            Token::ProcessingInstructionEnd | Token::EmptyTagEnd => true,
             _ => false
         }
     }

@@ -6,6 +6,8 @@
 var EXPORTED_SYMBOLS = [
   "FxAccountsStorageManagerCanStoreField",
   "FxAccountsStorageManager",
+  // Exported for tests.
+  "LoginManagerStorage",
 ];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");

@@ -251,8 +251,10 @@ static bool CheckIfAppRanRecently(bool* aResult) {
 //   Actually performs the default agent task, which currently means generating
 //   and sending our telemetry ping and possibly showing a notification to the
 //   user if their browser has switched from Firefox to Edge with Blink.
-// set-default-browser-user-choice [app-user-model-id]
-//   Set the default browser via the UserChoice registry keys.
+// set-default-browser-user-choice [app-user-model-id] [[.file1] ...]
+//   Set the default browser via the UserChoice registry keys.  Additional
+//   optional file extensions to register can be specified as additional
+//   arguments.
 int wmain(int argc, wchar_t** argv) {
   if (argc < 2 || !argv[1]) {
     return E_INVALIDARG;
@@ -394,7 +396,9 @@ int wmain(int argc, wchar_t** argv) {
       return E_INVALIDARG;
     }
 
-    return SetDefaultBrowserUserChoice(argv[2]);
+    // `argv` is itself null-terminated, so we can safely pass the tail of the
+    // array here.
+    return SetDefaultBrowserUserChoice(argv[2], &argv[3]);
   } else {
     return E_INVALIDARG;
   }

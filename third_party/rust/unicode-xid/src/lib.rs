@@ -27,20 +27,13 @@
 //! unicode-xid supports a `no_std` feature. This eliminates dependence
 //! on std, and instead uses equivalent functions from core.
 //!
-//! # crates.io
-//!
-//! You can use this package in your project by adding the following
-//! to your `Cargo.toml`:
-//!
-//! ```toml
-//! [dependencies]
-//! unicode-xid = "0.0.4"
-//! ```
 
-#![deny(missing_docs, unsafe_code)]
-#![doc(html_logo_url = "https://unicode-rs.github.io/unicode-rs_sm.png",
-       html_favicon_url = "https://unicode-rs.github.io/unicode-rs_sm.png")]
-
+#![forbid(unsafe_code)]
+#![deny(missing_docs)]
+#![doc(
+    html_logo_url = "https://unicode-rs.github.io/unicode-rs_sm.png",
+    html_favicon_url = "https://unicode-rs.github.io/unicode-rs_sm.png"
+)]
 #![no_std]
 #![cfg_attr(feature = "bench", feature(test, unicode_internals))]
 
@@ -80,8 +73,20 @@ pub trait UnicodeXID {
 
 impl UnicodeXID for char {
     #[inline]
-    fn is_xid_start(self) -> bool { derived_property::XID_Start(self) }
+    fn is_xid_start(self) -> bool {
+        // Fast-path for ascii idents
+        ('a' <= self && self <= 'z')
+            || ('A' <= self && self <= 'Z')
+            || (self > '\x7f' && derived_property::XID_Start(self))
+    }
 
     #[inline]
-    fn is_xid_continue(self) -> bool { derived_property::XID_Continue(self) }
+    fn is_xid_continue(self) -> bool {
+        // Fast-path for ascii idents
+        ('a' <= self && self <= 'z')
+            || ('A' <= self && self <= 'Z')
+            || ('0' <= self && self <= '9')
+            || self == '_'
+            || (self > '\x7f' && derived_property::XID_Continue(self))
+    }
 }

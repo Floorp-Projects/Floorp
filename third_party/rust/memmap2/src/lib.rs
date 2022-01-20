@@ -1,6 +1,6 @@
 //! A cross-platform Rust API for memory mapped buffers.
 
-#![doc(html_root_url = "https://docs.rs/memmap2/0.3.0")]
+#![doc(html_root_url = "https://docs.rs/memmap2/0.3.1")]
 
 #[cfg(windows)]
 mod windows;
@@ -19,6 +19,8 @@ use crate::unix::MmapInner;
 #[cfg(not(any(unix, windows)))]
 mod stub;
 #[cfg(not(any(unix, windows)))]
+use crate::stub::file_len;
+#[cfg(not(any(unix, windows)))]
 use crate::stub::MmapInner;
 
 use std::fmt;
@@ -35,6 +37,9 @@ pub struct MmapRawDescriptor<'a>(&'a File);
 
 #[cfg(unix)]
 pub struct MmapRawDescriptor(std::os::unix::io::RawFd);
+
+#[cfg(not(any(unix, windows)))]
+pub struct MmapRawDescriptor<'a>(&'a File);
 
 pub trait MmapAsRawDesc {
     fn as_raw_desc(&self) -> MmapRawDescriptor;
@@ -58,6 +63,13 @@ impl MmapAsRawDesc for &File {
 impl MmapAsRawDesc for std::os::unix::io::RawFd {
     fn as_raw_desc(&self) -> MmapRawDescriptor {
         MmapRawDescriptor(*self)
+    }
+}
+
+#[cfg(not(any(unix, windows)))]
+impl MmapAsRawDesc for &File {
+    fn as_raw_desc(&self) -> MmapRawDescriptor {
+        MmapRawDescriptor(self)
     }
 }
 
@@ -176,13 +188,26 @@ impl MmapOptions {
         self.len.map(Ok).unwrap_or_else(|| {
             let desc = file.as_raw_desc();
             let file_len = file_len(desc.0)?;
-            let len = file_len as u64 - self.offset;
-            if len > (usize::MAX as u64) {
+
+            if file_len < self.offset {
                 return Err(Error::new(
                     ErrorKind::InvalidData,
-                    "memory map length overflows usize",
+                    "memory map offset is larger than length",
                 ));
             }
+            let len = file_len - self.offset;
+
+            // This check it not relevant on 64bit targets, because usize == u64
+            #[cfg(not(target_pointer_width = "64"))]
+            {
+                if len > (usize::MAX as u64) {
+                    return Err(Error::new(
+                        ErrorKind::InvalidData,
+                        "memory map length overflows usize",
+                    ));
+                }
+            }
+
             Ok(len as usize)
         })
     }
@@ -1102,6 +1127,29 @@ mod test {
         assert_eq!(nulls, &read);
     }
 
+    // 32bit Linux cannot map a file larger than i32, but Windows can.
+    #[cfg(all(target_os = "linux", target_pointer_width = "32"))]
+    #[test]
+    fn map_offset() {
+        let tempdir = tempdir::TempDir::new("mmap").unwrap();
+        let path = tempdir.path().join("mmap");
+
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .open(&path)
+            .unwrap();
+
+        let offset = u32::max_value() as u64 + 2;
+        let len = 5432;
+        file.set_len(offset + len as u64).unwrap();
+
+        let mmap = unsafe { MmapOptions::new().offset(offset).map_mut(&file) };
+        assert!(mmap.is_err());
+    }
+
+    #[cfg(not(all(target_os = "linux", target_pointer_width = "32")))]
     #[test]
     fn map_offset() {
         let tempdir = tempdir::TempDir::new("mmap").unwrap();

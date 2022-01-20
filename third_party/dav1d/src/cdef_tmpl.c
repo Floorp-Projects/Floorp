@@ -55,9 +55,9 @@ static inline void fill(int16_t *tmp, const ptrdiff_t stride,
 
 static void padding(int16_t *tmp, const ptrdiff_t tmp_stride,
                     const pixel *src, const ptrdiff_t src_stride,
-                    const pixel (*left)[2], const pixel *top,
-                    const int w, const int h,
-                    const enum CdefEdgeFlags edges)
+                    const pixel (*left)[2],
+                    const pixel *top, const pixel *bottom,
+                    const int w, const int h, const enum CdefEdgeFlags edges)
 {
     // fill extended input buffer
     int x_start = -2, x_end = w + 2, y_start = -2, y_end = h + 2;
@@ -86,17 +86,25 @@ static void padding(int16_t *tmp, const ptrdiff_t tmp_stride,
     for (int y = 0; y < h; y++)
         for (int x = x_start; x < 0; x++)
             tmp[x + y * tmp_stride] = left[y][2 + x];
-    for (int y = 0; y < y_end; y++) {
+    for (int y = 0; y < h; y++) {
         for (int x = (y < h) ? 0 : x_start; x < x_end; x++)
             tmp[x] = src[x];
         src += PXSTRIDE(src_stride);
         tmp += tmp_stride;
     }
+    for (int y = h; y < y_end; y++) {
+        for (int x = x_start; x < x_end; x++)
+            tmp[x] = bottom[x];
+        bottom += PXSTRIDE(src_stride);
+        tmp += tmp_stride;
+    }
+
 }
 
 static NOINLINE void
 cdef_filter_block_c(pixel *dst, const ptrdiff_t dst_stride,
-                    const pixel (*left)[2], const pixel *const top,
+                    const pixel (*left)[2],
+                    const pixel *const top, const pixel *const bottom,
                     const int pri_strength, const int sec_strength,
                     const int dir, const int damping, const int w, int h,
                     const enum CdefEdgeFlags edges HIGHBD_DECL_SUFFIX)
@@ -106,7 +114,7 @@ cdef_filter_block_c(pixel *dst, const ptrdiff_t dst_stride,
     int16_t tmp_buf[144]; // 12*12 is the maximum value of tmp_stride * (h + 4)
     int16_t *tmp = tmp_buf + 2 * tmp_stride + 2;
 
-    padding(tmp, tmp_stride, dst, dst_stride, left, top, w, h, edges);
+    padding(tmp, tmp_stride, dst, dst_stride, left, top, bottom, w, h, edges);
 
     if (pri_strength) {
         const int bitdepth_min_8 = bitdepth_from_max(bitdepth_max) - 8;
@@ -211,6 +219,7 @@ static void cdef_filter_block_##w##x##h##_c(pixel *const dst, \
                                             const ptrdiff_t stride, \
                                             const pixel (*left)[2], \
                                             const pixel *const top, \
+                                            const pixel *const bottom, \
                                             const int pri_strength, \
                                             const int sec_strength, \
                                             const int dir, \
@@ -218,8 +227,8 @@ static void cdef_filter_block_##w##x##h##_c(pixel *const dst, \
                                             const enum CdefEdgeFlags edges \
                                             HIGHBD_DECL_SUFFIX) \
 { \
-    cdef_filter_block_c(dst, stride, left, top, pri_strength, sec_strength, \
-                        dir, damping, w, h, edges HIGHBD_TAIL_SUFFIX); \
+    cdef_filter_block_c(dst, stride, left, top, bottom, \
+                        pri_strength, sec_strength, dir, damping, w, h, edges HIGHBD_TAIL_SUFFIX); \
 }
 
 cdef_fn(4, 4);

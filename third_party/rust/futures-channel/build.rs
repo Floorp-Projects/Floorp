@@ -8,7 +8,7 @@ include!("no_atomic_cas.rs");
 // and outside of the normal semver guarantees:
 //
 // - `futures_no_atomic_cas`
-//      Assume the target does not have atomic CAS (compare-and-swap).
+//      Assume the target does *not* support atomic CAS operations.
 //      This is usually detected automatically by the build script, but you may
 //      need to enable it manually when building for custom targets or using
 //      non-cargo build systems that don't run the build script.

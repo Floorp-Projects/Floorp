@@ -26,9 +26,7 @@
 #include "nsRegion.h"
 #include "nsXULPopupManager.h"
 #include "nsMenuPopupFrame.h"
-#ifdef MOZ_XUL
-#  include "nsTreeBodyFrame.h"
-#endif
+#include "nsTreeBodyFrame.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
@@ -400,7 +398,6 @@ nsBaseDragService::InvokeDragSessionWithImage(
   // tree to ensure that the drag feedback gets clipped to those
   // rows. For other content, region should be null.
   mRegion = Nothing();
-#ifdef MOZ_XUL
   if (aDOMNode && aDOMNode->IsContent() && !aImage) {
     if (aDOMNode->NodeInfo()->Equals(nsGkAtoms::treechildren,
                                      kNameSpaceID_XUL)) {
@@ -411,7 +408,6 @@ nsBaseDragService::InvokeDragSessionWithImage(
       }
     }
   }
-#endif
 
   nsresult rv = InvokeDragSession(
       aDOMNode, aPrincipal, aCsp, aCookieJarSettings, aTransferableArray,

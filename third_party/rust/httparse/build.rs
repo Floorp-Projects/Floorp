@@ -1,8 +1,11 @@
 use std::env;
-use std::ffi::OsString;
-use std::process::Command;
+//use std::ffi::OsString;
+//use std::process::Command;
 
 fn main() {
+    // We don't currently need to check the Version anymore...
+    // But leaving this in place in case we need to in the future.
+    /*
     let rustc = env::var_os("RUSTC").unwrap_or(OsString::from("rustc"));
     let output = Command::new(&rustc)
         .arg("--version")
@@ -12,11 +15,13 @@ fn main() {
 
     let version = String::from_utf8(output)
         .expect("rustc version output should be utf-8");
+    */
 
-    enable_new_features(&version);
+    enable_new_features(/*&version*/);
 }
 
-fn enable_new_features(raw_version: &str) {
+fn enable_new_features(/*raw_version: &str*/) {
+    /*
     let version = match Version::parse(raw_version) {
         Ok(version) => version,
         Err(err) => {
@@ -24,41 +29,24 @@ fn enable_new_features(raw_version: &str) {
             return;
         }
     };
+    */
 
-    let min_rust2018_version = Version {
-        major: 1,
-        minor: 31,
-        patch: 0,
-    };
-
-    if version >= min_rust2018_version {
-        println!("cargo:rustc-cfg=httparse_min_2018");
-    }
-
-    enable_simd(version);
+    enable_simd(/*version*/);
 }
 
-fn enable_simd(version: Version) {
+fn enable_simd(/*version: Version*/) {
     if env::var_os("CARGO_FEATURE_STD").is_none() {
         println!("cargo:warning=building for no_std disables httparse SIMD");
         return;
     }
 
     let env_disable = "CARGO_CFG_HTTPARSE_DISABLE_SIMD";
-    if env::var_os(env_disable).is_some() {
+    if var_is(env_disable, "1") {
         println!("cargo:warning=detected {} environment variable, disabling SIMD", env_disable);
         return;
     }
 
-    let min_simd_version = Version {
-        major: 1,
-        minor: 27,
-        patch: 0,
-    };
-
-    if version >= min_simd_version {
-        println!("cargo:rustc-cfg=httparse_simd");
-    }
+    println!("cargo:rustc-cfg=httparse_simd");
 
     // cfg(target_feature) isn't stable yet, but CARGO_CFG_TARGET_FEATURE has
     // a list... We aren't doing anything unsafe, since the is_x86_feature_detected
@@ -74,7 +62,7 @@ fn enable_simd(version: Version) {
 
 
     let env_runtime_only = "CARGO_CFG_HTTPARSE_DISABLE_SIMD_COMPILETIME";
-    if env::var_os(env_runtime_only).is_some() {
+    if var_is(env_runtime_only, "1") {
         println!("cargo:warning=detected {} environment variable, using runtime SIMD detection only", env_runtime_only);
         return;
     }
@@ -109,6 +97,7 @@ fn enable_simd(version: Version) {
     }
 }
 
+/*
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 struct Version {
     major: u32,
@@ -135,7 +124,7 @@ impl Version {
             }
             num.push(c);
         }
-        let major = try!(num.parse::<u32>().map_err(|e| e.to_string()));
+        let major = num.parse::<u32>().map_err(|e| e.to_string())?;
 
         num.clear();
         for c in parts[1].chars() {
@@ -144,7 +133,7 @@ impl Version {
             }
             num.push(c);
         }
-        let minor = try!(num.parse::<u32>().map_err(|e| e.to_string()));
+        let minor = num.parse::<u32>().map_err(|e| e.to_string())?;
 
         num.clear();
         for c in parts[2].chars() {
@@ -153,7 +142,7 @@ impl Version {
             }
             num.push(c);
         }
-        let patch = try!(num.parse::<u32>().map_err(|e| e.to_string()));
+        let patch = num.parse::<u32>().map_err(|e| e.to_string())?;
 
         Ok(Version {
             major: major,
@@ -162,4 +151,11 @@ impl Version {
         })
     }
 }
+*/
 
+fn var_is(key: &str, val: &str) -> bool {
+    match env::var(key) {
+        Ok(v) => v == val,
+        Err(_) => false,
+    }
+}

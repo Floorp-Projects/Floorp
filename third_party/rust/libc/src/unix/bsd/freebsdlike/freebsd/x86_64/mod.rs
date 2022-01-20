@@ -80,6 +80,19 @@ s_no_extra_traits! {
         pub xmm_reg: [[u8; 16]; 8],
         pub xmm_pad: [u8; 224],
     }
+
+    #[cfg(libc_union)]
+    pub union __c_anonymous_elf64_auxv_union {
+        pub a_val: ::c_long,
+        pub a_ptr: *mut ::c_void,
+        pub a_fcn: extern "C" fn(),
+    }
+
+    pub struct Elf64_Auxinfo {
+        pub a_type: ::c_long,
+        #[cfg(libc_union)]
+        pub a_un: __c_anonymous_elf64_auxv_union,
+    }
 }
 
 cfg_if! {
@@ -171,6 +184,56 @@ cfg_if! {
                 self.xmm_acc.hash(state);
                 self.xmm_reg.hash(state);
                 self.xmm_pad.hash(state);
+            }
+        }
+
+        #[cfg(libc_union)]
+        impl PartialEq for __c_anonymous_elf64_auxv_union {
+            fn eq(&self, other: &__c_anonymous_elf64_auxv_union) -> bool {
+                unsafe { self.a_val == other.a_val
+                        || self.a_ptr == other.a_ptr
+                        || self.a_fcn == other.a_fcn }
+            }
+        }
+        #[cfg(libc_union)]
+        impl Eq for __c_anonymous_elf64_auxv_union {}
+        #[cfg(libc_union)]
+        impl ::fmt::Debug for __c_anonymous_elf64_auxv_union {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("a_val")
+                    .field("a_val", unsafe { &self.a_val })
+                    .finish()
+            }
+        }
+        #[cfg(not(libc_union))]
+        impl PartialEq for Elf64_Auxinfo {
+            fn eq(&self, other: &Elf64_Auxinfo) -> bool {
+                self.a_type == other.a_type
+            }
+        }
+        #[cfg(libc_union)]
+        impl PartialEq for Elf64_Auxinfo {
+            fn eq(&self, other: &Elf64_Auxinfo) -> bool {
+                self.a_type == other.a_type
+                    && self.a_un == other.a_un
+            }
+        }
+        impl Eq for Elf64_Auxinfo {}
+        #[cfg(not(libc_union))]
+        impl ::fmt::Debug for Elf64_Auxinfo {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("Elf64_Auxinfo")
+                    .field("a_type", &self.a_type)
+                    .finish()
+            }
+        }
+        #[cfg(libc_union)]
+        impl ::fmt::Debug for Elf64_Auxinfo {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("Elf64_Auxinfo")
+                    .field("a_type", &self.a_type)
+                    .field("a_un", &self.a_un)
+                    .finish()
             }
         }
     }

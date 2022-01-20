@@ -171,14 +171,8 @@ nsFilePicker::nsFilePicker()
       mRunning(false),
       mAllowURLs(false),
       mFileChooserDelegate(nullptr) {
-  nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
-  // Due to Bug 1635718 always use portal for file dialog on Wayland.
-  if (widget::GdkIsWaylandDisplay()) {
-    mUseNativeFileChooser =
-        Preferences::GetBool("widget.use-xdg-desktop-portal", true);
-  } else {
-    giovfs->ShouldUseFlatpakPortal(&mUseNativeFileChooser);
-  }
+  mUseNativeFileChooser =
+      widget::ShouldUsePortal(widget::PortalKind::FilePicker);
 }
 
 nsFilePicker::~nsFilePicker() = default;

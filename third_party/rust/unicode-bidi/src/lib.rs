@@ -53,27 +53,23 @@
 //! ]);
 //! ```
 //!
+//! # Features
+//!
+//! - `std`: Enabled by default, but can be disabled to make `unicode_bidi`
+//!   `#![no_std]` + `alloc` compatible.
+//! - `serde`: Adds [`serde::Serialize`] and [`serde::Deserialize`]
+//!   implementations to relevant types.
+//!
 //! [tr9]: <http://www.unicode.org/reports/tr9/>
 
 #![forbid(unsafe_code)]
 
-#![cfg_attr(feature="flame_it", feature(plugin, custom_attribute))]
-#![cfg_attr(feature="flame_it", plugin(flamer))]
-
-
+#![no_std]
+// We need to link to std to make doc tests work on older Rust versions
+#[cfg(feature = "std")]
+extern crate std;
 #[macro_use]
-extern crate matches;
-
-#[cfg(feature = "serde")]
-#[macro_use]
-extern crate serde;
-
-#[cfg(all(feature = "serde", test))]
-extern crate serde_test;
-
-#[cfg(feature = "flame_it")]
-extern crate flame;
-
+extern crate alloc;
 
 pub mod deprecated;
 pub mod format_chars;
@@ -84,18 +80,19 @@ mod explicit;
 mod implicit;
 mod prepare;
 
-pub use char_data::{BidiClass, bidi_class, UNICODE_VERSION};
-pub use level::{Level, LTR_LEVEL, RTL_LEVEL};
-pub use prepare::LevelRun;
+pub use crate::char_data::{BidiClass, bidi_class, UNICODE_VERSION};
+pub use crate::level::{Level, LTR_LEVEL, RTL_LEVEL};
+pub use crate::prepare::LevelRun;
 
-use std::borrow::Cow;
-use std::cmp::{max, min};
-use std::iter::repeat;
-use std::ops::Range;
+use alloc::borrow::Cow;
+use alloc::vec::Vec;
+use alloc::string::String;
+use core::cmp::{max, min};
+use core::iter::repeat;
+use core::ops::Range;
 
-use BidiClass::*;
-use format_chars as chars;
-
+use crate::BidiClass::*;
+use crate::format_chars as chars;
 
 /// Bidi information about a single paragraph
 #[derive(Debug, PartialEq)]
@@ -135,8 +132,8 @@ impl<'text> InitialInfo<'text> {
     /// Also sets the class for each First Strong Isolate initiator (FSI) to LRI or RLI if a strong
     /// character is found before the matching PDI.  If no strong character is found, the class will
     /// remain FSI, and it's up to later stages to treat these as LRI when needed.
-    #[cfg_attr(feature = "flame_it", flame)]
-    pub fn new(text: &str, default_para_level: Option<Level>) -> InitialInfo {
+    #[cfg_attr(feature = "flame_it", flamer::flame)]
+    pub fn new(text: &str, default_para_level: Option<Level>) -> InitialInfo<'_> {
         let mut original_classes = Vec::with_capacity(text.len());
 
         // The stack contains the starting byte index for each nested isolate we're inside.
@@ -261,8 +258,8 @@ impl<'text> BidiInfo<'text> {
     /// text that is entirely LTR.  See the `nsBidi` class from Gecko for comparison.
     ///
     /// TODO: Support auto-RTL base direction
-    #[cfg_attr(feature = "flame_it", flame)]
-    pub fn new(text: &str, default_para_level: Option<Level>) -> BidiInfo {
+    #[cfg_attr(feature = "flame_it", flamer::flame)]
+    pub fn new(text: &str, default_para_level: Option<Level>) -> BidiInfo<'_> {
         let InitialInfo {
             original_classes,
             paragraphs,
@@ -309,15 +306,15 @@ impl<'text> BidiInfo<'text> {
 
     /// Re-order a line based on resolved levels and return only the embedding levels, one `Level`
     /// per *byte*.
-    #[cfg_attr(feature = "flame_it", flame)]
+    #[cfg_attr(feature = "flame_it", flamer::flame)]
     pub fn reordered_levels(&self, para: &ParagraphInfo, line: Range<usize>) -> Vec<Level> {
-        let (levels, _) = self.visual_runs(para, line.clone());
+        let (levels, _) = self.visual_runs(para, line);
         levels
     }
 
     /// Re-order a line based on resolved levels and return only the embedding levels, one `Level`
     /// per *character*.
-    #[cfg_attr(feature = "flame_it", flame)]
+    #[cfg_attr(feature = "flame_it", flamer::flame)]
     pub fn reordered_levels_per_char(
         &self,
         para: &ParagraphInfo,
@@ -329,13 +326,13 @@ impl<'text> BidiInfo<'text> {
 
 
     /// Re-order a line based on resolved levels and return the line in display order.
-    #[cfg_attr(feature = "flame_it", flame)]
+    #[cfg_attr(feature = "flame_it", flamer::flame)]
     pub fn reorder_line(&self, para: &ParagraphInfo, line: Range<usize>) -> Cow<'text, str> {
         let (levels, runs) = self.visual_runs(para, line.clone());
 
         // If all isolating run sequences are LTR, no reordering is needed
         if runs.iter().all(|run| levels[run.start].is_ltr()) {
-            return self.text[line.clone()].into();
+            return self.text[line].into();
         }
 
         let mut result = String::with_capacity(line.len());
@@ -354,7 +351,7 @@ impl<'text> BidiInfo<'text> {
     /// `line` is a range of bytes indices within `levels`.
     ///
     /// <http://www.unicode.org/reports/tr9/#Reordering_Resolved_Levels>
-    #[cfg_attr(feature = "flame_it", flame)]
+    #[cfg_attr(feature = "flame_it", flamer::flame)]
     pub fn visual_runs(
         &self,
         para: &ParagraphInfo,
@@ -364,6 +361,8 @@ impl<'text> BidiInfo<'text> {
         assert!(line.end <= self.levels.len());
 
         let mut levels = self.levels.clone();
+        let line_classes = &self.original_classes[line.clone()];
+        let line_levels = &mut levels[line.clone()];
 
         // Reset some whitespace chars to paragraph level.
         // <http://www.unicode.org/reports/tr9/#L1>
@@ -371,7 +370,7 @@ impl<'text> BidiInfo<'text> {
         let mut reset_from: Option<usize> = Some(0);
         let mut reset_to: Option<usize> = None;
         for (i, c) in line_str.char_indices() {
-            match self.original_classes[i] {
+            match line_classes[i] {
                 // Ignored by X9
                 RLE | LRE | RLO | LRO | PDF | BN => {}
                 // Segment separator, Paragraph separator
@@ -393,18 +392,16 @@ impl<'text> BidiInfo<'text> {
                 }
             }
             if let (Some(from), Some(to)) = (reset_from, reset_to) {
-                #[cfg_attr(feature = "cargo-clippy", allow(needless_range_loop))]
-                for j in from..to {
-                    levels[j] = para.level;
+                for level in &mut line_levels[from..to] {
+                    *level = para.level;
                 }
                 reset_from = None;
                 reset_to = None;
             }
         }
         if let Some(from) = reset_from {
-            #[cfg_attr(feature = "cargo-clippy", allow(needless_range_loop))]
-            for j in from..line_str.len() {
-                levels[j] = para.level;
+            for level in &mut line_levels[from..] {
+                *level = para.level;
             }
         }
 
@@ -479,7 +476,7 @@ impl<'text> BidiInfo<'text> {
 ///
 /// The levels assigned to these characters are not specified by the algorithm.  This function
 /// assigns each one the level of the previous character, to avoid breaking level runs.
-#[cfg_attr(feature = "flame_it", flame)]
+#[cfg_attr(feature = "flame_it", flamer::flame)]
 fn assign_levels_to_removed_chars(para_level: Level, classes: &[BidiClass], levels: &mut [Level]) {
     for i in 0..levels.len() {
         if prepare::removed_by_x9(classes[i]) {
@@ -674,7 +671,7 @@ mod tests {
             }
         );
 
-        /// BidiTest:69635 (AL ET EN)
+        // BidiTest:69635 (AL ET EN)
         let bidi_info = BidiInfo::new("\u{060B}\u{20CF}\u{06F9}", None);
         assert_eq!(bidi_info.original_classes, vec![AL, AL, ET, ET, ET, EN, EN]);
     }
@@ -703,7 +700,7 @@ mod tests {
         assert_eq!(BidiInfo::new("אבּג\n123", None).has_rtl(), true);
     }
 
-    fn reorder_paras(text: &str) -> Vec<Cow<str>> {
+    fn reorder_paras(text: &str) -> Vec<Cow<'_, str>> {
         let bidi_info = BidiInfo::new(text, None);
         bidi_info
             .paragraphs
@@ -714,22 +711,22 @@ mod tests {
 
     #[test]
     fn test_reorder_line() {
-        /// Bidi_Class: L L L B L L L B L L L
+        // Bidi_Class: L L L B L L L B L L L
         assert_eq!(
             reorder_paras("abc\ndef\nghi"),
             vec!["abc\n", "def\n", "ghi"]
         );
 
-        /// Bidi_Class: L L EN B L L EN B L L EN
+        // Bidi_Class: L L EN B L L EN B L L EN
         assert_eq!(
             reorder_paras("ab1\nde2\ngh3"),
             vec!["ab1\n", "de2\n", "gh3"]
         );
 
-        /// Bidi_Class: L L L B AL AL AL
+        // Bidi_Class: L L L B AL AL AL
         assert_eq!(reorder_paras("abc\nابج"), vec!["abc\n", "جبا"]);
 
-        /// Bidi_Class: AL AL AL B L L L
+        // Bidi_Class: AL AL AL B L L L
         assert_eq!(reorder_paras("ابج\nabc"), vec!["\nجبا", "abc"]);
 
         assert_eq!(reorder_paras("1.-2"), vec!["1.-2"]);
@@ -812,7 +809,7 @@ mod tests {
     #[test]
     fn test_reordered_levels() {
 
-        /// BidiTest:946 (LRI PDI)
+        // BidiTest:946 (LRI PDI)
         let text = "\u{2067}\u{2069}";
         assert_eq!(
             reordered_levels_for_paras(text),
@@ -822,6 +819,13 @@ mod tests {
             reordered_levels_per_char_for_paras(text),
             vec![Level::vec(&[0, 0])]
         );
+
+        let text = "aa טֶ";
+        let bidi_info = BidiInfo::new(text, None);
+        assert_eq!(
+            bidi_info.reordered_levels(&bidi_info.paragraphs[0], 3..7),
+            Level::vec(&[0, 0, 0, 1, 1, 1, 1]),
+        )
 
         /* TODO
         /// BidiTest:69635 (AL ET EN)

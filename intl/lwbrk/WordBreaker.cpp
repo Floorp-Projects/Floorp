@@ -3,17 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/intl/UnicodeProperties.h"
 #include "mozilla/intl/WordBreaker.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsComplexBreaker.h"
 #include "nsTArray.h"
-#include "nsUnicodeProperties.h"
 
+using mozilla::intl::Script;
+using mozilla::intl::UnicodeProperties;
 using mozilla::intl::WordBreaker;
 using mozilla::intl::WordRange;
 using mozilla::unicode::GetGenCategory;
-using mozilla::unicode::GetScriptCode;
-using mozilla::unicode::Script;
 
 #define IS_ASCII(c) (0 == (0xFF80 & (c)))
 #define ASCII_IS_ALPHA(c) \
@@ -40,7 +40,7 @@ using mozilla::unicode::Script;
 // the script is not supported by the platform, we just won't find any useful
 // boundaries.)
 static bool IsScriptioContinua(char16_t aChar) {
-  Script sc = GetScriptCode(aChar);
+  Script sc = UnicodeProperties::GetScriptCode(aChar);
   return sc == Script::THAI || sc == Script::MYANMAR || sc == Script::KHMER ||
          sc == Script::JAVANESE || sc == Script::BALINESE ||
          sc == Script::SUNDANESE || sc == Script::LAO;

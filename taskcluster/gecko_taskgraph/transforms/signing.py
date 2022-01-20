@@ -8,7 +8,10 @@ Transform the signing task into an actual task description.
 
 from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.base import TransformSequence
-from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
+from gecko_taskgraph.util.attributes import (
+    copy_attributes_from_dependent_job,
+    release_level,
+)
 from gecko_taskgraph.util.keyed_by import evaluate_keyed_by
 from gecko_taskgraph.util.schema import taskref_or_string
 from gecko_taskgraph.util.scriptworker import get_signing_cert_scope_per_platform
@@ -80,7 +83,7 @@ def add_entitlements_link(config, jobs):
             "mac entitlements",
             {
                 "platform": job["primary-dependency"].attributes.get("build_platform"),
-                "release-level": config.params.release_level(),
+                "release-level": release_level(config.params["project"]),
             },
         )
         if entitlements_path:

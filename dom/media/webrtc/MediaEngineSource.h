@@ -73,31 +73,6 @@ class MediaEngineSourceInterface {
   virtual bool IsFake() const = 0;
 
   /**
-   * Gets the human readable name of this device.
-   */
-  virtual nsString GetName() const = 0;
-
-  /**
-   * Gets the raw (non-anonymous) UUID of this device.
-   */
-  virtual nsCString GetUUID() const = 0;
-
-  /**
-   * Gets the raw Group id of this device.
-   */
-  virtual nsString GetGroupId() const = 0;
-
-  /**
-   * Get the enum describing the underlying type of MediaSource.
-   */
-  virtual dom::MediaSourceEnum GetMediaSource() const = 0;
-
-  /**
-   * Override w/true if source does end-run around cross origin restrictions.
-   */
-  virtual bool GetScary() const = 0;
-
-  /**
    * Override w/a promise if source has frames, in order to potentially allow
    * deferring success of source acquisition until first frame has arrived.
    */
@@ -243,9 +218,6 @@ class MediaEngineSource : public MediaEngineSourceInterface {
 
   // Not fake by default.
   bool IsFake() const override;
-
-  // Not scary by default.
-  bool GetScary() const override;
 
   // Returns NS_ERROR_NOT_AVAILABLE by default.
   nsresult FocusOnSelectedSource() override;

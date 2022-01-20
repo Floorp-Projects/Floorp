@@ -2,83 +2,73 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// XXXXXX - This has been cloned from places/src/schema.rs, which has the
-// comment:
-// // This has been cloned from logins/src/schema.rs, on Thom's
-// // wip-sync-sql-store branch.
-// // We should work out how to turn this into something that can use a shared
-// // db.rs.
-//
-// And we really should :) But not now.
-
+use crate::db::sql_fns;
 use crate::error::Result;
-use rusqlite::{Connection, NO_PARAMS};
-use sql_support::ConnExt;
-
-const VERSION: i64 = 2;
+use rusqlite::{Connection, Transaction};
+use sql_support::open_database::{
+    ConnectionInitializer as MigrationLogic, Error as MigrationError, Result as MigrationResult,
+};
 
 const CREATE_SCHEMA_SQL: &str = include_str!("../sql/create_schema.sql");
 const CREATE_SYNC_TEMP_TABLES_SQL: &str = include_str!("../sql/create_sync_temp_tables.sql");
 
-fn get_current_schema_version(db: &Connection) -> Result<i64> {
-    Ok(db.query_one::<i64>("PRAGMA user_version")?)
-}
+pub struct WebExtMigrationLogin;
 
-pub fn init(db: &Connection) -> Result<()> {
-    let user_version = get_current_schema_version(db)?;
-    if user_version == 0 {
-        create(db)?;
-    } else if user_version != VERSION {
-        if user_version < VERSION {
-            upgrade(db, user_version)?;
-        } else {
-            log::warn!(
-                "Loaded future schema version {} (we only understand version {}). \
-                 Optimistically ",
-                user_version,
-                VERSION
-            );
-            // Downgrade the schema version, so that anything added with our
-            // schema is migrated forward when the newer library reads our
-            // database.
-            db.execute_batch(&format!("PRAGMA user_version = {};", VERSION))?;
-        }
-        create(db)?;
+impl MigrationLogic for WebExtMigrationLogin {
+    const NAME: &'static str = "webext storage db";
+    const END_VERSION: u32 = 2;
+
+    fn prepare(&self, conn: &Connection) -> MigrationResult<()> {
+        let initial_pragmas = "
+            -- We don't care about temp tables being persisted to disk.
+            PRAGMA temp_store = 2;
+            -- we unconditionally want write-ahead-logging mode
+            PRAGMA journal_mode=WAL;
+            -- foreign keys seem worth enforcing!
+            PRAGMA foreign_keys = ON;
+        ";
+        conn.execute_batch(initial_pragmas)?;
+        define_functions(&conn)?;
+        conn.set_prepared_statement_cache_capacity(128);
+        Ok(())
     }
-    Ok(())
-}
 
-fn create(db: &Connection) -> Result<()> {
-    log::debug!("Creating schema");
-    db.execute_batch(CREATE_SCHEMA_SQL)?;
-    db.execute(
-        &format!("PRAGMA user_version = {version}", version = VERSION),
-        NO_PARAMS,
-    )?;
-
-    Ok(())
-}
-
-fn upgrade(db: &Connection, from: i64) -> Result<()> {
-    log::debug!("Upgrading schema from {} to {}", from, VERSION);
-    if from == VERSION {
-        return Ok(());
-    }
-    // Places has a cute `migration` helper we can consider using if we get
-    // a few complicated updates, but let's KISS for now.
-    if from == 1 {
-        // We changed a not null constraint
-        log::debug!("Upgrading schema from 1 to 2");
-        db.execute_batch("ALTER TABLE storage_sync_mirror RENAME TO old_mirror;")?;
-        // just re-run the full schema commands to recreate the able.
+    fn init(&self, db: &Transaction<'_>) -> MigrationResult<()> {
+        log::debug!("Creating schema");
         db.execute_batch(CREATE_SCHEMA_SQL)?;
-        db.execute_batch(
-            "INSERT OR IGNORE INTO storage_sync_mirror(guid, ext_id, data)
-             SELECT guid, ext_id, data FROM old_mirror;",
-        )?;
-        db.execute_batch("DROP TABLE old_mirror;")?;
-        db.execute_batch("PRAGMA user_version = 2;")?;
+        Ok(())
     }
+
+    fn upgrade_from(&self, db: &Transaction<'_>, version: u32) -> MigrationResult<()> {
+        match version {
+            1 => upgrade_from_1(db),
+            _ => Err(MigrationError::IncompatibleVersion(version)),
+        }
+    }
+}
+
+fn define_functions(c: &Connection) -> MigrationResult<()> {
+    use rusqlite::functions::FunctionFlags;
+    c.create_scalar_function(
+        "generate_guid",
+        0,
+        FunctionFlags::SQLITE_UTF8,
+        sql_fns::generate_guid,
+    )?;
+    Ok(())
+}
+
+fn upgrade_from_1(db: &Connection) -> MigrationResult<()> {
+    // We changed a not null constraint
+    db.execute_batch("ALTER TABLE storage_sync_mirror RENAME TO old_mirror;")?;
+    // just re-run the full schema commands to recreate the able.
+    db.execute_batch(CREATE_SCHEMA_SQL)?;
+    db.execute_batch(
+        "INSERT OR IGNORE INTO storage_sync_mirror(guid, ext_id, data)
+         SELECT guid, ext_id, data FROM old_mirror;",
+    )?;
+    db.execute_batch("DROP TABLE old_mirror;")?;
+    db.execute_batch("PRAGMA user_version = 2;")?;
     Ok(())
 }
 
@@ -132,6 +122,10 @@ mod tests {
     use super::*;
     use crate::db::test::new_mem_db;
     use rusqlite::Error;
+    use sql_support::open_database::test_utils::MigratedDatabaseFile;
+    use sql_support::ConnExt;
+
+    const CREATE_SCHEMA_V1_SQL: &str = include_str!("../sql/tests/create_schema_v1.sql");
 
     #[test]
     fn test_create_schema_twice() {
@@ -174,48 +168,10 @@ mod tests {
     }
 
     #[test]
-    fn test_upgrade_1_2() -> Result<()> {
-        let _ = env_logger::try_init();
-        // This is the table definition of the table we are migrating away
-        // from - note the NOT NULL on ext_id, which no longer exists.
-        let old_create_table = "CREATE TABLE IF NOT EXISTS storage_sync_mirror (
-            guid TEXT NOT NULL PRIMARY KEY,
-            ext_id TEXT NOT NULL UNIQUE,
-            data TEXT
-        );";
-        // Create a named in-memory database.
-        let db = new_mem_db();
-        db.execute_batch("DROP TABLE storage_sync_mirror;")?;
-        db.execute_batch(old_create_table)?;
-
-        db.execute_batch(
-            "INSERT INTO storage_sync_mirror(guid, ext_id, data)
-             VALUES
-                ('guid-1', 'ext-id-1', 'data-1'),
-                ('guid-2', 'ext-id-2', 'data-2')",
-        )?;
-
-        db.execute_batch("PRAGMA user_version = 1")?;
-
-        // We are back to what a v1 database looks like. Make sure the NOT NULL
-        // constraint is honoured.
-        assert!(db
-            .execute_batch(
-                "INSERT INTO storage_sync_mirror(guid, ext_id, data)
-                 VALUES ('guid-3', NULL, NULL);"
-            )
-            .is_err());
-
-        // Ugrade
-        upgrade(&db, 1)?;
-
-        assert_eq!(get_current_schema_version(&db)?, VERSION);
-
-        // Should be able to insert the new row.
-        db.execute_batch(
-            "INSERT INTO storage_sync_mirror(guid, ext_id, data)
-             VALUES ('guid-3', NULL, NULL);",
-        )?;
+    fn test_all_upgrades() -> Result<()> {
+        let db_file = MigratedDatabaseFile::new(WebExtMigrationLogin, CREATE_SCHEMA_V1_SQL);
+        db_file.run_all_upgrades();
+        let db = db_file.open();
 
         let get_id_data = |guid: &str| -> Result<(Option<String>, Option<String>)> {
             let (ext_id, data) = db
@@ -236,7 +192,22 @@ mod tests {
             get_id_data("guid-2")?,
             (Some("ext-id-2".to_string()), Some("data-2".to_string()))
         );
-        assert_eq!(get_id_data("guid-3")?, (None, None));
+        Ok(())
+    }
+
+    #[test]
+    fn test_upgrade_2() -> Result<()> {
+        let _ = env_logger::try_init();
+
+        let db_file = MigratedDatabaseFile::new(WebExtMigrationLogin, CREATE_SCHEMA_V1_SQL);
+        db_file.upgrade_to(2);
+        let db = db_file.open();
+
+        // Should be able to insert a new with a NULL ext_id
+        db.execute_batch(
+            "INSERT INTO storage_sync_mirror(guid, ext_id, data)
+             VALUES ('guid-3', NULL, NULL);",
+        )?;
         Ok(())
     }
 }

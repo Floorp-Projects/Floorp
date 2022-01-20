@@ -2,8 +2,43 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.3.23] - 2021-12-06
+
+### Changed
+
+- Improve error messages when a `pkg-config` package can't be found (#127).
+
+## [0.3.22] - 2021-10-24
+
+### Fixed
+
+- `pkg-config` compiles again with Rust 1.30 or newer. 0.3.21 accidentally
+  made use of API only available since 1.40 (#124, #125).
+
+### Changed
+
+- Switched from Travis to GitHub Actions for the CI. Travis is dysfunctional
+  since quite some time (#126).
+
+## [0.3.21] - 2021-10-22
+
+### Fixed
+
+- Tests succeed again on macOS (#122).
+
+### Changed
+
+- Improve error message in case of missing pkg-config and provide instructions
+  how it can be installed (#121).
+
+## [0.3.20] - 2021-09-25
+
+### Fixed
+
+- Use target-specific pkg-config consistently everywhere (#121, #118).
 
 ## [0.3.19] - 2020-10-13
 

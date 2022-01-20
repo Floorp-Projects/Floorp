@@ -1,16 +1,7 @@
 "use strict";
 
-const { _ExperimentManager } = ChromeUtils.import(
-  "resource://nimbus/lib/ExperimentManager.jsm"
-);
-const { ExperimentStore } = ChromeUtils.import(
-  "resource://nimbus/lib/ExperimentStore.jsm"
-);
 const { Sampling } = ChromeUtils.import(
   "resource://gre/modules/components-utils/Sampling.jsm"
-);
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
 /**
@@ -48,6 +39,26 @@ add_task(async function test_onStartup_setExperimentActive_called() {
       manager.setExperimentActive.calledWith(exp),
       false,
       `should not call setExperimentActive for inactive experiment: ${exp.slug}`
+    )
+  );
+});
+
+add_task(async function test_onStartup_setRolloutActive_called() {
+  const manager = ExperimentFakes.manager();
+  const sandbox = sinon.createSandbox();
+  sandbox.stub(manager, "setExperimentActive");
+  sandbox.stub(manager.store, "init").resolves();
+
+  const active = ["foo", "bar"].map(ExperimentFakes.rollout);
+  sandbox.stub(manager.store, "getAll").returns(active);
+
+  await manager.onStartup();
+
+  active.forEach(r =>
+    Assert.equal(
+      manager.setExperimentActive.calledWith(r),
+      true,
+      `should call setExperimentActive for rollout: ${r.slug}`
     )
   );
 });
@@ -133,6 +144,68 @@ add_task(async function test_onRecipe_update() {
   );
 });
 
+add_task(async function test_onRecipe_rollout_update() {
+  const manager = ExperimentFakes.manager();
+  const sandbox = sinon.createSandbox();
+  sandbox.spy(manager, "enroll");
+  sandbox.spy(manager, "unenroll");
+  sandbox.spy(manager, "updateEnrollment");
+  sandbox.stub(manager, "isInBucketAllocation").resolves(true);
+
+  const fooRecipe = {
+    ...ExperimentFakes.recipe("foo"),
+    isRollout: true,
+  };
+  // Rollouts should only have 1 branch
+  fooRecipe.branches = fooRecipe.branches.slice(0, 1);
+  const experimentUpdate = new Promise(resolve =>
+    manager.store.on(`update:${fooRecipe.slug}`, resolve)
+  );
+
+  await manager.onStartup();
+  await manager.onRecipe(fooRecipe, "test");
+  // onRecipe calls enroll which saves the experiment in the store
+  // but none of them wait on disk operations to finish
+  await experimentUpdate;
+  // Call again after recipe has already been enrolled
+  await manager.onRecipe(fooRecipe, "test");
+
+  Assert.equal(
+    manager.updateEnrollment.calledWith(fooRecipe),
+    true,
+    "should call .updateEnrollment() if the recipe has already been enrolled"
+  );
+  Assert.ok(
+    manager.updateEnrollment.alwaysReturned(true),
+    "updateEnrollment will confirm the enrolled branch still exists in the recipe and exit"
+  );
+  Assert.ok(
+    manager.unenroll.notCalled,
+    "Should not call if the branches did not change"
+  );
+
+  // We call again but this time we change the branch slug
+  // Has to be a deep clone otherwise you're changing the
+  // value found in the experiment store
+  let recipeClone = Cu.cloneInto(fooRecipe, {});
+  recipeClone.branches[0].slug = "control-v2";
+  await manager.onRecipe(recipeClone, "test");
+
+  Assert.equal(
+    manager.updateEnrollment.calledWith(recipeClone),
+    true,
+    "should call .updateEnrollment() if the recipe has already been enrolled"
+  );
+  Assert.ok(
+    manager.unenroll.called,
+    "updateEnrollment will unenroll because the branch slug changed"
+  );
+  Assert.ok(
+    manager.unenroll.calledWith(fooRecipe.slug, "branch-removed"),
+    "updateEnrollment will unenroll because the branch slug changed"
+  );
+});
+
 add_task(async function test_onRecipe_isEnrollmentPaused() {
   const manager = ExperimentFakes.manager();
   const sandbox = sinon.createSandbox();
@@ -194,7 +267,7 @@ add_task(async function test_onFinalize_unenroll() {
     lastSeen: Date.now().toLocaleString(),
     source: "test",
   });
-  await manager.store.addExperiment(recipe0);
+  await manager.store.addEnrollment(recipe0);
 
   const recipe1 = ExperimentFakes.recipe("bar");
   // Unique features to prevent overlap
@@ -242,7 +315,7 @@ add_task(async function test_onFinalize_unenroll_mismatch() {
     lastSeen: Date.now().toLocaleString(),
     source: "test",
   });
-  await manager.store.addExperiment(recipe0);
+  await manager.store.addEnrollment(recipe0);
 
   const recipe1 = ExperimentFakes.recipe("bar");
   // Unique features to prevent overlap
@@ -271,5 +344,29 @@ add_task(async function test_onFinalize_unenroll_mismatch() {
     manager.sessions.has("test"),
     false,
     "should clear sessions[test]"
+  );
+});
+
+add_task(async function test_onFinalize_rollout_unenroll() {
+  const manager = ExperimentFakes.manager();
+  const sandbox = sinon.createSandbox();
+  sandbox.spy(manager, "unenroll");
+
+  await manager.onStartup();
+
+  let rollout = ExperimentFakes.rollout("rollout");
+  await manager.store.addEnrollment(rollout);
+
+  manager.onFinalize("NimbusTestUtils");
+
+  Assert.equal(
+    manager.unenroll.callCount,
+    1,
+    "should only call unenroll for the unseen recipe"
+  );
+  Assert.equal(
+    manager.unenroll.calledWith("rollout", "recipe-not-seen"),
+    true,
+    "should unenroll a experiment whose recipe wasn't seen in the current session"
   );
 });

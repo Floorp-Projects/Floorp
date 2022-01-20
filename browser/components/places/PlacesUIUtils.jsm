@@ -300,7 +300,7 @@ var PlacesUIUtils = {
       throw new Error("Method must be used to only obfuscate place: uris!");
     }
     let urlNoProtocol = url.substring(url.indexOf(":") + 1);
-    let hashedURL = md5Hash(urlNoProtocol);
+    let hashedURL = PlacesUtils.md5(urlNoProtocol);
 
     return `place:${hashedURL}`;
   },
@@ -1228,77 +1228,6 @@ var PlacesUIUtils = {
     }
   },
 
-  ensureBookmarkToolbarTelemetryListening() {
-    if (this._bookmarkToolbarTelemetryListening) {
-      return;
-    }
-
-    // This listener is for counting new bookmarks
-    let placesUtilsObserversListener = events => {
-      for (let event of events) {
-        switch (event.type) {
-          case "bookmark-added":
-            if (event.parentGuid == PlacesUtils.bookmarks.toolbarGuid) {
-              Services.telemetry.scalarAdd(
-                "browser.engagement.bookmarks_toolbar_bookmark_added",
-                1
-              );
-            }
-            break;
-          case "bookmark-moved":
-            let hasMovedToToolbar =
-              event.parentGuid == PlacesUtils.bookmarks.toolbarGuid &&
-              event.oldParentGuid != PlacesUtils.bookmarks.toolbarGuid;
-            if (hasMovedToToolbar) {
-              Services.telemetry.scalarAdd(
-                "browser.engagement.bookmarks_toolbar_bookmark_added",
-                1
-              );
-            }
-            break;
-        }
-      }
-    };
-
-    // This listener is for tracking bookmark moves
-    let placesUtilsBookmarksObserver = {
-      onItemChanged() {},
-      onItemMoved(
-        aItemId,
-        aOldIndex,
-        aNewIndex,
-        aItemType,
-        aGuid,
-        oldParentGuid,
-        newParentGuid
-      ) {
-        let hasMovedToToolbar =
-          newParentGuid == PlacesUtils.bookmarks.toolbarGuid &&
-          oldParentGuid != PlacesUtils.bookmarks.toolbarGuid;
-        if (hasMovedToToolbar) {
-          Services.telemetry.scalarAdd(
-            "browser.engagement.bookmarks_toolbar_bookmark_added",
-            1
-          );
-        }
-      },
-    };
-
-    this._bookmarkToolbarTelemetryListening = true;
-    PlacesUtils.observers.addListener(
-      ["bookmark-added", "bookmark-moved"],
-      placesUtilsObserversListener
-    );
-    PlacesUtils.bookmarks.addObserver(placesUtilsBookmarksObserver);
-    PlacesUtils.registerShutdownFunction(() => {
-      PlacesUtils.observers.removeListener(
-        ["bookmark-added", "bookmark-moved"],
-        placesUtilsObserversListener
-      );
-      PlacesUtils.bookmarks.removeObserver(placesUtilsBookmarksObserver);
-    });
-  },
-
   /**
    * Uncollapses PersonalToolbar if its collapsed status is not
    * persisted, and user customized it or changed default bookmarks.
@@ -1879,31 +1808,4 @@ function getBrowserWindow(aWindow) {
       "navigator:browser"
     ? aWindow
     : BrowserWindowTracker.getTopWindow();
-}
-
-// Keep a hasher for repeated hashings
-let gCryptoHash = null;
-
-/**
- * Run some text through md5 and return the base64 result.
- * @param {string} data The string to hash.
- * @returns {string} md5 hash of the input string.
- */
-function md5Hash(data) {
-  // Lazily create a reusable hasher
-  if (gCryptoHash === null) {
-    gCryptoHash = Cc["@mozilla.org/security/hash;1"].createInstance(
-      Ci.nsICryptoHash
-    );
-  }
-
-  gCryptoHash.init(gCryptoHash.MD5);
-
-  // Convert the data to a byte array for hashing
-  gCryptoHash.update(
-    data.split("").map(c => c.charCodeAt(0)),
-    data.length
-  );
-  // Request the has result as ASCII base64
-  return gCryptoHash.finish(true);
 }

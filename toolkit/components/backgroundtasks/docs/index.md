@@ -69,3 +69,7 @@ The technical mechanism that keeps background tasks "lightweight" is very simple
 For Firefox in particular, this means that [`BrowserContentHandler.jsm`](https://searchfox.org/mozilla-central/source/browser/components/BrowserContentHandler.jsm) is not registered as a command-line-handler.  This means that [`BrowserGlue.jsm`](https://searchfox.org/mozilla-central/source/browser/components/BrowserGlue.jsm) is not loaded, and this short circuits regular headed browsing startup.
 
 See the [documentation for defining static components](https://firefox-source-docs.mozilla.org/build/buildsystem/defining-xpcom-components.html) for how to change this default behaviour, and [Bug 1675848](https://bugzilla.mozilla.org/show_bug.cgi?id=1675848) for details of the implementation.
+
+### Most background tasks do not process updates
+
+To prevent unexpected interactions between background tasks and the Firefox runtime lifecycle, such as those uncovered by [Bug 1736373](https://bugzilla.mozilla.org/show_bug.cgi?id=1736373), most background tasks do not process application updates.  The startup process decides whether to process updates in [`::ShouldProcessUpdates`](https://searchfox.org/mozilla-central/source/toolkit/xre/nsAppRunner.cpp) and the predicate that determines whether a particular background task *does* process updates is [`BackgroundTasks::IsUpdatingTaskName`](https://searchfox.org/mozilla-central/source/toolkit/components/backgroundtasks/BackgroundTasks.h).

@@ -179,6 +179,11 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // called. There is currently no mechanism to release the data sooner.
   bool usePinnedBytecode = false;
 
+  // When performing off-thread task that generates JS::Stencil as output,
+  // allocate JS::InstantiationStorage off main thread to reduce the
+  // main thread allocation.
+  bool allocateInstantiationStorage = false;
+
   /**
    * |introductionType| is a statically allocated C string: one of "eval",
    * "Function", or "GeneratorFunction".
@@ -498,6 +503,8 @@ class JS_PUBLIC_API DecodeOptions {
  public:
   bool borrowBuffer = false;
   bool usePinnedBytecode = false;
+  bool allocateInstantiationStorage = false;
+  bool forceAsync = false;
 
   const char* introducerFilename = nullptr;
 
@@ -512,6 +519,8 @@ class JS_PUBLIC_API DecodeOptions {
   explicit DecodeOptions(const ReadOnlyCompileOptions& options)
       : borrowBuffer(options.borrowBuffer),
         usePinnedBytecode(options.usePinnedBytecode),
+        allocateInstantiationStorage(options.allocateInstantiationStorage),
+        forceAsync(options.forceAsync),
         introducerFilename(options.introducerFilename()),
         introductionType(options.introductionType),
         introductionLineno(options.introductionLineno),
@@ -520,6 +529,8 @@ class JS_PUBLIC_API DecodeOptions {
   void copyTo(CompileOptions& options) const {
     options.borrowBuffer = borrowBuffer;
     options.usePinnedBytecode = usePinnedBytecode;
+    options.allocateInstantiationStorage = allocateInstantiationStorage;
+    options.forceAsync = forceAsync;
     options.introducerFilename_ = introducerFilename;
     options.introductionType = introductionType;
     options.introductionLineno = introductionLineno;

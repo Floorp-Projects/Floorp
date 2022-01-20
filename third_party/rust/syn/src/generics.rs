@@ -770,8 +770,8 @@ pub mod parsing {
                     if input.peek(Token![,]) || input.peek(Token![>]) || input.peek(Token![=]) {
                         break;
                     }
-                    if input.peek(Token![?]) && input.peek2(Token![const]) {
-                        input.parse::<Token![?]>()?;
+                    if input.peek(Token![~]) && input.peek2(Token![const]) {
+                        input.parse::<Token![~]>()?;
                         input.parse::<Token![const]>()?;
                         is_maybe_const = true;
                     }
@@ -831,13 +831,41 @@ pub mod parsing {
     #[cfg_attr(doc_cfg, doc(cfg(feature = "parsing")))]
     impl Parse for TraitBound {
         fn parse(input: ParseStream) -> Result<Self> {
+            #[cfg(feature = "full")]
+            let tilde_const = if input.peek(Token![~]) && input.peek2(Token![const]) {
+                let tilde_token = input.parse::<Token![~]>()?;
+                let const_token = input.parse::<Token![const]>()?;
+                Some((tilde_token, const_token))
+            } else {
+                None
+            };
+
             let modifier: TraitBoundModifier = input.parse()?;
             let lifetimes: Option<BoundLifetimes> = input.parse()?;
 
             let mut path: Path = input.parse()?;
-            if path.segments.last().unwrap().arguments.is_empty() && input.peek(token::Paren) {
-                let parenthesized = PathArguments::Parenthesized(input.parse()?);
+            if path.segments.last().unwrap().arguments.is_empty()
+                && (input.peek(token::Paren) || input.peek(Token![::]) && input.peek3(token::Paren))
+            {
+                input.parse::<Option<Token![::]>>()?;
+                let args: ParenthesizedGenericArguments = input.parse()?;
+                let parenthesized = PathArguments::Parenthesized(args);
                 path.segments.last_mut().unwrap().arguments = parenthesized;
+            }
+
+            #[cfg(feature = "full")]
+            {
+                if let Some((tilde_token, const_token)) = tilde_const {
+                    path.segments.insert(
+                        0,
+                        PathSegment {
+                            ident: Ident::new("const", const_token.span),
+                            arguments: PathArguments::None,
+                        },
+                    );
+                    let (_const, punct) = path.segments.pairs_mut().next().unwrap().into_tuple();
+                    *punct.unwrap() = Token![::](tilde_token.span);
+                }
             }
 
             Ok(TraitBound {
@@ -994,6 +1022,8 @@ mod printing {
     use super::*;
     use crate::attr::FilterAttrs;
     use crate::print::TokensOrDefault;
+    #[cfg(feature = "full")]
+    use crate::punctuated::Pair;
     use proc_macro2::TokenStream;
     #[cfg(feature = "full")]
     use proc_macro2::TokenTree;
@@ -1188,7 +1218,7 @@ mod printing {
                             let mut iter = default.clone().into_iter().peekable();
                             while let Some(token) = iter.next() {
                                 if let TokenTree::Punct(q) = token {
-                                    if q.as_char() == '?' {
+                                    if q.as_char() == '~' {
                                         if let Some(TokenTree::Ident(c)) = iter.peek() {
                                             if c == "const" {
                                                 if self.bounds.is_empty() {
@@ -1214,9 +1244,26 @@ mod printing {
     impl ToTokens for TraitBound {
         fn to_tokens(&self, tokens: &mut TokenStream) {
             let to_tokens = |tokens: &mut TokenStream| {
+                #[cfg(feature = "full")]
+                let skip = match self.path.segments.pairs().next() {
+                    Some(Pair::Punctuated(t, p)) if t.ident == "const" => {
+                        Token![~](p.spans[0]).to_tokens(tokens);
+                        t.to_tokens(tokens);
+                        1
+                    }
+                    _ => 0,
+                };
                 self.modifier.to_tokens(tokens);
                 self.lifetimes.to_tokens(tokens);
-                self.path.to_tokens(tokens);
+                #[cfg(feature = "full")]
+                {
+                    self.path.leading_colon.to_tokens(tokens);
+                    tokens.append_all(self.path.segments.pairs().skip(skip));
+                }
+                #[cfg(not(feature = "full"))]
+                {
+                    self.path.to_tokens(tokens);
+                }
             };
             match &self.paren_token {
                 Some(paren) => paren.surround(tokens, to_tokens),

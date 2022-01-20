@@ -7,13 +7,14 @@
 #include "TouchActionHelper.h"
 
 #include "mozilla/layers/IAPZCTreeManager.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/TouchEvents.h"
 #include "nsContainerFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 
-namespace mozilla {
-namespace layers {
+namespace mozilla::layers {
 
 static void UpdateAllowedBehavior(StyleTouchAction aTouchActionValue,
                                   bool aConsiderPanning,
@@ -48,7 +49,7 @@ static void UpdateAllowedBehavior(StyleTouchAction aTouchActionValue,
   }
 }
 
-TouchBehaviorFlags TouchActionHelper::GetAllowedTouchBehavior(
+static TouchBehaviorFlags GetAllowedTouchBehaviorForPoint(
     nsIWidget* aWidget, RelativeTo aRootFrame,
     const LayoutDeviceIntPoint& aPoint) {
   TouchBehaviorFlags behavior = AllowedTouchBehavior::VERTICAL_PAN |
@@ -89,8 +90,7 @@ TouchBehaviorFlags TouchActionHelper::GetAllowedTouchBehavior(
 
   for (nsIFrame* frame = target; frame && frame->GetContent() && behavior;
        frame = frame->GetInFlowParent()) {
-    UpdateAllowedBehavior(nsLayoutUtils::GetTouchActionFromFrame(frame),
-                          considerPanning, behavior);
+    UpdateAllowedBehavior(frame->UsedTouchAction(), considerPanning, behavior);
 
     if (frame == nearestScrollableFrame) {
       // We met the scrollable element, after it we shouldn't consider
@@ -102,5 +102,23 @@ TouchBehaviorFlags TouchActionHelper::GetAllowedTouchBehavior(
   return behavior;
 }
 
-}  // namespace layers
-}  // namespace mozilla
+nsTArray<TouchBehaviorFlags> TouchActionHelper::GetAllowedTouchBehavior(
+    nsIWidget* aWidget, dom::Document* aDocument,
+    const WidgetTouchEvent& aEvent) {
+  nsTArray<TouchBehaviorFlags> flags;
+  if (!aWidget || !aDocument) {
+    return flags;
+  }
+  if (PresShell* presShell = aDocument->GetPresShell()) {
+    if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
+      for (auto& touch : aEvent.mTouches) {
+        flags.AppendElement(GetAllowedTouchBehaviorForPoint(
+            aWidget, RelativeTo{rootFrame, ViewportType::Visual},
+            touch->mRefPoint));
+      }
+    }
+  }
+  return flags;
+}
+
+}  // namespace mozilla::layers

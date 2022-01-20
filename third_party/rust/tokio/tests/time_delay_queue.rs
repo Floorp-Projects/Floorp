@@ -1,3 +1,4 @@
+#![allow(clippy::blacklisted_name, clippy::stable_sort_primitive)]
 #![warn(rust_2018_idioms)]
 #![cfg(feature = "full")]
 
@@ -441,6 +442,124 @@ async fn insert_after_ready_poll() {
     assert_eq!("1", res[0]);
     assert_eq!("2", res[1]);
     assert_eq!("3", res[2]);
+}
+
+#[tokio::test]
+async fn reset_later_after_slot_starts() {
+    time::pause();
+
+    let mut queue = task::spawn(DelayQueue::new());
+
+    let now = Instant::now();
+
+    let foo = queue.insert_at("foo", now + ms(100));
+
+    assert_pending!(poll!(queue));
+
+    delay_for(ms(80)).await;
+
+    assert!(!queue.is_woken());
+
+    // At this point the queue hasn't been polled, so `elapsed` on the wheel
+    // for the queue is still at 0 and hence the 1ms resolution slots cover
+    // [0-64).  Resetting the time on the entry to 120 causes it to get put in
+    // the [64-128) slot.  As the queue knows that the first entry is within
+    // that slot, but doesn't know when, it must wake immediately to advance
+    // the wheel.
+    queue.reset_at(&foo, now + ms(120));
+    assert!(queue.is_woken());
+
+    assert_pending!(poll!(queue));
+
+    delay_for(ms(39)).await;
+    assert!(!queue.is_woken());
+
+    delay_for(ms(1)).await;
+    assert!(queue.is_woken());
+
+    let entry = assert_ready_ok!(poll!(queue)).into_inner();
+    assert_eq!(entry, "foo");
+}
+
+#[tokio::test]
+async fn reset_inserted_expired() {
+    time::pause();
+    let mut queue = task::spawn(DelayQueue::new());
+    let now = Instant::now();
+
+    let key = queue.insert_at("foo", now - ms(100));
+
+    // this causes the panic described in #2473
+    queue.reset_at(&key, now + ms(100));
+
+    assert_eq!(1, queue.len());
+
+    delay_for(ms(200)).await;
+
+    let entry = assert_ready_ok!(poll!(queue)).into_inner();
+    assert_eq!(entry, "foo");
+
+    assert_eq!(queue.len(), 0);
+}
+
+#[tokio::test]
+async fn reset_earlier_after_slot_starts() {
+    time::pause();
+
+    let mut queue = task::spawn(DelayQueue::new());
+
+    let now = Instant::now();
+
+    let foo = queue.insert_at("foo", now + ms(200));
+
+    assert_pending!(poll!(queue));
+
+    delay_for(ms(80)).await;
+
+    assert!(!queue.is_woken());
+
+    // At this point the queue hasn't been polled, so `elapsed` on the wheel
+    // for the queue is still at 0 and hence the 1ms resolution slots cover
+    // [0-64).  Resetting the time on the entry to 120 causes it to get put in
+    // the [64-128) slot.  As the queue knows that the first entry is within
+    // that slot, but doesn't know when, it must wake immediately to advance
+    // the wheel.
+    queue.reset_at(&foo, now + ms(120));
+    assert!(queue.is_woken());
+
+    assert_pending!(poll!(queue));
+
+    delay_for(ms(39)).await;
+    assert!(!queue.is_woken());
+
+    delay_for(ms(1)).await;
+    assert!(queue.is_woken());
+
+    let entry = assert_ready_ok!(poll!(queue)).into_inner();
+    assert_eq!(entry, "foo");
+}
+
+#[tokio::test]
+async fn insert_in_past_after_poll_fires_immediately() {
+    time::pause();
+
+    let mut queue = task::spawn(DelayQueue::new());
+
+    let now = Instant::now();
+
+    queue.insert_at("foo", now + ms(200));
+
+    assert_pending!(poll!(queue));
+
+    delay_for(ms(80)).await;
+
+    assert!(!queue.is_woken());
+    queue.insert_at("bar", now + ms(40));
+
+    assert!(queue.is_woken());
+
+    let entry = assert_ready_ok!(poll!(queue)).into_inner();
+    assert_eq!(entry, "bar");
 }
 
 fn ms(n: u64) -> Duration {

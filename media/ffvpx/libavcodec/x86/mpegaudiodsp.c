@@ -22,6 +22,7 @@
 #include "libavutil/attributes.h"
 #include "libavutil/cpu.h"
 #include "libavutil/internal.h"
+#include "libavutil/mem_internal.h"
 #include "libavutil/x86/asm.h"
 #include "libavutil/x86/cpu.h"
 #include "libavcodec/mpegaudiodsp.h"
@@ -239,10 +240,8 @@ DECL_IMDCT_BLOCKS(avx,avx)
 #endif
 #endif /* HAVE_X86ASM */
 
-av_cold void ff_mpadsp_init_x86(MPADSPContext *s)
+av_cold void ff_mpadsp_init_x86_tabs(void)
 {
-    av_unused int cpu_flags = av_get_cpu_flags();
-
     int i, j;
     for (j = 0; j < 4; j++) {
         for (i = 0; i < 40; i ++) {
@@ -256,6 +255,11 @@ av_cold void ff_mpadsp_init_x86(MPADSPContext *s)
             mdct_win_sse[1][j][4*i + 3] = ff_mdct_win_float[j + 4][i];
         }
     }
+}
+
+av_cold void ff_mpadsp_init_x86(MPADSPContext *s)
+{
+    av_unused int cpu_flags = av_get_cpu_flags();
 
 #if HAVE_6REGS && HAVE_SSE_INLINE
     if (INLINE_SSE(cpu_flags)) {

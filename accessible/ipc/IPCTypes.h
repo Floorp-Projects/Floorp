@@ -12,6 +12,7 @@
 #  include "mozilla/a11y/AccTypes.h"
 #  include "mozilla/a11y/CacheConstants.h"
 #  include "mozilla/a11y/Role.h"
+#  include "mozilla/a11y/AccGroupInfo.h"
 #  include "mozilla/GfxMessageUtils.h"
 #  include "ipc/EnumSerializer.h"
 #  include "ipc/IPCMessageUtilsSpecializations.h"
@@ -69,6 +70,21 @@ struct ParamTraits<mozilla::a11y::DeleteEntry> {
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     return ReadParam(aMsg, aIter, &(aResult->mValue));
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::a11y::AccGroupInfo> {
+  typedef mozilla::a11y::AccGroupInfo paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    MOZ_ASSERT_UNREACHABLE("Cannot serialize AccGroupInfo");
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    MOZ_ASSERT_UNREACHABLE("Cannot de-serialize AccGroupInfo");
+    return false;
   }
 };
 

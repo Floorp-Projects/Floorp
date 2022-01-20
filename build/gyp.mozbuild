@@ -46,7 +46,6 @@ gyp_vars.update({
     'build_icu': 0,
     'build_opus': 0,
     'libyuv_dir': '/media/libyuv/libyuv',
-    'yuv_disable_avx2': 0 if CONFIG['HAVE_X86_AVX2'] else 1,
     # don't use openssl
     'use_openssl': 0,
     # Must match build/gyp.mozbuild WEBRTC_BUILD_LIBEVENT
@@ -107,11 +106,6 @@ if CONFIG['ARM_ARCH']:
         gyp_vars['armv7'] = 0
     # For libyuv
     gyp_vars['arm_version'] = int(CONFIG['ARM_ARCH'])
-
-# Don't try to compile ssse3/sse4.1 code if toolchain doesn't support
-if CONFIG['INTEL_ARCHITECTURE']:
-    if not CONFIG['HAVE_TOOLCHAIN_SUPPORT_MSSSE3'] or not CONFIG['HAVE_TOOLCHAIN_SUPPORT_MSSE4_1']:
-        gyp_vars['yuv_disable_asm'] = 1
 
 if CONFIG['MACOS_SDK_DIR']:
     gyp_vars['mac_sdk_path'] = CONFIG['MACOS_SDK_DIR']

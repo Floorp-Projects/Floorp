@@ -133,4 +133,9 @@ interface nsIDNSAddrRecord : nsIDNSRecord
      * The TRR mode this record is used.
      */
     readonly attribute unsigned long effectiveTRRMode;
+
+    /**
+     * Returns the ttl of this record.
+     */
+    readonly attribute uint32_t ttl;
 };

@@ -233,5 +233,27 @@ TEST_F(ColorManagementTest, D2700ToSRGB) {
                           FloatNear(0.601, 1e-3)));
 }
 
+TEST_F(ColorManagementTest, P3HLGTo2020HLG) {
+  ColorEncoding p3_hlg;
+  p3_hlg.SetColorSpace(ColorSpace::kRGB);
+  p3_hlg.white_point = WhitePoint::kD65;
+  p3_hlg.primaries = Primaries::kP3;
+  p3_hlg.tf.SetTransferFunction(TransferFunction::kHLG);
+  ASSERT_TRUE(p3_hlg.CreateICC());
+
+  ColorEncoding rec2020_hlg = p3_hlg;
+  rec2020_hlg.primaries = Primaries::k2100;
+  ASSERT_TRUE(rec2020_hlg.CreateICC());
+
+  ColorSpaceTransform transform;
+  ASSERT_TRUE(transform.Init(p3_hlg, rec2020_hlg, 1000, 1, 1));
+  const float p3_hlg_values[3] = {0., 0.75, 0.};
+  float rec2020_hlg_values[3];
+  DoColorSpaceTransform(&transform, 0, p3_hlg_values, rec2020_hlg_values);
+  EXPECT_THAT(rec2020_hlg_values,
+              ElementsAre(FloatNear(0.3973, 1e-4), FloatNear(0.7382, 1e-4),
+                          FloatNear(0.1183, 1e-4)));
+}
+
 }  // namespace
 }  // namespace jxl

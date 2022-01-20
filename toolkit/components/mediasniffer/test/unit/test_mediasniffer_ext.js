@@ -44,7 +44,7 @@ const tests = [
   // An MP3 bytestream in a RIFF container, truncated to 512 bytes.
   { path: "data/mp3-in-riff.wav", expected: "audio/mpeg" },
   // The sniffing-relevant portion of a Canon raw image
-  { path: "data/bug1725190.cr3", expected: "video/mp4" },
+  { path: "data/bug1725190.cr3", expected: "application/octet-stream" },
 ];
 
 // A basic listener that reads checks the if we sniffed properly.

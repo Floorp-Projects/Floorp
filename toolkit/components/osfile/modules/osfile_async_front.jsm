@@ -1117,73 +1117,6 @@ File.remove = function remove(path, options) {
   return Scheduler.post("remove", [Type.path.toMsg(path), options], path);
 };
 
-// Extended attribute functions are MacOS only at this point.
-if (SharedAll.Constants.Sys.Name == "Darwin") {
-  /**
-   * Get an extended attribute (xattr) from a file.
-   *
-   * @param {string} path The name of the file.
-   * @param {string} name The name of the extended attribute.
-   *
-   * @returns {promise}
-   * @resolves {Uint8Array} An array containing the value of the attribute.
-   * @rejects {OS.File.Error} In case of an I/O error or invalid options.
-   */
-  File.macGetXAttr = function macGetXAttr(path, name) {
-    let promise = Scheduler.post(
-      "macGetXAttr",
-      [Type.path.toMsg(path), Type.cstring.toMsg(name)],
-      [path, name]
-    );
-    return promise.then(data => {
-      return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
-    });
-  };
-
-  /**
-   * Remove an extended attribute (xattr) from a file.
-   *
-   * @param {string} path The name of the file.
-   * @param {string} name The name of the extended attribute.
-   *
-   * @returns {promise}
-   * @resolves {null}
-   * @rejects {OS.File.Error} In case of an I/O error.
-   */
-  File.macRemoveXAttr = function macRemoveXAttr(path, name) {
-    return Scheduler.post(
-      "macRemoveXAttr",
-      [Type.path.toMsg(path), Type.cstring.toMsg(name)],
-      [path, name]
-    );
-  };
-
-  /**
-   * Set an extended attribute (xattr) on a file.
-   *
-   * @param {string} path The name of the file.
-   * @param {string} name The name of the extended attribute.
-   * @param {Uint8Array} value A byte array containing the value to set the
-   * xattr to.
-   *
-   * @returns {promise}
-   * @resolves {null}
-   * @rejects {OS.File.Error} In case of an I/O error.
-   */
-  File.macSetXAttr = function macSetXAttr(path, name, value, number) {
-    return Scheduler.post(
-      "macSetXAttr",
-      [
-        Type.path.toMsg(path),
-        Type.cstring.toMsg(name),
-        Type.void_t.in_ptr.toMsg(value),
-        value.length,
-      ],
-      [path, name, value]
-    );
-  };
-}
-
 /**
  * Create a directory and, optionally, its parent directories.
  *
@@ -1371,29 +1304,10 @@ File.Info = function Info(value) {
   // Note that we can't just do this[k] = value[k] because our
   // prototype defines getters for all of these fields.
   for (let k in value) {
-    if (k != "creationDate") {
-      Object.defineProperty(this, k, { value: value[k] });
-    }
+    Object.defineProperty(this, k, { value: value[k] });
   }
-  Object.defineProperty(this, "_deprecatedCreationDate", {
-    value: value.creationDate,
-  });
 };
 File.Info.prototype = SysAll.AbstractInfo.prototype;
-
-// Deprecated
-Object.defineProperty(File.Info.prototype, "creationDate", {
-  get: function creationDate() {
-    let { Deprecated } = ChromeUtils.import(
-      "resource://gre/modules/Deprecated.jsm"
-    );
-    Deprecated.warning(
-      "Field 'creationDate' is deprecated.",
-      "https://developer.mozilla.org/en-US/docs/JavaScript_OS.File/OS.File.Info#Cross-platform_Attributes"
-    );
-    return this._deprecatedCreationDate;
-  },
-});
 
 File.Info.fromMsg = function fromMsg(value) {
   return new File.Info(value);

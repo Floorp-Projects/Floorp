@@ -23,6 +23,8 @@ namespace mozilla::dom {
 class VsyncParent final : public PVsyncParent, public VsyncObserver {
   friend class PVsyncParent;
 
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VsyncParent, override)
+
  public:
   VsyncParent();
   void UpdateVsyncSource(const RefPtr<gfx::VsyncSource>& aVsyncSource);

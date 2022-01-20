@@ -5,6 +5,10 @@
 import { recordTelemetryEvent } from "../aboutLoginsUtils.js";
 
 export default class LoginFilter extends HTMLElement {
+  get #loginList() {
+    return document.querySelector("login-list");
+  }
+
   connectedCallback() {
     if (this.shadowRoot) {
       return;
@@ -18,6 +22,7 @@ export default class LoginFilter extends HTMLElement {
     this._input = this.shadowRoot.querySelector("input");
 
     this.addEventListener("input", this);
+    this._input.addEventListener("keydown", this);
     window.addEventListener("AboutLoginsFilterLogins", this);
   }
 
@@ -27,16 +32,46 @@ export default class LoginFilter extends HTMLElement {
 
   handleEvent(event) {
     switch (event.type) {
-      case "AboutLoginsFilterLogins": {
-        if (this.value != event.detail) {
-          this.value = event.detail;
-        }
+      case "AboutLoginsFilterLogins":
+        this.#filterLogins(event.detail);
         break;
-      }
-      case "input": {
-        this._dispatchFilterEvent(event.originalTarget.value);
+      case "input":
+        this.#input(event.originalTarget.value);
         break;
-      }
+      case "keydown":
+        this.#keyDown(event);
+        break;
+    }
+  }
+
+  #filterLogins(filterText) {
+    if (this.value != filterText) {
+      this.value = filterText;
+    }
+  }
+
+  #input(value) {
+    this._dispatchFilterEvent(value);
+  }
+
+  #keyDown(e) {
+    switch (e.code) {
+      case "ArrowUp":
+        e.preventDefault();
+        this.#loginList.selectPrevious();
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        this.#loginList.selectNext();
+        break;
+      case "Escape":
+        e.preventDefault();
+        this.value = "";
+        break;
+      case "Enter":
+        e.preventDefault();
+        this.#loginList.clickSelected();
+        break;
     }
   }
 

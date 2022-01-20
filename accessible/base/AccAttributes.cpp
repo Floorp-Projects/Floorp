@@ -62,7 +62,10 @@ void AccAttributes::StringFromValueAndName(nsAtom* aAttrName,
       [&aValueString](const RefPtr<AccAttributes>& val) {
         aValueString.Assign(u"AccAttributes{...}");
       },
-      [&aValueString](const uint64_t& val) { aValueString.AppendInt(val); });
+      [&aValueString](const uint64_t& val) { aValueString.AppendInt(val); },
+      [&aValueString](const UniquePtr<AccGroupInfo>& val) {
+        aValueString.Assign(u"AccGroupInfo{...}");
+      });
 }
 
 void AccAttributes::Update(AccAttributes* aOther) {
@@ -147,6 +150,10 @@ void AccAttributes::CopyTo(AccAttributes* aDest) const {
         },
         [&iter, &aDest](const uint64_t& val) {
           aDest->mData.InsertOrUpdate(iter.Key(), AsVariant(val));
+        },
+        [](const UniquePtr<AccGroupInfo>& val) {
+          MOZ_ASSERT_UNREACHABLE(
+              "Trying to copy an AccAttributes containing an AccGroupInfo");
         });
   }
 }

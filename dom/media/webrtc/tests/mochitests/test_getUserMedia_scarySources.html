@@ -28,15 +28,15 @@ let getDevices = async constraints => {
 
 runTest(async () => {
   await pushPrefs(["media.navigator.permission.disabled", true],
-                  ["media.navigator.permission.fake", true],
                   ["media.navigator.permission.force", true]);
   let devices = await getDevices({video: { mediaSource: "window" }});
   ok(devices.length, "Found one or more windows.");
   devices = Array.prototype.filter.call(devices, d => d.scary);
   ok(devices.length, "Found one or more scary windows (our own counts).");
-  devices.filter(d => d.name.includes("MochiTest"));
+  devices = devices.filter(d => d.rawName.includes("MochiTest"));
   ok(devices.length,
-     "Our own window is among the scary: " + devices.map(d => `"${d.name}"`));
+     "Our own window is among the scary: "
+     + devices.map(d => `"${d.rawName}"`));
 
   devices = await getDevices({video: { mediaSource: "screen" }});
   let numScreens = devices.length;

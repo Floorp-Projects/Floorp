@@ -18,13 +18,11 @@
 #include "nsWeakReference.h"
 
 // Interfaces
-#include "nsIObserver.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 
 // Classes
 class nsIFrame;
-class nsIPrintProgressParams;
 class nsIPrintSettings;
 class nsPrintData;
 class nsPagePrintTimer;
@@ -49,23 +47,17 @@ class PrintPreviewResultInfo;
  * A print job may be instantiated either for printing to an actual physical
  * printer, or for creating a print preview.
  */
-class nsPrintJob final : public nsIObserver,
-                         public nsIWebProgressListener,
+class nsPrintJob final : public nsIWebProgressListener,
                          public nsSupportsWeakReference {
   using Document = mozilla::dom::Document;
   using PrintPreviewResolver =
       std::function<void(const mozilla::dom::PrintPreviewResultInfo&)>;
 
  public:
-  static void CloseProgressDialog(nsIWebProgressListener* aWebProgressListener);
-
   nsPrintJob();
 
   // nsISupports interface...
   NS_DECL_ISUPPORTS
-
-  // nsIObserver
-  NS_DECL_NSIOBSERVER
 
   NS_DECL_NSIWEBPROGRESSLISTENER
 
@@ -182,11 +174,6 @@ class nsPrintJob final : public nsIObserver,
   nsresult ReflowPrintObject(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
   void CalcNumPrintablePages(int32_t& aNumPages);
-  void ShowPrintProgress(bool aIsForPrinting, bool& aDoNotify, Document* aDoc);
-  void SetURLAndTitleOnProgressParams(
-      const mozilla::UniquePtr<nsPrintObject>& aPO,
-      nsIPrintProgressParams* aParams);
-  void EllipseLongString(nsAString& aStr, const uint32_t aLen, bool aDoFront);
 
   nsresult StartPagePrintTimer(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
@@ -297,7 +284,6 @@ class nsPrintJob final : public nsIObserver,
   bool mIsCreatingPrintPreview = false;
   bool mIsDoingPrinting = false;
   bool mHasEverPrinted = false;
-  bool mProgressDialogIsShown = false;
   bool mDidLoadDataForPrinting = false;
   bool mDoingInitialReflow = false;
   bool mIsDestroying = false;

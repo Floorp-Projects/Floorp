@@ -2,7 +2,7 @@
 
 assertEq(isLcovEnabled(), true);
 
-offThreadCompileModule(`
+offThreadCompileModuleToStencil(`
     globalThis.hitCount = 0;
     function offThreadFun() {
         globalThis.hitCount += 1;
@@ -13,7 +13,8 @@ offThreadCompileModule(`
     offThreadFun();
     offThreadFun();
 `);
-let mod = finishOffThreadModule();
+let stencil = finishOffThreadCompileModuleToStencil();
+let mod = instantiateModuleStencil(stencil);
 mod.declarationInstantiation();
 mod.evaluation();
 assertEq(hitCount, 4);

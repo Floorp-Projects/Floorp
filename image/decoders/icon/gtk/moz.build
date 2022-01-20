@@ -14,6 +14,7 @@ EXPORTS += [
 
 FINAL_LIBRARY = "xul"
 
-CXXFLAGS += CONFIG["TK_CFLAGS"]
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
 include("/ipc/chromium/chromium-config.mozbuild")

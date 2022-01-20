@@ -16,6 +16,7 @@ Most of the search code lives in `browser/components/search`_.
 .. toctree::
 
    application-search-engines
+   Preferences
    telemetry
 
 .. _toolkit Search Service: /toolkit/search/index.html

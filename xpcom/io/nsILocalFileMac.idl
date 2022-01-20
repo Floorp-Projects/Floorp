@@ -168,6 +168,39 @@ interface nsILocalFileMac : nsIFile
      * this is the same as lastModifiedTime.
      */
     readonly attribute int64_t bundleContentsLastModifiedTime;
+
+    /**
+     * Return whether or not the file has an extended attribute.
+     *
+     * @param aAttrName The attribute name to check for.
+     *
+     * @return Whether or not the extended attribute is present.
+     */
+    bool hasXAttr(in ACString aAttrName);
+
+    /**
+     * Get the value of the extended attribute.
+     *
+     * @param aAttrName The attribute name to read.
+     *
+     * @return The extended attribute value.
+     */
+    Array<uint8_t> getXAttr(in ACString aAttrName);
+
+    /**
+     * Set an extended attribute.
+     *
+     * @param aAttrName The attribute name to set a value for.
+     * @param aAttrValue The value to set for the attribute.
+     */
+    void setXAttr(in ACString aAttrName, in Array<uint8_t> aAttrValue);
+
+    /**
+     * Delete an extended attribute.
+     *
+     * @param aAttrName The extended attribute to delete.
+     */
+    void delXAttr(in ACString aAttrName);
 };
 
 %{C++

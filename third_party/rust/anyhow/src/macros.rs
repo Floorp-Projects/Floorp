@@ -50,8 +50,30 @@
 /// #     Ok(())
 /// # }
 /// ```
+#[cfg(doc)]
 #[macro_export]
 macro_rules! bail {
+    ($msg:literal $(,)?) => {
+        return $crate::private::Err($crate::anyhow!($msg))
+    };
+    ($err:expr $(,)?) => {
+        return $crate::private::Err($crate::anyhow!($err))
+    };
+    ($fmt:expr, $($arg:tt)*) => {
+        return $crate::private::Err($crate::anyhow!($fmt, $($arg)*))
+    };
+}
+
+// Workaround for crates that intentionally contained `{}` in an error message
+// prior to https://github.com/dtolnay/anyhow/issues/55 catching the missing
+// format args.
+#[cfg(not(doc))]
+#[macro_export]
+macro_rules! bail {
+    // https://github.com/estk/log4rs/blob/afa0351af56b3bfd1780389700051d7e4d8bbdc9/src/append/rolling_file/policy/compound/roll/fixed_window.rs#L261
+    ("pattern does not contain `{}`") => {
+        return $crate::private::Err($crate::Error::msg("pattern does not contain `{}`"))
+    };
     ($msg:literal $(,)?) => {
         return $crate::private::Err($crate::anyhow!($msg))
     };
@@ -111,13 +133,15 @@ macro_rules! bail {
 /// #     Ok(())
 /// # }
 /// ```
+#[cfg(doc)]
 #[macro_export]
 macro_rules! ensure {
     ($cond:expr $(,)?) => {
-        $crate::ensure!(
-            $cond,
-            $crate::private::concat!("Condition failed: `", $crate::private::stringify!($cond), "`"),
-        )
+        if !$cond {
+            return $crate::private::Err($crate::Error::msg(
+                $crate::private::concat!("Condition failed: `", $crate::private::stringify!($cond), "`")
+            ));
+        }
     };
     ($cond:expr, $msg:literal $(,)?) => {
         if !$cond {
@@ -133,6 +157,22 @@ macro_rules! ensure {
         if !$cond {
             return $crate::private::Err($crate::anyhow!($fmt, $($arg)*));
         }
+    };
+}
+
+#[cfg(not(doc))]
+#[macro_export]
+macro_rules! ensure {
+    ($($tt:tt)*) => {
+        $crate::__parse_ensure!(
+            /* state */ 0
+            /* stack */ ()
+            /* bail */ ($($tt)*)
+            /* fuel */ (~~~~~~~~~~ ~~~~~~~~~~ ~~~~~~~~~~ ~~~~~~~~~~ ~~~~~~~~~~ ~~~~~~~~~~ ~~~~~~~~~~ ~~~~~~~~~~ ~~~~~~~~~~ ~~~~~~~~~~ ~~~~~~~~~~ ~~~~~~~~~~)
+            /* parse */ {()}
+            /* dup */ ($($tt)*)
+            /* rest */ $($tt)*
+        )
     };
 }
 
@@ -166,18 +206,18 @@ macro_rules! ensure {
 /// ```
 #[macro_export]
 macro_rules! anyhow {
-    ($msg:literal $(,)?) => {
-        // Handle $:literal as a special case to make cargo-expanded code more
-        // concise in the common case.
-        $crate::private::new_adhoc($msg)
-    };
+    ($msg:literal $(,)?) => ({
+        let error = $crate::private::format_err($crate::private::format_args!($msg));
+        error
+    });
     ($err:expr $(,)?) => ({
         use $crate::private::kind::*;
-        match $err {
+        let error = match $err {
             error => (&error).anyhow_kind().new(error),
-        }
+        };
+        error
     });
     ($fmt:expr, $($arg:tt)*) => {
-        $crate::private::new_adhoc(format!($fmt, $($arg)*))
+        $crate::Error::msg($crate::private::format!($fmt, $($arg)*))
     };
 }

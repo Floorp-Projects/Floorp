@@ -7,6 +7,7 @@
 
 #include "CustomAttributes.h"
 #include "plugin.h"
+#include "llvm/ADT/BitmaskEnum.h"
 
 class CustomTypeAnnotation {
   enum ReasonKind {
@@ -58,10 +59,26 @@ private:
   AnnotationReason tmplArgAnnotationReason(ArrayRef<TemplateArgument> Args);
 
 protected:
+  // Flags specifying which properties of the underlying type we want to visit.
+  enum VisitFlags {
+    VISIT_NONE = 0,
+    VISIT_FIELDS = 1,
+    VISIT_TMPL_ARGS = 2,
+    VISIT_BASES = 4,
+    LLVM_MARK_AS_BITMASK_ENUM(VISIT_BASES)
+  };
+
   // Allow subclasses to apply annotations for reasons other than a direct
   // annotation. A non-empty string return value means that the object D is
   // annotated, and should contain the reason why.
-  virtual std::string getImplicitReason(const TagDecl *D) const { return ""; }
+  //
+  // The subclass may also modify `VisitFlags` to change what properties of the
+  // type will be inspected to skip inspecting fields, force template arguments
+  // to be inspected, etc.
+  virtual std::string getImplicitReason(const TagDecl *D,
+                                        VisitFlags &Flags) const {
+    return "";
+  }
 };
 
 extern CustomTypeAnnotation StackClass;

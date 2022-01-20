@@ -1,6 +1,6 @@
 [package]
 name = "mp4parse_capi"
-version = "0.12.0"
+version = "0.13.0"
 authors = [
   "Ralph Giles <giles@mozilla.com>",
   "Matthew Gregan <kinetik@flim.org>",
@@ -27,7 +27,7 @@ travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
 byteorder = "1.2.1"
 fallible_collections = { version = "0.4", features = ["std_io"] }
 log = "0.4"
-mp4parse = { version = "0.12.0", path = "../mp4parse", features = ["unstable-api"] }
+mp4parse = { version = "0.13.0", path = "../mp4parse", features = ["unstable-api"] }
 num-traits = "0.2.14"
 
 [dev-dependencies]

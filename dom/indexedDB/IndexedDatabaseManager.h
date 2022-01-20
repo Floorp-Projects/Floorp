@@ -133,8 +133,9 @@ class IndexedDatabaseManager final {
 
   static const nsCString& GetLocale();
 
-  static nsresult CommonPostHandleEvent(EventChainPostVisitor& aVisitor,
-                                        const IDBFactory& aFactory);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static nsresult CommonPostHandleEvent(
+      EventChainPostVisitor& aVisitor, const IDBFactory& aFactory);
 
   static bool ResolveSandboxBinding(JSContext* aCx);
 

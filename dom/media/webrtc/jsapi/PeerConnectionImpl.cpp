@@ -977,7 +977,8 @@ already_AddRefed<TransceiverImpl> PeerConnectionImpl::CreateTransceiverImpl(
   PeerConnectionCtx* ctx = PeerConnectionCtx::GetInstance();
   RefPtr<TransceiverImpl> transceiverImpl;
   aRv = mMedia->AddTransceiver(aJsepTransceiver, aSendTrack,
-                               ctx->GetSharedWebrtcState(), &transceiverImpl);
+                               ctx->GetSharedWebrtcState(), mIdGenerator,
+                               &transceiverImpl);
 
   return transceiverImpl.forget();
 }
@@ -2031,7 +2032,8 @@ bool PeerConnectionImpl::PluginCrash(uint32_t aPluginID,
   event->SetTrusted(true);
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
 
-  EventDispatcher::DispatchDOMEvent(mWindow, nullptr, event, nullptr, nullptr);
+  nsCOMPtr<nsPIDOMWindowInner> window = mWindow;
+  EventDispatcher::DispatchDOMEvent(window, nullptr, event, nullptr, nullptr);
 
   return true;
 }
@@ -2868,37 +2870,6 @@ void PeerConnectionImpl::CollectConduitTelemetryData() {
   }
 }
 
-template <class T>
-void AssignWithOpaqueIds(dom::Sequence<T>& aSource, dom::Sequence<T>& aDest,
-                         RefPtr<RTCStatsIdGenerator>& aGenerator) {
-  for (auto& stat : aSource) {
-    stat.mId.Value() = aGenerator->Id(stat.mId.Value());
-  }
-  if (!aDest.AppendElements(aSource, fallible)) {
-    mozalloc_handle_oom(0);
-  }
-}
-
-template <class T>
-void RewriteRemoteIds(dom::Sequence<T>& aList,
-                      RefPtr<RTCStatsIdGenerator>& aGenerator) {
-  for (auto& stat : aList) {
-    if (stat.mRemoteId.WasPassed()) {
-      stat.mRemoteId.Value() = aGenerator->Id(stat.mRemoteId.Value());
-    }
-  }
-}
-
-template <class T>
-void RewriteLocalIds(dom::Sequence<T>& aList,
-                     RefPtr<RTCStatsIdGenerator>& aGenerator) {
-  for (auto& stat : aList) {
-    if (stat.mLocalId.WasPassed()) {
-      stat.mLocalId.Value() = aGenerator->Id(stat.mLocalId.Value());
-    }
-  }
-}
-
 RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
     dom::MediaStreamTrack* aSelector, bool aInternalStats) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -3005,63 +2976,7 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
           [report = std::move(report), idGen = mIdGenerator](
               const nsTArray<UniquePtr<dom::RTCStatsCollection>>&
                   aStats) mutable {
-            // Rewrite an Optional id
-            auto rewriteId = [&idGen](Optional<nsString>& id) {
-              if (id.WasPassed()) {
-                id.Value() = idGen->Id(id.Value());
-              }
-            };
-
-            // Involves a lot of copying, since webidl dictionaries don't have
-            // move semantics. Oh well.
-            for (const auto& stats : aStats) {
-              for (auto& stat : stats->mIceCandidatePairStats) {
-                rewriteId(stat.mLocalCandidateId);
-                rewriteId(stat.mRemoteCandidateId);
-              };
-              AssignWithOpaqueIds(stats->mIceCandidatePairStats,
-                                  report->mIceCandidatePairStats, idGen);
-
-              AssignWithOpaqueIds(stats->mIceCandidateStats,
-                                  report->mIceCandidateStats, idGen);
-
-              RewriteRemoteIds(stats->mInboundRtpStreamStats, idGen);
-              AssignWithOpaqueIds(stats->mInboundRtpStreamStats,
-                                  report->mInboundRtpStreamStats, idGen);
-
-              RewriteRemoteIds(stats->mOutboundRtpStreamStats, idGen);
-              AssignWithOpaqueIds(stats->mOutboundRtpStreamStats,
-                                  report->mOutboundRtpStreamStats, idGen);
-
-              RewriteLocalIds(stats->mRemoteInboundRtpStreamStats, idGen);
-              AssignWithOpaqueIds(stats->mRemoteInboundRtpStreamStats,
-                                  report->mRemoteInboundRtpStreamStats, idGen);
-
-              RewriteLocalIds(stats->mRemoteOutboundRtpStreamStats, idGen);
-              AssignWithOpaqueIds(stats->mRemoteOutboundRtpStreamStats,
-                                  report->mRemoteOutboundRtpStreamStats, idGen);
-
-              AssignWithOpaqueIds(stats->mRtpContributingSourceStats,
-                                  report->mRtpContributingSourceStats, idGen);
-              AssignWithOpaqueIds(stats->mTrickledIceCandidateStats,
-                                  report->mTrickledIceCandidateStats, idGen);
-              AssignWithOpaqueIds(stats->mDataChannelStats,
-                                  report->mDataChannelStats, idGen);
-              if (!report->mRawLocalCandidates.AppendElements(
-                      stats->mRawLocalCandidates, fallible) ||
-                  !report->mRawRemoteCandidates.AppendElements(
-                      stats->mRawRemoteCandidates, fallible) ||
-                  !report->mVideoFrameHistories.AppendElements(
-                      stats->mVideoFrameHistories, fallible) ||
-                  !report->mBandwidthEstimations.AppendElements(
-                      stats->mBandwidthEstimations, fallible)) {
-                // XXX(Bug 1632090) Instead of extending the array 1-by-1
-                // (which might involve multiple reallocations) and
-                // potentially crashing here, SetCapacity could be called
-                // outside the loop once.
-                mozalloc_handle_oom(0);
-              }
-            }
+            idGen->RewriteIds(aStats, report.get());
             return dom::RTCStatsReportPromise::CreateAndResolve(
                 std::move(report), __func__);
           },

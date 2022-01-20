@@ -21,7 +21,6 @@ include("/ipc/chromium/chromium-config.mozbuild")
 FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
-    "/extensions/auth",
     "/netwerk/base",
     "/netwerk/cache",
     "/netwerk/dns",
@@ -37,6 +36,11 @@ LOCAL_INCLUDES += [
     "/netwerk/streamconv",
     "/netwerk/streamconv/converters",
 ]
+
+if CONFIG["MOZ_AUTH_EXTENSION"]:
+    LOCAL_INCLUDES += [
+        "/extensions/auth",
+    ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     LOCAL_INCLUDES += [

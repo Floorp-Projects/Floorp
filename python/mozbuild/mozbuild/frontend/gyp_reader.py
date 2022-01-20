@@ -203,6 +203,10 @@ def process_gyp_result(
         os_libs = []
         for l in libs:
             if l.startswith("-"):
+                if l.startswith("-l"):
+                    # Remove "-l" for consumption in OS_LIBS. Other flags
+                    # are passed through unchanged.
+                    l = l[2:]
                 if l not in os_libs:
                     os_libs.append(l)
             elif l.endswith(".lib"):
@@ -364,7 +368,6 @@ def process_gyp_result(
             context["LOCAL_INCLUDES"] += [
                 "!/ipc/ipdl/_ipdlheaders",
                 "/ipc/chromium/src",
-                "/ipc/glue",
             ]
             # These get set via VC project file settings for normal GYP builds.
             if config.substs["OS_TARGET"] == "WINNT":

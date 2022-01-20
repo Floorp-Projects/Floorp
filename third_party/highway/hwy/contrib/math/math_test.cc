@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <stdio.h>
+
 #include <cfloat>  // FLT_MAX
-#include <iostream>
 #include <type_traits>
 
 // clang-format off
@@ -29,10 +30,18 @@ HWY_BEFORE_NAMESPACE();
 namespace hwy {
 namespace HWY_NAMESPACE {
 
+template <class Out, class In>
+inline Out BitCast(const In& in) {
+  static_assert(sizeof(Out) == sizeof(In), "");
+  Out out;
+  CopyBytes<sizeof(out)>(&in, &out);
+  return out;
+}
+
 template <class T, class D>
-void TestMath(const std::string name, T (*fx1)(T), Vec<D> (*fxN)(D, Vec<D>),
-              D d, T min, T max, uint64_t max_error_ulp) {
-  constexpr bool kIsF32 = (sizeof(T) == 4);
+HWY_NOINLINE void TestMath(const std::string name, T (*fx1)(T),
+                           Vec<D> (*fxN)(D, VecArg<Vec<D>>), D d, T min, T max,
+                           uint64_t max_error_ulp) {
   using UintT = MakeUnsigned<T>;
 
   const UintT min_bits = BitCast<UintT>(min);
@@ -51,18 +60,16 @@ void TestMath(const std::string name, T (*fx1)(T), Vec<D> (*fxN)(D, Vec<D>),
   }
 
   uint64_t max_ulp = 0;
-#if HWY_ARCH_ARM
   // Emulation is slower, so cannot afford as many.
-  constexpr UintT kSamplesPerRange = 25000;
-#else
-  constexpr UintT kSamplesPerRange = 100000;
-#endif
+  constexpr UintT kSamplesPerRange = static_cast<UintT>(AdjustedReps(10000));
   for (int range_index = 0; range_index < range_count; ++range_index) {
     const UintT start = ranges[range_index][0];
     const UintT stop = ranges[range_index][1];
-    const UintT step = std::max<UintT>(1, ((stop - start) / kSamplesPerRange));
+    const UintT step = HWY_MAX(1, ((stop - start) / kSamplesPerRange));
     for (UintT value_bits = start; value_bits <= stop; value_bits += step) {
-      const T value = BitCast<T>(std::min(value_bits, stop));
+      // For reasons unknown, the HWY_MAX is necessary on RVV, otherwise
+      // value_bits can be less than start, and thus possibly NaN.
+      const T value = BitCast<T>(HWY_MIN(HWY_MAX(start, value_bits), stop));
       const T actual = GetLane(fxN(d, Set(d, value)));
       const T expected = fx1(value);
 
@@ -73,21 +80,41 @@ void TestMath(const std::string name, T (*fx1)(T), Vec<D> (*fxN)(D, Vec<D>),
       }
 #endif
 
-      const auto ulp = ComputeUlpDelta(actual, expected);
-      max_ulp = std::max<uint64_t>(max_ulp, ulp);
+      const auto ulp = hwy::detail::ComputeUlpDelta(actual, expected);
+      max_ulp = HWY_MAX(max_ulp, ulp);
       if (ulp > max_error_ulp) {
-        std::cout << name << "<" << (kIsF32 ? "F32x" : "F64x") << Lanes(d)
-                  << ">(" << value << ") expected: " << expected
-                  << " actual: " << actual << " ulp: " << ulp
-                  << " max: " << max_error_ulp << std::endl;
+        fprintf(stderr,
+                "%s: %s(%f) expected %f actual %f ulp %" PRIu64 " max ulp %u\n",
+                hwy::TypeName(T(), Lanes(d)).c_str(), name.c_str(), value,
+                expected, actual, static_cast<uint64_t>(ulp),
+                static_cast<uint32_t>(max_error_ulp));
       }
-      HWY_ASSERT(ulp <= max_error_ulp);
     }
   }
-  std::cout << (kIsF32 ? "F32x" : "F64x") << Lanes(d)
-            << ", Max ULP: " << max_ulp << std::endl;
+  fprintf(stderr, "%s: %s max_ulp %" PRIu64 "\n",
+          hwy::TypeName(T(), Lanes(d)).c_str(), name.c_str(), max_ulp);
+  HWY_ASSERT(max_ulp <= max_error_ulp);
 }
 
+// TODO(janwas): remove once RVV supports fractional LMUL
+#undef DEFINE_MATH_TEST_FUNC
+#if HWY_TARGET == HWY_RVV
+
+#define DEFINE_MATH_TEST_FUNC(NAME)                    \
+  HWY_NOINLINE void TestAll##NAME() {                  \
+    ForFloatTypes(ForShrinkableVectors<Test##NAME>()); \
+  }
+
+#else
+
+#define DEFINE_MATH_TEST_FUNC(NAME)                 \
+  HWY_NOINLINE void TestAll##NAME() {               \
+    ForFloatTypes(ForPartialVectors<Test##NAME>()); \
+  }
+
+#endif
+
+#undef DEFINE_MATH_TEST
 #define DEFINE_MATH_TEST(NAME, F32x1, F32xN, F32_MIN, F32_MAX, F32_ERROR, \
                          F64x1, F64xN, F64_MIN, F64_MAX, F64_ERROR)       \
   struct Test##NAME {                                                     \
@@ -97,28 +124,45 @@ void TestMath(const std::string name, T (*fx1)(T), Vec<D> (*fxN)(D, Vec<D>),
         TestMath<T, D>(HWY_STR(NAME), F32x1, F32xN, d, F32_MIN, F32_MAX,  \
                        F32_ERROR);                                        \
       } else {                                                            \
-        TestMath<T, D>(HWY_STR(NAME), F64x1, F64xN, d, F64_MIN, F64_MAX,  \
+        TestMath<T, D>(HWY_STR(NAME), F64x1, F64xN, d,                    \
+                       static_cast<T>(F64_MIN), static_cast<T>(F64_MAX),  \
                        F64_ERROR);                                        \
       }                                                                   \
     }                                                                     \
   };                                                                      \
-  HWY_NOINLINE void TestAll##NAME() {                                     \
-    ForFloatTypes(ForPartialVectors<Test##NAME>());                       \
-  }
+  DEFINE_MATH_TEST_FUNC(NAME)
 
 // Floating point values closest to but less than 1.0
 const float kNearOneF = BitCast<float>(0x3F7FFFFF);
 const double kNearOneD = BitCast<double>(0x3FEFFFFFFFFFFFFFULL);
 
+// The discrepancy is unacceptably large for MSYS2 (less accurate libm?), so
+// only increase the error tolerance there.
+constexpr uint64_t Cos64ULP() {
+#if defined(__MINGW32__)
+  return 23;
+#else
+  return 3;
+#endif
+}
+
+constexpr uint64_t ACosh32ULP() {
+#if defined(__MINGW32__)
+  return 8;
+#else
+  return 3;
+#endif
+}
+
 // clang-format off
 DEFINE_MATH_TEST(Acos,
-  std::acos,  CallAcos,  -1.0,       +1.0,        3,  // NEON is 3 instead of 2
+  std::acos,  CallAcos,  -1.0f,      +1.0f,       3,  // NEON is 3 instead of 2
   std::acos,  CallAcos,  -1.0,       +1.0,        2)
 DEFINE_MATH_TEST(Acosh,
-  std::acosh, CallAcosh, +1.0,       +FLT_MAX,    3,
+  std::acosh, CallAcosh, +1.0f,      +FLT_MAX,    ACosh32ULP(),
   std::acosh, CallAcosh, +1.0,       +DBL_MAX,    3)
 DEFINE_MATH_TEST(Asin,
-  std::asin,  CallAsin,  -1.0,       +1.0,        4,  // ARMv7 is 4 instead of 2
+  std::asin,  CallAsin,  -1.0f,      +1.0f,       4,  // ARMv7 is 4 instead of 2
   std::asin,  CallAsin,  -1.0,       +1.0,        2)
 DEFINE_MATH_TEST(Asinh,
   std::asinh, CallAsinh, -FLT_MAX,   +FLT_MAX,    3,
@@ -130,13 +174,13 @@ DEFINE_MATH_TEST(Atanh,
   std::atanh, CallAtanh, -kNearOneF, +kNearOneF,  4,  // NEON is 4 instead of 3
   std::atanh, CallAtanh, -kNearOneD, +kNearOneD,  3)
 DEFINE_MATH_TEST(Cos,
-  std::cos,   CallCos,   -39000.0,   +39000.0,    3,
-  std::cos,   CallCos,   -39000.0,   +39000.0,    3)
+  std::cos,   CallCos,   -39000.0f,  +39000.0f,   3,
+  std::cos,   CallCos,   -39000.0,   +39000.0,    Cos64ULP())
 DEFINE_MATH_TEST(Exp,
-  std::exp,   CallExp,   -FLT_MAX,   +104.0,      1,
+  std::exp,   CallExp,   -FLT_MAX,   +104.0f,     1,
   std::exp,   CallExp,   -DBL_MAX,   +104.0,      1)
 DEFINE_MATH_TEST(Expm1,
-  std::expm1, CallExpm1, -FLT_MAX,   +104.0,      4,
+  std::expm1, CallExpm1, -FLT_MAX,   +104.0f,     4,
   std::expm1, CallExpm1, -DBL_MAX,   +104.0,      4)
 DEFINE_MATH_TEST(Log,
   std::log,   CallLog,   +FLT_MIN,   +FLT_MAX,    1,
@@ -145,14 +189,14 @@ DEFINE_MATH_TEST(Log10,
   std::log10, CallLog10, +FLT_MIN,   +FLT_MAX,    2,
   std::log10, CallLog10, +DBL_MIN,   +DBL_MAX,    2)
 DEFINE_MATH_TEST(Log1p,
-  std::log1p, CallLog1p, +0.0f,      +1e37,       3,  // NEON is 3 instead of 2
+  std::log1p, CallLog1p, +0.0f,      +1e37f,      3,  // NEON is 3 instead of 2
   std::log1p, CallLog1p, +0.0,       +DBL_MAX,    2)
 DEFINE_MATH_TEST(Log2,
   std::log2,  CallLog2,  +FLT_MIN,   +FLT_MAX,    2,
   std::log2,  CallLog2,  +DBL_MIN,   +DBL_MAX,    2)
 DEFINE_MATH_TEST(Sin,
-  std::sin,   CallSin,   -39000.0,   +39000.0,    3,
-  std::sin,   CallSin,   -39000.0,   +39000.0,    3)
+  std::sin,   CallSin,   -39000.0f,  +39000.0f,   3,
+  std::sin,   CallSin,   -39000.0,   +39000.0,    4)  // MSYS is 4 instead of 3
 DEFINE_MATH_TEST(Sinh,
   std::sinh,  CallSinh,  -80.0f,     +80.0f,      4,
   std::sinh,  CallSinh,  -709.0,     +709.0,      4)
@@ -167,6 +211,7 @@ DEFINE_MATH_TEST(Tanh,
 HWY_AFTER_NAMESPACE();
 
 #if HWY_ONCE
+
 namespace hwy {
 HWY_BEFORE_TEST(HwyMathTest);
 HWY_EXPORT_AND_TEST_P(HwyMathTest, TestAllAcos);
@@ -186,4 +231,11 @@ HWY_EXPORT_AND_TEST_P(HwyMathTest, TestAllSin);
 HWY_EXPORT_AND_TEST_P(HwyMathTest, TestAllSinh);
 HWY_EXPORT_AND_TEST_P(HwyMathTest, TestAllTanh);
 }  // namespace hwy
+
+// Ought not to be necessary, but without this, no tests run on RVV.
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 #endif

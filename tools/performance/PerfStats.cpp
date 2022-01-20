@@ -106,6 +106,16 @@ void PerfStats::RecordMeasurementInternal(Metric aMetric,
       aDuration.ToMilliseconds();
 }
 
+void PerfStats::RecordMeasurementCounterInternal(Metric aMetric,
+                                                 uint64_t aIncrementAmount) {
+  StaticMutexAutoLock lock(sMutex);
+
+  MOZ_ASSERT(sSingleton);
+
+  sSingleton->mRecordedTimes[static_cast<size_t>(aMetric)] +=
+      double(aIncrementAmount);
+}
+
 struct StringWriteFunc : public JSONWriteFunc {
   nsCString& mString;
 

@@ -148,7 +148,7 @@ fn test_static_ptr() {
 }
 
 #[test]
-// Something about i686-pc-windows-gnu, makes dll initialization code call abort when it is loaded
+// Something about i686-pc-windows-gnu, makes dll initialisation code call abort when it is loaded
 // and unloaded many times. So far it seems like an issue with mingw, not libloading, so ignoring
 // the target. Especially since it is very unlikely to be fixed given the state of support its
 // support.
@@ -193,7 +193,7 @@ fn library_this() {
     use libloading::os::windows::Library;
     make_helpers();
     unsafe {
-        // SAFE: well-known library without initializers is loaded.
+        // SAFE: well-known library without initialisers is loaded.
         let _lib = Library::new(LIBPATH).unwrap();
         let this = Library::this().expect("this library");
         // SAFE: functions are never called.

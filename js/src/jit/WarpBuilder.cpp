@@ -1658,6 +1658,9 @@ bool WarpBuilder::build_Arguments(BytecodeLocation loc) {
   if (inlineCallInfo()) {
     argsObj = MCreateInlinedArgumentsObject::New(alloc(), env, getCallee(),
                                                  inlineCallInfo()->argv());
+    if (!argsObj) {
+      return false;
+    }
   } else {
     argsObj = MCreateArgumentsObject::New(alloc(), env, templateObj);
   }

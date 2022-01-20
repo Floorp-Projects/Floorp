@@ -221,6 +221,9 @@ const TEST_GLOBAL = {
     readJSON() {
       return Promise.resolve({});
     },
+    read() {
+      return Promise.resolve(new Uint8Array());
+    },
     makeDirectory() {
       return Promise.resolve(0);
     },
@@ -504,6 +507,13 @@ const TEST_GLOBAL = {
       onUpdate() {},
       off() {},
     },
+    pocketNewtab: {
+      isEnabled() {},
+      getVariable() {},
+      getAllVariables() {},
+      onUpdate() {},
+      off() {},
+    },
   },
   TelemetryEnvironment: {
     setExperimentActive() {},
@@ -542,7 +552,6 @@ const TEST_GLOBAL = {
   },
   Logger,
 };
-TEST_GLOBAL.NimbusFeatures.pocketNewtab = TEST_GLOBAL.NimbusFeatures.newtab;
 overrider.set(TEST_GLOBAL);
 
 describe("activity-stream", () => {

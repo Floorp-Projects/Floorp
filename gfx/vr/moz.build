@@ -91,8 +91,9 @@ if CONFIG["OS_ARCH"] == "WINNT":
     LOCAL_INCLUDES += ["/layout/generic", "/widget", "/widget/windows"]
     SOURCES += ["FxROutputHandler.cpp", "FxRWindowManager.cpp"]
 
-CXXFLAGS += CONFIG["TK_CFLAGS"]
-CFLAGS += CONFIG["TK_CFLAGS"]
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
+    CFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 

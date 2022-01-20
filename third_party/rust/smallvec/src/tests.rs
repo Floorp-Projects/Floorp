@@ -424,6 +424,13 @@ fn test_invalid_grow() {
 }
 
 #[test]
+#[should_panic]
+fn drain_overflow() {
+    let mut v: SmallVec<[u8; 8]> = smallvec![0];
+    v.drain(..=std::usize::MAX);
+}
+
+#[test]
 fn test_insert_from_slice() {
     let mut v: SmallVec<[u8; 8]> = SmallVec::new();
     for x in 0..4 {
@@ -896,6 +903,35 @@ fn const_generics() {
     let _v = SmallVec::<[i32; 987]>::default();
 }
 
+#[cfg(feature = "const_new")]
+#[test]
+fn const_new() {
+    let v = const_new_inner();
+    assert_eq!(v.capacity(), 4);
+    assert_eq!(v.len(), 0);
+    let v = const_new_inline_sized();
+    assert_eq!(v.capacity(), 4);
+    assert_eq!(v.len(), 4);
+    assert_eq!(v[0], 1);
+    let v = const_new_inline_args();
+    assert_eq!(v.capacity(), 2);
+    assert_eq!(v.len(), 2);
+    assert_eq!(v[0], 1);
+    assert_eq!(v[1], 4);
+}
+#[cfg(feature = "const_new")]
+const fn const_new_inner() -> SmallVec<[i32; 4]> {
+    SmallVec::<[i32; 4]>::new_const()
+}
+#[cfg(feature = "const_new")]
+const fn const_new_inline_sized() -> SmallVec<[i32; 4]> {
+    crate::smallvec_inline![1; 4]
+}
+#[cfg(feature = "const_new")]
+const fn const_new_inline_args() -> SmallVec<[i32; 2]> {
+    crate::smallvec_inline![1, 4]
+}
+
 #[test]
 fn empty_macro() {
     let _v: SmallVec<[u8; 1]> = smallvec![];
@@ -917,4 +953,26 @@ fn test_insert_many_overflow() {
 
     v.insert_many(0, iter);
     assert_eq!(&*v, &[0, 2, 4, 123]);
+}
+
+#[test]
+fn test_clone_from() {
+    let mut a: SmallVec<[u8; 2]> = SmallVec::new();
+    a.push(1);
+    a.push(2);
+    a.push(3);
+
+    let mut b: SmallVec<[u8; 2]> = SmallVec::new();
+    b.push(10);
+
+    let mut c: SmallVec<[u8; 2]> = SmallVec::new();
+    c.push(20);
+    c.push(21);
+    c.push(22);
+
+    a.clone_from(&b);
+    assert_eq!(&*a, &[10]);
+
+    b.clone_from(&c);
+    assert_eq!(&*b, &[20, 21, 22]);
 }

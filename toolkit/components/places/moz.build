@@ -21,6 +21,7 @@ if CONFIG["MOZ_PLACES"]:
         "mozISyncedBookmarksMirror.idl",
         "nsIFaviconService.idl",
         "nsINavBookmarksService.idl",
+        "nsIPlacesPreviewsHelperService.idl",
         "nsITaggingService.idl",
     ]
 
@@ -65,6 +66,7 @@ if CONFIG["MOZ_PLACES"]:
         "PlacesBackups.jsm",
         "PlacesDBUtils.jsm",
         "PlacesExpiration.jsm",
+        "PlacesPreviews.jsm",
         "PlacesSyncUtils.jsm",
         "PlacesTransactions.jsm",
         "PlacesUtils.jsm",

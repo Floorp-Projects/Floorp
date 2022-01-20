@@ -232,6 +232,21 @@ div.CodeMirror span.marked-text {
   margin-inline-end: -1px;
 }
 
+
+.cm-s-mozilla .empty-line .CodeMirror-linenumber {
+  color: var(--grey-50);
+}
+
+/* Blackboxing lines */
+
+.cm-s-mozilla .CodeMirror-lines .blackboxed-line {
+  background-color: hsl(211, 89%, 17%);
+}
+
+.cm-s-mozilla .blackboxed-line .CodeMirror-linenumber {
+  color: var(--theme-icon-checked-color);
+}
+
 /* Highlight for evaluating current statement. */
 div.CodeMirror span.eval-text {
   background-color: #556;

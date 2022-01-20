@@ -1,5 +1,5 @@
-extern crate libloading;
 extern crate libc;
+extern crate libloading;
 extern crate static_assertions;
 
 #[cfg(all(test, unix))]

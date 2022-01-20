@@ -1,4 +1,5 @@
 ../tools/mozterm
+../tools/geckoprocesstypes_generator
 
 ../mozbase/manifestparser
 ../mozbase/mozcrash

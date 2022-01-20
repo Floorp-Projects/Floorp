@@ -46,15 +46,11 @@ add_task(async function remote_disable() {
 
   userChoiceStub.resetHistory();
   setDefaultStub.resetHistory();
-  await ExperimentFakes.remoteDefaultsHelper({
-    feature: NimbusFeatures.shellService,
-    configuration: {
-      slug: "shellService_remoteDisable",
-      variables: {
-        setDefaultBrowserUserChoice: false,
-        enabled: true,
-      },
-      targeting: "true",
+  let doCleanup = await ExperimentFakes.enrollWithRollout({
+    featureId: NimbusFeatures.shellService.featureId,
+    value: {
+      setDefaultBrowserUserChoice: false,
+      enabled: true,
     },
   });
 
@@ -65,6 +61,8 @@ add_task(async function remote_disable() {
     "Set default with user choice disabled via nimbus"
   );
   Assert.ok(setDefaultStub.called, "Used plain set default insteead");
+
+  await doCleanup();
 });
 
 add_task(async function restore_default() {

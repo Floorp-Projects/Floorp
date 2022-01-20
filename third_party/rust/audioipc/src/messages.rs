@@ -312,6 +312,8 @@ pub enum SerializableHandle {
     Empty,
 }
 
+// PlatformHandle is non-Send and containers a pointer (HANDLE) on Windows.
+#[allow(clippy::non_send_fields_in_send_ty)]
 unsafe impl Send for SerializableHandle {}
 
 impl SerializableHandle {

@@ -1,3 +1,11 @@
+# 0.2.7 (July 1, 2020)
+
+* Add Illumos support. (#2563)
+
+# 0.2.6 (February 4, 2020)
+
+* Add `tokio 0.2.x` deprecation notice.
+
 # 0.2.5 (January 6, 2019)
 
 * Fix bug in `UnixDatagram::send` (#782).

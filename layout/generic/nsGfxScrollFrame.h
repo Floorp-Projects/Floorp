@@ -99,7 +99,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   OverflowState GetOverflowState() const;
 
-  nsresult FireScrollPortEvent();
+  MOZ_CAN_RUN_SCRIPT nsresult FireScrollPortEvent();
   void PostScrollEndEvent();
   void FireScrollEndEvent();
   void PostOverflowEvent();
@@ -139,9 +139,9 @@ class ScrollFrameHelper : public nsIReflowCallback {
   void CurPosAttributeChanged(nsIContent* aChild, bool aDoScroll = true);
 
   void PostScrollEvent(bool aDelayed = false);
-  void FireScrollEvent();
+  MOZ_CAN_RUN_SCRIPT void FireScrollEvent();
   void PostScrolledAreaEvent();
-  void FireScrolledAreaEvent();
+  MOZ_CAN_RUN_SCRIPT void FireScrolledAreaEvent();
 
   bool IsSmoothScrollingEnabled();
 
@@ -203,6 +203,14 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool SetVisualViewportOffset(const nsPoint& aOffset, bool aRepaint);
   nsRect GetVisualScrollRange() const;
   nsRect GetScrollRangeForUserInputEvents() const;
+
+  const nsRect& ScrollPort() const { return mScrollPort; }
+  void SetScrollPort(const nsRect& aNewScrollPort) {
+    if (!mScrollPort.IsEqualEdges(aNewScrollPort)) {
+      mMayScheduleScrollAnimations = true;
+    }
+    mScrollPort = aNewScrollPort;
+  }
 
   /**
    * Return the 'optimal viewing region' as a rect suitable for use by
@@ -394,6 +402,16 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   bool NeedsScrollSnap() const;
 
+  // Schedule the scroll-linked animations.
+  void ScheduleScrollAnimations();
+  void TryScheduleScrollAnimations() {
+    if (!mMayScheduleScrollAnimations) {
+      return;
+    }
+    ScheduleScrollAnimations();
+    mMayScheduleScrollAnimations = false;
+  }
+
  public:
   bool IsScrollbarOnRight() const;
   bool IsScrollingActive() const;
@@ -419,8 +437,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
   void AdjustScrollbarRectForResizer(
       nsIFrame* aFrame, nsPresContext* aPresContext, nsRect& aRect,
       bool aHasResizer, mozilla::layers::ScrollDirection aDirection);
-  // returns true if a resizer should be visible
-  bool HasResizer() { return mResizerBox; }
   void LayoutScrollbars(nsBoxLayoutState& aState,
                         const nsRect& aInsideBorderArea,
                         const nsRect& aOldScrollPort);
@@ -583,9 +599,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   nsTArray<ScrollPositionUpdate> mScrollUpdates;
 
-  // NOTE: On mobile this value might be factoring into overflow:hidden region
-  // in the case of the top level document.
-  nsRect mScrollPort;
   nsSize mMinimumScaleSize;
 
   // Stores the ICB size for the root document if this frame is using the
@@ -748,6 +761,14 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // Whether we need to reclamp the visual viewport offset in ReflowFinished.
   bool mReclampVVOffsetInReflowFinished : 1;
 
+  // Whether we need to schedule the scroll-linked animations.
+  bool mMayScheduleScrollAnimations : 1;
+
+#ifdef MOZ_WIDGET_ANDROID
+  // True if this scrollable frame was vertically overflowed on the last reflow.
+  bool mHasVerticalOverflowForDynamicToolbar : 1;
+#endif
+
   mozilla::layout::ScrollVelocityQueue mVelocityQueue;
 
  protected:
@@ -801,6 +822,11 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   // Removes any RefreshDriver observers we might have registered.
   void RemoveObservers();
+
+ private:
+  // NOTE: On mobile this value might be factoring into overflow:hidden region
+  // in the case of the top level document.
+  nsRect mScrollPort;
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ScrollFrameHelper::OverflowState)
@@ -850,7 +876,12 @@ class nsHTMLScrollFrame : public nsContainerFrame,
                       const ReflowOutput& aDesiredSize);
   void PlaceScrollArea(ScrollReflowInput& aState,
                        const nsPoint& aScrollPosition);
-  nscoord GetIntrinsicVScrollbarWidth(gfxContext* aRenderingContext);
+
+  // Return the sum of inline-size of the scrollbar gutters (if any) at the
+  // inline-start and inline-end edges of the scroll frame (for a potential
+  // scrollbar that scrolls in the block axis).
+  nscoord IntrinsicScrollbarGutterSizeAtInlineEdges(
+      gfxContext* aRenderingContext);
 
   bool GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
                       Sides aSkipSides, nscoord aRadii[8]) const final {
@@ -1382,10 +1413,6 @@ class nsXULScrollFrame final : public nsBoxFrame,
   void LayoutScrollArea(nsBoxLayoutState& aState,
                         const nsPoint& aScrollPosition);
 
-  static bool AddRemoveScrollbar(bool& aHasScrollbar, nscoord& aXY,
-                                 nscoord& aSize, nscoord aSbSize,
-                                 bool aOnRightOrBottom, bool aAdd);
-
   bool AddRemoveScrollbar(nsBoxLayoutState& aState, bool aOnRightOrBottom,
                           bool aHorizontal, bool aAdd);
 
@@ -1738,7 +1765,7 @@ class nsXULScrollFrame final : public nsBoxFrame,
      * edge, then subtract the current width to find the physical position.
      */
     if (!mHelper.IsPhysicalLTR()) {
-      aRect.x = mHelper.mScrollPort.XMost() - aScrollPosition.x - aRect.width;
+      aRect.x = mHelper.ScrollPort().XMost() - aScrollPosition.x - aRect.width;
     }
     mHelper.mScrolledFrame->SetXULBounds(aState, aRect, aRemoveOverflowAreas);
   }

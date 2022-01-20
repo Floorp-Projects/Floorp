@@ -9,6 +9,25 @@ fn peekable() {
         pin_mut!(peekable);
         assert_eq!(peekable.as_mut().peek().await, Some(&1u8));
         assert_eq!(peekable.collect::<Vec<u8>>().await, vec![1, 2, 3]);
+
+        let s = stream::once(async { 1 }).peekable();
+        pin_mut!(s);
+        assert_eq!(s.as_mut().peek().await, Some(&1u8));
+        assert_eq!(s.collect::<Vec<u8>>().await, vec![1]);
+    });
+}
+
+#[test]
+fn peekable_mut() {
+    block_on(async {
+        let s = stream::iter(vec![1u8, 2, 3]).peekable();
+        pin_mut!(s);
+        if let Some(p) = s.as_mut().peek_mut().await {
+            if *p == 1 {
+                *p = 5;
+            }
+        }
+        assert_eq!(s.collect::<Vec<_>>().await, vec![5, 2, 3]);
     });
 }
 

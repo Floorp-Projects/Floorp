@@ -109,6 +109,11 @@ inline nsresult nsresultForErrno(int aErr) {
     case EFBIG: /*     File too large. */
       return NS_ERROR_FILE_TOO_BIG;
 
+#ifdef ENOATTR
+    case ENOATTR:
+      return NS_ERROR_NOT_AVAILABLE;
+#endif  // ENOATTR
+
     default:
       return NS_ERROR_FAILURE;
   }

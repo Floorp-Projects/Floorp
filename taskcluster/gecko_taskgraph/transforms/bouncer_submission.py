@@ -13,6 +13,7 @@ import attr
 
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.l10n import parse_locales_file
+from gecko_taskgraph.util.attributes import release_level
 from gecko_taskgraph.util.schema import resolve_keyed_by
 from gecko_taskgraph.util.scriptworker import get_release_config
 
@@ -125,13 +126,13 @@ def make_task_worker(config, jobs):
             job,
             "worker-type",
             item_name=job["name"],
-            **{"release-level": config.params.release_level()}
+            **{"release-level": release_level(config.params["project"])}
         )
         resolve_keyed_by(
             job,
             "scopes",
             item_name=job["name"],
-            **{"release-level": config.params.release_level()}
+            **{"release-level": release_level(config.params["project"])}
         )
         resolve_keyed_by(
             job,

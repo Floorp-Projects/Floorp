@@ -101,11 +101,13 @@ class PageThumbProtocolHandler final
    * profile directory, which is unavailable in the child.
    *
    * @param aPath the path of the moz-page-thumb URI.
+   * @param aHost the host of the moz-page-thumb URI.
    * @param aThumbnailPath in/out string param referring to the thumbnail path.
    * @return NS_OK if the thumbnail path was obtained successfully. Otherwise
    *         returns an error.
    */
-  nsresult GetThumbnailPath(const nsACString& aPath, nsString& aThumbnailPath);
+  nsresult GetThumbnailPath(const nsACString& aPath, const nsACString& aHost,
+                            nsString& aThumbnailPath);
 
   // To allow parent IPDL actors to invoke methods on this handler when
   // handling moz-page-thumb requests from the child.

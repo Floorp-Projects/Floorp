@@ -19,6 +19,10 @@ fn main() {
         println!("cargo:rustc-cfg=syn_no_const_vec_new");
     }
 
+    if compiler.minor < 56 {
+        println!("cargo:rustc-cfg=syn_no_negative_literal_parse");
+    }
+
     if !compiler.nightly {
         println!("cargo:rustc-cfg=syn_disable_nightly_tests");
     }

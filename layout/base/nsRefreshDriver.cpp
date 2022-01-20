@@ -64,7 +64,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/Selection.h"
-#include "mozilla/dom/VsyncChild.h"
+#include "mozilla/dom/VsyncMainChild.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/RestyleManager.h"
@@ -93,9 +93,7 @@
 #  include "VRManagerChild.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
-#ifdef MOZ_XUL
-#  include "nsXULPopupManager.h"
-#endif
+#include "nsXULPopupManager.h"
 
 #include <numeric>
 
@@ -109,9 +107,6 @@ static mozilla::LazyLogModule sRefreshDriverLog("nsRefreshDriver");
 #define LOG(...) \
   MOZ_LOG(sRefreshDriverLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
-#define DEFAULT_THROTTLED_FRAME_RATE 1
-#define DEFAULT_RECOMPUTE_VISIBILITY_INTERVAL_MS 1000
-#define DEFAULT_NOTIFY_INTERSECTION_OBSERVERS_INTERVAL_MS 100
 // after 10 minutes, stop firing off inactive timers
 #define DEFAULT_INACTIVE_TIMER_DISABLE_SECONDS 600
 
@@ -453,10 +448,10 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
                         aVsyncSource->GetRefreshTimerVsyncDispatcher());
   }
 
-  explicit VsyncRefreshDriverTimer(const RefPtr<VsyncChild>& aVsyncChild)
+  explicit VsyncRefreshDriverTimer(RefPtr<VsyncMainChild>&& aVsyncChild)
       : mVsyncSource(nullptr),
         mVsyncDispatcher(nullptr),
-        mVsyncChild(aVsyncChild),
+        mVsyncChild(std::move(aVsyncChild)),
         mVsyncRate(TimeDuration::Forever()) {
     MOZ_ASSERT(XRE_IsContentProcess());
     MOZ_ASSERT(NS_IsMainThread());
@@ -481,6 +476,9 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
   // explicitly shutdown. We create an inner class that has the VsyncObserver
   // and is shutdown when the RefreshDriverTimer is deleted.
   class RefreshDriverVsyncObserver final : public VsyncObserver {
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(
+        VsyncRefreshDriverTimer::RefreshDriverVsyncObserver, override)
+
    public:
     explicit RefreshDriverVsyncObserver(
         VsyncRefreshDriverTimer* aVsyncRefreshDriverTimer)
@@ -799,7 +797,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
   // Used for child process.
   // The mVsyncChild will be always available before VsncChild::ActorDestroy().
   // After ActorDestroy(), StartTimer() and StopTimer() calls will be non-op.
-  RefPtr<VsyncChild> mVsyncChild;
+  RefPtr<VsyncMainChild> mVsyncChild;
   TimeDuration mVsyncRate;
   bool mIsTicking = false;
 };  // VsyncRefreshDriverTimer
@@ -1002,9 +1000,9 @@ void nsRefreshDriver::CreateVsyncRefreshTimer() {
         return;
       }
       if (BrowserChild* browserChild = widget->GetOwningBrowserChild()) {
-        if (RefPtr<VsyncChild> localVsyncSource =
+        if (RefPtr<VsyncMainChild> localVsyncSource =
                 browserChild->GetVsyncChild()) {
-          mOwnTimer = new VsyncRefreshDriverTimer(localVsyncSource);
+          mOwnTimer = new VsyncRefreshDriverTimer(std::move(localVsyncSource));
           sRegularRateTimerList->AppendElement(mOwnTimer.get());
           return;
         }
@@ -1024,15 +1022,14 @@ void nsRefreshDriver::CreateVsyncRefreshTimer() {
         return;
       }
 
-      dom::PVsyncChild* actor = actorChild->SendPVsyncConstructor();
+      auto child = MakeRefPtr<dom::VsyncMainChild>();
+      dom::PVsyncChild* actor = actorChild->SendPVsyncConstructor(child);
       if (NS_WARN_IF(!actor)) {
         return;
       }
 
-      dom::VsyncChild* child = static_cast<dom::VsyncChild*>(actor);
-
       RefPtr<RefreshDriverTimer> vsyncRefreshDriverTimer =
-          new VsyncRefreshDriverTimer(child);
+          new VsyncRefreshDriverTimer(std::move(child));
 
       sRegularRateTimer = std::move(vsyncRefreshDriverTimer);
     }
@@ -1087,29 +1084,41 @@ double nsRefreshDriver::GetRegularTimerInterval() const {
 
 /* static */
 double nsRefreshDriver::GetThrottledTimerInterval() {
-  int32_t rate = Preferences::GetInt("layout.throttled_frame_rate", -1);
-  if (rate <= 0) {
-    rate = DEFAULT_THROTTLED_FRAME_RATE;
-  }
+  uint32_t rate = StaticPrefs::layout_throttled_frame_rate();
   return 1000.0 / rate;
 }
 
-/* static */ mozilla::TimeDuration
-nsRefreshDriver::GetMinRecomputeVisibilityInterval() {
-  int32_t interval =
-      Preferences::GetInt("layout.visibility.min-recompute-interval-ms", -1);
-  if (interval <= 0) {
-    interval = DEFAULT_RECOMPUTE_VISIBILITY_INTERVAL_MS;
+/* static */
+TimeDuration nsRefreshDriver::GetMinRecomputeVisibilityInterval() {
+  return TimeDuration::FromMilliseconds(
+      StaticPrefs::layout_visibility_min_recompute_interval_ms());
+}
+
+bool nsRefreshDriver::ComputeShouldBeThrottled() const {
+  if (mIsActive) {
+    // If we're active we should definitely be unthrottled.
+    return false;
   }
-  return TimeDuration::FromMilliseconds(interval);
+  if (!mIsInActiveTab) {
+    // If we're not in the active tab we should definitely be throttled.
+    return true;
+  }
+  if (mIsGrantingActivityGracePeriod) {
+    // If we're granting the activity grace period, then we should be
+    // unthrottled.
+    return false;
+  }
+  // Otherwise we should be throttled.
+  return true;
 }
 
 RefreshDriverTimer* nsRefreshDriver::ChooseTimer() {
   if (mThrottled) {
-    if (!sThrottledRateTimer)
+    if (!sThrottledRateTimer) {
       sThrottledRateTimer = new InactiveRefreshDriverTimer(
           GetThrottledTimerInterval(),
           DEFAULT_INACTIVE_TIMER_DISABLE_SECONDS * 1000.0);
+    }
     return sThrottledRateTimer;
   }
 
@@ -1147,6 +1156,10 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
           TimeDuration::FromMilliseconds(GetThrottledTimerInterval())),
       mMinRecomputeVisibilityInterval(GetMinRecomputeVisibilityInterval()),
       mThrottled(false),
+      mIsActive(true),
+      mIsInActiveTab(true),
+      mIsGrantingActivityGracePeriod(false),
+      mHasGrantedActivityGracePeriod(false),
       mNeedToRecomputeVisibility(false),
       mTestControllingRefreshes(false),
       mViewManagerFlushIsPending(false),
@@ -1160,8 +1173,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
       mInNormalTick(false),
       mAttemptedExtraTickSinceLastVsync(false),
       mHasExceededAfterLoadTickPeriod(false),
-      mHasStartedTimerAtLeastOnce(false),
-      mWarningThreshold(REFRESH_WAIT_WARNING) {
+      mHasStartedTimerAtLeastOnce(false) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mPresContext,
              "Need a pres context to tell us to call Disconnect() later "
@@ -1209,7 +1221,6 @@ void nsRefreshDriver::AdvanceTimeAndRefresh(int64_t aMilliseconds) {
       // Disable any refresh driver throttling when entering test mode
       mWaitingForTransaction = false;
       mSkippedPaints = false;
-      mWarningThreshold = REFRESH_WAIT_WARNING;
     }
   }
 
@@ -1829,29 +1840,31 @@ bool nsRefreshDriver::ShouldKeepTimerRunningAfterPageLoad() {
   }
 
   nsPIDOMWindowInner* innerWindow = mPresContext->Document()->GetInnerWindow();
-  if (innerWindow) {
-    if (PerformanceMainThread* perf = static_cast<PerformanceMainThread*>(
-            innerWindow->GetPerformance())) {
-      nsDOMNavigationTiming* timing = perf->GetDOMTiming();
-      if (timing) {
-        TimeStamp loadend = timing->LoadEventEnd();
-        if (loadend) {
-          // Keep ticking after the page load for some time.
-          bool retval =
-              (loadend +
-               TimeDuration::FromMilliseconds(
-                   StaticPrefs::layout_keep_ticking_after_load_ms())) >
-              TimeStamp::Now();
-          if (!retval) {
-            mHasExceededAfterLoadTickPeriod = true;
-          }
-          return retval;
-        }
-      }
-    }
+  if (!innerWindow) {
+    return false;
   }
-
-  return false;
+  auto* perf =
+      static_cast<PerformanceMainThread*>(innerWindow->GetPerformance());
+  if (!perf) {
+    return false;
+  }
+  nsDOMNavigationTiming* timing = perf->GetDOMTiming();
+  if (!timing) {
+    return false;
+  }
+  TimeStamp loadend = timing->LoadEventEnd();
+  if (!loadend) {
+    return false;
+  }
+  // Keep ticking after the page load for some time.
+  const bool retval =
+      (loadend + TimeDuration::FromMilliseconds(
+                     StaticPrefs::layout_keep_ticking_after_load_ms())) >
+      TimeStamp::Now();
+  if (!retval) {
+    mHasExceededAfterLoadTickPeriod = true;
+  }
+  return retval;
 }
 
 nsRefreshDriver::ObserverArray& nsRefreshDriver::ArrayFor(
@@ -1892,7 +1905,7 @@ struct DocumentFrameCallbacks {
   explicit DocumentFrameCallbacks(Document* aDocument) : mDocument(aDocument) {}
 
   RefPtr<Document> mDocument;
-  nsTArray<Document::FrameRequest> mCallbacks;
+  nsTArray<FrameRequest> mCallbacks;
 };
 
 static bool HasPendingAnimations(PresShell* aPresShell) {
@@ -2140,6 +2153,13 @@ static CallState ReduceAnimations(Document& aDocument) {
   return CallState::Continue;
 }
 
+bool nsRefreshDriver::ShouldStopActivityGracePeriod() const {
+  MOZ_ASSERT(mIsGrantingActivityGracePeriod);
+  return TimeStamp::Now() - mActivityGracePeriodStart >=
+         TimeDuration::FromMilliseconds(
+             StaticPrefs::layout_oopif_activity_grace_period_ms());
+}
+
 void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
                            IsExtraTick aIsExtraTick /* = No */) {
   MOZ_ASSERT(!nsContentUtils::GetCurrentJSContext(),
@@ -2193,7 +2213,6 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     mRootRefresh = nullptr;
   }
   mSkippedPaints = false;
-  mWarningThreshold = 1;
 
   RefPtr<PresShell> presShell = mPresContext->GetPresShell();
   if (!presShell) {
@@ -2229,6 +2248,13 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
       StopTimer();
     }
     return;
+  }
+
+  // Potentially go back to throttled after the grace period is done.
+  if (MOZ_UNLIKELY(mIsGrantingActivityGracePeriod) &&
+      ShouldStopActivityGracePeriod()) {
+    mIsGrantingActivityGracePeriod = false;
+    UpdateThrottledState();
   }
 
   AUTO_PROFILER_LABEL("nsRefreshDriver::Tick", LAYOUT);
@@ -2425,13 +2451,11 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     presShell->ScheduleApproximateFrameVisibilityUpdateNow();
   }
 
-#ifdef MOZ_XUL
   // Update any popups that may need to be moved or hidden due to their
   // anchor changing.
   if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
     pm->UpdatePopupPositions(this);
   }
-#endif
 
   UpdateIntersectionObservations(aNowTime);
 
@@ -2668,7 +2692,6 @@ void nsRefreshDriver::Thaw() {
 void nsRefreshDriver::FinishedWaitingForTransaction() {
   mWaitingForTransaction = false;
   mSkippedPaints = false;
-  mWarningThreshold = 1;
 }
 
 mozilla::layers::TransactionId nsRefreshDriver::GetTransactionId(
@@ -2686,7 +2709,6 @@ mozilla::layers::TransactionId nsRefreshDriver::GetTransactionId(
       LOG("[%p] Hit max pending transaction limit, entering wait mode", this);
       mWaitingForTransaction = true;
       mSkippedPaints = false;
-      mWarningThreshold = 1;
     }
   }
 
@@ -2764,16 +2786,6 @@ bool nsRefreshDriver::IsWaitingForPaint(mozilla::TimeStamp aTime) {
   }
 
   if (mWaitingForTransaction) {
-    if (mSkippedPaints &&
-        aTime > (mMostRecentRefresh +
-                 TimeDuration::FromMilliseconds(mWarningThreshold * 1000))) {
-      // XXX - Bug 1303369 - too many false positives.
-      // gfxCriticalNote << "Refresh driver waiting for the compositor for "
-      //                << (aTime - mMostRecentRefresh).ToSeconds()
-      //                << " seconds.";
-      mWarningThreshold *= 2;
-    }
-
     LOG("[%p] Over max pending transaction limit when trying to paint, "
         "skipping",
         this);
@@ -2805,14 +2817,38 @@ bool nsRefreshDriver::IsWaitingForPaint(mozilla::TimeStamp aTime) {
   return false;
 }
 
-void nsRefreshDriver::SetThrottled(bool aThrottled) {
-  if (aThrottled != mThrottled) {
-    mThrottled = aThrottled;
-    if (mActiveTimer) {
-      // We want to switch our timer type here, so just stop and
-      // restart the timer.
-      EnsureTimerStarted(eForceAdjustTimer);
+void nsRefreshDriver::SetActivity(bool aIsActive, bool aIsInActiveTab) {
+  if (mIsActive == aIsActive && mIsInActiveTab == aIsInActiveTab) {
+    return;
+  }
+  mIsActive = aIsActive;
+  mIsInActiveTab = aIsInActiveTab;
+
+  // For iframes which are in the active tab but hidden, grant them a grace
+  // period of 1s of activity so that they can get set up.
+  if (!mHasGrantedActivityGracePeriod && !mIsActive && mIsInActiveTab &&
+      mPresContext && !mPresContext->IsRootContentDocumentCrossProcess()) {
+    mHasGrantedActivityGracePeriod = true;
+    mIsGrantingActivityGracePeriod =
+        StaticPrefs::layout_oopif_activity_grace_period_ms() > 0;
+    if (mIsGrantingActivityGracePeriod) {
+      mActivityGracePeriodStart = TimeStamp::Now();
     }
+  }
+
+  UpdateThrottledState();
+}
+
+void nsRefreshDriver::UpdateThrottledState() {
+  const bool shouldThrottle = ComputeShouldBeThrottled();
+  if (mThrottled == shouldThrottle) {
+    return;
+  }
+  mThrottled = shouldThrottle;
+  if (mActiveTimer) {
+    // We want to switch our timer type here, so just stop and
+    // restart the timer.
+    EnsureTimerStarted(eForceAdjustTimer);
   }
 }
 

@@ -44,3 +44,9 @@ cfg_if::cfg_if! {
         pub use self::rust::*;
     }
 }
+
+impl std::fmt::Debug for ErrorMessage {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        self.get().fmt(f)
+    }
+}

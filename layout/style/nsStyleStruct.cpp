@@ -228,7 +228,7 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
       mFontSizeOffset{0},
       mFontSizeKeyword(StyleFontSizeKeyword::Medium),
       mMathDepth(0),
-      mMathVariant(NS_MATHML_MATHVARIANT_NONE),
+      mMathVariant(StyleMathVariant::None),
       mMathStyle(NS_STYLE_MATH_STYLE_NORMAL),
       mMinFontSizeRatio(100),  // 100%
       mExplicitLanguage(false),
@@ -1040,7 +1040,7 @@ bool nsStyleSVGReset::HasMask() const {
 
 nsChangeHint nsStylePage::CalcDifference(const nsStylePage& aNewData) const {
   // Page rule styling only matters when printing or using print preview.
-  if (aNewData.mSize != mSize) {
+  if (aNewData.mSize != mSize || aNewData.mPage != mPage) {
     return nsChangeHint_NeutralChange;
   }
   return nsChangeHint_Empty;
@@ -2705,7 +2705,7 @@ nsStyleVisibility::nsStyleVisibility(const Document& aDocument)
       mImageRendering(StyleImageRendering::Auto),
       mWritingMode(StyleWritingModeProperty::HorizontalTb),
       mTextOrientation(StyleTextOrientation::Mixed),
-      mColorAdjust(StyleColorAdjust::Economy) {
+      mPrintColorAdjust(StylePrintColorAdjust::Economy) {
   MOZ_COUNT_CTOR(nsStyleVisibility);
 }
 
@@ -2716,7 +2716,7 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
       mImageRendering(aSource.mImageRendering),
       mWritingMode(aSource.mWritingMode),
       mTextOrientation(aSource.mTextOrientation),
-      mColorAdjust(aSource.mColorAdjust) {
+      mPrintColorAdjust(aSource.mPrintColorAdjust) {
   MOZ_COUNT_CTOR(nsStyleVisibility);
 }
 
@@ -2754,7 +2754,7 @@ nsChangeHint nsStyleVisibility::CalcDifference(
     if (mImageRendering != aNewData.mImageRendering) {
       hint |= nsChangeHint_RepaintFrame;
     }
-    if (mColorAdjust != aNewData.mColorAdjust) {
+    if (mPrintColorAdjust != aNewData.mPrintColorAdjust) {
       // color-adjust only affects media where dynamic changes can't happen.
       hint |= nsChangeHint_NeutralChange;
     }
@@ -2962,7 +2962,8 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
       mTextUnderlinePosition(aSource.mTextUnderlinePosition),
       mWebkitTextStrokeWidth(aSource.mWebkitTextStrokeWidth),
       mTextShadow(aSource.mTextShadow),
-      mTextEmphasisStyle(aSource.mTextEmphasisStyle) {
+      mTextEmphasisStyle(aSource.mTextEmphasisStyle),
+      mHyphenateCharacter(aSource.mHyphenateCharacter) {
   MOZ_COUNT_CTOR(nsStyleText);
 }
 
@@ -2996,7 +2997,8 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
       (mTextIndent != aNewData.mTextIndent) ||
       (mTextJustify != aNewData.mTextJustify) ||
       (mWordSpacing != aNewData.mWordSpacing) ||
-      (mTabSize != aNewData.mTabSize)) {
+      (mTabSize != aNewData.mTabSize) ||
+      (mHyphenateCharacter != aNewData.mHyphenateCharacter)) {
     return NS_STYLE_HINT_REFLOW;
   }
 

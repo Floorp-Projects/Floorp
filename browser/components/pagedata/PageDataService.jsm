@@ -13,7 +13,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
+  HiddenFrame: "resource://gre/modules/HiddenFrame.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
@@ -25,7 +28,123 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
   });
 });
 
+XPCOMUtils.defineLazyServiceGetters(this, {
+  idleService: ["@mozilla.org/widget/useridleservice;1", "nsIUserIdleService"],
+});
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "fetchIdleTime",
+  "browser.pagedata.fetchIdleTime",
+  300
+);
+
 const ALLOWED_SCHEMES = ["http", "https", "data", "blob"];
+
+const BACKGROUND_WIDTH = 1024;
+const BACKGROUND_HEIGHT = 768;
+
+/**
+ * Shifts the first element out of the set.
+ *
+ * @param {Set<T>} set
+ *   The set containing elements.
+ * @returns {T | undefined} The first element in the set or undefined if
+ *   there is nothing in the set.
+ */
+function shift(set) {
+  let iter = set.values();
+  let { value, done } = iter.next();
+
+  if (done) {
+    return undefined;
+  }
+
+  set.delete(value);
+  return value;
+}
+
+/**
+ * A manager for hidden browsers. Responsible for creating and destroying a
+ * hidden frame to hold them.
+ */
+class HiddenBrowserManager {
+  /**
+   * The hidden frame if one has been created.
+   * @type {HiddenFrame | null}
+   */
+  #frame = null;
+  /**
+   * The number of hidden browser elements currently in use.
+   * @type {number}
+   */
+  #browsers = 0;
+
+  /**
+   * Creates and returns a new hidden browser.
+   *
+   * @returns {Browser}
+   */
+  async #acquireBrowser() {
+    this.#browsers++;
+    if (!this.#frame) {
+      this.#frame = new HiddenFrame();
+    }
+
+    let frame = await this.#frame.get();
+    let doc = frame.document;
+    let browser = doc.createXULElement("browser");
+    browser.setAttribute("remote", "true");
+    browser.setAttribute("type", "content");
+    browser.setAttribute(
+      "style",
+      `
+        width: ${BACKGROUND_WIDTH}px;
+        min-width: ${BACKGROUND_WIDTH}px;
+        height: ${BACKGROUND_HEIGHT}px;
+        min-height: ${BACKGROUND_HEIGHT}px;
+      `
+    );
+    browser.setAttribute("maychangeremoteness", "true");
+    doc.documentElement.appendChild(browser);
+
+    return browser;
+  }
+
+  /**
+   * Releases the given hidden browser.
+   *
+   * @param {Browser} browser
+   *   The hidden browser element.
+   */
+  #releaseBrowser(browser) {
+    browser.remove();
+
+    this.#browsers--;
+    if (this.#browsers == 0) {
+      this.#frame.destroy();
+      this.#frame = null;
+    }
+  }
+
+  /**
+   * Calls a callback function with a new hidden browser.
+   * This function will return whatever the callback function returns.
+   *
+   * @param {Callback} callback
+   *   The callback function will be called with the browser element and may
+   *   be asynchronous.
+   * @returns {T}
+   */
+  async withHiddenBrowser(callback) {
+    let browser = await this.#acquireBrowser();
+    try {
+      return await callback(browser);
+    } finally {
+      this.#releaseBrowser(browser);
+    }
+  }
+}
 
 /**
  * @typedef {object} PageData
@@ -54,6 +173,55 @@ const PageDataService = new (class PageDataService extends EventEmitter {
    * @type {Map<string, PageData>}
    */
   #pageDataCache = new Map();
+
+  /**
+   * The number of currently running background fetches.
+   * @type {number}
+   */
+  #backgroundFetches = 0;
+
+  /**
+   * The list of urls waiting to be loaded in the background.
+   * @type {Set<string>}
+   */
+  #backgroundQueue = new Set();
+
+  /**
+   * Tracks whether the user is currently idle.
+   * @type {boolean}
+   */
+  #userIsIdle = false;
+
+  /**
+   * A manager for hidden browsers.
+   * @type {HiddenBrowserManager}
+   */
+  #browserManager = new HiddenBrowserManager();
+
+  /**
+   * A map of hidden browsers to a resolve function that should be passed the
+   * actor that was created for the browser.
+   *
+   * @type {WeakMap<Browser, (actor: PageDataParent) => void>}
+   */
+  #backgroundBrowsers = new WeakMap();
+
+  /**
+   * Constructs the service.
+   */
+  constructor() {
+    super();
+
+    // Limits the number of background fetches that will run at once. Set to 0 to
+    // effectively allow an infinite number.
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "MAX_BACKGROUND_FETCHES",
+      "browser.pagedata.maxBackgroundFetches",
+      5,
+      () => this.#startBackgroundWorkers()
+    );
+  }
 
   /**
    * Initializes a new instance of the service, not called externally.
@@ -90,6 +258,8 @@ const PageDataService = new (class PageDataService extends EventEmitter {
         }
       }
     }
+
+    idleService.addIdleObserver(this, fetchIdleTime);
   }
 
   /**
@@ -116,9 +286,22 @@ const PageDataService = new (class PageDataService extends EventEmitter {
     }
 
     let browser = actor.browsingContext?.embedderElement;
+
     // If we don't have a browser then it went away before we could record,
     // so we don't know where the data came from.
-    if (!browser || !this.#isATabBrowser(browser)) {
+    if (!browser) {
+      return;
+    }
+
+    // Is this a load in a background browser?
+    let backgroundResolve = this.#backgroundBrowsers.get(browser);
+    if (backgroundResolve) {
+      backgroundResolve(actor);
+      return;
+    }
+
+    // Otherwise we only care about pages loaded in the tab browser.
+    if (!this.#isATabBrowser(browser)) {
       return;
     }
 
@@ -167,6 +350,128 @@ const PageDataService = new (class PageDataService extends EventEmitter {
   }
 
   /**
+   * Fetches page data from the given URL using a hidden window. Note that this does not populate
+   * the page data cache or emit the `page-data` event.
+   *
+   * @param {string} url
+   *   The url to retrieve data for.
+   * @returns {Promise<PageData|null>}
+   *   Resolves to the found pagedata or null in case of error.
+   */
+  async fetchPageData(url) {
+    return this.#browserManager.withHiddenBrowser(async browser => {
+      try {
+        let { promise, resolve } = PromiseUtils.defer();
+        this.#backgroundBrowsers.set(browser, resolve);
+
+        let principal = Services.scriptSecurityManager.getSystemPrincipal();
+        let oa = E10SUtils.predictOriginAttributes({
+          browser,
+        });
+        let loadURIOptions = {
+          triggeringPrincipal: principal,
+          remoteType: E10SUtils.getRemoteTypeForURI(
+            url,
+            true,
+            false,
+            E10SUtils.DEFAULT_REMOTE_TYPE,
+            null,
+            oa
+          ),
+        };
+        browser.loadURI(url, loadURIOptions);
+
+        let actor = await promise;
+        return await actor.collectPageData();
+      } finally {
+        this.#backgroundBrowsers.delete(browser);
+      }
+    });
+  }
+
+  /**
+   * Handles notifications from the idle service.
+   *
+   * @param {nsISupports} subject
+   *   The notification's subject.
+   * @param {string} topic
+   *   The notification topic.
+   * @param {string} data
+   *   The data associated with the notification.
+   */
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "idle":
+        logConsole.debug("User went idle");
+        this.#userIsIdle = true;
+        this.#startBackgroundWorkers();
+        break;
+      case "active":
+        logConsole.debug("User became active");
+        this.#userIsIdle = false;
+        break;
+    }
+  }
+
+  /**
+   * Starts as many background workers as are allowed to process the background
+   * queue.
+   */
+  #startBackgroundWorkers() {
+    if (!this.#userIsIdle) {
+      return;
+    }
+
+    let toStart;
+
+    if (this.MAX_BACKGROUND_FETCHES) {
+      toStart = this.MAX_BACKGROUND_FETCHES - this.#backgroundFetches;
+    } else {
+      toStart = this.#backgroundQueue.size;
+    }
+
+    for (let i = 0; i < toStart; i++) {
+      this.#backgroundFetch();
+    }
+  }
+
+  /**
+   * Starts a background fetch worker which will pull urls from the queue and
+   * load them until the queue is empty.
+   */
+  async #backgroundFetch() {
+    this.#backgroundFetches++;
+
+    let url = shift(this.#backgroundQueue);
+    while (url) {
+      try {
+        let pageData = await this.fetchPageData(url);
+
+        if (pageData) {
+          this.#pageDataCache.set(url, pageData);
+          this.emit("page-data", pageData);
+        }
+      } catch (e) {
+        logConsole.error(e);
+      }
+
+      // Check whether the user became active or the worker limit changed
+      // dynamically.
+      if (
+        !this.#userIsIdle ||
+        (this.MAX_BACKGROUND_FETCHES > 0 &&
+          this.#backgroundFetches > this.MAX_BACKGROUND_FETCHES)
+      ) {
+        break;
+      }
+
+      url = shift(this.#backgroundQueue);
+    }
+
+    this.#backgroundFetches--;
+  }
+
+  /**
    * Queues page data retrieval for a url. The page-data notification will be
    * generated if data becomes available.
    *
@@ -175,19 +480,10 @@ const PageDataService = new (class PageDataService extends EventEmitter {
    * @param {string} url
    *   The url to retrieve data for.
    */
-  async queueFetch(url) {
-    // Stub-implementation that generates an empty record.
-    let pageData = {
-      url,
-      date: Date.now(),
-      data: {},
-    };
+  queueFetch(url) {
+    this.#backgroundQueue.add(url);
 
-    this.#pageDataCache.set(url, pageData);
-
-    // Send out a notification. The `no-page-data` notification is intended
-    // for test use only.
-    this.emit("page-data", pageData);
+    this.#startBackgroundWorkers();
   }
 
   /**

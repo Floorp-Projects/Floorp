@@ -109,6 +109,7 @@ use serde::ser::{Serialize, SerializeStruct, Serializer};
 /// }
 /// ```
 #[repr(C)]
+#[cfg_attr(docsrs, doc(cfg(feature = "raw_value")))]
 pub struct RawValue {
     json: str,
 }
@@ -120,6 +121,10 @@ impl RawValue {
 
     fn from_owned(json: Box<str>) -> Box<Self> {
         unsafe { mem::transmute::<Box<str>, Box<RawValue>>(json) }
+    }
+
+    fn into_owned(raw_value: Box<Self>) -> Box<str> {
+        unsafe { mem::transmute::<Box<RawValue>, Box<str>>(raw_value) }
     }
 }
 
@@ -215,6 +220,12 @@ impl RawValue {
     }
 }
 
+impl From<Box<RawValue>> for Box<str> {
+    fn from(raw_value: Box<RawValue>) -> Self {
+        RawValue::into_owned(raw_value)
+    }
+}
+
 /// Convert a `T` into a boxed `RawValue`.
 ///
 /// # Example
@@ -267,6 +278,7 @@ impl RawValue {
 ///
 /// println!("{}", serde_json::value::to_raw_value(&map).unwrap_err());
 /// ```
+#[cfg_attr(docsrs, doc(cfg(feature = "raw_value")))]
 pub fn to_raw_value<T>(value: &T) -> Result<Box<RawValue>, Error>
 where
     T: Serialize,

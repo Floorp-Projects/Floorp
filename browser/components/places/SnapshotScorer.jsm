@@ -13,6 +13,10 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Services.jsm"
 );
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Snapshots: "resource:///modules/Snapshots.jsm",
+});
+
 XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
   return console.createInstance({
     prefix: "SnapshotSelector",
@@ -166,14 +170,13 @@ const SnapshotScorer = new (class SnapshotScorer {
   }
 
   /**
-   * Not currently used.
+   * Calculate points based on whether the snapshot has interactions which share a common referrer with the context url
    *
    * @param {Snapshot} snapshot
    * @returns {number}
    */
   _scoreInNavigation(snapshot) {
-    // In Navigation is not currently implemented.
-    return 0;
+    return snapshot.commonReferrerScore ?? 0;
   }
 
   /**
@@ -194,7 +197,7 @@ const SnapshotScorer = new (class SnapshotScorer {
    * @returns {number}
    */
   _scoreIsUserPersisted(snapshot) {
-    return snapshot.userPersisted ? 1 : 0;
+    return snapshot.userPersisted != Snapshots.USER_PERSISTED.NO ? 1 : 0;
   }
 
   /**

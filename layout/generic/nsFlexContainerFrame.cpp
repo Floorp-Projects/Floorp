@@ -44,12 +44,6 @@ static mozilla::LazyLogModule gFlexContainerLog("FlexContainer");
 #define FLEX_LOGV(...) \
   MOZ_LOG(gFlexContainerLog, LogLevel::Verbose, (__VA_ARGS__));
 
-// XXXdholbert Some of this helper-stuff should be separated out into a general
-// "main/cross-axis utils" header, shared by grid & flexbox?
-// (Particularly when grid gets support for align-*/justify-* properties.)
-
-// Helper structs / classes / methods
-// ==================================
 // Returns true iff the given nsStyleDisplay has display:-webkit-{inline-}box
 // or display:-moz-{inline-}box.
 static inline bool IsDisplayValueLegacyBox(const nsStyleDisplay* aStyleDisp) {
@@ -315,6 +309,42 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
   // FlexItem::IsInlineAxisMainAxis() is equivalent & more optimal.
   bool IsInlineAxisMainAxis(WritingMode aItemWM) const {
     return IsRowOriented() != GetWritingMode().IsOrthogonalTo(aItemWM);
+  }
+
+  // Maps justify-*: 'left' or 'right' to 'start' or 'end'.
+  StyleAlignFlags ResolveJustifyLeftRight(const StyleAlignFlags& aFlags) const {
+    MOZ_ASSERT(
+        aFlags == StyleAlignFlags::LEFT || aFlags == StyleAlignFlags::RIGHT,
+        "This helper accepts only 'LEFT' or 'RIGHT' flags!");
+
+    const auto wm = GetWritingMode();
+    const bool isJustifyLeft = aFlags == StyleAlignFlags::LEFT;
+    if (IsColumnOriented()) {
+      if (!wm.IsVertical()) {
+        // Container's alignment axis (main axis) is *not* parallel to the
+        // line-left <-> line-right axis or the physical left <-> physical right
+        // axis, so we map both 'left' and 'right' to 'start'.
+        return StyleAlignFlags::START;
+      }
+
+      MOZ_ASSERT(wm.PhysicalAxis(MainAxis()) == eAxisHorizontal,
+                 "Vertical column-oriented flex container's main axis should "
+                 "be parallel to physical left <-> right axis!");
+      // Map 'left' or 'right' to 'start' or 'end', depending on its block flow
+      // direction.
+      return isJustifyLeft == wm.IsVerticalLR() ? StyleAlignFlags::START
+                                                : StyleAlignFlags::END;
+    }
+
+    MOZ_ASSERT(MainAxis() == eLogicalAxisInline,
+               "Row-oriented flex container's main axis should be parallel to "
+               "line-left <-> line-right axis!");
+
+    // If we get here, we're operating on the flex container's inline axis,
+    // so we map 'left' to whichever of 'start' or 'end' corresponds to the
+    // *line-relative* left side; and similar for 'right'.
+    return isJustifyLeft == wm.IsBidiLTR() ? StyleAlignFlags::START
+                                           : StyleAlignFlags::END;
   }
 
   // Delete copy-constructor & reassignment operator, to prevent accidental
@@ -1193,7 +1223,7 @@ static mozilla::StyleAlignFlags SimplifyAlignOrJustifyContentForOneItem(
   // space-{between,around,evenly} (since those values only make sense with
   // multiple alignment subjects), and otherwise just use the specified value:
   if (specified == StyleAlignFlags::SPACE_BETWEEN) {
-    return StyleAlignFlags::START;
+    return StyleAlignFlags::FLEX_START;
   }
   if (specified == StyleAlignFlags::SPACE_AROUND ||
       specified == StyleAlignFlags::SPACE_EVENLY) {
@@ -1281,6 +1311,11 @@ StyleAlignFlags nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
     }
   }
 
+  if (alignment == StyleAlignFlags::STRETCH) {
+    // The default fallback alignment for 'stretch' is 'flex-start'.
+    alignment = StyleAlignFlags::FLEX_START;
+  }
+
   // Resolve flex-start, flex-end, auto, left, right, baseline, last baseline;
   if (alignment == StyleAlignFlags::FLEX_START) {
     alignment = isAxisReversed ? StyleAlignFlags::END : StyleAlignFlags::START;
@@ -1288,19 +1323,20 @@ StyleAlignFlags nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
     alignment = isAxisReversed ? StyleAlignFlags::START : StyleAlignFlags::END;
   } else if (alignment == StyleAlignFlags::LEFT ||
              alignment == StyleAlignFlags::RIGHT) {
-    if (aLogicalAxis == eLogicalAxisInline) {
-      const bool isLeft = (alignment == StyleAlignFlags::LEFT);
-      alignment = (isLeft == GetWritingMode().IsBidiLTR())
-                      ? StyleAlignFlags::START
-                      : StyleAlignFlags::END;
-    } else {
-      alignment = StyleAlignFlags::START;
-    }
+    MOZ_ASSERT(isMainAxis, "Only justify-* can have 'left' and 'right'!");
+    alignment = axisTracker.ResolveJustifyLeftRight(alignment);
   } else if (alignment == StyleAlignFlags::BASELINE) {
     alignment = StyleAlignFlags::START;
   } else if (alignment == StyleAlignFlags::LAST_BASELINE) {
     alignment = StyleAlignFlags::END;
   }
+
+  MOZ_ASSERT(alignment != StyleAlignFlags::STRETCH,
+             "We should've converted 'stretch' to the fallback alignment!");
+  MOZ_ASSERT(alignment != StyleAlignFlags::FLEX_START &&
+                 alignment != StyleAlignFlags::FLEX_END,
+             "nsAbsoluteContainingBlock doesn't know how to handle "
+             "flex-relative axis for flex containers!");
 
   return (alignment | alignmentFlags);
 }
@@ -3432,28 +3468,8 @@ MainAxisPositionTracker::MainAxisPositionTracker(
   // Map 'left'/'right' to 'start'/'end'
   if (mJustifyContent.primary == StyleAlignFlags::LEFT ||
       mJustifyContent.primary == StyleAlignFlags::RIGHT) {
-    const auto wm = aAxisTracker.GetWritingMode();
-    if (aAxisTracker.IsColumnOriented() && !wm.IsVertical()) {
-      // Container's alignment axis (main axis) is *not* parallel to the
-      // line-left <-> line-right axis or the physical left <-> physical right
-      // axis, so we map both 'left' and 'right' to 'start'.
-      mJustifyContent.primary = StyleAlignFlags::START;
-    } else {
-      MOZ_ASSERT(
-          aAxisTracker.MainAxis() == eLogicalAxisInline ||
-              wm.PhysicalAxis(aAxisTracker.MainAxis()) == eAxisHorizontal,
-          "The container's main axis should be parallel to either line-left "
-          "<-> line-right axis or physical left <-> physical right axis!");
-
-      // Otherwise, we map 'left' and 'right' to 'start' or 'end', depending on
-      // the container's writing mode.
-      const bool isLTR = wm.IsPhysicalLTR();
-      const bool isJustifyLeft =
-          (mJustifyContent.primary == StyleAlignFlags::LEFT);
-      mJustifyContent.primary = (isJustifyLeft == isLTR)
-                                    ? StyleAlignFlags::START
-                                    : StyleAlignFlags::END;
-    }
+    mJustifyContent.primary =
+        aAxisTracker.ResolveJustifyLeftRight(mJustifyContent.primary);
   }
 
   // Map 'start'/'end' to 'flex-start'/'flex-end'.

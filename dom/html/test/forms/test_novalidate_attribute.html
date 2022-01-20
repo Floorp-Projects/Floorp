@@ -34,9 +34,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=556013
 /**
  * novalidate should prevent form validation, thus not blocking form submission.
  *
- * NOTE: if there is no invalidformsubmit observer, the form submission will
- * never be blocked and this test might be a false-positive but that should not
- * be a problem.
+ * NOTE: if the MozInvalidForm event doesn't get prevented default, the form
+ * submission will never be blocked and this test might be a false-positive but
+ * that should not be a problem. We will remove the check for MozInvalidForm
+ * event, see bug 587671.
  */
 document.forms[0].addEventListener("submit", function(aEvent) {
   ok(true, "novalidate has been correctly used for first form");

@@ -3,10 +3,10 @@
 <assemblyIdentity
         version="1.0.0.0"
         processorArchitecture="*"
-        name="Floorp"
-        type="FLoorp"
+        name="Firefox"
+        type="win32"
 />
-<description>Floorp</description>
+<description>Firefox</description>
 <dependency>
         <dependentAssembly>
                 <assemblyIdentity

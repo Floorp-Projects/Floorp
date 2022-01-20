@@ -22,10 +22,6 @@ const OPEN_NOOPENER_WINDOW = `
 `;
 
 add_task(async function test_bc_id_overflow() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["print.tab_modal.enabled", true]],
-  });
-
   is(document.querySelector(".printPreviewBrowser"), null);
 
   await BrowserTestUtils.withNewTab(

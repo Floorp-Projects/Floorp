@@ -590,7 +590,6 @@ already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
     }
   }
 
-  RefPtr<DrawTarget> target = aTarget;
   IntRect surfRect(0, 0, mSurface->GetSize().width, mSurface->GetSize().height);
 
   // Check if we still need to crop our surface
@@ -600,8 +599,7 @@ already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
     // the crop lies entirely outside the surface area, nothing to draw
     if (surfPortion.IsEmpty()) {
       mSurface = nullptr;
-      RefPtr<gfx::SourceSurface> surface(mSurface);
-      return surface.forget();
+      return nullptr;
     }
 
     IntPoint dest(std::max(0, surfPortion.X() - mPictureRect.X()),
@@ -609,18 +607,28 @@ already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
 
     // We must initialize this target with mPictureRect.Size() because the
     // specification states that if the cropping area is given, then return an
-    // ImageBitmap with the size equals to the cropping area.
-    target = target->CreateSimilarDrawTarget(mPictureRect.Size(),
-                                             target->GetFormat());
-
-    if (!target) {
+    // ImageBitmap with the size equals to the cropping area. Ensure that the
+    // format matches the surface, even though the DT type is similar to the
+    // destination, i.e. blending an alpha surface to an opaque DT. However,
+    // any pixels outside the surface portion must be filled with transparent
+    // black, even if the surface is opaque, so force to an alpha format in
+    // that case.
+    SurfaceFormat format = mSurface->GetFormat();
+    if (!surfPortion.IsEqualEdges(mPictureRect) && IsOpaque(format)) {
+      format = SurfaceFormat::B8G8R8A8;
+    }
+    RefPtr<DrawTarget> cropped =
+        aTarget->CreateSimilarDrawTarget(mPictureRect.Size(), format);
+    if (!cropped) {
       mSurface = nullptr;
-      RefPtr<gfx::SourceSurface> surface(mSurface);
-      return surface.forget();
+      return nullptr;
     }
 
-    target->CopySurface(mSurface, surfPortion, dest);
-    mSurface = target->Snapshot();
+    cropped->CopySurface(mSurface, surfPortion, dest);
+    mSurface = cropped->Snapshot();
+    if (!mSurface) {
+      return nullptr;
+    }
 
     // Make mCropRect match new surface we've cropped to
     mPictureRect.MoveTo(0, 0);
@@ -636,9 +644,12 @@ already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
                mSurface->GetFormat() == SurfaceFormat::A8R8G8B8);
 
     RefPtr<DataSourceSurface> srcSurface = mSurface->GetDataSurface();
+    if (NS_WARN_IF(!srcSurface)) {
+      return nullptr;
+    }
     RefPtr<DataSourceSurface> dstSurface = Factory::CreateDataSourceSurface(
         srcSurface->GetSize(), srcSurface->GetFormat());
-    if (NS_WARN_IF(!srcSurface) || NS_WARN_IF(!dstSurface)) {
+    if (NS_WARN_IF(!dstSurface)) {
       return nullptr;
     }
 
@@ -667,10 +678,8 @@ already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
   // Replace our surface with one optimized for the target we're about to draw
   // to, under the assumption it'll likely be drawn again to that target.
   // This call should be a no-op for already-optimized surfaces
-  mSurface = target->OptimizeSourceSurface(mSurface);
-
-  RefPtr<gfx::SourceSurface> surface(mSurface);
-  return surface.forget();
+  mSurface = aTarget->OptimizeSourceSurface(mSurface);
+  return do_AddRef(mSurface);
 }
 
 already_AddRefed<layers::Image> ImageBitmap::TransferAsImage() {
@@ -1001,6 +1010,56 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
 
 /* static */
 already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
+    nsIGlobalObject* aGlobal, OffscreenCanvas& aOffscreenCanvas,
+    const Maybe<IntRect>& aCropRect, const ImageBitmapOptions& aOptions,
+    ErrorResult& aRv) {
+  if (aOffscreenCanvas.Width() == 0) {
+    aRv.ThrowInvalidStateError("Passed-in canvas has width 0");
+    return nullptr;
+  }
+
+  if (aOffscreenCanvas.Height() == 0) {
+    aRv.ThrowInvalidStateError("Passed-in canvas has height 0");
+    return nullptr;
+  }
+
+  uint32_t flags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE;
+
+  // by default surfaces have premultiplied alpha
+  // attempt to get non premultiplied if required
+  if (aOptions.mPremultiplyAlpha == PremultiplyAlpha::None) {
+    flags |= nsLayoutUtils::SFE_ALLOW_NON_PREMULT;
+  }
+
+  SurfaceFromElementResult res =
+      nsLayoutUtils::SurfaceFromOffscreenCanvas(&aOffscreenCanvas, flags);
+
+  RefPtr<SourceSurface> surface = res.GetSourceSurface();
+  if (NS_WARN_IF(!surface)) {
+    aRv.ThrowInvalidStateError("Passed-in canvas failed to create snapshot");
+    return nullptr;
+  }
+
+  gfxAlphaType alphaType = res.mAlphaType;
+  bool writeOnly = res.mIsWriteOnly;
+
+  // If the OffscreenCanvas's rendering context is WebGL/WebGPU, then the
+  // snapshot we got from the OffscreenCanvas is a DataSourceSurface which
+  // is a copy of the rendering context. We handle cropping in this case.
+  bool needToReportMemoryAllocation = false;
+  bool mustCopy =
+      aCropRect.isSome() &&
+      (aOffscreenCanvas.GetContextType() == CanvasContextType::WebGL1 ||
+       aOffscreenCanvas.GetContextType() == CanvasContextType::WebGL2 ||
+       aOffscreenCanvas.GetContextType() == CanvasContextType::WebGPU);
+
+  return CreateImageBitmapInternal(aGlobal, surface, aCropRect, aOptions,
+                                   writeOnly, needToReportMemoryAllocation,
+                                   mustCopy, alphaType, aRv);
+}
+
+/* static */
+already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
     nsIGlobalObject* aGlobal, ImageData& aImageData,
     const Maybe<IntRect>& aCropRect, const ImageBitmapOptions& aOptions,
     ErrorResult& aRv) {
@@ -1127,14 +1186,48 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
     return nullptr;
   }
 
-  RefPtr<layers::Image> data = aImageBitmap.mData;
-
-  RefPtr<SourceSurface> surface = data->GetAsSourceSurface();
+  IntRect cropRect = aImageBitmap.mPictureRect;
+  RefPtr<SourceSurface> surface;
 
   bool needToReportMemoryAllocation = false;
 
+  if (aImageBitmap.mSurface) {
+    // the source imageBitmap already has a cropped surface, just use this
+    surface = aImageBitmap.mSurface;
+    cropRect = aCropRect.valueOr(cropRect);
+  } else {
+    RefPtr<layers::Image> data = aImageBitmap.mData;
+    surface = data->GetAsSourceSurface();
+
+    if (aCropRect.isSome()) {
+      // get new crop rect relative to original uncropped surface
+      IntRect newCropRect = aCropRect.ref();
+      newCropRect = FixUpNegativeDimension(newCropRect, aRv);
+
+      newCropRect.MoveBy(cropRect.X(), cropRect.Y());
+
+      if (cropRect.Contains(newCropRect)) {
+        // new crop region within existing surface
+        // safe to just crop this with new rect
+        cropRect = newCropRect;
+      } else {
+        // crop includes area outside original cropped region
+        // create new surface cropped by original bitmap crop rect
+        RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
+
+        surface = CropAndCopyDataSourceSurface(dataSurface, cropRect);
+        if (NS_WARN_IF(!surface)) {
+          aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+          return nullptr;
+        }
+        needToReportMemoryAllocation = true;
+        cropRect = aCropRect.ref();
+      }
+    }
+  }
+
   return CreateImageBitmapInternal(
-      aGlobal, surface, aCropRect, aOptions, aImageBitmap.mWriteOnly,
+      aGlobal, surface, Some(cropRect), aOptions, aImageBitmap.mWriteOnly,
       needToReportMemoryAllocation, false, aImageBitmap.mAlphaType, aRv);
 }
 
@@ -1394,6 +1487,9 @@ already_AddRefed<Promise> ImageBitmap::Create(
         NS_IsMainThread(),
         "Creating ImageBitmap from HTMLCanvasElement off the main thread.");
     imageBitmap = CreateInternal(aGlobal, aSrc.GetAsHTMLCanvasElement(),
+                                 aCropRect, aOptions, aRv);
+  } else if (aSrc.IsOffscreenCanvas()) {
+    imageBitmap = CreateInternal(aGlobal, aSrc.GetAsOffscreenCanvas(),
                                  aCropRect, aOptions, aRv);
   } else if (aSrc.IsImageData()) {
     imageBitmap = CreateInternal(aGlobal, aSrc.GetAsImageData(), aCropRect,

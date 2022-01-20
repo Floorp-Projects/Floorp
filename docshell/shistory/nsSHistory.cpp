@@ -1317,7 +1317,7 @@ void nsSHistory::LoadURIOrBFCache(LoadEntryResult& aLoadEntry) {
         (!currentShe || (she->SharedInfo() != currentShe->SharedInfo() &&
                          !currentShe->GetFrameLoader()))) {
       bool canSave = (!currentShe || currentShe->GetSaveLayoutStateFlag()) &&
-                     canonicalBC->AllowedInBFCache(Nothing());
+                     canonicalBC->AllowedInBFCache(Nothing(), nullptr);
 
       MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
               ("nsSHistory::LoadURIOrBFCache "

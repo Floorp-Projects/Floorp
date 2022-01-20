@@ -123,6 +123,7 @@ apt_packages+=('libsecret-1-0:i386')
 apt_packages+=('libgtk-3-0:i386')
 apt_packages+=('libx11-xcb1:i386')
 apt_packages+=('libxcb1:i386')
+apt_packages+=('libasound2:i386')
 
 apt-get install --allow-downgrades "${apt_packages[@]}"
 rm -rf /var/lib/apt/lists/*

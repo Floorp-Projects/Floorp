@@ -438,10 +438,12 @@ MediaSourceTrackDemuxer::DoGetSamples(int32_t aNumSamples) {
   }
   RefPtr<SamplesHolder> samples = new SamplesHolder;
   samples->AppendSample(sample);
-  if (mNextRandomAccessPoint <= sample->mTime) {
-    MonitorAutoLock mon(mMonitor);
-    mNextRandomAccessPoint =
-        mManager->GetNextRandomAccessPoint(mType, MediaSourceDemuxer::EOS_FUZZ);
+  {
+    MonitorAutoLock mon(mMonitor);  // spurious warning will be given
+    if (mNextRandomAccessPoint <= sample->mTime) {
+      mNextRandomAccessPoint = mManager->GetNextRandomAccessPoint(
+          mType, MediaSourceDemuxer::EOS_FUZZ);
+    }
   }
   return SamplesPromise::CreateAndResolve(samples, __func__);
 }

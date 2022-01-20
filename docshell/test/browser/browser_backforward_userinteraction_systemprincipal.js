@@ -10,8 +10,18 @@ const TEST_PAGE =
   ) + "dummy_page.html";
 
 async function runTest(privilegedLoad) {
-  // Test with both pref on and off
-  for (let requireUserInteraction of [true, false]) {
+  let prefVals;
+  // Test with both pref on and off, unless parent-controlled pref is enabled.
+  // This distinction can be removed once SHIP is enabled by default.
+  if (
+    Services.prefs.getBoolPref("browser.tabs.documentchannel.parent-controlled")
+  ) {
+    prefVals = [false];
+  } else {
+    prefVals = [true, false];
+  }
+
+  for (let requireUserInteraction of prefVals) {
     Services.prefs.setBoolPref(
       "browser.navigation.requireUserInteraction",
       requireUserInteraction

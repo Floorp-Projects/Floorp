@@ -22,6 +22,7 @@
                       android:required="false"/>
 
         <activity
+                android:configChanges="keyboardHidden|orientation|screenSize"
                 android:name=".GeckoViewActivity"
                 android:label="GeckoView Example"
                 android:launchMode="singleTop"

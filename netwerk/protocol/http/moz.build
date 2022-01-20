@@ -49,6 +49,7 @@ EXPORTS.mozilla.net += [
     "ClassifierDummyChannel.h",
     "ClassifierDummyChannelChild.h",
     "ClassifierDummyChannelParent.h",
+    "EarlyHintsPreloader.h",
     "HttpAuthUtils.h",
     "HttpBackgroundChannelChild.h",
     "HttpBackgroundChannelParent.h",
@@ -99,6 +100,7 @@ UNIFIED_SOURCES += [
     "ConnectionEntry.cpp",
     "ConnectionHandle.cpp",
     "DnsAndConnectSocket.cpp",
+    "EarlyHintsPreloader.cpp",
     "Http2Compression.cpp",
     "Http2Push.cpp",
     "Http2Session.cpp",
@@ -182,7 +184,6 @@ FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [
     "/dom/base",
-    "/extensions/auth",
     "/netwerk/base",
     "/netwerk/cookie",
     "/netwerk/dns",
@@ -190,6 +191,11 @@ LOCAL_INCLUDES += [
     "/netwerk/socket/neqo_glue",
     "/netwerk/url-classifier",
 ]
+
+if CONFIG["MOZ_AUTH_EXTENSION"]:
+    LOCAL_INCLUDES += [
+        "/extensions/auth",
+    ]
 
 EXTRA_JS_MODULES += [
     "WellKnownOpportunisticUtils.jsm",

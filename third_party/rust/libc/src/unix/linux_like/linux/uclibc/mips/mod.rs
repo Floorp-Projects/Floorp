@@ -32,22 +32,13 @@ pub const EPOLL_CLOEXEC: ::c_int = 0x80000;
 
 pub const EFD_CLOEXEC: ::c_int = 0x80000;
 
-pub const BUFSIZ: ::c_uint = 4096;
 pub const TMP_MAX: ::c_uint = 238328;
-pub const FOPEN_MAX: ::c_uint = 16;
-pub const POSIX_MADV_DONTNEED: ::c_int = 4;
 pub const _SC_2_C_VERSION: ::c_int = 96;
 pub const O_ACCMODE: ::c_int = 3;
 pub const O_DIRECT: ::c_int = 0x8000;
 pub const O_DIRECTORY: ::c_int = 0x10000;
 pub const O_NOFOLLOW: ::c_int = 0x20000;
-pub const NI_MAXHOST: ::socklen_t = 1025;
 
-pub const RLIMIT_NOFILE: ::c_int = 5;
-pub const RLIMIT_AS: ::c_int = 6;
-pub const RLIMIT_RSS: ::c_int = 7;
-pub const RLIMIT_NPROC: ::c_int = 8;
-pub const RLIMIT_MEMLOCK: ::c_int = 9;
 pub const RLIMIT_NLIMITS: ::c_int = 15;
 pub const RLIM_NLIMITS: ::c_int = RLIMIT_NLIMITS;
 
@@ -87,7 +78,6 @@ pub const EXFULL: ::c_int = 52;
 pub const ENOANO: ::c_int = 53;
 pub const EBADRQC: ::c_int = 54;
 pub const EBADSLT: ::c_int = 55;
-pub const EDEADLOCK: ::c_int = 56;
 pub const EMULTIHOP: ::c_int = 74;
 pub const EOVERFLOW: ::c_int = 79;
 pub const ENOTUNIQ: ::c_int = 80;
@@ -189,7 +179,6 @@ pub const SIGTSTP: ::c_int = 24;
 pub const SIGURG: ::c_int = 21;
 pub const SIGIO: ::c_int = 22;
 pub const SIGSYS: ::c_int = 12;
-pub const SIGPOLL: ::c_int = 22;
 pub const SIGPWR: ::c_int = 19;
 pub const SIG_SETMASK: ::c_int = 3;
 pub const SIG_BLOCK: ::c_int = 0x1;
@@ -216,47 +205,15 @@ pub const CPU_SETSIZE: ::c_int = 0x400;
 pub const EFD_NONBLOCK: ::c_int = 0x80;
 
 pub const F_GETLK: ::c_int = 14;
-pub const F_GETOWN: ::c_int = 23;
-pub const F_SETOWN: ::c_int = 24;
 pub const F_SETLK: ::c_int = 6;
 pub const F_SETLKW: ::c_int = 7;
 
 pub const SFD_NONBLOCK: ::c_int = 0x80;
 
-pub const TCGETS: ::c_ulong = 0x540d;
-pub const TCSETS: ::c_ulong = 0x540e;
-pub const TCSETSW: ::c_ulong = 0x540f;
-pub const TCSETSF: ::c_ulong = 0x5410;
-pub const TCGETA: ::c_ulong = 0x5401;
-pub const TCSETA: ::c_ulong = 0x5402;
-pub const TCSETAW: ::c_ulong = 0x5403;
-pub const TCSETAF: ::c_ulong = 0x5404;
-pub const TCSBRK: ::c_ulong = 0x5405;
-pub const TCXONC: ::c_ulong = 0x5406;
-pub const TCFLSH: ::c_ulong = 0x5407;
-pub const TIOCGSOFTCAR: ::c_ulong = 0x5481;
-pub const TIOCSSOFTCAR: ::c_ulong = 0x5482;
-pub const TIOCINQ: ::c_ulong = 0x467f;
-pub const TIOCLINUX: ::c_ulong = 0x5483;
-pub const TIOCGSERIAL: ::c_ulong = 0x5484;
-pub const TIOCEXCL: ::c_ulong = 0x740d;
-pub const TIOCNXCL: ::c_ulong = 0x740e;
-pub const TIOCSCTTY: ::c_ulong = 0x5480;
-pub const TIOCGPGRP: ::c_ulong = 0x40047477;
-pub const TIOCSPGRP: ::c_ulong = 0x80047476;
-pub const TIOCOUTQ: ::c_ulong = 0x7472;
-pub const TIOCSTI: ::c_ulong = 0x5472;
 pub const TIOCGWINSZ: ::c_ulong = 0x40087468;
 pub const TIOCSWINSZ: ::c_ulong = 0x80087467;
-pub const TIOCMGET: ::c_ulong = 0x741d;
-pub const TIOCMBIS: ::c_ulong = 0x741b;
-pub const TIOCMBIC: ::c_ulong = 0x741c;
-pub const TIOCMSET: ::c_ulong = 0x741a;
-pub const FIONREAD: ::c_ulong = 0x467f;
-pub const TIOCCONS: ::c_ulong = 0x80047478;
 
 pub const RTLD_GLOBAL: ::c_int = 0x4;
-pub const RTLD_NOLOAD: ::c_int = 0x8;
 
 pub const SIGSTKSZ: ::size_t = 8192;
 pub const CBAUD: ::tcflag_t = 0o0010017;
@@ -316,8 +273,6 @@ pub const B4800: ::speed_t = 0o000014;
 pub const B9600: ::speed_t = 0o000015;
 pub const B19200: ::speed_t = 0o000016;
 pub const B38400: ::speed_t = 0o000017;
-pub const EXTA: ::speed_t = B19200;
-pub const EXTB: ::speed_t = B38400;
 pub const B57600: ::speed_t = 0o010001;
 pub const B115200: ::speed_t = 0o010002;
 pub const B230400: ::speed_t = 0o010003;

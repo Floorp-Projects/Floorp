@@ -38,6 +38,7 @@ SEARCH_PATHS = [
     "reftest",
     "tools/mach",
     "tools/mozterm",
+    "tools/geckoprocesstypes_generator",
     "tools/six",
     "tools/wptserve",
     "web-platform",

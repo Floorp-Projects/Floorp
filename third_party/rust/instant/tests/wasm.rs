@@ -1,6 +1,6 @@
 extern crate wasm_bindgen_test;
 
-use instant::Instant;
+use instant::{Instant, SystemTime};
 use std::time::Duration;
 use wasm_bindgen_test::*;
 
@@ -47,3 +47,11 @@ fn test_checked_sub() {
         .checked_sub(Duration::new(u64::MAX, ONE_BILLION - 1))
         .is_none());
 }
+
+#[wasm_bindgen_test]
+fn test_system_time() {
+    assert!(SystemTime::UNIX_EPOCH
+        .duration_since(SystemTime::now())
+        .is_err());
+}
+

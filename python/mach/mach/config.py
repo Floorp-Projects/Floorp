@@ -18,9 +18,12 @@ from __future__ import absolute_import, unicode_literals
 
 import collections
 import collections.abc
-import os
 import sys
 import six
+
+from pathlib import Path
+from typing import List, Union
+
 from functools import wraps
 from six.moves.configparser import RawConfigParser, NoSectionError
 from six import string_types
@@ -287,23 +290,21 @@ class ConfigSettings(collections.abc.Mapping):
         self._settings = {}
         self._sections = {}
         self._finalized = False
-        self.loaded_files = set()
 
-    def load_file(self, filename):
-        self.load_files([filename])
+    def load_file(self, filename: Union[str, Path]):
+        self.load_files([Path(filename)])
 
-    def load_files(self, filenames):
+    def load_files(self, filenames: List[Path]):
         """Load a config from files specified by their paths.
 
         Files are loaded in the order given. Subsequent files will overwrite
         values from previous files. If a file does not exist, it will be
         ignored.
         """
-        filtered = [f for f in filenames if os.path.exists(f)]
+        filtered = [f for f in filenames if f.exists()]
 
         fps = [open(f, "rt") for f in filtered]
         self.load_fps(fps)
-        self.loaded_files.update(set(filtered))
         for fp in fps:
             fp.close()
 

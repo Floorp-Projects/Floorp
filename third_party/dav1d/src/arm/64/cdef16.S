@@ -30,12 +30,12 @@
 #include "cdef_tmpl.S"
 
 .macro pad_top_bot_16 s1, s2, w, stride, reg, ret
-        tst             w6,  #1 // CDEF_HAVE_LEFT
+        tst             w7,  #1 // CDEF_HAVE_LEFT
         b.eq            2f
         // CDEF_HAVE_LEFT
         sub             \s1,  \s1,  #4
         sub             \s2,  \s2,  #4
-        tst             w6,  #2 // CDEF_HAVE_RIGHT
+        tst             w7,  #2 // CDEF_HAVE_RIGHT
         b.eq            1f
         // CDEF_HAVE_LEFT+CDEF_HAVE_RIGHT
         ldr             \reg\()0, [\s1]
@@ -76,7 +76,7 @@
 
 2:
         // !CDEF_HAVE_LEFT
-        tst             w6,  #2 // CDEF_HAVE_RIGHT
+        tst             w7,  #2 // CDEF_HAVE_RIGHT
         b.eq            1f
         // !CDEF_HAVE_LEFT+CDEF_HAVE_RIGHT
         ldr             \reg\()0, [\s1]
@@ -126,7 +126,8 @@
 
 // void dav1d_cdef_paddingX_16bpc_neon(uint16_t *tmp, const pixel *src,
 //                                     ptrdiff_t src_stride, const pixel (*left)[2],
-//                                     const pixel *const top, int h,
+//                                     const pixel *const top,
+//                                     const pixel *const bottom, int h,
 //                                     enum CdefEdgeFlags edges);
 
 .macro padding_func_16 w, stride, reg
@@ -134,7 +135,7 @@ function cdef_padding\w\()_16bpc_neon, export=1
         movi            v30.8h,  #0x80, lsl #8
         mov             v31.16b, v30.16b
         sub             x0,  x0,  #2*(2*\stride+2)
-        tst             w6,  #4 // CDEF_HAVE_TOP
+        tst             w7,  #4 // CDEF_HAVE_TOP
         b.ne            1f
         // !CDEF_HAVE_TOP
         st1             {v30.8h, v31.8h}, [x0], #32
@@ -149,17 +150,17 @@ function cdef_padding\w\()_16bpc_neon, export=1
 
         // Middle section
 3:
-        tst             w6,  #1 // CDEF_HAVE_LEFT
+        tst             w7,  #1 // CDEF_HAVE_LEFT
         b.eq            2f
         // CDEF_HAVE_LEFT
-        tst             w6,  #2 // CDEF_HAVE_RIGHT
+        tst             w7,  #2 // CDEF_HAVE_RIGHT
         b.eq            1f
         // CDEF_HAVE_LEFT+CDEF_HAVE_RIGHT
 0:
         ld1             {v0.s}[0], [x3], #4
         ldr             s2,       [x1, #2*\w]
         load_n_incr_16  v1,  x1,  x2,  \w
-        subs            w5,  w5,  #1
+        subs            w6,  w6,  #1
         str             s0,       [x0]
         stur            \reg\()1, [x0, #4]
         str             s2,       [x0, #4+2*\w]
@@ -170,7 +171,7 @@ function cdef_padding\w\()_16bpc_neon, export=1
         // CDEF_HAVE_LEFT+!CDEF_HAVE_RIGHT
         ld1             {v0.s}[0], [x3], #4
         load_n_incr_16  v1,  x1,  x2,  \w
-        subs            w5,  w5,  #1
+        subs            w6,  w6,  #1
         str             s0,       [x0]
         stur            \reg\()1, [x0, #4]
         str             s31,      [x0, #4+2*\w]
@@ -178,13 +179,13 @@ function cdef_padding\w\()_16bpc_neon, export=1
         b.gt            1b
         b               3f
 2:
-        tst             w6,  #2 // CDEF_HAVE_RIGHT
+        tst             w7,  #2 // CDEF_HAVE_RIGHT
         b.eq            1f
         // !CDEF_HAVE_LEFT+CDEF_HAVE_RIGHT
 0:
         ldr             s1,       [x1, #2*\w]
         load_n_incr_16  v0,  x1,  x2,  \w
-        subs            w5,  w5,  #1
+        subs            w6,  w6,  #1
         str             s31,      [x0]
         stur            \reg\()0, [x0, #4]
         str             s1,       [x0, #4+2*\w]
@@ -194,7 +195,7 @@ function cdef_padding\w\()_16bpc_neon, export=1
 1:
         // !CDEF_HAVE_LEFT+!CDEF_HAVE_RIGHT
         load_n_incr_16  v0,  x1,  x2,  \w
-        subs            w5,  w5,  #1
+        subs            w6,  w6,  #1
         str             s31,      [x0]
         stur            \reg\()0, [x0, #4]
         str             s31,      [x0, #4+2*\w]
@@ -202,7 +203,7 @@ function cdef_padding\w\()_16bpc_neon, export=1
         b.gt            1b
 
 3:
-        tst             w6,  #8 // CDEF_HAVE_BOTTOM
+        tst             w7,  #8 // CDEF_HAVE_BOTTOM
         b.ne            1f
         // !CDEF_HAVE_BOTTOM
         st1             {v30.8h, v31.8h}, [x0], #32
@@ -212,8 +213,8 @@ function cdef_padding\w\()_16bpc_neon, export=1
         ret
 1:
         // CDEF_HAVE_BOTTOM
-        add             x9,  x1,  x2
-        pad_top_bot_16  x1,  x9, \w, \stride, \reg, 1
+        add             x9,  x5,  x2
+        pad_top_bot_16  x5,  x9, \w, \stride, \reg, 1
 endfunc
 .endm
 

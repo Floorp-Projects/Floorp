@@ -21,6 +21,7 @@
 #include "chrome/common/ipc_channel.h"
 #include "gfxConfig.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/FOGIPC.h"
 #include "mozilla/HangDetails.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
@@ -29,6 +30,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
 
@@ -46,6 +48,7 @@
 
 #include "mozilla/ipc/ProcessUtils.h"
 #include "nsDebugImpl.h"
+#include "nsIXULRuntime.h"
 #include "nsThreadManager.h"
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
@@ -262,11 +265,28 @@ mozilla::ipc::IPCResult RDDParent::RecvInitSandboxTesting(
 }
 #endif
 
+mozilla::ipc::IPCResult RDDParent::RecvFlushFOGData(
+    FlushFOGDataResolver&& aResolver) {
+  glean::FlushFOGData(std::move(aResolver));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult RDDParent::RecvTestTriggerMetrics(
+    TestTriggerMetricsResolver&& aResolve) {
+  mozilla::glean::test_only_ipc::a_counter.Add(nsIXULRuntime::PROCESS_TYPE_RDD);
+  aResolve(true);
+  return IPC_OK();
+}
+
 void RDDParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (AbnormalShutdown == aWhy) {
     NS_WARNING("Shutting down RDD process early due to a crash!");
     ProcessChild::QuickExit();
   }
+
+  // Send the last bits of Glean data over to the main process.
+  glean::FlushFOGData(
+      [](ByteBuf&& aBuf) { glean::SendFOGData(std::move(aBuf)); });
 
 #ifndef NS_FREE_PERMANENT_DATA
 #  ifdef XP_WIN

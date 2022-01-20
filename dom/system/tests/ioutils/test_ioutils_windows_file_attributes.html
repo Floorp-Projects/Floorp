@@ -1,0 +1,135 @@
+<!-- Any copyright is dedicated to the Public Domain.
+- http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Test the IOUtils file I/O API</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="file_ioutils_test_fixtures.js"></script>
+  <script>
+    "use strict";
+
+    const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+
+    add_task(async function getSetWindowsAttributes() {
+      const tmpDir = PathUtils.join(await PathUtils.getTempDir(), "ioutils-windows-attributes.tmp.d");
+      await createDir(tmpDir);
+      ok(await dirExists(tmpDir), `Expected ${tmpDir} to be a directory`);
+
+      const filePath = PathUtils.join(tmpDir, "file.tmp");
+      await createFile(filePath);
+      ok(await fileExists(filePath), `Expected ${filePath} to exist`);
+
+      {
+        info("Getting attributes for newly created file.");
+        const attrs = await IOUtils.getWindowsAttributes(filePath);
+
+        ok(attrs.readOnly === false, `Newly created file ${filePath} is not a read-only file`);
+        ok(attrs.hidden === false, `Newly created file ${filePath} is not a hidden file`);
+        ok(attrs.system === false, `Newly created file ${filePath} is not a system file`);
+      }
+
+      {
+        info("Setting read-only on an existing file.");
+        await IOUtils.setWindowsAttributes(filePath, { readOnly: true })
+        const attrs = await IOUtils.getWindowsAttributes(filePath);
+
+        ok(attrs.readOnly === true, `Updated file ${filePath} is a read-only file`);
+        ok(attrs.hidden === false, `Updated file ${filePath} is not a hidden file`);
+        ok(attrs.system === false, `Updated file ${filePath} is not a system file`);
+      }
+
+      info("Attempting to write to a read-only file.");
+
+      await Assert.rejects(
+        IOUtils.writeUTF8(filePath, "hello, world"),
+        /NotAllowedError: Could not open the file at .+ for writing/,
+        "IOUtils::writeUTF8 on a read-only file fails."
+      );
+
+      {
+        info("Setting hidden on an existing file.");
+        await IOUtils.setWindowsAttributes(filePath, { hidden: true })
+        const attrs = await IOUtils.getWindowsAttributes(filePath);
+
+        ok(attrs.readOnly === true, `Updated file ${filePath} is still a read-only file`);
+        ok(attrs.hidden === true, `Updated file ${filePath} is a hidden file`);
+        ok(attrs.system === false, `Updated file ${filePath} is not a system file`);
+      }
+
+      {
+        info("Setting system on an existing file.");
+        await IOUtils.setWindowsAttributes(filePath, { system: true })
+        const attrs = await IOUtils.getWindowsAttributes(filePath);
+
+        ok(attrs.readOnly === true, `Updated file ${filePath} is still a read-only file`);
+        ok(attrs.hidden === true, `Updated file ${filePath} is still a hidden file`);
+        ok(attrs.system === true, `Updated file ${filePath} is a system file`);
+      }
+
+      {
+        info("Clearing all Windows attributes on an existing file.");
+        await IOUtils.setWindowsAttributes(filePath, { readOnly: false, hidden: false, system: false });
+        const attrs = await IOUtils.getWindowsAttributes(filePath);
+
+        ok(attrs.readOnly === false, `Updated file ${filePath} is not a read-only file`);
+        ok(attrs.hidden === false, `Updated file ${filePath} is not a hidden file`);
+        ok(attrs.system === false, `Updated file ${filePath} is not a system file`);
+      }
+
+      {
+        info("Setting all Windows attributes on an existing file.");
+        await IOUtils.setWindowsAttributes(filePath, { readOnly: true, hidden: true, system: true });
+        const attrs = await IOUtils.getWindowsAttributes(filePath);
+
+        ok(attrs.readOnly === true, `Updated file ${filePath} is a read-only file`);
+        ok(attrs.hidden === true, `Updated file ${filePath} is a hidden file`);
+        ok(attrs.system === true, `Updated file ${filePath} is a system file`);
+      }
+
+      {
+        info("Clearing read-only on an existing file.");
+        await IOUtils.setWindowsAttributes(filePath, { readOnly: false });
+        const attrs = await IOUtils.getWindowsAttributes(filePath);
+
+        ok(attrs.readOnly === false, `Updated file ${filePath} is no longer a read-only file`);
+        ok(attrs.hidden === true, `Updated file ${filePath} is still a hidden file`);
+        ok(attrs.system === true, `Updated file ${filePath} is still a system file`);
+      }
+
+      {
+        info("Clearing hidden on an existing file.");
+        await IOUtils.setWindowsAttributes(filePath, { hidden: false });
+        const attrs = await IOUtils.getWindowsAttributes(filePath);
+
+        ok(attrs.readOnly === false, `Updated file ${filePath} is still not a read-only file`);
+        ok(attrs.hidden === false, `Updated file ${filePath} is no longer a hidden file`);
+        ok(attrs.system === true, `Updated file ${filePath} is still a system file`);
+      }
+
+      {
+        info("Clearing system on an existing file.");
+        await IOUtils.setWindowsAttributes(filePath, { system: false });
+        const attrs = await IOUtils.getWindowsAttributes(filePath);
+
+        ok(attrs.readOnly === false, `Updated file ${filePath} is still not a read-only file`);
+        ok(attrs.hidden === false, `Updated file ${filePath} is sitll not a hidden file`);
+        ok(attrs.system === false, `Updated file ${filePath} is no longer a system file`);
+      }
+
+      await cleanup(tmpDir);
+    });
+
+  </script>
+</head>
+
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+</body>
+
+</html>

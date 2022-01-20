@@ -101,16 +101,13 @@ struct HandleRefInner(Option<File>);
 
 impl Drop for HandleRefInner {
     fn drop(&mut self) {
-        self.0.take().map(|f| f.into_raw_handle());
+        self.0.take().unwrap().into_raw_handle();
     }
 }
 
 impl AsRawHandle for HandleRef {
     fn as_raw_handle(&self) -> RawHandle {
-        match (self.0).0.as_ref() {
-            Some(f) => f.as_raw_handle(),
-            None => std::ptr::null_mut(),
-        }
+        self.as_file().as_raw_handle()
     }
 }
 
@@ -162,11 +159,7 @@ impl HandleRef {
     /// is a valid handle. The caller must ensure this is true before invoking
     /// this constructor.
     pub unsafe fn from_raw_handle(handle: RawHandle) -> HandleRef {
-        HandleRef(HandleRefInner(if handle.is_null() {
-            None
-        } else {
-            Some(File::from_raw_handle(handle))
-        }))
+        HandleRef(HandleRefInner(Some(File::from_raw_handle(handle))))
     }
 
     /// Return this handle as a standard `File` reference.

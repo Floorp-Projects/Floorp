@@ -24,7 +24,6 @@ MOCHITEST_CHROME_MANIFESTS += [
 BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
 
 XPIDL_SOURCES += [
-    "nsIFormSubmitObserver.idl",
     "nsIMenuBuilder.idl",
 ]
 

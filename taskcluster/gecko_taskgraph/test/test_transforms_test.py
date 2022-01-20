@@ -85,13 +85,22 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
     run_split_variants = partial(run_transform, test_transforms.variant.split_variants)
 
     # test no variants
-    input_task = make_test_task()
+    input_task = make_test_task(
+        **{
+            "run-without-variant": True,
+        }
+    )
     tasks = list(run_split_variants(input_task))
     assert len(tasks) == 1
     assert tasks[0] == input_task
 
     # test variants are split into expected tasks
-    input_task["variants"] = ["foo", "bar"]
+    input_task = make_test_task(
+        **{
+            "run-without-variant": True,
+            "variants": ["foo", "bar"],
+        }
+    )
     tasks = list(run_split_variants(input_task))
     assert len(tasks) == 3
     assert tasks[0] == make_test_task()
@@ -104,6 +113,7 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
     # test composite variants
     input_task = make_test_task(
         **{
+            "run-without-variant": True,
             "variants": ["foo+bar"],
         }
     )
@@ -119,9 +129,10 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
     # test 'when' filter
     input_task = make_test_task(
         **{
-            "variants": ["foo", "bar", "foo+bar"],
+            "run-without-variant": True,
             # this should cause task to be filtered out of 'bar' and 'foo+bar' variants
             "test-platform": "windows",
+            "variants": ["foo", "bar", "foo+bar"],
         }
     )
     tasks = list(run_split_variants(input_task))
@@ -129,14 +140,24 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
     assert "unittest_variant" not in tasks[0]["attributes"]
     assert tasks[1]["attributes"]["unittest_variant"] == "foo"
 
+    # test 'run-without-variants=False'
+    input_task = make_test_task(
+        **{
+            "run-without-variant": False,
+            "variants": ["foo"],
+        }
+    )
+    tasks = list(run_split_variants(input_task))
+    assert len(tasks) == 1
+    assert tasks[0]["attributes"]["unittest_variant"] == "foo"
+
 
 @pytest.mark.parametrize(
     "task,expected",
     (
         pytest.param(
             {
-                "attributes": {"unittest_variant": "webrender-sw+wayland"},
-                "e10s": False,
+                "attributes": {"unittest_variant": "webrender-sw+wayland+1proc"},
                 "test-platform": "linux1804-64-clang-trunk-qr/opt",
             },
             {
@@ -162,7 +183,6 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
         pytest.param(
             {
                 "attributes": {},
-                "e10s": True,
                 "test-platform": "android-hw-s7-8-0-android-aarch64-shippable-qr/opt",
             },
             {
@@ -185,7 +205,6 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
         pytest.param(
             {
                 "attributes": {},
-                "e10s": True,
                 "test-platform": "windows10-64-2004-ref-hw-2017-ccov/debug",
             },
             {

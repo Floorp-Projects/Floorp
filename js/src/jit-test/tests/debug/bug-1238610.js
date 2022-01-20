@@ -16,6 +16,7 @@ function loadFile(lfVarx) {
   for (lfLocal in this)
       if (!(lfLocal in lfGlobal))
           lfGlobal[lfLocal] = this[lfLocal]
-  offThreadCompileScript(lfVarx)
-  lfGlobal.runOffThreadScript()
+  offThreadCompileToStencil(lfVarx);
+  var stencil = lfGlobal.finishOffThreadCompileToStencil();
+  lfGlobal.evalStencil(stencil);
 }

@@ -49,8 +49,6 @@ user_pref("extensions.getAddons.discovery.api_url", "data:;base64,eyJyZXN1bHRzIj
 user_pref("extensions.webextensions.warnings-as-errors", true);
 // Disable useragent updates.
 user_pref("general.useragent.updates.enabled", false);
-// Ensure WR doesn't get enabled in tests unless we do it explicitly with the MOZ_WEBRENDER envvar.
-user_pref("gfx.webrender.all.qualified", false);
 user_pref("hangmonitor.timeout", 0); // no hang monitor
 user_pref("media.gmp-manager.updateEnabled", false);
 // Don't do network connections for mitm priming

@@ -18,24 +18,11 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{env, io};
 
-use glob;
+use glob::{self, Pattern};
 
 use libc::c_int;
 
 use super::CXVersion;
-
-//================================================
-// Macros
-//================================================
-
-macro_rules! try_opt {
-    ($option:expr) => {{
-        match $option {
-            Some(some) => some,
-            None => return None,
-        }
-    }};
-}
 
 //================================================
 // Structs
@@ -117,7 +104,9 @@ impl Clang {
             }
         }
 
-        paths.extend(env::split_paths(&env::var("PATH").unwrap()));
+        if let Ok(path) = env::var("PATH") {
+            paths.extend(env::split_paths(&path));
+        }
 
         // First, look for a target-prefixed `clang` executable.
 
@@ -126,7 +115,7 @@ impl Clang {
             let versioned = format!("{}-clang-[0-9]*{}", target, env::consts::EXE_SUFFIX);
             let patterns = &[&default[..], &versioned[..]];
             for path in &paths {
-                if let Some(path) = find(&path, patterns) {
+                if let Some(path) = find(path, patterns) {
                     return Some(Clang::new(path, args));
                 }
             }
@@ -154,12 +143,17 @@ impl Clang {
 /// Returns the first match to the supplied glob patterns in the supplied
 /// directory if there are any matches.
 fn find(directory: &Path, patterns: &[&str]) -> Option<PathBuf> {
+    // Escape the directory in case it contains characters that have special
+    // meaning in glob patterns (e.g., `[` or `]`).
+    let directory = if let Some(directory) = directory.to_str() {
+        Path::new(&Pattern::escape(directory)).to_owned()
+    } else {
+        return None;
+    };
+
     for pattern in patterns {
         let pattern = directory.join(pattern).to_string_lossy().into_owned();
-        if let Some(path) = try_opt!(glob::glob(&pattern).ok())
-            .filter_map(|p| p.ok())
-            .next()
-        {
+        if let Some(path) = glob::glob(&pattern).ok()?.filter_map(|p| p.ok()).next() {
             if path.is_file() && is_executable(&path).unwrap_or(false) {
                 return Some(path);
             }
@@ -221,10 +215,10 @@ fn parse_version_number(number: &str) -> Option<c_int> {
 /// Parses the version from the output of a `clang` executable if possible.
 fn parse_version(path: &Path) -> Option<CXVersion> {
     let output = run_clang(path, &["--version"]).0;
-    let start = try_opt!(output.find("version ")) + 8;
-    let mut numbers = try_opt!(output[start..].split_whitespace().next()).split('.');
-    let major = try_opt!(numbers.next().and_then(parse_version_number));
-    let minor = try_opt!(numbers.next().and_then(parse_version_number));
+    let start = output.find("version ")? + 8;
+    let mut numbers = output[start..].split_whitespace().next()?.split('.');
+    let major = numbers.next().and_then(parse_version_number)?;
+    let minor = numbers.next().and_then(parse_version_number)?;
     let subminor = numbers.next().and_then(parse_version_number).unwrap_or(0);
     Some(CXVersion {
         Major: major,
@@ -238,8 +232,8 @@ fn parse_search_paths(path: &Path, language: &str, args: &[String]) -> Option<Ve
     let mut clang_args = vec!["-E", "-x", language, "-", "-v"];
     clang_args.extend(args.iter().map(|s| &**s));
     let output = run_clang(path, &clang_args).1;
-    let start = try_opt!(output.find("#include <...> search starts here:")) + 34;
-    let end = try_opt!(output.find("End of search list."));
+    let start = output.find("#include <...> search starts here:")? + 34;
+    let end = output.find("End of search list.")?;
     let paths = output[start..end].replace("(framework directory)", "");
     Some(
         paths

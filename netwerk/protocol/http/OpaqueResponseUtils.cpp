@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace net {
 
-bool IsOpaqueSafeListedMIMEType(const nsACString& aContentType) {
+static bool IsOpaqueSafeListedMIMEType(const nsACString& aContentType) {
   if (aContentType.EqualsLiteral(TEXT_CSS) ||
       aContentType.EqualsLiteral(IMAGE_SVG_XML)) {
     return true;
@@ -25,7 +25,7 @@ bool IsOpaqueSafeListedMIMEType(const nsACString& aContentType) {
   return nsContentUtils::IsJavascriptMIMEType(typeString);
 }
 
-bool IsOpaqueBlockListedMIMEType(const nsACString& aContentType) {
+static bool IsOpaqueBlockListedMIMEType(const nsACString& aContentType) {
   return aContentType.EqualsLiteral(TEXT_HTML) ||
          StringEndsWith(aContentType, "+json"_ns) ||
          aContentType.EqualsLiteral(APPLICATION_JSON) ||
@@ -35,7 +35,8 @@ bool IsOpaqueBlockListedMIMEType(const nsACString& aContentType) {
          aContentType.EqualsLiteral(TEXT_XML);
 }
 
-bool IsOpaqueBlockListedNeverSniffedMIMEType(const nsACString& aContentType) {
+static bool IsOpaqueBlockListedNeverSniffedMIMEType(
+    const nsACString& aContentType) {
   return aContentType.EqualsLiteral(APPLICATION_GZIP2) ||
          aContentType.EqualsLiteral(APPLICATION_MSEXCEL) ||
          aContentType.EqualsLiteral(APPLICATION_MSPPT) ||
@@ -73,6 +74,39 @@ bool IsOpaqueBlockListedNeverSniffedMIMEType(const nsACString& aContentType) {
          aContentType.EqualsLiteral(MULTIPART_SIGNED) ||
          aContentType.EqualsLiteral(TEXT_EVENT_STREAM) ||
          aContentType.EqualsLiteral(TEXT_CSV);
+}
+
+OpaqueResponseBlockedReason GetOpaqueResponseBlockedReason(
+    const nsHttpResponseHead& aResponseHead) {
+  nsAutoCString contentType;
+  aResponseHead.ContentType(contentType);
+  if (contentType.IsEmpty()) {
+    return OpaqueResponseBlockedReason::BLOCKED_SHOULD_SNIFF;
+  }
+
+  if (IsOpaqueSafeListedMIMEType(contentType)) {
+    return OpaqueResponseBlockedReason::ALLOWED_SAFE_LISTED;
+  }
+
+  if (IsOpaqueBlockListedNeverSniffedMIMEType(contentType)) {
+    return OpaqueResponseBlockedReason::BLOCKED_BLOCKLISTED_NEVER_SNIFFED;
+  }
+
+  if (aResponseHead.Status() == 206 &&
+      IsOpaqueBlockListedMIMEType(contentType)) {
+    return OpaqueResponseBlockedReason::BLOCKED_206_AND_BLOCKLISTED;
+  }
+
+  nsAutoCString contentTypeOptionsHeader;
+  if (aResponseHead.GetContentTypeOptionsHeader(contentTypeOptionsHeader) &&
+      contentTypeOptionsHeader.EqualsIgnoreCase("nosniff") &&
+      (IsOpaqueBlockListedMIMEType(contentType) ||
+       contentType.EqualsLiteral(TEXT_PLAIN))) {
+    return OpaqueResponseBlockedReason::
+        BLOCKED_NOSNIFF_AND_EITHER_BLOCKLISTED_OR_TEXTPLAIN;
+  }
+
+  return OpaqueResponseBlockedReason::BLOCKED_SHOULD_SNIFF;
 }
 
 Result<std::tuple<int64_t, int64_t, int64_t>, nsresult>

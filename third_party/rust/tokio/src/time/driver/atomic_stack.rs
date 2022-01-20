@@ -95,7 +95,7 @@ impl Iterator for AtomicStackEntries {
     type Item = Arc<Entry>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.ptr.is_null() {
+        if self.ptr.is_null() || self.ptr == SHUTDOWN {
             return None;
         }
 
@@ -118,7 +118,7 @@ impl Drop for AtomicStackEntries {
     fn drop(&mut self) {
         for entry in self {
             // Flag the entry as errored
-            entry.error();
+            entry.error(Error::shutdown());
         }
     }
 }

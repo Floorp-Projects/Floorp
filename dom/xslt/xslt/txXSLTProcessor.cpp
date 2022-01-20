@@ -31,12 +31,20 @@ void txXSLTProcessor::shutdown() { txHandlerTable::shutdown(); }
 
 /* static */
 nsresult txXSLTProcessor::execute(txExecutionState& aEs) {
-  nsresult rv = NS_OK;
-  txInstruction* instr;
-  while ((instr = aEs.getNextInstruction())) {
-    rv = instr->execute(aEs);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsresult rv;
+  do {
+    mozilla::Result<txInstruction*, nsresult> result = aEs.getNextInstruction();
+    if (result.isErr()) {
+      return result.unwrapErr();
+    }
 
-  return NS_OK;
+    txInstruction* instr = result.unwrap();
+    if (!instr) {
+      return NS_OK;
+    }
+
+    rv = instr->execute(aEs);
+  } while (NS_SUCCEEDED(rv));
+
+  return rv;
 }

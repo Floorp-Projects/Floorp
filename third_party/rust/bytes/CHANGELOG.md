@@ -1,3 +1,57 @@
+# 1.1.0 (August 25, 2021)
+
+### Added
+
+- `BufMut::put_bytes(self, val, cnt)` (#487)
+- Implement `From<Box<[u8]>>` for `Bytes` (#504)
+
+### Changed
+
+- Override `put_slice` for `&mut [u8]` (#483)
+- Panic on integer overflow in `Chain::remaining` (#482)
+- Add inline tags to `UninitSlice` methods (#443)
+- Override `copy_to_bytes` for Chain and Take (#481)
+- Keep capacity when unsplit on empty other buf (#502)
+
+### Documented
+
+- Clarify `BufMut` allocation guarantees (#501)
+- Clarify `BufMut::put_int` behavior (#486)
+- Clarify actions of `clear` and `truncate`. (#508)
+
+# 1.0.1 (January 11, 2021)
+
+### Changed
+- mark `Vec::put_slice` with `#[inline]` (#459)
+
+### Fixed
+- Fix deprecation warning (#457)
+- use `Box::into_raw` instead of `mem::forget`-in-disguise (#458)
+
+# 1.0.0 (December 22, 2020)
+
+### Changed
+- Rename `Buf`/`BufMut` methods `bytes()` and `bytes_mut()` to `chunk()` and `chunk_mut()` (#450)
+
+### Removed
+- remove unused Buf implementation. (#449)
+
+# 0.6.0 (October 21, 2020)
+
+API polish in preparation for a 1.0 release.
+
+### Changed
+- `BufMut` is now an `unsafe` trait (#432).
+- `BufMut::bytes_mut()` returns `&mut UninitSlice`, a type owned by `bytes` to
+  avoid undefined behavior (#433).
+- `Buf::copy_to_bytes(len)` replaces `Buf::into_bytes()` (#439).
+- `Buf`/`BufMut` utility methods are moved onto the trait and `*Ext` traits are
+  removed (#431).
+
+### Removed
+- `BufMut::bytes_vectored_mut()` (#430).
+- `new` methods on combinator types (#434).
+
 # 0.5.6 (July 13, 2020)
 
 - Improve `BytesMut` to reuse buffer when fully `advance`d.

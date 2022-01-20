@@ -322,7 +322,7 @@ mingw-w64:
     fetch:
         type: git
         repo: https://git.code.sf.net/p/mingw-w64/mingw-w64
-        revision: cdb052f1d4056cd510cb83197b55868427b87476
+        revision: 09def642bf5e8a78195791257ff53fd920c549d1
 
 libunwind:
     description: libunwind source code
@@ -351,27 +351,6 @@ clang-5.0:
         type: git
         repo: https://github.com/llvm/llvm-project
         revision: 6a075b6de4cafebec9ca1ff9eec7229a617c93f6
-
-clang-7:
-    description: clang 7 source code
-    fetch:
-        type: git
-        repo: https://github.com/llvm/llvm-project
-        revision: d0d8eb2e5415b8be29343e3c17a18e49e67b5551
-
-clang-8:
-    description: clang 8.0.1 source code
-    fetch:
-        type: git
-        repo: https://github.com/llvm/llvm-project
-        revision: 19a71f6bdf2dddb10764939e7f0ec2b98dba76c9
-
-clang-10:
-    description: clang 10.0.0 source code
-    fetch:
-        type: git
-        repo: https://github.com/llvm/llvm-project
-        revision: d32170dbd5b0d54436537b6b75beaf44324e0c28
 
 clang-13:
     description: clang 13.0.0 source code
@@ -446,7 +425,7 @@ rust-minidump:
     fetch:
         type: git
         repo: https://github.com/luser/rust-minidump/
-        revision: 0c90e02544797317503d1c4cff8daab0cabdea86
+        revision: 664dcd1d8ba8c227220f8b83927095880bd68a5f
 
 fix-stacks:
     description: fix-stacks source code
@@ -486,8 +465,8 @@ makecab:
     description: makecab source code
     fetch:
         type: git
-        repo: https://github.com/luser/rust-makecab/
-        revision: 7eb27ba11b8909a1e2c01b63510e1f1c989912c8
+        repo: https://github.com/glandium/rust-makecab/
+        revision: 73a4605b97123bf7221533c671f27f234d974b02
 
 nodejs-10-linux64:
     description: nodejs 10 for x64 linux
@@ -607,3 +586,14 @@ msix-packaging:
         type: git
         repo: https://github.com/mozilla/msix-packaging
         revision: 8164b7ac5a67688e18fa2497fb31ba13ce9bfb15
+
+pkgconf:
+    description: pkgconf 1.8.0
+    fetch:
+        type: static-url
+        url: https://distfiles.dereferenced.org/pkgconf/pkgconf-1.8.0.tar.xz
+        sha256: ef9c7e61822b7cb8356e6e9e1dca58d9556f3200d78acab35e4347e9d4c2bbaf
+        size: 296304
+        artifact-name: pkgconf.tar.zst
+        strip-components: 1
+        add-prefix: pkgconf/

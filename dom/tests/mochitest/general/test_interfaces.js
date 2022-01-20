@@ -283,7 +283,9 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CSSKeyframesRule", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "CSSLayerRule", insecureContext: true, nightly: true },
+  { name: "CSSLayerBlockRule", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "CSSLayerStatementRule", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CSSMediaRule", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1179,8 +1181,6 @@ var interfaceNamesInGlobalScope = [
   { name: "SVGNumberList", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "SVGPathElement", insecureContext: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "SVGPathSegList", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "SVGPatternElement", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!

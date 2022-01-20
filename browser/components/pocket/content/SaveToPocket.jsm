@@ -100,10 +100,18 @@ var PocketContextMenu = {
       subject.onVideo ||
       subject.onAudio
     );
-    let targetUrl = subject.onLink ? subject.linkUrl : subject.pageUrl;
-    let targetURI = Services.io.newURI(targetUrl);
+    let targetUrl, targetURI;
+    if (subject.onLink) {
+      targetUrl = subject.linkUrl;
+      // linkURI may be null if the URL is invalid.
+      targetURI = subject.linkURI;
+    } else {
+      targetUrl = subject.pageUrl;
+      targetURI = Services.io.newURI(targetUrl);
+    }
     let canPocket =
       pocketEnabled &&
+      targetURI &&
       (targetURI.schemeIs("http") ||
         targetURI.schemeIs("https") ||
         (targetURI.schemeIs("about") && ReaderMode.getOriginalUrl(targetUrl)));

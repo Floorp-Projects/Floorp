@@ -130,7 +130,7 @@ struct CustomElementData {
 // The required information for a custom element as defined in:
 // https://html.spec.whatwg.org/multipage/scripting.html#custom-element-definition
 struct CustomElementDefinition {
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(CustomElementDefinition)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(CustomElementDefinition)
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CustomElementDefinition)
 
   CustomElementDefinition(nsAtom* aType, nsAtom* aLocalName,

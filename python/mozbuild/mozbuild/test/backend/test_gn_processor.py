@@ -125,7 +125,6 @@ class TestGnMozbuildWriter(BackendTester):
             [
                 "-I" + mozpath.join(flags_obj.topobjdir, "ipc", "ipdl", "_ipdlheaders"),
                 "-I" + mozpath.join(flags_obj.topsrcdir, "ipc", "chromium", "src"),
-                "-I" + mozpath.join(flags_obj.topsrcdir, "ipc", "glue"),
                 "-I"
                 + mozpath.join(
                     flags_obj.topsrcdir, "trunk", "webrtc", "modules", "include"
@@ -140,7 +139,7 @@ class TestGnMozbuildWriter(BackendTester):
 class TestGnMozbuildFactoring(unittest.TestCase):
 
     test_attrs = {
-        "LOCAL_INCLUDES": ["!/ipc/ipdl/_ipdlheaders", "/ipc/chromium/src", "/ipc/glue"],
+        "LOCAL_INCLUDES": ["!/ipc/ipdl/_ipdlheaders", "/ipc/chromium/src"],
         "DEFINES": {"UNICODE": True, "DEBUG": True},
         "LIBRARY_NAME": "Foo",
     }

@@ -199,8 +199,4 @@ was trying to connect. -->
 <!ENTITY prefReset.longDesc "It looks like your network security settings might be causing this. Do you want the default settings to be restored?">
 <!ENTITY prefReset.label "Restore default settings">
 
-<!ENTITY enableTls10.longDesc "This website might not support the TLS 1.2 protocol, which is the minimum version supported by &brandShortName;. Enabling TLS 1.0 and TLS 1.1 might allow this connection to succeed.">
-<!ENTITY enableTls10.note "TLS 1.0 and TLS 1.1 will be permanently disabled in a future release.">
-<!ENTITY enableTls10.label "Enable TLS 1.0 and 1.1">
-
 <!ENTITY networkProtocolError.longDesc "<p>The page you are trying to view cannot be shown because an error in the network protocol was detected.</p><ul><li>Please contact the website owners to inform them of this problem.</li></ul>">

@@ -21,6 +21,8 @@ user_pref("extensions.update.notifyUser", false);
 user_pref("focusmanager.testmode", true);
 // Enable fake media streams for getUserMedia
 user_pref("media.navigator.streams.fake", true);
+// Disable permission prompt for getUserMedia
+user_pref("media.navigator.permission.disabled", true);
 // Enable pre-fetching of resources
 user_pref("network.preload", true);
 // Enable direct connection

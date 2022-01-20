@@ -332,8 +332,8 @@ void TransactionWrapper::AppendTransformProperties(
 void TransactionWrapper::UpdateScrollPosition(
     const wr::WrPipelineId& aPipelineId,
     const layers::ScrollableLayerGuid::ViewID& aScrollId,
-    const wr::LayoutPoint& aScrollPosition) {
-  wr_transaction_scroll_layer(mTxn, aPipelineId, aScrollId, aScrollPosition);
+    const wr::LayoutVector2D& aScrollOffset) {
+  wr_transaction_scroll_layer(mTxn, aPipelineId, aScrollId, aScrollOffset);
 }
 
 void TransactionWrapper::UpdateIsTransformAsyncZooming(uint64_t aAnimationId,
@@ -1152,7 +1152,7 @@ Maybe<wr::WrSpatialId> DisplayListBuilder::GetScrollIdForDefinedScrollLayer(
 wr::WrSpatialId DisplayListBuilder::DefineScrollLayer(
     const layers::ScrollableLayerGuid::ViewID& aViewId,
     const Maybe<wr::WrSpatialId>& aParent, const wr::LayoutRect& aContentRect,
-    const wr::LayoutRect& aClipRect, const wr::LayoutPoint& aScrollOffset,
+    const wr::LayoutRect& aClipRect, const wr::LayoutVector2D& aScrollOffset,
     wr::SpatialTreeItemKey aKey) {
   auto it = mScrollIds.find(aViewId);
   if (it != mScrollIds.end()) {

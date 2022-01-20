@@ -96,5 +96,10 @@ bool nsXPTMethodInfo::GetId(JSContext* aCx, jsid& aId) const {
     return true;
   }
 
-  return mozilla::dom::AtomizeAndPinJSString(aCx, aId, Name());
+  JSString* str = JS_AtomizeString(aCx, Name());
+  if (!str) {
+    return false;
+  }
+  aId = JS::PropertyKey::fromNonIntAtom(str);
+  return true;
 }

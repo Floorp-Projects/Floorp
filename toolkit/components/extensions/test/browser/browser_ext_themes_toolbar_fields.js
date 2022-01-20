@@ -142,3 +142,42 @@ add_task(async function test_support_toolbar_field_brighttext() {
 
   await extension.unload();
 });
+
+// Verifies that we apply the lwt-toolbar-field-brighttext attribute when
+// toolbar fields are dark text on a dark background.
+add_task(async function test_support_toolbar_field_brighttext_dark_on_dark() {
+  let root = document.documentElement;
+  // Remove the `remotecontrol` attribute since it interferes with the urlbar styling.
+  root.removeAttribute("remotecontrol");
+  registerCleanupFunction(() => {
+    root.setAttribute("remotecontrol", "true");
+  });
+  let urlbar = gURLBar.textbox;
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      theme: {
+        colors: {
+          frame: ACCENT_COLOR,
+          tab_background_text: TEXT_COLOR,
+          toolbar_field: "#000",
+          toolbar_field_text: "#111111",
+        },
+      },
+    },
+  });
+
+  await extension.startup();
+
+  Assert.equal(
+    window.getComputedStyle(urlbar).color,
+    hexToCSS("#111111"),
+    "Color has been set"
+  );
+  Assert.ok(
+    root.hasAttribute("lwt-toolbar-field-brighttext"),
+    "Brighttext attribute should be set"
+  );
+
+  await extension.unload();
+});

@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use fluent_fallback::types::ResourceId;
 use std::io;
 
 /// The users of [`FileSource`] implement this trait to provide loading of
@@ -13,7 +14,7 @@ pub trait FileFetcher {
     /// blocking.
     ///
     /// See [`fetch`](#tymethod.fetch).
-    fn fetch_sync(&self, path: &str) -> io::Result<String>;
+    fn fetch_sync(&self, resource_id: &ResourceId) -> io::Result<String>;
 
     /// Return the `String` representation for `path`.
     ///
@@ -25,5 +26,5 @@ pub trait FileFetcher {
     /// is available.
     ///
     /// See [`fetch_sync`](#tymethod.fetch_sync)
-    async fn fetch(&self, path: &str) -> io::Result<String>;
+    async fn fetch(&self, path: &ResourceId) -> io::Result<String>;
 }

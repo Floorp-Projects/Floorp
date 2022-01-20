@@ -238,6 +238,7 @@ windows10-64-2004-shippable-qr/opt:
         - windows10-2004-tests
         - windows10-64-2004-failure-tests
         - talos-xperf
+        - windows-talos
 
 windows10-64-2004-devedition-qr/opt:
     build-platform: win64-devedition/opt

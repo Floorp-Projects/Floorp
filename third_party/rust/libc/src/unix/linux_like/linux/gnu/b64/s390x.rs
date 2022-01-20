@@ -153,17 +153,6 @@ s! {
         __f_spare: [::c_int; 6],
     }
 
-    pub struct termios2 {
-        pub c_iflag: ::tcflag_t,
-        pub c_oflag: ::tcflag_t,
-        pub c_cflag: ::tcflag_t,
-        pub c_lflag: ::tcflag_t,
-        pub c_line: ::cc_t,
-        pub c_cc: [::cc_t; 19],
-        pub c_ispeed: ::speed_t,
-        pub c_ospeed: ::speed_t,
-    }
-
     pub struct __psw_t {
         pub mask: u64,
         pub addr: u64,
@@ -385,6 +374,7 @@ pub const MAP_POPULATE: ::c_int = 0x08000;
 pub const MAP_NONBLOCK: ::c_int = 0x010000;
 pub const MAP_STACK: ::c_int = 0x020000;
 pub const MAP_HUGETLB: ::c_int = 0x040000;
+pub const MAP_SYNC: ::c_int = 0x080000;
 
 pub const EDEADLOCK: ::c_int = 35;
 pub const ENAMETOOLONG: ::c_int = 36;
@@ -537,10 +527,6 @@ pub const TIOCOUTQ: ::c_ulong = 0x5411;
 pub const TIOCSTI: ::c_ulong = 0x5412;
 pub const TIOCGWINSZ: ::c_ulong = 0x5413;
 pub const TIOCSWINSZ: ::c_ulong = 0x5414;
-pub const TIOCMGET: ::c_ulong = 0x5415;
-pub const TIOCMBIS: ::c_ulong = 0x5416;
-pub const TIOCMBIC: ::c_ulong = 0x5417;
-pub const TIOCMSET: ::c_ulong = 0x5418;
 pub const FIONREAD: ::c_ulong = 0x541B;
 pub const TIOCCONS: ::c_ulong = 0x541D;
 pub const TIOCSBRK: ::c_ulong = 0x5427;
@@ -552,12 +538,6 @@ pub const TCSAFLUSH: ::c_int = 2;
 
 pub const TIOCLINUX: ::c_ulong = 0x541C;
 pub const TIOCGSERIAL: ::c_ulong = 0x541E;
-pub const TIOCM_ST: ::c_int = 0x008;
-pub const TIOCM_SR: ::c_int = 0x010;
-pub const TIOCM_CTS: ::c_int = 0x020;
-pub const TIOCM_CAR: ::c_int = 0x040;
-pub const TIOCM_RNG: ::c_int = 0x080;
-pub const TIOCM_DSR: ::c_int = 0x100;
 
 pub const VTIME: usize = 5;
 pub const VSWTC: usize = 7;
@@ -616,7 +596,6 @@ pub const PARODD: ::tcflag_t = 0o001000;
 pub const HUPCL: ::tcflag_t = 0o002000;
 pub const CLOCAL: ::tcflag_t = 0o004000;
 pub const CBAUDEX: ::tcflag_t = 0o010000;
-pub const BOTHER: ::speed_t = 0o010000;
 pub const B57600: ::speed_t = 0o010001;
 pub const B115200: ::speed_t = 0o010002;
 pub const B230400: ::speed_t = 0o010003;

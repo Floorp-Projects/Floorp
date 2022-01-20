@@ -21,6 +21,7 @@ class Blob;
 }  // namespace dom
 
 class AllocationHandle;
+class MediaDevice;
 class MediaEngineSource;
 
 enum MediaSinkEnum {
@@ -46,11 +47,19 @@ class MediaEngine {
 
   virtual void Shutdown() = 0;
 
+  virtual RefPtr<MediaEngineSource> CreateSource(
+      const MediaDevice* aDevice) = 0;
+
   virtual void SetFakeDeviceChangeEventsEnabled(bool aEnable) {
     MOZ_DIAGNOSTIC_ASSERT(false, "Fake events may not have started/stopped");
   }
 
   virtual MediaEventSource<void>& DeviceListChangeEvent() = 0;
+  /**
+   * Return true if devices returned from EnumerateDevices are emulated media
+   * devices.
+   */
+  virtual bool IsFake() const = 0;
 
  protected:
   virtual ~MediaEngine() = default;

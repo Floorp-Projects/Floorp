@@ -145,11 +145,10 @@ LocalAccessible* RemoteAccessibleBase<Derived>::OuterDocOfRemoteBrowser()
 
 template <class Derived>
 void RemoteAccessibleBase<Derived>::SetParent(Derived* aParent) {
-  MOZ_ASSERT(IsDoc(), "we should only reparent documents");
   if (!aParent) {
     mParent = kNoParent;
   } else {
-    MOZ_ASSERT(!aParent->IsDoc());
+    MOZ_ASSERT(!IsDoc() || !aParent->IsDoc());
     mParent = aParent->ID();
   }
 }
@@ -208,9 +207,11 @@ void RemoteAccessibleBase<Derived>::Description(nsString& aDescription) const {
 
 template <class Derived>
 double RemoteAccessibleBase<Derived>::CurValue() const {
-  if (auto value = mCachedFields->GetAttribute<double>(nsGkAtoms::value)) {
-    VERIFY_CACHE(CacheDomain::Value);
-    return *value;
+  if (mCachedFields) {
+    if (auto value = mCachedFields->GetAttribute<double>(nsGkAtoms::value)) {
+      VERIFY_CACHE(CacheDomain::Value);
+      return *value;
+    }
   }
 
   return UnspecifiedNaN<double>();
@@ -218,9 +219,11 @@ double RemoteAccessibleBase<Derived>::CurValue() const {
 
 template <class Derived>
 double RemoteAccessibleBase<Derived>::MinValue() const {
-  if (auto min = mCachedFields->GetAttribute<double>(nsGkAtoms::min)) {
-    VERIFY_CACHE(CacheDomain::Value);
-    return *min;
+  if (mCachedFields) {
+    if (auto min = mCachedFields->GetAttribute<double>(nsGkAtoms::min)) {
+      VERIFY_CACHE(CacheDomain::Value);
+      return *min;
+    }
   }
 
   return UnspecifiedNaN<double>();
@@ -228,9 +231,11 @@ double RemoteAccessibleBase<Derived>::MinValue() const {
 
 template <class Derived>
 double RemoteAccessibleBase<Derived>::MaxValue() const {
-  if (auto max = mCachedFields->GetAttribute<double>(nsGkAtoms::max)) {
-    VERIFY_CACHE(CacheDomain::Value);
-    return *max;
+  if (mCachedFields) {
+    if (auto max = mCachedFields->GetAttribute<double>(nsGkAtoms::max)) {
+      VERIFY_CACHE(CacheDomain::Value);
+      return *max;
+    }
   }
 
   return UnspecifiedNaN<double>();
@@ -238,9 +243,11 @@ double RemoteAccessibleBase<Derived>::MaxValue() const {
 
 template <class Derived>
 double RemoteAccessibleBase<Derived>::Step() const {
-  if (auto step = mCachedFields->GetAttribute<double>(nsGkAtoms::step)) {
-    VERIFY_CACHE(CacheDomain::Value);
-    return *step;
+  if (mCachedFields) {
+    if (auto step = mCachedFields->GetAttribute<double>(nsGkAtoms::step)) {
+      VERIFY_CACHE(CacheDomain::Value);
+      return *step;
+    }
   }
 
   return UnspecifiedNaN<double>();
@@ -465,6 +472,120 @@ uint64_t RemoteAccessibleBase<Derived>::State() {
     }
   }
   return state;
+}
+
+template <class Derived>
+already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
+  RefPtr<AccAttributes> attributes = new AccAttributes();
+  if (mCachedFields) {
+    // We use GetAttribute instead of GetAttributeRefPtr because we need
+    // nsAtom, not const nsAtom.
+    if (auto tag =
+            mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::tag)) {
+      attributes->SetAttribute(nsGkAtoms::tag, *tag);
+    }
+
+    GroupPos groupPos = GroupPosition();
+    nsAccUtils::SetAccGroupAttrs(attributes, groupPos.level, groupPos.setSize,
+                                groupPos.posInSet);
+
+    bool hierarchical = false;
+    uint32_t itemCount = AccGroupInfo::TotalItemCount(this, &hierarchical);
+    if (itemCount) {
+      attributes->SetAttribute(nsGkAtoms::child_item_count,
+                              static_cast<int32_t>(itemCount));
+    }
+
+    if (hierarchical) {
+      attributes->SetAttribute(nsGkAtoms::tree, true);
+    }
+
+    if (auto inputType = mCachedFields->GetAttribute<RefPtr<nsAtom>>(
+            nsGkAtoms::textInputType)) {
+      attributes->SetAttribute(nsGkAtoms::textInputType, *inputType);
+    }
+  }
+
+  return attributes.forget();
+}
+
+template <class Derived>
+nsAtom* RemoteAccessibleBase<Derived>::TagName() const {
+  if (mCachedFields) {
+    if (auto tag =
+            mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::tag)) {
+      return *tag;
+    }
+  }
+
+  return nullptr;
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::ARIAGroupPosition(
+    int32_t* aLevel, int32_t* aSetSize, int32_t* aPosInSet) const {
+  if (!mCachedFields) {
+    return;
+  }
+
+  if (aLevel) {
+    if (auto level =
+            mCachedFields->GetAttribute<int32_t>(nsGkAtoms::aria_level)) {
+      *aLevel = *level;
+    }
+  }
+  if (aSetSize) {
+    if (auto setsize =
+            mCachedFields->GetAttribute<int32_t>(nsGkAtoms::aria_setsize)) {
+      *aSetSize = *setsize;
+    }
+  }
+  if (aPosInSet) {
+    if (auto posinset =
+            mCachedFields->GetAttribute<int32_t>(nsGkAtoms::aria_posinset)) {
+      *aPosInSet = *posinset;
+    }
+  }
+}
+
+template <class Derived>
+AccGroupInfo* RemoteAccessibleBase<Derived>::GetGroupInfo() const {
+  if (!mCachedFields) {
+    return nullptr;
+  }
+
+  if (auto groupInfo = mCachedFields->GetAttribute<UniquePtr<AccGroupInfo>>(
+          nsGkAtoms::group)) {
+    return groupInfo->get();
+  }
+
+  return nullptr;
+}
+
+template <class Derived>
+AccGroupInfo* RemoteAccessibleBase<Derived>::GetOrCreateGroupInfo() {
+  AccGroupInfo* groupInfo = GetGroupInfo();
+  if (groupInfo) {
+    return groupInfo;
+  }
+
+  groupInfo = AccGroupInfo::CreateGroupInfo(this);
+  if (groupInfo) {
+    if (!mCachedFields) {
+      mCachedFields = new AccAttributes();
+    }
+
+    mCachedFields->SetAttribute(nsGkAtoms::group, groupInfo);
+  }
+
+  return groupInfo;
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::InvalidateGroupInfo() {
+  if (mCachedFields) {
+    mCachedFields->Remove(nsGkAtoms::group);
+  }
 }
 
 template <class Derived>

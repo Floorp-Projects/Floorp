@@ -79,7 +79,9 @@ EXPORTS.mozilla.dom += [
     "URLClassifierParent.h",
     "UserActivationIPCUtils.h",
     "VsyncChild.h",
+    "VsyncMainChild.h",
     "VsyncParent.h",
+    "VsyncWorkerChild.h",
     "WindowGlobalActor.h",
     "WindowGlobalChild.h",
     "WindowGlobalParent.h",
@@ -142,8 +144,9 @@ UNIFIED_SOURCES += [
 SOURCES += [
     "ContentChild.cpp",
     "ProcessHangMonitor.cpp",
-    "VsyncChild.cpp",
+    "VsyncMainChild.cpp",
     "VsyncParent.cpp",
+    "VsyncWorkerChild.cpp",
 ]
 
 PREPROCESSED_IPDL_SOURCES += [
@@ -244,7 +247,8 @@ MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.ini"]
 MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.ini"]
 
-CXXFLAGS += CONFIG["TK_CFLAGS"]
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
 if CONFIG["FUZZING"] and CONFIG["FUZZING_INTERFACES"]:
     TEST_DIRS += ["fuzztest"]

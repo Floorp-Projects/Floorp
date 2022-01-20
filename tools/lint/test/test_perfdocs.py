@@ -53,6 +53,7 @@ module.exports = {
 };
 """
 
+
 SAMPLE_CONFIG = """
 name: mozperftest
 manifest: None
@@ -63,6 +64,7 @@ suites:
         tests:
             Example: ""
 """
+
 
 DYNAMIC_SAMPLE_CONFIG = """
 name: {}
@@ -78,6 +80,7 @@ suites:
         tests:
             Example: "Performance test Example from another_suite."
 """
+
 
 SAMPLE_INI = """
 [Example]
@@ -551,7 +554,8 @@ def test_perfdocs_framework_gatherers_urls(logger, structured_logger, perfdocs_s
             desc = gn._verifier._gatherer.framework_gatherers[
                 "raptor"
             ].build_test_description(fg, test_name, tests[test_name], suite_name)
-            assert suite_name in desc[0]
+            assert f"**test url**: `<{url[0]['test_url']}>`__" in desc[0]
+            assert f"**expected**: {url[0]['expected']}" in desc[0]
             assert test_name in desc[0]
 
 

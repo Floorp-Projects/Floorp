@@ -134,6 +134,30 @@ class WebDriverBiDi {
   }
 
   /**
+   * Retrieve the readiness state of the remote end, regarding the creation of
+   * new WebDriverBiDi sessions.
+   *
+   * See https://w3c.github.io/webdriver-bidi/#command-session-status
+   *
+   * @return {Object}
+   *     The readiness state.
+   */
+  getSessionReadinessStatus() {
+    if (this.session) {
+      // We currently only support one session, see Bug 1720707.
+      return {
+        ready: false,
+        message: "Session already started",
+      };
+    }
+
+    return {
+      ready: true,
+      message: "",
+    };
+  }
+
+  /**
    * Starts the WebDriver BiDi support.
    */
   start() {

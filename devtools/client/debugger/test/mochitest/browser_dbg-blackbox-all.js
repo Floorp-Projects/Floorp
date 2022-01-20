@@ -83,7 +83,7 @@ add_task(async function() {
 
   is(findSource(dbg, SOURCE_FILES.nestedSource).isBlackBoxed, true, "nested-source.js is blackboxed");
   is(findSource(dbg, SOURCE_FILES.codeReload1).isBlackBoxed, true, "code_reload_1.js is blackboxed");
- 
+
   info("Unblackbox files in this group.");
   rightClickEl(dbg, sourceTreeRootNodeEl);
   await waitForContextMenu(dbg);
@@ -99,6 +99,6 @@ add_task(async function() {
 function waitForBlackboxCount(dbg, count) {
   return waitForState(
     dbg,
-    state => dbg.selectors.getBlackBoxList().length === count
+    state => Object.keys(dbg.selectors.getBlackBoxRanges()).length === count
   );
 }

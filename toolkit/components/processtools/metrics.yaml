@@ -26,6 +26,7 @@ power:
     notification_emails:
       - florian@mozilla.com
     expires: never
+    telemetry_mirror: POWER_TOTAL_CPU_TIME_MS
 
   total_gpu_time_ms:
     type: counter
@@ -40,5 +41,6 @@ power:
     notification_emails:
       - florian@mozilla.com
     expires: never
+    telemetry_mirror: POWER_TOTAL_GPU_TIME_MS
     no_lint:
       - COMMON_PREFIX

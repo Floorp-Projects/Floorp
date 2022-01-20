@@ -15,7 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DownloadsViewUI: "resource:///modules/DownloadsViewUI.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 

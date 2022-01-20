@@ -8,7 +8,7 @@
 
 /* eslint "valid-jsdoc": [2, {requireReturn: false}] */
 
-var EXPORTED_SYMBOLS = ["Blocklist"];
+var EXPORTED_SYMBOLS = ["Blocklist", "BlocklistPrivate"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -82,6 +82,18 @@ const kEscapeSequences = /\\[^.{}]/;
 // trailing literal )$/
 //    plus an optional ) before the )$/
 const kRegExpRemovalRegExp = /^\/\^\(\(?|\\|\)\)?\$\/$/g;
+
+// The list of types provided by XPIProvider. In order to block add-ons,
+// they should be signed and their type should be part of this list.
+// NOTE: This array should be kept in sync with the same addon type strings part of
+// the ALL_EXTERNAL_TYPES set defined by XPIProvider.jsm.
+const kXPIAddonTypes = [
+  "extension",
+  "theme",
+  "locale",
+  "dictionary",
+  "sitepermission",
+];
 
 // For a given input string matcher, produce either a string to compare with,
 // a regular expression, or a set of strings to compare with.
@@ -250,8 +262,6 @@ const BlocklistTelemetry = {
     );
   },
 };
-
-this.BlocklistTelemetry = BlocklistTelemetry;
 
 const Utils = {
   /**
@@ -497,10 +507,8 @@ async function targetAppFilter(entry, environment) {
  * The RemoteSetttings client takes care of filtering out versions that don't apply.
  * The code here stores entries in memory and sends them to the gfx component in
  * serialized text form, using ',', '\t' and '\n' as separators.
- *
- * Note: we assign to the global to allow tests to reach the object directly.
  */
-this.GfxBlocklistRS = {
+const GfxBlocklistRS = {
   _ensureInitialized() {
     if (this._initialized || !gBlocklistEnabled) {
       return;
@@ -674,10 +682,8 @@ this.GfxBlocklistRS = {
  *
  * This is a legacy format, and implements deprecated operations (bug 1620580).
  * ExtensionBlocklistMLBF supersedes this implementation.
- *
- * Note: we assign to the global to allow tests to reach the object directly.
  */
-this.ExtensionBlocklistRS = {
+const ExtensionBlocklistRS = {
   async _ensureEntries() {
     this.ensureInitialized();
     if (!this._entries && gBlocklistEnabled) {
@@ -773,8 +779,7 @@ this.ExtensionBlocklistRS = {
     await this.ensureInitialized();
     await this._updateEntries();
 
-    const types = ["extension", "theme", "locale", "dictionary", "service"];
-    let addons = await AddonManager.getAddonsByTypes(types);
+    let addons = await AddonManager.getAddonsByTypes(kXPIAddonTypes);
     for (let addon of addons) {
       let oldState = addon.blocklistState;
       if (addon.updateBlocklistState) {
@@ -945,10 +950,8 @@ this.ExtensionBlocklistRS = {
  *
  * Stashes can be used to update the blocklist without forcing the whole MLBF
  * to be downloaded again. These stashes are applied on top of the base MLBF.
- *
- * Note: we assign to the global to allow tests to reach the object directly.
  */
-this.ExtensionBlocklistMLBF = {
+const ExtensionBlocklistMLBF = {
   RS_ATTACHMENT_ID: "addons-mlbf.bin",
 
   async _fetchMLBF(record) {
@@ -1136,9 +1139,7 @@ this.ExtensionBlocklistMLBF = {
     this.ensureInitialized();
     await this._updateMLBF(true);
 
-    // Check add-ons from XPIProvider.
-    const types = ["extension", "theme", "locale", "dictionary"];
-    let addons = await AddonManager.getAddonsByTypes(types);
+    let addons = await AddonManager.getAddonsByTypes(kXPIAddonTypes);
     for (let addon of addons) {
       let oldState = addon.blocklistState;
       await addon.updateBlocklistState(false);
@@ -1475,3 +1476,11 @@ let Blocklist = {
 };
 
 Blocklist._init();
+
+// Allow tests to reach implementation objects.
+const BlocklistPrivate = {
+  BlocklistTelemetry,
+  ExtensionBlocklistMLBF,
+  ExtensionBlocklistRS,
+  GfxBlocklistRS,
+};

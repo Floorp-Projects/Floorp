@@ -543,7 +543,7 @@
 //                    const unsigned char* arg_types,
 //                    const unsigned long long* arg_values,
 //                    unsigned char flags)
-#define TRACE_EVENT_API_ADD_TRACE_EVENT webrtc::EventTracer::AddTraceEvent
+#define TRACE_EVENT_API_ADD_TRACE_EVENT MOZ_INTERNAL_UPROFILER_SIMPLE_EVENT
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -566,33 +566,64 @@
 // Implementation detail: internal macro to create static category.
 #define INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category) \
     INTERNAL_TRACE_EVENT_INFO_TYPE INTERNAL_TRACE_EVENT_UID(catstatic) = \
-        TRACE_EVENT_API_GET_CATEGORY_ENABLED(category);
+        reinterpret_cast<const unsigned char*>(category);
 
 // Implementation detail: internal macro to create static category and add
 // event if the category is enabled.
 #define INTERNAL_TRACE_EVENT_ADD(phase, category, name, flags, ...) \
-  MOZ_INTERNAL_UPROFILER_SIMPLE_EVENT(name, category, phase)
+    do { \
+      INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category); \
+      if (*INTERNAL_TRACE_EVENT_UID(catstatic)) { \
+        webrtc::trace_event_internal::AddTraceEvent(          \
+            phase, INTERNAL_TRACE_EVENT_UID(catstatic), name, \
+            webrtc::trace_event_internal::kNoEventId, flags, ##__VA_ARGS__); \
+      } \
+    } while (0)
 
 // Implementation detail: internal macro to create static category and add begin
 // event if the category is enabled. Also adds the end event when the scope
 // ends.
 #define INTERNAL_TRACE_EVENT_ADD_SCOPED(category, name, ...) \
-  MOZ_INTERNAL_UPROFILER_AUTO_TRACE(category, name)
+    INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category); \
+    webrtc::trace_event_internal::TraceEndOnScopeClose  \
+        INTERNAL_TRACE_EVENT_UID(profileScope); \
+    if (*INTERNAL_TRACE_EVENT_UID(catstatic)) { \
+      webrtc::trace_event_internal::AddTraceEvent(      \
+          TRACE_EVENT_PHASE_BEGIN, \
+          INTERNAL_TRACE_EVENT_UID(catstatic), \
+          name, webrtc::trace_event_internal::kNoEventId,       \
+          TRACE_EVENT_FLAG_NONE, ##__VA_ARGS__); \
+      INTERNAL_TRACE_EVENT_UID(profileScope).Initialize( \
+          INTERNAL_TRACE_EVENT_UID(catstatic), name); \
+    }
 
 // Implementation detail: internal macro to create static category and add
 // event if the category is enabled.
 #define INTERNAL_TRACE_EVENT_ADD_WITH_ID(phase, category, name, id, flags, \
                                          ...)                              \
-  MOZ_INTERNAL_UPROFILER_SIMPLE_EVENT(name, category, phase)
+    do { \
+      INTERNAL_TRACE_EVENT_GET_CATEGORY_INFO(category); \
+      if (*INTERNAL_TRACE_EVENT_UID(catstatic)) { \
+        unsigned char trace_event_flags = flags | TRACE_EVENT_FLAG_HAS_ID; \
+        webrtc::trace_event_internal::TraceID trace_event_trace_id( \
+            id, &trace_event_flags); \
+        webrtc::trace_event_internal::AddTraceEvent( \
+            phase, INTERNAL_TRACE_EVENT_UID(catstatic), \
+            name, trace_event_trace_id.data(), trace_event_flags, \
+            ##__VA_ARGS__); \
+      } \
+    } while (0)
 
 #ifdef MOZ_GECKO_PROFILER
-#define MOZ_INTERNAL_UPROFILER_SIMPLE_EVENT(name, category, phase) \
-  uprofiler_simple_event_marker(name, category, phase);
-#define MOZ_INTERNAL_UPROFILER_AUTO_TRACE(category, name) \
-  AutoTrace INTERNAL_TRACE_EVENT_UID(trace)(name, category);
+#define MOZ_INTERNAL_UPROFILER_SIMPLE_EVENT(phase, category_enabled, name, id, \
+                                            num_args, arg_names, arg_types,    \
+                                            arg_values, flags)                 \
+  uprofiler_simple_event_marker(name, phase, num_args, arg_names, arg_types,   \
+                                arg_values);
 #else
-#define MOZ_INTERNAL_UPROFILER_SIMPLE_EVENT(name, category, phase)
-#define MOZ_INTERNAL_UPROFILER_AUTO_TRACE(name, category)
+#define MOZ_INTERNAL_UPROFILER_SIMPLE_EVENT(phase, category_enabled, name, id, \
+                                            num_args, arg_names, arg_types,    \
+                                            arg_values, flags)
 #endif
 
 // Notes regarding the following definitions:
@@ -619,6 +650,253 @@
 #define TRACE_EVENT_FLAG_HAS_ID      (static_cast<unsigned char>(1 << 1))
 #define TRACE_EVENT_FLAG_MANGLE_ID   (static_cast<unsigned char>(1 << 2))
 
+namespace webrtc {
+namespace trace_event_internal {
+
+// Specify these values when the corresponding argument of AddTraceEvent is not
+// used.
+const int kZeroNumArgs = 0;
+const unsigned long long kNoEventId = 0;
+
+// TraceID encapsulates an ID that can either be an integer or pointer. Pointers
+// are mangled with the Process ID so that they are unlikely to collide when the
+// same pointer is used on different processes.
+class TraceID {
+ public:
+  class ForceMangle {
+    public:
+     explicit ForceMangle(unsigned long long id) : data_(id) {}
+     explicit ForceMangle(unsigned long id) : data_(id) {}
+     explicit ForceMangle(unsigned int id) : data_(id) {}
+     explicit ForceMangle(unsigned short id) : data_(id) {}
+     explicit ForceMangle(unsigned char id) : data_(id) {}
+     explicit ForceMangle(long long id)
+         : data_(static_cast<unsigned long long>(id)) {}
+     explicit ForceMangle(long id)
+         : data_(static_cast<unsigned long long>(id)) {}
+     explicit ForceMangle(int id)
+         : data_(static_cast<unsigned long long>(id)) {}
+     explicit ForceMangle(short id)
+         : data_(static_cast<unsigned long long>(id)) {}
+     explicit ForceMangle(signed char id)
+         : data_(static_cast<unsigned long long>(id)) {}
+
+     unsigned long long data() const { return data_; }
+
+    private:
+     unsigned long long data_;
+  };
+
+  explicit TraceID(const void* id, unsigned char* flags)
+      : data_(static_cast<unsigned long long>(
+              reinterpret_cast<uintptr_t>(id))) {
+    *flags |= TRACE_EVENT_FLAG_MANGLE_ID;
+  }
+  explicit TraceID(ForceMangle id, unsigned char* flags) : data_(id.data()) {
+    *flags |= TRACE_EVENT_FLAG_MANGLE_ID;
+  }
+  explicit TraceID(unsigned long long id, unsigned char* flags)
+      : data_(id) { (void)flags; }
+  explicit TraceID(unsigned long id, unsigned char* flags)
+      : data_(id) { (void)flags; }
+  explicit TraceID(unsigned int id, unsigned char* flags)
+      : data_(id) { (void)flags; }
+  explicit TraceID(unsigned short id, unsigned char* flags)
+      : data_(id) { (void)flags; }
+  explicit TraceID(unsigned char id, unsigned char* flags)
+      : data_(id) { (void)flags; }
+  explicit TraceID(long long id, unsigned char* flags)
+      : data_(static_cast<unsigned long long>(id)) { (void)flags; }
+  explicit TraceID(long id, unsigned char* flags)
+      : data_(static_cast<unsigned long long>(id)) { (void)flags; }
+  explicit TraceID(int id, unsigned char* flags)
+      : data_(static_cast<unsigned long long>(id)) { (void)flags; }
+  explicit TraceID(short id, unsigned char* flags)
+      : data_(static_cast<unsigned long long>(id)) { (void)flags; }
+  explicit TraceID(signed char id, unsigned char* flags)
+      : data_(static_cast<unsigned long long>(id)) { (void)flags; }
+
+  unsigned long long data() const { return data_; }
+
+ private:
+  unsigned long long data_;
+};
+
+// Simple union to store various types as unsigned long long.
+union TraceValueUnion {
+  bool as_bool;
+  unsigned long long as_uint;
+  long long as_int;
+  double as_double;
+  const void* as_pointer;
+  const char* as_string;
+};
+
+// Simple container for const char* that should be copied instead of retained.
+class TraceStringWithCopy {
+ public:
+  explicit TraceStringWithCopy(const char* str) : str_(str) {}
+  operator const char* () const { return str_; }
+ private:
+  const char* str_;
+};
+
+// Define SetTraceValue for each allowed type. It stores the type and
+// value in the return arguments. This allows this API to avoid declaring any
+// structures so that it is portable to third_party libraries.
+#define INTERNAL_DECLARE_SET_TRACE_VALUE(actual_type, \
+                                         union_member, \
+                                         value_type_id) \
+    static inline void SetTraceValue(actual_type arg, \
+                                     unsigned char* type, \
+                                     unsigned long long* value) { \
+      TraceValueUnion type_value; \
+      type_value.union_member = arg; \
+      *type = value_type_id; \
+      *value = type_value.as_uint; \
+    }
+// Simpler form for int types that can be safely casted.
+#define INTERNAL_DECLARE_SET_TRACE_VALUE_INT(actual_type, \
+                                             value_type_id) \
+    static inline void SetTraceValue(actual_type arg, \
+                                     unsigned char* type, \
+                                     unsigned long long* value) { \
+      *type = value_type_id; \
+      *value = static_cast<unsigned long long>(arg); \
+    }
+
+INTERNAL_DECLARE_SET_TRACE_VALUE_INT(unsigned long long, TRACE_VALUE_TYPE_UINT)
+INTERNAL_DECLARE_SET_TRACE_VALUE_INT(unsigned long, TRACE_VALUE_TYPE_UINT)
+INTERNAL_DECLARE_SET_TRACE_VALUE_INT(unsigned int, TRACE_VALUE_TYPE_UINT)
+INTERNAL_DECLARE_SET_TRACE_VALUE_INT(unsigned short, TRACE_VALUE_TYPE_UINT)
+INTERNAL_DECLARE_SET_TRACE_VALUE_INT(unsigned char, TRACE_VALUE_TYPE_UINT)
+INTERNAL_DECLARE_SET_TRACE_VALUE_INT(long long, TRACE_VALUE_TYPE_INT)
+INTERNAL_DECLARE_SET_TRACE_VALUE_INT(long, TRACE_VALUE_TYPE_INT)
+INTERNAL_DECLARE_SET_TRACE_VALUE_INT(int, TRACE_VALUE_TYPE_INT)
+INTERNAL_DECLARE_SET_TRACE_VALUE_INT(short, TRACE_VALUE_TYPE_INT)
+INTERNAL_DECLARE_SET_TRACE_VALUE_INT(signed char, TRACE_VALUE_TYPE_INT)
+INTERNAL_DECLARE_SET_TRACE_VALUE(bool, as_bool, TRACE_VALUE_TYPE_BOOL)
+INTERNAL_DECLARE_SET_TRACE_VALUE(double, as_double, TRACE_VALUE_TYPE_DOUBLE)
+INTERNAL_DECLARE_SET_TRACE_VALUE(const void*, as_pointer,
+                                 TRACE_VALUE_TYPE_POINTER)
+INTERNAL_DECLARE_SET_TRACE_VALUE(const char*, as_string,
+                                 TRACE_VALUE_TYPE_STRING)
+INTERNAL_DECLARE_SET_TRACE_VALUE(const TraceStringWithCopy&, as_string,
+                                 TRACE_VALUE_TYPE_COPY_STRING)
+
+#undef INTERNAL_DECLARE_SET_TRACE_VALUE
+#undef INTERNAL_DECLARE_SET_TRACE_VALUE_INT
+
+// std::string version of SetTraceValue so that trace arguments can be strings.
+static inline void SetTraceValue(const std::string& arg,
+                                 unsigned char* type,
+                                 unsigned long long* value) {
+  TraceValueUnion type_value;
+  type_value.as_string = arg.c_str();
+  *type = TRACE_VALUE_TYPE_COPY_STRING;
+  *value = type_value.as_uint;
+}
+
+// These AddTraceEvent template functions are defined here instead of in the
+// macro, because the arg_values could be temporary objects, such as
+// std::string. In order to store pointers to the internal c_str and pass
+// through to the tracing API, the arg_values must live throughout
+// these procedures.
+
+static inline void AddTraceEvent(char phase,
+                                const unsigned char* category_enabled,
+                                const char* name,
+                                unsigned long long id,
+                                unsigned char flags) {
+  TRACE_EVENT_API_ADD_TRACE_EVENT(phase, category_enabled, name, id,
+                                  kZeroNumArgs, nullptr, nullptr, nullptr,
+                                  flags);
+}
+
+template<class ARG1_TYPE>
+static inline void AddTraceEvent(char phase,
+                                const unsigned char* category_enabled,
+                                const char* name,
+                                unsigned long long id,
+                                unsigned char flags,
+                                const char* arg1_name,
+                                const ARG1_TYPE& arg1_val) {
+  const int num_args = 1;
+  unsigned char arg_types[1];
+  unsigned long long arg_values[1];
+  SetTraceValue(arg1_val, &arg_types[0], &arg_values[0]);
+  TRACE_EVENT_API_ADD_TRACE_EVENT(
+      phase, category_enabled, name, id,
+      num_args, &arg1_name, arg_types, arg_values,
+      flags);
+}
+
+template<class ARG1_TYPE, class ARG2_TYPE>
+static inline void AddTraceEvent(char phase,
+                                const unsigned char* category_enabled,
+                                const char* name,
+                                unsigned long long id,
+                                unsigned char flags,
+                                const char* arg1_name,
+                                const ARG1_TYPE& arg1_val,
+                                const char* arg2_name,
+                                const ARG2_TYPE& arg2_val) {
+  const int num_args = 2;
+  const char* arg_names[2] = { arg1_name, arg2_name };
+  unsigned char arg_types[2];
+  unsigned long long arg_values[2];
+  SetTraceValue(arg1_val, &arg_types[0], &arg_values[0]);
+  SetTraceValue(arg2_val, &arg_types[1], &arg_values[1]);
+  TRACE_EVENT_API_ADD_TRACE_EVENT(
+      phase, category_enabled, name, id,
+      num_args, arg_names, arg_types, arg_values,
+      flags);
+}
+
+// Used by TRACE_EVENTx macro. Do not use directly.
+class TraceEndOnScopeClose {
+ public:
+  // Note: members of data_ intentionally left uninitialized. See Initialize.
+  TraceEndOnScopeClose() : p_data_(nullptr) {}
+  ~TraceEndOnScopeClose() {
+    if (p_data_)
+      AddEventIfEnabled();
+  }
+
+  void Initialize(const unsigned char* category_enabled,
+                  const char* name) {
+    data_.category_enabled = category_enabled;
+    data_.name = name;
+    p_data_ = &data_;
+  }
+
+ private:
+  // Add the end event if the category is still enabled.
+  void AddEventIfEnabled() {
+    // Only called when p_data_ is non-null.
+    if (*p_data_->category_enabled) {
+      TRACE_EVENT_API_ADD_TRACE_EVENT(TRACE_EVENT_PHASE_END,
+                                      p_data_->category_enabled, p_data_->name,
+                                      kNoEventId, kZeroNumArgs, nullptr,
+                                      nullptr, nullptr, TRACE_EVENT_FLAG_NONE);
+    }
+  }
+
+  // This Data struct workaround is to avoid initializing all the members
+  // in Data during construction of this object, since this object is always
+  // constructed, even when tracing is disabled. If the members of Data were
+  // members of this class instead, compiler warnings occur about potential
+  // uninitialized accesses.
+  struct Data {
+    const unsigned char* category_enabled;
+    const char* name;
+  };
+  Data* p_data_;
+  Data data_;
+};
+
+}  // namespace trace_event_internal
+}  // namespace webrtc
 #else
 
 ////////////////////////////////////////////////////////////////////////////////

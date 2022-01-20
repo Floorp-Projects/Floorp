@@ -133,6 +133,12 @@ parent:
    */
   async Cache(CacheUpdateType aUpdateType, CacheData[] aData, bool aFinal);
 
+  /*
+   * Tell the parent process that the given Accessibles are about to be moved
+   * via subsequent hide and show events.
+   */
+  async AccessiblesWillMove(uint64_t[] aIDs);
+
 child:
   /*
    * Notify the content process that the PDocAccessible has finished being

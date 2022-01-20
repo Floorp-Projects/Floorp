@@ -46,6 +46,7 @@ class AboutStudies extends React.Component {
       ShieldLearnMoreHref: "learnMoreHref",
       StudiesEnabled: "studiesEnabled",
       ShieldTranslations: "translations",
+      DebugModeOn: "debugMode",
     };
 
     this.state = {};
@@ -104,6 +105,7 @@ class AboutStudies extends React.Component {
       prefStudies,
       experiments,
       optInMessage,
+      debugMode,
     } = this.state;
     // Wait for all values to be loaded before rendering. Some of the values may
     // be falsey, so an explicit null check is needed.
@@ -116,7 +118,13 @@ class AboutStudies extends React.Component {
       { className: "about-studies-container main-content" },
       r(WhatsThisBox, { translations, learnMoreHref, studiesEnabled }),
       optInMessage && r(OptInBox, optInMessage),
-      r(StudyList, { translations, addonStudies, prefStudies, experiments })
+      r(StudyList, {
+        translations,
+        addonStudies,
+        prefStudies,
+        experiments,
+        debugMode,
+      })
     );
   }
 }
@@ -183,7 +191,13 @@ function OptInBox({ error, message }) {
  */
 class StudyList extends React.Component {
   render() {
-    const { addonStudies, prefStudies, translations, experiments } = this.props;
+    const {
+      addonStudies,
+      prefStudies,
+      translations,
+      experiments,
+      debugMode,
+    } = this.props;
 
     if (!addonStudies.length && !prefStudies.length && !experiments.length) {
       return r("p", { className: "study-list-info" }, translations.noStudies);
@@ -222,7 +236,7 @@ class StudyList extends React.Component {
         type: study.experimentType,
         sortDate: new Date(study.lastSeen),
       });
-      if (!study.active) {
+      if (!study.active && !study.isRollout) {
         inactiveStudies.push(clonedStudy);
       } else {
         activeStudies.push(clonedStudy);
@@ -246,15 +260,12 @@ class StudyList extends React.Component {
               translations,
             });
           }
-          if (
-            study.type === "nimbus" ||
-            // Backwards compatibility with old recipes
-            study.type === "messaging_experiment"
-          ) {
+          if (study.type === "nimbus" || study.type === "rollout") {
             return r(MessagingSystemListItem, {
               key: study.slug,
               study,
               translations,
+              debugMode,
             });
           }
           if (study.type === "pref") {
@@ -321,10 +332,13 @@ class MessagingSystemListItem extends React.Component {
   }
 
   render() {
-    const { study, translations } = this.props;
+    const { study, translations, debugMode } = this.props;
     const userFacingName = study.userFacingName || study.slug;
     const userFacingDescription =
       study.userFacingDescription || "Nimbus experiment.";
+    if (study.isRollout && !debugMode) {
+      return null;
+    }
     return r(
       "li",
       {

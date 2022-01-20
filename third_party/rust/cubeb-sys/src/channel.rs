@@ -33,7 +33,7 @@ cubeb_enum! {
 }
 
 cubeb_enum! {
-    pub enum cubeb_channel_layout {
+    pub enum cubeb_channel_layout : c_enum {
         CUBEB_LAYOUT_UNDEFINED = 0,
         CUBEB_LAYOUT_MONO = CHANNEL_FRONT_CENTER,
         CUBEB_LAYOUT_MONO_LFE = CUBEB_LAYOUT_MONO | CHANNEL_LOW_FREQUENCY,

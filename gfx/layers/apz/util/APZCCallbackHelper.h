@@ -33,9 +33,6 @@ namespace layers {
 
 struct RepaintRequest;
 
-typedef std::function<void(uint64_t, const nsTArray<TouchBehaviorFlags>&)>
-    SetAllowedTouchBehaviorCallback;
-
 /* Refer to documentation on SendSetTargetAPZCNotification for this class */
 class DisplayportSetListener : public ManagedPostRefreshObserver {
  public:
@@ -148,14 +145,6 @@ class APZCCallbackHelper {
       nsIWidget* aWidget, mozilla::dom::Document* aDocument,
       const WidgetGUIEvent& aEvent, const LayersId& aLayersId,
       uint64_t aInputBlockId);
-
-  /* Figure out the allowed touch behaviors of each touch point in |aEvent|
-   * and send that information to the provided callback. Also returns the
-   * allowed touch behaviors. */
-  static nsTArray<TouchBehaviorFlags> SendSetAllowedTouchBehaviorNotification(
-      nsIWidget* aWidget, mozilla::dom::Document* aDocument,
-      const WidgetTouchEvent& aEvent, uint64_t aInputBlockId,
-      const SetAllowedTouchBehaviorCallback& aCallback);
 
   /* Notify content of a mouse scroll testing event. */
   static void NotifyMozMouseScrollEvent(

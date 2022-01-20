@@ -135,13 +135,14 @@ static constexpr uint32_t kVoidStringLength = ~0;
 static bool WriteStringPair(JSStructuredCloneWriter* aWriter,
                             const nsACString& aString1,
                             const nsACString& aString2) {
-  auto StringLength = [](const nsACString& aStr) {
-    MOZ_DIAGNOSTIC_ASSERT(uint32_t(aStr.Length()) != kVoidStringLength,
+  auto StringLength = [](const nsACString& aStr) -> uint32_t {
+    auto length = uint32_t(aStr.Length());
+    MOZ_DIAGNOSTIC_ASSERT(length != kVoidStringLength,
                           "We should not be serializing a 4GiB string");
     if (aStr.IsVoid()) {
       return kVoidStringLength;
     }
-    return aStr.Length();
+    return length;
   };
 
   return JS_WriteUint32Pair(aWriter, StringLength(aString1),

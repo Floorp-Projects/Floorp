@@ -5,8 +5,8 @@
 
 use callbacks::cubeb_device_collection_changed_callback;
 use context::cubeb;
-use std::{fmt, mem};
 use std::os::raw::{c_char, c_int, c_uint, c_void};
+use std::{fmt, mem};
 
 cubeb_enum! {
     pub enum cubeb_device_fmt {

@@ -57,6 +57,7 @@ TESTING_JS_MODULES.backgroundtasks += [
     "tests/BackgroundTask_backgroundtask_specific_pref.jsm",
     "tests/BackgroundTask_crash.jsm",
     "tests/BackgroundTask_policies.jsm",
+    "tests/BackgroundTask_shouldnotprocessupdates.jsm",
     "tests/BackgroundTask_shouldprocessupdates.jsm",
     "tests/BackgroundTask_timeout.jsm",
     "tests/BackgroundTask_unique_profile.jsm",

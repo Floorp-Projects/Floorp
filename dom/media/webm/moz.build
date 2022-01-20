@@ -9,20 +9,16 @@ EXPORTS += [
     "WebMBufferedParser.h",
     "WebMDecoder.h",
     "WebMDemuxer.h",
+    "WebMWriter.h",
 ]
 
 UNIFIED_SOURCES += [
+    "EbmlComposer.cpp",
     "WebMBufferedParser.cpp",
     "WebMDecoder.cpp",
     "WebMDemuxer.cpp",
+    "WebMWriter.cpp",
 ]
-
-if CONFIG["MOZ_WEBM_ENCODER"]:
-    EXPORTS += ["WebMWriter.h"]
-    UNIFIED_SOURCES += [
-        "EbmlComposer.cpp",
-        "WebMWriter.cpp",
-    ]
 
 CXXFLAGS += CONFIG["MOZ_LIBVPX_CFLAGS"]
 

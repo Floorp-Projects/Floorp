@@ -72,11 +72,8 @@ async function pushGetUserMediaTestPrefs({
       );
     }
   }
-  if (loopbackAudio || loopbackVideo) {
-    // Prevent gUM permission prompt. Since loopback devices are considered
-    // real devices we need to set prefs so the gUM prompt isn't presented.
-    testPrefs.push(["media.navigator.permission.disabled", true]);
-  }
+  // Prevent presentation of the gUM permission prompt.
+  testPrefs.push(["media.navigator.permission.disabled", true]);
   return SpecialPowers.pushPrefEnv({ set: testPrefs });
 }
 

@@ -36,9 +36,9 @@ body > .hidden:not(:disabled) {
 }
 
 #title {
-  font-size: 24px;
+  font-size: 1.6em;
   font-weight: 600;
-  line-height: 36px;
+  line-height: 1.5;
   margin: 5px auto;
   text-align: center;
   white-space: pre-wrap;
@@ -48,8 +48,7 @@ body.confetti #title {
   -webkit-background-clip: text;
   background-image: linear-gradient(90deg, #6173FF, #ED1D5F, #F6901E, #6173FF);
   background-size: 400%;
-  font-size: 36px;
-  line-height: 48px;
+  font-size: 2.4em;
 }
 
 @media not (prefers-contrast) {
@@ -85,12 +84,16 @@ body.confetti #title {
 }
 
 #subtitle {
-  font-size: 18px;
+  font-size: 1.1em;
   font-weight: 400;
-  line-height: 28px;
-  margin: 0 auto 16px;
+  line-height: 1.6;
+  margin: 0 auto;
   max-width: 485px;
   text-align: center;
+}
+
+body.confetti #subtitle {
+  font-size: 1.2em;
 }
 
 .colorways {
@@ -149,6 +152,8 @@ body.confetti #title {
   /* Gradients aren't used for high contrast, so show a solid color instead. */
   background-color: var(--in-content-page-background);
   background-image: linear-gradient(#F0F0F4, #9F9FAD);
+  outline: 2px solid var(--in-content-box-border-color);
+  outline-offset: -2px;
 }
 
 .themes > :nth-child(1)::before {
@@ -200,7 +205,7 @@ body.confetti #title {
 @media not (prefers-contrast) {
   .variations {
     --in-content-box-border-color: transparent;
-    --in-content-button-background: transparent;
+    --in-content-button-background: rgba(0, 0, 0, 0.09);
     --in-content-button-background-active: rgba(0, 0, 0, 0.4);
     --in-content-button-background-hover: rgba(0, 0, 0, 0.2);
     --in-content-button-text-color-hover: var(--in-content-page-color);
@@ -220,12 +225,10 @@ body.confetti #title {
   border-radius: 100%;
   display: flex;
   flex-direction: column;
-  height: 158px;
+  height: 150px;
   justify-content: space-around;
   margin: auto;
-  outline: 2px solid var(--in-content-box-border-color);
-  outline-offset: -2px;
-  padding-block: 20px 12px;
+  padding-block: 20px;
   position: relative;
   text-align: center;
   width: 190px;
@@ -328,12 +331,11 @@ body.confetti #title {
 
 /* Make these variation radio buttons appear like regular buttons. */
 .variations > input {
-  border-radius: 2px;
-  font-size: 12px;
+  border-radius: 20px;
+  font-size: .8em;
   height: unset;
-  line-height: 1.2;
   margin: auto;
-  padding: 6px 12px;
+  padding: 4px 12px;
   width: unset;
 }
 
@@ -355,7 +357,7 @@ body.confetti #title {
 
 .checkbox {
   display: flex;
-  font-size: 14px;
+  font-size: .9em;
   margin: auto;
   max-width: 460px;
   padding-bottom: 20px;
@@ -367,7 +369,8 @@ button {
 }
 
 #secondary {
-  margin-top: 9px;
+  font-size: .9em;
+  margin-top: 16px;
   padding: 4px;
 }
 

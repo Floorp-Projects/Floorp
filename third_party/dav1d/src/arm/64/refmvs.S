@@ -51,26 +51,32 @@ function splat_mv_neon, export=1
         br              x3
 
 10:
+        AARCH64_VALID_JUMP_TARGET
         st1             {v0.8b}, [x1]
         str             s2,  [x1, #8]
         b.gt            1b
         ret
 20:
+        AARCH64_VALID_JUMP_TARGET
         st1             {v0.16b}, [x1]
         str             d1,  [x1, #16]
         b.gt            1b
         ret
 320:
+        AARCH64_VALID_JUMP_TARGET
         st1             {v0.16b, v1.16b, v2.16b}, [x1], #48
         st1             {v0.16b, v1.16b, v2.16b}, [x1], #48
         st1             {v0.16b, v1.16b, v2.16b}, [x1], #48
         st1             {v0.16b, v1.16b, v2.16b}, [x1], #48
 160:
+        AARCH64_VALID_JUMP_TARGET
         st1             {v0.16b, v1.16b, v2.16b}, [x1], #48
         st1             {v0.16b, v1.16b, v2.16b}, [x1], #48
 80:
+        AARCH64_VALID_JUMP_TARGET
         st1             {v0.16b, v1.16b, v2.16b}, [x1], #48
 40:
+        AARCH64_VALID_JUMP_TARGET
         st1             {v0.16b, v1.16b, v2.16b}, [x1]
         b.gt            1b
         ret

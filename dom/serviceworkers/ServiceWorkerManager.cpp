@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ServiceWorkerManager.h"
+#include "ServiceWorkerPrivateImpl.h"
 
 #include <algorithm>
 
@@ -96,12 +97,24 @@
 #  undef PostMessage
 #endif
 
+mozilla::LazyLogModule sWorkerTelemetryLog("WorkerTelemetry");
+
+#ifdef LOG
+#  undef LOG
+#endif
+#define LOG(_args) MOZ_LOG(sWorkerTelemetryLog, LogLevel::Debug, _args);
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace dom {
+
+// Counts the number of registered ServiceWorkers, and the number that
+// handle Fetch, for reporting in Telemetry
+uint32_t gServiceWorkersRegistered = 0;
+uint32_t gServiceWorkersRegisteredFetch = 0;
 
 static_assert(
     nsIHttpChannelInternal::CORS_MODE_SAME_ORIGIN ==
@@ -419,6 +432,8 @@ NS_IMPL_RELEASE(ServiceWorkerManager)
 NS_INTERFACE_MAP_BEGIN(ServiceWorkerManager)
   NS_INTERFACE_MAP_ENTRY(nsIServiceWorkerManager)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIServiceWorkerManager)
 NS_INTERFACE_MAP_END
 
@@ -428,6 +443,9 @@ ServiceWorkerManager::ServiceWorkerManager()
 ServiceWorkerManager::~ServiceWorkerManager() {
   // The map will assert if it is not empty when destroyed.
   mRegistrationInfos.Clear();
+  if (mTelemetryTimer) {
+    mTelemetryTimer->Cancel();
+  }
 
   // This can happen if the browser is started up in ProfileManager mode, in
   // which case XPCOM will startup and shutdown, but there won't be any
@@ -492,6 +510,22 @@ void ServiceWorkerManager::Init(ServiceWorkerRegistrar* aRegistrar) {
   }
 
   mActor = static_cast<ServiceWorkerManagerChild*>(actor);
+  constexpr uint32_t period_ms = 10 * 1000;
+
+  NS_NewTimerWithCallback(getter_AddRefs(mTelemetryTimer), this, period_ms,
+                          nsITimer::TYPE_REPEATING_SLACK);
+}
+
+NS_IMETHODIMP
+ServiceWorkerManager::Notify(nsITimer* aTimer) {
+  ServiceWorkerPrivateImpl::ReportRunning();
+  return NS_OK;
+}
+
+// nsINamed implementation
+NS_IMETHODIMP ServiceWorkerManager::GetName(nsACString& aNameOut) {
+  aNameOut.AssignLiteral("ServiceWorkerManager");
+  return NS_OK;
 }
 
 RefPtr<GenericErrorResultPromise> ServiceWorkerManager::StartControllingClient(
@@ -533,7 +567,7 @@ RefPtr<GenericErrorResultPromise> ServiceWorkerManager::StartControllingClient(
                                 1);
 
           // Always check to see if we failed to actually control the client. In
-          // that case removed the client from our list of controlled clients.
+          // that case remove the client from our list of controlled clients.
           return promise->Then(
               GetMainThreadSerialEventTarget(), __func__,
               [](bool) {
@@ -666,6 +700,7 @@ void ServiceWorkerManager::MaybeFinishShutdown() {
   nsresult rv = NS_DispatchToMainThread(runnable);
   Unused << NS_WARN_IF(NS_FAILED(rv));
   mActor = nullptr;
+  ServiceWorkerPrivateImpl::CheckRunningShutdown();
 }
 
 class ServiceWorkerResolveWindowPromiseOnRegisterCallback final
@@ -851,7 +886,6 @@ RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerManager::Register(
   queue->ScheduleJob(job);
 
   MOZ_ASSERT(NS_IsMainThread());
-  Telemetry::Accumulate(Telemetry::SERVICE_WORKER_REGISTRATIONS, 1);
 
   return cb->Promise();
 }
@@ -1499,7 +1533,7 @@ void ServiceWorkerManager::LoadRegistration(
     // If active worker script matches our expectations for a "current worker",
     // then we are done. Since scripts with the same URL might have different
     // contents such as updated scripts or scripts with different LoadFlags, we
-    // use the CacheName to judje whether the two scripts are identical, where
+    // use the CacheName to judge whether the two scripts are identical, where
     // the CacheName is an UUID generated when a new script is found.
     if (registration->GetActive() &&
         registration->GetActive()->CacheName() == aRegistration.cacheName()) {
@@ -1534,10 +1568,21 @@ void ServiceWorkerManager::LoadRegistration(
 void ServiceWorkerManager::LoadRegistrations(
     const nsTArray<ServiceWorkerRegistrationData>& aRegistrations) {
   MOZ_ASSERT(NS_IsMainThread());
-
+  uint32_t fetch = 0;
   for (uint32_t i = 0, len = aRegistrations.Length(); i < len; ++i) {
     LoadRegistration(aRegistrations[i]);
+    if (aRegistrations[i].currentWorkerHandlesFetch()) {
+      fetch++;
+    }
   }
+  gServiceWorkersRegistered = aRegistrations.Length();
+  gServiceWorkersRegisteredFetch = fetch;
+  Telemetry::ScalarSet(Telemetry::ScalarID::SERVICEWORKER_REGISTRATIONS,
+                       u"All"_ns, gServiceWorkersRegistered);
+  Telemetry::ScalarSet(Telemetry::ScalarID::SERVICEWORKER_REGISTRATIONS,
+                       u"Fetch"_ns, gServiceWorkersRegisteredFetch);
+  LOG(("LoadRegistrations: %u, fetch %u\n", gServiceWorkersRegistered,
+       gServiceWorkersRegisteredFetch));
 }
 
 void ServiceWorkerManager::StoreRegistration(
@@ -2792,6 +2837,80 @@ ServiceWorkerManager::GetRegistrationForAddonPrincipal(
     return NS_OK;
   }
   info.forget(aInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerManager::WakeForExtensionAPIEvent(
+    const nsAString& aExtensionBaseURL, const nsAString& aAPINamespace,
+    const nsAString& aAPIEventName, JSContext* aCx, dom::Promise** aPromise) {
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
+  if (NS_WARN_IF(!global)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult erv;
+  RefPtr<Promise> outer = Promise::Create(global, erv);
+  if (NS_WARN_IF(erv.Failed())) {
+    return erv.StealNSResult();
+  }
+
+  auto enabled =
+      StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup();
+  if (!enabled) {
+    outer->MaybeRejectWithNotAllowedError(
+        "Disabled. extensions.backgroundServiceWorker.enabled is false");
+    outer.forget(aPromise);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> scopeURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aExtensionBaseURL);
+  if (NS_FAILED(rv)) {
+    outer->MaybeReject(rv);
+    outer.forget(aPromise);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal;
+  MOZ_TRY_VAR(principal, ScopeToPrincipal(scopeURI, {}));
+
+  auto* addonPolicy = BasePrincipal::Cast(principal)->AddonPolicy();
+  if (NS_WARN_IF(!addonPolicy)) {
+    outer->MaybeRejectWithNotAllowedError(
+        "Not an extension principal or extension disabled");
+    outer.forget(aPromise);
+    return NS_OK;
+  }
+
+  OriginAttributes attrs;
+  ServiceWorkerInfo* info = GetActiveWorkerInfoForScope(
+      attrs, NS_ConvertUTF16toUTF8(aExtensionBaseURL));
+  if (NS_WARN_IF(!info)) {
+    outer->MaybeRejectWithInvalidStateError(
+        "No active worker for the extension background service worker");
+    outer.forget(aPromise);
+    return NS_OK;
+  }
+
+  ServiceWorkerPrivate* workerPrivate = info->WorkerPrivate();
+  auto result =
+      workerPrivate->WakeForExtensionAPIEvent(aAPINamespace, aAPIEventName);
+  if (result.isErr()) {
+    outer->MaybeReject(result.propagateErr());
+    outer.forget(aPromise);
+    return NS_OK;
+  }
+
+  RefPtr<ServiceWorkerPrivate::PromiseExtensionWorkerHasListener> innerPromise =
+      result.unwrap();
+
+  innerPromise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [outer](bool aSubscribedEvent) { outer->MaybeResolve(aSubscribedEvent); },
+      [outer](nsresult aErrorResult) { outer->MaybeReject(aErrorResult); });
+
+  outer.forget(aPromise);
   return NS_OK;
 }
 

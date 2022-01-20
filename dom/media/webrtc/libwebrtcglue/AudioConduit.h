@@ -181,10 +181,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   WebrtcAudioConduit(const WebrtcAudioConduit& other) = delete;
   void operator=(const WebrtcAudioConduit& other) = delete;
 
-  // Function to convert between WebRTC and Conduit codec structures
-  bool CodecConfigToWebRTCCodec(const AudioCodecConfig& codecInfo,
-                                webrtc::AudioSendStream::Config& config);
-
   // Generate block size in sample length for a given sampling frequency
   unsigned int GetNum10msSamplesForFrequency(int samplingFreqHz) const;
 

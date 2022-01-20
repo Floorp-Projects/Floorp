@@ -55,12 +55,6 @@
         }
     },
 
-    "icons": {
-        "32": "/icons/icon-32.png",
-        "64": "/icons/icon-64.png",
-        "128": "/icons/icon-128.png"
-    },
-
     "permissions": [
         "<all_urls>",
         "storage",
@@ -82,6 +76,7 @@
     ],
 
     "browser_action": {
+        "default_area" : "menupanel",
         "browser_style": false,
         "default_icon": "/icons/icon-32.png",
         "default_title": "__MSG_pageActionTitle__"

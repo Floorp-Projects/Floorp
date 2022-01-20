@@ -196,3 +196,118 @@ add_task(async function test_switch_to_async() {
   strictEqual(values[0], null);
   strictEqual(values[1], "Value2");
 });
+
+/**
+ * This test verifies that when a required resource is missing,
+ * we fallback entirely to the next locale for all entries.
+ */
+add_task(async function test_format_from_missing_required_resource() {
+  const l10nReg = new L10nRegistry();
+
+  const fs = [
+    { path: "/localization/de/browser/menu.ftl", source: `
+key-value = [de] Value1
+` },
+    { path: "/localization/de/browser/missing-in-en-US.ftl", source: `
+key-missing = [de] MissingValue
+` },
+    { path: "/localization/en-US/browser/menu.ftl", source: `
+key-value = [en] Value1
+` },
+  ];
+
+  const source = L10nFileSource.createMock("test", "app", ["de", "en-US"], "/localization/{locale}", fs);
+  l10nReg.registerSources([source]);
+
+  // returns correct contexts for [en-US, de]
+
+  let l10n = new Localization([
+    "/browser/menu.ftl",
+    "/browser/missing-in-en-US.ftl",
+  ], false, l10nReg, ["en-US", "de"]);
+
+  {
+    let values = await l10n.formatValues([
+      {id: "key-value"},
+      {id: "key-missing"},
+    ]);
+
+    strictEqual(values[0], "[de] Value1");
+    strictEqual(values[1], "[de] MissingValue");
+  }
+
+  // returns correct contexts for [de, en-US]
+
+  l10n = new Localization([
+    "/browser/menu.ftl",
+    {path: "/browser/missing-in-en-US.ftl", optional: false},
+  ], false, l10nReg, ["de", "en-US"]);
+
+  {
+    let values = await l10n.formatValues([
+      {id: "key-value"},
+      {id: "key-missing"},
+    ]);
+
+    strictEqual(values[0], "[de] Value1");
+    strictEqual(values[1], "[de] MissingValue");
+  }
+});
+
+/**
+ * This test verifies that when an optional resource is missing, we continue
+ * to populate entires from other resources in the same locale, and we only
+ * fallback entries from the missing optional resource to the next locale.
+ */
+add_task(async function test_format_from_missing_optional_resource() {
+  const l10nReg = new L10nRegistry();
+
+  const fs = [
+    { path: "/localization/de/browser/menu.ftl", source: `
+key-value = [de] Value1
+` },
+    { path: "/localization/de/browser/missing-in-en-US.ftl", source: `
+key-missing = [de] MissingValue
+` },
+    { path: "/localization/en-US/browser/menu.ftl", source: `
+key-value = [en] Value1
+` },
+  ];
+
+  const source = L10nFileSource.createMock("test", "app", ["de", "en-US"], "/localization/{locale}", fs);
+  l10nReg.registerSources([source]);
+
+  // returns correct contexts for [en-US, de]
+
+  let l10n = new Localization([
+    {path: "/browser/menu.ftl", optional: false},
+    {path: "/browser/missing-in-en-US.ftl", optional: true},
+  ], false, l10nReg, ["en-US", "de"]);
+
+  {
+    let values = await l10n.formatValues([
+      {id: "key-value"},
+      {id: "key-missing"},
+    ]);
+
+    strictEqual(values[0], "[en] Value1");
+    strictEqual(values[1], "[de] MissingValue");
+  }
+
+  // returns correct contexts for [de, en-US]
+
+  l10n = new Localization([
+    {path: "/browser/menu.ftl", optional: false},
+    {path: "/browser/missing-in-en-US.ftl", optional: true},
+  ], false, l10nReg, ["de", "en-US"]);
+
+  {
+    let values = await l10n.formatValues([
+      {id: "key-value"},
+      {id: "key-missing"},
+    ]);
+
+    strictEqual(values[0], "[de] Value1");
+    strictEqual(values[1], "[de] MissingValue");
+  }
+});

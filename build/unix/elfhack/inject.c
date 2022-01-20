@@ -49,7 +49,7 @@ extern __attribute__((visibility("hidden"))) void original_init(int argc,
                                                                 char** argv,
                                                                 char** env);
 
-extern __attribute__((visibility("hidden"))) Elf32_Rel relhack[];
+extern __attribute__((visibility("hidden"))) Elf_Addr relhack[];
 extern __attribute__((visibility("hidden"))) Elf_Ehdr elf_header;
 
 extern __attribute__((visibility("hidden"))) int (*mprotect_cb)(void* addr,
@@ -60,12 +60,24 @@ extern __attribute__((visibility("hidden"))) char relro_start[];
 extern __attribute__((visibility("hidden"))) char relro_end[];
 
 static inline __attribute__((always_inline)) void do_relocations(void) {
-  Elf32_Rel* rel;
-  Elf_Addr *ptr, *start;
-  for (rel = relhack; rel->r_offset; rel++) {
-    start = (Elf_Addr*)((intptr_t)&elf_header + rel->r_offset);
-    for (ptr = start; ptr < &start[rel->r_info]; ptr++)
+  Elf_Addr* ptr;
+  for (Elf_Addr* entry = relhack; *entry; entry++) {
+    if ((*entry & 1) == 0) {
+      ptr = (Elf_Addr*)((intptr_t)&elf_header + *entry);
       *ptr += (intptr_t)&elf_header;
+    } else {
+      size_t remaining = (8 * sizeof(Elf_Addr) - 1);
+      Elf_Addr bits = *entry;
+      do {
+        bits >>= 1;
+        remaining--;
+        ptr++;
+        if (bits & 1) {
+          *ptr += (intptr_t)&elf_header;
+        }
+      } while (bits);
+      ptr += remaining;
+    }
   }
 }
 

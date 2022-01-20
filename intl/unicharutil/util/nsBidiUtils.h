@@ -6,63 +6,24 @@
 #ifndef nsBidiUtils_h__
 #define nsBidiUtils_h__
 
+#include "mozilla/intl/BidiClass.h"
+
 #include "nsString.h"
 #include "encoding_rs_mem.h"
-
-/**
- *  Read ftp://ftp.unicode.org/Public/UNIDATA/ReadMe-Latest.txt
- *  section BIDIRECTIONAL PROPERTIES
- *  for the detailed definition of the following categories
- *
- *  The values here must match the equivalents in %bidicategorycode in
- *  mozilla/intl/unicharutil/tools/genUnicodePropertyData.pl,
- *  and must also match the values used by ICU's UCharDirection.
- */
-
-enum nsCharType {
-  eCharType_LeftToRight = 0,
-  eCharType_RightToLeft = 1,
-  eCharType_EuropeanNumber = 2,
-  eCharType_EuropeanNumberSeparator = 3,
-  eCharType_EuropeanNumberTerminator = 4,
-  eCharType_ArabicNumber = 5,
-  eCharType_CommonNumberSeparator = 6,
-  eCharType_BlockSeparator = 7,
-  eCharType_SegmentSeparator = 8,
-  eCharType_WhiteSpaceNeutral = 9,
-  eCharType_OtherNeutral = 10,
-  eCharType_LeftToRightEmbedding = 11,
-  eCharType_LeftToRightOverride = 12,
-  eCharType_RightToLeftArabic = 13,
-  eCharType_RightToLeftEmbedding = 14,
-  eCharType_RightToLeftOverride = 15,
-  eCharType_PopDirectionalFormat = 16,
-  eCharType_DirNonSpacingMark = 17,
-  eCharType_BoundaryNeutral = 18,
-  eCharType_FirstStrongIsolate = 19,
-  eCharType_LeftToRightIsolate = 20,
-  eCharType_RightToLeftIsolate = 21,
-  eCharType_PopDirectionalIsolate = 22,
-  eCharType_CharTypeCount
-};
-
-/**
- * This specifies the language directional property of a character set.
- */
-typedef enum nsCharType nsCharType;
 
 /**
  * definitions of bidirection character types by category
  */
 
-#define CHARTYPE_IS_RTL(val) \
-  (((val) == eCharType_RightToLeft) || ((val) == eCharType_RightToLeftArabic))
+#define BIDICLASS_IS_RTL(val)                          \
+  (((val) == mozilla::intl::BidiClass::RightToLeft) || \
+   ((val) == mozilla::intl::BidiClass::RightToLeftArabic))
 
-#define CHARTYPE_IS_WEAK(val)                       \
-  (((val) == eCharType_EuropeanNumberSeparator) ||  \
-   ((val) == eCharType_EuropeanNumberTerminator) || \
-   (((val) > eCharType_ArabicNumber) &&             \
-    ((val) != eCharType_RightToLeftArabic)))
+#define BIDICLASS_IS_WEAK(val)                                      \
+  (((val) == mozilla::intl::BidiClass::EuropeanNumberSeparator) ||  \
+   ((val) == mozilla::intl::BidiClass::EuropeanNumberTerminator) || \
+   (((val) > mozilla::intl::BidiClass::ArabicNumber) &&             \
+    ((val) != mozilla::intl::BidiClass::RightToLeftArabic)))
 
 /**
  * Inspects a Unichar, converting numbers to Arabic or Hindi forms and

@@ -192,6 +192,14 @@ void FetchEventOpProxyChild::ActorDestroy(ActorDestroyReason) {
   Unused << NS_WARN_IF(mRespondWithPromiseRequestHolder.Exists());
   mRespondWithPromiseRequestHolder.DisconnectIfExists();
 
+  // If mPreloadResponsePromise exists, navigation preloading response will not
+  // be valid anymore since it is too late to respond to the FetchEvent.
+  // Resolve the preload response promise with NS_ERROR_DOM_ABORT_ERR.
+  if (mPreloadResponsePromise) {
+    mPreloadResponsePromise->Resolve(
+        InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
+  }
+
   mOp->RevokeActor(this);
   mOp = nullptr;
 }

@@ -87,6 +87,8 @@ void AssertExtendedGraphCoherency(MIRGraph& graph,
 
 [[nodiscard]] bool EliminateRedundantChecks(MIRGraph& graph);
 
+[[nodiscard]] bool EliminateRedundantShapeGuards(MIRGraph& graph);
+
 [[nodiscard]] bool AddKeepAliveInstructions(MIRGraph& graph);
 
 // Simple linear sum of the form 'n' or 'x + n'.

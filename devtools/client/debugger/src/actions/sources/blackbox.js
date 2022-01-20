@@ -13,86 +13,104 @@ import { getSourceActorsForSource } from "../../selectors";
 
 import { PROMISE } from "../utils/middleware/promise";
 
-async function blackboxActors(state, client, sourceId, isBlackBoxed, range) {
-  for (const actor of getSourceActorsForSource(state, sourceId)) {
-    await client.blackBox(actor, isBlackBoxed, range);
+async function blackboxSourceActors(
+  thunkArgs,
+  sources,
+  shouldBlackBox,
+  ranges
+) {
+  const { getState, client, sourceMaps } = thunkArgs;
+  const blackboxSources = await Promise.all(
+    sources.map(async source => {
+      let sourceId = source.id;
+      // If the source is the original, then get the source id of its generated file
+      // and the range for where the original is represented in the generated file
+      // (which might be a bundle including other files).
+      if (isOriginalId(source.id)) {
+        sourceId = originalToGeneratedId(source.id);
+        ranges = [await sourceMaps.getFileGeneratedRange(source.id)];
+        if (ranges.length) {
+          // TODO: Investigate blackboxing lines in original files,
+          // there is likely to be issues as the whole genrated file
+          // representing the original file will always be blackboxed.
+          console.warn(
+            "The might be unxpected issues when ignoring lines in an original file."
+          );
+        }
+      }
+
+      for (const actor of getSourceActorsForSource(getState(), sourceId)) {
+        await client.blackBox(actor, shouldBlackBox, ranges);
+      }
+
+      return { source, shouldBlackBox, ranges };
+    })
+  );
+
+  if (shouldBlackBox) {
+    recordEvent("blackbox");
   }
-  return { isBlackBoxed: !isBlackBoxed };
+
+  return { blackboxSources };
 }
 
-async function getBlackboxRangeForSource(source, sourceMaps) {
-  let sourceId = source.id,
-    range;
+/**
+ * Toggle blackboxing for the whole source or for specific lines in a source
+ *
+ * @param {Object} cx
+ * @param {Object} source - The source to be blackboxed/unblackboxed.
+ * @param {Boolean} [shouldBlackBox] - Specifies if the source should be blackboxed (true
+ *                                     or unblackboxed (false). When this is not provided
+ *                                     option is decided based on the `isBlackBoxed` value
+ *                                     of the source.
+ * @param {Array} [ranges] - List of line/column offsets to blackbox, these
+ *                           are provided only when blackboxing lines.
+ *                           The range structure:
+ *                           const range = {
+ *                            start: { line: 1, column: 5 },
+ *                            end: { line: 3, column: 4 },
+ *                           }
+ */
+export function toggleBlackBox(cx, source, shouldBlackBox, ranges) {
+  return async thunkArgs => {
+    const { dispatch } = thunkArgs;
+    shouldBlackBox =
+      typeof shouldBlackBox == "boolean"
+        ? shouldBlackBox
+        : !source.isBlackBoxed;
 
-  // If the source is the original, then get the source id of its generated file
-  // and the range for where the original is represented in the generated file
-  // (which might be a bundle including other files).
-  // If the source is the generated, there's no need for the range as the whole file
-  // gets blackboxed.
-  if (isOriginalId(source.id)) {
-    range = await sourceMaps.getFileGeneratedRange(source.id);
-    sourceId = originalToGeneratedId(source.id);
-  }
-  return { sourceId, range };
+    return dispatch({
+      type: "BLACKBOX",
+      cx,
+      [PROMISE]: blackboxSourceActors(
+        thunkArgs,
+        [source],
+        shouldBlackBox,
+        ranges ? ranges : []
+      ),
+    });
+  };
 }
+/*
+ * Blackboxes a group of sources together
+ *
+ * @param {Object} cx
+ * @param {Array} sourcesToBlackBox - The list of sources to blackbox
+ * @param {Boolean} shouldBlackbox - Specifies if the sources should blackboxed (true)
+ *                                   or unblackboxed (false).
+ */
+export function blackBoxSources(cx, sourcesToBlackBox, shouldBlackBox) {
+  return async thunkArgs => {
+    const { dispatch } = thunkArgs;
 
-export function toggleBlackBox(cx, source) {
-  return async ({ dispatch, getState, client, sourceMaps }) => {
-    const { isBlackBoxed } = source;
-
-    if (!isBlackBoxed) {
-      recordEvent("blackbox");
-    }
-
-    const { sourceId, range } = await getBlackboxRangeForSource(
-      source,
-      sourceMaps
+    const sources = sourcesToBlackBox.filter(
+      source => source.isBlackBoxed !== shouldBlackBox
     );
 
     return dispatch({
       type: "BLACKBOX",
       cx,
-      source,
-      [PROMISE]: blackboxActors(
-        getState(),
-        client,
-        sourceId,
-        isBlackBoxed,
-        range
-      ),
-    });
-  };
-}
-
-export function blackBoxSources(cx, sourcesToBlackBox, shouldBlackBox) {
-  return async ({ dispatch, getState, client, sourceMaps }) => {
-    const state = getState();
-    const sources = sourcesToBlackBox.filter(
-      source => source.isBlackBoxed !== shouldBlackBox
-    );
-
-    if (shouldBlackBox) {
-      recordEvent("blackbox");
-    }
-
-    const promises = [
-      ...sources.map(async source => {
-        const { sourceId, range } = await getBlackboxRangeForSource(
-          source,
-          sourceMaps
-        );
-
-        return getSourceActorsForSource(state, sourceId).map(actor =>
-          client.blackBox(actor, source.isBlackBoxed, range)
-        );
-      }),
-    ];
-
-    return dispatch({
-      type: "BLACKBOX_SOURCES",
-      cx,
-      shouldBlackBox,
-      [PROMISE]: Promise.all(promises).then(() => ({ sources })),
+      [PROMISE]: blackboxSourceActors(thunkArgs, sources, shouldBlackBox, []),
     });
   };
 }

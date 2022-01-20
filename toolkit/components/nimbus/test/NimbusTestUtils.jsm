@@ -131,9 +131,9 @@ const ExperimentTestUtils = {
   async validateRollouts(rollout) {
     const schema = (
       await fetchSchema(
-        "resource://testing-common/ExperimentFeatureRemote.schema.json"
+        "resource://testing-common/NimbusEnrollment.schema.json"
       )
-    ).RemoteFeatureConfiguration;
+    ).NimbusExperiment;
 
     return this._validator(
       schema,
@@ -147,10 +147,10 @@ const ExperimentFakes = {
   manager(store) {
     let sandbox = sinon.createSandbox();
     let manager = new _ExperimentManager({ store: store || this.store() });
-    // We want calls to `store.addExperiment` to implicitly validate the
+    // We want calls to `store.addEnrollment` to implicitly validate the
     // enrollment before saving to store
-    let origAddExperiment = manager.store.addExperiment.bind(manager.store);
-    sandbox.stub(manager.store, "addExperiment").callsFake(async enrollment => {
+    let origAddExperiment = manager.store.addEnrollment.bind(manager.store);
+    sandbox.stub(manager.store, "addEnrollment").callsFake(async enrollment => {
       await ExperimentTestUtils.validateEnrollment(enrollment);
       return origAddExperiment(enrollment);
     });
@@ -167,22 +167,42 @@ const ExperimentFakes = {
 
     return new Promise(resolve => ExperimentAPI.on("update", options, resolve));
   },
-  async remoteDefaultsHelper({
-    feature,
-    store = ExperimentManager.store,
-    configuration,
-  }) {
-    if (!store._isReady) {
-      throw new Error("Store not ready, need to `await ExperimentAPI.ready()`");
+  async enrollWithRollout(
+    featureConfig,
+    { manager = ExperimentManager, source } = {}
+  ) {
+    await manager.store.init();
+    const rollout = this.rollout(`${featureConfig.featureId}-rollout`, {
+      branch: {
+        slug: `${featureConfig.featureId}-rollout-branch`,
+        features: [featureConfig],
+      },
+    });
+    if (source) {
+      rollout.source = source;
     }
-
-    await ExperimentTestUtils.validateRollouts(configuration);
+    await ExperimentTestUtils.validateRollouts(rollout);
     // After storing the remote configuration to store and updating the feature
     // we want to flush so that NimbusFeature usage in content process also
     // receives the update
-    store.updateRemoteConfigs(feature.featureId, configuration);
-    await feature.ready();
-    store._syncToChildren({ flush: true });
+    await manager.store.addEnrollment(rollout);
+    manager.store._syncToChildren({ flush: true });
+
+    let unenrollCompleted = slug =>
+      new Promise(resolve =>
+        manager.store.on(`update:${slug}`, (event, enrollment) => {
+          if (enrollment.slug === rollout.slug && !enrollment.active) {
+            manager.store._deleteForTests(rollout.slug);
+            resolve();
+          }
+        })
+      );
+
+    return () => {
+      let promise = unenrollCompleted(rollout.slug);
+      manager.unenroll(rollout.slug, "cleanup");
+      return promise;
+    };
   },
   async enrollWithFeatureConfig(
     featureConfig,
@@ -303,6 +323,33 @@ const ExperimentFakes = {
       featureIds: props?.branch?.features?.map(f => f.featureId) || [
         "test-feature",
       ],
+      ...props,
+    };
+  },
+  rollout(slug, props = {}) {
+    return {
+      slug,
+      active: true,
+      enrollmentId: NormandyUtils.generateUuid(),
+      isRollout: true,
+      branch: {
+        slug: "treatment",
+        features: [
+          {
+            featureId: "test-feature",
+            value: { title: "hello", enabled: true },
+          },
+        ],
+        ...props,
+      },
+      source: "NimbusTestUtils",
+      isEnrollmentPaused: true,
+      experimentType: "rollout",
+      userFacingName: "NimbusTestUtils",
+      userFacingDescription: "NimbusTestUtils",
+      featureIds: (props?.branch?.features || props?.features)?.map(
+        f => f.featureId
+      ) || ["test-feature"],
       ...props,
     };
   },

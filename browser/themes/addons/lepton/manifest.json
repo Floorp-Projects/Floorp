@@ -7,8 +7,6 @@
   },
   "name": "Lepton",
   "description": "Firefox-UI-Fix is coming to Floorp!",
-  "author": "black7375",
-  "homepage_url":  "https://github.com/black7375/Firefox-UI-Fix",
   "version": "4.5.3",
   "icons": {"32": "icon.svg"},
   "theme": {

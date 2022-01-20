@@ -24,9 +24,6 @@ with Files("**"):
 with Files("moz.build"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
-with Files("README.md"):
-    BUG_COMPONENT = ("Testing", "web-platform-tests")
-
 with Files("wptrunner.ini"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
@@ -660,7 +657,7 @@ with Files("tests/storage/**"):
     BUG_COMPONENT = ("Core", "Storage: Quota Manager")
 
 with Files("tests/streams/**"):
-    BUG_COMPONENT = ("Core", "JavaScript Engine")
+    BUG_COMPONENT = ("Core", "DOM: Streams")
 
 with Files("tests/subresource-integrity/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
@@ -772,3 +769,5 @@ with Files("tests/worklets/**"):
 
 with Files("tests/x-frame-options/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
+
+SPHINX_TREES["/web-platform"] = "docs"

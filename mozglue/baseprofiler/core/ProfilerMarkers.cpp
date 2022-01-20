@@ -5,7 +5,7 @@
 
 #include "mozilla/BaseProfilerMarkers.h"
 
-#include "mozilla/Likely.h"
+#include "mozilla/BaseProfilerUtils.h"
 
 #include <limits>
 
@@ -72,6 +72,58 @@ static Streaming::MarkerTypeFunctions
 /* static */ Span<const Streaming::MarkerTypeFunctions>
 Streaming::MarkerTypeFunctionsArray() {
   return {sMarkerTypeFunctions1Based, sDeserializerCount};
+}
+
+// Only accessed on the main thread.
+// Both profilers (Base and Gecko) could be active at the same time, so keep a
+// ref-count to only allocate at most one buffer at any time.
+static int sBufferForMainThreadAddMarkerRefCount = 0;
+static ProfileChunkedBuffer* sBufferForMainThreadAddMarker = nullptr;
+
+ProfileChunkedBuffer* GetClearedBufferForMainThreadAddMarker() {
+  if (!mozilla::baseprofiler::profiler_is_main_thread()) {
+    return nullptr;
+  }
+
+  if (sBufferForMainThreadAddMarker) {
+    sBufferForMainThreadAddMarker->Clear();
+  }
+
+  return sBufferForMainThreadAddMarker;
+}
+
+MFBT_API void EnsureBufferForMainThreadAddMarker() {
+  if (!mozilla::baseprofiler::profiler_is_main_thread()) {
+    return;
+  }
+
+  if (sBufferForMainThreadAddMarkerRefCount++ == 0) {
+    // First `Ensure`, allocate the buffer.
+    MOZ_ASSERT(!sBufferForMainThreadAddMarker);
+    sBufferForMainThreadAddMarker = new ProfileChunkedBuffer(
+        ProfileChunkedBuffer::ThreadSafety::WithoutMutex,
+        MakeUnique<ProfileBufferChunkManagerSingle>(
+            ProfileBufferChunkManager::scExpectedMaximumStackSize));
+  }
+}
+
+MFBT_API void ReleaseBufferForMainThreadAddMarker() {
+  if (!mozilla::baseprofiler::profiler_is_main_thread()) {
+    return;
+  }
+
+  if (sBufferForMainThreadAddMarkerRefCount == 0) {
+    // Unexpected Release! This should not normally happen, but it's harmless in
+    // practice, it means the buffer is not alive anyway.
+    return;
+  }
+
+  MOZ_ASSERT(sBufferForMainThreadAddMarker);
+  if (--sBufferForMainThreadAddMarkerRefCount == 0) {
+    // Last `Release`, destroy the buffer.
+    delete sBufferForMainThreadAddMarker;
+    sBufferForMainThreadAddMarker = nullptr;
+  }
 }
 
 }  // namespace base_profiler_markers_detail

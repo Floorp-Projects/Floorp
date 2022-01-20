@@ -197,6 +197,15 @@
 #define ARCH_CPU_RISCV64 1
 #define ARCH_CPU_64_BITS 1
 #define ARCH_CPU_LITTLE_ENDIAN 1
+#elif defined(__sparc__)
+#if defined(__LP64__)
+#define ARCH_CPU_SPARC64 1
+#define ARCH_CPU_64_BITS 1
+#define ARCH_CPU_BIG_ENDIAN 1
+#endif
+#define ARCH_CPU_SPARC 1
+#define ARCH_CPU_32_BITS 1
+#define ARCH_CPU_BIG_ENDIAN 1
 #else
 #error Please add support for your architecture in build/build_config.h
 #endif

@@ -73,10 +73,10 @@ pub trait AsyncRead {
     /// that they did not write to.
     ///
     /// [`io::Read`]: std::io::Read
-    /// [`poll_read_buf`]: #method.poll_read_buf
+    /// [`poll_read_buf`]: method@Self::poll_read_buf
     unsafe fn prepare_uninitialized_buffer(&self, buf: &mut [MaybeUninit<u8>]) -> bool {
         for x in buf {
-            *x.as_mut_ptr() = 0;
+            *x = MaybeUninit::new(0);
         }
 
         true
@@ -140,12 +140,14 @@ macro_rules! deref_async_read {
             (**self).prepare_uninitialized_buffer(buf)
         }
 
-        fn poll_read(mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &mut [u8])
-            -> Poll<io::Result<usize>>
-        {
+        fn poll_read(
+            mut self: Pin<&mut Self>,
+            cx: &mut Context<'_>,
+            buf: &mut [u8],
+        ) -> Poll<io::Result<usize>> {
             Pin::new(&mut **self).poll_read(cx, buf)
         }
-    }
+    };
 }
 
 impl<T: ?Sized + AsyncRead + Unpin> AsyncRead for Box<T> {

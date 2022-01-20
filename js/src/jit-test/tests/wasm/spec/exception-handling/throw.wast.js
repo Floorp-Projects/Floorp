@@ -70,3 +70,19 @@ assert_exception(() => invoke($0, `throw-param-f64`, [value("f64", 5)]));
 
 // ./test/core/throw.wast:45
 assert_return(() => invoke($0, `test-throw-1-2`, []), []);
+
+// ./test/core/throw.wast:47
+assert_invalid(() => instantiate(`(module (func (throw 0)))`), `unknown tag 0`);
+
+// ./test/core/throw.wast:48
+assert_invalid(
+  () => instantiate(`(module (tag (param i32)) (func (throw 0)))`),
+  `type mismatch: instruction requires [i32] but stack has []`,
+);
+
+// ./test/core/throw.wast:50
+assert_invalid(
+  () =>
+    instantiate(`(module (tag (param i32)) (func (i64.const 5) (throw 0)))`),
+  `type mismatch: instruction requires [i32] but stack has [i64]`,
+);

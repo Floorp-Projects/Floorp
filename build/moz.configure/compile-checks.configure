@@ -103,9 +103,9 @@ def check_symbol(symbol, language="C", flags=None, when=None, onerror=lambda: No
     if when is None:
         when = always
 
-    compiler = {
-        "C": c_compiler,
-        "C++": cxx_compiler,
+    compiler, extern_c = {
+        "C": (c_compiler, ""),
+        "C++": (cxx_compiler, 'extern "C" '),
     }[language]
 
     # Stolen from autoconf 2.13 ; might be irrelevant now, but it doesn't hurt to
@@ -117,7 +117,7 @@ def check_symbol(symbol, language="C", flags=None, when=None, onerror=lambda: No
     ]
 
     return compiler.try_run(
-        header=comment + ["char %s();" % symbol],
+        header=comment + ["%schar %s();" % (extern_c, symbol)],
         body="%s();" % symbol,
         flags=flags,
         check_msg="for %s" % symbol,

@@ -8,6 +8,7 @@ EXPORTS += ["AccEvent.h", "nsAccessibilityService.h"]
 
 EXPORTS.mozilla.a11y += [
     "AccAttributes.h",
+    "AccGroupInfo.h",
     "AccTypes.h",
     "CacheConstants.h",
     "DocManager.h",

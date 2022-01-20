@@ -119,10 +119,10 @@ class DevToolsWorkerChild extends JSWindowActorChild {
 
     // Create one Target actor for each prefix/client which listen to workers
     for (const [watcherActorID, sessionData] of sessionDataByWatcherActor) {
-      const { targets, connectionPrefix, context } = sessionData;
+      const { targets, connectionPrefix, sessionContext } = sessionData;
       if (
         targets.includes("worker") &&
-        shouldNotifyWindowGlobal(this.manager, context)
+        shouldNotifyWindowGlobal(this.manager, sessionContext)
       ) {
         this._watchWorkerTargets({
           watcherActorID,
@@ -141,15 +141,15 @@ class DevToolsWorkerChild extends JSWindowActorChild {
    * @param {*} message.data
    */
   receiveMessage(message) {
-    // All messages pass `context` (except packet) and are expected
+    // All messages pass `sessionContext` (except packet) and are expected
     // to match shouldNotifyWindowGlobal result.
     if (message.name != "DevToolsWorkerParent:packet") {
-      const { browserId } = message.data.context;
+      const { browserId } = message.data.sessionContext;
       // Re-check here, just to ensure that both parent and content processes agree
       // on what should or should not be watched.
       if (
         this.manager.browsingContext.browserId != browserId &&
-        !shouldNotifyWindowGlobal(this.manager, message.data.context)
+        !shouldNotifyWindowGlobal(this.manager, message.data.sessionContext)
       ) {
         throw new Error(
           "Mismatch between DevToolsWorkerParent and DevToolsWorkerChild  " +
@@ -527,14 +527,14 @@ class DevToolsWorkerChild extends JSWindowActorChild {
 /**
  * Helper function to know if we should watch for workers on a given windowGlobal
  */
-function shouldNotifyWindowGlobal(windowGlobal, context) {
+function shouldNotifyWindowGlobal(windowGlobal, sessionContext) {
   const browsingContext = windowGlobal.browsingContext;
 
   // If we are focusing only on a sub-tree of Browsing Element, ignore elements that are
   // not part of it.
   if (
-    context.type == "browser-element" &&
-    browsingContext.browserId != context.browserId
+    sessionContext.type == "browser-element" &&
+    browsingContext.browserId != sessionContext.browserId
   ) {
     return false;
   }

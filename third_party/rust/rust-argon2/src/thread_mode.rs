@@ -13,11 +13,13 @@ pub enum ThreadMode {
     /// Run in one thread.
     Sequential,
 
+    #[cfg(feature = "crossbeam-utils")]
     /// Run in the same number of threads as the number of lanes.
     Parallel,
 }
 
 impl ThreadMode {
+    #[cfg(feature = "crossbeam-utils")]
     /// Create a thread mode from the threads count.
     pub fn from_threads(threads: u32) -> ThreadMode {
         if threads > 1 {
@@ -25,6 +27,12 @@ impl ThreadMode {
         } else {
             ThreadMode::Sequential
         }
+    }
+
+    #[cfg(not(feature = "crossbeam-utils"))]
+    pub fn from_threads(threads: u32) -> ThreadMode {
+        assert_eq!(threads, 1);
+        Self::default()
     }
 }
 
@@ -34,17 +42,17 @@ impl Default for ThreadMode {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
 
-    use super::*;
+    use crate::thread_mode::ThreadMode;
 
     #[test]
     fn default_returns_correct_thread_mode() {
         assert_eq!(ThreadMode::default(), ThreadMode::Sequential);
     }
 
+    #[cfg(feature = "crossbeam-utils")]
     #[test]
     fn from_threads_returns_correct_thread_mode() {
         assert_eq!(ThreadMode::from_threads(0), ThreadMode::Sequential);

@@ -12,7 +12,7 @@ pub struct CapacityError<T = ()> {
 
 impl<T> CapacityError<T> {
     /// Create a new `CapacityError` from `element`.
-    pub fn new(element: T) -> CapacityError<T> {
+    pub const fn new(element: T) -> CapacityError<T> {
         CapacityError {
             element: element,
         }

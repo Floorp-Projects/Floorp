@@ -6,9 +6,109 @@
 html {
   box-sizing: border-box;
 }
+  /* top sites */
+  .top-site-outer .tile {
+    border-radius: 12px !important;
+    height: 44px !important;
+    width: 44px !important;
+    box-shadow: none !important;
+  }
 
-/* New Tab Page */
-@-moz-document url("about:newtab"), url("about:home") {
+  .top-site-outer .tile .icon-wrapper {
+    border-radius: 4px !important;
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .top-site-outer .default-icon,
+  .top-site-outer .search-topsite {
+    background-size: 24px !important;
+    height: 24px !important;
+    width: 24px !important;
+  }
+
+  .top-site-outer .tile .icon-wrapper.letter-fallback::before {
+    font-size: 32px !important;
+  }
+
+  /* card */
+  .card-outer .card,
+  .ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) {
+    border-radius: 4px !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .card-outer .card-preview-image-outer,
+  .ds-card-grid.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img {
+    border-radius: 4px 4px 0 0 !important
+  }
+}
+
+/* private browsing newtab */
+@-moz-document url-prefix(about:privatebrowsing) {
+  :root {
+    --uc-wordmark-color: #737373 !important;
+    --uc-background-color-secondary: #fff !important;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --uc-wordmark-color: #fff !important;
+      --uc-background-color-secondary: #4a4a4a !important;
+    }
+  }
+
+  .search-inner-wrapper {
+    height: 44px !important;
+  }
+
+  .search-handoff-button,
+  .search-handoff-button:active,
+  .search-handoff-button:enabled:hover:active {
+    background-color: var(--uc-background-color-secondary) !important;
+    background-size: 24px;
+    border: 0 !important;
+    border-radius: 99px !important;
+    padding-inline-start: 48px !important;
+    --elevation: 4;
+    box-shadow: 0 0 calc((var(--elevation) * 0.225px) + 2px) rgba(0, 0, 0, 0.11), 0 calc(var(--elevation) * 0.4px) calc((var(--elevation) * 0.9px)) rgba(0, 0, 0, 0.13) !important;
+  }
+
+  .search-handoff-button:hover {
+    --elevation: 6;
+  }
+
+  .search-handoff-button.focused:not(.disabled) {
+    box-shadow: none !important;
+    outline: 2px solid var(--in-content-focus-outline-color) !important;
+    outline-offset: -1px !important;
+  }
+
+  .search-handoff-button.disabled {
+    opacity: 0 !important;
+  }
+
+  .fake-textbox {
+    color: var(--in-content-page-color) !important;
+  }
+
+  .wordmark {
+    fill: var(--uc-wordmark-color) !important;
+  }
+
+  .info {
+    background-color: var(--uc-background-color-secondary) !important;
+  }
+}
+  /* hide pin */
+  .icon.icon-pin-small {
+    display: none !important;
+  }
+
+  /* unpinned sites have lower opacity title */
+  .top-site-button .title:not(.pinned) {
+    opacity: 0.6 !important;
+  }
 
   body {
     margin: 0;
@@ -16,156 +116,38 @@ html {
     height: 100vh;
     background-image:url("https://raw.githubusercontent.com/Floorp-Projects/Floorp-Browser-dev/master/Background.png") !important;
   }
-  .search-wrapper input {
-    border: 0 !important;
-    box-shadow: none !important;
-    fill: var(--newtab-search-icon-color);
-    border-radius: 4px !important;
-    outline: none !important;
-  }
-
-  .search-inner-wrapper input {
-    transition: box-shadow .2s ease-in-out !important;
-    box-shadow: 0px 1.6px 3.6px rgb(0 0 0 / 13%), 0px 0px 2.9px rgb(0 0 0 / 11%) !important;
-  }
-
-  .search-inner-wrapper:hover input {
-    box-shadow: 0px 3.2px 7.2px rgb(0 0 0 / 13%), 0px 0px 3.8px rgb(0 0 0 / 11%) !important;
-  }
-
-  .search-wrapper :is(input, button) {
-    height: 44px !important;
-  }
-
-  #searchSubmit {
-    width: 68px !important;
-    background-color: var(--search-button-bg) !important;
-  }
-
-  #searchSubmit:hover {
-    background-color: var(--search-button-bg-hover) !important;
-  }
-
-  .top-site-outer .tile,
-  .screenshot,
-  .top-site-icon {
-    border-radius: 8px !important;
-  }
-
-  .card-outer .card-preview-image-outer {
-    background-color: #0002 !important;
-  }
-
-  .outer-wrapper:not(.newtab-experience) .top-site-outer .top-site-icon,
-  .outer-wrapper:not(.newtab-experience) .top-site-outer .screenshot {
-    box-shadow: none !important;
-  }
-
-  .top-site-outer:not(:hover) .tile {
-    box-shadow: var(--newtab-card-shadow) !important;
-  }
-
-  .compact-cards .card-outer .card-context::after,
-  .card-outer .card-preview-image-outer::after {
-    border-color: #0001 !important;
-  }
-
-  .top-site-outer .screenshot {
-    background-color: transparent !important;
-  }
-
-  body:not([lwt-newtab], [style*="color"]) {
-    --newtab-background-color: #f7f7f7 !important;
-    --newtab-search-header-background-color: #f7f7f7f0 !important;
-    --newtab-text-primary-color: #000 !important;
-    --newtab-textbox-background-color: #fff !important;
-    --newtab-topsites-background-color: #fff !important;
-
-    --search-button-bg: #0078D4;
-    --search-button-bg-hover: #006CBE;
-    --newtab-search-icon-color: #fff !important;
-
-    --newtab-snippets-background-color: var(--newtab-topsites-background-color) !important;
-    --newtab-card-background-color: var(--newtab-topsites-background-color) !important;
-    --newtab-card-hairline-color: var(--newtab-topsites-background-color) !important;
-  }
-
-  body[lwt-newtab-brighttext]:not([style*="--newtab-background-color"], [style*="--newtab-text-primary-color"]) {
-    --newtab-background-color: #242424 !important;
-    --newtab-search-header-background-color: #242424f0 !important;
-    --newtab-text-primary-color: #fff !important;
-    --newtab-textbox-background-color: #424242 !important;
-    --newtab-topsites-background-color: #424242 !important;
-
-    --search-button-bg: #006CBE;
-    --search-button-bg-hover: #0078D4;
-    --newtab-search-icon-color: #fff !important;
-
-    --newtab-snippets-background-color: var(--newtab-topsites-background-color) !important;
-    --newtab-card-background-color: var(--newtab-topsites-background-color) !important;
-    --newtab-card-hairline-color: var(--newtab-topsites-background-color) !important;
-  }
-}
-
-/* Private Browsing Page */
-@-moz-document url("about:privatebrowsing") {
-  html.private {
-    --in-content-page-color: #000d !important;
-    --in-content-text-color: #000 !important;
-    --in-content-page-background: #f5f5f5 !important;
-  }
-
-  .wordmark {
-    fill: #737373 !important;
-  }
-
-  .info {
-    background-color: #fff !important;
-    background-image: url(../icons/incognito.svg) !important;
+  .search-wrapper .search-inner-wrapper {
+    min-height: 44px !important;
   }
 
   .search-handoff-button {
-    background-color: #fff !important;
-    color: #000 !important;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    html.private {
-      --in-content-page-color: #fffd !important;
-      --in-content-text-color: #fff !important;
-      --in-content-page-background: #242424 !important;
-    }
-
-    .wordmark {
-      fill: #f5f5f5 !important;
-    }
-
-    .info {
-      background-color: #2b2b2b !important;
-    }
-
-    .search-handoff-button {
-      background-color: #424242 !important;
-      color: #fff !important;
-    }
-  }
-
-  .fake-textbox {
-    color: inherit !important;
-  }
-
-  .search-handoff-button {
-    border: 0 !important;
-    border-radius: 4px !important;
-    height: 44px !important;
-    transition: box-shadow .2s ease-in-out !important;
-    box-shadow: 0px 1.6px 3.6px rgb(0 0 0 / 13%), 0px 0px 2.9px rgb(0 0 0 / 11%) !important;
+    border-radius: 99px !important;
+    background-position: 12px !important;
+    padding-inline-start: 48px !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+    --elevation: 4;
+    box-shadow: 0 0 calc((var(--elevation) * 0.225px) + 2px) rgba(0, 0, 0, 0.11), 0 calc(var(--elevation) * 0.4px) calc((var(--elevation) * 0.9px)) rgba(0, 0, 0, 0.13) !important;
   }
 
   .search-handoff-button:hover {
-    box-shadow: 0px 3.2px 7.2px rgb(0 0 0 / 13%), 0px 0px 3.8px rgb(0 0 0 / 11%) !important;
+    --elevation: 6;
   }
-}
+
+  .search-wrapper.fake-focus:not(.search.disabled) .search-handoff-button {
+    border-color: transparent !important;
+    outline: 2px solid var(--newtab-primary-action-background) !important;
+    outline-offset: -1px !important;
+  }
+
+  .search-handoff-button .fake-caret {
+    inset-inline-start: 48px !important;
+    top: 13px !important;
+  }
+
+  .search-disabled .search-handoff-button {
+    opacity: 0 !important;
+  }
 
 *,
 *::before,
@@ -5110,156 +5092,4 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   margin-inline-start: 18px;
   align-self: flex-end;
   display: flex;
-}
-body[style*="--newtab-background-color:rgba(28, 27, 34, 1);"],
-body[style*="--newtab-background-color:rgba(42, 42, 46, 1);"],
-body[style*="--newtab-background-color: rgba(42, 42, 46, 1);"],
-body[style*="--newtab-background-color: rgba(43, 42, 51, 1);"] {
-  /* inner */
-  --newtab-focus-border: rgba(
-    0,
-    221,
-    255,
-    0.5
-  ) !important; /* Original: #B5D3FF, Better color-mix(in srgb, #B5D3FF 70%, transparent) */
-  --newtab-focus-border-selected: rgba(0, 221, 255, 0.5) !important; /* Original: #B5D3FF */
-
-  /* For Nightly */
-  --newtab-primary-action-background: var(--newtab-focus-border) !important;
-}
-
-/** Activity Stream - Web Site Icon: full size ******************************/
-.top-site-outer .tile {
-  overflow: hidden;
-}
-
-.top-site-outer .tile .icon-wrapper {
-  width: 100% !important; /* Original: 48px */
-  height: 100% !important; /* Original: 48px */
-}
-
-/** Activity Stream - Animate ***********************************************/
-@media (prefers-reduced-motion: no-preference) {
-  :root {
-    --animation-easing-function: cubic-bezier(0.07, 0.95, 0, 1);
-  }
-
-  /* Background */
-  .top-site-outer,
-  #searchSubmit,
-  button.icon,
-  button.close-button {
-    transition: background 1.5s var(--animation-easing-function);
-  }
-  .top-site-outer:hover,
-  #searchSubmit:hover,
-  button.icon:hover,
-  button.close-button:hover {
-    transition: background 0.5s var(--animation-easing-function);
-  }
-
-  /* Search Bar */
-  .search-inner-wrapper input {
-    transition: 1s var(--animation-easing-function);
-    transition-property: border-color, box-shadow;
-  }
-  .search-wrapper .search-inner-wrapper:active input,
-  .search-wrapper input:focus {
-    transition: border-color 0.5s var(--animation-easing-function), box-shadow 1s var(--animation-easing-function);
-  }
-  .search-wrapper .search-inner-wrapper:hover input {
-    border-color: var(--newtab-primary-action-background) !important;
-    transition: border-color 0.5s var(--animation-easing-function);
-  }
-}
-
-/** Activity Stream - Home Search Bar looks like proton *********************/
-/* Dropdown Colors */
-#root {
-  --newtab-search-background-color: rgba(255, 255, 255, 1); /* Same as light theme's --panel-background */
-
-  /* Set search dropdown background */
-  --newtab-search-dropdown-header-color: var(--newtab-search-background-color) !important;
-  --newtab-search-dropdown-color: var(--newtab-search-background-color) !important;
-  --newtab-element-hover-color: color-mix(in srgb, currentColor 9%, transparent) !important;
-}
-
-@media (-moz-toolbar-prefers-color-scheme: dark), (prefers-color-scheme: dark) {
-  #root {
-    /* Default Dark Mode */
-    --newtab-search-background-color: rgba(66, 65, 77, 1); /* Same as dark theme's --panel-background */
-  }
-}
-.activity-stream[lwt-sidebar]:not([style*="--newtab-background-color: rgba(43, 42, 51, 1);"]) #root {
-  /* Light weight theme */
-  --newtab-search-background-color: var(--lwt-sidebar-background-color);
-}
-
-/* Padding */
-#searchSuggestionTable {
-  border-radius: 4px !important;
-  -moz-window-shadow: cliprounded;
-}
-
-.contentSearchSuggestionTable .contentSearchOneOffItem {
-  width: 32px !important;
-  height: 32px !important;
-
-  /* Margin */
-  margin-block: 5px !important;
-  margin-inline-start: 5px !important;
-  margin-inline-end: 8px !important;
-
-  /* Border */
-  border-radius: 4px !important;
-  border-image: none !important; /* Original: linear-gradient(transparent 18%, var(--newtab-border-secondary-color) 18%, var(--newtab-border-secondary-color) 82%, transparent 82%) 1; */
-  border-inline-end: none !important; /* Original: 1px solid; */
-}
-
-#contentSearchSettingsButton::before {
-  content: url("chrome://global/skin/icons/settings.svg") !important;
-  display: -moz-inline-box;
-
-  /* Color */
-  -moz-context-properties: fill, fill-opacity !important;
-  fill: currentColor !important;
-
-  /* Align */
-  margin-inline-end: 5px;
-  vertical-align: -25%;
-}
-
-/* Pointer */
-.contentSearchSuggestionTable .contentSearchOneOffItem,
-#contentSearchSettingsButton {
-  cursor: pointer;
-}
-
-/*- Fix Color For Nightly --------------------------------------------------*/
-.contentSearchSuggestionTable,
-.contentSearchHeaderRow,
-.contentSearchHeader,
-.contentSearchSuggestionsContainer {
-  color: var(--newtab-text-primary-color) !important;
-  background: var(--newtab-search-background-color) !important;
-}
-
-.contentSearchSuggestionTable .contentSearchSuggestionRow.selected,
-.contentSearchSuggestionTable .contentSearchSettingsButton:hover {
-  color: var(--newtab-text-primary-color) !important;
-}
-
-.contentSearchSuggestionTable .contentSearchSuggestionRow.selected,
-.contentSearchSuggestionTable .contentSearchSettingsButton:hover,
-.contentSearchSuggestionTable .contentSearchOneOffItem.selected {
-  background: var(--newtab-element-hover-color) !important;
-}
-
-.contentSearchSuggestionTable .contentSearchSuggestionRow.selected:active,
-.contentSearchSuggestionTable .contentSearchOneOffItem:active {
-  background: var(--newtab-element-active-color) !important;
-}
-
-.contentSearchSuggestionTable .contentSearchSuggestionRow.selected .historyIcon {
-  fill: var(--newtab-icon-secondary-color) !important;
 }

@@ -1,7 +1,7 @@
 // |jit-test| skip-if: !('oomTest' in this) || helperThreadCount() === 0
 
 oomTest(() => {
-    offThreadCompileScript(
+    offThreadCompileToStencil(
         `
         function f(x) {
             if (x == 0)
@@ -10,5 +10,6 @@ oomTest(() => {
         }
         f(5);
         `);
-    runOffThreadScript();
+    var stencil = finishOffThreadCompileToStencil();
+    evalStencil(stencil);
 });

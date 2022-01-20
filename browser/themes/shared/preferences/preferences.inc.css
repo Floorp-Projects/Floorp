@@ -35,59 +35,6 @@
 }
 /* Preferences Page */
 
-  /* Icons */
-  #category-general>.category-icon {
-    list-style-image: url(chrome://browser/skin/settings.svg) !important;
-  }
-
-  #category-home>.category-icon {
-    list-style-image: url(chrome://browser/skin/home.svg) !important;
-  }
-
-  #category-search>.category-icon {
-    list-style-image: url(chrome://browser/skin/search.svg) !important;
-  }  
-  #category-sync>.category-icon {
-    list-style-image: url(chrome://browser/skin/sync.svg) !important;
-  }
-
-  .category[name="discover"] {
-    background-image: url(chrome://browser/skin/star.svg) !important;
-  }
-
-  .category[name="extension"] {
-    background-image: url(chrome://browser/skin/addons.svg) !important;
-  }
-
-  .category[name="theme"] {
-    background-image: url(chrome://browser/skin/brush.svg) !important;
-  }
-
-  /* Permissions */
-  .geo-icon {
-    list-style-image: url(chrome://browser/skin/geo.svg) !important;
-  }
-
-  .camera-icon {
-    list-style-image: url(chrome://browser/skin/camera.svg) !important;
-  }
-
-  .microphone-icon {
-    list-style-image: url(chrome://browser/skin/microphone.svg) !important;
-  }
-
-  .desktop-notification-icon {
-    list-style-image: url(chrome://browser/skin/desktop-notification.svg) !important;
-  }
-
-  .autoplay-icon {
-    list-style-image: url(chrome://browser/skin/autoplay-media.svg) !important;
-  }
-
-  .xr-icon {
-    list-style-image: url(chrome://browser/skin/xr.svg) !important;
-  }
-
   /* Sync Items */
   .sync-engine-bookmarks .checkbox-icon,
   .sync-engine-bookmarks.sync-engine-image {
@@ -305,15 +252,6 @@
     border-bottom: 1px solid var(--sidebar-border-color) !important;
   }
 
-  .sticky-container::before {
-    content: "Floorp Legacy";
-    font-size: 24px;
-    font-weight: 600;
-    position: absolute !important;
-    min-height: 34px;
-    top: 16px;
-    left: 4px;
-  }
 
   #mainPrefPane {
     margin-top: 16px !important;
@@ -1216,7 +1154,7 @@ dialog > .sync-engines-list + hbox {
 
 .sync-engine-addons .checkbox-icon,
 .sync-engine-addons.sync-engine-image {
-  list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
+  list-style-image: url("chrome://browser/skin/addons.svg");
 }
 
 .sync-engine-prefs .checkbox-icon,

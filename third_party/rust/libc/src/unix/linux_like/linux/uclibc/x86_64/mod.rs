@@ -292,8 +292,13 @@ s_no_extra_traits! {
 }
 
 // constants
+pub const ENAMETOOLONG: ::c_int = 36; // File name too long
+pub const ENOTEMPTY: ::c_int = 39; // Directory not empty
+pub const ELOOP: ::c_int = 40; // Too many symbolic links encountered
 pub const EADDRINUSE: ::c_int = 98; // Address already in use
 pub const EADDRNOTAVAIL: ::c_int = 99; // Cannot assign requested address
+pub const ENETDOWN: ::c_int = 100; // Network is down
+pub const ENETUNREACH: ::c_int = 101; // Network is unreachable
 pub const ECONNABORTED: ::c_int = 103; // Software caused connection abort
 pub const ECONNREFUSED: ::c_int = 111; // Connection refused
 pub const ECONNRESET: ::c_int = 104; // Connection reset by peer
@@ -301,6 +306,9 @@ pub const EDEADLK: ::c_int = 35; // Resource deadlock would occur
 pub const ENOSYS: ::c_int = 38; // Function not implemented
 pub const ENOTCONN: ::c_int = 107; // Transport endpoint is not connected
 pub const ETIMEDOUT: ::c_int = 110; // connection timed out
+pub const ESTALE: ::c_int = 116; // Stale file handle
+pub const EHOSTUNREACH: ::c_int = 113; // No route to host
+pub const EDQUOT: ::c_int = 122; // Quota exceeded
 pub const EOPNOTSUPP: ::c_int = 0x5f;
 pub const ENODATA: ::c_int = 0x3d;
 pub const O_APPEND: ::c_int = 02000;

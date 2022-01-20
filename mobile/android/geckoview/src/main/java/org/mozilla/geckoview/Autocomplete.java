@@ -1288,6 +1288,7 @@ public class Autocomplete {
     public StorageProxy() {}
 
     private void registerListener() {
+      EventDispatcher.getInstance().dispatch("GeckoView:StorageDelegate:Attached", null);
       EventDispatcher.getInstance()
           .registerUiThreadListener(
               this,

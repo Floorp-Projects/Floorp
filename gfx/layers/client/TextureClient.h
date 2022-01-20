@@ -68,7 +68,6 @@ class ITextureClientRecycleAllocator;
 class TextureClientPool;
 #endif
 class TextureForwarder;
-class KeepAlive;
 
 /**
  * TextureClient is the abstraction that allows us to share data between the
@@ -795,20 +794,6 @@ class MOZ_RAII TextureClientAutoLock {
   bool mChecked;
 #endif
   bool mSucceeded;
-};
-
-class KeepAlive {
- public:
-  virtual ~KeepAlive() = default;
-};
-
-template <typename T>
-class TKeepAlive : public KeepAlive {
- public:
-  explicit TKeepAlive(T* aData) : mData(aData) {}
-
- protected:
-  RefPtr<T> mData;
 };
 
 /// Convenience function to set the content of ycbcr texture.

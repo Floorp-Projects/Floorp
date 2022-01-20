@@ -325,8 +325,9 @@ function Toolbox(
   this._onResourceUpdated = this._onResourceUpdated.bind(this);
   this._onToolSelectedStopPicker = this._onToolSelectedStopPicker.bind(this);
 
+  // `component` might be null if the toolbox was destroying during the throttling
   this._throttledSetToolboxButtons = throttle(
-    () => this.component.setToolboxButtons(this.toolbarButtons),
+    () => this.component?.setToolboxButtons(this.toolbarButtons),
     500,
     this
   );
@@ -692,11 +693,6 @@ Toolbox.prototype = {
    */
   async _onTargetAvailable({ targetFront, isTargetSwitching }) {
     if (targetFront.isTopLevel) {
-      if (isTargetSwitching) {
-        // Notify gDevTools that the toolbox will be hooked to another target.
-        this.emit("switch-target", targetFront);
-      }
-
       // Attach to a new top-level target.
       // For now, register these event listeners only on the top level target
       if (!targetFront.targetForm.ignoreSubFrames) {
@@ -1347,6 +1343,10 @@ Toolbox.prototype = {
       runtimeInfo,
       targetType,
     };
+  },
+
+  isDebugTargetFenix() {
+    return this._getDebugTargetData()?.runtimeInfo?.isFenix;
   },
 
   /**
@@ -2151,6 +2151,7 @@ Toolbox.prototype = {
   _buildPickerButton() {
     this.pickerButton = this._createButtonState({
       id: "command-button-pick",
+      className: this._getPickerAdditionalClassName(),
       description: this._getPickerTooltip(),
       onClick: this._onPickerClick,
       isInStartContainer: true,
@@ -2160,6 +2161,13 @@ Toolbox.prototype = {
     });
 
     return this.pickerButton;
+  },
+
+  _getPickerAdditionalClassName() {
+    if (this.isDebugTargetFenix()) {
+      return "remote-fenix";
+    }
+    return null;
   },
 
   /**
@@ -2174,9 +2182,17 @@ Toolbox.prototype = {
     shortcut = KeyShortcuts.stringify(shortcut);
     const shortcutMac = L10N.getStr("toolbox.elementPicker.mac.key");
     const isMac = Services.appinfo.OS === "Darwin";
-    const label = isMac
-      ? "toolbox.elementPicker.mac.tooltip"
-      : "toolbox.elementPicker.tooltip";
+
+    let label;
+    if (this.isDebugTargetFenix()) {
+      label = isMac
+        ? "toolbox.androidElementPicker.mac.tooltip"
+        : "toolbox.androidElementPicker.tooltip";
+    } else {
+      label = isMac
+        ? "toolbox.elementPicker.mac.tooltip"
+        : "toolbox.elementPicker.tooltip";
+    }
 
     return isMac
       ? L10N.getFormatStr(label, shortcut, shortcutMac)
@@ -2273,7 +2289,7 @@ Toolbox.prototype = {
       // If the current panel doesn't define a custom updatePickerButton,
       // revert the button to its default state
       button.description = this._getPickerTooltip();
-      button.className = null;
+      button.className = this._getPickerAdditionalClassName();
       button.disabled = null;
     }
   },
@@ -3256,7 +3272,7 @@ Toolbox.prototype = {
     try {
       const { frames } = await this.target.listFrames();
 
-      // @backward-compat { version 95 } frame.isTopLevel was added in 95.
+      // @backward-compat { version 96 } frame.isTopLevel was added in 96.
       for (const frame of frames) {
         frame.isTopLevel = !frame.parentID;
       }

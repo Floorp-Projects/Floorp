@@ -107,30 +107,41 @@ add_task(async function test_nimbus_experiments() {
 
 add_task(async function test_remote_configuration() {
   await ExperimentAPI.ready();
-  await ExperimentFakes.remoteDefaultsHelper({
-    feature: NimbusFeatures.aboutwelcome,
-    configuration: {
-      slug: "about:studies-configuration-slug",
-      variables: { enabled: true },
-      targeting: "true",
-    },
+  let doCleanup = await ExperimentFakes.enrollWithRollout({
+    featureId: NimbusFeatures.aboutwelcome.featureId,
+    value: { enabled: true },
   });
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:support" },
     async function(browser) {
-      let featureId = await SpecialPowers.spawn(browser, [], async function() {
-        await ContentTaskUtils.waitForCondition(
-          () =>
-            content.document.querySelector(
-              "#remote-features-tbody tr:first-child td"
-            )?.innerText
-        );
-        return content.document.querySelector(
-          "#remote-features-tbody tr:first-child td"
-        ).innerText;
-      });
-      ok(featureId.match("aboutwelcome"), "Rendered the expected featureId");
+      let [userFacingName, branch] = await SpecialPowers.spawn(
+        browser,
+        [],
+        async function() {
+          await ContentTaskUtils.waitForCondition(
+            () =>
+              content.document.querySelector(
+                "#remote-features-tbody tr:first-child td"
+              )?.innerText
+          );
+          let rolloutName = content.document.querySelector(
+            "#remote-features-tbody tr:first-child td"
+          ).innerText;
+          let branchName = content.document.querySelector(
+            "#remote-features-tbody tr:first-child td:nth-child(2)"
+          ).innerText;
+
+          return [rolloutName, branchName];
+        }
+      );
+      ok(
+        userFacingName.match("NimbusTestUtils"),
+        "Rendered the expected rollout"
+      );
+      ok(branch.match("aboutwelcome"), "Rendered the expected rollout branch");
     }
   );
+
+  await doCleanup();
 });

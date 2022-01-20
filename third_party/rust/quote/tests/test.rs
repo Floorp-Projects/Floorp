@@ -1,4 +1,10 @@
-#![cfg_attr(feature = "cargo-clippy", allow(blacklisted_name))]
+#![allow(
+    clippy::blacklisted_name,
+    clippy::let_underscore_drop,
+    clippy::shadow_unrelated,
+    clippy::unseparated_literal_suffix,
+    clippy::used_underscore_binding
+)]
 
 use std::borrow::Cow;
 use std::collections::BTreeSet;
@@ -76,6 +82,27 @@ fn test_iter() {
     assert_eq!("X , X , X , X ,", quote!(#(#primes,)*).to_string());
 
     assert_eq!("X , X , X , X", quote!(#(#primes),*).to_string());
+}
+
+#[test]
+fn test_array() {
+    let array: [u8; 40] = [0; 40];
+    let _ = quote!(#(#array #array)*);
+
+    let ref_array: &[u8; 40] = &[0; 40];
+    let _ = quote!(#(#ref_array #ref_array)*);
+
+    let ref_slice: &[u8] = &[0; 40];
+    let _ = quote!(#(#ref_slice #ref_slice)*);
+
+    let array: [X; 2] = [X, X]; // !Copy
+    let _ = quote!(#(#array #array)*);
+
+    let ref_array: &[X; 2] = &[X, X];
+    let _ = quote!(#(#ref_array #ref_array)*);
+
+    let ref_slice: &[X] = &[X, X];
+    let _ = quote!(#(#ref_slice #ref_slice)*);
 }
 
 #[test]

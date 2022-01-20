@@ -395,7 +395,12 @@ txExecutionState::TemplateRule* txExecutionState::getCurrentTemplateRule() {
   return &mTemplateRules[mTemplateRules.Length() - 1];
 }
 
-txInstruction* txExecutionState::getNextInstruction() {
+mozilla::Result<txInstruction*, nsresult>
+txExecutionState::getNextInstruction() {
+  if (mStopProcessing) {
+    return mozilla::Err(NS_ERROR_FAILURE);
+  }
+
   txInstruction* instr = mNextInstruction;
   if (instr) {
     mNextInstruction = instr->mNext.get();

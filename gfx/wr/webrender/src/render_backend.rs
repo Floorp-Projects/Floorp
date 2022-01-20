@@ -10,7 +10,7 @@
 
 use api::{DebugFlags, BlobImageHandler, Parameter, BoolParameter};
 use api::{DocumentId, ExternalScrollId, HitTestResult};
-use api::{IdNamespace, PipelineId, RenderNotifier, ScrollClamping};
+use api::{IdNamespace, PipelineId, RenderNotifier};
 use api::{NotificationRequest, Checkpoint, QualitySettings};
 use api::{PrimitiveKeyKind, RenderReasons};
 use api::units::*;
@@ -245,7 +245,6 @@ impl ScratchBuffer {
     pub fn recycle(&mut self, recycler: &mut Recycler) {
         self.primitive.recycle(recycler);
         self.picture.recycle(recycler);
-        self.frame.recycle(recycler);
     }
 
     pub fn memory_pressure(&mut self) {
@@ -394,10 +393,10 @@ impl Document {
             FrameMsg::RequestHitTester(tx) => {
                 tx.send(self.shared_hit_tester.clone()).unwrap();
             }
-            FrameMsg::ScrollNodeWithId(origin, id, clamp) => {
-                profile_scope!("ScrollNodeWithScrollId");
+            FrameMsg::SetScrollOffset(id, offset) => {
+                profile_scope!("SetScrollOffset");
 
-                if self.scroll_node(origin, id, clamp) {
+                if self.set_scroll_offset(id, offset) {
                     self.hit_tester_is_valid = false;
                     self.frame_is_valid = false;
                 }
@@ -512,13 +511,12 @@ impl Document {
     }
 
     /// Returns true if the node actually changed position or false otherwise.
-    pub fn scroll_node(
+    pub fn set_scroll_offset(
         &mut self,
-        origin: LayoutPoint,
         id: ExternalScrollId,
-        clamp: ScrollClamping
+        offset: LayoutVector2D,
     ) -> bool {
-        self.spatial_tree.scroll_node(origin, id, clamp)
+        self.spatial_tree.set_scroll_offset(id, offset)
     }
 
     /// Update the state of tile caches when a new scene is being swapped in to
@@ -1339,7 +1337,7 @@ impl RenderBackend {
             *frame_counter += 1;
 
             // borrow ck hack for profile_counters
-            let (pending_update, rendered_document) = {
+            let (pending_update, mut rendered_document) = {
                 let frame_build_start_time = precise_time_ns();
 
                 let frame_stats = doc.frame_stats.take();
@@ -1364,6 +1362,12 @@ impl RenderBackend {
                 let pending_update = self.resource_cache.pending_updates();
                 (pending_update, rendered_document)
             };
+
+            // Invalidate dirty rects if the compositing config has changed significantly
+            rendered_document
+                .frame
+                .composite_state
+                .update_dirty_rect_validity(&doc.prev_composite_descriptor);
 
             // Build a small struct that represents the state of the tiles to be composited.
             let composite_descriptor = rendered_document

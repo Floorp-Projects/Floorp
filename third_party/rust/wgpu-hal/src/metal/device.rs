@@ -227,7 +227,6 @@ impl crate::Device<super::Api> for super::Device {
         Ok(super::Buffer {
             raw,
             size: desc.size,
-            options,
         })
     }
     unsafe fn destroy_buffer(&self, _buffer: super::Buffer) {}
@@ -635,6 +634,11 @@ impl crate::Device<super::Api> for super::Device {
                         resources: stage_data.cs.resources,
                         ..per_stage_map.cs
                     },
+                },
+                bounds_check_policies: naga::proc::BoundsCheckPolicies {
+                    index: naga::proc::BoundsCheckPolicy::ReadZeroSkipWrite,
+                    buffer: naga::proc::BoundsCheckPolicy::ReadZeroSkipWrite,
+                    image: naga::proc::BoundsCheckPolicy::ReadZeroSkipWrite,
                 },
             },
         })

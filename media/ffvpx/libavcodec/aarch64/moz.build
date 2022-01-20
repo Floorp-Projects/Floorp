@@ -32,6 +32,7 @@ SOURCES += [
     'vp9lpf_16bpp_neon.S',
     'vp9lpf_neon.S',
     'vp9mc_16bpp_neon.S',
+    'vp9mc_aarch64.S',
     'vp9mc_neon.S',
 ]
 

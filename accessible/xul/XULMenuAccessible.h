@@ -26,7 +26,6 @@ class XULMenuitemAccessible : public AccessibleWrap {
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
-  virtual int32_t GetLevelInternal() override;
 
   // ActionAccessible
   virtual uint8_t ActionCount() const override;
@@ -43,6 +42,7 @@ class XULMenuitemAccessible : public AccessibleWrap {
  protected:
   // LocalAccessible
   virtual ENameValueFlag NativeName(nsString& aName) const override;
+  virtual int32_t GetLevel(bool aFast) const override;
 };
 
 /**

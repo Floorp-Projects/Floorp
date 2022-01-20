@@ -297,6 +297,8 @@ Status DecodeImageAPNG(const Span<const uint8_t> bytes,
               // TODO(veluca): this could in principle be implemented.
               if (last_base_was_none && !all_dispose_bg &&
                   (x0 != 0 || y0 != 0 || w0 != w || h0 != h || bop != 0)) {
+                delete[] frameRaw.rows;
+                delete[] frameRaw.p;
                 return JXL_FAILURE(
                     "APNG with dispose-to-0 is not supported for non-full or "
                     "blended frames");

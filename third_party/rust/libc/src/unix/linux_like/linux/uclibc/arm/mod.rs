@@ -61,8 +61,8 @@ s! {
         pub st_mtime_nsec: ::c_long,
         pub st_ctime: ::time_t,
         pub st_ctime_nsec: ::c_long,
-        pub __uclibc_unused4: ::c_ulong,
-        pub __uclibc_unused5: ::c_ulong,
+        pub __unused4: ::c_ulong,
+        pub __unused5: ::c_ulong,
     }
 
     pub struct stat64
@@ -205,41 +205,41 @@ s! {
         pub __pad1: ::c_ushort,
         pub __seq: ::c_ushort,
         pub __pad2: ::c_ushort,
-        pub __uclibc_unused1: ::c_ulong,
-        pub __uclibc_unused2: ::c_ulong,
+        pub __unused1: ::c_ulong,
+        pub __unused2: ::c_ulong,
     }
 
     pub struct msqid_ds {
         pub msg_perm: ::ipc_perm,
         pub msg_stime: ::time_t,
-        pub __uclibc_unused1: ::c_ulong,
+        pub __unused1: ::c_ulong,
         pub msg_rtime: ::time_t,
-        pub __uclibc_unused2: ::c_ulong,
+        pub __unused2: ::c_ulong,
         pub msg_ctime: ::time_t,
-        pub __uclibc_unused3: ::c_ulong,
+        pub __unused3: ::c_ulong,
         pub __msg_cbytes: ::c_ulong,
         pub msg_qnum: ::msgqnum_t,
         pub msg_qbytes: ::msglen_t,
         pub msg_lspid: ::pid_t,
         pub msg_lrpid: ::pid_t,
-        pub __uclibc_unused4: ::c_ulong,
-        pub __uclibc_unused5: ::c_ulong,
+        pub __unused4: ::c_ulong,
+        pub __unused5: ::c_ulong,
     }
 
     pub struct shmid_ds {
         pub shm_perm: ::ipc_perm,
         pub shm_segsz: ::size_t,
         pub shm_atime: ::time_t,
-        pub __uclibc_unused1: ::c_ulong,
+        pub __unused1: ::c_ulong,
         pub shm_dtime: ::time_t,
-        pub __uclibc_unused2: ::c_ulong,
+        pub __unused2: ::c_ulong,
         pub shm_ctime: ::time_t,
-        pub __uclibc_unused3: ::c_ulong,
+        pub __unused3: ::c_ulong,
         pub shm_cpid: ::pid_t,
         pub shm_lpid: ::pid_t,
         pub shm_nattch: ::shmatt_t,
-        pub __uclibc_unused4: ::c_ulong,
-        pub __uclibc_unused5: ::c_ulong,
+        pub __unused4: ::c_ulong,
+        pub __unused5: ::c_ulong,
     }
 }
 
@@ -469,6 +469,7 @@ pub const PENDIN: ::tcflag_t = 0x4000;
 pub const POLLWRBAND: ::c_short = 0x200;
 pub const POLLWRNORM: ::c_short = 0x100;
 pub const PTHREAD_STACK_MIN: ::size_t = 16384;
+pub const RTLD_GLOBAL: ::c_int = 0x00100;
 
 // These are typed unsigned to match sigaction
 pub const SA_NOCLDSTOP: ::c_ulong = 0x1;
@@ -516,6 +517,8 @@ pub const TABDLY: ::c_int = 0x1800;
 pub const TCSADRAIN: ::c_int = 0x1;
 pub const TCSAFLUSH: ::c_int = 0x2;
 pub const TCSANOW: ::c_int = 0;
+pub const TIOCGWINSZ: ::c_int = 0x5413;
+pub const TIOCSWINSZ: ::c_int = 0x5414;
 pub const TOSTOP: ::tcflag_t = 0x100;
 pub const VDISCARD: usize = 0xd;
 pub const VEOF: usize = 0x4;
@@ -886,6 +889,9 @@ pub const SYS_pwritev2: ::c_long = 393;
 pub const SYS_pkey_mprotect: ::c_long = 394;
 pub const SYS_pkey_alloc: ::c_long = 395;
 pub const SYS_pkey_free: ::c_long = 396;
+pub const SYS_statx: ::c_int = 397;
+pub const SYS_pidfd_open: ::c_long = 434;
+pub const SYS_clone3: ::c_long = 435;
 
 extern "C" {
     pub fn ioctl(fd: ::c_int, request: ::c_ulong, ...) -> ::c_int;

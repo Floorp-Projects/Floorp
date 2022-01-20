@@ -387,22 +387,11 @@ pub const TIOCEXCL: ::c_ulong = 0x540C;
 pub const TIOCNXCL: ::c_ulong = 0x540D;
 pub const TIOCSCTTY: ::c_ulong = 0x540E;
 pub const TIOCSTI: ::c_ulong = 0x5412;
-pub const TIOCMGET: ::c_ulong = 0x5415;
-pub const TIOCMBIS: ::c_ulong = 0x5416;
-pub const TIOCMBIC: ::c_ulong = 0x5417;
-pub const TIOCMSET: ::c_ulong = 0x5418;
 pub const TIOCCONS: ::c_ulong = 0x541D;
 pub const TIOCSBRK: ::c_ulong = 0x5427;
 pub const TIOCCBRK: ::c_ulong = 0x5428;
 pub const TIOCGRS485: ::c_int = 0x542E;
 pub const TIOCSRS485: ::c_int = 0x542F;
-
-pub const TIOCM_ST: ::c_int = 0x008;
-pub const TIOCM_SR: ::c_int = 0x010;
-pub const TIOCM_CTS: ::c_int = 0x020;
-pub const TIOCM_CAR: ::c_int = 0x040;
-pub const TIOCM_RNG: ::c_int = 0x080;
-pub const TIOCM_DSR: ::c_int = 0x100;
 
 pub const SFD_CLOEXEC: ::c_int = 0x080000;
 
@@ -599,7 +588,6 @@ pub const B2500000: ::speed_t = 0o0033;
 pub const B3000000: ::speed_t = 0o0034;
 pub const B3500000: ::speed_t = 0o0035;
 pub const B4000000: ::speed_t = 0o0036;
-pub const BOTHER: ::speed_t = 0o0037;
 
 pub const VEOL: usize = 6;
 pub const VEOL2: usize = 8;

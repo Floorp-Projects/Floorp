@@ -47,9 +47,6 @@ bitflags::bitflags! {
         /// Can be used for host-shareable structures.
         const HOST_SHARED = 0x10;
 
-        /// This is a top-level host-shareable type.
-        const TOP_LEVEL = 0x20;
-
         /// This type can be passed as a function argument.
         const ARGUMENT = 0x40;
     }
@@ -83,6 +80,11 @@ pub enum TypeError {
     UnresolvedBase(Handle<crate::Type>),
     #[error("Invalid type for pointer target {0:?}")]
     InvalidPointerBase(Handle<crate::Type>),
+    #[error("Unsized types like {base:?} must be in the `Storage` storage class, not `{class:?}`")]
+    InvalidPointerToUnsized {
+        base: Handle<crate::Type>,
+        class: crate::StorageClass,
+    },
     #[error("Expected data type, found {0:?}")]
     InvalidData(Handle<crate::Type>),
     #[error("Base type {0:?} for the array is invalid")]
@@ -108,8 +110,6 @@ pub enum TypeError {
         size: u32,
         span: u32,
     },
-    #[error("The composite type contains a top-level structure")]
-    NestedTopLevel,
 }
 
 // Only makes sense if `flags.contains(HOST_SHARED)`
@@ -255,7 +255,9 @@ impl super::Validator {
                     width as u32,
                 )
             }
-            Ti::Pointer { base, class: _ } => {
+            Ti::Pointer { base, class } => {
+                use crate::StorageClass as Sc;
+
                 if base >= handle {
                     return Err(TypeError::UnresolvedBase(base));
                 }
@@ -264,21 +266,45 @@ impl super::Validator {
                 if !base_info.flags.contains(TypeFlags::DATA) {
                     return Err(TypeError::InvalidPointerBase(base));
                 }
-                // Pointers to dynamically-sized arrays are needed, to serve as
-                // the type of an `AccessIndex` expression referring to a
-                // dynamically sized array appearing as the final member of a
-                // top-level `Struct`. But such pointers cannot be passed to
-                // functions, stored in variables, etc. So, we mark them as not
-                // `DATA`.
-                let data_flag = if base_info.flags.contains(TypeFlags::SIZED) {
-                    TypeFlags::DATA | TypeFlags::ARGUMENT
-                } else if let crate::TypeInner::Struct { .. } = types[base].inner {
-                    TypeFlags::DATA | TypeFlags::ARGUMENT
-                } else {
-                    TypeFlags::empty()
+
+                // Runtime-sized values can only live in the `Storage` storage
+                // class, so it's useless to have a pointer to such a type in
+                // any other class.
+                //
+                // Detecting this problem here prevents the definition of
+                // functions like:
+                //
+                //     fn f(p: ptr<workgroup, UnsizedType>) -> ... { ... }
+                //
+                // which would otherwise be permitted, but uncallable. (They
+                // may also present difficulties in code generation).
+                if !base_info.flags.contains(TypeFlags::SIZED) {
+                    match class {
+                        Sc::Storage { .. } => {}
+                        _ => {
+                            return Err(TypeError::InvalidPointerToUnsized { base, class });
+                        }
+                    }
+                }
+
+                // Pointers passed as arguments to user-defined functions must
+                // be in the `Function`, `Private`, or `Workgroup` storage
+                // class. We only mark pointers in those classes as `ARGUMENT`.
+                //
+                // `Validator::validate_function` actually checks the storage
+                // class of pointer arguments explicitly before checking the
+                // `ARGUMENT` flag, to give better error messages. But it seems
+                // best to set `ARGUMENT` accurately anyway.
+                let argument_flag = match class {
+                    Sc::Function | Sc::Private | Sc::WorkGroup => TypeFlags::ARGUMENT,
+                    Sc::Uniform | Sc::Storage { .. } | Sc::Handle | Sc::PushConstant => {
+                        TypeFlags::empty()
+                    }
                 };
 
-                TypeInfo::new(data_flag | TypeFlags::SIZED | TypeFlags::COPY, 0)
+                // Pointers cannot be stored in variables, structure members, or
+                // array elements, so we do not mark them as `DATA`.
+                TypeInfo::new(argument_flag | TypeFlags::SIZED | TypeFlags::COPY, 0)
             }
             Ti::ValuePointer {
                 size: _,
@@ -298,9 +324,6 @@ impl super::Validator {
                 let base_info = &self.types[base.index()];
                 if !base_info.flags.contains(TypeFlags::DATA | TypeFlags::SIZED) {
                     return Err(TypeError::InvalidArrayBaseType(base));
-                }
-                if base_info.flags.contains(TypeFlags::TOP_LEVEL) {
-                    return Err(TypeError::NestedTopLevel);
                 }
 
                 let base_size = types[base].inner.span(constants);
@@ -412,11 +435,7 @@ impl super::Validator {
                     storage_layout,
                 }
             }
-            Ti::Struct {
-                top_level,
-                ref members,
-                span,
-            } => {
+            Ti::Struct { ref members, span } => {
                 let mut ti = TypeInfo::new(
                     TypeFlags::DATA
                         | TypeFlags::SIZED
@@ -435,9 +454,6 @@ impl super::Validator {
                     let base_info = &self.types[member.ty.index()];
                     if !base_info.flags.contains(TypeFlags::DATA) {
                         return Err(TypeError::InvalidData(member.ty));
-                    }
-                    if base_info.flags.contains(TypeFlags::TOP_LEVEL) {
-                        return Err(TypeError::NestedTopLevel);
                     }
                     if !base_info.flags.contains(TypeFlags::HOST_SHARED) {
                         if ti.uniform_layout.is_ok() {
@@ -503,9 +519,6 @@ impl super::Validator {
                                 Err((handle, Disalignment::UnsizedMember { index: i as u32 }));
                         }
                     }
-                }
-                if top_level {
-                    ti.flags |= TypeFlags::TOP_LEVEL;
                 }
 
                 let alignment = self.layouter[handle].alignment.get();

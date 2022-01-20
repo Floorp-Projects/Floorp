@@ -37,8 +37,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.engagement.recent_visited_origins.expiry"
 );
 
-Cu.importGlobalProperties(["Glean"]);
-
 // The upper bound for the count of the visited unique domain names.
 const MAX_UNIQUE_VISITED_DOMAINS = 100;
 

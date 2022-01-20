@@ -205,6 +205,29 @@ static const AVPixFmtDescriptor av_pix_fmt_descriptors[AV_PIX_FMT_NB] = {
             { 0, 4, 1, 0, 8, 3, 7, 2 },        /* V */
         },
     },
+    [AV_PIX_FMT_Y210LE] = {
+        .name = "y210le",
+        .nb_components = 3,
+        .log2_chroma_w = 1,
+        .log2_chroma_h = 0,
+        .comp = {
+            { 0, 4, 0, 6, 10, 3, 9, 1 },        /* Y */
+            { 0, 8, 2, 6, 10, 7, 9, 3 },        /* U */
+            { 0, 8, 6, 6, 10, 7, 9, 7 },        /* V */
+        },
+    },
+    [AV_PIX_FMT_Y210BE] = {
+        .name = "y210be",
+        .nb_components = 3,
+        .log2_chroma_w = 1,
+        .log2_chroma_h = 0,
+        .comp = {
+            { 0, 4, 0, 6, 10, 3, 9, 1 },        /* Y */
+            { 0, 8, 2, 6, 10, 7, 9, 3 },        /* U */
+            { 0, 8, 6, 6, 10, 7, 9, 7 },        /* V */
+        },
+        .flags = AV_PIX_FMT_FLAG_BE,
+    },
     [AV_PIX_FMT_RGB24] = {
         .name = "rgb24",
         .nb_components = 3,
@@ -228,6 +251,30 @@ static const AVPixFmtDescriptor av_pix_fmt_descriptors[AV_PIX_FMT_NB] = {
             { 0, 3, 0, 0, 8, 2, 7, 1 },        /* B */
         },
         .flags = AV_PIX_FMT_FLAG_RGB,
+    },
+    [AV_PIX_FMT_X2RGB10LE] = {
+        .name = "x2rgb10le",
+        .nb_components= 3,
+        .log2_chroma_w= 0,
+        .log2_chroma_h= 0,
+        .comp = {
+            { 0, 4, 2, 4, 10, 3, 9, 2 },       /* R */
+            { 0, 4, 1, 2, 10, 3, 9, 3 },       /* G */
+            { 0, 4, 0, 0, 10, 3, 9, 4 },       /* B */
+        },
+        .flags = AV_PIX_FMT_FLAG_RGB,
+    },
+    [AV_PIX_FMT_X2RGB10BE] = {
+        .name = "x2rgb10be",
+        .nb_components= 3,
+        .log2_chroma_w= 0,
+        .log2_chroma_h= 0,
+        .comp = {
+            { 0, 4, 0, 4, 10, 3, 9, 2 },       /* R */
+            { 0, 4, 1, 2, 10, 3, 9, 3 },       /* G */
+            { 0, 4, 2, 0, 10, 3, 9, 4 },       /* B */
+        },
+        .flags = AV_PIX_FMT_FLAG_RGB | AV_PIX_FMT_FLAG_BE,
     },
     [AV_PIX_FMT_YUV422P] = {
         .name = "yuv422p",
@@ -2344,6 +2391,10 @@ static const AVPixFmtDescriptor av_pix_fmt_descriptors[AV_PIX_FMT_NB] = {
         },
         .flags = AV_PIX_FMT_FLAG_PLANAR,
     },
+    [AV_PIX_FMT_VULKAN] = {
+        .name = "vulkan",
+        .flags = AV_PIX_FMT_FLAG_HWACCEL,
+    },
 };
 #if FF_API_PLUS1_MINUS1
 FF_ENABLE_DEPRECATION_WARNINGS
@@ -2369,7 +2420,7 @@ static const char * const color_primaries_names[AVCOL_PRI_NB] = {
     [AVCOL_PRI_SMPTE428] = "smpte428",
     [AVCOL_PRI_SMPTE431] = "smpte431",
     [AVCOL_PRI_SMPTE432] = "smpte432",
-    [AVCOL_PRI_JEDEC_P22] = "jedec-p22",
+    [AVCOL_PRI_EBU3213] = "ebu3213",
 };
 
 static const char * const color_transfer_names[] = {
@@ -2608,7 +2659,7 @@ void ff_check_pixfmt_descriptors(void){
                 continue;
             av_read_image_line(tmp, (void*)data, linesize, d, 0, 0, j, 2, 0);
             av_assert0(tmp[0] == 0 && tmp[1] == 0);
-            tmp[0] = tmp[1] = (1<<c->depth) - 1;
+            tmp[0] = tmp[1] = (1ULL << c->depth) - 1;
             av_write_image_line(tmp, data, linesize, d, 0, 0, j, 2);
         }
     }
@@ -2651,11 +2702,13 @@ static int get_color_type(const AVPixFmtDescriptor *desc) {
     if(desc->nb_components == 1 || desc->nb_components == 2)
         return FF_COLOR_GRAY;
 
-    if(desc->name && !strncmp(desc->name, "yuvj", 4))
-        return FF_COLOR_YUV_JPEG;
+    if (desc->name) {
+        if (av_strstart(desc->name, "yuvj", NULL))
+            return FF_COLOR_YUV_JPEG;
 
-    if(desc->name && !strncmp(desc->name, "xyz", 3))
-        return FF_COLOR_XYZ;
+        if (av_strstart(desc->name, "xyz", NULL))
+            return FF_COLOR_XYZ;
+    }
 
     if(desc->flags & AV_PIX_FMT_FLAG_RGB)
         return  FF_COLOR_RGB;
@@ -2856,8 +2909,7 @@ int av_color_range_from_name(const char *name)
     int i;
 
     for (i = 0; i < FF_ARRAY_ELEMS(color_range_names); i++) {
-        size_t len = strlen(color_range_names[i]);
-        if (!strncmp(color_range_names[i], name, len))
+        if (av_strstart(name, color_range_names[i], NULL))
             return i;
     }
 
@@ -2875,13 +2927,10 @@ int av_color_primaries_from_name(const char *name)
     int i;
 
     for (i = 0; i < FF_ARRAY_ELEMS(color_primaries_names); i++) {
-        size_t len;
-
         if (!color_primaries_names[i])
             continue;
 
-        len = strlen(color_primaries_names[i]);
-        if (!strncmp(color_primaries_names[i], name, len))
+        if (av_strstart(name, color_primaries_names[i], NULL))
             return i;
     }
 
@@ -2899,13 +2948,10 @@ int av_color_transfer_from_name(const char *name)
     int i;
 
     for (i = 0; i < FF_ARRAY_ELEMS(color_transfer_names); i++) {
-        size_t len;
-
         if (!color_transfer_names[i])
             continue;
 
-        len = strlen(color_transfer_names[i]);
-        if (!strncmp(color_transfer_names[i], name, len))
+        if (av_strstart(name, color_transfer_names[i], NULL))
             return i;
     }
 
@@ -2923,13 +2969,10 @@ int av_color_space_from_name(const char *name)
     int i;
 
     for (i = 0; i < FF_ARRAY_ELEMS(color_space_names); i++) {
-        size_t len;
-
         if (!color_space_names[i])
             continue;
 
-        len = strlen(color_space_names[i]);
-        if (!strncmp(color_space_names[i], name, len))
+        if (av_strstart(name, color_space_names[i], NULL))
             return i;
     }
 
@@ -2947,13 +2990,10 @@ int av_chroma_location_from_name(const char *name)
     int i;
 
     for (i = 0; i < FF_ARRAY_ELEMS(chroma_location_names); i++) {
-        size_t len;
-
         if (!chroma_location_names[i])
             continue;
 
-        len = strlen(chroma_location_names[i]);
-        if (!strncmp(chroma_location_names[i], name, len))
+        if (av_strstart(name, chroma_location_names[i], NULL))
             return i;
     }
 

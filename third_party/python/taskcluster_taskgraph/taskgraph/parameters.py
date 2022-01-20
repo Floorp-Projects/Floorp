@@ -64,15 +64,52 @@ base_schema = Schema(
 )
 
 
-def extend_parameters_schema(schema):
+def _get_defaults():
+    return {
+        "base_repository": _repo().get_url(),
+        "build_date": int(time.time()),
+        "do_not_optimize": [],
+        "existing_tasks": {},
+        "filters": ["target_tasks_method"],
+        "head_ref": _repo().head_ref,
+        "head_repository": _repo().get_url(),
+        "head_rev": _repo().head_ref,
+        "head_tag": "",
+        "level": "3",
+        "moz_build_date": datetime.now().strftime("%Y%m%d%H%M%S"),
+        "optimize_target_tasks": True,
+        "owner": "nobody@mozilla.com",
+        "project": _repo().get_url().rsplit("/", 1)[1],
+        "pushdate": int(time.time()),
+        "pushlog_id": "0",
+        "repository_type": _repo().tool,
+        "target_tasks_method": "default",
+        "tasks_for": "",
+    }
+
+
+defaults_functions = [_get_defaults]
+
+
+def extend_parameters_schema(schema, defaults_fn=None):
     """
     Extend the schema for parameters to include per-project configuration.
 
     This should be called by the `taskgraph.register` function in the
     graph-configuration.
+
+    Args:
+        schema (Schema): The voluptuous.Schema object used to describe extended
+            parameters.
+        defaults_fn (function): A function which takes no arguments and returns a
+            dict mapping parameter name to default value in the
+            event strict=False (optional).
     """
     global base_schema
+    global defaults_functions
     base_schema = base_schema.extend(schema)
+    if defaults_fn:
+        defaults_functions.append(defaults_fn)
 
 
 class Parameters(ReadOnlyDict):
@@ -123,27 +160,9 @@ class Parameters(ReadOnlyDict):
 
     @staticmethod
     def _fill_defaults(**kwargs):
-        defaults = {
-            "base_repository": _repo().get_url(),
-            "build_date": int(time.time()),
-            "do_not_optimize": [],
-            "existing_tasks": {},
-            "filters": ["target_tasks_method"],
-            "head_ref": _repo().head_ref,
-            "head_repository": _repo().get_url(),
-            "head_rev": _repo().head_ref,
-            "head_tag": "",
-            "level": "3",
-            "moz_build_date": datetime.now().strftime("%Y%m%d%H%M%S"),
-            "optimize_target_tasks": True,
-            "owner": "nobody@mozilla.com",
-            "project": _repo().get_url().rsplit("/", 1)[1],
-            "pushdate": int(time.time()),
-            "pushlog_id": "0",
-            "repository_type": _repo().tool,
-            "target_tasks_method": "default",
-            "tasks_for": "",
-        }
+        defaults = {}
+        for fn in defaults_functions:
+            defaults.update(fn())
 
         for name, default in defaults.items():
             if name not in kwargs:

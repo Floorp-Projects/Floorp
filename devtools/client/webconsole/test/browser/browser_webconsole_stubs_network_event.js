@@ -12,12 +12,8 @@ const {
   writeStubsToFile,
 } = require(`${CHROME_URL_ROOT}stub-generator-helpers`);
 
-// Note: we use http://mochi.test:8888 because this will be accepted even when
-// https-first mode is enabled. Other stubs are simply using https://example.com
-// but we cannot use it here because there is a bug capturing 404 from httpd.js
-// in DevTools when using HTTPS (see Bug 1733420).
 const TEST_URI =
-  "http://mochi.test:8888/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html";
+  "https://example.com/browser/devtools/client/webconsole/test/browser/stub-generators/test-network-event.html";
 const STUB_FILE = "networkEvent.js";
 
 add_task(async function() {

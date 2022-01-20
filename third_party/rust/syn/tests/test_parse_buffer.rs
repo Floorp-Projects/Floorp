@@ -1,3 +1,5 @@
+#![allow(clippy::non_ascii_literal)]
+
 use proc_macro2::{Delimiter, Group, Punct, Spacing, TokenStream, TokenTree};
 use std::iter::FromIterator;
 use syn::parse::{discouraged::Speculative, Parse, ParseStream, Parser, Result};
@@ -10,7 +12,7 @@ fn smuggled_speculative_cursor_between_sources() {
     impl Parse for BreakRules {
         fn parse(input1: ParseStream) -> Result<Self> {
             let nested = |input2: ParseStream| {
-                input1.advance_to(&input2);
+                input1.advance_to(input2);
                 Ok(Self)
             };
             nested.parse_str("")

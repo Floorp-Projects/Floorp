@@ -152,6 +152,42 @@ impl Extensions {
             map.clear();
         }
     }
+
+    /// Check whether the extension set is empty or not.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use http::Extensions;
+    /// let mut ext = Extensions::new();
+    /// assert!(ext.is_empty());
+    /// ext.insert(5i32);
+    /// assert!(!ext.is_empty());
+    /// ```
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.map
+            .as_ref()
+            .map_or(true, |map| map.is_empty())
+    }
+
+    /// Get the numer of extensions available.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use http::Extensions;
+    /// let mut ext = Extensions::new();
+    /// assert_eq!(ext.len(), 0);
+    /// ext.insert(5i32);
+    /// assert_eq!(ext.len(), 1);
+    /// ```
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.map
+            .as_ref()
+            .map_or(0, |map| map.len())
+    }
 }
 
 impl fmt::Debug for Extensions {

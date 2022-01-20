@@ -3968,12 +3968,10 @@ void nsGlobalWindowOuter::SetScreenYOuter(int32_t aScreenY,
 void nsGlobalWindowOuter::CheckSecurityWidthAndHeight(int32_t* aWidth,
                                                       int32_t* aHeight,
                                                       CallerType aCallerType) {
-#ifdef MOZ_XUL
   if (aCallerType != CallerType::System) {
     // if attempting to resize the window, hide any open popups
     nsContentUtils::HidePopupsInDocument(mDoc);
   }
-#endif
 
   // This one is easy. Just ensure the variable is greater than 100;
   if ((aWidth && *aWidth < 100) || (aHeight && *aHeight < 100)) {
@@ -4033,10 +4031,8 @@ void nsGlobalWindowOuter::CheckSecurityLeftAndTop(int32_t* aLeft, int32_t* aTop,
   // Check security state for use in determing window dimensions
 
   if (aCallerType != CallerType::System) {
-#ifdef MOZ_XUL
     // if attempting to move the window, hide any open popups
     nsContentUtils::HidePopupsInDocument(mDoc);
-#endif
 
     if (nsGlobalWindowOuter* rootWindow =
             nsGlobalWindowOuter::Cast(GetPrivateRoot())) {
@@ -5205,7 +5201,8 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     return;
   }
 
-  if (!StaticPrefs::print_tab_modal_enabled() && ShouldPromptToBlockDialogs() &&
+  bool print_tab_modal_enabled = true;
+  if (!print_tab_modal_enabled && ShouldPromptToBlockDialogs() &&
       !ConfirmDialogIfNeeded()) {
     return aError.ThrowNotAllowedError("Prompt was canceled by the user");
   }
@@ -5236,8 +5233,8 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     }
   });
 
-  const bool isPreview = StaticPrefs::print_tab_modal_enabled() &&
-                         !StaticPrefs::print_always_print_silent();
+  const bool isPreview =
+      print_tab_modal_enabled && !StaticPrefs::print_always_print_silent();
   Print(nullptr, nullptr, nullptr, IsPreview(isPreview),
         IsForWindowDotPrint::Yes, nullptr, aError);
 #endif
@@ -5296,9 +5293,9 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
   nsCOMPtr<nsIContentViewer> cv;
   RefPtr<BrowsingContext> bc;
   bool hasPrintCallbacks = false;
+  bool print_tab_modal_enabled = true;
   if (docToPrint->IsStaticDocument() &&
-      (aIsPreview == IsPreview::Yes ||
-       StaticPrefs::print_tab_modal_enabled())) {
+      (aIsPreview == IsPreview::Yes || print_tab_modal_enabled)) {
     if (aForWindowDotPrint == IsForWindowDotPrint::Yes) {
       aError.ThrowNotSupportedError(
           "Calling print() from a print preview is unsupported, did you intend "
@@ -5332,6 +5329,10 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
       auto printKind = aForWindowDotPrint == IsForWindowDotPrint::Yes
                            ? PrintKind::WindowDotPrint
                            : PrintKind::InternalPrint;
+      // For PrintKind::WindowDotPrint, this call will not only make the parent
+      // process create a CanonicalBrowsingContext for the returned `bc`, but
+      // it will also make the parent process initiate the print/print preview.
+      // See the handling of OPEN_PRINT_BROWSER in browser.js.
       aError = OpenInternal(u""_ns, u""_ns, u""_ns,
                             false,             // aDialog
                             false,             // aContentModal
@@ -5402,20 +5403,21 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
     return nullptr;
   }
 
-  if (aIsPreview == IsPreview::Yes) {
-    // When using the new print preview UI from window.print() this would be
-    // wasted work (and use probably-incorrect settings). So skip it, the
-    // preview UI will take care of calling PrintPreview again.
-    if (aForWindowDotPrint == IsForWindowDotPrint::No) {
+  // For window.print(), we postpone making these calls until the round-trip to
+  // the parent process (triggered by the OpenInternal call above) calls us
+  // again. Only a call from the parent can provide a valid nsPrintSettings
+  // object and RemotePrintJobChild object.
+  if (aForWindowDotPrint == IsForWindowDotPrint::No) {
+    if (aIsPreview == IsPreview::Yes) {
       aError = webBrowserPrint->PrintPreview(ps, aListener,
                                              std::move(aPrintPreviewCallback));
       if (aError.Failed()) {
         return nullptr;
       }
+    } else {
+      // Historically we've eaten this error.
+      webBrowserPrint->Print(ps, aListener);
     }
-  } else {
-    // Historically we've eaten this error.
-    webBrowserPrint->Print(ps, aListener);
   }
 
   // When using window.print() with the new UI, we usually want to block until
@@ -6571,9 +6573,12 @@ class CommandDispatcher : public Runnable {
         mDispatcher(aDispatcher),
         mAction(aAction) {}
 
-  NS_IMETHOD Run() override { return mDispatcher->UpdateCommands(mAction); }
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
+    return mDispatcher->UpdateCommands(mAction);
+  }
 
-  nsCOMPtr<nsIDOMXULCommandDispatcher> mDispatcher;
+  const nsCOMPtr<nsIDOMXULCommandDispatcher> mDispatcher;
   nsString mAction;
 };
 }  // anonymous namespace

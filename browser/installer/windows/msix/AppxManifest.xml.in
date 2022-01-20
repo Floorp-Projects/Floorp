@@ -32,6 +32,10 @@
         <uap3:Extension Category="windows.fileTypeAssociation">
           <uap3:FileTypeAssociation Name="htm">
             <uap:SupportedFileTypes>
+              <!-- Keep synchronized with
+                   https://searchfox.org/mozilla-central/source/browser/installer/windows/nsis/shared.nsh
+                   and `os.environment.launched_to_handle` and `os.environment.invoked_to_handle` telemetry in
+                   https://searchfox.org/mozilla-central/source/browser/components/BrowserContentHandler.jsm. -->
               <uap:FileType>.avif</uap:FileType>
               <uap:FileType>.htm</uap:FileType>
               <uap:FileType>.html</uap:FileType>

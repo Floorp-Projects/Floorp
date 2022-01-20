@@ -63,6 +63,10 @@
 #include "vm/StringType.h"
 #include "vm/ThrowMsgKind.h"  // ThrowMsgKind
 #include "vm/TraceLogging.h"
+#ifdef ENABLE_RECORD_TUPLE
+#  include "vm/RecordType.h"
+#  include "vm/TupleType.h"
+#endif
 
 #include "builtin/Boolean-inl.h"
 #include "debugger/DebugAPI-inl.h"
@@ -279,6 +283,39 @@ static bool MaybeCreateThisForConstructor(JSContext* cx, const CallArgs& args) {
   // relazifyFunctions testing function that doesn't have this restriction.
   return JSFunction::getOrCreateScript(cx, callee);
 }
+
+#ifdef ENABLE_RECORD_TUPLE
+static bool AddRecordSpreadOperation(JSContext* cx, HandleValue recHandle,
+                                     HandleValue spreadeeHandle) {
+  MOZ_ASSERT(recHandle.toExtendedPrimitive().is<RecordType>());
+  RecordType* rec = &recHandle.toExtendedPrimitive().as<RecordType>();
+
+  RootedObject obj(cx, ToObjectOrGetObjectPayload(cx, spreadeeHandle));
+
+  RootedIdVector keys(cx);
+  if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_SYMBOLS, &keys)) {
+    return false;
+  }
+
+  size_t len = keys.length();
+  RootedId propKey(cx);
+  RootedValue propValue(cx);
+  for (size_t i = 0; i < len; i++) {
+    propKey.set(keys[i]);
+
+    // Step 4.c.ii.1.
+    if (MOZ_UNLIKELY(!GetProperty(cx, obj, obj, propKey, &propValue))) {
+      return false;
+    }
+
+    if (MOZ_UNLIKELY(!rec->initializeNextProperty(cx, propKey, propValue))) {
+      return false;
+    }
+  }
+
+  return true;
+}
+#endif
 
 static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
                                                               RunState& state);
@@ -811,6 +848,10 @@ bool js::HasInstance(JSContext* cx, HandleObject obj, HandleValue v, bool* bp) {
 }
 
 JSType js::TypeOfObject(JSObject* obj) {
+#ifdef ENABLE_RECORD_TUPLE
+  MOZ_ASSERT(!js::IsExtendedPrimitive(*obj));
+#endif
+
   AutoUnsafeCallWithABI unsafe;
   if (EmulatesUndefined(obj)) {
     return JSTYPE_UNDEFINED;
@@ -820,6 +861,20 @@ JSType js::TypeOfObject(JSObject* obj) {
   }
   return JSTYPE_OBJECT;
 }
+
+#ifdef ENABLE_RECORD_TUPLE
+JSType TypeOfExtendedPrimitive(JSObject* obj) {
+  MOZ_ASSERT(js::IsExtendedPrimitive(*obj));
+
+  if (obj->is<RecordType>()) {
+    return JSTYPE_RECORD;
+  }
+  if (obj->is<TupleType>()) {
+    return JSTYPE_TUPLE;
+  }
+  MOZ_CRASH("Unknown ExtendedPrimitive");
+}
+#endif
 
 JSType js::TypeOfValue(const Value& v) {
   switch (v.type()) {
@@ -834,6 +889,10 @@ JSType js::TypeOfValue(const Value& v) {
       return JSTYPE_UNDEFINED;
     case ValueType::Object:
       return TypeOfObject(&v.toObject());
+#ifdef ENABLE_RECORD_TUPLE
+    case ValueType::ExtendedPrimitive:
+      return TypeOfExtendedPrimitive(&v.toExtendedPrimitive());
+#endif
     case ValueType::Boolean:
       return JSTYPE_BOOLEAN;
     case ValueType::BigInt:
@@ -1252,6 +1311,13 @@ again:
     REGS.sp++->setObjectOrNull(obj); \
     cx->debugOnlyCheck(REGS.sp[-1]); \
   } while (0)
+#ifdef ENABLE_RECORD_TUPLE
+#  define PUSH_EXTENDED_PRIMITIVE(obj)      \
+    do {                                    \
+      REGS.sp++->setExtendedPrimitive(obj); \
+      cx->debugOnlyCheck(REGS.sp[-1]);      \
+    } while (0)
+#endif
 #define PUSH_MAGIC(magic) REGS.sp++->setMagic(magic)
 #define POP_COPY_TO(v) (v) = *--REGS.sp
 #define POP_RETURN_VALUE() REGS.fp()->setReturnValue(*--REGS.sp)
@@ -3953,6 +4019,91 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     }
     END_CASE(InitElemInc)
 
+#ifdef ENABLE_RECORD_TUPLE
+    CASE(InitRecord) {
+      uint32_t length = GET_UINT32(REGS.pc);
+      RecordType* rec = RecordType::createUninitialized(cx, length);
+      if (!rec) {
+        goto error;
+      }
+      PUSH_EXTENDED_PRIMITIVE(*rec);
+    }
+    END_CASE(InitRecord)
+
+    CASE(AddRecordProperty) {
+      MOZ_ASSERT(REGS.stackDepth() >= 3);
+
+      ReservedRooted<JSObject*> rec(&rootObject0,
+                                    &REGS.sp[-3].toExtendedPrimitive());
+      MOZ_ASSERT(rec->is<RecordType>());
+
+      ReservedRooted<Value> key(&rootValue0, REGS.sp[-2]);
+      ReservedRooted<jsid> id(&rootId0);
+      if (!JS_ValueToId(cx, key, &id)) {
+        goto error;
+      }
+      if (!rec->as<RecordType>().initializeNextProperty(
+              cx, id, REGS.stackHandleAt(-1))) {
+        goto error;
+      }
+
+      REGS.sp -= 2;
+    }
+    END_CASE(AddRecordProperty)
+
+    CASE(AddRecordSpread) {
+      MOZ_ASSERT(REGS.stackDepth() >= 2);
+
+      if (!AddRecordSpreadOperation(cx, REGS.stackHandleAt(-2),
+                                    REGS.stackHandleAt(-1))) {
+        goto error;
+      }
+      REGS.sp--;
+    }
+    END_CASE(AddRecordSpread)
+
+    CASE(FinishRecord) {
+      MOZ_ASSERT(REGS.stackDepth() >= 1);
+      RecordType* rec = &REGS.sp[-1].toExtendedPrimitive().as<RecordType>();
+      if (!rec->finishInitialization(cx)) {
+        goto error;
+      }
+    }
+    END_CASE(FinishRecord)
+
+    CASE(InitTuple) {
+      uint32_t length = GET_UINT32(REGS.pc);
+      TupleType* tup = TupleType::createUninitialized(cx, length);
+      if (!tup) {
+        goto error;
+      }
+      PUSH_EXTENDED_PRIMITIVE(*tup);
+    }
+    END_CASE(InitTuple)
+
+    CASE(AddTupleElement) {
+      MOZ_ASSERT(REGS.stackDepth() >= 2);
+
+      ReservedRooted<JSObject*> tup(&rootObject0,
+                                    &REGS.sp[-2].toExtendedPrimitive());
+      HandleValue val = REGS.stackHandleAt(-1);
+
+      if (!tup->as<TupleType>().initializeNextElement(cx, val)) {
+        goto error;
+      }
+
+      REGS.sp--;
+    }
+    END_CASE(AddTupleElement)
+
+    CASE(FinishTuple) {
+      MOZ_ASSERT(REGS.stackDepth() >= 1);
+      TupleType& tup = REGS.sp[-1].toExtendedPrimitive().as<TupleType>();
+      tup.finishInitialization(cx);
+    }
+    END_CASE(FinishTuple)
+#endif
+
     CASE(Gosub) {
       int32_t len = GET_JUMP_OFFSET(REGS.pc);
       ADVANCE_AND_DISPATCH(len);
@@ -4525,6 +4676,13 @@ bool js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name,
       case ValueType::BigInt:
         proto = GlobalObject::getOrCreateBigIntPrototype(cx, cx->global());
         break;
+#ifdef ENABLE_RECORD_TUPLE
+      case ValueType::ExtendedPrimitive: {
+        RootedObject obj(cx, &v.toExtendedPrimitive());
+        RootedId id(cx, NameToId(name));
+        return ExtendedPrimitiveGetProperty(cx, obj, v, id, vp);
+      }
+#endif
       case ValueType::Undefined:
       case ValueType::Null:
       case ValueType::Magic:

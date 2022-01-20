@@ -62,8 +62,13 @@ void RemoteAccessible::Description(nsString& aDesc) const {
   Unused << mDoc->SendDescription(mID, &aDesc);
 }
 
-void RemoteAccessible::Attributes(RefPtr<AccAttributes>* aAttributes) const {
-  Unused << mDoc->SendAttributes(mID, aAttributes);
+already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::Attributes();
+  }
+  RefPtr<AccAttributes> attrs;
+  Unused << mDoc->SendAttributes(mID, &attrs);
+  return attrs.forget();
 }
 
 nsTArray<RemoteAccessible*> RemoteAccessible::RelationByType(
@@ -131,6 +136,10 @@ nsStaticAtom* RemoteAccessible::ARIARoleAtom() const {
 }
 
 GroupPos RemoteAccessible::GroupPosition() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::GroupPosition();
+  }
+
   GroupPos groupPos;
   Unused << mDoc->SendGroupPosition(mID, &groupPos.level, &groupPos.setSize,
                                     &groupPos.posInSet);

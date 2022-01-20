@@ -54,9 +54,8 @@ extern mozilla::LazyLogModule gWindowsLog;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeWin, nsNativeTheme, nsITheme)
 
-nsNativeThemeWin::nsNativeThemeWin(
-    mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawingWin)
-    : nsNativeBasicTheme(std::move(aScrollbarDrawingWin)),
+nsNativeThemeWin::nsNativeThemeWin()
+    : nsNativeBasicTheme(DefaultPlatformScrollbarStyle()),
       mProgressDeterminateTimeStamp(TimeStamp::Now()),
       mProgressIndeterminateTimeStamp(TimeStamp::Now()),
       mBorderCacheValid(),
@@ -69,14 +68,22 @@ nsNativeThemeWin::nsNativeThemeWin(
 
 nsNativeThemeWin::~nsNativeThemeWin() { nsUXThemeData::Invalidate(); }
 
-bool nsNativeThemeWin::IsWidgetNonNative(nsIFrame* aFrame,
-                                         StyleAppearance aAppearance) {
+auto nsNativeThemeWin::IsWidgetNonNative(nsIFrame* aFrame,
+                                         StyleAppearance aAppearance)
+    -> NonNative {
+  if (IsWidgetScrollbarPart(aAppearance)) {
+    return NonNative::Always;
+  }
+
   // We only know how to draw light widgets, so we defer to the non-native
   // theme when appropriate.
-  return nsNativeBasicTheme::ThemeSupportsWidget(aFrame->PresContext(), aFrame,
-                                                 aAppearance) &&
-         LookAndFeel::ColorSchemeForFrame(aFrame) ==
-             LookAndFeel::ColorScheme::Dark;
+  if (nsNativeBasicTheme::ThemeSupportsWidget(aFrame->PresContext(), aFrame,
+                                              aAppearance) &&
+      LookAndFeel::ColorSchemeForFrame(aFrame) ==
+          LookAndFeel::ColorScheme::Dark) {
+    return NonNative::BecauseColorMismatch;
+  }
+  return NonNative::No;
 }
 
 static int32_t GetTopLevelWindowActiveState(nsIFrame* aFrame) {
@@ -1493,7 +1500,7 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                        const nsRect& aRect,
                                        const nsRect& aDirtyRect,
                                        DrawOverflow aDrawOverflow) {
-  if (IsWidgetNonNative(aFrame, aAppearance)) {
+  if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
     return nsNativeBasicTheme::DrawWidgetBackground(
         aContext, aFrame, aAppearance, aRect, aDirtyRect, aDrawOverflow);
   }
@@ -1894,7 +1901,7 @@ bool nsNativeThemeWin::CreateWebRenderCommandsForWidget(
     const layers::StackingContextHelper& aSc,
     layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
     StyleAppearance aAppearance, const nsRect& aRect) {
-  if (IsWidgetNonNative(aFrame, aAppearance)) {
+  if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
     return nsNativeBasicTheme::CreateWebRenderCommandsForWidget(
         aBuilder, aResources, aSc, aManager, aFrame, aAppearance, aRect);
   }
@@ -2126,8 +2133,8 @@ bool nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
       if (aFrame->GetContent()->IsXULElement()) {
         top = 2;
         bottom = 3;
-        left = right = 5;
       }
+      left = right = 5;
       break;
     default:
       return false;
@@ -2151,7 +2158,7 @@ bool nsNativeThemeWin::GetWidgetOverflow(nsDeviceContext* aContext,
                                          nsIFrame* aFrame,
                                          StyleAppearance aAppearance,
                                          nsRect* aOverflowRect) {
-  if (IsWidgetNonNative(aFrame, aAppearance)) {
+  if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
     return nsNativeBasicTheme::GetWidgetOverflow(aContext, aFrame, aAppearance,
                                                  aOverflowRect);
   }
@@ -2206,6 +2213,11 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                        StyleAppearance aAppearance,
                                        LayoutDeviceIntSize* aResult,
                                        bool* aIsOverridable) {
+  if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
+    return nsNativeBasicTheme::GetMinimumWidgetSize(
+        aPresContext, aFrame, aAppearance, aResult, aIsOverridable);
+  }
+
   aResult->width = aResult->height = 0;
   *aIsOverridable = true;
   nsresult rv = NS_OK;
@@ -2522,6 +2534,11 @@ bool nsNativeThemeWin::ThemeSupportsWidget(nsPresContext* aPresContext,
     return true;
   }
 
+  if (IsWidgetNonNative(aFrame, aAppearance) == NonNative::Always) {
+    return nsNativeBasicTheme::ThemeSupportsWidget(aPresContext, aFrame,
+                                                   aAppearance);
+  }
+
   HANDLE theme = nullptr;
   if (aAppearance == StyleAppearance::CheckboxContainer)
     theme = GetTheme(StyleAppearance::Checkbox);
@@ -2550,7 +2567,7 @@ bool nsNativeThemeWin::WidgetIsContainer(StyleAppearance aAppearance) {
 
 bool nsNativeThemeWin::ThemeDrawsFocusForWidget(nsIFrame* aFrame,
                                                 StyleAppearance aAppearance) {
-  if (IsWidgetNonNative(aFrame, aAppearance)) {
+  if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
     return nsNativeBasicTheme::ThemeDrawsFocusForWidget(aFrame, aAppearance);
   }
   switch (aAppearance) {
@@ -2598,7 +2615,7 @@ nsITheme::ThemeGeometryType nsNativeThemeWin::ThemeGeometryTypeForWidget(
 
 nsITheme::Transparency nsNativeThemeWin::GetWidgetTransparency(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
-  if (IsWidgetNonNative(aFrame, aAppearance)) {
+  if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
     return nsNativeBasicTheme::GetWidgetTransparency(aFrame, aAppearance);
   }
 
@@ -3008,7 +3025,6 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(
   aFocused = false;
   switch (aAppearance) {
     case StyleAppearance::Button: {
-
       aPart = DFC_BUTTON;
       aState = DFCS_BUTTONPUSH;
       aFocused = false;
@@ -4034,8 +4050,8 @@ bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
     case StyleAppearance::ScrollbarbuttonDown:
     case StyleAppearance::ScrollbarbuttonLeft:
     case StyleAppearance::ScrollbarbuttonRight: {
-      nscolor buttonColor =
-          ScrollbarDrawingWin::GetScrollbarButtonColor(trackColor, eventStates);
+      nscolor buttonColor = GetScrollbarDrawing().GetScrollbarButtonColor(
+          trackColor, eventStates);
       ctx->SetColor(sRGBColor::FromABGR(buttonColor));
       ctx->Rectangle(bgRect);
       ctx->Fill();
@@ -4081,7 +4097,8 @@ bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
       ctx->ClosePath();
       // And paint the arrow.
       nscolor arrowColor =
-          ScrollbarDrawingWin::GetScrollbarArrowColor(buttonColor)
+          GetScrollbarDrawing()
+              .GetScrollbarArrowColor(buttonColor)
               .valueOrFrom(
                   [&] { return GetScrollbarThumbColor(aFrame, eventStates); });
       ctx->SetColor(sRGBColor::FromABGR(arrowColor));
@@ -4102,7 +4119,7 @@ already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
   static nsCOMPtr<nsITheme> inst;
 
   if (!inst) {
-    inst = new nsNativeThemeWin(MakeUnique<ScrollbarDrawingWin>());
+    inst = new nsNativeThemeWin();
     ClearOnShutdown(&inst);
   }
 

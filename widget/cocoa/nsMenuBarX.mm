@@ -263,14 +263,15 @@ void nsMenuBarX::ObserveContentRemoved(mozilla::dom::Document* aDocument, nsICon
                                        nsIContent* aChild, nsIContent* aPreviousSibling) {
   nsINode* parent = NODE_FROM(aContainer, aDocument);
   MOZ_ASSERT(parent);
-  int32_t index = parent->ComputeIndexOf(aPreviousSibling) + 1;
-  RemoveMenuAtIndex(index);
+  const Maybe<uint32_t> index = parent->ComputeIndexOf(aPreviousSibling);
+  MOZ_ASSERT(*index != UINT32_MAX);
+  RemoveMenuAtIndex(index.isSome() ? *index + 1u : 0u);
 }
 
 void nsMenuBarX::ObserveContentInserted(mozilla::dom::Document* aDocument, nsIContent* aContainer,
                                         nsIContent* aChild) {
   InsertMenuAtIndex(MakeRefPtr<nsMenuX>(this, mMenuGroupOwner, aChild),
-                    aContainer->ComputeIndexOf(aChild));
+                    aContainer->ComputeIndexOf(aChild).valueOr(UINT32_MAX));
 }
 
 void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& aIndexString) {

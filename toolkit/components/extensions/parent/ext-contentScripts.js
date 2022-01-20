@@ -15,6 +15,30 @@ var { ExtensionUtils } = ChromeUtils.import(
 
 var { ExtensionError, getUniqueId } = ExtensionUtils;
 
+function getOriginAttributesPatternForCookieStoreId(cookieStoreId) {
+  if (isDefaultCookieStoreId(cookieStoreId)) {
+    return {
+      userContextId: Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID,
+      privateBrowsingId:
+        Ci.nsIScriptSecurityManager.DEFAULT_PRIVATE_BROWSING_ID,
+    };
+  }
+  if (isPrivateCookieStoreId(cookieStoreId)) {
+    return {
+      userContextId: Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID,
+      privateBrowsingId: 1,
+    };
+  }
+  if (isContainerCookieStoreId(cookieStoreId)) {
+    let userContextId = getContainerForCookieStoreId(cookieStoreId);
+    if (userContextId !== null) {
+      return { userContextId };
+    }
+  }
+
+  throw new ExtensionError("Invalid cookieStoreId");
+}
+
 /**
  * Represents (in the main browser process) a content script registered
  * programmatically (instead of being included in the addon manifest).
@@ -74,7 +98,17 @@ class ContentScriptParent {
       runAt: details.runAt || "document_idle",
       jsPaths: [],
       cssPaths: [],
+      originAttributesPatterns: null,
     };
+
+    if (details.cookieStoreId != null) {
+      const cookieStoreIds = Array.isArray(details.cookieStoreId)
+        ? details.cookieStoreId
+        : [details.cookieStoreId];
+      options.originAttributesPatterns = cookieStoreIds.map(cookieStoreId =>
+        getOriginAttributesPatternForCookieStoreId(cookieStoreId)
+      );
+    }
 
     const convertCodeToURL = (data, mime) => {
       const blob = new context.cloneScope.Blob(data, { type: mime });

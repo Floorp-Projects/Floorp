@@ -46,6 +46,14 @@ class ScriptSource;
                                     JS::Handle<JSString*> displayURL,
                                     JS::Handle<JSString*> sourceMapURL);
 
+JSObject* CreateScriptPrivate(JSContext* cx,
+                              JS::Handle<JSString*> path = nullptr);
+
+[[nodiscard]] bool ParseDebugMetadata(
+    JSContext* cx, JS::Handle<JSObject*> opts,
+    JS::MutableHandle<JS::Value> privateValue,
+    JS::MutableHandle<JSString*> elementAttributeName);
+
 } /* namespace js */
 
 #endif /* builtin_TestingUtility_h */

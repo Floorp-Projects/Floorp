@@ -179,6 +179,9 @@ int av_parser_parse2(AVCodecParserContext *s, AVCodecContext *avctx,
         /* offset of the next frame */
         s->next_frame_offset = s->cur_offset + index;
         s->fetch_timestamp   = 1;
+    } else {
+        /* Don't return a pointer to dummy_buf. */
+        *poutbuf = NULL;
     }
     if (index < 0)
         index = 0;
@@ -186,6 +189,7 @@ int av_parser_parse2(AVCodecParserContext *s, AVCodecContext *avctx,
     return index;
 }
 
+#if FF_API_PARSER_CHANGE
 int av_parser_change(AVCodecParserContext *s, AVCodecContext *avctx,
                      uint8_t **poutbuf, int *poutbuf_size,
                      const uint8_t *buf, int buf_size, int keyframe)
@@ -220,7 +224,7 @@ int av_parser_change(AVCodecParserContext *s, AVCodecContext *avctx,
 
     return 0;
 }
-
+#endif
 void av_parser_close(AVCodecParserContext *s)
 {
     if (s) {
@@ -295,6 +299,10 @@ int ff_combine_frame(ParseContext *pc, int next,
         *buf      = pc->buffer;
     }
 
+    if (next < -8) {
+        pc->overread += -8 - next;
+        next = -8;
+    }
     /* store overread bytes */
     for (; next < 0; next++) {
         pc->state   = pc->state   << 8 | pc->buffer[pc->last_index + next];

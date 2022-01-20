@@ -12,6 +12,7 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/dom/SessionHistoryEntry.h"
+#include "EarlyHintsPreloader.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/PDocumentChannelParent.h"
@@ -19,6 +20,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsIBrowser.h"
 #include "nsIChannelEventSink.h"
+#include "nsIEarlyHintObserver.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIParentChannel.h"
@@ -59,7 +61,6 @@ struct StreamFilterRequest {
     }
   }
   RefPtr<ChildEndpointPromise::Private> mPromise;
-  base::ProcessId mChildProcessId = 0;
   mozilla::ipc::Endpoint<extensions::PStreamFilterChild> mChildEndpoint;
 };
 }  // namespace net
@@ -96,7 +97,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                              public nsIChannelEventSink,
                              public HttpChannelSecurityWarningReporter,
                              public nsIMultiPartChannelListener,
-                             public nsIProgressEventSink {
+                             public nsIProgressEventSink,
+                             public nsIEarlyHintObserver {
  public:
   // See the comment on GetLoadingBrowsingContext for explanation of
   // aLoadingBrowsingContext.
@@ -211,6 +213,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIMULTIPARTCHANNELLISTENER
   NS_DECL_NSIPROGRESSEVENTSINK
+  NS_DECL_NSIEARLYHINTOBSERVER
 
   // We suspend the underlying channel when replacing ourselves with
   // the real listener channel.
@@ -270,8 +273,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // or 0 initiated from a parent process load.
   base::ProcessId OtherPid() const;
 
-  [[nodiscard]] RefPtr<ChildEndpointPromise> AttachStreamFilter(
-      base::ProcessId aChildProcessId);
+  [[nodiscard]] RefPtr<ChildEndpointPromise> AttachStreamFilter();
 
   // Serializes all data needed to setup the new replacement channel
   // in the content process into the RedirectToRealChannelArgs struct.
@@ -282,6 +284,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   uint64_t GetLoadIdentifier() const { return mLoadIdentifier; }
   uint32_t GetLoadType() const { return mLoadStateLoadType; }
+  bool IsDownload() const { return mIsDownload; }
+  bool IsLoadingJSURI() const { return mIsLoadingJSURI; }
 
   mozilla::dom::LoadingSessionHistoryInfo* GetLoadingSessionHistoryInfo() {
     return mLoadingSessionHistoryInfo.get();
@@ -499,11 +503,9 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // replaces us.
   RefPtr<ParentChannelListener> mParentChannelListener;
 
-  // The original URI of the current channel. If there are redirects,
-  // then the value on the channel gets overwritten with the original
-  // URI of the first channel in the redirect chain, so we cache the
-  // value we need here.
-  nsCOMPtr<nsIURI> mChannelCreationURI;
+  // Get the channel creation URI for constructing the channel in the content
+  // process. See the function for more details.
+  nsIURI* GetChannelCreationURI() const;
 
   // The original navigation timing information containing various timestamps
   // such as when the original load started.
@@ -538,6 +540,12 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   uint32_t mLoadStateInternalLoadFlags = 0;
   uint32_t mLoadStateLoadType = 0;
 
+  // Indicates if this load is a download.
+  bool mIsDownload = false;
+
+  // Indicates if we are loading a javascript URI.
+  bool mIsLoadingJSURI = false;
+
   // Corresponding redirect channel registrar Id for the final channel that
   // we want to use when redirecting the child, or doing a process switch.
   // 0 means redirection is not started.
@@ -568,6 +576,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   Maybe<nsCString> mOriginalUriString;
 
+  // Parent-initiated loads do not support redirects to real channels.
   bool mSupportsRedirectToRealChannel = true;
 
   Maybe<nsCString> mRemoteTypeOverride;
@@ -591,6 +600,8 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   bool mOpenPromiseResolved = false;
 
   const bool mIsDocumentLoad;
+
+  EarlyHintsPreloader mEarlyHintsPreloader;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DocumentLoadListener, DOCUMENT_LOAD_LISTENER_IID)

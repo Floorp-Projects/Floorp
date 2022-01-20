@@ -51,7 +51,7 @@ add_task(async function test_contentscript_runtime_getFrameId() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["webNavigation", "tabs"],
-      host_permissions: ["http://example.org/"],
+      host_permissions: ["https://example.org/"],
     },
 
     files: {
@@ -97,7 +97,7 @@ add_task(async function test_contentscript_runtime_getFrameId() {
       },
 
       async "closedPopup.js"() {
-        let popup = window.open("http://example.org/?popup");
+        let popup = window.open("https://example.org/?popup");
         popup.close();
         for (let i = 0; i < 100; i++) {
           await new Promise(r => setTimeout(r, 50));
@@ -125,7 +125,7 @@ add_task(async function test_contentscript_runtime_getFrameId() {
     },
 
     async background() {
-      let base = "http://example.org/tests/toolkit/components/extensions/test/mochitest";
+      let base = "https://example.org/tests/toolkit/components/extensions/test/mochitest";
       let files = {
         "file_contains_iframe.html": 2,
         "file_WebNavigation_page1.html": 2,

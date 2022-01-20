@@ -39,14 +39,6 @@ nsresult nsHtml5DocumentBuilder::MarkAsBroken(nsresult aReason) {
   return aReason;
 }
 
-void nsHtml5DocumentBuilder::SetDocumentCharsetAndSource(
-    NotNull<const Encoding*> aEncoding, int32_t aCharsetSource) {
-  if (mDocument) {
-    mDocument->SetDocumentCharacterSetSource(aCharsetSource);
-    mDocument->SetDocumentCharacterSet(aEncoding);
-  }
-}
-
 void nsHtml5DocumentBuilder::UpdateStyleSheet(nsIContent* aElement) {
   auto* linkStyle = LinkStyle::FromNode(*aElement);
   if (!linkStyle) {

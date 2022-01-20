@@ -46,7 +46,7 @@ void Description(nsString& aDesc) const override;
 /**
  * Get the set of attributes on the proxied accessible.
  */
-void Attributes(RefPtr<AccAttributes>* aAttributes) const;
+virtual already_AddRefed<AccAttributes> Attributes() override;
 
 /**
  * Return set of targets of given relation type.
@@ -65,7 +65,7 @@ nsAtom* LandmarkRole() const;
 
 nsStaticAtom* ARIARoleAtom() const;
 
-mozilla::a11y::GroupPos GroupPosition();
+virtual mozilla::a11y::GroupPos GroupPosition() override;
 void ScrollTo(uint32_t aScrollType);
 void ScrollToPoint(uint32_t aScrollType, int32_t aX, int32_t aY);
 

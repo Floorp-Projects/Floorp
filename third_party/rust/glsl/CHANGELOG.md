@@ -1,3 +1,17 @@
+# 4.1.1
+
+> Wed Jul 1st 2020
+
+- Fix the _identifier_ parser, that previously failed to parse identifiers starting with an
+  underscore (`_`) while it is permitted (chapter 3.7 of the GLSLang spec).
+- Fix associativity for logical binary operators (`||`, `&&`).
+
+# 4.1
+
+> Fri Jun 19th 2020
+
+- Implement `std::error::Error` for error types.
+
 # 4.0.3
 
 > Fri Mar 6th 2020

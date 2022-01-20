@@ -376,8 +376,7 @@ def extra_toolchain_flags(
         android_system,
         "-isystem",
         os.path.join(android_sysroot, "usr", "include"),
-        "-gcc-toolchain",
-        toolchain_dir,
+        "--gcc-toolchain={}".format(toolchain_dir),
         "-D__ANDROID_API__=%d" % android_version,
     ]
     return flags

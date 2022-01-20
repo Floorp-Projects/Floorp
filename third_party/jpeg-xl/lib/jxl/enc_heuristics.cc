@@ -720,10 +720,7 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
   // Compute parameters for noise synthesis.
   if (shared.frame_header.flags & FrameHeader::kNoise) {
     PROFILER_ZONE("enc GetNoiseParam");
-    if (cparams.photon_noise_iso > 0) {
-      shared.image_features.noise_params = SimulatePhotonNoise(
-          opsin->xsize(), opsin->ysize(), cparams.photon_noise_iso);
-    } else {
+    if (cparams.photon_noise_iso == 0) {
       // Don't start at zero amplitude since adding noise is expensive -- it
       // significantly slows down decoding, and this is unlikely to
       // completely go away even with advanced optimizations. After the

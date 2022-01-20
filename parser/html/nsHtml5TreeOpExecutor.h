@@ -22,6 +22,7 @@
 #include "nsHashKeys.h"
 #include "mozilla/LinkedList.h"
 #include "nsHtml5DocumentBuilder.h"
+#include "nsCharsetSource.h"
 
 class nsHtml5Parser;
 class nsHtml5StreamParser;
@@ -181,9 +182,18 @@ class nsHtml5TreeOpExecutor final
 
   nsresult FlushDocumentWrite();
 
+  void CommitToInternalEncoding();
+
+  void TakeOpsFromStage();
+
   void MaybeSuspend();
 
   void Start();
+
+  void SetDocumentCharsetAndSource(NotNull<const Encoding*> aEncoding,
+                                   nsCharsetSource aCharsetSource);
+
+  void UpdateCharsetSource(nsCharsetSource aCharsetSource);
 
   void NeedsCharsetSwitchTo(NotNull<const Encoding*> aEncoding, int32_t aSource,
                             uint32_t aLineNumber);
@@ -191,7 +201,8 @@ class nsHtml5TreeOpExecutor final
   void MaybeComplainAboutCharset(const char* aMsgId, bool aError,
                                  uint32_t aLineNumber);
 
-  void ComplainAboutBogusProtocolCharset(mozilla::dom::Document*);
+  void ComplainAboutBogusProtocolCharset(mozilla::dom::Document* aDoc,
+                                         bool aUnrecognized);
 
   void MaybeComplainAboutDeepTree(uint32_t aLineNumber);
 

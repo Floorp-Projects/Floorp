@@ -89,11 +89,25 @@
 //! notation.
 
 #![no_std]
-#![doc(html_root_url = "https://docs.rs/ryu/1.0.5")]
-#![cfg_attr(feature = "cargo-clippy", allow(renamed_and_removed_lints))]
-#![cfg_attr(
-    feature = "cargo-clippy",
-    allow(cast_lossless, many_single_char_names, unreadable_literal,)
+#![doc(html_root_url = "https://docs.rs/ryu/1.0.6")]
+#![allow(
+    clippy::cast_lossless,
+    clippy::cast_possible_truncation,
+    clippy::cast_possible_wrap,
+    clippy::cast_sign_loss,
+    clippy::checked_conversions,
+    clippy::doc_markdown,
+    clippy::expl_impl_clone_on_copy,
+    clippy::if_not_else,
+    clippy::many_single_char_names,
+    clippy::missing_panics_doc,
+    clippy::module_name_repetitions,
+    clippy::must_use_candidate,
+    clippy::similar_names,
+    clippy::too_many_lines,
+    clippy::unreadable_literal,
+    clippy::unseparated_literal_suffix,
+    clippy::wildcard_imports
 )]
 
 mod buffer;

@@ -182,10 +182,8 @@ fn rem_full(d1: &Dec64, d2: &Buf12, scale: i32) -> CalculationResult {
     // TODO: Optimize slice logic
 
     let mut tmp = Buf16::zero();
+    let divisor = d2.low64() << shift;
     if d2.hi() == 0 {
-        // 64 bit divisor so we adjust accordingly
-        let divisor = d2.low64() << shift;
-
         // Do some division
         if upper == 6 {
             upper -= 1;
@@ -232,7 +230,7 @@ fn rem_full(d1: &Dec64, d2: &Buf12, scale: i32) -> CalculationResult {
             d1.scale,
         ))
     } else {
-        let divisor_low64 = d2.low64() << shift;
+        let divisor_low64 = divisor;
         let divisor = Buf12 {
             data: [
                 divisor_low64 as u32,

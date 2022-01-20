@@ -7,6 +7,11 @@ against this Rust version.
 
 ### Unreleased
 
+### 1.14.0 (2021-09-01)
+- [changed] Sealed all marker traits. Documentation already stated that these
+  should not be implemented outside the crate, so this is not considered a
+  breaking change.
+
 ### 1.13.0 (2021-03-12)
 - [changed] MSRV from 1.22.0 to 1.37.0.
 - [fixed] `op` macro with 2018 edition import.

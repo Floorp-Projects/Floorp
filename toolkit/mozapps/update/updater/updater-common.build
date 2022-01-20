@@ -38,6 +38,10 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "shlwapi",
         "crypt32",
         "advapi32",
+        "gdi32",
+        "user32",
+        "userenv",
+        "uuid",
     ]
 
 USE_LIBS += [
@@ -109,8 +113,8 @@ elif CONFIG["OS_ARCH"] == "WINNT":
     WIN32_EXE_LDFLAGS += ["-municode"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-    CXXFLAGS += CONFIG["TK_CFLAGS"]
-    OS_LIBS += CONFIG["TK_LIBS"]
+    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
+    OS_LIBS += CONFIG["MOZ_GTK3_LIBS"]
 
 if CONFIG["CC_TYPE"] == "gcc":
     CXXFLAGS += ["-Wno-format-truncation"]

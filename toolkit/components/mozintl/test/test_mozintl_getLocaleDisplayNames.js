@@ -45,6 +45,16 @@ const gLocDN = Services.intl.getLocaleDisplayNames.bind(
   undefined
 );
 
+add_test(function test_native_tag() {
+  const options = { preferNative: true };
+  deepEqual(gLocDN([], options), []);
+  deepEqual(gLocDN(["ca-valencia"], options), ["Català (Valencià)"]);
+  deepEqual(gLocDN(["en-US"], options), ["English (US)"]);
+  deepEqual(gLocDN(["en-RU"], options), ["English (Russia)"]);
+  deepEqual(gLocDN(["ja-JP-mac"], options), ["日本語"]);
+  run_next_test();
+});
+
 add_test(function test_valid_language_tag() {
   deepEqual(gLocDN([]), []);
   deepEqual(gLocDN(["en"]), ["English"]);

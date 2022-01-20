@@ -63,6 +63,7 @@ class MIDIPort : public DOMEventTargetHelper,
 
   void FireStateChangeEvent();
 
+  virtual void StateChange();
   virtual void Receive(const nsTArray<MIDIMessage>& aMsg);
 
   // This object holds a pointer to its corresponding IPC MIDIPortChild actor.
@@ -70,11 +71,17 @@ class MIDIPort : public DOMEventTargetHelper,
   void UnsetIPCPort();
 
   IMPL_EVENT_HANDLER(statechange)
+
+  void DisconnectFromOwner() override;
+
  protected:
   // IPC Actor corresponding to this class
   RefPtr<MIDIPortChild> mPort;
 
  private:
+  void KeepAliveOnStatechange();
+  void DontKeepAliveOnStatechange();
+
   // MIDIAccess object that created this MIDIPort object, which we need for
   // firing port connection events. There is a chance this MIDIPort object can
   // outlive its parent MIDIAccess object, so this is a weak reference that must
@@ -88,6 +95,8 @@ class MIDIPort : public DOMEventTargetHelper,
   // Promise object generated on Close() call, that needs to be resolved once
   // the platform specific Close() function has completed.
   RefPtr<Promise> mClosingPromise;
+  // If true this object will be kept alive even without direct JS references
+  bool mKeepAlive;
 };
 
 }  // namespace mozilla::dom

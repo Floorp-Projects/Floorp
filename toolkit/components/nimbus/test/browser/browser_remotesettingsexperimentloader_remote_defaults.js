@@ -14,10 +14,7 @@ const {
 const { ExperimentManager } = ChromeUtils.import(
   "resource://nimbus/lib/ExperimentManager.jsm"
 );
-const {
-  RemoteDefaultsLoader,
-  RemoteSettingsExperimentLoader,
-} = ChromeUtils.import(
+const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
   "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
 );
 const { BrowserTestUtils } = ChromeUtils.import(
@@ -51,87 +48,56 @@ const BAR_FAKE_FEATURE_MANIFEST = {
   },
 };
 
-const REMOTE_CONFIGURATION_FOO = {
-  id: "foo",
-  description: "foo remote feature value",
-  configurations: [
+const ENSURE_ENROLLMENT = {
+  targeting: "true",
+  bucketConfig: {
+    namespace: "nimbus-test-utils",
+    randomizationUnit: "normandy_id",
+    start: 0,
+    count: 1000,
+    total: 1000,
+  },
+};
+
+const REMOTE_CONFIGURATION_FOO = ExperimentFakes.recipe("foo-rollout", {
+  isRollout: true,
+  branches: [
     {
-      slug: "a",
-      variables: { remoteValue: 24, enabled: false },
-      targeting: "false",
-      isEarlyStartup: true,
-      bucketConfig: {
-        namespace: "nimbus-test-utils",
-        randomizationUnit: "normandy_id",
-        start: 0,
-        count: 1000,
-        total: 1000,
-      },
-    },
-    {
-      slug: "b",
-      variables: { remoteValue: 42, enabled: true },
-      targeting: "true",
-      isEarlyStartup: true,
-      bucketConfig: {
-        namespace: "nimbus-test-utils",
-        randomizationUnit: "normandy_id",
-        start: 0,
-        count: 1000,
-        total: 1000,
-      },
+      slug: "foo-rollout-branch",
+      features: [
+        {
+          featureId: "foo",
+          enabled: true,
+          isEarlyStartup: true,
+          value: { remoteValue: 42 },
+        },
+      ],
     },
   ],
-};
-const REMOTE_CONFIGURATION_BAR = {
-  id: "bar",
-  description: "bar remote feature value",
-  configurations: [
+  ...ENSURE_ENROLLMENT,
+});
+const REMOTE_CONFIGURATION_BAR = ExperimentFakes.recipe("bar-rollout", {
+  isRollout: true,
+  branches: [
     {
-      slug: "a",
-      variables: { remoteValue: 1, enabled: false },
-      targeting: "false",
-      isEarlyStartup: true,
-      bucketConfig: {
-        namespace: "nimbus-test-utils",
-        randomizationUnit: "normandy_id",
-        start: 0,
-        count: 1000,
-        total: 1000,
-      },
-    },
-    {
-      slug: "b",
-      variables: { remoteValue: 3, enabled: true },
-      targeting: "true",
-      isEarlyStartup: true,
-      bucketConfig: {
-        namespace: "nimbus-test-utils",
-        randomizationUnit: "normandy_id",
-        start: 0,
-        count: 1000,
-        total: 1000,
-      },
-    },
-    {
-      slug: "c",
-      variables: { remoteValue: 2, enabled: false },
-      targeting: "false",
-      isEarlyStartup: true,
-      bucketConfig: {
-        namespace: "nimbus-test-utils",
-        randomizationUnit: "normandy_id",
-        start: 0,
-        count: 1000,
-        total: 1000,
-      },
+      slug: "bar-rollout-branch",
+      features: [
+        {
+          featureId: "bar",
+          enabled: true,
+          isEarlyStartup: true,
+          value: { remoteValue: 3 },
+        },
+      ],
     },
   ],
-};
+  ...ENSURE_ENROLLMENT,
+});
+
 const SYNC_DEFAULTS_PREF_BRANCH = "nimbus.syncdefaultsstore.";
 
 async function setup(configuration) {
-  const client = RemoteSettings("nimbus-desktop-defaults");
+  const client = RemoteSettings("nimbus-desktop-experiments");
   await client.db.importChanges(
     {},
     42,
@@ -152,8 +118,6 @@ add_task(async function test_remote_fetch_and_ready() {
   const sandbox = sinon.createSandbox();
   const fooInstance = new ExperimentFeature("foo", FOO_FAKE_FEATURE_MANIFEST);
   const barInstance = new ExperimentFeature("bar", BAR_FAKE_FEATURE_MANIFEST);
-  let stub = sandbox.stub();
-  let spy = sandbox.spy(ExperimentAPI._store, "finalizeRemoteConfigs");
   const setExperimentActiveStub = sandbox.stub(
     TelemetryEnvironment,
     "setExperimentActive"
@@ -162,10 +126,6 @@ add_task(async function test_remote_fetch_and_ready() {
     TelemetryEnvironment,
     "setExperimentInactive"
   );
-  ExperimentAPI._store._deleteForTests("foo");
-  ExperimentAPI._store._deleteForTests("bar");
-
-  fooInstance.onUpdate(stub);
 
   Assert.equal(
     fooInstance.getVariable("remoteValue"),
@@ -173,37 +133,36 @@ add_task(async function test_remote_fetch_and_ready() {
     "This prop does not exist before we sync"
   );
 
+  // Create to promises that get resolved when the features update
+  // with the remote setting rollouts
+  let fooUpdate = new Promise(resolve => fooInstance.onUpdate(resolve));
+  let barUpdate = new Promise(resolve => barInstance.onUpdate(resolve));
+
+  await ExperimentAPI.ready();
+
   let rsClient = await setup();
 
-  await RemoteDefaultsLoader.syncRemoteDefaults();
-
-  Assert.equal(
-    spy.callCount,
-    1,
-    "Called finalize after processing remote configs"
+  // Fake being initialized so we can update recipes
+  // we don't need to start any timers
+  RemoteSettingsExperimentLoader._initialized = true;
+  await RemoteSettingsExperimentLoader.updateRecipes(
+    "browser_rsel_remote_defaults"
   );
 
   // We need to await here because remote configurations are processed
   // async to evaluate targeting
-  await Promise.all([fooInstance.ready(), barInstance.ready()]);
+  await Promise.all([fooUpdate, barUpdate]);
 
   Assert.ok(fooInstance.isEnabled(), "Enabled by remote defaults");
   Assert.equal(
     fooInstance.getVariable("remoteValue"),
-    REMOTE_CONFIGURATION_FOO.configurations[1].variables.remoteValue,
+    REMOTE_CONFIGURATION_FOO.branches[0].features[0].value.remoteValue,
     "`foo` feature is set by remote defaults"
   );
   Assert.equal(
     barInstance.getVariable("remoteValue"),
-    REMOTE_CONFIGURATION_BAR.configurations[1].variables.remoteValue,
+    REMOTE_CONFIGURATION_BAR.branches[0].features[0].value.remoteValue,
     "`bar` feature is set by remote defaults"
-  );
-
-  Assert.equal(stub.callCount, 1, "Called by RS sync");
-  Assert.equal(
-    stub.firstCall.args[1],
-    "remote-defaults-update",
-    "We receive events on remote defaults updates"
   );
 
   Assert.ok(
@@ -220,38 +179,43 @@ add_task(async function test_remote_fetch_and_ready() {
 
   Assert.ok(
     setExperimentActiveStub.calledWith(
-      "default-foo",
-      REMOTE_CONFIGURATION_FOO.configurations[1].slug,
+      REMOTE_CONFIGURATION_FOO.slug,
+      REMOTE_CONFIGURATION_FOO.branches[0].slug,
       {
-        type: "nimbus-default",
-        enrollmentId: "__NO_ENROLLMENT_ID__",
+        type: "nimbus-rollout",
+        enrollmentId: sinon.match.string,
       }
     ),
     "should call setExperimentActive with `foo` feature"
   );
   Assert.ok(
     setExperimentActiveStub.calledWith(
-      "default-bar",
-      REMOTE_CONFIGURATION_BAR.configurations[1].slug,
+      REMOTE_CONFIGURATION_BAR.slug,
+      REMOTE_CONFIGURATION_BAR.branches[0].slug,
       {
-        type: "nimbus-default",
-        enrollmentId: "__NO_ENROLLMENT_ID__",
+        type: "nimbus-rollout",
+        enrollmentId: sinon.match.string,
       }
     ),
     "should call setExperimentActive with `bar` feature"
   );
 
+  Assert.equal(fooInstance.getVariable("remoteValue"), 42, "Has rollout value");
+  Assert.equal(barInstance.getVariable("remoteValue"), 3, "Has rollout value");
+
   // Clear RS db and load again. No configurations so should clear the cache.
   await rsClient.db.clear();
-  await RemoteDefaultsLoader.syncRemoteDefaults();
+  await RemoteSettingsExperimentLoader.updateRecipes(
+    "browser_rsel_remote_defaults"
+  );
 
-  Assert.equal(spy.callCount, 2, "Called a second time by syncRemoteDefaults");
-
-  Assert.ok(stub.calledTwice, "Second update is from the removal");
-  Assert.equal(
-    stub.secondCall.args[1],
-    "remote-defaults-update",
-    "We receive events when the remote configuration is removed"
+  Assert.ok(
+    !fooInstance.getVariable("remoteValue"),
+    "foo-rollout should be removed"
+  );
+  Assert.ok(
+    !barInstance.getVariable("remoteValue"),
+    "bar-rollout should be removed"
   );
 
   // Check if we sent active experiment data for defaults
@@ -262,11 +226,11 @@ add_task(async function test_remote_fetch_and_ready() {
   );
 
   Assert.ok(
-    setExperimentInactiveStub.calledWith("default-foo"),
+    setExperimentInactiveStub.calledWith(REMOTE_CONFIGURATION_FOO.slug),
     "should call setExperimentInactive with `foo` feature"
   );
   Assert.ok(
-    setExperimentInactiveStub.calledWith("default-bar"),
+    setExperimentInactiveStub.calledWith(REMOTE_CONFIGURATION_BAR.slug),
     "should call setExperimentInactive with `bar` feature"
   );
 
@@ -276,17 +240,18 @@ add_task(async function test_remote_fetch_and_ready() {
   );
   Assert.ok(!barInstance.getVariable("remoteValue"), "Should be missing");
 
-  fooInstance.off(stub);
   ExperimentAPI._store._deleteForTests("foo");
   ExperimentAPI._store._deleteForTests("bar");
+  ExperimentAPI._store._deleteForTests(REMOTE_CONFIGURATION_FOO.slug);
+  ExperimentAPI._store._deleteForTests(REMOTE_CONFIGURATION_BAR.slug);
   sandbox.restore();
 });
 
 add_task(async function test_remote_fetch_on_updateRecipes() {
   let sandbox = sinon.createSandbox();
-  let syncRemoteDefaultsStub = sandbox.stub(
-    RemoteDefaultsLoader,
-    "syncRemoteDefaults"
+  let updateRecipesStub = sandbox.stub(
+    RemoteSettingsExperimentLoader,
+    "updateRecipes"
   );
   // Work around the pref change callback that would trigger `setTimer`
   sandbox.replaceGetter(
@@ -305,16 +270,12 @@ add_task(async function test_remote_fetch_on_updateRecipes() {
   RemoteSettingsExperimentLoader.setTimer();
 
   await BrowserTestUtils.waitForCondition(
-    () => syncRemoteDefaultsStub.called,
+    () => updateRecipesStub.called,
     "Wait for timer to call"
   );
 
-  Assert.ok(syncRemoteDefaultsStub.calledOnce, "Timer calls function");
-  Assert.equal(
-    syncRemoteDefaultsStub.firstCall.args[0],
-    "timer",
-    "Called by timer"
-  );
+  Assert.ok(updateRecipesStub.calledOnce, "Timer calls function");
+  Assert.equal(updateRecipesStub.firstCall.args[0], "timer", "Called by timer");
   sandbox.restore();
   // This will un-register the timer
   RemoteSettingsExperimentLoader._initialized = true;
@@ -324,113 +285,60 @@ add_task(async function test_remote_fetch_on_updateRecipes() {
   );
 });
 
-// Test that awaiting `feature.ready()` resolves even when there is no remote
-// data
-add_task(async function test_remote_fetch_no_data_syncRemoteBefore() {
-  const sandbox = sinon.createSandbox();
-  const fooInstance = new ExperimentFeature("foo", FOO_FAKE_FEATURE_MANIFEST);
-  const barInstance = new ExperimentFeature("bar", {
-    bar: { description: "mochitests" },
-  });
-  const stub = sandbox.stub();
-  const spy = sandbox.spy(ExperimentAPI._store, "finalizeRemoteConfigs");
-
-  ExperimentAPI._store.on("remote-defaults-finalized", stub);
-
-  await setup();
-
-  await RemoteDefaultsLoader.syncRemoteDefaults();
-
-  // featureFoo will also resolve when the remote defaults cycle finishes
-  await Promise.all([fooInstance.ready(), barInstance.ready()]);
-
-  Assert.ok(spy.calledOnce, "Called finalizeRemoteConfigs");
-  Assert.deepEqual(spy.firstCall.args[0], ["bar", "foo"]);
-  Assert.equal(stub.callCount, 1, "Notified all features");
-
-  ExperimentAPI._store.off("remote-defaults-finalized", stub);
-  ExperimentAPI._store._deleteForTests("foo");
-  ExperimentAPI._store._deleteForTests("bar");
-  sandbox.restore();
-});
-
-// Test that awaiting `feature.ready()` resolves even when there is no remote
-// data
-add_task(async function test_remote_fetch_no_data_noWaitRemoteLoad() {
-  const fooInstance = new ExperimentFeature("foo", FOO_FAKE_FEATURE_MANIFEST);
-  const barInstance = new ExperimentFeature("bar", {
-    bar: { description: "mochitests" },
-  });
-  const stub = sinon.stub();
-
-  ExperimentAPI._store.on("remote-defaults-finalized", stub);
-
-  await setup([]);
-
-  // Don't wait to load remote defaults; make sure there is no blocking issue
-  // with the `ready` call
-  RemoteDefaultsLoader.syncRemoteDefaults();
-
-  // featureFoo will also resolve when the remote defaults cycle finishes
-  await Promise.all([fooInstance.ready(), barInstance.ready()]);
-
-  Assert.equal(stub.callCount, 1, "Notified all features");
-
-  ExperimentAPI._store.off("remote-defaults-finalized", stub);
-  ExperimentAPI._store._deleteForTests("bar");
-  ExperimentAPI._store._deleteForTests("foo");
-});
-
-add_task(async function test_remote_ready_from_experiment() {
-  const featureFoo = new ExperimentFeature("foo", {
-    foo: { description: "mochitests" },
-  });
-
-  await ExperimentAPI.ready();
-
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    enabled: true,
-    featureId: "foo",
-    value: null,
-  });
-
-  // featureFoo will also resolve when the remote defaults cycle finishes
-  await featureFoo.ready();
-
-  Assert.ok(
-    true,
-    "We resolved the remote defaults ready by enrolling in an experiment that targets this feature"
-  );
-
-  await doExperimentCleanup();
-});
-
 add_task(async function test_finalizeRemoteConfigs_cleanup() {
-  const SYNC_DEFAULTS_PREF_BRANCH = "nimbus.syncdefaultsstore.";
   const featureFoo = new ExperimentFeature("foo", {
     foo: { description: "mochitests" },
   });
   const featureBar = new ExperimentFeature("bar", {
     foo: { description: "mochitests" },
   });
+  let fooCleanup = await ExperimentFakes.enrollWithRollout(
+    {
+      featureId: "foo",
+      enabled: true,
+      isEarlyStartup: true,
+      value: { foo: true },
+    },
+    {
+      source: "rs-loader",
+    }
+  );
+  await ExperimentFakes.enrollWithRollout(
+    {
+      featureId: "bar",
+      enabled: true,
+      isEarlyStartup: true,
+      value: { bar: true },
+    },
+    {
+      source: "rs-loader",
+    }
+  );
   let stubFoo = sinon.stub();
   let stubBar = sinon.stub();
   featureFoo.onUpdate(stubFoo);
   featureBar.onUpdate(stubBar);
+  let cleanupPromise = new Promise(resolve => featureBar.onUpdate(resolve));
 
   Services.prefs.setStringPref(
     `${SYNC_DEFAULTS_PREF_BRANCH}foo`,
-    JSON.stringify({ foo: true })
+    JSON.stringify({ foo: true, branch: { feature: { featureId: "foo" } } })
   );
   Services.prefs.setStringPref(
     `${SYNC_DEFAULTS_PREF_BRANCH}bar`,
-    JSON.stringify({ bar: true })
+    JSON.stringify({ bar: true, branch: { feature: { featureId: "bar" } } })
   );
 
-  ExperimentAPI._store.finalizeRemoteConfigs(["foo"]);
+  await setup([REMOTE_CONFIGURATION_FOO]);
+  RemoteSettingsExperimentLoader._initialized = true;
+  await RemoteSettingsExperimentLoader.updateRecipes();
+  await cleanupPromise;
 
-  Assert.ok(stubFoo.notCalled, "Not called, feature seen in session");
-  Assert.ok(stubBar.called, "Called, feature not seen in session");
+  Assert.ok(
+    stubFoo.notCalled,
+    "Not called, not enrolling in rollout feature already exists"
+  );
+  Assert.ok(stubBar.called, "Called because no recipe is seen, cleanup");
   Assert.ok(
     Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}foo`),
     "Pref is not cleared"
@@ -439,52 +347,31 @@ add_task(async function test_finalizeRemoteConfigs_cleanup() {
     !Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}bar`, ""),
     "Pref was cleared"
   );
-  // cleanup
-  Services.prefs.clearUserPref(`${SYNC_DEFAULTS_PREF_BRANCH}foo`);
-});
 
-add_task(async function remote_defaults_resolve_telemetry_off() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["app.shield.optoutstudies.enabled", false]],
-  });
-  let stub = sinon.stub();
-  ExperimentAPI._store.on("remote-defaults-finalized", stub);
-
-  const feature = new ExperimentFeature("foo", {
-    foo: { description: "test" },
-  });
-  let promise = feature.ready();
-
-  RemoteSettingsExperimentLoader.init();
-
-  await promise;
-
-  Assert.equal(stub.callCount, 1, "init returns early and resolves the await");
-});
-
-add_task(async function remote_defaults_resolve_timeout() {
-  const feature = new ExperimentFeature("foo", {
-    foo: { description: "test" },
-  });
-
-  await feature.ready(1);
-
-  Assert.ok(true, "Resolves waitForRemote");
+  await fooCleanup();
+  // This will also remove the inactive recipe from the store
+  // the previous update (from recipe not seen code path)
+  // only sets the recipe as inactive
+  ExperimentAPI._store._deleteForTests("bar-rollout");
+  ExperimentAPI._store._deleteForTests("foo-rollout");
 });
 
 // If the remote config data returned from the store is not modified
 // this test should not throw
 add_task(async function remote_defaults_no_mutation() {
   let sandbox = sinon.createSandbox();
-  sandbox
-    .stub(ExperimentAPI._store, "getRemoteConfig")
-    .returns(
-      Cu.cloneInto(
-        { targeting: "true", variables: { remoteStub: true } },
-        {},
-        { deepFreeze: true }
-      )
-    );
+  sandbox.stub(ExperimentAPI._store, "getRolloutForFeature").returns(
+    Cu.cloneInto(
+      {
+        featureIds: ["foo"],
+        branch: {
+          features: [{ featureId: "foo", value: { remoteStub: true } }],
+        },
+      },
+      {},
+      { deepFreeze: true }
+    )
+  );
 
   let fooInstance = new ExperimentFeature("foo", FOO_FAKE_FEATURE_MANIFEST);
   let config = fooInstance.getAllVariables();
@@ -492,68 +379,6 @@ add_task(async function remote_defaults_no_mutation() {
   Assert.ok(config.remoteStub, "Got back the expected value");
 
   sandbox.restore();
-});
-
-add_task(async function remote_defaults_active_experiments_check() {
-  let barFeature = new ExperimentFeature("bar", {
-    description: "mochitest",
-    variables: { enabled: { type: "boolean" } },
-  });
-  let experimentOnlyRemoteDefault = {
-    id: "bar",
-    description: "if we're in the foo experiment bar should be off",
-    configurations: [
-      {
-        slug: "a",
-        variables: { enabled: false },
-        targeting: "'mochitest-active-foo' in activeExperiments",
-      },
-      {
-        slug: "b",
-        variables: { enabled: true },
-        targeting: "true",
-      },
-    ],
-  };
-
-  await setup([experimentOnlyRemoteDefault]);
-  await RemoteDefaultsLoader.syncRemoteDefaults("mochitest");
-  await barFeature.ready();
-
-  Assert.ok(barFeature.isEnabled(), "First it's enabled");
-
-  let {
-    enrollmentPromise,
-    doExperimentCleanup,
-  } = ExperimentFakes.enrollmentHelper(
-    ExperimentFakes.recipe("mochitest-active-foo", {
-      branches: [
-        {
-          slug: "mochitest-active-foo",
-          features: [
-            {
-              enabled: true,
-              featureId: "foo",
-              value: null,
-            },
-          ],
-        },
-      ],
-      active: true,
-    })
-  );
-
-  await enrollmentPromise;
-  let featureUpdate = new Promise(resolve => barFeature.onUpdate(resolve));
-  await RemoteDefaultsLoader.syncRemoteDefaults("mochitests");
-  await featureUpdate;
-
-  Assert.ok(
-    !barFeature.isEnabled(),
-    "We've enrolled in an experiment which makes us match on the first remote default that disables the feature"
-  );
-
-  await doExperimentCleanup();
 });
 
 add_task(async function remote_defaults_active_remote_defaults() {
@@ -567,40 +392,55 @@ add_task(async function remote_defaults_active_remote_defaults() {
     description: "mochitest",
     variables: { enabled: { type: "boolean" } },
   });
-  let remoteDefaults = [
-    {
-      id: "bar",
-      description: "will enroll first try",
-      configurations: [
-        {
-          slug: "a",
-          variables: { enabled: true },
-          targeting: "true",
-        },
-      ],
-    },
-    {
-      id: "foo",
-      description: "will enroll second try after bar",
-      configurations: [
-        {
-          slug: "b",
-          variables: { enabled: true },
-          targeting: "'bar' in activeRemoteDefaults",
-        },
-      ],
-    },
-  ];
+  let rollout1 = ExperimentFakes.recipe("bar", {
+    branches: [
+      {
+        slug: "bar-rollout-branch",
+        ratio: 1,
+        features: [
+          {
+            featureId: "bar",
+            value: { enabled: true },
+          },
+        ],
+      },
+    ],
+    isRollout: true,
+    ...ENSURE_ENROLLMENT,
+    targeting: "true",
+  });
 
-  await setup(remoteDefaults);
-  await RemoteDefaultsLoader.syncRemoteDefaults("mochitest");
-  await barFeature.ready();
+  let rollout2 = ExperimentFakes.recipe("foo", {
+    branches: [
+      {
+        slug: "foo-rollout-branch",
+        ratio: 1,
+        features: [
+          {
+            featureId: "foo",
+            value: { enabled: true },
+          },
+        ],
+      },
+    ],
+    isRollout: true,
+    ...ENSURE_ENROLLMENT,
+    targeting: "'bar' in activeRollouts",
+  });
+
+  // Order is important, rollout2 won't match at first
+  await setup([rollout2, rollout1]);
+  let updatePromise = new Promise(resolve => barFeature.onUpdate(resolve));
+  RemoteSettingsExperimentLoader._initialized = true;
+  await RemoteSettingsExperimentLoader.updateRecipes("mochitest");
+
+  await updatePromise;
 
   Assert.ok(barFeature.isEnabled(), "Enabled on first sync");
   Assert.ok(!fooFeature.isEnabled(), "Targeting doesn't match");
 
   let featureUpdate = new Promise(resolve => fooFeature.onUpdate(resolve));
-  await RemoteDefaultsLoader.syncRemoteDefaults("mochitest");
+  await RemoteSettingsExperimentLoader.updateRecipes("mochitest");
   await featureUpdate;
 
   Assert.ok(fooFeature.isEnabled(), "Targeting should match");
@@ -608,136 +448,38 @@ add_task(async function remote_defaults_active_remote_defaults() {
   ExperimentAPI._store._deleteForTests("bar");
 });
 
-add_task(async function test_remote_defaults_bucketConfig() {
-  const sandbox = sinon.createSandbox();
-  let finalizeRemoteConfigsSpy = sandbox.spy(
-    ExperimentAPI._store,
-    "finalizeRemoteConfigs"
-  );
-  let isInBucketAllocationStub = sandbox
-    .stub(ExperimentManager, "isInBucketAllocation")
-    .resolves(false);
-  let evaluateJexlStub = sandbox
-    .stub(RemoteSettingsExperimentLoader, "evaluateJexl")
-    .resolves(true);
-  let rsClient = await setup();
-
-  await RemoteDefaultsLoader.syncRemoteDefaults("mochitest");
-
-  Assert.equal(
-    isInBucketAllocationStub.callCount,
-    5,
-    "Bucket allocation is checked"
-  );
-  Assert.equal(
-    evaluateJexlStub.callCount,
-    0,
-    "We skip targeting if bucket allocation fails"
-  );
-  Assert.equal(
-    finalizeRemoteConfigsSpy.called,
-    true,
-    "Finally no configs match"
-  );
-  Assert.deepEqual(
-    finalizeRemoteConfigsSpy.firstCall.args[0],
-    [],
-    "No configs matched because of bucket allocation"
-  );
-
-  sandbox.restore();
-  await rsClient.db.clear();
-});
-
-add_task(async function test_remote_defaults_no_bucketConfig() {
-  const sandbox = sinon.createSandbox();
-  const remoteConfigNoBucket = {
-    id: "aboutwelcome",
-    description: "about:welcome",
-    configurations: [
-      {
-        slug: "a",
-        variables: { remoteValue: 24, enabled: false },
-        targeting: "false",
-      },
-      {
-        slug: "b",
-        variables: { remoteValue: 42, enabled: true },
-        targeting: "true",
-      },
-    ],
-  };
-  let finalizeRemoteConfigsStub = sandbox.stub(
-    ExperimentAPI._store,
-    "finalizeRemoteConfigs"
-  );
-  let isInBucketAllocationStub = sandbox
-    .stub(ExperimentManager, "isInBucketAllocation")
-    .resolves(false);
-  let evaluateJexlStub = sandbox.spy(
-    RemoteSettingsExperimentLoader,
-    "evaluateJexl"
-  );
-  let rsClient = await setup([remoteConfigNoBucket]);
-
-  await RemoteDefaultsLoader.syncRemoteDefaults("mochitest");
-
-  Assert.ok(isInBucketAllocationStub.notCalled, "No bucket config to call");
-  Assert.equal(evaluateJexlStub.callCount, 2, "Called for two remote configs");
-  Assert.deepEqual(
-    finalizeRemoteConfigsStub.firstCall.args[0],
-    ["aboutwelcome"],
-    "Match the config with targeting set to `true`"
-  );
-
-  sandbox.restore();
-  await rsClient.db.clear();
-});
-
 add_task(async function remote_defaults_variables_storage() {
   let barFeature = new ExperimentFeature("bar", {
-    bar: {
-      description: "mochitest",
-      variables: {
-        storage: {
-          type: "int",
-        },
-        object: {
-          type: "json",
-        },
-        string: {
-          type: "string",
-        },
-        bool: {
-          type: "boolean",
-        },
+    description: "mochitest",
+    variables: {
+      storage: {
+        type: "int",
+      },
+      object: {
+        type: "json",
+      },
+      string: {
+        type: "string",
+      },
+      bool: {
+        type: "boolean",
       },
     },
   });
-  let remoteDefaults = [
-    {
-      id: "bar",
-      description: "test pref storage and types",
-      configurations: [
-        {
-          slug: "a",
-          isEarlyStartup: true,
-          variables: {
-            storage: 42,
-            object: { foo: "foo" },
-            string: "string",
-            bool: true,
-            enabled: true,
-          },
-          targeting: "true",
-        },
-      ],
-    },
-  ];
+  let rolloutValue = {
+    storage: 42,
+    object: { foo: "foo" },
+    string: "string",
+    bool: true,
+    enabled: true,
+  };
 
-  await setup(remoteDefaults);
-  await RemoteDefaultsLoader.syncRemoteDefaults("mochitest");
-  await barFeature.ready();
+  let doCleanup = await ExperimentFakes.enrollWithRollout({
+    featureId: "bar",
+    enabled: true,
+    isEarlyStartup: true,
+    value: rolloutValue,
+  });
 
   Assert.ok(
     Services.prefs.getStringPref(`${SYNC_DEFAULTS_PREF_BRANCH}bar`, ""),
@@ -753,16 +495,19 @@ add_task(async function remote_defaults_variables_storage() {
     "Stores variable in correct type"
   );
   Assert.deepEqual(
-    barFeature.getRemoteConfig().variables,
-    remoteDefaults[0].configurations[0].variables,
+    barFeature.getAllVariables(),
+    rolloutValue,
     "Test types are returned correctly"
   );
 
-  ExperimentAPI._store._deleteForTests("bar");
+  await doCleanup();
 
   Assert.equal(
     Services.prefs.getIntPref(`${SYNC_DEFAULTS_PREF_BRANCH}bar.storage`, -1),
     -1,
     "Variable pref is cleared"
   );
+  Assert.ok(!barFeature.getVariable("string"), "Variable is no longer defined");
+  ExperimentAPI._store._deleteForTests("bar");
+  ExperimentAPI._store._deleteForTests("bar-rollout");
 });

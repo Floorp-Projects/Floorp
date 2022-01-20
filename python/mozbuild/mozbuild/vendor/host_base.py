@@ -54,4 +54,4 @@ class BaseHost:
             return (latest_tag, latest_tag_timestamp)
 
     def upstream_snapshot(self, revision):
-        pass
+        raise Exception("Should not be called")

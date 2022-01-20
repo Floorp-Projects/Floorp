@@ -55,20 +55,28 @@ namespace hwy {
 // Delays subsequent loads until prior loads are visible. On Intel CPUs, also
 // serves as a full fence (waits for all prior instructions to complete).
 // No effect on non-x86.
+// DEPRECATED due to differing behavior across architectures AND vendors.
 HWY_INLINE HWY_ATTR_CACHE void LoadFence() {
 #if HWY_ARCH_X86 && !defined(HWY_DISABLE_CACHE_CONTROL)
   _mm_lfence();
 #endif
 }
 
-// Ensures previous weakly-ordered stores are visible. No effect on non-x86.
-HWY_INLINE HWY_ATTR_CACHE void StoreFence() {
+// Ensures values written by previous `Stream` calls are visible on the current
+// core. This is NOT sufficient for synchronizing across cores; when `Stream`
+// outputs are to be consumed by other core(s), the producer must publish
+// availability (e.g. via mutex or atomic_flag) after `FlushStream`.
+HWY_INLINE HWY_ATTR_CACHE void FlushStream() {
 #if HWY_ARCH_X86 && !defined(HWY_DISABLE_CACHE_CONTROL)
   _mm_sfence();
 #endif
 }
 
-// Begins loading the cache line containing "p".
+// DEPRECATED, replace with `FlushStream`.
+HWY_INLINE HWY_ATTR_CACHE void StoreFence() { FlushStream(); }
+
+// Optionally begins loading the cache line containing "p" to reduce latency of
+// subsequent actual loads.
 template <typename T>
 HWY_INLINE HWY_ATTR_CACHE void Prefetch(const T* p) {
 #if HWY_ARCH_X86 && !defined(HWY_DISABLE_CACHE_CONTROL)
@@ -82,7 +90,7 @@ HWY_INLINE HWY_ATTR_CACHE void Prefetch(const T* p) {
 #endif
 }
 
-// Invalidates and flushes the cache line containing "p". No effect on non-x86.
+// Invalidates and flushes the cache line containing "p", if possible.
 HWY_INLINE HWY_ATTR_CACHE void FlushCacheline(const void* p) {
 #if HWY_ARCH_X86 && !defined(HWY_DISABLE_CACHE_CONTROL)
   _mm_clflush(p);
@@ -91,7 +99,7 @@ HWY_INLINE HWY_ATTR_CACHE void FlushCacheline(const void* p) {
 #endif
 }
 
-// Reduces power consumption in spin-loops. No effect on non-x86.
+// When called inside a spin-loop, may reduce power consumption.
 HWY_INLINE HWY_ATTR_CACHE void Pause() {
 #if HWY_ARCH_X86 && !defined(HWY_DISABLE_CACHE_CONTROL)
   _mm_pause();

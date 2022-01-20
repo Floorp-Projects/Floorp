@@ -242,46 +242,11 @@ const CustomizableWidgets = [
   },
   {
     id: "print-button",
-    l10nId:
-      !Services.prefs.getBoolPref("print.tab_modal.enabled") &&
-      AppConstants.platform !== "macosx"
-        ? "navbar-print-tab-modal-disabled"
-        : "navbar-print",
+    l10nId: "navbar-print",
     shortcutId: "printKb",
     keepBroadcastAttributesWhenCustomizing: true,
     onCreated(aNode) {
-      aNode.setAttribute("command", "cmd_printPreview");
-      Services.prefs.addObserver("print.tab_modal.enabled", this);
-      if (!this.printNodeMap) {
-        this.printNodeMap = new Map();
-      }
-      this.printNodeMap.set(aNode.ownerDocument, aNode);
-
-      let listener = {
-        onWidgetInstanceRemoved: (aWidgetId, aDoc) => {
-          if (!aDoc) {
-            return;
-          }
-          this.printNodeMap.delete(aDoc);
-          CustomizableUI.removeListener(listener);
-        },
-      };
-
-      CustomizableUI.addListener(listener);
-    },
-    observe() {
-      for (let [document, printBtn] of this.printNodeMap) {
-        let keyEl = document.getElementById(this.shortcutId);
-        let shortcut = ShortcutUtils.prettifyShortcut(keyEl);
-        document.l10n.setAttributes(
-          printBtn,
-          !Services.prefs.getBoolPref("print.tab_modal.enabled") &&
-            AppConstants.platform !== "macosx"
-            ? "navbar-print-tab-modal-disabled"
-            : "navbar-print",
-          { shortcut }
-        );
-      }
+      aNode.setAttribute("command", "cmd_printPreviewToggle");
     },
   },
   {

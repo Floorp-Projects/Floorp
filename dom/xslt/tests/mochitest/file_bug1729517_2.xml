@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="#stylesheet"?>
+<!DOCTYPE root [
+  <!ATTLIST xsl:stylesheet id ID #IMPLIED>
+]>
+<root>
+  <xsl:stylesheet id="stylesheet" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+  <xsl:template match="/">
+    <html>
+      <head>
+        <title>[]</title>
+        <script type="text/javascript">
+          async function checkCOEPAndReferrer() {
+            let results = new Map();
+
+            let win = window.open();
+            result = win.fetch("https://example.org/tests/dom/xslt/tests/mochitest/bug1729517_2.sjs", { mode: "no-cors" }).then(() => {
+              return "FAIL";
+            }, () => {
+              return "PASS";
+            });
+            results.set("Cross-Origin-Embedder-Policy", await result);
+            win.close();
+
+            result = fetch("bug1729517_2.sjs").then((response) => {
+              return response.text();
+            });
+            results.set("Referrer-Policy", await result || "FAIL");
+
+            window.opener.postMessage(results, "*");
+          }
+        </script>
+      </head>
+      <body onload="checkCOEPAndReferrer()" />
+    </html>
+  </xsl:template>
+</xsl:stylesheet>
+</root>

@@ -862,9 +862,10 @@ def validate_directory_parameters(moz_yaml_dir, vendoring_dir):
         moz_yaml_dir and vendoring_dir
     ), "If either moz_yaml_dir or vendoring_dir are specified, they both must be"
 
-    # Ensure they are provided with trailing slashes
-    moz_yaml_dir += "/" if moz_yaml_dir[-1] != "/" else ""
-    vendoring_dir += "/" if vendoring_dir[-1] != "/" else ""
+    if moz_yaml_dir is not None:
+        # Ensure they are provided with trailing slashes
+        moz_yaml_dir += "/" if moz_yaml_dir[-1] != "/" else ""
+        vendoring_dir += "/" if vendoring_dir[-1] != "/" else ""
 
     return (moz_yaml_dir, vendoring_dir)
 

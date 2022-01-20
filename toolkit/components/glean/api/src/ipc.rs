@@ -82,7 +82,7 @@ static PROCESS_TYPE: Lazy<AtomicU32> = Lazy::new(|| {
     // and introduced a negative process type constant. Default to parent.
     let process_type = process_type
         .try_into()
-        .unwrap_or(nsIXULRuntime::PROCESS_TYPE_DEFAULT as u32);
+        .unwrap_or(nsIXULRuntime::PROCESS_TYPE_DEFAULT);
     // We don't have process-specific init locations outside of the main
     // process, so we introduce this side-effect to a global static init.
     // This is the absolute first time we decide which process type we're
@@ -93,7 +93,7 @@ static PROCESS_TYPE: Lazy<AtomicU32> = Lazy::new(|| {
 
 #[cfg(feature = "with_gecko")]
 pub fn need_ipc() -> bool {
-    PROCESS_TYPE.load(Ordering::Relaxed) != nsIXULRuntime::PROCESS_TYPE_DEFAULT as u32
+    PROCESS_TYPE.load(Ordering::Relaxed) != nsIXULRuntime::PROCESS_TYPE_DEFAULT
 }
 
 /// The first time we're used in a process,
@@ -103,7 +103,7 @@ pub fn need_ipc() -> bool {
 /// Multiple calls may register multiple handlers.
 #[cfg(feature = "with_gecko")]
 fn register_process_shutdown(process_type: u32) {
-    match process_type as i64 {
+    match process_type {
         nsIXULRuntime::PROCESS_TYPE_DEFAULT => {
             // Parent process shutdown is handled by the FOG XPCOM Singleton.
         }
@@ -118,6 +118,12 @@ fn register_process_shutdown(process_type: u32) {
         }
         nsIXULRuntime::PROCESS_TYPE_GPU => {
             // GPU process shutdown is handled in GPUParent::ActorDestroy.
+        }
+        nsIXULRuntime::PROCESS_TYPE_RDD => {
+            // RDD process shutdown is handled in RDDParent::ActorDestroy.
+        }
+        nsIXULRuntime::PROCESS_TYPE_SOCKET => {
+            // Socket process shutdown is handled in SocketProcessChild::ActorDestroy.
         }
         _ => {
             // We don't yet support other process types.

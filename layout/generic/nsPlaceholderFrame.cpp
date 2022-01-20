@@ -110,10 +110,16 @@ void nsPlaceholderFrame::Reflow(nsPresContext* aPresContext,
   // (See bug 1367711.)
 
 #ifdef DEBUG
-  // We should be getting reflowed before our out-of-flow.
-  // If this is our first reflow, and our out-of-flow has already received its
-  // first reflow (before us), complain.
+  // We should be getting reflowed before our out-of-flow. If this is our first
+  // reflow, and our out-of-flow has already received its first reflow (before
+  // us), complain.
+  //
+  // Popups are an exception though, because their position doesn't depend on
+  // the placeholder, so they don't have this requirement (and this condition
+  // doesn't hold anyways because the default popupgroup goes before than the
+  // default tooltip, for example).
   if (HasAnyStateBits(NS_FRAME_FIRST_REFLOW) &&
+      !HasAnyStateBits(PLACEHOLDER_FOR_POPUP) &&
       !mOutOfFlowFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     // Unfortunately, this can currently happen when the placeholder is in a
     // later continuation or later IB-split sibling than its out-of-flow (as

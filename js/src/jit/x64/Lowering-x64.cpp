@@ -540,3 +540,26 @@ void LIRGenerator::visitSignExtendInt64(MSignExtendInt64* ins) {
                   LSignExtendInt64(useInt64RegisterAtStart(ins->input())),
               ins);
 }
+
+// On x64 we specialize the cases: compare is {U,}Int{32,64}, and select is
+// {U,}Int{32,64}, independently.
+bool LIRGeneratorShared::canSpecializeWasmCompareAndSelect(
+    MCompare::CompareType compTy, MIRType insTy) {
+  return (insTy == MIRType::Int32 || insTy == MIRType::Int64) &&
+         (compTy == MCompare::Compare_Int32 ||
+          compTy == MCompare::Compare_UInt32 ||
+          compTy == MCompare::Compare_Int64 ||
+          compTy == MCompare::Compare_UInt64);
+}
+
+void LIRGeneratorShared::lowerWasmCompareAndSelect(MWasmSelect* ins,
+                                                   MDefinition* lhs,
+                                                   MDefinition* rhs,
+                                                   MCompare::CompareType compTy,
+                                                   JSOp jsop) {
+  MOZ_ASSERT(canSpecializeWasmCompareAndSelect(compTy, ins->type()));
+  auto* lir = new (alloc()) LWasmCompareAndSelect(
+      useRegister(lhs), useAny(rhs), compTy, jsop,
+      useRegisterAtStart(ins->trueExpr()), useAny(ins->falseExpr()));
+  defineReuseInput(lir, ins, LWasmCompareAndSelect::IfTrueExprIndex);
+}

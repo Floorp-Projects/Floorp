@@ -7,9 +7,6 @@ const {
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
-);
 
 async function setupForExperimentFeature() {
   const sandbox = sinon.createSandbox();
@@ -45,14 +42,15 @@ const FAKE_FEATURE_MANIFEST = {
     test: {
       type: "boolean",
     },
+    title: {
+      type: "string",
+    },
   },
 };
 const FAKE_FEATURE_REMOTE_VALUE = {
-  slug: "default-remote-value",
-  variables: {
+  value: {
     enabled: true,
   },
-  targeting: "true",
 };
 
 /**
@@ -100,6 +98,17 @@ add_task(async function test_ExperimentFeature_isEnabled_default() {
 
 add_task(async function test_ExperimentFeature_isEnabled_default_over_remote() {
   const { manager, sandbox } = await setupForExperimentFeature();
+  const rollout = ExperimentFakes.rollout("foo-rollout", {
+    branch: {
+      features: [
+        {
+          featureId: "foo",
+          enabled: true,
+          value: FAKE_FEATURE_REMOTE_VALUE,
+        },
+      ],
+    },
+  });
   await manager.store.ready();
 
   const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
@@ -112,12 +121,7 @@ add_task(async function test_ExperimentFeature_isEnabled_default_over_remote() {
     "should use the default pref value, including if it is false"
   );
 
-  manager.store.updateRemoteConfigs("foo", {
-    ...FAKE_FEATURE_REMOTE_VALUE,
-    variables: { enabled: true },
-  });
-
-  await featureInstance.ready();
+  await manager.store.addEnrollment(rollout);
 
   Assert.equal(
     featureInstance.isEnabled(),
@@ -142,14 +146,16 @@ add_task(async function test_ExperimentFeature_test_helper_ready() {
 
   const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
 
-  await ExperimentFakes.remoteDefaultsHelper({
-    feature: featureInstance,
-    store: manager.store,
-    configuration: {
-      ...FAKE_FEATURE_REMOTE_VALUE,
-      variables: { remoteValue: "mochitest", enabled: true },
+  await ExperimentFakes.enrollWithRollout(
+    {
+      featureId: "foo",
+      enabled: true,
+      value: { remoteValue: "mochitest", enabled: true },
     },
-  });
+    {
+      manager,
+    }
+  );
 
   Assert.equal(featureInstance.isEnabled(), true, "enabled by remote config");
   Assert.equal(
@@ -176,16 +182,20 @@ add_task(
     const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
 
     await manager.store.ready();
-
-    await manager.store.addExperiment(expected);
+    await manager.store.addEnrollment(expected);
 
     const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
-    manager.store.updateRemoteConfigs("foo", {
-      ...FAKE_FEATURE_REMOTE_VALUE,
-      variables: { enabled: false },
-    });
 
-    await featureInstance.ready();
+    await ExperimentFakes.enrollWithRollout(
+      {
+        featureId: "foo",
+        enabled: false,
+        value: { enabled: false },
+      },
+      {
+        manager,
+      }
+    );
 
     Assert.equal(
       featureInstance.isEnabled(),
@@ -214,12 +224,53 @@ add_task(
   }
 );
 
+add_task(
+  async function test_ExperimentFeature_isEnabled_prefer_experiment_over_remote_legacy() {
+    const { sandbox, manager } = await setupForExperimentFeature();
+    const expected = ExperimentFakes.experiment("foo", {
+      branch: {
+        slug: "treatment",
+        features: [
+          {
+            featureId: "foo",
+            enabled: true,
+            value: { legacy: true },
+          },
+        ],
+      },
+    });
+    const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
+
+    await manager.store.ready();
+    await manager.store.addEnrollment(expected);
+
+    await ExperimentFakes.enrollWithRollout(
+      {
+        featureId: "foo",
+        enabled: false,
+        value: { legacy: true, enabled: false },
+      },
+      {
+        manager,
+      }
+    );
+
+    Assert.equal(
+      featureInstance.isEnabled(),
+      true,
+      "should return the enabled value defined in the experiment not the remote value"
+    );
+
+    sandbox.restore();
+  }
+);
+
 add_task(async function test_record_exposure_event() {
   const { sandbox, manager } = await setupForExperimentFeature();
 
   const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
   const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
-  const getExperimentSpy = sandbox.spy(ExperimentAPI, "getExperiment");
+  const getExperimentSpy = sandbox.spy(ExperimentAPI, "getExperimentMetaData");
   sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
 
   featureInstance.recordExposureEvent();
@@ -229,7 +280,7 @@ add_task(async function test_record_exposure_event() {
     "should not emit an exposure event when no experiment is active"
   );
 
-  await manager.store.addExperiment(
+  await manager.store.addEnrollment(
     ExperimentFakes.experiment("blah", {
       branch: {
         slug: "treatment",
@@ -261,7 +312,7 @@ add_task(async function test_record_exposure_event_once() {
   const exposureSpy = sandbox.spy(ExperimentAPI, "recordExposureEvent");
   sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
 
-  await manager.store.addExperiment(
+  await manager.store.addEnrollment(
     ExperimentFakes.experiment("blah", {
       branch: {
         slug: "treatment",
@@ -315,39 +366,6 @@ add_task(async function test_allow_multiple_exposure_events() {
   await doExperimentCleanup();
 });
 
-add_task(async function test_set_remote_before_ready() {
-  let sandbox = sinon.createSandbox();
-  const manager = ExperimentFakes.manager();
-  sandbox.stub(ExperimentAPI, "_store").get(() => manager.store);
-  const feature = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
-
-  await Assert.rejects(
-    ExperimentFakes.remoteDefaultsHelper({
-      feature,
-      store: manager.store,
-      configuration: {
-        ...FAKE_FEATURE_REMOTE_VALUE,
-        variables: { test: true, enabled: true },
-      },
-    }),
-    /Store not ready/,
-    "Throws if used before init finishes"
-  );
-
-  await manager.onStartup();
-
-  await ExperimentFakes.remoteDefaultsHelper({
-    feature,
-    store: manager.store,
-    configuration: {
-      ...FAKE_FEATURE_REMOTE_VALUE,
-      variables: { test: true, enabled: true },
-    },
-  });
-
-  Assert.ok(feature.getVariable("test"), "Successfully set");
-});
-
 add_task(async function test_isEnabled_backwards_compatible() {
   const PREVIOUS_FEATURE_MANIFEST = {
     variables: {
@@ -365,18 +383,19 @@ add_task(async function test_isEnabled_backwards_compatible() {
 
   await manager.onStartup();
 
-  await ExperimentFakes.remoteDefaultsHelper({
-    feature,
-    store: manager.store,
-    configuration: {
-      ...FAKE_FEATURE_REMOTE_VALUE,
-      variables: { enabled: false },
+  await ExperimentFakes.enrollWithRollout(
+    {
+      featureId: "foo",
+      value: { enabled: false },
     },
-  });
+    {
+      manager,
+    }
+  );
 
   Assert.ok(!feature.isEnabled(), "Disabled based on remote configs");
 
-  await manager.store.addExperiment(
+  await manager.store.addEnrollment(
     ExperimentFakes.experiment("blah", {
       branch: {
         slug: "treatment",
@@ -435,21 +454,31 @@ add_task(async function test_onUpdate_before_store_ready() {
 add_task(async function test_ExperimentFeature_test_ready_late() {
   const { manager, sandbox } = await setupForExperimentFeature();
   const stub = sandbox.stub();
-  await manager.store.ready();
+  sandbox
+    .stub(manager.store, "getAllRollouts")
+    .returns([ExperimentFakes.rollout("foo")]);
+  await manager.onStartup();
 
-  manager.store.finalizeRemoteConfigs([]);
-
-  const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
+  const featureInstance = new ExperimentFeature(
+    "test-feature",
+    FAKE_FEATURE_MANIFEST
+  );
   featureInstance.onUpdate(stub);
 
-  // Setting a really high timeout so in case our ready function doesn't handle
-  // this late init + ready scenario correctly the test will time out
-  await featureInstance.ready(400 * 1000);
+  await featureInstance.ready();
 
   Assert.ok(stub.notCalled, "We register too late to catch any events");
 
-  Assert.ok(
-    !featureInstance.isEnabled(),
+  setDefaultBranch(TEST_FALLBACK_PREF, JSON.stringify({ foo: true }));
+
+  Assert.deepEqual(
+    featureInstance.getVariable("config"),
+    { foo: true },
     "Feature is ready even when initialized after store update"
+  );
+  Assert.equal(
+    featureInstance.getVariable("title"),
+    "hello",
+    "Returns the NimbusTestUtils rollout default value"
   );
 });

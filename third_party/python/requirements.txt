@@ -162,9 +162,9 @@ fluent.syntax==0.18.1 \
     #   -r requirements-mach-vendor-python.in
     #   compare-locales
     #   fluent.migrate
-glean_parser==3.6.0 \
-    --hash=sha256:1da46764d93ec563eb93235bd477814444742d1ee6b5231dc6684cebf46a6057 \
-    --hash=sha256:655a2038ec0be5364f351f592d5476fe7b028ebb0d9fd75f07c6c54287859552
+glean_parser==4.3.1 \
+    --hash=sha256:a8924a3a4aca7fba35dc69d93031993d6481c6ec9cd43362c068eb3e18ea43e8 \
+    --hash=sha256:c194aba35a57ff9d139527c5321ef526599794994e355bad4c314bd3ab64c3eb
     # via -r requirements-mach-vendor-python.in
 idna-ssl==1.1.0 \
     --hash=sha256:a933e3bb13da54383f9e8f35dc4f9cb9eb9b3b78c6b36f311254d6d0d92c6c7c
@@ -418,9 +418,9 @@ slugid==2.0.0 \
     #   -r requirements-mach-vendor-python.in
     #   taskcluster
     #   taskcluster-taskgraph
-taskcluster-taskgraph==1.0.1 \
-    --hash=sha256:99376afaee4ca52ea2b98eee6467409aae86fa9c1bd300d028e85032f961edef \
-    --hash=sha256:9ee1ba6063ad6c367cf67f80904faf872b722b63843b6c8d36525e75a03b9588
+taskcluster-taskgraph==1.1.0 \
+    --hash=sha256:d3991c71484dfdf102e5479ce71a4e6d43a1889a33bec4aae634c70150cd3f28 \
+    --hash=sha256:eee145dedd2c12b6404d100ceb6e15a30820b75c8fed587a5cb804d254947153
     # via -r requirements-mach-vendor-python.in
 taskcluster-urls==13.0.1 \
     --hash=sha256:5e25e7e6818e8877178b175ff43d2e6548afad72694aa125f404a7329ece0973 \

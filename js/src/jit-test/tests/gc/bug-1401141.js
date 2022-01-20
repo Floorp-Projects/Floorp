@@ -6,5 +6,5 @@ setGCCallback({
 });
 gcslice(3);
 var lfGlobal = newGlobal();
-lfGlobal.offThreadCompileScript("");
+lfGlobal.offThreadCompileToStencil("");
 

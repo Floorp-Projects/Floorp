@@ -1,8 +1,4 @@
 {
-  "icons": {
-    "128": "icon.svg"
-  },
-  "browser_style": true,
   "applications": {
     "gecko": {
       "id": "qr-code@mozilla.org"

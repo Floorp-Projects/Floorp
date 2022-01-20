@@ -87,13 +87,13 @@ double ComputeDistanceP(const ImageF& distmap, const ButteraugliParams& params,
     }
     double v = 0;
     v += pow(
-        onePerPixels * (sum1[0] + GetLane(SumOfLanes(Load(d, sum_totals0)))),
+        onePerPixels * (sum1[0] + GetLane(SumOfLanes(d, Load(d, sum_totals0)))),
         1.0 / (p * 1.0));
     v += pow(
-        onePerPixels * (sum1[1] + GetLane(SumOfLanes(Load(d, sum_totals1)))),
+        onePerPixels * (sum1[1] + GetLane(SumOfLanes(d, Load(d, sum_totals1)))),
         1.0 / (p * 2.0));
     v += pow(
-        onePerPixels * (sum1[2] + GetLane(SumOfLanes(Load(d, sum_totals2)))),
+        onePerPixels * (sum1[2] + GetLane(SumOfLanes(d, Load(d, sum_totals2)))),
         1.0 / (p * 4.0));
     v /= 3.0;
     return v;

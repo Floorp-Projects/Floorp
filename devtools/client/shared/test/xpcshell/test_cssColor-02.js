@@ -13,19 +13,22 @@ const { colorUtils } = require("devtools/shared/css/color");
 const getFixtureColorData = require("resource://test/helper_color_data.js");
 
 function run_test() {
-  getFixtureColorData().forEach(({ authored, name, hex, hsl, rgb, cycle }) => {
-    if (cycle) {
-      const nameCycled = runCycle(name, cycle);
-      const hexCycled = runCycle(hex, cycle);
-      const hslCycled = runCycle(hsl, cycle);
-      const rgbCycled = runCycle(rgb, cycle);
-      // Cut down on log output by only reporting a single pass/fail for the color.
-      ok(
-        nameCycled && hexCycled && hslCycled && rgbCycled,
-        `${authored} was able to cycle back to the original value`
-      );
+  getFixtureColorData().forEach(
+    ({ authored, name, hex, hsl, rgb, hwb, cycle }) => {
+      if (cycle) {
+        const nameCycled = runCycle(name, cycle);
+        const hexCycled = runCycle(hex, cycle);
+        const hslCycled = runCycle(hsl, cycle);
+        const rgbCycled = runCycle(rgb, cycle);
+        const hwbCycled = runCycle(hwb, cycle);
+        // Cut down on log output by only reporting a single pass/fail for the color.
+        ok(
+          nameCycled && hexCycled && hslCycled && rgbCycled && hwbCycled,
+          `${authored} was able to cycle back to the original value`
+        );
+      }
     }
-  });
+  );
 }
 
 /**
@@ -38,9 +41,12 @@ function run_test() {
  */
 function runCycle(value, times) {
   let color = new colorUtils.CssColor(value);
+  //console.log("color", value, color.toString(), color);
   for (let i = 0; i < times; i++) {
     color.nextColorUnit();
+    //console.log("color.nextColorUnit", color.toString(), color);
     color = new colorUtils.CssColor(color.toString());
+    //console.log("new color", color.toString(), color);
   }
   return color.toString() === value;
 }

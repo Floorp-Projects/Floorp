@@ -1,0 +1,16 @@
+[package]
+name = "audioipc2-client"
+version = "0.5.0"
+authors = [
+        "Matthew Gregan <kinetik@flim.org>",
+        "Dan Glastonbury <dan.glastonbury@gmail.com>"
+        ]
+license = "ISC"
+description = "Cubeb Backend for talking to remote cubeb server."
+edition = "2018"
+
+[dependencies]
+audio_thread_priority = "0.23.4"
+audioipc = { package = "audioipc2", path="../audioipc" }
+cubeb-backend = "0.9"
+log = "0.4"

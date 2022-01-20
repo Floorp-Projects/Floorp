@@ -104,6 +104,9 @@ function monotonicNow() {
  *   Creation time as the number of milliseconds since the epoch.
  * @property {number} updated_at
  *   Last updated time as the number of milliseconds since the epoch.
+ * @property {string} referrer
+ *   The referrer to the url of the page that was interacted with (may be empty)
+ *
  */
 
 /**

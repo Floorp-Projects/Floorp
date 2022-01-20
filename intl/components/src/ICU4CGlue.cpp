@@ -7,12 +7,18 @@
 
 namespace mozilla::intl {
 
+// Starting with ICU 59, UChar defaults to char16_t.
+static_assert(std::is_same_v<UChar, char16_t>,
+              "Gecko doesn't support redefining UChar to a different type");
+
 ICUError ToICUError(UErrorCode status) {
   MOZ_ASSERT(!U_SUCCESS(status));
-  if (status == U_MEMORY_ALLOCATION_ERROR) {
-    return ICUError::OutOfMemory;
+  switch (status) {
+    case U_MEMORY_ALLOCATION_ERROR:
+      return ICUError::OutOfMemory;
+    default:
+      return ICUError::InternalError;
   }
-  return ICUError::InternalError;
 }
 
 ICUResult ToICUResult(UErrorCode status) {

@@ -7,6 +7,7 @@
 interface nsIContentSecurityPolicy;
 interface nsIDocShell;
 interface nsIPrincipal;
+interface nsIReferrerInfo;
 interface nsIURI;
 
 /**
@@ -25,7 +26,7 @@ interface nsITopLevelNavigationDelegate : nsISupports
    *        navigate to.
    * @param unsigned long loadType Contains a load type for the navigation as
    *        specified by the load constants in nsIDocShell:LoadCommand.
-   * @param nsIURI referrer
+   * @param nsIReferrerInfo referrerInfo
    *        The referrer of the load.
    * @param boolean hasPostData
    *        True if the load which is being asked about has associated post data
@@ -41,7 +42,7 @@ interface nsITopLevelNavigationDelegate : nsISupports
   bool shouldNavigate(in nsIDocShell docShell,
                       in nsIURI linkURI,
                       in unsigned long loadType,
-                      in nsIURI referrer,
+                      in nsIReferrerInfo referrerInfo,
                       in boolean hasPostData,
                       in nsIPrincipal triggeringPrincipal,
                       in nsIContentSecurityPolicy csp);

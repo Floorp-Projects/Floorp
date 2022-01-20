@@ -12,22 +12,15 @@ option(
 )
 
 
-c_warning_flag = dependable("-Werror")
-
-
-@depends("--enable-warnings-as-errors", c_warning_flag)
-def warnings_as_errors(warnings_as_errors, c_warning_flag):
+@depends("--enable-warnings-as-errors")
+def warnings_as_errors(warnings_as_errors):
     if not warnings_as_errors:
         return ""
 
-    return c_warning_flag
+    return "-Werror"
 
 
 set_config("WARNINGS_AS_ERRORS", warnings_as_errors)
-# We have a peculiar setup in old-configure.in where some compilation tests
-# depend on enabling warnings-as-errors even if it's disabled for Firefox
-# compilation.  We therefore need this assignment.
-add_old_configure_assignment("WARNINGS_AS_ERRORS", c_warning_flag)
 
 
 # GCC/Clang warnings:

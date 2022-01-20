@@ -437,7 +437,6 @@ MSG_DEF(JSMSG_WASM_BAD_IMP_SIZE,       1, JSEXN_WASMLINKERROR, "imported {0} wit
 MSG_DEF(JSMSG_WASM_BAD_IMP_MAX,        1, JSEXN_WASMLINKERROR, "imported {0} with incompatible maximum size")
 MSG_DEF(JSMSG_WASM_IMP_SHARED_REQD,    0, JSEXN_WASMLINKERROR, "imported unshared memory but shared required")
 MSG_DEF(JSMSG_WASM_IMP_SHARED_BANNED,  0, JSEXN_WASMLINKERROR, "imported shared memory but unshared required")
-MSG_DEF(JSMSG_WASM_BAD_FIT,            2, JSEXN_WASMLINKERROR, "{0} segment does not fit in {1}")
 MSG_DEF(JSMSG_WASM_NO_SHMEM_LINK,      0, JSEXN_WASMLINKERROR, "shared memory is disabled")
 MSG_DEF(JSMSG_WASM_NO_MEM64_LINK,      0, JSEXN_WASMLINKERROR, "memory64 is disabled")
 MSG_DEF(JSMSG_WASM_BAD_GLOB_MUT_LINK,  0, JSEXN_WASMLINKERROR, "imported global mutability mismatch")
@@ -456,6 +455,7 @@ MSG_DEF(JSMSG_WASM_DEREF_NULL,         0, JSEXN_WASMRUNTIMEERROR, "dereferencing
 MSG_DEF(JSMSG_WASM_BAD_CAST,           0, JSEXN_WASMRUNTIMEERROR, "bad cast")
 MSG_DEF(JSMSG_WASM_MEM_IMP_LIMIT,      0, JSEXN_WASMRUNTIMEERROR, "too many memory pages")
 MSG_DEF(JSMSG_WASM_TABLE_IMP_LIMIT,    0, JSEXN_WASMRUNTIMEERROR, "too many table elements")
+MSG_DEF(JSMSG_WASM_ARRAY_IMP_LIMIT,    0, JSEXN_WASMRUNTIMEERROR, "too many array elements")
 MSG_DEF(JSMSG_WASM_BAD_RANGE ,         2, JSEXN_RANGEERR,    "bad {0} {1}")
 MSG_DEF(JSMSG_WASM_BAD_GROW,           1, JSEXN_RANGEERR,    "failed to grow {0}")
 MSG_DEF(JSMSG_WASM_TABLE_OUT_OF_BOUNDS, 0, JSEXN_WASMRUNTIMEERROR,   "table index out of bounds")
@@ -674,6 +674,8 @@ MSG_DEF(JSMSG_SHORT_TYPED_ARRAY_RETURNED, 2, JSEXN_TYPEERR, "expected TypedArray
 MSG_DEF(JSMSG_TYPED_ARRAY_NOT_COMPATIBLE, 2, JSEXN_TYPEERR, "{0} elements are incompatible with {1}")
 MSG_DEF(JSMSG_ARRAYBUFFER_REQUIRED, 0, JSEXN_TYPEERR, "ArrayBuffer object required")
 
+MSG_DEF(JSMSG_ARRAYBUFFER_COPY_RANGE, 0, JSEXN_RANGEERR, "ArrayBuffer range incorrect for copying")
+
 // Shared array buffer
 MSG_DEF(JSMSG_SHARED_ARRAY_BAD_LENGTH,  0, JSEXN_RANGEERR, "length argument out of range")
 MSG_DEF(JSMSG_NON_SHARED_ARRAY_BUFFER_RETURNED, 0, JSEXN_TYPEERR, "expected SharedArrayBuffer, but species constructor returned non-SharedArrayBuffer")
@@ -739,6 +741,7 @@ MSG_DEF(JSMSG_FOR_AWAIT_NOT_OF,        0, JSEXN_SYNTAXERR, "'for await' loop sho
 MSG_DEF(JSMSG_NOT_AN_ASYNC_GENERATOR,  0, JSEXN_TYPEERR, "Not an async generator")
 MSG_DEF(JSMSG_NOT_AN_ASYNC_ITERATOR,   0, JSEXN_TYPEERR, "Not an async from sync iterator")
 MSG_DEF(JSMSG_GET_ASYNC_ITER_RETURNED_PRIMITIVE, 0, JSEXN_TYPEERR, "[Symbol.asyncIterator]() returned a non-object value")
+MSG_DEF(JSMSG_SUSPENDED_QUEUE_NOT_EMPTY, 0, JSEXN_INTERNALERR, "Async generator is in invalid state due to debugger interaction")
 
 // ReadableStream
 MSG_DEF(JSMSG_READABLESTREAM_UNDERLYINGSOURCE_TYPE_WRONG,0, JSEXN_RANGEERR,"'underlyingSource.type' must be \"bytes\" or undefined.")
@@ -819,7 +822,10 @@ MSG_DEF(JSMSG_BAD_WEAKREF_TARGET,                        0, JSEXN_TYPEERR, "cann
 // Iterator Helpers
 MSG_DEF(JSMSG_NEGATIVE_LIMIT,                            0, JSEXN_RANGEERR, "Iterator limits cannot be negative")
 
-// Stencil
-MSG_DEF(JSMSG_STENCIL_OPTIONS_MISMATCH,                  0, JSEXN_ERR, "CompileOptions mismatch between input and Stencil")
+// Record and Tuple
+MSG_DEF(JSMSG_RECORD_TUPLE_NO_OBJECT,                    0, JSEXN_TYPEERR, "Record and Tuple can only contain primitive values")
+MSG_DEF(JSMSG_RECORD_NO_PROTO,                           0, JSEXN_SYNTAXERR, "__proto__ is not a valid literal key in records")
+MSG_DEF(JSMSG_RECORD_NO_SYMBOL_KEY,						 0, JSEXN_TYPEERR, "Symbols cannot be used as record keys")
+MSG_DEF(JSMSG_RECORD_INVALID_DESCRIPTOR,                 0, JSEXN_TYPEERR, "Invalid record property descriptor")
 
 //clang-format on

@@ -12,7 +12,9 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 :root {
-  /* ::::: Variables ::::: */
+  --default-focusring-width: 1px;
+  --default-focusring: var(--default-focusring-width) dotted;
+
   --arrowpanel-background: Field;
   --arrowpanel-color: FieldText;
   --arrowpanel-border-color: ThreeDShadow;
@@ -41,6 +43,12 @@
   --toolbar-field-color: black;
   --toolbar-field-focus-color: black;
   --toolbar-field-border-color: transparent;
+}
+
+@media (prefers-contrast) {
+  :root {
+    --default-focusring-width: 2px;
+  }
 }
 
 :is(menupopup, panel)[type=arrow] {

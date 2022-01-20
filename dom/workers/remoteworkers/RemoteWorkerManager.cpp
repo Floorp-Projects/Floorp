@@ -33,6 +33,9 @@
 
 mozilla::LazyLogModule gRemoteWorkerManagerLog("RemoteWorkerManager");
 
+#ifdef LOG
+#  undef LOG
+#endif
 #define LOG(fmt) \
   MOZ_LOG(gRemoteWorkerManagerLog, mozilla::LogLevel::Verbose, fmt)
 

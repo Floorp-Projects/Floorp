@@ -194,12 +194,6 @@ pub const TCSAFLUSH: ::c_int = 2;
 
 pub const TIOCLINUX: ::c_ulong = 0x541C;
 pub const TIOCGSERIAL: ::c_ulong = 0x541E;
-pub const TIOCM_ST: ::c_int = 0x008;
-pub const TIOCM_SR: ::c_int = 0x010;
-pub const TIOCM_CTS: ::c_int = 0x020;
-pub const TIOCM_CAR: ::c_int = 0x040;
-pub const TIOCM_RNG: ::c_int = 0x080;
-pub const TIOCM_DSR: ::c_int = 0x100;
 
 pub const MADV_SOFT_OFFLINE: ::c_int = 101;
 pub const MAP_LOCKED: ::c_int = 0x00080;
@@ -329,10 +323,6 @@ pub const TIOCEXCL: ::c_ulong = 0x540C;
 pub const TIOCNXCL: ::c_ulong = 0x540D;
 pub const TIOCSCTTY: ::c_ulong = 0x540E;
 pub const TIOCSTI: ::c_ulong = 0x5412;
-pub const TIOCMGET: ::c_ulong = 0x5415;
-pub const TIOCMBIS: ::c_ulong = 0x5416;
-pub const TIOCMBIC: ::c_ulong = 0x5417;
-pub const TIOCMSET: ::c_ulong = 0x5418;
 pub const TIOCCONS: ::c_ulong = 0x541D;
 
 pub const SIGCHLD: ::c_int = 17;
@@ -446,7 +436,6 @@ pub const B2500000: ::speed_t = 0o0033;
 pub const B3000000: ::speed_t = 0o0034;
 pub const B3500000: ::speed_t = 0o0035;
 pub const B4000000: ::speed_t = 0o0036;
-pub const BOTHER: ::speed_t = 0o0037;
 
 pub const VEOL: usize = 6;
 pub const VEOL2: usize = 8;

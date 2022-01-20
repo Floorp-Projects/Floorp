@@ -27,6 +27,16 @@
     return promise_rejects_dom(t, 'AbortError', result);
   }, "User approval decline should reject the promise.");
 
+  fedcm_test(async (t, mock) => {
+    mock.returnError("ErrorTooManyRequests");
+    const first = await navigator.credentials.get(test_options);
+    const second = await navigator.credentials.get(test_options);
+    assert_equals(first, undefined);
+    return promise_rejects_dom(t, 'AbortError', second);
+  },
+  "When there's a pending request, a second `get` call should be rejected. ",
+  "Only one navigator.credentials.get request may be outstanding at one time.");
+
   promise_test(async t => {
     const result = navigator.credentials.get({
     federated: {
@@ -77,8 +87,9 @@
     return promise_rejects_dom(t, "InvalidStateError", result);
   }, "Reject when clientId is empty");
 
-  promise_test(async t => {
-    const result = navigator.credentials.get({
+  fedcm_test(async (t, mock) => {
+    mock.returnIdToken("a_token");
+    const token = await navigator.credentials.get({
     federated: {
       providers: [{
         url: 'https://idp.test',
@@ -86,29 +97,59 @@
       }]
     }
     });
-    return promise_rejects_js(t, TypeError, result);
-  }, "Reject when nonce is missing" );
 
-  promise_test(async t => {
-    const result = navigator.credentials.get({
+    assert_equals(token, "a_token");
+  }, "nonce is not required in FederatedIdentityProvider.");
+
+  fedcm_test(async (t, mock) => {
+    let controller = new AbortController();
+    mock.returnPendingPromise();
+    let aborted = false;
+    const token_promise = navigator.credentials.get({
     federated: {
       providers: [{
         url: 'https://idp.test',
         clientId: '1',
-        nonce: '',
-      }]
-    }
+      }],
+    },
+    signal: controller.signal,
     });
-    return promise_rejects_dom(t, "InvalidStateError", result);
-  }, "Reject when nonce is empty");
+    assert_equals(aborted, false);
+    controller.abort();
+    try {
+      await token_promise;
+    } catch (e) {
+      aborted = true;
+      assert_equals(e.name, "AbortError");
+    }
+    assert_equals(aborted, true);
+  }, "test the abort signal");
 
-  promise_test(function(t) {
-    // Logout API not supported yet.
-    return promise_rejects_dom(t, "NotSupportedError",
-      FederatedCredential.logout([{
-        account_id: "1234",
-        endpoint: "https://rp.example/logout.php"
-      }])
-    );
-  }, "navigator.credentials.logout() basic.");
+  fedcm_test(async (t, mock) => {
+    let controller = new AbortController();
+    mock.returnPendingPromise();
+    let aborted = false;
+    const token_promise = navigator.credentials.get({
+    federated: {
+      providers: [{
+        url: 'https://idp.test',
+        clientId: '1',
+      }],
+    },
+    signal: controller.signal,
+    });
+    assert_equals(aborted, false);
+    controller.abort();
+    try {
+      await token_promise;
+    } catch (e) {
+      aborted = true;
+      assert_equals(e.name, "AbortError");
+    }
+    assert_equals(aborted, true);
+
+    mock.returnIdToken("a_token");
+    const token = await navigator.credentials.get(test_options);
+    assert_equals(token, "a_token");
+  }, "get after abort should work");
 </script>

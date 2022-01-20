@@ -55,23 +55,23 @@ use util::{ensure_compatible_types, cstr_cow_from_bytes};
 use std::ffi::{OsStr, OsString};
 use std::{fmt, io, marker, mem, ptr};
 
-/// A platform-specific counterpart of the cross-platform [`Library`](crate::Library).
+/// The platform-specific counterpart of the cross-platform [`Library`](crate::Library).
 pub struct Library(HMODULE);
 
 unsafe impl Send for Library {}
 // Now, this is sort-of-tricky. MSDN documentation does not really make any claims as to safety of
 // the Win32 APIs. Sadly, whomever I asked, even current and former Microsoft employees, couldn’t
-// say for sure, whether the Win32 APIs used to implement `Library` are thread-safe or not.
+// say for sure whether the Win32 APIs used to implement `Library` are thread-safe or not.
 //
 // My investigation ended up with a question about thread-safety properties of the API involved
 // being sent to an internal (to MS) general question mailing-list. The conclusion of the mail is
 // as such:
 //
-// * Nobody inside MS (at least out of all the people who have seen the question) knows for
+// * Nobody inside MS (at least out of all of the people who have seen the question) knows for
 //   sure either;
 // * However, the general consensus between MS developers is that one can rely on the API being
 //   thread-safe. In case it is not thread-safe it should be considered a bug on the Windows
-//   part. (NB: bugs filled at https://connect.microsoft.com/ against Windows Server)
+//   part. (NB: bugs filed at https://connect.microsoft.com/ against Windows Server)
 unsafe impl Sync for Library {}
 
 impl Library {
@@ -79,11 +79,11 @@ impl Library {
     ///
     /// If the `filename` specifies a full path, the function only searches that path for the
     /// module. Otherwise, if the `filename` specifies a relative path or a module name without a
-    /// path, the function uses a windows-specific search strategy to find the module; for more
+    /// path, the function uses a Windows-specific search strategy to find the module. For more
     /// information, see the [Remarks on MSDN][msdn].
     ///
-    /// If the `filename` specifies a library filename without path and with extension omitted,
-    /// `.dll` extension is implicitly added. This behaviour may be suppressed by appending a
+    /// If the `filename` specifies a library filename without a path and with the extension omitted,
+    /// the `.dll` extension is implicitly added. This behaviour may be suppressed by appending a
     /// trailing `.` to the `filename`.
     ///
     /// This is equivalent to <code>[Library::load_with_flags](filename, 0)</code>.
@@ -92,8 +92,8 @@ impl Library {
     ///
     /// # Safety
     ///
-    /// When a library is loaded initialization routines contained within the library are executed.
-    /// For the purposes of safety, execution of these routines is conceptually the same calling an
+    /// When a library is loaded, initialisation routines contained within the library are executed.
+    /// For the purposes of safety, the execution of these routines is conceptually the same calling an
     /// unknown foreign function and may impose arbitrary requirements on the caller for the call
     /// to be sound.
     ///
@@ -107,7 +107,7 @@ impl Library {
 
     /// Get the `Library` representing the original program executable.
     ///
-    /// Note that behaviour of `Library` loaded with this method is different from
+    /// Note that the behaviour of the `Library` loaded with this method is different from
     /// Libraries loaded with [`os::unix::Library::this`]. For more information refer to [MSDN].
     ///
     /// Corresponds to `GetModuleHandleExW(0, NULL, _)`.
@@ -131,15 +131,15 @@ impl Library {
     /// Get a module that is already loaded by the program.
     ///
     /// This function returns a `Library` corresponding to a module with the given name that is
-    /// already mapped into the address space of the process. If the module isn't found an error is
+    /// already mapped into the address space of the process. If the module isn't found, an error is
     /// returned.
     ///
     /// If the `filename` does not include a full path and there are multiple different loaded
     /// modules corresponding to the `filename`, it is impossible to predict which module handle
     /// will be returned. For more information refer to [MSDN].
     ///
-    /// If the `filename` specifies a library filename without path and with extension omitted,
-    /// `.dll` extension is implicitly added. This behaviour may be suppressed by appending a
+    /// If the `filename` specifies a library filename without a path and with the extension omitted,
+    /// the `.dll` extension is implicitly added. This behaviour may be suppressed by appending a
     /// trailing `.` to the `filename`.
     ///
     /// This is equivalent to `GetModuleHandleExW(0, filename, _)`.
@@ -169,7 +169,7 @@ impl Library {
 
     /// Find and load a module, additionally adjusting behaviour with flags.
     ///
-    /// See [`Library::new`] for documentation on handling of the `filename` argument. See the
+    /// See [`Library::new`] for documentation on the handling of the `filename` argument. See the
     /// [flag table on MSDN][flags] for information on applicable values for the `flags` argument.
     ///
     /// Corresponds to `LoadLibraryExW(filename, reserved: NULL, flags)`.
@@ -178,8 +178,8 @@ impl Library {
     ///
     /// # Safety
     ///
-    /// When a library is loaded initialization routines contained within the library are executed.
-    /// For the purposes of safety, execution of these routines is conceptually the same calling an
+    /// When a library is loaded, initialisation routines contained within the library are executed.
+    /// For the purposes of safety, the execution of these routines is conceptually the same calling an
     /// unknown foreign function and may impose arbitrary requirements on the caller for the call
     /// to be sound.
     ///
@@ -206,9 +206,9 @@ impl Library {
         ret
     }
 
-    /// Get a pointer to function or static variable by symbol name.
+    /// Get a pointer to a function or static variable by symbol name.
     ///
-    /// The `symbol` may not contain any null bytes, with an exception of last byte. A null
+    /// The `symbol` may not contain any null bytes, with the exception of the last byte. A null
     /// terminated `symbol` may avoid a string allocation in some cases.
     ///
     /// Symbol is interpreted as-is; no mangling is done. This means that symbols like `x::y` are
@@ -216,8 +216,7 @@ impl Library {
     ///
     /// # Safety
     ///
-    /// Users of this API must specify the correct type of the function or variable loaded. Using a
-    /// `Symbol` with a wrong type is undefined.
+    /// Users of this API must specify the correct type of the function or variable loaded.
     pub unsafe fn get<T>(&self, symbol: &[u8]) -> Result<Symbol<T>, crate::Error> {
         ensure_compatible_types::<T, FARPROC>()?;
         let symbol = cstr_cow_from_bytes(symbol)?;
@@ -234,12 +233,11 @@ impl Library {
         }).map_err(|e| e.unwrap_or(crate::Error::GetProcAddressUnknown))
     }
 
-    /// Get a pointer to function or static variable by ordinal number.
+    /// Get a pointer to a function or static variable by ordinal number.
     ///
     /// # Safety
     ///
-    /// Users of this API must specify the correct type of the function or variable loaded. Using a
-    /// `Symbol` with a wrong type is undefined.
+    /// Users of this API must specify the correct type of the function or variable loaded.
     pub unsafe fn get_ordinal<T>(&self, ordinal: WORD) -> Result<Symbol<T>, crate::Error> {
         ensure_compatible_types::<T, FARPROC>()?;
         with_get_last_error(|source| crate::Error::GetProcAddress { source }, || {
@@ -267,8 +265,8 @@ impl Library {
     ///
     /// # Safety
     ///
-    /// The handle shall be a result of a successful call of `LoadLibraryA`, `LoadLibraryW`,
-    /// `LoadLibraryExW`, `LoadLibraryExA` or a handle previously returned by the
+    /// The handle must be the result of a successful call of `LoadLibraryA`, `LoadLibraryW`,
+    /// `LoadLibraryExW`, or `LoadLibraryExA`, or a handle previously returned by the
     /// `Library::into_raw` call.
     pub unsafe fn from_raw(handle: HMODULE) -> Library {
         Library(handle)
@@ -290,7 +288,7 @@ impl Library {
         }).map_err(|e| e.unwrap_or(crate::Error::FreeLibraryUnknown));
         // While the library is not free'd yet in case of an error, there is no reason to try
         // dropping it again, because all that will do is try calling `FreeLibrary` again. only
-        // this time it would ignore the return result, which we already seen failing…
+        // this time it would ignore the return result, which we already seen failing...
         std::mem::forget(self);
         result
     }
@@ -323,17 +321,17 @@ impl fmt::Debug for Library {
     }
 }
 
-/// Symbol from a library.
+/// A symbol from a library.
 ///
-/// A major difference compared to the cross-platform `Symbol` is that this does not ensure the
-/// `Symbol` does not outlive `Library` it comes from.
+/// A major difference compared to the cross-platform `Symbol` is that this does not ensure that the
+/// `Symbol` does not outlive the `Library` that it comes from.
 pub struct Symbol<T> {
     pointer: FARPROC,
     pd: marker::PhantomData<T>
 }
 
 impl<T> Symbol<T> {
-    /// Convert the loaded Symbol into a handle.
+    /// Convert the loaded `Symbol` into a handle.
     pub fn into_raw(self) -> FARPROC {
         let pointer = self.pointer;
         mem::forget(self);
@@ -452,7 +450,7 @@ pub const LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE: DWORD = consts::LOAD_LIBRARY_AS_DA
 
 /// Map the file into the process’ virtual address space as an image file.
 ///
-/// The loader does not load the static imports or perform the other usual initialization steps.
+/// The loader does not load the static imports or perform the other usual initialisation steps.
 /// Use this flag when you want to load a DLL only to extract messages or resources from it.
 ///
 /// Unless the application depends on the file having the in-memory layout of an image, this value
@@ -462,7 +460,7 @@ pub const LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE: DWORD = consts::LOAD_LIBRARY_AS_DA
 /// See [flag documentation on MSDN](https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw#parameters).
 pub const LOAD_LIBRARY_AS_IMAGE_RESOURCE: DWORD = consts::LOAD_LIBRARY_AS_IMAGE_RESOURCE;
 
-/// Search application's installation directory for the DLL and its dependencies.
+/// Search the application's installation directory for the DLL and its dependencies.
 ///
 /// Directories in the standard search path are not searched. This value cannot be combined with
 /// [`LOAD_WITH_ALTERED_SEARCH_PATH`].
@@ -509,11 +507,11 @@ pub const LOAD_LIBRARY_SEARCH_SYSTEM32: DWORD = consts::LOAD_LIBRARY_SEARCH_SYST
 /// See [flag documentation on MSDN](https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-loadlibraryexw#parameters).
 pub const LOAD_LIBRARY_SEARCH_USER_DIRS: DWORD = consts::LOAD_LIBRARY_SEARCH_USER_DIRS;
 
-/// If `filename specifies an absolute path, the system uses the alternate file search strategy
+/// If `filename` specifies an absolute path, the system uses the alternate file search strategy
 /// discussed in the [Remarks section] to find associated executable modules that the specified
 /// module causes to be loaded.
 ///
-/// If this value is used and `filename` specifies a relative path, the behavior is undefined.
+/// If this value is used and `filename` specifies a relative path, the behaviour is undefined.
 ///
 /// If this value is not used, or if `filename` does not specify a path, the system uses the
 /// standard search strategy discussed in the [Remarks section] to find associated executable

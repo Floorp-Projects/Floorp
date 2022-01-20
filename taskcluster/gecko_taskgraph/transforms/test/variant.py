@@ -75,7 +75,8 @@ def split_variants(config, tasks):
     for task in tasks:
         variants = task.pop("variants", [])
 
-        yield copy.deepcopy(task)
+        if task.pop("run-without-variant"):
+            yield copy.deepcopy(task)
 
         for name in variants:
             # Apply composite variants (joined by '+') in order.

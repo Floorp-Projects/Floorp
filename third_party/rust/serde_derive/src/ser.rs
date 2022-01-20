@@ -30,7 +30,7 @@ pub fn expand_derive_serialize(
 
     let impl_block = if let Some(remote) = cont.attrs.remote() {
         let vis = &input.vis;
-        let used = pretend::pretend_used(&cont);
+        let used = pretend::pretend_used(&cont, params.is_packed);
         quote! {
             impl #impl_generics #ident #ty_generics #where_clause {
                 #vis fn serialize<__S>(__self: &#remote #ty_generics, __serializer: __S) -> #serde::__private::Result<__S::Ok, __S::Error>
@@ -1099,7 +1099,7 @@ fn serialize_struct_visitor(
             let mut field_expr = if is_enum {
                 quote!(#member)
             } else {
-                get_member(params, field, &member)
+                get_member(params, field, member)
             };
 
             let key_expr = field.attrs.name().serialize_name();

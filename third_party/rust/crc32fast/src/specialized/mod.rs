@@ -1,6 +1,7 @@
 cfg_if! {
     if #[cfg(all(
         crc32fast_stdarchx86,
+        target_feature = "sse2",
         any(target_arch = "x86", target_arch = "x86_64")
     ))] {
         mod pclmulqdq;

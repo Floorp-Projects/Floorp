@@ -3,15 +3,6 @@
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
-const { CleanupManager } = ChromeUtils.import(
-  "resource://normandy/lib/CleanupManager.jsm"
-);
-const { ExperimentManager } = ChromeUtils.import(
-  "resource://nimbus/lib/ExperimentManager.jsm"
-);
-const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
-  "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
-);
 const { FirstStartup } = ChromeUtils.import(
   "resource://gre/modules/FirstStartup.jsm"
 );

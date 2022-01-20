@@ -25,10 +25,7 @@ mod task;
 use atomic_refcell::AtomicRefCell;
 use error::KeyValueError;
 use libc::c_void;
-use moz_task::{
-    create_background_task_queue, dispatch_background_task_with_options, DispatchOptions,
-    TaskRunnable,
-};
+use moz_task::{create_background_task_queue, DispatchOptions, TaskRunnable};
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_NO_AGGREGATION, NS_OK};
 use nsstring::{nsACString, nsCString};
 use owned_value::{owned_to_variant, variant_to_owned};
@@ -126,10 +123,8 @@ impl KeyValueService {
             nsCString::from(name),
         ));
 
-        dispatch_background_task_with_options(
-            RefPtr::new(TaskRunnable::new("KVService::GetOrCreate", task)?.coerce()),
-            DispatchOptions::default().may_block(true),
-        )
+        TaskRunnable::new("KVService::GetOrCreate", task)?
+            .dispatch_background_task_with_options(DispatchOptions::default().may_block(true))
     }
 }
 

@@ -24,12 +24,10 @@ add_task(async function not_major_upgrade() {
 
 add_task(async function remote_disabled() {
   await ExperimentAPI.ready();
-  await ExperimentFakes.remoteDefaultsHelper({
-    feature: NimbusFeatures.upgradeDialog,
-    configuration: {
-      slug: "upgradeDialog_remoteDisabled",
-      variables: { enabled: false },
-      targeting: "true",
+  let doCleanup = await ExperimentFakes.enrollWithRollout({
+    featureId: NimbusFeatures.upgradeDialog.featureId,
+    value: {
+      enabled: false,
     },
   });
 
@@ -47,15 +45,7 @@ add_task(async function remote_disabled() {
     "disabled",
   ]);
 
-  // Re-enable back
-  await ExperimentFakes.remoteDefaultsHelper({
-    feature: NimbusFeatures.upgradeDialog,
-    configuration: {
-      slug: "upgradeDialog_remoteEnabled",
-      variables: { enabled: true },
-      targeting: "true",
-    },
-  });
+  await doCleanup();
 });
 
 add_task(async function enterprise_disabled() {

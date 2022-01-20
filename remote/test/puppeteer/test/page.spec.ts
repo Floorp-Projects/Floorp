@@ -27,6 +27,7 @@ import {
   describeFailsFirefox,
 } from './mocha-utils'; // eslint-disable-line import/extensions
 import { Page, Metrics } from '../lib/cjs/puppeteer/common/Page.js';
+import { CDPSession } from '../lib/cjs/puppeteer/common/Connection.js';
 import { JSHandle } from '../lib/cjs/puppeteer/common/JSHandle.js';
 
 describe('Page', function () {
@@ -134,6 +135,23 @@ describe('Page', function () {
       // Still one because we removed the handler.
       expect(handler.callCount).toBe(1);
       page.on('response', handler);
+      await page.goto(server.EMPTY_PAGE);
+      // Two now because we added the handler back.
+      expect(handler.callCount).toBe(2);
+    });
+
+    it('should correctly added and removed request events', async () => {
+      const { page, server } = getTestState();
+
+      const handler = sinon.spy();
+      page.on('request', handler);
+      await page.goto(server.EMPTY_PAGE);
+      expect(handler.callCount).toBe(1);
+      page.off('request', handler);
+      await page.goto(server.EMPTY_PAGE);
+      // Still one because we removed the handler.
+      expect(handler.callCount).toBe(1);
+      page.on('request', handler);
       await page.goto(server.EMPTY_PAGE);
       // Two now because we added the handler back.
       expect(handler.callCount).toBe(2);
@@ -339,6 +357,18 @@ describe('Page', function () {
         await otherContext.close();
       }
     );
+    it('should grant persistent-storage', async () => {
+      const { page, server, context } = getTestState();
+
+      await page.goto(server.EMPTY_PAGE);
+      expect(await getPermission(page, 'persistent-storage')).not.toBe(
+        'granted'
+      );
+      await context.overridePermissions(server.EMPTY_PAGE, [
+        'persistent-storage',
+      ]);
+      expect(await getPermission(page, 'persistent-storage')).toBe('granted');
+    });
   });
 
   describe('Page.setGeolocation', function () {
@@ -825,6 +855,79 @@ describe('Page', function () {
     });
   });
 
+  describe('Page.waitForNetworkIdle', function () {
+    it('should work', async () => {
+      const { page, server } = getTestState();
+      await page.goto(server.EMPTY_PAGE);
+      let res;
+      const [t1, t2] = await Promise.all([
+        page.waitForNetworkIdle().then((r) => {
+          res = r;
+          return Date.now();
+        }),
+        page
+          .evaluate(() =>
+            (async () => {
+              await Promise.all([
+                fetch('/digits/1.png'),
+                fetch('/digits/2.png'),
+              ]);
+              await new Promise((resolve) => setTimeout(resolve, 200));
+              await fetch('/digits/3.png');
+              await new Promise((resolve) => setTimeout(resolve, 200));
+              await fetch('/digits/4.png');
+            })()
+          )
+          .then(() => Date.now()),
+      ]);
+      expect(res).toBe(undefined);
+      expect(t1).toBeGreaterThan(t2);
+      expect(t1 - t2).toBeGreaterThanOrEqual(400);
+    });
+    it('should respect timeout', async () => {
+      const { page, puppeteer } = getTestState();
+      let error = null;
+      await page
+        .waitForNetworkIdle({ timeout: 1 })
+        .catch((error_) => (error = error_));
+      expect(error).toBeInstanceOf(puppeteer.errors.TimeoutError);
+    });
+    it('should respect idleTime', async () => {
+      const { page, server } = getTestState();
+      await page.goto(server.EMPTY_PAGE);
+      const [t1, t2] = await Promise.all([
+        page.waitForNetworkIdle({ idleTime: 10 }).then(() => Date.now()),
+        page
+          .evaluate(() =>
+            (async () => {
+              await Promise.all([
+                fetch('/digits/1.png'),
+                fetch('/digits/2.png'),
+              ]);
+              await new Promise((resolve) => setTimeout(resolve, 250));
+            })()
+          )
+          .then(() => Date.now()),
+      ]);
+      expect(t2).toBeGreaterThan(t1);
+    });
+    it('should work with no timeout', async () => {
+      const { page, server } = getTestState();
+      await page.goto(server.EMPTY_PAGE);
+      const [result] = await Promise.all([
+        page.waitForNetworkIdle({ timeout: 0 }),
+        page.evaluate(() =>
+          setTimeout(() => {
+            fetch('/digits/1.png');
+            fetch('/digits/2.png');
+            fetch('/digits/3.png');
+          }, 50)
+        ),
+      ]);
+      expect(result).toBe(undefined);
+    });
+  });
+
   describe('Page.exposeFunction', function () {
     it('should work', async () => {
       const { page } = getTestState();
@@ -943,6 +1046,20 @@ describe('Page', function () {
       );
       expect(result.x).toBe(7);
     });
+    it('should fallback to default export when passed a module object', async () => {
+      const { page, server } = getTestState();
+      const moduleObject = {
+        default: function (a, b) {
+          return a * b;
+        },
+      };
+      await page.goto(server.EMPTY_PAGE);
+      await page.exposeFunction('compute', moduleObject);
+      const result = await page.evaluate(async function () {
+        return await globalThis.compute(9, 4);
+      });
+      expect(result).toBe(36);
+    });
   });
 
   describe('Page.Events.PageError', function () {
@@ -997,6 +1114,44 @@ describe('Page', function () {
       expect(await page.evaluate(() => navigator.userAgent)).toContain(
         'iPhone'
       );
+    });
+    it('should work with additional userAgentMetdata', async () => {
+      const { page, server } = getTestState();
+
+      await page.setUserAgent('MockBrowser', {
+        architecture: 'Mock1',
+        mobile: false,
+        model: 'Mockbook',
+        platform: 'MockOS',
+        platformVersion: '3.1',
+      });
+      const [request] = await Promise.all([
+        server.waitForRequest('/empty.html'),
+        page.goto(server.EMPTY_PAGE),
+      ]);
+      expect(
+        await page.evaluate(() => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore: userAgentData not yet in TypeScript DOM API
+          return navigator.userAgentData.mobile;
+        })
+      ).toBe(false);
+
+      const uaData = await page.evaluate(() => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: userAgentData not yet in TypeScript DOM API
+        return navigator.userAgentData.getHighEntropyValues([
+          'architecture',
+          'model',
+          'platform',
+          'platformVersion',
+        ]);
+      });
+      expect(uaData['architecture']).toBe('Mock1');
+      expect(uaData['model']).toBe('Mockbook');
+      expect(uaData['platform']).toBe('MockOS');
+      expect(uaData['platformVersion']).toBe('3.1');
+      expect(request.headers['user-agent']).toBe('MockBrowser');
     });
   });
 
@@ -1295,6 +1450,15 @@ describe('Page', function () {
       expect(await page.evaluate(() => globalThis.__injected)).toBe(35);
     });
 
+    it('should add id when provided', async () => {
+      const { page, server } = getTestState();
+      await page.goto(server.EMPTY_PAGE);
+      await page.addScriptTag({ content: 'window.__injected = 1;', id: 'one' });
+      await page.addScriptTag({ url: '/injectedfile.js', id: 'two' });
+      expect(await page.$('#one')).not.toBeNull();
+      expect(await page.$('#two')).not.toBeNull();
+    });
+
     // @see https://github.com/puppeteer/puppeteer/issues/4840
     xit('should throw when added with content to the CSP page', async () => {
       const { page, server } = getTestState();
@@ -1513,6 +1677,34 @@ describe('Page', function () {
       await page.pdf({ path: outputFile });
       expect(fs.readFileSync(outputFile).byteLength).toBeGreaterThan(0);
       fs.unlinkSync(outputFile);
+    });
+
+    it('can print to PDF and stream the result', async () => {
+      // Printing to pdf is currently only supported in headless
+      const { isHeadless, page } = getTestState();
+
+      if (!isHeadless) return;
+
+      const stream = await page.createPDFStream();
+      let size = 0;
+      for await (const chunk of stream) {
+        size += chunk.length;
+      }
+      expect(size).toBeGreaterThan(0);
+    });
+
+    // This test should be skipped in mozilla-central (Firefox).
+    // It intermittently makes the whole test suite fail.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1748255
+    itFailsFirefox('should respect timeout', async () => {
+      const { isHeadless, page, server, puppeteer } = getTestState();
+      if (!isHeadless) return;
+
+      await page.goto(server.PREFIX + '/pdf.html');
+
+      let error = null;
+      await page.pdf({ timeout: 1 }).catch((_error) => (error = _error));
+      expect(error).toBeInstanceOf(puppeteer.errors.TimeoutError);
     });
   });
 
@@ -1743,6 +1935,13 @@ describe('Page', function () {
       const { page, context } = getTestState();
 
       expect(page.browserContext()).toBe(context);
+    });
+  });
+
+  describe('Page.client', function () {
+    it('should return the client instance', async () => {
+      const { page } = getTestState();
+      expect(page.client()).toBeInstanceOf(CDPSession);
     });
   });
 });

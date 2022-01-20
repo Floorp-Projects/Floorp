@@ -318,6 +318,11 @@ class NotificationController final : public EventQueue,
 
  private:
   /**
+   * Remove a specific hide event if it should not be propagated.
+   */
+  void CoalesceHideEvent(AccHideEvent* aHideEvent);
+
+  /**
    * get rid of a mutation event that is no longer necessary.
    */
   void DropMutationEvent(AccTreeMutationEvent* aEvent);

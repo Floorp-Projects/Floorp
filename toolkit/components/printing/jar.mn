@@ -3,18 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
-#ifndef XP_MACOSX
 #ifdef XP_WIN
    content/global/printPageSetup.js                 (content/printPageSetup.js)
    content/global/printPageSetup.xhtml              (content/printPageSetup.xhtml)
 #endif
-   content/global/printPreviewProgress.js           (content/printPreviewProgress.js)
-   content/global/printPreviewProgress.xhtml        (content/printPreviewProgress.xhtml)
-   content/global/printProgress.js                  (content/printProgress.js)
-   content/global/printProgress.xhtml               (content/printProgress.xhtml)
-#endif
    content/global/printPreviewPagination.js         (content/printPreviewPagination.js)
-   content/global/printPreviewToolbar.js            (content/printPreviewToolbar.js)
    content/global/printUtils.js                     (content/printUtils.js)
    content/global/print.js                          (content/print.js)
    content/global/print.html                        (content/print.html)

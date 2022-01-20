@@ -220,7 +220,7 @@ class gfxFontconfigFont final : public gfxFT2FontBase {
   FcPattern* GetPattern() const { return mPattern; }
 
   already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
-      DrawTarget* aTarget) override;
+      const TextRunDrawParams& aRunParams) override;
 
   bool ShouldHintMetrics() const override;
 

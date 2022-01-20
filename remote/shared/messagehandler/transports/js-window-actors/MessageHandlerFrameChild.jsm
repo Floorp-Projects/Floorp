@@ -12,6 +12,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   error: "chrome://remote/content/shared/messagehandler/Errors.jsm",
+  isBrowsingContextCompatible:
+    "chrome://remote/content/shared/messagehandler/transports/FrameContextUtils.jsm",
   MessageHandlerRegistry:
     "chrome://remote/content/shared/messagehandler/MessageHandlerRegistry.jsm",
   WindowGlobalMessageHandler:
@@ -40,7 +42,9 @@ class MessageHandlerFrameChild extends JSWindowActorChild {
 
   handleEvent({ type }) {
     if (type == "DOMWindowCreated") {
-      this._registry.createAllMessageHandlers();
+      if (isBrowsingContextCompatible(this.manager.browsingContext)) {
+        this._registry.createAllMessageHandlers();
+      }
     }
   }
 

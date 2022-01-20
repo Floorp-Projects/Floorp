@@ -359,12 +359,6 @@ bool BufferTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface) {
   return true;
 }
 
-void BufferTextureData::SetDescriptor(BufferDescriptor&& aDescriptor) {
-  MOZ_ASSERT(mDescriptor.type() == BufferDescriptor::TYCbCrDescriptor);
-  MOZ_ASSERT(mDescriptor.get_YCbCrDescriptor().ySize() == gfx::IntSize());
-  mDescriptor = std::move(aDescriptor);
-}
-
 bool MemoryTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   MOZ_ASSERT(GetFormat() != gfx::SurfaceFormat::UNKNOWN);
   if (GetFormat() == gfx::SurfaceFormat::UNKNOWN) {

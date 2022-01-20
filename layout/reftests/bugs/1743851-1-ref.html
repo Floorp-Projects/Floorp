@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<script>
+
+			const spriteSheet = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAALBAMAAACEzBAKAAAAFVBMVEUAAADMr3z///8PDw9AQEC/v7/w8PCtfkxVAAAAA3RSTlMAAAD6dsTeAAAAQ0lEQVQIWy3IQRGAIAAEwJ1zCEAFLEAUK5iPClaggj9rMH7Y57prrR0pOJB1kU58OIldsSt2BQVHaIN3Rnt4p2SwJj863A7yxMyt/AAAAABJRU5ErkJggg=='
+
+			const loadImage = (src) => {
+				return new Promise((resolve, reject) => {
+					var img = new Image()
+					img.onload = () => resolve(img)
+					img.onerror = () => reject(false)
+					img.src = src
+				})
+			}
+
+			let cursorImage
+
+			function drawTestImage(canvasID, alphaValue) {
+				const ctx = document.getElementById(canvasID).getContext("2d", { alpha: alphaValue })
+
+				ctx.fillStyle = "#808080" // For contrast
+				ctx.fillRect(0, 0, 30, 30)
+
+				createImageBitmap(cursorImage, 0, 0, 8, 11, { premultiplyAlpha: "none" }).then(image => {
+					ctx.drawImage(image, 10, 10)
+				})
+			}
+
+			window.addEventListener("DOMContentLoaded", () => {
+				loadImage(spriteSheet).then(img => {
+					cursorImage = img
+					drawTestImage("c1", true)
+				})
+			})
+
+		</script>
+	</head>
+	<body>
+		<canvas id="c1" width="30" height="30"></canvas>
+	</body>
+</html>
+

@@ -975,7 +975,7 @@ gfxFont* gfxPlatformFontList::SystemFindFontForChar(
   LogModule* log = gfxPlatform::GetLog(eGfxLog_textrun);
 
   if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Warning))) {
-    Script script = mozilla::unicode::GetScriptCode(aCh);
+    Script script = intl::UnicodeProperties::GetScriptCode(aCh);
     MOZ_LOG(log, LogLevel::Warning,
             ("(textrun-systemfallback-%s) char: u+%6.6x "
              "script: %d match: [%s]"

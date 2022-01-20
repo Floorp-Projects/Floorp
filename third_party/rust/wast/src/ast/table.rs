@@ -188,15 +188,15 @@ impl<'a> Parse<'a> for ElemPayload<'a> {
 
 impl<'a> ElemPayload<'a> {
     fn parse_tail(parser: Parser<'a>, ty: Option<ast::RefType<'a>>) -> Result<Self> {
-        let ty = match ty {
+        let (must_use_indices, ty) = match ty {
             None => {
                 parser.parse::<Option<kw::func>>()?;
-                ast::RefType::func()
+                (true, ast::RefType::func())
             }
-            Some(ty) => ty,
+            Some(ty) => (false, ty),
         };
         if let ast::HeapType::Func = ty.heap {
-            if parser.peek::<ast::IndexOrRef<kw::func>>() {
+            if must_use_indices || parser.peek::<ast::IndexOrRef<kw::func>>() {
                 let mut elems = Vec::new();
                 while !parser.is_empty() {
                     elems.push(parser.parse::<ast::IndexOrRef<_>>()?.0);

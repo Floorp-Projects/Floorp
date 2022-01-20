@@ -17,7 +17,8 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = "downloads"
 
-CXXFLAGS += CONFIG["TK_CFLAGS"]
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
 SOURCES += [
     "DownloadPlatform.cpp",

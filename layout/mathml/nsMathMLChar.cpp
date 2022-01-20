@@ -11,6 +11,7 @@
 #include "gfxUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/intl/UnicodeScriptCodes.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/UniquePtr.h"
@@ -42,7 +43,6 @@
 #include <algorithm>
 
 #include "gfxMathTable.h"
-#include "nsUnicodeScriptCodes.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -1541,7 +1541,7 @@ nsresult nsMathMLChar::StretchInternal(
   // and record missing math script otherwise.
   gfxMissingFontRecorder* MFR = presContext->MissingFontRecorder();
   if (MFR && !fm->GetThebesFontGroup()->GetFirstMathFont()) {
-    MFR->RecordScript(unicode::Script::MATHEMATICAL_NOTATION);
+    MFR->RecordScript(intl::Script::MATHEMATICAL_NOTATION);
   }
 
   // If the scale_stretchy_operators option is disabled, we are done.

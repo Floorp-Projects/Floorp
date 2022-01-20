@@ -100,10 +100,6 @@ be useful in most cases. If you do need useful error messages, then upon
 error you can pass the same input to [pin-project] to receive a helpful
 description of the compile error.
 
-### Different: No support for custom Drop implementation
-
-pin-project supports this by [`#[pinned_drop]`][pinned-drop].
-
 ### Different: No support for custom Unpin implementation
 
 pin-project supports this by [`UnsafeUnpin`][unsafe-unpin] and [`!Unpin`][not-unpin].
@@ -115,7 +111,6 @@ pin-project supports this.
 [`pin_project!`]: https://docs.rs/pin-project-lite/0.2/pin_project_lite/macro.pin_project.html
 [not-unpin]: https://docs.rs/pin-project/1/pin_project/attr.pin_project.html#unpin
 [pin-project]: https://github.com/taiki-e/pin-project
-[pinned-drop]: https://docs.rs/pin-project/1/pin_project/attr.pin_project.html#pinned_drop
 [unsafe-unpin]: https://docs.rs/pin-project/1/pin_project/attr.pin_project.html#unsafeunpin
 
 ## License

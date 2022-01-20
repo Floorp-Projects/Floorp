@@ -3,15 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AccGroupInfo.h"
+#include "mozilla/a11y/Accessible.h"
+
 #include "nsAccUtils.h"
 #include "TableAccessible.h"
 
-#include "Role.h"
 #include "States.h"
 
 using namespace mozilla::a11y;
 
-AccGroupInfo::AccGroupInfo(const LocalAccessible* aItem, role aRole)
+AccGroupInfo::AccGroupInfo(const Accessible* aItem, role aRole)
     : mPosInSet(0), mSetSize(0), mParent(nullptr), mItem(aItem), mRole(aRole) {
   MOZ_COUNT_CTOR(AccGroupInfo);
   Update();
@@ -20,7 +21,7 @@ AccGroupInfo::AccGroupInfo(const LocalAccessible* aItem, role aRole)
 void AccGroupInfo::Update() {
   mParent = nullptr;
 
-  LocalAccessible* parent = mItem->LocalParent();
+  Accessible* parent = mItem->Parent();
   if (!parent) return;
 
   int32_t indexInParent = mItem->IndexInParent();
@@ -31,12 +32,12 @@ void AccGroupInfo::Update() {
     return;
   }
 
-  int32_t level = nsAccUtils::GetARIAOrDefaultLevel(mItem);
+  int32_t level = GetARIAOrDefaultLevel(mItem);
 
   // Compute position in set.
   mPosInSet = 1;
   for (int32_t idx = indexInParent - 1; idx >= 0; idx--) {
-    LocalAccessible* sibling = parent->LocalChildAt(idx);
+    Accessible* sibling = parent->ChildAt(idx);
     roles::Role siblingRole = sibling->Role();
 
     // If the sibling is separator then the group is ended.
@@ -45,11 +46,11 @@ void AccGroupInfo::Update() {
     if (BaseRole(siblingRole) != mRole) {
       continue;
     }
-    bool siblingHasGroupInfo =
-        sibling->mBits.groupInfo && !sibling->HasDirtyGroupInfo();
+
+    AccGroupInfo* siblingGroupInfo = sibling->GetGroupInfo();
     // Skip invisible siblings.
     // If the sibling has calculated group info, that means it's visible.
-    if (!siblingHasGroupInfo && sibling->State() & states::INVISIBLE) {
+    if (!siblingGroupInfo && sibling->State() & states::INVISIBLE) {
       continue;
     }
 
@@ -57,7 +58,7 @@ void AccGroupInfo::Update() {
     // level is lesser than this one then group is ended, if the sibling level
     // is greater than this one then the group is split by some child elements
     // (group will be continued).
-    int32_t siblingLevel = nsAccUtils::GetARIAOrDefaultLevel(sibling);
+    int32_t siblingLevel = GetARIAOrDefaultLevel(sibling);
     if (siblingLevel < level) {
       mParent = sibling;
       break;
@@ -68,10 +69,10 @@ void AccGroupInfo::Update() {
 
     // If the previous item in the group has calculated group information then
     // build group information for this item based on found one.
-    if (siblingHasGroupInfo) {
-      mPosInSet += sibling->mBits.groupInfo->mPosInSet;
-      mParent = sibling->mBits.groupInfo->mParent;
-      mSetSize = sibling->mBits.groupInfo->mSetSize;
+    if (siblingGroupInfo) {
+      mPosInSet += siblingGroupInfo->mPosInSet;
+      mParent = siblingGroupInfo->mParent;
+      mSetSize = siblingGroupInfo->mSetSize;
       return;
     }
 
@@ -82,7 +83,7 @@ void AccGroupInfo::Update() {
   mSetSize = mPosInSet;
 
   for (uint32_t idx = indexInParent + 1; idx < siblingCount; idx++) {
-    LocalAccessible* sibling = parent->LocalChildAt(idx);
+    Accessible* sibling = parent->ChildAt(idx);
 
     roles::Role siblingRole = sibling->Role();
 
@@ -92,16 +93,15 @@ void AccGroupInfo::Update() {
     if (BaseRole(siblingRole) != mRole) {
       continue;
     }
-    bool siblingHasGroupInfo =
-        sibling->mBits.groupInfo && !sibling->HasDirtyGroupInfo();
+    AccGroupInfo* siblingGroupInfo = sibling->GetGroupInfo();
     // Skip invisible siblings.
     // If the sibling has calculated group info, that means it's visible.
-    if (!siblingHasGroupInfo && sibling->State() & states::INVISIBLE) {
+    if (!siblingGroupInfo && sibling->State() & states::INVISIBLE) {
       continue;
     }
 
     // and check if it's hierarchical flatten structure.
-    int32_t siblingLevel = nsAccUtils::GetARIAOrDefaultLevel(sibling);
+    int32_t siblingLevel = GetARIAOrDefaultLevel(sibling);
     if (siblingLevel < level) break;
 
     // Skip subset.
@@ -109,9 +109,9 @@ void AccGroupInfo::Update() {
 
     // If the next item in the group has calculated group information then
     // build group information for this item based on found one.
-    if (siblingHasGroupInfo) {
-      mParent = sibling->mBits.groupInfo->mParent;
-      mSetSize = sibling->mBits.groupInfo->mSetSize;
+    if (siblingGroupInfo) {
+      mParent = siblingGroupInfo->mParent;
+      mSetSize = siblingGroupInfo->mSetSize;
       return;
     }
 
@@ -131,7 +131,7 @@ void AccGroupInfo::Update() {
   // the previous tree item of the group is a conceptual parent of the tree
   // item.
   if (mRole == roles::OUTLINEITEM) {
-    LocalAccessible* parentPrevSibling = parent->LocalPrevSibling();
+    Accessible* parentPrevSibling = parent->PrevSibling();
     if (parentPrevSibling && parentPrevSibling->Role() == mRole) {
       mParent = parentPrevSibling;
       return;
@@ -142,24 +142,47 @@ void AccGroupInfo::Update() {
   // the parent of the item will be a group and containing item of the group is
   // a conceptual parent of the item.
   if (mRole == roles::LISTITEM || mRole == roles::OUTLINEITEM) {
-    LocalAccessible* grandParent = parent->LocalParent();
+    Accessible* grandParent = parent->Parent();
     if (grandParent && grandParent->Role() == mRole) mParent = grandParent;
   }
 }
 
-LocalAccessible* AccGroupInfo::FirstItemOf(const LocalAccessible* aContainer) {
+AccGroupInfo* AccGroupInfo::CreateGroupInfo(const Accessible* aAccessible) {
+  mozilla::a11y::role role = aAccessible->Role();
+  if (role != mozilla::a11y::roles::ROW &&
+      role != mozilla::a11y::roles::OUTLINEITEM &&
+      role != mozilla::a11y::roles::OPTION &&
+      role != mozilla::a11y::roles::LISTITEM &&
+      role != mozilla::a11y::roles::MENUITEM &&
+      role != mozilla::a11y::roles::COMBOBOX_OPTION &&
+      role != mozilla::a11y::roles::RICH_OPTION &&
+      role != mozilla::a11y::roles::CHECK_RICH_OPTION &&
+      role != mozilla::a11y::roles::PARENT_MENUITEM &&
+      role != mozilla::a11y::roles::CHECK_MENU_ITEM &&
+      role != mozilla::a11y::roles::RADIO_MENU_ITEM &&
+      role != mozilla::a11y::roles::RADIOBUTTON &&
+      role != mozilla::a11y::roles::PAGETAB &&
+      role != mozilla::a11y::roles::COMMENT) {
+    return nullptr;
+  }
+
+  AccGroupInfo* info = new AccGroupInfo(aAccessible, BaseRole(role));
+  return info;
+}
+
+Accessible* AccGroupInfo::FirstItemOf(const Accessible* aContainer) {
   // ARIA tree can be arranged by ARIA groups case #1 (previous sibling of a
   // group is a parent) or by aria-level.
   a11y::role containerRole = aContainer->Role();
-  LocalAccessible* item = aContainer->LocalNextSibling();
+  Accessible* item = aContainer->NextSibling();
   if (item) {
     if (containerRole == roles::OUTLINEITEM &&
         item->Role() == roles::GROUPING) {
-      item = item->LocalFirstChild();
+      item = item->FirstChild();
     }
 
     if (item) {
-      AccGroupInfo* itemGroupInfo = item->GetGroupInfo();
+      AccGroupInfo* itemGroupInfo = item->GetOrCreateGroupInfo();
       if (itemGroupInfo && itemGroupInfo->ConceptualParent() == aContainer) {
         return item;
       }
@@ -168,15 +191,15 @@ LocalAccessible* AccGroupInfo::FirstItemOf(const LocalAccessible* aContainer) {
 
   // ARIA list and tree can be arranged by ARIA groups case #2 (group is
   // a child of an item).
-  item = aContainer->LocalLastChild();
+  item = aContainer->LastChild();
   if (!item) return nullptr;
 
   if (item->Role() == roles::GROUPING &&
       (containerRole == roles::LISTITEM ||
        containerRole == roles::OUTLINEITEM)) {
-    item = item->LocalFirstChild();
+    item = item->FirstChild();
     if (item) {
-      AccGroupInfo* itemGroupInfo = item->GetGroupInfo();
+      AccGroupInfo* itemGroupInfo = item->GetOrCreateGroupInfo();
       if (itemGroupInfo && itemGroupInfo->ConceptualParent() == aContainer) {
         return item;
       }
@@ -184,37 +207,44 @@ LocalAccessible* AccGroupInfo::FirstItemOf(const LocalAccessible* aContainer) {
   }
 
   // Otherwise, it can be a direct child if the container is a list or tree.
-  item = aContainer->LocalFirstChild();
+  item = aContainer->FirstChild();
   if (ShouldReportRelations(item->Role(), containerRole)) return item;
 
   return nullptr;
 }
 
-uint32_t AccGroupInfo::TotalItemCount(LocalAccessible* aContainer,
+uint32_t AccGroupInfo::TotalItemCount(Accessible* aContainer,
                                       bool* aIsHierarchical) {
   uint32_t itemCount = 0;
   switch (aContainer->Role()) {
     case roles::TABLE:
-      if (nsCoreUtils::GetUIntAttr(aContainer->GetContent(),
+      if (!aContainer->IsLocal()) {
+        break;
+      }
+      if (nsCoreUtils::GetUIntAttr(aContainer->AsLocal()->GetContent(),
                                    nsGkAtoms::aria_rowcount,
                                    (int32_t*)&itemCount)) {
         break;
       }
 
-      if (TableAccessible* tableAcc = aContainer->AsTable()) {
+      if (TableAccessible* tableAcc = aContainer->AsLocal()->AsTable()) {
         return tableAcc->RowCount();
       }
 
       break;
     case roles::ROW:
-      if (LocalAccessible* table = nsAccUtils::TableFor(aContainer)) {
+      if (!aContainer->IsLocal()) {
+        break;
+      }
+      if (LocalAccessible* table =
+              nsAccUtils::TableFor(aContainer->AsLocal())) {
         if (nsCoreUtils::GetUIntAttr(table->GetContent(),
                                      nsGkAtoms::aria_colcount,
                                      (int32_t*)&itemCount)) {
           break;
         }
 
-        if (TableAccessible* tableAcc = table->AsTable()) {
+        if (TableAccessible* tableAcc = table->AsLocal()->AsTable()) {
           return tableAcc->ColCount();
         }
       }
@@ -233,12 +263,12 @@ uint32_t AccGroupInfo::TotalItemCount(LocalAccessible* aContainer,
     case roles::EDITCOMBOBOX:
     case roles::RADIO_GROUP:
     case roles::PAGETABLIST: {
-      LocalAccessible* childItem = AccGroupInfo::FirstItemOf(aContainer);
+      Accessible* childItem = AccGroupInfo::FirstItemOf(aContainer);
       if (!childItem) {
-        childItem = aContainer->LocalFirstChild();
+        childItem = aContainer->FirstChild();
         if (childItem && childItem->IsTextLeaf()) {
           // First child can be a text leaf, check its sibling for an item.
-          childItem = childItem->LocalNextSibling();
+          childItem = childItem->NextSibling();
         }
       }
 
@@ -258,18 +288,18 @@ uint32_t AccGroupInfo::TotalItemCount(LocalAccessible* aContainer,
   return itemCount;
 }
 
-LocalAccessible* AccGroupInfo::NextItemTo(LocalAccessible* aItem) {
-  AccGroupInfo* groupInfo = aItem->GetGroupInfo();
+Accessible* AccGroupInfo::NextItemTo(Accessible* aItem) {
+  AccGroupInfo* groupInfo = aItem->GetOrCreateGroupInfo();
   if (!groupInfo) return nullptr;
 
   // If the item in middle of the group then search next item in siblings.
   if (groupInfo->PosInSet() >= groupInfo->SetSize()) return nullptr;
 
-  LocalAccessible* parent = aItem->LocalParent();
+  Accessible* parent = aItem->Parent();
   uint32_t childCount = parent->ChildCount();
   for (uint32_t idx = aItem->IndexInParent() + 1; idx < childCount; idx++) {
-    LocalAccessible* nextItem = parent->LocalChildAt(idx);
-    AccGroupInfo* nextGroupInfo = nextItem->GetGroupInfo();
+    Accessible* nextItem = parent->ChildAt(idx);
+    AccGroupInfo* nextGroupInfo = nextItem->GetOrCreateGroupInfo();
     if (nextGroupInfo &&
         nextGroupInfo->ConceptualParent() == groupInfo->ConceptualParent()) {
       return nextItem;
@@ -289,4 +319,13 @@ bool AccGroupInfo::ShouldReportRelations(role aRole, role aParentRole) {
   if (aParentRole == roles::LIST && aRole == roles::LISTITEM) return true;
 
   return false;
+}
+
+int32_t AccGroupInfo::GetARIAOrDefaultLevel(const Accessible* aAccessible) {
+  int32_t level = 0;
+  aAccessible->ARIAGroupPosition(&level, nullptr, nullptr);
+
+  if (level != 0) return level;
+
+  return aAccessible->GetLevel(true);
 }

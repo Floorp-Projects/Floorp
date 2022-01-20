@@ -23,13 +23,13 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/intl/UnicodeScriptCodes.h"
 #include "nsTHashMap.h"
 #include "nsDebug.h"
 #include "nsHashKeys.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
-#include "nsUnicodeScriptCodes.h"
 #include "nscore.h"
 
 class FontInfoData;
@@ -131,7 +131,7 @@ struct gfxFontFeatureInfo {
 class gfxFontEntry {
  public:
   typedef mozilla::gfx::DrawTarget DrawTarget;
-  typedef mozilla::unicode::Script Script;
+  typedef mozilla::intl::Script Script;
   typedef mozilla::FontWeight FontWeight;
   typedef mozilla::FontSlantStyle FontSlantStyle;
   typedef mozilla::FontStretch FontStretch;

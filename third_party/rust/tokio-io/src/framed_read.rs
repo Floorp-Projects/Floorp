@@ -2,12 +2,12 @@
 
 use std::fmt;
 
-use AsyncRead;
 use codec::Decoder;
 use framed::Fuse;
+use AsyncRead;
 
-use futures::{Async, Poll, Stream, Sink, StartSend};
 use bytes::BytesMut;
+use futures::{Async, Poll, Sink, StartSend, Stream};
 
 /// A `Stream` of messages decoded from an `AsyncRead`.
 #[deprecated(since = "0.1.7", note = "Moved to tokio-codec")]
@@ -30,8 +30,9 @@ const INITIAL_CAPACITY: usize = 8 * 1024;
 // ===== impl FramedRead =====
 
 impl<T, D> FramedRead<T, D>
-    where T: AsyncRead,
-          D: Decoder,
+where
+    T: AsyncRead,
+    D: Decoder,
 {
     /// Creates a new `FramedRead` with the given `decoder`.
     pub fn new(inner: T, decoder: D) -> FramedRead<T, D> {
@@ -83,8 +84,9 @@ impl<T, D> FramedRead<T, D> {
 }
 
 impl<T, D> Stream for FramedRead<T, D>
-    where T: AsyncRead,
-          D: Decoder,
+where
+    T: AsyncRead,
+    D: Decoder,
 {
     type Item = D::Item;
     type Error = D::Error;
@@ -95,15 +97,13 @@ impl<T, D> Stream for FramedRead<T, D>
 }
 
 impl<T, D> Sink for FramedRead<T, D>
-    where T: Sink,
+where
+    T: Sink,
 {
     type SinkItem = T::SinkItem;
     type SinkError = T::SinkError;
 
-    fn start_send(&mut self,
-                  item: Self::SinkItem)
-                  -> StartSend<Self::SinkItem, Self::SinkError>
-    {
+    fn start_send(&mut self, item: Self::SinkItem) -> StartSend<Self::SinkItem, Self::SinkError> {
         self.inner.inner.0.start_send(item)
     }
 
@@ -117,8 +117,9 @@ impl<T, D> Sink for FramedRead<T, D>
 }
 
 impl<T, D> fmt::Debug for FramedRead<T, D>
-    where T: fmt::Debug,
-          D: fmt::Debug,
+where
+    T: fmt::Debug,
+    D: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("FramedRead")
@@ -174,7 +175,8 @@ impl<T> FramedRead2<T> {
 }
 
 impl<T> Stream for FramedRead2<T>
-    where T: AsyncRead + Decoder,
+where
+    T: AsyncRead + Decoder,
 {
     type Item = T::Item;
     type Error = T::Error;
@@ -188,13 +190,13 @@ impl<T> Stream for FramedRead2<T>
             // readable again, at which point the stream is terminated.
             if self.is_readable {
                 if self.eof {
-                    let frame = try!(self.inner.decode_eof(&mut self.buffer));
+                    let frame = self.inner.decode_eof(&mut self.buffer)?;
                     return Ok(Async::Ready(frame));
                 }
 
                 trace!("attempting to decode a frame");
 
-                if let Some(frame) = try!(self.inner.decode(&mut self.buffer)) {
+                if let Some(frame) = self.inner.decode(&mut self.buffer)? {
                     trace!("frame decoded from buffer");
                     return Ok(Async::Ready(Some(frame)));
                 }

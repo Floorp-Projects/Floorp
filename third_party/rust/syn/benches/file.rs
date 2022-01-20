@@ -19,7 +19,7 @@ use std::fs;
 use std::str::FromStr;
 use test::Bencher;
 
-const FILE: &str = "tests/rust/src/libcore/str/mod.rs";
+const FILE: &str = "tests/rust/library/core/src/str/mod.rs";
 
 #[bench]
 fn parse_file(b: &mut Bencher) {

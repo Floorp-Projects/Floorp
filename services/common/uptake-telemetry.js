@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["UptakeTelemetry"];
+var EXPORTED_SYMBOLS = ["UptakeTelemetry", "Policy"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"

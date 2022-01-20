@@ -12,17 +12,17 @@
 
 [package]
 name = "tokio-executor"
-version = "0.1.9"
+version = "0.1.10"
 authors = ["Carl Lerche <me@carllerche.com>"]
 description = "Future execution primitives\n"
 homepage = "https://github.com/tokio-rs/tokio"
-documentation = "https://docs.rs/tokio-executor/0.1.9/tokio_executor"
+documentation = "https://docs.rs/tokio-executor/0.1.10/tokio_executor"
 keywords = ["futures", "tokio"]
 categories = ["concurrency", "asynchronous"]
 license = "MIT"
 repository = "https://github.com/tokio-rs/tokio"
 [dependencies.crossbeam-utils]
-version = "0.6.2"
+version = "0.7.0"
 
 [dependencies.futures]
 version = "0.1.19"

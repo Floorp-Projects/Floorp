@@ -6,24 +6,23 @@
 // FOG needs a profile directory to put its data in.
 do_get_profile();
 
-const FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
 // We need to initialize it once, otherwise operations will be stuck in the pre-init queue.
-FOG.initializeFOG();
+Services.fog.initializeFOG();
 
 add_task(function test_fog_experiment_annotations() {
   const id = "my-experiment-id";
   const branch = "my-branch";
   const extra = { extra_key: "extra_value" };
-  FOG.setExperimentActive(id, branch, extra);
+  Services.fog.setExperimentActive(id, branch, extra);
 
-  let data = FOG.testGetExperimentData(id);
+  let data = Services.fog.testGetExperimentData(id);
   Assert.equal(data.branch, branch);
   Assert.deepEqual(data.extra, extra);
 
   // Unknown id gets nothing.
-  Assert.equal(undefined, FOG.testGetExperimentData(id + id));
+  Assert.equal(undefined, Services.fog.testGetExperimentData(id + id));
 
   // Inactive id gets nothing.
-  FOG.setExperimentInactive(id);
-  Assert.equal(undefined, FOG.testGetExperimentData(id));
+  Services.fog.setExperimentInactive(id);
+  Assert.equal(undefined, Services.fog.testGetExperimentData(id));
 });

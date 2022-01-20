@@ -47,65 +47,57 @@ function checkPseudoClass(aElement, aExpected)
      "matches(':-moz-ui-valid') should return " + aExpected + " for " + aElement);
 }
 
-var os = SpecialPowers.Cc['@mozilla.org/observer-service;1']
-                      .getService(SpecialPowers.Ci.nsIObserverService);
-var observers = os.enumerateObservers("invalidformsubmit");
+var content = document.getElementById('content');
+var textarea = document.getElementsByTagName('textarea')[0];
+var input = document.getElementsByTagName('input')[0];
+var button = document.getElementsByTagName('button')[0];
+var select = document.getElementsByTagName('select')[0];
+var form = document.forms[0];
 
-if (observers.hasMoreElements()) {
-  var content = document.getElementById('content');
-  var textarea = document.getElementsByTagName('textarea')[0];
-  var input = document.getElementsByTagName('input')[0];
-  var button = document.getElementsByTagName('button')[0];
-  var select = document.getElementsByTagName('select')[0];
-  var form = document.forms[0];
+checkPseudoClass(textarea, false);
+checkPseudoClass(input, false);
+checkPseudoClass(select, false);
 
-  checkPseudoClass(textarea, false);
-  checkPseudoClass(input, false);
-  checkPseudoClass(select, false);
+// Try to submit.
+button.click();
+checkPseudoClass(textarea, true);
+checkPseudoClass(input, true);
+checkPseudoClass(select, true);
 
-  // Try to submit.
-  button.click();
-  checkPseudoClass(textarea, true);
-  checkPseudoClass(input, true);
-  checkPseudoClass(select, true);
+// No longer in the form.
+content.appendChild(textarea);
+content.appendChild(input);
+content.appendChild(select);
+checkPseudoClass(textarea, false);
+checkPseudoClass(input, false);
+checkPseudoClass(select, false);
 
-  // No longer in the form.
-  content.appendChild(textarea);
-  content.appendChild(input);
-  content.appendChild(select);
-  checkPseudoClass(textarea, false);
-  checkPseudoClass(input, false);
-  checkPseudoClass(select, false);
+// Back in the form.
+form.appendChild(textarea);
+form.appendChild(input);
+form.appendChild(select);
+checkPseudoClass(textarea, true);
+checkPseudoClass(input, true);
+checkPseudoClass(select, true);
 
-  // Back in the form.
-  form.appendChild(textarea);
-  form.appendChild(input);
-  form.appendChild(select);
-  checkPseudoClass(textarea, true);
-  checkPseudoClass(input, true);
-  checkPseudoClass(select, true);
+/* Case when elements get orphaned. */
+var textarea = document.getElementsByTagName('textarea')[1];
+var input = document.getElementsByTagName('input')[1];
+var button = document.getElementsByTagName('button')[1];
+var select = document.getElementsByTagName('select')[1];
+var form = document.forms[1];
 
-  /* Case when elements get orphaned. */
-  var textarea = document.getElementsByTagName('textarea')[1];
-  var input = document.getElementsByTagName('input')[1];
-  var button = document.getElementsByTagName('button')[1];
-  var select = document.getElementsByTagName('select')[1];
-  var form = document.forms[1];
+// Try to submit.
+button.click();
+checkPseudoClass(textarea, true);
+checkPseudoClass(input, true);
+checkPseudoClass(select, true);
 
-  // Try to submit.
-  button.click();
-  checkPseudoClass(textarea, true);
-  checkPseudoClass(input, true);
-  checkPseudoClass(select, true);
-
-  // Remove the form.
-  document.getElementsByTagName('table')[0].removeChild(form);
-  checkPseudoClass(textarea, false);
-  checkPseudoClass(input, false);
-  checkPseudoClass(select, false);
-} else {
-  todo(false, "No 'invalidformsubmit' observers. Skip test.");
-}
+// Remove the form.
+document.getElementsByTagName('table')[0].removeChild(form);
+checkPseudoClass(textarea, false);
+checkPseudoClass(input, false);
+checkPseudoClass(select, false);
 
 </script>
 </pre>

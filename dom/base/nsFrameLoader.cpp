@@ -131,9 +131,7 @@
 
 #include "mozilla/ContentPrincipal.h"
 
-#ifdef MOZ_XUL
-#  include "nsXULPopupManager.h"
-#endif
+#include "nsXULPopupManager.h"
 
 #ifdef NS_PRINTING
 #  include "mozilla/embedding/printingui/PrintingParent.h"
@@ -3207,7 +3205,6 @@ void nsFrameLoader::AttributeChanged(mozilla::dom::Element* aElement,
   bool is_primary = aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::primary,
                                           nsGkAtoms::_true, eIgnoreCase);
 
-#ifdef MOZ_XUL
   // when a content panel is no longer primary, hide any open popups it may have
   if (!is_primary) {
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
@@ -3215,7 +3212,6 @@ void nsFrameLoader::AttributeChanged(mozilla::dom::Element* aElement,
       pm->HidePopupsInDocShell(GetDocShell());
     }
   }
-#endif
 
   parentTreeOwner->ContentShellRemoved(GetDocShell());
   if (aElement->AttrValueIs(kNameSpaceID_None, TypeAttrName(aElement),
@@ -3862,7 +3858,9 @@ void nsFrameLoader::MaybeNotifyCrashed(BrowsingContext* aBrowsingContext,
   RefPtr<FrameCrashedEvent> event = FrameCrashedEvent::Constructor(
       mOwnerContent->OwnerDoc(), eventName, init);
   event->SetTrusted(true);
-  EventDispatcher::DispatchDOMEvent(mOwnerContent, nullptr, event, nullptr,
+
+  RefPtr<Element> ownerContent = mOwnerContent;
+  EventDispatcher::DispatchDOMEvent(ownerContent, nullptr, event, nullptr,
                                     nullptr);
 }
 

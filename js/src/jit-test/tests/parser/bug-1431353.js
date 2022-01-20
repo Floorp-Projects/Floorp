@@ -21,112 +21,137 @@ function encodeScript(source)
 }
 
 let a, b, c;
+let stencil, stencilA, stencilB, stencilC;
 
 // Calling run functions without arguments assumes a single off-thread job.
 
 // Test run functions fail when no jobs exist.
 
-assertFails(() => runOffThreadScript());
+assertFails(() => finishOffThreadCompileToStencil());
 
-assertFails(() => finishOffThreadModule());
+assertFails(() => finishOffThreadCompileModuleToStencil());
 
-assertFails(() => runOffThreadDecodedScript());
+assertFails(() => finishOffThreadDecodeStencil());
 
 // Test run functions fail when multiple jobs exist and no ID specified.
 
-a = offThreadCompileScript("");
-b = offThreadCompileScript("");
-assertFails(() => runOffThreadScript());
-runOffThreadScript(a);
-runOffThreadScript(b);
+a = offThreadCompileToStencil("");
+b = offThreadCompileToStencil("");
+assertFails(() => finishOffThreadCompileToStencil());
+stencilA = finishOffThreadCompileToStencil(a);
+stencilB = finishOffThreadCompileToStencil(b);
+evalStencil(stencilA);
+evalStencil(stencilB);
 
-a = offThreadCompileModule("");
-b = offThreadCompileModule("");
-assertFails(() => finishOffThreadModule());
-finishOffThreadModule(a);
-finishOffThreadModule(b);
+a = offThreadCompileModuleToStencil("");
+b = offThreadCompileModuleToStencil("");
+assertFails(() => finishOffThreadCompileModuleToStencil());
+stencilA = finishOffThreadCompileModuleToStencil(a);
+stencilB = finishOffThreadCompileModuleToStencil(b);
+instantiateModuleStencil(stencilA);
+instantiateModuleStencil(stencilB);
 
-a = offThreadDecodeScript(encodeScript(""));
-b = offThreadDecodeScript(encodeScript(""));
-assertFails(() => runOffThreadScript());
-runOffThreadDecodedScript(a);
-runOffThreadDecodedScript(b);
+a = offThreadDecodeStencil(encodeScript(""));
+b = offThreadDecodeStencil(encodeScript(""));
+assertFails(() => finishOffThreadCompileToStencil());
+stencilA = finishOffThreadDecodeStencil(a);
+stencilB = finishOffThreadDecodeStencil(b);
+evalStencil(stencilA);
+evalStencil(stencilB);
 
 // Test fun functions succeed when a single job exist and no ID specified.
 
-offThreadCompileScript("42");
-assertEq(runOffThreadScript(), 42);
+offThreadCompileToStencil("42");
+stencil = finishOffThreadCompileToStencil();
+assertEq(evalStencil(stencil), 42);
 
-offThreadCompileModule("");
-assertEq(typeof finishOffThreadModule(), "object");
+offThreadCompileModuleToStencil("");
+stencil = finishOffThreadCompileModuleToStencil();
+assertEq(typeof instantiateModuleStencil(stencil), "object");
 
-offThreadDecodeScript(encodeScript("23"));
-assertEq(runOffThreadDecodedScript(), 23);
+offThreadDecodeStencil(encodeScript("23"));
+stencil = finishOffThreadDecodeStencil();
+assertEq(evalStencil(stencil), 23);
 
 // Run functions take an ID argument returned from the compile function.
 
 // Test bad ID type and unknown ID.
 
-offThreadCompileScript("");
-assertFails(() => runOffThreadScript("foo"));
-assertFails(() => runOffThreadScript(42));
-runOffThreadScript();
+offThreadCompileToStencil("");
+assertFails(() => finishOffThreadCompileToStencil("foo"));
+assertFails(() => finishOffThreadCompileToStencil(42));
+stencil = finishOffThreadCompileToStencil();
+evalStencil(stencil);
 
-offThreadCompileModule("");
-assertFails(() => finishOffThreadModule("foo"));
-assertFails(() => finishOffThreadModule(42));
-finishOffThreadModule();
+offThreadCompileModuleToStencil("");
+assertFails(() => finishOffThreadCompileModuleToStencil("foo"));
+assertFails(() => finishOffThreadCompileModuleToStencil(42));
+stencil = finishOffThreadCompileModuleToStencil();
+instantiateModuleStencil(stencil);
 
-offThreadDecodeScript(encodeScript(""));
-assertFails(() => runOffThreadDecodedScript("foo"));
-assertFails(() => runOffThreadDecodedScript(42));
-runOffThreadDecodedScript();
+offThreadDecodeStencil(encodeScript(""));
+assertFails(() => finishOffThreadDecodeStencil("foo"));
+assertFails(() => finishOffThreadDecodeStencil(42));
+stencil = finishOffThreadDecodeStencil();
+evalStencil(stencil);
 
 // Test stale ID.
 
-a = offThreadCompileScript("");
-runOffThreadScript(a);
-assertFails(() => runOffThreadScript(a));
+a = offThreadCompileToStencil("");
+stencilA = finishOffThreadCompileToStencil(a);
+evalStencil(stencilA);
+assertFails(() => finishOffThreadCompileToStencil(a));
 
-a = offThreadCompileModule("");
-finishOffThreadModule(a);
-assertFails(() => finishOffThreadModule(a));
+a = offThreadCompileModuleToStencil("");
+stencilA = finishOffThreadCompileModuleToStencil(a);
+assertFails(() => finishOffThreadCompileModuleToStencil(a));
+instantiateModuleStencil(stencilA);
 
-a = offThreadDecodeScript(encodeScript(""));
-runOffThreadDecodedScript(a);
-assertFails(() => runOffThreadDecodedScript(a));
+a = offThreadDecodeStencil(encodeScript(""));
+stencilA = finishOffThreadDecodeStencil(a);
+evalStencil(stencilA);
+assertFails(() => finishOffThreadDecodeStencil(a));
 
 // Test wrong job kind.
 
-a = offThreadCompileScript("");
-b = offThreadCompileModule("");
-c = offThreadDecodeScript(encodeScript(""));
-assertFails(() => runOffThreadScript(b));
-assertFails(() => runOffThreadScript(c));
-assertFails(() => finishOffThreadModule(a));
-assertFails(() => finishOffThreadModule(c));
-assertFails(() => runOffThreadDecodedScript(a));
-assertFails(() => runOffThreadDecodedScript(b));
-runOffThreadScript(a);
-finishOffThreadModule(b);
-runOffThreadDecodedScript(c);
+a = offThreadCompileToStencil("");
+b = offThreadCompileModuleToStencil("");
+c = offThreadDecodeStencil(encodeScript(""));
+assertFails(() => finishOffThreadCompileToStencil(b));
+assertFails(() => finishOffThreadCompileToStencil(c));
+assertFails(() => finishOffThreadCompileModuleToStencil(a));
+assertFails(() => finishOffThreadCompileModuleToStencil(c));
+assertFails(() => finishOffThreadDecodeStencil(a));
+assertFails(() => finishOffThreadDecodeStencil(b));
+stencilA = finishOffThreadCompileToStencil(a);
+evalStencil(stencilA);
+stencilB = finishOffThreadCompileModuleToStencil(b);
+instantiateModuleStencil(stencilB);
+stencilC = finishOffThreadDecodeStencil(c);
+evalStencil(stencilC);
 
 // Test running multiple jobs.
 
-a = offThreadCompileScript("1");
-b = offThreadCompileScript("2");
-assertEq(runOffThreadScript(a), 1);
-assertEq(runOffThreadScript(b), 2);
+a = offThreadCompileToStencil("1");
+b = offThreadCompileToStencil("2");
+stencilA = finishOffThreadCompileToStencil(a);
+stencilB = finishOffThreadCompileToStencil(b);
+assertEq(evalStencil(stencilA), 1);
+assertEq(evalStencil(stencilB), 2);
 
-a = offThreadCompileModule("");
-b = offThreadCompileModule("");
-assertEq(typeof finishOffThreadModule(a), "object");
-assertEq(typeof finishOffThreadModule(b), "object");
+a = offThreadCompileModuleToStencil("");
+b = offThreadCompileModuleToStencil("");
+stencilA = finishOffThreadCompileModuleToStencil(a);
+stencilB = finishOffThreadCompileModuleToStencil(b);
+assertEq(typeof instantiateModuleStencil(stencilA), "object");
+assertEq(typeof instantiateModuleStencil(stencilB), "object");
 
-a = offThreadDecodeScript(encodeScript("3"));
-b = offThreadDecodeScript(encodeScript("4"));
-assertEq(runOffThreadDecodedScript(a), 3);
-assertEq(runOffThreadDecodedScript(b), 4);
+a = offThreadDecodeStencil(encodeScript("3"));
+b = offThreadDecodeStencil(encodeScript("4"));
+stencilA = finishOffThreadDecodeStencil(a);
+stencilB = finishOffThreadDecodeStencil(b);
+assertEq(evalStencil(stencilA), 3);
+assertEq(evalStencil(stencilB), 4);
 
 // Test many jobs.
 
@@ -135,18 +160,24 @@ let jobs;
 
 jobs = new Array(count);
 for (let i = 0; i < jobs.length; i++)
-    jobs[i] = offThreadCompileScript(`${i} * ${i}`);
-for (let i = 0; i < jobs.length; i++)
-    assertEq(runOffThreadScript(jobs[i]), i * i);
+    jobs[i] = offThreadCompileToStencil(`${i} * ${i}`);
+for (let i = 0; i < jobs.length; i++) {
+    stencil = finishOffThreadCompileToStencil(jobs[i]);
+    assertEq(evalStencil(stencil), i * i);
+}
 
 jobs = new Array(count);
 for (let i = 0; i < jobs.length; i++)
-    jobs[i] = offThreadCompileModule("");
-for (let i = 0; i < jobs.length; i++)
-    assertEq(typeof finishOffThreadModule(jobs[i]), "object");
+    jobs[i] = offThreadCompileModuleToStencil("");
+for (let i = 0; i < jobs.length; i++) {
+    stencil = finishOffThreadCompileModuleToStencil(jobs[i]);
+    assertEq(typeof instantiateModuleStencil(stencil), "object");
+}
 
 jobs = new Array(count);
 for (let i = 0; i < jobs.length; i++)
-    jobs[i] = offThreadDecodeScript(encodeScript(`${i} * ${i}`));
-for (let i = 0; i < jobs.length; i++)
-    assertEq(runOffThreadDecodedScript(jobs[i]), i * i);
+    jobs[i] = offThreadDecodeStencil(encodeScript(`${i} * ${i}`));
+for (let i = 0; i < jobs.length; i++) {
+    stencil = finishOffThreadDecodeStencil(jobs[i]);
+    assertEq(evalStencil(stencil), i * i);
+}

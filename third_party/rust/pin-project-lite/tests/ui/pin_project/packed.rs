@@ -1,3 +1,5 @@
+#![allow(unaligned_references)]
+
 use pin_project_lite::pin_project;
 
 pin_project! { //~ ERROR reference to packed field is unaligned

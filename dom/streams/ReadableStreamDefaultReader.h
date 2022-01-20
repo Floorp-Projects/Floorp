@@ -40,21 +40,24 @@ class ReadableStreamDefaultReader final : public ReadableStreamGenericReader,
   ~ReadableStreamDefaultReader();
 
  public:
+  bool IsDefault() override { return true; }
+  bool IsBYOB() override { return false; }
+  ReadableStreamDefaultReader* AsDefault() override { return this; }
+  ReadableStreamBYOBReader* AsBYOB() override {
+    MOZ_CRASH();
+    return nullptr;
+  }
+
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<ReadableStreamDefaultReader> Constructor(
       const GlobalObject& aGlobal, ReadableStream& stream, ErrorResult& aRv);
 
-  already_AddRefed<Promise> Read(JSContext* aCx, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Read(JSContext* aCx,
+                                                    ErrorResult& aRv);
 
   void ReleaseLock(ErrorResult& aRv);
-
-  already_AddRefed<Promise> Closed() const;
-
-  already_AddRefed<Promise> Cancel(JSContext* aCx,
-                                   JS::Handle<JS::Value> aReason,
-                                   ErrorResult& aRv);
 
   LinkedList<RefPtr<ReadRequest>>& ReadRequests() { return mReadRequests; }
 

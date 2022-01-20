@@ -51,10 +51,8 @@
 #endif
 #include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"
-#include "builtin/TestingUtility.h"        // js::ParseCompileOptions
-#include "frontend/BytecodeCompilation.h"  // frontend::CanLazilyParse,
-// frontend::CompileGlobalScriptToExtensibleStencil,
-// frontend::DelazifyCanonicalScriptedFunction
+#include "builtin/TestingUtility.h"  // js::ParseCompileOptions, js::ParseDebugMetadata
+#include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScriptToExtensibleStencil, frontend::DelazifyCanonicalScriptedFunction
 #include "frontend/BytecodeCompiler.h"  // frontend::ParseModuleToExtensibleStencil
 #include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
 #include "gc/Allocator.h"
@@ -2854,13 +2852,23 @@ static bool SetTestFilenameValidationCallback(JSContext* cx, unsigned argc,
 
   // Accept all filenames that start with "safe". In system code also accept
   // filenames starting with "system".
-  auto testCb = [](const char* filename, bool isSystemRealm) -> bool {
+  auto testCb = [](JSContext* cx, const char* filename) -> bool {
     if (strstr(filename, "safe") == filename) {
       return true;
     }
-    if (isSystemRealm && strstr(filename, "system") == filename) {
+    if (cx->realm()->isSystem() && strstr(filename, "system") == filename) {
       return true;
     }
+
+    const char* utf8Filename;
+    if (mozilla::IsUtf8(mozilla::MakeStringSpan(filename))) {
+      utf8Filename = filename;
+    } else {
+      utf8Filename = "(invalid UTF-8 filename)";
+    }
+    JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
+                             JSMSG_UNSAFE_FILENAME, utf8Filename);
+
     return false;
   };
   JS::SetFilenameValidationCallback(testCb);
@@ -4030,6 +4038,16 @@ static bool DisplayName(JSContext* cx, unsigned argc, Value* vp) {
   JSFunction* fun = &args[0].toObject().as<JSFunction>();
   JSString* str = fun->displayAtom();
   args.rval().setString(str ? str : cx->runtime()->emptyString.ref());
+  return true;
+}
+
+static bool IsAvxPresent(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
+  args.rval().setBoolean(jit::Assembler::HasAVX());
+#else
+  args.rval().setBoolean(false);
+#endif
   return true;
 }
 
@@ -5324,7 +5342,7 @@ static bool GetBacktrace(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   JS::ConstUTF8CharsZ utf8chars(buf.get(), strlen(buf.get()));
-  JSString* str = NewStringCopyUTF8Z<CanGC>(cx, utf8chars);
+  JSString* str = NewStringCopyUTF8Z(cx, utf8chars);
   if (!str) {
     return false;
   }
@@ -6194,7 +6212,7 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
 
   // Start at 1, as the script 0 is the top-level.
   for (uint32_t index = 1; index < nScripts; index++) {
-    UniquePtr<CompilationStencil> innerStencil;
+    RefPtr<CompilationStencil> innerStencil;
     {
       BorrowingCompilationStencil borrow(merger.getResult());
       ScriptIndex scriptIndex{index};
@@ -6214,19 +6232,19 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
       }
     }
 
-    if (!merger.addDelazification(cx, *innerStencil.get())) {
+    if (!merger.addDelazification(cx, *innerStencil)) {
       return false;
     }
   }
 
-  UniquePtr<CompilationStencil> result =
-      cx->make_unique<CompilationStencil>(merger.takeResult());
+  RefPtr<CompilationStencil> result =
+      cx->new_<CompilationStencil>(merger.takeResult());
   if (!result) {
     return false;
   }
 
-  Rooted<js::StencilObject*> stencilObj(
-      cx, js::StencilObject::create(cx, do_AddRef(result.release())));
+  Rooted<js::StencilObject*> stencilObj(cx,
+                                        js::StencilObject::create(cx, result));
   if (!stencilObj) {
     return false;
   }
@@ -6259,6 +6277,8 @@ static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
 
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
+  Rooted<JS::Value> privateValue(cx);
+  Rooted<JSString*> elementAttributeName(cx);
   if (args.length() == 2) {
     if (!args[1].isObject()) {
       JS_ReportErrorASCII(cx,
@@ -6271,31 +6291,32 @@ static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
       return false;
     }
+    if (!js::ParseDebugMetadata(cx, opts, &privateValue,
+                                &elementAttributeName)) {
+      return false;
+    }
   }
 
-  if (stencilObj->stencil()->canLazilyParse !=
-      frontend::CanLazilyParse(options)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_STENCIL_OPTIONS_MISMATCH);
+  bool useDebugMetadata = !privateValue.isUndefined() || elementAttributeName;
+
+  JS::InstantiateOptions instantiateOptions(options);
+  if (useDebugMetadata) {
+    instantiateOptions.hideScriptFromDebugger = true;
+  }
+  RootedScript script(cx, JS::InstantiateGlobalStencil(cx, instantiateOptions,
+                                                       stencilObj->stencil()));
+  if (!script) {
     return false;
   }
 
-  /* Prepare the CompilationStencil for decoding. */
-  Rooted<frontend::CompilationInput> input(cx,
-                                           frontend::CompilationInput(options));
-  if (!input.get().initForGlobal(cx)) {
-    return false;
+  if (useDebugMetadata) {
+    instantiateOptions.hideScriptFromDebugger = false;
+    if (!JS::UpdateDebugMetadata(cx, script, instantiateOptions, privateValue,
+                                 elementAttributeName, nullptr, nullptr)) {
+      return false;
+    }
   }
 
-  /* Instantiate the stencil. */
-  Rooted<frontend::CompilationGCOutput> output(cx);
-  if (!frontend::CompilationStencil::instantiateStencils(
-          cx, input.get(), *stencilObj->stencil(), output.get())) {
-    return false;
-  }
-
-  /* Obtain the JSScript and evaluate it. */
-  RootedScript script(cx, output.get().script);
   RootedValue retVal(cx);
   if (!JS_ExecuteScript(cx, script, &retVal)) {
     return false;
@@ -6409,6 +6430,8 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
 
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
+  Rooted<JS::Value> privateValue(cx);
+  Rooted<JSString*> elementAttributeName(cx);
   if (args.length() == 2) {
     if (!args[1].isObject()) {
       JS_ReportErrorASCII(cx,
@@ -6419,6 +6442,10 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
     RootedObject opts(cx, &args[1].toObject());
 
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
+      return false;
+    }
+    if (!js::ParseDebugMetadata(cx, opts, &privateValue,
+                                &elementAttributeName)) {
       return false;
     }
   }
@@ -6449,16 +6476,27 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
     return false;
   }
 
-  /* Instantiate the stencil. */
-  Rooted<frontend::CompilationGCOutput> output(cx);
-  if (!frontend::CompilationStencil::instantiateStencils(
-          cx, input.get(), stencil, output.get())) {
+  bool useDebugMetadata = !privateValue.isUndefined() || elementAttributeName;
+
+  JS::InstantiateOptions instantiateOptions(options);
+  if (useDebugMetadata) {
+    instantiateOptions.hideScriptFromDebugger = true;
+  }
+  RootedScript script(
+      cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, &stencil));
+  if (!script) {
     return false;
   }
 
-  /* Obtain the JSScript and evaluate it. */
-  RootedScript script(cx, output.get().script);
-  RootedValue retVal(cx, UndefinedValue());
+  if (useDebugMetadata) {
+    instantiateOptions.hideScriptFromDebugger = false;
+    if (!JS::UpdateDebugMetadata(cx, script, instantiateOptions, privateValue,
+                                 elementAttributeName, nullptr, nullptr)) {
+      return false;
+    }
+  }
+
+  RootedValue retVal(cx);
   if (!JS_ExecuteScript(cx, script, &retVal)) {
     return false;
   }
@@ -8201,6 +8239,10 @@ gc::ZealModeHelpText),
 "isAsmJSFunction(fn)",
 "  Returns whether the given value is a nested function in an asm.js module that has been\n"
 "  both compile- and link-time validated."),
+
+    JS_FN_HELP("isAvxPresent", IsAvxPresent, 0, 0,
+"isAvxPresent(fn)",
+"  Returns whether AVX is present and enabled."),
 
     JS_FN_HELP("wasmIsSupported", WasmIsSupported, 0, 0,
 "wasmIsSupported()",

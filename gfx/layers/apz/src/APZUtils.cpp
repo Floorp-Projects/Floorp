@@ -73,9 +73,7 @@ bool AboutToCheckerboard(const FrameMetrics& aPaintedMetrics,
   // The main-thread code to compute the painted area can introduce some
   // rounding error due to multiple unit conversions, so we inflate the rect by
   // one app unit to account for that.
-  CSSRect painted = (aPaintedMetrics.GetCriticalDisplayPort().IsEmpty()
-                         ? aPaintedMetrics.GetDisplayPort()
-                         : aPaintedMetrics.GetCriticalDisplayPort()) +
+  CSSRect painted = aPaintedMetrics.GetDisplayPort() +
                     aPaintedMetrics.GetLayoutScrollOffset();
   painted.Inflate(CSSMargin::FromAppUnits(nsMargin(1, 1, 1, 1)));
 

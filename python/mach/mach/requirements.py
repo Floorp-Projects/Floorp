@@ -13,7 +13,7 @@ Thunderbird requirements definitions cannot include PyPI packages.
 
 
 class PthSpecifier:
-    def __init__(self, path):
+    def __init__(self, path: str):
         self.path = path
 
 
@@ -60,10 +60,10 @@ class MachEnvRequirements:
         self.pypi_optional_requirements = []
         self.vendored_requirements = []
 
-    def pths_as_absolute(self, topsrcdir):
+    def pths_as_absolute(self, topsrcdir: str):
         return sorted(
             [
-                os.path.normcase(os.path.join(topsrcdir, pth.path))
+                os.path.normcase(Path(topsrcdir) / pth.path)
                 for pth in (self.pth_requirements + self.vendored_requirements)
             ]
         )
@@ -71,33 +71,31 @@ class MachEnvRequirements:
     @classmethod
     def from_requirements_definition(
         cls,
-        topsrcdir,
+        topsrcdir: str,
         is_thunderbird,
-        is_mach_or_build_site,
+        only_strict_requirements,
         requirements_definition,
     ):
         requirements = cls()
         _parse_mach_env_requirements(
             requirements,
-            requirements_definition,
-            topsrcdir,
+            Path(requirements_definition),
+            Path(topsrcdir),
             is_thunderbird,
-            is_mach_or_build_site,
+            only_strict_requirements,
         )
         return requirements
 
 
 def _parse_mach_env_requirements(
     requirements_output,
-    root_requirements_path,
-    topsrcdir,
+    root_requirements_path: Path,
+    topsrcdir: Path,
     is_thunderbird,
-    is_mach_or_build_site,
+    only_strict_requirements,
 ):
-    topsrcdir = Path(topsrcdir)
-
     def _parse_requirements_line(
-        current_requirements_path, line, line_number, is_thunderbird_packages_txt
+        current_requirements_path: Path, line, line_number, is_thunderbird_packages_txt
     ):
         line = line.strip()
         if not line or line.startswith("#"):
@@ -110,26 +108,12 @@ def _parse_mach_env_requirements(
                 # In sparse checkouts, not all paths will be populated.
                 return
 
-            for child in path.iterdir():
-                if child.name.endswith(".dist-info"):
-                    raise Exception(
-                        f'The "pth:" pointing to "{path}" has a ".dist-info" file.\n'
-                        f'Perhaps "{current_requirements_path}:{line_number}" '
-                        'should change to start with "vendored:" instead of "pth:".'
-                    )
-                if child.name == "PKG-INFO":
-                    raise Exception(
-                        f'The "pth:" pointing to "{path}" has a "PKG-INFO" file.\n'
-                        f'Perhaps "{current_requirements_path}:{line_number}" '
-                        'should change to start with "vendored:" instead of "pth:".'
-                    )
-
             requirements_output.pth_requirements.append(PthSpecifier(params))
         elif action == "vendored":
             requirements_output.vendored_requirements.append(PthSpecifier(params))
         elif action == "packages.txt":
             _parse_requirements_definition_file(
-                os.path.join(topsrcdir, params),
+                topsrcdir / params,
                 is_thunderbird_packages_txt,
             )
         elif action == "pypi":
@@ -137,7 +121,9 @@ def _parse_mach_env_requirements(
                 raise Exception(THUNDERBIRD_PYPI_ERROR)
 
             requirements_output.pypi_requirements.append(
-                PypiSpecifier(_parse_package_specifier(params, is_mach_or_build_site))
+                PypiSpecifier(
+                    _parse_package_specifier(params, only_strict_requirements)
+                )
             )
         elif action == "pypi-optional":
             if is_thunderbird_packages_txt:
@@ -153,25 +139,25 @@ def _parse_mach_env_requirements(
             requirements_output.pypi_optional_requirements.append(
                 PypiOptionalSpecifier(
                     repercussion,
-                    _parse_package_specifier(raw_requirement, is_mach_or_build_site),
+                    _parse_package_specifier(raw_requirement, only_strict_requirements),
                 )
             )
         elif action == "thunderbird-packages.txt":
             if is_thunderbird:
                 _parse_requirements_definition_file(
-                    os.path.join(topsrcdir, params), is_thunderbird_packages_txt=True
+                    topsrcdir / params, is_thunderbird_packages_txt=True
                 )
         else:
             raise Exception("Unknown requirements definition action: %s" % action)
 
     def _parse_requirements_definition_file(
-        requirements_path, is_thunderbird_packages_txt
+        requirements_path: Path, is_thunderbird_packages_txt
     ):
         """Parse requirements file into list of requirements"""
-        if not os.path.isfile(requirements_path):
+        if not requirements_path.is_file():
             raise Exception(f'Missing requirements file at "{requirements_path}"')
 
-        requirements_output.requirements_paths.append(requirements_path)
+        requirements_output.requirements_paths.append(str(requirements_path))
 
         with open(requirements_path, "r") as requirements_file:
             lines = [line for line in requirements_file]
@@ -184,14 +170,16 @@ def _parse_mach_env_requirements(
     _parse_requirements_definition_file(root_requirements_path, False)
 
 
-def _parse_package_specifier(raw_requirement, is_mach_or_build_site):
+class UnexpectedFlexibleRequirementException(Exception):
+    def __init__(self, raw_requirement):
+        self.raw_requirement = raw_requirement
+
+
+def _parse_package_specifier(raw_requirement, only_strict_requirements):
     requirement = Requirement(raw_requirement)
 
-    if not is_mach_or_build_site and [
+    if only_strict_requirements and [
         s for s in requirement.specifier if s.operator != "=="
     ]:
-        raise Exception(
-            'All sites except for "mach" and "build" must pin pypi package '
-            f'versions in the format "package==version", found "{raw_requirement}"'
-        )
+        raise UnexpectedFlexibleRequirementException(raw_requirement)
     return requirement

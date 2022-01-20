@@ -44,7 +44,7 @@ pub mod pings {
     #[allow(non_upper_case_globals)]
     pub static events: Lazy<PingType> = Lazy::new(|| {
         PingType::new(
-            "metrics",
+            "events",
             true,
             false,
             vec![

@@ -2,20 +2,22 @@
 
 use {codec, AsyncRead, AsyncWrite};
 
-use bytes::{Buf, BufMut, BytesMut, IntoBuf};
 use bytes::buf::Chain;
+use bytes::{Buf, BufMut, BytesMut, IntoBuf};
 
-use futures::{Async, AsyncSink, Stream, Sink, StartSend, Poll};
+use futures::{Async, AsyncSink, Poll, Sink, StartSend, Stream};
 
-use std::{cmp, fmt};
 use std::error::Error as StdError;
 use std::io::{self, Cursor};
+use std::{cmp, fmt};
 
 /// Configure length delimited `FramedRead`, `FramedWrite`, and `Framed` values.
 ///
 /// `Builder` enables constructing configured length delimited framers. Note
 /// that not all configuration settings apply to both encoding and decoding. See
 /// the documentation for specific methods for more detail.
+#[deprecated(since = "0.1.8", note = "Moved to tokio-codec")]
+#[doc(hidden)]
 #[derive(Debug, Clone, Copy)]
 pub struct Builder {
     // Maximum frame length
@@ -44,6 +46,8 @@ pub struct Builder {
 /// See [module level] documentation for more detail.
 ///
 /// [module level]: index.html
+#[deprecated(since = "0.1.8", note = "Moved to tokio-codec")]
+#[doc(hidden)]
 pub struct Framed<T, B: IntoBuf = BytesMut> {
     inner: FramedRead<FramedWrite<T, B>>,
 }
@@ -53,12 +57,16 @@ pub struct Framed<T, B: IntoBuf = BytesMut> {
 /// See [module level] documentation for more detail.
 ///
 /// [module level]: index.html
+#[deprecated(since = "0.1.8", note = "Moved to tokio-codec")]
+#[doc(hidden)]
 #[derive(Debug)]
 pub struct FramedRead<T> {
     inner: codec::FramedRead<T, Decoder>,
 }
 
 /// An error when the number of bytes read is more than max frame length.
+#[deprecated(since = "0.1.8", note = "Moved to tokio-codec")]
+#[doc(hidden)]
 pub struct FrameTooBig {
     _priv: (),
 }
@@ -83,6 +91,8 @@ enum DecodeState {
 /// See [module level] documentation for more detail.
 ///
 /// [module level]: index.html
+#[deprecated(since = "0.1.8", note = "Moved to tokio-codec")]
+#[doc(hidden)]
 pub struct FramedWrite<T, B: IntoBuf = BytesMut> {
     // I/O type
     inner: T,
@@ -160,8 +170,9 @@ impl<T: AsyncWrite, B: IntoBuf> Sink for Framed<T, B> {
 }
 
 impl<T, B: IntoBuf> fmt::Debug for Framed<T, B>
-    where T: fmt::Debug,
-          B::Buf: fmt::Debug,
+where
+    T: fmt::Debug,
+    B::Buf: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Framed")
@@ -299,9 +310,10 @@ impl Decoder {
             };
 
             if n > self.builder.max_frame_len as u64 {
-                return Err(io::Error::new(io::ErrorKind::InvalidData, FrameTooBig {
-                    _priv: (),
-                }));
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    FrameTooBig { _priv: () },
+                ));
             }
 
             // The check above ensures there is no overflow
@@ -317,7 +329,12 @@ impl Decoder {
             // Error handling
             match n {
                 Some(n) => n,
-                None => return Err(io::Error::new(io::ErrorKind::InvalidInput, "provided length would overflow after adjustment")),
+                None => {
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidInput,
+                        "provided length would overflow after adjustment",
+                    ));
+                }
             }
         };
 
@@ -351,19 +368,17 @@ impl codec::Decoder for Decoder {
 
     fn decode(&mut self, src: &mut BytesMut) -> io::Result<Option<BytesMut>> {
         let n = match self.state {
-            DecodeState::Head => {
-                match try!(self.decode_head(src)) {
-                    Some(n) => {
-                        self.state = DecodeState::Data(n);
-                        n
-                    }
-                    None => return Ok(None),
+            DecodeState::Head => match self.decode_head(src)? {
+                Some(n) => {
+                    self.state = DecodeState::Data(n);
+                    n
                 }
-            }
+                None => return Ok(None),
+            },
             DecodeState::Data(n) => n,
         };
 
-        match try!(self.decode_data(n, src)) {
+        match self.decode_data(n, src)? {
             Some(data) => {
                 // Update the decode state
                 self.state = DecodeState::Head;
@@ -445,7 +460,12 @@ impl<T: AsyncWrite, B: IntoBuf> FramedWrite<T, B> {
 
         loop {
             let frame = self.frame.as_mut().unwrap();
-            try_ready!(self.inner.write_buf(frame));
+            if try_ready!(self.inner.write_buf(frame)) == 0 {
+                return Err(io::Error::new(
+                    io::ErrorKind::WriteZero,
+                    "failed to write frame to transport",
+                ));
+            }
 
             if !frame.has_remaining() {
                 break;
@@ -462,9 +482,10 @@ impl<T: AsyncWrite, B: IntoBuf> FramedWrite<T, B> {
         let n = buf.remaining();
 
         if n > self.builder.max_frame_len {
-            return Err(io::Error::new(io::ErrorKind::InvalidInput, FrameTooBig {
-                _priv: (),
-            }));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                FrameTooBig { _priv: () },
+            ));
         }
 
         // Adjust `n` with bounds checking
@@ -477,7 +498,12 @@ impl<T: AsyncWrite, B: IntoBuf> FramedWrite<T, B> {
         // Error handling
         let n = match n {
             Some(n) => n,
-            None => return Err(io::Error::new(io::ErrorKind::InvalidInput, "provided length would overflow after adjustment")),
+            None => {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "provided length would overflow after adjustment",
+                ));
+            }
         };
 
         if self.builder.length_field_is_big_endian {
@@ -499,11 +525,11 @@ impl<T: AsyncWrite, B: IntoBuf> Sink for FramedWrite<T, B> {
     type SinkError = io::Error;
 
     fn start_send(&mut self, item: B) -> StartSend<B, io::Error> {
-        if !try!(self.do_write()).is_ready() {
+        if !self.do_write()?.is_ready() {
             return Ok(AsyncSink::NotReady(item));
         }
 
-        try!(self.set_frame(item.into_buf()));
+        self.set_frame(item.into_buf())?;
 
         Ok(AsyncSink::Ready)
     }
@@ -550,8 +576,9 @@ impl<T: AsyncRead, U: IntoBuf> AsyncRead for FramedWrite<T, U> {
 }
 
 impl<T, B: IntoBuf> fmt::Debug for FramedWrite<T, B>
-    where T: fmt::Debug,
-          B::Buf: fmt::Debug,
+where
+    T: fmt::Debug,
+    B::Buf: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("FramedWrite")
@@ -813,13 +840,17 @@ impl Builder {
     /// # }
     /// ```
     pub fn new_read<T>(&self, upstream: T) -> FramedRead<T>
-        where T: AsyncRead,
+    where
+        T: AsyncRead,
     {
         FramedRead {
-            inner: codec::FramedRead::new(upstream, Decoder {
-                builder: *self,
-                state: DecodeState::Head,
-            }),
+            inner: codec::FramedRead::new(
+                upstream,
+                Decoder {
+                    builder: *self,
+                    state: DecodeState::Head,
+                },
+            ),
         }
     }
 
@@ -842,8 +873,9 @@ impl Builder {
     /// # pub fn main() {}
     /// ```
     pub fn new_write<T, B>(&self, inner: T) -> FramedWrite<T, B>
-        where T: AsyncWrite,
-              B: IntoBuf,
+    where
+        T: AsyncWrite,
+        B: IntoBuf,
     {
         FramedWrite {
             inner: inner,
@@ -871,8 +903,9 @@ impl Builder {
     /// # pub fn main() {}
     /// ```
     pub fn new_framed<T, B>(&self, inner: T) -> Framed<T, B>
-        where T: AsyncRead + AsyncWrite,
-              B: IntoBuf
+    where
+        T: AsyncRead + AsyncWrite,
+        B: IntoBuf,
     {
         let inner = self.new_read(self.new_write(inner));
         Framed { inner: inner }
@@ -884,17 +917,16 @@ impl Builder {
     }
 
     fn get_num_skip(&self) -> usize {
-        self.num_skip.unwrap_or(self.length_field_offset + self.length_field_len)
+        self.num_skip
+            .unwrap_or(self.length_field_offset + self.length_field_len)
     }
 }
-
 
 // ===== impl FrameTooBig =====
 
 impl fmt::Debug for FrameTooBig {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("FrameTooBig")
-            .finish()
+        f.debug_struct("FrameTooBig").finish()
     }
 }
 

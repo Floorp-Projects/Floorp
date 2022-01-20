@@ -9,7 +9,7 @@ error: no rules expected the token `[`
 8 | | }
   | |_^ no rules expected this token in macro call
   |
-  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+  = note: this error originates in the macro `pin_project` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: no rules expected the token `[`
   --> $DIR/invalid.rs:17:1
@@ -23,7 +23,7 @@ error: no rules expected the token `[`
 23 | | }
    | |_^ no rules expected this token in macro call
    |
-   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `pin_project` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: cannot find attribute `pin` in this scope
   --> $DIR/invalid.rs:11:7

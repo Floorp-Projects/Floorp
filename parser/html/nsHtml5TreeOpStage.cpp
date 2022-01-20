@@ -23,6 +23,11 @@ void nsHtml5TreeOpStage::MoveOpsAndSpeculativeLoadsTo(
   aSpeculativeLoadQueue.AppendElements(std::move(mSpeculativeLoadQueue));
 }
 
+void nsHtml5TreeOpStage::MoveOpsTo(nsTArray<nsHtml5TreeOperation>& aOpQueue) {
+  mozilla::MutexAutoLock autoLock(mMutex);
+  aOpQueue.AppendElements(std::move(mOpQueue));
+}
+
 void nsHtml5TreeOpStage::MoveSpeculativeLoadsFrom(
     nsTArray<nsHtml5SpeculativeLoad>& aSpeculativeLoadQueue) {
   mozilla::MutexAutoLock autoLock(mMutex);
@@ -38,7 +43,6 @@ void nsHtml5TreeOpStage::MoveSpeculativeLoadsTo(
 #ifdef DEBUG
 void nsHtml5TreeOpStage::AssertEmpty() {
   mozilla::MutexAutoLock autoLock(mMutex);
-  // This shouldn't really need the mutex
-  NS_ASSERTION(mOpQueue.IsEmpty(), "The stage was supposed to be empty.");
+  MOZ_ASSERT(mOpQueue.IsEmpty(), "The stage was supposed to be empty.");
 }
 #endif

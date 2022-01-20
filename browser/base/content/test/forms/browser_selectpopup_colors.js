@@ -182,6 +182,8 @@ const gSelects = {
      .textShadow { text-shadow: 1px 1px 2px black; }
    </style></head><body><select id='one'>
      <option>{"color": "rgb(0, 0, 255)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>
+     <option>{"color": "rgb(0, 0, 255)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>
+     <option>{"color": "rgb(0, 0, 255)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>
      <option class="redColor">{"color": "rgb(255, 0, 0)", "backgroundColor": "-moz-Combobox"}</option>
      <option class="textShadow">{"color": "rgb(0, 0, 255)", "textShadow": "rgb(0, 0, 0) 1px 1px 2px", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>
      <option selected="true">{"end": "true"}</option>
@@ -709,55 +711,43 @@ add_task(
 
     await testSelectColors(
       "SELECT_INHERITED_COLORS_ON_OPTIONS_DONT_GET_UNIQUE_RULES_IF_RULE_SET_ON_SELECT",
-      4,
+      6,
       options
     );
 
     let stylesheetEl = document.getElementById(
       "ContentSelectDropdownStylesheet"
     );
+
     let sheet = stylesheetEl.sheet;
-    /* Check that there are no rulesets for the first option, but that
-     one exists for the second option and sets the color of that
-     option to "rgb(255, 0, 0)" */
+    /* Check that the rules are what we expect: There are three different option styles (even though there are 6 options, plus the select rules). */
+    let expectedSelectors = [
+      "#ContentSelectDropdown .ContentSelectDropdown-item-0",
+      "#ContentSelectDropdown .ContentSelectDropdown-item-1",
+      '#ContentSelectDropdown .ContentSelectDropdown-item-1:not([_moz-menuactive="true"])',
+      "#ContentSelectDropdown .ContentSelectDropdown-item-2",
+      '#ContentSelectDropdown .ContentSelectDropdown-item-2:not([_moz-menuactive="true"])',
+      "#ContentSelectDropdown > menupopup",
+      '#ContentSelectDropdown > menupopup > :is(menuitem, menucaption):not([_moz-menuactive="true"])',
+      '#ContentSelectDropdown > menupopup > :is(menuitem, menucaption)[_moz-menuactive="true"]',
+    ].sort();
 
-    function hasMatchingRuleForOption(cssRules, index, styles = {}) {
-      for (let rule of cssRules) {
-        if (rule.selectorText.includes(`:nth-child(${index})`)) {
-          if (
-            Object.keys(styles).some(key => rule.style[key] !== styles[key])
-          ) {
-            continue;
-          }
-          return true;
-        }
-      }
-      return false;
+    let actualSelectors = [...sheet.cssRules].map(r => r.selectorText).sort();
+    is(
+      actualSelectors.length,
+      expectedSelectors.length,
+      "Should have the expected number of rules"
+    );
+    for (let i = 0; i < expectedSelectors.length; ++i) {
+      is(
+        actualSelectors[i],
+        expectedSelectors[i],
+        `Selector ${i} should match`
+      );
     }
-
-    is(
-      hasMatchingRuleForOption(sheet.cssRules, 1),
-      false,
-      "There should be no rules specific to option1"
-    );
-    is(
-      hasMatchingRuleForOption(sheet.cssRules, 2, {
-        color: "rgb(255, 0, 0)",
-      }),
-      true,
-      "There should be a rule specific to option2 and it should have color: red"
-    );
-    is(
-      hasMatchingRuleForOption(sheet.cssRules, 3, {
-        "text-shadow": "rgb(0, 0, 0) 1px 1px 2px",
-      }),
-      true,
-      "There should be a rule specific to option3 and it should have text-shadow: rgb(0, 0, 0) 1px 1px 2px"
-    );
 
     let menulist = document.getElementById("ContentSelectDropdown");
     let selectPopup = menulist.menupopup;
-
     await hideSelectPopup(selectPopup, "escape");
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }

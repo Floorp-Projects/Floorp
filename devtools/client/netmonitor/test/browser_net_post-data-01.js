@@ -7,11 +7,6 @@
  * Tests if the POST requests display the correct information in the UI.
  */
 add_task(async function() {
-  // Using https-first for this test is blocked on Bug 1733420.
-  // We cannot assert status text "Och Aye" with HTTPS requests to httpd.js, instead
-  // we get "Connected"
-  await pushPref("dom.security.https_first", false);
-
   const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
   // Set a higher panel height in order to get full CodeMirror content

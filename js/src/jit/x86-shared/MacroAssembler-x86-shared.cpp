@@ -2073,13 +2073,25 @@ void MacroAssembler::copySignDouble(FloatRegister lhs, FloatRegister rhs,
                                     FloatRegister output) {
   ScratchDoubleScope scratch(*this);
 
-  double clearSignMask = mozilla::BitwiseCast<double>(INT64_MAX);
-  loadConstantDouble(clearSignMask, scratch);
-  vandpd(scratch, lhs, output);
+  // TODO Support AVX2
+  if (rhs == output) {
+    MOZ_ASSERT(lhs != rhs);
+    double keepSignMask = mozilla::BitwiseCast<double>(INT64_MIN);
+    loadConstantDouble(keepSignMask, scratch);
+    vandpd(scratch, rhs, output);
 
-  double keepSignMask = mozilla::BitwiseCast<double>(INT64_MIN);
-  loadConstantDouble(keepSignMask, scratch);
-  vandpd(rhs, scratch, scratch);
+    double clearSignMask = mozilla::BitwiseCast<double>(INT64_MAX);
+    loadConstantDouble(clearSignMask, scratch);
+    vandpd(lhs, scratch, scratch);
+  } else {
+    double clearSignMask = mozilla::BitwiseCast<double>(INT64_MAX);
+    loadConstantDouble(clearSignMask, scratch);
+    vandpd(scratch, lhs, output);
+
+    double keepSignMask = mozilla::BitwiseCast<double>(INT64_MIN);
+    loadConstantDouble(keepSignMask, scratch);
+    vandpd(rhs, scratch, scratch);
+  }
 
   vorpd(scratch, output, output);
 }
@@ -2088,13 +2100,25 @@ void MacroAssembler::copySignFloat32(FloatRegister lhs, FloatRegister rhs,
                                      FloatRegister output) {
   ScratchFloat32Scope scratch(*this);
 
-  float clearSignMask = mozilla::BitwiseCast<float>(INT32_MAX);
-  loadConstantFloat32(clearSignMask, scratch);
-  vandps(scratch, lhs, output);
+  // TODO Support AVX2
+  if (rhs == output) {
+    MOZ_ASSERT(lhs != rhs);
+    float keepSignMask = mozilla::BitwiseCast<float>(INT32_MIN);
+    loadConstantFloat32(keepSignMask, scratch);
+    vandps(scratch, output, output);
 
-  float keepSignMask = mozilla::BitwiseCast<float>(INT32_MIN);
-  loadConstantFloat32(keepSignMask, scratch);
-  vandps(rhs, scratch, scratch);
+    float clearSignMask = mozilla::BitwiseCast<float>(INT32_MAX);
+    loadConstantFloat32(clearSignMask, scratch);
+    vandps(lhs, scratch, scratch);
+  } else {
+    float clearSignMask = mozilla::BitwiseCast<float>(INT32_MAX);
+    loadConstantFloat32(clearSignMask, scratch);
+    vandps(scratch, lhs, output);
+
+    float keepSignMask = mozilla::BitwiseCast<float>(INT32_MIN);
+    loadConstantFloat32(keepSignMask, scratch);
+    vandps(rhs, scratch, scratch);
+  }
 
   vorps(scratch, output, output);
 }

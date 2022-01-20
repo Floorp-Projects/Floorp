@@ -220,14 +220,18 @@ void VideoFrameContainer::ClearFutureFrames(TimeStamp aNow) {
 }
 
 void VideoFrameContainer::ClearCachedResources() {
+  MutexAutoLock lock(mMutex);
   mImageContainer->ClearCachedResources();
 }
 
 ImageContainer* VideoFrameContainer::GetImageContainer() {
+  // Note - you'll need the lock to manipulate this.  The pointer is not
+  // modified from multiple threads, just the data pointed to by it.
   return mImageContainer;
 }
 
 double VideoFrameContainer::GetFrameDelay() {
+  MutexAutoLock lock(mMutex);
   return mImageContainer->GetPaintDelay().ToSeconds();
 }
 

@@ -278,7 +278,7 @@ class nsPACMan final : public nsIStreamLoaderObserver,
   bool mLoadPending;
   Atomic<bool, Relaxed> mShutdown;
   TimeStamp mScheduledReload;
-  uint32_t mLoadFailureCount;
+  Atomic<uint32_t, Relaxed> mLoadFailureCount;
 
   bool mInProgress;
   bool mIncludePath;

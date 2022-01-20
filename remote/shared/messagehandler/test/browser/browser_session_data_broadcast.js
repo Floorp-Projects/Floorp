@@ -10,8 +10,8 @@ const { RootMessageHandler } = ChromeUtils.import(
 const TEST_PAGE = "https://example.com/document-builder.sjs?html=tab";
 
 add_task(async function test_session_data_broadcast() {
-  const tab1 = BrowserTestUtils.addTab(gBrowser, TEST_PAGE);
-  await BrowserTestUtils.browserLoaded(tab1.linkedBrowser);
+  const tab1 = gBrowser.selectedTab;
+  await loadURL(tab1.linkedBrowser, TEST_PAGE);
   const browsingContext1 = tab1.linkedBrowser.browsingContext;
 
   const root = createRootMessageHandler("session-id-event");
@@ -87,7 +87,6 @@ add_task(async function test_session_data_broadcast() {
 
   root.destroy();
 
-  gBrowser.removeTab(tab1);
   gBrowser.removeTab(tab2);
 });
 

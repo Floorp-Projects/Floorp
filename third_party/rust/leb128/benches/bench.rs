@@ -1,7 +1,7 @@
 #![feature(test)]
 
 extern crate test;
-extern crate leb128;
+use leb128;
 
 #[bench]
 fn write_signed(b: &mut test::Bencher) {

@@ -35,6 +35,24 @@
 
 namespace mozilla {
 
+#ifdef XP_LINUX
+static void RunTestsSched(SandboxTestingChild* child) {
+  struct sched_param param_pid_0 = {};
+  child->ErrnoTest("sched_getparam(0)"_ns, true,
+                   [&] { return sched_getparam(0, &param_pid_0); });
+
+  struct sched_param param_pid_tid = {};
+  child->ErrnoTest("sched_getparam(tid)"_ns, true, [&] {
+    return sched_getparam((pid_t)syscall(__NR_gettid), &param_pid_tid);
+  });
+
+  struct sched_param param_pid_Ntid = {};
+  child->ErrnoValueTest("sched_getparam(Ntid)"_ns, false, EPERM, [&] {
+    return sched_getparam((pid_t)(syscall(__NR_gettid) - 1), &param_pid_Ntid);
+  });
+}
+#endif  // XP_LINUX
+
 void RunTestsContent(SandboxTestingChild* child) {
   MOZ_ASSERT(child, "No SandboxTestingChild*?");
 
@@ -219,6 +237,33 @@ void RunTestsRDD(SandboxTestingChild* child) {
     int rv = getrusage(RUSAGE_SELF, &res);
     return rv;
   });
+
+  child->ErrnoValueTest("unlink"_ns, false, ENOENT, [&] {
+    int rv = unlink("");
+    return rv;
+  });
+
+  child->ErrnoValueTest("unlinkat"_ns, false, ENOENT, [&] {
+    int rv = unlinkat(AT_FDCWD, "", 0);
+    return rv;
+  });
+
+  RunTestsSched(child);
+
+  child->ErrnoTest("socket"_ns, false,
+                   [] { return socket(AF_UNIX, SOCK_STREAM, 0); });
+
+  child->ErrnoTest("uname"_ns, true, [] {
+    struct utsname uts;
+    return uname(&uts);
+  });
+
+  child->ErrnoValueTest("ioctl_dma_buf"_ns, false, ENOTTY, [] {
+    // Apply the ioctl to the wrong kind of fd; it should fail with
+    // ENOTTY (rather than ENOSYS if it were blocked).
+    return ioctl(0, _IOW('b', 0, uint64_t), nullptr);
+  });
+
 #  endif  // XP_LINUX
 #else     // XP_UNIX
   child->ReportNoTests();
@@ -230,7 +275,7 @@ void RunTestsGMPlugin(SandboxTestingChild* child) {
 #ifdef XP_UNIX
 #  ifdef XP_LINUX
   struct utsname utsname_res = {};
-  child->ErrnoTest("uname"_ns, true, [&] {
+  child->ErrnoTest("uname_restricted"_ns, true, [&] {
     int rv = uname(&utsname_res);
 
     nsCString expectedSysname("Linux"_ns);
@@ -249,19 +294,7 @@ void RunTestsGMPlugin(SandboxTestingChild* child) {
   child->ErrnoTest("geteuid"_ns, true, [&] { return geteuid(); });
   child->ErrnoTest("getegid"_ns, true, [&] { return getegid(); });
 
-  struct sched_param param_pid_0 = {};
-  child->ErrnoTest("sched_getparam(0)"_ns, true,
-                   [&] { return sched_getparam(0, &param_pid_0); });
-
-  struct sched_param param_pid_tid = {};
-  child->ErrnoTest("sched_getparam(tid)"_ns, true, [&] {
-    return sched_getparam((pid_t)syscall(__NR_gettid), &param_pid_tid);
-  });
-
-  struct sched_param param_pid_Ntid = {};
-  child->ErrnoTest("sched_getparam(Ntid)"_ns, false, [&] {
-    return sched_getparam((pid_t)(syscall(__NR_gettid) - 1), &param_pid_Ntid);
-  });
+  RunTestsSched(child);
 
   std::vector<std::pair<const char*, bool>> open_tests = {
       {"/etc/ld.so.cache", true},

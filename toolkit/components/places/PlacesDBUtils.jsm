@@ -23,6 +23,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
+  PlacesPreviews: "resource://gre/modules/PlacesPreviews.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Sqlite: "resource://gre/modules/Sqlite.jsm",
 });
@@ -53,6 +54,7 @@ var PlacesDBUtils = {
       this.originFrecencyStats,
       this.incrementalVacuum,
       this.removeOldCorruptDBs,
+      this.deleteOrphanPreviews,
     ];
     let telemetryStartTime = Date.now();
     let taskStatusMap = await PlacesDBUtils.runTasks(tasks);
@@ -244,6 +246,25 @@ var PlacesDBUtils = {
         "Unable to incrementally vacuum the favicons database " + ex
       );
     });
+  },
+
+  /**
+   * Expire orphan previews that don't have a Places entry anymore.
+   *
+   * @return {Promise} resolves when done.
+   * @resolves to an array of logs for this task.
+   */
+  async deleteOrphanPreviews() {
+    let logs = [];
+    try {
+      let deleted = await PlacesPreviews.deleteOrphans();
+      if (deleted) {
+        logs.push(`Orphan previews deleted.`);
+      }
+    } catch (ex) {
+      throw new Error("Unable to delete orphan previews " + ex);
+    }
+    return logs;
   },
 
   async _getCoherenceStatements() {

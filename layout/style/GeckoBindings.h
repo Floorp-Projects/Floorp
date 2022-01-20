@@ -483,7 +483,10 @@ mozilla::StyleDefaultFontSizes Gecko_GetBaseSize(nsAtom* lang);
 
 struct GeckoFontMetrics {
   mozilla::Length mXSize;
-  mozilla::Length mChSize;  // negatives indicate not found.
+  mozilla::Length mChSize;     // negatives indicate not found.
+  mozilla::Length mCapHeight;  // negatives indicate not found.
+  mozilla::Length mIcWidth;    // negatives indicate not found.
+  mozilla::Length mAscent;
 };
 
 GeckoFontMetrics Gecko_GetFontMetrics(const nsPresContext*, bool is_vertical,

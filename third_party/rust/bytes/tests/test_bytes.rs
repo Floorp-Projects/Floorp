@@ -461,6 +461,7 @@ fn reserve_allocates_at_least_original_capacity() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore)] // Miri is too slow
 fn reserve_max_original_capacity_value() {
     const SIZE: usize = 128 * 1024;
 
@@ -608,15 +609,15 @@ fn advance_past_len() {
 
 #[test]
 // Only run these tests on little endian systems. CI uses qemu for testing
-// little endian... and qemu doesn't really support threading all that well.
-#[cfg(target_endian = "little")]
+// big endian... and qemu doesn't really support threading all that well.
+#[cfg(any(miri, target_endian = "little"))]
 fn stress() {
     // Tests promoting a buffer from a vec -> shared in a concurrent situation
     use std::sync::{Arc, Barrier};
     use std::thread;
 
     const THREADS: usize = 8;
-    const ITERS: usize = 1_000;
+    const ITERS: usize = if cfg!(miri) { 100 } else { 1_000 };
 
     for i in 0..ITERS {
         let data = [i as u8; 256];
@@ -784,6 +785,31 @@ fn bytes_mut_unsplit_empty_self() {
 }
 
 #[test]
+fn bytes_mut_unsplit_other_keeps_capacity() {
+    let mut buf = BytesMut::with_capacity(64);
+    buf.extend_from_slice(b"aabb");
+
+    // non empty other created "from" buf
+    let mut other = buf.split_off(buf.len());
+    other.extend_from_slice(b"ccddee");
+    buf.unsplit(other);
+
+    assert_eq!(buf.capacity(), 64);
+}
+
+#[test]
+fn bytes_mut_unsplit_empty_other_keeps_capacity() {
+    let mut buf = BytesMut::with_capacity(64);
+    buf.extend_from_slice(b"aabbccddee");
+
+    // empty other created "from" buf
+    let other = buf.split_off(buf.len());
+    buf.unsplit(other);
+
+    assert_eq!(buf.capacity(), 64);
+}
+
+#[test]
 fn bytes_mut_unsplit_arc_different() {
     let mut buf = BytesMut::with_capacity(64);
     buf.extend_from_slice(b"aaaabbbbeeee");
@@ -912,20 +938,20 @@ fn bytes_buf_mut_advance() {
     let mut bytes = BytesMut::with_capacity(1024);
 
     unsafe {
-        let ptr = bytes.bytes_mut().as_ptr();
-        assert_eq!(1024, bytes.bytes_mut().len());
+        let ptr = bytes.chunk_mut().as_mut_ptr();
+        assert_eq!(1024, bytes.chunk_mut().len());
 
         bytes.advance_mut(10);
 
-        let next = bytes.bytes_mut().as_ptr();
-        assert_eq!(1024 - 10, bytes.bytes_mut().len());
+        let next = bytes.chunk_mut().as_mut_ptr();
+        assert_eq!(1024 - 10, bytes.chunk_mut().len());
         assert_eq!(ptr.offset(10), next);
 
         // advance to the end
         bytes.advance_mut(1024 - 10);
 
         // The buffer size is doubled
-        assert_eq!(1024, bytes.bytes_mut().len());
+        assert_eq!(1024, bytes.chunk_mut().len());
     }
 }
 
@@ -959,4 +985,20 @@ fn bytes_with_capacity_but_empty() {
     // See https://github.com/tokio-rs/bytes/issues/340
     let vec = Vec::with_capacity(1);
     let _ = Bytes::from(vec);
+}
+
+#[test]
+fn bytes_put_bytes() {
+    let mut bytes = BytesMut::new();
+    bytes.put_u8(17);
+    bytes.put_bytes(19, 2);
+    assert_eq!([17, 19, 19], bytes.as_ref());
+}
+
+#[test]
+fn box_slice_empty() {
+    // See https://github.com/tokio-rs/bytes/issues/340
+    let empty: Box<[u8]> = Default::default();
+    let b = Bytes::from(empty);
+    assert!(b.is_empty());
 }

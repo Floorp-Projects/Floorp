@@ -62,7 +62,6 @@ impl<W: AsyncWrite, Item: AsRef<[u8]>> Sink<Item> for IntoSink<W, Item> {
         Poll::Ready(Ok(()))
     }
 
-    #[allow(clippy::debug_assert_with_mut_call)]
     fn start_send(self: Pin<&mut Self>, item: Item) -> Result<(), Self::Error> {
         debug_assert!(self.buffer.is_none());
         *self.project().buffer = Some(Block { offset: 0, bytes: item });

@@ -8,6 +8,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/MIDIAccessManager.h"
 #include "mozilla/dom/MIDIOptionsBinding.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsIGlobalObject.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
@@ -86,6 +87,20 @@ MIDIPermissionRequest::Run() {
   // If we already have sysex perms, allow.
   if (nsContentUtils::IsExactSitePermAllow(mPrincipal, "midi-sysex"_ns)) {
     Allow(JS::UndefinedHandleValue);
+    return NS_OK;
+  }
+
+  // If midi is addon-gated, the we only pass through to ask permission if
+  // the permission already exists.  This allows for the user possibly changing
+  // the permission to ask, or deny and having the existing UX properly handle
+  // the outcome.
+  if (
+#ifndef RELEASE_OR_BETA
+      StaticPrefs::dom_webmidi_gated() &&
+#endif
+      !nsContentUtils::HasExactSitePerm(mPrincipal, "midi"_ns) &&
+      !nsContentUtils::HasExactSitePerm(mPrincipal, "midi-sysex"_ns)) {
+    Cancel();
     return NS_OK;
   }
 

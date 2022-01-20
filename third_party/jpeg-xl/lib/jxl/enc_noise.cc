@@ -74,12 +74,6 @@ class NoiseHistogram {
   int Get(const float x) const { return bins[Index(x)]; }
   int Bin(const size_t bin) const { return bins[bin]; }
 
-  void Print() const {
-    for (unsigned int bin : bins) {
-      printf("%d\n", bin);
-    }
-  }
-
   int Mode() const {
     size_t max_idx = 0;
     for (size_t i = 0; i < kBins; i++) {

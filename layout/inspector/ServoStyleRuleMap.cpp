@@ -85,12 +85,13 @@ void ServoStyleRuleMap::RuleRemoved(StyleSheet& aStyleSheet,
     case StyleCssRuleType::Import:
     case StyleCssRuleType::Media:
     case StyleCssRuleType::Supports:
-    case StyleCssRuleType::Layer:
+    case StyleCssRuleType::LayerBlock:
     case StyleCssRuleType::Document: {
       // See the comment in StyleSheetRemoved.
       mTable.Clear();
       break;
     }
+    case StyleCssRuleType::LayerStatement:
     case StyleCssRuleType::FontFace:
     case StyleCssRuleType::Page:
     case StyleCssRuleType::Keyframes:
@@ -118,7 +119,7 @@ void ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule) {
       mTable.InsertOrUpdate(rule.Raw(), &rule);
       break;
     }
-    case StyleCssRuleType::Layer:
+    case StyleCssRuleType::LayerBlock:
     case StyleCssRuleType::Media:
     case StyleCssRuleType::Supports:
     case StyleCssRuleType::Document: {
@@ -134,6 +135,7 @@ void ServoStyleRuleMap::FillTableFromRule(css::Rule& aRule) {
       FillTableFromStyleSheet(*rule.GetStyleSheet());
       break;
     }
+    case StyleCssRuleType::LayerStatement:
     case StyleCssRuleType::FontFace:
     case StyleCssRuleType::Page:
     case StyleCssRuleType::Keyframes:

@@ -26,7 +26,6 @@
         return getUserMedia({
           video: { mediaSource: "browser",
                    scrollWithPage: true },
-          fake: false
         });
       })
       .then(stream => {
@@ -41,7 +40,6 @@
           viewportWidth: 100,
           viewportHeight: 100
         },
-        fake: false
       }))
       .then(stream => {
         var playback = new MediaStreamPlayback(testVideo, stream);

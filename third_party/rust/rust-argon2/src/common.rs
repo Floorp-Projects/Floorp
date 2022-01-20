@@ -13,7 +13,7 @@ pub const DEF_LANES: u32 = 1;
 pub const MIN_LANES: u32 = 1;
 
 /// Maximum number of lanes (degree of parallelism).
-pub const MAX_LANES: u32 = 0x00FFFFFF;
+pub const MAX_LANES: u32 = 0x00FF_FFFF;
 
 /// Number of synchronization points between lanes per pass.
 pub const SYNC_POINTS: u32 = 4;
@@ -25,7 +25,7 @@ pub const DEF_HASH_LENGTH: u32 = 32;
 pub const MIN_HASH_LENGTH: u32 = 4;
 
 /// Maximum digest size in bytes.
-pub const MAX_HASH_LENGTH: u32 = 0xFFFFFFFF;
+pub const MAX_HASH_LENGTH: u32 = 0xFFFF_FFFF;
 
 /// Default number of memory blocks (2^12).
 pub const DEF_MEMORY: u32 = 4096;
@@ -37,7 +37,7 @@ pub const MIN_MEMORY: u32 = 2 * SYNC_POINTS;
 #[cfg(target_pointer_width = "32")]
 pub const MAX_MEMORY: u32 = 0x200000;
 #[cfg(target_pointer_width = "64")]
-pub const MAX_MEMORY: u32 = 0xFFFFFFFF;
+pub const MAX_MEMORY: u32 = 0xFFFF_FFFF;
 
 /// Default number of passes.
 pub const DEF_TIME: u32 = 3;
@@ -46,31 +46,31 @@ pub const DEF_TIME: u32 = 3;
 pub const MIN_TIME: u32 = 1;
 
 /// Maximum number of passes.
-pub const MAX_TIME: u32 = 0xFFFFFFFF;
+pub const MAX_TIME: u32 = 0xFFFF_FFFF;
 
 /// Minimum password length in bytes.
 pub const MIN_PWD_LENGTH: u32 = 0;
 
 /// Maximum password length in bytes.
-pub const MAX_PWD_LENGTH: u32 = 0xFFFFFFFF;
+pub const MAX_PWD_LENGTH: u32 = 0xFFFF_FFFF;
 
 /// Minimum associated data length in bytes.
 pub const MIN_AD_LENGTH: u32 = 0;
 
 /// Maximum associated data length in bytes.
-pub const MAX_AD_LENGTH: u32 = 0xFFFFFFFF;
+pub const MAX_AD_LENGTH: u32 = 0xFFFF_FFFF;
 
 /// Minimum salt length in bytes.
 pub const MIN_SALT_LENGTH: u32 = 8;
 
 /// Maximum salt length in bytes.
-pub const MAX_SALT_LENGTH: u32 = 0xFFFFFFFF;
+pub const MAX_SALT_LENGTH: u32 = 0xFFFF_FFFF;
 
 /// Minimum key length in bytes.
 pub const MIN_SECRET_LENGTH: u32 = 0;
 
 /// Maximum key length in bytes.
-pub const MAX_SECRET_LENGTH: u32 = 0xFFFFFFFF;
+pub const MAX_SECRET_LENGTH: u32 = 0xFFFF_FFFF;
 
 /// Memory block size in bytes.
 pub const BLOCK_SIZE: usize = 1024;

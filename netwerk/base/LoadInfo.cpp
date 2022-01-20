@@ -522,6 +522,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mPrincipalToInherit(rhs.mPrincipalToInherit),
       mTopLevelPrincipal(rhs.mTopLevelPrincipal),
       mResultPrincipalURI(rhs.mResultPrincipalURI),
+      mChannelCreationOriginalURI(rhs.mChannelCreationOriginalURI),
       mCookieJarSettings(rhs.mCookieJarSettings),
       mCspToInherit(rhs.mCspToInherit),
       mSandboxedNullPrincipalID(rhs.mSandboxedNullPrincipalID),
@@ -1775,6 +1776,18 @@ LoadInfo::GetResultPrincipalURI(nsIURI** aURI) {
 NS_IMETHODIMP
 LoadInfo::SetResultPrincipalURI(nsIURI* aURI) {
   mResultPrincipalURI = aURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetChannelCreationOriginalURI(nsIURI** aURI) {
+  *aURI = do_AddRef(mChannelCreationOriginalURI).take();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetChannelCreationOriginalURI(nsIURI* aURI) {
+  mChannelCreationOriginalURI = aURI;
   return NS_OK;
 }
 

@@ -1,7 +1,6 @@
 {
 	"name":         "__MSG_name__",
 	"description":  "__MSG_description__",
-	"icons":        {"128": "i.svg"},
 	"version":      "1",
 	"background": {
     "scripts": [

@@ -1080,6 +1080,7 @@ nsIFrame* AccessibleCaretManager::GetFrameForFirstRangeStartOrLastRangeEnd(
     nodeOffset = range->StartOffset();
     hint = CARET_ASSOCIATE_AFTER;
   } else {
+    MOZ_ASSERT(selection->RangeCount() > 0);
     range = selection->GetRangeAt(selection->RangeCount() - 1);
     startNode = range->GetEndContainer();
     endNode = range->GetStartContainer();
@@ -1153,8 +1154,10 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
 
   // Compare the active caret's new position (aOffsets) to the inactive caret's
   // position.
-  const Maybe<int32_t> cmpToInactiveCaretPos = nsContentUtils::ComparePoints(
-      aOffsets.content, aOffsets.StartOffset(), content, contentOffset);
+  NS_ASSERTION(contentOffset >= 0, "contentOffset should not be negative");
+  const Maybe<int32_t> cmpToInactiveCaretPos =
+      nsContentUtils::ComparePoints_AllowNegativeOffsets(
+          aOffsets.content, aOffsets.StartOffset(), content, contentOffset);
   if (NS_WARN_IF(!cmpToInactiveCaretPos)) {
     // Potentially handle this properly when Selection across Shadow DOM
     // boundary is implemented
@@ -1173,9 +1176,12 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
   }
 
   // Compare the active caret's new position (aOffsets) to the limit.
+  NS_ASSERTION(limit.mContentOffset >= 0,
+               "limit.mContentOffset should not be negative");
   const Maybe<int32_t> cmpToLimit =
-      nsContentUtils::ComparePoints(aOffsets.content, aOffsets.StartOffset(),
-                                    limit.mResultContent, limit.mContentOffset);
+      nsContentUtils::ComparePoints_AllowNegativeOffsets(
+          aOffsets.content, aOffsets.StartOffset(), limit.mResultContent,
+          limit.mContentOffset);
   if (NS_WARN_IF(!cmpToLimit)) {
     // Potentially handle this properly when Selection across Shadow DOM
     // boundary is implemented

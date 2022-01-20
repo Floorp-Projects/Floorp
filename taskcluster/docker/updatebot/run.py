@@ -19,7 +19,7 @@ import requests
 import subprocess
 import taskcluster
 
-# Bump this number when you need to cause a commit for the job to re-run: 20
+# Bump this number when you need to cause a commit for the job to re-run: 21
 
 if len(sys.argv) < 3:
     print("Usage:", sys.argv[0], "gecko-dev-path updatebot-path [moz-fetches-dir]")

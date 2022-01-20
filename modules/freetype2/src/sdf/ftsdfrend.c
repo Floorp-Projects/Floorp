@@ -298,8 +298,15 @@
       goto Exit;
     }
 
+    /* the rows and pitch must be valid after presetting the */
+    /* bitmap using outline                                  */
     if ( !bitmap->rows || !bitmap->pitch )
+    {
+      FT_ERROR(( "ft_sdf_render: failed to preset bitmap\n" ));
+
+      error = FT_THROW( Cannot_Render_Glyph );
       goto Exit;
+    }
 
     /* the padding will simply be equal to the `spread' */
     x_pad = sdf_module->spread;
@@ -350,6 +357,10 @@
     error = render->raster_render( render->raster,
                                    (const FT_Raster_Params*)&params );
 
+    /* transform the outline back to the original state */
+    if ( x_shift || y_shift )
+      FT_Outline_Translate( outline, -x_shift, -y_shift );
+
   Exit:
     if ( !error )
     {
@@ -361,9 +372,6 @@
       FT_FREE( bitmap->buffer );
       slot->internal->flags &= ~FT_GLYPH_OWN_BITMAP;
     }
-
-    if ( x_shift || y_shift )
-      FT_Outline_Translate( outline, -x_shift, -y_shift );
 
     return error;
   }
@@ -506,8 +514,24 @@
       goto Exit;
     }
 
-    if ( !bitmap->rows || !bitmap->pitch )
+    /* Do not generate SDF if the bitmap is not owned by the       */
+    /* glyph: it might be that the source buffer is already freed. */
+    if ( !( slot->internal->flags & FT_GLYPH_OWN_BITMAP ) )
+    {
+      FT_ERROR(( "ft_bsdf_render: can't generate SDF from"
+                 " unowned source bitmap\n" ));
+
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
+    }
+
+    if ( !bitmap->rows || !bitmap->pitch )
+    {
+      FT_ERROR(( "ft_bsdf_render: invalid bitmap size\n" ));
+
+      error = FT_THROW( Invalid_Argument );
+      goto Exit;
+    }
 
     FT_Bitmap_New( &target );
 

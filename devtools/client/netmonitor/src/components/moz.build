@@ -4,6 +4,7 @@
 
 DIRS += [
     "messages",
+    "new-request",
     "previews",
     "request-blocking",
     "request-details",

@@ -97,7 +97,7 @@ impl super::Adapter {
             device: desc.DeviceId as usize,
             device_type: if (desc.Flags & dxgi::DXGI_ADAPTER_FLAG_SOFTWARE) != 0 {
                 workarounds.avoid_cpu_descriptor_overwrites = true;
-                wgt::DeviceType::VirtualGpu
+                wgt::DeviceType::Cpu
             } else if features_architecture.CacheCoherentUMA != 0 {
                 wgt::DeviceType::IntegratedGpu
             } else {
@@ -185,7 +185,8 @@ impl super::Adapter {
             | wgt::Features::VERTEX_WRITABLE_STORAGE
             | wgt::Features::TIMESTAMP_QUERY
             | wgt::Features::TEXTURE_COMPRESSION_BC
-            | wgt::Features::CLEAR_COMMANDS;
+            | wgt::Features::CLEAR_COMMANDS
+            | wgt::Features::TEXTURE_FORMAT_16BIT_NORM;
         //TODO: in order to expose this, we need to run a compute shader
         // that extract the necessary statistics out of the D3D12 result.
         // Alternatively, we could allocate a buffer for the query set,
@@ -247,12 +248,15 @@ impl super::Adapter {
                     min_uniform_buffer_offset_alignment:
                         d3d12::D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT,
                     min_storage_buffer_offset_alignment: 4,
+                    max_inter_stage_shader_components: base.max_inter_stage_shader_components,
+                    max_compute_workgroup_storage_size: base.max_compute_workgroup_storage_size, //TODO?
+                    max_compute_invocations_per_workgroup:
+                        d3d12::D3D12_CS_4_X_THREAD_GROUP_MAX_THREADS_PER_GROUP,
                     max_compute_workgroup_size_x: d3d12::D3D12_CS_THREAD_GROUP_MAX_X,
                     max_compute_workgroup_size_y: d3d12::D3D12_CS_THREAD_GROUP_MAX_Y,
                     max_compute_workgroup_size_z: d3d12::D3D12_CS_THREAD_GROUP_MAX_Z,
                     max_compute_workgroups_per_dimension:
                         d3d12::D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION,
-                    // TODO?
                 },
                 alignments: crate::Alignments {
                     buffer_copy_offset: wgt::BufferSize::new(

@@ -13,6 +13,7 @@ license = "MIT OR Apache-2.0"
 
 [features]
 default = []
+angle = ["hal/gles"]
 # Enable API tracing
 trace = ["ron", "serde", "wgt/trace", "arrayvec/serde", "naga/serialize"]
 # Enable API replaying
@@ -29,7 +30,7 @@ fxhash = "0.2"
 log = "0.4"
 parking_lot = "0.11"
 profiling = { version = "1", default-features = false }
-raw-window-handle = { version = "0.3", optional = true }
+raw-window-handle = { version = "0.4", optional = true }
 ron = { version = "0.7", optional = true }
 serde = { version = "1.0", features = ["serde_derive"], optional = true }
 smallvec = "1"
@@ -37,7 +38,7 @@ thiserror = "1"
 
 [dependencies.naga]
 git = "https://github.com/gfx-rs/naga"
-rev = "29571cc"
+rev = "8ffd6ba"
 #version = "0.7"
 features = ["span", "validate", "wgsl-in"]
 

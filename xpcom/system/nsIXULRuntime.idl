@@ -19,8 +19,8 @@ uint32_t GetMaxWebProcessCount();
 // global value of the pref. For other use cases, you should use
 // nsILoadContext::UseRemoteSubframes instead. This will also check for special
 // conditions, like safe mode, which may require fission to be disabled, or
-// environment variable MOZ_FORCE_ENABLE_FISSION, used by mach run to
-// enable fission regardless of pref settings.
+// environment variables MOZ_FORCE_ENABLE_FISSION and MOZ_FORCE_DISABLE_FISSION,
+// used by mach run to enable/disable fission regardless of pref settings.
 bool FissionAutostart();
 
 // Returns whether or not we are currently enrolled in the fission experiment.
@@ -88,25 +88,28 @@ interface nsIXULRuntime : nsISupports
     // Fission is enabled because the `MOZ_FORCE_ENABLE_FISSION` environment
     // variable is set.
     eFissionEnabledByEnv = 4,
+    // Fission is disabled because the `MOZ_FORCE_DISABLE_FISSION` environment
+    // variable is set.
+    eFissionDisabledByEnv = 5,
     // Fission is disabled because the current session is running in safe
     // mode.
-    eFissionDisabledBySafeMode = 5,
+    eFissionDisabledBySafeMode = 6,
     // Fission is enabled because the "fission.autostart" preference is true
     // by default.
-    eFissionEnabledByDefault = 6,
+    eFissionEnabledByDefault = 7,
     // Fission is disabled because the "fission.autostart" preference is false
     // by default.
-    eFissionDisabledByDefault = 7,
+    eFissionDisabledByDefault = 8,
     // Fission is enabled because the "fission.autostart" preference was
     // turned on by the user.
-    eFissionEnabledByUserPref = 8,
+    eFissionEnabledByUserPref = 9,
     // Fission is enabled because the "fission.autostart" preference was
     // turned on by the user.
-    eFissionDisabledByUserPref = 9,
+    eFissionDisabledByUserPref = 10,
     // Fission is disabled because e10s is disabled for some other reason.
-    eFissionDisabledByE10sOther = 10,
+    eFissionDisabledByE10sOther = 11,
     // Fission is enabled by a Normandy phased rollout.
-    eFissionEnabledByRollout = 11,
+    eFissionEnabledByRollout = 12,
   };
 
   /**
@@ -188,7 +191,7 @@ interface nsIXULRuntime : nsISupports
   const unsigned long PROCESS_TYPE_VR = 6;
   const unsigned long PROCESS_TYPE_RDD = 7;
   const unsigned long PROCESS_TYPE_SOCKET = 8;
-  const unsigned long PROCESS_TYPE_SANDBOX_BROKER = 9;
+  const unsigned long PROCESS_TYPE_REMOTESANDBOXBROKER = 9;
   const unsigned long PROCESS_TYPE_FORKSERVER = 10;
 
   /**
@@ -283,16 +286,6 @@ interface nsIXULRuntime : nsISupports
    * closed cleanly. This is set to 0 if there was no existing profile lock.
    */
   readonly attribute PRTime replacedLockTime;
-
-  /**
-   * True if this is RELEASE_OR_BETA.
-   */
-  readonly attribute boolean isReleaseOrBeta;
-
-  /**
-   * True if this build uses official branding (MOZ_OFFICIAL_BRANDING).
-   */
-  readonly attribute boolean isOfficialBranding;
 
   /**
    * The default update channel (MOZ_UPDATE_CHANNEL).

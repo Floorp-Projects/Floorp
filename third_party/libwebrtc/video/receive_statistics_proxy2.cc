@@ -21,6 +21,7 @@
 #include "rtc_base/task_utils/to_queued_task.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
+#include "rtc_base/trace_event.h"
 #include "system_wrappers/include/clock.h"
 #include "system_wrappers/include/field_trial.h"
 #include "system_wrappers/include/metrics.h"
@@ -973,6 +974,9 @@ void ReceiveStatisticsProxy::OnCompleteFrame(bool is_keyframe,
                                              VideoContentType content_type) {
   RTC_DCHECK_RUN_ON(&main_thread_);
 
+  TRACE_EVENT2("webrtc", "ReceiveStatisticsProxy::OnCompleteFrame",
+               "remote_ssrc", remote_ssrc_, "is_keyframe", is_keyframe);
+
   if (is_keyframe) {
     ++stats_.frame_counts.key_frames;
   } else {
@@ -1004,6 +1008,8 @@ void ReceiveStatisticsProxy::OnCompleteFrame(bool is_keyframe,
 void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
   // Can be called on either the decode queue or the worker thread
   // See FrameBuffer2 for more details.
+  TRACE_EVENT2("webrtc", "ReceiveStatisticsProxy::OnDroppedFrames",
+               "remote_ssrc", remote_ssrc_, "frames_dropped", frames_dropped);
   worker_thread_->PostTask(ToQueuedTask(task_safety_, [frames_dropped, this]() {
     RTC_DCHECK_RUN_ON(&main_thread_);
     stats_.frames_dropped += frames_dropped;
@@ -1011,8 +1017,16 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
 }
 
 void ReceiveStatisticsProxy::OnDiscardedPackets(uint32_t packets_discarded) {
-  RTC_DCHECK_RUN_ON(&main_thread_);
-  stats_.packets_discarded += packets_discarded;
+  // Can be called on either the decode queue or the worker thread
+  // See FrameBuffer2 for more details.
+  TRACE_EVENT2("webrtc", "ReceiveStatisticsProxy::OnDiscardedPackets",
+               "remote_ssrc", remote_ssrc_, "packets_discarded",
+               packets_discarded);
+  worker_thread_->PostTask(
+      ToQueuedTask(task_safety_, [packets_discarded, this]() {
+        RTC_DCHECK_RUN_ON(&main_thread_);
+        stats_.packets_discarded += packets_discarded;
+      }));
 }
 
 void ReceiveStatisticsProxy::OnPreDecode(VideoCodecType codec_type, int qp) {
@@ -1040,6 +1054,8 @@ void ReceiveStatisticsProxy::OnStreamInactive() {
 
 void ReceiveStatisticsProxy::OnRttUpdate(int64_t avg_rtt_ms) {
   RTC_DCHECK_RUN_ON(&main_thread_);
+  TRACE_EVENT2("webrtc", "ReceiveStatisticsProxy::OnRttUpdate",
+               "remote_ssrc", remote_ssrc_, "avg_rtt_ms", avg_rtt_ms);
   avg_rtt_ms_ = avg_rtt_ms;
 }
 

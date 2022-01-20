@@ -5,21 +5,16 @@
 // Each test will wait for a write to the Session Store
 // before executing.
 
-var OS = ChromeUtils.import("resource://gre/modules/osfile.jsm", {}).OS;
-var { File, Constants, Path } = OS;
-
 const PREF_SS_INTERVAL = "browser.sessionstore.interval";
 const Paths = SessionFile.Paths;
 
-// A text decoder.
-var gDecoder = new TextDecoder();
 // Global variables that contain sessionstore.jsonlz4 and sessionstore.baklz4 data for
 // comparison between tests.
 var gSSData;
 var gSSBakData;
 
 function promiseRead(path) {
-  return File.read(path, { encoding: "utf-8", compression: "lz4" });
+  return IOUtils.readUTF8(path, { decompress: true });
 }
 
 async function reInitSessionFile() {
@@ -38,28 +33,32 @@ add_task(async function test_creation() {
   // Cancel all pending session saves so they won't get in our way.
   SessionSaver.cancel();
 
+  let PROFILE_DIR = await PathUtils.getProfileDir();
   // Create dummy sessionstore backups
-  let OLD_BACKUP = Path.join(Constants.Path.profileDir, "sessionstore.baklz4");
-  let OLD_UPGRADE_BACKUP = Path.join(
-    Constants.Path.profileDir,
+  let OLD_BACKUP = PathUtils.join(PROFILE_DIR, "sessionstore.baklz4");
+  let OLD_UPGRADE_BACKUP = PathUtils.join(
+    PROFILE_DIR,
     "sessionstore.baklz4-0000000"
   );
 
-  await File.writeAtomic(OLD_BACKUP, "sessionstore.bak");
-  await File.writeAtomic(OLD_UPGRADE_BACKUP, "sessionstore upgrade backup");
+  await IOUtils.writeUTF8(OLD_BACKUP, "sessionstore.bak");
+  await IOUtils.writeUTF8(OLD_UPGRADE_BACKUP, "sessionstore upgrade backup");
 
   await reInitSessionFile();
 
   // Ensure none of the sessionstore files and backups exists
   for (let k of Paths.loadOrder) {
     ok(
-      !(await File.exists(Paths[k])),
+      !(await IOUtils.exists(Paths[k])),
       "After wipe " + k + " sessionstore file doesn't exist"
     );
   }
-  ok(!(await File.exists(OLD_BACKUP)), "After wipe, old backup doesn't exist");
   ok(
-    !(await File.exists(OLD_UPGRADE_BACKUP)),
+    !(await IOUtils.exists(OLD_BACKUP)),
+    "After wipe, old backup doesn't exist"
+  );
+  ok(
+    !(await IOUtils.exists(OLD_UPGRADE_BACKUP)),
     "After wipe, old upgrade backup doesn't exist"
   );
 
@@ -75,11 +74,11 @@ add_task(async function test_creation() {
   await SessionSaver.run();
 
   ok(
-    await File.exists(Paths.recovery),
+    await IOUtils.exists(Paths.recovery),
     "After write, recovery sessionstore file exists again"
   );
   ok(
-    !(await File.exists(Paths.recoveryBackup)),
+    !(await IOUtils.exists(Paths.recoveryBackup)),
     "After write, recoveryBackup sessionstore doesn't exist"
   );
   ok(
@@ -87,7 +86,7 @@ add_task(async function test_creation() {
     "Recovery sessionstore file contains the required tab"
   );
   ok(
-    !(await File.exists(Paths.clean)),
+    !(await IOUtils.exists(Paths.clean)),
     "After first write, clean shutdown " +
       "sessionstore doesn't exist, since we haven't shutdown yet"
   );
@@ -101,7 +100,7 @@ add_task(async function test_creation() {
   await SessionSaver.run();
 
   ok(
-    await File.exists(Paths.recovery),
+    await IOUtils.exists(Paths.recovery),
     "After second write, recovery sessionstore file still exists"
   );
   ok(
@@ -109,14 +108,14 @@ add_task(async function test_creation() {
     "Recovery sessionstore file contains the latest url"
   );
   ok(
-    await File.exists(Paths.recoveryBackup),
+    await IOUtils.exists(Paths.recoveryBackup),
     "After write, recoveryBackup sessionstore now exists"
   );
   let backup = await promiseRead(Paths.recoveryBackup);
   ok(!backup.includes(URL2), "Recovery backup doesn't contain the latest url");
   ok(backup.includes(URL), "Recovery backup contains the original url");
   ok(
-    !(await File.exists(Paths.clean)),
+    !(await IOUtils.exists(Paths.clean)),
     "After first write, clean shutdown " +
       "sessionstore doesn't exist, since we haven't shutdown yet"
   );
@@ -125,17 +124,17 @@ add_task(async function test_creation() {
   await SessionFile.read(); // Reinitializes SessionFile
   await SessionSaver.run();
   ok(
-    !(await File.exists(Paths.clean)),
+    !(await IOUtils.exists(Paths.clean)),
     "After second write, clean shutdown " +
       "sessionstore doesn't exist, since we haven't shutdown yet"
   );
   ok(
-    !(await File.exists(Paths.upgradeBackup)),
+    Paths.upgradeBackup === "",
     "After second write, clean " +
       "shutdown sessionstore doesn't exist, since we haven't shutdown yet"
   );
   ok(
-    !(await File.exists(Paths.nextUpgradeBackup)),
+    !(await IOUtils.exists(Paths.nextUpgradeBackup)),
     "After second write, clean " +
       "shutdown sessionstore doesn't exist, since we haven't shutdown yet"
   );
@@ -167,11 +166,8 @@ add_task(async function test_recovery() {
 
   // Create Paths.recovery, ensure that we can recover from it.
   let SOURCE = await promiseSource("Paths.recovery");
-  await File.makeDir(Paths.backups);
-  await File.writeAtomic(Paths.recovery, SOURCE, {
-    encoding: "utf-8",
-    compression: "lz4",
-  });
+  await IOUtils.makeDirectory(Paths.backups);
+  await IOUtils.writeUTF8(Paths.recovery, SOURCE, { compress: true });
   is(
     (await SessionFile.read()).source,
     SOURCE,
@@ -180,15 +176,9 @@ add_task(async function test_recovery() {
 
   info("Corrupting recovery file, attempting to recover from recovery backup");
   SOURCE = await promiseSource("Paths.recoveryBackup");
-  await File.makeDir(Paths.backups);
-  await File.writeAtomic(Paths.recoveryBackup, SOURCE, {
-    encoding: "utf-8",
-    compression: "lz4",
-  });
-  await File.writeAtomic(Paths.recovery, "<Invalid JSON>", {
-    encoding: "utf-8",
-    compression: "lz4",
-  });
+  await IOUtils.makeDirectory(Paths.backups);
+  await IOUtils.writeUTF8(Paths.recoveryBackup, SOURCE, { compress: true });
+  await IOUtils.writeUTF8(Paths.recovery, "<Invalid JSON>", { compress: true });
   is(
     (await SessionFile.read()).source,
     SOURCE,
@@ -208,34 +198,25 @@ add_task(async function test_recovery_inaccessible() {
   );
   let SOURCE_RECOVERY = await promiseSource("Paths.recovery");
   let SOURCE = await promiseSource("Paths.recoveryBackup");
-  await File.makeDir(Paths.backups);
-  await File.writeAtomic(Paths.recoveryBackup, SOURCE, {
-    encoding: "utf-8",
-    compression: "lz4",
-  });
+  await IOUtils.makeDirectory(Paths.backups);
+  await IOUtils.writeUTF8(Paths.recoveryBackup, SOURCE, { compress: true });
 
   // Write a valid recovery file but make it inaccessible.
-  await File.writeAtomic(Paths.recovery, SOURCE_RECOVERY, {
-    encoding: "utf-8",
-    compression: "lz4",
-  });
-  await File.setPermissions(Paths.recovery, { unixMode: 0 });
+  await IOUtils.writeUTF8(Paths.recovery, SOURCE_RECOVERY, { compress: true });
+  await IOUtils.setPermissions(Paths.recovery, 0);
 
   is(
     (await SessionFile.read()).source,
     SOURCE,
     "Recovered the correct source from the recovery file"
   );
-  await File.setPermissions(Paths.recovery, { unixMode: 0o644 });
+  await IOUtils.setPermissions(Paths.recovery, 0o644);
 });
 
 add_task(async function test_clean() {
   await reInitSessionFile();
   let SOURCE = await promiseSource("Paths.clean");
-  await File.writeAtomic(Paths.clean, SOURCE, {
-    encoding: "utf-8",
-    compression: "lz4",
-  });
+  await IOUtils.writeUTF8(Paths.clean, SOURCE, { compress: true });
   await SessionFile.read();
   await SessionSaver.run();
   is(
@@ -261,11 +242,8 @@ add_task(async function test_version() {
   );
 
   // Create Paths.clean file
-  await File.makeDir(Paths.backups);
-  await File.writeAtomic(Paths.clean, SOURCE, {
-    encoding: "utf-8",
-    compression: "lz4",
-  });
+  await IOUtils.makeDirectory(Paths.backups);
+  await IOUtils.writeUTF8(Paths.clean, SOURCE, { compress: true });
 
   info("Attempting to recover from the clean file");
   // Ensure that we can recover from Paths.recovery
@@ -296,21 +274,15 @@ add_task(async function test_version_fallback() {
     "Found backup sessionstore format version"
   );
 
-  await File.makeDir(Paths.backups);
+  await IOUtils.makeDirectory(Paths.backups);
 
   info(
     "Modifying format version number to something incorrect, to make sure that we disregard the file."
   );
   let parsedSource = JSON.parse(SOURCE);
   parsedSource.version[0] = "bookmarks";
-  await File.writeAtomic(Paths.clean, JSON.stringify(parsedSource), {
-    encoding: "utf-8",
-    compression: "lz4",
-  });
-  await File.writeAtomic(Paths.cleanBackup, BACKUP_SOURCE, {
-    encoding: "utf-8",
-    compression: "lz4",
-  });
+  await IOUtils.writeJSON(Paths.clean, parsedSource, { compress: true });
+  await IOUtils.writeUTF8(Paths.cleanBackup, BACKUP_SOURCE, { compress: true });
   is(
     (await SessionFile.read()).source,
     BACKUP_SOURCE,
@@ -322,14 +294,8 @@ add_task(async function test_version_fallback() {
   );
   parsedSource = JSON.parse(SOURCE);
   parsedSource.version[1] = Number.MAX_SAFE_INTEGER;
-  await File.writeAtomic(Paths.clean, JSON.stringify(parsedSource), {
-    encoding: "utf-8",
-    compression: "lz4",
-  });
-  await File.writeAtomic(Paths.cleanBackup, BACKUP_SOURCE, {
-    encoding: "utf-8",
-    compression: "lz4",
-  });
+  await IOUtils.writeJSON(Paths.clean, parsedSource, { compress: true });
+  await IOUtils.writeUTF8(Paths.cleanBackup, BACKUP_SOURCE, { compress: true });
   is(
     (await SessionFile.read()).source,
     BACKUP_SOURCE,

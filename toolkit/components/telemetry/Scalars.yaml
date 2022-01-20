@@ -1867,11 +1867,89 @@ os.environment:
     operating_systems:
       - windows
 
+  launched_to_handle:
+    bug_numbers:
+      - 1243603
+    description: >
+      Records counts for when Firefox was launched afresh (i.e., was not already
+      running) to handle a file type or protocol with `-osint -url ...`.  The
+      result is split into keys which represent the file extension: currently,
+      the set of file types Firefox registers to handle, namely ".avif", ".htm",
+      ".html", ".pdf", ".shtml", ".xht", ".xhtml", ".svg", ".webp", and the set
+      of protocol schemes that Firefox registers to handle, namely "about",
+      "http", "https", "mailto".  If Firefox was launched to handle a file type
+      or protocol it does not register to handle by default, the count is
+      recorded as ".<other extension>" or "<other protocol>", respectively
+      (neither of which are valid extension or protocol identifiers).
+    keyed: true
+    expires: "106"
+    kind: uint
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    record_in_processes:
+      - main
+    operating_systems:
+      - windows
+
+  invoked_to_handle:
+    bug_numbers:
+      - 1243603
+    description: >
+      Records counts for when Firefox was invoked (i.e., was already running and
+      was not launched) to handle a file type or protocol with `-osint -url
+      ...`.  The result is split into keys which represent the file extension:
+      currently, the set of file types Firefox registers to handle, namely
+      ".avif", ".htm", ".html", ".pdf", ".shtml", ".xht", ".xhtml", ".svg",
+      ".webp", and the set of protocol schemes that Firefox registers to handle,
+      namely "about", "http", "https", "mailto".  If Firefox was invoked to
+      handle a file type or protocol it does not register to handle by default,
+      the count is recorded as ".<other extension>" or "<other protocol>",
+      respectively (neither of which are valid extension or protocol
+      identifiers).
+    keyed: true
+    expires: "106"
+    kind: uint
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    record_in_processes:
+      - main
+    operating_systems:
+      - windows
+
+  is_default_handler:
+    bug_numbers:
+      - 1743914
+    description: >
+      Records whether Firefox was the default handler for particular file types
+      or protocols.  The result is split into keys which represent the file
+      extension: currently, a subset of the file types Firefox registers to
+      handle, namely ".pdf".  In the future, more file types may be recorded,
+      and/or a subset of the protocol schemes that Firefox registers to may be
+      recorded.
+    keyed: true
+    expires: "106"
+    kind: boolean
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    record_in_processes:
+      - main
+    operating_systems:
+      - windows
+
   is_kept_in_dock:
     bug_numbers:
       - 1715348
     description: Whether this app was kept in macOS Dock on startup
-    expires: "97"
+    expires: never
     kind: boolean
     notification_emails:
       - elee@mozilla.com
@@ -1889,7 +1967,7 @@ os.environment:
       - 1685213
       - 1725298
     description: Whether this app was pinned to taskbar on startup
-    expires: "100"
+    expires: never
     kind: boolean
     notification_emails:
       - application-update-telemetry-alerts@mozilla.com
@@ -2268,6 +2346,24 @@ media:
       - 'main'
       - 'content'
 
+  video_hd_hardware_decoding_support:
+    bug_numbers:
+      - 1741286
+    description: >
+      Record whether hardware decoding is supported for the specific video codec, this only records video in HD (1280*720) or higher resultion. The key is the type of video codec, eg. video/vp9.
+    expires: "100"
+    kind: boolean
+    keyed: true
+    notification_emails:
+      - alwu@mozilla.com
+      - bvandyk@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'content'
+
 # The following section contains content process base counters.
 dom.contentprocess:
   buildID_mismatch:
@@ -2351,35 +2447,6 @@ dom.contentprocess:
     products:
       - 'firefox'
       - 'fennec'
-    record_in_processes:
-      - 'main'
-  crash_tab_ui_presented:
-    bug_numbers:
-      - 1676943
-    description: >
-      The number of times the tab crashed page has been shown.
-    expires: "98"
-    kind: uint
-    notification_emails:
-      - nlayzell@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-  # Note that the unsubmitted notification is currently only enabled on Nightly builds
-  unsubmitted_ui_presented:
-    bug_numbers:
-      - 1676943
-    description: >
-      The number of times the notification has been shown that indicates
-      that there are unsubmitted crash reports.
-    expires: "98"
-    kind: uint
-    notification_emails:
-      - nlayzell@mozilla.com
-    products:
-      - 'firefox'
     record_in_processes:
       - 'main'
 
@@ -3962,25 +4029,8 @@ formautofill.creditCards:
     record_in_processes:
       - 'content'
 
-# This section is for notification bars
+# This section is for notification bars testing
 notificationbar:
-  crash_subframe_ui:
-    bug_numbers:
-      - 1676943
-    description: >
-      Notifications for when the subframe crash UI is shown to the user. This
-      only triggers when a tab containing the subframe is switched to.
-    expires: "98"
-    kind: uint
-    keyed: true
-    notification_emails:
-      - nlayzell@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-
   # Used only for testing
   testone:
     bug_numbers:
@@ -4621,25 +4671,6 @@ browser.timings:
 
 # The following section contains the service worker scalars.
 sw:
-  synthesized_res_count:
-    bug_numbers:
-      - 1416629
-      - 1433916
-    description: >
-      The count of number of synthesize response made by service workers.
-    expires: "68"
-    kind: uint
-    notification_emails:
-      - sw-telemetry@mozilla.com
-      - ttung@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - 'main'
-      - 'content'
-
   cors_res_for_so_req_count:
     bug_numbers:
       - 1416629
@@ -4677,6 +4708,51 @@ sw:
     record_in_processes:
       - 'main'
       - 'content'
+
+serviceworker:
+  registrations:
+    description: >
+      Count how many registrations occur. File bugs in Core::DOM in case of a Telemetry regression.
+
+    record_in_processes:
+      - 'main'
+    products:
+      - 'firefox'
+      - 'fennec'
+    expires: "102"
+    kind: uint
+    bug_numbers:
+      - 1740335
+    notification_emails:
+      - sw-telemetry@mozilla.com
+      - rjesup@mozilla.com
+      - echuang@mozilla.com
+    keyed: true
+    keys:
+      - All
+      - Fetch
+
+  running_max:
+    description: >
+      The maximum number of simultaneous running ServiceWorkers in a session.
+
+    record_in_processes:
+      - 'main'
+    products:
+      - 'firefox'
+      - 'fennec'
+    expires: "102"
+    kind: uint
+    bug_numbers:
+      - 1740335
+    notification_emails:
+      - sw-telemetry@mozilla.com
+      - rjesup@mozilla.com
+      - echuang@mozilla.com
+    keyed: true
+    keys:
+      - All
+      - Fetch
 
 widget:
   ime_name_on_windows:
@@ -7277,6 +7353,42 @@ contextual.services.quicksuggest:
     record_in_processes:
       - main
 
+power:
+  total_cpu_time_ms:
+    bug_numbers:
+      - 1736040
+      - 1748627
+    description: >
+      Total CPU time used by all processes in ms.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'content'
+      - 'gpu'
+      - 'socket'
+
+  total_gpu_time_ms:
+    bug_numbers:
+      - 1743176
+      - 1748627
+    description: >
+      Total GPU time used by all processes in ms.
+    expires: never
+    kind: uint
+    notification_emails:
+      - florian@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'gpu'
 
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
@@ -7897,20 +8009,21 @@ content:
   process_max_precise:
     bug_numbers:
       - 1741759
+      - 1745268
     description: >
       The maximum number of content processes, submitted when a
       new maximum is reached.  Replaces CONTENT_PROCESS_MAX and
       CONTENT_PROCESS_PRECISE_MAX.
-      
+
     notification_emails:
-      - kmadan@mozilla.com
+      - barret@mozilla.com
       - perf-telemetry-alerts@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
     record_in_processes:
       - 'main'
-    expires: "98"
+    expires: "104"
     kind: uint
 
 opaque.response.blocking:

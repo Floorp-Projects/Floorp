@@ -57,6 +57,8 @@ struct RawServoSelectorList;
 
 namespace mozilla {
 class EventListenerManager;
+template <typename T>
+class Maybe;
 class PresShell;
 class TextEditor;
 namespace dom {
@@ -620,6 +622,35 @@ class nsINode : public mozilla::dom::EventTarget {
    * Get the index of a child within this content.
    *
    * @param aPossibleChild the child to get the index of.
+   * @return the index of the child, or Nothing if not a child. Be aware that
+   *         anonymous children (e.g. a <div> child of an <input> element) will
+   *         result in Nothing.
+   *
+   * If the return value is Some, then calling GetChildAt_Deprecated() with
+   * that value will return aPossibleChild.
+   */
+  mozilla::Maybe<uint32_t> ComputeIndexOf(const nsINode* aPossibleChild) const;
+
+  /**
+   * Get the index of this within parent node (ComputeIndexInParentNode) or
+   * parent content (nsIContent) node (ComputeIndexInParentContent).
+   *
+   * @return the index of this node in the parent, or Nothing there is no
+   *         parent (content) node or the parent does not have this node anymore
+   *         (e.g., being removed from the parent). Be aware that anonymous
+   *         children (e.g. a <div> child of an <input> element) will result in
+   *         Nothing.
+   *
+   * If the return value is Some, then calling GetChildAt_Deprecated() with
+   * that value will return this.
+   */
+  mozilla::Maybe<uint32_t> ComputeIndexInParentNode() const;
+  mozilla::Maybe<uint32_t> ComputeIndexInParentContent() const;
+
+  /**
+   * Get the index of a child within this content.
+   *
+   * @param aPossibleChild the child to get the index of.
    * @return the index of the child, or -1 if not a child. Be aware that
    *         anonymous children (e.g. a <div> child of an <input> element) will
    *         result in -1.
@@ -627,7 +658,7 @@ class nsINode : public mozilla::dom::EventTarget {
    * If the return value is not -1, then calling GetChildAt_Deprecated() with
    * that value will return aPossibleChild.
    */
-  virtual int32_t ComputeIndexOf(const nsINode* aPossibleChild) const;
+  int32_t ComputeIndexOf_Deprecated(const nsINode* aPossibleChild) const;
 
   /**
    * Returns the "node document" of this node.
@@ -1045,9 +1076,10 @@ class nsINode : public mozilla::dom::EventTarget {
   virtual nsIGlobalObject* GetOwnerGlobal() const override;
 
   using mozilla::dom::EventTarget::DispatchEvent;
-  bool DispatchEvent(mozilla::dom::Event& aEvent,
-                     mozilla::dom::CallerType aCallerType,
-                     mozilla::ErrorResult& aRv) override;
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool DispatchEvent(
+      mozilla::dom::Event& aEvent, mozilla::dom::CallerType aCallerType,
+      mozilla::ErrorResult& aRv) override;
 
   MOZ_CAN_RUN_SCRIPT
   nsresult PostHandleEvent(mozilla::EventChainPostVisitor& aVisitor) override;
@@ -1479,7 +1511,8 @@ class nsINode : public mozilla::dom::EventTarget {
    */
   Document* GetOwnerDocument() const;
 
-  void Normalize();
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Normalize();
 
   /**
    * Get the base URI for any relative URIs within this piece of
@@ -1978,9 +2011,9 @@ class nsINode : public mozilla::dom::EventTarget {
   bool HasChildNodes() const { return HasChildren(); }
 
   // See nsContentUtils::PositionIsBefore for aThisIndex and aOtherIndex usage.
-  uint16_t CompareDocumentPosition(nsINode& aOther,
-                                   int32_t* aThisIndex = nullptr,
-                                   int32_t* aOtherIndex = nullptr) const;
+  uint16_t CompareDocumentPosition(
+      nsINode& aOther, mozilla::Maybe<uint32_t>* aThisIndex = nullptr,
+      mozilla::Maybe<uint32_t>* aOtherIndex = nullptr) const;
   void GetNodeValue(nsAString& aNodeValue) { GetNodeValueInternal(aNodeValue); }
   void SetNodeValue(const nsAString& aNodeValue, mozilla::ErrorResult& aError) {
     SetNodeValueInternal(aNodeValue, aError);
@@ -2009,7 +2042,9 @@ class nsINode : public mozilla::dom::EventTarget {
                         mozilla::ErrorResult& aError) {
     return ReplaceOrInsertBefore(true, &aNode, &aChild, aError);
   }
-  nsINode* RemoveChild(nsINode& aChild, mozilla::ErrorResult& aError);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsINode* RemoveChild(
+      nsINode& aChild, mozilla::ErrorResult& aError);
   already_AddRefed<nsINode> CloneNode(bool aDeep, mozilla::ErrorResult& aError);
   bool IsSameNode(nsINode* aNode);
   bool IsEqualNode(nsINode* aNode);
@@ -2156,9 +2191,10 @@ class nsINode : public mozilla::dom::EventTarget {
   void EnsurePreInsertionValidity2(bool aReplace, nsINode& aNewChild,
                                    nsINode* aRefChild,
                                    mozilla::ErrorResult& aError);
-  nsINode* ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
-                                 nsINode* aRefChild,
-                                 mozilla::ErrorResult& aError);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsINode* ReplaceOrInsertBefore(
+      bool aReplace, nsINode* aNewChild, nsINode* aRefChild,
+      mozilla::ErrorResult& aError);
 
   /**
    * Returns the Element that should be used for resolving namespaces

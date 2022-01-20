@@ -15,7 +15,7 @@ transforms:
 job-defaults:
     attributes:
         retrigger: true
-    run-on-projects: ['mozilla-beta', 'trunk']
+    run-on-projects: ['integration', 'release']
     treeherder:
         tier: 1
         kind: other
@@ -132,7 +132,7 @@ jobs:
 
     macos-release:
         description: Runs release-mode WebRender CI tests on a macOS worker
-        worker-type: t-osx-1014
+        worker-type: t-osx-1015-r8
         worker:
             # repo cloning has highly variable run time
             max-run-time: 7200
@@ -152,7 +152,7 @@ jobs:
                 export WRENCH_BINARY=$PWD/wrench-macos/bin/wrench &&
                 ci-scripts/macos-release-tests.sh
         treeherder:
-            platform: macosx1014-64-qr/opt
+            platform: macosx1015-64-qr/opt
             symbol: WR(wrench)
         when:
             files-changed:
@@ -189,7 +189,7 @@ jobs:
 
     macos-debug:
         description: Runs debug-mode WebRender CI tests on a macOS worker
-        worker-type: t-osx-1014
+        worker-type: t-osx-1015-r8
         worker:
             max-run-time: 3600
             env:
@@ -207,7 +207,7 @@ jobs:
                 cd target &&
                 for i in debug/deps/*; do $i; done
         treeherder:
-            platform: macosx1014-64-qr/debug
+            platform: macosx1015-64-qr/debug
             symbol: WR(cargotest)
         when:
             files-changed:
@@ -215,7 +215,7 @@ jobs:
 
     windows:
         description: Runs WebRender CI tests on a Windows worker
-        worker-type: t-win10-64
+        worker-type: win10-64-2004-ssd
         worker:
             max-run-time: 5400
             env:
@@ -231,7 +231,7 @@ jobs:
             command: '$GECKO_PATH/taskcluster/scripts/misc/wrench-windows-tests.sh'
             tooltool-downloads: internal
         treeherder:
-            platform: windows10-64-qr/release
+            platform: windows10-64-2004-qr/release
             symbol: WR(wrench)
         when:
             files-changed:

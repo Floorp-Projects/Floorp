@@ -176,7 +176,7 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
   // but a request to refresh it will be made.
   mozilla::TimeStamp mGraceStart;
 
-  uint32_t mTtl = 0;
+  mozilla::Atomic<uint32_t, mozilla::Relaxed> mTtl{0};
 
   // The computed TRR mode that is actually used by the request.
   // It is set in nsHostResolver::NameLookup and is based on the mode of the
@@ -255,6 +255,8 @@ class AddrHostRecord final : public nsHostRecord {
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const override;
 
   nsIRequest::TRRMode EffectiveTRRMode() const { return mEffectiveTRRMode; }
+
+  nsresult GetTtl(uint32_t* aResult);
 
  private:
   friend class nsHostResolver;

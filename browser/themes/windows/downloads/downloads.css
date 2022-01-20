@@ -24,6 +24,7 @@
   --downloads-item-height: 5.5em;
   --downloads-item-font-size-factor: 0.9;
   --downloads-item-details-opacity: 0.6;
+  --downloads-item-disabled-opacity: 0.6;
 }
 
 @notKeyfocus@ .downloadButton:-moz-focusring {
@@ -35,4 +36,17 @@
 @keyfocus@ @itemFocused@ {
   outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
+}
+
+/*** Progress bars ***/
+
+@media (prefers-contrast) {
+  .downloadProgress {
+    background-color: -moz-Dialog;
+    border: 1px solid ButtonText;
+  }
+
+  .downloadProgress::-moz-progress-bar {
+    --download-progress-fill-color: SelectedItem;
+  }
 }

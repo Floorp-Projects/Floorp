@@ -27,8 +27,9 @@ from .protocol import (BaseProtocolPart,
                        SetPermissionProtocolPart,
                        VirtualAuthenticatorProtocolPart,
                        WindowProtocolPart,
+                       DebugProtocolPart,
                        SPCTransactionsProtocolPart,
-                       DebugProtocolPart)
+                       merge_dicts)
 
 from webdriver.client import Session
 from webdriver import error
@@ -345,6 +346,11 @@ class WebDriverProtocol(Protocol):
     def __init__(self, executor, browser, capabilities, **kwargs):
         super(WebDriverProtocol, self).__init__(executor, browser)
         self.capabilities = capabilities
+        if hasattr(browser, "capabilities"):
+            if self.capabilities is None:
+                self.capabilities = browser.capabilities
+            else:
+                merge_dicts(self.capabilities, browser.capabilities)
         self.url = browser.webdriver_url
         self.webdriver = None
 

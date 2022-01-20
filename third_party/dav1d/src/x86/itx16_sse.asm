@@ -102,8 +102,8 @@ pixel_10bpc_max: times 8 dw  0x03ff
 pw_1567_3784:    times 4 dw  1567,  3784
 pw_m3784_1567:   times 4 dw -3784,  1567
 
-clip_min: times 4 dd -0x20000
-clip_max: times 4 dd  0x1ffff
+clip_18b_min: times 4 dd -0x20000
+clip_18b_max: times 4 dd  0x1ffff
 
 idct64_mul_16bpc:
 dd 4095,  101, 2967, -2824,  3745, 1660, 3822, -1474,   401,  4076,   799,  4017
@@ -1348,8 +1348,8 @@ cglobal idct_8x4_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
     lea                  r3, [rsp+gprsize]
 %else
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
     mova                 m0, [cq+0*16]
@@ -1473,9 +1473,9 @@ cglobal idct_8x4_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
     mova                 m0, m4
     paddd                m4, m7, m3 ; t7
     psubd                m7, m3     ; t6a
-    mova                 m3, [o(clip_min)]
+    mova                 m3, [o(clip_18b_min)]
     REPX    {pmaxsd x, m3 }, m1, m2, m7, m4
-    mova                 m3, [o(clip_max)]
+    mova                 m3, [o(clip_18b_max)]
     REPX    {pminsd x, m3 }, m1, m2, m7, m4
     mova          [r3+3*16], m2
     mova          [r3+1*16], m4
@@ -1495,9 +1495,9 @@ cglobal idct_8x4_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
     psubd                m1, m5     ; t5a
     paddd                m4, m7, m3 ; t7
     psubd                m7, m3     ; t6a
-    mova                 m6, [o(clip_min)]
+    mova                 m6, [o(clip_18b_min)]
     REPX    {pmaxsd x, m6 }, m1, m2, m7, m4
-    mova                 m6, [o(clip_max)]
+    mova                 m6, [o(clip_18b_max)]
     REPX    {pminsd x, m6 }, m1, m2, m7, m4
     mova                 m6, [r3+3*16]
     mova          [r3+3*16], m2
@@ -1526,9 +1526,9 @@ cglobal idct_8x4_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
     paddd                m6, m5, m2 ; dct4 out1
     psubd                m5, m2     ; dct4 out2
 
-    mova                 m1, [o(clip_min)]
+    mova                 m1, [o(clip_18b_min)]
     REPX    {pmaxsd x, m1 }, m0, m6, m5, m3
-    mova                 m1, [o(clip_max)]
+    mova                 m1, [o(clip_18b_max)]
     REPX    {pminsd x, m1 }, m0, m6, m5, m3
     ret
 .round:
@@ -1668,10 +1668,10 @@ cglobal iadst_8x4_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
     paddd                m5, m1     ; t3
     psubd                m1, m7, m3 ; t5
     paddd                m7, m3     ; t1
-    mova                 m3, [o(clip_min)]
+    mova                 m3, [o(clip_18b_min)]
     REPX    {pmaxsd x, m3 }, m6, m1, m4, m2, m0, m5, m7
     mova          [r3+1*16], m7
-    mova                 m7, [o(clip_max)]
+    mova                 m7, [o(clip_18b_max)]
     pmaxsd               m3, [r3+0*16]
     REPX    {pminsd x, m7 }, m6, m1, m3, m4, m2, m0, m5
     pminsd               m7, [r3+1*16]
@@ -1695,9 +1695,9 @@ cglobal iadst_8x4_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
     paddd                m0, m6     ;  out0
     psubd                m6, m1, m4 ;  t6
     paddd                m1, m4     ; -out1
-    mova                 m4, [o(clip_min)]
+    mova                 m4, [o(clip_18b_min)]
     REPX    {pmaxsd x, m4 }, m5, m3, m6, m2
-    mova                 m4, [o(clip_max)]
+    mova                 m4, [o(clip_18b_max)]
     REPX    {pminsd x, m4 }, m5, m3, m6, m2
     mova                 m4, [o(pd_2896)]
     REPX    {pmulld x, m4 }, m5, m3, m6, m2
@@ -1843,8 +1843,8 @@ cglobal idct_8x8_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
 .pass1_full:
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
 %undef cmp
@@ -2189,8 +2189,8 @@ cglobal idct_8x16_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
 .pass1_full:
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
 %undef cmp
@@ -2523,8 +2523,8 @@ INV_TXFM_16X4_FN dct, flipadst
 cglobal idct_16x4_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
     ; setup stack pointer
@@ -2705,11 +2705,11 @@ cglobal idct_16x4_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
     paddd                m5, m1     ; t12
     psubd                m1, m7, m3 ; t14
     paddd                m7, m3     ; t15
-    mova                 m3, [o(clip_min)]
+    mova                 m3, [o(clip_18b_min)]
     REPX     {pmaxsd x, m3}, m1, m4, m6, m0, m2, m5, m7
     pmaxsd               m3, [r3+0*16]
     mova          [r3+0*16], m3
-    mova                 m3, [o(clip_max)]
+    mova                 m3, [o(clip_18b_max)]
     REPX     {pminsd x, m3}, m1, m4, m6, m0, m2, m5, m7
     pminsd               m3, [r3+0*16]
     mova          [r3+0*16], m0
@@ -2734,11 +2734,11 @@ cglobal idct_16x4_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
     psubd                m7, m5     ; t12a
     mova          [r3+0*16], m3
     mova                 m3, [r3+1*16]
-    mova                 m5, [o(clip_min)]
+    mova                 m5, [o(clip_18b_min)]
     REPX     {pmaxsd x, m5}, m2, m7, m3, m4, m0, m1, m6
     pmaxsd               m5, [r3+0*16]
     mova          [r3+0*16], m5
-    mova                 m5, [o(clip_max)]
+    mova                 m5, [o(clip_18b_max)]
     REPX     {pminsd x, m5}, m2, m7, m3, m4, m0, m1, m6
     pminsd               m5, [r3+0*16]
     mova          [r3+0*16], m5
@@ -2904,8 +2904,8 @@ cglobal iadst_16x4_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
 .main:
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
     mova                 m0, [cq+ 2*16]
@@ -3098,11 +3098,11 @@ cglobal iadst_16x4_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
     mova                 m3, [r3+11*16]
     psubd                m7, m5, m3 ; t13a
     paddd                m5, m3     ; t5a
-    mova                 m3, [o(clip_min)]
+    mova                 m3, [o(clip_18b_min)]
     REPX     {pmaxsd x, m3}, m2, m6, m7, m0, m1, m4, m5
     pmaxsd               m3, [r3+8*16]
     mova          [r3+8*16], m3
-    mova                 m3, [o(clip_max)]
+    mova                 m3, [o(clip_18b_max)]
     REPX     {pminsd x, m3}, m2, m6, m7, m0, m1, m4, m5
     pminsd               m3, [r3+8*16]
     mova          [r3+8*16], m3
@@ -3125,11 +3125,11 @@ cglobal iadst_16x4_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
     mova                 m0, [r3+8*16]
     mova                 m1, [r3+9*16]
     mova                 m4, [r3+10*16]
-    mova                 m3, [o(clip_min)]
+    mova                 m3, [o(clip_18b_min)]
     REPX     {pmaxsd x, m3}, m4, m5, m7, m0, m1, m2, m6
     pmaxsd               m3, [r3+11*16]
     mova          [r3+8*16], m3
-    mova                 m3, [o(clip_max)]
+    mova                 m3, [o(clip_18b_max)]
     REPX     {pminsd x, m3}, m4, m5, m7, m0, m1, m2, m6
     pminsd               m3, [r3+8*16]
     mova          [r3+8*16], m0
@@ -3176,11 +3176,11 @@ cglobal iadst_16x4_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
     psubd                m7, m1             ;  t2a
     paddd                m1, [r3+8*16]      ;  out0
     mova          [r3+4*16], m1
-    mova                 m1, [o(clip_min)]
+    mova                 m1, [o(clip_18b_min)]
     REPX     {pmaxsd x, m1}, m0, m2, m3, m4, m5, m6, m7
     pmaxsd               m1, [r3+10*16]
     mova         [r3+10*16], m1
-    mova                 m1, [o(clip_max)]
+    mova                 m1, [o(clip_18b_max)]
     REPX     {pminsd x, m1}, m0, m2, m3, m4, m5, m6, m7
     pminsd               m1, [r3+10*16]
     mova         [r3+10*16], m1
@@ -3275,11 +3275,11 @@ cglobal iadst_16x4_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
     paddd                m2, m6     ; t6a
     psubd                m6, m7, m3 ; t15a
     paddd                m7, m3     ; t7a
-    mova                 m3, [o(clip_min)]
+    mova                 m3, [o(clip_18b_min)]
     REPX     {pmaxsd x, m3}, m4, m5, m6, m0, m1, m2, m7
     pmaxsd               m3, [r3+4*16]
     mova          [r3+4*16], m3
-    mova                 m3, [o(clip_max)]
+    mova                 m3, [o(clip_18b_max)]
     REPX     {pminsd x, m3}, m4, m5, m6, m0, m1, m2, m7
     pminsd               m3, [r3+4*16]
     mova          [r3+4*16], m3
@@ -3302,11 +3302,11 @@ cglobal iadst_16x4_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
     mova                 m1, [r3+5*16]
     mova                 m3, [r3+6*16]
     mova                 m2, [r3+7*16]
-    mova                 m0, [o(clip_min)]
+    mova                 m0, [o(clip_18b_min)]
     REPX     {pmaxsd x, m0}, m3, m2, m7, m6, m1, m4, m5
     pmaxsd               m0, [r3+4*16]
     mova          [r3+4*16], m0
-    mova                 m0, [o(clip_max)]
+    mova                 m0, [o(clip_18b_max)]
     REPX     {pminsd x, m0}, m3, m2, m7, m6, m1, m4, m5
     pminsd               m0, [r3+4*16]
     mova          [r3+4*16], m0
@@ -3557,8 +3557,8 @@ cglobal idct_16x8_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
 .main:
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
     mova                 m0, [cq+ 1*32+r5]
@@ -3652,8 +3652,8 @@ cglobal iadst_16x8_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
 .main:
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
     mova                 m0, [cq+ 2*32+r5]
@@ -4027,8 +4027,8 @@ cglobal idct_16x16_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
 .main:
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
 
@@ -4250,8 +4250,8 @@ cglobal iadst_16x16_internal_16bpc, 0, 0, 0, dst, stride, c, eob, tx2
 .main:
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
     mova                 m0, [cq+ 2*64+r5]
@@ -5033,8 +5033,8 @@ cglobal inv_txfm_add_dct_dct_8x32_16bpc, 4, 7, 15, 0-36*16, \
 .loop_pass1:
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
     mova                 m0, [cq+0*128+r5*8]
@@ -5218,8 +5218,8 @@ cglobal inv_txfm_add_dct_dct_16x32_16bpc, 4, 7, 16, 0-77*16, \
 .loop_pass1:
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
     mova                 m0, [cq+ 1*128+r5*8]
@@ -5390,8 +5390,8 @@ cglobal inv_txfm_add_dct_dct_32x8_16bpc, 4, 7, 16, 0-(24+8*ARCH_X86_32)*16, \
     mova                 m7, [cq+32*31+r5*8]
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
     mov                  r3, rsp
@@ -5622,11 +5622,11 @@ cglobal inv_txfm_add_dct_dct_32x8_16bpc, 4, 7, 16, 0-(24+8*ARCH_X86_32)*16, \
     paddd                m1, m5     ; t28
     psubd                m5, m3, m7 ; t30
     paddd                m7, m3     ; t31
-    mova                 m3, [o(clip_min)]
+    mova                 m3, [o(clip_18b_min)]
     REPX     {pmaxsd x, m3}, m5, m4, m2, m0, m6, m1, m7
     pmaxsd               m3, [r3+0*16]
     mova          [r3+0*16], m3
-    mova                 m3, [o(clip_max)]
+    mova                 m3, [o(clip_18b_max)]
     REPX     {pminsd x, m3}, m5, m4, m2, m0, m6, m1, m7
     pminsd               m3, [r3+0*16]
     mova          [r3+0*16], m0
@@ -5649,11 +5649,11 @@ cglobal inv_txfm_add_dct_dct_32x8_16bpc, 4, 7, 16, 0-(24+8*ARCH_X86_32)*16, \
     paddd                m0, m6     ; t16a
     psubd                m6, m7, m2 ; t28a
     paddd                m7, m2     ; t31a
-    mova                 m2, [o(clip_min)]
+    mova                 m2, [o(clip_18b_min)]
     REPX     {pmaxsd x, m2}, m3, m6, m1, m4, m0, m7, m5
     pmaxsd               m2, [r3+0*16]
     mova          [r3+0*16], m2
-    mova                 m2, [o(clip_max)]
+    mova                 m2, [o(clip_18b_max)]
     REPX     {pminsd x, m2}, m3, m6, m1, m4, m0, m7, m5
     pminsd               m2, [r3+0*16]
     mova          [r3+16*0], m0
@@ -5824,11 +5824,11 @@ cglobal inv_txfm_add_dct_dct_32x8_16bpc, 4, 7, 16, 0-(24+8*ARCH_X86_32)*16, \
     paddd                m1, m5     ; t20
     psubd                m5, m3, m7 ; t22
     paddd                m7, m3     ; t23
-    mova                 m3, [o(clip_min)]
+    mova                 m3, [o(clip_18b_min)]
     REPX     {pmaxsd x, m3}, m5, m4, m2, m0, m6, m1, m7
     pmaxsd               m3, [r3+ 8*16]
     mova         [r3+ 8*16], m3
-    mova                 m3, [o(clip_max)]
+    mova                 m3, [o(clip_18b_max)]
     REPX     {pminsd x, m3}, m5, m4, m2, m0, m6, m1, m7
     pminsd               m3, [r3+ 8*16]
     mova         [r3+ 8*16], m0
@@ -5851,11 +5851,11 @@ cglobal inv_txfm_add_dct_dct_32x8_16bpc, 4, 7, 16, 0-(24+8*ARCH_X86_32)*16, \
     paddd                m0, m6     ; t24a
     psubd                m6, m7, m2 ; t20a
     paddd                m7, m2     ; t23a
-    mova                 m2, [o(clip_min)]
+    mova                 m2, [o(clip_18b_min)]
     REPX     {pmaxsd x, m2}, m3, m6, m1, m4, m0, m7, m5
     pmaxsd               m2, [r3+ 8*16]
     mova         [r3+ 8*16], m2
-    mova                 m2, [o(clip_max)]
+    mova                 m2, [o(clip_18b_max)]
     REPX     {pminsd x, m2}, m3, m6, m1, m4, m0, m7, m5
     pminsd               m2, [r3+ 8*16]
     mova         [r3+ 8*16], m0
@@ -5866,8 +5866,8 @@ cglobal inv_txfm_add_dct_dct_32x8_16bpc, 4, 7, 16, 0-(24+8*ARCH_X86_32)*16, \
     ITX_MULSUB_2D         4, 1, 2, 5, 7, 0, 1567, 3784, 4 ; t26a, t21a
     ITX_MULSUB_2D         3, 6, 2, 5, _, 0,    7, 3784, 4 ; t27,  t20
     mova         [r3+10*16], m3
-    mova                 m0, [o(clip_min)]
-    mova                 m2, [o(clip_max)]
+    mova                 m0, [o(clip_18b_min)]
+    mova                 m2, [o(clip_18b_max)]
     mova                 m5, [r3+16*2] ; t18a
     mova                 m7, [r3+16*3] ; t19
     psubd                m3, m5, m1    ; t21
@@ -6021,8 +6021,8 @@ cglobal inv_txfm_add_dct_dct_32x8_16bpc, 4, 7, 16, 0-(24+8*ARCH_X86_32)*16, \
     mova         [r3+22*16], m6
     mova         [r3+23*16], m7
     mova                 m1, [o(pd_2)]
-    mova                 m2, [o(clip_min)]
-    mova                 m3, [o(clip_max)]
+    mova                 m2, [o(clip_18b_min)]
+    mova                 m3, [o(clip_18b_max)]
 
     mov                  r4, 15*16
 .loop_dct32_end:
@@ -6103,8 +6103,8 @@ cglobal inv_txfm_add_dct_dct_32x16_16bpc, 4, 7, 16, 0-(24+8*ARCH_X86_32)*16, \
 .loop_pass1:
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
     mova                 m0, [cq+64* 1+r5*8]
@@ -6320,8 +6320,8 @@ cglobal inv_txfm_add_dct_dct_32x16_16bpc, 4, 7, 16, 0-(24+8*ARCH_X86_32)*16, \
     mova         [r3+22*16], m6
     mova         [r3+23*16], m7
     pcmpeqd              m1, m1     ; -1
-    mova                 m2, [o(clip_min)]
-    mova                 m3, [o(clip_max)]
+    mova                 m2, [o(clip_18b_min)]
+    mova                 m3, [o(clip_18b_max)]
 
     mov                  r4, 15*16
 .loop_dct32_end:
@@ -6418,8 +6418,8 @@ cglobal inv_txfm_add_dct_dct_32x32_16bpc, 4, 7, 16, 0-(5*32+1)*16, \
     mova                 m7, [cq+128*31+r5*8]
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
     mov                  r3, rsp
@@ -6636,8 +6636,8 @@ cglobal inv_txfm_add_dct_dct_16x64_16bpc, 4, 7, 16, \
 .loop_pass1:
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
     mova                 m0, [cq+ 1*128+r5*8]
@@ -6919,8 +6919,8 @@ cglobal inv_txfm_add_dct_dct_32x64_16bpc, 4, 7, 16, \
 .loop_pass1:
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
     mova                 m0, [cq+128* 1+r5*8]
@@ -7136,8 +7136,8 @@ cglobal inv_txfm_add_dct_dct_64x16_16bpc, 4, 7, 16, 0-(64+8*ARCH_X86_32)*16, \
 .loop_pass1:
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
 
@@ -7339,11 +7339,11 @@ cglobal inv_txfm_add_dct_dct_64x16_16bpc, 4, 7, 16, 0-(64+8*ARCH_X86_32)*16, \
     paddd                m3, m2     ; t35
     psubd                m2, m4, m0 ; t61
     paddd                m4, m0     ; t60
-    mova                 m0, [o(clip_min)]
+    mova                 m0, [o(clip_18b_min)]
     REPX     {pmaxsd x, m0}, m5, m1, m7, m6, m3, m2, m4
     pmaxsd               m0, [r3+1*16]
     mova          [r3+0*16], m0
-    mova                 m0, [o(clip_max)]
+    mova                 m0, [o(clip_18b_max)]
     REPX     {pminsd x, m0}, m5, m1, m7, m6, m3, m2, m4
     pminsd               m0, [r3+0*16]
     mova          [r3+0*16], m0
@@ -7373,11 +7373,11 @@ cglobal inv_txfm_add_dct_dct_64x16_16bpc, 4, 7, 16, 0-(64+8*ARCH_X86_32)*16, \
     paddd                m1, m6     ; t33
     psubd                m6, m5, m2 ; t61
     paddd                m2, m5     ; t62
-    mova                 m5, [o(clip_min)]
+    mova                 m5, [o(clip_18b_min)]
     REPX     {pmaxsd x, m5}, m0, m3, m7, m4, m1, m6, m2
     pmaxsd               m5, [r3+0*16]
     mova          [r3+0*16], m5
-    mova                 m5, [o(clip_max)]
+    mova                 m5, [o(clip_18b_max)]
     REPX     {pminsd x, m5}, m0, m3, m7, m4, m1, m6, m2
     pminsd               m5, [r3+0*16]
     mova          [r3+16*0], m0
@@ -7476,11 +7476,11 @@ cglobal inv_txfm_add_dct_dct_64x16_16bpc, 4, 7, 16, 0-(64+8*ARCH_X86_32)*16, \
     paddd                m5, m4     ; t47
     psubd                m4, m7, m6 ; t55
     paddd                m7, m6     ; t48
-    mova                 m6, [o(clip_min)]
+    mova                 m6, [o(clip_18b_min)]
     REPX     {pmaxsd x, m6}, m0, m1, m2, m3, m5, m4, m7
     pmaxsd               m6, [r3+0*16]
     mova          [r3+0*16], m6
-    mova                 m6, [o(clip_max)]
+    mova                 m6, [o(clip_18b_max)]
     REPX     {pminsd x, m6}, m0, m1, m2, m3, m5, m4, m7
     pminsd               m6, [r3+0*16]
     mova          [r3+0*16], m0
@@ -7503,11 +7503,11 @@ cglobal inv_txfm_add_dct_dct_64x16_16bpc, 4, 7, 16, 0-(64+8*ARCH_X86_32)*16, \
     paddd                m6, m4     ; t56
     psubd                m4, m1, m3 ; t40
     paddd                m1, m3     ; t39
-    mova                 m3, [o(clip_min)]
+    mova                 m3, [o(clip_18b_min)]
     REPX     {pmaxsd x, m3}, m2, m7, m0, m5, m6, m4, m1
     pmaxsd               m3, [r3+1*16]
     mova          [r3+0*16], m3
-    mova                 m3, [o(clip_max)]
+    mova                 m3, [o(clip_18b_max)]
     REPX     {pminsd x, m3}, m2, m7, m0, m5, m6, m4, m1
     pminsd               m3, [r3+0*16]
     mova         [r4-16* 8], m2
@@ -7577,8 +7577,8 @@ cglobal inv_txfm_add_dct_dct_64x16_16bpc, 4, 7, 16, 0-(64+8*ARCH_X86_32)*16, \
     mova                 m1, [r3+16*44] ; idct16 15 - n
     paddd                m4, m0, m1     ; idct16 out0  + n
     psubd                m0, m1         ; idct16 out15 - n
-    mova                 m5, [o(clip_min)]
-    mova                 m6, [o(clip_max)]
+    mova                 m5, [o(clip_18b_min)]
+    mova                 m6, [o(clip_18b_max)]
     REPX     {pmaxsd x, m5}, m4, m0
     REPX     {pminsd x, m6}, m4, m0
     paddd                m1, m4, m3     ; idct32 out0  + n
@@ -7720,8 +7720,8 @@ cglobal inv_txfm_add_dct_dct_64x32_16bpc, 4, 7, 16, \
 .loop_pass1:
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
 
@@ -7956,8 +7956,8 @@ cglobal inv_txfm_add_dct_dct_64x64_16bpc, 4, 7, 16, \
 .loop_pass1:
 %if ARCH_X86_64
     mova                m11, [o(pd_2048)]
-    mova                m12, [o(clip_min)]
-    mova                m13, [o(clip_max)]
+    mova                m12, [o(clip_18b_min)]
+    mova                m13, [o(clip_18b_max)]
     mova                m14, [o(pd_2896)]
 %endif
 

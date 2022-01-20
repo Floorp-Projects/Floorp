@@ -796,6 +796,45 @@ Tester.prototype = {
         { category: "Test", startTime: this.lastStartTimestamp },
         name
       );
+
+      // See if we should upload a profile of a failing test.
+      if (this.currentTest.failCount) {
+        let env = Cc["@mozilla.org/process/environment;1"].getService(
+          Ci.nsIEnvironment
+        );
+        // If MOZ_PROFILER_SHUTDOWN is set, the profiler got started from --profiler
+        // and a profile will be shown even if there's no test failure.
+        if (
+          env.exists("MOZ_UPLOAD_DIR") &&
+          !env.exists("MOZ_PROFILER_SHUTDOWN") &&
+          Services.profiler.IsActive()
+        ) {
+          let filename = `profile_${name}.json`;
+          let path = env.get("MOZ_UPLOAD_DIR");
+          let profilePath = PathUtils.join(path, filename);
+          try {
+            let profileData = await Services.profiler.getProfileDataAsGzippedArrayBuffer();
+            await IOUtils.write(profilePath, new Uint8Array(profileData));
+            this.currentTest.addResult(
+              new testResult({
+                name:
+                  "Found unexpected failures during the test; profile uploaded in " +
+                  filename,
+              })
+            );
+          } catch (e) {
+            // If the profile is large, we may encounter out of memory errors.
+            this.currentTest.addResult(
+              new testResult({
+                name:
+                  "Found unexpected failures during the test; failed to upload profile: " +
+                  e,
+              })
+            );
+          }
+        }
+      }
+
       let time = Date.now() - this.lastStartTime;
 
       this.structuredLogger.testEnd(

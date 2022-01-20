@@ -188,6 +188,18 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         .Else(InvalidSyscall());
   }
 
+  static intptr_t SchedTrap(ArgsRef aArgs, void* aux) {
+    const pid_t tid = syscall(__NR_gettid);
+    if (aArgs.args[0] == static_cast<uint64_t>(tid)) {
+      return DoSyscall(aArgs.nr, 0, static_cast<uintptr_t>(aArgs.args[1]),
+                       static_cast<uintptr_t>(aArgs.args[2]),
+                       static_cast<uintptr_t>(aArgs.args[3]),
+                       static_cast<uintptr_t>(aArgs.args[4]),
+                       static_cast<uintptr_t>(aArgs.args[5]));
+    }
+    return -EPERM;
+  }
+
  private:
   // Bug 1093893: Translate tkill to tgkill for pthread_kill; fixed in
   // bionic commit 10c8ce59a (in JB and up; API level 16 = Android 4.1).
@@ -283,6 +295,10 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
   static intptr_t UnlinkTrap(ArgsRef aArgs, void* aux) {
     auto broker = static_cast<SandboxBrokerClient*>(aux);
     auto path = reinterpret_cast<const char*>(aArgs.args[0]);
+    if (path && path[0] == '\0') {
+      // If the path is empty, then just fail the call here
+      return -ENOENT;
+    }
     return broker->Unlink(path);
   }
 
@@ -472,6 +488,10 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
     auto fd = static_cast<int>(aArgs.args[0]);
     auto path = reinterpret_cast<const char*>(aArgs.args[1]);
     auto flags = static_cast<int>(aArgs.args[2]);
+    if (path && path[0] == '\0') {
+      // If the path is empty, then just fail the call here
+      return -ENOENT;
+    }
     if (fd != AT_FDCWD && path[0] != '/') {
       SANDBOX_LOG_ERROR("unsupported fd-relative unlinkat(%d, \"%s\", 0x%x)",
                         fd, path, flags);
@@ -1627,19 +1647,6 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
     return fd;
   }
 
-  static intptr_t SchedTrap(ArgsRef aArgs, void* aux) {
-    const pid_t tid = syscall(__NR_gettid);
-    if (aArgs.args[0] == static_cast<uint64_t>(tid)) {
-      return DoSyscall(aArgs.nr, 0, static_cast<uintptr_t>(aArgs.args[1]),
-                       static_cast<uintptr_t>(aArgs.args[2]),
-                       static_cast<uintptr_t>(aArgs.args[3]),
-                       static_cast<uintptr_t>(aArgs.args[4]),
-                       static_cast<uintptr_t>(aArgs.args[5]));
-    }
-    SANDBOX_LOG_ERROR("unsupported tid in SchedTrap");
-    return BlockedSyscallTrap(aArgs, nullptr);
-  }
-
   static intptr_t UnameTrap(const sandbox::arch_seccomp_data& aArgs,
                             void* aux) {
     const auto buf = reinterpret_cast<struct utsname*>(aArgs.args[0]);
@@ -1775,6 +1782,20 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
   }
 #endif
 
+  Maybe<ResultExpr> EvaluateSocketCall(int aCall,
+                                       bool aHasArgs) const override {
+    switch (aCall) {
+      // Mesa can call getpwuid_r to get the home dir, which can try
+      // to connect to nscd (or maybe servers like NIS or LDAP); this
+      // can't be safely allowed, but we can quietly deny it.
+      case SYS_SOCKET:
+        return Some(Error(EACCES));
+
+      default:
+        return SandboxPolicyCommon::EvaluateSocketCall(aCall, aHasArgs);
+    }
+  }
+
   ResultExpr EvaluateSyscall(int sysno) const override {
     switch (sysno) {
       case __NR_getrusage:
@@ -1785,9 +1806,13 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
         auto shifted_type = request & kIoctlTypeMask;
         static constexpr unsigned long kDrmType =
             static_cast<unsigned long>('d') << _IOC_TYPESHIFT;
+        // Note: 'b' is also the Binder device on Android.
+        static constexpr unsigned long kDmaBufType =
+            static_cast<unsigned long>('b') << _IOC_TYPESHIFT;
 
-        // Allow DRI for VA-API
+        // Allow DRI and DMA-Buf for VA-API
         return If(shifted_type == kDrmType, Allow())
+            .ElseIf(shifted_type == kDmaBufType, Allow())
             .Else(SandboxPolicyCommon::EvaluateSyscall(sysno));
       }
 
@@ -1797,6 +1822,26 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
 
         // We use this in our DMABuf support code.
       case __NR_eventfd2:
+        return Allow();
+
+        // Allow the sched_* syscalls for the current thread only.
+        // Mesa attempts to use them to optimize performance; often
+        // this involves passing other threads' tids, which we can't
+        // safely allow, but maybe a future Mesa version could fix that.
+      case __NR_sched_getaffinity:
+      case __NR_sched_setaffinity:
+      case __NR_sched_getparam:
+      case __NR_sched_setparam:
+      case __NR_sched_getscheduler:
+      case __NR_sched_setscheduler:
+      case __NR_sched_getattr:
+      case __NR_sched_setattr: {
+        Arg<pid_t> pid(0);
+        return If(pid == 0, Allow()).Else(Trap(SchedTrap, nullptr));
+      }
+
+        // Mesa sometimes wants to know the OS version.
+      case __NR_uname:
         return Allow();
 
         // Pass through the common policy.

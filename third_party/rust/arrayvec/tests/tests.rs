@@ -773,7 +773,6 @@ fn test_arrayvec_const_constructible() {
     assert_eq!(var[..], [vec![3, 5, 8]]);
 }
 
-
 #[test]
 fn test_arraystring_const_constructible() {
     const AS: ArrayString<10> = ArrayString::new_const();
@@ -786,3 +785,9 @@ fn test_arraystring_const_constructible() {
 }
 
 
+#[test]
+fn test_arraystring_zero_filled_has_some_sanity_checks() {
+    let string = ArrayString::<4>::zero_filled();
+    assert_eq!(string.as_str(), "\0\0\0\0");
+    assert_eq!(string.len(), 4);
+}

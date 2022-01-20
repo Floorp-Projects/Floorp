@@ -340,7 +340,7 @@ else:
         CONFIGURE_ARGS += " --target=x86_64-pc-mingw32"
 
 if platform.system() == "Linux" and AUTOMATION:
-    CONFIGURE_ARGS = "--enable-stdcxx-compat --disable-gold " + CONFIGURE_ARGS
+    CONFIGURE_ARGS = "--enable-stdcxx-compat " + CONFIGURE_ARGS
 
 # Timeouts.
 ACTIVE_PROCESSES = set()
@@ -470,7 +470,7 @@ mach = posixpath.join(PDIR.source, "mach")
 
 if not args.nobuild:
     # Do the build
-    run_command([mach, "build"], check=True)
+    run_command([sys.executable, mach, "build"], check=True)
 
     if use_minidump:
         # Convert symbols to breakpad format.
@@ -481,6 +481,7 @@ if not args.nobuild:
         cmd_env["MOZ_AUTOMATION_BUILD_SYMBOLS"] = "1"
         run_command(
             [
+                sys.executable,
                 mach,
                 "build",
                 "recurse_syms",

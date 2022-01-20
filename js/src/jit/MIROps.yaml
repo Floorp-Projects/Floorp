@@ -1321,7 +1321,6 @@
   guard: true
   movable: true
   congruent_to: custom
-  folds_to: custom
   alias_set: custom
 
 - name: GuardProto
@@ -2728,4 +2727,19 @@
   gen_boilerplate: false
 
 - name: IonToWasmCall
+  gen_boilerplate: false
+
+- name: WasmExceptionDataPointer
+  gen_boilerplate: false
+
+- name: WasmLoadExceptionDataValue
+  gen_boilerplate: false
+
+- name: WasmStoreExceptionDataValue
+  gen_boilerplate: false
+
+- name: WasmExceptionRefsPointer
+  gen_boilerplate: false
+
+- name: WasmLoadExceptionRefsValue
   gen_boilerplate: false

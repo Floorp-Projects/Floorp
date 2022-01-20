@@ -1,0 +1,9 @@
+{
+    "stages": "4",
+    "pgo" : true,
+    "build_wasm": true,
+    "cc": "/usr/bin/gcc",
+    "cxx": "/usr/bin/g++",
+    "as": "/usr/bin/gcc",
+    "wasi-compiler-rt": "{MOZ_FETCHES_DIR}/compiler-rt"
+}

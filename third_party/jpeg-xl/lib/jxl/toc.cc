@@ -31,6 +31,13 @@ Status ReadGroupOffsets(size_t toc_entries, BitReader* JXL_RESTRICT reader,
     return JXL_FAILURE("too many toc entries");
   }
 
+  sizes->clear();
+  sizes->resize(toc_entries);
+  offsets->clear();
+  offsets->resize(toc_entries);
+  if (reader->TotalBitsConsumed() >= reader->TotalBytes() * kBitsPerByte) {
+    return JXL_STATUS(StatusCode::kNotEnoughBytes, "Not enough bytes for TOC");
+  }
   const auto check_bit_budget = [&](size_t num_entries) -> Status {
     // U32Coder reads 2 bits to recognize variant and kTocDist cheapest variant
     // is Bits(10), this way at least 12 bits are required per toc-entry.
@@ -56,23 +63,19 @@ Status ReadGroupOffsets(size_t toc_entries, BitReader* JXL_RESTRICT reader,
 
   JXL_RETURN_IF_ERROR(reader->JumpToByteBoundary());
   JXL_RETURN_IF_ERROR(check_bit_budget(toc_entries));
-  sizes->clear();
-  sizes->reserve(toc_entries);
   for (size_t i = 0; i < toc_entries; ++i) {
-    sizes->push_back(U32Coder::Read(kTocDist, reader));
+    (*sizes)[i] = U32Coder::Read(kTocDist, reader);
   }
   JXL_RETURN_IF_ERROR(reader->JumpToByteBoundary());
   JXL_RETURN_IF_ERROR(check_bit_budget(0));
 
   // Prefix sum starting with 0 and ending with the offset of the last group
-  offsets->clear();
-  offsets->reserve(toc_entries);
   uint64_t offset = 0;
   for (size_t i = 0; i < toc_entries; ++i) {
     if (offset + (*sizes)[i] < offset) {
       return JXL_FAILURE("group offset overflow");
     }
-    offsets->push_back(offset);
+    (*offsets)[i] = offset;
     offset += (*sizes)[i];
   }
   if (total_size) {

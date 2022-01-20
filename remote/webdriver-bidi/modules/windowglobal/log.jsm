@@ -15,6 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/shared/listeners/ConsoleAPIListener.jsm",
   ConsoleListener:
     "chrome://remote/content/shared/listeners/ConsoleListener.jsm",
+  isChromeFrame: "chrome://remote/content/shared/Stack.jsm",
   Module: "chrome://remote/content/shared/messagehandler/Module.jsm",
   serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
 });
@@ -78,10 +79,47 @@ class Log extends Module {
     }
   }
 
+  /**
+   * Map the internal stacktrace representation to a WebDriver BiDi
+   * compatible one.
+   *
+   * Currently chrome frames will be filtered out until chrome scope
+   * is supported (bug 1722679).
+   *
+   * @param {Array<StackFrame>=} stackTrace
+   *     Stack frames to process.
+   *
+   * @returns {Object=} Object, containing the list of frames as `callFrames`.
+   */
+  #buildStackTrace(stackTrace) {
+    if (stackTrace == undefined) {
+      return undefined;
+    }
+
+    const callFrames = stackTrace
+      .filter(frame => !isChromeFrame(frame))
+      .map(frame => {
+        return {
+          columnNumber: frame.columnNumber,
+          functionName: frame.functionName,
+          // Match WebDriver BiDi and convert Firefox's one-based line number.
+          lineNumber: frame.lineNumber - 1,
+          url: frame.filename,
+        };
+      });
+
+    return { callFrames };
+  }
+
   #onConsoleAPIMessage = (eventName, data = {}) => {
-    // `arguments` cannot be used as variable name in functions
-    // `level` corresponds to the console method used
-    const { arguments: messageArguments, level: method, timeStamp } = data;
+    const {
+      // `arguments` cannot be used as variable name in functions
+      arguments: messageArguments,
+      // `level` corresponds to the console method used
+      level: method,
+      stacktrace,
+      timeStamp,
+    } = data;
 
     // Step numbers below refer to the specifications at
     //   https://w3c.github.io/webdriver-bidi/#event-log-entryAdded
@@ -111,19 +149,24 @@ class Log extends Module {
       serializedArgs.push(serialize(arg /*, null, true, new Set() */));
     }
 
-    // 8. TODO: set realm to the current realm id.
+    // 8. Bug 1742589: set realm to the current realm id.
 
-    // 9. TODO: set stack to the current stack trace.
+    // 9. Set stack trace only for certain methods.
+    let stackTrace;
+    if (["assert", "error", "trace", "warn"].includes(method)) {
+      stackTrace = this.#buildStackTrace(stacktrace);
+    }
 
     // 10. Build the ConsoleLogEntry
     const entry = {
       type: "console",
-      level: logEntrylevel,
-      text,
-      timestamp,
       method,
       realm: null,
       args: serializedArgs,
+      level: logEntrylevel,
+      text,
+      timestamp,
+      stackTrace,
     };
 
     // TODO: steps 11. to 15. Those steps relate to:
@@ -138,15 +181,15 @@ class Log extends Module {
   };
 
   #onJavaScriptError = (eventName, data = {}) => {
-    const { level, message, timeStamp } = data;
+    const { level, message, stacktrace, timeStamp } = data;
 
+    // Build the JavascriptLogEntry
     const entry = {
       type: "javascript",
       level,
       text: message,
       timestamp: timeStamp || Date.now(),
-      // TODO: Bug 1731553
-      stackTrace: undefined,
+      stackTrace: this.#buildStackTrace(stacktrace),
     };
 
     this.messageHandler.emitMessageHandlerEvent("log.entryAdded", entry);

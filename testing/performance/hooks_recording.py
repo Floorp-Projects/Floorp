@@ -78,6 +78,7 @@ def before_runs(env):
         add_option(env, "browsertime.url", test_site.get("test_url"), overwrite=True)
         add_option(env, "browsertime.screenshot", "true")
         add_option(env, "browsertime.testName", test_site.get("name"))
+        add_option(env, "browsertime.testType", test_site.get("type", "pageload"))
 
         prefs = test_site.get("preferences", {})
         for pref, val in prefs.items():
@@ -86,6 +87,9 @@ def before_runs(env):
         second_url = test_site.get("secondary_url", None)
         if second_url:
             add_option(env, "browsertime.secondary_url", second_url)
+
+        inject_deterministic = test_site.get("inject_deterministic", True)
+        env.set_arg("proxy-deterministic", inject_deterministic)
 
         cmds = test_site.get("test_cmds", [])
         if cmds:

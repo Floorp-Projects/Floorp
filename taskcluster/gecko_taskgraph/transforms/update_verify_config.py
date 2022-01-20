@@ -8,6 +8,7 @@ Transform the beetmover task into an actual task description.
 from urllib.parse import urlsplit
 
 from gecko_taskgraph.transforms.base import TransformSequence
+from gecko_taskgraph.util.attributes import release_level
 from gecko_taskgraph.util.schema import resolve_keyed_by
 from gecko_taskgraph.util.scriptworker import get_release_config
 from gecko_taskgraph.transforms.task import (
@@ -127,7 +128,7 @@ def add_command(config, tasks):
                 platform=task["attributes"]["build_platform"],
                 **{
                     "release-type": config.params["release_type"],
-                    "release-level": config.params.release_level(),
+                    "release-level": release_level(config.params["project"]),
                 },
             )
             # ignore things that resolved to null

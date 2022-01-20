@@ -8,8 +8,6 @@ from __future__ import absolute_import, print_function
 import json
 import os
 import re
-from talos import utils
-import six
 
 KEY_XRE = "{xre}"
 DEFAULT_DURATION = 100.0
@@ -58,7 +56,7 @@ class Allowlist:
         filename = filename.lower()
         filename.replace(" (x86)", "")
 
-        for path, subst in six.iteritems(self.path_substitutions):
+        for path, subst in self.path_substitutions.items():
             parts = filename.split(path)
             if len(parts) >= 2:
                 if self.PRE_PROFILE == "" and subst == "{profile}":
@@ -81,8 +79,8 @@ class Allowlist:
 
                 filename = "%s%s" % (subst, path.join(parts[1:]))
 
-        for old_name, new_name in six.iteritems(self.name_substitutions):
-            if isinstance(old_name, re._pattern_type):
+        for old_name, new_name in self.name_substitutions.items():
+            if isinstance(old_name, re.Pattern):
                 filename = re.sub(old_name, new_name, filename)
             else:
                 parts = filename.split(old_name)
@@ -93,7 +91,7 @@ class Allowlist:
 
     def check(self, test, file_name_index, event_source_index=None):
         errors = {}
-        for row_key in six.iterkeys(test):
+        for row_key in test.keys():
             filename = self.sanitize_filename(row_key[file_name_index])
 
             if filename in self.listmap:
@@ -117,7 +115,7 @@ class Allowlist:
 
     def checkDuration(self, test, file_name_index, file_duration_index):
         errors = {}
-        for idx, (row_key, row_value) in utils.indexed_items(six.iteritems(test)):
+        for idx, (row_key, row_value) in enumerate(test.items()):
             if row_value[file_duration_index] > DEFAULT_DURATION:
                 filename = self.sanitize_filename(row_key[file_name_index])
                 if (
@@ -157,7 +155,7 @@ class Allowlist:
     @staticmethod
     def get_error_strings(errors):
         error_strs = []
-        for filename, data in six.iteritems(errors):
+        for filename, data in errors.items():
             for datum in data:
                 error_strs.append(
                     "File '%s' was accessed and we were not"

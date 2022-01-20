@@ -73,7 +73,7 @@
 #include "builtin/ModuleObject.h"
 #include "builtin/RegExp.h"
 #include "builtin/TestingFunctions.h"
-#include "builtin/TestingUtility.h"  // js::ParseCompileOptions
+#include "builtin/TestingUtility.h"  // js::ParseCompileOptions, js::ParseDebugMetadata, js::CreateScriptPrivate
 #include "debugger/DebugAPI.h"
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/BytecodeCompiler.h"
@@ -120,7 +120,7 @@
 #include "js/experimental/CTypes.h"        // JS::InitCTypesClass
 #include "js/experimental/Intl.h"  // JS::AddMoz{DateTimeFormat,DisplayNames}Constructor
 #include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter,Method}CallArgs, JSJitGetterInfo, JSJit{Getter,Setter}Op, JSJitInfo
-#include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileToStencilOffThread, JS::FinishOffThreadCompileToStencil
+#include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileToStencilOffThread, JS::FinishCompileToStencilOffThread
 #include "js/experimental/SourceHook.h"  // js::{Set,Forget,}SourceHook
 #include "js/experimental/TypedData.h"   // JS_NewUint8Array
 #include "js/friend/DumpFunctions.h"     // JS::FormatStackDump
@@ -376,7 +376,7 @@ class js::shell::OffThreadJob {
  public:
   using Source = mozilla::Variant<JS::UniqueTwoByteChars, JS::TranscodeBuffer>;
 
-  OffThreadJob(ShellContext* sc, ScriptKind kind, Source&& source);
+  OffThreadJob(ShellContext* sc, OffThreadJobKind kind, Source&& source);
   ~OffThreadJob();
 
   void cancel();
@@ -388,7 +388,7 @@ class js::shell::OffThreadJob {
 
  public:
   const int32_t id;
-  const ScriptKind kind;
+  const OffThreadJobKind kind;
 
  private:
   js::Monitor& monitor;
@@ -397,7 +397,7 @@ class js::shell::OffThreadJob {
   Source source;
 };
 
-static OffThreadJob* NewOffThreadJob(JSContext* cx, ScriptKind kind,
+static OffThreadJob* NewOffThreadJob(JSContext* cx, OffThreadJobKind kind,
                                      CompileOptions& options,
                                      OffThreadJob::Source&& source) {
   ShellContext* sc = GetShellContext(cx);
@@ -416,7 +416,8 @@ static OffThreadJob* NewOffThreadJob(JSContext* cx, ScriptKind kind,
   return job.release();
 }
 
-static OffThreadJob* GetSingleOffThreadJob(JSContext* cx, ScriptKind kind) {
+static OffThreadJob* GetSingleOffThreadJob(JSContext* cx,
+                                           OffThreadJobKind kind) {
   ShellContext* sc = GetShellContext(cx);
   const auto& jobs = sc->offThreadJobs;
   if (jobs.empty()) {
@@ -439,8 +440,8 @@ static OffThreadJob* GetSingleOffThreadJob(JSContext* cx, ScriptKind kind) {
   return job;
 }
 
-static OffThreadJob* LookupOffThreadJobByID(JSContext* cx, ScriptKind kind,
-                                            int32_t id) {
+static OffThreadJob* LookupOffThreadJobByID(JSContext* cx,
+                                            OffThreadJobKind kind, int32_t id) {
   if (id <= 0) {
     JS_ReportErrorASCII(cx, "Bad off-thread job ID");
     return nullptr;
@@ -474,7 +475,8 @@ static OffThreadJob* LookupOffThreadJobByID(JSContext* cx, ScriptKind kind,
   return job;
 }
 
-static OffThreadJob* LookupOffThreadJobForArgs(JSContext* cx, ScriptKind kind,
+static OffThreadJob* LookupOffThreadJobForArgs(JSContext* cx,
+                                               OffThreadJobKind kind,
                                                const CallArgs& args,
                                                size_t arg) {
   // If the optional ID argument isn't present, get the single pending job.
@@ -532,7 +534,8 @@ static void CancelOffThreadJobsForRuntime(JSContext* cx) {
 
 mozilla::Atomic<int32_t> gOffThreadJobSerial(1);
 
-OffThreadJob::OffThreadJob(ShellContext* sc, ScriptKind kind, Source&& source)
+OffThreadJob::OffThreadJob(ShellContext* sc, OffThreadJobKind kind,
+                           Source&& source)
     : id(gOffThreadJobSerial++),
       kind(kind),
       monitor(sc->offThreadMonitor),
@@ -972,22 +975,6 @@ void EnvironmentPreparer::invoke(HandleObject global, Closure& closure) {
   }
 }
 
-JSObject* js::shell::CreateScriptPrivate(JSContext* cx, HandleString path) {
-  RootedObject info(cx, JS_NewPlainObject(cx));
-  if (!info) {
-    return nullptr;
-  }
-
-  if (path) {
-    RootedValue pathValue(cx, StringValue(path));
-    if (!JS_DefineProperty(cx, info, "path", pathValue, JSPROP_ENUMERATE)) {
-      return nullptr;
-    }
-  }
-
-  return info;
-}
-
 static bool RegisterScriptPathWithModuleLoader(JSContext* cx,
                                                HandleScript script,
                                                const char* filename) {
@@ -1001,7 +988,7 @@ static bool RegisterScriptPathWithModuleLoader(JSContext* cx,
   }
 
   MOZ_ASSERT(JS::GetScriptPrivate(script).isUndefined());
-  RootedObject infoObject(cx, CreateScriptPrivate(cx, path));
+  RootedObject infoObject(cx, js::CreateScriptPrivate(cx, path));
   if (!infoObject) {
     return false;
   }
@@ -2000,44 +1987,6 @@ static bool LoadScriptRelativeToScript(JSContext* cx, unsigned argc,
   return LoadScript(cx, argc, vp, true);
 }
 
-static bool ParseDebugMetadata(JSContext* cx, HandleObject opts,
-                               MutableHandleValue privateValue,
-                               MutableHandleString elementAttributeName) {
-  RootedValue v(cx);
-  RootedString s(cx);
-
-  if (!JS_GetProperty(cx, opts, "element", &v)) {
-    return false;
-  }
-  if (v.isObject()) {
-    RootedObject infoObject(cx, CreateScriptPrivate(cx));
-    if (!infoObject) {
-      return false;
-    }
-    RootedValue elementValue(cx, v);
-    if (!JS_WrapValue(cx, &elementValue)) {
-      return false;
-    }
-    if (!JS_DefineProperty(cx, infoObject, "element", elementValue, 0)) {
-      return false;
-    }
-    privateValue.set(ObjectValue(*infoObject));
-  }
-
-  if (!JS_GetProperty(cx, opts, "elementAttributeName", &v)) {
-    return false;
-  }
-  if (!v.isUndefined()) {
-    s = ToString(cx, v);
-    if (!s) {
-      return false;
-    }
-    elementAttributeName.set(s);
-  }
-
-  return true;
-}
-
 static void my_LargeAllocFailCallback() {
   JSContext* cx = TlsContext.get();
   if (!cx || cx->isHelperThreadContext()) {
@@ -2225,32 +2174,6 @@ static bool ConvertTranscodeResultToJSException(JSContext* cx,
       MOZ_ASSERT(cx->isExceptionPending());
       return false;
   }
-}
-
-static bool StartIncrementalEncoding(JSContext* cx,
-                                     const JS::ReadOnlyCompileOptions& options,
-                                     JS::Stencil* stencil) {
-  Rooted<frontend::CompilationInput> input(cx,
-                                           frontend::CompilationInput(options));
-
-  auto initial =
-      js::MakeUnique<frontend::ExtensibleCompilationStencil>(cx, input.get());
-  if (!initial) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  auto* source = stencil->source.get();
-
-  if (!initial->steal(cx, std::move(*stencil))) {
-    return false;
-  }
-
-  if (!source->startIncrementalEncoding(cx, std::move(initial))) {
-    return false;
-  }
-
-  return true;
 }
 
 static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
@@ -2495,7 +2418,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
         }
 
         if (saveIncrementalBytecode) {
-          if (!StartIncrementalEncoding(cx, options, stencil)) {
+          if (!JS::StartIncrementalEncoding(cx, std::move(stencil))) {
             return false;
           }
         }
@@ -4231,8 +4154,7 @@ static bool CreateErrorReport(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedString toString(cx,
-                        NewStringCopyUTF8Z<CanGC>(cx, report.toStringResult()));
+  RootedString toString(cx, NewStringCopyUTF8Z(cx, report.toStringResult()));
   if (!toString) {
     return false;
   }
@@ -6199,146 +6121,6 @@ static void OffThreadCompileScriptCallback(JS::OffThreadToken* token,
   job->markDone(token);
 }
 
-static bool OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp) {
-  if (!CanUseExtraThreads()) {
-    JS_ReportErrorASCII(cx,
-                        "Can't use offThreadCompileScript with --no-threads");
-    return false;
-  }
-
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  if (!args.requireAtLeast(cx, "offThreadCompileScript", 1)) {
-    return false;
-  }
-  if (!args[0].isString()) {
-    const char* typeName = InformalValueTypeName(args[0]);
-    JS_ReportErrorASCII(cx, "expected string to parse, got %s", typeName);
-    return false;
-  }
-
-  UniqueChars fileNameBytes;
-  CompileOptions options(cx);
-  options.setIntroductionType("js shell offThreadCompileScript")
-      .setFileAndLine("<string>", 1)
-      .setDeferDebugMetadata();
-
-  if (args.length() >= 2) {
-    if (!args[1].isObject()) {
-      JS_ReportErrorASCII(
-          cx, "offThreadCompileScript: The 2nd argument must be an object");
-      return false;
-    }
-
-    // Offthread compilation requires that the debug metadata be set when the
-    // script is collected from offthread, rather than when compiled.
-    RootedObject opts(cx, &args[1].toObject());
-    if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
-      return false;
-    }
-  }
-
-  // These option settings must override whatever the caller requested.
-  options.setIsRunOnce(true).setSourceIsLazy(false);
-
-  // We assume the caller wants caching if at all possible, ignoring
-  // heuristics that make sense for a real browser.
-  options.forceAsync = true;
-
-  JSString* scriptContents = args[0].toString();
-  AutoStableStringChars stableChars(cx);
-  if (!stableChars.initTwoByte(cx, scriptContents)) {
-    return false;
-  }
-
-  size_t length = scriptContents->length();
-  const char16_t* chars = stableChars.twoByteChars();
-
-  // Make sure we own the string's chars, so that they are not freed before
-  // the compilation is finished.
-  UniqueTwoByteChars ownedChars;
-  if (stableChars.maybeGiveOwnershipToCaller()) {
-    ownedChars.reset(const_cast<char16_t*>(chars));
-  } else {
-    ownedChars.reset(cx->pod_malloc<char16_t>(length));
-    if (!ownedChars) {
-      return false;
-    }
-
-    mozilla::PodCopy(ownedChars.get(), chars, length);
-  }
-
-  if (!JS::CanCompileOffThread(cx, options, length)) {
-    JS_ReportErrorASCII(cx, "cannot compile code on worker thread");
-    return false;
-  }
-
-  OffThreadJob* job =
-      NewOffThreadJob(cx, ScriptKind::Script, options,
-                      OffThreadJob::Source(std::move(ownedChars)));
-  if (!job) {
-    return false;
-  }
-
-  JS::SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, job->sourceChars(), length,
-                   JS::SourceOwnership::Borrowed) ||
-      !JS::CompileOffThread(cx, options, srcBuf, OffThreadCompileScriptCallback,
-                            job)) {
-    job->cancel();
-    DeleteOffThreadJob(cx, job);
-    return false;
-  }
-
-  args.rval().setInt32(job->id);
-  return true;
-}
-
-static bool runOffThreadScript(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  OffThreadJob* job =
-      LookupOffThreadJobForArgs(cx, ScriptKind::Script, args, 0);
-  if (!job) {
-    return false;
-  }
-
-  JS::OffThreadToken* token = job->waitUntilDone(cx);
-  MOZ_ASSERT(token);
-
-  RootedScript script(cx, JS::FinishOffThreadScript(cx, token));
-  DeleteOffThreadJob(cx, job);
-  if (!script) {
-    return false;
-  }
-
-  RootedValue privateValue(cx);
-  RootedString elementAttributeName(cx);
-
-  if (args.length() >= 2) {
-    if (args[1].isPrimitive()) {
-      JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
-                                JSSMSG_INVALID_ARGS, "compile");
-      return false;
-    }
-
-    RootedObject opts(cx, &args[1].toObject());
-    if (!ParseDebugMetadata(cx, opts, &privateValue, &elementAttributeName)) {
-      return false;
-    }
-  }
-
-  CompileOptions dummyOptions(cx);
-  JS::InstantiateOptions dummyInstantiateOptions(dummyOptions);
-  if (!JS::UpdateDebugMetadata(cx, script, dummyInstantiateOptions,
-                               privateValue, elementAttributeName, nullptr,
-                               nullptr)) {
-    return false;
-  }
-
-  return JS_ExecuteScript(cx, script, args.rval());
-}
-
 static bool OffThreadCompileToStencil(JSContext* cx, unsigned argc, Value* vp) {
   if (!CanUseExtraThreads()) {
     JS_ReportErrorASCII(
@@ -6414,7 +6196,7 @@ static bool OffThreadCompileToStencil(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   OffThreadJob* job =
-      NewOffThreadJob(cx, ScriptKind::ScriptStencil, options,
+      NewOffThreadJob(cx, OffThreadJobKind::CompileScript, options,
                       OffThreadJob::Source(std::move(ownedChars)));
   if (!job) {
     return false;
@@ -6439,7 +6221,7 @@ static bool FinishOffThreadCompileToStencil(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
 
   OffThreadJob* job =
-      LookupOffThreadJobForArgs(cx, ScriptKind::ScriptStencil, args, 0);
+      LookupOffThreadJobForArgs(cx, OffThreadJobKind::CompileScript, args, 0);
   if (!job) {
     return false;
   }
@@ -6447,7 +6229,7 @@ static bool FinishOffThreadCompileToStencil(JSContext* cx, unsigned argc,
   JS::OffThreadToken* token = job->waitUntilDone(cx);
   MOZ_ASSERT(token);
 
-  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadCompileToStencil(cx, token);
+  RefPtr<JS::Stencil> stencil = JS::FinishCompileToStencilOffThread(cx, token);
   DeleteOffThreadJob(cx, job);
   if (!stencil) {
     return false;
@@ -6462,18 +6244,20 @@ static bool FinishOffThreadCompileToStencil(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp) {
+static bool OffThreadCompileModuleToStencil(JSContext* cx, unsigned argc,
+                                            Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   if (args.length() != 1 || !args[0].isString()) {
     JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
-                              JSSMSG_INVALID_ARGS, "offThreadCompileModule");
+                              JSSMSG_INVALID_ARGS,
+                              "offThreadCompileModuleToStencil");
     return false;
   }
 
   UniqueChars fileNameBytes;
   CompileOptions options(cx);
-  options.setIntroductionType("js shell offThreadCompileModule")
+  options.setIntroductionType("js shell offThreadCompileModuleToStencil")
       .setFileAndLine("<string>", 1);
   options.setIsRunOnce(true).setSourceIsLazy(false);
   options.forceAsync = true;
@@ -6507,7 +6291,7 @@ static bool OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   OffThreadJob* job =
-      NewOffThreadJob(cx, ScriptKind::Module, options,
+      NewOffThreadJob(cx, OffThreadJobKind::CompileModule, options,
                       OffThreadJob::Source(std::move(ownedChars)));
   if (!job) {
     return false;
@@ -6516,8 +6300,8 @@ static bool OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp) {
   JS::SourceText<char16_t> srcBuf;
   if (!srcBuf.init(cx, job->sourceChars(), length,
                    JS::SourceOwnership::Borrowed) ||
-      !JS::CompileOffThreadModule(cx, options, srcBuf,
-                                  OffThreadCompileScriptCallback, job)) {
+      !JS::CompileModuleToStencilOffThread(
+          cx, options, srcBuf, OffThreadCompileScriptCallback, job)) {
     job->cancel();
     DeleteOffThreadJob(cx, job);
     return false;
@@ -6527,11 +6311,12 @@ static bool OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool FinishOffThreadModule(JSContext* cx, unsigned argc, Value* vp) {
+static bool FinishOffThreadCompileModuleToStencil(JSContext* cx, unsigned argc,
+                                                  Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   OffThreadJob* job =
-      LookupOffThreadJobForArgs(cx, ScriptKind::Module, args, 0);
+      LookupOffThreadJobForArgs(cx, OffThreadJobKind::CompileModule, args, 0);
   if (!job) {
     return false;
   }
@@ -6539,31 +6324,33 @@ static bool FinishOffThreadModule(JSContext* cx, unsigned argc, Value* vp) {
   JS::OffThreadToken* token = job->waitUntilDone(cx);
   MOZ_ASSERT(token);
 
-  RootedObject module(cx, JS::FinishOffThreadModule(cx, token));
+  RefPtr<JS::Stencil> stencil =
+      JS::FinishCompileModuleToStencilOffThread(cx, token);
   DeleteOffThreadJob(cx, job);
-  if (!module) {
+  if (!stencil) {
     return false;
   }
 
-  Rooted<ShellModuleObjectWrapper*> wrapper(
-      cx, ShellModuleObjectWrapper::create(cx, module.as<ModuleObject>()));
-  if (!wrapper) {
+  RootedObject stencilObj(cx,
+                          js::StencilObject::create(cx, std::move(stencil)));
+  if (!stencilObj) {
     return false;
   }
-  args.rval().setObject(*wrapper);
+
+  args.rval().setObject(*stencilObj);
   return true;
 }
 
-static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
+static bool OffThreadDecodeStencil(JSContext* cx, unsigned argc, Value* vp) {
   if (!CanUseExtraThreads()) {
     JS_ReportErrorASCII(cx,
-                        "Can't use offThreadDecodeScript with --no-threads");
+                        "Can't use offThreadDecodeStencil with --no-threads");
     return false;
   }
 
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (!args.requireAtLeast(cx, "offThreadDecodeScript", 1)) {
+  if (!args.requireAtLeast(cx, "offThreadDecodeStencil", 1)) {
     return false;
   }
   if (!args[0].isObject() || !CacheEntry_isCacheEntry(&args[0].toObject())) {
@@ -6575,15 +6362,13 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
 
   UniqueChars fileNameBytes;
   CompileOptions options(cx);
-  options.setIntroductionType("js shell offThreadDecodeScript")
+  options.setIntroductionType("js shell offThreadDecodeStencil")
       .setFileAndLine("<string>", 1);
-
-  options.borrowBuffer = true;
 
   if (args.length() >= 2) {
     if (!args[1].isObject()) {
       JS_ReportErrorASCII(
-          cx, "offThreadDecodeScript: The 2nd argument must be an object");
+          cx, "offThreadDecodeStencil: The 2nd argument must be an object");
       return false;
     }
 
@@ -6613,20 +6398,21 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!JS::CanDecodeOffThread(cx, options, loadLength)) {
+  JS::DecodeOptions decodeOptions(options);
+  if (!JS::CanDecodeOffThread(cx, decodeOptions, loadLength)) {
     JS_ReportErrorASCII(cx, "cannot compile code on worker thread");
     return false;
   }
 
   OffThreadJob* job =
-      NewOffThreadJob(cx, ScriptKind::DecodeScript, options,
+      NewOffThreadJob(cx, OffThreadJobKind::Decode, options,
                       OffThreadJob::Source(std::move(loadBuffer)));
   if (!job) {
     return false;
   }
 
-  if (!JS::DecodeOffThreadScript(cx, options, job->xdrBuffer(), 0,
-                                 OffThreadCompileScriptCallback, job)) {
+  if (!JS::DecodeStencilOffThread(cx, decodeOptions, job->xdrBuffer(), 0,
+                                  OffThreadCompileScriptCallback, job)) {
     job->cancel();
     DeleteOffThreadJob(cx, job);
     return false;
@@ -6636,11 +6422,12 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool runOffThreadDecodedScript(JSContext* cx, unsigned argc, Value* vp) {
+static bool FinishOffThreadDecodeStencil(JSContext* cx, unsigned argc,
+                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   OffThreadJob* job =
-      LookupOffThreadJobForArgs(cx, ScriptKind::DecodeScript, args, 0);
+      LookupOffThreadJobForArgs(cx, OffThreadJobKind::Decode, args, 0);
   if (!job) {
     return false;
   }
@@ -6648,13 +6435,20 @@ static bool runOffThreadDecodedScript(JSContext* cx, unsigned argc, Value* vp) {
   JS::OffThreadToken* token = job->waitUntilDone(cx);
   MOZ_ASSERT(token);
 
-  RootedScript script(cx, JS::FinishOffThreadScriptDecoder(cx, token));
+  RefPtr<JS::Stencil> stencil = JS::FinishDecodeStencilOffThread(cx, token);
   DeleteOffThreadJob(cx, job);
-  if (!script) {
+  if (!stencil) {
     return false;
   }
 
-  return JS_ExecuteScript(cx, script, args.rval());
+  RootedObject stencilObj(cx,
+                          js::StencilObject::create(cx, std::move(stencil)));
+  if (!stencilObj) {
+    return false;
+  }
+
+  args.rval().setObject(*stencilObj);
+  return true;
 }
 
 class AutoCStringVector {
@@ -9623,12 +9417,39 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "syntaxParse(code)",
 "  Check the syntax of a string, returning success value"),
 
-    JS_FN_HELP("offThreadCompileScript", OffThreadCompileScript, 1, 0,
-"offThreadCompileScript(code[, options])",
-"  Compile |code| on a helper thread, returning a job ID.\n"
-"  To wait for the compilation to finish and run the code, call\n"
-"  |runOffThreadScript| passing the job ID. If present, |options| may\n"
-"  have properties saying how the code should be compiled:\n"
+    JS_FN_HELP("offThreadCompileModuleToStencil", OffThreadCompileModuleToStencil, 1, 0,
+"offThreadCompileModuleToStencil(code)",
+"  Compile |code| on a helper thread, returning a job ID. To wait for the\n"
+"  compilation to finish and and get the module stencil object call\n"
+"  |finishOffThreadCompileModuleToStencil| passing the job ID."),
+
+    JS_FN_HELP("finishOffThreadCompileModuleToStencil", FinishOffThreadCompileModuleToStencil, 0, 0,
+"finishOffThreadCompileModuleToStencil([jobID])",
+"  Wait for an off-thread compilation job to complete. The job ID can be\n"
+"  ommitted if there is only one job pending. If an error occurred,\n"
+"  throw the appropriate exception; otherwise, return the module stencil\n"
+"  object."),
+
+    JS_FN_HELP("offThreadDecodeStencil", OffThreadDecodeStencil, 1, 0,
+"offThreadDecodeStencil(cacheEntry[, options])",
+"  Decode |code| on a helper thread, returning a job ID. To wait for the\n"
+"  decoding to finish and run the code, call |finishOffThreadDecodeStencil| passing\n"
+"  the job ID. If present, |options| may have properties saying how the code\n"
+"  should be compiled (see also offThreadCompileToStencil)."),
+
+    JS_FN_HELP("finishOffThreadDecodeStencil", FinishOffThreadDecodeStencil, 0, 0,
+"finishOffThreadDecodeStencil([jobID])",
+"  Wait for an off-thread decode job to complete. The job ID can be\n"
+"  ommitted if there is only one job pending. If an error occurred,\n"
+"  throw the appropriate exception; otherwise, return the decoded stencil\n"
+"  object."),
+
+    JS_FN_HELP("offThreadCompileToStencil", OffThreadCompileToStencil, 1, 0,
+"offThreadCompileToStencil(code[, options])",
+"  Compile |code| on a helper thread, returning a job ID. To wait for the\n"
+"  compilation to finish and get the stencil object, call\n"
+"  |finishOffThreadCompileToStencil| passing the job ID.  If present, \n"
+"  |options| may have properties saying how the code should be compiled:\n"
 "      noScriptRval: use the no-script-rval compiler option (default: false)\n"
 "      fileName: filename for error messages and debug info\n"
 "      lineNumber: starting line number for error messages and debug info\n"
@@ -9640,44 +9461,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "      elementAttributeName: if present and not undefined, the name of\n"
 "         property of 'element' that holds this code. This is what\n"
 "         Debugger.Source.prototype.elementAttributeName returns."),
-
-    JS_FN_HELP("runOffThreadScript", runOffThreadScript, 0, 0,
-"runOffThreadScript([jobID])",
-"  Wait for an off-thread compilation job to complete. The job ID can be\n"
-"  ommitted if there is only one job pending. If an error occurred,\n"
-"  throw the appropriate exception; otherwise, run the script and return\n"
-"  its value."),
-
-    JS_FN_HELP("offThreadCompileModule", OffThreadCompileModule, 1, 0,
-"offThreadCompileModule(code)",
-"  Compile |code| on a helper thread, returning a job ID. To wait for the\n"
-"  compilation to finish and and get the module record object call\n"
-"  |finishOffThreadModule| passing the job ID."),
-
-    JS_FN_HELP("finishOffThreadModule", FinishOffThreadModule, 0, 0,
-"finishOffThreadModule([jobID])",
-"  Wait for an off-thread compilation job to complete. The job ID can be\n"
-"  ommitted if there is only one job pending. If an error occurred,\n"
-"  throw the appropriate exception; otherwise, return the module record object."),
-
-    JS_FN_HELP("offThreadDecodeScript", OffThreadDecodeScript, 1, 0,
-"offThreadDecodeScript(cacheEntry[, options])",
-"  Decode |code| on a helper thread, returning a job ID. To wait for the\n"
-"  decoding to finish and run the code, call |runOffThreadDecodeScript| passing\n"
-"  the job ID. If present, |options| may have properties saying how the code\n"
-"  should be compiled (see also offThreadCompileScript)."),
-
-    JS_FN_HELP("runOffThreadDecodedScript", runOffThreadDecodedScript, 0, 0,
-"runOffThreadDecodedScript([jobID])",
-"  Wait for off-thread decoding to complete. The job ID can be ommitted if there\n"
-"  is only one job pending. If an error occurred, throw the appropriate\n"
-"  exception; otherwise, run the script and return its value."),
-
-    JS_FN_HELP("offThreadCompileToStencil", OffThreadCompileToStencil, 1, 0,
-"offThreadCompileToStencil(code[, options])",
-"  Compile |code| on a helper thread, returning a job ID. To wait for the\n"
-"  compilation to finish and get the stencil object, call\n"
-"  |finishOffThreadCompileToStencil| passing the job ID."),
 
     JS_FN_HELP("finishOffThreadCompileToStencil", FinishOffThreadCompileToStencil, 0, 0,
 "finishOffThreadCompileToStencil([jobID])",
@@ -11453,6 +11236,16 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     }
   }
 
+  if (const char* str = op.getStringOption("ion-optimize-shapeguards")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableRedundantShapeGuards = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableRedundantShapeGuards = true;
+    } else {
+      return OptionFailure("ion-optimize-shapeguards", str);
+    }
+  }
+
   if (const char* str = op.getStringOption("ion-instruction-reordering")) {
     if (strcmp(str, "on") == 0) {
       jit::JitOptions.disableInstructionReordering = false;
@@ -12370,6 +12163,9 @@ int main(int argc, char** argv) {
       !op.addStringOption(
           '\0', "ion-instruction-reordering", "on/off",
           "Instruction reordering (default: off, on to enable)") ||
+      !op.addStringOption(
+          '\0', "ion-optimize-shapeguards", "on/off",
+          "Eliminate redundant shape guards (default: on, off to disable)") ||
       !op.addBoolOption('\0', "ion-check-range-analysis",
                         "Range analysis checking") ||
       !op.addBoolOption('\0', "ion-extra-checks",
@@ -12889,10 +12685,6 @@ int main(int argc, char** argv) {
     if (!sCompilerProcessFlags.append("--enable-avx")) {
       return EXIT_FAILURE;
     }
-    // Disable AVX completely for now.  We're not supporting AVX and things
-    // break easily if asking for AVX.
-    fprintf(stderr, "Error: AVX encodings are currently disabled\n");
-    return EXIT_FAILURE;
   }
 
   // Recompute flags.

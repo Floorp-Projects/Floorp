@@ -24,8 +24,9 @@
 #include "js/RootingAPI.h"          // JS::Handle, JS::MutableHandle, JS::Rooted
 #include "js/Value.h"               // JS::ObjectValue, JS::Value
 #include "proxy/Proxy.h"            // js::Proxy
-#include "vm/JSContext.h"           // JSContext
-#include "vm/JSObject.h"            // JSObject
+#include "vm/GlobalObject.h"
+#include "vm/JSContext.h"     // JSContext
+#include "vm/JSObject.h"      // JSObject
 #include "vm/NativeObject.h"  // js::NativeObject, js::Native{Get,Has,Set}Property, js::NativeGetPropertyNoGC, js::Qualified
 #include "vm/ProxyObject.h"   // js::ProxyObject
 #include "vm/StringType.h"    // js::NameToId
@@ -108,6 +109,10 @@ inline bool HasProperty(JSContext* cx, JS::Handle<JSObject*> obj,
 inline bool GetProperty(JSContext* cx, JS::Handle<JSObject*> obj,
                         JS::Handle<JS::Value> receiver, JS::Handle<jsid> id,
                         JS::MutableHandle<JS::Value> vp) {
+#ifdef ENABLE_RECORD_TUPLE
+  MOZ_ASSERT(!IsExtendedPrimitive(*obj));
+#endif
+
   if (GetPropertyOp op = obj->getOpsGetProperty()) {
     return op(cx, obj, receiver, id, vp);
   }
@@ -174,6 +179,10 @@ inline bool GetElementLargeIndex(JSContext* cx, JS::Handle<JSObject*> obj,
 
 inline bool GetPropertyNoGC(JSContext* cx, JSObject* obj,
                             const JS::Value& receiver, jsid id, JS::Value* vp) {
+#ifdef ENABLE_RECORD_TUPLE
+  MOZ_ASSERT(!IsExtendedPrimitive(*obj));
+#endif
+
   if (obj->getOpsGetProperty()) {
     return false;
   }
@@ -355,6 +364,10 @@ inline bool PutProperty(JSContext* cx, JS::Handle<JSObject*> obj,
  */
 inline bool DeleteProperty(JSContext* cx, JS::Handle<JSObject*> obj,
                            JS::Handle<jsid> id, JS::ObjectOpResult& result) {
+#ifdef ENABLE_RECORD_TUPLE
+  MOZ_ASSERT(!IsExtendedPrimitive(*obj));
+#endif
+
   if (DeletePropertyOp op = obj->getOpsDeleteProperty()) {
     return op(cx, obj, id, result);
   }

@@ -265,15 +265,15 @@ static inline DynFn DynamicFunction(Sig fun);
 
 enum class CharEncoding { Latin1, TwoByte };
 
-constexpr uint32_t WasmCallerTLSOffsetBeforeCall =
-    wasm::FrameWithTls::callerTLSOffset() + ShadowStackSpace;
-constexpr uint32_t WasmCalleeTLSOffsetBeforeCall =
-    wasm::FrameWithTls::calleeTLSOffset() + ShadowStackSpace;
+constexpr uint32_t WasmCallerTlsOffsetBeforeCall =
+    wasm::FrameWithTls::callerTlsOffsetWithoutFrame();
+constexpr uint32_t WasmCalleeTlsOffsetBeforeCall =
+    wasm::FrameWithTls::calleeTlsOffsetWithoutFrame();
 
-constexpr uint32_t WasmCallerTLSOffsetAfterCall =
-    WasmCallerTLSOffsetBeforeCall + SizeOfReturnAddressAfterCall;
-constexpr uint32_t WasmCalleeTLSOffsetAfterCall =
-    WasmCalleeTLSOffsetBeforeCall + SizeOfReturnAddressAfterCall;
+constexpr uint32_t WasmCallerTlsOffsetAfterCall =
+    WasmCallerTlsOffsetBeforeCall + SizeOfReturnAddressAfterCall;
+constexpr uint32_t WasmCalleeTlsOffsetAfterCall =
+    WasmCalleeTlsOffsetBeforeCall + SizeOfReturnAddressAfterCall;
 
 // Allocation sites may be passed to GC thing allocation methods either via a
 // register (for baseline compilation) or an enum indicating one of the
@@ -2233,6 +2233,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                  FloatRegister lhsDest)
       DEFINED_ON(x86_shared, arm64);
 
+  inline void replaceLaneInt64x2(unsigned lane, FloatRegister lhs,
+                                 Register64 rhs, FloatRegister dest)
+      DEFINED_ON(x86, x64);
+
   inline void replaceLaneInt64x2(unsigned lane, Register64 rhs,
                                  FloatRegister lhsDest)
       DEFINED_ON(x86, x64, arm64);
@@ -2433,7 +2437,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared, arm64);
 
   inline void addInt32x4(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister dest) DEFINED_ON(arm64);
+                         FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void addInt32x4(const SimdConstant& rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared);
@@ -2474,7 +2478,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared);
 
   inline void subInt32x4(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister dest) DEFINED_ON(arm64);
+                         FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void subInt64x2(FloatRegister rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared, arm64);
@@ -2500,7 +2504,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared, arm64);
 
   inline void mulInt32x4(FloatRegister lhs, FloatRegister rhs,
-                         FloatRegister dest) DEFINED_ON(arm64);
+                         FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void mulInt32x4(const SimdConstant& rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared);
@@ -2978,7 +2982,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared, arm64);
 
   inline void bitwiseAndSimd128(FloatRegister lhs, FloatRegister rhs,
-                                FloatRegister dest) DEFINED_ON(arm64);
+                                FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void bitwiseAndSimd128(const SimdConstant& rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared);
@@ -2987,7 +2992,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared, arm64);
 
   inline void bitwiseOrSimd128(FloatRegister lhs, FloatRegister rhs,
-                               FloatRegister dest) DEFINED_ON(arm64);
+                               FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void bitwiseOrSimd128(const SimdConstant& rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared);
@@ -2996,7 +3002,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared, arm64);
 
   inline void bitwiseXorSimd128(FloatRegister lhs, FloatRegister rhs,
-                                FloatRegister dest) DEFINED_ON(arm64);
+                                FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void bitwiseXorSimd128(const SimdConstant& rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared);
@@ -3013,6 +3020,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void bitwiseNotAndSimd128(FloatRegister rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared, arm64);
+
+  inline void bitwiseNotAndSimd128(FloatRegister lhs, FloatRegister rhs,
+                                   FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
 
   // Bitwise select
 
@@ -3114,7 +3125,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void compareInt32x4(Assembler::Condition cond, FloatRegister lhs,
                              FloatRegister rhs, FloatRegister dest)
-      DEFINED_ON(arm64);
+      DEFINED_ON(x86_shared, arm64);
 
   inline void compareForEqualityInt64x2(Assembler::Condition cond,
                                         FloatRegister rhs,
@@ -3141,10 +3152,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                const SimdConstant& rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared);
 
+  // On x86_shared, limited to ==, !=, <, <=
   // On arm64, use any float-point comparison condition.
   inline void compareFloat32x4(Assembler::Condition cond, FloatRegister lhs,
                                FloatRegister rhs, FloatRegister dest)
-      DEFINED_ON(arm64);
+      DEFINED_ON(x86_shared, arm64);
 
   inline void compareFloat64x2(Assembler::Condition cond, FloatRegister rhs,
                                FloatRegister lhsDest)
@@ -3245,7 +3257,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared, arm64);
 
   inline void addFloat32x4(FloatRegister lhs, FloatRegister rhs,
-                           FloatRegister dest) DEFINED_ON(arm64);
+                           FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void addFloat32x4(const SimdConstant& rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared);
@@ -3265,7 +3277,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared, arm64);
 
   inline void subFloat32x4(FloatRegister lhs, FloatRegister rhs,
-                           FloatRegister dest) DEFINED_ON(arm64);
+                           FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void subFloat32x4(const SimdConstant& rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared);
@@ -3285,7 +3297,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared, arm64);
 
   inline void divFloat32x4(FloatRegister lhs, FloatRegister rhs,
-                           FloatRegister dest) DEFINED_ON(arm64);
+                           FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void divFloat32x4(const SimdConstant& rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared);
@@ -3305,7 +3317,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared, arm64);
 
   inline void mulFloat32x4(FloatRegister lhs, FloatRegister rhs,
-                           FloatRegister dest) DEFINED_ON(arm64);
+                           FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   inline void mulFloat32x4(const SimdConstant& rhs, FloatRegister lhsDest)
       DEFINED_ON(x86_shared);
@@ -3809,15 +3821,24 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                     Label* rejoin)
       DEFINED_ON(arm, arm64, x86_shared, mips_shared);
 
+  void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest);
+
   // This function takes care of loading the callee's TLS and pinned regs but
   // it is the caller's responsibility to save/restore TLS or pinned regs.
   CodeOffset wasmCallImport(const wasm::CallSiteDesc& desc,
                             const wasm::CalleeDesc& callee);
 
   // WasmTableCallIndexReg must contain the index of the indirect call.
+  // This is for wasm calls only.
   CodeOffset wasmCallIndirect(const wasm::CallSiteDesc& desc,
                               const wasm::CalleeDesc& callee,
-                              bool needsBoundsCheck);
+                              bool needsBoundsCheck,
+                              mozilla::Maybe<uint32_t> tableSize);
+
+  // WasmTableCallIndexReg must contain the index of the indirect call.
+  // This is for asm.js calls only.
+  CodeOffset asmCallIndirect(const wasm::CallSiteDesc& desc,
+                             const wasm::CalleeDesc& callee);
 
   // This function takes care of loading the pointer to the current instance
   // as the implicit first argument. It preserves TLS and pinned registers.
@@ -5464,11 +5485,6 @@ static inline size_t StackDecrementForCall(uint32_t alignment,
 // Helper for generatePreBarrier.
 inline DynFn JitPreWriteBarrier(MIRType type);
 }  // namespace jit
-
-namespace wasm {
-const TlsData* ExtractCalleeTlsFromFrameWithTls(const Frame* fp);
-TlsData* ExtractCallerTlsFromFrameWithTls(Frame* fp);
-}  // namespace wasm
 
 }  // namespace js
 

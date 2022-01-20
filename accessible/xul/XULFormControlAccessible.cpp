@@ -361,8 +361,8 @@ XULToolbarButtonAccessible::XULToolbarButtonAccessible(nsIContent* aContent,
                                                        DocAccessible* aDoc)
     : XULButtonAccessible(aContent, aDoc) {}
 
-void XULToolbarButtonAccessible::GetPositionAndSizeInternal(int32_t* aPosInSet,
-                                                            int32_t* aSetSize) {
+void XULToolbarButtonAccessible::GetPositionAndSetSize(int32_t* aPosInSet,
+                                                       int32_t* aSetSize) {
   int32_t setSize = 0;
   int32_t posInSet = 0;
 

@@ -2233,6 +2233,7 @@ class nsIFrame : public nsQueryFrame {
   void DisassociateImage(const mozilla::StyleImage&);
 
   mozilla::StyleImageRendering UsedImageRendering() const;
+  mozilla::StyleTouchAction UsedTouchAction() const;
 
   enum class AllowCustomCursorImage {
     No,
@@ -3364,9 +3365,6 @@ class nsIFrame : public nsQueryFrame {
   bool IsLeaf() const {
     MOZ_ASSERT(uint8_t(mClass) < mozilla::ArrayLength(sFrameClassBits));
     FrameClassBits bits = sFrameClassBits[uint8_t(mClass)];
-    if (MOZ_UNLIKELY(bits & eFrameClassBitsDynamicLeaf)) {
-      return IsLeafDynamic();
-    }
     return bits & eFrameClassBitsLeaf;
   }
 
@@ -4964,13 +4962,6 @@ class nsIFrame : public nsQueryFrame {
   void ReparentFrameViewTo(nsViewManager* aViewManager, nsView* aNewParentView,
                            nsView* aOldParentView);
 
-  /**
-   * To be overridden by frame classes that have a varying IsLeaf() state and
-   * is indicating that with DynamicLeaf in FrameIdList.h.
-   * @see IsLeaf()
-   */
-  virtual bool IsLeafDynamic() const { return false; }
-
   // Members
   nsRect mRect;
   nsCOMPtr<nsIContent> mContent;
@@ -5385,7 +5376,6 @@ class nsIFrame : public nsQueryFrame {
   enum FrameClassBits {
     eFrameClassBitsNone = 0x0,
     eFrameClassBitsLeaf = 0x1,
-    eFrameClassBitsDynamicLeaf = 0x2,
   };
   // Maps mClass to IsLeaf() flags.
   static const FrameClassBits sFrameClassBits[
@@ -5452,8 +5442,10 @@ class nsIFrame : public nsQueryFrame {
   virtual nsresult GetFrameName(nsAString& aResult) const;
   nsresult MakeFrameName(const nsAString& aType, nsAString& aResult) const;
   // Helper function to return the index in parent of the frame's content
-  // object. Returns -1 on error or if the frame doesn't have a content object
-  static int32_t ContentIndexInContainer(const nsIFrame* aFrame);
+  // object. Returns Nothing on error or if the frame doesn't have a content
+  // object
+  static mozilla::Maybe<uint32_t> ContentIndexInContainer(
+      const nsIFrame* aFrame);
 #endif
 
 #ifdef DEBUG

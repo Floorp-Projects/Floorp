@@ -259,6 +259,27 @@ impl HttpServer for Http3TestServer {
                                         .unwrap();
                                     stream.stream_close_send().unwrap();
                                 }
+                            } else if path == "/103_response" {
+                                if let Some(early_hint) =
+                                    headers.iter().find(|h| h.name() == "link-to-set")
+                                {
+                                    for l in early_hint.value().split(',') {
+                                        stream
+                                            .send_headers(&[
+                                                Header::new(":status", "103"),
+                                                Header::new("link", l),
+                                            ])
+                                            .unwrap();
+                                    }
+                                }
+                                stream
+                                    .send_headers(&[
+                                        Header::new(":status", "200"),
+                                        Header::new("cache-control", "no-cache"),
+                                        Header::new("content-length", "0"),
+                                    ])
+                                    .unwrap();
+                                stream.stream_close_send().unwrap();
                             } else {
                                 match path.trim_matches(|p| p == '/').parse::<usize>() {
                                     Ok(v) => {

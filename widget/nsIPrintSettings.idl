@@ -94,7 +94,6 @@ interface nsIPrintSettings : nsISupports
    * Output file format
    */
   const short kOutputFormatNative = 0;
-  const short kOutputFormatPS     = 1;
   const short kOutputFormatPDF    = 2;
 
   /**
@@ -279,7 +278,6 @@ interface nsIPrintSettings : nsISupports
   readonly attribute boolean saveOnCancel;        /* indicates whether the print settings should be saved after a cancel */
   attribute boolean printSilent;         /* print without putting up the dialog */
   [infallible] attribute boolean shrinkToFit; /* shrinks content to fit on page */
-  attribute boolean showPrintProgress;   /* indicates whether the progress dialog should be shown */
 
   /* Additional XP Related */
   attribute AString paperId;       /* identifier of paper (not display name) */
@@ -335,16 +333,6 @@ interface nsIPrintSettings : nsISupports
   [noscript] void SetEdgeInTwips(in nsNativeIntMarginRef aEdge);
   [noscript, notxpcom, nostdcall] nsNativeIntMargin GetMarginInTwips();
   [noscript, notxpcom, nostdcall] nsNativeIntMargin GetEdgeInTwips();
-
-  /**
-   * We call this function so that anything that requires a run of the event loop
-   * can do so safely. The print dialog runs the event loop but in silent printing
-   * that doesn't happen.
-   *
-   * Either this or ShowPrintDialog (but not both) MUST be called by the print engine
-   * before printing, otherwise printing can fail on some platforms.
-   */
-  [noscript] void SetupSilentPrinting();
 
   /**
    * Sets/Gets the "unwriteable margin" for the page format.  This defines

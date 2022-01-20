@@ -82,6 +82,7 @@ interface nsIEventListenerService : nsISupports
    * @note Some events, especially 'load', may actually have a shorter
    *       event target chain than what this methods returns.
    */
+  [can_run_script]
   Array<EventTarget> getEventTargetChainFor(in EventTarget aEventTarget,
                                             in boolean composed);
 

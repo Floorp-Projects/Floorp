@@ -48,18 +48,6 @@ https://firefox-source-docs.mozilla.org/mobile/android/geckoview/contributor/gec
 =============
 """.strip()
 
-VISUAL_STUDIO_ADVERTISEMENT = """
-===============================
-Visual Studio Support Available
-
-You are building Firefox on Windows. You can generate Visual Studio
-files by running:
-
-   mach build-backend --backend=VisualStudio
-
-===============================
-""".strip()
-
 
 def config_status(
     topobjdir=".",
@@ -200,10 +188,6 @@ def config_status(
         for the_backend in selected_backends:
             for path, diff in sorted(the_backend.file_diffs.items()):
                 print("\n".join(diff))
-
-    # Advertise Visual Studio if appropriate.
-    if os.name == "nt" and "VisualStudio" not in options.backend:
-        print(VISUAL_STUDIO_ADVERTISEMENT)
 
     # Advertise Android Studio if it is appropriate.
     if MachCommandConditions.is_android(env):

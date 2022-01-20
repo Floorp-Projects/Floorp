@@ -31,8 +31,11 @@ import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -48,6 +51,9 @@ import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
+import org.mozilla.geckoview.SessionTextInput.EditableListener.IMEContextFlags;
+import org.mozilla.geckoview.SessionTextInput.EditableListener.IMENotificationType;
+import org.mozilla.geckoview.SessionTextInput.EditableListener.IMEState;
 
 /**
  * GeckoEditable implements only some functions of Editable The field mText contains the actual
@@ -92,13 +98,15 @@ import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
   private boolean mNeedUpdateComposition; // Used by IC thread
   private boolean mSuppressKeyUp; // Used by IC thread
 
+  @IMEState
   private int mIMEState = // Used by IC thread.
       SessionTextInput.EditableListener.IME_STATE_DISABLED;
+
   private String mIMETypeHint = ""; // Used by IC/UI thread.
   private String mIMEModeHint = ""; // Used by IC thread.
   private String mIMEActionHint = ""; // Used by IC thread.
   private String mIMEAutocapitalize = ""; // Used by IC thread.
-  private int mIMEFlags; // Used by IC thread.
+  @IMEContextFlags private int mIMEFlags; // Used by IC thread.
 
   private boolean mIgnoreSelectionChange; // Used by Gecko thread
   // Combined offsets from the previous batch of onTextChange calls; valid
@@ -784,15 +792,25 @@ import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
   }
 
   // Flags for icMaybeSendComposition
+  @Retention(RetentionPolicy.SOURCE)
+  @IntDef(
+      flag = true,
+      value = {
+        SEND_COMPOSITION_USE_ENTIRE_TEXT,
+        SEND_COMPOSITION_NOTIFY_GECKO,
+        SEND_COMPOSITION_KEEP_CURRENT
+      })
+  /* package */ @interface CompositionFlags {}
+
   // If text has composing spans, treat the entire text as a Gecko composition,
   // instead of just the spanned part.
-  private static final int SEND_COMPOSITION_USE_ENTIRE_TEXT = 1;
+  private static final int SEND_COMPOSITION_USE_ENTIRE_TEXT = 1 << 0;
   // Notify Gecko of the new composition ranges;
   // otherwise, the caller is responsible for notifying Gecko.
-  private static final int SEND_COMPOSITION_NOTIFY_GECKO = 2;
+  private static final int SEND_COMPOSITION_NOTIFY_GECKO = 1 << 1;
   // Keep the current composition when updating;
   // composition is not updated if there is no current composition.
-  private static final int SEND_COMPOSITION_KEEP_CURRENT = 4;
+  private static final int SEND_COMPOSITION_KEEP_CURRENT = 1 << 2;
 
   /**
    * Send composition ranges to Gecko if the text has composing spans.
@@ -801,8 +819,8 @@ import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
    * @param flags Bitmask of SEND_COMPOSITION_* flags for updating composition.
    * @return Whether there was a composition
    */
-  private boolean icMaybeSendComposition(final CharSequence sequence, final int flags)
-      throws RemoteException {
+  private boolean icMaybeSendComposition(
+      final CharSequence sequence, @CompositionFlags final int flags) throws RemoteException {
     final boolean useEntireText = (flags & SEND_COMPOSITION_USE_ENTIRE_TEXT) != 0;
     final boolean notifyGecko = (flags & SEND_COMPOSITION_NOTIFY_GECKO) != 0;
     final boolean keepCurrent = (flags & SEND_COMPOSITION_KEEP_CURRENT) != 0;
@@ -1346,7 +1364,7 @@ import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
   }
 
   @Override // SessionTextInput.EditableClient
-  public void requestCursorUpdates(final int requestMode) {
+  public void requestCursorUpdates(@CursorMonitorMode final int requestMode) {
     try {
       if (mFocusedChild != null) {
         mFocusedChild.onImeRequestCursorUpdates(requestMode);
@@ -1474,7 +1492,7 @@ import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
   }
 
   @Override // IGeckoEditableParent
-  public void notifyIME(final IGeckoEditableChild child, final int type) {
+  public void notifyIME(final IGeckoEditableChild child, @IMENotificationType final int type) {
     // On Gecko or binder thread.
     if (DEBUG) {
       // NOTIFY_IME_REPLY_EVENT is logged separately, inside geckoActionReply()
@@ -1528,7 +1546,8 @@ import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
         });
   }
 
-  /* package */ void icNotifyIME(final IGeckoEditableChild child, final int type) {
+  /* package */ void icNotifyIME(
+      final IGeckoEditableChild child, @IMENotificationType final int type) {
     if (DEBUG) {
       assertOnIcThread();
     }
@@ -1595,6 +1614,9 @@ import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
           return; // Don't notify listener.
         }
 
+      case SessionTextInput.EditableListener.NOTIFY_IME_OF_TOKEN:
+      case SessionTextInput.EditableListener.NOTIFY_IME_REPLY_EVENT:
+      case SessionTextInput.EditableListener.NOTIFY_IME_TO_CANCEL_COMPOSITION:
       default:
         throw new IllegalArgumentException("Invalid notifyIME type: " + type);
     }
@@ -1607,12 +1629,12 @@ import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
   @Override // IGeckoEditableParent
   public void notifyIMEContext(
       final IBinder token,
-      final int state,
+      @IMEState final int state,
       final String typeHint,
       final String modeHint,
       final String actionHint,
       final String autocapitalize,
-      final int flags) {
+      @IMEContextFlags final int flags) {
     // On Gecko or binder thread.
     if (DEBUG) {
       final StringBuilder sb = new StringBuilder("notifyIMEContext(");
@@ -1647,12 +1669,12 @@ import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
   }
 
   /* package */ void icNotifyIMEContext(
-      final int originalState,
+      @IMEState final int originalState,
       final String typeHint,
       final String modeHint,
       final String actionHint,
       final String autocapitalize,
-      final int flags) {
+      @IMEContextFlags final int flags) {
     if (DEBUG) {
       assertOnIcThread();
     }

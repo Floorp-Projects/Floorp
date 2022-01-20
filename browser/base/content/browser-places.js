@@ -2126,6 +2126,13 @@ var BookmarkingUI = {
               }
             }
           }
+
+          if (ev.parentGuid === PlacesUtils.bookmarks.toolbarGuid) {
+            Services.telemetry.scalarAdd(
+              "browser.engagement.bookmarks_toolbar_bookmark_added",
+              1
+            );
+          }
           break;
         case "bookmark-removed":
           // If one of the tracked bookmarks has been removed, unregister it.
@@ -2152,6 +2159,15 @@ var BookmarkingUI = {
             this.updateEmptyToolbarMessage();
           }
 
+          const hasMovedToToolbar =
+            ev.parentGuid === PlacesUtils.bookmarks.toolbarGuid &&
+            ev.oldParentGuid !== PlacesUtils.bookmarks.toolbarGuid;
+          if (hasMovedToToolbar) {
+            Services.telemetry.scalarAdd(
+              "browser.engagement.bookmarks_toolbar_bookmark_added",
+              1
+            );
+          }
           break;
         case "bookmark-url-changed":
           // If the changed bookmark was tracked, check if it is now pointing to
@@ -2191,30 +2207,6 @@ var BookmarkingUI = {
     }
 
     this.updateEmptyToolbarMessage();
-  },
-
-  onItemMoved(
-    aItemId,
-    aOldIndex,
-    aNewIndex,
-    aItemType,
-    aGuid,
-    oldParentGuid,
-    newParentGuid
-  ) {
-    let hasMovedToOrOutOfOtherBookmarks =
-      newParentGuid === PlacesUtils.bookmarks.unfiledGuid ||
-      oldParentGuid === PlacesUtils.bookmarks.unfiledGuid;
-    if (hasMovedToOrOutOfOtherBookmarks) {
-      this.maybeShowOtherBookmarksFolder();
-    }
-
-    let hasMovedToToolbar = newParentGuid === PlacesUtils.bookmarks.toolbarGuid;
-    let hasMovedOutOfToolbar =
-      oldParentGuid === PlacesUtils.bookmarks.toolbarGuid;
-    if (hasMovedToToolbar || hasMovedOutOfToolbar) {
-      this.updateEmptyToolbarMessage();
-    }
   },
 
   onWidgetUnderflow(aNode, aContainer) {

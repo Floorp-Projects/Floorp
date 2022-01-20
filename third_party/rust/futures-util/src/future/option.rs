@@ -31,6 +31,12 @@ pin_project! {
     }
 }
 
+impl<F> Default for OptionFuture<F> {
+    fn default() -> Self {
+        Self { inner: None }
+    }
+}
+
 impl<F: Future> Future for OptionFuture<F> {
     type Output = Option<F::Output>;
 

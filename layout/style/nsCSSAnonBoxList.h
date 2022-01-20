@@ -140,7 +140,6 @@ CSS_WRAPPER_ANON_BOX(rubyBaseContainer, ":-moz-ruby-base-container")
 CSS_WRAPPER_ANON_BOX(rubyText, ":-moz-ruby-text")
 CSS_WRAPPER_ANON_BOX(rubyTextContainer, ":-moz-ruby-text-container")
 
-#ifdef MOZ_XUL
 CSS_ANON_BOX(mozTreeColumn, ":-moz-tree-column")
 CSS_ANON_BOX(mozTreeRow, ":-moz-tree-row")
 CSS_ANON_BOX(mozTreeSeparator, ":-moz-tree-separator")
@@ -152,7 +151,6 @@ CSS_ANON_BOX(mozTreeImage, ":-moz-tree-image")
 CSS_ANON_BOX(mozTreeCellText, ":-moz-tree-cell-text")
 CSS_ANON_BOX(mozTreeCheckbox, ":-moz-tree-checkbox")
 CSS_ANON_BOX(mozTreeDropFeedback, ":-moz-tree-drop-feedback")
-#endif
 
 CSS_ANON_BOX(mozSVGMarkerAnonChild, ":-moz-svg-marker-anon-child")
 CSS_ANON_BOX(mozSVGOuterSVGAnonChild, ":-moz-svg-outer-svg-anon-child")

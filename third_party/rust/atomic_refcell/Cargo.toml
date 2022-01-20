@@ -3,16 +3,15 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 name = "atomic_refcell"
-version = "0.1.7"
+version = "0.1.8"
 authors = ["Bobby Holley <bobbyholley@gmail.com>"]
 description = "Threadsafe RefCell"
 documentation = "https://docs.rs/atomic_refcell/"

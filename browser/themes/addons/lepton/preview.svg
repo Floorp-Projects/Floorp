@@ -1,46 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg width="680" height="92" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="680" height="92" fill="#F0F0F4" />
-  <g filter="url(#filter0_dd)">
-    <rect x="28" y="5" width="166" height="34" rx="4" fill="white" />
-  </g>
-  <rect x="51" y="20" width="121" height="4" rx="2" fill="#15141A" />
-  <rect x="221" y="20" width="121" height="4" rx="2" fill="#15141A" />
-  <rect y="44" width="680" height="48" fill="#F9F9FB" />
-  <circle cx="24" cy="68" r="6.25" stroke="#5B5B66" stroke-width="1.5" />
-  <circle cx="60" cy="68" r="6.25" stroke="#5B5B66" stroke-width="1.5" />
-  <rect x="114" y="52" width="488" height="32" rx="4" fill="#F0F0F4" />
-  <circle cx="130" cy="68" r="6.25" stroke="#5B5B66" stroke-width="1.5" />
-  <rect x="146" y="66" width="308" height="4" rx="2" fill="#5B5B66" />
-  <mask id="mask0" mask-type="alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="680" height="92">
-    <path d="M680 92V0H334C321.85 0 312 9.84974 312 22C312 34.1503 302.15 44 290 44H252C238.745 44 228 54.7452 228 68C228 81.2548 217.255 92 204 92H680Z" fill="#C4C4C4" />
-  </mask>
-  <g mask="url(#mask0)">
-    <rect width="680" height="92" fill="#1C1B22" />
-    <rect x="221" y="20" width="121" height="4" rx="2" fill="#B8B7BB" />
-    <rect y="44" width="680" height="48" fill="#2B2A33" />
-    <line x1="663" y1="73.75" x2="649" y2="73.75" stroke="#FBFBFE" stroke-width="1.5" />
-    <line x1="663" y1="67.75" x2="649" y2="67.75" stroke="#FBFBFE" stroke-width="1.5" />
-    <line x1="663" y1="61.75" x2="649" y2="61.75" stroke="#FBFBFE" stroke-width="1.5" />
-    <rect x="114" y="52" width="488" height="32" rx="4" fill="#1C1B22" />
-    <rect x="146" y="66" width="308" height="4" rx="2" fill="white" />
-  </g>
-  <defs>
-    <filter id="filter0_dd" x="24" y="1" width="174" height="42" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feFlood flood-opacity="0" result="BackgroundImageFix" />
-      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
-      <feOffset />
-      <feGaussianBlur stdDeviation="2" />
-      <feColorMatrix type="matrix" values="0 0 0 0 0.501961 0 0 0 0 0.501961 0 0 0 0 0.556863 0 0 0 0.5 0" />
-      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow" />
-      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" />
-      <feOffset />
-      <feGaussianBlur stdDeviation="0.5" />
-      <feColorMatrix type="matrix" values="0 0 0 0 0.501961 0 0 0 0 0.501961 0 0 0 0 0.556863 0 0 0 0.9 0" />
-      <feBlend mode="normal" in2="effect1_dropShadow" result="effect2_dropShadow" />
-      <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow" result="shape" />
-    </filter>
-  </defs>
+
+<svg
+   width="638.18854"
+   height="83.9114"
+   viewBox="0 0 638.18853 83.9114"
+   fill="none"
+   version="1.1"
+   id="svg28"
+   sodipodi:docname="preview.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs32" />
+  <sodipodi:namedview
+     id="namedview30"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="2.5351858"
+     inkscape:cx="522.05247"
+     inkscape:cy="0.1972242"
+     inkscape:window-width="1920"
+     inkscape:window-height="1009"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg28">
+    <inkscape:grid
+       type="xygrid"
+       id="grid10580"
+       originx="-15.777936"
+       originy="-8.0885973" />
+  </sodipodi:namedview>
+  <rect
+     width="638.18854"
+     height="83.9114"
+     fill="#1c1b22"
+     id="rect2"
+     x="0"
+     y="0"
+     style="stroke-width:0.925202" />
+  <rect
+     x="35.222065"
+     y="-82.0886"
+     width="121"
+     height="5"
+     rx="2"
+     fill="#fbfbfe"
+     id="rect6" />
+  <rect
+     x="199.89474"
+     y="62.315014"
+     width="121"
+     height="5"
+     rx="2"
+     fill="#b8b7bb"
+     id="rect8" />
+  <rect
+     y="0.19481945"
+     width="638.18854"
+     height="39.716583"
+     fill="#2b2a33"
+     id="rect10"
+     x="0"
+     style="stroke-width:0.881222" />
+  <circle
+     cx="28.222065"
+     cy="19.911404"
+     r="6.25"
+     stroke="#fbfbfe"
+     stroke-width="1.5"
+     id="circle12" />
+  <circle
+     cx="64.222061"
+     cy="19.911404"
+     r="6.25"
+     stroke="#fbfbfe"
+     stroke-width="1.5"
+     id="circle14" />
+  <line
+     x1="617.22205"
+     y1="25.661404"
+     x2="603.22205"
+     y2="25.661404"
+     stroke="#fbfbfe"
+     stroke-width="1.5"
+     id="line16" />
+  <line
+     x1="617.22205"
+     y1="19.661404"
+     x2="603.22205"
+     y2="19.661404"
+     stroke="#fbfbfe"
+     stroke-width="1.5"
+     id="line18" />
+  <line
+     x1="617.22205"
+     y1="13.661403"
+     x2="603.22205"
+     y2="13.661403"
+     stroke="#fbfbfe"
+     stroke-width="1.5"
+     id="line20" />
+  <rect
+     x="98.222061"
+     y="3.9114027"
+     width="488"
+     height="32"
+     rx="4"
+     fill="#323138"
+     id="rect22" />
+  <circle
+     cx="114.22206"
+     cy="19.911404"
+     r="6.25"
+     stroke="#ffffff"
+     stroke-width="1.5"
+     id="circle24" />
+  <rect
+     x="130.22206"
+     y="17.911404"
+     width="308"
+     height="4"
+     rx="2"
+     fill="#ffffff"
+     id="rect26" />
+  <path
+     style="fill:#2b2a33;fill-opacity:1;stroke:#2b2a33;stroke-width:0.139459;stroke-opacity:1"
+     d="m 19.857011,83.580588 c 0,-0.182462 0.215653,-0.689878 0.479229,-1.127589 0.999493,-1.659822 1.714681,-4.188883 2.122113,-7.504249 0.26941,-2.192245 0.299284,-8.529344 0.06228,-13.210324 -0.316445,-6.249888 -0.153421,-10.507903 0.469495,-12.262778 0.294164,-0.828715 0.851117,-1.532755 1.390977,-1.758323 0.620685,-0.259339 153.247425,-0.47874 153.729025,-0.220986 0.72764,0.389415 1.20605,2.118903 1.45145,5.247009 0.12125,1.545581 0.13038,4.20423 0.0349,10.180476 -0.21447,13.430658 0.0764,17.149414 1.55222,19.842782 0.26412,0.48203 0.48022,0.937014 0.48022,1.011075 0,0.08642 -28.97736,0.134658 -80.88597,0.134658 H 19.857011 Z"
+     id="path10381" />
+  <rect
+     x="41.397209"
+     y="62.766613"
+     width="121"
+     height="5"
+     rx="2"
+     fill="#b8b7bb"
+     id="rect8-2" />
 </svg>

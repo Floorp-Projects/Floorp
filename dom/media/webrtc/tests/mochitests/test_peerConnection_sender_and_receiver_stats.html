@@ -16,10 +16,12 @@
   const checkStats = (sndReport, rcvReport, mediaType) => {
     ok(sndReport instanceof window.RTCStatsReport, "sender stats are a RTCStatsReport");
     ok(rcvReport instanceof window.RTCStatsReport, "receiver stats are a RTCStatsReport");
-    // Returns SSRCs and checks that the tracks are of the correct mediaType
+    // Returns SSRCs and performs some checks
     let getSsrcs = (report, kind) => {
       return [...report.values()]
         .filter(stat => stat.type.endsWith("bound-rtp")).map(stat =>{
+          isnot(parseInt(stat.id, 16), NaN,
+            `id ${stat.id} is an opaque (hex) number`);
           is(stat.mediaType, kind, "mediaType of " + stat.id
               + " is expected type " + kind);
           return stat.ssrc;

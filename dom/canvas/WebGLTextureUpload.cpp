@@ -1709,7 +1709,7 @@ static bool DoCopyTexOrSubImage(WebGLContext* webgl, bool isSubImage,
       byteCount *= dstHeight;
 
       if (byteCount.isValid()) {
-        zeros = calloc(1u, byteCount.value());
+        zeros = UniqueBuffer::Take(calloc(1u, byteCount.value()));
       }
 
       if (!zeros.get()) {

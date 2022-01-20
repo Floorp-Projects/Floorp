@@ -867,9 +867,21 @@ impl Index<usize> for SmallBitVec {
 impl hash::Hash for SmallBitVec {
     #[inline]
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
-        self.len().hash(state);
-        for b in self.iter() {
-            b.hash(state);
+        let len = self.len();
+        len.hash(state);
+        if self.is_inline() {
+            reverse_bits(self.data & inline_ones(len)).hash(state);
+        } else {
+            let full_blocks = len / bits_per_storage();
+            let remainder = len % bits_per_storage();
+            let buffer = self.buffer();
+            if full_blocks != 0 {
+                buffer[..full_blocks].hash(state);
+            }
+            if remainder != 0 {
+                let mask = (1 << remainder) - 1;
+                (buffer[full_blocks] & mask).hash(state);
+            }
         }
     }
 }
@@ -1036,4 +1048,14 @@ impl<'a> Index<usize> for VecRange<'a> {
         assert!(vec_i < self.range.end, "index out of range");
         &self.vec[vec_i]
     }
+}
+
+fn reverse_bits(mut value: usize) -> usize {
+    let mut result = 0;
+    for _ in 0..inline_bits() {
+        result <<= 1;
+        result |= value & 1;
+        value >>= 1;
+    }
+    result
 }

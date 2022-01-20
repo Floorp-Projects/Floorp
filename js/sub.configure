@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-@depends(check_build_environment)
+@depends(build_environment)
 @imports("logging")
 @imports(_from="__builtin__", _import="object")
 @imports(_from="mozbuild.configure.util", _import="ConfigureOutputHandler")
@@ -52,8 +52,6 @@ def old_js_configure_env(substs, mozconfig):
     for var in (
         "MOZ_DEV_EDITION",
         "STLPORT_LIBS",
-        "MOZ_LINKER",
-        "ZLIB_IN_MOZGLUE",
         "RANLIB",
     ):
         if var in substs:

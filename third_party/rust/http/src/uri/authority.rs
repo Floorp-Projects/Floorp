@@ -442,6 +442,24 @@ impl<'a> TryFrom<&'a str> for Authority {
     }
 }
 
+impl TryFrom<Vec<u8>> for Authority {
+    type Error = InvalidUri;
+
+    #[inline]
+    fn try_from(vec: Vec<u8>) -> Result<Self, Self::Error> {
+        Authority::from_shared(vec.into())
+    }
+}
+
+impl TryFrom<String> for Authority {
+    type Error = InvalidUri;
+
+    #[inline]
+    fn try_from(t: String) -> Result<Self, Self::Error> {
+        Authority::from_shared(t.into())
+    }
+}
+
 impl FromStr for Authority {
     type Err = InvalidUri;
 

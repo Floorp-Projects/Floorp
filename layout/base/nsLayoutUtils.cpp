@@ -61,6 +61,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZPublicUtils.h"  // for apz::CalculatePendingDisplayPort
 #include "mozilla/layers/CompositorBridgeChild.h"
@@ -160,9 +161,7 @@
 #include "UnitTransforms.h"
 #include "ViewportFrame.h"
 
-#ifdef MOZ_XUL
-#  include "nsXULPopupManager.h"
-#endif
+#include "nsXULPopupManager.h"
 
 // Make sure getpid() works.
 #ifdef XP_WIN
@@ -1181,19 +1180,20 @@ int32_t nsLayoutUtils::DoCompareTreePosition(
     return 0;
   }
 
-  int32_t index1 = parent->ComputeIndexOf(content1Ancestor);
-  int32_t index2 = parent->ComputeIndexOf(content2Ancestor);
+  const Maybe<uint32_t> index1 = parent->ComputeIndexOf(content1Ancestor);
+  const Maybe<uint32_t> index2 = parent->ComputeIndexOf(content2Ancestor);
 
   // None of the nodes are anonymous, just do a regular comparison.
-  if (index1 >= 0 && index2 >= 0) {
-    return index1 - index2;
+  if (index1.isSome() && index2.isSome()) {
+    return static_cast<int32_t>(static_cast<int64_t>(*index1) - *index2);
   }
 
   // Otherwise handle pseudo-element and anonymous content ordering.
   //
   // ::marker -> ::before -> anon siblings -> regular siblings -> ::after
-  auto PseudoIndex = [](const nsINode* aNode, int32_t aNodeIndex) -> int32_t {
-    if (aNodeIndex >= 0) {
+  auto PseudoIndex = [](const nsINode* aNode,
+                        const Maybe<uint32_t>& aNodeIndex) -> int32_t {
+    if (aNodeIndex.isSome()) {
       return 1;  // Not a pseudo.
     }
     if (aNode->IsContent()) {
@@ -1734,7 +1734,6 @@ nsPoint nsLayoutUtils::GetEventCoordinatesRelativeTo(
 
 nsIFrame* nsLayoutUtils::GetPopupFrameForEventCoordinates(
     nsPresContext* aPresContext, const WidgetEvent* aEvent) {
-#ifdef MOZ_XUL
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (!pm) {
     return nullptr;
@@ -1751,7 +1750,6 @@ nsIFrame* nsLayoutUtils::GetPopupFrameForEventCoordinates(
       return popup;
     }
   }
-#endif
   return nullptr;
 }
 
@@ -5449,7 +5447,8 @@ static bool ShouldDarkenColors(nsIFrame* aFrame) {
   if (pc->GetBackgroundColorDraw() || pc->GetBackgroundImageDraw()) {
     return false;
   }
-  return aFrame->StyleVisibility()->mColorAdjust != StyleColorAdjust::Exact;
+  return aFrame->StyleVisibility()->mPrintColorAdjust !=
+         StylePrintColorAdjust::Exact;
 }
 
 nscolor nsLayoutUtils::DarkenColorIfNeeded(nsIFrame* aFrame, nscolor aColor) {
@@ -8500,13 +8499,17 @@ void nsLayoutUtils::SetBSizeFromFontMetrics(const nsIFrame* aFrame,
 }
 
 /* static */
-bool nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(
+// _BOUNDARY because Dispatch() with `targets` must not handle the event.
+MOZ_CAN_RUN_SCRIPT_BOUNDARY bool
+nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(
     PresShell* aPresShell) {
   if (Document* doc = aPresShell->GetDocument()) {
     WidgetEvent event(true, eVoidEvent);
     nsTArray<EventTarget*> targets;
-    nsresult rv = EventDispatcher::Dispatch(
-        ToSupports(doc), nullptr, &event, nullptr, nullptr, nullptr, &targets);
+    // TODO: Bug 1506441
+    nsresult rv =
+        EventDispatcher::Dispatch(MOZ_KnownLive(ToSupports(doc)), nullptr,
+                                  &event, nullptr, nullptr, nullptr, &targets);
     NS_ENSURE_SUCCESS(rv, false);
     for (size_t i = 0; i < targets.Length(); i++) {
       if (targets[i]->IsApzAware()) {
@@ -8953,30 +8956,6 @@ Maybe<ScrollMetadata> nsLayoutUtils::GetRootMetadata(
 }
 
 /* static */
-StyleTouchAction nsLayoutUtils::GetTouchActionFromFrame(nsIFrame* aFrame) {
-  if (!aFrame) {
-    return StyleTouchAction::AUTO;
-  }
-
-  // The touch-action CSS property applies to: all elements except:
-  // non-replaced inline elements, table rows, row groups, table columns, and
-  // column groups
-  bool isNonReplacedInlineElement =
-      aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
-  if (isNonReplacedInlineElement) {
-    return StyleTouchAction::AUTO;
-  }
-
-  const nsStyleDisplay* disp = aFrame->StyleDisplay();
-  bool isTableElement = disp->IsInternalTableStyleExceptCell();
-  if (isTableElement) {
-    return StyleTouchAction::AUTO;
-  }
-
-  return disp->mTouchAction;
-}
-
-/* static */
 void nsLayoutUtils::TransformToAncestorAndCombineRegions(
     const nsRegion& aRegion, nsIFrame* aFrame, const nsIFrame* aAncestorFrame,
     nsRegion* aPreciseTargetDest, nsRegion* aImpreciseTargetDest,
@@ -9066,9 +9045,10 @@ nsRect nsLayoutUtils::GetSelectionBoundingRect(const Selection* aSel) {
       res = TransformFrameRectToAncestor(frame, res, relativeTo);
     }
   } else {
-    int32_t rangeCount = aSel->RangeCount();
     RectAccumulator accumulator;
-    for (int32_t idx = 0; idx < rangeCount; ++idx) {
+    const uint32_t rangeCount = aSel->RangeCount();
+    for (const uint32_t idx : IntegerRange(rangeCount)) {
+      MOZ_ASSERT(aSel->RangeCount() == rangeCount);
       nsRange* range = aSel->GetRangeAt(idx);
       nsRange::CollectClientRectsAndText(
           &accumulator, nullptr, range, range->GetStartContainer(),

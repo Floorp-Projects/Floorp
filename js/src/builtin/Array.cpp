@@ -47,6 +47,9 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 #include "vm/WrapperObject.h"
+#ifdef ENABLE_RECORD_TUPLE
+#  include "vm/TupleType.h"
+#endif
 
 #include "vm/ArgumentsObject-inl.h"
 #include "vm/ArrayObject-inl.h"

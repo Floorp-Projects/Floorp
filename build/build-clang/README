@@ -28,7 +28,7 @@ Config file format
 
 build-clang.py accepts a JSON config format with the following fields:
 
-* stages: Use 1, 2, 3 or 4 to select different compiler stages.  The default is 3.
+* stages: Use 1, 2, 3 or 4 to select different compiler stages.  The default is 2.
 * cc: Path to the bootsraping C Compiler.
 * cxx: Path to the bootsraping C++ Compiler.
 * as: Path to the assembler tool.

@@ -1,0 +1,10 @@
+[package]
+
+name = "memalloc"
+version = "0.1.0"
+authors = ["Jonathan Reem <jonathan.reem@gmail.com>"]
+repository = "https://github.com/reem/rust-memalloc.git"
+description = "Memory allocation in stable rust."
+readme = "README.md"
+license = "MIT"
+

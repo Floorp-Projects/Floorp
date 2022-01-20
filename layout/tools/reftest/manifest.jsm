@@ -503,11 +503,8 @@ function BuildConditionSandbox(aURL) {
       g.windowUtils.layerManagerType == "OpenGL";
     sandbox.swgl =
       g.windowUtils.layerManagerType.startsWith("WebRender (Software");
-    sandbox.webrender =
-      g.windowUtils.layerManagerType.startsWith("WebRender");
     sandbox.layersOMTC =
       g.windowUtils.layerManagerRemote == true;
-    sandbox.layerChecksEnabled = !sandbox.webrender;
 
     // Shortcuts for widget toolkits.
     sandbox.Android = xr.OS == "Android";

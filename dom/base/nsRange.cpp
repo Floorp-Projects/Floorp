@@ -805,15 +805,18 @@ bool nsRange::IntersectsNode(nsINode& aNode, ErrorResult& aRv) {
     return GetRoot() == &aNode;
   }
 
-  const int32_t nodeIndex = parent->ComputeIndexOf(&aNode);
+  const Maybe<uint32_t> nodeIndex = parent->ComputeIndexOf(&aNode);
+  if (nodeIndex.isNothing()) {
+    return false;
+  }
 
   const Maybe<int32_t> startOrder = nsContentUtils::ComparePoints(
       mStart.Container(),
       *mStart.Offset(RangeBoundary::OffsetFilter::kValidOffsets), parent,
-      nodeIndex + 1);
+      *nodeIndex + 1u);
   if (startOrder && (*startOrder < 0)) {
     const Maybe<int32_t> endOrder = nsContentUtils::ComparePoints(
-        parent, nodeIndex, mEnd.Container(),
+        parent, *nodeIndex, mEnd.Container(),
         *mEnd.Offset(RangeBoundary::OffsetFilter::kValidOffsets));
     return endOrder && (*endOrder < 0);
   }
@@ -954,12 +957,6 @@ void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
         NewRunnableMethod("NotifySelectionListenersAfterRangeSet", this,
                           &nsRange::NotifySelectionListenersAfterRangeSet));
   }
-}
-
-static int32_t IndexOf(nsINode* aChild) {
-  nsINode* parent = aChild->GetParentNode();
-
-  return parent ? parent->ComputeIndexOf(aChild) : -1;
 }
 
 void nsRange::RegisterSelection(Selection& aSelection) {
@@ -1164,10 +1161,11 @@ void nsRange::SelectNodesInContainer(nsINode* aContainer,
                                      nsIContent* aStartContent,
                                      nsIContent* aEndContent) {
   MOZ_ASSERT(aContainer);
-  MOZ_ASSERT(aContainer->ComputeIndexOf(aStartContent) <=
-             aContainer->ComputeIndexOf(aEndContent));
-  MOZ_ASSERT(aStartContent && aContainer->ComputeIndexOf(aStartContent) != -1);
-  MOZ_ASSERT(aEndContent && aContainer->ComputeIndexOf(aEndContent) != -1);
+  MOZ_ASSERT(aContainer->ComputeIndexOf(aStartContent).valueOr(0) <=
+             aContainer->ComputeIndexOf(aEndContent).valueOr(0));
+  MOZ_ASSERT(aStartContent &&
+             aContainer->ComputeIndexOf(aStartContent).isSome());
+  MOZ_ASSERT(aEndContent && aContainer->ComputeIndexOf(aEndContent).isSome());
 
   nsINode* newRoot = RangeUtils::ComputeRootNode(aContainer);
   MOZ_ASSERT(newRoot);
@@ -1254,20 +1252,19 @@ void nsRange::SelectNode(nsINode& aNode, ErrorResult& aRv) {
     return;
   }
 
-  int32_t index = container->ComputeIndexOf(&aNode);
-  // MOZ_ASSERT(index != -1);
+  const Maybe<uint32_t> index = container->ComputeIndexOf(&aNode);
+  // MOZ_ASSERT(index.isSome());
   // We need to compute the index here unfortunately, because, while we have
   // support for XBL, |container| may be the node's binding parent without
   // actually containing it.
-  if (NS_WARN_IF(index < 0)) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(index.isNothing()))) {
     aRv.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
     return;
   }
 
   AutoInvalidateSelection atEndOfBlock(this);
-  DoSetRange(RawRangeBoundary{container, static_cast<uint32_t>(index)},
-             RawRangeBoundary{container, static_cast<uint32_t>(index + 1)},
-             newRoot);
+  DoSetRange(RawRangeBoundary{container, *index},
+             RawRangeBoundary{container, *index + 1u}, newRoot);
 }
 
 void nsRange::SelectNodeContentsJS(nsINode& aNode, ErrorResult& aErr) {
@@ -1662,11 +1659,10 @@ void nsRange::CutContents(DocumentFragment** aFragment, ErrorResult& aRv) {
       // has a common ancestor with start and end, hence both have to be
       // comparable to it.
       if (doctype &&
-          *nsContentUtils::ComparePoints(startContainer,
-                                         static_cast<int32_t>(startOffset),
-                                         doctype, 0) < 0 &&
-          *nsContentUtils::ComparePoints(doctype, 0, endContainer,
-                                         static_cast<int32_t>(endOffset)) < 0) {
+          *nsContentUtils::ComparePoints(startContainer, startOffset, doctype,
+                                         0) < 0 &&
+          *nsContentUtils::ComparePoints(doctype, 0, endContainer, endOffset) <
+              0) {
         aRv.ThrowHierarchyRequestError("Start or end position isn't valid.");
         return;
       }
@@ -2004,9 +2000,8 @@ int16_t nsRange::CompareBoundaryPoints(uint16_t aHow,
     return 0;
   }
 
-  const Maybe<int32_t> order = nsContentUtils::ComparePoints(
-      ourNode, static_cast<int32_t>(ourOffset), otherNode,
-      static_cast<int32_t>(otherOffset));
+  const Maybe<int32_t> order =
+      nsContentUtils::ComparePoints(ourNode, ourOffset, otherNode, otherOffset);
 
   // `this` and `aOtherRange` share the same root and (ourNode, ourOffset),
   // (otherNode, otherOffset) correspond to some of their boundaries. Hence,
@@ -2336,12 +2331,12 @@ void nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv) {
   uint32_t newOffset;
 
   if (referenceNode) {
-    int32_t indexInParent = IndexOf(referenceNode);
-    if (NS_WARN_IF(indexInParent < 0)) {
+    Maybe<uint32_t> indexInParent = referenceNode->ComputeIndexInParentNode();
+    if (MOZ_UNLIKELY(NS_WARN_IF(indexInParent.isNothing()))) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
-    newOffset = static_cast<uint32_t>(indexInParent);
+    newOffset = *indexInParent;
   } else {
     newOffset = tChildList->Length();
   }
@@ -3036,7 +3031,7 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
         } else {
           // Save the end point before truncating the range.
           nsINode* endContainer = range->mEnd.Container();
-          const int32_t endOffset =
+          const uint32_t endOffset =
               *range->mEnd.Offset(RangeBoundary::OffsetFilter::kValidOffsets);
 
           // Truncate the current range before the first non-selectable node.
@@ -3051,7 +3046,7 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
 
           // Create a new range for the remainder.
           nsINode* startContainer = node;
-          int32_t startOffset = 0;
+          Maybe<uint32_t> startOffset = Some(0);
           // Don't start *inside* a node with independent selection though
           // (e.g. <input>).
           if (content && content->HasIndependentSelection()) {
@@ -3061,8 +3056,9 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
               startContainer = parent;
             }
           }
-          newRange = nsRange::Create(startContainer, startOffset, endContainer,
-                                     endOffset, IgnoreErrors());
+          newRange =
+              nsRange::Create(startContainer, startOffset.valueOr(UINT32_MAX),
+                              endContainer, endOffset, IgnoreErrors());
           if (!newRange || newRange->Collapsed()) {
             newRange = nullptr;
           }

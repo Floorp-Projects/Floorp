@@ -1,5 +1,5 @@
 use crate::{
-    constants::{MAX_PRECISION, POWERS_10, U32_MASK},
+    constants::{MAX_PRECISION_U32, POWERS_10, U32_MASK},
     decimal::{CalculationResult, Decimal},
     ops::array::{
         add_by_internal, cmp_internal, div_by_u32, is_all_zero, mul_by_u32, mul_part, rescale_internal, shl1_internal,
@@ -171,16 +171,16 @@ pub(crate) fn div_impl(d1: &Decimal, d2: &Decimal) -> CalculationResult {
 
     // Check for underflow
     let mut final_scale: u32 = quotient_scale as u32;
-    if final_scale > MAX_PRECISION {
+    if final_scale > MAX_PRECISION_U32 {
         let mut remainder = 0;
 
         // Division underflowed. We must remove some significant digits over using
         //  an invalid scale.
-        while final_scale > MAX_PRECISION && !is_all_zero(&quotient) {
+        while final_scale > MAX_PRECISION_U32 && !is_all_zero(&quotient) {
             remainder = div_by_u32(&mut quotient, 10);
             final_scale -= 1;
         }
-        if final_scale > MAX_PRECISION {
+        if final_scale > MAX_PRECISION_U32 {
             // Result underflowed so set to zero
             final_scale = 0;
             quotient_negative = false;
@@ -228,8 +228,8 @@ pub(crate) fn mul_impl(d1: &Decimal, d2: &Decimal) -> CalculationResult {
         let mut u64_result = u64_to_array(u64::from(my[0]) * u64::from(ot[0]));
 
         // If we're above max precision then this is a very small number
-        if final_scale > MAX_PRECISION {
-            final_scale -= MAX_PRECISION;
+        if final_scale > MAX_PRECISION_U32 {
+            final_scale -= MAX_PRECISION_U32;
 
             // If the number is above 19 then this will equate to zero.
             // This is because the max value in 64 bits is 1.84E19
@@ -258,7 +258,7 @@ pub(crate) fn mul_impl(d1: &Decimal, d2: &Decimal) -> CalculationResult {
                 u64_result[0] += 1;
             }
 
-            final_scale = MAX_PRECISION;
+            final_scale = MAX_PRECISION_U32;
         }
         return CalculationResult::Ok(Decimal::from_parts(
             u64_result[0],
@@ -350,17 +350,17 @@ pub(crate) fn mul_impl(d1: &Decimal, d2: &Decimal) -> CalculationResult {
 
     // If we're still above max precision then we'll try again to
     // reduce precision - we may be dealing with a limit of "0"
-    if final_scale > MAX_PRECISION {
+    if final_scale > MAX_PRECISION_U32 {
         // We're in an underflow situation
         // The easiest way to remove precision is to divide off the result
-        while final_scale > MAX_PRECISION && !is_all_zero(&product) {
+        while final_scale > MAX_PRECISION_U32 && !is_all_zero(&product) {
             div_by_u32(&mut product, 10);
             final_scale -= 1;
         }
         // If we're still at limit then we can't represent any
         // significant decimal digits and will return an integer only
         // Can also be invoked while representing 0.
-        if final_scale > MAX_PRECISION {
+        if final_scale > MAX_PRECISION_U32 {
             final_scale = 0;
         }
     } else if !(product[3] == 0 && product[4] == 0 && product[5] == 0) {
@@ -632,7 +632,7 @@ fn add_with_scale_internal(
                 let remainder = div_by_u32(temp, 10);
                 if remainder == 0 {
                     *scale -= 1;
-                    target.copy_from_slice(&temp);
+                    target.copy_from_slice(temp);
                 } else {
                     break;
                 }
@@ -659,7 +659,7 @@ fn add_with_scale_internal(
                 if overflow == 0 {
                     // Still no overflow
                     *scale += 1;
-                    target.copy_from_slice(&temp);
+                    target.copy_from_slice(temp);
                 }
             }
         }
@@ -682,7 +682,7 @@ fn add_with_scale_internal(
             while *scale > target_scale {
                 div_by_u32(temp, 10);
                 *scale -= 1;
-                target.copy_from_slice(&temp);
+                target.copy_from_slice(temp);
             }
         }
         if *quotient_scale < *working_scale {

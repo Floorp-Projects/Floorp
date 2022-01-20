@@ -55,8 +55,7 @@ extern "C" {
  * per frame.
  *
  */
-typedef struct  _VADecPictureParameterBufferVP9
-{
+typedef struct  _VADecPictureParameterBufferVP9 {
     /** \brief picture width
      *  Picture original resolution. The value may not be multiple of 8.
      */
@@ -76,10 +75,8 @@ typedef struct  _VADecPictureParameterBufferVP9
      */
     VASurfaceID             reference_frames[8];
 
-    union
-    {
-        struct
-        {
+    union {
+        struct {
             /** \brief flags for current picture
              *  same syntax and semantic as those in VP9 code
              */
@@ -204,12 +201,9 @@ typedef struct  _VADecPictureParameterBufferVP9
  * and sent to API in a single buffer.
  *
  */
-typedef struct  _VASegmentParameterVP9
-{
-    union
-    {
-        struct
-        {
+typedef struct  _VASegmentParameterVP9 {
+    union {
+        struct {
             /** \brief Indicates if per segment reference frame indicator
              *  is enabled.
              *  Corresponding to variable feature_enabled when
@@ -282,8 +276,7 @@ typedef struct  _VASegmentParameterVP9
  * (at least compressed header) to the end of frame.
  *
  */
-typedef struct _VASliceParameterBufferVP9
-{
+typedef struct _VASliceParameterBufferVP9 {
     /** \brief The byte count of current frame in the bitstream buffer,
      *  starting from first byte of the buffer.
      *  It uses the name slice_data_size to be consitent with other codec,

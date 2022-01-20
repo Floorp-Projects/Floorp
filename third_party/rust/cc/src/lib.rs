@@ -1557,6 +1557,10 @@ impl Build {
                         cmd.args.push(
                             format!("--target={}", target.replace("riscv64gc", "riscv64")).into(),
                         );
+                    } else if target.starts_with("riscv32gc-") {
+                        cmd.args.push(
+                            format!("--target={}", target.replace("riscv32gc", "riscv32")).into(),
+                        );
                     } else if target.contains("uefi") {
                         if target.contains("x86_64") {
                             cmd.args.push("--target=x86_64-unknown-windows-gnu".into());

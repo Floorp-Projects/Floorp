@@ -41,7 +41,7 @@ const { SUPPORTED_DATA } = SessionDataHelpers;
 // It is keyed by WatcherActor ID and values contains following attributes:
 // - targets: Set of strings, refering to target types to be listened to
 // - resources: Set of strings, refering to resource types to be observed
-// - context: WatcherActor's context. Describe what the watcher should be debugging.
+// - sessionContext: WatcherActor's session context. Describe what the watcher should be debugging.
 //            See watcher actor constructor for more info.
 // - connectionPrefix: The DevToolsConnection prefix of the watcher actor. Used to compute new actor ID in the content processes.
 //
@@ -109,9 +109,9 @@ const WatcherRegistry = {
     let sessionData = sessionDataByWatcherActor.get(watcherActorID);
     if (!sessionData && createData) {
       sessionData = {
-        // The "context" object help understand what should be debugged and which target should be created.
+        // The "session context" object help understand what should be debugged and which target should be created.
         // See WatcherActor constructor for more info.
-        context: watcher.context,
+        sessionContext: watcher.sessionContext,
         // The DevToolsServerConnection prefix will be used to compute actor IDs created in the content process
         connectionPrefix: watcher.conn.prefix,
         // Expose watcher traits so we can retrieve them in content process.
@@ -152,8 +152,8 @@ const WatcherRegistry = {
     const watchers = [];
     for (const watcherActor of watcherActors.values()) {
       if (
-        watcherActor.context.type == "browser-element" &&
-        watcherActor.context.browserId === browserId
+        watcherActor.sessionContext.type == "browser-element" &&
+        watcherActor.sessionContext.browserId === browserId
       ) {
         watchers.push(watcherActor);
       }

@@ -16,7 +16,7 @@ const TEST_URI = `
   div {
     color: green;
     background-color: black;
-    cursor: pointer;
+    -moz-float-edge: content-box;
   }
 </style>
 <div class="test-inline" style="color:pink; user-select:none;"></div>
@@ -30,9 +30,9 @@ const TEST_DATA_INITIAL = [
       {
         color: { value: "green" },
         "background-color": { value: "black" },
-        cursor: {
-          value: "pointer",
-          expected: COMPATIBILITY_TOOLTIP_MESSAGE.default,
+        "-moz-float-edge": {
+          value: "content-box",
+          expected: COMPATIBILITY_TOOLTIP_MESSAGE.deprecated,
         },
       },
     ],
@@ -50,9 +50,9 @@ const TEST_DATA_INITIAL = [
       {
         color: { value: "green" },
         "background-color": { value: "black" },
-        cursor: {
-          value: "pointer",
-          expected: COMPATIBILITY_TOOLTIP_MESSAGE.default,
+        "-moz-float-edge": {
+          value: "content-box",
+          expected: COMPATIBILITY_TOOLTIP_MESSAGE.deprecated,
         },
       },
     ],
@@ -67,7 +67,7 @@ const TEST_DATA_TOGGLE_CLASS_DECLARATION = [
       {
         color: { value: "green" },
         "background-color": { value: "black" },
-        cursor: { value: "pointer" },
+        "-moz-float-edge": { value: "content-box" },
       },
     ],
   },
@@ -84,7 +84,7 @@ const TEST_DATA_TOGGLE_CLASS_DECLARATION = [
       {
         color: { value: "green" },
         "background-color": { value: "black" },
-        cursor: { value: "pointer" },
+        "-moz-float-edge": { value: "content-box" },
       },
     ],
   },
@@ -98,7 +98,7 @@ const TEST_DATA_TOGGLE_INLINE = [
       {
         color: { value: "green" },
         "background-color": { value: "black" },
-        cursor: { value: "pointer" },
+        "-moz-float-edge": { value: "content-box" },
       },
     ],
   },
@@ -112,7 +112,7 @@ const TEST_DATA_TOGGLE_INLINE = [
       {
         color: { value: "green" },
         "background-color": { value: "black" },
-        cursor: { value: "pointer" },
+        "-moz-float-edge": { value: "content-box" },
       },
     ],
   },
@@ -126,15 +126,15 @@ add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector, view } = await openRuleView();
 
-  const cursor = { cursor: "pointer" };
+  const mozFloatEdge = { "-moz-float-edge": "content-box" };
   const userSelect = { "user-select": "none" };
 
   await runCSSCompatibilityTests(view, inspector, TEST_DATA_INITIAL);
 
   info(
-    'Disable cursor: "pointer" which is not cross browser compatible declaration'
+    'Disable -moz-float-edge: "content-box" which is not cross browser compatible declaration'
   );
-  await toggleDeclaration(view, 1, cursor);
+  await toggleDeclaration(view, 1, mozFloatEdge);
   await runCSSCompatibilityTests(
     view,
     inspector,

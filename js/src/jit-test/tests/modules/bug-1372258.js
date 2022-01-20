@@ -2,8 +2,9 @@
 
 // Overwrite built-in parseModule with off-thread module parser.
 function parseModule(source) {
-    offThreadCompileModule(source);
-    return finishOffThreadModule();
+    offThreadCompileModuleToStencil(source);
+    var stencil = finishOffThreadCompileModuleToStencil();
+    return instantiateModuleStencil(stencil);
 }
 
 // Test case derived from: js/src/jit-test/tests/modules/many-imports.js

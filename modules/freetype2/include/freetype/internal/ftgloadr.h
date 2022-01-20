@@ -22,6 +22,7 @@
 
 #include <freetype/freetype.h>
 
+#include "compiler-macros.h"
 
 FT_BEGIN_HEADER
 

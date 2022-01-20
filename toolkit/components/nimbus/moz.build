@@ -7,9 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Nimbus Desktop Client")
 
-EXPORTS.mozilla.browser += [
-    "lib/NimbusFeatures.h",
-]
+EXPORTS.mozilla.browser += ["!lib/NimbusFeatureManifest.h", "lib/NimbusFeatures.h"]
 
 UNIFIED_SOURCES += [
     "lib/NimbusFeatures.cpp",
@@ -42,6 +40,13 @@ GeneratedFile(
     "FeatureManifest.js",
     script="generate/generate_feature_manifest.py",
     entry_point="generate_feature_manifest",
+    inputs=["./FeatureManifest.yaml"],
+)
+
+GeneratedFile(
+    "lib/NimbusFeatureManifest.h",
+    script="generate/generate_feature_manifest.py",
+    entry_point="generate_platform_feature_manifest",
     inputs=["./FeatureManifest.yaml"],
 )
 

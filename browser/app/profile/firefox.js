@@ -21,9 +21,9 @@
 //addon消す
 pref("extensions.getAddons.showPane", false);
 //軽量化
-pref("browser.tabs.animate",false);
+pref("browser.tabs.animate", false);
 pref("browser.panorama.animate_zoom", false);
-pref("network.http.pipelining",false);
+pref("network.http.pipelining", false);
 pref("network.http.pipelining.firstrequest", true);
 pref("network.http.pipelining.maxrequests", 8);
 pref("network.http.max-connections-per-server", 8);
@@ -34,10 +34,12 @@ pref("content.notify.ontimer", true);
 pref("content.interrupt.parsing", true);
 pref("nglayout.initialpaint.delay", 0);
 //既定のテーマを変更
-pref("privacy.resistFingerprinting.block_mozAddonManager",true);
+pref("privacy.resistFingerprinting.block_mozAddonManager", true);
 pref("extensions.activeThemeID", "firefox-compact-dark@mozilla.org");
 //backdropfilter
-pref("layout.css.backdrop-filter.enabled",true);
+pref("layout.css.backdrop-filter.enabled", true);
+//svgの互換性工場
+pref("svg.context-properties.content.enabled", true)
 
 pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindowMac.xhtml");
 
@@ -289,7 +291,7 @@ pref("browser.shell.setDefaultPDFHandler", false);
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last visited page, 3 = resume previous browser session
 // The behavior of option 3 is detailed at: http://wiki.mozilla.org/Session_Restore
-pref("browser.startup.page",                1);
+pref("browser.startup.page",                2);
 pref("browser.startup.homepage",            "about:home");
 #ifdef NIGHTLY_BUILD
 pref("browser.startup.homepage.abouthome_cache.enabled", true);
@@ -1582,7 +1584,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.spocs.personalized", tr
 pref("browser.newtabpage.activity-stream.feeds.section.topstories", true);
 
 // The pref controls if search hand-off is enabled for Activity Stream.
-pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", false);
+pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", true);
 
 pref("browser.newtabpage.activity-stream.logowordmark.alwaysVisible", true);
 

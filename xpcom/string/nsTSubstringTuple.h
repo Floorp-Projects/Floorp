@@ -28,7 +28,7 @@ class MOZ_TEMPORARY_CLASS nsTSubstringTuple {
 
   typedef nsTSubstringTuple<T> self_type;
   typedef mozilla::detail::nsTStringRepr<char_type> base_string_type;
-  typedef uint32_t size_type;
+  typedef size_t size_type;
 
  public:
   nsTSubstringTuple(const base_string_type* aStrA,
@@ -37,8 +37,7 @@ class MOZ_TEMPORARY_CLASS nsTSubstringTuple {
 
   nsTSubstringTuple(const self_type& aHead, const base_string_type* aStrB)
       : mHead(&aHead),
-        mFragA(nullptr)  // this fragment is ignored when aHead != nullptr
-        ,
+        mFragA(nullptr),  // this fragment is ignored when aHead != nullptr
         mFragB(aStrB) {}
 
   /**
@@ -51,7 +50,7 @@ class MOZ_TEMPORARY_CLASS nsTSubstringTuple {
    * to be equal to or greater than the value returned by the Length()
    * method.  the string written to |buf| is not null-terminated.
    */
-  void WriteTo(char_type* aBuf, uint32_t aBufLen) const;
+  void WriteTo(char_type* aBuf, size_type aBufLen) const;
 
   /**
    * returns true if this tuple is dependent on (i.e., overlapping with)

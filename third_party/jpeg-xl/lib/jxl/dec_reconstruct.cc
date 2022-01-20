@@ -357,8 +357,8 @@ void DoYCbCrUpsampling(size_t hs, size_t vs, ImageF* plane_in, const Rect& rect,
         Store(left, d, out + x);
         Store(right, d, out + x + 1);
 #else
-        Store(InterleaveLower(left, right), d, out + x);
-        Store(InterleaveUpper(left, right), d, out + x + Lanes(d));
+        Store(InterleaveLower(d, left, right), d, out + x);
+        Store(InterleaveUpper(d, left, right), d, out + x + Lanes(d));
 #endif
       }
     }

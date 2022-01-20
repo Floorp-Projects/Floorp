@@ -85,12 +85,12 @@ impl crate::Instance<Api> for Instance {
     ) -> Result<Surface, crate::InstanceError> {
         match has_handle.raw_window_handle() {
             #[cfg(target_os = "ios")]
-            raw_window_handle::RawWindowHandle::IOS(handle) => {
+            raw_window_handle::RawWindowHandle::UiKit(handle) => {
                 let _ = &self.managed_metal_layer_delegate;
                 Ok(Surface::from_uiview(handle.ui_view))
             }
             #[cfg(target_os = "macos")]
-            raw_window_handle::RawWindowHandle::MacOS(handle) => Ok(Surface::from_nsview(
+            raw_window_handle::RawWindowHandle::AppKit(handle) => Ok(Surface::from_nsview(
                 handle.ns_view,
                 &self.managed_metal_layer_delegate,
             )),
@@ -137,6 +137,7 @@ impl crate::Instance<Api> for Instance {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Debug)]
 struct PrivateCapabilities {
     family_check: bool,
@@ -211,6 +212,8 @@ struct PrivateCapabilities {
     max_texture_layers: u64,
     max_fragment_input_components: u64,
     max_color_render_targets: u8,
+    max_varying_components: u32,
+    max_threads_per_group: u32,
     max_total_threadgroup_memory: u32,
     sample_count_mask: u8,
     supports_debug_markers: bool,
@@ -230,6 +233,7 @@ struct PrivateDisabilities {
     /// Near depth is not respected properly on some Intel GPUs.
     broken_viewport_near_depth: bool,
     /// Multi-target clears don't appear to work properly on Intel GPUs.
+    #[allow(dead_code)]
     broken_layered_clear_image: bool,
 }
 
@@ -391,7 +395,6 @@ impl crate::Queue<Api> for Queue {
 pub struct Buffer {
     raw: mtl::Buffer,
     size: wgt::BufferAddress,
-    options: mtl::MTLResourceOptions,
 }
 
 unsafe impl Send for Buffer {}

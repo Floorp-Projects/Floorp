@@ -18,6 +18,27 @@ Log.repository.getLogger("Sync.RemoteTabs").addAppender(new Log.DumpAppender());
 // engine. We pass a constructor that Sync creates.
 function MockTabsEngine() {
   this.clients = {}; // We'll set this dynamically
+  // Mock fxAccounts + recentDeviceList as if we hit the FxA server
+  this.fxAccounts = {
+    device: {
+      recentDeviceList: [
+        {
+          id: 1,
+          name: "updated desktop name",
+          availableCommands: {
+            "https://identity.mozilla.com/cmd/open-uri": "baz",
+          },
+        },
+        {
+          id: 2,
+          name: "updated mobile name",
+          availableCommands: {
+            "https://identity.mozilla.com/cmd/open-uri": "boo",
+          },
+        },
+      ],
+    },
+  };
 }
 
 MockTabsEngine.prototype = {
@@ -54,7 +75,18 @@ let MockClientsEngine = {
     if (this.clientSettings[id]) {
       return this.clientSettings[id];
     }
-    return tabsEngine.clients[id].clientName;
+    let client = tabsEngine.clients[id];
+    let fxaDevice = tabsEngine.fxAccounts.device.recentDeviceList.find(
+      device => device.id === client.fxaDeviceId
+    );
+    return fxaDevice ? fxaDevice.name : client.clientName;
+  },
+
+  getClientFxaDeviceId(id) {
+    if (this.clientSettings[id]) {
+      return this.clientSettings[id];
+    }
+    return tabsEngine.clients[id].fxaDeviceId;
   },
 
   getClientType(id) {
@@ -272,4 +304,34 @@ add_task(async function test_duplicatesTabsAcrossClients() {
   equal(clients[1].tabs.length, 1);
   equal(clients[0].tabs[0].url, "http://foo.com/");
   equal(clients[1].tabs[0].url, "http://foo.com/");
+});
+
+add_task(async function test_clientsTabUpdatedName() {
+  // See the "fxAccounts" object in the MockEngine above for the device list
+  await configureClients({
+    guid_desktop: {
+      clientName: "My Desktop",
+      tabs: [
+        {
+          urlHistory: ["http://foo.com/"],
+          icon: "http://foo.com/favicon",
+        },
+      ],
+      fxaDeviceId: 1,
+    },
+    guid_mobile: {
+      clientName: "My Phone",
+      tabs: [
+        {
+          urlHistory: ["http://bar.com/"],
+          icon: "http://bar.com/favicon",
+        },
+      ],
+      fxaDeviceId: 2,
+    },
+  });
+  let clients = await SyncedTabs.getTabClients();
+  equal(clients.length, 2);
+  equal(clients[0].name, "updated desktop name");
+  equal(clients[1].name, "updated mobile name");
 });

@@ -23,10 +23,12 @@ if CONFIG["CPU_ARCH"] in ("x86", "x86_64"):
     )
 
 OS_LIBS += [
+    "advapi32",
     "ntdll",
     "ole32",
     "shlwapi",
     "user32",
+    "uuid",
 ]
 
 DELAYLOAD_DLLS += [

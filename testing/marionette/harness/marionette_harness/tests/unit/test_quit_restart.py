@@ -23,10 +23,14 @@ class TestServerQuitApplication(MarionetteTestCase):
         if self.marionette.session is None:
             self.marionette.start_session()
 
-    def quit(self, flags=None):
-        body = None
+    def quit(self, flags=None, safe_mode=False):
+        body = {}
         if flags is not None:
-            body = {"flags": list(flags)}
+            body["flags"] = list(
+                flags,
+            )
+        if safe_mode:
+            body["safeMode"] = safe_mode
 
         resp = self.marionette._send_message("Marionette:Quit", body)
         self.marionette.session_id = None
@@ -59,9 +63,13 @@ class TestServerQuitApplication(MarionetteTestCase):
         cause = self.quit(())
         self.assertEqual("shutdown", cause)
 
-    def test_incompatible_flags(self):
+    def test_incompatible_quit_flags(self):
         with self.assertRaises(errors.InvalidArgumentException):
             self.quit(("eAttemptQuit", "eForceQuit"))
+
+    def test_safe_mode_requires_restart(self):
+        with self.assertRaises(errors.InvalidArgumentException):
+            self.quit(("eAttemptQuit",), True)
 
     def test_attempt_quit(self):
         cause = self.quit(("eAttemptQuit",))
@@ -173,6 +181,14 @@ class TestQuitRestart(MarionetteTestCase):
         ):
             self.marionette.restart(in_app=True, clean=True)
 
+    def test_restart_safe_mode(self):
+        try:
+            self.assertFalse(self.is_safe_mode, "Safe Mode is unexpectedly enabled")
+            self.marionette.restart(safe_mode=True)
+            self.assertTrue(self.is_safe_mode, "Safe Mode is not enabled")
+        finally:
+            self.marionette.quit(clean=True)
+
     def test_in_app_restart(self):
         details = self.marionette.restart(in_app=True)
 
@@ -262,33 +278,6 @@ class TestQuitRestart(MarionetteTestCase):
         finally:
             self.marionette.shutdown_timeout = timeout_shutdown
             self.marionette.startup_timeout = timeout_startup
-
-    def test_in_app_restart_safe_mode(self):
-        def restart_in_safe_mode():
-            with self.marionette.using_context("chrome"):
-                self.marionette.execute_script(
-                    """
-                  Components.utils.import("resource://gre/modules/Services.jsm");
-
-                  let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
-                                     .createInstance(Ci.nsISupportsPRBool);
-                  Services.obs.notifyObservers(cancelQuit,
-                      "quit-application-requested", null);
-
-                  if (!cancelQuit.data) {
-                    Services.startup.restartInSafeMode(Ci.nsIAppStartup.eAttemptQuit);
-                  }
-                """
-                )
-
-        try:
-            self.assertFalse(self.is_safe_mode, "Safe Mode is unexpectedly enabled")
-            self.marionette.restart(in_app=True, callback=restart_in_safe_mode)
-            self.assertTrue(self.is_safe_mode, "Safe Mode is not enabled")
-        finally:
-            if self.marionette.session is None:
-                self.marionette.start_session()
-            self.marionette.quit(clean=True)
 
     def test_in_app_quit(self):
         details = self.marionette.quit(in_app=True)

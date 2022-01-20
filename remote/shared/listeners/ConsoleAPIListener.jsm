@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  * listener.startListening();
  *
  * const onConsoleAPIMessage = (eventName, data = {}) => {
- *   const { arguments: msgArguments, level, rawMessage, timeStamp } = data;
+ *   const { arguments: msgArguments, level, stacktrace, timeStamp } = data;
  *   ...
  * };
  * ```
@@ -34,10 +34,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  * @emits message
  *    The ConsoleAPIListener emits "message" events, with the following object as
  *    payload:
- *      - `message` property pointing to the wrappedJSObject of the raw message
- *      - `rawMessage` property pointing to the raw message
+ *      - {Array<Object>} arguments - Arguments as passed-in when the method was called.
+ *      - {String} level - Importance, one of `info`, `warning`, `error`, `debug`, `trace`.
+ *      - {Array<Object>} stacktrace - List of stack frames, starting from most recent.
+ *      - {Number} timeStamp - Timestamp when the method was called.
  */
 class ConsoleAPIListener {
+  #emittedMessages;
   #innerWindowId;
   #listening;
 
@@ -50,12 +53,14 @@ class ConsoleAPIListener {
   constructor(innerWindowId) {
     EventEmitter.decorate(this);
 
-    this.#listening = false;
+    this.#emittedMessages = new Set();
     this.#innerWindowId = innerWindowId;
+    this.#listening = false;
   }
 
   destroy() {
     this.stopListening();
+    this.#emittedMessages = null;
   }
 
   startListening() {
@@ -63,12 +68,15 @@ class ConsoleAPIListener {
       return;
     }
 
-    // Bug 1731574: Retrieve cached messages first before registering the
-    // listener to avoid duplicated messages.
     Services.obs.addObserver(
       this.#onConsoleAPIMessage,
       "console-api-log-event"
     );
+
+    // Emit cached messages after registering the observer, to make sure we
+    // don't miss any message.
+    this.#emitCachedMessages();
+
     this.#listening = true;
   }
 
@@ -84,8 +92,27 @@ class ConsoleAPIListener {
     this.#listening = false;
   }
 
+  #emitCachedMessages() {
+    const ConsoleAPIStorage = Cc[
+      "@mozilla.org/consoleAPI-storage;1"
+    ].getService(Ci.nsIConsoleAPIStorage);
+
+    const cachedMessages = ConsoleAPIStorage.getEvents(this.#innerWindowId);
+    for (const message of cachedMessages) {
+      this.#onConsoleAPIMessage(message);
+    }
+  }
+
   #onConsoleAPIMessage = message => {
     const messageObject = message.wrappedJSObject;
+
+    // Bail if this message was already emitted, useful to filter out cached
+    // messages already received by the consumer.
+    if (this.#emittedMessages.has(messageObject)) {
+      return;
+    }
+
+    this.#emittedMessages.add(messageObject);
 
     if (messageObject.innerID !== this.#innerWindowId) {
       // If the message doesn't match the innerWindowId of the current context
@@ -96,7 +123,7 @@ class ConsoleAPIListener {
     this.emit("message", {
       arguments: messageObject.arguments,
       level: messageObject.level,
-      rawMessage: message,
+      stacktrace: messageObject.stacktrace,
       timeStamp: messageObject.timeStamp,
     });
   };

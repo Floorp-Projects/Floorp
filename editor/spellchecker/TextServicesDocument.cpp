@@ -11,6 +11,7 @@
 #include "mozilla/EditorUtils.h"      // for AutoTransactionBatchExternal
 #include "mozilla/HTMLEditHelpers.h"  // for JoinNodesDirection
 #include "mozilla/HTMLEditUtils.h"    // for HTMLEditUtils
+#include "mozilla/IntegerRange.h"     // for IntegerRange
 #include "mozilla/mozalloc.h"         // for operator new, etc
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/UniquePtr.h"          // for UniquePtr
@@ -588,9 +589,10 @@ nsresult TextServicesDocument::LastSelectedBlock(
   // XXX: We may need to add some code here to make sure
   //      the ranges are sorted in document appearance order!
 
-  for (uint32_t i = rangeCount; i > 0; i--) {
-    range = selection->GetRangeAt(i - 1, IgnoreErrors());
-    if (!range) {
+  for (const uint32_t i : Reversed(IntegerRange(rangeCount))) {
+    MOZ_ASSERT(selection->RangeCount() == rangeCount);
+    range = selection->GetRangeAt(i);
+    if (MOZ_UNLIKELY(!range)) {
       return NS_OK;  // XXX Really?
     }
 
@@ -643,9 +645,7 @@ nsresult TextServicesDocument::LastSelectedBlock(
   // Create a range that extends from the end of the selection,
   // to the end of the document, then iterate forwards through
   // it till you find a text node!
-
-  range = selection->GetRangeAt(rangeCount - 1, IgnoreErrors());
-
+  range = rangeCount > 0 ? selection->GetRangeAt(rangeCount - 1) : nullptr;
   if (!range) {
     return NS_ERROR_FAILURE;
   }
@@ -1858,13 +1858,11 @@ nsresult TextServicesDocument::GetCollapsedSelection(
   uint32_t offset = range->StartOffset();
 
   const Maybe<int32_t> e1s1 = nsContentUtils::ComparePoints(
-      eStart->mTextNode, AssertedCast<int32_t>(eStartOffset), parent,
-      AssertedCast<int32_t>(offset));
+      eStart->mTextNode, eStartOffset, parent, offset);
   const Maybe<int32_t> e2s1 = nsContentUtils::ComparePoints(
-      eEnd->mTextNode, AssertedCast<int32_t>(eEndOffset), parent,
-      AssertedCast<int32_t>(offset));
+      eEnd->mTextNode, eEndOffset, parent, offset);
 
-  if (NS_WARN_IF(!e1s1) || NS_WARN_IF(!e2s1)) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!e1s1) || NS_WARN_IF(!e2s1))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2043,9 +2041,12 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
   Maybe<int32_t> e1s2;
   Maybe<int32_t> e2s1;
   uint32_t startOffset, endOffset;
-  for (uint32_t i = 0; i < rangeCount; i++) {
-    range = selection->GetRangeAt(i, IgnoreErrors());
-    NS_ENSURE_STATE(range);
+  for (const uint32_t i : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(selection->RangeCount() == rangeCount);
+    range = selection->GetRangeAt(i);
+    if (MOZ_UNLIKELY(NS_WARN_IF(!range))) {
+      return NS_ERROR_FAILURE;
+    }
 
     nsresult rv =
         GetRangeEndPoints(range, getter_AddRefs(startContainer), &startOffset,
@@ -2053,16 +2054,14 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
 
     NS_ENSURE_SUCCESS(rv, rv);
 
-    e1s2 = nsContentUtils::ComparePoints(
-        eStart->mTextNode, AssertedCast<int32_t>(eStartOffset), endContainer,
-        AssertedCast<int32_t>(endOffset));
+    e1s2 = nsContentUtils::ComparePoints(eStart->mTextNode, eStartOffset,
+                                         endContainer, endOffset);
     if (NS_WARN_IF(!e1s2)) {
       return NS_ERROR_FAILURE;
     }
 
-    e2s1 = nsContentUtils::ComparePoints(
-        eEnd->mTextNode, AssertedCast<int32_t>(eEndOffset), startContainer,
-        AssertedCast<int32_t>(startOffset));
+    e2s1 = nsContentUtils::ComparePoints(eEnd->mTextNode, eEndOffset,
+                                         startContainer, startOffset);
     if (NS_WARN_IF(!e2s1)) {
       return NS_ERROR_FAILURE;
     }
@@ -2084,15 +2083,13 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
 
   // Now that we have an intersecting range, find out more info:
   const Maybe<int32_t> e1s1 = nsContentUtils::ComparePoints(
-      eStart->mTextNode, AssertedCast<int32_t>(eStartOffset), startContainer,
-      AssertedCast<int32_t>(startOffset));
+      eStart->mTextNode, eStartOffset, startContainer, startOffset);
   if (NS_WARN_IF(!e1s1)) {
     return NS_ERROR_FAILURE;
   }
 
   const Maybe<int32_t> e2s2 = nsContentUtils::ComparePoints(
-      eEnd->mTextNode, AssertedCast<int32_t>(eEndOffset), endContainer,
-      AssertedCast<int32_t>(endOffset));
+      eEnd->mTextNode, eEndOffset, endContainer, endOffset);
   if (NS_WARN_IF(!e2s2)) {
     return NS_ERROR_FAILURE;
   }

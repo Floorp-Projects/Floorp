@@ -355,6 +355,9 @@ class JSString : public js::gc::CellWithLengthAndFlags {
    */
   static inline bool validateLength(JSContext* maybecx, size_t length);
 
+  template <js::AllowGC allowGC>
+  static inline bool validateLengthInternal(JSContext* maybecx, size_t length);
+
   static constexpr size_t offsetOfFlags() { return offsetOfHeaderFlags(); }
   static constexpr size_t offsetOfLength() { return offsetOfHeaderLength(); }
 
@@ -1166,13 +1169,6 @@ class JSAtom : public JSLinearString {
   MOZ_ALWAYS_INLINE
   bool isPermanent() const { return JSString::isPermanentAtom(); }
 
-  // Transform this atom into a permanent atom. This is only done during
-  // initialization of the runtime. Permanent atoms are always pinned.
-  MOZ_ALWAYS_INLINE void morphIntoPermanentAtom() {
-    MOZ_ASSERT(static_cast<JSString*>(this)->isAtom());
-    setFlagBit(PERMANENT_ATOM_MASK);
-  }
-
   MOZ_ALWAYS_INLINE bool isIndex() const {
     MOZ_ASSERT(JSString::isAtom());
     mozilla::DebugOnly<uint32_t> index;
@@ -1411,16 +1407,14 @@ inline JSLinearString* NewStringCopyZ(
   return NewStringCopyN<allowGC>(cx, s, strlen(s), heap);
 }
 
-template <js::AllowGC allowGC>
 extern JSLinearString* NewStringCopyUTF8N(
     JSContext* cx, const JS::UTF8Chars utf8,
     js::gc::InitialHeap heap = js::gc::DefaultHeap);
 
-template <js::AllowGC allowGC>
 inline JSLinearString* NewStringCopyUTF8Z(
     JSContext* cx, const JS::ConstUTF8CharsZ utf8,
     js::gc::InitialHeap heap = js::gc::DefaultHeap) {
-  return NewStringCopyUTF8N<allowGC>(
+  return NewStringCopyUTF8N(
       cx, JS::UTF8Chars(utf8.c_str(), strlen(utf8.c_str())), heap);
 }
 

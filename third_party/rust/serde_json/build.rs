@@ -31,6 +31,12 @@ fn main() {
     if minor < 45 {
         println!("cargo:rustc-cfg=no_btreemap_remove_entry");
     }
+
+    // BTreeMap::retain
+    // https://blog.rust-lang.org/2021/06/17/Rust-1.53.0.html#stabilized-apis
+    if minor < 53 {
+        println!("cargo:rustc-cfg=no_btreemap_retain");
+    }
 }
 
 fn rustc_minor_version() -> Option<u32> {

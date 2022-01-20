@@ -71,7 +71,6 @@ function getPrintSettings(settings, filePath) {
   printSettings.printerName = "marionette";
   printSettings.printSilent = true;
   printSettings.printToFile = true;
-  printSettings.showPrintProgress = false;
   printSettings.toFileName = filePath;
 
   // Setting the paperSizeUnit to kPaperSizeMillimeters doesn't work on mac

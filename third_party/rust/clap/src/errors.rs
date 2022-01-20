@@ -1,16 +1,20 @@
 // Std
-use std::convert::From;
-use std::error::Error as StdError;
-use std::fmt as std_fmt;
-use std::fmt::Display;
-use std::io::{self, Write};
-use std::process;
-use std::result::Result as StdResult;
+use std::{
+    convert::From,
+    error::Error as StdError,
+    fmt as std_fmt,
+    fmt::Display,
+    io::{self, Write},
+    process,
+    result::Result as StdResult,
+};
 
 // Internal
-use args::AnyArg;
-use fmt::{ColorWhen, Colorizer, ColorizerOption};
-use suggestions;
+use crate::{
+    args::AnyArg,
+    fmt::{ColorWhen, Colorizer, ColorizerOption},
+    suggestions,
+};
 
 /// Short hand for [`Result`] type
 ///
@@ -385,20 +389,35 @@ pub struct Error {
 impl Error {
     /// Should the message be written to `stdout` or not
     pub fn use_stderr(&self) -> bool {
-        match self.kind {
-            ErrorKind::HelpDisplayed | ErrorKind::VersionDisplayed => false,
-            _ => true,
-        }
+        !matches!(
+            self.kind,
+            ErrorKind::HelpDisplayed | ErrorKind::VersionDisplayed
+        )
     }
 
-    /// Prints the error to `stderr` and exits with a status of `1`
+    /// Prints the error message and exits. If `Error::use_stderr` evaluates to `true`, the message
+    /// will be written to `stderr` and exits with a status of `1`. Otherwise, `stdout` is used
+    /// with a status of `0`.
     pub fn exit(&self) -> ! {
         if self.use_stderr() {
-            wlnerr!("{}", self.message);
+            wlnerr!(@nopanic "{}", self.message);
             process::exit(1);
         }
-        let out = io::stdout();
-        writeln!(&mut out.lock(), "{}", self.message).expect("Error writing Error to stdout");
+        // We are deliberately dropping errors here. We could match on the error kind, and only
+        // drop things such as `std::io::ErrorKind::BrokenPipe`, however nothing is being bubbled
+        // up or reported back to the caller and we will be exit'ing the process anyways.
+        // Additionally, changing this API to bubble up the result would be a breaking change.
+        //
+        // Another approach could be to try and write to stdout, if that fails due to a broken pipe
+        // then use stderr. However, that would change the semantics in what could be argued is a
+        // breaking change. Simply dropping the error, can always be changed to this "use stderr if
+        // stdout is closed" approach later if desired.
+        //
+        // A good explanation of the types of errors are SIGPIPE where the read side of the pipe
+        // closes before the write side. See the README in `calm_io` for a good explanation:
+        //
+        // https://github.com/myrrlyn/calm_io/blob/a42845575a04cd8b65e92c19d104627f5fcad3d7/README.md
+        let _ = writeln!(&mut io::stdout().lock(), "{}", self.message);
         process::exit(0);
     }
 
@@ -866,11 +885,7 @@ impl Error {
             when: ColorWhen::Auto,
         });
         Error {
-            message: format!(
-                "{} The argument '{}' wasn't found",
-                c.error("error:"),
-                a.clone()
-            ),
+            message: format!("{} The argument '{}' wasn't found", c.error("error:"), a),
             kind: ErrorKind::ArgumentNotFound,
             info: Some(vec![a]),
         }
@@ -887,7 +902,7 @@ impl Error {
         });
         Error {
             message: format!("{} {}", c.error("error:"), description),
-            kind: kind,
+            kind,
             info: None,
         }
     }

@@ -1,5 +1,57 @@
 # Version History
 
+## 1.18.0
+
+* Fixes integer handling for `to_f64` when scale is set to `0`. [#443](https://github.com/paupino/rust-decimal/pull/443). 
+  Thank you [@anatols](https://github.com/anatols) for creating this fix.
+* Add support for Rocket Forms using the feature flag `rocket-traits`. [#445](https://github.com/paupino/rust-decimal/pull/445).
+  Thank you [@Misterio77](https://github.com/Misterio77) for putting this together.
+* Add Diesel MySQL support, enabled by the feature flag `db-diesel-mysq`. [#446](https://github.com/paupino/rust-decimal/pull/446).
+
+## 1.17.0
+
+* Fixes panic when display precision was specified greater than 30. [#428](https://github.com/paupino/rust-decimal/issues/428). 
+* Binds `deserialize` so that invalid scale values cannot be set. This may be a breaking change for some users leveraging
+  this in a `const` function. [#428](https://github.com/paupino/rust-decimal/issues/428).
+* Fixes an issue in `round_sf` whereby integral values that started with a 0 or 1 would output incorrect rounded numbers. [#430](https://github.com/paupino/rust-decimal/issues/430), [#437](https://github.com/paupino/rust-decimal/issues/437).
+* Adds `from_f32_retain` and `from_f64_retain` functions which allow parsing a floating point number and retaining any excess precision. [#438](https://github.com/paupino/rust-decimal/issues/438).
+
+## 1.16.0
+
+* Implement `sin`/`cos`/`tan` functions which are enabled within the `maths` feature. [#413](https://github.com/paupino/rust-decimal/pull/413).
+* Implement `round_sf` and `round_sf_with_strategy` to enable significant figure rounding. [#421](https://github.com/paupino/rust-decimal/pull/421)
+* Remove unnecessary `std` feature from `arrayvec` usage [#417](https://github.com/paupino/rust-decimal/pull/417).
+* Adhoc benchmarking and fuzz tooling improvements [#412](https://github.com/paupino/rust-decimal/pull/412), 
+  [#415](https://github.com/paupino/rust-decimal/pull/415), [#416](https://github.com/paupino/rust-decimal/pull/416), 
+  [#418](https://github.com/paupino/rust-decimal/pull/418).
+
+Thank you to [@c410-f3r](https://github.com/c410-f3r) for all your help with fuzz and benchmarking improvements!
+
+## 1.15.0
+
+A minor bug and feature release which adds a couple of new functions as well as cleans up some documentation:
+
+* Support for serializing to float without converting to float via the `serde-arbitrary-precision` feature. 
+  [#402](https://github.com/paupino/rust-decimal/issues/402). Thanks [@JamesHinshelwood](https://github.com/JamesHinshelwood)!
+  for finding and fixing this!
+* Add `log10` support to the `maths` feature. Please note that `ln` and `log10` will now panic on invalid input since both 
+  functions have a `checked_*` equivalent. This is the preferred approach going forward, however if you would like to re-enable
+  the previous behavior please use the `maths-nopanic` feature. [#397](https://github.com/paupino/rust-decimal/issues/397).
+* Added further constants to the `Decimal` library including `TWO`, `TEN`, `ONE_HUNDRED`, `ONE_THOUSAND`, and `NEGATIVE_ONE`.
+  [#400](https://github.com/paupino/rust-decimal/issues/400).
+* Fixes serialization issue for `-0` whereby `-` would be output [#406](https://github.com/paupino/rust-decimal/pull/406). Thanks
+  [@edwardycl](https://github.com/edwardycl)!
+* Fixes float rounding before return in `to_f64`. [#401](https://github.com/paupino/rust-decimal/issues/401).
+* Added `BUILD.md` file to help people get set up with Rust Decimal locally and cleaned up some
+  documentation examples.
+
+## 1.14.3
+
+Fixes an issue [#398](https://github.com/paupino/rust-decimal/issues/398) where `Decimal::ZERO.ln()` would panic rather than returning `Decimal::ZERO`. This 
+aligns the behavior with calling `ln` on negative decimals.
+
+Thank you to [@SebRollen](https://github.com/SebRollen) for finding and fixing this.
+
 ## 1.14.2
 
 Fixes an overflow issue during division under some specific circumstances. ([#392](https://github.com/paupino/rust-decimal/issues/392))

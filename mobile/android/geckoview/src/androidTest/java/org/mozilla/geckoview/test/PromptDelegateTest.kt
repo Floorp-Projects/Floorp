@@ -55,7 +55,7 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         })
 
-        sessionRule.session.loadTestPath(POPUP_HTML_PATH)
+        mainSession.loadTestPath(POPUP_HTML_PATH)
         sessionRule.waitUntilCalled(NavigationDelegate::class, "onNewSession")
     }
 
@@ -88,14 +88,14 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         })
 
-        sessionRule.session.loadTestPath(POPUP_HTML_PATH)
+        mainSession.loadTestPath(POPUP_HTML_PATH)
         sessionRule.waitForPageStop()
-        sessionRule.session.waitForRoundTrip()
+        mainSession.waitForRoundTrip()
     }
 
     @Ignore // TODO: Reenable when 1501574 is fixed.
     @Test fun alertTest() {
-        sessionRule.session.evaluateJS("alert('Alert!');")
+        mainSession.evaluateJS("alert('Alert!');")
 
         sessionRule.waitUntilCalled(object : PromptDelegate {
             @AssertCalled(count = 1)
@@ -205,7 +205,7 @@ class PromptDelegateTest : BaseSessionTest() {
     }
 
     @Test fun buttonTest() {
-        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         sessionRule.delegateDuringNextWait(object : PromptDelegate {
@@ -217,7 +217,7 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         assertThat("Result should match",
-                sessionRule.session.waitForJS("confirm('Confirm?')") as Boolean,
+                mainSession.waitForJS("confirm('Confirm?')") as Boolean,
                 equalTo(true))
 
         sessionRule.delegateDuringNextWait(object : PromptDelegate {
@@ -229,16 +229,16 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         assertThat("Result should match",
-                sessionRule.session.waitForJS("confirm('Confirm?')") as Boolean,
+                mainSession.waitForJS("confirm('Confirm?')") as Boolean,
                 equalTo(false))
     }
 
     @Test
     fun onFormResubmissionPrompt() {
-        sessionRule.session.loadTestPath(RESUBMIT_CONFIRM)
+        mainSession.loadTestPath(RESUBMIT_CONFIRM)
         sessionRule.waitForPageStop()
 
-        sessionRule.session.evaluateJS(
+        mainSession.evaluateJS(
             "document.querySelector('#text').value = 'Some text';" +
             "document.querySelector('#submit').click();"
         )
@@ -267,7 +267,7 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         // This should trigger a confirm resubmit prompt
-        sessionRule.session.reload();
+        mainSession.reload();
 
         sessionRule.waitUntilCalled(object : PromptDelegate {
             @AssertCalled(count = 1)
@@ -280,7 +280,7 @@ class PromptDelegateTest : BaseSessionTest() {
         sessionRule.waitForResult(promptResult)
 
         // Trigger it again, this time the load should go through
-        sessionRule.session.reload();
+        mainSession.reload();
         sessionRule.waitUntilCalled(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onRepostConfirmPrompt(session: GeckoSession, prompt: PromptDelegate.RepostConfirmPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
@@ -298,7 +298,7 @@ class PromptDelegateTest : BaseSessionTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "dom.require_user_interaction_for_beforeunload" to false
         ))
-        sessionRule.session.loadTestPath(BEFORE_UNLOAD)
+        mainSession.loadTestPath(BEFORE_UNLOAD)
         sessionRule.waitForPageStop()
 
         val result = GeckoResult<Void>()
@@ -323,7 +323,7 @@ class PromptDelegateTest : BaseSessionTest() {
 
         // This will try to load "hello.html" but will be denied, if the request
         // goes through anyway the onLoadRequest delegate above will throw an exception
-        sessionRule.session.evaluateJS("document.querySelector('#navigateAway').click()")
+        mainSession.evaluateJS("document.querySelector('#navigateAway').click()")
         sessionRule.waitUntilCalled(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onBeforeUnloadPrompt(session: GeckoSession, prompt: PromptDelegate.BeforeUnloadPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
@@ -336,7 +336,7 @@ class PromptDelegateTest : BaseSessionTest() {
 
         // This request will go through and end the test. Doing the negative case first will
         // ensure that if either of this tests fail the test will fail.
-        sessionRule.session.evaluateJS("document.querySelector('#navigateAway2').click()")
+        mainSession.evaluateJS("document.querySelector('#navigateAway2').click()")
         sessionRule.waitUntilCalled(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onBeforeUnloadPrompt(session: GeckoSession, prompt: PromptDelegate.BeforeUnloadPrompt): GeckoResult<PromptDelegate.PromptResponse>? {
@@ -350,8 +350,8 @@ class PromptDelegateTest : BaseSessionTest() {
     }
 
     @Test fun textTest() {
-        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
-        sessionRule.session.waitForPageStop()
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
 
         sessionRule.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(count = 1)
@@ -363,7 +363,7 @@ class PromptDelegateTest : BaseSessionTest() {
         })
 
         assertThat("Result should match",
-                sessionRule.session.waitForJS("prompt('Prompt:', 'default')") as String,
+                mainSession.waitForJS("prompt('Prompt:', 'default')") as String,
                 equalTo("foo"))
     }
 
@@ -371,10 +371,10 @@ class PromptDelegateTest : BaseSessionTest() {
     @Test fun choiceTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
-        sessionRule.session.loadTestPath(PROMPT_HTML_PATH)
-        sessionRule.session.waitForPageStop()
+        mainSession.loadTestPath(PROMPT_HTML_PATH)
+        mainSession.waitForPageStop()
 
-        sessionRule.session.evaluateJS("document.getElementById('selectexample').click();")
+        mainSession.evaluateJS("document.getElementById('selectexample').click();")
 
         sessionRule.waitUntilCalled(object : PromptDelegate {
             @AssertCalled(count = 1)
@@ -387,8 +387,8 @@ class PromptDelegateTest : BaseSessionTest() {
     @Test fun colorTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
-        sessionRule.session.loadTestPath(PROMPT_HTML_PATH)
-        sessionRule.session.waitForPageStop()
+        mainSession.loadTestPath(PROMPT_HTML_PATH)
+        mainSession.waitForPageStop()
 
         sessionRule.delegateDuringNextWait(object : PromptDelegate {
             @AssertCalled(count = 1)
@@ -398,11 +398,11 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         })
 
-        sessionRule.session.evaluateJS("""
+        mainSession.evaluateJS("""
             this.c = document.getElementById('colorexample');
         """.trimIndent())
 
-        val promise = sessionRule.session.evaluatePromiseJS("""
+        val promise = mainSession.evaluatePromiseJS("""
             new Promise((resolve, reject) => {
                 this.c.addEventListener(
                     'change',
@@ -411,7 +411,7 @@ class PromptDelegateTest : BaseSessionTest() {
                 );
             })""".trimIndent())
 
-        sessionRule.session.evaluateJS("this.c.click();")
+        mainSession.evaluateJS("this.c.click();")
 
         assertThat("Value should match",
                 promise.value as String,
@@ -422,10 +422,10 @@ class PromptDelegateTest : BaseSessionTest() {
     @Test fun dateTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
-        sessionRule.session.loadTestPath(PROMPT_HTML_PATH)
-        sessionRule.session.waitForPageStop()
+        mainSession.loadTestPath(PROMPT_HTML_PATH)
+        mainSession.waitForPageStop()
 
-        sessionRule.session.evaluateJS("document.getElementById('dateexample').click();")
+        mainSession.evaluateJS("document.getElementById('dateexample').click();")
 
         sessionRule.waitUntilCalled(object : PromptDelegate {
             @AssertCalled(count = 1)
@@ -438,10 +438,10 @@ class PromptDelegateTest : BaseSessionTest() {
     @Test fun fileTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
-        sessionRule.session.loadTestPath(PROMPT_HTML_PATH)
-        sessionRule.session.waitForPageStop()
+        mainSession.loadTestPath(PROMPT_HTML_PATH)
+        mainSession.waitForPageStop()
 
-        sessionRule.session.evaluateJS("document.getElementById('fileexample').click();")
+        mainSession.evaluateJS("document.getElementById('fileexample').click();")
 
         sessionRule.waitUntilCalled(object : PromptDelegate {
             @AssertCalled(count = 1)

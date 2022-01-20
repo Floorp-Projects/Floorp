@@ -460,10 +460,13 @@ void DeviceManagerDx::ImportDeviceInfo(const D3D11DeviceStatus& aDeviceStatus) {
   mDeviceStatus = Some(aDeviceStatus);
 }
 
-void DeviceManagerDx::ExportDeviceInfo(D3D11DeviceStatus* aOut) {
+bool DeviceManagerDx::ExportDeviceInfo(D3D11DeviceStatus* aOut) {
   if (mDeviceStatus) {
     *aOut = mDeviceStatus.value();
+    return true;
   }
+
+  return false;
 }
 
 void DeviceManagerDx::CreateContentDevices() {

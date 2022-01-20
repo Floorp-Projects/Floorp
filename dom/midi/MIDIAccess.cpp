@@ -63,6 +63,7 @@ MIDIAccess::MIDIAccess(nsPIDOMWindowInner* aWindow, bool aSysexEnabled,
       mHasShutdown(false) {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aAccessPromise);
+  KeepAliveIfHasListenersFor(nsGkAtoms::onstatechange);
 }
 
 MIDIAccess::~MIDIAccess() { Shutdown(); }
@@ -216,6 +217,12 @@ JSObject* MIDIAccess::WrapObject(JSContext* aCx,
 
 void MIDIAccess::RemovePortListener(MIDIAccessDestructionObserver* aObs) {
   mDestructionObservers.RemoveObserver(aObs);
+}
+
+void MIDIAccess::DisconnectFromOwner() {
+  IgnoreKeepAliveIfHasListenersFor(nsGkAtoms::onstatechange);
+
+  DOMEventTargetHelper::DisconnectFromOwner();
 }
 
 }  // namespace mozilla::dom

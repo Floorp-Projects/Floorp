@@ -32,6 +32,7 @@ class ClientWebGLContext;
 namespace layers {
 class CanvasRenderer;
 class Image;
+class ImageContainer;
 class Layer;
 class LayerManager;
 class OOPCanvasRenderer;
@@ -52,24 +53,20 @@ class CanvasCaptureMediaStream;
 class File;
 class HTMLCanvasPrintState;
 class OffscreenCanvas;
+class OffscreenCanvasDisplayHelper;
 class PrintCallback;
 class PWebGLChild;
 class RequestedFrameRefreshObserver;
 
 // Listen visibilitychange and memory-pressure event and inform
 // context when event is fired.
-class HTMLCanvasElementObserver final : public nsIObserver,
-                                        public nsIDOMEventListener {
+class HTMLCanvasElementObserver final : public nsIObserver {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSIDOMEVENTLISTENER
 
   explicit HTMLCanvasElementObserver(HTMLCanvasElement* aElement);
   void Destroy();
-
-  void RegisterVisibilityChangeEvent();
-  void UnregisterVisibilityChangeEvent();
 
   void RegisterObserverEvents();
   void UnregisterObserverEvents();
@@ -142,29 +139,15 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   uint32_t Height() {
     return GetUnsignedIntAttr(nsGkAtoms::height, DEFAULT_CANVAS_HEIGHT);
   }
-  void SetHeight(uint32_t aHeight, ErrorResult& aRv) {
-    if (mOffscreenCanvas) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    SetUnsignedIntAttr(nsGkAtoms::height, aHeight, DEFAULT_CANVAS_HEIGHT, aRv);
-  }
   uint32_t Width() {
     return GetUnsignedIntAttr(nsGkAtoms::width, DEFAULT_CANVAS_WIDTH);
   }
-  void SetWidth(uint32_t aWidth, ErrorResult& aRv) {
-    if (mOffscreenCanvas) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
+  void SetHeight(uint32_t aHeight, ErrorResult& aRv);
+  void SetWidth(uint32_t aWidth, ErrorResult& aRv);
 
-    SetUnsignedIntAttr(nsGkAtoms::width, aWidth, DEFAULT_CANVAS_WIDTH, aRv);
-  }
-
-  virtual already_AddRefed<nsISupports> GetContext(
+  already_AddRefed<nsISupports> GetContext(
       JSContext* aCx, const nsAString& aContextId,
-      JS::Handle<JS::Value> aContextOptions, ErrorResult& aRv) override;
+      JS::Handle<JS::Value> aContextOptions, ErrorResult& aRv);
 
   void ToDataURL(JSContext* aCx, const nsAString& aType,
                  JS::Handle<JS::Value> aParams, nsAString& aDataURL,
@@ -218,6 +201,11 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
    * a specific extension's content script expanded principal.
    */
   void SetWriteOnly(nsIPrincipal* aExpandedReader);
+
+  /**
+   * Notify the placeholder offscreen canvas of an updated size.
+   */
+  void InvalidateCanvasPlaceholder(uint32_t aWidth, uint32_t aHeight);
 
   /**
    * Notify that some canvas content has changed and the window may
@@ -319,7 +307,6 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
 
   layers::LayersBackend GetCompositorBackendType() const;
 
-  void OnVisibilityChange();
   void OnMemoryPressure();
   void OnDeviceReset();
 
@@ -362,6 +349,10 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   ClientWebGLContext* GetWebGLContext();
   webgpu::CanvasContext* GetWebGPUContext();
 
+  bool IsOffscreen() const { return !!mOffscreenCanvas; }
+
+  RefPtr<layers::ImageContainer> GetImageContainer();
+
  protected:
   bool mResetLayer;
   bool mMaybeModified;  // we fetched the context, so we may have written to the
@@ -373,6 +364,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   RefPtr<RequestedFrameRefreshObserver> mRequestedFrameRefreshObserver;
   RefPtr<CanvasRenderer> mCanvasRenderer;
   RefPtr<OffscreenCanvas> mOffscreenCanvas;
+  RefPtr<OffscreenCanvasDisplayHelper> mOffscreenDisplay;
   RefPtr<HTMLCanvasElementObserver> mContextObserver;
 
  public:

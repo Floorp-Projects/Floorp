@@ -55,7 +55,7 @@ set_config("MOZ_PROFILE_USE", depends_if("--enable-profile-use")(lambda _: True)
     "--with-pgo-profile-path",
     "--enable-profile-use",
     llvm_profdata,
-    check_build_environment,
+    build_environment,
 )
 @imports("os")
 def pgo_profile_path(path, pgo_use, profdata, build_env):
@@ -183,22 +183,20 @@ imply_option("MOZ_LD64_KNOWN_GOOD", depends_if("MOZ_AUTOMATION")(lambda _: True)
     "--enable-lto",
     c_compiler,
     select_linker,
-    "MOZ_AUTOMATION",
     "MOZ_LD64_KNOWN_GOOD",
     target,
     "--enable-profile-generate",
-    new_pass_manager_flags,
+    pass_manager.enabled,
 )
 @imports("multiprocessing")
 def lto(
     value,
     c_compiler,
     select_linker,
-    automation,
     ld64_known_good,
     target,
     instrumented_build,
-    newpm_flags,
+    pass_manager,
 ):
     cflags = []
     ldflags = []
@@ -234,6 +232,7 @@ def lto(
         target.kernel == "Darwin"
         and target.os == "OSX"
         and value == "cross"
+        and select_linker.KIND == "ld64"
         and not ld64_known_good
     ):
         die(
@@ -315,15 +314,17 @@ def lto(
     # If we're using the new pass manager, we can also enable the new PM
     # during LTO. Further we can use the resulting size savings to increase
     # the import limit in hot functions.
-    if newpm_flags:
+    if pass_manager:
         if target.os == "WINNT":
-            # On Windows, this flag requires a change from clang-12, which
-            # is applied as a patch to our automation toolchain.
-            if automation or c_compiler.version >= "12.0.0":
+            if c_compiler.version >= "12.0.0" and c_compiler.version < "13.0.0":
                 ldflags.append("-opt:ltonewpassmanager")
+            if c_compiler.version >= "12.0.0":
                 ldflags.append("-mllvm:-import-hot-multiplier=30")
-        elif select_linker.KIND != "ld64" and c_compiler.type == "clang":
-            ldflags.append("-Wl,-plugin-opt=new-pass-manager")
+        elif target.os == "OSX":
+            ldflags.append("-Wl,-mllvm,-import-hot-multiplier=30")
+        else:
+            if c_compiler.version < "13.0.0":
+                ldflags.append("-Wl,-plugin-opt=new-pass-manager")
             ldflags.append("-Wl,-plugin-opt=-import-hot-multiplier=30")
 
     return namespace(

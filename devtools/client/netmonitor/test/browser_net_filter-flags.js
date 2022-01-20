@@ -142,10 +142,6 @@ const EXPECTED_REQUESTS = [
 ];
 
 add_task(async function() {
-  // Using https-first for this test is blocked on Bug 1733420.
-  // We cannot assert status code 304 with HTTPS requests to httpd.js
-  await pushPref("dom.security.https_first", false);
-
   const { monitor } = await initNetMonitor(FILTERING_URL, { requestCount: 1 });
   const { document, store, windowRequire } = monitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");

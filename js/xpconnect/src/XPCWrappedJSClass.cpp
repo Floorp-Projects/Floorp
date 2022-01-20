@@ -794,19 +794,19 @@ nsXPCWrappedJS::CallMethod(uint16_t methodIndex, const nsXPTMethodInfo* info,
     return NS_ERROR_FAILURE;
   }
 
-  const nsXPTInterfaceInfo* interfaceInfo = GetInfo();
-  JS::RootedId id(cx);
-  const char* name = info->NameOrDescription();
-  if (!info->GetId(cx, id.get())) {
-    return NS_ERROR_FAILURE;
-  }
-
   // We now need to enter the realm of the actual JSObject* we are pointing at.
   // But that may be a cross-compartment wrapper and therefore not have a
   // well-defined realm, so enter the realm of the global that we grabbed back
   // when we started pointing to our JSObject*.
   RootedObject scope(cx, GetJSObjectGlobal());
   JSAutoRealm ar(cx, scope);
+
+  const nsXPTInterfaceInfo* interfaceInfo = GetInfo();
+  JS::RootedId id(cx);
+  const char* name = info->NameOrDescription();
+  if (!info->GetId(cx, id.get())) {
+    return NS_ERROR_FAILURE;
+  }
 
   // [optional_argc] has a different calling convention, which we don't
   // support for JS-implemented components.

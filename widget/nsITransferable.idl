@@ -14,12 +14,17 @@ interface nsIPrincipal;
 
 %{ C++
 
+// Internal formats must have their second part starting with 'x-moz-',
+// for example text/x-moz-internaltype. These cannot be assigned by
+// unprivileged content but all other types can.
+#define kInternal_Mimetype_Prefix   u"/x-moz-"_ns
+
 // these probably shouldn't live here, but in some central repository shared
 // by the entire app.
 #define kTextMime                   "text/plain"
 #define kRTFMime                    "text/rtf"
 #define kUnicodeMime                "text/unicode"
-#define kMozTextInternal          "text/x-moz-text-internal"  // text data which isn't suppoed to be parsed by other apps.
+#define kMozTextInternal            "text/x-moz-text-internal"  // text data which isn't suppoed to be parsed by other apps.
 #define kHTMLMime                   "text/html"
 #define kAOLMailMime                "AOLMAIL"
 #define kPNGImageMime               "image/png"
@@ -46,7 +51,7 @@ interface nsIPrincipal;
 // local application handler for the request's MIME type accepts images with
 // the given filename extension (from kFilePromiseDestFilename). When the
 // image is dragged out, we replace the extension with a compatible extension.
-#define kImageRequestMime           "text/_moz_requestmime"
+#define kImageRequestMime           "text/x-moz-requestmime"
 
 // the source URL for a file promise
 #define kFilePromiseURLMime         "application/x-moz-file-promise-url"

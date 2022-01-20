@@ -72,14 +72,7 @@ ifndef FUZZING_JS_FUZZILLI
 #  -sanitizer-coverage-pc-table                  Create a static PC table.
 #
 # In TSan builds, we must not pass any of these, because sanitizer coverage is incompatible with TSan.
-#
-# sancov legacy pass was removed in rustc 1.57 and replaced by sancov-module
-ifeq (1,$(words $(filter 1.53.% 1.54.% 1.55.% 1.56.%,$(RUSTC_VERSION))))
-rustflags_sancov += -Cpasses=sancov
-else
-rustflags_sancov += -Cpasses=sancov-module
-endif
-rustflags_sancov += -Cllvm-args=-sanitizer-coverage-inline-8bit-counters -Cllvm-args=-sanitizer-coverage-level=4 -Cllvm-args=-sanitizer-coverage-trace-compares -Cllvm-args=-sanitizer-coverage-pc-table
+rustflags_sancov += -Cpasses=sancov-module -Cllvm-args=-sanitizer-coverage-inline-8bit-counters -Cllvm-args=-sanitizer-coverage-level=4 -Cllvm-args=-sanitizer-coverage-trace-compares -Cllvm-args=-sanitizer-coverage-pc-table
 endif
 endif
 endif

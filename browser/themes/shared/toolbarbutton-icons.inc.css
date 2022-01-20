@@ -230,7 +230,7 @@ toolbar {
 }
 
 #add-ons-button {
-  list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
+  list-style-image: url("chrome://browser/skin/addons.svg");
 }
 
 #open-file-button {
@@ -442,7 +442,6 @@ toolbar[brighttext] #panic-button[open] {
   list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
   -moz-context-properties: fill;
   fill: currentColor;
-  margin: 7px !important;
 }
 
 toolbarbutton.bookmark-item {

@@ -163,3 +163,11 @@ def release_level(project):
     :return str: One of "production" or "staging".
     """
     return "production" if project in RELEASE_PROJECTS else "staging"
+
+
+def is_try(params):
+    """
+    Determine whether this graph is being built on a try project or for
+    `mach try fuzzy`.
+    """
+    return "try" in params["project"] or params["try_mode"] == "try_select"

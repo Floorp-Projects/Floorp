@@ -46,95 +46,78 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=589696
 
 /** Test for Bug 589696 **/
 
-var os = SpecialPowers.Cc['@mozilla.org/observer-service;1']
-                      .getService(SpecialPowers.Ci.nsIObserverService);
-var observers = os.enumerateObservers("invalidformsubmit");
+document.getElementById('av').addEventListener("invalid", function(aEvent) {
+  aEvent.target.removeAttribute("invalid", arguments.callee, false);
+  ok(true, "formnovalidate should not apply on if not set on the submit " +
+           "control used for the submission");
+  document.getElementById('b').click();
+});
+
+document.getElementById('bv').addEventListener("invalid", function(aEvent) {
+  aEvent.target.removeAttribute("invalid", arguments.callee, false);
+  ok(true, "formnovalidate should not apply on if not set on the submit " +
+           "control used for the submission");
+  var c = document.getElementById('c');
+  c.focus();
+  synthesizeKey("KEY_Enter");
+});
+
+document.getElementById('c').addEventListener("invalid", function(aEvent) {
+  aEvent.target.removeAttribute("invalid", arguments.callee, false);
+  ok(true, "formnovalidate should only apply on submit controls");
+  document.getElementById('d').click();
+});
+
+document.forms[3].addEventListener("submit", function(aEvent) {
+  aEvent.target.removeAttribute("submit", arguments.callee, false);
+  ok(true, "formnovalidate applies if set on the submit control used for the submission");
+  document.getElementById('e').click();
+});
+
+document.forms[4].addEventListener("submit", function(aEvent) {
+  aEvent.target.removeAttribute("submit", arguments.callee, false);
+  ok(true, "formnovalidate applies if set on the submit control used for the submission");
+  SimpleTest.executeSoon(SimpleTest.finish);
+});
 
 /**
- * formnovalidate should prevent form validation if set on the submit control
- * used to submit the form.
- *
- * The following test should not be done if there is no observer for
- * "invalidformsubmit" because the form submission will not be canceled in that
- * case.
+ * We have to be sure invalid events behave as expected.
+ * They should be sent before the submit event so we can just create a test
+ * failure if we got one when unexpected. All of them should be caught if
+ * sent.
+ * At worst, we got random green which isn't harmful.
+ * If expected, they will be part of the chain reaction.
  */
-
-if (observers.hasMoreElements()) {
-  document.getElementById('av').addEventListener("invalid", function(aEvent) {
-    aEvent.target.removeAttribute("invalid", arguments.callee, false);
-    ok(true, "formnovalidate should not apply on if not set on the submit " +
-             "control used for the submission");
-    document.getElementById('b').click();
-  });
-
-  document.getElementById('bv').addEventListener("invalid", function(aEvent) {
-    aEvent.target.removeAttribute("invalid", arguments.callee, false);
-    ok(true, "formnovalidate should not apply on if not set on the submit " +
-             "control used for the submission");
-    var c = document.getElementById('c');
-    c.focus();
-    synthesizeKey("KEY_Enter");
-  });
-
-  document.getElementById('c').addEventListener("invalid", function(aEvent) {
-    aEvent.target.removeAttribute("invalid", arguments.callee, false);
-    ok(true, "formnovalidate should only apply on submit controls");
-    document.getElementById('d').click();
-  });
-
-  document.forms[3].addEventListener("submit", function(aEvent) {
-    aEvent.target.removeAttribute("submit", arguments.callee, false);
-    ok(true, "formnovalidate applies if set on the submit control used for the submission");
-    document.getElementById('e').click();
-  });
-
-  document.forms[4].addEventListener("submit", function(aEvent) {
-    aEvent.target.removeAttribute("submit", arguments.callee, false);
-    ok(true, "formnovalidate applies if set on the submit control used for the submission");
-    SimpleTest.executeSoon(SimpleTest.finish);
-  });
-
-  /**
-   * We have to be sure invalid events behave as expected.
-   * They should be sent before the submit event so we can just create a test
-   * failure if we got one when unexpected. All of them should be caught if
-   * sent.
-   * At worst, we got random green which isn't harmful.
-   * If expected, they will be part of the chain reaction.
-   */
-  function unexpectedInvalid(aEvent)
-  {
-    aEvent.target.removeAttribute("invalid", unexpectedInvalid, false);
-    ok(false, "invalid event should not be sent");
-  }
-
-  document.getElementById('dv').addEventListener("invalid", unexpectedInvalid);
-  document.getElementById('ev').addEventListener("invalid", unexpectedInvalid);
-
-  /**
-   * Some submission have to be canceled. In that case, the submit events should
-   * not be sent.
-   * Same behavior as unexpected invalid events.
-   */
-  function unexpectedSubmit(aEvent)
-  {
-    aEvent.target.removeAttribute("submit", unexpectedSubmit, false);
-    ok(false, "submit event should not be sent");
-  }
-
-  document.forms[0].addEventListener("submit", unexpectedSubmit);
-  document.forms[1].addEventListener("submit", unexpectedSubmit);
-  document.forms[2].addEventListener("submit", unexpectedSubmit);
-
-  SimpleTest.waitForExplicitFinish();
-
-  // This is going to call all the tests (with a chain reaction).
-  SimpleTest.waitForFocus(function() {
-    document.getElementById('a').click();
-  });
-} else {
-  todo(false, "No 'invalidformsubmit' observers. Skip test.");
+function unexpectedInvalid(aEvent)
+{
+  aEvent.target.removeAttribute("invalid", unexpectedInvalid, false);
+  ok(false, "invalid event should not be sent");
 }
+
+document.getElementById('dv').addEventListener("invalid", unexpectedInvalid);
+document.getElementById('ev').addEventListener("invalid", unexpectedInvalid);
+
+/**
+ * Some submission have to be canceled. In that case, the submit events should
+ * not be sent.
+ * Same behavior as unexpected invalid events.
+ */
+function unexpectedSubmit(aEvent)
+{
+  aEvent.target.removeAttribute("submit", unexpectedSubmit, false);
+  ok(false, "submit event should not be sent");
+}
+
+document.forms[0].addEventListener("submit", unexpectedSubmit);
+document.forms[1].addEventListener("submit", unexpectedSubmit);
+document.forms[2].addEventListener("submit", unexpectedSubmit);
+
+SimpleTest.waitForExplicitFinish();
+
+// This is going to call all the tests (with a chain reaction).
+SimpleTest.waitForFocus(function() {
+  document.getElementById('a').click();
+});
 
 </script>
 </pre>

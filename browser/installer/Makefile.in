@@ -120,7 +120,7 @@ MOZ_PACKAGER_MINIFY=1
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
-ifeq (bundle, $(MOZ_FS_LAYOUT))
+ifeq (Darwin,$(OS_TARGET))
 BINPATH = $(_BINPATH)
 DEFINES += -DAPPNAME='$(_APPNAME)'
 else
@@ -130,7 +130,7 @@ endif
 DEFINES += -DBINPATH='$(BINPATH)'
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-RESPATH = $(_APPNAME)/Contents/Resources
+RESPATH = $(_RESPATH)
 else
 RESPATH = $(BINPATH)
 endif

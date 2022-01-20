@@ -9,8 +9,6 @@ const { TelemetrySession } = ChromeUtils.import(
   "resource://gre/modules/TelemetrySession.jsm"
 );
 
-Cu.importGlobalProperties(["Glean"]);
-
 function tick(aHowMany) {
   for (let i = 0; i < aHowMany; i++) {
     Services.obs.notifyObservers(null, "user-interaction-active");
@@ -47,8 +45,7 @@ add_task(async function test_setup() {
   // Make sure we don't generate unexpected pings due to pref changes.
   await setEmptyPrefWatchlist();
   // Ensure FOG's init
-  let FOG = Cc["@mozilla.org/toolkit/glean;1"].getService(Ci.nsIFOG);
-  FOG.initializeFOG();
+  Services.fog.initializeFOG();
 });
 
 add_task(async function test_record_activeTicks() {

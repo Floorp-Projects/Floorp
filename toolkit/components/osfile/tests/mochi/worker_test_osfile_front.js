@@ -275,12 +275,6 @@ function test_iter_dir() {
       // Since this test was written in 2011 and some of our packaging
       // sets dates arbitrarily to 2010, this should be safe.
       let year = new Date().getFullYear();
-      let creation = entry.winCreationDate;
-      ok(creation, "test_iter_dir: Windows creation date exists: " + creation);
-      ok(
-        creation.getFullYear() >= 2009 && creation.getFullYear() <= year,
-        "test_iter_dir: consistent creation date"
-      );
 
       let lastWrite = entry.winLastWriteDate;
       ok(
@@ -433,8 +427,6 @@ function test_iter_dir() {
         " | " +
         info.unixGroup +
         " | " +
-        info.creationDate +
-        " | " +
         info.lastModificationDate +
         " | " +
         info.lastAccessDate +
@@ -553,27 +545,6 @@ function test_info() {
   let startMs = start.getTime() - SLOPPY_FILE_SYSTEM_ADJUSTMENT;
   let stopMs = stop.getTime() + SLOPPY_FILE_SYSTEM_ADJUSTMENT;
   info("Testing stat with bounds [ " + startMs + ", " + stopMs + " ]");
-
-  (function() {
-    let birth;
-    if ("winBirthDate" in stat) {
-      birth = stat.winBirthDate;
-    } else if ("macBirthDate" in stat) {
-      birth = stat.macBirthDate;
-    } else {
-      ok(true, "Skipping birthdate test");
-      return;
-    }
-    ok(birth.getTime() <= stopMs, "test_info: platformBirthDate is consistent");
-    // Note: Previous versions of this test checked whether the file
-    // has been created after the start of the test. Unfortunately,
-    // this sometimes failed under Windows, in specific circumstances:
-    // if the file has been removed at the start of the test and
-    // recreated immediately, the Windows file system detects this and
-    // decides that the file was actually truncated rather than
-    // recreated, hence that it should keep its previous creation
-    // date.  Debugging hilarity ensues.
-  })();
 
   let change = stat.lastModificationDate;
   info("Testing lastModificationDate: " + change);

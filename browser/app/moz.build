@@ -78,6 +78,10 @@ if CONFIG["OS_ARCH"] == "WINNT":
     LOCAL_INCLUDES += [
         "/browser/app/winlauncher",
     ]
+    OS_LIBS += [
+        "advapi32",
+        "uuid",
+    ]
     DELAYLOAD_DLLS += [
         "advapi32.dll",
         "oleaut32.dll",
@@ -99,9 +103,9 @@ if CONFIG["OS_ARCH"] == "WINNT":
     # only enable it for processes that are not using JIT in xul.dll.
     LINK_FLAGS["CETCOMPAT"] = []
 
-if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "Darwin":
-    USE_LIBS += [
-        "mozsandbox",
+if CONFIG["OS_ARCH"] == "Darwin":
+    OS_LIBS += [
+        "-framework CoreFoundation",
     ]
 
 if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "WINNT":
@@ -115,6 +119,9 @@ if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "WINNT":
         "sandbox_s",
     ]
 
+    OS_LIBS += [
+        "winmm",
+    ]
     DELAYLOAD_DLLS += [
         "winmm.dll",
         "user32.dll",

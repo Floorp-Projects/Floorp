@@ -81,7 +81,7 @@ interface mozIMozIntl : nsISupports
    *   let locs = getLocaleDisplayNames(["pl"], ["sr-RU", "es-MX", "fr-CA"]);
    *   locs === ["Serbski (Rosja)", "Hiszpański (Meksyk)", "Francuski (Kanada)"]
    */
-  jsval getLocaleDisplayNames(in jsval locales, in jsval localeCodes);
+  jsval getLocaleDisplayNames(in jsval locales, in jsval localeCodes, [optional] in jsval options);
 
   readonly attribute jsval Collator;
   readonly attribute jsval DateTimeFormat;

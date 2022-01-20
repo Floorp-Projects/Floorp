@@ -63,9 +63,56 @@ e! {
     }
 
     // kernel/scheduler.h
+
+    pub enum be_task_flags {
+        B_DEFAULT_MEDIA_PRIORITY = 0x000,
+        B_OFFLINE_PROCESSING = 0x001,
+        B_STATUS_RENDERING = 0x002,
+        B_USER_INPUT_HANDLING = 0x004,
+        B_LIVE_VIDEO_MANIPULATION = 0x008,
+        B_VIDEO_PLAYBACK = 0x010,
+        B_VIDEO_RECORDING = 0x020,
+        B_LIVE_AUDIO_MANIPULATION = 0x040,
+        B_AUDIO_PLAYBACK = 0x080,
+        B_AUDIO_RECORDING = 0x100,
+        B_LIVE_3D_RENDERING = 0x200,
+        B_NUMBER_CRUNCHING = 0x400,
+        B_MIDI_PROCESSING = 0x800,
+    }
+
     pub enum schduler_mode {
         SCHEDULER_MODE_LOW_LATENCY,
         SCHEDULER_MODE_POWER_SAVING,
+    }
+
+    // FindDirectory.h
+    pub enum path_base_directory {
+        B_FIND_PATH_INSTALLATION_LOCATION_DIRECTORY,
+        B_FIND_PATH_ADD_ONS_DIRECTORY,
+        B_FIND_PATH_APPS_DIRECTORY,
+        B_FIND_PATH_BIN_DIRECTORY,
+        B_FIND_PATH_BOOT_DIRECTORY,
+        B_FIND_PATH_CACHE_DIRECTORY,
+        B_FIND_PATH_DATA_DIRECTORY,
+        B_FIND_PATH_DEVELOP_DIRECTORY,
+        B_FIND_PATH_DEVELOP_LIB_DIRECTORY,
+        B_FIND_PATH_DOCUMENTATION_DIRECTORY,
+        B_FIND_PATH_ETC_DIRECTORY,
+        B_FIND_PATH_FONTS_DIRECTORY,
+        B_FIND_PATH_HEADERS_DIRECTORY,
+        B_FIND_PATH_LIB_DIRECTORY,
+        B_FIND_PATH_LOG_DIRECTORY,
+        B_FIND_PATH_MEDIA_NODES_DIRECTORY,
+        B_FIND_PATH_PACKAGES_DIRECTORY,
+        B_FIND_PATH_PREFERENCES_DIRECTORY,
+        B_FIND_PATH_SERVERS_DIRECTORY,
+        B_FIND_PATH_SETTINGS_DIRECTORY,
+        B_FIND_PATH_SOUNDS_DIRECTORY,
+        B_FIND_PATH_SPOOL_DIRECTORY,
+        B_FIND_PATH_TRANSLATORS_DIRECTORY,
+        B_FIND_PATH_VAR_DIRECTORY,
+        B_FIND_PATH_IMAGE_PATH = 1000,
+        B_FIND_PATH_PACKAGE_PATH,
     }
 }
 
@@ -228,6 +275,93 @@ s! {
         pub data_size: i32,
         pub api_version: i32,
         pub abi: i32
+    }
+
+    pub struct __c_anonymous_eax_0 {
+        pub max_eax: u32,
+        pub vendor_id: [::c_char; 12],
+    }
+
+    pub struct __c_anonymous_eax_1 {
+        pub stepping: u32,
+        pub model: u32,
+        pub family: u32,
+        pub tpe: u32,
+        __reserved_0: u32,
+        pub extended_model: u32,
+        pub extended_family: u32,
+        __reserved_1: u32,
+        pub brand_index: u32,
+        pub clflush: u32,
+        pub logical_cpus: u32,
+        pub apic_id: u32,
+        pub features: u32,
+        pub extended_features: u32,
+    }
+
+    pub struct __c_anonymous_eax_2 {
+        pub call_num: u8,
+        pub cache_descriptors: [u8; 15],
+    }
+
+    pub struct __c_anonymous_eax_3 {
+        __reserved: [u32; 2],
+        pub serial_number_high: u32,
+        pub serial_number_low: u32,
+    }
+
+    pub struct __c_anonymous_regs {
+        pub eax: u32,
+        pub ebx: u32,
+        pub edx: u32,
+        pub ecx: u32,
+    }
+}
+
+s_no_extra_traits! {
+    #[cfg(libc_union)]
+    pub union cpuid_info {
+        pub eax_0: __c_anonymous_eax_0,
+        pub eax_1: __c_anonymous_eax_1,
+        pub eax_2: __c_anonymous_eax_2,
+        pub eax_3: __c_anonymous_eax_3,
+        pub as_chars: [::c_char; 16],
+        pub regs: __c_anonymous_regs,
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "extra_traits")] {
+        #[cfg(libc_union)]
+        impl PartialEq for cpuid_info {
+            fn eq(&self, other: &cpuid_info) -> bool {
+                unsafe {
+                self.eax_0 == other.eax_0
+                    || self.eax_1 == other.eax_1
+                    || self.eax_2 == other.eax_2
+                    || self.eax_3 == other.eax_3
+                    || self.as_chars == other.as_chars
+                    || self.regs == other.regs
+                }
+            }
+        }
+        #[cfg(libc_union)]
+        impl Eq for cpuid_info {}
+        #[cfg(libc_union)]
+        impl ::fmt::Debug for cpuid_info {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                unsafe {
+                f.debug_struct("cpuid_info")
+                    .field("eax_0", &self.eax_0)
+                    .field("eax_1", &self.eax_1)
+                    .field("eax_2", &self.eax_2)
+                    .field("eax_3", &self.eax_3)
+                    .field("as_chars", &self.as_chars)
+                    .field("regs", &self.regs)
+                    .finish()
+                }
+            }
+        }
     }
 }
 
@@ -744,6 +878,13 @@ extern "C" {
 
     pub fn rename_thread(thread: thread_id, newName: *const ::c_char) -> status_t;
     pub fn set_thread_priority(thread: thread_id, newPriority: i32) -> status_t;
+    pub fn suggest_thread_priority(
+        task_flags: be_task_flags,
+        period: i32,
+        jitter: ::bigtime_t,
+        length: ::bigtime_t,
+    ) -> i32;
+    pub fn estimate_max_scheduling_latency(th: ::thread_id) -> ::bigtime_t;
     pub fn exit_thread(status: status_t);
     pub fn wait_for_thread(thread: thread_id, returnValue: *mut status_t) -> status_t;
     pub fn on_exit_thread(callback: extern "C" fn(*mut ::c_void), data: *mut ::c_void) -> status_t;
@@ -795,7 +936,7 @@ extern "C" {
     pub fn debugger(message: *const ::c_char);
     pub fn disable_debugger(state: ::c_int) -> ::c_int;
 
-    // TODO: cpuid_info struct and the get_cpuid() function
+    pub fn get_cpuid(info: *mut cpuid_info, eaxRegister: u32, cpuNum: u32) -> status_t;
 
     pub fn get_system_info(info: *mut system_info) -> status_t;
     pub fn get_cpu_info(firstCPU: u32, cpuCount: u32, info: *mut cpu_info) -> status_t;
@@ -933,6 +1074,13 @@ extern "C" {
         cookie: *mut i32,
         info: *mut image_info,
         size: ::size_t,
+    ) -> status_t;
+    pub fn find_path(
+        codePointer: *const ::c_void,
+        baseDirectory: path_base_directory,
+        subPath: *const ::c_char,
+        pathBuffer: *mut ::c_char,
+        bufferSize: usize,
     ) -> status_t;
 }
 

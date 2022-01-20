@@ -114,7 +114,7 @@ add_task(async function check_download_spam_ui() {
   ok(listbox, "Download list box present");
 
   await TestUtils.waitForCondition(() => {
-    return listbox.childElementCount == 2;
+    return listbox.childElementCount == 2 && !listbox.getAttribute("disabled");
   }, "2 downloads = 1 allowed download and 1 for 99 downloads blocked");
 
   let spamElement = listbox.itemChildren[0].classList.contains(

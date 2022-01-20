@@ -51,5 +51,5 @@ fn test_into_deserializer() {
             first: "abc".to_string(),
             second: 99
         }
-    )
+    );
 }

@@ -22,8 +22,9 @@ function loadFile(lfVarx) {
             case 5:
                 var lfGlobal = newGlobal();
                 for (lfLocal in this) {}
-                lfGlobal.offThreadCompileScript(lfVarx);
-                lfGlobal.runOffThreadScript();
+                lfGlobal.offThreadCompileToStencil(lfVarx);
+                var stencil = lfGlobal.finishOffThreadCompileToStencil();
+                lfGlobal.evalStencil(stencil);
         }
     } else if (!isNaN(lfVarx)) {
         lfRunTypeId = parseInt(lfVarx);

@@ -20,6 +20,10 @@ compiled with unwinding enabled.
 
 ## Release Notes
 
+### 0.2.6
+
+* Remove year from copyright notices.
+
 ### 0.2.5
 
 * Specify a `links` value in the Cargo manifest.

@@ -12,30 +12,21 @@ const AUTH_TYPE = {
   SCHEME_DIGEST: 2,
 };
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { ChromeMigrationUtils } = ChromeUtils.import(
-  "resource:///modules/ChromeMigrationUtils.jsm"
-);
-const { MigrationUtils, MigratorPrototype } = ChromeUtils.import(
-  "resource:///modules/MigrationUtils.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesUIUtils",
-  "resource:///modules/PlacesUIUtils.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  ChromeMigrationUtils: "resource:///modules/ChromeMigrationUtils.jsm",
+  MigratorPrototype: "resource:///modules/MigrationUtils.jsm",
+  MigrationUtils: "resource:///modules/MigrationUtils.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  Qihoo360seMigrationUtils: "resource:///modules/360seMigrationUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 /**
  * Converts an array of chrome bookmark objects into one our own places code
@@ -109,7 +100,7 @@ ChromeProfileMigrator.prototype.getResources = async function Chrome_getResource
     let profileFolder = OS.Path.join(chromeUserDataPath, aProfile.id);
     if (await OS.File.exists(profileFolder)) {
       let possibleResourcePromises = [
-        GetBookmarksResource(profileFolder),
+        GetBookmarksResource(profileFolder, this.getBrowserKey()),
         GetHistoryResource(profileFolder),
         GetCookiesResource(profileFolder),
       ];
@@ -211,8 +202,27 @@ Object.defineProperty(ChromeProfileMigrator.prototype, "sourceLocked", {
   },
 });
 
-async function GetBookmarksResource(aProfileFolder) {
+async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
   let bookmarksPath = OS.Path.join(aProfileFolder, "Bookmarks");
+
+  if (aBrowserKey === "chromium-360se") {
+    let localState = {};
+    try {
+      localState = await ChromeMigrationUtils.getLocalState("360 SE");
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+
+    let alternativeBookmarks = await Qihoo360seMigrationUtils.getAlternativeBookmarks(
+      { bookmarksPath, localState }
+    );
+    if (alternativeBookmarks.resource) {
+      return alternativeBookmarks.resource;
+    }
+
+    bookmarksPath = alternativeBookmarks.path;
+  }
+
   if (!(await OS.File.exists(bookmarksPath))) {
     return null;
   }
@@ -729,4 +739,22 @@ ChromiumEdgeBetaMigrator.prototype.classID = Components.ID(
 
 if (AppConstants.platform == "macosx" || AppConstants.platform == "win") {
   EXPORTED_SYMBOLS.push("ChromiumEdgeMigrator", "ChromiumEdgeBetaMigrator");
+}
+
+function Chromium360seMigrator() {
+  this._chromeUserDataPathSuffix = "360 SE";
+}
+Chromium360seMigrator.prototype = Object.create(
+  ChromeProfileMigrator.prototype
+);
+Chromium360seMigrator.prototype.classDescription =
+  "Chromium 360 Secure Browser Profile Migrator";
+Chromium360seMigrator.prototype.contractID =
+  "@mozilla.org/profile/migrator;1?app=browser&type=chromium-360se";
+Chromium360seMigrator.prototype.classID = Components.ID(
+  "{2e1a182e-ce4f-4dc9-a22c-d4125b931552}"
+);
+
+if (AppConstants.platform == "win") {
+  EXPORTED_SYMBOLS.push("Chromium360seMigrator");
 }

@@ -31,18 +31,6 @@ using double_conversion::DoubleToStringConverter;
 using DTSC = DoubleToStringConverter;
 
 /*
- * Note: on some platforms va_list is defined as an array,
- * and requires array notation.
- */
-#ifdef HAVE_VA_COPY
-#  define VARARGS_ASSIGN(foo, bar) VA_COPY(foo, bar)
-#elif defined(HAVE_VA_LIST_AS_ARRAY)
-#  define VARARGS_ASSIGN(foo, bar) foo[0] = bar[0]
-#else
-#  define VARARGS_ASSIGN(foo, bar) (foo) = (bar)
-#endif
-
-/*
  * Numbered Argument State
  */
 struct NumArgState {
@@ -654,7 +642,7 @@ static bool BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas) {
     // earlier argument.
     MOZ_ASSERT(nas[cn].type != TYPE_UNKNOWN);
 
-    VARARGS_ASSIGN(nas[cn].ap, ap);
+    va_copy(nas[cn].ap, ap);
 
     switch (nas[cn].type) {
       case TYPE_SCHAR:

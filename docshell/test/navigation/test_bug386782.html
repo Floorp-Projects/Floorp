@@ -37,30 +37,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
       },
     ];
 
-    var gTestNum = -1;
     var gTest = null;
 
-    window.onload = goNext;
-
-    function goNext() {
-      gTestNum++;
-      if (gTestNum >= gTests.length) {
-        SimpleTest.finish();
-        return;
+    add_task(async () => {
+      while (gTests.length) {
+        gTest = gTests.shift();
+        await runTest();
       }
-      gTest = gTests[gTestNum];
-      gTest.window = window.open(gTest.url, gTest.name, "width=500,height=500");
-      window.onmessage = function(e) {
-        is(e.data.persisted, false, "Initial load cannot be persisted");
-        window.onmessage = null;
-        if ("onload" in gTest) {
-          gTest.onload(gTest.window.document);
-        }
-        SimpleTest.waitForFocus(beginTest, gTest.window);
-      };
-    }
+    });
 
-    function beginTest() {
+    async function runTest() {
+      gTest.window = window.open(gTest.url, gTest.name, "width=500,height=500");
+      let e = await new Promise(r => window.onmessage = r);
+      is(e.data.persisted, false, "Initial load cannot be persisted");
+      if ("onload" in gTest) {
+        gTest.onload(gTest.window.document);
+      }
+      await SimpleTest.promiseFocus(gTest.window);
+
       gTest.window.document.body.focus();
 
       // WARNING: If the following test fails, give the setTimeout() in the onload()
@@ -70,24 +64,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterEdit, "Editing failed.");
 
       gTest.window.location = "about:blank";
-      let cond = () => gTest.window.location.href == "about:blank";
-      SimpleTest.waitForCondition(cond, () => {
-        SimpleTest.waitForFocus(goBack, gTest.window, true);
-      }, "about:blank never loaded");
-    }
+      await new Promise(r => gTest.window.onpagehide = r);
+      // The active document is updated synchronously after "pagehide" (and
+      // its associated microtasks), so, after waiting for the next global
+      // task, gTest.window will be proxying the realm associated with the
+      // "about:blank" document.
+      // https://html.spec.whatwg.org/multipage/browsing-the-web.html#update-the-session-history-with-the-new-page
+      await new Promise(r => setTimeout(r));
+      is(gTest.window.location.href, "about:blank", "location.href");
+      await SimpleTest.promiseFocus(gTest.window, true);
 
-    function goBack() {
-      window.onmessage = function(e) {
-        window.onmessage = null;
-        // Skip the test if the page is not loaded from the bf-cache when going back.
-        if (e.data.persisted) {
-          checkStillEditable();
-        } else {
-          gTest.window.close();
-          goNext();
-        }
-      };
       gTest.window.history.back();
+      e = await new Promise(r => window.onmessage = r);
+      // Skip the test if the page is not loaded from the bf-cache when going back.
+      if (e.data.persisted) {
+        checkStillEditable();
+      }
+      gTest.window.close();
     }
 
     function checkStillEditable() {
@@ -105,9 +98,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=386782
       gTest.window.document.body.focus();
       sendString("TWICE ", gTest.window);
       is(gTest.window.document.body.innerHTML, gTest.expectedBodyAfterSecondEdit, "Can we still edit?");
-
-      gTest.window.close();
-      goNext();
     }
 
   </script>

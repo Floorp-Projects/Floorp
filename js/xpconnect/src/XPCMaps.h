@@ -166,17 +166,10 @@ class IID2NativeInterfaceMap {
     return ptr ? ptr->value() : nullptr;
   }
 
-  XPCNativeInterface* Add(XPCNativeInterface* iface) {
+  bool AddNew(XPCNativeInterface* iface) {
     MOZ_ASSERT(iface, "bad param");
     const nsIID* iid = iface->GetIID();
-    Map::AddPtr ptr = mMap.lookupForAdd(iid);
-    if (ptr) {
-      return ptr->value();
-    }
-    if (!mMap.add(ptr, iid, iface)) {
-      return nullptr;
-    }
-    return iface;
+    return mMap.putNew(iid, iface);
   }
 
   void Remove(XPCNativeInterface* iface) {
@@ -187,6 +180,8 @@ class IID2NativeInterfaceMap {
   uint32_t Count() { return mMap.count(); }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+
+  void Trace(JSTracer* trc);
 
  private:
   Map mMap;

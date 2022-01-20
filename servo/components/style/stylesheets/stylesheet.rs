@@ -16,7 +16,6 @@ use crate::stylesheets::{CssRule, CssRules, Origin, UrlExtraData};
 use crate::use_counters::UseCounters;
 use crate::{Namespace, Prefix};
 use cssparser::{Parser, ParserInput, RuleListParser};
-use fallible::FallibleVec;
 use fxhash::FxHashMap;
 #[cfg(feature = "gecko")]
 use malloc_size_of::{MallocSizeOfOps, MallocUnconditionalShallowSizeOf};
@@ -362,7 +361,8 @@ impl SanitizationKind {
             CssRule::Import(..) |
             // TODO(emilio): Perhaps Layer should not be always sanitized? But
             // we sanitize @media and co, so this seems safer for now.
-            CssRule::Layer(..) => false,
+            CssRule::LayerStatement(..) |
+            CssRule::LayerBlock(..) => false,
 
             CssRule::FontFace(..) | CssRule::Namespace(..) | CssRule::Style(..) => true,
 
@@ -504,9 +504,10 @@ impl Stylesheet {
                         // Use a fallible push here, and if it fails, just fall
                         // out of the loop.  This will cause the page to be
                         // shown incorrectly, but it's better than OOMing.
-                        if rules.try_push(rule).is_err() {
+                        if rules.try_reserve(1).is_err() {
                             break;
                         }
+                        rules.push(rule);
                     },
                     Err((error, slice)) => {
                         let location = error.location;

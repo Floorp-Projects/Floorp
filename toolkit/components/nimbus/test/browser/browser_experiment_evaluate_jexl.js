@@ -34,7 +34,7 @@ add_task(async function test_throws_if_no_experiment_in_context() {
       customThing: 1,
       source: "test_throws_if_no_experiment_in_context",
     }),
-    /Expected an .experiment or .activeRemoteDefaults/,
+    /Expected an .experiment/,
     "should throw if experiment is not passed to the custom context"
   );
 });

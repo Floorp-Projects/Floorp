@@ -1196,6 +1196,15 @@ hbox[anonid="findbar-textbox-wrapper"] toolbarbutton:not([disabled]):hover:activ
 				:root[tabsintitlebar] #TabsToolbar .titlebar-button
 				{
 					transform: translateY(-8px) !important;
+					transform: translateY(-10px) !important;
+				}
+
+				.titlebar-button {
+					padding: 10px 17px !important;
+				}
+
+				.titlebar-buttonbox-container {
+					margin-bottom: 0 !important;
 				}
 				
 				@media (-moz-windows-accent-color-in-titlebar: 0)
@@ -1256,13 +1265,14 @@ hbox[anonid="findbar-textbox-wrapper"] toolbarbutton:not([disabled]):hover:activ
 #scrollbutton-up[part="scrollbutton-up"]:not(.menupopup-scrollbutton),
 #scrollbutton-down[part="scrollbutton-down"]:not(.menupopup-scrollbutton)
 {
-	font-size: 12px !important;
+	font-size: 13.8px !important;
 	padding: 0 !important;
-	margin: 0 !;
-	border: 2px solid transparent !important;
-	background-clip: padding-box !important;
+	margin: 0;
+	border: 2.3px solid transparent !important;
 }
-
+.bookmark-item{
+	margin-right: 4px !important;
+}
 #navigator-toolbox :-moz-any(.toolbarbutton-1, .scrollbutton-up, .scrollbutton-down),
 /* no ::part workaround - may have side effects */
 .#scrollbutton-up[part="scrollbutton-up"]:not(.menupopup-scrollbutton),
@@ -1859,12 +1869,6 @@ hbox[anonid="findbar-textbox-wrapper"] toolbarbutton:not([disabled]):hover:activ
 #searchbar:not(:-moz-lwtheme)
 {
 	color: inherit !important;
-}
-
-#urlbar:hover,
-#searchbar:hover
-{
-	background-color: var(--toolbar-field-hover-background-color) !important;
 }
 
 #urlbar[focused],
@@ -4667,7 +4671,7 @@ popupnotificationcontent {
 	background-image: url("chrome://browser/skin/forward.svg");
   }
   .downloadShowMenuItem {
-	background-image: url("chrome://global/skin/icons/folder.svg");
+	background-image: url("chrome://browser/skin/folder.png");
   }
   #context-pocket,
   #context-savelinktopocket {

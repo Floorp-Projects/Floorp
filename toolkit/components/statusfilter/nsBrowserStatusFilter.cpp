@@ -271,7 +271,7 @@ nsBrowserStatusFilter::OnProgressChange64(nsIWebProgress* aWebProgress,
 
 NS_IMETHODIMP
 nsBrowserStatusFilter::OnRefreshAttempted(nsIWebProgress* aWebProgress,
-                                          nsIURI* aUri, int32_t aDelay,
+                                          nsIURI* aUri, uint32_t aDelay,
                                           bool aSameUri, bool* allowRefresh) {
   nsCOMPtr<nsIWebProgressListener2> listener = do_QueryInterface(mListener);
   if (!listener) {

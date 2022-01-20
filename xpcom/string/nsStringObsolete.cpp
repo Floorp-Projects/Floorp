@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Casting.h"
 #include "nsString.h"
 
 /**
@@ -876,65 +877,57 @@ namespace detail {
 template <typename T>
 template <typename Q, typename EnableIfChar>
 int32_t nsTStringRepr<T>::Compare(const char_type* aString, bool aIgnoreCase,
-                                  int32_t aCount) const {
-  uint32_t strLen = char_traits::length(aString);
+                                  size_type aCount) const {
+  size_t strLen = char_traits::length(aString);
 
-  int32_t maxCount = int32_t(XPCOM_MIN(this->mLength, strLen));
+  size_t minLen = XPCOM_MIN(this->Length(), strLen);
 
-  int32_t compareCount;
-  if (aCount < 0 || aCount > maxCount)
-    compareCount = maxCount;
-  else
-    compareCount = aCount;
+  // NOTE: As `minLen <= this->Length()` this value must fit in a `uint32_t`.
+  uint32_t compareCount =
+      ReleaseAssertedCast<uint32_t>(XPCOM_MIN(minLen, aCount));
 
   int32_t result = nsBufferRoutines<T>::compare(this->mData, aString,
                                                 compareCount, aIgnoreCase);
 
-  if (result == 0 && (aCount < 0 || strLen < uint32_t(aCount) ||
-                      this->mLength < uint32_t(aCount))) {
+  if (result == 0 && minLen < aCount && this->Length() != strLen) {
     // Since the caller didn't give us a length to test, or strings shorter
     // than aCount, and compareCount characters matched, we have to assume
     // that the longer string is greater.
 
-    if (this->mLength != strLen) result = (this->mLength < strLen) ? -1 : 1;
+    return (this->Length() < strLen) ? -1 : 1;
   }
   return result;
 }
 
 template int32_t nsTStringRepr<char>::Compare(const char_type*, bool,
-                                              int32_t) const;
+                                              size_type) const;
 
 template <typename T>
 template <typename Q, typename EnableIfChar16>
 bool nsTStringRepr<T>::EqualsIgnoreCase(const incompatible_char_type* aString,
-                                        int32_t aCount) const {
-  uint32_t strLen = nsCharTraits<char>::length(aString);
+                                        size_type aCount) const {
+  size_t strLen = nsCharTraits<char>::length(aString);
 
-  int32_t maxCount = int32_t(XPCOM_MIN(this->mLength, strLen));
+  size_t minLen = XPCOM_MIN(this->Length(), strLen);
 
-  int32_t compareCount;
-  if (aCount < 0 || aCount > maxCount)
-    compareCount = maxCount;
-  else
-    compareCount = aCount;
+  // NOTE: As `minLen <= this->Length()` this value must fit in a `uint32_t`.
+  uint32_t compareCount =
+      ReleaseAssertedCast<uint32_t>(XPCOM_MIN(minLen, aCount));
 
   int32_t result =
       nsBufferRoutines<T>::compare(this->mData, aString, compareCount, true);
 
-  if (result == 0 && (aCount < 0 || strLen < uint32_t(aCount) ||
-                      this->mLength < uint32_t(aCount))) {
+  if (result == 0 && minLen < aCount && this->Length() != strLen) {
     // Since the caller didn't give us a length to test, or strings shorter
     // than aCount, and compareCount characters matched, we have to assume
     // that the longer string is greater.
-
-    if (this->mLength != strLen)
-      result = 1;  // Arbitrarily using any number != 0
+    return false;
   }
   return result == 0;
 }
 
 template bool nsTStringRepr<char16_t>::EqualsIgnoreCase(
-    const incompatible_char_type*, int32_t) const;
+    const incompatible_char_type*, size_type) const;
 
 }  // namespace detail
 }  // namespace mozilla

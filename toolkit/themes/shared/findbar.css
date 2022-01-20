@@ -31,7 +31,7 @@ findbar[noanim] {
 .findbar-container {
   margin-inline-start: 8px;
   height: 28px;
-  overflow-inline: clip; /* Ensures the close button stays visible. */
+  overflow-inline: hidden; /* Ensures the close button stays visible. */
 }
 
 /* Remove start margin when close button is on the left side (on macOS) */

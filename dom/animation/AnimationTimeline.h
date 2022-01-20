@@ -22,6 +22,7 @@ namespace dom {
 
 class Animation;
 class Document;
+class ScrollTimeline;
 
 class AnimationTimeline : public nsISupports, public nsWrapperCache {
  public:
@@ -31,6 +32,10 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
 
  protected:
   virtual ~AnimationTimeline();
+
+  // Tick animations and may remove them from the list if we don't need to
+  // tick it. Return true if any animations need to be ticked.
+  bool Tick();
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -96,6 +101,11 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
   virtual void RemoveAnimation(Animation* aAnimation);
 
   virtual Document* GetDocument() const = 0;
+
+  virtual bool IsMonotonicallyIncreasing() const = 0;
+
+  virtual bool IsScrollTimeline() const { return false; }
+  virtual const ScrollTimeline* AsScrollTimeline() const { return nullptr; }
 
  protected:
   nsCOMPtr<nsIGlobalObject> mWindow;

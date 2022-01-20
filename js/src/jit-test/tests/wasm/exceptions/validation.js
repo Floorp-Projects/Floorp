@@ -1,3 +1,4 @@
+
 // Test wasm type validation for exception handling instructions.
 
 load(libdir + "wasm-binary.js");
@@ -132,6 +133,14 @@ function testValidateThrow() {
                throw $exn1)
              (tag $exn1 (type 0)))`;
 
+  validSimd = `(module
+                (tag $exn (param v128))
+                (func (export "f") (param v128) (result v128)
+                  (try (result v128)
+                    (do (v128.const f64x2 1 2)
+                        (throw $exn))
+                    (catch $exn))))`;
+
   invalid0 = `(module
                 (type (func (param i32)))
                 (func $exn-zero
@@ -156,6 +165,9 @@ function testValidateThrow() {
   error2 = /tag index out of range/;
 
   wasmValidateText(valid);
+  if (wasmSimdEnabled()) {
+    wasmValidateText(validSimd);
+  }
   wasmFailValidateText(invalid0, error0);
   wasmFailValidateText(invalid1, error1);
   wasmFailValidateText(invalid2, error2);

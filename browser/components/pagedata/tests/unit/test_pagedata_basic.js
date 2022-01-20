@@ -59,17 +59,3 @@ add_task(async function test_pageDataDiscovered_notifies() {
     "Should return the same pageData from the cache as was notified."
   );
 });
-
-add_task(async function test_queueFetch_notifies() {
-  let promise = PageDataService.once("page-data");
-
-  PageDataService.queueFetch("https://example.org");
-
-  let pageData = await promise;
-  Assert.equal(
-    pageData.url,
-    "https://example.org",
-    "Should have notified data for the expected url"
-  );
-  Assert.deepEqual(pageData.data, {}, "Should have returned no data");
-});

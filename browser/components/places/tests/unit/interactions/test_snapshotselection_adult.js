@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 async function addSnapshotAndFilter(url) {
   await PlacesTestUtils.addVisits(url);
-  await Snapshots.add({ url, userPersisted: true });
+  await Snapshots.add({ url, userPersisted: Snapshots.USER_PERSISTED.MANUAL });
 
   FilterAdult.addDomainToList(url);
 }
@@ -44,7 +44,7 @@ add_task(async function test_interactions_adult_basic() {
   let snapshots = await snapshotPromise;
 
   await assertSnapshotList(snapshots, [
-    { url: TEST_URL2, userPersisted: true },
+    { url: TEST_URL2, userPersisted: Snapshots.USER_PERSISTED.MANUAL },
     { url: TEST_URL1 },
   ]);
 

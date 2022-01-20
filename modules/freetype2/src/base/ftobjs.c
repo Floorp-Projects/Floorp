@@ -221,6 +221,7 @@
       FT_Stream_OpenMemory( stream,
                             (const FT_Byte*)args->memory_base,
                             (FT_ULong)args->memory_size );
+      stream->memory = memory;
     }
 
 #ifndef FT_CONFIG_OPTION_DISABLE_STREAM_SUPPORT
@@ -231,6 +232,7 @@
       if ( FT_NEW( stream ) )
         goto Exit;
 
+      stream->memory = memory;
       error = FT_Stream_Open( stream, args->pathname );
       if ( error )
         FT_FREE( stream );
@@ -241,8 +243,9 @@
 
       /* in this case, we do not need to allocate a new stream object */
       /* since the caller is responsible for closing it himself       */
-      stream = args->stream;
-      error  = FT_Err_Ok;
+      stream         = args->stream;
+      stream->memory = memory;
+      error          = FT_Err_Ok;
     }
 
 #endif
@@ -255,10 +258,7 @@
     }
 
     if ( !error )
-    {
-      stream->memory = memory;
       *astream       = stream;
-    }
 
   Exit:
     return error;
@@ -535,7 +535,7 @@
     else
       slot->internal->flags |= FT_GLYPH_OWN_BITMAP;
 
-    (void)FT_ALLOC( slot->bitmap.buffer, size );
+    FT_MEM_ALLOC( slot->bitmap.buffer, size );
     return error;
   }
 
@@ -2610,7 +2610,7 @@
     FT_TRACE4(( "FT_Open_Face: New face object, adding to list\n" ));
 
     /* add the face object to its driver's list */
-    if ( FT_NEW( node ) )
+    if ( FT_QNEW( node ) )
       goto Fail;
 
     node->data = face;
@@ -2895,7 +2895,7 @@
     memory = face->memory;
 
     /* Allocate new size object and perform basic initialisation */
-    if ( FT_ALLOC( size, clazz->size_object_size ) || FT_NEW( node ) )
+    if ( FT_ALLOC( size, clazz->size_object_size ) || FT_QNEW( node ) )
       goto Exit;
 
     size->face = face;
@@ -3132,10 +3132,12 @@
   }
 
 
-  FT_BASE_DEF( void )
+  FT_BASE_DEF( FT_Error )
   FT_Request_Metrics( FT_Face          face,
                       FT_Size_Request  req )
   {
+    FT_Error  error = FT_Err_Ok;
+
     FT_Size_Metrics*  metrics;
 
 
@@ -3226,8 +3228,18 @@
         scaled_h = FT_MulFix( face->units_per_EM, metrics->y_scale );
       }
 
-      metrics->x_ppem = (FT_UShort)( ( scaled_w + 32 ) >> 6 );
-      metrics->y_ppem = (FT_UShort)( ( scaled_h + 32 ) >> 6 );
+      scaled_w = ( scaled_w + 32 ) >> 6;
+      scaled_h = ( scaled_h + 32 ) >> 6;
+      if ( scaled_w > (FT_Long)FT_USHORT_MAX ||
+           scaled_h > (FT_Long)FT_USHORT_MAX )
+      {
+        FT_ERROR(( "FT_Request_Metrics: Resulting ppem size too large\n" ));
+        error = FT_ERR( Invalid_Pixel_Size );
+        goto Exit;
+      }
+
+      metrics->x_ppem = (FT_UShort)scaled_w;
+      metrics->y_ppem = (FT_UShort)scaled_h;
 
       ft_recompute_scaled_metrics( face, metrics );
     }
@@ -3237,6 +3249,9 @@
       metrics->x_scale = 1L << 16;
       metrics->y_scale = 1L << 16;
     }
+
+  Exit:
+    return error;
   }
 
 
@@ -3300,7 +3315,7 @@
   FT_Request_Size( FT_Face          face,
                    FT_Size_Request  req )
   {
-    FT_Error         error = FT_Err_Ok;
+    FT_Error         error;
     FT_Driver_Class  clazz;
     FT_ULong         strike_index;
 
@@ -3336,13 +3351,15 @@
        */
       error = FT_Match_Size( face, req, 0, &strike_index );
       if ( error )
-        return error;
+        goto Exit;
 
       return FT_Select_Size( face, (FT_Int)strike_index );
     }
     else
     {
-      FT_Request_Metrics( face, req );
+      error = FT_Request_Metrics( face, req );
+      if ( error )
+        goto Exit;
 
       FT_TRACE5(( "FT_Request_Size:\n" ));
     }
@@ -3365,6 +3382,7 @@
     }
 #endif
 
+  Exit:
     return error;
   }
 
@@ -3689,9 +3707,9 @@
           FT_CharMap  last_charmap = face->charmaps[face->num_charmaps - 1];
 
 
-          if ( FT_RENEW_ARRAY( face->charmaps,
-                               face->num_charmaps,
-                               face->num_charmaps - 1 ) )
+          if ( FT_QRENEW_ARRAY( face->charmaps,
+                                face->num_charmaps,
+                                face->num_charmaps - 1 ) )
             return;
 
           /* remove it from our list of charmaps */
@@ -3723,7 +3741,7 @@
                FT_CharMap     charmap,
                FT_CMap       *acmap )
   {
-    FT_Error   error = FT_Err_Ok;
+    FT_Error   error;
     FT_Face    face;
     FT_Memory  memory;
     FT_CMap    cmap = NULL;
@@ -3748,9 +3766,9 @@
       }
 
       /* add it to our list of charmaps */
-      if ( FT_RENEW_ARRAY( face->charmaps,
-                           face->num_charmaps,
-                           face->num_charmaps + 1 ) )
+      if ( FT_QRENEW_ARRAY( face->charmaps,
+                            face->num_charmaps,
+                            face->num_charmaps + 1 ) )
         goto Fail;
 
       face->charmaps[face->num_charmaps++] = (FT_CharMap)cmap;
@@ -4444,7 +4462,7 @@
     FT_ListNode  node    = NULL;
 
 
-    if ( FT_NEW( node ) )
+    if ( FT_QNEW( node ) )
       goto Exit;
 
     {
@@ -4685,7 +4703,7 @@
         else
           renderer = FT_Lookup_Renderer( library, slot->format, &node );
 
-        error = FT_ERR( Unimplemented_Feature );
+        error = FT_ERR( Cannot_Render_Glyph );
         while ( renderer )
         {
           error = renderer->render( renderer, slot, render_mode, NULL );
@@ -4701,6 +4719,11 @@
           /* format.                                               */
           renderer = FT_Lookup_Renderer( library, slot->format, &node );
         }
+
+        /* it is not an error if we cannot render a bitmap glyph */
+        if ( FT_ERR_EQ( error, Cannot_Render_Glyph ) &&
+             slot->format == FT_GLYPH_FORMAT_BITMAP  )
+          error = FT_Err_Ok;
       }
     }
 
@@ -5634,6 +5657,35 @@
                                          base_glyph,
                                          root_transform,
                                          paint );
+    else
+      return 0;
+  }
+
+
+  /* documentation is in ftcolor.h */
+
+  FT_EXPORT_DEF( FT_Bool )
+  FT_Get_Color_Glyph_ClipBox( FT_Face      face,
+                              FT_UInt      base_glyph,
+                              FT_ClipBox*  clip_box )
+  {
+    TT_Face       ttface;
+    SFNT_Service  sfnt;
+
+
+    if ( !face || !clip_box )
+      return 0;
+
+    if ( !FT_IS_SFNT( face ) )
+      return 0;
+
+    ttface = (TT_Face)face;
+    sfnt   = (SFNT_Service)ttface->sfnt;
+
+    if ( sfnt->get_color_glyph_clipbox )
+      return sfnt->get_color_glyph_clipbox( ttface,
+                                            base_glyph,
+                                            clip_box );
     else
       return 0;
   }

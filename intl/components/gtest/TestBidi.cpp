@@ -275,4 +275,40 @@ TEST(IntlBidi, VisualRunsWithEmbeds)
   }
 }
 
+// The full Bidi class can be found in [1].
+//
+// [1]: https://www.unicode.org/Public/UNIDATA/extracted/DerivedBidiClass.txt
+TEST(IntlBidi, GetBaseDirection)
+{
+  // Return Neutral as default if empty string is provided.
+  ASSERT_EQ(Bidi::GetBaseDirection(nullptr), Bidi::BaseDirection::Neutral);
+
+  // White space(WS) is classified as Neutral.
+  ASSERT_EQ(Bidi::GetBaseDirection(MakeStringSpan(u" ")),
+            Bidi::BaseDirection::Neutral);
+
+  // 000A and 000D are paragraph separators(BS), which are also classified as
+  // Neutral.
+  ASSERT_EQ(Bidi::GetBaseDirection(MakeStringSpan(u"\u000A")),
+            Bidi::BaseDirection::Neutral);
+  ASSERT_EQ(Bidi::GetBaseDirection(MakeStringSpan(u"\u000D")),
+            Bidi::BaseDirection::Neutral);
+
+  // 0620..063f are Arabic letters, which is of type AL.
+  ASSERT_EQ(Bidi::GetBaseDirection(MakeStringSpan(u"\u0620\u0621\u0622")),
+            Bidi::BaseDirection::RTL);
+  ASSERT_EQ(Bidi::GetBaseDirection(MakeStringSpan(u" \u0620\u0621\u0622")),
+            Bidi::BaseDirection::RTL);
+  ASSERT_EQ(Bidi::GetBaseDirection(MakeStringSpan(u"\u0620\u0621\u0622ABC")),
+            Bidi::BaseDirection::RTL);
+
+  // First strong character is of English letters.
+  ASSERT_EQ(Bidi::GetBaseDirection(MakeStringSpan(u"ABC")),
+            Bidi::BaseDirection::LTR);
+  ASSERT_EQ(Bidi::GetBaseDirection(MakeStringSpan(u" ABC")),
+            Bidi::BaseDirection::LTR);
+  ASSERT_EQ(Bidi::GetBaseDirection(MakeStringSpan(u"ABC\u0620")),
+            Bidi::BaseDirection::LTR);
+}
+
 }  // namespace mozilla::intl

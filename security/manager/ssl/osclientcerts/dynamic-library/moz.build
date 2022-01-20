@@ -12,6 +12,7 @@ UNIFIED_SOURCES += [
 
 if CONFIG["OS_ARCH"] == "WINNT":
     OS_LIBS += [
+        "advapi32",
         "crypt32",
         "kernel32",
         "ncrypt",
@@ -21,6 +22,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
 
 if CONFIG["OS_ARCH"] == "Darwin":
     OS_LIBS += [
+        "-framework CoreFoundation",
         "-framework Security",
     ]
 

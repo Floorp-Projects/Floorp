@@ -12,7 +12,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsArray.h"
 #include "nsPrintfCString.h"
-#include "mozilla/Preferences.h"
+#include "mozilla/WidgetUtilsGtk.h"
 
 #include <gio/gio.h>
 #include <gtk/gtk.h>
@@ -22,26 +22,6 @@
 #endif
 
 using namespace mozilla;
-
-// s. a. the code gtk_should_use_portal() uses to detect if in flatpak env
-// https://gitlab.gnome.org/GNOME/gtk/-/blob/4300a5c609306ce77cbc8a3580c19201dccd8d13/gdk/gdk.c#L472
-static bool GetFlatpakPortalEnv() {
-  bool shouldUsePortal;
-  if (g_file_test("/.flatpak-info", G_FILE_TEST_EXISTS)) {
-    shouldUsePortal = true;
-  } else {
-    const char* portalEnvString = g_getenv("GTK_USE_PORTAL");
-    shouldUsePortal = portalEnvString != nullptr && atoi(portalEnvString) != 0;
-  }
-  return shouldUsePortal;
-}
-
-static bool GetShouldUseFlatpakPortal() {
-  static bool sFlatpakPortalEnv = GetFlatpakPortalEnv();
-  return Preferences::HasUserValue("widget.use-xdg-desktop-portal")
-             ? Preferences::GetBool("widget.use-xdg-desktop-portal", false)
-             : sFlatpakPortalEnv;
-}
 
 class nsFlatpakHandlerApp : public nsIHandlerApp {
  public:
@@ -422,7 +402,7 @@ nsGIOService::GetAppForURIScheme(const nsACString& aURIScheme,
   // Application in flatpak sandbox does not have access to the list
   // of installed applications on the system. We use generic
   // nsFlatpakHandlerApp which forwards launch call to the system.
-  if (GetShouldUseFlatpakPortal()) {
+  if (widget::ShouldUsePortal(widget::PortalKind::MimeHandler)) {
     nsFlatpakHandlerApp* mozApp = new nsFlatpakHandlerApp();
     NS_ADDREF(*aApp = mozApp);
     return NS_OK;
@@ -480,7 +460,7 @@ nsGIOService::GetAppForMimeType(const nsACString& aMimeType,
 
   // Flatpak does not reveal installed application to the sandbox,
   // we need to create generic system handler.
-  if (GetShouldUseFlatpakPortal()) {
+  if (widget::ShouldUsePortal(widget::PortalKind::MimeHandler)) {
     nsFlatpakHandlerApp* mozApp = new nsFlatpakHandlerApp();
     NS_ADDREF(*aApp = mozApp);
     return NS_OK;
@@ -720,11 +700,5 @@ nsGIOService::CreateAppFromCommand(nsACString const& cmd,
 
   nsGIOMimeApp* mozApp = new nsGIOMimeApp(app_info);
   NS_ADDREF(*appInfo = mozApp);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGIOService::ShouldUseFlatpakPortal(bool* aRes) {
-  *aRes = GetShouldUseFlatpakPortal();
   return NS_OK;
 }

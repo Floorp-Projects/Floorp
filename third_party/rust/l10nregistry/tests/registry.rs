@@ -1,8 +1,8 @@
 use l10nregistry::testing::{FileSource, RegistrySetup, TestFileFetcher};
 use unic_langid::LanguageIdentifier;
 
-const FTL_RESOURCE_TOOLKIT: &str = "toolkit/global/textActions.ftl";
-const FTL_RESOURCE_BROWSER: &str = "branding/brand.ftl";
+static FTL_RESOURCE_TOOLKIT: &str = "toolkit/global/textActions.ftl";
+static FTL_RESOURCE_BROWSER: &str = "branding/brand.ftl";
 
 #[test]
 fn test_generate_sources_for_file() {
@@ -23,26 +23,27 @@ fn test_generate_sources_for_file() {
 
         let toolkit = lock.get_source(0, "toolkit").unwrap();
         let browser = lock.get_source(0, "browser").unwrap();
+        let toolkit_resource_id = FTL_RESOURCE_TOOLKIT.into();
 
-        let mut i = lock.generate_sources_for_file(0, &en_us, FTL_RESOURCE_TOOLKIT);
+        let mut i = lock.generate_sources_for_file(0, &en_us, &toolkit_resource_id);
 
         assert_eq!(i.next(), Some(toolkit));
         assert_eq!(i.next(), Some(browser));
         assert_eq!(i.next(), None);
 
         assert!(browser
-            .fetch_file_sync(&en_us, FTL_RESOURCE_TOOLKIT, false)
+            .fetch_file_sync(&en_us, &FTL_RESOURCE_TOOLKIT.into(), false)
             .is_none());
 
-        let mut i = lock.generate_sources_for_file(0, &en_us, FTL_RESOURCE_TOOLKIT);
+        let mut i = lock.generate_sources_for_file(0, &en_us, &toolkit_resource_id);
         assert_eq!(i.next(), Some(toolkit));
         assert_eq!(i.next(), None);
 
         assert!(toolkit
-            .fetch_file_sync(&en_us, FTL_RESOURCE_TOOLKIT, false)
+            .fetch_file_sync(&en_us, &FTL_RESOURCE_TOOLKIT.into(), false)
             .is_some());
 
-        let mut i = lock.generate_sources_for_file(0, &en_us, FTL_RESOURCE_TOOLKIT);
+        let mut i = lock.generate_sources_for_file(0, &en_us, &toolkit_resource_id);
         assert_eq!(i.next(), Some(toolkit));
         assert_eq!(i.next(), None);
     }

@@ -146,10 +146,10 @@ use crate::{Extensions, Result};
 /// use http::Response;
 /// use serde::de;
 ///
-/// fn deserialize<T>(req: Response<Vec<u8>>) -> serde_json::Result<Response<T>>
+/// fn deserialize<T>(res: Response<Vec<u8>>) -> serde_json::Result<Response<T>>
 ///     where for<'de> T: de::Deserialize<'de>,
 /// {
-///     let (parts, body) = req.into_parts();
+///     let (parts, body) = res.into_parts();
 ///     let body = serde_json::from_slice(&body)?;
 ///     Ok(Response::from_parts(parts, body))
 /// }
@@ -166,10 +166,10 @@ use crate::{Extensions, Result};
 /// use http::Response;
 /// use serde::ser;
 ///
-/// fn serialize<T>(req: Response<T>) -> serde_json::Result<Response<Vec<u8>>>
+/// fn serialize<T>(res: Response<T>) -> serde_json::Result<Response<Vec<u8>>>
 ///     where T: ser::Serialize,
 /// {
-///     let (parts, body) = req.into_parts();
+///     let (parts, body) = res.into_parts();
 ///     let body = serde_json::to_vec(&body)?;
 ///     Ok(Response::from_parts(parts, body))
 /// }
@@ -706,8 +706,8 @@ impl Builder {
     ///
     /// ```
     /// # use http::Response;
-    /// let req = Response::builder().extension("My Extension").extension(5u32);
-    /// let extensions = req.extensions_ref().unwrap();
+    /// let res = Response::builder().extension("My Extension").extension(5u32);
+    /// let extensions = res.extensions_ref().unwrap();
     /// assert_eq!(extensions.get::<&'static str>(), Some(&"My Extension"));
     /// assert_eq!(extensions.get::<u32>(), Some(&5u32));
     /// ```
@@ -723,8 +723,8 @@ impl Builder {
     ///
     /// ```
     /// # use http::Response;
-    /// let mut req = Response::builder().extension("My Extension");
-    /// let mut extensions = req.extensions_mut().unwrap();
+    /// let mut res = Response::builder().extension("My Extension");
+    /// let mut extensions = res.extensions_mut().unwrap();
     /// assert_eq!(extensions.get::<&'static str>(), Some(&"My Extension"));
     /// extensions.insert(5u32);
     /// assert_eq!(extensions.get::<u32>(), Some(&5u32));

@@ -155,7 +155,6 @@ file-whitespace:
         - testing/web-platform/tests/css/tools/w3ctestlib/Utils.py
         - testing/web-platform/tests/css/tools/w3ctestlib/__init__.py
         - testing/web-platform/tests/css/tools/w3ctestlib/templates/indices.css
-        - testing/web-platform/tests/css/vendor-imports
         - testing/web-platform/tests/html
         - testing/web-platform/tests/tools/webdriver/webdriver/transport.py
         - testing/web-platform/tests/tools/wptrunner/wptrunner/browsers/edgechromium.py

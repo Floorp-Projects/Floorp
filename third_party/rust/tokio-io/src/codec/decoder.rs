@@ -1,10 +1,10 @@
-use std::io;
 use bytes::BytesMut;
+use std::io;
 
-use {AsyncWrite, AsyncRead};
 use super::encoder::Encoder;
+use {AsyncRead, AsyncWrite};
 
-use ::_tokio_codec::Framed;
+use _tokio_codec::Framed;
 
 /// Decoding of frames via buffers.
 ///
@@ -57,7 +57,7 @@ pub trait Decoder {
     ///
     /// Note that the bytes provided may be empty. If a previous call to
     /// `decode` consumed all the bytes in the buffer then `decode` will be
-    /// called again until it returns `None`, indicating that more bytes need to
+    /// called again until it returns `Ok(None)`, indicating that more bytes need to
     /// be read.
     ///
     /// Finally, if the bytes in the buffer are malformed then an error is
@@ -79,14 +79,13 @@ pub trait Decoder {
     /// frames to yield. This behavior enables returning finalization frames
     /// that may not be based on inbound data.
     fn decode_eof(&mut self, buf: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        match try!(self.decode(buf)) {
+        match self.decode(buf)? {
             Some(frame) => Ok(Some(frame)),
             None => {
                 if buf.is_empty() {
                     Ok(None)
                 } else {
-                    Err(io::Error::new(io::ErrorKind::Other,
-                                       "bytes remaining on stream").into())
+                    Err(io::Error::new(io::ErrorKind::Other, "bytes remaining on stream").into())
                 }
             }
         }
@@ -110,7 +109,8 @@ pub trait Decoder {
     /// calling `split` on the `Framed` returned by this method, which will
     /// break them into separate objects, allowing them to interact more easily.
     fn framed<T: AsyncRead + AsyncWrite + Sized>(self, io: T) -> Framed<T, Self>
-        where Self: Encoder + Sized,
+    where
+        Self: Encoder + Sized,
     {
         Framed::new(io, self)
     }

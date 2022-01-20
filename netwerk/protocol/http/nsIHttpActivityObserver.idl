@@ -97,12 +97,13 @@ interface nsIHttpActivityObserver : nsISupports
     const unsigned long ACTIVITY_TYPE_SOCKET_TRANSPORT     = 0x0001;
     const unsigned long ACTIVITY_TYPE_HTTP_TRANSACTION     = 0x0002;
 
-    const unsigned long ACTIVITY_SUBTYPE_REQUEST_HEADER    = 0x5001;
-    const unsigned long ACTIVITY_SUBTYPE_REQUEST_BODY_SENT = 0x5002;
-    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_START    = 0x5003;
-    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_HEADER   = 0x5004;
-    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_COMPLETE = 0x5005;
-    const unsigned long ACTIVITY_SUBTYPE_TRANSACTION_CLOSE = 0x5006;
+    const unsigned long ACTIVITY_SUBTYPE_REQUEST_HEADER         = 0x5001;
+    const unsigned long ACTIVITY_SUBTYPE_REQUEST_BODY_SENT      = 0x5002;
+    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_START         = 0x5003;
+    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_HEADER        = 0x5004;
+    const unsigned long ACTIVITY_SUBTYPE_RESPONSE_COMPLETE      = 0x5005;
+    const unsigned long ACTIVITY_SUBTYPE_TRANSACTION_CLOSE      = 0x5006;
+    const unsigned long ACTIVITY_SUBTYPE_PROXY_RESPONSE_HEADER  = 0x5007;
 
     /**
      *  When aActivityType is ACTIVITY_TYPE_SOCKET_TRANSPORT
@@ -145,6 +146,8 @@ interface nsIHttpActivityObserver : nsISupports
             nsIHttpActivityObserver::ACTIVITY_SUBTYPE_RESPONSE_COMPLETE
 #define NS_HTTP_ACTIVITY_SUBTYPE_TRANSACTION_CLOSE \
             nsIHttpActivityObserver::ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
+#define NS_HTTP_ACTIVITY_SUBTYPE_PROXY_RESPONSE_HEADER \
+            nsIHttpActivityObserver::ACTIVITY_SUBTYPE_PROXY_RESPONSE_HEADER
 
 %}
 
@@ -159,4 +162,10 @@ interface nsIHttpActivityDistributor : nsIHttpActivityObserver
 {
     void addObserver(in nsIHttpActivityObserver aObserver);
     void removeObserver(in nsIHttpActivityObserver aObserver);
+
+    /**
+     * When true, the ACTIVITY_SUBTYPE_PROXY_RESPONSE_HEADER will be sent to
+     * the observers.
+     */
+    [must_use] attribute boolean observeProxyResponse;
 };

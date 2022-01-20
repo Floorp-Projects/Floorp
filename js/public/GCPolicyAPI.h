@@ -95,9 +95,10 @@ struct GCPointerPolicy {
                 "Non-pointer type not allowed for GCPointerPolicy");
 
   static void trace(JSTracer* trc, T* vp, const char* name) {
-    // It's not safe to trace unbarriered pointers except as part of root
-    // marking.
-    UnsafeTraceRoot(trc, vp, name);
+    // This should only be called as part of root marking since that's the only
+    // time we should trace unbarriered GC thing pointers. This will assert if
+    // called at other times.
+    TraceRoot(trc, vp, name);
   }
   static bool isTenured(T v) { return !js::gc::IsInsideNursery(v); }
   static bool isValid(T v) { return js::gc::IsCellPointerValidOrNull(v); }

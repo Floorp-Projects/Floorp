@@ -2,14 +2,50 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* This is the mac variant */
-[lwt-newtab-brighttext] {
-  -moz-osx-font-smoothing: grayscale;
-}
-
+/* This is the windows variant */
 html {
   box-sizing: border-box;
 }
+
+
+  body {
+    margin: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image:url("https://raw.githubusercontent.com/Floorp-Projects/Floorp-Browser-dev/master/Background.png") !important;
+  }
+  .search-wrapper .search-inner-wrapper {
+    min-height: 44px !important;
+  }
+
+  .search-handoff-button {
+    border-radius: 99px !important;
+    background-position: 12px !important;
+    padding-inline-start: 48px !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+    --elevation: 4;
+    box-shadow: 0 0 calc((var(--elevation) * 0.225px) + 2px) rgba(0, 0, 0, 0.11), 0 calc(var(--elevation) * 0.4px) calc((var(--elevation) * 0.9px)) rgba(0, 0, 0, 0.13) !important;
+  }
+
+  .search-handoff-button:hover {
+    --elevation: 6;
+  }
+
+  .search-wrapper.fake-focus:not(.search.disabled) .search-handoff-button {
+    border-color: transparent !important;
+    outline: 2px solid var(--newtab-primary-action-background) !important;
+    outline-offset: -1px !important;
+  }
+
+  .search-handoff-button .fake-caret {
+    inset-inline-start: 48px !important;
+    top: 13px !important;
+  }
+
+  .search-disabled .search-handoff-button {
+    opacity: 0 !important;
+  }
 
 *,
 *::before,
@@ -167,7 +203,7 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://global/skin/icons/pocket.svg");
 }
 .icon.icon-pocket-save {
-  background-image: url("chrome://global/skin/icons/pocket-outline.svg");
+  background-image: url("chrome://browser/skin/pocket-outline.svg");
 }
 .icon.icon-pocket-delete {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-pocket-delete-16.svg");
@@ -204,7 +240,7 @@ body[lwt-newtab-brighttext] {
   background-image: url("chrome://browser/skin/downloads/downloads.svg");
 }
 .icon.icon-copy {
-  background-image: url("chrome://global/skin/icons/edit-copy.svg");
+  background-image: url("chrome://browser/skin/edit-copy.svg");
 }
 .icon.icon-open-file {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-open-file-16.svg");
@@ -764,9 +800,6 @@ main.has-snippet {
   visibility: hidden;
 }
 
-.edit-topsites-wrapper .top-site-inner > .top-site-button > .tile {
-  border: 1px solid var(--newtab-border-color);
-}
 .edit-topsites-wrapper .modal {
   box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
   left: 0;
@@ -1185,13 +1218,13 @@ main.has-snippet {
 }
 .search-wrapper .logo-and-wordmark .wordmark {
   background: url("chrome://branding/content/firefox-wordmark.svg") no-repeat center center;
-  background-size: 134px;
+  background-size: 300px;
   -moz-context-properties: fill;
   display: inline-block;
   fill: var(--newtab-wordmark-color);
-  height: 82px;
-  margin-inline-start: 16px;
-  width: 134px;
+  height: 100px;
+  margin-inline-start: 25px;
+  width: 300px;
 }
 @media (max-width: 609px) {
   .search-wrapper .logo-and-wordmark .logo {
@@ -2231,7 +2264,7 @@ main.has-snippet {
   border-radius: 2px;
 }
 .asrouter-toggle .icon-devtools {
-  background-image: url("chrome://global/skin/icons/developer.svg");
+  background-image: url("chrome://browser/skin/developer.svg");
   padding: 15px;
 }
 .asrouter-toggle:dir(rtl) {

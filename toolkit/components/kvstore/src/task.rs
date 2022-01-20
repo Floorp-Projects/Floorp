@@ -44,9 +44,9 @@ type SingleStore = rkv::SingleStore<SafeModeDatabase>;
 macro_rules! task_done {
     (value) => {
         fn done(&self) -> Result<(), nsresult> {
-            // If TaskRunnable.run() calls Task.done() to return a result
-            // on the main thread before TaskRunnable.run() returns on the database
-            // thread, then the Task will get dropped on the database thread.
+            // If TaskRunnable calls Task.done() to return a result on the
+            // main thread before TaskRunnable returns on the database thread,
+            // then the Task will get dropped on the database thread.
             //
             // But the callback is an nsXPCWrappedJS that isn't safe to release
             // on the database thread.  So we move it out of the Task here to ensure
@@ -65,9 +65,9 @@ macro_rules! task_done {
 
     (void) => {
         fn done(&self) -> Result<(), nsresult> {
-            // If TaskRunnable.run() calls Task.done() to return a result
-            // on the main thread before TaskRunnable.run() returns on the database
-            // thread, then the Task will get dropped on the database thread.
+            // If TaskRunnable calls Task.done() to return a result on the
+            // main thread before TaskRunnable returns on the database thread,
+            // then the Task will get dropped on the database thread.
             //
             // But the callback is an nsXPCWrappedJS that isn't safe to release
             // on the database thread.  So we move it out of the Task here to ensure

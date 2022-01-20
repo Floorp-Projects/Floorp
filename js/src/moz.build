@@ -470,6 +470,15 @@ SOURCES += [
     "vm/ProfilingStack.cpp",
 ]
 
+if CONFIG["ENABLE_RECORD_TUPLE"]:
+    UNIFIED_SOURCES += [
+        "builtin/RecordObject.cpp",
+        "builtin/TupleObject.cpp",
+        "vm/RecordTupleShared.cpp",
+        "vm/RecordType.cpp",
+        "vm/TupleType.cpp",
+    ]
+
 if CONFIG["JS_HAS_INTL_API"]:
     UNIFIED_SOURCES += [
         "builtin/intl/Collator.cpp",
@@ -500,6 +509,10 @@ if CONFIG["ENABLE_TRACE_LOGGING"]:
     ]
 
 if CONFIG["OS_ARCH"] == "WINNT":
+    OS_LIBS += [
+        "advapi32",
+        "winmm",
+    ]
     UNIFIED_SOURCES += [
         "threading/windows/CpuCount.cpp",
         "threading/windows/WindowsThread.cpp",
@@ -543,6 +556,12 @@ if CONFIG["MOZ_VTUNE"]:
             SOURCES["vtune/ittnotify_static.c"].flags += ["-Wno-stringop-truncation"]
 
 DIRS += ["build", "debugger", "frontend", "gc", "irregexp", "jit", "util", "wasm"]
+
+# Bug 1739321 - clang 13+ only emits debuginfo for classes that are actually
+# constructed, and we cheat in a number of cases. The flag exists at least
+# back to clang 4.
+if CONFIG["CC_TYPE"] == "clang":
+    CXXFLAGS += ["-fstandalone-debug"]
 
 if CONFIG["JS_JITSPEW"]:
     DIRS += ["zydis"]

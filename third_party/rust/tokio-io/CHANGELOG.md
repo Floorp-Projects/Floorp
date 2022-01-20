@@ -1,3 +1,30 @@
+# 0.1.13 (February 4, 2020)
+
+* Add `tokio 0.2.x` deprecation notice.
+
+# 0.1.12 (March 1, 2019)
+
+### Added
+- Add `unsplit` to join previously split `AsyncRead + AsyncWrite` (#807).
+
+# 0.1.11 (January 6, 2019)
+
+* Fix minor error in Decoder::decode API documentation (#797).
+
+# 0.1.10 (October 23, 2018)
+
+* Expose inner codec from `Framed` (#686).
+* Implement AsyncRead::prepare_uninitialized_buffer for Take and Chain (#678).
+
+# 0.1.9 (September 27, 2018)
+
+* Fix bug in `AsyncRead::split()` (#655).
+* Fix non-terminating loop in `length_delimited::FramedWrite` (#576).
+
+# 0.1.8 (August 23, 2018)
+
+* Documentation improvements
+
 # 0.1.7 (June 13, 2018)
 
 * Move `codec::{Encode, Decode, Framed*}` into `tokio-codec` (#353)

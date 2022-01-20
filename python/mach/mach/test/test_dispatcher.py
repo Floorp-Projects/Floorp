@@ -5,18 +5,16 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import os
 import unittest
 from io import StringIO
 
 import pytest
 from mozunit import main
 from six import string_types
+from pathlib import Path
 
 from mach.base import CommandContext
 from mach.registrar import Registrar
-
-here = os.path.abspath(os.path.dirname(__file__))
 
 
 @pytest.mark.usefixtures("get_mach", "run_mach")
@@ -24,7 +22,7 @@ class TestDispatcher(unittest.TestCase):
     """Tests dispatch related code"""
 
     def get_parser(self, config=None):
-        mach = self.get_mach("basic.py")
+        mach = self.get_mach(Path("basic.py"))
 
         for provider in Registrar.settings_providers:
             mach.settings.register_provider(provider)
@@ -34,7 +32,7 @@ class TestDispatcher(unittest.TestCase):
                 config = StringIO(config)
             mach.settings.load_fps([config])
 
-        context = CommandContext(settings=mach.settings)
+        context = CommandContext(cwd="", settings=mach.settings)
         return mach.get_argument_parser(context)
 
     def test_command_aliases(self):

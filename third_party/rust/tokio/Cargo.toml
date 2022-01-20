@@ -13,11 +13,11 @@
 [package]
 edition = "2018"
 name = "tokio"
-version = "0.2.18"
+version = "0.2.25"
 authors = ["Tokio Contributors <team@tokio.rs>"]
 description = "An event-driven, non-blocking I/O platform for writing asynchronous I/O\nbacked applications.\n"
 homepage = "https://tokio.rs"
-documentation = "https://docs.rs/tokio/0.2.18/tokio/"
+documentation = "https://docs.rs/tokio/0.2.25/tokio/"
 readme = "README.md"
 keywords = ["io", "async", "non-blocking", "futures"]
 categories = ["asynchronous", "network-programming"]
@@ -45,7 +45,7 @@ version = "0.1.4"
 optional = true
 
 [dependencies.lazy_static]
-version = "1.0.2"
+version = "1.4.0"
 optional = true
 
 [dependencies.memchr]
@@ -53,7 +53,7 @@ version = "2.2"
 optional = true
 
 [dependencies.mio]
-version = "0.6.20"
+version = "0.6.23"
 optional = true
 
 [dependencies.num_cpus]
@@ -61,22 +61,31 @@ version = "1.8.0"
 optional = true
 
 [dependencies.parking_lot]
-version = "0.10.0"
+version = "0.11.0"
 optional = true
 
 [dependencies.pin-project-lite]
 version = "0.1.1"
 
 [dependencies.slab]
-version = "0.4.1"
+version = "0.4.2"
 optional = true
 
 [dependencies.tokio-macros]
-version = "0.2.4"
+version = "0.2.6"
 optional = true
+
+[dependencies.tracing]
+version = "0.1.16"
+features = ["std"]
+optional = true
+default-features = false
 [dev-dependencies.futures]
 version = "0.3.0"
 features = ["async-await"]
+
+[dev-dependencies.futures-test]
+version = "0.3.0"
 
 [dev-dependencies.proptest]
 version = "0.9.4"
@@ -99,7 +108,7 @@ io-util = ["memchr"]
 macros = ["tokio-macros"]
 net = ["dns", "tcp", "udp", "uds"]
 process = ["io-driver", "libc", "mio-named-pipes", "signal", "winapi/consoleapi", "winapi/minwindef", "winapi/threadpoollegacyapiset", "winapi/winerror"]
-rt-core = []
+rt-core = ["slab"]
 rt-threaded = ["num_cpus", "rt-core"]
 rt-util = []
 signal = ["io-driver", "lazy_static", "libc", "mio-uds", "signal-hook-registry", "winapi/consoleapi", "winapi/minwindef"]
@@ -110,8 +119,8 @@ test-util = []
 time = ["slab"]
 udp = ["io-driver"]
 uds = ["io-driver", "mio-uds", "libc"]
-[target."cfg(not(windows))".dev-dependencies.loom]
-version = "0.3.1"
+[target."cfg(loom)".dev-dependencies.loom]
+version = "0.3.5"
 features = ["futures", "checkpoint"]
 [target."cfg(unix)".dependencies.libc]
 version = "0.2.42"

@@ -365,3 +365,33 @@ fn resize() {
     assert_eq!(v.get(98).unwrap(), false);
     assert_eq!(v.get(99).unwrap(), false);
 }
+
+#[test]
+fn hash() {
+    extern crate std;
+    use core::hash::{Hash, Hasher};
+
+    let v1 = sbvec![true, false, true, false, true, true, true];
+    let mut v2 = v1.clone();
+    v2.reserve(100_000);
+    assert_eq!(v1, v2);
+
+    let hash = |v: &SmallBitVec| {
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        v.hash(&mut hasher);
+        hasher.finish()
+    };
+
+    assert_eq!(hash(&v1), hash(&v2));
+
+    let mut v3 = v1.clone();
+    v3.push(false);
+    assert_ne!(hash(&v1), hash(&v3));
+
+    let mut v4 = v2.clone();
+    v4.push(false);
+    assert_ne!(hash(&v2), hash(&v4));
+
+    assert_eq!(v3, v4);
+    assert_eq!(hash(&v3), hash(&v4));
+}

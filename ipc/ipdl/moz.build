@@ -15,7 +15,8 @@ FINAL_LIBRARY = "xul"
 
 # We #include some things in the dom/plugins/ directory that rely on
 # toolkit libraries.
-CXXFLAGS += CONFIG["TK_CFLAGS"]
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
 # Add libFuzzer configuration directives
 include("/tools/fuzzing/libfuzzer-config.mozbuild")

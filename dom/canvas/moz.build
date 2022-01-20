@@ -60,6 +60,7 @@ EXPORTS.mozilla.dom += [
     "ImageData.h",
     "ImageUtils.h",
     "OffscreenCanvas.h",
+    "OffscreenCanvasDisplayHelper.h",
     "QueueParamTraits.h",
     "TextMetrics.h",
     "WebGLChild.h",
@@ -76,6 +77,11 @@ EXPORTS.mozilla.gfx += [
 ]
 
 # Canvas 2D and common sources
+#
+# Due to bug 1745384, and the associated clang mingw cross compile crash, we
+# must be careful about disturbing the unified file combinations.
+# nsICanvasRenderingContextInternal.cpp cannot be built standalone until this
+# is resolved, so new files may need to be added to SOURCES for the time being.
 UNIFIED_SOURCES += [
     "CanvasGradient.cpp",
     "CanvasImageCache.cpp",
@@ -94,6 +100,7 @@ UNIFIED_SOURCES += [
 SOURCES += [
     "DrawTargetWebgl.cpp",  # Isolate Skia
     "ImageUtils.cpp",
+    "OffscreenCanvasDisplayHelper.cpp",  # See bug 1745384
 ]
 
 # WebGL Sources
@@ -195,7 +202,8 @@ LOCAL_INCLUDES += [
     "/media/libyuv/libyuv/include",
 ]
 
-CXXFLAGS += CONFIG["TK_CFLAGS"]
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
 LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
 
@@ -205,3 +213,6 @@ if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
 
 if CONFIG["CC_TYPE"] == "gcc":
     CXXFLAGS += ["-Wno-error=unused-result"]  # GCC doesn't ignore (void)MustUse();
+
+# Add libFuzzer configuration directives
+include("/tools/fuzzing/libfuzzer-config.mozbuild")

@@ -58,7 +58,7 @@ mod librustc_parse {
             }
         }
 
-        rustc_span::with_session_globals(Edition::Edition2018, || {
+        rustc_span::create_session_if_not_set_then(Edition::Edition2018, |_| {
             let cm = Lrc::new(SourceMap::new(FilePathMapping::empty()));
             let emitter = Box::new(SilentEmitter);
             let handler = Handler::with_emitter(false, None, emitter);

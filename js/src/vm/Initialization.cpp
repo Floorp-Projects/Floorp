@@ -227,11 +227,19 @@ JS_PUBLIC_API bool JS::InitSelfHostedCode(JSContext* cx, SelfHostedCache cache,
 
   JSRuntime* rt = cx->runtime();
 
+  if (!rt->initializeParserAtoms(cx)) {
+    return false;
+  }
+
+  if (!rt->initSelfHostingStencil(cx, cache, writer)) {
+    return false;
+  }
+
   if (!rt->initializeAtoms(cx)) {
     return false;
   }
 
-  if (!rt->initializeParserAtoms(cx)) {
+  if (!rt->initSelfHostingFromStencil(cx)) {
     return false;
   }
 
@@ -240,14 +248,6 @@ JS_PUBLIC_API bool JS::InitSelfHostedCode(JSContext* cx, SelfHostedCache cache,
     return false;
   }
 #endif
-
-  if (!rt->initSelfHosting(cx, cache, writer)) {
-    return false;
-  }
-
-  if (!rt->parentRuntime && !rt->initMainAtomsTables(cx)) {
-    return false;
-  }
 
   return true;
 }

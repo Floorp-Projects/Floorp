@@ -36,7 +36,7 @@ label {
 }
 
 :host([native]:not([open="true"]):-moz-focusring) > #label-box {
-  outline: 1px dotted;
+  outline: var(--default-focusring);
 }
 
 

@@ -14,7 +14,7 @@
 const TEST_URI = `
 <style>
   div {
-    cursor: pointer;
+    -moz-float-edge: content-box;
   }
 </style>
 <div></div>`;
@@ -25,9 +25,9 @@ const TEST_DATA = [
     rules: [
       {},
       {
-        cursor: {
-          value: "pointer",
-          expected: COMPATIBILITY_TOOLTIP_MESSAGE.default,
+        "-moz-float-edge": {
+          value: "content-box",
+          expected: COMPATIBILITY_TOOLTIP_MESSAGE.deprecated,
         },
       },
     ],

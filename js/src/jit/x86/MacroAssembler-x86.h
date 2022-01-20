@@ -1030,11 +1030,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
   inline void ensureDouble(const ValueOperand& source, FloatRegister dest,
                            Label* failure);
 
-  void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
-    loadPtr(Address(WasmTlsReg,
-                    offsetof(wasm::TlsData, globalArea) + globalDataOffset),
-            dest);
-  }
   void loadWasmPinnedRegsFromTls() {
     // x86 doesn't have any pinned registers.
   }

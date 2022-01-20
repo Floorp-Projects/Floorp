@@ -783,6 +783,8 @@ STATIC_ATOMS = [
     Atom("onconnect", "onconnect"),
     Atom("onconnectionavailable", "onconnectionavailable"),
     Atom("oncontextmenu", "oncontextmenu"),
+    Atom("oncontextlost", "oncontextlost"),
+    Atom("oncontextrestored", "oncontextrestored"),
     Atom("oncopy", "oncopy"),
     Atom("oncut", "oncut"),
     Atom("ondblclick", "ondblclick"),
@@ -846,6 +848,7 @@ STATIC_ATOMS = [
     Atom("onmouseout", "onmouseout"),
     Atom("onmouseover", "onmouseover"),
     Atom("onMozMouseHittest", "onMozMouseHittest"),
+    Atom("onMozMouseExploreByTouch", "onMozMouseExploreByTouch"),
     Atom("onmouseup", "onmouseup"),
     Atom("onMozAfterPaint", "onMozAfterPaint"),
     Atom("onmozfullscreenchange", "onmozfullscreenchange"),
@@ -2134,6 +2137,7 @@ STATIC_ATOMS = [
     Atom("docLevelNativeAnonymousContent", "docLevelNativeAnonymousContent"),  # bool
     Atom("paintRequestTime", "PaintRequestTime"),
     Atom("pseudoProperty", "PseudoProperty"),  # PseudoStyleType
+    Atom("scrollTimelinesProperty", "SrollTimelinesProperty"),  # ScrollTimelineSet*
     Atom("manualNACProperty", "ManualNACProperty"),  # ManualNAC*
     Atom("markerPseudoProperty", "markerPseudoProperty"),  # nsXMLElement*
     # Languages for lang-specific transforms

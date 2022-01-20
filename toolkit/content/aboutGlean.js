@@ -4,15 +4,16 @@
 
 "use strict";
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 function onLoad() {
   document.getElementById("controls-submit").addEventListener("click", () => {
     let tag = document.getElementById("tag-pings").value;
     let log = document.getElementById("log-pings").checked;
     let send = document.getElementById("send-pings").value;
-    let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
-    FOG.setLogPings(log);
-    FOG.setTagPings(tag);
-    FOG.sendPing(send);
+    Services.fog.setLogPings(log);
+    Services.fog.setTagPings(tag);
+    Services.fog.sendPing(send);
   });
 }
 

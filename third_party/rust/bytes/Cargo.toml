@@ -13,15 +13,16 @@
 [package]
 edition = "2018"
 name = "bytes"
-version = "0.5.6"
+version = "1.1.0"
 authors = ["Carl Lerche <me@carllerche.com>", "Sean McArthur <sean@seanmonstar.com>"]
 description = "Types and traits for working with bytes"
-documentation = "https://docs.rs/bytes"
 readme = "README.md"
 keywords = ["buffers", "zero-copy", "io"]
 categories = ["network-programming", "data-structures"]
 license = "MIT"
 repository = "https://github.com/tokio-rs/bytes"
+[package.metadata.docs.rs]
+rustdoc-args = ["--cfg", "docsrs"]
 [dependencies.serde]
 version = "1.0.60"
 features = ["alloc"]
@@ -34,4 +35,4 @@ version = "1.0"
 default = ["std"]
 std = []
 [target."cfg(loom)".dev-dependencies.loom]
-version = "0.3"
+version = "0.5"

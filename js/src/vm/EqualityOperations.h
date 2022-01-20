@@ -41,6 +41,21 @@ extern bool LooselyEqual(JSContext* cx, JS::Handle<JS::Value> lval,
 extern bool SameValue(JSContext* cx, JS::Handle<JS::Value> v1,
                       JS::Handle<JS::Value> v2, bool* same);
 
+#ifdef ENABLE_RECORD_TUPLE
+/**
+ * Computes |SameValue(v1, v2)|, but it expects that strings, records and
+ * tuples are all linear.
+ */
+extern bool SameValueZeroLinear(const JS::Value& lval, const JS::Value& rval);
+#endif
+
+/**
+ * Computes |SameValueZero(v1, v2)| -- strict equality except that NaNs are
+ * considered equal. Opposite-signed zeroes are considered equal.
+ */
+extern bool SameValueZero(JSContext* cx, JS::Handle<JS::Value> v1,
+                          JS::Handle<JS::Value> v2, bool* same);
+
 }  // namespace js
 
 #endif  // vm_EqualityOperations_h

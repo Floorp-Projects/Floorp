@@ -12,12 +12,16 @@
 # fully.
 #
 #
-# The following will 1. create a build directory and 2. change into it and
+# The following will (1) create a build directory, and (2) change into it and
 # call cmake to configure the build with default parameters as a static
-# library. See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
-# for information about Debug, Release, etc. builds.
+# library.  See
+#
+#   https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
+#
+# for information about debug or release builds, for example
 #
 #   cmake -B build -D CMAKE_BUILD_TYPE=Release
+#
 #
 # For a dynamic library, use
 #
@@ -39,7 +43,8 @@
 #
 #   cmake -E chdir build cmake -G Xcode -D IOS_PLATFORM=SIMULATOR64 ..
 #
-# Finally, build the project with:
+#
+# Finally, build the project with
 #
 #   cmake --build build
 #
@@ -56,40 +61,47 @@
 #
 # Some notes.
 #
-# . `cmake' creates configuration files in
+# - `cmake' creates configuration files in
 #
 #     <build-directory>/include/freetype/config
 #
 #   which should be further modified if necessary.
 #
-# . You can use `cmake' directly on a freshly cloned FreeType git
+# - You can use `cmake' directly on a freshly cloned FreeType git
 #   repository.
 #
-# . `CMakeLists.txt' is provided as-is since it is normally not used by the
+# - `CMakeLists.txt' is provided as-is since it is normally not used by the
 #   developer team.
 #
-# . Set the `FT_WITH_ZLIB', `FT_WITH_BZIP2', `FT_WITH_PNG',
-#   `FT_WITH_HARFBUZZ', and `FT_WITH_BROTLI' CMake variables to `ON' to
-#   force using a dependency.  Leave a variable undefined (which is the
-#   default) to use the dependency only if it is available. Example:
+# - Set the `FT_REQUIRE_ZLIB', `FT_REQUIRE_BZIP2', `FT_REQUIRE_PNG',
+#   `FT_REQUIRE_HARFBUZZ', and `FT_REQUIRE_BROTLI' CMake variables to `ON'
+#   or `TRUE' to force using a dependency.  Leave a variable undefined
+#   (which is the default) to use the dependency only if it is available.
+#   Example:
 #
-#     cmake -B build -D FT_WITH_ZLIB=ON \
-#                    -D FT_WITH_BZIP2=ON \
-#                    -D FT_WITH_PNG=ON \
-#                    -D FT_WITH_HARFBUZZ=ON \
-#                    -D FT_WITH_BROTLI=ON [...]
+#     cmake -B build -D FT_REQUIRE_ZLIB=TRUE \
+#                    -D FT_REQUIRE_BZIP2=TRUE \
+#                    -D FT_REQUIRE_PNG=TRUE \
+#                    -D FT_REQUIRE_HARFBUZZ=TRUE \
+#                    -D FT_REQUIRE_BROTLI=TRUE [...]
 #
-#   Set `CMAKE_DISABLE_FIND_PACKAGE_XXX=TRUE' to disable a dependency completely
-#   (where `XXX' is a CMake package name like `BZip2').  Example for disabling all
+# - Set `FT_DISABLE_XXX=TRUE' to disable a dependency completely (where
+#   `XXX' is a CMake package name like `BZip2').  Example for disabling all
 #   dependencies:
 #
-#     cmake -B build -D CMAKE_DISABLE_FIND_PACKAGE_ZLIB=TRUE \
-#                    -D CMAKE_DISABLE_FIND_PACKAGE_BZip2=TRUE \
-#                    -D CMAKE_DISABLE_FIND_PACKAGE_PNG=TRUE \
-#                    -D CMAKE_DISABLE_FIND_PACKAGE_HarfBuzz=TRUE \
-#                    -D CMAKE_DISABLE_FIND_PACKAGE_BrotliDec=TRUE [...]
+#     cmake -B build -D FT_DISABLE_ZLIB=TRUE \
+#                    -D FT_DISABLE_BZIP2=TRUE \
+#                    -D FT_DISABLE_PNG=TRUE \
+#                    -D FT_DISABLE_HARFBUZZ=TRUE \
+#                    -D FT_DISABLE_BROTLI=TRUE [...]
 #
-# . Installation of FreeType can be controlled with the CMake variables
+# - NOTE: If a package is set as DISABLED, it cannot be set as REQUIRED
+#   without unsetting the DISABLED value first.  For example, if
+#   `FT_DISABLE_HARFBUZZ=TRUE' has been set (Cache is present), you need to
+#   call `FT_DISABLE_HARFBUZZ=FALSE' before calling
+#   `FT_REQUIRE_HARFBUZZ=TRUE'.
+#
+# - Installation of FreeType can be controlled with the CMake variables
 #   `SKIP_INSTALL_HEADERS', `SKIP_INSTALL_LIBRARIES', and `SKIP_INSTALL_ALL'
 #   (this is compatible with the same CMake variables in zlib's CMake
 #   support).
@@ -109,6 +121,7 @@ if (NOT CMAKE_VERSION VERSION_LESS 3.3)
 endif ()
 
 include(CheckIncludeFile)
+include(CMakeDependentOption)
 
 # CMAKE_TOOLCHAIN_FILE must be set before `project' is called, which
 # configures the base build environment and references the toolchain file
@@ -150,7 +163,7 @@ project(freetype C)
 
 set(VERSION_MAJOR "2")
 set(VERSION_MINOR "11")
-set(VERSION_PATCH "0")
+set(VERSION_PATCH "1")
 
 # Generate LIBRARY_VERSION and LIBRARY_SOVERSION.
 set(LIBTOOL_REGEX "version_info='([0-9]+):([0-9]+):([0-9]+)'")
@@ -171,13 +184,37 @@ string(REGEX REPLACE
 math(EXPR LIBRARY_SOVERSION "${LIBTOOL_CURRENT} - ${LIBTOOL_AGE}")
 set(LIBRARY_VERSION "${LIBRARY_SOVERSION}.${LIBTOOL_AGE}.${LIBTOOL_REVISION}")
 
-# External dependency library detection is automatic. See the notes at the top
-# of this file, for how to force or disable dependencies completely.
-option(FT_WITH_ZLIB "Use system zlib instead of internal library." OFF)
-option(FT_WITH_BZIP2 "Support bzip2 compressed fonts." OFF)
-option(FT_WITH_PNG "Support PNG compressed OpenType embedded bitmaps." OFF)
-option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." OFF)
-option(FT_WITH_BROTLI "Support compressed WOFF2 fonts." OFF)
+# External dependency library detection is automatic.  See the notes at the
+# top of this file, for how to force or disable dependencies completely.
+option(FT_DISABLE_ZLIB
+  "Disable use of system zlib and use internal zlib library instead." OFF)
+cmake_dependent_option(FT_REQUIRE_ZLIB
+  "Require system zlib instead of internal zlib library." OFF
+  "NOT FT_DISABLE_ZLIB" OFF)
+
+option(FT_DISABLE_BZIP2
+  "Disable support of bzip2 compressed fonts." OFF)
+cmake_dependent_option(FT_REQUIRE_BZIP2
+  "Require support of bzip2 compressed fonts." OFF
+  "NOT FT_DISABLE_BZIP2" OFF)
+
+option(FT_DISABLE_PNG
+  "Disable support of PNG compressed OpenType embedded bitmaps." OFF)
+cmake_dependent_option(FT_REQUIRE_PNG
+  "Require support of PNG compressed OpenType embedded bitmaps." OFF
+  "NOT FT_DISABLE_PNG" OFF)
+
+option(FT_DISABLE_HARFBUZZ
+  "Disable HarfBuzz (used for improving auto-hinting of OpenType fonts)." OFF)
+cmake_dependent_option(FT_REQUIRE_HARFBUZZ
+  "Require HarfBuzz for improving auto-hinting of OpenType fonts." OFF
+  "NOT FT_DISABLE_HARFBUZZ" OFF)
+
+option(FT_DISABLE_BROTLI
+  "Disable support of compressed WOFF2 fonts." OFF)
+cmake_dependent_option(FT_REQUIRE_BROTLI
+  "Require support of compressed WOFF2 fonts." OFF
+  "NOT FT_DISABLE_BROTLI" OFF)
 
 
 # Disallow in-source builds
@@ -208,35 +245,45 @@ endif ()
 
 
 # Find dependencies
-set(HARFBUZZ_MIN_VERSION "2.0.0")
-if (FT_WITH_HARFBUZZ)
-  find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION} REQUIRED)
-else ()
-  find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION})
+if (NOT FT_DISABLE_HARFBUZZ)
+  set(HARFBUZZ_MIN_VERSION "2.0.0")
+  if (FT_REQUIRE_HARFBUZZ)
+    find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION} REQUIRED)
+  else ()
+    find_package(HarfBuzz ${HARFBUZZ_MIN_VERSION})
+  endif ()
 endif ()
 
-if (FT_WITH_PNG)
-  find_package(PNG REQUIRED)
-else ()
-  find_package(PNG)
+if (NOT FT_DISABLE_PNG)
+  if (FT_REQUIRE_PNG)
+    find_package(PNG REQUIRED)
+  else ()
+    find_package(PNG)
+  endif ()
 endif ()
 
-if (FT_WITH_ZLIB)
-  find_package(ZLIB REQUIRED)
-else ()
-  find_package(ZLIB)
+if (NOT FT_DISABLE_ZLIB)
+  if (FT_REQUIRE_ZLIB)
+    find_package(ZLIB REQUIRED)
+  else ()
+    find_package(ZLIB)
+  endif ()
 endif ()
 
-if (FT_WITH_BZIP2)
-  find_package(BZip2 REQUIRED)
-else ()
-  find_package(BZip2)
+if (NOT FT_DISABLE_BZIP2)
+  if (FT_REQUIRE_BZIP2)
+    find_package(BZip2 REQUIRED)
+  else ()
+    find_package(BZip2)
+  endif ()
 endif ()
 
-if (FT_WITH_BROTLI)
-  find_package(BrotliDec REQUIRED)
-else ()
-  find_package(BrotliDec)
+if (NOT FT_DISABLE_BROTLI)
+  if (FT_REQUIRE_BROTLI)
+    find_package(BrotliDec REQUIRED)
+  else ()
+    find_package(BrotliDec)
+  endif ()
 endif ()
 
 # Create the configuration file
@@ -426,7 +473,7 @@ target_include_directories(
     PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}/include
       ${CMAKE_CURRENT_SOURCE_DIR}/include
-      
+
       # Make <ftconfig.h> available for builds/unix/ftsystem.c.
       ${CMAKE_CURRENT_BINARY_DIR}/include/freetype/config
 )

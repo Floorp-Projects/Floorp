@@ -15,10 +15,6 @@ PYTHON_UNITTEST_MANIFESTS += [
     '/testing/talos/talos/unittests/python.ini'
 ]
 
-CONFIGURE_SUBST_FILES += [
-    '/tools/update-packaging/Makefile',
-]
-
 DIRS += [
     '/tools',
     '/xpcom/xpidl',
@@ -136,12 +132,7 @@ DIRS += [
     '/tools/performance',
     '/tools/power',
     '/tools/profiler',
-]
-
-if CONFIG['MOZ_SPELLCHECK']:
-    DIRS += ['/extensions/spellcheck']
-
-DIRS += [
+    '/extensions/spellcheck',
     '/security/manager',
     '/toolkit',
 ]

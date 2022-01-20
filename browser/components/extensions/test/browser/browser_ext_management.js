@@ -4,7 +4,7 @@ const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
 
-const { ProductAddonChecker } = ChromeUtils.import(
+const { ProductAddonCheckerTestUtils } = ChromeUtils.import(
   "resource://gre/modules/addons/ProductAddonChecker.jsm"
 );
 
@@ -69,7 +69,7 @@ add_task(async function test_management_install() {
     },
   });
 
-  let themeXPIFileHash = await ProductAddonChecker.computeHash(
+  let themeXPIFileHash = await ProductAddonCheckerTestUtils.computeHash(
     "sha256",
     themeXPIFile.path
   );

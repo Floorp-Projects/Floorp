@@ -101,9 +101,30 @@ const char* strings[] = {
 };
 
 /* Create a hole between two zones of relative relocations */
-const int hole[] = {42, 42, 42, 42};
+int small_hole[] = {42, 42, 42, 42};
 
 const char* strings2[] = {
+#  include "test.c"
+#  include "test.c"
+#  include "test.c"
+#  include "test.c"
+#  include "test.c"
+};
+
+/* Create a bigger hole between two zones of relative relocations */
+int bigger_hole[] = {
+    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
+};
+
+const char* strings3[] = {
 #  include "test.c"
 #  include "test.c"
 #  include "test.c"
@@ -145,7 +166,7 @@ void end_test() {
 }
 
 void test() {
-  int i = 0, j = 0;
+  int i = 0, j = 0, k = 0;
 #  define DEF_(a, i, w) \
     if (a[i++] != str_##w) return;
 #  define DEF(w) DEF_(strings, i, w)
@@ -160,8 +181,16 @@ void test() {
 #  include "test.c"
 #  include "test.c"
 #  undef DEF
+#  define DEF(w) DEF_(strings3, k, w)
+#  include "test.c"
+#  include "test.c"
+#  include "test.c"
+#  include "test.c"
+#  include "test.c"
+#  undef DEF
   if (i != sizeof(strings) / sizeof(strings[0]) &&
-      j != sizeof(strings2) / sizeof(strings2[0]))
+      j != sizeof(strings2) / sizeof(strings2[0]) &&
+      k != sizeof(strings3) / sizeof(strings3[0]))
     fprintf(stderr, "WARNING: Test doesn't cover the whole array\n");
   end_test();
 }

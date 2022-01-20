@@ -2,7 +2,6 @@
   "manifest_version": 2,
   "name": "__MSG_App_Title_Default__",
   "description": "__MSG_App_Description_Default__",
-  "default_area": "tabstrip",
   "sidebar_action": {
     "default_icon": "assets/icon128.png",
     "default_title" : "__MSG_App_Title_Default__",
@@ -10,6 +9,7 @@
   },
   "default_locale": "ja",
   "browser_action": {
+    "default_area" : "menupanel",
     "default_icon": {
       "32": "assets/notsynced.png"
     },

@@ -15,6 +15,7 @@ from typing import Any, Dict, Optional, Union
 
 from . import metrics
 from . import pings
+from . import tags
 from . import util
 
 # An (imcomplete) list of reserved keywords in Swift.
@@ -139,7 +140,7 @@ class Category:
     """
 
     name: str
-    objs: Dict[str, Union[metrics.Metric, pings.Ping]]
+    objs: Dict[str, Union[metrics.Metric, pings.Ping, tags.Tag]]
     contains_pings: bool
 
 

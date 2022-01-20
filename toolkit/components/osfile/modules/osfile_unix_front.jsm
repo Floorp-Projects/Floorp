@@ -919,99 +919,6 @@
       return serialized;
     };
 
-    // Extended attribute functions are MacOS only at this point.
-    if (OS.Constants.Sys.Name == "Darwin") {
-      /**
-       * Get an extended attribute (xattr) from a file.
-       *
-       * @param {string} path The name of the file.
-       * @param {string} name The name of the extended attribute.
-       *
-       * @returns {Uint8Array} An array containing the value of the attribute.
-       * @throws {OS.File.Error} In case of an I/O error.
-       */
-      File.macGetXAttr = function getxattr(path, name) {
-        // Get the size of the xattr
-        let result = UnixFile.getxattr(
-          path,
-          name,
-          null,
-          0,
-          // The position arg is not used unless
-          // interacting with a resouce fork.
-          0 /* position arg */,
-          0 /* follow links */
-        );
-        if (result == -1) {
-          throw new File.Error("getxattr", ctypes.errno, path);
-        }
-        // Loop until we fetch the whole xattr. This covers the edge case
-        // where the xattr is set in between calls and attempts to avoid us
-        // less than the full size of the xattr.
-        while (true) {
-          let size = result;
-          let buffer = new Uint8Array(size);
-          result = UnixFile.getxattr(
-            path,
-            name,
-            buffer,
-            size,
-            // The position arg is not used unless
-            // interacting with a resouce fork.
-            0 /* position arg */,
-            0 /* follow links */
-          );
-          if (result == -1) {
-            throw new File.Error("getxattr", ctypes.errno, path);
-          }
-          if (size == result) {
-            return buffer;
-          }
-        }
-      };
-
-      /**
-       * Remove an extended attribute (xattr) from a file.
-       *
-       * @param {string} path The name of the file.
-       * @param {string} name The name of the extended attribute.
-       *
-       * @throws {OS.File.Error} In case of an I/O error.
-       */
-      File.macRemoveXAttr = function removexattr(path, name) {
-        let result = UnixFile.removexattr(path, name, 0 /* follow links */);
-        if (result == -1) {
-          throw new File.Error("removexattr", ctypes.errno, path);
-        }
-      };
-
-      /**
-       * Set an extended attribute (xattr) on a file.
-       *
-       * @param {string} path The name of the file.
-       * @param {string} name The name of the extended attribute.
-       * @param {Uint8Array} value The value of the xattr to be set.
-       *
-       * @throws {OS.File.Error} In case of an I/O error.
-       */
-      File.macSetXAttr = function setxattr(path, name, value) {
-        let size = value.length;
-        let result = UnixFile.setxattr(
-          path,
-          name,
-          value,
-          size,
-          // The position arg is not used unless
-          // interacting with a resouce fork.
-          0 /* position arg */,
-          0 /* follow links */
-        );
-        if (result == -1) {
-          throw new File.Error("setxattr", ctypes.errno, path);
-        }
-      };
-    }
-
     let gStatData = new Type.stat.implementation();
     let gStatDataPtr = gStatData.address();
 
@@ -1042,34 +949,8 @@
         unixGroup,
         unixMode
       );
-
-      // Some platforms (e.g. MacOS X, some BSDs) store a file creation date
-      if ("OSFILE_OFFSETOF_STAT_ST_BIRTHTIME" in Const) {
-        let date = new Date(stat.st_birthtime * 1000);
-
-        /**
-         * The date of creation of this file.
-         *
-         * Note that the date returned by this method is not always
-         * reliable. Not all file systems are able to provide this
-         * information.
-         *
-         * @type {Date}
-         */
-        this.macBirthDate = date;
-      }
     };
     File.Info.prototype = Object.create(SysAll.AbstractInfo.prototype);
-
-    // Deprecated, use macBirthDate/winBirthDate instead
-    Object.defineProperty(File.Info.prototype, "creationDate", {
-      get: function creationDate() {
-        // On the Macintosh, returns the birth date if available.
-        // On other Unix, as the birth date is not available,
-        // returns the epoch.
-        return this.macBirthDate || new Date(0);
-      },
-    });
 
     /**
      * Return a version of an instance of File.Info that can be sent

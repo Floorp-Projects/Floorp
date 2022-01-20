@@ -7,7 +7,7 @@ intr protocol PTestNestedLoops {
 
 child:
     async Start();
-    intr R();
+    [LegacyIntr] intr R();
     async __delete__();
 
 parent:

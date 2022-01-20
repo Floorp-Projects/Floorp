@@ -52,6 +52,7 @@ import ConditionalPanel from "./ConditionalPanel";
 import InlinePreviews from "./InlinePreviews";
 import HighlightCalls from "./HighlightCalls";
 import Exceptions from "./Exceptions";
+import BlackboxLines from "./BlackboxLines";
 
 import {
   showSourceText,
@@ -98,6 +99,37 @@ const cssVars = {
 };
 
 class Editor extends PureComponent {
+  static get propTypes() {
+    return {
+      selectedSource: PropTypes.object,
+      cx: PropTypes.object,
+      closeTab: PropTypes.func,
+      toggleBreakpointAtLine: PropTypes.func,
+      conditionalPanelLocation: PropTypes.object,
+      closeConditionalPanel: PropTypes.func,
+      openConditionalPanel: PropTypes.func,
+      updateViewport: PropTypes.func,
+      isPaused: PropTypes.bool,
+      highlightCalls: PropTypes.func,
+      unhighlightCalls: PropTypes.func,
+      breakpointActions: PropTypes.object,
+      editorActions: PropTypes.object,
+      addBreakpointAtLine: PropTypes.func,
+      continueToHere: PropTypes.func,
+      toggleBlackBox: PropTypes.func,
+      updateCursorPosition: PropTypes.func,
+      jumpToMappedLocation: PropTypes.func,
+      selectedLocation: PropTypes.object,
+      symbols: PropTypes.object,
+      startPanelSize: PropTypes.number,
+      endPanelSize: PropTypes.number,
+      searchOn: PropTypes.bool,
+      inlinePreviewEnabled: PropTypes.bool,
+      editorWrappingEnabled: PropTypes.bool,
+      skipPausing: PropTypes.bool,
+    };
+  }
+
   $editorWrapper;
   constructor(props) {
     super(props);
@@ -606,6 +638,7 @@ class Editor extends PureComponent {
         <Breakpoints editor={editor} cx={cx} />
         <Preview editor={editor} editorRef={this.$editorWrapper} />
         <HighlightLines editor={editor} />
+        {features.blackboxLines ? <BlackboxLines editor={editor} /> : null}
         <Exceptions />
         {
           <EditorMenu

@@ -38,8 +38,13 @@ Services.prefs.setBoolPref("browser.pagedata.log", true);
  */
 function parseDocument(str, path = DEFAULT_PATH) {
   server.registerPathHandler(path, (request, response) => {
-    response.setHeader("Content-Type", "text/html");
-    response.write(str);
+    response.setHeader("Content-Type", "text/html;charset=utf-8");
+
+    let converter = Cc[
+      "@mozilla.org/intl/converter-output-stream;1"
+    ].createInstance(Ci.nsIConverterOutputStream);
+    converter.init(response.bodyOutputStream, "utf-8");
+    converter.writeString(str);
   });
 
   return new Promise((resolve, reject) => {

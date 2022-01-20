@@ -746,10 +746,17 @@ void TrackBuffersManager::RemoveAllCodedFrames() {
   }
 
   UpdateBufferedRanges();
-  MOZ_ASSERT(mAudioBufferedRanges.IsEmpty(),
-             "Should have no buffered video ranges after evicting everything.");
-  MOZ_ASSERT(mVideoBufferedRanges.IsEmpty(),
-             "Should have no buffered video ranges after evicting everything.");
+#ifdef DEBUG
+  {
+    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(
+        mAudioBufferedRanges.IsEmpty(),
+        "Should have no buffered video ranges after evicting everything.");
+    MOZ_ASSERT(
+        mVideoBufferedRanges.IsEmpty(),
+        "Should have no buffered video ranges after evicting everything.");
+  }
+#endif
   mSizeSourceBuffer = mVideoTracks.mSizeBuffer + mAudioTracks.mSizeBuffer;
   MOZ_ASSERT(mSizeSourceBuffer == 0,
              "Buffer should be empty after evicting everything!");

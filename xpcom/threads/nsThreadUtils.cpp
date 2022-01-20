@@ -697,22 +697,12 @@ extern "C" {
 // via the xpcom/rust/moz_task crate, which wraps them in safe Rust functions
 // that enable Rust code to get/create threads and dispatch runnables on them.
 
-nsresult NS_GetCurrentThreadEventTarget(nsIEventTarget** aResult) {
-  nsCOMPtr<nsIEventTarget> target = mozilla::GetCurrentEventTarget();
-  if (!target) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  target.forget(aResult);
-  return NS_OK;
+nsresult NS_GetCurrentThreadRust(nsIThread** aResult) {
+  return NS_GetCurrentThread(aResult);
 }
 
-nsresult NS_GetMainThreadEventTarget(nsIEventTarget** aResult) {
-  nsCOMPtr<nsIEventTarget> target = mozilla::GetMainThreadEventTarget();
-  if (!target) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  target.forget(aResult);
-  return NS_OK;
+nsresult NS_GetMainThreadRust(nsIThread** aResult) {
+  return NS_GetMainThread(aResult);
 }
 
 // NS_NewNamedThread's aStackSize parameter has the default argument
@@ -727,8 +717,8 @@ nsresult NS_NewNamedThreadWithDefaultStackSize(const nsACString& aName,
   return NS_NewNamedThread(aName, aResult, aEvent);
 }
 
-bool NS_IsCurrentThread(nsIEventTarget* aThread) {
-  return aThread->IsOnCurrentThread();
+bool NS_IsOnCurrentThread(nsIEventTarget* aTarget) {
+  return aTarget->IsOnCurrentThread();
 }
 
 nsresult NS_DispatchBackgroundTask(nsIRunnable* aEvent,

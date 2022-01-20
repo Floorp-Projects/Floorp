@@ -360,8 +360,9 @@ XRE_API(nsresult, XRE_ParseAppData,
 
 // This enum is not dense.  See GeckoProcessTypes.h for details.
 enum GeckoProcessType {
-#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, xre_name, \
-                           bin_type)                                     \
+#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, proc_typename, \
+                           process_bin_type, procinfo_typename,               \
+                           webidl_typename, allcaps_name)                     \
   GeckoProcessType_##enum_name = enum_value,
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE
@@ -416,9 +417,10 @@ XRE_API(bool, XRE_IsE10sParentProcess, ())
  * the e10s parent process or called in the main process when e10s is
  * disabled.
  */
-#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, xre_name, \
-                           bin_type)                                     \
-  XRE_API(bool, XRE_Is##xre_name##Process, ())
+#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, proc_typename, \
+                           process_bin_type, procinfo_typename,               \
+                           webidl_typename, allcaps_name)                     \
+  XRE_API(bool, XRE_Is##proc_typename##Process, ())
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE
 

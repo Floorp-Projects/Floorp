@@ -25,6 +25,12 @@
 
 namespace js {
 
+#ifdef ENABLE_RECORD_TUPLE
+// Defined in vm/RecordTupleShared.{h,cpp}. We cannot include that file
+// because it causes circular dependencies.
+extern bool IsExtendedPrimitiveWrapper(const JSObject& obj);
+#endif
+
 // Get the GC kind to use for scripted 'new', empty object literals ({}), and
 // the |Object| constructor.
 static inline gc::AllocKind NewObjectGCKind() { return gc::AllocKind::OBJECT4; }
@@ -206,6 +212,11 @@ inline js::GlobalObject& JSObject::nonCCWGlobal() const {
 inline bool JSObject::nonProxyIsExtensible() const {
   MOZ_ASSERT(!uninlinedIsProxyObject());
 
+#ifdef ENABLE_RECORD_TUPLE
+  if (js::IsExtendedPrimitiveWrapper(*this)) {
+    return false;
+  }
+#endif
   // [[Extensible]] for ordinary non-proxy objects is an object flag.
   return !hasFlag(js::ObjectFlag::NotExtensible);
 }

@@ -22,7 +22,7 @@ import requests
 import subprocess
 
 RE_BUG = re.compile("Bug (\d+)")
-RE_COMMITMSG = re.compile("Update (.+) to (.+)")
+RE_COMMITMSG = re.compile("Update (.+) to ([^\s]+)(.*)")
 
 
 class Revision:

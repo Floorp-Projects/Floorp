@@ -16,6 +16,16 @@ pub const MZ_FINISH: isize = MZFlush::Finish as isize;
 use super::*;
 use crate::mem;
 
+// miniz_oxide doesn't provide any error messages (yet?)
+#[derive(Default)]
+pub struct ErrorMessage;
+
+impl ErrorMessage {
+    pub fn get(&self) -> Option<&str> {
+        None
+    }
+}
+
 fn format_from_bool(zlib_header: bool) -> DataFormat {
     if zlib_header {
         DataFormat::Zlib
@@ -73,7 +83,7 @@ impl InflateBackend for Inflate {
             },
             Err(status) => match status {
                 MZError::Buf => Ok(Status::BufError),
-                _ => mem::decompress_failed(),
+                _ => mem::decompress_failed(ErrorMessage),
             },
         }
     }
@@ -144,11 +154,11 @@ impl DeflateBackend for Deflate {
             Ok(status) => match status {
                 MZStatus::Ok => Ok(Status::Ok),
                 MZStatus::StreamEnd => Ok(Status::StreamEnd),
-                MZStatus::NeedDict => Err(CompressError(())),
+                MZStatus::NeedDict => mem::compress_failed(ErrorMessage),
             },
             Err(status) => match status {
                 MZError::Buf => Ok(Status::BufError),
-                _ => Err(CompressError(())),
+                _ => mem::compress_failed(ErrorMessage),
             },
         }
     }

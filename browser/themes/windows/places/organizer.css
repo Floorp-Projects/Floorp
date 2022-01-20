@@ -223,7 +223,6 @@
 /* Tree */
 
 #contentView treecol {
-  padding: 4px;
   /* Use box-shadow to draw a bottom border instead of border-bottom
    * because otherwise the items on contentView won't be perfectly
    * aligned with the items on the sidebar. */

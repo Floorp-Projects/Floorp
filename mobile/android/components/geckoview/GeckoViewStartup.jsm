@@ -21,6 +21,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const { debug, warn } = GeckoViewUtils.initLogging("Startup");
 
+var { DelayedInit } = ChromeUtils.import(
+  "resource://gre/modules/DelayedInit.jsm"
+);
+
+function InitLater(fn, object, name) {
+  return DelayedInit.schedule(fn, object, name, 15000 /* 15s max wait */);
+}
+
 const JSWINDOWACTORS = {
   LoadURIDelegate: {
     child: {
@@ -34,6 +42,15 @@ const JSWINDOWACTORS = {
         click: { capture: false, mozSystemGroup: true },
         contextmenu: { capture: false, mozSystemGroup: true },
         DOMPopupBlocked: { capture: false, mozSystemGroup: true },
+      },
+    },
+    allFrames: true,
+  },
+  GeckoViewFormValidation: {
+    child: {
+      moduleURI: "resource:///actors/GeckoViewFormValidationChild.jsm",
+      events: {
+        MozInvalidForm: {},
       },
     },
     allFrames: true,
@@ -124,30 +141,20 @@ class GeckoViewStartup {
           }
         );
 
-        // Handle invalid form submission. If we don't hook up to this,
-        // invalid forms are allowed to be submitted!
-        Services.obs.addObserver(
-          {
-            QueryInterface: ChromeUtils.generateQI([
-              "nsIObserver",
-              "nsIFormSubmitObserver",
-            ]),
-            notifyInvalidSubmit: (form, element) => {
-              // We should show the validation message here, bug 1510450.
-            },
-          },
-          "invalidformsubmit"
-        );
-
+        // Parent process only
         if (
           Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT
         ) {
           ActorManagerParent.addJSWindowActors(JSWINDOWACTORS);
 
-          GeckoViewUtils.addLazyGetter(this, "ContentCrashHandler", {
-            module: "resource://gre/modules/ContentCrashHandler.jsm",
-            observers: ["ipc:content-shutdown"],
+          GeckoViewUtils.addLazyGetter(this, "ChildCrashHandler", {
+            module: "resource://gre/modules/ChildCrashHandler.jsm",
+            observers: ["ipc:content-shutdown", "compositor:process-aborted"],
           });
+
+          EventDispatcher.instance.registerListener(this, [
+            "GeckoView:StorageDelegate:Attached",
+          ]);
         }
         break;
       }
@@ -245,6 +252,15 @@ class GeckoViewStartup {
           Ci.nsIPrefLocalizedString,
           pls
         );
+        break;
+
+      case "GeckoView:StorageDelegate:Attached":
+        InitLater(() => {
+          const loginDetection = Cc[
+            "@mozilla.org/login-detection-service;1"
+          ].createInstance(Ci.nsILoginDetectionService);
+          loginDetection.init();
+        });
         break;
     }
   }

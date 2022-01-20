@@ -85,8 +85,8 @@ JS_PUBLIC_API void AssertObjectBelongsToCurrentThread(JSObject* obj);
  * See also CompileOptions::setSkipFilenameValidation to opt-out of the callback
  * for specific parse jobs.
  */
-using FilenameValidationCallback = bool (*)(const char* filename,
-                                            bool isSystemRealm);
+using FilenameValidationCallback = bool (*)(JSContext* cx,
+                                            const char* filename);
 JS_PUBLIC_API void SetFilenameValidationCallback(FilenameValidationCallback cb);
 
 } /* namespace JS */

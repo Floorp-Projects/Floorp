@@ -123,16 +123,10 @@ impl<L> EntryCustom<L> {
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkEnumerateInstanceLayerProperties.html>"]
     pub fn enumerate_instance_layer_properties(&self) -> VkResult<Vec<vk::LayerProperties>> {
         unsafe {
-            let mut count = 0;
-            self.entry_fn_1_0
-                .enumerate_instance_layer_properties(&mut count, ptr::null_mut())
-                .result()?;
-            let mut v = Vec::with_capacity(count as usize);
-            let err_code = self
-                .entry_fn_1_0
-                .enumerate_instance_layer_properties(&mut count, v.as_mut_ptr());
-            v.set_len(count as usize);
-            err_code.result_with_success(v)
+            read_into_uninitialized_vector(|count, data| {
+                self.entry_fn_1_0
+                    .enumerate_instance_layer_properties(count, data)
+            })
         }
     }
 
@@ -141,18 +135,10 @@ impl<L> EntryCustom<L> {
         &self,
     ) -> VkResult<Vec<vk::ExtensionProperties>> {
         unsafe {
-            let mut count = 0;
-            self.entry_fn_1_0
-                .enumerate_instance_extension_properties(ptr::null(), &mut count, ptr::null_mut())
-                .result()?;
-            let mut data = Vec::with_capacity(count as usize);
-            let err_code = self.entry_fn_1_0.enumerate_instance_extension_properties(
-                ptr::null(),
-                &mut count,
-                data.as_mut_ptr(),
-            );
-            data.set_len(count as usize);
-            err_code.result_with_success(data)
+            read_into_uninitialized_vector(|count, data| {
+                self.entry_fn_1_0
+                    .enumerate_instance_extension_properties(ptr::null(), count, data)
+            })
         }
     }
 

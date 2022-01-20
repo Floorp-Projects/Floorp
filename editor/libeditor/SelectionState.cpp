@@ -8,7 +8,8 @@
 #include "EditorUtils.h"      // for EditorUtils
 #include "HTMLEditHelpers.h"  // for JoinNodesDirection, SplitNodeDirection
 
-#include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc.
+#include "mozilla/Assertions.h"    // for MOZ_ASSERT, etc.
+#include "mozilla/IntegerRange.h"  // for IntegerRange
 #include "mozilla/dom/RangeBinding.h"
 #include "mozilla/dom/Selection.h"  // for Selection
 #include "nsAString.h"              // for nsAString::Length
@@ -53,9 +54,12 @@ void SelectionState::SaveSelection(Selection& aSelection) {
   }
 
   // now store the selection ranges
-  for (uint32_t i = 0; i < aSelection.RangeCount(); i++) {
+  const uint32_t rangeCount = aSelection.RangeCount();
+  for (const uint32_t i : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(aSelection.RangeCount() == rangeCount);
     const nsRange* range = aSelection.GetRangeAt(i);
-    if (NS_WARN_IF(!range)) {
+    MOZ_ASSERT(range);
+    if (MOZ_UNLIKELY(NS_WARN_IF(!range))) {
       continue;
     }
     mArray[i]->StoreRange(*range);

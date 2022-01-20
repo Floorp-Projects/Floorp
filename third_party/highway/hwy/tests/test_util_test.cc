@@ -30,19 +30,19 @@ struct TestName {
   HWY_NOINLINE void operator()(T t, D d) {
     char num[10];
     std::string expected = IsFloat<T>() ? "f" : (IsSigned<T>() ? "i" : "u");
-    snprintf(num, sizeof(num), "%zu", sizeof(T) * 8);
+    snprintf(num, sizeof(num), "%u" , static_cast<unsigned>(sizeof(T) * 8));
     expected += num;
 
     const size_t N = Lanes(d);
     if (N != 1) {
       expected += 'x';
-      snprintf(num, sizeof(num), "%zu", N);
+      snprintf(num, sizeof(num), "%u", static_cast<unsigned>(N));
       expected += num;
     }
     const std::string actual = TypeName(t, N);
     if (expected != actual) {
-      NotifyFailure(__FILE__, __LINE__, expected.c_str(), 0, expected.c_str(),
-                    actual.c_str());
+      HWY_ABORT("%s mismatch: expected '%s', got '%s'.\n",
+                hwy::TargetName(HWY_TARGET), expected.c_str(), actual.c_str());
     }
   }
 };
@@ -94,9 +94,17 @@ HWY_NOINLINE void TestAllEqual() {
 HWY_AFTER_NAMESPACE();
 
 #if HWY_ONCE
+
 namespace hwy {
 HWY_BEFORE_TEST(TestUtilTest);
 HWY_EXPORT_AND_TEST_P(TestUtilTest, TestAllName);
 HWY_EXPORT_AND_TEST_P(TestUtilTest, TestAllEqual);
 }  // namespace hwy
+
+// Ought not to be necessary, but without this, no tests run on RVV.
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 #endif

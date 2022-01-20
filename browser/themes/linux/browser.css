@@ -24,8 +24,6 @@
 
   --panel-separator-color: ThreeDShadow;
 
-  --tabs-border-color: rgba(0,0,0,.3);
-
   --chrome-content-separator-color: ThreeDShadow;
 }
 
@@ -71,7 +69,7 @@
 }
 
 #nav-bar:not([tabs-hidden="true"]) {
-  box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--tabs-border-color);
+  box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--lwt-tabs-border-color, rgba(0,0,0,.3));
   /* This is needed for some toolbar button animations. Gross :( */
   position: relative;
 }
@@ -331,15 +329,47 @@ menuitem.bookmark-item {
   border-radius: inherit;
 }
 
-/* We draw to titlebar when Gkt+ CSD is available */
+/**
+ * Titlebar drawing:
+ *
+ * We draw to titlebar when Gkt+ CSD is available. This is mostly
+ * straight-forward, but getting the window corners to look perfect is a bit
+ * tricky, as there are different variables to take into account.
+ *
+ * GTK windows have both a window radius (exposed via the
+ * `-moz-gtk-csd-titlebar-radius`) environment variable, and a window shadow
+ * (which we can't read back from GTK). Note that the native drawing does draw
+ * the shadow already.
+ *
+ * So there are multiple configurations to consider:
+ *
+ *  * Whether we're using Wayland vs. X11
+ *  * Whether we're using a lightweight theme or not.
+ *
+ * Consider the simple case (default system theme). We render the titlebar
+ * using `-moz-default-appearance: -moz-window-titlebar;`, then don't draw
+ * anything else. Success!
+ *
+ * Now consider lightweight themes: We need to render the native titlebar
+ * behind the "theme" titlebar in order to render the native shadow on X11. But
+ * we can't just use the #navigator-toolbox as that's where the lightweight
+ * theme background goes, so we need to use the #navigator-toolbox-background.
+ * We still have to apply the corner radii to #navigator-toolbox of course, so
+ * the lightweight theme background doesn't overflow the titlebar radius.
+ *
+ * In a Wayland-only world, the setup could be much simpler: We could apply the
+ * titlebar appearance to #navigator-toolbox, and just apply the border radius
+ * on the <body> or #navigator-toolbox-background to clip the extra shadow when
+ * using the system theme. For the lightweight theme, we could use
+ * appearance: none and the titlebar radius on the toolbox. In X11 however, we
+ * do need the native titlebar behind at all times.
+ */
 @media (-moz-gtk-csd-available) {
-  :root[tabsintitlebar][sizemode="normal"]:not(:-moz-lwtheme) {
+  :root[tabsintitlebar][sizemode="normal"] {
     background-color: transparent;
   }
 
   :root[tabsintitlebar] #titlebar {
-    appearance: auto;
-    -moz-default-appearance: -moz-window-titlebar-maximized;
     color: CaptionText;
   }
 
@@ -351,31 +381,30 @@ menuitem.bookmark-item {
     color: inherit;
   }
 
-  :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #titlebar {
+  :root[tabsintitlebar] #navigator-toolbox-background {
     appearance: auto;
+    -moz-default-appearance: -moz-window-titlebar-maximized;
+  }
+
+  :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox-background {
     -moz-default-appearance: -moz-window-titlebar;
   }
-  :root[tabsintitlebar]:not([inDOMFullscreen]) #titlebar:-moz-lwtheme {
-    visibility: hidden;
-  }
-  :root[tabsintitlebar]:not([inDOMFullscreen]) #toolbar-menubar:-moz-lwtheme,
-  :root[tabsintitlebar]:not([inDOMFullscreen]) #TabsToolbar:-moz-lwtheme {
-    visibility: visible;
+
+  :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox:-moz-lwtheme,
+  :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) ::backdrop {
+    border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
+    border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
   }
 
   /* When temporarily showing the menu bar, make it at least as tall as the tab
    * bar such that the window controls don't appear to move up. */
   :root[tabsintitlebar] #toolbar-menubar[autohide="true"] {
-    height: var(--tab-min-height);
-  }
-  :root[tabsintitlebar][sizemode="normal"] #toolbar-menubar[autohide="true"] {
-    height: var(--tab-min-height);
+    height: calc(var(--tab-min-height) + 2 * var(--tab-block-margin));
   }
 
   /* Make #TabsToolbar transparent as we style underlying #titlebar with
    * -moz-window-titlebar (Gtk+ theme). */
-  :root[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) #TabsToolbar,
-  :root[tabsintitlebar][sizemode="maximized"] #TabsToolbar,
+  :root[tabsintitlebar] #TabsToolbar,
   :root[tabsintitlebar] #toolbar-menubar {
     appearance: none;
     color: inherit;
@@ -399,18 +428,59 @@ menuitem.bookmark-item {
   .titlebar-min {
     appearance: auto;
     -moz-default-appearance: -moz-window-button-minimize;
+    -moz-box-ordinal-group: env(-moz-gtk-csd-minimize-button-position);
   }
   .titlebar-max {
     appearance: auto;
     -moz-default-appearance: -moz-window-button-maximize;
+    -moz-box-ordinal-group: env(-moz-gtk-csd-maximize-button-position);
   }
   .titlebar-restore {
     appearance: auto;
     -moz-default-appearance: -moz-window-button-restore;
+    -moz-box-ordinal-group: env(-moz-gtk-csd-maximize-button-position);
   }
   .titlebar-close {
     appearance: auto;
     -moz-default-appearance: -moz-window-button-close;
+    -moz-box-ordinal-group: env(-moz-gtk-csd-close-button-position);
+  }
+
+  /* When using lightweight themes, use our own buttons since native ones might
+   * assume a native background in order to be visible. */
+  .titlebar-button:-moz-lwtheme {
+    appearance: none;
+    border-radius: 100%;
+  }
+  .titlebar-button > .toolbarbutton-icon:-moz-lwtheme {
+    padding: 6px;
+    -moz-context-properties: stroke;
+    stroke: currentColor;
+  }
+  .titlebar-min:-moz-lwtheme {
+    list-style-image: url(chrome://browser/skin/window-controls/minimize.svg);
+  }
+  .titlebar-max:-moz-lwtheme {
+    list-style-image: url(chrome://browser/skin/window-controls/maximize.svg);
+  }
+  .titlebar-restore:-moz-lwtheme {
+    list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
+  }
+  .titlebar-close:-moz-lwtheme {
+    list-style-image: url(chrome://browser/skin/window-controls/close.svg);
+  }
+  .titlebar-button:-moz-lwtheme:hover {
+    background-color: color-mix(in srgb, currentColor 12%, transparent);
+  }
+  .titlebar-button:-moz-lwtheme:hover:active {
+    background-color: color-mix(in srgb, currentColor 20%, transparent);
+  }
+  .titlebar-close:-moz-lwtheme:hover {
+    background-color: #d70022;
+    color: white;
+  }
+  .titlebar-close:-moz-lwtheme:hover:active {
+    background-color: #ff0039;
   }
 
   @media not (-moz-gtk-csd-minimize-button) {
@@ -431,8 +501,7 @@ menuitem.bookmark-item {
   }
 
   @media (-moz-gtk-csd-reversed-placement) {
-    .titlebar-buttonbox-container,
-    .titlebar-close {
+    .titlebar-buttonbox-container {
       -moz-box-ordinal-group: 0;
     }
   }

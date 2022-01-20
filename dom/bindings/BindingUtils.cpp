@@ -807,13 +807,16 @@ static bool DefineConstructor(JSContext* cx, JS::Handle<JSObject*> global,
 static bool DefineConstructor(JSContext* cx, JS::Handle<JSObject*> global,
                               const char* name,
                               JS::Handle<JSObject*> constructor) {
-  PinnedStringId nameStr;
-  return nameStr.init(cx, name) &&
-         DefineConstructor(cx, global, nameStr, constructor);
+  JSString* nameStr = JS_AtomizeString(cx, name);
+  if (!nameStr) {
+    return false;
+  }
+  JS::Rooted<JS::PropertyKey> nameKey(cx,
+                                      JS::PropertyKey::fromNonIntAtom(nameStr));
+  return DefineConstructor(cx, global, nameKey, constructor);
 }
 
-// name must be a pinned string (or JS::PropertyKey::fromPinnedString will
-// assert).
+// name must be an atom (or JS::PropertyKey::fromNonIntAtom will assert).
 static JSObject* CreateInterfaceObject(
     JSContext* cx, JS::Handle<JSObject*> global,
     JS::Handle<JSObject*> constructorProto, const JSClass* constructorClass,
@@ -904,7 +907,7 @@ static JSObject* CreateInterfaceObject(
     return nullptr;
   }
 
-  JS::Rooted<jsid> nameStr(cx, JS::PropertyKey::fromPinnedString(name));
+  JS::Rooted<jsid> nameStr(cx, JS::PropertyKey::fromNonIntAtom(name));
   if (defineOnGlobal && !DefineConstructor(cx, global, nameStr, constructor)) {
     return nullptr;
   }
@@ -1068,10 +1071,7 @@ void CreateInterfaceObjects(
 
   bool isChrome = nsContentUtils::ThreadsafeIsSystemCaller(cx);
 
-  // Might as well intern, since we're going to need an atomized
-  // version of name anyway when we stick our constructor on the
-  // global.
-  JS::Rooted<JSString*> nameStr(cx, JS_AtomizeAndPinString(cx, name));
+  JS::Rooted<JSString*> nameStr(cx, JS_AtomizeString(cx, name));
   if (!nameStr) {
     return;
   }

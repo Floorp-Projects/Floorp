@@ -6,6 +6,7 @@
 
 #include "nsNSSComponent.h"
 
+#include "BinaryPath.h"
 #include "CryptoTask.h"
 #include "EnterpriseRoots.h"
 #include "ExtendedValidation.h"
@@ -21,6 +22,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/EndianUtils.h"
+#include "mozilla/FilePreferences.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
@@ -100,6 +102,72 @@ int nsNSSComponent::mInstanceCount = 0;
 // Forward declaration.
 nsresult CommonInit();
 
+// Take an nsIFile and get a c-string representation of the location of that
+// file (encapsulated in an nsACString). This function handles a
+// platform-specific issue on Windows where Unicode characters that cannot be
+// mapped to the system's codepage will be dropped, resulting in a c-string
+// that is useless to describe the location of the file in question.
+// This operation is generally to be avoided, except when interacting with
+// third-party or legacy libraries that cannot handle `nsIFile`s (such as NSS).
+nsresult FileToCString(const nsCOMPtr<nsIFile>& file, nsACString& result) {
+#ifdef XP_WIN
+  // Native path will drop Unicode characters that cannot be mapped to system's
+  // codepage, using short (canonical) path as workaround.
+  nsCOMPtr<nsILocalFileWin> fileWin = do_QueryInterface(file);
+  if (!fileWin) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't get nsILocalFileWin"));
+    return NS_ERROR_FAILURE;
+  }
+  return fileWin->GetNativeCanonicalPath(result);
+#else
+  return file->GetNativePath(result);
+#endif
+}
+
+void TruncateFromLastDirectorySeparator(nsCString& path) {
+  static const nsAutoCString kSeparatorString(
+      mozilla::FilePreferences::kPathSeparator);
+  int32_t index = path.RFind(kSeparatorString);
+  if (index == kNotFound) {
+    return;
+  }
+  path.Truncate(index);
+}
+
+bool LoadIPCClientCerts() {
+  // This returns the path to the binary currently running, which in most
+  // cases is "plugin-container".
+  UniqueFreePtr<char> pluginContainerPath(BinaryPath::Get());
+  if (!pluginContainerPath) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("failed to get get plugin-container path"));
+    return false;
+  }
+  nsAutoCString ipcClientCertsDirString(pluginContainerPath.get());
+  // On most platforms, ipcclientcerts is in the same directory as
+  // plugin-container. To obtain the path to that directory, truncate from
+  // the last directory separator.
+  // On macOS, plugin-container is in
+  // Firefox.app/Contents/MacOS/plugin-container.app/Contents/MacOS/,
+  // whereas ipcclientcerts is in Firefox.app/Contents/MacOS/. Consequently,
+  // this truncation from the last directory separator has to happen 4 times
+  // total. Normally this would be done using nsIFile APIs, but due to when
+  // this is initialized in the socket process, those aren't available.
+  TruncateFromLastDirectorySeparator(ipcClientCertsDirString);
+#ifdef XP_MACOSX
+  TruncateFromLastDirectorySeparator(ipcClientCertsDirString);
+  TruncateFromLastDirectorySeparator(ipcClientCertsDirString);
+  TruncateFromLastDirectorySeparator(ipcClientCertsDirString);
+#endif
+  if (!LoadIPCClientCertsModule(ipcClientCertsDirString)) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("failed to load ipcclientcerts from '%s'",
+             ipcClientCertsDirString.get()));
+    return false;
+  }
+  return true;
+}
+
 // This function can be called from chrome or content or socket processes
 // to ensure that NSS is initialized.
 bool EnsureNSSInitializedChromeOrContent() {
@@ -149,6 +217,10 @@ bool EnsureNSSInitializedChromeOrContent() {
     if (NS_FAILED(CommonInit())) {
       return false;
     }
+    // If ipcclientcerts fails to load, client certificate authentication won't
+    // work (if networking is done on the socket process). This is preferable
+    // to stopping the program entirely, so treat this as best-effort.
+    Unused << NS_WARN_IF(!LoadIPCClientCerts());
     initialized = true;
     return true;
   }
@@ -218,8 +290,6 @@ void nsNSSComponent::GetRevocationBehaviorFromPrefs(
   hardTimeoutMillis =
       std::min(hardTimeoutMillis, OCSP_TIMEOUT_MILLISECONDS_HARD_MAX);
   hardTimeout = TimeDuration::FromMilliseconds(hardTimeoutMillis);
-
-  ClearSSLExternalAndInternalSessionCache();
 }
 
 nsNSSComponent::nsNSSComponent()
@@ -507,6 +577,7 @@ void nsNSSComponent::UnloadEnterpriseRoots() {
   MutexAutoLock lock(mMutex);
   mEnterpriseCerts.clear();
   setValidationOptions(false, lock);
+  ClearSSLExternalAndInternalSessionCache();
 }
 
 static const char* kEnterpriseRootModePref =
@@ -751,18 +822,7 @@ static nsresult GetDirectoryPath(const char* directoryKey, nsCString& result) {
             ("could not get '%s' from directory service", directoryKey));
     return rv;
   }
-#ifdef XP_WIN
-  // Native path will drop Unicode characters that cannot be mapped to system's
-  // codepage, using short (canonical) path as workaround.
-  nsCOMPtr<nsILocalFileWin> directoryWin = do_QueryInterface(directory);
-  if (!directoryWin) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't get nsILocalFileWin"));
-    return NS_ERROR_FAILURE;
-  }
-  return directoryWin->GetNativeCanonicalPath(result);
-#else
-  return directory->GetNativePath(result);
-#endif
+  return FileToCString(directory, result);
 }
 
 class BackgroundLoadOSClientCertsModuleTask final : public CryptoTask {
@@ -841,8 +901,6 @@ nsNSSComponent::HasActiveSmartCards(bool* result) {
 NS_IMETHODIMP
 nsNSSComponent::HasUserCertsInstalled(bool* result) {
   NS_ENSURE_ARG_POINTER(result);
-
-  BlockUntilLoadableCertsLoaded();
 
   // FindClientCertificatesWithPrivateKeys won't ever return an empty list, so
   // all we need to do is check if this is null or not.
@@ -942,18 +1000,7 @@ static nsresult GetNSS3Directory(nsCString& result) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't get parent directory?"));
     return rv;
   }
-#ifdef XP_WIN
-  // Native path will drop Unicode characters that cannot be mapped to system's
-  // codepage, using short (canonical) path as workaround.
-  nsCOMPtr<nsILocalFileWin> nss3DirectoryWin = do_QueryInterface(nss3Directory);
-  if (!nss3DirectoryWin) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't get nsILocalFileWin"));
-    return NS_ERROR_FAILURE;
-  }
-  return nss3DirectoryWin->GetNativeCanonicalPath(result);
-#else
-  return nss3Directory->GetNativePath(result);
-#endif
+  return FileToCString(nss3Directory, result);
 }
 
 // The loadable roots library is probably in the same directory we loaded the
@@ -2621,6 +2668,9 @@ UniqueCERTCertList FindClientCertificatesWithPrivateKeys() {
   });
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("FindClientCertificatesWithPrivateKeys"));
+
+  BlockUntilLoadableCertsLoaded();
+
   UniqueCERTCertList certsWithPrivateKeys(CERT_NewCertList());
   if (!certsWithPrivateKeys) {
     return nullptr;

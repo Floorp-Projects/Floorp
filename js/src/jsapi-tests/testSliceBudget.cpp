@@ -73,3 +73,59 @@ BEGIN_TEST(testSliceBudgetTimeZero) {
   return true;
 }
 END_TEST(testSliceBudgetTimeZero)
+
+BEGIN_TEST(testSliceBudgetInterruptibleTime) {
+  mozilla::Atomic<bool> wantInterrupt(false);
+
+  // Interruptible 100 second budget. This test will finish in well under that
+  // time.
+  static constexpr int64_t LONG_TIME = 100000;
+  SliceBudget budget = SliceBudget(TimeBudget(LONG_TIME), &wantInterrupt);
+  CHECK(!budget.isUnlimited());
+  CHECK(!budget.isWorkBudget());
+  CHECK(budget.isTimeBudget());
+
+  CHECK(budget.timeBudget() == LONG_TIME);
+
+  CHECK(!budget.isOverBudget());
+
+  // We do a little work, very small amount of time passes.
+  budget.step(500);
+
+  // Not enough work to check interrupt, and no interrupt anyway.
+  CHECK(!budget.isOverBudget());
+
+  // External signal: interrupt requested.
+  wantInterrupt = true;
+
+  // Interrupt requested, but not enough work has been done to check for it.
+  CHECK(!budget.isOverBudget());
+
+  // Do enough work for an expensive check.
+  budget.step(1000);
+
+  // Interrupt requested! This will reset the external flag, but internally
+  // remember that an interrupt was requested.
+  CHECK(budget.isOverBudget());
+  CHECK(!wantInterrupt);
+  CHECK(budget.isOverBudget());
+
+  // Caller would handle the interrupt here. Normally, the SliceBudget would
+  // then be discarded. But it can be reset and reused, which we'll test here.
+
+  budget.reset();
+  CHECK(!budget.isOverBudget());
+  budget.step(5);
+  CHECK(!budget.isOverBudget());
+
+  // The external signal gets picked up only when isOverBudget() is called.
+  wantInterrupt = true;
+  budget.step(2000);
+  wantInterrupt = false;
+  CHECK(!budget.isOverBudget());
+
+  // This doesn't test the deadline is correct as that would require waiting.
+
+  return true;
+}
+END_TEST(testSliceBudgetInterruptibleTime)

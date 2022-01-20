@@ -644,11 +644,12 @@ var gHistorySwipeAnimation = {
    * by the platform/configuration.
    */
   init: function HSA_init() {
+    this.isLTR = document.documentElement.matches(":-moz-locale-dir(ltr)");
+
     if (!this._isSupported()) {
       return;
     }
 
-    this.isLTR = document.documentElement.matches(":-moz-locale-dir(ltr)");
     this._isStoppingAnimation = false;
     if (
       !Services.prefs.getBoolPref(

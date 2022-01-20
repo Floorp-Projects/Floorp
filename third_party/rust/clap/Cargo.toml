@@ -11,8 +11,9 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "clap"
-version = "2.33.3"
+version = "2.34.0"
 authors = ["Kevin K. <kbknapp@gmail.com>"]
 exclude = ["examples/*", "clap-test/*", "tests/*", "benches/*", "*.png", "clap-perf/*", "*.dot"]
 description = "A simple to use, efficient, and full-featured Command Line Argument Parser\n"
@@ -102,7 +103,6 @@ color = ["ansi_term", "atty"]
 debug = []
 default = ["suggestions", "color", "vec_map"]
 doc = ["yaml"]
-lints = ["clippy"]
 nightly = []
 no_cargo = []
 suggestions = ["strsim"]
@@ -110,7 +110,7 @@ unstable = []
 wrap_help = ["term_size", "textwrap/term_size"]
 yaml = ["yaml-rust"]
 [target."cfg(not(windows))".dependencies.ansi_term]
-version = "0.11"
+version = "0.12"
 optional = true
 [badges.appveyor]
 repository = "clap-rs/clap"

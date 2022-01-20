@@ -343,6 +343,7 @@ fission-status-experiment-control = Disabled by experiment
 fission-status-experiment-treatment = Enabled by experiment
 fission-status-disabled-by-e10s-env = Disabled by environment
 fission-status-enabled-by-env = Enabled by environment
+fission-status-disabled-by-env = Disabled by environment
 fission-status-disabled-by-safe-mode = Disabled by safe mode
 fission-status-enabled-by-default = Enabled by default
 fission-status-disabled-by-default = Disabled by default

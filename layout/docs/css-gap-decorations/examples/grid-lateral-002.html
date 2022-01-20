@@ -1,0 +1,66 @@
+<!doctype html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<title>Examples of column-rule-lateral-inset-start</title>
+<style>
+html,body {
+  color:black; background-color:white; font:20px/1 monospace;
+}
+
+.grid {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  gap: 4px 16px;
+
+  column-rule: solid blue;
+
+  margin-right: 8ch;
+  background: lightgrey;
+  padding: 10px;
+}
+
+x {
+  inline-size: 50px;
+  block-size: 1.5em;
+  background: grey;
+}
+
+.test1 {
+  column-rule-lateral-inset-start: 0;
+}
+.test2 {
+  column-rule-lateral-inset-start: 3px;
+}
+
+.grid::after {
+  position: absolute;
+  white-space: pre;
+  bottom: -2em;
+  content: attr(test);
+  font-size: 10px;
+}
+pre {
+  font-size: 10px;
+}
+</style>
+
+<pre>
+Examples of aligning a rule at the start of the gap with a lateral offset:
+</pre>
+<div class="grid test1"><x>1</x><x>2</x></div>
+<div class="grid test2"><x>1</x><x>2</x></div>
+
+
+<script>
+window.onload = function() {
+  [...document.querySelectorAll('.grid')].forEach(function(elm) {
+    const cs = window.getComputedStyle(elm);
+    elm.setAttribute("test", 
+      "column-rule-lateral-inset-start: " + cs.columnRuleLateralInsetStart
+    );
+  });
+}
+</script>

@@ -12,6 +12,7 @@
 #include "GLConsts.h"
 #include "InputData.h"
 #include "LiveResizeListener.h"
+#include "SwipeTracker.h"
 #include "TouchEvents.h"
 #include "WritingModes.h"
 #include "X11UndefineNone.h"
@@ -37,10 +38,12 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/SimpleGestureEventBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
+#include "mozilla/layers/TouchActionHelper.h"
 #include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/APZThreadUtils.h"
@@ -160,7 +163,8 @@ nsBaseWidget::nsBaseWidget()
       mUseAttachedEvents(false),
       mIMEHasFocus(false),
       mIMEHasQuit(false),
-      mIsFullyOccluded(false) {
+      mIsFullyOccluded(false),
+      mCurrentPanGestureBelongsToSwipe(false) {
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
   printf("WIDGETS+ = %d\n", gNumWidgets);
@@ -413,6 +417,11 @@ void nsBaseWidget::FreeLocalesChangedObserver() {
 //-------------------------------------------------------------------------
 
 nsBaseWidget::~nsBaseWidget() {
+  if (mSwipeTracker) {
+    mSwipeTracker->Destroy();
+    mSwipeTracker = nullptr;
+  }
+
   IMEStateManager::WidgetDestroyed(this);
 
   FreeLocalesChangedObserver();
@@ -842,21 +851,13 @@ void nsBaseWidget::ConfigureAPZCTreeManager() {
     mAPZC->SetKeyboardMap(map);
   }
 
-  RefPtr<IAPZCTreeManager> treeManager = mAPZC;  // for capture by the lambdas
-
   ContentReceivedInputBlockCallback callback(
-      [treeManager](uint64_t aInputBlockId, bool aPreventDefault) {
+      [treeManager = RefPtr{mAPZC.get()}](uint64_t aInputBlockId,
+                                          bool aPreventDefault) {
         MOZ_ASSERT(NS_IsMainThread());
         treeManager->ContentReceivedInputBlock(aInputBlockId, aPreventDefault);
       });
   mAPZEventState = new APZEventState(this, std::move(callback));
-
-  mSetAllowedTouchBehaviorCallback =
-      [treeManager](uint64_t aInputBlockId,
-                    const nsTArray<TouchBehaviorFlags>& aFlags) {
-        MOZ_ASSERT(NS_IsMainThread());
-        treeManager->SetAllowedTouchBehavior(aInputBlockId, aFlags);
-      };
 
   mRootContentController = CreateRootContentController();
   if (mRootContentController) {
@@ -940,15 +941,15 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
     if (WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent()) {
       nsTArray<TouchBehaviorFlags> allowedTouchBehaviors;
       if (touchEvent->mMessage == eTouchStart) {
-        if (StaticPrefs::layout_css_touch_action_enabled()) {
-          allowedTouchBehaviors =
-              APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
-                  this, GetDocument(), *(original->AsTouchEvent()),
-                  inputBlockId, mSetAllowedTouchBehaviorCallback);
+        auto& originalEvent = *original->AsTouchEvent();
+        MOZ_ASSERT(NS_IsMainThread());
+        allowedTouchBehaviors = TouchActionHelper::GetAllowedTouchBehavior(
+            this, GetDocument(), originalEvent);
+        if (!allowedTouchBehaviors.IsEmpty()) {
+          mAPZC->SetAllowedTouchBehavior(inputBlockId, allowedTouchBehaviors);
         }
         postLayerization = APZCCallbackHelper::SendSetTargetAPZCNotification(
-            this, GetDocument(), *(original->AsTouchEvent()), rootLayersId,
-            inputBlockId);
+            this, GetDocument(), originalEvent, rootLayersId, inputBlockId);
       }
       mAPZEventState->ProcessTouchEvent(*touchEvent, targetGuid, inputBlockId,
                                         aApzResult.GetStatus(), status,
@@ -956,7 +957,7 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
     } else if (WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent()) {
       MOZ_ASSERT(wheelEvent->mFlags.mHandledByAPZ);
       postLayerization = APZCCallbackHelper::SendSetTargetAPZCNotification(
-          this, GetDocument(), *(original->AsWheelEvent()), rootLayersId,
+          this, GetDocument(), *original->AsWheelEvent(), rootLayersId,
           inputBlockId);
       if (wheelEvent->mCanTriggerSwipe) {
         ReportSwipeStarted(inputBlockId, wheelEvent->TriggersSwipe());
@@ -965,7 +966,7 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
     } else if (WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
       MOZ_ASSERT(mouseEvent->mFlags.mHandledByAPZ);
       postLayerization = APZCCallbackHelper::SendSetTargetAPZCNotification(
-          this, GetDocument(), *(original->AsMouseEvent()), rootLayersId,
+          this, GetDocument(), *original->AsMouseEvent(), rootLayersId,
           inputBlockId);
       mAPZEventState->ProcessMouseEvent(*mouseEvent, inputBlockId);
     }
@@ -1144,6 +1145,12 @@ void nsBaseWidget::DispatchEventToAPZOnly(mozilla::WidgetInputEvent* aEvent) {
     MOZ_ASSERT(APZThreadUtils::IsControllerThread());
     mAPZC->InputBridge()->ReceiveInputEvent(*aEvent);
   }
+}
+
+bool nsBaseWidget::DispatchWindowEvent(WidgetGUIEvent& event) {
+  nsEventStatus status;
+  DispatchEvent(&event, status);
+  return ConvertStatus(status);
 }
 
 Document* nsBaseWidget::GetDocument() const {
@@ -2037,6 +2044,160 @@ nsresult nsBaseWidget::AsyncEnableDragDrop(bool aEnable) {
           "AsyncEnableDragDropFn",
           [this, aEnable, kungFuDeathGrip]() { EnableDragDrop(aEnable); }),
       kAsyncDragDropTimeout, EventQueuePriority::Idle);
+}
+
+void nsBaseWidget::SwipeFinished() { mSwipeTracker = nullptr; }
+
+void nsBaseWidget::ReportSwipeStarted(uint64_t aInputBlockId,
+                                      bool aStartSwipe) {
+  if (mSwipeEventQueue && mSwipeEventQueue->inputBlockId == aInputBlockId) {
+    if (aStartSwipe) {
+      PanGestureInput& startEvent = mSwipeEventQueue->queuedEvents[0];
+      TrackScrollEventAsSwipe(startEvent, mSwipeEventQueue->allowedDirections);
+      for (size_t i = 1; i < mSwipeEventQueue->queuedEvents.Length(); i++) {
+        mSwipeTracker->ProcessEvent(mSwipeEventQueue->queuedEvents[i]);
+      }
+    }
+    mSwipeEventQueue = nullptr;
+  }
+}
+
+void nsBaseWidget::TrackScrollEventAsSwipe(
+    const mozilla::PanGestureInput& aSwipeStartEvent,
+    uint32_t aAllowedDirections) {
+  // If a swipe is currently being tracked kill it -- it's been interrupted
+  // by another gesture event.
+  if (mSwipeTracker) {
+    mSwipeTracker->CancelSwipe(aSwipeStartEvent.mTimeStamp);
+    mSwipeTracker->Destroy();
+    mSwipeTracker = nullptr;
+  }
+
+  uint32_t direction =
+      (aSwipeStartEvent.mPanDisplacement.x > 0.0)
+          ? (uint32_t)dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT
+          : (uint32_t)dom::SimpleGestureEvent_Binding::DIRECTION_LEFT;
+
+  mSwipeTracker =
+      new SwipeTracker(*this, aSwipeStartEvent, aAllowedDirections, direction);
+
+  if (!mAPZC) {
+    mCurrentPanGestureBelongsToSwipe = true;
+  }
+}
+
+nsBaseWidget::SwipeInfo nsBaseWidget::SendMayStartSwipe(
+    const mozilla::PanGestureInput& aSwipeStartEvent) {
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+
+  uint32_t direction =
+      (aSwipeStartEvent.mPanDisplacement.x > 0.0)
+          ? (uint32_t)dom::SimpleGestureEvent_Binding::DIRECTION_RIGHT
+          : (uint32_t)dom::SimpleGestureEvent_Binding::DIRECTION_LEFT;
+
+  // We're ready to start the animation. Tell Gecko about it, and at the same
+  // time ask it if it really wants to start an animation for this event.
+  // This event also reports back the directions that we can swipe in.
+  LayoutDeviceIntPoint position = RoundedToInt(aSwipeStartEvent.mPanStartPoint *
+                                               ScreenToLayoutDeviceScale(1));
+  WidgetSimpleGestureEvent geckoEvent = SwipeTracker::CreateSwipeGestureEvent(
+      eSwipeGestureMayStart, this, position, aSwipeStartEvent.mTimeStamp);
+  geckoEvent.mDirection = direction;
+  geckoEvent.mDelta = 0.0;
+  geckoEvent.mAllowedDirections = 0;
+  bool shouldStartSwipe =
+      DispatchWindowEvent(geckoEvent);  // event cancelled == swipe should start
+
+  SwipeInfo result = {shouldStartSwipe, geckoEvent.mAllowedDirections};
+  return result;
+}
+
+WidgetWheelEvent nsBaseWidget::MayStartSwipeForAPZ(
+    const PanGestureInput& aPanInput, const APZEventResult& aApzResult,
+    CanTriggerSwipe aCanTriggerSwipe) {
+  WidgetWheelEvent event = aPanInput.ToWidgetEvent(this);
+  if (aCanTriggerSwipe == CanTriggerSwipe::Yes &&
+      aPanInput.mOverscrollBehaviorAllowsSwipe) {
+    SwipeInfo swipeInfo = SendMayStartSwipe(aPanInput);
+    event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
+    if (swipeInfo.wantsSwipe) {
+      if (aApzResult.GetStatus() == nsEventStatus_eIgnore) {
+        // APZ has determined and that scrolling horizontally in the
+        // requested direction is impossible, so it didn't do any
+        // scrolling for the event.
+        // We know now that MayStartSwipe wants a swipe, so we can start
+        // the swipe now.
+        TrackScrollEventAsSwipe(aPanInput, swipeInfo.allowedDirections);
+      } else {
+        // We don't know whether this event can start a swipe, so we need
+        // to queue up events and wait for a call to ReportSwipeStarted.
+        // APZ might already have started scrolling in response to the
+        // event if it knew that it's the right thing to do. In that case
+        // we'll still get a call to ReportSwipeStarted, and we will
+        // discard the queued events at that point.
+        mSwipeEventQueue = MakeUnique<SwipeEventQueue>(
+            swipeInfo.allowedDirections, aApzResult.mInputBlockId);
+      }
+    }
+  }
+
+  if (mSwipeEventQueue &&
+      mSwipeEventQueue->inputBlockId == aApzResult.mInputBlockId) {
+    mSwipeEventQueue->queuedEvents.AppendElement(aPanInput);
+  }
+
+  return event;
+}
+
+bool nsBaseWidget::MayStartSwipeForNonAPZ(const PanGestureInput& aPanInput,
+                                          CanTriggerSwipe aCanTriggerSwipe) {
+  if (aPanInput.mType == PanGestureInput::PANGESTURE_MAYSTART ||
+      aPanInput.mType == PanGestureInput::PANGESTURE_START) {
+    mCurrentPanGestureBelongsToSwipe = false;
+  }
+  if (mCurrentPanGestureBelongsToSwipe) {
+    // Ignore this event. It's a momentum event from a scroll gesture
+    // that was processed as a swipe, and the swipe animation has
+    // already finished (so mSwipeTracker is already null).
+    MOZ_ASSERT(aPanInput.IsMomentum(),
+               "If the fingers are still on the touchpad, we should still have "
+               "a SwipeTracker, "
+               "and it should have consumed this event.");
+    return true;
+  }
+
+  if (aCanTriggerSwipe == CanTriggerSwipe::No) {
+    return false;
+  }
+
+  SwipeInfo swipeInfo = SendMayStartSwipe(aPanInput);
+
+  // We're in the non-APZ case here, but we still want to know whether
+  // the event was routed to a child process, so we use InputAPZContext
+  // to get that piece of information.
+  ScrollableLayerGuid guid;
+  InputAPZContext context(guid, 0, nsEventStatus_eIgnore);
+
+  WidgetWheelEvent event = aPanInput.ToWidgetEvent(this);
+  event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
+  nsEventStatus status;
+  DispatchEvent(&event, status);
+  if (swipeInfo.wantsSwipe) {
+    if (context.WasRoutedToChildProcess()) {
+      // We don't know whether this event can start a swipe, so we need
+      // to queue up events and wait for a call to ReportSwipeStarted.
+      mSwipeEventQueue =
+          MakeUnique<SwipeEventQueue>(swipeInfo.allowedDirections, 0);
+    } else if (event.TriggersSwipe()) {
+      TrackScrollEventAsSwipe(aPanInput, swipeInfo.allowedDirections);
+    }
+  }
+
+  if (mSwipeEventQueue && mSwipeEventQueue->inputBlockId == 0) {
+    mSwipeEventQueue->queuedEvents.AppendElement(aPanInput);
+  }
+
+  return true;
 }
 
 const IMENotificationRequests& nsIWidget::IMENotificationRequestsRef() {

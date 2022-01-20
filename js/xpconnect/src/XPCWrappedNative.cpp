@@ -1634,8 +1634,7 @@ nsresult CallMethodHelper::Invoke() {
 static void TraceParam(JSTracer* aTrc, void* aVal, const nsXPTType& aType,
                        uint32_t aArrayLen = 0) {
   if (aType.Tag() == nsXPTType::T_JSVAL) {
-    JS::UnsafeTraceRoot(aTrc, (JS::Value*)aVal,
-                        "XPCWrappedNative::CallMethod param");
+    JS::TraceRoot(aTrc, (JS::Value*)aVal, "XPCWrappedNative::CallMethod param");
   } else if (aType.Tag() == nsXPTType::T_ARRAY) {
     auto* array = (xpt::detail::UntypedTArray*)aVal;
     const nsXPTType& elty = aType.ArrayElementType();

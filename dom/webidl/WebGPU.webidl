@@ -82,26 +82,30 @@ enum GPUPowerPreference {
 
 dictionary GPURequestAdapterOptions {
     GPUPowerPreference powerPreference;
+    boolean forceFallbackAdapter = false;
 };
 
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
-interface GPUAdapterFeatures {
-    readonly setlike<GPUFeatureName>;
+interface GPUSupportedFeatures {
+    readonly setlike<DOMString>;
 };
 
 dictionary GPUDeviceDescriptor {
     sequence<GPUFeatureName> requiredFeatures = [];
-    record<DOMString, GPUSize32> requiredLimits;
+    record<DOMString, GPUSize64> requiredLimits;
 };
 
 enum GPUFeatureName {
-    "depth-clamping",
+    "depth-clip-control",
     "depth24unorm-stencil8",
     "depth32float-stencil8",
     "pipeline-statistics-query",
     "texture-compression-bc",
+    "texture-compression-etc2",
+    "texture-compression-astc",
     "timestamp-query",
+    "indirect-first-instance",
 };
 
 [Pref="dom.webgpu.enabled",
@@ -130,9 +134,9 @@ interface GPUSupportedLimits {
  Exposed=Window]
 interface GPUAdapter {
     readonly attribute DOMString name;
-    [SameObject] readonly attribute GPUAdapterFeatures features;
+    [SameObject] readonly attribute GPUSupportedFeatures features;
     [SameObject] readonly attribute GPUSupportedLimits limits;
-    readonly attribute boolean isSoftware;
+    readonly attribute boolean isFallbackAdapter;
 
     [NewObject]
     Promise<GPUDevice> requestDevice(optional GPUDeviceDescriptor descriptor = {});
@@ -142,9 +146,8 @@ interface GPUAdapter {
 [Pref="dom.webgpu.enabled",
  Exposed=Window]
 interface GPUDevice: EventTarget {
-    //[SameObject] readonly attribute GPUAdapter adapter;
-    //readonly attribute FrozenArray<GPUFeatureName> features;
-    //readonly attribute object limits;
+    [SameObject] readonly attribute GPUSupportedFeatures features;
+    [SameObject] readonly attribute GPUSupportedLimits limits;
 
     // Overriding the name to avoid collision with `class Queue` in gcc
     [SameObject, BinaryName="getQueue"] readonly attribute GPUQueue queue;
@@ -960,9 +963,9 @@ interface GPUCommandEncoder {
         GPUExtent3D copySize);
     */
 
-    //void pushDebugGroup(USVString groupLabel);
-    //void popDebugGroup();
-    //void insertDebugMarker(USVString markerLabel);
+    void pushDebugGroup(USVString groupLabel);
+    void popDebugGroup();
+    void insertDebugMarker(USVString markerLabel);
 
     [NewObject]
     GPUCommandBuffer finish(optional GPUCommandBufferDescriptor descriptor = {});
@@ -973,9 +976,9 @@ interface mixin GPUProgrammablePassEncoder {
     void setBindGroup(GPUIndex32 index, GPUBindGroup bindGroup,
                       optional sequence<GPUBufferDynamicOffset> dynamicOffsets = []);
 
-    //void pushDebugGroup(USVString groupLabel);
-    //void popDebugGroup();
-    //void insertDebugMarker(USVString markerLabel);
+    void pushDebugGroup(USVString groupLabel);
+    void popDebugGroup();
+    void insertDebugMarker(USVString markerLabel);
 };
 
 // Render Pass
@@ -1171,5 +1174,6 @@ interface GPUCanvasContext {
     void unconfigure();
 
     GPUTextureFormat getPreferredFormat(GPUAdapter adapter);
+    [Throws]
     GPUTexture getCurrentTexture();
 };

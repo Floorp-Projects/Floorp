@@ -778,8 +778,8 @@ const char* js::ValueToSourceForError(JSContext* cx, HandleValue val,
   }
 
   JSStringBuilder sb(cx);
-  if (val.isObject()) {
-    RootedObject valObj(cx, val.toObjectOrNull());
+  if (val.hasObjectPayload()) {
+    RootedObject valObj(cx, &val.getObjectPayload());
     ESClass cls;
     if (!JS::GetBuiltinClass(cx, valObj, &cls)) {
       return "<<error determining class of value>>";
@@ -791,6 +791,12 @@ const char* js::ValueToSourceForError(JSContext* cx, HandleValue val,
       s = "the array buffer ";
     } else if (JS_IsArrayBufferViewObject(valObj)) {
       s = "the typed array ";
+#ifdef ENABLE_RECORD_TUPLE
+    } else if (cls == ESClass::Record) {
+      s = "the record ";
+    } else if (cls == ESClass::Tuple) {
+      s = "the tuple ";
+#endif
     } else {
       s = "the object ";
     }

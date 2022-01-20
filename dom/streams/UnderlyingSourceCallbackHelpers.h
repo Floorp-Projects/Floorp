@@ -43,8 +43,7 @@ class UnderlyingSourceStartCallbackHelper : public nsISupports {
 
   // The fundamental Call Primitive
   MOZ_CAN_RUN_SCRIPT
-  void StartCallback(JSContext* aCx,
-                     ReadableStreamDefaultController& aController,
+  void StartCallback(JSContext* aCx, ReadableStreamController& aController,
                      JS::MutableHandle<JS::Value> aRetVal, ErrorResult& aRv);
 
  protected:
@@ -67,7 +66,7 @@ class UnderlyingSourcePullCallbackHelper : public nsISupports {
   // The fundamental Call Primitive
   MOZ_CAN_RUN_SCRIPT
   virtual already_AddRefed<Promise> PullCallback(
-      JSContext* aCx, ReadableStreamDefaultController& aController,
+      JSContext* aCx, ReadableStreamController& aController,
       ErrorResult& aRv) = 0;
 
  protected:
@@ -91,7 +90,7 @@ class IDLUnderlyingSourcePullCallbackHelper final
 
   MOZ_CAN_RUN_SCRIPT
   virtual already_AddRefed<Promise> PullCallback(
-      JSContext* aCx, ReadableStreamDefaultController& aController,
+      JSContext* aCx, ReadableStreamController& aController,
       ErrorResult& aRv) override;
 
  protected:
@@ -148,6 +147,19 @@ class IDLUnderlyingSourceCancelCallbackHelper final
  private:
   JS::Heap<JSObject*> mThisObj;
   RefPtr<UnderlyingSourceCancelCallback> mCallback;
+};
+
+// Callback called when erroring a stream.
+class UnderlyingSourceErrorCallbackHelper : public nsISupports {
+ public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(
+      UnderlyingSourceErrorCallbackHelper)
+
+  virtual void Call() = 0;
+
+ protected:
+  virtual ~UnderlyingSourceErrorCallbackHelper() = default;
 };
 
 }  // namespace mozilla::dom

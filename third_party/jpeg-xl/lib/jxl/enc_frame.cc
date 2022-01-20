@@ -49,6 +49,7 @@
 #include "lib/jxl/enc_noise.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/enc_patch_dictionary.h"
+#include "lib/jxl/enc_photon_noise.h"
 #include "lib/jxl/enc_quant_weights.h"
 #include "lib/jxl/enc_splines.h"
 #include "lib/jxl/enc_toc.h"
@@ -302,8 +303,9 @@ Status MakeFrameHeader(const CompressParams& cparams,
   }
 
   frame_header->flags = FrameFlagsFromParams(cparams);
-  // Noise is not supported in the Modular encoder for now.
-  if (frame_header->encoding != FrameEncoding::kVarDCT) {
+  // Non-photon noise is not supported in the Modular encoder for now.
+  if (frame_header->encoding != FrameEncoding::kVarDCT &&
+      cparams.photon_noise_iso == 0) {
     frame_header->UpdateFlag(false, FrameHeader::Flags::kNoise);
   }
 
@@ -332,6 +334,15 @@ Status MakeFrameHeader(const CompressParams& cparams,
     frame_header->frame_origin = ib.origin;
     size_t ups = 1;
     if (cparams.already_downsampled) ups = cparams.resampling;
+
+    // TODO(lode): this is not correct in case of odd original image sizes in
+    // combination with cparams.already_downsampled. Likely these values should
+    // be set to respectively frame_header->default_xsize() and
+    // frame_header->default_ysize() instead, the original (non downsampled)
+    // intended decoded image dimensions. But it may be more subtle than that
+    // if combined with crop. This issue causes custom_size_or_origin to be
+    // incorrectly set to true in case of already_downsampled with odd output
+    // image size when no cropping is used.
     frame_header->frame_size.xsize = ib.xsize() * ups;
     frame_header->frame_size.ysize = ib.ysize() * ups;
     if (ib.origin.x0 != 0 || ib.origin.y0 != 0 ||
@@ -1250,6 +1261,10 @@ Status EncodeFrame(const CompressParams& cparams_orig,
                   get_output(0), kLayerSplines, HistogramParams(), aux_out);
   }
 
+  if (cparams.photon_noise_iso > 0) {
+    lossy_frame_encoder.State()->shared.image_features.noise_params =
+        SimulatePhotonNoise(ib.xsize(), ib.ysize(), cparams.photon_noise_iso);
+  }
   if (frame_header->flags & FrameHeader::kNoise) {
     EncodeNoise(lossy_frame_encoder.State()->shared.image_features.noise_params,
                 get_output(0), kLayerNoise, aux_out);

@@ -26,7 +26,7 @@
 %include "config.asm"
 %include "ext/x86/x86inc.asm"
 
-SECTION_RODATA 32
+SECTION_RODATA 64
 
 %macro JMP_TABLE 2-*
     %xdefine %%prefix mangle(private_prefix %+ _%1)
@@ -41,10 +41,13 @@ SECTION_RODATA 32
 %if ARCH_X86_64
 splat_mv_shuf: db  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,  0,  1,  2,  3
                db  4,  5,  6,  7,  8,  9, 10, 11,  0,  1,  2,  3,  4,  5,  6,  7
+               db  8,  9, 10, 11,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11
+               db  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,  0,  1,  2,  3
 
-JMP_TABLE splat_mv_avx2, 1, 2, 4, 8, 16, 32
+JMP_TABLE splat_mv_avx512icl, 1, 2, 4, 8, 16, 32
+JMP_TABLE splat_mv_avx2,      1, 2, 4, 8, 16, 32
 %endif
-JMP_TABLE splat_mv_sse2, 1, 2, 4, 8, 16, 32
+JMP_TABLE splat_mv_sse2,      1, 2, 4, 8, 16, 32
 
 SECTION .text
 
@@ -166,4 +169,80 @@ cglobal splat_mv, 4, 5, 3, rr, a, bx4, bw4, bh4
     dec           bh4d
     jg .loop
     RET
-%endif
+
+INIT_ZMM avx512icl
+cglobal splat_mv, 4, 7, 3, rr, a, bx4, bw4, bh4
+    vbroadcasti32x4    m0, [aq]
+    lea                r1, [splat_mv_avx512icl_table]
+    tzcnt            bw4d, bw4d
+    lea              bx4d, [bx4q*3]
+    pshufb             m0, [splat_mv_shuf]
+    movsxd           bw4q, [r1+bw4q*4]
+    mov               r6d, bh4m
+    add              bw4q, r1
+    lea               rrq, [rrq+r6*8]
+    mov               r1d, 0x3f
+    neg                r6
+    kmovb              k1, r1d
+    jmp              bw4q
+.w1:
+    mov                r1, [rrq+r6*8]
+    vmovdqu16 [r1+bx4q*4]{k1}, xm0
+    inc                r6
+    jl .w1
+    RET
+.w2:
+    mov                r1, [rrq+r6*8]
+    vmovdqu32 [r1+bx4q*4]{k1}, ym0
+    inc                r6
+    jl .w2
+    RET
+.w4:
+    mov                r1, [rrq+r6*8]
+    vmovdqu64 [r1+bx4q*4]{k1}, m0
+    inc                r6
+    jl .w4
+    RET
+.w8:
+    pshufd            ym1, ym0, q1021
+.w8_loop:
+    mov                r1, [rrq+r6*8+0]
+    mov                r3, [rrq+r6*8+8]
+    movu   [r1+bx4q*4+ 0], m0
+    mova   [r1+bx4q*4+64], ym1
+    movu   [r3+bx4q*4+ 0], m0
+    mova   [r3+bx4q*4+64], ym1
+    add                r6, 2
+    jl .w8_loop
+    RET
+.w16:
+    pshufd             m1, m0, q1021
+    pshufd             m2, m0, q2102
+.w16_loop:
+    mov                r1, [rrq+r6*8+0]
+    mov                r3, [rrq+r6*8+8]
+    mova [r1+bx4q*4+64*0], m0
+    mova [r1+bx4q*4+64*1], m1
+    mova [r1+bx4q*4+64*2], m2
+    mova [r3+bx4q*4+64*0], m0
+    mova [r3+bx4q*4+64*1], m1
+    mova [r3+bx4q*4+64*2], m2
+    add                r6, 2
+    jl .w16_loop
+    RET
+.w32:
+    pshufd             m1, m0, q1021
+    pshufd             m2, m0, q2102
+.w32_loop:
+    mov                r1, [rrq+r6*8]
+    lea                r1, [r1+bx4q*4]
+    mova        [r1+64*0], m0
+    mova        [r1+64*1], m1
+    mova        [r1+64*2], m2
+    mova        [r1+64*3], m0
+    mova        [r1+64*4], m1
+    mova        [r1+64*5], m2
+    inc                r6
+    jl .w32_loop
+    RET
+%endif ; ARCH_X86_64

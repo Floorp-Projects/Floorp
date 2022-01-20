@@ -32,6 +32,7 @@
 #include "compiler-macros.h"
 
 #ifdef FT_DEBUG_LOGGING
+#define DLG_STATIC
 #include <dlg/output.h>
 #include <dlg/dlg.h>
 

@@ -83,7 +83,11 @@
     /* load the header and check it */
     error = pfr_header_load( &face->header, stream );
     if ( error )
+    {
+      FT_TRACE2(( "  not a PFR font\n" ));
+      error = FT_THROW( Unknown_File_Format );
       goto Exit;
+    }
 
     if ( !pfr_header_check( &face->header ) )
     {

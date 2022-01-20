@@ -46,3 +46,8 @@ pub struct pthread_attr_t {
 // L4Re requires a min stack size of 64k; that isn't defined in uClibc, but
 // somewhere in the core libraries. uClibc wants 16k, but that's not enough.
 pub const PTHREAD_STACK_MIN: usize = 65536;
+
+// Misc other constants required for building.
+pub const SIGIO: ::c_int = 29;
+pub const B19200: ::speed_t = 0o000016;
+pub const B38400: ::speed_t = 0o000017;

@@ -866,11 +866,13 @@
     },
 
     getTabDialogBox(aBrowser) {
-      let browser = aBrowser || this.selectedBrowser;
-      if (!browser.tabDialogBox) {
-        browser.tabDialogBox = new TabDialogBox(browser);
+      if (!aBrowser) {
+        throw new Error("aBrowser is required");
       }
-      return browser.tabDialogBox;
+      if (!aBrowser.tabDialogBox) {
+        aBrowser.tabDialogBox = new TabDialogBox(aBrowser);
+      }
+      return aBrowser.tabDialogBox;
     },
 
     getTabFromAudioEvent(aEvent) {
@@ -5457,21 +5459,16 @@
         )
       ) {
         if (tab.linkedBrowser) {
-          // When enabled, show the PID of the content process, and if
-          // we're running with fission enabled, try to include PIDs for
-          // every remote subframe.
+          // Show the PIDs of the content process and remote subframe processes.
           let [contentPid, ...framePids] = E10SUtils.getBrowserPids(
             tab.linkedBrowser,
             gFissionBrowser
           );
           if (contentPid) {
-            label += " (pid " + contentPid + ")";
-            if (gFissionBrowser) {
-              label += " [F";
-              if (framePids.length) {
-                label += " " + framePids.join(", ");
-              }
-              label += "]";
+            if (framePids && framePids.length) {
+              label += ` (pids ${contentPid}, ${framePids.sort().join(", ")})`;
+            } else {
+              label += ` (pid ${contentPid})`;
             }
           }
           if (tab.linkedBrowser.docShellIsActive) {
@@ -6544,9 +6541,24 @@
             // before the location changed.
 
             this.mBrowser.userTypedValue = null;
-
+            // When browser.tabs.documentchannel.parent-controlled pref and SHIP
+            // are enabled and a load gets cancelled due to another one
+            // starting, the error is NS_BINDING_CANCELLED_OLD_LOAD.
+            // When these prefs are not enabled, the error is different and
+            // that's why we still want to look at the isNavigating flag.
+            // We could add a workaround and make sure that in the alternative
+            // codepaths we would also omit the same error, but considering
+            // how we will be enabling fission by default soon, we can keep
+            // using isNavigating for now, and remove it when the
+            // parent-controlled pref and SHIP are enabled by default.
+            // Bug 1725716 has been filed to consider removing isNavigating
+            // field alltogether.
             let isNavigating = this.mBrowser.isNavigating;
-            if (this.mTab.selected && !isNavigating) {
+            if (
+              this.mTab.selected &&
+              aStatus != Cr.NS_BINDING_CANCELLED_OLD_LOAD &&
+              !isNavigating
+            ) {
               gURLBar.setURI();
             }
           } else if (isSuccessful) {

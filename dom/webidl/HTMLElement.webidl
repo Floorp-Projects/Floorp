@@ -82,6 +82,14 @@ partial interface HTMLElement {
   readonly attribute long offsetHeight;
 };
 
+partial interface HTMLElement {
+  [ChromeOnly]
+  readonly attribute ElementInternals? internals;
+
+  [ChromeOnly]
+  readonly attribute boolean isFormAssociatedCustomElements;
+};
+
 interface mixin TouchEventHandlers {
   [Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
            attribute EventHandler ontouchstart;

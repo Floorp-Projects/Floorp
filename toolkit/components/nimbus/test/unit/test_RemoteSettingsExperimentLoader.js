@@ -7,10 +7,7 @@ const { ExperimentManager } = ChromeUtils.import(
   "resource://nimbus/lib/ExperimentManager.jsm"
 );
 
-const {
-  RemoteSettingsExperimentLoader,
-  RemoteDefaultsLoader,
-} = ChromeUtils.import(
+const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
   "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
 );
 
@@ -54,7 +51,6 @@ add_task(async function test_init() {
   const loader = ExperimentFakes.rsLoader();
   sinon.stub(loader, "setTimer");
   sinon.stub(loader, "updateRecipes").resolves();
-  sinon.stub(RemoteDefaultsLoader, "syncRemoteDefaults");
 
   Services.prefs.setBoolPref(ENABLED_PREF, false);
   await loader.init();
@@ -68,10 +64,6 @@ add_task(async function test_init() {
   await loader.init();
   ok(loader.setTimer.calledOnce, "should call .setTimer");
   ok(loader.updateRecipes.calledOnce, "should call .updatpickeRecipes");
-  ok(
-    RemoteDefaultsLoader.syncRemoteDefaults,
-    "initialized remote defaults loader"
-  );
 });
 
 add_task(async function test_init_with_opt_in() {

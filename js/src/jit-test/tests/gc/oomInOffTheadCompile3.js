@@ -1,7 +1,7 @@
 // |jit-test| skip-if: !('oomTest' in this) || helperThreadCount() === 0
 
 oomTest(() => {
-    offThreadCompileScript(`
+    offThreadCompileToStencil(`
         function f(x) {
             class of extends ("ABCDEFGHIJK") {
                 test() { return true; };
@@ -12,5 +12,6 @@ oomTest(() => {
         }
         return g("try{}catch(e){}", n);
         `);
-    runOffThreadScript();
+    var stencil = finishOffThreadCompileToStencil();
+    evalStencil(stencil);
 });

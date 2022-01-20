@@ -5,14 +5,14 @@ authors = ["Zibi Braniecki <zibi@braniecki.net>"]
 edition = "2018"
 
 [dependencies]
-fluent = { version = "0.16", features = ["fluent-pseudo"] }
+fluent = { version = "0.16.0", features = ["fluent-pseudo"] }
 fluent-pseudo = "0.3.1"
-intl-memoizer = "0.5"
+intl-memoizer = "0.5.1"
 unic-langid = "0.9"
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
 cstr = "0.2"
 xpcom = { path = "../../../../xpcom/rust/xpcom" }
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
-l10nregistry = { git = "https://github.com/mozilla/l10nregistry-rs", rev = "fd02134161505f978e132114cbabdac057ce3b71" }
-fluent-fallback = "0.5"
+l10nregistry = { git = "https://github.com/mozilla/l10nregistry-rs.git", rev = "9da98c6e5325a5f2997191727eaa82c0ebc2004c" }
+fluent-fallback = "0.6.0"
 futures = "0.3"

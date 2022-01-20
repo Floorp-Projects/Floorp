@@ -1,6 +1,7 @@
 try {
-  offThreadCompileScript('Error()', { lineNumber: (4294967295)});
-  runOffThreadScript().stack;
+  offThreadCompileToStencil('Error()', { lineNumber: (4294967295)});
+  var stencil = finishOffThreadCompileToStencil();
+  evalStencil(stencil).stack;
 } catch (e) {
-  // Ignore "Error: Can't use offThreadCompileScript with --no-threads"
+  // Ignore "Error: Can't use offThreadCompileToStencil with --no-threads"
 }

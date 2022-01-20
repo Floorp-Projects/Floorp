@@ -62,7 +62,7 @@ const EXPECTED_REMOTE_SETTINGS_RESULT = {
     sponsoredImpressionUrl: "http://impression.reporting.test.com/",
     sponsoredClickUrl: "http://click.reporting.test.com/",
     sponsoredBlockId: 1,
-    sponsoredAdvertiser: "testadvertiser",
+    sponsoredAdvertiser: "TestAdvertiser",
     isSponsored: true,
     helpUrl: UrlbarProviderQuickSuggest.helpUrl,
     helpL10nId: "firefox-suggest-urlbar-learn-more",

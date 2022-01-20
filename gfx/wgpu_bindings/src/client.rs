@@ -261,6 +261,8 @@ pub struct RenderBundleEncoderDescriptor<'a> {
     color_formats: *const wgt::TextureFormat,
     color_formats_length: usize,
     depth_stencil_format: Option<&'a wgt::TextureFormat>,
+    depth_read_only: bool,
+    stencil_read_only: bool,
     sample_count: u32,
 }
 
@@ -616,6 +618,7 @@ pub extern "C" fn wgpu_client_create_command_encoder(
 pub extern "C" fn wgpu_device_create_render_bundle_encoder(
     device_id: id::DeviceId,
     desc: &RenderBundleEncoderDescriptor,
+    bb: &mut ByteBuf,
 ) -> *mut wgc::command::RenderBundleEncoder {
     let descriptor = wgc::command::RenderBundleEncoderDescriptor {
         label: cow_label(&desc.label),
@@ -624,15 +627,20 @@ pub extern "C" fn wgpu_device_create_render_bundle_encoder(
             .depth_stencil_format
             .map(|&format| wgt::RenderBundleDepthStencil {
                 format,
-                depth_read_only: false, //TODO: add to `RenderBundleEncoderDescriptor`
-                stencil_read_only: false,
+                depth_read_only: desc.depth_read_only,
+                stencil_read_only: desc.stencil_read_only,
             }),
         sample_count: desc.sample_count,
         multiview: None,
     };
     match wgc::command::RenderBundleEncoder::new(&descriptor, device_id, None) {
         Ok(encoder) => Box::into_raw(Box::new(encoder)),
-        Err(e) => panic!("Error in Device::create_render_bundle_encoder: {}", e),
+        Err(e) => {
+            let message = format!("Error in Device::create_render_bundle_encoder: {}", e);
+            let action = DeviceAction::Error(message);
+            *bb = make_byte_buf(&action);
+            ptr::null_mut()
+        }
     }
 }
 
@@ -778,15 +786,13 @@ pub unsafe extern "C" fn wgpu_client_create_bind_group_layout(
                     has_dynamic_offset: entry.has_dynamic_offset,
                     min_binding_size: entry.min_binding_size,
                 },
-                RawBindingType::Sampler => wgt::BindingType::Sampler(
-                    if entry.sampler_compare {
-                        wgt::SamplerBindingType::Comparison
-                    } else if entry.sampler_filter {
-                        wgt::SamplerBindingType::Filtering
-                    } else {
-                        wgt::SamplerBindingType::NonFiltering
-                    }
-                ),
+                RawBindingType::Sampler => wgt::BindingType::Sampler(if entry.sampler_compare {
+                    wgt::SamplerBindingType::Comparison
+                } else if entry.sampler_filter {
+                    wgt::SamplerBindingType::Filtering
+                } else {
+                    wgt::SamplerBindingType::NonFiltering
+                }),
                 RawBindingType::SampledTexture => wgt::BindingType::Texture {
                     //TODO: the spec has a bug here
                     view_dimension: *entry
@@ -1055,6 +1061,34 @@ pub unsafe extern "C" fn wgpu_command_encoder_copy_texture_to_texture(
     bb: &mut ByteBuf,
 ) {
     let action = CommandEncoderAction::CopyTextureToTexture { src, dst, size };
+    *bb = make_byte_buf(&action);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wgpu_command_encoder_push_debug_group(
+    marker: RawString,
+    bb: &mut ByteBuf,
+) {
+    let cstr = std::ffi::CStr::from_ptr(marker);
+    let string = cstr.to_str().unwrap_or_default().to_string();
+    let action = CommandEncoderAction::PushDebugGroup(string);
+    *bb = make_byte_buf(&action);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wgpu_command_encoder_pop_debug_group(bb: &mut ByteBuf) {
+    let action = CommandEncoderAction::PopDebugGroup;
+    *bb = make_byte_buf(&action);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wgpu_command_encoder_insert_debug_marker(
+    marker: RawString,
+    bb: &mut ByteBuf,
+) {
+    let cstr = std::ffi::CStr::from_ptr(marker);
+    let string = cstr.to_str().unwrap_or_default().to_string();
+    let action = CommandEncoderAction::InsertDebugMarker(string);
     *bb = make_byte_buf(&action);
 }
 

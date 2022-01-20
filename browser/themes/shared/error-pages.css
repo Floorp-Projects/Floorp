@@ -71,20 +71,6 @@ body {
   body {
     padding: 0 12px;
   }
-
-  /* At some point the screen gets so small that the cute
-   * critter image takes up too much valuable screen real
-   * estate to keep it showing. */
-  #errorPageContainer {
-    background-image: none !important;
-  }
-
-  /* When the critter is hidden, also use the full screen
-   * size for the error text */
-  .illustrated #text-container {
-    margin: unset;
-    padding-inline-start: 0;
-  }
 }
 
 @media only screen and (max-height: 480px) {

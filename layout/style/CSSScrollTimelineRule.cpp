@@ -34,7 +34,7 @@ void CSSScrollTimelineRule::GetSource(nsString& aSource) const {
 }
 
 void CSSScrollTimelineRule::GetOrientation(nsString& aOrientation) const {
-  Servo_ScrollTimelineRule_GetOrientation(mRawRule, &aOrientation);
+  Servo_ScrollTimelineRule_GetOrientationAsString(mRawRule, &aOrientation);
 }
 
 void CSSScrollTimelineRule::GetScrollOffsets(nsString& aScrollOffsets) const {

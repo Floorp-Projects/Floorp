@@ -10,8 +10,8 @@
 
 class nsHtml5SVGLoadDispatcher : public mozilla::Runnable {
  private:
-  nsCOMPtr<nsIContent> mElement;
-  RefPtr<mozilla::dom::Document> mDocument;
+  const nsCOMPtr<nsIContent> mElement;
+  const RefPtr<mozilla::dom::Document> mDocument;
 
  public:
   explicit nsHtml5SVGLoadDispatcher(nsIContent* aElement);

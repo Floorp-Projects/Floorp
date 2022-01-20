@@ -1,7 +1,17 @@
 # Changelog
 
-## Unpublished
+## 1.0.4
+ * Update puffin to 0.10
+
+## 1.0.3
+ * Update puffin to 0.6 and puffin-imgui to 0.8
+
+## 1.0.2
+ * Fix tracing backend failing to compile when tracing crate is not a dependency in the downstream crate
+
+## 1.0.1
  * Rework feature flags so that downstream *libraries* no longer have to add feature flags per profiling backend.
+ * Add a backend that does type checking (for CI purposes)
 
 ## 1.0.0
  * Republish 0.1.10 as 1.0.0

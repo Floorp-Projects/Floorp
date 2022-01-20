@@ -25,7 +25,7 @@ class gfxGDIFont : public gfxFont {
   HFONT GetHFONT() { return mFont; }
 
   already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
-      DrawTarget* aTarget) override;
+      const TextRunDrawParams& aRunParams) override;
 
   /* override Measure to add padding for antialiasing */
   RunMetrics Measure(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,

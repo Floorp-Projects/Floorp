@@ -19,7 +19,6 @@ from mozpack.chrome.manifest import (
     is_manifest,
     parse_manifest,
 )
-from mozpack.files import ExecutableFile
 import mozpack.path as mozpath
 from mozbuild.preprocessor import Preprocessor
 
@@ -29,19 +28,16 @@ class Component(object):
     Class that represents a component in a package manifest.
     """
 
-    def __init__(self, name, destdir="", xz_compress=False):
+    def __init__(self, name, destdir=""):
         if name.find(" ") > 0:
             errors.fatal('Malformed manifest: space in component name "%s"' % name)
         self._name = name
         self._destdir = destdir
-        self._xz_compress = xz_compress
 
     def __repr__(self):
         s = self.name
         if self.destdir:
             s += ' destdir="%s"' % self.destdir
-        if self.xz_compress:
-            s += ' xz_compress="1"'
         return s
 
     @property
@@ -51,10 +47,6 @@ class Component(object):
     @property
     def destdir(self):
         return self._destdir
-
-    @property
-    def xz_compress(self):
-        return self._xz_compress
 
     @staticmethod
     def _triples(lst):
@@ -130,12 +122,11 @@ class Component(object):
             errors.fatal("Malformed manifest: %s" % e)
             return
         destdir = options.pop("destdir", "")
-        xz_compress = options.pop("xz_compress", "0") != "0"
         if options:
             errors.fatal(
                 "Malformed manifest: options %s not recognized" % options.keys()
             )
-        return Component(name, destdir=destdir, xz_compress=xz_compress)
+        return Component(name, destdir=destdir)
 
 
 class PackageManifestParser(object):
@@ -428,8 +419,6 @@ class SimpleManifestSink(object):
             if is_manifest(p):
                 self._manifests.add(p)
             dest = mozpath.join(component.destdir, SimpleManifestSink.normalize_path(p))
-            if isinstance(f, ExecutableFile):
-                f.xz_compress = component.xz_compress
             self.packager.add(dest, f)
         if not added:
             errors.error("Missing file(s): %s" % pattern)

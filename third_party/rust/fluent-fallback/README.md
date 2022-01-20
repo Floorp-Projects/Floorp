@@ -8,7 +8,7 @@ the corresponding UI, reacting to events such as locale changes, resource update
 
 The API can be used directly, or can serve as an example of state manager for `fluent-bundle` and `fluent-resmgr`. 
 
-[![crates.io](https://meritbadge.herokuapp.com/fluent-fallback)](https://crates.io/crates/fluent-fallback)
+[![crates.io](https://img.shields.io/crates/v/fluent-fallback.svg)](https://crates.io/crates/fluent-fallback)
 [![Build and test](https://github.com/projectfluent/fluent-rs/workflows/Build%20and%20test/badge.svg)](https://github.com/projectfluent/fluent-rs/actions?query=branch%3Amaster+workflow%3A%22Build+and+test%22)
 [![Coverage Status](https://coveralls.io/repos/github/projectfluent/fluent-rs/badge.svg?branch=master)](https://coveralls.io/github/projectfluent/fluent-rs?branch=master)
 

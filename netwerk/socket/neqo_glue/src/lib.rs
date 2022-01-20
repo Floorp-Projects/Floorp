@@ -428,7 +428,10 @@ pub extern "C" fn neqo_http3conn_priority_update(
         return NS_ERROR_INVALID_ARG;
     }
     let priority = Priority::new(urgency, incremental);
-    match conn.conn.priority_update(StreamId::from(stream_id), priority) {
+    match conn
+        .conn
+        .priority_update(StreamId::from(stream_id), priority)
+    {
         Ok(_) => NS_OK,
         Err(_) => NS_ERROR_UNEXPECTED,
     }
@@ -600,6 +603,7 @@ pub enum Http3Event {
     HeaderReady {
         stream_id: u64,
         fin: bool,
+        interim: bool,
     },
     /// New bytes available for reading.
     DataReadable {
@@ -693,32 +697,32 @@ pub extern "C" fn neqo_http3conn_event(
 ) -> nsresult {
     while let Some(evt) = conn.conn.next_event() {
         let fe = match evt {
-            Http3ClientEvent::DataWritable { stream_id } => {
-                Http3Event::DataWritable { stream_id: stream_id.as_u64() }
-            }
-            Http3ClientEvent::StopSending { stream_id, error } => {
-                Http3Event::StopSending { stream_id: stream_id.as_u64(), error }
-            }
+            Http3ClientEvent::DataWritable { stream_id } => Http3Event::DataWritable {
+                stream_id: stream_id.as_u64(),
+            },
+            Http3ClientEvent::StopSending { stream_id, error } => Http3Event::StopSending {
+                stream_id: stream_id.as_u64(),
+                error,
+            },
             Http3ClientEvent::HeaderReady {
                 stream_id,
                 headers,
                 fin,
                 interim,
             } => {
-                if interim {
-                    // This are 1xx responses and they are ignored.
-                    Http3Event::NoEvent
-                } else {
-                    let res = convert_h3_to_h1_headers(headers, data);
-                    if res != NS_OK {
-                        return res;
-                    }
-                    Http3Event::HeaderReady { stream_id: stream_id.as_u64(), fin }
+                let res = convert_h3_to_h1_headers(headers, data);
+                if res != NS_OK {
+                    return res;
+                }
+                Http3Event::HeaderReady {
+                    stream_id: stream_id.as_u64(),
+                    fin,
+                    interim,
                 }
             }
-            Http3ClientEvent::DataReadable { stream_id } => {
-                Http3Event::DataReadable { stream_id: stream_id.as_u64() }
-            }
+            Http3ClientEvent::DataReadable { stream_id } => Http3Event::DataReadable {
+                stream_id: stream_id.as_u64(),
+            },
             Http3ClientEvent::Reset {
                 stream_id,
                 error,

@@ -1411,35 +1411,6 @@ static nscolor GetBackgroundColor(
   return NS_TRANSPARENT;
 }
 
-static int32_t GetBorderRadius(GtkStyleContext* aStyle) {
-  GValue value = G_VALUE_INIT;
-  // NOTE(emilio): In an ideal world, we'd query the two longhands
-  // (border-top-left-radius and border-top-right-radius) separately. However,
-  // that doesn't work (GTK rejects the query with:
-  //
-  //   Style property "border-top-left-radius" is not gettable
-  //
-  // However! Getting border-radius does work, and it does return the
-  // border-top-left-radius as a gint:
-  //
-  //   https://docs.gtk.org/gtk3/const.STYLE_PROPERTY_BORDER_RADIUS.html
-  //   https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-3-20/gtk/gtkcssshorthandpropertyimpl.c#L961-977
-  //
-  // So we abuse this fact, and make the assumption here that the
-  // border-top-{left,right}-radius are the same, and roll with it.
-  gtk_style_context_get_property(aStyle, "border-radius", GTK_STATE_FLAG_NORMAL,
-                                 &value);
-  auto unset = MakeScopeExit([&] { g_value_unset(&value); });
-
-  auto type = G_VALUE_TYPE(&value);
-  if (type == G_TYPE_INT) {
-    return g_value_get_int(&value);
-  }
-  NS_WARNING(nsPrintfCString("Unknown value type %lu for titlebar radius", type)
-                 .get());
-  return 0;
-}
-
 void nsLookAndFeel::PerThemeData::Init() {
   mName = GetGtkTheme();
 
@@ -1572,7 +1543,10 @@ void nsLookAndFeel::PerThemeData::Init() {
     g_object_unref(accelStyle);
   }
 
-  style = GetStyleContext(MOZ_GTK_HEADER_BAR);
+  const auto effectiveHeaderBarStyle =
+      HeaderBarShouldDrawContainer(MOZ_GTK_HEADER_BAR) ? MOZ_GTK_HEADERBAR_FIXED
+                                                       : MOZ_GTK_HEADER_BAR;
+  style = GetStyleContext(effectiveHeaderBarStyle);
   {
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
     mTitlebarText = GDK_RGBA_TO_NS_RGBA(color);

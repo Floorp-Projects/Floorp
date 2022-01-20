@@ -103,7 +103,6 @@ class nsPrintSettings : public nsIPrintSettings {
   bool mSaveOnCancel;
   bool mPrintSilent;
   bool mShrinkToFit;
-  bool mShowPrintProgress;
   bool mShowMarginGuides;
   bool mHonorPageRuleMargins;
   bool mIsPrintSelectionRBEnabled;

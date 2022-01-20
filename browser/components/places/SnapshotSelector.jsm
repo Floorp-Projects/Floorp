@@ -79,10 +79,20 @@ class SnapshotSelector extends EventEmitter {
      */
     selectOverlappingVisits: false,
     /**
+     * Whether to select snapshots which share a common referrer with the context url
+     * @type {boolean}
+     */
+    selectCommonReferrer: false,
+    /**
      * The page the snapshots are for.
      * @type {string | undefined}
      */
     url: undefined,
+    /**
+     * The referrer to the page the snapshots are for.
+     * @type {string | undefined}
+     */
+    referrerUrl: undefined,
     /**
      * The type of snapshots desired.
      * @type {PageDataCollector.DATA_TYPE | undefined}
@@ -111,6 +121,8 @@ class SnapshotSelector extends EventEmitter {
    *   Whether adult sites should be filtered from the snapshots.
    * @param {boolean} [options.selectOverlappingVisits]
    *   Whether to select snapshots where visits overlapped the current context url
+   * @param {boolean} [options.selectCommonReferrer]
+   *   Whether to select snapshots which share a common referrer to the context url
    * @param {function} [options.getCurrentSessionUrls]
    *   A function that returns a Set containing the urls for the current session.
    */
@@ -118,6 +130,7 @@ class SnapshotSelector extends EventEmitter {
     count = 5,
     filterAdult = false,
     selectOverlappingVisits = false,
+    selectCommonReferrer = false,
     getCurrentSessionUrls = () => new Set(),
   }) {
     super();
@@ -128,6 +141,7 @@ class SnapshotSelector extends EventEmitter {
     this.#context.count = count;
     this.#context.filterAdult = filterAdult;
     this.#context.selectOverlappingVisits = selectOverlappingVisits;
+    this.#context.selectCommonReferrer = selectCommonReferrer;
     this.#context.getCurrentSessionUrls = getCurrentSessionUrls;
     SnapshotSelector.#selectors.add(this);
   }
@@ -173,8 +187,11 @@ class SnapshotSelector extends EventEmitter {
    * Starts the process of building snapshots.
    */
   async #buildSnapshots() {
-    if (this.#context.selectOverlappingVisits) {
-      await this.#buildOverlappingSnapshots();
+    if (
+      this.#context.selectOverlappingVisits ||
+      this.#context.selectCommonReferrer
+    ) {
+      await this.#buildRelevancySnapshots();
       return;
     }
 
@@ -210,12 +227,11 @@ class SnapshotSelector extends EventEmitter {
   }
 
   /**
-   * Build snapshots where interactions overlapped within an hour of interactions from the current context.
+   * Build snapshots based on relevancy heuristsics.
+   *  These include overlapping visits and common referrer, defined by the context options.
    *
-   *   For example, if a user visited Site A two days ago, we would generate a list of snapshots that were visited within an hour of that visit.
-   *   Site A may have also been visited four days ago, we would like to see what websites were browsed then.
    */
-  async #buildOverlappingSnapshots() {
+  async #buildRelevancySnapshots() {
     // If this instance has been destroyed then do nothing.
     if (!this.#task) {
       return;
@@ -226,15 +242,40 @@ class SnapshotSelector extends EventEmitter {
     let context = { ...this.#context };
     logConsole.debug("Building overlapping snapshots", context);
 
-    let snapshots = await Snapshots.queryOverlapping(context.url);
-    snapshots = snapshots.filter(snapshot => {
-      return !context.filterAdult || !FilterAdult.isAdultUrl(snapshot.url);
-    });
+    let snapshots = [];
 
-    logConsole.debug(
-      "Found overlapping snapshots:",
-      snapshots.map(s => s.url)
-    );
+    if (context.selectOverlappingVisits) {
+      snapshots = await Snapshots.queryOverlapping(context.url);
+
+      logConsole.debug(
+        "Found overlapping snapshots:",
+        snapshots.map(s => s.url)
+      );
+    }
+
+    if (
+      context.selectCommonReferrer &&
+      context.referrerUrl &&
+      context.referrerUrl != ""
+    ) {
+      let commonReferrerSnapshots = await Snapshots.queryCommonReferrer(
+        context.url,
+        context.referrerUrl
+      );
+
+      logConsole.debug(
+        "Found common referrer snapshots:",
+        commonReferrerSnapshots.map(s => s.url)
+      );
+
+      snapshots = snapshots.concat(commonReferrerSnapshots);
+    }
+
+    if (context.filterAdult) {
+      snapshots = snapshots.filter(snapshot => {
+        return !FilterAdult.isAdultUrl(snapshot.url);
+      });
+    }
 
     snapshots = SnapshotScorer.combineAndScore(
       this.#context.getCurrentSessionUrls(),
@@ -255,13 +296,17 @@ class SnapshotSelector extends EventEmitter {
    * Sets the current context's url for this selector.
    *
    * @param {string} url
+   *  The url of the context
+   * @param {string} referrerUrl
+   *   The url of the context's referrer, if any.
    */
-  setUrl(url) {
-    if (this.#context.url == url) {
+  setUrl(url, referrerUrl) {
+    if (this.#context.url == url && this.#context.referrerUrl == referrerUrl) {
       return;
     }
 
     this.#context.url = url;
+    this.#context.referrerUrl = referrerUrl;
     this.rebuild();
   }
 
@@ -270,13 +315,17 @@ class SnapshotSelector extends EventEmitter {
    * startup.
    *
    * @param {string} url
+   *  The url of the context
+   * @param {string} referrerUrl
+   *   The url of the context's referrer, if any.
    */
-  setUrlAndRebuildNow(url) {
-    if (this.#context.url == url) {
+  setUrlAndRebuildNow(url, referrerUrl) {
+    if (this.#context.url == url && this.#context.referrerUrl == referrerUrl) {
       return;
     }
 
     this.#context.url = url;
+    this.#context.referrerUrl = referrerUrl;
     this.#buildSnapshots();
   }
 

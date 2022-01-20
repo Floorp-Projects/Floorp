@@ -405,12 +405,17 @@ void LIRGeneratorARM64::lowerWasmSelectI64(MWasmSelect* select) {
   defineInt64(new (alloc()) LWasmSelectI64(t, f, c), select);
 }
 
+// On arm64 we specialize the cases: compare is {{U,}Int32, {U,}Int64},
+// Float32, Double}, and select is {{U,}Int32, {U,}Int64}, Float32, Double},
+// independently.
 bool LIRGeneratorARM64::canSpecializeWasmCompareAndSelect(
     MCompare::CompareType compTy, MIRType insTy) {
-  return (insTy == MIRType::Int32 || insTy == MIRType::Float32 ||
-          insTy == MIRType::Double) &&
+  return (insTy == MIRType::Int32 || insTy == MIRType::Int64 ||
+          insTy == MIRType::Float32 || insTy == MIRType::Double) &&
          (compTy == MCompare::Compare_Int32 ||
           compTy == MCompare::Compare_UInt32 ||
+          compTy == MCompare::Compare_Int64 ||
+          compTy == MCompare::Compare_UInt64 ||
           compTy == MCompare::Compare_Float32 ||
           compTy == MCompare::Compare_Double);
 }
@@ -426,7 +431,9 @@ void LIRGeneratorARM64::lowerWasmCompareAndSelect(MWasmSelect* ins,
       compTy == MCompare::Compare_Double) {
     rhsAlloc = useRegisterAtStart(rhs);
   } else if (compTy == MCompare::Compare_Int32 ||
-             compTy == MCompare::Compare_UInt32) {
+             compTy == MCompare::Compare_UInt32 ||
+             compTy == MCompare::Compare_Int64 ||
+             compTy == MCompare::Compare_UInt64) {
     rhsAlloc = useRegisterOrConstantAtStart(rhs);
   } else {
     MOZ_CRASH("Unexpected type");

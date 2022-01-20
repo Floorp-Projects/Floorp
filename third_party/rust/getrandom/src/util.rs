@@ -5,7 +5,7 @@
 // <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
-
+#![allow(dead_code)]
 use core::sync::atomic::{AtomicUsize, Ordering::Relaxed};
 
 // This structure represents a lazily initialized static usize value. Useful

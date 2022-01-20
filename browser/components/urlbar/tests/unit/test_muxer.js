@@ -590,3 +590,128 @@ async function doBadHeuristicGroupsTest(resultGroups, expectedResults) {
 
   Services.prefs.clearUserPref("browser.urlbar.resultGroups");
 }
+
+// When `maxRichResults` is positive and taken up by suggested-index result(s),
+// both the heuristic and suggested-index results should be included because we
+// (a) make room for the heuristic and (b) assume all suggested-index results
+// should be included even if it means exceeding `maxRichResults`. The specified
+// `maxRichResults` span will be exceeded in this case.
+add_task(async function roomForHeuristic_suggestedIndex() {
+  let results = [
+    Object.assign(
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        UrlbarUtils.RESULT_SOURCE.HISTORY,
+        { url: "http://example.com/heuristic" }
+      ),
+      { heuristic: true }
+    ),
+    Object.assign(
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        UrlbarUtils.RESULT_SOURCE.HISTORY,
+        { url: "http://example.com/suggestedIndex" }
+      ),
+      { suggestedIndex: 1 }
+    ),
+  ];
+
+  UrlbarPrefs.set("maxRichResults", 1);
+
+  let provider = registerBasicTestProvider(results);
+  let context = createContext(undefined, { providers: [provider.name] });
+  await check_results({
+    context,
+    matches: results,
+  });
+
+  UrlbarPrefs.clear("maxRichResults");
+});
+
+// When `maxRichResults` is positive but less than the heuristic's result span,
+// the heuristic should be included because we make room for it even if it means
+// exceeding `maxRichResults`. The specified `maxRichResults` span will be
+// exceeded in this case.
+add_task(async function roomForHeuristic_largeResultSpan() {
+  let results = [
+    Object.assign(
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        UrlbarUtils.RESULT_SOURCE.HISTORY,
+        { url: "http://example.com/heuristic" }
+      ),
+      { heuristic: true, resultSpan: 2 }
+    ),
+  ];
+
+  UrlbarPrefs.set("maxRichResults", 1);
+
+  let provider = registerBasicTestProvider(results);
+  let context = createContext(undefined, { providers: [provider.name] });
+  await check_results({
+    context,
+    matches: results,
+  });
+
+  UrlbarPrefs.clear("maxRichResults");
+});
+
+// When `maxRichResults` is zero and there are no suggested-index results, the
+// heuristic should not be included.
+add_task(async function roomForHeuristic_maxRichResultsZero() {
+  let results = [
+    Object.assign(
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        UrlbarUtils.RESULT_SOURCE.HISTORY,
+        { url: "http://example.com/heuristic" }
+      ),
+      { heuristic: true }
+    ),
+  ];
+
+  UrlbarPrefs.set("maxRichResults", 0);
+
+  let provider = registerBasicTestProvider(results);
+  let context = createContext(undefined, { providers: [provider.name] });
+  await check_results({
+    context,
+    matches: [],
+  });
+
+  UrlbarPrefs.clear("maxRichResults");
+});
+
+// When `maxRichResults` is zero and suggested-index results are present,
+// neither the heuristic nor the suggested-index results should be included.
+add_task(async function roomForHeuristic_maxRichResultsZero_suggestedIndex() {
+  let results = [
+    Object.assign(
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        UrlbarUtils.RESULT_SOURCE.HISTORY,
+        { url: "http://example.com/heuristic" }
+      ),
+      { heuristic: true }
+    ),
+    Object.assign(
+      new UrlbarResult(
+        UrlbarUtils.RESULT_TYPE.URL,
+        UrlbarUtils.RESULT_SOURCE.HISTORY,
+        { url: "http://example.com/suggestedIndex" }
+      ),
+      { suggestedIndex: 1 }
+    ),
+  ];
+
+  UrlbarPrefs.set("maxRichResults", 0);
+
+  let provider = registerBasicTestProvider(results);
+  let context = createContext(undefined, { providers: [provider.name] });
+  await check_results({
+    context,
+    matches: [],
+  });
+
+  UrlbarPrefs.clear("maxRichResults");
+});

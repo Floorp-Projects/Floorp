@@ -20,7 +20,6 @@
   --panel-separator-color: ThreeDLightShadow;
 
   --chrome-content-separator-color: ThreeDShadow;
-  --tabs-border-color: threedshadow;
 }
 
 @media (-moz-windows-default-theme) {
@@ -158,8 +157,13 @@
   position: relative;
 }
 
-#nav-bar {
-  box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--tabs-border-color);
+@media (-moz-windows-default-theme: 0) {
+  #nav-bar:not(:-moz-lwtheme) {
+    box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 ThreeDShadow;
+  }
+}
+#nav-bar:-moz-lwtheme {
+  box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--lwt-tabs-border-color, rgba(0,0,0,.3));
 }
 @media (-moz-windows-compositor: 0) {
   #nav-bar[tabs-hidden="true"] {

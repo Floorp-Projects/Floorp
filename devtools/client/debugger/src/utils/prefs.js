@@ -35,7 +35,6 @@ if (isNode()) {
   pref("devtools.debugger.end-panel-collapsed", false);
   pref("devtools.debugger.start-panel-size", 300);
   pref("devtools.debugger.end-panel-size", 300);
-  pref("devtools.debugger.tabsBlackBoxed", "[]");
   pref("devtools.debugger.ui.editor-wrapping", false);
   pref("devtools.debugger.ui.framework-grouping-on", true);
   pref("devtools.debugger.pending-selected-location", "{}");

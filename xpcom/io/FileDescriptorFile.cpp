@@ -402,6 +402,11 @@ FileDescriptorFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
 }
 
 NS_IMETHODIMP
+FileDescriptorFile::GetDiskCapacity(int64_t* aDiskCapacity) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 FileDescriptorFile::Reveal() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP

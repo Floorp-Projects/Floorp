@@ -6,8 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use crate::error::Error;
 use std::result;
-use super::error::Error;
 
 /// A specialized result type for Argon2 operations.
 pub type Result<T> = result::Result<T, Error>;

@@ -33,6 +33,37 @@ use std::task::{Context, Poll};
 ///     // approximately 20ms have elapsed.
 /// }
 /// ```
+///
+/// A simple example using `interval` to execute a task every two seconds.
+///
+/// The difference between `interval` and [`delay_for`] is that an `interval`
+/// measures the time since the last tick, which means that `.tick().await`
+/// may wait for a shorter time than the duration specified for the interval
+/// if some time has passed between calls to `.tick().await`.
+///
+/// If the tick in the example below was replaced with [`delay_for`], the task
+/// would only be executed once every three seconds, and not every two
+/// seconds.
+///
+/// ```
+/// use tokio::time;
+///
+/// async fn task_that_takes_a_second() {
+///     println!("hello");
+///     time::delay_for(time::Duration::from_secs(1)).await
+/// }
+///
+/// #[tokio::main]
+/// async fn main() {
+///     let mut interval = time::interval(time::Duration::from_secs(2));
+///     for _i in 0..5 {
+///         interval.tick().await;
+///         task_that_takes_a_second().await;
+///     }
+/// }
+/// ```
+///
+/// [`delay_for`]: crate::time::delay_for()
 pub fn interval(period: Duration) -> Interval {
     assert!(period > Duration::new(0, 0), "`period` must be non-zero.");
 
@@ -40,7 +71,7 @@ pub fn interval(period: Duration) -> Interval {
 }
 
 /// Creates new `Interval` that yields with interval of `period` with the
-/// first tick completing at `at`.
+/// first tick completing at `start`.
 ///
 /// An interval will tick indefinitely. At any time, the `Interval` value can be
 /// dropped. This cancels the interval.
@@ -76,6 +107,11 @@ pub fn interval_at(start: Instant, period: Duration) -> Interval {
 }
 
 /// Stream returned by [`interval`](interval) and [`interval_at`](interval_at).
+///
+/// This type only implements the [`Stream`] trait if the "stream" feature is
+/// enabled.
+///
+/// [`Stream`]: trait@crate::stream::Stream
 #[derive(Debug)]
 pub struct Interval {
     /// Future that completes the next time the `Interval` yields a value.

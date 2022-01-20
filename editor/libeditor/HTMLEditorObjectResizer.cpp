@@ -7,12 +7,14 @@
 
 #include "HTMLEditorEventListener.h"
 #include "HTMLEditUtils.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/mozalloc.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/mozalloc.h"
+#include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/EventTarget.h"
@@ -670,9 +672,8 @@ nsresult HTMLEditor::StartResizing(Element& aHandleElement) {
       "Element::SetAttr(nsGkAtoms::_moz_activated, true) failed");
 
   // do we want to preserve ratio or not?
-  bool preserveRatio =
-      HTMLEditUtils::IsImage(mResizedObject) &&
-      Preferences::GetBool("editor.resizing.preserve_ratio", true);
+  const bool preserveRatio = StaticPrefs::editor_resizing_preserve_ratio() &&
+                             HTMLEditUtils::IsImage(mResizedObject);
 
   // the way we change the position/size of the shadow depends on
   // the handle

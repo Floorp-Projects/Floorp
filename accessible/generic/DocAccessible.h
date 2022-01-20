@@ -497,6 +497,26 @@ class DocAccessible : public HyperTextAccessibleWrap,
    */
   void ProcessBoundsChanged();
 
+  bool IsAccessibleBeingMoved(LocalAccessible* aAcc) {
+    return mMovedAccessibles.Contains(aAcc);
+  }
+
+  /**
+   * Called from NotificationController before mutation events are processed to
+   * notify the parent process which Accessibles are being moved (if any).
+   */
+  void SendAccessiblesWillMove();
+
+  /**
+   * Called from NotificationController after all mutation events have been
+   * processed to clear our data about Accessibles that were moved during this
+   * tick.
+   */
+  void ClearMovedAccessibles() {
+    mMovedAccessibles.Clear();
+    mInsertedAccessibles.Clear();
+  }
+
   /**
    * Steals or puts back accessible subtrees.
    */
@@ -708,12 +728,25 @@ class DocAccessible : public HyperTextAccessibleWrap,
  private:
   void SetRoleMapEntryForDoc(dom::Element* aElement);
 
+  /**
+   * This must be called whenever an Accessible is moved if the cache is
+   * enabled. It keeps track of Accessibles moved during this tick.
+   */
+  void TrackMovedAccessible(LocalAccessible* aAcc);
+
   PresShell* mPresShell;
 
   // Exclusively owned by IPDL so don't manually delete it!
   DocAccessibleChild* mIPCDoc;
 
   nsTHashSet<RefPtr<LocalAccessible>> mMaybeBoundsChanged;
+  // A set of Accessibles moved during this tick. Only used if the cache is
+  // enabled.
+  nsTHashSet<RefPtr<LocalAccessible>> mMovedAccessibles;
+  // A set of Accessibles inserted during this tick. Only used if the cache is
+  // enabled. This is needed to prevent insertions + moves of the same
+  // Accessible in the same tick from being tracked as moves.
+  nsTHashSet<RefPtr<LocalAccessible>> mInsertedAccessibles;
 };
 
 inline DocAccessible* LocalAccessible::AsDoc() {

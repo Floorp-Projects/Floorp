@@ -59,11 +59,11 @@ class FlattenedChildIterator;
 
 class nsCSSFrameConstructor final : public nsFrameManager {
  public:
-  typedef mozilla::ComputedStyle ComputedStyle;
-  typedef mozilla::PseudoStyleType PseudoStyleType;
-  typedef mozilla::PresShell PresShell;
-  typedef mozilla::dom::Element Element;
-  typedef mozilla::dom::Text Text;
+  using ComputedStyle = mozilla::ComputedStyle;
+  using PseudoStyleType = mozilla::PseudoStyleType;
+  using PresShell = mozilla::PresShell;
+  using Element = mozilla::dom::Element;
+  using Text = mozilla::dom::Text;
 
   // FIXME(emilio): Is this really needed?
   friend class mozilla::RestyleManager;
@@ -274,9 +274,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // Returns whether there are chances for the frame to be unsuppressed.
   bool EnsureFrameForTextNodeIsCreatedAfterFlush(
       mozilla::dom::CharacterData* aContent);
-
-  // Generate the child frames and process bindings
-  void GenerateChildFrames(nsContainerFrame* aFrame);
 
   // Should be called when a frame is going to be destroyed and
   // WillDestroyFrameTree hasn't been called yet.
@@ -588,10 +585,10 @@ class nsCSSFrameConstructor final : public nsFrameManager {
      @param PresShell the presshell whose arena should be used to allocate
                       the frame.
      @param ComputedStyle the style to use for the frame. */
-  typedef nsIFrame* (*FrameCreationFunc)(PresShell*, ComputedStyle*);
-  typedef nsContainerFrame* (*ContainerFrameCreationFunc)(PresShell*,
-                                                          ComputedStyle*);
-  typedef nsBlockFrame* (*BlockFrameCreationFunc)(PresShell*, ComputedStyle*);
+  using FrameCreationFunc = nsIFrame* (*)(PresShell*, ComputedStyle*);
+  using ContainerFrameCreationFunc = nsContainerFrame* (*)(PresShell*,
+                                                           ComputedStyle*);
+  using BlockFrameCreationFunc = nsBlockFrame* (*)(PresShell*, ComputedStyle*);
 
   /* A function that can be used to get a FrameConstructionData.  Such
      a function is allowed to return null.
@@ -600,8 +597,8 @@ class nsCSSFrameConstructor final : public nsFrameManager {
      @param ComputedStyle the style to be used for the frame.
   */
   struct FrameConstructionData;
-  typedef const FrameConstructionData* (*FrameConstructionDataGetter)(
-      const Element&, ComputedStyle&);
+  using FrameConstructionDataGetter =
+      const FrameConstructionData* (*)(const Element&, ComputedStyle&);
 
   /* A constructor function that's used for complicated construction tasks.
      This is expected to create the new frame, initialize it, add whatever
@@ -623,10 +620,12 @@ class nsCSSFrameConstructor final : public nsFrameManager {
      @return the frame that was constructed.  This frame is what the caller
              will set as the frame on the content.  Guaranteed non-null.
   */
-  typedef nsIFrame* (nsCSSFrameConstructor::*FrameFullConstructor)(
-      nsFrameConstructorState& aState, FrameConstructionItem& aItem,
-      nsContainerFrame* aParentFrame, const nsStyleDisplay* aStyleDisplay,
-      nsFrameList& aFrameList);
+  using FrameFullConstructor =
+      nsIFrame* (nsCSSFrameConstructor::*)(nsFrameConstructorState& aState,
+                                           FrameConstructionItem& aItem,
+                                           nsContainerFrame* aParentFrame,
+                                           const nsStyleDisplay* aStyleDisplay,
+                                           nsFrameList& aFrameList);
 
   /* Bits that modify the way a FrameConstructionData is handled */
 
@@ -664,11 +663,9 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   /* If FCDATA_MAY_NEED_SCROLLFRAME is set, the new frame should be wrapped in
      a scrollframe if its overflow type so requires. */
 #define FCDATA_MAY_NEED_SCROLLFRAME 0x80
-#ifdef MOZ_XUL
   /* If FCDATA_IS_POPUP is set, the new frame is a XUL popup frame.  These need
      some really weird special handling.  */
-#  define FCDATA_IS_POPUP 0x100
-#endif /* MOZ_XUL */
+#define FCDATA_IS_POPUP 0x100
   /* If FCDATA_SKIP_ABSPOS_PUSH is set, don't push this frame as an
      absolute containing block, no matter what its style says. */
 #define FCDATA_SKIP_ABSPOS_PUSH 0x200
@@ -727,23 +724,50 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   /* Structure representing information about how a frame should be
      constructed.  */
   struct FrameConstructionData {
-    // Flag bits that can modify the way the construction happens
-    uint32_t mBits;
     // We have exactly one of three types of functions, so use a union for
-    // better cache locality for the ones that aren't pointer-to-member.  That
-    // one needs to be separate, because we can't cast between it and the
-    // others and hence wouldn't be able to initialize the union without a
-    // constructor and all the resulting generated code.  See documentation
-    // above for FrameCreationFunc, FrameConstructionDataGetter, and
-    // FrameFullConstructor to see what the functions would do.
+    // better cache locality.
     union Func {
       FrameCreationFunc mCreationFunc;
       FrameConstructionDataGetter mDataGetter;
+      FrameFullConstructor mFullConstructor;
+
+      explicit constexpr Func(FrameCreationFunc aFunc) : mCreationFunc(aFunc) {}
+      explicit constexpr Func(FrameConstructionDataGetter aDataGetter)
+          : mDataGetter(aDataGetter) {}
+      explicit constexpr Func(FrameFullConstructor aCtor)
+          : mFullConstructor(aCtor) {}
     } mFunc;
-    FrameFullConstructor mFullConstructor;
+    // Flag bits that can modify the way the construction happens
+    const uint32_t mBits = 0;
     // For cases when FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS is set, the
     // anonymous box type to use for that wrapper.
-    PseudoStyleType const mAnonBoxPseudo;
+    PseudoStyleType const mAnonBoxPseudo = PseudoStyleType::NotPseudo;
+
+    constexpr FrameConstructionData() : FrameConstructionData(nullptr) {}
+
+    MOZ_IMPLICIT constexpr FrameConstructionData(std::nullptr_t,
+                                                 uint32_t aBits = 0)
+        : mFunc(static_cast<FrameCreationFunc>(nullptr)), mBits(aBits) {}
+
+    MOZ_IMPLICIT constexpr FrameConstructionData(
+        FrameCreationFunc aCreationFunc, uint32_t aBits = 0)
+        : mFunc(aCreationFunc), mBits(aBits) {}
+    constexpr FrameConstructionData(FrameCreationFunc aCreationFunc,
+                                    uint32_t aBits,
+                                    PseudoStyleType aAnonBoxPseudo)
+        : mFunc(aCreationFunc),
+          mBits(aBits | FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS),
+          mAnonBoxPseudo(aAnonBoxPseudo) {}
+    MOZ_IMPLICIT constexpr FrameConstructionData(
+        FrameConstructionDataGetter aDataGetter, uint32_t aBits = 0)
+        : mFunc(aDataGetter),
+          mBits(aBits | FCDATA_FUNC_IS_DATA_GETTER),
+          mAnonBoxPseudo(PseudoStyleType::NotPseudo) {}
+    MOZ_IMPLICIT constexpr FrameConstructionData(FrameFullConstructor aCtor,
+                                                 uint32_t aBits = 0)
+        : mFunc(aCtor),
+          mBits(aBits | FCDATA_FUNC_IS_FULL_CTOR),
+          mAnonBoxPseudo(PseudoStyleType::NotPseudo) {}
   };
 
   /* Structure representing a mapping of an atom to a FrameConstructionData.
@@ -1462,18 +1486,16 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   static const FrameConstructionData* FindXULTagData(const Element&,
                                                      ComputedStyle&);
   // XUL data-finding helper functions and structures
-#ifdef MOZ_XUL
   static const FrameConstructionData* FindPopupGroupData(const Element&,
                                                          ComputedStyle&);
   static const FrameConstructionData* FindXULButtonData(const Element&,
                                                         ComputedStyle&);
   static const FrameConstructionData* FindXULLabelOrDescriptionData(
       const Element&, ComputedStyle&);
-#  ifdef XP_MACOSX
+#ifdef XP_MACOSX
   static const FrameConstructionData* FindXULMenubarData(const Element&,
                                                          ComputedStyle&);
-#  endif /* XP_MACOSX */
-#endif   /* MOZ_XUL */
+#endif /* XP_MACOSX */
 
   /**
    * Constructs an outer frame, an anonymous child that wraps its real

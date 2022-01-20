@@ -100,24 +100,18 @@ class OSXAndroidBootstrapper(object):
                 avd_manifest_path=android.AVD_MANIFEST_ARM64,
             )
 
-    def ensure_mobile_android_packages(self, state_dir, checkout_root):
+    def ensure_mobile_android_packages(self):
         from mozboot import android
 
         arch = platform.machine()
         android.ensure_java("macosx", arch)
 
         if arch == "x86_64" or arch == "x86":
-            self.install_toolchain_artifact(
-                state_dir, checkout_root, android.MACOS_X86_64_ANDROID_AVD
-            )
-            self.install_toolchain_artifact(
-                state_dir, checkout_root, android.MACOS_ARM_ANDROID_AVD
-            )
+            self.install_toolchain_artifact(android.MACOS_X86_64_ANDROID_AVD)
+            self.install_toolchain_artifact(android.MACOS_ARM_ANDROID_AVD)
         elif arch == "arm64":
             # The only emulator supported on Apple Silicon is the Arm64 one.
-            self.install_toolchain_artifact(
-                state_dir, checkout_root, android.MACOS_ARM64_ANDROID_AVD
-            )
+            self.install_toolchain_artifact(android.MACOS_ARM64_ANDROID_AVD)
 
     def install_mobile_android_artifact_mode_packages(self, mozconfig_builder):
         self.install_mobile_android_packages(mozconfig_builder, artifact_mode=True)
@@ -187,16 +181,16 @@ class OSXBootstrapperLight(OSXAndroidBootstrapper, BaseBootstrapper):
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         pass
 
-    def ensure_node_packages(self, state_dir, checkout_root):
+    def ensure_node_packages(self):
         pass
 
-    def ensure_stylo_packages(self, state_dir, checkout_root):
+    def ensure_stylo_packages(self):
         pass
 
-    def ensure_clang_static_analysis_package(self, state_dir, checkout_root):
+    def ensure_clang_static_analysis_package(self):
         pass
 
-    def ensure_nasm_packages(self, state_dir, checkout_root):
+    def ensure_nasm_packages(self):
         pass
 
 
@@ -311,54 +305,33 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
                     print(BAD_PATH_ORDER % (check, brew_dir, brew_dir, check, brew_dir))
                     sys.exit(1)
 
-    def ensure_clang_static_analysis_package(self, state_dir, checkout_root):
+    def ensure_clang_static_analysis_package(self):
         from mozboot import static_analysis
 
-        self.install_toolchain_static_analysis(
-            state_dir, checkout_root, static_analysis.MACOS_CLANG_TIDY
-        )
+        self.install_toolchain_static_analysis(static_analysis.MACOS_CLANG_TIDY)
 
-    def ensure_sccache_packages(self, state_dir, checkout_root):
+    def ensure_sccache_packages(self):
         from mozboot import sccache
 
-        self.install_toolchain_artifact(state_dir, checkout_root, sccache.MACOS_SCCACHE)
-        self.install_toolchain_artifact(
-            state_dir, checkout_root, sccache.RUSTC_DIST_TOOLCHAIN, no_unpack=True
-        )
-        self.install_toolchain_artifact(
-            state_dir, checkout_root, sccache.CLANG_DIST_TOOLCHAIN, no_unpack=True
-        )
+        self.install_toolchain_artifact("sccache")
+        self.install_toolchain_artifact(sccache.RUSTC_DIST_TOOLCHAIN, no_unpack=True)
+        self.install_toolchain_artifact(sccache.CLANG_DIST_TOOLCHAIN, no_unpack=True)
 
-    def ensure_fix_stacks_packages(self, state_dir, checkout_root):
-        from mozboot import fix_stacks
+    def ensure_fix_stacks_packages(self):
+        self.install_toolchain_artifact("fix-stacks")
 
-        self.install_toolchain_artifact(
-            state_dir, checkout_root, fix_stacks.MACOS_FIX_STACKS
-        )
+    def ensure_stylo_packages(self):
+        self.install_toolchain_artifact("clang")
+        self.install_toolchain_artifact("cbindgen")
 
-    def ensure_stylo_packages(self, state_dir, checkout_root):
-        from mozboot import stylo
+    def ensure_nasm_packages(self):
+        self.install_toolchain_artifact("nasm")
 
-        self.install_toolchain_artifact(state_dir, checkout_root, stylo.MACOS_CLANG)
-        self.install_toolchain_artifact(state_dir, checkout_root, stylo.MACOS_CBINDGEN)
+    def ensure_node_packages(self):
+        self.install_toolchain_artifact("node")
 
-    def ensure_nasm_packages(self, state_dir, checkout_root):
-        from mozboot import nasm
-
-        self.install_toolchain_artifact(state_dir, checkout_root, nasm.MACOS_NASM)
-
-    def ensure_node_packages(self, state_dir, checkout_root):
-        # XXX from necessary?
-        from mozboot import node
-
-        self.install_toolchain_artifact(state_dir, checkout_root, node.OSX)
-
-    def ensure_minidump_stackwalk_packages(self, state_dir, checkout_root):
-        from mozboot import minidump_stackwalk
-
-        self.install_toolchain_artifact(
-            state_dir, checkout_root, minidump_stackwalk.MACOS_MINIDUMP_STACKWALK
-        )
+    def ensure_minidump_stackwalk_packages(self):
+        self.install_toolchain_artifact("minidump_stackwalk")
 
     def install_homebrew(self):
         print(BREW_INSTALL)

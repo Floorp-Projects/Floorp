@@ -47,7 +47,7 @@ const startupPhases = {
   // We are at this phase after creating the first browser window (ie. after final-ui-startup).
   "before opening first browser window": {
     denylist: {
-      modules: new Set([]),
+      modules: new Set(["resource://gre/modules/osfile.jsm"]),
     },
   },
 

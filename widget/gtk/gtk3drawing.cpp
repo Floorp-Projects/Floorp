@@ -2176,6 +2176,16 @@ static gint moz_gtk_header_bar_paint(WidgetNodeType widgetType, cairo_t* cr,
   GtkStyleContext* style =
       GetStyleContext(widgetType, state->scale, GTK_TEXT_DIR_NONE, state_flags);
 
+  // Some themes like Elementary's style the container of the headerbar rather
+  // than the header bar itself.
+  if (HeaderBarShouldDrawContainer(widgetType)) {
+    auto containerType = widgetType == MOZ_GTK_HEADER_BAR
+                             ? MOZ_GTK_HEADERBAR_FIXED
+                             : MOZ_GTK_HEADERBAR_FIXED_MAXIMIZED;
+    style = GetStyleContext(containerType, state->scale, GTK_TEXT_DIR_NONE,
+                            state_flags);
+  }
+
 // Some themes (Adwaita for instance) draws bold dark line at
 // titlebar bottom. It does not fit well with Firefox tabs so
 // draw with some extent to make the titlebar bottom part invisible.
@@ -2190,7 +2200,7 @@ static gint moz_gtk_header_bar_paint(WidgetNodeType widgetType, cairo_t* cr,
       !mozilla::widget::GdkIsWaylandDisplay()) {
     GtkStyleContext* windowStyle =
         GetStyleContext(MOZ_GTK_HEADERBAR_WINDOW, state->scale);
-    bool solidDecorations =
+    const bool solidDecorations =
         gtk_style_context_has_class(windowStyle, "solid-csd");
     GtkStyleContext* decorationStyle =
         GetStyleContext(solidDecorations ? MOZ_GTK_WINDOW_DECORATION_SOLID

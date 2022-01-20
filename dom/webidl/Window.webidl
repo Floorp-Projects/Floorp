@@ -386,12 +386,8 @@ partial interface Window {
   [Throws, NeedsCallerType] attribute any outerHeight;
 };
 
-// https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/RequestAnimationFrame/Overview.html
-partial interface Window {
-  [Throws] long requestAnimationFrame(FrameRequestCallback callback);
-  [Throws] void cancelAnimationFrame(long handle);
-};
-callback FrameRequestCallback = void (DOMHighResTimeStamp time);
+// https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#animation-frames
+Window includes AnimationFrameProvider;
 
 // https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html
 partial interface Window {

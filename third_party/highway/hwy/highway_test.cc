@@ -66,14 +66,30 @@ struct TestOverflow {
     const auto vmax = Set(d, LimitsMax<T>());
     const auto vmin = Set(d, LimitsMin<T>());
     // Unsigned underflow / negative -> positive
-    HWY_ASSERT_VEC_EQ(d, vmax, vmin - v1);
+    HWY_ASSERT_VEC_EQ(d, vmax, Sub(vmin, v1));
     // Unsigned overflow / positive -> negative
-    HWY_ASSERT_VEC_EQ(d, vmin, vmax + v1);
+    HWY_ASSERT_VEC_EQ(d, vmin, Add(vmax, v1));
   }
 };
 
 HWY_NOINLINE void TestAllOverflow() {
   ForIntegerTypes(ForPartialVectors<TestOverflow>());
+}
+
+struct TestClamp {
+  template <class T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    const auto v0 = Zero(d);
+    const auto v1 = Set(d, 1);
+    const auto v2 = Set(d, 2);
+
+    HWY_ASSERT_VEC_EQ(d, v1, Clamp(v2, v0, v1));
+    HWY_ASSERT_VEC_EQ(d, v1, Clamp(v0, v1, v2));
+  }
+};
+
+HWY_NOINLINE void TestAllClamp() {
+  ForAllTypes(ForPartialVectors<TestClamp>());
 }
 
 struct TestSignBitInteger {
@@ -122,16 +138,20 @@ bool IsNaN(TF f) {
 }
 
 template <class D, class V>
-HWY_NOINLINE void AssertNaN(const D d, const V v, const char* file, int line) {
+HWY_NOINLINE void AssertNaN(D d, VecArg<V> v, const char* file, int line) {
   using T = TFromD<D>;
   const T lane = GetLane(v);
   if (!IsNaN(lane)) {
     const std::string type_name = TypeName(T(), Lanes(d));
-    MakeUnsigned<T> bits;
-    memcpy(&bits, &lane, sizeof(T));
-    // RVV lacks PRIu64, so use size_t; double will be truncated on 32-bit.
-    Abort(file, line, "Expected %s NaN, got %E (%zu)", type_name.c_str(), lane,
-          size_t(bits));
+    // RVV lacks PRIu64 and MSYS still has problems with %zu, so print bytes to
+    // avoid truncating doubles.
+    uint8_t bytes[HWY_MAX(sizeof(T), 8)] = {0};
+    memcpy(bytes, &lane, sizeof(T));
+    Abort(file, line,
+          "Expected %s NaN, got %E (bytes %02x %02x %02x %02x %02x %02x %02x "
+          "%02x)",
+          type_name.c_str(), lane, bytes[0], bytes[1], bytes[2], bytes[3],
+          bytes[4], bytes[5], bytes[6], bytes[7]);
   }
 }
 
@@ -187,18 +207,18 @@ struct TestNaN {
     HWY_ASSERT_NAN(d, Or(nan, v1));
 
     // Comparison
-    HWY_ASSERT(AllFalse(Eq(nan, v1)));
-    HWY_ASSERT(AllFalse(Gt(nan, v1)));
-    HWY_ASSERT(AllFalse(Lt(nan, v1)));
-    HWY_ASSERT(AllFalse(Ge(nan, v1)));
-    HWY_ASSERT(AllFalse(Le(nan, v1)));
+    HWY_ASSERT(AllFalse(d, Eq(nan, v1)));
+    HWY_ASSERT(AllFalse(d, Gt(nan, v1)));
+    HWY_ASSERT(AllFalse(d, Lt(nan, v1)));
+    HWY_ASSERT(AllFalse(d, Ge(nan, v1)));
+    HWY_ASSERT(AllFalse(d, Le(nan, v1)));
 
     // Reduction
-    HWY_ASSERT_NAN(d, SumOfLanes(nan));
+    HWY_ASSERT_NAN(d, SumOfLanes(d, nan));
 // TODO(janwas): re-enable after QEMU is fixed
 #if HWY_TARGET != HWY_RVV
-    HWY_ASSERT_NAN(d, MinOfLanes(nan));
-    HWY_ASSERT_NAN(d, MaxOfLanes(nan));
+    HWY_ASSERT_NAN(d, MinOfLanes(d, nan));
+    HWY_ASSERT_NAN(d, MaxOfLanes(d, nan));
 #endif
 
     // Min
@@ -227,13 +247,6 @@ struct TestNaN {
 #endif
     HWY_ASSERT_NAN(d, Min(nan, nan));
     HWY_ASSERT_NAN(d, Max(nan, nan));
-
-    // Comparison
-    HWY_ASSERT(AllFalse(Eq(nan, v1)));
-    HWY_ASSERT(AllFalse(Gt(nan, v1)));
-    HWY_ASSERT(AllFalse(Lt(nan, v1)));
-    HWY_ASSERT(AllFalse(Ge(nan, v1)));
-    HWY_ASSERT(AllFalse(Le(nan, v1)));
   }
 };
 
@@ -286,6 +299,19 @@ HWY_NOINLINE void TestAllGetLane() {
   ForAllTypes(ForPartialVectors<TestGetLane>());
 }
 
+struct TestDFromV {
+  template <class T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    const auto v0 = Zero(d);
+    using D0 = DFromV<decltype(v0)>;         // not necessarily same as D
+    const auto v0b = And(v0, Set(D0(), 1));  // but vectors can interoperate
+    HWY_ASSERT_VEC_EQ(d, v0, v0b);
+  }
+};
+
+HWY_NOINLINE void TestAllDFromV() {
+  ForAllTypes(ForPartialVectors<TestDFromV>());
+}
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
 }  // namespace HWY_NAMESPACE
@@ -293,13 +319,23 @@ HWY_NOINLINE void TestAllGetLane() {
 HWY_AFTER_NAMESPACE();
 
 #if HWY_ONCE
+
 namespace hwy {
 HWY_BEFORE_TEST(HighwayTest);
 HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllSet);
 HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllOverflow);
+HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllClamp);
 HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllSignBit);
 HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllNaN);
 HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllCopyAndAssign);
 HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllGetLane);
+HWY_EXPORT_AND_TEST_P(HighwayTest, TestAllDFromV);
 }  // namespace hwy
+
+// Ought not to be necessary, but without this, no tests run on RVV.
+int main(int argc, char** argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 #endif

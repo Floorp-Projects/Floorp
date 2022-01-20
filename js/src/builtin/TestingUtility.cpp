@@ -8,13 +8,15 @@
 
 #include <stdint.h>  // uint32_t
 
+#include "jsapi.h"                 // JS_NewPlainObject, JS_WrapValue
 #include "js/CharacterEncoding.h"  // JS_EncodeStringToLatin1
 #include "js/CompileOptions.h"     // JS::CompileOptions
 #include "js/Conversions.h"  // JS::ToBoolean, JS::ToString, JS::ToUint32, JS::ToInt32
-#include "js/PropertyAndElement.h"  // JS_GetProperty
+#include "js/PropertyAndElement.h"  // JS_GetProperty, JS_DefineProperty
+#include "js/PropertyDescriptor.h"  // JSPROP_ENUMERATE
 #include "js/RootingAPI.h"          // JS::Rooted, JS::Handle
 #include "js/Utility.h"             // JS::UniqueChars
-#include "js/Value.h"               // JS::Value
+#include "js/Value.h"               // JS::Value, JS::StringValue
 #include "vm/JSContext.h"           // JSContext
 #include "vm/JSObject.h"            // JSObject
 #include "vm/StringType.h"          // JSString
@@ -152,6 +154,61 @@ bool js::SetSourceOptions(JSContext* cx, ScriptSource* source,
     if (!source->setSourceMapURL(cx, std::move(chars))) {
       return false;
     }
+  }
+
+  return true;
+}
+
+JSObject* js::CreateScriptPrivate(JSContext* cx,
+                                  JS::Handle<JSString*> path /* = nullptr */) {
+  JS::Rooted<JSObject*> info(cx, JS_NewPlainObject(cx));
+  if (!info) {
+    return nullptr;
+  }
+
+  if (path) {
+    JS::Rooted<JS::Value> pathValue(cx, JS::StringValue(path));
+    if (!JS_DefineProperty(cx, info, "path", pathValue, JSPROP_ENUMERATE)) {
+      return nullptr;
+    }
+  }
+
+  return info;
+}
+
+bool js::ParseDebugMetadata(JSContext* cx, JS::Handle<JSObject*> opts,
+                            JS::MutableHandle<JS::Value> privateValue,
+                            JS::MutableHandle<JSString*> elementAttributeName) {
+  JS::Rooted<JS::Value> v(cx);
+  JS::Rooted<JSString*> s(cx);
+
+  if (!JS_GetProperty(cx, opts, "element", &v)) {
+    return false;
+  }
+  if (v.isObject()) {
+    JS::Rooted<JSObject*> infoObject(cx, CreateScriptPrivate(cx));
+    if (!infoObject) {
+      return false;
+    }
+    JS::Rooted<JS::Value> elementValue(cx, v);
+    if (!JS_WrapValue(cx, &elementValue)) {
+      return false;
+    }
+    if (!JS_DefineProperty(cx, infoObject, "element", elementValue, 0)) {
+      return false;
+    }
+    privateValue.set(ObjectValue(*infoObject));
+  }
+
+  if (!JS_GetProperty(cx, opts, "elementAttributeName", &v)) {
+    return false;
+  }
+  if (!v.isUndefined()) {
+    s = ToString(cx, v);
+    if (!s) {
+      return false;
+    }
+    elementAttributeName.set(s);
   }
 
   return true;

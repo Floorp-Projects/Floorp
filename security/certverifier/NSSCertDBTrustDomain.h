@@ -76,6 +76,23 @@ bool LoadOSClientCertsModule(const nsCString& dir);
 
 extern const char* kOSClientCertsModuleName;
 
+/**
+ * Loads the IPC client certs module.
+ *
+ * @param dir
+ *        The path to the directory containing the module. This should be the
+ *        same as where all of the other gecko libraries live.
+ * @return true if the module was successfully loaded, false otherwise.
+ */
+bool LoadIPCClientCertsModule(const nsCString& dir);
+
+extern const char* kIPCClientCertsModuleName;
+
+/**
+ * Unloads the loadable roots module and os client certs module, if loaded.
+ */
+void UnloadUserModules();
+
 nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
                                       /*out*/ nsCString& nickname);
 
@@ -212,6 +229,8 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   mozilla::pkix::Input GetSCTListFromCertificate() const;
   mozilla::pkix::Input GetSCTListFromOCSPStapling() const;
 
+  bool GetIsBuiltChainRootBuiltInRoot() const;
+
   bool GetIsErrorDueToDistrustedCAPolicy() const;
 
  private:
@@ -263,6 +282,7 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
       mThirdPartyIntermediateInputs;                             // non-owning
   const Maybe<nsTArray<nsTArray<uint8_t>>>& mExtraCertificates;  // non-owning
   nsTArray<nsTArray<uint8_t>>& mBuiltChain;                      // non-owning
+  bool mIsBuiltChainRootBuiltInRoot;
   PinningTelemetryInfo* mPinningTelemetryInfo;
   const char* mHostname;  // non-owning - only used for pinning checks
   nsCOMPtr<nsICertStorage> mCertStorage;

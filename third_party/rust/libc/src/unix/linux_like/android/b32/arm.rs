@@ -138,7 +138,7 @@ cfg_if! {
                         self.uc_stack.hash(state);
                         self.uc_mcontext.hash(state);
                         self.uc_sigmask__c_anonymous_union.hash(state);
-                        &self.uc_regspace[..].hash(state);
+                        self.uc_regspace[..].hash(state);
                         // Ignore padding field
                     }
                 }

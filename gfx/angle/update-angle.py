@@ -174,7 +174,7 @@ except subprocess.CalledProcessError:
     exit(1)
 
 p = run_checked(
-    "py",
+    "python3",
     "scripts/export_targets.py",
     str(OUT_DIR),
     *ROOTS,
@@ -334,6 +334,7 @@ REGISTERED_DEFINES = {
 
 print("\nRun actions")
 required_files: Set[str] = set()
+required_files.add("//LICENSE")
 
 run_checked("ninja", "-C", str(OUT_DIR), ":angle_commit_id")
 required_files.add("//out/gen/angle/angle_commit.h")

@@ -165,6 +165,16 @@ add_task(async function enableHtmlViews() {
       type: "extension",
     },
     {
+      id: "sitepermission@mochi.test",
+      name: "Test site permission add-on",
+      creator: { name: "you got it" },
+      description: "permission description",
+      fullDescription: "detailed description",
+      siteOrigin: "http://mochi.test",
+      sitePermissions: ["midi"],
+      type: "sitepermission",
+    },
+    {
       id: "theme1@mochi.test",
       name: "Test theme",
       creator: { name: "Artist", url: "http://example.com/artist" },
@@ -778,6 +788,59 @@ add_task(async function testStaticTheme() {
   is(text.textContent, "Artist", "The author is set");
 
   is(rows.length, 0, "There was only 1 row");
+
+  await closeView(win);
+});
+
+add_task(async function testSitePermission() {
+  let win = await loadInitialView("sitepermission");
+  let doc = win.document;
+
+  // The list card.
+  let card = getAddonCard(win, "sitepermission@mochi.test");
+  ok(!card.hasAttribute("expanded"), "The list card is not expanded");
+
+  // Load the detail view.
+  let loaded = waitForViewLoad(win);
+  card.querySelector('[action="expand"]').click();
+  await loaded;
+
+  card = getAddonCard(win, "sitepermission@mochi.test");
+
+  // Check all the deck buttons are hidden.
+  assertDeckHeadingHidden(card.details.tabGroup);
+
+  let rows = getDetailRows(card);
+  is(rows.length, 4, "There are 4 rows");
+
+  // Automatic updates.
+  let row = rows.shift();
+  checkLabel(row, "updates");
+
+  // Private browsing.
+  let private = rows.shift();
+  checkLabel(private, "private-browsing");
+
+  let help = rows.shift();
+  ok(help.classList.contains("addon-detail-help-row"), "There's a help row");
+  ok(!row.hidden, "The help row is shown");
+  is(
+    doc.l10n.getAttributes(help).id,
+    "addon-detail-private-browsing-help",
+    "The help row is for private browsing"
+  );
+
+  // Author.
+  let author = rows.shift();
+  checkLabel(author, "author");
+
+  is(rows.length, 0, "There was only 1 row");
+
+  let permissions = Array.from(
+    card.querySelectorAll(".addon-permissions-list .permission-info")
+  );
+  is(permissions.length, 1, "a permission is listed");
+  is(permissions[0].textContent, "Access MIDI devices", "got midi permission");
 
   await closeView(win);
 });

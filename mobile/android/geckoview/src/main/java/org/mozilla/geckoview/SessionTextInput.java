@@ -20,9 +20,12 @@ import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import androidx.annotation.AnyThread;
+import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.NativeQueue;
@@ -59,12 +62,16 @@ public final class SessionTextInput {
     // The following value is used by requestCursorUpdates
     // ONE_SHOT calls updateCompositionRects() after getting current composing
     // character rects.
-    @WrapForJNI final int ONE_SHOT = 1;
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({ONE_SHOT, START_MONITOR, END_MONITOR})
+    /* package */ @interface CursorMonitorMode {}
+
+    @WrapForJNI static final int ONE_SHOT = 1;
     // START_MONITOR start the monitor for composing character rects.  If is is
     // updaed,  call updateCompositionRects()
-    @WrapForJNI final int START_MONITOR = 2;
+    @WrapForJNI static final int START_MONITOR = 2;
     // ENDT_MONITOR stops the monitor for composing character rects.
-    @WrapForJNI final int END_MONITOR = 3;
+    @WrapForJNI static final int END_MONITOR = 3;
 
     void sendKeyEvent(@Nullable View view, int action, @NonNull KeyEvent event);
 
@@ -76,34 +83,61 @@ public final class SessionTextInput {
 
     void postToInputConnection(@NonNull Runnable runnable);
 
-    void requestCursorUpdates(int requestMode);
+    void requestCursorUpdates(@CursorMonitorMode int requestMode);
   }
 
   // Interface to access GeckoInputConnection from GeckoEditable.
   /* package */ interface EditableListener {
     // IME notification type for notifyIME(), corresponding to NotificationToIME enum.
-    @WrapForJNI final int NOTIFY_IME_OF_TOKEN = -3;
-    @WrapForJNI final int NOTIFY_IME_OPEN_VKB = -2;
-    @WrapForJNI final int NOTIFY_IME_REPLY_EVENT = -1;
-    @WrapForJNI final int NOTIFY_IME_OF_FOCUS = 1;
-    @WrapForJNI final int NOTIFY_IME_OF_BLUR = 2;
-    @WrapForJNI final int NOTIFY_IME_TO_COMMIT_COMPOSITION = 8;
-    @WrapForJNI final int NOTIFY_IME_TO_CANCEL_COMPOSITION = 9;
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({
+      NOTIFY_IME_OF_TOKEN,
+      NOTIFY_IME_OPEN_VKB,
+      NOTIFY_IME_REPLY_EVENT,
+      NOTIFY_IME_OF_FOCUS,
+      NOTIFY_IME_OF_BLUR,
+      NOTIFY_IME_TO_COMMIT_COMPOSITION,
+      NOTIFY_IME_TO_CANCEL_COMPOSITION
+    })
+    /* package */ @interface IMENotificationType {}
+
+    @WrapForJNI static final int NOTIFY_IME_OF_TOKEN = -3;
+    @WrapForJNI static final int NOTIFY_IME_OPEN_VKB = -2;
+    @WrapForJNI static final int NOTIFY_IME_REPLY_EVENT = -1;
+    @WrapForJNI static final int NOTIFY_IME_OF_FOCUS = 1;
+    @WrapForJNI static final int NOTIFY_IME_OF_BLUR = 2;
+    @WrapForJNI static final int NOTIFY_IME_TO_COMMIT_COMPOSITION = 8;
+    @WrapForJNI static final int NOTIFY_IME_TO_CANCEL_COMPOSITION = 9;
 
     // IME enabled state for notifyIMEContext().
-    final int IME_STATE_UNKNOWN = -1;
-    final int IME_STATE_DISABLED = 0;
-    final int IME_STATE_ENABLED = 1;
-    final int IME_STATE_PASSWORD = 2;
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({IME_STATE_UNKNOWN, IME_STATE_DISABLED, IME_STATE_ENABLED, IME_STATE_PASSWORD})
+    /* package */ @interface IMEState {}
+
+    static final int IME_STATE_UNKNOWN = -1;
+    static final int IME_STATE_DISABLED = 0;
+    static final int IME_STATE_ENABLED = 1;
+    static final int IME_STATE_PASSWORD = 2;
 
     // Flags for notifyIMEContext().
-    @WrapForJNI final int IME_FLAG_PRIVATE_BROWSING = 1;
-    @WrapForJNI final int IME_FLAG_USER_ACTION = 2;
-    @WrapForJNI final int IME_FOCUS_NOT_CHANGED = 4;
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef(
+        flag = true,
+        value = {IME_FLAG_PRIVATE_BROWSING, IME_FLAG_USER_ACTION, IME_FOCUS_NOT_CHANGED})
+    /* package */ @interface IMEContextFlags {}
 
-    void notifyIME(int type);
+    @WrapForJNI static final int IME_FLAG_PRIVATE_BROWSING = 1 << 0;
+    @WrapForJNI static final int IME_FLAG_USER_ACTION = 1 << 1;
+    @WrapForJNI static final int IME_FOCUS_NOT_CHANGED = 1 << 2;
 
-    void notifyIMEContext(int state, String typeHint, String modeHint, String actionHint, int flag);
+    void notifyIME(@IMENotificationType int type);
+
+    void notifyIMEContext(
+        @IMEState int state,
+        String typeHint,
+        String modeHint,
+        String actionHint,
+        @IMEContextFlags int flag);
 
     void onSelectionChange();
 

@@ -616,11 +616,12 @@ FT_BEGIN_HEADER
    */
 
 #ifndef FT_ENC_TAG
-#define FT_ENC_TAG( value, a, b, c, d )         \
-          value = ( ( (FT_UInt32)(a) << 24 ) |  \
-                    ( (FT_UInt32)(b) << 16 ) |  \
-                    ( (FT_UInt32)(c) <<  8 ) |  \
-                      (FT_UInt32)(d)         )
+
+#define FT_ENC_TAG( value, a, b, c, d )                             \
+          value = ( ( FT_STATIC_BYTE_CAST( FT_UInt32, a ) << 24 ) | \
+                    ( FT_STATIC_BYTE_CAST( FT_UInt32, b ) << 16 ) | \
+                    ( FT_STATIC_BYTE_CAST( FT_UInt32, c ) <<  8 ) | \
+                      FT_STATIC_BYTE_CAST( FT_UInt32, d )         )
 
 #endif /* FT_ENC_TAG */
 
@@ -730,11 +731,16 @@ FT_BEGIN_HEADER
    *     Same as FT_ENCODING_JOHAB.  Deprecated.
    *
    * @note:
-   *   By default, FreeType enables a Unicode charmap and tags it with
-   *   `FT_ENCODING_UNICODE` when it is either provided or can be generated
-   *   from PostScript glyph name dictionaries in the font file.  All other
-   *   encodings are considered legacy and tagged only if explicitly defined
-   *   in the font file.  Otherwise, `FT_ENCODING_NONE` is used.
+   *   When loading a font, FreeType makes a Unicode charmap active if
+   *   possible (either if the font provides such a charmap, or if FreeType
+   *   can synthesize one from PostScript glyph name dictionaries; in either
+   *   case, the charmap is tagged with `FT_ENCODING_UNICODE`).  If such a
+   *   charmap is synthesized, it is placed at the first position of the
+   *   charmap array.
+   *
+   *   All other encodings are considered legacy and tagged only if
+   *   explicitly defined in the font file.  Otherwise, `FT_ENCODING_NONE` is
+   *   used.
    *
    *   `FT_ENCODING_NONE` is set by the BDF and PCF drivers if the charmap is
    *   neither Unicode nor ISO-8859-1 (otherwise it is set to
@@ -2094,7 +2100,8 @@ FT_BEGIN_HEADER
    *     The size in bytes of the file in memory.
    *
    *   pathname ::
-   *     A pointer to an 8-bit file pathname.  The pointer is not owned by
+   *     A pointer to an 8-bit file pathname, which must be a C~string (i.e.,
+   *     no null bytes except at the very end).  The pointer is not owned by
    *     FreeType.
    *
    *   stream ::
@@ -2181,6 +2188,13 @@ FT_BEGIN_HEADER
    *   FreeType error code.  0~means success.
    *
    * @note:
+   *   The `pathname` string should be recognizable as such by a standard
+   *   `fopen` call on your system; in particular, this means that `pathname`
+   *   must not contain null bytes.  If that is not sufficient to address all
+   *   file name possibilities (for example, to handle wide character file
+   *   names on Windows in UTF-16 encoding) you might use @FT_Open_Face to
+   *   pass a memory array or a stream object instead.
+   *
    *   Use @FT_Done_Face to destroy the created @FT_Face object (along with
    *   its slot and sizes).
    */
@@ -3168,7 +3182,7 @@ FT_BEGIN_HEADER
    *   necessary to empty the cache after a mode switch to avoid false hits.
    *
    */
-#define FT_LOAD_TARGET_( x )   ( (FT_Int32)( (x) & 15 ) << 16 )
+#define FT_LOAD_TARGET_( x )   ( FT_STATIC_CAST( FT_Int32, (x) & 15 ) << 16 )
 
 #define FT_LOAD_TARGET_NORMAL  FT_LOAD_TARGET_( FT_RENDER_MODE_NORMAL )
 #define FT_LOAD_TARGET_LIGHT   FT_LOAD_TARGET_( FT_RENDER_MODE_LIGHT  )
@@ -3187,7 +3201,8 @@ FT_BEGIN_HEADER
    *   @FT_LOAD_TARGET_XXX value.
    *
    */
-#define FT_LOAD_TARGET_MODE( x )  ( (FT_Render_Mode)( ( (x) >> 16 ) & 15 ) )
+#define FT_LOAD_TARGET_MODE( x )                               \
+          FT_STATIC_CAST( FT_Render_Mode, ( (x) >> 16 ) & 15 )
 
 
   /**************************************************************************
@@ -4725,7 +4740,7 @@ FT_BEGIN_HEADER
    */
 #define FREETYPE_MAJOR  2
 #define FREETYPE_MINOR  11
-#define FREETYPE_PATCH  0
+#define FREETYPE_PATCH  1
 
 
   /**************************************************************************

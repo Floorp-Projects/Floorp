@@ -215,7 +215,7 @@
 
     stream->descriptor.pointer = NULL;
     stream->size               = 0;
-    stream->base               = 0;
+    stream->base               = NULL;
   }
 
 
@@ -233,11 +233,11 @@
   FT_CALLBACK_DEF( void )
   ft_close_stream_by_free( FT_Stream  stream )
   {
-    ft_free( NULL, stream->descriptor.pointer );
+    ft_free( stream->memory, stream->descriptor.pointer );
 
     stream->descriptor.pointer = NULL;
     stream->size               = 0;
-    stream->base               = 0;
+    stream->base               = NULL;
   }
 
 
@@ -313,8 +313,7 @@
                                           file,
                                           0 );
 
-    /* on some RTOS, mmap might return 0 */
-    if ( (long)stream->base != -1 && stream->base != NULL )
+    if ( stream->base != MAP_FAILED )
       stream->close = ft_close_stream_by_munmap;
     else
     {
@@ -324,7 +323,7 @@
       FT_ERROR(( "FT_Stream_Open:" ));
       FT_ERROR(( " could not `mmap' file `%s'\n", filepathname ));
 
-      stream->base = (unsigned char*)ft_alloc( NULL, stream->size );
+      stream->base = (unsigned char*)ft_alloc( stream->memory, stream->size );
 
       if ( !stream->base )
       {
@@ -365,7 +364,7 @@
     stream->descriptor.pointer = stream->base;
     stream->pathname.pointer   = (char*)filepathname;
 
-    stream->read = 0;
+    stream->read = NULL;
 
     FT_TRACE1(( "FT_Stream_Open:" ));
     FT_TRACE1(( " opened `%s' (%ld bytes) successfully\n",
@@ -374,7 +373,7 @@
     return FT_Err_Ok;
 
   Fail_Read:
-    ft_free( NULL, stream->base );
+    ft_free( stream->memory, stream->base );
 
   Fail_Map:
     close( file );
@@ -409,7 +408,7 @@
     memory = (FT_Memory)malloc( sizeof ( *memory ) );
     if ( memory )
     {
-      memory->user    = 0;
+      memory->user    = NULL;
       memory->alloc   = ft_alloc;
       memory->realloc = ft_realloc;
       memory->free    = ft_free;

@@ -92,11 +92,11 @@ jobs:
                   path: /builds/worker/archive
                   type: directory
     macosx64-firefox:
-        worker-type: t-osx-1014
+        worker-type: t-osx-1015-r8
         description: Creates or updates conditioned profiles on macOS
         treeherder:
             symbol: condprof(firefox)
-            platform: macosx1014-64/opt
+            platform: macosx1015-64-qr/opt
         index:
             product: firefox
             job-name: condprof-macosx64

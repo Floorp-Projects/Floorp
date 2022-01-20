@@ -1,89 +1,19 @@
-#!/bin/sh
+#!/usr/bin/env python3
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# The beginning of this script is both valid POSIX shell and valid Python,
-# such that the script starts with the shell and is reexecuted with
-# the right Python.
-
-# Embeds a shell script inside a Python triple quote. This pattern is valid
-# shell because `''':'`, `':'` and `:` are all equivalent, and `:` is a no-op.
-''':'
-
-get_command() {
-    # Parse the name of the mach command out of the arguments. This is necessary
-    # in the presence of global mach arguments that come before the name of the
-    # command, e.g. `mach -v build`. We dispatch to the correct Python
-    # interpreter depending on the command.
-    while true; do
-    case $1 in
-        -v|--verbose) shift;;
-        -l|--log-file)
-            if [ "$#" -lt 2 ]
-            then
-                echo
-                break
-            else
-                shift 2
-            fi
-            ;;
-        --no-interactive) shift;;
-        --log-interval) shift;;
-        --log-no-times) shift;;
-        -h) shift;;
-        --debug-command) shift;;
-        --profile-command)
-            py_profile_command="1"
-            shift;;
-        --settings)
-            if [ "$#" -lt 2 ]
-            then
-                echo
-                break
-            else
-                shift 2
-            fi
-            ;;
-        "") echo; break;;
-        *) echo $1; break;;
-    esac
-    done
-    return ${py_profile_command}
-}
-
-command=$(get_command "$@")
-py_profile_command=$?
-
-if [ ${py_profile_command} -eq 0 ]
-then
-    py_profile_command_args=""
-else
-    # We would prefer to use an array variable here, but we're limited to POSIX.
-    # None of our arguments have quoting or spaces so we can safely interpolate
-    # a string instead.
-    py_profile_command_args="-m cProfile -o mach_profile_${command}.cProfile"
-    echo "Running with --profile-command.  To visualize, use snakeviz:"
-    echo "python3 -m pip install snakeviz"
-    echo "python3 -m snakeviz mach_profile_${command}.cProfile"
-fi
-
-if command -v python3 > /dev/null
-then
-    exec python3 $py_profile_command_args "$0" "$@"
-else
-    echo "This mach command requires 'python3', which wasn't found on the system!"
-    exit 1
-fi
-'''
-
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import platform
 import sys
+from textwrap import dedent
 
 
 def load_mach(dir_path, mach_path):
+    # Defer import of "importlib.util" until after Python version check has happened
+    # so that Python 2 usages fail gracefully.
     import importlib.util
     spec = importlib.util.spec_from_file_location('mach_initialize', mach_path)
     mach_initialize = importlib.util.module_from_spec(spec)
@@ -107,6 +37,46 @@ def check_and_get_mach(dir_path):
 
 
 def main(args):
+    # Ensure we are running Python 3.6+. We run this check as soon as
+    # possible to avoid a cryptic import/usage error.
+    if sys.version_info < (3, 6):
+        print("Python 3.6+ is required to run mach.")
+        print("You are running Python", platform.python_version())
+        if sys.platform.startswith("linux"):
+            print(dedent("""
+            See https://firefox-source-docs.mozilla.org/setup/linux_build.html#installingpython
+            for guidance on how to install Python on your system.
+            """).strip())
+        elif sys.platform.startswith("darwin"):
+            print(dedent("""
+            See https://firefox-source-docs.mozilla.org/setup/macos_build.html
+            for guidance on how to prepare your system to build Firefox. Perhaps
+            you need to update Xcode, or install Python using brew?
+            """).strip())
+        elif "MOZILLABUILD" in os.environ and os.environ.get("TERM"):
+            print(dedent("""
+            Python is provided by MozillaBuild; ensure your MozillaBuild installation is
+            up to date. See https://firefox-source-docs.mozilla.org/setup/windows_build.html#install-mozillabuild
+            for details.
+            """).strip())
+        elif sys.platform.startswith("win"):
+            print(dedent("""
+            You probably want to be interacting with Mach from within MozillaBuild, see
+            https://firefox-source-docs.mozilla.org/setup/windows_build.html for details.
+            
+            If you are deliberately using Mach from outside MozillaBuild, then see
+            https://firefox-source-docs.mozilla.org/mach/windows-usage-outside-mozillabuild.html#install-python
+            for guidance on installing native Python on your system.
+            """).strip())
+        else:
+            print(dedent("""
+            We do not have specific instructions for your platform on how to
+            install Python. You may find Pyenv (https://github.com/pyenv/pyenv)
+            helpful, if your system package manager does not provide a way to
+            install a recent enough Python 3.
+            """).strip())
+        sys.exit(1)
+
     # XCode python sets __PYVENV_LAUNCHER__, which overrides the executable
     # used when a python subprocess is created. This is an issue when we want
     # to run using our virtualenv python executables.

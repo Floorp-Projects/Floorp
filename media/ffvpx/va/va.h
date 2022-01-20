@@ -80,7 +80,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "va_version.h"
+#include <va/va_version.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -113,22 +113,112 @@ extern "C" {
  * VA-API is split into several modules:
  * - \ref api_core
  * - Encoder (H264, HEVC, JPEG, MPEG2, VP8, VP9)
- * 	- \ref api_enc_h264
- * 	- \ref api_enc_hevc
- * 	- \ref api_enc_jpeg
- * 	- \ref api_enc_mpeg2
- * 	- \ref api_enc_vp8
- * 	- \ref api_enc_vp9
- * - Decoder (HEVC, JPEG, VP8, VP9)
+ *  - \ref api_enc_h264
+ *  - \ref api_enc_hevc
+ *  - \ref api_enc_jpeg
+ *  - \ref api_enc_mpeg2
+ *  - \ref api_enc_vp8
+ *  - \ref api_enc_vp9
+ * - Decoder (HEVC, JPEG, VP8, VP9, AV1)
  *      - \ref api_dec_hevc
  *      - \ref api_dec_jpeg
  *      - \ref api_dec_vp8
  *      - \ref api_dec_vp9
+ *      - \ref api_dec_av1
  * - \ref api_vpp
+ * - \ref api_prot
  * - FEI (H264, HEVC)
- * 	- \ref api_fei
- * 	- \ref api_fei_h264
- * 	- \ref api_fei_hevc
+ *  - \ref api_fei
+ *  - \ref api_fei_h264
+ *  - \ref api_fei_hevc
+ *
+ * \section threading Multithreading Guide
+ * All VAAPI functions implemented in libva are thread-safe. For any VAAPI
+ * function that requires the implementation of a backend (e.g. hardware driver),
+ * the backend must ensure that its implementation is also thread-safe. If the
+ * backend implementation of a VAAPI function is not thread-safe then this should
+ * be considered as a bug against the backend implementation.
+ *
+ * It is assumed that none of the VAAPI functions will be called from signal
+ * handlers.
+ *
+ * Thread-safety in this context means that when VAAPI is being called by multiple
+ * concurrent threads, it will not crash or hang the OS, and VAAPI internal
+ * data structures will not be corrupted. When multiple threads are operating on
+ * the same VAAPI objects, it is the application's responsibility to synchronize
+ * these operations in order to generate the expected results. For example, using
+ * a single VAContext from multiple threads may generate unexpected results.
+ *
+ * Following pseudo code illustrates a multithreaded transcoding scenario, where
+ * one thread is handling the decoding operation and another thread is handling
+ * the encoding operation, while synchronizing the use of a common pool of
+ * surfaces.
+ *
+ * \code
+ * // Initialization
+ * dpy = vaGetDisplayDRM(fd);
+ * vaInitialize(dpy, ...);
+ *
+ * // Create surfaces required for decoding and subsequence encoding
+ * vaCreateSurfaces(dpy, VA_RT_FORMAT_YUV420, width, height, &surfaces[0], ...);
+ *
+ * // Set up a queue for the surfaces shared between decode and encode threads
+ * surface_queue = queue_create();
+ *
+ * // Create decode_thread
+ * pthread_create(&decode_thread, NULL, decode, ...);
+ *
+ * // Create encode_thread
+ * pthread_create(&encode_thread, NULL, encode, ...);
+ *
+ * // Decode thread function
+ * decode() {
+ *   // Find the decode entrypoint for H.264
+ *   vaQueryConfigEntrypoints(dpy, h264_profile, entrypoints, ...);
+ *
+ *   // Create a config for H.264 decode
+ *   vaCreateConfig(dpy, h264_profile, VAEntrypointVLD, ...);
+ *
+ *   // Create a context for decode
+ *   vaCreateContext(dpy, config, width, height, VA_PROGRESSIVE, surfaces,
+ *     num_surfaces, &decode_context);
+ *
+ *   // Decode frames in the bitstream
+ *   for (;;) {
+ *     // Parse one frame and decode
+ *     vaBeginPicture(dpy, decode_context, surfaces[surface_index]);
+ *     vaRenderPicture(dpy, decode_context, buf, ...);
+ *     vaEndPicture(dpy, decode_context);
+ *     // Poll the decoding status and enqueue the surface in display order after
+ *     // decoding is complete
+ *     vaQuerySurfaceStatus();
+ *     enqueue(surface_queue, surface_index);
+ *   }
+ * }
+ *
+ * // Encode thread function
+ * encode() {
+ *   // Find the encode entrypoint for HEVC
+ *   vaQueryConfigEntrypoints(dpy, hevc_profile, entrypoints, ...);
+ *
+ *   // Create a config for HEVC encode
+ *   vaCreateConfig(dpy, hevc_profile, VAEntrypointEncSlice, ...);
+ *
+ *   // Create a context for encode
+ *   vaCreateContext(dpy, config, width, height, VA_PROGRESSIVE, surfaces,
+ *     num_surfaces, &encode_context);
+ *
+ *   // Encode frames produced by the decoder
+ *   for (;;) {
+ *     // Dequeue the surface enqueued by the decoder
+ *     surface_index = dequeue(surface_queue);
+ *     // Encode using this surface as the source
+ *     vaBeginPicture(dpy, encode_context, surfaces[surface_index]);
+ *     vaRenderPicture(dpy, encode_context, buf, ...);
+ *     vaEndPicture(dpy, encode_context);
+ *   }
+ * }
+ * \endcode
  */
 
 /**
@@ -165,29 +255,29 @@ Initialization & Configuration Management
 
 */
 
-typedef void* VADisplay;	/* window system dependent */
+typedef void* VADisplay;    /* window system dependent */
 
-typedef int VAStatus;	/** Return status type from functions */
+typedef int VAStatus;   /** Return status type from functions */
 /** Values for the return status */
-#define VA_STATUS_SUCCESS			0x00000000
-#define VA_STATUS_ERROR_OPERATION_FAILED	0x00000001
-#define VA_STATUS_ERROR_ALLOCATION_FAILED	0x00000002
-#define VA_STATUS_ERROR_INVALID_DISPLAY		0x00000003
-#define VA_STATUS_ERROR_INVALID_CONFIG		0x00000004
-#define VA_STATUS_ERROR_INVALID_CONTEXT		0x00000005
-#define VA_STATUS_ERROR_INVALID_SURFACE		0x00000006
-#define VA_STATUS_ERROR_INVALID_BUFFER		0x00000007
-#define VA_STATUS_ERROR_INVALID_IMAGE		0x00000008
-#define VA_STATUS_ERROR_INVALID_SUBPICTURE	0x00000009
-#define VA_STATUS_ERROR_ATTR_NOT_SUPPORTED	0x0000000a
-#define VA_STATUS_ERROR_MAX_NUM_EXCEEDED	0x0000000b
-#define VA_STATUS_ERROR_UNSUPPORTED_PROFILE	0x0000000c
-#define VA_STATUS_ERROR_UNSUPPORTED_ENTRYPOINT	0x0000000d
-#define VA_STATUS_ERROR_UNSUPPORTED_RT_FORMAT	0x0000000e
-#define VA_STATUS_ERROR_UNSUPPORTED_BUFFERTYPE	0x0000000f
-#define VA_STATUS_ERROR_SURFACE_BUSY		0x00000010
+#define VA_STATUS_SUCCESS           0x00000000
+#define VA_STATUS_ERROR_OPERATION_FAILED    0x00000001
+#define VA_STATUS_ERROR_ALLOCATION_FAILED   0x00000002
+#define VA_STATUS_ERROR_INVALID_DISPLAY     0x00000003
+#define VA_STATUS_ERROR_INVALID_CONFIG      0x00000004
+#define VA_STATUS_ERROR_INVALID_CONTEXT     0x00000005
+#define VA_STATUS_ERROR_INVALID_SURFACE     0x00000006
+#define VA_STATUS_ERROR_INVALID_BUFFER      0x00000007
+#define VA_STATUS_ERROR_INVALID_IMAGE       0x00000008
+#define VA_STATUS_ERROR_INVALID_SUBPICTURE  0x00000009
+#define VA_STATUS_ERROR_ATTR_NOT_SUPPORTED  0x0000000a
+#define VA_STATUS_ERROR_MAX_NUM_EXCEEDED    0x0000000b
+#define VA_STATUS_ERROR_UNSUPPORTED_PROFILE 0x0000000c
+#define VA_STATUS_ERROR_UNSUPPORTED_ENTRYPOINT  0x0000000d
+#define VA_STATUS_ERROR_UNSUPPORTED_RT_FORMAT   0x0000000e
+#define VA_STATUS_ERROR_UNSUPPORTED_BUFFERTYPE  0x0000000f
+#define VA_STATUS_ERROR_SURFACE_BUSY        0x00000010
 #define VA_STATUS_ERROR_FLAG_NOT_SUPPORTED      0x00000011
-#define VA_STATUS_ERROR_INVALID_PARAMETER	0x00000012
+#define VA_STATUS_ERROR_INVALID_PARAMETER   0x00000012
 #define VA_STATUS_ERROR_RESOLUTION_NOT_SUPPORTED 0x00000013
 #define VA_STATUS_ERROR_UNIMPLEMENTED           0x00000014
 #define VA_STATUS_ERROR_SURFACE_IN_DISPLAYING   0x00000015
@@ -207,12 +297,14 @@ typedef int VAStatus;	/** Return status type from functions */
 /** \brief An invalid filter chain was supplied. */
 #define VA_STATUS_ERROR_INVALID_FILTER_CHAIN    0x00000021
 /** \brief Indicate HW busy (e.g. run multiple encoding simultaneously). */
-#define VA_STATUS_ERROR_HW_BUSY	                0x00000022
+#define VA_STATUS_ERROR_HW_BUSY                 0x00000022
 /** \brief An unsupported memory type was supplied. */
 #define VA_STATUS_ERROR_UNSUPPORTED_MEMORY_TYPE 0x00000024
 /** \brief Indicate allocated buffer size is not enough for input or output. */
 #define VA_STATUS_ERROR_NOT_ENOUGH_BUFFER       0x00000025
-#define VA_STATUS_ERROR_UNKNOWN			0xFFFFFFFF
+/** \brief Indicate an operation isn't completed because time-out interval elapsed. */
+#define VA_STATUS_ERROR_TIMEDOUT                0x00000026
+#define VA_STATUS_ERROR_UNKNOWN         0xFFFFFFFF
 
 /**
  * 1. De-interlacing flags for vaPutSurface()
@@ -255,19 +347,60 @@ typedef int VAStatus;	/** Return status type from functions */
 #define VA_FILTER_SCALING_NL_ANAMORPHIC 0x00000300
 #define VA_FILTER_SCALING_MASK          0x00000f00
 
+/** Interpolation method for scaling */
+#define VA_FILTER_INTERPOLATION_DEFAULT                    0x00000000
+#define VA_FILTER_INTERPOLATION_NEAREST_NEIGHBOR           0x00001000
+#define VA_FILTER_INTERPOLATION_BILINEAR                   0x00002000
+#define VA_FILTER_INTERPOLATION_ADVANCED                   0x00003000
+#define VA_FILTER_INTERPOLATION_MASK                       0x0000f000
+
 /** Padding size in 4-bytes */
 #define VA_PADDING_LOW          4
 #define VA_PADDING_MEDIUM       8
 #define VA_PADDING_HIGH         16
 #define VA_PADDING_LARGE        32
 
+/** operation options */
+/** synchronization, block call, output should be ready after execution function return*/
+#define VA_EXEC_SYNC              0x0
+/** asynchronization,application should call additonal sync operation to access output */
+#define VA_EXEC_ASYNC             0x1
+
+/** operation mode */
+#define VA_EXEC_MODE_DEFAULT      0x0
+#define VA_EXEC_MODE_POWER_SAVING 0x1
+#define VA_EXEC_MODE_PERFORMANCE  0x2
+
+/* Values used to describe device features. */
+/** The feature is not supported by the device.
+ *
+ * Any corresponding feature flag must not be set.
+ */
+#define VA_FEATURE_NOT_SUPPORTED  0
+/** The feature is supported by the device.
+ *
+ * The user may decide whether or not to use this feature.
+ *
+ * Note that support for a feature only indicates that the hardware
+ * is able to use it; whether it is actually a positive change to
+ * enable it in a given situation will depend on other factors
+ * including the input provided by the user.
+ */
+#define VA_FEATURE_SUPPORTED      1
+/** The feature is required by the device.
+ *
+ * The device does not support not enabling this feature, so any
+ * corresponding feature flag must be set and any additional
+ * configuration needed by the feature must be supplied.
+ */
+#define VA_FEATURE_REQUIRED       2
+
 /**
  * Returns a short english description of error_status
  */
 const char *vaErrorStr(VAStatus error_status);
 
-typedef struct _VARectangle
-{
+typedef struct _VARectangle {
     int16_t x;
     int16_t y;
     uint16_t width;
@@ -306,7 +439,7 @@ VAMessageCallback vaSetInfoCallback(VADisplay dpy, VAMessageCallback callback, v
  * native window system.
  * For X Windows, native_dpy would be from XOpenDisplay()
  */
-typedef void* VANativeDisplay;	/* window system dependent */
+typedef void* VANativeDisplay;  /* window system dependent */
 
 int vaDisplayIsValid(VADisplay dpy);
 
@@ -315,21 +448,21 @@ int vaDisplayIsValid(VADisplay dpy);
  */
 VAStatus vaSetDriverName(VADisplay dpy,
                          char *driver_name
-);
+                        );
 
 /**
  * Initialize the library
  */
-VAStatus vaInitialize (
+VAStatus vaInitialize(
     VADisplay dpy,
-    int *major_version,	 /* out */
-    int *minor_version 	 /* out */
+    int *major_version,  /* out */
+    int *minor_version   /* out */
 );
 
 /**
  * After this call, all library internal resources will be cleaned up
  */
-VAStatus vaTerminate (
+VAStatus vaTerminate(
     VADisplay dpy
 );
 
@@ -341,7 +474,7 @@ VAStatus vaTerminate (
  * e.g. for the Intel GMA500 implementation, an example would be:
  * "Intel GMA500 - 2.0.0.32L.0005"
  */
-const char *vaQueryVendorString (
+const char *vaQueryVendorString(
     VADisplay dpy
 );
 
@@ -351,28 +484,27 @@ typedef int (*VAPrivFunc)(void);
  * Return a function pointer given a function name in the library.
  * This allows private interfaces into the library
  */
-VAPrivFunc vaGetLibFunc (
+VAPrivFunc vaGetLibFunc(
     VADisplay dpy,
     const char *func
 );
 
 /** Currently defined profiles */
-typedef enum
-{
+typedef enum {
     /** \brief Profile ID used for video processing. */
     VAProfileNone                       = -1,
-    VAProfileMPEG2Simple		= 0,
-    VAProfileMPEG2Main			= 1,
-    VAProfileMPEG4Simple		= 2,
-    VAProfileMPEG4AdvancedSimple	= 3,
-    VAProfileMPEG4Main			= 4,
+    VAProfileMPEG2Simple        = 0,
+    VAProfileMPEG2Main          = 1,
+    VAProfileMPEG4Simple        = 2,
+    VAProfileMPEG4AdvancedSimple    = 3,
+    VAProfileMPEG4Main          = 4,
     VAProfileH264Baseline va_deprecated_enum = 5,
-    VAProfileH264Main			= 6,
-    VAProfileH264High			= 7,
-    VAProfileVC1Simple			= 8,
-    VAProfileVC1Main			= 9,
-    VAProfileVC1Advanced		= 10,
-    VAProfileH263Baseline		= 11,
+    VAProfileH264Main           = 6,
+    VAProfileH264High           = 7,
+    VAProfileVC1Simple          = 8,
+    VAProfileVC1Main            = 9,
+    VAProfileVC1Advanced        = 10,
+    VAProfileH263Baseline       = 11,
     VAProfileJPEGBaseline               = 12,
     VAProfileH264ConstrainedBaseline    = 13,
     VAProfileVP8Version0_3              = 14,
@@ -392,21 +524,25 @@ typedef enum
     VAProfileHEVCMain444_12             = 28,
     VAProfileHEVCSccMain                = 29,
     VAProfileHEVCSccMain10              = 30,
-    VAProfileHEVCSccMain444             = 31
+    VAProfileHEVCSccMain444             = 31,
+    VAProfileAV1Profile0                = 32,
+    VAProfileAV1Profile1                = 33,
+    VAProfileHEVCSccMain444_10          = 34,
+    /** \brief Profile ID used for protected video playback. */
+    VAProfileProtected                  = 35
 } VAProfile;
 
 /**
  *  Currently defined entrypoints
  */
-typedef enum
-{
-    VAEntrypointVLD		= 1,
-    VAEntrypointIZZ		= 2,
-    VAEntrypointIDCT		= 3,
-    VAEntrypointMoComp		= 4,
-    VAEntrypointDeblocking	= 5,
-    VAEntrypointEncSlice	= 6,	/* slice level encode */
-    VAEntrypointEncPicture 	= 7,	/* pictuer encode, JPEG, etc */
+typedef enum {
+    VAEntrypointVLD     = 1,
+    VAEntrypointIZZ     = 2,
+    VAEntrypointIDCT        = 3,
+    VAEntrypointMoComp      = 4,
+    VAEntrypointDeblocking  = 5,
+    VAEntrypointEncSlice    = 6,    /* slice level encode */
+    VAEntrypointEncPicture  = 7,    /* pictuer encode, JPEG, etc */
     /*
      * For an implementation that supports a low power/high performance variant
      * for slice level encode, it can choose to expose the
@@ -415,7 +551,7 @@ typedef enum
      * application can query the encoding configuration attributes to find
      * out more details if this entrypoint is supported.
      */
-    VAEntrypointEncSliceLP 	= 8,
+    VAEntrypointEncSliceLP  = 8,
     VAEntrypointVideoProc       = 10,   /**< Video pre/post-processing. */
     /**
      * \brief VAEntrypointFEI
@@ -451,17 +587,28 @@ typedef enum
      * and VAStatsMVBufferType) are needed for this entry point.
      **/
     VAEntrypointStats       = 12,
+    /**
+     * \brief VAEntrypointProtectedTEEComm
+     *
+     * A function for communicating with TEE (Trusted Execution Environment).
+     **/
+    VAEntrypointProtectedTEEComm       = 13,
+    /**
+     * \brief VAEntrypointProtectedContent
+     *
+     * A function for protected content to decrypt encrypted content.
+     **/
+    VAEntrypointProtectedContent       = 14,
 } VAEntrypoint;
 
 /** Currently defined configuration attribute types */
-typedef enum
-{
-    VAConfigAttribRTFormat		= 0,
-    VAConfigAttribSpatialResidual	= 1,
-    VAConfigAttribSpatialClipping	= 2,
-    VAConfigAttribIntraResidual		= 3,
-    VAConfigAttribEncryption		= 4,
-    VAConfigAttribRateControl		= 5,
+typedef enum {
+    VAConfigAttribRTFormat      = 0,
+    VAConfigAttribSpatialResidual   = 1,
+    VAConfigAttribSpatialClipping   = 2,
+    VAConfigAttribIntraResidual     = 3,
+    VAConfigAttribEncryption        = 4,
+    VAConfigAttribRateControl       = 5,
 
     /** @name Attributes for decoding */
     /**@{*/
@@ -476,14 +623,14 @@ typedef enum
      *
      * See \c VA_DEC_SLICE_MODE_xxx for the list of slice decoding modes.
      */
-    VAConfigAttribDecSliceMode		= 6,
-   /**
-     * \brief JPEG decoding attribute. Read-only.
-     *
-     * This attribute exposes a number of capabilities of the underlying
-     * JPEG implementation. The attribute value is partitioned into fields as defined in the
-     * VAConfigAttribValDecJPEG union.
-     */
+    VAConfigAttribDecSliceMode      = 6,
+    /**
+      * \brief JPEG decoding attribute. Read-only.
+      *
+      * This attribute exposes a number of capabilities of the underlying
+      * JPEG implementation. The attribute value is partitioned into fields as defined in the
+      * VAConfigAttribValDecJPEG union.
+      */
     VAConfigAttribDecJPEG             = 7,
     /**
      * \brief Decode processing support. Read/write.
@@ -517,7 +664,7 @@ typedef enum
      * same as “render_target” set in vaBeginPicture(), but the driver may choose
      * to ignore this parameter.
      */
-    VAConfigAttribDecProcessing		= 8,
+    VAConfigAttribDecProcessing     = 8,
     /** @name Attributes for encoding */
     /**@{*/
     /**
@@ -684,7 +831,7 @@ typedef enum
      * rect encoding is supported, the ROI information is passed to the driver using
      * VAEncMiscParameterTypeDirtyRect.
      */
-     VAConfigAttribEncDirtyRect       = 28,
+    VAConfigAttribEncDirtyRect       = 28,
     /**
      * \brief Parallel Rate Control (hierachical B) attribute. Read-only.
      *
@@ -696,30 +843,30 @@ typedef enum
      * per layer per GOP will be passed to driver through VAEncMiscParameterParallelRateControl
      * structure.Currently three layers are defined.
      */
-     VAConfigAttribEncParallelRateControl   = 29,
-     /**
-     * \brief Dynamic Scaling Attribute. Read-only.
-     *
-     * This attribute conveys whether encoder is capable to determine dynamic frame
-     * resolutions adaptive to bandwidth utilization and processing power, etc.
-     * It is a boolean value 0 - unsupported, 1 - supported.
-     * If it is supported,for VP9, suggested frame resolution can be retrieved from VACodedBufferVP9Status.
-     */
-     VAConfigAttribEncDynamicScaling        = 30,
-     /**
-     * \brief frame size tolerance support
-     * it indicates the tolerance of frame size
-     */
-     VAConfigAttribFrameSizeToleranceSupport = 31,
-     /**
-     * \brief Encode function type for FEI.
-     *
-     * This attribute conveys whether the driver supports different function types for encode.
-     * It can be VA_FEI_FUNCTION_ENC, VA_FEI_FUNCTION_PAK, or VA_FEI_FUNCTION_ENC_PAK. Currently
-     * it is for FEI entry point only.
-     * Default is VA_FEI_FUNCTION_ENC_PAK.
-     */
-     VAConfigAttribFEIFunctionType     = 32,
+    VAConfigAttribEncParallelRateControl   = 29,
+    /**
+    * \brief Dynamic Scaling Attribute. Read-only.
+    *
+    * This attribute conveys whether encoder is capable to determine dynamic frame
+    * resolutions adaptive to bandwidth utilization and processing power, etc.
+    * It is a boolean value 0 - unsupported, 1 - supported.
+    * If it is supported,for VP9, suggested frame resolution can be retrieved from VACodedBufferVP9Status.
+    */
+    VAConfigAttribEncDynamicScaling        = 30,
+    /**
+    * \brief frame size tolerance support
+    * it indicates the tolerance of frame size
+    */
+    VAConfigAttribFrameSizeToleranceSupport = 31,
+    /**
+    * \brief Encode function type for FEI.
+    *
+    * This attribute conveys whether the driver supports different function types for encode.
+    * It can be VA_FEI_FUNCTION_ENC, VA_FEI_FUNCTION_PAK, or VA_FEI_FUNCTION_ENC_PAK. Currently
+    * it is for FEI entry point only.
+    * Default is VA_FEI_FUNCTION_ENC_PAK.
+    */
+    VAConfigAttribFEIFunctionType     = 32,
     /**
      * \brief Maximum number of FEI MV predictors. Read-only.
      *
@@ -736,14 +883,14 @@ typedef enum
      * VAConfigAttribValStats union. Currently it is for VAEntrypointStats only.
      */
     VAConfigAttribStats               = 34,
-     /**
-     * \brief Tile Support Attribute. Read-only.
-     *
-     * This attribute conveys whether encoder is capable to support tiles.
-     * If not supported, the tile related parameters sent to encoder, such as
-     * tiling structure, should be ignored. 0 - unsupported, 1 - supported.
-     */
-     VAConfigAttribEncTileSupport        = 35,
+    /**
+    * \brief Tile Support Attribute. Read-only.
+    *
+    * This attribute conveys whether encoder is capable to support tiles.
+    * If not supported, the tile related parameters sent to encoder, such as
+    * tiling structure, should be ignored. 0 - unsupported, 1 - supported.
+    */
+    VAConfigAttribEncTileSupport        = 35,
     /**
      * \brief whether accept rouding setting from application. Read-only.
      * This attribute is for encode quality, if it is report,
@@ -777,6 +924,78 @@ typedef enum
      * implementation, multiple frames encode/decode can improve HW concurrency
      */
     VAConfigAttribMultipleFrame         = 40,
+    /** \brief priority setting for the context. Read-Write
+     *  attribute value is \c VAConfigAttribValContextPriority
+     *  this setting also could be update by \c VAContextParameterUpdateBuffer
+     */
+    VAConfigAttribContextPriority       = 41,
+    /** \brief AV1 decoding features.  Read-only.
+     *
+     * This attribute describes the supported features of an
+     * AV1 decoder configuration.  The value returned uses the
+     * VAConfigAttribValDecAV1Features type.
+     */
+    VAConfigAttribDecAV1Features    = 42,
+    /** \brief TEE could be any HW secure device. Read-only */
+    VAConfigAttribTEEType               = 43,
+    /** \brief TEE type client is a specific module supporting specific functions in TEE. Read-only*/
+    VAConfigAttribTEETypeClient         = 44,
+    /**
+     * \brief Cipher algorithm of the protected content session.
+     *
+     * This attribute specifies the cipher algorithm of the protected content session. It
+     * could be \c VA_PC_CIPHER_AES, etc....
+     */
+    VAConfigAttribProtectedContentCipherAlgorithm = 45,
+    /**
+     * \brief Cipher block size of the protected content session.
+     *
+     * This attribute specifies the block size of the protected content session. It could be
+     * \c VA_PC_BLOCK_SIZE_128, \c VA_PC_BLOCK_SIZE_192, or \c VA_PC_BLOCK_SIZE_256, etc....
+     */
+    VAConfigAttribProtectedContentCipherBlockSize = 46,
+    /**
+     * \brief Cipher mode of the protected content session.
+     *
+     * This attribute specifies the cipher mode of the protected content session. It could
+     * be \c VA_PC_CIPHER_MODE_ECB, \c VA_PC_CIPHER_MODE_CBC, \c VA_PC_CIPHER_MODE_CTR, etc...
+     */
+    VAConfigAttribProtectedContentCipherMode = 47,
+    /**
+     * \brief Decryption sample type of the protected content session.
+     *
+     * This attribute specifies the decryption sample type of the protected content session.
+     * It could be \c VA_PC_SAMPLE_TYPE_FULLSAMPLE or \c VA_PC_SAMPLE_TYPE_SUBSAMPLE.
+     */
+    VAConfigAttribProtectedContentCipherSampleType = 48,
+    /**
+     * \brief Special usage attribute of the protected session.
+     *
+     * The attribute specifies the flow for the protected session could be used. For
+     * example, it could be \c VA_PC_USAGE_DEFAULT, \c VA_PC_USAGE_WIDEVINE, etc....
+     */
+    VAConfigAttribProtectedContentUsage = 49,
+
+    /** \brief HEVC/H.265 encoding features.  Read-only.
+     *
+     * This attribute describes the supported features of an
+     * HEVC/H.265 encoder configuration.  The value returned uses the
+     * VAConfigAttribValEncHEVCFeatures type.
+     *
+     * If this attribute is supported by a driver then it must also
+     * support the VAConfigAttribEncHEVCBlockSizes attribute.
+     */
+    VAConfigAttribEncHEVCFeatures       = 50,
+    /** \brief HEVC/H.265 encoding block sizes.  Read-only.
+     *
+     * This attribute describes the supported coding tree and transform
+     * block sizes of an HEVC/H.265 encoder configuration.  The value
+     * returned uses the VAConfigAttribValEncHEVCBlockSizes type.
+     *
+     * If this attribute is supported by a driver then it must also
+     * support the VAConfigAttribEncHEVCFeatures attribute.
+     */
+    VAConfigAttribEncHEVCBlockSizes     = 51,
     /**@}*/
     VAConfigAttribTypeMax
 } VAConfigAttribType;
@@ -794,27 +1013,27 @@ typedef struct _VAConfigAttrib {
 
 /* Attribute values for VAConfigAttribRTFormat. */
 
-#define VA_RT_FORMAT_YUV420	0x00000001	///< YUV 4:2:0 8-bit.
-#define VA_RT_FORMAT_YUV422	0x00000002	///< YUV 4:2:2 8-bit.
-#define VA_RT_FORMAT_YUV444	0x00000004	///< YUV 4:4:4 8-bit.
-#define VA_RT_FORMAT_YUV411	0x00000008	///< YUV 4:1:1 8-bit.
-#define VA_RT_FORMAT_YUV400	0x00000010	///< Greyscale 8-bit.
-#define VA_RT_FORMAT_YUV420_10	0x00000100	///< YUV 4:2:0 10-bit.
-#define VA_RT_FORMAT_YUV422_10	0x00000200	///< YUV 4:2:2 10-bit.
-#define VA_RT_FORMAT_YUV444_10	0x00000400	///< YUV 4:4:4 10-bit.
-#define VA_RT_FORMAT_YUV420_12	0x00001000	///< YUV 4:2:0 12-bit.
-#define VA_RT_FORMAT_YUV422_12	0x00002000	///< YUV 4:2:2 12-bit.
-#define VA_RT_FORMAT_YUV444_12	0x00004000	///< YUV 4:4:4 12-bit.
+#define VA_RT_FORMAT_YUV420 0x00000001  ///< YUV 4:2:0 8-bit.
+#define VA_RT_FORMAT_YUV422 0x00000002  ///< YUV 4:2:2 8-bit.
+#define VA_RT_FORMAT_YUV444 0x00000004  ///< YUV 4:4:4 8-bit.
+#define VA_RT_FORMAT_YUV411 0x00000008  ///< YUV 4:1:1 8-bit.
+#define VA_RT_FORMAT_YUV400 0x00000010  ///< Greyscale 8-bit.
+#define VA_RT_FORMAT_YUV420_10  0x00000100  ///< YUV 4:2:0 10-bit.
+#define VA_RT_FORMAT_YUV422_10  0x00000200  ///< YUV 4:2:2 10-bit.
+#define VA_RT_FORMAT_YUV444_10  0x00000400  ///< YUV 4:4:4 10-bit.
+#define VA_RT_FORMAT_YUV420_12  0x00001000  ///< YUV 4:2:0 12-bit.
+#define VA_RT_FORMAT_YUV422_12  0x00002000  ///< YUV 4:2:2 12-bit.
+#define VA_RT_FORMAT_YUV444_12  0x00004000  ///< YUV 4:4:4 12-bit.
 
-#define VA_RT_FORMAT_RGB16	0x00010000	///< Packed RGB, 16 bits per pixel.
-#define VA_RT_FORMAT_RGB32	0x00020000	///< Packed RGB, 32 bits per pixel, 8 bits per colour sample.
-#define VA_RT_FORMAT_RGBP	0x00100000	///< Planar RGB, 8 bits per sample.
-#define VA_RT_FORMAT_RGB32_10	0x00200000	///< Packed RGB, 32 bits per pixel, 10 bits per colour sample.
+#define VA_RT_FORMAT_RGB16  0x00010000  ///< Packed RGB, 16 bits per pixel.
+#define VA_RT_FORMAT_RGB32  0x00020000  ///< Packed RGB, 32 bits per pixel, 8 bits per colour sample.
+#define VA_RT_FORMAT_RGBP   0x00100000  ///< Planar RGB, 8 bits per sample.
+#define VA_RT_FORMAT_RGB32_10   0x00200000  ///< Packed RGB, 32 bits per pixel, 10 bits per colour sample.
 
-#define VA_RT_FORMAT_PROTECTED	0x80000000
+#define VA_RT_FORMAT_PROTECTED  0x80000000
 
-#define VA_RT_FORMAT_RGB32_10BPP	VA_RT_FORMAT_RGB32_10	///< @deprecated use VA_RT_FORMAT_RGB32_10 instead.
-#define VA_RT_FORMAT_YUV420_10BPP	VA_RT_FORMAT_YUV420_10	///< @deprecated use VA_RT_FORMAT_YUV420_10 instead.
+#define VA_RT_FORMAT_RGB32_10BPP    VA_RT_FORMAT_RGB32_10   ///< @deprecated use VA_RT_FORMAT_RGB32_10 instead.
+#define VA_RT_FORMAT_YUV420_10BPP   VA_RT_FORMAT_YUV420_10  ///< @deprecated use VA_RT_FORMAT_YUV420_10 instead.
 
 /** @name Attribute values for VAConfigAttribRateControl */
 /**@{*/
@@ -832,7 +1051,7 @@ typedef struct _VAConfigAttrib {
 #define VA_RC_VBR_CONSTRAINED           0x00000020
 /** \brief Intelligent Constant Quality. Provided an initial ICQ_quality_factor,
  *  adjusts QP at a frame and MB level based on motion to improve subjective quality. */
-#define VA_RC_ICQ			0x00000040
+#define VA_RC_ICQ           0x00000040
 /** \brief Macroblock based rate control.  Per MB control is decided
  *  internally in the encoder. It may be combined with other RC modes, except CQP. */
 #define VA_RC_MB                        0x00000080
@@ -864,8 +1083,18 @@ typedef struct _VAConfigAttrib {
  *  Convergence is specified in the unit of frame.
  *  window_size in VAEncMiscParameterRateControl is equal to convergence for AVBR.
  *  Accuracy is in the range of [1,100], 1 means one percent, and so on.
- *  target_percentage in VAEncMiscParameterRateControl is equal to accuracy for AVBR. */
+ *  target_percentage in VAEncMiscParameterRateControl is equal to accuracy for AVBR.
+ * */
 #define VA_RC_AVBR                      0x00000800
+/** \brief Transport Controlled BRC
+ *  Specific bitrate control for real time streaming.
+ *  TCBRC can instantly react to channel change to remove or significantly reduce the delay.
+ *  Application (transport) provides channel feedback to driver through TargetFrameSize.
+ *  When channel condition is very good (almost no constraint on instant frame size),
+ *  the app should set target frame size as zero. Otherwise, channel capacity divided by fps
+ *  should be used.
+ * */
+#define VA_RC_TCBRC                     0x00001000
 
 /**@}*/
 
@@ -880,10 +1109,10 @@ typedef struct _VAConfigAttrib {
 /**@{*/
 typedef union _VAConfigAttribValDecJPEG {
     struct {
-    /** \brief Set to (1 << VA_ROTATION_xxx) for supported rotation angles. */
-    uint32_t rotation : 4;
-    /** \brief Reserved for future use. */
-    uint32_t reserved : 28;
+        /** \brief Set to (1 << VA_ROTATION_xxx) for supported rotation angles. */
+        uint32_t rotation : 4;
+        /** \brief Reserved for future use. */
+        uint32_t reserved : 28;
     } bits;
     uint32_t value;
 } VAConfigAttribValDecJPEG;
@@ -953,12 +1182,16 @@ typedef union _VAConfigAttribValDecJPEG {
 #define VA_ENC_SLICE_STRUCTURE_POWER_OF_TWO_ROWS        0x00000001
 /** \brief Driver supports an arbitrary number of macroblocks per slice. */
 #define VA_ENC_SLICE_STRUCTURE_ARBITRARY_MACROBLOCKS    0x00000002
-/** \brief Dirver support 1 rows  per slice */
+/** \brief Driver support 1 row per slice */
 #define VA_ENC_SLICE_STRUCTURE_EQUAL_ROWS               0x00000004
-/** \brief Dirver support max encoded slice size per slice */
+/** \brief Driver support max encoded slice size per slice */
 #define VA_ENC_SLICE_STRUCTURE_MAX_SLICE_SIZE           0x00000008
 /** \brief Driver supports an arbitrary number of rows per slice. */
 #define VA_ENC_SLICE_STRUCTURE_ARBITRARY_ROWS           0x00000010
+/** \brief Driver supports any number of rows per slice but they must be the same
+*       for all slices except for the last one, which must be equal or smaller
+*       to the previous slices. */
+#define VA_ENC_SLICE_STRUCTURE_EQUAL_MULTI_ROWS         0x00000020
 /**@}*/
 
 /** \brief Attribute value for VAConfigAttribMaxFrameSize */
@@ -973,7 +1206,7 @@ typedef union _VAConfigAttribValMaxFrameSize {
         /** \brief multiple_pass support */
         uint32_t multiple_pass  : 1;
         /** \brief reserved bits for future, must be zero*/
-        uint32_t reserved       :30;
+        uint32_t reserved       : 30;
     } bits;
     uint32_t value;
 } VAConfigAttribValMaxFrameSize;
@@ -1016,6 +1249,8 @@ typedef union _VAConfigAttribValEncJPEG {
 #define VA_PREDICTION_DIRECTION_PREVIOUS                0x00000001
 /** \brief Driver support backward prediction frame/slice */
 #define VA_PREDICTION_DIRECTION_FUTURE                  0x00000002
+/** \brief Dirver require both reference list must be not empty for inter frame */
+#define VA_PREDICTION_DIRECTION_BI_NOT_EMPTY            0x00000004
 /**@}*/
 
 /** @name Attribute values for VAConfigAttribEncIntraRefresh */
@@ -1043,7 +1278,7 @@ typedef union _VAConfigAttribValEncJPEG {
 typedef union _VAConfigAttribValEncROI {
     struct {
         /** \brief The number of ROI regions supported, 0 if ROI is not supported. */
-        uint32_t num_roi_regions 		: 8;
+        uint32_t num_roi_regions        : 8;
         /**
          * \brief A flag indicates whether ROI priority is supported
          *
@@ -1055,7 +1290,7 @@ typedef union _VAConfigAttribValEncROI {
          * User should ignore \ref roi_rc_priority_support when VAConfigAttribRateControl == VA_RC_CQP
          * because ROI delta QP is always required when VAConfigAttribRateControl == VA_RC_CQP.
          */
-        uint32_t roi_rc_priority_support	: 1;
+        uint32_t roi_rc_priority_support    : 1;
         /**
          * \brief A flag indicates whether ROI delta QP is supported
          *
@@ -1069,8 +1304,8 @@ typedef union _VAConfigAttribValEncROI {
          */
         uint32_t roi_rc_qp_delta_support    : 1;
         uint32_t reserved                   : 22;
-     } bits;
-     uint32_t value;
+    } bits;
+    uint32_t value;
 } VAConfigAttribValEncROI;
 
 /** \brief Attribute value for VAConfigAttribEncRateControlExt */
@@ -1127,7 +1362,51 @@ typedef union _VAConfigAttribValMultipleFrame {
         uint32_t reserved                       : 23;
     } bits;
     uint32_t value;
-}VAConfigAttribValMultipleFrame;
+} VAConfigAttribValMultipleFrame;
+
+/** brief Attribute value VAConfigAttribValContextPriority */
+typedef union _VAConfigAttribValContextPriority {
+    struct {
+        /** \brief the priority , for the Query operation (read) it represents highest priority
+         * for the set operation (write), value should be [0~highest priority] , 0 is lowest priority*/
+        uint32_t priority     : 16;
+        /** \brief reserved bits for future, must be zero*/
+        uint32_t reserved     : 16;
+    } bits;
+    uint32_t value;
+} VAConfigAttribValContextPriority;
+
+/** @name Attribute values for VAConfigAttribProtectedContentCipherAlgorithm */
+/** \brief AES cipher */
+#define VA_PC_CIPHER_AES                    0x00000001
+
+/** @name Attribute values for VAConfigAttribProtectedContentCipherBlockSize */
+/** \brief 128 bits block size */
+#define VA_PC_BLOCK_SIZE_128                0x00000001
+/** \brief 192 bits block size */
+#define VA_PC_BLOCK_SIZE_192                0x00000002
+/** \brief 256 bits block size */
+#define VA_PC_BLOCK_SIZE_256                0x00000004
+
+/** @name Attribute values for VAConfigAttribProtectedContentCipherMode */
+/** \brief AES ECB */
+#define VA_PC_CIPHER_MODE_ECB               0x00000001
+/** \brief AES CBC */
+#define VA_PC_CIPHER_MODE_CBC               0x00000002
+/** \brief AES CTR */
+#define VA_PC_CIPHER_MODE_CTR               0x00000004
+
+/** @name Attribute values for VAConfigAttribProtectedContentCipherSampleType */
+/** \brief Full sample */
+#define VA_PC_SAMPLE_TYPE_FULLSAMPLE        0x00000001
+/** \brief Sub sample */
+#define VA_PC_SAMPLE_TYPE_SUBSAMPLE         0x00000002
+
+/** @name Attribute values for VAConfigAttribProtectedContentUsage */
+/** \brief Default usage */
+#define VA_PC_USAGE_DEFAULT                 0x00000000
+/** \brief Widevine */
+#define VA_PC_USAGE_WIDEVINE                0x00000001
 
 /** @name Attribute values for VAConfigAttribProcessingRate. */
 /**@{*/
@@ -1145,17 +1424,17 @@ typedef union _VAConfigAttribValMultipleFrame {
 #define VA_ATTRIB_NOT_SUPPORTED 0x80000000
 
 /** Get maximum number of profiles supported by the implementation */
-int vaMaxNumProfiles (
+int vaMaxNumProfiles(
     VADisplay dpy
 );
 
 /** Get maximum number of entrypoints supported by the implementation */
-int vaMaxNumEntrypoints (
+int vaMaxNumEntrypoints(
     VADisplay dpy
 );
 
 /** Get maximum number of attributs supported by the implementation */
-int vaMaxNumConfigAttributes (
+int vaMaxNumConfigAttributes(
     VADisplay dpy
 );
 
@@ -1165,10 +1444,10 @@ int vaMaxNumConfigAttributes (
  * least vaMaxNumProfile() entries. The actual number of profiles
  * returned in "profile_list" is returned in "num_profile".
  */
-VAStatus vaQueryConfigProfiles (
+VAStatus vaQueryConfigProfiles(
     VADisplay dpy,
-    VAProfile *profile_list,	/* out */
-    int *num_profiles		/* out */
+    VAProfile *profile_list,    /* out */
+    int *num_profiles       /* out */
 );
 
 /**
@@ -1177,11 +1456,11 @@ VAStatus vaQueryConfigProfiles (
  * least vaMaxNumEntrypoints() entries. The actual number of entrypoints
  * returned in "entrypoint_list" is returned in "num_entrypoints".
  */
-VAStatus vaQueryConfigEntrypoints (
+VAStatus vaQueryConfigEntrypoints(
     VADisplay dpy,
     VAProfile profile,
-    VAEntrypoint *entrypoint_list,	/* out */
-    int *num_entrypoints		/* out */
+    VAEntrypoint *entrypoint_list,  /* out */
+    int *num_entrypoints        /* out */
 );
 
 /**
@@ -1192,7 +1471,7 @@ VAStatus vaQueryConfigEntrypoints (
  * not supported for the given profile/entrypoint pair will have their
  * value set to VA_ATTRIB_NOT_SUPPORTED
  */
-VAStatus vaGetConfigAttributes (
+VAStatus vaGetConfigAttributes(
     VADisplay dpy,
     VAProfile profile,
     VAEntrypoint entrypoint,
@@ -1210,7 +1489,7 @@ typedef VAGenericID VAConfigID;
  * it passes in the attribute list that specifies the attributes it cares
  * about, with the rest taking default values.
  */
-VAStatus vaCreateConfig (
+VAStatus vaCreateConfig(
     VADisplay dpy,
     VAProfile profile,
     VAEntrypoint entrypoint,
@@ -1222,7 +1501,7 @@ VAStatus vaCreateConfig (
 /**
  * Free resources associdated with a given config
  */
-VAStatus vaDestroyConfig (
+VAStatus vaDestroyConfig(
     VADisplay dpy,
     VAConfigID config_id
 );
@@ -1235,13 +1514,13 @@ VAStatus vaDestroyConfig (
  * vaMaxNumConfigAttributes() entries. The actual number of attributes
  * returned in "attrib_list" is returned in "num_attribs"
  */
-VAStatus vaQueryConfigAttributes (
+VAStatus vaQueryConfigAttributes(
     VADisplay dpy,
     VAConfigID config_id,
-    VAProfile *profile, 	/* out */
-    VAEntrypoint *entrypoint, 	/* out */
+    VAProfile *profile,     /* out */
+    VAEntrypoint *entrypoint,   /* out */
     VAConfigAttrib *attrib_list,/* out */
-    int *num_attribs 		/* out */
+    int *num_attribs        /* out */
 );
 
 
@@ -1268,8 +1547,8 @@ typedef VAGenericID VAContextID;
 
 typedef VAGenericID VASurfaceID;
 
-#define VA_INVALID_ID		0xffffffff
-#define VA_INVALID_SURFACE	VA_INVALID_ID
+#define VA_INVALID_ID       0xffffffff
+#define VA_INVALID_SURFACE  VA_INVALID_ID
 
 /** \brief Generic value types. */
 typedef enum  {
@@ -1313,14 +1592,13 @@ typedef struct _VAGenericValue {
 typedef enum {
     VASurfaceAttribNone = 0,
     /**
-     * \brief Pixel format (fourcc).
+     * \brief Pixel format as a FOURCC (int, read/write).
      *
-     * The value is meaningful as input to vaQuerySurfaceAttributes().
-     * If zero, the driver returns the optimal pixel format for the
-     * specified config. Otherwise, if non-zero, the value represents
-     * a pixel format (FOURCC) that is kept as is on output, if the
-     * driver supports it. Otherwise, the driver sets the value to
-     * zero and drops the \c VA_SURFACE_ATTRIB_SETTABLE flag.
+     * When vaQuerySurfaceAttributes() is called, the driver will return one
+     * PixelFormat attribute per supported pixel format.
+     *
+     * When provided as an input to vaCreateSurfaces(), the driver will
+     * allocate a surface with the provided pixel format.
      */
     VASurfaceAttribPixelFormat,
     /** \brief Minimal width in pixels (int, read-only). */
@@ -1343,6 +1621,13 @@ typedef enum {
     /** \brief Surface usage hint, gives the driver a hint of intended usage
      *  to optimize allocation (e.g. tiling) (int, read/write). */
     VASurfaceAttribUsageHint,
+    /** \brief List of possible DRM format modifiers (pointer, write).
+     *
+     * The value must be a pointer to a VADRMFormatModifierList. This can only
+     * be used when allocating a new buffer, it's invalid to use this attribute
+     * when importing an existing buffer.
+     */
+    VASurfaceAttribDRMFormatModifiers,
     /** \brief Number of surface attributes. */
     VASurfaceAttribCount
 } VASurfaceAttribType;
@@ -1365,11 +1650,11 @@ typedef struct _VASurfaceAttrib {
  */
 /**@{*/
 /** \brief VA memory type (default) is supported. */
-#define VA_SURFACE_ATTRIB_MEM_TYPE_VA			0x00000001
+#define VA_SURFACE_ATTRIB_MEM_TYPE_VA           0x00000001
 /** \brief V4L2 buffer memory type is supported. */
-#define VA_SURFACE_ATTRIB_MEM_TYPE_V4L2			0x00000002
+#define VA_SURFACE_ATTRIB_MEM_TYPE_V4L2         0x00000002
 /** \brief User pointer memory type is supported. */
-#define VA_SURFACE_ATTRIB_MEM_TYPE_USER_PTR		0x00000004
+#define VA_SURFACE_ATTRIB_MEM_TYPE_USER_PTR     0x00000004
 /**@}*/
 
 /**
@@ -1404,33 +1689,33 @@ typedef struct _VASurfaceAttribExternalBuffers {
 /** @name VASurfaceAttribExternalBuffers flags */
 /**@{*/
 /** \brief Enable memory tiling */
-#define VA_SURFACE_EXTBUF_DESC_ENABLE_TILING	0x00000001
+#define VA_SURFACE_EXTBUF_DESC_ENABLE_TILING    0x00000001
 /** \brief Memory is cacheable */
-#define VA_SURFACE_EXTBUF_DESC_CACHED		0x00000002
+#define VA_SURFACE_EXTBUF_DESC_CACHED       0x00000002
 /** \brief Memory is non-cacheable */
-#define VA_SURFACE_EXTBUF_DESC_UNCACHED		0x00000004
+#define VA_SURFACE_EXTBUF_DESC_UNCACHED     0x00000004
 /** \brief Memory is write-combined */
-#define VA_SURFACE_EXTBUF_DESC_WC		0x00000008
+#define VA_SURFACE_EXTBUF_DESC_WC       0x00000008
 /** \brief Memory is protected */
 #define VA_SURFACE_EXTBUF_DESC_PROTECTED        0x80000000
 
 /** @name VASurfaceAttribUsageHint attribute usage hint flags */
 /**@{*/
 /** \brief Surface usage not indicated. */
-#define VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC 	0x00000000
+#define VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC    0x00000000
 /** \brief Surface used by video decoder. */
-#define VA_SURFACE_ATTRIB_USAGE_HINT_DECODER 	0x00000001
+#define VA_SURFACE_ATTRIB_USAGE_HINT_DECODER    0x00000001
 /** \brief Surface used by video encoder. */
-#define VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER 	0x00000002
+#define VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER    0x00000002
 /** \brief Surface read by video post-processing. */
-#define VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ 	0x00000004
+#define VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ   0x00000004
 /** \brief Surface written by video post-processing. */
-#define VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE 	0x00000008
+#define VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE  0x00000008
 /** \brief Surface used for display. */
-#define VA_SURFACE_ATTRIB_USAGE_HINT_DISPLAY 	0x00000010
+#define VA_SURFACE_ATTRIB_USAGE_HINT_DISPLAY    0x00000010
 /** \brief Surface used for export to third-party APIs, e.g. via
  *  vaExportSurfaceHandle(). */
-#define VA_SURFACE_ATTRIB_USAGE_HINT_EXPORT 	0x00000020
+#define VA_SURFACE_ATTRIB_USAGE_HINT_EXPORT     0x00000020
 
 /**@}*/
 
@@ -1506,7 +1791,7 @@ vaCreateSurfaces(
  *  surfaces: array of surfaces to destroy
  *  num_surfaces: number of surfaces in the array to be destroyed.
  */
-VAStatus vaDestroySurfaces (
+VAStatus vaDestroySurfaces(
     VADisplay dpy,
     VASurfaceID *surfaces,
     int num_surfaces
@@ -1525,7 +1810,7 @@ VAStatus vaDestroySurfaces (
  *  num_render_targets: number of render targets in the above array
  *  context: created context id upon return
  */
-VAStatus vaCreateContext (
+VAStatus vaCreateContext(
     VADisplay dpy,
     VAConfigID config_id,
     int picture_width,
@@ -1533,7 +1818,7 @@ VAStatus vaCreateContext (
     int flag,
     VASurfaceID *render_targets,
     int num_render_targets,
-    VAContextID *context		/* out */
+    VAContextID *context        /* out */
 );
 
 /**
@@ -1541,7 +1826,7 @@ VAStatus vaCreateContext (
  *  dpy: display
  *  context: context to be destroyed
  */
-VAStatus vaDestroyContext (
+VAStatus vaDestroyContext(
     VADisplay dpy,
     VAContextID context
 );
@@ -1564,7 +1849,7 @@ typedef VAGenericID VAMFContextID;
  *  mf_context: Multi-Frame context encapsulating all associated context
  *  for multi-frame submission.
  */
-VAStatus vaCreateMFContext (
+VAStatus vaCreateMFContext(
     VADisplay dpy,
     VAMFContextID *mf_context    /* out */
 );
@@ -1602,7 +1887,7 @@ VAStatus vaCreateMFContext (
  *  context: context being associated with Multi-Frame context.
  *  mf_context: - multi-frame context used to associate contexts for multi-frame submission.
  */
-VAStatus vaMFAddContext (
+VAStatus vaMFAddContext(
     VADisplay dpy,
     VAMFContextID mf_context,
     VAContextID context
@@ -1620,7 +1905,7 @@ VAStatus vaMFAddContext (
  *  mf_context: VAMFContextID where context is added
  *  context: VAContextID to be added
  */
-VAStatus vaMFReleaseContext (
+VAStatus vaMFReleaseContext(
     VADisplay dpy,
     VAMFContextID mf_context,
     VAContextID context
@@ -1636,32 +1921,31 @@ VAStatus vaMFReleaseContext (
 
 typedef VAGenericID VABufferID;
 
-typedef enum
-{
-    VAPictureParameterBufferType	= 0,
-    VAIQMatrixBufferType		= 1,
-    VABitPlaneBufferType		= 2,
-    VASliceGroupMapBufferType		= 3,
-    VASliceParameterBufferType		= 4,
-    VASliceDataBufferType		= 5,
-    VAMacroblockParameterBufferType	= 6,
-    VAResidualDataBufferType		= 7,
-    VADeblockingParameterBufferType	= 8,
-    VAImageBufferType			= 9,
-    VAProtectedSliceDataBufferType	= 10,
+typedef enum {
+    VAPictureParameterBufferType    = 0,
+    VAIQMatrixBufferType        = 1,
+    VABitPlaneBufferType        = 2,
+    VASliceGroupMapBufferType       = 3,
+    VASliceParameterBufferType      = 4,
+    VASliceDataBufferType       = 5,
+    VAMacroblockParameterBufferType = 6,
+    VAResidualDataBufferType        = 7,
+    VADeblockingParameterBufferType = 8,
+    VAImageBufferType           = 9,
+    VAProtectedSliceDataBufferType  = 10,
     VAQMatrixBufferType                 = 11,
     VAHuffmanTableBufferType            = 12,
     VAProbabilityBufferType             = 13,
 
-/* Following are encode buffer types */
-    VAEncCodedBufferType		= 21,
-    VAEncSequenceParameterBufferType	= 22,
-    VAEncPictureParameterBufferType	= 23,
-    VAEncSliceParameterBufferType	= 24,
+    /* Following are encode buffer types */
+    VAEncCodedBufferType        = 21,
+    VAEncSequenceParameterBufferType    = 22,
+    VAEncPictureParameterBufferType = 23,
+    VAEncSliceParameterBufferType   = 24,
     VAEncPackedHeaderParameterBufferType = 25,
     VAEncPackedHeaderDataBufferType     = 26,
-    VAEncMiscParameterBufferType	= 27,
-    VAEncMacroblockParameterBufferType	= 28,
+    VAEncMiscParameterBufferType    = 27,
+    VAEncMacroblockParameterBufferType  = 28,
     VAEncMacroblockMapBufferType        = 29,
 
     /**
@@ -1672,7 +1956,7 @@ typedef enum
      * #VAEncQPBufferH264 for details
      */
     VAEncQPBufferType                   = 30,
-/* Following are video processing buffer types */
+    /* Following are video processing buffer types */
     /**
      * \brief Video processing pipeline parameter buffer.
      *
@@ -1740,9 +2024,133 @@ typedef enum
      * entry_offset_to_subset_array in VAPictureParameterBufferHEVC data structure.
      */
     VASubsetsParameterBufferType        = 57,
+    /** \brief adjust context parameters dynamically
+     *
+     * this parameter is used to update context parameters, detail parameter is in
+     *  \c VAContextParameterUpdateBuffer
+     */
+    VAContextParameterUpdateBufferType  = 58,
+    /**
+     * \brief Protected session execution buffer type
+     *
+     * It's for TEE execution usage (vaProtectedSessionExecute()). The buffer structure is in
+     * \c VAProtectedSessionExecuteBuffer
+     */
+    VAProtectedSessionExecuteBufferType = 59,
+
+    /** \brief Encryption parameters buffer for protected content session.
+     *
+     * Refer to \c VAEncryptionParameters
+    */
+    VAEncryptionParameterBufferType = 60,
 
     VABufferTypeMax
 } VABufferType;
+
+/** \brief update the context parameter
+ * this structure is used to update context parameters, such as priority of the context
+ * backend driver should keep the parameter unchanged if there no new
+ * parameter updated.
+ */
+typedef struct _VAContextParameterUpdateBuffer {
+    union {
+        struct {
+            /** \brief indicate whether context priority changed */
+            uint32_t context_priority_update : 1;
+            /** \brief Reserved bits for future use, must be zero */
+            uint32_t reserved                : 31;
+        } bits;
+        uint32_t value;
+    } flags;
+    /** \brief task/context priority */
+    VAConfigAttribValContextPriority context_priority;
+    /** \brief Reserved bytes for future use, must be zero */
+    uint32_t reserved[VA_PADDING_MEDIUM];
+} VAContextParameterUpdateBuffer;
+
+/**
+ * These ENCRYPTION_TYPEs are used for the attribute values for
+ * \c VAConfigAttribEncryption and for encryption_type in
+ * VAEncryptionParameters.
+ *
+ * When used for \c VAConfigAttribEncryption, it be used via
+ * vaQueryConfigEntrypoints to check which type are supported for specific
+ * profile or not.
+ *
+ * When used for encryption_type in VAEncryptionParameters, it tells driver
+ * the parameters in VAEncryptionParameters are used for which encryption type.
+ */
+#define VA_ENCRYPTION_TYPE_FULLSAMPLE_CTR       0x00000001  /* AES CTR fullsample */
+#define VA_ENCRYPTION_TYPE_FULLSAMPLE_CBC       0x00000002  /* AES CBC fullsample */
+#define VA_ENCRYPTION_TYPE_SUBSAMPLE_CTR        0x00000004  /* AES CTR fullsample */
+#define VA_ENCRYPTION_TYPE_SUBSAMPLE_CBC        0x00000008  /* AES CBC fullsample */
+
+/** \brief structure for encrypted segment info. */
+typedef struct _VAEncryptionSegmentInfo {
+    /** \brief  The offset relative to the start of the bitstream input in
+     *  bytes of the start of the segment */
+    uint32_t segment_start_offset;
+    /** \brief  The length of the segments in bytes */
+    uint32_t segment_length;
+    /** \brief  The length in bytes of the remainder of an incomplete block
+     *  from a previous segment*/
+    uint32_t partial_aes_block_size;
+    /** \brief  The length in bytes of the initial clear data */
+    uint32_t init_byte_length;
+    /** \brief  This will be AES counter for secure decode and secure encode
+     *  when numSegments equals 1, valid size is specified by
+     * \c key_blob_size */
+    uint8_t aes_cbc_iv_or_ctr[64];
+    /** \brief Reserved bytes for future use, must be zero */
+    uint32_t va_reserved[VA_PADDING_MEDIUM];
+} VAEncryptionSegmentInfo;
+
+/** \brief Encryption parameters buffer for VAEncryptionParameterBufferType */
+typedef struct _VAEncryptionParameters {
+    /** \brief Encryption type, refer to \c VA_ENCRYPTION_TYPE_FULLSAMPLE_CTR,
+     * \c VA_ENCRYPTION_TYPE_FULLSAMPLE_CBC, \c VA_ENCRYPTION_TYPE_SUBSAMPLE_CTR,
+     * or \c VA_ENCRYPTION_TYPE_SUBSAMPLE_CBC */
+    uint32_t encryption_type;
+    /** \brief The number of sengments */
+    uint32_t num_segments;
+    /** \brief Pointer of segments */
+    VAEncryptionSegmentInfo *segment_info;
+    /** \brief The status report index reserved for CENC fullsample workload.
+     * The related structures and definitions are vendor specific.
+    */
+    uint32_t status_report_index;
+    /** \brief CENC counter length */
+    uint32_t size_of_length;
+    /** \brief Wrapped decrypt blob (Snd)kb, valid size is specified by
+     * \c key_blob_size */
+    uint8_t wrapped_decrypt_blob[64];
+    /** \brief Wrapped Key blob info (Sne)kb, valid size is specified by
+     * \c key_blob_size */
+    uint8_t wrapped_encrypt_blob[64];
+    /** \brief key blob size
+     * It could be \c VA_PC_BLOCK_SIZE_128, \c VA_PC_BLOCK_SIZE_192, or
+     * \c VA_PC_BLOCK_SIZE_256
+     */
+    uint32_t key_blob_size;
+    /** \brief Indicates the number of 16-byte BLOCKS that are encrypted in any
+     *  given encrypted region of segments.
+     *  If this value is zero:
+     *    1. All bytes in encrypted region of segments are encrypted, i.e. the
+     *       CENC or CBC1 scheme is being used
+     *    2. blocks_stripe_clear must also be zero.
+     *  If this value is non-zero, blocks_stripe_clear must also be non-zero.
+     */
+    uint32_t blocks_stripe_encrypted;
+    /** \brief Indicates the number of 16-byte BLOCKS that are clear in any given
+     *  encrypted region of segments, as defined by the CENS and CBCS schemes in
+     *  the common encryption spec.
+     *  If this value is zero, all bytes in encrypted region of segments are
+     *  encrypted, i.e. the CENC or CBC1 scheme is being used.
+     */
+    uint32_t blocks_stripe_clear;
+    /** \brief Reserved bytes for future use, must be zero */
+    uint32_t va_reserved[VA_PADDING_MEDIUM];
+} VAEncryptionParameters;
 
 /**
  * Processing rate parameter for encode.
@@ -1806,12 +2214,11 @@ vaQueryProcessingRate(
     unsigned int       *processing_rate
 );
 
-typedef enum
-{
-    VAEncMiscParameterTypeFrameRate 	= 0,
-    VAEncMiscParameterTypeRateControl  	= 1,
-    VAEncMiscParameterTypeMaxSliceSize	= 2,
-    VAEncMiscParameterTypeAIR    	= 3,
+typedef enum {
+    VAEncMiscParameterTypeFrameRate     = 0,
+    VAEncMiscParameterTypeRateControl   = 1,
+    VAEncMiscParameterTypeMaxSliceSize  = 2,
+    VAEncMiscParameterTypeAIR       = 3,
     /** \brief Buffer type used to express a maximum frame size (in bits). */
     VAEncMiscParameterTypeMaxFrameSize  = 4,
     /** \brief Buffer type used for HRD parameters. */
@@ -1903,15 +2310,13 @@ typedef struct _VAEncPackedHeaderParameterBuffer {
  *    vaUnmapBuffer(dpy, buf_id);
  *    vaRenderPicture(dpy, context, &buf_id, 1);
  */
-typedef struct _VAEncMiscParameterBuffer
-{
+typedef struct _VAEncMiscParameterBuffer {
     VAEncMiscParameterType type;
     uint32_t data[];
 } VAEncMiscParameterBuffer;
 
 /** \brief Temporal layer Structure*/
-typedef struct _VAEncMiscParameterTemporalLayerStructure
-{
+typedef struct _VAEncMiscParameterTemporalLayerStructure {
     /** \brief The number of temporal layers */
     uint32_t number_of_layers;
     /** \brief The length of the array defining frame layer membership. Should be 1-32 */
@@ -1930,8 +2335,7 @@ typedef struct _VAEncMiscParameterTemporalLayerStructure
 
 
 /** \brief Rate control parameters */
-typedef struct _VAEncMiscParameterRateControl
-{
+typedef struct _VAEncMiscParameterRateControl {
     /** The maximum bit-rate which the the rate controller should generate. */
     uint32_t bits_per_second;
     /** The target bit-rate which the rate controller should generate, as a percentage of the
@@ -1962,10 +2366,8 @@ typedef struct _VAEncMiscParameterRateControl
      * Only used by some drivers - see driver documentation for details.  Set to zero if unused.
      */
     uint32_t basic_unit_size;
-    union
-    {
-        struct
-        {
+    union {
+        struct {
             /** Force rate controller reset.
              *
              * The next frame will be treated as the start of a new stream, with all rate
@@ -2031,8 +2433,17 @@ typedef struct _VAEncMiscParameterRateControl
      *  the range will be different for different codec
      */
     uint32_t quality_factor;
+    /** Target frame size
+     *
+     *  Desired frame size in bytes.
+     *  This parameter can be used in some RC modes (like Transport Controlled BRC)
+     *  where feedback from the app is required.
+     *  Zero value means no limits.
+     *
+     */
+    uint32_t target_frame_size;
     /** Reserved bytes for future use, must be zero. */
-    uint32_t va_reserved[VA_PADDING_MEDIUM - 3];
+    uint32_t va_reserved[VA_PADDING_LOW];
 } VAEncMiscParameterRateControl;
 
 /** Encode framerate parameters.
@@ -2041,8 +2452,7 @@ typedef struct _VAEncMiscParameterRateControl
  * provided in all modes using a bitrate target (variable framerate is not
  * supported).
  */
-typedef struct _VAEncMiscParameterFrameRate
-{
+typedef struct _VAEncMiscParameterFrameRate {
     /** Encode framerate.
      *
      * The framerate is specified as a number of frames per second, as a
@@ -2063,17 +2473,15 @@ typedef struct _VAEncMiscParameterFrameRate
      * in the low 2 bytes.
      */
     uint32_t framerate;
-    union
-    {
-        struct
-        {
+    union {
+        struct {
             /** The temporal layer that these framerate parameters apply to. */
             uint32_t temporal_id : 8;
             /** Reserved for future use, must be zero. */
             uint32_t reserved : 24;
-         } bits;
-         uint32_t value;
-     } framerate_flags;
+        } bits;
+        uint32_t value;
+    } framerate_flags;
 
     /** \brief Reserved bytes for future use, must be zero */
     uint32_t                va_reserved[VA_PADDING_LOW];
@@ -2084,16 +2492,14 @@ typedef struct _VAEncMiscParameterFrameRate
  * The encoder will attempt to make sure that individual slices do not exceed this size
  * Or to signal applicate if the slice size exceed this size, see "status" of VACodedBufferSegment
  */
-typedef struct _VAEncMiscParameterMaxSliceSize
-{
+typedef struct _VAEncMiscParameterMaxSliceSize {
     uint32_t max_slice_size;
 
     /** \brief Reserved bytes for future use, must be zero */
     uint32_t                va_reserved[VA_PADDING_LOW];
 } VAEncMiscParameterMaxSliceSize;
 
-typedef struct _VAEncMiscParameterAIR
-{
+typedef struct _VAEncMiscParameterAIR {
     uint32_t air_num_mbs;
     uint32_t air_threshold;
     uint32_t air_auto; /* if set to 1 then hardware auto-tune the AIR threshold */
@@ -2105,23 +2511,21 @@ typedef struct _VAEncMiscParameterAIR
 /*
  * \brief Rolling intra refresh data structure for encoding.
  */
-typedef struct _VAEncMiscParameterRIR
-{
-    union
-    {
+typedef struct _VAEncMiscParameterRIR {
+    union {
         struct
-	/**
-	 * \brief Indicate if intra refresh is enabled in column/row.
-	 *
-	 * App should query VAConfigAttribEncIntraRefresh to confirm RIR support
-	 * by the driver before sending this structure.
-         */
+        /**
+         * \brief Indicate if intra refresh is enabled in column/row.
+         *
+         * App should query VAConfigAttribEncIntraRefresh to confirm RIR support
+         * by the driver before sending this structure.
+             */
         {
-	    /* \brief enable RIR in column */
+            /* \brief enable RIR in column */
             uint32_t enable_rir_column : 1;
-	    /* \brief enable RIR in row */
+            /* \brief enable RIR in row */
             uint32_t enable_rir_row : 1;
-	    uint32_t reserved : 30;
+            uint32_t reserved : 30;
         } bits;
         uint32_t value;
     } rir_flags;
@@ -2152,8 +2556,7 @@ typedef struct _VAEncMiscParameterRIR
  *
  * If not provided, the encoder may use arbitrary amounts of buffering.
  */
-typedef struct _VAEncMiscParameterHRD
-{
+typedef struct _VAEncMiscParameterHRD {
     /** The initial fullness of the HRD coded picture buffer, in bits.
      *
      * This sets how full the CPB is when encoding begins - that is, how much
@@ -2249,20 +2652,17 @@ typedef struct _VAEncMiscParameterBufferQualityLevel {
  * Some encoders support special types of quantization such as trellis, and this structure
  * can be used by the app to control these special types of quantization by the encoder.
  */
-typedef struct _VAEncMiscParameterQuantization
-{
-    union
-    {
-    /* if no flags is set then quantization is determined by the driver */
-        struct
-        {
-	    /* \brief disable trellis for all frames/fields */
+typedef struct _VAEncMiscParameterQuantization {
+    union {
+        /* if no flags is set then quantization is determined by the driver */
+        struct {
+            /* \brief disable trellis for all frames/fields */
             uint32_t disable_trellis : 1;
-	    /* \brief enable trellis for I frames/fields */
+            /* \brief enable trellis for I frames/fields */
             uint32_t enable_trellis_I : 1;
-	    /* \brief enable trellis for P frames/fields */
+            /* \brief enable trellis for P frames/fields */
             uint32_t enable_trellis_P : 1;
-	    /* \brief enable trellis for B frames/fields */
+            /* \brief enable trellis for B frames/fields */
             uint32_t enable_trellis_B : 1;
             uint32_t reserved : 28;
         } bits;
@@ -2307,31 +2707,30 @@ typedef struct _VAEncMiscParameterSkipFrame {
  * supported ROIs can be queried through the VAConfigAttribEncROI.  The encoder will use the
  * ROI information to adjust the QP values of the MB's that fall within the ROIs.
  */
-typedef struct _VAEncROI
-{
-        /** \brief Defines the ROI boundary in pixels, the driver will map it to appropriate
-         *  codec coding units.  It is relative to frame coordinates for the frame case and
-         *  to field coordinates for the field case. */
-        VARectangle     roi_rectangle;
-        /**
-         * \brief ROI value
-         *
-         * \ref roi_value specifies ROI delta QP or ROI priority.
-         * --  ROI delta QP is the value that will be added on top of the frame level QP.
-         * --  ROI priority specifies the priority of a region, it can be positive (more important)
-         * or negative (less important) values and is compared with non-ROI region (taken as value 0),
-         * E.g. ROI region with \ref roi_value -3 is less important than the non-ROI region (\ref roi_value
-         * implied to be 0) which is less important than ROI region with roi_value +2. For overlapping
-         * regions, the roi_value that is first in the ROI array will have priority.
-         *
-         * \ref roi_value always specifes ROI delta QP when VAConfigAttribRateControl == VA_RC_CQP, no matter
-         * the value of \c roi_value_is_qp_delta in #VAEncMiscParameterBufferROI.
-         *
-         * \ref roi_value depends on \c roi_value_is_qp_delta in #VAEncMiscParameterBufferROI when
-         * VAConfigAttribRateControl != VA_RC_CQP. \ref roi_value specifies ROI_delta QP if \c roi_value_is_qp_delta
-         * in VAEncMiscParameterBufferROI is 1, otherwise \ref roi_value specifies ROI priority.
-         */
-        int8_t            roi_value;
+typedef struct _VAEncROI {
+    /** \brief Defines the ROI boundary in pixels, the driver will map it to appropriate
+     *  codec coding units.  It is relative to frame coordinates for the frame case and
+     *  to field coordinates for the field case. */
+    VARectangle     roi_rectangle;
+    /**
+     * \brief ROI value
+     *
+     * \ref roi_value specifies ROI delta QP or ROI priority.
+     * --  ROI delta QP is the value that will be added on top of the frame level QP.
+     * --  ROI priority specifies the priority of a region, it can be positive (more important)
+     * or negative (less important) values and is compared with non-ROI region (taken as value 0),
+     * E.g. ROI region with \ref roi_value -3 is less important than the non-ROI region (\ref roi_value
+     * implied to be 0) which is less important than ROI region with roi_value +2. For overlapping
+     * regions, the roi_value that is first in the ROI array will have priority.
+     *
+     * \ref roi_value always specifes ROI delta QP when VAConfigAttribRateControl == VA_RC_CQP, no matter
+     * the value of \c roi_value_is_qp_delta in #VAEncMiscParameterBufferROI.
+     *
+     * \ref roi_value depends on \c roi_value_is_qp_delta in #VAEncMiscParameterBufferROI when
+     * VAConfigAttribRateControl != VA_RC_CQP. \ref roi_value specifies ROI_delta QP if \c roi_value_is_qp_delta
+     * in VAEncMiscParameterBufferROI is 1, otherwise \ref roi_value specifies ROI priority.
+     */
+    int8_t            roi_value;
 } VAEncROI;
 
 typedef struct _VAEncMiscParameterBufferROI {
@@ -2344,8 +2743,8 @@ typedef struct _VAEncMiscParameterBufferROI {
     int8_t                max_delta_qp;
     int8_t                min_delta_qp;
 
-   /** \brief Pointer to a VAEncROI array with num_roi elements.  It is relative to frame
-     *  coordinates for the frame case and to field coordinates for the field case.*/
+    /** \brief Pointer to a VAEncROI array with num_roi elements.  It is relative to frame
+      *  coordinates for the frame case and to field coordinates for the field case.*/
     VAEncROI            *roi;
     union {
         struct {
@@ -2381,13 +2780,12 @@ typedef struct _VAEncMiscParameterBufferROI {
  * areas not covered by dirty rect rectangles are assumed to have not changed compared to the
  * previous picture.  The encoder may do some internal optimizations.
  */
-typedef struct _VAEncMiscParameterBufferDirtyRect
-{
+typedef struct _VAEncMiscParameterBufferDirtyRect {
     /** \brief Number of Rectangle being sent.*/
     uint32_t    num_roi_rectangle;
 
     /** \brief Pointer to a VARectangle array with num_roi_rectangle elements.*/
-     VARectangle    *roi_rectangle;
+    VARectangle    *roi_rectangle;
 } VAEncMiscParameterBufferDirtyRect;
 
 /** \brief Attribute value for VAConfigAttribEncParallelRateControl */
@@ -2403,12 +2801,9 @@ typedef struct _VAEncMiscParameterParallelRateControl {
 
 /** per frame encoder quality controls, once set they will persist for all future frames
   *till it is updated again. */
-typedef struct _VAEncMiscParameterEncQuality
-{
-    union
-    {
-        struct
-        {
+typedef struct _VAEncMiscParameterEncQuality {
+    union {
+        struct {
             /** Use raw frames for reference instead of reconstructed frames.
               * it only impact motion estimation (ME)  stage, and will not impact MC stage
               * so the reconstruct picture will can match with decode side */
@@ -2480,8 +2875,7 @@ typedef struct _VAEncMiscParameterEncQuality
  *  offset parameters for quantization.
  *  Valid when \c VAConfigAttribCustomRoundingControl equals 1.
  */
-typedef struct _VAEncMiscParameterCustomRoundingControl
-{
+typedef struct _VAEncMiscParameterCustomRoundingControl {
     union {
         struct {
             /** \brief Enable customized rounding offset for intra blocks.
@@ -2506,12 +2900,13 @@ typedef struct _VAEncMiscParameterCustomRoundingControl
              */
             uint32_t    rounding_offset_inter           : 7;
 
-           /* Reserved */
-            uint32_t    reserved                        :16;
+            /* Reserved */
+            uint32_t    reserved                        : 16;
         }  bits;
         uint32_t    value;
     }   rounding_offset_setting;
 } VAEncMiscParameterCustomRoundingControl;
+
 /**
  * There will be cases where the bitstream buffer will not have enough room to hold
  * the data for the entire slice, and the following flags will be used in the slice
@@ -2520,17 +2915,16 @@ typedef struct _VAEncMiscParameterCustomRoundingControl
  * the slice data partially in the slice data buffer (BEGIN and MIDDLE cases below),
  * then a slice parameter and data buffer needs to be sent again to complete this slice.
  */
-#define VA_SLICE_DATA_FLAG_ALL		0x00	/* whole slice is in the buffer */
-#define VA_SLICE_DATA_FLAG_BEGIN	0x01	/* The beginning of the slice is in the buffer but the end if not */
-#define VA_SLICE_DATA_FLAG_MIDDLE	0x02	/* Neither beginning nor end of the slice is in the buffer */
-#define VA_SLICE_DATA_FLAG_END		0x04	/* end of the slice is in the buffer */
+#define VA_SLICE_DATA_FLAG_ALL      0x00    /* whole slice is in the buffer */
+#define VA_SLICE_DATA_FLAG_BEGIN    0x01    /* The beginning of the slice is in the buffer but the end if not */
+#define VA_SLICE_DATA_FLAG_MIDDLE   0x02    /* Neither beginning nor end of the slice is in the buffer */
+#define VA_SLICE_DATA_FLAG_END      0x04    /* end of the slice is in the buffer */
 
 /* Codec-independent Slice Parameter Buffer base */
-typedef struct _VASliceParameterBufferBase
-{
-    uint32_t slice_data_size;	/* number of bytes in the slice data buffer for this slice */
-    uint32_t slice_data_offset;	/* the offset to the first byte of slice data */
-    uint32_t slice_data_flag;	/* see VA_SLICE_DATA_FLAG_XXX definitions */
+typedef struct _VASliceParameterBufferBase {
+    uint32_t slice_data_size;   /* number of bytes in the slice data buffer for this slice */
+    uint32_t slice_data_offset; /* the offset to the first byte of slice data */
+    uint32_t slice_data_flag;   /* see VA_SLICE_DATA_FLAG_XXX definitions */
 } VASliceParameterBufferBase;
 
 /**********************************
@@ -2584,8 +2978,7 @@ typedef struct _VAHuffmanTableBufferJPEGBaseline {
  * For each frame or field, and before any slice data, a single
  * picture parameter buffer must be send.
  */
-typedef struct _VAPictureParameterBufferMPEG2
-{
+typedef struct _VAPictureParameterBufferMPEG2 {
     uint16_t horizontal_size;
     uint16_t vertical_size;
     VASurfaceID forward_reference_picture;
@@ -2595,17 +2988,17 @@ typedef struct _VAPictureParameterBufferMPEG2
     int32_t f_code; /* pack all four fcode into this */
     union {
         struct {
-            uint32_t intra_dc_precision		: 2;
-            uint32_t picture_structure		: 2;
-            uint32_t top_field_first		: 1;
-            uint32_t frame_pred_frame_dct		: 1;
-            uint32_t concealment_motion_vectors	: 1;
-            uint32_t q_scale_type			: 1;
-            uint32_t intra_vlc_format		: 1;
-            uint32_t alternate_scan			: 1;
-            uint32_t repeat_first_field		: 1;
-            uint32_t progressive_frame		: 1;
-            uint32_t is_first_field			: 1; /* indicate whether the current field
+            uint32_t intra_dc_precision     : 2;
+            uint32_t picture_structure      : 2;
+            uint32_t top_field_first        : 1;
+            uint32_t frame_pred_frame_dct       : 1;
+            uint32_t concealment_motion_vectors : 1;
+            uint32_t q_scale_type           : 1;
+            uint32_t intra_vlc_format       : 1;
+            uint32_t alternate_scan         : 1;
+            uint32_t repeat_first_field     : 1;
+            uint32_t progressive_frame      : 1;
+            uint32_t is_first_field         : 1; /* indicate whether the current field
                                                               * is the first field for field picture
                                                               */
         } bits;
@@ -2617,8 +3010,7 @@ typedef struct _VAPictureParameterBufferMPEG2
 } VAPictureParameterBufferMPEG2;
 
 /** MPEG-2 Inverse Quantization Matrix Buffer */
-typedef struct _VAIQMatrixBufferMPEG2
-{
+typedef struct _VAIQMatrixBufferMPEG2 {
     /** \brief Same as the MPEG-2 bitstream syntax element. */
     int32_t load_intra_quantiser_matrix;
     /** \brief Same as the MPEG-2 bitstream syntax element. */
@@ -2641,8 +3033,7 @@ typedef struct _VAIQMatrixBufferMPEG2
 } VAIQMatrixBufferMPEG2;
 
 /** MPEG-2 Slice Parameter Buffer */
-typedef struct _VASliceParameterBufferMPEG2
-{
+typedef struct _VASliceParameterBufferMPEG2 {
     uint32_t slice_data_size;/* number of bytes in the slice data buffer for this slice */
     uint32_t slice_data_offset;/* the offset to the first byte of slice data */
     uint32_t slice_data_flag; /* see VA_SLICE_DATA_FLAG_XXX defintions */
@@ -2657,8 +3048,7 @@ typedef struct _VASliceParameterBufferMPEG2
 } VASliceParameterBufferMPEG2;
 
 /** MPEG-2 Macroblock Parameter Buffer */
-typedef struct _VAMacroblockParameterBufferMPEG2
-{
+typedef struct _VAMacroblockParameterBufferMPEG2 {
     uint16_t macroblock_address;
     /*
      * macroblock_address (in raster scan order)
@@ -2668,9 +3058,9 @@ typedef struct _VAMacroblockParameterBufferMPEG2
     uint8_t macroblock_type;  /* see definition below */
     union {
         struct {
-            uint32_t frame_motion_type		: 2;
-            uint32_t field_motion_type		: 2;
-            uint32_t dct_type			: 1;
+            uint32_t frame_motion_type      : 2;
+            uint32_t field_motion_type      : 2;
+            uint32_t dct_type           : 1;
         } bits;
         uint32_t value;
     } macroblock_modes;
@@ -2701,10 +3091,10 @@ typedef struct _VAMacroblockParameterBufferMPEG2
 /*
  * OR'd flags for macroblock_type (section 6.3.17.1 in the spec)
  */
-#define VA_MB_TYPE_MOTION_FORWARD	0x02
-#define VA_MB_TYPE_MOTION_BACKWARD	0x04
-#define VA_MB_TYPE_MOTION_PATTERN	0x08
-#define VA_MB_TYPE_MOTION_INTRA		0x10
+#define VA_MB_TYPE_MOTION_FORWARD   0x02
+#define VA_MB_TYPE_MOTION_BACKWARD  0x04
+#define VA_MB_TYPE_MOTION_PATTERN   0x08
+#define VA_MB_TYPE_MOTION_INTRA     0x10
 
 /**
  * MPEG-2 Residual Data Buffer
@@ -2721,25 +3111,24 @@ typedef struct _VAMacroblockParameterBufferMPEG2
  * For each frame or field, and before any slice data, a single
  * picture parameter buffer must be send.
  */
-typedef struct _VAPictureParameterBufferMPEG4
-{
+typedef struct _VAPictureParameterBufferMPEG4 {
     uint16_t vop_width;
     uint16_t vop_height;
     VASurfaceID forward_reference_picture;
     VASurfaceID backward_reference_picture;
     union {
         struct {
-            uint32_t short_video_header		: 1;
-            uint32_t chroma_format			: 2;
-            uint32_t interlaced			: 1;
-            uint32_t obmc_disable			: 1;
-            uint32_t sprite_enable			: 2;
-            uint32_t sprite_warping_accuracy	: 2;
-            uint32_t quant_type			: 1;
-            uint32_t quarter_sample			: 1;
-            uint32_t data_partitioned		: 1;
-            uint32_t reversible_vlc			: 1;
-            uint32_t resync_marker_disable		: 1;
+            uint32_t short_video_header     : 1;
+            uint32_t chroma_format          : 2;
+            uint32_t interlaced         : 1;
+            uint32_t obmc_disable           : 1;
+            uint32_t sprite_enable          : 2;
+            uint32_t sprite_warping_accuracy    : 2;
+            uint32_t quant_type         : 1;
+            uint32_t quarter_sample         : 1;
+            uint32_t data_partitioned       : 1;
+            uint32_t reversible_vlc         : 1;
+            uint32_t resync_marker_disable      : 1;
         } bits;
         uint32_t value;
     } vol_fields;
@@ -2749,12 +3138,12 @@ typedef struct _VAPictureParameterBufferMPEG4
     uint8_t quant_precision;
     union {
         struct {
-            uint32_t vop_coding_type		: 2;
-            uint32_t backward_reference_vop_coding_type	: 2;
-            uint32_t vop_rounding_type		: 1;
-            uint32_t intra_dc_vlc_thr		: 3;
-            uint32_t top_field_first		: 1;
-            uint32_t alternate_vertical_scan_flag	: 1;
+            uint32_t vop_coding_type        : 2;
+            uint32_t backward_reference_vop_coding_type : 2;
+            uint32_t vop_rounding_type      : 1;
+            uint32_t intra_dc_vlc_thr       : 3;
+            uint32_t top_field_first        : 1;
+            uint32_t alternate_vertical_scan_flag   : 1;
         } bits;
         uint32_t value;
     } vop_fields;
@@ -2773,8 +3162,7 @@ typedef struct _VAPictureParameterBufferMPEG4
 } VAPictureParameterBufferMPEG4;
 
 /** MPEG-4 Inverse Quantization Matrix Buffer */
-typedef struct _VAIQMatrixBufferMPEG4
-{
+typedef struct _VAIQMatrixBufferMPEG4 {
     /** Same as the MPEG-4:2 bitstream syntax element. */
     int32_t load_intra_quant_mat;
     /** Same as the MPEG-4:2 bitstream syntax element. */
@@ -2789,8 +3177,7 @@ typedef struct _VAIQMatrixBufferMPEG4
 } VAIQMatrixBufferMPEG4;
 
 /** MPEG-4 Slice Parameter Buffer */
-typedef struct _VASliceParameterBufferMPEG4
-{
+typedef struct _VASliceParameterBufferMPEG4 {
     uint32_t slice_data_size;/* number of bytes in the slice data buffer for this slice */
     uint32_t slice_data_offset;/* the offset to the first byte of slice data */
     uint32_t slice_data_flag; /* see VA_SLICE_DATA_FLAG_XXX defintions */
@@ -2828,8 +3215,7 @@ typedef enum   /* see 7.1.1.32 */
  *   type as defined by QUANTIZER (J.1.19) and either
  *   PQUANTIZER (7.1.1.8) or PQINDEX (7.1.1.6)
  */
-typedef struct _VAPictureParameterBufferVC1
-{
+typedef struct _VAPictureParameterBufferVC1 {
     VASurfaceID forward_reference_picture;
     VASurfaceID backward_reference_picture;
     /* if out-of-loop post-processing is done on the render
@@ -2840,73 +3226,73 @@ typedef struct _VAPictureParameterBufferVC1
     /* sequence layer for AP or meta data for SP and MP */
     union {
         struct {
-            uint32_t pulldown	: 1; /* SEQUENCE_LAYER::PULLDOWN */
-            uint32_t interlace	: 1; /* SEQUENCE_LAYER::INTERLACE */
-            uint32_t tfcntrflag	: 1; /* SEQUENCE_LAYER::TFCNTRFLAG */
-            uint32_t finterpflag	: 1; /* SEQUENCE_LAYER::FINTERPFLAG */
-            uint32_t psf		: 1; /* SEQUENCE_LAYER::PSF */
-            uint32_t multires	: 1; /* METADATA::MULTIRES */
-            uint32_t overlap	: 1; /* METADATA::OVERLAP */
-            uint32_t syncmarker	: 1; /* METADATA::SYNCMARKER */
-            uint32_t rangered	: 1; /* METADATA::RANGERED */
-            uint32_t max_b_frames	: 3; /* METADATA::MAXBFRAMES */
-            uint32_t profile	: 2; /* SEQUENCE_LAYER::PROFILE or The MSB of METADATA::PROFILE */
+            uint32_t pulldown   : 1; /* SEQUENCE_LAYER::PULLDOWN */
+            uint32_t interlace  : 1; /* SEQUENCE_LAYER::INTERLACE */
+            uint32_t tfcntrflag : 1; /* SEQUENCE_LAYER::TFCNTRFLAG */
+            uint32_t finterpflag    : 1; /* SEQUENCE_LAYER::FINTERPFLAG */
+            uint32_t psf        : 1; /* SEQUENCE_LAYER::PSF */
+            uint32_t multires   : 1; /* METADATA::MULTIRES */
+            uint32_t overlap    : 1; /* METADATA::OVERLAP */
+            uint32_t syncmarker : 1; /* METADATA::SYNCMARKER */
+            uint32_t rangered   : 1; /* METADATA::RANGERED */
+            uint32_t max_b_frames   : 3; /* METADATA::MAXBFRAMES */
+            uint32_t profile    : 2; /* SEQUENCE_LAYER::PROFILE or The MSB of METADATA::PROFILE */
         } bits;
         uint32_t value;
     } sequence_fields;
 
-    uint16_t coded_width;		/* ENTRY_POINT_LAYER::CODED_WIDTH */
-    uint16_t coded_height;	/* ENTRY_POINT_LAYER::CODED_HEIGHT */
-    union {
-	struct {
-            uint32_t broken_link	: 1; /* ENTRY_POINT_LAYER::BROKEN_LINK */
-            uint32_t closed_entry	: 1; /* ENTRY_POINT_LAYER::CLOSED_ENTRY */
-            uint32_t panscan_flag	: 1; /* ENTRY_POINT_LAYER::PANSCAN_FLAG */
-            uint32_t loopfilter	: 1; /* ENTRY_POINT_LAYER::LOOPFILTER */
-	} bits;
-	uint32_t value;
-    } entrypoint_fields;
-    uint8_t conditional_overlap_flag; /* ENTRY_POINT_LAYER::CONDOVER */
-    uint8_t fast_uvmc_flag;	/* ENTRY_POINT_LAYER::FASTUVMC */
+    uint16_t coded_width;       /* ENTRY_POINT_LAYER::CODED_WIDTH */
+    uint16_t coded_height;  /* ENTRY_POINT_LAYER::CODED_HEIGHT */
     union {
         struct {
-            uint32_t luma_flag	: 1; /* ENTRY_POINT_LAYER::RANGE_MAPY_FLAG */
-            uint32_t luma		: 3; /* ENTRY_POINT_LAYER::RANGE_MAPY */
-            uint32_t chroma_flag	: 1; /* ENTRY_POINT_LAYER::RANGE_MAPUV_FLAG */
-            uint32_t chroma		: 3; /* ENTRY_POINT_LAYER::RANGE_MAPUV */
+            uint32_t broken_link    : 1; /* ENTRY_POINT_LAYER::BROKEN_LINK */
+            uint32_t closed_entry   : 1; /* ENTRY_POINT_LAYER::CLOSED_ENTRY */
+            uint32_t panscan_flag   : 1; /* ENTRY_POINT_LAYER::PANSCAN_FLAG */
+            uint32_t loopfilter : 1; /* ENTRY_POINT_LAYER::LOOPFILTER */
+        } bits;
+        uint32_t value;
+    } entrypoint_fields;
+    uint8_t conditional_overlap_flag; /* ENTRY_POINT_LAYER::CONDOVER */
+    uint8_t fast_uvmc_flag; /* ENTRY_POINT_LAYER::FASTUVMC */
+    union {
+        struct {
+            uint32_t luma_flag  : 1; /* ENTRY_POINT_LAYER::RANGE_MAPY_FLAG */
+            uint32_t luma       : 3; /* ENTRY_POINT_LAYER::RANGE_MAPY */
+            uint32_t chroma_flag    : 1; /* ENTRY_POINT_LAYER::RANGE_MAPUV_FLAG */
+            uint32_t chroma     : 3; /* ENTRY_POINT_LAYER::RANGE_MAPUV */
         } bits;
         uint32_t value;
     } range_mapping_fields;
 
-    uint8_t b_picture_fraction;	/* Index for PICTURE_LAYER::BFRACTION value in Table 40 (7.1.1.14) */
-    uint8_t cbp_table;		/* PICTURE_LAYER::CBPTAB/ICBPTAB */
-    uint8_t mb_mode_table;	/* PICTURE_LAYER::MBMODETAB */
+    uint8_t b_picture_fraction; /* Index for PICTURE_LAYER::BFRACTION value in Table 40 (7.1.1.14) */
+    uint8_t cbp_table;      /* PICTURE_LAYER::CBPTAB/ICBPTAB */
+    uint8_t mb_mode_table;  /* PICTURE_LAYER::MBMODETAB */
     uint8_t range_reduction_frame;/* PICTURE_LAYER::RANGEREDFRM */
-    uint8_t rounding_control;	/* PICTURE_LAYER::RNDCTRL */
-    uint8_t post_processing;	/* PICTURE_LAYER::POSTPROC */
-    uint8_t picture_resolution_index;	/* PICTURE_LAYER::RESPIC */
-    uint8_t luma_scale;		/* PICTURE_LAYER::LUMSCALE */
-    uint8_t luma_shift;		/* PICTURE_LAYER::LUMSHIFT */
+    uint8_t rounding_control;   /* PICTURE_LAYER::RNDCTRL */
+    uint8_t post_processing;    /* PICTURE_LAYER::POSTPROC */
+    uint8_t picture_resolution_index;   /* PICTURE_LAYER::RESPIC */
+    uint8_t luma_scale;     /* PICTURE_LAYER::LUMSCALE */
+    uint8_t luma_shift;     /* PICTURE_LAYER::LUMSHIFT */
 
     union {
         struct {
-            uint32_t picture_type		: 3; /* PICTURE_LAYER::PTYPE */
-            uint32_t frame_coding_mode	: 3; /* PICTURE_LAYER::FCM */
-            uint32_t top_field_first	: 1; /* PICTURE_LAYER::TFF */
-            uint32_t is_first_field		: 1; /* set to 1 if it is the first field */
-            uint32_t intensity_compensation	: 1; /* PICTURE_LAYER::INTCOMP */
+            uint32_t picture_type       : 3; /* PICTURE_LAYER::PTYPE */
+            uint32_t frame_coding_mode  : 3; /* PICTURE_LAYER::FCM */
+            uint32_t top_field_first    : 1; /* PICTURE_LAYER::TFF */
+            uint32_t is_first_field     : 1; /* set to 1 if it is the first field */
+            uint32_t intensity_compensation : 1; /* PICTURE_LAYER::INTCOMP */
         } bits;
         uint32_t value;
     } picture_fields;
     union {
         struct {
-            uint32_t mv_type_mb	: 1; 	/* PICTURE::MVTYPEMB */
-            uint32_t direct_mb	: 1; 	/* PICTURE::DIRECTMB */
-            uint32_t skip_mb	: 1; 	/* PICTURE::SKIPMB */
-            uint32_t field_tx	: 1; 	/* PICTURE::FIELDTX */
-            uint32_t forward_mb	: 1;	/* PICTURE::FORWARDMB */
-            uint32_t ac_pred	: 1;	/* PICTURE::ACPRED */
-            uint32_t overflags	: 1;	/* PICTURE::OVERFLAGS */
+            uint32_t mv_type_mb : 1;    /* PICTURE::MVTYPEMB */
+            uint32_t direct_mb  : 1;    /* PICTURE::DIRECTMB */
+            uint32_t skip_mb    : 1;    /* PICTURE::SKIPMB */
+            uint32_t field_tx   : 1;    /* PICTURE::FIELDTX */
+            uint32_t forward_mb : 1;    /* PICTURE::FORWARDMB */
+            uint32_t ac_pred    : 1;    /* PICTURE::ACPRED */
+            uint32_t overflags  : 1;    /* PICTURE::OVERFLAGS */
         } flags;
         uint32_t value;
     } raw_coding;
@@ -2925,51 +3311,51 @@ typedef struct _VAPictureParameterBufferVC1
     union {
         struct {
             uint32_t reference_distance_flag : 1;/* PICTURE_LAYER::REFDIST_FLAG */
-            uint32_t reference_distance	: 5;/* PICTURE_LAYER::REFDIST */
+            uint32_t reference_distance : 5;/* PICTURE_LAYER::REFDIST */
             uint32_t num_reference_pictures: 1;/* PICTURE_LAYER::NUMREF */
-            uint32_t reference_field_pic_indicator	: 1;/* PICTURE_LAYER::REFFIELD */
+            uint32_t reference_field_pic_indicator  : 1;/* PICTURE_LAYER::REFFIELD */
         } bits;
         uint32_t value;
     } reference_fields;
     union {
         struct {
-            uint32_t mv_mode		: 3; /* PICTURE_LAYER::MVMODE */
-            uint32_t mv_mode2		: 3; /* PICTURE_LAYER::MVMODE2 */
-            uint32_t mv_table		: 3; /* PICTURE_LAYER::MVTAB/IMVTAB */
+            uint32_t mv_mode        : 3; /* PICTURE_LAYER::MVMODE */
+            uint32_t mv_mode2       : 3; /* PICTURE_LAYER::MVMODE2 */
+            uint32_t mv_table       : 3; /* PICTURE_LAYER::MVTAB/IMVTAB */
             uint32_t two_mv_block_pattern_table: 2; /* PICTURE_LAYER::2MVBPTAB */
-            uint32_t four_mv_switch		: 1; /* PICTURE_LAYER::4MVSWITCH */
+            uint32_t four_mv_switch     : 1; /* PICTURE_LAYER::4MVSWITCH */
             uint32_t four_mv_block_pattern_table : 2; /* PICTURE_LAYER::4MVBPTAB */
-            uint32_t extended_mv_flag	: 1; /* ENTRY_POINT_LAYER::EXTENDED_MV */
-            uint32_t extended_mv_range	: 2; /* PICTURE_LAYER::MVRANGE */
-            uint32_t extended_dmv_flag	: 1; /* ENTRY_POINT_LAYER::EXTENDED_DMV */
-            uint32_t extended_dmv_range	: 2; /* PICTURE_LAYER::DMVRANGE */
+            uint32_t extended_mv_flag   : 1; /* ENTRY_POINT_LAYER::EXTENDED_MV */
+            uint32_t extended_mv_range  : 2; /* PICTURE_LAYER::MVRANGE */
+            uint32_t extended_dmv_flag  : 1; /* ENTRY_POINT_LAYER::EXTENDED_DMV */
+            uint32_t extended_dmv_range : 2; /* PICTURE_LAYER::DMVRANGE */
         } bits;
         uint32_t value;
     } mv_fields;
     union {
         struct {
-            uint32_t dquant	: 2; 	/* ENTRY_POINT_LAYER::DQUANT */
-            uint32_t quantizer     : 2; 	/* ENTRY_POINT_LAYER::QUANTIZER */
-            uint32_t half_qp	: 1; 	/* PICTURE_LAYER::HALFQP */
+            uint32_t dquant : 2;    /* ENTRY_POINT_LAYER::DQUANT */
+            uint32_t quantizer     : 2;     /* ENTRY_POINT_LAYER::QUANTIZER */
+            uint32_t half_qp    : 1;    /* PICTURE_LAYER::HALFQP */
             uint32_t pic_quantizer_scale : 5;/* PICTURE_LAYER::PQUANT */
             uint32_t pic_quantizer_type : 1;/* PICTURE_LAYER::PQUANTIZER */
-            uint32_t dq_frame	: 1; 	/* VOPDQUANT::DQUANTFRM */
-            uint32_t dq_profile	: 2; 	/* VOPDQUANT::DQPROFILE */
-            uint32_t dq_sb_edge	: 2; 	/* VOPDQUANT::DQSBEDGE */
-            uint32_t dq_db_edge 	: 2; 	/* VOPDQUANT::DQDBEDGE */
-            uint32_t dq_binary_level : 1; 	/* VOPDQUANT::DQBILEVEL */
+            uint32_t dq_frame   : 1;    /* VOPDQUANT::DQUANTFRM */
+            uint32_t dq_profile : 2;    /* VOPDQUANT::DQPROFILE */
+            uint32_t dq_sb_edge : 2;    /* VOPDQUANT::DQSBEDGE */
+            uint32_t dq_db_edge     : 2;    /* VOPDQUANT::DQDBEDGE */
+            uint32_t dq_binary_level : 1;   /* VOPDQUANT::DQBILEVEL */
             uint32_t alt_pic_quantizer : 5;/* VOPDQUANT::ALTPQUANT */
         } bits;
         uint32_t value;
     } pic_quantizer_fields;
     union {
         struct {
-            uint32_t variable_sized_transform_flag	: 1;/* ENTRY_POINT_LAYER::VSTRANSFORM */
-            uint32_t mb_level_transform_type_flag	: 1;/* PICTURE_LAYER::TTMBF */
-            uint32_t frame_level_transform_type	: 2;/* PICTURE_LAYER::TTFRM */
-            uint32_t transform_ac_codingset_idx1	: 2;/* PICTURE_LAYER::TRANSACFRM */
-            uint32_t transform_ac_codingset_idx2	: 2;/* PICTURE_LAYER::TRANSACFRM2 */
-            uint32_t intra_transform_dc_table	: 1;/* PICTURE_LAYER::TRANSDCTAB */
+            uint32_t variable_sized_transform_flag  : 1;/* ENTRY_POINT_LAYER::VSTRANSFORM */
+            uint32_t mb_level_transform_type_flag   : 1;/* PICTURE_LAYER::TTMBF */
+            uint32_t frame_level_transform_type : 2;/* PICTURE_LAYER::TTFRM */
+            uint32_t transform_ac_codingset_idx1    : 2;/* PICTURE_LAYER::TRANSACFRM */
+            uint32_t transform_ac_codingset_idx2    : 2;/* PICTURE_LAYER::TRANSACFRM2 */
+            uint32_t intra_transform_dc_table   : 1;/* PICTURE_LAYER::TRANSDCTAB */
         } bits;
         uint32_t value;
     } transform_fields;
@@ -2989,10 +3375,10 @@ each nibble carrying three bitplanes for one macroblock.  The following table
 shows the bitplane data arrangement within each nibble based on the picture
 type.
 
-Picture Type	Bit3		Bit2		Bit1		Bit0
-I or BI				OVERFLAGS	ACPRED		FIELDTX
-P				MYTYPEMB	SKIPMB		DIRECTMB
-B				FORWARDMB	SKIPMB		DIRECTMB
+Picture Type    Bit3        Bit2        Bit1        Bit0
+I or BI             OVERFLAGS   ACPRED      FIELDTX
+P               MYTYPEMB    SKIPMB      DIRECTMB
+B               FORWARDMB   SKIPMB      DIRECTMB
 
 Within each byte, the lower nibble is for the first MB and the upper nibble is
 for the second MB.  E.g. the lower nibble of the first byte in the bitplane
@@ -3001,8 +3387,7 @@ Macroblock #2 in the first row.
 */
 
 /* VC-1 Slice Parameter Buffer */
-typedef struct _VASliceParameterBufferVC1
-{
+typedef struct _VASliceParameterBufferVC1 {
     uint32_t slice_data_size;/* number of bytes in the slice data buffer for this slice */
     uint32_t slice_data_offset;/* the offset to the first byte of slice data */
     uint32_t slice_data_flag; /* see VA_SLICE_DATA_FLAG_XXX defintions */
@@ -3022,8 +3407,7 @@ This is simplely a buffer containing raw bit-stream bytes
  * H.264/AVC data structures
  ****************************/
 
-typedef struct _VAPictureH264
-{
+typedef struct _VAPictureH264 {
     VASurfaceID picture_id;
     uint32_t frame_idx;
     uint32_t flags;
@@ -3034,21 +3418,20 @@ typedef struct _VAPictureH264
     uint32_t                va_reserved[VA_PADDING_LOW];
 } VAPictureH264;
 /* flags in VAPictureH264 could be OR of the following */
-#define VA_PICTURE_H264_INVALID			0x00000001
-#define VA_PICTURE_H264_TOP_FIELD		0x00000002
-#define VA_PICTURE_H264_BOTTOM_FIELD		0x00000004
-#define VA_PICTURE_H264_SHORT_TERM_REFERENCE	0x00000008
-#define VA_PICTURE_H264_LONG_TERM_REFERENCE	0x00000010
+#define VA_PICTURE_H264_INVALID         0x00000001
+#define VA_PICTURE_H264_TOP_FIELD       0x00000002
+#define VA_PICTURE_H264_BOTTOM_FIELD        0x00000004
+#define VA_PICTURE_H264_SHORT_TERM_REFERENCE    0x00000008
+#define VA_PICTURE_H264_LONG_TERM_REFERENCE 0x00000010
 
 /** H.264 Picture Parameter Buffer */
 /*
  * For each picture, and before any slice data, a single
  * picture parameter buffer must be send.
  */
-typedef struct _VAPictureParameterBufferH264
-{
+typedef struct _VAPictureParameterBufferH264 {
     VAPictureH264 CurrPic;
-    VAPictureH264 ReferenceFrames[16];	/* in DPB */
+    VAPictureH264 ReferenceFrames[16];  /* in DPB */
     uint16_t picture_width_in_mbs_minus1;
     uint16_t picture_height_in_mbs_minus1;
     uint8_t bit_depth_luma_minus8;
@@ -3056,17 +3439,17 @@ typedef struct _VAPictureParameterBufferH264
     uint8_t num_ref_frames;
     union {
         struct {
-            uint32_t chroma_format_idc			: 2;
-            uint32_t residual_colour_transform_flag		: 1; /* Renamed to separate_colour_plane_flag in newer standard versions. */
-            uint32_t gaps_in_frame_num_value_allowed_flag	: 1;
-            uint32_t frame_mbs_only_flag			: 1;
-            uint32_t mb_adaptive_frame_field_flag		: 1;
-            uint32_t direct_8x8_inference_flag		: 1;
-            uint32_t MinLumaBiPredSize8x8			: 1; /* see A.3.3.2 */
-            uint32_t log2_max_frame_num_minus4		: 4;
-            uint32_t pic_order_cnt_type			: 2;
-            uint32_t log2_max_pic_order_cnt_lsb_minus4	: 4;
-            uint32_t delta_pic_order_always_zero_flag	: 1;
+            uint32_t chroma_format_idc          : 2;
+            uint32_t residual_colour_transform_flag     : 1; /* Renamed to separate_colour_plane_flag in newer standard versions. */
+            uint32_t gaps_in_frame_num_value_allowed_flag   : 1;
+            uint32_t frame_mbs_only_flag            : 1;
+            uint32_t mb_adaptive_frame_field_flag       : 1;
+            uint32_t direct_8x8_inference_flag      : 1;
+            uint32_t MinLumaBiPredSize8x8           : 1; /* see A.3.3.2 */
+            uint32_t log2_max_frame_num_minus4      : 4;
+            uint32_t pic_order_cnt_type         : 2;
+            uint32_t log2_max_pic_order_cnt_lsb_minus4  : 4;
+            uint32_t delta_pic_order_always_zero_flag   : 1;
         } bits;
         uint32_t value;
     } seq_fields;
@@ -3080,16 +3463,16 @@ typedef struct _VAPictureParameterBufferH264
     int8_t second_chroma_qp_index_offset;
     union {
         struct {
-            uint32_t entropy_coding_mode_flag	: 1;
-            uint32_t weighted_pred_flag		: 1;
-            uint32_t weighted_bipred_idc		: 2;
-            uint32_t transform_8x8_mode_flag	: 1;
-            uint32_t field_pic_flag			: 1;
-            uint32_t constrained_intra_pred_flag	: 1;
-            uint32_t pic_order_present_flag			: 1; /* Renamed to bottom_field_pic_order_in_frame_present_flag in newer standard versions. */
+            uint32_t entropy_coding_mode_flag   : 1;
+            uint32_t weighted_pred_flag     : 1;
+            uint32_t weighted_bipred_idc        : 2;
+            uint32_t transform_8x8_mode_flag    : 1;
+            uint32_t field_pic_flag         : 1;
+            uint32_t constrained_intra_pred_flag    : 1;
+            uint32_t pic_order_present_flag         : 1; /* Renamed to bottom_field_pic_order_in_frame_present_flag in newer standard versions. */
             uint32_t deblocking_filter_control_present_flag : 1;
-            uint32_t redundant_pic_cnt_present_flag		: 1;
-            uint32_t reference_pic_flag			: 1; /* nal_ref_idc != 0 */
+            uint32_t redundant_pic_cnt_present_flag     : 1;
+            uint32_t reference_pic_flag         : 1; /* nal_ref_idc != 0 */
         } bits;
         uint32_t value;
     } pic_fields;
@@ -3100,8 +3483,7 @@ typedef struct _VAPictureParameterBufferH264
 } VAPictureParameterBufferH264;
 
 /** H.264 Inverse Quantization Matrix Buffer */
-typedef struct _VAIQMatrixBufferH264
-{
+typedef struct _VAIQMatrixBufferH264 {
     /** \brief 4x4 scaling list, in raster scan order. */
     uint8_t ScalingList4x4[6][16];
     /** \brief 8x8 scaling list, in raster scan order. */
@@ -3112,8 +3494,7 @@ typedef struct _VAIQMatrixBufferH264
 } VAIQMatrixBufferH264;
 
 /** H.264 Slice Parameter Buffer */
-typedef struct _VASliceParameterBufferH264
-{
+typedef struct _VASliceParameterBufferH264 {
     uint32_t slice_data_size;/* number of bytes in the slice data buffer for this slice */
     /** \brief Byte offset to the NAL Header Unit for this slice. */
     uint32_t slice_data_offset;
@@ -3151,8 +3532,8 @@ typedef struct _VASliceParameterBufferH264
     uint8_t disable_deblocking_filter_idc;
     int8_t slice_alpha_c0_offset_div2;
     int8_t slice_beta_offset_div2;
-    VAPictureH264 RefPicList0[32];	/* See 8.2.4.2 */
-    VAPictureH264 RefPicList1[32];	/* See 8.2.4.2 */
+    VAPictureH264 RefPicList0[32];  /* See 8.2.4.2 */
+    VAPictureH264 RefPicList1[32];  /* See 8.2.4.2 */
     uint8_t luma_log2_weight_denom;
     uint8_t chroma_log2_weight_denom;
     uint8_t luma_weight_l0_flag;
@@ -3175,11 +3556,10 @@ typedef struct _VASliceParameterBufferH264
 /****************************
  * Common encode data structures
  ****************************/
-typedef enum
-{
-    VAEncPictureTypeIntra		= 0,
-    VAEncPictureTypePredictive		= 1,
-    VAEncPictureTypeBidirectional	= 2,
+typedef enum {
+    VAEncPictureTypeIntra       = 0,
+    VAEncPictureTypePredictive      = 1,
+    VAEncPictureTypeBidirectional   = 2,
 } VAEncPictureType;
 
 /**
@@ -3189,16 +3569,15 @@ typedef enum
  * This is a deprecated encode slice parameter buffer, All applications
  * \c can use VAEncSliceParameterBufferXXX (XXX = MPEG2, HEVC, H264, JPEG)
  */
-typedef struct _VAEncSliceParameterBuffer
-{
-    uint32_t start_row_number;	/* starting MB row number for this slice */
-    uint32_t slice_height;	/* slice height measured in MB */
+typedef struct _VAEncSliceParameterBuffer {
+    uint32_t start_row_number;  /* starting MB row number for this slice */
+    uint32_t slice_height;  /* slice height measured in MB */
     union {
         struct {
-            uint32_t is_intra	: 1;
+            uint32_t is_intra   : 1;
             uint32_t disable_deblocking_filter_idc : 2;
-            uint32_t uses_long_term_ref		:1;
-            uint32_t is_long_term_ref		:1;
+            uint32_t uses_long_term_ref     : 1;
+            uint32_t is_long_term_ref       : 1;
         } bits;
         uint32_t value;
     } slice_flags;
@@ -3212,8 +3591,7 @@ typedef struct _VAEncSliceParameterBuffer
  * H.263 specific encode data structures
  ****************************/
 
-typedef struct _VAEncSequenceParameterBufferH263
-{
+typedef struct _VAEncSequenceParameterBufferH263 {
     uint32_t intra_period;
     uint32_t bits_per_second;
     uint32_t frame_rate;
@@ -3224,8 +3602,7 @@ typedef struct _VAEncSequenceParameterBufferH263
     uint32_t                va_reserved[VA_PADDING_LOW];
 } VAEncSequenceParameterBufferH263;
 
-typedef struct _VAEncPictureParameterBufferH263
-{
+typedef struct _VAEncPictureParameterBufferH263 {
     VASurfaceID reference_picture;
     VASurfaceID reconstructed_picture;
     VABufferID coded_buf;
@@ -3241,8 +3618,7 @@ typedef struct _VAEncPictureParameterBufferH263
  * MPEG-4 specific encode data structures
  ****************************/
 
-typedef struct _VAEncSequenceParameterBufferMPEG4
-{
+typedef struct _VAEncSequenceParameterBufferMPEG4 {
     uint8_t profile_and_level_indication;
     uint32_t intra_period;
     uint32_t video_object_layer_width;
@@ -3259,8 +3635,7 @@ typedef struct _VAEncSequenceParameterBufferMPEG4
     uint32_t                va_reserved[VA_PADDING_LOW];
 } VAEncSequenceParameterBufferMPEG4;
 
-typedef struct _VAEncPictureParameterBufferMPEG4
-{
+typedef struct _VAEncPictureParameterBufferMPEG4 {
     VASurfaceID reference_picture;
     VASurfaceID reconstructed_picture;
     VABufferID coded_buf;
@@ -3293,14 +3668,14 @@ typedef struct _VAEncPictureParameterBufferMPEG4
  *  Note: image buffers are created by the library, not the client. Please see
  *        vaCreateImage on how image buffers are managed.
  */
-VAStatus vaCreateBuffer (
+VAStatus vaCreateBuffer(
     VADisplay dpy,
     VAContextID context,
-    VABufferType type,	/* in */
-    unsigned int size,	/* in */
+    VABufferType type,  /* in */
+    unsigned int size,  /* in */
     unsigned int num_elements, /* in */
-    void *data,		/* in */
-    VABufferID *buf_id	/* out */
+    void *data,     /* in */
+    VABufferID *buf_id  /* out */
 );
 
 /**
@@ -3331,9 +3706,9 @@ VAStatus vaCreateBuffer2(
  * this will communicate to the server the number of slice parameters
  * that are valid in the buffer.
  */
-VAStatus vaBufferSetNumElements (
+VAStatus vaBufferSetNumElements(
     VADisplay dpy,
-    VABufferID buf_id,	/* in */
+    VABufferID buf_id,  /* in */
     unsigned int num_elements /* in */
 );
 
@@ -3355,8 +3730,8 @@ VAStatus vaBufferSetNumElements (
 #define VA_CODED_BUF_STATUS_PICTURE_AVE_QP_MASK         0xff
 #define VA_CODED_BUF_STATUS_LARGE_SLICE_MASK            0x100
 #define VA_CODED_BUF_STATUS_SLICE_OVERFLOW_MASK         0x200
-#define VA_CODED_BUF_STATUS_BITRATE_OVERFLOW		0x400
-#define VA_CODED_BUF_STATUS_BITRATE_HIGH		0x800
+#define VA_CODED_BUF_STATUS_BITRATE_OVERFLOW        0x400
+#define VA_CODED_BUF_STATUS_BITRATE_HIGH        0x800
 /**
  * \brief The frame has exceeded the maximum requested size.
  *
@@ -3369,7 +3744,7 @@ VAStatus vaBufferSetNumElements (
  * \brief the bitstream is bad or corrupt.
  */
 #define VA_CODED_BUF_STATUS_BAD_BITSTREAM               0x8000
-#define VA_CODED_BUF_STATUS_AIR_MB_OVER_THRESHOLD	0xff0000
+#define VA_CODED_BUF_STATUS_AIR_MB_OVER_THRESHOLD   0xff0000
 
 /**
  * \brief The coded buffer segment status contains frame encoding passes number
@@ -3431,10 +3806,10 @@ typedef  struct _VACodedBufferSegment  {
  * if buffer type is VAEncCodedBufferType, pbuf points to link-list of
  * VACodedBufferSegment, and the list is terminated if "next" is NULL
  */
-VAStatus vaMapBuffer (
+VAStatus vaMapBuffer(
     VADisplay dpy,
-    VABufferID buf_id,	/* in */
-    void **pbuf 	/* out */
+    VABufferID buf_id,  /* in */
+    void **pbuf     /* out */
 );
 
 /**
@@ -3442,9 +3817,9 @@ VAStatus vaMapBuffer (
  * "Unmap" it to let the server know that the data is ready to be
  * consumed by the server
  */
-VAStatus vaUnmapBuffer (
+VAStatus vaUnmapBuffer(
     VADisplay dpy,
-    VABufferID buf_id	/* in */
+    VABufferID buf_id   /* in */
 );
 
 /**
@@ -3456,7 +3831,7 @@ VAStatus vaUnmapBuffer (
  * Note re-using a shared buffer (e.g. a slice data buffer) between the host and the
  * hardware accelerator can result in performance dropping.
  */
-VAStatus vaDestroyBuffer (
+VAStatus vaDestroyBuffer(
     VADisplay dpy,
     VABufferID buffer_id
 );
@@ -3643,7 +4018,7 @@ VAStatus vaExportSurfaceHandle(VADisplay dpy,
  * - encode a picture from a target surface
  * - process a picture to a target surface
  */
-VAStatus vaBeginPicture (
+VAStatus vaBeginPicture(
     VADisplay dpy,
     VAContextID context,
     VASurfaceID render_target
@@ -3652,7 +4027,7 @@ VAStatus vaBeginPicture (
 /**
  * Send video decode, encode or processing buffers to the server.
  */
-VAStatus vaRenderPicture (
+VAStatus vaRenderPicture(
     VADisplay dpy,
     VAContextID context,
     VABufferID *buffers,
@@ -3667,7 +4042,7 @@ VAStatus vaRenderPicture (
  * if VAContextID used in this function previously successfully passed
  * vaMFAddContext call, real processing will be started during vaMFSubmit
  */
-VAStatus vaEndPicture (
+VAStatus vaEndPicture(
     VADisplay dpy,
     VAContextID context
 );
@@ -3691,7 +4066,7 @@ VAStatus vaEndPicture (
  * contexts: list of contexts submitting their tasks for multi-frame operation.
  * num_contexts: number of passed contexts.
  */
-VAStatus vaMFSubmit (
+VAStatus vaMFSubmit(
     VADisplay dpy,
     VAMFContextID mf_context,
     VAContextID * contexts,
@@ -3709,32 +4084,59 @@ Synchronization
  * have been completed.  Upon return it is safe to use the render target for a
  * different picture.
  */
-VAStatus vaSyncSurface (
+VAStatus vaSyncSurface(
     VADisplay dpy,
     VASurfaceID render_target
 );
 
-typedef enum
-{
-    VASurfaceRendering	= 1, /* Rendering in progress */
-    VASurfaceDisplaying	= 2, /* Displaying in progress (not safe to render into it) */
-                             /* this status is useful if surface is used as the source */
-                             /* of an overlay */
-    VASurfaceReady	= 4, /* not being rendered or displayed */
-    VASurfaceSkipped	= 8  /* Indicate a skipped frame during encode */
+/** \brief Indicates an infinite timeout. */
+#define VA_TIMEOUT_INFINITE 0xFFFFFFFFFFFFFFFF
+
+/**
+ * \brief Synchronizes pending operations associated with the supplied surface.
+ *
+ * This function blocks during specified timeout (in nanoseconds) until
+ * all pending operations on the render target have been completed.
+ * If timeout is zero, the function returns immediately.
+ *
+ * Possible errors:
+ * - \ref VA_STATUS_ERROR_UNIMPLEMENTED: the VA driver implementation
+ *   does not support this interface
+ * - \ref VA_STATUS_ERROR_INVALID_DISPLAY: an invalid display was supplied
+ * - \ref VA_STATUS_ERROR_INVALID_SURFACE: an invalid surface was supplied
+ * - \ref VA_STATUS_ERROR_TIMEDOUT: synchronization is still in progress,
+ *   client should call the function again to complete synchronization
+ *
+ * @param[in] dpy         the VA display
+ * @param[in] surface     the surface for which synchronization is performed
+ * @param[in] timeout_ns  the timeout in nanoseconds
+ *
+ */
+VAStatus vaSyncSurface2(
+    VADisplay dpy,
+    VASurfaceID surface,
+    uint64_t timeout_ns
+);
+
+typedef enum {
+    VASurfaceRendering  = 1, /* Rendering in progress */
+    VASurfaceDisplaying = 2, /* Displaying in progress (not safe to render into it) */
+    /* this status is useful if surface is used as the source */
+    /* of an overlay */
+    VASurfaceReady  = 4, /* not being rendered or displayed */
+    VASurfaceSkipped    = 8  /* Indicate a skipped frame during encode */
 } VASurfaceStatus;
 
 /**
  * Find out any pending ops on the render target
  */
-VAStatus vaQuerySurfaceStatus (
+VAStatus vaQuerySurfaceStatus(
     VADisplay dpy,
     VASurfaceID render_target,
-    VASurfaceStatus *status	/* out */
+    VASurfaceStatus *status /* out */
 );
 
-typedef enum
-{
+typedef enum {
     VADecodeSliceMissing            = 0,
     VADecodeMBError                 = 1,
 } VADecodeErrorType;
@@ -3743,8 +4145,7 @@ typedef enum
  * Client calls vaQuerySurfaceError with VA_STATUS_ERROR_DECODING_ERROR, server side returns
  * an array of structure VASurfaceDecodeMBErrors, and the array is terminated by setting status=-1
 */
-typedef struct _VASurfaceDecodeMBErrors
-{
+typedef struct _VASurfaceDecodeMBErrors {
     int32_t status; /* 1 if hardware has returned detailed info below, -1 means this record is invalid */
     uint32_t start_mb; /* start mb address with errors */
     uint32_t end_mb;  /* end mb address with errors */
@@ -3770,6 +4171,46 @@ VAStatus vaQuerySurfaceError(
 );
 
 /**
+ * \brief Synchronizes pending operations associated with the supplied buffer.
+ *
+ * This function blocks during specified timeout (in nanoseconds) until
+ * all pending operations on the supplied buffer have been completed.
+ * If timeout is zero, the function returns immediately.
+ *
+ * Possible errors:
+ * - \ref VA_STATUS_ERROR_UNIMPLEMENTED: the VA driver implementation
+ *   does not support this interface
+ * - \ref VA_STATUS_ERROR_INVALID_DISPLAY: an invalid display was supplied
+ * - \ref VA_STATUS_ERROR_INVALID_BUFFER: an invalid buffer was supplied
+ * - \ref VA_STATUS_ERROR_TIMEDOUT: synchronization is still in progress,
+ *   client should call the function again to complete synchronization
+ *
+ * @param[in] dpy         the VA display
+ * @param[in] buf_id      the buffer for which synchronization is performed
+ * @param[in] timeout_ns  the timeout in nanoseconds
+ *
+ */
+VAStatus vaSyncBuffer(
+    VADisplay dpy,
+    VABufferID buf_id,
+    uint64_t timeout_ns
+);
+
+/**
+ * Notes about synchronization interfaces:
+ * vaSyncSurface:
+ * 1. Allows to synchronize output surface (i.e. from decoding or VP)
+ * 2. Allows to synchronize all bitstreams being encoded from the given input surface (1->N pipelines).
+ *
+ * vaSyncSurface2:
+ * 1. The same as vaSyncSurface but allows to specify a timeout
+ *
+ * vaSyncBuffer:
+ * 1. Allows to synchronize output buffer (e.g. bitstream from encoding).
+ *    Comparing to vaSyncSurface this function synchronizes given bitstream only.
+ */
+
+/**
  * Images and Subpictures
  * VAImage is used to either get the surface data to client memory, or
  * to copy image data in client memory to a surface.
@@ -3785,48 +4226,48 @@ VAStatus vaQuerySurfaceError(
 /** NV12: two-plane 8-bit YUV 4:2:0.
  * The first plane contains Y, the second plane contains U and V in pairs of bytes.
  */
-#define VA_FOURCC_NV12		0x3231564E
+#define VA_FOURCC_NV12      0x3231564E
 /** NV21: two-plane 8-bit YUV 4:2:0.
  * Same as NV12, but with U and V swapped.
  */
-#define VA_FOURCC_NV21		0x3132564E
+#define VA_FOURCC_NV21      0x3132564E
 
 /** AI44: packed 4-bit YA.
  *
  * The bottom half of each byte contains luma, the top half contains alpha.
  */
-#define VA_FOURCC_AI44		0x34344149
+#define VA_FOURCC_AI44      0x34344149
 
 /** RGBA: packed 8-bit RGBA.
  *
  * Four bytes per pixel: red, green, blue, alpha.
  */
-#define VA_FOURCC_RGBA		0x41424752
+#define VA_FOURCC_RGBA      0x41424752
 /** RGBX: packed 8-bit RGB.
  *
  * Four bytes per pixel: red, green, blue, unspecified.
  */
-#define VA_FOURCC_RGBX		0x58424752
+#define VA_FOURCC_RGBX      0x58424752
 /** BGRA: packed 8-bit RGBA.
  *
  * Four bytes per pixel: blue, green, red, alpha.
  */
-#define VA_FOURCC_BGRA		0x41524742
+#define VA_FOURCC_BGRA      0x41524742
 /** BGRX: packed 8-bit RGB.
  *
  * Four bytes per pixel: blue, green, red, unspecified.
  */
-#define VA_FOURCC_BGRX		0x58524742
+#define VA_FOURCC_BGRX      0x58524742
 /** ARGB: packed 8-bit RGBA.
  *
  * Four bytes per pixel: alpha, red, green, blue.
  */
-#define VA_FOURCC_ARGB		0x42475241
+#define VA_FOURCC_ARGB      0x42475241
 /** XRGB: packed 8-bit RGB.
  *
  * Four bytes per pixel: unspecified, red, green, blue.
  */
-#define VA_FOURCC_XRGB		0x42475258
+#define VA_FOURCC_XRGB      0x42475258
 /** ABGR: packed 8-bit RGBA.
  *
  * Four bytes per pixel: alpha, blue, green, red.
@@ -3948,6 +4389,12 @@ VAStatus vaQuerySurfaceError(
  * with the bottom six bits ignored.  The samples are in the order Y, U, Y, V.
  */
 #define VA_FOURCC_Y210          0x30313259
+/** Y212: packed 12-bit YUV 4:2:2.
+ *
+ * Eight bytes represent a pair of pixels.  Each sample is a two-byte little-endian value.
+ * The samples are in the order Y, U, Y, V.
+ */
+#define VA_FOURCC_Y212          0x32313259
 /** Y216: packed 16-bit YUV 4:2:2.
  *
  * Eight bytes represent a pair of pixels.  Each sample is a two-byte little-endian value.
@@ -3960,6 +4407,12 @@ VAStatus vaQuerySurfaceError(
  * A, V, Y, U are found in bits 31:30, 29:20, 19:10, 9:0 respectively.
  */
 #define VA_FOURCC_Y410          0x30313459
+/** Y412 packed 12-bit YUVA 4:4:4.
+ *
+ * Each pixel is a set of four samples, each of which is a two-byte little-endian value.
+ * The samples are in the order A, V, Y, U.
+ */
+#define VA_FOURCC_Y412          0x32313459
 /** Y416: packed 16-bit YUVA 4:4:4.
  *
  * Each pixel is a set of four samples, each of which is a two-byte little-endian value.
@@ -3978,6 +4431,12 @@ VAStatus vaQuerySurfaceError(
  * The first plane contains Y, the second plane contains U and V in pairs of samples.
  */
 #define VA_FOURCC_P010          0x30313050
+/** P012: two-plane 12-bit YUV 4:2:0.
+ *
+ * Each sample is a two-byte little-endian value with the bottom four bits ignored.
+ * The first plane contains Y, the second plane contains U and V in pairs of samples.
+ */
+#define VA_FOURCC_P012          0x32313050
 /** P016: two-plane 16-bit YUV 4:2:0.
  *
  * Each sample is a two-byte little-endian value.  The first plane contains Y, the second
@@ -4005,6 +4464,14 @@ VAStatus vaQuerySurfaceError(
  * 10-bit Pixel BGR formats.
  */
 #define VA_FOURCC_A2B10G10R10   0x30334241 /* VA_FOURCC('A','B','3','0') */
+/**
+ * 10-bit Pixel RGB formats without alpha.
+ */
+#define VA_FOURCC_X2R10G10B10   0x30335258 /* VA_FOURCC('X','R','3','0') */
+/**
+ * 10-bit Pixel BGR formats without alpha.
+ */
+#define VA_FOURCC_X2B10G10R10   0x30334258 /* VA_FOURCC('X','B','3','0') */
 
 /** Y8: 8-bit greyscale.
  *
@@ -4036,22 +4503,26 @@ VAStatus vaQuerySurfaceError(
  * The four planes contain: alpha, blue, green, red respectively.
  */
 #define VA_FOURCC_ABGR64        0x34474241
+/** XYUV: packed 8-bit YUVX 4:4:4.
+ *
+ * Four bytes per pixel: X, Y, U, V.
+ */
+#define VA_FOURCC_XYUV          0x56555958
 
 /* byte order */
-#define VA_LSB_FIRST		1
-#define VA_MSB_FIRST		2
+#define VA_LSB_FIRST        1
+#define VA_MSB_FIRST        2
 
-typedef struct _VAImageFormat
-{
-    uint32_t	fourcc;
-    uint32_t	byte_order; /* VA_LSB_FIRST, VA_MSB_FIRST */
-    uint32_t	bits_per_pixel;
+typedef struct _VAImageFormat {
+    uint32_t    fourcc;
+    uint32_t    byte_order; /* VA_LSB_FIRST, VA_MSB_FIRST */
+    uint32_t    bits_per_pixel;
     /* for RGB formats */
-    uint32_t	depth; /* significant bits per pixel */
-    uint32_t	red_mask;
-    uint32_t	green_mask;
-    uint32_t	blue_mask;
-    uint32_t	alpha_mask;
+    uint32_t    depth; /* significant bits per pixel */
+    uint32_t    red_mask;
+    uint32_t    green_mask;
+    uint32_t    blue_mask;
+    uint32_t    alpha_mask;
 
     /** \brief Reserved bytes for future use, must be zero */
     uint32_t                va_reserved[VA_PADDING_LOW];
@@ -4059,11 +4530,10 @@ typedef struct _VAImageFormat
 
 typedef VAGenericID VAImageID;
 
-typedef struct _VAImage
-{
-    VAImageID		image_id; /* uniquely identify this image */
-    VAImageFormat	format;
-    VABufferID		buf;	/* image data buffer */
+typedef struct _VAImage {
+    VAImageID       image_id; /* uniquely identify this image */
+    VAImageFormat   format;
+    VABufferID      buf;    /* image data buffer */
     /*
      * Image data will be stored in a buffer of type VAImageBufferType to facilitate
      * data store on the server side for optimal performance. The buffer will be
@@ -4071,20 +4541,20 @@ typedef struct _VAImage
      * size and format. This buffer is managed by the library implementation, and
      * accessed by the client through the buffer Map/Unmap functions.
      */
-    uint16_t	width;
-    uint16_t	height;
-    uint32_t	data_size;
-    uint32_t	num_planes;	/* can not be greater than 3 */
+    uint16_t    width;
+    uint16_t    height;
+    uint32_t    data_size;
+    uint32_t    num_planes; /* can not be greater than 3 */
     /*
      * An array indicating the scanline pitch in bytes for each plane.
      * Each plane may have a different pitch. Maximum 3 planes for planar formats
      */
-    uint32_t	pitches[3];
+    uint32_t    pitches[3];
     /*
      * An array indicating the byte offset from the beginning of the image data
      * to the start of each plane.
      */
-    uint32_t	offsets[3];
+    uint32_t    offsets[3];
 
     /* The following fields are only needed for paletted formats */
     int32_t num_palette_entries;   /* set to zero for non-palette images */
@@ -4104,7 +4574,7 @@ typedef struct _VAImage
 } VAImage;
 
 /** Get maximum number of image formats supported by the implementation */
-int vaMaxNumImageFormats (
+int vaMaxNumImageFormats(
     VADisplay dpy
 );
 
@@ -4114,10 +4584,10 @@ int vaMaxNumImageFormats (
  * least vaMaxNumImageFormats() entries. The actual number of formats
  * returned in "format_list" is returned in "num_formats".
  */
-VAStatus vaQueryImageFormats (
+VAStatus vaQueryImageFormats(
     VADisplay dpy,
-    VAImageFormat *format_list,	/* out */
-    int *num_formats		/* out */
+    VAImageFormat *format_list, /* out */
+    int *num_formats        /* out */
 );
 
 /**
@@ -4127,23 +4597,23 @@ VAStatus vaQueryImageFormats (
  * image->buf has been created and proper storage allocated by the library.
  * The client can access the image through the Map/Unmap calls.
  */
-VAStatus vaCreateImage (
+VAStatus vaCreateImage(
     VADisplay dpy,
     VAImageFormat *format,
     int width,
     int height,
-    VAImage *image	/* out */
+    VAImage *image  /* out */
 );
 
 /**
  * Should call DestroyImage before destroying the surface it is bound to
  */
-VAStatus vaDestroyImage (
+VAStatus vaDestroyImage(
     VADisplay dpy,
     VAImageID image
 );
 
-VAStatus vaSetImagePalette (
+VAStatus vaSetImagePalette(
     VADisplay dpy,
     VAImageID image,
     /*
@@ -4158,10 +4628,10 @@ VAStatus vaSetImagePalette (
  * Retrive surface data into a VAImage
  * Image must be in a format supported by the implementation
  */
-VAStatus vaGetImage (
+VAStatus vaGetImage(
     VADisplay dpy,
     VASurfaceID surface,
-    int x,	/* coordinates of the upper left source pixel */
+    int x,  /* coordinates of the upper left source pixel */
     int y,
     unsigned int width, /* width and height of the region */
     unsigned int height,
@@ -4174,7 +4644,7 @@ VAStatus vaGetImage (
  * Returns a VA_STATUS_ERROR_SURFACE_BUSY if the surface
  * shouldn't be rendered into when this is called
  */
-VAStatus vaPutImage (
+VAStatus vaPutImage(
     VADisplay dpy,
     VASurfaceID surface,
     VAImageID image,
@@ -4219,10 +4689,10 @@ VAStatus vaPutImage (
  * image and image buffer structures will be destroyed; however, the underlying
  * surface will remain unchanged until freed with vaDestroySurfaces.
  */
-VAStatus vaDeriveImage (
+VAStatus vaDeriveImage(
     VADisplay dpy,
     VASurfaceID surface,
-    VAImage *image	/* out */
+    VAImage *image  /* out */
 );
 
 /**
@@ -4235,14 +4705,14 @@ VAStatus vaDeriveImage (
 typedef VAGenericID VASubpictureID;
 
 /** Get maximum number of subpicture formats supported by the implementation */
-int vaMaxNumSubpictureFormats (
+int vaMaxNumSubpictureFormats(
     VADisplay dpy
 );
 
 /** flags for subpictures */
-#define VA_SUBPICTURE_CHROMA_KEYING			0x0001
-#define VA_SUBPICTURE_GLOBAL_ALPHA			0x0002
-#define VA_SUBPICTURE_DESTINATION_IS_SCREEN_COORD	0x0004
+#define VA_SUBPICTURE_CHROMA_KEYING         0x0001
+#define VA_SUBPICTURE_GLOBAL_ALPHA          0x0002
+#define VA_SUBPICTURE_DESTINATION_IS_SCREEN_COORD   0x0004
 /**
  * Query supported subpicture formats
  * The caller must provide a "format_list" array that can hold at
@@ -4252,29 +4722,29 @@ int vaMaxNumSubpictureFormats (
  *  flags: returned value to indicate addtional capabilities
  *         VA_SUBPICTURE_CHROMA_KEYING - supports chroma-keying
  *         VA_SUBPICTURE_GLOBAL_ALPHA - supports global alpha
- * 	   VA_SUBPICTURE_DESTINATION_IS_SCREEN_COORD - supports unscaled screen relative subpictures for On Screen Display
+ *     VA_SUBPICTURE_DESTINATION_IS_SCREEN_COORD - supports unscaled screen relative subpictures for On Screen Display
  */
 
-VAStatus vaQuerySubpictureFormats (
+VAStatus vaQuerySubpictureFormats(
     VADisplay dpy,
-    VAImageFormat *format_list,	/* out */
-    unsigned int *flags,	/* out */
-    unsigned int *num_formats	/* out */
+    VAImageFormat *format_list, /* out */
+    unsigned int *flags,    /* out */
+    unsigned int *num_formats   /* out */
 );
 
 /**
  * Subpictures are created with an image associated.
  */
-VAStatus vaCreateSubpicture (
+VAStatus vaCreateSubpicture(
     VADisplay dpy,
     VAImageID image,
-    VASubpictureID *subpicture	/* out */
+    VASubpictureID *subpicture  /* out */
 );
 
 /**
  * Destroy the subpicture before destroying the image it is assocated to
  */
-VAStatus vaDestroySubpicture (
+VAStatus vaDestroySubpicture(
     VADisplay dpy,
     VASubpictureID subpicture
 );
@@ -4283,7 +4753,7 @@ VAStatus vaDestroySubpicture (
  * Bind an image to the subpicture. This image will now be associated with
  * the subpicture instead of the one at creation.
  */
-VAStatus vaSetSubpictureImage (
+VAStatus vaSetSubpictureImage(
     VADisplay dpy,
     VASubpictureID subpicture,
     VAImageID image
@@ -4298,7 +4768,7 @@ VAStatus vaSetSubpictureImage (
  * The chromakey mask can be used to mask out certain components for chromakey
  * comparision
  */
-VAStatus vaSetSubpictureChromakey (
+VAStatus vaSetSubpictureChromakey(
     VADisplay dpy,
     VASubpictureID subpicture,
     unsigned int chromakey_min,
@@ -4311,7 +4781,7 @@ VAStatus vaSetSubpictureChromakey (
  * a value of 0 means fully transparent. If per-pixel alpha is also specified then
  * the overall alpha is per-pixel alpha multiplied by the global alpha
  */
-VAStatus vaSetSubpictureGlobalAlpha (
+VAStatus vaSetSubpictureGlobalAlpha(
     VADisplay dpy,
     VASubpictureID subpicture,
     float global_alpha
@@ -4324,7 +4794,7 @@ VAStatus vaSetSubpictureGlobalAlpha (
  * Both will be displayed at the next call to vaPutSurface.  Additional
  * associations before the call to vaPutSurface simply overrides the association.
  */
-VAStatus vaAssociateSubpicture (
+VAStatus vaAssociateSubpicture(
     VADisplay dpy,
     VASubpictureID subpicture,
     VASurfaceID *target_surfaces,
@@ -4347,7 +4817,7 @@ VAStatus vaAssociateSubpicture (
 /**
  * vaDeassociateSubpicture removes the association of the subpicture with target_surfaces.
  */
-VAStatus vaDeassociateSubpicture (
+VAStatus vaDeassociateSubpicture(
     VADisplay dpy,
     VASubpictureID subpicture,
     VASurfaceID *target_surfaces,
@@ -4360,10 +4830,19 @@ VAStatus vaDeassociateSubpicture (
  * brightness etc. in the rendering process.  The application can query what
  * attributes are supported by the driver, and then set the appropriate attributes
  * before calling vaPutSurface()
+ *
+ * Display attributes can also be used to query/set platform or display adaptor (vaDisplay)
+ * related information. These attributes do not depend on vaConfig, and could not be used
+ * for vaPutSurface. Application can use vaQueryDisplayAttributes/vaGetDisplayAttributes
+ * at anytime after vaInitialize, but (for settable attributes) vaSetDisplayAttributes should be
+ * called after vaInitialize and before any other function call.
+ *
+ * To distinguish these two types of display attributes, display adaptor related attributes
+ * should be marked as "HW attribute" in the description.
  */
+
 /* PowerVR IEP Lite attributes */
-typedef enum
-{
+typedef enum {
     VADISPLAYATTRIB_BLE_OFF              = 0x00,
     VADISPLAYATTRIB_BLE_LOW,
     VADISPLAYATTRIB_BLE_MEDIUM,
@@ -4410,13 +4889,53 @@ typedef enum
 #define VA_RENDER_DEVICE_LOCAL      1
 #define VA_RENDER_DEVICE_EXTERNAL   2
 
+/**\brief sub device info
+ * Sub-device is the concept basing on the "device" behind "vaDisplay".
+ * If a device could be divided to several sub devices, the task of
+ * decode/encode/vpp could be assigned on one sub-device. So, application
+ * could choose the sub device before any other operations. After that,
+ * all of the task execution/resource allocation will be dispatched to
+ * the sub device. If application does not choose the sub device, driver
+ * will assign one as default.
+ *
+ * If the value == VA_ATTRIB_NOT_SUPPORTED, it mean that the attribute
+ * is unsupport or UNKNOWN.
+ */
+
+typedef union _VADisplayAttribValSubDevice {
+    struct {
+        /** \brief current sub device index, read - write */
+        uint32_t current_sub_device     : 4;
+        /** \brief sub devices count, read - only */
+        uint32_t sub_device_count       : 4;
+        /** \brief reserved bits for future, must be zero*/
+        uint32_t reserved               : 8;
+        /** \brief bit mask to indicate which sub_device is available, read only
+         * \code
+         * VADisplayAttribValSubDevice reg;
+         * VADisplayAttribute reg_attr;
+         * reg_attr.type = VADisplayAttribSubDevice;
+         * vaGetDisplayAttributes(dpy, &reg_attr, 1);
+         * reg.value = reg_attr.value;
+         *
+         * for(int i = 0; i < reg.bits.sub_device_count; i ++ ){
+         *    if((1<<i) & reg.bits.sub_device_mask){
+         *        printf("sub device  %d can be selected", i);
+         *    }
+         *}
+         * \endcode
+         */
+        uint32_t sub_device_mask       : 16;
+    } bits;
+    uint32_t value;
+} VADisplayAttribValSubDevice;
+
 /** Currently defined display attribute types */
-typedef enum
-{
-    VADisplayAttribBrightness		= 0,
-    VADisplayAttribContrast		= 1,
-    VADisplayAttribHue			= 2,
-    VADisplayAttribSaturation		= 3,
+typedef enum {
+    VADisplayAttribBrightness       = 0,
+    VADisplayAttribContrast     = 1,
+    VADisplayAttribHue          = 2,
+    VADisplayAttribSaturation       = 3,
     /* client can specifiy a background color for the target window
      * the new feature of video conference,
      * the uncovered area of the surface is filled by this color
@@ -4465,7 +4984,7 @@ typedef enum
      * customized overlay color key, the format is RGB888
      * [23:16] = Red, [15:08] = Green, [07:00] = Blue.
      */
-    VADisplayAttribOverlayColorKey	= 15,
+    VADisplayAttribOverlayColorKey  = 15,
     /*
      * The hint for the implementation of vaPutSurface
      * normally, the driver could use an overlay or GPU to render the surface on the screen
@@ -4482,20 +5001,29 @@ typedef enum
      * specify vaPutSurface render area if there is no drawable on the monitor
      */
     VADisplayAttribRenderRect          = 18,
+    /*
+     * HW attribute, read/write, specify the sub device configure
+     */
+    VADisplayAttribSubDevice           = 19,
+    /*
+     * HW attribute. read only. specify whether vaCopy support on current HW
+     * The value of each bit should equal to 1 << VA_EXEC_MODE_XXX to represent
+     * modes of vaCopy
+     */
+    VADisplayAttribCopy                 = 20,
 } VADisplayAttribType;
 
 /* flags for VADisplayAttribute */
-#define VA_DISPLAY_ATTRIB_NOT_SUPPORTED	0x0000
-#define VA_DISPLAY_ATTRIB_GETTABLE	0x0001
-#define VA_DISPLAY_ATTRIB_SETTABLE	0x0002
+#define VA_DISPLAY_ATTRIB_NOT_SUPPORTED 0x0000
+#define VA_DISPLAY_ATTRIB_GETTABLE  0x0001
+#define VA_DISPLAY_ATTRIB_SETTABLE  0x0002
 
-typedef struct _VADisplayAttribute
-{
+typedef struct _VADisplayAttribute {
     VADisplayAttribType type;
     int32_t min_value;
     int32_t max_value;
-    int32_t value;	/* used by the set/get attribute functions */
-/* flags can be VA_DISPLAY_ATTRIB_GETTABLE or VA_DISPLAY_ATTRIB_SETTABLE or OR'd together */
+    int32_t value;  /* used by the set/get attribute functions */
+    /* flags can be VA_DISPLAY_ATTRIB_GETTABLE or VA_DISPLAY_ATTRIB_SETTABLE or OR'd together */
     uint32_t flags;
 
     /** \brief Reserved bytes for future use, must be zero */
@@ -4503,7 +5031,7 @@ typedef struct _VADisplayAttribute
 } VADisplayAttribute;
 
 /** Get maximum number of display attributs supported by the implementation */
-int vaMaxNumDisplayAttributes (
+int vaMaxNumDisplayAttributes(
     VADisplay dpy
 );
 
@@ -4513,10 +5041,10 @@ int vaMaxNumDisplayAttributes (
  * least vaMaxNumDisplayAttributes() entries. The actual number of attributes
  * returned in "attr_list" is returned in "num_attributes".
  */
-VAStatus vaQueryDisplayAttributes (
+VAStatus vaQueryDisplayAttributes(
     VADisplay dpy,
-    VADisplayAttribute *attr_list,	/* out */
-    int *num_attributes			/* out */
+    VADisplayAttribute *attr_list,  /* out */
+    int *num_attributes         /* out */
 );
 
 /**
@@ -4525,9 +5053,9 @@ VAStatus vaQueryDisplayAttributes (
  * Only attributes returned with VA_DISPLAY_ATTRIB_GETTABLE set in the "flags" field
  * from vaQueryDisplayAttributes() can have their values retrieved.
  */
-VAStatus vaGetDisplayAttributes (
+VAStatus vaGetDisplayAttributes(
     VADisplay dpy,
-    VADisplayAttribute *attr_list,	/* in/out */
+    VADisplayAttribute *attr_list,  /* in/out */
     int num_attributes
 );
 
@@ -4537,7 +5065,7 @@ VAStatus vaGetDisplayAttributes (
  * from vaQueryDisplayAttributes() can be set.  If the attribute is not settable or
  * the value is out of range, the function returns VA_STATUS_ERROR_ATTR_NOT_SUPPORTED
  */
-VAStatus vaSetDisplayAttributes (
+VAStatus vaSetDisplayAttributes(
     VADisplay dpy,
     VADisplayAttribute *attr_list,
     int num_attributes
@@ -4555,8 +5083,7 @@ VAStatus vaSetDisplayAttributes (
  * In this case, two entries of ReferenceFrames[] may share same picture_id
  * value.
  */
-typedef struct _VAPictureHEVC
-{
+typedef struct _VAPictureHEVC {
     /** \brief reconstructed picture buffer surface index
      * invalid when taking value VA_INVALID_SURFACE.
      */
@@ -4612,10 +5139,51 @@ typedef struct _VAPictureHEVC
  */
 #define VA_PICTURE_HEVC_RPS_LT_CURR             0x00000040
 
+typedef enum {
+    VACopyObjectSurface = 0,
+    VACopyObjectBuffer  = 1,
+} VACopyObjectType;
+
+typedef struct _VACopyObject {
+    VACopyObjectType  obj_type;    // type of object.
+    union {
+        VASurfaceID surface_id;
+        VABufferID  buffer_id;
+    } object;
+
+    uint32_t    va_reserved[VA_PADDING_MEDIUM];
+} VACopyObject;
+
+typedef union _VACopyOption {
+    struct {
+        /** \brief va copy synchronization, the value should be /c VA_EXEC_SYNC or /c VA_EXEC_ASYNC */
+        uint32_t va_copy_sync : 2;
+        /** \brief va copy mode, the value should be VA_EXEC_MODE_XXX */
+        uint32_t va_copy_mode : 4;
+        uint32_t reserved     : 26;
+    } bits;
+    uint32_t value;
+} VACopyOption;
+
+/** \brief Copies an object.
+ *
+ * Copies specified object (surface or buffer). If non-blocking copy
+ * is requested (VA_COPY_NONBLOCK), then need vaSyncBuffer or vaSyncSurface/vaSyncSurface2
+ * to sync the destination object.
+ *
+ * @param[in] dpy               the VA display
+ * @param[in] dst               Destination object to copy to
+ * @param[in] src               Source object to copy from
+ * @param[in] option            VA copy option
+ * @return VA_STATUS_SUCCESS if successful
+ */
+VAStatus vaCopy(VADisplay dpy, VACopyObject * dst, VACopyObject * src, VACopyOption option);
+
 //#include <va/va_dec_hevc.h>
 //#include <va/va_dec_jpeg.h>
-#include "va_dec_vp8.h"
-#include "va_dec_vp9.h"
+#include <va/va_dec_vp8.h>
+#include <va/va_dec_vp9.h>
+#include <va/va_dec_av1.h>
 //#include <va/va_enc_hevc.h>
 //#include <va/va_fei_hevc.h>
 //#include <va/va_enc_h264.h>
@@ -4626,6 +5194,7 @@ typedef struct _VAPictureHEVC
 //#include <va/va_fei.h>
 //#include <va/va_fei_h264.h>
 //#include <va/va_vpp.h>
+//#include <va/va_prot.h>
 
 /**@}*/
 

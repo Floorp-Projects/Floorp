@@ -16,10 +16,10 @@ import org.mozilla.geckoview.GeckoSessionSettings
 class PrivateModeTest : BaseSessionTest() {
     @Test
     fun privateDataNotShared() {
-        sessionRule.session.loadUri("https://example.com")
-        sessionRule.session.waitForPageStop()
+        mainSession.loadUri("https://example.com")
+        mainSession.waitForPageStop()
 
-        sessionRule.session.evaluateJS("""
+        mainSession.evaluateJS("""
             localStorage.setItem('ctx', 'regular');
         """)
 
@@ -42,7 +42,7 @@ class PrivateModeTest : BaseSessionTest() {
             localStorage.setItem('ctx', 'private');
         """)
 
-        localStorage = sessionRule.session.evaluateJS("""
+        localStorage = mainSession.evaluateJS("""
             localStorage.getItem('ctx') || 'null'
         """) as String
 

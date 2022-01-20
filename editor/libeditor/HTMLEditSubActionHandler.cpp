@@ -21,8 +21,10 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ContentIterator.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RangeUtils.h"
@@ -630,9 +632,10 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
     }
 
     // If the selection is in empty inline HTML elements, we should delete
-    // them.
-    if (mPlaceholderBatch && SelectionRef().IsCollapsed() &&
-        SelectionRef().GetFocusNode()) {
+    // them unless it's inserted intentionally.
+    if (mPlaceholderBatch &&
+        TopLevelEditSubActionDataRef().mNeedsToCleanUpEmptyInlineElements &&
+        SelectionRef().IsCollapsed() && SelectionRef().GetFocusNode()) {
       RefPtr<Element> mostDistantEmptyInlineAncestor = nullptr;
       for (Element* ancestor :
            SelectionRef().GetFocusNode()->InclusiveAncestorsOfType<Element>()) {
@@ -6121,8 +6124,10 @@ void HTMLEditor::GetSelectionRangesExtendedToIncludeAdjuscentWhiteSpaces(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aOutArrayOfRanges.IsEmpty());
 
-  aOutArrayOfRanges.SetCapacity(SelectionRef().RangeCount());
-  for (uint32_t i = 0; i < SelectionRef().RangeCount(); i++) {
+  const uint32_t rangeCount = SelectionRef().RangeCount();
+  aOutArrayOfRanges.SetCapacity(rangeCount);
+  for (const uint32_t i : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(SelectionRef().RangeCount() == rangeCount);
     const nsRange* selectionRange = SelectionRef().GetRangeAt(i);
     MOZ_ASSERT(selectionRange);
 
@@ -6141,8 +6146,10 @@ void HTMLEditor::GetSelectionRangesExtendedToHardLineStartAndEnd(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aOutArrayOfRanges.IsEmpty());
 
-  aOutArrayOfRanges.SetCapacity(SelectionRef().RangeCount());
-  for (uint32_t i = 0; i < SelectionRef().RangeCount(); i++) {
+  const uint32_t rangeCount = SelectionRef().RangeCount();
+  aOutArrayOfRanges.SetCapacity(rangeCount);
+  for (const uint32_t i : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(SelectionRef().RangeCount() == rangeCount);
     // Make a new adjusted range to represent the appropriate block content.
     // The basic idea is to push out the range endpoints to truly enclose the
     // blocks that we will affect.  This call alters opRange.
@@ -6626,8 +6633,11 @@ Element* HTMLEditor::GetParentListElementAtSelection() const {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
-  for (uint32_t i = 0; i < SelectionRef().RangeCount(); ++i) {
+  const uint32_t rangeCount = SelectionRef().RangeCount();
+  for (const uint32_t i : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(SelectionRef().RangeCount() == rangeCount);
     nsRange* range = SelectionRef().GetRangeAt(i);
+    MOZ_ASSERT(range);
     for (nsINode* parent = range->GetClosestCommonInclusiveAncestor(); parent;
          parent = parent->GetParentNode()) {
       if (HTMLEditUtils::IsAnyListElement(parent)) {
@@ -7355,6 +7365,11 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(
       splitListItemResult.Succeeded(),
       "HTMLEditor::SplitNodeDeepWithTransaction() failed, but ignored");
 
+  if (MOZ_UNLIKELY(!aListItem.GetParent())) {
+    NS_WARNING("Somebody disconnected the target listitem from the parent");
+    return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+  }
+
   // Hack: until I can change the damaged doc range code back to being
   // extra-inclusive, I have to manually detect certain list items that may be
   // left empty.
@@ -7376,14 +7391,13 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(
       if (HTMLEditUtils::IsEmptyNode(aListItem)) {
         if (aListItem.IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dt)) {
           nsCOMPtr<nsINode> list = aListItem.GetParentNode();
-          int32_t itemOffset = list ? list->ComputeIndexOf(&aListItem) : -1;
-
+          const uint32_t itemOffset = *list->ComputeIndexOf(&aListItem);
           nsStaticAtom* nextDefinitionListItemTagName =
               aListItem.IsHTMLElement(nsGkAtoms::dt) ? nsGkAtoms::dd
                                                      : nsGkAtoms::dt;
-          MOZ_DIAGNOSTIC_ASSERT(itemOffset != -1);
+          MOZ_ASSERT(itemOffset != UINT32_MAX);
           EditorDOMPoint atNextListItem(list, aListItem.GetNextSibling(),
-                                        AssertedCast<uint32_t>(itemOffset + 1));
+                                        itemOffset + 1u);
           Result<RefPtr<Element>, nsresult> maybeNewListItemElement =
               CreateAndInsertElementWithTransaction(
                   MOZ_KnownLive(*nextDefinitionListItemTagName),

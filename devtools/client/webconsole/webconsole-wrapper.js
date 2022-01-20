@@ -27,6 +27,10 @@ const Telemetry = require("devtools/client/shared/telemetry");
 const EventEmitter = require("devtools/shared/event-emitter");
 const App = createFactory(require("devtools/client/webconsole/components/App"));
 
+loader.lazyGetter(this, "AppErrorBoundary", () =>
+  createFactory(require("devtools/client/shared/components/AppErrorBoundary"))
+);
+
 const {
   setupServiceContainer,
 } = require("devtools/client/webconsole/service-container");
@@ -36,6 +40,12 @@ loader.lazyRequireGetter(
   "Constants",
   "devtools/client/webconsole/constants"
 );
+
+// Localized strings for (devtools/client/locales/en-US/startup.properties)
+loader.lazyGetter(this, "L10N", function() {
+  const { LocalizationHelper } = require("devtools/shared/l10n");
+  return new LocalizationHelper("devtools/client/locales/startup.properties");
+});
 
 function renderApp({ app, store, toolbox, root }) {
   return ReactDOM.render(
@@ -101,20 +111,27 @@ class WebConsoleWrapper {
         webConsoleWrapper: this,
       });
 
-      const app = App({
-        serviceContainer,
-        webConsoleUI,
-        onFirstMeaningfulPaint: resolve,
-        closeSplitConsole: this.closeSplitConsole.bind(this),
-        hidePersistLogsCheckbox:
-          webConsoleUI.isBrowserConsole || webConsoleUI.isBrowserToolboxConsole,
-        hideShowContentMessagesCheckbox:
-          !webConsoleUI.isBrowserConsole &&
-          !webConsoleUI.isBrowserToolboxConsole,
-        inputEnabled:
-          !webConsoleUI.isBrowserConsole ||
-          Services.prefs.getBoolPref("devtools.chrome.enabled"),
-      });
+      const app = AppErrorBoundary(
+        {
+          componentName: "Console",
+          panel: L10N.getStr("ToolboxTabWebconsole.label"),
+        },
+        App({
+          serviceContainer,
+          webConsoleUI,
+          onFirstMeaningfulPaint: resolve,
+          closeSplitConsole: this.closeSplitConsole.bind(this),
+          hidePersistLogsCheckbox:
+            webConsoleUI.isBrowserConsole ||
+            webConsoleUI.isBrowserToolboxConsole,
+          hideShowContentMessagesCheckbox:
+            !webConsoleUI.isBrowserConsole &&
+            !webConsoleUI.isBrowserToolboxConsole,
+          inputEnabled:
+            !webConsoleUI.isBrowserConsole ||
+            Services.prefs.getBoolPref("devtools.chrome.enabled"),
+        })
+      );
 
       // Render the root Application component.
       if (this.parentNode) {

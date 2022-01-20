@@ -9,6 +9,7 @@ DIRS += [
 ]
 
 CompiledModules(
+    "BlackboxLines.js",
     "Breakpoint.js",
     "Breakpoints.js",
     "ColumnBreakpoint.js",

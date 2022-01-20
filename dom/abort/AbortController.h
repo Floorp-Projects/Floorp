@@ -38,15 +38,16 @@ class AbortController final : public nsISupports, public nsWrapperCache {
 
   AbortSignal* Signal();
 
-  void Abort();
+  void Abort(JSContext* aCx, JS::Handle<JS::Value> aReason);
 
  private:
-  ~AbortController() = default;
+  ~AbortController();
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<AbortSignal> mSignal;
 
   bool mAborted;
+  JS::Heap<JS::Value> mReason;
 };
 
 }  // namespace dom

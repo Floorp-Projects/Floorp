@@ -5,6 +5,7 @@
 // <LICENSE-MIT or https://opensource.org/licenses/MIT>, at your
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
+#![allow(dead_code)]
 use crate::error::ERRNO_NOT_POSITIVE;
 use crate::util::LazyUsize;
 use crate::Error;

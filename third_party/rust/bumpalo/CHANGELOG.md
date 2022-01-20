@@ -28,6 +28,38 @@ Released YYYY-MM-DD.
 
 --------------------------------------------------------------------------------
 
+## 3.8.0
+
+Released 2021-10-19.
+
+### Added
+
+* Added the `CollectIn` and `FromIteratorIn` traits to make building a
+  collection from an iterator easier. These new traits live in the
+  `bumpalo::collections` module and are implemented by
+  `bumpalo::collections::{String,Vec}`.
+
+* Added the `Bump::iter_allocated_chunks_raw` method, which is an `unsafe`, raw
+  version of `Bump::iter_allocated_chunks`. The new method does not take an
+  exclusive borrow of the `Bump` and yields raw pointer-and-length pairs for
+  each chunk in the bump. It is the caller's responsibility to ensure that no
+  allocation happens in the `Bump` while iterating over chunks and that there
+  are no active borrows of allocated data if they want to turn any
+  pointer-and-length pairs into slices.
+
+--------------------------------------------------------------------------------
+
+## 3.7.1
+
+Released 2021-09-17.
+
+### Changed
+
+* The packaged crate uploaded to crates.io when `bumpalo` is published is now
+  smaller, thanks to excluding unnecessary files.
+
+--------------------------------------------------------------------------------
+
 ## 3.7.0
 
 Released 2020-05-28.
@@ -203,7 +235,7 @@ Released 2020-03-24.
   2. I've written a quickcheck test to exercise `realloc`. Without the bug fix
      in this patch, this quickcheck immediately triggers invalid reads when run
      under `valgrind`. We didn't previously have quickchecks that exercised
-     `realloc` beacuse `realloc` isn't publicly exposed directly, and instead
+     `realloc` because `realloc` isn't publicly exposed directly, and instead
      can only be indirectly called. This new quickcheck test exercises `realloc`
      via `bumpalo::collections::Vec::resize` and
      `bumpalo::collections::Vec::shrink_to_fit` calls.
@@ -274,7 +306,7 @@ Released 2019-12-20.
 
 * Added `Bump::alloc_slice_fill_copy` and `Bump::alloc_slice_fill_clone` for
   creating slices of length `n` that are filled with copies or clones of an
-  inital element.
+  initial element.
 
 * Added `Bump::alloc_slice_fill_default` for creating slices of length `n` with
   the element type's default instance.

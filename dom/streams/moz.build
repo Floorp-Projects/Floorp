@@ -8,26 +8,46 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Streams")
 
 EXPORTS.mozilla.dom += [
+    "ByteStreamHelpers.h",
     "CountQueuingStrategy.h",
     "QueueWithSizes.h",
+    "ReadableByteStreamController.h",
     "ReadableStream.h",
+    "ReadableStreamBYOBReader.h",
+    "ReadableStreamBYOBRequest.h",
+    "ReadableStreamController.h",
     "ReadableStreamDefaultController.h",
     "ReadableStreamDefaultReader.h",
     "ReadableStreamGenericReader.h",
     "ReadableStreamTee.h",
+    "ReadIntoRequest.h",
     "ReadRequest.h",
+    "StreamUtils.h",
     "TeeState.h",
+    "UnderlyingSinkCallbackHelpers.h",
     "UnderlyingSourceCallbackHelpers.h",
+    "WritableStream.h",
+    "WritableStreamDefaultController.h",
+    "WritableStreamDefaultWriter.h",
 ]
 
 UNIFIED_SOURCES += [
+    "ByteStreamHelpers.cpp",
     "CountQueuingStrategy.cpp",
+    "ReadableByteStreamController.cpp",
     "ReadableStream.cpp",
+    "ReadableStreamBYOBReader.cpp",
+    "ReadableStreamBYOBRequest.cpp",
     "ReadableStreamDefaultController.cpp",
     "ReadableStreamDefaultReader.cpp",
     "ReadableStreamTee.cpp",
+    "StreamUtils.cpp",
     "TeeState.cpp",
+    "UnderlyingSinkCallbackHelpers.cpp",
     "UnderlyingSourceCallbackHelpers.cpp",
+    "WritableStream.cpp",
+    "WritableStreamDefaultController.cpp",
+    "WritableStreamDefaultWriter.cpp",
 ]
 
 FINAL_LIBRARY = "xul"

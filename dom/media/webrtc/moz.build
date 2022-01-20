@@ -55,6 +55,9 @@ if CONFIG["MOZ_WEBRTC"]:
     SOURCES += [
         "MediaEngineWebRTC.cpp",
     ]
+    PREPROCESSED_IPDL_SOURCES += [
+        "PWebrtcGlobal.ipdl",
+    ]
     LOCAL_INCLUDES += [
         "..",
         "/dom/base",
@@ -84,7 +87,6 @@ if CONFIG["MOZ_WEBRTC_SIGNALING"]:
 
 PREPROCESSED_IPDL_SOURCES += [
     "PMediaTransport.ipdl",
-    "PWebrtcGlobal.ipdl",
 ]
 
 UNIFIED_SOURCES += [
@@ -113,3 +115,6 @@ CXXFLAGS += [
 
 DEFINES["TRACING"] = True
 FINAL_LIBRARY = "xul"
+
+# Add libFuzzer configuration directives
+include("/tools/fuzzing/libfuzzer-config.mozbuild")

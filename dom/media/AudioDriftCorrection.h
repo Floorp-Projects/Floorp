@@ -7,7 +7,6 @@
 #define MOZILLA_AUDIO_DRIFT_CORRECTION_H_
 
 #include "DynamicResampler.h"
-#include "mozilla/Preferences.h"
 
 namespace mozilla {
 
@@ -150,11 +149,13 @@ class ClockDrift final {
  * audio thread.
  */
 class AudioDriftCorrection final {
+  const uint32_t kMinBufferMs = 5;
+
  public:
-  AudioDriftCorrection(uint32_t aSourceRate, uint32_t aTargetRate)
-      : mDesiredBuffering(
-            std::max(5, Preferences::GetInt("media.clockdrift.buffering", 50)) *
-            aSourceRate / 1000),
+  AudioDriftCorrection(uint32_t aSourceRate, uint32_t aTargetRate,
+                       uint32_t aBufferMs)
+      : mDesiredBuffering(std::max(kMinBufferMs, aBufferMs) * aSourceRate /
+                          1000),
         mTargetRate(aTargetRate),
         mClockDrift(aSourceRate, aTargetRate, mDesiredBuffering),
         mResampler(aSourceRate, aTargetRate, mDesiredBuffering) {}

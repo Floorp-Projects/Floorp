@@ -37,7 +37,7 @@
 #include "js/GCAPI.h"               // for GarbageCollectionEvent
 #include "js/Proxy.h"               // for PropertyDescriptor
 #include "js/RootingAPI.h"          // for Handle
-#include "js/TracingAPI.h"          // for UnsafeTraceRoot
+#include "js/TracingAPI.h"          // for TraceRoot
 #include "js/Wrapper.h"             // for UncheckedUnwrap
 #include "proxy/DeadObjectProxy.h"  // for IsDeadProxyObject
 #include "vm/GeneratorObject.h"     // for AbstractGeneratorObject
@@ -148,7 +148,7 @@ class Completion {
     Value value;
 
     void trace(JSTracer* trc) {
-      JS::UnsafeTraceRoot(trc, &value, "js::Completion::Return::value");
+      JS::TraceRoot(trc, &value, "js::Completion::Return::value");
     }
   };
 
@@ -159,8 +159,8 @@ class Completion {
     SavedFrame* stack;
 
     void trace(JSTracer* trc) {
-      JS::UnsafeTraceRoot(trc, &exception, "js::Completion::Throw::exception");
-      JS::UnsafeTraceRoot(trc, &stack, "js::Completion::Throw::stack");
+      JS::TraceRoot(trc, &exception, "js::Completion::Throw::exception");
+      JS::TraceRoot(trc, &stack, "js::Completion::Throw::stack");
     }
   };
 
@@ -174,8 +174,8 @@ class Completion {
     AbstractGeneratorObject* generatorObject;
 
     void trace(JSTracer* trc) {
-      JS::UnsafeTraceRoot(trc, &generatorObject,
-                          "js::Completion::InitialYield::generatorObject");
+      JS::TraceRoot(trc, &generatorObject,
+                    "js::Completion::InitialYield::generatorObject");
     }
   };
 
@@ -186,10 +186,10 @@ class Completion {
     Value iteratorResult;
 
     void trace(JSTracer* trc) {
-      JS::UnsafeTraceRoot(trc, &generatorObject,
-                          "js::Completion::Yield::generatorObject");
-      JS::UnsafeTraceRoot(trc, &iteratorResult,
-                          "js::Completion::Yield::iteratorResult");
+      JS::TraceRoot(trc, &generatorObject,
+                    "js::Completion::Yield::generatorObject");
+      JS::TraceRoot(trc, &iteratorResult,
+                    "js::Completion::Yield::iteratorResult");
     }
   };
 
@@ -200,9 +200,9 @@ class Completion {
     Value awaitee;
 
     void trace(JSTracer* trc) {
-      JS::UnsafeTraceRoot(trc, &generatorObject,
-                          "js::Completion::Await::generatorObject");
-      JS::UnsafeTraceRoot(trc, &awaitee, "js::Completion::Await::awaitee");
+      JS::TraceRoot(trc, &generatorObject,
+                    "js::Completion::Await::generatorObject");
+      JS::TraceRoot(trc, &awaitee, "js::Completion::Await::awaitee");
     }
   };
 

@@ -208,7 +208,7 @@ function cdef_filter\w\suffix\()_\bpc\()bpc_neon
 .endif
         b.ne            2b
 
-        sshr            v4.8h,  v1.8h,  #15         // -(sum < 0)
+        cmlt            v4.8h,  v1.8h,  #0          // -(sum < 0)
         add             v1.8h,  v1.8h,  v4.8h       // sum - (sum < 0)
         srshr           v1.8h,  v1.8h,  #4          // (8 + sum - (sum < 0)) >> 4
         add             v0.8h,  v0.8h,  v1.8h       // px + (8 + sum ...) >> 4

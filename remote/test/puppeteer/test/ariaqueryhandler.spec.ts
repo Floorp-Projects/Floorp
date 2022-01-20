@@ -47,6 +47,10 @@ describeChromeOnly('AriaQueryHandler', () => {
       );
       await expectFound(button);
       button = await page.$(
+        "aria/Submit button and some spaces[role='button']"
+      );
+      await expectFound(button);
+      button = await page.$(
         'aria/  Submit button and some spaces[role="button"]'
       );
       await expectFound(button);
@@ -68,6 +72,10 @@ describeChromeOnly('AriaQueryHandler', () => {
       await expectFound(button);
       button = await page.$(
         'aria/[name="  Submit  button and some  spaces"][role="button"]'
+      );
+      await expectFound(button);
+      button = await page.$(
+        "aria/[name='  Submit  button and some  spaces'][role='button']"
       );
       await expectFound(button);
       button = await page.$(
@@ -186,6 +194,16 @@ describeChromeOnly('AriaQueryHandler', () => {
       await page.goto(server.EMPTY_PAGE);
       await page.evaluate(addElement, 'button');
       await page.waitForSelector('aria/[role="button"]');
+    });
+
+    it('should work for ElementHandler.waitForSelector', async () => {
+      const { page, server } = getTestState();
+      await page.goto(server.EMPTY_PAGE);
+      await page.evaluate(
+        () => (document.body.innerHTML = `<div><button>test</button></div>`)
+      );
+      const element = await page.$('div');
+      await element.waitForSelector('aria/test');
     });
 
     it('should persist query handler bindings across reloads', async () => {
@@ -582,13 +600,13 @@ describeChromeOnly('AriaQueryHandler', () => {
       const { page } = getTestState();
       const found = await page.$$('aria/[role="heading"]');
       const ids = await getIds(found);
-      expect(ids).toEqual(['shown', 'node11', 'node13']);
+      expect(ids).toEqual(['shown', 'hidden', 'node11', 'node13']);
     });
-    it('should not find ignored', async () => {
+    it('should find both ignored and unignored', async () => {
       const { page } = getTestState();
       const found = await page.$$('aria/title');
       const ids = await getIds(found);
-      expect(ids).toEqual(['shown']);
+      expect(ids).toEqual(['shown', 'hidden']);
     });
   });
 });

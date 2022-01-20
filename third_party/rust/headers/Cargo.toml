@@ -12,7 +12,7 @@
 
 [package]
 name = "headers"
-version = "0.3.2"
+version = "0.3.3"
 authors = ["Sean McArthur <sean@seanmonstar.com>"]
 description = "typed HTTP headers"
 homepage = "https://hyper.rs"
@@ -22,13 +22,13 @@ categories = ["web-programming"]
 license = "MIT"
 repository = "https://github.com/hyperium/headers"
 [dependencies.base64]
-version = "0.12"
+version = "0.13"
 
 [dependencies.bitflags]
 version = "1.0"
 
 [dependencies.bytes]
-version = "0.5"
+version = "1"
 
 [dependencies.headers-core]
 version = "0.2"

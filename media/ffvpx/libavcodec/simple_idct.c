@@ -175,7 +175,8 @@ static inline void idct4col_add(uint8_t *dest, ptrdiff_t line_size, const int16_
 #define R_SHIFT 11
 static inline void idct4row(int16_t *row)
 {
-    int c0, c1, c2, c3, a0, a1, a2, a3;
+    unsigned c0, c1, c2, c3;
+    int a0, a1, a2, a3;
 
     a0 = row[0];
     a1 = row[1];
@@ -236,7 +237,7 @@ void ff_simple_idct44_add(uint8_t *dest, ptrdiff_t line_size, int16_t *block)
     }
 }
 
-void ff_prores_idct(int16_t *block, const int16_t *qmat)
+void ff_prores_idct_10(int16_t *block, const int16_t *qmat)
 {
     int i;
 
@@ -249,5 +250,21 @@ void ff_prores_idct(int16_t *block, const int16_t *qmat)
     for (i = 0; i < 8; i++) {
         block[i] += 8192;
         idctSparseCol_extrashift_10(block + i);
+    }
+}
+
+void ff_prores_idct_12(int16_t *block, const int16_t *qmat)
+{
+    int i;
+
+    for (i = 0; i < 64; i++)
+        block[i] *= qmat[i];
+
+    for (i = 0; i < 8; i++)
+        idctRowCondDC_int16_12bit(block + i*8, 0);
+
+    for (i = 0; i < 8; i++) {
+        block[i] += 8192;
+        idctSparseCol_int16_12bit(block + i);
     }
 }

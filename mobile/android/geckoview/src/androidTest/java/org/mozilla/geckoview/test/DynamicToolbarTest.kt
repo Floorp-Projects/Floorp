@@ -152,15 +152,15 @@ class DynamicToolbarTest : BaseSessionTest() {
         mainSession.loadTestPath(BaseSessionTest.FIXED_VH)
         mainSession.waitForPageStop()
 
-        val pixelRatio = sessionRule.session.evaluateJS("window.devicePixelRatio") as Double
-        val scale = sessionRule.session.evaluateJS("window.visualViewport.scale") as Double
+        val pixelRatio = mainSession.evaluateJS("window.devicePixelRatio") as Double
+        val scale = mainSession.evaluateJS("window.visualViewport.scale") as Double
 
         for (i in 1..dynamicToolbarMaxHeight) {
           // Simulate the dynamic toolbar is going to be hidden.
           sessionRule.display?.run { setVerticalClipping(-i) }
 
           val expectedViewportHeight = (SCREEN_HEIGHT - dynamicToolbarMaxHeight + i) / scale / pixelRatio
-          val promise = sessionRule.session.evaluatePromiseJS("""
+          val promise = mainSession.evaluatePromiseJS("""
              new Promise(resolve => {
                window.visualViewport.addEventListener('resize', resolve(window.visualViewport.height));
              });
@@ -203,7 +203,7 @@ class DynamicToolbarTest : BaseSessionTest() {
             getComputedStyle(document.querySelector('#fixed-element')).height
         """.trimIndent()) as String
 
-        val scale = sessionRule.session.evaluateJS("window.visualViewport.scale") as Double
+        val scale = mainSession.evaluateJS("window.visualViewport.scale") as Double
         val expectedHeight = (SCREEN_HEIGHT / scale).toInt()
         assertThat("The %-based height should be now recomputed based on the screen height",
                    height, equalTo(expectedHeight.toString() + "px"))
@@ -222,7 +222,7 @@ class DynamicToolbarTest : BaseSessionTest() {
         mainSession.waitForPageStop()
 
         for (i in 1..dynamicToolbarMaxHeight - 1) {
-            val promise = sessionRule.session.evaluatePromiseJS("""
+            val promise = mainSession.evaluatePromiseJS("""
                 new Promise(resolve => {
                     let fired = false;
                     window.addEventListener('resize', () => { fired = true; }, { once: true });
@@ -239,7 +239,7 @@ class DynamicToolbarTest : BaseSessionTest() {
                        promise.value as Boolean, equalTo(false));
         }
 
-        val promise = sessionRule.session.evaluatePromiseJS("""
+        val promise = mainSession.evaluatePromiseJS("""
             new Promise(resolve => {
                 window.addEventListener('resize', () => { resolve(true); }, { once: true });
             });
@@ -265,10 +265,10 @@ class DynamicToolbarTest : BaseSessionTest() {
         mainSession.loadTestPath(BaseSessionTest.FIXED_BOTTOM)
         mainSession.waitForPageStop()
 
-        val pixelRatio = sessionRule.session.evaluateJS("window.devicePixelRatio") as Double
+        val pixelRatio = mainSession.evaluateJS("window.devicePixelRatio") as Double
 
         for (i in 1..dynamicToolbarMaxHeight - 1) {
-            val promise = sessionRule.session.evaluatePromiseJS("""
+            val promise = mainSession.evaluatePromiseJS("""
                new Promise(resolve => {
                  window.visualViewport.addEventListener('resize', resolve(window.innerHeight));
                });
@@ -280,7 +280,7 @@ class DynamicToolbarTest : BaseSessionTest() {
                        promise.value as Double, closeTo(SCREEN_HEIGHT / 2 / pixelRatio, .01))
         }
 
-        val promise = sessionRule.session.evaluatePromiseJS("""
+        val promise = mainSession.evaluatePromiseJS("""
             new Promise(resolve => {
                 window.addEventListener('resize', () => { resolve(window.innerHeight); }, { once: true });
             });
@@ -303,7 +303,7 @@ class DynamicToolbarTest : BaseSessionTest() {
         mainSession.loadTestPath(BaseSessionTest.FIXED_VH)
         mainSession.waitForPageStop()
 
-        val promise = sessionRule.session.evaluatePromiseJS("""
+        val promise = mainSession.evaluatePromiseJS("""
             new Promise(resolve => window.addEventListener('resize', () => resolve(true)));
         """.trimIndent())
 
@@ -342,6 +342,34 @@ class DynamicToolbarTest : BaseSessionTest() {
             override fun onShowDynamicToolbar(session: GeckoSession) {
             }
         })
+    }
 
+    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
+    @Test fun showDynamicToolbarOnOverflowHidden() {
+        val dynamicToolbarMaxHeight = SCREEN_HEIGHT / 2
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(dynamicToolbarMaxHeight) }
+
+        // Set active since setVerticalClipping call affects only for forground tab.
+        mainSession.setActive(true)
+
+        mainSession.loadTestPath(SHOW_DYNAMIC_TOOLBAR_HTML_PATH)
+        mainSession.waitForPageStop()
+        mainSession.evaluateJS("window.scrollTo(0, " + dynamicToolbarMaxHeight + ")")
+        mainSession.waitUntilCalled(object : ScrollDelegate {
+            @AssertCalled(count = 1)
+            override fun onScrollChanged(session: GeckoSession, scrollX: Int, scrollY: Int) {
+            }
+        })
+
+        // Simulate the dynamic toolbar being hidden by the scroll
+        sessionRule.display?.run { setVerticalClipping(-dynamicToolbarMaxHeight) }
+
+        mainSession.evaluateJS("document.documentElement.style.overflow = 'hidden'")
+
+        mainSession.waitUntilCalled(object : ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onShowDynamicToolbar(session: GeckoSession) {
+            }
+        })
     }
 }

@@ -12,6 +12,7 @@ AllowCompilerWarnings()
 DEFINES["ABSL_ALLOCATOR_NOTHROW"] = "1"
 DEFINES["RTC_ENABLE_VP9"] = True
 DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
+DEFINES["WEBRTC_EXCLUDE_SYSTEM_TIME"] = True
 DEFINES["WEBRTC_LIBRARY_IMPL"] = True
 DEFINES["WEBRTC_MOZILLA_BUILD"] = True
 DEFINES["WEBRTC_NON_STATIC_TRACE_EVENT_HANDLERS"] = "0"
@@ -22,7 +23,6 @@ FINAL_LIBRARY = "webrtc"
 LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
     "/ipc/chromium/src",
-    "/ipc/glue",
     "/third_party/libwebrtc/",
     "/third_party/libwebrtc/third_party/abseil-cpp/",
     "/tools/profiler/public"
@@ -50,7 +50,6 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["HAVE_SYS_UIO_H"] = True
     DEFINES["WEBRTC_ANDROID"] = True
     DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
-    DEFINES["WEBRTC_EXCLUDE_SYSTEM_TIME"] = True
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_GNU_SOURCE"] = True
@@ -63,7 +62,6 @@ if CONFIG["OS_TARGET"] == "Android":
 
 if CONFIG["OS_TARGET"] == "Darwin":
 
-    DEFINES["WEBRTC_EXCLUDE_SYSTEM_TIME"] = True
     DEFINES["WEBRTC_MAC"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_LIBCPP_HAS_NO_ALIGNED_ALLOCATION"] = True
@@ -79,11 +77,21 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["USE_OZONE"] = "1"
     DEFINES["USE_UDEV"] = True
     DEFINES["USE_X11"] = "1"
-    DEFINES["WEBRTC_EXCLUDE_SYSTEM_TIME"] = True
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
     DEFINES["_GNU_SOURCE"] = True
+    DEFINES["_LARGEFILE64_SOURCE"] = True
+    DEFINES["_LARGEFILE_SOURCE"] = True
+    DEFINES["__STDC_CONSTANT_MACROS"] = True
+    DEFINES["__STDC_FORMAT_MACROS"] = True
+
+if CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["USE_GLIB"] = "1"
+    DEFINES["WEBRTC_BSD"] = True
+    DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["_FILE_OFFSET_BITS"] = "64"
     DEFINES["_LARGEFILE64_SOURCE"] = True
     DEFINES["_LARGEFILE_SOURCE"] = True
     DEFINES["__STDC_CONSTANT_MACROS"] = True
@@ -97,7 +105,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["PSAPI_VERSION"] = "2"
     DEFINES["UNICODE"] = True
     DEFINES["USE_AURA"] = "1"
-    DEFINES["WEBRTC_EXCLUDE_SYSTEM_TIME"] = True
     DEFINES["WEBRTC_WIN"] = True
     DEFINES["WIN32"] = True
     DEFINES["WIN32_LEAN_AND_MEAN"] = True
@@ -152,6 +159,10 @@ if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["_FORTIFY_SOURCE"] = "2"
 
+if not CONFIG["MOZ_DEBUG"] and CONFIG["OS_TARGET"] == "OpenBSD":
+
+    DEFINES["_FORTIFY_SOURCE"] = "2"
+
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["_DEBUG"] = True
@@ -161,6 +172,10 @@ if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Darwin":
     DEFINES["_DEBUG"] = True
 
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["_DEBUG"] = True
+
+if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "OpenBSD":
 
     DEFINES["_DEBUG"] = True
 

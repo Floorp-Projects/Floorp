@@ -98,3 +98,4 @@ load 1555795.html
 load 1560179.html
 load 1572904.html
 load 1683907.html
+pref(layout.css.d-property.enabled,true) pref(dom.svg.pathSeg.enabled,true) load 1715387.html

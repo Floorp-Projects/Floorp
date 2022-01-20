@@ -274,6 +274,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD SetBeConservative(bool aBeConservative) override;
   NS_IMETHOD GetBypassProxy(bool* aBypassProxy) override;
   NS_IMETHOD SetBypassProxy(bool aBypassProxy) override;
+  bool BypassProxy();
+
   NS_IMETHOD GetIsTRRServiceChannel(bool* aTRR) override;
   NS_IMETHOD SetIsTRRServiceChannel(bool aTRR) override;
   NS_IMETHOD GetIsResolvedByTRR(bool* aResolvedByTRR) override;

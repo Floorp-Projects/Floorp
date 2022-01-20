@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "getrandom"
-version = "0.1.14"
+version = "0.1.16"
 authors = ["The Rand Project Developers"]
 exclude = ["utils/*", ".*", "appveyor.yml"]
 description = "A small cross-platform library for retrieving random data from system source"
@@ -22,7 +22,7 @@ categories = ["os", "no-std"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-random/getrandom"
 [dependencies.cfg-if]
-version = "0.1.2"
+version = "1"
 
 [dependencies.compiler_builtins]
 version = "0.1"
@@ -42,17 +42,23 @@ dummy = []
 rustc-dep-of-std = ["compiler_builtins", "core"]
 std = []
 test-in-browser = ["wasm-bindgen"]
+wasm-bindgen = ["bindgen", "js-sys"]
 [target."cfg(target_os = \"wasi\")".dependencies.wasi]
 version = "0.9"
 [target."cfg(unix)".dependencies.libc]
 version = "0.2.64"
 default-features = false
-[target.wasm32-unknown-unknown.dependencies.stdweb]
-version = "0.4.18"
+[target.wasm32-unknown-unknown.dependencies.bindgen]
+version = "0.2.29"
+optional = true
+package = "wasm-bindgen"
+
+[target.wasm32-unknown-unknown.dependencies.js-sys]
+version = "0.3"
 optional = true
 
-[target.wasm32-unknown-unknown.dependencies.wasm-bindgen]
-version = "0.2.29"
+[target.wasm32-unknown-unknown.dependencies.stdweb]
+version = "0.4.18"
 optional = true
 [target.wasm32-unknown-unknown.dev-dependencies.wasm-bindgen-test]
 version = "0.2"

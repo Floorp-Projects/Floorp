@@ -10,23 +10,20 @@ function run_test() {
   // bad_certs/mitm.pem
   let cert1 = {
     sha256Fingerprint:
-      "AF:89:F3:E8:0A:AD:58:96:05:C4:AC:D7:A2:A3:07:42:E6:F9:85:FA:9D:D7:D4:43:EC:9F:87:52:94:9C:4D:A6",
-    dbKey:
-      "AAAAAAAAAAAAAAAUAAAAG0uHZ2GoTSZsZNE9WdB/lvAPubXIMBkxFzAVBgNVBAMMDlRlc3QgTUlUTSBSb290",
+      "B6:E6:16:9F:A0:9D:97:AF:B4:8C:AF:94:FD:08:C6:D3:AE:E6:B8:62:B9:B2:81:B5:52:AB:6E:7C:17:25:8E:F8",
+    dbKey: "This isn't relevant for this test.",
   };
   // bad_certs/selfsigned.pem
   let cert2 = {
     sha256Fingerprint:
-      "5D:13:3E:90:DF:34:C4:E8:27:E8:88:4A:28:12:84:1D:1B:E8:0C:73:20:C4:90:8A:A7:AC:A5:8D:7E:42:7E:6E",
-    dbKey:
-      "AAAAAAAAAAAAAAAUAAAAKEdUzTa/lL+mUeJpdBfMepsMAP5RMCYxJDAiBgNVBAMMG1NlbGYtc2lnbmVkIFRlc3QgRW5kLWVudGl0eQ==",
+      "7B:23:9E:6C:46:D8:D1:F3:59:DC:E6:05:5C:DB:06:FB:98:21:50:92:9C:B7:EC:3A:A3:B9:A5:4E:25:B2:C3:F8",
+    dbKey: "This isn't relevant for this test.",
   };
   // bad_certs/noValidNames.pem
   let cert3 = {
     sha256Fingerprint:
-      "40:56:30:2B:C3:AE:DA:22:40:8A:2D:C5:45:00:5E:EC:9B:AA:38:99:D6:4E:29:05:6B:4E:CB:E8:F9:10:30:D6",
-    dbKey:
-      "AAAAAAAAAAAAAAAUAAAAFHPQYJXEeVUul+u7/ZQOjaI3fYD1MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=",
+      "CB:E3:D7:05:40:05:22:B4:0D:85:01:01:A6:3F:14:44:C1:AE:C1:1C:FA:77:C2:36:56:1F:2B:AD:6D:94:77:A4",
+    dbKey: "This isn't relevant for this test.",
   };
 
   let profileDir = do_get_profile();
@@ -98,8 +95,17 @@ function run_test() {
 
   // Now that the override service is initialized we can actually read the certificates
   cert1 = constructCertFromFile("bad_certs/mitm.pem");
+  info(
+    `if this test fails, try updating cert1.sha256Fingerprint to "${cert1.sha256Fingerprint}"`
+  );
   cert2 = constructCertFromFile("bad_certs/selfsigned.pem");
+  info(
+    `if this test fails, try updating cert2.sha256Fingerprint to "${cert2.sha256Fingerprint}"`
+  );
   cert3 = constructCertFromFile("bad_certs/noValidNames.pem");
+  info(
+    `if this test fails, try updating cert3.sha256Fingerprint to "${cert3.sha256Fingerprint}"`
+  );
 
   const OVERRIDES = [
     {

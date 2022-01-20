@@ -251,12 +251,6 @@ struct AuxOut {
     DumpImage(label, normalized);
   }
 
-  // This dumps coefficients as a 16-bit PNG with coefficients of a block placed
-  // in the area that would contain that block in a normal image. To view the
-  // resulting image manually, rescale intensities by using:
-  // $ convert -auto-level IMAGE.PNG - | display -
-  void DumpCoeffImage(const char* label, const Image3S& coeff_image) const;
-
   void SetInspectorImage3F(const jxl::InspectorImage3F& inspector) {
     inspector_image3f_ = inspector;
   }

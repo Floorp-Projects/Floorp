@@ -155,7 +155,7 @@ var UrlbarUtils = {
   // This defines icon locations that are commonly used in the UI.
   ICON: {
     // DEFAULT is defined lazily so it doesn't eagerly initialize PlacesUtils.
-    EXTENSION: "chrome://mozapps/skin/extensions/extension.svg",
+    EXTENSION: "chrome://browser/skin/addons.svg",
     HISTORY: "chrome://browser/skin/history.svg",
     SEARCH_GLASS: "chrome://global/skin/icons/search-glass.svg",
     TIP: "chrome://global/skin/icons/lightbulb.svg",

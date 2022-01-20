@@ -3746,7 +3746,7 @@ size_t CacheIndex::SizeOfExcludingThisInternal(
 
 // static
 size_t CacheIndex::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-  sLock.AssertCurrentThreadOwns();
+  StaticMutexAutoLock lock(sLock);
 
   if (!gInstance) return 0;
 
@@ -3757,7 +3757,8 @@ size_t CacheIndex::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
 size_t CacheIndex::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
   StaticMutexAutoLock lock(sLock);
 
-  return mallocSizeOf(gInstance) + SizeOfExcludingThis(mallocSizeOf);
+  return mallocSizeOf(gInstance) +
+         (gInstance ? gInstance->SizeOfExcludingThisInternal(mallocSizeOf) : 0);
 }
 
 // static

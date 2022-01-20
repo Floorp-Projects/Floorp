@@ -45,6 +45,7 @@
 #include "mozilla/UseCounter.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/css/StylePreloadKind.h"
+#include "mozilla/dom/AnimationFrameProvider.h"
 #include "mozilla/dom/DispatcherTrait.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/dom/Element.h"
@@ -275,6 +276,7 @@ enum class ViewportFitType : uint8_t;
 class WindowContext;
 class WindowGlobalChild;
 class WindowProxyHolder;
+class WorkerDocumentListener;
 class XPathEvaluator;
 class XPathExpression;
 class XPathNSResolver;
@@ -720,12 +722,6 @@ class Document : public nsINode,
    *               is false, the document will NOT set its principal to the
    *               channel's owner, will not clear any event listeners that are
    *               already set on it, etc.
-   * @param aSink The content sink to use for the data.  If this is null and
-   *              the document needs a content sink, it will create one based
-   *              on whatever it knows about the data it's going to load.
-   *              This MUST be null if the underlying document is an HTML
-   *              document. Even in the XML case, please don't add new calls
-   *              with non-null sink.
    *
    * Once this has been called, the document will return false for
    * MayStartLayout() until SetMayStartLayout(true) is called on it.  Making
@@ -739,8 +735,7 @@ class Document : public nsINode,
                                      nsILoadGroup* aLoadGroup,
                                      nsISupports* aContainer,
                                      nsIStreamListener** aDocListener,
-                                     bool aReset,
-                                     nsIContentSink* aSink = nullptr) = 0;
+                                     bool aReset) = 0;
   void StopDocumentLoad();
 
   virtual void SetSuppressParserErrorElement(bool aSuppress) {}
@@ -1279,6 +1274,7 @@ class Document : public nsINode,
 
   Selection* GetSelection(ErrorResult& aRv);
 
+  nsresult HasStorageAccessSync(bool& aHasStorageAccess);
   already_AddRefed<Promise> HasStorageAccess(ErrorResult& aRv);
   already_AddRefed<Promise> RequestStorageAccess(ErrorResult& aRv);
 
@@ -1561,11 +1557,12 @@ class Document : public nsINode,
                          NotNull<const Encoding*>& aEncoding,
                          nsHtml5TreeOpExecutor* aExecutor);
 
-  void DispatchContentLoadedEvents();
+  MOZ_CAN_RUN_SCRIPT void DispatchContentLoadedEvents();
 
-  void DispatchPageTransition(EventTarget* aDispatchTarget,
-                              const nsAString& aType, bool aInFrameSwap,
-                              bool aPersisted, bool aOnlySystemGroup);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DispatchPageTransition(
+      EventTarget* aDispatchTarget, const nsAString& aType, bool aInFrameSwap,
+      bool aPersisted, bool aOnlySystemGroup);
 
   // Call this before the document does something that will unbind all content.
   // That will stop us from doing a lot of work as each element is removed.
@@ -2125,6 +2122,9 @@ class Document : public nsINode,
    */
   void FlushExternalResources(FlushType aType);
 
+  void AddWorkerDocumentListener(WorkerDocumentListener* aListener);
+  void RemoveWorkerDocumentListener(WorkerDocumentListener* aListener);
+
   // Triggers an update of <svg:use> element shadow trees.
   void UpdateSVGUseElementShadowTrees() {
     if (mSVGUseElementsNeedingShadowTreeUpdate.IsEmpty()) {
@@ -2341,8 +2341,9 @@ class Document : public nsINode,
   /**
    * Sanitize the document by resetting all input elements and forms that have
    * autocomplete=off to their default values.
+   * TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
    */
-  void Sanitize();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Sanitize();
 
   /**
    * Enumerate all subdocuments.
@@ -2431,7 +2432,7 @@ class Document : public nsINode,
 
   void BlockDOMContentLoaded() { ++mBlockDOMContentLoaded; }
 
-  void UnblockDOMContentLoaded();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void UnblockDOMContentLoaded();
 
   /**
    * Notification that the page has been shown, for documents which are loaded
@@ -3101,19 +3102,6 @@ class Document : public nsINode,
 
   SVGSVGElement* GetSVGRootElement() const;
 
-  struct FrameRequest {
-    FrameRequest(FrameRequestCallback& aCallback, int32_t aHandle);
-    ~FrameRequest();
-
-    // Comparator operators to allow RemoveElementSorted with an
-    // integer argument on arrays of FrameRequest
-    bool operator==(int32_t aHandle) const { return mHandle == aHandle; }
-    bool operator<(int32_t aHandle) const { return mHandle < aHandle; }
-
-    RefPtr<FrameRequestCallback> mCallback;
-    int32_t mHandle;
-  };
-
   nsresult ScheduleFrameRequestCallback(FrameRequestCallback& aCallback,
                                         int32_t* aHandle);
   void CancelFrameRequestCallback(int32_t aHandle);
@@ -3321,7 +3309,9 @@ class Document : public nsINode,
       const nsAString& target, const nsAString& data, ErrorResult& rv) const;
   already_AddRefed<nsINode> ImportNode(nsINode& aNode, bool aDeep,
                                        ErrorResult& rv) const;
-  nsINode* AdoptNode(nsINode& aNode, ErrorResult& rv);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsINode* AdoptNode(nsINode& aNode,
+                                                 ErrorResult& rv);
   already_AddRefed<Event> CreateEvent(const nsAString& aEventType,
                                       CallerType aCallerType,
                                       ErrorResult& rv) const;
@@ -4983,11 +4973,6 @@ class Document : public nsINode,
    */
   uint32_t mIgnoreDestructiveWritesCounter;
 
-  /**
-   * The current frame request callback handle
-   */
-  int32_t mFrameRequestCallbackCounter;
-
   // Count of live static clones of this document.
   uint32_t mStaticCloneCount;
 
@@ -5009,11 +4994,7 @@ class Document : public nsINode,
 
   nsCOMPtr<nsIDocumentEncoder> mCachedEncoder;
 
-  nsTArray<FrameRequest> mFrameRequestCallbacks;
-
-  // The set of frame request callbacks that were canceled but which we failed
-  // to find in mFrameRequestCallbacks.
-  HashSet<int32_t> mCanceledFrameRequestCallbacks;
+  FrameRequestManager mFrameRequestManager;
 
   // This object allows us to evict ourself from the back/forward cache.  The
   // pointer is non-null iff we're currently in the bfcache.
@@ -5270,6 +5251,8 @@ class Document : public nsINode,
   RefPtr<ChromeObserver> mChromeObserver;
 
   RefPtr<HTMLAllCollection> mAll;
+
+  nsTHashSet<RefPtr<WorkerDocumentListener>> mWorkerListeners;
 
   // Pres shell resolution saved before entering fullscreen mode.
   float mSavedResolution;

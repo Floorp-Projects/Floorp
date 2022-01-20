@@ -15,6 +15,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ActivityStream: "resource://activity-stream/lib/ActivityStream.jsm",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   RemotePages:
     "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm",
 });
@@ -40,6 +41,8 @@ const AboutNewTab = {
   _activityStreamEnabled: false,
   activityStream: null,
   activityStreamDebug: false,
+
+  _cachedTopSites: null,
 
   _newTabURL: ABOUT_URL,
   _newTabURLOverridden: false,
@@ -176,9 +179,38 @@ const AboutNewTab = {
     this.activityStream = new ActivityStream();
     try {
       this.activityStream.init();
+      this._subscribeToActivityStream();
     } catch (e) {
       Cu.reportError(e);
     }
+  },
+
+  _subscribeToActivityStream() {
+    let unsubscribe = this.activityStream.store.subscribe(() => {
+      // If the top sites changed, broadcast "newtab-top-sites-changed". We
+      // ignore changes to the `screenshot` property in each site because
+      // screenshots are generated at times that are hard to predict and it ends
+      // up interfering with tests that rely on "newtab-top-sites-changed".
+      // Observers likely don't care about screenshots anyway.
+      let topSites = this.activityStream.store
+        .getState()
+        .TopSites.rows.map(site => {
+          site = { ...site };
+          delete site.screenshot;
+          return site;
+        });
+      if (!ObjectUtils.deepEqual(topSites, this._cachedTopSites)) {
+        this._cachedTopSites = topSites;
+        Services.obs.notifyObservers(null, "newtab-top-sites-changed");
+      }
+    });
+    this._unsubscribeFromActivityStream = () => {
+      try {
+        unsubscribe();
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    };
   },
 
   /**
@@ -187,6 +219,7 @@ const AboutNewTab = {
    */
   uninit() {
     if (this.activityStream) {
+      this._unsubscribeFromActivityStream?.();
       this.activityStream.uninit();
       this.activityStream = null;
     }

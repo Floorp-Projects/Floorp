@@ -473,17 +473,6 @@ class ImageSurfaceCache {
       return;
     }
 
-    // Get our native size. While we know the image should be fully decoded,
-    // if it is an SVG, it is valid to have a zero size. We can't do compacting
-    // in that case because we need to know the width/height ratio to define a
-    // candidate set.
-    IntSize nativeSize;
-    if (NS_FAILED(image->GetWidth(&nativeSize.width)) ||
-        NS_FAILED(image->GetHeight(&nativeSize.height)) ||
-        nativeSize.IsEmpty()) {
-      return;
-    }
-
     // We have a valid size, we can change modes.
     mFactor2Mode = true;
   }
@@ -593,11 +582,19 @@ class ImageSurfaceCache {
     if (NS_FAILED(image->GetWidth(&factorSize.width)) ||
         NS_FAILED(image->GetHeight(&factorSize.height)) ||
         factorSize.IsEmpty()) {
-      // We should not have entered factor of 2 mode without a valid size, and
-      // several successfully decoded surfaces. Note that valid vector images
-      // may have a default size of 0x0, and those are not yet supported.
-      MOZ_ASSERT_UNREACHABLE("Expected valid native size!");
-      return aSize;
+      // Valid vector images may have a default size of 0x0. In that case, just
+      // assume a default size of 100x100 and apply the intrinsic ratio if
+      // available. If our guess was too small, don't use factor-of-scaling.
+      MOZ_ASSERT(mIsVectorImage);
+      factorSize = IntSize(100, 100);
+      Maybe<AspectRatio> aspectRatio = image->GetIntrinsicRatio();
+      if (aspectRatio && *aspectRatio) {
+        factorSize.width =
+            NSToIntRound(aspectRatio->ApplyToFloat(float(factorSize.height)));
+        if (factorSize.IsEmpty()) {
+          return aSize;
+        }
+      }
     }
 
     if (mIsVectorImage) {

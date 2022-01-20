@@ -499,23 +499,18 @@
   ps_mask_table_merge_all( PS_Mask_Table  table,
                            FT_Memory      memory )
   {
-    FT_Int    index1, index2;
+    FT_UInt   index1, index2;
     FT_Error  error = FT_Err_Ok;
 
 
-    /* both loops go down to 0, thus FT_Int for index1 and index2 */
-    for ( index1 = (FT_Int)table->num_masks - 1; index1 > 0; index1-- )
+    /* the loops stop when unsigned indices wrap around after 0 */
+    for ( index1 = table->num_masks - 1; index1 < table->num_masks; index1-- )
     {
-      for ( index2 = index1 - 1; index2 >= 0; index2-- )
+      for ( index2 = index1 - 1; index2 < index1; index2-- )
       {
-        if ( ps_mask_table_test_intersect( table,
-                                           (FT_UInt)index1,
-                                           (FT_UInt)index2 ) )
+        if ( ps_mask_table_test_intersect( table, index1, index2 ) )
         {
-          error = ps_mask_table_merge( table,
-                                       (FT_UInt)index2,
-                                       (FT_UInt)index1,
-                                       memory );
+          error = ps_mask_table_merge( table, index2, index1, memory );
           if ( error )
             goto Exit;
 

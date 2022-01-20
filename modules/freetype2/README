@@ -1,4 +1,4 @@
-FreeType 2.11.0
+FreeType 2.11.1
 ===============
 
 Homepage: https://www.freetype.org
@@ -30,9 +30,9 @@ sites.  Go to
 
 and download one of the following files.
 
-  freetype-doc-2.11.0.tar.xz
-  freetype-doc-2.11.0.tar.gz
-  ftdoc2110.zip
+  freetype-doc-2.11.1.tar.xz
+  freetype-doc-2.11.1.tar.gz
+  ftdoc2111.zip
 
 To view the documentation online, go to
 
@@ -87,7 +87,6 @@ Details on the process can be found here:
 
 
 Enjoy!
-
 
   The FreeType Team
 

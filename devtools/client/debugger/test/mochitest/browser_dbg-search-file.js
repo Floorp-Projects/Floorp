@@ -4,8 +4,6 @@
 
 // Tests the search bar correctly responds to queries, enter, shift enter
 
-const IS_MAC_OSX = AppConstants.platform === "macosx";
-
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
   const {
@@ -111,25 +109,6 @@ add_task(async function() {
     linesWithResults[0],
     "Enter cycles forward through the results"
   );
-
-  if (IS_MAC_OSX) {
-    info(
-      "cmd+G and cmdShift+G shortcut for traversing results only work for macOS"
-    );
-    await navigateWithKey(
-      dbg,
-      "fileSearchNext",
-      linesWithResults[1],
-      "Cmd+G moves forward in the search results"
-    );
-
-    await navigateWithKey(
-      dbg,
-      "fileSearchPrev",
-      linesWithResults[0],
-      "Cmd+Shift+G moves backward in the search results"
-    );
-  }
 
   info("Check that changing the search term works");
   pressKey(dbg, "fileSearch");

@@ -65,7 +65,7 @@ async function testStrings(mvpUIEnabled) {
   let elt = doc.querySelector("#isolateCookiesSocialMedia");
   let id = doc.l10n.getAttributes(elt).id;
   expectedStringID = mvpUIEnabled
-    ? "sitedata-option-block-cross-site-cookies-including-social-media"
+    ? "sitedata-option-block-cross-site-cookies"
     : "sitedata-option-block-cross-site-and-social-media-trackers-plus-isolate";
   is(
     id,

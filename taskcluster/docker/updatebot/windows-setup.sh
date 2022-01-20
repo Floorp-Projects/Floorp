@@ -20,9 +20,29 @@ MOZ_FETCHES_PATH="$PWD"
 #########################################################
 # Install dependencies
 
+# Move depot_tools
+cd "$MOZ_FETCHES_DIR"
+mv depot_tools.git depot_tools
+
+
+# Generating a new version of the preloaded depot_tools download can be done by:
+# 1) Running the task, uncommenting the variable assignment below, uncommenting the 
+#    _GENERATE_DEPOT_TOOLS_BINARIES_ section in taskcluster/ci/updatebot/kind.yml,
+#    and ensuring that an angle update will actually take place (so it downloads the depot_tools)
+# 2) Downloading and sanity-checking the depot_tools-preloaded-binaries-GIT_HASH-DATE.zip artifact
+# 3) Adding it to tooltool
+# 4) Updating the updatebot manifest
+# Note that even for the same git revision the downloaded tools can change, so they are tagged
+# with both the git hash and the date it was generated
+
+# export GENERATE_DEPOT_TOOLS_BINARIES=1
+
+if test -n "$GENERATE_DEPOT_TOOLS_BINARIES"; then
+    cp -r depot_tools depot_tools-from-git
+fi
+
 # Git is at /c/Program Files/Git/cmd/git.exe
 #  It's in PATH for this script (confusingly) but not in PATH so we need to add it
-which git
 export PATH="/c/Program Files/Git/cmd:$PATH"
 
 # php & arcanist
@@ -35,14 +55,11 @@ cp "$GECKO_PATH/taskcluster/docker/updatebot/windows-php.ini" "$MOZ_FETCHES_DIR/
 
 cd "$MOZ_FETCHES_DIR/arcanist.git"
 patch -p1 < "$GECKO_PATH/taskcluster/docker/updatebot/arcanist_windows_stream.patch"
+patch -p1 < "$GECKO_PATH/taskcluster/docker/updatebot/arcanist_patch_size.patch"
 cd "$MOZ_FETCHES_DIR"
 
 export PATH="$MOZ_FETCHES_PATH/php-win:$PATH"
 export PATH="$MOZ_FETCHES_PATH/arcanist.git/bin:$PATH"
-
-
-
-ls "$MOZ_FETCHES_PATH/arcanist.git/bin"
 
 # get Updatebot
 cd "$MOZ_FETCHES_DIR"
@@ -79,6 +96,39 @@ export PYTHONUNBUFFERED=1
 
 cd "$UPDATEBOT_PATH"
 python3 -m poetry run python3 ./automation.py
+
+#########################################################
+if test -n "$GENERATE_DEPOT_TOOLS_BINARIES"; then
+    # Artifacts
+
+    cd "$MOZ_FETCHES_PATH"
+    mv depot_tools depot_tools-from-tc
+
+    # Clean out unneeded files
+    # Need to use cmd because for some reason rm from bash throws 'Access Denied'
+    cmd '/c for /d /r %i in (*__pycache__) do rmdir /s /q %i'
+    rm -rf depot_tools-from-git/.git || true
+
+    # Delete the files that are already in git
+    find depot_tools-from-git -mindepth 1 -maxdepth 1 | sed s/depot_tools-from-git/depot_tools-from-tc/ | while read -r d; do rm -rf "$d"; done
+
+    # Make the artifact
+    rm -rf depot_tools-preloaded-binaries #remove it if it existed (i.e. we probably have one from tooltool already)
+    mv depot_tools-from-tc depot_tools-preloaded-binaries
+
+    # zip can't add symbolic links, and exits with an error code. || true avoids a script crash
+    zip -r depot_tools-preloaded-binaries.zip depot_tools-preloaded-binaries/ || true
+
+    # Convoluted way to get the git hash, because we don't have a .git directory
+    # Adding extra print statements just in case we need to debug it
+    GIT_HASH=$(grep depot_tools -A 1 "$GECKO_PATH/taskcluster/ci/fetch/updatebot.yml" | tee /dev/tty | grep revision | tee /dev/tty | awk -F': *' '{print $2}' | tee /dev/tty)
+    DATE=$(date -I)
+    mv depot_tools-preloaded-binaries.zip "depot_tools-preloaded-binaries-$GIT_HASH-$DATE.zip"
+
+    # Put the artifact into the directory we will look for it
+    mkdir -p "$GECKO_PATH/obj-build/depot_tools" || true
+    mv "depot_tools-preloaded-binaries-$GIT_HASH-$DATE.zip" "$GECKO_PATH/obj-build/depot_tools"
+fi
 
 #########################################################
 echo "Killing SQL Proxy"

@@ -1,3 +1,5 @@
+mod macros;
+
 use core::{
     cmp::Ordering::*,
     convert::{TryFrom, TryInto},
@@ -5,16 +7,6 @@ use core::{
 };
 use num_traits::{Signed, ToPrimitive};
 use rust_decimal::{Decimal, Error, RoundingStrategy};
-
-macro_rules! either {
-    ($result:expr, $legacy_result:expr) => {
-        if cfg!(feature = "legacy-ops") {
-            $legacy_result
-        } else {
-            $result
-        }
-    };
-}
 
 #[test]
 #[cfg(feature = "c-repr")]
@@ -140,6 +132,41 @@ fn it_can_serialize_deserialize() {
     }
 }
 
+#[test]
+fn it_can_deserialize_unbounded_values() {
+    // Mantissa for these: 19393111376951473493673267553
+    let tests = [
+        (
+            [1u8, 0, 28, 206, 97, 81, 216, 182, 20, 30, 165, 78, 18, 155, 169, 62],
+            // Scale 28: -1.9393111376951473493673267553
+            "-1.9393111376951473493673267553",
+        ),
+        (
+            [1u8, 0, 29, 206, 97, 81, 216, 182, 20, 30, 165, 78, 18, 155, 169, 62],
+            // Scale 29: -0.19393111376951473493673267553
+            "-0.1939311137695147349367326755",
+        ),
+        (
+            [1u8, 0, 30, 206, 97, 81, 216, 182, 20, 30, 165, 78, 18, 155, 169, 62],
+            // Scale 30: -0.019393111376951473493673267553
+            "-0.0193931113769514734936732676",
+        ),
+        (
+            [1u8, 0, 31, 206, 97, 81, 216, 182, 20, 30, 165, 78, 18, 155, 169, 62],
+            // Scale 31: -0.0019393111376951473493673267553
+            "-0.0019393111376951473493673268",
+        ),
+    ];
+    for &(bytes, expected) in &tests {
+        let dec = Decimal::deserialize(bytes);
+        let string = format!("{:.9999}", dec);
+        let dec2 = Decimal::from_str(&string).unwrap();
+        assert_eq!(dec, dec2);
+        assert_eq!(dec.to_string(), expected, "dec.to_string()");
+        assert_eq!(dec2.to_string(), expected, "dec2.to_string()");
+    }
+}
+
 // Formatting
 
 #[test]
@@ -192,6 +219,7 @@ fn it_formats_small_neg() {
     assert_eq!(format!("{:010.2}", a), "-000000.22");
     assert_eq!(format!("{:0<10.2}", a), "-0.2200000");
 }
+
 #[test]
 fn it_formats_zero() {
     let a = Decimal::from_str("0").unwrap();
@@ -2355,6 +2383,97 @@ fn it_can_round_up() {
 }
 
 #[test]
+fn it_can_round_significant_figures() {
+    let tests = &[
+        ("305.459", 0u32, Some("0")),
+        ("305.459", 1, Some("300")),
+        ("305.459", 2, Some("310")),
+        ("305.459", 3, Some("305")),
+        ("305.459", 4, Some("305.5")),
+        ("305.459", 5, Some("305.46")),
+        ("305.459", 6, Some("305.459")),
+        ("305.459", 7, Some("305.4590")),
+        ("305.459", 10, Some("305.4590000")),
+        ("-305.459", 3, Some("-305")),
+        ("-305.459", 2, Some("-310")), // We ignore the negative
+        ("-305.459", 5, Some("-305.46")),
+        (
+            "79228162514264337593543950335",
+            29,
+            Some("79228162514264337593543950335"),
+        ),
+        ("79228162514264337593543950335", 1, None),
+        (
+            "79228162514264337593543950335",
+            2,
+            Some("79000000000000000000000000000"),
+        ),
+        (
+            "79228162514264337593543950335",
+            30,
+            Some("79228162514264337593543950335"),
+        ),
+        (
+            "79228162514264337593543950335",
+            u32::MAX,
+            Some("79228162514264337593543950335"),
+        ),
+    ];
+    for &(input, sf, expected) in tests {
+        let input = Decimal::from_str(input).unwrap();
+        let result = input.round_sf(sf);
+        if let Some(expected) = expected {
+            assert!(result.is_some(), "Expected result for {}.round_sf({})", input, sf);
+            assert_eq!(expected, result.unwrap().to_string(), "{}.round_sf({})", input, sf);
+        } else {
+            assert!(result.is_none(), "Unexpected result for {}.round_sf({})", input, sf);
+        }
+    }
+}
+
+#[test]
+fn it_can_round_significant_figures_with_strategy() {
+    let tests = &[
+        ("12301", 3u32, RoundingStrategy::AwayFromZero, Some("12400")),
+        ("123.01", 3u32, RoundingStrategy::AwayFromZero, Some("124")),
+        ("1.2301", 3u32, RoundingStrategy::AwayFromZero, Some("1.24")),
+        ("0.12301", 3u32, RoundingStrategy::AwayFromZero, Some("0.124")),
+        ("0.012301", 3u32, RoundingStrategy::AwayFromZero, Some("0.0124")),
+        ("0.0000012301", 3u32, RoundingStrategy::AwayFromZero, Some("0.00000124")),
+        ("1.012301", 3u32, RoundingStrategy::AwayFromZero, Some("1.02")),
+    ];
+    for &(input, sf, strategy, expected) in tests {
+        let input = Decimal::from_str(input).unwrap();
+        let result = input.round_sf_with_strategy(sf, strategy);
+        if let Some(expected) = expected {
+            assert!(
+                result.is_some(),
+                "Expected result for {}.round_sf_with_strategy({}, {:?})",
+                input,
+                sf,
+                strategy
+            );
+            assert_eq!(
+                expected,
+                result.unwrap().to_string(),
+                "{}.round_sf_with_strategy({}, {:?})",
+                input,
+                sf,
+                strategy
+            );
+        } else {
+            assert!(
+                result.is_none(),
+                "Unexpected result for {}.round_sf_with_strategy({}, {:?})",
+                input,
+                sf,
+                strategy
+            );
+        }
+    }
+}
+
+#[test]
 fn it_can_trunc() {
     let tests = &[("1.00000000000000000000", "1"), ("1.000000000000000000000001", "1")];
 
@@ -2451,11 +2570,15 @@ fn it_converts_to_f64() {
             "2.1234567890123456789012345678",
             Some(2.1234567890123456789012345678_f64),
         ),
+        ("21234567890123456789012345678", Some(21234567890123458000000000000_f64)),
         (
-            "21234567890123456789012345678",
-            None, // Cannot be represented in an f64
+            "-21234567890123456789012345678",
+            Some(-21234567890123458000000000000_f64),
         ),
         ("1.59283191", Some(1.59283191_f64)),
+        ("2.2238", Some(2.2238_f64)),
+        ("2.2238123", Some(2.2238123_f64)),
+        ("22238", Some(22238_f64)),
     ];
     for &(value, expected) in tests {
         let value = Decimal::from_str(value).unwrap().to_f64();
@@ -2478,9 +2601,10 @@ fn it_converts_to_f64_try() {
             "2.1234567890123456789012345678",
             Some(2.1234567890123456789012345678_f64),
         ),
+        ("21234567890123456789012345678", Some(21234567890123458000000000000_f64)),
         (
-            "21234567890123456789012345678",
-            None, // Cannot be represented in an f64
+            "-21234567890123456789012345678",
+            Some(-21234567890123458000000000000_f64),
         ),
         ("1.59283191", Some(1.59283191_f64)),
     ];
@@ -2590,129 +2714,137 @@ fn it_converts_from_u128() {
 
 #[test]
 fn it_converts_from_f32() {
-    fn from_f32(f: f32) -> Option<Decimal> {
-        num_traits::FromPrimitive::from_f32(f)
+    use num_traits::FromPrimitive;
+
+    let tests = [
+        (0.1_f32, "0.1"),
+        (1_f32, "1"),
+        (0_f32, "0"),
+        (0.12345_f32, "0.12345"),
+        (0.1234567800123456789012345678_f32, "0.12345678"),
+        (0.12345678901234567890123456789_f32, "0.12345679"),
+        (0.00000000000000000000000000001_f32, "0"),
+        (5.1_f32, "5.1"),
+    ];
+
+    for &(input, expected) in &tests {
+        assert_eq!(
+            expected,
+            Decimal::from_f32(input).unwrap().to_string(),
+            "from_f32({})",
+            input
+        );
+        assert_eq!(
+            expected,
+            Decimal::try_from(input).unwrap().to_string(),
+            "try_from({})",
+            input
+        );
     }
-
-    assert_eq!("1", from_f32(1f32).unwrap().to_string());
-    assert_eq!("0", from_f32(0f32).unwrap().to_string());
-    assert_eq!("0.12345", from_f32(0.12345f32).unwrap().to_string());
-    assert_eq!(
-        "0.12345678",
-        from_f32(0.1234567800123456789012345678f32).unwrap().to_string()
-    );
-    assert_eq!(
-        "0.12345679",
-        from_f32(0.12345678901234567890123456789f32).unwrap().to_string()
-    );
-    assert_eq!("0", from_f32(0.00000000000000000000000000001f32).unwrap().to_string());
-
-    assert!(from_f32(f32::NAN).is_none());
-    assert!(from_f32(f32::INFINITY).is_none());
-
-    // These both overflow
-    assert!(from_f32(f32::MAX).is_none());
-    assert!(from_f32(f32::MIN).is_none());
 }
 
 #[test]
-fn it_converts_from_f32_try() {
-    assert_eq!("1", Decimal::try_from(1f32).unwrap().to_string());
-    assert_eq!("0", Decimal::try_from(0f32).unwrap().to_string());
-    assert_eq!("0.12345", Decimal::try_from(0.12345f32).unwrap().to_string());
-    assert_eq!(
-        "0.12345678",
-        Decimal::try_from(0.1234567800123456789012345678f32)
-            .unwrap()
-            .to_string()
-    );
-    assert_eq!(
-        "0.12345679",
-        Decimal::try_from(0.12345678901234567890123456789f32)
-            .unwrap()
-            .to_string()
-    );
-    assert_eq!(
-        "0",
-        Decimal::try_from(0.00000000000000000000000000001f32)
-            .unwrap()
-            .to_string()
-    );
+fn it_converts_from_f32_limits() {
+    use num_traits::FromPrimitive;
 
-    assert!(Decimal::try_from(f32::NAN).is_err());
-    assert!(Decimal::try_from(f32::INFINITY).is_err());
+    assert!(Decimal::from_f32(f32::NAN).is_none(), "from_f32(f32::NAN)");
+    assert!(Decimal::from_f32(f32::INFINITY).is_none(), "from_f32(f32::INFINITY)");
+    assert!(Decimal::try_from(f32::NAN).is_err(), "try_from(f32::NAN)");
+    assert!(Decimal::try_from(f32::INFINITY).is_err(), "try_from(f32::INFINITY)");
 
-    // These both overflow
-    assert!(Decimal::try_from(f32::MAX).is_err());
-    assert!(Decimal::try_from(f32::MIN).is_err());
+    // These overflow
+    assert!(Decimal::from_f32(f32::MAX).is_none(), "from_f32(f32::MAX)");
+    assert!(Decimal::from_f32(f32::MIN).is_none(), "from_f32(f32::MIN)");
+    assert!(Decimal::try_from(f32::MAX).is_err(), "try_from(f32::MAX)");
+    assert!(Decimal::try_from(f32::MIN).is_err(), "try_from(f32::MIN)");
+}
+
+#[test]
+fn it_converts_from_f32_retaining_bits() {
+    let tests = [
+        (0.1_f32, "0.100000001490116119384765625"),
+        (2_f32, "2"),
+        (4.000_f32, "4"),
+        (5.1_f32, "5.099999904632568359375"),
+    ];
+
+    for &(input, expected) in &tests {
+        assert_eq!(
+            expected,
+            Decimal::from_f32_retain(input).unwrap().to_string(),
+            "from_f32_retain({})",
+            input
+        );
+    }
 }
 
 #[test]
 fn it_converts_from_f64() {
-    fn from_f64(f: f64) -> Option<Decimal> {
-        num_traits::FromPrimitive::from_f64(f)
+    use num_traits::FromPrimitive;
+
+    let tests = [
+        (0.1_f64, "0.1"),
+        (1_f64, "1"),
+        (0_f64, "0"),
+        (0.12345_f64, "0.12345"),
+        (0.1234567890123456089012345678_f64, "0.1234567890123456"),
+        (0.12345678901234567890123456789_f64, "0.1234567890123457"),
+        (0.00000000000000000000000000001_f64, "0"),
+        (0.6927_f64, "0.6927"),
+        (0.00006927_f64, "0.00006927"),
+        (0.000000006927_f64, "0.000000006927"),
+        (5.1_f64, "5.1"),
+    ];
+
+    for &(input, expected) in &tests {
+        assert_eq!(
+            expected,
+            Decimal::from_f64(input).unwrap().to_string(),
+            "from_f64({})",
+            input
+        );
+        assert_eq!(
+            expected,
+            Decimal::try_from(input).unwrap().to_string(),
+            "try_from({})",
+            input
+        );
     }
-
-    assert_eq!("1", from_f64(1f64).unwrap().to_string());
-    assert_eq!("0", from_f64(0f64).unwrap().to_string());
-    assert_eq!("0.12345", from_f64(0.12345f64).unwrap().to_string());
-    assert_eq!(
-        "0.1234567890123456",
-        from_f64(0.1234567890123456089012345678f64).unwrap().to_string()
-    );
-    assert_eq!(
-        "0.1234567890123457",
-        from_f64(0.12345678901234567890123456789f64).unwrap().to_string()
-    );
-    assert_eq!("0", from_f64(0.00000000000000000000000000001f64).unwrap().to_string());
-    assert_eq!("0.6927", from_f64(0.6927f64).unwrap().to_string());
-    assert_eq!("0.00006927", from_f64(0.00006927f64).unwrap().to_string());
-    assert_eq!("0.000000006927", from_f64(0.000000006927f64).unwrap().to_string());
-
-    assert!(from_f64(f64::NAN).is_none());
-    assert!(from_f64(f64::INFINITY).is_none());
-
-    // These both overflow
-    assert!(from_f64(f64::MAX).is_none());
-    assert!(from_f64(f64::MIN).is_none());
 }
 
 #[test]
-fn it_converts_from_f64_try() {
-    assert_eq!("1", Decimal::try_from(1f64).unwrap().to_string());
-    assert_eq!("0", Decimal::try_from(0f64).unwrap().to_string());
-    assert_eq!("0.12345", Decimal::try_from(0.12345f64).unwrap().to_string());
-    assert_eq!(
-        "0.1234567890123456",
-        Decimal::try_from(0.1234567890123456089012345678f64)
-            .unwrap()
-            .to_string()
-    );
-    assert_eq!(
-        "0.1234567890123457",
-        Decimal::try_from(0.12345678901234567890123456789f64)
-            .unwrap()
-            .to_string()
-    );
-    assert_eq!(
-        "0",
-        Decimal::try_from(0.00000000000000000000000000001f64)
-            .unwrap()
-            .to_string()
-    );
-    assert_eq!("0.6927", Decimal::try_from(0.6927f64).unwrap().to_string());
-    assert_eq!("0.00006927", Decimal::try_from(0.00006927f64).unwrap().to_string());
-    assert_eq!(
-        "0.000000006927",
-        Decimal::try_from(0.000000006927f64).unwrap().to_string()
-    );
+fn it_converts_from_f64_limits() {
+    use num_traits::FromPrimitive;
 
-    assert!(Decimal::try_from(f64::NAN).is_err());
-    assert!(Decimal::try_from(f64::INFINITY).is_err());
+    assert!(Decimal::from_f64(f64::NAN).is_none(), "from_f64(f64::NAN)");
+    assert!(Decimal::from_f64(f64::INFINITY).is_none(), "from_f64(f64::INFINITY)");
+    assert!(Decimal::try_from(f64::NAN).is_err(), "try_from(f64::NAN)");
+    assert!(Decimal::try_from(f64::INFINITY).is_err(), "try_from(f64::INFINITY)");
 
-    // These both overflow
-    assert!(Decimal::try_from(f64::MAX).is_err());
-    assert!(Decimal::try_from(f64::MIN).is_err());
+    // These overflow
+    assert!(Decimal::from_f64(f64::MAX).is_none(), "from_f64(f64::MAX)");
+    assert!(Decimal::from_f64(f64::MIN).is_none(), "from_f64(f64::MIN)");
+    assert!(Decimal::try_from(f64::MAX).is_err(), "try_from(f64::MIN)");
+    assert!(Decimal::try_from(f64::MIN).is_err(), "try_from(f64::MAX)");
+}
+
+#[test]
+fn it_converts_from_f64_retaining_bits() {
+    let tests = [
+        (0.1_f64, "0.1000000000000000055511151231"),
+        (2_f64, "2"),
+        (4.000_f64, "4"),
+        (5.1_f64, "5.0999999999999996447286321175"),
+    ];
+
+    for &(input, expected) in &tests {
+        assert_eq!(
+            expected,
+            Decimal::from_f64_retain(input).unwrap().to_string(),
+            "from_f64_retain({})",
+            input
+        );
+    }
 }
 
 #[test]
@@ -3166,6 +3298,17 @@ fn it_can_rescale() {
     }
 }
 
+#[test]
+fn test_constants() {
+    assert_eq!("0", Decimal::ZERO.to_string());
+    assert_eq!("1", Decimal::ONE.to_string());
+    assert_eq!("-1", Decimal::NEGATIVE_ONE.to_string());
+    assert_eq!("10", Decimal::TEN.to_string());
+    assert_eq!("100", Decimal::ONE_HUNDRED.to_string());
+    assert_eq!("1000", Decimal::ONE_THOUSAND.to_string());
+    assert_eq!("2", Decimal::TWO.to_string());
+}
+
 // Mathematical features
 #[cfg(feature = "maths")]
 mod maths {
@@ -3173,6 +3316,15 @@ mod maths {
     use rust_decimal::MathematicalOps;
 
     use num_traits::One;
+
+    #[test]
+    fn test_constants() {
+        assert_eq!("3.1415926535897932384626433833", Decimal::PI.to_string());
+        assert_eq!("6.2831853071795864769252867666", Decimal::TWO_PI.to_string());
+        assert_eq!("1.5707963267948966192313216916", Decimal::HALF_PI.to_string());
+        assert_eq!("2.7182818284590452353602874714", Decimal::E.to_string());
+        assert_eq!("0.3678794411714423215955237702", Decimal::E_INVERSE.to_string());
+    }
 
     #[test]
     fn test_powu() {
@@ -3288,7 +3440,7 @@ mod maths {
             (
                 "0.5",
                 "0.25",
-                either!("0.8410938963634267005719877122", "0.8410938963634267005719877121"),
+                either!("0.8408964159265360661551317741", "0.8408964159265360661551317742"),
             ),
             // ~= 0.999999999999999999999999999790814
             (
@@ -3300,26 +3452,25 @@ mod maths {
             (
                 "1234.5678",
                 "0.9012",
-                either!("611.04510400020872819829427791", "611.04510400020872819829429407"),
+                either!("611.04510415448740041442807964", "611.04510415448740041442807964"),
             ),
             (
                 "-2",
                 "0.5",
-                either!("-1.4142700792209353663825932515", "-1.4142700792209353663825932497"),
+                either!("-1.4142135570048917090885260834", "-1.4142135570048917090885260835"),
             ),
             // ~= -1.1193003023312942
             (
                 "-2.5",
                 "0.123",
-                either!("-1.1193076423225947707712184105", "-1.1193076423225947707712184107"),
+                either!("-1.1193002994383985239135362086", "-1.1193002994383985239135362086"),
             ),
-            // TODO: Overflows when calculating `ln`
             // ~= 0.0003493091
-            // (
-            //     "0.0000000000000000000000000001",
-            //     "0.1234567890123456789012345678",
-            //     "0.0003493091",
-            // ),
+            (
+                "0.0000000000000000000000000001",
+                "0.1234567890123456789012345678",
+                either!("0.0003533642875741443321850682", "0.0003305188683169079961720764"),
+            ),
         ];
         for &(x, y, expected) in test_cases {
             let x = Decimal::from_str(x).unwrap();
@@ -3535,37 +3686,112 @@ mod maths {
 
     #[test]
     fn test_ln() {
-        let test_cases = &[
-            (Decimal::from_str("1").unwrap(), Decimal::from_str("0").unwrap()),
-            (Decimal::from_str("-2.0").unwrap(), Decimal::from_str("0").unwrap()),
+        let test_cases = [
+            ("1", "0"),
+            // Wolfram Alpha gives -1.46968
             (
-                Decimal::from_str("0.23").unwrap(),
-                // Wolfram Alpha gives -1.46968
-                Decimal::from_str("-1.4661188292208822723626471532").unwrap(),
+                "0.23",
+                either!("-1.4696759700589416772292300779", "-1.4696759700589416772292300777"),
             ),
+            // Wolfram Alpha gives 0.693147180559945309417232121458176568075500134360255254120
+            ("2", "0.6931471805599453094172321218"),
+            // Wolfram Alpha gives 3.218875824868200749201518666452375279051202708537035443825
             (
-                Decimal::from_str("2").unwrap(),
-                // Wolfram Alpha gives 0.693147180559945309417232121458176568075500134360255254120
-                Decimal::from_str(either!(
-                    "0.6932271134541528994884316448",
-                    "0.6932271134541528994884316422"
-                ))
-                .unwrap(),
+                "25",
+                either!("3.2188758248682007492015186670", "3.2188758248682007492015186674"),
             ),
+            // Wolfram Alpha gives 0.210721022
             (
-                Decimal::from_str("25").unwrap(),
-                // Wolfram Alpha gives 3.218875824868200749201518666452375279051202708537035443825
-                Decimal::from_str(either!(
-                    "3.2188760588726737559923925704",
-                    "3.218876058872673755992392564"
-                ))
-                .unwrap(),
+                "1.234567890",
+                either!("0.2107210222156525610500017104", "0.2107210222156525610500017106"),
             ),
         ];
 
-        for case in test_cases {
-            assert_eq!(case.1, case.0.ln());
+        for (input, expected) in test_cases {
+            let input = Decimal::from_str(input).unwrap();
+            let expected = Decimal::from_str(expected).unwrap();
+            assert_eq!(expected, input.ln(), "Failed to calculate ln({})", input);
         }
+    }
+
+    #[test]
+    #[cfg(feature = "maths-nopanic")]
+    fn test_invalid_ln_nopanic() {
+        let test_cases = ["0", "-2.0"];
+
+        for input in test_cases {
+            let input = Decimal::from_str(input).unwrap();
+            assert_eq!("0", input.ln().to_string(), "Failed to calculate ln({})", input);
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "Unable to calculate ln for zero")]
+    #[cfg(not(feature = "maths-nopanic"))]
+    fn test_invalid_ln_zero_panic() {
+        let _ = Decimal::ZERO.ln();
+    }
+
+    #[test]
+    #[should_panic(expected = "Unable to calculate ln for negative numbers")]
+    #[cfg(not(feature = "maths-nopanic"))]
+    fn test_invalid_ln_negative_panic() {
+        let _ = Decimal::NEGATIVE_ONE.ln();
+    }
+
+    #[test]
+    fn test_log10() {
+        let test_cases = [
+            ("1", "0"),
+            // Wolfram Alpha: 0.3010299956639811952137388947
+            (
+                "2",
+                either!("0.3010299956639811952137388949", "0.3010299956639811952137388948"),
+            ),
+            // Wolfram Alpha: 0.0915149772
+            (
+                "1.234567890",
+                either!("0.0915149771692704475183336230", "0.0915149771692704475183336231"),
+            ),
+            ("10", "1"),
+            ("100", "2"),
+            ("1000", "3"),
+            ("1000.00000000", "3"),
+            ("1000.000000000000000000000", "3"),
+            ("10.000000000000000000000000000", "1"),
+            ("100000000000000.0000000000", "14"),
+        ];
+
+        for (input, expected) in test_cases {
+            let input = Decimal::from_str(input).unwrap();
+            let expected = Decimal::from_str(expected).unwrap();
+            assert_eq!(expected, input.log10(), "Failed to calculate log10({})", input);
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "maths-nopanic")]
+    fn test_invalid_log10_nopanic() {
+        let test_cases = ["0", "-2.0"];
+
+        for input in test_cases {
+            let input = Decimal::from_str(input).unwrap();
+            assert_eq!("0", input.log10().to_string(), "Failed to calculate ln({})", input);
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "Unable to calculate log10 for zero")]
+    #[cfg(not(feature = "maths-nopanic"))]
+    fn test_invalid_log10_zero_panic() {
+        let _ = Decimal::ZERO.log10();
+    }
+
+    #[test]
+    #[should_panic(expected = "Unable to calculate log10 for negative numbers")]
+    #[cfg(not(feature = "maths-nopanic"))]
+    fn test_invalid_log10_negative_panic() {
+        let _ = Decimal::NEGATIVE_ONE.log10();
     }
 
     #[test]
@@ -3595,6 +3821,129 @@ mod maths {
         ];
         for case in test_cases {
             assert_eq!(case.1, case.0.erf());
+        }
+    }
+
+    #[test]
+    fn test_checked_sin() {
+        const ACCEPTED_PRECISION: u32 = 10;
+        let test_cases = &[
+            // Sin(0)
+            ("0", Some("0")),
+            // Sin(PI/2)
+            ("1.5707963267948966192313216916", Some("1")),
+            // Sin(PI)
+            ("3.1415926535897932384626433833", Some("0")),
+            // Sin(3PI/2)
+            ("4.7123889803846898576939650749", Some("-1")),
+            // Sin(2PI)
+            ("6.2831853071795864769252867666", Some("0")),
+            // Sin(1) ~= 0.8414709848078965066525023216302989996225630607983710656727517099
+            ("1", Some("0.8414709848078965066525023216")),
+            // Sin(2) ~= 0.9092974268256816953960198659117448427022549714478902683789730115
+            ("2", Some("0.9092974268256816953960198659")),
+            // Sin(4) ~= -0.756802495307928251372639094511829094135912887336472571485416773
+            ("4", Some("-0.7568024953079282513726390945")),
+            // Sin(6) ~= -0.279415498198925872811555446611894759627994864318204318483351369
+            ("6", Some("-0.2794154981989258728115554466")),
+            // WA estimate: -0.893653245236708. Legacy ops is closer to f64 accuracy.
+            (
+                "-79228162514264.337593543950335",
+                Some(either!("-0.893653245236708", "-0.8963358176")),
+            ),
+        ];
+        for (input, result) in test_cases {
+            let radians = Decimal::from_str(input).unwrap();
+            let sin = radians.checked_sin();
+            if let Some(result) = result {
+                assert!(sin.is_some(), "Expected result for sin({})", input);
+                let result = Decimal::from_str(result).unwrap();
+                assert_approx_eq!(sin.unwrap(), result, ACCEPTED_PRECISION, "sin({})", input);
+            } else {
+                assert!(sin.is_none(), "Unexpected result for sin({})", input);
+            }
+        }
+    }
+
+    #[test]
+    fn test_checked_cos() {
+        const ACCEPTED_PRECISION: u32 = 10;
+        let test_cases = &[
+            // Cos(0)
+            ("0", Some("1")),
+            // Cos(PI/2)
+            ("1.5707963267948966192313216916", Some("0")),
+            // Cos(PI)
+            ("3.1415926535897932384626433833", Some("-1")),
+            // Cos(3PI/2)
+            ("4.7123889803846898576939650749", Some("0")),
+            // Cos(2PI)
+            ("6.2831853071795864769252867666", Some("1")),
+            // Cos(1) ~= 0.5403023058681397174009366074429766037323104206179222276700972553
+            ("1", Some("0.5403023058681397174009366074")),
+            // Cos(2) ~= -0.416146836547142386997568229500762189766000771075544890755149973
+            ("2", Some("-0.4161468365471423869975682295")),
+            // Cos(4) ~= -0.653643620863611914639168183097750381424133596646218247007010283
+            ("4", Some("-0.6536436208636119146391681831")),
+            // Cos(6) ~= 0.9601702866503660205456522979229244054519376792110126981292864260
+            ("6", Some("0.9601702866503660205456522979")),
+            // WA estimate: 0.448758150096352. Legacy ops is closer to f64 accuracy.
+            (
+                "-79228162514264.337593543950335",
+                Some(either!("0.448758150096352", "0.443375802326")),
+            ),
+        ];
+        for (input, result) in test_cases {
+            let radians = Decimal::from_str(input).unwrap();
+            let cos = radians.checked_cos();
+            if let Some(result) = result {
+                assert!(cos.is_some(), "Expected result for cos({})", input);
+                let result = Decimal::from_str(result).unwrap();
+                assert_approx_eq!(cos.unwrap(), result, ACCEPTED_PRECISION, "cos({})", input);
+            } else {
+                assert!(cos.is_none(), "Unexpected result for cos({})", input);
+            }
+        }
+    }
+
+    #[test]
+    fn test_checked_tan() {
+        const ACCEPTED_PRECISION: u32 = 8;
+        let test_cases = &[
+            // Tan(0)
+            ("0", Some("0")),
+            // Tan(PI/2)
+            ("1.5707963267948966192313216916", None),
+            // Tan(PI)
+            ("3.1415926535897932384626433833", Some("0")),
+            // Tan(3PI/2)
+            ("4.7123889803846898576939650749", None),
+            // Tan(2PI)
+            ("6.2831853071795864769252867666", Some("0")),
+            // Tan(1) ~= 1.5574077246549022305069748074583601730872507723815200383839466056
+            ("1", Some("1.5574077246549022305069748075")),
+            // Tan(2) ~= -2.185039863261518991643306102313682543432017746227663164562955869
+            ("2", Some("-2.1850398632615189916433061023")),
+            // Tan(4) ~= 1.1578212823495775831373424182673239231197627673671421300848571893
+            ("4", Some("1.1578212823495775831373424183")),
+            // Tan(6) ~= -0.291006191384749157053699588868175542831155570912339131608827193
+            ("6", Some("-0.2910061913847491570536995889")),
+            // WA estimate: -1.99139167733184. Legacy ops is closer to f64 accuracy.
+            (
+                "-79228162514264.337593543950335",
+                Some(either!("-1.99139167733184", "-2.021616454709")),
+            ),
+        ];
+        for (input, result) in test_cases {
+            let radians = Decimal::from_str(input).unwrap();
+            let tan = radians.checked_tan();
+            if let Some(result) = result {
+                assert!(tan.is_some(), "Expected result for tan({})", input);
+                let result = Decimal::from_str(result).unwrap();
+                assert_approx_eq!(tan.unwrap(), result, ACCEPTED_PRECISION, "tan({})", input);
+            } else {
+                assert!(tan.is_none(), "Unexpected result for tan({})", input);
+            }
         }
     }
 }
@@ -3955,6 +4304,29 @@ mod generated {
     gen_test!(test_sub_111_101, "Sub_111_101.csv", checked_sub);
     gen_test!(test_sub_111_110, "Sub_111_110.csv", checked_sub);
     gen_test!(test_sub_111_111, "Sub_111_111.csv", checked_sub);
+}
+
+#[cfg(feature = "rocket-traits")]
+mod rocket {
+    use crate::Decimal;
+    use rocket::form::{Form, FromForm};
+    use std::str::FromStr;
+
+    #[derive(FromForm)]
+    struct Example {
+        foo: Decimal,
+        bar: Decimal,
+    }
+
+    #[test]
+    fn it_can_parse_form() {
+        let parsed: Example = Form::parse("bar=0.12345678901234567890123456789&foo=-123456.78").unwrap();
+        assert_eq!(parsed.foo, Decimal::from_str("-123456.78").unwrap());
+        assert_eq!(
+            parsed.bar,
+            Decimal::from_str("0.12345678901234567890123456789").unwrap()
+        );
+    }
 }
 
 #[cfg(feature = "rust-fuzz")]

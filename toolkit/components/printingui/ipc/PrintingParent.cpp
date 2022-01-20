@@ -13,9 +13,7 @@
 #include "nsIPrintingPromptService.h"
 #include "nsIPrintSettingsService.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIWebProgressListener.h"
 #include "PrintingParent.h"
-#include "PrintProgressDialogParent.h"
 #include "PrintSettingsDialogParent.h"
 #include "mozilla/layout/RemotePrintJobParent.h"
 #include "mozilla/StaticPrefs_print.h"
@@ -26,60 +24,6 @@ using namespace mozilla::layout;
 
 namespace mozilla {
 namespace embedding {
-mozilla::ipc::IPCResult PrintingParent::RecvShowProgress(
-    PBrowserParent* parent, PPrintProgressDialogParent* printProgressDialog,
-    PRemotePrintJobParent* remotePrintJob, const bool& isForPrinting) {
-  bool notifyOnOpen = false;
-
-  nsCOMPtr<nsPIDOMWindowOuter> parentWin = DOMWindowFromBrowserParent(parent);
-  nsCOMPtr<nsIPrintingPromptService> pps(
-      do_GetService("@mozilla.org/embedcomp/printingprompt-service;1"));
-
-  PrintProgressDialogParent* dialogParent =
-      static_cast<PrintProgressDialogParent*>(printProgressDialog);
-  nsCOMPtr<nsIObserver> observer = dialogParent;
-
-  nsCOMPtr<nsIWebProgressListener> printProgressListener;
-  nsCOMPtr<nsIPrintProgressParams> printProgressParams;
-
-  nsresult rv = NS_ERROR_INVALID_ARG;
-  if (parentWin && pps) {
-    rv = pps->ShowPrintProgressDialog(
-        parentWin, nullptr, observer, isForPrinting,
-        getter_AddRefs(printProgressListener),
-        getter_AddRefs(printProgressParams), &notifyOnOpen);
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    if (remotePrintJob) {
-      // If we have a RemotePrintJob use that as a more general forwarder for
-      // print progress listeners.
-      static_cast<RemotePrintJobParent*>(remotePrintJob)
-          ->RegisterListener(printProgressListener);
-    } else {
-      dialogParent->SetWebProgressListener(printProgressListener);
-    }
-
-    dialogParent->SetPrintProgressParams(printProgressParams);
-  }
-
-  // NOTE: If we aren't going to observe an event on our observer, we need to
-  // fake one. This takes the form of sending the SendDialogOpened message. This
-  // is safe because the child process proxy will always return `true` for
-  // notifyOnOpen, as the request will always be async when performed across
-  // process boundaries.
-  //
-  // We can pass nullptr for all of the arguments, as all consumers of this
-  // observer don't care about the subject, topic, or data.
-  //
-  // If notifyOnOpen is true, then the ShowProgress call will handle notifying
-  // our observer for us.
-  if (!notifyOnOpen) {
-    observer->Observe(nullptr, nullptr, nullptr);
-  }
-  return IPC_OK();
-}
-
 nsresult PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
                                          const PrintData& aData,
                                          PrintData* aResult) {
@@ -198,24 +142,6 @@ mozilla::ipc::IPCResult PrintingParent::RecvSavePrintSettings(
       settings, aUsePrinterNamePrefix, aFlags);
 
   return IPC_OK();
-}
-
-PPrintProgressDialogParent* PrintingParent::AllocPPrintProgressDialogParent() {
-  PrintProgressDialogParent* actor = new PrintProgressDialogParent();
-  NS_ADDREF(actor);  // De-ref'd in the __delete__ handler for
-                     // PrintProgressDialogParent.
-  return actor;
-}
-
-bool PrintingParent::DeallocPPrintProgressDialogParent(
-    PPrintProgressDialogParent* doomed) {
-  // We can't just delete the PrintProgressDialogParent since somebody might
-  // still be holding a reference to it as nsIObserver, so just decrement the
-  // refcount instead.
-  PrintProgressDialogParent* actor =
-      static_cast<PrintProgressDialogParent*>(doomed);
-  NS_RELEASE(actor);
-  return true;
 }
 
 PPrintSettingsDialogParent* PrintingParent::AllocPPrintSettingsDialogParent() {

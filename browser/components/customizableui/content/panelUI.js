@@ -463,6 +463,9 @@ const PanelUI = {
       let tempPanel = document.createXULElement("panel");
       tempPanel.setAttribute("type", "arrow");
       tempPanel.setAttribute("id", "customizationui-widget-panel");
+      if (viewNode.hasAttribute("neverhidden")) {
+        tempPanel.setAttribute("neverhidden", "true");
+      }
 
       tempPanel.setAttribute("class", "cui-widget-panel panel-no-padding");
       tempPanel.setAttribute("viewId", aViewId);
@@ -1068,12 +1071,7 @@ const PanelUI = {
   _formatPrintButtonShortcuts() {
     let printButton = this.mainView.querySelector("#appMenu-print-button2");
     if (printButton) {
-      if (
-        !Services.prefs.getBoolPref("print.tab_modal.enabled") &&
-        AppConstants.platform !== "macosx"
-      ) {
-        printButton.removeAttribute("shortcut");
-      } else if (!printButton.hasAttribute("shortcut")) {
+      if (!printButton.hasAttribute("shortcut")) {
         printButton.setAttribute(
           "shortcut",
           ShortcutUtils.prettifyShortcut(

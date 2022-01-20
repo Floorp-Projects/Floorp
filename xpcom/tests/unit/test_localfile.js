@@ -15,6 +15,7 @@ function run_test() {
   test_file_modification_time();
   test_directory_modification_time();
   test_diskSpaceAvailable();
+  test_diskCapacity();
 }
 
 function test_toplevel_parent_is_null() {
@@ -131,6 +132,26 @@ function test_diskSpaceAvailable() {
 
   bytes = file.diskSpaceAvailable;
   Assert.ok(bytes > 0);
+
+  file.remove(true);
+}
+
+function test_diskCapacity() {
+  let file = do_get_profile();
+  file.QueryInterface(Ci.nsIFile);
+
+  const startBytes = file.diskCapacity;
+  Assert.ok(!!startBytes); // Not 0, undefined etc.
+
+  file.append("testfile");
+  if (file.exists()) {
+    file.remove(true);
+  }
+  file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o644);
+
+  const endBytes = file.diskCapacity;
+  Assert.ok(!!endBytes); // Not 0, undefined etc.
+  Assert.ok(startBytes === endBytes);
 
   file.remove(true);
 }

@@ -23,6 +23,8 @@ one-ping-only:
   notification_emails:
     - chutten@mozilla.com
     - glean-team@mozilla.com
+  no_lint:
+    - REDUNDANT_PING
 
 test-ping:
   description: |
@@ -36,3 +38,5 @@ test-ping:
   notification_emails:
     - chutten@mozilla.com
     - glean-team@mozilla.com
+  no_lint:
+    - REDUNDANT_PING

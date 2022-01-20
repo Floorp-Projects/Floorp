@@ -3,6 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+loadScript("dom/quota/test/common/file.js");
+
 function getOriginDir(persistence, origin) {
   return getRelativeFile(`storage/${persistence}/${origin}`);
 }
@@ -24,4 +26,22 @@ function makeRepositoryUnusable(persistence) {
   // file).
   const metadataFile = getMetadataFile(persistence, "https+++bad-example.com");
   metadataFile.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+}
+
+async function fillOrigin(principal, size) {
+  let database = getSimpleDatabase(principal);
+
+  let request = database.open("data");
+  await requestFinished(request);
+
+  try {
+    request = database.write(getBuffer(size));
+    await requestFinished(request);
+    ok(true, "Should not have thrown");
+  } catch (ex) {
+    ok(false, "Should not have thrown");
+  }
+
+  request = database.close();
+  await requestFinished(request);
 }

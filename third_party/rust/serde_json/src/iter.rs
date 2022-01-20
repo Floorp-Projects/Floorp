@@ -12,7 +12,7 @@ pub struct LineColIterator<I> {
     /// The column is 0 immediately after a newline character has been read.
     col: usize,
 
-    /// Byte offset of the start of the current line. This is the sum of lenghts
+    /// Byte offset of the start of the current line. This is the sum of lengths
     /// of all previous lines. Keeping track of things this way allows efficient
     /// computation of the current line, column, and byte offset while only
     /// updating one of the counters in `next()` in the common case.

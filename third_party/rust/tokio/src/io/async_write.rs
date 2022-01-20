@@ -51,7 +51,7 @@ pub trait AsyncWrite {
     /// If the object is not ready for writing, the method returns
     /// `Poll::Pending` and arranges for the current task (via
     /// `cx.waker()`) to receive a notification when the object becomes
-    /// readable or is closed.
+    /// writable or is closed.
     fn poll_write(
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,
@@ -153,9 +153,11 @@ pub trait AsyncWrite {
 
 macro_rules! deref_async_write {
     () => {
-        fn poll_write(mut self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8])
-            -> Poll<io::Result<usize>>
-        {
+        fn poll_write(
+            mut self: Pin<&mut Self>,
+            cx: &mut Context<'_>,
+            buf: &[u8],
+        ) -> Poll<io::Result<usize>> {
             Pin::new(&mut **self).poll_write(cx, buf)
         }
 
@@ -166,7 +168,7 @@ macro_rules! deref_async_write {
         fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
             Pin::new(&mut **self).poll_shutdown(cx)
         }
-    }
+    };
 }
 
 impl<T: ?Sized + AsyncWrite + Unpin> AsyncWrite for Box<T> {

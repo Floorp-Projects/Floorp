@@ -77,5 +77,31 @@ async function runTests(doc) {
 
   await hideTooltip(tooltip);
 
+  info(
+    "Check that refreshing the tooltip when it overflows does keep scroll position"
+  );
+  // Set the tooltip panel to overflow. Some consumers of the HTMLTooltip are doing that
+  // via CSS (e.g. the iframe dropdown, the context selector, …).
+  tooltip.panel.style.overflowY = "auto";
+  tooltipContent.style.cssText =
+    "width: auto; height: 3000px; background: tomato;";
+  await showTooltip(tooltip, doc.getElementById("box1"));
+
+  ok(
+    tooltip.panel.scrollHeight > tooltip.panel.clientHeight,
+    "Tooltip overflows"
+  );
+
+  const scrollPosition = 500;
+  tooltip.panel.scrollTop = scrollPosition;
+
+  await showTooltip(tooltip, doc.getElementById("box1"));
+  is(
+    tooltip.panel.scrollTop,
+    scrollPosition,
+    "scroll position was kept during the update"
+  );
+  await hideTooltip(tooltip);
+
   tooltip.destroy();
 }

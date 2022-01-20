@@ -169,14 +169,35 @@ imply_option("--enable-profiling", dmd)
 imply_option("--enable-jemalloc", dmd, when=compile_environment)
 imply_option("--enable-replace-malloc", dmd, when=compile_environment)
 
+# midir-based Web MIDI support
+# ==============================================================
+@depends(target)
+def midir_linux_support(target):
+    return target.kernel == "Linux" and target.os != "Android"
+
+
+@depends(target, midir_linux_support)
+def midir_support(target, midir_linux_support):
+    if target.os in ("WINNT", "OSX") or midir_linux_support:
+        return True
+
+
+set_config("MOZ_WEBMIDI_MIDIR_IMPL", midir_support)
+
 # ALSA cubeb backend
 # ==============================================================
-system_lib_option("--enable-alsa", env="MOZ_ALSA", help="Enable ALSA audio backend.")
+option("--enable-alsa", env="MOZ_ALSA", help="Enable ALSA audio backend.")
 
-alsa = pkg_check_modules("MOZ_ALSA", "alsa", when="--enable-alsa")
 
-set_config("MOZ_ALSA", depends_if(alsa)(lambda _: True))
-set_define("MOZ_ALSA", depends_if(alsa)(lambda _: True))
+@depends("--enable-alsa", midir_linux_support)
+def enable_alsa_or_midir_linux_support(alsa_enabled, midir_linux_support):
+    return alsa_enabled or midir_linux_support
+
+
+pkg_check_modules("MOZ_ALSA", "alsa", when=enable_alsa_or_midir_linux_support)
+
+set_config("MOZ_ALSA", True, when="--enable-alsa")
+set_define("MOZ_ALSA", True, when="--enable-alsa")
 
 # JACK cubeb backend
 # ==============================================================
@@ -230,7 +251,7 @@ include("../build/moz.configure/node.configure")
 option("--with-l10n-base", nargs=1, env="L10NBASEDIR", help="Path to l10n repositories")
 
 
-@depends("--with-l10n-base", "MOZ_AUTOMATION", check_build_environment)
+@depends("--with-l10n-base", "MOZ_AUTOMATION", build_environment)
 @imports(_from="os.path", _import="isdir")
 @imports(_from="os.path", _import="expanduser")
 @imports(_from="os", _import="environ")
@@ -282,9 +303,10 @@ option(
 )
 
 
-@depends_if("--enable-default-toolkit")
+@depends("--enable-default-toolkit")
 def full_toolkit(value):
-    return value[0]
+    if value:
+        return value[0]
 
 
 @depends(full_toolkit)
@@ -439,7 +461,7 @@ def check_for_freetype2(fc_freetype):
 
 # Check for freetype2. Flags are combined with fontconfig flags.
 freetype2_info = pkg_check_modules(
-    "_FT2", "freetype2 >= 6.1.0", when=check_for_freetype2
+    "_FT2", "freetype2 >= 9.10.3", when=check_for_freetype2
 )
 
 
@@ -455,9 +477,6 @@ def freetype2_combined_info(fontconfig_info, freetype2_info):
     )
 
 
-add_old_configure_assignment(
-    "_HAVE_FREETYPE2", depends_if(freetype2_info)(lambda _: True)
-)
 set_define("MOZ_HAVE_FREETYPE2", depends_if(freetype2_info)(lambda _: True))
 
 # Apple platform decoder support
@@ -470,7 +489,6 @@ def applemedia(toolkit):
 
 set_config("MOZ_APPLEMEDIA", applemedia)
 set_define("MOZ_APPLEMEDIA", applemedia)
-add_old_configure_assignment("MOZ_APPLEMEDIA", applemedia)
 
 # Windows Media Foundation support
 # ==============================================================
@@ -960,14 +978,13 @@ def tree_freetype(target, skia_pdf):
 
 set_define("MOZ_TREE_FREETYPE", tree_freetype)
 set_config("MOZ_TREE_FREETYPE", tree_freetype)
-add_old_configure_assignment("MOZ_TREE_FREETYPE", tree_freetype)
 
 set_define("HAVE_FT_BITMAP_SIZE_Y_PPEM", tree_freetype)
 set_define("HAVE_FT_GLYPHSLOT_EMBOLDEN", tree_freetype)
 set_define("HAVE_FT_LOAD_SFNT_TABLE", tree_freetype)
 
 
-@depends(freetype2_combined_info, tree_freetype, check_build_environment)
+@depends(freetype2_combined_info, tree_freetype, build_environment)
 def ft2_info(freetype2_combined_info, tree_freetype, build_env):
     if tree_freetype:
         return namespace(
@@ -978,8 +995,18 @@ def ft2_info(freetype2_combined_info, tree_freetype, build_env):
 
 
 set_config("FT2_LIBS", ft2_info.libs)
-add_old_configure_assignment("FT2_LIBS", ft2_info.libs)
-add_old_configure_assignment("FT2_CFLAGS", ft2_info.cflags)
+
+
+@depends(target, tree_freetype, freetype2_info)
+def enable_cairo_ft(target, tree_freetype, freetype2_info):
+    # Avoid defining MOZ_ENABLE_CAIRO_FT on Windows platforms because
+    # "cairo-ft-font.c" includes <dlfcn.h>, which only exists on posix platforms
+    return freetype2_info or (tree_freetype and target.os != "WINNT")
+
+
+set_config("MOZ_ENABLE_CAIRO_FT", True, when=enable_cairo_ft)
+set_config("CAIRO_FT_CFLAGS", ft2_info.cflags, when=enable_cairo_ft)
+
 
 # WebDriver (HTTP / BiDi)
 # ==============================================================
@@ -1229,7 +1256,7 @@ with only_when("--enable-compile-environment"):
         return (
             target.kernel == "Linux"
             and host.kernel == "Linux"
-            and target.cpu in ("arm", "x86", "x86_64")
+            and target.cpu in ("arm", "aarch64", "x86", "x86_64")
         )
 
     @depends("--enable-release", enable_linker)
@@ -1249,7 +1276,7 @@ with only_when("--enable-compile-environment"):
         set_config("USE_ELF_HACK", depends_if("--enable-elf-hack")(lambda _: True))
 
 
-@depends(check_build_environment)
+@depends(build_environment)
 def idl_roots(build_env):
     return namespace(
         ipdl_root=os.path.join(build_env.topobjdir, "ipc", "ipdl"),
@@ -1407,7 +1434,15 @@ def accessibility(value, check_for_midl, midl, c_compiler):
 
 set_config("ACCESSIBILITY", accessibility)
 set_define("ACCESSIBILITY", accessibility)
-add_old_configure_assignment("ACCESSIBILITY", accessibility)
+
+
+@depends(moz_debug, developer_options)
+def a11y_log(debug, developer_options):
+    return debug or developer_options
+
+
+set_config("A11Y_LOG", True, when=a11y_log)
+set_define("A11Y_LOG", True, when=a11y_log)
 
 
 # Addon signing
@@ -1811,14 +1846,36 @@ with only_when(compile_environment):
             return ("-march=armv8-a",)
 
     @depends("--with-system-jpeg", target)
-    def in_tree_jpeg(system_jpeg, target):
+    def in_tree_jpeg_mips64(system_jpeg, target):
         if system_jpeg:
             return
 
-        if target.cpu == "arm":
-            return ("-march=armv7-a", "-mfpu=neon")
-        elif target.cpu == "aarch64":
-            return ("-march=armv8-a",)
+        if target.cpu == "mips64":
+            return ("-Wa,-mloongson-mmi", "-mloongson-ext")
+
+    # Compiler check from https://github.com/libjpeg-turbo/libjpeg-turbo/blob/57ba02a408a9a55ccff25aae8b164632a3a4f177/simd/CMakeLists.txt#L419
+    jpeg_mips64_mmi = c_compiler.try_compile(
+        body='int c = 0, a = 0, b = 0; asm("paddb %0, %1, %2" : "=f" (c) : "f" (a), "f" (b));',
+        check_msg="for loongson mmi support",
+        flags=in_tree_jpeg_mips64,
+        when=in_tree_jpeg_mips64,
+    )
+
+    @depends(
+        "--with-system-jpeg",
+        target,
+        in_tree_jpeg_arm,
+        in_tree_jpeg_mips64,
+        jpeg_mips64_mmi,
+    )
+    def in_tree_jpeg(
+        system_jpeg, target, in_tree_jpeg_arm, in_tree_jpeg_mips64, jpeg_mips64_mmi
+    ):
+        if system_jpeg:
+            return
+
+        if target.cpu in ("arm", "aarch64"):
+            return in_tree_jpeg_arm
         elif target.kernel == "Darwin":
             if target.cpu == "x86":
                 return ("-DPIC", "-DMACHO")
@@ -1831,19 +1888,20 @@ with only_when(compile_environment):
                 return ("-D__x86_64__", "-DPIC", "-DWIN64", "-DMSVC")
         elif target.cpu == "mips32":
             return ("-mdspr2",)
-        elif target.cpu == "mips64":
-            return ("-Wa,-mloongson-mmi", "-mloongson-ext")
+        elif target.cpu == "mips64" and jpeg_mips64_mmi:
+            return in_tree_jpeg_mips64
         elif target.cpu == "x86":
             return ("-DPIC", "-DELF")
         elif target.cpu == "x86_64":
             return ("-D__x86_64__", "-DPIC", "-DELF")
 
-    @depends(target, when=in_tree_jpeg)
+    @depends(target, when=depends("--with-system-jpeg")(lambda x: not x))
     def jpeg_nasm(target):
         if target.cpu in ("x86", "x86_64"):
             # libjpeg-turbo 2.0.6 requires nasm 2.10.
             return namespace(version="2.10", what="JPEG")
 
+    # Compiler checks from https://github.com/libjpeg-turbo/libjpeg-turbo/blob/57ba02a408a9a55ccff25aae8b164632a3a4f177/simd/CMakeLists.txt#L258
     jpeg_arm_neon_vld1_s16_x3 = c_compiler.try_compile(
         includes=["arm_neon.h"],
         body="int16_t input[12] = {}; int16x4x3_t output = vld1_s16_x3(input);",
@@ -1879,6 +1937,37 @@ with only_when(compile_environment):
         & jpeg_arm_neon_vld1_u16_x2
         & jpeg_arm_neon_vld1q_u8_x4,
     )
+
+
+# PNG
+# ===
+with only_when(compile_environment):
+    system_lib_option(
+        "--with-system-png",
+        nargs="?",
+        help="Use system libpng",
+    )
+
+    @depends("--with-system-png")
+    def deprecated_system_png_path(value):
+        if len(value) == 1:
+            die(
+                "--with-system-png=PATH is not supported anymore. Please use "
+                "--with-system-png and set any necessary pkg-config environment variable."
+            )
+
+    png = pkg_check_modules("MOZ_PNG", "libpng >= 1.6.35", when="--with-system-png")
+
+    check_symbol(
+        "png_get_acTL",
+        flags=png.libs,
+        onerror=lambda: die(
+            "--with-system-png won't work because the system's libpng doesn't have APNG support"
+        ),
+        when="--with-system-png",
+    )
+
+    set_config("MOZ_SYSTEM_PNG", True, when="--with-system-png")
 
 
 # FFmpeg's ffvpx configuration
@@ -2549,3 +2638,400 @@ option(
 
 set_config("MOZ_DOM_STREAMS", True, when="--enable-dom-streams")
 set_define("MOZ_DOM_STREAMS", True, when="--enable-dom-streams")
+
+# libevent
+# ==============================================================
+with only_when(compile_environment):
+    system_lib_option(
+        "--with-system-libevent",
+        nargs="?",
+        help="Use system libevent",
+    )
+
+    @depends("--with-system-libevent")
+    def deprecated_system_libevent_path(value):
+        if len(value) == 1:
+            die(
+                "--with-system-libevent=PATH is not supported anymore. Please use "
+                "--with-system-libevent and set any necessary pkg-config environment variable."
+            )
+
+    pkg_check_modules("MOZ_LIBEVENT", "libevent", when="--with-system-libevent")
+
+    set_config("MOZ_SYSTEM_LIBEVENT", True, when="--with-system-libevent")
+
+
+# Crash reporting
+# ==============================================================
+@depends(target, developer_options)
+def crashreporter_default(target, developer_options):
+    if target.kernel in ("WINNT", "Darwin"):
+        return True
+    if target.kernel == "Linux" and target.cpu in ("x86", "x86_64", "arm", "aarch64"):
+        # The crash reporter prevents crash stacktraces to be logged in the
+        # logs on Android, so we leave it out by default in developer builds.
+        return target.os != "Android" or not developer_options
+
+
+option(
+    "--enable-crashreporter",
+    default=crashreporter_default,
+    help="{Enable|Disable} crash reporting",
+)
+
+
+set_config("MOZ_CRASHREPORTER", True, when="--enable-crashreporter")
+set_define("MOZ_CRASHREPORTER", True, when="--enable-crashreporter")
+add_old_configure_assignment("MOZ_CRASHREPORTER", True, when="--enable-crashreporter")
+
+with only_when(compile_environment):
+    with only_when("--enable-crashreporter"):
+        pkg_check_modules(
+            "MOZ_GTHREAD",
+            "gthread-2.0",
+            when=depends(target)(lambda t: t.os == "GNU" and t.kernel == "Linux"),
+        )
+
+        set_config(
+            "MOZ_CRASHREPORTER_INJECTOR",
+            True,
+            when=depends(target)(lambda t: t.os == "WINNT" and t.bitness == 32),
+        )
+        set_define(
+            "MOZ_CRASHREPORTER_INJECTOR",
+            True,
+            when=depends(target)(lambda t: t.os == "WINNT" and t.bitness == 32),
+        )
+
+
+# Gtk+
+# ==============================================================
+with only_when(toolkit_gtk):
+    pkg_check_modules(
+        "MOZ_GTK3",
+        "gtk+-3.0 >= 3.14.0 gtk+-unix-print-3.0 glib-2.0 gobject-2.0 gio-unix-2.0",
+    )
+
+    set_define("GDK_VERSION_MIN_REQUIRED", "GDK_VERSION_3_14")
+    set_define("GDK_VERSION_MAX_ALLOWED", "GDK_VERSION_3_14")
+
+    pkg_check_modules("GLIB", "glib-2.0 >= 2.42 gobject-2.0")
+
+    set_define("GLIB_VERSION_MIN_REQUIRED", "GLIB_VERSION_2_42")
+    set_define("GLIB_VERSION_MAX_ALLOWED", "GLIB_VERSION_2_42")
+
+    set_define("MOZ_ACCESSIBILITY_ATK", True, when=accessibility)
+
+# DBus
+# ==============================================================
+with only_when(toolkit_gtk):
+    option("--disable-dbus", help="Disable dbus support")
+
+    with only_when("--enable-dbus"):
+        pkg_check_modules("MOZ_DBUS", "dbus-1 >= 0.60")
+        pkg_check_modules("MOZ_DBUS_GLIB", "dbus-glib-1 >= 0.60")
+
+        set_config("MOZ_ENABLE_DBUS", True)
+        set_define("MOZ_ENABLE_DBUS", True)
+
+
+# Necko's wifi scanner
+# ==============================================================
+@depends(target)
+def necko_wifi_when(target):
+    return target.os in ("WINNT", "OSX", "DragonFly", "FreeBSD") or (
+        target.kernel == "Linux" and target.os == "GNU"
+    )
+
+
+option("--disable-necko-wifi", help="Disable necko wifi scanner", when=necko_wifi_when)
+
+set_config("NECKO_WIFI", True, when="--enable-necko-wifi")
+set_define("NECKO_WIFI", True, when="--enable-necko-wifi")
+
+
+@depends(
+    depends("--enable-necko-wifi", when=necko_wifi_when)(lambda x: x),
+    depends("--enable-dbus", when=toolkit_gtk)(lambda x: x),
+    when=depends(target)(lambda t: t.os == "GNU" and t.kernel == "Linux"),
+)
+def necko_wifi_dbus(necko_wifi, dbus):
+    if necko_wifi and not dbus:
+        die(
+            "Necko WiFi scanning needs DBus on your platform, remove --disable-dbus"
+            " or use --disable-necko-wifi"
+        )
+    return necko_wifi and dbus
+
+
+set_config("NECKO_WIFI_DBUS", True, when=necko_wifi_dbus)
+
+
+# Frontend JS debug mode
+# ==============================================================
+option("--enable-debug-js-modules", help="Enable debug mode for frontend JS libraries")
+
+set_config("DEBUG_JS_MODULES", True, when="--enable-debug-js-modules")
+
+
+# moz_dump_painting
+# ==============================================================
+option("--enable-dump-painting", help="Enable paint debugging")
+
+set_define(
+    "MOZ_DUMP_PAINTING",
+    True,
+    when=depends("--enable-dump-painting", "--enable-debug")(
+        lambda painting, debug: painting or debug
+    ),
+)
+set_define("MOZ_LAYERS_HAVE_LOG", True, when="--enable-dump-painting")
+
+
+# libproxy support
+# ==============================================================
+with only_when(toolkit_gtk):
+    system_lib_option("--enable-libproxy", help="Enable libproxy support")
+
+    with only_when("--enable-libproxy"):
+        pkg_check_modules("MOZ_LIBPROXY", "libproxy-1.0")
+
+        set_config("MOZ_ENABLE_LIBPROXY", True)
+        set_define("MOZ_ENABLE_LIBPROXY", True)
+
+
+# Enable runtime logging
+# ==============================================================
+set_define("MOZ_LOGGING", True)
+set_define("FORCE_PR_LOG", True)
+
+# This will enable logging of addref, release, ctor, dtor.
+# ==============================================================
+option(
+    "--enable-logrefcnt",
+    default=moz_debug,
+    help="{Enable|Disable} logging of refcounts",
+)
+
+set_define("NS_BUILD_REFCNT_LOGGING", True, when="--enable-logrefcnt")
+
+
+# NegotiateAuth
+# ==============================================================
+option("--disable-negotiateauth", help="Disable GSS-API negotiation")
+
+set_config("MOZ_AUTH_EXTENSION", True, when="--enable-negotiateauth")
+set_define("MOZ_AUTH_EXTENSION", True, when="--enable-negotiateauth")
+
+
+# Parental control
+# ==============================================================
+option("--disable-parental-controls", help="Do not build parental controls")
+
+set_config(
+    "MOZ_DISABLE_PARENTAL_CONTROLS",
+    True,
+    when=depends("--enable-parental-controls")(lambda x: not x),
+)
+set_define(
+    "MOZ_DISABLE_PARENTAL_CONTROLS",
+    True,
+    when=depends("--enable-parental-controls")(lambda x: not x),
+)
+
+
+# Sandboxing support
+# ==============================================================
+@depends(target, tsan, asan)
+def sandbox_default(target, tsan, asan):
+    # Only enable the sandbox by default on Linux, OpenBSD, macOS, and Windows
+    if target.kernel == "Linux" and target.os == "GNU":
+        # Bug 1182565: TSan conflicts with sandboxing on Linux.
+        # Bug 1287971: LSan also conflicts with sandboxing on Linux.
+        if tsan or asan:
+            return False
+        # Linux sandbox is only available on x86{,_64} and arm{,64}.
+        return target.cpu in ("x86", "x86_64", "arm", "aarch64")
+    return target.kernel in ("WINNT", "Darwin", "OpenBSD")
+
+
+option(
+    "--enable-sandbox",
+    default=sandbox_default,
+    help="{Enable|Disable} sandboxing support",
+)
+
+set_config("MOZ_SANDBOX", True, when="--enable-sandbox")
+set_define("MOZ_SANDBOX", True, when="--enable-sandbox")
+
+
+# Searching of system directories for extensions.
+# ==============================================================
+# Note: this switch is meant to be used for test builds whose behavior should
+# not depend on what happens to be installed on the local machine.
+option(
+    "--disable-system-extension-dirs",
+    help="Disable searching system- and account-global directories for extensions"
+    " of any kind; use only profile-specific extension directories",
+)
+
+set_define("ENABLE_SYSTEM_EXTENSION_DIRS", True, when="--enable-system-extension-dirs")
+
+
+# Pixman
+# ==============================================================
+with only_when(compile_environment):
+    system_lib_option(
+        "--enable-system-pixman", help="Use system pixman (located with pkgconfig)"
+    )
+
+    @depends("--enable-system-pixman")
+    def in_tree_pixman(pixman):
+        return not pixman
+
+    set_config("MOZ_TREE_PIXMAN", True, when=in_tree_pixman)
+    set_define("MOZ_TREE_PIXMAN", True, when=in_tree_pixman)
+
+    pkg_check_modules("MOZ_PIXMAN", "pixman-1 >= 0.36.0", when="--enable-system-pixman")
+    # Set MOZ_PIXMAN_CFLAGS to an explicit empty value when --enable-system-pixman is *not* used,
+    # for layout/style/extra-bindgen-flags
+    set_config("MOZ_PIXMAN_CFLAGS", [], when=in_tree_pixman)
+
+
+# Universalchardet
+# ==============================================================
+with only_when(compile_environment):
+    option("--disable-universalchardet", help="Disable universal encoding detection")
+
+    set_config("MOZ_UNIVERSALCHARDET", True, when="--enable-universalchardet")
+
+
+# Disable zipwriter
+# ==============================================================
+with only_when(compile_environment):
+    option("--disable-zipwriter", help="Disable zipwriter component")
+
+    set_config("MOZ_ZIPWRITER", True, when="--enable-zipwriter")
+
+
+# Location of the mozilla user directory
+# ==============================================================
+with only_when(compile_environment):
+
+    @depends(target)
+    def default_user_appdir(target):
+        if target.kernel in ("WINNT", "Darwin"):
+            return "Mozilla"
+        return ".mozilla"
+
+    option(
+        "--with-user-appdir",
+        nargs=1,
+        default=default_user_appdir,
+        help="Set user-specific appdir",
+    )
+
+    @depends("--with-user-appdir")
+    def user_appdir(appdir):
+        if not appdir:
+            die("--without-user-appdir is not a valid option.")
+        if "/" in appdir[0]:
+            die("--with-user-appdir must be a single relative path.")
+        return '"{}"'.format(appdir[0])
+
+    set_define("MOZ_USER_DIR", user_appdir)
+
+
+# Check for sin_len and sin6_len - used by SCTP; only appears in Mac/*BSD generally
+# ==============================================================
+with only_when(compile_environment):
+    have_sin_len = c_compiler.try_compile(
+        includes=["netinet/in.h"],
+        body="struct sockaddr_in x; void *foo = (void*) &x.sin_len;",
+        check_msg="for sin_len in struct sockaddr_in",
+    )
+    have_sin6_len = c_compiler.try_compile(
+        includes=["netinet/in.h"],
+        body="struct sockaddr_in6 x; void *foo = (void*) &x.sin6_len;",
+        check_msg="for sin_len6 in struct sockaddr_in6",
+    )
+    set_define("HAVE_SIN_LEN", have_sin_len)
+    set_define("HAVE_SIN6_LEN", have_sin6_len)
+    # HAVE_CONN_LEN must be the same as HAVE_SIN_LEN and HAVE_SIN6_LEN
+    set_define("HAVE_SCONN_LEN", have_sin_len & have_sin6_len)
+    set_define(
+        "HAVE_SA_LEN",
+        c_compiler.try_compile(
+            includes=["netinet/in.h"],
+            body="struct sockaddr x; void *foo = (void*) &x.sa_len;",
+            check_msg="for sa_len in struct sockaddr",
+        ),
+    )
+
+
+# Check for pthread_cond_timedwait_monotonic_np
+# ==============================================================
+with only_when(compile_environment):
+    set_define(
+        "HAVE_PTHREAD_COND_TIMEDWAIT_MONOTONIC",
+        c_compiler.try_compile(
+            includes=["pthread.h"],
+            body="pthread_cond_timedwait_monotonic_np(0, 0, 0);",
+            # -Werror to catch any "implicit declaration" warning that means the function
+            # is not supported.
+            flags=["-Werror"],
+            check_msg="for pthread_cond_timedwait_monotonic_np",
+        ),
+    )
+
+
+# Custom dynamic linker for Android
+# ==============================================================
+with only_when(target_is_linux & compile_environment):
+    option(
+        env="MOZ_LINKER",
+        default=depends(target.os, when="--enable-jemalloc")(
+            lambda os: os == "Android"
+        ),
+        help="{Enable|Disable} custom dynamic linker",
+    )
+
+    set_config("MOZ_LINKER", True, when="MOZ_LINKER")
+    set_define("MOZ_LINKER", True, when="MOZ_LINKER")
+    add_old_configure_assignment("MOZ_LINKER", True, when="MOZ_LINKER")
+
+    moz_linker = depends(when="MOZ_LINKER")(lambda: True)
+
+
+# 32-bits ethtool_cmd.speed
+# ==============================================================
+with only_when(target_is_linux & compile_environment):
+    set_config(
+        "MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI",
+        c_compiler.try_compile(
+            includes=["linux/ethtool.h"],
+            body="struct ethtool_cmd cmd; cmd.speed_hi = 0;",
+            check_msg="for 32-bits ethtool_cmd.speed",
+        ),
+    )
+
+# Gamepad support
+# ==============================================================
+check_header(
+    "linux/joystick.h",
+    onerror=lambda: die(
+        "Can't find header linux/joystick.h, needed for gamepad support."
+        " Please install Linux kernel headers."
+    ),
+    when=target_is_linux & compile_environment,
+)
+
+# Smart card support
+# ==============================================================
+@depends(build_project)
+def disable_smart_cards(build_project):
+    return build_project == "mobile/android"
+
+
+set_config("MOZ_NO_SMART_CARDS", True, when=disable_smart_cards)
+set_define("MOZ_NO_SMART_CARDS", True, when=disable_smart_cards)

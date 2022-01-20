@@ -19,6 +19,7 @@ OS_LIBS += [
     "shell32",
     "shlwapi",
     "urlmon",
+    "uuid",
 ]
 
 if CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CC_TYPE"] in ("gcc", "clang"):

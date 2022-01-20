@@ -118,6 +118,11 @@ AXTextMarkerRef AXTextMarkerRangeCopyStartMarker(AXTextMarkerRangeRef text_marke
 AXTextMarkerRef AXTextMarkerRangeCopyEndMarker(AXTextMarkerRangeRef text_marker_range);
 }
 
+@interface NSScreen (NSScreen12_0)
+// https://developer.apple.com/documentation/appkit/nsscreen/3882821-safeareainsets?language=objc&changes=latest_major
+@property(readonly) NSEdgeInsets safeAreaInsets;
+@end
+
 #endif
 
 #endif  // SDKDefines_h

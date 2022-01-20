@@ -545,13 +545,22 @@ ContentBlocking::CompleteAllowAccessFor(
                  trackingOrigin, aAllowMode)
           ->Then(
               GetCurrentSerialEventTarget(), __func__,
-              [](ParentAccessGrantPromise::ResolveOrRejectValue&& aValue) {
-                if (aValue.IsResolve()) {
-                  return StorageAccessPermissionGrantPromise::CreateAndResolve(
-                      ContentBlocking::eAllow, __func__);
+              [aReason, trackingPrincipal](
+                  ParentAccessGrantPromise::ResolveOrRejectValue&& aValue) {
+                if (!aValue.IsResolve()) {
+                  return StorageAccessPermissionGrantPromise::CreateAndReject(
+                      false, __func__);
                 }
-                return StorageAccessPermissionGrantPromise::CreateAndReject(
-                    false, __func__);
+                // We only wish to observe user interaction in the case of a
+                // "normal" requestStorageAccess grant. We do not observe user
+                // interaction where the priveledged API is used. Acquiring
+                // the storageAccessAPI permission for the first time will only
+                // occur through the clicking accept on the doorhanger.
+                if (aReason == ContentBlockingNotifier::eStorageAccessAPI) {
+                  ContentBlockingUserInteraction::Observe(trackingPrincipal);
+                }
+                return StorageAccessPermissionGrantPromise::CreateAndResolve(
+                    ContentBlocking::eAllow, __func__);
               });
     }
 
@@ -570,17 +579,23 @@ ContentBlocking::CompleteAllowAccessFor(
             aTopLevelWindowId, aParentContext,
             IPC::Principal(trackingPrincipal), trackingOrigin, aAllowMode,
             reportReason)
-        ->Then(GetCurrentSerialEventTarget(), __func__,
-               [](const ContentChild::
-                      StorageAccessPermissionGrantedForOriginPromise::
-                          ResolveOrRejectValue& aValue) {
-                 if (aValue.IsResolve()) {
-                   return StorageAccessPermissionGrantPromise::CreateAndResolve(
-                       aValue.ResolveValue(), __func__);
-                 }
-                 return StorageAccessPermissionGrantPromise::CreateAndReject(
-                     false, __func__);
-               });
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [aReason, trackingPrincipal](
+                const ContentChild::
+                    StorageAccessPermissionGrantedForOriginPromise::
+                        ResolveOrRejectValue& aValue) {
+              if (aValue.IsResolve()) {
+                if (aValue.ResolveValue() &&
+                    (aReason == ContentBlockingNotifier::eStorageAccessAPI)) {
+                  ContentBlockingUserInteraction::Observe(trackingPrincipal);
+                }
+                return StorageAccessPermissionGrantPromise::CreateAndResolve(
+                    aValue.ResolveValue(), __func__);
+              }
+              return StorageAccessPermissionGrantPromise::CreateAndReject(
+                  false, __func__);
+            });
   };
 
   if (aPerformFinalChecks) {

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ExternalScrollId, PropertyBinding, ReferenceFrameKind, TransformStyle, PropertyBindingId};
-use api::{PipelineId, ScrollClamping, SpatialTreeItemKey};
+use api::{PipelineId, SpatialTreeItemKey};
 use api::units::*;
 use euclid::Transform3D;
 use crate::gpu_types::TransformPalette;
@@ -435,7 +435,7 @@ impl SceneSpatialTree {
 
                 let existing_node = &self.spatial_nodes[e.index];
 
-                if existing_node.descriptor != node.descriptor || existing_node.parent != node.parent {
+                if *existing_node != node {
                     self.updates.updates.push(SpatialTreeUpdate::Update {
                         index: e.index,
                         parent: node.parent,
@@ -1004,17 +1004,19 @@ impl SpatialTree {
         CoordinateSpaceMapping::Transform(transform)
     }
 
-    /// Returns true if both supplied spatial nodes are in the same coordinate system
-    /// (implies the relative transform produce axis-aligned rects).
-    pub fn is_matching_coord_system(
+    pub fn is_relative_transform_complex(
         &self,
-        index0: SpatialNodeIndex,
-        index1: SpatialNodeIndex,
+        child_index: SpatialNodeIndex,
+        parent_index: SpatialNodeIndex,
     ) -> bool {
-        let node0 = self.get_spatial_node(index0);
-        let node1 = self.get_spatial_node(index1);
+        if child_index == parent_index {
+            return false;
+        }
 
-        node0.coordinate_system_id == node1.coordinate_system_id
+        let child = self.get_spatial_node(child_index);
+        let parent = self.get_spatial_node(parent_index);
+
+        child.coordinate_system_id != parent.coordinate_system_id
     }
 
     fn get_world_transform_impl(
@@ -1066,21 +1068,20 @@ impl SpatialTree {
         self.root_reference_frame_index
     }
 
-    pub fn scroll_node(
+    pub fn set_scroll_offset(
         &mut self,
-        origin: LayoutPoint,
         id: ExternalScrollId,
-        clamp: ScrollClamping
+        offset: LayoutVector2D,
     ) -> bool {
-        let mut did_scroll_node = false;
+        let mut did_change = false;
 
         self.visit_nodes_mut(|_, node| {
             if node.matches_external_id(id) {
-                did_scroll_node |= node.set_scroll_origin(&origin, clamp);
+                did_change |= node.set_scroll_offset(&offset);
             }
         });
 
-        did_scroll_node
+        did_change
     }
 
     pub fn update_tree(

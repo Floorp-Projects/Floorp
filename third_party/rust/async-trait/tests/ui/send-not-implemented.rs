@@ -10,6 +10,13 @@ trait Test {
         let _guard = mutex.lock().unwrap();
         f().await;
     }
+
+    async fn test_ret(&self) -> bool {
+        let mutex = Mutex::new(());
+        let _guard = mutex.lock().unwrap();
+        f().await;
+        true
+    }
 }
 
 fn main() {}

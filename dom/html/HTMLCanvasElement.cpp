@@ -26,6 +26,7 @@
 #include "mozilla/dom/VideoStreamTrack.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/OffscreenCanvas.h"
+#include "mozilla/dom/OffscreenCanvasDisplayHelper.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/layers/CanvasRenderer.h"
@@ -269,7 +270,6 @@ void HTMLCanvasPrintState::NotifyDone() {
 HTMLCanvasElementObserver::HTMLCanvasElementObserver(
     HTMLCanvasElement* aElement)
     : mElement(aElement) {
-  RegisterVisibilityChangeEvent();
   RegisterObserverEvents();
 }
 
@@ -277,26 +277,7 @@ HTMLCanvasElementObserver::~HTMLCanvasElementObserver() { Destroy(); }
 
 void HTMLCanvasElementObserver::Destroy() {
   UnregisterObserverEvents();
-  UnregisterVisibilityChangeEvent();
   mElement = nullptr;
-}
-
-void HTMLCanvasElementObserver::RegisterVisibilityChangeEvent() {
-  if (!mElement) {
-    return;
-  }
-
-  Document* document = mElement->OwnerDoc();
-  document->AddSystemEventListener(u"visibilitychange"_ns, this, true, false);
-}
-
-void HTMLCanvasElementObserver::UnregisterVisibilityChangeEvent() {
-  if (!mElement) {
-    return;
-  }
-
-  Document* document = mElement->OwnerDoc();
-  document->RemoveSystemEventListener(u"visibilitychange"_ns, this, true);
 }
 
 void HTMLCanvasElementObserver::RegisterObserverEvents() {
@@ -344,19 +325,6 @@ HTMLCanvasElementObserver::Observe(nsISupports*, const char* aTopic,
   } else if (strcmp(aTopic, "canvas-device-reset") == 0) {
     mElement->OnDeviceReset();
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLCanvasElementObserver::HandleEvent(Event* aEvent) {
-  nsAutoString type;
-  aEvent->GetType(type);
-  if (!mElement || !type.EqualsLiteral("visibilitychange")) {
-    return NS_OK;
-  }
-
-  mElement->OnVisibilityChange();
 
   return NS_OK;
 }
@@ -852,40 +820,45 @@ void HTMLCanvasElement::ToBlob(JSContext* aCx, BlobCallback& aCallback,
   CanvasRenderingContextHelper::ToBlob(aCx, global, aCallback, aType, aParams,
                                        usePlaceholder, aRv);
 }
-#define DISABLE_OFFSCREEN_CANVAS 1
+
 OffscreenCanvas* HTMLCanvasElement::TransferControlToOffscreen(
     ErrorResult& aRv) {
-  if (DISABLE_OFFSCREEN_CANVAS) {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-    return nullptr;
-  }
-  if (mCurrentContext) {
+  if (mCurrentContext || mOffscreenCanvas) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
-  if (!mOffscreenCanvas) {
-    MOZ_CRASH("todo");
+  MOZ_ASSERT(!mOffscreenDisplay);
 
-    nsPIDOMWindowInner* win = OwnerDoc()->GetInnerWindow();
-    if (!win) {
-      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-      return nullptr;
-    }
-
-    // nsIntSize sz = GetWidthHeight();
-    // mOffscreenCanvas =
-    //    new OffscreenCanvas(win->AsGlobal(), sz.width, sz.height,
-    //                        GetCompositorBackendType(), renderer);
-    if (mWriteOnly) {
-      mOffscreenCanvas->SetWriteOnly();
-    }
-
-    if (!mContextObserver) {
-      mContextObserver = new HTMLCanvasElementObserver(this);
-    }
-  } else {
+  nsPIDOMWindowInner* win = OwnerDoc()->GetInnerWindow();
+  if (!win) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  LayersBackend backend = LayersBackend::LAYERS_NONE;
+  TextureType textureType = TextureType::Unknown;
+  nsIWidget* docWidget = nsContentUtils::WidgetForDocument(OwnerDoc());
+  if (docWidget) {
+    WindowRenderer* renderer = docWidget->GetWindowRenderer();
+    if (renderer) {
+      backend = renderer->GetCompositorBackendType();
+      textureType = TexTypeForWebgl(renderer->AsKnowsCompositor());
+    }
+  }
+
+  nsIntSize sz = GetWidthHeight();
+  mOffscreenDisplay =
+      MakeRefPtr<OffscreenCanvasDisplayHelper>(this, sz.width, sz.height);
+  mOffscreenCanvas =
+      new OffscreenCanvas(win->AsGlobal(), sz.width, sz.height, backend,
+                          textureType, mOffscreenDisplay);
+  if (mWriteOnly) {
+    mOffscreenCanvas->SetWriteOnly();
+  }
+
+  if (!mContextObserver) {
+    mContextObserver = new HTMLCanvasElementObserver(this);
   }
 
   return mOffscreenCanvas;
@@ -950,11 +923,12 @@ already_AddRefed<nsISupports> HTMLCanvasElement::GetContext(
     JSContext* aCx, const nsAString& aContextId,
     JS::Handle<JS::Value> aContextOptions, ErrorResult& aRv) {
   if (mOffscreenCanvas) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
 
   mMaybeModified = true;  // For FirstContentfulPaint
-  return CanvasRenderingContextHelper::GetContext(
+  return CanvasRenderingContextHelper::GetOrCreateContext(
       aCx, aContextId,
       aContextOptions.isObject() ? aContextOptions : JS::NullHandleValue, aRv);
 }
@@ -967,6 +941,11 @@ already_AddRefed<nsISupports> HTMLCanvasElement::MozGetIPCContext(
   // We only support 2d shmem contexts for now.
   if (!aContextId.EqualsLiteral("2d")) {
     aRv.Throw(NS_ERROR_INVALID_ARG);
+    return nullptr;
+  }
+
+  if (mOffscreenCanvas) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return nullptr;
   }
 
@@ -1033,6 +1012,45 @@ bool HTMLCanvasElement::CallerCanRead(JSContext* aCx) {
 
   return nsContentUtils::PrincipalHasPermission(*prin,
                                                 nsGkAtoms::all_urlsPermission);
+}
+
+void HTMLCanvasElement::SetWidth(uint32_t aWidth, ErrorResult& aRv) {
+  if (mOffscreenCanvas) {
+    aRv.ThrowInvalidStateError(
+        "Cannot set width of placeholder canvas transferred to "
+        "OffscreenCanvas.");
+    return;
+  }
+
+  SetUnsignedIntAttr(nsGkAtoms::width, aWidth, DEFAULT_CANVAS_WIDTH, aRv);
+}
+
+void HTMLCanvasElement::SetHeight(uint32_t aHeight, ErrorResult& aRv) {
+  if (mOffscreenCanvas) {
+    aRv.ThrowInvalidStateError(
+        "Cannot set height of placeholder canvas transferred to "
+        "OffscreenCanvas.");
+    return;
+  }
+
+  SetUnsignedIntAttr(nsGkAtoms::height, aHeight, DEFAULT_CANVAS_HEIGHT, aRv);
+}
+
+void HTMLCanvasElement::InvalidateCanvasPlaceholder(uint32_t aWidth,
+                                                    uint32_t aHeight) {
+  // We need to keep our placeholder canvas dimensions in sync with the actual
+  // offscreen canvas. It is only a placeholder if we transferred the object to
+  // a worker thread.
+  if (mOffscreenCanvas->IsNeutered()) {
+    mOffscreenCanvas->UpdateNeuteredSize(aWidth, aHeight);
+  }
+
+  // We always need to update the canvas element itself however.
+  ErrorResult rv;
+  SetUnsignedIntAttr(nsGkAtoms::width, aWidth, DEFAULT_CANVAS_WIDTH, rv);
+  MOZ_ASSERT(!rv.Failed());
+  SetUnsignedIntAttr(nsGkAtoms::height, aHeight, DEFAULT_CANVAS_HEIGHT, rv);
+  MOZ_ASSERT(!rv.Failed());
 }
 
 void HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect) {
@@ -1116,16 +1134,19 @@ bool HTMLCanvasElement::GetOpaqueAttr() {
 }
 
 CanvasContextType HTMLCanvasElement::GetCurrentContextType() {
+  if (mOffscreenDisplay) {
+    return mOffscreenDisplay->GetContextType();
+  }
   return mCurrentContextType;
 }
 
 already_AddRefed<Image> HTMLCanvasElement::GetAsImage() {
-  if (mCurrentContext) {
-    return mCurrentContext->GetAsImage();
+  if (mOffscreenDisplay) {
+    return mOffscreenDisplay->GetAsImage();
   }
 
-  if (mOffscreenCanvas) {
-    MOZ_CRASH("todo");
+  if (mCurrentContext) {
+    return mCurrentContext->GetAsImage();
   }
 
   return nullptr;
@@ -1133,11 +1154,10 @@ already_AddRefed<Image> HTMLCanvasElement::GetAsImage() {
 
 bool HTMLCanvasElement::UpdateWebRenderCanvasData(
     nsDisplayListBuilder* aBuilder, WebRenderCanvasData* aCanvasData) {
+  MOZ_ASSERT(!mOffscreenDisplay);
+
   if (mCurrentContext) {
     return mCurrentContext->UpdateWebRenderCanvasData(aBuilder, aCanvasData);
-  }
-  if (mOffscreenCanvas) {
-    MOZ_CRASH("todo");
   }
 
   // Clear CanvasRenderer of WebRenderCanvasData
@@ -1147,12 +1167,10 @@ bool HTMLCanvasElement::UpdateWebRenderCanvasData(
 
 bool HTMLCanvasElement::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
                                                  CanvasRenderer* aRenderer) {
+  MOZ_ASSERT(!mOffscreenDisplay);
+
   if (mCurrentContext) {
     return mCurrentContext->InitializeCanvasRenderer(aBuilder, aRenderer);
-  }
-
-  if (mOffscreenCanvas) {
-    MOZ_CRASH("todo");
   }
 
   return false;
@@ -1261,9 +1279,12 @@ void HTMLCanvasElement::SetFrameCapture(
 
 already_AddRefed<SourceSurface> HTMLCanvasElement::GetSurfaceSnapshot(
     gfxAlphaType* const aOutAlphaType) {
-  if (!mCurrentContext) return nullptr;
-
-  return mCurrentContext->GetSurfaceSnapshot(aOutAlphaType);
+  if (mCurrentContext) {
+    return mCurrentContext->GetSurfaceSnapshot(aOutAlphaType);
+  } else if (mOffscreenDisplay) {
+    return mOffscreenDisplay->GetSurfaceSnapshot();
+  }
+  return nullptr;
 }
 
 layers::LayersBackend HTMLCanvasElement::GetCompositorBackendType() const {
@@ -1278,28 +1299,9 @@ layers::LayersBackend HTMLCanvasElement::GetCompositorBackendType() const {
   return LayersBackend::LAYERS_NONE;
 }
 
-void HTMLCanvasElement::OnVisibilityChange() {
-  if (OwnerDoc()->Hidden()) {
-    return;
-  }
-
-  if (mOffscreenCanvas) {
-    MOZ_CRASH("todo");
-    // Dispatch to GetActiveEventTarget.
-    return;
-  }
-
-  if (mCurrentContext) {
-    mCurrentContext->OnVisibilityChange();
-  }
-}
-
 void HTMLCanvasElement::OnMemoryPressure() {
-  if (mOffscreenCanvas) {
-    MOZ_CRASH("todo");
-    // Dispatch to GetActiveEventTarget.
-    return;
-  }
+  // FIXME(aosmond): We need to implement memory pressure handling for
+  // OffscreenCanvas when it is on worker threads. See bug 1746260.
 
   if (mCurrentContext) {
     mCurrentContext->OnMemoryPressure();
@@ -1327,6 +1329,13 @@ webgpu::CanvasContext* HTMLCanvasElement::GetWebGPUContext() {
   }
 
   return static_cast<webgpu::CanvasContext*>(GetCurrentContext());
+}
+
+RefPtr<ImageContainer> HTMLCanvasElement::GetImageContainer() {
+  if (mOffscreenDisplay) {
+    return mOffscreenDisplay->GetImageContainer();
+  }
+  return nullptr;
 }
 
 }  // namespace mozilla::dom

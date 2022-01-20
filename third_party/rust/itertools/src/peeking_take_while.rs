@@ -83,6 +83,13 @@ pub struct PeekingTakeWhile<'a, I: 'a, F>
     f: F,
 }
 
+impl<'a, I: 'a, F> std::fmt::Debug for PeekingTakeWhile<'a, I, F>
+where
+    I: Iterator + std::fmt::Debug,
+{
+    debug_fmt_fields!(PeekingTakeWhile, iter);
+}
+
 /// Create a PeekingTakeWhile
 pub fn peeking_take_while<I, F>(iter: &mut I, f: F) -> PeekingTakeWhile<I, F>
     where I: Iterator,

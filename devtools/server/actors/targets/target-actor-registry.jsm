@@ -35,18 +35,18 @@ var TargetActorRegistry = {
   },
 
   /**
-   * Return the first target actor matching the passed watcher's context. Returns null if
+   * Return the first target actor matching the passed watcher's session context. Returns null if
    * no matching target actors could be found.
    *
-   * @param {Object} context: WatcherActor's context. To only retrieve targets related
+   * @param {Object} sessionContext: WatcherActor's session context. To only retrieve targets related
    *                          to the scope of this watcher actor.
    *                          See watcher actor constructor for more info.
    * @param {String} connectionPrefix: DevToolsServerConnection's prefix, in order to select only actor
    *                                   related to the same connection. i.e. the same client.
    * @returns {TargetActor|null}
    */
-  getTopLevelTargetActorForContext(context, connectionPrefix) {
-    if (context.type == "all") {
+  getTopLevelTargetActorForContext(sessionContext, connectionPrefix) {
+    if (sessionContext.type == "all") {
       if (
         Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT
       ) {
@@ -56,21 +56,21 @@ var TargetActorRegistry = {
           return xpcShellTargetActor;
         }
 
-        const actors = this.getTargetActors(context, connectionPrefix);
+        const actors = this.getTargetActors(sessionContext, connectionPrefix);
         // In theory, there should be only one actor here.
         return actors[0];
       }
       return null;
     } else if (
-      context.type == "browser-element" ||
-      context.type == "webextension"
+      sessionContext.type == "browser-element" ||
+      sessionContext.type == "webextension"
     ) {
-      const actors = this.getTargetActors(context, connectionPrefix);
+      const actors = this.getTargetActors(sessionContext, connectionPrefix);
       return actors.find(actor => {
         return actor.isTopLevelTarget;
       });
     }
-    throw new Error("Unsupported context type: " + context.type);
+    throw new Error("Unsupported session context type: " + sessionContext.type);
   },
 
   /**
@@ -78,22 +78,24 @@ var TargetActorRegistry = {
    * In some scenarios, the registry can have multiple target actors for a given
    * browserId (e.g. the regular DevTools content toolbox + DevTools WebExtensions targets).
    *
-   * @param {Object} context: WatcherActor's context. To only retrieve targets related
+   * @param {Object} sessionContext: WatcherActor's session context. To only retrieve targets related
    *                          to the scope of this watcher actor.
    *                          See watcher actor constructor for more info.
    * @param {String} connectionPrefix: DevToolsServerConnection's prefix, in order to select only actor
    *                                   related to the same connection. i.e. the same client.
    * @returns {Array<TargetActor>}
    */
-  getTargetActors(context, connectionPrefix) {
+  getTargetActors(sessionContext, connectionPrefix) {
     const actors = [];
     for (const actor of windowGlobalTargetActors) {
       const isMatchingPrefix = actor.actorID.startsWith(connectionPrefix);
       const isMatchingContext =
-        (context.type == "all" && actor.typeName === "parentProcessTarget") ||
-        (context.type == "browser-element" &&
-          actor.browserId == context.browserId) ||
-        (context.type == "webextension" && actor.addonId == context.addonId);
+        (sessionContext.type == "all" &&
+          actor.typeName === "parentProcessTarget") ||
+        (sessionContext.type == "browser-element" &&
+          actor.browserId == sessionContext.browserId) ||
+        (sessionContext.type == "webextension" &&
+          actor.addonId == sessionContext.addonId);
       if (isMatchingPrefix && isMatchingContext) {
         actors.push(actor);
       }

@@ -186,10 +186,10 @@ builtinNames = [
     Builtin("octet", "uint8_t", "u8", False, True),
     Builtin("short", "int16_t", "i16", True, True),
     Builtin("long", "int32_t", "i32", True, True),
-    Builtin("long long", "int64_t", "i64", True, False),
+    Builtin("long long", "int64_t", "i64", True, True),
     Builtin("unsigned short", "uint16_t", "u16", False, True),
     Builtin("unsigned long", "uint32_t", "u32", False, True),
-    Builtin("unsigned long long", "uint64_t", "u64", False, False),
+    Builtin("unsigned long long", "uint64_t", "u64", False, True),
     Builtin("float", "float", "libc::c_float", True, False),
     Builtin("double", "double", "libc::c_double", True, False),
     Builtin("char", "char", "libc::c_char", True, False),
@@ -953,6 +953,15 @@ class ConstMember(object):
         self.basetype = basetype
         # Value is a lambda. Resolve it.
         self.value = self.valueFn(self.iface)
+
+        min_val = -(2 ** 31) if basetype.signed else 0
+        max_val = 2 ** 31 - 1 if basetype.signed else 2 ** 32 - 1
+        if self.value < min_val or self.value > max_val:
+            raise IDLError(
+                "xpidl constants must fit within %s"
+                % ("int32_t" if basetype.signed else "uint32_t"),
+                self.location,
+            )
 
     def getValue(self):
         return self.value

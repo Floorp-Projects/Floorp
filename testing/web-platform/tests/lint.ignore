@@ -84,6 +84,8 @@ CR AT EOL: html/semantics/forms/the-input-element/multiline-placeholder-cr.html
 CR AT EOL: html/semantics/forms/the-input-element/multiline-placeholder-crlf.html
 CR AT EOL: webvtt/parsing/file-parsing/tests/support/newlines.vtt
 CR AT EOL: css/css-text/ellisize-rtl-text-crash.html
+CR AT EOL: html/syntax/charset/after-head-after-1kb-crlf.html
+CR AT EOL: html/syntax/charset/after-head-in-1kb-crlf.html
 
 # Intentional use of tabs
 INDENT TABS: html/semantics/embedded-content/the-canvas-element/size.attributes.parse.whitespace.html
@@ -320,20 +322,8 @@ SET TIMEOUT: html/dom/documents/dom-tree-accessors/Document.currentScript.html
 SET TIMEOUT: html/webappapis/timers/*
 SET TIMEOUT: orientation-event/resources/orientation-event-helpers.js
 SET TIMEOUT: portals/history/resources/portal-harness.js
-SET TIMEOUT: resources/chromium/*
-SET TIMEOUT: resources/test/tests/functional/add_cleanup.html
-SET TIMEOUT: resources/test/tests/functional/add_cleanup_async.html
-SET TIMEOUT: resources/test/tests/functional/add_cleanup_async_rejection.html
-SET TIMEOUT: resources/test/tests/functional/add_cleanup_async_rejection_after_load.html
-SET TIMEOUT: resources/test/tests/functional/api-tests-1.html
-SET TIMEOUT: resources/test/tests/functional/step_wait.html
-SET TIMEOUT: resources/test/tests/functional/step_wait_func.html
-SET TIMEOUT: resources/test/tests/functional/worker.js
-SET TIMEOUT: resources/test/tests/functional/worker-uncaught-allow.js
-SET TIMEOUT: resources/test/tests/unit/exceptional-cases.html
-SET TIMEOUT: resources/test/tests/unit/exceptional-cases-timeouts.html
-SET TIMEOUT: resources/test/tests/unit/promise_setup.html
-SET TIMEOUT: resources/testharness.js
+SET TIMEOUT: requestidlecallback/deadline-after-expired-timer.html
+SET TIMEOUT: resources/*
 SET TIMEOUT: scheduler/tentative/current-task-signal-async-abort.any.js
 SET TIMEOUT: scheduler/tentative/current-task-signal-async-priority.any.js
 SET TIMEOUT: speculation-rules/prerender/resources/activation-start.html
@@ -394,10 +384,6 @@ SUPPORT-WRONG-DIR: css/CSS2/section-index.xht
 SUPPORT-WRONG-DIR: css/CSS2/other-formats/xml/background-18.css
 SUPPORT-WRONG-DIR: css/CSS2/other-formats/xml/background-19-alt.xml
 SUPPORT-WRONG-DIR: css/CSS2/other-formats/xml/background-19.css
-SUPPORT-WRONG-DIR: css/vendor-imports/mozilla/mozilla-central-reftests/check-for-references.sh
-SUPPORT-WRONG-DIR: css/vendor-imports/mozilla/mozilla-central-reftests/sync-tests-filter
-SUPPORT-WRONG-DIR: css/vendor-imports/mozilla/mozilla-central-reftests/sync-tests.sh
-SUPPORT-WRONG-DIR: css/vendor-imports/mozilla/mozilla-central-reftests/masking/blank.html
 SUPPORT-WRONG-DIR: css/WOFF2/testcaseindex.xht
 
 
@@ -423,7 +409,6 @@ INDENT TABS: css/css-writing-modes/*
 INDENT TABS: css/filter-effects/*
 INDENT TABS: css/mediaqueries/*
 INDENT TABS: css/selectors/*
-INDENT TABS: css/vendor-imports/*
 INDENT TABS: css/WOFF2/*
 
 
@@ -434,12 +419,6 @@ CONSOLE: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001*.html
 CONSOLE: css/css-writing-modes/tools/generators/gulpfile.js
 
 TRAILING WHITESPACE: css/css-fonts/support/fonts/gsubtest-lookup3.ufo/features.fea
-TRAILING WHITESPACE: css/vendor-imports/mozilla/mozilla-central-reftests/css21/pagination/moz-css21-float-page-break-inside-avoid-7.html
-TRAILING WHITESPACE: css/vendor-imports/mozilla/mozilla-central-reftests/css21/pagination/moz-css21-float-page-break-inside-avoid-7-ref.html
-TRAILING WHITESPACE: css/vendor-imports/mozilla/mozilla-central-reftests/css21/pagination/moz-css21-float-page-break-inside-avoid-8.html
-TRAILING WHITESPACE: css/vendor-imports/mozilla/mozilla-central-reftests/css21/pagination/moz-css21-float-page-break-inside-avoid-8-ref.html
-TRAILING WHITESPACE: css/vendor-imports/mozilla/mozilla-central-reftests/css21/pagination/moz-css21-float-page-break-inside-avoid-9.html
-TRAILING WHITESPACE: css/vendor-imports/mozilla/mozilla-central-reftests/css21/pagination/moz-css21-float-page-break-inside-avoid-9-ref.html
 
 SET TIMEOUT: css/compositing/mix-blend-mode/mix-blend-mode-parent-with-3D-transform-and-transition.html
 SET TIMEOUT: css/compositing/mix-blend-mode/mix-blend-mode-sibling-with-3D-transform-and-transition.html
@@ -769,6 +748,7 @@ AHEM SYSTEM FONT: infrastructure/assumptions/ahem-ref.html
 AHEM SYSTEM FONT: infrastructure/assumptions/ahem.html
 
 # Existing crashtests using testharness
+TESTHARNESS-IN-OTHER-TYPE: accessibility/crashtests/computed-node-checked.html
 TESTHARNESS-IN-OTHER-TYPE: html/canvas/element/manual/wide-gamut-canvas/imagedata-no-color-settings-crash.html
 TESTHARNESS-IN-OTHER-TYPE: css/CSS2/floats-clear/adjoining-float-new-fc-crash.html
 TESTHARNESS-IN-OTHER-TYPE: css/CSS2/floats/floats-saturated-position-crash.html
@@ -807,6 +787,9 @@ TESTHARNESS-IN-OTHER-TYPE: svg/extensibility/foreignObject/foreign-object-circul
 TESTHARNESS-IN-OTHER-TYPE: svg/extensibility/foreignObject/foreign-object-under-clip-path-crash.html
 TESTHARNESS-IN-OTHER-TYPE: svg/extensibility/foreignObject/foreign-object-under-defs-crash.html
 TESTHARNESS-IN-OTHER-TYPE: svg/svg-in-svg/svg-in-svg-circular-filter-reference-crash.html
+
+# Adding the testharnessreport.js script causes the test to never complete.
+MISSING-TESTHARNESSREPORT: accessibility/crashtests/computed-node-checked.html
 
 PRINT STATEMENT: webdriver/tests/print/printcmd.py
 PRINT STATEMENT: webdriver/tests/print/user_prompts.py

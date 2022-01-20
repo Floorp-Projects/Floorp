@@ -526,6 +526,33 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void testPtr(Register lhs, Register rhs) { testq(rhs, lhs); }
   void testPtr(Register lhs, Imm32 rhs) { testq(rhs, lhs); }
   void testPtr(const Operand& lhs, Imm32 rhs) { testq(rhs, lhs); }
+  void test64(Register lhs, Register rhs) { testq(rhs, lhs); }
+  void test64(Register lhs, const Imm64 rhs) {
+    if ((intptr_t)rhs.value <= INT32_MAX && (intptr_t)rhs.value >= INT32_MIN) {
+      testq(Imm32((int32_t)rhs.value), lhs);
+    } else {
+      ScratchRegisterScope scratch(asMasm());
+      movq(ImmWord(rhs.value), scratch);
+      testq(scratch, lhs);
+    }
+  }
+
+  // Compare-then-conditionally-move/load, for integer types
+  template <size_t CmpSize, size_t MoveSize>
+  void cmpMove(Condition cond, Register lhs, Register rhs, Register falseVal,
+               Register trueValAndDest);
+
+  template <size_t CmpSize, size_t MoveSize>
+  void cmpMove(Condition cond, Register lhs, const Address& rhs,
+               Register falseVal, Register trueValAndDest);
+
+  template <size_t CmpSize, size_t LoadSize>
+  void cmpLoad(Condition cond, Register lhs, Register rhs,
+               const Address& falseVal, Register trueValAndDest);
+
+  template <size_t CmpSize, size_t LoadSize>
+  void cmpLoad(Condition cond, Register lhs, const Address& rhs,
+               const Address& falseVal, Register trueValAndDest);
 
   /////////////////////////////////////////////////////////////////
   // Common interface.
@@ -1007,11 +1034,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void vcmpltpdSimd128(const SimdConstant& v, FloatRegister src);
   void vcmplepdSimd128(const SimdConstant& v, FloatRegister src);
 
-  void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
-    loadPtr(Address(WasmTlsReg,
-                    offsetof(wasm::TlsData, globalArea) + globalDataOffset),
-            dest);
-  }
   void loadWasmPinnedRegsFromTls() {
     loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg);
   }

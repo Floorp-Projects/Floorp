@@ -361,6 +361,7 @@ static void PrintHelpAndExit(int status = 0) {
       "  cacheflush    Instruction Cache flushes (ARM only for now)\n"
       "  range         Range Analysis\n"
       "  wasmbce       Wasm Bounds Check Elimination\n"
+      "  shapeguards   Redundant shape guard elimination\n"
       "  logs          JSON visualization logging\n"
       "  logs-sync     Same as logs, but flushes between each pass (sync. "
       "compiled functions only).\n"
@@ -458,6 +459,8 @@ void jit::CheckLogging() {
       EnableChannel(JitSpew_Pools);
     } else if (IsFlag(found, "cacheflush")) {
       EnableChannel(JitSpew_CacheFlush);
+    } else if (IsFlag(found, "shapeguards")) {
+      EnableChannel(JitSpew_RedundantShapeGuards);
     } else if (IsFlag(found, "logs")) {
       EnableIonDebugAsyncLogging();
     } else if (IsFlag(found, "logs-sync")) {

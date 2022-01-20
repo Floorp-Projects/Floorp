@@ -479,7 +479,7 @@ jobs:
        eq(variables['Build.SourceBranch'], 'refs/heads/triggers/safari_stable'),
        and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_safari']))
   strategy:
-    parallel: 5 # chosen to make runtime ~2h
+    parallel: 7 # chosen to make runtime ~2h
   timeoutInMinutes: 180
   pool:
     vmImage: 'macOS-10.15'
@@ -516,7 +516,7 @@ jobs:
        eq(variables['Build.SourceBranch'], 'refs/heads/triggers/safari_preview'),
        and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_safari_preview']))
   strategy:
-    parallel: 5 # chosen to make runtime ~2h
+    parallel: 7 # chosen to make runtime ~2h
   timeoutInMinutes: 180
   pool:
     vmImage: 'macOS-11'

@@ -13,18 +13,12 @@ toolkit = dependable(None)
 # build/moz.configure/bindgen.configure is not included.
 bindgen_config_paths = dependable(None)
 
-option(env="DIST", nargs=1, help="DIST directory")
 
-
-@depends("--help", "DIST")
-def check_build_environment(_, dist):
+@depends("--help")
+def build_environment(_):
     topobjdir = os.path.realpath(".")
     topsrcdir = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
-
-    if dist:
-        dist = normsep(dist[0])
-    else:
-        dist = os.path.join(topobjdir, "dist")
+    dist = os.path.join(topobjdir, "dist")
 
     return namespace(
         topsrcdir=topsrcdir,
@@ -33,13 +27,13 @@ def check_build_environment(_, dist):
     )
 
 
-set_config("TOPSRCDIR", check_build_environment.topsrcdir)
-set_config("TOPOBJDIR", check_build_environment.topobjdir)
-set_config("DIST", check_build_environment.dist)
+set_config("TOPSRCDIR", build_environment.topsrcdir)
+set_config("TOPOBJDIR", build_environment.topobjdir)
+set_config("DIST", build_environment.dist)
 
-add_old_configure_assignment("_topsrcdir", check_build_environment.topsrcdir)
-add_old_configure_assignment("_objdir", check_build_environment.topobjdir)
-add_old_configure_assignment("DIST", check_build_environment.dist)
+add_old_configure_assignment("_topsrcdir", build_environment.topsrcdir)
+add_old_configure_assignment("_objdir", build_environment.topobjdir)
+add_old_configure_assignment("DIST", build_environment.dist)
 
 option(env="MOZ_AUTOMATION", help="Enable options for automated builds")
 set_config("MOZ_AUTOMATION", depends_if("MOZ_AUTOMATION")(lambda x: True))
@@ -57,13 +51,11 @@ option(env="MOZCONFIG", nargs=1, help="Mozconfig location")
 # be called when --help is passed, and the mozconfig wouldn't be read.
 
 
-@depends("MOZCONFIG", "OLD_CONFIGURE", check_build_environment, "--help")
+@depends("MOZCONFIG", "OLD_CONFIGURE", build_environment, "--help")
 @imports(_from="mozbuild.mozconfig", _import="MozconfigLoader")
 @imports(_from="mozboot.mozconfig", _import="find_mozconfig")
+@imports("os")
 def mozconfig(mozconfig, old_configure, build_env, help):
-    if not old_configure and not help:
-        die("The OLD_CONFIGURE environment variable must be set")
-
     # Don't read the mozconfig for the js configure (yay backwards
     # compatibility)
     # While the long term goal is that js and top-level use the same configure
@@ -80,8 +72,10 @@ def mozconfig(mozconfig, old_configure, build_env, help):
     # OLD_CONFIGURE path, which points to js/src/old-configure.
     # I expect we'll have figured things out for mozconfigs well before
     # old-configure dies.
-    if old_configure and os.path.dirname(os.path.abspath(old_configure[0])).endswith(
-        "/js/src"
+    if (
+        old_configure
+        and os.path.dirname(os.path.abspath(old_configure[0])).endswith("/js/src")
+        or (mozconfig and mozconfig[0] == os.devnull)
     ):
         return {"path": None}
 
@@ -110,12 +104,16 @@ option(env="CONFIG_SHELL", nargs=1, help="Path to a POSIX shell")
 @depends("CONFIG_SHELL", "MOZILLABUILD")
 @checking("for a shell")
 @imports("sys")
+@imports(_from="pathlib", _import="Path")
 def shell(value, mozillabuild):
     if value:
         return find_program(value[0])
     shell = "sh"
     if mozillabuild:
-        shell = mozillabuild[0] + "/msys/bin/sh"
+        if (Path(mozillabuild[0]) / "msys2").exists():
+            shell = mozillabuild[0] + "/msys2/usr/bin/sh"
+        else:
+            shell = mozillabuild[0] + "/msys/bin/sh"
     if sys.platform == "win32":
         shell = shell + ".exe"
     return find_program(shell)
@@ -221,7 +219,7 @@ def mozconfig_options(mozconfig, early_options, automation, help):
             add(key, value)
 
 
-@depends(check_build_environment, "--help")
+@depends(build_environment, "--help")
 @imports(_from="os.path", _import="exists")
 def js_package(build_env, help):
     return not exists(os.path.join(build_env.topsrcdir, "browser"))
@@ -231,7 +229,7 @@ def js_package(build_env, help):
 # ================================================
 
 
-@depends(check_build_environment, "MOZ_AUTOMATION", js_package, "--help")
+@depends(build_environment, "MOZ_AUTOMATION", js_package, "--help")
 @checking("for vcs source checkout")
 @imports("os")
 def vcs_checkout_type(build_env, automation, js_package, help):
@@ -296,7 +294,7 @@ def hg_version(hg):
 # like API keys.
 
 
-@depends_all(check_build_environment, hg, hg_version)
+@depends_all(build_environment, hg, hg_version)
 @imports("os")
 def hg_config(build_env, hg, version):
     env = dict(os.environ)
@@ -359,7 +357,7 @@ set_config("VCS_CHECKOUT_TYPE", exposed_vcs_checkout_type)
 # Obtain a Repository interface for the current VCS repository.
 
 
-@depends(check_build_environment, exposed_vcs_checkout_type, hg, git)
+@depends(build_environment, exposed_vcs_checkout_type, hg, git)
 @imports(_from="mozversioncontrol", _import="get_repository_object")
 def vcs_repository(build_env, vcs_checkout_type, hg, git):
     if vcs_checkout_type == "hg":
@@ -397,7 +395,7 @@ def application(app):
 imply_option("--enable-project", application)
 
 
-@depends(check_build_environment, js_package)
+@depends(build_environment, js_package)
 def default_project(build_env, js_package):
     if js_package or build_env.topobjdir.endswith("/js/src"):
         return "js"
@@ -778,6 +776,7 @@ def host_variables(host):
 set_config("HOST_CPU_ARCH", host.cpu)
 set_config("HOST_OS_ARCH", host_variables.HOST_OS_ARCH)
 add_old_configure_assignment("HOST_OS_ARCH", host_variables.HOST_OS_ARCH)
+set_config("HOST_ALIAS", host.alias)
 
 
 @depends(target)
@@ -887,7 +886,7 @@ def target_is_sparc(target):
 set_define("SPARC64", target_is_sparc)
 
 
-@depends("--enable-project", check_build_environment, "--help")
+@depends("--enable-project", build_environment, "--help")
 @imports(_from="os.path", _import="exists")
 def include_project_configure(project, build_env, help):
     if not project:
@@ -943,7 +942,7 @@ def version_path(path):
 # - if we have "a1" in GRE_MILESTONE, we're building Nightly (define NIGHTLY_BUILD)
 # - otherwise, if we have "a" in GRE_MILESTONE, we're building Nightly or Aurora
 # - otherwise, we're building Release/Beta (define RELEASE_OR_BETA)
-@depends(check_build_environment, build_project, version_path, "--help")
+@depends(build_environment, build_project, version_path, "--help")
 @imports(_from="__builtin__", _import="open")
 @imports("os")
 @imports("re")

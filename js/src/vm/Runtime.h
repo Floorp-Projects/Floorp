@@ -35,6 +35,7 @@
 #include "js/Context.h"
 #include "js/Debug.h"
 #include "js/experimental/CTypes.h"      // JS::CTypesActivityCallback
+#include "js/experimental/JSStencil.h"   // mozilla::RefPtrTraits<JS::Stencil>
 #include "js/experimental/SourceHook.h"  // js::SourceHook
 #include "js/friend/StackLimits.h"       // js::ReportOverRecursed
 #include "js/friend/UsageStatistics.h"   // JSAccumulateTelemetryDataCallback
@@ -676,8 +677,9 @@ struct JSRuntime {
 
   bool hasInitializedSelfHosting() const { return hasSelfHostStencil(); }
 
-  bool initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache = nullptr,
-                       JS::SelfHostedWriter xdrWriter = nullptr);
+  bool initSelfHostingStencil(JSContext* cx, JS::SelfHostedCache xdrCache,
+                              JS::SelfHostedWriter xdrWriter);
+  bool initSelfHostingFromStencil(JSContext* cx);
   void finishSelfHosting();
   void traceSelfHostingStencil(JSTracer* trc);
   js::GeneratorKind getSelfHostedFunctionGeneratorKind(js::PropertyName* name);
@@ -780,7 +782,6 @@ struct JSRuntime {
   // can only be done from the main thread.
   js::MainThreadOrGCTaskData<js::SymbolRegistry> symbolRegistry_;
 
-  js::WriteOnceData<js::AtomSet*> permanentAtomsDuringInit_;
   js::WriteOnceData<js::FrozenAtomSet*> permanentAtoms_;
 
  public:
@@ -788,9 +789,7 @@ struct JSRuntime {
   bool initializeParserAtoms(JSContext* cx);
   void finishAtoms();
   void finishParserAtoms();
-  bool atomsAreFinished() const {
-    return !atoms_ && !permanentAtomsDuringInit_;
-  }
+  bool atomsAreFinished() const { return !atoms_; }
 
   js::AtomsTable* atomsForSweeping() {
     MOZ_ASSERT(JS::RuntimeHeapIsCollecting());
@@ -842,16 +841,6 @@ struct JSRuntime {
 
   // The permanent atoms table is populated during initialization.
   bool permanentAtomsPopulated() const { return permanentAtoms_; }
-
-  // For internal use, return the permanent atoms table while it is being
-  // populated.
-  js::AtomSet* permanentAtomsDuringInit() const {
-    MOZ_ASSERT(!permanentAtoms_);
-    return permanentAtomsDuringInit_.ref();
-  }
-
-  bool initMainAtomsTables(JSContext* cx);
-  void tracePermanentThingsDuringInit(JSTracer* trc);
 
   // Cached well-known symbols (ES6 rev 24 6.1.5.1). Like permanent atoms,
   // these are shared with the parentRuntime, if any.

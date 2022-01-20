@@ -51,13 +51,13 @@
 #define GFX_SCRIPTITEMIZER_H
 
 #include <stdint.h>
-#include "nsUnicodeScriptCodes.h"
+#include "mozilla/intl/UnicodeScriptCodes.h"
 
 #define PAREN_STACK_DEPTH 32
 
 class gfxScriptItemizer {
  public:
-  typedef mozilla::unicode::Script Script;
+  typedef mozilla::intl::Script Script;
 
   gfxScriptItemizer(const char16_t* src, uint32_t length);
 

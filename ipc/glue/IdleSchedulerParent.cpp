@@ -13,6 +13,7 @@
 #include "nsThreadUtils.h"
 #include "nsITimer.h"
 #include "nsIThread.h"
+#include "nsXPCOMPrivate.h"  // for gXPCOMThreadsShutDown
 
 namespace mozilla::ipc {
 
@@ -23,8 +24,6 @@ LinkedList<IdleSchedulerParent> IdleSchedulerParent::sIdleAndGCRequests;
 int32_t IdleSchedulerParent::sMaxConcurrentIdleTasksInChildProcesses = 1;
 uint32_t IdleSchedulerParent::sMaxConcurrentGCs = 1;
 uint32_t IdleSchedulerParent::sActiveGCs = 0;
-bool IdleSchedulerParent::sRecordGCTelemetry = false;
-uint32_t IdleSchedulerParent::sNumWaitingGC = 0;
 uint32_t IdleSchedulerParent::sChildProcessesRunningPrioritizedOperation = 0;
 uint32_t IdleSchedulerParent::sChildProcessesAlive = 0;
 nsITimer* IdleSchedulerParent::sStarvationPreventer = nullptr;
@@ -72,7 +71,9 @@ IdleSchedulerParent::IdleSchedulerParent() {
                   CalculateNumIdleTasks();
                 });
 
-            thread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+            if (MOZ_LIKELY(!gXPCOMThreadsShutDown)) {
+              thread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+            }
           }
         });
     NS_DispatchBackgroundTask(runnable.forget(), NS_DISPATCH_EVENT_MAY_BLOCK);
@@ -281,8 +282,6 @@ IPCResult IdleSchedulerParent::RecvRequestGC(RequestGCResolver&& aResolver) {
     sIdleAndGCRequests.insertBack(this);
   }
 
-  sRecordGCTelemetry = true;
-  sNumWaitingGC++;
   Schedule(nullptr);
   return IPC_OK();
 }
@@ -296,7 +295,6 @@ IPCResult IdleSchedulerParent::RecvStartedGC() {
   sActiveGCs++;
 
   if (mRequestingGC) {
-    sNumWaitingGC--;
     // We have to respond to the request before dropping it, even though the
     // content process is already doing the GC.
     mRequestingGC.value()(true);
@@ -304,7 +302,6 @@ IPCResult IdleSchedulerParent::RecvStartedGC() {
     if (!IsWaitingForIdle()) {
       remove();
     }
-    sRecordGCTelemetry = true;
   }
 
   return IPC_OK();
@@ -314,7 +311,6 @@ IPCResult IdleSchedulerParent::RecvDoneGC() {
   MOZ_ASSERT(mDoingGC);
   sActiveGCs--;
   mDoingGC = false;
-  sRecordGCTelemetry = true;
   Schedule(nullptr);
   return IPC_OK();
 }
@@ -359,9 +355,6 @@ void IdleSchedulerParent::SendMayGC() {
   mRequestingGC = Nothing();
   mDoingGC = true;
   sActiveGCs++;
-  sRecordGCTelemetry = true;
-  MOZ_ASSERT(sNumWaitingGC > 0);
-  sNumWaitingGC--;
 }
 
 void IdleSchedulerParent::Schedule(IdleSchedulerParent* aRequester) {
@@ -417,11 +410,6 @@ void IdleSchedulerParent::Schedule(IdleSchedulerParent* aRequester) {
 
   if (!sIdleAndGCRequests.isEmpty() && HasSpareCycles(activeCount)) {
     EnsureStarvationTimer();
-  }
-
-  if (sRecordGCTelemetry) {
-    sRecordGCTelemetry = false;
-    Telemetry::Accumulate(Telemetry::GC_WAIT_FOR_IDLE_COUNT, sNumWaitingGC);
   }
 }
 

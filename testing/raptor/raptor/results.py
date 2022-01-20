@@ -41,7 +41,6 @@ class PerftestResultsHandler(object):
         app=None,
         conditioned_profile=None,
         cold=False,
-        enable_webrender=False,
         chimera=False,
         **kwargs
     ):
@@ -59,7 +58,6 @@ class PerftestResultsHandler(object):
         self.fission_enabled = kwargs.get("extra_prefs", {}).get(
             "fission.autostart", False
         )
-        self.webrender_enabled = enable_webrender
         self.browser_version = None
         self.browser_name = None
         self.cold = cold
@@ -91,8 +89,7 @@ class PerftestResultsHandler(object):
                 extra_options.append("gecko-profile")
             if self.cold:
                 extra_options.append("cold")
-            if self.webrender_enabled:
-                extra_options.append("webrender")
+            extra_options.append("webrender")
         else:
             for modifier, name in modifiers:
                 if not modifier:
@@ -105,14 +102,10 @@ class PerftestResultsHandler(object):
                         % name
                     )
 
-        if (
-            self.app.lower()
-            in (
-                "chrome",
-                "chrome-m",
-                "chromium",
-            )
-            and "webrender" in extra_options
+        if self.app.lower() in (
+            "chrome",
+            "chrome-m",
+            "chromium",
         ):
             extra_options.remove("webrender")
 
@@ -266,7 +259,6 @@ class RaptorResultsHandler(PerftestResultsHandler):
                         "condprof-%s" % self.conditioned_profile,
                     ),
                     (self.fission_enabled, "fission"),
-                    (self.webrender_enabled, "webrender"),
                 ]
             )
         )

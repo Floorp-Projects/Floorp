@@ -7,7 +7,7 @@ import {
   isGeneratedId,
   originalToGeneratedId,
 } from "devtools-source-map";
-import { uniqBy, zip } from "lodash";
+import { uniqBy } from "lodash";
 
 import {
   getSource,
@@ -30,10 +30,10 @@ async function mapLocations(generatedLocations, { sourceMaps }) {
     generatedLocations
   );
 
-  return zip(
-    originalLocations,
-    generatedLocations
-  ).map(([location, generatedLocation]) => ({ location, generatedLocation }));
+  return originalLocations.map((location, index) => ({
+    location,
+    generatedLocation: generatedLocations[index],
+  }));
 }
 
 // Filter out positions, that are not in the original source Id

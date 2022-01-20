@@ -228,11 +228,11 @@ toolbarpaletteitem[place="menu-panel"]:not([mousedown="true"]):-moz-focusring,
 toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
   /* Delay adding the focusring back until after the transform transition completes. */
   transition: outline-width .01s linear var(--drag-drop-transition-duration);
-  outline: 1px dotted;
+  outline: var(--default-focusring);
 }
 
 toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
-  outline-offset: -5px;
+  outline-offset: calc(-1 * var(--default-focusring-width) - 4px);
 }
 
 toolbarpaletteitem[place=palette]::after {

@@ -1,6 +1,6 @@
 /// A version number for a specific component of an OpenGL implementation
 #[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
-pub(crate) struct Version {
+pub struct Version {
     pub major: u32,
     pub minor: u32,
     pub is_embedded: bool,
@@ -10,7 +10,7 @@ pub(crate) struct Version {
 
 impl Version {
     /// Create a new OpenGL version number
-    pub fn new(major: u32, minor: u32, revision: Option<u32>, vendor_info: String) -> Self {
+    pub(crate) fn new(major: u32, minor: u32, revision: Option<u32>, vendor_info: String) -> Self {
         Version {
             major: major,
             minor: minor,
@@ -20,7 +20,7 @@ impl Version {
         }
     }
     /// Create a new OpenGL ES version number
-    pub fn new_embedded(major: u32, minor: u32, vendor_info: String) -> Self {
+    pub(crate) fn new_embedded(major: u32, minor: u32, vendor_info: String) -> Self {
         Version {
             major,
             minor,
@@ -47,7 +47,7 @@ impl Version {
     /// resulting in an `Err`.
     /// # Notes
     /// `WebGL 2` version returned as `OpenGL ES 3.0`
-    pub fn parse(mut src: &str) -> Result<Version, &str> {
+    pub(crate) fn parse(mut src: &str) -> Result<Version, &str> {
         let webgl_sig = "WebGL ";
         // According to the WebGL specification
         // VERSION	WebGL<space>1.0<space><vendor-specific information>

@@ -6,7 +6,7 @@ use self::mantissa::*;
 use crate::common;
 use crate::d2s::{self, *};
 use crate::f2s::*;
-use core::{mem, ptr};
+use core::ptr;
 #[cfg(feature = "no-panic")]
 use no_panic::no_panic;
 
@@ -50,7 +50,7 @@ use no_panic::no_panic;
 #[must_use]
 #[cfg_attr(feature = "no-panic", no_panic)]
 pub unsafe fn format64(f: f64, result: *mut u8) -> usize {
-    let bits = mem::transmute::<f64, u64>(f);
+    let bits = f.to_bits();
     let sign = ((bits >> (DOUBLE_MANTISSA_BITS + DOUBLE_EXPONENT_BITS)) & 1) != 0;
     let ieee_mantissa = bits & ((1u64 << DOUBLE_MANTISSA_BITS) - 1);
     let ieee_exponent =
@@ -157,7 +157,7 @@ pub unsafe fn format64(f: f64, result: *mut u8) -> usize {
 #[must_use]
 #[cfg_attr(feature = "no-panic", no_panic)]
 pub unsafe fn format32(f: f32, result: *mut u8) -> usize {
-    let bits = mem::transmute::<f32, u32>(f);
+    let bits = f.to_bits();
     let sign = ((bits >> (FLOAT_MANTISSA_BITS + FLOAT_EXPONENT_BITS)) & 1) != 0;
     let ieee_mantissa = bits & ((1u32 << FLOAT_MANTISSA_BITS) - 1);
     let ieee_exponent =

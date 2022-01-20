@@ -159,6 +159,11 @@ int main(int argc, char* argv[]) {
     total += 1;
 
     printf("%s\n", name);
+
+    // Make sure the test name is printed before we enter the test that can
+    // crash on failure.
+    fflush(stdout);
+
     if (!test->init(maybeReusedContext)) {
       printf("TEST-UNEXPECTED-FAIL | %s | Failed to initialize.\n", name);
       failures++;

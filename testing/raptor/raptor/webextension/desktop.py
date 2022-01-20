@@ -41,12 +41,6 @@ class WebExtensionDesktop(PerftestDesktop, WebExtension):
         # Force Firefox to immediately exit for content crashes
         self.runner.env["MOZ_CRASHREPORTER_SHUTDOWN"] = "1"
 
-        if self.config["enable_webrender"]:
-            self.runner.env["MOZ_WEBRENDER"] = "1"
-            self.runner.env["MOZ_ACCELERATED"] = "1"
-        else:
-            self.runner.env["MOZ_WEBRENDER"] = "0"
-
         self.runner.env.update(self.config.get("environment", {}))
 
     def launch_desktop_browser(self, test):

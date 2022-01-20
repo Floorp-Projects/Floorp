@@ -803,8 +803,8 @@ public class SessionAccessibility {
 
     nativeProvider.exploreByTouch(
         mAccessibilityFocusedNode != 0 ? mAccessibilityFocusedNode : View.NO_ID,
-        event.getRawX(),
-        event.getRawY());
+        event.getX(),
+        event.getY());
 
     return true;
   }

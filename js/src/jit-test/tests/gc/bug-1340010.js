@@ -19,4 +19,4 @@ if (typeof oomTest == "function") {
 }
 deterministicgc(true);
 startgc(9469, "shrinking");
-offThreadCompileScript("");
+offThreadCompileToStencil("");

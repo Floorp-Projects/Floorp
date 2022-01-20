@@ -6,6 +6,7 @@
 
 #include "MediaData.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "Tracing.h"
 
 // Use abort() instead of exception in SoundTouch.
@@ -638,9 +639,15 @@ void AudioDecoderInputTrack::EnsureTimeStretcher() {
     // We are going to use a smaller 10ms sequence size to improve speech
     // clarity, giving more resolution at high tempo and less reverb at low
     // tempo. Maintain 15ms seekwindow and 8ms overlap for smoothness.
-    mTimeStretcher->setSetting(SETTING_SEQUENCE_MS, 10);
-    mTimeStretcher->setSetting(SETTING_SEEKWINDOW_MS, 15);
-    mTimeStretcher->setSetting(SETTING_OVERLAP_MS, 8);
+    mTimeStretcher->setSetting(
+        SETTING_SEQUENCE_MS,
+        StaticPrefs::media_audio_playbackrate_soundtouch_sequence_ms());
+    mTimeStretcher->setSetting(
+        SETTING_SEEKWINDOW_MS,
+        StaticPrefs::media_audio_playbackrate_soundtouch_seekwindow_ms());
+    mTimeStretcher->setSetting(
+        SETTING_OVERLAP_MS,
+        StaticPrefs::media_audio_playbackrate_soundtouch_overlap_ms());
     SetTempoAndRateForTimeStretcher();
     LOG("Create TimeStretcher (channel=%d, playbackRate=%f, preservePitch=%d)",
         GetChannelCountForTimeStretcher(), mPlaybackRate, mPreservesPitch);

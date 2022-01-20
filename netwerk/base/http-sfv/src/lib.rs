@@ -168,8 +168,8 @@ impl SFVInteger {
         Ok(())
     }
 
-    xpcom_method!(get_type => GetType() -> i64);
-    fn get_type(&self) -> Result<i64, nsresult> {
+    xpcom_method!(get_type => GetType() -> i32);
+    fn get_type(&self) -> Result<i32, nsresult> {
         Ok(nsISFVBareItem::INTEGER)
     }
 
@@ -203,8 +203,8 @@ impl SFVBool {
         Ok(())
     }
 
-    xpcom_method!(get_type => GetType() -> i64);
-    fn get_type(&self) -> Result<i64, nsresult> {
+    xpcom_method!(get_type => GetType() -> i32);
+    fn get_type(&self) -> Result<i32, nsresult> {
         Ok(nsISFVBareItem::BOOL)
     }
 
@@ -245,8 +245,8 @@ impl SFVString {
         Ok(())
     }
 
-    xpcom_method!(get_type => GetType() -> i64);
-    fn get_type(&self) -> Result<i64, nsresult> {
+    xpcom_method!(get_type => GetType() -> i32);
+    fn get_type(&self) -> Result<i32, nsresult> {
         Ok(nsISFVBareItem::STRING)
     }
 
@@ -287,8 +287,8 @@ impl SFVToken {
         Ok(())
     }
 
-    xpcom_method!(get_type => GetType() -> i64);
-    fn get_type(&self) -> Result<i64, nsresult> {
+    xpcom_method!(get_type => GetType() -> i32);
+    fn get_type(&self) -> Result<i32, nsresult> {
         Ok(nsISFVBareItem::TOKEN)
     }
 
@@ -329,8 +329,8 @@ impl SFVByteSeq {
         Ok(())
     }
 
-    xpcom_method!(get_type => GetType() -> i64);
-    fn get_type(&self) -> Result<i64, nsresult> {
+    xpcom_method!(get_type => GetType() -> i32);
+    fn get_type(&self) -> Result<i32, nsresult> {
         Ok(nsISFVBareItem::BYTE_SEQUENCE)
     }
 
@@ -371,8 +371,8 @@ impl SFVDecimal {
         Ok(())
     }
 
-    xpcom_method!(get_type => GetType() -> i64);
-    fn get_type(&self) -> Result<i64, nsresult> {
+    xpcom_method!(get_type => GetType() -> i32);
+    fn get_type(&self) -> Result<i32, nsresult> {
         Ok(nsISFVBareItem::DECIMAL)
     }
 
@@ -724,7 +724,7 @@ fn bare_item_from_interface(obj: &nsISFVBareItem) -> Result<BareItem, nsresult> 
     let obj = obj
         .query_interface::<nsISFVBareItem>()
         .ok_or(NS_ERROR_UNEXPECTED)?;
-    let mut obj_type: i64 = -1;
+    let mut obj_type: i32 = -1;
     unsafe {
         obj.deref().GetType(&mut obj_type);
     }

@@ -395,6 +395,7 @@ bool WidgetEvent::CanBeSentToRemoteProcess() const {
     case eMouseDown:
     case eMouseUp:
     case eMouseMove:
+    case eMouseExploreByTouch:
     case eContextMenu:
     case eMouseEnterIntoWidget:
     case eMouseExitFromWidget:

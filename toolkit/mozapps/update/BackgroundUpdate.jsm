@@ -48,14 +48,12 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIApplicationUpdateService"
 );
 
-Cu.importGlobalProperties(["Glean"]);
-
 // We may want to change the definition of the task over time. When we do this,
 // we need to remove and re-register the task. We will make sure this happens
 // by storing the installed version number of the task to a pref and comparing
 // that version number to the current version. If they aren't equal, we know
 // that we have to re-register the task.
-const TASK_DEF_CURRENT_VERSION = 2;
+const TASK_DEF_CURRENT_VERSION = 3;
 const TASK_INSTALLED_VERSION_PREF =
   "app.update.background.lastInstalledTaskVersion";
 
@@ -500,6 +498,41 @@ var BackgroundUpdate = {
           await TaskScheduler.deleteTask(this.taskId);
         } catch (e) {
           log.error(`${SLUG}: Error removing old task: ${e}`);
+        }
+        try {
+          // When the update directory was moved, we migrated the old contents
+          // to the new location. This can potentially happen in a background
+          // task. However, we also need to re-register the background task
+          // with the task scheduler in order to update the MOZ_LOG_FILE value
+          // to point to the new location. If the task runs before Firefox has
+          // a chance to re-register the task, the log file may be recreated in
+          // the old location. In practice, this would be unusual, because
+          // MOZ_LOG_FILE will not create the parent directories necessary to
+          // put a log file in the specified location. But just to be safe,
+          // we'll do some cleanup when we re-register the task to make sure
+          // that no log file is hanging around in the old location.
+          let oldUpdateDir = FileUtils.getDir("OldUpdRootD", [], false);
+          let oldLog = oldUpdateDir.clone();
+          oldLog.append("backgroundupdate.moz_log");
+
+          if (oldLog.exists()) {
+            oldLog.remove(false);
+            // We may have created some directories in order to put this log
+            // file in this location. Clean them up if they are empty.
+            // (If we pass false for the recurse parameter, directories with
+            // contents will not be removed)
+            //
+            // Potentially removes "C:\ProgramData\Mozilla\updates\<hash>"
+            oldUpdateDir.remove(false);
+            // Potentially removes "C:\ProgramData\Mozilla\updates"
+            oldUpdateDir.parent.remove(false);
+            // Potentially removes "C:\ProgramData\Mozilla"
+            oldUpdateDir.parent.parent.remove(false);
+          }
+        } catch (ex) {
+          log.warn(
+            `${SLUG}: Ignoring error encountered attempting to remove stale log file: ${ex}`
+          );
         }
       }
 

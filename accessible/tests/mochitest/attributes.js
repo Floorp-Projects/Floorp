@@ -11,9 +11,10 @@
  *                              (name/value pairs)
  * @param aSkipUnexpectedAttrs  [in] points this function doesn't fail if
  *                              unexpected attribute is encountered
+ * @param aTodo                 [in] true if this is a 'todo'
  */
-function testAttrs(aAccOrElmOrID, aAttrs, aSkipUnexpectedAttrs) {
-  testAttrsInternal(aAccOrElmOrID, aAttrs, aSkipUnexpectedAttrs);
+function testAttrs(aAccOrElmOrID, aAttrs, aSkipUnexpectedAttrs, aTodo) {
+  testAttrsInternal(aAccOrElmOrID, aAttrs, aSkipUnexpectedAttrs, null, aTodo);
 }
 
 /**
@@ -22,9 +23,10 @@ function testAttrs(aAccOrElmOrID, aAttrs, aSkipUnexpectedAttrs) {
  * @param aAccOrElmOrID         [in] the accessible identifier
  * @param aAbsentAttrs          [in] map of attributes that should not be
  *                              present (name/value pairs)
+ * @param aTodo                 [in] true if this is a 'todo'
  */
-function testAbsentAttrs(aAccOrElmOrID, aAbsentAttrs) {
-  testAttrsInternal(aAccOrElmOrID, {}, true, aAbsentAttrs);
+function testAbsentAttrs(aAccOrElmOrID, aAbsentAttrs, aTodo) {
+  testAttrsInternal(aAccOrElmOrID, {}, true, aAbsentAttrs, aTodo);
 }
 
 /**
@@ -35,17 +37,12 @@ function testAbsentAttrs(aAccOrElmOrID, aAbsentAttrs) {
  * @param aExpectedValue        [in] expected attribute value
  */
 function todoAttr(aAccOrElmOrID, aKey, aExpectedValue) {
-  var accessible = getAccessible(aAccOrElmOrID);
-  if (!accessible) {
-    return;
-  }
-
-  var attrs = null;
-  try {
-    attrs = accessible.attributes;
-  } catch (e) {}
-
-  todo_is(attrs.getStringProperty(aKey), aExpectedValue, "attributes match");
+  testAttrs(
+    aAccOrElmOrID,
+    Object.fromEntries([[aKey, aExpectedValue]]),
+    true,
+    true
+  );
 }
 
 /**
@@ -92,53 +89,56 @@ function testAbsentCSSAttrs(aID) {
  * @param aSetSize       [in] the value of 'setsize' attribute
  * @param aLevel         [in, optional] the value of 'level' attribute
  */
-function testGroupAttrs(aAccOrElmOrID, aPosInSet, aSetSize, aLevel) {
+function testGroupAttrs(aAccOrElmOrID, aPosInSet, aSetSize, aLevel, aTodo) {
   var acc = getAccessible(aAccOrElmOrID);
   var levelObj = {},
     posInSetObj = {},
     setSizeObj = {};
   acc.groupPosition(levelObj, setSizeObj, posInSetObj);
 
-  if (aPosInSet && aSetSize) {
-    is(
-      posInSetObj.value,
-      aPosInSet,
-      "Wrong group position (posinset) for " + prettyName(aAccOrElmOrID)
-    );
-    is(
-      setSizeObj.value,
-      aSetSize,
-      "Wrong size of the group (setsize) for " + prettyName(aAccOrElmOrID)
-    );
+  let groupPos = {},
+    expectedGroupPos = {};
 
-    let attrs = {
-      posinset: String(aPosInSet),
-      setsize: String(aSetSize),
-    };
-    testAttrs(aAccOrElmOrID, attrs, true);
+  if (aPosInSet && aSetSize) {
+    groupPos.setsize = String(setSizeObj.value);
+    groupPos.posinset = String(posInSetObj.value);
+
+    expectedGroupPos.setsize = String(aSetSize);
+    expectedGroupPos.posinset = String(aPosInSet);
   }
 
   if (aLevel) {
-    is(
-      levelObj.value,
-      aLevel,
-      "Wrong group level for " + prettyName(aAccOrElmOrID)
-    );
+    groupPos.level = String(levelObj.value);
 
-    let attrs = { level: String(aLevel) };
-    testAttrs(aAccOrElmOrID, attrs, true);
+    expectedGroupPos.level = String(aLevel);
   }
+
+  compareSimpleObjects(
+    groupPos,
+    expectedGroupPos,
+    false,
+    "wrong groupPos",
+    aTodo
+  );
+
+  testAttrs(aAccOrElmOrID, expectedGroupPos, true, aTodo);
 }
 
-function testGroupParentAttrs(aAccOrElmOrID, aChildItemCount, aIsHierarchical) {
+function testGroupParentAttrs(
+  aAccOrElmOrID,
+  aChildItemCount,
+  aIsHierarchical,
+  aTodo
+) {
   testAttrs(
     aAccOrElmOrID,
     { "child-item-count": String(aChildItemCount) },
-    true
+    true,
+    aTodo
   );
 
   if (aIsHierarchical) {
-    testAttrs(aAccOrElmOrID, { tree: "true" }, true);
+    testAttrs(aAccOrElmOrID, { tree: "true" }, true, aTodo);
   } else {
     testAbsentAttrs(aAccOrElmOrID, { tree: "true" });
   }
@@ -414,7 +414,8 @@ function testAttrsInternal(
   aAccOrElmOrID,
   aAttrs,
   aSkipUnexpectedAttrs,
-  aAbsentAttrs
+  aAbsentAttrs,
+  aTodo
 ) {
   var accessible = getAccessible(aAccOrElmOrID);
   if (!accessible) {
@@ -432,7 +433,14 @@ function testAttrsInternal(
   }
 
   var errorMsg = " for " + prettyName(aAccOrElmOrID);
-  compareAttrs(errorMsg, attrs, aAttrs, aSkipUnexpectedAttrs, aAbsentAttrs);
+  compareAttrs(
+    errorMsg,
+    attrs,
+    aAttrs,
+    aSkipUnexpectedAttrs,
+    aAbsentAttrs,
+    aTodo
+  );
 }
 
 function compareAttrs(
@@ -440,61 +448,69 @@ function compareAttrs(
   aAttrs,
   aExpectedAttrs,
   aSkipUnexpectedAttrs,
-  aAbsentAttrs
+  aAbsentAttrs,
+  aTodo
 ) {
   // Check if all obtained attributes are expected and have expected value.
+  let attrObject = {};
   for (let prop of aAttrs.enumerate()) {
-    if (!(prop.key in aExpectedAttrs)) {
-      if (!aSkipUnexpectedAttrs) {
-        ok(
-          false,
-          "Unexpected attribute '" +
-            prop.key +
-            "' having '" +
-            prop.value +
-            "'" +
-            aErrorMsg
-        );
-      }
-    } else {
-      var msg = "Attribute '" + prop.key + "' has wrong value" + aErrorMsg;
-      var expectedValue = aExpectedAttrs[prop.key];
-
-      if (typeof expectedValue == "function") {
-        ok(expectedValue(prop.value), msg);
-      } else {
-        is(prop.value, expectedValue, msg);
-      }
-    }
+    attrObject[prop.key] = prop.value;
   }
 
-  // Check if all expected attributes are presented.
-  for (let name in aExpectedAttrs) {
-    var value = "";
-    try {
-      value = aAttrs.getStringProperty(name);
-    } catch (e) {}
+  // Create expected attributes set by using the return values from
+  // embedded functions to determine the entry's value.
+  let expectedObj = Object.fromEntries(
+    Object.entries(aExpectedAttrs).map(([k, v]) => {
+      if (v instanceof Function) {
+        // If value is a function that returns true given the received
+        // attribute value, assign the attribute value to the entry.
+        // If it is false, stringify the function for good error reporting.
+        let value = v(attrObject[k]) ? attrObject[k] : v.toString();
+        return [k, value];
+      }
 
-    if (!value) {
-      ok(false, "There is no expected attribute '" + name + "' " + aErrorMsg);
-    }
-  }
+      return [k, v];
+    })
+  );
+
+  compareSimpleObjects(
+    attrObject,
+    expectedObj,
+    aSkipUnexpectedAttrs,
+    aErrorMsg,
+    aTodo
+  );
 
   // Check if all unexpected attributes are absent.
   if (aAbsentAttrs) {
-    for (var name in aAbsentAttrs) {
-      var wasFound = false;
-
-      for (let prop of aAttrs.enumerate()) {
-        if (prop.key == name) {
-          wasFound = true;
-        }
-      }
-    }
-
-    ok(
-      !wasFound,
-      "There is an unexpected attribute '" + name + "' " + aErrorMsg
+    let presentAttrs = Object.keys(attrObject).filter(
+      k => aAbsentAttrs[k] !== undefined
     );
+    if (presentAttrs.length) {
+      (aTodo ? todo : ok)(
+        false,
+        `There were unexpected attributes: ${presentAttrs}`
+      );
+    }
+  }
+}
+
+function compareSimpleObjects(
+  aObj,
+  aExpectedObj,
+  aSkipUnexpectedAttrs,
+  aMessage,
+  aTodo
+) {
+  let keys = aSkipUnexpectedAttrs
+    ? Object.keys(aExpectedObj).sort()
+    : Object.keys(aObj).sort();
+  let o1 = JSON.stringify(aObj, keys);
+  let o2 = JSON.stringify(aExpectedObj, keys);
+
+  if (aTodo) {
+    todo_is(o1, o2, `${aMessage} - Got ${o1}, expected ${o2}`);
+  } else {
+    is(o1, o2, aMessage);
   }
 }

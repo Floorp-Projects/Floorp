@@ -133,7 +133,7 @@ where
         let shift = fp.normalize();
         errors <<= shift;
 
-        u64::error_is_accurate::<F>(errors, &fp)
+        u64::error_is_accurate::<F>(errors, fp)
     }
 }
 

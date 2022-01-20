@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<script>
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  window.removeEventListener("message", receiveMessage);
+
+  var mySocket = new WebSocket("ws://example.com/tests/dom/security/test/https-only/file_upgrade_insecure");
+  mySocket.onopen = function(e) {
+    parent.dispatchEvent(new CustomEvent("WebSocketEnded", {
+      detail: { url: mySocket.url, state: "onopen" }
+    }));
+    mySocket.close();
+  };
+  mySocket.onerror = function(e) {
+    parent.dispatchEvent(new CustomEvent("WebSocketEnded", {
+      detail: { url: mySocket.url, state: "onerror" }
+    }));
+    mySocket.close();
+  };
+}
+</script>
+</head>
+<body>
+  Https-Only: WebSocket exemption test in iframe</br>
+</body>
+</html>

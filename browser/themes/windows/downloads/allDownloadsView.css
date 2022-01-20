@@ -48,3 +48,20 @@
     outline-offset: -2px;
   }
 }
+
+/*** Progress bars ***/
+
+@media (prefers-contrast) {
+  .downloadProgress {
+    background-color: -moz-Dialog;
+    border: 1px solid ButtonText;
+  }
+
+  .downloadProgress::-moz-progress-bar {
+    --download-progress-fill-color: SelectedItem;
+  }
+
+  #downloadsRichListBox richlistitem[selected] .downloadProgress::-moz-progress-bar {
+    --download-progress-fill-color: ButtonText;
+  }
+}

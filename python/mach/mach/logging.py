@@ -86,14 +86,20 @@ class StructuredHumanFormatter(logging.Formatter):
         self.last_time = None
 
     def format(self, record):
-        f = record.msg.format(**record.params)
+        formatted_msg = record.msg.format(**record.params)
 
-        if not self.write_times:
-            return f
+        elapsed_time = (
+            format_seconds(self._time(record)) + " " if self.write_times else ""
+        )
 
-        elapsed = self._time(record)
+        rv = elapsed_time + formatted_msg
+        formatted_stack_trace_result = formatted_stack_trace(record, self)
 
-        return "%s %s" % (format_seconds(elapsed), f)
+        if formatted_stack_trace_result != "":
+            stack_trace = "\n" + elapsed_time + formatted_stack_trace_result
+            rv += stack_trace.replace("\n", f"\n{elapsed_time}")
+
+        return rv
 
     def _time(self, record):
         t = record.created - self.start_time
@@ -114,12 +120,19 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
         self._sgr0 = terminal.normal if terminal and blessings else ""
 
     def format(self, record):
-        f = record.msg.format(**record.params)
+        formatted_msg = record.msg.format(**record.params)
+        elapsed_time = (
+            self.terminal.blue(format_seconds(self._time(record))) + " "
+            if self.write_times
+            else ""
+        )
 
-        if not self.write_times:
-            return f
+        rv = elapsed_time + self._colorize(formatted_msg) + self._sgr0
+        formatted_stack_trace_result = formatted_stack_trace(record, self)
 
-        t = self.terminal.blue(format_seconds(self._time(record)))
+        if formatted_stack_trace_result != "":
+            stack_trace = "\n" + elapsed_time + formatted_stack_trace_result
+            rv += stack_trace.replace("\n", f"\n{elapsed_time}")
 
         # Some processes (notably Clang) don't reset terminal attributes after
         # printing newlines. This can lead to terminal attributes getting in a
@@ -127,7 +140,7 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
         # line to reset all attributes. For programs that rely on the next line
         # inheriting the same attributes, this will prevent that from happening.
         # But that's better than "corrupting" the terminal.
-        return "%s %s%s" % (t, self._colorize(f), self._sgr0)
+        return rv + self._sgr0
 
     def _colorize(self, s):
         if not self.terminal:
@@ -152,6 +165,28 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
             result = "REFTEST " + result
 
         return result
+
+
+def formatted_stack_trace(record, formatter):
+    """
+    Formatting behavior here intended to mimic a portion of the
+    standard library's logging.Formatter::format function
+    """
+    rv = ""
+
+    if record.exc_info:
+        # Cache the traceback text to avoid converting it multiple times
+        # (it's constant anyway)
+        if not record.exc_text:
+            record.exc_text = formatter.formatException(record.exc_info)
+    if record.exc_text:
+        rv = record.exc_text
+    if record.stack_info:
+        if rv[-1:] != "\n":
+            rv = rv + "\n"
+        rv = rv + formatter.formatStack(record.stack_info)
+
+    return rv
 
 
 class LoggingManager(object):

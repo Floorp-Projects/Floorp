@@ -1114,9 +1114,10 @@ class LayerViewSupport final
   void SyncPauseCompositor() {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
+    mCompositorPaused = true;
+
     if (RefPtr<UiCompositorControllerChild> child =
             GetUiCompositorControllerChild()) {
-      mCompositorPaused = true;
       child->Pause();
     }
 
@@ -2584,7 +2585,8 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
 
 void nsWindow::GetCompositorWidgetInitData(
     mozilla::widget::CompositorWidgetInitData* aInitData) {
-  *aInitData = mozilla::widget::AndroidCompositorWidgetInitData(mWidgetId);
+  *aInitData = mozilla::widget::AndroidCompositorWidgetInitData(
+      mWidgetId, GetClientSize());
 }
 
 bool nsWindow::WidgetPaintsBackground() {

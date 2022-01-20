@@ -1063,7 +1063,7 @@ void ScriptPreloader::FinishOffThreadDecode(JS::OffThreadToken* token) {
   //
   // The exception from the off-thread decode operation will be reported when
   // we pop the AutoJSAPI off the stack.
-  Unused << JS::FinishMultiOffThreadStencilDecoder(cx, token, &stencils);
+  Unused << JS::FinishDecodeMultiStencilsOffThread(cx, token, &stencils);
 
   unsigned i = 0;
   for (auto script : mParsingScripts) {
@@ -1135,8 +1135,10 @@ void ScriptPreloader::DecodeNextBatch(size_t chunkSize,
   options.borrowBuffer = true;
   options.usePinnedBytecode = true;
 
-  if (!JS::CanCompileOffThread(cx, options, size) ||
-      !JS::DecodeMultiOffThreadStencils(cx, options, mParsingSources,
+  JS::DecodeOptions decodeOptions(options);
+
+  if (!JS::CanDecodeOffThread(cx, decodeOptions, size) ||
+      !JS::DecodeMultiStencilsOffThread(cx, decodeOptions, mParsingSources,
                                         OffThreadDecodeCallback,
                                         static_cast<void*>(this))) {
     // If we fail here, we don't move on to process the next batch, so make

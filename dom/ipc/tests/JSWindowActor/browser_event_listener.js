@@ -85,3 +85,87 @@ declTest("test createActor:false not triggering actor creation", {
     );
   },
 });
+
+async function testEventProcessedOnce(browser, waitForUrl) {
+  let notificationCount = 0;
+  let firstNotificationResolve;
+  let firstNotification = new Promise(resolve => {
+    firstNotificationResolve = resolve;
+  });
+
+  const TOPIC = "test-js-window-actor-parent-event";
+  function obs(subject, topic, data) {
+    is(data, "mozwindowactortestevent");
+    notificationCount++;
+    if (firstNotificationResolve) {
+      firstNotificationResolve();
+      firstNotificationResolve = null;
+    }
+  }
+  Services.obs.addObserver(obs, TOPIC);
+
+  if (waitForUrl) {
+    info("Waiting for URI to be alright");
+    await TestUtils.waitForCondition(() => {
+      if (!browser.browsingContext?.currentWindowGlobal) {
+        info("No CWG yet");
+        return false;
+      }
+      return SpecialPowers.spawn(browser, [waitForUrl], async function(url) {
+        info(content.document.documentURI);
+        return content.document.documentURI.includes(url);
+      });
+    });
+  }
+
+  info("Dispatching event");
+  await SpecialPowers.spawn(browser, [], async function() {
+    content.document.dispatchEvent(
+      new content.CustomEvent("mozwindowactortestevent", { bubbles: true })
+    );
+  });
+
+  info("Waiting for notification");
+  await firstNotification;
+
+  await new Promise(r => setTimeout(r, 0));
+
+  is(notificationCount, 1, "Should get only one notification");
+
+  Services.obs.removeObserver(obs, TOPIC);
+}
+
+declTest("test in-process content events are not processed twice", {
+  url: "about:preferences",
+  events: { mozwindowactortestevent: { wantUntrusted: true } },
+  async test(browser) {
+    is(
+      browser.getAttribute("type"),
+      "content",
+      "Should be a content <browser>"
+    );
+    is(browser.getAttribute("remotetype"), "", "Should not be remote");
+    await testEventProcessedOnce(browser);
+  },
+});
+
+declTest("test in-process chrome events are processed correctly", {
+  url: "about:blank",
+  events: { mozwindowactortestevent: { wantUntrusted: true } },
+  allFrames: true,
+  includeChrome: true,
+  async test(browser) {
+    let dialogBox = gBrowser.getTabDialogBox(browser);
+    let { dialogClosed, dialog } = dialogBox.open(
+      "chrome://mochitests/content/browser/dom/ipc/tests/JSWindowActor/file_dummyChromePage.html"
+    );
+    let chromeBrowser = dialog._frame;
+    is(chromeBrowser.getAttribute("type"), "", "Should be a chrome <browser>");
+    is(chromeBrowser.getAttribute("remotetype"), "", "Should not be remote");
+
+    await testEventProcessedOnce(chromeBrowser, "dummyChromePage.html");
+
+    dialog.close();
+    await dialogClosed;
+  },
+});

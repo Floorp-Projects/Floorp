@@ -63,6 +63,10 @@ void PendingAnimationTracker::TriggerPendingAnimationsOnNextTick(
         continue;
       }
 
+      MOZ_ASSERT(timeline->IsMonotonicallyIncreasing(),
+                 "Don't put non-MonotoniciallyIncreasing timeline into "
+                 "PendingAnimationTracker");
+
       // When the timeline's refresh driver is under test control, its values
       // have no correspondance to wallclock times so we shouldn't try to
       // convert aReadyTime (which is a wallclock time) to a timeline value.

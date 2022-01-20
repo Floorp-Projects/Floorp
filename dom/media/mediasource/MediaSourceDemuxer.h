@@ -145,9 +145,11 @@ class MediaSourceTrackDemuxer
   // the need for the lock.
   RefPtr<TrackBuffersManager> mManager;
 
+  // Only accessed on TaskQueue
   Maybe<RefPtr<MediaRawData>> mNextSample;
   // Set to true following a reset. Ensure that the next sample demuxed
   // is available at position 0.
+  // Only accessed on TaskQueue
   bool mReset;
 
   // Amount of pre-roll time when seeking.

@@ -65,7 +65,7 @@ class gfxFT2FontBase : public gfxFont {
   void UnlockFTFace();
 
  private:
-  uint32_t GetCharExtents(char aChar, gfxFloat* aWidth,
+  uint32_t GetCharExtents(uint32_t aChar, gfxFloat* aWidth,
                           gfxRect* aBounds = nullptr);
 
   // Get advance (and optionally bounds) of a single glyph from FreeType,

@@ -560,6 +560,7 @@ HTMLTooltip.prototype = {
     // Record the height too since it might save us from having to look it up
     // later.
     let measuredHeight;
+    const currentScrollTop = this.panel.scrollTop;
     if (this.preferredWidth === "auto") {
       // Reset any styles that constrain the dimensions we want to calculate.
       this.container.style.width = "auto";
@@ -663,6 +664,7 @@ HTMLTooltip.prototype = {
     );
 
     this.container.style.height = height + "px";
+    this.panel.scrollTop = currentScrollTop;
 
     return { left, top };
   },

@@ -9,6 +9,7 @@
 
 #include "js/AllocPolicy.h"
 #include "js/RootingAPI.h"
+#include "js/SourceText.h"
 #include "js/TypeDecls.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Assertions.h"
@@ -16,6 +17,7 @@
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/MaybeOneOf.h"
 #include "mozilla/PreloaderBase.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "mozilla/Variant.h"
@@ -109,8 +111,10 @@ class ScriptLoadRequest
     GetScriptElement()->ScriptAvailable(aResult, GetScriptElement(),
                                         isInlineClassicScript, mURI, mLineNo);
   }
-  void FireScriptEvaluated(nsresult aResult) {
-    GetScriptElement()->ScriptEvaluated(aResult, GetScriptElement(), mIsInline);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FireScriptEvaluated(nsresult aResult) {
+    RefPtr<nsIScriptElement> scriptElement = GetScriptElement();
+    scriptElement->ScriptEvaluated(aResult, scriptElement, mIsInline);
   }
 
   bool IsPreload() const {
@@ -247,6 +251,16 @@ class ScriptLoadRequest
   nsIGlobalObject* GetWebExtGlobal() const {
     return mFetchOptions->mWebExtGlobal;
   }
+
+  using MaybeSourceText =
+      mozilla::MaybeOneOf<JS::SourceText<char16_t>, JS::SourceText<Utf8Unit>>;
+
+  // Get source text.  On success |aMaybeSource| will contain either UTF-8 or
+  // UTF-16 source; on failure it will remain in its initial state.
+  nsresult GetScriptSource(JSContext* aCx, MaybeSourceText* aMaybeSource);
+
+  // Used to output a string for the Gecko Profiler.
+  void GetProfilerLabel(nsACString& aOutString);
 
   // Make this request a preload (speculative) request.
   void SetIsPreloadRequest() {

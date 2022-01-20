@@ -109,7 +109,7 @@ impl ImguiManager {
                 // implemented upstream and I switch to using it
             }
             _ => {
-                platform.handle_event(context.io_mut(), &window, &event);
+                platform.handle_event(context.io_mut(), window, event);
             }
         }
     }
@@ -309,12 +309,12 @@ fn init_imgui(window: &winit::window::Window) -> imgui::Context {
 }
 
 pub fn init_imgui_manager(window: &winit::window::Window) -> ImguiManager {
-    let mut imgui_context = init_imgui(&window);
+    let mut imgui_context = init_imgui(window);
     let mut imgui_platform = imgui_winit_support::WinitPlatform::init(&mut imgui_context);
 
     imgui_platform.attach_window(
         imgui_context.io_mut(),
-        &window,
+        window,
         imgui_winit_support::HiDpiMode::Rounded,
     );
 
