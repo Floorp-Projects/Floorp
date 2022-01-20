@@ -1240,11 +1240,6 @@ nsresult VerifyCertAtTime(nsIX509Cert* aCert,
   *aHasEVPolicy = false;
   *_retval = PR_UNKNOWN_ERROR;
 
-  UniqueCERTCertificate nssCert(aCert->GetCert());
-  if (!nssCert) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_FAILURE);
 

@@ -1620,9 +1620,18 @@ def select_linker(linker, c_compiler, developer_options, toolchain_flags, target
 set_config("LINKER_KIND", select_linker.KIND)
 
 
-@depends_if(select_linker, target, target_sysroot, target_multiarch_dir, c_compiler)
+@depends_if(
+    select_linker,
+    target,
+    target_sysroot,
+    target_multiarch_dir,
+    android_platform,
+    c_compiler,
+)
 @imports("os")
-def linker_ldflags(linker, target, sysroot, multiarch_dir, c_compiler):
+def linker_ldflags(
+    linker, target, sysroot, multiarch_dir, android_platform, c_compiler
+):
     flags = list((linker and linker.LINKER_FLAG) or [])
     # rpath-link is irrelevant to wasm, see for more info https://github.com/emscripten-core/emscripten/issues/11076.
     if sysroot.path and multiarch_dir and target.os != "WASI":
@@ -1641,6 +1650,11 @@ def linker_ldflags(linker, target, sysroot, multiarch_dir, c_compiler):
                     sysroot.path, multiarch_dir, sysroot.stdcxx_version
                 )
             )
+    if android_platform:
+        flags.append("-L{}/usr/lib".format(android_platform))
+        flags.append("-Wl,--rpath-link={}/usr/lib".format(android_platform))
+        flags.append("--sysroot")
+        flags.append(android_platform)
     return flags
 
 

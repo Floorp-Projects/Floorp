@@ -625,11 +625,6 @@ const windowGlobalTargetPrototype = {
         watchpoints: true,
         // Supports back and forward navigation
         navigation: true,
-        // The target actor no longer expose attach/detach methods and is now running
-        // the code which used to be run while calling attach from its constructor.
-        // The target actor is now immediately fully usable and starts inspecting the
-        // WindowGlobal immediately
-        isAutoAttached: true,
       },
     };
 
