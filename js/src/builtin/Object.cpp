@@ -488,7 +488,7 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
 
     val.set(desc->value());
 
-    JSFunction* fun = nullptr;
+    JSFunction* fun;
     if (IsFunctionObject(val, &fun) && fun->isMethod()) {
       if (!AddProperty(id, val, PropertyKind::Method)) {
         return nullptr;
