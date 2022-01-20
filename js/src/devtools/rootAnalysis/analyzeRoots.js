@@ -33,7 +33,7 @@ try {
         },
         {
             name: "gcEdges",
-            default: "gcEdges.txt"
+            default: "gcEdges.json"
         },
         {
             name: "limitedFunctions",
@@ -78,16 +78,7 @@ text = null;
 
 var typeInfo = loadTypeInfo(options.typeInfo);
 
-var gcEdges = {};
-text = snarf(options.gcEdges).split('\n');
-assert(text.pop().length == 0);
-for (const line of text) {
-    var [ block, edge, func ] = line.split(" || ");
-    if (!(block in gcEdges))
-        gcEdges[block] = {}
-    gcEdges[block][edge] = func;
-}
-text = null;
+var gcEdges = JSON.parse(os.file.readFile(options.gcEdges));
 
 var match;
 var gcThings = {};
@@ -849,6 +840,9 @@ function process(name, json) {
         {
             if (attrs)
                 pbody.attrs[id] = attrs;
+        }
+        for (const edgeAttr of gcEdges[blockIdentifier(body)] || []) {
+            body.attrs[edgeAttr.Index[0]] |= edgeAttr.attrs;
         }
     }
 
