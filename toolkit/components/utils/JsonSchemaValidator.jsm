@@ -257,7 +257,6 @@ class JsonSchemaValidator {
 
       case "array":
         if (!Array.isArray(param)) {
-          log.error("Array expected but not received");
           return {
             valid: false,
             error: new JsonSchemaValidatorError({
@@ -300,7 +299,6 @@ class JsonSchemaValidator {
 
       case "object": {
         if (typeof param != "object" || !param) {
-          log.error("Object expected but not received");
           return {
             valid: false,
             error: new JsonSchemaValidatorError({
@@ -413,7 +411,6 @@ class JsonSchemaValidator {
         try {
           let json = JSON.parse(param);
           if (typeof json != "object") {
-            log.error("JSON was not an object");
             return {
               valid: false,
               error: new JsonSchemaValidatorError({
