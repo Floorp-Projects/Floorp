@@ -163,6 +163,9 @@ add_task(async function test_support_ntp_colors() {
       // from the newtab background colors, but we hard-code the light styles
       // on this test.
       ["layout.css.prefers-color-scheme.content-override", 2],
+      // Override the system color scheme to light so this test passes on
+      // machines with dark system color scheme.
+      ["ui.systemUsesDarkTheme", 0],
     ],
   });
   NewTabPagePreloading.removePreloadedBrowser(window);
