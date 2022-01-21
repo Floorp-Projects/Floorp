@@ -32,6 +32,7 @@ const execute = (context, details, kind, method) => {
   let options = {
     jsPaths: [],
     cssPaths: [],
+    removeCSS: method == "removeCSS",
     extensionId: context.extension.id,
   };
 
@@ -105,6 +106,10 @@ this.scripting = class extends ExtensionAPI {
 
         insertCSS: async details => {
           return execute(context, details, "css", "insertCSS").then(() => {});
+        },
+
+        removeCSS: async details => {
+          return execute(context, details, "css", "removeCSS").then(() => {});
         },
       },
     };

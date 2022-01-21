@@ -173,6 +173,25 @@
             "parameters": []
           }
         ]
+      },
+      {
+        "name": "removeCSS",
+        "type": "function",
+        "description": "Removes a CSS stylesheet that was previously inserted by this extension from a target context.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "injection",
+            "$ref": "CSSInjection",
+            "description": "The details of the styles to remove. Note that the <code>css</code>, <code>files</code>, and <code>origin</code> properties must exactly match the stylesheet inserted through <code>insertCSS</code>. Attempting to remove a non-existent stylesheet is a no-op."
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "description": "Invoked upon completion of the injection.",
+            "parameters": []
+          }
+        ]
       }
     ]
   }
