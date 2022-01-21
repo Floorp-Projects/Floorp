@@ -97,8 +97,9 @@ function registryToObject(wrk, policies) {
 function readRegistryValue(wrk, value) {
   switch (wrk.getValueType(value)) {
     case 7: // REG_MULTI_SZ
-      // We only use REG_MULTI_SZ for JSON in the registry. By parsing it here,
-      // we get the benefit of having JSONSchemaValidator properly validate.
+      // While we support JSON in REG_SZ and REG_MULTI_SZ, if it's REG_MULTI_SZ,
+      // we know it must be JSON. So we go ahead and JSON.parse it here so it goes
+      // through the schema validator.
       try {
         return JSON.parse(wrk.readStringValue(value).replace(/\0/g, "\n"));
       } catch (e) {
