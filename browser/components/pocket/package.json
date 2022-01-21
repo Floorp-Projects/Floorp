@@ -11,7 +11,7 @@
     "watch": "npx run-p watch:*",
     "watch:handlebars": "npx chokidar \"content/panels/tmpl/**/*.handlebars\" -c \"npm run build:handlebars\"",
     "watch:webpack": "npm run build:webpack -- --env development -w",
-    "watch:sass": "npx chokidar \"content/panels/css/**/*.scss\" -c \"npm run build:sass\"",
+    "watch:sass": "npx chokidar \"content/panels/**/*.scss\" -c \"npm run build:sass\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Mozilla (https://mozilla.org/)",
