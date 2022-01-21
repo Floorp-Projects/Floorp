@@ -25,20 +25,6 @@ const BuiltInThemeConfig = new Map([
       path: "resource://builtin-themes/light/",
     },
   ],
-    [
-    "floorp-edge@mozilla.org",
-    {
-      version: "1.2",
-      path: "resource://builtin-themes/motion/",
-    },
-  ],
-  [
-    "floorp-lepton@mozilla.org",
-    {
-      version: "1.2",
-      path: "resource://builtin-themes/lepton/",
-    },
-  ],
   [
     "firefox-compact-dark@mozilla.org",
     {

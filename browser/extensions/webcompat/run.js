@@ -8,7 +8,7 @@
            AVAILABLE_PIP_OVERRIDES, AVAILABLE_UA_OVERRIDES, CUSTOM_FUNCTIONS,
            Injections, Shims, UAOverrides */
 
-let injections, uaOverrides;
+let injections, shims, uaOverrides;
 
 try {
   injections = new Injections(AVAILABLE_INJECTIONS, CUSTOM_FUNCTIONS);
@@ -27,14 +27,19 @@ try {
 }
 
 try {
-  const aboutCompatBroker = new AboutCompatBroker({ injections, uaOverrides });
-  aboutCompatBroker.bootup();
+  shims = new Shims(AVAILABLE_SHIMS);
 } catch (e) {
-  console.error("about:compat broker failed to start", e);
+  console.error("Shims failed to start", e);
+  shims = undefined;
 }
 
 try {
-  new Shims(AVAILABLE_SHIMS);
+  const aboutCompatBroker = new AboutCompatBroker({
+    injections,
+    shims,
+    uaOverrides,
+  });
+  aboutCompatBroker.bootup();
 } catch (e) {
-  console.error("Shims failed to start", e);
+  console.error("about:compat broker failed to start", e);
 }

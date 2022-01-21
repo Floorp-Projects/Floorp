@@ -160,6 +160,9 @@ testing/talos/talos/tests/devtools/damp.manifest.develop
 tps.log
 tps_result.json
 
+# Unit test
+.pytest_cache/
+
 # Ignore files created when running a reftest.
 lextab.py
 
@@ -174,3 +177,7 @@ testing/raptor/.raptor-venv
 testing/raptor/raptor-venv
 testing/raptor/raptor/tests/json/
 testing/raptor/webext/raptor/auto_gen_test_config.js
+
+# Ignore ICU4X experimentation data files.
+# See intl/ICU4X.md for more details.
+config/external/icu4x

@@ -2,40 +2,270 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#infoContainer {
+/**
+ * We follow the example of the upgrade dialog for font sizes, line heights,
+ * etc. See: https://searchfox.org/mozilla-central/source/browser/themes/shared/upgradeDialog.css
+ */
+
+:root {
+  --introduction-magglass-logo-height: 128px;
+  --introduction-firefox-logo-height: 72px;
+  --main-magglass-logo-height: 64px;
+  --main-firefox-logo-height: 50px;
+  --x-large-margin: 40px;
+  --large-margin: 24px;
+  --large-margin-const: 24px;
+  --small-margin: 16px;
+  --small-margin-const: 16px;
+  --x-small-margin-const: 8px;
+  --section-vertical-padding: 32px;
+  --section-horizontal-padding: 64px;
+}
+
+body.compact {
+  --main-magglass-logo-height: 48px;
+  --main-firefox-logo-height: 32px;
+  --x-large-margin: 20px;
+  --large-margin: 12px;
+  --small-margin: 8px;
+  --section-vertical-padding: 16px;
+  --section-horizontal-padding: 32px;
+
+  /* 15px is the non-compact font-size. */
+  font-size: 13px;
+}
+
+body,
+section {
+  width: 536px;
+}
+
+section {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  flex-direction: column;
   text-align: center;
-  padding: 1em 0;
+  padding: var(--section-vertical-padding) var(--section-horizontal-padding);
+  /* This is the largest approximate natural height of the main section across
+     platforms and dialog variations, erring on the side of being slightly
+     larger than necessary. If you change this, also update COMPACT_MODE_HEIGHT
+     in the JS. */
+  min-height: 650px;
+}
+
+body.compact section {
+  /* This is the largest approximate natural height of the main section across
+     platforms and dialog variations in compact mode, erring on the side of
+     being slightly larger than necessary. */
+  min-height: 510px;
 }
 
 a {
   cursor: pointer;
+  font-weight: normal;
 }
 
-#notNowLinkContainer {
-  text-align: end;
-  padding-inline-end: 1em;
+.title {
+  font-size: 1.6em;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: pre-line;
 }
 
-#infoIcon {
-  width: 112px;
-  height: 112px;
-  margin: 0 auto 1em;
+.logo {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  border: none;
+}
+
+.pager > span {
+  display: inline-block;
+  border-radius: 3px;
+  width: 6px;
+  height: 6px;
+  background-color: var(--in-content-border-color);
+  margin-inline: 4px;
+}
+
+.pager > .current {
+  background-color: var(--in-content-primary-button-background);
+}
+
+#introduction-section .logo {
+  background-image: url("quicksuggestOnboarding_magglass.svg");
+  height: var(--introduction-magglass-logo-height);
+  margin-block-end: var(--large-margin);
+}
+
+#introduction-section .logo.firefox {
   background-image: url("chrome://branding/content/about-logo.svg");
-  background-size: 100%;
+  height: var(--introduction-firefox-logo-height);
 }
 
-#infoTitle {
-  font-size: 1.5em;
-  margin: 0;
+@media (prefers-reduced-motion: no-preference) {
+  #introduction-section .logo {
+    background-image: url("quicksuggestOnboarding_magglass_animation.svg");
+  }
 }
 
-#infoBody {
-  margin: 1em 0;
+#introduction-section .title {
+  margin-block-end: var(--x-large-margin);
 }
 
-#illustration {
-  background: url("quicksuggestOnboarding_illustration.svg") no-repeat center;
-  min-width: 538px;
-  height: 219px;
-  margin: 1em 0 2em;
+#onboardingClose {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  margin: 16px;
+  padding: 0;
+  line-height: 0;
+  min-width: 20px;
+  min-height: 20px;
+}
+
+#onboardingClose img {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#main-section:not(.active) {
+  display: none;
+}
+
+#main-section .logo {
+  background-image: url("quicksuggestOnboarding_magglass.svg");
+  height: var(--main-magglass-logo-height);
+  margin-block-end: var(--large-margin);
+}
+
+#main-section .logo.firefox {
+  background-image: url("chrome://branding/content/about-logo.svg");
+  height: var(--main-firefox-logo-height);
+}
+
+#main-section .title {
+  margin-block: 0 var(--small-margin);
+}
+
+#main-section .description-section {
+  /* The effective visual margin between the description and first option should
+     be --large-margin-const. Each child in the description has a bottom margin
+     of --small-margin, so subtract it from --large-margin-const. */
+  margin-block: 0 calc(var(--large-margin-const) - var(--small-margin));
+}
+
+#main-section .description {
+  font-size: 1.1em;
+  font-weight: 400;
+  line-height: 1.6;
+  margin-block: 0 var(--small-margin);
+}
+
+#main-section .privacy-first {
+  font-size: 1.1em;
+  font-weight: 700;
+  margin-block: 0 var(--small-margin);
+}
+
+#main-section .privacy-first:not(.active) {
+  display: none;
+}
+
+#main-section .option {
+  border-radius: 4px;
+  border: 2px solid var(--in-content-box-info-background);
+  display: flex;
+  text-align: start;
+  /* Use --small-margin-const for the horizontal padding to make the option's
+     horizontal padding larger than the vertical padding in compact mode. The
+     radio button and text are too close to the left and right edges of the
+     option's border otherwise. */
+  padding: var(--small-margin) var(--small-margin-const);
+  flex-direction: row;
+}
+
+#main-section .option.selected {
+  border-color: var(--in-content-primary-button-background);
+}
+
+#main-section .option.accept {
+  margin-block-end: var(--small-margin);
+}
+
+#main-section .option.reject {
+  margin-block-end: var(--large-margin-const);
+}
+
+#main-section .option > label {
+  /* Make the whole option area selectable for the radio button. 22px is the
+     width of the radio button and its inline margin. */
+  padding-block: var(--small-margin);
+  padding-inline-start: calc(22px + var(--small-margin-const));
+  padding-inline-end: var(--small-margin-const);
+  margin-block: calc(-1 * var(--small-margin));
+  margin-inline-start: calc(-1 * (22px + var(--small-margin-const)));
+  margin-inline-end: calc(-1 * var(--small-margin-const));
+}
+
+body:not(.compact) #main-section .option > input {
+  /* Vertically align the radio button with the .option-label. */
+  margin-block-start: 0.25em;
+}
+
+#main-section .option-label {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-block-end: 2px;
+}
+
+#main-section .option-description {
+  font-size: 1em;
+}
+
+.buttonBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+button {
+  margin-block-end: var(--large-margin);
+}
+
+#onboardingSkipLink {
+  margin-block-end: var(--x-small-margin-const);
+}
+
+/* transition from introduction to main */
+#introduction-section.inactive {
+  /* Avoid including this section size */
+  position: fixed;
+  pointer-events: none;
+  animation: fadeout 0.3s forwards;
+}
+
+#main-section.active {
+  animation: fadein 0.3s forwards;
+}
+
+@keyframes fadeout {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    visibility: hidden;
+    opacity: 0;
+  }
+}
+
+@keyframes fadein {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    pointer-events: initial;
+    opacity: 1;
+  }
 }

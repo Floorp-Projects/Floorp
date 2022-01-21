@@ -7,8 +7,7 @@ ChromeUtils.defineModuleGetter(
 );
 
 const { Management } = ChromeUtils.import(
-  "resource://gre/modules/Extension.jsm",
-  null
+  "resource://gre/modules/Extension.jsm"
 );
 
 const PREF_WC_REPORTER_ENABLED = "extensions.webcompat-reporter.enabled";

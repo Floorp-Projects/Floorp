@@ -17,23 +17,6 @@ add_task(async function test_process_switch_cross_origin_frame() {
       ],
     },
 
-    background() {
-      browser.runtime.onConnect.addListener(port => {
-        port.onMessage.addListener(async () => {
-          let { url, frameId } = port.sender;
-
-          browser.test.assertTrue(frameId > 0, "sender frameId is ok");
-          browser.test.assertTrue(
-            url.endsWith("file_iframe.html"),
-            "url is ok"
-          );
-
-          port.postMessage(frameId);
-          port.disconnect();
-        });
-      });
-    },
-
     files: {
       "cs.js"() {
         browser.test.assertEq(
@@ -42,15 +25,9 @@ add_task(async function test_process_switch_cross_origin_frame() {
           "url is ok"
         );
 
-        let frameId;
-        let port = browser.runtime.connect();
-        port.onMessage.addListener(response => {
-          frameId = response;
-        });
-        port.onDisconnect.addListener(() => {
-          browser.test.sendMessage("content-script-loaded", frameId);
-        });
-        port.postMessage("hello");
+        // frameId is the BrowsingContext ID in practice.
+        let frameId = browser.runtime.getFrameId(window);
+        browser.test.sendMessage("content-script-loaded", frameId);
       },
     },
   });

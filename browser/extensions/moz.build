@@ -13,14 +13,6 @@ DIRS += [
     "pictureinpicture",
     "proxy-failover",
     "search-detection",
-    "floorp-rss-read",
-    "floorpsync",
-    "open-closed",
-    "translate",
-    "qr-code",
-    "floorp-s",
-    "tab-s",
-    "notify",
 ]
 
 if CONFIG["NIGHTLY_BUILD"]:

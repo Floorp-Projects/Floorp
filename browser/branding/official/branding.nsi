@@ -8,12 +8,12 @@
 
 # BrandFullNameInternal is used for some registry and file system values
 # instead of BrandFullName and typically should not be modified.
-!define BrandFullNameInternal "FloorpLegacy"
-!define BrandFullName         "FloorpLegacy"
-!define CompanyName           "Ablaze"
-!define URLInfoAbout          "https://Ablaze.one"
+!define BrandFullNameInternal "Mozilla Firefox"
+!define BrandFullName         "Mozilla Firefox"
+!define CompanyName           "Mozilla Corporation"
+!define URLInfoAbout          "https://www.mozilla.org"
 !define URLUpdateInfo         "https://www.mozilla.org/firefox/${AppVersion}/releasenotes"
-!define HelpLink              "https://support.ablaze.one"
+!define HelpLink              "https://support.mozilla.org"
 
 ; The OFFICIAL define is a workaround to support different urls for Release and
 ; Beta since they share the same branding when building with other branches that
@@ -27,7 +27,7 @@
 !define Channel "release"
 
 # The installer's certificate name and issuer expected by the stub installer
-!define CertNameDownload   "Ablaze"
+!define CertNameDownload   "Mozilla Corporation"
 !define CertIssuerDownload "DigiCert SHA2 Assured ID Code Signing CA"
 
 # Dialog units are used so the UI displays correctly with the system's DPI

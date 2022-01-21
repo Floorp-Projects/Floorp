@@ -521,8 +521,7 @@ if (!window.FB) {
       cb?.call(this);
     },
     ui(params, fn) {
-      const { display, method } = params;
-      if (display === "popup" && method === "permissions.oauth") {
+      if (params.method === "permissions.oauth") {
         window.FB.login(fn, params);
       }
     },

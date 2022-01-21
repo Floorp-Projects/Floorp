@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-  <style>
-    path:not(:target){display:none}
-  </style>
-  <g style="fill:context-fill;fill-opacity:context-fill-opacity">
-    <path id="show" d="M4 4a4 4 0 1 0 0 8h8a4 4 0 0 0 0-8H4zm0 1h8a3 3 0 1 1 0 6H4a3 3 0 1 1 0-6zm0 1a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
-    <path id="hide" d="M4 4a4 4 0 0 0 0 8h8a4 4 0 0 0 0-8H4zm8 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/>
-  </g>
-</svg>

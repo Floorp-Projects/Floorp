@@ -14,7 +14,7 @@
 #define bookmarks_toolbarfolder_description Add bookmarks to this folder to see them displayed on the Bookmarks Toolbar
 
 # LOCALIZATION NOTE (getting_started):
-# link title for https://support.ablaze.one/
+# link title for https://www.mozilla.org/en-US/firefox/central/
 #define getting_started Getting Started
 
 # LOCALIZATION NOTE (firefox_heading):

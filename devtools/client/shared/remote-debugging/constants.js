@@ -6,7 +6,7 @@
 
 const CONNECTION_TYPES = {
   NETWORK: "network",
-  THIS_FIREFOX: "this-floorp",
+  THIS_FIREFOX: "this-firefox",
   UNKNOWN: "unknown",
   USB: "usb",
 };

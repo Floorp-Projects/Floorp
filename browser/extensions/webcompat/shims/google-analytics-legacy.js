@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// based on https://github.com/gorhill/uBlock/blob/caa8e7d35ba61214a9d13e7d324b2bd2aa73237f/src/web_accessible_resources/google-analytics_ga.js
+// based on https://github.com/gorhill/uBlock/blob/6f49e079db0262e669b70f4169924f796ac8db7c/src/web_accessible_resources/google-analytics_ga.js
 
 "use strict";
 
@@ -26,7 +26,11 @@ if (!window._gaq) {
       if (!Array.isArray(a)) {
         return;
       }
-      if (a[0] === "_link" && typeof a[1] === "string") {
+      if (
+        typeof a[0] === "string" &&
+        /(^|\.)_link$/.test(a[0]) &&
+        typeof a[1] === "string"
+      ) {
         window.location.assign(a[1]);
       }
       if (

@@ -46,7 +46,7 @@ community-exp = <label data-l10n-name="community-exp-mozillaLink">{ -vendor-shor
 community-2 = { -brand-short-name } is designed by <label data-l10n-name="community-mozillaLink">{ -vendor-short-name }</label>, a <label data-l10n-name="community-creditsLink">global community</label> working together to keep the Web open, public and accessible to all.
 
 helpus = Want to help? <label data-l10n-name="helpus-donateLink">Make a donation</label> or <label data-l10n-name="helpus-getInvolvedLink">get involved!</label>
-iconprov = Icon creator of Floorp Legacy: <label data-l10n-name="iconprov-Link">@kotaten_kt</label>
+
 bottomLinks-license = Licensing Information
 bottomLinks-rights = End-User Rights
 bottomLinks-privacy = Privacy Policy
@@ -55,11 +55,11 @@ bottomLinks-privacy = Privacy Policy
 # Variables:
 #   $version (String): version of Firefox, e.g. 66.0.1
 #   $bits (Number): bits of the architecture (32 or 64)
-aboutDialog-version = 8.2.3 ({ $bits }-bit)
+aboutDialog-version = { $version } ({ $bits }-bit)
 
 # Example of resulting string: 66.0a1 (2019-01-16) (64-bit)
 # Variables:
 #   $version (String): version of Firefox for Nightly builds, e.g. 66.0a1
 #   $isodate (String): date in ISO format, e.g. 2019-01-16
 #   $bits (Number): bits of the architecture (32 or 64)
-aboutDialog-version-nightly = 8.2.3 ({ $isodate }) ({ $bits }-bit)
+aboutDialog-version-nightly = { $version } ({ $isodate }) ({ $bits }-bit)

@@ -69,37 +69,6 @@ const TESTCASES = [
   },
   {
     description:
-      "Should not trigger credit card saving if there are more than four cc-number fields",
-    document: `<form id="form1">
-                <input id="cc-type" autocomplete="cc-type">
-                <input id="cc-name" autocomplete="cc-name">
-                <input id="cc-number1" maxlength="4">
-                <input id="cc-number2" maxlength="4">
-                <input id="cc-number3" maxlength="4">
-                <input id="cc-number4" maxlength="4">
-                <input id="cc-number5" maxlength="4">
-                <input id="cc-exp-month" autocomplete="cc-exp-month">
-                <input id="cc-exp-year" autocomplete="cc-exp-year">
-                <input id="submit" type="submit">
-              </form>
-    `,
-    targetElementId: "cc-name",
-    formValue: {
-      "cc-name": "John Doe",
-      "cc-number1": "3714",
-      "cc-number2": "4963",
-      "cc-number3": "5398",
-      "cc-number4": "431",
-      "cc-exp-month": 12,
-      "cc-exp-year": 2000,
-      "cc-type": "amex",
-    },
-    expectedResult: {
-      formSubmission: false,
-    },
-  },
-  {
-    description:
       "Should not trigger credit card saving if there is more than one cc-number field but less than four fields",
     document: `<form id="form1">
                 <input id="cc-type" autocomplete="cc-type">

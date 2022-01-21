@@ -10,16 +10,16 @@ class AboutCompatBroker {
   constructor(bindings) {
     this._injections = bindings.injections;
     this._uaOverrides = bindings.uaOverrides;
+    this._shims = bindings.shims;
 
-    if (!this._injections && !this._uaOverrides) {
-      throw new Error(
-        "No injections or UA overrides; about:compat broker is not needed"
-      );
+    if (!this._injections && !this._uaOverrides && !this._shims) {
+      throw new Error("No interventions; about:compat broker is not needed");
     }
 
     this.portsToAboutCompatTabs = this.buildPorts();
     this._injections?.bindAboutCompatBroker(this);
     this._uaOverrides?.bindAboutCompatBroker(this);
+    this._shims?.bindAboutCompatBroker(this);
   }
 
   buildPorts() {
@@ -50,10 +50,11 @@ class AboutCompatBroker {
       });
   }
 
-  getOverrideOrInterventionById(id) {
+  getInterventionById(id) {
     for (const [type, things] of Object.entries({
       overrides: this._uaOverrides?.getAvailableOverrides() || [],
       interventions: this._injections?.getAvailableInjections() || [],
+      shims: this._shims?.getAvailableShims() || [],
     })) {
       for (const what of things) {
         if (what.id === id) {
@@ -69,18 +70,19 @@ class AboutCompatBroker {
       switch (msg.command || msg) {
         case "toggle": {
           const id = msg.id;
-          const { type, what } = this.getOverrideOrInterventionById(id);
+          const { type, what } = this.getInterventionById(id);
           if (!what) {
             return Promise.reject(
               `No such override or intervention to toggle: ${id}`
             );
           }
+          const active = type === "shims" ? !what.disabledReason : what.active;
           this.portsToAboutCompatTabs
-            .broadcast({ toggling: id, active: what.active })
+            .broadcast({ toggling: id, active })
             .then(async () => {
               switch (type) {
                 case "interventions": {
-                  if (what.active) {
+                  if (active) {
                     await this._injections?.disableInjection(what);
                   } else {
                     await this._injections?.enableInjection(what);
@@ -88,22 +90,32 @@ class AboutCompatBroker {
                   break;
                 }
                 case "overrides": {
-                  if (what.active) {
+                  if (active) {
                     await this._uaOverrides?.disableOverride(what);
                   } else {
                     await this._uaOverrides?.enableOverride(what);
                   }
                   break;
                 }
+                case "shims": {
+                  if (active) {
+                    await this._shims?.disableShimForSession(id);
+                  } else {
+                    await this._shims?.enableShimForSession(id);
+                  }
+                  // no need to broadcast the "toggled" signal for shims, as
+                  // they send a shimsUpdated message themselves instead
+                  return;
+                }
               }
               this.portsToAboutCompatTabs.broadcast({
                 toggled: id,
-                active: what.active,
+                active: !active,
               });
             });
           break;
         }
-        case "getOverridesAndInterventions": {
+        case "getAllInterventions": {
           return Promise.resolve({
             overrides:
               (this._uaOverrides?.isEnabled() &&
@@ -117,6 +129,7 @@ class AboutCompatBroker {
                   this._injections?.getAvailableInjections()
                 )) ||
               false,
+            shims: this._shims?.getAvailableShims() || false,
           });
         }
       }

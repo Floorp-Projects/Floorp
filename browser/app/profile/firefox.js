@@ -18,28 +18,6 @@
     #define UNIX_BUT_NOT_MAC
   #endif
 #endif
-//addon消す
-pref("extensions.getAddons.showPane", false);
-//軽量化
-pref("browser.tabs.animate", false);
-pref("browser.panorama.animate_zoom", false);
-pref("network.http.pipelining", false);
-pref("network.http.pipelining.firstrequest", true);
-pref("network.http.pipelining.maxrequests", 8);
-pref("network.http.max-connections-per-server", 8);
-pref("network.http.max-connections", 32);
-pref("nglayout.initialpaint.delay", 0);
-pref("toolkit.telemetry.updatePing.enabledr", false);
-pref("content.notify.ontimer", true);
-pref("content.interrupt.parsing", true);
-pref("nglayout.initialpaint.delay", 0);
-//既定のテーマを変更
-pref("privacy.resistFingerprinting.block_mozAddonManager", true);
-pref("extensions.activeThemeID", "firefox-compact-dark@mozilla.org");
-//backdropfilter
-pref("layout.css.backdrop-filter.enabled", true);
-//svgの互換性工場
-pref("svg.context-properties.content.enabled", true)
 
 pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindowMac.xhtml");
 
@@ -89,8 +67,8 @@ pref("extensions.webextensions.remote", true);
 pref("extensions.webextensions.background-delayed-startup", true);
 
 // Require signed add-ons by default
-pref("extensions.langpacks.signatures.required", false);
-pref("xpinstall.signatures.required", false);
+pref("extensions.langpacks.signatures.required", true);
+pref("xpinstall.signatures.required", true);
 pref("xpinstall.signatures.devInfoURL", "https://wiki.mozilla.org/Addons/Extension_Signing");
 
 // Enable extensionStorage storage actor by default
@@ -273,7 +251,7 @@ pref("browser.touchmode.auto", true);
 pref("browser.compactmode.show", false);
 
 // At startup, check if we're the default browser and prompt user if not.
-pref("browser.shell.checkDefaultBrowser", false);
+pref("browser.shell.checkDefaultBrowser", true);
 pref("browser.shell.shortcutFavicons",true);
 pref("browser.shell.mostRecentDateSetAsDefault", "");
 pref("browser.shell.skipDefaultBrowserCheckOnFirstRun", true);
@@ -283,15 +261,12 @@ pref("browser.shell.defaultBrowserCheckCount", 0);
 // Attempt to set the default browser on Windows 10 using the UserChoice registry keys,
 // before falling back to launching the modern Settings dialog.
 pref("browser.shell.setDefaultBrowserUserChoice", true);
-// When setting the default browser on Windows 10 using the UserChoice
-// registry keys, also try to set Firefox as the default PDF handler.
-pref("browser.shell.setDefaultPDFHandler", false);
 #endif
 
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last visited page, 3 = resume previous browser session
 // The behavior of option 3 is detailed at: http://wiki.mozilla.org/Session_Restore
-pref("browser.startup.page",                    1);
+pref("browser.startup.page",                1);
 pref("browser.startup.homepage",            "about:home");
 #ifdef NIGHTLY_BUILD
 pref("browser.startup.homepage.abouthome_cache.enabled", true);
@@ -383,7 +358,6 @@ pref("browser.urlbar.maxHistoricalSearchSuggestions", 2);
 pref("browser.urlbar.suggest.bookmark",             true);
 pref("browser.urlbar.suggest.history",              true);
 pref("browser.urlbar.suggest.openpage",             true);
-pref("browser.urlbar.suggest.remotetab",            true);
 pref("browser.urlbar.suggest.searches",             true);
 pref("browser.urlbar.suggest.topsites",             true);
 pref("browser.urlbar.suggest.engines",              true);
@@ -423,10 +397,6 @@ pref("browser.urlbar.quicksuggest.nonSponsoredIndex", -1);
 
 // Whether Remote Settings is enabled as a quick suggest source.
 pref("browser.urlbar.quicksuggest.remoteSettings.enabled", true);
-
-// Whether quick suggest results can be shown in position specified in the
-// suggestions.
-pref("browser.urlbar.quicksuggest.allowPositionInSuggestions", true);
 
 // Whether unit conversion is enabled.
 #ifdef NIGHTLY_BUILD
@@ -637,7 +607,7 @@ pref("browser.link.open_newwindow.restriction", 2);
 
 // Tabbed browser
 pref("browser.tabs.closeTabByDblclick", false);
-pref("browser.tabs.closeWindowWithLastTab", false);
+pref("browser.tabs.closeWindowWithLastTab", true);
 pref("browser.tabs.allowTabDetach", true);
 // Open related links to a tab, e.g., link in current tab, at next to the
 // current tab if |insertRelatedAfterCurrent| is true.  Otherwise, always
@@ -1180,7 +1150,7 @@ pref("browser.zoom.siteSpecific", true);
 pref("browser.zoom.updateBackgroundTabs", true);
 
 // The breakpad report server to link to in about:crashes
-pref("breakpad.reportURL", "");
+pref("breakpad.reportURL", "https://crash-stats.mozilla.org/report/index/");
 
 // URL for "Learn More" for DataCollection
 pref("toolkit.datacollection.infoURL",
@@ -1191,7 +1161,7 @@ pref("toolkit.crashreporter.infoURL",
      "https://www.mozilla.org/legal/privacy/firefox.html#crash-reporter");
 
 // base URL for web-based support pages
-pref("app.support.baseURL", "https://support.ablaze.one/#");
+pref("app.support.baseURL", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/");
 
 // base url for web-based feedback pages
 pref("app.feedback.baseURL", "https://ideas.mozilla.org/");
@@ -1226,6 +1196,25 @@ pref("browser.flash-protected-mode-flip.done", false);
 pref("dom.ipc.shims.enabledWarnings", false);
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
+  // Controls whether and how the Windows NPAPI plugin process is sandboxed.
+  // To get a different setting for a particular plugin replace "default", with
+  // the plugin's nice file name, see: nsPluginTag::GetNiceFileName.
+  // On windows these levels are:
+  // 0 - no sandbox
+  // 1 - sandbox with USER_NON_ADMIN access token level
+  // 2 - a more strict sandbox, which might cause functionality issues. This now
+  //     includes running at low integrity.
+  // 3 - the strongest settings we seem to be able to use without breaking
+  //     everything, but will probably cause some functionality restrictions
+  pref("dom.ipc.plugins.sandbox-level.default", 0);
+  #if defined(_AMD64_)
+    // The base sandbox level in nsPluginTag::InitSandboxLevel must be
+    // updated to keep in sync with this value.
+    pref("dom.ipc.plugins.sandbox-level.flash", 3);
+  #else
+    pref("dom.ipc.plugins.sandbox-level.flash", 0);
+  #endif
+
   // This controls the strength of the Windows content process sandbox for
   // testing purposes. This will require a restart.
   // On windows these levels are:
@@ -1357,10 +1346,8 @@ pref("services.sync.prefs.sync.browser.menu.showViewImageInfo", true);
 pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons", true);
 pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features", true);
 pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.showSearch", true);
-pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.showSponsored", false);
-pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.showSponsoredTopSites", false);
-pref("browser.newtabpage.activity-stream.showSponsored", false);
-pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);
+pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.showSponsored", true);
+pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.showSponsoredTopSites", true);
 pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.feeds.topsites", true);
 pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.topSitesRows", true);
 pref("services.sync.prefs.sync.browser.newtabpage.activity-stream.feeds.snippets", true);
@@ -1468,10 +1455,10 @@ pref("browser.menu.showCharacterEncoding", "chrome://browser/locale/browser.prop
 // This is a fallback value for when prompt callers do not specify a modalType.
 pref("prompts.defaultModalType", 3);
 
-pref("browser.topsites.useRemoteSetting", false);
+pref("browser.topsites.useRemoteSetting", true);
 // Fetch sponsored Top Sites from Mozilla Tiles Service (Contile)
-pref("browser.topsites.contile.enabled", false);
-pref("browser.topsites.contile.endpoint", "");
+pref("browser.topsites.contile.enabled", true);
+pref("browser.topsites.contile.endpoint", "https://contile.services.mozilla.com/v1/tiles");
 
 // The base URL for the Quick Suggest anonymizing proxy. To make a request to
 // the proxy, include a campaign ID in the path.
@@ -1538,18 +1525,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.loadMore.enabled", fals
 pref("browser.newtabpage.activity-stream.discoverystream.lastCardMessage.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.newFooterSection.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.saveToPocketCard.enabled", false);
-pref("browser.newtabpage.activity-stream.discoverystream.hideDescriptions.enabled", false);
-pref("browser.newtabpage.activity-stream.discoverystream.compactGrid.enabled", false);
-pref("browser.newtabpage.activity-stream.discoverystream.compactImages.enabled", false);
-pref("browser.newtabpage.activity-stream.discoverystream.imageGradient.enabled", false);
-pref("browser.newtabpage.activity-stream.discoverystream.titleLines", 3);
-pref("browser.newtabpage.activity-stream.discoverystream.descLines", 3);
-pref("browser.newtabpage.activity-stream.discoverystream.readTime.enabled", false);
-pref("browser.newtabpage.activity-stream.discoverystream.newSponsoredLabel.enabled", false);
-pref("browser.newtabpage.activity-stream.discoverystream.essentialReadsHeader.enabled", false);
-pref("browser.newtabpage.activity-stream.discoverystream.editorsPicksHeader.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.spoc-positions", "2,4,11,20");
-
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint", "");
 pref("browser.newtabpage.activity-stream.discoverystream.spocs-endpoint-query", "");
 pref("browser.newtabpage.activity-stream.discoverystream.sponsored-collections.enabled", false);
@@ -1654,10 +1630,10 @@ pref("security.insecure_connection_icon.enabled", true);
 pref("security.insecure_connection_icon.pbmode.enabled", true);
 
 // For secure connections, show gray instead of green lock icon
-pref("security.secure_connection_icon_color_gray", false);
+pref("security.secure_connection_icon_color_gray", true);
 
 // Show "Not Secure" text for http pages; disabled for now
-pref("security.insecure_connection_text.enabled", true);
+pref("security.insecure_connection_text.enabled", false);
 pref("security.insecure_connection_text.pbmode.enabled", false);
 
 // 1 = allow MITM for certificate pinning checks.
@@ -1902,13 +1878,6 @@ pref("browser.contentblocking.report.proxy.enabled", false);
 // Disable the mobile promotion by default.
 pref("browser.contentblocking.report.show_mobile_app", true);
 
-// Avoid advertising in certain regions. Comma separated string of two letter ISO 3166-1 country codes.
-// We're currently blocking all of Ukraine (ua), but would prefer to block just Crimea (ua-43). Currently, the Mozilla Location Service APIs used by Region.jsm only exposes the country, not the subdivision.
-pref("browser.vpn_promo.disallowed_regions", "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr,ua");
-
-// Default to enabling VPN promo messages to be shown when specified and allowed
-pref("browser.vpn_promo.enabled", true);
-
 // Enable the vpn card by default.
 pref("browser.contentblocking.report.vpn.enabled", true);
 // Only show vpn card to certain regions. Comma separated string of two letter ISO 3166-1 country codes.
@@ -2018,7 +1987,7 @@ pref("browser.tabs.remote.warmup.maxTabs", 3);
 pref("browser.tabs.remote.warmup.unloadDelayMs", 2000);
 
 // For the about:tabcrashed page
-pref("browser.tabs.crashReporting.sendReport", false, locked);
+pref("browser.tabs.crashReporting.sendReport", true);
 pref("browser.tabs.crashReporting.includeURL", false);
 
 // If true, unprivileged extensions may use experimental APIs on
@@ -2067,15 +2036,15 @@ pref("browser.migrate.chrome.history.limit", 2000);
 pref("browser.migrate.chrome.history.maxAgeInDays", 180);
 pref("browser.migrate.showBookmarksToolbarAfterMigration", true);
 
-pref("extensions.pocket.api", "");
-pref("extensions.pocket.enabled", false);
-pref("extensions.pocket.oAuthConsumerKey", "");
-pref("extensions.pocket.site", "");
-pref("extensions.pocket.onSaveRecs", false);
+pref("extensions.pocket.api", "api.getpocket.com");
+pref("extensions.pocket.enabled", true);
+pref("extensions.pocket.oAuthConsumerKey", "40249-e88c401e1b1f2242d9e441c4");
+pref("extensions.pocket.site", "getpocket.com");
+pref("extensions.pocket.onSaveRecs", true);
 pref("extensions.pocket.onSaveRecs.locales", "en-US,en-GB,en-CA");
 
 // Enable Pocket button home panel for non link pages.
-pref("extensions.pocket.showHome", false);
+pref("extensions.pocket.showHome", true);
 
 // Control what version of the logged out doorhanger is displayed
 // Possibilities are: `control`, `control-one-button`, `variant_a`, `variant_b`, `variant_c`
@@ -2161,9 +2130,9 @@ pref("app.normandy.shieldLearnMoreUrl", "https://support.mozilla.org/1/firefox/%
 pref("app.normandy.last_seen_buildid", "");
 pref("app.normandy.onsync_skew_sec", 600);
 #ifdef MOZ_DATA_REPORTING
-  pref("app.shield.optoutstudies.enabled", false, locked);
+  pref("app.shield.optoutstudies.enabled", true);
 #else
-  pref("app.shield.optoutstudies.enabled", false, locked);
+  pref("app.shield.optoutstudies.enabled", false);
 #endif
 
 // Multi-lingual preferences
@@ -2254,9 +2223,13 @@ pref("devtools.browsertoolbox.fission", false);
 // This preference will enable watching top-level targets from the server side.
 pref("devtools.target-switching.server.enabled", true);
 
-// In DevTools, create a target for each frame (i.e. not only for top-level document and
-// remote frames).
+// Setting this preference to true will result in DevTools creating a target for each frame
+// (i.e. not only for top-level document and remote frames).
+#if defined(NIGHTLY_BUILD)
 pref("devtools.every-frame-target.enabled", true);
+#else
+pref("devtools.every-frame-target.enabled", false);
+#endif
 
 // Toolbox Button preferences
 pref("devtools.command-button-pick.enabled", true);
@@ -2447,9 +2420,6 @@ pref("devtools.netmonitor.audits.slow", 500);
 // Enable the EventSource Inspector
 pref("devtools.netmonitor.features.serverSentEvents", true);
 
-// Enable the new Edit and Resend panel
-pref("devtools.netmonitor.features.newEditAndResend", false);
-
 // Enable the Storage Inspector
 pref("devtools.storage.enabled", true);
 
@@ -2485,7 +2455,11 @@ pref("devtools.webconsole.filter.netxhr", false);
 pref("devtools.webconsole.input.autocomplete",true);
 
 // Show context selector in console input
-pref("devtools.webconsole.input.context", true);
+#if defined(NIGHTLY_BUILD)
+  pref("devtools.webconsole.input.context", true);
+#else
+  pref("devtools.webconsole.input.context", false);
+#endif
 
 // Set to true to eagerly show the results of webconsole terminal evaluations
 // when they don't have side effects.

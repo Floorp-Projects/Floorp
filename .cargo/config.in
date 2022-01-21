@@ -10,12 +10,12 @@ rev = "029ac0d54b237f27dc7d8d4e51bc0fb076e5e852"
 [source."https://github.com/mozilla/neqo"]
 git = "https://github.com/mozilla/neqo"
 replace-with = "vendored-sources"
-tag = "v0.5.3"
+tag = "v0.5.6"
 
 [source."https://github.com/mozilla/mp4parse-rust"]
 git = "https://github.com/mozilla/mp4parse-rust"
 replace-with = "vendored-sources"
-rev = "72eb355ddeada541d7e57dbe5fb60eb5124dea0d"
+rev = "a25713781eac774c531af43ba833ef86cb920889"
 
 [source."https://github.com/mozilla/l10nregistry-rs"]
 git = "https://github.com/mozilla/l10nregistry-rs"
@@ -30,12 +30,12 @@ rev = "9695281319fcb3e40db6a32cc0661548d6192f4d"
 [source."https://github.com/mozilla/cubeb-coreaudio-rs"]
 git = "https://github.com/mozilla/cubeb-coreaudio-rs"
 replace-with = "vendored-sources"
-rev = "5ada876e8b73246b9bb0b5855f9143a0a9848467"
+rev = "41de71f88cd266a380e601326ec16280cad6028c"
 
 [source."https://github.com/mozilla/audioipc-2"]
 git = "https://github.com/mozilla/audioipc-2"
 replace-with = "vendored-sources"
-rev = "03868a0eaf1d46e895353fa6e1f5bcaf7e588e62"
+rev = "470320364f59672c0e1ee60240f2cd15f0e5b52f"
 
 [source."https://github.com/mozilla/application-services"]
 git = "https://github.com/mozilla/application-services"
@@ -45,7 +45,7 @@ rev = "8a576fbe79199fa8664f64285524017f74ebcc5f"
 [source."https://github.com/mozilla-spidermonkey/jsparagus"]
 git = "https://github.com/mozilla-spidermonkey/jsparagus"
 replace-with = "vendored-sources"
-rev = "ecc433935118a4ff22d33c4fe7c625a5d0bfb571"
+rev = "23a37b0881b20f923f952b3c0648f2cd4a6acc9f"
 
 [source."https://github.com/kvark/dummy-web"]
 git = "https://github.com/kvark/dummy-web"
@@ -84,12 +84,12 @@ rev = "302c995f91f44cf26e77dc4758ad56c3ff0153ad"
 [source."https://github.com/gfx-rs/wgpu"]
 git = "https://github.com/gfx-rs/wgpu"
 replace-with = "vendored-sources"
-rev = "37288a6"
+rev = "28ba9d8"
 
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"
 replace-with = "vendored-sources"
-rev = "e226cf3"
+rev = "29571cc"
 
 [source."https://github.com/bytecodealliance/wasmtime"]
 git = "https://github.com/bytecodealliance/wasmtime"

@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-  <style>
-    #flip:target{transform:scaleX(-1);transform-origin:center}
-  </style>
-  <path style="fill:context-fill;fill-opacity:context-fill-opacity" d="M7.477.5a.5.5 0 0 0-.33.147l-7 6.5a.5.5 0 0 0 0 .707l7 6.5a.5.5 0 0 0 .707-.708L1.707 8H15.5a.5.5 0 0 0 0-1H1.707l6.147-5.646A.5.5 0 0 0 7.477.5z" id="flip"/>
-</svg>

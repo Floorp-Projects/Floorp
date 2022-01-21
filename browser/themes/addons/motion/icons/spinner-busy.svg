@@ -1,6 +1,0 @@
-<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    @keyframes stroke-rotate{0%{stroke-dashoffset:var(--max-gap)}to{stroke-dashoffset:var(--min-gap)}}:root{--radius:calc(2 * 3.1415926536 * 7.5px);--max-gap:calc(var(--radius) * .99);--min-gap:calc(var(--radius) * .5)}
-  </style>
-  <circle cx="50%" cy="50%" r="7.5" style="fill:transparent;stroke:context-fill;stroke-width:1px;stroke-dasharray:var(--radius);stroke-linecap:round;transform-origin:center;animation:stroke-rotate 1.333s cubic-bezier(.35,0,.25,1) both"/>
-</svg>

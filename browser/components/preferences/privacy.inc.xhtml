@@ -651,6 +651,10 @@
   <checkbox id="enginesSuggestion" data-l10n-id="addressbar-locbar-engines-option"
             preference="browser.urlbar.suggest.engines"/>
   <vbox id="firefoxSuggestContainer" hidden="true">
+    <!-- This form[autocomplete="off"] is necessary to prevent the inputs from
+         participating in session restore. autocomplete="off" is ignored on the
+         inputs themselves. -->
+    <html:form id="firefoxSuggestForm" autocomplete="off" hidden="true"/>
     <vbox class="firefoxSuggestOptionBox">
       <hbox align="center">
         <label id="firefoxSuggestNonsponsoredLabel"
@@ -660,6 +664,7 @@
                     type="checkbox"
                     class="toggle-button firefoxSuggestToggle"
                     preference="browser.urlbar.suggest.quicksuggest.nonsponsored"
+                    form="firefoxSuggestForm"
                     aria-labelledby="firefoxSuggestNonsponsoredLabel"
                     aria-describedby="firefoxSuggestNonsponsoredDescription"/>
       </hbox>
@@ -676,6 +681,7 @@
                     type="checkbox"
                     class="toggle-button firefoxSuggestToggle"
                     preference="browser.urlbar.suggest.quicksuggest.sponsored"
+                    form="firefoxSuggestForm"
                     aria-labelledby="firefoxSuggestSponsoredLabel"
                     aria-describedby="firefoxSuggestSponsoredDescription"/>
       </hbox>
@@ -692,6 +698,7 @@
                     type="checkbox"
                     class="toggle-button firefoxSuggestToggle"
                     preference="browser.urlbar.quicksuggest.dataCollection.enabled"
+                    form="firefoxSuggestForm"
                     aria-labelledby="firefoxSuggestDataCollectionLabel"
                     aria-describedby="firefoxSuggestDataCollectionDescription"/>
       </hbox>

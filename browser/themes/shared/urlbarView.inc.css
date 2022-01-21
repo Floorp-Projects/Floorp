@@ -12,8 +12,6 @@
 %include ../shared/urlbar/dynamicResults.inc.css
 
 :root {
-  --autocomplete-popup-background: var(--arrowpanel-background);
-  --autocomplete-popup-color: var(--arrowpanel-color);
   --autocomplete-popup-highlight-background: SelectedItem;
   --autocomplete-popup-highlight-color: SelectedItemText;
 
@@ -537,6 +535,11 @@
 }
 
 .urlbarView-row[firefox-suggest-sponsored] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title {
+  /* The width of favicon + this title element + help icon is over than total
+     displayed width, favicon and title will collapse as different row, the style
+     will be broken. To avoid it, we specify the max displayable width for title
+     explicitly. */
+  flex-basis: calc(100% - @urlbarViewFaviconWidth@ - @urlbarViewIconMarginEnd@);
   /* Move the title away from the action a little. This does not affect the
      height of the row. */
   margin-top: -0.3em;
@@ -755,8 +758,8 @@
 /* search bar popup */
 
 #PopupSearchAutoComplete {
-  --panel-background: var(--autocomplete-popup-background);
-  --panel-color: var(--autocomplete-popup-color);
+  --panel-color: var(--toolbar-field-focus-color);
+  --panel-background: var(--toolbar-field-focus-background-color);
   --panel-border-color: var(--arrowpanel-border-color);
 }
 
@@ -764,11 +767,6 @@
   /* Remove the top border since the panel is flush with the input. */
   border-top-width: 0;
   --panel-padding: var(--panel-subview-body-padding);
-}
-
-#PopupSearchAutoComplete {
-  --panel-color: var(--toolbar-field-focus-color);
-  --panel-background: var(--toolbar-field-focus-background-color);
 }
 
 #PopupSearchAutoComplete .autocomplete-richlistitem[selected] {

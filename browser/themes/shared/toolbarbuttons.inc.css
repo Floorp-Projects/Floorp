@@ -91,7 +91,7 @@ toolbar .toolbarbutton-1 {
   border: 4px solid transparent;
   border-radius: calc(var(--tab-border-radius) + 4px);
   margin: 0;
-  padding: 0 calc(var(--toolbarbutton-inner-padding) - 6px);
+  padding: var(--toolbarbutton-inner-padding) calc(var(--toolbarbutton-inner-padding) - 6px);
 }
 
 /*** Adds padding to end of toolbar while making that space click the first button ***/
@@ -249,9 +249,6 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
 toolbarbutton.bookmark-item:not(.subviewbutton) {
   max-width: 13em;
   appearance: none;
-  min-height: 28px;
-  margin-right: 7px !important;
-  margin-left: 7px !important;
 }
 
 /**

@@ -46,7 +46,7 @@ const DOMContentLoadedPromise = new Promise(resolve => {
 });
 
 Promise.all([
-  browser.runtime.sendMessage("getOverridesAndInterventions"),
+  browser.runtime.sendMessage("getAllInterventions"),
   DOMContentLoadedPromise,
 ]).then(([info]) => {
   document.body.addEventListener("click", async evt => {
@@ -76,12 +76,18 @@ Promise.all([
 });
 
 function onMessageFromAddon(msg) {
+  const alsoShowHidden = location.hash === "#all";
+
   if ("interventionsChanged" in msg) {
-    redrawTable($("#interventions"), msg.interventionsChanged);
+    redrawTable($("#interventions"), msg.interventionsChanged, alsoShowHidden);
   }
 
   if ("overridesChanged" in msg) {
-    redrawTable($("#overrides"), msg.overridesChanged);
+    redrawTable($("#overrides"), msg.overridesChanged, alsoShowHidden);
+  }
+
+  if ("shimsChanged" in msg) {
+    updateShimTables(msg.shimsChanged, alsoShowHidden);
   }
 
   const id = msg.toggling || msg.toggled;
@@ -101,13 +107,120 @@ function redraw() {
   if (!availablePatches) {
     return;
   }
-  const { overrides, interventions } = availablePatches;
-  const showHidden = location.hash === "#all";
-  redrawTable($("#overrides"), overrides, showHidden);
-  redrawTable($("#interventions"), interventions, showHidden);
+  const { overrides, interventions, shims } = availablePatches;
+  const alsoShowHidden = location.hash === "#all";
+  redrawTable($("#overrides"), overrides, alsoShowHidden);
+  redrawTable($("#interventions"), interventions, alsoShowHidden);
+  updateShimTables(shims, alsoShowHidden);
 }
 
-function redrawTable(table, data, showHidden = false) {
+function clearTableAndAddMessage(table, msgId) {
+  table.querySelectorAll("tr").forEach(tr => {
+    tr.remove();
+  });
+
+  const tr = document.createElement("tr");
+  tr.className = "message";
+  tr.id = msgId;
+
+  const td = document.createElement("td");
+  td.setAttribute("colspan", "3");
+  document.l10n.setAttributes(td, msgId);
+  tr.appendChild(td);
+
+  table.appendChild(tr);
+}
+
+function hideMessagesOnTable(table) {
+  table.querySelectorAll("tr.message").forEach(tr => {
+    tr.remove();
+  });
+}
+
+function updateShimTables(shimsChanged, alsoShowHidden) {
+  const tables = document.querySelectorAll("table.shims");
+  if (!tables.length) {
+    return;
+  }
+
+  for (const { bug, disabledReason, hidden, id, name, type } of shimsChanged) {
+    // if any shim is disabled by global pref, all of them are. just show the
+    // "disabled in about:config" message on each shim table in that case.
+    if (disabledReason === "globalPref") {
+      for (const table of tables) {
+        clearTableAndAddMessage(table, "text-disabled-in-about-config");
+      }
+      return;
+    }
+
+    // otherwise, find which table the shim belongs in. if there is none,
+    // ignore the shim (we're not showing it on the UI for whatever reason).
+    const table = document.querySelector(`table.shims#${type}`);
+    if (!table) {
+      continue;
+    }
+
+    // similarly, skip shims hidden from the UI (only for testing, etc).
+    if (!alsoShowHidden && hidden) {
+      continue;
+    }
+
+    // also, hide the shim if it is disabled because it is not meant for this
+    // platform, release (etc) rather than being disabled by pref/about:compat
+    const notApplicable =
+      disabledReason &&
+      disabledReason !== "pref" &&
+      disabledReason !== "session";
+    if (!alsoShowHidden && notApplicable) {
+      continue;
+    }
+
+    // create an updated table-row for the shim
+    const tr = document.createElement("tr");
+    tr.setAttribute("data-id", id);
+
+    let td = document.createElement("td");
+    td.innerText = name;
+    tr.appendChild(td);
+
+    td = document.createElement("td");
+    const a = document.createElement("a");
+    a.href = `https://bugzilla.mozilla.org/show_bug.cgi?id=${bug}`;
+    document.l10n.setAttributes(a, "label-more-information", { bug });
+    a.target = "_blank";
+    td.appendChild(a);
+    tr.appendChild(td);
+
+    td = document.createElement("td");
+    tr.appendChild(td);
+    const button = document.createElement("button");
+    document.l10n.setAttributes(
+      button,
+      disabledReason ? "label-enable" : "label-disable"
+    );
+    td.appendChild(button);
+
+    // is it already in the table?
+    const row = table.querySelector(`tr[data-id="${id}"]`);
+    if (row) {
+      row.replaceWith(tr);
+    } else {
+      table.appendChild(tr);
+    }
+  }
+
+  for (const table of tables) {
+    if (!table.querySelector("tr:not(.message)")) {
+      // no shims? then add a message that none are available for this platform/config
+      clearTableAndAddMessage(table, `text-no-${table.id}`);
+    } else {
+      // otherwise hide any such message, since we have shims on the list
+      hideMessagesOnTable(table);
+    }
+  }
+}
+
+function redrawTable(table, data, alsoShowHidden) {
   const df = document.createDocumentFragment();
   table.querySelectorAll("tr").forEach(tr => {
     tr.remove();
@@ -117,8 +230,7 @@ function redrawTable(table, data, showHidden = false) {
   if (data === false) {
     noEntriesMessage = "text-disabled-in-about-config";
   } else if (data.length === 0) {
-    noEntriesMessage =
-      table.id === "overrides" ? "text-no-overrides" : "text-no-interventions";
+    noEntriesMessage = `text-no-${table.id}`;
   }
 
   if (noEntriesMessage) {
@@ -135,7 +247,7 @@ function redrawTable(table, data, showHidden = false) {
   }
 
   for (const row of data) {
-    if (row.hidden && !showHidden) {
+    if (row.hidden && !alsoShowHidden) {
       continue;
     }
 

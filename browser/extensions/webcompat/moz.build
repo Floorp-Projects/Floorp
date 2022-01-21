@@ -64,6 +64,10 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1728140-map-size-fix.css",
     "injections/css/bug1738313-curriculum.gov.bc.ca-bootstrap-fix.css",
     "injections/css/bug1738316-vuoriclothing.com-flexbox-fix.css",
+    "injections/css/bug1740542-tesla.com-footer-links.css",
+    "injections/css/bug1741234-patient.alphalabs.ca-height-fix.css",
+    "injections/css/bug1743041-lu.ma-display-fix.css",
+    "injections/css/bug1743614-storytel.com-flex-min-width.css",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
@@ -80,7 +84,6 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1722955-frontgate.com-ua-override.js",
     "injections/js/bug1724764-amextravel.com-window-print.js",
     "injections/js/bug1724868-news.yahoo.co.jp-ua-override.js",
-    "injections/js/bug1727100-slack.com-ua-override.js",
     "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
 ]
 
@@ -108,9 +111,11 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
     "shims/google-publisher-tags.js",
     "shims/google-safeframe.html",
     "shims/hamropatro.js",
+    "shims/humblebundle.js",
     "shims/iaspet.js",
     "shims/kinja.js",
     "shims/live-test-shim.js",
+    "shims/microsoftLogin.js",
     "shims/moat.js",
     "shims/mochitest-shim-1.js",
     "shims/mochitest-shim-2.js",
@@ -134,6 +139,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["lib"] += [
     "lib/intervention_helpers.js",
     "lib/messaging_helper.js",
     "lib/module_shim.js",
+    "lib/requestStorageAccess_helper.js",
     "lib/shim_messaging_helper.js",
     "lib/shims.js",
     "lib/ua_helpers.js",

@@ -413,6 +413,7 @@ pref("media.decoder-doctor.verbose", false);
 pref("media.decoder-doctor.new-issue-endpoint", "https://webcompat.com/issues/new");
 
 pref("media.videocontrols.picture-in-picture.enabled", false);
+pref("media.videocontrols.picture-in-picture.allow-multiple", true);
 pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);
 pref("media.videocontrols.picture-in-picture.video-toggle.always-show", false);
 pref("media.videocontrols.picture-in-picture.video-toggle.min-video-secs", 45);
@@ -949,9 +950,6 @@ pref("print.shrink-to-fit.scale-limit-percent", 20);
 // Whether we should display simplify page checkbox on print preview UI
 pref("print.use_simplify_page", false);
 
-// Whether or not to force the Page Setup submenu of the File menu to shown
-pref("print.show_page_setup_menu", false);
-
 // Print header customization
 // Use the following codes:
 // &T - Title
@@ -1000,6 +998,18 @@ pref("print.print_edge_bottom", 0);
   // This is the default. Probably just remove this.
   pref("print.print_in_color", true);
 #endif
+
+// Whether inserting <div> when typing Enter in a block element which can
+// contain <div>.  If false, inserts <br> instead.
+pref("editor.use_div_for_default_newlines",  true);
+
+// Prefs specific to seamonkey composer belong in
+// comm-central/editor/ui/composer.js
+pref("editor.use_custom_colors", false);
+pref("editor.use_css",                       false);
+pref("editor.css.default_length_unit",       "px");
+pref("editor.resizing.preserve_ratio",       true);
+pref("editor.positioning.offset",            0);
 
 // Scripts & Windows prefs
 pref("dom.beforeunload_timeout_ms",         1000);
@@ -1399,7 +1409,7 @@ pref("network.http.fast-fallback-to-IPv4", true);
 
 // Try and use SPDY when using SSL
 pref("network.http.spdy.enabled", true);
-pref("network.http.spdy.enabled.http2", false);
+pref("network.http.spdy.enabled.http2", true);
 pref("network.http.spdy.enabled.deps", true);
 pref("network.http.spdy.enforce-tls-profile", true);
 pref("network.http.spdy.chunk-size", 16000);
@@ -1949,7 +1959,6 @@ pref("intl.hyphenation-alias.en-*", "en-us");
 
 pref("intl.hyphenation-alias.af-*", "af");
 pref("intl.hyphenation-alias.bg-*", "bg");
-pref("intl.hyphenation-alias.bn-*", "bn");
 pref("intl.hyphenation-alias.ca-*", "ca");
 pref("intl.hyphenation-alias.cy-*", "cy");
 pref("intl.hyphenation-alias.da-*", "da");
@@ -1959,8 +1968,6 @@ pref("intl.hyphenation-alias.et-*", "et");
 pref("intl.hyphenation-alias.fi-*", "fi");
 pref("intl.hyphenation-alias.fr-*", "fr");
 pref("intl.hyphenation-alias.gl-*", "gl");
-pref("intl.hyphenation-alias.gu-*", "gu");
-pref("intl.hyphenation-alias.hi-*", "hi");
 pref("intl.hyphenation-alias.hr-*", "hr");
 pref("intl.hyphenation-alias.hsb-*", "hsb");
 pref("intl.hyphenation-alias.hu-*", "hu");
@@ -1968,29 +1975,17 @@ pref("intl.hyphenation-alias.ia-*", "ia");
 pref("intl.hyphenation-alias.is-*", "is");
 pref("intl.hyphenation-alias.it-*", "it");
 pref("intl.hyphenation-alias.kmr-*", "kmr");
-pref("intl.hyphenation-alias.kn-*", "kn");
 pref("intl.hyphenation-alias.la-*", "la");
 pref("intl.hyphenation-alias.lt-*", "lt");
-pref("intl.hyphenation-alias.ml-*", "ml");
 pref("intl.hyphenation-alias.mn-*", "mn");
 pref("intl.hyphenation-alias.nl-*", "nl");
-pref("intl.hyphenation-alias.or-*", "or");
-pref("intl.hyphenation-alias.pa-*", "pa");
 pref("intl.hyphenation-alias.pl-*", "pl");
 pref("intl.hyphenation-alias.pt-*", "pt");
 pref("intl.hyphenation-alias.ru-*", "ru");
 pref("intl.hyphenation-alias.sl-*", "sl");
 pref("intl.hyphenation-alias.sv-*", "sv");
-pref("intl.hyphenation-alias.ta-*", "ta");
-pref("intl.hyphenation-alias.te-*", "te");
 pref("intl.hyphenation-alias.tr-*", "tr");
 pref("intl.hyphenation-alias.uk-*", "uk");
-
-// Assamese and Marathi use the same patterns as Bengali and Hindi respectively
-pref("intl.hyphenation-alias.as", "bn");
-pref("intl.hyphenation-alias.as-*", "bn");
-pref("intl.hyphenation-alias.mr", "hi");
-pref("intl.hyphenation-alias.mr-*", "hi");
 
 // use reformed (1996) German patterns by default unless specifically tagged as de-1901
 // (these prefs may soon be obsoleted by better BCP47-based tag matching, but for now...)
@@ -2373,6 +2368,9 @@ pref("plugin.override_internal_types", false);
 // enable single finger gesture input (win7+ tablets)
 pref("gestures.enable_single_finger_input", true);
 
+pref("editor.resizing.preserve_ratio",       true);
+pref("editor.positioning.offset",            0);
+
 pref("dom.use_watchdog", true);
 
 // Stop all scripts in a compartment when the "stop script" dialog is used.
@@ -2460,9 +2458,9 @@ pref("dom.ipc.plugins.forcedirect.enabled", true);
 
 // Enable multi by default.
 #if !defined(MOZ_ASAN) && !defined(MOZ_TSAN)
-  pref("dom.ipc.processCount", 3);
+  pref("dom.ipc.processCount", 8);
 #else
-  pref("dom.ipc.processCount", 3);
+  pref("dom.ipc.processCount", 4);
 #endif
 
 // Default to allow only one file:// URL content process.
@@ -3799,7 +3797,7 @@ pref("extensions.webextensions.performanceCountersMaxAge", 5000);
 // Whether to allow the inline options browser in HTML about:addons page.
 pref("extensions.htmlaboutaddons.inline-options.enabled", true);
 // Show recommendations on the extension and theme list views.
-pref("extensions.htmlaboutaddons.recommendations.enabled", false);
+pref("extensions.htmlaboutaddons.recommendations.enabled", true);
 
 // The URL for the privacy policy related to recommended add-ons.
 pref("extensions.recommendations.privacyPolicyUrl", "");
@@ -4253,6 +4251,9 @@ pref("plugins.rewrite_youtube_embeds", true);
 // Default media volume
 pref("media.default_volume", "1.0");
 
+// return the maximum number of cores that navigator.hardwareCurrency returns
+pref("dom.maxHardwareConcurrency", 16);
+
 pref("dom.storageManager.prompt.testing", false);
 pref("dom.storageManager.prompt.testing.allow", false);
 
@@ -4329,10 +4330,10 @@ pref("toolkit.aboutProcesses.profileDuration", 5);
 // user profile directory for these stylesheets:
 //  * userContent.css
 //  * userChrome.css
-pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
+pref("toolkit.legacyUserProfileCustomizations.stylesheets", false);
 
 #ifdef MOZ_DATA_REPORTING
-  pref("datareporting.policy.dataSubmissionEnabled", false);
+  pref("datareporting.policy.dataSubmissionEnabled", true);
   pref("datareporting.policy.dataSubmissionPolicyNotifiedTime", "0");
   pref("datareporting.policy.dataSubmissionPolicyAcceptedVersion", 0);
   pref("datareporting.policy.dataSubmissionPolicyBypassNotification", false);
@@ -4347,7 +4348,7 @@ pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
     pref("datareporting.healthreport.infoURL", "https://www.mozilla.org/legal/privacy/firefox.html#health-report");
 
     // Health Report is enabled by default on all channels.
-    pref("datareporting.healthreport.uploadEnabled", false);
+    pref("datareporting.healthreport.uploadEnabled", true);
   #endif
 #endif
 
@@ -4599,17 +4600,14 @@ pref("browser.privatebrowsing.autostart", false);
 pref("security.external_protocol_requires_permission", true);
 
 // Preferences for the form autofill toolkit component.
-// The truthy values of "extensions.formautofill.addresses.available"
-// and "extensions.formautofill.creditCards.available" are "on" and "detect",
+// The truthy values of "extensions.formautofill.available" are "on" and "detect",
 // any other value means autofill isn't available.
 // "detect" means it's enabled if conditions defined in the extension are met.
-pref("extensions.formautofill.addresses.available", "detect");
+pref("extensions.formautofill.available", "detect");
 pref("extensions.formautofill.addresses.enabled", true);
 pref("extensions.formautofill.addresses.capture.enabled", false);
-pref("extensions.formautofill.addresses.supportedCountries", "US,CA");
-pref("extensions.formautofill.creditCards.available", "detect");
+pref("extensions.formautofill.creditCards.available", true);
 pref("extensions.formautofill.creditCards.enabled", true);
-pref("extensions.formautofill.creditCards.supportedCountries", "US,CA");
 // Temporary preference to control displaying the UI elements for
 // credit card autofill used for the duration of the A/B test.
 pref("extensions.formautofill.creditCards.hideui", false);
@@ -4628,4 +4626,5 @@ pref("extensions.formautofill.loglevel", "Warn");
 
 pref("toolkit.osKeyStore.loglevel", "Warn");
 
+pref("extensions.formautofill.supportedCountries", "US,CA");
 pref("extensions.formautofill.supportRTL", false);

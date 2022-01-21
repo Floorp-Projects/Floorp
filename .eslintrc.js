@@ -21,7 +21,11 @@ function removeOverrides(config) {
   return config;
 }
 
-const xpcshellTestPaths = ["**/test*/unit*/**/", "**/test*/xpcshell/**/"];
+const xpcshellTestPaths = [
+  "**/test*/unit*/**/",
+  "**/test*/*/unit*/",
+  "**/test*/xpcshell/**/",
+];
 
 const browserTestPaths = ["**/test*/**/browser*/"];
 
@@ -84,30 +88,21 @@ module.exports = {
     {
       files: "*.sjs",
       rules: {
-        radix: "warn",
-        strict: "warn",
-        "no-var": "warn",
         complexity: "warn",
         "no-undef": "warn",
         "no-empty": "warn",
         "no-shadow": "warn",
-        "valid-jsdoc": "warn",
         "no-redeclare": "warn",
         "no-unused-vars": "warn",
         "no-fallthrough": "warn",
-        "mozilla/no-aArgs": "warn",
-        "block-scoped-var": "warn",
         "no-control-regex": "warn",
         "no-throw-literal": "warn",
         "no-useless-concat": "warn",
         "consistent-return": "warn",
         "mozilla/use-cc-etc": "warn",
-        "no-use-before-define": "warn",
         "mozilla/use-services": "warn",
         "mozilla/use-includes-instead-of-indexOf": "warn",
         "mozilla/no-compare-against-boolean-literals": "warn",
-        "mozilla/reject-importGlobalProperties": "warn",
-        "mozilla/var-only-at-top-level": "warn",
       },
     },
     {
@@ -258,7 +253,6 @@ module.exports = {
       rules: {
         "mozilla/no-arbitrary-setTimeout": "off",
         "mozilla/no-define-cc-etc": "off",
-        "mozilla/use-services": "off",
         "consistent-return": "off",
         "no-eval": "off",
         "no-global-assign": "off",
@@ -456,7 +450,6 @@ module.exports = {
         "dom/base/test/chrome/test_bug884693.xhtml",
         "dom/base/test/chrome/test_document-element-inserted.xhtml",
         "dom/base/test/chrome/test_domparsing.xhtml",
-        "dom/base/test/chrome/test_fileconstructor.xhtml",
         "dom/base/test/chrome/title_window.xhtml",
         "dom/base/test/chrome/window_nsITextInputProcessor.xhtml",
         "dom/base/test/chrome/window_swapFrameLoaders.xhtml",
@@ -505,9 +498,7 @@ module.exports = {
         "no-redeclare": "off",
         "no-shadow": "off",
         "no-throw-literal": "off",
-        "no-undef": "off",
         "no-unsanitized/method": "off",
-        "no-unused-vars": "off",
         "no-useless-return": "off",
         "object-shorthand": "off",
       },
@@ -543,10 +534,7 @@ module.exports = {
     {
       // TODO: Bug 1609271 Fix all violations for ChromeUtils.import(..., null)
       files: [
-        "browser/base/content/test/forms/head.js",
-        "browser/base/content/test/general/browser_datachoices_notification.js",
         "browser/base/content/test/sync/browser_fxa_web_channel.js",
-        "browser/base/content/test/webextensions/head.js",
         "browser/components/customizableui/test/browser_1042100_default_placements_update.js",
         "browser/components/customizableui/test/browser_1096763_seen_widgets_post_reset.js",
         "browser/components/customizableui/test/browser_1161838_inserted_new_default_buttons.js",
@@ -554,20 +542,14 @@ module.exports = {
         "browser/components/customizableui/test/browser_currentset_post_reset.js",
         "browser/components/customizableui/test/browser_panel_keyboard_navigation.js",
         "browser/components/customizableui/test/browser_proton_toolbar_hide_toolbarbuttons.js",
-        "browser/components/enterprisepolicies/tests/browser/browser_policies_setAndLockPref_API.js",
-        "browser/components/enterprisepolicies/tests/xpcshell/head.js",
-        "browser/components/enterprisepolicies/tests/xpcshell/test_proxy.js",
-        "browser/components/enterprisepolicies/tests/xpcshell/test_runOnce_helper.js",
         "browser/components/migration/tests/unit/test_Edge_db_migration.js",
         "browser/components/translation/test/unit/test_cld2.js",
         "browser/extensions/formautofill/test/unit/test_sync.js",
-        "browser/extensions/report-site-issue/test/browser/head.js",
         "devtools/client/aboutdebugging/test/browser/browser_aboutdebugging_addons_debug_popup.js",
         "dom/ipc/tests/browser_memory_distribution_telemetry.js",
         "dom/push/test/xpcshell/head.js",
         "dom/push/test/xpcshell/test_broadcast_success.js",
         "dom/push/test/xpcshell/test_crypto.js",
-        "security/manager/ssl/RemoteSecuritySettings.jsm",
         "services/common/tests/unit/head_helpers.js",
         "services/common/tests/unit/test_uptake_telemetry.js",
         "services/fxaccounts/tests/xpcshell/test_accounts.js",
@@ -582,13 +564,8 @@ module.exports = {
         "toolkit/components/crashes/tests/xpcshell/test_crash_manager.js",
         "toolkit/components/crashes/tests/xpcshell/test_crash_service.js",
         "toolkit/components/crashes/tests/xpcshell/test_crash_store.js",
-        "toolkit/components/enterprisepolicies/tests/EnterprisePolicyTesting.jsm",
         "toolkit/components/featuregates/test/unit/test_FeatureGate.js",
         "toolkit/components/normandy/test/browser/browser_actions_ShowHeartbeatAction.js",
-        "toolkit/components/osfile/modules/osfile_async_front.jsm",
-        "toolkit/components/osfile/modules/osfile_native.jsm",
-        "toolkit/components/osfile/tests/xpcshell/test_osfile_kill.js",
-        "toolkit/components/processsingleton/MainProcessSingleton.jsm",
         "toolkit/modules/subprocess/test/xpcshell/test_subprocess.js",
         "toolkit/modules/tests/xpcshell/test_GMPInstallManager.js",
         "toolkit/mozapps/extensions/internal/AddonTestUtils.jsm",
@@ -604,12 +581,11 @@ module.exports = {
         "toolkit/mozapps/extensions/test/xpcshell/test_permissions_prefs.js",
         "toolkit/mozapps/extensions/test/xpcshell/test_signed_updatepref.js",
         "toolkit/mozapps/extensions/test/xpcshell/test_signed_verify.js",
-        "toolkit/mozapps/extensions/test/xpcshell/test_webextension.js",
         "toolkit/mozapps/extensions/test/xpcshell/test_webextension_events.js",
         "toolkit/mozapps/extensions/test/xpcshell/test_XPIStates.js",
       ],
       rules: {
-        "mozilla/reject-chromeutils-import-params": "off",
+        "mozilla/reject-chromeutils-import-params": "warn",
       },
     },
   ],

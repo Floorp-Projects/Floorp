@@ -33,340 +33,6 @@
 * {
   user-select: text;
 }
-/* Preferences Page */
-
-  /* Sync Items */
-  .sync-engine-bookmarks .checkbox-icon,
-  .sync-engine-bookmarks.sync-engine-image {
-    list-style-image: url(chrome://browser/skin/bookmark.svg) !important;
-  }
-
-  .sync-engine-history .checkbox-icon,
-  .sync-engine-history.sync-engine-image {
-    list-style-image: url(chrome://browser/skin/history.svg) !important;
-  }
-
-  .sync-engine-tabs .checkbox-icon,
-  .sync-engine-tabs.sync-engine-image {
-    list-style-image: url(chrome://browser/skin/new-tab.svg) !important;
-  }
-
-  .sync-engine-passwords .checkbox-icon,
-  .sync-engine-passwords.sync-engine-image {
-    list-style-image: url(chrome://browser/skin/key.svg) !important;
-  }
-
-  .sync-engine-addons .checkbox-icon,
-  .sync-engine-addons.sync-engine-image {
-    list-style-image: url(chrome://browser/skin/addons.svg) !important;
-  }
-
-  .sync-engine-prefs .checkbox-icon,
-  .sync-engine-prefs.sync-engine-image {
-    list-style-image: url(chrome://browser/skin/settings.svg) !important;
-  }
-
-  /* Profile Picture */
-  .fxaProfileImage:is(:not([style*="list-style-image"]), [style*="https://profile.accounts.firefox.com/v1/avatar/"]) {
-    list-style-image: url(chrome://browser/skin/profile.svg) !important;
-  }
-
-  /* links */
-  .preferences-icon,
-  .page-options-menu>.more-options-button {
-    background-image: url(chrome://browser/skin/settings.svg) !important;
-  }
-
-  .addons-icon {
-    list-style-image: url(chrome://browser/skin/addons.svg) !important;
-  }
-
-  .textbox-search-sign {
-    list-style-image: url(chrome://browser/skin/search.svg) !important;
-  }
-
-  /* Visual Ajustments */
-  :root {
-    --in-content-page-background: #f7f7f7 !important;
-    --in-content-text-color: #262626 !important;
-    --in-content-page-color: #262626 !important;
-    --card-background: #fff;
-    --card-shadow: rgb(0 0 0 / 13%) 0px 1.6px 3.6px, rgb(0 0 0 / 11%) 0px 0px 2.9px !important;
-    --sidebar-border-color: #bebebe;
-    --in-content-accent-color: #0078d4 !important;
-    --category-selected: #0001;
-    --in-content-link-color: #0078d4 !important;
-    --section-highlight-background-color: #0078d420 !important;
-
-    --search-bgcolor: #fff;
-    --input-border-color: var(--sidebar-border-color);
-    --input-border-color-focused: #888;
-
-    --checkbox-bgcolor: #f7f7f7;
-    --checkbox-border-color: #8D8D8D;
-    --checkbox-hover-border-color: #666;
-    --checkbox-fill-color: #262626;
-    --checkbox-checked-bgcolor: #0078D4;
-    --checkbox-checked-fill-color: #fff;
-  }
-
-  .content-blocking-category.selected {
-    border-color: #0078d4 !important;
-  }
-
-  .content-blocking-category.expanded:not(.selected) .content-blocking-warning {
-    background-color: #f7f7f7 !important;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --in-content-page-background: #333 !important;
-      --in-content-text-color: #fff !important;
-      --in-content-page-color: #fff !important;
-      --card-background: #3b3b3b;
-      --card-shadow: 0px 1.6px 3.6px rgb(0 0 0 / 25%), 0px 0px 2.9px rgb(0 0 0 / 22%) !important;
-      --sidebar-border-color: #6b6b6b;
-      --in-content-accent-color: #63ade5 !important;
-      --category-selected: #fff1;
-      --in-content-link-color: #63ade5 !important;
-      --section-highlight-background-color: #63ade520 !important;
-
-      --search-bgcolor: #2b2b2b;
-      --input-border-color-focused: #808080;
-
-      --checkbox-bgcolor: #333;
-      --checkbox-border-color: #7d7d7d;
-      --checkbox-hover-border-color: #A4A4A4;
-      --checkbox-fill-color: #fff;
-      --checkbox-checked-bgcolor: #006CBE;
-      --checkbox-checked-fill-color: #fff;
-    }
-
-    .content-blocking-category.selected {
-      border-color: #63ade5 !important;
-    }
-
-    .content-blocking-category.expanded:not(.selected) .content-blocking-warning {
-      background-color: #333 !important;
-    }
-  }
-
-  /* Cards For Certain Sections */
-  #fxaGroup,
-  .sync-group,
-  #trackingGroup,
-  #searchbarGroup,
-  #homeContentsGroup,
-  #permissionsGroup,
-  #httpsOnlyBox,
-  #applicationsGroup,
-  #oneClickSearchProvidersGroup {
-    padding: 12px 16px !important;
-    background: var(--card-background) !important;
-    box-shadow: var(--card-shadow) !important;
-    border-radius: 4px !important;
-    border: 0 !important;
-  }
-
-  :is(.sync-group, #trackingGroup, #searchbarGroup, #homeContentsGroup, #permissionsGroup, #httpsOnlyBox, #applicationsGroup, #oneClickSearchProvidersGroup) h2 {
-    margin-top: 2px !important;
-  }
-
-  h1 {
-    margin: 0 0 16px !important;
-    font-weight: 600 !important;
-    font-size: 20px !important;
-  }
-
-  #openChangeProfileImage {
-    height: 64px !important;
-    width: 64px !important;
-    margin: 10px !important;
-    margin-inline: 6px 20px !important;
-  }
-
-  menulist {
-    max-width: 400px !important;
-  }
-
-
-  search-textbox,
-  input[type="text"] {
-    background-color: transparent !important;
-    border: 1px solid var(--input-border-color) !important;
-    transition: all .2s ease-in-out !important;
-  }
-
-  search-textbox:hover,
-  search-textbox[focused],
-  input[type="text"]:focus,
-  input[type="text"]:hover {
-    --input-border-color: var(--input-border-color-focused) !important;
-    outline: 0 !important;
-  }
-
-  search-textbox[focused],
-  input[type="text"]:focus {
-    box-shadow: 0 0 0 1px inset var(--input-border-color) !important;
-  }
-
-  search-textbox {
-    background-color: var(--search-bgcolor) !important;
-    padding: 2px 8px !important;
-    margin: 16px 0 !important;
-    min-height: 34px !important;
-  }
-
-  #policies-container {
-    margin: 17px 0 17px 0 !important;
-    position: relative !important;
-    z-index: 99 !important;
-    background-color: var(--in-content-page-background) !important;
-  }
-
-  button,
-  menulist {
-    background-color: transparent !important;
-    border: 1px solid var(--input-border-color) !important;
-    border-radius: 2px !important;
-    transition: all .2s ease-in-out !important;
-  }
-
-  button:hover,
-  menulist:hover {
-    border-color: var(--input-border-color-focused) !important;
-  }
-
-  dropmarker {
-    list-style-image: url(chrome://browser/skin/menu-right.svg) !important;
-    transform: rotate(90deg) scale(calc(16 / 12)) !important;
-    margin: 0 4px 0 0 !important;
-    max-width: 12px !important;
-  }
-
-  .navigation {
-    border-right: 1px solid var(--sidebar-border-color) !important;
-  }
-
-  .sticky-container {
-    border-bottom: 1px solid var(--sidebar-border-color) !important;
-  }
-
-
-  #mainPrefPane {
-    margin-top: 16px !important;
-  }
-
-  .checkbox-check {
-    /* Move Checkboxes to Right */
-    -moz-box-ordinal-group: 2 !important;
-
-    width: 40px !important;
-    height: 20px !important;
-    padding: 4px !important;
-    padding-inline: 0 24px !important;
-    list-style-image: none !important;
-    border-radius: 99px !important;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ccircle cx='5' cy='5' r='5' fill='context-fill'/%3E%3C/svg%3E") !important;
-    background-position: 4px 4px !important;
-    background-repeat: no-repeat !important;
-    background-size: 10px !important;
-    transition: all 0.1s ease-in-out !important;
-    -moz-context-properties: fill, fill-opacity !important;
-    fill: currentColor !important;
-    background-color: var(--checkbox-bgcolor) !important;
-    color: var(--checkbox-fill-color) !important;
-    border: 1px solid var(--checkbox-border-color) !important;
-    margin: 3px 8px !important;
-  }
-
-  .indent>checkbox>.checkbox-check {
-    margin-inline-start: 32px !important;
-  }
-
-  .checkbox-check:hover {
-    border-color: var(--checkbox-hover-border-color) !important;
-  }
-
-  .checkbox-check[checked] {
-    background-position: 24px 4px !important;
-    background-color: var(--checkbox-checked-bgcolor) !important;
-    color: var(--checkbox-checked-fill-color) !important;
-    border-color: transparent !important;
-  }
-
-  .radio-check {
-    background-color: var(--checkbox-bgcolor) !important;
-    border: 1px solid var(--checkbox-border-color) !important;
-  }
-
-  .radio-check:hover {
-    background-color: var(--checkbox-bgcolor) !important;
-    border-color: var(--checkbox-hover-border-color) !important;
-  }
-
-  .radio-check[selected] {
-    background-color: var(--checkbox-border-color) !important;
-    border-color: transparent !important;
-    color: var(--checkbox-bgcolor) !important;
-  }
-
-  .radio-check[selected]:hover {
-    background-color: var(--checkbox-hover-border-color) !important;
-  }
-
-  #categories {
-    padding-inline: 16px !important;
-    margin: 16px 0 0 !important;
-  }
-
-  .category {
-    position: relative !important;
-    margin: 0 !important;
-    padding-inline: 12px !important;
-  }
-
-  .sidebar-footer-link,
-  .sidebar-footer-button>.text-link {
-    margin-inline: 16px !important;
-    height: 40px !important;
-  }
-
-  .sidebar-footer-icon {
-    margin: 12px 16px !important;
-    height: 16px !important;
-    width: 16px !important;
-    scale: 1 !important;
-    translate: 0 !important;
-  }
-
-  .sidebar-footer-list {
-    margin: 0 !important;
-    margin-bottom: 16px !important;
-  }
-
-  @media (max-width: 830px) {
-    :root {
-      --in-content-sidebar-width: 80px !important;
-    }
-
-    .navigation {
-      margin-inline-end: 16px !important;
-    }
-  }
-
-  .category::before {
-    content: "";
-    height: calc(100% - 24px) !important;
-    position: absolute !important;
-    top: 12px;
-    left: 0;
-    border-left: 3px solid transparent !important;
-  }
-
-  .category[selected]::before {
-    border-color: var(--in-content-accent-color) !important;
-  }
 
 /*
   The stack has some very tall content but it shouldn't be taller than the
@@ -1154,7 +820,7 @@ dialog > .sync-engines-list + hbox {
 
 .sync-engine-addons .checkbox-icon,
 .sync-engine-addons.sync-engine-image {
-  list-style-image: url("chrome://browser/skin/addons.svg");
+  list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
 }
 
 .sync-engine-prefs .checkbox-icon,
@@ -1229,7 +895,7 @@ image.update-throbber {
 }
 
 .face-sad {
-  list-style-image: url("chrome://browser/skin/notdefault.png");
+  list-style-image: url("chrome://browser/skin/preferences/face-sad.svg");
   width: 20px;
   height: 20px;
   margin-block: 5px;
@@ -1237,7 +903,7 @@ image.update-throbber {
 }
 
 .face-smile {
-  list-style-image: url("chrome://browser/skin/default.png");
+  list-style-image: url("chrome://browser/skin/preferences/face-smile.svg");
   width: 20px;
   height: 20px;
   margin-block: 5px;
@@ -1498,7 +1164,7 @@ richlistitem .text-link:hover {
 }
 
 .checkbox-row {
-  display: none !important;
+  display: flex;
   align-items: baseline;
 }
 
@@ -1513,6 +1179,7 @@ richlistitem .text-link:hover {
 #moreFromMozillaCategory .subtitle {
   color: var(--in-content-deemphasized-text);
   margin: 4px 0 10px;
+  line-height: 1.4em;
 }
 
 #moreFromMozillaCategory .list-item {
@@ -1520,31 +1187,99 @@ richlistitem .text-link:hover {
 }
 
 #moreFromMozillaCategory .product-title {
+  margin: 4px 0;
   background-repeat: no-repeat;
   background-size: contain;
   padding-inline-start: 30px;
-  margin: 4px 0;
   -moz-context-properties: fill;
   fill: currentColor;
 }
 
-#moreFromMozillaCategory .product-title:-moz-locale-dir(rtl) {
+#moreFromMozillaCategory .advanced .product-title {
+  background-size: initial;
+  padding-inline-start: 0;
+  padding-top: 33px;
+}
+
+/* The firefox-mobile product has three columns and needs to constrain the
+ * .product-info section to one of them.
+ */
+#firefox-mobile-vbox.advanced .product-info {
+  max-width: 200px;
+}
+
+#moreFromMozillaCategory .product-img {
+  background-repeat: no-repeat;
+  background-size: 170px;
+  padding-inline-start: 184px;
+}
+
+#moreFromMozillaCategory .product-title:-moz-locale-dir(rtl),
+#moreFromMozillaCategory .product-img:-moz-locale-dir(rtl) {
   background-position-x: right;
 }
 
 #moreFromMozillaCategory .description {
   color: var(--in-content-deemphasized-text);
   padding-inline-start: 30px;
-  margin: 4px 0;
+  margin: 2px 0;
+  line-height: 1.4em;
 }
 
-#moreFromMozillaCategory button {
+#moreFromMozillaCategory .advanced .description {
+  padding-inline-start: 0;
+}
+
+#moreFromMozillaCategory .small-button {
   margin-block: 16px;
   margin-inline: 30px 0;
 }
 
+#moreFromMozillaCategory .advanced .small-button {
+  margin: 24px 0;
+}
+
+#moreFromMozillaCategory vbox.advanced {
+  box-shadow: 0 2px 6px rgba(58, 57, 68, 0.2);
+  border-radius: 4px;
+
+  margin-block: 20px 10px;
+  margin-inline: 2px 0;
+  padding: 16px;
+
+  min-width: 725px;
+  max-width: 725px;
+  height: 219px;
+}
+
+@media (prefers-color-scheme: dark) {
+  #moreFromMozillaCategory vbox.advanced {
+    background-color: rgb(66, 65, 77);
+  }
+}
+
+#moreFromMozillaCategory .advanced .product-info {
+  min-height: 200px;
+}
+
+#moreFromMozillaCategory .text-link {
+  font-size: .87em;
+  line-height: 1.4em;
+
+  text-decoration: underline;
+
+  margin-block: 2px 0;
+  margin-inline: 6px 0;
+}
+
+#moreFromMozillaCategory .simple .text-link {
+  display: block;
+  margin-inline-start: 4px;
+}
+
 #firefox-mobile {
-  background-image: url("chrome://branding/content/about-logo.svg");
+  background-image: url("chrome://devtools/skin/images/browsers/mobile.svg");
+  padding-top: 5px;
 }
 
 #mozilla-vpn {
@@ -1553,4 +1288,129 @@ richlistitem .text-link:hover {
 
 #mozilla-rally {
   background-image: url("chrome://browser/skin/preferences/rally-logo.svg");
+}
+
+#firefox-mobile-image {
+  background-image: url("chrome://browser/skin/preferences/img-mobile.svg");
+}
+
+#mozilla-vpn-image {
+  background-image: url("chrome://browser/skin/preferences/img-vpn.svg");
+}
+
+#mozilla-rally-image {
+  background-image: url("chrome://browser/skin/preferences/img-rally.png");
+}
+
+/*
+ * The :not clause is required because hiding an element with `display: flex` only
+ * partially hides it.
+ */
+.qr-code-box:not([hidden="true"]) {
+  max-width: 320px; /* a unit better than px for this & next? */
+  min-height: 204px;
+  margin-block: 10px;
+  margin-inline-start: 30px;
+  background-color: #f9f9fb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.advanced .qr-code-box {
+  align-items: flex-start;
+  max-width: 307px;
+  min-height: 187px;
+  margin-inline-start: 12px;
+}
+
+.qr-code-top-box {
+  display: flex;
+}
+
+.advanced .qr-code-top-box {
+  align-items: center;
+}
+
+.qr-code-box-image {
+  border-radius: 4px;
+  padding: 2px;
+  width: 80px;
+  flex: 0 0 auto;
+}
+
+.advanced .qr-code-box-image {
+  max-width: 86px;
+  height: 86px;
+  margin-inline-end: 16px;
+  margin-block: 18px;
+
+  fill: rgb(87, 77, 77);
+}
+
+#moreFromMozillaCategory .advanced .text-link {
+  margin-inline-start: 0;
+}
+
+.qr-code-title-label {
+  flex: 1 1 auto;
+}
+
+.qr-code-box-title {
+  font-size: .87em;
+  font-weight: 600;
+  line-height: 1.42em;
+
+  text-align: center;
+
+  margin-block: 20px 0;
+  margin-inline: 40px;
+}
+
+.advanced .qr-code-box-title {
+  text-align: start;
+  margin-inline: 16px;
+  margin-block: revert;
+}
+
+#moreFromMozillaCategory .qr-code-button {
+  font-size: .87em;
+  font-weight: 400;
+  line-height: 1.42em;
+  text-decoration: underline;
+  color: #5b5b66;
+
+  flex: 2 0 auto;
+  margin-block-start: 10px;
+  margin-inline: 0; /* make sure we're correctly centered by overriding button rule */
+}
+
+#moreFromMozillaCategory .advanced .qr-code-button {
+  margin-inline: 16px;
+  padding-block-start: 30px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .qr-code-box:not([hidden="true"]) {
+    background-color: rgba(91,91,102,0.45);
+  }
+
+  .qr-code-box-image {
+    -moz-context-properties: fill;
+    fill: white;
+  }
+
+  .advanced .qr-code-box-image {
+    background-color: white;
+    fill: black;
+  }
+
+  #moreFromMozillaCategory .qr-code-button {
+    color: #fbfbfe;
+  }
+
+  .qr-code-box-title {
+    color: #fbfbfe;
+  }
 }
