@@ -62,6 +62,16 @@ nsWebHandlerApp.prototype = {
     // can't do this directly.  Ideally, we'd fix nsStandardURL to make it
     // possible to turn off all of its quirks handling, and use that...
 
+    let { scheme } = aURI;
+    if (scheme == "ftp" || scheme == "ftps" || scheme == "sftp") {
+      // FTP URLs are parsed by nsStandardURL, so clearing the username and
+      // password does not throw.
+      aURI = aURI
+        .mutate()
+        .setUserPass("")
+        .finalize();
+    }
+
     // encode the URI to be handled
     var escapedUriSpecToHandle = encodeURIComponent(aURI.spec);
 
@@ -78,7 +88,6 @@ nsWebHandlerApp.prototype = {
     // iframes, and in any case it's unlikely to work due to framing
     // restrictions employed by the target site.
     if (aBrowsingContext && aBrowsingContext != aBrowsingContext.top) {
-      let { scheme } = aURI;
       if (!scheme.startsWith("web+") && !scheme.startsWith("ext+")) {
         aBrowsingContext = null;
       }
