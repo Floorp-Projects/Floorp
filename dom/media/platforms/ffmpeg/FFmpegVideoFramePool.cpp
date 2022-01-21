@@ -98,6 +98,12 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
   // VADRMPRIMESurfaceDescriptor can be used with VA-API only.
   MOZ_ASSERT(mUseVAAPI);
 
+  if (aVaDesc.fourcc != VA_FOURCC_NV12 && aVaDesc.fourcc != VA_FOURCC_YV12 &&
+      aVaDesc.fourcc != VA_FOURCC_P010) {
+    FFMPEG_LOG("Unsupported VA-API surface format %d", aVaDesc.fourcc);
+    return nullptr;
+  }
+
   auto videoSurface = GetFreeVideoFrameSurface();
   if (!videoSurface) {
     RefPtr<DMABufSurfaceYUV> surface =

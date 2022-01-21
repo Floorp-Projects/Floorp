@@ -675,4 +675,9 @@ AbortSignal* Request::GetOrCreateSignal() {
 
 AbortSignalImpl* Request::GetSignalImpl() const { return mSignal; }
 
+AbortSignalImpl* Request::GetSignalImplToConsumeBody() const {
+  // This is a hack, see Response::GetSignalImplToConsumeBody.
+  return nullptr;
+}
+
 }  // namespace mozilla::dom

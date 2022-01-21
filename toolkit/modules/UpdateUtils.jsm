@@ -12,8 +12,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   ctypes: "resource://gre/modules/ctypes.jsm",
-  FileUtils: "resource://gre/modules/FileUtils.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   Services: "resource://gre/modules/Services.jsm",
   WindowsRegistry: "resource://gre/modules/WindowsRegistry.jsm",
   WindowsVersionInfo:
@@ -34,6 +32,7 @@ const PREF_APP_DISTRIBUTION_VERSION = "distribution.version";
 
 var UpdateUtils = {
   _locale: undefined,
+  _configFilePath: undefined,
 
   /**
    * Read the update channel from defaults only.  We do this to ensure that
@@ -145,6 +144,22 @@ var UpdateUtils = {
     );
 
     return (this._locale = null);
+  },
+
+  /* Get the path to the config file. */
+  getConfigFilePath() {
+    let path = PathUtils.join(
+      Services.dirsvc.get("UpdRootD", Ci.nsIFile).path,
+      FILE_UPDATE_CONFIG_JSON
+    );
+    return (this._configFilePath = path);
+  },
+
+  get configFilePath() {
+    if (this._configFilePath !== undefined) {
+      return this._configFilePath;
+    }
+    return this.getConfigFilePath();
   },
 
   /**
@@ -367,8 +382,7 @@ var UpdateUtils = {
    * @return A Promise that, once the setting has been saved, resolves with the
    *         value that was saved.
    * @throw  If there is an I/O error when attempting to write to the config
-   *         file, the returned Promise will reject with an OS.File.Error
-   *         exception.
+   *         file, the returned Promise will reject with a DOMException.
    */
   writeUpdateConfigSetting(prefName, value, options) {
     if (!(prefName in this.PER_INSTALLATION_PREFS)) {
@@ -820,19 +834,15 @@ function readDefaultValue(config, prefName) {
  */
 async function readUpdateConfig() {
   try {
-    let configFile = FileUtils.getDir("UpdRootD", [], true);
-    configFile.append(FILE_UPDATE_CONFIG_JSON);
-    let binaryData = await OS.File.read(configFile.path);
+    let config = await IOUtils.readJSON(UpdateUtils.getConfigFilePath());
 
     // We only migrate once. If we read something, the migration has already
     // happened so we should make sure it doesn't happen again.
     setUpdateConfigMigrationDone();
 
-    let jsonData = new TextDecoder().decode(binaryData);
-    let config = JSON.parse(jsonData);
     return config;
   } catch (e) {
-    if (e instanceof OS.File.Error && e.becauseNoSuchFile) {
+    if (e instanceof DOMException && e.name == "NotFoundError") {
       if (updateConfigNeedsMigration()) {
         const migrationConfig = makeMigrationUpdateConfig();
         setUpdateConfigMigrationDone();
@@ -866,12 +876,11 @@ async function readUpdateConfig() {
  * @param  config
  *           The configuration object to write.
  * @return The configuration object written.
- * @throw  An OS.File.Error exception will be thrown on I/O error.
+ * @throw  A DOMException will be thrown on I/O error.
  */
 async function writeUpdateConfig(config) {
-  let configFile = FileUtils.getDir("UpdRootD", [], true);
-  configFile.append(FILE_UPDATE_CONFIG_JSON);
-  await OS.File.writeAtomic(configFile.path, JSON.stringify(config));
+  let path = UpdateUtils.getConfigFilePath();
+  await IOUtils.writeJSON(path, config, { tmpPath: `${path}.tmp` });
   return config;
 }
 

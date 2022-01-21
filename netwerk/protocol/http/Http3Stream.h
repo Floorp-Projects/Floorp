@@ -68,7 +68,6 @@ class Http3Stream final : public nsAHttpSegmentReader,
 
   bool GetHeadersString(const char* buf, uint32_t avail, uint32_t* countUsed);
   nsresult StartRequest();
-  void FindRequestContentLength();
 
   void SetPriority(uint32_t aCos);
 
@@ -144,7 +143,6 @@ class Http3Stream final : public nsAHttpSegmentReader,
   bool mDataReceived{false};
   bool mResetRecv{false};
   nsTArray<uint8_t> mFlatResponseHeaders;
-  uint32_t mRequestBodyLenRemaining{0};
   uint64_t mTransactionTabId{0};
   uint64_t mCurrentTopBrowsingContextId;
   uint8_t mPriorityUrgency{3};  // urgency field of http priority

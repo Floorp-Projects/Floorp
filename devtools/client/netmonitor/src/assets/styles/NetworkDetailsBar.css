@@ -537,21 +537,24 @@
 }
 
 .network-monitor .custom-header,
-.network-monitor .http-custom-header  {
+.network-monitor .http-custom-header {
   flex-grow: 1;
   font-size: 1.1em;
   padding-top: 4px;
 }
 
 .network-monitor .custom-section,
-.network-monitor .http-custom-section{
+.network-monitor .http-custom-section {
   flex-direction: column;
   margin-top: 0.5em;
 }
 
-.network-monitor .custom-method-value,
-.network-monitor .http-custom-method-value{
+.network-monitor .custom-method-value {
   width: 4.5em;
+}
+
+.network-monitor .http-custom-method-value{
+  width: 6.0em;
 }
 
 .network-monitor .custom-url-value,

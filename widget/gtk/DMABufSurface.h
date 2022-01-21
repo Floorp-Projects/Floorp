@@ -17,6 +17,16 @@ typedef void* EGLSyncKHR;
 
 #define DMABUF_BUFFER_PLANES 4
 
+#ifndef VA_FOURCC_NV12
+#  define VA_FOURCC_NV12 0x3231564E
+#endif
+#ifndef VA_FOURCC_YV12
+#  define VA_FOURCC_YV12 0x32315659
+#endif
+#ifndef VA_FOURCC_P010
+#  define VA_FOURCC_P010 0x30313050
+#endif
+
 namespace mozilla {
 namespace gfx {
 class SourceSurface;
