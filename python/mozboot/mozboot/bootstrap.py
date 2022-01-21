@@ -15,7 +15,13 @@ import time
 from typing import Optional
 from pathlib import Path
 from distutils.version import LooseVersion
-from mach.util import get_state_dir, UserError, to_optional_path, to_optional_str
+from mach.util import (
+    get_state_dir,
+    UserError,
+    to_optional_path,
+    to_optional_str,
+    win_to_msys_path,
+)
 from mach.telemetry import initialize_telemetry_setting
 from mozboot.base import MODERN_RUST_VERSION
 from mozboot.centosfedora import CentOSFedoraBootstrapper
@@ -633,8 +639,7 @@ def configure_git(
         if "MOZILLABUILD" in os.environ:
             # Slightly modify the path on Windows to be correct
             # for the copy/paste into the .bash_profile
-            cinnabar_dir = "/" + cinnabar_dir
-            cinnabar_dir = cinnabar_dir.replace(":", "")
+            cinnabar_dir = win_to_msys_path(cinnabar_dir)
 
             print(
                 ADD_GIT_CINNABAR_PATH.format(
