@@ -214,27 +214,27 @@ class BookmarkFragmentStoreTest {
         assertEquals(BookmarkFragmentState.Mode.Syncing, store.state.mode)
     }
 
-    private val item = BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0, "Mozilla", "http://mozilla.org", 0, null)
-    private val separator = BookmarkNode(BookmarkNodeType.SEPARATOR, "789", "123", 1, null, null, 0, null)
-    private val subfolder = BookmarkNode(BookmarkNodeType.FOLDER, "987", "123", 0, "Subfolder", null, 0, listOf())
+    private val item = BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0u, "Mozilla", "http://mozilla.org", 0, null)
+    private val separator = BookmarkNode(BookmarkNodeType.SEPARATOR, "789", "123", 1u, null, null, 0, null)
+    private val subfolder = BookmarkNode(BookmarkNodeType.FOLDER, "987", "123", 0u, "Subfolder", null, 0, listOf())
     private val childItem = BookmarkNode(
         BookmarkNodeType.ITEM,
         "987",
         "123",
-        2,
+        2u,
         "Firefox",
         "https://www.mozilla.org/en-US/firefox/",
         0,
         null
     )
     private val tree = BookmarkNode(
-        BookmarkNodeType.FOLDER, "123", null, 0, "Mobile", null, 0, listOf(item, separator, childItem, subfolder)
+        BookmarkNodeType.FOLDER, "123", null, 0u, "Mobile", null, 0, listOf(item, separator, childItem, subfolder)
     )
     private val newTree = BookmarkNode(
         BookmarkNodeType.FOLDER,
         "123",
         null,
-        0,
+        0u,
         "Mobile",
         null,
         0,
@@ -244,7 +244,7 @@ class BookmarkFragmentStoreTest {
         BookmarkNodeType.FOLDER,
         "root________",
         null,
-        0,
+        0u,
         "Desktop Bookmarks",
         null,
         0,

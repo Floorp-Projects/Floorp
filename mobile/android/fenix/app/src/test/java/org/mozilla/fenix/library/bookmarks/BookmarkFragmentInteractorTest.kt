@@ -23,11 +23,11 @@ class BookmarkFragmentInteractorTest {
     private val bookmarkController: DefaultBookmarkController = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
 
-    private val item = BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0, "Mozilla", "http://mozilla.org", 0, null)
-    private val separator = BookmarkNode(BookmarkNodeType.SEPARATOR, "789", "123", 1, null, null, 0, null)
-    private val subfolder = BookmarkNode(BookmarkNodeType.FOLDER, "987", "123", 0, "Subfolder", null, 0, listOf())
+    private val item = BookmarkNode(BookmarkNodeType.ITEM, "456", "123", 0u, "Mozilla", "http://mozilla.org", 0, null)
+    private val separator = BookmarkNode(BookmarkNodeType.SEPARATOR, "789", "123", 1u, null, null, 0, null)
+    private val subfolder = BookmarkNode(BookmarkNodeType.FOLDER, "987", "123", 0u, "Subfolder", null, 0, listOf())
     private val tree: BookmarkNode = BookmarkNode(
-        BookmarkNodeType.FOLDER, "123", null, 0, "Mobile", null, 0, listOf(item, separator, item, subfolder)
+        BookmarkNodeType.FOLDER, "123", null, 0u, "Mobile", null, 0, listOf(item, separator, item, subfolder)
     )
 
     @Before

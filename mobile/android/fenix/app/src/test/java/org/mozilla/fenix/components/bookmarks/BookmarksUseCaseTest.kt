@@ -72,7 +72,7 @@ class BookmarksUseCaseTest {
             BookmarkNodeType.ITEM,
             "987",
             "123",
-            2,
+            2u,
             "Firefox",
             "https://www.firefox.com",
             0,

@@ -24,7 +24,7 @@ class BookmarkDeselectNavigationListenerTest {
         BookmarkNodeType.ITEM,
         BookmarkRoot.Root.id,
         parentGuid = null,
-        position = 0,
+        position = 0u,
         title = null,
         url = null,
         dateAdded = 0,

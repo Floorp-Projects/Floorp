@@ -133,7 +133,7 @@ internal class BookmarkAdapterTest {
         val item = testBookmarkItem("someFolder", "http://mozilla.org")
         assertTrue(createSingleItemDiffUtil(item, item).areContentsTheSame(0, 0))
         assertFalse(
-            createSingleItemDiffUtil(item, item.copy(position = 1)).areContentsTheSame(0, 0)
+            createSingleItemDiffUtil(item, item.copy(position = 1u)).areContentsTheSame(0, 0)
         )
         assertFalse(
             createSingleItemDiffUtil(

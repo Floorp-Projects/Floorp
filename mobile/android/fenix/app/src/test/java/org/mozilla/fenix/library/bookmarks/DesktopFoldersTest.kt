@@ -32,7 +32,7 @@ class DesktopFoldersTest {
         guid = BookmarkRoot.Root.id,
         parentGuid = null,
         title = BookmarkRoot.Root.name,
-        position = 0,
+        position = 0u,
         url = null,
         dateAdded = 0,
         children = null
