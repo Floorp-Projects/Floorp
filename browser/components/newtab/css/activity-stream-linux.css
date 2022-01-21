@@ -2740,89 +2740,89 @@ main.has-snippet {
 .ds-card-grid.empty {
   grid-template-columns: auto;
 }
-.ds-column-9 .ds-card-grid.ds-card-grid-compact-variant, .ds-column-10 .ds-card-grid.ds-card-grid-compact-variant, .ds-column-11 .ds-card-grid.ds-card-grid-compact-variant, .ds-column-12 .ds-card-grid.ds-card-grid-compact-variant {
+.ds-column-9 .ds-card-grid.ds-card-grid-four-card-variant, .ds-column-10 .ds-card-grid.ds-card-grid-four-card-variant, .ds-column-11 .ds-card-grid.ds-card-grid-four-card-variant, .ds-column-12 .ds-card-grid.ds-card-grid-four-card-variant {
   grid-template-columns: repeat(1, 1fr);
 }
 @media (min-width: 610px) {
-  .ds-column-9 .ds-card-grid.ds-card-grid-compact-variant, .ds-column-10 .ds-card-grid.ds-card-grid-compact-variant, .ds-column-11 .ds-card-grid.ds-card-grid-compact-variant, .ds-column-12 .ds-card-grid.ds-card-grid-compact-variant {
+  .ds-column-9 .ds-card-grid.ds-card-grid-four-card-variant, .ds-column-10 .ds-card-grid.ds-card-grid-four-card-variant, .ds-column-11 .ds-card-grid.ds-card-grid-four-card-variant, .ds-column-12 .ds-card-grid.ds-card-grid-four-card-variant {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 @media (min-width: 866px) {
-  .ds-column-9 .ds-card-grid.ds-card-grid-compact-variant, .ds-column-10 .ds-card-grid.ds-card-grid-compact-variant, .ds-column-11 .ds-card-grid.ds-card-grid-compact-variant, .ds-column-12 .ds-card-grid.ds-card-grid-compact-variant {
+  .ds-column-9 .ds-card-grid.ds-card-grid-four-card-variant, .ds-column-10 .ds-card-grid.ds-card-grid-four-card-variant, .ds-column-11 .ds-card-grid.ds-card-grid-four-card-variant, .ds-column-12 .ds-card-grid.ds-card-grid-four-card-variant {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 @media (min-width: 1122px) {
-  .ds-column-9 .ds-card-grid.ds-card-grid-compact-variant, .ds-column-10 .ds-card-grid.ds-card-grid-compact-variant, .ds-column-11 .ds-card-grid.ds-card-grid-compact-variant, .ds-column-12 .ds-card-grid.ds-card-grid-compact-variant {
+  .ds-column-9 .ds-card-grid.ds-card-grid-four-card-variant, .ds-column-10 .ds-card-grid.ds-card-grid-four-card-variant, .ds-column-11 .ds-card-grid.ds-card-grid-four-card-variant, .ds-column-12 .ds-card-grid.ds-card-grid-four-card-variant {
     grid-template-columns: repeat(4, 1fr);
   }
 }
-.ds-card-grid.ds-card-grid-compact-variant .ds-card.placeholder {
+.ds-card-grid.ds-card-grid-four-card-variant .ds-card.placeholder {
   min-height: 247px;
 }
-.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta {
-  padding: 12px 0 0;
-}
-.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .story-footer {
+.ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .story-footer {
   margin-top: 8px;
 }
-.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .source,
-.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .ds-last-card-desc,
-.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .story-sponsored-label,
-.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .status-message .story-context-label {
+.ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .source,
+.ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .ds-last-card-desc,
+.ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .story-sponsored-label,
+.ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .status-message .story-context-label {
   color: var(--newtab-text-secondary-color);
   -webkit-line-clamp: 2;
 }
-.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .source,
-.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .ds-last-card-desc,
-.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .story-sponsored-label {
+.ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .source,
+.ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .ds-last-card-desc,
+.ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .story-sponsored-label {
   font-size: 13px;
 }
-.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .status-message .story-context-label {
+.ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .status-message .story-context-label {
   font-size: 11.7px;
 }
-.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .story-badge-icon {
+.ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .story-badge-icon {
   margin-inline-end: 2px;
   margin-bottom: 2px;
   height: 14px;
   width: 14px;
   background-size: 14px;
 }
-.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .title {
+.ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .title {
   font-size: 14px;
-  -webkit-line-clamp: 3;
   line-height: 20px;
 }
-.ds-card-grid.ds-card-grid-compact-variant .ds-card .meta .info-wrap {
+.ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .info-wrap {
   flex-grow: 0;
 }
 
-.outer-wrapper .ds-card-grid.ds-card-grid-compact-variant.ds-card-grid-border .ds-card:not(.placeholder),
-.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-compact-variant.ds-card-grid-border .ds-card:not(.placeholder) {
+.outer-wrapper .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder),
+.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) {
   box-shadow: none;
   background: none;
 }
-.outer-wrapper .ds-card-grid.ds-card-grid-compact-variant.ds-card-grid-border .ds-card:not(.placeholder) .ds-card-link:focus,
-.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-compact-variant.ds-card-grid-border .ds-card:not(.placeholder) .ds-card-link:focus {
+.outer-wrapper .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .ds-card-link:focus,
+.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .ds-card-link:focus {
   box-shadow: none;
 }
-.outer-wrapper .ds-card-grid.ds-card-grid-compact-variant.ds-card-grid-border .ds-card:not(.placeholder) .ds-card-link:focus .img-wrapper .img img,
-.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-compact-variant.ds-card-grid-border .ds-card:not(.placeholder) .ds-card-link:focus .img-wrapper .img img {
+.outer-wrapper .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .ds-card-link:focus .img-wrapper .img img,
+.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .ds-card-link:focus .img-wrapper .img img {
   border: 0;
   outline: 0;
   box-shadow: 0 0 0 3px var(--newtab-primary-action-background-dimmed), 0 0 0 1px var(--newtab-primary-action-background);
 }
-.outer-wrapper .ds-card-grid.ds-card-grid-compact-variant.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img,
-.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-compact-variant.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img {
+.outer-wrapper .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img,
+.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img {
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
-.outer-wrapper .ds-card-grid.ds-card-grid-compact-variant.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img.last-card-message-image,
-.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-compact-variant.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img.last-card-message-image {
+.outer-wrapper .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img.last-card-message-image,
+.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .img-wrapper .img img.last-card-message-image {
   background: transparent;
   box-shadow: none;
   object-fit: contain;
+}
+.outer-wrapper .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .meta,
+.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) .meta {
+  padding: 12px 0 0;
 }
 
 .ds-layout .ds-card-grid-load-more-button {

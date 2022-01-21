@@ -187,6 +187,14 @@ pocketNewtab:
       type: boolean
       fallbackPref: browser.newtabpage.activity-stream.discoverystream.compactLayout.enabled
       description: Enable compact cards on newtab grid
+    hideCardBackground:
+      type: boolean
+      fallbackPref: browser.newtabpage.activity-stream.discoverystream.hideCardBackground.enabled
+      description: Removes Pocket card background and borders.
+    fourCardLayout:
+      type: boolean
+      fallbackPref: browser.newtabpage.activity-stream.discoverystream.fourCardLayout.enabled
+      description: Enable four Pocket cards per row.
     loadMore:
       type: boolean
       fallbackPref: browser.newtabpage.activity-stream.discoverystream.loadMore.enabled

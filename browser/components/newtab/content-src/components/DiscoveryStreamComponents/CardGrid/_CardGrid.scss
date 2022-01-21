@@ -153,7 +153,7 @@ $col4-header-font-size: 14;
     grid-template-columns: auto;
   }
 
-  &.ds-card-grid-compact-variant {
+  &.ds-card-grid-four-card-variant {
     // "Full width layout"
     .ds-column-9 &,
     .ds-column-10 &,
@@ -180,8 +180,6 @@ $col4-header-font-size: 14;
       }
 
       .meta {
-        padding: 12px 0 0;
-
         .story-footer {
           margin-top: 8px;
         }
@@ -214,7 +212,6 @@ $col4-header-font-size: 14;
 
         .title {
           font-size: 14px;
-          -webkit-line-clamp: 3;
           line-height: 20px;
         }
 
@@ -226,8 +223,8 @@ $col4-header-font-size: 14;
   }
 }
 
-.outer-wrapper .ds-card-grid.ds-card-grid-compact-variant.ds-card-grid-border .ds-card,
-.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-compact-variant.ds-card-grid-border .ds-card {
+.outer-wrapper .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card,
+.outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card {
   &:not(.placeholder) {
     box-shadow: none;
     background: none;
@@ -249,6 +246,10 @@ $col4-header-font-size: 14;
         box-shadow: none;
         object-fit: contain;
       }
+    }
+
+    .meta {
+      padding: 12px 0 0;
     }
   }
 }
