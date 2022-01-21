@@ -8,7 +8,7 @@ import hashlib
 import os
 import sys
 
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Optional
 
 
@@ -86,6 +86,17 @@ def get_state_dir(specific_to_topsrcdir=False, topsrcdir=None):
             fh.write(topsrcdir)
 
     return state_dir
+
+
+def win_to_msys_path(path: Path):
+    """Convert a windows-style path to msys-style."""
+    drive, path = os.path.splitdrive(path)
+    path = "/".join(path.split("\\"))
+    if drive:
+        if path[0] == "/":
+            path = path[1:]
+        path = f"/{drive[:-1]}/{path}"
+    return PurePosixPath(path)
 
 
 def to_optional_path(path: Optional[Path]):
