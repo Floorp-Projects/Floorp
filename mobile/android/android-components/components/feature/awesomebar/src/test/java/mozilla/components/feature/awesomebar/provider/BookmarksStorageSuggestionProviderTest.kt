@@ -166,7 +166,7 @@ class BookmarksStorageSuggestionProviderTest {
             parentGuid: String,
             url: String,
             title: String,
-            position: Int?
+            position: UInt?
         ): String {
             val id = UUID.randomUUID().toString()
             bookmarkMap[id] =
@@ -174,12 +174,12 @@ class BookmarksStorageSuggestionProviderTest {
             return id
         }
 
-        override suspend fun addFolder(parentGuid: String, title: String, position: Int?): String {
+        override suspend fun addFolder(parentGuid: String, title: String, position: UInt?): String {
             // "Not needed for the test"
             throw NotImplementedError()
         }
 
-        override suspend fun addSeparator(parentGuid: String, position: Int?): String {
+        override suspend fun addSeparator(parentGuid: String, position: UInt?): String {
             // "Not needed for the test"
             throw NotImplementedError()
         }

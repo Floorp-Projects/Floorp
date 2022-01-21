@@ -68,7 +68,7 @@ interface BookmarksStorage : Storage {
      * @param position The optional position to add the new node or null to append.
      * @return The guid of the newly inserted bookmark item.
      */
-    suspend fun addItem(parentGuid: String, url: String, title: String, position: Int?): String
+    suspend fun addItem(parentGuid: String, url: String, title: String, position: UInt?): String
 
     /**
      * Adds a new bookmark folder to a given node.
@@ -80,7 +80,7 @@ interface BookmarksStorage : Storage {
      * @param position The optional position to add the new node or null to append.
      * @return The guid of the newly inserted bookmark item.
      */
-    suspend fun addFolder(parentGuid: String, title: String, position: Int? = null): String
+    suspend fun addFolder(parentGuid: String, title: String, position: UInt? = null): String
 
     /**
      * Adds a new bookmark separator to a given node.
@@ -91,7 +91,7 @@ interface BookmarksStorage : Storage {
      * @param position The optional position to add the new node or null to append.
      * @return The guid of the newly inserted bookmark item.
      */
-    suspend fun addSeparator(parentGuid: String, position: Int?): String
+    suspend fun addSeparator(parentGuid: String, position: UInt?): String
 
     /**
      * Edits the properties of an existing bookmark item and/or moves an existing one underneath a new parent guid.
@@ -133,7 +133,7 @@ data class BookmarkNode(
     val type: BookmarkNodeType,
     val guid: String,
     val parentGuid: String?,
-    val position: Int?,
+    val position: UInt?,
     val title: String?,
     val url: String?,
     val dateAdded: Long,
@@ -145,7 +145,7 @@ data class BookmarkNode(
  */
 data class BookmarkInfo(
     val parentGuid: String?,
-    val position: Int?,
+    val position: UInt?,
     val title: String?,
     val url: String?
 )

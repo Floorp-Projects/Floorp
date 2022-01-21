@@ -8,8 +8,8 @@ import android.content.Context
 import android.net.Uri
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.PlacesApi
-import mozilla.appservices.places.PlacesException
-import mozilla.appservices.places.VisitObservation
+import mozilla.appservices.places.uniffi.PlacesException
+import mozilla.appservices.places.uniffi.VisitObservation
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.concept.storage.HistoryAutocompleteResult
@@ -57,7 +57,7 @@ open class PlacesHistoryStorage(
                 places.writer().noteObservation(
                     VisitObservation(
                         uri,
-                        visitType = visit.visitType.into(),
+                        visitType = visit.visitType.intoTransitionType(),
                         isRedirectSource = visit.redirectSource != null,
                         isPermanentRedirectSource = visit.redirectSource == RedirectSource.PERMANENT
                     )
@@ -71,7 +71,7 @@ open class PlacesHistoryStorage(
             logger.debug("Not recording observation (canAddUri=false) for: $uri")
             return
         }
-        // NB: visitType 'UPDATE_PLACE' means "record meta information about this URL".
+        // NB: visitType being null means "record meta information about this URL".
         withContext(writeScope.coroutineContext) {
             // Ignore exceptions related to uris. This means we may drop some of the data on the floor
             // if the underlying storage layer refuses it.
@@ -79,7 +79,7 @@ open class PlacesHistoryStorage(
                 places.writer().noteObservation(
                     VisitObservation(
                         url = uri,
-                        visitType = mozilla.appservices.places.VisitType.UPDATE_PLACE,
+                        visitType = null,
                         title = observation.title,
                         previewImageUrl = observation.previewImageUrl
                     )

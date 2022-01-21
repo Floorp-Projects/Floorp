@@ -98,9 +98,6 @@ class Nimbus(
  * experiment.
  */
 class NimbusDisabled(
+    override val context: Context,
     private val delegate: Observable<NimbusInterface.Observer> = ObserverRegistry()
-) : NimbusApi, Observable<NimbusInterface.Observer> by delegate {
-    companion object {
-        val instance: NimbusApi by lazy { NimbusDisabled() }
-    }
-}
+) : NimbusApi, Observable<NimbusInterface.Observer> by delegate

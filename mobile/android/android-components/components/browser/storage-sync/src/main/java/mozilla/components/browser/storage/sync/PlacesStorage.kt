@@ -11,10 +11,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.withContext
-import mozilla.appservices.places.InternalPanic
-import mozilla.appservices.places.PlacesException
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
+import mozilla.appservices.places.uniffi.PlacesException
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.storage.Storage
 import mozilla.components.concept.sync.SyncStatus
@@ -86,7 +85,7 @@ abstract class PlacesStorage(
     protected inline fun handlePlacesExceptions(operation: String, block: () -> Unit) {
         try {
             block()
-        } catch (e: InternalPanic) {
+        } catch (e: PlacesException.UnexpectedPlacesException) {
             throw e
         } catch (e: PlacesException) {
             crashReporter?.submitCaughtException(e)
@@ -110,7 +109,7 @@ abstract class PlacesStorage(
     ): T {
         return try {
             block()
-        } catch (e: InternalPanic) {
+        } catch (e: PlacesException.UnexpectedPlacesException) {
             throw e
         } catch (e: PlacesException) {
             crashReporter?.submitCaughtException(e)
@@ -130,8 +129,8 @@ abstract class PlacesStorage(
             logger.debug("Successfully synced.")
             SyncStatus.Ok
 
-            // Order of these catches matters: InternalPanic extends PlacesException.
-        } catch (e: InternalPanic) {
+            // Order of these catches matters: UnexpectedPlacesException extends PlacesException
+        } catch (e: PlacesException.UnexpectedPlacesException) {
             logger.error("Places panic while syncing", e)
             throw e
         } catch (e: PlacesException) {

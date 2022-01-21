@@ -7,9 +7,8 @@ package mozilla.components.browser.storage.sync
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.withContext
-import mozilla.appservices.places.BookmarkUpdateInfo
 import mozilla.appservices.places.PlacesApi
-import mozilla.appservices.places.PlacesException
+import mozilla.appservices.places.uniffi.PlacesException
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarksStorage
@@ -95,8 +94,9 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
             } else {
                 0
             }
-            reader.getRecentBookmarks(limit).filter { it.dateAdded >= threshold }
+            reader.getRecentBookmarks(limit)
                 .map { it.asBookmarkNode() }
+                .filter { it.dateAdded >= threshold }
         }
     }
 
@@ -111,7 +111,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * @param position The optional position to add the new node or null to append.
      * @return The guid of the newly inserted bookmark item.
      */
-    override suspend fun addItem(parentGuid: String, url: String, title: String, position: Int?): String {
+    override suspend fun addItem(parentGuid: String, url: String, title: String, position: UInt?): String {
         return withContext(writeScope.coroutineContext) {
             writer.createBookmarkItem(parentGuid, url, title, position)
         }
@@ -127,7 +127,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * @param position The optional position to add the new node or null to append.
      * @return The guid of the newly inserted bookmark item.
      */
-    override suspend fun addFolder(parentGuid: String, title: String, position: Int?): String {
+    override suspend fun addFolder(parentGuid: String, title: String, position: UInt?): String {
         return withContext(writeScope.coroutineContext) {
             writer.createFolder(parentGuid, title, position)
         }
@@ -142,7 +142,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      * @param position The optional position to add the new node or null to append.
      * @return The guid of the newly inserted bookmark item.
      */
-    override suspend fun addSeparator(parentGuid: String, position: Int?): String {
+    override suspend fun addSeparator(parentGuid: String, position: UInt?): String {
         return withContext(writeScope.coroutineContext) {
             writer.createSeparator(parentGuid, position)
         }
@@ -158,7 +158,7 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
      */
     override suspend fun updateNode(guid: String, info: BookmarkInfo) {
         return withContext(writeScope.coroutineContext) {
-            writer.updateBookmark(guid, BookmarkUpdateInfo(info.parentGuid, info.position, info.title, info.url))
+            writer.updateBookmark(guid, info.parentGuid, info.position, info.title, info.url)
         }
     }
 

@@ -27,7 +27,7 @@ class NimbusTest {
     @Test
     fun `Nimbus disabled and enabled can have observers registered on it`() {
         val enabled: NimbusApi = Nimbus(context, appInfo, null)
-        val disabled: NimbusApi = NimbusDisabled.instance
+        val disabled: NimbusApi = NimbusDisabled(context)
 
         val observer = object : NimbusInterface.Observer {}
 
@@ -37,7 +37,7 @@ class NimbusTest {
 
     @Test
     fun `NimbusDisabled is empty`() {
-        val nimbus: NimbusApi = NimbusDisabled()
+        val nimbus: NimbusApi = NimbusDisabled(context)
         nimbus.fetchExperiments()
         nimbus.applyPendingExperiments()
         assertTrue("getActiveExperiments should be empty", nimbus.getActiveExperiments().isEmpty())

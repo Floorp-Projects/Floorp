@@ -6,11 +6,10 @@ package mozilla.components.browser.storage.sync
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
-import mozilla.appservices.places.InternalPanic
-import mozilla.appservices.places.PlacesException
 import mozilla.appservices.places.PlacesReaderConnection
 import mozilla.appservices.places.PlacesWriterConnection
-import mozilla.appservices.places.VisitObservation
+import mozilla.appservices.places.uniffi.PlacesException
+import mozilla.appservices.places.uniffi.VisitObservation
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.DocumentType
 import mozilla.components.concept.storage.FrecencyThresholdOption
@@ -247,7 +246,7 @@ class PlacesHistoryStorageTest {
         assertEquals(VisitType.RELOAD, visits[1].visitType)
 
         assertEquals("http://www.firefox.com/", visits[2].url)
-        assertEquals("", visits[2].title)
+        assertEquals(null, visits[2].title)
         assertEquals(VisitType.LINK, visits[2].visitType)
 
         val visitsAll = history.getDetailedVisits(0)
@@ -707,7 +706,8 @@ class PlacesHistoryStorageTest {
 
     @Test
     fun `storage passes through sync exceptions`() = runBlocking {
-        val exception = PlacesException("test error")
+        // Can be any PlacesException
+        val exception = PlacesException.UrlParseFailed("test error")
         val conn = object : Connection {
             override fun reader(): PlacesReaderConnection {
                 fail()
@@ -760,9 +760,9 @@ class PlacesHistoryStorageTest {
         assertEquals("test error", error.exception.message)
     }
 
-    @Test(expected = InternalPanic::class)
+    @Test(expected = PlacesException::class)
     fun `storage re-throws sync panics`() = runBlocking {
-        val exception = InternalPanic("test panic")
+        val exception = PlacesException.UnexpectedPlacesException("test panic")
         val conn = object : Connection {
             override fun reader(): PlacesReaderConnection {
                 fail()
@@ -819,7 +819,7 @@ class PlacesHistoryStorageTest {
             fail("Expected v0 database to be unsupported")
         } catch (e: PlacesException) {
             // This is a little brittle, but the places library doesn't have a proper error type for this.
-            assertEquals("Can not import from database version 0", e.message)
+            assertEquals("Unexpected error: Can not import from database version 0", e.message)
         }
     }
 
@@ -832,7 +832,7 @@ class PlacesHistoryStorageTest {
             fail("Expected v23 database to be unsupported")
         } catch (e: PlacesException) {
             // This is a little brittle, but the places library doesn't have a proper error type for this.
-            assertEquals("Can not import from database version 23", e.message)
+            assertEquals("Unexpected error: Can not import from database version 23", e.message)
         }
     }
 
@@ -1032,7 +1032,7 @@ class PlacesHistoryStorageTest {
             VisitObservation(
                 url = "https://www.youtube.com/watch?v=F7PQdCDiE44",
                 title = "DW next crisis",
-                visitType = mozilla.appservices.places.VisitType.LINK
+                visitType = mozilla.appservices.places.uniffi.VisitTransition.LINK
             )
         )
 
@@ -1314,7 +1314,8 @@ class PlacesHistoryStorageTest {
     @Test
     fun `safe read from places`() = runBlocking {
         val result = history.handlePlacesExceptions("test", default = emptyList<HistoryMetadata>()) {
-            throw PlacesException("test")
+            // Can be any PlacesException error
+            throw PlacesException.PlacesConnectionBusy("test")
         }
         assertEquals(emptyList<HistoryMetadata>(), result)
     }

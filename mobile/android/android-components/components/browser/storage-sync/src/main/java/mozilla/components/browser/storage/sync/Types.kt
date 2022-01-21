@@ -6,11 +6,8 @@
 
 package mozilla.components.browser.storage.sync
 
-import mozilla.appservices.places.BookmarkFolder
-import mozilla.appservices.places.BookmarkItem
-import mozilla.appservices.places.BookmarkSeparator
-import mozilla.appservices.places.BookmarkTreeNode
 import mozilla.appservices.places.SyncAuthInfo
+import mozilla.appservices.places.uniffi.BookmarkItem
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.storage.DocumentType
@@ -43,9 +40,9 @@ internal fun mozilla.components.concept.sync.SyncAuthInfo.into(): SyncAuthInfo {
  * Conversion from a generic [FrecencyThresholdOption] into its richer comrade within the 'places' lib.
  */
 internal fun FrecencyThresholdOption.into() = when (this) {
-    FrecencyThresholdOption.NONE -> mozilla.appservices.places.FrecencyThresholdOption.NONE
+    FrecencyThresholdOption.NONE -> mozilla.appservices.places.uniffi.FrecencyThresholdOption.NONE
     FrecencyThresholdOption.SKIP_ONE_TIME_PAGES ->
-        mozilla.appservices.places.FrecencyThresholdOption.SKIP_ONE_TIME_PAGES
+        mozilla.appservices.places.uniffi.FrecencyThresholdOption.SKIP_ONE_TIME_PAGES
 }
 
 /**
@@ -77,58 +74,85 @@ internal fun mozilla.appservices.places.VisitType.into() = when (this) {
     mozilla.appservices.places.VisitType.FRAMED_LINK -> VisitType.FRAMED_LINK
 }
 
-internal fun mozilla.appservices.places.VisitInfo.into(): VisitInfo {
+internal fun VisitType.intoTransitionType() = when (this) {
+    VisitType.NOT_A_VISIT -> null
+    VisitType.LINK -> mozilla.appservices.places.uniffi.VisitTransition.LINK
+    VisitType.RELOAD -> mozilla.appservices.places.uniffi.VisitTransition.RELOAD
+    VisitType.TYPED -> mozilla.appservices.places.uniffi.VisitTransition.TYPED
+    VisitType.BOOKMARK -> mozilla.appservices.places.uniffi.VisitTransition.BOOKMARK
+    VisitType.EMBED -> mozilla.appservices.places.uniffi.VisitTransition.EMBED
+    VisitType.REDIRECT_PERMANENT -> mozilla.appservices.places.uniffi.VisitTransition.REDIRECT_PERMANENT
+    VisitType.REDIRECT_TEMPORARY -> mozilla.appservices.places.uniffi.VisitTransition.REDIRECT_TEMPORARY
+    VisitType.DOWNLOAD -> mozilla.appservices.places.uniffi.VisitTransition.DOWNLOAD
+    VisitType.FRAMED_LINK -> mozilla.appservices.places.uniffi.VisitTransition.FRAMED_LINK
+}
+
+internal fun mozilla.appservices.places.uniffi.VisitTransition.into() = when (this) {
+    mozilla.appservices.places.uniffi.VisitTransition.LINK -> VisitType.LINK
+    mozilla.appservices.places.uniffi.VisitTransition.RELOAD -> VisitType.RELOAD
+    mozilla.appservices.places.uniffi.VisitTransition.TYPED -> VisitType.TYPED
+    mozilla.appservices.places.uniffi.VisitTransition.BOOKMARK -> VisitType.BOOKMARK
+    mozilla.appservices.places.uniffi.VisitTransition.EMBED -> VisitType.EMBED
+    mozilla.appservices.places.uniffi.VisitTransition.REDIRECT_PERMANENT -> VisitType.REDIRECT_PERMANENT
+    mozilla.appservices.places.uniffi.VisitTransition.REDIRECT_TEMPORARY -> VisitType.REDIRECT_TEMPORARY
+    mozilla.appservices.places.uniffi.VisitTransition.DOWNLOAD -> VisitType.DOWNLOAD
+    mozilla.appservices.places.uniffi.VisitTransition.FRAMED_LINK -> VisitType.FRAMED_LINK
+}
+
+private val intToVisitType: Map<Int, VisitType> = VisitType.values().associateBy(VisitType::type)
+
+internal fun mozilla.appservices.places.uniffi.HistoryVisitInfo.into(): VisitInfo {
     return VisitInfo(
         url = this.url,
         title = this.title,
-        visitTime = this.visitTime,
+        visitTime = this.timestamp,
         visitType = this.visitType.into(),
         previewImageUrl = this.previewImageUrl
     )
 }
 
-internal fun mozilla.appservices.places.TopFrecentSiteInfo.into(): TopFrecentSiteInfo {
+internal fun mozilla.appservices.places.uniffi.TopFrecentSiteInfo.into(): TopFrecentSiteInfo {
     return TopFrecentSiteInfo(
         url = this.url,
         title = this.title
     )
 }
 
-internal fun BookmarkTreeNode.asBookmarkNode(): BookmarkNode {
+internal fun BookmarkItem.asBookmarkNode(): BookmarkNode {
     return when (this) {
-        is BookmarkItem -> {
+        is BookmarkItem.Bookmark -> {
             BookmarkNode(
                 BookmarkNodeType.ITEM,
-                this.guid,
-                this.parentGUID,
-                this.position,
-                this.title,
-                this.url,
-                this.dateAdded,
+                this.b.guid,
+                this.b.parentGuid,
+                this.b.position,
+                this.b.title,
+                this.b.url,
+                this.b.dateAdded,
                 null
             )
         }
-        is BookmarkFolder -> {
+        is BookmarkItem.Folder -> {
             BookmarkNode(
                 BookmarkNodeType.FOLDER,
-                this.guid,
-                this.parentGUID,
-                this.position,
-                this.title,
+                this.f.guid,
+                this.f.parentGuid,
+                this.f.position,
+                this.f.title,
                 null,
-                this.dateAdded,
-                this.children?.map(BookmarkTreeNode::asBookmarkNode)
+                this.f.dateAdded,
+                this.f.childNodes?.map(BookmarkItem::asBookmarkNode)
             )
         }
-        is BookmarkSeparator -> {
+        is BookmarkItem.Separator -> {
             BookmarkNode(
                 BookmarkNodeType.SEPARATOR,
-                this.guid,
-                this.parentGUID,
-                this.position,
+                this.s.guid,
+                this.s.parentGuid,
+                this.s.position,
                 null,
                 null,
-                this.dateAdded,
+                this.s.dateAdded,
                 null
             )
         }

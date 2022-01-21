@@ -7,7 +7,7 @@ package mozilla.components.browser.storage.sync
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.appservices.places.PlacesException
+import mozilla.appservices.places.uniffi.PlacesException
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
@@ -86,7 +86,7 @@ class PlacesBookmarksStorageTest {
         assertEquals(emptyList<BookmarkNode>(), bookmarks.getBookmarksWithUrl(url))
         assertEquals(emptyList<BookmarkNode>(), bookmarks.searchBookmarks("mozilla"))
 
-        val insertedItem = bookmarks.addItem(BookmarkRoot.Mobile.id, url, "Mozilla", 5)
+        val insertedItem = bookmarks.addItem(BookmarkRoot.Mobile.id, url, "Mozilla", 5u)
 
         with(bookmarks.getBookmarksWithUrl(url)) {
             assertEquals(1, this.size)
@@ -96,7 +96,7 @@ class PlacesBookmarksStorageTest {
                 assertEquals("Mozilla", this.title)
                 assertEquals(BookmarkRoot.Mobile.id, this.parentGuid)
                 // Clamped to actual range. 'Mobile' was empty, so we get 0 back.
-                assertEquals(0, this.position)
+                assertEquals(0u, this.position)
                 assertEquals("http://www.mozilla.org/", this.url)
             }
         }
@@ -105,7 +105,7 @@ class PlacesBookmarksStorageTest {
         bookmarks.updateNode(
             insertedItem,
             BookmarkInfo(
-                parentGuid = folderGuid, title = null, position = -3, url = null
+                parentGuid = folderGuid, title = null, position = 9999u, url = null
             )
         )
         with(bookmarks.getBookmarksWithUrl(url)) {
@@ -115,12 +115,12 @@ class PlacesBookmarksStorageTest {
                 assertEquals(BookmarkNodeType.ITEM, this.type)
                 assertEquals("Mozilla", this.title)
                 assertEquals(folderGuid, this.parentGuid)
-                assertEquals(0, this.position)
+                assertEquals(0u, this.position)
                 assertEquals("http://www.mozilla.org/", this.url)
             }
         }
 
-        val separatorGuid = bookmarks.addSeparator(folderGuid, 1)
+        val separatorGuid = bookmarks.addSeparator(folderGuid, 1u)
         with(bookmarks.getTree(folderGuid)!!) {
             assertEquals(2, this.children!!.size)
             assertEquals(BookmarkNodeType.SEPARATOR, this.children!![1].type)
@@ -155,7 +155,7 @@ class PlacesBookmarksStorageTest {
             assertTrue(this.isEmpty())
         }
 
-        val secondInsertedItem = bookmarks.addItem(BookmarkRoot.Unfiled.id, url, "Mozilla", 6)
+        val secondInsertedItem = bookmarks.addItem(BookmarkRoot.Unfiled.id, url, "Mozilla", 6u)
 
         with(bookmarks.getRecentBookmarks(2)) {
             assertEquals(secondInsertedItem, this[0].guid)
@@ -199,7 +199,7 @@ class PlacesBookmarksStorageTest {
             fail("Expected v0 database to be unsupported")
         } catch (e: PlacesException) {
             // This is a little brittle, but the places library doesn't have a proper error type for this.
-            assertEquals("Can not import from database version 0", e.message)
+            assertEquals("Unexpected error: Can not import from database version 0", e.message)
         }
     }
 

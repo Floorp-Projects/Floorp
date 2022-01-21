@@ -8,7 +8,7 @@ import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.appservices.places.PlacesException
+import mozilla.appservices.places.uniffi.PlacesException
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
@@ -365,7 +365,7 @@ class FennecMigratorTest {
         val historyStorage: PlacesHistoryStorage = mock()
 
         // Fail during history migration.
-        `when`(historyStorage.importFromFennec(any())).thenThrow(PlacesException("test exception"))
+        `when`(historyStorage.importFromFennec(any())).thenThrow(PlacesException.InvalidParent("test exception"))
 
         val migrator = FennecMigrator.Builder(testContext, mock())
             .migrateHistory(lazy { historyStorage })
@@ -401,7 +401,7 @@ class FennecMigratorTest {
         val historyStorage: PlacesHistoryStorage = mock()
 
         // Fail during history migration.
-        `when`(historyStorage.importFromFennec(any())).thenThrow(PlacesException("test exception"))
+        `when`(historyStorage.importFromFennec(any())).thenThrow(PlacesException.InvalidParent("test exception"))
 
         `when`(bookmarkStorage.importFromFennec(any())).thenReturn(
             JSONObject().also {
@@ -449,8 +449,8 @@ class FennecMigratorTest {
         val historyStorage: PlacesHistoryStorage = mock()
 
         // Both migrations failed.
-        `when`(historyStorage.importFromFennec(any())).thenThrow(PlacesException("test exception"))
-        `when`(bookmarkStorage.importFromFennec(any())).thenThrow(PlacesException("test exception"))
+        `when`(historyStorage.importFromFennec(any())).thenThrow(PlacesException.InvalidParent("test exception"))
+        `when`(bookmarkStorage.importFromFennec(any())).thenThrow(PlacesException.BookmarksCorruption("test exception"))
 
         val migrator = FennecMigrator.Builder(testContext, mock())
             .migrateHistory(lazy { historyStorage })
