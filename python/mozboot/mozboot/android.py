@@ -354,7 +354,6 @@ def ensure_android(
     ensure_android_sdk_and_ndk(
         mozbuild_path,
         os_name,
-        os_arch,
         sdk_path=sdk_path,
         sdk_url=sdk_url,
         ndk_path=ndk_path,
@@ -408,7 +407,6 @@ def ensure_android(
 def ensure_android_sdk_and_ndk(
     mozbuild_path: Path,
     os_name,
-    os_arch,
     sdk_path: Path,
     sdk_url,
     ndk_path: Path,
