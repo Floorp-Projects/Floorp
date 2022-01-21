@@ -27,15 +27,12 @@ job-defaults:
     variants:
         - fission
         - webrender-sw
+        - webrender-sw+fission
         - headless
         - headless+fission
     run-on-projects:
         by-variant:
-            fission:
-                by-test-platform:
-                    (linux.*64|windows10-64)(-shippable)?(-qr)?/.*: ['trunk']
-                    linux.*64-asan-qr/opt: ['trunk']
-                    default: []
+            fission: built-projects
             headless:
                 by-test-platform:
                     (linux.*64)(-shippable)?-qr/opt: built-projects
@@ -45,6 +42,10 @@ job-defaults:
                     (linux.*64)(-shippable)?-qr/opt: built-projects
                     default: []
             webrender-sw:
+                by-test-platform:
+                    .*/debug: built-projects
+                    default: []
+            webrender-sw+fission:
                 by-test-platform:
                     .*/debug: built-projects
                     default: []
