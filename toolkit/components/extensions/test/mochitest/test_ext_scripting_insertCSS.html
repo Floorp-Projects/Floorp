@@ -41,7 +41,7 @@ add_task(async function setup() {
   });
 });
 
-add_task(async function test_insertCSS_params_validation() {
+add_task(async function test_insertCSS_and_removeCSS_params_validation() {
   let extension = makeExtension({
     async background() {
       const tabs = await browser.tabs.query({ active: true });
@@ -49,12 +49,12 @@ add_task(async function test_insertCSS_params_validation() {
       const TEST_CASES = [
         {
           title: "no files and no css",
-          insertCSSParams: {},
+          cssParams: {},
           expectedError: "Exactly one of files and css must be specified.",
         },
         {
           title: "both files and css are passed",
-          insertCSSParams: {
+          cssParams: {
             files: ["styles.css"],
             css: "* { background: rgb(1, 1, 1) }",
           },
@@ -62,7 +62,7 @@ add_task(async function test_insertCSS_params_validation() {
         },
         {
           title: "both allFrames and frameIds are passed",
-          insertCSSParams: {
+          cssParams: {
             target: {
               tabId: tabs[0].id,
               allFrames: true,
@@ -74,7 +74,7 @@ add_task(async function test_insertCSS_params_validation() {
         },
         {
           title: "empty css string with a file",
-          insertCSSParams: {
+          cssParams: {
             css: "",
             files: ["styles.css"],
           },
@@ -82,23 +82,32 @@ add_task(async function test_insertCSS_params_validation() {
         },
       ];
 
-      for (const { title, insertCSSParams, expectedError } of TEST_CASES) {
+      for (const { title, cssParams, expectedError } of TEST_CASES) {
         await browser.test.assertRejects(
           browser.scripting.insertCSS({
             target: { tabId: tabs[0].id },
-            ...insertCSSParams,
+            ...cssParams,
           }),
           expectedError,
-          `expected error when: ${title}`
+          `${title} - expected error for insertCSS()`
+        );
+
+        await browser.test.assertRejects(
+          browser.scripting.removeCSS({
+            target: { tabId: tabs[0].id },
+            ...cssParams,
+          }),
+          expectedError,
+          `${title} - expected error for removeCSS()`
         );
       }
 
-      browser.test.notifyPass("insert-css");
+      browser.test.notifyPass("checks-done");
     },
   });
 
   await extension.startup();
-  await extension.awaitFinish("insert-css");
+  await extension.awaitFinish("checks-done");
   await extension.unload();
 });
 
@@ -153,7 +162,7 @@ add_task(async function test_insertCSS_with_wrong_host_permissions() {
   await extension.unload();
 });
 
-add_task(async function test_insertCSS() {
+add_task(async function test_insertCSS_and_removeCSS() {
   let extension = makeExtension({
     manifest: {
       permissions: ["scripting", "webNavigation"],
@@ -179,7 +188,7 @@ add_task(async function test_insertCSS() {
         {
           title: "with css prop",
           elementId: "div-1",
-          insertCSSParams: [
+          cssParams: [
             {
               target: { tabId },
               css: `#div-1 { background: ${cssColor1} }`,
@@ -190,7 +199,7 @@ add_task(async function test_insertCSS() {
         {
           title: "with a file",
           elementId: "div-2",
-          insertCSSParams: [
+          cssParams: [
             {
               target: { tabId },
               files: ["file1.css"],
@@ -201,7 +210,7 @@ add_task(async function test_insertCSS() {
         {
           title: "css prop in a single frame",
           elementId: "div-3",
-          insertCSSParams: [
+          cssParams: [
             {
               target: { tabId, frameIds: [frameIds[0]] },
               css: `#div-3 { background: ${cssColor2} }`,
@@ -212,7 +221,7 @@ add_task(async function test_insertCSS() {
         {
           title: "css prop in multiple frames",
           elementId: "div-4",
-          insertCSSParams: [
+          cssParams: [
             {
               target: { tabId, frameIds },
               css: `#div-4 { background: ${cssColor1} }`,
@@ -223,7 +232,7 @@ add_task(async function test_insertCSS() {
         {
           title: "allFrames is true",
           elementId: "div-5",
-          insertCSSParams: [
+          cssParams: [
             {
               target: { tabId, allFrames: true },
               css: `#div-5 { background: ${defaultColor} }`,
@@ -234,7 +243,7 @@ add_task(async function test_insertCSS() {
         {
           title: "origin: 'AUTHOR'",
           elementId: "div-6",
-          insertCSSParams: [
+          cssParams: [
             {
               target: { tabId },
               css: `#div-6 { background: ${cssColor1} }`,
@@ -251,7 +260,7 @@ add_task(async function test_insertCSS() {
         {
           title: "origin: 'USER'",
           elementId: "div-7",
-          insertCSSParams: [
+          cssParams: [
             {
               target: { tabId },
               css: `#div-7 { background: ${cssColor1} !important }`,
@@ -269,7 +278,7 @@ add_task(async function test_insertCSS() {
         {
           title: "empty css string",
           elementId: "div-8",
-          insertCSSParams: [
+          cssParams: [
             {
               target: { tabId },
               css: "",
@@ -277,12 +286,28 @@ add_task(async function test_insertCSS() {
           ],
           expectedResults: [defaultColor, defaultColor],
         },
+        {
+          title: "allFrames is false",
+          elementId: "div-9",
+          cssParams: [
+            {
+              target: { tabId, allFrames: false },
+              css: `#div-9 { background: ${cssColor1} }`,
+            },
+          ],
+          expectedResults: [cssColor1, defaultColor],
+        },
       ];
+
+      const getBackgroundColor = elementId => {
+        return window.getComputedStyle(document.getElementById(elementId))
+          .backgroundColor;
+      };
 
       for (const {
         title,
         elementId,
-        insertCSSParams,
+        cssParams,
         expectedResults,
       } of TEST_CASES) {
         // Create a unique element for the current test case.
@@ -297,7 +322,7 @@ add_task(async function test_insertCSS() {
         });
 
         let results = await Promise.all(
-          insertCSSParams.map(params => browser.scripting.insertCSS(params))
+          cssParams.map(params => browser.scripting.insertCSS(params))
         );
         // `insertCSS()` should not resolve to a value.
         results.forEach(result => {
@@ -306,10 +331,7 @@ add_task(async function test_insertCSS() {
 
         results = await browser.scripting.executeScript({
           target: { tabId, allFrames: true },
-          func: elementId => {
-            return window.getComputedStyle(document.getElementById(elementId))
-              .backgroundColor;
-          },
+          func: getBackgroundColor,
           args: [elementId],
         });
         results.sort((a, b) => a.frameId - b.frameId);
@@ -326,9 +348,28 @@ add_task(async function test_insertCSS() {
             `${title} - got expected result (index=${index}): ${title}`
           );
         });
+
+        results = await Promise.all(
+          cssParams.map(params => browser.scripting.removeCSS(params))
+        );
+        // `removeCSS()` should not resolve to a value.
+        results.forEach(result => {
+          browser.test.assertEq(undefined, result, "got expected empty result");
+        });
+
+        results = await browser.scripting.executeScript({
+          target: { tabId, allFrames: true },
+          func: getBackgroundColor,
+          args: [elementId],
+        });
+
+        browser.test.assertTrue(
+          results.every(({ result }) => result === defaultColor),
+          "got expected default color in all frames"
+        );
       }
 
-      browser.test.notifyPass("insert-css");
+      browser.test.notifyPass("insert-and-remove-css");
     },
     files: {
       "file1.css": "#div-2 { background: rgb(3, 3, 3) }",
@@ -342,7 +383,7 @@ add_task(async function test_insertCSS() {
   );
 
   await extension.startup();
-  await extension.awaitFinish("insert-css");
+  await extension.awaitFinish("insert-and-remove-css");
   await extension.unload();
 
   await AppTestDelegate.removeTab(window, tab);

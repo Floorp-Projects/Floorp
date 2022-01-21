@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests scripting.removeCSS()</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const MOCHITEST_HOST_PERMISSIONS = [
+  "*://mochi.test/",
+  "*://mochi.xorigin-test/",
+  "*://test1.example.com/",
+];
+
+const makeExtension = ({ manifest: manifestProps, ...otherProps }) => {
+  return ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      permissions: ["scripting"],
+      host_permissions: [...MOCHITEST_HOST_PERMISSIONS],
+      ...manifestProps,
+    },
+    ...otherProps,
+  });
+};
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+});
+
+add_task(async function test_removeCSS_with_invalid_tabId() {
+  let extension = makeExtension({
+    async background() {
+      // This tab ID should not exist.
+      const tabId = 123456789;
+
+      await browser.test.assertRejects(
+        browser.scripting.removeCSS({
+          target: { tabId },
+          css: "* { background: rgb(42, 42, 42) }",
+        }),
+        `Invalid tab ID: ${tabId}`
+      );
+
+      browser.test.notifyPass("remove-css");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("remove-css");
+  await extension.unload();
+});
+
+add_task(async function test_removeCSS_without_insertCSS_called_before() {
+  let extension = makeExtension({
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      browser.scripting
+        .removeCSS({
+          target: { tabId: tabs[0].id },
+          css: "* { background: rgb(42, 42, 42) }",
+        })
+        .then(() => {
+          browser.test.notifyPass("remove-css");
+        })
+        .catch(() => {
+          browser.test.notifyFail("remove-css");
+        });
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("remove-css");
+  await extension.unload();
+});
+
+add_task(async function test_removeCSS_with_origin_mismatch() {
+  let extension = makeExtension({
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      const cssColor = "rgb(42, 42, 42)";
+      const cssParams = {
+        target: { tabId: tabs[0].id },
+        css: `* { background: ${cssColor} !important }`,
+      };
+
+      await browser.scripting.insertCSS({ ...cssParams, origin: "AUTHOR" });
+
+      let results = await browser.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        func: () => {
+          return window.getComputedStyle(document.body).backgroundColor;
+        },
+      });
+
+      browser.test.assertEq(cssColor, results[0].result, "got expected color");
+
+      // Here, we pass a different origin, which should result in no CSS
+      // removal.
+      await browser.scripting.removeCSS({ ...cssParams, origin: "USER" });
+
+      browser.test.assertEq(
+        cssColor,
+        results[0].result,
+        "got expected color after removeCSS"
+      );
+
+      browser.test.notifyPass("remove-css");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("remove-css");
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>
