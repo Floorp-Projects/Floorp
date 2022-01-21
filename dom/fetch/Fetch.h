@@ -246,6 +246,8 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
 
   virtual AbortSignalImpl* GetSignalImpl() const = 0;
 
+  virtual AbortSignalImpl* GetSignalImplToConsumeBody() const = 0;
+
   // AbortFollower
   void RunAbortAlgorithm() override;
 
@@ -323,6 +325,7 @@ class EmptyBody final : public FetchBody<EmptyBody> {
   nsIGlobalObject* GetParentObject() const { return mOwner; }
 
   AbortSignalImpl* GetSignalImpl() const override { return mAbortSignalImpl; }
+  AbortSignalImpl* GetSignalImplToConsumeBody() const final { return nullptr; }
 
   const UniquePtr<mozilla::ipc::PrincipalInfo>& GetPrincipalInfo() const {
     return mPrincipalInfo;
