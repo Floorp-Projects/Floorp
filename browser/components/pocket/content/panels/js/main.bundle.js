@@ -2,7 +2,7 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 672:
+/***/ 318:
 /***/ ((__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) => {
 
 
@@ -920,7 +920,36 @@ SavedOverlay.prototype = {
 
 };
 /* harmony default export */ const saved_overlay = (SavedOverlay);
+;// CONCATENATED MODULE: ./content/panels/js/components/ArticleList/ArticleList.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function ArticleList(props) {
+  return /*#__PURE__*/react.createElement("ul", {
+    className: "stp_article_list"
+  }, props.articles.map(article => /*#__PURE__*/react.createElement("li", {
+    className: "stp_article_list_item"
+  }, /*#__PURE__*/react.createElement("a", {
+    className: "stp_article_list_link",
+    href: article.url
+  }, /*#__PURE__*/react.createElement("img", {
+    className: "stp_article_list_thumb",
+    src: article.thumbnail,
+    alt: article.alt
+  }), /*#__PURE__*/react.createElement("div", {
+    className: "stp_article_list_meta"
+  }, /*#__PURE__*/react.createElement("header", {
+    className: "stp_article_list_header"
+  }, article.title), /*#__PURE__*/react.createElement("p", {
+    className: "stp_article_list_publisher"
+  }, article.publisher))))));
+}
+
+/* harmony default export */ const ArticleList_ArticleList = (ArticleList);
 ;// CONCATENATED MODULE: ./content/panels/js/style-guide/overlay.js
+
 
 
 
@@ -930,7 +959,9 @@ var StyleGuideOverlay = function (options) {};
 StyleGuideOverlay.prototype = {
   create() {
     // TODO: Wrap popular topics component in JSX to work without needing an explicit container hierarchy for styling
-    react_dom.render( /*#__PURE__*/react.createElement(PopularTopics_PopularTopics, {
+    react_dom.render( /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "JSX Components:"), /*#__PURE__*/react.createElement("h4", {
+      className: "stp_styleguide_h4"
+    }, "PopularTopics"), /*#__PURE__*/react.createElement(PopularTopics_PopularTopics, {
       pockethost: `getpocket.com`,
       utmsource: `styleguide`,
       topics: [{
@@ -946,7 +977,29 @@ StyleGuideOverlay.prototype = {
         title: "Science",
         topic: "science"
       }]
-    }), document.querySelector(`#stp_style_guide_components`));
+    }), /*#__PURE__*/react.createElement("h4", {
+      className: "stp_styleguide_h4"
+    }, "ArticleList"), /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
+      articles: [{
+        title: "Article Title",
+        publisher: "Publisher",
+        thumbnail: "https://img-getpocket.cdn.mozilla.net/80x80/https://www.raritanheadwaters.org/wp-content/uploads/2020/04/red-fox.jpg",
+        url: "https://example.org",
+        alt: "Alt Text"
+      }, {
+        title: "Article Title",
+        publisher: "Publisher",
+        thumbnail: "https://img-getpocket.cdn.mozilla.net/80x80/https://www.raritanheadwaters.org/wp-content/uploads/2020/04/red-fox.jpg",
+        url: "https://example.org",
+        alt: "Alt Text"
+      }, {
+        title: "Article Title",
+        publisher: "Publisher",
+        thumbnail: "https://img-getpocket.cdn.mozilla.net/80x80/https://www.raritanheadwaters.org/wp-content/uploads/2020/04/red-fox.jpg",
+        url: "https://example.org",
+        alt: "Alt Text"
+      }]
+    })), document.querySelector(`#stp_style_guide_components`));
   }
 
 };
@@ -1198,7 +1251,7 @@ window.pktPanelMessaging = messages;
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(672)))
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(318)))
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()
