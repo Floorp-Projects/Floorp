@@ -10,7 +10,7 @@ permalink: /components/
 
 Every browser will need two core components:
 
-* **[browser-session](https://github.com/mozilla-mobile/android-components/tree/main/components/browser/session)** - Representing the state of the browser (_"What tabs are opened?"_, _"What URLs are they pointing to?"_)
+* **[browser-state](https://github.com/mozilla-mobile/android-components/tree/main/components/browser/state)** - Representing the state of the browser (_"What tabs are opened?"_, _"What URLs are they pointing to?"_)
 * **browser-engine** - The browser engine that transforms web pages into an interactive visual representation. The _browser-engine_ component comes in multiple flavors. We are supporting [Android's WebView](https://github.com/mozilla-mobile/android-components/tree/main/components/browser/engine-system) (limited feature set) and **GeckoView** ([Release](https://github.com/mozilla-mobile/android-components/tree/main/components/browser/engine-gecko), [Beta](https://github.com/mozilla-mobile/android-components/tree/main/components/browser/engine-gecko-beta) and [Nightly](https://github.com/mozilla-mobile/android-components/tree/main/components/browser/engine-gecko-nightly) channels) currently. The actual implementation is hidden behind [generic interfaces](https://github.com/mozilla-mobile/android-components/tree/main/components/concept) so that apps can build against multiple engines (e.g. based on product flavor) and so that other components work seemlessly with all implementations.
 
 Other high-level browser components may depend on those core components.
