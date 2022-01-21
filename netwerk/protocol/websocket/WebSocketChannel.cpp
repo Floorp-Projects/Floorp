@@ -2371,9 +2371,12 @@ void WebSocketChannel::DoStopSession(nsresult reason) {
     CleanupConnection();
   }
 
-  if (mCancelable) {
-    mCancelable->Cancel(NS_ERROR_UNEXPECTED);
-    mCancelable = nullptr;
+  {
+    MutexAutoLock lock(mMutex);
+    if (mCancelable) {
+      mCancelable->Cancel(NS_ERROR_UNEXPECTED);
+      mCancelable = nullptr;
+    }
   }
 
   mPMCECompressor = nullptr;
@@ -2814,10 +2817,18 @@ nsresult WebSocketChannel::DoAdmissionDNS() {
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIEventTarget> main = GetMainThreadEventTarget();
-  MOZ_ASSERT(!mCancelable);
-  return dns->AsyncResolveNative(
+  nsCOMPtr<nsICancelable> cancelable;
+  rv = dns->AsyncResolveNative(
       hostName, nsIDNSService::RESOLVE_TYPE_DEFAULT, 0, nullptr, this, main,
-      mLoadInfo->GetOriginAttributes(), getter_AddRefs(mCancelable));
+      mLoadInfo->GetOriginAttributes(), getter_AddRefs(cancelable));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(!mCancelable);
+  mCancelable = std::move(cancelable);
+  return rv;
 }
 
 nsresult WebSocketChannel::ApplyForAdmission() {
@@ -2838,18 +2849,18 @@ nsresult WebSocketChannel::ApplyForAdmission() {
     return DoAdmissionDNS();
   }
 
-  MOZ_ASSERT(!mCancelable);
-
   nsresult rv;
+  nsCOMPtr<nsICancelable> cancelable;
   rv = pps->AsyncResolve(
       mHttpChannel,
       nsIProtocolProxyService::RESOLVE_PREFER_SOCKS_PROXY |
           nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
           nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL,
-      this, nullptr, getter_AddRefs(mCancelable));
-  NS_ASSERTION(NS_FAILED(rv) || mCancelable,
-               "nsIProtocolProxyService::AsyncResolve succeeded but didn't "
-               "return a cancelable object!");
+      this, nullptr, getter_AddRefs(cancelable));
+
+  MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(!mCancelable);
+  mCancelable = std::move(cancelable);
   return rv;
 }
 
@@ -2993,13 +3004,15 @@ WebSocketChannel::OnLookupComplete(nsICancelable* aRequest,
 
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
 
-  if (mStopped) {
-    LOG(("WebSocketChannel::OnLookupComplete: Request Already Stopped\n"));
+  {
+    MutexAutoLock lock(mMutex);
     mCancelable = nullptr;
-    return NS_OK;
   }
 
-  mCancelable = nullptr;
+  if (mStopped) {
+    LOG(("WebSocketChannel::OnLookupComplete: Request Already Stopped\n"));
+    return NS_OK;
+  }
 
   // These failures are not fatal - we just use the hostname as the key
   if (NS_FAILED(aStatus)) {
@@ -3027,15 +3040,17 @@ NS_IMETHODIMP
 WebSocketChannel::OnProxyAvailable(nsICancelable* aRequest,
                                    nsIChannel* aChannel, nsIProxyInfo* pi,
                                    nsresult status) {
+  {
+    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(!mCancelable || (aRequest == mCancelable));
+    mCancelable = nullptr;
+  }
+
   if (mStopped) {
     LOG(("WebSocketChannel::OnProxyAvailable: [%p] Request Already Stopped\n",
          this));
-    mCancelable = nullptr;
     return NS_OK;
   }
-
-  MOZ_ASSERT(!mCancelable || (aRequest == mCancelable));
-  mCancelable = nullptr;
 
   nsAutoCString type;
   if (NS_SUCCEEDED(status) && pi && NS_SUCCEEDED(pi->GetType(type)) &&
