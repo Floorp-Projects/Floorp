@@ -10,7 +10,6 @@ import { QuickOpenModal } from "../QuickOpenModal";
 import { mockcx } from "../../utils/test-mockup";
 
 jest.mock("fuzzaldrin-plus");
-jest.unmock("lodash");
 
 import { filter } from "fuzzaldrin-plus";
 

@@ -194,7 +194,7 @@ Changelog
     ``browser.urlbar.suggest.quicksuggest.nonsponsored``, and this event now
     corresponds to the latter pref. [Bug 1735976_]
 
-  Firefox 96:
+  Firefox 96.0:
     The event is no longer recorded when the user interacts with the online
     modal dialog since the ``browser.urlbar.suggest.quicksuggest.nonsponsored``
     pref is no longer set when the user opts in or out. [Bug 1740965_]
@@ -211,7 +211,7 @@ The event's objects are the following:
 
 :accept:
   The user accepted the dialog and opted in. This object was removed in Firefox
-  96.0.1.
+  96.0.2.
 :accept_2:
   The user accepted the dialog and opted in.
 :close_1:
@@ -225,15 +225,15 @@ The event's objects are the following:
   on main section. The user remains opted out in this case.
 :dismissed_escape_key:
   The user dismissed the dialog by pressing the Escape key. The user remains
-  opted out in this case. This object was removed in Firefox 96.0.1.
+  opted out in this case. This object was removed in Firefox 96.0.2.
 :dismissed_other:
   The dialog was dismissed in some unknown way. One case where this can happen
   is when the dialog is replaced with another higher priority dialog like the
   one shown when quitting the app. The user remains opted out in this case.
-  This object was removed in Firefox 96.0.1.
+  This object was removed in Firefox 96.0.2.
 :learn_more:
   The user clicked "Learn more". The user remains opted out in this case. This
-  object was removed in Firefox 96.0.1.
+  object was removed in Firefox 96.0.2.
 :learn_more_2:
   The user clicked "Learn more". The user remains opted out in this case.
 :not_now:
@@ -244,12 +244,12 @@ The event's objects are the following:
   this case.
 :not_now_link:
   The user clicked "Not now". The user remains opted out in this case. This
-  object was removed in Firefox 96.0.1.
+  object was removed in Firefox 96.0.2.
 :reject_2:
   The user rejected the dialog and opted out.
 :settings:
   The user clicked the "Customize" button. The user remains opted out in this
-  case. This object was removed in Firefox 96.0.1.
+  case. This object was removed in Firefox 96.0.2.
 
 Changelog
   Firefox 92.0.1
@@ -262,7 +262,7 @@ Changelog
     ``dismissed_other``, ``learn_more``, ``not_now_link``, and ``settings``.
     [Bug 1733687_]
 
-  Firefox 96.0.1
+  Firefox 96.0.2
     Objects changed to: ``accept_2``, ``reject_2``, ``learn_more_2``,
     ``close_1``, ``not_now_2``, ``dismiss_1`` and ``dismiss_2``.
     [Bug 1745026_]
@@ -292,7 +292,7 @@ Changelog
   Firefox 92.0.1
     Introduced. [Bug 1728430_]
 
-  Firefox 96:
+  Firefox 96.0:
     The event is no longer recorded when the user interacts with the online
     modal dialog since the ``browser.urlbar.suggest.quicksuggest.sponsored``
     pref is no longer set when the user opts in or out. [Bug 1740965_]
@@ -318,7 +318,7 @@ string-valued pref with the following possible values:
   The user has not made a choice (e.g., because the dialog hasn't been shown).
 :accept:
   The user accepted the dialog and opted in. This object was removed in Firefox
-  96.0.1.
+  96.0.2.
 :accept_2:
   The user accepted the dialog and opted in.
 :close_1:
@@ -332,15 +332,15 @@ string-valued pref with the following possible values:
   on main section. The user remains opted out in this case.
 :dismissed_escape_key:
   The user dismissed the dialog by pressing the Escape key. The user remains
-  opted out in this case. This object was removed in Firefox 96.0.1.
+  opted out in this case. This object was removed in Firefox 96.0.2.
 :dismissed_other:
   The dialog was dismissed in some unknown way. One case where this can happen
   is when the dialog is replaced with another higher priority dialog like the
   one shown when quitting the app. The user remains opted out in this case. This
-  object was removed in Firefox 96.0.1.
+  object was removed in Firefox 96.0.2.
 :learn_more:
   The user clicked "Learn more". The user remains opted out in this case. This
-  object was removed in Firefox 96.0.1.
+  object was removed in Firefox 96.0.2.
 :learn_more_2:
   The user clicked "Learn more". The user remains opted out in this case.
 :not_now_2:
@@ -348,18 +348,18 @@ string-valued pref with the following possible values:
   this case.
 :not_now_link:
   The user clicked "Not now". The user remains opted out in this case. This
-  object was removed in Firefox 96.0.1.
+  object was removed in Firefox 96.0.2.
 :reject_2:
   The user rejected the dialog and opted out.
 :settings:
   The user clicked the "Customize" button. The user remains opted out in this
-  case. This object was removed in Firefox 96.0.1.
+  case. This object was removed in Firefox 96.0.2.
 
 Changelog
   Firefox 94.0
     Introduced. [Bug 1734447_]
 
-  Firefox 96.0.1
+  Firefox 96.0.2
     Added ``accept_2``, ``reject_2``, ``learn_more_2``, ``close_1``,
     ``not_now_2``, ``dismiss_1``, ``dismiss_2`` and removed ``accept``,
     ``dismissed_escape_key``, ``dismissed_other``, ``learn_more``,
@@ -412,7 +412,7 @@ Changelog
     Introduced. It replaces ``browser.urlbar.suggest.quicksuggest``. [Bug
     1735976_]
 
-  Firefox 96:
+  Firefox 96.0:
     The pref is now true by default in the online scenario. Previously it was
     false by default in online. For users who were enrolled in the online
     scenario in older versions and who did not opt in or otherwise enable
@@ -434,7 +434,7 @@ Changelog
   Firefox 92.0.1
     Introduced. [Bug 1730721_]
 
-  Firefox 96:
+  Firefox 96.0:
     The pref is now true by default in the online scenario. Previously it was
     false by default in online. For users who were enrolled in the online
     scenario in older versions and who did not opt in or otherwise enable

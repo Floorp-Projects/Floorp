@@ -1919,7 +1919,7 @@ var gMainPane = {
         Cu.reportError(error);
         await Promise.all([
           this.readUpdateAutoPref(),
-          this.reportUpdatePrefWriteError(error),
+          this.reportUpdatePrefWriteError(),
         ]);
         return;
       }
@@ -2002,7 +2002,7 @@ var gMainPane = {
       } catch (error) {
         Cu.reportError(error);
         await this.readBackgroundUpdatePref();
-        await this.reportUpdatePrefWriteError(error);
+        await this.reportUpdatePrefWriteError();
         return;
       }
 
@@ -2010,12 +2010,12 @@ var gMainPane = {
     }
   },
 
-  async reportUpdatePrefWriteError(error) {
+  async reportUpdatePrefWriteError() {
     let [title, message] = await document.l10n.formatValues([
       { id: "update-setting-write-failure-title2" },
       {
         id: "update-setting-write-failure-message2",
-        args: { path: error.path },
+        args: { path: UpdateUtils.configFilePath },
       },
     ]);
 

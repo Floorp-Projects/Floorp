@@ -27,6 +27,10 @@ class PromptFactory {
 
   handleEvent(aEvent) {
     switch (aEvent.type) {
+      case "mozshowdropdown":
+      case "mozshowdropdown-sourcetouch":
+        this._handleSelect(aEvent);
+        break;
       case "click":
         this._handleClick(aEvent);
         break;
@@ -39,8 +43,14 @@ class PromptFactory {
     }
   }
 
+  // TODO(emilio): We should listen to MozOpenDateTimePicker instead, except
+  // the Gecko widget isn't supported for stuff like <input type=week>
   _handleClick(aEvent) {
     const target = aEvent.composedTarget;
+    if (ChromeUtils.getClassName(target) !== "HTMLInputElement") {
+      return;
+    }
+
     if (
       target.isContentEditable ||
       target.disabled ||
@@ -52,22 +62,16 @@ class PromptFactory {
       return;
     }
 
-    const win = target.ownerGlobal;
-    if (target instanceof win.HTMLSelectElement) {
-      this._handleSelect(target);
+    const type = target.type;
+    if (
+      type === "date" ||
+      type === "month" ||
+      type === "week" ||
+      type === "time" ||
+      type === "datetime-local"
+    ) {
+      this._handleDateTime(target, type);
       aEvent.preventDefault();
-    } else if (target instanceof win.HTMLInputElement) {
-      const type = target.type;
-      if (
-        type === "date" ||
-        type === "month" ||
-        type === "week" ||
-        type === "time" ||
-        type === "datetime-local"
-      ) {
-        this._handleDateTime(target, type);
-        aEvent.preventDefault();
-      }
     }
   }
 

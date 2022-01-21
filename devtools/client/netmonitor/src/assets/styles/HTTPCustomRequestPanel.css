@@ -2,11 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- .network-monitor .http-custom-method-and-url .http-custom-method-value-label {
-  grid-column: 1 / 1;
-  grid-row: 1 / 1;
-}
-
 .network-monitor .http-custom-method-and-url .http-custom-url-value {
   grid-column: 2 / 2;
   grid-row: 2 / 2;
@@ -18,22 +13,37 @@
   grid-row: 2 / 2;
 }
 
-.network-monitor .http-custom-method-and-url .http-custom-url-value-label {
-  grid-column: 2 / 2;
-  grid-row: 1 / 1 ;
-  margin-inline-start: 12px;
-}
-
 .network-monitor .tabpanel-summary-container.http-custom-method-and-url {
   display: grid;
   grid-template-columns: auto 1fr;
+  width: 100%;
+  height: 26px;
+  padding: 3px;
+}
+
+.network-monitor .http-custom-method-and-url :is(.http-custom-method-value, .http-custom-url-value) {
+  border: 0;
+}
+
+.network-monitor .http-custom-method-value select {
+  font-size: 11px;
+  line-height: 13px;
+}
+
+.network-monitor .http-custom-method-and-url .http-custom-url-value {
+  padding-inline-start: 7px;
 }
 
 .network-monitor .http-custom-method-and-url input {
-  font-weight: 400;
-  margin-top: 4px;
+  font-weight: normal;
   min-width: 9ch;
-  padding: 2px 3px;
+}
+
+.network-monitor .http-custom-method-and-url input ::placeholder {
+  color: var(--grey-50);
+  font-size: 11px;
+  line-height: 13px;
+  margin-inline-end: 8px;
 }
 
 .network-monitor .http-custom-request-panel textarea {
@@ -67,7 +77,9 @@
 
 .network-monitor .http-custom-request .http-custom-request-button-container {
   display: flex;
+  justify-content: end;
   flex-wrap: wrap-reverse;
+  justify-content: end;
   gap: 8px;
   margin-block: 16px 12px;
   margin-inline: 16px;
@@ -103,7 +115,7 @@
   background-color: var(--blue-70);
 }
 
-.network-monitor .http-custom-request #http-custom-request-close-button {
+.network-monitor .http-custom-request #http-custom-request-clear-button {
   margin-inline-end: 4px;
 }
 
@@ -116,20 +128,34 @@
   padding: 4px 16px;
 }
 
+/* Dark theme */
 :root.theme-dark .network-details-bar .http-custom-request-panel {
   background-color: var(--grey-85);
 }
 
-:root.theme-dark .network-monitor #http-custom-request-close-button {
+:root.theme-dark .network-monitor .tabpanel-summary-container.http-custom-method-and-url {
+  border-bottom: 1px solid var(--grey-60);
+}
+
+:root.theme-dark .network-monitor .http-custom-method-and-url .http-custom-method-value,
+:root.theme-dark .network-monitor .http-custom-method-and-url .http-custom-url-value {
+  background-color: var(--grey-85);
+}
+
+:root.theme-dark .network-monitor .http-custom-method-and-url .http-custom-url-value {
+  border-inline-start: 1px solid var(--grey-60);
+}
+
+:root.theme-dark .network-monitor #http-custom-request-clear-button {
   background-color: var(--toolbarbutton-background);
   border: 1px solid var(--theme-splitter-color);
 }
 
-:root.theme-dark .network-monitor #http-custom-request-close-button:hover:active {
+:root.theme-dark .network-monitor #http-custom-request-clear-button:hover:active {
   background-color: var(--theme-selection-background-hover);
 }
 
-:root.theme-dark .network-monitor #http-custom-request-close-button:focus {
+:root.theme-dark .network-monitor #http-custom-request-clear-button:focus {
   background-color: var(--theme-selection-focus-background);
 }
 
@@ -149,21 +175,34 @@
   color: var(--grey-40);
 }
 
+/* Light theme */
+:root.theme-light .network-monitor .tabpanel-summary-container.http-custom-method-and-url {
+  border-bottom: 1px solid var(--grey-30);
+}
+
+:root.theme-light .network-monitor .http-custom-method-and-url .http-custom-method-value {
+  background-color: white;
+}
+
+:root.theme-light .network-monitor .http-custom-method-and-url .http-custom-url-value {
+  border-inline-start: 1px solid var(--grey-30);
+}
+
 :root.theme-light .network-details-bar .http-custom-request-label.http-custom-header {
   background-color: var(--grey-10);
   border-bottom: 1px solid var(--grey-25);
 }
 
-:root.theme-light .network-monitor #http-custom-request-close-button {
-  background-color: var(--grey-20);
+:root.theme-light .network-monitor #http-custom-request-clear-button {
+  background-color: var(--grey-25);
   border: var(--theme-splitter-color);
 }
 
-:root.theme-light .network-monitor #http-custom-request-close-button:hover:active {
+:root.theme-light .network-monitor #http-custom-request-clear-button:hover:active {
   background-color: var(--theme-selection-background-hover);
 }
 
-:root.theme-light .network-monitor #http-custom-request-close-button:focus {
+:root.theme-light .network-monitor #http-custom-request-clear-button:focus {
   outline: 2px solid var(--blue-50);
   outline-offset: -2px;
   box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.3);
