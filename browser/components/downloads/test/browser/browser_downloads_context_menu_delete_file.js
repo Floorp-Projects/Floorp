@@ -30,6 +30,10 @@ async function createDownloadFiles() {
   });
 }
 
+registerCleanupFunction(async function() {
+  await task_resetState();
+});
+
 add_task(async function test_download_deleteFile() {
   await SpecialPowers.pushPrefEnv({
     set: [
