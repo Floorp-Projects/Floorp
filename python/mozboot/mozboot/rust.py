@@ -4,9 +4,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import os
 import platform as platform_mod
 import sys
+
+from pathlib import Path
 
 # Base url for pulling the rustup installer.
 # Use the no-CNAME host for compatibilty with Python 2.7
@@ -156,8 +157,8 @@ if __name__ == "__main__":
     # script in standalone mode.
     #
     # This module is necessary for correct https certificate verification.
-    mod_path = os.path.dirname(__file__)
-    sys.path.insert(0, os.path.join(mod_path, "..", "..", "requests"))
+    mod_path = Path(__file__).resolve().parent
+    sys.path.insert(0, str(mod_path / ".." / ".." / "requests"))
 
     update = False
     if len(sys.argv) > 1:

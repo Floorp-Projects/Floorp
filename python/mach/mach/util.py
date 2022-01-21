@@ -8,6 +8,9 @@ import hashlib
 import os
 import sys
 
+from pathlib import Path
+from typing import Optional
+
 
 class UserError(Exception):
     """Represents an error caused by something the user did wrong rather than
@@ -83,3 +86,17 @@ def get_state_dir(specific_to_topsrcdir=False, topsrcdir=None):
             fh.write(topsrcdir)
 
     return state_dir
+
+
+def to_optional_path(path: Optional[Path]):
+    if path:
+        return Path(path)
+    else:
+        return None
+
+
+def to_optional_str(path: Optional[Path]):
+    if path:
+        return str(path)
+    else:
+        return None
