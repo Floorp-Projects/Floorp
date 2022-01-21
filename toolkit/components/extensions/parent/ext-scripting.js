@@ -40,8 +40,9 @@ const execute = (tab, context, details, kind, method) => {
     host => host.pattern
   );
 
-  if (details.code) {
-    options[`${kind}Code`] = details.code;
+  // Defined in `child/ext-scripting.js`.
+  if (details.codeToExecute) {
+    options[`${kind}Code`] = details.codeToExecute;
   }
 
   if (details.files) {
@@ -56,13 +57,24 @@ const execute = (tab, context, details, kind, method) => {
     }
   }
 
-  // TODO: Bug 1736574 - Add support for multiple frame IDs and `allFrames`.
-  if (details.frameId) {
-    options.frameID = details.frameId;
+  let { frameIds, allFrames } = details.target;
+
+  if (allFrames && frameIds) {
+    throw new ExtensionError("Cannot specify both 'allFrames' and 'frameIds'.");
+  }
+
+  if (allFrames) {
+    options.allFrames = allFrames;
+  } else if (frameIds) {
+    options.frameIds = frameIds;
   }
 
   options.runAt = "document_idle";
   options.wantReturnValue = true;
+  // With this option set to `true`, we'll receive executeScript() results with
+  // `frameId/result` properties and an `error` property will also be returned
+  // in case of an error.
+  options.returnResultsWithFrameIds = kind === "js";
 
   // TODO: Bug 1736579 - Configure options for CSS injection, e.g., `cssPaths`
   // and `cssOrigin`.
@@ -80,50 +92,10 @@ this.scripting = class extends ExtensionAPI {
     return {
       scripting: {
         executeScriptInternal: async details => {
-          let { tabId, frameIds } = details.target;
-
+          let { tabId } = details.target;
           let tab = tabManager.get(tabId);
 
-          let executeDetails = {
-            // Defined in `child/ext-scripting.js`.
-            code: details.codeToExecute,
-            files: details.files,
-          };
-
-          const promises = [];
-
-          if (!frameIds) {
-            // We use the top-level frame by default.
-            frameIds = [0];
-          }
-
-          for (const frameId of frameIds) {
-            const details = { ...executeDetails, frameId };
-            promises.push(
-              execute(tab, context, details, "js", "executeScript")
-                // We return `null` when the result value is falsey.
-                .then(results => ({ frameId, result: results[0] || null }))
-                .catch(error => ({ frameId, result: null, error }))
-            );
-          }
-
-          const results = await Promise.all(promises);
-
-          return results.map(({ frameId, result, error }) => {
-            if (error) {
-              // TODO Bug 1740608: we re-throw extension errors coming from
-              // `tab.executeScript()` and only log runtime errors, but this
-              // might change because error handling needs to be more
-              // well-defined.
-              if (error instanceof ExtensionError) {
-                throw error;
-              }
-
-              Cu.reportError(error.message || error);
-            }
-
-            return { frameId, result };
-          });
+          return execute(tab, context, details, "js", "executeScript");
         },
       },
     };
