@@ -5,7 +5,7 @@ use proc_macro2::TokenStream;
 use quote::{ToTokens, TokenStreamExt};
 use syn::{Meta, NestedMeta};
 
-use {Error, FromMeta, Result};
+use crate::{Error, FromMeta, Result};
 
 /// Receiver struct for shape validation. Shape validation allows a deriving type
 /// to declare that it only accepts - for example - named structs, or newtype enum
@@ -134,7 +134,7 @@ impl DataShape {
     }
 
     fn set_word(&mut self, word: &str) -> Result<()> {
-        match word.trim_left_matches(self.prefix) {
+        match word.trim_start_matches(self.prefix) {
             "newtype" => {
                 self.newtype = true;
                 Ok(())
@@ -188,7 +188,7 @@ impl ToTokens for DataShape {
         let body = if self.any {
             quote!(::darling::export::Ok(()))
         } else if self.supports_none() {
-            let ty = self.prefix.trim_right_matches('_');
+            let ty = self.prefix.trim_end_matches('_');
             quote!(::darling::export::Err(::darling::Error::unsupported_shape(#ty)))
         } else {
             let unit = match_arm("unit", self.unit);
@@ -228,15 +228,14 @@ fn match_arm(name: &'static str, is_supported: bool) -> TokenStream {
 #[cfg(test)]
 mod tests {
     use proc_macro2::TokenStream;
-    use syn;
 
     use super::Shape;
-    use FromMeta;
+    use crate::FromMeta;
 
     /// parse a string as a syn::Meta instance.
     fn pm(tokens: TokenStream) -> ::std::result::Result<syn::Meta, String> {
         let attribute: syn::Attribute = parse_quote!(#[#tokens]);
-        attribute.parse_meta().or(Err("Unable to parse".into()))
+        attribute.parse_meta().map_err(|_| "Unable to parse".into())
     }
 
     fn fm<T: FromMeta>(tokens: TokenStream) -> T {
@@ -247,22 +246,22 @@ mod tests {
     #[test]
     fn supports_any() {
         let decl = fm::<Shape>(quote!(ignore(any)));
-        assert_eq!(decl.any, true);
+        assert!(decl.any);
     }
 
     #[test]
     fn supports_struct() {
         let decl = fm::<Shape>(quote!(ignore(struct_any, struct_newtype)));
-        assert_eq!(decl.struct_values.any, true);
-        assert_eq!(decl.struct_values.newtype, true);
+        assert!(decl.struct_values.any);
+        assert!(decl.struct_values.newtype);
     }
 
     #[test]
     fn supports_mixed() {
         let decl = fm::<Shape>(quote!(ignore(struct_newtype, enum_newtype, enum_tuple)));
-        assert_eq!(decl.struct_values.newtype, true);
-        assert_eq!(decl.enum_values.newtype, true);
-        assert_eq!(decl.enum_values.tuple, true);
-        assert_eq!(decl.struct_values.any, false);
+        assert!(decl.struct_values.newtype);
+        assert!(decl.enum_values.newtype);
+        assert!(decl.enum_values.tuple);
+        assert!(!decl.struct_values.any);
     }
 }

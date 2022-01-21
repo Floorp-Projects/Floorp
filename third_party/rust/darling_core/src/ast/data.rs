@@ -1,11 +1,13 @@
 use std::{slice, vec};
 
-use syn;
+use proc_macro2::{Span, TokenStream};
+use quote::ToTokens;
+use syn::spanned::Spanned;
 
-use usage::{
+use crate::usage::{
     self, IdentRefSet, IdentSet, LifetimeRefSet, LifetimeSet, UsesLifetimes, UsesTypeParams,
 };
-use {Error, FromField, FromVariant, Result};
+use crate::{Error, FromField, FromVariant, Result};
 
 /// A struct or enum body.
 ///
@@ -18,16 +20,33 @@ pub enum Data<V, F> {
 
 impl<V, F> Data<V, F> {
     /// Creates an empty body of the same shape as the passed-in body.
+    ///
+    /// # Panics
+    /// This function will panic if passed `syn::Data::Union`.
     pub fn empty_from(src: &syn::Data) -> Self {
         match *src {
             syn::Data::Enum(_) => Data::Enum(vec![]),
             syn::Data::Struct(ref vd) => Data::Struct(Fields::empty_from(&vd.fields)),
-            syn::Data::Union(_) => unreachable!(),
+            syn::Data::Union(_) => panic!("Unions are not supported"),
+        }
+    }
+
+    /// Creates an empty body of the same shape as the passed-in body.
+    ///
+    /// `darling` does not support unions; calling this function with a union body will return an error.
+    pub fn try_empty_from(src: &syn::Data) -> Result<Self> {
+        match *src {
+            syn::Data::Enum(_) => Ok(Data::Enum(vec![])),
+            syn::Data::Struct(ref vd) => Ok(Data::Struct(Fields::empty_from(&vd.fields))),
+            // This deliberately doesn't set a span on the error message, as the error is most useful if
+            // applied to the call site of the offending macro. Given that the message is very generic,
+            // putting it on the union keyword ends up being confusing.
+            syn::Data::Union(_) => Err(Error::custom("Unions are not supported")),
         }
     }
 
     /// Creates a new `Data<&'a V, &'a F>` instance from `Data<V, F>`.
-    pub fn as_ref<'a>(&'a self) -> Data<&'a V, &'a F> {
+    pub fn as_ref(&self) -> Data<&V, &F> {
         match *self {
             Data::Enum(ref variants) => Data::Enum(variants.iter().collect()),
             Data::Struct(ref data) => Data::Struct(data.as_ref()),
@@ -118,7 +137,10 @@ impl<V: FromVariant, F: FromField> Data<V, F> {
                 }
             }
             syn::Data::Struct(ref data) => Ok(Data::Struct(Fields::try_from(&data.fields)?)),
-            syn::Data::Union(_) => unreachable!(),
+            // This deliberately doesn't set a span on the error message, as the error is most useful if
+            // applied to the call site of the offending macro. Given that the message is very generic,
+            // putting it on the union keyword ends up being confusing.
+            syn::Data::Union(_) => Err(Error::custom("Unions are not supported")),
         }
     }
 }
@@ -150,18 +172,35 @@ impl<V: UsesLifetimes, F: UsesLifetimes> UsesLifetimes for Data<V, F> {
 }
 
 /// Equivalent to `syn::Fields`, but replaces the AST element with a generic.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Fields<T> {
     pub style: Style,
     pub fields: Vec<T>,
+    span: Option<Span>,
+    __nonexhaustive: (),
 }
 
 impl<T> Fields<T> {
-    pub fn empty_from(vd: &syn::Fields) -> Self {
-        Fields {
-            style: vd.into(),
-            fields: Vec::new(),
+    /// Creates a new [`Fields`] struct.
+    pub fn new(style: Style, fields: Vec<T>) -> Self {
+        Self {
+            style,
+            fields,
+            span: None,
+            __nonexhaustive: (),
         }
+    }
+
+    /// Adds a [`Span`] to [`Fields`].
+    pub fn with_span(mut self, span: Span) -> Self {
+        if self.span.is_none() {
+            self.span = Some(span);
+        }
+        self
+    }
+
+    pub fn empty_from(vd: &syn::Fields) -> Self {
+        Self::new(vd.into(), Vec::new())
     }
 
     /// Splits the `Fields` into its style and fields for further processing.
@@ -187,10 +226,12 @@ impl<T> Fields<T> {
         self.style.is_struct()
     }
 
-    pub fn as_ref<'a>(&'a self) -> Fields<&'a T> {
+    pub fn as_ref(&self) -> Fields<&T> {
         Fields {
             style: self.style,
             fields: self.fields.iter().collect(),
+            span: self.span,
+            __nonexhaustive: (),
         }
     }
 
@@ -201,6 +242,8 @@ impl<T> Fields<T> {
         Fields {
             style: self.style,
             fields: self.fields.into_iter().map(map).collect(),
+            span: self.span,
+            __nonexhaustive: (),
         }
     }
 
@@ -221,54 +264,92 @@ impl<T> Fields<T> {
 
 impl<F: FromField> Fields<F> {
     pub fn try_from(fields: &syn::Fields) -> Result<Self> {
-        let (items, errors) = match *fields {
-            syn::Fields::Named(ref fields) => {
-                let mut items = Vec::with_capacity(fields.named.len());
-                let mut errors = Vec::new();
+        let (items, errors) = {
+            match &fields {
+                syn::Fields::Named(fields) => {
+                    let mut items = Vec::with_capacity(fields.named.len());
+                    let mut errors = Vec::new();
 
-                for field in &fields.named {
-                    match FromField::from_field(field) {
-                        Ok(val) => items.push(val),
-                        Err(err) => errors.push(if let Some(ref ident) = field.ident {
-                            err.at(ident)
-                        } else {
-                            err
-                        }),
+                    for field in &fields.named {
+                        match FromField::from_field(field) {
+                            Ok(val) => items.push(val),
+                            Err(err) => errors.push({
+                                if let Some(ident) = &field.ident {
+                                    err.at(ident)
+                                } else {
+                                    err
+                                }
+                            }),
+                        }
                     }
+
+                    (items, errors)
                 }
+                syn::Fields::Unnamed(fields) => {
+                    let mut items = Vec::with_capacity(fields.unnamed.len());
+                    let mut errors = Vec::new();
 
-                (items, errors)
-            }
-            syn::Fields::Unnamed(ref fields) => {
-                let mut items = Vec::with_capacity(fields.unnamed.len());
-                let mut errors = Vec::new();
-
-                for field in &fields.unnamed {
-                    match FromField::from_field(field) {
-                        Ok(val) => items.push(val),
-                        Err(err) => errors.push(if let Some(ref ident) = field.ident {
-                            err.at(ident)
-                        } else {
-                            err
-                        }),
+                    for field in &fields.unnamed {
+                        match FromField::from_field(field) {
+                            Ok(val) => items.push(val),
+                            Err(err) => errors.push({
+                                if let Some(ident) = &field.ident {
+                                    err.at(ident)
+                                } else {
+                                    err
+                                }
+                            }),
+                        }
                     }
-                }
 
-                (items, errors)
+                    (items, errors)
+                }
+                syn::Fields::Unit => (vec![], vec![]),
             }
-            syn::Fields::Unit => (vec![], vec![]),
         };
 
         if !errors.is_empty() {
             Err(Error::multiple(errors))
         } else {
-            Ok(Fields {
-                style: fields.into(),
-                fields: items,
-            })
+            Ok(Self::new(fields.into(), items).with_span(fields.span()))
         }
     }
 }
+
+impl<T: ToTokens> ToTokens for Fields<T> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let fields = &self.fields;
+        // An unknown Span should be `Span::call_site()`;
+        // https://docs.rs/syn/1.0.12/syn/spanned/trait.Spanned.html#tymethod.span
+        let span = self.span.unwrap_or_else(Span::call_site);
+
+        match self.style {
+            Style::Struct => {
+                let trailing_comma = {
+                    if fields.is_empty() {
+                        quote!()
+                    } else {
+                        quote!(,)
+                    }
+                };
+
+                tokens.extend(quote_spanned![span => { #(#fields),* #trailing_comma }]);
+            }
+            Style::Tuple => {
+                tokens.extend(quote_spanned![span => ( #(#fields),* )]);
+            }
+            Style::Unit => {}
+        }
+    }
+}
+
+impl<T: PartialEq> PartialEq for Fields<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.style == other.style && self.fields == other.fields
+    }
+}
+
+impl<T: Eq> Eq for Fields<T> {}
 
 impl<T> IntoIterator for Fields<T> {
     type Item = T;
@@ -281,10 +362,7 @@ impl<T> IntoIterator for Fields<T> {
 
 impl<T> From<Style> for Fields<T> {
     fn from(style: Style) -> Self {
-        Fields {
-            style,
-            fields: Vec::new(),
-        }
+        Self::new(style, Vec::new())
     }
 }
 
@@ -336,10 +414,7 @@ impl Style {
 
     /// Creates a new `Fields` of the specified style with the passed-in fields.
     fn with_fields<T, U: Into<Vec<T>>>(self, fields: U) -> Fields<T> {
-        Fields {
-            style: self,
-            fields: fields.into(),
-        }
+        Fields::new(self, fields.into())
     }
 }
 
@@ -356,5 +431,71 @@ impl<'a> From<&'a syn::Fields> for Style {
             syn::Fields::Unnamed(_) => Style::Tuple,
             syn::Fields::Unit => Style::Unit,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // it is not possible to directly convert a TokenStream into syn::Fields, so you have
+    // to convert the TokenStream into DeriveInput first and then pass the syn::Fields to
+    // Fields::try_from.
+    fn token_stream_to_fields(input: TokenStream) -> Fields<syn::Field> {
+        Fields::try_from(&{
+            if let syn::Data::Struct(s) = syn::parse2::<syn::DeriveInput>(input).unwrap().data {
+                s.fields
+            } else {
+                panic!();
+            }
+        })
+        .unwrap()
+    }
+
+    #[test]
+    fn test_style_eq() {
+        // `Fields` implements `Eq` manually, so it has to be ensured, that all fields of `Fields`
+        // implement `Eq`, this test would fail, if someone accidentally removed the Eq
+        // implementation from `Style`.
+        struct _AssertEq
+        where
+            Style: Eq;
+    }
+
+    #[test]
+    fn test_fields_to_tokens_struct() {
+        let reference = quote!(
+            {
+                executable: String,
+                args: Vec<String>,
+                env: Vec<String>,
+                index: usize,
+                optional: Option<String>,
+                current_dir: String,
+            }
+        );
+        let input = quote!(
+            struct ExampleTest #reference
+        );
+
+        let fields = token_stream_to_fields(input);
+
+        let mut result = quote!();
+        fields.to_tokens(&mut result);
+        assert_eq!(result.to_string(), reference.to_string());
+    }
+
+    #[test]
+    fn test_fields_to_tokens_tuple() {
+        let reference = quote!((u64, usize, &'a T));
+        let input = quote!(
+            struct ExampleTest #reference;
+        );
+
+        let fields = token_stream_to_fields(input);
+
+        let mut result = quote!();
+        fields.to_tokens(&mut result);
+        assert_eq!(result.to_string(), reference.to_string());
     }
 }

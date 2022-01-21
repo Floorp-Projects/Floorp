@@ -1,7 +1,7 @@
 Darling
 =======
 
-[![Build Status](https://travis-ci.org/TedDriggs/darling.svg?branch=master)](https://travis-ci.org/TedDriggs/darling)
+[![Build Status](https://github.com/TedDriggs/darling/workflows/CI/badge.svg)](https://github.com/TedDriggs/darling/actions)
 [![Latest Version](https://img.shields.io/crates/v/darling.svg)](https://crates.io/crates/darling)
 [![Rustc Version 1.31+](https://img.shields.io/badge/rustc-1.31+-lightgray.svg)](https://blog.rust-lang.org/2018/12/06/Rust-1.31-and-rust-2018.html)
 
@@ -18,6 +18,7 @@ Darling
 2. `FromDeriveInput` is implemented or derived by each proc-macro crate which depends on `darling`. This is the root for input parsing; it gets access to the identity, generics, and visibility of the target type, and can specify which attribute names should be parsed or forwarded from the input AST.
 3. `FromField` is implemented or derived by each proc-macro crate which depends on `darling`. Structs deriving this trait will get access to the identity (if it exists), type, and visibility of the field.
 4. `FromVariant` is implemented or derived by each proc-macro crate which depends on `darling`. Structs deriving this trait will get access to the identity and contents of the variant, which can be transformed the same as any other `darling` input.
+5. `FromAttributes` is a lower-level version of the more-specific `FromDeriveInput`, `FromField`, and `FromVariant` traits. Structs deriving this trait get a meta-item extractor and error collection which works for any syntax element, including traits, trait items, and functions. This is useful for non-derive proc macros.
 
 ## Additional Modules
 * `darling::ast` provides generic types for representing the AST.
@@ -40,7 +41,7 @@ pub struct Lorem {
 }
 
 #[derive(FromDeriveInput)]
-#[darling(from_ident, attributes(my_crate), forward_attrs(allow, doc, cfg))]
+#[darling(attributes(my_crate), forward_attrs(allow, doc, cfg))]
 pub struct MyTraitOpts {
     ident: syn::Ident,
     attrs: Vec<syn::Attribute>,
@@ -53,7 +54,7 @@ The above code will then be able to parse this input:
 ```rust,ignore
 /// A doc comment which will be available in `MyTraitOpts::attrs`.
 #[derive(MyTrait)]
-#[my_crate(lorem(dolor = "Hello", ipsum))]
+#[my_crate(lorem(dolor = "Hello", sit))]
 pub struct ConsumingType;
 ```
 
@@ -82,7 +83,7 @@ fn your_attr(args: TokenStream, input: TokenStream) -> TokenStream {
 
     let _args = match MacroArgs::from_list(&attr_args) {
         Ok(v) => v,
-        Err(e) => { return e.write_errors(); }
+        Err(e) => { return TokenStream::from(e.write_errors()); }
     };
 
     // do things with `args`
@@ -106,7 +107,7 @@ Darling's features are built to work well for real-world projects.
 * **Defaults**: Supports struct- and field-level defaults, using the same path syntax as `serde`.
 * **Field Renaming**: Fields can have different names in usage vs. the backing code.
 * **Auto-populated fields**: Structs deriving `FromDeriveInput` and `FromField` can declare properties named `ident`, `vis`, `ty`, `attrs`, and `generics` to automatically get copies of the matching values from the input AST. `FromDeriveInput` additionally exposes `data` to get access to the body of the deriving type, and `FromVariant` exposes `fields`.
-* **Mapping function**: Use `#[darling(map="path")]` to specify a function that runs on the result of parsing a meta-item field. This can change the return type, which enables you to parse to an intermediate form and convert that to the type you need in your struct.
+* **Mapping function**: Use `#[darling(map="path")]` or `#[darling(and_then="path")]` to specify a function that runs on the result of parsing a meta-item field. This can change the return type, which enables you to parse to an intermediate form and convert that to the type you need in your struct.
 * **Skip fields**: Use `#[darling(skip)]` to mark a field that shouldn't be read from attribute meta-items.
 * **Multiple-occurrence fields**: Use `#[darling(multiple)]` on a `Vec` field to allow that field to appear multiple times in the meta-item. Each occurrence will be pushed into the `Vec`.
 * **Span access**: Use `darling::util::SpannedValue` in a struct to get access to that meta item's source code span. This can be used to emit warnings that point at a specific field from your proc macro. In addition, you can use `darling::Error::write_errors` to automatically get precise error location details in most cases.

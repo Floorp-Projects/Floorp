@@ -10,7 +10,7 @@ path = "lib.rs"
 proc-macro = true
 
 [dependencies]
-darling = { version = "0.10", default-features = false }
+darling = { version = "0.13", default-features = false }
 derive_common = { path = "../derive_common" }
 proc-macro2 = "1"
 quote = "1"
