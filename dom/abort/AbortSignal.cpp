@@ -99,7 +99,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(AbortSignal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AbortSignal,
                                                   DOMEventTargetHelper)
   AbortSignalImpl::Traverse(static_cast<AbortSignalImpl*>(tmp), cb);
-  AbortFollower::Traverse(static_cast<AbortFollower*>(tmp), cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(AbortSignal,
@@ -212,11 +211,5 @@ void AbortFollower::Unfollow() {
 }
 
 bool AbortFollower::IsFollowing() const { return !!mFollowingSignal; }
-
-/* static */ void AbortFollower::Traverse(
-    AbortFollower* aFollower, nsCycleCollectionTraversalCallback& cb) {
-  ImplCycleCollectionTraverse(cb, aFollower->mFollowingSignal,
-                              "mFollowingSignal", 0);
-}
 
 }  // namespace mozilla::dom
