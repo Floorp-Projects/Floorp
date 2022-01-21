@@ -429,17 +429,20 @@ def show_taskgraph(options):
                 base_path += f"_{params_name}"
                 cur_path += f"_{params_name}"
 
-            # We only capture errors when the 'base' generation fails. This is
-            # because if the 'current' generation passed, the failure is likely
-            # due to a difference in the set of revisions being tested and
-            # harmless. We'll still log a warning to notify that the diff is
-            # not available. But if the current generation failed, the error
-            # needs to be addressed.
-            if not os.path.isfile(base_path):
+            # If the base or cur files are missing it means that generation
+            # failed. If one of them failed but not the other, the failure is
+            # likely due to the patch making changes to taskgraph in modules
+            # that don't get reloaded (safe to ignore). If both generations
+            # failed, there's likely a real issue.
+            base_missing = not os.path.isfile(base_path)
+            cur_missing = not os.path.isfile(cur_path)
+            if base_missing != cur_missing:  # != is equivalent to XOR for booleans
                 non_fatal_failures.append(os.path.basename(base_path))
                 continue
 
             try:
+                # If the output file(s) are missing, this command will raise
+                # CalledProcessError with a returncode > 1.
                 proc = subprocess.run(
                     diffcmd + [base_path, cur_path],
                     stdout=subprocess.PIPE,
