@@ -230,6 +230,13 @@ var DownloadsViewUI = {
       download.target?.exists || download.target?.partFileExists
     );
 
+    // Hide the "Go To Download Page" item if there's no referrer. Ideally the
+    // Downloads API will require a referrer (see bug 1723712) to create a
+    // download, but this fallback will ensure any failures aren't user facing.
+    contextMenu.querySelector(
+      ".downloadOpenReferrerMenuItem"
+    ).hidden = !download.source.referrerInfo?.originalReferrer;
+
     // Hide the "use system viewer" and "always use system viewer" items
     // if the feature is disabled or this download doesn't support it:
     let useSystemViewerItem = contextMenu.querySelector(
