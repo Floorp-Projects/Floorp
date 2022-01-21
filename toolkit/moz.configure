@@ -2578,14 +2578,6 @@ set_config("ANDROID_PACKAGE_NAME", android_package_name)
 option(env="MOZ_WINCONSOLE", nargs="?", help="Whether we can create a console window.")
 set_define("MOZ_WINCONSOLE", True, when=depends("MOZ_WINCONSOLE")(lambda x: x))
 
-option(
-    env="MOZ_USE_NATIVE_POPUP_WINDOWS",
-    default=target_is_android,
-    help="Whether to use native popup windows",
-)
-
-set_define("MOZ_USE_NATIVE_POPUP_WINDOWS", True, when="MOZ_USE_NATIVE_POPUP_WINDOWS")
-
 
 # Alternative Crashreporter setting
 option(
