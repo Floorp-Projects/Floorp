@@ -1067,6 +1067,13 @@ var DownloadsView = {
     DownloadsViewController.updateCommands();
 
     DownloadsViewUI.updateContextMenuForElement(this.contextMenu, element);
+    // Hide the copy location item if there is somehow no URL. We have to do
+    // this here instead of in DownloadsViewUI because DownloadsPlacesView
+    // allows selecting multiple downloads, so in that view the menuitem will be
+    // shown according to whether at least one of the selected items has a URL.
+    this.contextMenu.querySelector(
+      ".downloadCopyLocationMenuItem"
+    ).hidden = !element._shell.download.source?.url;
   },
 
   onDownloadDragStart(aEvent) {
@@ -1166,8 +1173,9 @@ class DownloadsViewItem extends DownloadsViewUI.DownloadElementShell {
         let { target } = this.download;
         return target.exists || target.partFileExists;
       }
-      case "cmd_delete":
       case "downloadsCmd_copyLocation":
+        return !!this.download.source?.url;
+      case "cmd_delete":
       case "downloadsCmd_doDefault":
         return true;
       case "downloadsCmd_showBlockedInfo":
