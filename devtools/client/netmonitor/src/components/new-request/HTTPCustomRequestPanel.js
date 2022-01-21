@@ -29,6 +29,7 @@ const CUSTOM_NEW_REQUEST_URL_LABEL = L10N.getStr(
 const CUSTOM_POSTDATA = L10N.getStr("netmonitor.custom.postData");
 const CUSTOM_QUERY = L10N.getStr("netmonitor.custom.query");
 const CUSTOM_SEND = L10N.getStr("netmonitor.custom.send");
+const CUSTOM_CLEAR = L10N.getStr("netmonitor.custom.clear");
 
 /*
  * HTTP Custom request panel component
@@ -63,6 +64,7 @@ class HTTPCustomRequestPanel extends Component {
 
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleHeadersChange = this.handleHeadersChange.bind(this);
+    this.handleClear = this.handleClear.bind(this);
   }
 
   /**
@@ -109,6 +111,18 @@ class HTTPCustomRequestPanel extends Component {
     });
   }
 
+  handleClear() {
+    this.setState({
+      method: "",
+      url: "",
+      headers: {
+        customHeadersValue: "",
+        headers: [],
+      },
+      requestPostData: "",
+    });
+  }
+
   render() {
     const { sendCustomRequest } = this.props;
     const { method, requestPostData, url, headers } = this.state;
@@ -137,20 +151,6 @@ class HTTPCustomRequestPanel extends Component {
       { className: "http-custom-request-panel" },
       div(
         { className: "http-custom-request-panel-content" },
-        div(
-          { className: "tabpanel-summary-container http-custom-request" },
-          div(
-            { className: "http-custom-request-button-container" },
-            button(
-              {
-                className: "devtools-button",
-                id: "http-custom-request-send-button",
-                onClick: () => sendCustomRequest(this.state),
-              },
-              CUSTOM_SEND
-            )
-          )
-        ),
         div(
           {
             className: "tabpanel-summary-container http-custom-method-and-url",
@@ -182,6 +182,7 @@ class HTTPCustomRequestPanel extends Component {
             name: "url",
             placeholder: CUSTOM_NEW_REQUEST_URL_LABEL,
             onChange: this.handleInputChange,
+            onBlur: this.handleInputChange,
             value: url,
           })
         ),
@@ -253,6 +254,29 @@ class HTTPCustomRequestPanel extends Component {
             value: requestPostData,
             wrap: "off",
           })
+        ),
+        div(
+          { className: "tabpanel-summary-container http-custom-request" },
+          div(
+            { className: "http-custom-request-button-container" },
+            button(
+              {
+                className: "devtools-button",
+                id: "http-custom-request-clear-button",
+                onClick: this.handleClear,
+              },
+              CUSTOM_CLEAR
+            ),
+            button(
+              {
+                className: "devtools-button",
+                id: "http-custom-request-send-button",
+                disabled: !this.state.url,
+                onClick: () => sendCustomRequest(this.state),
+              },
+              CUSTOM_SEND
+            )
+          )
         )
       )
     );
