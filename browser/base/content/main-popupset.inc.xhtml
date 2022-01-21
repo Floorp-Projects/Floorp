@@ -92,6 +92,15 @@
               data-lazy-l10n-id="tab-context-reopen-closed-tabs"
               data-l10n-args='{"tabCount": 1}'
               observes="History:UndoCloseTab"/>
+    <menuseparator contexttype="fullscreen"/>
+    <menuitem class="fullscreen-context-autohide"
+              contexttype="fullscreen"
+              type="checkbox"
+              data-lazy-l10n-id="full-screen-autohide"
+              oncommand="FullScreen.setAutohide();"/>
+    <menuitem contexttype="fullscreen"
+              data-lazy-l10n-id="full-screen-exit"
+              oncommand="BrowserFullScreen();"/>
   </menupopup>
 
   <!-- bug 415444/582485: event.stopPropagation is here for the cloned version
@@ -394,6 +403,15 @@
               observes="cmd_CustomizeToolbars"
               class="viewCustomizeToolbar"
               data-lazy-l10n-id="toolbar-context-menu-view-customize-toolbar-2"/>
+    <menuseparator contexttype="fullscreen"/>
+    <menuitem class="fullscreen-context-autohide"
+              contexttype="fullscreen"
+              type="checkbox"
+              data-lazy-l10n-id="full-screen-autohide"
+              oncommand="FullScreen.setAutohide();"/>
+    <menuitem contexttype="fullscreen"
+              data-lazy-l10n-id="full-screen-exit"
+              oncommand="BrowserFullScreen();"/>
   </menupopup>
 
   <menupopup id="blockedPopupOptions"
@@ -409,15 +427,6 @@
               type="checkbox"
               oncommand="gPopupBlockerObserver.dontShowMessage();"/>
     <menuseparator id="blockedPopupsSeparator"/>
-  </menupopup>
-
-  <menupopup id="autohide-context"
-         onpopupshowing="FullScreen.getAutohide(this.firstChild);">
-    <menuitem type="checkbox" data-l10n-id="full-screen-autohide"
-              oncommand="FullScreen.setAutohide();"/>
-    <menuseparator/>
-    <menuitem data-l10n-id="full-screen-exit"
-              oncommand="BrowserFullScreen();"/>
   </menupopup>
 
   <menupopup id="contentAreaContextMenu" pagemenu="#page-menu-separator"
