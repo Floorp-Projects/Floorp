@@ -12,6 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  SnapshotGroups: "resource:///modules/SnapshotGroups.jsm",
   Snapshots: "resource:///modules/Snapshots.jsm",
   SnapshotScorer: "resource:///modules/SnapshotScorer.jsm",
   SnapshotSelector: "resource:///modules/SnapshotSelector.jsm",
@@ -284,6 +285,41 @@ async function assertSnapshots(expected, options) {
   let snapshots = await Snapshots.query(options);
 
   await assertSnapshotList(snapshots, expected);
+}
+
+/**
+ * Asserts that the snapshot groups match the expected values.
+ *
+ * @param {SnapshotGroup} group
+ *   The actual snapshot groups.
+ * @param {SnapshotGroup} expected
+ *   The expected snapshot group.
+ */
+function assertSnapshotGroup(group, expected) {
+  if (expected.title != null) {
+    Assert.equal(group.title, expected.title, "Should have the expected title");
+  }
+  if (expected.builder != null) {
+    Assert.equal(
+      group.builder,
+      expected.builder,
+      "Should have the expected builder"
+    );
+  }
+  if (expected.builderMetadata != null) {
+    Assert.deepEqual(
+      group.builderMetadata,
+      expected.builderMetadata,
+      "Should have the expected builderMetadata"
+    );
+  }
+  if (expected.snapshotCount != null) {
+    Assert.equal(
+      group.snapshotCount,
+      expected.snapshotCount,
+      "Should have the expected snapshotCount"
+    );
+  }
 }
 
 /**

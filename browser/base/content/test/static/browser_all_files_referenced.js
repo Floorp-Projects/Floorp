@@ -280,6 +280,11 @@ var whitelist = [
 
   { file: "resource://app/modules/SnapshotSelector.jsm" },
 
+  // Bug 1751275
+  {
+    file: "resource://app/modules/SnapshotGroups.jsm",
+  },
+
   // toolkit/xre/MacRunFromDmgUtils.mm
   { file: "resource://gre/localization/en-US/toolkit/global/run-from-dmg.ftl" },
 ];
