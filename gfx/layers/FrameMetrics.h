@@ -806,6 +806,8 @@ struct ScrollMetadata {
         mIsRDMTouchSimulationActive(false),
         mDidContentGetPainted(true),
         mPrefersReducedMotion(false),
+        mForceMousewheelAutodir(false),
+        mForceMousewheelAutodirHonourRoot(false),
         mOverscrollBehavior() {}
 
   bool operator==(const ScrollMetadata& aOther) const {
@@ -823,6 +825,9 @@ struct ScrollMetadata {
            mIsRDMTouchSimulationActive == aOther.mIsRDMTouchSimulationActive &&
            mDidContentGetPainted == aOther.mDidContentGetPainted &&
            mPrefersReducedMotion == aOther.mPrefersReducedMotion &&
+           mForceMousewheelAutodir == aOther.mForceMousewheelAutodir &&
+           mForceMousewheelAutodirHonourRoot ==
+               aOther.mForceMousewheelAutodirHonourRoot &&
            mDisregardedDirection == aOther.mDisregardedDirection &&
            mOverscrollBehavior == aOther.mOverscrollBehavior &&
            mScrollUpdates == aOther.mScrollUpdates;
@@ -896,6 +901,18 @@ struct ScrollMetadata {
 
   void SetPrefersReducedMotion(bool aValue) { mPrefersReducedMotion = aValue; }
   bool PrefersReducedMotion() const { return mPrefersReducedMotion; }
+
+  void SetForceMousewheelAutodir(bool aValue) {
+    mForceMousewheelAutodir = aValue;
+  }
+  bool ForceMousewheelAutodir() const { return mForceMousewheelAutodir; }
+
+  void SetForceMousewheelAutodirHonourRoot(bool aValue) {
+    mForceMousewheelAutodirHonourRoot = aValue;
+  }
+  bool ForceMousewheelAutodirHonourRoot() const {
+    return mForceMousewheelAutodirHonourRoot;
+  }
 
   bool DidContentGetPainted() const { return mDidContentGetPainted; }
 
@@ -1006,6 +1023,11 @@ struct ScrollMetadata {
   // non-essential motion it uses (see the prefers-reduced-motion
   // media query).
   bool mPrefersReducedMotion : 1;
+
+  // Whether privileged code has requested that autodir behaviour be
+  // enabled for the scroll frame.
+  bool mForceMousewheelAutodir : 1;
+  bool mForceMousewheelAutodirHonourRoot : 1;
 
   // The disregarded direction means the direction which is disregarded anyway,
   // even if the scroll frame overflows in that direction and the direction is
