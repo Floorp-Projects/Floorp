@@ -117,7 +117,10 @@ disperse_tasks = list(
 
 def idfn(param):
     if isinstance(param, tuple):
-        return param[0].__name__
+        try:
+            return param[0].__name__
+        except AttributeError:
+            return None
     return None
 
 

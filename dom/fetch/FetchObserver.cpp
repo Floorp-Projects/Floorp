@@ -14,7 +14,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(FetchObserver)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FetchObserver,
                                                   DOMEventTargetHelper)
-  AbortFollower::Traverse(static_cast<AbortFollower*>(tmp), cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FetchObserver,

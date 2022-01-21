@@ -1041,23 +1041,26 @@ SearchService.prototype = {
   },
 
   async _fetchEngineSelectorEngines() {
-    let locale = Services.locale.appLocaleAsBCP47;
-    let region = Region.home || "default";
+    let searchEngineSelectorProperties = {
+      locale: Services.locale.appLocaleAsBCP47,
+      region: Region.home || "default",
+      channel: AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
+        ? "esr"
+        : AppConstants.MOZ_UPDATE_CHANNEL,
+      experiment: NimbusFeatures.search.getVariable("experiment") ?? "",
+      distroID: SearchUtils.distroID ?? "",
+    };
 
-    let channel = AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
-      ? "esr"
-      : AppConstants.MOZ_UPDATE_CHANNEL;
+    for (let [key, value] of Object.entries(searchEngineSelectorProperties)) {
+      this._settings.setAttribute(key, value);
+    }
 
     let {
       engines,
       privateDefault,
-    } = await this._engineSelector.fetchEngineConfiguration({
-      locale,
-      region,
-      channel,
-      experiment: NimbusFeatures.search.getVariable("experiment"),
-      distroID: SearchUtils.distroID,
-    });
+    } = await this._engineSelector.fetchEngineConfiguration(
+      searchEngineSelectorProperties
+    );
 
     for (let e of engines) {
       if (!e.webExtension) {

@@ -676,25 +676,33 @@ class TabBase {
 
   /**
    * Query each content process hosting subframes of the tab, return results.
+   *
    * @param {string} message
    * @param {object} options
-   * @param {number} options.frameID
-   * @param {boolean} options.allFrames
+   *        These options are also sent to the message handler in the
+   *        `ExtensionContentChild`.
+   * @param {number[]} options.frameIds
+   * @param {boolean} options.returnResultsWithFrameIds
    * @returns {Promise[]}
    */
   async queryContent(message, options) {
-    let { allFrames, frameID } = options;
+    let { frameIds } = options;
 
     /** @type {Map<nsIDOMProcessParent, innerWindowId[]>} */
     let byProcess = new DefaultMap(() => []);
+    let framesFound = 0;
 
     // Recursively walk the tab's BC tree, find all frames, group by process.
     function visit(bc) {
       let win = bc.currentWindowGlobal;
-      if (win?.domProcess && (!frameID || frameID === bc.id)) {
+      let frameId = bc.parent ? bc.id : 0;
+
+      if (win?.domProcess && (!frameIds || frameIds.includes(frameId))) {
         byProcess.get(win.domProcess).push(win.innerWindowId);
+        framesFound++;
       }
-      if (allFrames || (frameID && !byProcess.size)) {
+
+      if (!frameIds || framesFound < frameIds.length) {
         bc.children.forEach(visit);
       }
     }
@@ -715,15 +723,15 @@ class TabBase {
     results = results.flat();
 
     if (!results.length) {
-      if (frameID) {
+      if (frameIds && frameIds.length === 1 && frameIds[0] !== 0) {
         throw new ExtensionError("Frame not found, or missing host permission");
       }
 
-      let frames = allFrames ? ", and any iframes" : "";
+      let frames = framesFound > 1 ? ", and any iframes" : "";
       throw new ExtensionError(`Missing host permission for the tab${frames}`);
     }
 
-    if (!allFrames && results.length > 1) {
+    if (frameIds && frameIds.length === 1 && results.length > 1) {
       throw new ExtensionError("Internal error: multiple windows matched");
     }
 
@@ -787,12 +795,15 @@ class TabBase {
       }
       options[`${kind}Paths`].push(url);
     }
+
     if (details.allFrames) {
-      options.allFrames = details.allFrames;
+      options.allFrames = true;
+    } else if (details.frameId !== null) {
+      options.frameIds = [details.frameId];
+    } else if (!details.allFrames) {
+      options.frameIds = [0];
     }
-    if (details.frameId !== null) {
-      options.frameID = details.frameId;
-    }
+
     if (details.matchAboutBlank) {
       options.matchAboutBlank = details.matchAboutBlank;
     }

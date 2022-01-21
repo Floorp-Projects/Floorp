@@ -10,7 +10,7 @@
 import { isOriginalId } from "devtools-source-map";
 
 import { getSourceFromId, getSourceWithContent } from "../../reducers/sources";
-import { tabExists } from "../../reducers/tabs";
+import { tabExists } from "../../selectors/tabs";
 import { setSymbols } from "./symbols";
 import { setInScopeLines } from "../ast";
 import { closeActiveSearch, updateActiveFileSearch } from "../ui";

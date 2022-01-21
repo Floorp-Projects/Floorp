@@ -2144,7 +2144,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(EventListenerManager::ListenerSignalFollower)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(
     EventListenerManager::ListenerSignalFollower)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListener)
-  AbortFollower::Traverse(static_cast<AbortFollower*>(tmp), cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(

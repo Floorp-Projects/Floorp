@@ -2400,17 +2400,113 @@ function doTestAutoDirScroll2(aSettings, aAutoDirTrait,
       adjusted: true,
       expected: kAdjustedForLeft.result,
       cleanup (cb) {
+                 SpecialPowers.pushPrefEnv({"set":
+                                               [["mousewheel.autodir.enabled",
+                                                 false]]},
+                                            cb);
+               } },
+    // Tests:   Test that autodir scrolling can be force-enabled using windowUtils.
+    //          This only tests vertical wheel scrolls being adjusted to be
+    //          horizontal, rather than re-testing all autodir behaviours just for
+    //          this way of enabling it.
+    // Results: Vertical wheel scrolls are adjusted to be horizontal whereas the
+    //          horizontal wheel scrolls are unadjusted.
+    // Reason:  Auto-dir adjustment applies to a target if the target overflows
+    //          in only one direction and the direction is orthogonal to the
+    //          wheel and deltaZ is zero.
+    { description: "force-enabled auto-dir scroll to " + kAdjustedForDown.desc +
+                   "(originally bottom) by pixel scroll even if lineOrPageDelta is 0, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForDown.result,
+      prepare (cb) {
+                 gScrollableElement.style.overflowX = "auto";
+                 gScrollableElement.style.overflowY = "hidden";
+                 resetScrollPosition(gScrollableElement);
+                 winUtils.setMousewheelAutodir(gScrollableElement, true, kHonoursRoot)
+                 cb();
+               } },
+    { description: "force-enabled auto-dir scroll to " + kAdjustedForDown.desc +
+                   "(originally bottom) by pixel scroll when lineOrPageDelta is 1, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: 8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForDown.result },
+    { description: "force-enabled auto-dir scroll to " + kAdjustedForUp.desc +
+                   "(originally top) by pixel scroll even if lineOrPageDelta is 0, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForUp.result },
+    { description: "force-enabled auto-dir scroll to " + kAdjustedForUp.desc +
+                   "(originally top) by pixel scroll when lineOrPageDelta is -1, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 0.0, deltaY: -8.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: true,
+      expected: kAdjustedForUp.result },
+    { description: "force-enabled auto-dir scroll to right by pixel scroll even if lineOrPageDelta is 0, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 8.0, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollRight },
+    { description: "force-enabled auto-dir scroll to right by pixel scroll when lineOrPageDelta is 1, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: 8.0, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollRight },
+    { description: "force-enabled auto-dir scroll to left by pixel scroll even if lineOrPageDelta is 0, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -8.0, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollLeft },
+    { description: "force-enabled auto-dir scroll to left by pixel scroll when lineOrPageDelta is -1, " +
+                   "no vertical scrollbar",
+      event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+               deltaX: -8.0, deltaY: 0.0, deltaZ: 0.0,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isMomentum: false,
+               expectedOverflowDeltaX: 0, expectedOverflowDeltaY: 0,
+               shiftKey: false, ctrlKey: false, altKey: false, metaKey: false, osKey: false },
+      adjusted: false,
+      expected: kScrollLeft,
+      cleanup (cb) {
                  gScrollableElement.style.position = "static";
                  gScrollableElement.style.top = "auto";
                  gScrollableElement.style.left = "auto";
                  gScrollableElement.style.overflow = "auto";
                  Object.assign(document.body.style, kOldStyleForRoot);
                  Object.assign(gScrollableElement.style, kOldStyleForTarget);
-                 SpecialPowers.pushPrefEnv({"set":
-                                               [["mousewheel.autodir.enabled",
-                                                 false]]},
-                                            cb);
-               } },
+                 winUtils.setMousewheelAutodir(gScrollableElement, false, false);
+                 cb();
+              } },
   ];
 
   let styleDescForRoot = "";

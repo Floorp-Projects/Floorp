@@ -9,6 +9,8 @@ import sys
 import tempfile
 import subprocess
 
+from pathlib import Path
+
 from mozboot.base import BaseBootstrapper
 from mozboot.linux_common import LinuxBootstrapper
 
@@ -69,6 +71,10 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         self.install_browser_packages(mozconfig_builder, artifact_mode=True)
 
+    def ensure_nasm_packages(self, state_dir: Path, checkout_root: Path):
+        # installed via install_browser_packages
+        pass
+
     def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
         # Multi-part process:
         # 1. System packages.
@@ -126,15 +132,15 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         command = ["curl", "-L", "-O", uri]
         self.run(command)
 
-    def unpack(self, path, name, ext):
+    def unpack(self, path: Path, name, ext):
         if ext == ".gz":
             compression = "-z"
         else:
             print(f"unsupported compression extension: {ext}", file=sys.stderr)
             sys.exit(1)
 
-        name = os.path.join(path, name) + ".tar" + ext
-        command = ["tar", "-x", compression, "-f", name, "-C", path]
+        name = path / (name + ".tar" + ext)
+        command = ["tar", "-x", compression, "-f", str(name), "-C", str(path)]
         self.run(command)
 
     def makepkg(self, name):
@@ -161,7 +167,7 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         if not needed:
             return
 
-        path = tempfile.mkdtemp(prefix="mozboot-")
+        path = Path(tempfile.mkdtemp(prefix="mozboot-"))
         if not self.no_interactive:
             print(
                 "WARNING! This script requires to install packages from the AUR "
@@ -174,12 +180,12 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             if choice != "yes":
                 sys.exit(1)
 
-        base_dir = os.getcwd()
+        base_dir = Path.cwd()
         os.chdir(path)
         for name in needed:
             url = AUR_URL_TEMPLATE.format(package)
-            ext = os.path.splitext(url)[-1]
-            directory = os.path.join(path, name)
+            ext = Path(url).suffix
+            directory = path / name
             self.download(url)
             self.unpack(path, name, ext)
             os.chdir(directory)

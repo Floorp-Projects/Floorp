@@ -12,7 +12,7 @@ import pytest
 
 import mozinfo
 from manifestparser import TestManifest, expression
-from moztest.selftest.fixtures import binary, setup_test_harness  # noqa
+from moztest.selftest.fixtures import binary_fixture, setup_test_harness  # noqa
 
 here = os.path.abspath(os.path.dirname(__file__))
 setup_args = [os.path.join(here, "files"), "mochitest", "testing/mochitest"]
@@ -140,7 +140,7 @@ def skip_using_mozinfo(request, setup_test_harness):
     runtests = pytest.importorskip("runtests")
     runtests.update_mozinfo()
 
-    skip_mozinfo = request.node.get_marker("skip_mozinfo")
+    skip_mozinfo = request.node.get_closest_marker("skip_mozinfo")
     if skip_mozinfo:
         value = skip_mozinfo.args[0]
         if expression.parse(value, **mozinfo.info):

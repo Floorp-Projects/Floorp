@@ -8570,6 +8570,18 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
       }
     }
 
+    // Note: GetProperty() will return nullptr both in the case where
+    // the property hasn't been set, and in the case where the property
+    // has been set to false (in which case the property value is
+    // `reinterpret_cast<void*>(false)` which is nullptr.
+    if (aContent->GetProperty(nsGkAtoms::forceMousewheelAutodir)) {
+      metadata.SetForceMousewheelAutodir(true);
+    }
+
+    if (aContent->GetProperty(nsGkAtoms::forceMousewheelAutodirHonourRoot)) {
+      metadata.SetForceMousewheelAutodirHonourRoot(true);
+    }
+
     if (IsAPZTestLoggingEnabled()) {
       LogTestDataForPaint(aLayerManager, scrollId, "displayport",
                           metrics.GetDisplayPort());
