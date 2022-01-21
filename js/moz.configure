@@ -1270,3 +1270,35 @@ with only_when(compile_environment):
             check_msg="for tm_zone and tm_gmtoff in struct tm",
         ),
     )
+
+#
+# Checks for library functions
+# ==============================================================
+with only_when(compile_environment & depends(target.os)(lambda os: os != "WINNT")):
+    set_define("HAVE_GETPAGESIZE", check_symbol("getpagesize"))
+    set_define("HAVE_GMTIME_R", check_symbol("gmtime_r"))
+    set_define("HAVE_LOCALTIME_R", check_symbol("localtime_r"))
+    set_define("HAVE_GETTID", check_symbol("gettid"))
+    set_define("HAVE_SETPRIORITY", check_symbol("setpriority"))
+    set_define("HAVE_SYSCALL", check_symbol("syscall"))
+    set_define("HAVE_GETC_UNLOCKED", check_symbol("getc_unlocked"))
+    set_define("HAVE_PTHREAD_GETNAME_NP", check_symbol("pthread_getname_np"))
+    set_define("HAVE_PTHREAD_GET_NAME_NP", check_symbol("pthread_get_name_np"))
+    set_define("HAVE_STRERROR", check_symbol("strerror"))
+
+    @depends(check_symbol("__cxa_demangle", language="C++"), moz_debug, dmd)
+    def demangle_symbols(cxa_demangle, moz_debug, dmd):
+        # Demangle only for debug or DMD builds
+        if cxa_demangle and (moz_debug or dmd):
+            return True
+
+    set_define("MOZ_DEMANGLE_SYMBOLS", demangle_symbols)
+
+    set_define(
+        "HAVE__UNWIND_BACKTRACE",
+        check_symbol("_Unwind_Backtrace", when=check_header("unwind.h")),
+    )
+
+with only_when(compile_environment):
+    set_define("HAVE__GETC_NOLOCK", check_symbol("_getc_nolock"))
+    set_define("HAVE_LOCALECONV", check_symbol("localeconv"))

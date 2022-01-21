@@ -128,11 +128,11 @@ class JSActor : public nsISupports, public nsWrapperCache {
     QueryHandler(JSActor* aActor, const JSActorMessageMeta& aMetadata,
                  Promise* aPromise);
 
-    void RejectedCallback(JSContext* aCx,
-                          JS::Handle<JS::Value> aValue) override;
+    void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                          ErrorResult& aRv) override;
 
-    void ResolvedCallback(JSContext* aCx,
-                          JS::Handle<JS::Value> aValue) override;
+    void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                          ErrorResult& aRv) override;
 
    private:
     ~QueryHandler() = default;

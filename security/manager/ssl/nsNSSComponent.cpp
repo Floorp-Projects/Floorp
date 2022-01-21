@@ -1546,16 +1546,6 @@ void nsNSSComponent::setValidationOptions(
       break;
   }
 
-  uint32_t defaultCRLiteCTMergeDelaySeconds =
-      60 * 60 * 28;  // 28 hours in seconds
-  uint64_t maxCRLiteCTMergeDelaySeconds = 60 * 60 * 24 * 365;
-  uint64_t crliteCTMergeDelaySeconds =
-      Preferences::GetUint("security.pki.crlite_ct_merge_delay_seconds",
-                           defaultCRLiteCTMergeDelaySeconds);
-  if (crliteCTMergeDelaySeconds > maxCRLiteCTMergeDelaySeconds) {
-    crliteCTMergeDelaySeconds = maxCRLiteCTMergeDelaySeconds;
-  }
-
   CertVerifier::OcspDownloadConfig odc;
   CertVerifier::OcspStrictConfig osc;
   uint32_t certShortLifetimeInDays;
@@ -1568,7 +1558,7 @@ void nsNSSComponent::setValidationOptions(
   mDefaultCertVerifier = new SharedCertVerifier(
       odc, osc, softTimeout, hardTimeout, certShortLifetimeInDays, sha1Mode,
       PublicSSLState()->NameMatchingMode(), netscapeStepUpPolicy, ctMode,
-      crliteMode, crliteCTMergeDelaySeconds, mEnterpriseCerts);
+      crliteMode, mEnterpriseCerts);
 }
 
 void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
@@ -1587,8 +1577,7 @@ void nsNSSComponent::UpdateCertVerifierWithEnterpriseRoots() {
       oldCertVerifier->mCertShortLifetimeInDays, oldCertVerifier->mSHA1Mode,
       oldCertVerifier->mNameMatchingMode,
       oldCertVerifier->mNetscapeStepUpPolicy, oldCertVerifier->mCTMode,
-      oldCertVerifier->mCRLiteMode, oldCertVerifier->mCRLiteCTMergeDelaySeconds,
-      mEnterpriseCerts);
+      oldCertVerifier->mCRLiteMode, mEnterpriseCerts);
 }
 
 // Enable the TLS versions given in the prefs, defaulting to TLS 1.0 (min) and
@@ -2400,9 +2389,7 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                    "security.OCSP.timeoutMilliseconds.soft") ||
                prefName.EqualsLiteral(
                    "security.OCSP.timeoutMilliseconds.hard") ||
-               prefName.EqualsLiteral("security.pki.crlite_mode") ||
-               prefName.EqualsLiteral(
-                   "security.pki.crlite_ct_merge_delay_seconds")) {
+               prefName.EqualsLiteral("security.pki.crlite_mode")) {
       MutexAutoLock lock(mMutex);
       setValidationOptions(false, lock);
 #ifdef DEBUG

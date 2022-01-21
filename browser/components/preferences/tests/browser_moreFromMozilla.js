@@ -222,7 +222,7 @@ add_task(async function test_aboutpreferences_clickBtnVPN() {
   );
   Assert.equal(
     searchParams.get("utm_content"),
-    "fxvt-113-a-na",
+    "fxvt-113-a-global",
     "utm_content set"
   );
 
@@ -238,6 +238,66 @@ add_task(async function test_aboutpreferences_clickBtnVPN() {
   );
 
   BrowserTestUtils.removeTab(openedTab);
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_aboutpreferences_clickBtnMobile() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.preferences.moreFromMozilla", true],
+      ["browser.preferences.moreFromMozilla.template", "simple"],
+    ],
+  });
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+  let tab = gBrowser.selectedTab;
+
+  let productCards = doc.querySelectorAll("vbox.simple");
+  Assert.ok(productCards, "Simple template loaded");
+
+  const expectedUrl = "https://www.mozilla.org/firefox/browsers/mobile/";
+
+  let mobileUrl = new URL(doc.getElementById("simple-fxMobile").href);
+
+  Assert.ok(mobileUrl.href.startsWith(expectedUrl));
+
+  let searchParams = mobileUrl.searchParams;
+  Assert.equal(
+    searchParams.get("utm_source"),
+    "about-prefs",
+    "expected utm_source sent"
+  );
+  Assert.equal(
+    searchParams.get("utm_campaign"),
+    "morefrommozilla",
+    "utm_campaign set"
+  );
+  Assert.equal(
+    searchParams.get("utm_medium"),
+    "firefox-desktop",
+    "utm_medium set"
+  );
+  Assert.equal(
+    searchParams.get("utm_content"),
+    "fxvt-113-a-global",
+    "default-global",
+    "utm_content set"
+  );
+
+  // Since we're not running MfM experiments in this release, we want to be sure that
+  // our URL params aren't claiming that we are.
+  Assert.ok(
+    !searchParams.has("entrypoint_variation"),
+    "entrypoint_variation should not be set"
+  );
+  Assert.ok(
+    !searchParams.has("entrypoint_experiment"),
+    "entrypoint_experiment should not be set"
+  );
+
   BrowserTestUtils.removeTab(tab);
 });
 

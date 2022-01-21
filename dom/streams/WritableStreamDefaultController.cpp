@@ -139,8 +139,9 @@ class WritableStartPromiseNativeHandler final : public PromiseNativeHandler {
       WritableStreamDefaultController* aController)
       : PromiseNativeHandler(), mController(aController) {}
 
-  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(
-      JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(JSContext* aCx,
+                                           JS::Handle<JS::Value> aValue,
+                                           ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#set-up-writable-stream-default-controller
     // Step 17. Upon fulfillment of startPromise,
     // Step 17.1. Assert: stream.[[state]] is "writable" or "erroring".
@@ -152,16 +153,13 @@ class WritableStartPromiseNativeHandler final : public PromiseNativeHandler {
     mController->SetStarted(true);
     // Step 17.3 Perform
     // ! WritableStreamDefaultControllerAdvanceQueueIfNeeded(controller).
-    IgnoredErrorResult rv;
     WritableStreamDefaultControllerAdvanceQueueIfNeeded(
-        aCx, MOZ_KnownLive(mController), rv);
-    if (rv.MaybeSetPendingException(aCx)) {
-      return;
-    }
+        aCx, MOZ_KnownLive(mController), aRv);
   }
 
-  MOZ_CAN_RUN_SCRIPT void RejectedCallback(
-      JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  MOZ_CAN_RUN_SCRIPT void RejectedCallback(JSContext* aCx,
+                                           JS::Handle<JS::Value> aValue,
+                                           ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#set-up-writable-stream-default-controller
     RefPtr<WritableStream> stream = mController->Stream();
     // Step 18. Upon rejection of startPromise with reason r,
@@ -171,11 +169,7 @@ class WritableStartPromiseNativeHandler final : public PromiseNativeHandler {
     // Step 18.2. Set controller.[[started]] to true.
     mController->SetStarted(true);
     // Step 18.3. Perform ! WritableStreamDealWithRejection(stream, r).
-    IgnoredErrorResult rv;
-    stream->DealWithRejection(aCx, aValue, rv);
-    if (rv.MaybeSetPendingException(aCx)) {
-      return;
-    }
+    stream->DealWithRejection(aCx, aValue, aRv);
   }
 };
 
@@ -326,7 +320,8 @@ class SinkCloseNativePromiseHandler final : public PromiseNativeHandler {
       WritableStreamDefaultController* aController)
       : PromiseNativeHandler(), mController(aController) {}
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#writable-stream-default-controller-process-close
     RefPtr<WritableStream> stream = mController->Stream();
     // Step 7. Upon fulfillment of sinkClosePromise,
@@ -334,16 +329,16 @@ class SinkCloseNativePromiseHandler final : public PromiseNativeHandler {
     stream->FinishInFlightClose();
   }
 
-  MOZ_CAN_RUN_SCRIPT void RejectedCallback(
-      JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  MOZ_CAN_RUN_SCRIPT void RejectedCallback(JSContext* aCx,
+                                           JS::Handle<JS::Value> aValue,
+                                           ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#writable-stream-default-controller-process-close
     RefPtr<WritableStream> stream = mController->Stream();
     // Step 8. Upon rejection of sinkClosePromise with reason reason,
     // Step 8.1. Perform ! WritableStreamFinishInFlightCloseWithError(stream,
     // reason).
-    IgnoredErrorResult rv;
-    stream->FinishInFlightCloseWithError(aCx, aValue, rv);
-    NS_WARNING_ASSERTION(!rv.Failed(), "FinishInFlightCloseWithError failed");
+
+    stream->FinishInFlightCloseWithError(aCx, aValue, aRv);
   }
 
  private:
@@ -385,6 +380,10 @@ MOZ_CAN_RUN_SCRIPT static void WritableStreamDefaultControllerProcessClose(
                      : Promise::CreateResolvedWithUndefined(
                            aController->GetParentObject(), aRv);
 
+  if (aRv.Failed()) {
+    return;
+  }
+
   // Step 6. Perform !
   // WritableStreamDefaultControllerClearAlgorithms(controller).
   aController->ClearAlgorithms();
@@ -410,8 +409,9 @@ class SinkWriteNativePromiseHandler final : public PromiseNativeHandler {
       WritableStreamDefaultController* aController)
       : PromiseNativeHandler(), mController(aController) {}
 
-  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(
-      JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(JSContext* aCx,
+                                           JS::Handle<JS::Value> aValue,
+                                           ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#writable-stream-default-controller-process-write
     RefPtr<WritableStream> stream = mController->Stream();
 
@@ -438,25 +438,21 @@ class SinkWriteNativePromiseHandler final : public PromiseNativeHandler {
       bool backpressure = mController->GetBackpressure();
       // Step 4.5.2. Perform ! WritableStreamUpdateBackpressure(stream,
       // backpressure).
-      IgnoredErrorResult rv;
-      stream->UpdateBackpressure(backpressure, rv);
-      // XXX Not Sure How To Handle Errors Inside Native Callbacks,
-      NS_WARNING_ASSERTION(!rv.Failed(), "UpdateBackpressure failed");
+      stream->UpdateBackpressure(backpressure, aRv);
+      if (aRv.Failed()) {
+        return;
+      }
     }
 
     // Step 4.6. Perform !
     // WritableStreamDefaultControllerAdvanceQueueIfNeeded(controller).
-    IgnoredErrorResult rv;
     WritableStreamDefaultControllerAdvanceQueueIfNeeded(
-        aCx, MOZ_KnownLive(mController), rv);
-    // XXX Not Sure How To Handle Errors Inside Native Callbacks,
-    NS_WARNING_ASSERTION(
-        !rv.Failed(),
-        "WritableStreamDefaultControllerAdvanceQueueIfNeeded failed");
+        aCx, MOZ_KnownLive(mController), aRv);
   }
 
-  MOZ_CAN_RUN_SCRIPT void RejectedCallback(
-      JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  MOZ_CAN_RUN_SCRIPT void RejectedCallback(JSContext* aCx,
+                                           JS::Handle<JS::Value> aValue,
+                                           ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#writable-stream-default-controller-process-write
     RefPtr<WritableStream> stream = mController->Stream();
 
@@ -468,10 +464,8 @@ class SinkWriteNativePromiseHandler final : public PromiseNativeHandler {
 
     // Step 5.2. Perform ! WritableStreamFinishInFlightWriteWithError(stream,
     // reason)
-    IgnoredErrorResult rv;
-    stream->FinishInFlightWriteWithError(aCx, aValue, rv);
-    // XXX Not Sure How To Handle Errors Inside Native Callbacks,
-    NS_WARNING_ASSERTION(!rv.Failed(), "FinishInFlightWriteWithError failed");
+
+    stream->FinishInFlightWriteWithError(aCx, aValue, aRv);
   }
 };
 

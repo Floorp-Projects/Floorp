@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import errno
 
 import mozbuild.settings  # noqa need @SettingsProvider hook to execute
 import mozpack.path as mozpath
@@ -343,7 +344,11 @@ def clobber(command_context, what, full=False):
     "mach command.",
 )
 def show_log(command_context, log_file=None):
-    """Show mach logs."""
+    """Show mach logs
+    If we're in a terminal context, the log is piped to 'less'
+    for more convenient viewing.
+    (https://man7.org/linux/man-pages/man1/less.1.html)
+    """
     if not log_file:
         path = command_context._get_state_filename("last_log.json")
         log_file = open(path, "rb")
@@ -351,22 +356,75 @@ def show_log(command_context, log_file=None):
     if os.isatty(sys.stdout.fileno()):
         env = dict(os.environ)
         if "LESS" not in env:
-            # Sensible default flags if none have been set in the user
-            # environment.
-            env[b"LESS"] = b"FRX"
-        less = subprocess.Popen(["less"], stdin=subprocess.PIPE, env=env)
-        # Various objects already have a reference to sys.stdout, so we
-        # can't just change it, we need to change the file descriptor under
-        # it to redirect to less's input.
-        # First keep a copy of the sys.stdout file descriptor.
-        output_fd = os.dup(sys.stdout.fileno())
-        os.dup2(less.stdin.fileno(), sys.stdout.fileno())
+            # Sensible default flags if none have been set in the user environment.
+            env["LESS"] = "FRX"
+        less = subprocess.Popen(
+            ["less"], stdin=subprocess.PIPE, env=env, encoding="UTF-8"
+        )
 
-    startTime = 0
+        try:
+            # Create a new logger handler with the stream being the stdin of our 'less'
+            # process so that we can pipe the logger output into 'less'
+            less_handler = logging.StreamHandler(stream=less.stdin)
+            less_handler.setFormatter(
+                command_context.log_manager.terminal_handler.formatter
+            )
+            less_handler.setLevel(command_context.log_manager.terminal_handler.level)
+
+            # replace the existing terminal handler with the new one for 'less' while
+            # still keeping the original one to set back later
+            original_handler = command_context.log_manager.replace_terminal_handler(
+                less_handler
+            )
+
+            # Save this value so we can set it back to the original value later
+            original_logging_raise_exceptions = logging.raiseExceptions
+
+            # We need to explicitly disable raising exceptions inside logging so
+            # that we can catch them here ourselves to ignore the ones we want
+            logging.raiseExceptions = False
+
+            # Parses the log file line by line and streams
+            # (to less.stdin) the relevant records we want
+            handle_log_file(command_context, log_file)
+
+            # At this point we've piped the entire log file to
+            # 'less', so we can close the input stream
+            less.stdin.close()
+
+            # Wait for the user to manually terminate `less`
+            less.wait()
+        except OSError as os_error:
+            # (POSIX)   errno.EPIPE: BrokenPipeError: [Errno 32] Broken pipe
+            # (Windows) errno.EINVAL: OSError:        [Errno 22] Invalid argument
+            if os_error.errno == errno.EPIPE or os_error.errno == errno.EINVAL:
+                # If the user manually terminates 'less' before the entire log file
+                # is piped (without scrolling close enough to the bottom) we will get
+                # one of these errors (depends on the OS) because the logger will still
+                # attempt to stream to the now invalid less.stdin. To prevent a bunch
+                # of errors being shown after a user terminates 'less', we just catch
+                # the first of those exceptions here, and stop parsing the log file.
+                pass
+            else:
+                raise
+        except Exception:
+            raise
+        finally:
+            # Ensure these values are changed back to the originals, regardless of outcome
+            command_context.log_manager.replace_terminal_handler(original_handler)
+            logging.raiseExceptions = original_logging_raise_exceptions
+    else:
+        # Not in a terminal context, so just handle the log file with the
+        # default stream without piping it to a pager (less)
+        handle_log_file(command_context, log_file)
+
+
+def handle_log_file(command_context, log_file):
+    start_time = 0
     for line in log_file:
         created, action, params = json.loads(line)
-        if not startTime:
-            startTime = created
+        if not start_time:
+            start_time = created
             command_context.log_manager.terminal_handler.formatter.start_time = created
         if "line" in params:
             record = logging.makeLogRecord(
@@ -380,17 +438,6 @@ def show_log(command_context, log_file=None):
                 }
             )
             command_context._logger.handle(record)
-
-    if command_context.log_manager.terminal:
-        # Close less's input so that it knows that we're done sending data.
-        less.stdin.close()
-        # Since the less's input file descriptor is now also the stdout
-        # file descriptor, we still actually have a non-closed system file
-        # descriptor for less's input. Replacing sys.stdout's file
-        # descriptor with what it was before we replaced it will properly
-        # close less's input.
-        os.dup2(output_fd, sys.stdout.fileno())
-        less.wait()
 
 
 # Provide commands for inspecting warnings.

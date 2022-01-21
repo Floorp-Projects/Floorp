@@ -676,4 +676,20 @@ bool ClientSource::CalledRegisterForServiceWorkerScope(
   return mRegisteringScopeList.Contains(aScope);
 }
 
+nsIPrincipal* ClientSource::GetPrincipal() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // We only create the principal if necessary because creating a principal is
+  // expensive.
+  if (!mPrincipal) {
+    auto principalOrErr = Info().GetPrincipal();
+    nsCOMPtr<nsIPrincipal> prin =
+        principalOrErr.isOk() ? principalOrErr.unwrap() : nullptr;
+
+    mPrincipal.emplace(prin);
+  }
+
+  return mPrincipal.ref();
+}
+
 }  // namespace mozilla::dom

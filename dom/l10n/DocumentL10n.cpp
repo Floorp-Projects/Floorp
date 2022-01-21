@@ -69,12 +69,14 @@ class L10nReadyHandler final : public PromiseNativeHandler {
   explicit L10nReadyHandler(Promise* aPromise, DocumentL10n* aDocumentL10n)
       : mPromise(aPromise), mDocumentL10n(aDocumentL10n) {}
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     mDocumentL10n->InitialTranslationCompleted(true);
     mPromise->MaybeResolveWithUndefined();
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     mDocumentL10n->InitialTranslationCompleted(false);
 
     nsTArray<nsCString> errors{

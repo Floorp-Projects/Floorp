@@ -420,8 +420,9 @@ class PullIfNeededNativePromiseHandler final : public PromiseNativeHandler {
       ReadableStreamDefaultController* aController)
       : PromiseNativeHandler(), mController(aController) {}
 
-  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(
-      JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(JSContext* aCx,
+                                           JS::Handle<JS::Value> aValue,
+                                           ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
     // Step 7.1
     mController->SetPulling(false);
@@ -433,18 +434,15 @@ class PullIfNeededNativePromiseHandler final : public PromiseNativeHandler {
       // Step 7.2.2
       ErrorResult rv;
       ReadableStreamDefaultControllerCallPullIfNeeded(
-          aCx, MOZ_KnownLive(mController), rv);
-
-      (void)rv.MaybeSetPendingException(aCx);
+          aCx, MOZ_KnownLive(mController), aRv);
     }
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
     // Step 8.1
-    ErrorResult rv;
-    ReadableStreamDefaultControllerError(aCx, mController, aValue, rv);
-    (void)rv.MaybeSetPendingException(aCx, "PullIfNeeded Rejected Error");
+    ReadableStreamDefaultControllerError(aCx, mController, aValue, aRv);
   }
 };
 
@@ -513,7 +511,8 @@ class StartPromiseNativeHandler final : public PromiseNativeHandler {
       : PromiseNativeHandler(), mController(aController) {}
 
   MOZ_CAN_RUN_SCRIPT
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     MOZ_ASSERT(mController);
 
     // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller
@@ -528,18 +527,16 @@ class StartPromiseNativeHandler final : public PromiseNativeHandler {
     mController->SetPullAgain(false);
 
     // Step 11.4:
-    ErrorResult rv;
+
     RefPtr<ReadableStreamDefaultController> stackController = mController;
-    ReadableStreamDefaultControllerCallPullIfNeeded(aCx, stackController, rv);
-    (void)rv.MaybeSetPendingException(aCx, "StartPromise Resolved Error");
+    ReadableStreamDefaultControllerCallPullIfNeeded(aCx, stackController, aRv);
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller
     // Step 12.1
-    ErrorResult rv;
-    ReadableStreamDefaultControllerError(aCx, mController, aValue, rv);
-    (void)rv.MaybeSetPendingException(aCx, "StartPromise Rejected Error");
+    ReadableStreamDefaultControllerError(aCx, mController, aValue, aRv);
   }
 };
 
@@ -666,6 +663,9 @@ already_AddRefed<Promise> ReadableStreamDefaultController::CancelSteps(
   RefPtr<Promise> result =
       callback ? callback->CancelCallback(aCx, errorOption, aRv)
                : Promise::CreateResolvedWithUndefined(GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   // Step 3.
   ReadableStreamDefaultControllerClearAlgorithms(this);
