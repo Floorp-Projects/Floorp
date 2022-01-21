@@ -2884,6 +2884,60 @@ pub extern "C" fn Servo_PageRule_SetStyle(
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_PageRule_GetSelectorText(
+    rule: &RawServoPageRule,
+    result: &mut nsACString,
+) {
+    read_locked_arc(rule, |rule: &PageRule| {
+        rule.selectors.to_css(&mut CssWriter::new(result)).unwrap();
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_PageRule_SetSelectorText(
+    sheet: &RawServoStyleSheetContents,
+    rule: &RawServoPageRule,
+    text: &nsACString,
+) -> bool {
+
+    let value_str = unsafe { text.as_str_unchecked() };
+
+    write_locked_arc(rule, |rule: &mut PageRule| {
+        use style::stylesheets::PageSelectors;
+
+        let mut parser_input = ParserInput::new(&value_str);
+        let mut parser = Parser::new(&mut parser_input);
+
+        // Ensure that a blank input results in empty page selectors
+        if parser.is_exhausted() {
+            rule.selectors = PageSelectors::default();
+            return true;
+        }
+
+        let contents = StylesheetContents::as_arc(&sheet);
+        let url_data = contents.url_data.read();
+        let context = ParserContext::new(
+            Origin::Author,
+            &url_data,
+            None,
+            ParsingMode::DEFAULT,
+            QuirksMode::NoQuirks,
+            None,
+            None,
+        );
+
+        match parser.parse_entirely(|i| PageSelectors::parse(&context, i)) {
+            Ok(selectors) => {
+                rule.selectors = selectors;
+                true
+            },
+            Err(_) => false,
+        }
+    })
+}
+
+
+#[no_mangle]
 pub extern "C" fn Servo_SupportsRule_GetConditionText(
     rule: &RawServoSupportsRule,
     result: &mut nsACString,
@@ -3765,9 +3819,9 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
                 Origin::User => CascadeLevel::UserNormal,
                 Origin::Author => CascadeLevel::same_tree_author_normal(),
             };
-            for &(ref rule, _layer_id) in data.pages.iter() {
+            for &(ref rule, _layer_id) in data.pages.global.iter() {
                 extra_declarations.push(ApplicableDeclarationBlock::from_declarations(
-                    rule.read_with(level.guard(&guards)).block.clone(),
+                    rule.0.read_with(level.guard(&guards)).block.clone(),
                     level,
                     LayerOrder::root(),
                 ));

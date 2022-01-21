@@ -169,6 +169,25 @@ void CSSPageRule::GetCssText(nsACString& aCssText) const {
 
 /* CSSPageRule implementation */
 
+void CSSPageRule::GetSelectorText(nsACString& aSelectorText) const {
+  Servo_PageRule_GetSelectorText(mRawRule.get(), &aSelectorText);
+}
+
+void CSSPageRule::SetSelectorText(const nsACString& aSelectorText) {
+  if (IsReadOnly()) {
+    return;
+  }
+
+  if (StyleSheet* const sheet = GetStyleSheet()) {
+    sheet->WillDirty();
+    const RawServoStyleSheetContents* const contents = sheet->RawContents();
+    if (Servo_PageRule_SetSelectorText(contents, mRawRule.get(),
+                                       &aSelectorText)) {
+      sheet->RuleChanged(this, StyleRuleChangeKind::Generic);
+    }
+  }
+}
+
 nsICSSDeclaration* CSSPageRule::Style() { return &mDecls; }
 
 JSObject* CSSPageRule::WrapObject(JSContext* aCx,
