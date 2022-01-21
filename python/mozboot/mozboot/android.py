@@ -539,9 +539,7 @@ def ensure_android_avd(
             f"Could not find config file at {config_file_name}, something went wrong"
         )
     if prewarm_avd:
-        run_prewarm_avd(
-            adb_tool, emulator_tool, env, avd_name, avd_manifest, no_interactive
-        )
+        run_prewarm_avd(adb_tool, emulator_tool, env, avd_name, avd_manifest)
     # When running in headless mode, the emulator does not run the cleanup
     # step, and thus doesn't delete lock files. On some platforms, left-over
     # lock files can cause the emulator to not start, so we remove them here.
@@ -561,7 +559,6 @@ def run_prewarm_avd(
     env,
     avd_name,
     avd_manifest,
-    no_interactive=False,
 ):
     """
     Ensures the emulator is fully booted to save time on future iterations.
