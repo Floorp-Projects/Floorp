@@ -579,6 +579,10 @@ pref("browser.privatebrowsing.vpnpromourl", "https://vpn.mozilla.org/?utm_source
 // Whether the user is opted-in to privacy segmentation.
 pref("browser.privacySegmentation.enabled", false);
 
+// Use dark theme variant for PBM windows. This is only supported if the theme
+// sets darkTheme data.
+pref("browser.theme.dark-private-windows", false);
+
 pref("browser.sessionhistory.max_entries", 50);
 
 // Built-in default permissions.
