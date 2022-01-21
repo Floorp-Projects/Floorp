@@ -23,6 +23,11 @@ ChromeUtils.defineModuleGetter(
   "ThemeVariableMap",
   "resource:///modules/ThemeVariableMap.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 const DEFAULT_THEME_ID = "default-theme@mozilla.org";
 
@@ -234,11 +239,37 @@ LightweightThemeConsumer.prototype = {
   _update(themeData) {
     this._lastData = themeData;
 
-    const useDarkTheme =
-      themeData.darkTheme &&
-      this.darkThemeMediaQuery?.matches &&
-      (themeData.darkTheme.id != DEFAULT_THEME_ID ||
-        !DEFAULT_THEME_RESPECTS_SYSTEM_COLOR_SCHEME);
+    let updateGlobalThemeData = true;
+    let useDarkTheme = (() => {
+      if (!themeData.darkTheme) {
+        return false;
+      }
+      if (this.darkThemeMediaQuery?.matches) {
+        return (
+          themeData.darkTheme.id != DEFAULT_THEME_ID ||
+          !DEFAULT_THEME_RESPECTS_SYSTEM_COLOR_SCHEME
+        );
+      }
+
+      // If enabled, apply the dark theme variant to private browsing windows.
+      if (
+        !Services.prefs.getBoolPref(
+          "browser.theme.dark-private-windows",
+          false
+        ) ||
+        !PrivateBrowsingUtils.isWindowPrivate(this._win) ||
+        PrivateBrowsingUtils.permanentPrivateBrowsing
+      ) {
+        return false;
+      }
+      // When applying the dark theme for a PBM window we need to skip calling
+      // _determineToolbarAndContentTheme, because it applies the color scheme
+      // globally for all windows. Skipping this method also means we don't
+      // switch the content theme to dark.
+      updateGlobalThemeData = false;
+      return true;
+    })();
+
     let theme = useDarkTheme ? themeData.darkTheme : themeData.theme;
     if (!theme) {
       theme = { id: DEFAULT_THEME_ID };
@@ -266,7 +297,9 @@ LightweightThemeConsumer.prototype = {
     _setProperties(root, active, theme);
 
     if (theme.id != DEFAULT_THEME_ID || useDarkTheme) {
-      _determineToolbarAndContentTheme(this._doc, theme._processedColors);
+      if (updateGlobalThemeData) {
+        _determineToolbarAndContentTheme(this._doc, theme._processedColors);
+      }
       root.setAttribute("lwtheme", "true");
     } else {
       _determineToolbarAndContentTheme(this._doc, null);

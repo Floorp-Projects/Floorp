@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 import requests
+from typing import Optional, Union
 from pathlib import Path
 from tqdm import tqdm
 
@@ -37,15 +38,9 @@ MACOS_ARM64_ANDROID_AVD = "linux64-android-avd-arm64-repack"
 WINDOWS_X86_64_ANDROID_AVD = "linux64-android-avd-x86_64-repack"
 WINDOWS_ARM_ANDROID_AVD = "linux64-android-avd-arm-repack"
 
-AVD_MANIFEST_X86_64 = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "android-avds/x86_64.json")
-)
-AVD_MANIFEST_ARM = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "android-avds/arm.json")
-)
-AVD_MANIFEST_ARM64 = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "android-avds/arm64.json")
-)
+AVD_MANIFEST_X86_64 = Path(__file__).resolve().parent / "android-avds/x86_64.json"
+AVD_MANIFEST_ARM = Path(__file__).resolve().parent / "android-avds/arm.json"
+AVD_MANIFEST_ARM64 = Path(__file__).resolve().parent / "android-avds/arm64.json"
 
 JAVA_VERSION_MAJOR = "17"
 JAVA_VERSION_MINOR = "0.1"
@@ -109,21 +104,20 @@ class GetNdkVersionError(Exception):
     pass
 
 
-def install_bundletool(url, path):
+def install_bundletool(url, path: Path):
     """
     Fetch bundletool to the desired directory.
     """
-    old_path = os.getcwd()
     try:
-        os.chdir(path)
         subprocess.check_call(
-            ["wget", "--continue", url, "--output-document", "bundletool.jar"]
+            ["wget", "--continue", url, "--output-document", "bundletool.jar"],
+            cwd=str(path),
         )
     finally:
-        os.chdir(old_path)
+        pass
 
 
-def install_mobile_android_sdk_or_ndk(url, path):
+def install_mobile_android_sdk_or_ndk(url, path: Path):
     """
     Fetch an Android SDK or NDK from |url| and unpack it into the given |path|.
 
@@ -136,79 +130,81 @@ def install_mobile_android_sdk_or_ndk(url, path):
     not require a long re-download than to wipe the cache prematurely.
     """
 
-    old_path = os.getcwd()
+    download_path = path / "mozboot"
     try:
-        download_path = os.path.join(path, "mozboot")
-        try:
-            os.makedirs(download_path)
-        except OSError as e:
-            if e.errno == errno.EEXIST and os.path.isdir(download_path):
-                pass
-            else:
-                raise
-
-        os.chdir(download_path)
-
-        file_name = url.split("/")[-1]
-        abspath = os.path.join(download_path, file_name)
-
-        file = Path(abspath)
-
-        with requests.Session() as session:
-            request = session.head(url)
-            remote_file_size = int(request.headers["content-length"])
-
-            if file.is_file():
-                local_file_size = file.stat().st_size
-
-                if local_file_size == remote_file_size:
-                    print(f"{file} already downloaded. Skipping download...")
-                else:
-                    print(f"Partial download detected. Resuming download of {file}...")
-                    download(file_name, session, url, remote_file_size, local_file_size)
-            else:
-                print(f"Downloading {file}...")
-                download(file_name, session, url, remote_file_size)
-
-        os.chdir(path)
-
-        if file_name.endswith(".tar.gz") or file_name.endswith(".tgz"):
-            cmd = ["tar", "zxf", abspath]
-        elif file_name.endswith(".tar.bz2"):
-            cmd = ["tar", "jxf", abspath]
-        elif file_name.endswith(".zip"):
-            cmd = ["unzip", "-q", abspath]
-        elif file_name.endswith(".bin"):
-            # Execute the .bin file, which unpacks the content.
-            mode = os.stat(path).st_mode
-            os.chmod(abspath, mode | stat.S_IXUSR)
-            cmd = [abspath]
+        download_path.mkdir(parents=True)
+    except OSError as e:
+        if e.errno == errno.EEXIST and download_path.is_dir():
+            pass
         else:
-            raise NotImplementedError(f"Don't know how to unpack file: {file_name}")
+            raise
 
-        print(f"Unpacking {file}...")
+    file_name = url.split("/")[-1]
+    download_file_path = download_path / file_name
 
-        with open(os.devnull, "w") as stdout:
-            # These unpack commands produce a ton of output; ignore it.  The
-            # .bin files are 7z archives; there's no command line flag to quiet
-            # output, so we use this hammer.
-            subprocess.check_call(cmd, stdout=stdout)
+    with requests.Session() as session:
+        request = session.head(url)
+        remote_file_size = int(request.headers["content-length"])
 
-        print(f"Unpacking {file}... DONE")
-        # Now delete the archive
-        os.unlink(abspath)
-    finally:
-        os.chdir(old_path)
+        if download_file_path.is_file():
+            local_file_size = download_file_path.stat().st_size
+
+            if local_file_size == remote_file_size:
+                print(f"{download_file_path} already downloaded. Skipping download...")
+            else:
+                print(
+                    f"Partial download detected. Resuming download of {download_file_path}..."
+                )
+                download(
+                    download_file_path,
+                    session,
+                    url,
+                    remote_file_size,
+                    local_file_size,
+                )
+        else:
+            print(f"Downloading {download_file_path}...")
+            download(download_file_path, session, url, remote_file_size)
+
+    if file_name.endswith(".tar.gz") or file_name.endswith(".tgz"):
+        cmd = ["tar", "zxf", str(download_file_path)]
+    elif file_name.endswith(".tar.bz2"):
+        cmd = ["tar", "jxf", str(download_file_path)]
+    elif file_name.endswith(".zip"):
+        cmd = ["unzip", "-q", str(download_file_path)]
+    elif file_name.endswith(".bin"):
+        # Execute the .bin file, which unpacks the content.
+        mode = os.stat(path).st_mode
+        download_file_path.chmod(mode | stat.S_IXUSR)
+        cmd = [str(download_file_path)]
+    else:
+        raise NotImplementedError(f"Don't know how to unpack file: {file_name}")
+
+    print(f"Unpacking {download_file_path}...")
+
+    with open(os.devnull, "w") as stdout:
+        # These unpack commands produce a ton of output; ignore it.  The
+        # .bin files are 7z archives; there's no command line flag to quiet
+        # output, so we use this hammer.
+        subprocess.check_call(cmd, stdout=stdout, cwd=str(path))
+
+    print(f"Unpacking {download_file_path}... DONE")
+    # Now delete the archive
+    download_file_path.unlink()
 
 
 def download(
-    file_name, session, url, remote_file_size, resume_from_byte_pos: int = None
+    download_file_path: Path,
+    session,
+    url,
+    remote_file_size,
+    resume_from_byte_pos: int = None,
 ):
     """
     Handles both a fresh SDK/NDK download, as well as resuming a partial one
     """
     # "ab" will behave same as "wb" if file does not exist
-    with open(file_name, "ab") as file:
+    with open(download_file_path, "ab") as file:
         # 64 KB/s should be fine on even the slowest internet connections
         chunk_size = 1024 * 64
         # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range#directives
@@ -227,7 +223,7 @@ def download(
             unit="B",
             unit_scale=True,
             unit_divisor=1024,
-            desc=file_name,
+            desc=download_file_path.name,
             initial=resume_from_byte_pos if resume_from_byte_pos else 0,
         ) as progress_bar:
             for chunk in request.iter_content(chunk_size):
@@ -235,11 +231,12 @@ def download(
                 progress_bar.update(len(chunk))
 
 
-def get_ndk_version(ndk_path):
+def get_ndk_version(ndk_path: Union[str, Path]):
     """Given the path to the NDK, return the version as a 3-tuple of (major,
     minor, human).
     """
-    with open(os.path.join(ndk_path, "source.properties"), "r") as f:
+    ndk_path = Path(ndk_path)
+    with open(ndk_path / "source.properties", "r") as f:
         revision = [line for line in f if line.startswith("Pkg.Revision")]
         if not revision:
             raise GetNdkVersionError(
@@ -270,60 +267,47 @@ def get_ndk_version(ndk_path):
 
 
 def get_paths(os_name):
-    mozbuild_path = os.environ.get(
-        "MOZBUILD_STATE_PATH", os.path.expanduser(os.path.join("~", ".mozbuild"))
+    mozbuild_path = Path(
+        os.environ.get("MOZBUILD_STATE_PATH", Path("~/.mozbuild").expanduser())
     )
-    sdk_path = os.environ.get(
-        "ANDROID_SDK_HOME",
-        os.path.join(mozbuild_path, "android-sdk-{0}".format(os_name)),
+    sdk_path = Path(
+        os.environ.get("ANDROID_SDK_HOME", mozbuild_path / f"android-sdk-{os_name}"),
     )
-    ndk_path = os.environ.get(
-        "ANDROID_NDK_HOME",
-        os.path.join(mozbuild_path, "android-ndk-{0}".format(NDK_VERSION)),
+    ndk_path = Path(
+        os.environ.get(
+            "ANDROID_NDK_HOME", mozbuild_path / f"android-ndk-{NDK_VERSION}"
+        ),
     )
-    avd_home_path = os.environ.get(
-        "ANDROID_AVD_HOME", os.path.join(mozbuild_path, "android-device", "avd")
+    avd_home_path = Path(
+        os.environ.get("ANDROID_AVD_HOME", mozbuild_path / "android-device" / "avd")
     )
-    emulator_path = os.environ.get(
-        "ANDROID_EMULATOR_HOME", os.path.join(mozbuild_path, "android-device")
-    )
-    return (mozbuild_path, sdk_path, ndk_path, avd_home_path, emulator_path)
+    return mozbuild_path, sdk_path, ndk_path, avd_home_path
 
 
-def sdkmanager_tool(sdk_path):
+def sdkmanager_tool(sdk_path: Path):
     # sys.platform is win32 even if Python/Win64.
     sdkmanager = "sdkmanager.bat" if sys.platform.startswith("win") else "sdkmanager"
-    return os.path.join(
-        sdk_path, "cmdline-tools", CMDLINE_TOOLS_VERSION_STRING, "bin", sdkmanager
+    return (
+        sdk_path / "cmdline-tools" / CMDLINE_TOOLS_VERSION_STRING / "bin" / sdkmanager
     )
 
 
-def avdmanager_tool(sdk_path):
+def avdmanager_tool(sdk_path: Path):
     # sys.platform is win32 even if Python/Win64.
     sdkmanager = "avdmanager.bat" if sys.platform.startswith("win") else "avdmanager"
-    return os.path.join(
-        sdk_path, "cmdline-tools", CMDLINE_TOOLS_VERSION_STRING, "bin", sdkmanager
+    return (
+        sdk_path / "cmdline-tools" / CMDLINE_TOOLS_VERSION_STRING / "bin" / sdkmanager
     )
 
 
-def adb_tool(sdk_path):
+def adb_tool(sdk_path: Path):
     adb = "adb.bat" if sys.platform.startswith("win") else "adb"
-    return os.path.join(sdk_path, "platform-tools", adb)
+    return sdk_path / "platform-tools" / adb
 
 
-def emulator_tool(sdk_path):
+def emulator_tool(sdk_path: Path):
     emulator = "emulator.bat" if sys.platform.startswith("win") else "emulator"
-    return os.path.join(sdk_path, "emulator", emulator)
-
-
-def ensure_dir(dir):
-    """Ensures the given directory exists"""
-    if dir and not os.path.exists(dir):
-        try:
-            os.makedirs(dir)
-        except OSError as error:
-            if error.errno != errno.EEXIST:
-                raise
+    return sdk_path / "emulator" / emulator
 
 
 def ensure_android(
@@ -333,7 +317,7 @@ def ensure_android(
     ndk_only=False,
     system_images_only=False,
     emulator_only=False,
-    avd_manifest_path=None,
+    avd_manifest_path: Optional[Path] = None,
     prewarm_avd=False,
     no_interactive=False,
     list_packages=False,
@@ -350,7 +334,7 @@ def ensure_android(
     # save them a lengthy download), or they may have already
     # completed the download. We unpack to
     # ~/.mozbuild/{android-sdk-$OS_NAME, android-ndk-$VER}.
-    mozbuild_path, sdk_path, ndk_path, avd_home_path, emulator_path = get_paths(os_name)
+    mozbuild_path, sdk_path, ndk_path, avd_home_path = get_paths(os_name)
 
     if os_name == "macosx":
         os_tag = "mac"
@@ -370,7 +354,6 @@ def ensure_android(
     ensure_android_sdk_and_ndk(
         mozbuild_path,
         os_name,
-        os_arch,
         sdk_path=sdk_path,
         sdk_url=sdk_url,
         ndk_path=ndk_path,
@@ -415,7 +398,6 @@ def ensure_android(
         emulator_tool=emulator_tool(sdk_path),
         avd_home_path=avd_home_path,
         sdk_path=sdk_path,
-        emulator_path=emulator_path,
         no_interactive=no_interactive,
         avd_manifest=avd_manifest,
         prewarm_avd=prewarm_avd,
@@ -423,12 +405,11 @@ def ensure_android(
 
 
 def ensure_android_sdk_and_ndk(
-    mozbuild_path,
+    mozbuild_path: Path,
     os_name,
-    os_arch,
-    sdk_path,
+    sdk_path: Path,
     sdk_url,
-    ndk_path,
+    ndk_path: Path,
     ndk_url,
     bundletool_url,
     artifact_mode,
@@ -447,7 +428,7 @@ def ensure_android_sdk_and_ndk(
     # Check for Android NDK only if we are not in artifact mode.
     if not artifact_mode and not emulator_only:
         install_ndk = True
-        if os.path.isdir(ndk_path):
+        if ndk_path.is_dir():
             try:
                 _, _, human = get_ndk_version(ndk_path)
                 if human == NDK_VERSION:
@@ -466,24 +447,21 @@ def ensure_android_sdk_and_ndk(
     # |sdkmanager| tool to install additional parts of the Android
     # toolchain.  If we overwrite, we lose whatever Android packages
     # the user may have already installed.
-    if os.path.isfile(sdkmanager_tool(sdk_path)):
+    if sdkmanager_tool(sdk_path).is_file():
         print(ANDROID_SDK_EXISTS % sdk_path)
-    elif os.path.isdir(sdk_path):
+    elif sdk_path.is_dir():
         raise NotImplementedError(ANDROID_SDK_TOO_OLD % sdk_path)
     else:
         # The SDK archive used to include a top-level
         # android-sdk-$OS_NAME directory; it no longer does so.  We
         # preserve the old convention to smooth detecting existing SDK
         # installations.
-        cmdline_tools_path = os.path.join(
-            mozbuild_path, "android-sdk-{0}".format(os_name), "cmdline-tools"
-        )
+        cmdline_tools_path = mozbuild_path / f"android-sdk-{os_name}" / "cmdline-tools"
         install_mobile_android_sdk_or_ndk(sdk_url, cmdline_tools_path)
         # The tools package *really* wants to be in
         # <sdk>/cmdline-tools/$CMDLINE_TOOLS_VERSION_STRING
-        os.rename(
-            os.path.join(cmdline_tools_path, "cmdline-tools"),
-            os.path.join(cmdline_tools_path, CMDLINE_TOOLS_VERSION_STRING),
+        (cmdline_tools_path / "cmdline-tools").rename(
+            cmdline_tools_path / CMDLINE_TOOLS_VERSION_STRING
         )
         install_bundletool(bundletool_url, mozbuild_path)
 
@@ -497,12 +475,11 @@ def get_packages_to_install(packages_file_content, avd_manifest):
 
 
 def ensure_android_avd(
-    avdmanager_tool,
-    adb_tool,
-    emulator_tool,
-    avd_home_path,
-    sdk_path,
-    emulator_path,
+    avdmanager_tool: Path,
+    adb_tool: Path,
+    emulator_tool: Path,
+    avd_home_path: Path,
+    sdk_path: Path,
     no_interactive=False,
     avd_manifest=None,
     prewarm_avd=False,
@@ -514,13 +491,13 @@ def ensure_android_avd(
     if avd_manifest is None:
         return
 
-    ensure_dir(avd_home_path)
+    avd_home_path.mkdir(parents=True, exist_ok=True)
     # The AVD needs this folder to boot, so make sure it exists here.
-    ensure_dir(os.path.join(sdk_path, "platforms"))
+    (sdk_path / "platforms").mkdir(parents=True, exist_ok=True)
 
     avd_name = avd_manifest["emulator_avd_name"]
     args = [
-        avdmanager_tool,
+        str(avdmanager_tool),
         "--verbose",
         "create",
         "avd",
@@ -538,7 +515,7 @@ def ensure_android_avd(
     # Flush outputs before running sdkmanager.
     sys.stdout.flush()
     env = os.environ.copy()
-    env["ANDROID_AVD_HOME"] = avd_home_path
+    env["ANDROID_AVD_HOME"] = str(avd_home_path)
     proc = subprocess.Popen(args, stdin=subprocess.PIPE, env=env)
     proc.communicate("no\n".encode("UTF-8"))
 
@@ -548,43 +525,45 @@ def ensure_android_avd(
         e = subprocess.CalledProcessError(retcode, cmd)
         raise e
 
-    avd_path = os.path.join(avd_home_path, avd_name + ".avd")
-    config_file_name = os.path.join(avd_path, "config.ini")
+    avd_path = avd_home_path / (str(avd_name) + ".avd")
+    config_file_name = avd_path / "config.ini"
 
-    print("Writing config at %s" % config_file_name)
+    print(f"Writing config at {config_file_name}")
 
-    if os.path.isfile(config_file_name):
+    if config_file_name.is_file():
         with open(config_file_name, "a") as config:
             for key, value in avd_manifest["emulator_extra_config"].items():
                 config.write("%s=%s\n" % (key, value))
     else:
         raise NotImplementedError(
-            "Could not find config file at %s, something went wrong" % config_file_name
+            f"Could not find config file at {config_file_name}, something went wrong"
         )
     if prewarm_avd:
-        run_prewarm_avd(
-            adb_tool, emulator_tool, env, avd_name, avd_manifest, no_interactive
-        )
+        run_prewarm_avd(adb_tool, emulator_tool, env, avd_name, avd_manifest)
     # When running in headless mode, the emulator does not run the cleanup
     # step, and thus doesn't delete lock files. On some platforms, left-over
     # lock files can cause the emulator to not start, so we remove them here.
     for lock_file in ["hardware-qemu.ini.lock", "multiinstance.lock"]:
-        lock_file_path = os.path.join(avd_path, lock_file)
+        lock_file_path = avd_path / lock_file
         try:
-            os.remove(lock_file_path)
-            print("Removed lock file %s" % lock_file_path)
+            lock_file_path.unlink()
+            print(f"Removed lock file {lock_file_path}")
         except OSError:
             # The lock file is not there, nothing to do.
             pass
 
 
 def run_prewarm_avd(
-    adb_tool, emulator_tool, env, avd_name, avd_manifest, no_interactive=False
+    adb_tool: Path,
+    emulator_tool: Path,
+    env,
+    avd_name,
+    avd_manifest,
 ):
     """
     Ensures the emulator is fully booted to save time on future iterations.
     """
-    args = [emulator_tool, "-avd", avd_name] + avd_manifest["emulator_extra_args"]
+    args = [str(emulator_tool), "-avd", avd_name] + avd_manifest["emulator_extra_args"]
 
     # Flush outputs before running emulator.
     sys.stdout.flush()
@@ -592,7 +571,7 @@ def run_prewarm_avd(
 
     booted = False
     for i in range(100):
-        boot_completed_cmd = [adb_tool, "shell", "getprop", "sys.boot_completed"]
+        boot_completed_cmd = [str(adb_tool), "shell", "getprop", "sys.boot_completed"]
         completed_proc = subprocess.Popen(
             boot_completed_cmd, env=env, stdout=subprocess.PIPE
         )
@@ -612,14 +591,14 @@ def run_prewarm_avd(
         raise NotImplementedError("Could not prewarm emulator")
 
     # Wait until the emulator completely shuts down
-    subprocess.Popen([adb_tool, "emu", "kill"], env=env).wait()
+    subprocess.Popen([str(adb_tool), "emu", "kill"], env=env).wait()
     proc.wait()
 
 
 def ensure_android_packages(
     os_name,
     os_arch,
-    sdkmanager_tool,
+    sdkmanager_tool: Path,
     emulator_only=False,
     system_images_only=False,
     avd_manifest=None,
@@ -640,16 +619,15 @@ def ensure_android_packages(
     else:
         packages_file_name = "android-packages.txt"
 
-    packages_file_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), packages_file_name)
-    )
+    packages_file_path = (Path(__file__).parent / packages_file_name).resolve()
+
     with open(packages_file_path) as packages_file:
         packages_file_content = packages_file.readlines()
 
     packages = get_packages_to_install(packages_file_content, avd_manifest)
     print(INSTALLING_ANDROID_PACKAGES % "\n".join(packages))
 
-    args = [sdkmanager_tool]
+    args = [str(sdkmanager_tool)]
     if os_name == "macosx" and os_arch == "arm64":
         # Support for Apple Silicon is still in nightly
         args.append("--channel=3")
@@ -658,7 +636,7 @@ def ensure_android_packages(
     # sdkmanager needs JAVA_HOME
     java_bin_path = ensure_java(os_name, os_arch)
     env = os.environ.copy()
-    env["JAVA_HOME"] = os.path.dirname(java_bin_path)
+    env["JAVA_HOME"] = str(java_bin_path.parent)
 
     if not no_interactive:
         subprocess.check_call(args, env=env)
@@ -679,11 +657,11 @@ def ensure_android_packages(
         e = subprocess.CalledProcessError(retcode, cmd)
         raise e
     if list_packages:
-        subprocess.check_call([sdkmanager_tool, "--list"])
+        subprocess.check_call([str(sdkmanager_tool), "--list"])
 
 
 def generate_mozconfig(os_name, artifact_mode=False):
-    moz_state_dir, sdk_path, ndk_path, avd_home_path, emulator_path = get_paths(os_name)
+    moz_state_dir, sdk_path, ndk_path, avd_home_path = get_paths(os_name)
 
     extra_lines = []
     if extra_lines:
@@ -808,6 +786,10 @@ def main(argv):
         ensure_java(os_name, os_arch)
         return 0
 
+    avd_manifest_path = (
+        Path(options.avd_manifest_path) if options.avd_manifest_path else None
+    )
+
     ensure_android(
         os_name,
         os_arch,
@@ -815,7 +797,7 @@ def main(argv):
         ndk_only=options.ndk_only,
         system_images_only=options.system_images_only,
         emulator_only=options.emulator_only,
-        avd_manifest_path=options.avd_manifest_path,
+        avd_manifest_path=avd_manifest_path,
         prewarm_avd=options.prewarm_avd,
         no_interactive=options.no_interactive,
         list_packages=options.list_packages,
@@ -833,7 +815,7 @@ def main(argv):
 
 
 def ensure_java(os_name, os_arch):
-    mozbuild_path, _, _, _, _ = get_paths(os_name)
+    mozbuild_path, _, _, _ = get_paths(os_name)
 
     if os_name == "macosx":
         os_tag = "mac"
@@ -853,7 +835,7 @@ def ensure_java(os_name, os_arch):
     if not java_path:
         raise NotImplementedError(f"Could not bootstrap java for {os_name}.")
 
-    if not os.path.exists(java_path):
+    if not java_path.exists():
         # e.g. https://github.com/adoptium/temurin17-binaries/releases/
         #      download/jdk-17.0.1%2B12/OpenJDK17U-jdk_x64_linux_hotspot_17.0.1_12.tar.gz
         java_url = (
@@ -868,29 +850,29 @@ def ensure_java(os_name, os_arch):
             arch=arch,
             ext=ext,
         )
-        install_mobile_android_sdk_or_ndk(java_url, os.path.join(mozbuild_path, "jdk"))
+        install_mobile_android_sdk_or_ndk(java_url, mozbuild_path / "jdk")
     return java_path
 
 
-def java_bin_path(os_name, toolchain_path):
+def java_bin_path(os_name, toolchain_path: Path):
     # Like jdk-17.0.1+12
     jdk_folder = "jdk-{major}.{minor}+{patch}".format(
         major=JAVA_VERSION_MAJOR, minor=JAVA_VERSION_MINOR, patch=JAVA_VERSION_PATCH
     )
 
-    java_path = os.path.join(toolchain_path, "jdk", jdk_folder)
+    java_path = toolchain_path / "jdk" / jdk_folder
 
     if os_name == "macosx":
-        return os.path.join(java_path, "Contents", "Home", "bin")
+        return java_path / "Contents" / "Home" / "bin"
     elif os_name == "linux":
-        return os.path.join(java_path, "bin")
+        return java_path / "bin"
     elif os_name == "windows":
-        return os.path.join(java_path, "bin")
+        return java_path / "bin"
     else:
         return None
 
 
-def locate_java_bin_path(host_kernel, toolchain_path):
+def locate_java_bin_path(host_kernel, toolchain_path: Union[str, Path]):
     if host_kernel == "WINNT":
         os_name = "windows"
     elif host_kernel == "Darwin":
@@ -900,13 +882,13 @@ def locate_java_bin_path(host_kernel, toolchain_path):
     else:
         # Default to Linux
         os_name = "linux"
-    path = java_bin_path(os_name, toolchain_path)
-    if not os.path.isdir(path):
+    path = java_bin_path(os_name, Path(toolchain_path))
+    if not path.is_dir():
         raise JavaLocationFailedException(
-            "Could not locate Java at {}, please run "
-            "./mach bootstrap --no-system-changes".format(path)
+            f"Could not locate Java at {path}, please run "
+            "./mach bootstrap --no-system-changes"
         )
-    return path
+    return str(path)
 
 
 class JavaLocationFailedException(Exception):

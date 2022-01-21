@@ -36,7 +36,7 @@
           "files": {
             "type": "array",
             "optional": true,
-            "description": "The path of the JS or CSS files to inject, relative to the extension's root directory. Exactly one of <code>files</code> and <code>func</code> must be specified.",
+            "description": "The path of the JS files to inject, relative to the extension's root directory. Exactly one of <code>files</code> and <code>func</code> must be specified.",
             "minItems": 1,
             "items": { "type": "string" }
           },
@@ -57,13 +57,24 @@
         "description": "Result of a script injection.",
         "properties": {
           "frameId": {
-            "type": "number",
+            "type": "integer",
             "description": "The frame ID associated with the injection."
           },
           "result": {
             "type": "any",
             "optional": true,
             "description": "The result of the script execution."
+          },
+          "error": {
+            "type": "object",
+            "optional": true,
+            "description": "When the injection has failed, the error is exposed to the caller with this property.",
+            "properties": {
+              "message": {
+                "type": "string",
+                "description": "A message explaining why the injection has failed."
+              }
+            }
           }
         }
       },
@@ -77,9 +88,43 @@
             "description": "The IDs of specific frames to inject into.",
             "items": { "type": "number" }
           },
+          "allFrames": {
+            "type": "boolean",
+            "optional": true,
+            "description": "Whether the script should inject into all frames within the tab. Defaults to false. This must not be true if <code>frameIds</code> is specified."
+          },
           "tabId": {
             "type": "number",
             "description": "The ID of the tab into which to inject."
+          }
+        }
+      },
+      {
+        "id": "CSSInjection",
+        "type": "object",
+        "properties": {
+          "css": {
+            "type": "string",
+            "optional": true,
+            "description": "A string containing the CSS to inject. Exactly one of <code>files</code> and <code>css</code> must be specified."
+          },
+          "files": {
+            "type": "array",
+            "optional": true,
+            "description": "The path of the CSS files to inject, relative to the extension's root directory. Exactly one of <code>files</code> and <code>css</code> must be specified.",
+            "minItems": 1,
+            "items": { "type": "string" }
+          },
+          "origin": {
+            "type": "string",
+            "optional": true,
+            "enum": ["USER", "AUTHOR"],
+            "default": "AUTHOR",
+            "description": "The style origin for the injection. Defaults to <code>'AUTHOR'</code>."
+          },
+          "target": {
+            "$ref": "InjectionTarget",
+            "description": "Details specifying the target into which to inject the CSS."
           }
         }
       }
@@ -107,6 +152,44 @@
                 "items": { "$ref": "InjectionResult" }
               }
             ]
+          }
+        ]
+      },
+      {
+        "name": "insertCSS",
+        "type": "function",
+        "description": "Inserts a CSS stylesheet into a target context. If multiple frames are specified, unsuccessful injections are ignored.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "injection",
+            "$ref": "CSSInjection",
+            "description": "The details of the styles to insert."
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "description": "Invoked upon completion of the injection.",
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "removeCSS",
+        "type": "function",
+        "description": "Removes a CSS stylesheet that was previously inserted by this extension from a target context.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "injection",
+            "$ref": "CSSInjection",
+            "description": "The details of the styles to remove. Note that the <code>css</code>, <code>files</code>, and <code>origin</code> properties must exactly match the stylesheet inserted through <code>insertCSS</code>. Attempting to remove a non-existent stylesheet is a no-op."
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "description": "Invoked upon completion of the injection.",
+            "parameters": []
           }
         ]
       }

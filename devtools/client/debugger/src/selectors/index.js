@@ -53,6 +53,8 @@ export {
   getSelectedFrames,
   getVisibleSelectedFrame,
 } from "./pause";
+export * from "./tabs";
+export * from "./threads";
 
 import { objectInspector } from "devtools/client/shared/components/reps/index";
 

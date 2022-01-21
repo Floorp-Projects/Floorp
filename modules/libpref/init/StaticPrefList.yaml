@@ -5676,6 +5676,12 @@
   value: true
   mirror: once
 
+# Whether or not we should force partial present on.
+- name: gfx.webrender.force-partial-present
+  type: bool
+  value: false
+  mirror: once
+
 - name: gfx.webrender.enable-gpu-markers
   type: bool
 #ifdef DEBUG

@@ -655,6 +655,23 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       }
       return NS_OK;
     }
+
+    if (aFeature == FEATURE_WEBRENDER_PARTIAL_PRESENT) {
+      // Block partial present on some devices due to rendering issues.
+      // On Mali-Txxx due to bug 1680087 and bug 1707815.
+      // On Adreno 3xx GPUs due to bug 1695771.
+      const bool isMaliT =
+          mGLStrings->Renderer().Find("Mali-T", /*ignoreCase*/ true) >= 0;
+      const bool isAdreno3xx = mGLStrings->Renderer().Find(
+                                   "Adreno (TM) 3", /*ignoreCase*/ true) >= 0;
+      if (isMaliT || isAdreno3xx) {
+        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+        aFailureId = "FEATURE_FAILURE_BUG_1680087_1695771_1707815";
+      } else {
+        *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
+      }
+      return NS_OK;
+    }
   }
 
   if (aFeature == FEATURE_GL_SWIZZLE) {

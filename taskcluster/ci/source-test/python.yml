@@ -36,6 +36,7 @@ job-defaults:
 
 firefox-ci:
     description: taskcluster/gecko_taskgraph unit tests
+    always-target: false
     python-version: [3]
     treeherder:
         symbol: ci

@@ -1138,6 +1138,17 @@ var ExtensionContent = {
   // Used to executeScript, insertCSS and removeCSS.
   async handleActorExecute({ options, windows }) {
     let policy = WebExtensionPolicy.getByID(options.extensionId);
+    // `WebExtensionContentScript` uses `MozDocumentMatcher::Matches` to ensure
+    // that a script can be run in a document. That requires either `frameId`
+    // or `allFrames` to be set. When `frameIds` (plural) is used, we force
+    // `allFrames` to be `true` in order to match any frame. This is OK because
+    // `executeInWin()` below looks up the window for the given `frameIds`
+    // immediately before `script.injectInto()`. Due to this, we won't run
+    // scripts in windows with non-matching `frameId`, despite `allFrames`
+    // being set to `true`.
+    if (options.frameIds) {
+      options.allFrames = true;
+    }
     let matcher = new WebExtensionContentScript(policy, options);
 
     Object.assign(matcher, {
@@ -1155,12 +1166,35 @@ var ExtensionContent = {
     const executeInWin = innerId => {
       let wg = WindowGlobalChild.getByInnerWindowId(innerId);
       if (wg?.isCurrentGlobal && script.matchesWindowGlobal(wg)) {
-        return script.injectInto(wg.browsingContext.window);
+        let bc = wg.browsingContext;
+
+        return {
+          frameId: bc.parent ? bc.id : 0,
+          promise: script.injectInto(bc.window),
+        };
       }
     };
 
-    let all = Promise.all(windows.map(executeInWin).filter(p => p));
-    let result = await all.catch(e => Promise.reject({ message: e.message }));
+    let promisesWithFrameIds = windows.map(executeInWin).filter(obj => obj);
+
+    let result = await Promise.all(
+      promisesWithFrameIds.map(async ({ frameId, promise }) => {
+        if (!options.returnResultsWithFrameIds) {
+          return promise;
+        }
+
+        try {
+          const result = await promise;
+
+          return { frameId, result };
+        } catch ({ message }) {
+          // Errors cannot be cloned, so return an object with a message
+          // property.
+          // TODO bug 1740608: also support non-Error rejections.
+          return { frameId, error: { message } };
+        }
+      })
+    ).catch(e => Promise.reject({ message: e.message }));
 
     try {
       // Check if the result can be structured-cloned before sending back.

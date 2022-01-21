@@ -573,27 +573,47 @@ struct LazyFuncExport {
 
 using LazyFuncExportVector = Vector<LazyFuncExport, 0, SystemAllocPolicy>;
 
-// IndirectStub provides a mapping between function indices and
-// indirect stubs code ranges.
-
-// The function index is the index of the function *within a specific module*,
+// IndirectStub provides a mapping between a function index and an indirect stub
+// code range.
+//
+// The function index is the index of the function *within its defining module*,
 // not necessarily in the module that owns the stub.  That module's and
-// function's instance is provided by the tls field.
+// function's instance is provided by the tls field of the IndirectStubTable
+// entry within which this IndirectStub is found.
 
 struct IndirectStub {
   size_t funcIndex;
   size_t segmentIndex;
   size_t codeRangeIndex;
-  void* tls;
-  IndirectStub(size_t funcIndex, size_t segmentIndex, size_t codeRangeIndex,
-               TlsData* tls)
+  IndirectStub(size_t funcIndex, size_t segmentIndex, size_t codeRangeIndex)
       : funcIndex(funcIndex),
         segmentIndex(segmentIndex),
-        codeRangeIndex(codeRangeIndex),
-        tls(tls) {}
+        codeRangeIndex(codeRangeIndex) {}
 };
 
+// IndirectStubVector represents a set of IndirectStubs.  These stubs all belong
+// to the same IndirectStubTable entry, and so all have the same tls value.
+//
+// The IndirectStubVector is ordered by IndirectStubComparator (WasmCode.cpp):
+// the sort key is the funcIndex.  The vector is binary-searched by that
+// predicate when an entry is needed.
+//
+// Creating an indirect stub is not an idempotent operation!  There must be NO
+// duplicate entries in the table, or equivalently, an entry that is in the
+// table must always be found by a binary search.
+
 using IndirectStubVector = Vector<IndirectStub, 0, SystemAllocPolicy>;
+
+// An IndirectStubTable represents a set of indirect stubs belonging to a
+// module.  There table is keyed uniquely by tls and there is one
+// IndirectStubVector per tls value represented in the set.
+//
+// While the set is usually very small, its can grow with the product of the
+// number of instances and the number of threads in a system, and we therefore
+// use a hash table.
+
+using IndirectStubTable =
+    HashMap<void*, IndirectStubVector, DefaultHasher<void*>, SystemAllocPolicy>;
 
 // LazyStubTier contains all the necessary information for lazy function entry
 // stubs and indirect stubs that are generated at runtime.
@@ -606,15 +626,7 @@ using IndirectStubVector = Vector<IndirectStub, 0, SystemAllocPolicy>;
 class LazyStubTier {
   LazyStubSegmentVector stubSegments_;
   LazyFuncExportVector exports_;
-  // The indirectStubVector_ is totally ordered by IndirectStubComparator (in
-  // WasmCode.cpp): the primary index is the funcIndex, the secondary index the
-  // pointer value of the tls.  The vector is binary-searched by that predicate
-  // when an entry is needed.
-  //
-  // Creating an indirect stub is not an idempotent operation!  There must be NO
-  // duplicate entries in the table, which is another way of saying that an
-  // entry that is in the table must always be found by a lookup.
-  IndirectStubVector indirectStubVector_;
+  IndirectStubTable indirectStubTable_;
   size_t lastStubSegmentIndex_;
 
   [[nodiscard]] bool createManyEntryStubs(const Uint32Vector& funcExportIndices,
