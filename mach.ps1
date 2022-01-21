@@ -1,8 +1,14 @@
 $mypath = $MyInvocation.MyCommand.Path
-$machpath = ($mypath -replace '\\', '/').substring(0, $mypath.length - 4)
+$machpath = $mypath.substring(0, $mypath.length - 4)
+
+if (Get-Command py) {
+  $python_executable = "py"
+} else {
+  $python_executable = "python"
+}
 
 if (-not (test-path env:MACH_PS1_USE_MOZILLABUILD)) {
-  python $machpath $args
+  &$python_executable $machpath $args
   exit $lastexitcode
 }
 
@@ -10,6 +16,8 @@ if (-not (test-path env:MOZILLABUILD)) {
   echo "No MOZILLABUILD environment variable found, terminating."
   exit 1
 }
+
+$machpath = ($machpath -replace '\\', '/')
 
 if ($machpath.contains(' ')) {
   echo @'
