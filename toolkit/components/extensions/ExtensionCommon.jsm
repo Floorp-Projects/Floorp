@@ -2284,7 +2284,6 @@ class EventManager {
       for (let [event, eventEntry] of moduleEntry) {
         for (let listener of eventEntry.values()) {
           let primed = { pendingEvents: [] };
-          listener.primed = primed;
 
           let fireEvent = (...args) =>
             new Promise((resolve, reject) => {
@@ -2302,13 +2301,16 @@ class EventManager {
             async: fireEvent,
           };
 
-          let { unregister, convert } = api.primeListener(
+          let handler = api.primeListener(
             extension,
             event,
             fire,
             listener.params
           );
-          Object.assign(primed, { unregister, convert });
+          if (handler) {
+            listener.primed = primed;
+            Object.assign(primed, handler);
+          }
         }
       }
     }
@@ -2446,10 +2448,10 @@ class EventManager {
         .get(key);
 
       if (listener) {
-        // If extensions.webextensions.background-delayed-startup is disabled,
-        // we can have stored info here but no primed listener.  This check
-        // can be removed if/when we make delayed background startup the only
-        // supported setting.
+        // During startup only a subset of persisted listeners are primed.  As
+        // well, each API determines whether to prime a specific listener.
+        // Additionally, if extensions.webextensions.background-delayed-startup
+        // is disabled we may not have primed listeners.
         let { primed } = listener;
         if (primed) {
           listener.primed = null;
