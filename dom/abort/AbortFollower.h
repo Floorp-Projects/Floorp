@@ -10,6 +10,7 @@
 #include "jsapi.h"
 #include "nsISupportsImpl.h"
 #include "nsTObserverArray.h"
+#include "mozilla/WeakPtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -32,21 +33,16 @@ class AbortFollower : public nsISupports {
   AbortSignalImpl* Signal() const { return mFollowingSignal; }
 
  protected:
-  // Subclasses of this class must call these Traverse and Unlink functions
-  // during corresponding cycle collection operations.
-  static void Traverse(AbortFollower* aFollower,
-                       nsCycleCollectionTraversalCallback& cb);
-
   static void Unlink(AbortFollower* aFollower) { aFollower->Unfollow(); }
 
   virtual ~AbortFollower();
 
   friend class AbortSignalImpl;
 
-  RefPtr<AbortSignalImpl> mFollowingSignal;
+  WeakPtr<AbortSignalImpl> mFollowingSignal;
 };
 
-class AbortSignalImpl : public nsISupports {
+class AbortSignalImpl : public nsISupports, public SupportsWeakPtr {
  public:
   explicit AbortSignalImpl(bool aAborted, JS::Handle<JS::Value> aReason);
 
