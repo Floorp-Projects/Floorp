@@ -310,16 +310,6 @@ def emulator_tool(sdk_path: Path):
     return sdk_path / "emulator" / emulator
 
 
-def ensure_dir(directory: Optional[Path]):
-    """Ensures the given directory exists"""
-    if directory and not directory.exists():
-        try:
-            directory.mkdir(parents=True)
-        except OSError as error:
-            if error.errno != errno.EEXIST:
-                raise
-
-
 def ensure_android(
     os_name,
     os_arch,
@@ -503,9 +493,9 @@ def ensure_android_avd(
     if avd_manifest is None:
         return
 
-    ensure_dir(avd_home_path)
+    avd_home_path.mkdir(parents=True, exist_ok=True)
     # The AVD needs this folder to boot, so make sure it exists here.
-    ensure_dir(sdk_path / "platforms")
+    (sdk_path / "platforms").mkdir(parents=True, exist_ok=True)
 
     avd_name = avd_manifest["emulator_avd_name"]
     args = [
