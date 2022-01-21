@@ -87,11 +87,11 @@ mochitest-plain:
                     default: []
             socketprocess_networking:
                 by-test-platform:
-                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     default: []
             socketprocess_networking+fission:
                 by-test-platform:
-                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     default: []
             wayland:
                 by-test-platform:
@@ -176,7 +176,7 @@ mochitest-a11y:
         by-variant:
             socketprocess_networking+1proc:
                 by-test-platform:
-                    linux.*64-qr/debug: built-projects
+                    linux.*64-qr/debug: ['autoland', 'mozilla-central']
                     default: []
             wayland+1proc:
                 by-test-platform:
@@ -221,7 +221,7 @@ mochitest-browser-chrome:
                     default: []
             socketprocess_networking:
                 by-test-platform:
-                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     default: []
             webrender-sw:
                 by-test-platform:
@@ -375,7 +375,7 @@ mochitest-chrome:
                     default: []
             socketprocess_networking+1proc:
                 by-test-platform:
-                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     default: []
             wayland+1proc:
                 by-test-platform:
@@ -444,7 +444,7 @@ mochitest-devtools-chrome:
                     default: []
             socketprocess_networking:
                 by-test-platform:
-                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     default: []
             wayland:
                 by-test-platform:
@@ -1165,7 +1165,7 @@ mochitest-remote:
                     default: []
             socketprocess_networking:
                 by-test-platform:
-                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     default: []
             webrender-sw:
                 by-test-platform:
