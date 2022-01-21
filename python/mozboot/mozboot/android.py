@@ -284,10 +284,7 @@ def get_paths(os_name):
     avd_home_path = os.environ.get(
         "ANDROID_AVD_HOME", os.path.join(mozbuild_path, "android-device", "avd")
     )
-    emulator_path = os.environ.get(
-        "ANDROID_EMULATOR_HOME", os.path.join(mozbuild_path, "android-device")
-    )
-    return (mozbuild_path, sdk_path, ndk_path, avd_home_path, emulator_path)
+    return mozbuild_path, sdk_path, ndk_path, avd_home_path
 
 
 def sdkmanager_tool(sdk_path):
@@ -350,7 +347,7 @@ def ensure_android(
     # save them a lengthy download), or they may have already
     # completed the download. We unpack to
     # ~/.mozbuild/{android-sdk-$OS_NAME, android-ndk-$VER}.
-    mozbuild_path, sdk_path, ndk_path, avd_home_path, emulator_path = get_paths(os_name)
+    mozbuild_path, sdk_path, ndk_path, avd_home_path = get_paths(os_name)
 
     if os_name == "macosx":
         os_tag = "mac"
@@ -415,7 +412,6 @@ def ensure_android(
         emulator_tool=emulator_tool(sdk_path),
         avd_home_path=avd_home_path,
         sdk_path=sdk_path,
-        emulator_path=emulator_path,
         no_interactive=no_interactive,
         avd_manifest=avd_manifest,
         prewarm_avd=prewarm_avd,
@@ -502,7 +498,6 @@ def ensure_android_avd(
     emulator_tool,
     avd_home_path,
     sdk_path,
-    emulator_path,
     no_interactive=False,
     avd_manifest=None,
     prewarm_avd=False,
@@ -683,7 +678,7 @@ def ensure_android_packages(
 
 
 def generate_mozconfig(os_name, artifact_mode=False):
-    moz_state_dir, sdk_path, ndk_path, avd_home_path, emulator_path = get_paths(os_name)
+    moz_state_dir, sdk_path, ndk_path, avd_home_path = get_paths(os_name)
 
     extra_lines = []
     if extra_lines:
@@ -833,7 +828,7 @@ def main(argv):
 
 
 def ensure_java(os_name, os_arch):
-    mozbuild_path, _, _, _, _ = get_paths(os_name)
+    mozbuild_path, _, _, _ = get_paths(os_name)
 
     if os_name == "macosx":
         os_tag = "mac"
