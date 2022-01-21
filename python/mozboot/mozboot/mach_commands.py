@@ -94,7 +94,6 @@ def vcs_setup(command_context, update_only=False):
             bootstrap.update_git_tools(
                 vcs,
                 Path(command_context._mach_context.state_dir),
-                Path(command_context._mach_context.topdir),
             )
         else:
             bootstrap.update_vct(vcs, Path(command_context._mach_context.state_dir))
