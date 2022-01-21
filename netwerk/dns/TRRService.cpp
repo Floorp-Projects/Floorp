@@ -35,8 +35,7 @@ static const char kDisableIpv6Pref[] = "network.dns.disableIPv6";
 #define TRR_PREF_PREFIX "network.trr."
 #define TRR_PREF(x) TRR_PREF_PREFIX x
 
-namespace mozilla {
-namespace net {
+namespace mozilla::net {
 
 StaticRefPtr<nsIThread> sTRRBackgroundThread;
 static Atomic<TRRService*> sTRRServicePtr;
@@ -355,14 +354,6 @@ nsresult TRRService::ReadPrefs(const char* name) {
     MutexAutoLock lock(mLock);
     Preferences::GetCString(TRR_PREF("bootstrapAddr"), mBootstrapAddr);
     clearEntireCache = true;
-  }
-  if (!name || !strcmp(name, TRR_PREF("blacklist-duration"))) {
-    // prefs is given in number of seconds
-    uint32_t secs;
-    if (NS_SUCCEEDED(
-            Preferences::GetUint(TRR_PREF("blacklist-duration"), &secs))) {
-      mBlocklistDurationSeconds = secs;
-    }
   }
   if (!name || !strcmp(name, kDisableIpv6Pref)) {
     bool tmp;
@@ -851,7 +842,8 @@ bool TRRService::IsDomainBlocked(const nsACString& aHost,
   // use a unified casing for the hashkey
   nsAutoCString hashkey(aHost + aOriginSuffix);
   if (auto val = bl->Lookup(hashkey)) {
-    int32_t until = *val + mBlocklistDurationSeconds;
+    int32_t until =
+        *val + int32_t(StaticPrefs::network_trr_temp_blocklist_duration_sec());
     int32_t expire = NowInSeconds();
     if (until > expire) {
       LOG(("Host [%s] is TRR blocklisted\n", nsCString(aHost).get()));
@@ -1314,5 +1306,4 @@ void TRRService::InitTRRConnectionInfo() {
   }
 }
 
-}  // namespace net
-}  // namespace mozilla
+}  // namespace mozilla::net
