@@ -967,51 +967,50 @@ class PreComputedEdgeRange : public EdgeRange {
 //
 // RootList::init itself causes a minor collection, but once the list of roots
 // has been created, GC must not occur, as the referent ubi::Nodes are not
-// stable across GC. It returns a [[nodiscard]] AutoCheckCannotGC token in order
-// to enforce this. The token's lifetime must extend at least as long as the
-// RootList itself. Note that the RootList does not itself contain a nogc field,
-// which means that it is possible to store it somewhere that it can escape
-// the init()'s nogc scope. Don't do that. (Or you could call some function
-// and pass in the RootList and GC, but that would be caught.)
+// stable across GC. The init calls emplace on |noGC|'s AutoCheckCannotGC, whose
+// lifetime must extend at least as long as the RootList itself.
 //
 // Example usage:
 //
 //    {
-//        JS::ubi::RootList rootList(cx);
-//        auto [ok, nogc] = rootList.init();
-//        if (!ok()) {
+//        mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
+//        JS::ubi::RootList rootList(cx, maybeNoGC);
+//        if (!rootList.init()) {
 //            return false;
 //        }
+//
+//        // The AutoCheckCannotGC is guaranteed to exist if init returned true.
+//        MOZ_ASSERT(maybeNoGC.isSome());
 //
 //        JS::ubi::Node root(&rootList);
 //
 //        ...
 //    }
 class MOZ_STACK_CLASS JS_PUBLIC_API RootList {
+  Maybe<AutoCheckCannotGC>& noGC;
+
  public:
   JSContext* cx;
   EdgeVector edges;
   bool wantNames;
-  bool inited;
 
-  explicit RootList(JSContext* cx, bool wantNames = false);
+  RootList(JSContext* cx, Maybe<AutoCheckCannotGC>& noGC,
+           bool wantNames = false);
 
   // Find all GC roots.
-  [[nodiscard]] std::pair<bool, JS::AutoCheckCannotGC> init();
+  [[nodiscard]] bool init();
   // Find only GC roots in the provided set of |JS::Compartment|s. Note: it's
   // important to take a CompartmentSet and not a RealmSet: objects in
   // same-compartment realms can reference each other directly, without going
   // through CCWs, so if we used a RealmSet here we would miss edges.
-  [[nodiscard]] std::pair<bool, JS::AutoCheckCannotGC> init(
-      CompartmentSet& debuggees);
+  [[nodiscard]] bool init(CompartmentSet& debuggees);
   // Find only GC roots in the given Debugger object's set of debuggee
   // compartments.
-  [[nodiscard]] std::pair<bool, JS::AutoCheckCannotGC> init(
-      HandleObject debuggees);
+  [[nodiscard]] bool init(HandleObject debuggees);
 
   // Returns true if the RootList has been initialized successfully, false
   // otherwise.
-  bool initialized() { return inited; }
+  bool initialized() { return noGC.isSome(); }
 
   // Explicitly add the given Node as a root in this RootList. If wantNames is
   // true, you must pass an edgeName. The RootList does not take ownership of
