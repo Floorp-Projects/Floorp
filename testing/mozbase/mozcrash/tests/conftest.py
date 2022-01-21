@@ -50,7 +50,6 @@ def check_for_java_exception():
     return wrapper
 
 
-@pytest.fixture
 def minidump_files(request, tmpdir):
     files = []
 
@@ -102,6 +101,11 @@ def minidump_files(request, tmpdir):
         files.append({"dmp": dmp, "extra": extra})
 
     return files
+
+
+@pytest.fixture(name="minidump_files")
+def minidump_files_fixture(request, tmpdir):
+    return minidump_files(request, tmpdir)
 
 
 @pytest.fixture(autouse=True)
