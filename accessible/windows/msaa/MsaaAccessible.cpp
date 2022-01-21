@@ -333,6 +333,28 @@ AccessibleWrap* MsaaAccessible::LocalAcc() {
 }
 
 /**
+ * If this is an OOP iframe in a content process, return the COM proxy for the
+ * child document.
+ * This will only ever return something when the cache is disabled. When the
+ * cache is enabled, traversing to OOP iframe documents is handled in the
+ * parent process via the RemoteAccessible hierarchy.
+ */
+static already_AddRefed<IDispatch> MaybeGetOOPIframeDocCOMProxy(
+    Accessible* aAcc) {
+  if (!XRE_IsContentProcess() || !aAcc->IsOuterDoc()) {
+    return nullptr;
+  }
+  MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
+  LocalAccessible* outerDoc = aAcc->AsLocal();
+  auto bridge = dom::BrowserBridgeChild::GetFrom(outerDoc->GetContent());
+  if (!bridge) {
+    // This isn't an OOP iframe.
+    return nullptr;
+  }
+  return bridge->GetEmbeddedDocAccessible();
+}
+
+/**
  * This function is a helper for implementing IAccessible methods that accept
  * a Child ID as a parameter. If the child ID is CHILDID_SELF, the function
  * returns S_OK but a null *aOutInterface. Otherwise, *aOutInterface points
@@ -372,6 +394,11 @@ MsaaAccessible::ResolveChild(const VARIANT& aVarChild,
 
   if (aVarChild.lVal == CHILDID_SELF) {
     return S_OK;
+  }
+
+  if (aVarChild.lVal == 1 && RefPtr{MaybeGetOOPIframeDocCOMProxy(mAcc)}) {
+    // We can't access an OOP iframe document.
+    return E_FAIL;
   }
 
   bool isDefunct = false;
@@ -460,28 +487,6 @@ static already_AddRefed<IDispatch> GetProxiedAccessibleInSubtree(
   }
 
   return disp.forget();
-}
-
-/**
- * If this is an OOP iframe in a content process, return the COM proxy for the
- * child document.
- * This will only ever return something when the cache is disabled. When the
- * cache is enabled, traversing to OOP iframe documents is handled in the
- * parent process via the RemoteAccessible hierarchy.
- */
-static already_AddRefed<IDispatch> MaybeGetOOPIframeDocCOMProxy(
-    Accessible* aAcc) {
-  if (!XRE_IsContentProcess() || !aAcc->IsOuterDoc()) {
-    return nullptr;
-  }
-  MOZ_ASSERT(!StaticPrefs::accessibility_cache_enabled_AtStartup());
-  LocalAccessible* outerDoc = aAcc->AsLocal();
-  auto bridge = dom::BrowserBridgeChild::GetFrom(outerDoc->GetContent());
-  if (!bridge) {
-    // This isn't an OOP iframe.
-    return nullptr;
-  }
-  return bridge->GetEmbeddedDocAccessible();
 }
 
 already_AddRefed<IAccessible> MsaaAccessible::GetIAccessibleFor(
