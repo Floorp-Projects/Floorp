@@ -208,7 +208,11 @@ var DownloadsView = {
  * as they exist they "collapses" their history "counterpart" (So we don't show two
  * items for every download).
  */
-function DownloadsPlacesView(aRichListBox, aActive = true) {
+function DownloadsPlacesView(
+  aRichListBox,
+  aActive = true,
+  aSuppressionFlag = DownloadsCommon.SUPPRESS_ALL_DOWNLOADS_OPEN
+) {
   this._richlistbox = aRichListBox;
   this._richlistbox._placesView = this;
   window.controllers.insertControllerAt(0, this);
@@ -227,16 +231,23 @@ function DownloadsPlacesView(aRichListBox, aActive = true) {
   this._waitingForInitialData = true;
   this._downloadsData.addView(this);
 
-  // Get the Download button out of the attention state since we're about to
-  // view all downloads.
-  DownloadsCommon.getIndicatorData(window).attention =
-    DownloadsCommon.ATTENTION_NONE;
+  // Pause the download indicator as user is interacting with downloads. This is
+  // skipped on about:downloads because it handles this by itself.
+  if (aSuppressionFlag === DownloadsCommon.SUPPRESS_ALL_DOWNLOADS_OPEN) {
+    DownloadsCommon.getIndicatorData(
+      window
+    ).attentionSuppressed |= aSuppressionFlag;
+  }
 
   // Make sure to unregister the view if the window is closed.
   window.addEventListener(
     "unload",
     () => {
       window.controllers.removeController(this);
+      // Unpause the main window's download indicator.
+      DownloadsCommon.getIndicatorData(
+        window
+      ).attentionSuppressed &= ~aSuppressionFlag;
       this._downloadsData.removeView(this);
       this.result = null;
     },
