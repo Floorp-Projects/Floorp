@@ -1759,11 +1759,11 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
                             (aFlags & (FLAG_SHOWRING | FLAG_NOSHOWRING));
     newWindow->SetFocusedElement(elementToFocus, focusMethod);
     if (aFocusChanged) {
-      if (nsCOMPtr<nsIDocShell> docShell = newWindow->GetDocShell()) {
-        RefPtr<PresShell> presShell = docShell->GetPresShell();
-        if (presShell && presShell->DidInitialize()) {
-          ScrollIntoView(presShell, elementToFocus, aFlags);
-        }
+      nsCOMPtr<nsIDocShell> docShell = newWindow->GetDocShell();
+
+      RefPtr<PresShell> presShell = docShell->GetPresShell();
+      if (presShell && presShell->DidInitialize()) {
+        ScrollIntoView(presShell, elementToFocus, aFlags);
       }
     }
 
