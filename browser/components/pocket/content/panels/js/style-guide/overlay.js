@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import PopularTopics from "../components/PopularTopics";
+import PopularTopics from "../components/PopularTopics/PopularTopics";
 
 var StyleGuideOverlay = function(options) {};
 
