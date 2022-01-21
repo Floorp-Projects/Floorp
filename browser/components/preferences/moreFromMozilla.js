@@ -35,7 +35,7 @@ var gMoreFromMozillaPane = {
     return this._option;
   },
 
-  getURL(url, option, hasEmail) {
+  getURL(url, region, option, hasEmail) {
     const URL_PARAMS = {
       utm_source: "about-prefs",
       utm_campaign: "morefrommozilla",
@@ -44,21 +44,23 @@ var gMoreFromMozillaPane = {
     // UTM content param used in analytics to record
     // UI template used to open URL
     const utm_content = {
-      default: "fxvt-default",
-      simple: "fxvt-113-a-na",
-      advanced: "fxvt-113-b-na",
+      default: "default",
+      simple: "fxvt-113-a",
+      advanced: "fxvt-113-b",
     };
 
     let pageUrl = new URL(url);
     for (let [key, val] of Object.entries(URL_PARAMS)) {
       pageUrl.searchParams.append(key, val);
     }
-    // Append '-email' to utm_content when URL is opened
+
+    // Append region by product to utm_cotent and also
+    // append '-email' when URL is opened
     // from send email link in QRCode box
     if (option) {
       pageUrl.searchParams.set(
         "utm_content",
-        `${utm_content[option]}${hasEmail ? "-email" : ""}`
+        `${utm_content[option]}-${region}${hasEmail ? "-email" : ""}`
       );
     }
     return pageUrl.toString();
@@ -70,6 +72,7 @@ var gMoreFromMozillaPane = {
         id: "firefox-mobile",
         title_string_id: "more-from-moz-firefox-mobile-title",
         description_string_id: "more-from-moz-firefox-mobile-description",
+        region: "global",
         button: {
           id: "fxMobile",
           type: "link",
@@ -102,6 +105,7 @@ var gMoreFromMozillaPane = {
         id: "mozilla-vpn",
         title_string_id: "more-from-moz-mozilla-vpn-title",
         description_string_id: "more-from-moz-mozilla-vpn-description",
+        region: "global",
         button: {
           id: "mozillaVPN",
           label_string_id: "more-from-moz-button-mozilla-vpn",
@@ -116,6 +120,7 @@ var gMoreFromMozillaPane = {
         id: "mozilla-rally",
         title_string_id: "more-from-moz-mozilla-rally-title",
         description_string_id: "more-from-moz-mozilla-rally-description",
+        region: "na",
         button: {
           id: "mozillaRally",
           label_string_id: "more-from-moz-button-mozilla-rally",
@@ -175,7 +180,7 @@ var gMoreFromMozillaPane = {
         if (isLink) {
           actionElement.setAttribute(
             "href",
-            this.getURL(product.button.actionURL, this.option)
+            this.getURL(product.button.actionURL, product.region, this.option)
           );
           actionElement.setAttribute("target", "_blank");
         } else {
@@ -184,6 +189,7 @@ var gMoreFromMozillaPane = {
             mainWindow.openTrustedLinkIn(
               gMoreFromMozillaPane.getURL(
                 product.button.actionURL,
+                product.region,
                 gMoreFromMozillaPane.option
               ),
               "tab"
@@ -229,7 +235,12 @@ var gMoreFromMozillaPane = {
         );
         qrc_btn.setAttribute(
           "href",
-          this.getURL(product.qrcode.button.actionURL, this.option, true)
+          this.getURL(
+            product.qrcode.button.actionURL,
+            product.region,
+            this.option,
+            true
+          )
         );
       }
 

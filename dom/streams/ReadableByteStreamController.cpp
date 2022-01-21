@@ -424,7 +424,8 @@ class ByteStreamPullIfNeededPromiseHandler final : public PromiseNativeHandler {
       : PromiseNativeHandler(), mController(aController) {}
 
   MOZ_CAN_RUN_SCRIPT
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#readable-byte-stream-controller-call-pull-if-needed
     // Step 7.1
     mController->SetPulling(false);
@@ -434,19 +435,16 @@ class ByteStreamPullIfNeededPromiseHandler final : public PromiseNativeHandler {
       mController->SetPullAgain(false);
 
       // Step 7.2.2
-      ErrorResult rv;
       ReadableByteStreamControllerCallPullIfNeeded(
-          aCx, MOZ_KnownLive(mController), rv);
-      (void)rv.MaybeSetPendingException(aCx, "PullIfNeeded Resolved Error");
+          aCx, MOZ_KnownLive(mController), aRv);
     }
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#readable-byte-stream-controller-call-pull-if-needed
     // Step 8.1
-    ErrorResult rv;
-    ReadableByteStreamControllerError(mController, aValue, rv);
-    (void)rv.MaybeSetPendingException(aCx, "PullIfNeeded Rejected Error");
+    ReadableByteStreamControllerError(mController, aValue, aRv);
   }
 };
 
@@ -490,6 +488,9 @@ void ReadableByteStreamControllerCallPullIfNeeded(
       pullAlgorithm ? pullAlgorithm->PullCallback(aCx, *controller, aRv)
                     : Promise::CreateResolvedWithUndefined(
                           controller->GetParentObject(), aRv);
+  if (aRv.Failed()) {
+    return;
+  }
 
   // Steps 7+8
   RefPtr<ByteStreamPullIfNeededPromiseHandler> promiseHandler =
@@ -1661,7 +1662,8 @@ class ByteStreamStartPromiseNativeHandler final : public PromiseNativeHandler {
       : PromiseNativeHandler(), mController(aController) {}
 
   MOZ_CAN_RUN_SCRIPT
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     MOZ_ASSERT(mController);
 
     // https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller
@@ -1676,18 +1678,16 @@ class ByteStreamStartPromiseNativeHandler final : public PromiseNativeHandler {
     mController->SetPullAgain(false);
 
     // Step 16.4:
-    ErrorResult rv;
+
     RefPtr<ReadableByteStreamController> stackController = mController;
-    ReadableByteStreamControllerCallPullIfNeeded(aCx, stackController, rv);
-    (void)rv.MaybeSetPendingException(aCx, "StartPromise Resolve Error");
+    ReadableByteStreamControllerCallPullIfNeeded(aCx, stackController, aRv);
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     // https://streams.spec.whatwg.org/#set-up-readable-byte-stream-controller
     // Step 17.1
-    ErrorResult rv;
-    ReadableByteStreamControllerError(mController, aValue, rv);
-    (void)rv.MaybeSetPendingException(aCx, "StartPromise Rejected Error");
+    ReadableByteStreamControllerError(mController, aValue, aRv);
   }
 };
 

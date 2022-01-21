@@ -139,10 +139,12 @@ class ChromeCompatCallbackHandler final : public dom::PromiseNativeHandler {
                      dom::Promise* aPromise,
                      const RefPtr<dom::Function>& aCallback);
 
-  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(
-      JSContext* aCx, JS::Handle<JS::Value> aValue) override;
-  MOZ_CAN_RUN_SCRIPT void RejectedCallback(
-      JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(JSContext* aCx,
+                                           JS::Handle<JS::Value> aValue,
+                                           ErrorResult& aRv) override;
+  MOZ_CAN_RUN_SCRIPT void RejectedCallback(JSContext* aCx,
+                                           JS::Handle<JS::Value> aValue,
+                                           ErrorResult& aRv) override;
 
  private:
   ChromeCompatCallbackHandler(ExtensionBrowser* aExtensionBrowser,

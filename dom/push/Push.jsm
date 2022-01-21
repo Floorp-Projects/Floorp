@@ -58,7 +58,13 @@ Push.prototype = {
 
     this.initDOMRequestHelper(win);
 
-    this._principal = win.document.nodePrincipal;
+    // Get the client principal from the window. This won't be null because the
+    // service worker should be available when accessing the push manager.
+    this._principal = win.clientPrincipal;
+
+    if (!this._principal) {
+      throw new Error(" The client principal of the window is not available");
+    }
 
     try {
       this._topLevelPrincipal = win.top.document.nodePrincipal;

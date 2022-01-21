@@ -1529,19 +1529,12 @@ void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
     mRefreshTimerStartedCause = profiler_capture_backtrace();
   }
 
-  if (IsFrozen() || !mPresContext) {
-    // If we don't want to start it now, or we've been disconnected.
-    StopTimer();
-    return;
-  }
-
   // will it already fire, and no other changes needed?
   if (mActiveTimer && !(aFlags & eForceAdjustTimer)) {
-    // If we're being called from within a user input handler or someone
-    // explicitly asked for an extra tick, and we think there's time to rush an
-    // extra tick immediately, then schedule a runnable to run the extra tick.
-    if ((mPresContext->TakeWantsExtraTick() || mUserInputProcessingCount) &&
-        CanDoExtraTick()) {
+    // If we're being called from within a user input handler, and we think
+    // there's time to rush an extra tick immediately, then schedule a runnable
+    // to run the extra tick.
+    if (mUserInputProcessingCount && CanDoExtraTick()) {
       RefPtr<nsRefreshDriver> self = this;
       NS_DispatchToCurrentThreadQueue(
           NS_NewRunnableFunction(
@@ -1560,6 +1553,12 @@ void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
               }),
           EventQueuePriority::Vsync);
     }
+    return;
+  }
+
+  if (IsFrozen() || !mPresContext) {
+    // If we don't want to start it now, or we've been disconnected.
+    StopTimer();
     return;
   }
 

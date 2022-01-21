@@ -222,7 +222,6 @@ class CertVerifier {
                BRNameMatchingPolicy::Mode nameMatchingMode,
                NetscapeStepUpPolicy netscapeStepUpPolicy,
                CertificateTransparencyMode ctMode, CRLiteMode crliteMode,
-               uint64_t crliteCTMergeDelaySeconds,
                const Vector<EnterpriseCert>& thirdPartyCerts);
   ~CertVerifier();
 
@@ -238,7 +237,6 @@ class CertVerifier {
   const NetscapeStepUpPolicy mNetscapeStepUpPolicy;
   const CertificateTransparencyMode mCTMode;
   const CRLiteMode mCRLiteMode;
-  const uint64_t mCRLiteCTMergeDelaySeconds;
 
  private:
   OCSPCache mOCSPCache;

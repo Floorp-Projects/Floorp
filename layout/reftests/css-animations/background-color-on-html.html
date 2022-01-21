@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait reftest-no-flush">
+<style>
+@keyframes anim {
+  from { background-color: green; }
+  to { background-color: red; }
+}
+html {
+  background-color: black;
+}
+</style>
+<script>
+document.addEventListener("MozReftestInvalidate", () => {
+  document.documentElement.style.animation = "anim 100s step-end reverse";
+  document.documentElement.addEventListener("animationstart", () => {
+    document.documentElement.classList.remove("reftest-wait");
+  });
+});
+</script>
+</html>

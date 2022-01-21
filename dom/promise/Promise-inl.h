@@ -23,9 +23,11 @@ class PromiseNativeThenHandlerBase : public PromiseNativeHandler {
 
   PromiseNativeThenHandlerBase(Promise& aPromise) : mPromise(&aPromise) {}
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override;
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override;
 
  protected:
   virtual ~PromiseNativeThenHandlerBase() = default;

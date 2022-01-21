@@ -170,10 +170,8 @@ void gfxPlatformGtk::InitX11EGLConfig() {
                          "FEATURE_FAILURE_GLXTEST_NO_EGL"_ns);
   }
 
-  if (feature.IsEnabled() && IsX11Display() && PR_GetEnv("mesa_glthread")) {
-    gfxWarningOnce()
-        << "The mesa_glthread environment variable has been disabled as it "
-           "causes crashes on the EGL backend, see bug 1670545";
+  if (feature.IsEnabled() && IsX11Display()) {
+    // Enabling glthread crashes on X11/EGL, see bug 1670545
     PR_SetEnv("mesa_glthread=false");
   }
 #else

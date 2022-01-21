@@ -872,7 +872,6 @@ fi
 
 dnl Checks for library functions.
 dnl ========================================================
-AC_CHECK_FUNCS(stat64 lstat64 truncate64 statvfs64 statvfs statfs64 statfs getpagesize gmtime_r localtime_r arc4random arc4random_buf mallinfo gettid setpriority strerror syscall lutimes)
 
 dnl check for clock_gettime(), the CLOCK_MONOTONIC clock
 AC_CACHE_CHECK(for clock_gettime(CLOCK_MONOTONIC),
@@ -1010,16 +1009,6 @@ fi
 dnl End of C++ language/feature checks
 AC_LANG_C
 
-dnl ========================================================
-dnl =  Internationalization checks
-dnl ========================================================
-dnl
-dnl Internationalization and Locale support is different
-dnl on various UNIX platforms.  Checks for specific i18n
-dnl features go here.
-
-AC_HAVE_FUNCS(localeconv)
-
 fi # ! SKIP_COMPILER_CHECKS
 
 if test -n "${COMPILE_ENVIRONMENT}"; then
@@ -1039,7 +1028,6 @@ if test -n "$SKIP_COMPILER_CHECKS"; then
    dnl Windows has malloc.h
    AC_DEFINE(MALLOC_H, [<malloc.h>])
    AC_DEFINE(HAVE_FORCEINLINE)
-   AC_DEFINE(HAVE_LOCALECONV)
 fi # SKIP_COMPILER_CHECKS
 
 dnl Mozilla specific options
@@ -1205,34 +1193,6 @@ dnl ========================================================
 if test -n "$COMPILE_ENVIRONMENT"; then
 MOZ_CONFIG_CLANG_PLUGIN
 fi # COMPILE_ENVIRONMENT
-
-dnl ========================================================
-dnl = Support for demangling undefined symbols
-dnl ========================================================
-if test -z "$SKIP_LIBRARY_CHECKS"; then
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
-    AC_CHECK_FUNCS(__cxa_demangle, HAVE_DEMANGLE=1, HAVE_DEMANGLE=)
-    AC_LANG_RESTORE
-fi
-
-# Demangle only for debug or DMD builds
-MOZ_DEMANGLE_SYMBOLS=
-if test "$HAVE_DEMANGLE" && test "$MOZ_DEBUG" -o "$MOZ_DMD"; then
-    MOZ_DEMANGLE_SYMBOLS=1
-    AC_DEFINE(MOZ_DEMANGLE_SYMBOLS)
-fi
-AC_SUBST(MOZ_DEMANGLE_SYMBOLS)
-
-dnl ========================================================
-dnl = Support for gcc stack unwinding (from gcc 3.3)
-dnl ========================================================
-if test -z "$SKIP_LIBRARY_CHECKS"; then
-    AC_LANG_SAVE
-    AC_LANG_CPLUSPLUS
-    MOZ_CHECK_HEADER(unwind.h, AC_CHECK_FUNCS(_Unwind_Backtrace))
-    AC_LANG_RESTORE
-fi
 
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl ========================================================
@@ -1518,10 +1478,6 @@ dnl Host JavaScript runtime, if any, to use during cross compiles.
 AC_SUBST(JS_BINARY)
 
 AC_SUBST(NSS_EXTRA_SYMBOLS_FILE)
-
-if test -n "$COMPILE_ENVIRONMENT"; then
-AC_CHECK_FUNCS(posix_fadvise posix_fallocate)
-fi # COMPILE_ENVIRONMENT
 
 dnl Set various defines and substitutions
 dnl ========================================================

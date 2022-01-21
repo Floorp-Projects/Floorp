@@ -36,9 +36,11 @@ class FetchStreamReader final : public nsIOutputStreamCallback,
                          FetchStreamReader** aStreamReader,
                          nsIInputStream** aInputStream);
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override;
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override;
 
   // Idempotently close the output stream and null out all state. If aCx is
   // provided, the reader will also be canceled.  aStatus must be a DOM error
