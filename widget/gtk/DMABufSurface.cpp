@@ -54,14 +54,6 @@ using namespace mozilla::layers;
 
 #define BUFFER_FLAGS 0
 
-#ifndef VA_FOURCC_NV12
-#  define VA_FOURCC_NV12 0x3231564E
-#endif
-
-#ifndef VA_FOURCC_YV12
-#  define VA_FOURCC_YV12 0x32315659
-#endif
-
 static RefPtr<GLContext> sSnapshotContext;
 static Atomic<int> gNewSurfaceUID(1);
 
@@ -887,6 +879,8 @@ bool DMABufSurfaceYUV::UpdateYUVData(const VADRMPRIMESurfaceDescriptor& aDesc) {
     return false;
   }
   if (aDesc.fourcc == VA_FOURCC_NV12) {
+    mSurfaceType = SURFACE_NV12;
+  } else if (aDesc.fourcc == VA_FOURCC_P010) {
     mSurfaceType = SURFACE_NV12;
   } else if (aDesc.fourcc == VA_FOURCC_YV12) {
     mSurfaceType = SURFACE_YUV420;
