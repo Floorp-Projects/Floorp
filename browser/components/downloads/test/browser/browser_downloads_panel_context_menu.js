@@ -5,6 +5,19 @@
 let gDownloadDir;
 const TestFiles = {};
 
+let ReferrerInfo = Components.Constructor(
+  "@mozilla.org/referrer-info;1",
+  "nsIReferrerInfo",
+  "init"
+);
+
+// Load a new URI with a specific referrer.
+let exampleRefInfo = new ReferrerInfo(
+  Ci.nsIReferrerInfo.EMPTY,
+  true,
+  Services.io.newURI("https://example.org")
+);
+
 const MENU_ITEMS = {
   pause: ".downloadPauseMenuItem",
   resume: ".downloadResumeMenuItem",
@@ -14,10 +27,10 @@ const MENU_ITEMS = {
   alwaysOpenSimilarFiles: '[command="downloadsCmd_alwaysOpenSimilarFiles"]',
   show: '[command="downloadsCmd_show"]',
   commandsSeparator: "menuseparator,.downloadCommandsSeparator",
-  openReferrer: '[command="downloadsCmd_openReferrer"]',
-  copyLocation: '[command="downloadsCmd_copyLocation"]',
+  openReferrer: ".downloadOpenReferrerMenuItem",
+  copyLocation: ".downloadCopyLocationMenuItem",
   separator: "menuseparator",
-  deleteFile: '[command="downloadsCmd_deleteFile"]',
+  deleteFile: ".downloadDeleteFileMenuItem",
   delete: '[command="cmd_delete"]',
   clearList: '[command="downloadsCmd_clearList"]',
   clearDownloads: '[command="downloadsCmd_clearDownloads"]',
@@ -32,6 +45,9 @@ const TestCasesDefaultMimetypes = [
         state: DownloadsCommon.DOWNLOAD_FINISHED,
         contentType: "application/pdf",
         target: {},
+        source: {
+          referrerInfo: exampleRefInfo,
+        },
       },
     ],
     expected: {
@@ -50,6 +66,31 @@ const TestCasesDefaultMimetypes = [
     },
   },
   {
+    name:
+      "Completed PDF download with improvements pref disabled and referrer info missing",
+    prefEnabled: false,
+    downloads: [
+      {
+        state: DownloadsCommon.DOWNLOAD_FINISHED,
+        contentType: "application/pdf",
+        target: {},
+      },
+    ],
+    expected: {
+      menu: [
+        MENU_ITEMS.openInSystemViewer,
+        MENU_ITEMS.alwaysOpenInSystemViewer,
+        MENU_ITEMS.show,
+        MENU_ITEMS.commandsSeparator,
+        MENU_ITEMS.copyLocation,
+        MENU_ITEMS.separator,
+        MENU_ITEMS.deleteFile,
+        MENU_ITEMS.delete,
+        MENU_ITEMS.clearList,
+      ],
+    },
+  },
+  {
     name: "Canceled PDF download with improvements pref disabled",
     prefEnabled: false,
     downloads: [
@@ -57,6 +98,9 @@ const TestCasesDefaultMimetypes = [
         state: DownloadsCommon.DOWNLOAD_CANCELED,
         contentType: "application/pdf",
         target: {},
+        source: {
+          referrerInfo: exampleRefInfo,
+        },
       },
     ],
     expected: {
@@ -80,6 +124,9 @@ const TestCasesNewMimetypesPrefDisabled = [
         state: DownloadsCommon.DOWNLOAD_FINISHED,
         contentType: "text/plain",
         target: {},
+        source: {
+          referrerInfo: exampleRefInfo,
+        },
       },
     ],
     expected: {
@@ -103,6 +150,9 @@ const TestCasesNewMimetypesPrefDisabled = [
         state: DownloadsCommon.DOWNLOAD_CANCELED,
         contentType: "text/plain",
         target: {},
+        source: {
+          referrerInfo: exampleRefInfo,
+        },
       },
     ],
     expected: {
@@ -126,6 +176,9 @@ const TestCasesNewMimetypesPrefEnabled = [
         state: DownloadsCommon.DOWNLOAD_FINISHED,
         contentType: "text/plain",
         target: {},
+        source: {
+          referrerInfo: exampleRefInfo,
+        },
       },
     ],
     expected: {
@@ -150,6 +203,9 @@ const TestCasesNewMimetypesPrefEnabled = [
         state: DownloadsCommon.DOWNLOAD_CANCELED,
         contentType: "text/plain",
         target: {},
+        source: {
+          referrerInfo: exampleRefInfo,
+        },
       },
     ],
     expected: {
@@ -172,6 +228,9 @@ const TestCasesNewMimetypesPrefEnabled = [
         state: DownloadsCommon.DOWNLOAD_FINISHED,
         contentType: "application/octet-stream",
         target: {},
+        source: {
+          referrerInfo: exampleRefInfo,
+        },
       },
     ],
     expected: {
@@ -197,6 +256,9 @@ const TestCasesNewMimetypesPrefEnabled = [
         state: DownloadsCommon.DOWNLOAD_FINISHED,
         contentType: "application/octet-stream",
         target: {},
+        source: {
+          referrerInfo: exampleRefInfo,
+        },
       },
     ],
     expected: {
@@ -228,6 +290,9 @@ const TestCasesDeletedFile = [
         state: DownloadsCommon.DOWNLOAD_FINISHED,
         contentType: "application/pdf",
         target: {},
+        source: {
+          referrerInfo: exampleRefInfo,
+        },
       },
     ],
     expected: {
