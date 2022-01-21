@@ -535,92 +535,6 @@ license file's hash.
         # changes. See bug 1324462
         subprocess.check_call([cargo, "update", "-p", "gkrust"], cwd=self.topsrcdir)
 
-        output = subprocess.check_output(
-            [cargo, "vendor", vendor_dir], cwd=self.topsrcdir
-        ).decode("UTF-8")
-
-        # Get the snippet of configuration that cargo vendor outputs, and
-        # update .cargo/config with it.
-        # XXX(bug 1576765): Hopefully do something better after
-        # https://github.com/rust-lang/cargo/issues/7280 is addressed.
-        config = "\n".join(
-            dropwhile(lambda l: not l.startswith("["), output.splitlines())
-        )
-
-        # The config is toml, parse it as such.
-        config = pytoml.loads(config)
-
-        # For each replace-with, extract their configuration and update the
-        # corresponding directory to be relative to topsrcdir.
-        replaces = {
-            v["replace-with"] for v in config["source"].values() if "replace-with" in v
-        }
-
-        # We only really expect one replace-with
-        if len(replaces) != 1:
-            self.log(
-                logging.ERROR,
-                "vendor_failed",
-                {},
-                """cargo vendor didn't output a unique replace-with. Found: %s."""
-                % replaces,
-            )
-            sys.exit(1)
-
-        replace_name = replaces.pop()
-        replace = config["source"].pop(replace_name)
-        replace["directory"] = mozpath.relpath(
-            mozpath.normsep(os.path.normcase(replace["directory"])),
-            mozpath.normsep(os.path.normcase(self.topsrcdir)),
-        )
-
-        # Introduce some determinism for the output.
-        def recursive_sort(obj):
-            if isinstance(obj, dict):
-                return OrderedDict(
-                    sorted((k, recursive_sort(v)) for k, v in obj.items())
-                )
-            if isinstance(obj, list):
-                return [recursive_sort(o) for o in obj]
-            return obj
-
-        config = recursive_sort(config)
-
-        # Normalize pytoml output:
-        # - removing empty lines
-        # - remove empty [section]
-        def toml_dump(data):
-            dump = pytoml.dumps(data)
-            if isinstance(data, dict):
-                for k, v in data.items():
-                    if all(isinstance(v2, dict) for v2 in v.values()):
-                        dump = dump.replace("[%s]" % k, "")
-            return dump.strip()
-
-        cargo_config = os.path.join(self.topsrcdir, ".cargo", "config.in")
-        with open(cargo_config, "w", encoding="utf-8", newline="\n") as fh:
-            fh.write(
-                CARGO_CONFIG_TEMPLATE.format(
-                    config=toml_dump(config),
-                    replace_name=replace_name,
-                    directory=replace["directory"],
-                )
-            )
-
-        if not self._check_licenses(vendor_dir):
-            self.log(
-                logging.ERROR,
-                "license_check_failed",
-                {},
-                """The changes from `mach vendor rust` will NOT be added to version control.
-
-{notice}""".format(
-                    notice=CARGO_LOCK_NOTICE
-                ),
-            )
-            self.repository.clean_directory(vendor_dir)
-            sys.exit(1)
-
         with open(os.path.join(self.topsrcdir, "Cargo.lock")) as fh:
             cargo_lock = pytoml.load(fh)
             failed = False
@@ -726,8 +640,93 @@ license file's hash.
                     failed = True
 
             if failed:
-                self.repository.clean_directory(vendor_dir)
                 sys.exit(1)
+
+        output = subprocess.check_output(
+            [cargo, "vendor", vendor_dir], cwd=self.topsrcdir
+        ).decode("UTF-8")
+
+        # Get the snippet of configuration that cargo vendor outputs, and
+        # update .cargo/config with it.
+        # XXX(bug 1576765): Hopefully do something better after
+        # https://github.com/rust-lang/cargo/issues/7280 is addressed.
+        config = "\n".join(
+            dropwhile(lambda l: not l.startswith("["), output.splitlines())
+        )
+
+        # The config is toml, parse it as such.
+        config = pytoml.loads(config)
+
+        # For each replace-with, extract their configuration and update the
+        # corresponding directory to be relative to topsrcdir.
+        replaces = {
+            v["replace-with"] for v in config["source"].values() if "replace-with" in v
+        }
+
+        # We only really expect one replace-with
+        if len(replaces) != 1:
+            self.log(
+                logging.ERROR,
+                "vendor_failed",
+                {},
+                """cargo vendor didn't output a unique replace-with. Found: %s."""
+                % replaces,
+            )
+            sys.exit(1)
+
+        replace_name = replaces.pop()
+        replace = config["source"].pop(replace_name)
+        replace["directory"] = mozpath.relpath(
+            mozpath.normsep(os.path.normcase(replace["directory"])),
+            mozpath.normsep(os.path.normcase(self.topsrcdir)),
+        )
+
+        # Introduce some determinism for the output.
+        def recursive_sort(obj):
+            if isinstance(obj, dict):
+                return OrderedDict(
+                    sorted((k, recursive_sort(v)) for k, v in obj.items())
+                )
+            if isinstance(obj, list):
+                return [recursive_sort(o) for o in obj]
+            return obj
+
+        config = recursive_sort(config)
+
+        # Normalize pytoml output:
+        # - removing empty lines
+        # - remove empty [section]
+        def toml_dump(data):
+            dump = pytoml.dumps(data)
+            if isinstance(data, dict):
+                for k, v in data.items():
+                    if all(isinstance(v2, dict) for v2 in v.values()):
+                        dump = dump.replace("[%s]" % k, "")
+            return dump.strip()
+
+        cargo_config = os.path.join(self.topsrcdir, ".cargo", "config.in")
+        with open(cargo_config, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(
+                CARGO_CONFIG_TEMPLATE.format(
+                    config=toml_dump(config),
+                    replace_name=replace_name,
+                    directory=replace["directory"],
+                )
+            )
+
+        if not self._check_licenses(vendor_dir):
+            self.log(
+                logging.ERROR,
+                "license_check_failed",
+                {},
+                """The changes from `mach vendor rust` will NOT be added to version control.
+
+{notice}""".format(
+                    notice=CARGO_LOCK_NOTICE
+                ),
+            )
+            self.repository.clean_directory(vendor_dir)
+            sys.exit(1)
 
         self.repository.add_remove_files(vendor_dir)
 
