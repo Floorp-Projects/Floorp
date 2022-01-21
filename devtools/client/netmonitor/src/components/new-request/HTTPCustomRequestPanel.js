@@ -20,12 +20,9 @@ const {
   parseQueryString,
   writeHeaderText,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
-const { button, div, input, label, textarea } = dom;
+const { button, div, input, label, textarea, select, option } = dom;
 
 const CUSTOM_HEADERS = L10N.getStr("netmonitor.custom.headers");
-const CUSTOM_NEW_REQUEST_METHOD_LABEL = L10N.getStr(
-  "netmonitor.custom.newRequestMethodLabel"
-);
 const CUSTOM_NEW_REQUEST_URL_LABEL = L10N.getStr(
   "netmonitor.custom.newRequestUrlLabel"
 );
@@ -125,6 +122,17 @@ class HTTPCustomRequestPanel extends Component {
       ? queryArray.map(({ name, value }) => name + "=" + value).join("\n")
       : "";
 
+    const methods = [
+      "GET",
+      "HEAD",
+      "POST",
+      "DELETE",
+      "PUT",
+      "CONNECT",
+      "OPTIONS",
+      "TRACE",
+      "PATH",
+    ];
     return div(
       { className: "http-custom-request-panel" },
       div(
@@ -148,36 +156,33 @@ class HTTPCustomRequestPanel extends Component {
             className: "tabpanel-summary-container http-custom-method-and-url",
             id: "http-custom-method-and-url",
           },
-          label(
+          select(
             {
-              className:
-                "http-custom-method-value-label http-custom-request-label",
-              htmlFor: "http-custom-method-value",
+              className: "http-custom-method-value",
+              id: "http-custom-method-value",
+              name: "method",
+              onChange: this.handleInputChange,
+              onBlur: this.handleInputChange,
+              value: method,
             },
-            CUSTOM_NEW_REQUEST_METHOD_LABEL
-          ),
-          input({
-            className: "http-custom-method-value",
-            id: "http-custom-method-value",
-            name: "method",
-            onChange: this.handleInputChange,
-            onBlur: () => {},
-            value: method,
-          }),
-          label(
-            {
-              className:
-                "http-custom-url-value-label http-custom-request-label",
-              htmlFor: "http-custom-url-value",
-            },
-            CUSTOM_NEW_REQUEST_URL_LABEL
+
+            methods.map(item =>
+              option(
+                {
+                  value: item,
+                  key: item,
+                },
+                item
+              )
+            )
           ),
           input({
             className: "http-custom-url-value",
             id: "http-custom-url-value",
             name: "url",
+            placeholder: CUSTOM_NEW_REQUEST_URL_LABEL,
             onChange: this.handleInputChange,
-            value: url || "http://",
+            value: url,
           })
         ),
         // Hide query field when there is no params
