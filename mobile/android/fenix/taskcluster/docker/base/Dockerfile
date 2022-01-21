@@ -46,7 +46,8 @@ RUN apt-get update -qq \
     && apt-get clean
 
 RUN pip install --upgrade pip
-RUN pip install taskcluster
+# TODO update to python3 so we can use newer taskcluster
+RUN pip install taskcluster==44.2.2
 
 RUN locale-gen "$LANG"
 
