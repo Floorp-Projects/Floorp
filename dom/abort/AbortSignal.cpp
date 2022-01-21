@@ -53,26 +53,23 @@ void AbortSignalImpl::SignalAbort(JS::Handle<JS::Value> aReason) {
   // https://dom.spec.whatwg.org/#abortsignal-remove could be invoked in an
   // earlier algorithm to remove a later algorithm, so |mFollowers| must be a
   // |nsTObserverArray| to defend against mutation.
-  for (RefPtr<AbortFollower> follower : mFollowers.ForwardRange()) {
+  for (RefPtr<AbortFollower>& follower : mFollowers.ForwardRange()) {
     MOZ_ASSERT(follower->mFollowingSignal == this);
     follower->RunAbortAlgorithm();
   }
 
   // Step 4.
-  // Clear follower->signal links, then clear signal->follower links.
-  for (AbortFollower* follower : mFollowers.ForwardRange()) {
-    follower->mFollowingSignal = nullptr;
-  }
-  mFollowers.Clear();
+  UnlinkFollowers();
 }
 
 void AbortSignalImpl::Traverse(AbortSignalImpl* aSignal,
                                nsCycleCollectionTraversalCallback& cb) {
-  // To be filled in shortly.
+  ImplCycleCollectionTraverse(cb, aSignal->mFollowers, "mFollowers", 0);
 }
 
 void AbortSignalImpl::Unlink(AbortSignalImpl* aSignal) {
   aSignal->mReason.setUndefined();
+  aSignal->UnlinkFollowers();
 }
 
 void AbortSignalImpl::MaybeAssignAbortError(JSContext* aCx) {
@@ -89,6 +86,15 @@ void AbortSignalImpl::MaybeAssignAbortError(JSContext* aCx) {
   }
 
   mReason.set(exception);
+}
+
+void AbortSignalImpl::UnlinkFollowers() {
+  // Manually unlink all followers before destructing the array, or otherwise
+  // the array will be accessed by Unfollow() while being destructed.
+  for (RefPtr<AbortFollower>& follower : mFollowers.ForwardRange()) {
+    follower->mFollowingSignal = nullptr;
+  }
+  mFollowers.Clear();
 }
 
 // AbortSignal

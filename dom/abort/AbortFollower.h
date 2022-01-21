@@ -24,8 +24,13 @@ class AbortFollower : public nsISupports {
  public:
   virtual void RunAbortAlgorithm() = 0;
 
+  // This adds strong reference to this follower on the signal, which means
+  // you'll need to call Unfollow() to prevent your object from living
+  // needlessly longer.
   void Follow(AbortSignalImpl* aSignal);
 
+  // Explicitly call this to let garbage collection happen sooner when the
+  // follower finished its work and cannot be aborted anymore.
   void Unfollow();
 
   bool IsFollowing() const;
@@ -63,7 +68,7 @@ class AbortSignalImpl : public nsISupports, public SupportsWeakPtr {
 
   static void Unlink(AbortSignalImpl* aSignal);
 
-  virtual ~AbortSignalImpl() = default;
+  virtual ~AbortSignalImpl() { UnlinkFollowers(); }
 
   JS::Heap<JS::Value> mReason;
 
@@ -72,11 +77,13 @@ class AbortSignalImpl : public nsISupports, public SupportsWeakPtr {
 
   void MaybeAssignAbortError(JSContext* aCx);
 
+  void UnlinkFollowers();
+
   // Raw pointers.  |AbortFollower::Follow| adds to this array, and
-  // |AbortFollower::Unfollow| (also callbed by the destructor) will remove
+  // |AbortFollower::Unfollow| (also called by the destructor) will remove
   // from this array.  Finally, calling |SignalAbort()| will (after running all
   // abort algorithms) empty this and make all contained followers |Unfollow()|.
-  nsTObserverArray<AbortFollower*> mFollowers;
+  nsTObserverArray<RefPtr<AbortFollower>> mFollowers;
 
   bool mAborted;
 };
