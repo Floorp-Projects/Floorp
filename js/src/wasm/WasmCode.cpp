@@ -884,8 +884,10 @@ bool LazyStubTier::createOneEntryStub(uint32_t funcExportIndex,
 
 // This uses the funcIndex as the major key and the tls pointer value as the
 // minor key, the same as the < and == predicates used in RemoveDuplicates.
+// However, since we only ever use this to search tables where every entry has
+// the same tls, there is no actual code for tls comparison here.
 
-auto IndirectStubComparator = [](uint32_t funcIndex, void* tlsData,
+auto IndirectStubComparator = [](uint32_t funcIndex,
                                  const IndirectStub& stub) -> int {
   if (funcIndex < stub.funcIndex) {
     return -1;
@@ -894,12 +896,6 @@ auto IndirectStubComparator = [](uint32_t funcIndex, void* tlsData,
     return 1;
   }
   // Function indices are equal.
-  if (uintptr_t(tlsData) < uintptr_t(stub.tls)) {
-    return -1;
-  }
-  if (uintptr_t(tlsData) > uintptr_t(stub.tls)) {
-    return 1;
-  }
   return 0;
 };
 
@@ -982,24 +978,63 @@ bool LazyStubTier::createManyIndirectStubs(
   }
 
   // Record the runtime info about generated indirect stubs.
-  if (!indirectStubVector_.reserve(indirectStubVector_.length() +
-                                   targets.length())) {
-    return false;
+
+  // Count the number of new slots needed for the different tls values in the
+  // table.  While there may be multiple tls values in the target set, the
+  // typical number is one or two.
+  struct Counter {
+    explicit Counter(void* tls) : tls(tls), counter(0) {}
+    void* tls;
+    size_t counter;
+  };
+  Vector<Counter, 8, SystemAllocPolicy> counters{};
+  for (const auto& target : targets) {
+    size_t i = 0;
+    while (i < counters.length() && target.tls != counters[i].tls) {
+      i++;
+    }
+    if (i == counters.length() && !counters.emplaceBack(target.tls)) {
+      return false;
+    }
+    counters[i].counter++;
   }
 
+  // Reserve space in the tables, creating new tables as necessary.  Do this
+  // first to avoid OOM while we're midway through installing stubs in the
+  // tables.
+  for (const auto& counter : counters) {
+    auto probe = indirectStubTable_.lookupForAdd(counter.tls);
+    if (!probe) {
+      IndirectStubVector v{};
+      if (!indirectStubTable_.add(probe, counter.tls, std::move(v))) {
+        return false;
+      }
+    }
+    IndirectStubVector& indirectStubVector = probe->value();
+    if (!indirectStubVector.reserve(indirectStubVector.length() +
+                                    counter.counter)) {
+      return false;
+    }
+  }
+
+  // We have storage, so now we can commit.
   for (const auto& target : targets) {
     auto stub = IndirectStub{target.functionIdx, lastStubSegmentIndex_,
-                             indirectStubRangeIndex, target.tls};
+                             indirectStubRangeIndex};
+
+    auto probe = indirectStubTable_.lookup(target.tls);
+    MOZ_RELEASE_ASSERT(probe);
+    IndirectStubVector& indirectStubVector = probe->value();
 
     size_t indirectStubIndex;
     MOZ_ALWAYS_FALSE(BinarySearchIf(
-        indirectStubVector_, 0, indirectStubVector_.length(),
+        indirectStubVector, 0, indirectStubVector.length(),
         [&stub](const IndirectStub& otherStub) {
-          return IndirectStubComparator(stub.funcIndex, stub.tls, otherStub);
+          return IndirectStubComparator(stub.funcIndex, otherStub);
         },
         &indirectStubIndex));
-    MOZ_ALWAYS_TRUE(indirectStubVector_.insert(
-        indirectStubVector_.begin() + indirectStubIndex, std::move(stub)));
+    MOZ_ALWAYS_TRUE(indirectStubVector.insert(
+        indirectStubVector.begin() + indirectStubIndex, std::move(stub)));
 
     ++indirectStubRangeIndex;
   }
@@ -1078,16 +1113,20 @@ void* LazyStubTier::lookupInterpEntry(uint32_t funcIndex) const {
 
 void* LazyStubTier::lookupIndirectStub(uint32_t funcIndex, void* tls) const {
   size_t match;
+  auto probe = indirectStubTable_.lookup(tls);
+  if (!probe) {
+    return nullptr;
+  }
+  const IndirectStubVector& indirectStubVector = probe->value();
   if (!BinarySearchIf(
-          indirectStubVector_, 0, indirectStubVector_.length(),
-          [funcIndex, tls](const IndirectStub& stub) {
-            return IndirectStubComparator(funcIndex, tls, stub);
+          indirectStubVector, 0, indirectStubVector.length(),
+          [funcIndex](const IndirectStub& stub) {
+            return IndirectStubComparator(funcIndex, stub);
           },
           &match)) {
     return nullptr;
   }
-
-  const IndirectStub& indirectStub = indirectStubVector_[match];
+  const IndirectStub& indirectStub = indirectStubVector[match];
 
   const LazyStubSegment& segment = *stubSegments_[indirectStub.segmentIndex];
   return segment.base() +
