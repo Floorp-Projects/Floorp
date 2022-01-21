@@ -41,6 +41,8 @@ const JSWINDOWACTORS = {
       events: {
         click: { capture: false, mozSystemGroup: true },
         contextmenu: { capture: false, mozSystemGroup: true },
+        mozshowdropdown: {},
+        "mozshowdropdown-sourcetouch": {},
         DOMPopupBlocked: { capture: false, mozSystemGroup: true },
       },
     },

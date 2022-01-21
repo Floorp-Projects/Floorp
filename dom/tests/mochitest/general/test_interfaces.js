@@ -149,6 +149,7 @@ var legacyMozPrefixedInterfaces = [
 //            except to remove items from it!
 
 // IMPORTANT: Do not change the list below without review from a DOM peer!
+// (You can request review on Phabricator via r=#webidl)
 var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AbortController", insecureContext: true },
@@ -1286,40 +1287,6 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "VisualViewport", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "VRDisplay", releaseNonWindowsAndMac: false },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "VRDisplayCapabilities",
-    releaseNonWindowsAndMac: false,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "VRDisplayEvent",
-    releaseNonWindowsAndMac: false,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "VREyeParameters",
-    releaseNonWindowsAndMac: false,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "VRFieldOfView",
-    releaseNonWindowsAndMac: false,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "VRFrameData",
-    releaseNonWindowsAndMac: false,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "VRPose", releaseNonWindowsAndMac: false },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "VRStageParameters",
-    releaseNonWindowsAndMac: false,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "VTTCue", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "VTTRegion", insecureContext: true },
@@ -1411,7 +1378,6 @@ function entryDisabled(entry) {
     entry.fennecOrDesktop === (isAndroid && !isFennec) ||
     entry.fennec === !isFennec ||
     entry.release === !isRelease ||
-    entry.releaseNonWindowsAndMac === !(isRelease && !isWindows && !isMac) ||
     entry.releaseNonWindows === !(isRelease && !isWindows) ||
     // The insecureContext test is very purposefully converting
     // entry.insecureContext to boolean, so undefined will convert to

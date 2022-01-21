@@ -2964,6 +2964,7 @@ installation:
     objects:
       - full # if the full installer was run directly
       - stub # if the stub installer was used
+      - msix # if the installation was done through an MSIX package
     release_channel_collection: opt-out
     record_in_processes: ["main"]
     products: ["firefox"]
@@ -2973,11 +2974,13 @@ installation:
       build_id: The build ID of the application installed by the installer (not necessarily the current version)
       admin_user: Whether the installer is running from an elevated admin user
       install_existed: Whether there was already an install in this location
+      other_inst: Whether there was already any non-MSIX install on this system
+      other_msix_inst: Whether there was already any MSIX install on this system
       profdir_existed: Whether the top-level profile directory existed
       silent: '(optional, present if object is "full") Whether this was a silent install'
       from_msi: '(optional, present if object is "full") Whether this was an MSI install'
       default_path: '(optional, present if object is "full") Whether the default path was used'
-    bug_numbers: [1660198, 1725295]
+    bug_numbers: [1660198, 1725295, 1743465]
     notification_emails:
       - application-update-telemetry-alerts@mozilla.com
       - rtestard@mozilla.com

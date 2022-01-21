@@ -369,7 +369,8 @@ var DownloadsPanel = {
     this._state = this.kStateShown;
 
     // Since at most one popup is open at any given time, we can set globally.
-    DownloadsCommon.getIndicatorData(window).attentionSuppressed = true;
+    DownloadsCommon.getIndicatorData(window).attentionSuppressed |=
+      DownloadsCommon.SUPPRESS_PANEL_OPEN;
 
     // Ensure that the first item is selected when the panel is focused.
     if (DownloadsView.richListBox.itemCount > 0) {
@@ -399,7 +400,9 @@ var DownloadsPanel = {
     this.keyFocusing = false;
 
     // Since at most one popup is open at any given time, we can set globally.
-    DownloadsCommon.getIndicatorData(window).attentionSuppressed = false;
+    DownloadsCommon.getIndicatorData(
+      window
+    ).attentionSuppressed &= ~DownloadsCommon.SUPPRESS_PANEL_OPEN;
 
     // Allow the anchor to be hidden.
     DownloadsButton.releaseAnchor();
@@ -1067,6 +1070,13 @@ var DownloadsView = {
     DownloadsViewController.updateCommands();
 
     DownloadsViewUI.updateContextMenuForElement(this.contextMenu, element);
+    // Hide the copy location item if there is somehow no URL. We have to do
+    // this here instead of in DownloadsViewUI because DownloadsPlacesView
+    // allows selecting multiple downloads, so in that view the menuitem will be
+    // shown according to whether at least one of the selected items has a URL.
+    this.contextMenu.querySelector(
+      ".downloadCopyLocationMenuItem"
+    ).hidden = !element._shell.download.source?.url;
   },
 
   onDownloadDragStart(aEvent) {
@@ -1166,8 +1176,9 @@ class DownloadsViewItem extends DownloadsViewUI.DownloadElementShell {
         let { target } = this.download;
         return target.exists || target.partFileExists;
       }
-      case "cmd_delete":
       case "downloadsCmd_copyLocation":
+        return !!this.download.source?.url;
+      case "cmd_delete":
       case "downloadsCmd_doDefault":
         return true;
       case "downloadsCmd_showBlockedInfo":
