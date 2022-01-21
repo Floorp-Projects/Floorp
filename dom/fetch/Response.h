@@ -121,6 +121,18 @@ class Response final : public FetchBody<Response>, public nsWrapperCache {
   SafeRefPtr<InternalResponse> GetInternalResponse() const;
 
   AbortSignalImpl* GetSignalImpl() const override { return mSignalImpl; }
+  AbortSignalImpl* GetSignalImplToConsumeBody() const final {
+    // XXX: BodyConsumer is supposed to work in terms of ReadableStream and
+    // should be affected by: https://fetch.spec.whatwg.org/#abort-fetch
+    //
+    // Step 6: If response’s body is not null and is readable, then error
+    // response’s body with error.
+    //
+    // But since it's written before streams work, it's currently depending on
+    // abort signal to be aborted.
+    // Please fix this when DOM ReadableStream is ready. (Bug 1730584)
+    return mSignalImpl;
+  }
 
  private:
   ~Response();
