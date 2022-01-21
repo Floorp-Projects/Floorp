@@ -3,7 +3,7 @@
     <!-- Text for context menu item to open the link in a new tab. -->
     <string name="mozac_feature_contextmenu_open_link_in_new_tab">Fosgail an ceangal ann an taba ùr</string>
     <!-- Text for context menu item to open the link in a private tab. -->
-    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Fosgail an ceangal ann an taba prìobhaideach</string>
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">Fosgail an ceangal le taba prìobhaideach</string>
     <!-- Text for context menu item to open the image in a new tab. -->
     <string name="mozac_feature_contextmenu_open_image_in_new_tab">Fosgail an dealbh ann an taba ùr</string>
     <!-- Text for context menu item to save / download the link. -->
@@ -29,7 +29,7 @@
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Geàrr leum</string>
     <!-- Text for context menu item to open the link in an external app. -->
-    <string name="mozac_feature_contextmenu_open_link_in_external_app">Fosgail an ceangal ann an aplacaid air an taobh a-muigh</string>
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">Fosgail an ceangal le aplacaid eile</string>
     <!-- Text for context menu item to share the email with another app. -->
     <string name="mozac_feature_contextmenu_share_email_address">Co-roinn an seòladh puist-d</string>
     <!-- Text for context menu item to copy the email address to the clipboard. -->
