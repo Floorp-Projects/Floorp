@@ -175,8 +175,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_DMABUF = 34;
   /* Whether webrender caches shader program binaries to disk, starting in 89. */
   const long FEATURE_WEBRENDER_SHADER_CACHE = 35;
+  /* Whether partial present is allowed with WebRender, starting in 98. */
+  const long FEATURE_WEBRENDER_PARTIAL_PRESENT = 36;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_WEBRENDER_SHADER_CACHE;
+  const long FEATURE_MAX_VALUE = FEATURE_WEBRENDER_PARTIAL_PRESENT;
 
   /*
    * A set of return values from GetFeatureStatus
