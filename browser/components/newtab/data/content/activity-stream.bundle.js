@@ -3290,7 +3290,8 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_12___default.a
           type: component.type,
           dispatch: this.props.dispatch,
           items: component.properties.items,
-          compact: component.properties.compact,
+          hideCardBackground: component.properties.hideCardBackground,
+          fourCardLayout: component.properties.fourCardLayout,
           hideDescriptions: component.properties.hideDescriptions,
           compactGrid: component.properties.compactGrid,
           compactImages: component.properties.compactImages,
@@ -3301,7 +3302,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_12___default.a
           essentialReadsHeader: component.properties.essentialReadsHeader,
           editorsPicksHeader: component.properties.editorsPicksHeader,
           readTime: component.properties.readTime,
-          loadMoreEnabled: component.loadMoreEnabled,
+          loadMore: component.loadMore,
           lastCardMessageEnabled: component.lastCardMessageEnabled,
           saveToPocketCard: component.saveToPocketCard,
           cta_variant: component.cta_variant,
@@ -13775,11 +13776,11 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
 
   get showLoadMore() {
     const {
-      loadMoreEnabled,
+      loadMore,
       data,
       loadMoreThreshold
     } = this.props;
-    return loadMoreEnabled && data.recommendations.length > loadMoreThreshold && !this.state.moreLoaded;
+    return loadMore && data.recommendations.length > loadMoreThreshold && !this.state.moreLoaded;
   }
 
   renderDSSubHeader(title) {
@@ -13796,10 +13797,11 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
 
   renderCards() {
     let {
-      items,
-      compact
+      items
     } = this.props;
     const {
+      hideCardBackground,
+      fourCardLayout,
       hideDescriptions,
       lastCardMessageEnabled,
       saveToPocketCard,
@@ -13871,8 +13873,8 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
 
 
     if (essentialReadsHeader && editorsPicksHeader) {
-      // For compact second row is 8 cards, and regular it is 6 cards.
-      if (compact) {
+      // For 4 card row layouts, second row is 8 cards, and regular it is 6 cards.
+      if (fourCardLayout) {
         cards.splice(8, 0, this.renderDSSubHeader("Editor’s Picks"));
       } else {
         cards.splice(6, 0, this.renderDSSubHeader("Editor’s Picks"));
@@ -13888,11 +13890,12 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
 
 
     const variantClass = this.props.display_variant ? `ds-card-grid-${this.props.display_variant}` : ``;
-    const compactClass = compact ? `ds-card-grid-compact-variant` : ``;
+    const hideCardBackgroundClass = hideCardBackground ? `ds-card-grid-hide-background` : ``;
+    const fourCardLayoutClass = fourCardLayout ? `ds-card-grid-four-card-variant` : ``;
     const hideDescriptionsClassName = !hideDescriptions ? `ds-card-grid-include-descriptions` : ``;
     const compactGridClassName = compactGrid ? `ds-card-grid-compact` : ``;
     return /*#__PURE__*/external_React_default.a.createElement("div", {
-      className: `ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${compactClass} ${hideDescriptionsClassName} ${compactGridClassName}`
+      className: `ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`
     }, cards);
   }
 
