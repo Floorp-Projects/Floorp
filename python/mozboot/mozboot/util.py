@@ -6,6 +6,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 
+from pathlib import Path
+
 from mach.site import PythonVirtualenv
 from mach.util import get_state_dir
 
@@ -20,11 +22,9 @@ def get_tools_dir(srcdir=False):
 
 
 def get_mach_virtualenv_root():
-    return os.path.join(
-        get_state_dir(specific_to_topsrcdir=True), "_virtualenvs", "mach"
-    )
+    return Path(get_state_dir(specific_to_topsrcdir=True)) / "_virtualenvs" / "mach"
 
 
 def get_mach_virtualenv_binary():
     root = get_mach_virtualenv_root()
-    return PythonVirtualenv(root).python_path
+    return Path(PythonVirtualenv(str(root)).python_path)
