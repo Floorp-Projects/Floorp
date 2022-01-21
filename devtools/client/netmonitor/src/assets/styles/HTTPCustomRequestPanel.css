@@ -77,7 +77,9 @@
 
 .network-monitor .http-custom-request .http-custom-request-button-container {
   display: flex;
+  justify-content: end;
   flex-wrap: wrap-reverse;
+  justify-content: end;
   gap: 8px;
   margin-block: 16px 12px;
   margin-inline: 16px;
@@ -113,7 +115,7 @@
   background-color: var(--blue-70);
 }
 
-.network-monitor .http-custom-request #http-custom-request-close-button {
+.network-monitor .http-custom-request #http-custom-request-clear-button {
   margin-inline-end: 4px;
 }
 
@@ -132,7 +134,7 @@
 }
 
 :root.theme-dark .network-monitor .tabpanel-summary-container.http-custom-method-and-url {
-  border: 1px solid var(--grey-50);
+  border-bottom: 1px solid var(--grey-60);
 }
 
 :root.theme-dark .network-monitor .http-custom-method-and-url .http-custom-method-value,
@@ -141,19 +143,19 @@
 }
 
 :root.theme-dark .network-monitor .http-custom-method-and-url .http-custom-url-value {
-  border-inline-start: 1px solid var(--grey-50);
+  border-inline-start: 1px solid var(--grey-60);
 }
 
-:root.theme-dark .network-monitor #http-custom-request-close-button {
+:root.theme-dark .network-monitor #http-custom-request-clear-button {
   background-color: var(--toolbarbutton-background);
   border: 1px solid var(--theme-splitter-color);
 }
 
-:root.theme-dark .network-monitor #http-custom-request-close-button:hover:active {
+:root.theme-dark .network-monitor #http-custom-request-clear-button:hover:active {
   background-color: var(--theme-selection-background-hover);
 }
 
-:root.theme-dark .network-monitor #http-custom-request-close-button:focus {
+:root.theme-dark .network-monitor #http-custom-request-clear-button:focus {
   background-color: var(--theme-selection-focus-background);
 }
 
@@ -175,7 +177,7 @@
 
 /* Light theme */
 :root.theme-light .network-monitor .tabpanel-summary-container.http-custom-method-and-url {
-  border: 1px solid var(--grey-30);
+  border-bottom: 1px solid var(--grey-30);
 }
 
 :root.theme-light .network-monitor .http-custom-method-and-url .http-custom-method-value {
@@ -191,16 +193,16 @@
   border-bottom: 1px solid var(--grey-25);
 }
 
-:root.theme-light .network-monitor #http-custom-request-close-button {
-  background-color: var(--grey-20);
+:root.theme-light .network-monitor #http-custom-request-clear-button {
+  background-color: var(--grey-25);
   border: var(--theme-splitter-color);
 }
 
-:root.theme-light .network-monitor #http-custom-request-close-button:hover:active {
+:root.theme-light .network-monitor #http-custom-request-clear-button:hover:active {
   background-color: var(--theme-selection-background-hover);
 }
 
-:root.theme-light .network-monitor #http-custom-request-close-button:focus {
+:root.theme-light .network-monitor #http-custom-request-clear-button:focus {
   outline: 2px solid var(--blue-50);
   outline-offset: -2px;
   box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.3);
