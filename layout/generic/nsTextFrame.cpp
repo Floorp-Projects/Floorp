@@ -10293,9 +10293,8 @@ void nsTextFrame::ToCString(nsCString& aBuf) const {
     return;
   }
 
-  const int32_t length = GetContentEnd() - mContentOffset;
-  if (length <= 0) {
-    // Negative lengths are possible during invalidation.
+  const uint32_t contentLength = AssertedCast<uint32_t>(GetContentLength());
+  if (0 == contentLength) {
     return;
   }
 
