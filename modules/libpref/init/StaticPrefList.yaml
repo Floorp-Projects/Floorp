@@ -10149,13 +10149,6 @@
   value: true
   mirror: always
 
-# TRR blocklist entry expire time (in seconds). Default is one minute.
-# Meant to survive basically a page load.
-- name: network.trr.temp_blocklist_duration_sec
-  type: RelaxedAtomicUint32
-  value: 60
-  mirror: always
-
 # Single TRR request timeout, in milliseconds
 - name: network.trr.request_timeout_ms
   type: RelaxedAtomicUint32

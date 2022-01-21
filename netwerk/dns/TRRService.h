@@ -119,6 +119,8 @@ class TRRService : public TRRServiceBase,
   void AddEtcHosts(const nsTArray<nsCString>&);
 
   bool mInitialized{false};
+  Atomic<uint32_t, Relaxed> mBlocklistDurationSeconds{60};
+
   Mutex mLock{"TRRService"};
 
   nsCString mPrivateCred;  // main thread only
