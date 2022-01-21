@@ -8,7 +8,6 @@ DevToolsModules(
     'fluent-react.js',
     'immutable.js',
     'jszip.js',
-    'lodash.js',
     'react-dom-factories.js',
     'react-dom-server.js',
     'react-dom-test-utils.js',
