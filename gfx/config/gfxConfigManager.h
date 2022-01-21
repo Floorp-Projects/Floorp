@@ -38,6 +38,7 @@ class gfxConfigManager {
         mWrForceAngleNoGPUProcess(false),
         mWrDCompWinEnabled(false),
         mWrCompositorDCompRequired(false),
+        mWrForcePartialPresent(false),
         mWrPartialPresent(false),
         mWrOptimizedShaders(false),
         mGPUProcessAllowSoftware(false),
@@ -86,6 +87,7 @@ class gfxConfigManager {
   bool mWrForceAngleNoGPUProcess;
   bool mWrDCompWinEnabled;
   bool mWrCompositorDCompRequired;
+  bool mWrForcePartialPresent;
   bool mWrPartialPresent;
   Maybe<bool> mWrShaderCache;
   bool mWrOptimizedShaders;

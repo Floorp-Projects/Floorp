@@ -434,6 +434,8 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
     WriteParam(aMsg, aParam.mIsRDMTouchSimulationActive);
     WriteParam(aMsg, aParam.mDidContentGetPainted);
     WriteParam(aMsg, aParam.mPrefersReducedMotion);
+    WriteParam(aMsg, aParam.mForceMousewheelAutodir);
+    WriteParam(aMsg, aParam.mForceMousewheelAutodirHonourRoot);
     WriteParam(aMsg, aParam.mDisregardedDirection);
     WriteParam(aMsg, aParam.mOverscrollBehavior);
     WriteParam(aMsg, aParam.mScrollUpdates);
@@ -474,6 +476,11 @@ struct ParamTraits<mozilla::layers::ScrollMetadata>
                                &paramType::SetDidContentGetPainted) &&
            ReadBoolForBitfield(aMsg, aIter, aResult,
                                &paramType::SetPrefersReducedMotion) &&
+           ReadBoolForBitfield(aMsg, aIter, aResult,
+                               &paramType::SetForceMousewheelAutodir) &&
+           ReadBoolForBitfield(
+               aMsg, aIter, aResult,
+               &paramType::SetForceMousewheelAutodirHonourRoot) &&
            ReadParam(aMsg, aIter, &aResult->mDisregardedDirection) &&
            ReadParam(aMsg, aIter, &aResult->mOverscrollBehavior) &&
            ReadParam(aMsg, aIter, &aResult->mScrollUpdates);

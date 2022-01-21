@@ -240,6 +240,9 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_WEBRENDER_SHADER_CACHE:
       name = BLOCKLIST_PREF_BRANCH "webrender.program-binary-disk";
       break;
+    case nsIGfxInfo::FEATURE_WEBRENDER_PARTIAL_PRESENT:
+      name = BLOCKLIST_PREF_BRANCH "webrender.partial-present";
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");
       break;
@@ -485,6 +488,9 @@ static int32_t BlocklistFeatureToGfxFeature(const nsAString& aFeature) {
   }
   if (aFeature.EqualsLiteral("DMABUF")) {
     return nsIGfxInfo::FEATURE_DMABUF;
+  }
+  if (aFeature.EqualsLiteral("WEBRENDER_PARTIAL_PRESENT")) {
+    return nsIGfxInfo::FEATURE_WEBRENDER_PARTIAL_PRESENT;
   }
 
   // If we don't recognize the feature, it may be new, and something
@@ -1367,6 +1373,7 @@ void GfxInfoBase::EvaluateDownloadedBlocklist(
                         nsIGfxInfo::FEATURE_ALLOW_WEBGL_OUT_OF_PROCESS,
                         nsIGfxInfo::FEATURE_X11_EGL,
                         nsIGfxInfo::FEATURE_DMABUF,
+                        nsIGfxInfo::FEATURE_WEBRENDER_PARTIAL_PRESENT,
                         0};
 
   // For every feature we know about, we evaluate whether this blocklist has a

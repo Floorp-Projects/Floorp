@@ -51,7 +51,7 @@ import {
   getAllThreadsBySource,
   getBreakableLinesForSourceActors,
 } from "./source-actors";
-import { getAllThreads } from "./threads";
+import { getAllThreads } from "../selectors/threads";
 
 export function initialSourcesState(state) {
   return {

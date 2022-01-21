@@ -12,11 +12,17 @@ import re
 import sys
 import subprocess
 import time
+from typing import Optional
+from pathlib import Path
 from distutils.version import LooseVersion
-from mozfile import which
-from mach.util import get_state_dir, UserError
+from mach.util import (
+    get_state_dir,
+    UserError,
+    to_optional_path,
+    to_optional_str,
+    win_to_msys_path,
+)
 from mach.telemetry import initialize_telemetry_setting
-
 from mozboot.base import MODERN_RUST_VERSION
 from mozboot.centosfedora import CentOSFedoraBootstrapper
 from mozboot.opensuse import OpenSUSEBootstrapper
@@ -31,6 +37,7 @@ from mozboot.void import VoidBootstrapper
 from mozboot.windows import WindowsBootstrapper
 from mozboot.mozillabuild import MozillaBuildBootstrapper
 from mozboot.mozconfig import find_mozconfig, MozconfigBuilder
+from mozfile import which
 
 # Use distro package to retrieve linux platform information
 import distro
@@ -168,7 +175,7 @@ class Bootstrapper(object):
                 cls = GentooBootstrapper
             elif dist_id in ("solus"):
                 cls = SolusBootstrapper
-            elif dist_id in ("arch") or os.path.exists("/etc/arch-release"):
+            elif dist_id in ("arch") or Path("/etc/arch-release").exists():
                 cls = ArchlinuxBootstrapper
             elif dist_id in ("void"):
                 cls = VoidBootstrapper
@@ -236,7 +243,7 @@ class Bootstrapper(object):
         # Like 'ensure_browser_packages' or 'ensure_mobile_android_packages'
         getattr(self.instance, "ensure_%s_packages" % application)()
 
-    def check_code_submission(self, checkout_root):
+    def check_code_submission(self, checkout_root: Path):
         if self.instance.no_interactive or which("moz-phab"):
             return
 
@@ -248,8 +255,8 @@ class Bootstrapper(object):
         if not self.instance.prompt_yesno("Will you be submitting commits to Mozilla?"):
             return
 
-        mach_binary = os.path.join(checkout_root, "mach")
-        subprocess.check_call((sys.executable, mach_binary, "install-moz-phab"))
+        mach_binary = checkout_root / "mach"
+        subprocess.check_call((sys.executable, str(mach_binary), "install-moz-phab"))
 
     def bootstrap(self, settings):
         if self.choice is None:
@@ -305,13 +312,16 @@ class Bootstrapper(object):
                 )
                 return 1
 
-        state_dir = get_state_dir()
+        state_dir = Path(get_state_dir())
         self.instance.state_dir = state_dir
+
+        hg = to_optional_path(which("hg"))
 
         # We need to enable the loading of hgrc in case extensions are
         # required to open the repo.
         (checkout_type, checkout_root) = current_firefox_checkout(
-            env=self.instance._hg_cleanenv(load_hgrc=True), hg=which("hg")
+            env=self.instance._hg_cleanenv(load_hgrc=True),
+            hg=hg,
         )
         self.instance.srcdir = checkout_root
         self.instance.validate_environment()
@@ -331,6 +341,8 @@ class Bootstrapper(object):
         if not self.instance.artifact_mode:
             self.instance.ensure_rust_modern()
 
+        git = to_optional_path(which("git"))
+
         # Possibly configure Mercurial, but not if the current checkout or repo
         # type is Git.
         if hg_installed and checkout_type == "hg":
@@ -340,10 +352,10 @@ class Bootstrapper(object):
                 configure_hg = self.hg_configure
 
             if configure_hg:
-                configure_mercurial(which("hg"), state_dir)
+                configure_mercurial(hg, state_dir)
 
         # Offer to configure Git, if the current checkout or repo type is Git.
-        elif which("git") and checkout_type == "git":
+        elif git and checkout_type == "git":
             should_configure_git = False
             if not self.instance.no_interactive:
                 should_configure_git = self.instance.prompt_yesno(prompt=CONFIGURE_GIT)
@@ -353,7 +365,10 @@ class Bootstrapper(object):
 
             if should_configure_git:
                 configure_git(
-                    which("git"), which("git-cinnabar"), state_dir, checkout_root
+                    git,
+                    to_optional_path(which("git-cinnabar")),
+                    state_dir,
+                    checkout_root,
                 )
 
         self.maybe_install_private_packages_or_exit(application)
@@ -361,12 +376,12 @@ class Bootstrapper(object):
         # Wait until after moz-phab setup to check telemetry so that employees
         # will be automatically opted-in.
         if not self.instance.no_interactive and not settings.mach_telemetry.is_set_up:
-            initialize_telemetry_setting(settings, checkout_root, state_dir)
+            initialize_telemetry_setting(settings, str(checkout_root), str(state_dir))
 
         print(FINISHED % name)
         if not (
             which("rustc")
-            and self.instance._parse_version("rustc") >= MODERN_RUST_VERSION
+            and self.instance._parse_version(Path("rustc")) >= MODERN_RUST_VERSION
         ):
             print(
                 "To build %s, please restart the shell (Start a new terminal window)"
@@ -385,15 +400,14 @@ class Bootstrapper(object):
         raw_mozconfig = mozconfig_builder.generate()
 
         if raw_mozconfig:
-            mozconfig_path = find_mozconfig(self.mach_context.topdir)
+            mozconfig_path = Path(find_mozconfig(Path(self.mach_context.topdir)))
             if not mozconfig_path:
                 # No mozconfig file exists yet
-                mozconfig_path = os.path.join(self.mach_context.topdir, "mozconfig")
+                mozconfig_path = Path(self.mach_context.topdir) / "mozconfig"
                 with open(mozconfig_path, "w") as mozconfig_file:
                     mozconfig_file.write(raw_mozconfig)
                 print(
-                    'Your requested configuration has been written to "%s".'
-                    % mozconfig_path
+                    f'Your requested configuration has been written to "{mozconfig_path}".'
                 )
             else:
                 suggestion = MOZCONFIG_SUGGESTION_TEMPLATE % (
@@ -420,7 +434,7 @@ class Bootstrapper(object):
             print("ERROR: distutils is not behaving as expected.", file=sys.stderr)
             self.instance.suggest_install_distutils()
             valid = False
-        pip3 = which("pip3")
+        pip3 = to_optional_path(which("pip3"))
         if not pip3:
             print("ERROR: Could not find pip3.", file=sys.stderr)
             self.instance.suggest_install_pip3()
@@ -436,9 +450,9 @@ class Bootstrapper(object):
             sys.exit(1)
 
 
-def update_vct(hg, root_state_dir):
+def update_vct(hg: Path, root_state_dir: Path):
     """Ensure version-control-tools in the state directory is up to date."""
-    vct_dir = os.path.join(root_state_dir, "version-control-tools")
+    vct_dir = root_state_dir / "version-control-tools"
 
     # Ensure the latest revision of version-control-tools is present.
     update_mercurial_repo(
@@ -448,48 +462,50 @@ def update_vct(hg, root_state_dir):
     return vct_dir
 
 
-def configure_mercurial(hg, root_state_dir):
+def configure_mercurial(hg: Optional[Path], root_state_dir: Path):
     """Run the Mercurial configuration wizard."""
     vct_dir = update_vct(hg, root_state_dir)
+
+    hg = to_optional_str(hg)
 
     # Run the config wizard from v-c-t.
     args = [
         hg,
         "--config",
-        "extensions.configwizard=%s/hgext/configwizard" % vct_dir,
+        f"extensions.configwizard={vct_dir}/hgext/configwizard",
         "configwizard",
     ]
     subprocess.call(args)
 
 
-def update_mercurial_repo(hg, url, dest, revision):
+def update_mercurial_repo(hg: Path, url, dest: Path, revision):
     """Perform a clone/pull + update of a Mercurial repository."""
     # Disable common extensions whose older versions may cause `hg`
     # invocations to abort.
-    pull_args = [hg]
-    if os.path.exists(dest):
+    pull_args = [str(hg)]
+    if dest.exists():
         pull_args.extend(["pull", url])
         cwd = dest
     else:
-        pull_args.extend(["clone", "--noupdate", url, dest])
+        pull_args.extend(["clone", "--noupdate", url, str(dest)])
         cwd = "/"
 
-    update_args = [hg, "update", "-r", revision]
+    update_args = [str(hg), "update", "-r", revision]
 
     print("=" * 80)
-    print("Ensuring %s is up to date at %s" % (url, dest))
+    print(f"Ensuring {url} is up to date at {dest}")
 
     env = os.environ.copy()
     env.update({"HGPLAIN": "1"})
 
     try:
-        subprocess.check_call(pull_args, cwd=cwd, env=env)
-        subprocess.check_call(update_args, cwd=dest, env=env)
+        subprocess.check_call(pull_args, cwd=str(cwd), env=env)
+        subprocess.check_call(update_args, cwd=str(dest), env=env)
     finally:
         print("=" * 80)
 
 
-def current_firefox_checkout(env, hg=None):
+def current_firefox_checkout(env, hg: Optional[Path] = None):
     """Determine whether we're in a Firefox checkout.
 
     Returns one of None, ``git``, or ``hg``.
@@ -501,22 +517,22 @@ def current_firefox_checkout(env, hg=None):
         ]
     )
 
-    path = os.getcwd()
+    path = Path.cwd()
     while path:
-        hg_dir = os.path.join(path, ".hg")
-        git_dir = os.path.join(path, ".git")
-        if hg and os.path.exists(hg_dir):
+        hg_dir = path / ".hg"
+        git_dir = path / ".git"
+        if hg and hg_dir.exists():
             # Verify the hg repo is a Firefox repo by looking at rev 0.
             try:
                 node = subprocess.check_output(
-                    [hg, "log", "-r", "0", "--template", "{node}"],
-                    cwd=path,
+                    [str(hg), "log", "-r", "0", "--template", "{node}"],
+                    cwd=str(path),
                     env=env,
                     universal_newlines=True,
                 )
                 if node in HG_ROOT_REVISIONS:
                     _warn_if_risky_revision(path)
-                    return ("hg", path)
+                    return "hg", path
                 # Else the root revision is different. There could be nested
                 # repos. So keep traversing the parents.
             except subprocess.CalledProcessError:
@@ -525,14 +541,13 @@ def current_firefox_checkout(env, hg=None):
         # Just check for known-good files in the checkout, to prevent attempted
         # foot-shootings.  Determining a canonical git checkout of mozilla-unified
         # is...complicated
-        elif os.path.exists(git_dir):
-            moz_configure = os.path.join(path, "moz.configure")
-            if os.path.exists(moz_configure):
+        elif git_dir.exists():
+            moz_configure = path / "moz.configure"
+            if moz_configure.exists():
                 _warn_if_risky_revision(path)
-                return ("git", path)
+                return "git", path
 
-        path, child = os.path.split(path)
-        if child == "":
+        if not len(path.parents):
             break
 
     raise UserError(
@@ -541,53 +556,64 @@ def current_firefox_checkout(env, hg=None):
     )
 
 
-def update_git_tools(git, root_state_dir):
+def update_git_tools(git: Optional[Path], root_state_dir: Path):
     """Update git tools, hooks and extensions"""
     # Ensure git-cinnabar is up to date.
-    cinnabar_dir = os.path.join(root_state_dir, "git-cinnabar")
+    cinnabar_dir = root_state_dir / "git-cinnabar"
 
     # Ensure the latest revision of git-cinnabar is present.
     update_git_repo(git, "https://github.com/glandium/git-cinnabar.git", cinnabar_dir)
+
+    git = to_optional_str(git)
 
     # Perform a download of cinnabar.
     download_args = [git, "cinnabar", "download"]
 
     try:
-        subprocess.check_call(download_args, cwd=cinnabar_dir)
+        subprocess.check_call(download_args, cwd=str(cinnabar_dir))
     except subprocess.CalledProcessError as e:
         print(e)
     return cinnabar_dir
 
 
-def update_git_repo(git, url, dest):
+def update_git_repo(git: Optional[Path], url, dest: Path):
     """Perform a clone/pull + update of a Git repository."""
-    pull_args = [git]
+    git_str = to_optional_str(git)
 
-    if os.path.exists(dest):
+    pull_args = [git_str]
+
+    if dest.exists():
         pull_args.extend(["pull"])
         cwd = dest
     else:
-        pull_args.extend(["clone", "--no-checkout", url, dest])
-        cwd = "/"
+        pull_args.extend(["clone", "--no-checkout", url, str(dest)])
+        cwd = Path("/")
 
-    update_args = [git, "checkout"]
+    update_args = [git_str, "checkout"]
 
     print("=" * 80)
-    print("Ensuring %s is up to date at %s" % (url, dest))
+    print(f"Ensuring {url} is up to date at {dest}")
 
     try:
-        subprocess.check_call(pull_args, cwd=cwd)
-        subprocess.check_call(update_args, cwd=dest)
+        subprocess.check_call(pull_args, cwd=str(cwd))
+        subprocess.check_call(update_args, cwd=str(dest))
     finally:
         print("=" * 80)
 
 
-def configure_git(git, cinnabar, root_state_dir, top_src_dir):
+def configure_git(
+    git: Optional[Path],
+    cinnabar: Optional[Path],
+    root_state_dir: Path,
+    top_src_dir: Path,
+):
     """Run the Git configuration steps."""
+
+    git_str = to_optional_str(git)
 
     match = re.search(
         r"(\d+\.\d+\.\d+)",
-        subprocess.check_output([git, "--version"], universal_newlines=True),
+        subprocess.check_output([git_str, "--version"], universal_newlines=True),
     )
     if not match:
         raise Exception("Could not find git version")
@@ -604,17 +630,16 @@ def configure_git(git, cinnabar, root_state_dir, top_src_dir):
     if git_version >= LooseVersion("2.17"):
         # "core.untrackedCache" has a bug before 2.17
         subprocess.check_call(
-            [git, "config", "core.untrackedCache", "true"], cwd=top_src_dir
+            [git_str, "config", "core.untrackedCache", "true"], cwd=str(top_src_dir)
         )
 
-    cinnabar_dir = update_git_tools(git, root_state_dir)
+    cinnabar_dir = str(update_git_tools(git, root_state_dir))
 
     if not cinnabar:
         if "MOZILLABUILD" in os.environ:
             # Slightly modify the path on Windows to be correct
             # for the copy/paste into the .bash_profile
-            cinnabar_dir = "/" + cinnabar_dir
-            cinnabar_dir = cinnabar_dir.replace(":", "")
+            cinnabar_dir = win_to_msys_path(cinnabar_dir)
 
             print(
                 ADD_GIT_CINNABAR_PATH.format(
@@ -625,7 +650,7 @@ def configure_git(git, cinnabar, root_state_dir, top_src_dir):
             print(ADD_GIT_CINNABAR_PATH.format(prefix="~", cinnabar_dir=cinnabar_dir))
 
 
-def _warn_if_risky_revision(path):
+def _warn_if_risky_revision(path: Path):
     # Warn the user if they're trying to bootstrap from an obviously old
     # version of tree as reported by the version control system (a month in
     # this case). This is an approximate calculation but is probably good

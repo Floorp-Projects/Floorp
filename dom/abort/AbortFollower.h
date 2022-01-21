@@ -10,6 +10,7 @@
 #include "jsapi.h"
 #include "nsISupportsImpl.h"
 #include "nsTObserverArray.h"
+#include "mozilla/WeakPtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -23,8 +24,13 @@ class AbortFollower : public nsISupports {
  public:
   virtual void RunAbortAlgorithm() = 0;
 
+  // This adds strong reference to this follower on the signal, which means
+  // you'll need to call Unfollow() to prevent your object from living
+  // needlessly longer.
   void Follow(AbortSignalImpl* aSignal);
 
+  // Explicitly call this to let garbage collection happen sooner when the
+  // follower finished its work and cannot be aborted anymore.
   void Unfollow();
 
   bool IsFollowing() const;
@@ -32,21 +38,16 @@ class AbortFollower : public nsISupports {
   AbortSignalImpl* Signal() const { return mFollowingSignal; }
 
  protected:
-  // Subclasses of this class must call these Traverse and Unlink functions
-  // during corresponding cycle collection operations.
-  static void Traverse(AbortFollower* aFollower,
-                       nsCycleCollectionTraversalCallback& cb);
-
   static void Unlink(AbortFollower* aFollower) { aFollower->Unfollow(); }
 
   virtual ~AbortFollower();
 
   friend class AbortSignalImpl;
 
-  RefPtr<AbortSignalImpl> mFollowingSignal;
+  WeakPtr<AbortSignalImpl> mFollowingSignal;
 };
 
-class AbortSignalImpl : public nsISupports {
+class AbortSignalImpl : public nsISupports, public SupportsWeakPtr {
  public:
   explicit AbortSignalImpl(bool aAborted, JS::Handle<JS::Value> aReason);
 
@@ -67,7 +68,7 @@ class AbortSignalImpl : public nsISupports {
 
   static void Unlink(AbortSignalImpl* aSignal);
 
-  virtual ~AbortSignalImpl() = default;
+  virtual ~AbortSignalImpl() { UnlinkFollowers(); }
 
   JS::Heap<JS::Value> mReason;
 
@@ -76,11 +77,13 @@ class AbortSignalImpl : public nsISupports {
 
   void MaybeAssignAbortError(JSContext* aCx);
 
+  void UnlinkFollowers();
+
   // Raw pointers.  |AbortFollower::Follow| adds to this array, and
-  // |AbortFollower::Unfollow| (also callbed by the destructor) will remove
+  // |AbortFollower::Unfollow| (also called by the destructor) will remove
   // from this array.  Finally, calling |SignalAbort()| will (after running all
   // abort algorithms) empty this and make all contained followers |Unfollow()|.
-  nsTObserverArray<AbortFollower*> mFollowers;
+  nsTObserverArray<RefPtr<AbortFollower>> mFollowers;
 
   bool mAborted;
 };

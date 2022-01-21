@@ -22,7 +22,7 @@ def harness_class(request):
     failures according to the supplied test parameter
     """
     if "num_fails_crashed" in request.funcargnames:
-        num_fails_crashed = request.getfuncargvalue("num_fails_crashed")
+        num_fails_crashed = request.getfixturevalue("num_fails_crashed")
     else:
         num_fails_crashed = (0, 0)
     harness_cls = Mock(spec=MarionetteHarness)
@@ -41,7 +41,7 @@ def runner_class(request):
     runner.crashed attributes are provided by a test parameter
     """
     if "num_fails_crashed" in request.funcargnames:
-        failures, crashed = request.getfuncargvalue("num_fails_crashed")
+        failures, crashed = request.getfixturevalue("num_fails_crashed")
     else:
         failures = 0
         crashed = 0

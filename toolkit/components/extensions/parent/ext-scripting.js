@@ -9,18 +9,16 @@
 var { ExtensionError } = ExtensionUtils;
 
 /**
- * Inserts a script in the given tab, and returns a promise which resolves when
- * the operation has completed.
+ * Inserts a script or style in the given tab, and returns a promise which
+ * resolves when the operation has completed.
  *
- * @param {TabBase} tab
- *        The tab in which to perform the injection.
  * @param {BaseContext} context
  *        The extension context for which to perform the injection.
  * @param {Object} details
  *        The details object, specifying what to inject, where, and when.
- *        Derived from the ScriptInjection type.
+ *        Derived from the ScriptInjection or CSSInjection types.
  * @param {string} kind
- *        The kind of data being injected. Possible choices: "js".
+ *        The kind of data being injected. Possible choices: "js" or "css".
  * @param {string} method
  *        The name of the method which was called to trigger the injection.
  *        Used to generate appropriate error messages on failure.
@@ -28,11 +26,18 @@ var { ExtensionError } = ExtensionUtils;
  * @returns {Promise}
  *        Resolves to the result of the execution, once it has completed.
  */
-const execute = (tab, context, details, kind, method) => {
+const execute = (context, details, kind, method) => {
+  const { tabManager } = context.extension;
+
   let options = {
     jsPaths: [],
+    cssPaths: [],
+    removeCSS: method == "removeCSS",
     extensionId: context.extension.id,
   };
+
+  const { tabId, frameIds, allFrames } = details.target;
+  const tab = tabManager.get(tabId);
 
   // TODO: Bug 1750765 - Add test coverage for this option.
   options.hasActiveTabPermission = tab.hasActiveTabPermission;
@@ -40,32 +45,51 @@ const execute = (tab, context, details, kind, method) => {
     host => host.pattern
   );
 
-  if (details.code) {
-    options[`${kind}Code`] = details.code;
+  const codeKey = kind === "js" ? "func" : "css";
+  if ((details.files === null) == (details[codeKey] === null)) {
+    throw new ExtensionError(
+      `Exactly one of files and ${codeKey} must be specified.`
+    );
+  }
+
+  if (details[codeKey]) {
+    options[`${kind}Code`] = details[codeKey];
   }
 
   if (details.files) {
     for (const file of details.files) {
       let url = context.uri.resolve(file);
       if (!tab.extension.isExtensionURL(url)) {
-        return Promise.reject({
-          message: "Files to be injected must be within the extension",
-        });
+        throw new ExtensionError(
+          "Files to be injected must be within the extension"
+        );
       }
       options[`${kind}Paths`].push(url);
     }
   }
 
-  // TODO: Bug 1736574 - Add support for multiple frame IDs and `allFrames`.
-  if (details.frameId) {
-    options.frameID = details.frameId;
+  if (allFrames && frameIds) {
+    throw new ExtensionError("Cannot specify both 'allFrames' and 'frameIds'.");
+  }
+
+  if (allFrames) {
+    options.allFrames = allFrames;
+  } else if (frameIds) {
+    options.frameIds = frameIds;
   }
 
   options.runAt = "document_idle";
   options.wantReturnValue = true;
+  // With this option set to `true`, we'll receive executeScript() results with
+  // `frameId/result` properties and an `error` property will also be returned
+  // in case of an error.
+  options.returnResultsWithFrameIds = kind === "js";
 
-  // TODO: Bug 1736579 - Configure options for CSS injection, e.g., `cssPaths`
-  // and `cssOrigin`.
+  if (details.origin) {
+    options.cssOrigin = details.origin.toLowerCase();
+  } else {
+    options.cssOrigin = "author";
+  }
 
   // This function is derived from `_execute()` in `parent/ext-tabs-base.js`,
   // make sure to keep both in sync when relevant.
@@ -74,56 +98,18 @@ const execute = (tab, context, details, kind, method) => {
 
 this.scripting = class extends ExtensionAPI {
   getAPI(context) {
-    const { extension } = context;
-    const { tabManager } = extension;
-
     return {
       scripting: {
         executeScriptInternal: async details => {
-          let { tabId, frameIds } = details.target;
+          return execute(context, details, "js", "executeScript");
+        },
 
-          let tab = tabManager.get(tabId);
+        insertCSS: async details => {
+          return execute(context, details, "css", "insertCSS").then(() => {});
+        },
 
-          let executeDetails = {
-            // Defined in `child/ext-scripting.js`.
-            code: details.codeToExecute,
-            files: details.files,
-          };
-
-          const promises = [];
-
-          if (!frameIds) {
-            // We use the top-level frame by default.
-            frameIds = [0];
-          }
-
-          for (const frameId of frameIds) {
-            const details = { ...executeDetails, frameId };
-            promises.push(
-              execute(tab, context, details, "js", "executeScript")
-                // We return `null` when the result value is falsey.
-                .then(results => ({ frameId, result: results[0] || null }))
-                .catch(error => ({ frameId, result: null, error }))
-            );
-          }
-
-          const results = await Promise.all(promises);
-
-          return results.map(({ frameId, result, error }) => {
-            if (error) {
-              // TODO Bug 1740608: we re-throw extension errors coming from
-              // `tab.executeScript()` and only log runtime errors, but this
-              // might change because error handling needs to be more
-              // well-defined.
-              if (error instanceof ExtensionError) {
-                throw error;
-              }
-
-              Cu.reportError(error.message || error);
-            }
-
-            return { frameId, result };
-          });
+        removeCSS: async details => {
+          return execute(context, details, "css", "removeCSS").then(() => {});
         },
       },
     };

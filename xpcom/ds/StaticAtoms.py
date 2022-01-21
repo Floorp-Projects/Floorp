@@ -2202,6 +2202,8 @@ STATIC_ATOMS = [
     Atom("DisplayPortMargins", "_displayportmargins"),
     Atom("DisplayPortBase", "_displayportbase"),
     Atom("MinimalDisplayPort", "_minimaldisplayport"),
+    Atom("forceMousewheelAutodir", "_force_mousewheel_autodir"),
+    Atom("forceMousewheelAutodirHonourRoot", "_force_mousewheel_autodir_honourroot"),
     Atom("forcemessagemanager", "forcemessagemanager"),
     Atom("initialBrowsingContextGroupId", "initialBrowsingContextGroupId"),
     Atom("initiallyactive", "initiallyactive"),

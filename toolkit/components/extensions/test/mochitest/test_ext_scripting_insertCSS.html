@@ -1,0 +1,395 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tests scripting.insertCSS()</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const MOCHITEST_HOST_PERMISSIONS = [
+  "*://mochi.test/",
+  "*://mochi.xorigin-test/",
+  "*://test1.example.com/",
+];
+
+const makeExtension = ({ manifest: manifestProps, ...otherProps }) => {
+  return ExtensionTestUtils.loadExtension({
+    manifest: {
+      manifest_version: 3,
+      permissions: ["scripting"],
+      host_permissions: [
+        ...MOCHITEST_HOST_PERMISSIONS,
+        // Used in `file_contains_iframe.html`
+        "https://example.org/",
+      ],
+      ...manifestProps,
+    },
+    ...otherProps,
+  });
+};
+
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+});
+
+add_task(async function test_insertCSS_and_removeCSS_params_validation() {
+  let extension = makeExtension({
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+
+      const TEST_CASES = [
+        {
+          title: "no files and no css",
+          cssParams: {},
+          expectedError: "Exactly one of files and css must be specified.",
+        },
+        {
+          title: "both files and css are passed",
+          cssParams: {
+            files: ["styles.css"],
+            css: "* { background: rgb(1, 1, 1) }",
+          },
+          expectedError: "Exactly one of files and css must be specified.",
+        },
+        {
+          title: "both allFrames and frameIds are passed",
+          cssParams: {
+            target: {
+              tabId: tabs[0].id,
+              allFrames: true,
+              frameIds: [1, 2, 3],
+            },
+            files: ["styles.css"],
+          },
+          expectedError: "Cannot specify both 'allFrames' and 'frameIds'.",
+        },
+        {
+          title: "empty css string with a file",
+          cssParams: {
+            css: "",
+            files: ["styles.css"],
+          },
+          expectedError: "Exactly one of files and css must be specified.",
+        },
+      ];
+
+      for (const { title, cssParams, expectedError } of TEST_CASES) {
+        await browser.test.assertRejects(
+          browser.scripting.insertCSS({
+            target: { tabId: tabs[0].id },
+            ...cssParams,
+          }),
+          expectedError,
+          `${title} - expected error for insertCSS()`
+        );
+
+        await browser.test.assertRejects(
+          browser.scripting.removeCSS({
+            target: { tabId: tabs[0].id },
+            ...cssParams,
+          }),
+          expectedError,
+          `${title} - expected error for removeCSS()`
+        );
+      }
+
+      browser.test.notifyPass("checks-done");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("checks-done");
+  await extension.unload();
+});
+
+add_task(async function test_insertCSS_with_invalid_tabId() {
+  let extension = makeExtension({
+    async background() {
+      // This tab ID should not exist.
+      const tabId = 123456789;
+
+      await browser.test.assertRejects(
+        browser.scripting.insertCSS({
+          target: { tabId },
+          css: "* { background: rgb(1, 1, 1) }",
+        }),
+        `Invalid tab ID: ${tabId}`
+      );
+
+      browser.test.notifyPass("insert-css");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("insert-css");
+  await extension.unload();
+});
+
+add_task(async function test_insertCSS_with_wrong_host_permissions() {
+  let extension = makeExtension({
+    manifest: {
+      host_permissions: [],
+    },
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      browser.test.assertRejects(
+        browser.scripting.insertCSS({
+          target: { tabId: tabs[0].id },
+          css: "* { background: rgb(1, 1, 1) }",
+        }),
+        /Missing host permission for the tab/,
+        "expected host permission error"
+      );
+
+      browser.test.notifyPass("insert-css");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("insert-css");
+  await extension.unload();
+});
+
+add_task(async function test_insertCSS_and_removeCSS() {
+  let extension = makeExtension({
+    manifest: {
+      permissions: ["scripting", "webNavigation"],
+    },
+    async background() {
+      const tabs = await browser.tabs.query({ active: true });
+      browser.test.assertEq(1, tabs.length, "expected 1 tab");
+
+      const tabId = tabs[0].id;
+
+      const frames = await browser.webNavigation.getAllFrames({ tabId });
+      // 1. Top-level frame that loads `file_contains_iframe.html`
+      // 2. Frame that loads `file_contains_img.html`
+      browser.test.assertEq(2, frames.length, "expected 2 frames");
+      const frameIds = frames.map(frame => frame.frameId);
+
+      const cssColor1 = "rgb(1, 1, 1)";
+      const cssColor2 = "rgb(2, 2, 2)";
+      const cssColorInFile1 = "rgb(3, 3, 3)";
+      const defaultColor = "rgba(0, 0, 0, 0)";
+
+      const TEST_CASES = [
+        {
+          title: "with css prop",
+          elementId: "div-1",
+          cssParams: [
+            {
+              target: { tabId },
+              css: `#div-1 { background: ${cssColor1} }`,
+            },
+          ],
+          expectedResults: [cssColor1, defaultColor],
+        },
+        {
+          title: "with a file",
+          elementId: "div-2",
+          cssParams: [
+            {
+              target: { tabId },
+              files: ["file1.css"],
+            },
+          ],
+          expectedResults: [cssColorInFile1, defaultColor],
+        },
+        {
+          title: "css prop in a single frame",
+          elementId: "div-3",
+          cssParams: [
+            {
+              target: { tabId, frameIds: [frameIds[0]] },
+              css: `#div-3 { background: ${cssColor2} }`,
+            },
+          ],
+          expectedResults: [cssColor2, defaultColor],
+        },
+        {
+          title: "css prop in multiple frames",
+          elementId: "div-4",
+          cssParams: [
+            {
+              target: { tabId, frameIds },
+              css: `#div-4 { background: ${cssColor1} }`,
+            },
+          ],
+          expectedResults: [cssColor1, cssColor1],
+        },
+        {
+          title: "allFrames is true",
+          elementId: "div-5",
+          cssParams: [
+            {
+              target: { tabId, allFrames: true },
+              css: `#div-5 { background: ${defaultColor} }`,
+            },
+          ],
+          expectedResults: [defaultColor, defaultColor],
+        },
+        {
+          title: "origin: 'AUTHOR'",
+          elementId: "div-6",
+          cssParams: [
+            {
+              target: { tabId },
+              css: `#div-6 { background: ${cssColor1} }`,
+              origin: "AUTHOR",
+            },
+            {
+              target: { tabId },
+              css: `#div-6 { background: ${cssColor2} }`,
+              origin: "AUTHOR",
+            },
+          ],
+          expectedResults: [cssColor2, defaultColor],
+        },
+        {
+          title: "origin: 'USER'",
+          elementId: "div-7",
+          cssParams: [
+            {
+              target: { tabId },
+              css: `#div-7 { background: ${cssColor1} !important }`,
+              origin: "USER",
+            },
+            {
+              target: { tabId },
+              css: `#div-7 { background: ${cssColor2} !important }`,
+              origin: "AUTHOR",
+            },
+          ],
+          // User has higher importance.
+          expectedResults: [cssColor1, defaultColor],
+        },
+        {
+          title: "empty css string",
+          elementId: "div-8",
+          cssParams: [
+            {
+              target: { tabId },
+              css: "",
+            },
+          ],
+          expectedResults: [defaultColor, defaultColor],
+        },
+        {
+          title: "allFrames is false",
+          elementId: "div-9",
+          cssParams: [
+            {
+              target: { tabId, allFrames: false },
+              css: `#div-9 { background: ${cssColor1} }`,
+            },
+          ],
+          expectedResults: [cssColor1, defaultColor],
+        },
+      ];
+
+      const getBackgroundColor = elementId => {
+        return window.getComputedStyle(document.getElementById(elementId))
+          .backgroundColor;
+      };
+
+      for (const {
+        title,
+        elementId,
+        cssParams,
+        expectedResults,
+      } of TEST_CASES) {
+        // Create a unique element for the current test case.
+        await browser.scripting.executeScript({
+          target: { tabId, allFrames: true },
+          func: elementId => {
+            const element = document.createElement("div");
+            element.setAttribute("id", elementId);
+            document.body.appendChild(element);
+          },
+          args: [elementId],
+        });
+
+        let results = await Promise.all(
+          cssParams.map(params => browser.scripting.insertCSS(params))
+        );
+        // `insertCSS()` should not resolve to a value.
+        results.forEach(result => {
+          browser.test.assertEq(undefined, result, "got expected empty result");
+        });
+
+        results = await browser.scripting.executeScript({
+          target: { tabId, allFrames: true },
+          func: getBackgroundColor,
+          args: [elementId],
+        });
+        results.sort((a, b) => a.frameId - b.frameId);
+
+        browser.test.assertEq(
+          expectedResults.length,
+          results.length,
+          `${title} - got the expected number of results`
+        );
+        results.forEach((result, index) => {
+          browser.test.assertEq(
+            expectedResults[index],
+            result.result,
+            `${title} - got expected result (index=${index}): ${title}`
+          );
+        });
+
+        results = await Promise.all(
+          cssParams.map(params => browser.scripting.removeCSS(params))
+        );
+        // `removeCSS()` should not resolve to a value.
+        results.forEach(result => {
+          browser.test.assertEq(undefined, result, "got expected empty result");
+        });
+
+        results = await browser.scripting.executeScript({
+          target: { tabId, allFrames: true },
+          func: getBackgroundColor,
+          args: [elementId],
+        });
+
+        browser.test.assertTrue(
+          results.every(({ result }) => result === defaultColor),
+          "got expected default color in all frames"
+        );
+      }
+
+      browser.test.notifyPass("insert-and-remove-css");
+    },
+    files: {
+      "file1.css": "#div-2 { background: rgb(3, 3, 3) }",
+    },
+  });
+
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "https://test1.example.com/tests/toolkit/components/extensions/test/mochitest/file_contains_iframe.html",
+    true
+  );
+
+  await extension.startup();
+  await extension.awaitFinish("insert-and-remove-css");
+  await extension.unload();
+
+  await AppTestDelegate.removeTab(window, tab);
+});
+
+</script>
+
+</body>
+</html>
