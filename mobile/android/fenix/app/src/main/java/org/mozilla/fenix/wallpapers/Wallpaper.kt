@@ -10,10 +10,12 @@ package org.mozilla.fenix.wallpapers
  * @property portraitPath A file path for the portrait version of this wallpaper.
  * @property landscapePath A file path for the landscape version of this wallpaper.
  * @property isDark Indicates if the most predominant color on the wallpaper is dark.
+ * @property isThemed Whether the wallpaper belongs to a themed collection.
  */
 data class Wallpaper(
     val name: String,
     val portraitPath: String,
     val landscapePath: String,
-    val isDark: Boolean
+    val isDark: Boolean,
+    val isThemed: Boolean = false,
 )

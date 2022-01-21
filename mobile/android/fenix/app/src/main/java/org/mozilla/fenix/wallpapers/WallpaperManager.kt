@@ -14,15 +14,19 @@ import androidx.appcompat.app.AppCompatDelegate
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.utils.Settings
 
 /**
  * Provides access to available wallpapers and manages their states.
  */
+@Suppress("TooManyFunctions")
 class WallpaperManager(
     private val settings: Settings,
-    private val wallpaperStorage: WallpaperStorage
+    private val wallpaperStorage: WallpaperStorage,
+    private val metrics: MetricController,
 ) {
     val logger = Logger("WallpaperManager")
     var availableWallpapers: List<Wallpaper> = loadWallpapers()
@@ -30,6 +34,7 @@ class WallpaperManager(
 
     var currentWallpaper: Wallpaper = getCurrentWallpaperFromSettings()
         set(value) {
+            settings.previousWallpaper = currentWallpaper.name
             settings.currentWallpaper = value.name
             field = value
         }
@@ -50,6 +55,7 @@ class WallpaperManager(
         currentWallpaper = newWallpaper
 
         adjustTheme(wallpaperContainer.context)
+        recordWallpaperAppliedMetric(newWallpaper)
     }
 
     private fun adjustTheme(context: Context) {
@@ -107,6 +113,8 @@ class WallpaperManager(
             defaultWallpaper
         } else {
             availableWallpapers.find { it.name == currentWallpaper } ?: defaultWallpaper
+        }.also {
+            recordSelectionMetrics(it)
         }
     }
 
@@ -132,6 +140,28 @@ class WallpaperManager(
         } else {
             listOf(defaultWallpaper)
         }
+    }
+
+    fun recordDiscoveredMetric() {
+        val hasSentMetric = settings.wallpapersDiscovered
+        if (!hasSentMetric) {
+            metrics.track(Event.Wallpaper.DiscoveredFeature)
+            settings.wallpapersDiscovered = true
+        }
+    }
+
+    private fun recordWallpaperAppliedMetric(appliedWallpaper: Wallpaper) {
+        metrics.track(Event.Wallpaper.NewWallpaperApplied(appliedWallpaper))
+    }
+
+    private fun recordSelectionMetrics(currentWallpaper: Wallpaper) {
+        val previousWallpaperName = settings.previousWallpaper
+        if (previousWallpaperName != defaultWallpaper.name && currentWallpaper == defaultWallpaper) {
+            metrics.track(Event.Wallpaper.WallpaperResetToDefault)
+            // This metric will continue to be reported unless the previous wallpaper is reset
+            settings.previousWallpaper = currentWallpaper.name
+        }
+        metrics.track(Event.Wallpaper.WallpaperSelected(currentWallpaper))
     }
 
     companion object {

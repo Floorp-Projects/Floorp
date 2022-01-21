@@ -6954,3 +6954,66 @@ search_terms:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-12-01"
+
+wallpapers:
+  discovered_wallpaper_feature:
+    type: boolean
+    description: |
+      Whether or not the user has discovered the wallpaper feature.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23381
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23382
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: "2023-05-01"
+  new_wallpaper_applied:
+    type: labeled_counter
+    description: |
+      How many and which type of wallpapers were applied.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23381
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23382
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: "2023-05-01"
+  selected_wallpaper:
+    type: event
+    description: |
+      Records the wallpaper that is active at session start.
+    extra_keys:
+      name:
+        description: The name of the selected wallpaper
+        type: string
+      is_themed:
+        description: Whether the selected wallpaper is part of a theme.
+        type: boolean
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23381
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23382
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: "2023-05-01"
+  wallpaper_reset_to_default:
+    type: event
+    description: |
+      The user has reset their wallpaper back to the default background.
+      This means the default is active on startup, and has changed since the
+      previous session.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23381
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23382
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-05-01"

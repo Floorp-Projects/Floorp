@@ -767,6 +767,7 @@ class HomeFragment : Fragment() {
         if (shouldEnableWallpaper() && context.settings().wallpapersSwitchedByLogoTap) {
             binding.wordmark.setOnClickListener {
                 val manager = requireComponents.wallpaperManager
+                manager.recordDiscoveredMetric()
                 manager.updateWallpaper(
                     wallpaperContainer = binding.homeLayout,
                     newWallpaper = manager.switchToNextWallpaper()

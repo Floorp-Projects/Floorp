@@ -58,6 +58,7 @@ import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.GleanMetrics.VoiceSearch
+import org.mozilla.fenix.GleanMetrics.Wallpapers
 import org.mozilla.fenix.ext.components
 
 private class EventWrapper<T : Enum<T>>(
@@ -906,6 +907,25 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.JumpBackInGroupTapped -> EventWrapper<NoExtraKeys>(
             { SearchTerms.jumpBackInGroupTapped.record(it) }
+        )
+        is Event.Wallpaper.DiscoveredFeature -> EventWrapper<NoExtraKeys>(
+            { Wallpapers.discoveredWallpaperFeature.set(true) }
+        )
+        is Event.Wallpaper.NewWallpaperApplied -> EventWrapper<NoExtraKeys>(
+            { Wallpapers.newWallpaperApplied[this.wallpaper.name].add() }
+        )
+        is Event.Wallpaper.WallpaperSelected -> EventWrapper<NoExtraKeys>(
+            {
+                Wallpapers.selectedWallpaper.record(
+                    Wallpapers.SelectedWallpaperExtra(
+                        name = this.wallpaper.name,
+                        isThemed = this.wallpaper.isThemed,
+                    ),
+                )
+            },
+        )
+        Event.Wallpaper.WallpaperResetToDefault -> EventWrapper<NoExtraKeys>(
+            { Wallpapers.wallpaperResetToDefault.record() }
         )
 
         // Don't record other events in Glean:

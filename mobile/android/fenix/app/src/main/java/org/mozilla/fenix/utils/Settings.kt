@@ -166,6 +166,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = ""
     )
 
+    var previousWallpaper by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_previous_wallpaper),
+        default = WallpaperManager.defaultWallpaper.name
+    )
+
     var currentWallpaper by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_current_wallpaper),
         default = WallpaperManager.defaultWallpaper.name
@@ -174,6 +179,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var wallpapersSwitchedByLogoTap by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_wallpapers_switched_by_logo_tap),
         default = true
+    )
+
+    var wallpapersDiscovered by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_wallpapers_discovered),
+        default = false
     )
 
     var openLinksInAPrivateTab by booleanPreference(

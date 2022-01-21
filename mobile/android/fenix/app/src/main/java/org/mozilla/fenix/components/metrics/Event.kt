@@ -676,6 +676,13 @@ sealed class Event {
 
     sealed class Search
 
+    sealed class Wallpaper : Event() {
+        object DiscoveredFeature : Wallpaper()
+        data class NewWallpaperApplied(val wallpaper: org.mozilla.fenix.wallpapers.Wallpaper) : Wallpaper()
+        data class WallpaperSelected(val wallpaper: org.mozilla.fenix.wallpapers.Wallpaper) : Wallpaper()
+        object WallpaperResetToDefault : Wallpaper()
+    }
+
     internal open val extras: Map<*, String>?
         get() = null
 }
