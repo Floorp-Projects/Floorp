@@ -12,7 +12,7 @@ import shutil
 
 import mozunit
 import pytest
-from moztest.selftest.fixtures import binary as real_binary  # noqa: F401
+from moztest.selftest.fixtures import binary_fixture  # noqa: F401
 
 from mozversion import errors, get_version
 
@@ -20,8 +20,8 @@ from mozversion import errors, get_version
 """test getting application version information from a binary path"""
 
 
-@pytest.fixture(name="binary")
-def fixure_binary(tmpdir):
+@pytest.fixture()
+def fake_binary(tmpdir):
     binary = tmpdir.join("binary")
     binary.write("foobar")
     return str(binary)
@@ -57,46 +57,46 @@ SourceRepository = PlatformSourceRepo"""
     return str(ini)
 
 
-def test_real_binary(real_binary):  # noqa: F811
-    if not real_binary:
+def test_real_binary(binary):  # noqa: F811
+    if not binary:
         pytest.skip("No binary found")
-    v = get_version(real_binary)
+    v = get_version(binary)
     assert isinstance(v, dict)
 
 
-def test_binary(binary, application_ini, platform_ini):
-    _check_version(get_version(binary))
+def test_binary(fake_binary, application_ini, platform_ini):
+    _check_version(get_version(fake_binary))
 
 
 @pytest.mark.skipif(
     not hasattr(os, "symlink"), reason="os.symlink not supported on this platform"
 )
-def test_symlinked_binary(binary, application_ini, platform_ini, tmpdir):
+def test_symlinked_binary(fake_binary, application_ini, platform_ini, tmpdir):
     # create a symlink of the binary in another directory and check
     # version against this symlink
     symlink = str(tmpdir.join("symlink"))
-    os.symlink(binary, symlink)
+    os.symlink(fake_binary, symlink)
     _check_version(get_version(symlink))
 
 
-def test_binary_in_current_path(binary, application_ini, platform_ini, tmpdir):
+def test_binary_in_current_path(fake_binary, application_ini, platform_ini, tmpdir):
     os.chdir(str(tmpdir))
     _check_version(get_version())
 
 
 def test_with_ini_files_on_osx(
-    binary, application_ini, platform_ini, monkeypatch, tmpdir
+    fake_binary, application_ini, platform_ini, monkeypatch, tmpdir
 ):
     monkeypatch.setattr(sys, "platform", "darwin")
     # get_version is working with ini files next to the binary
-    _check_version(get_version(binary=binary))
+    _check_version(get_version(binary=fake_binary))
 
     # or if they are in the Resources dir
     # in this case the binary must be in a Contents dir, next
     # to the Resources dir
     contents_dir = tmpdir.mkdir("Contents")
-    moved_binary = str(contents_dir.join(os.path.basename(binary)))
-    shutil.move(binary, moved_binary)
+    moved_binary = str(contents_dir.join(os.path.basename(fake_binary)))
+    shutil.move(fake_binary, moved_binary)
 
     resources_dir = str(tmpdir.mkdir("Resources"))
     shutil.move(application_ini, resources_dir)
@@ -110,22 +110,22 @@ def test_invalid_binary_path(tmpdir):
         get_version(str(tmpdir.join("invalid")))
 
 
-def test_without_ini_files(binary):
+def test_without_ini_files(fake_binary):
     """With missing ini files an exception should be thrown"""
     with pytest.raises(errors.AppNotFoundError):
-        get_version(binary)
+        get_version(fake_binary)
 
 
-def test_without_platform_ini_file(binary, application_ini):
+def test_without_platform_ini_file(fake_binary, application_ini):
     """With a missing platform.ini file an exception should be thrown"""
     with pytest.raises(errors.AppNotFoundError):
-        get_version(binary)
+        get_version(fake_binary)
 
 
-def test_without_application_ini_file(binary, platform_ini):
+def test_without_application_ini_file(fake_binary, platform_ini):
     """With a missing application.ini file an exception should be thrown"""
     with pytest.raises(errors.AppNotFoundError):
-        get_version(binary)
+        get_version(fake_binary)
 
 
 def test_with_exe(application_ini, platform_ini, tmpdir):
@@ -135,9 +135,9 @@ def test_with_exe(application_ini, platform_ini, tmpdir):
     _check_version(get_version(os.path.splitext(str(binary))[0]))
 
 
-def test_not_found_with_binary_specified(binary):
+def test_not_found_with_binary_specified(fake_binary):
     with pytest.raises(errors.LocalAppNotFoundError):
-        get_version(binary)
+        get_version(fake_binary)
 
 
 def _check_version(version):

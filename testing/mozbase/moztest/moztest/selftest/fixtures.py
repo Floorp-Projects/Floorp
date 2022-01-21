@@ -90,7 +90,6 @@ def setup_test_harness(request, flavor="plain"):
     return inner
 
 
-@pytest.fixture(scope="session")
 def binary():
     """Return a Firefox binary"""
     try:
@@ -108,3 +107,8 @@ def binary():
 
     if "GECKO_BINARY_PATH" in os.environ:
         return os.environ["GECKO_BINARY_PATH"]
+
+
+@pytest.fixture(name="binary", scope="session")
+def binary_fixture():
+    return binary()
