@@ -215,9 +215,15 @@ avoid-blacklist-and-whitelist:
         - netwerk/base/nsURLHelper.cpp
         - netwerk/cookie/CookieCommons.h
         - netwerk/dns/nsHostRecord.cpp
+        - netwerk/dns/nsHostResolver.cpp
         - netwerk/dns/nsIDNService.cpp
         - netwerk/dns/nsIDNService.h
         - netwerk/dns/TRR.cpp
+        - netwerk/dns/TRR.h
+        - netwerk/dns/TRRServiceChild.cpp
+        - netwerk/dns/TRRService.cpp
+        - netwerk/dns/TRRService.h
+        - netwerk/dns/TRRServiceParent.cpp
         - netwerk/ipc/DocumentLoadListener.cpp
         - netwerk/protocol/about/nsAboutProtocolHandler.cpp
         - netwerk/protocol/http/Http2Session.cpp
@@ -234,13 +240,21 @@ avoid-blacklist-and-whitelist:
         - netwerk/protocol/websocket/BaseWebSocketChannel.cpp
         - netwerk/socket/nsSOCKSSocketProvider.cpp
         - netwerk/test/gtest/TestCookie.cpp
+        - netwerk/test/unit/head_trr.js
+        - netwerk/test/unit_ipc/test_dns_by_type_resolve_wrap.js
+        - netwerk/test/unit_ipc/test_trr_httpssvc_wrap.js
         - netwerk/test/unit/test_bug396389.js
         - netwerk/test/unit/test_bug427957.js
         - netwerk/test/unit/test_bug464591.js
         - netwerk/test/unit/test_bug479413.js
         - netwerk/test/unit/test_cookie_blacklist.js
+        - netwerk/test/unit/test_dns_by_type_resolve.js
         - netwerk/test/unit/test_idn_blacklist.js
         - netwerk/test/unit/test_idn_urls.js
+        - netwerk/test/unit/test_odoh.js
+        - netwerk/test/unit/test_trr_httpssvc.js
+        - netwerk/test/unit/test_trr.js
+        - netwerk/test/unit/test_use_httpssvc.js
         - netwerk/url-classifier/AsyncUrlChannelClassifier.cpp
         - netwerk/url-classifier/nsChannelClassifier.cpp
         - netwerk/url-classifier/nsChannelClassifier.h
