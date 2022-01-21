@@ -829,6 +829,11 @@ pub enum ReferenceTransformBinding {
     /// Computed reference frame which dynamically calculates the transform
     /// based on the given parameters. The reference is the content size of
     /// the parent iframe, which is affected by snapping.
+    ///
+    /// This is used when a transform depends on the layout size of an
+    /// element, otherwise the difference between the unsnapped size
+    /// used in the transform, and the snapped size calculated during scene
+    /// building can cause seaming.
     Computed {
         scale_from: Option<LayoutSize>,
         vertical_flip: bool,
