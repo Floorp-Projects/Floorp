@@ -93,7 +93,7 @@ fun createNimbus(context: Context, url: String?): NimbusApi =
         } else {
             Logger.error("Failed to initialize Nimbus", e)
         }
-        NimbusDisabled()
+        NimbusDisabled(context = context)
     }
 
 fun getNimbusAppName(): String {
