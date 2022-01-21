@@ -38,5 +38,13 @@ Please run MozillaBuild manually for now.
   }
 }
 
-& "$env:MOZILLABUILD/start-shell.bat" $machpath $args
+$mozillabuild_version = Get-Content "$env:MOZILLABUILD\VERSION"
+# Remove "preX" postfix if the current MozillaBuild is a prerelease.
+$mozillabuild_version = [decimal]($mozillabuild_version -replace "pre.*")
+
+if ($mozillabuild_version -ge 4.0) {
+  & "$env:MOZILLABUILD/start-shell.bat" -no-start -defterm -c "$machpath $args"
+} else {
+  & "$env:MOZILLABUILD/start-shell.bat" $machpath $args
+}
 exit $lastexitcode
