@@ -232,7 +232,7 @@ void Promise::Then(JSContext* aCx,
 }
 
 void PromiseNativeThenHandlerBase::ResolvedCallback(
-    JSContext* aCx, JS::Handle<JS::Value> aValue) {
+    JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv) {
   RefPtr<Promise> promise = CallResolveCallback(aCx, aValue);
   if (promise) {
     mPromise->MaybeResolve(promise);
@@ -242,7 +242,7 @@ void PromiseNativeThenHandlerBase::ResolvedCallback(
 }
 
 void PromiseNativeThenHandlerBase::RejectedCallback(
-    JSContext* aCx, JS::Handle<JS::Value> aValue) {
+    JSContext* aCx, JS::Handle<JS::Value> aValue, ErrorResult& aRv) {
   mPromise->MaybeReject(aValue);
 }
 
@@ -333,16 +333,17 @@ static bool NativeHandlerCallback(JSContext* aCx, unsigned aArgc,
   v = js::GetFunctionNativeReserved(&args.callee(), SLOT_NATIVEHANDLER_TASK);
   NativeHandlerTask task = static_cast<NativeHandlerTask>(v.toInt32());
 
+  ErrorResult rv;
   if (task == NativeHandlerTask::Resolve) {
     // handler is kept alive by "obj" on the stack.
-    MOZ_KnownLive(handler)->ResolvedCallback(aCx, args.get(0));
+    MOZ_KnownLive(handler)->ResolvedCallback(aCx, args.get(0), rv);
   } else {
     MOZ_ASSERT(task == NativeHandlerTask::Reject);
     // handler is kept alive by "obj" on the stack.
-    MOZ_KnownLive(handler)->RejectedCallback(aCx, args.get(0));
+    MOZ_KnownLive(handler)->RejectedCallback(aCx, args.get(0), rv);
   }
 
-  return true;
+  return !rv.MaybeSetPendingException(aCx);
 }
 
 static JSObject* CreateNativeHandlerFunction(JSContext* aCx,
@@ -380,16 +381,18 @@ class PromiseNativeHandlerShim final : public PromiseNativeHandler {
   }
 
   MOZ_CAN_RUN_SCRIPT
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     RefPtr<PromiseNativeHandler> inner = std::move(mInner);
-    inner->ResolvedCallback(aCx, aValue);
+    inner->ResolvedCallback(aCx, aValue, aRv);
     MOZ_ASSERT(!mInner);
   }
 
   MOZ_CAN_RUN_SCRIPT
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     RefPtr<PromiseNativeHandler> inner = std::move(mInner);
-    inner->RejectedCallback(aCx, aValue);
+    inner->RejectedCallback(aCx, aValue, aRv);
     MOZ_ASSERT(!mInner);
   }
 
@@ -770,12 +773,14 @@ void PromiseWorkerProxy::RunCallback(JSContext* aCx,
 }
 
 void PromiseWorkerProxy::ResolvedCallback(JSContext* aCx,
-                                          JS::Handle<JS::Value> aValue) {
+                                          JS::Handle<JS::Value> aValue,
+                                          ErrorResult& aRv) {
   RunCallback(aCx, aValue, &Promise::MaybeResolve);
 }
 
 void PromiseWorkerProxy::RejectedCallback(JSContext* aCx,
-                                          JS::Handle<JS::Value> aValue) {
+                                          JS::Handle<JS::Value> aValue,
+                                          ErrorResult& aRv) {
   RunCallback(aCx, aValue, &Promise::MaybeReject);
 }
 

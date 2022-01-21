@@ -59,10 +59,10 @@ use std::time::{Duration, SystemTime};
 use storage_variant::VariantType;
 use thin_vec::ThinVec;
 use xpcom::interfaces::{
-    nsICRLiteState, nsICertInfo, nsICertStorage, nsICertStorageCallback, nsIFile,
-    nsIHandleReportCallback, nsIIssuerAndSerialRevocationState, nsIMemoryReporter,
-    nsIMemoryReporterManager, nsIObserver, nsIPrefBranch, nsIRevocationState, nsISerialEventTarget,
-    nsISubjectAndPubKeyRevocationState, nsISupports,
+    nsICRLiteCoverage, nsICRLiteState, nsICRLiteTimestamp, nsICertInfo, nsICertStorage,
+    nsICertStorageCallback, nsIFile, nsIHandleReportCallback, nsIIssuerAndSerialRevocationState,
+    nsIMemoryReporter, nsIMemoryReporterManager, nsIObserver, nsIPrefBranch, nsIRevocationState,
+    nsISerialEventTarget, nsISubjectAndPubKeyRevocationState, nsISupports,
 };
 use xpcom::{nsIID, GetterAddrefs, RefPtr, ThreadBoundRefPtr, XpCom};
 
@@ -72,6 +72,8 @@ const PREFIX_CRLITE: &str = "crlite";
 const PREFIX_SUBJECT: &str = "subject";
 const PREFIX_CERT: &str = "cert";
 const PREFIX_DATA_TYPE: &str = "datatype";
+
+const COVERAGE_SERIALIZATION_VERSION: u8 = 1;
 
 type Rkv = rkv::Rkv<SafeModeEnvironment>;
 type SingleStore = rkv::SingleStore<SafeModeDatabase>;
@@ -151,8 +153,10 @@ struct SecurityState {
     int_prefs: HashMap<String, u32>,
     #[ignore_malloc_size_of = "rental crate does not allow impls for rental structs"]
     crlite_filter: Option<holding::CRLiteFilter>,
-    /// Maps issuer spki hashes to sets of seiral numbers.
+    /// Maps issuer spki hashes to sets of serial numbers.
     crlite_stash: Option<HashMap<Vec<u8>, HashSet<Vec<u8>>>>,
+    /// Maps an RFC 6962 LogID to a pair of 64 bit unix timestamps
+    crlite_coverage: Option<HashMap<Vec<u8>, (u64, u64)>>,
     /// Tracks the number of asynchronous operations which have been dispatched but not completed.
     remaining_ops: i32,
 }
@@ -167,6 +171,7 @@ impl SecurityState {
             int_prefs: HashMap::new(),
             crlite_filter: None,
             crlite_stash: None,
+            crlite_coverage: None,
             remaining_ops: 0,
         })
     }
@@ -297,7 +302,7 @@ impl SecurityState {
 
     pub fn get_has_prior_data(&self, data_type: u8) -> Result<bool, SecurityStateError> {
         if data_type == nsICertStorage::DATA_TYPE_CRLITE_FILTER_FULL {
-            return Ok(self.crlite_filter.is_some());
+            return Ok(self.crlite_filter.is_some() && self.crlite_coverage.is_some());
         }
         if data_type == nsICertStorage::DATA_TYPE_CRLITE_FILTER_INCREMENTAL {
             return Ok(self.crlite_stash.is_some());
@@ -413,15 +418,29 @@ impl SecurityState {
         }
     }
 
+    pub fn filter_covers_some_timestamp(&self, timestamps: &[CRLiteTimestamp]) -> bool {
+        if let Some(crlite_coverage) = self.crlite_coverage.as_ref() {
+            for entry in timestamps {
+                if let Some(&(low, high)) = crlite_coverage.get(entry.log_id.as_ref()) {
+                    if low <= entry.timestamp && entry.timestamp <= high {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     pub fn set_full_crlite_filter(
         &mut self,
         filter: Vec<u8>,
-        timestamp: u64,
+        coverage_entries: &[(nsCString, u64, u64)],
     ) -> Result<(), SecurityStateError> {
         // First drop any existing crlite filter and clear the accumulated stash.
         {
             let _ = self.crlite_filter.take();
             let _ = self.crlite_stash.take();
+            let _ = self.crlite_coverage.take();
             let mut path = get_store_path(&self.profile_path)?;
             path.push("crlite.stash");
             // Truncate the stash file if it exists.
@@ -438,31 +457,45 @@ impl SecurityState {
             let mut filter_file = File::create(&path)?;
             filter_file.write_all(&filter)?;
         }
+
+        // Serialize the coverage metadata as a 1 byte version number followed by any number of 48
+        // byte entries. Each entry is a 32 byte (opaque) log id, followed by two 8 byte
+        // timestamps. Each timestamp is an 8 byte unsigned integer in little endian.
+        let mut coverage_bytes = Vec::with_capacity(
+            size_of::<u8>() + coverage_entries.len() * (32 + size_of::<u64>() + size_of::<u64>()),
+        );
+        coverage_bytes.push(COVERAGE_SERIALIZATION_VERSION);
+        for (b64_log_id, min_t, max_t) in coverage_entries {
+            let log_id = match base64::decode(&b64_log_id) {
+                Ok(log_id) if log_id.len() == 32 => log_id,
+                _ => {
+                    warn!("malformed log ID - skipping: {}", b64_log_id);
+                    continue;
+                }
+            };
+            coverage_bytes.extend_from_slice(&log_id);
+            coverage_bytes.extend_from_slice(&min_t.to_le_bytes());
+            coverage_bytes.extend_from_slice(&max_t.to_le_bytes());
+        }
+        // Write the coverage file for the new filter
+        let mut path = get_store_path(&self.profile_path)?;
+        path.push("crlite.coverage");
+        {
+            let mut coverage_file = File::create(&path)?;
+            coverage_file.write_all(&coverage_bytes)?;
+        }
         self.load_crlite_filter()?;
-        let env_and_store = match self.env_and_store.as_mut() {
-            Some(env_and_store) => env_and_store,
-            None => return Err(SecurityStateError::from("env and store not initialized?")),
-        };
-        let mut writer = env_and_store.env.write()?;
-        // Make a note of the timestamp of the full filter.
-        env_and_store.store.put(
-            &mut writer,
-            &make_key!(
-                PREFIX_DATA_TYPE,
-                &[nsICertStorage::DATA_TYPE_CRLITE_FILTER_FULL]
-            ),
-            &Value::U64(timestamp),
-        )?;
-        writer.commit()?;
+
         Ok(())
     }
 
     fn load_crlite_filter(&mut self) -> Result<(), SecurityStateError> {
-        if self.crlite_filter.is_some() {
+        if self.crlite_filter.is_some() || self.crlite_coverage.is_some() {
             return Err(SecurityStateError::from(
-                "crlite_filter should be None here",
+                "Both crlite_filter and crlite_coverage should be None here",
             ));
         }
+
         let mut path = get_store_path(&self.profile_path)?;
         path.push("crlite.filter");
         // Before we've downloaded any filters, this file won't exist.
@@ -478,8 +511,63 @@ impl SecurityState {
             }
         })
         .map_err(|_| SecurityStateError::from("unable to initialize CRLite filter"))?;
+
+        let mut path = get_store_path(&self.profile_path)?;
+        path.push("crlite.coverage");
+        if !path.exists() {
+            return Ok(());
+        }
+
+        // Deserialize the coverage metadata.
+        // The format is described in `set_full_crlite_filter`.
+        let coverage_file = File::open(path)?;
+        let mut coverage_reader = BufReader::new(coverage_file);
+        match coverage_reader.read_u8() {
+            Ok(COVERAGE_SERIALIZATION_VERSION) => (),
+            _ => {
+                return Err(SecurityStateError::from(
+                    "unable to initialize CRLite coverage",
+                ))
+            }
+        }
+        let mut crlite_coverage: HashMap<Vec<u8>, (u64, u64)> = HashMap::new();
+        loop {
+            let mut coverage_entry = [0u8; 48];
+            match coverage_reader.read(&mut coverage_entry) {
+                Ok(48) => (),
+                Ok(0) => break, // end of file
+                _ => {
+                    return Err(SecurityStateError::from(
+                        "unable to initialize CRLite coverage",
+                    ))
+                }
+            };
+            let log_id = &coverage_entry[0..32];
+            let min_timestamp: u64;
+            let max_timestamp: u64;
+            match (&coverage_entry[32..40]).read_u64::<LittleEndian>() {
+                Ok(value) => min_timestamp = value,
+                _ => {
+                    return Err(SecurityStateError::from(
+                        "unable to initialize CRLite coverage",
+                    ))
+                }
+            }
+            match (&coverage_entry[40..48]).read_u64::<LittleEndian>() {
+                Ok(value) => max_timestamp = value,
+                _ => {
+                    return Err(SecurityStateError::from(
+                        "unable to initialize CRLite coverage",
+                    ))
+                }
+            }
+            crlite_coverage.insert(log_id.to_vec(), (min_timestamp, max_timestamp));
+        }
+
         let old_crlite_filter_should_be_none = self.crlite_filter.replace(crlite_filter);
         assert!(old_crlite_filter_should_be_none.is_none());
+        let old_crlite_coverage_should_be_none = self.crlite_coverage.replace(crlite_coverage);
+        assert!(old_crlite_coverage_should_be_none.is_none());
         Ok(())
     }
 
@@ -518,35 +606,14 @@ impl SecurityState {
         issuer: &[u8],
         issuer_spki: &[u8],
         serial_number: &[u8],
-    ) -> Result<(u64, i16), SecurityStateError> {
-        let timestamp = {
-            let env_and_store = match self.env_and_store.as_ref() {
-                Some(env_and_store) => env_and_store,
-                None => return Err(SecurityStateError::from("env and store not initialized?")),
-            };
-            let reader = env_and_store.env.read()?;
-            match env_and_store.store.get(
-                &reader,
-                &make_key!(
-                    PREFIX_DATA_TYPE,
-                    &[nsICertStorage::DATA_TYPE_CRLITE_FILTER_FULL]
-                ),
-            ) {
-                Ok(Some(Value::U64(timestamp))) => timestamp,
-                // If we don't have a timestamp yet, we won't have a filter. Return the earliest
-                // timestamp possible to indicate this to callers.
-                Ok(None) => return Ok((0, nsICertStorage::STATE_UNSET)),
-                Ok(_) => {
-                    return Err(SecurityStateError::from(
-                        "unexpected type when trying to get Value::U64",
-                    ))
-                }
-                Err(_) => return Err(SecurityStateError::from("error getting CRLite timestamp")),
-            }
-        };
+        timestamps: &[CRLiteTimestamp],
+    ) -> Result<i16, SecurityStateError> {
         let enrollment_state = self.get_crlite_state(issuer, issuer_spki)?;
         if enrollment_state != nsICertStorage::STATE_ENFORCE {
-            return Ok((timestamp, nsICertStorage::STATE_NOT_ENROLLED));
+            return Ok(nsICertStorage::STATE_NOT_ENROLLED);
+        }
+        if !self.filter_covers_some_timestamp(timestamps) {
+            return Ok(nsICertStorage::STATE_NOT_COVERED);
         }
         let mut digest = Sha256::default();
         digest.input(issuer_spki);
@@ -556,13 +623,12 @@ impl SecurityState {
         let result = match &self.crlite_filter {
             Some(crlite_filter) => crlite_filter.rent(|filter| filter.has(&lookup_key)),
             // This can only happen if the backing file was deleted or if it or our database has
-            // become corrupted. In any case, we have no information, so again return the earliest
-            // timestamp to indicate this to the user.
-            None => return Ok((0, nsICertStorage::STATE_UNSET)),
+            // become corrupted. In any case, we have no information.
+            None => return Ok(nsICertStorage::STATE_NOT_COVERED),
         };
         match result {
-            true => Ok((timestamp, nsICertStorage::STATE_ENFORCE)),
-            false => Ok((timestamp, nsICertStorage::STATE_UNSET)),
+            true => Ok(nsICertStorage::STATE_ENFORCE),
+            false => Ok(nsICertStorage::STATE_UNSET),
         }
     }
 
@@ -925,6 +991,12 @@ impl<'a> IntoIterator for CertHashList<'a> {
     fn into_iter(self) -> Self::IntoIter {
         self.hashes.into_iter()
     }
+}
+
+// Helper struct for get_crlite_revocation_state.
+struct CRLiteTimestamp {
+    log_id: ThinVec<u8>,
+    timestamp: u64,
 }
 
 // Helper struct for set_batch_state. Takes a prefix, two base64-encoded key
@@ -1647,20 +1719,34 @@ impl CertStorage {
     unsafe fn SetFullCRLiteFilter(
         &self,
         filter: *const ThinVec<u8>,
-        timestamp: u64,
+        coverage: *const ThinVec<RefPtr<nsICRLiteCoverage>>,
         callback: *const nsICertStorageCallback,
     ) -> nserror::nsresult {
         if !is_main_thread() {
             return NS_ERROR_NOT_SAME_THREAD;
         }
-        if filter.is_null() || callback.is_null() {
+        if filter.is_null() || coverage.is_null() || callback.is_null() {
             return NS_ERROR_NULL_POINTER;
         }
+
         let filter_owned = (*filter).to_vec();
+
+        let coverage = &*coverage;
+        let mut coverage_entries = Vec::with_capacity(coverage.len());
+        for entry in coverage {
+            let mut b64_log_id = nsCString::new();
+            try_ns!((*entry).GetB64LogID(&mut *b64_log_id).to_result(), or continue);
+            let mut min_timestamp: u64 = 0;
+            try_ns!((*entry).GetMinTimestamp(&mut min_timestamp).to_result(), or continue);
+            let mut max_timestamp: u64 = 0;
+            try_ns!((*entry).GetMaxTimestamp(&mut max_timestamp).to_result(), or continue);
+            coverage_entries.push((b64_log_id, min_timestamp, max_timestamp));
+        }
+
         let task = Box::new(try_ns!(SecurityStateTask::new(
             &*callback,
             &self.security_state,
-            move |ss| ss.set_full_crlite_filter(filter_owned, timestamp),
+            move |ss| ss.set_full_crlite_filter(filter_owned, &coverage_entries),
         )));
         let runnable = try_ns!(TaskRunnable::new("SetFullCRLiteFilter", task));
         try_ns!(TaskRunnable::dispatch(runnable, self.queue.coerce()));
@@ -1711,7 +1797,7 @@ impl CertStorage {
         issuer: *const ThinVec<u8>,
         issuerSPKI: *const ThinVec<u8>,
         serialNumber: *const ThinVec<u8>,
-        valid_before: *mut u64,
+        timestamps: *const ThinVec<RefPtr<nsICRLiteTimestamp>>,
         state: *mut i16,
     ) -> nserror::nsresult {
         // TODO (bug 1541212): We really want to restrict this to non-main-threads only, but we
@@ -1719,17 +1805,29 @@ impl CertStorage {
         if issuer.is_null()
             || issuerSPKI.is_null()
             || serialNumber.is_null()
-            || valid_before.is_null()
             || state.is_null()
+            || timestamps.is_null()
         {
             return NS_ERROR_NULL_POINTER;
         }
-        *valid_before = 0;
+        let timestamps = &*timestamps;
+        let mut timestamp_entries = Vec::with_capacity(timestamps.len());
+        for timestamp_entry in timestamps {
+            let mut log_id = ThinVec::with_capacity(32);
+            try_ns!(timestamp_entry.GetLogID(&mut log_id).to_result(), or continue);
+            let mut timestamp: u64 = 0;
+            try_ns!(timestamp_entry.GetTimestamp(&mut timestamp).to_result(), or continue);
+            timestamp_entries.push(CRLiteTimestamp { log_id, timestamp });
+        }
         *state = nsICertStorage::STATE_UNSET;
         let ss = get_security_state!(self);
-        match ss.get_crlite_revocation_state(&*issuer, &*issuerSPKI, &*serialNumber) {
-            Ok((crlite_timestamp, st)) => {
-                *valid_before = crlite_timestamp;
+        match ss.get_crlite_revocation_state(
+            &*issuer,
+            &*issuerSPKI,
+            &*serialNumber,
+            &timestamp_entries,
+        ) {
+            Ok(st) => {
                 *state = st;
                 NS_OK
             }

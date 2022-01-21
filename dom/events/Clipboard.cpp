@@ -187,7 +187,8 @@ class BlobTextHandler final : public PromiseNativeHandler {
     mHolder.Reject(rv, __func__);
   }
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     AssertIsOnMainThread();
 
     nsString text;
@@ -203,7 +204,8 @@ class BlobTextHandler final : public PromiseNativeHandler {
     mHolder.Resolve(std::move(native), __func__);
   }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                        ErrorResult& aRv) override {
     Reject();
   }
 

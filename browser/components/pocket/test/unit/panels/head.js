@@ -8,7 +8,13 @@ const testGlobal = {
   RPMAddMessageListener: () => {},
   RPMSendAsyncMessage: () => {},
   window: {},
+  self: {},
 };
+
+Services.scriptloader.loadSubScript(
+  "chrome://pocket/content/panels/js/vendor.bundle.js",
+  testGlobal
+);
 
 Services.scriptloader.loadSubScript(
   "chrome://pocket/content/panels/js/main.bundle.js",

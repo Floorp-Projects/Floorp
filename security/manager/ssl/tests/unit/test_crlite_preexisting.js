@@ -123,31 +123,19 @@ add_task(async function test_preexisting_crlite_data() {
   Services.prefs.clearUserPref("security.OCSP.require");
   Services.prefs.clearUserPref("security.OCSP.enabled");
 
-  // If the earliest certificate timestamp is within the merge delay of the
-  // logs for the filter we have, it won't be looked up, and thus won't be
-  // revoked.
-  // The earliest timestamp in this certificate is in August 2020, whereas
-  // the filter timestamp is in October 2020, so setting the merge delay to
-  // this large value simluates the situation being tested.
-  Services.prefs.setIntPref(
-    "security.pki.crlite_ct_merge_delay_seconds",
-    60 * 60 * 24 * 60
+  let notCoveredCert = constructCertFromFile(
+    "test_crlite_filters/notcovered.pem"
   );
-  // Since setting the merge delay parameter this way effectively makes this
-  // certificate "too new" to be covered by the filter, the implementation
-  // would fall back to OCSP fetching. Since this would result in a crash and
-  // test failure, the Ci.nsIX509CertDB.FLAG_LOCAL_ONLY is used.
   await checkCertErrorGenericAtTime(
     certdb,
-    revokedCert,
+    notCoveredCert,
     PRErrorCodeSuccess,
     certificateUsageSSLServer,
-    new Date("2020-10-20T00:00:00Z").getTime() / 1000,
+    new Date("2022-01-07T00:00:00Z").getTime() / 1000,
     false,
-    "us-datarecovery.com",
+    "peekaboophonics.com",
     Ci.nsIX509CertDB.FLAG_LOCAL_ONLY
   );
-  Services.prefs.clearUserPref("security.pki.crlite_ct_merge_delay_seconds");
 });
 
 function run_test() {
@@ -163,6 +151,8 @@ function run_test() {
   // profile directory.
   let stashFile = do_get_file("test_crlite_preexisting/crlite.stash");
   stashFile.copyTo(securityStateDirectory, "crlite.stash");
+  let coverageFile = do_get_file("test_crlite_preexisting/crlite.coverage");
+  coverageFile.copyTo(securityStateDirectory, "crlite.coverage");
   let certStorageFile = do_get_file("test_crlite_preexisting/data.safe.bin");
   certStorageFile.copyTo(securityStateDirectory, "data.safe.bin");
 

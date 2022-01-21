@@ -5,3 +5,4 @@ asserts-if(Android,0-1) load 793844.html
 skip-if(Android) load 1662259.html
 skip-if(Android) load 1663722.html
 skip-if(Android) load 1671503.html
+asserts-if(!Android,1-1) load 1748277.html # Bug 1751260
