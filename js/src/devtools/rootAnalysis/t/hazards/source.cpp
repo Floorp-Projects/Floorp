@@ -367,3 +367,34 @@ class Subcell : public Cell {
     return f;  // this->f
   }
 };
+
+template <typename T>
+struct RefPtr {
+  ~RefPtr() { GC(); }
+  void forget() {}
+};
+
+Cell* refptr_test1() {
+  Cell cell;
+  RefPtr<float> v1;
+  Cell* ref_unsafe1 = &cell;
+  return ref_unsafe1;
+}
+
+Cell* refptr_test2() {
+  Cell cell;
+  RefPtr<float> v2;
+  Cell* ref_safe2 = &cell;
+  v2.forget();
+  return ref_safe2;
+}
+
+Cell* refptr_test3() {
+  Cell cell;
+  RefPtr<float> v3;
+  Cell* ref_unsafe3 = &cell;
+  if (x) {
+    v3.forget();
+  }
+  return ref_unsafe3;
+}
