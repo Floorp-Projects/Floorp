@@ -169,8 +169,10 @@ interface GPUDevice: EventTarget {
     GPUComputePipeline createComputePipeline(GPUComputePipelineDescriptor descriptor);
     GPURenderPipeline createRenderPipeline(GPURenderPipelineDescriptor descriptor);
 
-    //Promise<GPUComputePipeline> createComputePipelineAsync(GPUComputePipelineDescriptor descriptor);
-    //Promise<GPURenderPipeline> createRenderPipelineAsync(GPURenderPipelineDescriptor descriptor);
+    [Throws]
+    Promise<GPUComputePipeline> createComputePipelineAsync(GPUComputePipelineDescriptor descriptor);
+    [Throws]
+    Promise<GPURenderPipeline> createRenderPipelineAsync(GPURenderPipelineDescriptor descriptor);
 
     [NewObject]
     GPUCommandEncoder createCommandEncoder(optional GPUCommandEncoderDescriptor descriptor = {});
