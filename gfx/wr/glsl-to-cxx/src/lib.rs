@@ -357,7 +357,7 @@ fn write_set_uniform_1i(
     uniforms: &UniformIndices,
 ) {
     write!(
-        state, 
+        state,
         "static void set_uniform_1i(VertexShaderImpl* impl, int index, int value) {{\n"
     );
     write!(state, " Self* self = (Self*)impl;\n");
