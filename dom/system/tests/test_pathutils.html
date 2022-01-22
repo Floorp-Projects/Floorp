@@ -409,19 +409,11 @@
 
     // See: nsAppDirectoryServiceDefs.h
     const tempDir = await PathUtils.getTempDir();
-    if (AppConstants.MOZ_SANDBOX) {
-      is(
-        tempDir,
-        Services.dirsvc.get("ContentTmpD", Ci.nsIFile).path,
-        "PathUtils.getTempDir() should match dirsvc"
-      );
-    } else {
-      is(
-        tempDir,
-        Services.dirsvc.get("TmpD", Ci.nsIFile).path,
-        "PathUtils.getTempDir() should match dirsvc"
-      );
-    }
+    is(
+      tempDir,
+      Services.dirsvc.get("ContentTmpD", Ci.nsIFile).path,
+      "PathUtils.getTempDir() should match dirsvc"
+    );
   });
 </script>
 

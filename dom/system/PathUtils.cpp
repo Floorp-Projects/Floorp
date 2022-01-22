@@ -21,6 +21,7 @@
 #include "mozilla/dom/Promise.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsIFile.h"
 #include "nsIGlobalObject.h"
@@ -353,9 +354,9 @@ already_AddRefed<Promise> PathUtils::GetTempDir(const GlobalObject& aGlobal,
 }
 
 PathUtils::DirectoryCache::DirectoryCache() {
-  mProfileDir.SetIsVoid(true);
-  mLocalProfileDir.SetIsVoid(true);
-  mTempDir.SetIsVoid(true);
+  for (auto& dir : mDirectories) {
+    dir.SetIsVoid(true);
+  }
 }
 
 PathUtils::DirectoryCache& PathUtils::DirectoryCache::Ensure(
@@ -408,60 +409,30 @@ already_AddRefed<Promise> PathUtils::DirectoryCache::GetDirectory(
 
 void PathUtils::DirectoryCache::ResolveWithDirectory(
     Promise* aPromise, const Directory aRequestedDir) {
-  switch (aRequestedDir) {
-    case Directory::Profile:
-      MOZ_RELEASE_ASSERT(!mProfileDir.IsVoid());
-      aPromise->MaybeResolve(mProfileDir);
-      break;
-
-    case Directory::LocalProfile:
-      MOZ_RELEASE_ASSERT(!mLocalProfileDir.IsVoid());
-      aPromise->MaybeResolve(mLocalProfileDir);
-      break;
-
-    case Directory::Temp:
-      MOZ_RELEASE_ASSERT(!mTempDir.IsVoid());
-      aPromise->MaybeResolve(mTempDir);
-      break;
-
-    default:
-      MOZ_ASSERT_UNREACHABLE();
-  }
+  MOZ_RELEASE_ASSERT(aRequestedDir < Directory::Count);
+  MOZ_RELEASE_ASSERT(!mDirectories[aRequestedDir].IsVoid());
+  aPromise->MaybeResolve(mDirectories[aRequestedDir]);
 }
 
 already_AddRefed<PathUtils::DirectoryCache::PopulateDirectoriesPromise>
 PathUtils::DirectoryCache::PopulateDirectories(
     const PathUtils::DirectoryCache::Directory aRequestedDir) {
+  MOZ_RELEASE_ASSERT(aRequestedDir < Directory::Count);
+
   // If we have already resolved the requested directory, we can return
   // immediately.
-  if ((aRequestedDir == Directory::Temp && !mTempDir.IsVoid()) ||
-      (aRequestedDir == Directory::Profile && !mProfileDir.IsVoid()) ||
-      (aRequestedDir == Directory::LocalProfile &&
-       !mLocalProfileDir.IsVoid())) {
-    // We cannot have a state where mProfileDir is not populated but
-    // mLocalProfileDir is.
-    if (mProfileDir.IsVoid()) {
-      MOZ_RELEASE_ASSERT(mLocalProfileDir.IsVoid());
-    }
+  // Otherwise, if we have already fired off a request to populate the entry, so
+  // we can return the corresponding promise immediately. caller will queue a
+  // Thenable onto that promise to resolve/reject the request.
+  if (!mDirectories[aRequestedDir].IsVoid()) {
     return nullptr;
   }
-
-  // We have already fired off a request to populate the entry, so we can return
-  // the corresponding promise immediately. caller will queue a Thenable onto
-  // that promise to resolve/reject the request.
-  if (!mAllDirsPromise.IsEmpty()) {
-    return mAllDirsPromise.Ensure(__func__);
-  }
-  if (aRequestedDir != Directory::Temp && !mProfileDirsPromise.IsEmpty()) {
-    return mProfileDirsPromise.Ensure(__func__);
+  if (!mPromises[aRequestedDir].IsEmpty()) {
+    return mPromises[aRequestedDir].Ensure(__func__);
   }
 
-  RefPtr<PopulateDirectoriesPromise> promise;
-  if (aRequestedDir == Directory::Temp) {
-    promise = mAllDirsPromise.Ensure(__func__);
-  } else {
-    promise = mProfileDirsPromise.Ensure(__func__);
-  }
+  RefPtr<PopulateDirectoriesPromise> promise =
+      mPromises[aRequestedDir].Ensure(__func__);
 
   if (NS_IsMainThread()) {
     nsresult rv = PopulateDirectoriesImpl(aRequestedDir);
@@ -481,67 +452,30 @@ PathUtils::DirectoryCache::PopulateDirectories(
 
 void PathUtils::DirectoryCache::ResolvePopulateDirectoriesPromise(
     nsresult aRv, const PathUtils::DirectoryCache::Directory aRequestedDir) {
+  MOZ_RELEASE_ASSERT(aRequestedDir < Directory::Count);
+
   if (NS_SUCCEEDED(aRv)) {
-    if (aRequestedDir == Directory::Temp) {
-      mAllDirsPromise.Resolve(Ok{}, __func__);
-    } else {
-      mProfileDirsPromise.Resolve(Ok{}, __func__);
-    }
+    mPromises[aRequestedDir].Resolve(Ok{}, __func__);
   } else {
-    if (aRequestedDir == Directory::Temp) {
-      mAllDirsPromise.Reject(aRv, __func__);
-    } else {
-      mProfileDirsPromise.Reject(aRv, __func__);
-    }
+    mPromises[aRequestedDir].Reject(aRv, __func__);
   }
 }
 
 nsresult PathUtils::DirectoryCache::PopulateDirectoriesImpl(
     const PathUtils::DirectoryCache::Directory aRequestedDir) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(aRequestedDir < Directory::Count);
+
+  // We cannot have second request to populate any of these
+  // directories if the first request succeeded, so assert that the
+  // corresponding fields are void.
+  MOZ_RELEASE_ASSERT(mDirectories[aRequestedDir].IsVoid());
 
   nsCOMPtr<nsIFile> path;
 
-  // We only populate the temporary directory entry when specifically requested
-  // because the nsDirectoryService will do main thread IO to create the
-  // directory if it hasn't been created yet.
-  //
-  // Additionally, we cannot have second request to populate any of these
-  // directories if the first request succeeded, so assert that the
-  // corresponding fields are void.
-  if (aRequestedDir == Directory::Temp) {
-    MOZ_RELEASE_ASSERT(mTempDir.IsVoid());
-
-    MOZ_TRY(NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
-                                   getter_AddRefs(path)));
-    MOZ_TRY(path->GetPath(mTempDir));
-  } else if (aRequestedDir == Directory::Profile) {
-    MOZ_RELEASE_ASSERT(mProfileDir.IsVoid());
-    MOZ_RELEASE_ASSERT(mLocalProfileDir.IsVoid());
-  } else {
-    MOZ_RELEASE_ASSERT(aRequestedDir == Directory::LocalProfile);
-    MOZ_RELEASE_ASSERT(mProfileDir.IsVoid());
-    MOZ_RELEASE_ASSERT(mLocalProfileDir.IsVoid());
-  }
-
-  if (mProfileDir.IsVoid()) {
-    MOZ_RELEASE_ASSERT(mLocalProfileDir.IsVoid());
-
-    nsString profileDir;
-    nsString localProfileDir;
-
-    MOZ_TRY(NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                   getter_AddRefs(path)));
-    MOZ_TRY(path->GetPath(profileDir));
-
-    MOZ_TRY(NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
-                                   getter_AddRefs(path)));
-    MOZ_TRY(path->GetPath(localProfileDir));
-
-    // We either set both of these or neither.
-    mProfileDir = std::move(profileDir);
-    mLocalProfileDir = std::move(localProfileDir);
-  }
+  MOZ_TRY(NS_GetSpecialDirectory(kDirectoryNames[aRequestedDir],
+                                 getter_AddRefs(path)));
+  MOZ_TRY(path->GetPath(mDirectories[aRequestedDir]));
 
   return NS_OK;
 }
