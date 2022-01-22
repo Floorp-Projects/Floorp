@@ -126,7 +126,7 @@ void AssertUniqueItem(nsDisplayItem* aItem) {
   for (nsDisplayItem* i : aItem->Frame()->DisplayItems()) {
     if (i != aItem && !i->HasDeletedFrame() && i->Frame() == aItem->Frame() &&
         i->GetPerFrameKey() == aItem->GetPerFrameKey()) {
-      if (i->IsPreProcessedItem()) {
+      if (i->IsPreProcessedItem() || i->IsPreProcessed()) {
         continue;
       }
       MOZ_DIAGNOSTIC_ASSERT(false, "Duplicate display item!");
@@ -694,6 +694,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       static_cast<uint32_t>(DisplayItemType::TYPE_MAX) < (1 << TYPE_BITS),
       "Check TYPE_MAX should not overflow");
   mIsForContent = XRE_IsContentProcess();
+  mIsReusingStackingContextItems =
+      mRetainingDisplayList && StaticPrefs::layout_display_list_retain_sc();
 }
 
 static PresShell* GetFocusedPresShell() {
@@ -2004,6 +2006,20 @@ void nsDisplayListBuilder::BuildCompositorHitTestInfoIfNeeded(
   if (info != CompositorHitTestInvisibleToHit) {
     aList->AppendNewToTop<nsDisplayCompositorHitTestInfo>(this, aFrame);
   }
+}
+
+void nsDisplayListBuilder::ReuseDisplayItem(nsDisplayItem* aItem) {
+  const auto* previous = mCurrentContainerASR;
+  const auto* asr = aItem->GetActiveScrolledRoot();
+  mCurrentContainerASR =
+      ActiveScrolledRoot::PickAncestor(asr, mCurrentContainerASR);
+
+  if (previous != mCurrentContainerASR) {
+    DL_LOGV("RDL - Changed mCurrentContainerASR from %p to %p", previous,
+            mCurrentContainerASR);
+  }
+
+  aItem->SetReusedItem();
 }
 
 void nsDisplayListSet::MoveTo(const nsDisplayListSet& aDestination) const {

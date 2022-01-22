@@ -116,6 +116,24 @@ static void PrintDisplayItemTo(nsDisplayListBuilder* aBuilder,
                                area.width, area.height);
   }
 
+  auto ReuseStateToString = [](nsDisplayItem::ReuseState aState) {
+    switch (aState) {
+      case nsDisplayItem::ReuseState::None:
+        return "None";
+      case nsDisplayItem::ReuseState::Reusable:
+        return "Reusable";
+      case nsDisplayItem::ReuseState::PreProcessed:
+        return "PreProcessed";
+      case nsDisplayItem::ReuseState::Reused:
+        return "Reused";
+    }
+
+    MOZ_ASSERT_UNREACHABLE();
+  };
+
+  aStream << nsPrintfCString(" reuse-state(%s)",
+                             ReuseStateToString(aItem->GetReuseState()));
+
   // Display item specific debug info
   aItem->WriteDebugInfo(aStream);
 
