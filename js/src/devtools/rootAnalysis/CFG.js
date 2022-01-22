@@ -467,8 +467,12 @@ function edgeUsesVariable(edge, variable, body)
     if (ignoreEdgeUse(edge, variable, body))
         return 0;
 
-    if (variable.Kind == "Return" && body.Index[1] == edge.Index[1] && body.BlockId.Kind == "Function")
-        return edge.Index[1]; // Last point in function body uses the return value.
+    if (variable.Kind == "Return" && body.Index[1] == edge.Index[1] && body.BlockId.Kind == "Function") {
+        // The last point in the function body is treated as using the return
+        // value. This is the only time the destination point is returned
+        // rather than the source point.
+        return edge.Index[1];
+    }
 
     var src = edge.Index[0];
 
