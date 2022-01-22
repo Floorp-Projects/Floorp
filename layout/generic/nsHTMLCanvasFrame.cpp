@@ -95,8 +95,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override {
     *aSnap = true;
-    nsHTMLCanvasFrame* f = static_cast<nsHTMLCanvasFrame*>(Frame());
-    return f->GetInnerArea() + ToReferenceFrame();
+    return Frame()->GetContentRectRelativeToSelf() + ToReferenceFrame();
   }
 
   virtual bool CreateWebRenderCommands(
@@ -546,20 +545,6 @@ void nsHTMLCanvasFrame::Reflow(nsPresContext* aPresContext,
                  ("exit nsHTMLCanvasFrame::Reflow: size=%d,%d",
                   aMetrics.ISize(wm), aMetrics.BSize(wm)));
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
-}
-
-// FIXME taken from nsImageFrame, but then had splittable frame stuff
-// removed.  That needs to be fixed.
-// XXXdholbert As in nsImageFrame, this function's clients should probably
-// just be calling GetContentRectRelativeToSelf().
-nsRect nsHTMLCanvasFrame::GetInnerArea() const {
-  nsMargin bp = mBorderPadding.GetPhysicalMargin(GetWritingMode());
-  nsRect r;
-  r.x = bp.left;
-  r.y = bp.top;
-  r.width = mRect.width - bp.left - bp.right;
-  r.height = mRect.height - bp.top - bp.bottom;
-  return r;
 }
 
 bool nsHTMLCanvasFrame::UpdateWebRenderCanvasData(
