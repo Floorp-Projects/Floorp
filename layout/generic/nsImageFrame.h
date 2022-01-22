@@ -234,7 +234,10 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
 
   bool IsServerImageMap();
 
-  void TranslateEventCoords(const nsPoint& aPoint, nsIntPoint& aResult);
+  // Translate a point that is relative to our frame into a localized CSS pixel
+  // coordinate that is relative to the content area of this frame (inside the
+  // border+padding).
+  mozilla::CSSIntPoint TranslateEventCoords(const nsPoint& aPoint);
 
   bool GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
                                   nsIContent** aNode);

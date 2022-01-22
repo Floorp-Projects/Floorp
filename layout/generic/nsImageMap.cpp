@@ -737,10 +737,10 @@ void nsImageMap::AddArea(HTMLAreaElement* aArea) {
   mAreas.AppendElement(std::move(area));
 }
 
-HTMLAreaElement* nsImageMap::GetArea(nscoord aX, nscoord aY) const {
+HTMLAreaElement* nsImageMap::GetArea(const CSSIntPoint& aPt) const {
   NS_ASSERTION(mMap, "Not initialized");
   for (const auto& area : mAreas) {
-    if (area->IsInside(aX, aY)) {
+    if (area->IsInside(aPt.x, aPt.y)) {
       return area->mArea;
     }
   }
