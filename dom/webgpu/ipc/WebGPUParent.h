@@ -74,6 +74,9 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvSwapChainDestroy(wr::ExternalImageId aExternalId);
 
   ipc::IPCResult RecvDeviceAction(RawId aSelf, const ipc::ByteBuf& aByteBuf);
+  ipc::IPCResult RecvDeviceActionWithAck(
+      RawId aSelf, const ipc::ByteBuf& aByteBuf,
+      DeviceActionWithAckResolver&& aResolver);
   ipc::IPCResult RecvTextureAction(RawId aSelf, RawId aDevice,
                                    const ipc::ByteBuf& aByteBuf);
   ipc::IPCResult RecvCommandEncoderAction(RawId aSelf, RawId aDevice,

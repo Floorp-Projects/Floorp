@@ -26,6 +26,13 @@ struct WGPUTextureViewDescriptor;
 
 using AdapterPromise =
     MozPromise<ipc::ByteBuf, Maybe<ipc::ResponseRejectReason>, true>;
+using PipelinePromise = MozPromise<RawId, ipc::ResponseRejectReason, true>;
+
+struct PipelineCreationContext {
+  RawId mParentId = 0;
+  RawId mImplicitPipelineLayoutId = 0;
+  nsTArray<RawId> mImplicitBindGroupLayoutIds;
+};
 
 ffi::WGPUByteBuf* ToFFI(ipc::ByteBuf* x);
 
@@ -69,14 +76,19 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
                               const dom::GPUBindGroupDescriptor& aDesc);
   RawId DeviceCreateShaderModule(RawId aSelfId,
                                  const dom::GPUShaderModuleDescriptor& aDesc);
+
   RawId DeviceCreateComputePipeline(
-      RawId aSelfId, const dom::GPUComputePipelineDescriptor& aDesc,
-      RawId* const aImplicitPipelineLayoutId,
-      nsTArray<RawId>* const aImplicitBindGroupLayoutIds);
+      PipelineCreationContext* const aContext,
+      const dom::GPUComputePipelineDescriptor& aDesc);
+  RefPtr<PipelinePromise> DeviceCreateComputePipelineAsync(
+      PipelineCreationContext* const aContext,
+      const dom::GPUComputePipelineDescriptor& aDesc);
   RawId DeviceCreateRenderPipeline(
-      RawId aSelfId, const dom::GPURenderPipelineDescriptor& aDesc,
-      RawId* const aImplicitPipelineLayoutId,
-      nsTArray<RawId>* const aImplicitBindGroupLayoutIds);
+      PipelineCreationContext* const aContext,
+      const dom::GPURenderPipelineDescriptor& aDesc);
+  RefPtr<PipelinePromise> DeviceCreateRenderPipelineAsync(
+      PipelineCreationContext* const aContext,
+      const dom::GPURenderPipelineDescriptor& aDesc);
 
   void DeviceCreateSwapChain(RawId aSelfId, const RGBDescriptor& aRgbDesc,
                              size_t maxBufferCount,
@@ -93,6 +105,15 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   virtual ~WebGPUChild();
 
   void JsWarning(nsIGlobalObject* aGlobal, const nsACString& aMessage);
+
+  RawId DeviceCreateComputePipelineImpl(
+      PipelineCreationContext* const aContext,
+      const dom::GPUComputePipelineDescriptor& aDesc,
+      ipc::ByteBuf* const aByteBuf);
+  RawId DeviceCreateRenderPipelineImpl(
+      PipelineCreationContext* const aContext,
+      const dom::GPURenderPipelineDescriptor& aDesc,
+      ipc::ByteBuf* const aByteBuf);
 
   // AddIPDLReference and ReleaseIPDLReference are only to be called by
   // CompositorBridgeChild's AllocPWebGPUChild and DeallocPWebGPUChild methods

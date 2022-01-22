@@ -296,11 +296,13 @@ const Snapshots = new (class Snapshots {
    * @param {object} details
    * @param {string} details.url
    *   The url associated with the snapshot.
+   * @param {string} [details.title]
+   *   Optional user-provided title for the snapshot.
    * @param {Snapshots.USER_PERSISTED} [details.userPersisted]
    *   Whether the user created the snapshot and if they did, through what
    *   action, defaults to USER_PERSISTED.NO.
    */
-  async add({ url, userPersisted = this.USER_PERSISTED.NO }) {
+  async add({ url, title, userPersisted = this.USER_PERSISTED.NO }) {
     if (!url) {
       throw new Error("Missing url parameter to Snapshots.add()");
     }
@@ -313,6 +315,18 @@ const Snapshots = new (class Snapshots {
       async db => {
         let now = Date.now();
         await this.#maybeInsertPlace(db, new URL(url));
+
+        // Title is updated only if the caller provided it.
+        let updateTitleFragment =
+          title !== undefined ? ", title = :title " : "";
+        // If the user edits the title, update userPersisted accordingly. Note
+        // that in case of an update, we'll not override higher USER_PERSISTED
+        // values like PINNED with lower ones line MANUAL, to avoid losing
+        // precious information.
+        if (title !== undefined) {
+          userPersisted = this.USER_PERSISTED.MANUAL;
+        }
+
         // When the user asks for a snapshot to be created, we may not yet have
         // a corresponding interaction. We create a snapshot with 0 as the value
         // for first_interaction_at to flag it as missing a corresponding
@@ -322,16 +336,19 @@ const Snapshots = new (class Snapshots {
         let rows = await db.executeCached(
           `
             INSERT INTO moz_places_metadata_snapshots
-              (place_id, first_interaction_at, last_interaction_at, document_type, created_at, user_persisted)
+              (place_id, first_interaction_at, last_interaction_at, document_type, created_at, user_persisted, title)
             SELECT h.id, IFNULL(min(m.created_at), CASE WHEN :userPersisted THEN 0 ELSE NULL END),
                   IFNULL(max(m.created_at), CASE WHEN :userPersisted THEN :createdAt ELSE NULL END),
                   IFNULL(first_value(m.document_type) OVER (PARTITION BY h.id ORDER BY m.created_at DESC), :documentFallback),
-                  :createdAt, :userPersisted
+                  :createdAt, :userPersisted, :title
             FROM moz_places h
             LEFT JOIN moz_places_metadata m ON m.place_id = h.id
             WHERE h.url_hash = hash(:url) AND h.url = :url
             GROUP BY h.id
-            ON CONFLICT DO UPDATE SET user_persisted = :userPersisted, removed_at = NULL WHERE :userPersisted <> 0
+            ON CONFLICT DO UPDATE SET user_persisted = MAX(:userPersisted, user_persisted),
+                                      removed_at = NULL
+                                      ${updateTitleFragment}
+                                  WHERE :userPersisted <> 0
             RETURNING place_id, created_at, user_persisted
           `,
           {
@@ -339,6 +356,7 @@ const Snapshots = new (class Snapshots {
             url,
             userPersisted,
             documentFallback: Interactions.DOCUMENT_TYPE.GENERIC,
+            title: title || null, // Store null, not an empty string.
           }
         );
 
@@ -412,8 +430,8 @@ const Snapshots = new (class Snapshots {
 
     let rows = await db.executeCached(
       `
-      SELECT h.url AS url, h.title AS title, created_at, removed_at,
-             document_type, first_interaction_at, last_interaction_at,
+      SELECT h.url AS url, IFNULL(s.title, h.title) AS title, created_at,
+             removed_at, document_type, first_interaction_at, last_interaction_at,
              user_persisted, description, site_name, preview_image_url,
              group_concat('[' || e.type || ', ' || e.data || ']') AS page_data,
              h.visit_count
@@ -471,8 +489,8 @@ const Snapshots = new (class Snapshots {
 
     let rows = await db.executeCached(
       `
-      SELECT h.url AS url, h.title AS title, created_at, removed_at,
-             document_type, first_interaction_at, last_interaction_at,
+      SELECT h.url AS url, IFNULL(s.title, h.title) AS title, created_at,
+             removed_at, document_type, first_interaction_at, last_interaction_at,
              user_persisted, description, site_name, preview_image_url,
              group_concat('[' || e.type || ', ' || e.data || ']') AS page_data,
              h.visit_count
@@ -539,10 +557,12 @@ const Snapshots = new (class Snapshots {
     let db = await PlacesUtils.promiseDBConnection();
 
     let rows = await db.executeCached(
-      `SELECT h.url AS url, h.title AS title, o.overlappingVisitScore, created_at, removed_at,
-      document_type, first_interaction_at, last_interaction_at,
-      user_persisted, description, site_name, preview_image_url, group_concat('[' || e.type || ', ' || e.data || ']') AS page_data,
-      h.visit_count
+      `SELECT h.url AS url, IFNULL(s.title, h.title) AS title,
+              o.overlappingVisitScore, created_at, removed_at,
+              document_type, first_interaction_at, last_interaction_at,
+              user_persisted, description, site_name, preview_image_url,
+              group_concat('[' || e.type || ', ' || e.data || ']') AS page_data,
+              h.visit_count
       FROM moz_places_metadata_snapshots s
       JOIN moz_places h ON h.id = s.place_id
       JOIN (
@@ -606,10 +626,10 @@ const Snapshots = new (class Snapshots {
 
     let rows = await db.executeCached(
       `
-      SELECT h.id, h.url AS url, h.title AS title, s.created_at,
-        removed_at, s.document_type, first_interaction_at, last_interaction_at, user_persisted,
-        description, site_name, preview_image_url, h.visit_count,
-        group_concat('[' || e.type || ', ' || e.data || ']') AS page_data
+      SELECT h.id, h.url AS url, IFNULL(s.title, h.title) AS title, s.created_at,
+             removed_at, s.document_type, first_interaction_at, last_interaction_at,
+             user_persisted, description, site_name, preview_image_url, h.visit_count,
+             group_concat('[' || e.type || ', ' || e.data || ']') AS page_data
       FROM moz_places_metadata_snapshots s
       JOIN moz_places h
       ON h.id = s.place_id

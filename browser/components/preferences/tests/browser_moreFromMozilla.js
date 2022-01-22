@@ -44,7 +44,7 @@ add_task(async function testwhenPrefDisabled() {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
-add_task(async function testwhenPrefEnabledWithoutTemplatePref() {
+add_task(async function testDefaultUIWithoutTemplatePref() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.preferences.moreFromMozilla", true]],
   });
@@ -53,6 +53,7 @@ add_task(async function testwhenPrefEnabledWithoutTemplatePref() {
     leaveOpen: true,
   });
   let doc = gBrowser.contentDocument;
+  let tab = gBrowser.selectedTab;
 
   let moreFromMozillaCategory = doc.getElementById(
     "category-more-from-mozilla"
@@ -60,10 +61,53 @@ add_task(async function testwhenPrefEnabledWithoutTemplatePref() {
   ok(moreFromMozillaCategory, "The category exists");
   ok(!moreFromMozillaCategory.hidden, "The category is not hidden");
 
-  let productCard = doc.querySelector(".mozilla-product-item");
-  ok(productCard, "productCard found");
+  let clickedPromise = ContentTaskUtils.waitForEvent(
+    moreFromMozillaCategory,
+    "click"
+  );
+  moreFromMozillaCategory.click();
+  await clickedPromise;
 
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  let productCards = doc.querySelectorAll("div.simple");
+  Assert.ok(productCards, "Default UI uses simple template");
+  Assert.equal(productCards.length, 3, "3 product cards displayed");
+
+  const expectedUrl = "https://www.mozilla.org/firefox/browsers/mobile/";
+  let tabOpened = BrowserTestUtils.waitForNewTab(gBrowser, url =>
+    url.startsWith(expectedUrl)
+  );
+  let mobileLink = doc.getElementById("default-fxMobile");
+  mobileLink.click();
+  let openedTab = await tabOpened;
+  Assert.ok(gBrowser.selectedBrowser.documentURI.spec.startsWith(expectedUrl));
+
+  let searchParams = new URL(gBrowser.selectedBrowser.documentURI.spec)
+    .searchParams;
+  Assert.equal(
+    searchParams.get("utm_source"),
+    "about-prefs",
+    "expected utm_source sent"
+  );
+  Assert.equal(
+    searchParams.get("utm_campaign"),
+    "morefrommozilla",
+    "utm_campaign set"
+  );
+  Assert.equal(
+    searchParams.get("utm_medium"),
+    "firefox-desktop",
+    "utm_medium set"
+  );
+  Assert.ok(
+    !searchParams.has("entrypoint_variation"),
+    "entrypoint_variation should not be set"
+  );
+  Assert.ok(
+    !searchParams.has("entrypoint_experiment"),
+    "entrypoint_experiment should not be set"
+  );
+  BrowserTestUtils.removeTab(openedTab);
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_aboutpreferences_event_telemetry() {
@@ -225,18 +269,16 @@ add_task(async function test_aboutpreferences_clickBtnVPN() {
     "fxvt-113-a-global",
     "utm_content set"
   );
-
-  // Since we're not running MfM experiments in this release, we want to be sure that
-  // our URL params aren't claiming that we are.
-  Assert.ok(
-    !searchParams.has("entrypoint_variation"),
-    "entrypoint_variation should not be set"
+  Assert.equal(
+    searchParams.get("entrypoint_experiment"),
+    "morefrommozilla-experiment-1846",
+    "entrypoint_experiment set"
   );
-  Assert.ok(
-    !searchParams.has("entrypoint_experiment"),
-    "entrypoint_experiment should not be set"
+  Assert.equal(
+    searchParams.get("entrypoint_variation"),
+    "treatment-simple",
+    "entrypoint_variation set"
   );
-
   BrowserTestUtils.removeTab(openedTab);
   BrowserTestUtils.removeTab(tab);
 });
@@ -285,17 +327,6 @@ add_task(async function test_aboutpreferences_clickBtnMobile() {
     "fxvt-113-a-global",
     "default-global",
     "utm_content set"
-  );
-
-  // Since we're not running MfM experiments in this release, we want to be sure that
-  // our URL params aren't claiming that we are.
-  Assert.ok(
-    !searchParams.has("entrypoint_variation"),
-    "entrypoint_variation should not be set"
-  );
-  Assert.ok(
-    !searchParams.has("entrypoint_experiment"),
-    "entrypoint_experiment should not be set"
   );
 
   BrowserTestUtils.removeTab(tab);

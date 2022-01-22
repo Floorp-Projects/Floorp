@@ -21,7 +21,6 @@ ChromeUtils.defineModuleGetter(
   "KeyValueService",
   "resource://gre/modules/kvstore.jsm"
 );
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   this,
   "Services",
@@ -111,11 +110,12 @@ var NotificationDB = {
   },
 
   async maybeMigrateData() {
-    // We avoid using OS.File until we know we're going to migrate data
-    // to avoid the performance cost of loading that module.
-    const oldStore = FileUtils.getFile("ProfD", ["notificationstore.json"]);
+    const oldStore = PathUtils.join(
+      Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+      "notificationstore.json"
+    );
 
-    if (!oldStore.exists()) {
+    if (!(await IOUtils.exists(oldStore))) {
       if (DEBUG) {
         debug("Old store doesn't exist; not migrating data.");
       }
@@ -124,7 +124,7 @@ var NotificationDB = {
 
     let data;
     try {
-      data = await OS.File.read(oldStore.path, { encoding: "utf-8" });
+      data = await IOUtils.readUTF8(oldStore);
     } catch (ex) {
       // If read failed, we assume we have no notifications to migrate.
       if (DEBUG) {
@@ -133,7 +133,7 @@ var NotificationDB = {
       return;
     } finally {
       // Finally, delete the old file so we don't try to migrate it again.
-      await OS.File.remove(oldStore.path);
+      await IOUtils.remove(oldStore);
     }
 
     if (data.length > 0) {
