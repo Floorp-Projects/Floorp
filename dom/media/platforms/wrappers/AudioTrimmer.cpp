@@ -10,6 +10,10 @@
   DDMOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, "::%s: " arg, __func__, \
             ##__VA_ARGS__)
 
+#define LOGV(arg, ...)                                                   \
+  DDMOZ_LOG(sPDMLog, mozilla::LogLevel::Verbose, "::%s: " arg, __func__, \
+            ##__VA_ARGS__)
+
 namespace mozilla {
 
 using media::TimeInterval;
@@ -118,10 +122,10 @@ RefPtr<MediaDataDecoder::DecodePromise> AudioTrimmer::HandleDecodedResult(
     mTrimmers.RemoveElementAt(0);
     if (!trimmer) {
       // Those frames didn't need trimming.
-      LOG("sample[%" PRId64 ",%" PRId64 "] (decoded[%" PRId64 ",%" PRId64
-          "] no trimming needed",
-          rawStart, rawEnd, sampleInterval.mStart.ToMicroseconds(),
-          sampleInterval.mEnd.ToMicroseconds());
+      LOGV("sample[%" PRId64 ",%" PRId64 "] (decoded[%" PRId64 ",%" PRId64
+           "] no trimming needed",
+           rawStart, rawEnd, sampleInterval.mStart.ToMicroseconds(),
+           sampleInterval.mEnd.ToMicroseconds());
       i++;
       continue;
     }
@@ -199,8 +203,8 @@ void AudioTrimmer::PrepareTrimmers(MediaRawData* aRaw) {
     aRaw->mTime = aRaw->mOriginalPresentationWindow->mStart;
     aRaw->mDuration = aRaw->mOriginalPresentationWindow->Length();
   } else {
-    LOG("sample[%" PRId64 ",%" PRId64 "] no trimming information",
-        aRaw->mTime.ToMicroseconds(), aRaw->GetEndTime().ToMicroseconds());
+    LOGV("sample[%" PRId64 ",%" PRId64 "] no trimming information",
+         aRaw->mTime.ToMicroseconds(), aRaw->GetEndTime().ToMicroseconds());
     mTrimmers.AppendElement(Nothing());
   }
 }
