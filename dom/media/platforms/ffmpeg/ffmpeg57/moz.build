@@ -26,4 +26,6 @@ if CONFIG['CC_TYPE'] == 'gcc':
     '-Wno-attributes',
   ]
 
+include("/ipc/chromium/chromium-config.mozbuild")
+
 FINAL_LIBRARY = 'xul'
