@@ -375,14 +375,14 @@ struct RefPtr {
 };
 
 Cell* refptr_test1() {
-  Cell cell;
+  static Cell cell;
   RefPtr<float> v1;
   Cell* ref_unsafe1 = &cell;
   return ref_unsafe1;
 }
 
 Cell* refptr_test2() {
-  Cell cell;
+  static Cell cell;
   RefPtr<float> v2;
   Cell* ref_safe2 = &cell;
   v2.forget();
@@ -390,11 +390,23 @@ Cell* refptr_test2() {
 }
 
 Cell* refptr_test3() {
-  Cell cell;
+  static Cell cell;
   RefPtr<float> v3;
   Cell* ref_unsafe3 = &cell;
   if (x) {
     v3.forget();
   }
   return ref_unsafe3;
+}
+
+Cell* refptr_test4() {
+  static Cell cell;
+  RefPtr<int> r;
+  return &cell; // hazard in return value
+}
+
+Cell* refptr_test5() {
+  static Cell cell;
+  RefPtr<int> r;
+  return nullptr; // returning immobile value, so no hazard
 }

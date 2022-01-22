@@ -395,6 +395,7 @@ function findGCBeforeValueUse(start_body, start_point, suppressed_bits, variable
             }
 
             // The value is live across this edge. Check whether this edge can GC (if we don't have a GC yet on this path.)
+            const had_gcInfo = Boolean(path.gcInfo);
             if (!path.gcInfo && !(body.attrs[ppoint] & ATTR_GC_SUPPRESSED) && !isGCSuppressed) {
                 var gcName = edgeCanGC(edge, body);
                 if (gcName) {
@@ -453,6 +454,38 @@ function findGCBeforeValueUse(start_body, start_point, suppressed_bits, variable
             // "preGCLive" value up through the worklist to remember that the
             // variable *is* alive before the GC and so this function should be
             // returning a true value even if we don't find an assignment.
+
+            // One special case: if the use of the variable is on the
+            // destination part of the edge (which currently only happens for
+            // the return value and a terminal edge in the body), and this edge
+            // is also GCing, then that usage happens *after* the GC and so
+            // should not be used for anyUse or informativeUse. This matters
+            // for a hazard involving a destructor GC'ing after an immobile
+            // return value has been assigned:
+            //
+            //   GCInDestructor guard(cx);
+            //   if (cond()) {
+            //     return nullptr;
+            //   }
+            //
+            // which boils down to
+            //
+            //   p1 --(construct guard)-->
+            //   p2 --(call cond)-->
+            //   p3 --(returnval := nullptr) -->
+            //   p4 --(destruct guard, possibly GCing)-->
+            //   p5
+            //
+            // The return value is considered to be live at p5. The live range
+            // of the return value would ordinarily be from p3->p4->p5, except
+            // that the nullptr assignment means it needn't be considered live
+            // back that far, and so the live range is *just* p5. The GC on the
+            // 4->5 edge happens just before that range, so the value was not
+            // live across the GC.
+            //
+            if (!had_gcInfo && edge_uses == edge.Index[1]) {
+                return path; // New GC does not cross this variable use.
+            }
 
             path.anyUse = path.anyUse || edge;
             bestPathWithAnyUse = bestPathWithAnyUse || path;
