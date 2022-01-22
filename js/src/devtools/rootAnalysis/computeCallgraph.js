@@ -8,18 +8,34 @@
 
 loadRelativeToScript('callgraph.js');
 
-var theFunctionNameToFind;
-if (scriptArgs[0] == '--function' || scriptArgs[0] == '-f') {
-    theFunctionNameToFind = scriptArgs[1];
-    scriptArgs = scriptArgs.slice(2);
-}
+var options = parse_options([
+    {
+        name: '--function',
+        type: 'string'
+    },
+    {
+        name: 'typeInfo_filename',
+        type: 'string',
+        default: "typeInfo.txt"
+    },
+    {
+        name: 'callgraphOut_filename',
+        type: 'string',
+        default: "rawcalls.txt"
+    },
+    {
+        name: 'batch',
+        default: 1,
+        type: 'number'
+    },
+    {
+        name: 'numBatches',
+        default: 1,
+        type: 'number'
+    },
+]);
 
-var typeInfo_filename = scriptArgs[0] || "typeInfo.txt";
-var callgraphOut_filename = scriptArgs[1] || "rawcalls.txt";
-var batch = (scriptArgs[2]|0) || 1;
-var numBatches = (scriptArgs[3]|0) || 1;
-
-var origOut = os.file.redirect(callgraphOut_filename);
+var origOut = os.file.redirect(options.callgraphOut_filename);
 
 var memoized = new Map();
 
@@ -198,7 +214,7 @@ assert(ID.nogcfunc == functionId("(nogc-function)"));
 // garbage collection
 assert(ID.gc == functionId("(GC)"));
 
-var typeInfo = loadTypeInfo(typeInfo_filename);
+var typeInfo = loadTypeInfo(options.typeInfo_filename);
 
 loadTypes("src_comp.xdb");
 
@@ -256,8 +272,8 @@ printErr("Finished loading data structures");
 var minStream = xdb.min_data_stream();
 var maxStream = xdb.max_data_stream();
 
-if (theFunctionNameToFind) {
-    var index = xdb.lookup_key(theFunctionNameToFind);
+if (options.function) {
+    var index = xdb.lookup_key(options.function);
     if (!index) {
         printErr("Function not found");
         quit(1);
@@ -390,8 +406,8 @@ function process(functionName, functionBodies)
         printOnce(`D ${functionId("(js-code)")} ${functionId(functionName)}`);
 }
 
-var start = batchStart(batch, numBatches, minStream, maxStream);
-var end = batchLast(batch, numBatches, minStream, maxStream);
+var start = batchStart(options.batch, options.numBatches, minStream, maxStream);
+var end = batchLast(options.batch, options.numBatches, minStream, maxStream);
 
 for (var nameIndex = start; nameIndex <= end; nameIndex++) {
     var name = xdb.read_key(nameIndex);
