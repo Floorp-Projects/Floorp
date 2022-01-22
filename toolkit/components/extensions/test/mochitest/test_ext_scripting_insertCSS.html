@@ -321,15 +321,13 @@ add_task(async function test_insertCSS_and_removeCSS() {
           args: [elementId],
         });
 
-        let results = await Promise.all(
-          cssParams.map(params => browser.scripting.insertCSS(params))
-        );
-        // `insertCSS()` should not resolve to a value.
-        results.forEach(result => {
+        for (const params of cssParams) {
+          const result = await browser.scripting.insertCSS(params);
+          // `insertCSS()` should not resolve to a value.
           browser.test.assertEq(undefined, result, "got expected empty result");
-        });
+        }
 
-        results = await browser.scripting.executeScript({
+        let results = await browser.scripting.executeScript({
           target: { tabId, allFrames: true },
           func: getBackgroundColor,
           args: [elementId],
