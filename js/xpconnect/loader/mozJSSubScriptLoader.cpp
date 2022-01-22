@@ -253,17 +253,6 @@ bool mozJSSubScriptLoader::ReadStencil(
     len = buf.Length();
   }
 
-#ifdef DEBUG
-  int64_t currentLength = -1;
-  // if getting content length succeeded above, it should not fail now
-  MOZ_ASSERT(chan->GetContentLength(&currentLength) == NS_OK);
-  // if content length was not known when GetContentLength() was called before,
-  // 'len' would be set to -1 until NS_ReadInputStreamToString() set its correct
-  // value. Every subsequent call to GetContentLength() should return the same
-  // length as that value.
-  MOZ_ASSERT(currentLength == len);
-#endif
-
   Maybe<JSAutoRealm> ar;
 
   // Note that when using the ScriptPreloader cache with loadSubScript, there
