@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<script>
+  window.onload = () => {
+    window.requestIdleCallback(() => {
+      SpecialPowers.wrap(self).printPreview()
+      setTimeout(() => {
+        document.documentElement.classList.remove("reftest-wait");
+      }, 250)
+    })
+  }
+</script>
+<select autofocus='true'>

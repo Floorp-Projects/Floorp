@@ -1,0 +1,16 @@
+.stp_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 16px;
+  padding: 10px 0;
+  font-size: 1em;
+  font-weight: 600;
+
+  .stp_header_logo {
+    background: url(../img/pocketlogo.svg) bottom center no-repeat;
+    background-size: contain;
+    height: 32px;
+    width: 121px;
+  }
+}

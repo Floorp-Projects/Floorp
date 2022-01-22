@@ -1,6 +1,6 @@
-use syn::{self, Variant};
+use syn::Variant;
 
-use Result;
+use crate::Result;
 
 /// Creates an instance from a specified `syn::Variant`.
 pub trait FromVariant: Sized {

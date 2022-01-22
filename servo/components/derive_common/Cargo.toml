@@ -9,7 +9,7 @@ publish = false
 path = "lib.rs"
 
 [dependencies]
-darling = { version = "0.10", default-features = false }
+darling = { version = "0.13", default-features = false }
 proc-macro2 = "1"
 quote = "1"
 syn = { version = "1", default-features = false, features = ["clone-impls", "parsing"] }

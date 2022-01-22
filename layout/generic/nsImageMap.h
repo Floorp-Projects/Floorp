@@ -15,6 +15,7 @@
 #include "nsTArray.h"
 #include "nsStubMutationObserver.h"
 #include "nsIDOMEventListener.h"
+#include "Units.h"
 
 class Area;
 class nsImageFrame;
@@ -40,10 +41,10 @@ class nsImageMap final : public nsStubMutationObserver,
   void Init(nsImageFrame* aImageFrame, nsIContent* aMap);
 
   /**
-   * Return the first area element (in content order) for the given aX,aY pixel
-   * coordinate or nullptr if the coordinate is outside all areas.
+   * Return the first area element (in content order) for the given point in
+   * CSS pixel coordinate or nullptr if the coordinate is outside all areas.
    */
-  mozilla::dom::HTMLAreaElement* GetArea(nscoord aX, nscoord aY) const;
+  mozilla::dom::HTMLAreaElement* GetArea(const mozilla::CSSIntPoint& aPt) const;
 
   /**
    * Return area elements count associated with the image map.

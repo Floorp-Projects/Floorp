@@ -1,11 +1,11 @@
 use ident_case::RenameRule;
-use syn;
 
-use ast::{Data, Fields, Style};
-use codegen;
-use options::{DefaultExpression, InputField, InputVariant, ParseAttribute, ParseData};
-use util::Flag;
-use {Error, FromMeta, Result};
+use crate::ast::{Data, Fields, Style};
+use crate::codegen;
+use crate::codegen::PostfixTransform;
+use crate::options::{DefaultExpression, InputField, InputVariant, ParseAttribute, ParseData};
+use crate::util::Flag;
+use crate::{Error, FromMeta, Result};
 
 /// A struct or enum which should have `FromMeta` or `FromDeriveInput` implementations
 /// generated.
@@ -25,9 +25,13 @@ pub struct Core {
     /// The rule that should be used to rename all fields/variants in the container.
     pub rename_rule: RenameRule,
 
-    /// An infallible function with the signature `FnOnce(T) -> T` which will be called after the
-    /// target instance is successfully constructed.
-    pub map: Option<syn::Path>,
+    /// A transform which will be called on `darling::Result<Self>`. It must either be
+    /// an `FnOnce(T) -> T` when `map` is used, or `FnOnce(T) -> darling::Result<T>` when
+    /// `and_then` is used.
+    ///
+    /// `map` and `and_then` are mutually-exclusive to avoid confusion about the order in
+    /// which the two are applied.
+    pub post_transform: Option<codegen::PostfixTransform>,
 
     /// The body of the _deriving_ type.
     pub data: Data<InputVariant, InputField>,
@@ -41,11 +45,11 @@ pub struct Core {
 
 impl Core {
     /// Partially initializes `Core` by reading the identity, generics, and body shape.
-    pub fn start(di: &syn::DeriveInput) -> Self {
-        Core {
+    pub fn start(di: &syn::DeriveInput) -> Result<Self> {
+        Ok(Core {
             ident: di.ident.clone(),
             generics: di.generics.clone(),
-            data: Data::empty_from(&di.data),
+            data: Data::try_empty_from(&di.data)?,
             default: Default::default(),
             // See https://github.com/TedDriggs/darling/issues/10: We default to snake_case
             // for enums to help authors produce more idiomatic APIs.
@@ -54,13 +58,13 @@ impl Core {
             } else {
                 Default::default()
             },
-            map: Default::default(),
+            post_transform: Default::default(),
             bound: Default::default(),
             allow_unknown_fields: Default::default(),
-        }
+        })
     }
 
-    fn as_codegen_default<'a>(&'a self) -> Option<codegen::DefaultExpression<'a>> {
+    fn as_codegen_default(&self) -> Option<codegen::DefaultExpression<'_>> {
         self.default.as_ref().map(|expr| match *expr {
             DefaultExpression::Explicit(ref path) => codegen::DefaultExpression::Explicit(path),
             DefaultExpression::Inherit | DefaultExpression::Trait => {
@@ -76,7 +80,7 @@ impl ParseAttribute for Core {
 
         if path.is_ident("default") {
             if self.default.is_some() {
-                return Err(Error::duplicate_field("default").with_span(mi))
+                return Err(Error::duplicate_field("default").with_span(mi));
             }
 
             self.default = FromMeta::from_meta(mi)?;
@@ -84,22 +88,34 @@ impl ParseAttribute for Core {
             // WARNING: This may have been set based on body shape previously,
             // so an overwrite may be permissible.
             self.rename_rule = FromMeta::from_meta(mi)?;
-        } else if path.is_ident("map") {
-            if self.map.is_some() {
-                return Err(Error::duplicate_field("map").with_span(mi))
+        } else if path.is_ident("map") || path.is_ident("and_then") {
+            // This unwrap is safe because we just called is_ident above
+            let transformer = path.get_ident().unwrap().clone();
+
+            if let Some(post_transform) = &self.post_transform {
+                if transformer == post_transform.transformer {
+                    return Err(Error::duplicate_field(&transformer.to_string()).with_span(mi));
+                } else {
+                    return Err(Error::custom(format!(
+                        "Options `{}` and `{}` are mutually exclusive",
+                        transformer, post_transform.transformer
+                    ))
+                    .with_span(mi));
+                }
             }
 
-            self.map = FromMeta::from_meta(mi)?;
+            self.post_transform =
+                Some(PostfixTransform::new(transformer, FromMeta::from_meta(mi)?));
         } else if path.is_ident("bound") {
             self.bound = FromMeta::from_meta(mi)?;
         } else if path.is_ident("allow_unknown_fields") {
             if self.allow_unknown_fields.is_some() {
-                return Err(Error::duplicate_field("allow_unknown_fields").with_span(mi))
+                return Err(Error::duplicate_field("allow_unknown_fields").with_span(mi));
             }
 
             self.allow_unknown_fields = FromMeta::from_meta(mi)?;
         } else {
-            return Err(Error::unknown_field_path(&path).with_span(mi))
+            return Err(Error::unknown_field_path(path).with_span(mi));
         }
 
         Ok(())
@@ -108,7 +124,7 @@ impl ParseAttribute for Core {
 
 impl ParseData for Core {
     fn parse_variant(&mut self, variant: &syn::Variant) -> Result<()> {
-        let v = InputVariant::from_variant(variant, Some(&self))?;
+        let v = InputVariant::from_variant(variant, Some(self))?;
 
         match self.data {
             Data::Enum(ref mut variants) => {
@@ -120,7 +136,7 @@ impl ParseData for Core {
     }
 
     fn parse_field(&mut self, field: &syn::Field) -> Result<()> {
-        let f = InputField::from_field(field, Some(&self))?;
+        let f = InputField::from_field(field, Some(self))?;
 
         match self.data {
             Data::Struct(Fields {
@@ -146,7 +162,7 @@ impl<'a> From<&'a Core> for codegen::TraitImpl<'a> {
                 .map_struct_fields(InputField::as_codegen_field)
                 .map_enum_variants(|variant| variant.as_codegen_variant(&v.ident)),
             default: v.as_codegen_default(),
-            map: v.map.as_ref(),
+            post_transform: v.post_transform.as_ref(),
             bound: v.bound.as_ref().map(|i| i.as_slice()),
             allow_unknown_fields: v.allow_unknown_fields.into(),
         }
