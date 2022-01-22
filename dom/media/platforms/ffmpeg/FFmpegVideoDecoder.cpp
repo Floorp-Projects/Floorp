@@ -448,7 +448,7 @@ static int GetVideoBufferWrapper(struct AVCodecContext* aCodecContext,
 
 static void ReleaseVideoBufferWrapper(void* opaque, uint8_t* data) {
   if (opaque) {
-    FFMPEG_LOG("ReleaseVideoBufferWrapper: PlanarYCbCrImage=%p", opaque);
+    FFMPEG_LOGV("ReleaseVideoBufferWrapper: PlanarYCbCrImage=%p", opaque);
     RefPtr<ImageBufferWrapper> image = static_cast<ImageBufferWrapper*>(opaque);
     image->ReleaseBuffer();
   }
@@ -595,7 +595,7 @@ FFmpegVideoDecoder<LIBAV_VER>::CreateEmptyPlanarYCbCrData(
   data.mColorRange = aCodecContext->color_range == AVCOL_RANGE_JPEG
                          ? gfx::ColorRange::FULL
                          : gfx::ColorRange::LIMITED;
-  FFMPEG_LOG(
+  FFMPEG_LOGV(
       "Created plane data, YSize=(%d, %d), CbCrSize=(%d, %d), "
       "CroppedYSize=(%d, %d), CroppedCbCrSize=(%d, %d), ColorDepth=%hhu",
       data.mYSize.Width(), data.mYSize.Height(), data.mCbCrSize.Width(),
@@ -607,8 +607,8 @@ FFmpegVideoDecoder<LIBAV_VER>::CreateEmptyPlanarYCbCrData(
 
 int FFmpegVideoDecoder<LIBAV_VER>::GetVideoBuffer(
     struct AVCodecContext* aCodecContext, AVFrame* aFrame, int aFlags) {
-  FFMPEG_LOG("GetVideoBuffer: aCodecContext=%p aFrame=%p", aCodecContext,
-             aFrame);
+  FFMPEG_LOGV("GetVideoBuffer: aCodecContext=%p aFrame=%p", aCodecContext,
+              aFrame);
   if (!StaticPrefs::media_ffmpeg_customized_buffer_allocation()) {
     return AVERROR(EINVAL);
   }
