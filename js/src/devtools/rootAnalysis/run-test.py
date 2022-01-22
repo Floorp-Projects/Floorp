@@ -108,6 +108,7 @@ make_dir(outroot)
 os.environ["HAZARD_RUN_INTERNAL_TESTS"] = "1"
 
 failed = set()
+passed = set()
 for name in cfg.tests:
     name = os.path.basename(name)
     indir = os.path.join(testdir, name)
@@ -134,6 +135,9 @@ for name in cfg.tests:
         raise
     else:
         print("TEST-PASSED: %s" % name)
+        passed.add(name)
 
 if failed:
     raise Exception("Failed tests: " + " ".join(failed))
+
+print(f"All {len(passed)} tests passed.")
