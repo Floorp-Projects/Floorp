@@ -233,7 +233,7 @@ fn get_allowed_origins(allow_origins: Option<clap::Values>) -> Result<Vec<Url>, 
 }
 
 fn parse_args(app: &mut App) -> ProgramResult<Operation> {
-    let args = app.try_get_matches_from_mut(env::args())?;
+    let args = app.get_matches_from_safe_borrow(env::args())?;
 
     if args.is_present("help") {
         return Ok(Operation::Help);
@@ -261,7 +261,7 @@ fn parse_args(app: &mut App) -> ProgramResult<Operation> {
     };
 
     let android_storage =
-        args.value_of_t::<AndroidStorageInput>("android_storage").unwrap_or(AndroidStorageInput::Auto);
+        value_t!(args, "android_storage", AndroidStorageInput).unwrap_or(AndroidStorageInput::Auto);
 
     let binary = args.value_of("binary").map(PathBuf::from);
 
@@ -378,11 +378,11 @@ fn main() {
     });
 }
 
-fn make_app<'a>() -> App<'a> {
+fn make_app<'a, 'b>() -> App<'a, 'b> {
     App::new(format!("geckodriver {}", build::build_info()))
         .about("WebDriver implementation for Firefox")
         .arg(
-            Arg::new("webdriver_host")
+            Arg::with_name("webdriver_host")
                 .long("host")
                 .takes_value(true)
                 .value_name("HOST")
@@ -390,8 +390,8 @@ fn make_app<'a>() -> App<'a> {
                 .help("Host IP to use for WebDriver server"),
         )
         .arg(
-            Arg::new("webdriver_port")
-                .short('p')
+            Arg::with_name("webdriver_port")
+                .short("p")
                 .long("port")
                 .takes_value(true)
                 .value_name("PORT")
@@ -399,15 +399,15 @@ fn make_app<'a>() -> App<'a> {
                 .help("Port to use for WebDriver server"),
         )
         .arg(
-            Arg::new("binary")
-                .short('b')
+            Arg::with_name("binary")
+                .short("b")
                 .long("binary")
                 .takes_value(true)
                 .value_name("BINARY")
                 .help("Path to the Firefox binary"),
         )
         .arg(
-            Arg::new("marionette_host")
+            Arg::with_name("marionette_host")
                 .long("marionette-host")
                 .takes_value(true)
                 .value_name("HOST")
@@ -415,14 +415,14 @@ fn make_app<'a>() -> App<'a> {
                 .help("Host to use to connect to Gecko"),
         )
         .arg(
-            Arg::new("marionette_port")
+            Arg::with_name("marionette_port")
                 .long("marionette-port")
                 .takes_value(true)
                 .value_name("PORT")
                 .help("Port to use to connect to Gecko [default: system-allocated port]"),
         )
         .arg(
-            Arg::new("websocket_port")
+            Arg::with_name("websocket_port")
                 .long("websocket-port")
                 .takes_value(true)
                 .value_name("PORT")
@@ -430,25 +430,25 @@ fn make_app<'a>() -> App<'a> {
                 .help("Port to use to connect to WebDriver BiDi [default: 9222]"),
         )
         .arg(
-            Arg::new("connect_existing")
+            Arg::with_name("connect_existing")
                 .long("connect-existing")
                 .requires("marionette_port")
                 .help("Connect to an existing Firefox instance"),
         )
         .arg(
-            Arg::new("jsdebugger")
+            Arg::with_name("jsdebugger")
                 .long("jsdebugger")
                 .help("Attach browser toolbox debugger for Firefox"),
         )
         .arg(
-            Arg::new("verbosity")
-                .multiple_occurrences(true)
+            Arg::with_name("verbosity")
+                .multiple(true)
                 .conflicts_with("log_level")
-                .short('v')
+                .short("v")
                 .help("Log level verbosity (-v for debug and -vv for trace level)"),
         )
         .arg(
-            Arg::new("log_level")
+            Arg::with_name("log_level")
                 .long("log")
                 .takes_value(true)
                 .value_name("LEVEL")
@@ -456,37 +456,37 @@ fn make_app<'a>() -> App<'a> {
                 .help("Set Gecko log level"),
         )
         .arg(
-            Arg::new("help")
-                .short('h')
+            Arg::with_name("help")
+                .short("h")
                 .long("help")
                 .help("Prints this message"),
         )
         .arg(
-            Arg::new("version")
-                .short('V')
+            Arg::with_name("version")
+                .short("V")
                 .long("version")
                 .help("Prints version and copying information"),
         )
         .arg(
-            Arg::new("android_storage")
+            Arg::with_name("android_storage")
                 .long("android-storage")
                 .possible_values(&["auto", "app", "internal", "sdcard"])
                 .value_name("ANDROID_STORAGE")
                 .help("Selects storage location to be used for test data (deprecated)."),
         )
         .arg(
-            Arg::new("allow_hosts")
+            Arg::with_name("allow_hosts")
                 .long("allow-hosts")
                 .takes_value(true)
-                .multiple_values(true)
+                .multiple(true)
                 .value_name("ALLOW_HOSTS")
                 .help("List of hostnames to allow. By default the value of --host is allowed, and in addition if that's a well known local address, other variations on well known local addresses are allowed. If --allow-hosts is provided only exactly those hosts are allowed."),
         )
         .arg(
-            Arg::new("allow_origins")
+            Arg::with_name("allow_origins")
                 .long("allow-origins")
                 .takes_value(true)
-                .multiple_values(true)
+                .multiple(true)
                 .value_name("ALLOW_ORIGINS")
                 .help("List of request origins to allow. These must be formatted as scheme://host:port. By default any request with an origin header is rejected. If --allow-origins is provided then only exactly those origins are allowed."),
         )
