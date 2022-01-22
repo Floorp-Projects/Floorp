@@ -755,6 +755,18 @@ ipc::IPCResult WebGPUParent::RecvDeviceAction(RawId aSelf,
   return IPC_OK();
 }
 
+ipc::IPCResult WebGPUParent::RecvDeviceActionWithAck(
+    RawId aSelf, const ipc::ByteBuf& aByteBuf,
+    DeviceActionWithAckResolver&& aResolver) {
+  ErrorBuffer error;
+  ffi::wgpu_server_device_action(mContext, aSelf, ToFFI(&aByteBuf),
+                                 error.ToFFI());
+
+  ForwardError(aSelf, error);
+  aResolver(true);
+  return IPC_OK();
+}
+
 ipc::IPCResult WebGPUParent::RecvTextureAction(RawId aSelf, RawId aDevice,
                                                const ipc::ByteBuf& aByteBuf) {
   ErrorBuffer error;

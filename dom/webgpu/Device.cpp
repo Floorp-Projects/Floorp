@@ -209,26 +209,76 @@ already_AddRefed<ShaderModule> Device::CreateShaderModule(
 
 already_AddRefed<ComputePipeline> Device::CreateComputePipeline(
     const dom::GPUComputePipelineDescriptor& aDesc) {
-  nsTArray<RawId> implicitBindGroupLayoutIds;
-  RawId implicitPipelineLayoutId = 0;
-  RawId id = mBridge->DeviceCreateComputePipeline(
-      mId, aDesc, &implicitPipelineLayoutId, &implicitBindGroupLayoutIds);
+  PipelineCreationContext context = {mId};
+  RawId id = mBridge->DeviceCreateComputePipeline(&context, aDesc);
   RefPtr<ComputePipeline> object =
-      new ComputePipeline(this, id, implicitPipelineLayoutId,
-                          std::move(implicitBindGroupLayoutIds));
+      new ComputePipeline(this, id, context.mImplicitPipelineLayoutId,
+                          std::move(context.mImplicitBindGroupLayoutIds));
   return object.forget();
 }
 
 already_AddRefed<RenderPipeline> Device::CreateRenderPipeline(
     const dom::GPURenderPipelineDescriptor& aDesc) {
-  nsTArray<RawId> implicitBindGroupLayoutIds;
-  RawId implicitPipelineLayoutId = 0;
-  RawId id = mBridge->DeviceCreateRenderPipeline(
-      mId, aDesc, &implicitPipelineLayoutId, &implicitBindGroupLayoutIds);
+  PipelineCreationContext context = {mId};
+  RawId id = mBridge->DeviceCreateRenderPipeline(&context, aDesc);
   RefPtr<RenderPipeline> object =
-      new RenderPipeline(this, id, implicitPipelineLayoutId,
-                         std::move(implicitBindGroupLayoutIds));
+      new RenderPipeline(this, id, context.mImplicitPipelineLayoutId,
+                         std::move(context.mImplicitBindGroupLayoutIds));
   return object.forget();
+}
+
+already_AddRefed<dom::Promise> Device::CreateComputePipelineAsync(
+    const dom::GPUComputePipelineDescriptor& aDesc, ErrorResult& aRv) {
+  RefPtr<dom::Promise> promise = dom::Promise::Create(GetParentObject(), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  std::shared_ptr<PipelineCreationContext> context(
+      new PipelineCreationContext());
+  context->mParentId = mId;
+  mBridge->DeviceCreateComputePipelineAsync(context.get(), aDesc)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [self = RefPtr{this}, context, promise](RawId aId) {
+            RefPtr<ComputePipeline> object = new ComputePipeline(
+                self, aId, context->mImplicitPipelineLayoutId,
+                std::move(context->mImplicitBindGroupLayoutIds));
+            promise->MaybeResolve(object);
+          },
+          [promise](const ipc::ResponseRejectReason&) {
+            promise->MaybeRejectWithOperationError(
+                "Internal communication error");
+          });
+
+  return promise.forget();
+}
+
+already_AddRefed<dom::Promise> Device::CreateRenderPipelineAsync(
+    const dom::GPURenderPipelineDescriptor& aDesc, ErrorResult& aRv) {
+  RefPtr<dom::Promise> promise = dom::Promise::Create(GetParentObject(), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  std::shared_ptr<PipelineCreationContext> context(
+      new PipelineCreationContext());
+  context->mParentId = mId;
+  mBridge->DeviceCreateRenderPipelineAsync(context.get(), aDesc)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [self = RefPtr{this}, context, promise](RawId aId) {
+            RefPtr<RenderPipeline> object = new RenderPipeline(
+                self, aId, context->mImplicitPipelineLayoutId,
+                std::move(context->mImplicitBindGroupLayoutIds));
+            promise->MaybeResolve(object);
+          },
+          [promise](const ipc::ResponseRejectReason&) {
+            promise->MaybeRejectWithOperationError(
+                "Internal communication error");
+          });
+
+  return promise.forget();
 }
 
 already_AddRefed<Texture> Device::InitSwapChain(
