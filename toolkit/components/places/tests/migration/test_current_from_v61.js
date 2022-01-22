@@ -22,6 +22,11 @@ add_task(async function builder_fields_in_database() {
   );
 });
 
+add_task(async function title_field_in_snapshots() {
+  let db = await PlacesUtils.promiseDBConnection();
+  await db.execute(`SELECT title FROM moz_places_metadata_snapshots`);
+});
+
 add_task(async function indexes_in_database() {
   let db = await PlacesUtils.promiseDBConnection();
   let rows = await db.execute(
