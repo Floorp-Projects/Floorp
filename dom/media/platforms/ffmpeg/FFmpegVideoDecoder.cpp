@@ -16,9 +16,6 @@
 #if defined(MOZ_AV1) && defined(FFVPX_VERSION) && defined(MOZ_WAYLAND)
 #  include "AOMDecoder.h"
 #endif
-#if LIBAVCODEC_VERSION_MAJOR >= 57
-#  include "mozilla/layers/TextureClient.h"
-#endif
 #ifdef MOZ_WAYLAND_USE_VAAPI
 #  include "H264.h"
 #  include "mozilla/layers/DMABUFSurfaceImage.h"
@@ -40,6 +37,7 @@
 #  define AV_PIX_FMT_NONE PIX_FMT_NONE
 #endif
 #include "mozilla/PodOperations.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
 #include "nsThreadUtils.h"
@@ -55,10 +53,6 @@ typedef int VAStatus;
 
 // Use some extra HW frames for potential rendering lags.
 #define EXTRA_HW_FRAMES 6
-
-#if LIBAVCODEC_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MAJOR >= 56
-#  define CUSTOMIZED_BUFFER_ALLOCATION 1
-#endif
 
 typedef mozilla::layers::Image Image;
 typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
@@ -411,13 +405,6 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
 #endif
 }
 
-FFmpegVideoDecoder<LIBAV_VER>::~FFmpegVideoDecoder() {
-#ifdef CUSTOMIZED_BUFFER_ALLOCATION
-  MOZ_DIAGNOSTIC_ASSERT(mAllocatedImages.IsEmpty(),
-                        "Should release all shmem buffers before destroy!");
-#endif
-}
-
 RefPtr<MediaDataDecoder::InitPromise> FFmpegVideoDecoder<LIBAV_VER>::Init() {
   MediaResult rv;
 
@@ -438,304 +425,6 @@ RefPtr<MediaDataDecoder::InitPromise> FFmpegVideoDecoder<LIBAV_VER>::Init() {
 
   return InitPromise::CreateAndReject(rv, __func__);
 }
-
-#ifdef CUSTOMIZED_BUFFER_ALLOCATION
-static int GetVideoBufferWrapper(struct AVCodecContext* aCodecContext,
-                                 AVFrame* aFrame, int aFlags) {
-  auto* decoder =
-      static_cast<FFmpegVideoDecoder<LIBAV_VER>*>(aCodecContext->opaque);
-  int rv = decoder->GetVideoBuffer(aCodecContext, aFrame, aFlags);
-  return rv < 0 ? decoder->GetVideoBufferDefault(aCodecContext, aFrame, aFlags)
-                : rv;
-}
-
-static void ReleaseVideoBufferWrapper(void* opaque, uint8_t* data) {
-  if (opaque) {
-    FFMPEG_LOGV("ReleaseVideoBufferWrapper: PlanarYCbCrImage=%p", opaque);
-    RefPtr<ImageBufferWrapper> image = static_cast<ImageBufferWrapper*>(opaque);
-    image->ReleaseBuffer();
-  }
-}
-
-static gfx::YUVColorSpace TransferAVColorSpaceToYUVColorSpace(
-    AVColorSpace aSpace) {
-  switch (aSpace) {
-    case AVCOL_SPC_BT2020_NCL:
-    case AVCOL_SPC_BT2020_CL:
-      return gfx::YUVColorSpace::BT2020;
-    case AVCOL_SPC_BT709:
-      return gfx::YUVColorSpace::BT709;
-    case AVCOL_SPC_SMPTE170M:
-    case AVCOL_SPC_BT470BG:
-      return gfx::YUVColorSpace::BT601;
-    default:
-      return gfx::YUVColorSpace::Default;
-  }
-}
-
-static bool IsColorFormatSupportedForUsingCustomizedBuffer(
-    const AVPixelFormat& aFormat) {
-#  if XP_WIN
-  // Currently the web render doesn't support uploading R16 surface, so we can't
-  // use the shmem texture for 10 bit+ videos which would be uploaded by the
-  // web render. See Bug 1751498.
-  return aFormat == AV_PIX_FMT_YUV420P || aFormat == AV_PIX_FMT_YUVJ420P ||
-         aFormat == AV_PIX_FMT_YUV444P;
-#  else
-  // For now, we only support for YUV420P, YUVJ420P and YUV444 which are the
-  // only non-HW accelerated format supported by FFmpeg's H264 and VP9 decoder.
-  return aFormat == AV_PIX_FMT_YUV420P || aFormat == AV_PIX_FMT_YUVJ420P ||
-         aFormat == AV_PIX_FMT_YUV420P10LE ||
-         aFormat == AV_PIX_FMT_YUV420P12LE || aFormat == AV_PIX_FMT_YUV444P ||
-         aFormat == AV_PIX_FMT_YUV444P10LE || aFormat == AV_PIX_FMT_YUV444P12LE;
-#  endif
-}
-
-static gfx::ColorDepth GetColorDepth(const AVPixelFormat& aFormat) {
-  switch (aFormat) {
-    case AV_PIX_FMT_YUV420P:
-    case AV_PIX_FMT_YUVJ420P:
-    case AV_PIX_FMT_YUV422P:
-    case AV_PIX_FMT_YUV444P:
-      return gfx::ColorDepth::COLOR_8;
-    case AV_PIX_FMT_YUV420P10LE:
-    case AV_PIX_FMT_YUV422P10LE:
-    case AV_PIX_FMT_YUV444P10LE:
-      return gfx::ColorDepth::COLOR_10;
-    case AV_PIX_FMT_YUV420P12LE:
-    case AV_PIX_FMT_YUV422P12LE:
-    case AV_PIX_FMT_YUV444P12LE:
-      return gfx::ColorDepth::COLOR_12;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Not supported format?");
-      return gfx::ColorDepth::COLOR_8;
-  }
-}
-
-static bool IsYUV420Sampling(const AVPixelFormat& aFormat) {
-  return aFormat == AV_PIX_FMT_YUV420P || aFormat == AV_PIX_FMT_YUVJ420P ||
-         aFormat == AV_PIX_FMT_YUV420P10LE || aFormat == AV_PIX_FMT_YUV420P12LE;
-}
-
-layers::TextureClient*
-FFmpegVideoDecoder<LIBAV_VER>::AllocateTextueClientForImage(
-    struct AVCodecContext* aCodecContext, PlanarYCbCrImage* aImage) {
-  layers::PlanarYCbCrData data =
-      CreateEmptyPlanarYCbCrData(aCodecContext, mInfo);
-  // Allocate a shmem buffer for image.
-  if (!aImage->CreateEmptyBuffer(data)) {
-    return nullptr;
-  }
-  return aImage->GetTextureClient(mImageAllocator);
-}
-
-layers::PlanarYCbCrData
-FFmpegVideoDecoder<LIBAV_VER>::CreateEmptyPlanarYCbCrData(
-    struct AVCodecContext* aCodecContext, const VideoInfo& aInfo) {
-  MOZ_ASSERT(
-      IsColorFormatSupportedForUsingCustomizedBuffer(aCodecContext->pix_fmt));
-
-  // FFmpeg will store images with color depth > 8 bits in 16 bits with extra
-  // padding.
-  const int32_t bytesPerChannel =
-      GetColorDepth(aCodecContext->pix_fmt) == gfx::ColorDepth::COLOR_8 ? 1 : 2;
-
-  // If adjusted Ysize is larger than the actual image size (coded_width *
-  // coded_height), that means ffmpeg decoder needs extra padding on both width
-  // and height. If that happens, the planes will need to be cropped later in
-  // order to avoid visible incorrect border on the right and bottom of the
-  // actual image.
-  //
-  // Here are examples of various sizes video in YUV420P format, the width and
-  // height would need to be adjusted in order to align padding.
-  //
-  // Eg1. video (1920*1080)
-  // plane Y
-  // width 1920 height 1080 -> adjusted-width 1920 adjusted-height 1088
-  // plane Cb/Cr
-  // width 960  height  540 -> adjusted-width 1024 adjusted-height 544
-  //
-  // Eg2. video (2560*1440)
-  // plane Y
-  // width 2560 height 1440 -> adjusted-width 2560 adjusted-height 1440
-  // plane Cb/Cr
-  // width 1280 height  720 -> adjusted-width 1280 adjusted-height 736
-  layers::PlanarYCbCrData data;
-  auto paddedYSize =
-      gfx::IntSize{aCodecContext->coded_width, aCodecContext->coded_height};
-  mLib->avcodec_align_dimensions(aCodecContext, &paddedYSize.width,
-                                 &paddedYSize.height);
-  data.mYSize = gfx::IntSize{paddedYSize.Width(), paddedYSize.Height()};
-  data.mYStride = data.mYSize.Width() * bytesPerChannel;
-  data.mCroppedYSize = Some(
-      gfx::IntSize{aCodecContext->coded_width, aCodecContext->coded_height});
-
-  MOZ_ASSERT(
-      IsColorFormatSupportedForUsingCustomizedBuffer(aCodecContext->pix_fmt));
-  const auto yDims =
-      gfx::IntSize{aCodecContext->coded_width, aCodecContext->coded_height};
-  auto uvDims = yDims;
-  if (IsYUV420Sampling(aCodecContext->pix_fmt)) {
-    uvDims.width = (uvDims.width + 1) / 2;
-    uvDims.height = (uvDims.height + 1) / 2;
-  }
-  auto paddedCbCrSize = uvDims;
-  mLib->avcodec_align_dimensions(aCodecContext, &paddedCbCrSize.width,
-                                 &paddedCbCrSize.height);
-  data.mCbCrSize =
-      gfx::IntSize{paddedCbCrSize.Width(), paddedCbCrSize.Height()};
-  data.mCbCrStride = data.mCbCrSize.Width() * bytesPerChannel;
-  data.mCroppedCbCrSize = Some(gfx::IntSize{uvDims.Width(), uvDims.Height()});
-
-  // Setting other attributes
-  data.mPicSize =
-      gfx::IntSize{aCodecContext->coded_width, aCodecContext->coded_height};
-  const gfx::IntRect picture =
-      aInfo.ScaledImageRect(data.mPicSize.Width(), data.mPicSize.Height());
-  data.mPicX = picture.x;
-  data.mPicY = picture.y;
-  data.mStereoMode = aInfo.mStereoMode;
-  if (aCodecContext->colorspace != AVCOL_SPC_UNSPECIFIED) {
-    data.mYUVColorSpace =
-        TransferAVColorSpaceToYUVColorSpace(aCodecContext->colorspace);
-  } else {
-    data.mYUVColorSpace = aInfo.mColorSpace ? *aInfo.mColorSpace
-                                            : DefaultColorSpace(data.mPicSize);
-  }
-  data.mColorDepth = GetColorDepth(aCodecContext->pix_fmt);
-  data.mColorRange = aCodecContext->color_range == AVCOL_RANGE_JPEG
-                         ? gfx::ColorRange::FULL
-                         : gfx::ColorRange::LIMITED;
-  FFMPEG_LOGV(
-      "Created plane data, YSize=(%d, %d), CbCrSize=(%d, %d), "
-      "CroppedYSize=(%d, %d), CroppedCbCrSize=(%d, %d), ColorDepth=%hhu",
-      data.mYSize.Width(), data.mYSize.Height(), data.mCbCrSize.Width(),
-      data.mCbCrSize.Height(), data.mCroppedYSize->Width(),
-      data.mCroppedYSize->Height(), data.mCroppedCbCrSize->Width(),
-      data.mCroppedCbCrSize->Height(), static_cast<uint8_t>(data.mColorDepth));
-  return data;
-}
-
-int FFmpegVideoDecoder<LIBAV_VER>::GetVideoBuffer(
-    struct AVCodecContext* aCodecContext, AVFrame* aFrame, int aFlags) {
-  FFMPEG_LOGV("GetVideoBuffer: aCodecContext=%p aFrame=%p", aCodecContext,
-              aFrame);
-  if (!StaticPrefs::media_ffmpeg_customized_buffer_allocation()) {
-    return AVERROR(EINVAL);
-  }
-
-  if (mIsUsingShmemBufferForDecode && !*mIsUsingShmemBufferForDecode) {
-    return AVERROR(EINVAL);
-  }
-
-  // Codec doesn't support custom allocator.
-  if (!(aCodecContext->codec->capabilities & AV_CODEC_CAP_DR1)) {
-    return AVERROR(EINVAL);
-  }
-
-  // Pre-allocation is only for sw decoding. During decoding, ffmpeg decoder
-  // will need to reference decoded frames, if those frames are on shmem buffer,
-  // then it would cause a need to read CPU data from GPU, which is slow.
-  if (IsHardwareAccelerated()) {
-    return AVERROR(EINVAL);
-  }
-
-#  ifdef MOZ_WAYLAND_USE_VAAPI
-  // For SW decoding + DMABuf case, it's the opposite from the above case, we
-  // don't want to access GPU data too frequently from CPU.
-  if (mUseDMABufSurfaces) {
-    return AVERROR(EINVAL);
-  }
-#  endif
-
-  if (!IsColorFormatSupportedForUsingCustomizedBuffer(aCodecContext->pix_fmt)) {
-    FFMPEG_LOG("Not support color format %d", aCodecContext->pix_fmt);
-    return AVERROR(EINVAL);
-  }
-
-  if (aCodecContext->lowres != 0) {
-    FFMPEG_LOG("Not support low resolution decoding");
-    return AVERROR(EINVAL);
-  }
-
-  const gfx::IntSize size(aCodecContext->width, aCodecContext->height);
-  int rv = mLib->av_image_check_size(size.Width(), size.Height(), 0, nullptr);
-  if (rv < 0) {
-    FFMPEG_LOG("Invalid image size");
-    return rv;
-  }
-
-  CheckedInt32 dataSize = mLib->av_image_get_buffer_size(
-      aCodecContext->pix_fmt, aCodecContext->coded_width,
-      aCodecContext->coded_height, 16);
-  if (!dataSize.isValid()) {
-    FFMPEG_LOG("Data size overflow!");
-    return AVERROR(EINVAL);
-  }
-
-  if (!mImageContainer) {
-    FFMPEG_LOG("No Image container!");
-    return AVERROR(EINVAL);
-  }
-
-  RefPtr<PlanarYCbCrImage> image = mImageContainer->CreatePlanarYCbCrImage();
-  if (!image) {
-    FFMPEG_LOG("Failed to create YCbCr image");
-    return AVERROR(EINVAL);
-  }
-
-  RefPtr<layers::TextureClient> texture =
-      AllocateTextueClientForImage(aCodecContext, image);
-  if (!texture) {
-    FFMPEG_LOG("Failed to allocate a texture client");
-    return AVERROR(EINVAL);
-  }
-
-  if (!texture->Lock(layers::OpenMode::OPEN_WRITE)) {
-    FFMPEG_LOG("Failed to lock the texture");
-    return AVERROR(EINVAL);
-  }
-
-  layers::MappedYCbCrTextureData mapped;
-  if (!texture->BorrowMappedYCbCrData(mapped)) {
-    FFMPEG_LOG("Failed to borrow mapped data for the texture");
-    texture->Unlock();
-    return AVERROR(EINVAL);
-  }
-
-  aFrame->data[0] = mapped.y.data;
-  aFrame->data[1] = mapped.cb.data;
-  aFrame->data[2] = mapped.cr.data;
-
-  aFrame->linesize[0] = mapped.y.stride;
-  aFrame->linesize[1] = mapped.cb.stride;
-  aFrame->linesize[2] = mapped.cr.stride;
-
-  aFrame->width = aCodecContext->coded_width;
-  aFrame->height = aCodecContext->coded_height;
-  aFrame->format = aCodecContext->pix_fmt;
-  aFrame->extended_data = aFrame->data;
-  aFrame->reordered_opaque = aCodecContext->reordered_opaque;
-  MOZ_ASSERT(aFrame->data[0] && aFrame->data[1] && aFrame->data[2]);
-
-  // This will hold a reference to image, and the reference would be dropped
-  // when ffmpeg tells us that the buffer is no longer needed.
-  auto imageWrapper = MakeRefPtr<ImageBufferWrapper>(image.get(), this);
-  aFrame->buf[0] =
-      mLib->av_buffer_create(aFrame->data[0], dataSize.value(),
-                             ReleaseVideoBufferWrapper, imageWrapper.get(), 0);
-  if (!aFrame->buf[0]) {
-    FFMPEG_LOG("Failed to allocate buffer");
-    return AVERROR(EINVAL);
-  }
-
-  FFMPEG_LOG("Created av buffer, buf=%p, data=%p, image=%p, sz=%d",
-             aFrame->buf[0], aFrame->data[0], image.get(), dataSize.value());
-  mAllocatedImages.Insert(imageWrapper.get());
-  mIsUsingShmemBufferForDecode = Some(true);
-  return 0;
-}
-#endif
 
 void FFmpegVideoDecoder<LIBAV_VER>::InitCodecContext() {
   mCodecContext->width = mInfo.mImage.width;
@@ -769,14 +458,6 @@ void FFmpegVideoDecoder<LIBAV_VER>::InitCodecContext() {
 
   // FFmpeg will call back to this to negotiate a video pixel format.
   mCodecContext->get_format = ChoosePixelFormat;
-#ifdef CUSTOMIZED_BUFFER_ALLOCATION
-  FFMPEG_LOG("Set get_buffer2 for customized buffer allocation");
-  mCodecContext->get_buffer2 = GetVideoBufferWrapper;
-  mCodecContext->opaque = this;
-#  if FF_API_THREAD_SAFE_CALLBACKS
-  mCodecContext->thread_safe_callbacks = 1;
-#  endif
-#endif
 }
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
@@ -828,7 +509,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
   }
   do {
     if (!PrepareFrame()) {
-      NS_WARNING("FFmpeg decoder failed to allocate frame.");
+      NS_WARNING("FFmpeg h264 decoder failed to allocate frame.");
       return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
 
@@ -861,7 +542,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
 
     MediaResult rv;
 #  ifdef MOZ_WAYLAND_USE_VAAPI
-    if (IsHardwareAccelerated()) {
+    if (mVAAPIDeviceContext) {
       rv = CreateImageVAAPI(mFrame->pkt_pos, mFrame->pkt_pts,
                             mFrame->pkt_duration, aResults);
       // If VA-API playback failed, just quit. Decoder is going to be restarted
@@ -900,7 +581,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
                       aSample->mDuration.ToMicroseconds());
 
   if (!PrepareFrame()) {
-    NS_WARNING("FFmpeg decoder failed to allocate frame.");
+    NS_WARNING("FFmpeg h264 decoder failed to allocate frame.");
     return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
   }
 
@@ -1054,35 +735,11 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
                                               : gfx::ColorRange::LIMITED;
   }
 
-  RefPtr<VideoData> v;
-#ifdef CUSTOMIZED_BUFFER_ALLOCATION
-  if (mIsUsingShmemBufferForDecode && *mIsUsingShmemBufferForDecode) {
-    RefPtr<ImageBufferWrapper> wrapper = static_cast<ImageBufferWrapper*>(
-        mLib->av_buffer_get_opaque(mFrame->buf[0]));
-    MOZ_ASSERT(wrapper);
-    auto* image = wrapper->AsPlanarYCbCrImage();
-    RefPtr<layers::TextureClient> texture = image->GetTextureClient(nullptr);
-    if (!texture) {
-      NS_WARNING("Failed to get the texture client!");
-    } else {
-      // Texture was locked to ensure no one can modify or access texture's data
-      // except ffmpeg decoder. After finisheing decoding, texture's data would
-      // be avaliable for accessing for everyone so we unlock texture.
-      texture->Unlock();
-      v = VideoData::CreateFromImage(
-          mInfo.mDisplay, aOffset, TimeUnit::FromMicroseconds(aPts),
-          TimeUnit::FromMicroseconds(aDuration), image, !!mFrame->key_frame,
-          TimeUnit::FromMicroseconds(-1));
-    }
-  }
-#endif
-  if (!v) {
-    v = VideoData::CreateAndCopyData(
-        mInfo, mImageContainer, aOffset, TimeUnit::FromMicroseconds(aPts),
-        TimeUnit::FromMicroseconds(aDuration), b, !!mFrame->key_frame,
-        TimeUnit::FromMicroseconds(-1),
-        mInfo.ScaledImageRect(mFrame->width, mFrame->height), mImageAllocator);
-  }
+  RefPtr<VideoData> v = VideoData::CreateAndCopyData(
+      mInfo, mImageContainer, aOffset, TimeUnit::FromMicroseconds(aPts),
+      TimeUnit::FromMicroseconds(aDuration), b, !!mFrame->key_frame,
+      TimeUnit::FromMicroseconds(-1),
+      mInfo.ScaledImageRect(mFrame->width, mFrame->height), mImageAllocator);
 
   if (!v) {
     return MediaResult(NS_ERROR_OUT_OF_MEMORY,
@@ -1238,21 +895,19 @@ void FFmpegVideoDecoder<LIBAV_VER>::ProcessShutdown() {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
 #ifdef MOZ_WAYLAND_USE_VAAPI
   mVideoFramePool = nullptr;
-  if (IsHardwareAccelerated()) {
+  if (mVAAPIDeviceContext) {
     mLib->av_buffer_unref(&mVAAPIDeviceContext);
   }
 #endif
   FFmpegDataDecoder<LIBAV_VER>::ProcessShutdown();
 }
 
+#ifdef MOZ_WAYLAND_USE_VAAPI
 bool FFmpegVideoDecoder<LIBAV_VER>::IsHardwareAccelerated(
     nsACString& aFailureReason) const {
-#ifdef MOZ_WAYLAND_USE_VAAPI
   return !!mVAAPIDeviceContext;
-#else
-  return false;
-#endif
 }
+#endif
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
 bool FFmpegVideoDecoder<LIBAV_VER>::IsFormatAccelerated(
