@@ -16,37 +16,70 @@ var sourceRoot = (os.getenv('SOURCE') || '') + '/';
 var functionName;
 var functionBodies;
 
-if (typeof scriptArgs[0] != 'string' || typeof scriptArgs[1] != 'string')
-    throw "Usage: analyzeRoots.js [-f function_name] <gcFunctions.lst> <gcEdges.txt> <limitedFunctions.lst> <gcTypes.txt> <typeInfo.txt> [start end [tmpfile]]";
-
-var theFunctionNameToFind;
-if (scriptArgs[0] == '--function' || scriptArgs[0] == '-f') {
-    theFunctionNameToFind = scriptArgs[1];
-    scriptArgs = scriptArgs.slice(2);
+try {
+    var options = parse_options([
+        {
+            name: "--function",
+            type: 'string',
+        },
+        {
+            name: "-f",
+            type: "string",
+            dest: "function",
+        },
+        {
+            name: "gcFunctions",
+            default: "gcFunctions.lst"
+        },
+        {
+            name: "gcEdges",
+            default: "gcEdges.txt"
+        },
+        {
+            name: "limitedFunctions",
+            default: "limitedFunctions.lst"
+        },
+        {
+            name: "gcTypes",
+            default: "gcTypes.txt"
+        },
+        {
+            name: "typeInfo",
+            default: "typeInfo.txt"
+        },
+        {
+            name: "batch",
+            type: "number",
+            default: 1
+        },
+        {
+            name: "numBatches",
+            type: "number",
+            default: 1
+        },
+        {
+            name: "tmpfile",
+            default: "tmp.txt"
+        },
+    ]);
+} catch (e) {
+    printErr(e);
+    printErr("Usage: analyzeRoots.js [-f function_name] <gcFunctions.lst> <gcEdges.txt> <limitedFunctions.lst> <gcTypes.txt> <typeInfo.txt> [start end [tmpfile]]");
+    quit(1);
 }
-
-var gcFunctionsFile = scriptArgs[0] || "gcFunctions.lst";
-var gcEdgesFile = scriptArgs[1] || "gcEdges.txt";
-var limitedFunctionsFile = scriptArgs[2] || "limitedFunctions.lst";
-var gcTypesFile = scriptArgs[3] || "gcTypes.txt";
-var typeInfoFile = scriptArgs[4] || "typeInfo.txt";
-var batch = (scriptArgs[5]|0) || 1;
-var numBatches = (scriptArgs[6]|0) || 1;
-var tmpfile = scriptArgs[7] || "tmp.txt";
-
 var gcFunctions = {};
-var text = snarf("gcFunctions.lst").split("\n");
+var text = snarf(options.gcFunctions).split("\n");
 assert(text.pop().length == 0);
 for (const line of text)
     gcFunctions[mangled(line)] = readable(line);
 
-var limitedFunctions = JSON.parse(snarf(limitedFunctionsFile));
+var limitedFunctions = JSON.parse(snarf(options.limitedFunctions));
 text = null;
 
-var typeInfo = loadTypeInfo(typeInfoFile);
+var typeInfo = loadTypeInfo(options.typeInfo);
 
 var gcEdges = {};
-text = snarf(gcEdgesFile).split('\n');
+text = snarf(options.gcEdges).split('\n');
 assert(text.pop().length == 0);
 for (const line of text) {
     var [ block, edge, func ] = line.split(" || ");
@@ -60,7 +93,7 @@ var match;
 var gcThings = {};
 var gcPointers = {};
 
-text = snarf(gcTypesFile).split("\n");
+text = snarf(options.gcTypes).split("\n");
 for (var line of text) {
     if (match = /^GCThing: (.*)/.exec(line))
         gcThings[match[1]] = true;
@@ -523,8 +556,8 @@ function unsafeVariableAddressTaken(suppressed, variable)
 // given function and store it.
 function loadPrintedLines(functionName)
 {
-    assert(!os.system("xdbfind src_body.xdb '" + functionName + "' > " + tmpfile));
-    var lines = snarf(tmpfile).split('\n');
+    assert(!os.system("xdbfind src_body.xdb '" + functionName + "' > " + options.tmpfile));
+    var lines = snarf(options.tmpfile).split('\n');
 
     for (var body of functionBodies)
         body.lines = [];
@@ -788,7 +821,7 @@ function processBodies(functionName, wholeBodyAttrs)
     }
 }
 
-if (batch == 1)
+if (options.batch == 1)
     print("Time: " + new Date);
 
 var xdb = xdbLibrary();
@@ -797,8 +830,8 @@ xdb.open("src_body.xdb");
 var minStream = xdb.min_data_stream()|0;
 var maxStream = xdb.max_data_stream()|0;
 
-var start = batchStart(batch, numBatches, minStream, maxStream);
-var end = batchLast(batch, numBatches, minStream, maxStream);
+var start = batchStart(options.batch, options.numBatches, minStream, maxStream);
+var end = batchLast(options.batch, options.numBatches, minStream, maxStream);
 
 function process(name, json) {
     functionName = name;
@@ -831,11 +864,11 @@ function process(name, json) {
     processBodies(functionName, wholeBodyAttrs);
 }
 
-if (theFunctionNameToFind) {
-    var data = xdb.read_entry(theFunctionNameToFind);
+if (options.function) {
+    var data = xdb.read_entry(options.function);
     var json = data.readString();
     debugger;
-    process(theFunctionNameToFind, json);
+    process(options.function, json);
     xdb.free_string(data);
     quit(0);
 }
