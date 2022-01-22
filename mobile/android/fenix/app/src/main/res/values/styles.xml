@@ -14,7 +14,7 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowBackground">@color/fx_mobile_layer_color_1</item>
         <item name="android:colorEdgeEffect">@color/accent_normal_theme</item>
-        <item name="android:colorAccent">@color/primary_text_normal_theme</item>
+        <item name="android:colorAccent">@color/fx_mobile_text_color_primary</item>
         <item name="android:textColorPrimary">@color/state_list_text_color</item>
         <item name="android:textColorSecondary">@color/secondary_state_list_text_color</item>
         <item name="alertDialogStyle">@style/DialogStyleNormal</item>
@@ -44,10 +44,10 @@
         <!-- Inactive track color(30% transparency) -->
         <item name="android:colorForeground">@color/toggle_off_track_normal_theme</item>
         <!-- sets the toolbar back button color, radio buttons / unselected checkboxes -->
-        <item name="colorControlNormal">@color/primary_text_normal_theme</item>
+        <item name="colorControlNormal">@color/fx_mobile_text_color_primary</item>
 
         <!-- Updated color attributes -->
-        <item name="primaryText">@color/primary_text_normal_theme</item>
+        <item name="primaryText">@color/fx_mobile_text_color_primary</item>
         <item name="secondaryText">@color/secondary_text_normal_theme</item>
         <item name="contrastText">@color/contrast_text_normal_theme</item>
         <item name="accent">@color/accent_normal_theme</item>
@@ -87,7 +87,7 @@
         <item name="recentlyUsedShareMenu">@color/recently_used_share_theme</item>
 
         <!-- Shared widget colors -->
-        <item name="mozac_primary_text_color">@color/primary_text_normal_theme</item>
+        <item name="mozac_primary_text_color">@color/fx_mobile_text_color_primary</item>
         <item name="mozac_caption_text_color">@color/caption_text_normal_theme</item>
         <item name="mozac_widget_favicon_background_color">@color/fx_mobile_layer_color_2</item>
         <item name="mozac_widget_favicon_border_color">@color/fx_mobile_border_color_primary</item>
@@ -105,7 +105,7 @@
         <item name="bottomBarBackground">@drawable/home_bottom_bar_background</item>
         <item name="bottomBarBackgroundTop">@drawable/home_bottom_bar_background_top</item>
         <item name="privateBrowsingButtonBackground">@android:color/transparent</item>
-        <item name="privateBrowsingButtonAccent">@color/primary_text_normal_theme</item>
+        <item name="privateBrowsingButtonAccent">@color/fx_mobile_text_color_primary</item>
 
         <item name="tabCounterTintColor">?primaryText</item>
     </style>

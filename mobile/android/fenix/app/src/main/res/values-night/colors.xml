@@ -117,9 +117,8 @@
     <color name="fx_mobile_border_color_warning" tools:ignore="UnusedResources">@color/photonRed40</color>
 
     <!-- Normal theme colors for dark mode -->
-    <color name="primary_text_normal_theme">@color/fx_mobile_text_color_primary</color>
     <color name="secondary_text_normal_theme">#A7A2B7</color>
-    <color name="contrast_text_normal_theme">@color/primary_text_normal_theme</color>
+    <color name="contrast_text_normal_theme">@color/fx_mobile_text_color_primary</color>
     <color name="caption_text_normal_theme">@color/photonLightGrey70</color>
     <color name="inset_normal_theme">@color/photonDarkGrey50</color>
     <color name="accent_normal_theme">@color/photonViolet50</color>

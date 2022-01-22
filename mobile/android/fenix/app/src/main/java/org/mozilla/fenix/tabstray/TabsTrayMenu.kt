@@ -54,14 +54,14 @@ class TabsTrayMenu(
         listOf(
             SimpleBrowserMenuItem(
                 context.getString(R.string.tabs_tray_select_tabs),
-                textColorResource = R.color.primary_text_normal_theme
+                textColorResource = R.color.fx_mobile_text_color_primary
             ) {
                 onItemTapped.invoke(Item.SelectTabs)
             }.apply { visible = shouldShowSelectOrShare },
 
             SimpleBrowserMenuItem(
                 context.getString(R.string.tab_tray_menu_item_share),
-                textColorResource = R.color.primary_text_normal_theme
+                textColorResource = R.color.fx_mobile_text_color_primary
             ) {
                 context.components.analytics.metrics.track(Event.TabsTrayShareAllTabsPressed)
                 onItemTapped.invoke(Item.ShareAllTabs)
@@ -69,28 +69,28 @@ class TabsTrayMenu(
 
             SimpleBrowserMenuItem(
                 context.getString(R.string.tab_tray_menu_account_settings),
-                textColorResource = R.color.primary_text_normal_theme
+                textColorResource = R.color.fx_mobile_text_color_primary
             ) {
                 onItemTapped.invoke(Item.OpenAccountSettings)
             }.apply { visible = shouldShowAccountSetting },
 
             SimpleBrowserMenuItem(
                 context.getString(R.string.tab_tray_menu_tab_settings),
-                textColorResource = R.color.primary_text_normal_theme
+                textColorResource = R.color.fx_mobile_text_color_primary
             ) {
                 onItemTapped.invoke(Item.OpenTabSettings)
             }.apply { visible = shouldShowTabSetting },
 
             SimpleBrowserMenuItem(
                 context.getString(R.string.tab_tray_menu_recently_closed),
-                textColorResource = R.color.primary_text_normal_theme
+                textColorResource = R.color.fx_mobile_text_color_primary
             ) {
                 onItemTapped.invoke(Item.OpenRecentlyClosed)
             },
 
             SimpleBrowserMenuItem(
                 context.getString(R.string.tab_tray_menu_item_close),
-                textColorResource = R.color.primary_text_normal_theme
+                textColorResource = R.color.fx_mobile_text_color_primary
             ) {
                 context.components.analytics.metrics.track(Event.TabsTrayCloseAllTabsPressed)
                 onItemTapped.invoke(Item.CloseAllTabs)

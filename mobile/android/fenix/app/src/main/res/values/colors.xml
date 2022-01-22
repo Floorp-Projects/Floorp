@@ -191,7 +191,6 @@
     <color name="tab_tray_item_media_background_private_theme">@color/photonViolet50</color>
 
     <!-- Normal theme colors for light mode -->
-    <color name="primary_text_normal_theme">@color/primary_text_light_theme</color>
     <color name="secondary_text_normal_theme">@color/photonGrey50</color>
     <color name="contrast_text_normal_theme">@color/photonLightGrey05</color>
     <color name="caption_text_normal_theme">@color/photonLightGrey90</color>

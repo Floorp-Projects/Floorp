@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:gravity="center_vertical|start"
         android:textAppearance="@style/Header14TextStyle"
-        android:textColor="@color/primary_text_normal_theme"
+        android:textColor="@color/fx_mobile_text_color_primary"
         android:textSize="12sp"
         android:letterSpacing="0.04"
         android:textDirection="locale"
