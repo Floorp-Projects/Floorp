@@ -159,8 +159,6 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
       mozilla::layers::RenderRootStateManager*, nsDisplayListBuilder*,
       nsPoint aPt, uint32_t aFlags);
 
-  nsRect GetInnerArea() const;
-
   /**
    * Return a map element associated with this image.
    */
@@ -372,7 +370,11 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
 
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<imgIContainer> mPrevImage;
+
+  // The content-box size as if we are not fragmented, cached in the most recent
+  // reflow.
   nsSize mComputedSize;
+
   mozilla::IntrinsicSize mIntrinsicSize;
 
   // Stores mImage's intrinsic ratio, or a default AspectRatio if there's no
@@ -477,9 +479,7 @@ class nsDisplayImage final : public nsPaintedDisplayItem {
 
   nsRect GetBounds(bool* aSnap) const {
     *aSnap = true;
-
-    nsImageFrame* imageFrame = static_cast<nsImageFrame*>(mFrame);
-    return imageFrame->GetInnerArea() + ToReferenceFrame();
+    return Frame()->GetContentRectRelativeToSelf() + ToReferenceFrame();
   }
 
   nsRect GetBounds(nsDisplayListBuilder*, bool* aSnap) const final {
