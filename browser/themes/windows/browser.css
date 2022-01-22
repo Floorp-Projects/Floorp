@@ -448,7 +448,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   }
 }
 
-@media (prefers-color-scheme: dark) {
+@media (-moz-content-prefers-color-scheme: dark) {
   #statuspanel-label {
     background-color: hsl(240, 1%, 20%);
     border-color: hsl(240, 1%, 40%);

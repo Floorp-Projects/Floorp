@@ -1232,6 +1232,13 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
       // Firefox 97 uses schema version 62
 
+      if (currentSchemaVersion < 63) {
+        rv = MigrateV63Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 98 uses schema version 63
+
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
       // NEVER MIX UP SYNC AND ASYNC EXECUTION IN MIGRATORS, YOU MAY LOCK THE
@@ -2405,6 +2412,22 @@ nsresult Database::MigrateV62Up() {
   rv = mMainConn->ExecuteSimpleSQL(
       CREATE_IDX_MOZ_PLACES_METADATA_SNAPSHOTS_EXTRA_TYPE);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult Database::MigrateV63Up() {
+  // Add title column to snapshots if necessary.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(
+      "SELECT title FROM moz_places_metadata_snapshots"_ns,
+      getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(
+        "ALTER TABLE moz_places_metadata_snapshots "
+        "ADD COLUMN title TEXT "_ns);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }

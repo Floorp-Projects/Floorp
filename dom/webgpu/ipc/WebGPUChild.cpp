@@ -669,10 +669,9 @@ RawId WebGPUChild::DeviceCreateShaderModule(
   return id;
 }
 
-RawId WebGPUChild::DeviceCreateComputePipeline(
-    RawId aSelfId, const dom::GPUComputePipelineDescriptor& aDesc,
-    RawId* const aImplicitPipelineLayoutId,
-    nsTArray<RawId>* const aImplicitBindGroupLayoutIds) {
+RawId WebGPUChild::DeviceCreateComputePipelineImpl(
+    PipelineCreationContext* const aContext,
+    const dom::GPUComputePipelineDescriptor& aDesc, ByteBuf* const aByteBuf) {
   ffi::WGPUComputePipelineDescriptor desc = {};
   nsCString label, entryPoint;
   if (aDesc.mLabel.WasPassed()) {
@@ -686,20 +685,47 @@ RawId WebGPUChild::DeviceCreateComputePipeline(
   LossyCopyUTF16toASCII(aDesc.mCompute.mEntryPoint, entryPoint);
   desc.stage.entry_point = entryPoint.get();
 
-  ByteBuf bb;
   RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
   RawId id = ffi::wgpu_client_create_compute_pipeline(
-      mClient, aSelfId, &desc, ToFFI(&bb), aImplicitPipelineLayoutId,
-      implicit_bgl_ids);
+      mClient, aContext->mParentId, &desc, ToFFI(aByteBuf),
+      &aContext->mImplicitPipelineLayoutId, implicit_bgl_ids);
 
   for (const auto& cur : implicit_bgl_ids) {
     if (!cur) break;
-    aImplicitBindGroupLayoutIds->AppendElement(cur);
+    aContext->mImplicitBindGroupLayoutIds.AppendElement(cur);
   }
-  if (!SendDeviceAction(aSelfId, std::move(bb))) {
+
+  return id;
+}
+
+RawId WebGPUChild::DeviceCreateComputePipeline(
+    PipelineCreationContext* const aContext,
+    const dom::GPUComputePipelineDescriptor& aDesc) {
+  ByteBuf bb;
+  const RawId id = DeviceCreateComputePipelineImpl(aContext, aDesc, &bb);
+
+  if (!SendDeviceAction(aContext->mParentId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
   }
   return id;
+}
+
+RefPtr<PipelinePromise> WebGPUChild::DeviceCreateComputePipelineAsync(
+    PipelineCreationContext* const aContext,
+    const dom::GPUComputePipelineDescriptor& aDesc) {
+  ByteBuf bb;
+  const RawId id = DeviceCreateComputePipelineImpl(aContext, aDesc, &bb);
+
+  return SendDeviceActionWithAck(aContext->mParentId, std::move(bb))
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [id](bool aDummy) {
+            Unused << aDummy;
+            return PipelinePromise::CreateAndResolve(id, __func__);
+          },
+          [](const ipc::ResponseRejectReason& aReason) {
+            return PipelinePromise::CreateAndReject(aReason, __func__);
+          });
 }
 
 static ffi::WGPUMultisampleState ConvertMultisampleState(
@@ -746,10 +772,9 @@ static ffi::WGPUDepthStencilState ConvertDepthStencilState(
   return desc;
 }
 
-RawId WebGPUChild::DeviceCreateRenderPipeline(
-    RawId aSelfId, const dom::GPURenderPipelineDescriptor& aDesc,
-    RawId* const aImplicitPipelineLayoutId,
-    nsTArray<RawId>* const aImplicitBindGroupLayoutIds) {
+RawId WebGPUChild::DeviceCreateRenderPipelineImpl(
+    PipelineCreationContext* const aContext,
+    const dom::GPURenderPipelineDescriptor& aDesc, ByteBuf* const aByteBuf) {
   // A bunch of stack locals that we can have pointers into
   nsTArray<ffi::WGPUVertexBufferLayout> vertexBuffers;
   nsTArray<ffi::WGPUVertexAttribute> vertexAttributes;
@@ -860,20 +885,47 @@ RawId WebGPUChild::DeviceCreateRenderPipeline(
     desc.depth_stencil = &depthStencilState;
   }
 
-  ByteBuf bb;
   RawId implicit_bgl_ids[WGPUMAX_BIND_GROUPS] = {};
   RawId id = ffi::wgpu_client_create_render_pipeline(
-      mClient, aSelfId, &desc, ToFFI(&bb), aImplicitPipelineLayoutId,
-      implicit_bgl_ids);
+      mClient, aContext->mParentId, &desc, ToFFI(aByteBuf),
+      &aContext->mImplicitPipelineLayoutId, implicit_bgl_ids);
 
   for (const auto& cur : implicit_bgl_ids) {
     if (!cur) break;
-    aImplicitBindGroupLayoutIds->AppendElement(cur);
+    aContext->mImplicitBindGroupLayoutIds.AppendElement(cur);
   }
-  if (!SendDeviceAction(aSelfId, std::move(bb))) {
+
+  return id;
+}
+
+RawId WebGPUChild::DeviceCreateRenderPipeline(
+    PipelineCreationContext* const aContext,
+    const dom::GPURenderPipelineDescriptor& aDesc) {
+  ByteBuf bb;
+  const RawId id = DeviceCreateRenderPipelineImpl(aContext, aDesc, &bb);
+
+  if (!SendDeviceAction(aContext->mParentId, std::move(bb))) {
     MOZ_CRASH("IPC failure");
   }
   return id;
+}
+
+RefPtr<PipelinePromise> WebGPUChild::DeviceCreateRenderPipelineAsync(
+    PipelineCreationContext* const aContext,
+    const dom::GPURenderPipelineDescriptor& aDesc) {
+  ByteBuf bb;
+  const RawId id = DeviceCreateRenderPipelineImpl(aContext, aDesc, &bb);
+
+  return SendDeviceActionWithAck(aContext->mParentId, std::move(bb))
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [id](bool aDummy) {
+            Unused << aDummy;
+            return PipelinePromise::CreateAndResolve(id, __func__);
+          },
+          [](const ipc::ResponseRejectReason& aReason) {
+            return PipelinePromise::CreateAndReject(aReason, __func__);
+          });
 }
 
 ipc::IPCResult WebGPUChild::RecvDeviceUncapturedError(

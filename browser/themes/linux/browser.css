@@ -248,13 +248,12 @@ menuitem.bookmark-item {
   border-top-style: solid;
   color: -moz-dialogText;
   text-shadow: none;
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (-moz-content-prefers-color-scheme: dark) {
   #statuspanel-label {
-    background-color: hsl(240, 1%, 20%);
-    border-color: hsl(240, 1%, 40%);
-    color: rgb(249, 249, 250);
+    color-scheme: dark;
   }
 }
 
