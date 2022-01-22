@@ -63,3 +63,20 @@ TEST(ImportScanner, MediaIsIgnored)
   ASSERT_EQ(urls[1], u"baz"_ns);
   ASSERT_EQ(urls[2], u"bazz"_ns);
 }
+
+TEST(ImportScanner, Layers)
+{
+  auto urls = Scan(
+      "@layer foo, bar;\n"
+      "@import url(\"bar\") layer(foo);"
+      "@import url(\"baz\");"
+      "@import url(bazz);"
+      "@layer block {}"
+      // This one below is invalid now and shouldn't be scanned.
+      "@import\turL( 'bazzz' ); ");
+
+  ASSERT_EQ(urls.Length(), 3u);
+  ASSERT_EQ(urls[0], u"bar"_ns);
+  ASSERT_EQ(urls[1], u"baz"_ns);
+  ASSERT_EQ(urls[2], u"bazz"_ns);
+}
