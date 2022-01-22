@@ -681,13 +681,37 @@ function edgeEndsValueLiveRange(edge, variable, body)
         // temp = std::move(var)
         //
         // If var is a UniquePtr, and we pass it into something that takes
-        // ownership, then it should be considered to be invalid. It really
-        // ought to be invalidated at the point of the function call that calls
-        // the move constructor, but given that we're creating a temporary here
-        // just for the purpose of passing it in, this edge is good enough.
+        // ownership, then it should be considered to be invalid. Example:
+        //
+        //     consume(std::move(var));
+        //
+        // where consume takes a UniquePtr. This will compile to something like
+        //
+        //     UniquePtr* __temp_1 = &std::move(var);
+        //     UniquePtr&& __temp_2(*temp_1); // move constructor
+        //     consume(__temp_2);
+        //     ~UniquePtr(__temp_2);
+        //
+        // The line commented with "// move constructor" is a result of passing
+        // a UniquePtr as a parameter. If consume() took a UniquePtr&&
+        // directly, this would just be:
+        //
+        //     UniquePtr* __temp_1 = &std::move(var);
+        //     consume(__temp_1);
+        //
+        // which is not guaranteed to move from the reference. It might just
+        // ignore the parameter. We can't predict what consume(UniquePtr&&)
+        // will do. We do know that UniquePtr(UniquePtr&& other) moves out of
+        // `other`.
+        //
+        // The std::move() technically is irrelevant, but because we only care
+        // about bare variables, it has to be used, which is fortunate because
+        // the UniquePtr&& constructor operates on a temporary, not the
+        // variable we care about.
+
         const lhs = edge.Exp[1].Variable;
-        if (bodyEatsVariable(lhs, body, edge.Index[1]))
-            return true;
+        if (basicBlockEatsVariable(lhs, body, edge.Index[1]))
+          return true;
     }
 
     if (edge.Type.Kind == 'Function' &&
@@ -759,29 +783,36 @@ function edgeMovesVariable(edge, variable)
     return false;
 }
 
-// Scan forward through the given 'body', starting at 'startpoint', looking for
-// a call that passes 'variable' to a move constructor that "consumes" it (eg
-// UniquePtr::UniquePtr(UniquePtr&&)).
-function bodyEatsVariable(variable, body, startpoint)
+// Scan forward through the basic block in 'body' starting at 'startpoint',
+// looking for a call that passes 'variable' to a move constructor that
+// "consumes" it (eg UniquePtr::UniquePtr(UniquePtr&&)).
+function basicBlockEatsVariable(variable, body, startpoint)
 {
     const successors = getSuccessors(body);
-    const work = [startpoint];
-    while (work.length > 0) {
-        const point = work.shift();
-        if (!(point in successors))
-            continue;
-        for (const edge of successors[point]) {
-            if (edgeMovesVariable(edge, variable))
-                return true;
-            // edgeStartsValueLiveRange will find places where 'variable' is given a
-            // new value. Never observed in practice, since this function is
-            // only called with a temporary resulting from std::move(), which
-            // is used immediately for a call. But just to be robust to future
-            // uses:
-            if (!edgeStartsValueLiveRange(edge, variable))
-                work.push(edge.Index[1]);
+    let point = startpoint;
+    while (point in successors) {
+        // Only handle a single basic block. If it forks, stop looking.
+        const edges = successors[point];
+        if (edges.length != 1) {
+            return false;
         }
+        const edge = edges[0];
+
+        if (edgeMovesVariable(edge, variable)) {
+            return true;
+        }
+
+        // edgeStartsValueLiveRange will find places where 'variable' is given
+        // a new value. Never observed in practice, since this function is only
+        // called with a temporary resulting from std::move(), which is used
+        // immediately for a call. But just to be robust to future uses:
+        if (edgeStartsValueLiveRange(edge, variable)) {
+            return false;
+        }
+
+        point = edge.Index[1];
     }
+
     return false;
 }
 
