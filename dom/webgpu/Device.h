@@ -149,6 +149,10 @@ class Device final : public DOMEventTargetHelper {
       const dom::GPUComputePipelineDescriptor& aDesc);
   already_AddRefed<RenderPipeline> CreateRenderPipeline(
       const dom::GPURenderPipelineDescriptor& aDesc);
+  already_AddRefed<dom::Promise> CreateComputePipelineAsync(
+      const dom::GPUComputePipelineDescriptor& aDesc, ErrorResult& aRv);
+  already_AddRefed<dom::Promise> CreateRenderPipelineAsync(
+      const dom::GPURenderPipelineDescriptor& aDesc, ErrorResult& aRv);
 
   void PushErrorScope(const dom::GPUErrorFilter& aFilter);
   already_AddRefed<dom::Promise> PopErrorScope(ErrorResult& aRv);
