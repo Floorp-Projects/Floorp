@@ -46,9 +46,7 @@ private val darkColorPalette = FirefoxColors(
     layer3 = PhotonColors.DarkGrey30,
     layerAccent = PhotonColors.Violet40,
     layerNonOpaque = PhotonColors.Violet50A32,
-    scrim = PhotonColors.DarkGrey05A45,
-    scrimAccentStart = PhotonColors.Ink80A96,
-    scrimAccentEnd = PhotonColors.DarkGrey90A96,
+    scrim = PhotonColors.DarkGrey90A95,
     gradientStart = PhotonColors.Violet70,
     gradientEnd = PhotonColors.Violet40,
     actionPrimary = PhotonColors.Violet60,
@@ -107,9 +105,7 @@ private val lightColorPalette = FirefoxColors(
     layer3 = PhotonColors.LightGrey20,
     layerAccent = PhotonColors.Ink20,
     layerNonOpaque = PhotonColors.Violet70A12,
-    scrim = PhotonColors.DarkGrey05A45,
-    scrimAccentStart = PhotonColors.DarkGrey90A96,
-    scrimAccentEnd = PhotonColors.DarkGrey30A96,
+    scrim = PhotonColors.DarkGrey30A95,
     gradientStart = PhotonColors.Violet70,
     gradientEnd = PhotonColors.Violet40,
     actionPrimary = PhotonColors.Ink20,
@@ -174,8 +170,6 @@ class FirefoxColors(
     layerAccent: Color,
     layerNonOpaque: Color,
     scrim: Color,
-    scrimAccentStart: Color,
-    scrimAccentEnd: Color,
     gradientStart: Color,
     gradientEnd: Color,
     actionPrimary: Color,
@@ -245,10 +239,6 @@ class FirefoxColors(
     var layerNonOpaque by mutableStateOf(layerNonOpaque)
         private set
     var scrim by mutableStateOf(scrim)
-        private set
-    var scrimAccentStart by mutableStateOf(scrimAccentStart)
-        private set
-    var scrimAccentEnd by mutableStateOf(scrimAccentEnd)
         private set
     // Tooltip
     var gradientStart by mutableStateOf(gradientStart)
@@ -414,8 +404,6 @@ class FirefoxColors(
         layerAccent = other.layerAccent
         layerNonOpaque = other.layerNonOpaque
         scrim = other.scrim
-        scrimAccentStart = other.scrimAccentStart
-        scrimAccentEnd = other.scrimAccentEnd
         gradientStart = other.gradientStart
         gradientEnd = other.gradientEnd
         actionPrimary = other.actionPrimary
@@ -475,8 +463,6 @@ class FirefoxColors(
         layerAccent = layerAccent,
         layerNonOpaque = layerNonOpaque,
         scrim = scrim,
-        scrimAccentStart = scrimAccentStart,
-        scrimAccentEnd = scrimAccentEnd,
         gradientStart = gradientStart,
         gradientEnd = gradientEnd,
         actionPrimary = actionPrimary,

@@ -4,12 +4,21 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <!-- Design system color attributes -->
+
+    <!-- Layers -->
     <!-- Search -->
     <attr name="layer3" format="reference" />
+    <attr name="scrim" format="reference" />
+
+    <!-- Text -->
     <!-- Small heading, Text link -->
     <attr name="textAccent" format="reference" />
+
+    <!-- Icon -->
     <!-- Active tab -->
     <attr name="iconActive" format="reference" />
+
+    <!-- Border -->
     <!-- Default, Divider, Dotted -->
     <attr name="borderPrimary" format="reference" />
 
@@ -29,8 +38,6 @@
     <attr name="neutralFaded" format="reference" />
     <attr name="destructive" format="reference"/>
     <attr name="disabled" format="reference" />
-    <attr name="scrimStart" format="reference"/>
-    <attr name="scrimEnd" format="reference"/>
     <attr name="preferenceSectionHeader" format="reference"/>
 
     <!-- Color used in DefaultToolbarMenu for buttons placed at the end of menu items -->

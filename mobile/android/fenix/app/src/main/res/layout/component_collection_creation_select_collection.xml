@@ -101,7 +101,7 @@
         android:id="@+id/tab_list_dim"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@drawable/scrim_background"
+        android:background="?scrim"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/collections_list"
         app:layout_constraintEnd_toEndOf="parent"

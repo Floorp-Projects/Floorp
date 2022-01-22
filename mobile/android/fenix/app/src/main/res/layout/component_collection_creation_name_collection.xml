@@ -97,7 +97,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:alpha="0.5"
-        android:background="@drawable/scrim_background"
+        android:background="?scrim"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@+id/tab_list"
         app:layout_constraintEnd_toEndOf="parent"

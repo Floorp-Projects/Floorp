@@ -10,7 +10,7 @@
     android:overScrollMode="never"
     android:fitsSystemWindows="true"
     android:fillViewport="true"
-    android:background="@drawable/scrim_background"
+    android:background="?scrim"
     android:scrollbars="none">
 
     <androidx.constraintlayout.widget.ConstraintLayout

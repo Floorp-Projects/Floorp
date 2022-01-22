@@ -16,9 +16,7 @@
     <color name="fx_mobile_layer_color_accent">@color/photonInk20</color>
     <!-- Selected tab -->
     <color name="fx_mobile_layer_color_accent_nonopaque">@color/photonViolet70A12</color>
-    <color name="fx_mobile_layer_color_scrim" tools:ignore="UnusedResources">@color/photonDarkGrey05A45</color>
-    <color name="fx_mobile_layer_color_scrim_start">@color/photonDarkGrey90A96</color>
-    <color name="fx_mobile_layer_color_scrim_end">@color/photonDarkGrey30A96</color>
+    <color name="fx_mobile_layer_color_scrim">@color/photonDarkGrey30A95</color>
     <!-- Tooltip -->
     <color name="fx_mobile_layer_color_gradient_start">@color/photonViolet70</color>
     <!-- Tooltip -->
@@ -141,7 +139,7 @@
     <color name="fx_mobile_private_layer_color_accent" tools:ignore="UnusedResources">@color/photonViolet40</color>
     <!-- Selected tab -->
     <color name="fx_mobile_private_layer_color_accent_nonopaque" tools:ignore="UnusedResources">@color/photonViolet50A32</color>
-    <color name="fx_mobile_private_layer_color_scrim" tools:ignore="UnusedResources">@color/photonDarkGrey05A45</color>
+    <color name="fx_mobile_private_layer_color_scrim">@color/photonDarkGrey90A95</color>
     <!-- Tooltip -->
     <color name="fx_mobile_private_layer_color_gradient_start" tools:ignore="UnusedResources">@color/photonViolet70</color>
     <!-- Tooltip -->
@@ -258,8 +256,6 @@
     <color name="accent_high_contrast_private_theme">#AA71FF</color>
     <color name="neutral_private_theme">@color/photonGrey20</color>
     <color name="neutral_faded_private_theme">#1FFBFBFE</color>
-    <color name="scrimStart_private_theme">@color/photonInk80A96</color>
-    <color name="scrimEnd_private_theme">@color/photonDarkGrey90A96</color>
     <color name="snackbar_private_theme">@color/photonInk20</color>
     <color name="sync_disconnected_icon_fill_private_theme">@color/photonYellow70</color>
     <color name="sync_disconnected_background_private_theme">#5B5846</color>
