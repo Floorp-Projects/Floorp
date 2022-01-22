@@ -133,7 +133,7 @@ def check_symbol(symbol, language="C", flags=None, when=None, onerror=lambda: No
         @depends(check_symbol_flags, dependable(flags))
         def flags(base_flags, extra_flags):
             if base_flags and extra_flags:
-                return base_flags + extra_flags
+                return base_flags + list(extra_flags)
             if extra_flags:
                 return extra_flags
             return base_flags

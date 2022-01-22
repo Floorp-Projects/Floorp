@@ -1,12 +1,9 @@
+// This is needed for 1.31.0 to keep compiling
 extern crate proc_macro;
-#[macro_use]
-extern crate syn;
-
-extern crate darling_core;
-
-use proc_macro::TokenStream;
 
 use darling_core::{derive, Error};
+use proc_macro::TokenStream;
+use syn::parse_macro_input;
 
 #[proc_macro_derive(FromMeta, attributes(darling))]
 pub fn derive_from_meta(input: TokenStream) -> TokenStream {
@@ -18,6 +15,11 @@ pub fn derive_from_meta_item(_input: TokenStream) -> TokenStream {
     Error::custom("darling::FromMetaItem has been replaced by darling::FromMeta")
         .write_errors()
         .into()
+}
+
+#[proc_macro_derive(FromAttributes, attributes(darling))]
+pub fn derive_from_attributes(input: TokenStream) -> TokenStream {
+    derive::from_attributes(&parse_macro_input!(input)).into()
 }
 
 #[proc_macro_derive(FromDeriveInput, attributes(darling))]

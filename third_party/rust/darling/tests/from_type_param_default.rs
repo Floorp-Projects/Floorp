@@ -1,15 +1,8 @@
-#[macro_use]
-extern crate darling;
-#[macro_use]
-extern crate syn;
-#[macro_use]
-extern crate quote;
-
 use darling::FromTypeParam;
-use syn::{DeriveInput, GenericParam, TypeParam};
+use syn::{parse_quote, DeriveInput, GenericParam, TypeParam};
 
-#[darling(attributes(lorem), default)]
 #[derive(Default, FromTypeParam)]
+#[darling(attributes(lorem), default)]
 struct Lorem {
     foo: bool,
     bar: Option<String>,
@@ -24,6 +17,7 @@ fn extract_type(param: &GenericParam) -> &TypeParam {
 }
 
 #[test]
+#[allow(clippy::bool_assert_comparison)]
 fn expand_many() {
     let di: DeriveInput = parse_quote! {
         struct Baz<

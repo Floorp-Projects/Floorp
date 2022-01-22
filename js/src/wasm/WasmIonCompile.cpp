@@ -2482,6 +2482,22 @@ class FunctionCompiler {
       fixupRedundantPhis(loopBody);
     }
 
+    // Pending jumps to an enclosing try-catch may reference the recycled phis.
+    // We have to search above all enclosing try blocks, as a delegate may move
+    // patches around.
+    for (uint32_t depth = 0; depth < iter().controlStackDepth(); depth++) {
+      if (iter().controlKind(depth) != LabelKind::Try) {
+        continue;
+      }
+      Control& control = iter().controlItem(depth);
+      for (MControlInstruction* patch : control.tryPadPatches) {
+        MBasicBlock* block = patch->block();
+        if (block->loopDepth() >= loopEntry->loopDepth()) {
+          fixupRedundantPhis(block);
+        }
+      }
+    }
+
     // Discard redundant phis and add to the free list.
     for (MPhiIterator phi = loopEntry->phisBegin();
          phi != loopEntry->phisEnd();) {
