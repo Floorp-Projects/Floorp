@@ -30,9 +30,9 @@ export class CardGrid extends React.PureComponent {
   }
 
   get showLoadMore() {
-    const { loadMoreEnabled, data, loadMoreThreshold } = this.props;
+    const { loadMore, data, loadMoreThreshold } = this.props;
     return (
-      loadMoreEnabled &&
+      loadMore &&
       data.recommendations.length > loadMoreThreshold &&
       !this.state.moreLoaded
     );
@@ -51,8 +51,10 @@ export class CardGrid extends React.PureComponent {
   }
 
   renderCards() {
-    let { items, compact } = this.props;
+    let { items } = this.props;
     const {
+      hideCardBackground,
+      fourCardLayout,
       hideDescriptions,
       lastCardMessageEnabled,
       saveToPocketCard,
@@ -127,8 +129,8 @@ export class CardGrid extends React.PureComponent {
     // If we have both header, inject the second one after the second row.
     // For now this is English only.
     if (essentialReadsHeader && editorsPicksHeader) {
-      // For compact second row is 8 cards, and regular it is 6 cards.
-      if (compact) {
+      // For 4 card row layouts, second row is 8 cards, and regular it is 6 cards.
+      if (fourCardLayout) {
         cards.splice(8, 0, this.renderDSSubHeader("Editor’s Picks"));
       } else {
         cards.splice(6, 0, this.renderDSSubHeader("Editor’s Picks"));
@@ -149,7 +151,12 @@ export class CardGrid extends React.PureComponent {
       ? `ds-card-grid-${this.props.display_variant}`
       : ``;
 
-    const compactClass = compact ? `ds-card-grid-compact-variant` : ``;
+    const hideCardBackgroundClass = hideCardBackground
+      ? `ds-card-grid-hide-background`
+      : ``;
+    const fourCardLayoutClass = fourCardLayout
+      ? `ds-card-grid-four-card-variant`
+      : ``;
 
     const hideDescriptionsClassName = !hideDescriptions
       ? `ds-card-grid-include-descriptions`
@@ -159,7 +166,7 @@ export class CardGrid extends React.PureComponent {
 
     return (
       <div
-        className={`ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${compactClass} ${hideDescriptionsClassName} ${compactGridClassName}`}
+        className={`ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`}
       >
         {cards}
       </div>

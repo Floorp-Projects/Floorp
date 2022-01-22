@@ -2,7 +2,7 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 883:
+/***/ 318:
 /***/ ((__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) => {
 
 
@@ -10,7 +10,7 @@
 var react = __webpack_require__(294);
 // EXTERNAL MODULE: ./node_modules/react-dom/index.js
 var react_dom = __webpack_require__(935);
-;// CONCATENATED MODULE: ./content/panels/js/components/PopularTopics.jsx
+;// CONCATENATED MODULE: ./content/panels/js/components/PopularTopics/PopularTopics.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -33,7 +33,36 @@ function PopularTopics(props) {
   }));
 }
 
-/* harmony default export */ const components_PopularTopics = (PopularTopics);
+/* harmony default export */ const PopularTopics_PopularTopics = (PopularTopics);
+;// CONCATENATED MODULE: ./content/panels/js/components/Header/Header.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function Header(props) {
+  return /*#__PURE__*/react.createElement("h1", {
+    className: "stp_header"
+  }, /*#__PURE__*/react.createElement("div", {
+    className: "stp_header_logo"
+  }), props.children);
+}
+
+/* harmony default export */ const Header_Header = (Header);
+;// CONCATENATED MODULE: ./content/panels/js/components/Home/Home.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+function Home(props) {
+  return /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement("a", null, /*#__PURE__*/react.createElement("span", {
+    "data-l10n-id": "pocket-panel-header-my-list"
+  }))));
+}
+
+/* harmony default export */ const Home_Home = (Home);
 ;// CONCATENATED MODULE: ./content/panels/js/messages.js
 /* global RPMRemoveMessageListener:false, RPMAddMessageListener:false, RPMSendAsyncMessage:false */
 var pktPanelMessaging = {
@@ -100,10 +129,10 @@ It does not contain any logic for saving or communication with the extension or 
 
 
 
+
 var HomeOverlay = function (options) {
   this.inited = false;
   this.active = false;
-  this.pockethost = "getpocket.com";
 
   this.parseHTML = function (htmlString) {
     const parser = new DOMParser();
@@ -128,71 +157,84 @@ var HomeOverlay = function (options) {
 
 HomeOverlay.prototype = {
   create() {
-    var host = window.location.href.match(/pockethost=([\w|\.]*)&?/);
-
-    if (host && host.length > 1) {
-      this.pockethost = host[1];
-    }
-
-    var locale = window.location.href.match(/locale=([\w|\.]*)&?/);
-
-    if (locale && locale.length > 1) {
-      this.locale = locale[1].toLowerCase();
-    }
+    const {
+      searchParams
+    } = new URL(window.location.href);
+    const pockethost = searchParams.get(`pockethost`) || `getpocket.com`;
+    const locale = searchParams.get(`locale`) || ``;
+    const layoutRefresh = searchParams.get(`layoutRefresh`) === `true`;
 
     if (this.active) {
       return;
     }
 
-    this.active = true; // For English, we have a discover topics link.
-    // For non English, we don't have a link yet for this.
-    // When we do, we can consider flipping this on.
+    this.active = true;
 
-    const enableLocalizedExploreMore = false;
-    const templateData = {
-      pockethost: this.pockethost,
-      utmsource: "firefox-button"
-    }; // extra modifier class for language
+    if (layoutRefresh) {
+      // Create actual content
+      react_dom.render( /*#__PURE__*/react.createElement(Home_Home, {
+        pockethost: pockethost
+      }), document.querySelector(`body`));
+    } else {
+      // For English, we have a discover topics link.
+      // For non English, we don't have a link yet for this.
+      // When we do, we can consider flipping this on.
+      const enableLocalizedExploreMore = false;
+      const templateData = {
+        pockethost,
+        utmsource: `firefox-button`
+      }; // Create actual content
 
-    if (this.locale) {
-      document.querySelector(`body`).classList.add(`pkt_ext_home_${this.locale}`);
-    } // Create actual content
+      document.querySelector(`body`).append(this.parseHTML(Handlebars.templates.home_shell(templateData))); // We only have topic pages in English,
+      // so ensure we only show a topics section for English browsers.
+
+      if (locale.startsWith("en")) {
+        react_dom.render( /*#__PURE__*/react.createElement(PopularTopics_PopularTopics, {
+          pockethost: templateData.pockethost,
+          utmsource: templateData.utmsource,
+          topics: [{
+            title: "Self Improvement",
+            topic: "self-improvement"
+          }, {
+            title: "Food",
+            topic: "food"
+          }, {
+            title: "Entertainment",
+            topic: "entertainment"
+          }, {
+            title: "Science",
+            topic: "science"
+          }]
+        }), document.querySelector(`.pkt_ext_more`));
+      } else if (enableLocalizedExploreMore) {
+        // For non English, we have a slightly different component to the page.
+        document.querySelector(`.pkt_ext_more`).append(this.parseHTML(Handlebars.templates.explore_more()));
+      } // click events
 
 
-    document.querySelector(`body`).append(this.parseHTML(Handlebars.templates.home_shell(templateData))); // We only have topic pages in English,
-    // so ensure we only show a topics section for English browsers.
+      this.setupClickEvents();
+    } // tell back end we're ready
 
-    if (this.locale.startsWith("en")) {
-      react_dom.render( /*#__PURE__*/react.createElement(components_PopularTopics, {
-        pockethost: templateData.pockethost,
-        utmsource: templateData.utmsource,
-        topics: [{
-          title: "Self Improvement",
-          topic: "self-improvement"
-        }, {
-          title: "Food",
-          topic: "food"
-        }, {
-          title: "Entertainment",
-          topic: "entertainment"
-        }, {
-          title: "Science",
-          topic: "science"
-        }]
-      }), document.querySelector(`.pkt_ext_more`));
-    } else if (enableLocalizedExploreMore) {
-      // For non English, we have a slightly different component to the page.
-      document.querySelector(`.pkt_ext_more`).append(this.parseHTML(Handlebars.templates.explore_more()));
-    } // click events
-
-
-    this.setupClickEvents(); // tell back end we're ready
 
     messages.sendMessage("PKT_show_home");
   }
 
 };
 /* harmony default export */ const overlay = (HomeOverlay);
+;// CONCATENATED MODULE: ./content/panels/js/components/Signup/Signup.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+function Signup(props) {
+  return /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement("a", null, /*#__PURE__*/react.createElement("span", {
+    "data-l10n-id": "pocket-panel-header-sign-in"
+  }))));
+}
+
+/* harmony default export */ const Signup_Signup = (Signup);
 ;// CONCATENATED MODULE: ./content/panels/js/signup/overlay.js
 /* global Handlebars:false */
 
@@ -200,6 +242,9 @@ HomeOverlay.prototype = {
 SignupOverlay is the view itself and contains all of the methods to manipute the overlay and messaging.
 It does not contain any logic for saving or communication with the extension or server.
 */
+
+
+
 
 
 var SignupOverlay = function (options) {
@@ -225,43 +270,70 @@ var SignupOverlay = function (options) {
     const parser = new DOMParser();
     let elBody = document.querySelector(`body`); // Extract local variables passed into template via URL query params
 
-    let queryParams = new URL(window.location.href).searchParams;
-    let isEmailSignupEnabled = queryParams.get(`emailButton`) === `true`;
-    let pockethost = queryParams.get(`pockethost`) || `getpocket.com`;
-    let utmCampaign = queryParams.get(`utmCampaign`) || `firefox_door_hanger_menu`;
-    let utmSource = queryParams.get(`utmSource`) || `control`;
-    let language = queryParams.get(`locale`)?.split(`-`)[0].toLowerCase();
+    const {
+      searchParams
+    } = new URL(window.location.href);
+    const isEmailSignupEnabled = searchParams.get(`emailButton`) === `true`;
+    const pockethost = searchParams.get(`pockethost`) || `getpocket.com`;
+    const utmCampaign = searchParams.get(`utmCampaign`) || `firefox_door_hanger_menu`;
+    const utmSource = searchParams.get(`utmSource`) || `control`;
+    const language = searchParams.get(`locale`)?.split(`-`)[0].toLowerCase();
+    const layoutRefresh = searchParams.get(`layoutRefresh`) === `true`;
 
     if (this.active) {
       return;
     }
 
     this.active = true;
-    const templateData = {
-      pockethost,
-      utmCampaign,
-      utmSource
-    }; // extra modifier class for language
 
-    if (language) {
-      elBody.classList.add(`pkt_ext_signup_${language}`);
-    } // Create actual content
+    if (layoutRefresh) {
+      // Create actual content
+      document.querySelector(`.pkt_ext_containersignup`)?.classList.remove(`pkt_ext_containersignup`);
+      react_dom.render( /*#__PURE__*/react.createElement(Signup_Signup, {
+        pockethost: pockethost
+      }), document.querySelector(`body`));
+    } else {
+      const templateData = {
+        pockethost,
+        utmCampaign,
+        utmSource
+      }; // extra modifier class for language
+
+      if (language) {
+        elBody.classList.add(`pkt_ext_signup_${language}`);
+      } // Create actual content
 
 
-    elBody.append(parser.parseFromString(Handlebars.templates.signup_shell(templateData), `text/html`).documentElement); // Remove email button based on `extensions.pocket.refresh.emailButton.enabled` pref
+      elBody.append(parser.parseFromString(Handlebars.templates.signup_shell(templateData), `text/html`).documentElement); // Remove email button based on `extensions.pocket.refresh.emailButton.enabled` pref
 
-    if (!isEmailSignupEnabled) {
-      document.querySelector(`.btn-container-email`).remove();
-    } // click events
+      if (!isEmailSignupEnabled) {
+        document.querySelector(`.btn-container-email`).remove();
+      } // click events
 
 
-    this.setupClickEvents(); // tell back end we're ready
+      this.setupClickEvents();
+    } // tell back end we're ready
+
 
     messages.sendMessage("PKT_show_signup");
   };
 };
 
 /* harmony default export */ const signup_overlay = (SignupOverlay);
+;// CONCATENATED MODULE: ./content/panels/js/components/Saved/Saved.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+function Saved(props) {
+  return /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement("a", null, /*#__PURE__*/react.createElement("span", {
+    "data-l10n-id": "pocket-panel-header-my-list"
+  }))));
+}
+
+/* harmony default export */ const Saved_Saved = (Saved);
 ;// CONCATENATED MODULE: ./content/panels/js/saved/overlay.js
 /* global Handlebars:false */
 
@@ -271,17 +343,17 @@ It does not contain any logic for saving or communication with the extension or 
 */
 
 
+
+
+
 var SavedOverlay = function (options) {
   var myself = this;
   this.inited = false;
   this.active = false;
-  this.pockethost = "getpocket.com";
   this.savedItemId = 0;
   this.savedUrl = "";
-  this.premiumStatus = false;
   this.userTags = [];
   this.tagsDropdownOpen = false;
-  this.fxasignedin = false;
 
   this.parseHTML = function (htmlString) {
     const parser = new DOMParser();
@@ -776,86 +848,108 @@ SavedOverlay.prototype = {
 
     this.active = true;
     var myself = this;
-    var url = window.location.href.match(/premiumStatus=([\w|\d|\.]*)&?/);
+    const {
+      searchParams
+    } = new URL(window.location.href);
+    const pockethost = searchParams.get(`pockethost`) || `getpocket.com`;
+    const premiumStatus = searchParams.get(`premiumStatus`) == `1`;
+    const locale = searchParams.get(`locale`) || ``;
+    const language = locale.split(`-`)[0].toLowerCase();
+    const layoutRefresh = searchParams.get(`layoutRefresh`) === `true`;
 
-    if (url && url.length > 1) {
-      this.premiumStatus = url[1] == "1";
-    }
+    if (layoutRefresh) {
+      // Create actual content
+      react_dom.render( /*#__PURE__*/react.createElement(Saved_Saved, {
+        pockethost: pockethost
+      }), document.querySelector(`body`));
+    } else {
+      // set host
+      const templateData = {
+        pockethost
+      }; // extra modifier class for language
 
-    var fxasignedin = window.location.href.match(/fxasignedin=([\w|\d|\.]*)&?/);
-
-    if (fxasignedin && fxasignedin.length > 1) {
-      this.fxasignedin = fxasignedin[1] == "1";
-    }
-
-    var host = window.location.href.match(/pockethost=([\w|\.]*)&?/);
-
-    if (host && host.length > 1) {
-      this.pockethost = host[1];
-    }
-
-    var locale = window.location.href.match(/locale=([\w|\.]*)&?/);
-
-    if (locale && locale.length > 1) {
-      this.locale = locale[1].toLowerCase();
-    } // set host
-
-
-    const templateData = {
-      pockethost: this.pockethost
-    }; // extra modifier class for language
-
-    if (this.locale) {
-      document.querySelector(`body`).classList.add(`pkt_ext_saved_${this.locale}`);
-    }
-
-    const parser = new DOMParser(); // Create actual content
-
-    document.querySelector(`body`).append(...parser.parseFromString(Handlebars.templates.saved_shell(templateData), `text/html`).body.childNodes); // Add in premium content (if applicable based on premium status)
-
-    if (this.premiumStatus && !document.querySelector(`.pkt_ext_suggestedtag_detail`)) {
-      let elSubshell = document.querySelector(`body .pkt_ext_subshell`);
-      let elPremiumShellElements = parser.parseFromString(Handlebars.templates.saved_premiumshell(templateData), `text/html`).body.childNodes; // Convert NodeList to Array and reverse it
-
-      elPremiumShellElements = [].slice.call(elPremiumShellElements).reverse();
-      elPremiumShellElements.forEach(el => {
-        elSubshell.insertBefore(el, elSubshell.firstChild);
-      });
-    } // Initialize functionality for overlay
-
-
-    this.initTagInput();
-    this.initAddTagInput();
-    this.initRemovePageInput();
-    this.initOpenListInput(); // wait confirmation of save before flipping to final saved state
-
-    messages.addMessageListener("PKT_saveLink", function (resp) {
-      const {
-        data
-      } = resp;
-
-      if (data.status == "error") {
-        // Fallback to a generic catch all error.
-        let errorLocalizedKey = data?.error?.localizedKey || "pocket-panel-saved-error-generic";
-        myself.showStateLocalizedError("pocket-panel-saved-error-not-saved", errorLocalizedKey);
-        return;
+      if (language) {
+        document.querySelector(`body`).classList.add(`pkt_ext_saved_${language}`);
       }
 
-      myself.showStateSaved(data);
-    });
-    messages.addMessageListener("PKT_renderItemRecs", function (resp) {
-      const {
-        data
-      } = resp;
-      myself.renderItemRecs(data);
-    }); // tell back end we're ready
+      const parser = new DOMParser(); // Create actual content
+
+      document.querySelector(`body`).append(...parser.parseFromString(Handlebars.templates.saved_shell(templateData), `text/html`).body.childNodes); // Add in premium content (if applicable based on premium status)
+
+      if (premiumStatus && !document.querySelector(`.pkt_ext_suggestedtag_detail`)) {
+        let elSubshell = document.querySelector(`body .pkt_ext_subshell`);
+        let elPremiumShellElements = parser.parseFromString(Handlebars.templates.saved_premiumshell(templateData), `text/html`).body.childNodes; // Convert NodeList to Array and reverse it
+
+        elPremiumShellElements = [].slice.call(elPremiumShellElements).reverse();
+        elPremiumShellElements.forEach(el => {
+          elSubshell.insertBefore(el, elSubshell.firstChild);
+        });
+      } // Initialize functionality for overlay
+
+
+      this.initTagInput();
+      this.initAddTagInput();
+      this.initRemovePageInput();
+      this.initOpenListInput(); // wait confirmation of save before flipping to final saved state
+
+      messages.addMessageListener("PKT_saveLink", function (resp) {
+        const {
+          data
+        } = resp;
+
+        if (data.status == "error") {
+          // Fallback to a generic catch all error.
+          let errorLocalizedKey = data?.error?.localizedKey || "pocket-panel-saved-error-generic";
+          myself.showStateLocalizedError("pocket-panel-saved-error-not-saved", errorLocalizedKey);
+          return;
+        }
+
+        myself.showStateSaved(data);
+      });
+      messages.addMessageListener("PKT_renderItemRecs", function (resp) {
+        const {
+          data
+        } = resp;
+        myself.renderItemRecs(data);
+      });
+    } // tell back end we're ready
+
 
     messages.sendMessage("PKT_show_saved");
   }
 
 };
 /* harmony default export */ const saved_overlay = (SavedOverlay);
+;// CONCATENATED MODULE: ./content/panels/js/components/ArticleList/ArticleList.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function ArticleList(props) {
+  return /*#__PURE__*/react.createElement("ul", {
+    className: "stp_article_list"
+  }, props.articles.map(article => /*#__PURE__*/react.createElement("li", {
+    className: "stp_article_list_item"
+  }, /*#__PURE__*/react.createElement("a", {
+    className: "stp_article_list_link",
+    href: article.url
+  }, /*#__PURE__*/react.createElement("img", {
+    className: "stp_article_list_thumb",
+    src: article.thumbnail,
+    alt: article.alt
+  }), /*#__PURE__*/react.createElement("div", {
+    className: "stp_article_list_meta"
+  }, /*#__PURE__*/react.createElement("header", {
+    className: "stp_article_list_header"
+  }, article.title), /*#__PURE__*/react.createElement("p", {
+    className: "stp_article_list_publisher"
+  }, article.publisher))))));
+}
+
+/* harmony default export */ const ArticleList_ArticleList = (ArticleList);
 ;// CONCATENATED MODULE: ./content/panels/js/style-guide/overlay.js
+
 
 
 
@@ -865,7 +959,9 @@ var StyleGuideOverlay = function (options) {};
 StyleGuideOverlay.prototype = {
   create() {
     // TODO: Wrap popular topics component in JSX to work without needing an explicit container hierarchy for styling
-    react_dom.render( /*#__PURE__*/react.createElement(components_PopularTopics, {
+    react_dom.render( /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "JSX Components:"), /*#__PURE__*/react.createElement("h4", {
+      className: "stp_styleguide_h4"
+    }, "PopularTopics"), /*#__PURE__*/react.createElement(PopularTopics_PopularTopics, {
       pockethost: `getpocket.com`,
       utmsource: `styleguide`,
       topics: [{
@@ -881,7 +977,29 @@ StyleGuideOverlay.prototype = {
         title: "Science",
         topic: "science"
       }]
-    }), document.querySelector(`#stp_style_guide_components`));
+    }), /*#__PURE__*/react.createElement("h4", {
+      className: "stp_styleguide_h4"
+    }, "ArticleList"), /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
+      articles: [{
+        title: "Article Title",
+        publisher: "Publisher",
+        thumbnail: "https://img-getpocket.cdn.mozilla.net/80x80/https://www.raritanheadwaters.org/wp-content/uploads/2020/04/red-fox.jpg",
+        url: "https://example.org",
+        alt: "Alt Text"
+      }, {
+        title: "Article Title",
+        publisher: "Publisher",
+        thumbnail: "https://img-getpocket.cdn.mozilla.net/80x80/https://www.raritanheadwaters.org/wp-content/uploads/2020/04/red-fox.jpg",
+        url: "https://example.org",
+        alt: "Alt Text"
+      }, {
+        title: "Article Title",
+        publisher: "Publisher",
+        thumbnail: "https://img-getpocket.cdn.mozilla.net/80x80/https://www.raritanheadwaters.org/wp-content/uploads/2020/04/red-fox.jpg",
+        url: "https://example.org",
+        alt: "Alt Text"
+      }]
+    })), document.querySelector(`#stp_style_guide_components`));
   }
 
 };
@@ -1133,7 +1251,7 @@ window.pktPanelMessaging = messages;
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(883)))
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(318)))
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()

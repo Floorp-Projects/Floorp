@@ -4,8 +4,8 @@ use proc_macro2::TokenStream;
 use quote::{ToTokens, TokenStreamExt};
 use syn::{Ident, Path, Type};
 
-use codegen::DefaultExpression;
-use usage::{self, IdentRefSet, IdentSet, UsesTypeParams};
+use crate::codegen::{DefaultExpression, PostfixTransform};
+use crate::usage::{self, IdentRefSet, IdentSet, UsesTypeParams};
 
 /// Properties needed to generate code for a field in all the contexts
 /// where one may appear.
@@ -23,7 +23,7 @@ pub struct Field<'a> {
     pub ty: &'a Type,
     pub default_expression: Option<DefaultExpression<'a>>,
     pub with_path: Cow<'a, Path>,
-    pub map: Option<&'a Path>,
+    pub post_transform: Option<&'a PostfixTransform>,
     pub skip: bool,
     pub multiple: bool,
 }
@@ -97,6 +97,7 @@ impl<'a> ToTokens for MatchArm<'a> {
             let name_str = &field.name_in_attr;
             let ident = field.ident;
             let with_path = &field.with_path;
+            let post_transform = field.post_transform.as_ref();
 
             // Errors include the location of the bad input, so we compute that here.
             // Fields that take multiple values add the index of the error for convenience,
@@ -114,11 +115,7 @@ impl<'a> ToTokens for MatchArm<'a> {
             // The behavior of `with_span` makes this safe to do; if the child applied an
             // even-more-specific span, our attempt here will not overwrite that and will only cost
             // us one `if` check.
-            let mut extractor =
-                quote!(#with_path(__inner).map_err(|e| e.with_span(&__inner).at(#location)));
-            if let Some(ref map) = field.map {
-                extractor = quote!(#extractor.map(#map))
-            }
+            let extractor = quote!(#with_path(__inner)#post_transform.map_err(|e| e.with_span(&__inner).at(#location)));
 
             tokens.append_all(if field.multiple {
                 quote!(

@@ -1,13 +1,7 @@
 //! A newtype struct should be able to derive `FromMeta` if its member implements it.
 
-#[macro_use]
-extern crate darling;
-#[macro_use]
-extern crate syn;
-#[macro_use]
-extern crate quote;
-
-use darling::FromDeriveInput;
+use darling::{FromDeriveInput, FromMeta};
+use syn::parse_quote;
 
 #[derive(Debug, FromMeta, PartialEq, Eq)]
 struct Lorem(bool);

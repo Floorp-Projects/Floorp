@@ -261,6 +261,7 @@ load 1656925.html
 skip-if(Android) load 1665792.html # Print preview on android doesn't fly
 skip-if(ThreadSanitizer) load 1681729.html
 skip-if(ThreadSanitizer) load 1693049.html
+skip-if(winWidget||Android) pref(print.always_print_silent,true) pref(print.print_to_file,true) pref(print.print_to_filename,"/dev/null") load 1697256.html # Windows seemingly requires pref(print_printer,"Mozilla Save to PDF") but pref() doesn't allow space. Android doesn't support print.
 skip-if(ThreadSanitizer||Android) load 1697525.html
 skip-if(ThreadSanitizer||Android) load 1712198.html # Mysterious failure that should be investigated (bug 1712866).
 skip-if(Android) HTTP load 1728670-1.html

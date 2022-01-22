@@ -103,14 +103,20 @@ auto ImportScanner::Scan(char16_t aChar) -> State {
       }
       if (IsWhitespace(aChar)) {
         mInImportRule = mRuleName.LowerCaseEqualsLiteral("import");
-        if (mInImportRule || mRuleName.LowerCaseEqualsLiteral("charset")) {
-          MOZ_ASSERT(mRuleValue.IsEmpty());
+        if (mInImportRule) {
           return State::AtRuleValue;
+        }
+        // Ignorable rules, we skip until the next semi-colon for these.
+        if (mRuleName.LowerCaseEqualsLiteral("charset") ||
+            mRuleName.LowerCaseEqualsLiteral("layer")) {
+          MOZ_ASSERT(mRuleValue.IsEmpty());
+          return State::AfterRuleValue;
         }
       }
       return State::Done;
     }
     case State::AtRuleValue: {
+      MOZ_ASSERT(mInImportRule, "Should only get to this state for @import");
       if (mRuleValue.IsEmpty()) {
         if (IsWhitespace(aChar)) {
           return mState;
@@ -118,9 +124,6 @@ auto ImportScanner::Scan(char16_t aChar) -> State {
         if (aChar == '"' || aChar == '\'') {
           mUrlValueDelimiterClosingChar = aChar;
           return State::AtRuleValueDelimited;
-        }
-        if (!mInImportRule) {
-          return State::Done;
         }
         if (aChar == 'u' || aChar == 'U') {
           mRuleValue.Append('u');
@@ -157,11 +160,9 @@ auto ImportScanner::Scan(char16_t aChar) -> State {
       return State::Done;
     }
     case State::AtRuleValueDelimited: {
+      MOZ_ASSERT(mInImportRule, "Should only get to this state for @import");
       if (aChar == mUrlValueDelimiterClosingChar) {
         return State::AfterRuleValue;
-      }
-      if (!mInImportRule) {
-        return mState;
       }
       if (mUrlValueDelimiterClosingChar == ')' && mRuleValue.IsEmpty()) {
         if (IsWhitespace(aChar)) {

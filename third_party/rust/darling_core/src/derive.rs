@@ -5,7 +5,7 @@ use proc_macro2::TokenStream;
 use quote::ToTokens;
 use syn::DeriveInput;
 
-use options;
+use crate::options;
 
 /// Run an expression which returns a `darling::Result`, then either return the tokenized
 /// representation of the `Ok` value, or the tokens of the compiler errors in the `Err` case.
@@ -25,11 +25,18 @@ pub fn from_meta(input: &DeriveInput) -> TokenStream {
     emit_impl_or_error!(options::FromMetaOptions::new(input))
 }
 
+/// Create tokens for a `darling::FromAttributes` impl from a `DeriveInput`. If
+/// the input cannot produce a valid impl, the returned tokens will contain
+/// compile errors instead.
+pub fn from_attributes(input: &DeriveInput) -> TokenStream {
+    emit_impl_or_error!(options::FromAttributesOptions::new(input))
+}
+
 /// Create tokens for a `darling::FromDeriveInput` impl from a `DeriveInput`. If
 /// the input cannot produce a valid impl, the returned tokens will contain
 /// compile errors instead.
 pub fn from_derive_input(input: &DeriveInput) -> TokenStream {
-    emit_impl_or_error!(options::FdiOptions::new(&input))
+    emit_impl_or_error!(options::FdiOptions::new(input))
 }
 
 /// Create tokens for a `darling::FromField` impl from a `DeriveInput`. If

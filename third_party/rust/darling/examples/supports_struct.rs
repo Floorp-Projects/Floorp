@@ -1,9 +1,8 @@
-#[macro_use]
-extern crate darling;
+// The use of fields in debug print commands does not count as "used",
+// which causes the fields to trigger an unwanted dead code warning.
+#![allow(dead_code)]
 
-extern crate syn;
-
-use darling::{ast, util, FromDeriveInput};
+use darling::{ast, util, FromDeriveInput, FromField};
 use syn::{Ident, Type};
 
 #[derive(Debug, FromField)]

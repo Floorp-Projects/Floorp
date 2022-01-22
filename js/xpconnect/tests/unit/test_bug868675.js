@@ -8,6 +8,11 @@ function run_test() {
   try { result = XPCNativeWrapper(2); } catch (e) {}
   Assert.equal(result, 2);
 
+  // Make sure we throw when using `new` with primitives.
+  result = null;
+  try { result = new XPCNativeWrapper(2); } catch (e) { result = "catch"; }
+  Assert.equal(result, "catch");
+
   // Make sure that we can waive on a non-Xrayable object, and that we preserve
   // transitive waiving behavior.
   var sb = new Cu.Sandbox('http://www.example.com', { wantGlobalProperties: ["XMLHttpRequest"] });

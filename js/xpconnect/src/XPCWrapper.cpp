@@ -49,6 +49,10 @@ static bool XrayWrapperConstructor(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (!args[0].isObject()) {
+    if (args.isConstructing()) {
+      return ThrowException(NS_ERROR_XPC_BAD_CONVERT_JS, cx);
+    }
+
     args.rval().set(args[0]);
     return true;
   }

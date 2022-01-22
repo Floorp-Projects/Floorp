@@ -38,9 +38,8 @@ class nsHTMLCanvasFrame final : public nsContainerFrame {
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsHTMLCanvasFrame)
 
-  explicit nsHTMLCanvasFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
-      : nsContainerFrame(aStyle, aPresContext, kClassID),
-        mBorderPadding(GetWritingMode()) {}
+  nsHTMLCanvasFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
+      : nsContainerFrame(aStyle, aPresContext, kClassID) {}
 
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
                     nsIFrame* aPrevInFlow) override;
@@ -73,8 +72,6 @@ class nsHTMLCanvasFrame final : public nsContainerFrame {
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
 
-  nsRect GetInnerArea() const;
-
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() override;
 #endif
@@ -98,10 +95,6 @@ class nsHTMLCanvasFrame final : public nsContainerFrame {
 
  protected:
   virtual ~nsHTMLCanvasFrame();
-
-  nscoord GetContinuationOffset(nscoord* aWidth = 0) const;
-
-  mozilla::LogicalMargin mBorderPadding;
 };
 
 #endif /* nsHTMLCanvasFrame_h___ */

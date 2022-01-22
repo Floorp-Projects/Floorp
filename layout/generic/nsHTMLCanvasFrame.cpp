@@ -95,8 +95,7 @@ class nsDisplayCanvas final : public nsPaintedDisplayItem {
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override {
     *aSnap = true;
-    nsHTMLCanvasFrame* f = static_cast<nsHTMLCanvasFrame*>(Frame());
-    return f->GetInnerArea() + ToReferenceFrame();
+    return Frame()->GetContentRectRelativeToSelf() + ToReferenceFrame();
   }
 
   virtual bool CreateWebRenderCommands(
@@ -509,19 +508,7 @@ void nsHTMLCanvasFrame::Reflow(nsPresContext* aPresContext,
   MOZ_ASSERT(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
   WritingMode wm = aReflowInput.GetWritingMode();
-  LogicalSize finalSize = aReflowInput.ComputedSize();
-
-  // stash this away so we can compute our inner area later
-  mBorderPadding = aReflowInput.ComputedLogicalBorderPadding(wm);
-
-  finalSize.ISize(wm) += mBorderPadding.IStartEnd(wm);
-  finalSize.BSize(wm) += mBorderPadding.BStartEnd(wm);
-
-  if (GetPrevInFlow()) {
-    nscoord y = GetContinuationOffset(&finalSize.ISize(wm));
-    finalSize.BSize(wm) -= y + mBorderPadding.BStart(wm);
-    finalSize.BSize(wm) = std::max(0, finalSize.BSize(wm));
-  }
+  const LogicalSize finalSize = aReflowInput.ComputedSizeWithBorderPadding(wm);
 
   aMetrics.SetSize(wm, finalSize);
   aMetrics.SetOverflowAreasToDesiredBounds();
@@ -548,20 +535,6 @@ void nsHTMLCanvasFrame::Reflow(nsPresContext* aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aMetrics);
 }
 
-// FIXME taken from nsImageFrame, but then had splittable frame stuff
-// removed.  That needs to be fixed.
-// XXXdholbert As in nsImageFrame, this function's clients should probably
-// just be calling GetContentRectRelativeToSelf().
-nsRect nsHTMLCanvasFrame::GetInnerArea() const {
-  nsMargin bp = mBorderPadding.GetPhysicalMargin(GetWritingMode());
-  nsRect r;
-  r.x = bp.left;
-  r.y = bp.top;
-  r.width = mRect.width - bp.left - bp.right;
-  r.height = mRect.height - bp.top - bp.bottom;
-  return r;
-}
-
 bool nsHTMLCanvasFrame::UpdateWebRenderCanvasData(
     nsDisplayListBuilder* aBuilder, WebRenderCanvasData* aCanvasData) {
   HTMLCanvasElement* element = static_cast<HTMLCanvasElement*>(GetContent());
@@ -586,29 +559,6 @@ void nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   DisplaySelectionOverlay(aBuilder, aLists.Content(),
                           nsISelectionDisplay::DISPLAY_IMAGES);
-}
-
-// get the offset into the content area of the image where aImg starts if it is
-// a continuation. from nsImageFrame
-nscoord nsHTMLCanvasFrame::GetContinuationOffset(nscoord* aWidth) const {
-  nscoord offset = 0;
-  if (aWidth) {
-    *aWidth = 0;
-  }
-
-  if (GetPrevInFlow()) {
-    for (nsIFrame* prevInFlow = GetPrevInFlow(); prevInFlow;
-         prevInFlow = prevInFlow->GetPrevInFlow()) {
-      nsRect rect = prevInFlow->GetRect();
-      if (aWidth) {
-        *aWidth = rect.width;
-      }
-      offset += rect.height;
-    }
-    offset -= mBorderPadding.GetPhysicalMargin(GetWritingMode()).top;
-    offset = std::max(0, offset);
-  }
-  return offset;
 }
 
 void nsHTMLCanvasFrame::AppendDirectlyOwnedAnonBoxes(
