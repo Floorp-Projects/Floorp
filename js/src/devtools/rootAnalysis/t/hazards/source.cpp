@@ -402,11 +402,11 @@ Cell* refptr_test3() {
 Cell* refptr_test4() {
   static Cell cell;
   RefPtr<int> r;
-  return &cell; // hazard in return value
+  return &cell;  // hazard in return value
 }
 
 Cell* refptr_test5() {
   static Cell cell;
   RefPtr<int> r;
-  return nullptr; // returning immobile value, so no hazard
+  return nullptr;  // returning immobile value, so no hazard
 }

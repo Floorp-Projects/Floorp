@@ -1498,7 +1498,7 @@ void ChromeUtils::SaveHeapSnapshotShared(
                         !compartments.empty() ? &compartments : nullptr, nogc,
                         nodeCount, edgeCount)) {
       rv.Throw(zeroCopyStream.failed() ? zeroCopyStream.result()
-                                      : NS_ERROR_UNEXPECTED);
+                                       : NS_ERROR_UNEXPECTED);
       return;
     }
   }
