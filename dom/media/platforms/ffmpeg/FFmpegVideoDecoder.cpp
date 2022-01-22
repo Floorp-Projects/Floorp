@@ -183,6 +183,7 @@ static void VAAPIDisplayReleaseCallback(struct AVHWDeviceContext* hwctx) {
 bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
   mVAAPIDeviceContext = mLib->av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_VAAPI);
   if (!mVAAPIDeviceContext) {
+    FFMPEG_LOG("  av_hwdevice_ctx_alloc failed.");
     return false;
   }
 
@@ -196,18 +197,18 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
     mDisplay =
         mLib->vaGetDisplayDRM(widget::GetDMABufDevice()->GetGbmDeviceFd());
     if (!mDisplay) {
-      FFMPEG_LOG("Can't get DRM VA-API display.");
+      FFMPEG_LOG("  Can't get DRM VA-API display.");
       return false;
     }
   } else {
     wl_display* display = widget::WaylandDisplayGetWLDisplay();
     if (!display) {
-      FFMPEG_LOG("Can't get default wayland display.");
+      FFMPEG_LOG("  Can't get default wayland display.");
       return false;
     }
     mDisplay = mLib->vaGetDisplayWl(display);
     if (!mDisplay) {
-      FFMPEG_LOG("Can't get Wayland VA-API display.");
+      FFMPEG_LOG("  Can't get Wayland VA-API display.");
       return false;
     }
   }
@@ -218,11 +219,13 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
   int major, minor;
   int status = mLib->vaInitialize(mDisplay, &major, &minor);
   if (status != VA_STATUS_SUCCESS) {
+    FFMPEG_LOG("  vaInitialize failed.");
     return false;
   }
 
   vactx->display = mDisplay;
   if (mLib->av_hwdevice_ctx_init(mVAAPIDeviceContext) < 0) {
+    FFMPEG_LOG("  av_hwdevice_ctx_init failed.");
     return false;
   }
 

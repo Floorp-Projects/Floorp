@@ -32,6 +32,7 @@ async protocol PWebGPU
 
 parent:
   async DeviceAction(RawId selfId, ByteBuf buf);
+  async DeviceActionWithAck(RawId selfId, ByteBuf buf) returns (bool dummy);
   async TextureAction(RawId selfId, RawId aDeviceId, ByteBuf buf);
   async CommandEncoderAction(RawId selfId, RawId aDeviceId, ByteBuf buf);
   async BumpImplicitBindGroupLayout(RawId pipelineId, bool isCompute, uint32_t index, RawId assignId);

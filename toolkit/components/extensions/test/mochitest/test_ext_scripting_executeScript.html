@@ -685,14 +685,23 @@ add_task(async function test_executeScript_with_multiple_frameIds_and_wrong_host
   await extension.unload();
 });
 
-// See: https://bugzilla.mozilla.org/show_bug.cgi?id=1739643
-add_task(async function test_executeScript_with_iframe_srcdoc() {
+add_task(async function test_executeScript_with_iframe_srcdoc_and_aboutblank() {
   let iframe = document.createElement("iframe");
   iframe.srcdoc = `<!DOCTYPE html>
     <html>
       <head><title>iframe with srcdoc</title></head>
     </html>`;
-  document.body.appendChild(iframe);
+  await new Promise(resolve => {
+    iframe.onload = resolve;
+    document.body.appendChild(iframe);
+  });
+
+  let iframeAboutBlank = document.createElement("iframe");
+  iframeAboutBlank.src = "about:blank";
+  await new Promise(resolve => {
+    iframeAboutBlank.onload = resolve;
+    document.body.appendChild(iframeAboutBlank);
+  });
 
   let extension = makeExtension({
     manifest: {
@@ -708,23 +717,91 @@ add_task(async function test_executeScript_with_iframe_srcdoc() {
       // 2. Frame for this file
       // 3. Frame that loads `file_sample.html` at the top of this file
       // 4. Frame that loads the `srcdoc`
-      browser.test.assertEq(4, frames.length, "expected 4 frames");
+      // 5. Frame for `about:blank`
+      browser.test.assertEq(5, frames.length, "expected 5 frames");
 
       const frameIds = frames.map(frame => frame.frameId);
 
-      const results = await browser.scripting.executeScript({
-        target: { tabId, frameIds },
-        func: () => {},
-      });
+      const TEST_CASES = [
+        {
+          title: "with frameIds for all frames",
+          params: {
+            target: { tabId, frameIds },
+          },
+          expectedResults: {
+            count: 5,
+            entriesAtIndex: {
+              3: {
+                frameId: frameIds[3],
+                result: "iframe with srcdoc",
+              },
+              4: {
+                frameId: frameIds[4],
+                result: "about:blank",
+              },
+            },
+          },
+        },
+        {
+          title: "with allFrames: true",
+          params: {
+            target: { tabId, allFrames: true },
+          },
+          expectedResults: {
+            count: 5,
+            entriesAtIndex: {
+              3: {
+                frameId: frameIds[3],
+                result: "iframe with srcdoc",
+              },
+              4: {
+                frameId: frameIds[4],
+                result: "about:blank",
+              },
+            },
+          },
+        },
+        {
+          title: "with a single frame specified",
+          params: {
+            target: { tabId, frameIds: [frameIds[3]] },
+          },
+          expectedResults: {
+            count: 1,
+            entriesAtIndex: {
+              0: {
+                frameId: frameIds[3],
+                result: "iframe with srcdoc",
+              },
+            },
+          },
+        },
+      ];
 
-      // TODO Bug 1739643: when we support `srcdoc`, `executeScript()` should
-      // return 4 results. It currently returns 3 results because it cannot
-      // inject into the `srcdoc` frame.
-      browser.test.assertEq(
-        3,
-        results.length,
-        "got the expected number of results"
-      );
+      for (const { title, params, expectedResults } of TEST_CASES) {
+        const results = await browser.scripting.executeScript({
+          ...params,
+          func: () => {
+            return document.title || document.URL;
+          },
+        });
+        // Sort injection results by frameId to always assert the results in
+        // the same order.
+        results.sort((a, b) => a.frameId - b.frameId);
+
+        browser.test.assertEq(
+          expectedResults.count,
+          results.length,
+          `${title} - got the expected number of results`
+        );
+        Object.keys(expectedResults.entriesAtIndex).forEach(index => {
+          browser.test.assertEq(
+            JSON.stringify(expectedResults.entriesAtIndex[index]),
+            JSON.stringify(results[index]),
+            `${title} - got expected results[${index}]`
+          );
+        });
+      }
 
       browser.test.notifyPass("execute-script");
     },
@@ -735,6 +812,7 @@ add_task(async function test_executeScript_with_iframe_srcdoc() {
   await extension.unload();
 
   iframe.remove();
+  iframeAboutBlank.remove();
 });
 
 add_task(async function test_executeScript_with_multiple_files() {

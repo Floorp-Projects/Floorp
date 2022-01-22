@@ -586,6 +586,12 @@ void DisplayPortUtils::InvalidateForDisplayPortChange(
       return;
     }
 
+    if (StaticPrefs::layout_display_list_retain_sc()) {
+      // DisplayListBuildingDisplayPortRect property is not used when retain sc
+      // mode is enabled.
+      return;
+    }
+
     bool found;
     nsRect* rect = frame->GetProperty(
         nsDisplayListBuilder::DisplayListBuildingDisplayPortRect(), &found);
