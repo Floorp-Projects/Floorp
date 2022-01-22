@@ -88,8 +88,15 @@ static VAStatus (*vaInitializeFn)(VADisplay dpy, int* major_version, /* out */
                                   int* minor_version /* out */);
 static VAStatus (*vaSetDriverNameFn)(VADisplay dpy, char* driver_name);
 static int (*vaMaxNumEntrypointsFn)(VADisplay dpy);
-static VAStatus (*vaQueryConfigEntrypointsFn)(VADisplay dpy, VAProfile profile, VAEntrypoint *entrypoint_list, int *num_entrypoints);
-
+static VAStatus (*vaQueryConfigEntrypointsFn)(VADisplay dpy, VAProfile profile,
+                                              VAEntrypoint *entrypoint_list,
+                                              int *num_entrypoints);
+static VAMessageCallback (*vaSetErrorCallbackFn)(VADisplay dpy,
+                                                 VAMessageCallback callback,
+                                                 void *user_context);
+static VAMessageCallback (*vaSetInfoCallbackFn)(VADisplay dpy,
+                                                VAMessageCallback callback,
+                                                void *user_context);
 int LoadVALibrary() {
   static pthread_mutex_t sVALock = PTHREAD_MUTEX_INITIALIZER;
   static void* sVALib = NULL;
@@ -136,6 +143,8 @@ int LoadVALibrary() {
     GET_FUNC(vaSetDriverName, sVALib);
     GET_FUNC(vaMaxNumEntrypoints, sVALib);
     GET_FUNC(vaQueryConfigEntrypoints, sVALib);
+    GET_FUNC(vaSetErrorCallback, sVALib);
+    GET_FUNC(vaSetInfoCallback, sVALib);
 
     sVALoaded =
         (IS_FUNC_LOADED(vaDestroyBuffer) && IS_FUNC_LOADED(vaBeginPicture) &&
@@ -156,7 +165,9 @@ int LoadVALibrary() {
          IS_FUNC_LOADED(vaUnmapBuffer) && IS_FUNC_LOADED(vaTerminate) &&
          IS_FUNC_LOADED(vaInitialize) && IS_FUNC_LOADED(vaSetDriverName) &&
          IS_FUNC_LOADED(vaMaxNumEntrypoints) &&
-         IS_FUNC_LOADED(vaQueryConfigEntrypoints));
+         IS_FUNC_LOADED(vaQueryConfigEntrypoints) &&
+         IS_FUNC_LOADED(vaSetErrorCallback) &&
+         IS_FUNC_LOADED(vaSetInfoCallback));
   }
   pthread_mutex_unlock(&sVALock);
   return sVALoaded;
@@ -416,11 +427,29 @@ int vaMaxNumEntrypoints(VADisplay dpy) {
   return 0;
 }
 
-VAStatus vaQueryConfigEntrypoints(VADisplay dpy, VAProfile profile, VAEntrypoint *entrypoint_list, int *num_entrypoints) {
+VAStatus vaQueryConfigEntrypoints(VADisplay dpy, VAProfile profile,
+                                  VAEntrypoint *entrypoint_list,
+                                  int *num_entrypoints) {
   if (LoadVALibrary()) {
     return vaQueryConfigEntrypointsFn(dpy, profile, entrypoint_list, num_entrypoints);
   }
   return VA_STATUS_ERROR_UNIMPLEMENTED;
+}
+
+VAMessageCallback vaSetErrorCallback(VADisplay dpy, VAMessageCallback callback,
+                                     void *user_context) {
+  if (LoadVALibrary()) {
+    return vaSetErrorCallbackFn(dpy, callback, user_context);
+  }
+  return NULL;
+}
+
+VAMessageCallback vaSetInfoCallback(VADisplay dpy, VAMessageCallback callback,
+                                    void *user_context) {
+  if (LoadVALibrary()) {
+    return vaSetInfoCallbackFn(dpy, callback, user_context);
+  }
+  return NULL;
 }
 
 #pragma GCC visibility pop
