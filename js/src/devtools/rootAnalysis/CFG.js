@@ -8,6 +8,8 @@
 
 "use strict";
 
+var TRACING = false;
+
 // Find all points (positions within the code) of the body given by the list of
 // bodies and the blockId to match (which will specify an outer function or a
 // loop within it), recursing into loops if needed.
@@ -33,6 +35,154 @@ function findAllPoints(bodies, blockId, bits)
     }
 
     return points;
+}
+
+// Visitor of a graph of <body, ppoint> vertexes and sixgill-generated edges,
+// where the edges represent the actual computation happening.
+//
+// Uses the syntax `var Visitor = class { ... }` rather than `class Visitor`
+// to allow reloading this file with the JS debugger.
+var Visitor = class {
+    constructor(bodies) {
+        this.visited_bodies = new Map();
+        for (const body of bodies) {
+            this.visited_bodies.set(body, new Map());
+        }
+    }
+
+    // Returns whether we should keep going after seeing this <body, ppoint>
+    // pair. Also records it as visited.
+    visit(body, ppoint, info) {
+        const visited = this.visited_bodies.get(body);
+        const existing = visited.get(ppoint);
+        const action = this.next_action(existing, info);
+        const merged = this.merge_info(existing, info);
+        visited.set(ppoint, merged);
+        return [action, merged];
+    }
+
+    // Default implementation does a basic "only visit nodes once" search.
+    // (Whether this is BFS/DFS/other is determined by the caller.)
+
+    // Override if you need to revisit nodes. Valid actions are "continue",
+    // "prune", and "done". "continue" means continue with the search. "prune"
+    // means stop at this node, only continue on other edges. "done" means the
+    // whole search is complete even if unvisited nodes remain.
+    next_action(prev, current) { return prev ? "prune" : "continue"; }
+
+    // Update the info at a node. If this is the first time the node has been
+    // seen, `prev` will be undefined. `current` will be the info computed by
+    // `extend_path`. The node will be updated with the return value.
+    merge_info(prev, current) { return true; }
+
+    // Prepend `edge` to the info stored at the successor node, returning
+    // the updated info value. This should be overridden by pretty much any
+    // subclass, as a traversal's semantics are largely determined by this method.
+    extend_path(edge, body, ppoint, successor_path) { return true; }
+};
+
+function findMatchingBlock(bodies, blockId) {
+    for (const body of bodies) {
+        if (sameBlockId(body.BlockId, blockId)) {
+            return body;
+        }
+    }
+    assert(false);
+}
+
+// Perform a mostly breadth-first search through the graph of <body, ppoints>.
+// This is only mostly breadth-first because the visitor decides whether to
+// stop searching when it sees an already-visited node. It can choose to
+// re-visit a node in order to find "better" paths that include a node more
+// than once.
+//
+// The return value depends on how the search finishes. If a 'done' action
+// is returned by visitor.visit(), use the information returned by
+// that call. If the search completes without reaching the entry point of
+// the function (the "root"), return null. If the search manages to reach
+// the root, return the value of the `result_if_reached_root` parameter.
+//
+// This allows this function to be used in different ways. If the visitor
+// associates a value with each node that chains onto its successors
+// (or predecessors in the "upwards" search order), then this will return
+// a complete path through the graph. But this can also be used to test
+// whether a condition holds (eg "the exit point is reachable after
+// calling SomethingImportant()"), in which case no path is needed and the
+// visitor will cause the return value to be a simple boolean (or null
+// if it terminates the search before reaching the root.)
+//
+// The information returned by the visitor for a node is often called
+// `path` in the code below, even though it may not represent a path.
+//
+function BFS_upwards(start_body, start_ppoint, bodies, visitor,
+                     initial_successor_info={},
+                     result_if_reached_root=null)
+{
+    const work = [[start_body, start_ppoint, null, initial_successor_info]];
+    if (TRACING) {
+        printErr(`BFS start at ${blockIdentifier(start_body)}:${start_ppoint}`);
+    }
+
+    let reached_root = false;
+    while (work.length > 0) {
+        const [body, ppoint, edgeToAdd, successor_path] = work.shift();
+        if (TRACING) {
+            printErr(`prepending edge from ${ppoint} to state '${successor_path}'`);
+        }
+        let path = visitor.extend_path(edgeToAdd, body, ppoint, successor_path);
+
+        const [action,  merged_path] = visitor.visit(body, ppoint, path);
+        if (action === "done") {
+            return merged_path;
+        }
+        if (action === "prune") {
+            // Do not push anything else to the work queue, but continue processing
+            // other branches.
+            continue;
+        }
+        assert(action == "continue");
+        path = merged_path;
+
+        const predecessors = getPredecessors(body);
+        for (const edge of (predecessors[ppoint] || [])) {
+            if (edge.Kind == "Loop") {
+                // Propagate the search into the exit point of the loop body.
+                const loopBody = findMatchingBlock(bodies, edge.BlockId);
+                const loopEnd = loopBody.Index[1];
+                work.push([loopBody, loopEnd, null, path]);
+                // Don't continue to predecessors here without going through
+                // the loop. (The points in this body that enter the loop will
+                // be traversed when we reach the entry point of the loop.)
+            } else {
+                work.push([body, edge.Index[0], edge, path]);
+            }
+        }
+
+        // Check for hitting the entry point of a loop body.
+        if (ppoint == body.Index[0] && body.BlockId.Kind == "Loop") {
+            // Propagate to outer body parents that enter the loop body.
+            for (const parent of (body.BlockPPoint || [])) {
+                const parentBody = findMatchingBlock(bodies, parent.BlockId);
+                work.push([parentBody, parent.Index, null, path]);
+            }
+
+            // This point is also preceded by the *end* of this loop, for the
+            // previous iteration.
+            work.push([body, body.Index[1], null, path]);
+        }
+
+        // Check for reaching the root of the function.
+        if (body === start_body && ppoint == body.Index[0]) {
+            reached_root = true;
+        }
+    }
+
+    // The search space was exhausted without finding a 'done' state. That
+    // might be because all search paths were pruned before reaching the entry
+    // point of the function, in which case reached_root will be false. (If
+    // reached_root is true, then we may still not have visited the entire
+    // graph, if some paths were pruned but at least one made it to the root.)
+    return reached_root ? result_if_reached_root : null;
 }
 
 // Given the CFG for the constructor call of some RAII, return whether the
