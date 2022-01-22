@@ -2367,22 +2367,11 @@ bool nsImageFrame::IsServerImageMap() {
   return mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::ismap);
 }
 
-// Translate an point that is relative to our frame
-// into a localized pixel coordinate that is relative to the
-// content area of this frame (inside the border+padding).
-void nsImageFrame::TranslateEventCoords(const nsPoint& aPoint,
-                                        nsIntPoint& aResult) {
-  nscoord x = aPoint.x;
-  nscoord y = aPoint.y;
-
+CSSIntPoint nsImageFrame::TranslateEventCoords(const nsPoint& aPoint) {
+  const nsRect contentRect = GetContentRectRelativeToSelf();
   // Subtract out border and padding here so that the coordinates are
   // now relative to the content area of this frame.
-  nsRect inner = GetContentRectRelativeToSelf();
-  x -= inner.x;
-  y -= inner.y;
-
-  aResult.x = nsPresContext::AppUnitsToIntCSSPixels(x);
-  aResult.y = nsPresContext::AppUnitsToIntCSSPixels(y);
+  return CSSPixel::FromAppUnitsRounded(aPoint - contentRect.TopLeft());
 }
 
 bool nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
@@ -2435,11 +2424,9 @@ nsresult nsImageFrame::GetContentForEvent(WidgetEvent* aEvent,
   }
 
   if (nsImageMap* map = GetImageMap()) {
-    nsIntPoint p;
-    TranslateEventCoords(
-        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, RelativeTo{this}),
-        p);
-    nsCOMPtr<nsIContent> area = map->GetArea(p.x, p.y);
+    const CSSIntPoint p = TranslateEventCoords(
+        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, RelativeTo{this}));
+    nsCOMPtr<nsIContent> area = map->GetArea(p);
     if (area) {
       area.forget(aContent);
       return NS_OK;
@@ -2463,18 +2450,15 @@ nsresult nsImageFrame::HandleEvent(nsPresContext* aPresContext,
     nsImageMap* map = GetImageMap();
     bool isServerMap = IsServerImageMap();
     if (map || isServerMap) {
-      nsIntPoint p;
-      TranslateEventCoords(nsLayoutUtils::GetEventCoordinatesRelativeTo(
-                               aEvent, RelativeTo{this}),
-                           p);
-      bool inside = false;
+      CSSIntPoint p =
+          TranslateEventCoords(nsLayoutUtils::GetEventCoordinatesRelativeTo(
+              aEvent, RelativeTo{this}));
+
       // Even though client-side image map triggering happens
       // through content, we need to make sure we're not inside
       // (in case we deal with a case of both client-side and
       // sever-side on the same image - it happens!)
-      if (nullptr != map) {
-        inside = !!map->GetArea(p.x, p.y);
-      }
+      const bool inside = map && map->GetArea(p);
 
       if (!inside && isServerMap) {
         // Server side image maps use the href in a containing anchor
@@ -2521,9 +2505,8 @@ Maybe<nsIFrame::Cursor> nsImageFrame::GetCursor(const nsPoint& aPoint) {
   if (!map) {
     return nsIFrame::GetCursor(aPoint);
   }
-  nsIntPoint p;
-  TranslateEventCoords(aPoint, p);
-  HTMLAreaElement* area = map->GetArea(p.x, p.y);
+  const CSSIntPoint p = TranslateEventCoords(aPoint);
+  HTMLAreaElement* area = map->GetArea(p);
   if (!area) {
     return nsIFrame::GetCursor(aPoint);
   }
