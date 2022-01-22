@@ -24,6 +24,11 @@ var options = parse_options([
         default: "rawcalls.txt"
     },
     {
+        name: 'gcEdgesOut_filename',
+        type: 'string',
+        default: "gcEdges.json"
+    },
+    {
         name: 'batch',
         default: 1,
         type: 'number'
@@ -40,6 +45,8 @@ var origOut = os.file.redirect(options.callgraphOut_filename);
 var memoized = new Map();
 
 var unmangled2id = new Set();
+
+var gcEdges = {};
 
 // Insert a string into the name table and return the ID. Do not use for
 // functions, which must be handled specially.
@@ -416,5 +423,9 @@ for (var nameIndex = start; nameIndex <= end; nameIndex++) {
     xdb.free_string(name);
     xdb.free_string(data);
 }
+
+os.file.close(os.file.redirect(options.gcEdgesOut_filename));
+
+print(JSON.stringify(gcEdges, null, 4));
 
 os.file.close(os.file.redirect(origOut));
