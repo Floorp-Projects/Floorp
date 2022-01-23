@@ -4935,6 +4935,8 @@ static void CompareExchange(MacroAssembler& masm,
 
   ScratchRegisterScope scratch(masm);
 
+  // NOTE: the generated code must match the assembly code in gen_cmpxchg in
+  // GenerateAtomicOperations.py
   masm.memoryBarrierBefore(sync);
 
   masm.bind(&again);
@@ -5038,6 +5040,8 @@ static void AtomicExchange(MacroAssembler& masm,
 
   ScratchRegisterScope scratch(masm);
 
+  // NOTE: the generated code must match the assembly code in gen_exchange in
+  // GenerateAtomicOperations.py
   masm.memoryBarrierBefore(sync);
 
   masm.bind(&again);
@@ -5139,6 +5143,8 @@ static void AtomicFetchOp(MacroAssembler& masm,
   SecondScratchRegisterScope scratch2(masm);
   Register ptr = ComputePointerForAtomic(masm, mem, scratch2);
 
+  // NOTE: the generated code must match the assembly code in gen_fetchop in
+  // GenerateAtomicOperations.py
   masm.memoryBarrierBefore(sync);
 
   ScratchRegisterScope scratch(masm);
@@ -5394,6 +5400,8 @@ static void CompareExchange64(MacroAssembler& masm,
   SecondScratchRegisterScope scratch2(masm);
   Register ptr = ComputePointerForAtomic(masm, mem, scratch2);
 
+  // NOTE: the generated code must match the assembly code in gen_cmpxchg in
+  // GenerateAtomicOperations.py
   masm.memoryBarrierBefore(sync);
 
   masm.bind(&again);
@@ -6152,6 +6160,8 @@ void MacroAssemblerARM::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
                   type == Scalar::Int32 || type == Scalar::Int64;
   unsigned byteSize = access.byteSize();
 
+  // NOTE: the generated code must match the assembly code in gen_load in
+  // GenerateAtomicOperations.py
   asMasm().memoryBarrierBefore(access.sync());
 
   BufferOffset load;
@@ -6267,6 +6277,8 @@ void MacroAssemblerARM::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
     }
   }
 
+  // NOTE: the generated code must match the assembly code in gen_store in
+  // GenerateAtomicOperations.py
   asMasm().memoryBarrierAfter(access.sync());
 
   BufferOffset store;
