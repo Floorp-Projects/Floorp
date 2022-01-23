@@ -23,7 +23,6 @@
 #include <stdint.h>
 
 #include "jit/AtomicOperationsGenerated.h"
-#include "js/GCAPI.h"
 #include "vm/Uint8Clamped.h"
 
 namespace js {
@@ -55,7 +54,6 @@ inline void js::jit::AtomicOperations::fenceSeqCst() { AtomicFenceSeqCst(); }
 #define JIT_LOADOP(T, U, loadop)                   \
   template <>                                      \
   inline T AtomicOperations::loadSeqCst(T* addr) { \
-    JS::AutoSuppressGCAnalysis nogc;               \
     return (T)loadop((U*)addr);                    \
   }
 
@@ -63,7 +61,6 @@ inline void js::jit::AtomicOperations::fenceSeqCst() { AtomicFenceSeqCst(); }
 #  define JIT_LOADOP_CAS(T)                                   \
     template <>                                               \
     inline T AtomicOperations::loadSeqCst(T* addr) {          \
-      JS::AutoSuppressGCAnalysis nogc;                        \
       AtomicCompilerFence();                                  \
       return (T)AtomicCmpXchg64SeqCst((uint64_t*)addr, 0, 0); \
     }
@@ -96,7 +93,6 @@ JIT_LOADOP(uint64_t, uint64_t, AtomicLoad64SeqCst)
 #define JIT_STOREOP(T, U, storeop)                            \
   template <>                                                 \
   inline void AtomicOperations::storeSeqCst(T* addr, T val) { \
-    JS::AutoSuppressGCAnalysis nogc;                          \
     storeop((U*)addr, val);                                   \
   }
 
@@ -104,7 +100,6 @@ JIT_LOADOP(uint64_t, uint64_t, AtomicLoad64SeqCst)
 #  define JIT_STOREOP_CAS(T)                                                   \
     template <>                                                                \
     inline void AtomicOperations::storeSeqCst(T* addr, T val) {                \
-      JS::AutoSuppressGCAnalysis nogc;                                         \
       AtomicCompilerFence();                                                   \
       T oldval = *addr; /* good initial approximation */                       \
       for (;;) {                                                               \
@@ -146,7 +141,6 @@ JIT_STOREOP(uint64_t, uint64_t, AtomicStore64SeqCst)
 #define JIT_EXCHANGEOP(T, U, xchgop)                          \
   template <>                                                 \
   inline T AtomicOperations::exchangeSeqCst(T* addr, T val) { \
-    JS::AutoSuppressGCAnalysis nogc;                          \
     return (T)xchgop((U*)addr, (U)val);                       \
   }
 
@@ -154,7 +148,6 @@ JIT_STOREOP(uint64_t, uint64_t, AtomicStore64SeqCst)
 #  define JIT_EXCHANGEOP_CAS(T)                                                \
     template <>                                                                \
     inline T AtomicOperations::exchangeSeqCst(T* addr, T val) {                \
-      JS::AutoSuppressGCAnalysis nogc;                                         \
       AtomicCompilerFence();                                                   \
       T oldval = *addr;                                                        \
       for (;;) {                                                               \
@@ -198,7 +191,6 @@ JIT_EXCHANGEOP(uint64_t, uint64_t, AtomicExchange64SeqCst)
   template <>                                                         \
   inline T AtomicOperations::compareExchangeSeqCst(T* addr, T oldval, \
                                                    T newval) {        \
-    JS::AutoSuppressGCAnalysis nogc;                                  \
     return (T)cmpxchg((U*)addr, (U)oldval, (U)newval);                \
   }
 
@@ -222,14 +214,12 @@ JIT_CAS(uint64_t, uint64_t, AtomicCmpXchg64SeqCst)
 #define JIT_FETCHADDOP(T, U, xadd)                            \
   template <>                                                 \
   inline T AtomicOperations::fetchAddSeqCst(T* addr, T val) { \
-    JS::AutoSuppressGCAnalysis nogc;                          \
     return (T)xadd((U*)addr, (U)val);                         \
   }
 
 #define JIT_FETCHSUBOP(T)                                     \
   template <>                                                 \
   inline T AtomicOperations::fetchSubSeqCst(T* addr, T val) { \
-    JS::AutoSuppressGCAnalysis nogc;                          \
     return fetchAddSeqCst(addr, (T)(0 - val));                \
   }
 
@@ -237,7 +227,6 @@ JIT_CAS(uint64_t, uint64_t, AtomicCmpXchg64SeqCst)
 #  define JIT_FETCHADDOP_CAS(T)                                           \
     template <>                                                           \
     inline T AtomicOperations::fetchAddSeqCst(T* addr, T val) {           \
-      JS::AutoSuppressGCAnalysis nogc;                                    \
       AtomicCompilerFence();                                              \
       T oldval = *addr; /* Good initial approximation */                  \
       for (;;) {                                                          \
@@ -290,7 +279,6 @@ JIT_FETCHSUBOP(uint64_t)
 #define JIT_FETCHBITOPX(T, U, name, op)             \
   template <>                                       \
   inline T AtomicOperations::name(T* addr, T val) { \
-    JS::AutoSuppressGCAnalysis nogc;                \
     return (T)op((U*)addr, (U)val);                 \
   }
 
@@ -308,7 +296,6 @@ JIT_FETCHSUBOP(uint64_t)
 #  define JIT_FETCHBITOPX_CAS(T, name, OP)                                 \
     template <>                                                            \
     inline T AtomicOperations::name(T* addr, T val) {                      \
-      JS::AutoSuppressGCAnalysis nogc;                                     \
       AtomicCompilerFence();                                               \
       T oldval = *addr;                                                    \
       for (;;) {                                                           \
@@ -367,7 +354,6 @@ JIT_FETCHBITOP(uint64_t, uint64_t, AtomicAnd64SeqCst, AtomicOr64SeqCst,
 #define JIT_LOADSAFE(T, U, loadop)                                \
   template <>                                                     \
   inline T js::jit::AtomicOperations::loadSafeWhenRacy(T* addr) { \
-    JS::AutoSuppressGCAnalysis nogc;                              \
     union {                                                       \
       U u;                                                        \
       T t;                                                        \
@@ -380,7 +366,6 @@ JIT_FETCHBITOP(uint64_t, uint64_t, AtomicAnd64SeqCst, AtomicOr64SeqCst,
 #  define JIT_LOADSAFE_TEARING(T)                                   \
     template <>                                                     \
     inline T js::jit::AtomicOperations::loadSafeWhenRacy(T* addr) { \
-      JS::AutoSuppressGCAnalysis nogc;                              \
       MOZ_ASSERT(sizeof(T) == 8);                                   \
       union {                                                       \
         uint32_t u[2];                                              \
@@ -429,7 +414,6 @@ inline uint8_clamped js::jit::AtomicOperations::loadSafeWhenRacy(
 #define JIT_STORESAFE(T, U, storeop)                                         \
   template <>                                                                \
   inline void js::jit::AtomicOperations::storeSafeWhenRacy(T* addr, T val) { \
-    JS::AutoSuppressGCAnalysis nogc;                                         \
     union {                                                                  \
       U u;                                                                   \
       T t;                                                                   \
@@ -442,7 +426,6 @@ inline uint8_clamped js::jit::AtomicOperations::loadSafeWhenRacy(
 #  define JIT_STORESAFE_TEARING(T)                                             \
     template <>                                                                \
     inline void js::jit::AtomicOperations::storeSafeWhenRacy(T* addr, T val) { \
-      JS::AutoSuppressGCAnalysis nogc;                                         \
       union {                                                                  \
         uint32_t u[2];                                                         \
         T t;                                                                   \
@@ -489,7 +472,6 @@ inline void js::jit::AtomicOperations::storeSafeWhenRacy(uint8_clamped* addr,
 
 void js::jit::AtomicOperations::memcpySafeWhenRacy(void* dest, const void* src,
                                                    size_t nbytes) {
-  JS::AutoSuppressGCAnalysis nogc;
   MOZ_ASSERT(!((char*)dest <= (char*)src && (char*)src < (char*)dest + nbytes));
   MOZ_ASSERT(!((char*)src <= (char*)dest && (char*)dest < (char*)src + nbytes));
   AtomicMemcpyDownUnsynchronized((uint8_t*)dest, (const uint8_t*)src, nbytes);
@@ -498,7 +480,6 @@ void js::jit::AtomicOperations::memcpySafeWhenRacy(void* dest, const void* src,
 inline void js::jit::AtomicOperations::memmoveSafeWhenRacy(void* dest,
                                                            const void* src,
                                                            size_t nbytes) {
-  JS::AutoSuppressGCAnalysis nogc;
   if ((char*)dest <= (char*)src) {
     AtomicMemcpyDownUnsynchronized((uint8_t*)dest, (const uint8_t*)src, nbytes);
   } else {
