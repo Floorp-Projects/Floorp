@@ -35,11 +35,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   bool GetDefaultDrawInTitlebar() override;
 
-  template <typename Callback>
-  void WithAltThemeConfigured(const Callback&);
-
-  void InitializeAltTheme();
-
   void GetGtkContentTheme(LookAndFeelTheme&) override;
   void GetThemeInfo(nsACString&) override;
 
@@ -144,8 +139,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   // back to Adwaita / Adwaita Dark, respectively.
   PerThemeData mAltTheme;
 
-  GDBusProxy* mDBusSettingsProxy = nullptr;
-
   const PerThemeData& LightTheme() const {
     return mSystemTheme.mIsDark ? mAltTheme : mSystemTheme;
   }
@@ -158,6 +151,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     return mSystemThemeOverridden ? mAltTheme : mSystemTheme;
   }
 
+  GDBusProxy* mDBusSettingsProxy = nullptr;
+  mozilla::Maybe<ColorScheme> mColorSchemePreference;
   int32_t mCaretBlinkTime = 0;
   int32_t mCaretBlinkCount = -1;
   bool mCSDMaximizeButton = false;
@@ -171,10 +166,19 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   int32_t mCSDMinimizeButtonPosition = 0;
   int32_t mCSDCloseButtonPosition = 0;
 
-  void EnsureInit();
+  void EnsureInit() {
+    if (mInitialized) {
+      return;
+    }
+    Initialize();
+  }
+
+  void Initialize();
 
   void RestoreSystemTheme();
-  bool MatchFirefoxThemeIfNeeded();
+  void InitializeGlobalSettings();
+  void ConfigureAndInitializeAltTheme();
+  void ConfigureFinalEffectiveTheme();
 };
 
 #endif
