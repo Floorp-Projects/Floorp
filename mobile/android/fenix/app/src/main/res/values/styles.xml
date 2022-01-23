@@ -49,7 +49,7 @@
         <!-- Updated color attributes -->
         <item name="primaryText">@color/fx_mobile_text_color_primary</item>
         <item name="secondaryText">@color/fx_mobile_text_color_secondary</item>
-        <item name="contrastText">@color/contrast_text_normal_theme</item>
+        <item name="contrastText">@color/fx_mobile_text_color_oncolor_primary</item>
         <item name="accent">@color/accent_normal_theme</item>
         <item name="accentBright">@color/photonViolet70</item>
         <item name="accentHighContrast">@color/accent_high_contrast_normal_theme</item>

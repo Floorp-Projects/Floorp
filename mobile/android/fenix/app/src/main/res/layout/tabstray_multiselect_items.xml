@@ -20,7 +20,7 @@
         app:layout_constraintEnd_toStartOf="@id/share_multi_select"
         app:layout_constraintTop_toTopOf="@id/topBar"
         app:srcCompat="@drawable/ic_tab_collection"
-        app:tint="@color/contrast_text_normal_theme" />
+        app:tint="@color/fx_mobile_icon_color_oncolor" />
 
     <ImageButton
         android:id="@+id/share_multi_select"
@@ -33,7 +33,7 @@
         app:layout_constraintEnd_toStartOf="@id/menu_multi_select"
         app:layout_constraintTop_toTopOf="@id/topBar"
         app:srcCompat="@drawable/ic_share"
-        app:tint="@color/contrast_text_normal_theme" />
+        app:tint="@color/fx_mobile_icon_color_oncolor" />
 
     <ImageButton
         android:id="@+id/menu_multi_select"
@@ -46,5 +46,5 @@
         app:layout_constraintEnd_toEndOf="@id/topBar"
         app:layout_constraintTop_toTopOf="@id/topBar"
         app:srcCompat="@drawable/ic_menu"
-        app:tint="@color/contrast_text_normal_theme" />
+        app:tint="@color/fx_mobile_icon_color_oncolor" />
 </merge>

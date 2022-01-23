@@ -52,7 +52,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/multiselect_title"
         app:srcCompat="@drawable/ic_close"
-        app:tint="@color/contrast_text_normal_theme" />
+        app:tint="@color/fx_mobile_icon_color_oncolor" />
 
     <TextView
         android:id="@+id/multiselect_title"
@@ -60,7 +60,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
         android:focusableInTouchMode="true"
-        android:textColor="@color/contrast_text_normal_theme"
+        android:textColor="@color/fx_mobile_text_color_oncolor_primary"
         android:textSize="20sp"
         android:importantForAccessibility="no"
         app:fontFamily="@font/metropolis_semibold"
