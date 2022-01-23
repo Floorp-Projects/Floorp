@@ -65,7 +65,6 @@ included_inclnames_to_ignore = set(
         "frontend/smoosh_generated.h",  # generated in $OBJDIR
         "gc/StatsPhasesGenerated.h",  # generated in $OBJDIR
         "gc/StatsPhasesGenerated.inc",  # generated in $OBJDIR
-        "jit/AtomicOperationsGenerated.h",  # generated in $OBJDIR
         "jit/CacheIROpsGenerated.h",  # generated in $OBJDIR
         "jit/LIROpsGenerated.h",  # generated in $OBJDIR
         "jit/MIROpsGenerated.h",  # generated in $OBJDIR
