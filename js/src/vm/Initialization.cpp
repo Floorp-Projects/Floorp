@@ -187,6 +187,8 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
   RETURN_IF_FAIL(js::vtune::Initialize());
 #endif
 
+  RETURN_IF_FAIL(js::jit::AtomicOperations::Initialize());
+
 #if JS_HAS_INTL_API
   if (mozilla::intl::ICU4CLibrary::Initialize().isErr()) {
     return "ICU4CLibrary::Initialize() failed";
@@ -207,7 +209,7 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
 #endif
 
 #ifndef JS_CODEGEN_NONE
-  // This is forced by InitializeJit.
+  // Normally this is forced by the compilation of atomic operations.
   MOZ_ASSERT(js::jit::CPUFlagsHaveBeenComputed());
 #endif
 
@@ -272,6 +274,8 @@ JS_PUBLIC_API void JS_ShutDown(void) {
 #ifdef JS_SIMULATOR
   js::jit::SimulatorProcess::destroy();
 #endif
+
+  js::jit::AtomicOperations::ShutDown();
 
 #ifdef JS_TRACE_LOGGING
   js::DestroyTraceLoggerThreadState();

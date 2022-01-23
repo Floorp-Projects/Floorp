@@ -8118,8 +8118,6 @@ bool CacheIRCompiler::emitAtomicsLoadResult(ObjOperandId objId,
   // Load the value.
   BaseIndex source(scratch, index, ScaleFromScalarType(elementType));
 
-  // NOTE: the generated code must match the assembly code in gen_load in
-  // GenerateAtomicOperations.py
   auto sync = Synchronization::Load();
 
   masm.memoryBarrierBefore(sync);
@@ -8170,8 +8168,6 @@ bool CacheIRCompiler::emitAtomicsStoreResult(ObjOperandId objId,
     // Store the value.
     BaseIndex dest(scratch, index, ScaleFromScalarType(elementType));
 
-    // NOTE: the generated code must match the assembly code in gen_store in
-    // GenerateAtomicOperations.py
     auto sync = Synchronization::Store();
 
     masm.memoryBarrierBefore(sync);
