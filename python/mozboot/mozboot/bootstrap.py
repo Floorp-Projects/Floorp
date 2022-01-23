@@ -400,7 +400,7 @@ class Bootstrapper(object):
         raw_mozconfig = mozconfig_builder.generate()
 
         if raw_mozconfig:
-            mozconfig_path = Path(find_mozconfig(Path(self.mach_context.topdir)))
+            mozconfig_path = find_mozconfig(Path(self.mach_context.topdir))
             if not mozconfig_path:
                 # No mozconfig file exists yet
                 mozconfig_path = Path(self.mach_context.topdir) / "mozconfig"
