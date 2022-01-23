@@ -400,10 +400,10 @@ static int8_t GetClass(uint32_t u, LineBreakRule aLevel,
       /* BREAK_BEFORE = 5,                  [BB] */ CLASS_OPEN_LIKE_CHARACTER,
       /* MANDATORY_BREAK = 6,               [BK] */ CLASS_CHARACTER,
       /* CONTINGENT_BREAK = 7,              [CB] */ CLASS_CHARACTER,
-      /* CLOSE_PUNCTUATION = 8,             [CL] */ CLASS_CHARACTER,
+      /* CLOSE_PUNCTUATION = 8,             [CL] */ CLASS_CLOSE_LIKE_CHARACTER,
       /* COMBINING_MARK = 9,                [CM] */ CLASS_CHARACTER,
       /* CARRIAGE_RETURN = 10,              [CR] */ CLASS_BREAKABLE,
-      /* EXCLAMATION = 11,                  [EX] */ CLASS_CHARACTER,
+      /* EXCLAMATION = 11,                  [EX] */ CLASS_CLOSE_LIKE_CHARACTER,
       /* GLUE = 12,                         [GL] */ CLASS_NON_BREAKABLE,
       /* HYPHEN = 13,                       [HY] */ CLASS_CHARACTER,
       /* IDEOGRAPHIC = 14,                  [ID] */ CLASS_BREAKABLE,
@@ -412,8 +412,8 @@ static int8_t GetClass(uint32_t u, LineBreakRule aLevel,
       /* LINE_FEED = 17,                    [LF] */ CLASS_BREAKABLE,
       /* NONSTARTER = 18,                   [NS] */ CLASS_CLOSE_LIKE_CHARACTER,
       /* NUMERIC = 19,                      [NU] */ CLASS_NUMERIC,
-      /* OPEN_PUNCTUATION = 20,             [OP] */ CLASS_CHARACTER,
-      /* POSTFIX_NUMERIC = 21,              [PO] */ CLASS_CHARACTER,
+      /* OPEN_PUNCTUATION = 20,             [OP] */ CLASS_OPEN_LIKE_CHARACTER,
+      /* POSTFIX_NUMERIC = 21,              [PO] */ CLASS_CLOSE_LIKE_CHARACTER,
       /* PREFIX_NUMERIC = 22,               [PR] */ CLASS_CHARACTER,
       /* QUOTATION = 23,                    [QU] */ CLASS_CHARACTER,
       /* COMPLEX_CONTEXT = 24,              [SA] */ CLASS_CHARACTER,
@@ -564,20 +564,10 @@ static int8_t GetClass(uint32_t u, LineBreakRule aLevel,
     }
     if (0xff00 == h) {
       if (l <= 0x0060) {  // Fullwidth ASCII variant
-        // Fullwidth comma and period are exceptions to our map-to-ASCII
-        // behavior: https://bugzilla.mozilla.org/show_bug.cgi?id=1595428
-        if (l + 0x20 == ',' || l + 0x20 == '.') {
-          return CLASS_CLOSE;
-        }
-        // Also special-case fullwidth left/right white parenthesis,
-        // which do not fit the pattern of mapping to the ASCII block
-        if (l == 0x005f) {
-          return CLASS_OPEN;
-        }
-        if (l == 0x0060) {
-          return CLASS_CLOSE;
-        }
-        return GETCLASSFROMTABLE(gLBClass00, (l + 0x20));
+        // Previously, we treated Fullwidth chars the same as their ASCII
+        // counterparts, but UAX#14 (LineBreak.txt) disagrees with this and
+        // treats many of them as ideograph-like.
+        return sUnicodeLineBreakToClass[cls];
       }
       if (l < 0x00a0) {  // Halfwidth Katakana variants
         switch (l) {
