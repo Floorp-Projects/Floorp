@@ -922,6 +922,8 @@ void MacroAssembler::PushBoxed(FloatRegister reg) {
 
 void MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access,
                               Operand srcAddr, AnyRegister out) {
+  // NOTE: the generated code must match the assembly code in gen_load in
+  // GenerateAtomicOperations.py
   memoryBarrierBefore(access.sync());
 
   MOZ_ASSERT_IF(
@@ -1015,6 +1017,8 @@ void MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access,
 
 void MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access,
                                  Operand srcAddr, Register64 out) {
+  // NOTE: the generated code must match the assembly code in gen_load in
+  // GenerateAtomicOperations.py
   memoryBarrierBefore(access.sync());
 
   append(access, size());
@@ -1057,6 +1061,8 @@ void MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access,
 
 void MacroAssembler::wasmStore(const wasm::MemoryAccessDesc& access,
                                AnyRegister value, Operand dstAddr) {
+  // NOTE: the generated code must match the assembly code in gen_store in
+  // GenerateAtomicOperations.py
   memoryBarrierBefore(access.sync());
 
   append(access, masm.size());
@@ -1342,6 +1348,8 @@ static void AtomicFetchOp64(MacroAssembler& masm,
                             const wasm::MemoryAccessDesc* access, AtomicOp op,
                             Register value, const T& mem, Register temp,
                             Register output) {
+  // NOTE: the generated code must match the assembly code in gen_fetchop in
+  // GenerateAtomicOperations.py
   if (op == AtomicFetchAddOp) {
     if (value != output) {
       masm.movq(value, output);
@@ -1441,6 +1449,8 @@ void MacroAssembler::compareExchange64(const Synchronization&,
                                        const Address& mem, Register64 expected,
                                        Register64 replacement,
                                        Register64 output) {
+  // NOTE: the generated code must match the assembly code in gen_cmpxchg in
+  // GenerateAtomicOperations.py
   MOZ_ASSERT(output.reg == rax);
   if (expected != output) {
     movq(expected.reg, output.reg);
@@ -1463,6 +1473,8 @@ void MacroAssembler::compareExchange64(const Synchronization&,
 void MacroAssembler::atomicExchange64(const Synchronization&,
                                       const Address& mem, Register64 value,
                                       Register64 output) {
+  // NOTE: the generated code must match the assembly code in gen_exchange in
+  // GenerateAtomicOperations.py
   if (value != output) {
     movq(value.reg, output.reg);
   }
