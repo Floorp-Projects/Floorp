@@ -15,7 +15,7 @@
         android:layout_width="0dp"
         android:layout_height="@dimen/bottom_sheet_handle_height"
         android:layout_marginTop="@dimen/bottom_sheet_handle_top_margin"
-        android:background="@color/secondary_text_normal_theme"
+        android:background="@color/fx_mobile_text_color_secondary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"

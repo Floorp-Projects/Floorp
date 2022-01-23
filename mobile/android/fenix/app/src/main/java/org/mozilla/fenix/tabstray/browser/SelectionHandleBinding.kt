@@ -82,7 +82,7 @@ class SelectionHandleBinding(
         val colorResource = if (multiselect) {
             R.color.fx_mobile_layer_color_accent
         } else {
-            R.color.secondary_text_normal_theme
+            R.color.fx_mobile_text_color_secondary
         }
 
         val color = ContextCompat.getColor(handle.context, colorResource)
