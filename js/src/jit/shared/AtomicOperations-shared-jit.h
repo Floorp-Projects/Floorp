@@ -22,117 +22,19 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "jit/AtomicOperationsGenerated.h"
 #include "js/GCAPI.h"
 #include "vm/Uint8Clamped.h"
 
 namespace js {
 namespace jit {
 
-// The function pointers in this section all point to jitted code.
-//
-// On 32-bit systems we assume for simplicity's sake that we don't have any
-// 64-bit atomic operations except cmpxchg (this is a concession to x86 but it's
-// not a hardship).  On 32-bit systems we therefore implement other 64-bit
-// atomic operations in terms of cmpxchg along with some C++ code and a local
-// reordering fence to prevent other loads and stores from being intermingled
-// with operations in the implementation of the atomic.
-
-// `fence` performs a full memory barrier.
-extern void (*AtomicFenceSeqCst)();
-
 #ifndef JS_64BIT
-// `compiler_fence` erects a reordering boundary for operations on the current
-// thread.  We use it to prevent the compiler from reordering loads and stores
-// inside larger primitives that are synthesized from cmpxchg.
-extern void (*AtomicCompilerFence)();
+// `AtomicCompilerFence` erects a reordering boundary for operations on the
+// current thread.  We use it to prevent the compiler from reordering loads and
+// stores inside larger primitives that are synthesized from cmpxchg.
+extern void AtomicCompilerFence();
 #endif
-
-extern uint8_t (*AtomicLoad8SeqCst)(const uint8_t* addr);
-extern uint16_t (*AtomicLoad16SeqCst)(const uint16_t* addr);
-extern uint32_t (*AtomicLoad32SeqCst)(const uint32_t* addr);
-#ifdef JS_64BIT
-extern uint64_t (*AtomicLoad64SeqCst)(const uint64_t* addr);
-#endif
-
-// These are access-atomic up to sizeof(uintptr_t).
-extern uint8_t (*AtomicLoad8Unsynchronized)(const uint8_t* addr);
-extern uint16_t (*AtomicLoad16Unsynchronized)(const uint16_t* addr);
-extern uint32_t (*AtomicLoad32Unsynchronized)(const uint32_t* addr);
-#ifdef JS_64BIT
-extern uint64_t (*AtomicLoad64Unsynchronized)(const uint64_t* addr);
-#endif
-
-extern uint8_t (*AtomicStore8SeqCst)(uint8_t* addr, uint8_t val);
-extern uint16_t (*AtomicStore16SeqCst)(uint16_t* addr, uint16_t val);
-extern uint32_t (*AtomicStore32SeqCst)(uint32_t* addr, uint32_t val);
-#ifdef JS_64BIT
-extern uint64_t (*AtomicStore64SeqCst)(uint64_t* addr, uint64_t val);
-#endif
-
-// These are access-atomic up to sizeof(uintptr_t).
-extern uint8_t (*AtomicStore8Unsynchronized)(uint8_t* addr, uint8_t val);
-extern uint16_t (*AtomicStore16Unsynchronized)(uint16_t* addr, uint16_t val);
-extern uint32_t (*AtomicStore32Unsynchronized)(uint32_t* addr, uint32_t val);
-#ifdef JS_64BIT
-extern uint64_t (*AtomicStore64Unsynchronized)(uint64_t* addr, uint64_t val);
-#endif
-
-// `exchange` takes a cell address and a value.  It stores it in the cell and
-// returns the value previously in the cell.
-extern uint8_t (*AtomicExchange8SeqCst)(uint8_t* addr, uint8_t val);
-extern uint16_t (*AtomicExchange16SeqCst)(uint16_t* addr, uint16_t val);
-extern uint32_t (*AtomicExchange32SeqCst)(uint32_t* addr, uint32_t val);
-#ifdef JS_64BIT
-extern uint64_t (*AtomicExchange64SeqCst)(uint64_t* addr, uint64_t val);
-#endif
-
-// `add` adds a value atomically to the cell and returns the old value in the
-// cell.  (There is no `sub`; just add the negated value.)
-extern uint8_t (*AtomicAdd8SeqCst)(uint8_t* addr, uint8_t val);
-extern uint16_t (*AtomicAdd16SeqCst)(uint16_t* addr, uint16_t val);
-extern uint32_t (*AtomicAdd32SeqCst)(uint32_t* addr, uint32_t val);
-#ifdef JS_64BIT
-extern uint64_t (*AtomicAdd64SeqCst)(uint64_t* addr, uint64_t val);
-#endif
-
-// `and` bitwise-ands a value atomically into the cell and returns the old value
-// in the cell.
-extern uint8_t (*AtomicAnd8SeqCst)(uint8_t* addr, uint8_t val);
-extern uint16_t (*AtomicAnd16SeqCst)(uint16_t* addr, uint16_t val);
-extern uint32_t (*AtomicAnd32SeqCst)(uint32_t* addr, uint32_t val);
-#ifdef JS_64BIT
-extern uint64_t (*AtomicAnd64SeqCst)(uint64_t* addr, uint64_t val);
-#endif
-
-// `or` bitwise-ors a value atomically into the cell and returns the old value
-// in the cell.
-extern uint8_t (*AtomicOr8SeqCst)(uint8_t* addr, uint8_t val);
-extern uint16_t (*AtomicOr16SeqCst)(uint16_t* addr, uint16_t val);
-extern uint32_t (*AtomicOr32SeqCst)(uint32_t* addr, uint32_t val);
-#ifdef JS_64BIT
-extern uint64_t (*AtomicOr64SeqCst)(uint64_t* addr, uint64_t val);
-#endif
-
-// `xor` bitwise-xors a value atomically into the cell and returns the old value
-// in the cell.
-extern uint8_t (*AtomicXor8SeqCst)(uint8_t* addr, uint8_t val);
-extern uint16_t (*AtomicXor16SeqCst)(uint16_t* addr, uint16_t val);
-extern uint32_t (*AtomicXor32SeqCst)(uint32_t* addr, uint32_t val);
-#ifdef JS_64BIT
-extern uint64_t (*AtomicXor64SeqCst)(uint64_t* addr, uint64_t val);
-#endif
-
-// `cmpxchg` takes a cell address, an expected value and a replacement value.
-// If the value in the cell equals the expected value then the replacement value
-// is stored in the cell.  It always returns the value previously in the cell.
-extern uint8_t (*AtomicCmpXchg8SeqCst)(uint8_t* addr, uint8_t oldval,
-                                       uint8_t newval);
-extern uint16_t (*AtomicCmpXchg16SeqCst)(uint16_t* addr, uint16_t oldval,
-                                         uint16_t newval);
-extern uint32_t (*AtomicCmpXchg32SeqCst)(uint32_t* addr, uint32_t oldval,
-                                         uint32_t newval);
-extern uint64_t (*AtomicCmpXchg64SeqCst)(uint64_t* addr, uint64_t oldval,
-                                         uint64_t newval);
 
 // `...MemcpyDown` moves bytes toward lower addresses in memory: dest <= src.
 // `...MemcpyUp` moves bytes toward higher addresses in memory: dest >= src.
@@ -603,20 +505,5 @@ inline void js::jit::AtomicOperations::memmoveSafeWhenRacy(void* dest,
     AtomicMemcpyUpUnsynchronized((uint8_t*)dest, (const uint8_t*)src, nbytes);
   }
 }
-
-namespace js {
-namespace jit {
-
-extern bool InitializeJittedAtomics();
-extern void ShutDownJittedAtomics();
-
-}  // namespace jit
-}  // namespace js
-
-inline bool js::jit::AtomicOperations::Initialize() {
-  return InitializeJittedAtomics();
-}
-
-inline void js::jit::AtomicOperations::ShutDown() { ShutDownJittedAtomics(); }
 
 #endif  // jit_shared_AtomicOperations_shared_jit_h

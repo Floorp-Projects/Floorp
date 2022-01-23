@@ -187,8 +187,6 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
   RETURN_IF_FAIL(js::vtune::Initialize());
 #endif
 
-  RETURN_IF_FAIL(js::jit::AtomicOperations::Initialize());
-
 #if JS_HAS_INTL_API
   if (mozilla::intl::ICU4CLibrary::Initialize().isErr()) {
     return "ICU4CLibrary::Initialize() failed";
@@ -274,8 +272,6 @@ JS_PUBLIC_API void JS_ShutDown(void) {
 #ifdef JS_SIMULATOR
   js::jit::SimulatorProcess::destroy();
 #endif
-
-  js::jit::AtomicOperations::ShutDown();
 
 #ifdef JS_TRACE_LOGGING
   js::DestroyTraceLoggerThreadState();
