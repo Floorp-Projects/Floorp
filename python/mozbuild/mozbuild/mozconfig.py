@@ -106,6 +106,8 @@ class MozconfigLoader(object):
         """
         if path is self.AUTODETECT:
             path = find_mozconfig(self.topsrcdir)
+        if isinstance(path, Path):
+            path = str(path)
 
         result = {
             "path": path,
