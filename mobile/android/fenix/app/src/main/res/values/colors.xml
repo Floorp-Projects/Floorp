@@ -270,7 +270,6 @@
     <color name="prompt_login_edit_text_cursor_color_private_theme">@color/photonViolet50</color>
 
     <!-- Normal theme colors for light mode -->
-    <color name="caption_text_normal_theme">@color/photonLightGrey90</color>
     <color name="inset_normal_theme">@color/photonLightGrey30</color>
     <color name="accent_normal_theme">@color/photonInk20</color>
     <color name="accent_high_contrast_normal_theme">@color/photonInk20</color>

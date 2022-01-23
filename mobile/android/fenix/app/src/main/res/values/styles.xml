@@ -89,7 +89,7 @@
 
         <!-- Shared widget colors -->
         <item name="mozac_primary_text_color">@color/fx_mobile_text_color_primary</item>
-        <item name="mozac_caption_text_color">@color/caption_text_normal_theme</item>
+        <item name="mozac_caption_text_color">@color/fx_mobile_text_color_secondary</item>
         <item name="mozac_widget_favicon_background_color">@color/fx_mobile_layer_color_2</item>
         <item name="mozac_widget_favicon_border_color">@color/fx_mobile_border_color_primary</item>
 
