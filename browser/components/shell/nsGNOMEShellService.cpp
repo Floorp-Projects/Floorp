@@ -24,6 +24,7 @@
 #include "imgIContainer.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/WidgetUtils.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/dom/Element.h"
 #if defined(MOZ_WIDGET_GTK)
 #  include "nsImageToPixbuf.h"
@@ -195,30 +196,33 @@ bool nsGNOMEShellService::CheckHandlerMatchesAppName(
   return true;
 }
 
+static bool IsDefaultBrowserUsingXDGSettings() {
+  const gchar* argv[] = {"xdg-settings", "get", "default-web-browser", nullptr};
+  GSpawnFlags flags = static_cast<GSpawnFlags>(G_SPAWN_SEARCH_PATH |
+                                               G_SPAWN_STDERR_TO_DEV_NULL);
+  gchar* output = nullptr;
+  gint exit_status = 0;
+  if (!g_spawn_sync(nullptr, (gchar**)argv, nullptr, flags, nullptr, nullptr,
+                    &output, nullptr, &exit_status, nullptr)) {
+    return false;
+  }
+  auto freeOutput = MakeScopeExit([&] { g_free(output); });
+  if (exit_status != 0) {
+    return false;
+  }
+
+  nsDependentCString outputStr(output);
+  return outputStr.Find("firefox", /* aIgnoreCase = */ true) >= 0 ||
+         outputStr.Find(g_get_prgname(), /* aIgnoreCase = */ true) >= 0;
+}
+
 NS_IMETHODIMP
-nsGNOMEShellService::IsDefaultBrowser(bool aForAllTypes,
+nsGNOMEShellService::IsDefaultBrowser(bool /* aForAllTypes */,
                                       bool* aIsDefaultBrowser) {
   *aIsDefaultBrowser = false;
 
-  if (IsRunningAsASnap()) {
-    const gchar* argv[] = {"xdg-settings", "check", "default-web-browser",
-                           "firefox.desktop", nullptr};
-    GSpawnFlags flags = static_cast<GSpawnFlags>(G_SPAWN_SEARCH_PATH |
-                                                 G_SPAWN_STDERR_TO_DEV_NULL);
-    gchar* output = nullptr;
-    gint exit_status = 0;
-    if (!g_spawn_sync(nullptr, (gchar**)argv, nullptr, flags, nullptr, nullptr,
-                      &output, nullptr, &exit_status, nullptr)) {
-      return NS_OK;
-    }
-    if (exit_status != 0) {
-      g_free(output);
-      return NS_OK;
-    }
-    if (strcmp(output, "yes\n") == 0) {
-      *aIsDefaultBrowser = true;
-    }
-    g_free(output);
+  if (IsDefaultBrowserUsingXDGSettings()) {
+    *aIsDefaultBrowser = true;
     return NS_OK;
   }
 
