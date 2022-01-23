@@ -13,6 +13,7 @@
 
 #include "jit/CacheIRSpewer.h"
 #include "jit/CompileWrappers.h"
+#include "jit/Ion.h"
 #include "jit/JitCode.h"
 #include "jit/JitOptions.h"
 #include "jit/JitSpewer.h"
@@ -97,6 +98,11 @@ bool jit::InitializeJit() {
   }
 #endif
 
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  // Compute flags.
+  js::jit::CPUInfo::GetSSEVersion();
+#endif
+
 #if defined(JS_CODEGEN_ARM)
   InitARMFlags();
 #endif
@@ -105,6 +111,10 @@ bool jit::InitializeJit() {
   ComputeJitSupportFlags();
 
   CheckPerf();
+
+#ifndef JS_CODEGEN_NONE
+  MOZ_ASSERT(js::jit::CPUFlagsHaveBeenComputed());
+#endif
   return true;
 }
 
