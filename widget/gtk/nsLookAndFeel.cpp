@@ -897,7 +897,11 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     }
     case IntID::SystemUsesDarkTheme: {
       EnsureInit();
-      aResult = mSystemTheme.mIsDark;
+      if (mColorSchemePreference) {
+        aResult = *mColorSchemePreference == ColorScheme::Dark;
+      } else {
+        aResult = mSystemTheme.mIsDark;
+      }
       break;
     }
     case IntID::GTKCSDMaximizeButtonPosition:
@@ -1155,8 +1159,12 @@ void nsLookAndFeel::ConfigureTheme(const LookAndFeelTheme& aTheme) {
 }
 
 void nsLookAndFeel::RestoreSystemTheme() {
-  LOGLNF("RestoreSystemTheme(%s, %d)\n", mSystemTheme.mName.get(),
-         mSystemTheme.mPreferDarkTheme);
+  LOGLNF("RestoreSystemTheme(%s, %d, %d)\n", mSystemTheme.mName.get(),
+         mSystemTheme.mPreferDarkTheme, mSystemThemeOverridden);
+
+  if (!mSystemThemeOverridden) {
+    return;
+  }
 
   // Available on Gtk 3.20+.
   static auto sGtkSettingsResetProperty =
@@ -1167,22 +1175,21 @@ void nsLookAndFeel::RestoreSystemTheme() {
   if (sGtkSettingsResetProperty) {
     sGtkSettingsResetProperty(settings, "gtk-theme-name");
     sGtkSettingsResetProperty(settings, "gtk-application-prefer-dark-theme");
-    // If the prefer-dark-theme value was overridden by the dbus setting, make
-    // sure to keep it.
-    if (mSystemTheme.mPreferDarkTheme != GetPreferDarkTheme()) {
-      g_object_set(settings, "gtk-application-prefer-dark-theme",
-                   mSystemTheme.mPreferDarkTheme, nullptr);
-    }
   } else {
     g_object_set(settings, "gtk-theme-name", mSystemTheme.mName.get(),
                  "gtk-application-prefer-dark-theme",
                  mSystemTheme.mPreferDarkTheme, nullptr);
   }
   moz_gtk_refresh();
+  mSystemThemeOverridden = false;
 }
 
-template <typename Callback>
-void nsLookAndFeel::WithAltThemeConfigured(const Callback& aFn) {
+static bool AnyColorChannelIsDifferent(nscolor aColor) {
+  return NS_GET_R(aColor) != NS_GET_G(aColor) ||
+         NS_GET_R(aColor) != NS_GET_B(aColor);
+}
+
+void nsLookAndFeel::ConfigureAndInitializeAltTheme() {
   GtkSettings* settings = gtk_settings_get_default();
 
   bool fellBackToDefaultTheme = false;
@@ -1232,51 +1239,41 @@ void nsLookAndFeel::WithAltThemeConfigured(const Callback& aFn) {
     fellBackToDefaultTheme = true;
   }
 
-  aFn(fellBackToDefaultTheme);
+  mAltTheme.Init();
 
-  // Restore the system theme.
-  RestoreSystemTheme();
-}
-
-static bool AnyColorChannelIsDifferent(nscolor aColor) {
-  return NS_GET_R(aColor) != NS_GET_G(aColor) ||
-         NS_GET_R(aColor) != NS_GET_B(aColor);
-}
-
-void nsLookAndFeel::InitializeAltTheme() {
-  WithAltThemeConfigured([&](bool aFellBackToDefaultTheme) {
-    mAltTheme.Init();
-    // Some of the alt theme colors we can grab from the system theme, if we
-    // fell back to the default light / dark themes.
-    if (aFellBackToDefaultTheme) {
-      if (StaticPrefs::widget_gtk_alt_theme_selection()) {
-        mAltTheme.mTextSelectedText = mSystemTheme.mTextSelectedText;
-        mAltTheme.mTextSelectedBackground =
-            mSystemTheme.mTextSelectedBackground;
-      }
-
-      if (StaticPrefs::widget_gtk_alt_theme_scrollbar()) {
-        mAltTheme.mThemedScrollbar = mSystemTheme.mThemedScrollbar;
-        mAltTheme.mThemedScrollbarInactive =
-            mSystemTheme.mThemedScrollbarInactive;
-        mAltTheme.mThemedScrollbarThumb = mSystemTheme.mThemedScrollbarThumb;
-        mAltTheme.mThemedScrollbarThumbHover =
-            mSystemTheme.mThemedScrollbarThumbHover;
-        mAltTheme.mThemedScrollbarThumbInactive =
-            mSystemTheme.mThemedScrollbarThumbInactive;
-      }
-
-      if (StaticPrefs::widget_gtk_alt_theme_scrollbar_active()) {
-        mAltTheme.mThemedScrollbarThumbActive =
-            mSystemTheme.mThemedScrollbarThumbActive;
-      }
-
-      if (StaticPrefs::widget_gtk_alt_theme_selection()) {
-        mAltTheme.mAccentColor = mSystemTheme.mAccentColor;
-        mAltTheme.mAccentColorForeground = mSystemTheme.mAccentColorForeground;
-      }
+  // Some of the alt theme colors we can grab from the system theme, if we fell
+  // back to the default light / dark themes.
+  if (fellBackToDefaultTheme) {
+    if (StaticPrefs::widget_gtk_alt_theme_selection()) {
+      mAltTheme.mTextSelectedText = mSystemTheme.mTextSelectedText;
+      mAltTheme.mTextSelectedBackground = mSystemTheme.mTextSelectedBackground;
     }
-  });
+
+    if (StaticPrefs::widget_gtk_alt_theme_scrollbar()) {
+      mAltTheme.mThemedScrollbar = mSystemTheme.mThemedScrollbar;
+      mAltTheme.mThemedScrollbarInactive =
+          mSystemTheme.mThemedScrollbarInactive;
+      mAltTheme.mThemedScrollbarThumb = mSystemTheme.mThemedScrollbarThumb;
+      mAltTheme.mThemedScrollbarThumbHover =
+          mSystemTheme.mThemedScrollbarThumbHover;
+      mAltTheme.mThemedScrollbarThumbInactive =
+          mSystemTheme.mThemedScrollbarThumbInactive;
+    }
+
+    if (StaticPrefs::widget_gtk_alt_theme_scrollbar_active()) {
+      mAltTheme.mThemedScrollbarThumbActive =
+          mSystemTheme.mThemedScrollbarThumbActive;
+    }
+
+    if (StaticPrefs::widget_gtk_alt_theme_selection()) {
+      mAltTheme.mAccentColor = mSystemTheme.mAccentColor;
+      mAltTheme.mAccentColorForeground = mSystemTheme.mAccentColorForeground;
+    }
+  }
+
+  // Right now we're using the opposite color-scheme theme, make sure to record
+  // it.
+  mSystemThemeOverridden = true;
 }
 
 Maybe<ColorScheme> nsLookAndFeel::ComputeColorSchemeSetting() {
@@ -1312,47 +1309,52 @@ Maybe<ColorScheme> nsLookAndFeel::ComputeColorSchemeSetting() {
   return Some(ColorScheme::Light);
 }
 
-void nsLookAndFeel::EnsureInit() {
-  if (mInitialized) {
-    return;
-  }
+void nsLookAndFeel::Initialize() {
+  LOGLNF("nsLookAndFeel::Initialize");
+  MOZ_DIAGNOSTIC_ASSERT(!mInitialized);
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread(),
+                        "LookAndFeel init should be done on the main thread");
 
-  LOGLNF("nsLookAndFeel::EnsureInit");
+  mInitialized = true;
 
-  AutoRestore<bool> restoreIgnoreSettings(sIgnoreChangedSettings);
-  sIgnoreChangedSettings = true;
-
-  // Gtk manages a screen's CSS in the settings object so we
-  // ask Gtk to create it explicitly. Otherwise we may end up
-  // with wrong color theme, see Bug 972382
   GtkSettings* settings = gtk_settings_get_default();
   if (MOZ_UNLIKELY(!settings)) {
     NS_WARNING("EnsureInit: No settings");
     return;
   }
 
-  mInitialized = true;
-  if (mSystemThemeOverridden) {
-    // Our current theme may be different from the system theme if we're
-    // matching the firefox theme. Make sure to restore the original system
-    // theme.
-    RestoreSystemTheme();
-    mSystemThemeOverridden = false;
-  }
+  AutoRestore<bool> restoreIgnoreSettings(sIgnoreChangedSettings);
+  sIgnoreChangedSettings = true;
 
-  // gtk does non threadsafe refcounting
-  MOZ_ASSERT(NS_IsMainThread());
+  // Our current theme may be different from the system theme if we're matching
+  // the Firefox theme or using the alt theme intentionally due to the
+  // color-scheme preference. Make sure to restore the original system theme.
+  RestoreSystemTheme();
 
-  if (auto scheme = ComputeColorSchemeSetting()) {
-    // DBus settings color-scheme override the default. Ensure that this happens
-    // before the mSystemTheme.Init() call so that it gets correctly picked up.
-    bool dark = *scheme == ColorScheme::Dark;
-    if (dark != GetPreferDarkTheme()) {
-      g_object_set(settings, "gtk-application-prefer-dark-theme", dark,
-                   nullptr);
-      moz_gtk_refresh();
-    }
-  }
+  // First initialize global settings.
+  InitializeGlobalSettings();
+
+  // Record our system theme settings now.
+  mSystemTheme.Init();
+
+  // Find the alternative-scheme theme (light if the system theme is dark, or
+  // vice versa), configure it and initialize it.
+  ConfigureAndInitializeAltTheme();
+
+  LOGLNF("System Theme: %s. Alt Theme: %s\n", mSystemTheme.mName.get(),
+         mAltTheme.mName.get());
+
+  // Go back to the system theme or keep the alt theme configured, depending on
+  // Firefox theme or user color-scheme preference.
+  ConfigureFinalEffectiveTheme();
+
+  RecordTelemetry();
+}
+
+void nsLookAndFeel::InitializeGlobalSettings() {
+  GtkSettings* settings = gtk_settings_get_default();
+
+  mColorSchemePreference = ComputeColorSchemeSetting();
 
   gboolean enableAnimations = false;
   g_object_get(settings, "gtk-enable-animations", &enableAnimations, nullptr);
@@ -1380,8 +1382,6 @@ void nsLookAndFeel::EnsureInit() {
   } else {
     mCaretBlinkCount = -1;
   }
-
-  mSystemTheme.Init();
 
   mCSDCloseButton = false;
   mCSDMinimizeButton = false;
@@ -1423,28 +1423,13 @@ void nsLookAndFeel::EnsureInit() {
       *pos = i;
     }
   }
-
-  // Switching themes on startup has some performance cost, so until we use the
-  // dark colors, keep it pref'd off.
-  if (mSystemTheme.mIsDark || StaticPrefs::widget_gtk_alt_theme_dark()) {
-    InitializeAltTheme();
-  } else {
-    mAltTheme = mSystemTheme;
-  }
-
-  LOGLNF("System Theme: %s. Alt Theme: %s\n", mSystemTheme.mName.get(),
-         mAltTheme.mName.get());
-
-  MatchFirefoxThemeIfNeeded();
-
-  RecordTelemetry();
 }
 
-bool nsLookAndFeel::MatchFirefoxThemeIfNeeded() {
-  AutoRestore<bool> restoreIgnoreSettings(sIgnoreChangedSettings);
-  sIgnoreChangedSettings = true;
+void nsLookAndFeel::ConfigureFinalEffectiveTheme() {
+  MOZ_ASSERT(mSystemThemeOverridden,
+             "By this point, the alt theme should be configured");
 
-  const bool matchesSystem = [&] {
+  const bool shouldUseSystemTheme = [&] {
     // NOTE: We can't call ColorSchemeForChrome directly because this might run
     // while we're computing it.
     switch (ColorSchemeSettingForChrome()) {
@@ -1455,22 +1440,20 @@ bool nsLookAndFeel::MatchFirefoxThemeIfNeeded() {
       case ChromeColorSchemeSetting::System:
         break;
     };
-    return true;
+    if (!mColorSchemePreference) {
+      return true;
+    }
+    bool preferenceIsDark = *mColorSchemePreference == ColorScheme::Dark;
+    return preferenceIsDark == mSystemTheme.mIsDark;
   }();
 
   const bool usingSystem = !mSystemThemeOverridden;
+  LOGLNF("OverrideSystemThemeIfNeeded(matchesSystem=%d, usingSystem=%d)\n",
+         shouldUseSystemTheme, usingSystem);
 
-  LOGLNF("MatchFirefoxThemeIfNeeded(matchesSystem=%d, usingSystem=%d)\n",
-         matchesSystem, usingSystem);
-
-  if (usingSystem == matchesSystem) {
-    return false;
-  }
-
-  mSystemThemeOverridden = !matchesSystem;
-  if (matchesSystem) {
+  if (shouldUseSystemTheme) {
     RestoreSystemTheme();
-  } else {
+  } else if (usingSystem) {
     LOGLNF("Setting theme %s, %d\n", mAltTheme.mName.get(),
            mAltTheme.mPreferDarkTheme);
 
@@ -1486,8 +1469,8 @@ bool nsLookAndFeel::MatchFirefoxThemeIfNeeded() {
                    mAltTheme.mPreferDarkTheme, nullptr);
     }
     moz_gtk_refresh();
+    mSystemThemeOverridden = true;
   }
-  return true;
 }
 
 void nsLookAndFeel::GetGtkContentTheme(LookAndFeelTheme& aTheme) {
