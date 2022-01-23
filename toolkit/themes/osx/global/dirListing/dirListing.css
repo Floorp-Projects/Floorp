@@ -7,6 +7,7 @@
   color: -moz-dialogtext;
   font: message-box;
   padding-inline: 2em;
+  color-scheme: light dark;
 }
 
 body {
