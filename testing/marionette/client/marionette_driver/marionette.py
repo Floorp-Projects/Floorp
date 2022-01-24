@@ -492,6 +492,7 @@ class Marionette(object):
         self.bin = bin
         self.client = None
         self.instance = None
+        self.requested_capabilities = None
         self.session = None
         self.session_id = None
         self.process_id = None
@@ -944,7 +945,7 @@ class Marionette(object):
             self.delete_session()
             self.instance.restart(prefs)
             self.raise_for_port()
-            self.start_session()
+            self.start_session(self.requested_capabilities)
 
             # Restore the context as used before the restart
             self.set_context(context)
@@ -1085,8 +1086,8 @@ class Marionette(object):
                 "restart() can only be called "
                 "on Gecko instances launched by Marionette"
             )
-        context = self._send_message("Marionette:GetContext", key="value")
 
+        context = self._send_message("Marionette:GetContext", key="value")
         restart_details = {"cause": "restart", "forced": False}
 
         # Safe mode is only available with in_app restarts.
@@ -1167,7 +1168,7 @@ class Marionette(object):
                 "restarting the process".format(restart_details["cause"])
             )
 
-        self.start_session()
+        self.start_session(self.requested_capabilities)
         # Restore the context as used before the restart
         self.set_context(context)
 
@@ -1203,6 +1204,7 @@ class Marionette(object):
         """
         if capabilities is None:
             capabilities = {"strictFileInteractability": True}
+        self.requested_capabilities = capabilities
 
         if timeout is None:
             timeout = self.startup_timeout
