@@ -18,7 +18,6 @@
 #include "nsExpirationTracker.h"
 #include "nsContainerFrame.h"
 #include "nsIContent.h"
-#include "nsIScrollableFrame.h"
 #include "nsRefreshDriver.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/Document.h"
@@ -128,13 +127,6 @@ class LayerActivity {
   // Previous scale due to the CSS transform property.
   Maybe<Size> mPreviousTransformScale;
 
-  // The scroll frame during for which we most recently received a call to
-  // NotifyAnimatedFromScrollHandler.
-  WeakFrame mAnimatingScrollHandlerFrame;
-  // The set of activities that were triggered during
-  // mAnimatingScrollHandlerFrame's scroll event handler.
-  EnumSet<ActivityIndex> mScrollHandlerInducedActivity;
-
   // Number of restyle operations detected
   uint8_t mRestyleCounts[ACTIVITY_COUNT];
   bool mContentActive;
@@ -148,20 +140,12 @@ class LayerActivityTracker final
 
   explicit LayerActivityTracker(nsIEventTarget* aEventTarget)
       : nsExpirationTracker<LayerActivity, 4>(
-            GENERATION_MS, "LayerActivityTracker", aEventTarget),
-        mDestroying(false) {}
+            GENERATION_MS, "LayerActivityTracker", aEventTarget) {}
   ~LayerActivityTracker() override {
-    mDestroying = true;
     AgeAllGenerations();
   }
 
   void NotifyExpired(LayerActivity* aObject) override;
-
- public:
-  WeakFrame mCurrentScrollHandlerFrame;
-
- private:
-  bool mDestroying;
 };
 
 static StaticAutoPtr<LayerActivityTracker> gLayerActivityTracker;
@@ -177,13 +161,6 @@ LayerActivity::~LayerActivity() {
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(LayerActivityProperty, LayerActivity)
 
 void LayerActivityTracker::NotifyExpired(LayerActivity* aObject) {
-  if (!mDestroying && aObject->mAnimatingScrollHandlerFrame.IsAlive()) {
-    // Reset the restyle counts, but let the layer activity survive.
-    PodArrayZero(aObject->mRestyleCounts);
-    MarkUsed(aObject);
-    return;
-  }
-
   RemoveObject(aObject);
 
   nsIFrame* f = aObject->mFrame;
@@ -347,27 +324,6 @@ void ActiveLayerTracker::NotifyAnimated(nsIFrame* aFrame,
   }
 }
 
-/* static */
-void ActiveLayerTracker::NotifyAnimatedFromScrollHandler(
-    nsIFrame* aFrame, nsCSSPropertyID aProperty, nsIFrame* aScrollFrame) {
-  if (aFrame->PresContext() != aScrollFrame->PresContext()) {
-    // Don't allow cross-document dependencies.
-    return;
-  }
-  LayerActivity* layerActivity = GetLayerActivityForUpdate(aFrame);
-  LayerActivity::ActivityIndex activityIndex =
-      LayerActivity::GetActivityIndexForProperty(aProperty);
-
-  if (layerActivity->mAnimatingScrollHandlerFrame.GetFrame() != aScrollFrame) {
-    // Discard any activity of a different scroll frame. We only track the
-    // most recent scroll handler induced activity.
-    layerActivity->mScrollHandlerInducedActivity.clear();
-    layerActivity->mAnimatingScrollHandlerFrame = aScrollFrame;
-  }
-
-  layerActivity->mScrollHandlerInducedActivity += activityIndex;
-}
-
 static bool IsPresContextInScriptAnimationCallback(
     nsPresContext* aPresContext) {
   if (aPresContext->RefreshDriver()->IsInRefresh()) {
@@ -386,12 +342,6 @@ void ActiveLayerTracker::NotifyInlineStyleRuleModified(
   if (IsPresContextInScriptAnimationCallback(aFrame->PresContext())) {
     NotifyAnimated(aFrame, aProperty, aNewValue, aDOMCSSDecl);
   }
-  if (gLayerActivityTracker &&
-      gLayerActivityTracker->mCurrentScrollHandlerFrame.IsAlive()) {
-    NotifyAnimatedFromScrollHandler(
-        aFrame, aProperty,
-        gLayerActivityTracker->mCurrentScrollHandlerFrame.GetFrame());
-  }
 }
 
 /* static */
@@ -407,27 +357,6 @@ void ActiveLayerTracker::NotifyNeedsRepaint(nsIFrame* aFrame) {
         &layerActivity
              ->mRestyleCounts[LayerActivity::ACTIVITY_TRIGGERED_REPAINT]);
   }
-}
-
-static bool CheckScrollInducedActivity(
-    LayerActivity* aLayerActivity, LayerActivity::ActivityIndex aActivityIndex,
-    nsDisplayListBuilder* aBuilder) {
-  if (!aLayerActivity->mScrollHandlerInducedActivity.contains(aActivityIndex) ||
-      !aLayerActivity->mAnimatingScrollHandlerFrame.IsAlive()) {
-    return false;
-  }
-
-  nsIScrollableFrame* scrollFrame =
-      do_QueryFrame(aLayerActivity->mAnimatingScrollHandlerFrame.GetFrame());
-  if (scrollFrame && scrollFrame->IsScrollingActiveNotMinimalDisplayPort()) {
-    return true;
-  }
-
-  // The scroll frame has been destroyed or has become inactive. Clear it from
-  // the layer activity so that it can expire.
-  aLayerActivity->mAnimatingScrollHandlerFrame = nullptr;
-  aLayerActivity->mScrollHandlerInducedActivity.clear();
-  return false;
 }
 
 /* static */
@@ -447,9 +376,6 @@ bool ActiveLayerTracker::IsBackgroundPositionAnimated(
               ->mRestyleCounts[LayerActivity::ACTIVITY_TRIGGERED_REPAINT] < 2) {
         return true;
       }
-    }
-    if (CheckScrollInducedActivity(layerActivity, activityIndex, aBuilder)) {
-      return true;
     }
   }
   return nsLayoutUtils::HasEffectiveAnimation(
@@ -534,9 +460,6 @@ bool ActiveLayerTracker::IsStyleAnimated(
         return true;
       }
     }
-    if (CheckScrollInducedActivity(layerActivity, activityIndex, aBuilder)) {
-      return true;
-    }
   }
 
   if (nsLayoutUtils::HasEffectiveAnimation(aFrame, aPropertySet)) {
@@ -595,15 +518,6 @@ void ActiveLayerTracker::NotifyContentChange(nsIFrame* aFrame) {
 bool ActiveLayerTracker::IsContentActive(nsIFrame* aFrame) {
   LayerActivity* layerActivity = GetLayerActivity(aFrame);
   return layerActivity && layerActivity->mContentActive;
-}
-
-/* static */
-void ActiveLayerTracker::SetCurrentScrollHandlerFrame(nsIFrame* aFrame) {
-  if (!gLayerActivityTracker) {
-    gLayerActivityTracker =
-        new LayerActivityTracker(GetMainThreadSerialEventTarget());
-  }
-  gLayerActivityTracker->mCurrentScrollHandlerFrame = aFrame;
 }
 
 /* static */
