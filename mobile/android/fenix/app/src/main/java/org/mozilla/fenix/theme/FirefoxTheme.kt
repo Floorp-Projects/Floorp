@@ -226,7 +226,7 @@ class FirefoxColors(
     // App Bar Top, App Bar Bottom, Frontlayer header
     var layer3 by mutableStateOf(layer3)
         private set
-    // App Bar Top (edit), Header (edit)
+    // App Bar Top (edit), Text Cursor, Selected Tab Check
     var layerAccent by mutableStateOf(layerAccent)
         private set
     // Selected tab
