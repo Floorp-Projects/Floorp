@@ -2117,15 +2117,6 @@ class nsContentUtils {
   static bool OfflineAppAllowed(nsIPrincipal* aPrincipal);
 
   /**
-   * Determine whether the principal or document is allowed access to the
-   * localization system. We don't want the web to ever see this but all our UI
-   * including in content pages should pass this test.  aDocumentURI may be
-   * null.
-   */
-  static bool PrincipalAllowsL10n(nsIPrincipal& aPrincipal,
-                                  nsIURI* aDocumentURI);
-
-  /**
    * Increases the count of blockers preventing scripts from running.
    * NOTE: You might want to use nsAutoScriptBlocker rather than calling
    * this directly
