@@ -77,6 +77,16 @@ def main(args):
             """).strip())
         sys.exit(1)
 
+    try:
+        import distutils
+    except ModuleNotFoundError:
+        print(dedent("""
+        Mach needs the Python "distutils" module, but it's not available on your 
+        machine. This error is most common on Debian Linux (or derivatives), and can be 
+        fixed by installing a package named something like `python3-distutils`.
+        """).strip())
+        sys.exit(1)
+
     # XCode python sets __PYVENV_LAUNCHER__, which overrides the executable
     # used when a python subprocess is created. This is an issue when we want
     # to run using our virtualenv python executables.
