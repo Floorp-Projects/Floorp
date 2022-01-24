@@ -2149,7 +2149,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(
     EventListenerManager::ListenerSignalFollower)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mListener)
-  AbortFollower::Unlink(static_cast<AbortFollower*>(tmp));
   tmp->mListenerManager = nullptr;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 

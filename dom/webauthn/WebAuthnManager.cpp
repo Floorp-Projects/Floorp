@@ -46,7 +46,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(WebAuthnManager)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WebAuthnManager,
                                                 WebAuthnManagerBase)
-  AbortFollower::Unlink(static_cast<AbortFollower*>(tmp));
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTransaction)
   tmp->mTransaction.reset();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
