@@ -161,7 +161,7 @@ def check_schema(schema):
                     )
                 )
 
-        if isinstance(sch, collections.Mapping):
+        if isinstance(sch, collections.abc.Mapping):
             for k, v in sch.items():
                 child = f"{path}[{k!r}]"
                 check_identifier(child, k)
