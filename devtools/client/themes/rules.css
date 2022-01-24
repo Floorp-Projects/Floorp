@@ -148,10 +148,6 @@
   padding: 0;
 }
 
-.ruleview-code {
-  direction: ltr;
-}
-
 .ruleview-property:not(:hover) > .ruleview-enableproperty {
   pointer-events: none;
 }
@@ -267,6 +263,7 @@
 .ruleview-rule {
   border-bottom: 1px solid var(--theme-splitter-color);
   padding: 2px 4px;
+  direction: ltr;
 }
 
 #ruleview-container-focusable > .ruleview-rule:last-child {
@@ -694,6 +691,17 @@
 .ruleview-namecontainer:hover > .ruleview-propertyname,
 .ruleview-propertyvaluecontainer:hover > .ruleview-propertyvalue {
   border-bottom-color: hsl(0,0%,50%);
+}
+
+/* @media and @layer rule info element */
+.ruleview-rule-parent-data {
+  max-width: 100%;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* we only want to have it displayed on a single line. The whole string is available on
+     the title attribute of the element anyway */
+  white-space: nowrap;
 }
 
 .ruleview-selectorcontainer {
