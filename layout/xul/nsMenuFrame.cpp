@@ -867,7 +867,7 @@ void nsMenuFrame::UpdateMenuSpecialState() {
 }
 
 void nsMenuFrame::Execute(WidgetGUIEvent* aEvent) {
-  nsCOMPtr<nsISound> sound(do_CreateInstance("@mozilla.org/sound;1"));
+  nsCOMPtr<nsISound> sound(do_GetService("@mozilla.org/sound;1"));
   if (sound) sound->PlayEventSound(nsISound::EVENT_MENU_EXECUTE);
 
   // Create a trusted event if the triggering event was trusted, or if
