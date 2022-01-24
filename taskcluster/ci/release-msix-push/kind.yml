@@ -1,0 +1,41 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.release:run_on_releases
+    - gecko_taskgraph.transforms.release_deps:transforms
+    - gecko_taskgraph.transforms.release_msix_push:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - repackage-shippable-l10n-msix
+
+job-defaults:
+    description: Pushes msix archives to Microsoft Store
+    run-on-projects: []  # to make sure this never runs as part of CI
+    run-on-releases: [beta]
+    shipping-phase: ship
+    treeherder:
+        platform: win32-shippable/opt
+        kind: build
+        tier: 2
+    worker-type:
+        by-release-level:
+            production: scriptworker-k8s/gecko-3-pushmsix
+            staging: scriptworker-k8s/gecko-1-pushmsix
+    worker:
+        implementation: push-msix
+        channel:
+            by-release-type:
+                beta: beta
+                release: release
+                default: mock
+
+jobs:
+    firefox:
+        shipping-product: firefox
+        treeherder:
+            symbol: MSIX(push)
