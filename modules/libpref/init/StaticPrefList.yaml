@@ -8274,7 +8274,7 @@
 #elif defined(XP_WIN) && !defined(_ARM64_)
   value: true
 #elif defined(XP_MACOSX)
-  value: true
+  value: false
 #else
   value: false
 #endif
@@ -8288,7 +8288,7 @@
 #elif defined(XP_WIN) && !defined(_ARM64_)
   value: true
 #elif defined(XP_MACOSX)
-  value: true
+  value: false
 #else
   value: false
 #endif
