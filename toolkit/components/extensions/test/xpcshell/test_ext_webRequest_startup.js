@@ -52,10 +52,10 @@ function trackEvents(wrapper) {
  *                                      expect the starting event
  * @param {boolean} expect.request      wait for the request event
  */
-async function testPersistentRequestStartup(extension, events, expect) {
+async function testPersistentRequestStartup(extension, events, expect = {}) {
   equal(
     events.get("background-script-event"),
-    expect.background,
+    !!expect.background,
     "Should have gotten a background script event"
   );
   equal(
@@ -70,7 +70,7 @@ async function testPersistentRequestStartup(extension, events, expect) {
 
     equal(
       events.get("start-background-script"),
-      expect.delayedStart,
+      !!expect.delayedStart,
       "Should have gotten start-background-script event"
     );
   }
@@ -160,6 +160,80 @@ add_task(async function test_nonblocking() {
   await extension.unload();
 
   await promiseShutdownManager();
+});
+
+// Test that a non-blocking listener does not start the background on
+// startup, but that it does work after startup.
+add_task(async function test_eventpage_nonblocking() {
+  Services.prefs.setBoolPref("extensions.eventPages.enabled", true);
+  await promiseStartupManager();
+
+  let id = "event-nonblocking@test";
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      applications: { gecko: { id } },
+      permissions: ["webRequest", "http://example.com/"],
+      background: { persistent: false },
+    },
+
+    background() {
+      browser.webRequest.onBeforeRequest.addListener(
+        details => {
+          browser.test.sendMessage("got-request");
+        },
+        { urls: ["http://example.com/data/file_sample.html"] }
+      );
+    },
+  });
+
+  // First install runs background immediately, this sets persistent listeners
+  await extension.startup();
+
+  // Restart to get APP_STARTUP, the background should not start
+  await promiseRestartManager();
+  await extension.awaitStartup();
+  assertPersistentListeners(extension, "webRequest", "onBeforeRequest", {
+    primed: false,
+  });
+
+  // Test an early startup event
+  let events = trackEvents(extension);
+
+  await ExtensionTestUtils.fetch(
+    "http://example.com/",
+    "http://example.com/data/file_sample.html"
+  );
+
+  await testPersistentRequestStartup(extension, events);
+
+  Services.obs.notifyObservers(null, "sessionstore-windows-restored");
+  await ExtensionParent.browserStartupPromise;
+  // After late startup, event page listeners should be primed.
+  assertPersistentListeners(extension, "webRequest", "onBeforeRequest", {
+    primed: true,
+  });
+
+  // We should not have seen any events yet.
+  await testPersistentRequestStartup(extension, events);
+
+  // Test an event after startup
+  await ExtensionTestUtils.fetch(
+    "http://example.com/",
+    "http://example.com/data/file_sample.html"
+  );
+
+  // Now the event page should be started and we'll see the request.
+  await testPersistentRequestStartup(extension, events, {
+    background: true,
+    started: true,
+    request: true,
+  });
+
+  await extension.unload();
+
+  await promiseShutdownManager();
+  Services.prefs.setBoolPref("extensions.eventPages.enabled", false);
 });
 
 // Tests that filters are handled properly: if we have a blocking listener
