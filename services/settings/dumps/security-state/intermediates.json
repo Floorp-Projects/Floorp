@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1642604268417,
+      "derHash": "4g3/JvPDlj83AL8uEI8fnp3uJZwk+K/Q27tvzZobxZo=",
+      "subject": "CN=E-SAFER EXTENDED SSL CA  [Run by the Issuer],O=E-SAFER CONSULTORIA EM TECNOLOGIA DA INFORMACAO LTDA,C=BR",
+      "subjectDN": "MIGDMQswCQYDVQQGEwJCUjE9MDsGA1UEChM0RS1TQUZFUiBDT05TVUxUT1JJQSBFTSBURUNOT0xPR0lBIERBIElORk9STUFDQU8gTFREQTE1MDMGA1UEAwwsRS1TQUZFUiBFWFRFTkRFRCBTU0wgQ0EgIFtSdW4gYnkgdGhlIElzc3Vlcl0=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e3d91b124334fcf0c2f4314cdcac7ea72151da2fe3a6f07852655dd32fabee0f",
+        "size": 2316,
+        "filename": "plm_9YONwHj1IGtrwIqZq6BKWKFZfTMWD6vczJ53lUg=.pem",
+        "location": "security-state-staging/intermediates/8fa22e55-bb73-4e52-bfa7-8f445b589de2.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "plm/9YONwHj1IGtrwIqZq6BKWKFZfTMWD6vczJ53lUg=",
+      "crlite_enrolled": true,
+      "id": "c647c617-859f-4bb3-8422-a6325636759f",
+      "last_modified": 1642777078159
+    },
+    {
       "schema": 1642600408228,
       "derHash": "eu3lN07Kn/NMVyfBDbmCIi11MVd5dEm4g2T3Du+gwkw=",
       "subject": "CN=Alibaba Cloud GCC R3 AlphaSSL CA 2021,O=Alibaba Cloud Computing Co.\\, Ltd.,C=CN",
@@ -7325,24 +7343,6 @@
       "crlite_enrolled": false,
       "id": "e09736ec-c1cc-43e4-bfa1-7a6a72fb8a8b",
       "last_modified": 1635368388833
-    },
-    {
-      "schema": 1635365180434,
-      "derHash": "4g3/JvPDlj83AL8uEI8fnp3uJZwk+K/Q27tvzZobxZo=",
-      "subject": "CN=E-SAFER EXTENDED SSL CA  [Run by the Issuer],O=E-SAFER CONSULTORIA EM TECNOLOGIA DA INFORMACAO LTDA,C=BR",
-      "subjectDN": "MIGDMQswCQYDVQQGEwJCUjE9MDsGA1UEChM0RS1TQUZFUiBDT05TVUxUT1JJQSBFTSBURUNOT0xPR0lBIERBIElORk9STUFDQU8gTFREQTE1MDMGA1UEAwwsRS1TQUZFUiBFWFRFTkRFRCBTU0wgQ0EgIFtSdW4gYnkgdGhlIElzc3Vlcl0=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "e3d91b124334fcf0c2f4314cdcac7ea72151da2fe3a6f07852655dd32fabee0f",
-        "size": 2316,
-        "filename": "plm_9YONwHj1IGtrwIqZq6BKWKFZfTMWD6vczJ53lUg=.pem",
-        "location": "security-state-staging/intermediates/8fa22e55-bb73-4e52-bfa7-8f445b589de2.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "plm/9YONwHj1IGtrwIqZq6BKWKFZfTMWD6vczJ53lUg=",
-      "crlite_enrolled": false,
-      "id": "c647c617-859f-4bb3-8422-a6325636759f",
-      "last_modified": 1635368388819
     },
     {
       "schema": 1635365182151,
