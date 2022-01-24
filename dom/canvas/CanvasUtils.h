@@ -51,6 +51,9 @@ void DoDrawImageSecurityCheck(dom::HTMLCanvasElement* aCanvasElement,
 // Check if the context is chrome or has the permission to drawWindow
 bool HasDrawWindowPrivilege(JSContext* aCx, JSObject* aObj);
 
+// Check if the context has permission to use OffscreenCanvas.
+bool IsOffscreenCanvasEnabled(JSContext* aCx, JSObject* aObj);
+
 // Check site-specific permission and display prompt if appropriate.
 bool IsImageExtractionAllowed(dom::Document* aDocument, JSContext* aCx,
                               nsIPrincipal& aPrincipal);

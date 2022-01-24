@@ -85,7 +85,8 @@ class gfxVarReceiver;
   _(DrmRenderDevice, nsCString, nsCString())                       \
   _(UseDMABuf, bool, false)                                        \
   _(WebRenderRequiresHardwareDriver, bool, false)                  \
-  _(SupportsThreadsafeGL, bool, false)
+  _(SupportsThreadsafeGL, bool, false)                             \
+  _(OffscreenCanvasDomainAllowlist, nsCString, nsCString())
 
 /* Add new entries above this line. */
 
