@@ -142,21 +142,19 @@ TEST(CubebDeviceEnumerator, ZeroChannelDevices)
   // Make sure the devices are added to cubeb.
 
   cubeb_device_collection inputCollection = {nullptr, 0};
-  cubeb_enumerate_devices(mock->AsCubebContext(), CUBEB_DEVICE_TYPE_INPUT,
-                          &inputCollection);
+  mock->EnumerateDevices(CUBEB_DEVICE_TYPE_INPUT, &inputCollection);
   EXPECT_EQ(inputCollection.count, 2U);
   EXPECT_EQ(inputCollection.device[0].devid, dev1.devid);
   EXPECT_EQ(inputCollection.device[1].devid, dev2.devid);
-  cubeb_device_collection_destroy(mock->AsCubebContext(), &inputCollection);
+  mock->DestroyDeviceCollection(&inputCollection);
   EXPECT_EQ(inputCollection.count, 0U);
 
   cubeb_device_collection outputCollection = {nullptr, 0};
-  cubeb_enumerate_devices(mock->AsCubebContext(), CUBEB_DEVICE_TYPE_OUTPUT,
-                          &outputCollection);
+  mock->EnumerateDevices(CUBEB_DEVICE_TYPE_OUTPUT, &outputCollection);
   EXPECT_EQ(outputCollection.count, 2U);
   EXPECT_EQ(outputCollection.device[0].devid, dev3.devid);
   EXPECT_EQ(outputCollection.device[1].devid, dev4.devid);
-  cubeb_device_collection_destroy(mock->AsCubebContext(), &outputCollection);
+  mock->DestroyDeviceCollection(&outputCollection);
   EXPECT_EQ(outputCollection.count, 0U);
 
   // Enumerate the devices. The result should exclude the 0-channel devices.
