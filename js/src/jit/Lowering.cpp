@@ -3764,6 +3764,8 @@ void LIRGenerator::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins) {
   const LAllocation index = useRegisterOrIndexConstant(
       ins->index(), ins->storageType(), ins->offsetAdjustment());
 
+  // NOTE: the generated code must match the assembly code in gen_load in
+  // GenerateAtomicOperations.py
   Synchronization sync = Synchronization::Load();
   if (ins->requiresMemoryBarrier()) {
     LMemoryBarrier* fence = new (alloc()) LMemoryBarrier(sync.barrierBefore);
@@ -3951,6 +3953,9 @@ void LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins) {
   // is a store instruction that incorporates the necessary
   // barriers, and we could use that instead of separate barrier and
   // store instructions.  See bug #1077027.
+  //
+  // NOTE: the generated code must match the assembly code in gen_store in
+  // GenerateAtomicOperations.py
   Synchronization sync = Synchronization::Store();
   if (ins->requiresMemoryBarrier()) {
     LMemoryBarrier* fence = new (alloc()) LMemoryBarrier(sync.barrierBefore);
