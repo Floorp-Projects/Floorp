@@ -757,14 +757,6 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         V(21, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_BUG_1635186",
         "Mesa 21.0.0.0");
 
-    APPEND_TO_DRIVER_BLOCKLIST_EXT(
-        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
-        DesktopEnvironment::All, WindowProtocol::XWayland,
-        DriverVendor::NonMesaAll, DeviceFamily::NvidiaAll,
-        nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
-        V(470, 82, 0, 0), "FEATURE_FAILURE_WEBRENDER_BUG_1635186", "470.82.0");
-
     ////////////////////////////////////
     // FEATURE_WEBRENDER - ALLOWLIST
 
@@ -793,13 +785,13 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         nsIGfxInfo::FEATURE_ALLOW_QUALIFIED, DRIVER_GREATER_THAN_OR_EQUAL,
         V(18, 2, 0, 0), "FEATURE_ROLLOUT_NVIDIA_MESA", "Mesa 18.2.0.0");
 
-    // Nvidia proprietary driver baseline, see bug 1673752.
+    // Nvidia proprietary driver baseline, see bug 1742994.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
         DesktopEnvironment::All, WindowProtocol::All, DriverVendor::NonMesaAll,
         DeviceFamily::NvidiaAll, nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_ALLOW_QUALIFIED, DRIVER_GREATER_THAN_OR_EQUAL,
-        V(460, 32, 3, 0), "FEATURE_ROLLOUT_NVIDIA_BINARY", "460.32.03");
+        V(470, 82, 0, 0), "FEATURE_ROLLOUT_NVIDIA_BINARY", "470.82.0");
 
     // ATI Mesa baseline, chosen arbitrarily.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
