@@ -194,7 +194,7 @@
     <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
       <ul>
         <li>A sintassa di l’indirizzi hè di solitu <strong>http://www.esempiu.com/</strong></li>
-        <li>Assicuratevvi d’impiegà barre sbieche (i.e. <strong>/</strong>).</li>
+        <li>Assicuratevi d’impiegà barre sbieche (i.e. <strong>/</strong>).</li>
       </ul>
     ]]></string>
 
