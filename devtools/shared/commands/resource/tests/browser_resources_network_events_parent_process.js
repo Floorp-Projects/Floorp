@@ -27,7 +27,10 @@ const EXPECTED_REQUEST_COL_2 = 3;
 // Test the ResourceCommand API around NETWORK_EVENT for the parent process
 
 const FETCH_URI = "https://example.com/document-builder.sjs?html=foo";
-const IMAGE_URI = URL_ROOT_SSL + "test_image.png";
+// The img.src request gets cached regardless of `devtools.cache.disabled`.
+// Add a random parameter to the request to bypass the cache.
+const uuid = `${Date.now()}-${Math.random()}`;
+const IMAGE_URI = URL_ROOT_SSL + "test_image.png?" + uuid;
 
 add_task(async function testParentProcessRequests() {
   // The test expects the main process commands instance to receive resources
