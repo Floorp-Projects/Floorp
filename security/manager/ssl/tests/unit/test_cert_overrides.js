@@ -566,6 +566,14 @@ function add_simple_tests() {
       expectedBits,
       false
     );
+    certOverrideService.rememberValidityOverride(
+      "::1",
+      80,
+      {},
+      cert,
+      expectedBits,
+      false
+    );
     Assert.ok(
       certOverrideService.hasMatchingOverride(
         "example.com",
@@ -595,6 +603,10 @@ function add_simple_tests() {
         {}
       ),
       "Should have added override for example.org:443"
+    );
+    Assert.ok(
+      certOverrideService.hasMatchingOverride("::1", 80, {}, cert, {}, {}),
+      "Should have added override for [::1]:80"
     );
     Assert.ok(
       !certOverrideService.hasMatchingOverride(
