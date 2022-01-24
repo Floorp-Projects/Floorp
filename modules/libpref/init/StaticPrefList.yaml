@@ -3456,6 +3456,12 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
+# Whether the File System API is enabled
+- name: dom.fs.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Should we abort LocalStorage requests when a sync message from parent is
 # detected?
 #
