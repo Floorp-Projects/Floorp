@@ -17,7 +17,7 @@ dictionary ImageEncodeOptions {
 enum OffscreenRenderingContextId { /* "2d", */ "bitmaprenderer", "webgl", "webgl2", "webgpu" };
 
 [Exposed=(Window,Worker),
- Pref="gfx.offscreencanvas.enabled"]
+ Func="CanvasUtils::IsOffscreenCanvasEnabled"]
 interface OffscreenCanvas : EventTarget {
   constructor([EnforceRange] unsigned long width, [EnforceRange] unsigned long height);
 
