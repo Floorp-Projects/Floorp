@@ -1703,8 +1703,9 @@ void nsLookAndFeel::PerThemeData::Init() {
   style = GetStyleContext(MOZ_GTK_MENUITEM);
   gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
   mMenuHoverText = GDK_RGBA_TO_NS_RGBA(color);
-  mMenuHover =
-      GetBackgroundColor(style, mMenuHoverText, GTK_STATE_FLAG_PRELIGHT);
+  mMenuHover = NS_ComposeColors(
+      mMenuBackground,
+      GetBackgroundColor(style, mMenuHoverText, GTK_STATE_FLAG_PRELIGHT));
 
   GtkWidget* parent = gtk_fixed_new();
   GtkWidget* window = gtk_window_new(GTK_WINDOW_POPUP);
