@@ -251,7 +251,8 @@ def relativize_datestamps(task_def):
 def add_args_to_command(cmd_parts, extra_args=[]):
     """
     Add custom command line args to a given command.
-    args:
+
+    Args:
       cmd_parts: the raw command as seen by taskcluster
       extra_args: array of args we want to add
     """

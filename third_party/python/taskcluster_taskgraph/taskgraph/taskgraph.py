@@ -16,6 +16,9 @@ class TaskGraph:
 
     A task graph is a combination of a Graph and a dictionary of tasks indexed
     by label. TaskGraph instances should be treated as immutable.
+
+    In the graph, tasks are said to "link to" their dependencies. Whereas
+    tasks are "linked from" their dependents.
     """
 
     tasks = attr.ib()

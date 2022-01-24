@@ -11,6 +11,8 @@ from shutil import which
 import requests
 from redo import retry
 
+from taskgraph.util.path import ancestors
+
 PUSHLOG_TMPL = "{}/json-pushes?version=2&changeset={}&tipsonly=1&full=1"
 
 
@@ -162,10 +164,11 @@ def get_repository(path):
     """Get a repository object for the repository at `path`.
     If `path` is not a known VCS repository, raise an exception.
     """
-    if os.path.isdir(os.path.join(path, ".hg")):
-        return HgRepository(path)
-    elif os.path.exists(os.path.join(path, ".git")):
-        return GitRepository(path)
+    for path in ancestors(path):
+        if os.path.isdir(os.path.join(path, ".hg")):
+            return HgRepository(path)
+        elif os.path.exists(os.path.join(path, ".git")):
+            return GitRepository(path)
 
     raise RuntimeError("Current directory is neither a git or hg repository")
 
