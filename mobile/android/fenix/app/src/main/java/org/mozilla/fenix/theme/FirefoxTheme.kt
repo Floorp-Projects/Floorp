@@ -52,7 +52,8 @@ private val darkColorPalette = FirefoxColors(
     gradientStart = PhotonColors.Violet70,
     gradientEnd = PhotonColors.Violet40,
     actionPrimary = PhotonColors.Violet60,
-    actionSecondary = PhotonColors.DarkGrey10,
+    actionSecondary = PhotonColors.LightGrey05,
+    actionTertiary = PhotonColors.DarkGrey10,
     formDefault = PhotonColors.LightGrey05,
     formSelected = PhotonColors.Violet40,
     formSurface = PhotonColors.DarkGrey05,
@@ -104,6 +105,7 @@ private val lightColorPalette = FirefoxColors(
     gradientEnd = PhotonColors.Violet40,
     actionPrimary = PhotonColors.Ink20,
     actionSecondary = PhotonColors.LightGrey40,
+    actionTertiary = PhotonColors.LightGrey40,
     formDefault = PhotonColors.DarkGrey90,
     formSelected = PhotonColors.Ink20,
     formSurface = PhotonColors.LightGrey50,
@@ -160,6 +162,7 @@ class FirefoxColors(
     gradientEnd: Color,
     actionPrimary: Color,
     actionSecondary: Color,
+    actionTertiary: Color,
     formDefault: Color,
     formSelected: Color,
     formSurface: Color,
@@ -232,8 +235,11 @@ class FirefoxColors(
     // Primary button, Snackbar, Floating action button, Chip selected
     var actionPrimary by mutableStateOf(actionPrimary)
         private set
-    // Secondary button, Chip
+    // Secondary button
     var actionSecondary by mutableStateOf(actionSecondary)
+        private set
+    // Filter
+    var actionTertiary by mutableStateOf(actionTertiary)
         private set
     // Checkbox default, Radio button default
     var formDefault by mutableStateOf(formDefault)
@@ -360,6 +366,7 @@ class FirefoxColors(
         gradientEnd = other.gradientEnd
         actionPrimary = other.actionPrimary
         actionSecondary = other.actionSecondary
+        actionTertiary = other.actionTertiary
         formDefault = other.formDefault
         formSelected = other.formSelected
         formSurface = other.formSurface
@@ -411,6 +418,7 @@ class FirefoxColors(
         gradientEnd = gradientEnd,
         actionPrimary = actionPrimary,
         actionSecondary = actionSecondary,
+        actionTertiary = actionTertiary,
         formDefault = formDefault,
         formSelected = formSelected,
         formSurface = formSurface,

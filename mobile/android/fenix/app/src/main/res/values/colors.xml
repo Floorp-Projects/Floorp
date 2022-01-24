@@ -27,8 +27,10 @@
     <!-- Action -->
     <!-- Primary button, Snackbar, Floating action button, Chip selected -->
     <color name="fx_mobile_action_color_primary">@color/photonInk20</color>
-    <!-- Secondary button, Chip -->
+    <!-- Secondary button -->
     <color name="fx_mobile_action_color_secondary" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
+    <!-- Filter -->
+    <color name="fx_mobile_action_color_tertiary" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
     <!-- Checkbox default, Radio button default -->
     <color name="fx_mobile_action_color_form_default" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
     <!-- Checkbox selected, Radio button selected -->
