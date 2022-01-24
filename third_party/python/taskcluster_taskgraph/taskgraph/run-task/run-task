@@ -1042,7 +1042,7 @@ def main(args):
 
     try:
         for k in ['MOZ_FETCHES_DIR', 'UPLOAD_DIR'] + [
-            '%_PATH'.format(repository['project'].upper()) for repository in repositories
+            '{}_PATH'.format(repository['project'].upper()) for repository in repositories
         ]:
             if k in os.environ:
                 os.environ[k] = os.path.abspath(os.environ[k])
