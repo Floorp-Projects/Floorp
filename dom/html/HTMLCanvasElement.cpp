@@ -118,7 +118,9 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
     mReturnPlaceholderData = aReturnPlaceholderData;
   }
 
-  void WillRefresh(TimeStamp aTime) override {
+  void WillRefresh(TimeStamp aTime) override { CaptureFrame(aTime); }
+
+  void CaptureFrame(TimeStamp aTime) {
     MOZ_ASSERT(NS_IsMainThread());
 
     AUTO_PROFILER_LABEL("RequestedFrameRefreshObserver::WillRefresh", OTHER);
@@ -131,7 +133,9 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
       return;
     }
 
-    if (mOwningElement->IsContextCleanForFrameCapture()) {
+    if (auto* captureStateWatchable = mOwningElement->GetFrameCaptureState();
+        captureStateWatchable &&
+        *captureStateWatchable == FrameCaptureState::CLEAN) {
       return;
     }
 
@@ -1191,8 +1195,11 @@ void HTMLCanvasElement::MarkContextCleanForFrameCapture() {
   mCurrentContext->MarkContextCleanForFrameCapture();
 }
 
-bool HTMLCanvasElement::IsContextCleanForFrameCapture() {
-  return mCurrentContext && mCurrentContext->IsContextCleanForFrameCapture();
+Watchable<FrameCaptureState>* HTMLCanvasElement::GetFrameCaptureState() {
+  if (!mCurrentContext) {
+    return nullptr;
+  }
+  return mCurrentContext->GetFrameCaptureState();
 }
 
 nsresult HTMLCanvasElement::RegisterFrameCaptureListener(

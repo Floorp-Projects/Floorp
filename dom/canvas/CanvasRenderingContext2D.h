@@ -430,8 +430,12 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
   bool InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
                                 CanvasRenderer* aRenderer) override;
   void MarkContextClean() override;
-  void MarkContextCleanForFrameCapture() override;
-  bool IsContextCleanForFrameCapture() override;
+  void MarkContextCleanForFrameCapture() override {
+    mFrameCaptureState = FrameCaptureState::CLEAN;
+  }
+  Watchable<FrameCaptureState>* GetFrameCaptureState() override {
+    return &mFrameCaptureState;
+  }
   NS_IMETHOD SetIsIPC(bool aIsIPC) override;
   // this rect is in canvas device space
   void Redraw(const mozilla::gfx::Rect& aR);
@@ -750,7 +754,7 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
    * case when the canvas is not currently being drawn into and not rendered
    * but canvas capturing is still ongoing.
    */
-  bool mIsCapturedFrameInvalid;
+  Watchable<FrameCaptureState> mFrameCaptureState;
 
   /**
    * We also have a device space pathbuilder. The reason for this is as

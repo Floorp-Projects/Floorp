@@ -93,8 +93,12 @@ class ImageBitmapRenderingContext final
 
   virtual void DidRefresh() override;
 
-  virtual void MarkContextCleanForFrameCapture() override;
-  virtual bool IsContextCleanForFrameCapture() override;
+  void MarkContextCleanForFrameCapture() override {
+    mFrameCaptureState = FrameCaptureState::CLEAN;
+  }
+  Watchable<FrameCaptureState>* GetFrameCaptureState() override {
+    return &mFrameCaptureState;
+  }
 
  protected:
   already_AddRefed<gfx::DataSourceSurface> MatchWithIntrinsicSize();
@@ -109,7 +113,7 @@ class ImageBitmapRenderingContext final
    * case when the canvas is not currently being drawn into and not rendered
    * but canvas capturing is still ongoing.
    */
-  bool mIsCapturedFrameInvalid;
+  Watchable<FrameCaptureState> mFrameCaptureState;
 };
 
 }  // namespace dom
