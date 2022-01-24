@@ -70,7 +70,7 @@
     <!-- Active tab -->
     <color name="fx_mobile_icon_color_active">@color/photonViolet40</color>
     <!-- Disabled icon -->
-    <color name="fx_mobile_icon_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey70</color>
+    <color name="fx_mobile_icon_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey05A40</color>
     <!-- Icon inverted (on color) -->
     <color name="fx_mobile_icon_color_inverted" tools:ignore="UnusedResources">@color/photonWhite</color>
     <!-- Information -->
