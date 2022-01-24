@@ -56,7 +56,7 @@
     <!-- Disabled text -->
     <color name="fx_mobile_text_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey05A40</color>
     <!-- Warning text -->
-    <color name="fx_mobile_text_color_warning" tools:ignore="UnusedResources">@color/photonRed40</color>
+    <color name="fx_mobile_text_color_warning" tools:ignore="UnusedResources">@color/photonRed20</color>
     <!-- Small heading, Text link -->
     <color name="fx_mobile_text_color_accent">@color/photonViolet20</color>
     <!-- Text Inverted/On Color -->
@@ -79,7 +79,7 @@
     <color name="fx_mobile_icon_color_information">@color/photonBlue30</color>
     <!-- Icon button -->
     <color name="fx_mobile_icon_color_button" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
-    <color name="fx_mobile_icon_color_warning" tools:ignore="UnusedResources">@color/photonRed40</color>
+    <color name="fx_mobile_icon_color_warning" tools:ignore="UnusedResources">@color/photonRed20</color>
     <color name="fx_mobile_icon_color_accent_violet">@color/photonViolet20</color>
     <color name="fx_mobile_icon_color_accent_blue">@color/photonBlue20</color>
     <color name="fx_mobile_icon_color_accent_pink">@color/photonPink20</color>
