@@ -392,6 +392,7 @@ int cubeb_mock_enumerate_devices(cubeb* context, cubeb_device_type type,
 int cubeb_mock_device_collection_destroy(cubeb* context,
                                          cubeb_device_collection* collection) {
   delete[] collection->device;
+  collection->count = 0;
   return CUBEB_OK;
 }
 
