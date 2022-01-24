@@ -366,6 +366,12 @@ int MockCubeb::EnumerateDevices(cubeb_device_type aType,
   return CUBEB_OK;
 }
 
+int MockCubeb::DestroyDeviceCollection(cubeb_device_collection* aCollection) {
+  delete[] aCollection->device;
+  aCollection->count = 0;
+  return CUBEB_OK;
+}
+
 int MockCubeb::RegisterDeviceCollectionChangeCallback(
     cubeb_device_type aDevType,
     cubeb_device_collection_changed_callback aCallback, void* aUserPtr) {
