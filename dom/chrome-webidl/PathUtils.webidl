@@ -90,6 +90,15 @@ namespace PathUtils {
   UTF8String toFileURI(DOMString path);
 
   /**
+   * Determine if the given path is an absolute or relative path.
+   *
+   * @param path A file path that is either relative or absolute.
+   *
+   * @return Whether or not the path is absolute.
+   */
+  boolean isAbsolute(DOMString path);
+
+  /**
    * The profile directory.
    */
   [Throws]
