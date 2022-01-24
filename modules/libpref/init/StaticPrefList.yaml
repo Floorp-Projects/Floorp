@@ -3596,6 +3596,11 @@
   value: false
   mirror: always
 
+- name: dom.streams.writable_streams.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # For area and anchor elements with target=_blank and no rel set to
 # opener/noopener.
 - name: dom.targetBlankNoOpener.enabled
@@ -6576,7 +6581,7 @@
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
-# Streams API.
+# Streams API. This only applies to JS Streams
 - name: javascript.options.streams
   type: RelaxedAtomicBool
   value: true
