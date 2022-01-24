@@ -87,7 +87,7 @@ private val darkColorPalette = FirefoxColors(
     borderInverted = PhotonColors.LightGrey30,
     borderFormDefault = PhotonColors.LightGrey05,
     borderAccent = PhotonColors.Violet40,
-    borderDisabled = PhotonColors.LightGrey70,
+    borderDisabled = PhotonColors.LightGrey05A40,
     borderWarning = PhotonColors.Red40
 )
 
@@ -138,7 +138,7 @@ private val lightColorPalette = FirefoxColors(
     borderInverted = PhotonColors.DarkGrey05,
     borderFormDefault = PhotonColors.DarkGrey90,
     borderAccent = PhotonColors.Ink20,
-    borderDisabled = PhotonColors.LightGrey70,
+    borderDisabled = PhotonColors.DarkGrey90A40,
     borderWarning = PhotonColors.Red80
 )
 

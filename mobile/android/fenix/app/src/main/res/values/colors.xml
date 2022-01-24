@@ -98,7 +98,7 @@
     <!-- Active tab (Nav), Selected tab, Active form -->
     <color name="fx_mobile_border_color_accent">@color/photonInk20</color>
     <!-- Form parts -->
-    <color name="fx_mobile_border_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey70</color>
+    <color name="fx_mobile_border_color_disabled" tools:ignore="UnusedResources">@color/photonDarkGrey90A40</color>
     <!-- Form parts -->
     <color name="fx_mobile_border_color_warning" tools:ignore="UnusedResources">@color/photonRed80</color>
 
