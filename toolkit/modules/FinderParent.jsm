@@ -631,7 +631,7 @@ FinderParent.prototype = {
   initNotFoundSound() {
     if (!gSound && isSoundEnabled && notFoundSoundURL) {
       try {
-        gSound = Cc["@mozilla.org/sound;1"].createInstance(Ci.nsISound);
+        gSound = Cc["@mozilla.org/sound;1"].getService(Ci.nsISound);
         gSound.init();
       } catch (ex) {}
     }
