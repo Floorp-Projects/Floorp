@@ -418,9 +418,9 @@ slugid==2.0.0 \
     #   -r requirements-mach-vendor-python.in
     #   taskcluster
     #   taskcluster-taskgraph
-taskcluster-taskgraph==1.1.0 \
-    --hash=sha256:d3991c71484dfdf102e5479ce71a4e6d43a1889a33bec4aae634c70150cd3f28 \
-    --hash=sha256:eee145dedd2c12b6404d100ceb6e15a30820b75c8fed587a5cb804d254947153
+taskcluster-taskgraph==1.1.2 \
+    --hash=sha256:2c150b7e0ed760350fa64c609dccfad966d326f9bd463e592a14b9ec7f07fd33 \
+    --hash=sha256:8496cd571c29ad7b8340dcb42aeecb79c6c176fe9fb37591f29d52931d55a6e5
     # via -r requirements-mach-vendor-python.in
 taskcluster-urls==13.0.1 \
     --hash=sha256:5e25e7e6818e8877178b175ff43d2e6548afad72694aa125f404a7329ece0973 \
