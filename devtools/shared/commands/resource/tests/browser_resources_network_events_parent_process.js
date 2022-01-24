@@ -9,6 +9,10 @@ const FETCH_URI = "https://example.com/document-builder.sjs?html=foo";
 const IMAGE_URI = URL_ROOT_SSL + "test_image.png";
 
 add_task(async function testParentProcessRequests() {
+  // The test expects the main process commands instance to receive resources
+  // for content process requests.
+  await pushPref("devtools.browsertoolbox.fission", true);
+
   const commands = await CommandsFactory.forMainProcess();
   await commands.targetCommand.startListening();
   const { resourceCommand } = commands;
@@ -75,7 +79,7 @@ add_task(async function testParentProcessRequests() {
   const fetchStacktrace = receivedStacktraces[0].lastFrame;
   is(receivedStacktraces[0].resourceId, fetchRequest.stacktraceResourceId);
   is(fetchStacktrace.filename, gTestPath);
-  is(fetchStacktrace.lineNumber, 52);
+  is(fetchStacktrace.lineNumber, 56);
   is(fetchStacktrace.columnNumber, 9);
   is(fetchStacktrace.functionName, "testParentProcessRequests");
   is(fetchStacktrace.asyncCause, null);
@@ -103,7 +107,7 @@ add_task(async function testParentProcessRequests() {
   const firstImageStacktrace = receivedStacktraces[1].lastFrame;
   is(receivedStacktraces[1].resourceId, firstImageRequest.stacktraceResourceId);
   is(firstImageStacktrace.filename, gTestPath);
-  is(firstImageStacktrace.lineNumber, 56);
+  is(firstImageStacktrace.lineNumber, 60);
   is(firstImageStacktrace.columnNumber, 3);
   is(firstImageStacktrace.functionName, "testParentProcessRequests");
   is(firstImageStacktrace.asyncCause, null);
