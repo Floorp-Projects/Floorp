@@ -185,6 +185,7 @@
 	<color name="photonViolet05">#ffE7DFFF</color>
 	<color name="photonViolet10">#ffd9bfff</color>
 	<color name="photonViolet20">#ffcb9eFF</color>
+	<color name="photonViolet20A60">#99cb9eFF</color>
 	<color name="photonViolet30">#ffc689FF</color>
 	<color name="photonViolet40">#ffab71ff</color>
 	<color name="photonViolet40A12">#1fab71ff</color>
