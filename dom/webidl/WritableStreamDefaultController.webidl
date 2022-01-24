@@ -7,7 +7,7 @@
  * https://streams.spec.whatwg.org/#ws-default-controller-class-definition
  */
 
-[Exposed=(Window,Worker,Worklet)]
+[Exposed=(Window,Worker,Worklet), Pref="dom.streams.writable_streams.enabled"]
 interface WritableStreamDefaultController {
   [Throws]
   void error(optional any e);
