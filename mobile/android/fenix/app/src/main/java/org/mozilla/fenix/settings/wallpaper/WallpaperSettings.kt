@@ -114,7 +114,7 @@ private fun WallpaperSnackbar(
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
                 text = stringResource(R.string.wallpaper_updated_snackbar_message),
                 textAlign = TextAlign.Start,
-                color = FirefoxTheme.colors.textInverted,
+                color = FirefoxTheme.colors.textOnColor,
                 fontFamily = FontFamily(Font(R.font.metropolis_semibold)),
                 fontSize = 18.sp,
                 overflow = TextOverflow.Ellipsis,
@@ -130,7 +130,7 @@ private fun WallpaperSnackbar(
                     text = stringResource(R.string.wallpaper_updated_snackbar_action).uppercase(
                         Locale.getDefault()
                     ),
-                    color = FirefoxTheme.colors.textInverted,
+                    color = FirefoxTheme.colors.textOnColor,
                     fontFamily = FontFamily(Font(R.font.metropolis_medium)),
                     fontSize = 14.sp,
                 )

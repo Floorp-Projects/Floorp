@@ -62,7 +62,7 @@
     <!-- Small heading, Text link -->
     <color name="fx_mobile_text_color_accent">@color/photonViolet20</color>
     <!-- Text Inverted/On Color -->
-    <color name="fx_mobile_text_color_inverted" tools:ignore="UnusedResources">@color/photonWhite</color>
+    <color name="fx_mobile_text_color_oncolor" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
 
     <!-- Icon -->
     <!-- Primary icon -->
@@ -76,7 +76,7 @@
     <!-- Disabled icon -->
     <color name="fx_mobile_icon_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey05A40</color>
     <!-- Icon inverted (on color) -->
-    <color name="fx_mobile_icon_color_inverted" tools:ignore="UnusedResources">@color/photonWhite</color>
+    <color name="fx_mobile_icon_color_oncolor" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <!-- Information -->
     <color name="fx_mobile_icon_color_information">@color/photonBlue30</color>
     <!-- Icon button -->

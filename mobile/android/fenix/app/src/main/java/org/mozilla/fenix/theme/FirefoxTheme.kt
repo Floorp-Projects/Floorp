@@ -68,13 +68,13 @@ private val darkColorPalette = FirefoxColors(
     textDisabled = PhotonColors.LightGrey05A40,
     textWarning = PhotonColors.Red20,
     textAccent = PhotonColors.Violet20,
-    textInverted = PhotonColors.White,
+    textOnColor = PhotonColors.LightGrey05,
     iconPrimary = PhotonColors.LightGrey05,
     iconPrimaryInactive = PhotonColors.LightGrey05A60,
     iconSecondary = PhotonColors.LightGrey40,
     iconActive = PhotonColors.Violet40,
     iconDisabled = PhotonColors.LightGrey05A40,
-    iconInverted = PhotonColors.White,
+    iconOnColor = PhotonColors.LightGrey05,
     iconNotice = PhotonColors.Blue30,
     iconButton = PhotonColors.LightGrey05,
     iconWarning = PhotonColors.Red20,
@@ -121,13 +121,13 @@ private val lightColorPalette = FirefoxColors(
     textDisabled = PhotonColors.DarkGrey90A40,
     textWarning = PhotonColors.Red80,
     textAccent = PhotonColors.Violet70,
-    textInverted = PhotonColors.White,
+    textOnColor = PhotonColors.LightGrey05,
     iconPrimary = PhotonColors.DarkGrey90,
     iconPrimaryInactive = PhotonColors.DarkGrey90A60,
     iconSecondary = PhotonColors.DarkGrey05,
     iconActive = PhotonColors.Ink20,
     iconDisabled = PhotonColors.DarkGrey90A40,
-    iconInverted = PhotonColors.White,
+    iconOnColor = PhotonColors.LightGrey05,
     iconNotice = PhotonColors.Blue30,
     iconButton = PhotonColors.Ink20,
     iconWarning = PhotonColors.Red80,
@@ -179,13 +179,13 @@ class FirefoxColors(
     textDisabled: Color,
     textWarning: Color,
     textAccent: Color,
-    textInverted: Color,
+    textOnColor: Color,
     iconPrimary: Color,
     iconPrimaryInactive: Color,
     iconSecondary: Color,
     iconActive: Color,
     iconDisabled: Color,
-    iconInverted: Color,
+    iconOnColor: Color,
     iconNotice: Color,
     iconButton: Color,
     iconWarning: Color,
@@ -290,7 +290,7 @@ class FirefoxColors(
     var textAccent by mutableStateOf(textAccent)
         private set
     // Text Inverted/On Color
-    var textInverted by mutableStateOf(textInverted)
+    var textOnColor by mutableStateOf(textOnColor)
         private set
 
     // Icon
@@ -311,7 +311,7 @@ class FirefoxColors(
     var iconDisabled by mutableStateOf(iconDisabled)
         private set
     // Icon inverted (on color)
-    var iconInverted by mutableStateOf(iconInverted)
+    var iconOnColor by mutableStateOf(iconOnColor)
         private set
     // New
     var iconNotice by mutableStateOf(iconNotice)
@@ -387,13 +387,13 @@ class FirefoxColors(
         textDisabled = other.textDisabled
         textWarning = other.textWarning
         textAccent = other.textAccent
-        textInverted = other.textInverted
+        textOnColor = other.textOnColor
         iconPrimary = other.iconPrimary
         iconPrimaryInactive = other.iconPrimaryInactive
         iconSecondary = other.iconSecondary
         iconActive = other.iconActive
         iconDisabled = other.iconDisabled
-        iconInverted = other.iconInverted
+        iconOnColor = other.iconOnColor
         iconNotice = other.iconNotice
         iconButton = other.iconButton
         iconWarning = other.iconWarning
@@ -440,13 +440,13 @@ class FirefoxColors(
         textDisabled = textDisabled,
         textWarning = textWarning,
         textAccent = textAccent,
-        textInverted = textInverted,
+        textOnColor = textOnColor,
         iconPrimary = iconPrimary,
         iconPrimaryInactive = iconPrimaryInactive,
         iconSecondary = iconSecondary,
         iconActive = iconActive,
         iconDisabled = iconDisabled,
-        iconInverted = iconInverted,
+        iconOnColor = iconOnColor,
         iconNotice = iconNotice,
         iconButton = iconButton,
         iconWarning = iconWarning,
