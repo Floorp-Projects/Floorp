@@ -89,14 +89,14 @@ static VAStatus (*vaInitializeFn)(VADisplay dpy, int* major_version, /* out */
 static VAStatus (*vaSetDriverNameFn)(VADisplay dpy, char* driver_name);
 static int (*vaMaxNumEntrypointsFn)(VADisplay dpy);
 static VAStatus (*vaQueryConfigEntrypointsFn)(VADisplay dpy, VAProfile profile,
-                                              VAEntrypoint *entrypoint_list,
-                                              int *num_entrypoints);
+                                              VAEntrypoint* entrypoint_list,
+                                              int* num_entrypoints);
 static VAMessageCallback (*vaSetErrorCallbackFn)(VADisplay dpy,
                                                  VAMessageCallback callback,
-                                                 void *user_context);
+                                                 void* user_context);
 static VAMessageCallback (*vaSetInfoCallbackFn)(VADisplay dpy,
                                                 VAMessageCallback callback,
-                                                void *user_context);
+                                                void* user_context);
 int LoadVALibrary() {
   static pthread_mutex_t sVALock = PTHREAD_MUTEX_INITIALIZER;
   static void* sVALib = NULL;
@@ -428,16 +428,17 @@ int vaMaxNumEntrypoints(VADisplay dpy) {
 }
 
 VAStatus vaQueryConfigEntrypoints(VADisplay dpy, VAProfile profile,
-                                  VAEntrypoint *entrypoint_list,
-                                  int *num_entrypoints) {
+                                  VAEntrypoint* entrypoint_list,
+                                  int* num_entrypoints) {
   if (LoadVALibrary()) {
-    return vaQueryConfigEntrypointsFn(dpy, profile, entrypoint_list, num_entrypoints);
+    return vaQueryConfigEntrypointsFn(dpy, profile, entrypoint_list,
+                                      num_entrypoints);
   }
   return VA_STATUS_ERROR_UNIMPLEMENTED;
 }
 
 VAMessageCallback vaSetErrorCallback(VADisplay dpy, VAMessageCallback callback,
-                                     void *user_context) {
+                                     void* user_context) {
   if (LoadVALibrary()) {
     return vaSetErrorCallbackFn(dpy, callback, user_context);
   }
@@ -445,7 +446,7 @@ VAMessageCallback vaSetErrorCallback(VADisplay dpy, VAMessageCallback callback,
 }
 
 VAMessageCallback vaSetInfoCallback(VADisplay dpy, VAMessageCallback callback,
-                                    void *user_context) {
+                                    void* user_context) {
   if (LoadVALibrary()) {
     return vaSetInfoCallbackFn(dpy, callback, user_context);
   }
