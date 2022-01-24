@@ -205,7 +205,7 @@ class FirefoxColors(
     // Default Screen, Search, Frontlayer background
     var layer1 by mutableStateOf(layer1)
         private set
-    // Card background, Menu background
+    // Card background, Menu background, Dialog, Banner
     var layer2 by mutableStateOf(layer2)
         private set
     // App Bar Top, App Bar Bottom, Frontlayer header

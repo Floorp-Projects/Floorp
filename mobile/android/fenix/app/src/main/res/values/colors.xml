@@ -8,7 +8,7 @@
     <!-- Layers -->
     <!-- Default Screen, Search, Frontlayer background -->
     <color name="fx_mobile_layer_color_1">@color/photonLightGrey20</color>
-    <!-- Card background, Menu background -->
+    <!-- Card background, Menu background, Dialog, Banner -->
     <color name="fx_mobile_layer_color_2">@color/photonWhite</color>
     <!-- App Bar Top, App Bar Bottom, Frontlayer header -->
     <color name="fx_mobile_layer_color_3" tools:ignore="UnusedResources">@color/photonLightGrey10</color>
