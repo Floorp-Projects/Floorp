@@ -222,7 +222,7 @@ void WebGLContext::DestroyResourcesAndContext() {
 void ClientWebGLContext::MarkCanvasDirty() {
   if (!mCanvasElement && !mOffscreenCanvas) return;
 
-  mCapturedFrameInvalidated = true;
+  mFrameCaptureState = FrameCaptureState::DIRTY;
 
   if (mIsCanvasDirty) return;
   mIsCanvasDirty = true;

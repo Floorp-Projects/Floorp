@@ -91,7 +91,9 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   void DidRefresh() override {}
 
   void MarkContextCleanForFrameCapture() override {}
-  bool IsContextCleanForFrameCapture() override { return false; }
+  Watchable<FrameCaptureState>* GetFrameCaptureState() override {
+    return nullptr;
+  }
 
  public:
   void Configure(const dom::GPUCanvasConfiguration& aDesc);
