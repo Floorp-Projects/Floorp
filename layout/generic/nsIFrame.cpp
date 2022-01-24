@@ -1087,8 +1087,8 @@ void nsIFrame::RemoveDisplayItemDataForDeletion() {
 
   if (!updateData) {
     // No RetainedDisplayListData to update.
-    MOZ_RELEASE_ASSERT(!data->IsModified(this),
-                       "Deleted frame is in modified frame list");
+    MOZ_DIAGNOSTIC_ASSERT(!data->IsModified(this),
+                          "Deleted frame is in modified frame list");
     return;
   }
 
