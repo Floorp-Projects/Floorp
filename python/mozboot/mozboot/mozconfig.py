@@ -142,7 +142,7 @@ def find_mozconfig(topsrcdir: Union[str, Path], env=os.environ):
         path = existing[0]
 
     if path is not None:
-        return str(Path.cwd() / path)
+        return Path.cwd() / path
 
     deprecated_paths = [topsrcdir / s for s in DEPRECATED_TOPSRCDIR_PATHS]
 
