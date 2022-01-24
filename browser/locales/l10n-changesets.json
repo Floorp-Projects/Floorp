@@ -357,7 +357,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "b913aeed9ceb986afc646e4a5a377173b0c4c3c3"
+        "revision": "683aa1b3b9bfbac72237fc4ed9671217a36c80e7"
     },
     "en-CA": {
         "pin": false,
@@ -375,7 +375,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "501d80026e4fdeac79e20b41cb8087c7ec3c3ba2"
+        "revision": "395a911d757bbc5cdef255014e5d9ae6a0684648"
     },
     "en-GB": {
         "pin": false,
@@ -429,7 +429,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "e4e8f59ee9824548910f3281d02c5727caa36dd2"
+        "revision": "f1d2b95d044c6bf81d2b7cf06bd3fd465a5b52ac"
     },
     "es-CL": {
         "pin": false,
@@ -465,7 +465,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "46729ef124e5cf1f0a3e85d50c16a069602cfed2"
+        "revision": "50ae36cca91076145fd3f5a15cdcf887842c2b59"
     },
     "es-MX": {
         "pin": false,
@@ -483,7 +483,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "8cb43b67986a2fffd87fa18a7e4a2c5943e42a98"
+        "revision": "df77986c4a0631df4824c7e2943f38962252c8f5"
     },
     "et": {
         "pin": false,
@@ -501,7 +501,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "35ef2dcc9133e761ad0871bb8d383678d9ac5aef"
+        "revision": "802dca6a9abeeca36cfb214c306c88e66de457ca"
     },
     "eu": {
         "pin": false,
@@ -789,7 +789,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "ed2786177013615335280809caf6e99e3ea53716"
+        "revision": "f8db286b82c2798dc8e7cd2d609c6c29cd882de9"
     },
     "hy-AM": {
         "pin": false,
@@ -1677,7 +1677,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "39be41219ae0b16e1e3423dc9c4b12e9418e7c5b"
+        "revision": "1aa8a6ec95bb40acbfd8569d820471d3889675e4"
     },
     "vi": {
         "pin": false,
