@@ -55,6 +55,19 @@ abstract class NimbusPluginExtension {
      */
     abstract Property<String> getDestinationClass()
 
+    def getAppPackageName(variant) {
+        TaskProvider buildConfigProvider = variant.getGenerateBuildConfigProvider()
+        def configProvider = buildConfigProvider.get()
+
+        // In Gradle 6.x `getBuildConfigPackageName` was replaced by `namespace`.
+        // We want to be forward compatible, so we check that first or fallback to the old method.
+        if (configProvider.hasProperty("namespace")) {
+            return configProvider.namespace.get()
+        } else {
+            return configProvider.getBuildConfigPackageName().get()
+        }
+    }
+
     def getPackageClassLiteral() {
         var fqnClass = destinationClass.get() ?: ".nimbus.MyNimbus"
         def i = fqnClass.lastIndexOf('.')
@@ -70,16 +83,7 @@ abstract class NimbusPluginExtension {
         if (!packageName.startsWith(".")) {
             return packageName
         }
-        TaskProvider buildConfigProvider = variant.getGenerateBuildConfigProvider()
-        def configProvider = buildConfigProvider.get()
-        def appPackageName
-        // In Gradle 6.x `getBuildConfigPackageName` was replaced by `namespace`.
-        // We want to be forward compatible, so we check that first or fallback to the old method.
-        if (configProvider.hasProperty("namespace")) {
-            appPackageName = configProvider.namespace.get()
-        } else {
-            appPackageName = configProvider.getBuildConfigPackageName().get()
-        }
+        def appPackageName = getAppPackageName(variant)
         if (packageName == ".") {
             return appPackageName
         } else {
@@ -115,7 +119,6 @@ abstract class NimbusPluginExtension {
         if (asDir == null || asDir.isBlank()) {
             return null
         }
-
 
         def dir = new File([project.rootDir, asDir].join(File.separator))
         if (dir.exists() && dir.isDirectory()) {
@@ -166,10 +169,9 @@ class NimbusPlugin implements Plugin<Project> {
         // We would get this from the plugin itself but we don't know this vital piece of information
         // We don't spend much time looking it up now because:
         // a) this plugin is going to live in the AS repo (eventually)
-        // b) the nimbus-fml tooling is currently being built on a branch
         // See https://github.com/mozilla-mobile/android-components/issues/11422 for tying this
         // to a version that is specified in buildSrc/src/main/java/Dependencies.kt
-        return "87.2.0"
+        return "90.0.0"
     }
 
     // Try one or more hosts to download the given file.
@@ -210,6 +212,7 @@ class NimbusPlugin implements Plugin<Project> {
             def asVersion = getApplicationServiceVersion()
             def successfulHost = tryDownload(archive.getParentFile(), archive.getName(),
                     // …the latest one from github.
+                    "https://github.com/mozilla/application-services/releases/download/v$asVersion",
                     "https://github.com/mozilla/application-services/releases/latest/download"
             )
 
@@ -267,12 +270,14 @@ class NimbusPlugin implements Plugin<Project> {
         String archPart
         if (arch.contains("x86_64")) {
             archPart = "x86_64"
+        } else if (arch.contains("amd64")) {
+            archPart = "x86_64"
         } else if (arch.contains("aarch")) {
             archPart = "aarch64"
         } else {
             archPart = "unknown"
         }
-
+        println("OS and architecture detected as $os on $arch")
         return "${archPart}-${osPart}"
     }
 
@@ -323,6 +328,9 @@ class NimbusPlugin implements Plugin<Project> {
 
         var localAppServices = extension.getAppServicesActual(project)
 
+        var appPackageName = extension.getAppPackage(variant)
+        var requiresRPackage = versionCompare(getApplicationServiceVersion(), "89.0.0") >= 0
+
         var generateTask = project.task("nimbusFeatures${variant.name.capitalize()}", type: Exec) {
             description = "Generate Kotlin data classes for Nimbus enabled features"
             group = "Nimbus"
@@ -334,6 +342,7 @@ class NimbusPlugin implements Plugin<Project> {
                 println("manifest   $inputFile")
                 println("class      ${packageName}.${className}")
                 println("channel    $channel")
+                println("R.class    ${appPackageName}.R")
             }
 
             doLast {
@@ -354,6 +363,9 @@ class NimbusPlugin implements Plugin<Project> {
             args "--output", outputFile
             args "--package", packageName
             args "--channel", channel
+            if (requiresRPackage) {
+                args "--r-package", extension.getAppPackage(variant)
+            }
         }
         variant.registerJavaGeneratingTask(generateTask, new File(sourceOutputDir))
 
@@ -416,5 +428,20 @@ class NimbusPlugin implements Plugin<Project> {
         } else {
             dir.mkdirs()
         }
+    }
+
+    static def versionCompare(String versionA, String versionB) {
+        def a = versionA.split("\\.", 3)
+        def b = versionB.split("\\.", 3)
+        for (i in 0..<a.length) {
+            def na = Integer.parseInt(a[i])
+            def nb = Integer.parseInt(b[i])
+            if (na > nb) {
+                return 1
+            } else if (na < nb) {
+                return -1
+            }
+        }
+        return 0
     }
 }
