@@ -103,6 +103,7 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
         'vp9recon.c'
     ]
     if CONFIG['MOZ_WAYLAND']:
+        LOCAL_INCLUDES += ['/media/mozva']
         SOURCES += [
             'atsc_a53.c',
             'libdav1d.c',

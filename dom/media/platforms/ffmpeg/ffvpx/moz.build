@@ -21,7 +21,7 @@ SOURCES += [
 LOCAL_INCLUDES += [
     "..",
     "../ffmpeg58/include",
-    "/media/ffvpx",
+    "/media/mozva",
 ]
 
 CXXFLAGS += ["-Wno-deprecated-declarations"]
