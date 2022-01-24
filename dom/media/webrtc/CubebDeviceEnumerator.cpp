@@ -194,6 +194,9 @@ static RefPtr<AudioDeviceSet> GetDeviceCollection(Side aSide) {
                                   &collection) == CUBEB_OK) {
         for (unsigned int i = 0; i < collection.count; ++i) {
           auto device = collection.device[i];
+          if (device.max_channels == 0) {
+            continue;
+          }
           RefPtr<AudioDeviceInfo> info = new AudioDeviceInfo(
               device.devid, NS_ConvertUTF8toUTF16(device.friendly_name),
               NS_ConvertUTF8toUTF16(device.group_id),
