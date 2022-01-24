@@ -12,6 +12,9 @@ const POPUP_SECOND_URL =
 
 add_task(async function() {
   await pushPref("devtools.popups.debug", true);
+  // We expect to create a target for a same-process iframe
+  // in the test against window.open to load a document in an iframe.
+  await pushPref("devtools.every-frame-target.enabled", true);
 
   // Create a TargetCommand for a given test tab
   const tab = await addTab(TEST_URL);
@@ -140,7 +143,23 @@ add_task(async function() {
   ok(!targets[3].isDestroyed(), "The about:blank popup target is still alive");
 
   info("Call about:blank popup method to ensure it really is functional");
-  await targets[3].focus();
+  await targets[3].logInPage("foo");
+
+  info(
+    "Ensure that iframe using window.open to load their document aren't considered as popups"
+  );
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+    const iframe = content.document.createElement("iframe");
+    iframe.setAttribute("name", "test-iframe");
+    content.document.documentElement.appendChild(iframe);
+    content.open("data:text/html,iframe", "test-iframe");
+  });
+  await waitFor(() => targets.length === 6);
+  is(
+    targets[5].targetForm.isPopup,
+    false,
+    "The iframe target isn't considered as a popup"
+  );
 
   targetCommand.unwatchTargets({
     types: [TYPES.FRAME],

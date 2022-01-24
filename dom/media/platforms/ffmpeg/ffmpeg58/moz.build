@@ -12,7 +12,7 @@ UNIFIED_SOURCES += [
 ]
 LOCAL_INCLUDES += [
     '..',
-    '/media/ffvpx',
+    '/media/mozva',
     'include',
 ]
 

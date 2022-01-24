@@ -3420,6 +3420,11 @@
   value: false
   mirror: always
 
+- name: dom.workers.requestAnimationFrame
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: dom.workers.serialized-sab-access
   type: RelaxedAtomicBool
   value: false
@@ -3454,6 +3459,12 @@
 - name: dom.storageManager.enabled
   type: RelaxedAtomicBool
   value: @IS_NOT_ANDROID@
+  mirror: always
+
+# Whether the File System API is enabled
+- name: dom.fs.enabled
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
 
 # Should we abort LocalStorage requests when a sync message from parent is
@@ -5408,10 +5419,23 @@
   mirror: once
   do_not_use_directly: true
 
+# Enable OffscreenCanvas everywhere.
 - name: gfx.offscreencanvas.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
+
+# Enable OffscreenCanvas based on the domain allowlist.
+- name: gfx.offscreencanvas.domain-enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Domains included in the allowlist.
+- name: gfx.offscreencanvas.domain-allowlist
+  type: String
+  value: ""
+  mirror: never
 
 - name: gfx.omta.background-color
   type: bool
@@ -7448,7 +7472,7 @@
 # Is support for CSS hyphenate-character enabled?
 - name: layout.css.hyphenate-character.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Is support for CSS individual transform enabled?

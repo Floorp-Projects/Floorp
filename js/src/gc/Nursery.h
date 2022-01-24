@@ -479,7 +479,7 @@ class Nursery {
   PreviousGC previousGC;
 
   bool hasRecentGrowthData;
-  double smoothedGrowthFactor;
+  double smoothedTargetSize;
 
   // Calculate the promotion rate of the most recent minor GC.
   // The valid_for_tenuring parameter is used to return whether this

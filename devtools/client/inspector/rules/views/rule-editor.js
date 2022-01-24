@@ -135,6 +135,18 @@ RuleEditor.prototype = {
 
     this.updateSourceLink();
 
+    if (this.rule.mediaText) {
+      const text = `@media ${this.rule.mediaText}`;
+      createChild(this.element, "span", {
+        class: "ruleview-rule-parent-data theme-link",
+        // We force the string to be LTR in CSS, but for some reason, the `@` char is seen
+        // as not part of the string in the tooltip, and is displayed "at the end" of the
+        // string in RTL locales. To workaround this, we force LTR with \u202D
+        title: `\u202A${text}`,
+        textContent: text,
+      });
+    }
+
     const code = createChild(this.element, "div", {
       class: "ruleview-code",
     });
@@ -301,10 +313,6 @@ RuleEditor.prototype = {
     if (line > 0) {
       sourceTextContent += ":" + line;
       title += ":" + line;
-    }
-    if (this.rule.mediaText) {
-      sourceTextContent += " @" + this.rule.mediaText;
-      title += " @" + this.rule.mediaText;
     }
 
     const sourceLabel = this.element.querySelector(

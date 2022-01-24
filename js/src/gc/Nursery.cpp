@@ -210,7 +210,7 @@ js::Nursery::Nursery(GCRuntime* gc)
       reportPretenuringThreshold_(0),
       minorGCTriggerReason_(JS::GCReason::NO_REASON),
       hasRecentGrowthData(false),
-      smoothedGrowthFactor(1.0),
+      smoothedTargetSize(0.0),
       decommitTask(gc)
 #ifdef JS_GC_ZEAL
       ,
@@ -1626,19 +1626,21 @@ void js::Nursery::maybeResizeNursery(JS::GCOptions options,
   }
 }
 
-static inline double ClampDouble(double value, double min, double max) {
-  MOZ_ASSERT(!std::isnan(value) && !std::isnan(min) && !std::isnan(max));
+static inline bool ClampDouble(double* value, double min, double max) {
+  MOZ_ASSERT(!std::isnan(*value) && !std::isnan(min) && !std::isnan(max));
   MOZ_ASSERT(max >= min);
 
-  if (value <= min) {
-    return min;
+  if (*value <= min) {
+    *value = min;
+    return true;
   }
 
-  if (value >= max) {
-    return max;
+  if (*value >= max) {
+    *value = max;
+    return true;
   }
 
-  return value;
+  return false;
 }
 
 size_t js::Nursery::targetSize(JS::GCOptions options, JS::GCReason reason) {
@@ -1692,31 +1694,33 @@ size_t js::Nursery::targetSize(JS::GCOptions options, JS::GCReason reason) {
   // Limit the range of the growth factor to prevent transient high promotion
   // rates from affecting the nursery size too far into the future.
   static const double GrowthRange = 2.0;
-  growthFactor = ClampDouble(growthFactor, 1.0 / GrowthRange, GrowthRange);
+  bool wasClamped = ClampDouble(&growthFactor, 1.0 / GrowthRange, GrowthRange);
 
-  // Use exponential smoothing on the desired growth rate to take into account
-  // the promotion rate from recent previous collections.
+  // Calculate the target size based on data from this collection.
+  double target = double(capacity()) * growthFactor;
+
+  // Use exponential smoothing on the target size to take into account data from
+  // recent previous collections.
   if (hasRecentGrowthData &&
       now - lastCollectionEndTime() < TimeDuration::FromMilliseconds(200) &&
       !js::SupportDifferentialTesting()) {
-    growthFactor = 0.75 * smoothedGrowthFactor + 0.25 * growthFactor;
+    // Pay more attention to large changes.
+    double fraction = wasClamped ? 0.5 : 0.25;
+    smoothedTargetSize =
+        (1 - fraction) * smoothedTargetSize + fraction * target;
+  } else {
+    smoothedTargetSize = target;
   }
-
   hasRecentGrowthData = true;
-  smoothedGrowthFactor = growthFactor;
 
-  // Leave size untouched if we are close to the promotion goal.
+  // Leave size untouched if we are close to the target.
   static const double GoalWidth = 1.5;
+  growthFactor = smoothedTargetSize / double(capacity());
   if (growthFactor > (1.0 / GoalWidth) && growthFactor < GoalWidth) {
     return capacity();
   }
 
-  // The multiplication below cannot overflow because growthFactor is at
-  // most two.
-  MOZ_ASSERT(growthFactor <= 2.0);
-  MOZ_ASSERT(capacity() < SIZE_MAX / 2);
-
-  return roundSize(size_t(double(capacity()) * growthFactor));
+  return roundSize(size_t(smoothedTargetSize));
 }
 
 void js::Nursery::clearRecentGrowthData() {
@@ -1725,7 +1729,7 @@ void js::Nursery::clearRecentGrowthData() {
   }
 
   hasRecentGrowthData = false;
-  smoothedGrowthFactor = 1.0;
+  smoothedTargetSize = 0.0;
 }
 
 /* static */
