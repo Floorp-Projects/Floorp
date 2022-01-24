@@ -7781,7 +7781,7 @@
 
 - name: layout.display-list.retain.sc
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Set the maximum number of modified frames allowed before doing a full
