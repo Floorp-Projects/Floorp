@@ -38,7 +38,7 @@ async function renderInfo({
   infoLinkText,
   infoLinkUrl,
   infoIcon,
-}) {
+} = {}) {
   const container = document.querySelector(".info");
   if (infoEnabled === false) {
     container.remove();
@@ -75,7 +75,7 @@ async function renderInfo({
 }
 
 async function renderPromo({
-  promoEnabled,
+  promoEnabled = false,
   promoTitle,
   promoTitleEnabled,
   promoLinkText,
@@ -85,7 +85,7 @@ async function renderPromo({
   promoHeader,
   promoImageLarge,
   promoImageSmall,
-}) {
+} = {}) {
   const container = document.querySelector(".promo");
   if (promoEnabled === false) {
     container.remove();
@@ -164,33 +164,26 @@ async function renderPromo({
     [linkEl, promoLinkText],
     [promoHeaderEl, promoHeader],
   ]);
+
+  // Only make promo section visible after adding content
+  // and translations to prevent layout shifting in page
+  container.classList.add("promo-visible");
 }
 
-const DEFAULT_PRIVATE_BROWSING_CONTENT = {
-  promoEnabled: true,
-  infoEnabled: true,
-  infoIcon: "",
-  infoTitle: "",
-  infoBody: "fluent:about-private-browsing-info-description-private-window",
-  infoLinkText: "fluent:about-private-browsing-learn-more-link",
-  infoTitleEnabled: false,
-  promoLinkType: "button",
-  promoLinkText: "fluent:about-private-browsing-prominent-cta",
-  promoSectionStyle: "below-search",
-  promoHeader: "fluent:about-private-browsing-get-privacy",
-  promoTitle: "fluent:about-private-browsing-hide-activity-1",
-  promoTitleEnabled: true,
-  promoImageLarge: "chrome://browser/content/assets/moz-vpn.svg",
-};
-
 async function setupFeatureConfig() {
-  // Setup experiment data
-  let config = {};
+  let config = null;
   try {
-    config = window.PrivateBrowsingFeatureConfig(
-      DEFAULT_PRIVATE_BROWSING_CONTENT
-    );
+    config = window.PrivateBrowsingFeatureConfig();
   } catch (e) {}
+  if (!Object.keys(config).length) {
+    try {
+      let response = await window.ASRouterMessage({
+        type: "PBNEWTAB_MESSAGE_REQUEST",
+        data: {},
+      });
+      config = response?.message?.content;
+    } catch (e) {}
+  }
 
   await renderInfo(config);
   await renderPromo(config);
