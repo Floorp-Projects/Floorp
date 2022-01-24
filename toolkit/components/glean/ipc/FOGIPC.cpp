@@ -5,7 +5,6 @@
 
 #include "FOGIPC.h"
 
-#include <limits>
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/dom/ContentChild.h"
@@ -41,33 +40,28 @@ static void RecordPowerMetrics() {
   static uint64_t previousCpuTime = 0, previousGpuTime = 0;
 
   uint64_t cpuTime;
-  if (NS_SUCCEEDED(GetCpuTimeSinceProcessStartInMs(&cpuTime)) &&
-      cpuTime > previousCpuTime) {
-    uint64_t newCpuTime = cpuTime - previousCpuTime;
-    previousCpuTime += newCpuTime;
+  if (NS_FAILED(GetCpuTimeSinceProcessStartInMs(&cpuTime))) {
+    return;
+  }
 
+  uint64_t newCpuTime = cpuTime - previousCpuTime;
+  previousCpuTime += newCpuTime;
+
+  if (newCpuTime) {
     // The counters are reset at least once a day. Assuming all cores are used
     // continuously, an int32 can hold the data for 24.85 cores.
     // This should be fine for now, but may overflow in the future.
-    // Bug 1751277 tracks a newer, bigger counter.
-    int32_t nNewCpuTime = int32_t(newCpuTime);
-    if (newCpuTime > std::numeric_limits<int32_t>::max()) {
-      nNewCpuTime = std::numeric_limits<int32_t>::max();
-    }
-    power::total_cpu_time_ms.Add(nNewCpuTime);
+    power::total_cpu_time_ms.Add(int32_t(newCpuTime));
   }
 
   uint64_t gpuTime;
-  if (NS_SUCCEEDED(GetGpuTimeSinceProcessStartInMs(&gpuTime)) &&
-      gpuTime > previousGpuTime) {
+  if (NS_SUCCEEDED(GetGpuTimeSinceProcessStartInMs(&gpuTime))) {
     uint64_t newGpuTime = gpuTime - previousGpuTime;
     previousGpuTime += newGpuTime;
 
-    int32_t nNewGpuTime = int32_t(newGpuTime);
-    if (newGpuTime > std::numeric_limits<int32_t>::max()) {
-      nNewGpuTime = std::numeric_limits<int32_t>::max();
+    if (newGpuTime) {
+      power::total_gpu_time_ms.Add(int32_t(newGpuTime));
     }
-    power::total_gpu_time_ms.Add(int32_t(nNewGpuTime));
   }
 }
 
