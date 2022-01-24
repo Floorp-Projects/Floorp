@@ -41,9 +41,9 @@ object FirefoxTheme {
 }
 
 private val darkColorPalette = FirefoxColors(
-    layer1 = PhotonColors.DarkGrey80,
+    layer1 = PhotonColors.DarkGrey60,
     layer2 = PhotonColors.DarkGrey30,
-    layer3 = PhotonColors.DarkGrey60,
+    layer3 = PhotonColors.DarkGrey30,
     layerAccent = PhotonColors.Violet40,
     layerNonOpaque = PhotonColors.Violet50A32,
     scrim = PhotonColors.DarkGrey05A45,
@@ -98,9 +98,9 @@ private val darkColorPalette = FirefoxColors(
 )
 
 private val lightColorPalette = FirefoxColors(
-    layer1 = PhotonColors.LightGrey20,
+    layer1 = PhotonColors.LightGrey10,
     layer2 = PhotonColors.White,
-    layer3 = PhotonColors.LightGrey10,
+    layer3 = PhotonColors.LightGrey20,
     layerAccent = PhotonColors.Ink20,
     layerNonOpaque = PhotonColors.Violet70A12,
     scrim = PhotonColors.DarkGrey05A45,
@@ -217,13 +217,13 @@ class FirefoxColors(
 ) {
     // Layers
 
-    // Default Screen, Search, Frontlayer background
+    // Default Screen background, Frontlayer background, App Bar Top, App Bar Bottom, Frontlayer header
     var layer1 by mutableStateOf(layer1)
         private set
     // Card background, Menu background, Dialog, Banner
     var layer2 by mutableStateOf(layer2)
         private set
-    // App Bar Top, App Bar Bottom, Frontlayer header
+    // Search
     var layer3 by mutableStateOf(layer3)
         private set
     // App Bar Top (edit), Text Cursor, Selected Tab Check

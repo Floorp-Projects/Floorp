@@ -6,12 +6,12 @@
     <!-- Design system color variables -->
 
     <!-- Layers -->
-    <!-- Default Screen, Search, Frontlayer background -->
-    <color name="fx_mobile_layer_color_1">@color/photonLightGrey20</color>
+    <!-- Default Screen background, Frontlayer background, App Bar Top, App Bar Bottom, Frontlayer header -->
+    <color name="fx_mobile_layer_color_1">@color/photonLightGrey10</color>
     <!-- Card background, Menu background, Dialog, Banner -->
     <color name="fx_mobile_layer_color_2">@color/photonWhite</color>
-    <!-- App Bar Top, App Bar Bottom, Frontlayer header -->
-    <color name="fx_mobile_layer_color_3" tools:ignore="UnusedResources">@color/photonLightGrey10</color>
+    <!-- Search -->
+    <color name="fx_mobile_layer_color_3" tools:ignore="UnusedResources">@color/photonLightGrey20</color>
     <!-- App Bar Top (edit), Text Cursor, Selected Tab Check -->
     <color name="fx_mobile_layer_color_accent">@color/photonInk20</color>
     <!-- Selected tab -->
