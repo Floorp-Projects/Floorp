@@ -71,7 +71,7 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         self.install_browser_packages(mozconfig_builder, artifact_mode=True)
 
-    def ensure_nasm_packages(self, state_dir: Path, checkout_root: Path):
+    def ensure_nasm_packages(self):
         # installed via install_browser_packages
         pass
 
