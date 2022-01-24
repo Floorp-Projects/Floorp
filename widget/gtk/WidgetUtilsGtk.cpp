@@ -113,6 +113,8 @@ bool ShouldUsePortal(PortalKind aPortalKind) {
       case PortalKind::FilePicker:
         return StaticPrefs::widget_use_xdg_desktop_portal_file_picker();
       case PortalKind::MimeHandler:
+        // Mime portal breaks default browser handling, see bug 1516290.
+        autoBehavior = IsRunningUnderFlatpak();
         return StaticPrefs::widget_use_xdg_desktop_portal_mime_handler();
       case PortalKind::Print:
         // Print portal still needs more work, so auto behavior is just when
