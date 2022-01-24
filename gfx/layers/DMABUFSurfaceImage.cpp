@@ -28,10 +28,14 @@ using namespace mozilla::gl;
 
 DMABUFSurfaceImage::DMABUFSurfaceImage(DMABufSurface* aSurface)
     : Image(nullptr, ImageFormat::DMABUF), mSurface(aSurface) {
-  mSurface->GlobalRefAdd();
+  MOZ_DIAGNOSTIC_ASSERT(mSurface->IsGlobalRefSet(),
+                        "DMABufSurface must be marked as used!");
 }
 
-DMABUFSurfaceImage::~DMABUFSurfaceImage() { mSurface->GlobalRefRelease(); }
+DMABUFSurfaceImage::~DMABUFSurfaceImage() {
+  // Unref as we're done with this surface.
+  mSurface->GlobalRefRelease();
+}
 
 StaticRefPtr<GLContext> sSnapshotContext;
 static StaticMutex sSnapshotContextMutex;
