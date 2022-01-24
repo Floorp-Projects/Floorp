@@ -56,7 +56,7 @@
     <!-- Warning text -->
     <color name="fx_mobile_text_color_warning" tools:ignore="UnusedResources">@color/photonRed40</color>
     <!-- Small heading, Text link -->
-    <color name="fx_mobile_text_color_accent">@color/photonViolet40</color>
+    <color name="fx_mobile_text_color_accent">@color/photonViolet20</color>
     <!-- Text Inverted/On Color -->
     <color name="fx_mobile_text_color_inverted" tools:ignore="UnusedResources">@color/photonWhite</color>
 
