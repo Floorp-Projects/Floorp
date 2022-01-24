@@ -19,14 +19,16 @@ namespace impl {
 
 void CounterMetric::Add(int32_t aAmount) const {
   auto scalarId = ScalarIdForMetric(mId);
-  if (scalarId) {
-    Telemetry::ScalarAdd(scalarId.extract(), aAmount);
-  } else if (IsSubmetricId(mId)) {
-    auto lock = GetLabeledMirrorLock();
-    auto tuple = lock.ref()->MaybeGet(mId);
-    if (tuple && aAmount > 0) {
-      Telemetry::ScalarSet(Get<0>(tuple.ref()), Get<1>(tuple.ref()),
-                           (uint32_t)aAmount);
+  if (aAmount >= 0) {
+    if (scalarId) {
+      Telemetry::ScalarAdd(scalarId.extract(), aAmount);
+    } else if (IsSubmetricId(mId)) {
+      auto lock = GetLabeledMirrorLock();
+      auto tuple = lock.ref()->MaybeGet(mId);
+      if (tuple && aAmount > 0) {
+        Telemetry::ScalarSet(Get<0>(tuple.ref()), Get<1>(tuple.ref()),
+                             (uint32_t)aAmount);
+      }
     }
   }
   fog_counter_add(mId, aAmount);
