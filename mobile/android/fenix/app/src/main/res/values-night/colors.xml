@@ -31,6 +31,8 @@
     <color name="fx_mobile_action_color_secondary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <!-- Filter -->
     <color name="fx_mobile_action_color_tertiary" tools:ignore="UnusedResources">@color/photonDarkGrey10</color>
+    <!-- Chip -->
+    <color name="fx_mobile_action_quarternary" tools:ignore="UnusedResources">@color/photonDarkGrey80</color>
     <!-- Checkbox default, Radio button default -->
     <color name="fx_mobile_action_color_form_default" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <!-- Checkbox selected, Radio button selected -->
