@@ -325,11 +325,8 @@ p {
 
 .promo {
   text-align: center;
-  align-items: center;
-}
-
-.promo-visible {
   display: flex;
+  align-items: center;
 }
 
 .promo-content {
