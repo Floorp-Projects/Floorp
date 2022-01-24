@@ -75,6 +75,7 @@ UNIFIED_SOURCES += [
     "Safepoints.cpp",
     "ScalarReplacement.cpp",
     "shared/Assembler-shared.cpp",
+    "shared/AtomicOperations-shared-jit.cpp",
     "shared/CodeGenerator-shared.cpp",
     "shared/Disassembler-shared.cpp",
     "shared/Lowering-shared.cpp",
@@ -98,7 +99,6 @@ if CONFIG["JS_CODEGEN_NONE"]:
     UNIFIED_SOURCES += ["none/Trampoline-none.cpp"]
 elif CONFIG["JS_CODEGEN_X86"] or CONFIG["JS_CODEGEN_X64"]:
     UNIFIED_SOURCES += [
-        "shared/AtomicOperations-shared-jit.cpp",
         "x86-shared/Architecture-x86-shared.cpp",
         "x86-shared/Assembler-x86-shared.cpp",
         "x86-shared/AssemblerBuffer-x86-shared.cpp",
@@ -139,7 +139,6 @@ elif CONFIG["JS_CODEGEN_ARM"]:
         "arm/MacroAssembler-arm.cpp",
         "arm/MoveEmitter-arm.cpp",
         "arm/Trampoline-arm.cpp",
-        "shared/AtomicOperations-shared-jit.cpp",
     ]
     if CONFIG["JS_SIMULATOR_ARM"]:
         UNIFIED_SOURCES += ["arm/Simulator-arm.cpp"]
@@ -168,7 +167,6 @@ elif CONFIG["JS_CODEGEN_ARM64"]:
         "arm64/vixl/MozCpu-vixl.cpp",
         "arm64/vixl/MozInstructions-vixl.cpp",
         "arm64/vixl/Utils-vixl.cpp",
-        "shared/AtomicOperations-shared-jit.cpp",
     ]
     vixl_werror_sources = [
         "arm64/vixl/Disasm-vixl.cpp",
@@ -246,6 +244,13 @@ GeneratedFile(
     script="GenerateCacheIRFiles.py",
     entry_point="generate_cacheirops_header",
     inputs=["CacheIROps.yaml"],
+)
+
+GeneratedFile(
+    "AtomicOperationsGenerated.h",
+    script="GenerateAtomicOperations.py",
+    entry_point="generate_atomics_header",
+    inputs=[],
 )
 
 if CONFIG["FUZZING_INTERFACES"] or CONFIG["FUZZING_JS_FUZZILLI"]:
