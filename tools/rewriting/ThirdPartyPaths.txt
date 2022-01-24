@@ -119,6 +119,7 @@ media/libvorbis/
 media/libvpx/
 media/libwebp/
 media/libyuv/
+media/mozva/va
 media/mp4parse-rust/
 media/openmax_dl/
 media/openmax_il/
