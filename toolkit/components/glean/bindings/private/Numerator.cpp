@@ -19,7 +19,7 @@ namespace impl {
 
 void NumeratorMetric::AddToNumerator(int32_t aAmount) const {
   auto scalarId = ScalarIdForMetric(mId);
-  if (scalarId) {
+  if (scalarId && aAmount >= 0) {
     Telemetry::ScalarAdd(scalarId.extract(), u"numerator"_ns, aAmount);
   }
   fog_numerator_add_to_numerator(mId, aAmount);
