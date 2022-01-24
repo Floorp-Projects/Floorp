@@ -392,6 +392,22 @@
     }
   });
 
+  add_task(async function test_isAbsolute() {
+    if (Services.appinfo.OS === "WINNT") {
+      ok(PathUtils.isAbsolute("C:"), "Drive paths are absolute paths on Windows");
+      ok(PathUtils.isAbsolute("C:\\Windows"), "Paths from the root are absolute paths on Windows");
+      ok(!PathUtils.isAbsolute("foo"), "Paths containing a single item are not absolute paths on Windows");
+      ok(!PathUtils.isAbsolute(".\\foo"), "Paths relative to the current working directory are not absolute paths on Windows");
+      ok(!PathUtils.isAbsolute("..\\foo"), "Paths relative to the parent directory are not absolute paths on Windows");
+    } else {
+      ok(PathUtils.isAbsolute("/"), "Root paths are absolute paths");
+      ok(PathUtils.isAbsolute("/home"), "Paths with a root stem are absolute paths");
+      ok(!PathUtils.isAbsolute("foo"), "Paths containing a single non-root item are not absolute paths");
+      ok(!PathUtils.isAbsolute("./foo"), "Paths relative to the current working directory are not absolute paths");
+      ok(!PathUtils.isAbsolute("../foo"), "Paths relative to the parent directory are not absolute paths");
+    }
+  });
+
   add_task(async function test_getDirectories() {
     const profile = await PathUtils.getProfileDir();
     is(

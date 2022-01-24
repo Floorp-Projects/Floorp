@@ -62,6 +62,8 @@ class PathUtils final {
   static void ToFileURI(const GlobalObject&, const nsAString& aPath,
                         nsCString& aResult, ErrorResult& aErr);
 
+  static bool IsAbsolute(const GlobalObject&, const nsAString& aPath);
+
   static already_AddRefed<Promise> GetProfileDir(const GlobalObject& aGlobal,
                                                  ErrorResult& aErr);
 
