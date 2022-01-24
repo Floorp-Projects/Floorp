@@ -22,8 +22,6 @@
 
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">1 გახსნილი ჩანართი. შეეხეთ ჩანართების გადასართველად.</string>
-    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s გახსნილი ჩანართი. შეეხეთ ჩანართების გადასართველად.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d მონიშნულია</string>
@@ -56,7 +54,9 @@
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all">ყველას ჩვენება</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
-    <string name="recently_saved_show_all_content_description">ყველა ჩანიშნულის გამოსაჩენი ღილაკი</string>
+    <string name="recently_saved_show_all_content_description_2">ყველა ჩანიშნულის ჩვენება</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string moz:removedIn="97" name="recently_saved_show_all_content_description" tools:ignore="UnusedResources">ყველა ჩანიშნულის გამოსაჩენი ღილაკი</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s შემქმნელი Mozilla.</string>
@@ -111,8 +111,6 @@
     <string name="tab_tray_inactive_auto_close_body">Firefox დახურავს ჩანართებს, რომლებიც არ გინახავთ მთელი თვეში.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">დახურვა</string>
-    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
-    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">თვითდახურვის ჩართვა</string>
 
     <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_turn_on_auto_close_button_2">თვითდახურვის ჩართვა</string>
@@ -124,9 +122,6 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">ახალი პირადი ჩანართი</string>
 
-    <!-- Heading for the Top Sites block -->
-    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">რჩეული საიტები</string>
-
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">წინაზე გადასვლა</string>
@@ -134,7 +129,9 @@
     <string name="recent_tabs_show_all">ყველას ჩვენება</string>
 
     <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
-    <string name="recent_tabs_show_all_content_description">ყველა ბოლო ჩანართის ღილაკის ჩვენება</string>
+    <string name="recent_tabs_show_all_content_description_2">ყველა ბოლო ჩანართის ღილაკის ჩვენება</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string moz:removedIn="97" name="recent_tabs_show_all_content_description2" tools:ignore="UnusedResources">ყველა ბოლო ჩანართის ჩვენება</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">მოძიებული „%1$s“</string>
@@ -157,7 +154,9 @@
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">მოცილება</string>
     <!-- Content description for the button which navigates the user to show all of their history. -->
-    <string name="past_explorations_show_all_content_description">წარსულში ყველა მოძიებულის ღილაკის ჩვენება</string>
+    <string name="past_explorations_show_all_content_description_2">ყველა ბოლოს მოძიებულის ჩვენება</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string moz:removedIn="97" name="past_explorations_show_all_content_description" tools:ignore="UnusedResources">წარსულში ყველა მოძიებულის ღილაკის ჩვენება</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -170,8 +169,6 @@
     <string name="browser_menu_refresh">განახლება</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">შეჩერება</string>
-    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">ჩანიშვნა</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">სანიშნის ჩასწორება</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -574,8 +571,6 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">სინქრონიზაციის ჩართვა</string>
-    <!-- Preference for pairing -->
-    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">წააკითხეთ მიერთების კოდი კომპიუტერის Firefox-ში</string>
     <!-- Preference for account login -->
     <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">შესვლა</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -763,8 +758,6 @@
     <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">გახსნილი ჩანართები</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">კრებულში შენახვა</string>
-    <!-- Text shown in the menu for the collection selector -->
-    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">არჩევა</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">ყველა ჩანართის გაზიარება</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -920,8 +913,6 @@
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
     <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">სანიშნების მენიუ</string>
-    <!-- Screen title for editing bookmarks -->
-    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">სანიშნის ჩასწორება</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">საქაღალდის მითითება</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1020,6 +1011,8 @@
     <string name="preference_phone_feature_notification">შეტყობინება</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">მუდმივი მეხსიერება</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">საიტთაშორისი ფუნთუშები</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">DRM-დაქვემდებარებული შიგთავსი</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -1949,12 +1942,6 @@
     <string name="inactive_tabs_title">უქმი ჩანართები</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">ყველა უქმი ჩანართის დახურვა</string>
-    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string moz:removedIn="95" name="inactive_tabs_description" tools:ignore="UnusedResources">ჩანართები აქ დარჩება %s. შემდეგ კი თავადვე დაიხურება.</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 დღე</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 კვირა</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
@@ -1968,8 +1955,6 @@
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">გთხოვთ, დაგვეხმარეთ გაუმჯობესებაში</string>
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
     <string name="inactive_tabs_survey_header_1">დაგვეხმარეთ, გავაუმჯობესოთ Firefox</string>
 
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
@@ -1979,11 +1964,7 @@
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_do_it_myself">მსურს, თავად გავასუფთავო ძველი ჩანართები</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">უმოქმედობის დრო მეტად დიდია</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_time_too_long_option_1">ორკვირიანი ვადა, ზედმეტად დიდია</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">უმოქმედობის დრო მეტად მცირეა</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_time_too_short_option_1">ორკვირიანი ვადა, ზედმეტად მცირეა</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
