@@ -258,14 +258,6 @@ class ExtensionWrapper {
     this.state = "unloaded";
   }
 
-  /**
-   * This method sends the message to force-sleep the background scripts.
-   * @returns {Promise} resolves after the background is asleep and listeners primed.
-   */
-  terminateBackground() {
-    return this.extension.terminateBackground();
-  }
-
   /*
    * This method marks the extension unloading without actually calling
    * shutdown, since shutting down a MockExtension causes it to be uninstalled.
