@@ -1290,7 +1290,7 @@ void GLContext::LoadMoreSymbols(const SymbolLoader& loader) {
             { (PRFuncPtr*) &mSymbols.fEnablei, {{ "glEnableiOES" }} },
             END_SYMBOLS
         };
-        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::draw_buffers);
+        fnLoadFeatureByCore(coreSymbols, extSymbols, GLFeature::draw_buffers_indexed);
     }
 
     if (IsSupported(GLFeature::get_integer_indexed)) {
