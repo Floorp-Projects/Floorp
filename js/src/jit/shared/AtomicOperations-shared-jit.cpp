@@ -10,6 +10,8 @@
 
 #  include <atomic>
 
+#  include "js/GCAPI.h"
+
 using namespace js;
 using namespace js::jit;
 
@@ -66,6 +68,8 @@ void AtomicCompilerFence() {
 
 void AtomicMemcpyDownUnsynchronized(uint8_t* dest, const uint8_t* src,
                                     size_t nbytes) {
+  JS::AutoSuppressGCAnalysis nogc;
+
   const uint8_t* lim = src + nbytes;
 
   // Set up bulk copying.  The cases are ordered the way they are on the
@@ -119,6 +123,8 @@ void AtomicMemcpyDownUnsynchronized(uint8_t* dest, const uint8_t* src,
 
 void AtomicMemcpyUpUnsynchronized(uint8_t* dest, const uint8_t* src,
                                   size_t nbytes) {
+  JS::AutoSuppressGCAnalysis nogc;
+
   const uint8_t* lim = src;
 
   src += nbytes;
