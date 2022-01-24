@@ -60,6 +60,7 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
         'video_enc_params.c'
     ]
     if CONFIG["MOZ_WAYLAND"]:
+        LOCAL_INCLUDES += ['/media/mozva']
         SOURCES += [
             'hwcontext_vaapi.c',
             'mastering_display_metadata.c',

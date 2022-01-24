@@ -785,12 +785,12 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
   }
 
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
-  auto surface = mVideoFramePool->GetVideoFrameSurface(vaDesc);
+  auto surface = mVideoFramePool->GetVideoFrameSurface(vaDesc, mCodecContext,
+                                                       mFrame, mLib);
   if (!surface) {
     return MediaResult(NS_ERROR_OUT_OF_MEMORY,
                        RESULT_DETAIL("VAAPI dmabuf allocation error"));
   }
-  surface->LockVAAPIData(mCodecContext, mFrame, mLib);
   surface->SetYUVColorSpace(GetFrameColorSpace());
 
   if (mLib->av_frame_get_color_range) {

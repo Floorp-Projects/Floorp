@@ -388,6 +388,7 @@ GENERATED_WEBIDL_FILES = [
 
 PREPROCESSED_WEBIDL_FILES = [
     "Animation.webidl",
+    "FileSystemFileHandle.webidl",
     "Node.webidl",
     "Window.webidl",
 ]
@@ -545,9 +546,13 @@ WEBIDL_FILES = [
     "FileReaderSync.webidl",
     "FileSystem.webidl",
     "FileSystemDirectoryEntry.webidl",
+    "FileSystemDirectoryHandle.webidl",
+    "FileSystemDirectoryIterator.webidl",
     "FileSystemDirectoryReader.webidl",
     "FileSystemEntry.webidl",
     "FileSystemFileEntry.webidl",
+    "FileSystemHandle.webidl",
+    "FileSystemSyncAccessHandle.webidl",
     "FinalizationRegistry.webidl",
     "FocusEvent.webidl",
     "FontFace.webidl",
@@ -1005,6 +1010,7 @@ WEBIDL_FILES = [
 
 if CONFIG["MOZ_DOM_STREAMS"]:
     WEBIDL_FILES += [
+        "FileSystemWritableFileStream.webidl",
         "QueuingStrategy.webidl",
         "ReadableByteStreamController.webidl",
         "ReadableStream.webidl",

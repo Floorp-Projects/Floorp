@@ -13,7 +13,6 @@
 #include "nsIWebBrowserFind.h"
 #include "nsWeakReference.h"
 #include "nsITypeAheadFind.h"
-#include "nsISound.h"
 
 class nsPIDOMWindowInner;
 class nsPresContext;
@@ -99,11 +98,6 @@ class nsTypeAheadFind : public nsITypeAheadFind,
   // mLastFindLength is the character length of the last find string.  It is
   // used for disabling the "not found" sound when using backspace or delete
   uint32_t mLastFindLength;
-
-  // Sound is played asynchronously on some platforms.
-  // If we destroy mSoundInterface before sound has played, it won't play
-  nsCOMPtr<nsISound> mSoundInterface;
-  bool mIsSoundInitialized;
 
   // where selection was when user started the find
   RefPtr<nsRange> mStartFindRange;

@@ -917,13 +917,14 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
  public:
   bool InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
                                 layers::CanvasRenderer* aRenderer) override;
+
+  void MarkContextCleanForFrameCapture() override {
+    mFrameCaptureState = FrameCaptureState::CLEAN;
+  }
   // Note that 'clean' here refers to its invalidation state, not the
   // contents of the buffer.
-  bool IsContextCleanForFrameCapture() override {
-    return !mCapturedFrameInvalidated;
-  }
-  void MarkContextCleanForFrameCapture() override {
-    mCapturedFrameInvalidated = false;
+  Watchable<FrameCaptureState>* GetFrameCaptureState() override {
+    return &mFrameCaptureState;
   }
 
   void OnMemoryPressure() override;
@@ -986,7 +987,8 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
  protected:
   layers::LayersBackend GetCompositorBackendType() const;
 
-  bool mCapturedFrameInvalidated = false;
+  Watchable<FrameCaptureState> mFrameCaptureState = {
+      FrameCaptureState::CLEAN, "ClientWebGLContext::mFrameCaptureState"};
 
   // -------------------------------------------------------------------------
   // WebGLRenderingContext Basic Properties and Methods

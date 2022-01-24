@@ -239,10 +239,6 @@ extern "C" const char* __tsan_default_suppressions() {
          "race:_dl_deallocate_tls\n"
          "race:__libc_memalign\n"
 
-         // Bug 1664535
-         "race:setNeedsIncrementalBarrier\n"
-         "race:needsIncrementalBarrier\n"
-
          // Bug 1664803
          "race:Sampler::sSigHandlerCoordinator\n"
 

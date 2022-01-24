@@ -12,8 +12,12 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPrefs_webgl.h"
 #include "nsIPrincipal.h"
@@ -283,6 +287,35 @@ bool CoerceDouble(const JS::Value& v, double* d) {
 bool HasDrawWindowPrivilege(JSContext* aCx, JSObject* /* unused */) {
   return nsContentUtils::CallerHasPermission(aCx,
                                              nsGkAtoms::all_urlsPermission);
+}
+
+bool IsOffscreenCanvasEnabled(JSContext* aCx, JSObject* /* unused */) {
+  if (StaticPrefs::gfx_offscreencanvas_enabled()) {
+    return true;
+  }
+
+  if (!StaticPrefs::gfx_offscreencanvas_domain_enabled()) {
+    return false;
+  }
+
+  const auto& allowlist = gfxVars::OffscreenCanvasDomainAllowlist();
+
+  if (!NS_IsMainThread()) {
+    dom::WorkerPrivate* workerPrivate = dom::GetWorkerPrivateFromContext(aCx);
+    if (workerPrivate->UsesSystemPrincipal()) {
+      return true;
+    }
+
+    return nsContentUtils::IsURIInList(workerPrivate->GetBaseURI(), allowlist);
+  }
+
+  nsIPrincipal* principal = nsContentUtils::SubjectPrincipal(aCx);
+  if (principal->IsSystemPrincipal()) {
+    return true;
+  }
+
+  nsCOMPtr<nsIURI> uri = principal->GetURI();
+  return nsContentUtils::IsURIInList(uri, allowlist);
 }
 
 bool CheckWriteOnlySecurity(bool aCORSUsed, nsIPrincipal* aPrincipal,
