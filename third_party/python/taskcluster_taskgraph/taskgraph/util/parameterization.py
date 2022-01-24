@@ -39,11 +39,10 @@ def resolve_timestamps(now, task_def):
 
 
 def resolve_task_references(label, task_def, task_id, decision_task_id, dependencies):
-    """Resolve all instances of
-      {'task-reference': '..<..>..'}
-    and
-      {'artifact-reference`: '..<dependency/artifact/path>..'}
-    in the given task definition, using the given dependencies"""
+    """Resolve all instances of ``{'task-reference': '..<..>..'} ``
+    and ``{'artifact-reference`: '..<dependency/artifact/path>..'}``
+    in the given task definition, using the given dependencies.
+    """
 
     def task_reference(val):
         def repl(match):

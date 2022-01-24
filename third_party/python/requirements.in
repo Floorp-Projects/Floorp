@@ -40,7 +40,7 @@ setuptools==51.2.0
 six==1.13.0
 slugid==2.0.0
 taskcluster==44.2.2
-taskcluster-taskgraph==1.1.0
+taskcluster-taskgraph==1.1.2
 taskcluster-urls==13.0.1
 tqdm==4.62.3
 voluptuous==0.12.1
