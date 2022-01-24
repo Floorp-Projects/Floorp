@@ -69,6 +69,10 @@ private val darkColorPalette = FirefoxColors(
     textWarning = PhotonColors.Red20,
     textAccent = PhotonColors.Violet20,
     textOnColor = PhotonColors.LightGrey05,
+    textActionPrimary = PhotonColors.LightGrey05,
+    textActionSecondary = PhotonColors.DarkGrey90,
+    textActionTertiary = PhotonColors.LightGrey05,
+    textActionTertiaryActive = PhotonColors.LightGrey05,
     iconPrimary = PhotonColors.LightGrey05,
     iconPrimaryInactive = PhotonColors.LightGrey05A60,
     iconSecondary = PhotonColors.LightGrey40,
@@ -122,6 +126,10 @@ private val lightColorPalette = FirefoxColors(
     textWarning = PhotonColors.Red80,
     textAccent = PhotonColors.Violet70,
     textOnColor = PhotonColors.LightGrey05,
+    textActionPrimary = PhotonColors.LightGrey05,
+    textActionSecondary = PhotonColors.DarkGrey90,
+    textActionTertiary = PhotonColors.DarkGrey90,
+    textActionTertiaryActive = PhotonColors.LightGrey05,
     iconPrimary = PhotonColors.DarkGrey90,
     iconPrimaryInactive = PhotonColors.DarkGrey90A60,
     iconSecondary = PhotonColors.DarkGrey05,
@@ -180,6 +188,10 @@ class FirefoxColors(
     textWarning: Color,
     textAccent: Color,
     textOnColor: Color,
+    textActionPrimary: Color,
+    textActionSecondary: Color,
+    textActionTertiary: Color,
+    textActionTertiaryActive: Color,
     iconPrimary: Color,
     iconPrimaryInactive: Color,
     iconSecondary: Color,
@@ -292,6 +304,18 @@ class FirefoxColors(
     // Text Inverted/On Color
     var textOnColor by mutableStateOf(textOnColor)
         private set
+    // Action Primary text
+    var textActionPrimary by mutableStateOf(textActionPrimary)
+        private set
+    // Action Secondary text
+    var textActionSecondary by mutableStateOf(textActionSecondary)
+        private set
+    // Action Tertiary text
+    var textActionTertiary by mutableStateOf(textActionTertiary)
+        private set
+    // Action Tertiary Active text
+    var textActionTertiaryActive by mutableStateOf(textActionTertiaryActive)
+        private set
 
     // Icon
 
@@ -388,6 +412,10 @@ class FirefoxColors(
         textWarning = other.textWarning
         textAccent = other.textAccent
         textOnColor = other.textOnColor
+        textActionPrimary = other.textActionPrimary
+        textActionSecondary = other.textSecondary
+        textActionTertiary = other.textActionTertiary
+        textActionTertiaryActive = other.textActionTertiaryActive
         iconPrimary = other.iconPrimary
         iconPrimaryInactive = other.iconPrimaryInactive
         iconSecondary = other.iconSecondary
@@ -441,6 +469,10 @@ class FirefoxColors(
         textWarning = textWarning,
         textAccent = textAccent,
         textOnColor = textOnColor,
+        textActionPrimary = textActionPrimary,
+        textActionSecondary = textActionSecondary,
+        textActionTertiary = textActionTertiary,
+        textActionTertiaryActive = textActionTertiaryActive,
         iconPrimary = iconPrimary,
         iconPrimaryInactive = iconPrimaryInactive,
         iconSecondary = iconSecondary,

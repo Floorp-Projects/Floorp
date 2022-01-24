@@ -63,6 +63,14 @@
     <color name="fx_mobile_text_color_accent">@color/photonViolet20</color>
     <!-- Text Inverted/On Color -->
     <color name="fx_mobile_text_color_oncolor" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
+    <!-- Action Primary text -->
+    <color name="fx_mobile_text_color_action_primary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
+    <!-- Action Secondary text -->
+    <color name="fx_mobile_text_color_action_secondary" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
+    <!-- Action Tertiary text -->
+    <color name="fx_mobile_text_color_action_tertiary" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
+    <!-- Action Tertiary Active text -->
+    <color name="fx_mobile_text_color_action_tertiary_active" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
 
     <!-- Icon -->
     <!-- Primary icon -->
