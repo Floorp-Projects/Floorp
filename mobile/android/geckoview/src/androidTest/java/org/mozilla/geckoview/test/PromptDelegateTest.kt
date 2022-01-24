@@ -11,6 +11,7 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.AuthPrompt
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.PromptResponse
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 
 import androidx.test.filters.MediumTest
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -294,6 +295,52 @@ class PromptDelegateTest : BaseSessionTest() {
     }
 
     @Test
+    @WithDisplay(width = 100, height = 100)
+    fun selectTestSimple() {
+        mainSession.loadTestPath(SELECT_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        val result = GeckoResult<Void>()
+        sessionRule.delegateUntilTestEnd(object : PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat("Should not be multiple", prompt.type, equalTo(PromptDelegate.ChoicePrompt.Type.SINGLE));
+                assertThat("There should be two choices", prompt.choices.size, equalTo(2));
+                assertThat("First choice is correct", prompt.choices[0].label, equalTo("ABC"));
+                assertThat("Second choice is correct", prompt.choices[1].label, equalTo("DEF"));
+                result.complete(null);
+                return null
+            }
+        })
+        mainSession.synthesizeTap(10, 10)
+        sessionRule.waitForResult(result)
+    }
+
+    @Test
+    @WithDisplay(width = 100, height = 100)
+    fun selectTestMultiple() {
+        mainSession.loadTestPath(SELECT_MULTIPLE_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        val result = GeckoResult<Void>()
+        sessionRule.delegateUntilTestEnd(object : PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat("Should be multiple", prompt.type, equalTo(PromptDelegate.ChoicePrompt.Type.MULTIPLE));
+                assertThat("There should be three choices", prompt.choices.size, equalTo(3));
+                assertThat("First choice is correct", prompt.choices[0].label, equalTo("ABC"));
+                assertThat("Second choice is correct", prompt.choices[1].label, equalTo("DEF"));
+                assertThat("Third choice is correct", prompt.choices[2].label, equalTo("GHI"));
+                result.complete(null);
+                return null
+            }
+        })
+
+        mainSession.synthesizeTap(10, 10)
+        sessionRule.waitForResult(result)
+    }
+
+    @Test
     fun onBeforeUnloadTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf(
                 "dom.require_user_interaction_for_beforeunload" to false
@@ -365,23 +412,6 @@ class PromptDelegateTest : BaseSessionTest() {
         assertThat("Result should match",
                 mainSession.waitForJS("prompt('Prompt:', 'default')") as String,
                 equalTo("foo"))
-    }
-
-    @Ignore // TODO: Figure out weird test env behavior here.
-    @Test fun choiceTest() {
-        sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
-
-        mainSession.loadTestPath(PROMPT_HTML_PATH)
-        mainSession.waitForPageStop()
-
-        mainSession.evaluateJS("document.getElementById('selectexample').click();")
-
-        sessionRule.waitUntilCalled(object : PromptDelegate {
-            @AssertCalled(count = 1)
-            override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse> {
-                return GeckoResult.fromValue(prompt.dismiss())
-            }
-        })
     }
 
     @Test fun colorTest() {
