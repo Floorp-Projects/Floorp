@@ -552,6 +552,7 @@ WEBIDL_FILES = [
     "FileSystemEntry.webidl",
     "FileSystemFileEntry.webidl",
     "FileSystemHandle.webidl",
+    "FileSystemSyncAccessHandle.webidl",
     "FinalizationRegistry.webidl",
     "FocusEvent.webidl",
     "FontFace.webidl",
