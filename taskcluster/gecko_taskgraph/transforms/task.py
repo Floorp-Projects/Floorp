@@ -1204,6 +1204,28 @@ def build_push_flatpak_payload(config, task, task_def):
 
 
 @payload_builder(
+    "push-msix",
+    schema={
+        Required("channel"): str,
+        Required("upstream-artifacts"): [
+            {
+                Required("taskId"): taskref_or_string,
+                Required("taskType"): str,
+                Required("paths"): [str],
+            }
+        ],
+    },
+)
+def build_push_msix_payload(config, task, task_def):
+    worker = task["worker"]
+
+    task_def["payload"] = {
+        "channel": worker["channel"],
+        "upstreamArtifacts": worker["upstream-artifacts"],
+    }
+
+
+@payload_builder(
     "shipit-shipped",
     schema={
         Required("release-name"): str,

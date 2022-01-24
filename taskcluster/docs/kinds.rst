@@ -565,6 +565,10 @@ repackage-signing-shippable-l10n-msix
 Repackage-signing-shippable-l10n-msix takes Windows MSIX packages produced in
 ```repackage-signing-shippable-l10n-msix``` and signs them.
 
+release-msix-push
+--------------------
+Pushes msix repackage to the Microsoft Store.
+
 repo-update
 -----------
 Repo-Update tasks are tasks that perform some action on the project repo itself,
