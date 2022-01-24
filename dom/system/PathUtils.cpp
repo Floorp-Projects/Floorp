@@ -331,6 +331,12 @@ void PathUtils::ToFileURI(const GlobalObject&, const nsAString& aPath,
   }
 }
 
+bool PathUtils::IsAbsolute(const GlobalObject&, const nsAString& aPath) {
+  nsCOMPtr<nsIFile> path = new nsLocalFile();
+  nsresult rv = InitFileWithPath(path, aPath);
+  return NS_SUCCEEDED(rv);
+}
+
 already_AddRefed<Promise> PathUtils::GetProfileDir(const GlobalObject& aGlobal,
                                                    ErrorResult& aErr) {
   auto guard = sDirCache.Lock();

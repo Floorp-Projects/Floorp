@@ -931,7 +931,6 @@ class EventCollector {
       const override = listener.override || {};
       const tags = listener.tags || "";
       const type = listener.type || "";
-      let isScriptBoundToNonScriptElement = false;
       const enabled = !!listener.enabled;
       let functionSource = handler.toString();
       let line = 0;
@@ -967,13 +966,6 @@ class EventCollector {
 
       if (script) {
         const scriptSource = script.source.text;
-
-        // Scripts are provided via script tags. If it wasn't provided by a
-        // script tag it must be a DOM0 event.
-        if (script.source.element) {
-          isScriptBoundToNonScriptElement =
-            script.source.element.class !== "HTMLScriptElement";
-        }
 
         line = script.startLine;
         column = script.startColumn;
@@ -1032,9 +1024,7 @@ class EventCollector {
       } else {
         origin =
           url +
-          (isScriptBoundToNonScriptElement || line === 0
-            ? ""
-            : ":" + line + (column === null ? "" : ":" + column));
+          (line ? ":" + line + (column === null ? "" : ":" + column) : "");
       }
 
       eventObj = {
@@ -1056,7 +1046,7 @@ class EventCollector {
       // Hide the debugger icon for DOM0 and native listeners. DOM0 listeners are
       // generated dynamically from e.g. an onclick="" attribute so the script
       // doesn't actually exist.
-      if (native || isScriptBoundToNonScriptElement) {
+      if (!sourceActor) {
         eventObj.hide.debugger = true;
       }
     } finally {

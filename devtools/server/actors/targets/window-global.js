@@ -594,7 +594,13 @@ const windowGlobalTargetPrototype = {
       originalBrowsingContext.currentWindowContext.innerWindowId;
     const parentInnerWindowId =
       originalBrowsingContext.parent?.currentWindowContext.innerWindowId;
-    const isPopup = !!originalBrowsingContext.opener;
+    // Doesn't only check `!!opener` as some iframe might have an opener
+    // if their location was loaded via `window.open(url, "iframe-name")`.
+    // So also ensure that the document is opened in a distinct tab.
+    const isPopup =
+      !!originalBrowsingContext.opener &&
+      originalBrowsingContext.browserId !=
+        originalBrowsingContext.opener.browserId;
 
     const response = {
       actor: this.actorID,

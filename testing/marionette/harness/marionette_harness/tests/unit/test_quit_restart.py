@@ -181,6 +181,13 @@ class TestQuitRestart(MarionetteTestCase):
         ):
             self.marionette.restart(in_app=True, clean=True)
 
+    def test_restart_preserves_requested_capabilities(self):
+        self.marionette.delete_session()
+        self.marionette.start_session(capabilities={"moz:fooBar": True})
+
+        self.marionette.restart(in_app=False)
+        self.assertEqual(self.marionette.session.get("moz:fooBar"), True)
+
     def test_restart_safe_mode(self):
         try:
             self.assertFalse(self.is_safe_mode, "Safe Mode is unexpectedly enabled")
@@ -278,6 +285,13 @@ class TestQuitRestart(MarionetteTestCase):
         finally:
             self.marionette.shutdown_timeout = timeout_shutdown
             self.marionette.startup_timeout = timeout_startup
+
+    def test_in_app_restart_preserves_requested_capabilities(self):
+        self.marionette.delete_session()
+        self.marionette.start_session(capabilities={"moz:fooBar": True})
+
+        self.marionette.restart(in_app=True)
+        self.assertEqual(self.marionette.session.get("moz:fooBar"), True)
 
     def test_in_app_quit(self):
         details = self.marionette.quit(in_app=True)

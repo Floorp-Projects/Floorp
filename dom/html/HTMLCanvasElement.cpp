@@ -71,7 +71,9 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
       : mRegistered(false),
         mReturnPlaceholderData(aReturnPlaceholderData),
         mOwningElement(aOwningElement),
-        mRefreshDriver(aRefreshDriver) {
+        mRefreshDriver(aRefreshDriver),
+        mWatchManager(this, AbstractThread::MainThread()),
+        mPendingThrottledCapture(false) {
     MOZ_ASSERT(mOwningElement);
   }
 
@@ -118,7 +120,57 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
     mReturnPlaceholderData = aReturnPlaceholderData;
   }
 
-  void WillRefresh(TimeStamp aTime) override {
+  void NotifyCaptureStateChange() {
+    if (mPendingThrottledCapture) {
+      return;
+    }
+
+    if (!mOwningElement) {
+      return;
+    }
+
+    Watchable<FrameCaptureState>* captureState =
+        mOwningElement->GetFrameCaptureState();
+    if (!captureState) {
+      return;
+    }
+
+    if (captureState->Ref() == FrameCaptureState::CLEAN) {
+      return;
+    }
+
+    if (!mRefreshDriver) {
+      return;
+    }
+
+    if (!mRefreshDriver->IsThrottled()) {
+      return;
+    }
+
+    TimeStamp next = mLastCaptureTime + TimeDuration::FromMilliseconds(
+                                            nsRefreshDriver::DefaultInterval());
+    TimeStamp now = TimeStamp::Now();
+    if (mLastCaptureTime.IsNull() || next < now) {
+      CaptureFrame(now);
+      return;
+    }
+
+    mPendingThrottledCapture = true;
+    AbstractThread::MainThread()->DelayedDispatch(
+        NS_NewRunnableFunction(
+            __func__,
+            [this, self = RefPtr<RequestedFrameRefreshObserver>(this), next] {
+              mPendingThrottledCapture = false;
+              CaptureFrame(next);
+            }),
+        // next >= now, so this is a guard for (next - now) flooring to 0.
+        std::max<uint32_t>(
+            1, static_cast<uint32_t>((next - now).ToMilliseconds())));
+  }
+
+  void WillRefresh(TimeStamp aTime) override { CaptureFrame(aTime); }
+
+  void CaptureFrame(TimeStamp aTime) {
     MOZ_ASSERT(NS_IsMainThread());
 
     AUTO_PROFILER_LABEL("RequestedFrameRefreshObserver::WillRefresh", OTHER);
@@ -131,7 +183,9 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
       return;
     }
 
-    if (mOwningElement->IsContextCleanForFrameCapture()) {
+    if (auto* captureStateWatchable = mOwningElement->GetFrameCaptureState();
+        captureStateWatchable &&
+        *captureStateWatchable == FrameCaptureState::CLEAN) {
       return;
     }
 
@@ -161,6 +215,11 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
       }
     }
 
+    if (!mLastCaptureTime.IsNull() && aTime <= mLastCaptureTime) {
+      aTime = mLastCaptureTime + TimeDuration::FromMilliseconds(1);
+    }
+    mLastCaptureTime = aTime;
+
     {
       AUTO_PROFILER_LABEL("RequestedFrameRefreshObserver::WillRefresh:SetFrame",
                           OTHER);
@@ -175,6 +234,7 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
 
     Unregister();
     mRefreshDriver = nullptr;
+    mWatchManager.Shutdown();
   }
 
   void Register() {
@@ -188,6 +248,17 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
                                          "Canvas frame capture listeners");
       mRegistered = true;
     }
+
+    if (!mOwningElement) {
+      return;
+    }
+
+    if (Watchable<FrameCaptureState>* captureState =
+            mOwningElement->GetFrameCaptureState()) {
+      mWatchManager.Watch(
+          *captureState,
+          &RequestedFrameRefreshObserver::NotifyCaptureStateChange);
+    }
   }
 
   void Unregister() {
@@ -200,6 +271,17 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
       mRefreshDriver->RemoveRefreshObserver(this, FlushType::Display);
       mRegistered = false;
     }
+
+    if (!mOwningElement) {
+      return;
+    }
+
+    if (Watchable<FrameCaptureState>* captureState =
+            mOwningElement->GetFrameCaptureState()) {
+      mWatchManager.Unwatch(
+          *captureState,
+          &RequestedFrameRefreshObserver::NotifyCaptureStateChange);
+    }
   }
 
  private:
@@ -210,8 +292,11 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
 
   bool mRegistered;
   bool mReturnPlaceholderData;
-  HTMLCanvasElement* const mOwningElement;
+  const WeakPtr<HTMLCanvasElement> mOwningElement;
   RefPtr<nsRefreshDriver> mRefreshDriver;
+  WatchManager<RequestedFrameRefreshObserver> mWatchManager;
+  TimeStamp mLastCaptureTime;
+  bool mPendingThrottledCapture;
 };
 
 // ---------------------------------------------------------------------------
@@ -1191,8 +1276,11 @@ void HTMLCanvasElement::MarkContextCleanForFrameCapture() {
   mCurrentContext->MarkContextCleanForFrameCapture();
 }
 
-bool HTMLCanvasElement::IsContextCleanForFrameCapture() {
-  return mCurrentContext && mCurrentContext->IsContextCleanForFrameCapture();
+Watchable<FrameCaptureState>* HTMLCanvasElement::GetFrameCaptureState() {
+  if (!mCurrentContext) {
+    return nullptr;
+  }
+  return mCurrentContext->GetFrameCaptureState();
 }
 
 nsresult HTMLCanvasElement::RegisterFrameCaptureListener(

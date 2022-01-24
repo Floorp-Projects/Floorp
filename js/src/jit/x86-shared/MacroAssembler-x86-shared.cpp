@@ -1108,6 +1108,8 @@ static void CompareExchange(MacroAssembler& masm,
     masm.append(*access, masm.size());
   }
 
+  // NOTE: the generated code must match the assembly code in gen_cmpxchg in
+  // GenerateAtomicOperations.py
   switch (Scalar::byteSize(type)) {
     case 1:
       CheckBytereg(newval);
@@ -1153,7 +1155,8 @@ static void AtomicExchange(MacroAssembler& masm,
                            const wasm::MemoryAccessDesc* access,
                            Scalar::Type type, const T& mem, Register value,
                            Register output)
-
+// NOTE: the generated code must match the assembly code in gen_exchange in
+// GenerateAtomicOperations.py
 {
   if (value != output) {
     masm.movl(value, output);
@@ -1230,6 +1233,8 @@ static void AtomicFetchOp(MacroAssembler& masm,
                           const T& mem, Register temp, Register output) {
   // Note value can be an Imm or a Register.
 
+  // NOTE: the generated code must match the assembly code in gen_fetchop in
+  // GenerateAtomicOperations.py
 #define ATOMIC_BITOP_BODY(LOAD, OP, LOCK_CMPXCHG)  \
   do {                                             \
     MOZ_ASSERT(output != temp);                    \
