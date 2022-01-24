@@ -129,6 +129,7 @@ static void PrintDisplayItemTo(nsDisplayListBuilder* aBuilder,
     }
 
     MOZ_ASSERT_UNREACHABLE();
+    return "";
   };
 
   aStream << nsPrintfCString(" reuse-state(%s)",
