@@ -57,6 +57,7 @@ const {
 
 const FORBIDDEN_IDS = new Set(["toolbox", ""]);
 const MAX_ORDINAL = 99;
+const POPUP_DEBUG_PREF = "devtools.popups.debug";
 
 /**
  * DevTools is a class that represents a set of developer tools, it holds a
@@ -585,7 +586,10 @@ DevTools.prototype = {
   ) {
     // Popups are debugged via the toolbox of their opener document/tab.
     // So avoid opening dedicated toolbox for them.
-    if (tab.linkedBrowser.browsingContext.opener) {
+    if (
+      tab.linkedBrowser.browsingContext.opener &&
+      Services.prefs.getBoolPref(POPUP_DEBUG_PREF)
+    ) {
       const openerTab = tab.ownerGlobal.gBrowser.getTabForBrowser(
         tab.linkedBrowser.browsingContext.opener.embedderElement
       );

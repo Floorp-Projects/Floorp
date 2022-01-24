@@ -3639,6 +3639,8 @@ Toolbox.prototype = {
     );
 
     this.commands.targetCommand.selectTarget(target);
+
+    this.emit("switched-host-to-tab");
   },
 
   /**
