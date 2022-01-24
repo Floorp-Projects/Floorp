@@ -1256,11 +1256,9 @@ bool PathCacheEntry::MatchesPath(const SkPath& aPath, const Pattern* aPattern,
                                  const StrokeOptions* aStrokeOptions,
                                  const Matrix& aTransform,
                                  const IntRect& aBounds, HashNumber aHash) {
-  if (aHash != mHash || !HasMatchingScale(aTransform, mTransform) ||
-      aBounds.Size() != mBounds.Size() || aPath == mPath) {
-    return false;
-  }
-  return (!aPattern ? !mPattern : mPattern && *aPattern == *mPattern) &&
+  return aHash == mHash && HasMatchingScale(aTransform, mTransform) &&
+         aBounds.Size() == mBounds.Size() && aPath == mPath &&
+         (!aPattern ? !mPattern : mPattern && *aPattern == *mPattern) &&
          (!aStrokeOptions
               ? !mStrokeOptions
               : mStrokeOptions && *aStrokeOptions == *mStrokeOptions);
