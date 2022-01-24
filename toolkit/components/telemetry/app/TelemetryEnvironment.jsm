@@ -1800,22 +1800,22 @@ EnvironmentCache.prototype = {
    * @return Object containing the partner data.
    */
   _getPartner() {
+    let defaults = Services.prefs.getDefaultBranch(null);
     let partnerData = {
-      distributionId: Services.prefs.getStringPref(PREF_DISTRIBUTION_ID, null),
-      distributionVersion: Services.prefs.getStringPref(
+      distributionId: defaults.getStringPref(PREF_DISTRIBUTION_ID, null),
+      distributionVersion: defaults.getCharPref(
         PREF_DISTRIBUTION_VERSION,
         null
       ),
-      partnerId: Services.prefs.getStringPref(PREF_PARTNER_ID, null),
-      distributor: Services.prefs.getStringPref(PREF_DISTRIBUTOR, null),
-      distributorChannel: Services.prefs.getStringPref(
-        PREF_DISTRIBUTOR_CHANNEL,
-        null
-      ),
+      partnerId: defaults.getCharPref(PREF_PARTNER_ID, null),
+      distributor: defaults.getCharPref(PREF_DISTRIBUTOR, null),
+      distributorChannel: defaults.getCharPref(PREF_DISTRIBUTOR_CHANNEL, null),
     };
 
     // Get the PREF_APP_PARTNER_BRANCH branch and append its children to partner data.
-    let partnerBranch = Services.prefs.getBranch(PREF_APP_PARTNER_BRANCH);
+    let partnerBranch = Services.prefs.getDefaultBranch(
+      PREF_APP_PARTNER_BRANCH
+    );
     partnerData.partnerNames = partnerBranch.getChildList("");
 
     return partnerData;

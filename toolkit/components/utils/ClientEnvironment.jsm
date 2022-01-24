@@ -32,7 +32,9 @@ var EXPORTED_SYMBOLS = ["ClientEnvironmentBase"];
  */
 class ClientEnvironmentBase {
   static get distribution() {
-    return Services.prefs.getCharPref("distribution.id", "default");
+    return Services.prefs
+      .getDefaultBranch(null)
+      .getCharPref("distribution.id", "default");
   }
 
   static get telemetry() {

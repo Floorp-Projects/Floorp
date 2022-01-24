@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   CommonUtils: "resource://services-common/utils.js",
   MockRegistrar: "resource://testing-common/MockRegistrar.jsm",
   OS: "resource://gre/modules/osfile.jsm",
-  Preferences: "resource://gre/modules/Preferences.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["TelemetryEnvironmentTesting"];
@@ -147,7 +147,9 @@ var TelemetryEnvironmentTesting = {
 
     // Spoof the preferences.
     for (let pref in prefsToSpoof) {
-      Preferences.set(pref, prefsToSpoof[pref]);
+      Services.prefs
+        .getDefaultBranch(null)
+        .setStringPref(pref, prefsToSpoof[pref]);
     }
   },
 
