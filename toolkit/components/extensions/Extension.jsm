@@ -117,6 +117,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "[]"
 );
 
+// This pref modifies behavior for MV2.  MV3 is enabled regardless.
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "eventPagesEnabled",
+  "extensions.eventPages.enabled"
+);
+
 var {
   GlobalManager,
   ParentAPIManager,
@@ -543,6 +550,7 @@ class ExtensionData {
 
     this.errors = [];
     this.warnings = [];
+    this.eventPagesEnabled = eventPagesEnabled;
   }
 
   get builtinMessages() {
@@ -940,6 +948,24 @@ class ExtensionData {
 
   get manifestVersion() {
     return this.manifest.manifest_version;
+  }
+
+  get persistentBackground() {
+    let { manifest } = this;
+    if (
+      !manifest.background ||
+      manifest.background.service_worker ||
+      this.manifestVersion > 2
+    ) {
+      return false;
+    }
+    // V2 addons can only use event pages if the pref is also flipped and
+    // persistent is explicilty set to false.
+    let { persistent } = manifest.background;
+    if (!this.eventPagesEnabled && !persistent) {
+      this.logWarning("Event pages are not currently supported.");
+    }
+    return !this.eventPagesEnabled || persistent;
   }
 
   async getExtensionVersionWithoutValidation() {

@@ -266,9 +266,12 @@ this.backgroundPage = class extends ExtensionAPI {
     return this.bgInstance.build();
   }
 
-  onManifestEntry(entryName) {
+  async primeBackground(isInStartup = true) {
     let { extension } = this;
 
+    if (this.bgInstance) {
+      Cu.reportError(`background script exists before priming ${extension.id}`);
+    }
     this.bgInstance = null;
 
     // When in PPB background pages all run in a private context.  This check
@@ -300,11 +303,36 @@ this.backgroundPage = class extends ExtensionAPI {
       return bgStartupPromise;
     };
 
-    if (extension.startupReason !== "APP_STARTUP" || !DELAYED_STARTUP) {
+    extension.terminateBackground = async () => {
+      await bgStartupPromise;
+      this.onShutdown(false);
+      EventManager.clearPrimedListeners(this.extension, false);
+      // Setup background startup listeners for next primed event.
+      return this.primeBackground(false);
+    };
+
+    extension.once("terminate-background-script", async () => {
+      if (!this.extension) {
+        // Extension was already shut down.
+        return;
+      }
+      this.extension.terminateBackground();
+    });
+
+    // Persistent backgrounds are started immediately except during APP_STARTUP.
+    // Non-persistent backgrounds must be started immediately for new install or enable
+    // to initialize the addon and create the persisted listeners.
+    if (
+      isInStartup &&
+      (!DELAYED_STARTUP ||
+        (extension.persistentBackground &&
+          extension.startupReason !== "APP_STARTUP") ||
+        ["ADDON_INSTALL", "ADDON_ENABLE"].includes(extension.startupReason))
+    ) {
       return this.build();
     }
 
-    EventManager.primeListeners(extension);
+    EventManager.primeListeners(extension, isInStartup);
 
     extension.once("start-background-script", async () => {
       if (!this.extension) {
@@ -321,13 +349,9 @@ this.backgroundPage = class extends ExtensionAPI {
     //    to touch browserPaintedPromise here to initialize the listener
     //    or else we can miss it if the event occurs after the first
     //    window is painted but before #2
-    // 2. After all windows have been restored.
+    // 2. After all windows have been restored on startup (see onManifestEntry).
     extension.once("background-script-event", async () => {
       await ExtensionParent.browserPaintedPromise;
-      extension.emit("start-background-script");
-    });
-
-    ExtensionParent.browserStartupPromise.then(() => {
       extension.emit("start-background-script");
     });
   }
@@ -336,8 +360,39 @@ this.backgroundPage = class extends ExtensionAPI {
     if (this.bgInstance) {
       this.bgInstance.shutdown(isAppShutdown);
       this.bgInstance = null;
+      this.extension.emit("shutdown-background-script");
     } else {
       EventManager.clearPrimedListeners(this.extension, false);
     }
+  }
+
+  async onManifestEntry(entryName) {
+    let { extension } = this;
+
+    await this.primeBackground();
+
+    ExtensionParent.browserStartupPromise.then(() => {
+      // If the background has been created earlier than session restore,
+      // we do not want to continue with creating it here.
+      if (this.bgInstance) {
+        return;
+      }
+
+      // If there are no listeners for the extension that were persisted, we need to
+      // start the event page so they can be registered.
+      if (
+        extension.persistentBackground ||
+        !extension.persistentListeners?.size
+      ) {
+        extension.emit("start-background-script");
+      } else {
+        // During startup we only prime startup blocking listeners.  At
+        // this stage we need to prime all listeners for event pages.
+        EventManager.clearPrimedListeners(extension, false);
+        // Allow re-priming by deleting existing listeners.
+        extension.persistentListeners = null;
+        EventManager.primeListeners(extension, false);
+      }
+    });
   }
 };
