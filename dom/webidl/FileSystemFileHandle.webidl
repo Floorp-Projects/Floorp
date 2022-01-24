@@ -16,4 +16,7 @@ interface FileSystemFileHandle : FileSystemHandle {
 #ifdef MOZ_DOM_STREAMS
   Promise<FileSystemWritableFileStream> createWritable(optional FileSystemCreateWritableOptions options = {});
 #endif
+
+  [Exposed=DedicatedWorker]
+  Promise<FileSystemSyncAccessHandle> createSyncAccessHandle();
 };

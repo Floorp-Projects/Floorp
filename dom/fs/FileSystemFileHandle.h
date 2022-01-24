@@ -33,6 +33,8 @@ class FileSystemFileHandle final : public FileSystemHandle {
       const FileSystemCreateWritableOptions& aOptions);
 #endif
 
+  already_AddRefed<Promise> CreateSyncAccessHandle();
+
  private:
   ~FileSystemFileHandle() = default;
 };
