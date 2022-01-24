@@ -38,8 +38,6 @@ class AbortFollower : public nsISupports {
   AbortSignalImpl* Signal() const { return mFollowingSignal; }
 
  protected:
-  static void Unlink(AbortFollower* aFollower) { aFollower->Unfollow(); }
-
   virtual ~AbortFollower();
 
   friend class AbortSignalImpl;
