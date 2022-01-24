@@ -42,6 +42,11 @@ def gen_seqcst(fun_name):
 
 
 def gen_load(fun_name, cpp_type, size, barrier):
+    # NOTE: the assembly code must match the generated code in:
+    # - CacheIRCompiler::emitAtomicsLoadResult
+    # - LIRGenerator::visitLoadUnboxedScalar
+    # - CodeGenerator::visitAtomicLoad64 (on 64-bit platforms)
+    # - MacroAssembler::wasmLoad
     if cpu_arch in ("x86", "x86_64"):
         insns = ""
         if barrier:
@@ -128,6 +133,11 @@ def gen_load(fun_name, cpp_type, size, barrier):
 
 
 def gen_store(fun_name, cpp_type, size, barrier):
+    # NOTE: the assembly code must match the generated code in:
+    # - CacheIRCompiler::emitAtomicsStoreResult
+    # - LIRGenerator::visitStoreUnboxedScalar
+    # - CodeGenerator::visitAtomicStore64 (on 64-bit platforms)
+    # - MacroAssembler::wasmStore
     if cpu_arch in ("x86", "x86_64"):
         insns = ""
         if barrier:
@@ -208,6 +218,9 @@ def gen_store(fun_name, cpp_type, size, barrier):
 
 
 def gen_exchange(fun_name, cpp_type, size):
+    # NOTE: the assembly code must match the generated code in:
+    # - MacroAssembler::atomicExchange
+    # - MacroAssembler::atomicExchange64 (on 64-bit platforms)
     if cpu_arch in ("x86", "x86_64"):
         # Request an input/output register for `val` so that we can simply XCHG it
         # with *addr.
@@ -301,6 +314,9 @@ def gen_exchange(fun_name, cpp_type, size):
 
 
 def gen_cmpxchg(fun_name, cpp_type, size):
+    # NOTE: the assembly code must match the generated code in:
+    # - MacroAssembler::compareExchange
+    # - MacroAssembler::compareExchange64
     if cpu_arch == "x86" and size == 64:
         # Use a +A constraint to load `oldval` into EDX:EAX as input/output.
         # `newval` is loaded into ECX:EBX.
@@ -468,6 +484,9 @@ def gen_cmpxchg(fun_name, cpp_type, size):
 
 
 def gen_fetchop(fun_name, cpp_type, size, op):
+    # NOTE: the assembly code must match the generated code in:
+    # - MacroAssembler::atomicFetchOp
+    # - MacroAssembler::atomicFetchOp64 (on 64-bit platforms)
     if cpu_arch in ("x86", "x86_64"):
         # The `add` operation can be optimized with XADD.
         if op == "add":
