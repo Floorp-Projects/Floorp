@@ -52,6 +52,7 @@ DIRS += [
     "filehandle",
     "filesystem",
     "flex",
+    "fs",
     "gamepad",
     "geolocation",
     "grid",
