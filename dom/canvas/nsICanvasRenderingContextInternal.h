@@ -16,6 +16,7 @@
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/StateWatching.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/WeakPtr.h"
@@ -51,6 +52,8 @@ namespace gfx {
 class SourceSurface;
 }  // namespace gfx
 }  // namespace mozilla
+
+enum class FrameCaptureState : uint8_t { CLEAN, DIRTY };
 
 class nsICanvasRenderingContextInternal : public nsISupports,
                                           public mozilla::SupportsWeakPtr,
@@ -160,9 +163,10 @@ class nsICanvasRenderingContextInternal : public nsISupports,
   // Called when a frame is captured.
   virtual void MarkContextCleanForFrameCapture() = 0;
 
-  // Whether the context is clean or has been invalidated since the last frame
-  // was captured.
-  virtual bool IsContextCleanForFrameCapture() = 0;
+  // Whether the context is clean or has been invalidated (dirty) since the last
+  // frame was captured. The Watchable allows the caller to get notified of
+  // state changes.
+  virtual mozilla::Watchable<FrameCaptureState>* GetFrameCaptureState() = 0;
 
   // Redraw the dirty rectangle of this canvas.
   NS_IMETHOD Redraw(const gfxRect& dirty) = 0;
