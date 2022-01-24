@@ -59,4 +59,17 @@ already_AddRefed<Promise> FileSystemFileHandle::CreateWritable(
 }
 #endif
 
+already_AddRefed<Promise> FileSystemFileHandle::CreateSyncAccessHandle() {
+  IgnoredErrorResult rv;
+
+  RefPtr<Promise> promise = Promise::Create(GetParentObject(), rv);
+  if (rv.Failed()) {
+    return nullptr;
+  }
+
+  promise->MaybeReject(NS_ERROR_NOT_IMPLEMENTED);
+
+  return promise.forget();
+}
+
 }  // namespace mozilla::dom
