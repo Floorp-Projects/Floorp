@@ -718,12 +718,7 @@ let JSWINDOWACTORS = {
         DOMDocElementInserted: {},
       },
     },
-    matches: [
-      "about:home*",
-      "about:newtab*",
-      "about:welcome*",
-      "about:privatebrowsing",
-    ],
+    matches: ["about:home*", "about:newtab*", "about:welcome*"],
     remoteTypes: ["privilegedabout"],
   },
 
