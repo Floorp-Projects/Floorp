@@ -209,7 +209,7 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
 #endif
 
 #ifndef JS_CODEGEN_NONE
-  // Normally this is forced by the compilation of atomic operations.
+  // This is forced by InitializeJit.
   MOZ_ASSERT(js::jit::CPUFlagsHaveBeenComputed());
 #endif
 
