@@ -134,7 +134,7 @@ function run_test() {
       attributes: {},
     },
     {
-      host: "[::1]",
+      host: "::1",
       port: 443,
       cert: cert2,
       bits: Ci.nsICertOverrideService.ERROR_MISMATCH,
