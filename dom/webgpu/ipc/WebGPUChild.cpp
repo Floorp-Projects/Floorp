@@ -934,7 +934,7 @@ ipc::IPCResult WebGPUChild::RecvDeviceUncapturedError(
   if (!aDeviceId || targetIter == mDeviceMap.end()) {
     JsWarning(nullptr, aMessage);
   } else {
-    auto* target = targetIter->second;
+    auto* target = targetIter->second.get();
     MOZ_ASSERT(target);
     // We don't want to spam the errors to the console indefinitely
     if (target->CheckNewWarning(aMessage)) {
@@ -985,7 +985,9 @@ void WebGPUChild::RegisterDevice(RawId aId, Device* aDevice) {
 
 void WebGPUChild::UnregisterDevice(RawId aId) {
   mDeviceMap.erase(aId);
-  SendDeviceDestroy(aId);
+  if (IsOpen()) {
+    SendDeviceDestroy(aId);
+  }
 }
 
 }  // namespace webgpu

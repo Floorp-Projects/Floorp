@@ -3862,9 +3862,15 @@ static std::string ToString(const js::Scalar::Type type) {
     _(Int32)
     _(Uint32)
     _(Float32)
+    _(Float64)
+    _(Int64)
+    _(BigInt64)
+    _(BigUint64)
+    _(Simd128)
 #undef _
-    default:
-      break;
+    case js::Scalar::Type::MaxTypedArrayViewType:
+      // -_-
+      MOZ_CRASH("MaxTypedArrayViewType");
   }
   MOZ_ASSERT(false);
   return std::string("#") + std::to_string(UnderlyingValue(type));
