@@ -6019,3 +6019,7 @@ dependencies = [
  "podio",
  "time",
 ]
+
+[[patch.unused]]
+name = "mozbuild"
+version = "0.1.0"
