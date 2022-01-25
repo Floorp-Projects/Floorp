@@ -7,7 +7,7 @@
     "build": "npx run-p build:*",
     "build:handlebars": "node compile_handlebars.js",
     "build:webpack": "webpack --config webpack.config.js",
-    "build:sass": "npx sass content/panels/css/main.scss content/panels/css/main.compiled.css --style=compressed",
+    "build:sass": "npx sass content/panels/css/main.scss content/panels/css/main.compiled.css",
     "watch": "npx run-p watch:*",
     "watch:handlebars": "npx chokidar \"content/panels/tmpl/**/*.handlebars\" -c \"npm run build:handlebars\"",
     "watch:webpack": "npm run build:webpack -- --env development -w",
