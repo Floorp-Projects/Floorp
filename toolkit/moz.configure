@@ -1358,13 +1358,11 @@ option(env="MIDL_FLAGS", nargs=1, help="Extra flags to pass to MIDL")
 
 @depends(
     "MIDL_FLAGS",
-    c_compiler,
     target,
-    host,
     midl,
     when=depends(midl, target)(lambda m, t: m and t.kernel == "WINNT"),
 )
-def midl_flags(flags, c_compiler, target, host, midl):
+def midl_flags(flags, target, midl):
     if flags:
         flags = flags[0].split()
     else:
@@ -1376,22 +1374,7 @@ def midl_flags(flags, c_compiler, target, host, midl):
             "x86_64": "x64",
             "aarch64": "arm64",
         }[target.cpu]
-        flags += ["-env", env]
-
-        if host.os == "WINNT":
-            return flags + ["-cpp_cmd", c_compiler.compiler]
-
-        # If cross-compiling and using midl instead of widl, for now, we'll
-        # assume we can find the Windows version of clang-cl in the PATH.
-        # It is required because while Wine is able to spawn Linux
-        # processes from Windows programs(!), the calling program doesn't
-        # have access to the process output and can't wait for it to
-        # finish. Midl runs clang-cl as a preprocessor and expects to read
-        # its output...
-        clang_cl_exe = find_program("clang-cl.exe")
-        if not clang_cl_exe:
-            die("Cannot find clang-cl.exe")
-        return flags + ["-cpp_cmd", clang_cl_exe]
+        return flags + ["-nologo", "-no_cpp", "-env", env]
 
     # widl
     return flags + {
