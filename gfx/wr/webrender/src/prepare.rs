@@ -902,54 +902,49 @@ fn decompose_repeated_gradient(
     spatial_tree: &SpatialTree,
     mut callback: Option<&mut dyn FnMut(&LayoutRect, GpuDataRequest)>,
 ) -> GradientTileRange {
-    let mut visible_tiles = Vec::new();
+    let tile_range = gradient_tiles.open_range();
 
     // Tighten the clip rect because decomposing the repeated image can
     // produce primitives that are partially covering the original image
     // rect and we want to clip these extra parts out.
-    let tight_clip_rect = prim_vis
+    if let Some(tight_clip_rect) = prim_vis
         .combined_local_clip_rect
-        .intersection(prim_local_rect).unwrap();
+        .intersection(prim_local_rect) {
 
-    let visible_rect = compute_conservative_visible_rect(
-        &prim_vis.clip_chain,
-        frame_state.current_dirty_region().combined,
-        prim_spatial_node_index,
-        spatial_tree,
-    );
-    let stride = *stretch_size + *tile_spacing;
-
-    let repetitions = image_tiling::repetitions(prim_local_rect, &visible_rect, stride);
-    for Repetition { origin, .. } in repetitions {
-        let mut handle = GpuCacheHandle::new();
-        let rect = LayoutRect::from_origin_and_size(
-            origin,
-            *stretch_size,
+        let visible_rect = compute_conservative_visible_rect(
+            &prim_vis.clip_chain,
+            frame_state.current_dirty_region().combined,
+            prim_spatial_node_index,
+            spatial_tree,
         );
+        let stride = *stretch_size + *tile_spacing;
 
-        if let Some(callback) = &mut callback {
-            if let Some(request) = frame_state.gpu_cache.request(&mut handle) {
-                callback(&rect, request);
+        let repetitions = image_tiling::repetitions(prim_local_rect, &visible_rect, stride);
+        gradient_tiles.reserve(repetitions.num_repetitions());
+        for Repetition { origin, .. } in repetitions {
+            let mut handle = GpuCacheHandle::new();
+            let rect = LayoutRect::from_origin_and_size(
+                origin,
+                *stretch_size,
+            );
+
+            if let Some(callback) = &mut callback {
+                if let Some(request) = frame_state.gpu_cache.request(&mut handle) {
+                    callback(&rect, request);
+                }
             }
-        }
 
-        visible_tiles.push(VisibleGradientTile {
-            local_rect: rect,
-            local_clip_rect: tight_clip_rect,
-            handle
-        });
+            gradient_tiles.push(VisibleGradientTile {
+                local_rect: rect,
+                local_clip_rect: tight_clip_rect,
+                handle
+            });
+        }
     }
 
     // At this point if we don't have tiles to show it means we could probably
     // have done a better a job at culling during an earlier stage.
-    // Clearing the screen rect has the effect of "culling out" the primitive
-    // from the point of view of the batch builder, and ensures we don't hit
-    // assertions later on because we didn't request any image.
-    if visible_tiles.is_empty() {
-        GradientTileRange::empty()
-    } else {
-        gradient_tiles.extend(visible_tiles)
-    }
+    gradient_tiles.close_range(tile_range)
 }
 
 
