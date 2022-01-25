@@ -173,8 +173,9 @@ pub struct DocumentHandle {
     api: RenderApi,
     document_id: DocumentId,
     // One of the two options below is Some and the other None at all times.
-    // It would be nice to model with an enum, however it is tricky to express moving
-    // a variant's content into another variant without movign the containing enum.
+    // It would be nice to model with an enum, however it is tricky to express
+    // moving a variant's content into another variant without moving the
+    // containing enum.
     hit_tester_request: Option<HitTesterRequest>,
     hit_tester: Option<Arc<dyn ApiHitTester>>,
 }
@@ -203,10 +204,12 @@ impl DocumentHandle {
         }
     }
 
-    fn ensure_hit_tester(&mut self) {
-        if self.hit_tester.is_none() {
-            self.hit_tester = Some(self.hit_tester_request.take().unwrap().resolve());
+    fn ensure_hit_tester(&mut self) -> &Arc<dyn ApiHitTester> {
+        if let Some(ref ht) = self.hit_tester {
+            return ht;
         }
+        self.hit_tester = Some(self.hit_tester_request.take().unwrap().resolve());
+        self.hit_tester.as_ref().unwrap()
     }
 }
 
@@ -1729,12 +1732,12 @@ pub unsafe extern "C" fn wr_api_delete_document(dh: &mut DocumentHandle) {
 pub extern "C" fn wr_api_clone(dh: &mut DocumentHandle, out_handle: &mut *mut DocumentHandle) {
     assert!(unsafe { is_in_compositor_thread() });
 
-    dh.ensure_hit_tester();
+    let hit_tester = dh.ensure_hit_tester().clone();
 
     let handle = DocumentHandle {
         api: dh.api.create_sender().create_api_by_client(next_namespace_id()),
         document_id: dh.document_id,
-        hit_tester: dh.hit_tester.clone(),
+        hit_tester: Some(hit_tester),
         hit_tester_request: None,
     };
     *out_handle = Box::into_raw(Box::new(handle));
@@ -3843,10 +3846,7 @@ pub struct HitResult {
 
 #[no_mangle]
 pub extern "C" fn wr_api_hit_test(dh: &mut DocumentHandle, point: WorldPoint, out_results: &mut ThinVec<HitResult>) {
-    dh.ensure_hit_tester();
-
-    let result = dh.hit_tester.as_ref().unwrap().hit_test(point);
-
+    let result = dh.ensure_hit_tester().hit_test(point);
     for item in &result.items {
         out_results.push(HitResult {
             pipeline_id: item.pipeline,
