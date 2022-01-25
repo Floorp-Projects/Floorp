@@ -786,16 +786,16 @@ impl<'a> SceneBuilder<'a> {
             if cfg!(feature = "display_list_stats") {
                 let stats = traversal.debug_stats();
                 let total_bytes: usize = stats.iter().map(|(_, stats)| stats.num_bytes).sum();
-                println!("item, total count, total bytes, % of DL bytes, bytes per item");
+                debug!("item, total count, total bytes, % of DL bytes, bytes per item");
                 for (label, stats) in stats {
-                    println!("{}, {}, {}kb, {}%, {}",
+                    debug!("{}, {}, {}kb, {}%, {}",
                         label,
                         stats.total_count,
                         stats.num_bytes / 1000,
                         ((stats.num_bytes as f32 / total_bytes.max(1) as f32) * 100.0) as usize,
                         stats.num_bytes / stats.total_count.max(1));
                 }
-                println!();
+                debug!("");
             }
         }
 
@@ -1722,7 +1722,7 @@ impl<'a> SceneBuilder<'a> {
     ) {
         // Add primitive to the top-most stacking context on the stack.
         if prim_instance.is_chased() {
-            println!("\tadded to stacking context at {}", self.sc_stack.len());
+            info!("\tadded to stacking context at {}", self.sc_stack.len());
         }
 
         // If we have a valid stacking context, the primitive gets added to that.
@@ -2409,7 +2409,7 @@ impl<'a> SceneBuilder<'a> {
         instance: PipelineInstanceId,
     ) {
         if let ChasePrimitive::Id(id) = self.config.chase_primitive {
-            println!("Chasing {:?} by index", id);
+            debug!("Chasing {:?} by index", id);
             register_prim_chase_id(id);
         }
 
@@ -2875,7 +2875,7 @@ impl<'a> SceneBuilder<'a> {
         prim_instance: &PrimitiveInstance,
     ) {
         if ChasePrimitive::LocalRect(*rect) == self.config.chase_primitive {
-            println!("Chasing {:?} by local rect", prim_instance.id);
+            debug!("Chasing {:?} by local rect", prim_instance.id);
             register_prim_chase_id(prim_instance.id);
         }
     }
