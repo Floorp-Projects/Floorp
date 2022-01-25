@@ -325,11 +325,14 @@ ExtensionTestCommon = class ExtensionTestCommon {
     if (data.background) {
       let bgScript = Services.uuid.generateUUID().number + ".js";
 
+      // If persistent is set keep the flag.
+      let persistent = manifest.background?.persistent;
       let scriptKey = data.useServiceWorker
         ? ["background", "service_worker"]
         : ["background", "scripts"];
       let scriptVal = data.useServiceWorker ? bgScript : [bgScript];
       provide(manifest, scriptKey, scriptVal, true);
+      provide(manifest, ["background", "persistent"], persistent);
 
       files[bgScript] = data.background;
     }
