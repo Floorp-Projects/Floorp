@@ -17,6 +17,8 @@
 namespace mozilla {
 
 class VideoFramePool;
+class VideoFrameSurfaceDMABuf;
+class VideoFrameSurfaceVAAPI;
 
 class VideoFrameSurface {
  public:
@@ -24,15 +26,13 @@ class VideoFrameSurface {
 
   VideoFrameSurface() = default;
 
-  virtual class VideoFrameSurfaceDMABuf* AsVideoFrameSurfaceDMABuf() {
+  virtual VideoFrameSurfaceDMABuf* AsVideoFrameSurfaceDMABuf() {
     return nullptr;
   }
-  virtual class VideoFrameSurfaceVAAPI* AsVideoFrameSurfaceVAAPI() {
-    return nullptr;
-  }
+  virtual VideoFrameSurfaceVAAPI* AsVideoFrameSurfaceVAAPI() { return nullptr; }
 
-  virtual void SetYUVColorSpace(mozilla::gfx::YUVColorSpace aColorSpace) = 0;
-  virtual void SetColorRange(mozilla::gfx::ColorRange aColorRange) = 0;
+  virtual void SetYUVColorSpace(gfx::YUVColorSpace aColorSpace) = 0;
+  virtual void SetColorRange(gfx::ColorRange aColorRange) = 0;
 
   virtual RefPtr<DMABufSurfaceYUV> GetDMABufSurface() { return nullptr; };
   virtual RefPtr<layers::Image> GetAsImage() = 0;
@@ -55,22 +55,20 @@ class VideoFrameSurfaceDMABuf : public VideoFrameSurface {
  public:
   explicit VideoFrameSurfaceDMABuf(DMABufSurface* aSurface);
 
-  class VideoFrameSurfaceDMABuf* AsVideoFrameSurfaceDMABuf() {
-    return this;
-  }
+  VideoFrameSurfaceDMABuf* AsVideoFrameSurfaceDMABuf() final { return this; }
 
-  void SetYUVColorSpace(mozilla::gfx::YUVColorSpace aColorSpace) {
+  void SetYUVColorSpace(gfx::YUVColorSpace aColorSpace) final {
     mSurface->GetAsDMABufSurfaceYUV()->SetYUVColorSpace(aColorSpace);
   }
-  void SetColorRange(mozilla::gfx::ColorRange aColorRange) {
+  void SetColorRange(gfx::ColorRange aColorRange) final {
     mSurface->GetAsDMABufSurfaceYUV()->SetColorRange(aColorRange);
   }
 
-  RefPtr<DMABufSurfaceYUV> GetDMABufSurface() {
+  RefPtr<DMABufSurfaceYUV> GetDMABufSurface() final {
     return mSurface->GetAsDMABufSurfaceYUV();
   };
 
-  RefPtr<layers::Image> GetAsImage();
+  RefPtr<layers::Image> GetAsImage() final;
 
  protected:
   // Check if DMABufSurface is used by any gecko rendering process
@@ -81,7 +79,7 @@ class VideoFrameSurfaceDMABuf : public VideoFrameSurface {
  protected:
   const RefPtr<DMABufSurface> mSurface;
 
-  ~VideoFrameSurfaceDMABuf(){};
+  virtual ~VideoFrameSurfaceDMABuf() = default;
 };
 
 // VideoFrameSurfaceVAAPI holds a reference to GPU data with a video frame.
@@ -113,15 +111,13 @@ class VideoFrameSurfaceDMABuf : public VideoFrameSurface {
 // Unfortunately there isn't any obvious way how to mark particular VASurface
 // as used. The best we can do is to hold a reference to particular AVBuffer
 // from decoded AVFrame and AVHWFramesContext which owns the AVBuffer.
-class VideoFrameSurfaceVAAPI : public VideoFrameSurfaceDMABuf {
+class VideoFrameSurfaceVAAPI final : public VideoFrameSurfaceDMABuf {
   friend class VideoFramePool;
 
  public:
   explicit VideoFrameSurfaceVAAPI(DMABufSurface* aSurface);
 
-  virtual class VideoFrameSurfaceVAAPI* AsVideoFrameSurfaceVAAPI() {
-    return this;
-  }
+  VideoFrameSurfaceVAAPI* AsVideoFrameSurfaceVAAPI() final { return this; }
 
  protected:
   // Lock VAAPI related data
@@ -132,7 +128,7 @@ class VideoFrameSurfaceVAAPI : public VideoFrameSurfaceDMABuf {
   void ReleaseVAAPIData(bool aForFrameRecycle = true);
 
  private:
-  ~VideoFrameSurfaceVAAPI();
+  virtual ~VideoFrameSurfaceVAAPI();
 
   const FFmpegLibWrapper* mLib;
   AVBufferRef* mAVHWFramesContext;
@@ -158,10 +154,10 @@ class VideoFramePool final {
  private:
   const bool mUseVAAPI;
   // Protect mDMABufSurfaces pool access
-  mozilla::Mutex mSurfaceLock;
-  nsTArray<RefPtr<VideoFrameSurface>> mDMABufSurfaces;
-  // We may fails to create texture over DMABuf memory due to driver bugs
-  // so check that before we export first DMABuf video frame.
+  Mutex mSurfaceLock;
+  nsTArray<RefPtr<VideoFrameSurfaceDMABuf>> mDMABufSurfaces;
+  // We may fail to create texture over DMABuf memory due to driver bugs so
+  // check that before we export first DMABuf video frame.
   Maybe<bool> mTextureCreationWorks;
 };
 
