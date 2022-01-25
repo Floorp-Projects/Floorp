@@ -328,7 +328,7 @@ class NimbusPlugin implements Plugin<Project> {
 
         var localAppServices = extension.getAppServicesActual(project)
 
-        var appPackageName = extension.getAppPackage(variant)
+        var appPackageName = extension.getAppPackageName(variant)
         var requiresRPackage = versionCompare(getApplicationServiceVersion(), "89.0.0") >= 0
 
         var generateTask = project.task("nimbusFeatures${variant.name.capitalize()}", type: Exec) {
@@ -364,7 +364,7 @@ class NimbusPlugin implements Plugin<Project> {
             args "--package", packageName
             args "--channel", channel
             if (requiresRPackage) {
-                args "--r-package", extension.getAppPackage(variant)
+                args "--r-package", extension.getAppPackageName(variant)
             }
         }
         variant.registerJavaGeneratingTask(generateTask, new File(sourceOutputDir))
