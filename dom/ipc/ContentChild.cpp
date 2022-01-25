@@ -2364,8 +2364,6 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyAlertsObserver(
   return IPC_OK();
 }
 
-// NOTE: This method is being run in the SystemGroup, and thus cannot directly
-// touch pages. See GetSpecificMessageEventTarget.
 mozilla::ipc::IPCResult ContentChild::RecvNotifyVisited(
     nsTArray<VisitedQueryResult>&& aURIs) {
   nsCOMPtr<IHistory> history = components::History::Service();

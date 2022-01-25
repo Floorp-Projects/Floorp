@@ -2034,8 +2034,6 @@ void HttpChannelChild::SetEventTarget() {
     return;
   }
 
-  gNeckoChild->SetEventTargetForActor(this, target);
-
   {
     MutexAutoLock lock(mEventTargetMutex);
     mNeckoTarget = target;
@@ -2479,8 +2477,6 @@ HttpChannelChild::OpenAlternativeOutputStream(const nsACString& aType,
 
   RefPtr<AltDataOutputStreamChild> stream = new AltDataOutputStreamChild();
   stream->AddIPDLReference();
-
-  gNeckoChild->SetEventTargetForActor(stream, neckoTarget);
 
   if (!gNeckoChild->SendPAltDataOutputStreamConstructor(
           stream, nsCString(aType), aPredictedSize, this)) {
