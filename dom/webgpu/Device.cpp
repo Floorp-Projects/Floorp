@@ -33,8 +33,9 @@ namespace webgpu {
 
 mozilla::LazyLogModule gWebGPULog("WebGPU");
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(Device, DOMEventTargetHelper, mBridge,
-                                   mQueue)
+GPU_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(Device, DOMEventTargetHelper,
+                                                 mBridge, mQueue, mFeatures,
+                                                 mLimits);
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(Device, DOMEventTargetHelper)
 GPU_IMPL_JS_WRAP(Device)
 
@@ -68,7 +69,7 @@ Device::Device(Adapter* const aParent, RawId aId,
 Device::~Device() { Cleanup(); }
 
 void Device::Cleanup() {
-  if (mValid && mBridge && mBridge->IsOpen()) {
+  if (mValid && mBridge) {
     mValid = false;
     mBridge->UnregisterDevice(mId);
   }

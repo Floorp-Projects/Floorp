@@ -10,6 +10,7 @@
 #include "nsTHashSet.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -77,7 +78,7 @@ class WebGPUChild;
 
 using MappingPromise = MozPromise<ipc::Shmem, ipc::ResponseRejectReason, true>;
 
-class Device final : public DOMEventTargetHelper {
+class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Device, DOMEventTargetHelper)
