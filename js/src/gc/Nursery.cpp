@@ -913,44 +913,49 @@ void js::Nursery::printCollectionProfile(JS::GCReason reason,
 
   TimeDuration ts = collectionStartTime() - stats().creationTime();
 
+  FILE* file = stats().profileFile();
   fprintf(
-      stderr, "MinorGC: %7zu %14p %10.6f %-20.20s %5.1f%% %6zu %6zu %6" PRIu32,
+      file, "MinorGC: %7zu %14p %10.6f %-20.20s %5.1f%% %6zu %6zu %6" PRIu32,
       size_t(getpid()), runtime(), ts.ToSeconds(), JS::ExplainGCReason(reason),
       promotionRate * 100, previousGC.nurseryCapacity / 1024, capacity() / 1024,
       stats().getStat(gcstats::STAT_STRINGS_DEDUPLICATED));
 
-  printProfileDurations(profileDurations_);
+  printProfileDurations(file, profileDurations_);
 }
 
-// static
 void js::Nursery::printProfileHeader() {
+  FILE* file = stats().profileFile();
   fprintf(
-      stderr,
+      file,
       "MinorGC: PID     Runtime        Timestamp  Reason               PRate  "
       "OldSz  NewSz  Dedup ");
-#define PRINT_HEADER(name, text) fprintf(stderr, " %-6.6s", text);
+#define PRINT_HEADER(name, text) fprintf(file, " %-6.6s", text);
   FOR_EACH_NURSERY_PROFILE_TIME(PRINT_HEADER)
 #undef PRINT_HEADER
-  fprintf(stderr, "\n");
+  fprintf(file, "\n");
 }
 
 // static
-void js::Nursery::printProfileDurations(const ProfileDurations& times) {
+void js::Nursery::printProfileDurations(FILE* file,
+                                        const ProfileDurations& times) {
   for (auto time : times) {
-    fprintf(stderr, " %6" PRIi64, static_cast<int64_t>(time.ToMicroseconds()));
+    fprintf(file, " %6" PRIi64, static_cast<int64_t>(time.ToMicroseconds()));
   }
-  fprintf(stderr, "\n");
+  fprintf(file, "\n");
 }
 
 void js::Nursery::printTotalProfileTimes() {
-  if (enableProfiling_) {
-    fprintf(stderr,
-            "MinorGC: %6zu %14p TOTALS: %7" PRIu64
-            " collections:               %16" PRIu64,
-            size_t(getpid()), runtime(), gc->stringStats.deduplicatedStrings,
-            gc->minorGCCount());
-    printProfileDurations(totalDurations_);
+  if (!enableProfiling_) {
+    return;
   }
+
+  FILE* file = stats().profileFile();
+  fprintf(file,
+          "MinorGC: %7zu %14p TOTALS: %7" PRIu64
+          " collections:               %16" PRIu64,
+          size_t(getpid()), runtime(), gc->stringStats.deduplicatedStrings,
+          gc->minorGCCount());
+  printProfileDurations(file, totalDurations_);
 }
 
 void js::Nursery::maybeClearProfileDurations() {
