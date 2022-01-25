@@ -26,7 +26,7 @@ linux64-minidump-stackwalk:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang-13
+            - linux64-clang-toolchain
             - linux64-rust-1.57
             - sysroot-x86_64-linux-gnu
 
@@ -38,7 +38,7 @@ macosx64-minidump-stackwalk:
     fetches:
         toolchain:
             - linux64-rust-macos-1.57
-            - linux64-clang-13
+            - linux64-clang-toolchain
             - linux64-cctools-port-clang-13
             - macosx64-sdk-11.0
 
@@ -50,7 +50,7 @@ macosx64-aarch64-minidump-stackwalk:
     fetches:
         toolchain:
             - linux64-rust-macos-1.57
-            - linux64-clang-13
+            - linux64-clang-toolchain
             - linux64-cctools-port-clang-13
             - macosx64-sdk-11.0
 
@@ -67,7 +67,7 @@ win32-minidump-stackwalk:
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - linux64-clang-13
+            - linux64-clang-toolchain
             - linux64-liblowercase
             - linux64-rust-windows-1.57
 
@@ -84,7 +84,7 @@ win64-minidump-stackwalk:
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - linux64-clang-13
+            - linux64-clang-toolchain
             - linux64-liblowercase
             - linux64-rust-windows-1.57
 
@@ -107,6 +107,6 @@ linux64-breakpad-injector:
         symbol: TL(injector)
     fetches:
         toolchain:
-            - linux64-clang-13
+            - linux64-clang-toolchain
             - linux64-binutils
             - linux64-toolchain-sysroot

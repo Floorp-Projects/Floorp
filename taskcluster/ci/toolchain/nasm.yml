@@ -39,7 +39,7 @@ macosx64-nasm:
             - nasm-2.15.05
         toolchain:
             - linux64-cctools-port-clang-13
-            - linux64-clang-13-macosx-cross
+            - linux64-clang-toolchain
             - macosx64-sdk-11.0
 
 macosx64-aarch64-nasm:
@@ -56,7 +56,7 @@ macosx64-aarch64-nasm:
             - nasm-2.14.02
         toolchain:
             - linux64-cctools-port-clang-13
-            - linux64-clang-13-macosx-cross
+            - linux64-clang-toolchain
             - macosx64-sdk-11.0
 
 linux64-nasm:
@@ -72,7 +72,7 @@ linux64-nasm:
         fetch:
             - nasm-2.15.05
         toolchain:
-            - linux64-clang-13
+            - linux64-clang-toolchain
             - sysroot-x86_64-linux-gnu
 
 linux64-nasm-2.14.02:
@@ -86,5 +86,5 @@ linux64-nasm-2.14.02:
         fetch:
             - nasm-2.14.02
         toolchain:
-            - linux64-clang-13
+            - linux64-clang-toolchain
             - sysroot-x86_64-linux-gnu
