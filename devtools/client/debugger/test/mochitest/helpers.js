@@ -460,6 +460,17 @@ async function waitForPaused(dbg, url) {
   await waitForSelectedSource(dbg, url);
 }
 
+/**
+ * Waits for the debugger to resume
+ *
+ * @memberof mochitest/waits
+ * @param {Objeect} dbg
+ * @static
+ */
+function waitForResumed(dbg) {
+  return waitForState(dbg, state => !dbg.selectors.getIsCurrentThreadPaused());
+}
+
 function waitForInlinePreviews(dbg) {
   return waitForState(dbg, () => dbg.selectors.getSelectedInlinePreviews());
 }
@@ -759,9 +770,9 @@ async function stepOut(dbg) {
 async function resume(dbg) {
   const pauseLine = getVisibleSelectedFrameLine(dbg);
   info(`Resuming from ${pauseLine}`);
-  const onResumed = waitForActive(dbg);
-  await dbg.actions.resume(getThreadContext(dbg));
-  await onResumed;
+  const onResumed = waitForResumed(dbg);
+  await dbg.actions.resume();
+  return onResumed;
 }
 
 function deleteExpression(dbg, input) {
@@ -1050,10 +1061,6 @@ async function togglePauseOnExceptions(
     pauseOnExceptions,
     pauseOnCaughtExceptions
   );
-}
-
-function waitForActive(dbg) {
-  return waitForState(dbg, state => !dbg.selectors.getIsCurrentThreadPaused());
 }
 
 // Helpers
