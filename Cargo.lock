@@ -344,6 +344,7 @@ dependencies = [
  "cranelift-wasm",
  "env_logger",
  "log",
+ "mozbuild",
  "smallvec",
 ]
 
