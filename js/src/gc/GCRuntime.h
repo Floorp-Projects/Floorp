@@ -315,6 +315,7 @@ class GCRuntime {
   uint32_t getParameter(JSGCParamKey key, const AutoLockGC& lock);
 
   void setPerformanceHint(PerformanceHint hint);
+  bool isInPageLoad() const { return inPageLoadCount != 0; }
 
   [[nodiscard]] bool triggerGC(JS::GCReason reason);
   // Check whether to trigger a zone GC after allocating GC cells.
