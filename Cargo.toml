@@ -86,9 +86,6 @@ opt-level = 2
 cmake = { path = "build/rust/cmake" }
 vcpkg = { path = "build/rust/vcpkg" }
 
-# Helper crate for integration in the gecko build system.
-mozbuild = { path = "build/rust/mozbuild" }
-
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 
