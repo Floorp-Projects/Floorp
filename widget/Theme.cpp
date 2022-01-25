@@ -177,7 +177,10 @@ void Theme::Shutdown() {
 void Theme::LookAndFeelChanged() {
   ThemeColors::RecomputeAccentColors();
   if (gNonNativeInstance) {
-    gNonNativeInstance->SetScrollbarDrawing(Theme::ScrollbarStyle());
+    gNonNativeInstance->SetScrollbarDrawing(ScrollbarStyle());
+  }
+  if (gNativeInstance) {
+    gNativeInstance->SetScrollbarDrawing(ScrollbarStyle());
   }
 }
 
@@ -1400,12 +1403,8 @@ UniquePtr<ScrollbarDrawing> Theme::ScrollbarStyle() {
     case 5:
       return MakeUnique<ScrollbarDrawingWin11>();
     default:
-      return DefaultPlatformScrollbarStyle();
+      break;
   }
-}
-
-/* static */
-UniquePtr<ScrollbarDrawing> Theme::DefaultPlatformScrollbarStyle() {
   // Default to native scrollbar style for each platform.
 #ifdef XP_WIN
   if (IsWin11OrLater()) {
