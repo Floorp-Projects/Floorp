@@ -24,6 +24,7 @@
 #  include "mozilla/dom/ReadableStreamDefaultReaderBinding.h"
 #endif
 #include "mozilla/dom/RequestBinding.h"
+#include "mozilla/dom/workerinternals/RuntimeService.h"
 
 class nsIGlobalObject;
 class nsIEventTarget;
@@ -258,9 +259,6 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
  protected:
   nsCOMPtr<nsIGlobalObject> mOwner;
 
-  // Always set whenever the FetchBody is created on the worker thread.
-  WorkerPrivate* mWorkerPrivate;
-
 #ifdef MOZ_DOM_STREAMS
   // This is the ReadableStream exposed to content. It's underlying source is a
   // BodyStream object. This needs to be traversed by subclasses.
@@ -300,9 +298,9 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
   void LockStream(JSContext* aCx, JS::HandleObject aStream, ErrorResult& aRv);
 #endif
 
-  bool IsOnTargetThread() { return NS_IsMainThread() == !mWorkerPrivate; }
-
-  void AssertIsOnTargetThread() { MOZ_ASSERT(IsOnTargetThread()); }
+  void AssertIsOnTargetThread() {
+    MOZ_ASSERT(NS_IsMainThread() == !GetCurrentThreadWorkerPrivate());
+  }
 
   // Only ever set once, always on target thread.
   bool mBodyUsed;
