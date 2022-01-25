@@ -117,7 +117,9 @@ linux64-clang-13:
         resources:
             - 'build/build-clang/linux64.json'
             - 'build/build-clang/clang-13.json'
-        toolchain-alias: linux64-clang
+        toolchain-alias:
+            - linux64-clang
+            - linux64-clang-toolchain
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
@@ -265,7 +267,9 @@ macosx64-clang-13:
         - trunk
     run:
         script: repack-clang-linux-macosx-cross.sh
-        toolchain-alias: macosx64-clang
+        toolchain-alias:
+            - macosx64-clang
+            - macosx64-clang-toolchain
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
         macosx64-aarch64-compiler-rt-13: toolchain-macosx64-aarch64-compiler-rt-13
@@ -359,7 +363,9 @@ win64-clang-13:
             - 'build/build-clang/win64.json'
             - 'build/build-clang/clang-13.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-alias: win64-clang
+        toolchain-alias:
+            - win64-clang
+            - win64-clang-toolchain
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:
