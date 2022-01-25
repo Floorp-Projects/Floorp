@@ -615,6 +615,13 @@ if __name__ == "__main__":
         stages = int(config["stages"])
         if stages not in (1, 2, 3, 4):
             raise ValueError("We only know how to build 1, 2, 3, or 4 stages.")
+    skip_stages = 0
+    if "skip_stages" in config:
+        # The assumption here is that the compiler given in `cc` and other configs
+        # is the result of the last skip stage, built somewhere else.
+        skip_stages = int(config["skip_stages"])
+        if skip_stages >= stages:
+            raise ValueError("Cannot skip more stages than are built.")
     pgo = False
     if "pgo" in config:
         pgo = config["pgo"]
@@ -810,38 +817,43 @@ if __name__ == "__main__":
         extra_cflags2 += ["-fcrash-diagnostics-dir=%s" % upload_dir]
         extra_cxxflags2 += ["-fcrash-diagnostics-dir=%s" % upload_dir]
 
-    build_one_stage(
-        [cc] + extra_cflags,
-        [cxx] + extra_cxxflags,
-        [asm] + extra_asmflags,
-        [ld] + extra_ldflags,
-        ar,
-        ranlib,
-        libtool,
-        llvm_source_dir,
-        stage1_dir,
-        package_name,
-        build_libcxx,
-        osx_cross_compile,
-        build_type,
-        assertions,
-        libcxx_include_dir,
-        build_wasm,
-        is_final_stage=(stages == 1),
-    )
+    if skip_stages < 1:
+        build_one_stage(
+            [cc] + extra_cflags,
+            [cxx] + extra_cxxflags,
+            [asm] + extra_asmflags,
+            [ld] + extra_ldflags,
+            ar,
+            ranlib,
+            libtool,
+            llvm_source_dir,
+            stage1_dir,
+            package_name,
+            build_libcxx,
+            osx_cross_compile,
+            build_type,
+            assertions,
+            libcxx_include_dir,
+            build_wasm,
+            is_final_stage=(stages == 1),
+        )
 
     runtimes_source_link = llvm_source_dir + "/runtimes/compiler-rt"
 
-    if stages >= 2:
+    if stages >= 2 and skip_stages < 2:
         stage2_dir = build_dir + "/stage2"
         stage2_inst_dir = stage2_dir + "/" + package_name
         final_stage_dir = stage2_dir
         final_inst_dir = stage2_inst_dir
         pgo_phase = "gen" if pgo else None
+        if skip_stages < 1:
+            cc = stage1_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
+            cxx = stage1_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)
+            asm = stage1_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
         build_one_stage(
-            [stage1_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)] + extra_cflags2,
-            [stage1_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)] + extra_cxxflags2,
-            [stage1_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)] + extra_asmflags,
+            [cc] + extra_cflags2,
+            [cxx] + extra_cxxflags2,
+            [asm] + extra_asmflags,
             [ld] + extra_ldflags,
             ar,
             ranlib,
@@ -862,15 +874,19 @@ if __name__ == "__main__":
             pgo_phase=pgo_phase,
         )
 
-    if stages >= 3:
+    if stages >= 3 and skip_stages < 3:
         stage3_dir = build_dir + "/stage3"
         stage3_inst_dir = stage3_dir + "/" + package_name
         final_stage_dir = stage3_dir
         final_inst_dir = stage3_inst_dir
+        if skip_stages < 2:
+            cc = stage2_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
+            cxx = stage2_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)
+            asm = stage2_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
         build_one_stage(
-            [stage2_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)] + extra_cflags2,
-            [stage2_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)] + extra_cxxflags2,
-            [stage2_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)] + extra_asmflags,
+            [cc] + extra_cflags2,
+            [cxx] + extra_cxxflags2,
+            [asm] + extra_asmflags,
             [ld] + extra_ldflags,
             ar,
             ranlib,
@@ -890,7 +906,7 @@ if __name__ == "__main__":
             (stages == 3),
         )
 
-    if stages >= 4:
+    if stages >= 4 and skip_stages < 4:
         stage4_dir = build_dir + "/stage4"
         stage4_inst_dir = stage4_dir + "/" + package_name
         final_stage_dir = stage4_dir
@@ -906,10 +922,14 @@ if __name__ == "__main__":
             if not os.path.exists(stage4_dir):
                 os.mkdir(stage4_dir)
             run_in(stage4_dir, merge_cmd + profraw_files)
+        if skip_stages < 3:
+            cc = stage3_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
+            cxx = stage3_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)
+            asm = stage3_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
         build_one_stage(
-            [stage3_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)] + extra_cflags2,
-            [stage3_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)] + extra_cxxflags2,
-            [stage3_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)] + extra_asmflags,
+            [cc] + extra_cflags2,
+            [cxx] + extra_cxxflags2,
+            [asm] + extra_asmflags,
             [ld] + extra_ldflags,
             ar,
             ranlib,
