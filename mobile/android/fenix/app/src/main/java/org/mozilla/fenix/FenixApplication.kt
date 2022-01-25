@@ -25,13 +25,19 @@ import kotlinx.coroutines.launch
 import mozilla.appservices.Megazord
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.selector.selectedTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.isUnsupported
 import mozilla.components.concept.push.PushProcessor
+import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
+import mozilla.components.feature.autofill.AutofillUseCases
+import mozilla.components.feature.search.ext.buildSearchUrl
+import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
 import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
@@ -45,13 +51,27 @@ import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
 import mozilla.components.support.utils.logElapsedTime
 import mozilla.components.support.webextensions.WebExtensionSupport
+import org.mozilla.experiments.nimbus.NimbusInterface
+import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
+import org.mozilla.fenix.GleanMetrics.Addons
+import org.mozilla.fenix.GleanMetrics.AndroidAutofill
+import org.mozilla.fenix.GleanMetrics.CustomizeHome
 import org.mozilla.fenix.GleanMetrics.GleanBuildInfo
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.PerfStartup
+import org.mozilla.fenix.GleanMetrics.Preferences
+import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.components.Core
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricServiceType
+import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.metrics.SecurePrefsTelemetry
+import org.mozilla.fenix.components.toolbar.ToolbarPosition
+import org.mozilla.fenix.ext.isCustomEngine
+import org.mozilla.fenix.ext.isKnownSearchDomain
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
 import org.mozilla.fenix.perf.ProfilerMarkerFactProcessor
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.perf.StorageStatsMetrics
@@ -62,28 +82,8 @@ import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
 import org.mozilla.fenix.telemetry.TelemetryLifecycleObserver
 import org.mozilla.fenix.utils.BrowsersCache
-import java.util.concurrent.TimeUnit
-import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.storage.FrecencyThresholdOption
-import mozilla.components.feature.autofill.AutofillUseCases
-import mozilla.components.feature.search.ext.buildSearchUrl
-import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
-import mozilla.components.service.fxa.manager.SyncEnginesStorage
-import org.mozilla.experiments.nimbus.NimbusInterface
-import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
-import org.mozilla.fenix.GleanMetrics.Addons
-import org.mozilla.fenix.GleanMetrics.AndroidAutofill
-import org.mozilla.fenix.GleanMetrics.CustomizeHome
-import org.mozilla.fenix.GleanMetrics.Preferences
-import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
-import org.mozilla.fenix.components.Core
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MozillaProductDetector
-import org.mozilla.fenix.components.toolbar.ToolbarPosition
-import org.mozilla.fenix.ext.isCustomEngine
-import org.mozilla.fenix.ext.isKnownSearchDomain
-import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
 import org.mozilla.fenix.utils.Settings
+import java.util.concurrent.TimeUnit
 
 /**
  *The main application class for Fenix. Records data to measure initialization performance.
@@ -257,8 +257,9 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                         // switches delay rendering top sites when the cache is empty, which
                         // we can prevent with this.
                         components.core.topSitesStorage.getTopSites(
-                            components.settings.topSitesMaxLimit,
-                            if (components.settings.showTopFrecentSites)
+                            totalSites = components.settings.topSitesMaxLimit,
+                            fetchProvidedTopSites = components.settings.showContileFeature,
+                            frecencyConfig = if (components.settings.showTopFrecentSites)
                                 FrecencyThresholdOption.SKIP_ONE_TIME_PAGES
                             else
                                 null

@@ -426,8 +426,9 @@ class HomeFragment : Fragment() {
     internal fun getTopSitesConfig(): TopSitesConfig {
         val settings = requireContext().settings()
         return TopSitesConfig(
-            settings.topSitesMaxLimit,
-            if (settings.showTopFrecentSites) FrecencyThresholdOption.SKIP_ONE_TIME_PAGES else null
+            totalSites = settings.topSitesMaxLimit,
+            fetchProvidedTopSites = settings.showContileFeature,
+            frecencyConfig = if (settings.showTopFrecentSites) FrecencyThresholdOption.SKIP_ONE_TIME_PAGES else null
         )
     }
 

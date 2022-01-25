@@ -409,7 +409,7 @@ class Core(
         DefaultTopSitesStorage(
             pinnedSitesStorage = pinnedSiteStorage,
             historyStorage = historyStorage,
-            topSitesProvider = if (context.settings().showContileFeature) contileTopSitesProvider else null,
+            topSitesProvider = contileTopSitesProvider,
             defaultTopSites = defaultTopSites
         )
     }
