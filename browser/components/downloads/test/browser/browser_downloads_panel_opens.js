@@ -74,6 +74,7 @@ add_task(async function test_downloads_panel_opening_pref() {
   await promiseDownloadStartedNotification;
 
   is(DownloadsPanel.panel.state, "closed", "Panel should be closed");
+  await SpecialPowers.popPrefEnv();
 });
 
 /**
@@ -126,4 +127,56 @@ add_task(async function test_downloads_panel_remains_closed() {
   await promiseDownloadStartedNotification;
 
   is(DownloadsPanel.panel.state, "closed", "Panel should be closed");
+
+  for (let download of downloads) {
+    await publicList.remove(download);
+  }
+  is((await publicList.getAll()).length, 0, "Should have no downloads left.");
+});
+
+/**
+ * Make sure the downloads panel doesn't open if the window isn't in the
+ * foreground.
+ */
+add_task(async function test_downloads_panel_inactive_window() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.download.improvements_to_download_panel", true]],
+  });
+
+  let oldShowEventNotification = DownloadsIndicatorView.showEventNotification;
+
+  registerCleanupFunction(async () => {
+    DownloadsIndicatorView.showEventNotification = oldShowEventNotification;
+  });
+
+  let promiseDownloadStartedNotification = new Promise(resolve => {
+    // Instead of downloads panel opening, download notification should be shown.
+    DownloadsIndicatorView.showEventNotification = aType => {
+      if (aType == "start") {
+        DownloadsIndicatorView.showEventNotification = oldShowEventNotification;
+        resolve();
+      }
+    };
+  });
+
+  let testRunnerWindow = Array.from(Services.wm.getEnumerator("")).find(
+    someWin => someWin != window
+  );
+
+  await SimpleTest.promiseFocus(testRunnerWindow);
+
+  DownloadsCommon.getData(window)._notifyDownloadEvent("start");
+
+  is(
+    DownloadsPanel.isPanelShowing,
+    false,
+    "Panel state should NOT indicate a preparation to be opened"
+  );
+
+  await promiseDownloadStartedNotification;
+  await SimpleTest.promiseFocus(window);
+
+  is(DownloadsPanel.panel.state, "closed", "Panel should be closed");
+
+  testRunnerWindow = null;
 });
