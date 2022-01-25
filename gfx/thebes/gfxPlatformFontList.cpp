@@ -1026,6 +1026,28 @@ gfxFont* gfxPlatformFontList::CommonFontFallback(
   GlobalFontMatch data(aCh, aNextCh, *aMatchStyle, aPresentation);
   FontVisibility level =
       aPresContext ? aPresContext->GetFontVisibility() : FontVisibility::User;
+
+  // If a color-emoji presentation is requested, we will check any font found
+  // to see if it can provide this; if not, we'll remember it as a possible
+  // candidate but search the remainder of the list for a better choice.
+  gfxFont* candidateFont = nullptr;
+  FontFamily candidateFamily;
+  auto check = [&](gfxFontEntry* aFontEntry, FontFamily aFamily) -> gfxFont* {
+    gfxFont* font = aFontEntry->FindOrMakeFont(aMatchStyle);
+    if (aPresentation < eFontPresentation::EmojiDefault ||
+        font->HasColorGlyphFor(aCh, aNextCh)) {
+      aMatchedFamily = aFamily;
+      return font;
+    }
+    // We want a color glyph but this font only has monochrome; remember it
+    // (unless we already have a candidate) but continue to search.
+    if (!candidateFont) {
+      candidateFont = font;
+      candidateFamily = aFamily;
+    }
+    return nullptr;
+  };
+
   if (SharedFontList()) {
     for (const auto name : defaultFallbacks) {
       fontlist::Family* family =
@@ -1037,8 +1059,13 @@ gfxFont* gfxPlatformFontList::CommonFontFallback(
       // always do a potential sync initialization of the family?
       family->SearchAllFontsForChar(SharedFontList(), &data);
       if (data.mBestMatch) {
-        aMatchedFamily = FontFamily(family);
-        return data.mBestMatch->FindOrMakeFont(aMatchStyle);
+        gfxFont* font = check(data.mBestMatch, FontFamily(family));
+        if (font) {
+          // Twiddle the refcount of any stored candidate (that we're not going
+          // to return after all) so that the cache gets a chance to drop it.
+          RefPtr<gfxFont> autoRefDeref(candidateFont);
+          return font;
+        }
       }
     }
   } else {
@@ -1050,11 +1077,23 @@ gfxFont* gfxPlatformFontList::CommonFontFallback(
       }
       fallback->FindFontForChar(&data);
       if (data.mBestMatch) {
-        aMatchedFamily = FontFamily(fallback);
-        return data.mBestMatch->FindOrMakeFont(aMatchStyle);
+        gfxFont* font = check(data.mBestMatch, FontFamily(fallback));
+        if (font) {
+          RefPtr<gfxFont> autoRefDeref(candidateFont);
+          return font;
+        }
       }
     }
   }
+
+  // If we had a candidate that supports the character, but doesn't have the
+  // desired emoji-style glyph, we'll return it anyhow as nothing better was
+  // found.
+  if (candidateFont) {
+    aMatchedFamily = candidateFamily;
+    return candidateFont;
+  }
+
   return nullptr;
 }
 
