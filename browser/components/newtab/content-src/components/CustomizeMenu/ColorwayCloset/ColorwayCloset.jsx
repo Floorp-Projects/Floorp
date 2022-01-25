@@ -4,8 +4,6 @@
 
 import React from "react";
 
-export class ThemesSection extends React.PureComponent {
-  render() {
-    return <div />;
-  }
-}
+export const ColorwayCloset = ({ dispatch }) => (
+  <div id="colorway-closet">Colorway Closet Placeholder</div>
+);
