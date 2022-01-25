@@ -382,9 +382,13 @@ bool wasm::ThreadsAvailable(JSContext* cx) {
 }
 
 bool wasm::HasPlatformSupport(JSContext* cx) {
-#if !MOZ_LITTLE_ENDIAN() || defined(JS_CODEGEN_NONE) || defined(__wasi__)
+#if !MOZ_LITTLE_ENDIAN()
   return false;
 #else
+
+  if (!HasJitBackend()) {
+    return false;
+  }
 
   if (gc::SystemPageSize() > wasm::PageSize) {
     return false;

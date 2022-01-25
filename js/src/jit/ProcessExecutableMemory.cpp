@@ -23,6 +23,7 @@
 #  include "jit/arm64/vixl/Cpu-vixl.h"
 #endif
 #include "jit/FlushICache.h"  // js::jit::FlushICache
+#include "jit/JitOptions.h"
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
 #include "util/Memory.h"
@@ -545,6 +546,7 @@ class ProcessExecutableMemory {
     pages_.init();
 
     MOZ_RELEASE_ASSERT(!initialized());
+    MOZ_RELEASE_ASSERT(HasJitBackend());
     MOZ_RELEASE_ASSERT(gc::SystemPageSize() <= ExecutableCodePageSize);
 
     void* p = ReserveProcessExecutableMemory(MaxCodeBytesPerProcess);
@@ -603,6 +605,7 @@ void* ProcessExecutableMemory::allocate(size_t bytes,
                                         ProtectionSetting protection,
                                         MemCheckKind checkKind) {
   MOZ_ASSERT(initialized());
+  MOZ_ASSERT(HasJitBackend());
   MOZ_ASSERT(bytes > 0);
   MOZ_ASSERT((bytes % ExecutableCodePageSize) == 0);
 

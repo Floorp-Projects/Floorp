@@ -39,6 +39,7 @@ struct DefaultJitOptions {
 #endif
   bool checkRangeAnalysis;
   bool runExtraChecks;
+  bool disableJitBackend;
   bool disableAma;
   bool disableEaa;
   bool disableEdgeCaseAnalysis;
@@ -136,12 +137,17 @@ struct DefaultJitOptions {
 
 extern DefaultJitOptions JitOptions;
 
-inline bool IsBaselineInterpreterEnabled() {
-#ifdef JS_CODEGEN_NONE
+inline bool HasJitBackend() {
+#if defined(JS_CODEGEN_NONE)
   return false;
 #else
-  return JitOptions.baselineInterpreter && JitOptions.supportsFloatingPoint;
+  return !JitOptions.disableJitBackend;
 #endif
+}
+
+inline bool IsBaselineInterpreterEnabled() {
+  return HasJitBackend() && JitOptions.baselineInterpreter &&
+         JitOptions.supportsFloatingPoint;
 }
 
 }  // namespace jit
