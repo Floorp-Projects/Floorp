@@ -28,7 +28,7 @@ mozilla::ipc::IPCResult URLClassifierParent::StartClassify(
   nsCOMPtr<nsIURIClassifier> uriClassifier =
       do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    rv = uriClassifier->Classify(aPrincipal, nullptr, this, aSuccess);
+    rv = uriClassifier->Classify(aPrincipal, this, aSuccess);
   }
   if (NS_FAILED(rv) || !*aSuccess) {
     // We treat the case where we fail to classify and the case where the

@@ -67,17 +67,13 @@ nsresult UDPSocketChild::Bind(nsIUDPSocketInternal* aSocket,
                               nsIPrincipal* aPrincipal, const nsACString& aHost,
                               uint16_t aPort, bool aAddressReuse,
                               bool aLoopback, uint32_t recvBufferSize,
-                              uint32_t sendBufferSize,
-                              nsISerialEventTarget* aMainThreadEventTarget) {
+                              uint32_t sendBufferSize) {
   UDPSOCKET_LOG(
       ("%s: %s:%u", __FUNCTION__, PromiseFlatCString(aHost).get(), aPort));
 
   NS_ENSURE_ARG(aSocket);
 
   if (NS_IsMainThread()) {
-    if (aMainThreadEventTarget) {
-      gNeckoChild->SetEventTargetForActor(this, aMainThreadEventTarget);
-    }
     if (!gNeckoChild->SendPUDPSocketConstructor(this, aPrincipal,
                                                 mFilterName)) {
       return NS_ERROR_FAILURE;

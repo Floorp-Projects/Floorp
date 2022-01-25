@@ -102,12 +102,10 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   mozilla::ipc::IPCResult RecvParentAsyncMessages(
       nsTArray<AsyncParentMessageData>&& aMessages);
-  PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
-                               ReadLockDescriptor&& aReadLock,
-                               LayersBackend aLayersBackend,
-                               TextureFlags aFlags, uint64_t aSerial,
-                               wr::MaybeExternalImageId& aExternalImageId,
-                               nsISerialEventTarget* aTarget) override;
+  PTextureChild* CreateTexture(
+      const SurfaceDescriptor& aSharedData, ReadLockDescriptor&& aReadLock,
+      LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
+      wr::MaybeExternalImageId& aExternalImageId) override;
 
   already_AddRefed<CanvasChild> GetCanvasChild() final;
 

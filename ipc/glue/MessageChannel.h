@@ -156,6 +156,11 @@ class MessageChannel : HasResultCodes {
 
   IToplevelProtocol* Listener() const { return mListener; }
 
+  // Returns the event target which the worker lives on and must be used for
+  // operations on the current thread. Only safe to access after the
+  // MessageChannel has been opened.
+  nsISerialEventTarget* GetWorkerEventTarget() const { return mWorkerThread; }
+
   // "Open" a connection using an existing ScopedPort. The ScopedPort must be
   // valid and connected to a remote.
   //
