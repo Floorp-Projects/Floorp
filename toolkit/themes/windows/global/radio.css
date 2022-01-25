@@ -43,7 +43,7 @@ radio {
 
 /* ..... focused state ..... */
 
-radio[focused="true"] > .radio-label-box {
+radiogroup:focus-visible > radio[focused="true"] > .radio-label-box {
   outline: var(--default-focusring);
 }
 
