@@ -218,19 +218,8 @@ def build_one_stage(
     runtimes_source_link=None,
     compiler_rt_source_link=None,
     is_final_stage=False,
-    android_targets=None,
-    extra_targets=None,
     pgo_phase=None,
 ):
-    if is_final_stage and (android_targets or extra_targets):
-        # Linking compiler-rt under "runtimes" activates LLVM_RUNTIME_TARGETS
-        # and related arguments.
-        symlink(compiler_rt_source_dir, runtimes_source_link)
-        try:
-            os.unlink(compiler_rt_source_link)
-        except Exception:
-            pass
-
     if not os.path.exists(stage_dir):
         os.mkdir(stage_dir)
 
@@ -345,69 +334,6 @@ def build_one_stage(
         return cmake_args
 
     cmake_args = []
-
-    runtime_targets = []
-    if is_final_stage:
-        if android_targets:
-            runtime_targets = list(sorted(android_targets.keys()))
-        if extra_targets:
-            runtime_targets.extend(sorted(extra_targets))
-
-    if runtime_targets:
-        cmake_args += [
-            "-DLLVM_BUILTIN_TARGETS=%s" % ";".join(runtime_targets),
-            "-DLLVM_RUNTIME_TARGETS=%s" % ";".join(runtime_targets),
-        ]
-
-        for target in runtime_targets:
-            cmake_args += [
-                "-DRUNTIMES_%s_COMPILER_RT_BUILD_PROFILE=ON" % target,
-                "-DRUNTIMES_%s_COMPILER_RT_BUILD_SANITIZERS=ON" % target,
-                "-DRUNTIMES_%s_COMPILER_RT_BUILD_XRAY=OFF" % target,
-                "-DRUNTIMES_%s_SANITIZER_ALLOW_CXXABI=OFF" % target,
-                "-DRUNTIMES_%s_COMPILER_RT_BUILD_LIBFUZZER=OFF" % target,
-                "-DRUNTIMES_%s_COMPILER_RT_INCLUDE_TESTS=OFF" % target,
-                "-DRUNTIMES_%s_LLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF" % target,
-                "-DRUNTIMES_%s_LLVM_INCLUDE_TESTS=OFF" % target,
-            ]
-
-    # The above code flipped switches to build various runtime libraries on
-    # Android; we now have to provide all the necessary compiler switches to
-    # make that work.
-    if is_final_stage and android_targets:
-        android_link_flags = "-fuse-ld=lld"
-
-        for target, cfg in android_targets.items():
-            sysroot_dir = cfg["ndk_sysroot"].format(**os.environ)
-            android_gcc_dir = cfg["ndk_toolchain"].format(**os.environ)
-            android_include_dirs = cfg["ndk_includes"]
-            api_level = cfg["api_level"]
-
-            android_flags = [
-                "-isystem %s" % d.format(**os.environ) for d in android_include_dirs
-            ]
-            android_flags += ["--gcc-toolchain=%s" % android_gcc_dir]
-            android_flags += ["-D__ANDROID_API__=%s" % api_level]
-
-            # Our flags go last to override any --gcc-toolchain that may have
-            # been set earlier.
-            rt_c_flags = " ".join(cc[1:] + android_flags)
-            rt_cxx_flags = " ".join(cxx[1:] + android_flags)
-            rt_asm_flags = " ".join(asm[1:] + android_flags)
-
-            for kind in ("BUILTINS", "RUNTIMES"):
-                for var, arg in (
-                    ("ANDROID", "1"),
-                    ("CMAKE_ASM_FLAGS", rt_asm_flags),
-                    ("CMAKE_CXX_FLAGS", rt_cxx_flags),
-                    ("CMAKE_C_FLAGS", rt_c_flags),
-                    ("CMAKE_EXE_LINKER_FLAGS", android_link_flags),
-                    ("CMAKE_SHARED_LINKER_FLAGS", android_link_flags),
-                    ("CMAKE_SYSROOT", sysroot_dir),
-                    ("ANDROID_NATIVE_API_LEVEL", api_level),
-                ):
-                    cmake_args += ["-D%s_%s_%s=%s" % (kind, target, var, arg)]
-
     cmake_args += cmake_base_args(cc, cxx, asm, ld, ar, ranlib, libtool, inst_dir)
     cmake_args += [src_dir]
     build_package(build_dir, cmake_args)
@@ -743,24 +669,6 @@ if __name__ == "__main__":
         assertions = config["assertions"]
         if assertions not in (True, False):
             raise ValueError("Only boolean values are accepted for assertions.")
-    ndk_dir = None
-    android_targets = None
-    if "android_targets" in config:
-        android_targets = config["android_targets"]
-        for attr in ("ndk_toolchain", "ndk_sysroot", "ndk_includes", "api_level"):
-            for target, cfg in android_targets.items():
-                if attr not in cfg:
-                    raise ValueError(
-                        "must specify '%s' as a key for android target: %s"
-                        % (attr, target)
-                    )
-    extra_targets = None
-    if "extra_targets" in config:
-        extra_targets = config["extra_targets"]
-        if not isinstance(extra_targets, list):
-            raise ValueError("extra_targets must be a list")
-        if not all(isinstance(t, str) for t in extra_targets):
-            raise ValueError("members of extra_targets should be strings")
 
     if is_darwin() or osx_cross_compile:
         os.environ["MACOSX_DEPLOYMENT_TARGET"] = (
@@ -947,8 +855,6 @@ if __name__ == "__main__":
             runtimes_source_link,
             compiler_rt_source_link,
             is_final_stage=(stages == 2),
-            android_targets=android_targets,
-            extra_targets=extra_targets,
             pgo_phase=pgo_phase,
         )
 
@@ -978,7 +884,6 @@ if __name__ == "__main__":
             runtimes_source_link,
             compiler_rt_source_link,
             (stages == 3),
-            extra_targets=extra_targets,
         )
 
     if stages >= 4:
@@ -1018,7 +923,6 @@ if __name__ == "__main__":
             runtimes_source_link,
             compiler_rt_source_link,
             (stages == 4),
-            extra_targets=extra_targets,
             pgo_phase=pgo_phase,
         )
 
