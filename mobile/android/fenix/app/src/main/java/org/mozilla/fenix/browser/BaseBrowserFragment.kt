@@ -1262,7 +1262,19 @@ abstract class BaseBrowserFragment :
                     }
                 }
             } catch (e: PlacesException.UrlParseFailed) {
-                println("We should do something here")
+                withContext(Main) {
+                    requireComponents.analytics.metrics.track(Event.AddBookmark)
+
+                    view?.let {
+                        FenixSnackbar.make(
+                            view = binding.browserLayout,
+                            duration = FenixSnackbar.LENGTH_LONG,
+                            isDisplayedWithBrowserToolbar = true
+                        )
+                            .setText(getString(R.string.bookmark_invalid_url_error))
+                            .show()
+                    }
+                }
             }
         }
     }
