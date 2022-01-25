@@ -21,6 +21,7 @@ import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.TabData
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
+import org.mozilla.fenix.utils.IntentUtils
 
 /**
  * Manages notification channels and allows displaying different types of notifications.
@@ -54,11 +55,12 @@ class NotificationManager(private val context: Context) {
         // For now, a single notification per tab received will suffice.
         logger.debug("Showing ${tabs.size} tab(s) received from deviceID=${device?.id}")
         tabs.forEach { tab ->
+            val showReceivedTabsIntentFlags = IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_ONE_SHOT
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(tab.url))
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             intent.putExtra(RECEIVE_TABS_TAG, true)
             val pendingIntent: PendingIntent =
-                PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT)
+                PendingIntent.getActivity(context, 0, intent, showReceivedTabsIntentFlags)
 
             val builder = NotificationCompat.Builder(context, RECEIVE_TABS_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_status_logo)

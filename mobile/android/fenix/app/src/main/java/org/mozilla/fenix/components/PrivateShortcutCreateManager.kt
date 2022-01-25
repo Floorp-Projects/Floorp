@@ -13,6 +13,7 @@ import androidx.core.graphics.drawable.IconCompat
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
+import org.mozilla.fenix.utils.IntentUtils
 import java.util.UUID
 
 /**
@@ -50,11 +51,13 @@ object PrivateShortcutCreateManager {
                 }
             )
             .build()
+        val createPrivateShortcutIntentFlags = IntentUtils.defaultIntentPendingFlags or
+            PendingIntent.FLAG_UPDATE_CURRENT
         val homeScreenIntent = Intent(Intent.ACTION_MAIN)
             .addCategory(Intent.CATEGORY_HOME)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         val intentSender = PendingIntent
-            .getActivity(context, 0, homeScreenIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+            .getActivity(context, 0, homeScreenIntent, createPrivateShortcutIntentFlags)
             .intentSender
         ShortcutManagerCompat.requestPinShortcut(context, shortcut, intentSender)
     }

@@ -24,6 +24,7 @@ import mozilla.components.support.base.ids.SharedIdsHelper
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.utils.IntentUtils
 import org.mozilla.fenix.utils.Settings
 
 class DefaultBrowserNotificationWorker(
@@ -54,7 +55,7 @@ class DefaultBrowserNotificationWorker(
             applicationContext,
             SharedIdsHelper.getNextIdForTag(applicationContext, NOTIFICATION_PENDING_INTENT_TAG),
             intent,
-            0
+            IntentUtils.defaultIntentPendingFlags
         )
 
         with(applicationContext) {

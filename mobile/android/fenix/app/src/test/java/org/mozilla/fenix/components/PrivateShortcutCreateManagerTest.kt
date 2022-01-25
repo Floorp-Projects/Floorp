@@ -24,6 +24,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
+import org.mozilla.fenix.utils.IntentUtils
 
 @RunWith(FenixRobolectricTestRunner::class)
 class PrivateShortcutCreateManagerTest {
@@ -59,7 +60,7 @@ class PrivateShortcutCreateManagerTest {
 
         PrivateShortcutCreateManager.createPrivateShortcut(testContext)
 
-        verify { PendingIntent.getActivity(testContext, 0, capture(intent), PendingIntent.FLAG_UPDATE_CURRENT) }
+        verify { PendingIntent.getActivity(testContext, 0, capture(intent), IntentUtils.defaultIntentPendingFlags or PendingIntent.FLAG_UPDATE_CURRENT) }
         verify { ShortcutManagerCompat.requestPinShortcut(testContext, capture(shortcut), capture(intentSender)) }
         `assert shortcutInfoCompat is build correctly`(shortcut.captured)
         `assert homeScreenIntent is built correctly`(intent.captured)

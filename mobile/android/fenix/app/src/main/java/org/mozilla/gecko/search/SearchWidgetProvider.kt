@@ -28,6 +28,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.intent.StartSearchIntentProcessor
+import org.mozilla.fenix.utils.IntentUtils
 import org.mozilla.fenix.widget.VoiceSearchActivity
 import org.mozilla.fenix.widget.VoiceSearchActivity.Companion.SPEECH_PROCESSING
 
@@ -89,11 +90,13 @@ class SearchWidgetProvider : AppWidgetProvider() {
     private fun createTextSearchIntent(context: Context): PendingIntent {
         return Intent(context, IntentReceiverActivity::class.java)
             .let { intent ->
+                val createTextSearchIntentFlags = IntentUtils.defaultIntentPendingFlags or
+                    PendingIntent.FLAG_UPDATE_CURRENT
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 intent.putExtra(HomeActivity.OPEN_TO_SEARCH, StartSearchIntentProcessor.SEARCH_WIDGET)
                 PendingIntent.getActivity(
                     context,
-                    REQUEST_CODE_NEW_TAB, intent, PendingIntent.FLAG_UPDATE_CURRENT
+                    REQUEST_CODE_NEW_TAB, intent, createTextSearchIntentFlags
                 )
             }
     }
@@ -117,7 +120,7 @@ class SearchWidgetProvider : AppWidgetProvider() {
         return intentSpeech.resolveActivity(context.packageManager)?.let {
             PendingIntent.getActivity(
                 context,
-                REQUEST_CODE_VOICE, voiceIntent, 0
+                REQUEST_CODE_VOICE, voiceIntent, IntentUtils.defaultIntentPendingFlags
             )
         }
     }
