@@ -9694,8 +9694,9 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-espn.manifest
-   * **playback version**: 5.1.1
+   * **playback pageset manifest**: mitm7-linux-firefox-espn.manifest
+   * **playback version**: 7.0.4
+   * **secondary url**: `<https://www.espn.com/nba/draft/news>`__
    * **test url**: `<http://www.espn.com/nba/story/_/page/allstarweekend25788027/the-comparison-lebron-james-michael-jordan-their-own-words>`__
    * **type**: pageload
    * **unit**: ms
