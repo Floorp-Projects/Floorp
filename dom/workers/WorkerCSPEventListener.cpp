@@ -5,9 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WorkerCSPEventListener.h"
-#include "WorkerPrivate.h"
 #include "WorkerRef.h"
 #include "WorkerRunnable.h"
+#include "WorkerScope.h"
 #include "mozilla/dom/SecurityPolicyViolationEvent.h"
 #include "mozilla/dom/SecurityPolicyViolationEventBinding.h"
 #include "mozilla/dom/WorkerRunnable.h"

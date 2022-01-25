@@ -75,7 +75,6 @@
 #include "WorkerDebuggerManager.h"
 #include "WorkerError.h"
 #include "WorkerLoadInfo.h"
-#include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
 #include "WorkerThread.h"

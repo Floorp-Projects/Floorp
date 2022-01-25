@@ -11,7 +11,6 @@
 #include "ErrorList.h"
 #include "MainThreadUtils.h"
 #include "RuntimeService.h"
-#include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
 #include "mozilla/dom/LockManager.h"
