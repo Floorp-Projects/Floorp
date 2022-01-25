@@ -960,6 +960,7 @@ DownloadsDataCtor.prototype = {
         "browser.download.improvements_to_download_panel"
       ) &&
       DownloadsCommon.summarizeDownloads(this.downloads).numDownloading <= 1 &&
+      browserWin == Services.focus.activeWindow &&
       gAlwaysOpenPanel;
 
     if (
