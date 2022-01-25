@@ -3,25 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use rustc_version::{version, Version};
-use std::env;
-use std::path::PathBuf;
 
 fn main() {
-    let topobjdir = {
-        let path = PathBuf::from(env::var_os("MOZ_TOPOBJDIR").unwrap());
-        if !path.is_absolute() || !path.is_dir() {
-            panic!(
-                "MOZ_TOPOBJDIR must be an absolute directory, was: {}",
-                path.display()
-            );
-        }
-        path
-    };
     let mut build = cc::Build::new();
     build.cpp(true);
     // For js-confdefs.h, see wrappers.cpp.
-    build.include(topobjdir.join("js").join("src"));
-    build.include(topobjdir.join("dist").join("include"));
+    build.include(mozbuild::TOPOBJDIR.join("js").join("src"));
+    build.include(mozbuild::TOPOBJDIR.join("dist").join("include"));
     build.define("MOZ_HAS_MOZGLUE", None);
     build.file("wrappers.cpp");
     build.compile("wrappers");
