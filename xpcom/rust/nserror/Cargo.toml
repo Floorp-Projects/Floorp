@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 nsstring = { path = "../nsstring" }
+mozbuild = "0.1"
