@@ -263,9 +263,9 @@ class WorkerPrivate final
 
   bool ModifyBusyCountFromWorker(bool aIncrease);
 
-  bool AddChildWorker(WorkerPrivate* aChildWorker);
+  bool AddChildWorker(WorkerPrivate& aChildWorker);
 
-  void RemoveChildWorker(WorkerPrivate* aChildWorker);
+  void RemoveChildWorker(WorkerPrivate& aChildWorker);
 
   void PostMessageToParent(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                            const Sequence<JSObject*>& aTransferable,
@@ -587,6 +587,9 @@ class WorkerPrivate final
   // worker [Dedicated|Shared|Service].
   bool IsChromeWorker() const { return mIsChromeWorker; }
 
+  // TODO: Invariants require that the parent worker out-live any child
+  // worker, so WorkerPrivate* should be safe in the moment of calling.
+  // We would like to have stronger type-system annotated/enforced handling.
   WorkerPrivate* GetParent() const { return mParent; }
 
   bool IsFrozen() const {
@@ -1158,7 +1161,9 @@ class WorkerPrivate final
   SharedMutex mMutex;
   mozilla::CondVar mCondVar;
 
-  WorkerPrivate* const mParent;
+  // We cannot make this CheckedUnsafePtr<WorkerPrivate> as this would violate
+  // our static assert
+  MOZ_NON_OWNING_REF WorkerPrivate* const mParent;
 
   const nsString mScriptURL;
 
@@ -1283,6 +1288,8 @@ class WorkerPrivate final
 
     RefPtr<WorkerGlobalScope> mScope;
     RefPtr<WorkerDebuggerGlobalScope> mDebuggerScope;
+    // We cannot make this CheckedUnsafePtr<WorkerPrivate> as this would violate
+    // our static assert
     nsTArray<WorkerPrivate*> mChildWorkers;
     nsTObserverArray<WorkerRef*> mWorkerRefs;
     nsTArray<UniquePtr<TimeoutInfo>> mTimeouts;
@@ -1353,7 +1360,9 @@ class WorkerPrivate final
     ~AutoPushEventLoopGlobal();
 
    private:
-    WorkerPrivate* mWorkerPrivate;
+    // We cannot make this CheckedUnsafePtr<WorkerPrivate> as this would violate
+    // our static assert
+    MOZ_NON_OWNING_REF WorkerPrivate* mWorkerPrivate;
     nsCOMPtr<nsIGlobalObject> mOldEventLoopGlobal;
   };
   friend class AutoPushEventLoopGlobal;
@@ -1437,7 +1446,7 @@ class WorkerPrivate final
 };
 
 class AutoSyncLoopHolder {
-  WorkerPrivate* mWorkerPrivate;
+  CheckedUnsafePtr<WorkerPrivate> mWorkerPrivate;
   nsCOMPtr<nsIEventTarget> mTarget;
   uint32_t mIndex;
 
@@ -1460,12 +1469,12 @@ class AutoSyncLoopHolder {
   }
 
   bool Run() {
-    WorkerPrivate* workerPrivate = mWorkerPrivate;
+    CheckedUnsafePtr<WorkerPrivate> keepAliveWP = mWorkerPrivate;
     mWorkerPrivate = nullptr;
 
-    workerPrivate->AssertIsOnWorkerThread();
+    keepAliveWP->AssertIsOnWorkerThread();
 
-    return workerPrivate->RunCurrentSyncLoop();
+    return keepAliveWP->RunCurrentSyncLoop();
   }
 
   nsIEventTarget* GetEventTarget() const {
