@@ -7,14 +7,14 @@
 #ifndef mozilla_TimeStamp_h
 #define mozilla_TimeStamp_h
 
-#include <stdint.h>
-#include <algorithm>  // for std::min, std::max
-#include <ostream>
-#include <type_traits>
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Types.h"
+#include <algorithm>  // for std::min, std::max
+#include <ostream>
+#include <stdint.h>
+#include <type_traits>
 
 namespace IPC {
 template <typename T>
@@ -422,16 +422,11 @@ class TimeStamp {
   /**
    * Return a timestamp representing the time when the current process was
    * created which will be comparable with other timestamps taken with this
-   * class. If the actual process creation time is detected to be inconsistent
-   * the @a aIsInconsistent parameter will be set to true, the returned
-   * timestamp however will still be valid though inaccurate.
+   * class.
    *
-   * @param aIsInconsistent If non-null, set to true if an inconsistency was
-   * detected in the process creation time
-   * @returns A timestamp representing the time when the process was created,
-   * this timestamp is always valid even when errors are reported
+   * @returns A timestamp representing the time when the process was created
    */
-  static MFBT_API TimeStamp ProcessCreation(bool* aIsInconsistent = nullptr);
+  static MFBT_API TimeStamp ProcessCreation();
 
   /**
    * Records a process restart. After this call ProcessCreation() will return
@@ -531,8 +526,10 @@ class TimeStamp {
 
  private:
   friend struct IPC::ParamTraits<mozilla::TimeStamp>;
+  friend struct TimeStampInitialization;
 
-  MOZ_IMPLICIT TimeStamp(TimeStampValue aValue) : mValue(aValue) {}
+  MOZ_IMPLICIT
+  TimeStamp(TimeStampValue aValue) : mValue(aValue) {}
 
   static MFBT_API TimeStamp Now(bool aHighResolution);
 
