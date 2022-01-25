@@ -88,9 +88,13 @@ nsresult StorageObserver::Init() {
 
 // static
 nsresult StorageObserver::Shutdown() {
+  AssertIsOnMainThread();
+
   if (!sSelf) {
-    return NS_ERROR_NOT_INITIALIZED;
+    return NS_ERROR_NOT_INITIALIZED;  // Is this always an error?
   }
+
+  sSelf->mSinks.Clear();
 
   NS_RELEASE(sSelf);
   return NS_OK;
@@ -100,7 +104,7 @@ nsresult StorageObserver::Shutdown() {
 void StorageObserver::TestingPrefChanged(const char* aPrefName,
                                          void* aClosure) {
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (!obs) {
+  if (!obs || !sSelf) {
     return;
   }
 
@@ -122,17 +126,29 @@ void StorageObserver::TestingPrefChanged(const char* aPrefName,
 }
 
 void StorageObserver::AddSink(StorageObserverSink* aObs) {
+  AssertIsOnMainThread();
+
+  MOZ_ASSERT(sSelf);
+
   mSinks.AppendElement(aObs);
 }
 
 void StorageObserver::RemoveSink(StorageObserverSink* aObs) {
+  AssertIsOnMainThread();
+
+  MOZ_ASSERT(sSelf);
+
   mSinks.RemoveElement(aObs);
 }
 
 void StorageObserver::Notify(const char* aTopic,
                              const nsAString& aOriginAttributesPattern,
                              const nsACString& aOriginScope) {
-  for (auto* sink : mSinks.ForwardRange()) {
+  AssertIsOnMainThread();
+
+  MOZ_ASSERT(sSelf);
+
+  for (auto sink : mSinks.ForwardRange()) {
     sink->Observe(aTopic, aOriginAttributesPattern, aOriginScope);
   }
 }
@@ -178,6 +194,10 @@ nsresult StorageObserver::GetOriginScope(const char16_t* aData,
 NS_IMETHODIMP
 StorageObserver::Observe(nsISupports* aSubject, const char* aTopic,
                          const char16_t* aData) {
+  if (NS_WARN_IF(!sSelf)) {  // Shutdown took place
+    return NS_OK;
+  }
+
   nsresult rv;
 
   // Start the thread that opens the database.
