@@ -19,10 +19,20 @@ async function grantOptionalPermission(extension, permissions) {
   return ExtensionPermissions.add(extension.id, permissions, ext);
 }
 
+var someOtherTab, testTab;
+
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.manifestV3.enabled", true]],
   });
+
+  // To help diagnose an intermittent later.
+  SimpleTest.requestCompleteLog();
+
+  // Setup the test tab now, rather than for each test
+  someOtherTab = gBrowser.selectedTab;
+  testTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
+  registerCleanupFunction(() => BrowserTestUtils.removeTab(testTab));
 });
 
 // Registers a context menu using menus.create(menuCreateParams) and checks
@@ -38,7 +48,7 @@ async function testShowHideEvent({
   forceTabToBackground = false,
   manifest_version = 2,
 }) {
-  async function background() {
+  async function background(menu_create_params) {
     function awaitMessage(expectedId) {
       return new Promise(resolve => {
         browser.test.log(`Waiting for message: ${expectedId}`);
@@ -56,7 +66,6 @@ async function testShowHideEvent({
       });
     }
 
-    let menuCreateParams = await awaitMessage("create-params");
     const [tab] = await browser.tabs.query({
       active: true,
       currentWindow: true,
@@ -72,7 +81,7 @@ async function testShowHideEvent({
         args[0].targetElementId = 13337; // = EXPECT_TARGET_ELEMENT
       }
       shownEvents.push(args[0]);
-      if (menuCreateParams.title.includes("TEST_EXPECT_NO_TAB")) {
+      if (menu_create_params.title.includes("TEST_EXPECT_NO_TAB")) {
         browser.test.assertEq(undefined, args[1], "expect no tab");
       } else {
         browser.test.assertEq(tab.id, args[1].id, "expected tab");
@@ -85,7 +94,7 @@ async function testShowHideEvent({
 
     let menuId;
     await new Promise(resolve => {
-      menuId = browser.menus.create(menuCreateParams, resolve);
+      menuId = browser.menus.create(menu_create_params, resolve);
     });
     browser.test.assertEq(0, shownEvents.length, "no onShown before menu");
     browser.test.assertEq(0, hiddenEvents.length, "no onHidden before menu");
@@ -106,14 +115,13 @@ async function testShowHideEvent({
     browser.test.sendMessage("onShown-event-data2", shownEvents[1]);
   }
 
-  const someOtherTab = gBrowser.selectedTab;
   // Tab must initially open as a foreground tab, because the test extension
   // looks for the active tab.
-  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
+  gBrowser.selectedTab = testTab;
 
   const action = manifest_version < 3 ? "browser_action" : "action";
   let extension = ExtensionTestUtils.loadExtension({
-    background,
+    background: `(${background})(${JSON.stringify(menuCreateParams)})`,
     manifest: {
       manifest_version,
       page_action: {},
@@ -128,14 +136,13 @@ async function testShowHideEvent({
     },
   });
   await extension.startup();
-  extension.sendMessage("create-params", menuCreateParams);
   let menuId = await extension.awaitMessage("menu-registered");
 
   if (forceTabToBackground) {
     gBrowser.selectedTab = someOtherTab;
   }
 
-  await doOpenMenu(extension, tab);
+  await doOpenMenu(extension, testTab);
   extension.sendMessage("assert-menu-shown");
   let shownEvent = await extension.awaitMessage("onShown-event-data");
 
@@ -154,7 +161,7 @@ async function testShowHideEvent({
       permissions: [],
       origins: [PAGE_HOST_PATTERN],
     });
-    await doOpenMenu(extension, tab);
+    await doOpenMenu(extension, testTab);
     extension.sendMessage("optional-menu-shown-with-permissions");
     let shownEvent2 = await extension.awaitMessage("onShown-event-data2");
     Assert.deepEqual(
@@ -166,7 +173,6 @@ async function testShowHideEvent({
   }
 
   await extension.unload();
-  BrowserTestUtils.removeTab(tab);
 }
 
 // Make sure that we won't trigger onShown when extensions cannot add menus.
