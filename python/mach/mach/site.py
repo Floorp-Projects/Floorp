@@ -822,10 +822,8 @@ class ExternalPythonSite:
                 self.python_path,
                 "-c",
                 "import sys; import site; "
-                "print("
-                " set(sys.path)"
-                " - set([site.getusersitepackages()] + site.getsitepackages())"
-                ")",
+                "site_packages = [site.getusersitepackages()] + site.getsitepackages(); "
+                "print([path for path in sys.path if path not in site_packages])",
             ],
             # The "site" module may return erroneous entries for the system python
             # if the "VIRTUAL_ENV" environment variable is set.
