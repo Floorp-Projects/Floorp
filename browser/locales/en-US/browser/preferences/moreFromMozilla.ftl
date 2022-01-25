@@ -30,6 +30,8 @@ more-from-moz-button-mozilla-rally =
 
 more-from-moz-qr-code-box-firefox-mobile-title = Download using your mobile device. Point your camera at the QR code. When a link appears, tap it.
 more-from-moz-qr-code-box-firefox-mobile-button = Send an email to your phone instead
+more-from-moz-qr-code-firefox-mobile-img =
+  .alt = QR code to download { -brand-product-name } Mobile
 
 more-from-moz-button-mozilla-vpn =
   .label = Get VPN
