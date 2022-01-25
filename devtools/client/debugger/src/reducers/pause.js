@@ -107,7 +107,6 @@ function update(state = initialPauseState(), action) {
 
     case "PAUSED": {
       const { thread, frame, why } = action;
-
       state = {
         ...state,
         previewLocation: null,
