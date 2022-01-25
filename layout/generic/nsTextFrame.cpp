@@ -2161,14 +2161,16 @@ static already_AddRefed<gfxTextRun> GetHyphenTextRun(nsTextFrame* aTextFrame,
   auto* fontGroup = fm->GetThebesFontGroup();
   auto appPerDev = aTextFrame->PresContext()->AppUnitsPerDevPixel();
   const auto& hyphenateChar = aTextFrame->StyleText()->mHyphenateCharacter;
+  gfx::ShapedTextFlags flags =
+      nsLayoutUtils::GetTextRunOrientFlagsForStyle(aTextFrame->Style());
   if (hyphenateChar.IsAuto()) {
-    return fontGroup->MakeHyphenTextRun(dt, appPerDev);
+    return fontGroup->MakeHyphenTextRun(dt, flags, appPerDev);
   }
   auto* missingFonts = aTextFrame->PresContext()->MissingFontRecorder();
   const NS_ConvertUTF8toUTF16 hyphenStr(hyphenateChar.AsString().AsString());
   return fontGroup->MakeTextRun(hyphenStr.BeginReading(), hyphenStr.Length(),
-                                dt, appPerDev, gfx::ShapedTextFlags(),
-                                nsTextFrameUtils::Flags(), missingFonts);
+                                dt, appPerDev, flags, nsTextFrameUtils::Flags(),
+                                missingFonts);
 }
 
 already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
@@ -3300,6 +3302,10 @@ nsTextFrame::PropertyProvider::PropertyProvider(
       mReflowing(false),
       mWhichTextRun(aWhichTextRun) {
   NS_ASSERTION(mTextRun, "Textrun not initialized!");
+}
+
+gfx::ShapedTextFlags nsTextFrame::PropertyProvider::GetShapedTextFlags() const {
+  return nsLayoutUtils::GetTextRunOrientFlagsForStyle(mFrame->Style());
 }
 
 already_AddRefed<DrawTarget> nsTextFrame::PropertyProvider::GetDrawTarget()
@@ -7048,20 +7054,25 @@ void nsTextFrame::DrawTextRun(Range aRange, const gfx::Point& aTextBaselinePt,
   if (aParams.drawSoftHyphen) {
     // Don't use ctx as the context, because we need a reference context here,
     // ctx may be transformed.
+    DrawTextRunParams params = aParams;
+    params.provider = nullptr;
+    params.advanceWidth = nullptr;
     RefPtr<gfxTextRun> hyphenTextRun = GetHyphenTextRun(this, nullptr);
     if (hyphenTextRun) {
+      gfx::Point p(aTextBaselinePt);
+      bool vertical = GetWritingMode().IsVertical();
       // For right-to-left text runs, the soft-hyphen is positioned at the left
       // of the text, minus its own width
-      float hyphenBaselineX =
-          aTextBaselinePt.x +
+      float shift =
           mTextRun->GetDirection() * (*aParams.advanceWidth) -
           (mTextRun->IsRightToLeft() ? hyphenTextRun->GetAdvanceWidth() : 0);
-      DrawTextRunParams params = aParams;
-      params.provider = nullptr;
-      params.advanceWidth = nullptr;
-      ::DrawTextRun(hyphenTextRun.get(),
-                    gfx::Point(hyphenBaselineX, aTextBaselinePt.y),
-                    Range(hyphenTextRun.get()), params, this);
+      if (vertical) {
+        p.y += shift;
+      } else {
+        p.x += shift;
+      }
+      ::DrawTextRun(hyphenTextRun.get(), p, Range(hyphenTextRun.get()), params,
+                    this);
     }
   }
 }
