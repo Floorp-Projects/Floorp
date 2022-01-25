@@ -344,7 +344,6 @@ dependencies = [
  "cranelift-wasm",
  "env_logger",
  "log",
- "mozbuild",
  "smallvec",
 ]
 
@@ -1666,7 +1665,6 @@ dependencies = [
  "glean",
  "inherent",
  "log",
- "mozbuild",
  "nsstring",
  "once_cell",
  "serde",
