@@ -136,13 +136,13 @@
                /* flag predicate     */ WasmFunctionReferencesFlag(cx),       \
                /* shell flag         */ "gc",                                 \
                /* preference name    */ "gc")                                 \
-  EXPERIMENTAL(/* capitalized name   */ RelaxedSimd,                          \
-               /* lower case name    */ v128Relaxed,                          \
-               /* compile predicate  */ WASM_RELAXED_SIMD_ENABLED,            \
-               /* compiler predicate */ AnyCompilerAvailable(cx),             \
-               /* flag predicate     */ WasmSimdFlag(cx),                     \
-               /* shell flag         */ "relaxed-simd",                       \
-               /* preference name    */ "relaxed_simd")                       \
+  TENTATIVE(/* capitalized name   */ RelaxedSimd,                             \
+            /* lower case name    */ v128Relaxed,                             \
+            /* compile predicate  */ WASM_RELAXED_SIMD_ENABLED,               \
+            /* compiler predicate */ AnyCompilerAvailable(cx),                \
+            /* flag predicate     */ WasmSimdFlag(cx),                        \
+            /* shell flag         */ "relaxed-simd",                          \
+            /* preference name    */ "relaxed_simd")                          \
   TENTATIVE(/* capitalized name   */ Memory64,                                \
             /* lower case name    */ memory64,                                \
             /* compile predicate  */ WASM_MEMORY64_ENABLED,                   \
