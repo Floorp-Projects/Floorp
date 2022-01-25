@@ -37,6 +37,20 @@ const ONBOARDING_MESSAGES = () => [
     },
     trigger: { id: "protectionsPanelOpen" },
   },
+  {
+    id: "PB_NEWTAB_INFO_SECTION",
+    template: "pb_newtab",
+    content: {
+      promoEnabled: false,
+      infoEnabled: true,
+      infoIcon: "",
+      infoTitle: "",
+      infoBody: "fluent:about-private-browsing-info-description-private-window",
+      infoLinkText: "fluent:about-private-browsing-learn-more-link",
+      infoTitleEnabled: false,
+    },
+    targeting: "true",
+  },
 ];
 
 const OnboardingMessageProvider = {
