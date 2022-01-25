@@ -68,6 +68,17 @@ void HitTestInfoManager::ProcessItem(
     nsDisplayListBuilder* aDisplayListBuilder) {
   MOZ_ASSERT(aItem);
 
+  HITTEST_INFO_LOG("* HitTestInfoManager::ProcessItem(%d, %s, has=%d)\n",
+                   getpid(), aItem->Frame()->ListTag().get(),
+                   aItem->HasHitTestInfo());
+
+  if (MOZ_UNLIKELY(aItem->GetType() == DisplayItemType::TYPE_REMOTE)) {
+    // Remote frames might contain hit-test-info items inside (but those
+    // aren't processed by this process of course), so we can't optimize out the
+    // next hit-test info item because it might be on top of the iframe.
+    Reset();
+  }
+
   if (!aItem->HasHitTestInfo()) {
     return;
   }
@@ -97,7 +108,7 @@ void HitTestInfoManager::ProcessItem(
 
 /**
  * Updates the current hit testing information if necessary.
- * Returns true if the the hit testing information was changed.
+ * Returns true if the hit testing information was changed.
  */
 bool HitTestInfoManager::Update(const nsRect& aArea,
                                 const gfx::CompositorHitTestInfo& aFlags,
