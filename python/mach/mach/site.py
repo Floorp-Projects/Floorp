@@ -315,6 +315,14 @@ class MachSiteManager:
             self._build()
         return up_to_date
 
+    def attempt_populate_optional_packages(self):
+        if self._site_packages_source != SitePackagesSource.VENV:
+            pass
+
+        self._virtualenv().install_optional_packages(
+            self._requirements.pypi_optional_requirements
+        )
+
     def activate(self):
         assert not MozSiteMetadata.current
 
@@ -778,6 +786,16 @@ class PythonVirtualenv:
             stderr=subprocess.STDOUT,
         )
 
+    def install_optional_packages(self, optional_requirements):
+        for requirement in optional_requirements:
+            try:
+                self.pip_install_with_constraints([str(requirement.requirement)])
+            except subprocess.CalledProcessError:
+                print(
+                    f"Could not install {requirement.requirement.name}, so "
+                    f"{requirement.repercussion}. Continuing."
+                )
+
     def _resolve_installed_packages(self):
         return _resolve_installed_packages(self.python_path)
 
@@ -1081,15 +1099,7 @@ def _create_venv_with_pthfile(
     if site_packages_source == SitePackagesSource.VENV:
         for requirement in requirements.pypi_requirements:
             target_venv.pip_install([str(requirement.requirement)])
-
-        for requirement in requirements.pypi_optional_requirements:
-            try:
-                target_venv.pip_install_with_constraints([str(requirement.requirement)])
-            except subprocess.CalledProcessError:
-                print(
-                    f"Could not install {requirement.requirement.name}, so "
-                    f"{requirement.repercussion}. Continuing."
-                )
+        target_venv.install_optional_packages(requirements.pypi_optional_requirements)
 
     os.utime(target_venv.activate_path, None)
     metadata.write(is_finalized=True)
