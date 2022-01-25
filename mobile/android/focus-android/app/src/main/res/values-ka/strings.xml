@@ -641,6 +641,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">დამატებითი</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">საიტის ნებართვები</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">თვითგაშვება</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">ხმისა და ვიდეოს დაშვება</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">მხოლოდ ხმის შეზღუდვა</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">სასურველი</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">ხმისა და ვიდეოს შეზღუდვა</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">კვლევები</string>
 
@@ -779,8 +797,9 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">მხოლოდ-HTTPS რეჟიმი</string>
-    <!-- Description of the preference to enable "HTTPS-Only" mode. %1$s will get replaced with the name of the app. -->
-    <string name="preference_https_only_summary">HTTPS საშუალებას იძლევა, რომ %1$s უსაფრთხოდ და მონაცემთა დაშიფვრით დაუკავშირდეს საიტებს, რომელთაც ეწვევით. უმეტეს ვებსაიტზე HTTPS მხარდაჭერილია და როცა მხოლოდ-HTTPS რეჟიმი ჩართულია, %1$s ყველა კავშირს უზრუნველჰყოფს HTTPS-ით.</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary2">თავადვე ეცდება დაუკავშირდეს საიტებს HTTPS-ით, მეტი უსაფრთხოებისთვის. HTTPS-კავშირებით მონაცემები გადაიცემა დაცულად, დაშიფრულად საიტზე, რომელსაც ეწვევით.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">გამონაკლისები</string>
@@ -844,8 +863,13 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">მოცილება</string>
 
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">გადარქმევა</string>
     <!-- Text for the dialog title for renaming a top site -->
     <string name="rename_top_site">გადარქმევა</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">მალსახმობის სახელი</string>
 
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
@@ -863,6 +887,11 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">მოწყობილობის იერსახის მიხედვით</string>
 
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">მოთხოვნილ საიტზე არაა მხარდაჭერილი HTTPS</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">ნაგულისხმევად, %1$s ეცდება დაუკავშირდეს HTTPS-ით, მეტი უსაფრთხოებისთვის. ამ პარამეტრის შესაცვლელად ან უკეთ გასაცნობად, იხილეთ პარამეტრები &gt; პირადულობა და უსაფრთხოება &gt; უსაფრთხოება.</string>
 
     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
