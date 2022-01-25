@@ -3,7 +3,7 @@ Process Model
 
 The complete set of recognized process types is defined in `GeckoProcessTypes <https://searchfox.org/mozilla-central/source/xpcom/geckoprocesstypes_generator/geckoprocesstypes/__init__.py>`_.
 
-For more details on how process types are added and managed by IPC, see the process creation documentation. (FIXME: being added in `<https://phabricator.services.mozilla.com/D121871>`_)
+For more details on how process types are added and managed by IPC, see the process creation documentation :ref:`Gecko Processes`.
 
 Diagram
 -------
@@ -62,6 +62,7 @@ Diagram
                     <TR><TD BORDER="1">VR Process</TD></TR>
                     <TR><TD BORDER="1">Data Decoder (RDD) Process</TD></TR>
                     <TR><TD BORDER="1">Network (Socket) Process</TD></TR>
+                    <TR><TD BORDER="1">Utility Process</TD></TR>
                     <TR><TD BORDER="1">Remote Sandbox Broker Process</TD></TR>
                     <TR><TD BORDER="1">Fork Server</TD></TR>
                 </TABLE>
@@ -304,3 +305,12 @@ IPDLUnitTest
 :primary protocol: varies
 
 This test-only process type is intended for use when writing IPDL unit tests. However, it is currently broken, due to these tests having never been run in CI. The type may be removed or re-used when these unit tests are fixed.
+
+Utility Process
+---------------
+
+:primary protocol: `PUtilityProcess <https://searchfox.org/mozilla-central/source/ipc/glue/PUtilityProcess.ipdl>`_
+:metabug: `Bug 1722051 <https://bugzilla.mozilla.org/show_bug.cgi?id=1722051>`_
+:sandboxed?: yes, customizable
+
+The utility process is used to provide a simple way to implement IPC actor with some more specific sandboxing properties, in case where you don't need or want to deal with the extra complexity of adding a whole new process type but you just want to apply different sandboxing policies. Details can be found in :ref:`Utility Process`.
