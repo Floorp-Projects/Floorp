@@ -354,7 +354,7 @@ impl RenderTaskGraphBuilder {
                         self.roots.remove(root_task_id);
                     }
                     None => {
-                        println!("WARN: {:?} depends on root {:?} but it has no tasks!",
+                        warn!("WARN: {:?} depends on root {:?} but it has no tasks!",
                             task_id,
                             target_id,
                         );
@@ -644,10 +644,10 @@ impl RenderTaskGraph {
     pub fn print(
         &self,
     ) {
-        println!("-- RenderTaskGraph --");
+        debug!("-- RenderTaskGraph --");
 
         for (i, task) in self.tasks.iter().enumerate() {
-            println!("Task {}: render_on={} free_after={} {:?}",
+            debug!("Task {}: render_on={} free_after={} {:?}",
                 i,
                 task.render_on.0,
                 task.free_after.0,
@@ -656,16 +656,16 @@ impl RenderTaskGraph {
         }
 
         for (p, pass) in self.passes.iter().enumerate() {
-            println!("Pass {}:", p);
+            debug!("Pass {}:", p);
 
             for (s, sub_pass) in pass.sub_passes.iter().enumerate() {
-                println!("\tSubPass {}: {:?}",
+                debug!("\tSubPass {}: {:?}",
                     s,
                     sub_pass.surface,
                 );
 
                 for task_id in &sub_pass.task_ids {
-                    println!("\t\tTask {:?}", task_id.index);
+                    debug!("\t\tTask {:?}", task_id.index);
                 }
             }
         }

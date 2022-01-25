@@ -1302,7 +1302,7 @@ impl ClipStore {
         };
         profile_scope!("build_clip_chain_instance");
         if is_chased {
-            println!("\tbuilding clip chain instance with local rect {:?}", local_prim_rect);
+            info!("\tbuilding clip chain instance with local rect {:?}", local_prim_rect);
         }
 
         let local_bounding_rect = local_prim_rect.intersection(&local_clip_rect)?;
@@ -1342,8 +1342,8 @@ impl ClipStore {
             };
 
             if is_chased {
-                println!("\t\tclip {:?}", node.item);
-                println!("\t\tflags {:?}, resulted in {:?}", node_info.conversion.to_flags(), clip_result);
+                info!("\t\tclip {:?}", node.item);
+                info!("\t\tflags {:?}, resulted in {:?}", node_info.conversion.to_flags(), clip_result);
             }
 
             match clip_result {

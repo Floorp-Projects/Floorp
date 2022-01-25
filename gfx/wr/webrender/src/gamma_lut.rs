@@ -399,11 +399,11 @@ mod tests {
                     let preblend_result = over(dst, src, preblend as u32);
                     let true_result = ((overf(lin_dst, lin_src, alpha as f32) / 255.).powf(1. / g) * 255.) as u32;
                     let diff = absdiff(preblend_result, true_result);
-                    //println!("{} -- {} {} = {}", alpha, preblend_result, true_result, diff);
+                    //debug!("{} -- {} {} = {}", alpha, preblend_result, true_result, diff);
                     max_diff = max(max_diff, diff);
                 }
 
-                //println!("{} {} max {}", src, dst, max_diff);
+                //debug!("{} {} max {}", src, dst, max_diff);
                 assert!(max_diff <= 33);
                 dst += 1;
 
