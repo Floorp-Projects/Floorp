@@ -2971,7 +2971,7 @@ with only_when(compile_environment):
             body="pthread_cond_timedwait_monotonic_np(0, 0, 0);",
             # -Werror to catch any "implicit declaration" warning that means the function
             # is not supported.
-            flags=["-Werror"],
+            flags=["-Werror=implicit-function-declaration"],
             check_msg="for pthread_cond_timedwait_monotonic_np",
         ),
     )

@@ -79,6 +79,7 @@ case "$target" in
   "
   # These flags are only necessary to pass the cmake tests.
   exe_linker_flags="
+    --rtlib=libgcc
     -L$MOZ_FETCHES_DIR/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$ndk_target/$api_level
     -L$MOZ_FETCHES_DIR/android-ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$ndk_target
   "
