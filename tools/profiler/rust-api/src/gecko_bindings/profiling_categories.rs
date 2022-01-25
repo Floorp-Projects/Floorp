@@ -8,9 +8,8 @@
 //! `mozglue/baseprofiler/generate_profiling_categories.py`, from
 //! 'mozglue/baseprofiler/core/profiling_categories.yaml`.
 
-include!(concat!(
-    env!("MOZ_TOPOBJDIR"),
-    "/tools/profiler/rust-api/src/gecko_bindings/profiling_categories.rs"
+include!(mozbuild::objdir_path!(
+    "tools/profiler/rust-api/src/gecko_bindings/profiling_categories.rs"
 ));
 
 /// Helper macro that returns the profiling category pair from either only

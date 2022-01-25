@@ -1874,6 +1874,7 @@ dependencies = [
  "bincode",
  "bindgen",
  "lazy_static",
+ "mozbuild",
  "profiler-macros",
  "serde",
 ]
