@@ -308,6 +308,8 @@ class DMABufSurfaceYUV : public DMABufSurface {
   bool UpdateYUVData(void** aPixelData, int* aLineSizes);
   bool UpdateYUVData(const VADRMPRIMESurfaceDescriptor& aDesc);
 
+  bool VerifyTextureCreation();
+
  private:
   ~DMABufSurfaceYUV();
 
@@ -323,6 +325,9 @@ class DMABufSurfaceYUV : public DMABufSurface {
                                   int aPlane);
   void CloseFileDescriptorForPlane(const mozilla::MutexAutoLock& aProofOfLock,
                                    int aPlane, bool aForceClose);
+
+  bool CreateEGLImage(mozilla::gl::GLContext* aGLContext, int aPlane);
+  void ReleaseEGLImages(mozilla::gl::GLContext* aGLContext);
 
   int mWidth[DMABUF_BUFFER_PLANES];
   int mHeight[DMABUF_BUFFER_PLANES];
