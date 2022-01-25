@@ -687,8 +687,7 @@ static CloseMenuMode GetCloseMenuMode(nsIContent* aMenu) {
   }
 }
 
-void nsXULPopupManager::ShowMenu(nsIContent* aMenu, bool aSelectFirstItem,
-                                 bool aAsynchronous) {
+void nsXULPopupManager::ShowMenu(nsIContent* aMenu, bool aSelectFirstItem) {
   if (mNativeMenu && aMenu->IsElement() &&
       mNativeMenu->Element()->Contains(aMenu)) {
     mNativeMenu->OpenSubmenu(aMenu->AsElement());
@@ -728,22 +727,8 @@ void nsXULPopupManager::ShowMenu(nsIContent* aMenu, bool aSelectFirstItem,
   // there is no trigger event for menus
   popupFrame->InitializePopup(aMenu, nullptr, position, 0, 0,
                               MenuPopupAnchorType_Node, true);
-
-  if (aAsynchronous) {
-    nsCOMPtr<nsIRunnable> event =
-        NS_NewRunnableFunction("BeginShowingPopup", [=]() {
-          nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-          if (pm) {
-            PendingPopup pendingPopup(popupFrame->GetContent(), nullptr);
-            pm->BeginShowingPopup(pendingPopup, parentIsContextMenu,
-                                  aSelectFirstItem);
-          }
-        });
-    aMenu->OwnerDoc()->Dispatch(TaskCategory::Other, event.forget());
-  } else {
-    PendingPopup pendingPopup(popupFrame->GetContent(), nullptr);
-    BeginShowingPopup(pendingPopup, parentIsContextMenu, aSelectFirstItem);
-  }
+  PendingPopup pendingPopup(popupFrame->GetContent(), nullptr);
+  BeginShowingPopup(pendingPopup, parentIsContextMenu, aSelectFirstItem);
 }
 
 void nsXULPopupManager::ShowPopup(nsIContent* aPopup,
@@ -2206,7 +2191,7 @@ bool nsXULPopupManager::HandleShortcutNavigation(KeyboardEvent* aKeyEvent,
         nsMenuFrame* menuToOpen = result->Enter(evt);
         if (menuToOpen) {
           nsCOMPtr<nsIContent> content = menuToOpen->GetContent();
-          ShowMenu(content, true, false);
+          ShowMenu(content, true);
         }
       }
       return true;
@@ -2305,7 +2290,7 @@ bool nsXULPopupManager::HandleKeyboardNavigation(uint32_t aKeyCode) {
       // Open the menu and select its first item.
       if (currentMenu) {
         nsCOMPtr<nsIContent> content = currentMenu->GetContent();
-        ShowMenu(content, true, false);
+        ShowMenu(content, true);
       }
       return true;
     }
@@ -2352,7 +2337,7 @@ bool nsXULPopupManager::HandleKeyboardNavigationInPopup(
                !currentMenu->IsDisabled()) {
       // The menu is not yet open. Open it and select the first item.
       nsCOMPtr<nsIContent> content = currentMenu->GetContent();
-      ShowMenu(content, true, false);
+      ShowMenu(content, true);
       return true;
     }
   }
@@ -2490,7 +2475,7 @@ bool nsXULPopupManager::HandleKeyboardEventWithKeyCode(
       }
       if (menuToOpen) {
         nsCOMPtr<nsIContent> content = menuToOpen->GetContent();
-        ShowMenu(content, true, false);
+        ShowMenu(content, true);
       }
       break;
     }

@@ -28,7 +28,6 @@ SimpleTest.waitForFocus(test);
 // Tests that mouse events are correctly dispatched to <toolbarbutton type="menu"/>
 // This used to test menu buttons, and was updated when this button type was removed.
 function test() {
-  
   disableNonTestMouseEvents(true);
 
   let button = $("button");
@@ -48,9 +47,8 @@ function test() {
 
 function finishTest() {
   is(eventCount.command, 0, "Correct number of command events received");
-  is(eventCount.popupshowing, 1, "Correct number of popupshowing events received");
+  is(eventCount.popupshowing, 2, "Correct number of popupshowing events received");
   is(eventCount.click, 2, "Correct number of click events received");
-  is(eventCount.focus, 0, "Correct number of focus events received");
 
   SimpleTest.finish();
 }
@@ -59,7 +57,6 @@ let eventCount = {
   command: 0,
   popupshowing: 0,
   click: 0,
-  focus: 0
 };
 
 function eventReceived(eventName) {
