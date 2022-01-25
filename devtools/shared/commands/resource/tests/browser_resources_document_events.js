@@ -602,38 +602,38 @@ function assertEvents({
     is(
       typeof willNavigateEvent.time,
       "number",
-      "Type of time attribute for will-navigate event is correct"
+      `Type of time attribute for will-navigate event is correct (${willNavigateEvent.time})`
     );
   }
   is(
     typeof loadingEvent.time,
     "number",
-    "Type of time attribute for loading event is correct"
+    `Type of time attribute for loading event is correct (${loadingEvent.time})`
   );
   is(
     typeof interactiveEvent.time,
     "number",
-    "Type of time attribute for interactive event is correct"
+    `Type of time attribute for interactive event is correct (${interactiveEvent.time})`
   );
   is(
     typeof completeEvent.time,
     "number",
-    "Type of time attribute for complete event is correct"
+    `Type of time attribute for complete event is correct (${completeEvent.time})`
   );
 
   if (willNavigateEvent && !ignoreWillNavigateTimestamp) {
     ok(
-      willNavigateEvent.time < loadingEvent.time,
-      "Timestamp for dom-loading event is greater than will-navigate event"
+      willNavigateEvent.time <= loadingEvent.time,
+      `Timestamp for dom-loading event is greater than will-navigate event (${willNavigateEvent.time} <= ${loadingEvent.time})`
     );
   }
   ok(
-    loadingEvent.time < interactiveEvent.time,
-    "Timestamp for interactive event is greater than loading event"
+    loadingEvent.time <= interactiveEvent.time,
+    `Timestamp for interactive event is greater than loading event (${loadingEvent.time} <= ${interactiveEvent.time})`
   );
   ok(
-    interactiveEvent.time < completeEvent.time,
-    "Timestamp for complete event is greater than interactive event"
+    interactiveEvent.time <= completeEvent.time,
+    `Timestamp for complete event is greater than interactive event (${interactiveEvent.time} <= ${completeEvent.time}).`
   );
 
   if (willNavigateEvent) {
