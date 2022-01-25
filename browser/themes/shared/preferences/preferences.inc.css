@@ -1199,7 +1199,7 @@ richlistitem .text-link:hover {
 }
 
 #moreFromMozillaCategory-header .subtitle {
-  color: var(--in-content-deemphasized-text);
+  color: var(--in-content-text-color);
   margin: 4px 0 10px;
   line-height: 1.4em;
 }
@@ -1242,7 +1242,7 @@ richlistitem .text-link:hover {
 }
 
 #moreFromMozillaCategory .description {
-  color: var(--in-content-deemphasized-text);
+  color: var(--in-content-text-color);
   padding-inline-start: 30px;
   margin: 2px 0;
   line-height: 1.4em;
@@ -1281,11 +1281,7 @@ richlistitem .text-link:hover {
 }
 
 #moreFromMozillaCategory .text-link {
-  font-size: .87em;
   line-height: 1.4em;
-
-  text-decoration: underline;
-
   margin-block: 2px 0;
   margin-inline: 6px 0;
 }
@@ -1329,12 +1325,18 @@ richlistitem .text-link:hover {
   min-height: 204px;
   margin-block: 10px;
   margin-inline-start: 30px;
-  background-color: #f9f9fb;
+  background-color: var(--in-content-box-info-background);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-around;
   border-radius: 4px;
+}
+
+@media (prefers-contrast) {
+  .qr-code-box:not([hidden="true"]) {
+    border: 1px solid currentColor;
+  }
 }
 
 .advanced .qr-code-box {
@@ -1410,9 +1412,6 @@ richlistitem .text-link:hover {
   font-size: .87em;
   font-weight: 400;
   line-height: 1.42em;
-  text-decoration: underline;
-  color: #5b5b66;
-
   flex: 2 0 auto;
   margin-block-start: 10px;
   margin-inline: 0; /* make sure we're correctly centered by overriding button rule */
@@ -1431,10 +1430,6 @@ richlistitem .text-link:hover {
   .advanced .qr-code-box-image {
     background-color: white;
     fill: black;
-  }
-
-  #moreFromMozillaCategory .qr-code-button {
-    color: #fbfbfe;
   }
 
   .qr-code-box-title {
