@@ -95,7 +95,6 @@ class Theme : protected nsNativeTheme, public nsITheme {
 
   nscoord GetCheckboxRadioPrefSize() override;
 
-  static UniquePtr<ScrollbarDrawing> DefaultPlatformScrollbarStyle();
   static UniquePtr<ScrollbarDrawing> ScrollbarStyle();
 
  protected:
