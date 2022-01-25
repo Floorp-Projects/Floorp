@@ -1972,8 +1972,7 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
     // FunctionKey is used when caching to map a delazification stencil to a
     // specific lazy script. It is not used by instantiation, but we should
     // ensure it is correctly defined.
-    MOZ_ASSERT(stencil.functionKey ==
-               CompilationStencil::toFunctionKey(input.extent()));
+    MOZ_ASSERT(stencil.functionKey == input.extent().toFunctionKey());
 
     FunctionsFromExistingLazy(input, gcOutput);
     MOZ_ASSERT(gcOutput.functions.length() == stencil.scriptData.size());
@@ -3958,7 +3957,7 @@ bool CompilationStencilMerger::buildFunctionKeyToIndex(JSContext* cx) {
 
   for (size_t i = 1; i < initial_->scriptExtra.length(); i++) {
     const auto& extra = initial_->scriptExtra[i];
-    auto key = CompilationStencil::toFunctionKey(extra.extent);
+    auto key = extra.extent.toFunctionKey();
 
     // There can be multiple ScriptStencilExtra with same extent if
     // the function is parsed multiple times because of rewind for
