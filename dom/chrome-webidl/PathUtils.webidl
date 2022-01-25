@@ -20,17 +20,19 @@ namespace PathUtils {
   DOMString filename(DOMString path);
 
   /**
-   * Return the parent directory name of the given path.
+   * Return an ancestor directory of the given path.
    *
    * @param path An absolute path.
+   * @param depth The number of ancestors to remove, defaulting to 1 (i.e., the
+   *              parent).
    *
-   * @return The parent directory.
+   * @return The ancestor directory.
    *
    *         If the path provided is a root path (e.g., `C:` on Windows or `/`
    *         on *NIX), then null is returned.
    */
   [Throws]
-  DOMString? parent(DOMString path);
+  DOMString? parent(DOMString path, optional long depth = 1);
 
   /**
    * Join the given components into a full path.
