@@ -46,7 +46,7 @@ a DoH or a Do53 request. First it checks the effective TRR mode of the request
 is as requests could have a different mode from the global one.
 If the request may use TRR, then we dispatch a request in nsHostResolver::TrrLookup.
 Since we usually reolve both IPv4 and IPv6 names, a **TRRQuery** object is
-created to perform and combine both responses. 
+created to perform and combine both responses.
 
 Once done, nsHostResolver::CompleteLookup is called. If the DoH server returned a
 valid response we use it, otherwise we report a failure in TRR-only mode, or
@@ -62,7 +62,9 @@ main thread.
 Dynamic Blocklist
 -----------------
 
-In order to improve performance TRR service manages a dynamic persistent blocklist for host names that can't be resolved with DoH but works with the native resolver. Blocklisted entries will not be retried over DoH for one minute.
+In order to improve performance TRR service manages a dynamic blocklist for host names that can't be resolved with DoH but work with the native resolver. Blocklisted entries will not be retried over DoH for one minute (See `network.trr.temp_blocklist_duration_sec` pref).
+When a domain is added to the blocklist, we also check if there is an NS record for its parent domain, in which case we add that to the blocklist.
+This feature is controlled by the `network.trr.temp_blocklist` pref.
 
 TRR confirmation
 ----------------
