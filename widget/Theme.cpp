@@ -178,7 +178,6 @@ void Theme::LookAndFeelChanged() {
   ThemeColors::RecomputeAccentColors();
   if (gNonNativeInstance) {
     gNonNativeInstance->SetScrollbarDrawing(Theme::ScrollbarStyle());
-    gNonNativeInstance->GetScrollbarDrawing().RecomputeScrollbarParams();
   }
 }
 
