@@ -202,6 +202,14 @@ panelview[mainview] > .panel-header {
   visibility: hidden;
 }
 
+.tab-icon-image[fadein],
+.tab-close-button[fadein],
+.tabbrowser-tab[fadein]::after,
+.tab-background[fadein] {
+  /* This transition is only wanted for opening tabs. */
+  transition: visibility 0ms 25ms;
+}
+
 .tab-icon-pending:not([fadein]),
 .tab-icon-image:not([fadein]),
 .tab-close-button:not([fadein]),
