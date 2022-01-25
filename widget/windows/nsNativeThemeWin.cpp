@@ -51,7 +51,7 @@ extern mozilla::LazyLogModule gWindowsLog;
 namespace mozilla::widget {
 
 nsNativeThemeWin::nsNativeThemeWin()
-    : Theme(DefaultPlatformScrollbarStyle()),
+    : Theme(ScrollbarStyle()),
       mProgressDeterminateTimeStamp(TimeStamp::Now()),
       mProgressIndeterminateTimeStamp(TimeStamp::Now()),
       mBorderCacheValid(),
