@@ -3,19 +3,25 @@
 
 "use strict";
 
+/**
+ * If the user has set Firefox itself as a helper app,
+ * we should force prompting what to do, rather than ending up
+ * in an infinite loop.
+ * In an ideal world, we'd also test the case where we are the OS
+ * default handler app, but that would require test infrastructure
+ * to make ourselves the OS default (or at least fool ourselves into
+ * believing we are) which we don't have...
+ */
 add_task(async function test_helperapp() {
   // Set up the test infrastructure:
-  const kProt = "foopydoopydoo";
-  const extProtocolSvc = Cc[
-    "@mozilla.org/uriloader/external-protocol-service;1"
-  ].getService(Ci.nsIExternalProtocolService);
+  const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
   const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
     Ci.nsIHandlerService
   );
-  let handlerInfo = extProtocolSvc.getProtocolHandlerInfo(kProt);
-  if (handlerSvc.exists(handlerInfo)) {
-    handlerSvc.fillHandlerInfo(handlerInfo, "");
-  }
+  let handlerInfo = mimeSvc.getFromTypeAndExtension("application/x-foo", "foo");
+  registerCleanupFunction(() => {
+    handlerSvc.remove(handlerInfo);
+  });
   // Say we want to use a specific app:
   handlerInfo.preferredAction = Ci.nsIHandlerInfo.useHelperApp;
   handlerInfo.alwaysAskBeforeHandling = false;
@@ -57,16 +63,29 @@ add_task(async function test_helperapp() {
       };
     });
 
-    let askedUserPromise = waitForProtocolAppChooserDialog(browser, true);
+    let askedUserPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
 
-    BrowserTestUtils.loadURI(browser, kProt + ":test");
+    info("Clicking a link that should open the unknown content type dialog");
+    await SpecialPowers.spawn(browser, [], () => {
+      let link = content.document.createElement("a");
+      link.download = "foo.foo";
+      link.textContent = "Foo file";
+      link.href = "data:application/x-foo,hello";
+      content.document.body.append(link);
+      link.click();
+    });
     let dialog = await Promise.race([
       wrongThingHappenedPromise,
       askedUserPromise,
     ]);
     ok(dialog, "Should have gotten a dialog");
+    Assert.stringContains(
+      dialog.document.location.href,
+      "unknownContentType",
+      "Should have opened correct dialog."
+    );
 
-    let closePromise = waitForProtocolAppChooserDialog(browser, false);
+    let closePromise = BrowserTestUtils.windowClosed(dialog);
     dialog.close();
     await closePromise;
     askedUserPromise = null;

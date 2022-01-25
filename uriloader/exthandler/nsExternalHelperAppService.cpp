@@ -63,6 +63,7 @@
 
 #include "nsDSURIContentListener.h"
 #include "nsMimeTypes.h"
+#include "nsMIMEInfoImpl.h"
 // used for header disposition information.
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
@@ -76,7 +77,6 @@
 #  include "nsILocalFileMac.h"
 #endif
 
-#include "nsPluginHost.h"
 #include "nsEscape.h"
 
 #include "nsIStringBundle.h"  // XXX needed to localize error msgs
@@ -1953,6 +1953,33 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
                 action != nsIMIMEInfo::useHelperApp &&
                 action != nsIMIMEInfo::useSystemDefault &&
                 !shouldAutomaticallyHandleInternally;
+  }
+
+  // If we're handling with the OS default and we are that default, force
+  // asking, so we don't end up in an infinite loop:
+  if (!alwaysAsk && action == nsIMIMEInfo::useSystemDefault) {
+    bool areOSDefault = false;
+    alwaysAsk = NS_SUCCEEDED(mMimeInfo->IsCurrentAppOSDefault(&areOSDefault)) &&
+                areOSDefault;
+  } else if (!alwaysAsk && action == nsIMIMEInfo::useHelperApp) {
+    nsCOMPtr<nsIHandlerApp> preferredApp;
+    mMimeInfo->GetPreferredApplicationHandler(getter_AddRefs(preferredApp));
+    nsCOMPtr<nsILocalHandlerApp> handlerApp = do_QueryInterface(preferredApp);
+    if (handlerApp) {
+      nsCOMPtr<nsIFile> executable;
+      handlerApp->GetExecutable(getter_AddRefs(executable));
+      nsCOMPtr<nsIFile> ourselves;
+      if (executable &&
+          // Despite the name, this really just fetches an nsIFile...
+          NS_SUCCEEDED(NS_GetSpecialDirectory(XRE_EXECUTABLE_FILE,
+                                              getter_AddRefs(ourselves)))) {
+        ourselves = nsMIMEInfoBase::GetCanonicalExecutable(ourselves);
+        executable = nsMIMEInfoBase::GetCanonicalExecutable(executable);
+        bool isSameApp = false;
+        alwaysAsk =
+            NS_FAILED(executable->Equals(ourselves, &isSameApp)) || isSameApp;
+      }
+    }
   }
 
   // if we were told that we _must_ save to disk without asking, all the stuff
