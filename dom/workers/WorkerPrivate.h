@@ -32,7 +32,6 @@
 #include "mozilla/dom/Worker.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerLoadInfo.h"
-#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/WorkerStatus.h"
 #include "mozilla/dom/workerinternals/JSSettings.h"
 #include "mozilla/dom/workerinternals/Queue.h"
