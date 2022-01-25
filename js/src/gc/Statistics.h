@@ -291,6 +291,10 @@ struct Statistics {
 
   TimeStamp creationTime() const { return creationTime_; }
 
+  // File to write profiling information to, either stderr or file specified
+  // with JS_GC_PROFILE_FILE.
+  FILE* profileFile() const { return gcProfileFile; }
+
   // Occasionally print header lines for profiling information.
   void maybePrintProfileHeaders();
 
@@ -327,6 +331,9 @@ struct Statistics {
 
   /* File used for JS_GC_DEBUG output. */
   FILE* gcDebugFile;
+
+  /* File used for JS_GC_PROFILE output. */
+  FILE* gcProfileFile;
 
   ZoneGCStats zoneStats;
 
@@ -478,7 +485,7 @@ struct Statistics {
   double computeMMU(TimeDuration resolution) const;
 
   void printSliceProfile();
-  static void printProfileTimes(const ProfileDurations& times);
+  void printProfileTimes(const ProfileDurations& times);
 };
 
 struct MOZ_RAII AutoGCSlice {
