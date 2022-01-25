@@ -14,8 +14,8 @@ android {
         manifestPlaceholders = project.ext.manifestPlaceholders
 
         applicationId "org.mozilla.geckoview.test_runner"
-        versionCode 1
-        versionName "1.0"
+        versionCode project.ext.versionCode
+        versionName project.ext.versionName
 
         multiDexEnabled true
     }
