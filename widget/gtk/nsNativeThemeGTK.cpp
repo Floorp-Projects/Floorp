@@ -1668,17 +1668,9 @@ nsITheme::Transparency nsNativeThemeGTK::GetWidgetTransparency(
   }
 }
 
-already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
-  static nsCOMPtr<nsITheme> inst;
-
-  if (!inst) {
-    if (gfxPlatform::IsHeadless()) {
-      inst = new Theme(Theme::DefaultPlatformScrollbarStyle());
-    } else {
-      inst = new nsNativeThemeGTK();
-    }
-    ClearOnShutdown(&inst);
+already_AddRefed<Theme> do_CreateNativeThemeDoNotUseDirectly() {
+  if (gfxPlatform::IsHeadless()) {
+    return do_AddRef(new Theme(Theme::DefaultPlatformScrollbarStyle()));
   }
-
-  return do_AddRef(inst);
+  return do_AddRef(new nsNativeThemeGTK());
 }
