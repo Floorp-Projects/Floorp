@@ -276,9 +276,9 @@ def build_one_stage(
         if not is_windows() and is_final_stage:
             cmake_args += ["-DLLVM_ENABLE_LIBXML2=FORCE_ON"]
         if is_linux() and not osx_cross_compile and is_final_stage:
-            cmake_args += ["-DLLVM_BINUTILS_INCDIR=/usr/include"]
             sysroot = os.path.join(os.environ.get("MOZ_FETCHES_DIR", ""), "sysroot")
             if os.path.exists(sysroot):
+                cmake_args += ["-DLLVM_BINUTILS_INCDIR=/usr/include"]
                 cmake_args += ["-DCMAKE_SYSROOT=%s" % sysroot]
                 # Work around the LLVM build system not building the i386 compiler-rt
                 # because it doesn't allow to use a sysroot for that during the cmake
