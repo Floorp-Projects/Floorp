@@ -1779,19 +1779,12 @@ void MessageChannel::RunMessage(MessageTask& aTask) {
   // Check that we're going to run the first message that's valid to run.
 #if 0
 #  ifdef DEBUG
-    nsCOMPtr<nsIEventTarget> messageTarget =
-        mListener->GetMessageEventTarget(msg);
-
     for (MessageTask* task : mPending) {
         if (task == &aTask) {
             break;
         }
 
-        nsCOMPtr<nsIEventTarget> taskTarget =
-            mListener->GetMessageEventTarget(task->Msg());
-
         MOZ_ASSERT(!ShouldRunMessage(task->Msg()) ||
-                   taskTarget != messageTarget ||
                    aTask.Msg().priority() != task->Msg().priority());
 
     }
@@ -1879,15 +1872,7 @@ void MessageChannel::MessageTask::Post() {
 
   mScheduled = true;
 
-  RefPtr<MessageTask> self = this;
-  nsCOMPtr<nsISerialEventTarget> eventTarget =
-      Channel()->mListener->GetMessageEventTarget(mMessage);
-
-  if (eventTarget) {
-    eventTarget->Dispatch(self.forget(), NS_DISPATCH_NORMAL);
-  } else {
-    Channel()->mWorkerThread->Dispatch(self.forget());
-  }
+  Channel()->mWorkerThread->Dispatch(do_AddRef(this));
 }
 
 NS_IMETHODIMP

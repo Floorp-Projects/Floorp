@@ -1690,9 +1690,9 @@ nsresult nsUrlClassifierDBService::Init() {
 // nsChannelClassifier is the only consumer of this interface.
 NS_IMETHODIMP
 nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
-                                   nsISerialEventTarget* aEventTarget,
                                    nsIURIClassifierCallback* c, bool* aResult) {
   NS_ENSURE_ARG(aPrincipal);
+  MOZ_ASSERT(c);
   NS_ENSURE_ARG(aResult);
 
   if (aPrincipal->IsSystemPrincipal()) {
@@ -1709,10 +1709,6 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
     auto actor = static_cast<URLClassifierChild*>(
         content->AllocPURLClassifierChild(IPC::Principal(aPrincipal), aResult));
     MOZ_ASSERT(actor);
-
-    if (aEventTarget) {
-      content->SetEventTargetForActor(actor, aEventTarget);
-    }
 
     if (!content->SendPURLClassifierConstructor(
             actor, IPC::Principal(aPrincipal), aResult)) {

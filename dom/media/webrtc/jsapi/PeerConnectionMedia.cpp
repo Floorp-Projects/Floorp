@@ -100,13 +100,8 @@ PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl* parent)
       mTargetForDefaultLocalAddressLookupIsSet(false),
       mDestroyed(false) {
   if (XRE_IsContentProcess()) {
-    nsCOMPtr<nsISerialEventTarget> target =
-        mParent->GetWindow()
-            ? mParent->GetWindow()->EventTargetFor(TaskCategory::Other)
-            : nullptr;
-
     mStunAddrsRequest =
-        new net::StunAddrsRequestChild(new StunAddrsHandler(this), target);
+        new net::StunAddrsRequestChild(new StunAddrsHandler(this));
   }
 }
 
