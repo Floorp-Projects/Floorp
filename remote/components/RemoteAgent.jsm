@@ -161,7 +161,7 @@ class RemoteAgentClass {
       // Stop the CDP support before stopping the server.
       // Otherwise the HTTP server will fail to stop.
       await this.cdp?.stop();
-      this.webDriverBiDi?.stop();
+      await this.webDriverBiDi?.stop();
 
       await this.server.stop();
       this._server = null;
