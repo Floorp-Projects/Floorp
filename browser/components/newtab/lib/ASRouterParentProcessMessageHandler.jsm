@@ -75,6 +75,13 @@ class ASRouterParentProcessMessageHandler {
           browser,
         });
       }
+      case msg.PBNEWTAB_MESSAGE_REQUEST: {
+        return this._router.sendPBNewTabMessage({
+          ...data,
+          tabId,
+          browser,
+        });
+      }
       case msg.NEWTAB_MESSAGE_REQUEST: {
         return this._router.sendNewTabMessage({
           ...data,
