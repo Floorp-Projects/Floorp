@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hit-testing of positioned item on top of oop iframe</title>
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=1747409 -->
+<style>
+body, html {
+  width:100%;
+  height:100%;
+  margin:0;
+}
+
+iframe {
+  width:100%;
+  height:100%;
+  position:fixed;
+  z-index:1;
+}
+
+.over {
+  position: fixed;
+  right: 50px;
+  bottom: 50px;
+  z-index: 9999;
+}
+</style>
+<div class="over">
+  <a id="target" href="#">Link</a>
+</div>
+<iframe src="https://example.com"></iframe>
+<script>
+async function test() {
+  let config = getHitTestConfig();
+  let utils = config.utils;
+  let iframe = document.querySelector("iframe");
+  let target = document.getElementById("target");
+
+  try {
+    iframe.contentWindow.document;
+    ok(false, "Should be a cross-origin iframe");
+  } catch (ex) {}
+
+  await promiseApzFlushedRepaints();
+
+  checkHitResult(hitTest(centerOf(target)),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
+                 "fixed element with z-index");
+}
+
+
+onload = function() {
+  waitUntilApzStable()
+    .then(test)
+    .then(subtestDone, subtestFailed);
+};
+</script>
