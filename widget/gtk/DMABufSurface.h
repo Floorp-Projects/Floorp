@@ -171,7 +171,7 @@ class DMABufSurface {
   virtual ~DMABufSurface();
 
   SurfaceType mSurfaceType;
-  uint64_t mBufferModifier;
+  uint64_t mBufferModifiers[DMABUF_BUFFER_PLANES];
 
   int mBufferPlaneCount;
   int mDmabufFds[DMABUF_BUFFER_PLANES];
