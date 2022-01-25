@@ -21,8 +21,6 @@
     <string name="no_private_tabs_description">Maxfiy varaqlar shu yerda koʻrinadi.</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">1 ta ochiq varaq. Boshqa varaqqa oʻtish uchun bosing.</string>
-    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s ta ochiq varaq. Boshqa varaqqa oʻtish uchun bosing.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">Tanlandi: %1$d</string>
@@ -112,8 +110,6 @@
     <string name="tab_tray_inactive_auto_close_body">Oʻtgan oy ochilmagan varaqlarni Firefox yopishi mumkin.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Yopish</string>
-    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
-    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">Avtomatik yopishni yoqish</string>
 
     <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_turn_on_auto_close_button_2">Avtomatik yopishni yoqish</string>
@@ -124,8 +120,6 @@
     <string name="home_screen_shortcut_open_new_tab_2">Yangi varaq</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Yangi maxfiy varaq</string>
-    <!-- Heading for the Top Sites block -->
-    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Mashhur saytlar</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -174,8 +168,6 @@
     <string name="browser_menu_refresh">Yangilash</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Toʻxtatish</string>
-    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Xatchoʻp</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">Xatchoʻpni tahrirlash</string>
 
@@ -579,8 +571,6 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Sinxronizatsiyani yoqish</string>
-    <!-- Preference for pairing -->
-    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Kompyuter uchun Firefoxda ulanish kodini skanerlang</string>
     <!-- Preference for account login -->
     <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">Kirish</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -800,8 +790,6 @@
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
     <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">Xatchoʻp menyusi</string>
-    <!-- Screen title for editing bookmarks -->
-    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Xatchoʻpni tahrirlash</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">Jildni tanlash</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1043,10 +1031,50 @@
 
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Mashhur saytlarga qoʻshildi!</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Maxfiy varaq yopildi</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Maxfiy varaqlar yopildi</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string moz:removedIn="96" name="snackbar_private_tabs_deleted" tools:ignore="UnusedResources">Maxfiy varaqlar oʻchirildi</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">BEKOR QILISH</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string moz:removedIn="96" name="snackbar_top_site_removed" tools:ignore="UnusedResources">Sayt olib tashlandi</string>
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">Bekor qilish</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string moz:removedIn="96" name="a11y_dialog_deleted_confirm" tools:ignore="UnusedResources">Tasdiqlash</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">%1$sga %2$sni ochishga ruxsat bering</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">RUXSAT BERISH</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">RAD ETISH</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Siz %1$sni oʻchirishni xohlaysizmi?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Ushbu yorliqni oʻchirish orqali butun toʻplam oʻchadi. Istalgan vaqtda yangi toʻplamlar yaratishingiz mumkin.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">%1$s oʻchirilsinmi?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Oʻchirish</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Toʻliq ekran rejimiga oʻtmoqda</string>
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Manzildan nusxa olindi</string>
+
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">Bu namuna matn. Bu sozlamalar yordamida hajmni kattalashtirish yoki kamaytirishda matn qanday koʻrinishini namoyish etadi.</string>
+
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Barcha veb-saytlarni kattalashtirish</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Bu ishorani taqiqlovchi saytlar uchun ham chimdish va kattalashtirishga ruxsat berishni yoqing.</string>
+
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Soʻrovni “%s” bilan almashtiring. Masalan:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description text for a completed migration item -->
     <string name="migration_icon_description">Koʻchirish tugadi</string>
