@@ -475,12 +475,20 @@ static gfx::YUVColorSpace TransferAVColorSpaceToYUVColorSpace(
 
 static bool IsColorFormatSupportedForUsingCustomizedBuffer(
     const AVPixelFormat& aFormat) {
+#  if XP_WIN
+  // Currently the web render doesn't support uploading R16 surface, so we can't
+  // use the shmem texture for 10 bit+ videos which would be uploaded by the
+  // web render. See Bug 1751498.
+  return aFormat == AV_PIX_FMT_YUV420P || aFormat == AV_PIX_FMT_YUVJ420P ||
+         aFormat == AV_PIX_FMT_YUV444P;
+#  else
   // For now, we only support for YUV420P, YUVJ420P and YUV444 which are the
   // only non-HW accelerated format supported by FFmpeg's H264 and VP9 decoder.
   return aFormat == AV_PIX_FMT_YUV420P || aFormat == AV_PIX_FMT_YUVJ420P ||
          aFormat == AV_PIX_FMT_YUV420P10LE ||
          aFormat == AV_PIX_FMT_YUV420P12LE || aFormat == AV_PIX_FMT_YUV444P ||
          aFormat == AV_PIX_FMT_YUV444P10LE || aFormat == AV_PIX_FMT_YUV444P12LE;
+#  endif
 }
 
 static gfx::ColorDepth GetColorDepth(const AVPixelFormat& aFormat) {
