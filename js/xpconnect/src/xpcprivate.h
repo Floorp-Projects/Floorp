@@ -2243,10 +2243,12 @@ struct GlobalProperties {
   bool FileReader : 1;
   bool FormData : 1;
   bool Headers : 1;
+  bool IOUtils : 1;
   bool InspectorUtils : 1;
   bool MessageChannel : 1;
   bool Node : 1;
   bool NodeFilter : 1;
+  bool PathUtils : 1;
   bool Performance : 1;
   bool PromiseDebugging : 1;
   bool Range : 1;

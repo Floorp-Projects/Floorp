@@ -55,11 +55,13 @@
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FileBinding.h"
 #include "mozilla/dom/HeadersBinding.h"
+#include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
 #include "mozilla/dom/MessageChannelBinding.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/NodeFilterBinding.h"
+#include "mozilla/dom/PathUtilsBinding.h"
 #include "mozilla/dom/PerformanceBinding.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/PromiseDebuggingBinding.h"
@@ -920,6 +922,8 @@ bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {
       FormData = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "Headers")) {
       Headers = true;
+    } else if (JS_LinearStringEqualsLiteral(nameStr, "IOUtils")) {
+      IOUtils = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "InspectorUtils")) {
       InspectorUtils = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "MessageChannel")) {
@@ -928,6 +932,8 @@ bool xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj) {
       Node = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "NodeFilter")) {
       NodeFilter = true;
+    } else if (JS_LinearStringEqualsLiteral(nameStr, "PathUtils")) {
+      PathUtils = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "Performance")) {
       Performance = true;
     } else if (JS_LinearStringEqualsLiteral(nameStr, "PromiseDebugging")) {
@@ -1052,6 +1058,10 @@ bool xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj) {
     return false;
   }
 
+  if (IOUtils && !dom::IOUtils_Binding::GetConstructorObject(cx)) {
+    return false;
+  }
+
   if (InspectorUtils && !dom::InspectorUtils_Binding::GetConstructorObject(cx))
     return false;
 
@@ -1065,6 +1075,10 @@ bool xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj) {
   }
 
   if (NodeFilter && !dom::NodeFilter_Binding::GetConstructorObject(cx)) {
+    return false;
+  }
+
+  if (PathUtils && !dom::PathUtils_Binding::GetConstructorObject(cx)) {
     return false;
   }
 
