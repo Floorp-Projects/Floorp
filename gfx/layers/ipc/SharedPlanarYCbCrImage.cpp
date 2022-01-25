@@ -108,6 +108,11 @@ bool SharedPlanarYCbCrImage::AdoptData(const Data& aData) {
   return false;
 }
 
+bool SharedPlanarYCbCrImage::CreateEmptyBuffer(const Data& aData) {
+  auto data = aData;
+  return Allocate(data);
+}
+
 bool SharedPlanarYCbCrImage::IsValid() const {
   return mTextureClient && mTextureClient->IsValid();
 }
@@ -125,6 +130,18 @@ bool SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData) {
   if (!mTextureClient) {
     NS_WARNING("SharedPlanarYCbCrImage::Allocate failed.");
     return false;
+  }
+
+  gfx::IntSize imageYSize =
+      aData.mCroppedYSize ? *aData.mCroppedYSize : aData.mYSize;
+  gfx::IntSize imageCbCrSize =
+      aData.mCroppedCbCrSize ? *aData.mCroppedCbCrSize : aData.mCbCrSize;
+  if (aData.mCroppedYSize || aData.mCroppedCbCrSize) {
+    // If cropping fails, then reset Y&CbCr sizes to non-cropped sizes.
+    if (!mTextureClient->CropYCbCrPlanes(imageYSize, imageCbCrSize)) {
+      imageYSize = aData.mYSize;
+      imageCbCrSize = aData.mCbCrSize;
+    }
   }
 
   MappedYCbCrTextureData mapped;
@@ -146,8 +163,8 @@ bool SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData) {
   mData.mYChannel = aData.mYChannel;
   mData.mCbChannel = aData.mCbChannel;
   mData.mCrChannel = aData.mCrChannel;
-  mData.mYSize = aData.mYSize;
-  mData.mCbCrSize = aData.mCbCrSize;
+  mData.mYSize = imageYSize;
+  mData.mCbCrSize = imageCbCrSize;
   mData.mPicX = aData.mPicX;
   mData.mPicY = aData.mPicY;
   mData.mPicSize = aData.mPicSize;

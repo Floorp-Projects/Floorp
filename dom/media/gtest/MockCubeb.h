@@ -255,7 +255,9 @@ class MockCubeb {
   static MockCubeb* AsMock(cubeb* aContext);
   // Fill in the collection parameter with all devices of aType.
   int EnumerateDevices(cubeb_device_type aType,
-                       cubeb_device_collection* collection);
+                       cubeb_device_collection* aCollection);
+  // Clear the collection parameter and deallocate its related memory space.
+  int DestroyDeviceCollection(cubeb_device_collection* aCollection);
 
   // For a given device type, add a callback, called with a user pointer, when
   // the device collection for this backend changes (i.e. a device has been
@@ -391,8 +393,7 @@ int cubeb_mock_enumerate_devices(cubeb* context, cubeb_device_type type,
 
 int cubeb_mock_device_collection_destroy(cubeb* context,
                                          cubeb_device_collection* collection) {
-  delete[] collection->device;
-  return CUBEB_OK;
+  return MockCubeb::AsMock(context)->DestroyDeviceCollection(collection);
 }
 
 int cubeb_mock_register_device_collection_changed(

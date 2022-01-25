@@ -1404,9 +1404,9 @@ class PictureInPictureChild extends JSWindowActorChild {
 
     // gSiteOverrides is a list of tuples where the first element is the MatchPattern
     // for a supported site and the second is the actual overrides object for it.
-    // TODO: Remove DEBUG and NIGHTLY_BUILD checks (see Bug 1750998).
+    // TODO: Remove NIGHTLY_BUILD check (see Bug 1751793).
     let wrapperPath =
-      AppConstants.NIGHTLY_BUILD && !AppConstants.DEBUG && overrides
+      AppConstants.NIGHTLY_BUILD && overrides
         ? overrides[1].videoWrapperScriptPath
         : null;
     this.videoWrapper = new PictureInPictureChildVideoWrapper(

@@ -7,7 +7,7 @@
  * https://streams.spec.whatwg.org/#default-writer-class-definition
  */
 
-[Exposed=(Window,Worker,Worklet)]
+[Exposed=(Window,Worker,Worklet), Pref="dom.streams.writable_streams.enabled"]
 interface WritableStreamDefaultWriter {
   [Throws]
   constructor(WritableStream stream);

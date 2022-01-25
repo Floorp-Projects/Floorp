@@ -112,6 +112,69 @@ TEST(CubebDeviceEnumerator, EnumerateSimple)
   CubebDeviceEnumerator::Shutdown();
 }
 
+TEST(CubebDeviceEnumerator, ZeroChannelDevices)
+{
+  MockCubeb* mock = new MockCubeb();
+  mozilla::CubebUtils::ForceSetCubebContext(mock->AsCubebContext());
+
+  // Create devices with different channel count, including 0-channel
+
+  cubeb_device_info dev1 = DeviceTemplate(reinterpret_cast<cubeb_devid>(1),
+                                          CUBEB_DEVICE_TYPE_INPUT, "dev 1");
+  dev1.max_channels = 1;
+  mock->AddDevice(dev1);
+
+  cubeb_device_info dev2 = DeviceTemplate(reinterpret_cast<cubeb_devid>(2),
+                                          CUBEB_DEVICE_TYPE_INPUT, "dev 2");
+  dev2.max_channels = 0;
+  mock->AddDevice(dev2);
+
+  cubeb_device_info dev3 = DeviceTemplate(reinterpret_cast<cubeb_devid>(3),
+                                          CUBEB_DEVICE_TYPE_OUTPUT, "dev 3");
+  dev3.max_channels = 2;
+  mock->AddDevice(dev3);
+
+  cubeb_device_info dev4 = DeviceTemplate(reinterpret_cast<cubeb_devid>(4),
+                                          CUBEB_DEVICE_TYPE_OUTPUT, "dev 4");
+  dev4.max_channels = 0;
+  mock->AddDevice(dev4);
+
+  // Make sure the devices are added to cubeb.
+
+  cubeb_device_collection inputCollection = {nullptr, 0};
+  mock->EnumerateDevices(CUBEB_DEVICE_TYPE_INPUT, &inputCollection);
+  EXPECT_EQ(inputCollection.count, 2U);
+  EXPECT_EQ(inputCollection.device[0].devid, dev1.devid);
+  EXPECT_EQ(inputCollection.device[1].devid, dev2.devid);
+  mock->DestroyDeviceCollection(&inputCollection);
+  EXPECT_EQ(inputCollection.count, 0U);
+
+  cubeb_device_collection outputCollection = {nullptr, 0};
+  mock->EnumerateDevices(CUBEB_DEVICE_TYPE_OUTPUT, &outputCollection);
+  EXPECT_EQ(outputCollection.count, 2U);
+  EXPECT_EQ(outputCollection.device[0].devid, dev3.devid);
+  EXPECT_EQ(outputCollection.device[1].devid, dev4.devid);
+  mock->DestroyDeviceCollection(&outputCollection);
+  EXPECT_EQ(outputCollection.count, 0U);
+
+  // Enumerate the devices. The result should exclude the 0-channel devices.
+
+  RefPtr<CubebDeviceEnumerator> enumerator =
+      CubebDeviceEnumerator::GetInstance();
+
+  RefPtr<const AudioDeviceSet> inputDevices =
+      enumerator->EnumerateAudioInputDevices();
+  EXPECT_EQ(inputDevices->Length(), 1U);
+  EXPECT_EQ(inputDevices->ElementAt(0)->DeviceID(), dev1.devid);
+  EXPECT_EQ(inputDevices->ElementAt(0)->MaxChannels(), dev1.max_channels);
+
+  RefPtr<const AudioDeviceSet> outputDevices =
+      enumerator->EnumerateAudioOutputDevices();
+  EXPECT_EQ(outputDevices->Length(), 1U);
+  EXPECT_EQ(outputDevices->ElementAt(0)->DeviceID(), dev3.devid);
+  EXPECT_EQ(outputDevices->ElementAt(0)->MaxChannels(), dev3.max_channels);
+}
+
 #else  // building for Android, which has no device enumeration support
 TEST(CubebDeviceEnumerator, EnumerateAndroid)
 {

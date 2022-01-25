@@ -1432,14 +1432,6 @@
   value: true
   mirror: always
 
-# Temporary pref which makes certain ServiceWorkers be isolated in special
-# processes instead of within a the normal web/webIsolated process based on
-# the URI.  Entries are separated by commas
-- name: browser.tabs.remote.serviceWorkerIsolationList
-  type: String
-  value: ""
-  mirror: never
-
 # When this pref is enabled, opaque response is only allowed to enter the
 # content process if it's a response for media (audio, image, video), CSS, or
 # JavaScript.
@@ -3600,6 +3592,11 @@
 
 # DON'T enable, there are known issues!
 - name: dom.streams.byte_streams
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: dom.streams.writable_streams.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
@@ -6584,7 +6581,7 @@
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
-# Streams API.
+# Streams API. This only applies to JS Streams
 - name: javascript.options.streams
   type: RelaxedAtomicBool
   value: true
@@ -7781,7 +7778,7 @@
 
 - name: layout.display-list.retain.sc
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Set the maximum number of modified frames allowed before doing a full
@@ -7828,6 +7825,14 @@
 - name: layout.dynamic-reflow-roots.enabled
   type: bool
   value: @IS_EARLY_BETA_OR_EARLIER@
+  mirror: always
+
+# Enables the mechanism to optimize away flex item's final reflow.
+# Warning: Disabling the pref will impact the performance. This is useful only for
+# debugging flexbox issues.
+- name: layout.flexbox.item-final-reflow-optimization.enabled
+  type: bool
+  value: true
   mirror: always
 
 # Enables the <input type=search> custom layout frame with a clear icon.
@@ -8277,7 +8282,7 @@
 #elif defined(XP_WIN) && !defined(_ARM64_)
   value: true
 #elif defined(XP_MACOSX)
-  value: true
+  value: false
 #else
   value: false
 #endif
@@ -8291,7 +8296,7 @@
 #elif defined(XP_WIN) && !defined(_ARM64_)
   value: true
 #elif defined(XP_MACOSX)
-  value: true
+  value: false
 #else
   value: false
 #endif
@@ -8721,6 +8726,12 @@
     value: false
     mirror: always
 #endif
+
+# Allow ffmpeg decoder to decode directly onto shmem buffer
+- name: media.ffmpeg.customized-buffer-allocation
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
 
 #ifdef MOZ_FFMPEG
 -   name: media.ffmpeg.enabled

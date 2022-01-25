@@ -829,7 +829,6 @@
     separator: String
   result_type: Object
   possibly_calls: true
-  congruent_to: if_operands_equal
   # Although this instruction returns a new array, we don't have to mark
   # it as store instruction, see also MNewArray.
   alias_set: none

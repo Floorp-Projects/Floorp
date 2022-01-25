@@ -63,13 +63,6 @@ class ActiveLayerTracker {
                              const nsACString& aNewValue,
                              nsDOMCSSDeclaration* aDOMCSSDecl);
   /**
-   * Notify aFrame as being known to have an animation of aProperty through an
-   * inline style modification during aScrollFrame's scroll event handler.
-   */
-  static void NotifyAnimatedFromScrollHandler(nsIFrame* aFrame,
-                                              nsCSSPropertyID aProperty,
-                                              nsIFrame* aScrollFrame);
-  /**
    * Notify that a property in the inline style rule of aFrame's element
    * has been modified.
    * This notification is incomplete --- not all modifications to inline
@@ -150,13 +143,6 @@ class ActiveLayerTracker {
    * Return true if this frame's content is still marked as active.
    */
   static bool IsContentActive(nsIFrame* aFrame);
-
-  /**
-   * Called before and after a scroll event handler is executed, with the
-   * scrollframe or nullptr, respectively. This acts as a hint to treat
-   * inline style changes during the handler differently.
-   */
-  static void SetCurrentScrollHandlerFrame(nsIFrame* aFrame);
 };
 
 }  // namespace mozilla
