@@ -197,6 +197,7 @@ class Theme : protected nsNativeTheme, public nsITheme {
 
   void SetScrollbarDrawing(UniquePtr<ScrollbarDrawing>&& aScrollbarDrawing) {
     mScrollbarDrawing = std::move(aScrollbarDrawing);
+    mScrollbarDrawing->RecomputeScrollbarParams();
   }
   ScrollbarDrawing& GetScrollbarDrawing() const { return *mScrollbarDrawing; }
   UniquePtr<ScrollbarDrawing> mScrollbarDrawing;
