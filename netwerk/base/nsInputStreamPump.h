@@ -53,7 +53,7 @@ class nsInputStreamPump final : public nsIInputStreamPump,
    * The callback will be called at most once.
    *
    * The data from the stream will not be consumed, i.e. the pump's listener
-   * can still read all the data.
+   * can still read all the data
    *
    * Do not call before asyncRead. Do not call after onStopRequest.
    */
@@ -74,6 +74,15 @@ class nsInputStreamPump final : public nsIInputStreamPump,
   uint32_t OnStateStop();
   nsresult CreateBufferedStreamIfNeeded();
 
+  // This should optimize away in non-DEBUG builds
+  MOZ_ALWAYS_INLINE void AssertOnThread() const {
+    if (mOffMainThread) {
+      MOZ_ASSERT(mTargetThread->IsOnCurrentThread());
+    } else {
+      MOZ_ASSERT(NS_IsMainThread());
+    }
+  }
+
   uint32_t mState{STATE_IDLE};
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsIStreamListener> mListener;
@@ -89,6 +98,11 @@ class nsInputStreamPump final : public nsIInputStreamPump,
   uint32_t mSuspendCount{0};
   uint32_t mLoadFlags{LOAD_NORMAL};
   bool mIsPending{false};
+  // mListener is written on a single thread (either MainThread or an
+  // off-MainThread thread), read from that thread and perhaps others (in
+  // RetargetDeliveryTo)
+  // mAsyncStream is written on a single thread (either MainThread or an
+  // off-MainThread thread), and lives from AsyncRead() to OnStateStop().
   // True while in OnInputStreamReady, calling OnStateStart, OnStateTransfer
   // and OnStateStop. Used to prevent calls to AsyncWait during callbacks.
   bool mProcessingCallbacks{false};
@@ -98,8 +112,8 @@ class nsInputStreamPump final : public nsIInputStreamPump,
   bool mRetargeting{false};
   bool mAsyncStreamIsBuffered{false};
   // Indicate whether nsInputStreamPump is used completely off main thread.
-  // If true, OnStateStop() is executed off main thread.
   bool mOffMainThread;
+  // If true, OnStateStop() is executed off main thread. Set at creation.
   // Protects state/member var accesses across multiple threads.
   mozilla::RecursiveMutex mMutex{"nsInputStreamPump"};
 };
