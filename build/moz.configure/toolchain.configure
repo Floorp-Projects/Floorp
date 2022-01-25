@@ -225,7 +225,6 @@ def try_preprocess(compiler, language, source, onerror=None):
 @imports(_from="mozbuild.configure.constants", _import="CPU_preprocessor_checks")
 @imports(_from="mozbuild.configure.constants", _import="kernel_preprocessor_checks")
 @imports(_from="mozbuild.configure.constants", _import="OS_preprocessor_checks")
-@imports(_from="six", _import="iteritems")
 @imports(_from="textwrap", _import="dedent")
 @imports(_from="__builtin__", _import="Exception")
 def get_compiler_info(compiler, language):
@@ -274,7 +273,7 @@ def get_compiler_info(compiler, language):
         ("KERNEL", kernel_preprocessor_checks),
         ("OS", OS_preprocessor_checks),
     ):
-        for n, (value, condition) in enumerate(iteritems(preprocessor_checks)):
+        for n, (value, condition) in enumerate(preprocessor_checks.items()):
             check += dedent(
                 """\
                 #%(if)s %(condition)s

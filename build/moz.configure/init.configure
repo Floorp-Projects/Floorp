@@ -160,11 +160,8 @@ add_old_configure_assignment("PYTHON3", virtualenv_python3.path)
 def early_options():
     @depends("--help")
     @imports("__sandbox__")
-    @imports(_from="six", _import="itervalues")
     def early_options(_):
-        return set(
-            option.env for option in itervalues(__sandbox__._options) if option.env
-        )
+        return set(option.env for option in __sandbox__._options.values() if option.env)
 
     return early_options
 
@@ -176,7 +173,6 @@ early_options = early_options()
 # This gives access to the sandbox. Don't copy this blindly.
 @imports("__sandbox__")
 @imports("os")
-@imports("six")
 def mozconfig_options(mozconfig, early_options, automation, help):
     if mozconfig["path"]:
         if "MOZ_AUTOMATION_MOZCONFIG" in mozconfig["env"]["added"]:
@@ -207,15 +203,15 @@ def mozconfig_options(mozconfig, early_options, automation, help):
                 if key not in early_options:
                     helper.add(arg, origin="mozconfig", args=helper._args)
 
-        for key, value in six.iteritems(mozconfig["env"]["added"]):
+        for key, value in mozconfig["env"]["added"].items():
             add(key, value)
             os.environ[key] = value
-        for key, (_, value) in six.iteritems(mozconfig["env"]["modified"]):
+        for key, (_, value) in mozconfig["env"]["modified"].items():
             add(key, value)
             os.environ[key] = value
-        for key, value in six.iteritems(mozconfig["vars"]["added"]):
+        for key, value in mozconfig["vars"]["added"].items():
             add(key, value)
-        for key, (_, value) in six.iteritems(mozconfig["vars"]["modified"]):
+        for key, (_, value) in mozconfig["vars"]["modified"].items():
             add(key, value)
 
 
