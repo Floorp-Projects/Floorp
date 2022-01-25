@@ -8289,9 +8289,9 @@
   "PWMGR_IMPORT_LOGINS_FROM_FILE_JANK_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "bug_numbers": [1338522, 1584261, 1643431, 1678204],
+    "bug_numbers": [1338522, 1584261, 1643431, 1678204, 1749883],
     "alert_emails": ["sfoster@mozilla.com", "passwords-dev@mozilla.org"],
-    "expires_in_version": "99",
+    "expires_in_version": "105",
     "kind": "exponential",
     "n_buckets": 20,
     "high": 60000,
