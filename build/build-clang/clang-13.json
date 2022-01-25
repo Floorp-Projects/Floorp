@@ -13,7 +13,6 @@
       "compiler-rt-13-no-codesign.patch",
       "win64-no-symlink.patch",
       "revert-llvmorg-13-init-8182-gc2297544c047.patch",
-      "revert-llvmorg-13-init-4019-ga478b0a199f4.patch",
       "revert-llvmorg-12-init-7827-g2a078c307204.patch",
       "llvmorg-14-init-2833-gbadcd5858972.patch",
       "llvmorg-14-init-3166-gd9ab62ca3d29.patch",

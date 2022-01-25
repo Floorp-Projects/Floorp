@@ -1273,6 +1273,11 @@ def compiler(
         if info.flags:
             raise FatalCheckError("Unknown compiler or compiler not supported.")
 
+        # Recent clang defaults to compiler-rt, but we want libgcc for compat
+        # with the older NDKs we use.
+        if host_or_target.os == "Android":
+            flags.append("--rtlib=libgcc")
+
         return namespace(
             wrapper=wrapper,
             compiler=compiler,
