@@ -1681,20 +1681,30 @@ size_t js::Nursery::targetSize(JS::GCOptions options, JS::GCReason reason) {
   double fractionPromoted =
       double(previousGC.tenuredBytes) / double(previousGC.nurseryCapacity);
 
-  // Calculate the fraction of time spent collecting the nursery.
-  double timeFraction = 0.0;
+  // Calculate the duty factor, the fraction of time spent collecting the
+  // nursery.
+  double dutyFactor = 0.0;
+  TimeDuration collectorTime = now - collectionStartTime();
   if (hasRecentGrowthData && !js::SupportDifferentialTesting()) {
-    TimeDuration collectorTime = now - collectionStartTime();
     TimeDuration totalTime = now - lastCollectionEndTime();
-    timeFraction = collectorTime.ToSeconds() / totalTime.ToSeconds();
+    dutyFactor = collectorTime.ToSeconds() / totalTime.ToSeconds();
   }
 
-  // Adjust the nursery size to try to achieve a target promotion rate and
-  // collector time goals.
+  // Calculate a growth factor to try to achieve target promotion rate and duty
+  // factor goals.
   static const double PromotionGoal = 0.02;
-  static const double TimeGoal = 0.01;
-  double growthFactor =
-      std::max(fractionPromoted / PromotionGoal, timeFraction / TimeGoal);
+  static const double DutyFactorGoal = 0.01;
+  double promotionGrowth = fractionPromoted / PromotionGoal;
+  double dutyGrowth = dutyFactor / DutyFactorGoal;
+  double growthFactor = std::max(promotionGrowth, dutyGrowth);
+
+  // Decrease the growth factor to try to keep collections shorter than a target
+  // maximum time. Don't do this during page load.
+  static const double MaxTimeGoalMs = 4.0;
+  if (!gc->isInPageLoad() && !js::SupportDifferentialTesting()) {
+    double timeGrowth = MaxTimeGoalMs / collectorTime.ToMilliseconds();
+    growthFactor = std::min(growthFactor, timeGrowth);
+  }
 
   // Limit the range of the growth factor to prevent transient high promotion
   // rates from affecting the nursery size too far into the future.
