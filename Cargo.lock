@@ -5960,6 +5960,7 @@ version = "0.1.0"
 dependencies = [
  "cstr",
  "libc",
+ "mozbuild",
  "nserror",
  "nsstring",
  "thin-vec",
@@ -5981,6 +5982,7 @@ name = "xpcom_macros"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
+ "mozbuild",
  "proc-macro2",
  "quote",
  "syn",
