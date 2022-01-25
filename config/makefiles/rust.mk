@@ -214,7 +214,6 @@ export RUSTC
 export RUSTDOC
 export RUSTFMT
 export MOZ_SRC=$(topsrcdir)
-export MOZ_DIST=$(ABS_DIST)
 export LIBCLANG_PATH=$(MOZ_LIBCLANG_PATH)
 export CLANG_PATH=$(MOZ_CLANG_PATH)
 export PKG_CONFIG
