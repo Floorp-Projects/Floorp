@@ -4,7 +4,8 @@
     "searchPageRegexp",
     "queryParamName",
     "codeParamName",
-    "codePrefixes",
+    "taggedCodes",
+    "organicCodes",
     "followOnParamNames",
     "followOnCookies",
     "extraAdServersRegexps"
