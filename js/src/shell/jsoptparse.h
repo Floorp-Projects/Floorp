@@ -10,12 +10,45 @@
 #include <stdio.h>
 
 #include "js/AllocPolicy.h"
+#include "js/Utility.h"
 #include "js/Vector.h"
 
 namespace js {
 namespace cli {
 
 namespace detail {
+
+// We want to use the shell's option parser before initializing the JS engine.
+// The JS malloc arena isn't available yet at this point, so we use a custom
+// allocation policy that uses the system malloc instead.
+class OptionAllocPolicy {
+ public:
+  template <typename T>
+  T* pod_malloc(size_t numElems) {
+    size_t bytes;
+    if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(numElems, &bytes))) {
+      return nullptr;
+    }
+    return static_cast<T*>(malloc(bytes));
+  }
+
+  template <typename T>
+  T* pod_realloc(T* p, size_t oldSize, size_t newSize) {
+    size_t bytes;
+    if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(newSize, &bytes))) {
+      return nullptr;
+    }
+    return static_cast<T*>(realloc(p, bytes));
+  }
+
+  void reportAllocOverflow() const {}
+  bool checkSimulatedOOM() const { return !js::oom::ShouldFailWithOOM(); }
+
+  template <typename T>
+  void free_(T* p, size_t numElems = 0) {
+    free(p);
+  }
+};
 
 struct BoolOption;
 struct MultiStringOption;
@@ -137,7 +170,7 @@ struct StringArg {
 };
 
 struct MultiStringOption : public ValuedOption {
-  Vector<StringArg, 0, SystemAllocPolicy> strings;
+  Vector<StringArg, 0, detail::OptionAllocPolicy> strings;
 
   MultiStringOption(char shortflag, const char* longflag, const char* help,
                     const char* metavar)
@@ -198,7 +231,7 @@ class OptionParser {
   };
 
  private:
-  typedef Vector<detail::Option*, 0, SystemAllocPolicy> Options;
+  typedef Vector<detail::Option*, 0, detail::OptionAllocPolicy> Options;
   typedef detail::Option Option;
   typedef detail::BoolOption BoolOption;
 
