@@ -4483,9 +4483,17 @@ static CFTypeRefPtr<CFURLRef> GetPasteLocation(NSPasteboard* aPasteboard) {
 
 // Support for the "Services" menu. We currently only support sending strings
 // and HTML to system services.
-
+// This method can be called on any thread (see bug 1751687). We can only usefully
+// handle it on the main thread.
 - (id)validRequestorForSendType:(NSString*)sendType returnType:(NSString*)returnType {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+
+  if (!NS_IsMainThread()) {
+    // We don't have any thread-safe ways of checking whether we can send
+    // or receive content. Just say no. In normal cases, we expect this
+    // method to be called on the main thread.
+    return [super validRequestorForSendType:sendType returnType:returnType];
+  }
 
   // sendType contains the type of data that the service would like this
   // application to send to it.  sendType is nil if the service is not

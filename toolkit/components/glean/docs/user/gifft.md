@@ -160,3 +160,41 @@ and the event will be Summarized in Telemetry as all disabled events are.
 See
 [the Telemetry Event docs](/toolkit/components/telemetry/collection/events.rst)
 for details on how disabled Telemetry Events behave.
+
+### Numeric Values
+
+The arguments and storage formats for Glean's numeric types
+(`counter`, `labeled_counter`, `quantity`, `rate`, and `timespan`)
+are different from Telemetry's numeric type
+(Scalar of kind `uint`).
+
+This results in a few notable differences.
+
+#### Saturation and Overflow
+
+`counter`, `labeled_counter`, and `rate` metrics are stored as 32-bit signed values.
+`quantity` metrics are stored as 64-bit signed values.
+All of these Glean numeric metric types saturate at their maximum representable value.
+
+Scalars of kind `uint` are stored as 32-bit unsigned values.
+They will overflow if they exceed the value $2^{32} - 1$.
+
+If a Glean numeric type saturates, it will record an error of type `invalid_overflow`.
+In your analyses please check for these errors.
+
+#### Quantity Value Over-size
+
+Values greater than $2^{32} - 1$ passed to a `quantity` metric's
+`set()` method will be clamped to $2^{32} - 1$ before being passed to the metric's Telemetry mirror.
+
+#### Negative Values
+
+Values less than 0 passed to any numeric metric type's API will not be passed on to the Telemetry mirror.
+This avoids small negative numbers being cast into a stunningly large numbers,
+and keeps the Telemetry mirror's value closer to that of the Glean metric.
+
+#### Long Time Spans
+
+If the number of milliseconds between calls to a
+`timespan` metric's `start()` and `stop()` methods exceeds $2^{32} - 1$,
+the value passed to the metric's Telemetry mirror will be clamped to $2^{32} - 1$.

@@ -42,4 +42,6 @@ if CONFIG["MOZ_WAYLAND"]:
     DEFINES["MOZ_WAYLAND_USE_VAAPI"] = 1
     USE_LIBS += ["mozva"]
 
+include("/ipc/chromium/chromium-config.mozbuild")
+
 FINAL_LIBRARY = "xul"

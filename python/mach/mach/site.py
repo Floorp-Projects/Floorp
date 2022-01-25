@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import sys
 from collections import OrderedDict
+from distutils import dist
 from pathlib import Path
 import tempfile
 from contextlib import contextmanager
@@ -702,13 +703,6 @@ class PythonVirtualenv:
 
     @functools.lru_cache(maxsize=None)
     def site_packages_dir(self):
-        # Defer "distutils" import until this function is called so that
-        # "mach bootstrap" doesn't fail due to Linux distro python-distutils
-        # package not being installed.
-        # By the time this function is called, "distutils" must be installed
-        # because it's needed by the "virtualenv" package.
-        from distutils import dist
-
         normalized_venv_root = os.path.normpath(self.prefix)
 
         distribution = dist.Distribution({"script_args": "--no-user-cfg"})

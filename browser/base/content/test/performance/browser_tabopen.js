@@ -62,6 +62,68 @@ add_task(async function() {
 
   let inRange = (val, min, max) => min <= val && val <= max;
 
+  let inTabStrip = function(r) {
+    return (
+      r.y1 >= tabStripRect.top &&
+      r.y2 <= tabStripRect.bottom &&
+      r.x1 >= tabStripRect.left &&
+      r.x2 <= tabStripRect.right
+    );
+  };
+
+  let isExpectedChange = function(r) {
+    // We expect all changes to be within the tab strip.
+    if (!inTabStrip(r)) {
+      return false;
+    }
+
+    // The first tab should get deselected at the same time as the next tab
+    // starts appearing, so we should have one rect that includes the first tab
+    // but is wider.
+    if (
+      inRange(r.w, minTabWidth, maxTabWidth * 2) &&
+      inRange(r.x1, firstTabRect.x, firstTabRect.x + tabPaddingStart)
+    ) {
+      return true;
+    }
+
+    // The second tab gets painted several times due to tabopen animation.
+    let isSecondTabRect =
+      inRange(
+        r.x1,
+        firstTabRect.right - 1, // -1 for the border on Win7
+        firstTabRect.right + firstTabRect.width
+      ) &&
+      r.x2 <
+        firstTabRect.right +
+          firstTabRect.width +
+          // Sometimes the '+' is in the same rect.
+          newTabButtonRect.width;
+
+    if (isSecondTabRect) {
+      return true;
+    }
+    // The '+' icon moves with an animation. At the end of the animation
+    // the former and new positions can touch each other causing the rect
+    // to have twice the icon's width.
+    if (r.h == 13 && r.w <= 2 * 13 + kMaxEmptyPixels) {
+      return true;
+    }
+
+    // We sometimes have a rect for the right most 2px of the '+' button.
+    if (r.h == 2 && r.w == 2) {
+      return true;
+    }
+
+    // Same for the 'X' icon.
+    if (r.h == 10 && r.w <= 2 * 10) {
+      return true;
+    }
+
+    // Other changes are unexpected.
+    return false;
+  };
+
   // Add a reflow observer and open a new tab.
   await withPerfObserver(
     async function() {
@@ -76,46 +138,7 @@ add_task(async function() {
     {
       expectedReflows: EXPECTED_REFLOWS,
       frames: {
-        filter: rects =>
-          rects.filter(
-            r =>
-              !(
-                // We expect all changes to be within the tab strip.
-                (
-                  r.y1 >= tabStripRect.top &&
-                  r.y2 <= tabStripRect.bottom &&
-                  r.x1 >= tabStripRect.left &&
-                  r.x2 <= tabStripRect.right &&
-                  // The first tab should get deselected at the same time as the next
-                  // tab starts appearing, so we should have one rect that includes the
-                  // first tab but is wider.
-                  ((inRange(r.w, minTabWidth, maxTabWidth * 2) &&
-                    inRange(
-                      r.x1,
-                      firstTabRect.x,
-                      firstTabRect.x + tabPaddingStart
-                    )) ||
-                  // The second tab gets painted several times due to tabopen animation.
-                  (inRange(
-                    r.x1,
-                    firstTabRect.right - 1, // -1 for the border on Win7
-                    firstTabRect.right + firstTabRect.width
-                  ) &&
-                    r.x2 <
-                      firstTabRect.right +
-                        firstTabRect.width +
-                        newTabButtonRect.width) || // Sometimes the '+' is in the same rect.
-                    // The '+' icon moves with an animation. At the end of the animation
-                    // the former and new positions can touch each other causing the rect
-                    // to have twice the icon's width.
-                    (r.h == 13 && r.w <= 2 * 13 + kMaxEmptyPixels) ||
-                    // We sometimes have a rect for the right most 2px of the '+' button.
-                    (r.h == 2 && r.w == 2) ||
-                    // Same for the 'X' icon.
-                    (r.h == 10 && r.w <= 2 * 10))
-                )
-              )
-          ),
+        filter: rects => rects.filter(r => !isExpectedChange(r)),
         exceptions: [
           {
             name:

@@ -236,6 +236,11 @@ var gMoreFromMozillaPane = {
               : ""
           }` +
           ".svg";
+        // Add image a11y attributes
+        img.setAttribute(
+          "data-l10n-id",
+          "more-from-moz-qr-code-firefox-mobile-img"
+        );
 
         // Note that the QR code image itself is _not_ a link; this is a link that
         // is directly below the image.
