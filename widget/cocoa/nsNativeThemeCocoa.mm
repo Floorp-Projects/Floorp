@@ -3644,13 +3644,6 @@ nsITheme::Transparency nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFram
   }
 }
 
-already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
-  static nsCOMPtr<nsITheme> inst;
-
-  if (!inst) {
-    inst = new nsNativeThemeCocoa(MakeUnique<ScrollbarDrawingCocoa>());
-    ClearOnShutdown(&inst);
-  }
-
-  return do_AddRef(inst);
+already_AddRefed<widget::Theme> do_CreateNativeThemeDoNotUseDirectly() {
+  return do_AddRef(new nsNativeThemeCocoa(MakeUnique<ScrollbarDrawingCocoa>()));
 }

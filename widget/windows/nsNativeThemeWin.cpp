@@ -3662,13 +3662,6 @@ uint32_t nsNativeThemeWin::GetWidgetNativeDrawingFlags(
 // Creation Routine
 ///////////////////////////////////////////
 
-already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
-  static nsCOMPtr<nsITheme> inst;
-
-  if (!inst) {
-    inst = new nsNativeThemeWin();
-    ClearOnShutdown(&inst);
-  }
-
-  return do_AddRef(inst);
+already_AddRefed<Theme> do_CreateNativeThemeDoNotUseDirectly() {
+  return do_AddRef(new nsNativeThemeWin());
 }
