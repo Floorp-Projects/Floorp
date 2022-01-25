@@ -575,9 +575,21 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
 void DMABufSurfaceRGBA::ReleaseTextures() {
   FenceDelete();
 
-  if (!mGL) {
+  if (!mTexture) {
     return;
   }
+
+  if (!mGL) {
+#ifdef NIGHTLY
+    MOZ_DIAGNOSTIC_ASSERT(mGL, "Missing GL context!");
+#else
+    NS_WARNING(
+        "DMABufSurfaceRGBA::ReleaseTextures(): Missing GL context! We're "
+        "leaking textures!");
+    return;
+#endif
+  }
+
   const auto& gle = gl::GLContextEGL::Cast(mGL);
   const auto& egl = gle->mEgl;
 
@@ -587,9 +599,9 @@ void DMABufSurfaceRGBA::ReleaseTextures() {
     mGL = nullptr;
   }
 
-  if (mEGLImage) {
+  if (mEGLImage != LOCAL_EGL_NO_IMAGE) {
     egl->fDestroyImage(mEGLImage);
-    mEGLImage = nullptr;
+    mEGLImage = LOCAL_EGL_NO_IMAGE;
   }
 }
 
@@ -1114,18 +1126,19 @@ bool DMABufSurfaceYUV::Serialize(
   return true;
 }
 
-bool DMABufSurfaceYUV::CreateTexture(GLContext* aGLContext, int aPlane) {
+bool DMABufSurfaceYUV::CreateEGLImage(GLContext* aGLContext, int aPlane) {
   LOGDMABUF(
-      ("DMABufSurfaceYUV::CreateTexture() UID %d plane %d", mUID, aPlane));
-  MOZ_ASSERT(!mEGLImage[aPlane] && !mTexture[aPlane],
-             "EGLImage/Texture is already created!");
+      ("DMABufSurfaceYUV::CreateEGLImage() UID %d plane %d", mUID, aPlane));
+  MOZ_ASSERT(mEGLImage[aPlane] == LOCAL_EGL_NO_IMAGE,
+             "EGLImage is already created!");
+  MOZ_ASSERT(aGLContext, "Missing GLContext!");
 
-  if (!aGLContext) return false;
   const auto& gle = gl::GLContextEGL::Cast(aGLContext);
   const auto& egl = gle->mEgl;
 
   MutexAutoLock lockFD(mSurfaceLock);
   if (!OpenFileDescriptorForPlane(lockFD, aPlane)) {
+    LOGDMABUF(("  failed to open dmabuf file descriptors"));
     return false;
   }
 
@@ -1162,7 +1175,36 @@ bool DMABufSurfaceYUV::CreateTexture(GLContext* aGLContext, int aPlane) {
   CloseFileDescriptorForPlane(lockFD, aPlane);
 
   if (mEGLImage[aPlane] == LOCAL_EGL_NO_IMAGE) {
-    LOGDMABUF(("    EGLImageKHR creation failed"));
+    LOGDMABUF(("  EGLImageKHR creation failed"));
+    return false;
+  }
+
+  LOGDMABUF(("  Success."));
+  return true;
+}
+
+void DMABufSurfaceYUV::ReleaseEGLImages(GLContext* aGLContext) {
+  LOGDMABUF(("DMABufSurfaceYUV::ReleaseEGLImages() UID %d", mUID));
+  MOZ_ASSERT(aGLContext, "Missing GLContext!");
+
+  const auto& gle = gl::GLContextEGL::Cast(aGLContext);
+  const auto& egl = gle->mEgl;
+
+  for (int i = 0; i < mBufferPlaneCount; i++) {
+    if (mEGLImage[i] != LOCAL_EGL_NO_IMAGE) {
+      egl->fDestroyImage(mEGLImage[i]);
+      mEGLImage[i] = LOCAL_EGL_NO_IMAGE;
+    }
+  }
+}
+
+bool DMABufSurfaceYUV::CreateTexture(GLContext* aGLContext, int aPlane) {
+  LOGDMABUF(
+      ("DMABufSurfaceYUV::CreateTexture() UID %d plane %d", mUID, aPlane));
+  MOZ_ASSERT(!mTexture[aPlane], "Texture is already created!");
+  MOZ_ASSERT(aGLContext, "Missing GLContext!");
+
+  if (!CreateEGLImage(aGLContext, aPlane)) {
     return false;
   }
 
@@ -1195,26 +1237,48 @@ void DMABufSurfaceYUV::ReleaseTextures() {
     }
   }
 
-  if (!mGL) {
+  if (!textureActive) {
     return;
   }
-  const auto& gle = gl::GLContextEGL::Cast(mGL);
-  const auto& egl = gle->mEgl;
+
+  if (!mGL) {
+#ifdef NIGHTLY
+    MOZ_DIAGNOSTIC_ASSERT(mGL, "Missing GL context!");
+#else
+    NS_WARNING(
+        "DMABufSurfaceYUV::ReleaseTextures(): Missing GL context! We're "
+        "leaking textures!");
+    return;
+#endif
+  }
 
   if (textureActive && mGL->MakeCurrent()) {
     mGL->fDeleteTextures(DMABUF_BUFFER_PLANES, mTexture);
     for (int i = 0; i < DMABUF_BUFFER_PLANES; i++) {
       mTexture[i] = 0;
     }
+    ReleaseEGLImages(mGL);
     mGL = nullptr;
   }
+}
+
+bool DMABufSurfaceYUV::VerifyTextureCreation() {
+  LOGDMABUF(("DMABufSurfaceYUV::VerifyTextureCreation() UID %d", mUID));
+
+  if (!EnsureSnapshotGLContext()) {
+    LOGDMABUF(("  failed to create GL context!"));
+    return false;
+  }
+
+  auto release = MakeScopeExit([&] { ReleaseEGLImages(sSnapshotContext); });
 
   for (int i = 0; i < mBufferPlaneCount; i++) {
-    if (mEGLImage[i]) {
-      egl->fDestroyImage(mEGLImage[i]);
-      mEGLImage[i] = nullptr;
+    if (!CreateEGLImage(sSnapshotContext, i)) {
+      return false;
     }
   }
+
+  return true;
 }
 
 gfx::SurfaceFormat DMABufSurfaceYUV::GetFormat() {
