@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.appservices.places.uniffi.PlacesException
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
@@ -1230,34 +1231,38 @@ abstract class BaseBrowserFragment :
             }
         } else {
             // Save bookmark, then go to edit fragment
-            val guid = bookmarksStorage.addItem(
-                BookmarkRoot.Mobile.id,
-                url = sessionUrl,
-                title = sessionTitle,
-                position = null
-            )
+            try {
+                val guid = bookmarksStorage.addItem(
+                    BookmarkRoot.Mobile.id,
+                    url = sessionUrl,
+                    title = sessionTitle,
+                    position = null
+                )
 
-            withContext(Main) {
-                requireComponents.analytics.metrics.track(Event.AddBookmark)
+                withContext(Main) {
+                    requireComponents.analytics.metrics.track(Event.AddBookmark)
 
-                view?.let {
-                    FenixSnackbar.make(
-                        view = binding.browserLayout,
-                        duration = FenixSnackbar.LENGTH_LONG,
-                        isDisplayedWithBrowserToolbar = true
-                    )
-                        .setText(getString(R.string.bookmark_saved_snackbar))
-                        .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
-                            nav(
-                                R.id.browserFragment,
-                                BrowserFragmentDirections.actionGlobalBookmarkEditFragment(
-                                    guid,
-                                    true
+                    view?.let {
+                        FenixSnackbar.make(
+                            view = binding.browserLayout,
+                            duration = FenixSnackbar.LENGTH_LONG,
+                            isDisplayedWithBrowserToolbar = true
+                        )
+                            .setText(getString(R.string.bookmark_saved_snackbar))
+                            .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
+                                nav(
+                                    R.id.browserFragment,
+                                    BrowserFragmentDirections.actionGlobalBookmarkEditFragment(
+                                        guid,
+                                        true
+                                    )
                                 )
-                            )
-                        }
-                        .show()
+                            }
+                            .show()
+                    }
                 }
+            } catch (e: PlacesException.UrlParseFailed) {
+                println("We should do something here")
             }
         }
     }

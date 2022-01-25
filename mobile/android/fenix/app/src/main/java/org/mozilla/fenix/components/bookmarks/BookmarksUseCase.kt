@@ -6,6 +6,7 @@ package org.mozilla.fenix.components.bookmarks
 
 import androidx.annotation.WorkerThread
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.appservices.places.uniffi.PlacesException
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.concept.storage.HistoryStorage
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
@@ -29,18 +30,21 @@ class BookmarksUseCase(
          */
         @WorkerThread
         suspend operator fun invoke(url: String, title: String, position: UInt? = null): Boolean {
-            val canAdd = storage.getBookmarksWithUrl(url).firstOrNull { it.url == it.url } == null
+            try {
+                val canAdd = storage.getBookmarksWithUrl(url).firstOrNull { it.url == it.url } == null
 
-            if (canAdd) {
-                storage.addItem(
-                    BookmarkRoot.Mobile.id,
-                    url = url,
-                    title = title,
-                    position = position
-                )
+                if (canAdd) {
+                    storage.addItem(
+                        BookmarkRoot.Mobile.id,
+                        url = url,
+                        title = title,
+                        position = position
+                    )
+                }
+                return canAdd
+            } catch (e: PlacesException.UrlParseFailed) {
+                return false
             }
-
-            return canAdd
         }
     }
 
