@@ -27,10 +27,19 @@
       "title": "Partner Code Parameter Name",
       "description": "The name of the query parameter for the partner code."
     },
-    "codePrefixes": {
+    "taggedCodes": {
       "type": "array",
-      "title": "Partner Code Prefixes",
-      "description": "An array of prefixes (or complete values) to match against the partner code paramters in the url.",
+      "title": "Partner Codes",
+      "description": "An array of partner codes to match against the parameters in the url. Matching these codes will report the SERP as tagged.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9-._]*$"
+      }
+    },
+    "organicCodes": {
+      "type": "array",
+      "title": "Organic Codes",
+      "description": "An array of partner codes to match against the parameters in the url.  Matching these codes will report the SERP as organic.",
       "items": {
         "type": "string",
         "pattern": "^[a-zA-Z0-9-._]*$"
@@ -59,7 +68,7 @@
           },
           "extraCodePrefixes": {
             "type": "array",
-            "description": "Possbile values for the query parameter in the URL that indicates this might be a follow-on search.",
+            "description": "Possible values for the query parameter in the URL that indicates this might be a follow-on search.",
             "items": {
               "type": "string",
               "pattern": "^[a-zA-Z0-9-._]*$"
@@ -79,14 +88,6 @@
             "type": "string",
             "description": "The name of parameter within the cookie.",
             "pattern": "^[a-zA-Z0-9-._]*$"
-          },
-          "codePrefixes": {
-            "type": "array",
-            "description": "Possbile values for the parameter within the cookie.",
-            "items": {
-              "type": "string",
-              "pattern": "^[a-zA-Z0-9-._]*$"
-            }
           }
         }
       }
