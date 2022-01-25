@@ -23,6 +23,7 @@ from mach.util import (
     win_to_msys_path,
 )
 from mach.telemetry import initialize_telemetry_setting
+from mach.site import MachSiteManager
 from mozboot.base import MODERN_RUST_VERSION
 from mozboot.centosfedora import CentOSFedoraBootstrapper
 from mozboot.opensuse import OpenSUSEBootstrapper
@@ -325,7 +326,7 @@ class Bootstrapper(object):
         )
         self.instance.srcdir = checkout_root
         self.instance.validate_environment()
-        self._validate_python_environment()
+        self._validate_python_environment(checkout_root)
 
         if self.instance.no_system_changes:
             self.maybe_install_private_packages_or_exit(application)
@@ -416,7 +417,7 @@ class Bootstrapper(object):
                 )
                 print(suggestion, end="")
 
-    def _validate_python_environment(self):
+    def _validate_python_environment(self, topsrcdir):
         valid = True
         try:
             # distutils is singled out here because some distros (namely Ubuntu)
@@ -448,6 +449,12 @@ class Bootstrapper(object):
                 file=sys.stderr,
             )
             sys.exit(1)
+
+        mach_site = MachSiteManager.from_environment(
+            topsrcdir,
+            lambda: os.path.normpath(get_state_dir(True, topsrcdir=topsrcdir)),
+        )
+        mach_site.attempt_populate_optional_packages()
 
 
 def update_vct(hg: Path, root_state_dir: Path):
