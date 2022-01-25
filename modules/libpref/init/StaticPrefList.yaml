@@ -7827,6 +7827,14 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# Enables the mechanism to optimize away flex item's final reflow.
+# Warning: Disabling the pref will impact the performance. This is useful only for
+# debugging flexbox issues.
+- name: layout.flexbox.item-final-reflow-optimization.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Enables the <input type=search> custom layout frame with a clear icon.
 # Still needs tests and a web-exposed way to remove that icon, see bug 1654288.
 - name: layout.forms.input-type-search.enabled
