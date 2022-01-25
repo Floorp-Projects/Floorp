@@ -405,9 +405,6 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
   mExtraData->AppendElements(*aConfig.mExtraData);
 #ifdef MOZ_WAYLAND_USE_VAAPI
   InitHWDecodingPrefs();
-  if (mUseDMABufSurfaces || mEnableHardwareDecoding) {
-    mVideoFramePool = MakeUnique<VideoFramePool>(mEnableHardwareDecoding);
-  }
 #endif
 }
 
@@ -867,6 +864,9 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
       // If VA-API playback failed, just quit. Decoder is going to be restarted
       // without VA-API.
       if (NS_FAILED(rv)) {
+        // Explicitly remove dmabuf surface pool as it's configured
+        // for VA-API support.
+        mVideoFramePool = nullptr;
         return rv;
       }
     } else if (mUseDMABufSurfaces) {
@@ -1119,7 +1119,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
   VADRMPRIMESurfaceDescriptor vaDesc;
   if (!GetVAAPISurfaceDescriptor(&vaDesc)) {
     return MediaResult(
-        NS_ERROR_OUT_OF_MEMORY,
+        NS_ERROR_DOM_MEDIA_DECODE_ERR,
         RESULT_DETAIL("Unable to get frame by vaExportSurfaceHandle()"));
   }
 
@@ -1127,7 +1127,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
   auto surface = mVideoFramePool->GetVideoFrameSurface(vaDesc, mCodecContext,
                                                        mFrame, mLib);
   if (!surface) {
-    return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                        RESULT_DETAIL("VAAPI dmabuf allocation error"));
   }
   surface->SetYUVColorSpace(GetFrameColorSpace());
@@ -1145,7 +1145,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageVAAPI(
       !!mFrame->key_frame, TimeUnit::FromMicroseconds(-1));
 
   if (!vp) {
-    return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                        RESULT_DETAIL("VAAPI image allocation error"));
   }
 
@@ -1164,7 +1164,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageDMABuf(
   auto surface =
       mVideoFramePool->GetVideoFrameSurface(mCodecContext->pix_fmt, mFrame);
   if (!surface) {
-    return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                        RESULT_DETAIL("dmabuf allocation error"));
   }
   surface->SetYUVColorSpace(GetFrameColorSpace());
@@ -1182,7 +1182,7 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageDMABuf(
       !!mFrame->key_frame, TimeUnit::FromMicroseconds(-1));
 
   if (!vp) {
-    return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
                        RESULT_DETAIL("image allocation error"));
   }
 

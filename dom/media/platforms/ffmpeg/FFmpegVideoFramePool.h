@@ -160,6 +160,9 @@ class VideoFramePool final {
   // Protect mDMABufSurfaces pool access
   mozilla::Mutex mSurfaceLock;
   nsTArray<RefPtr<VideoFrameSurface>> mDMABufSurfaces;
+  // We may fails to create texture over DMABuf memory due to driver bugs
+  // so check that before we export first DMABuf video frame.
+  Maybe<bool> mTextureCreationWorks;
 };
 
 }  // namespace mozilla

@@ -9,6 +9,10 @@
 #include "mozilla/widget/DMABufLibWrapper.h"
 #include "libavutil/pixfmt.h"
 
+#undef FFMPEG_LOG
+#define FFMPEG_LOG(str, ...) \
+  MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (str, ##__VA_ARGS__))
+
 namespace mozilla {
 
 RefPtr<layers::Image> VideoFrameSurfaceDMABuf::GetAsImage() {
@@ -127,6 +131,13 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
       return nullptr;
     }
     FFMPEG_LOG("Created new VA-API DMABufSurface UID = %d", surface->GetUID());
+    if (!mTextureCreationWorks) {
+      mTextureCreationWorks = Some(surface->VerifyTextureCreation());
+    }
+    if (!*mTextureCreationWorks) {
+      FFMPEG_LOG("  failed to create texture over DMABuf memory!");
+      return nullptr;
+    }
     videoSurface = new VideoFrameSurfaceVAAPI(surface);
     mDMABufSurfaces.AppendElement(videoSurface);
   } else {
@@ -165,6 +176,13 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
     }
     FFMPEG_LOG("Created new SW DMABufSurface UID = %d", surface->GetUID());
     videoSurface = new VideoFrameSurfaceDMABuf(surface);
+    if (!mTextureCreationWorks) {
+      mTextureCreationWorks = Some(surface->VerifyTextureCreation());
+    }
+    if (!*mTextureCreationWorks) {
+      FFMPEG_LOG("  failed to create texture over DMABuf memory!");
+      return nullptr;
+    }
     mDMABufSurfaces.AppendElement(videoSurface);
     return videoSurface;
   }
