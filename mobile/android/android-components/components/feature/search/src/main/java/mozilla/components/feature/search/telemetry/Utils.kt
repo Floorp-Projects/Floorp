@@ -11,6 +11,17 @@ private const val SEARCH_TYPE_SAP_FOLLOW_ON = "sap-follow-on"
 private const val SEARCH_TYPE_SAP = "sap"
 private const val SEARCH_TYPE_ORGANIC = "organic"
 private const val CHANNEL_KEY = "channel"
+private val validCodeSet = setOf(
+    "MOZ2", "MOZ4", "MOZ5", "MOZA", "MOZB", "MOZD", "MOZE", "MOZI", "MOZM", "MOZO", "MOZT",
+    "MOZW", "MOZSL01", "MOZSL02", "MOZSL03", "monline_dg", "monline_3_dg", "monline_4_dg",
+    "monline_7_dg", "firefox-a", "firefox-b", "firefox-b-1", "firefox-b-ab", "firefox-b-1-ab",
+    "firefox-b-d", "firefox-b-1-d", "firefox-b-e", "firefox-b-1-e", "firefox-b-m",
+    "firefox-b-1-m", "firefox-b-o", "firefox-b-1-o", "firefox-b-lm", "firefox-b-1-lm",
+    "firefox-b-lg", "firefox-b-huawei-h1611", "firefox-b-is-oem1", "firefox-b-oem1",
+    "firefox-b-oem2", "firefox-b-tinno", "firefox-b-pn-wt", "firefox-b-pn-wt-us", "ubuntu",
+    "ffab", "ffcm", "ffhp", "ffip", "ffit", "ffnt", "ffocus", "ffos", "ffsb", "fpas", "fpsa",
+    "ftas", "ftsa", "newext", "1000969a"
+)
 
 /**
  * Get a String in a specific format allowing to identify how an ads/search provider was used.
@@ -33,6 +44,11 @@ internal fun getTrackKey(
         ) {
             code = uri.toString().substringAfter("from=", "")
                 .substringBefore("/", "")
+        }
+
+        // For Bug 1751920
+        if (!validCodeSet.contains(code)) {
+            code = null
         }
 
         // Glean doesn't allow code starting with a figure
