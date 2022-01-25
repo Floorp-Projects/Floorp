@@ -101,6 +101,29 @@ linux64-clang-trunk:
             - linux64-toolchain-sysroot
             - wasm32-wasi-compiler-rt
 
+linux64-clang-13-stage1:
+    description: "Clang 13 toolchain build"
+    treeherder:
+        symbol: TL(clang13-stage1)
+    run-on-projects: [trunk]
+    run:
+        using: toolchain-script
+        script: build-clang.sh
+        arguments:
+            - 'build/build-clang/linux64.json'
+            - 'build/build-clang/clang-13.json'
+            - 'build/build-clang/1stage.json'
+        resources:
+            - 'build/build-clang/linux64.json'
+            - 'build/build-clang/clang-13.json'
+            - 'build/build-clang/1stage.json'
+        toolchain-alias:
+            - linux64-clang-toolchain
+        toolchain-artifact: public/build/clang.tar.zst
+    fetches:
+        fetch:
+            - clang-13
+
 linux64-clang-13:
     description: "Clang 13 toolchain build"
     attributes:
@@ -114,17 +137,19 @@ linux64-clang-13:
         arguments:
             - 'build/build-clang/linux64.json'
             - 'build/build-clang/clang-13.json'
+            - 'build/build-clang/skip-stage-1.json'
         resources:
             - 'build/build-clang/linux64.json'
             - 'build/build-clang/clang-13.json'
+            - 'build/build-clang/skip-stage-1.json'
         toolchain-alias:
             - linux64-clang
-            - linux64-clang-toolchain
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
             - clang-13
         toolchain:
+            - linux64-clang-13-stage1
             - linux64-toolchain-sysroot
             - wasm32-wasi-compiler-rt-13
 
