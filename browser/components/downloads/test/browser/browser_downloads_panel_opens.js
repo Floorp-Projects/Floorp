@@ -24,6 +24,52 @@ add_task(async function test_downloads_panel_opens() {
   DownloadsPanel.hidePanel();
 });
 
+add_task(async function test_customizemode_doesnt_wreck_things() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.download.improvements_to_download_panel", true]],
+  });
+
+  // Enter customize mode:
+  let customizationReadyPromise = BrowserTestUtils.waitForEvent(
+    gNavToolbox,
+    "customizationready"
+  );
+  gCustomizeMode.enter();
+  await customizationReadyPromise;
+
+  info("try to open the panel (will not work, in customize mode)");
+  let promise = promisePanelOpened();
+  DownloadsCommon.getData(window)._notifyDownloadEvent("start");
+  await TestUtils.waitForCondition(
+    () => DownloadsPanel._state == DownloadsPanel.kStateHidden,
+    "Should try to show but stop short and hide the panel"
+  );
+  is(
+    DownloadsPanel._state,
+    DownloadsPanel.kStateHidden,
+    "Should not start opening the panel."
+  );
+
+  let afterCustomizationPromise = BrowserTestUtils.waitForEvent(
+    gNavToolbox,
+    "aftercustomization"
+  );
+  gCustomizeMode.exit();
+  await afterCustomizationPromise;
+
+  DownloadsCommon.getData(window)._notifyDownloadEvent("start");
+  is(
+    DownloadsPanel.isPanelShowing,
+    true,
+    "Panel state should indicate a preparation to be opened"
+  );
+  await promise;
+
+  is(DownloadsPanel.panel.state, "open", "Panel should be opened");
+
+  DownloadsPanel.hidePanel();
+});
+
 /**
  * Make sure the downloads panel _does not_ open automatically if we set the
  * pref telling it not to do that.
