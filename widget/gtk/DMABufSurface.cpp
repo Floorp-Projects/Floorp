@@ -149,7 +149,6 @@ void DMABufSurface::ReleaseDMABuf() {
 
 DMABufSurface::DMABufSurface(SurfaceType aSurfaceType)
     : mSurfaceType(aSurfaceType),
-      mBufferModifier(DRM_FORMAT_MOD_INVALID),
       mBufferPlaneCount(0),
       mDrmFormats(),
       mStrides(),
@@ -164,6 +163,9 @@ DMABufSurface::DMABufSurface(SurfaceType aSurfaceType)
       mSurfaceLock("DMABufSurface") {
   for (auto& slot : mDmabufFds) {
     slot = -1;
+  }
+  for (auto& modifier : mBufferModifiers) {
+    modifier = DRM_FORMAT_MOD_INVALID;
   }
 }
 
@@ -358,7 +360,7 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
         GetDMABufDevice()->GetGbmDevice(), mWidth, mHeight, mGmbFormat->mFormat,
         mGmbFormat->mModifiers, mGmbFormat->mModifiersCount);
     if (mGbmBufferObject[0]) {
-      mBufferModifier = nsGbmLib::GetModifier(mGbmBufferObject[0]);
+      mBufferModifiers[0] = nsGbmLib::GetModifier(mGbmBufferObject[0]);
     }
   }
 
@@ -368,7 +370,7 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
     mGbmBufferObject[0] =
         nsGbmLib::Create(GetDMABufDevice()->GetGbmDevice(), mWidth, mHeight,
                          mGmbFormat->mFormat, mGbmBufferFlags);
-    mBufferModifier = DRM_FORMAT_MOD_INVALID;
+    mBufferModifiers[0] = DRM_FORMAT_MOD_INVALID;
   }
 
   if (!mGbmBufferObject[0]) {
@@ -376,7 +378,7 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
     return false;
   }
 
-  if (mBufferModifier != DRM_FORMAT_MOD_INVALID) {
+  if (mBufferModifiers[0] != DRM_FORMAT_MOD_INVALID) {
     mBufferPlaneCount = nsGbmLib::GetPlaneCount(mGbmBufferObject[0]);
     if (mBufferPlaneCount > DMABUF_BUFFER_PLANES) {
       LOGDMABUF(("    There's too many dmabuf planes!"));
@@ -403,8 +405,8 @@ bool DMABufSurfaceRGBA::ImportSurfaceDescriptor(
 
   mWidth = desc.width()[0];
   mHeight = desc.height()[0];
-  mBufferModifier = desc.modifier();
-  if (mBufferModifier != DRM_FORMAT_MOD_INVALID) {
+  mBufferModifiers[0] = desc.modifier()[0];
+  if (mBufferModifiers[0] != DRM_FORMAT_MOD_INVALID) {
     mGmbFormat = GetDMABufDevice()->GetExactGbmFormat(desc.format()[0]);
   } else {
     mDrmFormats[0] = desc.format()[0];
@@ -458,6 +460,7 @@ bool DMABufSurfaceRGBA::Serialize(
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> strides;
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> offsets;
   AutoTArray<uintptr_t, DMABUF_BUFFER_PLANES> images;
+  AutoTArray<uint64_t, DMABUF_BUFFER_PLANES> modifiers;
   AutoTArray<ipc::FileDescriptor, 1> fenceFDs;
   AutoTArray<ipc::FileDescriptor, 1> refCountFDs;
 
@@ -471,6 +474,7 @@ bool DMABufSurfaceRGBA::Serialize(
   width.AppendElement(mWidth);
   height.AppendElement(mHeight);
   format.AppendElement(mGmbFormat->mFormat);
+  modifiers.AppendElement(mBufferModifiers[0]);
   for (int i = 0; i < mBufferPlaneCount; i++) {
     fds.AppendElement(ipc::FileDescriptor(mDmabufFds[i]));
     strides.AppendElement(mStrides[i]);
@@ -488,8 +492,8 @@ bool DMABufSurfaceRGBA::Serialize(
   }
 
   aOutDescriptor = SurfaceDescriptorDMABuf(
-      mSurfaceType, mBufferModifier, mGbmBufferFlags, fds, width, height,
-      format, strides, offsets, GetYUVColorSpace(), mColorRange, fenceFDs, mUID,
+      mSurfaceType, modifiers, mGbmBufferFlags, fds, width, height, format,
+      strides, offsets, GetYUVColorSpace(), mColorRange, fenceFDs, mUID,
       refCountFDs);
   return true;
 }
@@ -516,13 +520,13 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
     attribs.AppendElement((int)mOffsets[plane_idx]);                        \
     attribs.AppendElement(LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_PITCH_EXT);  \
     attribs.AppendElement((int)mStrides[plane_idx]);                        \
-    if (mBufferModifier != DRM_FORMAT_MOD_INVALID) {                        \
+    if (mBufferModifiers[0] != DRM_FORMAT_MOD_INVALID) {                    \
       attribs.AppendElement(                                                \
           LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_MODIFIER_LO_EXT);            \
-      attribs.AppendElement(mBufferModifier & 0xFFFFFFFF);                  \
+      attribs.AppendElement(mBufferModifiers[0] & 0xFFFFFFFF);              \
       attribs.AppendElement(                                                \
           LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_MODIFIER_HI_EXT);            \
-      attribs.AppendElement(mBufferModifier >> 32);                         \
+      attribs.AppendElement(mBufferModifiers[0] >> 32);                     \
     }                                                                       \
   }
 
@@ -611,8 +615,8 @@ bool DMABufSurfaceRGBA::CreateWlBuffer() {
   struct zwp_linux_buffer_params_v1* params =
       zwp_linux_dmabuf_v1_create_params(waylandDisplay->GetDmabuf());
   zwp_linux_buffer_params_v1_add(params, mDmabufFds[0], 0, mOffsets[0],
-                                 mStrides[0], mBufferModifier >> 32,
-                                 mBufferModifier & 0xffffffff);
+                                 mStrides[0], mBufferModifiers[0] >> 32,
+                                 mBufferModifiers[0] & 0xffffffff);
 
   mWlBuffer = zwp_linux_buffer_params_v1_create_immed(
       params, GetWidth(), GetHeight(), mGmbFormat->mFormat, 0);
@@ -891,15 +895,16 @@ bool DMABufSurfaceYUV::UpdateYUVData(const VADRMPRIMESurfaceDescriptor& aDesc) {
   }
 
   mBufferPlaneCount = aDesc.num_layers;
-  mBufferModifier = aDesc.objects[0].drm_format_modifier;
 
   for (unsigned int i = 0; i < aDesc.num_layers; i++) {
+    unsigned int object = aDesc.layers[i].object_index[0];
     // Intel exports VA-API surfaces in one object,planes have the same FD.
     // AMD exports surfaces in two objects with different FDs.
-    bool dupFD = (aDesc.layers[i].object_index[0] != i);
-    int fd = aDesc.objects[aDesc.layers[i].object_index[0]].fd;
+    int fd = aDesc.objects[object].fd;
+    bool dupFD = (object != i);
     mDmabufFds[i] = dupFD ? dup(fd) : fd;
 
+    mBufferModifiers[i] = aDesc.objects[object].drm_format_modifier;
     mDrmFormats[i] = aDesc.layers[i].drm_format;
     mOffsets[i] = aDesc.layers[i].offset[0];
     mStrides[i] = aDesc.layers[i].pitch[0];
@@ -1024,7 +1029,6 @@ bool DMABufSurfaceYUV::ImportSurfaceDescriptor(
     const SurfaceDescriptorDMABuf& aDesc) {
   mBufferPlaneCount = aDesc.fds().Length();
   mSurfaceType = (mBufferPlaneCount == 2) ? SURFACE_NV12 : SURFACE_YUV420;
-  mBufferModifier = aDesc.modifier();
   mColorSpace = aDesc.yUVColorSpace();
   mColorRange = aDesc.colorRange();
   mUID = aDesc.uid();
@@ -1044,6 +1048,7 @@ bool DMABufSurfaceYUV::ImportSurfaceDescriptor(
     mDrmFormats[i] = aDesc.format()[i];
     mStrides[i] = aDesc.strides()[i];
     mOffsets[i] = aDesc.offsets()[i];
+    mBufferModifiers[i] = aDesc.modifier()[i];
     LOGDMABUF(("    plane %d fd %d size %d x %d format %x", i, mDmabufFds[i],
                mWidth[i], mHeight[i], mDrmFormats[i]));
   }
@@ -1072,6 +1077,7 @@ bool DMABufSurfaceYUV::Serialize(
   AutoTArray<ipc::FileDescriptor, DMABUF_BUFFER_PLANES> fds;
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> strides;
   AutoTArray<uint32_t, DMABUF_BUFFER_PLANES> offsets;
+  AutoTArray<uint64_t, DMABUF_BUFFER_PLANES> modifiers;
   AutoTArray<ipc::FileDescriptor, 1> fenceFDs;
   AutoTArray<ipc::FileDescriptor, 1> refCountFDs;
 
@@ -1089,6 +1095,7 @@ bool DMABufSurfaceYUV::Serialize(
     fds.AppendElement(ipc::FileDescriptor(mDmabufFds[i]));
     strides.AppendElement(mStrides[i]);
     offsets.AppendElement(mOffsets[i]);
+    modifiers.AppendElement(mBufferModifiers[i]);
   }
 
   CloseFileDescriptors(lockFD);
@@ -1102,8 +1109,8 @@ bool DMABufSurfaceYUV::Serialize(
   }
 
   aOutDescriptor = SurfaceDescriptorDMABuf(
-      mSurfaceType, mBufferModifier, 0, fds, width, height, format, strides,
-      offsets, GetYUVColorSpace(), mColorRange, fenceFDs, mUID, refCountFDs);
+      mSurfaceType, modifiers, 0, fds, width, height, format, strides, offsets,
+      GetYUVColorSpace(), mColorRange, fenceFDs, mUID, refCountFDs);
   return true;
 }
 
@@ -1136,13 +1143,13 @@ bool DMABufSurfaceYUV::CreateTexture(GLContext* aGLContext, int aPlane) {
   attribs.AppendElement((int)mOffsets[aPlane]);                           \
   attribs.AppendElement(LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_PITCH_EXT);  \
   attribs.AppendElement((int)mStrides[aPlane]);                           \
-  if (mBufferModifier != DRM_FORMAT_MOD_INVALID) {                        \
+  if (mBufferModifiers[aPlane] != DRM_FORMAT_MOD_INVALID) {               \
     attribs.AppendElement(                                                \
         LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_MODIFIER_LO_EXT);            \
-    attribs.AppendElement(mBufferModifier & 0xFFFFFFFF);                  \
+    attribs.AppendElement(mBufferModifiers[aPlane] & 0xFFFFFFFF);         \
     attribs.AppendElement(                                                \
         LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_MODIFIER_HI_EXT);            \
-    attribs.AppendElement(mBufferModifier >> 32);                         \
+    attribs.AppendElement(mBufferModifiers[aPlane] >> 32);                \
   }
   ADD_PLANE_ATTRIBS_NV12(0);
 #undef ADD_PLANE_ATTRIBS_NV12
