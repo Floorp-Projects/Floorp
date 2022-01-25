@@ -5541,7 +5541,7 @@ var SessionStoreInternal = {
 
     if (newCount == 0) {
       this._setWindowStateBusyValue(aWindow, false);
-      this._sendWindowStateEvent(aWindow, "Ready");
+      this._sendWindowStateReadyEvent(aWindow);
     }
   },
 
@@ -5555,18 +5555,27 @@ var SessionStoreInternal = {
 
     if (newCount == 1) {
       this._setWindowStateBusyValue(aWindow, true);
-      this._sendWindowStateEvent(aWindow, "Busy");
+      this._sendWindowStateBusyEvent(aWindow);
     }
   },
 
   /**
-   * Dispatch an SSWindowState_____ event for the given window.
+   * Dispatch an SSWindowStateReady event for the given window.
    * @param aWindow the window
-   * @param aType the type of event, SSWindowState will be prepended to this string
    */
-  _sendWindowStateEvent: function ssi_sendWindowStateEvent(aWindow, aType) {
+  _sendWindowStateReadyEvent: function ssi_sendWindowStateReadyEvent(aWindow) {
     let event = aWindow.document.createEvent("Events");
-    event.initEvent("SSWindowState" + aType, true, false);
+    event.initEvent("SSWindowStateReady", true, false);
+    aWindow.dispatchEvent(event);
+  },
+
+  /**
+   * Dispatch an SSWindowStateBusy event for the given window.
+   * @param aWindow the window
+   */
+  _sendWindowStateBusyEvent: function ssi_sendWindowStateBusyEvent(aWindow) {
+    let event = aWindow.document.createEvent("Events");
+    event.initEvent("SSWindowStateBusy", true, false);
     aWindow.dispatchEvent(event);
   },
 
