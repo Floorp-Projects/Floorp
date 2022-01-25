@@ -1106,10 +1106,6 @@ bool FFmpegVideoDecoder<LIBAV_VER>::GetVAAPISurfaceDescriptor(
   if (vas != VA_STATUS_SUCCESS) {
     NS_WARNING("vaSyncSurface() failed.");
   }
-
-  aVaDesc->width = mFrame->width;
-  aVaDesc->height = mFrame->height;
-
   return true;
 }
 
