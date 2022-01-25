@@ -154,6 +154,10 @@ DefaultJitOptions::DefaultJitOptions() {
   // Toggles whether functions may be entered at loop headers.
   SET_DEFAULT(osr, true);
 
+  // Whether the JIT backend (used by JITs, Wasm, Baseline Interpreter) has been
+  // disabled for this process. See JS::DisableJitBackend.
+  SET_DEFAULT(disableJitBackend, false);
+
   // Whether to enable extra code to perform dynamic validations.
   SET_DEFAULT(runExtraChecks, false);
 

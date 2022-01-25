@@ -2112,11 +2112,9 @@ void JSScript::relazify(JSRuntime* rt) {
   js::Scope* scope = enclosingScope();
   UniquePtr<PrivateScriptData> scriptData;
 
-#ifndef JS_CODEGEN_NONE
   // Any JIT compiles should have been released, so we already point to the
   // interpreter trampoline which supports lazy scripts.
-  MOZ_ASSERT(isUsingInterpreterTrampoline(rt));
-#endif
+  MOZ_ASSERT_IF(jit::HasJitBackend(), isUsingInterpreterTrampoline(rt));
 
   // Without bytecode, the script counts are invalid so destroy them if they
   // still exist.
@@ -2363,11 +2361,10 @@ bool JSScript::fullyInitFromStencil(
   // here will be released by the UniquePtr.
   Rooted<UniquePtr<PrivateScriptData>> lazyData(cx);
 
-#ifndef JS_CODEGEN_NONE
   // Whether we are a newborn script or an existing lazy script, we should
   // already be pointing to the interpreter trampoline.
-  MOZ_ASSERT(script->isUsingInterpreterTrampoline(cx->runtime()));
-#endif
+  MOZ_ASSERT_IF(jit::HasJitBackend(),
+                script->isUsingInterpreterTrampoline(cx->runtime()));
 
   // If we are using an existing lazy script, record enough info to be able to
   // rollback on failure.
@@ -3131,11 +3128,10 @@ BaseScript* BaseScript::New(JSContext* cx, JS::Handle<JSFunction*> function,
     return nullptr;
   }
 
-#ifndef JS_CODEGEN_NONE
-  uint8_t* stubEntry = cx->runtime()->jitRuntime()->interpreterStub().value;
-#else
   uint8_t* stubEntry = nullptr;
-#endif
+  if (jit::HasJitBackend()) {
+    stubEntry = cx->runtime()->jitRuntime()->interpreterStub().value;
+  }
 
   MOZ_ASSERT_IF(function,
                 function->compartment() == sourceObject->compartment());

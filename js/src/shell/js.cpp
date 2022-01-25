@@ -12245,6 +12245,9 @@ int main(int argc, char** argv) {
                         "Disable functions that cause "
                         "artificial OOMs") ||
       !op.addBoolOption('\0', "no-threads", "Disable helper threads") ||
+      !op.addBoolOption(
+          '\0', "no-jit-backend",
+          "Disable the JIT backend completely for this process") ||
 #ifdef DEBUG
       !op.addBoolOption('\0', "dump-entrained-variables",
                         "Print variables which are "
@@ -12343,6 +12346,11 @@ int main(int argc, char** argv) {
 
   if (op.getHelpOption()) {
     return EXIT_SUCCESS;
+  }
+
+  // Note: DisableJitBackend must be called before JS_InitWithFailureDiagnostic.
+  if (op.getBoolOption("no-jit-backend")) {
+    JS::DisableJitBackend();
   }
 
   // Start the engine.
