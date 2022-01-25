@@ -6,6 +6,12 @@
 
 gkrust_features = []
 
+if CONFIG['NIGHTLY_BUILD']:
+    gkrust_features += ['gkrust-shared/moz_asserts_nightly']
+
+if CONFIG['MOZ_DIAGNOSTIC_ASSERT_ENABLED']:
+    gkrust_features += ['gkrust-shared/moz_asserts_diagnostic']
+
 if CONFIG['MOZ_DEBUG']:
     gkrust_features += [
         'gecko_debug',
