@@ -63,56 +63,6 @@ LazyLogModule gMediaTrackGraphLog("MediaTrackGraph");
  */
 static nsTHashMap<nsUint32HashKey, MediaTrackGraphImpl*> gGraphs;
 
-const AudioDataValue* AudioInputSamples::Data() const {
-  return mData.Elements();
-}
-
-size_t AudioInputSamples::FrameCount() const {
-  MOZ_ASSERT(mChannels > 0);
-  return mData.Length() / mChannels;
-}
-
-TrackRate AudioInputSamples::Rate() const { return mRate; }
-
-uint32_t AudioInputSamples::Channels() const { return mChannels; }
-
-bool AudioInputSamples::IsEmpty() const { return mData.IsEmpty(); }
-
-void AudioInputSamples::Push(const AudioDataValue* aBuffer, size_t aFrames,
-                             TrackRate aRate, uint32_t aChannels) {
-  MOZ_ASSERT(aRate > 0);
-  MOZ_ASSERT(aChannels > 0);
-
-  if (mRate == 0) {
-    mRate = aRate;
-  }
-  if (mChannels == 0) {
-    mChannels = aChannels;
-  }
-
-  MOZ_ASSERT(aRate == mRate);
-  MOZ_ASSERT(aChannels == mChannels);
-
-  CheckedInt<size_t> samples(aFrames);
-  samples *= static_cast<size_t>(aChannels);
-  MOZ_ASSERT(samples.isValid());
-
-  size_t oldLen = mData.Length();
-  size_t newLen = oldLen + samples.value();
-  if (newLen > mData.Capacity()) {
-    mData.SetCapacity(newLen);
-  }
-  mData.SetLengthAndRetainStorage(newLen);
-  AudioDataValue* dest = mData.Elements() + oldLen;
-  PodCopy(dest, aBuffer, samples.value());
-}
-
-void AudioInputSamples::Clear() {
-  mRate = 0;
-  mChannels = 0;
-  mData.ClearAndRetainStorage();
-}
-
 MediaTrackGraphImpl::~MediaTrackGraphImpl() {
   MOZ_ASSERT(mTracks.IsEmpty() && mSuspendedTracks.IsEmpty(),
              "All tracks should have been destroyed by messages from the main "
