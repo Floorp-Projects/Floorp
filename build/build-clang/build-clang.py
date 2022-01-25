@@ -270,9 +270,13 @@ def build_one_stage(
                 "-DCOMPILER_RT_BUILD_LIBFUZZER=OFF",
             ]
 
+        # There is no libxml2 on Windows except if we build one ourselves.
+        # libxml2 is only necessary for llvm-mt, but Windows can just use the
+        # native MT tool.
+        if not is_windows() and is_final_stage:
+            cmake_args += ["-DLLVM_ENABLE_LIBXML2=FORCE_ON"]
         if is_linux() and not osx_cross_compile and is_final_stage:
             cmake_args += ["-DLLVM_BINUTILS_INCDIR=/usr/include"]
-            cmake_args += ["-DLLVM_ENABLE_LIBXML2=FORCE_ON"]
             sysroot = os.path.join(os.environ.get("MOZ_FETCHES_DIR", ""), "sysroot")
             if os.path.exists(sysroot):
                 cmake_args += ["-DCMAKE_SYSROOT=%s" % sysroot]
