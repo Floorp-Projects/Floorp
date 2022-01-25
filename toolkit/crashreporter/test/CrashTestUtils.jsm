@@ -36,7 +36,6 @@ var CrashTestUtils = {
   CRASH_PHC_BOUNDS_VIOLATION: 23,
   CRASH_HEAP_CORRUPTION: 24,
   CRASH_EXC_GUARD: 25,
-  CRASH_STACK_OVERFLOW: 26,
 
   // Constants for dumpHasStream()
   // From google_breakpad/common/minidump_format.h

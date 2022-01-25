@@ -41,7 +41,11 @@ void SchedulerGroup::MarkVsyncReceived() {
   // May be called on any thread when a vsync is received and scheduled to be
   // processed. This may occur on the main thread due to queued messages when
   // the channel is connected.
-  TimeStamp creation = TimeStamp::ProcessCreation();
+  bool inconsistent = false;
+  TimeStamp creation = TimeStamp::ProcessCreation(&inconsistent);
+  if (inconsistent) {
+    return;
+  }
 
   // Attempt to set gEarliestUnprocessedVsync to our new value. If we've seen a
   // vsync already, but haven't handled it, the `compareExchange` will fail and
