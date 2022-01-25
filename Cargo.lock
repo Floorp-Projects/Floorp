@@ -1666,6 +1666,7 @@ dependencies = [
  "glean",
  "inherent",
  "log",
+ "mozbuild",
  "nsstring",
  "once_cell",
  "serde",
