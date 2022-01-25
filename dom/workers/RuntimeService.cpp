@@ -1152,7 +1152,7 @@ bool RuntimeService::RegisterWorker(WorkerPrivate& aWorkerPrivate) {
 
   // From here on out we must call UnregisterWorker if something fails!
   if (parent) {
-    if (!parent->AddChildWorker(&aWorkerPrivate)) {
+    if (!parent->AddChildWorker(aWorkerPrivate)) {
       UnregisterWorker(aWorkerPrivate);
       return false;
     }
@@ -1272,7 +1272,7 @@ void RuntimeService::UnregisterWorker(WorkerPrivate& aWorkerPrivate) {
   // same time as us calling into the code here and would race with us.
 
   if (parent) {
-    parent->RemoveChildWorker(&aWorkerPrivate);
+    parent->RemoveChildWorker(aWorkerPrivate);
   } else if (aWorkerPrivate.IsSharedWorker()) {
     AssertIsOnMainThread();
 
