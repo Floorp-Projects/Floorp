@@ -144,6 +144,15 @@ JS_PUBLIC_API bool InitSelfHostedCode(JSContext* cx,
                                       SelfHostedCache cache = nullptr,
                                       SelfHostedWriter writer = nullptr);
 
+/*
+ * Permanently disable the JIT backend for this process. This disables the JS
+ * Baseline Interpreter, JIT compilers, regular expression JIT and support for
+ * WebAssembly.
+ *
+ * If called, this *must* be called before JS_Init.
+ */
+JS_PUBLIC_API void DisableJitBackend();
+
 }  // namespace JS
 
 /**
