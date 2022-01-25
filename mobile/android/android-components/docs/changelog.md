@@ -29,7 +29,8 @@ permalink: /changelog/
 * **feature-top-sites**
   * ⚠️ **This is a breaking change**: The existing data class `TopSite` has been converted into a sealed class. [#11483](https://github.com/mozilla-mobile/android-components/issues/11483)
   * Extend `DefaultTopSitesStorage` to accept a `TopSitesProvider` for fetching top sites. [#11483](https://github.com/mozilla-mobile/android-components/issues/11483)
-  
+  * ⚠️ **This is a breaking change**: Added a new parameter `fetchProvidedTopSites` to `TopSitesConfig` to specify whether or not to fetch top sites from the `TopSitesProvider`. [#11605](https://github.com/mozilla-mobile/android-components/issues/11605)
+
 * **service-contile**
   * Adds a `ContileTopSitesProvider` that implements `TopSitesProvider` for returning top sites from the Contile services API. [#11483](https://github.com/mozilla-mobile/android-components/issues/11483)
 

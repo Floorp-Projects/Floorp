@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.top.sites
 
+import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.support.base.observer.Observable
 
@@ -42,12 +43,14 @@ interface TopSitesStorage : Observable<TopSitesStorage.Observer> {
      * If `frecencyConfig` is specified, fill in any missing top sites with frecent top site results.
      *
      * @param totalSites A total number of sites that will be retrieve if possible.
+     * @param fetchProvidedTopSites Whether or not to fetch top sites from the [TopSitesProvider].
      * @param frecencyConfig If [frecencyConfig] is specified, only visited sites with a frecency
      * score above the given threshold will be returned. Otherwise, frecent top site results are
      * not included.
      */
     suspend fun getTopSites(
         totalSites: Int,
+        fetchProvidedTopSites: Boolean,
         frecencyConfig: FrecencyThresholdOption?
     ): List<TopSite>
 

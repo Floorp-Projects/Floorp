@@ -86,6 +86,7 @@ class DefaultTopSitesStorage(
     @Suppress("TooGenericExceptionCaught")
     override suspend fun getTopSites(
         totalSites: Int,
+        fetchProvidedTopSites: Boolean,
         frecencyConfig: FrecencyThresholdOption?
     ): List<TopSite> {
         val topSites = ArrayList<TopSite>()
@@ -94,9 +95,9 @@ class DefaultTopSitesStorage(
 
         topSites.addAll(pinnedSites)
 
-        topSitesProvider?.let { provider ->
+        if (fetchProvidedTopSites && topSitesProvider != null) {
             try {
-                val providerTopSites = provider.getTopSites()
+                val providerTopSites = topSitesProvider.getTopSites()
                 topSites.addAll(providerTopSites.take(numSitesRequired))
                 numSitesRequired -= providerTopSites.size
             } catch (e: Exception) {
