@@ -763,7 +763,7 @@ class HomeFragment : Fragment() {
             requireComponents.reviewPromptController.promptReview(requireActivity())
         }
 
-        if (shouldEnableWallpaper()) {
+        if (shouldEnableWallpaper() && context.settings().wallpapersSwitchedByLogoTap) {
             binding.wordmark.setOnClickListener {
                 val manager = requireComponents.wallpaperManager
                 manager.updateWallpaper(

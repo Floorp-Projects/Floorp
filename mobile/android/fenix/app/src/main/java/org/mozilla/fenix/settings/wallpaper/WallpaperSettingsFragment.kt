@@ -27,6 +27,10 @@ class WallpaperSettingsFragment : Fragment() {
         requireComponents.wallpaperManager
     }
 
+    private val settings by lazy {
+        requireComponents.settings
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -37,6 +41,7 @@ class WallpaperSettingsFragment : Fragment() {
             setContent {
                 FirefoxTheme {
                     var currentWallpaper by remember { mutableStateOf(wallpaperManager.currentWallpaper) }
+                    var wallpapersSwitchedByLogo by remember { mutableStateOf(settings.wallpapersSwitchedByLogoTap) }
                     WallpaperSettings(
                         wallpapers = wallpaperManager.availableWallpapers,
                         defaultWallpaper = WallpaperManager.defaultWallpaper,
@@ -49,6 +54,11 @@ class WallpaperSettingsFragment : Fragment() {
                             wallpaperManager.currentWallpaper = selectedWallpaper
                         },
                         onViewWallpaper = { findNavController().navigate(R.id.homeFragment) },
+                        tapLogoSwitchChecked = wallpapersSwitchedByLogo,
+                        onTapLogoSwitchCheckedChange = {
+                            settings.wallpapersSwitchedByLogoTap = it
+                            wallpapersSwitchedByLogo = it
+                        }
                     )
                 }
             }

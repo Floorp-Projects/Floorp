@@ -171,6 +171,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = WallpaperManager.defaultWallpaper.name
     )
 
+    var wallpapersSwitchedByLogoTap by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_wallpapers_switched_by_logo_tap),
+        default = true
+    )
+
     var openLinksInAPrivateTab by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_open_links_in_a_private_tab),
         default = false
