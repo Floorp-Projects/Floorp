@@ -969,7 +969,8 @@ NS_IMPL_RELEASE_INHERITED(FetchEvent, ExtendableEvent)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FetchEvent)
 NS_INTERFACE_MAP_END_INHERITING(ExtendableEvent)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(FetchEvent, ExtendableEvent, mRequest)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(FetchEvent, ExtendableEvent, mRequest,
+                                   mHandled, mPreloadResponse)
 
 ExtendableEvent::ExtendableEvent(EventTarget* aOwner)
     : Event(aOwner, nullptr, nullptr) {}
