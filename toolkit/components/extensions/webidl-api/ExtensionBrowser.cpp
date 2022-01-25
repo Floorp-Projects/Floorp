@@ -8,7 +8,7 @@
 
 #include "mozilla/dom/ExtensionBrowserBinding.h"
 #include "mozilla/dom/ExtensionPortBinding.h"  // ExtensionPortDescriptor
-#include "mozilla/dom/WorkerPrivate.h"         // GetWorkerPrivateFromContext
+#include "mozilla/dom/WorkerScope.h"           // GetWorkerPrivateFromContext
 #include "mozilla/extensions/ExtensionAlarms.h"
 #include "mozilla/extensions/ExtensionMockAPI.h"
 #include "mozilla/extensions/ExtensionPort.h"

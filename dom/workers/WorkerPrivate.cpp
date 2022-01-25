@@ -51,6 +51,7 @@
 #include "mozilla/dom/RemoteWorkerService.h"
 #include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/WorkerBinding.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/extensions/ExtensionBrowser.h"  // extensions::Create{AndDispatchInitWorkerContext,WorkerLoaded,WorkerDestroyed}Runnable
@@ -5273,15 +5274,14 @@ WorkerGlobalScope* WorkerPrivate::GetOrCreateGlobalScope(JSContext* aCx) {
   }
 
   if (IsSharedWorker()) {
-    data->mScope = new SharedWorkerGlobalScope(
-        WrapNotNull(this), CreateClientSource(), WorkerName());
-  } else if (IsServiceWorker()) {
     data->mScope =
-        new ServiceWorkerGlobalScope(WrapNotNull(this), CreateClientSource(),
-                                     GetServiceWorkerRegistrationDescriptor());
+        new SharedWorkerGlobalScope(this, CreateClientSource(), WorkerName());
+  } else if (IsServiceWorker()) {
+    data->mScope = new ServiceWorkerGlobalScope(
+        this, CreateClientSource(), GetServiceWorkerRegistrationDescriptor());
   } else {
-    data->mScope = new DedicatedWorkerGlobalScope(
-        WrapNotNull(this), CreateClientSource(), WorkerName());
+    data->mScope = new DedicatedWorkerGlobalScope(this, CreateClientSource(),
+                                                  WorkerName());
   }
 
   JS::Rooted<JSObject*> global(aCx);
@@ -5310,7 +5310,7 @@ WorkerDebuggerGlobalScope* WorkerPrivate::CreateDebuggerGlobalScope(
       GetClientType(), HybridEventTarget(), NullPrincipalInfo());
 
   data->mDebuggerScope =
-      new WorkerDebuggerGlobalScope(WrapNotNull(this), std::move(clientSource));
+      new WorkerDebuggerGlobalScope(this, std::move(clientSource));
 
   JS::Rooted<JSObject*> global(aCx);
   NS_ENSURE_TRUE(data->mDebuggerScope->WrapGlobalObject(aCx, &global), nullptr);
