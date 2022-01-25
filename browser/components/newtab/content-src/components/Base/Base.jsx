@@ -178,6 +178,7 @@ export class BaseContent extends React.PureComponent {
       filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
     const showCustomizationMenu = this.state.customizeMenuVisible;
+    const showColorwayCloset = prefs["colorway-closet.enabled"];
     const enabledSections = {
       topSitesEnabled: prefs["feeds.topsites"],
       pocketEnabled: prefs["feeds.section.topstories"],
@@ -220,6 +221,7 @@ export class BaseContent extends React.PureComponent {
           pocketRegion={pocketRegion}
           mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
           showing={showCustomizationMenu}
+          showColorwayCloset={showColorwayCloset}
         />
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions*/}
         <div className={outerClassName} onClick={this.closeCustomizationMenu}>
