@@ -72,7 +72,9 @@ add_task(async function test_with_downloads_pref_disabled() {
     "file name of download should match"
   );
 
-  win.close();
+  let mainWindowActivated = BrowserTestUtils.waitForEvent(window, "activate");
+  await BrowserTestUtils.closeWindow(win);
+  await mainWindowActivated;
 });
 
 add_task(async function test_with_downloads_pref_enabled() {
