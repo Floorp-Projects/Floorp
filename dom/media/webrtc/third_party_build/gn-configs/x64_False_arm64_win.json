@@ -41925,7 +41925,6 @@
                 "-Wno-shorten-64-to-32"
             ],
             "defines": [
-                "MULTI_MONITOR_SCREENSHARE",
                 "USE_AURA=1",
                 "_HAS_NODISCARD",
                 "_HAS_EXCEPTIONS=0",

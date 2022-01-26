@@ -28157,7 +28157,6 @@
                 "-Wno-shorten-64-to-32"
             ],
             "defines": [
-                "MULTI_MONITOR_SCREENSHARE",
                 "WEBRTC_USE_PIPEWIRE",
                 "USE_UDEV",
                 "USE_AURA=1",
