@@ -173,7 +173,7 @@ bool VerifySSLServerCertParent::Dispatch(
   SECStatus status = SSLServerCertVerificationJob::Dispatch(
       0, nullptr, serverCert, std::move(peerCertBytes), aHostName, aPort,
       aOriginAttributes, stapledOCSPResponse, sctsFromTLSExtension, dcInfo,
-      aProviderFlags, Now(), PR_Now(), aCertVerifierFlags, resultTask);
+      aProviderFlags, Now(), aCertVerifierFlags, resultTask);
 
   if (status != SECWouldBlock) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,

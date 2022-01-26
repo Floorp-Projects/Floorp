@@ -130,6 +130,7 @@
 #include "nsURLHelper.h"
 #include "nsXPCOMCIDInternal.h"
 #include "mozpkix/pkix.h"
+#include "mozpkix/pkixcheck.h"
 #include "mozpkix/pkixnss.h"
 #include "secerr.h"
 #include "secport.h"
@@ -269,8 +270,9 @@ static uint32_t MapCertErrorToProbeValue(PRErrorCode errorCode) {
   return probeValue;
 }
 
-SECStatus DetermineCertOverrideErrors(const UniqueCERTCertificate& cert,
-                                      const nsACString& hostName, PRTime now,
+SECStatus DetermineCertOverrideErrors(const nsCOMPtr<nsIX509Cert>& cert,
+                                      const nsACString& hostName,
+                                      mozilla::pkix::Time now,
                                       PRErrorCode defaultErrorCodeToReport,
                                       /*out*/ uint32_t& collectedErrors,
                                       /*out*/ PRErrorCode& errorCodeTrust,
@@ -281,6 +283,17 @@ SECStatus DetermineCertOverrideErrors(const UniqueCERTCertificate& cert,
   MOZ_ASSERT(errorCodeTrust == 0);
   MOZ_ASSERT(errorCodeMismatch == 0);
   MOZ_ASSERT(errorCodeTime == 0);
+
+  nsTArray<uint8_t> certDER;
+  if (NS_FAILED(cert->GetRawDER(certDER))) {
+    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+    return SECFailure;
+  }
+  mozilla::pkix::Input certInput;
+  if (certInput.Init(certDER.Elements(), certDER.Length()) != Success) {
+    PR_SetError(SEC_ERROR_BAD_DER, 0);
+    return SECFailure;
+  }
 
   // Assumes the error prioritization described in mozilla::pkix's
   // BuildForward function. Also assumes that CheckCertHostname was only
@@ -301,22 +314,29 @@ SECStatus DetermineCertOverrideErrors(const UniqueCERTCertificate& cert,
       collectedErrors = nsICertOverrideService::ERROR_UNTRUSTED;
       errorCodeTrust = defaultErrorCodeToReport;
 
-      SECCertTimeValidity validity =
-          CERT_CheckCertValidTimes(cert.get(), now, false);
-      if (validity == secCertTimeUndetermined) {
-        // This only happens if cert is null. CERT_CheckCertValidTimes will
-        // have set the error code to SEC_ERROR_INVALID_ARGS. We should really
-        // be using mozilla::pkix here anyway.
-        MOZ_ASSERT(PR_GetError() == SEC_ERROR_INVALID_ARGS);
+      mozilla::pkix::BackCert backCert(
+          certInput, mozilla::pkix::EndEntityOrCA::MustBeEndEntity, nullptr);
+      Result rv = backCert.Init();
+      if (rv != Success) {
+        MapResultToPRErrorCode(rv);
         return SECFailure;
       }
-      if (validity == secCertTimeExpired) {
+      mozilla::pkix::Time notBefore(mozilla::pkix::Time::uninitialized);
+      mozilla::pkix::Time notAfter(mozilla::pkix::Time::uninitialized);
+      rv = mozilla::pkix::ParseValidity(backCert.GetValidity(), &notBefore,
+                                        &notAfter);
+      if (rv != Success) {
+        MapResultToPRErrorCode(rv);
+        return SECFailure;
+      }
+      // If `now` is outside of the certificate's validity period,
+      // CheckValidity will return Result::ERROR_NOT_YET_VALID_CERTIFICATE or
+      // Result::ERROR_EXPIRED_CERTIFICATE, as appropriate, and Success
+      // otherwise.
+      rv = mozilla::pkix::CheckValidity(now, notBefore, notAfter);
+      if (rv != Success) {
         collectedErrors |= nsICertOverrideService::ERROR_TIME;
-        errorCodeTime = SEC_ERROR_EXPIRED_CERTIFICATE;
-      } else if (validity == secCertTimeNotValidYet) {
-        collectedErrors |= nsICertOverrideService::ERROR_TIME;
-        errorCodeTime =
-            mozilla::pkix::MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE;
+        errorCodeTime = MapResultToPRErrorCode(rv);
       }
       break;
     }
@@ -344,11 +364,6 @@ SECStatus DetermineCertOverrideErrors(const UniqueCERTCertificate& cert,
   }
 
   if (defaultErrorCodeToReport != SSL_ERROR_BAD_CERT_DOMAIN) {
-    Input certInput;
-    if (certInput.Init(cert->derCert.data, cert->derCert.len) != Success) {
-      PR_SetError(SEC_ERROR_BAD_DER, 0);
-      return SECFailure;
-    }
     Input hostnameInput;
     Result result = hostnameInput.Init(
         BitwiseCast<const uint8_t*, const char*>(hostName.BeginReading()),
@@ -749,8 +764,8 @@ Result AuthCertificate(
 PRErrorCode AuthCertificateParseResults(
     uint64_t aPtrForLog, const nsACString& aHostName, int32_t aPort,
     const OriginAttributes& aOriginAttributes,
-    const UniqueCERTCertificate& aCert, uint32_t aProviderFlags, PRTime aPRTime,
-    PRErrorCode aDefaultErrorCodeToReport,
+    const nsCOMPtr<nsIX509Cert>& aCert, uint32_t aProviderFlags,
+    mozilla::pkix::Time aTime, PRErrorCode aDefaultErrorCodeToReport,
     /* out */ uint32_t& aCollectedErrors) {
   if (aDefaultErrorCodeToReport == 0) {
     MOZ_ASSERT_UNREACHABLE(
@@ -765,10 +780,9 @@ PRErrorCode AuthCertificateParseResults(
   PRErrorCode errorCodeTrust = 0;
   PRErrorCode errorCodeMismatch = 0;
   PRErrorCode errorCodeTime = 0;
-  if (DetermineCertOverrideErrors(aCert, aHostName, aPRTime,
-                                  aDefaultErrorCodeToReport, aCollectedErrors,
-                                  errorCodeTrust, errorCodeMismatch,
-                                  errorCodeTime) != SECSuccess) {
+  if (DetermineCertOverrideErrors(
+          aCert, aHostName, aTime, aDefaultErrorCodeToReport, aCollectedErrors,
+          errorCodeTrust, errorCodeMismatch, errorCodeTime) != SECSuccess) {
     PRErrorCode errorCode = PR_GetError();
     MOZ_ASSERT(!ErrorIsOverridable(errorCode));
     if (errorCode == 0) {
@@ -805,9 +819,8 @@ PRErrorCode AuthCertificateParseResults(
     if (overrideService) {
       bool haveOverride;
       bool isTemporaryOverride;  // we don't care
-      RefPtr<nsIX509Cert> nssCert(new nsNSSCertificate(aCert.get()));
       nsresult rv = overrideService->HasMatchingOverride(
-          aHostName, aPort, aOriginAttributes, nssCert, &overrideBits,
+          aHostName, aPort, aOriginAttributes, aCert, &overrideBits,
           &isTemporaryOverride, &haveOverride);
       if (NS_SUCCEEDED(rv) && haveOverride) {
         // remove the errors that are already overriden
@@ -879,7 +892,7 @@ SECStatus SSLServerCertVerificationJob::Dispatch(
     Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
     Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
     Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags, Time time,
-    PRTime prtime, uint32_t certVerifierFlags,
+    uint32_t certVerifierFlags,
     BaseSSLServerCertVerificationResult* aResultTask) {
   // Runs on the socket transport thread
   if (!aResultTask || !serverCert) {
@@ -896,7 +909,7 @@ SECStatus SSLServerCertVerificationJob::Dispatch(
   RefPtr<SSLServerCertVerificationJob> job(new SSLServerCertVerificationJob(
       addrForLogging, aPinArg, serverCert, std::move(peerCertChain), aHostName,
       aPort, aOriginAttributes, stapledOCSPResponse, sctsFromTLSExtension,
-      dcInfo, providerFlags, time, prtime, certVerifierFlags, aResultTask));
+      dcInfo, providerFlags, time, certVerifierFlags, aResultTask));
 
   nsresult nrv = gCertVerificationThreadPool->Dispatch(job, NS_DISPATCH_NORMAL);
   if (NS_FAILED(nrv)) {
@@ -964,9 +977,10 @@ SSLServerCertVerificationJob::Run() {
 
   PRErrorCode error = MapResultToPRErrorCode(rv);
   uint32_t collectedErrors = 0;
+  nsCOMPtr<nsIX509Cert> cert(new nsNSSCertificate(std::move(certBytes)));
   PRErrorCode finalError = AuthCertificateParseResults(
-      mAddrForLogging, mHostName, mPort, mOriginAttributes, mCert,
-      mProviderFlags, mPRTime, error, collectedErrors);
+      mAddrForLogging, mHostName, mPort, mOriginAttributes, cert,
+      mProviderFlags, mTime, error, collectedErrors);
 
   // NB: finalError may be 0 here, in which the connection will continue.
   mResultTask->Dispatch(
@@ -1038,7 +1052,7 @@ SECStatus AuthCertificateHookInternal(
       addr, infoObject, serverCert, std::move(peerCertChain), hostName,
       infoObject->GetPort(), infoObject->GetOriginAttributes(),
       stapledOCSPResponse, sctsFromTLSExtension, dcInfo, providerFlags, Now(),
-      PR_Now(), certVerifierFlags, resultTask);
+      certVerifierFlags, resultTask);
 }
 
 // Extracts whatever information we need out of fd (using SSL_*) and passes it
