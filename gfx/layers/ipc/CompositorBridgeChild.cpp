@@ -555,15 +555,10 @@ CompositorBridgeChild::GetTileLockAllocator() {
 PTextureChild* CompositorBridgeChild::CreateTexture(
     const SurfaceDescriptor& aSharedData, ReadLockDescriptor&& aReadLock,
     LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
-    wr::MaybeExternalImageId& aExternalImageId, nsISerialEventTarget* aTarget) {
+    wr::MaybeExternalImageId& aExternalImageId) {
   PTextureChild* textureChild =
       AllocPTextureChild(aSharedData, aReadLock, aLayersBackend, aFlags,
                          LayersId{0} /* FIXME */, aSerial, aExternalImageId);
-
-  // Do the DOM labeling.
-  if (aTarget) {
-    SetEventTargetForActor(textureChild, aTarget);
-  }
 
   return SendPTextureConstructor(
       textureChild, aSharedData, std::move(aReadLock), aLayersBackend, aFlags,

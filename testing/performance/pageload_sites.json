@@ -200,7 +200,7 @@
       "login": false,
       "name": "expedia",
       "test_url": "https://expedia.com/Hotel-Search?destination=New+York%2C+New+York&latLong=40.756680%2C-73.986470&regionId=178293&startDate=&endDate=&rooms=1&_xpid=11905%7C1&adults=2",
-      "secondary_url": "https://www.expedia.com/Activities"
+      "secondary_url": "https://groups.expedia.com/Group-Rate/?locale=en_US&ol=1"
     },
     {
       "login": true,

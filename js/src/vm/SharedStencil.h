@@ -205,6 +205,11 @@ struct SourceExtent {
     return SourceExtent(0, len, 0, len, lineno, column);
   }
 
+  // FunctionKey is an encoded position of a function within the source text
+  // that is unique and reproducible.
+  using FunctionKey = uint32_t;
+  static constexpr FunctionKey NullFunctionKey = 0;
+
   uint32_t sourceStart = 0;
   uint32_t sourceEnd = 0;
   uint32_t toStringStart = 0;
@@ -213,6 +218,14 @@ struct SourceExtent {
   // Line and column of |sourceStart_| position.
   uint32_t lineno = 1;  // 1-indexed.
   uint32_t column = 0;  // Count of Code Points
+
+  FunctionKey toFunctionKey() const {
+    // In eval("x=>1"), the arrow function will have a sourceStart of 0 which
+    // conflicts with the NullFunctionKey, so shift all keys by 1 instead.
+    auto result = sourceStart + 1;
+    MOZ_ASSERT(result != NullFunctionKey);
+    return result;
+  }
 };
 
 class ImmutableScriptFlags : public EnumFlags<ImmutableScriptFlagsEnum> {

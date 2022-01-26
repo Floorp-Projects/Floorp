@@ -1025,14 +1025,10 @@ struct CompilationStencil {
   // Used during instantiation.
   bool canLazilyParse = false;
 
-  // FunctionKey is an encoded position of a function within the source text
-  // that is reproducible.
-  using FunctionKey = uint32_t;
-  static constexpr FunctionKey NullFunctionKey = 0;
-
   // If this stencil is a delazification, this identifies location of the
   // function in the source text.
-  FunctionKey functionKey = NullFunctionKey;
+  using FunctionKey = SourceExtent::FunctionKey;
+  FunctionKey functionKey = SourceExtent::NullFunctionKey;
 
   // This holds allocations that do not require destructors to be run but are
   // live until the stencil is released.
@@ -1102,15 +1098,9 @@ struct CompilationStencil {
 #endif
 
  public:
-  static FunctionKey toFunctionKey(const SourceExtent& extent) {
-    // In eval("x=>1"), the arrow function will have a sourceStart of 0 which
-    // conflicts with the NullFunctionKey, so shift all keys by 1 instead.
-    auto result = extent.sourceStart + 1;
-    MOZ_ASSERT(result != NullFunctionKey);
-    return result;
+  bool isInitialStencil() const {
+    return functionKey == SourceExtent::NullFunctionKey;
   }
-
-  bool isInitialStencil() const { return functionKey == NullFunctionKey; }
 
   [[nodiscard]] static bool instantiateStencilAfterPreparation(
       JSContext* cx, CompilationInput& input, const CompilationStencil& stencil,
@@ -1161,7 +1151,7 @@ struct CompilationStencil {
       const CompilationStencil& stencil, CompilationGCOutput& gcOutput);
 
   void setFunctionKey(BaseScript* lazy) {
-    functionKey = toFunctionKey(lazy->extent());
+    functionKey = lazy->extent().toFunctionKey();
   }
 
   inline size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
@@ -1205,9 +1195,9 @@ struct CompilationStencil {
 struct ExtensibleCompilationStencil {
   bool canLazilyParse = false;
 
-  using FunctionKey = CompilationStencil::FunctionKey;
+  using FunctionKey = SourceExtent::FunctionKey;
 
-  FunctionKey functionKey = CompilationStencil::NullFunctionKey;
+  FunctionKey functionKey = SourceExtent::NullFunctionKey;
 
   // Data pointed by other fields are allocated in this LifoAlloc,
   // and moved to `CompilationStencil.alloc`.
@@ -1293,11 +1283,11 @@ struct ExtensibleCompilationStencil {
   }
 
   void setFunctionKey(const SourceExtent& extent) {
-    functionKey = CompilationStencil::toFunctionKey(extent);
+    functionKey = extent.toFunctionKey();
   }
 
   bool isInitialStencil() const {
-    return functionKey == CompilationStencil::NullFunctionKey;
+    return functionKey == SourceExtent::NullFunctionKey;
   }
 
   // Steal CompilationStencil content.
@@ -1655,7 +1645,7 @@ inline ScriptStencilIterable CompilationStencil::functionScriptStencils(
 // ExtensibleCompilationStencil.
 struct CompilationStencilMerger {
  private:
-  using FunctionKey = ExtensibleCompilationStencil::FunctionKey;
+  using FunctionKey = SourceExtent::FunctionKey;
 
   // The stencil for the initial compilation.
   // Delazifications are merged into this.

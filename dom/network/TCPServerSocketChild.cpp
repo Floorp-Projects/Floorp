@@ -38,13 +38,11 @@ NS_IMETHODIMP_(MozExternalRefCountType) TCPServerSocketChild::Release(void) {
   return refcnt;
 }
 
-TCPServerSocketChild::TCPServerSocketChild(
-    TCPServerSocket* aServerSocket, uint16_t aLocalPort, uint16_t aBacklog,
-    bool aUseArrayBuffers, nsISerialEventTarget* aIPCEventTarget) {
+TCPServerSocketChild::TCPServerSocketChild(TCPServerSocket* aServerSocket,
+                                           uint16_t aLocalPort,
+                                           uint16_t aBacklog,
+                                           bool aUseArrayBuffers) {
   mServerSocket = aServerSocket;
-  if (aIPCEventTarget) {
-    gNeckoChild->SetEventTargetForActor(this, aIPCEventTarget);
-  }
   AddIPDLReference();
   gNeckoChild->SendPTCPServerSocketConstructor(this, aLocalPort, aBacklog,
                                                aUseArrayBuffers);

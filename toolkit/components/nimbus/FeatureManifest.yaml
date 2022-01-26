@@ -452,3 +452,12 @@ spotlight:
   schema: >-
     "browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/Spotlight.schema.json"
   variables: {}
+pbNewtab:
+  description: Message shown on the PB newtab for Messaging System
+  hasExposure: true
+  exposureDescription: >-
+    Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched.
+  isEarlyStartup: false
+  schema: >-
+    browser/components/newtab/content-src/asrouter/templates/PBNewtab/NewtabPromoMessage.schema.json
+  variables: {}

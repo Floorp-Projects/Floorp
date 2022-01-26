@@ -50,6 +50,9 @@ compile_commands\.json
 # Ignore newtab component build assets
 ^browser/components/newtab/logs/
 
+# Ignore Pocket component build and dev assets
+browser/components/pocket/content/panels/css/main.compiled.css.map
+
 # Build directories for js shell
 _DBG\.OBJ/
 _OPT\.OBJ/

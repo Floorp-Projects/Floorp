@@ -448,14 +448,11 @@ description#identity-popup-content-verifier,
   padding: 0 var(--horizontal-padding);
 }
 
-.protections-popup-category:-moz-focusring,
 .protections-popup-category:hover,
-.protections-popup-footer-button:-moz-focusring,
 .protections-popup-footer-button:hover,
 #protections-popup-not-blocking-section-why:hover,
 #protections-popup-show-report-stack:hover > .protections-popup-footer-button {
   background-color: var(--panel-item-hover-bgcolor);
-  outline: none;
 }
 
 .protections-popup-category:hover:active,
@@ -999,10 +996,20 @@ description#identity-popup-content-verifier,
   margin-inline-end: 0;
 }
 
+.identity-popup-expander:focus-visible,
+.permission-popup-permission-remove-button:focus-visible {
+  outline: var(--focus-outline);
+}
+
 .protections-popup-category:focus-visible,
 .protections-popup-footer-button:focus-visible {
-  box-shadow: var(--panelview-toolbarbutton-focus-box-shadow);
+  outline: var(--focus-outline);
   background: none;
+}
+
+.protections-popup-tp-switch:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
 }
 
 #blocked-popup-indicator-item,

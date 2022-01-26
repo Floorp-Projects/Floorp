@@ -36,8 +36,12 @@
   left: calc(50% - 10px); /* Horizontally center the 20px wide animatable image */
   width: 20px; /* Width of each frame within the SVG sprite */
   height: 20px; /* Height of each frame within the SVG sprite */
-  /* animation is not directional and shouldn't be reversed in RTL */
+  /* Animation is not directional and shouldn't be reversed in RTL */
   direction: ltr;
+  /* Revert to the xul.css user agent stylesheet's z-index value (auto) for
+  stack children, to ensure the badge (the last child of the stack) appears in
+  front of the animatable boxes */
+  z-index: revert;
 }
 
 /* Hide progress and state animations in customize mode */

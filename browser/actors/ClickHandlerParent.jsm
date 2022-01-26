@@ -112,6 +112,7 @@ class ClickHandlerParent extends JSWindowActorParent {
       triggeringPrincipal: data.triggeringPrincipal,
       csp: data.csp ? E10SUtils.deserializeCSP(data.csp) : null,
       frameID: data.frameID,
+      openerBrowser: browser,
     };
 
     // The new tab/window must use the same userContextId.

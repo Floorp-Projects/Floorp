@@ -115,14 +115,6 @@ void FileSystemTaskChildBase::Start() {
     return;
   }
 
-  if (NS_IsMainThread()) {
-    nsISerialEventTarget* target =
-        mGlobalObject->EventTargetFor(TaskCategory::Other);
-    MOZ_ASSERT(target);
-
-    actor->SetEventTargetForActor(this, target);
-  }
-
   actor->SendPFileSystemRequestConstructor(this, params);
 }
 
