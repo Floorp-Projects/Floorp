@@ -1117,6 +1117,21 @@ class LayerViewSupport final
     gkWindow->Resize(aLeft, aTop, aWidth, aHeight, /* repaint */ false);
   }
 
+  void NotifyMemoryPressure() {
+    MOZ_ASSERT(NS_IsMainThread());
+    auto acc = mWindow.Access();
+    if (!acc) {
+      return;  // Already shut down.
+    }
+
+    nsWindow* gkWindow = acc->GetNsWindow();
+    if (!gkWindow) {
+      return;
+    }
+
+    gkWindow->mCompositorBridgeChild->SendNotifyMemoryPressure();
+  }
+
   void SetDynamicToolbarMaxHeight(int32_t aHeight) {
     MOZ_ASSERT(NS_IsMainThread());
     auto acc = mWindow.Access();
