@@ -1,7 +1,7 @@
 ﻿          __   __  ____  ____  ____  __ __  _     __ __
          /  \\/  \/  _ \/  _ \/  _ \/  \  \/ \___/_ / _\
          \       /   __/  _  \   __/      /  /  (_/  /__
-          \__\__/\_____/_____/__/  \__//_/\_____/__/___/v1.2.1
+          \__\__/\_____/_____/__/  \__//_/\_____/__/___/v1.2.2
 
 
 Description:
@@ -43,11 +43,12 @@ GET_OPTIONS:
    frame n   get nth frame
 
 SET_OPTIONS:
- Set color profile/metadata:
-   loop LOOP_COUNT   set the loop count
-   icc  file.icc     set ICC profile
-   exif file.exif    set EXIF metadata
-   xmp  file.xmp     set XMP metadata
+ Set color profile/metadata/parameters:
+   loop LOOP_COUNT            set the loop count
+   bgcolor BACKGROUND_COLOR   set the animation background color
+   icc  file.icc              set ICC profile
+   exif file.exif             set EXIF metadata
+   xmp  file.xmp              set XMP metadata
    where:    'file.icc' contains the ICC profile to be set,
              'file.exif' contains the EXIF metadata to be set
              'file.xmp' contains the XMP metadata to be set
@@ -248,10 +249,10 @@ Bugs:
 Please report all bugs to the issue tracker:
     https://bugs.chromium.org/p/webp
 Patches welcome! See this page to get started:
-    http://www.webmproject.org/code/contribute/submitting-patches/
+    https://www.webmproject.org/code/contribute/submitting-patches/
 
 Discuss:
 ========
 
 Email: webp-discuss@webmproject.org
-Web: http://groups.google.com/a/webmproject.org/group/webp-discuss
+Web: https://groups.google.com/a/webmproject.org/group/webp-discuss

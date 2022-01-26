@@ -269,7 +269,7 @@ Structure:
             appDisabled: <bool>,
             version: <string>,
             scope: <integer>,
-            type: <string>, // "extension", "service", ...
+            type: <string>, // "extension", "locale", ...
             foreignInstall: <bool>,
             hasBinaryComponents: <bool>,
             installDay: <number>, // days since UNIX epoch, 0 on failure

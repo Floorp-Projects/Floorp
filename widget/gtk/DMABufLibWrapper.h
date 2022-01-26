@@ -29,6 +29,7 @@ namespace mozilla {
 namespace widget {
 
 typedef struct gbm_device* (*CreateDeviceFunc)(int);
+typedef void (*DestroyDeviceFunc)(struct gbm_device*);
 typedef struct gbm_bo* (*CreateFunc)(struct gbm_device*, uint32_t, uint32_t,
                                      uint32_t, uint32_t);
 typedef struct gbm_bo* (*CreateWithModifiersFunc)(struct gbm_device*, uint32_t,
@@ -60,6 +61,10 @@ class nsGbmLib {
   static struct gbm_device* CreateDevice(int fd) {
     StaticMutexAutoLock lockDRI(sDRILock);
     return sCreateDevice(fd);
+  };
+  static void DestroyDevice(struct gbm_device* gdm) {
+    StaticMutexAutoLock lockDRI(sDRILock);
+    return sDestroyDevice(gdm);
   };
   static struct gbm_bo* Create(struct gbm_device* gbm, uint32_t width,
                                uint32_t height, uint32_t format,
@@ -130,6 +135,7 @@ class nsGbmLib {
 
  private:
   static CreateDeviceFunc sCreateDevice;
+  static DestroyDeviceFunc sDestroyDevice;
   static CreateFunc sCreate;
   static CreateWithModifiersFunc sCreateWithModifiers;
   static GetModifierFunc sGetModifier;
@@ -162,10 +168,9 @@ struct GbmFormat {
 class nsDMABufDevice {
  public:
   nsDMABufDevice();
+  ~nsDMABufDevice();
 
   gbm_device* GetGbmDevice();
-  // Returns -1 if we fails to gbm device file descriptor.
-  int GetGbmDeviceFd();
 
   // Use dmabuf for WebRender general web content
   bool IsDMABufTexturesEnabled();
@@ -177,6 +182,7 @@ class nsDMABufDevice {
   bool IsDMABufWebGLEnabled();
   void DisableDMABufWebGL();
 
+  int GetDRMFd();
   GbmFormat* GetGbmFormat(bool aHasAlpha);
   GbmFormat* GetExactGbmFormat(int aFormat);
   void ResetFormatsModifiers();
@@ -193,8 +199,8 @@ class nsDMABufDevice {
   GbmFormat mXRGBFormat;
   GbmFormat mARGBFormat;
 
+  int mDRMFd;
   gbm_device* mGbmDevice;
-  int mGbmFd;
   bool mInitialized;
 };
 

@@ -94,7 +94,7 @@ static inline gint GetMonitorScaleFactor(nsIFrame* aFrame) {
   return GetMonitorScaleFactor(aFrame->PresContext());
 }
 
-nsNativeThemeGTK::nsNativeThemeGTK() : Theme(DefaultPlatformScrollbarStyle()) {
+nsNativeThemeGTK::nsNativeThemeGTK() : Theme(ScrollbarStyle()) {
   if (moz_gtk_init() != MOZ_GTK_SUCCESS) {
     memset(mDisabledWidgetTypes, 0xff, sizeof(mDisabledWidgetTypes));
     return;
@@ -1668,17 +1668,9 @@ nsITheme::Transparency nsNativeThemeGTK::GetWidgetTransparency(
   }
 }
 
-already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
-  static nsCOMPtr<nsITheme> inst;
-
-  if (!inst) {
-    if (gfxPlatform::IsHeadless()) {
-      inst = new Theme(Theme::DefaultPlatformScrollbarStyle());
-    } else {
-      inst = new nsNativeThemeGTK();
-    }
-    ClearOnShutdown(&inst);
+already_AddRefed<Theme> do_CreateNativeThemeDoNotUseDirectly() {
+  if (gfxPlatform::IsHeadless()) {
+    return do_AddRef(new Theme(Theme::ScrollbarStyle()));
   }
-
-  return do_AddRef(inst);
+  return do_AddRef(new nsNativeThemeGTK());
 }

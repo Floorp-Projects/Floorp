@@ -24,7 +24,7 @@ linux64-pkgconf:
         arguments: ['x86_64-unknown-linux-gnu']
     fetches:
         toolchain:
-            - linux64-clang-13
+            - linux64-clang-toolchain
             - sysroot-x86_64-linux-gnu
 
 macosx64-pkgconf:
@@ -34,7 +34,7 @@ macosx64-pkgconf:
         arguments: ['x86_64-apple-darwin']
     fetches:
         toolchain:
-            - linux64-clang-13
+            - linux64-clang-toolchain
             - linux64-cctools-port-clang-13
             - macosx64-sdk-11.0
 
@@ -45,7 +45,7 @@ macosx64-aarch64-pkgconf:
         arguments: ['aarch64-apple-darwin']
     fetches:
         toolchain:
-            - linux64-clang-13
+            - linux64-clang-toolchain
             - linux64-cctools-port-clang-13
             - macosx64-sdk-11.0
 

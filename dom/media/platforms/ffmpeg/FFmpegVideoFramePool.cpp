@@ -95,17 +95,15 @@ void VideoFramePool::ReleaseUnusedVAAPIFrames() {
 }
 
 RefPtr<VideoFrameSurface> VideoFramePool::GetFreeVideoFrameSurface() {
-  int len = mDMABufSurfaces.Length();
-  for (int i = 0; i < len; i++) {
-    auto* dmabufSurface = mDMABufSurfaces[i]->AsVideoFrameSurfaceDMABuf();
-    if (!dmabufSurface->IsUsed()) {
-      auto* vaapiSurface = dmabufSurface->AsVideoFrameSurfaceVAAPI();
-      if (vaapiSurface) {
-        vaapiSurface->ReleaseVAAPIData();
-      }
-      dmabufSurface->MarkAsUsed();
-      return mDMABufSurfaces[i];
+  for (auto& surface : mDMABufSurfaces) {
+    if (surface->IsUsed()) {
+      continue;
     }
+    if (auto* vaapiSurface = surface->AsVideoFrameSurfaceVAAPI()) {
+      vaapiSurface->ReleaseVAAPIData();
+    }
+    surface->MarkAsUsed();
+    return surface;
   }
   return nullptr;
 }
@@ -123,7 +121,7 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
   }
 
   MutexAutoLock lock(mSurfaceLock);
-  auto videoSurface = GetFreeVideoFrameSurface();
+  RefPtr<VideoFrameSurface> videoSurface = GetFreeVideoFrameSurface();
   if (!videoSurface) {
     RefPtr<DMABufSurfaceYUV> surface =
         DMABufSurfaceYUV::CreateYUVSurface(aVaDesc);
@@ -131,6 +129,7 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
       return nullptr;
     }
     FFMPEG_LOG("Created new VA-API DMABufSurface UID = %d", surface->GetUID());
+    RefPtr<VideoFrameSurfaceDMABuf> surf = new VideoFrameSurfaceVAAPI(surface);
     if (!mTextureCreationWorks) {
       mTextureCreationWorks = Some(surface->VerifyTextureCreation());
     }
@@ -138,8 +137,8 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
       FFMPEG_LOG("  failed to create texture over DMABuf memory!");
       return nullptr;
     }
-    videoSurface = new VideoFrameSurfaceVAAPI(surface);
-    mDMABufSurfaces.AppendElement(videoSurface);
+    videoSurface = surf;
+    mDMABufSurfaces.AppendElement(std::move(surf));
   } else {
     RefPtr<DMABufSurfaceYUV> surface = videoSurface->GetDMABufSurface();
     if (!surface->UpdateYUVData(aVaDesc)) {
@@ -148,8 +147,7 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
     FFMPEG_LOG("Reusing VA-API DMABufSurface UID = %d", surface->GetUID());
   }
 
-  auto vaapiSurface = videoSurface->AsVideoFrameSurfaceVAAPI();
-  if (vaapiSurface) {
+  if (auto* vaapiSurface = videoSurface->AsVideoFrameSurfaceVAAPI()) {
     vaapiSurface->LockVAAPIData(aAVCodecContext, aAVFrame, aLib);
   }
   return videoSurface;
@@ -167,32 +165,30 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
   }
 
   MutexAutoLock lock(mSurfaceLock);
-  auto videoSurface = GetFreeVideoFrameSurface();
-  if (!videoSurface) {
-    RefPtr<DMABufSurfaceYUV> surface = DMABufSurfaceYUV::CreateYUVSurface(
-        aFrame->width, aFrame->height, (void**)aFrame->data, aFrame->linesize);
-    if (!surface) {
+  if (RefPtr<VideoFrameSurface> videoSurface = GetFreeVideoFrameSurface()) {
+    RefPtr<DMABufSurfaceYUV> surface = videoSurface->GetDMABufSurface();
+    if (!surface->UpdateYUVData((void**)aFrame->data, aFrame->linesize)) {
       return nullptr;
     }
-    FFMPEG_LOG("Created new SW DMABufSurface UID = %d", surface->GetUID());
-    videoSurface = new VideoFrameSurfaceDMABuf(surface);
-    if (!mTextureCreationWorks) {
-      mTextureCreationWorks = Some(surface->VerifyTextureCreation());
-    }
-    if (!*mTextureCreationWorks) {
-      FFMPEG_LOG("  failed to create texture over DMABuf memory!");
-      return nullptr;
-    }
-    mDMABufSurfaces.AppendElement(videoSurface);
+    FFMPEG_LOG("Reusing SW DMABufSurface UID = %d", surface->GetUID());
     return videoSurface;
   }
-
-  RefPtr<DMABufSurfaceYUV> surface = videoSurface->GetDMABufSurface();
-  if (!surface->UpdateYUVData((void**)aFrame->data, aFrame->linesize)) {
+  RefPtr<DMABufSurfaceYUV> surface = DMABufSurfaceYUV::CreateYUVSurface(
+      aFrame->width, aFrame->height, (void**)aFrame->data, aFrame->linesize);
+  if (!surface) {
     return nullptr;
   }
-  FFMPEG_LOG("Reusing SW DMABufSurface UID = %d", surface->GetUID());
-  return videoSurface;
+  RefPtr<VideoFrameSurfaceDMABuf> surf = new VideoFrameSurfaceDMABuf(surface);
+  if (!mTextureCreationWorks) {
+    mTextureCreationWorks = Some(surface->VerifyTextureCreation());
+  }
+  if (!*mTextureCreationWorks) {
+    FFMPEG_LOG("  failed to create texture over DMABuf memory!");
+    return nullptr;
+  }
+  FFMPEG_LOG("Created new SW DMABufSurface UID = %d", surface->GetUID());
+  mDMABufSurfaces.AppendElement(surf);
+  return surf;
 }
 
 }  // namespace mozilla

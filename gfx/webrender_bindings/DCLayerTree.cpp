@@ -15,6 +15,7 @@
 #include "mozilla/webrender/RenderD3D11TextureHost.h"
 #include "mozilla/webrender/RenderTextureHost.h"
 #include "mozilla/webrender/RenderThread.h"
+#include "mozilla/WindowsVersion.h"
 #include "mozilla/Telemetry.h"
 #include "nsPrintfCString.h"
 #include "WinUtils.h"
@@ -34,6 +35,8 @@ namespace wr {
 
 extern LazyLogModule gRenderThreadLog;
 #define LOG(...) MOZ_LOG(gRenderThreadLog, LogLevel::Debug, (__VA_ARGS__))
+
+UniquePtr<GpuOverlayInfo> DCLayerTree::sGpuOverlayInfo;
 
 /* static */
 UniquePtr<DCLayerTree> DCLayerTree::Create(gl::GLContext* aGL,
@@ -57,6 +60,8 @@ UniquePtr<DCLayerTree> DCLayerTree::Create(gl::GLContext* aGL,
   return layerTree;
 }
 
+void DCLayerTree::Shutdown() { DCLayerTree::sGpuOverlayInfo = nullptr; }
+
 DCLayerTree::DCLayerTree(gl::GLContext* aGL, EGLConfig aEGLConfig,
                          ID3D11Device* aDevice, ID3D11DeviceContext* aCtx,
                          IDCompositionDevice2* aCompositionDevice)
@@ -65,7 +70,6 @@ DCLayerTree::DCLayerTree(gl::GLContext* aGL, EGLConfig aEGLConfig,
       mDevice(aDevice),
       mCtx(aCtx),
       mCompositionDevice(aCompositionDevice),
-      mVideoOverlaySupported(false),
       mDebugCounter(false),
       mDebugVisualRedrawRegions(false),
       mEGLImage(EGL_NO_IMAGE),
@@ -132,6 +136,10 @@ bool DCLayerTree::Initialize(HWND aHwnd, nsACString& aError) {
       RenderThread::Get()->HandleWebRenderError(WebRenderError::VIDEO_OVERLAY);
     }
   }
+  if (!sGpuOverlayInfo) {
+    // Set default if sGpuOverlayInfo was not set.
+    sGpuOverlayInfo = MakeUnique<GpuOverlayInfo>();
+  }
 
   mCompositionTarget->SetRoot(mRootVisual);
   // Set interporation mode to nearest, to ensure 1:1 sampling.
@@ -143,7 +151,37 @@ bool DCLayerTree::Initialize(HWND aHwnd, nsACString& aError) {
   return true;
 }
 
+bool FlagsSupportsOverlays(UINT flags) {
+  return (flags & (DXGI_OVERLAY_SUPPORT_FLAG_DIRECT |
+                   DXGI_OVERLAY_SUPPORT_FLAG_SCALING));
+}
+
+// A warpper of IDXGIOutput4::CheckOverlayColorSpaceSupport()
+bool CheckOverlayColorSpaceSupport(DXGI_FORMAT aDxgiFormat,
+                                   DXGI_COLOR_SPACE_TYPE aDxgiColorSpace,
+                                   RefPtr<IDXGIOutput> aOutput,
+                                   RefPtr<ID3D11Device> aD3d11Device) {
+  UINT colorSpaceSupportFlags = 0;
+  RefPtr<IDXGIOutput4> output4;
+
+  if (FAILED(aOutput->QueryInterface(__uuidof(IDXGIOutput4),
+                                     getter_AddRefs(output4)))) {
+    return false;
+  }
+
+  if (FAILED(output4->CheckOverlayColorSpaceSupport(
+          aDxgiFormat, aDxgiColorSpace, aD3d11Device,
+          &colorSpaceSupportFlags))) {
+    return false;
+  }
+
+  return (colorSpaceSupportFlags &
+          DXGI_OVERLAY_COLOR_SPACE_SUPPORT_FLAG_PRESENT);
+}
+
 bool DCLayerTree::InitializeVideoOverlaySupport() {
+  MOZ_ASSERT(IsWin10AnniversaryUpdateOrLater());
+
   HRESULT hr;
 
   hr = mDevice->QueryInterface(
@@ -160,12 +198,76 @@ bool DCLayerTree::InitializeVideoOverlaySupport() {
     return false;
   }
 
-  // XXX When video is rendered to DXGI_FORMAT_B8G8R8A8_UNORM SwapChain with
-  // VideoProcessor, it seems that we do not need to check
-  // IDXGIOutput3::CheckOverlaySupport().
-  // If we want to yuv at DecodeSwapChain, its support seems necessary.
+  if (sGpuOverlayInfo) {
+    return true;
+  }
 
-  mVideoOverlaySupported = true;
+  UniquePtr<GpuOverlayInfo> info = MakeUnique<GpuOverlayInfo>();
+
+  RefPtr<IDXGIDevice> dxgiDevice;
+  RefPtr<IDXGIAdapter> adapter;
+  mDevice->QueryInterface((IDXGIDevice**)getter_AddRefs(dxgiDevice));
+  dxgiDevice->GetAdapter(getter_AddRefs(adapter));
+
+  unsigned int i = 0;
+  while (true) {
+    RefPtr<IDXGIOutput> output;
+    if (FAILED(adapter->EnumOutputs(i++, getter_AddRefs(output)))) {
+      break;
+    }
+    RefPtr<IDXGIOutput3> output3;
+    if (FAILED(output->QueryInterface(__uuidof(IDXGIOutput3),
+                                      getter_AddRefs(output3)))) {
+      break;
+    }
+
+    output3->CheckOverlaySupport(DXGI_FORMAT_NV12, mDevice,
+                                 &info->mNv12OverlaySupportFlags);
+    output3->CheckOverlaySupport(DXGI_FORMAT_YUY2, mDevice,
+                                 &info->mYuy2OverlaySupportFlags);
+    output3->CheckOverlaySupport(DXGI_FORMAT_R10G10B10A2_UNORM, mDevice,
+                                 &info->mRgb10a2OverlaySupportFlags);
+
+    if (FlagsSupportsOverlays(info->mNv12OverlaySupportFlags)) {
+      // NV12 format is preferred if it's supported.
+      info->mOverlayFormatUsed = DXGI_FORMAT_NV12;
+      info->mSupportsHardwareOverlays = true;
+    }
+
+    if (!info->mSupportsHardwareOverlays &&
+        FlagsSupportsOverlays(info->mYuy2OverlaySupportFlags)) {
+      // If NV12 isn't supported, fallback to YUY2 if it's supported.
+      info->mOverlayFormatUsed = DXGI_FORMAT_YUY2;
+      info->mSupportsHardwareOverlays = true;
+    }
+
+    // RGB10A2 overlay is used for displaying HDR content. In Intel's
+    // platform, RGB10A2 overlay is enabled only when
+    // DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 is supported.
+    if (FlagsSupportsOverlays(info->mRgb10a2OverlaySupportFlags)) {
+      if (!CheckOverlayColorSpaceSupport(
+              DXGI_FORMAT_R10G10B10A2_UNORM,
+              DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020, output, mDevice))
+        info->mRgb10a2OverlaySupportFlags = 0;
+    }
+
+    // Early out after the first output that reports overlay support. All
+    // outputs are expected to report the same overlay support according to
+    // Microsoft's WDDM documentation:
+    // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/multiplane-overlay-hardware-requirements
+    if (info->mSupportsHardwareOverlays) {
+      break;
+    }
+  }
+
+  if (!StaticPrefs::gfx_webrender_dcomp_video_yuv_overlay_win_AtStartup()) {
+    info->mOverlayFormatUsed = DXGI_FORMAT_B8G8R8A8_UNORM;
+    info->mSupportsHardwareOverlays = false;
+  }
+
+  info->mSupportsOverlays = info->mSupportsHardwareOverlays;
+
+  sGpuOverlayInfo = std::move(info);
   return true;
 }
 
@@ -579,6 +681,14 @@ bool DCLayerTree::EnsureVideoProcessor(const gfx::IntSize& aVideoSize) {
   return true;
 }
 
+bool DCLayerTree::SupportsHardwareOverlays() {
+  return sGpuOverlayInfo->mSupportsHardwareOverlays;
+}
+
+DXGI_FORMAT DCLayerTree::GetOverlayFormatForSDR() {
+  return sGpuOverlayInfo->mOverlayFormatUsed;
+}
+
 DCSurface::DCSurface(wr::DeviceIntSize aTileSize,
                      wr::DeviceIntPoint aVirtualOffset, bool aIsOpaque,
                      DCLayerTree* aDCLayerTree)
@@ -718,6 +828,21 @@ void DCSurfaceVideo::AttachExternalImage(wr::ExternalImageId aExternalImage) {
   mPrevTexture = texture;
 }
 
+bool IsYUVSwapChainFormat(DXGI_FORMAT aFormat) {
+  if (aFormat == DXGI_FORMAT_NV12 || aFormat == DXGI_FORMAT_YUY2) {
+    return true;
+  }
+  return false;
+}
+
+DXGI_FORMAT DCSurfaceVideo::GetSwapChainFormat() {
+  if (mFailedToCreateYuvSwapChain ||
+      !mDCLayerTree->SupportsHardwareOverlays()) {
+    return DXGI_FORMAT_B8G8R8A8_UNORM;
+  }
+  return mDCLayerTree->GetOverlayFormatForSDR();
+}
+
 bool DCSurfaceVideo::CreateVideoSwapChain(RenderTextureHost* aTexture) {
   const auto device = mDCLayerTree->GetDevice();
 
@@ -739,21 +864,23 @@ bool DCSurfaceVideo::CreateVideoSwapChain(RenderTextureHost* aTexture) {
   }
 
   gfx::IntSize size = aTexture->AsRenderDXGITextureHost()->GetSize(0);
-  DXGI_ALPHA_MODE alpha_mode =
-      mIsOpaque ? DXGI_ALPHA_MODE_IGNORE : DXGI_ALPHA_MODE_PREMULTIPLIED;
+  auto swapChainFormat = GetSwapChainFormat();
 
   DXGI_SWAP_CHAIN_DESC1 desc = {};
   desc.Width = size.width;
   desc.Height = size.height;
-  desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+  desc.Format = swapChainFormat;
   desc.Stereo = FALSE;
   desc.SampleDesc.Count = 1;
   desc.BufferCount = 2;
   desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
   desc.Scaling = DXGI_SCALING_STRETCH;
   desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
-  desc.Flags = 0;
-  desc.AlphaMode = alpha_mode;
+  desc.Flags = DXGI_SWAP_CHAIN_FLAG_FULLSCREEN_VIDEO;
+  if (IsYUVSwapChainFormat(swapChainFormat)) {
+    desc.Flags |= DXGI_SWAP_CHAIN_FLAG_YUV_VIDEO;
+  }
+  desc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
 
   HRESULT hr;
   hr = dxgiFactoryMedia->CreateSwapChainForCompositionSurfaceHandle(
@@ -761,11 +888,13 @@ bool DCSurfaceVideo::CreateVideoSwapChain(RenderTextureHost* aTexture) {
       getter_AddRefs(mVideoSwapChain));
 
   if (FAILED(hr)) {
+    mFailedToCreateYuvSwapChain = true;
     gfxCriticalNote << "Failed to create video SwapChain: " << gfx::hexa(hr);
     return false;
   }
 
   mSwapChainSize = size;
+  mSwapChainFormat = swapChainFormat;
   return true;
 }
 
@@ -855,9 +984,11 @@ bool DCSurfaceVideo::CallVideoProcessorBlt(RenderTextureHost* aTexture) {
   DXGI_COLOR_SPACE_TYPE inputColorSpace = sourceColorSpace.ref();
   videoContext1->VideoProcessorSetStreamColorSpace1(videoProcessor, 0,
                                                     inputColorSpace);
-  // XXX when content is hdr or yuv swapchain, it need to use other color space.
+
   DXGI_COLOR_SPACE_TYPE outputColorSpace =
-      DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+      IsYUVSwapChainFormat(mSwapChainFormat)
+          ? inputColorSpace
+          : DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
   hr = swapChain3->SetColorSpace1(outputColorSpace);
   if (FAILED(hr)) {
     gfxCriticalNote << "SetColorSpace1 failed: " << gfx::hexa(hr);

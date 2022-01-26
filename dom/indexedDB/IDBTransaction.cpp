@@ -453,18 +453,6 @@ void IDBTransaction::MaybeNoteInactiveTransaction() {
   }
 }
 
-IDBTransaction::AutoRestoreState<IDBTransaction::ReadyState::Inactive,
-                                 IDBTransaction::ReadyState::Active>
-IDBTransaction::TemporarilyTransitionToActive() {
-  return AutoRestoreState<ReadyState::Inactive, ReadyState::Active>{*this};
-}
-
-IDBTransaction::AutoRestoreState<IDBTransaction::ReadyState::Active,
-                                 IDBTransaction::ReadyState::Inactive>
-IDBTransaction::TemporarilyTransitionToInactive() {
-  return AutoRestoreState<ReadyState::Active, ReadyState::Inactive>{*this};
-}
-
 void IDBTransaction::GetCallerLocation(nsAString& aFilename,
                                        uint32_t* const aLineNo,
                                        uint32_t* const aColumn) const {

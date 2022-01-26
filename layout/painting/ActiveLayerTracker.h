@@ -35,8 +35,6 @@ class ActiveLayerTracker {
    *   eCSSProperty_offset_path, eCSSProperty_offset_distance,
    *   eCSSProperty_offset_rotate, eCSSProperty_offset_anchor,
    *   eCSSProperty_opacity
-   *   eCSSProperty_left, eCSSProperty_top,
-   *   eCSSProperty_right, eCSSProperty_bottom
    * and use that information to guess whether style changes are animated.
    */
 
@@ -47,12 +45,6 @@ class ActiveLayerTracker {
    * @param aProperty the property that has changed
    */
   static void NotifyRestyle(nsIFrame* aFrame, nsCSSPropertyID aProperty);
-  /**
-   * Notify aFrame's left/top/right/bottom properties as having (maybe)
-   * changed due to a restyle, and therefore possibly wanting an active layer
-   * to render that style. Any such marking will time out after a short period.
-   */
-  static void NotifyOffsetRestyle(nsIFrame* aFrame);
   /**
    * Mark aFrame as being known to have an animation of aProperty.
    * Any such marking will time out after a short period.
@@ -88,17 +80,6 @@ class ActiveLayerTracker {
   static bool IsStyleAnimated(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                               const nsCSSPropertyIDSet& aPropertySet);
   /**
-   * Return true if any of aFrame's offset property styles should be considered
-   * as being animated for constructing active layers.
-   */
-  static bool IsOffsetStyleAnimated(nsIFrame* aFrame);
-  /**
-   * Return true if aFrame's background-position-x or background-position-y
-   * property is animated.
-   */
-  static bool IsBackgroundPositionAnimated(nsDisplayListBuilder* aBuilder,
-                                           nsIFrame* aFrame);
-  /**
    * Return true if aFrame's transform-like property,
    * i.e. transform/translate/rotate/scale, is animated.
    */
@@ -128,21 +109,6 @@ class ActiveLayerTracker {
    * frame after the frame has been created.
    */
   static void TransferActivityToFrame(nsIContent* aContent, nsIFrame* aFrame);
-
-  /*
-   * We track modifications to the content of certain frames (i.e. canvas
-   * frames) and use that to make layering decisions.
-   */
-
-  /**
-   * Mark aFrame's content as being active. This marking will time out after
-   * a short period.
-   */
-  static void NotifyContentChange(nsIFrame* aFrame);
-  /**
-   * Return true if this frame's content is still marked as active.
-   */
-  static bool IsContentActive(nsIFrame* aFrame);
 };
 
 }  // namespace mozilla
