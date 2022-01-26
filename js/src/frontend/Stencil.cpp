@@ -2287,6 +2287,14 @@ ExtensibleCompilationStencil::ExtensibleCompilationStencil(
       source(input.source),
       parserAtoms(cx->runtime(), alloc) {}
 
+ExtensibleCompilationStencil::ExtensibleCompilationStencil(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    RefPtr<ScriptSource> source)
+    : canLazilyParse(CanLazilyParse(options)),
+      alloc(CompilationStencil::LifoAllocChunkSize),
+      source(std::move(source)),
+      parserAtoms(cx->runtime(), alloc) {}
+
 CompilationState::CompilationState(JSContext* cx,
                                    LifoAllocScope& parserAllocScope,
                                    CompilationInput& input)
