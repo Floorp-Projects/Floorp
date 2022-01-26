@@ -16,7 +16,7 @@ linux64-llvm-symbolizer:
         symbol: TL(llvm-symbolizer)
     fetches:
         toolchain:
-            - linux64-clang-toolchain
+            - linux64-clang
 
 macosx64-llvm-symbolizer:
     description: "llvm-symbolizer for Linux"
@@ -24,7 +24,7 @@ macosx64-llvm-symbolizer:
         symbol: TM(llvm-symbolizer)
     fetches:
         toolchain:
-            - macosx64-clang-toolchain
+            - macosx64-clang
 
 win64-llvm-symbolizer:
     description: "llvm-symbolizer for Linux"
@@ -32,4 +32,4 @@ win64-llvm-symbolizer:
         symbol: TW64(llvm-symbolizer)
     fetches:
         toolchain:
-            - win64-clang-toolchain
+            - win64-clang
