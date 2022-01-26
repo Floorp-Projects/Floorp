@@ -12731,15 +12731,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Verification status of Signed Certificate Timestamps received (0=Decoding error, 1=Valid SCT, 2=SCT from unknown log, 3=Invalid SCT signature, 4=SCT timestamp is in the future, 5=Valid SCT from a disqualified log)"
   },
-  "SSL_SERVER_AUTH_EKU": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Presence of of the Server Authenticaton EKU in accepted SSL server certificates (0=No EKU, 1=EKU present and has id_kp_serverAuth, 2=EKU present and has id_kp_serverAuth as well as some other EKU, 3=EKU present but does not contain id_kp_serverAuth)"
-  },
   "TLS_ERROR_REPORT_UI": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
