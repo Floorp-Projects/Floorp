@@ -244,17 +244,15 @@ linux64-clang-13-win-cross:
         toolchain-alias: linux64-clang-win-cross
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
-        win32-compiler-rt-13: toolchain-win32-compiler-rt-13
-        win64-compiler-rt-13: toolchain-win64-compiler-rt-13
+        win64-clang-13-2stage: toolchain-win64-clang-13-2stage
     fetches:
         toolchain:
             - linux64-clang-13
-        win32-compiler-rt-13:
-            - artifact: compiler-rt.tar.zst
-              dest: x86
-        win64-compiler-rt-13:
-            - artifact: compiler-rt.tar.zst
-              dest: x86_64
+        win64-clang-13-2stage:
+            # Put this into a new directory so it doesn't conflict with the linux toolchain
+            - artifact: clang.tar.zst
+              dest: clang-cl
+              extract: false
 
 macosx64-clang-13-raw:
     description: "Clang 13 toolchain build"
