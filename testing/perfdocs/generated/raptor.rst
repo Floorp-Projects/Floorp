@@ -16459,10 +16459,10 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm6-linux-firefox-live-office.manifest
-   * **playback version**: 6.0.2
-   * **secondary url**: `<https://www.office.com/>`__
-   * **test url**: `<https://www.office.com/launch/word>`__
+   * **playback pageset manifest**: mitm7-linux-firefox-office.manifest
+   * **playback version**: 7.0.4
+   * **secondary url**: `<https://www.office.com/?auth=1>`__
+   * **test url**: `<https://www.office.com/launch/powerpoint?auth=1>`__
    * **type**: pageload
    * **unit**: ms
    * **use live sites**: false
