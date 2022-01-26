@@ -53,6 +53,7 @@ class DefaultTopSitesStorage(
 
     override suspend fun getTopSites(
         totalSites: Int,
+        fetchProvidedTopSites: Boolean,
         frecencyConfig: FrecencyThresholdOption?
     ): List<TopSite> = pinnedSitesStorage.getPinnedSites().take(totalSites)
 

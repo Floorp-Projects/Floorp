@@ -111,19 +111,39 @@ class DefaultTopSitesStorageTest {
             )
         )
 
-        var topSites = defaultTopSitesStorage.getTopSites(0, frecencyConfig = null)
+        var topSites = defaultTopSitesStorage.getTopSites(
+            totalSites = 0,
+            fetchProvidedTopSites = false,
+            frecencyConfig = null
+        )
+
         assertTrue(topSites.isEmpty())
 
-        topSites = defaultTopSitesStorage.getTopSites(1, frecencyConfig = null)
+        topSites = defaultTopSitesStorage.getTopSites(
+            totalSites = 1,
+            fetchProvidedTopSites = false,
+            frecencyConfig = null
+        )
+
         assertEquals(1, topSites.size)
         assertEquals(pinnedSite1, topSites[0])
 
-        topSites = defaultTopSitesStorage.getTopSites(2, frecencyConfig = null)
+        topSites = defaultTopSitesStorage.getTopSites(
+            totalSites = 2,
+            fetchProvidedTopSites = false,
+            frecencyConfig = null
+        )
+
         assertEquals(2, topSites.size)
         assertEquals(pinnedSite1, topSites[0])
         assertEquals(pinnedSite2, topSites[1])
 
-        topSites = defaultTopSitesStorage.getTopSites(5, frecencyConfig = null)
+        topSites = defaultTopSitesStorage.getTopSites(
+            totalSites = 5,
+            fetchProvidedTopSites = false,
+            frecencyConfig = null
+        )
+
         assertEquals(2, topSites.size)
         assertEquals(pinnedSite1, topSites[0])
         assertEquals(pinnedSite2, topSites[1])
