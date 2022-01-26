@@ -10,6 +10,8 @@ object Constants {
         const val GOOGLE_PLAY_SERVICES = "com.android.vending"
         const val GOOGLE_APPS_PHOTOS = "com.google.android.apps.photos"
         const val YOUTUBE_APP = "com.google.android.youtube"
+        const val GMAIL_APP = "com.google.android.gm"
+        const val PHONE_APP = "com.google.android.dialer"
     }
 
     const val LONG_CLICK_DURATION: Long = 5000

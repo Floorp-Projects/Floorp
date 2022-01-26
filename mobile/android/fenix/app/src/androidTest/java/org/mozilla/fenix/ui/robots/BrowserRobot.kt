@@ -565,6 +565,15 @@ class BrowserRobot {
         tabCrashRestoreButton.click()
     }
 
+    fun fillAndSubmitGoogleSearchQuery(searchString: String) {
+        mDevice.findObject(
+            UiSelector().resourceId("$packageName:id/engineView")
+        ).waitForExists(waitingTime)
+        googleSearchBox.setText(searchString)
+        mDevice.pressEnter()
+        mDevice.waitForIdle(waitingTime)
+    }
+
     fun fillAndSubmitLoginCredentials(userName: String, password: String) {
         userNameTextBox.click()
         userNameTextBox.setText(userName)
@@ -847,6 +856,15 @@ val passwordTextBox =
         UiSelector()
             .index(1)
             .resourceId("password")
+            .className("android.widget.EditText")
+            .packageName("$packageName")
+    )
+
+val googleSearchBox =
+    mDevice.findObject(
+        UiSelector()
+            .index(0)
+            .resourceId("mib")
             .className("android.widget.EditText")
             .packageName("$packageName")
     )

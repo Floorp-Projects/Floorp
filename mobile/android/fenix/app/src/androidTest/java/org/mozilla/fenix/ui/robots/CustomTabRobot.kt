@@ -15,6 +15,8 @@ import junit.framework.TestCase.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.appName
+import org.mozilla.fenix.helpers.TestHelper.packageName
+import org.mozilla.fenix.helpers.TestHelper.waitForObjects
 
 /**
  *  Implementation of the robot pattern for Custom tabs
@@ -52,6 +54,17 @@ class CustomTabRobot {
 
     fun verifyCustomTabCloseButton() {
         closeButton().check(matches(isDisplayed()))
+    }
+
+    fun verifyCustomTabToolbarTitle(title: String) {
+        mDevice.waitForObjects(
+            mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/mozac_browser_toolbar_title_view")
+                    .textContains(title)
+            )
+        )
+        assertTrue(customTabToolbarTitle().text.equals(title))
     }
 
     class Transition {
@@ -92,3 +105,6 @@ private fun forwardButton() = mDevice.findObject(UiSelector().description("Forwa
 private fun backButton() = mDevice.findObject(UiSelector().description("Back"))
 
 private fun closeButton() = onView(withContentDescription("Return to previous app"))
+
+private fun customTabToolbarTitle() =
+    mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_title_view"))
