@@ -61,6 +61,8 @@ loader.lazyRequireGetter(
   true
 );
 
+loader.lazyRequireGetter(this, "ChromeUtils");
+
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 const SUPPORTED_RULE_TYPES = [
@@ -330,6 +332,13 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
           form.media.push(this.rawRule.parentRule.media.item(i));
         }
       }
+
+      if (
+        ChromeUtils.getClassName(this.rawRule.parentRule) ===
+        "CSSLayerBlockRule"
+      ) {
+        form.layerName = this.rawRule.parentRule.name;
+      }
     }
     if (this._parentSheet) {
       if (this.pageStyle.hasStyleSheetWatcherSupport) {
@@ -340,6 +349,14 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         form.parentStyleSheet = this.pageStyle._sheetRef(
           this._parentSheet
         ).actorID;
+      }
+
+      // Only override layerName if it wasn't set from the parent rule
+      if (
+        typeof this._parentSheet.ownerRule?.layerName !== "undefined" &&
+        form.layerName == undefined
+      ) {
+        form.layerName = this._parentSheet.ownerRule.layerName;
       }
     }
 
