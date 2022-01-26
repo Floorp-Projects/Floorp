@@ -883,4 +883,8 @@ add_task(async function test_creditCardFillUnavailable() {
         "Please restart if you flip the pref manually."
     );
   }
+
+  Services.prefs.clearUserPref(
+    "extensions.formautofill.creditCards.availability"
+  );
 });
