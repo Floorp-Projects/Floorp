@@ -81,20 +81,21 @@ function isBlankPageURL(aURL) {
   );
 }
 
-function getTopWin({ skipPopups } = {}) {
+function getTopWin({ skipPopups, forceNonPrivate } = {}) {
   // If this is called in a browser window, use that window regardless of
   // whether it's the frontmost window, since commands can be executed in
   // background windows (bug 626148).
   if (
     top.document.documentElement.getAttribute("windowtype") ==
       "navigator:browser" &&
-    (!skipPopups || top.toolbar.visible)
+    (!skipPopups || top.toolbar.visible) &&
+    (!forceNonPrivate || !PrivateBrowsingUtils.isWindowPrivate(top))
   ) {
     return top;
   }
 
   return BrowserWindowTracker.getTopWindow({
-    private: PrivateBrowsingUtils.isWindowPrivate(window),
+    private: !forceNonPrivate && PrivateBrowsingUtils.isWindowPrivate(window),
     allowPopups: !skipPopups,
   });
 }
@@ -293,6 +294,7 @@ function openLinkIn(url, where, params) {
   var aInBackground = params.inBackground;
   var aInitiatingDoc = params.initiatingDoc;
   var aIsPrivate = params.private;
+  var aForceNonPrivate = params.forceNonPrivate;
   var aSkipTabAnimation = params.skipTabAnimation;
   var aAllowPinnedTabHostChange = !!params.allowPinnedTabHostChange;
   var aAllowPopups = !!params.allowPopups;
@@ -341,12 +343,12 @@ function openLinkIn(url, where, params) {
   if (where == "current" && params.targetBrowser) {
     w = params.targetBrowser.ownerGlobal;
   } else {
-    w = getTopWin();
+    w = getTopWin({ forceNonPrivate: aForceNonPrivate });
   }
   // We don't want to open tabs in popups, so try to find a non-popup window in
   // that case.
   if ((where == "tab" || where == "tabshifted") && w && !w.toolbar.visible) {
-    w = getTopWin({ skipPopups: true });
+    w = getTopWin({ skipPopups: true, forceNonPrivate: aForceNonPrivate });
     aRelatedToCurrent = false;
   }
 
@@ -382,6 +384,8 @@ function openLinkIn(url, where, params) {
         false,
         aReferrerInfo.originalReferrer
       );
+    } else if (aForceNonPrivate) {
+      features += ",non-private";
     }
 
     // This propagates to window.arguments.
