@@ -93,7 +93,6 @@ EXPORTS.mozilla += [
 EXPORTS.mozilla.psm += [
     "IPCClientCertsChild.h",
     "IPCClientCertsParent.h",
-    "PSMIPCCommon.h",
     "TransportSecurityInfo.h",
     "VerifySSLServerCertChild.h",
     "VerifySSLServerCertParent.h",
@@ -142,7 +141,6 @@ UNIFIED_SOURCES += [
     "nsTLSSocketProvider.cpp",
     "OSKeyStore.cpp",
     "PKCS11ModuleDB.cpp",
-    "PSMIPCCommon.cpp",
     "PSMRunnable.cpp",
     "PublicKeyPinningService.cpp",
     "RootCertificateTelemetryUtils.cpp",

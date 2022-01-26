@@ -956,8 +956,8 @@ void RememberCertErrorsTable::LookupCertErrorBits(
   infoObject->mIsUntrusted = bits.mIsUntrusted;
 }
 
-void TransportSecurityInfo::SetStatusErrorBits(nsNSSCertificate* cert,
-                                               uint32_t collected_errors) {
+void TransportSecurityInfo::SetStatusErrorBits(
+    const nsCOMPtr<nsIX509Cert>& cert, uint32_t collected_errors) {
   SetServerCert(cert, EVStatus::NotEV);
 
   mHaveCertErrorBits = true;
@@ -1007,8 +1007,8 @@ NS_IMETHODIMP TransportSecurityInfo::GetServerCert(nsIX509Cert** aServerCert) {
   return NS_OK;
 }
 
-void TransportSecurityInfo::SetServerCert(nsNSSCertificate* aServerCert,
-                                          EVStatus aEVStatus) {
+void TransportSecurityInfo::SetServerCert(
+    const nsCOMPtr<nsIX509Cert>& aServerCert, EVStatus aEVStatus) {
   MOZ_ASSERT(aServerCert);
   MutexAutoLock lock(mMutex);
 

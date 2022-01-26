@@ -689,7 +689,7 @@ static void CollectCertTelemetry(
 }
 
 static void AuthCertificateSetResults(
-    TransportSecurityInfo* aInfoObject, nsNSSCertificate* aCert,
+    TransportSecurityInfo* aInfoObject, const nsCOMPtr<nsIX509Cert>& aCert,
     nsTArray<nsTArray<uint8_t>>&& aBuiltCertChain,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, EVStatus aEvStatus,
@@ -703,8 +703,7 @@ static void AuthCertificateSetResults(
 
     aInfoObject->SetServerCert(aCert, aEvStatus);
     aInfoObject->SetSucceededCertChain(std::move(aBuiltCertChain));
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("AuthCertificate setting NEW cert %p", aCert));
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("AuthCertificate setting NEW cert"));
 
     aInfoObject->SetIsBuiltCertChainRootBuiltInRoot(
         aIsBuiltCertChainRootBuiltInRoot);
@@ -956,7 +955,7 @@ SSLServerCertVerificationJob::Run() {
       mProviderFlags, mTime, mCertVerifierFlags, builtChainBytesArray, evStatus,
       certificateTransparencyInfo, isCertChainRootBuiltInRoot);
 
-  RefPtr<nsNSSCertificate> nsc = new nsNSSCertificate(mCert.get());
+  nsCOMPtr<nsIX509Cert> cert(new nsNSSCertificate(mCert.get()));
   if (rv == Success) {
     Telemetry::AccumulateTimeDelta(
         Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_MOZILLAPKIX, jobStartTime,
@@ -964,7 +963,7 @@ SSLServerCertVerificationJob::Run() {
     Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, 1);
 
     mResultTask->Dispatch(
-        nsc, std::move(builtChainBytesArray), std::move(mPeerCertChain),
+        cert, std::move(builtChainBytesArray), std::move(mPeerCertChain),
         TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(
             certificateTransparencyInfo),
         evStatus, true, 0, 0, isCertChainRootBuiltInRoot, mProviderFlags);
@@ -977,14 +976,13 @@ SSLServerCertVerificationJob::Run() {
 
   PRErrorCode error = MapResultToPRErrorCode(rv);
   uint32_t collectedErrors = 0;
-  nsCOMPtr<nsIX509Cert> cert(new nsNSSCertificate(std::move(certBytes)));
   PRErrorCode finalError = AuthCertificateParseResults(
       mAddrForLogging, mHostName, mPort, mOriginAttributes, cert,
       mProviderFlags, mTime, error, collectedErrors);
 
   // NB: finalError may be 0 here, in which the connection will continue.
   mResultTask->Dispatch(
-      nsc, std::move(builtChainBytesArray), std::move(mPeerCertChain),
+      cert, std::move(builtChainBytesArray), std::move(mPeerCertChain),
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,
       EVStatus::NotEV, false, finalError, collectedErrors, false,
       mProviderFlags);
@@ -1222,7 +1220,7 @@ SSLServerCertVerificationResult::SSLServerCertVerificationResult(
       mProviderFlags(0) {}
 
 void SSLServerCertVerificationResult::Dispatch(
-    nsNSSCertificate* aCert, nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
+    nsCOMPtr<nsIX509Cert> aCert, nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
     bool aSucceeded, PRErrorCode aFinalError, uint32_t aCollectedErrors,

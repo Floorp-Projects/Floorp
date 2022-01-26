@@ -1107,15 +1107,15 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
             ("HandshakeCallback: couldn't rebuild verified certificate info"));
   }
 
-  RefPtr<nsNSSCertificate> nssc(new nsNSSCertificate(cert.get()));
+  nsCOMPtr<nsIX509Cert> x509Cert(new nsNSSCertificate(cert.get()));
   if (rv == Success && evStatus == EVStatus::EV) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("HandshakeCallback using NEW cert %p (is EV)", nssc.get()));
-    infoObject->SetServerCert(nssc, EVStatus::EV);
+            ("HandshakeCallback using NEW cert (is EV)"));
+    infoObject->SetServerCert(x509Cert, EVStatus::EV);
   } else {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("HandshakeCallback using NEW cert %p (is not EV)", nssc.get()));
-    infoObject->SetServerCert(nssc, EVStatus::NotEV);
+            ("HandshakeCallback using NEW cert (is not EV)"));
+    infoObject->SetServerCert(x509Cert, EVStatus::NotEV);
   }
 
   if (rv == Success) {
