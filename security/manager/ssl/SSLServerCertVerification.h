@@ -10,14 +10,13 @@
 #include "ScopedNSSTypes.h"
 #include "mozilla/Maybe.h"
 #include "mozpkix/pkix.h"
+#include "nsIX509Cert.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "prerror.h"
 #include "prio.h"
 #include "seccomon.h"
 #include "secoidt.h"
-
-class nsNSSCertificate;
 
 using namespace mozilla::pkix;
 
@@ -44,7 +43,7 @@ class BaseSSLServerCertVerificationResult {
  public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
-  virtual void Dispatch(nsNSSCertificate* aCert,
+  virtual void Dispatch(nsCOMPtr<nsIX509Cert> aCert,
                         nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
                         nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
                         uint16_t aCertificateTransparencyStatus,
@@ -69,7 +68,7 @@ class SSLServerCertVerificationResult final
 
   explicit SSLServerCertVerificationResult(TransportSecurityInfo* infoObject);
 
-  void Dispatch(nsNSSCertificate* aCert,
+  void Dispatch(nsCOMPtr<nsIX509Cert> aCert,
                 nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
                 nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
                 uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
@@ -82,7 +81,7 @@ class SSLServerCertVerificationResult final
   ~SSLServerCertVerificationResult() = default;
 
   const RefPtr<TransportSecurityInfo> mInfoObject;
-  RefPtr<nsNSSCertificate> mCert;
+  nsCOMPtr<nsIX509Cert> mCert;
   nsTArray<nsTArray<uint8_t>> mBuiltChain;
   nsTArray<nsTArray<uint8_t>> mPeerCertChain;
   uint16_t mCertificateTransparencyStatus;

@@ -61,7 +61,7 @@ class IPCServerCertVerificationResult final
                                   VerifySSLServerCertParent* aParent)
       : mTarget(aTarget), mParent(aParent) {}
 
-  void Dispatch(nsNSSCertificate* aCert,
+  void Dispatch(nsCOMPtr<nsIX509Cert> aCert,
                 nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
                 nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
                 uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
@@ -78,7 +78,7 @@ class IPCServerCertVerificationResult final
 };
 
 void IPCServerCertVerificationResult::Dispatch(
-    nsNSSCertificate* aCert, nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
+    nsCOMPtr<nsIX509Cert> aCert, nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
     bool aSucceeded, PRErrorCode aFinalError, uint32_t aCollectedErrors,
