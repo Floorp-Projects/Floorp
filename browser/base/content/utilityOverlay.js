@@ -306,6 +306,8 @@ function openLinkIn(url, where, params) {
   var aCsp = params.csp;
   var aForceAboutBlankViewerInCurrent = params.forceAboutBlankViewerInCurrent;
   var aResolveOnNewTabCreated = params.resolveOnNewTabCreated;
+  // This callback will be called with the content browser once it's created.
+  var aResolveOnContentBrowserReady = params.resolveOnContentBrowserCreated;
 
   if (!aTriggeringPrincipal) {
     throw new Error("Must load with a triggering Principal");
@@ -428,36 +430,53 @@ function openLinkIn(url, where, params) {
 
     const sourceWindow = w || window;
     let win;
+
+    // Returns a promise that will be resolved when the new window's startup is finished.
+    function waitForWindowStartup() {
+      return new Promise(resolve => {
+        const delayedStartupObserver = aSubject => {
+          if (aSubject == win) {
+            Services.obs.removeObserver(
+              delayedStartupObserver,
+              "browser-delayed-startup-finished"
+            );
+            resolve();
+          }
+        };
+        Services.obs.addObserver(
+          delayedStartupObserver,
+          "browser-delayed-startup-finished"
+        );
+      });
+    }
+
     if (params.frameID != undefined && sourceWindow) {
       // Only notify it as a WebExtensions' webNavigation.onCreatedNavigationTarget
       // event if it contains the expected frameID params.
       // (e.g. we should not notify it as a onCreatedNavigationTarget if the user is
       // opening a new window using the keyboard shortcut).
       const sourceTabBrowser = sourceWindow.gBrowser.selectedBrowser;
-      let delayedStartupObserver = aSubject => {
-        if (aSubject == win) {
-          Services.obs.removeObserver(
-            delayedStartupObserver,
-            "browser-delayed-startup-finished"
-          );
-          Services.obs.notifyObservers(
-            {
-              wrappedJSObject: {
-                url,
-                createdTabBrowser: win.gBrowser.selectedBrowser,
-                sourceTabBrowser,
-                sourceFrameID: params.frameID,
-              },
+      waitForWindowStartup().then(() => {
+        Services.obs.notifyObservers(
+          {
+            wrappedJSObject: {
+              url,
+              createdTabBrowser: win.gBrowser.selectedBrowser,
+              sourceTabBrowser,
+              sourceFrameID: params.frameID,
             },
-            "webNavigation-createdNavigationTarget"
-          );
-        }
-      };
-      Services.obs.addObserver(
-        delayedStartupObserver,
-        "browser-delayed-startup-finished"
+          },
+          "webNavigation-createdNavigationTarget"
+        );
+      });
+    }
+
+    if (aResolveOnContentBrowserReady) {
+      waitForWindowStartup().then(() =>
+        aResolveOnContentBrowserReady(win.gBrowser.selectedBrowser)
       );
     }
+
     win = Services.ww.openWindow(
       sourceWindow,
       AppConstants.BROWSER_CHROME_URL,
@@ -465,6 +484,7 @@ function openLinkIn(url, where, params) {
       features,
       sa
     );
+
     return;
   }
 
@@ -564,6 +584,9 @@ function openLinkIn(url, where, params) {
         postData: aPostData,
         userContextId: aUserContextId,
       });
+      if (aResolveOnContentBrowserReady) {
+        aResolveOnContentBrowserReady(targetBrowser);
+      }
 
       // Don't focus the content area if focus is in the address bar and we're
       // loading the New Tab page.
@@ -601,6 +624,9 @@ function openLinkIn(url, where, params) {
 
       if (aResolveOnNewTabCreated) {
         aResolveOnNewTabCreated(targetBrowser);
+      }
+      if (aResolveOnContentBrowserReady) {
+        aResolveOnContentBrowserReady(targetBrowser);
       }
 
       if (params.frameID != undefined && w) {
