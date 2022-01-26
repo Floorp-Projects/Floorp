@@ -41804,7 +41804,6 @@
                 "-Wunused-lambda-capture"
             ],
             "defines": [
-                "MULTI_MONITOR_SCREENSHARE",
                 "USE_AURA=1",
                 "_HAS_NODISCARD",
                 "_HAS_EXCEPTIONS=0",
