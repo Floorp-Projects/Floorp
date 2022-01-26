@@ -937,6 +937,7 @@ struct SharedDataContainer {
 
   [[nodiscard]] bool prepareStorageFor(JSContext* cx, size_t nonLazyScriptCount,
                                        size_t allScriptCount);
+  [[nodiscard]] bool cloneFrom(JSContext* cx, const SharedDataContainer& other);
 
   // Returns index-th script's shared data, or nullptr if it doesn't have.
   js::SharedImmutableScriptData* get(ScriptIndex index) const;

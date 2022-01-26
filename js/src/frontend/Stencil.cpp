@@ -47,7 +47,7 @@
 #include "vm/JSScript.h"      // BaseScript, JSScript
 #include "vm/Printer.h"       // js::Fprinter
 #include "vm/RegExpObject.h"  // js::RegExpObject
-#include "vm/Scope.h"  // Scope, *Scope, ScopeKind::*, ScopeKindString, ScopeIter, ScopeKindIsCatch, BindingIter, GetScopeDataTrailingNames
+#include "vm/Scope.h"  // Scope, *Scope, ScopeKind::*, ScopeKindString, ScopeIter, ScopeKindIsCatch, BindingIter, GetScopeDataTrailingNames, SizeOfParserScopeData
 #include "vm/ScopeKind.h"    // ScopeKind
 #include "vm/SelfHosting.h"  // SetClonedSelfHostedFunctionName
 #include "vm/StaticStrings.h"
@@ -2382,6 +2382,44 @@ bool SharedDataContainer::prepareStorageFor(JSContext* cx,
   return true;
 }
 
+bool SharedDataContainer::cloneFrom(JSContext* cx,
+                                    const SharedDataContainer& other) {
+  MOZ_ASSERT(isEmpty());
+
+  if (other.isBorrow()) {
+    return cloneFrom(cx, *other.asBorrow());
+  }
+
+  if (other.isSingle()) {
+    // As we clone, we add an extra reference.
+    RefPtr<SharedImmutableScriptData> ref(other.asSingle());
+    setSingle(ref.forget());
+  } else if (other.isVector()) {
+    if (!initVector(cx)) {
+      return false;
+    }
+    if (!asVector()->appendAll(*other.asVector())) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+  } else if (other.isMap()) {
+    if (!initMap(cx)) {
+      return false;
+    }
+    auto& otherMap = *other.asMap();
+    if (!asMap()->reserve(otherMap.count())) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+    auto& map = *asMap();
+    for (auto iter = otherMap.iter(); !iter.done(); iter.next()) {
+      auto& entry = iter.get();
+      map.putNewInfallible(entry.key(), entry.value());
+    }
+  }
+  return true;
+}
+
 js::SharedImmutableScriptData* SharedDataContainer::get(
     ScriptIndex index) const {
   if (isSingle()) {
@@ -2739,9 +2777,25 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
     }
   }
 
-  sharedData = std::move(other->sharedData);
-  moduleMetadata = std::move(other->moduleMetadata);
-  asmJS = std::move(other->asmJS);
+  if (storageType == StorageType::Borrowed) {
+    // When the stolen stencil is borrowed, stealing will remove all the
+    // bytecode from the borrowed stencil, which is problematic. Thus, we copy
+    // the stencil instead and increment the reference count of each
+    // SharedImmutableScriptData.
+    if (!sharedData.cloneFrom(cx, other->sharedData)) {
+      return false;
+    }
+
+    // Note: moduleMetadata and asmJS are known after the first parse, and are
+    // not mutated by any delazifications later on. Thus we can safely increment
+    // the reference counter and keep these as-is.
+    moduleMetadata = other->moduleMetadata;
+    asmJS = other->asmJS;
+  } else {
+    sharedData = std::move(other->sharedData);
+    moduleMetadata = std::move(other->moduleMetadata);
+    asmJS = std::move(other->asmJS);
+  }
 
 #ifdef DEBUG
   assertNoExternalDependency();
@@ -4331,6 +4385,10 @@ bool CompilationStencilMerger::addDelazification(
                        mapAtomIndex, mapScopeIndex,
                        i == CompilationStencil::TopLevelIndex);
   }
+
+  // WARNING: moduleMetadata and asmJS fields are known at script/module
+  // top-level parsing, any mutation made in this function should be reflected
+  // to ExtensibleCompilationStencil::steal and CompilationStencil::clone.
 
   // Function shouldn't be a module.
   MOZ_ASSERT(!delazification.moduleMetadata);
