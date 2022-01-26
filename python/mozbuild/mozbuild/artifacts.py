@@ -556,7 +556,10 @@ class ResignJarWriter(JarWriter):
                     shutil.copyfileobj(data, tmp)
                     tmp.close()
                     self._job.log(
-                        logging.DEBUG, "artifact", {"path": name}, "Re-signing {path}"
+                        logging.DEBUG,
+                        "artifact",
+                        {"path": name.decode("utf-8")},
+                        "Re-signing {path}",
                     )
                     subprocess.check_call(
                         ["codesign", "-s", "-", "-f", tmp.name],
