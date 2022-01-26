@@ -175,7 +175,7 @@ async function gInit(perfFront, traits, pageContext, openAboutProfiling) {
         React.createElement(
           React.Fragment,
           null,
-          ProfilerEventHandling({ perfFront }),
+          ProfilerEventHandling({ perfFront, traits }),
           ProfilerPreferenceObserver(),
           DevToolsPanel({
             perfFront,
