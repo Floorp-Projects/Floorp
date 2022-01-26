@@ -17,7 +17,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.activity.robots.searchScreen
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.helpers.MainActivityIntentsTestRule
+import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.isPackageInstalled
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
 import org.mozilla.focus.helpers.TestHelper.waitingTime
@@ -34,6 +36,7 @@ class OpenInExternalBrowserDialogueTest {
 
     @Before
     fun setUp() {
+        TestHelper.appContext.settings.isCfrForForShieldToolbarIconVisible = false
         webServer = MockWebServer()
         try {
             webServer.enqueue(

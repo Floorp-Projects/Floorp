@@ -11,7 +11,9 @@ import org.junit.Test
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
 import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.getStringResource
@@ -32,6 +34,7 @@ class SafeBrowsingTest {
 
     @Before
     fun setUp() {
+        TestHelper.appContext.settings.isCfrForForShieldToolbarIconVisible = false
         webServer = MockWebServer()
         webServer.start()
     }

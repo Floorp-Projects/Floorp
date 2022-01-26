@@ -21,7 +21,9 @@ import org.junit.runner.RunWith
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.robots.notificationTray
 import org.mozilla.focus.activity.robots.searchScreen
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.pressHomeKey
@@ -40,6 +42,7 @@ class SwitchContextTest {
 
     @Before
     fun setUp() {
+        TestHelper.appContext.settings.isCfrForForShieldToolbarIconVisible = false
         webServer = MockWebServer()
         try {
             webServer.enqueue(

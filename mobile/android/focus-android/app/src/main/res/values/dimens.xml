@@ -25,7 +25,7 @@
 
     <dimen name="firstrun_card_width">300dp</dimen>
     <dimen name="firstrun_card_height">460dp</dimen>
-    
+
     <dimen name="fingerprint_icon_size">64dp</dimen>
     <dimen name="fingerprint_status_layout_margin_vertical">48dp</dimen>
 
@@ -84,4 +84,8 @@
     <dimen name="radio_button_preference_start_margin">18dp</dimen>
     <dimen name="radio_button_preference_title_margins">16dp</dimen>
 
+    <!-- Dimensions for the CFR (Contextual Feature Recommendation) tooltip triangle. -->
+    <dimen name="cfr_triangle_height">16dp</dimen>
+    <dimen name="cfr_triangle_width">16dp</dimen>
+    <dimen name="cfr_triangle_margin_edge">16dp</dimen>
 </resources>

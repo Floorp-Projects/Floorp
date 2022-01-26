@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.fragment
 
+import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -62,6 +63,7 @@ import org.mozilla.focus.browser.integration.FindInPageIntegration
 import org.mozilla.focus.browser.integration.FullScreenIntegration
 import org.mozilla.focus.contextmenu.ContextMenuCandidates
 import org.mozilla.focus.databinding.FragmentBrowserBinding
+import org.mozilla.focus.databinding.ToolbarShieldIconCfrBinding
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.EngineSharedPreferencesListener
 import org.mozilla.focus.ext.accessibilityManager
@@ -83,6 +85,7 @@ import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.topsites.DefaultTopSitesStorage.Companion.TOP_SITES_MAX_LIMIT
 import org.mozilla.focus.topsites.DefaultTopSitesView
+import org.mozilla.focus.utils.CfrUtils
 import org.mozilla.focus.utils.FocusSnackbar
 import org.mozilla.focus.utils.FocusSnackbarDelegate
 import org.mozilla.focus.utils.StatusBarUtils
@@ -98,6 +101,7 @@ class BrowserFragment :
 
     private var _binding: FragmentBrowserBinding? = null
     private val binding get() = _binding!!
+    private var _toolbarShieldIconCfrBinding: ToolbarShieldIconCfrBinding? = null
 
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val fullScreenIntegration = ViewBoundFeatureWrapper<FullScreenIntegration>()
@@ -115,6 +119,7 @@ class BrowserFragment :
     private val toolbarIntegration = ViewBoundFeatureWrapper<BrowserToolbarIntegration>()
 
     private lateinit var trackingProtectionPanel: TrackingProtectionPanel
+
     /**
      * The ID of the tab associated with this fragment.
      */
@@ -139,6 +144,7 @@ class BrowserFragment :
         return binding.root
     }
 
+    @SuppressLint("VisibleForTests")
     @Suppress("ComplexCondition", "LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val components = requireComponents
@@ -313,6 +319,10 @@ class BrowserFragment :
         }
 
         setSitePermissions(view)
+        _toolbarShieldIconCfrBinding = CfrUtils.shouldShowCFRForShieldToolbarIcon(
+            rootView = binding.browserToolbar.rootView, context = requireContext(),
+            isContentSecure = tab.content.securityInfo.secure
+        )
     }
 
     private fun setSitePermissions(rootView: View) {
@@ -426,6 +436,7 @@ class BrowserFragment :
         super.onDestroyView()
         requireContext().accessibilityManager.removeAccessibilityStateChangeListener(this)
         _binding = null
+        _toolbarShieldIconCfrBinding = null
     }
 
     override fun onDestroy() {

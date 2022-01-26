@@ -16,7 +16,9 @@ import org.junit.runner.RunWith
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.clickSnackBarActionButton
 import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
 import org.mozilla.focus.helpers.TestHelper.getStringResource
@@ -41,6 +43,7 @@ class MultitaskingTest {
     @Before
     @Throws(Exception::class)
     fun startWebServer() {
+        TestHelper.appContext.settings.isCfrForForShieldToolbarIconVisible = false
         webServer = MockWebServer()
         webServer.enqueue(createMockResponseFromAsset("tab1.html"))
         webServer.enqueue(createMockResponseFromAsset("tab2.html"))

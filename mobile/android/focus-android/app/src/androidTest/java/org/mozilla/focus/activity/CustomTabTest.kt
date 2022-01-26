@@ -29,6 +29,8 @@ import org.mozilla.focus.activity.robots.browserScreen
 import org.mozilla.focus.activity.robots.customTab
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
+import org.mozilla.focus.ext.settings
+import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
@@ -50,6 +52,7 @@ class CustomTabTest {
 
     @Before
     fun setUp() {
+        TestHelper.appContext.settings.isCfrForForShieldToolbarIconVisible = false
         webServer = MockWebServer()
         webServer.enqueue(createMockResponseFromAsset("plain_test.html"))
         webServer.enqueue(createMockResponseFromAsset("tab1.html"))

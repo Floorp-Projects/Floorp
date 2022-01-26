@@ -9,7 +9,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.activity.robots.searchScreen
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
 import org.mozilla.focus.testAnnotations.SmokeTest
 
@@ -21,6 +23,7 @@ class MediaPlaybackTest {
 
     @Before
     fun setUp() {
+        TestHelper.appContext.settings.isCfrForForShieldToolbarIconVisible = false
         webServer = MockWebServer()
         webServer.start()
     }

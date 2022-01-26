@@ -4,12 +4,15 @@
 package org.mozilla.focus.activity
 
 import androidx.test.espresso.Espresso.pressBack
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.activity.robots.browserScreen
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
+import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.pressEnterKey
 import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
@@ -22,10 +25,14 @@ class SearchTest {
     @get: Rule
     var mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
 
+    @Before
+    fun setUp() {
+        TestHelper.appContext.settings.isCfrForForShieldToolbarIconVisible = false
+    }
+
     @SmokeTest
     @Test
     fun changeSearchEngineTest() {
-
         for (searchEngine in enginesList) {
             // Open [settings menu] and select Search engine
             homeScreen {

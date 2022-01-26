@@ -15,6 +15,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.activity.robots.downloadRobot
 import org.mozilla.focus.activity.robots.searchScreen
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.helpers.DeleteFilesHelper.deleteFileUsingDisplayName
 import org.mozilla.focus.helpers.MainActivityIntentsTestRule
 import org.mozilla.focus.helpers.TestHelper
@@ -40,6 +41,7 @@ class DownloadFileTest {
 
     @Before
     fun setUp() {
+        TestHelper.appContext.settings.isCfrForForShieldToolbarIconVisible = false
         webServer = MockWebServer()
         try {
             webServer.enqueue(

@@ -10,6 +10,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.testAnnotations.SmokeTest
@@ -28,6 +29,7 @@ class ThreeDotMainMenuTest {
         webServer = MockWebServer()
         webServer.enqueue(TestHelper.createMockResponseFromAsset("tab1.html"))
         webServer.start()
+        TestHelper.appContext.settings.isCfrForForShieldToolbarIconVisible = false
     }
 
     @After

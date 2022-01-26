@@ -4,11 +4,13 @@
 package org.mozilla.focus.activity
 
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.robots.homeScreen
+import org.mozilla.focus.ext.settings
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper.appContext
 import org.mozilla.focus.helpers.TestHelper.exitToTop
@@ -19,6 +21,11 @@ import org.mozilla.focus.testAnnotations.SmokeTest
 class MozillaSupportPagesTest {
     @get: Rule
     val mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
+
+    @Before
+    fun setUp() {
+        appContext.settings.isCfrForForShieldToolbarIconVisible = false
+    }
 
     @SmokeTest
     @Test
