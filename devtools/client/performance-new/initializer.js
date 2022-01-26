@@ -135,7 +135,7 @@ async function gInit(perfFront, traits, pageContext, openAboutProfiling) {
   /**
    * @param {MinimallyTypedGeckoProfile} profile
    */
-  const onProfileReceived = profile => {
+  const onProfileReceived = async profile => {
     const objdirs = selectors.getObjdirs(store.getState());
     const profilerViewMode = getProfilerViewModeForCurrentPreset(pageContext);
     const sharedLibraries = sharedLibrariesFromProfile(profile);
@@ -144,7 +144,7 @@ async function gInit(perfFront, traits, pageContext, openAboutProfiling) {
       objdirs,
       perfFront
     );
-    const browser = openProfilerTab(profilerViewMode);
+    const browser = await openProfilerTab(profilerViewMode);
 
     /**
      * @type {ProfileCaptureResult}

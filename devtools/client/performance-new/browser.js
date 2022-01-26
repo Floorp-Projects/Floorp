@@ -58,18 +58,10 @@ const UI_BASE_URL_PATH_DEFAULT = "/from-browser";
  * @param {ProfilerViewMode | undefined} profilerViewMode - View mode for the Firefox Profiler
  *   front-end timeline. While opening the url, we should append a query string
  *   if a view other than "full" needs to be displayed.
- * @returns {MockedExports.Browser} The browser for the opened tab.
+ * @returns {Promise<MockedExports.Browser>} The browser for the opened tab.
  */
-function openProfilerTab(profilerViewMode) {
+async function openProfilerTab(profilerViewMode) {
   const Services = lazy.Services();
-  // Find the most recently used window, as the DevTools client could be in a variety
-  // of hosts.
-  const win = Services.wm.getMostRecentWindow("navigator:browser");
-  if (!win) {
-    throw new Error("No browser window");
-  }
-  const browser = win.gBrowser;
-  win.focus();
 
   // Allow the user to point to something other than profiler.firefox.com.
   const baseUrl = Services.prefs.getStringPref(
@@ -92,16 +84,28 @@ function openProfilerTab(profilerViewMode) {
     viewModeQueryString = `?view=${profilerViewMode}`;
   }
 
-  const tab = browser.addWebTab(
-    `${baseUrl}${baseUrlPath}${viewModeQueryString}`,
-    {
-      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({
-        userContextId: browser.contentPrincipal.userContextId,
-      }),
-    }
+  const urlToLoad = `${baseUrl}${baseUrlPath}${viewModeQueryString}`;
+
+  // Find the most recently used window, as the DevTools client could be in a variety
+  // of hosts.
+  const win = Services.wm.getMostRecentWindow("navigator:browser");
+  if (!win) {
+    throw new Error("No browser window");
+  }
+  win.focus();
+
+  // The profiler frontend currently doesn't support being loaded in a private
+  // window, because it does some storage writes in IndexedDB. That's why we
+  // force the opening of the tab in a non-private window. This might open a new
+  // non-private window if the only currently opened window is a private window.
+  const contentBrowser = await new Promise(resolveOnContentBrowserCreated =>
+    win.openWebLinkIn(urlToLoad, "tab", {
+      forceNonPrivate: true,
+      resolveOnContentBrowserCreated,
+      userContextId: win.gBrowser.contentPrincipal.userContextId,
+    })
   );
-  browser.selectedTab = tab;
-  return tab.linkedBrowser;
+  return contentBrowser;
 }
 
 /**
