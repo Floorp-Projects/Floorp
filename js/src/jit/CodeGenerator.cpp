@@ -8017,13 +8017,11 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
 #ifdef ENABLE_WASM_EXCEPTIONS
   // If this call is in Wasm try code block, initialise a WasmTryNote for this
   // call.
-  bool inTry = mir->inTry();
+  bool inTry_ = mir->inTry();
   size_t tryNoteIndex = 0;
-  if (inTry && !masm.wasmStartTry(&tryNoteIndex)) {
-    // Handle an OOM in allocating a try note by forcing inTry to false, this
-    // will skip the logic below that uses the try note. This is okay as
-    // compilation will be aborted after this.
-    inTry = false;
+
+  if (inTry_) {
+    tryNoteIndex = masm.wasmStartTry();
   }
 #endif
 
@@ -8098,7 +8096,7 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
   }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-  if (inTry) {
+  if (inTry_) {
     // A call that threw will not return here normally, but will jump to this
     // WasmCall's WasmTryNote entryPoint below. To make exceptional control flow
     // easier to track, we set the entry point in this very call. The exception
