@@ -396,16 +396,6 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsHTMLCanvasFrame)
 
-void nsHTMLCanvasFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
-                             nsIFrame* aPrevInFlow) {
-  nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
-
-  // We can fill in the canvas before the canvas frame is created, in
-  // which case we never get around to marking the content as active. Therefore,
-  // we mark it active here when we create the frame.
-  ActiveLayerTracker::NotifyContentChange(this);
-}
-
 void nsHTMLCanvasFrame::DestroyFrom(nsIFrame* aDestroyRoot,
                                     PostDestroyData& aPostDestroyData) {
   if (IsPrimaryFrame()) {

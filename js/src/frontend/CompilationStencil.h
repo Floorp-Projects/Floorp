@@ -937,6 +937,7 @@ struct SharedDataContainer {
 
   [[nodiscard]] bool prepareStorageFor(JSContext* cx, size_t nonLazyScriptCount,
                                        size_t allScriptCount);
+  [[nodiscard]] bool cloneFrom(JSContext* cx, const SharedDataContainer& other);
 
   // Returns index-th script's shared data, or nullptr if it doesn't have.
   js::SharedImmutableScriptData* get(ScriptIndex index) const;
@@ -1159,6 +1160,8 @@ struct CompilationStencil {
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
   }
 
+  const ParserAtomSpan& parserAtomsSpan() const { return parserAtomData; }
+
   bool isModule() const;
 
   bool hasMultipleReference() const { return refCount > 1; }
@@ -1234,6 +1237,9 @@ struct ExtensibleCompilationStencil {
   explicit ExtensibleCompilationStencil(JSContext* cx, ScriptSource* source);
 
   ExtensibleCompilationStencil(JSContext* cx, CompilationInput& input);
+  ExtensibleCompilationStencil(JSContext* cx,
+                               const JS::ReadOnlyCompileOptions& options,
+                               RefPtr<ScriptSource> source);
 
   ExtensibleCompilationStencil(ExtensibleCompilationStencil&& other) noexcept
       : canLazilyParse(other.canLazilyParse),
@@ -1292,6 +1298,20 @@ struct ExtensibleCompilationStencil {
 
   // Steal CompilationStencil content.
   [[nodiscard]] bool steal(JSContext* cx, RefPtr<CompilationStencil>&& other);
+
+  // Clone ExtensibleCompilationStencil content.
+  [[nodiscard]] bool cloneFrom(JSContext* cx, const CompilationStencil& other);
+  [[nodiscard]] bool cloneFrom(JSContext* cx,
+                               const ExtensibleCompilationStencil& other);
+
+ private:
+  template <typename Stencil>
+  [[nodiscard]] bool cloneFromImpl(JSContext* cx, const Stencil& other);
+
+ public:
+  const ParserAtomVector& parserAtomsSpan() const {
+    return parserAtoms.entries();
+  }
 
   bool isModule() const;
 

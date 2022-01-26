@@ -664,7 +664,7 @@ bool PresShell::GetVerifyReflowEnable() {
         const VerifyReflowFlagData* flag = gFlags;
         const VerifyReflowFlagData* limit = gFlags + NUM_VERIFY_REFLOW_FLAGS;
         while (flag < limit) {
-          if (PL_strcasecmp(flag->name, flags) == 0) {
+          if (nsCRT::strcasecmp(flag->name, flags) == 0) {
             gVerifyReflowFlags |= flag->bit;
             found = true;
             break;

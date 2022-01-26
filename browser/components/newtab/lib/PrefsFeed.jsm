@@ -171,6 +171,16 @@ this.PrefsFeed = class PrefsFeed {
       value: placeholderPrefValue,
     });
 
+    // Read the pref for search Clorway Closet from firefox.js and store it
+    // in our internal list of prefs to watch
+    let colorwayClosetPrefValue = Services.prefs.getBoolPref(
+      "browser.newtabpage.activity-stream.colorway-closet.enabled"
+    );
+    values["colorway-closet.enabled"] = colorwayClosetPrefValue;
+    this._prefMap.set("colorway-closet.enabled", {
+      value: colorwayClosetPrefValue,
+    });
+
     // Add experiment values and default values
     values.featureConfig = NimbusFeatures.newtab.getAllVariables() || {};
     values.pocketConfig = NimbusFeatures.pocketNewtab.getAllVariables() || {};

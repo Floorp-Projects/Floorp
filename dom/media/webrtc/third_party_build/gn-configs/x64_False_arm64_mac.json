@@ -25292,7 +25292,6 @@
                 "-Wno-shorten-64-to-32"
             ],
             "defines": [
-                "MULTI_MONITOR_SCREENSHARE",
                 "_LIBCPP_HAS_NO_ALIGNED_ALLOCATION",
                 "__STDC_CONSTANT_MACROS",
                 "__STDC_FORMAT_MACROS",

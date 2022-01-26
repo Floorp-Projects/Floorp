@@ -101,6 +101,29 @@ linux64-clang-trunk:
             - linux64-toolchain-sysroot
             - wasm32-wasi-compiler-rt
 
+linux64-clang-13-stage1:
+    description: "Clang 13 toolchain build"
+    treeherder:
+        symbol: TL(clang13-stage1)
+    run-on-projects: [trunk]
+    run:
+        using: toolchain-script
+        script: build-clang.sh
+        arguments:
+            - 'build/build-clang/linux64.json'
+            - 'build/build-clang/clang-13.json'
+            - 'build/build-clang/1stage.json'
+        resources:
+            - 'build/build-clang/linux64.json'
+            - 'build/build-clang/clang-13.json'
+            - 'build/build-clang/1stage.json'
+        toolchain-alias:
+            - linux64-clang-toolchain
+        toolchain-artifact: public/build/clang.tar.zst
+    fetches:
+        fetch:
+            - clang-13
+
 linux64-clang-13:
     description: "Clang 13 toolchain build"
     attributes:
@@ -114,15 +137,19 @@ linux64-clang-13:
         arguments:
             - 'build/build-clang/linux64.json'
             - 'build/build-clang/clang-13.json'
+            - 'build/build-clang/skip-stage-1.json'
         resources:
             - 'build/build-clang/linux64.json'
             - 'build/build-clang/clang-13.json'
-        toolchain-alias: linux64-clang
+            - 'build/build-clang/skip-stage-1.json'
+        toolchain-alias:
+            - linux64-clang
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
             - clang-13
         toolchain:
+            - linux64-clang-13-stage1
             - linux64-toolchain-sysroot
             - wasm32-wasi-compiler-rt-13
 
@@ -265,7 +292,9 @@ macosx64-clang-13:
         - trunk
     run:
         script: repack-clang-linux-macosx-cross.sh
-        toolchain-alias: macosx64-clang
+        toolchain-alias:
+            - macosx64-clang
+            - macosx64-clang-toolchain
         toolchain-artifact: public/build/clang.tar.zst
     dependencies:
         macosx64-aarch64-compiler-rt-13: toolchain-macosx64-aarch64-compiler-rt-13
@@ -359,7 +388,9 @@ win64-clang-13:
             - 'build/build-clang/win64.json'
             - 'build/build-clang/clang-13.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-        toolchain-alias: win64-clang
+        toolchain-alias:
+            - win64-clang
+            - win64-clang-toolchain
         toolchain-artifact: public/build/clang.tar.zst
         tooltool-downloads: internal
     fetches:

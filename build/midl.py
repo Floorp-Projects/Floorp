@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import buildconfig
+import shutil
 import subprocess
 import os
 import sys
@@ -23,22 +24,118 @@ def relativize(path, base=None):
     return os.path.relpath(path, base)
 
 
+def search_path(paths, path):
+    for p in paths:
+        f = os.path.join(p, path)
+        if os.path.isfile(f):
+            return f
+    raise RuntimeError(f"Cannot find {path}")
+
+
+# Preprocess all the direct and indirect inputs of midl, and put all the
+# preprocessed inputs in the given `base` directory. Returns a tuple containing
+# the path of the main preprocessed input, and the modified flags to use instead
+# of the flags given as argument.
+def preprocess(base, input, flags):
+    import argparse
+    import re
+    from collections import deque
+
+    IMPORT_RE = re.compile('import\s*"([^"]+)";')
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-I", action="append")
+    parser.add_argument("-D", action="append")
+    parser.add_argument("-acf")
+    args, remainder = parser.parse_known_args(flags)
+    preprocessor = (
+        [buildconfig.substs["_CXX"]]
+        # Ideally we'd use the real midl version, but querying it adds a
+        # significant overhead to configure. In practice, the version number
+        # doesn't make a difference at the moment.
+        + ["-E", "-D__midl=801"]
+        + [f"-D{d}" for d in args.D or ()]
+        + [f"-I{i}" for i in args.I or ()]
+    )
+    includes = ["."] + buildconfig.substs["INCLUDE"].split(";") + (args.I or [])
+    seen = set()
+    queue = deque([input])
+    if args.acf:
+        queue.append(args.acf)
+    output = os.path.join(base, os.path.basename(input))
+    while True:
+        try:
+            input = queue.popleft()
+        except IndexError:
+            break
+        if os.path.basename(input) in seen:
+            continue
+        seen.add(os.path.basename(input))
+        input = search_path(includes, input)
+        # If there is a .acf file corresponding to the .idl we're processing,
+        # we also want to preprocess that file because midl might look for it too.
+        if input.endswith(".idl") and os.path.exists(input[:-4] + ".acf"):
+            queue.append(input[:-4] + ".acf")
+        command = preprocessor + [input]
+        preprocessed = os.path.join(base, os.path.basename(input))
+        subprocess.run(command, stdout=open(preprocessed, "wb"), check=True)
+        # Read the resulting file, and search for imports, that we'll want to
+        # preprocess as well.
+        with open(preprocessed, "r") as fh:
+            for line in fh:
+                if not line.startswith("import"):
+                    continue
+                m = IMPORT_RE.match(line)
+                if not m:
+                    continue
+                imp = m.group(1)
+                queue.append(imp)
+    flags = []
+    # Add -I<base> first in the flags, so that midl resolves imports to the
+    # preprocessed files we created.
+    for i in [base] + (args.I or []):
+        flags.extend(["-I", i])
+    # Add the preprocessed acf file if one was given on the command line.
+    if args.acf:
+        flags.extend(["-acf", os.path.join(base, os.path.basename(args.acf))])
+    flags.extend(remainder)
+    return output, flags
+
+
 def midl(out, input, *flags):
     out.avoid_writing_to_file()
-    midl = buildconfig.substs["MIDL"]
-    wine = buildconfig.substs.get("WINE")
+    midl_flags = buildconfig.substs["MIDL_FLAGS"]
     base = os.path.dirname(out.name) or "."
-    if midl.lower().endswith(".exe") and wine:
-        command = [wine, midl]
-    else:
-        command = [midl]
-    command.extend(buildconfig.substs["MIDL_FLAGS"])
-    command.extend([relativize(f, base) for f in flags])
-    command.append("-Oicf")
-    command.append(relativize(input, base))
-    print("Executing:", " ".join(command))
-    result = subprocess.run(command, cwd=base)
-    return result.returncode
+    tmpdir = None
+    try:
+        # If the build system is asking to not use the preprocessor to midl,
+        # we need to do the preprocessing ourselves.
+        if "-no_cpp" in midl_flags:
+            # Normally, we'd use tempfile.TemporaryDirectory, but in this specific
+            # case, we actually want a deterministic directory name, because it's
+            # recorded in the code midl generates.
+            tmpdir = os.path.join(base, os.path.basename(input) + ".tmp")
+            os.makedirs(tmpdir, exist_ok=True)
+            try:
+                input, flags = preprocess(tmpdir, input, flags)
+            except subprocess.CalledProcessError as e:
+                return e.returncode
+        midl = buildconfig.substs["MIDL"]
+        wine = buildconfig.substs.get("WINE")
+        if midl.lower().endswith(".exe") and wine:
+            command = [wine, midl]
+        else:
+            command = [midl]
+        command.extend(midl_flags)
+        command.extend([relativize(f, base) for f in flags])
+        command.append("-Oicf")
+        command.append(relativize(input, base))
+        print("Executing:", " ".join(command))
+        result = subprocess.run(command, cwd=base)
+        return result.returncode
+    finally:
+        if tmpdir:
+            shutil.rmtree(tmpdir)
 
 
 # midl outputs dlldata to a single dlldata.c file by default. This prevents running

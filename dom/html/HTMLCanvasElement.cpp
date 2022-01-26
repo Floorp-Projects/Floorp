@@ -1147,8 +1147,6 @@ void HTMLCanvasElement::InvalidateCanvasContent(const gfx::Rect* damageRect) {
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame) return;
 
-  ActiveLayerTracker::NotifyContentChange(frame);
-
   // When using layers-free WebRender, we cannot invalidate the layer (because
   // there isn't one). Instead, we mark the CanvasRenderer dirty and scheduling
   // an empty transaction which is effectively equivalent.

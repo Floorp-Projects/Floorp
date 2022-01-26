@@ -682,6 +682,7 @@ class TabBase {
    *        These options are also sent to the message handler in the
    *        `ExtensionContentChild`.
    * @param {number[]} options.frameIds
+   *        When omitted, all frames will be queried.
    * @param {boolean} options.returnResultsWithFrameIds
    * @returns {Promise[]}
    */

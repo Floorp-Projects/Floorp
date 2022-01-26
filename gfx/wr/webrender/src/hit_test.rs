@@ -391,51 +391,52 @@ impl HitTester {
             }
 
             // Only consider hit tests on transformable layers.
-            if let Some(point_in_layer) = point_in_layer {
-                // If the item's rect or clip rect don't contain this point,
-                // it's not a valid hit.
-                if !item.rect.contains(point_in_layer) {
-                    continue;
-                }
-                if !item.clip_rect.contains(point_in_layer) {
-                    continue;
-                }
+            let point_in_layer = match point_in_layer {
+                Some(p) => p,
+                None => continue,
+            };
 
-                // See if any of the clips for this primitive cull out the item.
-                let mut is_valid = true;
-                let clip_nodes = &self.scene.clip_nodes[item.clip_nodes_range.start.0 as usize .. item.clip_nodes_range.end.0 as usize];
-                for clip_node in clip_nodes {
-                    let transform = self
-                        .spatial_nodes[&clip_node.spatial_node_index]
-                        .world_content_transform;
-                    let transformed_point = match transform
-                        .inverse()
-                        .and_then(|inverted| inverted.transform_point2d(test.point))
-                    {
-                        Some(point) => point,
-                        None => {
-                            continue;
-                        }
-                    };
-                    if !clip_node.region.contains(&transformed_point) {
-                        is_valid = false;
-                        break;
-                    }
-                }
-                if !is_valid {
-                    continue;
-                }
-
-                // Don't hit items with backface-visibility:hidden if they are facing the back.
-                if !item.is_backface_visible && scroll_node.world_content_transform.is_backface_visible() {
-                    continue;
-                }
-
-                result.items.push(HitTestItem {
-                    pipeline: pipeline_id,
-                    tag: item.tag,
-                });
+            // If the item's rect or clip rect don't contain this point, it's
+            // not a valid hit.
+            if !item.rect.contains(point_in_layer) {
+                continue;
             }
+
+            if !item.clip_rect.contains(point_in_layer) {
+                continue;
+            }
+
+            // See if any of the clips for this primitive cull out the item.
+            let clip_nodes = &self.scene.clip_nodes[item.clip_nodes_range.start.0 as usize .. item.clip_nodes_range.end.0 as usize];
+            let is_valid = clip_nodes.iter().all(|clip_node| {
+                let transform = self
+                    .spatial_nodes[&clip_node.spatial_node_index]
+                    .world_content_transform;
+                let transformed_point = match transform
+                    .inverse()
+                    .and_then(|inverted| inverted.transform_point2d(test.point))
+                {
+                    Some(point) => point,
+                    // XXX This `return true` is a bit sketchy, but matches
+                    // pre-existing behavior.
+                    None => return true,
+                };
+                clip_node.region.contains(&transformed_point)
+            });
+
+            if !is_valid {
+                continue;
+            }
+
+            // Don't hit items with backface-visibility:hidden if they are facing the back.
+            if !item.is_backface_visible && scroll_node.world_content_transform.is_backface_visible() {
+                continue;
+            }
+
+            result.items.push(HitTestItem {
+                pipeline: pipeline_id,
+                tag: item.tag,
+            });
         }
 
         result.items.dedup();

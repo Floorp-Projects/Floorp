@@ -11,6 +11,7 @@ path = "lib.rs"
 arrayvec = "0.5"
 
 [build-dependencies]
+mozbuild = "0.1"
 cc = "1"
 rustc_version = "0.2"
 

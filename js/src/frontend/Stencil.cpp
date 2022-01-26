@@ -47,7 +47,7 @@
 #include "vm/JSScript.h"      // BaseScript, JSScript
 #include "vm/Printer.h"       // js::Fprinter
 #include "vm/RegExpObject.h"  // js::RegExpObject
-#include "vm/Scope.h"  // Scope, *Scope, ScopeKind::*, ScopeKindString, ScopeIter, ScopeKindIsCatch, BindingIter, GetScopeDataTrailingNames
+#include "vm/Scope.h"  // Scope, *Scope, ScopeKind::*, ScopeKindString, ScopeIter, ScopeKindIsCatch, BindingIter, GetScopeDataTrailingNames, SizeOfParserScopeData
 #include "vm/ScopeKind.h"    // ScopeKind
 #include "vm/SelfHosting.h"  // SetClonedSelfHostedFunctionName
 #include "vm/StaticStrings.h"
@@ -2287,6 +2287,14 @@ ExtensibleCompilationStencil::ExtensibleCompilationStencil(
       source(input.source),
       parserAtoms(cx->runtime(), alloc) {}
 
+ExtensibleCompilationStencil::ExtensibleCompilationStencil(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    RefPtr<ScriptSource> source)
+    : canLazilyParse(CanLazilyParse(options)),
+      alloc(CompilationStencil::LifoAllocChunkSize),
+      source(std::move(source)),
+      parserAtoms(cx->runtime(), alloc) {}
+
 CompilationState::CompilationState(JSContext* cx,
                                    LifoAllocScope& parserAllocScope,
                                    CompilationInput& input)
@@ -2379,6 +2387,44 @@ bool SharedDataContainer::prepareStorageFor(JSContext* cx,
     }
   }
 
+  return true;
+}
+
+bool SharedDataContainer::cloneFrom(JSContext* cx,
+                                    const SharedDataContainer& other) {
+  MOZ_ASSERT(isEmpty());
+
+  if (other.isBorrow()) {
+    return cloneFrom(cx, *other.asBorrow());
+  }
+
+  if (other.isSingle()) {
+    // As we clone, we add an extra reference.
+    RefPtr<SharedImmutableScriptData> ref(other.asSingle());
+    setSingle(ref.forget());
+  } else if (other.isVector()) {
+    if (!initVector(cx)) {
+      return false;
+    }
+    if (!asVector()->appendAll(*other.asVector())) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+  } else if (other.isMap()) {
+    if (!initMap(cx)) {
+      return false;
+    }
+    auto& otherMap = *other.asMap();
+    if (!asMap()->reserve(otherMap.count())) {
+      ReportOutOfMemory(cx);
+      return false;
+    }
+    auto& map = *asMap();
+    for (auto iter = otherMap.iter(); !iter.done(); iter.next()) {
+      auto& entry = iter.get();
+      map.putNewInfallible(entry.key(), entry.value());
+    }
+  }
   return true;
 }
 
@@ -2560,6 +2606,24 @@ template <typename T, typename VectorT>
   return true;
 }
 
+template <typename T, typename IntoSpanT, size_t Inline, typename AllocPolicy>
+[[nodiscard]] bool CopyToVector(JSContext* cx,
+                                mozilla::Vector<T, Inline, AllocPolicy>& vec,
+                                const IntoSpanT& source) {
+  mozilla::Span<const T> span = source;
+  return CopySpanToVector(cx, vec, span);
+}
+
+// Span and Vector do not share the same method names.
+template <typename T, size_t Inline, typename AllocPolicy>
+size_t GetLength(const mozilla::Vector<T, Inline, AllocPolicy>& vec) {
+  return vec.length();
+}
+template <typename T>
+size_t GetLength(const mozilla::Span<T>& span) {
+  return span.Length();
+}
+
 // Copy scope names from `src` into `alloc`, and returns the allocated data.
 BaseParserScopeData* CopyScopeData(JSContext* cx, LifoAlloc& alloc,
                                    ScopeKind kind,
@@ -2576,6 +2640,125 @@ BaseParserScopeData* CopyScopeData(JSContext* cx, LifoAlloc& alloc,
   memcpy(dest, src, dataSize);
 
   return dest;
+}
+
+template <typename Stencil>
+bool ExtensibleCompilationStencil::cloneFromImpl(JSContext* cx,
+                                                 const Stencil& other) {
+  MOZ_ASSERT(alloc.isEmpty());
+
+  canLazilyParse = other.canLazilyParse;
+  functionKey = other.functionKey;
+
+  if (!CopyToVector(cx, scriptData, other.scriptData)) {
+    return false;
+  }
+
+  if (!CopyToVector(cx, scriptExtra, other.scriptExtra)) {
+    return false;
+  }
+
+  if (!CopyToVector(cx, gcThingData, other.gcThingData)) {
+    return false;
+  }
+
+  size_t scopeSize = GetLength(other.scopeData);
+  if (!CopyToVector(cx, scopeData, other.scopeData)) {
+    return false;
+  }
+  if (!scopeNames.reserve(scopeSize)) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  for (size_t i = 0; i < scopeSize; i++) {
+    if (other.scopeNames[i]) {
+      BaseParserScopeData* data = CopyScopeData(
+          cx, alloc, other.scopeData[i].kind(), other.scopeNames[i]);
+      if (!data) {
+        return false;
+      }
+      scopeNames.infallibleEmplaceBack(data);
+    } else {
+      scopeNames.infallibleEmplaceBack(nullptr);
+    }
+  }
+
+  if (!CopyToVector(cx, regExpData, other.regExpData)) {
+    return false;
+  }
+
+  // If CompilationStencil has external dependency, peform deep copy.
+
+  size_t bigIntSize = GetLength(other.bigIntData);
+  if (!bigIntData.resize(bigIntSize)) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  for (size_t i = 0; i < bigIntSize; i++) {
+    if (!bigIntData[i].init(cx, alloc, other.bigIntData[i].source())) {
+      return false;
+    }
+  }
+
+  size_t objLiteralSize = GetLength(other.objLiteralData);
+  if (!objLiteralData.reserve(objLiteralSize)) {
+    js::ReportOutOfMemory(cx);
+    return false;
+  }
+  for (const auto& data : other.objLiteralData) {
+    size_t length = data.code().size();
+    auto* code = alloc.newArrayUninitialized<uint8_t>(length);
+    if (!code) {
+      js::ReportOutOfMemory(cx);
+      return false;
+    }
+    memcpy(code, data.code().data(), length);
+    objLiteralData.infallibleEmplaceBack(code, length, data.kind(),
+                                         data.flags(), data.propertyCount());
+  }
+
+  // Regardless of whether CompilationStencil has external dependency or not,
+  // ParserAtoms should be interned, to populate internal HashMap.
+  for (const auto* entry : other.parserAtomsSpan()) {
+    if (!entry) {
+      if (!parserAtoms.addPlaceholder(cx)) {
+        return false;
+      }
+      continue;
+    }
+
+    auto index = parserAtoms.internExternalParserAtom(cx, entry);
+    if (!index) {
+      return false;
+    }
+  }
+
+  // We copy the stencil and increment the reference count of each
+  // SharedImmutableScriptData.
+  if (!sharedData.cloneFrom(cx, other.sharedData)) {
+    return false;
+  }
+
+  // Note: moduleMetadata and asmJS are known after the first parse, and are
+  // not mutated by any delazifications later on. Thus we can safely increment
+  // the reference counter and keep these as-is.
+  moduleMetadata = other.moduleMetadata;
+  asmJS = other.asmJS;
+
+#ifdef DEBUG
+  assertNoExternalDependency();
+#endif
+
+  return true;
+}
+
+bool ExtensibleCompilationStencil::cloneFrom(JSContext* cx,
+                                             const CompilationStencil& other) {
+  return cloneFromImpl(cx, other);
+}
+bool ExtensibleCompilationStencil::cloneFrom(
+    JSContext* cx, const ExtensibleCompilationStencil& other) {
+  return cloneFromImpl(cx, other);
 }
 
 bool ExtensibleCompilationStencil::steal(JSContext* cx,
@@ -2620,19 +2803,23 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
     return true;
   }
 
+  if (storageType == StorageType::Borrowed) {
+    return cloneFrom(cx, *other);
+  }
+
+  MOZ_ASSERT(storageType == StorageType::Owned);
+
   canLazilyParse = other->canLazilyParse;
   functionKey = other->functionKey;
 
-  if (storageType == StorageType::Owned) {
 #ifdef DEBUG
-    other->assertNoExternalDependency();
-    MOZ_ASSERT(other->refCount == 1);
+  other->assertNoExternalDependency();
+  MOZ_ASSERT(other->refCount == 1);
 #endif
 
-    // If CompilationStencil has no external dependency,
-    // steal LifoAlloc and perform shallow copy.
-    alloc.steal(&other->alloc);
-  }
+  // If CompilationStencil has no external dependency,
+  // steal LifoAlloc and perform shallow copy.
+  alloc.steal(&other->alloc);
 
   if (!CopySpanToVector(cx, scriptData, other->scriptData)) {
     return false;
@@ -2646,81 +2833,23 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
     return false;
   }
 
-  if (storageType == StorageType::Borrowed) {
-    size_t scopeSize = other->scopeData.size();
-
-    if (!CopySpanToVector(cx, scopeData, other->scopeData)) {
-      return false;
-    }
-    if (!scopeNames.reserve(scopeSize)) {
-      js::ReportOutOfMemory(cx);
-      return false;
-    }
-    for (size_t i = 0; i < scopeSize; i++) {
-      if (other->scopeNames[i]) {
-        BaseParserScopeData* data = CopyScopeData(
-            cx, alloc, other->scopeData[i].kind(), other->scopeNames[i]);
-        if (!data) {
-          return false;
-        }
-        scopeNames.infallibleEmplaceBack(data);
-      } else {
-        scopeNames.infallibleEmplaceBack(nullptr);
-      }
-    }
-  } else {
-    if (!CopySpanToVector(cx, scopeData, other->scopeData)) {
-      return false;
-    }
-    if (!CopySpanToVector(cx, scopeNames, other->scopeNames)) {
-      return false;
-    }
+  if (!CopySpanToVector(cx, scopeData, other->scopeData)) {
+    return false;
+  }
+  if (!CopySpanToVector(cx, scopeNames, other->scopeNames)) {
+    return false;
   }
 
   if (!CopySpanToVector(cx, regExpData, other->regExpData)) {
     return false;
   }
 
-  if (storageType == StorageType::Borrowed) {
-    // If CompilationStencil has external dependency, peform deep copy.
-
-    size_t bigIntSize = other->bigIntData.size();
-    if (!bigIntData.resize(bigIntSize)) {
-      js::ReportOutOfMemory(cx);
-      return false;
-    }
-    for (size_t i = 0; i < bigIntSize; i++) {
-      if (!bigIntData[i].init(cx, alloc, other->bigIntData[i].source())) {
-        return false;
-      }
-    }
-  } else {
-    if (!CopySpanToVector(cx, bigIntData, other->bigIntData)) {
-      return false;
-    }
+  if (!CopySpanToVector(cx, bigIntData, other->bigIntData)) {
+    return false;
   }
 
-  if (storageType == StorageType::Borrowed) {
-    size_t objLiteralSize = other->objLiteralData.size();
-    if (!objLiteralData.reserve(objLiteralSize)) {
-      js::ReportOutOfMemory(cx);
-      return false;
-    }
-    for (const auto& data : other->objLiteralData) {
-      size_t length = data.code().size();
-      auto* code = alloc.newArrayUninitialized<uint8_t>(length);
-      if (!code) {
-        js::ReportOutOfMemory(cx);
-        return false;
-      }
-      memcpy(code, data.code().data(), length);
-      objLiteralData.infallibleEmplaceBack(code, length, data.kind(),
-                                           data.flags(), data.propertyCount());
-    }
-  } else {
-    if (!CopySpanToVector(cx, objLiteralData, other->objLiteralData)) {
-      return false;
-    }
+  if (!CopySpanToVector(cx, objLiteralData, other->objLiteralData)) {
+    return false;
   }
 
   // Regardless of whether CompilationStencil has external dependency or not,
@@ -4331,6 +4460,10 @@ bool CompilationStencilMerger::addDelazification(
                        mapAtomIndex, mapScopeIndex,
                        i == CompilationStencil::TopLevelIndex);
   }
+
+  // WARNING: moduleMetadata and asmJS fields are known at script/module
+  // top-level parsing, any mutation made in this function should be reflected
+  // to ExtensibleCompilationStencil::steal and CompilationStencil::clone.
 
   // Function shouldn't be a module.
   MOZ_ASSERT(!delazification.moduleMetadata);
