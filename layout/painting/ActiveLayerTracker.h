@@ -109,21 +109,6 @@ class ActiveLayerTracker {
    * frame after the frame has been created.
    */
   static void TransferActivityToFrame(nsIContent* aContent, nsIFrame* aFrame);
-
-  /*
-   * We track modifications to the content of certain frames (i.e. canvas
-   * frames) and use that to make layering decisions.
-   */
-
-  /**
-   * Mark aFrame's content as being active. This marking will time out after
-   * a short period.
-   */
-  static void NotifyContentChange(nsIFrame* aFrame);
-  /**
-   * Return true if this frame's content is still marked as active.
-   */
-  static bool IsContentActive(nsIFrame* aFrame);
 };
 
 }  // namespace mozilla
