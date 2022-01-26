@@ -145,7 +145,7 @@ class Components(private val context: Context) {
     }
 
     val wallpaperManager by lazyMonitored {
-        WallpaperManager(settings, WallpapersAssetsStorage(context), analytics.metrics)
+        WallpaperManager(settings, WallpapersAssetsStorage(context))
     }
 
     val analytics by lazyMonitored { Analytics(context) }

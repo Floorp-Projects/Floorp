@@ -911,12 +911,31 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.WallpaperFeatureDiscovered -> EventWrapper<NoExtraKeys>(
             { Wallpapers.discoveredWallpaperFeature.set(true) }
         )
-        is Event.NewWallpaperApplied -> EventWrapper<NoExtraKeys>(
+        is Event.WallpaperSelected -> EventWrapper<NoExtraKeys>(
             {
-                Wallpapers.newWallpaperApplied.record(
-                    Wallpapers.NewWallpaperAppliedExtra(
+                Wallpapers.wallpaperSelected.record(
+                    Wallpapers.WallpaperSelectedExtra(
                         name = this.wallpaper.name,
                         themeCollection = this.wallpaper.themeCollection::class.simpleName,
+                    ),
+                )
+            }
+        )
+        is Event.WallpaperSwitched -> EventWrapper<NoExtraKeys>(
+            {
+                Wallpapers.wallpaperSwitched.record(
+                    Wallpapers.WallpaperSwitchedExtra(
+                        name = this.wallpaper.name,
+                        themeCollection = this.wallpaper.themeCollection::class.simpleName,
+                    ),
+                )
+            }
+        )
+        is Event.ChangeWallpaperWithLogoToggled -> EventWrapper<NoExtraKeys>(
+            {
+                Wallpapers.changeWallpaperLogoToggled.record(
+                    Wallpapers.ChangeWallpaperLogoToggledExtra(
+                        checked = this.checked,
                     ),
                 )
             }

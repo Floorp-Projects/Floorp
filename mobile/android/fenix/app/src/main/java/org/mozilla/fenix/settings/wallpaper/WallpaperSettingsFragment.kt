@@ -58,12 +58,14 @@ class WallpaperSettingsFragment : Fragment() {
                         onSelectWallpaper = { selectedWallpaper: Wallpaper ->
                             currentWallpaper = selectedWallpaper
                             wallpaperManager.currentWallpaper = selectedWallpaper
+                            metrics.track(Event.WallpaperSelected(selectedWallpaper))
                         },
                         onViewWallpaper = { findNavController().navigate(R.id.homeFragment) },
                         tapLogoSwitchChecked = wallpapersSwitchedByLogo,
                         onTapLogoSwitchCheckedChange = {
                             settings.wallpapersSwitchedByLogoTap = it
                             wallpapersSwitchedByLogo = it
+                            metrics.track(Event.ChangeWallpaperWithLogoToggled(it))
                         }
                     )
                 }

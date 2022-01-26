@@ -6970,17 +6970,55 @@ wallpapers:
     data_sensitivity:
       - interaction
     expires: "2023-05-01"
-  new_wallpaper_applied:
+  wallpaper_selected:
     type: event
     description: |
-      An event that is fired when a new wallpaper is applied to the home screen.
+      A wallpaper is selected from the settings screen.
     extra_keys:
       name:
-        description: The name of the applied wallpaper
+        description: The name of the selected wallpaper
         type: string
       theme_collection:
-        description: The theme collection the applied wallpaper belongs to.
+        description: The theme collection the selected wallpaper belongs to.
         type: string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23381
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23382
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: "2023-05-01"
+  wallpaper_switched:
+    type: event
+    description: |
+      The wallpaper was switched by using the homescreen toggle.
+    extra_keys:
+      name:
+        description: The name of the new wallpaper
+        type: string
+      theme_collection:
+        description: The theme collection the new wallpaper belongs to.
+        type: string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23381
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23382
+    notification_emails:
+      - android-probes@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: "2023-05-01"
+  change_wallpaper_logo_toggled:
+    type: event
+    description: |
+      A user has toggled the switch that controls the tap-logo-to-change-
+      wallpaper feature.
+    extra_keys:
+      checked:
+        description: Whether the switch is enabled or disabled.
+        type: boolean
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/23381
     data_reviews:

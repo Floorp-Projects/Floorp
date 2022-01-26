@@ -14,8 +14,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.utils.Settings
 
@@ -26,7 +24,6 @@ import org.mozilla.fenix.utils.Settings
 class WallpaperManager(
     private val settings: Settings,
     private val wallpaperStorage: WallpaperStorage,
-    private val metrics: MetricController,
 ) {
     val logger = Logger("WallpaperManager")
     var availableWallpapers: List<Wallpaper> = loadWallpapers()
@@ -52,7 +49,6 @@ class WallpaperManager(
             wallpaperContainer.background = BitmapDrawable(context.resources, bitmap)
         }
         currentWallpaper = newWallpaper
-        metrics.track(Event.NewWallpaperApplied(newWallpaper))
 
         adjustTheme(wallpaperContainer.context)
     }
