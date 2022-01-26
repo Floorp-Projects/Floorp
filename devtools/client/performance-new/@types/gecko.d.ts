@@ -169,6 +169,7 @@ declare namespace MockedExports {
     };
     wm: {
       getMostRecentWindow: (name: string) => ChromeWindow;
+      getMostRecentNonPBWindow: (name: string) => ChromeWindow;
     };
     focus: {
       activeWindow: ChromeWindow;

@@ -14,6 +14,7 @@
  * @typedef {import("./@types/perf").MinimallyTypedGeckoProfile} MinimallyTypedGeckoProfile
  * @typedef {import("./@types/perf").ProfileCaptureResult} ProfileCaptureResult
  * @typedef {import("./@types/perf").ProfilerViewMode} ProfilerViewMode
+ * @typedef {import("./@types/perf").RootTraits} RootTraits
  */
 "use strict";
 
@@ -89,10 +90,13 @@ const {
  * Initialize the panel by creating a redux store, and render the root component.
  *
  * @param {PerfFront} perfFront - The Perf actor's front. Used to start and stop recordings.
+ * @param {RootTraits} traits - The traits coming from the root actor. This
+ *                              makes it possible to change some code path
+ *                              depending on the server version.
  * @param {PageContext} pageContext - The context that the UI is being loaded in under.
  * @param {(() => void)?} openAboutProfiling - Optional call to open about:profiling
  */
-async function gInit(perfFront, pageContext, openAboutProfiling) {
+async function gInit(perfFront, traits, pageContext, openAboutProfiling) {
   const store = createStore(reducers);
   const isSupportedPlatform = await perfFront.isSupportedPlatform();
   const supportedFeatures = await perfFront.getSupportedFeatures();
