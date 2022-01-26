@@ -336,7 +336,7 @@ async function captureProfile(pageContext) {
   );
 
   const { openProfilerTab } = lazy.BrowserModule();
-  const browser = openProfilerTab(profilerViewMode);
+  const browser = await openProfilerTab(profilerViewMode);
   registerProfileCaptureForBrowser(
     browser,
     profileCaptureResult,
