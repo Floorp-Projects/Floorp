@@ -947,6 +947,36 @@ def strip_flags(flags, profiling, target):
 set_config("STRIP_FLAGS", strip_flags)
 
 
+@depends(llvm_tool("llvm-strip"), toolchain_prefix)
+def strip(llvm_strip, toolchain_prefix):
+    commands = [llvm_strip[0], "strip"]
+    for prefix in toolchain_prefix or ():
+        commands.insert(1, "%sstrip" % prefix)
+    return tuple(commands)
+
+
+def validate_strip(path):
+    if "llvm-strip" not in path:
+        return True
+    # llvm-strip doesn't support -S before llvm 8.0.
+    retcode, stdout, stderr = get_cmd_output(path, "--help")
+    return retcode == 0 and any(l.startswith("  -S ") for l in stdout.splitlines())
+
+
+@depends("--enable-compile-environment", target, host)
+def strip_when(compile_env, target, host):
+    return compile_env and any(x.kernel != "WINNT" for x in (target, host))
+
+
+check_prog(
+    "STRIP",
+    strip,
+    when=strip_when,
+    paths=clang_search_path,
+    validate=validate_strip,
+)
+
+
 @depends(js_standalone, target)
 def system_zlib_default(js_standalone, target):
     return js_standalone and target.kernel not in ("WINNT", "Darwin")
