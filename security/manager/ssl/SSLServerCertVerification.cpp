@@ -688,34 +688,6 @@ static void CollectCertTelemetry(
   }
 }
 
-static void AuthCertificateSetResults(
-    TransportSecurityInfo* aInfoObject, const nsCOMPtr<nsIX509Cert>& aCert,
-    nsTArray<nsTArray<uint8_t>>&& aBuiltCertChain,
-    nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
-    uint16_t aCertificateTransparencyStatus, EVStatus aEvStatus,
-    bool aSucceeded, bool aIsBuiltCertChainRootBuiltInRoot) {
-  MOZ_ASSERT(aInfoObject);
-  if (aSucceeded) {
-    // Certificate verification succeeded. Delete any potential record of
-    // certificate error bits.
-    RememberCertErrorsTable::GetInstance().RememberCertHasError(aInfoObject,
-                                                                SECSuccess);
-
-    aInfoObject->SetServerCert(aCert, aEvStatus);
-    aInfoObject->SetSucceededCertChain(std::move(aBuiltCertChain));
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("AuthCertificate setting NEW cert"));
-
-    aInfoObject->SetIsBuiltCertChainRootBuiltInRoot(
-        aIsBuiltCertChainRootBuiltInRoot);
-    aInfoObject->SetCertificateTransparencyStatus(
-        aCertificateTransparencyStatus);
-  } else {
-    // Certificate validation failed; store the peer certificate chain on
-    // infoObject so it can be used for error reporting.
-    aInfoObject->SetFailedCertChain(std::move(aPeerCertChain));
-  }
-}
-
 // Note: Takes ownership of |peerCertChain| if SECSuccess is not returned.
 Result AuthCertificate(
     CertVerifier& certVerifier, void* aPinArg,
@@ -885,7 +857,6 @@ static nsTArray<nsTArray<uint8_t>> CreateCertBytesArray(
 /*static*/
 SECStatus SSLServerCertVerificationJob::Dispatch(
     uint64_t addrForLogging, void* aPinArg,
-    const UniqueCERTCertificate& serverCert,
     nsTArray<nsTArray<uint8_t>>&& peerCertChain, const nsACString& aHostName,
     int32_t aPort, const OriginAttributes& aOriginAttributes,
     Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
@@ -894,9 +865,10 @@ SECStatus SSLServerCertVerificationJob::Dispatch(
     uint32_t certVerifierFlags,
     BaseSSLServerCertVerificationResult* aResultTask) {
   // Runs on the socket transport thread
-  if (!aResultTask || !serverCert) {
-    NS_ERROR("Invalid parameters for SSL server cert validation");
-    PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+  if (!aResultTask || peerCertChain.IsEmpty()) {
+    MOZ_ASSERT_UNREACHABLE(
+        "must have result task and non-empty peer cert chain");
+    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
     return SECFailure;
   }
 
@@ -906,9 +878,9 @@ SECStatus SSLServerCertVerificationJob::Dispatch(
   }
 
   RefPtr<SSLServerCertVerificationJob> job(new SSLServerCertVerificationJob(
-      addrForLogging, aPinArg, serverCert, std::move(peerCertChain), aHostName,
-      aPort, aOriginAttributes, stapledOCSPResponse, sctsFromTLSExtension,
-      dcInfo, providerFlags, time, certVerifierFlags, aResultTask));
+      addrForLogging, aPinArg, std::move(peerCertChain), aHostName, aPort,
+      aOriginAttributes, stapledOCSPResponse, sctsFromTLSExtension, dcInfo,
+      providerFlags, time, certVerifierFlags, aResultTask));
 
   nsresult nrv = gCertVerificationThreadPool->Dispatch(job, NS_DISPATCH_NORMAL);
   if (NS_FAILED(nrv)) {
@@ -948,14 +920,13 @@ SSLServerCertVerificationJob::Run() {
   CertificateTransparencyInfo certificateTransparencyInfo;
   bool isCertChainRootBuiltInRoot = false;
   nsTArray<nsTArray<uint8_t>> builtChainBytesArray;
-  nsTArray<uint8_t> certBytes(mCert->derCert.data, mCert->derCert.len);
+  nsTArray<uint8_t> certBytes(mPeerCertChain.ElementAt(0).Clone());
   Result rv = AuthCertificate(
       *certVerifier, mPinArg, certBytes, mPeerCertChain, mHostName,
       mOriginAttributes, mStapledOCSPResponse, mSCTsFromTLSExtension, mDCInfo,
       mProviderFlags, mTime, mCertVerifierFlags, builtChainBytesArray, evStatus,
       certificateTransparencyInfo, isCertChainRootBuiltInRoot);
 
-  nsCOMPtr<nsIX509Cert> cert(new nsNSSCertificate(mCert.get()));
   if (rv == Success) {
     Telemetry::AccumulateTimeDelta(
         Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_MOZILLAPKIX, jobStartTime,
@@ -963,7 +934,7 @@ SSLServerCertVerificationJob::Run() {
     Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, 1);
 
     mResultTask->Dispatch(
-        cert, std::move(builtChainBytesArray), std::move(mPeerCertChain),
+        std::move(builtChainBytesArray), std::move(mPeerCertChain),
         TransportSecurityInfo::ConvertCertificateTransparencyInfoToStatus(
             certificateTransparencyInfo),
         evStatus, true, 0, 0, isCertChainRootBuiltInRoot, mProviderFlags);
@@ -976,13 +947,14 @@ SSLServerCertVerificationJob::Run() {
 
   PRErrorCode error = MapResultToPRErrorCode(rv);
   uint32_t collectedErrors = 0;
+  nsCOMPtr<nsIX509Cert> cert(new nsNSSCertificate(std::move(certBytes)));
   PRErrorCode finalError = AuthCertificateParseResults(
       mAddrForLogging, mHostName, mPort, mOriginAttributes, cert,
       mProviderFlags, mTime, error, collectedErrors);
 
   // NB: finalError may be 0 here, in which the connection will continue.
   mResultTask->Dispatch(
-      cert, std::move(builtChainBytesArray), std::move(mPeerCertChain),
+      std::move(builtChainBytesArray), std::move(mPeerCertChain),
       nsITransportSecurityInfo::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE,
       EVStatus::NotEV, false, finalError, collectedErrors, false,
       mProviderFlags);
@@ -993,8 +965,7 @@ SSLServerCertVerificationJob::Run() {
 //  checks and calls SSLServerCertVerificationJob::Dispatch.
 SECStatus AuthCertificateHookInternal(
     TransportSecurityInfo* infoObject, const void* aPtrForLogging,
-    const UniqueCERTCertificate& serverCert, const nsACString& hostName,
-    nsTArray<nsTArray<uint8_t>>&& peerCertChain,
+    const nsACString& hostName, nsTArray<nsTArray<uint8_t>>&& peerCertChain,
     Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
     Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
     Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags,
@@ -1004,7 +975,7 @@ SECStatus AuthCertificateHookInternal(
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("[%p] starting AuthCertificateHookInternal\n", aPtrForLogging));
 
-  if (!infoObject || !serverCert) {
+  if (!infoObject || peerCertChain.IsEmpty()) {
     PR_SetError(PR_INVALID_STATE_ERROR, 0);
     return SECFailure;
   }
@@ -1036,7 +1007,7 @@ SECStatus AuthCertificateHookInternal(
 
   if (XRE_IsSocketProcess()) {
     return RemoteProcessCertVerification(
-        serverCert, std::move(peerCertChain), hostName, infoObject->GetPort(),
+        std::move(peerCertChain), hostName, infoObject->GetPort(),
         infoObject->GetOriginAttributes(), stapledOCSPResponse,
         sctsFromTLSExtension, dcInfo, providerFlags, certVerifierFlags,
         resultTask);
@@ -1047,7 +1018,7 @@ SECStatus AuthCertificateHookInternal(
   // and we *want* to do certificate verification on a background thread
   // because of the performance benefits of doing so.
   return SSLServerCertVerificationJob::Dispatch(
-      addr, infoObject, serverCert, std::move(peerCertChain), hostName,
+      addr, infoObject, std::move(peerCertChain), hostName,
       infoObject->GetPort(), infoObject->GetOriginAttributes(),
       stapledOCSPResponse, sctsFromTLSExtension, dcInfo, providerFlags, Now(),
       certVerifierFlags, resultTask);
@@ -1151,10 +1122,10 @@ SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
   const nsACString& hostname =
       verifyToEchPublicName ? echPublicName : socketInfo->GetHostName();
   socketInfo->SetCertVerificationWaiting();
-  rv = AuthCertificateHookInternal(
-      socketInfo, static_cast<const void*>(fd), serverCert, hostname,
-      std::move(peerCertsBytes), stapledOCSPResponse, sctsFromTLSExtension,
-      dcInfo, providerFlags, certVerifierFlags);
+  rv = AuthCertificateHookInternal(socketInfo, static_cast<const void*>(fd),
+                                   hostname, std::move(peerCertsBytes),
+                                   stapledOCSPResponse, sctsFromTLSExtension,
+                                   dcInfo, providerFlags, certVerifierFlags);
   return rv;
 }
 
@@ -1168,16 +1139,6 @@ SECStatus AuthCertificateHookWithInfo(
     Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension, uint32_t providerFlags) {
   if (peerCertChain.IsEmpty()) {
     PR_SetError(PR_INVALID_STATE_ERROR, 0);
-    return SECFailure;
-  }
-
-  SECItem der = {SECItemType::siBuffer, peerCertChain[0].Elements(),
-                 (uint32_t)peerCertChain[0].Length()};
-  UniqueCERTCertificate cert(CERT_NewTempCertificate(
-      CERT_GetDefaultCertDB(), &der, nullptr, false, true));
-  if (!cert) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("AuthCertificateHookWithInfo: cert failed"));
     return SECFailure;
   }
 
@@ -1200,8 +1161,8 @@ SECStatus AuthCertificateHookWithInfo(
   // for Delegated Credentials.
   Maybe<DelegatedCredentialInfo> dcInfo;
 
-  return AuthCertificateHookInternal(infoObject, aPtrForLogging, cert,
-                                     aHostName, std::move(peerCertChain),
+  return AuthCertificateHookInternal(infoObject, aPtrForLogging, aHostName,
+                                     std::move(peerCertChain),
                                      stapledOCSPResponse, sctsFromTLSExtension,
                                      dcInfo, providerFlags, certVerifierFlags);
 }
@@ -1220,12 +1181,11 @@ SSLServerCertVerificationResult::SSLServerCertVerificationResult(
       mProviderFlags(0) {}
 
 void SSLServerCertVerificationResult::Dispatch(
-    nsCOMPtr<nsIX509Cert> aCert, nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
+    nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
     bool aSucceeded, PRErrorCode aFinalError, uint32_t aCollectedErrors,
     bool aIsBuiltCertChainRootBuiltInRoot, uint32_t aProviderFlags) {
-  mCert = aCert;
   mBuiltChain = std::move(aBuiltChain);
   mPeerCertChain = std::move(aPeerCertChain);
   mCertificateTransparencyStatus = aCertificateTransparencyStatus;
@@ -1235,6 +1195,18 @@ void SSLServerCertVerificationResult::Dispatch(
   mCollectedErrors = aCollectedErrors;
   mIsBuiltCertChainRootBuiltInRoot = aIsBuiltCertChainRootBuiltInRoot;
   mProviderFlags = aProviderFlags;
+
+  if (mSucceeded && mBuiltChain.IsEmpty()) {
+    MOZ_ASSERT_UNREACHABLE(
+        "if the handshake succeeded, the built chain shouldn't be empty");
+    mSucceeded = false;
+    mFinalError = SEC_ERROR_LIBRARY_FAILURE;
+  }
+  if (!mSucceeded && mPeerCertChain.IsEmpty()) {
+    MOZ_ASSERT_UNREACHABLE(
+        "if the handshake failed, the peer chain shouldn't be empty");
+    mFinalError = SEC_ERROR_LIBRARY_FAILURE;
+  }
 
   nsresult rv;
   nsCOMPtr<nsIEventTarget> stsTarget =
@@ -1265,14 +1237,34 @@ SSLServerCertVerificationResult::Run() {
     SaveIntermediateCerts(mBuiltChain);
   }
 
-  AuthCertificateSetResults(mInfoObject, mCert, std::move(mBuiltChain),
-                            std::move(mPeerCertChain),
-                            mCertificateTransparencyStatus, mEVStatus,
-                            mSucceeded, mIsBuiltCertChainRootBuiltInRoot);
+  if (mSucceeded) {
+    // Certificate verification succeeded. Delete any potential record of
+    // certificate error bits.
+    RememberCertErrorsTable::GetInstance().RememberCertHasError(mInfoObject,
+                                                                SECSuccess);
 
-  if (!mSucceeded && mCollectedErrors != 0) {
-    mInfoObject->SetStatusErrorBits(mCert, mCollectedErrors);
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("SSLServerCertVerificationResult::Run setting NEW cert"));
+    nsTArray<uint8_t> certBytes(mBuiltChain.ElementAt(0).Clone());
+    nsCOMPtr<nsIX509Cert> cert(new nsNSSCertificate(std::move(certBytes)));
+    mInfoObject->SetServerCert(cert, mEVStatus);
+    mInfoObject->SetSucceededCertChain(std::move(mBuiltChain));
+
+    mInfoObject->SetIsBuiltCertChainRootBuiltInRoot(
+        mIsBuiltCertChainRootBuiltInRoot);
+    mInfoObject->SetCertificateTransparencyStatus(
+        mCertificateTransparencyStatus);
+  } else {
+    nsTArray<uint8_t> certBytes(mPeerCertChain.ElementAt(0).Clone());
+    nsCOMPtr<nsIX509Cert> cert(new nsNSSCertificate(std::move(certBytes)));
+    // Certificate validation failed; store the peer certificate chain on
+    // infoObject so it can be used for error reporting.
+    mInfoObject->SetFailedCertChain(std::move(mPeerCertChain));
+    if (mCollectedErrors != 0) {
+      mInfoObject->SetStatusErrorBits(cert, mCollectedErrors);
+    }
   }
+
   mInfoObject->SetCertVerificationResult(mFinalError);
   return NS_OK;
 }
