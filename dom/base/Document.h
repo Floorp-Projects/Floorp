@@ -276,6 +276,7 @@ enum class ViewportFitType : uint8_t;
 class WindowContext;
 class WindowGlobalChild;
 class WindowProxyHolder;
+struct Wireframe;
 class WorkerDocumentListener;
 class XPathEvaluator;
 class XPathExpression;
@@ -3409,6 +3410,8 @@ class Document : public nsINode,
   bool FullscreenEnabled(CallerType aCallerType) {
     return !GetFullscreenError(aCallerType);
   }
+
+  void GetWireframeWithoutFlushing(bool aIncludeNodes, Nullable<Wireframe>&);
 
   MOZ_CAN_RUN_SCRIPT void GetWireframe(bool aIncludeNodes,
                                        Nullable<Wireframe>&);

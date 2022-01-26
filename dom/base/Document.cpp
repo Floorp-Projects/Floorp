@@ -14566,9 +14566,14 @@ Element* Document::TopLayerPop(FunctionRef<bool(Element*)> aPredicateFunc) {
 
 void Document::GetWireframe(bool aIncludeNodes,
                             Nullable<Wireframe>& aWireframe) {
+  FlushPendingNotifications(FlushType::Layout);
+  GetWireframeWithoutFlushing(aIncludeNodes, aWireframe);
+}
+
+void Document::GetWireframeWithoutFlushing(bool aIncludeNodes,
+                                           Nullable<Wireframe>& aWireframe) {
   using FrameForPointOptions = nsLayoutUtils::FrameForPointOptions;
   using FrameForPointOption = nsLayoutUtils::FrameForPointOption;
-  FlushPendingNotifications(FlushType::Layout);
 
   PresShell* shell = GetPresShell();
   if (!shell) {
@@ -14613,8 +14618,10 @@ void Document::GetWireframe(bool aIncludeNodes,
         taggedRect.mNode.Construct(c);
       }
     }
-    taggedRect.mRect.Construct(MakeRefPtr<DOMRectReadOnly>(
-        ToSupports(this), r.x, r.y, r.width, r.height));
+    taggedRect.mX = r.x;
+    taggedRect.mY = r.y;
+    taggedRect.mWidth = r.width;
+    taggedRect.mHeight = r.height;
     taggedRect.mType.Construct() = [&] {
       if (frame->IsTextFrame()) {
         nsStyleUtil::GetSerializedColorValue(
