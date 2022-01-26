@@ -136,6 +136,7 @@ void nsIGlobalObject::UnlinkObjectsInGlobal() {
   mReportingObservers.Clear();
 #ifdef MOZ_DOM_STREAMS
   mCountQueuingStrategySizeFunction = nullptr;
+  mByteLengthQueuingStrategySizeFunction = nullptr;
 #endif
 }
 
@@ -154,6 +155,7 @@ void nsIGlobalObject::TraverseObjectsInGlobal(
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReportingObservers)
 #ifdef MOZ_DOM_STREAMS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCountQueuingStrategySizeFunction)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mByteLengthQueuingStrategySizeFunction)
 #endif
 }
 

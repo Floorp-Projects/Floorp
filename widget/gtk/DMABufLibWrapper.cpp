@@ -32,6 +32,7 @@ void* nsGbmLib::sGbmLibHandle = nullptr;
 void* nsGbmLib::sXf86DrmLibHandle = nullptr;
 bool nsGbmLib::sLibLoaded = false;
 CreateDeviceFunc nsGbmLib::sCreateDevice;
+DestroyDeviceFunc nsGbmLib::sDestroyDevice;
 CreateFunc nsGbmLib::sCreate;
 CreateWithModifiersFunc nsGbmLib::sCreateWithModifiers;
 GetModifierFunc nsGbmLib::sGetModifier;
@@ -48,10 +49,11 @@ DeviceIsFormatSupportedFunc nsGbmLib::sDeviceIsFormatSupported;
 DrmPrimeHandleToFDFunc nsGbmLib::sDrmPrimeHandleToFD;
 
 bool nsGbmLib::IsLoaded() {
-  return sCreateDevice != nullptr && sCreate != nullptr &&
-         sCreateWithModifiers != nullptr && sGetModifier != nullptr &&
-         sGetStride != nullptr && sGetFd != nullptr && sDestroy != nullptr &&
-         sMap != nullptr && sUnmap != nullptr && sGetPlaneCount != nullptr &&
+  return sCreateDevice != nullptr && sDestroyDevice != nullptr &&
+         sCreate != nullptr && sCreateWithModifiers != nullptr &&
+         sGetModifier != nullptr && sGetStride != nullptr &&
+         sGetFd != nullptr && sDestroy != nullptr && sMap != nullptr &&
+         sUnmap != nullptr && sGetPlaneCount != nullptr &&
          sGetHandleForPlane != nullptr && sGetStrideForPlane != nullptr &&
          sGetOffset != nullptr && sDeviceIsFormatSupported != nullptr &&
          sDrmPrimeHandleToFD != nullptr;
@@ -76,6 +78,8 @@ bool nsGbmLib::Load() {
     }
 
     sCreateDevice = (CreateDeviceFunc)dlsym(sGbmLibHandle, "gbm_create_device");
+    sDestroyDevice =
+        (DestroyDeviceFunc)dlsym(sGbmLibHandle, "gbm_device_destroy");
     sCreate = (CreateFunc)dlsym(sGbmLibHandle, "gbm_bo_create");
     sCreateWithModifiers = (CreateWithModifiersFunc)dlsym(
         sGbmLibHandle, "gbm_bo_create_with_modifiers");
@@ -113,8 +117,6 @@ bool nsGbmLib::Load() {
 gbm_device* nsDMABufDevice::GetGbmDevice() {
   return IsDMABufEnabled() ? mGbmDevice : nullptr;
 }
-
-int nsDMABufDevice::GetGbmDeviceFd() { return IsDMABufEnabled() ? mGbmFd : -1; }
 
 static void dmabuf_modifiers(void* data,
                              struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf,
@@ -173,8 +175,8 @@ nsDMABufDevice::nsDMABufDevice()
     : mUseWebGLDmabufBackend(true),
       mXRGBFormat({true, false, GBM_FORMAT_XRGB8888, nullptr, 0}),
       mARGBFormat({true, true, GBM_FORMAT_ARGB8888, nullptr, 0}),
+      mDRMFd(-1),
       mGbmDevice(nullptr),
-      mGbmFd(-1),
       mInitialized(false) {
   if (GdkIsWaylandDisplay()) {
     wl_display* display = WaylandDisplayGetWLDisplay();
@@ -184,7 +186,36 @@ nsDMABufDevice::nsDMABufDevice()
     wl_display_roundtrip(display);
     wl_registry_destroy(registry);
   }
+
+  nsAutoCString drm_render_node(getenv("MOZ_DRM_DEVICE"));
+  if (drm_render_node.IsEmpty()) {
+    drm_render_node.Assign(gfx::gfxVars::DrmRenderDevice());
+  }
+
+  if (!drm_render_node.IsEmpty()) {
+    LOGDMABUF(("Using DRM device %s", drm_render_node.get()));
+    mDRMFd = open(drm_render_node.get(), O_RDWR);
+    if (mDRMFd < 0) {
+      LOGDMABUF(("Failed to open drm render node %s error %s\n",
+                 drm_render_node.get(), strerror(errno)));
+    }
+  } else {
+    LOGDMABUF(("We're missing DRM render device!\n"));
+  }
 }
+
+nsDMABufDevice::~nsDMABufDevice() {
+  if (mGbmDevice) {
+    nsGbmLib::DestroyDevice(mGbmDevice);
+    mGbmDevice = nullptr;
+  }
+  if (mDRMFd != -1) {
+    close(mDRMFd);
+    mDRMFd = -1;
+  }
+}
+
+int nsDMABufDevice::GetDRMFd() { return mDRMFd; }
 
 bool nsDMABufDevice::Configure(nsACString& aFailureId) {
   LOGDMABUF(("nsDMABufDevice::Configure()"));
@@ -196,9 +227,7 @@ bool nsDMABufDevice::Configure(nsACString& aFailureId) {
 #ifdef NIGHTLY_BUILD
       StaticPrefs::widget_dmabuf_textures_enabled() ||
 #endif
-      StaticPrefs::widget_dmabuf_webgl_enabled() ||
-      StaticPrefs::media_ffmpeg_vaapi_enabled() ||
-      StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled());
+      StaticPrefs::widget_dmabuf_webgl_enabled());
 
   if (!isDMABufUsed) {
     // Disabled by user, just quit.
@@ -213,36 +242,16 @@ bool nsDMABufDevice::Configure(nsACString& aFailureId) {
     return false;
   }
 
-  nsAutoCString drm_render_node(getenv("MOZ_WAYLAND_DRM_DEVICE"));
-  if (drm_render_node.IsEmpty()) {
-    drm_render_node.Assign(gfx::gfxVars::DrmRenderDevice());
-    if (drm_render_node.IsEmpty()) {
-      LOGDMABUF(("Failed: We're missing DRM render device!\n"));
-      aFailureId = "FEATURE_FAILURE_NO_DRM_RENDER_NODE";
-      return false;
-    }
-  }
-
-  mGbmFd = open(drm_render_node.get(), O_RDWR);
-  if (mGbmFd < 0) {
-    const char* error = strerror(errno);
-    LOGDMABUF(("Failed to open drm render node %s error %s\n",
-               drm_render_node.get(), error));
+  // fd passed to gbm_create_device() should be kept open until
+  // gbm_device_destroy() is called.
+  mGbmDevice = nsGbmLib::CreateDevice(GetDRMFd());
+  if (!mGbmDevice) {
+    LOGDMABUF(("Failed to create drm render device"));
     aFailureId = "FEATURE_FAILURE_BAD_DRM_RENDER_NODE";
     return false;
   }
 
-  mGbmDevice = nsGbmLib::CreateDevice(mGbmFd);
-  if (!mGbmDevice) {
-    LOGDMABUF(
-        ("Failed to create drm render device %s\n", drm_render_node.get()));
-    aFailureId = "FEATURE_FAILURE_NO_DRM_RENDER_DEVICE";
-    close(mGbmFd);
-    mGbmFd = -1;
-    return false;
-  }
-
-  LOGDMABUF(("DMABuf is enabled, using drm node %s", drm_render_node.get()));
+  LOGDMABUF(("DMABuf is enabled"));
   return true;
 }
 
@@ -274,14 +283,12 @@ bool nsDMABufDevice::IsDMABufVideoEnabled() {
 }
 bool nsDMABufDevice::IsDMABufVAAPIEnabled() {
   LOGDMABUF(
-      ("nsDMABufDevice::IsDMABufVAAPIEnabled: EGL %d DMABufEnabled %d  "
+      ("nsDMABufDevice::IsDMABufVAAPIEnabled: EGL %d "
        "media_ffmpeg_vaapi_enabled %d CanUseHardwareVideoDecoding %d "
        "XRE_IsRDDProcess %d\n",
-       gfx::gfxVars::UseEGL(), IsDMABufEnabled(),
-       StaticPrefs::media_ffmpeg_vaapi_enabled(),
+       gfx::gfxVars::UseEGL(), StaticPrefs::media_ffmpeg_vaapi_enabled(),
        gfx::gfxVars::CanUseHardwareVideoDecoding(), XRE_IsRDDProcess()));
   return StaticPrefs::media_ffmpeg_vaapi_enabled() && XRE_IsRDDProcess() &&
-         gfx::gfxVars::UseDMABuf() && IsDMABufEnabled() &&
          gfx::gfxVars::CanUseHardwareVideoDecoding();
 }
 bool nsDMABufDevice::IsDMABufWebGLEnabled() {

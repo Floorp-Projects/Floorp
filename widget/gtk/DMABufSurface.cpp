@@ -312,7 +312,7 @@ bool DMABufSurfaceRGBA::OpenFileDescriptorForPlane(
   } else {
     uint32_t handle =
         nsGbmLib::GetHandleForPlane(mGbmBufferObject[0], aPlane).u32;
-    int ret = nsGbmLib::DrmPrimeHandleToFD(GetDMABufDevice()->GetGbmDeviceFd(),
+    int ret = nsGbmLib::DrmPrimeHandleToFD(GetDMABufDevice()->GetDRMFd(),
                                            handle, 0, &mDmabufFds[aPlane]);
     if (ret < 0) {
       mDmabufFds[aPlane] = -1;

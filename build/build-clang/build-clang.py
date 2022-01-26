@@ -218,19 +218,8 @@ def build_one_stage(
     runtimes_source_link=None,
     compiler_rt_source_link=None,
     is_final_stage=False,
-    android_targets=None,
-    extra_targets=None,
     pgo_phase=None,
 ):
-    if is_final_stage and (android_targets or extra_targets):
-        # Linking compiler-rt under "runtimes" activates LLVM_RUNTIME_TARGETS
-        # and related arguments.
-        symlink(compiler_rt_source_dir, runtimes_source_link)
-        try:
-            os.unlink(compiler_rt_source_link)
-        except Exception:
-            pass
-
     if not os.path.exists(stage_dir):
         os.mkdir(stage_dir)
 
@@ -281,11 +270,15 @@ def build_one_stage(
                 "-DCOMPILER_RT_BUILD_LIBFUZZER=OFF",
             ]
 
-        if is_linux() and not osx_cross_compile and is_final_stage:
-            cmake_args += ["-DLLVM_BINUTILS_INCDIR=/usr/include"]
+        # There is no libxml2 on Windows except if we build one ourselves.
+        # libxml2 is only necessary for llvm-mt, but Windows can just use the
+        # native MT tool.
+        if not is_windows() and is_final_stage:
             cmake_args += ["-DLLVM_ENABLE_LIBXML2=FORCE_ON"]
+        if is_linux() and not osx_cross_compile and is_final_stage:
             sysroot = os.path.join(os.environ.get("MOZ_FETCHES_DIR", ""), "sysroot")
             if os.path.exists(sysroot):
+                cmake_args += ["-DLLVM_BINUTILS_INCDIR=/usr/include"]
                 cmake_args += ["-DCMAKE_SYSROOT=%s" % sysroot]
                 # Work around the LLVM build system not building the i386 compiler-rt
                 # because it doesn't allow to use a sysroot for that during the cmake
@@ -345,69 +338,6 @@ def build_one_stage(
         return cmake_args
 
     cmake_args = []
-
-    runtime_targets = []
-    if is_final_stage:
-        if android_targets:
-            runtime_targets = list(sorted(android_targets.keys()))
-        if extra_targets:
-            runtime_targets.extend(sorted(extra_targets))
-
-    if runtime_targets:
-        cmake_args += [
-            "-DLLVM_BUILTIN_TARGETS=%s" % ";".join(runtime_targets),
-            "-DLLVM_RUNTIME_TARGETS=%s" % ";".join(runtime_targets),
-        ]
-
-        for target in runtime_targets:
-            cmake_args += [
-                "-DRUNTIMES_%s_COMPILER_RT_BUILD_PROFILE=ON" % target,
-                "-DRUNTIMES_%s_COMPILER_RT_BUILD_SANITIZERS=ON" % target,
-                "-DRUNTIMES_%s_COMPILER_RT_BUILD_XRAY=OFF" % target,
-                "-DRUNTIMES_%s_SANITIZER_ALLOW_CXXABI=OFF" % target,
-                "-DRUNTIMES_%s_COMPILER_RT_BUILD_LIBFUZZER=OFF" % target,
-                "-DRUNTIMES_%s_COMPILER_RT_INCLUDE_TESTS=OFF" % target,
-                "-DRUNTIMES_%s_LLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF" % target,
-                "-DRUNTIMES_%s_LLVM_INCLUDE_TESTS=OFF" % target,
-            ]
-
-    # The above code flipped switches to build various runtime libraries on
-    # Android; we now have to provide all the necessary compiler switches to
-    # make that work.
-    if is_final_stage and android_targets:
-        android_link_flags = "-fuse-ld=lld"
-
-        for target, cfg in android_targets.items():
-            sysroot_dir = cfg["ndk_sysroot"].format(**os.environ)
-            android_gcc_dir = cfg["ndk_toolchain"].format(**os.environ)
-            android_include_dirs = cfg["ndk_includes"]
-            api_level = cfg["api_level"]
-
-            android_flags = [
-                "-isystem %s" % d.format(**os.environ) for d in android_include_dirs
-            ]
-            android_flags += ["--gcc-toolchain=%s" % android_gcc_dir]
-            android_flags += ["-D__ANDROID_API__=%s" % api_level]
-
-            # Our flags go last to override any --gcc-toolchain that may have
-            # been set earlier.
-            rt_c_flags = " ".join(cc[1:] + android_flags)
-            rt_cxx_flags = " ".join(cxx[1:] + android_flags)
-            rt_asm_flags = " ".join(asm[1:] + android_flags)
-
-            for kind in ("BUILTINS", "RUNTIMES"):
-                for var, arg in (
-                    ("ANDROID", "1"),
-                    ("CMAKE_ASM_FLAGS", rt_asm_flags),
-                    ("CMAKE_CXX_FLAGS", rt_cxx_flags),
-                    ("CMAKE_C_FLAGS", rt_c_flags),
-                    ("CMAKE_EXE_LINKER_FLAGS", android_link_flags),
-                    ("CMAKE_SHARED_LINKER_FLAGS", android_link_flags),
-                    ("CMAKE_SYSROOT", sysroot_dir),
-                    ("ANDROID_NATIVE_API_LEVEL", api_level),
-                ):
-                    cmake_args += ["-D%s_%s_%s=%s" % (kind, target, var, arg)]
-
     cmake_args += cmake_base_args(cc, cxx, asm, ld, ar, ranlib, libtool, inst_dir)
     cmake_args += [src_dir]
     build_package(build_dir, cmake_args)
@@ -685,6 +615,13 @@ if __name__ == "__main__":
         stages = int(config["stages"])
         if stages not in (1, 2, 3, 4):
             raise ValueError("We only know how to build 1, 2, 3, or 4 stages.")
+    skip_stages = 0
+    if "skip_stages" in config:
+        # The assumption here is that the compiler given in `cc` and other configs
+        # is the result of the last skip stage, built somewhere else.
+        skip_stages = int(config["skip_stages"])
+        if skip_stages >= stages:
+            raise ValueError("Cannot skip more stages than are built.")
     pgo = False
     if "pgo" in config:
         pgo = config["pgo"]
@@ -743,24 +680,6 @@ if __name__ == "__main__":
         assertions = config["assertions"]
         if assertions not in (True, False):
             raise ValueError("Only boolean values are accepted for assertions.")
-    ndk_dir = None
-    android_targets = None
-    if "android_targets" in config:
-        android_targets = config["android_targets"]
-        for attr in ("ndk_toolchain", "ndk_sysroot", "ndk_includes", "api_level"):
-            for target, cfg in android_targets.items():
-                if attr not in cfg:
-                    raise ValueError(
-                        "must specify '%s' as a key for android target: %s"
-                        % (attr, target)
-                    )
-    extra_targets = None
-    if "extra_targets" in config:
-        extra_targets = config["extra_targets"]
-        if not isinstance(extra_targets, list):
-            raise ValueError("extra_targets must be a list")
-        if not all(isinstance(t, str) for t in extra_targets):
-            raise ValueError("members of extra_targets should be strings")
 
     if is_darwin() or osx_cross_compile:
         os.environ["MACOSX_DEPLOYMENT_TARGET"] = (
@@ -898,38 +817,43 @@ if __name__ == "__main__":
         extra_cflags2 += ["-fcrash-diagnostics-dir=%s" % upload_dir]
         extra_cxxflags2 += ["-fcrash-diagnostics-dir=%s" % upload_dir]
 
-    build_one_stage(
-        [cc] + extra_cflags,
-        [cxx] + extra_cxxflags,
-        [asm] + extra_asmflags,
-        [ld] + extra_ldflags,
-        ar,
-        ranlib,
-        libtool,
-        llvm_source_dir,
-        stage1_dir,
-        package_name,
-        build_libcxx,
-        osx_cross_compile,
-        build_type,
-        assertions,
-        libcxx_include_dir,
-        build_wasm,
-        is_final_stage=(stages == 1),
-    )
+    if skip_stages < 1:
+        build_one_stage(
+            [cc] + extra_cflags,
+            [cxx] + extra_cxxflags,
+            [asm] + extra_asmflags,
+            [ld] + extra_ldflags,
+            ar,
+            ranlib,
+            libtool,
+            llvm_source_dir,
+            stage1_dir,
+            package_name,
+            build_libcxx,
+            osx_cross_compile,
+            build_type,
+            assertions,
+            libcxx_include_dir,
+            build_wasm,
+            is_final_stage=(stages == 1),
+        )
 
     runtimes_source_link = llvm_source_dir + "/runtimes/compiler-rt"
 
-    if stages >= 2:
+    if stages >= 2 and skip_stages < 2:
         stage2_dir = build_dir + "/stage2"
         stage2_inst_dir = stage2_dir + "/" + package_name
         final_stage_dir = stage2_dir
         final_inst_dir = stage2_inst_dir
         pgo_phase = "gen" if pgo else None
+        if skip_stages < 1:
+            cc = stage1_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
+            cxx = stage1_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)
+            asm = stage1_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
         build_one_stage(
-            [stage1_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)] + extra_cflags2,
-            [stage1_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)] + extra_cxxflags2,
-            [stage1_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)] + extra_asmflags,
+            [cc] + extra_cflags2,
+            [cxx] + extra_cxxflags2,
+            [asm] + extra_asmflags,
             [ld] + extra_ldflags,
             ar,
             ranlib,
@@ -947,20 +871,22 @@ if __name__ == "__main__":
             runtimes_source_link,
             compiler_rt_source_link,
             is_final_stage=(stages == 2),
-            android_targets=android_targets,
-            extra_targets=extra_targets,
             pgo_phase=pgo_phase,
         )
 
-    if stages >= 3:
+    if stages >= 3 and skip_stages < 3:
         stage3_dir = build_dir + "/stage3"
         stage3_inst_dir = stage3_dir + "/" + package_name
         final_stage_dir = stage3_dir
         final_inst_dir = stage3_inst_dir
+        if skip_stages < 2:
+            cc = stage2_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
+            cxx = stage2_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)
+            asm = stage2_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
         build_one_stage(
-            [stage2_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)] + extra_cflags2,
-            [stage2_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)] + extra_cxxflags2,
-            [stage2_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)] + extra_asmflags,
+            [cc] + extra_cflags2,
+            [cxx] + extra_cxxflags2,
+            [asm] + extra_asmflags,
             [ld] + extra_ldflags,
             ar,
             ranlib,
@@ -978,10 +904,9 @@ if __name__ == "__main__":
             runtimes_source_link,
             compiler_rt_source_link,
             (stages == 3),
-            extra_targets=extra_targets,
         )
 
-    if stages >= 4:
+    if stages >= 4 and skip_stages < 4:
         stage4_dir = build_dir + "/stage4"
         stage4_inst_dir = stage4_dir + "/" + package_name
         final_stage_dir = stage4_dir
@@ -997,10 +922,14 @@ if __name__ == "__main__":
             if not os.path.exists(stage4_dir):
                 os.mkdir(stage4_dir)
             run_in(stage4_dir, merge_cmd + profraw_files)
+        if skip_stages < 3:
+            cc = stage3_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
+            cxx = stage3_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)
+            asm = stage3_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)
         build_one_stage(
-            [stage3_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)] + extra_cflags2,
-            [stage3_inst_dir + "/bin/%s%s" % (cxx_name, exe_ext)] + extra_cxxflags2,
-            [stage3_inst_dir + "/bin/%s%s" % (cc_name, exe_ext)] + extra_asmflags,
+            [cc] + extra_cflags2,
+            [cxx] + extra_cxxflags2,
+            [asm] + extra_asmflags,
             [ld] + extra_ldflags,
             ar,
             ranlib,
@@ -1018,7 +947,6 @@ if __name__ == "__main__":
             runtimes_source_link,
             compiler_rt_source_link,
             (stages == 4),
-            extra_targets=extra_targets,
             pgo_phase=pgo_phase,
         )
 

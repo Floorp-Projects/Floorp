@@ -768,10 +768,12 @@ EnvironmentAddonBuilder.prototype = {
    */
   async _getActiveAddons() {
     // Request addons, asynchronously.
-    let { addons: allAddons, fullData } = await AddonManager.getActiveAddons([
-      "extension",
-      "service",
-    ]);
+    // "theme" is excluded because it is already handled by _getActiveTheme.
+    let { addons: allAddons, fullData } = await AddonManager.getActiveAddons(
+      AddonManagerPrivate.getAddonTypesByProvider("XPIProvider").filter(
+        addonType => addonType != "theme"
+      )
+    );
 
     this._environment._addonsAreFull = fullData;
     let activeAddons = {};

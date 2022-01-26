@@ -31,7 +31,7 @@ macosx64-gn:
     fetches:
         toolchain:
             - linux64-cctools-port-clang-13
-            - linux64-clang-13
+            - linux64-clang-toolchain
             - macosx64-sdk-11.0
 
 win32-gn:

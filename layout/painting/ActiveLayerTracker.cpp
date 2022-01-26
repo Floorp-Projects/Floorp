@@ -47,11 +47,6 @@ class LayerActivity {
   enum ActivityIndex {
     ACTIVITY_OPACITY,
     ACTIVITY_TRANSFORM,
-    ACTIVITY_LEFT,
-    ACTIVITY_TOP,
-    ACTIVITY_RIGHT,
-    ACTIVITY_BOTTOM,
-    ACTIVITY_BACKGROUND_POSITION,
 
     ACTIVITY_SCALE,
     ACTIVITY_TRIGGERED_REPAINT,
@@ -60,8 +55,7 @@ class LayerActivity {
     ACTIVITY_COUNT
   };
 
-  explicit LayerActivity(nsIFrame* aFrame)
-      : mFrame(aFrame), mContent(nullptr), mContentActive(false) {
+  explicit LayerActivity(nsIFrame* aFrame) : mFrame(aFrame), mContent(nullptr) {
     PodArrayZero(mRestyleCounts);
   }
   ~LayerActivity();
@@ -84,20 +78,6 @@ class LayerActivity {
       case eCSSProperty_offset_anchor:
         // TODO: Bug 1559232: Add offset-position.
         return ACTIVITY_TRANSFORM;
-      case eCSSProperty_left:
-        return ACTIVITY_LEFT;
-      case eCSSProperty_top:
-        return ACTIVITY_TOP;
-      case eCSSProperty_right:
-        return ACTIVITY_RIGHT;
-      case eCSSProperty_bottom:
-        return ACTIVITY_BOTTOM;
-      case eCSSProperty_background_position:
-        return ACTIVITY_BACKGROUND_POSITION;
-      case eCSSProperty_background_position_x:
-        return ACTIVITY_BACKGROUND_POSITION;
-      case eCSSProperty_background_position_y:
-        return ACTIVITY_BACKGROUND_POSITION;
       default:
         MOZ_ASSERT(false);
         return ACTIVITY_OPACITY;
@@ -129,7 +109,6 @@ class LayerActivity {
 
   // Number of restyle operations detected
   uint8_t mRestyleCounts[ACTIVITY_COUNT];
-  bool mContentActive;
 };
 
 class LayerActivityTracker final
@@ -173,11 +152,6 @@ void LayerActivityTracker::NotifyExpired(LayerActivity* aObject) {
              "its frame or its content");
 
   if (f) {
-    // The pres context might have been detached during the delay -
-    // that's fine, just skip the paint.
-    if (f->PresContext()->GetContainerWeak() && !gfxVars::UseWebRender()) {
-      f->SchedulePaint(nsIFrame::PAINT_DEFAULT, false);
-    }
     f->RemoveStateBits(NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY);
     f->RemoveProperty(LayerActivityProperty());
   } else {
@@ -295,19 +269,6 @@ void ActiveLayerTracker::NotifyRestyle(nsIFrame* aFrame,
 }
 
 /* static */
-void ActiveLayerTracker::NotifyOffsetRestyle(nsIFrame* aFrame) {
-  LayerActivity* layerActivity = GetLayerActivityForUpdate(aFrame);
-  IncrementMutationCount(
-      &layerActivity->mRestyleCounts[LayerActivity::ACTIVITY_LEFT]);
-  IncrementMutationCount(
-      &layerActivity->mRestyleCounts[LayerActivity::ACTIVITY_TOP]);
-  IncrementMutationCount(
-      &layerActivity->mRestyleCounts[LayerActivity::ACTIVITY_RIGHT]);
-  IncrementMutationCount(
-      &layerActivity->mRestyleCounts[LayerActivity::ACTIVITY_BOTTOM]);
-}
-
-/* static */
 void ActiveLayerTracker::NotifyAnimated(nsIFrame* aFrame,
                                         nsCSSPropertyID aProperty,
                                         const nsACString& aNewValue,
@@ -357,30 +318,6 @@ void ActiveLayerTracker::NotifyNeedsRepaint(nsIFrame* aFrame) {
         &layerActivity
              ->mRestyleCounts[LayerActivity::ACTIVITY_TRIGGERED_REPAINT]);
   }
-}
-
-/* static */
-bool ActiveLayerTracker::IsBackgroundPositionAnimated(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) {
-  LayerActivity* layerActivity = GetLayerActivity(aFrame);
-  if (layerActivity) {
-    LayerActivity::ActivityIndex activityIndex =
-        LayerActivity::ActivityIndex::ACTIVITY_BACKGROUND_POSITION;
-    if (layerActivity->mRestyleCounts[activityIndex] >= 2) {
-      // If the frame needs to be repainted frequently, we probably don't get
-      // much from treating the property as animated, *unless* this frame's
-      // 'scale' (which includes the bounds changes of a rotation) is changing.
-      // Marking a scaling transform as animating allows us to avoid resizing
-      // the texture, even if we have to repaint the contents of that texture.
-      if (layerActivity
-              ->mRestyleCounts[LayerActivity::ACTIVITY_TRIGGERED_REPAINT] < 2) {
-        return true;
-      }
-    }
-  }
-  return nsLayoutUtils::HasEffectiveAnimation(
-      aFrame, nsCSSPropertyIDSet({eCSSProperty_background_position_x,
-                                  eCSSProperty_background_position_y}));
 }
 
 static bool IsMotionPathAnimated(nsDisplayListBuilder* aBuilder,
@@ -478,25 +415,6 @@ bool ActiveLayerTracker::IsStyleAnimated(
 }
 
 /* static */
-bool ActiveLayerTracker::IsOffsetStyleAnimated(nsIFrame* aFrame) {
-  LayerActivity* layerActivity = GetLayerActivity(aFrame);
-  if (layerActivity) {
-    if (layerActivity->mRestyleCounts[LayerActivity::ACTIVITY_LEFT] >= 2 ||
-        layerActivity->mRestyleCounts[LayerActivity::ACTIVITY_TOP] >= 2 ||
-        layerActivity->mRestyleCounts[LayerActivity::ACTIVITY_RIGHT] >= 2 ||
-        layerActivity->mRestyleCounts[LayerActivity::ACTIVITY_BOTTOM] >= 2) {
-      return true;
-    }
-  }
-  // We should also check for running CSS animations of these properties once
-  // bug 1009693 is fixed. Until that happens, layerization isn't useful for
-  // animations of these properties because we'll invalidate the layer contents
-  // on every change anyway.
-  // See bug 1151346 for a patch that adds a check for CSS animations.
-  return false;
-}
-
-/* static */
 bool ActiveLayerTracker::IsScaleSubjectToAnimation(nsIFrame* aFrame) {
   // Check whether JavaScript is animating this frame's scale.
   LayerActivity* layerActivity = GetLayerActivity(aFrame);
@@ -506,18 +424,6 @@ bool ActiveLayerTracker::IsScaleSubjectToAnimation(nsIFrame* aFrame) {
   }
 
   return AnimationUtils::FrameHasAnimatedScale(aFrame);
-}
-
-/* static */
-void ActiveLayerTracker::NotifyContentChange(nsIFrame* aFrame) {
-  LayerActivity* layerActivity = GetLayerActivityForUpdate(aFrame);
-  layerActivity->mContentActive = true;
-}
-
-/* static */
-bool ActiveLayerTracker::IsContentActive(nsIFrame* aFrame) {
-  LayerActivity* layerActivity = GetLayerActivity(aFrame);
-  return layerActivity && layerActivity->mContentActive;
 }
 
 /* static */

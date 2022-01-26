@@ -30,7 +30,6 @@ class DrawTarget;
 
 class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
   using ThemeCocoa = mozilla::widget::ThemeCocoa;
-  using ScrollbarDrawing = mozilla::widget::ScrollbarDrawing;
 
  public:
   enum class MenuIcon : uint8_t {
@@ -167,8 +166,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
     bool reverse = false;
   };
 
-  using ScrollbarParams = mozilla::widget::ScrollbarDrawing::ScrollbarParams;
-
   enum Widget : uint8_t {
     eColorFill,      // mozilla::gfx::sRGBColor
     eMenuIcon,       // MenuIconParams
@@ -193,9 +190,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
     eMeter,               // MeterParams
     eTreeHeaderCell,      // TreeHeaderCellParams
     eScale,               // ScaleParams
-    eScrollbarThumb,      // ScrollbarParams
-    eScrollbarTrack,      // ScrollbarParams
-    eScrollCorner,        // ScrollbarParams
     eMultilineTextField,  // bool
     eListBox,
     eActiveSourceListSelection,    // bool
@@ -264,15 +258,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
     static WidgetInfo Scale(const ScaleParams& aParams) {
       return WidgetInfo(Widget::eScale, aParams);
     }
-    static WidgetInfo ScrollbarThumb(const ScrollbarParams& aParams) {
-      return WidgetInfo(Widget::eScrollbarThumb, aParams);
-    }
-    static WidgetInfo ScrollbarTrack(const ScrollbarParams& aParams) {
-      return WidgetInfo(Widget::eScrollbarTrack, aParams);
-    }
-    static WidgetInfo ScrollCorner(const ScrollbarParams& aParams) {
-      return WidgetInfo(Widget::eScrollCorner, aParams);
-    }
     static WidgetInfo MultilineTextField(bool aParams) {
       return WidgetInfo(Widget::eMultilineTextField, aParams);
     }
@@ -301,13 +286,13 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
     mozilla::Variant<mozilla::gfx::sRGBColor, MenuIconParams, MenuItemParams, CheckboxOrRadioParams,
                      ButtonParams, DropdownParams, SpinButtonParams, SegmentParams, TextFieldParams,
                      ProgressParams, MeterParams, TreeHeaderCellParams, ScaleParams,
-                     ScrollbarParams, bool>
+                     bool>
         mVariant;
 
     enum Widget mWidget;
   };
 
-  explicit nsNativeThemeCocoa(mozilla::UniquePtr<mozilla::widget::ScrollbarDrawing>&&);
+  explicit nsNativeThemeCocoa();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -330,7 +315,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
                                  StyleAppearance aAppearance, nsRect* aOverflowRect) override;
 
-  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth, Overlay) override;
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance,
                                   mozilla::LayoutDeviceIntSize* aResult,

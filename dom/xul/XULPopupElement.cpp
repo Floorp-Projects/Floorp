@@ -58,7 +58,7 @@ void XULPopupElement::OpenPopup(Element* aAnchorElement,
     if (!aAnchorElement && position.IsEmpty() && GetPrimaryFrame()) {
       nsMenuFrame* menu = do_QueryFrame(GetPrimaryFrame()->GetParent());
       if (menu) {
-        pm->ShowMenu(menu->GetContent(), false, false);
+        pm->ShowMenu(menu->GetContent(), false);
         return;
       }
     }

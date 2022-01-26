@@ -19,10 +19,10 @@
 // is also how rust's `debug_assert!` is implemented)
 
 /// Whether Nightly-only assertions are enabled.
-pub const NIGHTLY_BUILD: bool = cfg!(feature = "nightly");
+pub use mozbuild::config::NIGHTLY_BUILD;
 
 /// Whether diagnostic assertions are enabled.
-pub const MOZ_DIAGNOSTIC_ASSERT_ENABLED: bool = cfg!(feature = "diagnostic");
+pub use mozbuild::config::MOZ_DIAGNOSTIC_ASSERT_ENABLED;
 
 /// assert! on Nightly, gets compiled out otherwise.
 #[macro_export]

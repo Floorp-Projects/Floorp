@@ -76,6 +76,8 @@ const execute = (context, details, kind, method) => {
     options.allFrames = allFrames;
   } else if (frameIds) {
     options.frameIds = frameIds;
+  } else {
+    options.frameIds = [0];
   }
 
   options.runAt = "document_idle";

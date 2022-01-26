@@ -26,7 +26,7 @@ linux64-rust-1.47:
         ]
     fetches:
         toolchain:
-            - linux64-clang
+            - linux64-clang-toolchain
 
 linux64-rust-1.57:
     treeherder:
@@ -43,7 +43,7 @@ linux64-rust-1.57:
         ]
     fetches:
         toolchain:
-            - linux64-clang
+            - linux64-clang-toolchain
 
 linux64-rust-1.58:
     treeherder:
@@ -61,7 +61,7 @@ linux64-rust-1.58:
         toolchain-alias: linux64-rust
     fetches:
         toolchain:
-            - linux64-clang
+            - linux64-clang-toolchain
 
 # A patched rust toolchain that allows us to use sanitizers in our vendored
 # build environment. See the rust fetch's comments for more details.
@@ -83,7 +83,7 @@ linux64-rust-dev:
         fetch:
             - rust-1.59.0-dev
         toolchain:
-            - linux64-clang
+            - linux64-clang-toolchain
             - linux64-binutils
 
 
@@ -171,7 +171,7 @@ linux64-rust-android-1.58:
         toolchain-alias: linux64-rust-android
     fetches:
         toolchain:
-            - linux64-clang
+            - linux64-clang-toolchain
 
 linux64-rust-windows-1.57:
     description: "rust repack with windows-cross support"

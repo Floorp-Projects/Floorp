@@ -405,7 +405,6 @@ def detect_rustc_target(
 
 
 @imports("os")
-@imports(_from="six", _import="ensure_binary")
 @imports(_from="tempfile", _import="mkstemp")
 @imports(_from="textwrap", _import="dedent")
 @imports(_from="mozbuild.configure.util", _import="LineIO")
@@ -417,12 +416,12 @@ def assert_rust_compile(host_or_target, rustc_target, rustc):
     out_fd, out_path = mkstemp(prefix="conftest", suffix=".rlib")
     os.close(out_fd)
     try:
-        source = 'pub extern fn hello() { println!("Hello world"); }'
+        source = b'pub extern fn hello() { println!("Hello world"); }'
         log.debug("Creating `%s` with content:", in_path)
         with LineIO(lambda l: log.debug("| %s", l)) as out:
             out.write(source)
 
-        os.write(in_fd, ensure_binary(source))
+        os.write(in_fd, source)
         os.close(in_fd)
 
         cmd = [

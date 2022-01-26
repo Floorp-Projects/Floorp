@@ -1,3 +1,11 @@
+- 1/11/2022: version 1.2.2
+  This is a binary compatible release.
+  * webpmux: add "-set bgcolor A,R,G,B"
+  * add ARM64 NEON support for MSVC builds (#539)
+  * fix duplicate include error in Xcode when using multiple XCFrameworks in a
+    project (#542)
+  * doc updates and bug fixes (#538, #544, #548, #550)
+
 - 7/20/2021: version 1.2.1
   This is a binary compatible release.
   * minor lossless encoder improvements and x86 color conversion speed up

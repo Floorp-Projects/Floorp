@@ -9,10 +9,7 @@
 //! 'toolkit/components/glean/metrics.yaml`.
 
 #[cfg(not(feature = "cargo-clippy"))]
-include!(concat!(
-    env!("MOZ_TOPOBJDIR"),
-    "/toolkit/components/glean/api/src/metrics.rs"
-));
+include!(mozbuild::objdir_path!("toolkit/components/glean/api/src/metrics.rs"));
 
 #[cfg(not(feature = "cargo-clippy"))]
 use crate::private::{EventMetric, EventRecordingError, ExtraKeys};

@@ -30,6 +30,7 @@ RUN apt-get update && \
       libssl-dev \
       libtool \
       libucl-dev \
+      libxml2-dev \
       ninja-build \
       openssh-client \
       p7zip-full \

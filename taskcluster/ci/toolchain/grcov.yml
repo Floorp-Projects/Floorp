@@ -20,7 +20,7 @@ linux64-grcov:
     fetches:
         toolchain:
             - linux64-rust-1.57
-            - linux64-clang
+            - linux64-clang-toolchain
             - linux64-binutils
             - sysroot-x86_64-linux-gnu
 
