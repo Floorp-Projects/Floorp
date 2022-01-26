@@ -113,7 +113,7 @@ object TestHelper {
         val intent = Intent().apply {
             action = Intent.ACTION_VIEW
             data = Uri.parse(url)
-            `package` = "org.mozilla.fenix.debug"
+            `package` = packageName
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         try {
