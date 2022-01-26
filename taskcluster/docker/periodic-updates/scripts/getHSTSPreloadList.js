@@ -462,6 +462,7 @@ function output(statuses) {
     dump("finished writing output file\n");
   } catch (e) {
     dump("ERROR: problem writing output to '" + OUTPUT + "': " + e + "\n");
+    throw e;
   }
 }
 

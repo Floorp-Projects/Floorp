@@ -4,9 +4,7 @@
 
 %filter substitution
 
-%define buttonStateHoverOrFocus :not([disabled],[open],:active):is(:hover,:focus-visible)
 %define buttonStateHover :not([disabled],[open],:active):is(:hover)
-%define buttonStateFocus :not([disabled],[open],:active):focus-visible
 %define menuStateHover :not([disabled],:active)[_moz-menuactive]
 %define buttonStateActive :not([disabled]):is([open],:hover:active)
 %define menuStateActive :not([disabled])[_moz-menuactive]:active
@@ -14,8 +12,6 @@
 %define inAnyPanel :is(:not([cui-areatype="toolbar"]), [overflowedItem=true])
 
 :root {
-  --panelview-toolbarbutton-focus-box-shadow: inset 0 0 0 2px var(--focus-outline-color);
-
   --panel-item-hover-bgcolor: var(--button-hover-bgcolor);
   --panel-item-active-bgcolor: var(--button-active-bgcolor);
   --panel-banner-item-color: var(--button-color);
@@ -201,13 +197,17 @@ toolbarseparator + .panel-subview-body,
   visibility: hidden;
 }
 
-.panel-info-button@buttonStateHoverOrFocus@ {
+.panel-info-button:hover {
   background-color: var(--panel-item-hover-bgcolor);
 }
 
 .panel-info-button:not(:hover)[checked],
-.panel-info-button@buttonStateActive@ {
+.panel-info-button:hover:active {
   background-color: var(--panel-item-active-bgcolor);
+}
+
+.panel-info-button:focus-visible {
+  outline: var(--focus-outline);
 }
 
 .panel-info-button > image {
@@ -957,10 +957,6 @@ panelview .toolbarbutton-1,
   -moz-box-pack: start;
 }
 
-.subviewbutton:focus {
-  outline: 0;
-}
-
 .subviewbutton[disabled="true"] {
   color: var(--panel-disabled-color);
 }
@@ -1020,18 +1016,24 @@ panelview .toolbarbutton-1,
   fill: currentColor;
 }
 
-#appMenu-zoomReduce-button2@buttonStateHoverOrFocus@,
-#appMenu-zoomReduce-button2@buttonStateActive@,
-#appMenu-zoomReset-button2@buttonStateHoverOrFocus@,
-#appMenu-zoomReset-button2@buttonStateActive@,
-#appMenu-zoomEnlarge-button2@buttonStateHoverOrFocus@,
-#appMenu-zoomEnlarge-button2@buttonStateActive@,
-#appMenu-fullscreen-button2@buttonStateHoverOrFocus@,
-#appMenu-fullscreen-button2@buttonStateActive@ {
+#appMenu-zoom-controls2 > .subviewbutton {
+  margin-inline-start: 2px;
+  padding: 4px;
+}
+
+#appMenu-zoom-controls2 > .subviewbutton:is(@buttonStateHover@, @buttonStateActive@) {
   color: unset;
   background-color: unset;
-  box-shadow: unset;
- }
+}
+
+#appMenu-zoom-controls2 > .subviewbutton:focus-visible {
+  outline: none;
+}
+
+#appMenu-zoom-controls2 > .subviewbutton-iconic:focus-visible > .toolbarbutton-icon,
+#appMenu-zoomReset-button2:focus-visible > .toolbarbutton-text {
+  outline: var(--focus-outline);
+}
 
 #appMenu-zoomReduce-button2 > .toolbarbutton-icon,
 #appMenu-zoomEnlarge-button2 > .toolbarbutton-icon {
@@ -1069,20 +1071,6 @@ panelview .toolbarbutton-1,
 #appMenu-zoomReduce-button2@buttonStateActive@ > .toolbarbutton-icon,
 #appMenu-zoomEnlarge-button2@buttonStateActive@ > .toolbarbutton-icon {
   stroke: var(--panel-item-active-bgcolor);
-}
-
-#appMenu-zoomReset-button2@buttonStateFocus@ > .toolbarbutton-text,
-#appMenu-fullscreen-button2@buttonStateFocus@ > .toolbarbutton-icon {
-  box-shadow: var(--panelview-toolbarbutton-focus-box-shadow);
-}
-#appMenu-zoomReduce-button2@buttonStateFocus@ > .toolbarbutton-icon,
-#appMenu-zoomEnlarge-button2@buttonStateFocus@ > .toolbarbutton-icon {
-  outline: var(--focus-outline);
-}
-
-#appMenu-zoom-controls2 > .subviewbutton {
-  margin-inline-start: 2px;
-  padding: 4px 4px;
 }
 
 /* We don't always display: none this item, and if it has forced width (like above)
@@ -1238,17 +1226,13 @@ panelview .toolbarbutton-1 {
   margin-top: 6px;
 }
 
-/**
- * Focus uses a box-shadow because we want the stroke to be
- * internal to the rect without affecting the surrounding layout. This
- * seemed to be the simplest way to do that.
- */
-panelview .toolbarbutton-1@buttonStateFocus@,
-toolbarbutton.subviewbutton@buttonStateFocus@,
-.navigable.subviewbutton@buttonStateFocus@,
-.widget-overflow-list .toolbarbutton-1@buttonStateFocus@,
-.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateFocus@ {
-  box-shadow: var(--panelview-toolbarbutton-focus-box-shadow);
+panelview .toolbarbutton-1:focus-visible,
+toolbarbutton.subviewbutton:focus-visible,
+.navigable.subviewbutton:focus-visible,
+.widget-overflow-list .toolbarbutton-1:focus-visible,
+.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: calc(var(--focus-outline-width) * -1);
 }
 
 panelview .toolbarbutton-1@buttonStateHover@,
@@ -1525,7 +1509,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   border: 1px solid transparent;
 }
 
-.subviewradio@buttonStateHoverOrFocus@ {
+.subviewradio@buttonStateHover@ {
   background-color: var(--button-hover-bgcolor);
 }
 
@@ -1533,6 +1517,14 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 .subviewradio[selected]:hover,
 .subviewradio@buttonStateActive@ {
   background-color: var(--button-active-bgcolor);
+}
+
+radiogroup:focus-visible > .subviewradio[focused="true"] {
+  outline: var(--focus-outline);
+}
+
+radiogroup:focus-visible > .subviewradio[focused="true"] > .radio-label-box {
+  outline: none;
 }
 
 .subviewradio > .radio-check {
@@ -1617,6 +1609,11 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 
 #PanelUI-panic-view-button:hover:active {
   background-color: var(--buttons-destructive-active-bgcolor);
+}
+
+#PanelUI-panic-view-button:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-outline-offset);
 }
 
 #PanelUI-panic-view-button > .toolbarbutton-text {
@@ -1913,12 +1910,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   text-decoration: underline;
 }
 
-#PanelUI-whatsNew .text-link:focus {
-  color: #0a84ff;
-  text-decoration: underline;
-}
-
-#PanelUI-whatsNew .text-link:active {
+#PanelUI-whatsNew .text-link:hover:active {
   color: #0060df;
 }
 

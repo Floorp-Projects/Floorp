@@ -8,6 +8,12 @@ const { ExperimentFakes } = ChromeUtils.import(
 const { ExperimentAPI } = ChromeUtils.import(
   "resource://nimbus/ExperimentAPI.jsm"
 );
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
+const { PanelTestProvider } = ChromeUtils.import(
+  "resource://activity-stream/lib/PanelTestProvider.jsm"
+);
 
 /**
  * These tests ensure that the experiment and remote default capabilities
@@ -46,10 +52,14 @@ function waitForTelemetryEvent(category) {
 }
 
 add_task(async function test_experiment_plain_text() {
+  const defaultMessageContent = (await PanelTestProvider.getMessages()).find(
+    m => m.template === "pb_newtab"
+  ).content;
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "privatebrowsing",
     enabled: true,
     value: {
+      ...defaultMessageContent,
       infoTitle: "Hello world",
       infoTitleEnabled: true,
       infoBody: "This is some text",
@@ -94,10 +104,14 @@ add_task(async function test_experiment_plain_text() {
 });
 
 add_task(async function test_experiment_fluent() {
+  const defaultMessageContent = (await PanelTestProvider.getMessages()).find(
+    m => m.template === "pb_newtab"
+  ).content;
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "privatebrowsing",
     enabled: true,
     value: {
+      ...defaultMessageContent,
       infoBody: "fluent:about-private-browsing-info-title",
       promoLinkText: "fluent:about-private-browsing-prominent-cta",
     },
@@ -180,6 +194,8 @@ add_task(async function test_experiment_format_urls() {
     featureId: "privatebrowsing",
     enabled: true,
     value: {
+      infoEnabled: true,
+      promoEnabled: true,
       infoLinkUrl: "http://foo.mozilla.com/%LOCALE%",
       promoLinkUrl: "http://bar.mozilla.com/%LOCALE%",
     },
@@ -238,6 +254,7 @@ add_task(async function test_experiment_click_promo_telemetry() {
     featureId: "privatebrowsing",
     enabled: true,
     value: {
+      promoEnabled: true,
       promoLinkUrl: "http://example.com",
     },
   });
@@ -263,9 +280,13 @@ add_task(async function test_experiment_click_promo_telemetry() {
 });
 
 add_task(async function test_experiment_bottom_promo() {
+  const defaultMessageContent = (await PanelTestProvider.getMessages()).find(
+    m => m.template === "pb_newtab"
+  ).content;
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "privatebrowsing",
     value: {
+      ...defaultMessageContent,
       enabled: true,
       promoLinkType: "button",
       promoSectionStyle: "bottom",
@@ -316,9 +337,13 @@ add_task(async function test_experiment_bottom_promo() {
 });
 
 add_task(async function test_experiment_below_search_promo() {
+  const defaultMessageContent = (await PanelTestProvider.getMessages()).find(
+    m => m.template === "pb_newtab"
+  ).content;
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "privatebrowsing",
     value: {
+      ...defaultMessageContent,
       enabled: true,
       promoLinkType: "button",
       promoSectionStyle: "below-search",
@@ -371,9 +396,13 @@ add_task(async function test_experiment_below_search_promo() {
 });
 
 add_task(async function test_experiment_top_promo() {
+  const defaultMessageContent = (await PanelTestProvider.getMessages()).find(
+    m => m.template === "pb_newtab"
+  ).content;
   let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
     featureId: "privatebrowsing",
     value: {
+      ...defaultMessageContent,
       enabled: true,
       promoLinkType: "button",
       promoSectionStyle: "top",
@@ -419,5 +448,93 @@ add_task(async function test_experiment_top_promo() {
 
   await BrowserTestUtils.closeWindow(win);
 
+  await doExperimentCleanup();
+});
+
+add_task(async function test_experiment_messaging_system() {
+  const LOCALE = Services.locale.appLocaleAsBCP47;
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "pbNewtab",
+    enabled: true,
+    value: {
+      id: "PB_NEWTAB_MESSAGING_SYSTEM",
+      template: "pb_newtab",
+      content: {
+        promoEnabled: true,
+        infoEnabled: true,
+        infoBody: "fluent:about-private-browsing-info-title",
+        promoLinkText: "fluent:about-private-browsing-prominent-cta",
+        infoLinkUrl: "http://foo.example.com/%LOCALE%",
+        promoLinkUrl: "http://bar.example.com/%LOCALE%",
+      },
+      // Priority ensures this message is picked over the one in
+      // OnboardingMessageProvider
+      priority: 5,
+      targeting: "true",
+    },
+  });
+  Services.prefs.setStringPref(
+    "browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments",
+    '{"id":"messaging-experiments","enabled":true,"type":"remote-experiments","messageGroups":["pbNewtab"],"updateCycleInMs":0}'
+  );
+  const { ASRouter } = ChromeUtils.import(
+    "resource://activity-stream/lib/ASRouter.jsm"
+  );
+  // Reload the provider
+  await ASRouter._updateMessageProviders();
+  // Wait to load the messages from the messaging-experiments provider
+  await ASRouter.loadMessagesFromAllProviders();
+
+  Assert.ok(
+    ASRouter.state.messages.find(m => m.id === "PB_NEWTAB_MESSAGING_SYSTEM"),
+    "Experiment message found in ASRouter state"
+  );
+
+  Services.telemetry.clearEvents();
+
+  let { win, tab } = await openTabAndWaitForRender();
+
+  await SpecialPowers.spawn(tab, [LOCALE], async function(locale) {
+    const infoBody = content.document.getElementById("info-body");
+    const promoLink = content.document.getElementById(
+      "private-browsing-vpn-link"
+    );
+
+    // Check experiment values are rendered
+    is(
+      infoBody.textContent,
+      "You’re in a Private Window",
+      "should render infoBody with fluent"
+    );
+    is(
+      promoLink.textContent,
+      "Stay private with Mozilla VPN",
+      "should render promoLinkText with fluent"
+    );
+    is(
+      content.document.querySelector(".info a").getAttribute("href"),
+      "http://foo.example.com/" + locale,
+      "should format the infoLinkUrl url"
+    );
+    is(
+      content.document.querySelector(".promo a").getAttribute("href"),
+      "http://bar.example.com/" + locale,
+      "should format the promoLinkUrl url"
+    );
+  });
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        method: "expose",
+        extra: {
+          featureId: "pbNewtab",
+        },
+      },
+    ],
+    { category: "normandy" }
+  );
+
+  await BrowserTestUtils.closeWindow(win);
   await doExperimentCleanup();
 });

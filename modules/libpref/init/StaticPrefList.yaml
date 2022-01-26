@@ -1474,7 +1474,7 @@
 # be loaded normally as-if users normally navigated to the page.
 - name: browser.soft_reload.only_force_validate_top_level_document
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -2144,12 +2144,6 @@
   type: String
   value: ""
   mirror: never
-
-# Whether WheelEvent should expose wheelDelta / wheelDeltaX / wheelDeltaY
-- name: dom.event.wheelDelta.enabled
-  type: bool
-  value: true
-  mirror: always
 
 #if defined(XP_MACOSX)
 # Whether to disable treating ctrl click as right click
@@ -6509,7 +6503,7 @@
 
 - name: javascript.options.wasm_caching
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # The amount of time we wait between a request to GC (due to leaving a page) and doing the actual GC, in ms.
@@ -10187,6 +10181,13 @@
 - name: network.trr.temp_blocklist
   type: RelaxedAtomicBool
   value: true
+  mirror: always
+
+# TRR blocklist entry expire time (in seconds). Default is one minute.
+# Meant to survive basically a page load.
+- name: network.trr.temp_blocklist_duration_sec
+  type: RelaxedAtomicUint32
+  value: 60
   mirror: always
 
 # Single TRR request timeout, in milliseconds

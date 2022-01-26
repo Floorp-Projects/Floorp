@@ -1585,7 +1585,9 @@ void CollectStackingContextItems(nsDisplayListBuilder* aBuilder,
     MOZ_ASSERT(!AnyContentAncestorModified(item->FrameForInvalidation()));
     MOZ_ASSERT(!item->IsPreProcessed());
     item->InvalidateCachedChildInfo(aBuilder);
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     item->SetMergedPreProcessed(false, true);
+#endif
     item->SetReused(true);
 
     const bool isStackingContextItem = IsReuseableStackingContextItem(item);

@@ -109,13 +109,13 @@ This telemetry is handled by `SearchSERPTelemetry.jsm and the associated parent/
 SEARCH_COUNTS - SERP results
   This histogram records search counts for visits to SERP in-content pages.
   For in-content searches, the format is
-  ``<provider>.in-content:[sap|sap-follow-on|organic]:[code|none]``.
+  ``<provider>.in-content:[sap|sap-follow-on|organic]:[<code>|other|none]``.
 
   This is obsolete, browser.search.content.* should be preferred.
 
 browser.search.content.*
   These keyed scalar track counts of SERP page loads. The key format is
-  ``<provider>:[tagged|tagged-follow-on|organic]:[<code>|none]``.
+  ``<provider>:[tagged|tagged-follow-on|organic]:[<code>|other|none]``.
 
   These will eventually replace the SEARCH_COUNTS - SERP results.
 

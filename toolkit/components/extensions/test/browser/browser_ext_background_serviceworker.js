@@ -9,6 +9,12 @@ Services.scriptloader.loadSubScript(
   this
 );
 
+// Bug 1748665 remove when events will start serviceworker
+Services.prefs.setBoolPref(
+  "extensions.webextensions.background-delayed-startup",
+  false
+);
+
 add_task(assert_background_serviceworker_pref_enabled);
 
 add_task(async function test_serviceWorker_register_guarded_by_pref() {

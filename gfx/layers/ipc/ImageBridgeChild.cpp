@@ -822,7 +822,7 @@ mozilla::ipc::IPCResult ImageBridgeChild::RecvReportFramesDropped(
 PTextureChild* ImageBridgeChild::CreateTexture(
     const SurfaceDescriptor& aSharedData, ReadLockDescriptor&& aReadLock,
     LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
-    wr::MaybeExternalImageId& aExternalImageId, nsISerialEventTarget* aTarget) {
+    wr::MaybeExternalImageId& aExternalImageId) {
   MOZ_ASSERT(CanSend());
   return SendPTextureConstructor(aSharedData, std::move(aReadLock),
                                  aLayersBackend, aFlags, aSerial,

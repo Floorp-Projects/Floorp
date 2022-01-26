@@ -3,6 +3,12 @@
 const HOSTS = new Set(["example.com"]);
 
 Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
+// Since we're not using AOM, and MV3 forces event pages, bypass
+// delayed-startup for MV3 test.  These tests do not rely on startup events.
+Services.prefs.setBoolPref(
+  "extensions.webextensions.background-delayed-startup",
+  false
+);
 
 const server = createHttpServer({ hosts: HOSTS });
 

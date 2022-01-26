@@ -1,0 +1,149 @@
+{
+  "data": [
+    {
+      "schema": 1643096116299,
+      "taggedCodes": [
+        "MOZ2",
+        "MOZ4",
+        "MOZ5",
+        "MOZA",
+        "MOZB",
+        "MOZD",
+        "MOZE",
+        "MOZI",
+        "MOZM",
+        "MOZO",
+        "MOZT",
+        "MOZW",
+        "MOZSL01",
+        "MOZSL02",
+        "MOZSL03"
+      ],
+      "telemetryId": "bing",
+      "organicCodes": [],
+      "codeParamName": "pc",
+      "queryParamName": "q",
+      "followOnCookies": [
+        {
+          "host": "www.bing.com",
+          "name": "SRCHS",
+          "codeParamName": "PC",
+          "extraCodePrefixes": [
+            "QBRE"
+          ],
+          "extraCodeParamName": "form"
+        }
+      ],
+      "searchPageRegexp": "^https://www\\.bing\\.com/search",
+      "extraAdServersRegexps": [
+        "^https://www\\.bing\\.com/acli?c?k"
+      ],
+      "id": "e1eec461-f1f3-40de-b94b-3b670b78108c",
+      "last_modified": 1643136934001
+    },
+    {
+      "schema": 1643100256547,
+      "taggedCodes": [
+        "firefox-a",
+        "firefox-b",
+        "firefox-b-1",
+        "firefox-b-ab",
+        "firefox-b-1-ab",
+        "firefox-b-d",
+        "firefox-b-1-d",
+        "firefox-b-e",
+        "firefox-b-1-e",
+        "firefox-b-m",
+        "firefox-b-1-m",
+        "firefox-b-o",
+        "firefox-b-1-o",
+        "firefox-b-lm",
+        "firefox-b-1-lm",
+        "firefox-b-lg",
+        "firefox-b-huawei-h1611",
+        "firefox-b-is-oem1",
+        "firefox-b-oem1",
+        "firefox-b-oem2",
+        "firefox-b-tinno",
+        "firefox-b-pn-wt",
+        "firefox-b-pn-wt-us",
+        "ubuntu"
+      ],
+      "telemetryId": "google",
+      "organicCodes": [],
+      "codeParamName": "client",
+      "queryParamName": "q",
+      "searchPageRegexp": "^https://www\\.google\\.(?:.+)/search",
+      "followOnParamNames": [
+        "oq",
+        "ved",
+        "ei"
+      ],
+      "extraAdServersRegexps": [
+        "^https://www\\.google(?:adservices)?\\.com/(?:pagead/)?aclk"
+      ],
+      "id": "635a3325-1995-42d6-be09-dbe4b2a95453",
+      "last_modified": 1643136933998
+    },
+    {
+      "schema": 1643100257574,
+      "taggedCodes": [
+        "ffab",
+        "ffcm",
+        "ffhp",
+        "ffip",
+        "ffit",
+        "ffnt",
+        "ffocus",
+        "ffos",
+        "ffsb",
+        "fpas",
+        "fpsa",
+        "ftas",
+        "ftsa",
+        "newext"
+      ],
+      "telemetryId": "duckduckgo",
+      "organicCodes": [],
+      "codeParamName": "t",
+      "queryParamName": "q",
+      "searchPageRegexp": "^https://duckduckgo\\.com/",
+      "extraAdServersRegexps": [
+        "^https://duckduckgo.com/y\\.js?.*ad_provider\\=",
+        "^https://www\\.amazon\\.(?:[a-z.]{2,24}).*(?:tag=duckduckgo-)"
+      ],
+      "id": "9dfd626b-26f2-4913-9d0a-27db6cb7d8ca",
+      "last_modified": 1643136933995
+    },
+    {
+      "schema": 1643100258578,
+      "telemetryId": "yahoo",
+      "queryParamName": "p",
+      "searchPageRegexp": "^https://(?:.*)search\\.yahoo\\.com/search",
+      "id": "0433b88a-1ddc-47b1-ab1f-9a77daeae1b7",
+      "last_modified": 1643136933992
+    },
+    {
+      "schema": 1643107838909,
+      "taggedCodes": [
+        "monline_dg",
+        "monline_3_dg",
+        "monline_4_dg",
+        "monline_7_dg"
+      ],
+      "telemetryId": "baidu",
+      "organicCodes": [],
+      "codeParamName": "tn",
+      "queryParamName": "wd",
+      "searchPageRegexp": "^https://www\\.baidu\\.com/(?:s|baidu)",
+      "followOnParamNames": [
+        "oq"
+      ],
+      "extraAdServersRegexps": [
+        "^https?://www\\.baidu\\.com/baidu\\.php?"
+      ],
+      "id": "19c434a3-d173-4871-9743-290ac92a3f6a",
+      "last_modified": 1643136933989
+    }
+  ]
+}
