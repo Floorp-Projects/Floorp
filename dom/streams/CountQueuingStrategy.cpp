@@ -21,7 +21,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BaseQueuingStrategy)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CountQueuingStrategy)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(CountQueuingStrategy,
+                                                BaseQueuingStrategy)
 NS_IMPL_ADDREF_INHERITED(CountQueuingStrategy, BaseQueuingStrategy)
 NS_IMPL_RELEASE_INHERITED(CountQueuingStrategy, BaseQueuingStrategy)
 
