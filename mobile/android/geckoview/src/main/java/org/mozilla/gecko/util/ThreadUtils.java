@@ -60,6 +60,14 @@ public final class ThreadUtils {
     sUiHandler.post(runnable);
   }
 
+  public static void postToUiThreadDelayed(final Runnable runnable, final long delayMillis) {
+    sUiHandler.postDelayed(runnable, delayMillis);
+  }
+
+  public static void removeUiThreadCallbacks(final Runnable runnable) {
+    sUiHandler.removeCallbacks(runnable);
+  }
+
   public static Handler getBackgroundHandler() {
     return GeckoBackgroundThread.getHandler();
   }

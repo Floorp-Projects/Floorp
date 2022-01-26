@@ -173,6 +173,8 @@ parent:
   sync NotifyChildRecreated(LayersId id)
     returns (CompositorOptions compositorOptions);
 
+  async NotifyMemoryPressure();
+
   // Make sure any pending composites are started immediately and
   // block until they are completed.
   sync FlushRendering(RenderReasons aReasons);
