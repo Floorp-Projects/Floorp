@@ -200,8 +200,7 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
   AVVAAPIDeviceContext* vactx = (AVVAAPIDeviceContext*)hwctx->hwctx;
 
   if (StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled()) {
-    mDisplay =
-        mLib->vaGetDisplayDRM(widget::GetDMABufDevice()->GetGbmDeviceFd());
+    mDisplay = mLib->vaGetDisplayDRM(widget::GetDMABufDevice()->GetDRMFd());
     if (!mDisplay) {
       FFMPEG_LOG("  Can't get DRM VA-API display.");
       return false;
