@@ -40,7 +40,6 @@ MediaTransportHandlerIPC::MediaTransportHandlerIPC(
               __func__);
         }
         MediaTransportChild* child = new MediaTransportChild(this);
-        actor->SetEventTargetForActor(child, mCallbackThread);
         // PBackgroungChild owns mChild! When it is done with it,
         // mChild will let us know it it going away.
         mChild = actor->SendPMediaTransportConstructor(child);

@@ -658,6 +658,7 @@ var DownloadsPanel = {
 
     if (!anchor) {
       DownloadsCommon.error("Downloads button cannot be found.");
+      this._state = this.kStateHidden;
       return;
     }
 
@@ -687,7 +688,10 @@ var DownloadsPanel = {
         0,
         false,
         null
-      ).catch(Cu.reportError);
+      ).catch(e => {
+        Cu.reportError(e);
+        this._state = this.kStateHidden;
+      });
 
       if (!openedManually) {
         this._delayPopupItems();

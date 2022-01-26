@@ -1039,7 +1039,7 @@ bool TextureClient::InitIPDLActor(CompositableForwarder* aForwarder) {
   PTextureChild* actor = aForwarder->GetTextureForwarder()->CreateTexture(
       desc, std::move(readLockDescriptor),
       aForwarder->GetCompositorBackendType(), GetFlags(), mSerial,
-      mExternalImageId, nullptr);
+      mExternalImageId);
 
   if (!actor) {
     gfxCriticalNote << static_cast<int32_t>(desc.type()) << ", "

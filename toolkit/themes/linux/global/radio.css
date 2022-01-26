@@ -38,7 +38,7 @@ radio {
 
 /* ..... focused state ..... */
 
-radio[focused="true"] > .radio-label-box {
+radiogroup:focus-visible > radio[focused="true"] > .radio-label-box {
   /* Native theming should take care of this but it appears to be broken with
      some Gtk themes. Bug 1312169. */
   outline: var(--default-focusring);

@@ -2820,6 +2820,20 @@
           });
         } else {
           this._insertBrowser(t, true);
+          // If we were called by frontend and don't have openWindowInfo,
+          // but we were opened from another browser, set the cross group
+          // opener ID:
+          if (openerBrowser && !openWindowInfo) {
+            try {
+              b.browsingContext.setCrossGroupOpener(
+                openerBrowser.browsingContext
+              );
+            } catch (ex) {
+              // Shouldn't happen, but we shouldn't break tabbrowser if
+              // this failed.
+              Cu.reportError(ex);
+            }
+          }
         }
       } catch (e) {
         Cu.reportError("Failed to create tab");

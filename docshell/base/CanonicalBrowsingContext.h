@@ -91,6 +91,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // BrowsingContextGroup.
   uint64_t GetCrossGroupOpenerId() const { return mCrossGroupOpenerId; }
   void SetCrossGroupOpenerId(uint64_t aOpenerId);
+  void SetCrossGroupOpener(CanonicalBrowsingContext& aCrossGroupOpener,
+                           ErrorResult& aRv);
 
   void GetWindowGlobals(nsTArray<RefPtr<WindowGlobalParent>>& aWindows);
 

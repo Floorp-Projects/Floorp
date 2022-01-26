@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use std::io::{stdout, Stdout, Write};
+use std::io::Write;
+use std::fmt::Write as FmtWrite;
 
 /// A struct that makes it easier to print out a pretty tree of data, which
 /// can be visually scanned more easily.
@@ -17,6 +18,10 @@ where
     /// a mid-tree prefix or a branch ending prefix.
     queued_item: Option<String>,
 
+    // We hold lines until they are done, and then output them all at
+    // once
+    line_buffer: String,
+
     /// The sink to print to.
     sink: W,
 }
@@ -30,9 +35,10 @@ pub trait PrintTreePrinter {
     fn add_item(&mut self, text: String);
 }
 
-impl PrintTree<Stdout> {
+// The default does nothing but log
+impl PrintTree<std::io::Sink> {
     pub fn new(title: &str) -> Self {
-        PrintTree::new_with_sink(title, stdout())
+        PrintTree::new_with_sink(title, std::io::sink())
     }
 }
 
@@ -40,30 +46,40 @@ impl<W> PrintTree<W>
 where
     W: Write
 {
-    pub fn new_with_sink(title: &str, mut sink: W) -> Self {
-        writeln!(sink, "\u{250c} {}", title).unwrap();
-        PrintTree {
+    pub fn new_with_sink(title: &str, sink: W) -> Self {
+        let mut result = PrintTree {
             level: 1,
             queued_item: None,
+            line_buffer: String::new(),
             sink,
-        }
+        };
+
+        writeln!(result.line_buffer, "\u{250c} {}", title).unwrap();
+        result.flush_line();
+        result
     }
 
     fn print_level_prefix(&mut self) {
         for _ in 0 .. self.level {
-            write!(self.sink, "\u{2502}  ").unwrap();
+            write!(self.line_buffer, "\u{2502}  ").unwrap();
         }
     }
 
     fn flush_queued_item(&mut self, prefix: &str) {
         if let Some(queued_item) = self.queued_item.take() {
             self.print_level_prefix();
-            writeln!(self.sink, "{} {}", prefix, queued_item).unwrap();
+            writeln!(self.line_buffer, "{} {}", prefix, queued_item).unwrap();
+            self.flush_line();
         }
+    }
+
+    fn flush_line(&mut self) {
+        debug!("{}", self.line_buffer);
+        self.sink.write_all(self.line_buffer.as_bytes()).unwrap();
+        self.line_buffer.clear();
     }
 }
 
-// The default `println!` based printer
 impl<W> PrintTreePrinter for PrintTree<W>
 where
     W: Write
@@ -73,7 +89,8 @@ where
         self.flush_queued_item("\u{251C}\u{2500}");
 
         self.print_level_prefix();
-        writeln!(self.sink, "\u{251C}\u{2500} {}", title).unwrap();
+        writeln!(self.line_buffer, "\u{251C}\u{2500} {}", title).unwrap();
+        self.flush_line();
 
         self.level = self.level + 1;
     }

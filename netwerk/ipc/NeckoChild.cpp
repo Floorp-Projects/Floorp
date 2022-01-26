@@ -184,10 +184,6 @@ PWebSocketEventListenerChild* NeckoChild::AllocPWebSocketEventListenerChild(
   RefPtr<WebSocketEventListenerChild> c =
       new WebSocketEventListenerChild(aInnerWindowID, target);
 
-  if (target) {
-    gNeckoChild->SetEventTargetForActor(c, target);
-  }
-
   return c.forget().take();
 }
 

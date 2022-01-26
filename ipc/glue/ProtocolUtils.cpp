@@ -337,27 +337,8 @@ const MessageChannel* IProtocol::GetIPCChannel() const {
   return mToplevel->GetIPCChannel();
 }
 
-void IProtocol::SetEventTargetForActor(IProtocol* aActor,
-                                       nsISerialEventTarget* aEventTarget) {
-  // Make sure we have a manager for the internal method to access.
-  aActor->SetManager(this);
-  mToplevel->SetEventTargetForActorInternal(aActor, aEventTarget);
-}
-
-void IProtocol::ReplaceEventTargetForActor(IProtocol* aActor,
-                                           nsISerialEventTarget* aEventTarget) {
-  MOZ_ASSERT(aActor->Manager());
-  mToplevel->ReplaceEventTargetForActor(aActor, aEventTarget);
-}
-
 nsISerialEventTarget* IProtocol::GetActorEventTarget() {
-  // FIXME: It's a touch sketchy that we don't return a strong reference here.
-  RefPtr<nsISerialEventTarget> target = GetActorEventTarget(this);
-  return target;
-}
-already_AddRefed<nsISerialEventTarget> IProtocol::GetActorEventTarget(
-    IProtocol* aActor) {
-  return mToplevel->GetActorEventTarget(aActor);
+  return GetIPCChannel()->GetWorkerEventTarget();
 }
 
 void IProtocol::SetId(int32_t aId) {
@@ -605,7 +586,6 @@ IToplevelProtocol::IToplevelProtocol(const char* aName, ProtocolId aProtoId,
     : IProtocol(aProtoId, aSide),
       mOtherPid(base::kInvalidProcessId),
       mLastLocalId(0),
-      mEventTargetMutex("ProtocolEventTargetMutex"),
       mChannel(aName, this) {
   mToplevel = this;
 }
@@ -668,20 +648,7 @@ int32_t IToplevelProtocol::Register(IProtocol* aRouted) {
     // If there's already an ID, just return that.
     return aRouted->Id();
   }
-  int32_t id = RegisterID(aRouted, NextId());
-
-  // Inherit our event target from our manager.
-  if (IProtocol* manager = aRouted->Manager()) {
-    MutexAutoLock lock(mEventTargetMutex);
-    if (nsCOMPtr<nsISerialEventTarget> target =
-            mEventTargetMap.Get(manager->Id())) {
-      MOZ_ASSERT(!mEventTargetMap.Contains(id),
-                 "Don't insert with an existing ID");
-      mEventTargetMap.InsertOrUpdate(id, std::move(target));
-    }
-  }
-
-  return id;
+  return RegisterID(aRouted, NextId());
 }
 
 int32_t IToplevelProtocol::RegisterID(IProtocol* aRouted, int32_t aId) {
@@ -698,9 +665,6 @@ void IToplevelProtocol::Unregister(int32_t aId) {
   MOZ_ASSERT(mActorMap.Contains(aId),
              "Attempting to remove an ID not in the actor map");
   mActorMap.Remove(aId);
-
-  MutexAutoLock lock(mEventTargetMutex);
-  mEventTargetMap.Remove(aId);
 }
 
 Shmem::SharedMemory* IToplevelProtocol::CreateSharedMemory(
@@ -799,88 +763,6 @@ bool IToplevelProtocol::ShmemDestroyed(const Message& aMsg) {
     Shmem::Dealloc(Shmem::PrivateIPDLCaller(), rawmem);
   }
   return true;
-}
-
-already_AddRefed<nsISerialEventTarget> IToplevelProtocol::GetMessageEventTarget(
-    const Message& aMsg) {
-  int32_t route = aMsg.routing_id();
-
-  Maybe<MutexAutoLock> lock;
-  lock.emplace(mEventTargetMutex);
-
-  nsCOMPtr<nsISerialEventTarget> target = mEventTargetMap.Get(route);
-
-  if (aMsg.is_constructor()) {
-    ActorHandle handle;
-    PickleIterator iter = PickleIterator(aMsg);
-    if (!IPC::ReadParam(&aMsg, &iter, &handle)) {
-      return nullptr;
-    }
-
-#ifdef DEBUG
-    // If this function is called more than once for the same message, the actor
-    // handle ID will already be in the map, but it should have the same target.
-    nsCOMPtr<nsISerialEventTarget> existingTgt =
-        mEventTargetMap.Get(handle.mId);
-    MOZ_ASSERT(existingTgt == target || existingTgt == nullptr);
-#endif /* DEBUG */
-
-    mEventTargetMap.InsertOrUpdate(handle.mId, nsCOMPtr{target});
-  }
-
-  return target.forget();
-}
-
-already_AddRefed<nsISerialEventTarget> IToplevelProtocol::GetActorEventTarget(
-    IProtocol* aActor) {
-  MOZ_RELEASE_ASSERT(aActor->Id() != kNullActorId &&
-                     aActor->Id() != kFreedActorId);
-
-  MutexAutoLock lock(mEventTargetMutex);
-  nsCOMPtr<nsISerialEventTarget> target = mEventTargetMap.Get(aActor->Id());
-  return target.forget();
-}
-
-nsISerialEventTarget* IToplevelProtocol::GetActorEventTarget() {
-  // The EventTarget of a ToplevelProtocol shall never be set.
-  return nullptr;
-}
-
-void IToplevelProtocol::SetEventTargetForActorInternal(
-    IProtocol* aActor, nsISerialEventTarget* aEventTarget) {
-  // The EventTarget of a ToplevelProtocol shall never be set.
-  MOZ_RELEASE_ASSERT(aActor != this);
-
-  // We should only call this function on actors that haven't been used for IPC
-  // code yet. Otherwise we'll be posting stuff to the wrong event target before
-  // we're called.
-  MOZ_RELEASE_ASSERT(aActor->Id() == kNullActorId ||
-                     aActor->Id() == kFreedActorId);
-
-  MOZ_ASSERT(aActor->Manager() && aActor->ToplevelProtocol() == this);
-
-  // Register the actor early. When it's registered again, it will keep the same
-  // ID.
-  int32_t id = Register(aActor);
-  aActor->SetId(id);
-
-  MutexAutoLock lock(mEventTargetMutex);
-  // FIXME bug 1445121 - sometimes the id is already mapped.
-  mEventTargetMap.InsertOrUpdate(id, nsCOMPtr{aEventTarget});
-}
-
-void IToplevelProtocol::ReplaceEventTargetForActor(
-    IProtocol* aActor, nsISerialEventTarget* aEventTarget) {
-  // The EventTarget of a ToplevelProtocol shall never be set.
-  MOZ_RELEASE_ASSERT(aActor != this);
-
-  int32_t id = aActor->Id();
-  // The ID of the actor should have existed.
-  MOZ_RELEASE_ASSERT(id != kNullActorId && id != kFreedActorId);
-
-  MutexAutoLock lock(mEventTargetMutex);
-  MOZ_ASSERT(mEventTargetMap.Contains(id), "Only replace an existing ID");
-  mEventTargetMap.InsertOrUpdate(id, nsCOMPtr{aEventTarget});
 }
 
 IPDLResolverInner::IPDLResolverInner(UniquePtr<IPC::Message> aReply,

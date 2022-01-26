@@ -196,11 +196,7 @@ bool GMPVideoDecoderChild::Alloc(size_t aSize,
                           this, &GMPVideoDecoderChild::RecvDecodingComplete));
   }
 #else
-#  ifdef GMP_SAFE_SHMEM
   rv = AllocShmem(aSize, aType, aMem);
-#  else
-  rv = AllocUnsafeShmem(aSize, aType, aMem);
-#  endif
 #endif
   return rv;
 }
