@@ -19737,8 +19737,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm6-linux-firefox-wikipedia.manifest
-   * **playback version**: 6.0.2
+   * **playback pageset manifest**: mitm7-linux-firefox-wikipedia.manifest
+   * **playback version**: 7.0.4
    * **secondary url**: `<https://en.wikipedia.org/wiki/Joe_Biden>`__
    * **test url**: `<https://en.wikipedia.org/wiki/Barack_Obama>`__
    * **type**: pageload
