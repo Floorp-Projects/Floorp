@@ -6956,11 +6956,10 @@ search_terms:
     expires: "2022-12-01"
 
 wallpapers:
-  discovered_wallpaper_feature:
-    type: boolean
-    lifetime: application
+  wallpaper_settings_opened:
+    type: event
     description: |
-      Whether or not the user has discovered the wallpaper feature.
+      User has opened the wallpaper settings screen.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/23381
     data_reviews:

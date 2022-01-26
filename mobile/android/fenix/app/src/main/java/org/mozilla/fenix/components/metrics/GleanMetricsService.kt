@@ -908,8 +908,8 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.JumpBackInGroupTapped -> EventWrapper<NoExtraKeys>(
             { SearchTerms.jumpBackInGroupTapped.record(it) }
         )
-        is Event.WallpaperFeatureDiscovered -> EventWrapper<NoExtraKeys>(
-            { Wallpapers.discoveredWallpaperFeature.set(true) }
+        is Event.WallpaperSettingsOpened -> EventWrapper<NoExtraKeys>(
+            { Wallpapers.wallpaperSettingsOpened.record() }
         )
         is Event.WallpaperSelected -> EventWrapper<NoExtraKeys>(
             {

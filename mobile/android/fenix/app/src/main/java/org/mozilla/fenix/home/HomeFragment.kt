@@ -768,7 +768,6 @@ class HomeFragment : Fragment() {
             binding.wordmark.setOnClickListener {
                 val manager = requireComponents.wallpaperManager
                 val newWallpaper = manager.switchToNextWallpaper()
-                requireComponents.analytics.metrics.track(Event.WallpaperFeatureDiscovered)
                 requireComponents.analytics.metrics.track(Event.WallpaperSwitched(newWallpaper))
                 manager.updateWallpaper(
                     wallpaperContainer = binding.homeLayout,

@@ -41,7 +41,7 @@ class WallpaperSettingsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        metrics.track(Event.WallpaperFeatureDiscovered)
+        metrics.track(Event.WallpaperSettingsOpened)
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
