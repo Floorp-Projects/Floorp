@@ -1268,9 +1268,8 @@ void OpenRunnable::MainThreadRunInternal(ErrorResult& aRv) {
 }
 
 void SendRunnable::RunOnMainThread(ErrorResult& aRv) {
-  nsresult rv = mProxy->mXHR->CheckCurrentGlobalCorrectness();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv = rv;
+  // Before we change any state let's check if we can send.
+  if (!mProxy->mXHR->CanSend(aRv)) {
     return;
   }
 
