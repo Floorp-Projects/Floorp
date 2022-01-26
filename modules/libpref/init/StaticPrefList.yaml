@@ -5728,6 +5728,11 @@
     type: bool
     value: false
     mirror: once
+  # Whether to use a yuv video overlay layers with DirectComposition
+-   name: gfx.webrender.dcomp-video-yuv-overlay-win
+    type: bool
+    value: false
+    mirror: once
 #endif
 
 # Whether or not fallback to Software WebRender requires the GPU process.

@@ -35,6 +35,7 @@
 #  include "GLLibraryEGL.h"
 #  include "mozilla/widget/WinCompositorWindowThread.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
+#  include "mozilla/webrender/DCLayerTree.h"
 //#  include "nsWindowsHelpers.h"
 //#  include <d3d11.h>
 #endif
@@ -172,6 +173,10 @@ void RenderThread::ShutDownTask(layers::SynchronousTask* aTask) {
   // Releasing on the render thread will allow us to avoid dispatching to remove
   // remaining textures from the texture map.
   layers::SharedSurfacesParent::ShutdownRenderThread();
+
+#ifdef XP_WIN
+  DCLayerTree::Shutdown();
+#endif
 
   ClearAllBlobImageResources();
   ClearSingletonGL();
