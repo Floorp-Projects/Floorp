@@ -17,6 +17,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.View.AccessibilityDelegate
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.view.accessibility.AccessibilityEvent
 import android.widget.Button
 import android.widget.LinearLayout
@@ -824,6 +825,25 @@ class HomeFragment : Fragment() {
         // triggered to cause an automatic update on warm start (no tab selection occurs). So we
         // update it manually here.
         requireComponents.useCases.sessionUseCases.updateLastAccess()
+        if (shouldAnimateLogoForWallpaper()) {
+            _binding?.sessionControlRecyclerView?.viewTreeObserver?.addOnGlobalLayoutListener(
+                homeLayoutListenerForLogoAnimation
+            )
+        }
+    }
+
+    // To try to find a good time to show the logo animation, we are waiting until all
+    // the sub-recyclerviews (recentBookmarks, collections, recentTabs,recentVisits
+    // and pocketStories) on the home screen have been layout.
+    private val homeLayoutListenerForLogoAnimation = object : ViewTreeObserver.OnGlobalLayoutListener {
+        override fun onGlobalLayout() {
+            _binding?.let { safeBindings ->
+                requireComponents.wallpaperManager.animateLogoIfNeeded(safeBindings.wordmark)
+                safeBindings.sessionControlRecyclerView.viewTreeObserver.removeOnGlobalLayoutListener(
+                    this
+                )
+            }
+        }
     }
 
     override fun onPause() {
@@ -1201,6 +1221,23 @@ class HomeFragment : Fragment() {
         } else {
             emptyList()
         }
+    }
+
+    // We want to show the animation in a time when the user less distracted
+    // The Heuristics are:
+    // 1) The animation hasn't shown before.
+    // 2) The user has onboarded.
+    // 3) It's the third time the user enters the app.
+    // 4) The user is part of the right audience.
+    @Suppress("MagicNumber")
+    private fun shouldAnimateLogoForWallpaper(): Boolean {
+        val localContext = context ?: return false
+        val settings = localContext.settings()
+
+        return shouldEnableWallpaper() && settings.shouldAnimateFirefoxLogo &&
+            onboarding.userHasBeenOnboarded() &&
+            settings.numberOfAppLaunches >= 3 &&
+            FeatureFlags.isThemedWallpapersFeatureEnabled(localContext)
     }
 
     private fun shouldEnableWallpaper() =

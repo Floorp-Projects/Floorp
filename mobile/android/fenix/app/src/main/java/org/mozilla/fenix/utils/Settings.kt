@@ -444,6 +444,16 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Indicates if the Firefox logo on the home screen should be animated,
+     * to show users that they can change the wallpaper by tapping on the Firefox logo.
+     */
+    var shouldAnimateFirefoxLogo by featureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_show_logo_animation),
+        default = FeatureFlags.showWallpapers,
+        featureFlag = FeatureFlags.showWallpapers
+    )
+
+    /**
      * Indicates if the user has enabled the search term tab groups feature.
      */
     var searchTermTabGroupsAreEnabled by featureFlagPreference(
