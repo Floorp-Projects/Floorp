@@ -337,7 +337,7 @@
     {
       "login": true,
       "name": "office",
-      "test_url": "https://www.office.com/launch/powerpoint?auth=1",
+      "test_url": "https://www.office.com/launch/word",
       "secondary_url": "https://www.office.com/"
     },
     {
