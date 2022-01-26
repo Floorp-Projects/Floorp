@@ -57,6 +57,7 @@
   _(WasmSignalInstallState, 500)      \
   _(WasmHugeMemoryEnabled, 500)       \
   _(MemoryTracker, 500)               \
+  _(StencilCache, 500)                \
                                       \
   _(IrregexpLazyStatic, 600)          \
   _(ThreadId, 600)                    \
