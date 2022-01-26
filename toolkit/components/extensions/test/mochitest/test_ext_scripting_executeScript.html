@@ -411,7 +411,7 @@ add_task(async function test_executeScript_with_a_file() {
   await extension.unload();
 });
 
-add_task(async function test_executeScript_in_one_frameId() {
+add_task(async function test_executeScript_in_one_frame() {
   let extension = makeExtension({
     manifest: {
       permissions: ["scripting", "webNavigation"],
@@ -433,26 +433,53 @@ add_task(async function test_executeScript_in_one_frameId() {
         "expected frame URL"
       );
 
-      const results = await browser.scripting.executeScript({
-        target: { tabId, frameIds: [fileSampleFrameId] },
-        files: ["script.js"],
-      });
+      const TEST_CASES = [
+        {
+          title: "with a file and a frame ID",
+          params: {
+            target: { tabId, frameIds: [fileSampleFrameId] },
+            files: ["script.js"],
+          },
+          expectedResults: [
+            {
+              frameId: fileSampleFrameId,
+              result: "Sample text",
+            },
+          ],
+        },
+        {
+          title: "with no frame ID",
+          params: {
+            target: { tabId },
+            func: () => {
+              return 123;
+            },
+          },
+          expectedResults: [{ frameId: 0, result: 123 }],
+        },
+      ];
 
-      browser.test.assertEq(
-        1,
-        results.length,
-        "got expected number of results"
-      );
-      browser.test.assertEq(
-        "Sample text",
-        results[0].result,
-        "got the expected result"
-      );
-      browser.test.assertEq(
-        fileSampleFrameId,
-        results[0].frameId,
-        "got the expected frameId"
-      );
+      for (const { title, params, expectedResults } of TEST_CASES) {
+        const results = await browser.scripting.executeScript(params);
+
+        browser.test.assertEq(
+          expectedResults.length,
+          results.length,
+          `${title} - got expected number of results`
+        );
+        expectedResults.forEach(({ frameId, result }, index) => {
+          browser.test.assertEq(
+            result,
+            results[index].result,
+            `${title} - got the expected results[${index}].result`
+          );
+          browser.test.assertEq(
+            frameId,
+            results[index].frameId,
+            `${title} - got the expected results[${index}].frameId`
+          );
+        });
+      }
 
       browser.test.notifyPass("execute-script");
     },
