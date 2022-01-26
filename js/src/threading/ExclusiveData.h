@@ -129,8 +129,11 @@ class ExclusiveData {
    * Guard utilizes both.
    */
   class MOZ_STACK_CLASS Guard {
+   protected:
     const ExclusiveData* parent_;
+    explicit Guard(std::nullptr_t) : parent_(nullptr) {}
 
+   private:
     Guard(const Guard&) = delete;
     Guard& operator=(const Guard&) = delete;
 
@@ -171,9 +174,54 @@ class ExclusiveData {
   };
 
   /**
+   * NullableGuard are similar to Guard, except that one the access to the
+   * ExclusiveData might not always be granted. This is useful when contextual
+   * information is enough to prevent useless use of Mutex.
+   *
+   * The NullableGuard can be manipulated as follows:
+   *
+   *     if (NullableGuard guard = data.mightAccess()) {
+   *         // NullableGuard is acquired.
+   *         guard->...
+   *     }
+   *     // NullableGuard was either not acquired or released.
+   *
+   * Where mightAccess returns either a NullableGuard from `noAccess()` or a
+   * Guard from `lock()`.
+   */
+  class MOZ_STACK_CLASS NullableGuard : public Guard {
+   public:
+    explicit NullableGuard(std::nullptr_t) : Guard((std::nullptr_t) nullptr) {}
+    explicit NullableGuard(const ExclusiveData& parent) : Guard(parent) {}
+    explicit NullableGuard(Guard&& rhs) : Guard(std::move(rhs)) {}
+
+    NullableGuard& operator=(Guard&& rhs) {
+      this->~NullableGuard();
+      new (this) NullableGuard(std::move(rhs));
+      return *this;
+    }
+
+    /**
+     * Returns whether this NullableGuard has access to the exclusive data.
+     */
+    bool hasAccess() const { return this->parent_; }
+    explicit operator bool() const { return hasAccess(); }
+  };
+
+  /**
    * Access the protected inner `T` value for exclusive reading and writing.
    */
   Guard lock() const { return Guard(*this); }
+
+  /**
+   * Provide a no-access guard, which coerces to false when tested. This value
+   * can be returned if the guard access is conditioned on external factors.
+   *
+   * See NullableGuard.
+   */
+  NullableGuard noAccess() const {
+    return NullableGuard((std::nullptr_t) nullptr);
+  }
 };
 
 template <class T>

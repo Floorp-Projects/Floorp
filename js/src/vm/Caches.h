@@ -21,6 +21,7 @@
 #include "vm/JSObject.h"
 #include "vm/JSScript.h"
 #include "vm/NativeObject.h"
+#include "vm/StencilCache.h"  // js::StencilCache
 
 namespace js {
 
@@ -120,10 +121,19 @@ class StringToAtomCache {
 
 class RuntimeCaches {
  public:
-  js::GSNCache gsnCache;
-  js::UncompressedSourceCache uncompressedSourceCache;
-  js::EvalCache evalCache;
-  js::StringToAtomCache stringToAtomCache;
+  GSNCache gsnCache;
+  UncompressedSourceCache uncompressedSourceCache;
+  EvalCache evalCache;
+  StringToAtomCache stringToAtomCache;
+
+  // This cache is used to store the result of delazification compilations which
+  // might be happening off-thread. The main-thread will concurrently read the
+  // content of this cache to avoid delazification, or fallback on running the
+  // delazification on the main-thread.
+  //
+  // Main-thread results are not stored in the StencilCache as there is no other
+  // consumer.
+  StencilCache delazificationCache;
 
   void sweepAfterMinorGC(JSTracer* trc) { evalCache.traceWeak(trc); }
 #ifdef JSGC_HASH_TABLE_CHECKS
@@ -135,10 +145,13 @@ class RuntimeCaches {
     stringToAtomCache.purge();
   }
 
+  void purgeStencils() { delazificationCache.clearAndDisable(); }
+
   void purge() {
     purgeForCompaction();
     gsnCache.purge();
     uncompressedSourceCache.purge();
+    purgeStencils();
   }
 };
 
