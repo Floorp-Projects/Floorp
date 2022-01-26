@@ -29,6 +29,7 @@ add_task(async function test() {
   // First check for the "Media" preset which will have no "view" query
   // string because it opens our traditional "full" view.
   await openPopupAndAssertUrlForPreset({
+    window,
     preset: "Media",
     expectedUrl: FRONTEND_BASE_URL,
   });
@@ -36,14 +37,16 @@ add_task(async function test() {
   // Now, let's check for "web-developer" preset. This will open up the frontend
   // with "active-tab" view query string. Frontend will understand and open the active tab view for it.
   await openPopupAndAssertUrlForPreset({
+    window,
     preset: "Web Developer",
     expectedUrl: FRONTEND_BASE_URL + "?view=active-tab&implementation=js",
   });
 });
 
-async function openPopupAndAssertUrlForPreset({ preset, expectedUrl }) {
+async function openPopupAndAssertUrlForPreset({ window, preset, expectedUrl }) {
   // Let's capture a profile and assert newly created tab's url.
   await openPopupAndEnsureCloses(window, async () => {
+    const { document } = window;
     {
       // Select the preset in the popup
       const presetsInPopup = document.getElementById(
