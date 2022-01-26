@@ -22,33 +22,7 @@ async function setupRegions(home, current) {
   Region._setCurrentRegion(current || "");
 }
 
-/**
- * Test that we don't show moreFromMozilla pane when it's disabled.
- */
-add_task(async function testwhenPrefDisabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.preferences.moreFromMozilla", false]],
-  });
-
-  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
-    leaveOpen: true,
-  });
-  let doc = gBrowser.contentDocument;
-
-  let moreFromMozillaCategory = doc.getElementById(
-    "category-more-from-mozilla"
-  );
-  ok(moreFromMozillaCategory, "The category exists");
-  ok(moreFromMozillaCategory.hidden, "The category is hidden");
-
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
-});
-
 add_task(async function testDefaultUIWithoutTemplatePref() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.preferences.moreFromMozilla", true]],
-  });
-
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });
@@ -98,6 +72,11 @@ add_task(async function testDefaultUIWithoutTemplatePref() {
     "firefox-desktop",
     "utm_medium set"
   );
+  Assert.equal(
+    searchParams.get("utm_content"),
+    "default-global",
+    "default utm_content set"
+  );
   Assert.ok(
     !searchParams.has("entrypoint_variation"),
     "entrypoint_variation should not be set"
@@ -108,6 +87,28 @@ add_task(async function testDefaultUIWithoutTemplatePref() {
   );
   BrowserTestUtils.removeTab(openedTab);
   BrowserTestUtils.removeTab(tab);
+});
+
+/**
+ * Test that we don't show moreFromMozilla pane when it's disabled.
+ */
+add_task(async function testwhenPrefDisabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.preferences.moreFromMozilla", false]],
+  });
+
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+    leaveOpen: true,
+  });
+  let doc = gBrowser.contentDocument;
+
+  let moreFromMozillaCategory = doc.getElementById(
+    "category-more-from-mozilla"
+  );
+  ok(moreFromMozillaCategory, "The category exists");
+  ok(moreFromMozillaCategory.hidden, "The category is hidden");
+
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function test_aboutpreferences_event_telemetry() {
