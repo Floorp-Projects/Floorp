@@ -973,7 +973,7 @@ pref("browser.preferences.experimental", true);
 #else
 pref("browser.preferences.experimental", false);
 #endif
-pref("browser.preferences.moreFromMozilla", false);
+pref("browser.preferences.moreFromMozilla", true);
 pref("browser.preferences.experimental.hidden", false);
 pref("browser.preferences.defaultPerformanceSettings.enabled", true);
 
