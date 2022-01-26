@@ -22,7 +22,7 @@
 #include "mozilla/PresShellInlines.h"
 
 #include "base/basictypes.h"
-
+#include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDocShell.h"
@@ -2342,7 +2342,7 @@ static void GetInterruptEnv() {
   char* ev = PR_GetEnv("GECKO_REFLOW_INTERRUPT_MODE");
   if (ev) {
 #ifndef XP_WIN
-    if (PL_strcasecmp(ev, "random") == 0) {
+    if (nsCRT::strcasecmp(ev, "random") == 0) {
       ev = PR_GetEnv("GECKO_REFLOW_INTERRUPT_SEED");
       if (ev) {
         sInterruptSeed = atoi(ev);
