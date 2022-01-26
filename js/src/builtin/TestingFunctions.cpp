@@ -2070,6 +2070,41 @@ static bool IsRelazifiableFunction(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool IsInStencilCache(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (args.length() != 1) {
+    JS_ReportErrorASCII(cx, "The function takes exactly one argument.");
+    return false;
+  }
+
+  if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
+    JS_ReportErrorASCII(cx, "The first argument should be a function.");
+    return false;
+  }
+
+  if (fuzzingSafe) {
+    // When running code concurrently to fill-up the stencil cache, the content
+    // is not garanteed to be present.
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  JSFunction* fun = &args[0].toObject().as<JSFunction>();
+  BaseScript* script = fun->baseScript();
+  RefPtr<ScriptSource> ss = script->scriptSource();
+  StencilCache& cache = cx->runtime()->caches().delazificationCache;
+  auto guard = cache.isSourceCached(ss);
+  if (!guard) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  StencilContext key(ss, script->extent());
+  frontend::CompilationStencil* stencil = cache.lookup(guard, key);
+  args.rval().setBoolean(bool(stencil));
+  return true;
+}
+
 static bool HasSameBytecodeData(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 2) {
@@ -8940,6 +8975,10 @@ JS_FN_HELP("setDefaultLocale", SetDefaultLocale, 1, 0,
 "  Set the runtime default locale to the given value.\n"
 "  An empty string or undefined resets the runtime locale to its default value.\n"
 "  NOTE: The input string is not fully validated, it must be a valid BCP-47 language tag."),
+
+JS_FN_HELP("isInStencilCache", IsInStencilCache, 1, 0,
+"isInStencilCache(fun)",
+"  True if fun is available in the stencil cache."),
 
     JS_FS_HELP_END
 };
