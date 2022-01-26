@@ -98,7 +98,10 @@ class BrowserRobot {
         )
 
         runWithIdleRes(sessionLoadedIdlingResource) {
-            assertTrue(mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime))
+            assertTrue(
+                "Page didn't load or doesn't contain the expected text",
+                mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
+            )
         }
     }
 
