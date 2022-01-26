@@ -4020,7 +4020,7 @@ const BrowserSearch = {
       window.location.href != AppConstants.BROWSER_CHROME_URL ||
       gURLBar.readOnly
     ) {
-      let win = getTopWin(true);
+      let win = getTopWin({ skipPopups: true });
       if (win) {
         // If there's an open browser window, it should handle this command
         win.focus();

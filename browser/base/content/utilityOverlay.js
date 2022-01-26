@@ -81,7 +81,7 @@ function isBlankPageURL(aURL) {
   );
 }
 
-function getTopWin(skipPopups) {
+function getTopWin({ skipPopups } = {}) {
   // If this is called in a browser window, use that window regardless of
   // whether it's the frontmost window, since commands can be executed in
   // background windows (bug 626148).
@@ -346,7 +346,7 @@ function openLinkIn(url, where, params) {
   // We don't want to open tabs in popups, so try to find a non-popup window in
   // that case.
   if ((where == "tab" || where == "tabshifted") && w && !w.toolbar.visible) {
-    w = getTopWin(true);
+    w = getTopWin({ skipPopups: true });
     aRelatedToCurrent = false;
   }
 
