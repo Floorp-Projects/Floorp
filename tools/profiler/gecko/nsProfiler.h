@@ -13,18 +13,16 @@
 #include "mozilla/ProfileJSONWriter.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Vector.h"
-#include "nsIObserver.h"
 #include "nsIProfiler.h"
 #include "nsITimer.h"
 #include "nsServiceManagerUtils.h"
 #include "ProfilerCodeAddressService.h"
 
-class nsProfiler final : public nsIProfiler, public nsIObserver {
+class nsProfiler final : public nsIProfiler {
  public:
   nsProfiler();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
   NS_DECL_NSIPROFILER
 
   nsresult Init();
@@ -51,8 +49,6 @@ class nsProfiler final : public nsIProfiler, public nsIObserver {
 
   RefPtr<SymbolTablePromise> GetSymbolTableMozPromise(
       const nsACString& aDebugPath, const nsACString& aBreakpadID);
-
-  bool mLockedForPrivateBrowsing;
 
   struct ExitProfile {
     nsCString mJSON;

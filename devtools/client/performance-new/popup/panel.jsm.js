@@ -70,7 +70,6 @@ function selectElementsInPanelview(panelview) {
     window: chromeWindow,
     inactive: getElementById("PanelUI-profiler-inactive"),
     active: getElementById("PanelUI-profiler-active"),
-    locked: getElementById("PanelUI-profiler-locked"),
     presetDescription: getElementById("PanelUI-profiler-content-description"),
     presetsEditSettings: getElementById(
       "PanelUI-profiler-content-edit-settings"
@@ -148,45 +147,17 @@ function createViewControllers(state, elements) {
 
     updateProfilerState() {
       const { Services } = lazy.Services();
-      /**
-       * Convert two boolean values into a "profilerState" enum.
-       *
-       * @type {"active" | "inactive" | "locked"}
-       */
-      let profilerState = Services.profiler.IsActive() ? "active" : "inactive";
-      if (!Services.profiler.CanProfile()) {
-        // In private browsing mode, the profiler is locked.
-        profilerState = "locked";
-      }
 
-      switch (profilerState) {
-        case "active":
-          elements.inactive.hidden = true;
-          elements.active.hidden = false;
-          elements.settingsSection.hidden = true;
-          elements.contentRecording.hidden = false;
-          elements.locked.hidden = true;
-          break;
-        case "inactive":
-          elements.inactive.hidden = false;
-          elements.active.hidden = true;
-          elements.settingsSection.hidden = false;
-          elements.contentRecording.hidden = true;
-          elements.locked.hidden = true;
-          break;
-        case "locked": {
-          elements.inactive.hidden = true;
-          elements.active.hidden = true;
-          elements.settingsSection.hidden = true;
-          elements.contentRecording.hidden = true;
-          elements.locked.hidden = false;
-          // This works around XULElement height issues.
-          const { height } = elements.locked.getBoundingClientRect();
-          elements.locked.style.height = `${height}px`;
-          break;
-        }
-        default:
-          throw new Error("Unhandled profiler state.");
+      if (Services.profiler.IsActive()) {
+        elements.inactive.hidden = true;
+        elements.active.hidden = false;
+        elements.settingsSection.hidden = true;
+        elements.contentRecording.hidden = false;
+      } else {
+        elements.inactive.hidden = false;
+        elements.active.hidden = true;
+        elements.settingsSection.hidden = false;
+        elements.contentRecording.hidden = true;
       }
     },
 
@@ -359,12 +330,7 @@ function addPopupEventHandlers(state, elements, view) {
   const { Services } = lazy.Services();
 
   // These are all events that can affect the current state of the profiler.
-  const events = [
-    "profiler-started",
-    "profiler-stopped",
-    "chrome-document-global-created", // This is potentially a private browser.
-    "last-pb-context-exited",
-  ];
+  const events = ["profiler-started", "profiler-stopped"];
   for (const event of events) {
     Services.obs.addObserver(view.updateProfilerState, event);
     state.cleanup.push(() => {
