@@ -30,29 +30,58 @@ add_task(async function test_open_tab() {
     gBrowser,
     EXAMPLE_URL
   );
-  openWebLinkIn(EXAMPLE_URL, "tab");
+  const contentBrowser = await new Promise(resolveOnContentBrowserCreated =>
+    openWebLinkIn(EXAMPLE_URL, "tab", {
+      resolveOnContentBrowserCreated,
+    })
+  );
 
   const tab = await waitForTabPromise;
+  is(
+    contentBrowser,
+    tab.linkedBrowser,
+    "We get a content browser that is the tab's linked browser as the result of opening a tab"
+  );
+
   BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_open_window() {
   const waitForWindowPromise = BrowserTestUtils.waitForNewWindow();
-  openWebLinkIn(EXAMPLE_URL, "window");
+  const contentBrowser = await new Promise(resolveOnContentBrowserCreated =>
+    openWebLinkIn(EXAMPLE_URL, "window", {
+      resolveOnContentBrowserCreated,
+    })
+  );
 
   const win = await waitForWindowPromise;
+  is(
+    contentBrowser,
+    win.gBrowser.selectedBrowser,
+    "We get the content browser for the newly opened window as a result of opening a window"
+  );
+
   await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function test_open_private_window() {
   const waitForWindowPromise = BrowserTestUtils.waitForNewWindow();
-  openWebLinkIn(EXAMPLE_URL, "window", {
-    private: true,
-  });
+  const contentBrowser = await new Promise(resolveOnContentBrowserCreated =>
+    openWebLinkIn(EXAMPLE_URL, "window", {
+      resolveOnContentBrowserCreated,
+      private: true,
+    })
+  );
+
   const win = await waitForWindowPromise;
   ok(
     PrivateBrowsingUtils.isBrowserPrivate(win),
     "The new window is a private window."
+  );
+  is(
+    contentBrowser,
+    win.gBrowser.selectedBrowser,
+    "We get the content browser for the newly opened window as a result of opening a private window"
   );
 
   await BrowserTestUtils.closeWindow(win);
@@ -66,12 +95,23 @@ add_task(async function test_open_private_tab_from_private_window() {
     privateWindow.gBrowser,
     EXAMPLE_URL
   );
-  privateWindow.openWebLinkIn(EXAMPLE_URL, "tab");
+  const contentBrowser = await new Promise(resolveOnContentBrowserCreated =>
+    privateWindow.openWebLinkIn(EXAMPLE_URL, "tab", {
+      resolveOnContentBrowserCreated,
+    })
+  );
+
   const tab = await waitForTabPromise;
   ok(
     PrivateBrowsingUtils.isBrowserPrivate(tab),
     "The new tab was opened in a private browser."
   );
+  is(
+    contentBrowser,
+    tab.linkedBrowser,
+    "We get a content browser that is the tab's linked browser as the result of opening a private tab in a private window"
+  );
+
   await BrowserTestUtils.closeWindow(privateWindow);
 });
 
@@ -86,12 +126,22 @@ add_task(async function test_open_non_private_tab_from_private_window() {
     EXAMPLE_URL
   );
 
-  privateWindow.openWebLinkIn(EXAMPLE_URL, "tab", { forceNonPrivate: true });
+  const contentBrowser = await new Promise(resolveOnContentBrowserCreated =>
+    privateWindow.openWebLinkIn(EXAMPLE_URL, "tab", {
+      forceNonPrivate: true,
+      resolveOnContentBrowserCreated,
+    })
+  );
 
   const nonPrivateTab = await waitForTabPromise;
   ok(
     !PrivateBrowsingUtils.isBrowserPrivate(nonPrivateTab),
     "The new window isn't a private window."
+  );
+  is(
+    contentBrowser,
+    nonPrivateTab.linkedBrowser,
+    "We get a content browser that is the non private tab's linked browser as the result of opening a non private tab from a private window"
   );
 
   BrowserTestUtils.removeTab(nonPrivateTab);
@@ -112,12 +162,22 @@ add_task(async function test_open_non_private_tab_from_only_private_window() {
   const waitForWindowPromise = BrowserTestUtils.waitForNewWindow({
     url: EXAMPLE_URL,
   });
-  privateWindow.openWebLinkIn(EXAMPLE_URL, "tab", { forceNonPrivate: true });
+  const contentBrowser = await new Promise(resolveOnContentBrowserCreated =>
+    privateWindow.openWebLinkIn(EXAMPLE_URL, "tab", {
+      forceNonPrivate: true,
+      resolveOnContentBrowserCreated,
+    })
+  );
 
   const nonPrivateWindow = await waitForWindowPromise;
   ok(
     !PrivateBrowsingUtils.isBrowserPrivate(nonPrivateWindow),
     "The new window isn't a private window."
+  );
+  is(
+    contentBrowser,
+    nonPrivateWindow.gBrowser.selectedBrowser,
+    "We get the content browser for the newly opened non private window from a private window, as a result of opening a non private tab."
   );
 
   await BrowserTestUtils.closeWindow(nonPrivateWindow);
