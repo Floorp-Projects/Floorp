@@ -3401,7 +3401,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 122;
+    const UI_VERSION = 123;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
@@ -4118,6 +4118,42 @@ BrowserGlue.prototype = {
         }
         Services.prefs.clearUserPref(oldPref);
       } catch (ex) {}
+    }
+
+    if (currentUIVersion < 123) {
+      // Migrate "extensions.formautofill.available" and
+      // "extensions.formautofill.creditCards.available" from old to new prefs
+      const oldFormAutofillModule = "extensions.formautofill.available";
+      const oldCreditCardsAvailable =
+        "extensions.formautofill.creditCards.available";
+      const newCreditCardsAvailable =
+        "extensions.formautofill.creditCards.supported";
+      const newAddressesAvailable =
+        "extensions.formautofill.addresses.supported";
+      if (Services.prefs.prefHasUserValue(oldFormAutofillModule)) {
+        let moduleAvailability = Services.prefs.getCharPref(
+          oldFormAutofillModule
+        );
+        if (moduleAvailability == "on") {
+          Services.prefs.setCharPref(newAddressesAvailable, moduleAvailability);
+          Services.prefs.setCharPref(
+            newCreditCardsAvailable,
+            Services.prefs.getBoolPref(oldCreditCardsAvailable) ? "on" : "off"
+          );
+        }
+
+        if (moduleAvailability == "off") {
+          Services.prefs.setCharPref(
+            newCreditCardsAvailable,
+            moduleAvailability
+          );
+          Services.prefs.setCharPref(newAddressesAvailable, moduleAvailability);
+        }
+      }
+
+      // after migrating, clear old prefs so we can remove them later.
+      Services.prefs.clearUserPref(oldFormAutofillModule);
+      Services.prefs.clearUserPref(oldCreditCardsAvailable);
     }
 
     // Update the migration version.
