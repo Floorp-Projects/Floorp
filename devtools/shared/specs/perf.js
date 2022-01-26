@@ -86,6 +86,8 @@ const perfDescription = {
       response: { value: RetVal("boolean") },
     },
 
+    // @backward-compat { version 98 } This method is not used since Firefox 98.
+    // We can remove it once Firefox 98 hits release.
     isLockedForPrivateBrowsing: {
       request: {},
       response: { value: RetVal("boolean") },
