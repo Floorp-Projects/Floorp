@@ -31,7 +31,6 @@
 #include "nsIOService.h"
 #include "nsHttpHandler.h"
 #include "nsHttpConnectionInfo.h"
-#include "PSMIPCCommon.h"
 #include "secerr.h"
 #ifdef MOZ_WEBRTC
 #  include "mozilla/dom/ContentProcessManager.h"

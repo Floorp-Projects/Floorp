@@ -2505,9 +2505,9 @@ nsNSSComponent::IsCertTestBuiltInRoot(CERTCertificate* cert, bool* result) {
   *result = false;
 
 #ifdef DEBUG
-  RefPtr<nsNSSCertificate> nsc = new nsNSSCertificate(cert);
+  nsCOMPtr<nsIX509Cert> x509Cert(new nsNSSCertificate(cert));
   nsAutoString certHash;
-  nsresult rv = nsc->GetSha256Fingerprint(certHash);
+  nsresult rv = x509Cert->GetSha256Fingerprint(certHash);
   if (NS_FAILED(rv)) {
     return rv;
   }
