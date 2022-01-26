@@ -32,8 +32,10 @@ add_task(async function test_detect_unsupportedRegion() {
       "extensions.formautofill.creditCards.supportedCountries"
     );
   });
+
   let addon = await AddonManager.getAddonByID(EXTENSION_ID);
   await addon.reload();
+
   Assert.equal(
     FormAutofill.isAutofillCreditCardsAvailable,
     false,
