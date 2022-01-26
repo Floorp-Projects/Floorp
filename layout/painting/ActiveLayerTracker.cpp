@@ -173,11 +173,6 @@ void LayerActivityTracker::NotifyExpired(LayerActivity* aObject) {
              "its frame or its content");
 
   if (f) {
-    // The pres context might have been detached during the delay -
-    // that's fine, just skip the paint.
-    if (f->PresContext()->GetContainerWeak() && !gfxVars::UseWebRender()) {
-      f->SchedulePaint(nsIFrame::PAINT_DEFAULT, false);
-    }
     f->RemoveStateBits(NS_FRAME_HAS_LAYER_ACTIVITY_PROPERTY);
     f->RemoveProperty(LayerActivityProperty());
   } else {
