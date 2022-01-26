@@ -2,7 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -773,7 +773,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title of the preference to enable "HTTPS-Only" mode -->
     <string name="preference_https_only_title">HTTPS-Only Mode</string>
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preference_https_only_summary2">Automatically attempts to connect to sites using HTTPS for increased security. HTTPS connections provide a secure, encrypted connection to websites you visit.</string>
+    <string name="preference_https_only_summary2" moz:removedIn="98" tools:ignore="UnusedResources">Automatically attempts to connect to sites using HTTPS for increased security. HTTPS connections provide a secure, encrypted connection to websites you visit.</string>
+    <string name="preference_https_only_summary3">Automatically attempts to connect to sites using the HTTPS encryption protocol for increased security.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Exceptions</string>

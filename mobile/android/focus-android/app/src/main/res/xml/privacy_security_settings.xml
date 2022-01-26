@@ -123,7 +123,7 @@
             android:defaultValue="true"
             android:key="@string/pref_key_https_only"
             android:layout="@layout/focus_preference_no_icon"
-            android:summary="@string/preference_https_only_summary2"
+            android:summary="@string/preference_https_only_summary3"
             android:title="@string/preference_https_only_title" />
     </androidx.preference.PreferenceCategory>
 
