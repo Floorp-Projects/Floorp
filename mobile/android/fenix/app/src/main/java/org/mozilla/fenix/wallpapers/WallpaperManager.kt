@@ -34,7 +34,6 @@ class WallpaperManager(
 
     var currentWallpaper: Wallpaper = getCurrentWallpaperFromSettings()
         set(value) {
-            settings.previousWallpaper = currentWallpaper.name
             settings.currentWallpaper = value.name
             field = value
         }
@@ -53,9 +52,9 @@ class WallpaperManager(
             wallpaperContainer.background = BitmapDrawable(context.resources, bitmap)
         }
         currentWallpaper = newWallpaper
+        metrics.track(Event.NewWallpaperApplied(newWallpaper))
 
         adjustTheme(wallpaperContainer.context)
-        recordWallpaperAppliedMetric(newWallpaper)
     }
 
     private fun adjustTheme(context: Context) {
@@ -113,8 +112,6 @@ class WallpaperManager(
             defaultWallpaper
         } else {
             availableWallpapers.find { it.name == currentWallpaper } ?: defaultWallpaper
-        }.also {
-            recordSelectionMetrics(it)
         }
     }
 
@@ -142,35 +139,14 @@ class WallpaperManager(
         }
     }
 
-    fun recordDiscoveredMetric() {
-        val hasSentMetric = settings.wallpapersDiscovered
-        if (!hasSentMetric) {
-            metrics.track(Event.Wallpaper.DiscoveredFeature)
-            settings.wallpapersDiscovered = true
-        }
-    }
-
-    private fun recordWallpaperAppliedMetric(appliedWallpaper: Wallpaper) {
-        metrics.track(Event.Wallpaper.NewWallpaperApplied(appliedWallpaper))
-    }
-
-    private fun recordSelectionMetrics(currentWallpaper: Wallpaper) {
-        val previousWallpaperName = settings.previousWallpaper
-        if (previousWallpaperName != defaultWallpaper.name && currentWallpaper == defaultWallpaper) {
-            metrics.track(Event.Wallpaper.WallpaperResetToDefault)
-            // This metric will continue to be reported unless the previous wallpaper is reset
-            settings.previousWallpaper = currentWallpaper.name
-        }
-        metrics.track(Event.Wallpaper.WallpaperSelected(currentWallpaper))
-    }
-
     companion object {
         const val DEFAULT_RESOURCE = R.attr.homeBackground
         val defaultWallpaper = Wallpaper(
             name = "default_wallpaper",
             portraitPath = "",
             landscapePath = "",
-            isDark = false
+            isDark = false,
+            themeCollection = WallpaperThemeCollection.None
         )
     }
 }

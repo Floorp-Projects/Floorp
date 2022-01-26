@@ -908,24 +908,18 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.JumpBackInGroupTapped -> EventWrapper<NoExtraKeys>(
             { SearchTerms.jumpBackInGroupTapped.record(it) }
         )
-        is Event.Wallpaper.DiscoveredFeature -> EventWrapper<NoExtraKeys>(
+        is Event.WallpaperFeatureDiscovered -> EventWrapper<NoExtraKeys>(
             { Wallpapers.discoveredWallpaperFeature.set(true) }
         )
-        is Event.Wallpaper.NewWallpaperApplied -> EventWrapper<NoExtraKeys>(
-            { Wallpapers.newWallpaperApplied[this.wallpaper.name].add() }
-        )
-        is Event.Wallpaper.WallpaperSelected -> EventWrapper<NoExtraKeys>(
+        is Event.NewWallpaperApplied -> EventWrapper<NoExtraKeys>(
             {
-                Wallpapers.selectedWallpaper.record(
-                    Wallpapers.SelectedWallpaperExtra(
+                Wallpapers.newWallpaperApplied.record(
+                    Wallpapers.NewWallpaperAppliedExtra(
                         name = this.wallpaper.name,
-                        isThemed = this.wallpaper.isThemed,
+                        themeCollection = this.wallpaper.themeCollection::class.simpleName,
                     ),
                 )
-            },
-        )
-        Event.Wallpaper.WallpaperResetToDefault -> EventWrapper<NoExtraKeys>(
-            { Wallpapers.wallpaperResetToDefault.record() }
+            }
         )
 
         // Don't record other events in Glean:

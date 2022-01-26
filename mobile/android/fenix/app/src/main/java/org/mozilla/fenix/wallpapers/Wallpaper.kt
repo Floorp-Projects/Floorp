@@ -10,12 +10,20 @@ package org.mozilla.fenix.wallpapers
  * @property portraitPath A file path for the portrait version of this wallpaper.
  * @property landscapePath A file path for the landscape version of this wallpaper.
  * @property isDark Indicates if the most predominant color on the wallpaper is dark.
- * @property isThemed Whether the wallpaper belongs to a themed collection.
+ * @property themeCollection The theme collection this wallpaper belongs to.
  */
 data class Wallpaper(
     val name: String,
     val portraitPath: String,
     val landscapePath: String,
     val isDark: Boolean,
-    val isThemed: Boolean = false,
+    val themeCollection: WallpaperThemeCollection,
 )
+
+/**
+ * A type hierarchy representing the different theme collections [Wallpaper]s belong to.
+ */
+sealed class WallpaperThemeCollection {
+    object None : WallpaperThemeCollection()
+    object Firefox : WallpaperThemeCollection()
+}
