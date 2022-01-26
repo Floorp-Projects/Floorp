@@ -154,6 +154,10 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
     };
   }
 
+  get layerName() {
+    return this._form.layerName;
+  }
+
   _clearOriginalLocation() {
     this._originalLocation = null;
   }
