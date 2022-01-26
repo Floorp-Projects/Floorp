@@ -15,11 +15,13 @@ import java.util.UUID
  * @property topSites The list of [TopSite] to display on the Home screen.
  * @property autoplayRulesChanged A flag which reflects the state of autoplay rules,
  * whether they have been updated or not
+ * @property secretSettingsEnabled A flag which reflects the state of debug secret settings
  */
 data class AppState(
     val screen: Screen,
     val topSites: List<TopSite> = emptyList(),
-    val autoplayRulesChanged: Boolean = false
+    val autoplayRulesChanged: Boolean = false,
+    val secretSettingsEnabled: Boolean = false
 ) : State
 
 /**
@@ -88,6 +90,7 @@ sealed class Screen {
             SitePermissions,
             Autoplay,
             Studies,
+            SecretSettings,
 
             SearchList,
             SearchRemove,

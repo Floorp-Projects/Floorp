@@ -13,12 +13,11 @@ import org.mozilla.focus.autocomplete.AutocompleteSettingsFragment
 import org.mozilla.focus.biometrics.BiometricAuthenticationDialogFragment
 import org.mozilla.focus.exceptions.ExceptionsListFragment
 import org.mozilla.focus.exceptions.ExceptionsRemoveFragment
-import org.mozilla.focus.fragment.AboutFragment
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.fragment.UrlInputFragment
+import org.mozilla.focus.fragment.about.AboutFragment
 import org.mozilla.focus.locale.screen.LanguageFragment
-import org.mozilla.focus.settings.AdvancedSettingsFragment
 import org.mozilla.focus.settings.GeneralSettingsFragment
 import org.mozilla.focus.settings.InstalledSearchEnginesSettingsFragment
 import org.mozilla.focus.settings.ManualAddSearchEngineSettingsFragment
@@ -26,6 +25,8 @@ import org.mozilla.focus.settings.MozillaSettingsFragment
 import org.mozilla.focus.settings.RemoveSearchEnginesSettingsFragment
 import org.mozilla.focus.settings.SearchSettingsFragment
 import org.mozilla.focus.settings.SettingsFragment
+import org.mozilla.focus.settings.advanced.AdvancedSettingsFragment
+import org.mozilla.focus.settings.advanced.SecretSettingsFragment
 import org.mozilla.focus.settings.permissions.AutoplayFragment
 import org.mozilla.focus.settings.permissions.SitePermissionsFragment
 import org.mozilla.focus.settings.privacy.PrivacySecuritySettingsFragment
@@ -177,6 +178,7 @@ class MainActivityNavigation(
             Screen.Settings.Page.Autoplay -> AutoplayFragment()
             Screen.Settings.Page.SitePermissions -> SitePermissionsFragment()
             Screen.Settings.Page.Studies -> StudiesFragment()
+            Screen.Settings.Page.SecretSettings -> SecretSettingsFragment()
             Screen.Settings.Page.SearchList -> InstalledSearchEnginesSettingsFragment()
             Screen.Settings.Page.SearchRemove -> RemoveSearchEnginesSettingsFragment()
             Screen.Settings.Page.SearchAdd -> ManualAddSearchEngineSettingsFragment()

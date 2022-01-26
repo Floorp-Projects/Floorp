@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.focus.fragment
+package org.mozilla.focus.fragment.about
 
 import android.os.Build
 import android.os.Bundle
@@ -41,6 +41,8 @@ import org.mozilla.geckoview.BuildConfig
 
 class AboutFragment : BaseSettingsLikeFragment() {
 
+    private lateinit var secretSettingsUnlocker: SecretSettingsUnlocker
+
     private val openLearnMore = {
         val tabId = requireContext().components.tabsUseCases.addTab(
             url = manifestoURL,
@@ -54,6 +56,7 @@ class AboutFragment : BaseSettingsLikeFragment() {
     override fun onResume() {
         super.onResume()
         updateTitle(R.string.menu_about)
+        secretSettingsUnlocker.resetCounter()
     }
 
     override fun onCreateView(
@@ -98,8 +101,16 @@ class AboutFragment : BaseSettingsLikeFragment() {
             packageInfo.versionCode.toString() + engineIndicator
         )
 
+        secretSettingsUnlocker = SecretSettingsUnlocker(requireContext())
+
         binding.aboutPageContent.setContent {
-            AboutPageContent(aboutVersion, content, learnMore, openLearnMore)
+            AboutPageContent(
+                aboutVersion,
+                content,
+                learnMore,
+                secretSettingsUnlocker,
+                openLearnMore
+            )
         }
         return binding.root
     }
@@ -110,6 +121,7 @@ private fun AboutPageContent(
     aboutVersion: String,
     content: String,
     learnMore: String,
+    secretSettingsUnlocker: SecretSettingsUnlocker,
     openLearnMore: () -> Job
 ) {
 
@@ -123,7 +135,7 @@ private fun AboutPageContent(
             horizontalAlignment = Alignment.CenterHorizontally
 
         ) {
-            LogoIcon()
+            LogoIcon(secretSettingsUnlocker)
             VersionInfo(aboutVersion)
             AboutContent(content)
             LearnMoreLink(learnMore, openLearnMore)
@@ -132,12 +144,15 @@ private fun AboutPageContent(
 }
 
 @Composable
-private fun LogoIcon() {
+private fun LogoIcon(secretSettingsUnlocker: SecretSettingsUnlocker) {
     Image(
         painter = painterResource(R.drawable.wordmark2),
         contentDescription = null,
         modifier = Modifier
             .padding(4.dp)
+            .clickable {
+                secretSettingsUnlocker.increment()
+            }
     )
 }
 

@@ -362,6 +362,14 @@ class Settings(
         false
     )
 
+    var shouldUseNimbusPreview: Boolean
+        get() = preferences.getBoolean(getPreferenceKey(R.string.pref_key_use_nimbus_preview), true)
+        set(value) {
+            preferences.edit()
+                .putBoolean(getPreferenceKey(R.string.pref_key_use_nimbus_preview), value)
+                .commit()
+        }
+
     fun getHttpsOnlyMode(): Engine.HttpsOnlyMode {
         return if (
             Features.HTTPS_ONLY_MODE &&

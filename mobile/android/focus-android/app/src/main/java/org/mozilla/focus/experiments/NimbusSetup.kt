@@ -24,7 +24,11 @@ fun createNimbus(context: Context, url: String?): NimbusApi =
         // Eventually we'll want to use `NimbusDisabled` when we have no NIMBUS_ENDPOINT.
         // but we keep this here to not mix feature flags and how we configure Nimbus.
         val serverSettings = if (!url.isNullOrBlank()) {
-            NimbusServerSettings(url = Uri.parse(url))
+            if (context.settings.shouldUseNimbusPreview) {
+                NimbusServerSettings(url = Uri.parse(url), collection = "nimbus-preview")
+            } else {
+                NimbusServerSettings(url = Uri.parse(url))
+            }
         } else {
             null
         }

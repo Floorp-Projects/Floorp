@@ -30,6 +30,10 @@ object AppReducer : Reducer<AppState, AppAction> {
             is AppAction.OpenTab -> openTab(state, action)
             is AppAction.TopSitesChange -> topSitesChanged(state, action)
             is AppAction.AutoplayChange -> autoplayRulesChanged(state, action)
+            is AppAction.SecretSettingsStateChange -> secretSettingsStateChanged(
+                state,
+                action
+            )
         }
     }
 }
@@ -153,6 +157,13 @@ private fun autoplayRulesChanged(state: AppState, action: AppAction.AutoplayChan
     return state.copy(autoplayRulesChanged = action.value)
 }
 
+/**
+ * The state of secret settings has changed.
+ */
+private fun secretSettingsStateChanged(state: AppState, action: AppAction.SecretSettingsStateChange): AppState {
+    return state.copy(secretSettingsEnabled = action.enabled)
+}
+
 @Suppress("ComplexMethod")
 private fun navigateUp(state: AppState, action: AppAction.NavigateUp): AppState {
     if (state.screen is Screen.Browser) {
@@ -186,6 +197,7 @@ private fun navigateUp(state: AppState, action: AppAction.NavigateUp): AppState 
         Screen.Settings.Page.SitePermissions -> Screen.Settings(page = Screen.Settings.Page.Privacy)
         Screen.Settings.Page.Autoplay -> Screen.Settings(page = Screen.Settings.Page.SitePermissions)
         Screen.Settings.Page.Studies -> Screen.Settings(page = Screen.Settings.Page.Privacy)
+        Screen.Settings.Page.SecretSettings -> Screen.Settings(page = Screen.Settings.Page.Advanced)
 
         Screen.Settings.Page.SearchList -> Screen.Settings(page = Screen.Settings.Page.Search)
         Screen.Settings.Page.SearchRemove -> Screen.Settings(page = Screen.Settings.Page.SearchList)

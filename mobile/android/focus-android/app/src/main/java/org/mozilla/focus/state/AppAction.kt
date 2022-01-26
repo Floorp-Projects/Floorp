@@ -80,4 +80,9 @@ sealed class AppAction : Action {
      * Site permissions autoplay rules has changed.
      */
     data class AutoplayChange(val value: Boolean) : AppAction()
+
+    /**
+     * State of secret settings state has changed.
+     */
+    data class SecretSettingsStateChange(val enabled: Boolean) : AppAction()
 }
