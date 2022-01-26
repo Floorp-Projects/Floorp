@@ -18,7 +18,7 @@ export interface PanelWindow {
     perfFront: PerfFront,
     traits: RootTraits,
     pageContext: PageContext,
-    openAboutProfiling?: () => void
+    openAboutProfiling: () => void
   ): Promise<void>;
   gDestroy(): void;
   gIsPanelDestroyed?: boolean;

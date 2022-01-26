@@ -68,8 +68,18 @@ class PerformancePanel {
       ),
     };
 
-    await this.panelWin.gInit(perfFront, traits, "devtools");
+    await this.panelWin.gInit(
+      perfFront,
+      traits,
+      "devtools",
+      this._openAboutProfiling
+    );
     return this;
+  }
+
+  _openAboutProfiling() {
+    const { openTrustedLink } = require("devtools/client/shared/link");
+    openTrustedLink("about:profiling", {});
   }
 
   // DevToolPanel API:

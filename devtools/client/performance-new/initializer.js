@@ -94,19 +94,12 @@ const {
  *                              makes it possible to change some code path
  *                              depending on the server version.
  * @param {PageContext} pageContext - The context that the UI is being loaded in under.
- * @param {(() => void)?} openAboutProfiling - Optional call to open about:profiling
+ * @param {(() => void)} openAboutProfiling - Optional call to open about:profiling
  */
 async function gInit(perfFront, traits, pageContext, openAboutProfiling) {
   const store = createStore(reducers);
   const isSupportedPlatform = await perfFront.isSupportedPlatform();
   const supportedFeatures = await perfFront.getSupportedFeatures();
-
-  if (!openAboutProfiling) {
-    openAboutProfiling = () => {
-      const { openTrustedLink } = require("devtools/client/shared/link");
-      openTrustedLink("about:profiling", {});
-    };
-  }
 
   {
     // Expose the store as a global, for testing.
