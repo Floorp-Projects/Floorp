@@ -14,7 +14,7 @@
         data-l10n-sync="true">
 
   <linkset>
-    <html:link rel="localization" href="browser/appmenu.ftl"/>
+    <html:link rel="localization" href="browser/menubar.ftl"/>
   </linkset>
 
 #include macWindow.inc.xhtml
@@ -27,9 +27,9 @@
   <menupopup id="menu_mac_dockmenu" aria-hidden="true">
     <!-- The command cannot be cmd_newNavigator because we need to activate
          the application. -->
-    <menuitem data-l10n-id="appmenuitem-new-window" oncommand="OpenBrowserWindowFromDockMenu();"
+    <menuitem data-l10n-id="menu-file-new-window" oncommand="OpenBrowserWindowFromDockMenu();"
               id="macDockMenuNewWindow" />
-    <menuitem data-l10n-id="appmenuitem-new-private-window" oncommand="OpenBrowserWindowFromDockMenu({private: true});"
+    <menuitem data-l10n-id="menu-file-new-private-window" oncommand="OpenBrowserWindowFromDockMenu({private: true});"
               id="macDockMenuNewPrivateWindow" />
   </menupopup>
 </popupset>
