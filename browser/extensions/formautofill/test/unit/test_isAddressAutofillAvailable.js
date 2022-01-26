@@ -13,7 +13,7 @@ const { FormAutofill } = ChromeUtils.import(
 
 add_task(async function test_defaultTestEnvironment() {
   Assert.equal(
-    Services.prefs.getCharPref("extensions.formautofill.addressess.supported"),
+    Services.prefs.getCharPref("extensions.formautofill.addresses.supported"),
     "on"
   );
 });
@@ -34,7 +34,7 @@ add_task(async function test_default_supported_module_and_autofill_region() {
 add_task(
   async function test_supported_creditCard_region_unsupported_address_region() {
     Services.prefs.setCharPref(
-      "extensions.formautofill.addressess.supported",
+      "extensions.formautofill.addresses.supported",
       "detect"
     );
     Services.prefs.setCharPref(
@@ -56,7 +56,7 @@ add_task(
         "extensions.formautofill.addresses.supportedCountries"
       );
       Services.prefs.clearUserPref(
-        "extensions.formautofill.addressess.supported"
+        "extensions.formautofill.addresses.supported"
       );
       Services.prefs.clearUserPref(
         "extensions.formautofill.creditCards.supported"
