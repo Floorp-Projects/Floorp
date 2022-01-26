@@ -63,16 +63,6 @@ if test "$COMPILE_ENVIRONMENT"; then
     MOZ_ANDROID_NDK
 fi # COMPILE_ENVIRONMENT
 
-case "$target" in
-*-android*|*-linuxandroid*)
-    ;;
-*-linux*)
-    AC_PATH_PROG(OBJCOPY,objcopy)
-    ;;
-esac
-
-AC_SUBST(OBJCOPY)
-
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
