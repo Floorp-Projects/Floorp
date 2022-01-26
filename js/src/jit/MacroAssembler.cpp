@@ -3751,9 +3751,9 @@ void MacroAssembler::wasmInterruptCheck(Register tls,
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
-size_t MacroAssembler::wasmStartTry() {
+[[nodiscard]] bool MacroAssembler::wasmStartTry(size_t* tryNoteIndex) {
   wasm::WasmTryNote tryNote = wasm::WasmTryNote(currentOffset(), 0, 0);
-  return append(tryNote);
+  return append(tryNote, tryNoteIndex);
 }
 #endif
 
