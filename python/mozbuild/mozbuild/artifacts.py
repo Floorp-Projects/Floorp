@@ -153,11 +153,11 @@ class ArtifactJob(object):
         self._tests_re = None
         if download_tests:
             self._tests_re = re.compile(
-                r"public/build/(en-US/)?target\.common\.tests\.(zip|tar\.gz)"
+                r"public/build/(en-US/)?target\.common\.tests\.(zip|tar\.gz)$"
             )
         self._maven_zip_re = None
         if download_maven_zip:
-            self._maven_zip_re = re.compile(r"public/build/target\.maven\.zip")
+            self._maven_zip_re = re.compile(r"public/build/target\.maven\.zip$")
         self._log = log
         self._substs = substs
         self._symbols_archive_suffix = None
@@ -418,7 +418,7 @@ class ArtifactJob(object):
 
 
 class AndroidArtifactJob(ArtifactJob):
-    package_re = r"public/build/geckoview_example\.apk"
+    package_re = r"public/build/geckoview_example\.apk$"
     product = "mobile"
 
     package_artifact_patterns = {"**/*.so"}
@@ -483,7 +483,7 @@ class AndroidArtifactJob(ArtifactJob):
 
 
 class LinuxArtifactJob(ArtifactJob):
-    package_re = r"public/build/target\.tar\.bz2"
+    package_re = r"public/build/target\.tar\.bz2$"
     product = "firefox"
 
     _package_artifact_patterns = {
@@ -573,7 +573,7 @@ class ResignJarWriter(JarWriter):
 
 
 class MacArtifactJob(ArtifactJob):
-    package_re = r"public/build/target\.dmg"
+    package_re = r"public/build/target\.dmg$"
     product = "firefox"
 
     # These get copied into dist/bin without the path, so "root/a/b/c" -> "dist/bin/c".
@@ -697,7 +697,7 @@ class MacArtifactJob(ArtifactJob):
 
 
 class WinArtifactJob(ArtifactJob):
-    package_re = r"public/build/target\.(zip|tar\.gz)"
+    package_re = r"public/build/target\.(zip|tar\.gz)$"
     product = "firefox"
 
     _package_artifact_patterns = {
