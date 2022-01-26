@@ -136,6 +136,7 @@ void nsIGlobalObject::UnlinkObjectsInGlobal() {
   mReportingObservers.Clear();
 #ifdef MOZ_DOM_STREAMS
   mCountQueuingStrategySizeFunction = nullptr;
+  mByteLengthQueuingStrategySizeFunction = nullptr;
 #endif
 }
 
