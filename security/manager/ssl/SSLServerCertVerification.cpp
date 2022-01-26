@@ -517,74 +517,6 @@ static SECStatus BlockServerCertChangeForSpdy(
   return SECFailure;
 }
 
-// Gather telemetry on whether the end-entity cert for a server has the
-// required TLS Server Authentication EKU, or any others
-void GatherEKUTelemetry(const UniqueCERTCertList& certList) {
-  MOZ_ASSERT(!CERT_LIST_EMPTY(certList));
-  if (CERT_LIST_EMPTY(certList)) {
-    return;
-  }
-  CERTCertListNode* endEntityNode = CERT_LIST_HEAD(certList);
-  MOZ_ASSERT(endEntityNode);
-  if (!endEntityNode) {
-    return;
-  }
-  CERTCertificate* endEntityCert = endEntityNode->cert;
-  MOZ_ASSERT(endEntityCert);
-  if (!endEntityCert) {
-    return;
-  }
-
-  // Find the EKU extension, if present
-  bool foundEKU = false;
-  SECOidTag oidTag;
-  CERTCertExtension* ekuExtension = nullptr;
-  for (size_t i = 0; endEntityCert->extensions && endEntityCert->extensions[i];
-       i++) {
-    oidTag = SECOID_FindOIDTag(&endEntityCert->extensions[i]->id);
-    if (oidTag == SEC_OID_X509_EXT_KEY_USAGE) {
-      foundEKU = true;
-      ekuExtension = endEntityCert->extensions[i];
-    }
-  }
-
-  if (!foundEKU) {
-    Telemetry::Accumulate(Telemetry::SSL_SERVER_AUTH_EKU, 0);
-    return;
-  }
-
-  // Parse the EKU extension
-  UniqueCERTOidSequence ekuSequence(
-      CERT_DecodeOidSequence(&ekuExtension->value));
-  if (!ekuSequence) {
-    return;
-  }
-
-  // Search through the available EKUs
-  bool foundServerAuth = false;
-  bool foundOther = false;
-  for (SECItem** oids = ekuSequence->oids; oids && *oids; oids++) {
-    oidTag = SECOID_FindOIDTag(*oids);
-    if (oidTag == SEC_OID_EXT_KEY_USAGE_SERVER_AUTH) {
-      foundServerAuth = true;
-    } else {
-      foundOther = true;
-    }
-  }
-
-  // Cases 3 is included only for completeness.  It should never
-  // appear in these statistics, because CheckExtendedKeyUsage()
-  // should require the EKU extension, if present, to contain the
-  // value id_kp_serverAuth.
-  if (foundServerAuth && !foundOther) {
-    Telemetry::Accumulate(Telemetry::SSL_SERVER_AUTH_EKU, 1);
-  } else if (foundServerAuth && foundOther) {
-    Telemetry::Accumulate(Telemetry::SSL_SERVER_AUTH_EKU, 2);
-  } else if (!foundServerAuth) {
-    Telemetry::Accumulate(Telemetry::SSL_SERVER_AUTH_EKU, 3);
-  }
-}
-
 // Gathers telemetry on which CA is the root of a given cert chain.
 // If the root is a built-in root, then the telemetry makes a count
 // by root.  Roots that are not built-in are counted in one bin.
@@ -606,17 +538,6 @@ void GatherRootCATelemetry(const UniqueCERTCertList& certList) {
   Span<uint8_t> certSpan = {rootCert->derCert.data, rootCert->derCert.len};
   AccumulateTelemetryForRootCA(Telemetry::CERT_VALIDATION_SUCCESS_BY_CA,
                                certSpan);
-}
-
-// There are various things that we want to measure about certificate
-// chains that we accept.  This is a single entry point for all of them.
-void GatherSuccessfulValidationTelemetry(const UniqueCERTCertList& certList,
-                                         bool isCertListRootBuiltInRoot) {
-  if (isCertListRootBuiltInRoot) {
-    // Only gather this telemetry if the root CA is built-in
-    GatherEKUTelemetry(certList);
-  }
-  GatherRootCATelemetry(certList);
 }
 
 void GatherTelemetryForSingleSCT(const ct::VerifiedSCT& verifiedSct) {
@@ -751,7 +672,6 @@ static void CollectCertTelemetry(
     KeySizeStatus aKeySizeStatus, SHA1ModeResult aSha1ModeResult,
     const PinningTelemetryInfo& aPinningTelemetryInfo,
     const nsTArray<nsTArray<uint8_t>>& aBuiltCertChain,
-    bool aIsBuiltCertChainRootBuiltInRoot,
     const CertificateTransparencyInfo& aCertificateTransparencyInfo) {
   UniqueCERTCertList builtCertChainList(CERT_NewCertList());
   if (!builtCertChainList) {
@@ -805,8 +725,7 @@ static void CollectCertTelemetry(
   }
 
   if (aCertVerificationResult == Success) {
-    GatherSuccessfulValidationTelemetry(builtCertChainList,
-                                        aIsBuiltCertChainRootBuiltInRoot);
+    GatherRootCATelemetry(builtCertChainList);
     GatherCertificateTransparencyTelemetry(builtCertChainList,
                                            aEVStatus == EVStatus::EV,
                                            aCertificateTransparencyInfo);
@@ -881,7 +800,6 @@ Result AuthCertificate(
 
   CollectCertTelemetry(rv, evStatus, ocspStaplingStatus, keySizeStatus,
                        sha1ModeResult, pinningTelemetryInfo, builtCertChain,
-                       aIsBuiltCertChainRootBuiltInRoot,
                        certificateTransparencyInfo);
 
   return rv;
