@@ -3523,7 +3523,9 @@ bool BaseCompiler::emitTry() {
     // Be conservative for BCE due to complex control flow in try blocks.
     controlItem().bceSafeOnExit = 0;
     // Mark the beginning of the try block, the rest is filled in by catch.
-    controlItem().tryNoteIndex = masm.wasmStartTry();
+    if (!masm.wasmStartTry(&controlItem().tryNoteIndex)) {
+      return false;
+    }
   }
 
   return true;
