@@ -43,7 +43,7 @@ class TopSiteItemViewHolder(
 
             val topSiteMenu = TopSiteItemMenu(
                 context = view.context,
-                isPinnedSite = topSite is TopSite.Pinned || topSite is TopSite.Default
+                topSite = topSite
             ) { item ->
                 when (item) {
                     is TopSiteItemMenu.Item.OpenInPrivateTab -> interactor.onOpenInPrivateTabClicked(
@@ -55,12 +55,16 @@ class TopSiteItemViewHolder(
                     is TopSiteItemMenu.Item.RemoveTopSite -> interactor.onRemoveTopSiteClicked(
                         topSite
                     )
+                    is TopSiteItemMenu.Item.Settings -> interactor.onSettingsClicked()
+                    is TopSiteItemMenu.Item.SponsorPrivacy -> interactor.onSponsorPrivacyClicked()
                 }
             }
             val menu = topSiteMenu.menuBuilder.build(view.context).show(anchor = it)
+
             it.setOnTouchListener @SuppressLint("ClickableViewAccessibility") { v, event ->
                 onTouchEvent(v, event, menu)
             }
+
             true
         }
     }

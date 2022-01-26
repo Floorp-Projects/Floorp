@@ -206,6 +206,18 @@ class SessionControlInteractorTest {
     }
 
     @Test
+    fun `WHEN onSettingsClicked is called THEN handleTopSiteSettingsClicked is called`() {
+        interactor.onSettingsClicked()
+        verify { controller.handleTopSiteSettingsClicked() }
+    }
+
+    @Test
+    fun `WHEN onSponsorPrivacyClicked is called THEN handleSponsorPrivacyClicked is called`() {
+        interactor.onSponsorPrivacyClicked()
+        verify { controller.handleSponsorPrivacyClicked() }
+    }
+
+    @Test
     fun `GIVEN a PocketStoriesInteractor WHEN stories are shown THEN handle it in a PocketStoriesController`() {
         val shownStories: List<PocketRecommendedStory> = mockk()
 

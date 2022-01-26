@@ -931,6 +931,33 @@ class DefaultSessionControlControllerTest {
         }
     }
 
+    @Test
+    fun `WHEN handleTopSiteSettingsClicked is called THEN navigate to the HomeSettingsFragment`() {
+        createController().handleTopSiteSettingsClicked()
+
+        verify {
+            navController.navigate(
+                match<NavDirections> {
+                    it.actionId == R.id.action_global_homeSettingsFragment
+                },
+                null
+            )
+        }
+    }
+
+    @Test
+    fun `WHEN handleSponsorPrivacyClicked is called THEN `() {
+        createController().handleSponsorPrivacyClicked()
+
+        verify {
+            activity.openToBrowserAndLoad(
+                searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.SPONSOR_PRIVACY),
+                newTab = true,
+                from = BrowserDirection.FromHome
+            )
+        }
+    }
+
     private fun createController(
         hideOnboarding: () -> Unit = { },
         registerCollectionStorageObserver: () -> Unit = { },

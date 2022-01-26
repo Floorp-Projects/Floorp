@@ -214,6 +214,18 @@ interface TopSiteInteractor {
     fun onSelectTopSite(topSite: TopSite)
 
     /**
+     * Navigates to the Homepage Settings. Called when an user clicks on the "Settings" top site
+     * menu item.
+     */
+    fun onSettingsClicked()
+
+    /**
+     * Opens the sponsor privacy support articles. Called when an user clicks on the
+     * "Our sponsors & your privacy" top site menu item.
+     */
+    fun onSponsorPrivacyClicked()
+
+    /**
      * Called when top site menu is opened.
      */
     fun onTopSiteMenuOpened()
@@ -299,6 +311,14 @@ class SessionControlInteractor(
 
     override fun onSelectTopSite(topSite: TopSite) {
         controller.handleSelectTopSite(topSite)
+    }
+
+    override fun onSettingsClicked() {
+        controller.handleTopSiteSettingsClicked()
+    }
+
+    override fun onSponsorPrivacyClicked() {
+        controller.handleSponsorPrivacyClicked()
     }
 
     override fun onStartBrowsingClicked() {

@@ -121,6 +121,16 @@ interface SessionControlController {
     fun handleSelectTopSite(topSite: TopSite)
 
     /**
+     * @see [TopSiteInteractor.onSettingsClicked]
+     */
+    fun handleTopSiteSettingsClicked()
+
+    /**
+     * @see [TopSiteInteractor.onSponsorPrivacyClicked]
+     */
+    fun handleSponsorPrivacyClicked()
+
+    /**
      * @see [OnboardingInteractor.onStartBrowsingClicked]
      */
     fun handleStartBrowsingClicked()
@@ -412,6 +422,21 @@ class DefaultSessionControlController(
             activity.handleRequestDesktopMode(tabId)
         }
         activity.openToBrowser(BrowserDirection.FromHome)
+    }
+
+    override fun handleTopSiteSettingsClicked() {
+        navController.nav(
+            R.id.homeFragment,
+            HomeFragmentDirections.actionGlobalHomeSettingsFragment()
+        )
+    }
+
+    override fun handleSponsorPrivacyClicked() {
+        activity.openToBrowserAndLoad(
+            searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.SPONSOR_PRIVACY),
+            newTab = true,
+            from = BrowserDirection.FromHome
+        )
     }
 
     @VisibleForTesting
