@@ -520,6 +520,11 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvFlushRendering(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult CompositorBridgeParent::RecvNotifyMemoryPressure() {
+  NotifyMemoryPressure();
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvFlushRenderingAsync(
     const wr::RenderReasons& aReasons) {
   if (mWrBridge) {
