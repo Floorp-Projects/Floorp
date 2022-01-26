@@ -1185,6 +1185,12 @@
   value: 16777216
   mirror: always
 
+# True to collect wireframes upon navigations / pushState
+- name: browser.history.collectWireframes
+  type: bool
+  value: false
+  mirror: always
+
 #if defined(XP_WIN) || defined(XP_LINUX)
   # Notify TabUnloader or send the memory pressure if the memory resource
   # notification is signaled AND the available commit space is lower than
