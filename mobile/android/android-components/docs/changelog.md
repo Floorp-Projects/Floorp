@@ -22,6 +22,9 @@ permalink: /changelog/
 
 * **support-ktx**
   * 🚒 Bug fixed [issue #11527](https://github.com/mozilla-mobile/android-components/issues/11527) - Fix some situations in which the immersive mode wasn't properly applied.
+  
+* **lib-crash**
+  * 🚒 Bug fixed [issue #11627](https://github.com/mozilla-mobile/android-components/issues/11627) - Firefox crash notification is not displayed on devices with Android 11/Android 12
 
 * **lib/publicsuffixlist**
   * ⚠️ **This is a breaking change**: Removed `String.urlToTrimmedHost` extension method.
