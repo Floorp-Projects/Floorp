@@ -496,6 +496,8 @@ class LinuxArtifactJob(ArtifactJob):
         "{product}/plugin-container",
         "{product}/updater",
         "{product}/**/*.so",
+        # Preserve signatures when present.
+        "{product}/**/*.sig",
     }
 
     @property
