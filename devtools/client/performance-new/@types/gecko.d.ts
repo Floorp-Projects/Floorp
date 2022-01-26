@@ -138,7 +138,6 @@ declare namespace MockedExports {
   type Services = {
     prefs: nsIPrefBranch;
     profiler: {
-      CanProfile: () => boolean;
       StartProfiler: (
         entryCount: number,
         interval: number,
