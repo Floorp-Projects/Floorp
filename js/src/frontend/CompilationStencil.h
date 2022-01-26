@@ -1160,6 +1160,8 @@ struct CompilationStencil {
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
   }
 
+  const ParserAtomSpan& parserAtomsSpan() const { return parserAtomData; }
+
   bool isModule() const;
 
   bool hasMultipleReference() const { return refCount > 1; }
@@ -1293,6 +1295,20 @@ struct ExtensibleCompilationStencil {
 
   // Steal CompilationStencil content.
   [[nodiscard]] bool steal(JSContext* cx, RefPtr<CompilationStencil>&& other);
+
+  // Clone ExtensibleCompilationStencil content.
+  [[nodiscard]] bool cloneFrom(JSContext* cx, const CompilationStencil& other);
+  [[nodiscard]] bool cloneFrom(JSContext* cx,
+                               const ExtensibleCompilationStencil& other);
+
+ private:
+  template <typename Stencil>
+  [[nodiscard]] bool cloneFromImpl(JSContext* cx, const Stencil& other);
+
+ public:
+  const ParserAtomVector& parserAtomsSpan() const {
+    return parserAtoms.entries();
+  }
 
   bool isModule() const;
 
