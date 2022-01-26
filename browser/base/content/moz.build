@@ -106,6 +106,9 @@ with Files("test/tabs/**"):
 with Files("test/touch/**"):
     BUG_COMPONENT = ("Firefox", "General")
 
+with Files("test/utilityOverlay/**"):
+    BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
 with Files("test/protectionsUI/**"):
     BUG_COMPONENT = ("Firefox", "Protections UI")
 
