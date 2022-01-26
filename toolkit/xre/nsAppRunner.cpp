@@ -430,12 +430,6 @@ static MOZ_FORMAT_PRINTF(2, 3) void Output(bool isError, const char* fmt, ...) {
 
     MessageBoxW(nullptr, wide_msg, L"XULRunner", flags);
   }
-#elif defined(MOZ_WIDGET_ANDROID)
-  SmprintfPointer msg = mozilla::Vsmprintf(fmt, ap);
-  if (msg) {
-    __android_log_print(isError ? ANDROID_LOG_ERROR : ANDROID_LOG_INFO,
-                        "GeckoRuntime", "%s", msg.get());
-  }
 #else
   vfprintf(stderr, fmt, ap);
 #endif
@@ -2345,14 +2339,7 @@ class ReturnAbortOnError {
 }  // namespace
 
 static nsresult ProfileMissingDialog(nsINativeAppSupport* aNative) {
-#if defined(MOZ_WIDGET_ANDROID)
-  // We cannot really do anything this early during initialization, so we just
-  // return as this is likely the effect of misconfiguration on the test side.
-  // Non-test code paths cannot set the profile folder, which is always the
-  // default one.
-  Output(true, "Could not find profile folder.\n");
-  return NS_ERROR_ABORT;
-#elif defined(MOZ_BACKGROUNDTASKS)
+#ifdef MOZ_BACKGROUNDTASKS
   if (BackgroundTasks::IsBackgroundTaskMode()) {
     // We should never get to this point in background task mode.
     Output(false,
