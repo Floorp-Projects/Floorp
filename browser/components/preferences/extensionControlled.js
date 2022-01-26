@@ -166,6 +166,7 @@ function setControllingExtensionDescription(elem, addon, settingName) {
     let image = document.createElementNS("http://www.w3.org/1999/xhtml", "img");
     image.setAttribute("src", src);
     image.setAttribute("data-l10n-name", "icon");
+    image.setAttribute("role", "presentation");
     image.classList.add("extension-controlled-icon");
     elem.appendChild(image);
   } else if (existingImg.getAttribute("src") !== src) {
@@ -231,6 +232,7 @@ function showEnableExtensionMessage(settingName) {
     let img = document.createElementNS("http://www.w3.org/1999/xhtml", "img");
     img.src = url;
     img.setAttribute("data-l10n-name", name);
+    img.setAttribute("role", "presentation");
     img.className = "extension-controlled-icon";
     return img;
   };
