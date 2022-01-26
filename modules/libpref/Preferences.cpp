@@ -14,6 +14,7 @@
 
 #include "base/basictypes.h"
 #include "MainThreadUtils.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/ArenaAllocatorExtensions.h"
 #include "mozilla/ArenaAllocator.h"
 #include "mozilla/ArrayUtils.h"
@@ -1583,6 +1584,13 @@ static nsresult pref_SetPref(const nsCString& aPrefName, PrefType aType,
                              bool aIsSticky, bool aIsLocked, bool aFromInit) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
+    MOZ_ASSERT(
+        false,
+        "!AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)");
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
 
   if (!HashTable()) {
     return NS_ERROR_OUT_OF_MEMORY;
