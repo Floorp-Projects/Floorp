@@ -214,9 +214,8 @@ class BackgroundParentImpl : public PBackgroundParent,
 
   already_AddRefed<mozilla::psm::PVerifySSLServerCertParent>
   AllocPVerifySSLServerCertParent(
-      const ByteArray& aServerCert, const nsTArray<ByteArray>& aPeerCertChain,
-      const nsCString& aHostName, const int32_t& aPort,
-      const OriginAttributes& aOriginAttributes,
+      const nsTArray<ByteArray>& aPeerCertChain, const nsCString& aHostName,
+      const int32_t& aPort, const OriginAttributes& aOriginAttributes,
       const Maybe<ByteArray>& aStapledOCSPResponse,
       const Maybe<ByteArray>& aSctsFromTLSExtension,
       const Maybe<DelegatedCredentialInfoArg>& aDcInfo,
@@ -224,9 +223,9 @@ class BackgroundParentImpl : public PBackgroundParent,
       const uint32_t& aCertVerifierFlags) override;
 
   mozilla::ipc::IPCResult RecvPVerifySSLServerCertConstructor(
-      PVerifySSLServerCertParent* aActor, const ByteArray& aServerCert,
-      nsTArray<ByteArray>&& aPeerCertChain, const nsCString& aHostName,
-      const int32_t& aPort, const OriginAttributes& aOriginAttributes,
+      PVerifySSLServerCertParent* aActor, nsTArray<ByteArray>&& aPeerCertChain,
+      const nsCString& aHostName, const int32_t& aPort,
+      const OriginAttributes& aOriginAttributes,
       const Maybe<ByteArray>& aStapledOCSPResponse,
       const Maybe<ByteArray>& aSctsFromTLSExtension,
       const Maybe<DelegatedCredentialInfoArg>& aDcInfo,
