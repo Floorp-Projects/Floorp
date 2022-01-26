@@ -774,18 +774,18 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
   StructuredCloneWriteInfo cloneWriteInfo(mTransaction->Database());
   nsTArray<IndexUpdateInfo> updateInfos;
 
-  {
-    const auto autoStateRestore =
-        mTransaction->TemporarilyTransitionToInactive();
-    GetAddInfo(aCx, aValueWrapper, aKey, cloneWriteInfo, key, updateInfos, aRv);
-  }
-
-  if (aRv.Failed()) {
+  // According to spec https://w3c.github.io/IndexedDB/#clone-value,
+  // the transaction must be in inactive state during clone
+  mTransaction->TransitionToInactive();
+  GetAddInfo(aCx, aValueWrapper, aKey, cloneWriteInfo, key, updateInfos, aRv);
+  if (mTransaction
+          ->IsAborted()) {  // No error thrown, abort is a possible outcome
     return nullptr;
   }
+  MOZ_ASSERT(mTransaction->IsInactive());
+  mTransaction->TransitionToActive();
 
-  if (!mTransaction->IsActive()) {
-    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
+  if (aRv.Failed()) {
     return nullptr;
   }
 

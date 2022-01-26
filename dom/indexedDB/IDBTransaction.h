@@ -208,39 +208,6 @@ class IDBTransaction final
   bool WasExplicitlyCommitted() const { return mWasExplicitlyCommitted; }
 #endif
 
-  template <ReadyState OriginalState, ReadyState TemporaryState>
-  class AutoRestoreState {
-   public:
-    explicit AutoRestoreState(IDBTransaction& aOwner) : mOwner { aOwner }
-#ifdef DEBUG
-    , mSavedPendingRequestCount { mOwner.mPendingRequestCount }
-#endif
-    {
-      mOwner.AssertIsOnOwningThread();
-      MOZ_ASSERT(mOwner.mReadyState == OriginalState);
-      mOwner.mReadyState = TemporaryState;
-    }
-
-    ~AutoRestoreState() {
-      mOwner.AssertIsOnOwningThread();
-      MOZ_ASSERT(mOwner.mReadyState == TemporaryState);
-      MOZ_ASSERT(mOwner.mPendingRequestCount == mSavedPendingRequestCount);
-
-      mOwner.mReadyState = OriginalState;
-    }
-
-   private:
-    IDBTransaction& mOwner;
-#ifdef DEBUG
-    const uint32_t mSavedPendingRequestCount;
-#endif
-  };
-
-  AutoRestoreState<ReadyState::Inactive, ReadyState::Active>
-  TemporarilyTransitionToActive();
-  AutoRestoreState<ReadyState::Active, ReadyState::Inactive>
-  TemporarilyTransitionToInactive();
-
   void TransitionToActive() {
     MOZ_ASSERT(mReadyState == ReadyState::Inactive);
     mReadyState = ReadyState::Active;
