@@ -517,29 +517,6 @@ static SECStatus BlockServerCertChangeForSpdy(
   return SECFailure;
 }
 
-// Gathers telemetry on which CA is the root of a given cert chain.
-// If the root is a built-in root, then the telemetry makes a count
-// by root.  Roots that are not built-in are counted in one bin.
-void GatherRootCATelemetry(const UniqueCERTCertList& certList) {
-  CERTCertListNode* rootNode = CERT_LIST_TAIL(certList);
-  MOZ_ASSERT(rootNode);
-  if (!rootNode) {
-    return;
-  }
-  MOZ_ASSERT(!CERT_LIST_END(rootNode, certList));
-  if (CERT_LIST_END(rootNode, certList)) {
-    return;
-  }
-  CERTCertificate* rootCert = rootNode->cert;
-  MOZ_ASSERT(rootCert);
-  if (!rootCert) {
-    return;
-  }
-  Span<uint8_t> certSpan = {rootCert->derCert.data, rootCert->derCert.len};
-  AccumulateTelemetryForRootCA(Telemetry::CERT_VALIDATION_SUCCESS_BY_CA,
-                               certSpan);
-}
-
 void GatherTelemetryForSingleSCT(const ct::VerifiedSCT& verifiedSct) {
   // See SSL_SCTS_ORIGIN in Histograms.json.
   uint32_t origin = 0;
@@ -584,7 +561,7 @@ void GatherTelemetryForSingleSCT(const ct::VerifiedSCT& verifiedSct) {
 }
 
 void GatherCertificateTransparencyTelemetry(
-    const UniqueCERTCertList& certList, bool isEV,
+    const nsTArray<uint8_t>& rootCert, bool isEV,
     const CertificateTransparencyInfo& info) {
   if (!info.enabled) {
     // No telemetry is gathered when CT is disabled.
@@ -629,33 +606,16 @@ void GatherCertificateTransparencyTelemetry(
                           evCompliance);
   }
 
-  // Get the root cert.
-  CERTCertListNode* rootNode = CERT_LIST_TAIL(certList);
-  MOZ_ASSERT(rootNode);
-  if (!rootNode) {
-    return;
-  }
-  MOZ_ASSERT(!CERT_LIST_END(rootNode, certList));
-  if (CERT_LIST_END(rootNode, certList)) {
-    return;
-  }
-  CERTCertificate* rootCert = rootNode->cert;
-  MOZ_ASSERT(rootCert);
-  if (!rootCert) {
-    return;
-  }
-
   // Report CT Policy compliance by CA.
-  Span<uint8_t> certSpan = {rootCert->derCert.data, rootCert->derCert.len};
   switch (info.policyCompliance) {
     case ct::CTPolicyCompliance::Compliant:
       AccumulateTelemetryForRootCA(
-          Telemetry::SSL_CT_POLICY_COMPLIANT_CONNECTIONS_BY_CA, certSpan);
+          Telemetry::SSL_CT_POLICY_COMPLIANT_CONNECTIONS_BY_CA, rootCert);
       break;
     case ct::CTPolicyCompliance::NotEnoughScts:
     case ct::CTPolicyCompliance::NotDiverseScts:
       AccumulateTelemetryForRootCA(
-          Telemetry::SSL_CT_POLICY_NON_COMPLIANT_CONNECTIONS_BY_CA, certSpan);
+          Telemetry::SSL_CT_POLICY_NON_COMPLIANT_CONNECTIONS_BY_CA, rootCert);
       break;
     case ct::CTPolicyCompliance::Unknown:
     default:
@@ -673,26 +633,6 @@ static void CollectCertTelemetry(
     const PinningTelemetryInfo& aPinningTelemetryInfo,
     const nsTArray<nsTArray<uint8_t>>& aBuiltCertChain,
     const CertificateTransparencyInfo& aCertificateTransparencyInfo) {
-  UniqueCERTCertList builtCertChainList(CERT_NewCertList());
-  if (!builtCertChainList) {
-    return;
-  }
-  CERTCertDBHandle* certDB(CERT_GetDefaultCertDB());
-  for (const auto& certBytes : aBuiltCertChain) {
-    SECItem certDERItem = {siBuffer, const_cast<uint8_t*>(certBytes.Elements()),
-                           AssertedCast<unsigned int>(certBytes.Length())};
-    UniqueCERTCertificate cert(
-        CERT_NewTempCertificate(certDB, &certDERItem, nullptr, false, true));
-    if (!cert) {
-      return;
-    }
-    if (CERT_AddCertToListTail(builtCertChainList.get(), cert.get()) !=
-        SECSuccess) {
-      return;
-    }
-    Unused << cert.release();  // cert is now owned by certList.
-  }
-
   uint32_t evStatus = (aCertVerificationResult != Success) ? 0  // 0 = Failure
                       : (aEVStatus != EVStatus::EV)        ? 1  // 1 = DV
                                                            : 2;        // 2 = EV
@@ -724,10 +664,11 @@ static void CollectCertTelemetry(
         aPinningTelemetryInfo.certPinningResultBucket);
   }
 
-  if (aCertVerificationResult == Success) {
-    GatherRootCATelemetry(builtCertChainList);
-    GatherCertificateTransparencyTelemetry(builtCertChainList,
-                                           aEVStatus == EVStatus::EV,
+  if (aCertVerificationResult == Success && aBuiltCertChain.Length() > 0) {
+    const nsTArray<uint8_t>& rootCert = aBuiltCertChain.LastElement();
+    AccumulateTelemetryForRootCA(Telemetry::CERT_VALIDATION_SUCCESS_BY_CA,
+                                 rootCert);
+    GatherCertificateTransparencyTelemetry(rootCert, aEVStatus == EVStatus::EV,
                                            aCertificateTransparencyInfo);
   }
 }
