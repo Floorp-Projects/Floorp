@@ -43,8 +43,7 @@ class BaseSSLServerCertVerificationResult {
  public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
-  virtual void Dispatch(nsCOMPtr<nsIX509Cert> aCert,
-                        nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
+  virtual void Dispatch(nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
                         nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
                         uint16_t aCertificateTransparencyStatus,
                         EVStatus aEVStatus, bool aSucceeded,
@@ -68,8 +67,7 @@ class SSLServerCertVerificationResult final
 
   explicit SSLServerCertVerificationResult(TransportSecurityInfo* infoObject);
 
-  void Dispatch(nsCOMPtr<nsIX509Cert> aCert,
-                nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
+  void Dispatch(nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
                 nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
                 uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
                 bool aSucceeded, PRErrorCode aFinalError,
@@ -81,7 +79,6 @@ class SSLServerCertVerificationResult final
   ~SSLServerCertVerificationResult() = default;
 
   const RefPtr<TransportSecurityInfo> mInfoObject;
-  nsCOMPtr<nsIX509Cert> mCert;
   nsTArray<nsTArray<uint8_t>> mBuiltChain;
   nsTArray<nsTArray<uint8_t>> mPeerCertChain;
   uint16_t mCertificateTransparencyStatus;
@@ -99,7 +96,6 @@ class SSLServerCertVerificationJob : public Runnable {
 
   // Must be called only on the socket transport thread
   static SECStatus Dispatch(uint64_t addrForLogging, void* aPinArg,
-                            const UniqueCERTCertificate& serverCert,
                             nsTArray<nsTArray<uint8_t>>&& peerCertChain,
                             const nsACString& aHostName, int32_t aPort,
                             const OriginAttributes& aOriginAttributes,
@@ -115,7 +111,6 @@ class SSLServerCertVerificationJob : public Runnable {
 
   // Must be called only on the socket transport thread
   SSLServerCertVerificationJob(uint64_t addrForLogging, void* aPinArg,
-                               const UniqueCERTCertificate& cert,
                                nsTArray<nsTArray<uint8_t>>&& peerCertChain,
                                const nsACString& aHostName, int32_t aPort,
                                const OriginAttributes& aOriginAttributes,
@@ -128,7 +123,6 @@ class SSLServerCertVerificationJob : public Runnable {
       : Runnable("psm::SSLServerCertVerificationJob"),
         mAddrForLogging(addrForLogging),
         mPinArg(aPinArg),
-        mCert(CERT_DupCertificate(cert.get())),
         mPeerCertChain(std::move(peerCertChain)),
         mHostName(aHostName),
         mPort(aPort),
@@ -143,7 +137,6 @@ class SSLServerCertVerificationJob : public Runnable {
 
   uint64_t mAddrForLogging;
   void* mPinArg;
-  const UniqueCERTCertificate mCert;
   nsTArray<nsTArray<uint8_t>> mPeerCertChain;
   nsCString mHostName;
   int32_t mPort;

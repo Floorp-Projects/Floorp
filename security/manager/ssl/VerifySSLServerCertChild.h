@@ -27,7 +27,6 @@ class VerifySSLServerCertChild : public PVerifySSLServerCertChild {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VerifySSLServerCertChild, override);
 
   explicit VerifySSLServerCertChild(
-      const UniqueCERTCertificate& aCert,
       SSLServerCertVerificationResult* aResultTask,
       nsTArray<nsTArray<uint8_t>>&& aPeerCertChain, uint32_t aProviderFlags);
 
@@ -42,14 +41,12 @@ class VerifySSLServerCertChild : public PVerifySSLServerCertChild {
  private:
   ~VerifySSLServerCertChild() = default;
 
-  UniqueCERTCertificate mCert;
   RefPtr<SSLServerCertVerificationResult> mResultTask;
   nsTArray<nsTArray<uint8_t>> mPeerCertChain;
   uint32_t mProviderFlags;
 };
 
 SECStatus RemoteProcessCertVerification(
-    const UniqueCERTCertificate& aCert,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain, const nsACString& aHostName,
     int32_t aPort, const OriginAttributes& aOriginAttributes,
     Maybe<nsTArray<uint8_t>>& aStapledOCSPResponse,
