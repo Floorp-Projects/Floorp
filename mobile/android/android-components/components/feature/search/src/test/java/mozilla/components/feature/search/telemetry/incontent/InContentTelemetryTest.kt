@@ -128,7 +128,7 @@ class InContentTelemetryTest {
     }
 
     @Test
-    fun `GIVEN a Bing search WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
+    fun `GIVEN an invalid Bing search WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://www.bing.com/search?q=aaa&pc=MOZMBA"
         val facts = mutableListOf<Fact>()
         Facts.registerProcessor(object : FactProcessor {
@@ -143,7 +143,7 @@ class InContentTelemetryTest {
         assertEquals(Component.FEATURE_SEARCH, facts[0].component)
         assertEquals(Action.INTERACTION, facts[0].action)
         assertEquals(InContentTelemetry.IN_CONTENT_SEARCH, facts[0].item)
-        assertEquals("bing.in-content.sap.none", facts[0].value)
+        assertEquals("bing.in-content.sap.other", facts[0].value)
     }
 
     @Test
@@ -166,7 +166,7 @@ class InContentTelemetryTest {
     }
 
     @Test
-    fun `GIVEN a invalid Google sap-follow-on WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
+    fun `GIVEN an invalid Google sap-follow-on WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://www.google.com/search?q=aaa&client=firefox-b-mTesting&oq=random"
         val facts = mutableListOf<Fact>()
         Facts.registerProcessor(object : FactProcessor {
@@ -181,7 +181,7 @@ class InContentTelemetryTest {
         assertEquals(Component.FEATURE_SEARCH, facts[0].component)
         assertEquals(Action.INTERACTION, facts[0].action)
         assertEquals(InContentTelemetry.IN_CONTENT_SEARCH, facts[0].item)
-        assertEquals("google.in-content.sap-follow-on.none", facts[0].value)
+        assertEquals("google.in-content.sap-follow-on.other", facts[0].value)
     }
 
     @Test

@@ -20,7 +20,7 @@ private val validCodeSet = setOf(
     "firefox-b-lg", "firefox-b-huawei-h1611", "firefox-b-is-oem1", "firefox-b-oem1",
     "firefox-b-oem2", "firefox-b-tinno", "firefox-b-pn-wt", "firefox-b-pn-wt-us", "ubuntu",
     "ffab", "ffcm", "ffhp", "ffip", "ffit", "ffnt", "ffocus", "ffos", "ffsb", "fpas", "fpsa",
-    "ftas", "ftsa", "newext", "1000969a"
+    "ftas", "ftsa", "newext", "1000969a", null
 )
 
 /**
@@ -48,7 +48,7 @@ internal fun getTrackKey(
 
         // For Bug 1751920
         if (!validCodeSet.contains(code)) {
-            code = null
+            code = "other"
         }
 
         // Glean doesn't allow code starting with a figure
