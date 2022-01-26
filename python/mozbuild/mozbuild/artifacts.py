@@ -50,7 +50,7 @@ import stat
 import subprocess
 import tarfile
 import tempfile
-import six.moves.urllib_parse as urlparse
+from urllib.parse import urlparse
 import zipfile
 from contextlib import contextmanager
 from io import BufferedReader
@@ -1549,25 +1549,34 @@ https://firefox-source-docs.mozilla.org/contributing/vcs/mercurial_bundles.html
 
     def install_from(self, source, distdir):
         """Install artifacts from a ``source`` into the given ``distdir``."""
-        if source and os.path.isfile(source):
-            return self.install_from_file(source, distdir)
-        elif source and urlparse(source).scheme:
-            return self.install_from_url(source, distdir)
-        else:
-            if source is None and "MOZ_ARTIFACT_REVISION" in os.environ:
-                source = os.environ["MOZ_ARTIFACT_REVISION"]
+        if (source and os.path.isfile(source)) or "MOZ_ARTIFACT_FILE" in os.environ:
+            source = source or os.environ["MOZ_ARTIFACT_FILE"]
+            for source in source.split(os.pathsep):
+                ret = self.install_from_file(source, distdir)
+                if ret:
+                    return ret
+            return 0
 
-            if source:
-                return self.install_from_revset(source, distdir)
+        if (source and urlparse(source).scheme) or "MOZ_ARTIFACT_URL" in os.environ:
+            source = source or os.environ["MOZ_ARTIFACT_URL"]
+            for source in source.split():
+                ret = self.install_from_url(source, distdir)
+                if ret:
+                    return ret
+            return 0
 
-            for var in (
-                "MOZ_ARTIFACT_TASK_%s" % self._job.upper().replace("-", "_"),
-                "MOZ_ARTIFACT_TASK",
-            ):
-                if var in os.environ:
-                    return self.install_from_task(os.environ[var], distdir)
+        if source or "MOZ_ARTIFACT_REVISION" in os.environ:
+            source = source or os.environ["MOZ_ARTIFACT_REVISION"]
+            return self.install_from_revset(source, distdir)
 
-            return self.install_from_recent(distdir)
+        for var in (
+            "MOZ_ARTIFACT_TASK_%s" % self._job.upper().replace("-", "_"),
+            "MOZ_ARTIFACT_TASK",
+        ):
+            if var in os.environ:
+                return self.install_from_task(os.environ[var], distdir)
+
+        return self.install_from_recent(distdir)
 
     def clear_cache(self):
         self.log(logging.INFO, "artifact", {}, "Deleting cached artifacts and caches.")
