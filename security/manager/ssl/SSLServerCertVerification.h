@@ -107,7 +107,7 @@ class SSLServerCertVerificationJob : public Runnable {
                             Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
                             Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
                             Maybe<DelegatedCredentialInfo>& dcInfo,
-                            uint32_t providerFlags, Time time, PRTime prtime,
+                            uint32_t providerFlags, Time time,
                             uint32_t certVerifierFlags,
                             BaseSSLServerCertVerificationResult* aResultTask);
 
@@ -123,7 +123,7 @@ class SSLServerCertVerificationJob : public Runnable {
                                Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
                                Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
                                Maybe<DelegatedCredentialInfo>& dcInfo,
-                               uint32_t providerFlags, Time time, PRTime prtime,
+                               uint32_t providerFlags, Time time,
                                uint32_t certVerifierFlags,
                                BaseSSLServerCertVerificationResult* aResultTask)
       : Runnable("psm::SSLServerCertVerificationJob"),
@@ -137,7 +137,6 @@ class SSLServerCertVerificationJob : public Runnable {
         mProviderFlags(providerFlags),
         mCertVerifierFlags(certVerifierFlags),
         mTime(time),
-        mPRTime(prtime),
         mStapledOCSPResponse(std::move(stapledOCSPResponse)),
         mSCTsFromTLSExtension(std::move(sctsFromTLSExtension)),
         mDCInfo(std::move(dcInfo)),
@@ -153,7 +152,6 @@ class SSLServerCertVerificationJob : public Runnable {
   const uint32_t mProviderFlags;
   const uint32_t mCertVerifierFlags;
   const Time mTime;
-  const PRTime mPRTime;
   Maybe<nsTArray<uint8_t>> mStapledOCSPResponse;
   Maybe<nsTArray<uint8_t>> mSCTsFromTLSExtension;
   Maybe<DelegatedCredentialInfo> mDCInfo;
