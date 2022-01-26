@@ -55,8 +55,7 @@ class LayerActivity {
     ACTIVITY_COUNT
   };
 
-  explicit LayerActivity(nsIFrame* aFrame)
-      : mFrame(aFrame), mContent(nullptr), mContentActive(false) {
+  explicit LayerActivity(nsIFrame* aFrame) : mFrame(aFrame), mContent(nullptr) {
     PodArrayZero(mRestyleCounts);
   }
   ~LayerActivity();
@@ -110,7 +109,6 @@ class LayerActivity {
 
   // Number of restyle operations detected
   uint8_t mRestyleCounts[ACTIVITY_COUNT];
-  bool mContentActive;
 };
 
 class LayerActivityTracker final
@@ -426,18 +424,6 @@ bool ActiveLayerTracker::IsScaleSubjectToAnimation(nsIFrame* aFrame) {
   }
 
   return AnimationUtils::FrameHasAnimatedScale(aFrame);
-}
-
-/* static */
-void ActiveLayerTracker::NotifyContentChange(nsIFrame* aFrame) {
-  LayerActivity* layerActivity = GetLayerActivityForUpdate(aFrame);
-  layerActivity->mContentActive = true;
-}
-
-/* static */
-bool ActiveLayerTracker::IsContentActive(nsIFrame* aFrame) {
-  LayerActivity* layerActivity = GetLayerActivity(aFrame);
-  return layerActivity && layerActivity->mContentActive;
 }
 
 /* static */
