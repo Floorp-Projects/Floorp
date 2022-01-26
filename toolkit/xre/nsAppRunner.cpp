@@ -4300,11 +4300,12 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 #endif
 
   // Enable Telemetry IO Reporting on DEBUG, nightly and local builds,
-  // but disable it on FUZZING builds.
+  // but disable it on FUZZING builds and for ANDROID.
 #ifndef FUZZING
-#  ifdef DEBUG
+#  ifndef ANDROID
+#    ifdef DEBUG
   mozilla::Telemetry::InitIOReporting(gAppData->xreDirectory);
-#  else
+#    else
   {
     const char* releaseChannel = MOZ_STRINGIFY(MOZ_UPDATE_CHANNEL);
     if (strcmp(releaseChannel, "nightly") == 0 ||
@@ -4312,8 +4313,9 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
       mozilla::Telemetry::InitIOReporting(gAppData->xreDirectory);
     }
   }
-#  endif /* DEBUG */
-#endif   /* FUZZING */
+#    endif /* DEBUG */
+#  endif   /* ANDROID */
+#endif     /* FUZZING */
 
 #if defined(XP_WIN)
   // Enable the HeapEnableTerminationOnCorruption exploit mitigation. We ignore
