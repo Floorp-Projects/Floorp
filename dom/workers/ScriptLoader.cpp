@@ -2420,7 +2420,8 @@ void ReportLoadError(ErrorResult& aRv, nsresult aLoadResult,
   switch (aLoadResult) {
     case NS_ERROR_FILE_NOT_FOUND:
     case NS_ERROR_NOT_AVAILABLE:
-      aRv.ThrowNetworkError(err);
+    case NS_ERROR_CORRUPTED_CONTENT:
+      aRv.Throw(NS_ERROR_DOM_NETWORK_ERR);
       break;
 
     case NS_ERROR_MALFORMED_URI:
@@ -2444,10 +2445,6 @@ void ReportLoadError(ErrorResult& aRv, nsresult aLoadResult,
       // This is actually a security error.
     case NS_ERROR_DOM_SECURITY_ERR:
       aRv.ThrowSecurityError(err);
-      break;
-
-    case NS_ERROR_CORRUPTED_CONTENT:
-      aRv.Throw(NS_ERROR_DOM_NETWORK_ERR);
       break;
 
     default:
