@@ -10,6 +10,7 @@
 #include "ProfileBuffer.h"
 
 #include "js/TraceLoggerAPI.h"
+#include "mozilla/OriginAttributes.h"
 #include "mozilla/Span.h"
 #include "nsXULAppAPI.h"
 
@@ -275,7 +276,15 @@ ProfilerThreadId DoStreamSamplesAndMarkers(
     aWriter.StringProperty("processName", aProcessName);
   }
   if (!aETLDplus1.IsEmpty()) {
-    aWriter.StringProperty("eTLD+1", aETLDplus1);
+    nsAutoCString originNoSuffix;
+    mozilla::OriginAttributes attrs;
+    if (!attrs.PopulateFromOrigin(aETLDplus1, originNoSuffix)) {
+      aWriter.StringProperty("eTLD+1", aETLDplus1);
+    } else {
+      aWriter.StringProperty("eTLD+1", originNoSuffix);
+      aWriter.BoolProperty("isPrivateBrowsing", attrs.mPrivateBrowsingId > 0);
+      aWriter.IntProperty("userContextId", attrs.mUserContextId);
+    }
   }
 
   if (aRegisterTime) {
