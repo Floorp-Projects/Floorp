@@ -197,10 +197,11 @@ async function makeSureProfilerPopupIsEnabled() {
  * any type of popup in the browser. This function waits for one of those events, and
  * checks that the viewId of the popup is PanelUI-profiler
  *
+ * @param {Window} window
  * @param {"popupshown" | "popuphidden"} eventName
  * @returns {Promise<void>}
  */
-function waitForProfilerPopupEvent(eventName) {
+function waitForProfilerPopupEvent(window, eventName) {
   return new Promise(resolve => {
     function handleEvent(event) {
       if (event.target.getAttribute("viewId") === "PanelUI-profiler") {
@@ -218,13 +219,14 @@ function waitForProfilerPopupEvent(eventName) {
  *
  * This function toggles the profiler menu button, and then uses user gestures
  * to click it open. It waits a tick to make sure it has a chance to initialize.
+ * @param {Window} window
  * @return {Promise<void>}
  */
 async function _toggleOpenProfilerPopup(window) {
   info("Toggle open the profiler popup.");
 
   info("> Find the profiler menu button.");
-  const profilerDropmarker = document.getElementById(
+  const profilerDropmarker = window.document.getElementById(
     "profiler-button-dropmarker"
   );
   if (!profilerDropmarker) {
@@ -233,10 +235,10 @@ async function _toggleOpenProfilerPopup(window) {
     );
   }
 
-  const popupShown = waitForProfilerPopupEvent("popupshown");
+  const popupShown = waitForProfilerPopupEvent(window, "popupshown");
 
   info("> Trigger a click on the profiler button dropmarker.");
-  await EventUtils.synthesizeMouseAtCenter(profilerDropmarker, {});
+  await EventUtils.synthesizeMouseAtCenter(profilerDropmarker, {}, window);
 
   if (profilerDropmarker.getAttribute("open") !== "true") {
     throw new Error(
@@ -255,10 +257,11 @@ async function _toggleOpenProfilerPopup(window) {
  * Do not use this directly in a test. Prefer withPopupOpen.
  *
  * This function uses a keyboard shortcut to close the profiler popup.
+ * @param {Window} window
  * @return {Promise<void>}
  */
 async function _closePopup(window) {
-  const popupHiddenPromise = waitForProfilerPopupEvent("popuphidden");
+  const popupHiddenPromise = waitForProfilerPopupEvent(window, "popuphidden");
   info("> Trigger an escape key to hide the popup");
   EventUtils.synthesizeKey("KEY_Escape");
 
@@ -292,7 +295,7 @@ async function withPopupOpen(window, callback) {
 async function openPopupAndEnsureCloses(window, callback) {
   await _toggleOpenProfilerPopup(window);
   // We want to ensure the popup gets closed by the test, during the callback.
-  const popupHiddenPromise = waitForProfilerPopupEvent("popuphidden");
+  const popupHiddenPromise = waitForProfilerPopupEvent(window, "popuphidden");
   await callback();
   info("> Verifying that the popup was closed by the test.");
   await popupHiddenPromise;
@@ -465,13 +468,17 @@ function withAboutProfiling(callback) {
  *                                          devtools panel's document, the
  *                                          second parameter is the opened tab's
  *                                          document.
+ * @param {Window} [aWindow] The browser's window object we target
  * @returns {Promise<void>}
  */
-async function withDevToolsPanel(url, callback) {
-  if (typeof url !== "string" && !callback) {
+async function withDevToolsPanel(url, callback, aWindow = window) {
+  if (typeof url === "function") {
+    aWindow = callback ?? window;
     callback = url;
     url = "about:blank";
   }
+
+  const { gBrowser } = aWindow;
 
   SpecialPowers.pushPrefEnv({
     set: [["devtools.performance.new-panel-enabled", "true"]],
