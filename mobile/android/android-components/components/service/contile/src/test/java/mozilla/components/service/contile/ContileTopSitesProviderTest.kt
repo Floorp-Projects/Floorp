@@ -35,7 +35,6 @@ class ContileTopSitesProviderTest {
         assertEquals("https://firefox.com/click", topSite.clickUrl)
         assertEquals("https://test.com/image1.jpg", topSite.imageUrl)
         assertEquals("https://test.com", topSite.impressionUrl)
-        assertEquals(1, topSite.position)
 
         topSite = topSites.last()
 
@@ -45,7 +44,6 @@ class ContileTopSitesProviderTest {
         assertEquals("https://mozilla.com/click", topSite.clickUrl)
         assertEquals("https://test.com/image2.jpg", topSite.imageUrl)
         assertEquals("https://example.com", topSite.impressionUrl)
-        assertEquals(2, topSite.position)
     }
 
     @Test(expected = IOException::class)

@@ -254,7 +254,6 @@ class DefaultTopSitesStorageTest {
             clickUrl = "https://mozilla.com/click",
             imageUrl = "https://test.com/image2.jpg",
             impressionUrl = "https://example.com",
-            position = 1,
             createdAt = 3
         )
 
@@ -338,7 +337,6 @@ class DefaultTopSitesStorageTest {
             clickUrl = "https://mozilla.com/click",
             imageUrl = "https://test.com/image2.jpg",
             impressionUrl = "https://example.com",
-            position = 1,
             createdAt = 3
         )
 

@@ -75,7 +75,6 @@ private fun JSONObject.toTopSite(): TopSite.Provided? {
             clickUrl = getString("click_url"),
             imageUrl = getString("image_url"),
             impressionUrl = getString("impression_url"),
-            position = getInt("position"),
             createdAt = null
         )
     } catch (e: JSONException) {

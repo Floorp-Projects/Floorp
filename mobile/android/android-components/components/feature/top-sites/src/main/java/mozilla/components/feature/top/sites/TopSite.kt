@@ -67,7 +67,6 @@ sealed class TopSite {
      * @property clickUrl The click URL of the top site.
      * @property imageUrl The image URL of the top site.
      * @property impressionUrl The URL that needs to be fired when the top site is displayed.
-     * @property position The position of the top site.
      * @property createdAt The optional date the top site was added.
      */
     data class Provided(
@@ -77,7 +76,6 @@ sealed class TopSite {
         val clickUrl: String,
         val imageUrl: String,
         val impressionUrl: String,
-        val position: Int,
         override val createdAt: Long?,
     ) : TopSite()
 }
