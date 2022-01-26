@@ -13,6 +13,13 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v98
+- Add [`WebRequest.beConservative`][98.1] to allow critical infrastructure to
+  avoid using bleeding-edge network features.
+  ([bug 1750231]({{bugzilla}}1750231))
+
+[98.1]: {{javadoc_uri}}/WebRequest.html#beConservative
+
 ## v97
 - ⚠️ Deprecated [`MediaSource.rawId`][97.1],
   which now provides the same string as [`id`][97.2].
@@ -1128,4 +1135,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: d6cc8df133ab50bb753761be0e07bf954dfe1349
+[api-version]: f6d4d5bfa6295b82c1f528532ae9b8ae37fe1824
