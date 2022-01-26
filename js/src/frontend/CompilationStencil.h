@@ -1237,6 +1237,9 @@ struct ExtensibleCompilationStencil {
   explicit ExtensibleCompilationStencil(JSContext* cx, ScriptSource* source);
 
   ExtensibleCompilationStencil(JSContext* cx, CompilationInput& input);
+  ExtensibleCompilationStencil(JSContext* cx,
+                               const JS::ReadOnlyCompileOptions& options,
+                               RefPtr<ScriptSource> source);
 
   ExtensibleCompilationStencil(ExtensibleCompilationStencil&& other) noexcept
       : canLazilyParse(other.canLazilyParse),
