@@ -2311,6 +2311,7 @@ package org.mozilla.geckoview {
     field public static final int CACHE_MODE_NO_STORE = 2;
     field public static final int CACHE_MODE_ONLY_IF_CACHED = 6;
     field public static final int CACHE_MODE_RELOAD = 3;
+    field public final boolean beConservative;
     field @Nullable public final ByteBuffer body;
     field public final int cacheMode;
     field @NonNull public final String method;
@@ -2319,6 +2320,7 @@ package org.mozilla.geckoview {
 
   @AnyThread public static class WebRequest.Builder extends WebMessage.Builder {
     ctor public Builder(@NonNull String);
+    method @NonNull public WebRequest.Builder beConservative(boolean);
     method @NonNull public WebRequest.Builder body(@Nullable ByteBuffer);
     method @NonNull public WebRequest.Builder body(@Nullable String);
     method @NonNull public WebRequest build();
