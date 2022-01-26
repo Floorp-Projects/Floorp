@@ -13,7 +13,7 @@ add_task(async function test_profile_multi_frame_page_info() {
   // Requesting the complete log to be able to debug Bug 1586105.
   SimpleTest.requestCompleteLog();
   Assert.ok(!Services.profiler.IsActive());
-  info("Clear the previous pages just in case we still some open tabs.");
+  info("Clear the previous pages just in case we still have some open tabs.");
   await Services.profiler.ClearAllPages();
 
   info(
@@ -63,6 +63,8 @@ add_task(async function test_profile_multi_frame_page_info() {
         Assert.equal(typeof page.innerWindowID, "number");
         // Top level document will have no embedder.
         Assert.equal(page.embedderInnerWindowID, 0);
+        Assert.equal(typeof page.isPrivateBrowsing, "boolean");
+        Assert.equal(page.isPrivateBrowsing, false);
         parentPage = page;
         foundPage++;
         break;
@@ -81,6 +83,8 @@ add_task(async function test_profile_multi_frame_page_info() {
         Assert.equal(typeof page.embedderInnerWindowID, "number");
         Assert.notEqual(typeof parentPage, "undefined");
         Assert.equal(page.embedderInnerWindowID, parentPage.innerWindowID);
+        Assert.equal(typeof page.isPrivateBrowsing, "boolean");
+        Assert.equal(page.isPrivateBrowsing, false);
         foundPage++;
         break;
       }

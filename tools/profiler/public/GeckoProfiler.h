@@ -99,7 +99,8 @@ static inline void profiler_received_exit_profile(
 static inline void profiler_register_page(uint64_t aTabID,
                                           uint64_t aInnerWindowID,
                                           const nsCString& aUrl,
-                                          uint64_t aEmbedderInnerWindowID) {}
+                                          uint64_t aEmbedderInnerWindowID,
+                                          bool aIsPrivateBrowsing) {}
 static inline void profiler_unregister_page(uint64_t aRegisteredInnerWindowID) {
 }
 
@@ -266,9 +267,12 @@ void profiler_unregister_thread();
 //   "aUrl"                   is the URL of the page.
 //   "aEmbedderInnerWindowID" is the inner window id of embedder. It's used to
 //                            determine sub documents of a page.
+//   "aIsPrivateBrowsing"     is true if this browsing context happens in a
+//                            private browsing context.
 void profiler_register_page(uint64_t aTabID, uint64_t aInnerWindowID,
                             const nsCString& aUrl,
-                            uint64_t aEmbedderInnerWindowID);
+                            uint64_t aEmbedderInnerWindowID,
+                            bool aIsPrivateBrowsing);
 // Unregister page with the profiler.
 //
 // Take a Inner Window ID and unregister the page entry that has the same ID.
