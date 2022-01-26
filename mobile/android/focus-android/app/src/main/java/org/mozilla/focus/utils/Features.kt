@@ -12,7 +12,7 @@ object Features {
 
     /**
      * HTTPS-Only mode.
-     * https://support.mozilla.org/en-US/kb/https-only-prefs
+     * https://support.mozilla.org/en-US/kb/https-only-prefs-focus
      */
     val HTTPS_ONLY_MODE = AppConstants.isDevOrNightlyBuild
 }

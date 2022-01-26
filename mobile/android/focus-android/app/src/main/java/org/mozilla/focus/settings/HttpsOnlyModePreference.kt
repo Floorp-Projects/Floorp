@@ -9,6 +9,7 @@ import android.util.AttributeSet
 import mozilla.components.concept.engine.Engine
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.utils.Features
+import org.mozilla.focus.utils.SupportUtils
 
 /**
  * Preference for HTTPS-Only mode.
@@ -17,9 +18,9 @@ class HttpsOnlyModePreference(
     context: Context,
     attrs: AttributeSet?
 ) : LearnMoreSwitchPreference(context, attrs) {
-    // Replace with SUMO link for Focus (This is the desktop link)
-    // https://github.com/mozilla-mobile/focus-android/issues/6008
-    override fun getLearnMoreUrl() = "https://support.mozilla.org/en-US/kb/https-only-prefs"
+
+    override fun getLearnMoreUrl() =
+        SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.HTTPS_ONLY)
 
     init {
         if (!Features.HTTPS_ONLY_MODE) {

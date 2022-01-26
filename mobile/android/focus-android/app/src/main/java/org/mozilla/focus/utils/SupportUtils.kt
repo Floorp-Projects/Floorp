@@ -45,7 +45,8 @@ object SupportUtils {
         WHATS_NEW_KLAR("whats-new-firefox-klar-android"),
         SEARCH_SUGGESTIONS("search-suggestions-focus-android"),
         ALLOWLIST("focus-android-allowlist"),
-        STUDIES("how-opt-out-studies-firefox-focus-android")
+        STUDIES("how-opt-out-studies-firefox-focus-android"),
+        HTTPS_ONLY("https-only-prefs-focus")
     }
 
     fun getGenericSumoURLForTopic(topic: SumoTopic): String {
