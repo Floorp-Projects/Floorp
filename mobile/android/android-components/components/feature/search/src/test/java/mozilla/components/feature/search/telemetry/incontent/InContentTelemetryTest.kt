@@ -204,6 +204,25 @@ class InContentTelemetryTest {
     }
 
     @Test
+    fun `GIVEN an invalid Google channel from topSite WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
+        val url = "https://www.google.com/search?q=aaa&client=firefox-b-m&channel=tsTest&oq=random"
+        val facts = mutableListOf<Fact>()
+        Facts.registerProcessor(object : FactProcessor {
+            override fun process(fact: Fact) {
+                facts.add(fact)
+            }
+        })
+
+        telemetry.trackPartnerUrlTypeMetric(url, listOf())
+
+        assertEquals(1, facts.size)
+        assertEquals(Component.FEATURE_SEARCH, facts[0].component)
+        assertEquals(Action.INTERACTION, facts[0].action)
+        assertEquals(InContentTelemetry.IN_CONTENT_SEARCH, facts[0].item)
+        assertEquals("google.in-content.sap-follow-on.firefox-b-m", facts[0].value)
+    }
+
+    @Test
     fun `GIVEN a Baidu sap-follow-on WHEN trackPartnerUrlTypeMetric is called THEN emit an appropriate IN_CONTENT_SEARCH fact`() {
         val url = "https://m.baidu.com/s?from=1000969a&word=aaa&oq=random"
         val facts = mutableListOf<Fact>()
