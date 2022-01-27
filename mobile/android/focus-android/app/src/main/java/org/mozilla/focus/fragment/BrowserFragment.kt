@@ -691,10 +691,6 @@ class BrowserFragment :
     }
 
     private fun openInBrowser() {
-        // Calling stop() on the GeckoSession helps preventing "Display already acquired" crashes from happening.
-        // See also https://bugzilla.mozilla.org/show_bug.cgi?id=1741899.
-        requireComponents.sessionUseCases.stopLoading(tabId)
-
         // Release the session from this view so that it can immediately be rendered by a different view
         sessionFeature.get()?.release()
 
