@@ -1,7 +1,43 @@
 {
   "data": [
     {
-      "schema": 1642777079288,
+      "schema": 1643210274385,
+      "derHash": "Ko5qhudNEO2yAmyBaT1klXoPCBwWMZEqyV79/LViVlc=",
+      "subject": "CN=HiPKI EV TLS CA - G1,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
+      "subjectDN": "MFExCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEdMBsGA1UEAwwUSGlQS0kgRVYgVExTIENBIC0gRzE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a023cea4830614c1b609404c9d6c146bd9ea1c7b18d1387e6ffd3f1bc4df8468",
+        "size": 2406,
+        "filename": "Vh3AWHegYXB8SaGzfKEBMcyAbWnHMWpi2fmpJO2WgMU=.pem",
+        "location": "security-state-staging/intermediates/3f43d607-34b9-4a08-a601-014da9b7f84d.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Vh3AWHegYXB8SaGzfKEBMcyAbWnHMWpi2fmpJO2WgMU=",
+      "crlite_enrolled": false,
+      "id": "43a2c25b-7851-4031-bd23-1be3b5327e04",
+      "last_modified": 1643273851580
+    },
+    {
+      "schema": 1643205203019,
+      "derHash": "mFFAkZNCI5yJCGsi38qkUIWQsRo94KQj4l68Pdr4kQ0=",
+      "subject": "CN=DigiCert Secure Site Pro ECC CN CA G3,O=DigiCert Inc,C=US",
+      "subjectDN": "MFQxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxLjAsBgNVBAMTJURpZ2lDZXJ0IFNlY3VyZSBTaXRlIFBybyBFQ0MgQ04gQ0EgRzM=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "abadc7dab3aa3ce9c3b3984b57de541e8e2155f1acb9659ec05255d0505f836a",
+        "size": 1341,
+        "filename": "ljUnYjVBy0mvbfWJdhWfQmd_OGXEqZ6sBA-BZTbrSVY=.pem",
+        "location": "security-state-staging/intermediates/69abe7b3-bea5-4ac4-b147-b7a9c256cfae.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ljUnYjVBy0mvbfWJdhWfQmd/OGXEqZ6sBA+BZTbrSVY=",
+      "crlite_enrolled": false,
+      "id": "d5251cce-28fd-44ee-97af-2b2fea57506d",
+      "last_modified": 1643209046682
+    },
+    {
+      "schema": 1643205202383,
       "derHash": "8Hu73gdvm0DFfMS+/t6Xyh9Tua4UfwNdKEy/U/NDL7g=",
       "subject": "CN=CFCA OV OCA,O=China Financial Certification Authority,C=CN",
       "subjectDN": "MFUxCzAJBgNVBAYTAkNOMTAwLgYDVQQKDCdDaGluYSBGaW5hbmNpYWwgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxFDASBgNVBAMMC0NGQ0EgT1YgT0NB",
@@ -14,9 +50,117 @@
         "mimetype": "application/x-pem-file"
       },
       "pubKeyHash": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=",
-      "crlite_enrolled": false,
+      "crlite_enrolled": true,
       "id": "b2b776e5-2b2f-4c8e-819d-026b8d3855d2",
-      "last_modified": 1643014635935
+      "last_modified": 1643209046672
+    },
+    {
+      "schema": 1643205203636,
+      "derHash": "2qBDVAf6RMKKuTnmgjgTYFd5CThzqWZJrW4DsF0oYmw=",
+      "subject": "CN=Buypass Class 3 CA 2,O=Buypass AS-983163327,C=NO",
+      "subjectDN": "MEsxCzAJBgNVBAYTAk5PMR0wGwYDVQQKDBRCdXlwYXNzIEFTLTk4MzE2MzMyNzEdMBsGA1UEAwwUQnV5cGFzcyBDbGFzcyAzIENBIDI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c3adfe4cbf2b1d7e9a605067bbec92b2d0430c2b1227c76517242204d270ea39",
+        "size": 1849,
+        "filename": "4ZQYrjRV6ScgdFiC0vn_Vy4QMIji7Tv-wkkEKEEQ6_I=.pem",
+        "location": "security-state-staging/intermediates/f4c24d5d-274d-468d-ad24-5434b0abf493.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "4ZQYrjRV6ScgdFiC0vn/Vy4QMIji7Tv+wkkEKEEQ6/I=",
+      "crlite_enrolled": true,
+      "id": "a3808703-8211-46eb-9e79-a0dff56992fd",
+      "last_modified": 1643209046662
+    },
+    {
+      "schema": 1643205203330,
+      "derHash": "VKiey5iaHcz0ATY584l0oLwHQsKZPftr0Mvx9GKWRQE=",
+      "subject": "CN=Buypass Class 2 CA 2,O=Buypass AS-983163327,C=NO",
+      "subjectDN": "MEsxCzAJBgNVBAYTAk5PMR0wGwYDVQQKDBRCdXlwYXNzIEFTLTk4MzE2MzMyNzEdMBsGA1UEAwwUQnV5cGFzcyBDbGFzcyAyIENBIDI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "0614048608f149da266521b3b029d5d9fbab892a53adc1151476ffbb67f64ea8",
+        "size": 1849,
+        "filename": "61MXD2Y0eBaJtXDtSP1wW5LIdaIPjtVmYYrVCM8GDDg=.pem",
+        "location": "security-state-staging/intermediates/807b4084-3ed6-4c3d-9105-8e356f3bdc73.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "61MXD2Y0eBaJtXDtSP1wW5LIdaIPjtVmYYrVCM8GDDg=",
+      "crlite_enrolled": true,
+      "id": "ef80dba5-2722-4073-94a2-06a8e7cf1eee",
+      "last_modified": 1643209046651
+    },
+    {
+      "schema": 1643204385586,
+      "derHash": "xJw1DlqCBeBj50xVSplDNbhDXJllJ9TvGisMe1FYSy0=",
+      "subject": "CN=Buypass Class 3 CA 3,O=Buypass AS-983163327,C=NO",
+      "subjectDN": "MEsxCzAJBgNVBAYTAk5PMR0wGwYDVQQKDBRCdXlwYXNzIEFTLTk4MzE2MzMyNzEdMBsGA1UEAwwUQnV5cGFzcyBDbGFzcyAzIENBIDM=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "954fa22283314bcbe40077bc8cee7655cbcfce4fb215854858c5599d8c8b498f",
+        "size": 1723,
+        "filename": "b2TqrhO3HsQ2hHTQB23iQnAAL127LlWqd3L_IgvgTtk=.pem",
+        "location": "security-state-staging/intermediates/379744b3-624d-49d1-b082-83d5b607dc72.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "b2TqrhO3HsQ2hHTQB23iQnAAL127LlWqd3L/IgvgTtk=",
+      "crlite_enrolled": true,
+      "id": "636e348f-d4b7-425a-aabb-4eab295a6c6e",
+      "last_modified": 1643209046639
+    },
+    {
+      "schema": 1643205202035,
+      "derHash": "zHJT696ffpLLope1ut7Rsi5c6spSXiAbTcQQ9PNQS14=",
+      "subject": "CN=CFCA EV OCA,O=China Financial Certification Authority,C=CN",
+      "subjectDN": "MFUxCzAJBgNVBAYTAkNOMTAwLgYDVQQKDCdDaGluYSBGaW5hbmNpYWwgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxFDASBgNVBAMMC0NGQ0EgRVYgT0NB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "74214137d4d8e9fcca062824947ddab76b72e3385e4e90362d532dea748a76cf",
+        "size": 1898,
+        "filename": "Ub-bKk6h-qrzcElkX07080gHiz8CDNkXagA7GJtPu0I=.pem",
+        "location": "security-state-staging/intermediates/7b653369-09f2-4882-9c83-209a35b305e5.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Ub+bKk6h+qrzcElkX07080gHiz8CDNkXagA7GJtPu0I=",
+      "crlite_enrolled": true,
+      "id": "2f50d8ff-d71a-4851-afa7-4fb7a4e14792",
+      "last_modified": 1643209046628
+    },
+    {
+      "schema": 1643205202717,
+      "derHash": "MGKRjZ3WF5JScbx/gIC4pqXSGFu9iA94Yv1MBDsZQZE=",
+      "subject": "CN=Buypass Class 2 CA 5,O=Buypass AS-983163327,C=NO",
+      "subjectDN": "MEsxCzAJBgNVBAYTAk5PMR0wGwYDVQQKDBRCdXlwYXNzIEFTLTk4MzE2MzMyNzEdMBsGA1UEAwwUQnV5cGFzcyBDbGFzcyAyIENBIDU=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "fd5a69fd438ea769861dbb346922f606e66c972bf1b76d0b4b699d88aef6ef6a",
+        "size": 2170,
+        "filename": "QlGZmcMUM6a8-CxL2TmTAfoYCm-fXAouAzzKYCxGoss=.pem",
+        "location": "security-state-staging/intermediates/d6a8096b-9b05-41b8-984a-b244edc193b6.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "QlGZmcMUM6a8+CxL2TmTAfoYCm+fXAouAzzKYCxGoss=",
+      "crlite_enrolled": true,
+      "id": "355287c5-30e3-4992-b72c-8013c887d757",
+      "last_modified": 1643209046618
+    },
+    {
+      "schema": 1643107795072,
+      "derHash": "YoBqPZQu1PbAkaEx5jY7E43WOlw830QT0AzIoMMzqfg=",
+      "subject": "CN=CERTDATA SSL OV CA  [Run by the Issuer],O=CERTDATA SERVICOS DE INFORMACAO LTDA,C=BR",
+      "subjectDN": "MG4xCzAJBgNVBAYTAkJSMS0wKwYDVQQKEyRDRVJUREFUQSBTRVJWSUNPUyBERSBJTkZPUk1BQ0FPIExUREExMDAuBgNVBAMMJ0NFUlREQVRBIFNTTCBPViBDQSAgW1J1biBieSB0aGUgSXNzdWVyXQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2f80f47c488ec7412b055557852db65a46130e869818968c2e1abd16dfde9038",
+        "size": 2129,
+        "filename": "j329Y60dfipsfu2WQjIJzo3bfYjWBMO0L6-erwtRMEM=.pem",
+        "location": "security-state-staging/intermediates/ac48c1cf-d260-4b4a-beb7-599ef5ee1de8.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "j329Y60dfipsfu2WQjIJzo3bfYjWBMO0L6+erwtRMEM=",
+      "crlite_enrolled": true,
+      "id": "538da95e-219e-4f04-9887-5ef9291a70ab",
+      "last_modified": 1643122645541
     },
     {
       "schema": 1642604268417,
@@ -215,24 +359,6 @@
       "crlite_enrolled": false,
       "id": "1a882256-e765-4db1-820b-0d4c76dcf9a5",
       "last_modified": 1642517853895
-    },
-    {
-      "schema": 1642409854981,
-      "derHash": "Ko5qhudNEO2yAmyBaT1klXoPCBwWMZEqyV79/LViVlc=",
-      "subject": "CN=HiPKI EV TLS CA - G1,O=Chunghwa Telecom Co.\\, Ltd.,C=TW",
-      "subjectDN": "MFExCzAJBgNVBAYTAlRXMSMwIQYDVQQKDBpDaHVuZ2h3YSBUZWxlY29tIENvLiwgTHRkLjEdMBsGA1UEAwwUSGlQS0kgRVYgVExTIENBIC0gRzE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a023cea4830614c1b609404c9d6c146bd9ea1c7b18d1387e6ffd3f1bc4df8468",
-        "size": 2406,
-        "filename": "Vh3AWHegYXB8SaGzfKEBMcyAbWnHMWpi2fmpJO2WgMU=.pem",
-        "location": "security-state-staging/intermediates/3f43d607-34b9-4a08-a601-014da9b7f84d.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Vh3AWHegYXB8SaGzfKEBMcyAbWnHMWpi2fmpJO2WgMU=",
-      "crlite_enrolled": true,
-      "id": "43a2c25b-7851-4031-bd23-1be3b5327e04",
-      "last_modified": 1642453051602
     },
     {
       "schema": 1642172243609,
@@ -2951,24 +3077,6 @@
       "crlite_enrolled": true,
       "id": "bcd47841-6736-4533-bf49-4312192e3896",
       "last_modified": 1641481037630
-    },
-    {
-      "schema": 1641477704267,
-      "derHash": "mFFAkZNCI5yJCGsi38qkUIWQsRo94KQj4l68Pdr4kQ0=",
-      "subject": "CN=DigiCert Secure Site Pro ECC CN CA G3,O=DigiCert Inc,C=US",
-      "subjectDN": "MFQxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxLjAsBgNVBAMTJURpZ2lDZXJ0IFNlY3VyZSBTaXRlIFBybyBFQ0MgQ04gQ0EgRzM=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "abadc7dab3aa3ce9c3b3984b57de541e8e2155f1acb9659ec05255d0505f836a",
-        "size": 1341,
-        "filename": "ljUnYjVBy0mvbfWJdhWfQmd_OGXEqZ6sBA-BZTbrSVY=.pem",
-        "location": "security-state-staging/intermediates/69abe7b3-bea5-4ac4-b147-b7a9c256cfae.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "ljUnYjVBy0mvbfWJdhWfQmd/OGXEqZ6sBA+BZTbrSVY=",
-      "crlite_enrolled": true,
-      "id": "d5251cce-28fd-44ee-97af-2b2fea57506d",
-      "last_modified": 1641481037620
     },
     {
       "schema": 1641477726605,
@@ -13985,24 +14093,6 @@
       "crlite_enrolled": false,
       "id": "4bbcb8f7-3b30-416c-9e64-eace4bae3c32",
       "last_modified": 1630915093878
-    },
-    {
-      "schema": 1630681084384,
-      "derHash": "YoBqPZQu1PbAkaEx5jY7E43WOlw830QT0AzIoMMzqfg=",
-      "subject": "CN=CERTDATA SSL OV CA  [Run by the Issuer],O=CERTDATA SERVICOS DE INFORMACAO LTDA,C=BR",
-      "subjectDN": "MG4xCzAJBgNVBAYTAkJSMS0wKwYDVQQKEyRDRVJUREFUQSBTRVJWSUNPUyBERSBJTkZPUk1BQ0FPIExUREExMDAuBgNVBAMMJ0NFUlREQVRBIFNTTCBPViBDQSAgW1J1biBieSB0aGUgSXNzdWVyXQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "2f80f47c488ec7412b055557852db65a46130e869818968c2e1abd16dfde9038",
-        "size": 2129,
-        "filename": "j329Y60dfipsfu2WQjIJzo3bfYjWBMO0L6-erwtRMEM=.pem",
-        "location": "security-state-staging/intermediates/ac48c1cf-d260-4b4a-beb7-599ef5ee1de8.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "j329Y60dfipsfu2WQjIJzo3bfYjWBMO0L6+erwtRMEM=",
-      "crlite_enrolled": false,
-      "id": "538da95e-219e-4f04-9887-5ef9291a70ab",
-      "last_modified": 1630742341441
     },
     {
       "schema": 1630396674974,
@@ -32779,24 +32869,6 @@
       "last_modified": 1576536533772
     },
     {
-      "schema": 1576535896778,
-      "derHash": "2qBDVAf6RMKKuTnmgjgTYFd5CThzqWZJrW4DsF0oYmw=",
-      "subject": "CN=Buypass Class 3 CA 2,O=Buypass AS-983163327,C=NO",
-      "subjectDN": "MEsxCzAJBgNVBAYTAk5PMR0wGwYDVQQKDBRCdXlwYXNzIEFTLTk4MzE2MzMyNzEdMBsGA1UEAwwUQnV5cGFzcyBDbGFzcyAzIENBIDI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c3adfe4cbf2b1d7e9a605067bbec92b2d0430c2b1227c76517242204d270ea39",
-        "size": 1849,
-        "filename": "4ZQYrjRV6ScgdFiC0vn_Vy4QMIji7Tv-wkkEKEEQ6_I=.pem",
-        "location": "security-state-staging/intermediates/f4c24d5d-274d-468d-ad24-5434b0abf493.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "4ZQYrjRV6ScgdFiC0vn/Vy4QMIji7Tv+wkkEKEEQ6/I=",
-      "crlite_enrolled": true,
-      "id": "a3808703-8211-46eb-9e79-a0dff56992fd",
-      "last_modified": 1576536533765
-    },
-    {
       "schema": 1576535892539,
       "derHash": "Y2WyXpKZtfOC6wBmhQYpCI682byzmPKGIhB2A8PBwn4=",
       "subject": "SERIALNUMBER=A62634068,CN=AC Firmaprofesional - AAPP,OU=Certificados Digitales para la Administracion Publica,O=Firmaprofesional SA,C=ES",
@@ -33983,24 +34055,6 @@
       "crlite_enrolled": false,
       "id": "4eac52f2-55a9-4aad-a5ec-b460abc548b6",
       "last_modified": 1576536533244
-    },
-    {
-      "schema": 1576535694050,
-      "derHash": "VKiey5iaHcz0ATY584l0oLwHQsKZPftr0Mvx9GKWRQE=",
-      "subject": "CN=Buypass Class 2 CA 2,O=Buypass AS-983163327,C=NO",
-      "subjectDN": "MEsxCzAJBgNVBAYTAk5PMR0wGwYDVQQKDBRCdXlwYXNzIEFTLTk4MzE2MzMyNzEdMBsGA1UEAwwUQnV5cGFzcyBDbGFzcyAyIENBIDI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "0614048608f149da266521b3b029d5d9fbab892a53adc1151476ffbb67f64ea8",
-        "size": 1849,
-        "filename": "61MXD2Y0eBaJtXDtSP1wW5LIdaIPjtVmYYrVCM8GDDg=.pem",
-        "location": "security-state-staging/intermediates/807b4084-3ed6-4c3d-9105-8e356f3bdc73.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "61MXD2Y0eBaJtXDtSP1wW5LIdaIPjtVmYYrVCM8GDDg=",
-      "crlite_enrolled": true,
-      "id": "ef80dba5-2722-4073-94a2-06a8e7cf1eee",
-      "last_modified": 1576536533226
     },
     {
       "schema": 1576535691263,
@@ -38593,24 +38647,6 @@
       "last_modified": 1562108472928
     },
     {
-      "schema": 1562108470681,
-      "derHash": "xJw1DlqCBeBj50xVSplDNbhDXJllJ9TvGisMe1FYSy0=",
-      "subject": "CN=Buypass Class 3 CA 3,O=Buypass AS-983163327,C=NO",
-      "subjectDN": "MEsxCzAJBgNVBAYTAk5PMR0wGwYDVQQKDBRCdXlwYXNzIEFTLTk4MzE2MzMyNzEdMBsGA1UEAwwUQnV5cGFzcyBDbGFzcyAzIENBIDM=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "954fa22283314bcbe40077bc8cee7655cbcfce4fb215854858c5599d8c8b498f",
-        "size": 1723,
-        "filename": "b2TqrhO3HsQ2hHTQB23iQnAAL127LlWqd3L_IgvgTtk=.pem",
-        "location": "security-state-staging/intermediates/379744b3-624d-49d1-b082-83d5b607dc72.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "b2TqrhO3HsQ2hHTQB23iQnAAL127LlWqd3L/IgvgTtk=",
-      "crlite_enrolled": true,
-      "id": "636e348f-d4b7-425a-aabb-4eab295a6c6e",
-      "last_modified": 1562108471419
-    },
-    {
       "schema": 1562108469933,
       "derHash": "geBxsB8B3EPuRYwOG9y8hItHRiwmtM4Z7pAVQWvG34k=",
       "subject": "CN=DigiCert Class 3 RSA CA G1,OU=www.digicert.com,O=DigiCert Inc,C=US",
@@ -39113,24 +39149,6 @@
       "crlite_enrolled": false,
       "id": "2a3597e8-9e52-40c9-8dcc-bdcde662da91",
       "last_modified": 1562108417422
-    },
-    {
-      "schema": 1562108415879,
-      "derHash": "zHJT696ffpLLope1ut7Rsi5c6spSXiAbTcQQ9PNQS14=",
-      "subject": "CN=CFCA EV OCA,O=China Financial Certification Authority,C=CN",
-      "subjectDN": "MFUxCzAJBgNVBAYTAkNOMTAwLgYDVQQKDCdDaGluYSBGaW5hbmNpYWwgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxFDASBgNVBAMMC0NGQ0EgRVYgT0NB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "74214137d4d8e9fcca062824947ddab76b72e3385e4e90362d532dea748a76cf",
-        "size": 1898,
-        "filename": "Ub-bKk6h-qrzcElkX07080gHiz8CDNkXagA7GJtPu0I=.pem",
-        "location": "security-state-staging/intermediates/7b653369-09f2-4882-9c83-209a35b305e5.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Ub+bKk6h+qrzcElkX07080gHiz8CDNkXagA7GJtPu0I=",
-      "crlite_enrolled": true,
-      "id": "2f50d8ff-d71a-4851-afa7-4fb7a4e14792",
-      "last_modified": 1562108416646
     },
     {
       "schema": 1562108414362,
@@ -47339,24 +47357,6 @@
       "crlite_enrolled": false,
       "id": "1a7227e1-a59c-4b29-ab18-0f65195a0fa1",
       "last_modified": 1562024852483
-    },
-    {
-      "schema": 1562024846502,
-      "derHash": "MGKRjZ3WF5JScbx/gIC4pqXSGFu9iA94Yv1MBDsZQZE=",
-      "subject": "CN=Buypass Class 2 CA 5,O=Buypass AS-983163327,C=NO",
-      "subjectDN": "MEsxCzAJBgNVBAYTAk5PMR0wGwYDVQQKDBRCdXlwYXNzIEFTLTk4MzE2MzMyNzEdMBsGA1UEAwwUQnV5cGFzcyBDbGFzcyAyIENBIDU=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "fd5a69fd438ea769861dbb346922f606e66c972bf1b76d0b4b699d88aef6ef6a",
-        "size": 2170,
-        "filename": "QlGZmcMUM6a8-CxL2TmTAfoYCm-fXAouAzzKYCxGoss=.pem",
-        "location": "security-state-staging/intermediates/d6a8096b-9b05-41b8-984a-b244edc193b6.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "QlGZmcMUM6a8+CxL2TmTAfoYCm+fXAouAzzKYCxGoss=",
-      "crlite_enrolled": true,
-      "id": "355287c5-30e3-4992-b72c-8013c887d757",
-      "last_modified": 1562024847233
     },
     {
       "schema": 1562024844261,
