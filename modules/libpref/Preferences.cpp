@@ -1586,9 +1586,6 @@ static nsresult pref_SetPref(const nsCString& aPrefName, PrefType aType,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
-    MOZ_ASSERT(
-        false,
-        "!AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)");
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
