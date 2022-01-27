@@ -6,13 +6,6 @@ export * from "../reducers/expressions";
 export * from "../reducers/tabs";
 export * from "../reducers/threads";
 
-export {
-  getSourceActor,
-  hasSourceActor,
-  getSourceActors,
-  getSourceActorsForThread,
-} from "../reducers/source-actors";
-
 export * from "./ast";
 export * from "./breakpoints";
 export {
@@ -33,6 +26,7 @@ export * from "./pending-breakpoints";
 export * from "./preview";
 export * from "./project-text-search";
 export * from "./quick-open";
+export * from "./source-actors";
 export * from "./source-tree";
 export * from "./sources";
 export * from "./tabs";

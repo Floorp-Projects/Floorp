@@ -6,7 +6,7 @@ import {
   getSourceActor,
   getSourceActorBreakableLines,
   getSourceActorBreakpointColumns,
-} from "../reducers/source-actors";
+} from "../selectors/source-actors";
 import { memoizeableAction } from "../utils/memoizableAction";
 import { PROMISE } from "./utils/middleware/promise";
 
