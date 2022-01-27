@@ -9,7 +9,6 @@ export * from "../reducers/pause";
 export * from "../reducers/threads";
 export * from "../reducers/breakpoints";
 export * from "../reducers/pending-breakpoints";
-export * from "../reducers/ui";
 
 export {
   getSourceActor,
@@ -44,6 +43,7 @@ export * from "./quick-open";
 export * from "./source-tree";
 export * from "./tabs";
 export * from "./threads";
+export * from "./ui";
 export {
   getVisibleBreakpoints,
   getFirstVisibleBreakpoints,
