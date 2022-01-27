@@ -1854,8 +1854,7 @@ nsresult AutoScroller::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
   // Start the AutoScroll timer if necessary.
   // `ScrollFrameRectIntoView` above may have run script and this may have
   // forbidden to continue scrolling.
-  if (didScroll &&
-      mFurtherScrollingAllowed == FurtherScrollingAllowed::kYes) {
+  if (didScroll && mFurtherScrollingAllowed == FurtherScrollingAllowed::kYes) {
     nsPoint presContextPoint =
         globalPoint -
         presShell->GetRootFrame()->GetOffsetToCrossDoc(rootmostFrame);
