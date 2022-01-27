@@ -275,6 +275,7 @@ class TestStatus:
         self.unexpected_pass = 0
         self.repeated_runs = 0
         self.expected_repeated_runs = 0
+        self.all_skipped = False
 
 
 def run_tests(config, test_paths, product, **kwargs):
@@ -416,6 +417,7 @@ def run_tests(config, test_paths, product, **kwargs):
                 if repeat_until_unexpected and test_status.unexpected > 0:
                     break
                 if test_status.repeated_runs == 1 and len(test_loader.test_ids) == test_status.skipped:
+                    test_status.all_skipped = True
                     break
 
     # Return the evaluation of the runs and the number of repeated iterations that were run.
