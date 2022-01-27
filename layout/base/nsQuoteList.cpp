@@ -50,10 +50,18 @@ nsString nsQuoteNode::Text() {
   const auto& quotesProp = mPseudoFrame->StyleList()->mQuotes;
 
   if (quotesProp.IsAuto()) {
-    // Look up CLDR-derived quotation marks for current language;
-    // if none available, use built-in default.
+    // Look up CLDR-derived quotation marks for the language of the context.
+    const nsIFrame* frame = mPseudoFrame->GetParent();
+    // Parent of the pseudo is the element around which the quotes are applied;
+    // we want lang from *its* parent, unless it is the root.
+    // XXX Are there other cases where we shouldn't look up to the parent?
+    if (!frame->Style()->IsRootElementStyle()) {
+      frame = frame->GetParent();
+    }
     const intl::Quotes* quotes =
-        intl::QuotesForLang(mPseudoFrame->StyleFont()->mLanguage);
+        intl::QuotesForLang(frame->StyleFont()->mLanguage);
+    // If we don't have quote-mark data for the language, use built-in
+    // defaults.
     if (!quotes) {
       static const intl::Quotes sDefaultQuotes = {
           {0x201c, 0x201d, 0x2018, 0x2019}};
