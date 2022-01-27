@@ -49,7 +49,6 @@ add_task(async function test_executeScript_params_validation() {
   let extension = makeExtension({
     async background() {
       const tabs = await browser.tabs.query({ active: true });
-      const tabId = tabs[0].id;
 
       const TEST_CASES = [
         {
@@ -81,7 +80,7 @@ add_task(async function test_executeScript_params_validation() {
           title: "both allFrames and frameIds are passed",
           executeScriptParams: {
             target: {
-              tabId,
+              tabId: tabs[0].id,
               allFrames: true,
               frameIds: [1, 2, 3],
             },
@@ -89,13 +88,18 @@ add_task(async function test_executeScript_params_validation() {
           },
           expectedError: /Cannot specify both 'allFrames' and 'frameIds'/,
         },
+        // TODO: Bug 1751154 - we probably don't want to reject with an error
+        // in this case.
         {
-          title: "invalid IDs in frameIds",
+          title: "empty array of frameIds",
           executeScriptParams: {
-            target: { tabId, frameIds: [0, 1, 2] },
-            func: () => {},
+            target: {
+              tabId: tabs[0].id,
+              frameIds: [],
+            },
+            files: ["script.js"],
           },
-          expectedError: "Invalid frame IDs: [1, 2].",
+          expectedError: /Missing host permission for the tab/,
         },
       ];
 
@@ -512,52 +516,40 @@ add_task(async function test_executeScript_in_multiple_frameIds() {
         return document.title;
       };
 
-      const TEST_CASES = [
-        {
-          title: "multiple frame IDs",
-          params: {
-            target: { tabId, frameIds },
-            func: getTitle,
-          },
-          expectedResults: [
-            {
-              frameId: frameIds[0],
-              result: "file contains iframe",
-            },
-            {
-              frameId: frameIds[1],
-              result: "file contains img",
-            },
-          ],
-        },
-        {
-          title: "empty list of frame IDs",
-          params: {
-            target: { tabId, frameIds: [] },
-            func: getTitle,
-          },
-          expectedResults: [],
-        },
-      ];
+      const results = await browser.scripting.executeScript({
+        target: { tabId, frameIds },
+        func: getTitle,
+      });
 
-      for (const { title, params, expectedResults } of TEST_CASES) {
-        const results = await browser.scripting.executeScript(params);
+      browser.test.assertEq(
+        2,
+        results.length,
+        "got expected number of results"
+      );
+      // Sort injection results by frameId to always assert the results in the
+      // same order.
+      results.sort((a, b) => a.frameId - b.frameId);
 
-        browser.test.assertEq(
-          expectedResults.length,
-          results.length,
-          `${title} - got expected number of results`
-        );
-        // Sort injection results by frameId to always assert the results in
-        // the same order.
-        results.sort((a, b) => a.frameId - b.frameId);
-
-        browser.test.assertEq(
-          JSON.stringify(expectedResults),
-          JSON.stringify(results),
-          `${title} - got expected results`
-        );
-      }
+      browser.test.assertEq(
+        "file contains iframe",
+        results[0].result,
+        "got the expected title in results[0]"
+      );
+      browser.test.assertEq(
+        frameIds[0],
+        results[0].frameId,
+        "got the expected frameId in results[0]"
+      );
+      browser.test.assertEq(
+        "file contains img",
+        results[1].result,
+        "got the expected title in results[1]"
+      );
+      browser.test.assertEq(
+        frameIds[1],
+        results[1].frameId,
+        "got the expected frameId in results[1]"
+      );
 
       browser.test.notifyPass("execute-script");
     },
