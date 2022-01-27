@@ -31,7 +31,6 @@
                                       \
   _(GlobalHelperThreadState, 400)     \
                                       \
-  _(SharedImmutableStringsCache, 500) \
   _(FutexThread, 500)                 \
   _(GeckoProfilerStrings, 500)        \
   _(ProtectedRegionTree, 500)         \
@@ -58,7 +57,9 @@
   _(WasmHugeMemoryEnabled, 500)       \
   _(MemoryTracker, 500)               \
   _(StencilCache, 500)                \
+  _(SourceCompression, 500)           \
                                       \
+  _(SharedImmutableStringsCache, 600) \
   _(IrregexpLazyStatic, 600)          \
   _(ThreadId, 600)                    \
   _(WasmCodeSegmentMap, 600)          \
