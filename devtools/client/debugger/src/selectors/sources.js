@@ -35,7 +35,7 @@ import {
   getSourceActors,
   getAllThreadsBySource,
   getBreakableLinesForSourceActors,
-} from "../reducers/source-actors";
+} from "../selectors/source-actors";
 import { getAllThreads } from "../selectors/threads";
 
 // This is used by tabs selectors
