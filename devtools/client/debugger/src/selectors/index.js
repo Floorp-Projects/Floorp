@@ -10,7 +10,6 @@ export * from "../reducers/threads";
 export * from "../reducers/breakpoints";
 export * from "../reducers/pending-breakpoints";
 export * from "../reducers/ui";
-export * from "../reducers/file-search";
 export * from "../reducers/project-text-search";
 export * from "../reducers/source-tree";
 export * from "../reducers/preview";
@@ -39,6 +38,7 @@ export {
 export { getBreakpointSources } from "./breakpointSources";
 export * from "./event-listeners";
 export * from "./exceptions";
+export * from "./file-search";
 export { getCallStackFrames } from "./getCallStackFrames";
 export { isLineInScope } from "./isLineInScope";
 export { isSelectedFrameVisible } from "./isSelectedFrameVisible";
