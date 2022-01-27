@@ -1530,7 +1530,7 @@ void GetUserMediaStreamTask::PrepareDOMStream() {
       if (mAudioDevice->IsFake()) {
         track = mtg->CreateSourceTrack(MediaSegment::AUDIO);
       } else {
-        track = AudioInputTrack::Create(mtg);
+        track = AudioProcessingTrack::Create(mtg);
         track->Suspend();  // Microphone source resumes in SetTrack
       }
 #else
