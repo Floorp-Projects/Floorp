@@ -35,20 +35,4 @@ function update(state = initialEventListenerState(), action) {
   }
 }
 
-export function getActiveEventListeners(state) {
-  return state.eventListenerBreakpoints.active;
-}
-
-export function getEventListenerBreakpointTypes(state) {
-  return state.eventListenerBreakpoints.categories;
-}
-
-export function getEventListenerExpanded(state) {
-  return state.eventListenerBreakpoints.expanded;
-}
-
-export function shouldLogEventBreakpoints(state) {
-  return state.eventListenerBreakpoints.logEventBreakpoints;
-}
-
 export default update;
