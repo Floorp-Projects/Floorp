@@ -19,6 +19,7 @@ CompiledModules(
     "isSelectedFrameVisible.js",
     "pause.js",
     "preview.js",
+    "project-text-search.js",
     "tabs.js",
     "threads.js",
     "visibleBreakpoints.js",
