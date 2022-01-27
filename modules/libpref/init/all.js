@@ -4609,7 +4609,7 @@ pref("extensions.formautofill.addresses.supportedCountries", "US,CA");
 pref("extensions.formautofill.creditCards.available", true);
 pref("extensions.formautofill.creditCards.supported", "detect");
 pref("extensions.formautofill.creditCards.enabled", true);
-pref("extensions.formautofill.creditCards.supportedCountries", "US,CA");
+pref("extensions.formautofill.creditCards.supportedCountries", "US,CA,UK,FR,DE");
 // Temporary preference to control displaying the UI elements for
 // credit card autofill used for the duration of the A/B test.
 pref("extensions.formautofill.creditCards.hideui", false);
