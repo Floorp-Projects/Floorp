@@ -3,7 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 export * from "../reducers/expressions";
-export * from "../reducers/sources";
 export * from "../reducers/tabs";
 export * from "../reducers/threads";
 
@@ -35,6 +34,7 @@ export * from "./preview";
 export * from "./project-text-search";
 export * from "./quick-open";
 export * from "./source-tree";
+export * from "./sources";
 export * from "./tabs";
 export * from "./threads";
 export * from "./ui";
