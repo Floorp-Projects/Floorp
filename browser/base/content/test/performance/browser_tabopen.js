@@ -62,6 +62,13 @@ add_task(async function() {
 
   let inRange = (val, min, max) => min <= val && val <= max;
 
+  info(`tabStripRect=${JSON.stringify(tabStripRect)}`);
+  info(`firstTabRect=${JSON.stringify(firstTabRect)}`);
+  info(`tabPaddingStart=${JSON.stringify(tabPaddingStart)}`);
+  info(`firstTabLabelRect=${JSON.stringify(firstTabLabelRect)}`);
+  info(`newTabButtonRect=${JSON.stringify(newTabButtonRect)}`);
+  info(`textBoxRect=${JSON.stringify(textBoxRect)}`);
+
   let inTabStrip = function(r) {
     return (
       r.y1 >= tabStripRect.top &&

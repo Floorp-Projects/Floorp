@@ -34,6 +34,12 @@ static inline bool OnHelperThread() {
     }
   }
 
+  if (Helper == AllowedHelperThread::ParseTask) {
+    if (CurrentThreadIsParseThread()) {
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -69,6 +75,7 @@ void CheckMainThread<Helper>::check() const {
 
 template class CheckMainThread<AllowedHelperThread::None>;
 template class CheckMainThread<AllowedHelperThread::GCTask>;
+template class CheckMainThread<AllowedHelperThread::ParseTask>;
 template class CheckMainThread<AllowedHelperThread::IonCompile>;
 
 template <AllowedHelperThread Helper>

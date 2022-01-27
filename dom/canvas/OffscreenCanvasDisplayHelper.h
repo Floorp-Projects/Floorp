@@ -60,8 +60,6 @@ class OffscreenCanvasDisplayHelper final {
   mutable Mutex mMutex;
   HTMLCanvasElement* MOZ_NON_OWNING_REF mCanvasElement;
   RefPtr<layers::ImageContainer> mImageContainer;
-  RefPtr<gfx::SourceSurface> mFrontBufferSurface;
-  Maybe<layers::SurfaceDescriptor> mFrontBufferDesc;
 
   OffscreenCanvasDisplayData mData;
   CanvasContextType mType = CanvasContextType::NoContext;

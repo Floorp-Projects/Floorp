@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import update, {
-  initialQuickOpenState,
+import update, { initialQuickOpenState } from "../quick-open";
+import {
   getQuickOpenEnabled,
   getQuickOpenQuery,
   getQuickOpenType,
-} from "../quick-open";
+} from "../../selectors/quick-open";
 import {
   setQuickOpenQuery,
   openQuickOpen,

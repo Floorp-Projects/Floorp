@@ -66,6 +66,28 @@ async function updateTargetBrowsers(panel, store, isTargetBrowserFunc) {
   settingsButton.click();
   await waitUntil(() => panel.querySelector(".compatibility-settings"));
 
+  const browsers = [
+    ...new Set(
+      Array.from(panel.querySelectorAll("[data-id]")).map(el =>
+        el.getAttribute("data-id")
+      )
+    ),
+  ];
+  Assert.deepEqual(
+    browsers,
+    [
+      "firefox",
+      "firefox_android",
+      "chrome",
+      "chrome_android",
+      "safari",
+      "safari_ios",
+      "edge",
+      "ie",
+    ],
+    "The expected browsers are displayed"
+  );
+
   info("Change target browsers");
   const settingsPane = panel.querySelector(".compatibility-settings");
   for (const checkbox of settingsPane.querySelectorAll(

@@ -492,16 +492,6 @@ bool IProtocol::ChannelSend(IPC::Message* aMsg, IPC::Message* aReply) {
   return false;
 }
 
-bool IProtocol::ChannelCall(IPC::Message* aMsg, IPC::Message* aReply) {
-  UniquePtr<IPC::Message> msg(aMsg);
-  if (CanSend()) {
-    return GetIPCChannel()->Call(std::move(msg), aReply);
-  }
-
-  WarnMessageDiscarded(msg.get());
-  return false;
-}
-
 #ifdef DEBUG
 void IProtocol::WarnMessageDiscarded(IPC::Message* aMsg) {
   NS_WARNING(nsPrintfCString("IPC message '%s' discarded: actor cannot send",

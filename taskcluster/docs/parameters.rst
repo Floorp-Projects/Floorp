@@ -45,6 +45,9 @@ Push Information
    the symbolic ref containing ``head_rev`` that should be pulled from
    ``head_repository``.
 
+``head_tag``
+   The tag attached to the revision, if any.
+
 ``owner``
    Email address indicating the person who made the push.  Note that this
    value may be forged and *must not* be relied on for authentication.
@@ -69,6 +72,9 @@ Push Information
 ``moz_build_date``
    A formatted timestamp of ``build_date``. Expressed as a string with the following
    format: %Y%m%d%H%M%S
+
+``repository_type``
+   The type of repository, either ``hg`` or ``git``.
 
 ``tasks_for``
    The ``tasks_for`` value used to generate the decision task.

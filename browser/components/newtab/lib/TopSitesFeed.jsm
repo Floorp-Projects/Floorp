@@ -81,6 +81,10 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return new Logger("TopSitesFeed");
 });
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+});
+
 const DEFAULT_SITES_PREF = "default.sites";
 const SHOWN_ON_NEWTAB_PREF = "feeds.topsites";
 const DEFAULT_TOP_SITES = [];
@@ -114,7 +118,9 @@ const DEFAULT_SITES_OVERRIDE_PREF =
 const DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH = "browser.topsites.experiment.";
 
 // Mozilla Tiles Service (Contile) prefs
-const CONTILE_ENABLED_PREF = "browser.topsites.contile.enabled";
+// Nimbus variable for the Contile integration. It falls back to the pref:
+// `browser.topsites.contile.enabled`.
+const NIMBUS_VARIABLE_CONTILE_ENABLED = "topSitesContileEnabled";
 const CONTILE_ENDPOINT_PREF = "browser.topsites.contile.endpoint";
 const CONTILE_UPDATE_INTERVAL = 15 * 60 * 1000; // 15 minutes
 const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
@@ -165,7 +171,7 @@ class ContileIntegration {
 
   async _fetchSites() {
     if (
-      !Services.prefs.getBoolPref(CONTILE_ENABLED_PREF) ||
+      !NimbusFeatures.newtab.getVariable(NIMBUS_VARIABLE_CONTILE_ENABLED) ||
       !this._topSitesFeed.store.getState().Prefs.values[SHOW_SPONSORED_PREF]
     ) {
       if (this._sites.length) {
@@ -233,6 +239,23 @@ this.TopSitesFeed = class TopSitesFeed {
       ...PINNED_FAVICON_PROPS_TO_MIGRATE,
     ]);
     PageThumbs.addExpirationFilter(this);
+    this._nimbusChangeListener = this._nimbusChangeListener.bind(this);
+  }
+
+  _nimbusChangeListener(event, reason) {
+    // The Nimbus API current doesn't specify the changed variable(s) in the
+    // listener callback, so we have to refresh unconditionally on every change
+    // of the `newtab` feature. It should be a manageable overhead given the
+    // current update cadence (6 hours) of Nimbus.
+    //
+    // Skip the experiment and rollout loading reasons since this feature has
+    // `isEarlyStartup` enabled, the feature variables are already available
+    // before the experiment or rollout loads.
+    if (
+      !["feature-experiment-loaded", "feature-rollout-loaded"].includes(reason)
+    ) {
+      this._contile.refresh();
+    }
   }
 
   init() {
@@ -245,7 +268,7 @@ this.TopSitesFeed = class TopSitesFeed {
     Services.prefs.addObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
     Services.prefs.addObserver(DEFAULT_SITES_OVERRIDE_PREF, this);
     Services.prefs.addObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
-    Services.prefs.addObserver(CONTILE_ENABLED_PREF, this);
+    NimbusFeatures.newtab.onUpdate(this._nimbusChangeListener);
   }
 
   uninit() {
@@ -255,7 +278,7 @@ this.TopSitesFeed = class TopSitesFeed {
     Services.prefs.removeObserver(REMOTE_SETTING_DEFAULTS_PREF, this);
     Services.prefs.removeObserver(DEFAULT_SITES_OVERRIDE_PREF, this);
     Services.prefs.removeObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
-    Services.prefs.removeObserver(CONTILE_ENABLED_PREF, this);
+    NimbusFeatures.newtab.off(this._nimbusChangeListener);
   }
 
   observe(subj, topic, data) {
@@ -283,8 +306,6 @@ this.TopSitesFeed = class TopSitesFeed {
           data.startsWith(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH)
         ) {
           this._readDefaults();
-        } else if (data === CONTILE_ENABLED_PREF) {
-          this._contile.refresh();
         }
         break;
     }
@@ -324,7 +345,9 @@ this.TopSitesFeed = class TopSitesFeed {
     DEFAULT_TOP_SITES.length = 0;
 
     // Read defaults from contile.
-    const contileEnabled = Services.prefs.getBoolPref(CONTILE_ENABLED_PREF);
+    const contileEnabled = NimbusFeatures.newtab.getVariable(
+      NIMBUS_VARIABLE_CONTILE_ENABLED
+    );
     let hasContileTiles = false;
     if (contileEnabled) {
       let sponsoredPosition = 1;
@@ -1330,7 +1353,9 @@ this.TopSitesFeed = class TopSitesFeed {
             this.refresh({ broadcast: true });
             break;
           case SHOW_SPONSORED_PREF:
-            if (Services.prefs.getBoolPref(CONTILE_ENABLED_PREF)) {
+            if (
+              NimbusFeatures.newtab.getVariable(NIMBUS_VARIABLE_CONTILE_ENABLED)
+            ) {
               this._contile.refresh();
             } else {
               this.refresh({ broadcast: true });

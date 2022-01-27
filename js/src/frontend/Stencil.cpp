@@ -4479,8 +4479,7 @@ bool CompilationStencilMerger::addDelazification(
 void JS::StencilAddRef(JS::Stencil* stencil) { stencil->refCount++; }
 void JS::StencilRelease(JS::Stencil* stencil) {
   MOZ_RELEASE_ASSERT(stencil->refCount > 0);
-  stencil->refCount--;
-  if (stencil->refCount == 0) {
+  if (--stencil->refCount == 0) {
     js_delete(stencil);
   }
 }

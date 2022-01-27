@@ -115,32 +115,8 @@ class Rule {
     };
   }
 
-  get sourceLink() {
-    return {
-      label: this._getSourceText(true),
-      title: this._getSourceText(),
-    };
-  }
-
   get sourceMapURLService() {
     return this.inspector.toolbox.sourceMapURLService;
-  }
-
-  /**
-   * Returns the original source location which includes the original URL, line and
-   * column numbers.
-   */
-  get generatedLocation() {
-    if (!this._generatedLocation) {
-      this._generatedLocation = {
-        sheet: this.sheet,
-        url: this.sheet ? this.sheet.href || this.sheet.nodeHref : null,
-        line: this.ruleLine,
-        column: this.ruleColumn,
-      };
-    }
-
-    return this._generatedLocation;
   }
 
   get title() {
@@ -263,37 +239,6 @@ class Rule {
    */
   getDeclaration(id) {
     return id ? this.textProps.find(textProp => textProp.id === id) : undefined;
-  }
-
-  /**
-   * Returns a formatted source text of the stylesheet URL with its source line
-   * and @media text.
-   *
-   * @param  {boolean} shortenURL True to get a shorter version of the URL.
-   */
-  _getSourceText(shortenURL) {
-    if (this.isSystem) {
-      return `${STYLE_INSPECTOR_L10N.getStr("rule.userAgentStyles")} ${
-        this.title
-      }`;
-    }
-
-    const currentLocation = this.generatedLocation;
-
-    let sourceText = currentLocation.url;
-    if (shortenURL) {
-      sourceText = CssLogic.shortSource({ href: sourceText });
-    }
-
-    if (currentLocation.line > 0) {
-      sourceText += ":" + currentLocation.line;
-    }
-
-    if (this.mediaText) {
-      sourceText += " @media " + this.mediaText;
-    }
-
-    return sourceText;
   }
 
   /**

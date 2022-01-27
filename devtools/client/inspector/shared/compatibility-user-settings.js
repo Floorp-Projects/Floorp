@@ -20,6 +20,7 @@ const TARGET_BROWSER_ID = [
   "safari",
   "safari_ios",
   "edge",
+  "ie",
 ];
 const TARGET_BROWSER_STATUS = ["esr", "current", "beta", "nightly"];
 
