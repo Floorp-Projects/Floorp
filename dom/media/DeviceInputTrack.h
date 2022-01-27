@@ -15,13 +15,48 @@ namespace mozilla {
 // MediaTrack subclass storing the raw audio data from microphone.
 class NativeInputTrack : public ProcessedMediaTrack {
  public:
-  // Main Thread API
-  static NativeInputTrack* Create(MediaTrackGraphImpl* aGraph,
-                                  CubebUtils::AudioDeviceID aDeviceId,
-                                  const PrincipalHandle& aPrincipalHandle);
-
-  size_t AddUser();
-  size_t RemoveUser();
+  // Main Thread APIs:
+  // The following two APIs can create and destroy a NativeInputTrack reference
+  // on main thread, then open and close the paired audio device accordingly on
+  // the graph thread. The user who wants to read the audio input from a certain
+  // device should use these APIs to obtain a NativeInputTrack reference and
+  // return the reference when the user no longer needs the audio data.
+  //
+  // There is only one NativeInputTrack per MediaTrackGraph and it will be
+  // created when the first user who requests the audio data. Once the
+  // NativeInputTrack is created, the paired device will start producing data,
+  // so its users can read the data immediately once they obtain the reference.
+  // Currently, we only allow one audio device per MediaTrackGraph. If the user
+  // requests a different device from the one running in the MediaTrackGraph,
+  // the API will return an error. The lifetime of NativeInputTrack is managed
+  // by the MediaTrackGraph. When the NativeInputTrack has no user any more,
+  // MediaTrackGraph will destroy it. In other words, it occurs when the last
+  // reference is returned.
+  //
+  // Example:
+  //   // On main thread
+  //   RefPtr<NativeInputTrack> track = NativeInputTrack::OpenAudio(...);
+  //   ...
+  //   // On graph thread
+  //   AudioSegmen* data = track->GetData<AudioSegment>();
+  //   ...
+  //   // On main thread
+  //   NativeInputTrack::CloseAudio(std::move(track), ...);
+  //
+  // Returns a reference of NativeInputTrack, storing the input audio data from
+  // the given device, in the given MediaTrackGraph, if the MediaTrackGraph has
+  // no audio input device, or the given device is the same as the one currently
+  // running in the MediaTrackGraph. Otherwise, return an error. The paired
+  // audio device will be opened accordingly in the successful case. The
+  // NativeInputTrack will access its user's audio settings via the attached
+  // AudioDataListener when it needs.
+  static Result<RefPtr<NativeInputTrack>, nsresult> OpenAudio(
+      MediaTrackGraphImpl* aGraph, CubebUtils::AudioDeviceID aDeviceId,
+      const PrincipalHandle& aPrincipalHandle, AudioDataListener* aListener);
+  // Destroy the NativeInputTrack reference obtained by the above API. The
+  // paired audio device will be closed accordingly.
+  static void CloseAudio(RefPtr<NativeInputTrack>&& aTrack,
+                         AudioDataListener* aListener);
 
   // Graph Thread APIs, for ProcessedMediaTrack
   void DestroyImpl() override;
@@ -49,13 +84,15 @@ class NativeInputTrack : public ProcessedMediaTrack {
   const CubebUtils::AudioDeviceID mDeviceId;
   const PrincipalHandle mPrincipalHandle;
 
-  // Only accessed on the graph thread.
-  nsTArray<RefPtr<AudioDataListener>> mDataUsers;
-
  private:
   NativeInputTrack(TrackRate aSampleRate, CubebUtils::AudioDeviceID aDeviceId,
                    const PrincipalHandle& aPrincipalHandle);
   ~NativeInputTrack() = default;
+
+  // Main thread APIs
+  void ReevaluateInputDevice();
+  void AddDataListener(AudioDataListener* aListener);
+  void RemoveDataListener(AudioDataListener* aListener);
 
   // Indicate whether we append extra frames in mPendingData. The extra number
   // of frames is in [0, WEBAUDIO_BLOCK_SIZE] range.
@@ -71,6 +108,9 @@ class NativeInputTrack : public ProcessedMediaTrack {
   // Only accessed on the main thread.
   // When this becomes zero, this NativeInputTrack is no longer needed.
   int32_t mUserCount = 0;
+
+  // Only accessed on the graph thread.
+  nsTArray<RefPtr<AudioDataListener>> mDataUsers;
 };
 
 }  // namespace mozilla
