@@ -19,17 +19,6 @@ const {
   updateSettingsVisibility,
 } = require("devtools/client/inspector/compatibility/actions/compatibility");
 
-loader.lazyRequireGetter(
-  this,
-  "openDocLink",
-  "devtools/client/shared/link",
-  true
-);
-
-const FEEDBACK_LINK =
-  "https://docs.google.com/forms/d/e/1FAIpQLSeevOHveQ1tDuKYY5Fxyb3vvbKKumdLWUT5-RuwJWoAAOST5g/viewform";
-
-const REPORT_ICON = "chrome://devtools/skin/images/report.svg";
 const SETTINGS_ICON = "chrome://devtools/skin/images/settings.svg";
 
 class Footer extends PureComponent {
@@ -80,12 +69,6 @@ class Footer extends PureComponent {
         "compatibility-settings-button-label",
         "compatibility-settings-button-title",
         this.props.updateSettingsVisibility
-      ),
-      this._renderButton(
-        REPORT_ICON,
-        "compatibility-feedback-button-label",
-        "compatibility-feedback-button-title",
-        () => openDocLink(FEEDBACK_LINK)
       )
     );
   }

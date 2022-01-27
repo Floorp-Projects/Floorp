@@ -13,15 +13,29 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v98
+- Add [`WebRequest.beConservative`][98.1] to allow critical infrastructure to
+  avoid using bleeding-edge network features.
+  ([bug 1750231]({{bugzilla}}1750231))
+
+[98.1]: {{javadoc_uri}}/WebRequest.html#beConservative
+
 ## v97
-- ⚠️ Deprecated GeckoSession.PermissionDelegate.MediaSource.rawId [97.1],
-  which now provides the same string as id [97.2].
-- Added [`EXTRA_CRASH_PROCESS_TYPE`][97.3] field to ACTION_CRASHED intents,
+- ⚠️ Deprecated [`MediaSource.rawId`][97.1],
+  which now provides the same string as [`id`][97.2].
+  ([bug 1744346]({{bugzilla}}1744346))
+- Added [`EXTRA_CRASH_PROCESS_TYPE`][97.3] field to `ACTION_CRASHED` intents,
   and corresponding [`CRASHED_PROCESS_TYPE_*`][97.4] constants, indicating which
   type of process a crash occured in.
+  ([bug 1743454]({{bugzilla}}1743454))
 - ⚠️ Deprecated [`EXTRA_CRASH_FATAL`][97.5]. Use `EXTRA_CRASH_PROCESS_TYPE` instead.
+  ([bug 1743454]({{bugzilla}}1743454))
 - Added [`OrientationController`][97.6] to allow GeckoView to handle orientation locking.
-- Added [GeckoSession.goBack][97.7] and [GeckoSession.goForward][97.8] with a `userInteraction` parameter. Updated the default goBack/goForward behaviour to also be considered as a user interaction.
+  ([bug 1697647]({{bugzilla}}1697647))
+- Added [GeckoSession.goBack][97.7] and [GeckoSession.goForward][97.8] with a
+  `userInteraction` parameter. Updated the default goBack/goForward behaviour
+  to also be considered as a user interaction.
+  ([bug 1644595]({{bugzilla}}1644595))
 
 [97.1]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.MediaSource.html#rawId
 [97.2]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.MediaSource.html#id
@@ -35,16 +49,17 @@ exclude: true
 ## v96
 - Added [`onLoginFetch`][96.1] which allows apps to provide all saved logins to
   GeckoView.
-  ([bug 1733423]({{bugzilla}}1733423)).
+  ([bug 1733423]({{bugzilla}}1733423))
 - Added [`GeckoResult.finally_`][96.2] to unconditionally run an action after
   the GeckoResult has been completed.
-  ([bug 1736433]({{bugzilla}}1736433)).
-- Added [`ERROR_INVALID_DOMAIN`][96.3] to WebExtension.InstallException.ErrorCodes.
-  ([bug 1740634]({{bugzilla}}1740634)).
-- Added [`SelectionActionDelegate.Selection.pasteAsPlainText`][96.4] to paste
-  HTML content as plain text.
+  ([bug 1736433]({{bugzilla}}1736433))
+- Added [`ERROR_INVALID_DOMAIN`][96.3] to `WebExtension.InstallException.ErrorCodes`.
+  ([bug 1740634]({{bugzilla}}1740634))
+- Added [`Selection.pasteAsPlainText`][96.4] to paste HTML content as plain
+  text.
+  ([bug 1740414]({{bugzilla}}1740414))
 - Removed deprecated Content Blocking APIs.
-  ([bug 1743706]({{bugzilla}}1743706)).
+  ([bug 1743706]({{bugzilla}}1743706))
 
 [96.1]: {{javadoc_uri}}/Autocomplete.StorageDelegate.html#onLoginFetch--
 [96.2]: {{javadoc_uri}}/GeckoResult.html#finally_-java.lang.Runnable-
@@ -55,17 +70,23 @@ exclude: true
 - Added [`GeckoSession.ContentDelegate.onPointerIconChange()`][95.1] to notify
   the application of changing pointer icon. If the application wants to handle
   pointer icon, it should override this.
+  ([bug 1672609]({{bugzilla}}1672609))
 - Deprecated [`ContentBlockingController`][95.2], use
   [`StorageController`][95.3] instead. A [`PERMISSION_TRACKING`][95.4]
   permission is now present in [`onLocationChange`][95.5] for every page load,
   which can be used to set tracking protection exceptions.
+  ([bug 1714945]({{bugzilla}}1714945))
 - Added [`setPrivateBrowsingPermanentPermission`][95.6], which allows apps to set
   permanent permissions in private browsing (e.g. to set permanent tracking
   protection permissions in private browsing).
+  ([bug 1714945]({{bugzilla}}1714945))
 - Deprecated [`GeckoRuntimeSettings.Builder.enterpiseRootsEnabled`][95.7] due to typo.
+  ([bug 1708815]({{bugzilla}}1708815))
 - Added [`GeckoRuntimeSettings.Builder.enterpriseRootsEnabled`][95.8] to replace [`GeckoRuntimeSettings.Builder.enterpiseRootsEnabled`][95.7].
-- Added [`GeckoSession.ContentDelegate.onPreviewImage()`][95.9] to notify
+  ([bug 1708815]({{bugzilla}}1708815))
+- Added [`GeckoSession.ContentDelegate.onPreviewImage`][95.9] to notify
   the application of a preview image URL.
+  ([bug 1732219]({{bugzilla}}1732219))
 
 [95.1]: {{javadoc_uri}}/GeckoSession.ContentDelegate.html#onPointerIconChange-org.mozilla.geckoview.GeckoSession-android.view.PointerIcon-
 [95.2]: {{javadoc_uri}}/ContentBlockingController.html
@@ -79,22 +100,27 @@ exclude: true
 
 ## v94
 - Extended [`Autocomplete`][78.7] API to support credit card saving.
+  ([bug 1703976]({{bugzilla}}1703976))
 
 ## v93
-- Removed deprecated ['Autocomplete.LoginStorageDelegate'][78.8].
+- Removed deprecated [`Autocomplete.LoginStorageDelegate`][78.8].
+  ([bug 1725469]({{bugzilla}}1725469))
 - Removed deprecated [`GeckoRuntime.getProfileDir`][90.5].
+  ([bug 1725469]({{bugzilla}}1725469))
 - Added [`PromptInstanceDelegate`][93.1] to allow GeckoView to dismiss stale prompts.
+  ([bug 1710668]({{bugzilla}}1710668))
 - Added [`WebRequestError.ERROR_HTTPS_ONLY`][93.2] error code to allow GeckoView display custom HTTPS-only error pages and bypass them.
+  ([bug 1697866]({{bugzilla}}1697866))
 
 [93.1]: {{javadoc_uri}}/GeckoSession.PromptDelegate.PromptInstanceDelegate.html
 [93.2]: {{javadoc_uri}}/WebRequestError.html#ERROR_HTTPS_ONLY
 
 ## v92
-- Added [`GeckoSession.PermissionDelegate.PERMISSION_STORAGE_ACCESS`][92.1] to
+- Added [`PermissionDelegate.PERMISSION_STORAGE_ACCESS`][92.1] to
   control the allowing of third-party frames to access first-party cookies and
   storage. ([bug 1543720]({{bugzilla}}1543720))
-- Added [`ContentDelegate#onShowDynamicToolbar(GeckoSession)`][92.2] to notify
-  the app that it must fully-expand its dynamic toolbar ([bug 1690296]({{bugzilla}}1690296)).
+- Added [`ContentDelegate.onShowDynamicToolbar`][92.2] to notify
+  the app that it must fully-expand its dynamic toolbar ([bug 1690296]({{bugzilla}}1690296))
 - Removed deprecated `GeckoResult.ALLOW` and `GeckoResult.DENY`.
   Use [`GeckoResult.allow`][89.8] and [`GeckoResult.deny`][89.9] instead.
 
@@ -163,7 +189,7 @@ exclude: true
   ([bug 1668952]({{bugzilla}}1668952))
 - Extended [`Autocomplete`][78.7] API to support credit cards.
   ([bug 1691819]({{bugzilla}}1691819)).
-- ⚠️  Deprecated ['Autocomplete.LoginStorageDelegate'][78.8] with the intention
+- ⚠️  Deprecated [`Autocomplete.LoginStorageDelegate`][78.8] with the intention
   of removing it in GeckoView v93. Please use
   [`Autocomplete.StorageDelegate`][89.11] instead.
   ([bug 1691819]({{bugzilla}}1691819)).
@@ -225,7 +251,7 @@ exclude: true
 [88.10]: {{javadoc_uri}}/GeckoSession.SessionState.html
 
 ## v87
-- ⚠ Added [`WebExtension.DownloadInitData`][87.1] class that can be used to
+- ⚠️ Added [`WebExtension.DownloadInitData`][87.1] class that can be used to
   implement the WebExtension `downloads` API. This class represents initial state of a download.
 - Added [`WebExtension.Download.Info`][87.2] interface that can be used to
   implement the WebExtension `downloads` API. This interface allows communicating
@@ -235,7 +261,7 @@ exclude: true
   ([bug 1689745]({{bugzilla}}1689745))
 - Added support for HTTPS-only mode to [`GeckoRuntimeSettings`][87.5] via
   [`setAllowInsecureConnections`][87.6].
-- Removed [`JSONException`] throws from [`SessionState.fromString`][87.7], fixed annotations,
+- Removed `JSONException` throws from [`SessionState.fromString`][87.7], fixed annotations,
   and clarified null-handling a bit.
 
 [87.1]: {{javadoc_uri}}/WebExtension.DownloadInitData.html
@@ -247,7 +273,7 @@ exclude: true
 [87.7]: {{javadoc_uri}}/GeckoSession.SessionState.html#fromString-java.lang.String-
 
 ## v86
-- Removed deprecated [`ContentDelegate#onExternalResponse(GeckoSession, WebResponseInfo)`].
+- Removed deprecated `ContentDelegate#onExternalResponse(GeckoSession, WebResponseInfo)`.
   Use [`ContentDelegate#onExternalResponse(GeckoSession, WebResponse)`][82.2] instead.
   ([bug 1665157]({{bugzilla}}1665157))
 - Added [`WebExtension.DownloadDelegate`][86.1] and  that can be used to
@@ -275,15 +301,15 @@ exclude: true
 [85.1]: {{javadoc_uri}}/WebExtension.BrowsingDataDelegate.html
 
 ## v84
-- ⚠️  Removed deprecated [`GeckoRuntimeSettings.Builder.useMultiprocess`] and
+- ⚠️  Removed deprecated `GeckoRuntimeSettings.Builder.useMultiprocess` and
   [`GeckoRuntimeSettings.getUseMultiprocess`]. Single-process GeckoView is no
   longer supported. ([bug 1650118]({{bugzilla}}1650118))
 - Deprecated members now have an additional [`@DeprecationSchedule`][84.1] annotation which
   includes the `version` that we expect to remove the member and an `id` that
   can be used to group annotation notices in tooling.
   ([bug 1671460]({{bugzilla}}1671460))
-- ⚠️  Removed deprecated [`ContentBlockingController.ExceptionList`] abd
-  [`ContentBlockingController.restoreExceptionList`]. ([bug 1674500]({{bugzilla}}1674500))
+- ⚠️  Removed deprecated `ContentBlockingController.ExceptionList` and
+  `ContentBlockingController.restoreExceptionList`. ([bug 1674500]({{bugzilla}}1674500))
 
 [84.1]: {{javadoc_uri}}/DeprecationSchedule.html
 
@@ -303,7 +329,7 @@ exclude: true
 - Added [`GeckoRuntime.ActivityDelegate`][83.4] which allows applications to handle
   starting external Activities on behalf of GeckoView. Currently this is used to integrate
   FIDO support for WebAuthn.
-- Added ['GeckoWebExecutor#FETCH_FLAG_PRIVATE'][83.5]. This new flag allows for private browsing downloads using WebExecutor.
+- Added [`GeckoWebExecutor#FETCH_FLAG_PRIVATE`][83.5]. This new flag allows for private browsing downloads using WebExecutor.
   ([bug 1665426]({{bugzilla}}1665426))
 - ⚠️ Deprecated [`GeckoSession#loadUri`][83.6] variants in favor of
   [`GeckoSession#load`][83.7]. See docs for [`Loader`][83.8].
@@ -381,8 +407,8 @@ the event is now considered.
 [80.2]: {{javadoc_uri}}/ContentBlocking.Settings.html
 
 ## v79
-- Added `runtime.openOptionsPage` support. For `options_ui.open_in_new_tab` ==
-  `false`, [`TabDelegate.onOpenOptionsPage`][79.1] is called.
+- Added `runtime.openOptionsPage` support. For `options_ui.open_in_new_tab ==
+  false`, [`TabDelegate.onOpenOptionsPage`][79.1] is called.
   ([bug 1618058]({{bugzilla}}1619766))
 - Added [`WebNotification.source`][79.2], which is the URL of the page
   or Service Worker that created the notification.
@@ -428,7 +454,7 @@ to allow adding gecko profiler markers.
 - Added [`BeforeUnloadPrompt`][78.6] to respond to prompts from onbeforeunload.
 - ⚠️  Refactored `LoginStorage` to the [`Autocomplete`][78.7] API to support
   login form autocomplete delegation.
-  Refactored 'LoginStorage.Delegate' to ['Autocomplete.LoginStorageDelegate'][78.8].
+  Refactored `LoginStorage.Delegate` to [`Autocomplete.LoginStorageDelegate`][78.8].
   Refactored `GeckoSession.PromptDelegate.onLoginStoragePrompt` to
   [`GeckoSession.PromptDelegate.onLoginSave`][78.9].
   Added [`GeckoSession.PromptDelegate.onLoginSelect`][78.10].
@@ -461,7 +487,7 @@ to allow adding gecko profiler markers.
 - [`RuntimeTelemetry#getSnapshots`][68.10] is deprecated and will be removed
   in 79. Use Glean to handle Gecko telemetry.
   ([bug 1620395]({{bugzilla}}1620395))
-- Added [`LoadRequest.isDirectNavigation`] to know when calls to
+- Added `LoadRequest.isDirectNavigation` to know when calls to
   [`onLoadRequest`][76.3] originate from a direct navigation made by the app
   itself.
   ([bug 1624675]({{bugzilla}}1624675))
@@ -552,16 +578,16 @@ to allow adding gecko profiler markers.
 - Added [`WebExtensionController.enable`][74.1] and [`disable`][74.2] to
   enable and disable extensions.
   ([bug 1599585]({{bugzilla}}1599585))
-- ⚠️ Added ['GeckoSession.ProgressDelegate.SecurityInformation#certificate'][74.3], which is the
+- ⚠️ Added [`GeckoSession.ProgressDelegate.SecurityInformation#certificate`][74.3], which is the
   full server certificate in use, if any. The other certificate-related fields were removed.
   ([bug 1508730]({{bugzilla}}1508730))
-- Added ['WebResponse#isSecure'][74.4], which indicates whether or not the response was
+- Added [`WebResponse#isSecure`][74.4], which indicates whether or not the response was
   delivered over a secure connection.
   ([bug 1508730]({{bugzilla}}1508730))
-- Added ['WebResponse#certificate'][74.5], which is the server certificate used for the
+- Added [`WebResponse#certificate`][74.5], which is the server certificate used for the
   response, if any.
   ([bug 1508730]({{bugzilla}}1508730))
-- Added ['WebRequestError#certificate'][74.6], which is the server certificate used in the
+- Added [`WebRequestError#certificate`][74.6], which is the server certificate used in the
   failed request, if any.
   ([bug 1508730]({{bugzilla}}1508730))
 - ⚠️ Updated [`ContentBlockingController`][74.7] to use new representation for content blocking
@@ -572,10 +598,10 @@ to allow adding gecko profiler markers.
 - Extended [`LoginStorage.Delegate`][74.11] with [`onLoginUsed`][74.12] to
   report when existing login entries are used for autofill.
   ([bug 1610353]({{bugzilla}}1610353))
-- Added ['WebExtensionController#setTabActive'][74.13], which is used to notify extensions about
+- Added [`WebExtensionController#setTabActive`][74.13], which is used to notify extensions about
   tab changes
   ([bug 1597793]({{bugzilla}}1597793))
-- Added ['WebExtension.metaData.optionsUrl'][74.14] and ['WebExtension.metaData.openOptionsPageInTab'][74.15],
+- Added [`WebExtension.metaData.optionsUrl`][74.14] and [`WebExtension.metaData.openOptionsPageInTab`][74.15],
   which is the addon metadata necessary to show their option pages.
   ([bug 1598792]({{bugzilla}}1598792))
 - Added [`WebExtensionController.update`][74.16] to update extensions. ([bug 1599581]({{bugzilla}}1599581))
@@ -678,7 +704,7 @@ to allow adding gecko profiler markers.
   [`ContentBlockingController.Event.LOADED_LEVEL_2_TRACKING_CONTENT`][72.17].
 - Replaced `subscription` argument in [`WebPushDelegate.onPushEvent`][72.18] from a [`WebPushSubscription`][72.19] to the [`String`][72.20] `scope`.
 - ⚠️ Renamed `WebExtension.ActionIcon` to [`Icon`][72.21].
-- Added ['GeckoWebExecutor#FETCH_FLAGS_STREAM_FAILURE_TEST'][72.22], which is a new
+- Added [`GeckoWebExecutor#FETCH_FLAGS_STREAM_FAILURE_TEST`][72.22], which is a new
   flag used to immediately fail when reading a `WebResponse` body.
   ([bug 1594905]({{bugzilla}}1594905))
 - Changed [`CrashReporter#sendCrashReport(Context, File, JSONObject)`][72.23] to
@@ -713,7 +739,6 @@ to allow adding gecko profiler markers.
 [72.23]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-java.io.File-org.json.JSONObject-
 [72.24]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.html#PERMISSION_PERSISTENT_XR
 
-=
 ## v71
 - Added a content blocking flag for blocked social cookies to [`ContentBlocking`][70.17].
   ([bug 1584479]({{bugzilla}}1584479))
@@ -869,8 +894,8 @@ to allow adding gecko profiler markers.
 [70.28]: {{javadoc_uri}}/GeckoRuntime.html#getContentBlockingController--
 
 ## v69
-- Modified behavior of ['setAutomaticFontSizeAdjustment'][69.1] so that it no
-  longer has any effect on ['setFontInflationEnabled'][69.2]
+- Modified behavior of [`setAutomaticFontSizeAdjustment`][69.1] so that it no
+  longer has any effect on [`setFontInflationEnabled`][69.2]
 - Add [GeckoSession.LOAD_FLAGS_FORCE_ALLOW_DATA_URI][69.14]
 - Added [`GeckoResult.accept`][69.3] for consuming a result without
   transforming it.
@@ -989,8 +1014,8 @@ to allow adding gecko profiler markers.
 - Moved [`GeckoVRManager`][67.2] into the org.mozilla.geckoview package.
 - Initial WebExtension support. [`GeckoRuntime#registerWebExtension`][67.15]
   allows embedders to register a local web extension.
-- Added API to [`GeckoView`][70.5] to take screenshot of the visible page. Calling [`capturePixels`][67.16] returns a ['GeckoResult'][65.25] that completes to a [`Bitmap`][67.17] of the current [`Surface`][67.18] contents, or an [`IllegalStateException`][67.19] if the [`GeckoSession`][65.9] is not ready to render content.
-- Added API to capture a screenshot to [`GeckoDisplay`][67.20]. [`capturePixels`][67.21] returns a ['GeckoResult'][65.25] that completes to a [`Bitmap`][67.16] of the current [`Surface`][67.17] contents, or an [`IllegalStateException`][67.18] if the [`GeckoSession`][65.9] is not ready to render content.
+- Added API to [`GeckoView`][70.5] to take screenshot of the visible page. Calling [`capturePixels`][67.16] returns a [`GeckoResult`][65.25] that completes to a [`Bitmap`][67.17] of the current [`Surface`][67.18] contents, or an [`IllegalStateException`][67.19] if the [`GeckoSession`][65.9] is not ready to render content.
+- Added API to capture a screenshot to [`GeckoDisplay`][67.20]. [`capturePixels`][67.21] returns a [`GeckoResult`][65.25] that completes to a [`Bitmap`][67.16] of the current [`Surface`][67.17] contents, or an [`IllegalStateException`][67.18] if the [`GeckoSession`][65.9] is not ready to render content.
 - Add missing [`@Nullable`][66.2] annotation to return value for
   [`GeckoSession.PromptDelegate.ChoiceCallback.onPopupResult()`][67.30]
 - Added `default` implementations for all non-functional `interface`s.
@@ -1110,4 +1135,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: d6cc8df133ab50bb753761be0e07bf954dfe1349
+[api-version]: f6d4d5bfa6295b82c1f528532ae9b8ae37fe1824

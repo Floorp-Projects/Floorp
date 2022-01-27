@@ -87,11 +87,7 @@ CompositorBridgeChild::CompositorBridgeChild(CompositorManagerChild* aManager)
       mThread(NS_GetCurrentThread()),
       mProcessToken(0),
       mSectionAllocator(nullptr),
-      mPaintLock("CompositorBridgeChild.mPaintLock"),
-      mTotalAsyncPaints(0),
-      mIsDelayingForAsyncPaints(false),
-      mSlowFlushCount(0),
-      mTotalFlushCount(0) {
+      mPaintLock("CompositorBridgeChild.mPaintLock") {
   MOZ_ASSERT(NS_IsMainThread());
 }
 

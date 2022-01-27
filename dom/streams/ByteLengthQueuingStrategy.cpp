@@ -16,7 +16,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ByteLengthQueuingStrategy)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(ByteLengthQueuingStrategy,
+                                                BaseQueuingStrategy)
 NS_IMPL_ADDREF_INHERITED(ByteLengthQueuingStrategy, BaseQueuingStrategy)
 NS_IMPL_RELEASE_INHERITED(ByteLengthQueuingStrategy, BaseQueuingStrategy)
 

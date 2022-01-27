@@ -29,7 +29,8 @@ class PageInformation final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PageInformation)
   PageInformation(uint64_t aTabID, uint64_t aInnerWindowID,
-                  const nsCString& aUrl, uint64_t aEmbedderInnerWindowID);
+                  const nsCString& aUrl, uint64_t aEmbedderInnerWindowID,
+                  bool aIsPrivateBrowsing);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   bool Equals(PageInformation* aOtherPageInfo) const;
@@ -39,6 +40,7 @@ class PageInformation final {
   uint64_t TabID() const { return mTabID; }
   const nsCString& Url() const { return mUrl; }
   uint64_t EmbedderInnerWindowID() const { return mEmbedderInnerWindowID; }
+  bool IsPrivateBrowsing() const { return mIsPrivateBrowsing; }
 
   mozilla::Maybe<uint64_t> BufferPositionWhenUnregistered() const {
     return mBufferPositionWhenUnregistered;
@@ -53,6 +55,7 @@ class PageInformation final {
   const uint64_t mInnerWindowID;
   const nsCString mUrl;
   const uint64_t mEmbedderInnerWindowID;
+  const bool mIsPrivateBrowsing;
 
   // Holds the buffer position when page is unregistered.
   // It's used to determine if we still use this page in the profiler or

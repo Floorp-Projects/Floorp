@@ -12,7 +12,6 @@
 
 #include "NSSCertDBTrustDomain.h"
 #include "NSSErrorsService.h"
-#include "PSMIPCCommon.h"
 #include "PSMRunnable.h"
 #include "SSLServerCertVerification.h"
 #include "ScopedNSSTypes.h"

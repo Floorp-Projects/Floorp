@@ -135,14 +135,39 @@ RuleEditor.prototype = {
 
     this.updateSourceLink();
 
-    if (this.rule.mediaText) {
-      const text = `@media ${this.rule.mediaText}`;
+    const hasMediaText = this.rule.mediaText;
+    const hasLayer = typeof this.rule.domRule.layerName !== "undefined";
+    if (hasMediaText || hasLayer) {
+      const parts = [];
+
+      if (hasLayer) {
+        // The layer can be anonymous, in such case its name is an empty string
+        parts.push(
+          `@layer${
+            this.rule.domRule.layerName ? " " + this.rule.domRule.layerName : ""
+          }`
+        );
+      }
+      if (hasMediaText) {
+        parts.push(`@media ${this.rule.mediaText}`);
+      }
+
+      // For now, we can only have at most a layer and a media query (if the rule stylesheet
+      // was imported with a layer name and the parent rule is a media query) so we can get
+      // await with displaying them one after the other.
+      // This might change with Bug 1751417 where we'll show the whole tree of media/layer
+      const text = parts.join(" ");
+
+      // We force the string to be LTR in CSS, but as @ is listed as having neutral
+      // directionality and starting a string with this char would default to RTL for that
+      // character (when in RTL locale), and then the next char (`m` of `media`, or `l` of `layer`)
+      // would start a new LTR visual run, since it is strongly LTR (through `direction` CSS property).
+      // To have the `@` properly displayed, we force LTR with \u202A
+      const title = `${text.replaceAll("@", "\u202A@")}`;
+
       createChild(this.element, "span", {
         class: "ruleview-rule-parent-data theme-link",
-        // We force the string to be LTR in CSS, but for some reason, the `@` char is seen
-        // as not part of the string in the tooltip, and is displayed "at the end" of the
-        // string in RTL locales. To workaround this, we force LTR with \u202D
-        title: `\u202A${text}`,
+        title,
         textContent: text,
       });
     }

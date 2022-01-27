@@ -165,10 +165,6 @@ profiler-popup-settings =
 profiler-popup-edit-settings-button =
   .label = Edit Settings…
 
-profiler-popup-disabled =
-  The profiler is currently disabled, most likely due to a Private Browsing window
-  being open.
-
 profiler-popup-recording-screen = Recording…
 
 profiler-popup-start-recording-button =

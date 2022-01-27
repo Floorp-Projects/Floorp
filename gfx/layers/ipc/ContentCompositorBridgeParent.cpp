@@ -242,6 +242,12 @@ ContentCompositorBridgeParent::RecvMapAndNotifyChildCreated(
   return IPC_FAIL_NO_REASON(this);
 }
 
+mozilla::ipc::IPCResult
+ContentCompositorBridgeParent::RecvNotifyMemoryPressure() {
+  // This can only be called from the browser process.
+  return IPC_FAIL_NO_REASON(this);
+}
+
 mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvCheckContentOnlyTDR(
     const uint32_t& sequenceNum, bool* isContentOnlyTDR) {
   *isContentOnlyTDR = false;

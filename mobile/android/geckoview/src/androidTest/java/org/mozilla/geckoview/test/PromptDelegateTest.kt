@@ -300,7 +300,7 @@ class PromptDelegateTest : BaseSessionTest() {
         mainSession.loadTestPath(SELECT_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        val result = GeckoResult<Void>()
+        val result = GeckoResult<PromptDelegate.PromptResponse>()
         sessionRule.delegateUntilTestEnd(object : PromptDelegate {
             @AssertCalled(count = 1)
             override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
@@ -308,12 +308,29 @@ class PromptDelegateTest : BaseSessionTest() {
                 assertThat("There should be two choices", prompt.choices.size, equalTo(2));
                 assertThat("First choice is correct", prompt.choices[0].label, equalTo("ABC"));
                 assertThat("Second choice is correct", prompt.choices[1].label, equalTo("DEF"));
-                result.complete(null);
-                return null
+                result.complete(prompt.confirm(prompt.choices[1]));
+                return result
             }
         })
+
+        val promise = mainSession.evaluatePromiseJS("""new Promise(function(resolve) {
+            let events = [];
+            // Record the events for testing purposes.
+            for (const t of ["change", "input"]) {
+                document.querySelector("select").addEventListener(t, function(e) {
+                    events.push(e.type + "(composed=" + e.composed + ")");
+                    if (events.length == 2) {
+                        resolve(events.join(" "));
+                    }
+                });
+            }
+        })""");
+
         mainSession.synthesizeTap(10, 10)
         sessionRule.waitForResult(result)
+        assertThat("Events should be as expected",
+                promise.value as String,
+                equalTo("input(composed=true) change(composed=false)"))
     }
 
     @Test

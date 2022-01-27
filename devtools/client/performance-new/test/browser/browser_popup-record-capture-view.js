@@ -29,6 +29,7 @@ add_task(async function test() {
   // First check for the "Media" preset which will have no "view" query
   // string because it opens our traditional "full" view.
   await openPopupAndAssertUrlForPreset({
+    window,
     preset: "Media",
     expectedUrl: FRONTEND_BASE_URL,
   });
@@ -36,14 +37,61 @@ add_task(async function test() {
   // Now, let's check for "web-developer" preset. This will open up the frontend
   // with "active-tab" view query string. Frontend will understand and open the active tab view for it.
   await openPopupAndAssertUrlForPreset({
+    window,
     preset: "Web Developer",
     expectedUrl: FRONTEND_BASE_URL + "?view=active-tab&implementation=js",
   });
 });
 
-async function openPopupAndAssertUrlForPreset({ preset, expectedUrl }) {
+add_task(async function test_in_private_window() {
+  info(
+    "Test that the profiler pop-up correctly opens the captured profile on the " +
+      "correct frontend view by adding proper view query string. This also tests " +
+      "that a tab is opened on the non-private window even when the popup is used " +
+      "in the private window."
+  );
+
+  // This test assumes that the Web Developer preset is set by default, which is
+  // not the case on Nightly and custom builds.
+  BackgroundJSM.changePreset(
+    "aboutprofiling",
+    "web-developer",
+    Services.profiler.GetFeatures()
+  );
+
+  await setProfilerFrontendUrl(FRONTEND_BASE_HOST, FRONTEND_BASE_PATH);
+  await makeSureProfilerPopupIsEnabled();
+
+  info("Open a private window.");
+  const privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+
+  // First check for the "Media" preset which will have no "view" query
+  // string because it opens our traditional "full" view.
+  // Note that this utility will check for a new tab in the main non-private
+  // window, which is exactly what we want here.
+  await openPopupAndAssertUrlForPreset({
+    window: privateWindow,
+    preset: "Media",
+    expectedUrl: FRONTEND_BASE_URL,
+  });
+
+  // Now, let's check for "web-developer" preset. This will open up the frontend
+  // with "active-tab" view query string. Frontend will understand and open the active tab view for it.
+  await openPopupAndAssertUrlForPreset({
+    window: privateWindow,
+    preset: "Web Developer",
+    expectedUrl: FRONTEND_BASE_URL + "?view=active-tab&implementation=js",
+  });
+
+  await BrowserTestUtils.closeWindow(privateWindow);
+});
+
+async function openPopupAndAssertUrlForPreset({ window, preset, expectedUrl }) {
   // Let's capture a profile and assert newly created tab's url.
   await openPopupAndEnsureCloses(window, async () => {
+    const { document } = window;
     {
       // Select the preset in the popup
       const presetsInPopup = document.getElementById(

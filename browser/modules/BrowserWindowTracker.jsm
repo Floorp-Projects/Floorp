@@ -212,4 +212,11 @@ this.BrowserWindowTracker = {
   track(window) {
     return WindowHelper.addWindow(window);
   },
+
+  // For tests only, this function will remove this window from the list of
+  // tracked windows. Please don't forget to add it back at the end of your
+  // tests!
+  untrackForTestsOnly(window) {
+    return WindowHelper.removeWindow(window);
+  },
 };

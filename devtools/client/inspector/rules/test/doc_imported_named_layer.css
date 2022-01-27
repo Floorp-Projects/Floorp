@@ -1,0 +1,12 @@
+@media screen {
+    h1 {
+        color:tomato;
+        border: 10px dotted currentColor;
+    }
+
+    @layer in-imported-stylesheet {
+        h1 {
+            color: purple;
+        }
+    }
+}

@@ -59,6 +59,62 @@ add_task(async function test() {
   });
 });
 
+add_task(async function test_in_private_window() {
+  info("Test that DevTools can capture profiles in a private window.");
+
+  // This test assumes that the Web Developer preset is set by default, which is
+  // not the case on Nightly and custom builds.
+  BackgroundJSM.changePreset(
+    "aboutprofiling",
+    "web-developer",
+    Services.profiler.GetFeatures()
+  );
+
+  await setProfilerFrontendUrl(FRONTEND_BASE_HOST, FRONTEND_BASE_PATH);
+
+  info("Open a private window.");
+  const privateWindow = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+
+  await withDevToolsPanel(async document => {
+    const getRecordingState = setupGetRecordingState(document);
+
+    // The initial state of the profiler UI is racy, as it calls out to the PerfFront
+    // to get the status of the profiler. This can race with the initialization of
+    // the test. Most of the the time the result is "not-yet-known", but rarely
+    // the PerfFront will win this race. Allow for both outcomes of the race in this
+    // test.
+    ok(
+      getRecordingState() === "not-yet-known" ||
+        getRecordingState() === "available-to-record",
+      "The component starts out in an unknown state or is already available to record."
+    );
+
+    // First check for "firefox-platform" preset which will have no "view" query
+    // string because this is where our traditional "full" view opens up.
+    // Note that this utility will check for a new tab in the main non-private
+    // window, which is exactly what we want here.
+    await setPresetCaptureAndAssertUrl({
+      document,
+      preset: "firefox-platform",
+      expectedUrl: FRONTEND_BASE_URL,
+      getRecordingState,
+    });
+
+    // Now, let's check for "web-developer" preset. This will open up the frontend
+    // with "active-tab" view query string. Frontend will understand and open the active tab view for it.
+    await setPresetCaptureAndAssertUrl({
+      document,
+      preset: "web-developer",
+      expectedUrl: FRONTEND_BASE_URL + "?view=active-tab&implementation=js",
+      getRecordingState,
+    });
+  }, privateWindow);
+
+  await BrowserTestUtils.closeWindow(privateWindow);
+});
+
 async function setPresetCaptureAndAssertUrl({
   document,
   preset,
