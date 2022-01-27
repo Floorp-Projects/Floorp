@@ -14,7 +14,6 @@ export * from "../reducers/file-search";
 export * from "../reducers/project-text-search";
 export * from "../reducers/source-tree";
 export * from "../reducers/preview";
-export * from "../reducers/exceptions";
 
 export {
   getSourceActor,
@@ -39,6 +38,7 @@ export {
 } from "./breakpointAtLocation";
 export { getBreakpointSources } from "./breakpointSources";
 export * from "./event-listeners";
+export * from "./exceptions";
 export { getCallStackFrames } from "./getCallStackFrames";
 export { isLineInScope } from "./isLineInScope";
 export { isSelectedFrameVisible } from "./isSelectedFrameVisible";
