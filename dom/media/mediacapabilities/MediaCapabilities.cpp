@@ -45,11 +45,36 @@ static nsCString VideoConfigurationToStr(const VideoConfiguration* aConfig) {
   if (!aConfig) {
     return nsCString();
   }
+
+  nsCString hdrMetaType(
+      aConfig->mHdrMetadataType.WasPassed()
+          ? HdrMetadataTypeValues::GetString(aConfig->mHdrMetadataType.Value())
+          : "?");
+
+  nsCString colorGamut(
+      aConfig->mColorGamut.WasPassed()
+          ? ColorGamutValues::GetString(aConfig->mColorGamut.Value())
+          : "?");
+
+  nsCString transferFunction(aConfig->mTransferFunction.WasPassed()
+                                 ? TransferFunctionValues::GetString(
+                                       aConfig->mTransferFunction.Value())
+                                 : "?");
+
   auto str = nsPrintfCString(
-      "[contentType:%s width:%d height:%d bitrate:%" PRIu64 " framerate:%s]",
+      "[contentType:%s width:%d height:%d bitrate:%" PRIu64
+      " framerate:%s hasAlphaChannel:%s hdrMetadataType:%s colorGamut:%s "
+      "transferFunction:%s scalabilityMode:%s]",
       NS_ConvertUTF16toUTF8(aConfig->mContentType).get(), aConfig->mWidth,
       aConfig->mHeight, aConfig->mBitrate,
-      NS_ConvertUTF16toUTF8(aConfig->mFramerate).get());
+      NS_ConvertUTF16toUTF8(aConfig->mFramerate).get(),
+      aConfig->mHasAlphaChannel.WasPassed()
+          ? aConfig->mHasAlphaChannel.Value() ? "true" : "false"
+          : "?",
+      hdrMetaType.get(), colorGamut.get(), transferFunction.get(),
+      aConfig->mScalabilityMode.WasPassed()
+          ? NS_ConvertUTF16toUTF8(aConfig->mScalabilityMode.Value()).get()
+          : "?");
   return std::move(str);
 }
 
