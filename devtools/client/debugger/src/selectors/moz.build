@@ -11,6 +11,7 @@ CompiledModules(
     "breakpoints.js",
     "breakpointSources.js",
     "event-listeners.js",
+    "exceptions.js",
     "getCallStackFrames.js",
     "index.js",
     "isLineInScope.js",
