@@ -1852,7 +1852,19 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
             mAsrStack.empty() ? nullptr : mAsrStack.back();
         newLayerData->ComputeDeferredTransformInfo(aSc, item);
 
-        mAsrStack.push_back(asr);
+        const ActiveScrolledRoot* stopAtAsrForDescendants = asr;
+        // While unusual and probably indicative of a poorly behaved display
+        // list, it's possible to have a deferred transform item which we
+        // will emit as its own layer on the way out of the recursion, whose
+        // ASR (let's call it T) is a *descendant* of the current item's ASR.
+        // In such cases, make sure our descendants have stopAtAsr=T, otherwise
+        // ASRs in the range [T, asr) may be emitted in duplicate, leading to
+        // cylic scroll metadata annotations.
+        if (newLayerData->mTransformShouldGetOwnLayer) {
+          stopAtAsrForDescendants = ActiveScrolledRoot::PickDescendant(
+              asr, newLayerData->mDeferredItem->GetActiveScrolledRoot());
+        }
+        mAsrStack.push_back(stopAtAsrForDescendants);
       }
     }
 
