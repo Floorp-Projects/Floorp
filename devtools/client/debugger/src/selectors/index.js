@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-export * from "../reducers/expressions";
 export * from "../reducers/tabs";
 export * from "../reducers/threads";
 
@@ -17,6 +16,7 @@ export {
 export { getBreakpointSources } from "./breakpointSources";
 export * from "./event-listeners";
 export * from "./exceptions";
+export * from "./expressions";
 export * from "./file-search";
 export { getCallStackFrames } from "./getCallStackFrames";
 export { isLineInScope } from "./isLineInScope";

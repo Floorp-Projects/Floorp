@@ -7,7 +7,6 @@
  * @module reducers/expressions
  */
 
-import { createSelector } from "reselect";
 import { prefs } from "../utils/prefs";
 
 export const initialExpressionState = () => ({
@@ -130,33 +129,5 @@ function deleteExpression(state, input) {
   storeExpressions(newState);
   return newState;
 }
-
-const getExpressionsWrapper = state => state.expressions;
-
-export const getExpressions = createSelector(
-  getExpressionsWrapper,
-  expressions => expressions.expressions
-);
-
-export const getAutocompleteMatches = createSelector(
-  getExpressionsWrapper,
-  expressions => expressions.autocompleteMatches
-);
-
-export function getExpression(state, input) {
-  return getExpressions(state).find(exp => exp.input == input);
-}
-
-export function getAutocompleteMatchset(state) {
-  const input = state.expressions.currentAutocompleteInput;
-  if (input) {
-    return getAutocompleteMatches(state)[input];
-  }
-}
-
-export const getExpressionError = createSelector(
-  getExpressionsWrapper,
-  expressions => expressions.expressionError
-);
 
 export default update;
