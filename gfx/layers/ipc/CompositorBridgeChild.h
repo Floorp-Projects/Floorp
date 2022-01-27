@@ -257,10 +257,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   // is only accessed on the main thread.
   nsTArray<RefPtr<TextureClient>> mTextureClientsForAsyncPaint;
 
-  // Off-Main-Thread Painting state. This covers access to the OMTP-related
-  // state below.
-  Monitor mPaintLock;
-
   RefPtr<CanvasChild> mCanvasChild;
 
   RefPtr<webgpu::WebGPUChild> mWebGPUChild;
