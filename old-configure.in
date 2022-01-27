@@ -236,8 +236,6 @@ dnl ========================================================
 dnl GNU specific defaults
 dnl ========================================================
 if test "$GNU_CC"; then
-    CFLAGS="$CFLAGS -fno-strict-aliasing"
-
     if test "$OS_ARCH" != "WINNT" -o -z "$CLANG_CC"; then
         DSO_PIC_CFLAGS='-fPIC'
         ASFLAGS="$ASFLAGS -fPIC"
@@ -329,7 +327,7 @@ if test "$GNU_CC"; then
 fi
 
 if test "$GNU_CXX"; then
-    CXXFLAGS="$CXXFLAGS -fno-exceptions -fno-strict-aliasing"
+    CXXFLAGS="$CXXFLAGS -fno-exceptions"
 
     _DEFINES_CXXFLAGS="-DMOZILLA_CLIENT -include $_objdir/mozilla-config.h"
 fi
