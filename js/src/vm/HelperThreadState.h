@@ -38,6 +38,8 @@ class AutoLockHelperThreadState;
 class AutoUnlockHelperThreadState;
 class CompileError;
 struct ParseTask;
+struct DelazifyTask;
+struct FreeDelazifyTask;
 struct PromiseHelperTask;
 class PromiseObject;
 
@@ -108,6 +110,9 @@ class GlobalHelperThreadState {
       Vector<js::UniquePtr<jit::IonFreeTask>, 0, SystemAllocPolicy>;
   typedef Vector<UniquePtr<ParseTask>, 0, SystemAllocPolicy> ParseTaskVector;
   using ParseTaskList = mozilla::LinkedList<ParseTask>;
+  using DelazifyTaskList = mozilla::LinkedList<DelazifyTask>;
+  using FreeDelazifyTaskVector =
+      Vector<js::UniquePtr<FreeDelazifyTask>, 1, SystemAllocPolicy>;
   typedef Vector<UniquePtr<SourceCompressionTask>, 0, SystemAllocPolicy>
       SourceCompressionTaskVector;
   using GCParallelTaskList = mozilla::LinkedList<GCParallelTask>;
@@ -145,6 +150,19 @@ class GlobalHelperThreadState {
   // Script parsing/emitting worklist and finished jobs.
   ParseTaskVector parseWorklist_;
   ParseTaskList parseFinishedList_;
+
+  // Script worklist, which might still have function to delazify.
+  DelazifyTaskList delazifyWorklist_;
+  // Ideally an instance should not have a method to free it-self as, the method
+  // has a this pointer, which aliases the deleted instance, and that the method
+  // might have some of its fields aliased on the stack.
+  //
+  // Delazification task are complex and have a lot of fields. To reduce the
+  // risk of having aliased fields on the stack while deleting instances of a
+  // DelazifyTask, we have FreeDelazifyTask. While FreeDelazifyTask suffer from
+  // the same problem, the limited scope of their actions should mitigate the
+  // risk.
+  FreeDelazifyTaskVector freeDelazifyTaskVector_;
 
   // Source compression worklist of tasks that we do not yet know can start.
   SourceCompressionTaskVector compressionPendingList_;
@@ -299,6 +317,15 @@ class GlobalHelperThreadState {
     return parseFinishedList_;
   }
 
+  DelazifyTaskList& delazifyWorklist(const AutoLockHelperThreadState&) {
+    return delazifyWorklist_;
+  }
+
+  FreeDelazifyTaskVector& freeDelazifyTaskVector(
+      const AutoLockHelperThreadState&) {
+    return freeDelazifyTaskVector_;
+  }
+
   SourceCompressionTaskVector& compressionPendingList(
       const AutoLockHelperThreadState&) {
     return compressionPendingList_;
@@ -339,6 +366,8 @@ class GlobalHelperThreadState {
   bool canStartIonCompileTask(const AutoLockHelperThreadState& lock);
   bool canStartIonFreeTask(const AutoLockHelperThreadState& lock);
   bool canStartParseTask(const AutoLockHelperThreadState& lock);
+  bool canStartFreeDelazifyTask(const AutoLockHelperThreadState& lock);
+  bool canStartDelazifyTask(const AutoLockHelperThreadState& lock);
   bool canStartCompressionTask(const AutoLockHelperThreadState& lock);
   bool canStartGCParallelTask(const AutoLockHelperThreadState& lock);
 
@@ -359,6 +388,9 @@ class GlobalHelperThreadState {
       const AutoLockHelperThreadState& lock);
   HelperThreadTask* maybeGetIonFreeTask(const AutoLockHelperThreadState& lock);
   HelperThreadTask* maybeGetParseTask(const AutoLockHelperThreadState& lock);
+  HelperThreadTask* maybeGetFreeDelazifyTask(
+      const AutoLockHelperThreadState& lock);
+  HelperThreadTask* maybeGetDelazifyTask(const AutoLockHelperThreadState& lock);
   HelperThreadTask* maybeGetCompressionTask(
       const AutoLockHelperThreadState& lock);
   HelperThreadTask* maybeGetGCParallelTask(
@@ -440,6 +472,9 @@ class GlobalHelperThreadState {
   bool submitTask(UniquePtr<SourceCompressionTask> task,
                   const AutoLockHelperThreadState& locked);
   bool submitTask(JSRuntime* rt, UniquePtr<ParseTask> task,
+                  const AutoLockHelperThreadState& locked);
+  void submitTask(DelazifyTask* task, const AutoLockHelperThreadState& locked);
+  bool submitTask(UniquePtr<FreeDelazifyTask> task,
                   const AutoLockHelperThreadState& locked);
   bool submitTask(PromiseHelperTask* task);
   bool submitTask(GCParallelTask* task,
@@ -540,7 +575,124 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
 
   void runHelperThreadTask(AutoLockHelperThreadState& locked) override;
   void runTask(AutoLockHelperThreadState& lock);
+  void scheduleDelazifyTask(AutoLockHelperThreadState& lock);
   ThreadType threadType() override { return ThreadType::THREAD_TYPE_PARSE; }
+};
+
+// Base class for implementing the various strategies to iterate over the
+// functions to be delazified, or to decide when to stop doing any
+// delazification.
+//
+// When created, the `add` function should be called with the top-level
+// ScriptIndex.
+struct DelazifyStrategy {
+  using ScriptIndex = frontend::ScriptIndex;
+  virtual ~DelazifyStrategy() = default;
+
+  // Returns true if no more functions should be delazified. Note, this does not
+  // imply that every function got delazified.
+  virtual bool done() const = 0;
+
+  // Return a function identifier which represent the next function to be
+  // delazified. If no more function should be delazified, then return 0.
+  virtual ScriptIndex next() = 0;
+
+  // Empty the list of functions to be processed next. done() should return true
+  // after this call.
+  virtual void clear() = 0;
+
+  // Add the inner functions of a delazified function. This function should only
+  // be called with a function which has some bytecode associated with it, and
+  // register functions which parent are already delazified.
+  //
+  // This function is called with the script index of:
+  //  - top-level script, when starting the off-thread delazification.
+  //  - functions added by `add` and delazified by `DelazifyTask`.
+  [[nodiscard]] virtual bool add(JSContext* cx,
+                                 const frontend::CompilationStencil& stencil,
+                                 ScriptIndex index) = 0;
+};
+
+// Delazify all functions using a Depth First traversal of the function-tree
+// ordered, where each functions is visited in source-order.
+//
+// When `add` is called with the top-level ScriptIndex. This will push all inner
+// functions to a stack such that they are popped in source order. Each
+// function, once delazified, would be used to schedule their inner functions
+// the same way.
+//
+// Hypothesis: This strategy parses all functions in source order, with the
+// expectation that calls will follow the same order, and that helper thread
+// would always be ahead of the execution.
+struct DepthFirstDelazification final : public DelazifyStrategy {
+  Vector<ScriptIndex, 0, SystemAllocPolicy> stack;
+
+  bool done() const override { return stack.empty(); }
+  ScriptIndex next() override { return stack.popCopy(); }
+  void clear() override { return stack.clear(); }
+  [[nodiscard]] bool add(JSContext* cx,
+                         const frontend::CompilationStencil& stencil,
+                         ScriptIndex index) override;
+};
+
+// Eagerly delazify functions, and send the result back to the runtime which
+// requested the stencil to be parsed, by filling the stencil cache.
+//
+// This task is scheduled multiple times, each time it is scheduled, it
+// delazifies a single function. Once the function is delazified, it schedules
+// the inner functions of the delazified function for delazification using the
+// DelazifyStrategy. The DelazifyStrategy is responsible for ordering and
+// filtering functions to be delazified.
+//
+// When no more function have to be delazified, a FreeDelazifyTask is scheduled
+// to remove the memory held by the DelazifyTask.
+struct DelazifyTask : public mozilla::LinkedListElement<DelazifyTask>,
+                      public HelperThreadTask {
+  // HelperThreads are shared between all runtimes in the process so explicitly
+  // track which one we are associated with.
+  JSRuntime* runtime = nullptr;
+
+  // Queue of functions to be processed while delazifying.
+  UniquePtr<DelazifyStrategy> strategy;
+
+  // Every delazified function is merged back to provide context for delazifying
+  // even more functions.
+  frontend::CompilationStencilMerger merger;
+
+  // Record any errors happening while parsing or generating bytecode.
+  OffThreadFrontendErrors errors_;
+
+  explicit DelazifyTask(JSRuntime* runtime);
+
+  [[nodiscard]] bool init(
+      JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+      UniquePtr<frontend::ExtensibleCompilationStencil>&& initial);
+
+  bool runtimeMatches(JSRuntime* rt) { return runtime == rt; }
+
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
+  }
+
+  void runHelperThreadTask(AutoLockHelperThreadState& locked) override;
+  [[nodiscard]] bool runTask(JSContext* cx);
+  ThreadType threadType() override { return ThreadType::THREAD_TYPE_DELAZIFY; }
+};
+
+// The FreeDelazifyTask exists as this is a bad practice to `js_delete(this)`,
+// as fields might be aliased across the destructor, such as with RAII guards.
+// The FreeDelazifyTask limits the risk of adding these kind of issues by
+// limiting the number of fields to the DelazifyTask pointer, before deleting
+// it-self.
+struct FreeDelazifyTask : public HelperThreadTask {
+  DelazifyTask* task;
+
+  explicit FreeDelazifyTask(DelazifyTask* t) : task(t) {}
+  void runHelperThreadTask(AutoLockHelperThreadState& locked) override;
+  ThreadType threadType() override {
+    return ThreadType::THREAD_TYPE_DELAZIFY_FREE;
+  }
 };
 
 // It is not desirable to eagerly compress: if lazy functions that are tied to
