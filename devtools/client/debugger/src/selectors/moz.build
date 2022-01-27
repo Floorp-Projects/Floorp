@@ -18,6 +18,7 @@ CompiledModules(
     "isLineInScope.js",
     "isSelectedFrameVisible.js",
     "pause.js",
+    "pending-breakpoints.js",
     "preview.js",
     "project-text-search.js",
     "quick-open.js",
