@@ -115,6 +115,16 @@ nsresult Http3Stream::TryActivating() {
   head->Method(method);
   head->Path(path);
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  nsAutoCString contentLength;
+  if (NS_SUCCEEDED(head->GetHeader(nsHttp::Content_Length, contentLength))) {
+    int64_t len;
+    if (nsHttp::ParseInt64(contentLength.get(), nullptr, &len)) {
+      mRequestBodyLenExpected = len;
+    }
+  }
+#endif
+
   return mSession->TryActivating(method, scheme, authorityHeader, path,
                                  mFlatHttpRequestHeaders, &mStreamId, this);
 }
@@ -194,6 +204,9 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
         break;
       }
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      mRequestBodyLenSent += *countRead;
+#endif
       mTotalSent += *countRead;
       mTransaction->OnTransportStatus(nullptr, NS_NET_STATUS_SENDING_TO,
                                       mTotalSent);
@@ -201,6 +214,9 @@ nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
     case EARLY_RESPONSE:
       // We do not need to send the rest of the request, so just ignore it.
       *countRead = count;
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      mRequestBodyLenSent += count;
+#endif
       break;
     default:
       MOZ_ASSERT(false, "We are done sending this request!");
@@ -387,6 +403,10 @@ nsresult Http3Stream::ReadSegments(nsAHttpSegmentReader* reader) {
       Telemetry::Accumulate(
           Telemetry::HTTP3_SENDING_BLOCKED_BY_FLOW_CONTROL_PER_TRANS,
           mSendingBlockedByFlowControlCount);
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      MOZ_DIAGNOSTIC_ASSERT(mRequestBodyLenSent == mRequestBodyLenExpected);
+#endif
       rv = NS_OK;
       again = false;
     }

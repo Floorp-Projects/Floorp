@@ -293,6 +293,13 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
                 return;
               }
 
+              if (!audioStats->last_packet_received_timestamp_ms) {
+                // By spec: "The lifetime of all RTP monitored objects starts
+                // when the RTP stream is first used: When the first RTP packet
+                // is sent or received on the SSRC it represents"
+                return;
+              }
+
               // First, fill in remote stat with rtcp sender data, if present.
               if (audioStats->last_sender_report_timestamp_ms) {
                 RTCRemoteOutboundRtpStreamStats remote;
@@ -378,6 +385,13 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
               Maybe<webrtc::VideoReceiveStream::Stats> videoStats =
                   aConduit->GetReceiverStats();
               if (videoStats.isNothing()) {
+                return;
+              }
+
+              if (!videoStats->rtp_stats.last_packet_received_timestamp_ms) {
+                // By spec: "The lifetime of all RTP monitored objects starts
+                // when the RTP stream is first used: When the first RTP packet
+                // is sent or received on the SSRC it represents"
                 return;
               }
 

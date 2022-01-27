@@ -422,9 +422,6 @@ class ScriptSource {
   // Common base class of the templated variants of PinnedUnits<T>.
   class PinnedUnitsBase {
    protected:
-    PinnedUnitsBase** stack_ = nullptr;
-    PinnedUnitsBase* prev_ = nullptr;
-
     ScriptSource* source_;
 
     explicit PinnedUnitsBase(ScriptSource* source) : source_(source) {}
@@ -548,15 +545,18 @@ class ScriptSource {
   SourceType data = SourceType(Missing());
 
   // If the GC calls triggerConvertToCompressedSource with PinnedUnits present,
-  // the first PinnedUnits (that is, bottom of the stack) will install the
-  // compressed chars upon destruction.
+  // the last PinnedUnits instance will install the compressed chars upon
+  // destruction.
   //
   // Retrievability isn't part of the type here because uncompressed->compressed
   // transitions must preserve existing retrievability.
-  PinnedUnitsBase* pinnedUnitsStack_ = nullptr;
-  mozilla::MaybeOneOf<CompressedData<mozilla::Utf8Unit>,
-                      CompressedData<char16_t>>
-      pendingCompressed_;
+  struct ReaderInstances {
+    size_t count = 0;
+    mozilla::MaybeOneOf<CompressedData<mozilla::Utf8Unit>,
+                        CompressedData<char16_t>>
+        pendingCompressed;
+  };
+  ExclusiveData<ReaderInstances> readers_;
 
   // True if an associated SourceCompressionTask was ever created.
   bool hadCompressionTask_ = false;
@@ -631,7 +631,8 @@ class ScriptSource {
   // to deflate to Latin1 for longer strings, because this can be slow.
   static const size_t SourceDeflateLimit = 100;
 
-  explicit ScriptSource() : id_(++idCount_) {}
+  explicit ScriptSource()
+      : id_(++idCount_), readers_(js::mutexid::SourceCompression) {}
   ~ScriptSource() { MOZ_ASSERT(refs == 0); }
 
   void AddRef() { refs++; }
@@ -980,7 +981,8 @@ class ScriptSource {
                                  size_t uncompressedLength);
 
   template <typename Unit>
-  void performDelayedConvertToCompressedSource();
+  void performDelayedConvertToCompressedSource(
+      ExclusiveData<ReaderInstances>::Guard& g);
 
   void triggerConvertToCompressedSourceFromTask(
       SharedImmutableString compressed);

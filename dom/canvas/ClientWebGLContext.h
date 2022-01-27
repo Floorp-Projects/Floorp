@@ -681,6 +681,11 @@ struct TexImageSourceAdapter final : public TexImageSource {
     mImageData = imageData;
   }
 
+  TexImageSourceAdapter(const dom::OffscreenCanvas* offscreenCanvas,
+                        ErrorResult*) {
+    mOffscreenCanvas = offscreenCanvas;
+  }
+
   TexImageSourceAdapter(const dom::Element* domElem,
                         ErrorResult* const out_error) {
     mDomElem = domElem;

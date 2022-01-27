@@ -172,9 +172,6 @@ void MacroAssemblerX86Shared::blendInt8x16(FloatRegister lhs, FloatRegister rhs,
                                            FloatRegister output,
                                            FloatRegister temp,
                                            const uint8_t lanes[16]) {
-  MOZ_ASSERT(lhs == output);
-  MOZ_ASSERT(temp.encoding() == X86Encoding::xmm0, "pblendvb needs xmm0");
-
   asMasm().loadConstantSimd128Int(
       SimdConstant::CreateX16(reinterpret_cast<const int8_t*>(lanes)), temp);
   vpblendvb(temp, rhs, lhs, output);
@@ -183,24 +180,19 @@ void MacroAssemblerX86Shared::blendInt8x16(FloatRegister lhs, FloatRegister rhs,
 void MacroAssemblerX86Shared::blendInt16x8(FloatRegister lhs, FloatRegister rhs,
                                            FloatRegister output,
                                            const uint16_t lanes[8]) {
-  MOZ_ASSERT(lhs == output);
-
   uint32_t mask = 0;
   for (unsigned i = 0; i < 8; i++) {
     if (lanes[i]) {
       mask |= (1 << i);
     }
   }
-  vpblendw(mask, rhs, lhs, lhs);
+  vpblendw(mask, rhs, lhs, output);
 }
 
 void MacroAssemblerX86Shared::laneSelectSimd128(FloatRegister lhs,
                                                 FloatRegister rhs,
                                                 FloatRegister mask,
                                                 FloatRegister output) {
-  MOZ_ASSERT(rhs == output);
-  MOZ_ASSERT(mask.encoding() == X86Encoding::xmm0, "pblendvb needs xmm0");
-
   vpblendvb(mask, lhs, rhs, output);
 }
 
@@ -212,8 +204,6 @@ void MacroAssemblerX86Shared::shuffleInt8x16(FloatRegister lhs,
 
   // Use pshufb instructions to gather the lanes from each source vector.
   // A negative index creates a zero lane, so the two vectors can be combined.
-
-  // Register preference: lhs == output.
 
   // Set scratch = lanes from rhs.
   int8_t idx[16];

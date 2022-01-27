@@ -368,13 +368,13 @@ struct InternalBarrierMethods<Value> {
 
     // If the target needs an entry, add it.
     js::gc::StoreBuffer* sb;
-    if ((next.isObject() || next.isString() || next.isBigInt()) &&
+    if (next.isNurseryAllocatableGCThing() &&
         (sb = next.toGCThing()->storeBuffer())) {
       // If we know that the prev has already inserted an entry, we can
       // skip doing the lookup to add the new entry. Note that we cannot
       // safely assert the presence of the entry because it may have been
       // added via a different store buffer.
-      if ((prev.isObject() || prev.isString() || prev.isBigInt()) &&
+      if (prev.isNurseryAllocatableGCThing() &&
           prev.toGCThing()->storeBuffer()) {
         return;
       }
@@ -382,7 +382,7 @@ struct InternalBarrierMethods<Value> {
       return;
     }
     // Remove the prev entry if the new value does not need it.
-    if ((prev.isObject() || prev.isString() || prev.isBigInt()) &&
+    if (prev.isNurseryAllocatableGCThing() &&
         (sb = prev.toGCThing()->storeBuffer())) {
       sb->unputValue(vp);
     }
@@ -993,8 +993,7 @@ class HeapSlot : public WriteBarriered<Value> {
 #ifdef DEBUG
     assertPreconditionForPostWriteBarrier(owner, kind, slot, target);
 #endif
-    if (this->value.isObject() || this->value.isString() ||
-        this->value.isBigInt()) {
+    if (this->value.isNurseryAllocatableGCThing()) {
       gc::Cell* cell = this->value.toGCThing();
       if (cell->storeBuffer()) {
         cell->storeBuffer()->putSlot(owner, kind, slot, 1);

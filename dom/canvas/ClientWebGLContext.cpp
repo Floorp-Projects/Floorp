@@ -1400,11 +1400,13 @@ void ClientWebGLContext::DeleteQuery(WebGLQueryJS* const obj) {
   // Unbind if current
 
   if (obj->mTarget) {
+    // Despite mTarget being set, we may not have called BeginQuery on this
+    // object. QueryCounter may also set mTarget.
     const auto slotTarget = QuerySlotTarget(obj->mTarget);
-    const auto& curForTarget =
-        *MaybeFind(state.mCurrentQueryByTarget, slotTarget);
+    const auto curForTarget =
+        MaybeFind(state.mCurrentQueryByTarget, slotTarget);
 
-    if (curForTarget == obj) {
+    if (curForTarget && *curForTarget == obj) {
       EndQuery(obj->mTarget);
     }
   }
@@ -3959,6 +3961,10 @@ webgl::TexUnpackBlobDesc FromImageData(GLenum target, uvec3 size,
                                        const dom::ImageData& imageData,
                                        dom::Uint8ClampedArray* const scopedArr);
 
+Maybe<webgl::TexUnpackBlobDesc> FromOffscreenCanvas(
+    const ClientWebGLContext&, GLenum target, uvec3 size,
+    const dom::OffscreenCanvas& src, ErrorResult* const out_error);
+
 Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext&,
                                             GLenum target, uvec3 size,
                                             const dom::Element& src,
@@ -4076,6 +4082,12 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
     if (src.mImageData) {
       return Some(webgl::FromImageData(imageTarget, explicitSize,
                                        *(src.mImageData), &scopedArr));
+    }
+
+    if (src.mOffscreenCanvas) {
+      return webgl::FromOffscreenCanvas(*this, imageTarget, explicitSize,
+                                        *(src.mOffscreenCanvas),
+                                        src.mOut_error);
     }
 
     if (src.mDomElem) {

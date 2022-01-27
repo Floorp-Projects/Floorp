@@ -12,7 +12,7 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/dom/SessionHistoryEntry.h"
-#include "EarlyHintsPreloader.h"
+#include "EarlyHintsService.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/PDocumentChannelParent.h"
@@ -601,7 +601,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   const bool mIsDocumentLoad;
 
-  EarlyHintsPreloader mEarlyHintsPreloader;
+  EarlyHintsService mEarlyHintsService;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DocumentLoadListener, DOCUMENT_LOAD_LISTENER_IID)

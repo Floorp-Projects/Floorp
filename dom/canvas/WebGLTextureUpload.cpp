@@ -19,6 +19,7 @@
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageData.h"
+#include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/ScopeExit.h"
@@ -145,6 +146,49 @@ static layers::SurfaceDescriptor Flatten(const layers::SurfaceDescriptor& sd) {
       return subdesc.get_SurfaceDescriptorMacIOSurface();
   }
   MOZ_CRASH("unreachable");
+}
+
+Maybe<webgl::TexUnpackBlobDesc> FromOffscreenCanvas(
+    const ClientWebGLContext& webgl, const GLenum target, uvec3 size,
+    const dom::OffscreenCanvas& canvas, ErrorResult* const out_error) {
+  if (canvas.IsWriteOnly()) {
+    webgl.EnqueueWarning(
+        "OffscreenCanvas is write-only, thus cannot be uploaded.");
+    out_error->ThrowSecurityError(
+        "OffscreenCanvas is write-only, thus cannot be uploaded.");
+    return {};
+  }
+
+  // The canvas spec says that drawImage should draw the first frame of
+  // animated images. The webgl spec doesn't mention the issue, so we do the
+  // same as drawImage.
+  uint32_t flags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE;
+  auto sfer = nsLayoutUtils::SurfaceFromOffscreenCanvas(
+      const_cast<dom::OffscreenCanvas*>(&canvas), flags);
+
+  RefPtr<gfx::DataSourceSurface> dataSurf;
+  if (sfer.GetSourceSurface()) {
+    dataSurf = sfer.GetSourceSurface()->GetDataSurface();
+  }
+
+  if (!dataSurf) {
+    webgl.EnqueueWarning("Resource has no data (yet?). Uploading zeros.");
+    return Some(TexUnpackBlobDesc{target, size, gfxAlphaType::NonPremult});
+  }
+
+  // We checked this above before we requested the surface.
+  MOZ_RELEASE_ASSERT(!sfer.mIsWriteOnly);
+
+  uvec2 canvasSize = *uvec2::FromSize(dataSurf->GetSize());
+  if (!size.x) {
+    size.x = canvasSize.x;
+  }
+  if (!size.y) {
+    size.y = canvasSize.y;
+  }
+
+  return Some(TexUnpackBlobDesc{
+      target, size, sfer.mAlphaType, {}, {}, canvasSize, {}, {}, dataSurf});
 }
 
 Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext& webgl,

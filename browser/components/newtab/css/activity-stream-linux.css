@@ -2793,6 +2793,131 @@ main.has-snippet {
 .ds-card-grid.ds-card-grid-four-card-variant .ds-card .meta .info-wrap {
   flex-grow: 0;
 }
+.ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout {
+  grid-template-columns: repeat(1, 1fr);
+}
+@media (min-width: 610px) {
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 866px) {
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-height: 1065px) {
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .excerpt, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .excerpt, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .excerpt, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .excerpt {
+    display: none;
+  }
+}
+@media (max-width: 1122px) {
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card.placeholder, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card.placeholder, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card.placeholder, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card.placeholder {
+    min-height: 247px;
+  }
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-footer, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-footer, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-footer, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-footer {
+    margin-top: 8px;
+  }
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
+.ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
+.ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label,
+.ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
+.ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
+.ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label,
+.ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
+.ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
+.ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label,
+.ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
+.ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
+.ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label,
+.ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label {
+    color: var(--newtab-text-secondary-color);
+    -webkit-line-clamp: 2;
+  }
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
+.ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
+.ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
+.ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
+.ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
+.ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
+.ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
+.ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
+.ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label {
+    font-size: 13px;
+  }
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label {
+    font-size: 11.7px;
+  }
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-badge-icon, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-badge-icon, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-badge-icon, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-badge-icon {
+    margin-inline-end: 2px;
+    margin-bottom: 2px;
+    height: 14px;
+    width: 14px;
+    background-size: 14px;
+  }
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .title, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .title, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .title, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .title {
+    font-size: 14px;
+    line-height: 20px;
+  }
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .info-wrap, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .info-wrap, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .info-wrap, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .info-wrap {
+    flex-grow: 0;
+  }
+}
+@media (min-width: 1122px) and (max-height: 964px) {
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card.placeholder, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card.placeholder, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card.placeholder, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card.placeholder {
+    min-height: 247px;
+  }
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-footer, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-footer, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-footer, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-footer {
+    margin-top: 8px;
+  }
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
+.ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
+.ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label,
+.ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
+.ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
+.ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label,
+.ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
+.ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
+.ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label,
+.ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
+.ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
+.ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label,
+.ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label {
+    color: var(--newtab-text-secondary-color);
+    -webkit-line-clamp: 2;
+  }
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
+.ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
+.ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
+.ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
+.ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
+.ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
+.ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .source,
+.ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .ds-last-card-desc,
+.ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-sponsored-label {
+    font-size: 13px;
+  }
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .status-message .story-context-label {
+    font-size: 11.7px;
+  }
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-badge-icon, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-badge-icon, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-badge-icon, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .story-badge-icon {
+    margin-inline-end: 2px;
+    margin-bottom: 2px;
+    height: 14px;
+    width: 14px;
+    background-size: 14px;
+  }
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .title, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .title, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .title, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .title {
+    font-size: 14px;
+    line-height: 20px;
+  }
+  .ds-column-9 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .info-wrap, .ds-column-10 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .info-wrap, .ds-column-11 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .info-wrap, .ds-column-12 .ds-card-grid.ds-card-grid-hybrid-layout .ds-card .meta .info-wrap {
+    flex-grow: 0;
+  }
+}
 
 .outer-wrapper .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder),
 .outer-wrapper.newtab-experience .ds-card-grid.ds-card-grid-hide-background.ds-card-grid-border .ds-card:not(.placeholder) {

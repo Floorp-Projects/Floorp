@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script>
+
+document.addEventListener('DOMContentLoaded', () => {
+  const gl = document.createElement('canvas').getContext('webgl');
+  const a = gl.getExtension('EXT_disjoint_timer_query');
+  const b = a.createQueryEXT();
+  a.queryCounterEXT(b, a.TIMESTAMP_EXT);
+  a.deleteQueryEXT(b);
+});
+
+</script>
+</head>
+</html>

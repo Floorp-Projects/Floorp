@@ -5,32 +5,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "EarlyHintsPreloader.h"
+#include "EarlyHintsService.h"
 #include "mozilla/Telemetry.h"
 
 namespace mozilla::net {
 
-void EarlyHintsPreloader::EarlyHint(const nsACString& linkHeader) {
+void EarlyHintsService::EarlyHint(const nsACString& linkHeader) {
   mEarlyHintsCount++;
   if (!mFirstEarlyHint) {
     mFirstEarlyHint.emplace(TimeStamp::NowLoRes());
   }
 }
 
-void EarlyHintsPreloader::FinalResponse(uint32_t aResponseStatus) {
+void EarlyHintsService::FinalResponse(uint32_t aResponseStatus) {
   // We will collect telemetry mosly once for a document.
   // In case of a reddirect this will be called multiple times.
   CollectTelemetry(Some(aResponseStatus));
 }
 
-void EarlyHintsPreloader::Cancel() {
+void EarlyHintsService::Cancel() {
   if (!mCanceled) {
     CollectTelemetry(Nothing());
     mCanceled = true;
   }
 }
 
-void EarlyHintsPreloader::CollectTelemetry(Maybe<uint32_t> aResponseStatus) {
+void EarlyHintsService::CollectTelemetry(Maybe<uint32_t> aResponseStatus) {
   // EH_NUM_OF_HINTS_PER_PAGE is only collected for the 2xx responses,
   // regardless of the number of received mEarlyHintsCount.
   // Other telemetry probes are only collected if there was at least one

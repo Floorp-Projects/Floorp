@@ -463,7 +463,11 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         this.store.getState().Prefs.values?.pocketConfig || {};
 
       let items = isBasicLayout ? 3 : 21;
-      if (pocketConfig.compactLayout || pocketConfig.fourCardLayout) {
+      if (
+        pocketConfig.compactLayout ||
+        pocketConfig.fourCardLayout ||
+        pocketConfig.hybridLayout
+      ) {
         items = isBasicLayout ? 4 : 24;
       }
 
@@ -476,6 +480,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
           pocketConfig.spocPositions?.split(`,`)
         ),
         compactLayout: pocketConfig.compactLayout,
+        hybridLayout: pocketConfig.hybridLayout,
         hideCardBackground: pocketConfig.hideCardBackground,
         fourCardLayout: pocketConfig.fourCardLayout,
         loadMore: pocketConfig.loadMore,
@@ -1870,6 +1875,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
      `spocPositions` Changes the position of spoc cards.
      `sponsoredCollectionsEnabled` Tuns on and off the sponsored collection section.
      `compactLayout` Changes cards to smaller more compact cards.
+     `hybridLayout` Changes cards to smaller more compact cards only for specific breakpoints.
      `hideCardBackground` Removes Pocket card background and borders.
      `fourCardLayout` Enable four Pocket cards per row.
      `loadMore` Hide half the Pocket stories behind a load more button.
@@ -1891,6 +1897,7 @@ getHardcodedLayout = ({
   spocPositions = [2, 4, 11, 20],
   sponsoredCollectionsEnabled = false,
   compactLayout = false,
+  hybridLayout = false,
   hideCardBackground = false,
   fourCardLayout = false,
   loadMore = false,
@@ -1982,6 +1989,7 @@ getHardcodedLayout = ({
           type: "CardGrid",
           properties: {
             items,
+            hybridLayout,
             hideCardBackground: hideCardBackground || compactLayout,
             fourCardLayout: fourCardLayout || compactLayout,
             hideDescriptions: hideDescriptions || compactLayout,
