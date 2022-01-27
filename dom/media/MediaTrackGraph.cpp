@@ -21,6 +21,7 @@
 #include "AudioCaptureTrack.h"
 #include "AudioNodeTrack.h"
 #include "AudioNodeExternalInputTrack.h"
+#include "MediaEngineWebRTCAudio.h"
 #include "MediaTrackListener.h"
 #include "mozilla/dom/BaseAudioContextBinding.h"
 #include "mozilla/dom/WorkletThread.h"
@@ -888,9 +889,11 @@ void MediaTrackGraphImpl::NotifyOutputData(AudioDataValue* aBuffer,
   }
   MOZ_ASSERT(mNativeInputTrack->mDeviceId == mInputDeviceID);
 
-  // When/if we decide to support multiple input devices per graph, this needs
-  // to loop over them.
-  mNativeInputTrack->NotifyOutputData(this, aBuffer, aFrames, aRate, aChannels);
+  for (const auto& track : mTracks) {
+    if (const auto& t = track->AsAudioInputTrack(); t) {
+      t->NotifyOutputData(this, aBuffer, aFrames, aRate, aChannels);
+    }
+  }
 }
 
 void MediaTrackGraphImpl::NotifyInputStopped() {

@@ -747,10 +747,10 @@ void AudioInputProcessing::Process(MediaTrackGraphImpl* aGraph, GraphTime aFrom,
   MOZ_ASSERT(mSegment.GetDuration() <= mPacketizerInput->mPacketSize);
 }
 
-void AudioInputProcessing::NotifyOutputData(MediaTrackGraphImpl* aGraph,
-                                            AudioDataValue* aBuffer,
-                                            size_t aFrames, TrackRate aRate,
-                                            uint32_t aChannels) {
+void AudioInputProcessing::ProcessOutputData(MediaTrackGraphImpl* aGraph,
+                                             AudioDataValue* aBuffer,
+                                             size_t aFrames, TrackRate aRate,
+                                             uint32_t aChannels) {
   MOZ_ASSERT(aGraph->OnGraphThread());
   MOZ_ASSERT(mEnabled);
 
@@ -1302,6 +1302,17 @@ void AudioInputTrack::GetInputSourceData(AudioSegment& aOutput,
                 " ticks of real data from input port source %p",
                 mGraph, mGraph->CurrentDriver(), this, end - start, source);
     }
+  }
+}
+
+void AudioInputTrack::NotifyOutputData(MediaTrackGraphImpl* aGraph,
+                                       AudioDataValue* aBuffer, size_t aFrames,
+                                       TrackRate aRate, uint32_t aChannels) {
+  MOZ_ASSERT(mGraph == aGraph, "Cannot feed audio output to another graph");
+  MOZ_ASSERT(mGraph->OnGraphThread());
+  if (mInputProcessing) {
+    mInputProcessing->ProcessOutputData(aGraph, aBuffer, aFrames, aRate,
+                                        aChannels);
   }
 }
 
