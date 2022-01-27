@@ -1908,6 +1908,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "serde_yaml",
+ "tempfile",
  "url",
  "uuid",
  "webdriver",
