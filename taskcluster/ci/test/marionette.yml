@@ -49,7 +49,10 @@ job-defaults:
                 by-test-platform:
                     .*/debug: built-projects
                     default: []
-            default: built-projects
+            default:
+                by-test-platform:
+                    linux.*: ['trunk']
+                    default: []
     virtualization:
         by-test-platform:
             windows10-64.*: hardware
