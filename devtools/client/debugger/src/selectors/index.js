@@ -5,7 +5,6 @@
 export * from "../reducers/expressions";
 export * from "../reducers/sources";
 export * from "../reducers/tabs";
-export * from "../reducers/pause";
 export * from "../reducers/threads";
 
 export {
@@ -30,11 +29,7 @@ export * from "./file-search";
 export { getCallStackFrames } from "./getCallStackFrames";
 export { isLineInScope } from "./isLineInScope";
 export { isSelectedFrameVisible } from "./isSelectedFrameVisible";
-export {
-  getSelectedFrame,
-  getSelectedFrames,
-  getVisibleSelectedFrame,
-} from "./pause";
+export * from "./pause";
 export * from "./pending-breakpoints";
 export * from "./preview";
 export * from "./project-text-search";
