@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Component } = require("devtools/client/shared/vendor/react");
+const { createRef, Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const {
@@ -20,7 +20,7 @@ const {
   parseQueryString,
   writeHeaderText,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
-const { button, div, input, label, textarea, select, option } = dom;
+const { button, div, label, textarea, select, option } = dom;
 
 const CUSTOM_HEADERS = L10N.getStr("netmonitor.custom.headers");
 const CUSTOM_NEW_REQUEST_URL_LABEL = L10N.getStr(
@@ -50,6 +50,8 @@ class HTTPCustomRequestPanel extends Component {
 
     const { request } = props;
 
+    this.URLTextareaRef = createRef();
+
     this.state = {
       method: request ? request.method : "",
       url: request ? request.url : "",
@@ -60,11 +62,30 @@ class HTTPCustomRequestPanel extends Component {
       requestPostData: request
         ? request.requestPostData?.postData.text || ""
         : "",
+      _meta: {
+        urlTextareaRowSize: 1,
+      },
     };
 
     this.handleInputChange = this.handleInputChange.bind(this);
+    this.updateURLTextareaRows = this.updateURLTextareaRows.bind(this);
     this.handleHeadersChange = this.handleHeadersChange.bind(this);
     this.handleClear = this.handleClear.bind(this);
+  }
+
+  componentDidMount() {
+    this.updateURLTextareaRows();
+    this.resizeObserver = new ResizeObserver(entries => {
+      this.updateURLTextareaRows();
+    });
+
+    this.resizeObserver.observe(this.URLTextareaRef.current);
+  }
+
+  componentWillUnmount() {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
   }
 
   /**
@@ -111,6 +132,35 @@ class HTTPCustomRequestPanel extends Component {
     });
   }
 
+  updateURLTextareaRows() {
+    // 14 is the height of one row
+    const textareaLineHeight = 14;
+    const minRows = 1;
+    const maxRows = 5;
+
+    // We reset the number of the rows in the textarea to make sure
+    // the scrollheight is exactly the height of the text
+    this.setState(
+      {
+        _meta: {
+          urlTextareaRowSize: minRows,
+        },
+      },
+      () => {
+        const currentRows = Math.ceil(
+          // 8 is the sum of the bottom and top padding of the element
+          (this.URLTextareaRef.current.scrollHeight - 8) / textareaLineHeight
+        );
+        const rows = currentRows <= maxRows ? currentRows : maxRows;
+        this.setState({
+          _meta: {
+            urlTextareaRowSize: rows,
+          },
+        });
+      }
+    );
+  }
+
   handleClear() {
     this.setState({
       method: "",
@@ -120,12 +170,15 @@ class HTTPCustomRequestPanel extends Component {
         headers: [],
       },
       requestPostData: "",
+      _meta: {
+        urlTextareaRowSize: 1,
+      },
     });
   }
 
   render() {
     const { sendCustomRequest } = this.props;
-    const { method, requestPostData, url, headers } = this.state;
+    const { method, requestPostData, url, headers, _meta } = this.state;
 
     const formattedHeaders = headers.customHeadersValue
       ? headers.customHeadersValue
@@ -176,14 +229,19 @@ class HTTPCustomRequestPanel extends Component {
               )
             )
           ),
-          input({
+          textarea({
             className: "http-custom-url-value",
             id: "http-custom-url-value",
             name: "url",
             placeholder: CUSTOM_NEW_REQUEST_URL_LABEL,
-            onChange: this.handleInputChange,
-            onBlur: this.handleInputChange,
+            ref: this.URLTextareaRef,
+            onChange: event => {
+              this.handleInputChange(event);
+              this.updateURLTextareaRows(event.target);
+            },
+            onBlur: this.handleTextareaChange,
             value: url,
+            rows: _meta.urlTextareaRowSize,
           })
         ),
         // Hide query field when there is no params
