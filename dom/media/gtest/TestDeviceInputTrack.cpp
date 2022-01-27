@@ -73,6 +73,7 @@ class TestDeviceInputTrack : public testing::Test {
 
 TEST_F(TestDeviceInputTrack, NativeInputTrackData) {
   const uint32_t flags = 0;
+  const CubebUtils::AudioDeviceID deviceId = (void*)1;
 
   AudioGenerator<AudioDataValue> generator(mChannels, mRate);
   const size_t nrFrames = 10;
@@ -84,7 +85,7 @@ TEST_F(TestDeviceInputTrack, NativeInputTrackData) {
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
 
   RefPtr<NativeInputTrack> track =
-      NativeInputTrack::Create(mGraph.get(), testPrincipal);
+      NativeInputTrack::Create(mGraph.get(), deviceId, testPrincipal);
 
   generator.GenerateInterleaved(buffer.Elements(), nrFrames);
   track->NotifyInputData(mGraph.get(), buffer.Elements(), nrFrames, mRate,

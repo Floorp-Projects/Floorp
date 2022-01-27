@@ -630,7 +630,8 @@ NativeInputTrack* MediaTrackGraphImpl::GetOrCreateDeviceTrack(
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<NativeInputTrack>& t = mDeviceTracks.LookupOrInsertWith(aID, [&] {
-    NativeInputTrack* track = NativeInputTrack::Create(this, aPrincipalHandle);
+    NativeInputTrack* track =
+        NativeInputTrack::Create(this, aID, aPrincipalHandle);
     LOG(LogLevel::Debug,
         ("Create NativeInputTrack %p for device %p", track, aID));
     return do_AddRef(track);
