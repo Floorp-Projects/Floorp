@@ -2259,7 +2259,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void shuffleInt8x16(const uint8_t lanes[16], FloatRegister lhs,
                              FloatRegister rhs, FloatRegister dest)
-      DEFINED_ON(arm64);
+      DEFINED_ON(x86_shared, arm64);
 
   // Lane values must be 0 (select from lhs) or FF (select from rhs).
   // The behavior is undefined for lane values that are neither 0 nor FF.
@@ -2291,53 +2291,37 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                 FloatRegister rhs, FloatRegister dest)
       DEFINED_ON(arm64);
 
-  inline void interleaveHighInt8x16(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared);
-
   inline void interleaveHighInt8x16(FloatRegister lhs, FloatRegister rhs,
-                                    FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void interleaveHighInt16x8(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared);
+                                    FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void interleaveHighInt16x8(FloatRegister lhs, FloatRegister rhs,
-                                    FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void interleaveHighInt32x4(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared);
+                                    FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void interleaveHighInt32x4(FloatRegister lhs, FloatRegister rhs,
-                                    FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void interleaveHighInt64x2(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared);
+                                    FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void interleaveHighInt64x2(FloatRegister lhs, FloatRegister rhs,
-                                    FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void interleaveLowInt8x16(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared);
+                                    FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void interleaveLowInt8x16(FloatRegister lhs, FloatRegister rhs,
-                                   FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void interleaveLowInt16x8(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared);
+                                   FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void interleaveLowInt16x8(FloatRegister lhs, FloatRegister rhs,
-                                   FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void interleaveLowInt32x4(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared);
+                                   FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void interleaveLowInt32x4(FloatRegister lhs, FloatRegister rhs,
-                                   FloatRegister dest) DEFINED_ON(arm64);
-
-  inline void interleaveLowInt64x2(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(x86_shared);
+                                   FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   inline void interleaveLowInt64x2(FloatRegister lhs, FloatRegister rhs,
-                                   FloatRegister dest) DEFINED_ON(arm64);
+                                   FloatRegister dest)
+      DEFINED_ON(x86_shared, arm64);
 
   // Permute - permute with immediate indices.
 
@@ -2362,16 +2346,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
                              FloatRegister dest) DEFINED_ON(x86_shared, arm64);
 
   // Funnel shift by immediate count:
-  //   low_16_bytes_of((lhsDest ++ rhs) >> shift*8), shift must be < 32.
-  inline void concatAndRightShiftSimd128(FloatRegister rhs,
-                                         FloatRegister lhsDest, uint32_t shift)
-      DEFINED_ON(x86_shared);
-
-  // Funnel shift by immediate count:
   //   low_16_bytes_of((lhs ++ rhs) >> shift*8), shift must be < 16
   inline void concatAndRightShiftSimd128(FloatRegister lhs, FloatRegister rhs,
                                          FloatRegister dest, uint32_t shift)
-      DEFINED_ON(arm64);
+      DEFINED_ON(x86_shared, arm64);
 
   // Rotate right by immediate count:
   //   low_16_bytes_of((src ++ src) >> shift*8), shift must be < 16
