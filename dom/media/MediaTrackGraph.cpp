@@ -3950,12 +3950,7 @@ uint32_t MediaTrackGraphImpl::AudioInputChannelCount() {
     return 0;
   }
   MOZ_ASSERT(mNativeInputTrack->mDeviceId == mInputDeviceID);
-  uint32_t maxInputChannels = 0;
-  for (const auto& listener : mNativeInputTrack->mDataUsers) {
-    maxInputChannels =
-        std::max(maxInputChannels, listener->RequestedInputChannelCount(this));
-  }
-  return maxInputChannels;
+  return mNativeInputTrack->MaxRequestedInputChannels();
 }
 
 AudioInputType MediaTrackGraphImpl::AudioInputDevicePreference() {
@@ -3965,17 +3960,8 @@ AudioInputType MediaTrackGraphImpl::AudioInputDevicePreference() {
     return AudioInputType::Unknown;
   }
   MOZ_ASSERT(mNativeInputTrack->mDeviceId == mInputDeviceID);
-
-  bool voiceInput = false;
-  // When/if we decide to support multiple input device per graph, this needs
-  // loop over them.
-
-  // If at least one track is considered to be voice,
-  // XXX This could use short-circuit evaluation resp. std::any_of.
-  for (const auto& listener : mNativeInputTrack->mDataUsers) {
-    voiceInput |= listener->IsVoiceInput(this);
-  }
-  return voiceInput ? AudioInputType::Voice : AudioInputType::Unknown;
+  return mNativeInputTrack->HasVoiceInput() ? AudioInputType::Voice
+                                            : AudioInputType::Unknown;
 }
 
 // nsIThreadObserver methods
