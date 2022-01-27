@@ -199,6 +199,12 @@ bool CurrentThreadIsParseThread();
 void CancelOffThreadParses(JSRuntime* runtime);
 
 /*
+ * Cancel all scheduled or in progress eager delazification phases for a
+ * runtime.
+ */
+void CancelOffThreadDelazify(JSRuntime* runtime);
+
+/*
  * Start a parse/emit cycle for a stream of source. The characters must stay
  * alive until the compilation finishes.
  */
