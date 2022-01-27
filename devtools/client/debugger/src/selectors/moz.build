@@ -23,6 +23,7 @@ CompiledModules(
     "project-text-search.js",
     "quick-open.js",
     "source-tree.js",
+    "sources.js",
     "tabs.js",
     "threads.js",
     "visibleBreakpoints.js",

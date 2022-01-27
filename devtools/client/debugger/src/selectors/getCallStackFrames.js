@@ -7,7 +7,7 @@ import {
   getSelectedSource,
   getSourceInSources,
   getBlackBoxRanges,
-} from "../reducers/sources";
+} from "../selectors/sources";
 import { getCurrentThreadFrames } from "./pause";
 import { annotateFrames } from "../utils/pause/frames";
 import { isFrameBlackBoxed } from "../utils/source";

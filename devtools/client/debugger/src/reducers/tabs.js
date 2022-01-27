@@ -11,7 +11,7 @@ import { isOriginalId } from "devtools-source-map";
 
 import { isSimilarTab, persistTabs } from "../utils/tabs";
 
-import { getSource, getSpecificSourceByURL } from "./sources";
+import { getSource, getSpecificSourceByURL } from "../selectors/sources";
 
 export function initialTabState() {
   return { tabs: [] };

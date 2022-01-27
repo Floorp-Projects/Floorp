@@ -5,7 +5,7 @@
 import {
   getSelectedSource,
   getBreakpointPositionsForLine,
-} from "../reducers/sources";
+} from "../selectors/sources";
 import { getBreakpointsList } from "../selectors/breakpoints";
 import { isGenerated } from "../utils/source";
 
