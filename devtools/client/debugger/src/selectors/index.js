@@ -10,7 +10,6 @@ export * from "../reducers/threads";
 export * from "../reducers/breakpoints";
 export * from "../reducers/pending-breakpoints";
 export * from "../reducers/ui";
-export * from "../reducers/project-text-search";
 export * from "../reducers/source-tree";
 
 export {
@@ -47,6 +46,7 @@ export {
   getVisibleSelectedFrame,
 } from "./pause";
 export * from "./preview";
+export * from "./project-text-search";
 export * from "./tabs";
 export * from "./threads";
 export {
