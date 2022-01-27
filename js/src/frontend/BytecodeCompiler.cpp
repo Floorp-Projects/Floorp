@@ -1277,7 +1277,10 @@ DelazifyCanonicalScriptedFunctionImpl(JSContext* cx,
   MOZ_DIAGNOSTIC_ASSERT(!data.isGhost());
 #endif
 
-  AutoIncrementalTimer timer(cx->realm()->timers.delazificationTime);
+  Maybe<AutoIncrementalTimer> timer;
+  if (cx->realm()) {
+    timer.emplace(cx->realm()->timers.delazificationTime);
+  }
 
   size_t sourceStart = extra.extent.sourceStart;
   size_t sourceLength = extra.extent.sourceEnd - sourceStart;
