@@ -3959,6 +3959,10 @@ webgl::TexUnpackBlobDesc FromImageData(GLenum target, uvec3 size,
                                        const dom::ImageData& imageData,
                                        dom::Uint8ClampedArray* const scopedArr);
 
+Maybe<webgl::TexUnpackBlobDesc> FromOffscreenCanvas(
+    const ClientWebGLContext&, GLenum target, uvec3 size,
+    const dom::OffscreenCanvas& src, ErrorResult* const out_error);
+
 Maybe<webgl::TexUnpackBlobDesc> FromDomElem(const ClientWebGLContext&,
                                             GLenum target, uvec3 size,
                                             const dom::Element& src,
@@ -4076,6 +4080,12 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
     if (src.mImageData) {
       return Some(webgl::FromImageData(imageTarget, explicitSize,
                                        *(src.mImageData), &scopedArr));
+    }
+
+    if (src.mOffscreenCanvas) {
+      return webgl::FromOffscreenCanvas(*this, imageTarget, explicitSize,
+                                        *(src.mOffscreenCanvas),
+                                        src.mOut_error);
     }
 
     if (src.mDomElem) {
