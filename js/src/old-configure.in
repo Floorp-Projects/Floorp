@@ -92,7 +92,6 @@ else
     AC_PROG_CC
     AC_PROG_CXX
     MOZ_PATH_PROGS(AS, $AS as, $CC)
-    AC_CHECK_PROGS(STRIP, strip, :)
 fi
 
 MOZ_TOOL_VARIABLES
@@ -336,10 +335,7 @@ dnl ========================================================
 case "$target" in
 *-darwin*)
     MOZ_OPTIMIZE_FLAGS="-O3"
-    CFLAGS="$CFLAGS -fno-common"
-    CXXFLAGS="$CXXFLAGS -fno-common"
     DSO_LDOPTS=''
-    LDFLAGS="$LDFLAGS -lobjc"
 
     dnl DTrace and -dead_strip don't interact well. See bug 403132.
     dnl ===================================================================
@@ -408,7 +404,6 @@ case "$target" in
         WIN32_GUI_EXE_LDFLAGS=-mwindows
     else
         TARGET_COMPILER_ABI=msvc
-        STRIP='echo not_strip'
         # aarch64 doesn't support subsystems below 6.02
         if test "$CPU_ARCH" = "aarch64"; then
             WIN32_SUBSYSTEM_VERSION=6.02

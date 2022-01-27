@@ -406,6 +406,42 @@ add_task(async function runOverrideTest() {
   await SpecialPowers.popPrefEnv();
 });
 
+add_task(async function testForceVersion100() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["general.useragent.forceVersion100", true]],
+  });
+
+  const VERSION_100_OSCPU = {
+    linux: "Linux x86_64",
+    win:
+      cpuArch == "x86_64" ? "Windows NT 10.0; Win64; x64" : "Windows NT 10.0",
+    macosx: "Intel Mac OS X 10.15",
+  };
+
+  let version100UserAgent = `Mozilla/5.0 (${
+    DEFAULT_UA_OS[AppConstants.platform]
+  }; rv:100.0) Gecko/20100101 Firefox/100.0`;
+
+  expectedResults = {
+    testDesc: "forceVersion100",
+    appVersion: DEFAULT_APPVERSION[AppConstants.platform],
+    hardwareConcurrency: navigator.hardwareConcurrency,
+    oscpu: VERSION_100_OSCPU[AppConstants.platform],
+    platform: DEFAULT_PLATFORM[AppConstants.platform],
+    userAgentNavigator: version100UserAgent,
+    userAgentHeader: version100UserAgent,
+  };
+
+  await testNavigator();
+
+  await testUserAgentHeader();
+
+  await testWorkerNavigator();
+
+  // Pop general.useragent.override etc
+  await SpecialPowers.popPrefEnv();
+});
+
 // Only test the Firefox and Gecko experiment prefs on desktop.
 if (AppConstants.platform != "android") {
   add_task(async function setupFirefoxVersionExperiment() {

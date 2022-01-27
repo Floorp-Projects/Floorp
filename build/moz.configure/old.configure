@@ -76,11 +76,7 @@ def prepare_configure(mozconfig, old_configure_assignments):
 @template
 def old_configure_options(*options):
     for opt in options:
-        if "-system-" in opt and opt != "--enable-system-extension-dirs":
-            cb = system_lib_option
-        else:
-            cb = option
-        cb(opt, nargs="*", help="Help missing for old configure options")
+        option(opt, nargs="*", help="Help missing for old configure options")
 
     @dependable
     def all_options():

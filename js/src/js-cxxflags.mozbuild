@@ -8,9 +8,6 @@
 CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    # Also disable strict-aliasing for GCC compiler, that is enabled by default
-    # starting with version 7.1, see Bug 1363009
-    CXXFLAGS += ['-fno-strict-aliasing']
     # Error on bad printf-like format strings
     CXXFLAGS += ['-Werror=format']
 

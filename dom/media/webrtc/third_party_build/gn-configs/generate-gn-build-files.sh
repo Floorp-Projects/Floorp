@@ -70,6 +70,7 @@ if [ "x$SYS_NAME" = "xDarwin" ]; then
   IS_DARWIN=1
 elif [ "x$SYS_NAME" = "xMINGW32_NT-6.2" ]; then
   export DEPOT_TOOLS_WIN_TOOLCHAIN=0
+  unset ANSICON
   CONFIGS="x64_True_arm64_win x64_False_arm64_win"
   CONFIGS="$CONFIGS x64_True_x64_win x64_False_x64_win"
   CONFIGS="$CONFIGS x64_True_x86_win x64_False_x86_win"

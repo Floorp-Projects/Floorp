@@ -34,7 +34,6 @@ interface nsIProfilerStartParams : nsISupports
 [scriptable, builtinclass, uuid(ead3f75c-0e0e-4fbb-901c-1e5392ef5b2a)]
 interface nsIProfiler : nsISupports
 {
-  boolean CanProfile();
   void StartProfiler(in uint32_t aEntries, in double aInterval,
                      in Array<AUTF8String> aFeatures,
                      [optional] in Array<AUTF8String> aFilters,

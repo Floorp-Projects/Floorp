@@ -27,7 +27,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadContext.h"
-#include "nsIObserverService.h"
 #include "nsIWebNavigation.h"
 #include "nsLocalFile.h"
 #include "nsMemory.h"
@@ -45,65 +44,18 @@ using dom::AutoJSAPI;
 using dom::Promise;
 using std::string;
 
-NS_IMPL_ISUPPORTS(nsProfiler, nsIProfiler, nsIObserver)
+NS_IMPL_ISUPPORTS(nsProfiler, nsIProfiler)
 
-nsProfiler::nsProfiler()
-    : mLockedForPrivateBrowsing(false),
-      mPendingProfiles(0),
-      mGathering(false) {}
+nsProfiler::nsProfiler() : mPendingProfiles(0), mGathering(false) {}
 
 nsProfiler::~nsProfiler() {
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-  if (observerService) {
-    observerService->RemoveObserver(this, "chrome-document-global-created");
-    observerService->RemoveObserver(this, "last-pb-context-exited");
-  }
   if (mSymbolTableThread) {
     mSymbolTableThread->Shutdown();
   }
   ResetGathering();
 }
 
-nsresult nsProfiler::Init() {
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-  if (observerService) {
-    observerService->AddObserver(this, "chrome-document-global-created", false);
-    observerService->AddObserver(this, "last-pb-context-exited", false);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsProfiler::Observe(nsISupports* aSubject, const char* aTopic,
-                    const char16_t* aData) {
-  // The profiler's handling of private browsing is as simple as possible: it
-  // is stopped when the first PB window opens, and left stopped when the last
-  // PB window closes.
-  if (strcmp(aTopic, "chrome-document-global-created") == 0) {
-    nsCOMPtr<nsIInterfaceRequestor> requestor = do_QueryInterface(aSubject);
-    nsCOMPtr<nsIWebNavigation> parentWebNav = do_GetInterface(requestor);
-    nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(parentWebNav);
-    if (loadContext && loadContext->UsePrivateBrowsing() &&
-        !mLockedForPrivateBrowsing) {
-      mLockedForPrivateBrowsing = true;
-      // Allow profiling tests that trigger private browsing.
-      if (!xpc::IsInAutomation()) {
-        profiler_stop();
-      }
-    }
-  } else if (strcmp(aTopic, "last-pb-context-exited") == 0) {
-    mLockedForPrivateBrowsing = false;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsProfiler::CanProfile(bool* aCanProfile) {
-  *aCanProfile = !mLockedForPrivateBrowsing;
-  return NS_OK;
-}
+nsresult nsProfiler::Init() { return NS_OK; }
 
 static nsresult FillVectorFromStringArray(Vector<const char*>& aVector,
                                           const nsTArray<nsCString>& aArray) {
@@ -121,10 +73,6 @@ nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
                           const nsTArray<nsCString>& aFeatures,
                           const nsTArray<nsCString>& aFilters,
                           uint64_t aActiveTabID, double aDuration) {
-  if (mLockedForPrivateBrowsing) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   ResetGathering();
 
   Vector<const char*> featureStringVector;

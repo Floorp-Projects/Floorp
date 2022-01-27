@@ -827,10 +827,36 @@ def readelf_when(compile_env, target, host):
 check_prog(
     "READELF",
     readelf,
-    what="readelf",
     when=readelf_when,
     paths=clang_search_path,
     validate=validate_readelf,
+)
+
+
+@depends(llvm_tool("llvm-objcopy"), toolchain_prefix)
+def objcopy(llvm_objcopy, toolchain_prefix):
+    commands = [llvm_objcopy[0], "objcopy"]
+    for prefix in toolchain_prefix or ():
+        commands.insert(1, "%sreadelf" % prefix)
+    return tuple(commands)
+
+
+def validate_objcopy(path):
+    if "llvm-objcopy" not in path:
+        return True
+    # llvm-objcopy doesn't support --only-keep-debug before llvm 9.0.
+    retcode, stdout, stderr = get_cmd_output(path, "--help")
+    return retcode == 0 and any(
+        l.startswith("  --only-keep-debug ") for l in stdout.splitlines()
+    )
+
+
+check_prog(
+    "OBJCOPY",
+    objcopy,
+    when=readelf_when,
+    paths=clang_search_path,
+    validate=validate_objcopy,
 )
 
 option("--enable-dtrace", help="Build with dtrace support")
@@ -919,6 +945,36 @@ def strip_flags(flags, profiling, target):
 
 
 set_config("STRIP_FLAGS", strip_flags)
+
+
+@depends(llvm_tool("llvm-strip"), toolchain_prefix)
+def strip(llvm_strip, toolchain_prefix):
+    commands = [llvm_strip[0], "strip"]
+    for prefix in toolchain_prefix or ():
+        commands.insert(1, "%sstrip" % prefix)
+    return tuple(commands)
+
+
+def validate_strip(path):
+    if "llvm-strip" not in path:
+        return True
+    # llvm-strip doesn't support -S before llvm 8.0.
+    retcode, stdout, stderr = get_cmd_output(path, "--help")
+    return retcode == 0 and any(l.startswith("  -S ") for l in stdout.splitlines())
+
+
+@depends("--enable-compile-environment", target, host)
+def strip_when(compile_env, target, host):
+    return compile_env and any(x.kernel != "WINNT" for x in (target, host))
+
+
+check_prog(
+    "STRIP",
+    strip,
+    when=strip_when,
+    paths=clang_search_path,
+    validate=validate_strip,
+)
 
 
 @depends(js_standalone, target)

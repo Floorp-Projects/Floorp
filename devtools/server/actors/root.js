@@ -130,6 +130,11 @@ exports.RootActor = protocol.ActorClassWithSpec(rootSpec, {
       // @backward-compat { version 86 } ThreadActor.attach no longer pauses the thread,
       //                                 so that we no longer have to resume.
       noPauseOnThreadActorAttach: true,
+      // @backward-compat { version 98 }
+      // Starting version 98, we stopped disabling the profiler if the user has
+      // a window with private browsing enabled. This trait helps to detect this
+      // so that different code paths can be called.
+      noDisablingOnPrivateBrowsing: true,
     };
   },
 

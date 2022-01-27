@@ -9,8 +9,10 @@ import static android.content.res.Configuration.ORIENTATION_LANDSCAPE;
 import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
 
 import android.content.Context;
-import android.content.res.Configuration;
+import android.graphics.Point;
+import android.os.Build;
 import android.util.Log;
+import android.view.Display;
 import android.view.Surface;
 import android.view.WindowManager;
 import java.util.ArrayList;
@@ -128,8 +130,22 @@ public class GeckoScreenOrientation {
     if (appContext == null) {
       return false;
     }
-    final Configuration config = appContext.getResources().getConfiguration();
-    return update(config.orientation);
+    final WindowManager windowManager =
+        (WindowManager) appContext.getSystemService(Context.WINDOW_SERVICE);
+    final Display display = windowManager.getDefaultDisplay();
+    return update(getScreenOrientation(display));
+  }
+
+  /*
+   * Update screen orientation.
+   *  Retrieve orientation and rotation via Display.
+   *
+   * @param aDisplay The Display that has screen orientation information
+   *
+   * @return Whether the screen orientation has changed.
+   */
+  public boolean update(final Display aDisplay) {
+    return update(getScreenOrientation(aDisplay));
   }
 
   /*
@@ -252,6 +268,26 @@ public class GeckoScreenOrientation {
       return ScreenOrientation.LANDSCAPE_SECONDARY;
     }
     return ScreenOrientation.NONE;
+  }
+
+  /*
+   * Get the Gecko orientation from Display.
+   *
+   * @param aDisplay The display that has orientation information.
+   *
+   * @return Gecko screen orientation.
+   */
+  private ScreenOrientation getScreenOrientation(final Display aDisplay) {
+    final Point size = new Point();
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+      aDisplay.getRealSize(size);
+    } else {
+      size.x = aDisplay.getWidth();
+      size.y = aDisplay.getHeight();
+    }
+
+    final int orientation = size.x >= size.y ? ORIENTATION_LANDSCAPE : ORIENTATION_PORTRAIT;
+    return getScreenOrientation(orientation, aDisplay.getRotation());
   }
 
   /*

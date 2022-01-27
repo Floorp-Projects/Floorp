@@ -62,9 +62,24 @@ class PerformancePanel {
     this.panelWin.gIsPanelDestroyed = false;
 
     const perfFront = await this.commands.client.mainRoot.getFront("perf");
+    const traits = {
+      noDisablingOnPrivateBrowsing: this.commands.targetCommand.targetFront.getTrait(
+        "noDisablingOnPrivateBrowsing"
+      ),
+    };
 
-    await this.panelWin.gInit(perfFront, "devtools");
+    await this.panelWin.gInit(
+      perfFront,
+      traits,
+      "devtools",
+      this._openAboutProfiling
+    );
     return this;
+  }
+
+  _openAboutProfiling() {
+    const { openTrustedLink } = require("devtools/client/shared/link");
+    openTrustedLink("about:profiling", {});
   }
 
   // DevToolPanel API:

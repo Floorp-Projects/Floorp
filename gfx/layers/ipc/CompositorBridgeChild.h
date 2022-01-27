@@ -233,7 +233,7 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   /**
    * Transaction id of ShadowLayerForwarder.
-   * It is incrementaed by UpdateFwdTransactionId() in each BeginTransaction()
+   * It is incremented by UpdateFwdTransactionId() in each BeginTransaction()
    * call.
    */
   uint64_t mFwdTransactionId;
@@ -260,20 +260,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   // Off-Main-Thread Painting state. This covers access to the OMTP-related
   // state below.
   Monitor mPaintLock;
-
-  // Contains the number of asynchronous paints that were queued since the
-  // beginning of the last async transaction, and the time stamp of when
-  // that was
-  size_t mTotalAsyncPaints;
-  TimeStamp mAsyncTransactionBegin;
-
-  // True if this CompositorBridge is currently delaying its messages until the
-  // paint thread completes. This is R/W on both the main and paint threads, and
-  // must be accessed within the paint lock.
-  bool mIsDelayingForAsyncPaints;
-
-  uintptr_t mSlowFlushCount;
-  uintptr_t mTotalFlushCount;
 
   RefPtr<CanvasChild> mCanvasChild;
 

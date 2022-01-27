@@ -2070,6 +2070,41 @@ static bool IsRelazifiableFunction(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool IsInStencilCache(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (args.length() != 1) {
+    JS_ReportErrorASCII(cx, "The function takes exactly one argument.");
+    return false;
+  }
+
+  if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
+    JS_ReportErrorASCII(cx, "The first argument should be a function.");
+    return false;
+  }
+
+  if (fuzzingSafe) {
+    // When running code concurrently to fill-up the stencil cache, the content
+    // is not garanteed to be present.
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  JSFunction* fun = &args[0].toObject().as<JSFunction>();
+  BaseScript* script = fun->baseScript();
+  RefPtr<ScriptSource> ss = script->scriptSource();
+  StencilCache& cache = cx->runtime()->caches().delazificationCache;
+  auto guard = cache.isSourceCached(ss);
+  if (!guard) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  StencilContext key(ss, script->extent());
+  frontend::CompilationStencil* stencil = cache.lookup(guard, key);
+  args.rval().setBoolean(bool(stencil));
+  return true;
+}
+
 static bool HasSameBytecodeData(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 2) {
@@ -6171,6 +6206,7 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
 
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
+  bool fillRuntimeCache = false;
   if (args.length() == 2) {
     if (!args[1].isObject()) {
       JS_ReportErrorASCII(
@@ -6182,6 +6218,16 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
 
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
       return false;
+    }
+
+    // fillRuntimeCache is currently unique to this function, as this is not yet
+    // a generic method used for parsing inner functions.
+    RootedValue v(cx);
+    if (!JS_GetProperty(cx, opts, "fillRuntimeCache", &v)) {
+      return false;
+    }
+    if (v.isBoolean() && v.toBoolean()) {
+      fillRuntimeCache = true;
     }
   }
   if (options.forceFullParse()) {
@@ -6202,6 +6248,38 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
                                              scopeKind);
   if (!topLevelStencil) {
     return false;
+  }
+
+  Rooted<js::StencilObject*> stencilObj(cx);
+  if (fillRuntimeCache) {
+    StencilCache& cache = cx->runtime()->caches().delazificationCache;
+    RefPtr<ScriptSource> source(input.get().source);
+    if (!cache.startCaching(std::move(source))) {
+      return false;
+    }
+
+    // We clone the topLevelStencil, as a extensible stencil, as we will need
+    // one for delazifying all inner functions.
+    UniquePtr<ExtensibleCompilationStencil> tempResult =
+        cx->make_unique<ExtensibleCompilationStencil>(cx, input.get());
+    if (!tempResult) {
+      return false;
+    }
+    if (!tempResult->cloneFrom(cx, *topLevelStencil)) {
+      return false;
+    }
+
+    // Move it to a CompilationStencil for storage.
+    RefPtr<CompilationStencil> result =
+        cx->new_<CompilationStencil>(std::move(tempResult));
+    if (!result) {
+      return false;
+    }
+
+    stencilObj = js::StencilObject::create(cx, result);
+    if (!stencilObj) {
+      return false;
+    }
   }
 
   // Iterate over all inner functions and compile them to stencil as well.
@@ -6231,6 +6309,16 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
       if (!innerStencil) {
         return false;
       }
+
+      if (fillRuntimeCache) {
+        StencilCache& cache = cx->runtime()->caches().delazificationCache;
+        StencilContext key(input.get().source, scriptRef.scriptExtra().extent);
+        if (auto guard = cache.isSourceCached(input.get().source)) {
+          if (!cache.putNew(guard, key, innerStencil.get())) {
+            return false;
+          }
+        }
+      }
     }
 
     if (!merger.addDelazification(cx, *innerStencil)) {
@@ -6238,16 +6326,17 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
     }
   }
 
-  RefPtr<CompilationStencil> result =
-      cx->new_<CompilationStencil>(merger.takeResult());
-  if (!result) {
-    return false;
-  }
+  if (!fillRuntimeCache) {
+    RefPtr<CompilationStencil> result =
+        cx->new_<CompilationStencil>(merger.takeResult());
+    if (!result) {
+      return false;
+    }
 
-  Rooted<js::StencilObject*> stencilObj(cx,
-                                        js::StencilObject::create(cx, result));
-  if (!stencilObj) {
-    return false;
+    stencilObj = js::StencilObject::create(cx, result);
+    if (!stencilObj) {
+      return false;
+    }
   }
 
   args.rval().setObject(*stencilObj);
@@ -8886,6 +8975,10 @@ JS_FN_HELP("setDefaultLocale", SetDefaultLocale, 1, 0,
 "  Set the runtime default locale to the given value.\n"
 "  An empty string or undefined resets the runtime locale to its default value.\n"
 "  NOTE: The input string is not fully validated, it must be a valid BCP-47 language tag."),
+
+JS_FN_HELP("isInStencilCache", IsInStencilCache, 1, 0,
+"isInStencilCache(fun)",
+"  True if fun is available in the stencil cache."),
 
     JS_FS_HELP_END
 };

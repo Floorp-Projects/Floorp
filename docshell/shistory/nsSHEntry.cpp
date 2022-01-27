@@ -1105,3 +1105,9 @@ nsSHEntry::GetBfcacheID(uint64_t* aBFCacheID) {
   *aBFCacheID = mShared->GetId();
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsSHEntry::GetWireframe(JSContext* aCx, JS::MutableHandleValue aOut) {
+  aOut.set(JS::NullValue());
+  return NS_OK;
+}

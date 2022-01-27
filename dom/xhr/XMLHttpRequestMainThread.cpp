@@ -2815,6 +2815,10 @@ void XMLHttpRequestMainThread::Send(
     ErrorResult& aRv) {
   NOT_CALLABLE_IN_SYNC_SEND_RV
 
+  if (!CanSend(aRv)) {
+    return;
+  }
+
   if (aData.IsNull()) {
     SendInternal(nullptr, false, aRv);
     return;
@@ -2882,32 +2886,41 @@ nsresult XMLHttpRequestMainThread::MaybeSilentSendFailure(nsresult aRv) {
   return NS_OK;
 }
 
-void XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
-                                            bool aBodyIsDocumentOrString,
-                                            ErrorResult& aRv) {
-  MOZ_ASSERT(NS_IsMainThread());
-
+bool XMLHttpRequestMainThread::CanSend(ErrorResult& aRv) {
   if (!mPrincipal) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
-    return;
+    return false;
   }
 
   // Step 1
   if (mState != XMLHttpRequest_Binding::OPENED) {
     aRv.ThrowInvalidStateError("XMLHttpRequest state must be OPENED.");
-    return;
+    return false;
   }
 
   // Step 2
   if (mFlagSend) {
     aRv.ThrowInvalidStateError("XMLHttpRequest must not be sending.");
-    return;
+    return false;
   }
 
   if (NS_FAILED(CheckCurrentGlobalCorrectness())) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_XHR_HAS_INVALID_CONTEXT);
-    return;
+    return false;
   }
+
+  return true;
+}
+
+void XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody,
+                                            bool aBodyIsDocumentOrString,
+                                            ErrorResult& aRv) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // We expect that CanSend has been called before we get here!
+  // We cannot move the remaining two checks below there because
+  // MaybeSilentSendFailure can cause unexpected side effects if called
+  // too early.
 
   // If open() failed to create the channel, then throw a network error
   // as per spec. We really should create the channel here in send(), but

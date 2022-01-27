@@ -457,4 +457,13 @@ interface nsISHEntry : nsISupports
     [notxpcom] void SyncTreesForSubframeNavigation(in nsISHEntry aEntry,
                                                    in BrowsingContext aTopBC,
                                                    in BrowsingContext aIgnoreBC);
+
+    /**
+     * If browser.history.collectWireframes is true, this will get populated
+     * with a Wireframe upon document navigation / pushState. This will only
+     * be set for nsISHEntry's accessed in the parent process with
+     * sessionHistoryInParent enabled. See Document.webidl for more details on
+     * what a Wireframe is.
+     */
+    [implicit_jscontext] readonly attribute jsval wireframe;
 };
