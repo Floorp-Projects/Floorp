@@ -34,6 +34,7 @@ import signal
 import socket
 import stat
 import subprocess
+import time
 
 import urllib.error
 import urllib.request
@@ -118,6 +119,19 @@ def run_required_command(prefix, args, *, extra_env=None, cwd=None):
     res = run_command(prefix, args, extra_env=extra_env, cwd=cwd)
     if res:
         sys.exit(res)
+
+
+def retry_required_command(prefix, args, *, extra_env=None, cwd=None, retries=2):
+    backoff = 1
+    while True:
+        res = run_command(prefix, args, extra_env=extra_env, cwd=cwd)
+        if not res:
+            return
+        if not retries:
+            sys.exit(res)
+        retries -= 1
+        backoff *= 2
+        time.sleep(backoff)
 
 
 def run_command(prefix, args, *, extra_env=None, cwd=None):
@@ -438,7 +452,7 @@ def git_checkout(
             destination_path,
         ]
 
-        run_required_command(b'vcs', args, extra_env=env)
+        retry_required_command(b'vcs', args, extra_env=env)
 
     # If a ref isn't provided, we fetch all refs from head_repo, which may be slow
     args = [
@@ -449,7 +463,7 @@ def git_checkout(
         ref if ref else '+refs/heads/*:refs/remotes/work/*'
     ]
 
-    run_required_command(b'vcs', args, cwd=destination_path, extra_env=env)
+    retry_required_command(b'vcs', args, cwd=destination_path, extra_env=env)
 
     args = [
         'git',

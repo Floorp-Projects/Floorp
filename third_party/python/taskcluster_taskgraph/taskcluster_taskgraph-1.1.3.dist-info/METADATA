@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: taskcluster-taskgraph
-Version: 1.1.2
+Version: 1.1.3
 Summary: Build taskcluster taskgraphs
 Home-page: https://hg.mozilla.org/ci/taskgraph
 License: UNKNOWN
