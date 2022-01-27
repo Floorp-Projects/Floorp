@@ -74,11 +74,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
     ASYNC = 1,
   };
 
-  enum Interrupt {
-    NOT_INTERRUPT = 0,
-    INTERRUPT = 1,
-  };
-
   enum Constructor {
     NOT_CONSTRUCTOR = 0,
     CONSTRUCTOR = 1,
@@ -102,7 +97,7 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
       SYNC_BIT = 0x0020,
       REPLY_BIT = 0x0040,
       REPLY_ERROR_BIT = 0x0080,
-      INTERRUPT_BIT = 0x0100,
+      /* UNUSED = 0x0100, */
       COMPRESS_BIT = 0x0200,
       COMPRESSALL_BIT = 0x0400,
       CONSTRUCTOR_BIT = 0x0800,
@@ -116,15 +111,13 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
 
     constexpr HeaderFlags(NestedLevel level, PriorityValue priority,
                           MessageCompression compression,
-                          Constructor constructor, Sync sync,
-                          Interrupt interrupt, Reply reply)
+                          Constructor constructor, Sync sync, Reply reply)
         : mFlags(level | (priority << 2) |
                  (compression == COMPRESSION_ENABLED ? COMPRESS_BIT
                   : compression == COMPRESSION_ALL   ? COMPRESSALL_BIT
                                                      : 0) |
                  (constructor == CONSTRUCTOR ? CONSTRUCTOR_BIT : 0) |
                  (sync == SYNC ? SYNC_BIT : 0) |
-                 (interrupt == INTERRUPT ? INTERRUPT_BIT : 0) |
                  (reply == REPLY ? REPLY_BIT : 0)) {}
 
     NestedLevel Level() const {
@@ -143,7 +136,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
 
     bool IsConstructor() const { return (mFlags & CONSTRUCTOR_BIT) != 0; }
     bool IsSync() const { return (mFlags & SYNC_BIT) != 0; }
-    bool IsInterrupt() const { return (mFlags & INTERRUPT_BIT) != 0; }
     bool IsReply() const { return (mFlags & REPLY_BIT) != 0; }
 
     bool IsReplyError() const { return (mFlags & REPLY_ERROR_BIT) != 0; }
@@ -151,7 +143,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
 
    private:
     void SetSync() { mFlags |= SYNC_BIT; }
-    void SetInterrupt() { mFlags |= INTERRUPT_BIT; }
     void SetReply() { mFlags |= REPLY_BIT; }
     void SetReplyError() { mFlags |= REPLY_ERROR_BIT; }
     void SetRelay(bool relay) {
@@ -191,7 +182,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
 
   // One-off constructors for special error-handling messages.
   static Message* ForSyncDispatchError(NestedLevel level);
-  static Message* ForInterruptDispatchError();
 
   NestedLevel nested_level() const { return header()->flags.Level(); }
 
@@ -201,9 +191,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
 
   // True if this is a synchronous message.
   bool is_sync() const { return header()->flags.IsSync(); }
-
-  // True if this is a synchronous message.
-  bool is_interrupt() const { return header()->flags.IsInterrupt(); }
 
   MessageCompression compress_type() const {
     return header()->flags.Compression();
@@ -224,24 +211,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   int32_t transaction_id() const { return header()->txid; }
 
   void set_transaction_id(int32_t txid) { header()->txid = txid; }
-
-  uint32_t interrupt_remote_stack_depth_guess() const {
-    return header()->interrupt_remote_stack_depth_guess;
-  }
-
-  void set_interrupt_remote_stack_depth_guess(uint32_t depth) {
-    DCHECK(is_interrupt());
-    header()->interrupt_remote_stack_depth_guess = depth;
-  }
-
-  uint32_t interrupt_local_stack_depth() const {
-    return header()->interrupt_local_stack_depth;
-  }
-
-  void set_interrupt_local_stack_depth(uint32_t depth) {
-    DCHECK(is_interrupt());
-    header()->interrupt_local_stack_depth = depth;
-  }
 
   int32_t seqno() const { return header()->seqno; }
 
@@ -388,16 +357,8 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
     uint32_t num_send_rights;  // the number of mach send rights included with
                                // this message
 #endif
-    union {
-      // For Interrupt messages, a guess at what the *other* side's stack depth
-      // is.
-      uint32_t interrupt_remote_stack_depth_guess;
-
-      // For RPC and Urgent messages, a transaction ID for message ordering.
-      int32_t txid;
-    };
-    // The actual local stack depth.
-    uint32_t interrupt_local_stack_depth;
+    // For sync messages, a transaction ID for message ordering.
+    int32_t txid;
     // Sequence number
     int32_t seqno;
     // Size of the message's event footer
@@ -426,21 +387,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   // deserializing a message.
   mutable nsTArray<mozilla::UniqueMachSendRight> attached_send_rights_;
 #endif
-};
-
-class MessageInfo {
- public:
-  typedef uint32_t msgid_t;
-
-  explicit MessageInfo(const Message& aMsg)
-      : mSeqno(aMsg.seqno()), mType(aMsg.type()) {}
-
-  int32_t seqno() const { return mSeqno; }
-  msgid_t type() const { return mType; }
-
- private:
-  int32_t mSeqno;
-  msgid_t mType;
 };
 
 //------------------------------------------------------------------------------
