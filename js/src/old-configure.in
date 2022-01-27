@@ -335,8 +335,6 @@ dnl ========================================================
 case "$target" in
 *-darwin*)
     MOZ_OPTIMIZE_FLAGS="-O3"
-    CFLAGS="$CFLAGS -fno-common"
-    CXXFLAGS="$CXXFLAGS -fno-common"
     DSO_LDOPTS=''
 
     dnl DTrace and -dead_strip don't interact well. See bug 403132.
