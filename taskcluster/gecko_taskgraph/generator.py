@@ -8,17 +8,17 @@ import copy
 
 import attr
 from taskgraph.config import GraphConfig
+from taskgraph.parameters import parameters_loader
 from taskgraph.util.yaml import load_yaml
 
 from . import filter_tasks
 from .graph import Graph
-from .taskgraph import TaskGraph
-from .task import Task
-from .optimize import optimize_task_graph
 from .morph import morph
-from .parameters import Parameters
-from .util.python_path import find_object
+from .optimize import optimize_task_graph
+from .task import Task
+from .taskgraph import TaskGraph
 from .transforms.base import TransformSequence, TransformConfig
+from .util.python_path import find_object
 from .util.verify import (
     verify_docs,
     verifications,
@@ -483,7 +483,7 @@ def load_tasks_for_kind(parameters, kind, root_dir=None):
     # make parameters read-write
     parameters = dict(parameters)
     parameters["target-kind"] = kind
-    parameters = Parameters(strict=False, **parameters)
+    parameters = parameters_loader(spec=None, strict=False, overrides=parameters)
     tgg = TaskGraphGenerator(root_dir=root_dir, parameters=parameters)
     return {
         task.task["metadata"]["name"]: task

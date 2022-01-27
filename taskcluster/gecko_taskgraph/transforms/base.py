@@ -5,8 +5,8 @@
 
 import attr
 from taskgraph.config import GraphConfig
+from taskgraph.parameters import Parameters
 
-from ..parameters import Parameters
 from ..util.schema import Schema, validate_schema
 
 
