@@ -4,6 +4,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <!-- Design system color attributes -->
+    <!-- Search -->
+    <attr name="layer3" format="reference" />
     <!-- Small heading, Text link -->
     <attr name="textAccent" format="reference" />
 

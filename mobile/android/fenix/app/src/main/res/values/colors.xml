@@ -11,7 +11,7 @@
     <!-- Card background, Menu background, Dialog, Banner -->
     <color name="fx_mobile_layer_color_2">@color/photonWhite</color>
     <!-- Search -->
-    <color name="fx_mobile_layer_color_3" tools:ignore="UnusedResources">@color/photonLightGrey20</color>
+    <color name="fx_mobile_layer_color_3">@color/photonLightGrey20</color>
     <!-- App Bar Top (edit), Text Cursor, Selected Tab Check -->
     <color name="fx_mobile_layer_color_accent">@color/photonInk20</color>
     <!-- Selected tab -->
@@ -117,8 +117,12 @@
     <!-- Private theme color variables -->
 
     <!-- Layers -->
-    <!-- Default Background, Search Background, Menu Background, App Bar Top, App Bar Bottom, Dialogs -->
+    <!-- Default Screen background, Frontlayer background, App Bar Top, App Bar Bottom, Frontlayer header -->
     <color name="fx_mobile_private_layer_color_1">@color/photonInk50</color>
+    <!-- Card background, Menu background, Dialog, Banner -->
+    <color name="fx_mobile_private_layer_color_2" tools:ignore="UnusedResources">@color/photonInk50</color>
+    <!-- Search -->
+    <color name="fx_mobile_private_layer_color_3">@color/photonInk50</color>
 
     <!-- Action -->
     <!-- Primary Button -->

@@ -11,7 +11,7 @@
     <!-- Card background, Menu background, Dialog, Banner -->
     <color name="fx_mobile_layer_color_2">@color/photonDarkGrey30</color>
     <!-- Search -->
-    <color name="fx_mobile_layer_color_3" tools:ignore="UnusedResources">@color/photonDarkGrey30</color>
+    <color name="fx_mobile_layer_color_3">@color/photonDarkGrey80</color>
     <!-- App Bar Top (edit), Text Cursor, Selected Tab Check -->
     <color name="fx_mobile_layer_color_accent">@color/photonViolet40</color>
     <!-- Selected tab -->
@@ -141,7 +141,6 @@
     <color name="search_suggestion_indicator_icon_color_normal_theme">@color/photonGreen60</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_normal_theme">@color/photonBlue40</color>
     <color name="recently_used_share_theme">@color/photonDarkGrey10</color>
-
 
     <!-- Tab tray -->
     <color name="tab_tray_item_background_normal_theme">@color/photonDarkGrey80</color>
