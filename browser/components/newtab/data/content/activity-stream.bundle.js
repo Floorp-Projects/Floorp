@@ -3293,6 +3293,7 @@ class _DiscoveryStreamBase extends react__WEBPACK_IMPORTED_MODULE_12___default.a
           type: component.type,
           dispatch: this.props.dispatch,
           items: component.properties.items,
+          hybridLayout: component.properties.hybridLayout,
           hideCardBackground: component.properties.hideCardBackground,
           fourCardLayout: component.properties.fourCardLayout,
           hideDescriptions: component.properties.hideDescriptions,
@@ -13803,6 +13804,7 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
       items
     } = this.props;
     const {
+      hybridLayout,
       hideCardBackground,
       fourCardLayout,
       hideDescriptions,
@@ -13897,8 +13899,9 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
     const fourCardLayoutClass = fourCardLayout ? `ds-card-grid-four-card-variant` : ``;
     const hideDescriptionsClassName = !hideDescriptions ? `ds-card-grid-include-descriptions` : ``;
     const compactGridClassName = compactGrid ? `ds-card-grid-compact` : ``;
+    const hybridLayoutClassName = hybridLayout ? `ds-card-grid-hybrid-layout` : ``;
     return /*#__PURE__*/external_React_default.a.createElement("div", {
-      className: `ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`
+      className: `ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${hybridLayoutClassName} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`
     }, cards);
   }
 

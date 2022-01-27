@@ -191,6 +191,10 @@ pocketNewtab:
       type: boolean
       fallbackPref: browser.newtabpage.activity-stream.discoverystream.compactLayout.enabled
       description: Enable compact cards on newtab grid
+    hybridLayout:
+      type: boolean
+      fallbackPref: browser.newtabpage.activity-stream.discoverystream.hybridLayout.enabled
+      description: Enable compact cards on newtab grid only for specific breakpoints 
     hideCardBackground:
       type: boolean
       fallbackPref: browser.newtabpage.activity-stream.discoverystream.hideCardBackground.enabled

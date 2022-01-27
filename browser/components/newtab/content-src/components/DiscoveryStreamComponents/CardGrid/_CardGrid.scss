@@ -153,27 +153,7 @@ $col4-header-font-size: 14;
     grid-template-columns: auto;
   }
 
-  &.ds-card-grid-four-card-variant {
-    // "Full width layout"
-    .ds-column-9 &,
-    .ds-column-10 &,
-    .ds-column-11 &,
-    .ds-column-12 & {
-      grid-template-columns: repeat(1, 1fr);
-
-      @media (min-width: $break-point-medium) {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      @media (min-width: $break-point-large) {
-        grid-template-columns: repeat(3, 1fr);
-      }
-
-      @media (min-width: $break-point-widest) {
-        grid-template-columns: repeat(4, 1fr);
-      }
-    }
-
+  @mixin small-cards {
     .ds-card {
       &.placeholder {
         min-height: 247px;
@@ -218,6 +198,62 @@ $col4-header-font-size: 14;
         .info-wrap {
           flex-grow: 0;
         }
+      }
+    }
+  }
+
+  &.ds-card-grid-four-card-variant {
+    // "Full width layout"
+    .ds-column-9 &,
+    .ds-column-10 &,
+    .ds-column-11 &,
+    .ds-column-12 & {
+      grid-template-columns: repeat(1, 1fr);
+
+      @media (min-width: $break-point-medium) {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      @media (min-width: $break-point-large) {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      @media (min-width: $break-point-widest) {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    @include small-cards;
+  }
+
+  &.ds-card-grid-hybrid-layout {
+    .ds-column-9 &,
+    .ds-column-10 &,
+    .ds-column-11 &,
+    .ds-column-12 & {
+      grid-template-columns: repeat(1, 1fr);
+
+      @media (min-width: $break-point-medium) {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      @media (min-width: $break-point-large) {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      @media (max-height: 1065px) {
+        .excerpt {
+          display: none;
+        }
+      }
+
+      @media (max-width: $break-point-widest) {
+        @include small-cards;
+      }
+
+      @media (min-width: $break-point-widest) and (max-height: 964px) {
+        @include small-cards;
+        grid-template-columns: repeat(4, 1fr);
       }
     }
   }
