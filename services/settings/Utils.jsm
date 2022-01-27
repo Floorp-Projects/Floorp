@@ -338,8 +338,7 @@ var Utils = {
     serverTimeMillis += cacheAgeSeconds * 1000;
 
     // Age of data (time between publication and now).
-    let lastModifiedMillis = Date.parse(response.headers.get("Last-Modified"));
-    const ageSeconds = (serverTimeMillis - lastModifiedMillis) / 1000;
+    const ageSeconds = (serverTimeMillis - timestamp) / 1000;
 
     // Check if the server asked the clients to back off.
     let backoffSeconds;
