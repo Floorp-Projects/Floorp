@@ -10,14 +10,13 @@
 #include "ScopedNSSTypes.h"
 #include "mozilla/Maybe.h"
 #include "mozpkix/pkix.h"
+#include "nsIX509Cert.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "prerror.h"
 #include "prio.h"
 #include "seccomon.h"
 #include "secoidt.h"
-
-class nsNSSCertificate;
 
 using namespace mozilla::pkix;
 
@@ -44,8 +43,7 @@ class BaseSSLServerCertVerificationResult {
  public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
-  virtual void Dispatch(nsNSSCertificate* aCert,
-                        nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
+  virtual void Dispatch(nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
                         nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
                         uint16_t aCertificateTransparencyStatus,
                         EVStatus aEVStatus, bool aSucceeded,
@@ -69,8 +67,7 @@ class SSLServerCertVerificationResult final
 
   explicit SSLServerCertVerificationResult(TransportSecurityInfo* infoObject);
 
-  void Dispatch(nsNSSCertificate* aCert,
-                nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
+  void Dispatch(nsTArray<nsTArray<uint8_t>>&& aBuiltChain,
                 nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
                 uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
                 bool aSucceeded, PRErrorCode aFinalError,
@@ -82,7 +79,6 @@ class SSLServerCertVerificationResult final
   ~SSLServerCertVerificationResult() = default;
 
   const RefPtr<TransportSecurityInfo> mInfoObject;
-  RefPtr<nsNSSCertificate> mCert;
   nsTArray<nsTArray<uint8_t>> mBuiltChain;
   nsTArray<nsTArray<uint8_t>> mPeerCertChain;
   uint16_t mCertificateTransparencyStatus;
@@ -100,14 +96,13 @@ class SSLServerCertVerificationJob : public Runnable {
 
   // Must be called only on the socket transport thread
   static SECStatus Dispatch(uint64_t addrForLogging, void* aPinArg,
-                            const UniqueCERTCertificate& serverCert,
                             nsTArray<nsTArray<uint8_t>>&& peerCertChain,
                             const nsACString& aHostName, int32_t aPort,
                             const OriginAttributes& aOriginAttributes,
                             Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
                             Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
                             Maybe<DelegatedCredentialInfo>& dcInfo,
-                            uint32_t providerFlags, Time time, PRTime prtime,
+                            uint32_t providerFlags, Time time,
                             uint32_t certVerifierFlags,
                             BaseSSLServerCertVerificationResult* aResultTask);
 
@@ -116,20 +111,18 @@ class SSLServerCertVerificationJob : public Runnable {
 
   // Must be called only on the socket transport thread
   SSLServerCertVerificationJob(uint64_t addrForLogging, void* aPinArg,
-                               const UniqueCERTCertificate& cert,
                                nsTArray<nsTArray<uint8_t>>&& peerCertChain,
                                const nsACString& aHostName, int32_t aPort,
                                const OriginAttributes& aOriginAttributes,
                                Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
                                Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
                                Maybe<DelegatedCredentialInfo>& dcInfo,
-                               uint32_t providerFlags, Time time, PRTime prtime,
+                               uint32_t providerFlags, Time time,
                                uint32_t certVerifierFlags,
                                BaseSSLServerCertVerificationResult* aResultTask)
       : Runnable("psm::SSLServerCertVerificationJob"),
         mAddrForLogging(addrForLogging),
         mPinArg(aPinArg),
-        mCert(CERT_DupCertificate(cert.get())),
         mPeerCertChain(std::move(peerCertChain)),
         mHostName(aHostName),
         mPort(aPort),
@@ -137,7 +130,6 @@ class SSLServerCertVerificationJob : public Runnable {
         mProviderFlags(providerFlags),
         mCertVerifierFlags(certVerifierFlags),
         mTime(time),
-        mPRTime(prtime),
         mStapledOCSPResponse(std::move(stapledOCSPResponse)),
         mSCTsFromTLSExtension(std::move(sctsFromTLSExtension)),
         mDCInfo(std::move(dcInfo)),
@@ -145,7 +137,6 @@ class SSLServerCertVerificationJob : public Runnable {
 
   uint64_t mAddrForLogging;
   void* mPinArg;
-  const UniqueCERTCertificate mCert;
   nsTArray<nsTArray<uint8_t>> mPeerCertChain;
   nsCString mHostName;
   int32_t mPort;
@@ -153,7 +144,6 @@ class SSLServerCertVerificationJob : public Runnable {
   const uint32_t mProviderFlags;
   const uint32_t mCertVerifierFlags;
   const Time mTime;
-  const PRTime mPRTime;
   Maybe<nsTArray<uint8_t>> mStapledOCSPResponse;
   Maybe<nsTArray<uint8_t>> mSCTsFromTLSExtension;
   Maybe<DelegatedCredentialInfo> mDCInfo;

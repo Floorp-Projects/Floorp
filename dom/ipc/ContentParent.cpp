@@ -7340,6 +7340,21 @@ mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryEntryCacheKey(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryEntryWireframe(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const Wireframe& aWireframe) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
+  SessionHistoryEntry* entry =
+      aContext.get_canonical()->GetActiveSessionHistoryEntry();
+  if (entry) {
+    entry->SetWireframe(Some(aWireframe));
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult
 ContentParent::RecvGetLoadingSessionHistoryInfoFromParent(
     const MaybeDiscarded<BrowsingContext>& aContext,

@@ -12,12 +12,8 @@ pub use dispatcher::{dispatch_background_task, dispatch_local, dispatch_onto, Ru
 mod event_loop;
 mod executor;
 pub use executor::{
-    spawn, spawn_blocking, spawn_local, spawn_onto, spawn_onto_blocking, TaskBuilder,
+    spawn, spawn_blocking, spawn_local, spawn_onto, spawn_onto_blocking, AsyncTask, TaskBuilder,
 };
-
-// FIXME: Unfortunately directly re-exporting as `Task` conflicts with the task
-// trait below. This type is useful for folks using the `spawn*` methods.
-pub use async_task::Task as AsyncTask;
 
 // Expose functions intended to be used only in gtest via this module.
 // We don't use a feature gate here to stop the need to compile all crates that

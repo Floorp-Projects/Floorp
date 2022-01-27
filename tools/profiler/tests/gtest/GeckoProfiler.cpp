@@ -2440,7 +2440,8 @@ TEST(GeckoProfiler, Markers)
       /* int64_t aCount */ 56,
       /* mozilla::net::CacheDisposition aCacheDisposition */
       net::kCacheHit,
-      /* uint64_t aInnerWindowID */ 78
+      /* uint64_t aInnerWindowID */ 78,
+      /* bool aIsPrivateBrowsing */ false
       /* const mozilla::net::TimingStruct* aTimings = nullptr */
       /* mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource =
          nullptr */
@@ -2462,6 +2463,7 @@ TEST(GeckoProfiler, Markers)
       /* mozilla::net::CacheDisposition aCacheDisposition */
       net::kCacheUnresolved,
       /* uint64_t aInnerWindowID */ 78,
+      /* bool aIsPrivateBrowsing */ false,
       /* const mozilla::net::TimingStruct* aTimings = nullptr */ nullptr,
       /* mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource =
          nullptr */
@@ -2487,6 +2489,7 @@ TEST(GeckoProfiler, Markers)
       /* mozilla::net::CacheDisposition aCacheDisposition */
       net::kCacheUnresolved,
       /* uint64_t aInnerWindowID */ 78,
+      /* bool aIsPrivateBrowsing */ false,
       /* const mozilla::net::TimingStruct* aTimings = nullptr */ nullptr,
       /* mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource =
          nullptr */
@@ -2511,6 +2514,7 @@ TEST(GeckoProfiler, Markers)
       /* mozilla::net::CacheDisposition aCacheDisposition */
       net::kCacheUnresolved,
       /* uint64_t aInnerWindowID */ 78,
+      /* bool aIsPrivateBrowsing */ false,
       /* const mozilla::net::TimingStruct* aTimings = nullptr */ nullptr,
       /* mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource =
          nullptr */
@@ -2535,6 +2539,7 @@ TEST(GeckoProfiler, Markers)
       /* mozilla::net::CacheDisposition aCacheDisposition */
       net::kCacheUnresolved,
       /* uint64_t aInnerWindowID */ 78,
+      /* bool aIsPrivateBrowsing */ false,
       /* const mozilla::net::TimingStruct* aTimings = nullptr */ nullptr,
       /* mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource =
          nullptr */
@@ -2558,6 +2563,7 @@ TEST(GeckoProfiler, Markers)
       /* mozilla::net::CacheDisposition aCacheDisposition */
       net::kCacheUnresolved,
       /* uint64_t aInnerWindowID */ 78,
+      /* bool aIsPrivateBrowsing */ false,
       /* const mozilla::net::TimingStruct* aTimings = nullptr */ nullptr,
       /* mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource =
          nullptr */
@@ -2569,6 +2575,27 @@ TEST(GeckoProfiler, Markers)
       /* uint32_t aRedirectFlags = 0 */ nsIChannelEventSink::REDIRECT_INTERNAL |
           nsIChannelEventSink::REDIRECT_STS_UPGRADE,
       /* uint64_t aRedirectChannelId = 0 */ 106);
+  profiler_add_network_marker(
+      /* nsIURI* aURI */ uri,
+      /* const nsACString& aRequestMethod */ "GET"_ns,
+      /* int32_t aPriority */ 34,
+      /* uint64_t aChannelId */ 7,
+      /* NetworkLoadType aType */ net::NetworkLoadType::LOAD_START,
+      /* mozilla::TimeStamp aStart */ ts1,
+      /* mozilla::TimeStamp aEnd */ ts2,
+      /* int64_t aCount */ 56,
+      /* mozilla::net::CacheDisposition aCacheDisposition */
+      net::kCacheUnresolved,
+      /* uint64_t aInnerWindowID */ 78,
+      /* bool aIsPrivateBrowsing */ true
+      /* const mozilla::net::TimingStruct* aTimings = nullptr */
+      /* mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource =
+         nullptr */
+      /* const mozilla::Maybe<nsDependentCString>& aContentType =
+         mozilla::Nothing() */
+      /* nsIURI* aRedirectURI = nullptr */
+      /* uint64_t aRedirectChannelId = 0 */
+  );
 
   EXPECT_TRUE(profiler_add_marker(
       "Text in main thread with stack", geckoprofiler::category::OTHER,
@@ -2653,6 +2680,7 @@ TEST(GeckoProfiler, Markers)
     S_NetworkMarkerPayload_redirect_permanent,
     S_NetworkMarkerPayload_redirect_internal,
     S_NetworkMarkerPayload_redirect_internal_sts,
+    S_NetworkMarkerPayload_private_browsing,
 
     S_TextWithStack,
     S_TextToMTWithStack,
@@ -2942,6 +2970,7 @@ TEST(GeckoProfiler, Markers)
                   EXPECT_EQ_JSON(payload["pri"], Int64, 34);
                   EXPECT_EQ_JSON(payload["count"], Int64, 56);
                   EXPECT_EQ_JSON(payload["cache"], String, "Hit");
+                  EXPECT_TRUE(payload["isPrivateBrowsing"].isNull());
                   EXPECT_TRUE(payload["RedirectURI"].isNull());
                   EXPECT_TRUE(payload["redirectType"].isNull());
                   EXPECT_TRUE(payload["isHttpToHttpsRedirect"].isNull());
@@ -2960,6 +2989,7 @@ TEST(GeckoProfiler, Markers)
                   EXPECT_EQ_JSON(payload["pri"], Int64, 34);
                   EXPECT_EQ_JSON(payload["count"], Int64, 56);
                   EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
+                  EXPECT_TRUE(payload["isPrivateBrowsing"].isNull());
                   EXPECT_TRUE(payload["RedirectURI"].isNull());
                   EXPECT_TRUE(payload["redirectType"].isNull());
                   EXPECT_TRUE(payload["isHttpToHttpsRedirect"].isNull());
@@ -2978,6 +3008,7 @@ TEST(GeckoProfiler, Markers)
                   EXPECT_EQ_JSON(payload["pri"], Int64, 34);
                   EXPECT_EQ_JSON(payload["count"], Int64, 56);
                   EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
+                  EXPECT_TRUE(payload["isPrivateBrowsing"].isNull());
                   EXPECT_EQ_JSON(payload["RedirectURI"], String,
                                  "http://example.com/");
                   EXPECT_EQ_JSON(payload["redirectType"], String, "Temporary");
@@ -2997,6 +3028,7 @@ TEST(GeckoProfiler, Markers)
                   EXPECT_EQ_JSON(payload["pri"], Int64, 34);
                   EXPECT_EQ_JSON(payload["count"], Int64, 56);
                   EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
+                  EXPECT_TRUE(payload["isPrivateBrowsing"].isNull());
                   EXPECT_EQ_JSON(payload["RedirectURI"], String,
                                  "http://example.com/");
                   EXPECT_EQ_JSON(payload["redirectType"], String, "Permanent");
@@ -3016,6 +3048,7 @@ TEST(GeckoProfiler, Markers)
                   EXPECT_EQ_JSON(payload["pri"], Int64, 34);
                   EXPECT_EQ_JSON(payload["count"], Int64, 56);
                   EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
+                  EXPECT_TRUE(payload["isPrivateBrowsing"].isNull());
                   EXPECT_EQ_JSON(payload["RedirectURI"], String,
                                  "http://example.com/");
                   EXPECT_EQ_JSON(payload["redirectType"], String, "Internal");
@@ -3037,6 +3070,7 @@ TEST(GeckoProfiler, Markers)
                   EXPECT_EQ_JSON(payload["pri"], Int64, 34);
                   EXPECT_EQ_JSON(payload["count"], Int64, 56);
                   EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
+                  EXPECT_TRUE(payload["isPrivateBrowsing"].isNull());
                   EXPECT_EQ_JSON(payload["RedirectURI"], String,
                                  "http://example.com/");
                   EXPECT_EQ_JSON(payload["redirectType"], String, "Internal");
@@ -3044,6 +3078,24 @@ TEST(GeckoProfiler, Markers)
                   EXPECT_EQ_JSON(payload["redirectId"], Int64, 106);
                   EXPECT_TRUE(payload["contentType"].isNull());
 
+                } else if (nameString == "Load 7: http://mozilla.org/") {
+                  EXPECT_EQ(state, S_NetworkMarkerPayload_private_browsing);
+                  state = State(S_NetworkMarkerPayload_private_browsing + 1);
+                  EXPECT_EQ(typeString, "Network");
+                  EXPECT_EQ_JSON(payload["startTime"], Double, ts1Double);
+                  EXPECT_EQ_JSON(payload["endTime"], Double, ts2Double);
+                  EXPECT_EQ_JSON(payload["id"], Int64, 7);
+                  EXPECT_EQ_JSON(payload["URI"], String, "http://mozilla.org/");
+                  EXPECT_EQ_JSON(payload["requestMethod"], String, "GET");
+                  EXPECT_EQ_JSON(payload["pri"], Int64, 34);
+                  EXPECT_EQ_JSON(payload["count"], Int64, 56);
+                  EXPECT_EQ_JSON(payload["cache"], String, "Unresolved");
+                  EXPECT_EQ_JSON(payload["isPrivateBrowsing"], Bool, true);
+                  EXPECT_TRUE(payload["RedirectURI"].isNull());
+                  EXPECT_TRUE(payload["redirectType"].isNull());
+                  EXPECT_TRUE(payload["isHttpToHttpsRedirect"].isNull());
+                  EXPECT_TRUE(payload["redirectId"].isNull());
+                  EXPECT_TRUE(payload["contentType"].isNull());
                 } else if (nameString == "Text in main thread with stack") {
                   EXPECT_EQ(state, S_TextWithStack);
                   state = State(S_TextWithStack + 1);

@@ -242,6 +242,7 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
       const LayersId& id, CompositorOptions* compositorOptions) = 0;
   virtual mozilla::ipc::IPCResult RecvFlushRendering(
       const wr::RenderReasons& aReasons) = 0;
+  virtual mozilla::ipc::IPCResult RecvNotifyMemoryPressure() = 0;
   virtual mozilla::ipc::IPCResult RecvWaitOnTransactionProcessed() = 0;
   virtual mozilla::ipc::IPCResult RecvStartFrameTimeRecording(
       const int32_t& bufferSize, uint32_t* startIndex) = 0;
@@ -324,6 +325,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
     return IPC_OK();
   }
 
+  mozilla::ipc::IPCResult RecvNotifyMemoryPressure() override;
   mozilla::ipc::IPCResult RecvBeginRecording(
       const TimeStamp& aRecordingStart,
       BeginRecordingResolver&& aResolve) override;

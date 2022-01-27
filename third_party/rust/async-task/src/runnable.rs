@@ -147,7 +147,7 @@ where
 /// This function is same as [`spawn()`], except it does not require [`Send`], [`Sync`], and
 /// `'static` on `future` and `schedule`.
 ///
-/// Safety requirements:
+/// # Safety
 ///
 /// - If `future` is not [`Send`], its [`Runnable`] must be used and dropped on the original
 ///   thread.

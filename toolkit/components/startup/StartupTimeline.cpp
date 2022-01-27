@@ -45,14 +45,11 @@ void StartupTimeline::RecordOnce(Event ev, const TimeStamp& aWhen) {
 
   // Record first paint timestamp as a scalar.
   if (ev == FIRST_PAINT || ev == FIRST_PAINT2) {
-    bool error = false;
     uint32_t firstPaintTime =
-        (uint32_t)(aWhen - TimeStamp::ProcessCreation(&error)).ToMilliseconds();
-    if (!error) {
-      Telemetry::ScalarSet(
-          ev == FIRST_PAINT ? Telemetry::ScalarID::TIMESTAMPS_FIRST_PAINT
-                            : Telemetry::ScalarID::TIMESTAMPS_FIRST_PAINT_TWO,
-          firstPaintTime);
-    }
+        (uint32_t)(aWhen - TimeStamp::ProcessCreation()).ToMilliseconds();
+    Telemetry::ScalarSet(ev == FIRST_PAINT
+                             ? Telemetry::ScalarID::TIMESTAMPS_FIRST_PAINT
+                             : Telemetry::ScalarID::TIMESTAMPS_FIRST_PAINT_TWO,
+                         firstPaintTime);
   }
 }

@@ -36,7 +36,29 @@ struct TimeStampInitialization {
 
   TimeStampInitialization() {
     TimeStamp::Startup();
-    mFirstTimeStamp = TimeStamp::Now();
+    TimeStamp now = TimeStamp::Now();
+
+    TimeStamp process_creation;
+    char* mozAppRestart = getenv("MOZ_APP_RESTART");
+
+    /* When calling PR_SetEnv() with an empty value the existing variable may
+     * be unset or set to the empty string depending on the underlying platform
+     * thus we have to check if the variable is present and not empty. */
+    if (mozAppRestart && (strcmp(mozAppRestart, "") != 0)) {
+      process_creation = now;
+    } else {
+      uint64_t uptime = TimeStamp::ComputeProcessUptime();
+      process_creation =
+          now - TimeDuration::FromMicroseconds(static_cast<double>(uptime));
+
+      if ((process_creation > now) || (uptime == 0)) {
+        process_creation = now;
+      }
+    }
+
+    mFirstTimeStamp = now;
+    mProcessCreation = process_creation;
+
     // On Windows < 10, initializing the uptime requires `mFirstTimeStamp` to be
     // valid.
     mozilla::InitializeUptime();
@@ -47,47 +69,12 @@ struct TimeStampInitialization {
 
 static TimeStampInitialization sInitOnce;
 
-MFBT_API TimeStamp TimeStamp::ProcessCreation(bool* aIsInconsistent) {
-  if (aIsInconsistent) {
-    *aIsInconsistent = false;
-  }
-
-  if (sInitOnce.mProcessCreation.IsNull()) {
-    char* mozAppRestart = getenv("MOZ_APP_RESTART");
-    TimeStamp ts;
-
-    /* When calling PR_SetEnv() with an empty value the existing variable may
-     * be unset or set to the empty string depending on the underlying platform
-     * thus we have to check if the variable is present and not empty. */
-    if (mozAppRestart && (strcmp(mozAppRestart, "") != 0)) {
-      /* Firefox was restarted, use the first time-stamp we've taken as the new
-       * process startup time. */
-      ts = sInitOnce.mFirstTimeStamp;
-    } else {
-      TimeStamp now = Now();
-      uint64_t uptime = ComputeProcessUptime();
-
-      ts = now - TimeDuration::FromMicroseconds(uptime);
-
-      if ((ts > sInitOnce.mFirstTimeStamp) || (uptime == 0)) {
-        /* If the process creation timestamp was inconsistent replace it with
-         * the first one instead and notify that a telemetry error was
-         * detected. */
-        if (aIsInconsistent) {
-          *aIsInconsistent = true;
-        }
-        ts = sInitOnce.mFirstTimeStamp;
-      }
-    }
-
-    sInitOnce.mProcessCreation = ts;
-  }
-
+MFBT_API TimeStamp TimeStamp::ProcessCreation() {
   return sInitOnce.mProcessCreation;
 }
 
 void TimeStamp::RecordProcessRestart() {
-  sInitOnce.mProcessCreation = TimeStamp();
+  sInitOnce.mProcessCreation = TimeStamp::Now();
 }
 
 }  // namespace mozilla

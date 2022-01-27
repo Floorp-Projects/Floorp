@@ -1001,6 +1001,105 @@ ModuleObject* frontend::CompileModule(JSContext* cx,
   return CompileModuleImpl(cx, options, srcBuf);
 }
 
+static bool InstantiateLazyFunction(JSContext* cx, CompilationInput& input,
+                                    CompilationStencil& stencil,
+                                    BytecodeCompilerOutput& output) {
+  // We do check the type, but do not write anything to it as this is not
+  // necessary for lazy function, as the script is patched inside the
+  // JSFunction when instantiating.
+  MOZ_ASSERT(output.is<CompilationGCOutput*>());
+  MOZ_ASSERT(!output.as<CompilationGCOutput*>());
+
+  mozilla::DebugOnly<uint32_t> lazyFlags =
+      static_cast<uint32_t>(input.immutableFlags());
+
+  Rooted<CompilationGCOutput> gcOutput(cx);
+
+  if (input.source->hasEncoder()) {
+    if (!input.source->addDelazificationToIncrementalEncoding(cx, stencil)) {
+      return false;
+    }
+  }
+
+  if (!CompilationStencil::instantiateStencils(cx, input, stencil,
+                                               gcOutput.get())) {
+    return false;
+  }
+
+  // NOTE: After instantiation succeeds and bytecode is attached, the rest of
+  //       this operation should be infallible. Any failure during
+  //       delazification should restore the function back to a consistent
+  //       lazy state.
+
+  MOZ_ASSERT(lazyFlags == gcOutput.get().script->immutableFlags());
+  MOZ_ASSERT(gcOutput.get().script->outermostScope()->hasOnChain(
+                 ScopeKind::NonSyntactic) ==
+             gcOutput.get().script->immutableFlags().hasFlag(
+                 JSScript::ImmutableFlags::HasNonSyntacticScope));
+
+  return true;
+}
+
+enum class GetCachedResult {
+  // Similar to return false.
+  Error,
+
+  // We have not found any entry.
+  NotFound,
+
+  // We have found an entry, and set everything according to the desired
+  // BytecodeCompilerOutput out-param.
+  Found
+};
+
+// When we have a cache hit, the addPtr out-param would evaluate to a true-ish
+// value.
+static GetCachedResult GetCachedLazyFunctionStencilMaybeInstantiate(
+    JSContext* cx, CompilationInput& input, BytecodeCompilerOutput& output) {
+  RefPtr<CompilationStencil> stencil;
+  {
+    StencilCache& cache = cx->runtime()->caches().delazificationCache;
+    auto guard = cache.isSourceCached(input.source);
+    if (!guard) {
+      return GetCachedResult::NotFound;
+    }
+
+    // Before releasing the guard, which is locking the cache, we increment the
+    // reference counter such that we do not reclaim the CompilationStencil
+    // while we are instantiating it.
+    StencilContext key(input.source, input.extent());
+    stencil = cache.lookup(guard, key);
+    if (!stencil) {
+      return GetCachedResult::NotFound;
+    }
+  }
+
+  if (output.is<RefPtr<CompilationStencil>>()) {
+    output.as<RefPtr<CompilationStencil>>() = stencil;
+    return GetCachedResult::Found;
+  }
+
+  if (output.is<UniquePtr<ExtensibleCompilationStencil>>()) {
+    auto extensible = cx->make_unique<ExtensibleCompilationStencil>(cx, input);
+    if (!extensible) {
+      return GetCachedResult::Error;
+    }
+    if (!extensible->cloneFrom(cx, *stencil)) {
+      return GetCachedResult::Error;
+    }
+
+    output.as<UniquePtr<ExtensibleCompilationStencil>>() =
+        std::move(extensible);
+    return GetCachedResult::Found;
+  }
+
+  if (!InstantiateLazyFunction(cx, input, *stencil, output)) {
+    return GetCachedResult::Error;
+  }
+
+  return GetCachedResult::Found;
+}
+
 template <typename Unit>
 static bool CompileLazyFunctionToStencilMaybeInstantiate(
     JSContext* cx, CompilationInput& input, const Unit* units, size_t length,
@@ -1008,6 +1107,16 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
   MOZ_ASSERT(input.source);
 
   AutoAssertReportedException assertException(cx);
+  auto res = GetCachedLazyFunctionStencilMaybeInstantiate(cx, input, output);
+  switch (res) {
+    case GetCachedResult::Error:
+      return false;
+    case GetCachedResult::Found:
+      assertException.reset();
+      return true;
+    case GetCachedResult::NotFound:
+      break;
+  }
 
   InheritThis inheritThis =
       input.functionFlags().isArrow() ? InheritThis::Yes : InheritThis::No;
@@ -1080,40 +1189,10 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
 
     output.as<RefPtr<CompilationStencil>>() = std::move(stencil);
   } else {
-    // We do check the type, but do not write anything to it as this is not
-    // necessary for lazy function, as the script is patched inside the
-    // JSFunction when instantiating.
-    MOZ_ASSERT(output.is<CompilationGCOutput*>());
-    MOZ_ASSERT(!output.as<CompilationGCOutput*>());
-
-    mozilla::DebugOnly<uint32_t> lazyFlags =
-        static_cast<uint32_t>(input.immutableFlags());
-
-    Rooted<CompilationGCOutput> gcOutput(cx);
     BorrowingCompilationStencil borrowingStencil(compilationState);
-
-    if (input.source->hasEncoder()) {
-      if (!input.source->addDelazificationToIncrementalEncoding(
-              cx, borrowingStencil)) {
-        return false;
-      }
-    }
-
-    if (!CompilationStencil::instantiateStencils(cx, input, borrowingStencil,
-                                                 gcOutput.get())) {
+    if (!InstantiateLazyFunction(cx, input, borrowingStencil, output)) {
       return false;
     }
-
-    // NOTE: After instantiation succeeds and bytecode is attached, the rest of
-    //       this operation should be infallible. Any failure during
-    //       delazification should restore the function back to a consistent
-    //       lazy state.
-
-    MOZ_ASSERT(lazyFlags == gcOutput.get().script->immutableFlags());
-    MOZ_ASSERT(gcOutput.get().script->outermostScope()->hasOnChain(
-                   ScopeKind::NonSyntactic) ==
-               gcOutput.get().script->immutableFlags().hasFlag(
-                   JSScript::ImmutableFlags::HasNonSyntacticScope));
   }
 
   assertException.reset();

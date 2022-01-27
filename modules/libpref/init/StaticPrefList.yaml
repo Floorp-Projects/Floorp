@@ -1185,6 +1185,12 @@
   value: 16777216
   mirror: always
 
+# True to collect wireframes upon navigations / pushState
+- name: browser.history.collectWireframes
+  type: bool
+  value: false
+  mirror: always
+
 #if defined(XP_WIN) || defined(XP_LINUX)
   # Notify TabUnloader or send the memory pressure if the memory resource
   # notification is signaled AND the available commit space is lower than
@@ -4969,6 +4975,21 @@
 - name: general.utility-process.startup_timeout_ms
   type: RelaxedAtomicInt32
   value: 5000
+  mirror: always
+
+# Temporary pref to test website compatibility with Firefox 100 UA string. This
+# pref will be removed in Firefox 100 because it will no longer needed.
+- name: general.useragent.forceVersion100
+  type: bool
+  value: false
+  mirror: always
+
+# Temporary pref to remember whether we have handled the Nimbus enrollment
+# event for the Firefox 100 UA experiment. This pref will be removed in Firefox
+# 100 because the experiment will have ended.
+- name: general.useragent.handledVersionExperimentEnrollment
+  type: bool
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------

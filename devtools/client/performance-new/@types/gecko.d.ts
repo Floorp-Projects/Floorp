@@ -73,7 +73,19 @@ declare namespace MockedExports {
 
   interface ChromeWindow {
     gBrowser: Browser;
-    focus: () => void;
+    focus(): void;
+    openWebLinkIn(
+      url: string,
+      where: "current" | "tab" | "window",
+      options: Partial<{
+        // Not all possible options are present, please add more if/when needed.
+        userContextId: number;
+        forceNonPrivate: boolean;
+        resolveOnContentBrowserCreated: (
+          contentBrowser: ChromeBrowser
+        ) => unknown;
+      }>
+    ): void;
   }
 
   interface ChromeBrowser {
@@ -138,7 +150,6 @@ declare namespace MockedExports {
   type Services = {
     prefs: nsIPrefBranch;
     profiler: {
-      CanProfile: () => boolean;
       StartProfiler: (
         entryCount: number,
         interval: number,
@@ -170,6 +181,7 @@ declare namespace MockedExports {
     };
     wm: {
       getMostRecentWindow: (name: string) => ChromeWindow;
+      getMostRecentNonPBWindow: (name: string) => ChromeWindow;
     };
     focus: {
       activeWindow: ChromeWindow;

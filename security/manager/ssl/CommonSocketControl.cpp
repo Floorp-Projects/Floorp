@@ -240,9 +240,9 @@ void CommonSocketControl::RebuildCertificateInfoFromSSLTokenCache() {
     return;
   }
 
-  RefPtr<nsNSSCertificate> nssc =
-      new nsNSSCertificate(std::move(info.mServerCertBytes));
-  SetServerCert(nssc, info.mEVStatus);
+  nsCOMPtr<nsIX509Cert> cert(
+      new nsNSSCertificate(std::move(info.mServerCertBytes)));
+  SetServerCert(cert, info.mEVStatus);
   SetCertificateTransparencyStatus(info.mCertificateTransparencyStatus);
   if (info.mSucceededCertChainBytes) {
     SetSucceededCertChain(std::move(*info.mSucceededCertChainBytes));

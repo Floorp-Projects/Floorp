@@ -63,16 +63,6 @@ if test "$COMPILE_ENVIRONMENT"; then
     MOZ_ANDROID_NDK
 fi # COMPILE_ENVIRONMENT
 
-case "$target" in
-*-android*|*-linuxandroid*)
-    ;;
-*-linux*)
-    AC_PATH_PROG(OBJCOPY,objcopy)
-    ;;
-esac
-
-AC_SUBST(OBJCOPY)
-
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
@@ -93,7 +83,6 @@ else
     esac
     AC_PROG_CXX
     MOZ_PATH_PROGS(AS, $AS as, $CC)
-    AC_CHECK_PROGS(STRIP, strip, :)
     AC_CHECK_PROGS(OTOOL, otool, :)
 fi
 
@@ -247,8 +236,6 @@ dnl ========================================================
 dnl GNU specific defaults
 dnl ========================================================
 if test "$GNU_CC"; then
-    CFLAGS="$CFLAGS -fno-strict-aliasing"
-
     if test "$OS_ARCH" != "WINNT" -o -z "$CLANG_CC"; then
         DSO_PIC_CFLAGS='-fPIC'
         ASFLAGS="$ASFLAGS -fPIC"
@@ -340,7 +327,7 @@ if test "$GNU_CC"; then
 fi
 
 if test "$GNU_CXX"; then
-    CXXFLAGS="$CXXFLAGS -fno-exceptions -fno-strict-aliasing"
+    CXXFLAGS="$CXXFLAGS -fno-exceptions"
 
     _DEFINES_CXXFLAGS="-DMOZILLA_CLIENT -include $_objdir/mozilla-config.h"
 fi
@@ -490,7 +477,6 @@ case "$target" in
         LDFLAGS="$LDFLAGS -Wl,--no-insert-timestamp"
     else
         TARGET_COMPILER_ABI=msvc
-        STRIP='echo not_strip'
         # aarch64 doesn't support subsystems below 6.02
         if test "$CPU_ARCH" = "aarch64"; then
             WIN32_SUBSYSTEM_VERSION=6.02

@@ -441,7 +441,7 @@ class FormAutofillParent extends JSWindowActorParent {
       if (
         collectionName == ADDRESSES_COLLECTION_NAME &&
         record.country &&
-        !FormAutofill.supportedCountries.includes(record.country)
+        !FormAutofill.isAutofillAddressesAvailableInCountry(record.country)
       ) {
         // Address autofill isn't supported for the record's country so we don't
         // want to attempt to potentially incorrectly fill the address fields.

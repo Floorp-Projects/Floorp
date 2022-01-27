@@ -88,6 +88,7 @@
 #include "mozilla/dom/nsHTTPSOnlyUtils.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/dom/JSWindowActorChild.h"
+#include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/net/DocumentChannel.h"
 #include "mozilla/net/DocumentChannelChild.h"
@@ -8804,6 +8805,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
     if (mActiveEntry) {
       mActiveEntry->SetScrollPosition(scrollPos.x, scrollPos.y);
       if (mBrowsingContext) {
+        CollectWireframe();
         if (XRE_IsParentProcess()) {
           SessionHistoryEntry* entry =
               mBrowsingContext->Canonical()->GetActiveSessionHistoryEntry();
@@ -10940,6 +10942,29 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
   return onLocationChangeNeeded;
 }
 
+void nsDocShell::CollectWireframe() {
+  if (mozilla::SessionHistoryInParent() &&
+      StaticPrefs::browser_history_collectWireframes() &&
+      mBrowsingContext->IsTop() && mActiveEntry) {
+    RefPtr<Document> doc = mContentViewer->GetDocument();
+    Nullable<Wireframe> wireframe;
+    doc->GetWireframeWithoutFlushing(false, wireframe);
+    if (!wireframe.IsNull()) {
+      if (XRE_IsParentProcess()) {
+        SessionHistoryEntry* entry =
+            mBrowsingContext->Canonical()->GetActiveSessionHistoryEntry();
+        if (entry) {
+          entry->SetWireframe(Some(wireframe.Value()));
+        }
+      } else {
+        mozilla::Unused
+            << ContentChild::GetSingleton()->SendSessionHistoryEntryWireframe(
+                   mBrowsingContext, wireframe.Value());
+      }
+    }
+  }
+}
+
 //*****************************************************************************
 // nsDocShell: Session History
 //*****************************************************************************
@@ -11707,6 +11732,11 @@ void nsDocShell::UpdateActiveEntry(
   // SessionHistoryEntry, but just replace its SessionHistoryInfo, that way the
   // entry keeps identity but its data is replaced.
   bool replace = aReplace && mActiveEntry;
+
+  if (!replace) {
+    CollectWireframe();
+  }
+
   if (mActiveEntry) {
     // Link this entry to the previous active entry.
     mActiveEntry = MakeUnique<SessionHistoryInfo>(*mActiveEntry, aURI);
@@ -11856,6 +11886,8 @@ nsDocShell::PersistLayoutHistoryState() {
     if (scrollRestorationIsManual && layoutState) {
       layoutState->ResetScrollState();
     }
+
+    CollectWireframe();
   }
 
   return rv;
