@@ -1008,7 +1008,7 @@ AddonWrapper = class {
     return (
       this.signedState == AddonManager.SIGNEDSTATE_PRIVILEGED ||
       (this.signedState >= AddonManager.SIGNEDSTATE_SIGNED &&
-        (this.recommendationStates.length || this.type == "sitepermission"))
+        this.recommendationStates.length)
     );
   }
 
