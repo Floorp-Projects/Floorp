@@ -268,6 +268,9 @@ var DownloadsViewUI = {
       mimeInfo.type === "application/octet-stream" ||
       mimeInfo.type === "application/x-msdownload" ||
       mimeInfo.type === "application/x-msdos-program" ||
+      gReputationService.isExecutable(
+        PathUtils.filename(download.target.path)
+      ) ||
       (mimeInfo.type === "text/plain" &&
         gReputationService.isBinary(download.target.path));
 

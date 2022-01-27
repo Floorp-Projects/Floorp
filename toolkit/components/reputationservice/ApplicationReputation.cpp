@@ -1971,3 +1971,10 @@ nsresult ApplicationReputationService::IsBinary(const nsACString& aFileName,
   *aBinary = ::IsBinary(aFileName);
   return NS_OK;
 }
+
+nsresult ApplicationReputationService::IsExecutable(const nsACString& aFileName,
+                                                    bool* aExecutable) {
+  *aExecutable =
+      ::IsFileType(aFileName, sExecutableExts, ArrayLength(sExecutableExts));
+  return NS_OK;
+}
