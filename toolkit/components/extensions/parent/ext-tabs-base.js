@@ -692,19 +692,14 @@ class TabBase {
     /** @type {Map<nsIDOMProcessParent, innerWindowId[]>} */
     let byProcess = new DefaultMap(() => []);
     let framesFound = 0;
-    // We use this set to know which frame IDs are potentially invalid (as in
-    // not found when visiting the tab's BC tree below) when frameIds is a
-    // non-empty list of frame IDs.
-    let frameIdsSet = new Set(frameIds);
 
     // Recursively walk the tab's BC tree, find all frames, group by process.
     function visit(bc) {
       let win = bc.currentWindowGlobal;
       let frameId = bc.parent ? bc.id : 0;
 
-      if (win?.domProcess && (!frameIds || frameIdsSet.has(frameId))) {
+      if (win?.domProcess && (!frameIds || frameIds.includes(frameId))) {
         byProcess.get(win.domProcess).push(win.innerWindowId);
-        frameIdsSet.delete(frameId);
         framesFound++;
       }
 
@@ -713,12 +708,6 @@ class TabBase {
       }
     }
     visit(this.browsingContext);
-
-    if (frameIdsSet.size > 0) {
-      throw new ExtensionError(
-        `Invalid frame IDs: [${Array.from(frameIdsSet).join(", ")}].`
-      );
-    }
 
     let promises = Array.from(byProcess.entries(), ([proc, windows]) =>
       proc.getActor("ExtensionContent").sendQuery(message, { windows, options })
