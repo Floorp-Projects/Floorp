@@ -99,8 +99,50 @@ bool js::ParseCompileOptions(JSContext* cx, JS::CompileOptions& options,
   if (!JS_GetProperty(cx, opts, "forceFullParse", &v)) {
     return false;
   }
+  bool forceFullParseIsSet = !v.isUndefined();
   if (v.isBoolean() && v.toBoolean()) {
     options.setForceFullParse();
+  }
+
+  if (!JS_GetProperty(cx, opts, "eagerDelazificationStrategy", &v)) {
+    return false;
+  }
+  if (forceFullParseIsSet && !v.isUndefined()) {
+    JS_ReportErrorASCII(
+        cx, "forceFullParse and eagerDelazificationStrategy are both set.");
+    return false;
+  }
+  if (v.isString()) {
+    s = JS::ToString(cx, v);
+    if (!s) {
+      return false;
+    }
+
+    JSLinearString* str = JS_EnsureLinearString(cx, s);
+    if (!str) {
+      return false;
+    }
+
+    bool found = false;
+    JS::DelazificationOption strategy = JS::DelazificationOption::OnDemandOnly;
+
+#define MATCH_AND_SET_STRATEGY_(NAME)                       \
+  if (!found && JS_LinearStringEqualsLiteral(str, #NAME)) { \
+    strategy = JS::DelazificationOption::NAME;              \
+    found = true;                                           \
+  }
+
+    FOREACH_DELAZIFICATION_STRATEGY(MATCH_AND_SET_STRATEGY_);
+#undef MATCH_AND_SET_STRATEGY_
+#undef FOR_STRATEGY_NAMES
+
+    if (!found) {
+      JS_ReportErrorASCII(cx,
+                          "eagerDelazificationStrategy does not match any "
+                          "DelazificationOption.");
+      return false;
+    }
+    options.setEagerDelazificationStrategy(strategy);
   }
 
   return true;
