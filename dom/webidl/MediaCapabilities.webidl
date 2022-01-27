@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://w3c.github.io/media-capabilities/
+ * https://wicg.github.io/media-capabilities/
  *
  * Copyright © 2018 the Contributors to the Media Capabilities Specification
  */
@@ -38,29 +38,6 @@ dictionary VideoConfiguration {
   required unsigned long height;
   required unsigned long long bitrate;
   required DOMString framerate;
-  boolean hasAlphaChannel;
-  HdrMetadataType hdrMetadataType;
-  ColorGamut colorGamut;
-  TransferFunction transferFunction;
-  DOMString scalabilityMode;
-};
-
-enum HdrMetadataType {
-  "smpteSt2086",
-  "smpteSt2094-10",
-  "smpteSt2094-40"
-};
-
-enum ColorGamut {
-  "srgb",
-  "p3",
-  "rec2020"
-};
-
-enum TransferFunction {
-  "srgb",
-  "pq",
-  "hlg"
 };
 
 dictionary AudioConfiguration {
