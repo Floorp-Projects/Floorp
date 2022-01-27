@@ -3990,6 +3990,58 @@ GraphTime MediaTrackGraph::ProcessedTime() const {
   return static_cast<const MediaTrackGraphImpl*>(this)->mProcessedTime;
 }
 
+uint32_t MediaTrackGraphImpl::AudioInputChannelCount() {
+  MOZ_ASSERT(OnGraphThreadOrNotRunning());
+
+#ifdef ANDROID
+  if (!mDeviceTrackMap.Contains(mInputDeviceID)) {
+    return 0;
+  }
+#else
+  if (!mInputDeviceID) {
+    MOZ_ASSERT(mDeviceTrackMap.Count() == 0,
+               "If running on a platform other than android,"
+               "an explicit device id should be present");
+    return 0;
+  }
+#endif
+  uint32_t maxInputChannels = 0;
+  // When/if we decide to support multiple input device per graph, this needs
+  // loop over them.
+  auto result = mDeviceTrackMap.Lookup(mInputDeviceID);
+  MOZ_ASSERT(result);
+  if (!result) {
+    return maxInputChannels;
+  }
+  for (const auto& listener : result.Data()->mDataUsers) {
+    maxInputChannels =
+        std::max(maxInputChannels, listener->RequestedInputChannelCount(this));
+  }
+  return maxInputChannels;
+}
+
+AudioInputType MediaTrackGraphImpl::AudioInputDevicePreference() {
+  MOZ_ASSERT(OnGraphThreadOrNotRunning());
+
+  auto result = mDeviceTrackMap.Lookup(mInputDeviceID);
+  if (!result) {
+    return AudioInputType::Unknown;
+  }
+  bool voiceInput = false;
+  // When/if we decide to support multiple input device per graph, this needs
+  // loop over them.
+
+  // If at least one track is considered to be voice,
+  // XXX This could use short-circuit evaluation resp. std::any_of.
+  for (const auto& listener : result.Data()->mDataUsers) {
+    voiceInput |= listener->IsVoiceInput(this);
+  }
+  if (voiceInput) {
+    return AudioInputType::Voice;
+  }
+  return AudioInputType::Unknown;
+}
+
 // nsIThreadObserver methods
 
 NS_IMETHODIMP
