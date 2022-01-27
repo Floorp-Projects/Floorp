@@ -1667,6 +1667,58 @@ void WebRenderCommandBuilder::CreateWebRenderCommands(
 struct NewLayerData {
   size_t mLayerCountBeforeRecursing = 0;
   const ActiveScrolledRoot* mStopAtAsr = nullptr;
+
+  // Information pertaining to the deferred transform.
+  nsDisplayTransform* mDeferredItem = nullptr;
+  ScrollableLayerGuid::ViewID mDeferredId = ScrollableLayerGuid::NULL_SCROLL_ID;
+  bool mTransformShouldGetOwnLayer = false;
+
+  void ComputeDeferredTransformInfo(const StackingContextHelper& aSc,
+                                    nsDisplayItem* aItem) {
+    // See the comments on StackingContextHelper::mDeferredTransformItem
+    // for an overview of what deferred transforms are.
+    // In the case where we deferred a transform, but have a child display
+    // item with a different ASR than the deferred transform item, we cannot
+    // put the transform on the WebRenderLayerScrollData item for the child.
+    // We cannot do this because it will not conform to APZ's expectations
+    // with respect to how the APZ tree ends up structured. In particular,
+    // the GetTransformToThis() for the child APZ (which is created for the
+    // child item's ASR) will not include the transform when we actually do
+    // want it to.
+    // When we run into this scenario, we solve it by creating two
+    // WebRenderLayerScrollData items; one that just holds the transform,
+    // that we deferred, and a child WebRenderLayerScrollData item that
+    // holds the scroll metadata for the child's ASR.
+    mDeferredItem = aSc.GetDeferredTransformItem();
+    if (mDeferredItem) {
+      // It's possible the transform's ASR is not only an ancestor of
+      // the item's ASR, but an ancestor of stopAtAsr. In such cases,
+      // don't use the transform at all at this level (it would be
+      // scrolled by stopAtAsr which is incorrect). The transform will
+      // instead be emitted as part of the ancestor WebRenderLayerScrollData
+      // node (the one with stopAtAsr as its item ASR), or one of its
+      // ancetors in turn.
+      if (ActiveScrolledRoot::IsProperAncestor(
+              mDeferredItem->GetActiveScrolledRoot(), mStopAtAsr)) {
+        mDeferredItem = nullptr;
+      }
+    }
+    if (mDeferredItem) {
+      if (const auto* asr = mDeferredItem->GetActiveScrolledRoot()) {
+        mDeferredId = asr->GetViewId();
+      }
+      if (mDeferredItem->GetActiveScrolledRoot() !=
+          aItem->GetActiveScrolledRoot()) {
+        mTransformShouldGetOwnLayer = true;
+      } else if (aItem->GetType() == DisplayItemType::TYPE_SCROLL_INFO_LAYER) {
+        // A scroll info layer has its own scroll id that's not reflected
+        // in item->GetActiveScrolledRoot(), but will be added to the
+        // WebRenderLayerScrollData node, so it needs to be treated as
+        // having a distinct ASR from the deferred transform item.
+        mTransformShouldGetOwnLayer = true;
+      }
+    }
+  }
 };
 
 void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
@@ -1798,6 +1850,7 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
         newLayerData->mLayerCountBeforeRecursing = mLayerScrollData.size();
         newLayerData->mStopAtAsr =
             mAsrStack.empty() ? nullptr : mAsrStack.back();
+        newLayerData->ComputeDeferredTransformInfo(aSc, item);
 
         mAsrStack.push_back(asr);
       }
@@ -1846,54 +1899,10 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
         int32_t descendants =
             mLayerScrollData.size() - newLayerData->mLayerCountBeforeRecursing;
 
-        // See the comments on StackingContextHelper::mDeferredTransformItem
-        // for an overview of what deferred transforms are.
-        // In the case where we deferred a transform, but have a child display
-        // item with a different ASR than the deferred transform item, we cannot
-        // put the transform on the WebRenderLayerScrollData item for the child.
-        // We cannot do this because it will not conform to APZ's expectations
-        // with respect to how the APZ tree ends up structured. In particular,
-        // the GetTransformToThis() for the child APZ (which is created for the
-        // child item's ASR) will not include the transform when we actually do
-        // want it to.
-        // When we run into this scenario, we solve it by creating two
-        // WebRenderLayerScrollData items; one that just holds the transform,
-        // that we deferred, and a child WebRenderLayerScrollData item that
-        // holds the scroll metadata for the child's ASR.
-        nsDisplayTransform* deferred = aSc.GetDeferredTransformItem();
-        ScrollableLayerGuid::ViewID deferredId =
-            ScrollableLayerGuid::NULL_SCROLL_ID;
-        bool transformShouldGetOwnLayer = false;
-        if (deferred) {
-          // It's possible the transform's ASR is not only an ancestor of
-          // the item's ASR, but an ancestor of stopAtAsr. In such cases,
-          // don't use the transform at all at this level (it would be
-          // scrolled by stopAtAsr which is incorrect). The transform will
-          // instead be emitted as part of the ancestor WebRenderLayerScrollData
-          // node (the one with stopAtAsr as its item ASR), or one of its
-          // ancetors in turn.
-          if (ActiveScrolledRoot::IsProperAncestor(
-                  deferred->GetActiveScrolledRoot(), stopAtAsr)) {
-            deferred = nullptr;
-          }
-        }
-        if (deferred) {
-          if (const auto* asr = deferred->GetActiveScrolledRoot()) {
-            deferredId = asr->GetViewId();
-          }
-          if (deferred->GetActiveScrolledRoot() !=
-              item->GetActiveScrolledRoot()) {
-            transformShouldGetOwnLayer = true;
-          } else if (item->GetType() ==
-                     DisplayItemType::TYPE_SCROLL_INFO_LAYER) {
-            // A scroll info layer has its own scroll id that's not reflected
-            // in item->GetActiveScrolledRoot(), but will be added to the
-            // WebRenderLayerScrollData node, so it needs to be treated as
-            // having a distinct ASR from the deferred transform item.
-            transformShouldGetOwnLayer = true;
-          }
-        }
-        if (transformShouldGetOwnLayer) {
+        nsDisplayTransform* deferred = newLayerData->mDeferredItem;
+        ScrollableLayerGuid::ViewID deferredId = newLayerData->mDeferredId;
+
+        if (newLayerData->mTransformShouldGetOwnLayer) {
           // This creates the child WebRenderLayerScrollData for |item|, but
           // omits the transform (hence the Nothing() as the last argument to
           // Initialize(...)). We also need to make sure that the ASR from
