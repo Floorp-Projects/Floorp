@@ -1660,6 +1660,14 @@ void WebRenderCommandBuilder::CreateWebRenderCommands(
   }
 }
 
+// A helper struct to store information needed when creating a new
+// WebRenderLayerScrollData in CreateWebRenderCommandsFromDisplayList().
+// This information is gathered before the recursion, and then used to
+// emit the new layer after the recursion.
+struct NewLayerData {
+  size_t mLayerCountBeforeRecursing = 0;
+};
+
 void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
     nsDisplayList* aDisplayList, nsDisplayItem* aWrappingItem,
     nsDisplayListBuilder* aDisplayListBuilder, const StackingContextHelper& aSc,
@@ -1750,13 +1758,14 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
       }
     }
 
-    bool forceNewLayerData = false;
-    size_t layerCountBeforeRecursing = mLayerScrollData.size();
+    Maybe<NewLayerData> newLayerData;
     if (apzEnabled) {
       // For some types of display items we want to force a new
       // WebRenderLayerScrollData object, to ensure we preserve the APZ-relevant
       // data that is in the display item.
-      forceNewLayerData = item->UpdateScrollData(nullptr, nullptr);
+      if (item->UpdateScrollData(nullptr, nullptr)) {
+        newLayerData = Some(NewLayerData());
+      }
 
       // Anytime the ASR changes we also want to force a new layer data because
       // the stack of scroll metadata is going to be different for this
@@ -1765,7 +1774,7 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
       const ActiveScrolledRoot* asr = item->GetActiveScrolledRoot();
       if (asr != mLastAsr) {
         mLastAsr = asr;
-        forceNewLayerData = true;
+        newLayerData = Some(NewLayerData());
       }
 
       // Refer to the comment on StackingContextHelper::mDeferredTransformItem
@@ -1775,16 +1784,17 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
       // merge the deferred transforms, but need to force a new
       // WebRenderLayerScrollData item to flush the old deferred transform, so
       // that we can then start deferring the new one.
-      if (!forceNewLayerData && item->CreatesStackingContextHelper() &&
+      if (!newLayerData && item->CreatesStackingContextHelper() &&
           aSc.GetDeferredTransformItem() &&
           aSc.GetDeferredTransformItem()->GetActiveScrolledRoot() != asr) {
-        forceNewLayerData = true;
+        newLayerData = Some(NewLayerData());
       }
 
       // If we're going to create a new layer data for this item, stash the
       // ASR so that if we recurse into a sublist they will know where to stop
       // walking up their ASR chain when building scroll metadata.
-      if (forceNewLayerData) {
+      if (newLayerData) {
+        newLayerData->mLayerCountBeforeRecursing = mLayerScrollData.size();
         mAsrStack.push_back(asr);
       }
     }
@@ -1822,7 +1832,7 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
     }
 
     if (apzEnabled) {
-      if (forceNewLayerData) {
+      if (newLayerData) {
         // Pop the thing we pushed before the recursion, so the topmost item on
         // the stack is enclosing display item's ASR (or the stack is empty)
         mAsrStack.pop_back();
@@ -1830,7 +1840,7 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
             mAsrStack.empty() ? nullptr : mAsrStack.back();
 
         int32_t descendants =
-            mLayerScrollData.size() - layerCountBeforeRecursing;
+            mLayerScrollData.size() - newLayerData->mLayerCountBeforeRecursing;
 
         // See the comments on StackingContextHelper::mDeferredTransformItem
         // for an overview of what deferred transforms are.
