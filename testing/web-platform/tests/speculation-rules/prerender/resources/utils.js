@@ -202,13 +202,13 @@ async function create_prerendered_page(t) {
   });
 
   async function activate() {
-    initChannel.postMessage('activate');
-    const prerendering = await exec(() => new Promise(resolve =>
+    const prerendering = exec(() => new Promise(resolve =>
       document.addEventListener('prerenderingchange', () => {
         resolve(document.prerendering);
       })));
 
-    if (prerendering)
+    initChannel.postMessage('activate');
+    if (await prerendering)
       throw new Error('Should not be prerendering at this point')
   }
 
@@ -216,4 +216,39 @@ async function create_prerendered_page(t) {
     exec,
     activate
   };
+}
+
+
+function test_prerender_restricted(fn, expected, label) {
+  promise_test(async t => {
+    const {exec} = await create_prerendered_page(t);
+    let result = null;
+    try {
+      await exec(fn);
+      result = "OK";
+    } catch (e) {
+      result = e.name;
+    }
+
+    assert_equals(result, expected);
+  }, label);
+}
+
+function test_prerender_defer(fn, label) {
+  promise_test(async t => {
+    const {exec, activate} = await create_prerendered_page(t);
+    let activated = false;
+    const deferred = exec(fn);
+
+    const post = new Promise(resolve =>
+      deferred.then(result => {
+        assert_true(activated, "Deferred operation should occur only after activation");
+        resolve(result);
+      }));
+
+    await new Promise(resolve => t.step_timeout(resolve, 100));
+    await activate();
+    activated = true;
+    await post;
+  }, label);
 }
