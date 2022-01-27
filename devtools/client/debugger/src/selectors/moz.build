@@ -26,4 +26,5 @@ CompiledModules(
     "threads.js",
     "visibleBreakpoints.js",
     "visibleColumnBreakpoints.js",
+    "ui.js",
 )
