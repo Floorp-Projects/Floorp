@@ -170,7 +170,7 @@ internal object TabsTrayReducer {
             is TabsTrayAction.AddSelectTab ->
                 state.copy(mode = TabsTrayState.Mode.Select(state.mode.selectedTabs + action.tab))
             is TabsTrayAction.RemoveSelectTab -> {
-                val selected = state.mode.selectedTabs - action.tab
+                val selected = state.mode.selectedTabs.filter { it.id != action.tab.id }.toSet()
                 state.copy(
                     mode = if (selected.isEmpty()) {
                         TabsTrayState.Mode.Normal

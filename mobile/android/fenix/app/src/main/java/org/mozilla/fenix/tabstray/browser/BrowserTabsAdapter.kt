@@ -91,7 +91,10 @@ class BrowserTabsAdapter(
             }
 
             selectionHolder?.let {
-                holder.showTabIsMultiSelectEnabled(selectedMaskView, it.selectedItems.contains(tab))
+                holder.showTabIsMultiSelectEnabled(
+                    selectedMaskView,
+                    (it.selectedItems.map { item -> item.id }).contains(tab.id)
+                )
             }
         }
     }
@@ -129,7 +132,10 @@ class BrowserTabsAdapter(
                     selectedMaskView = listBinding.checkboxInclude.selectedMask
                 }
             }
-            holder.showTabIsMultiSelectEnabled(selectedMaskView, it.selectedItems.contains(holder.tab))
+            holder.showTabIsMultiSelectEnabled(
+                selectedMaskView,
+                it.selectedItems.map { item -> item.id }.contains(tab.id)
+            )
         }
     }
 

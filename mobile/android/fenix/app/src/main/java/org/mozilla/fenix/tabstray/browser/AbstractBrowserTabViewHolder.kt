@@ -223,7 +223,7 @@ abstract class AbstractBrowserTabViewHolder(
                 selected.isEmpty() && trayStore.state.mode.isSelect().not() -> {
                     interactor.onTabSelected(item, featureName)
                 }
-                item in selected -> interactor.deselect(item)
+                item.id in selected.map { item -> item.id } -> interactor.deselect(item)
                 else -> interactor.select(item)
             }
         }
