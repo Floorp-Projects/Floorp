@@ -6,6 +6,7 @@
 DIRS += []
 
 CompiledModules(
+    "ast.js",
     "breakpointAtLocation.js",
     "breakpoints.js",
     "breakpointSources.js",
