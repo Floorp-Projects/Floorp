@@ -42,6 +42,7 @@ import java.util.Map;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoNetworkManager;
+import org.mozilla.gecko.GeckoScreenChangeListener;
 import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.GeckoScreenOrientation.ScreenOrientation;
 import org.mozilla.gecko.GeckoSystemStateListener;
@@ -225,12 +226,18 @@ public final class GeckoRuntime implements Parcelable {
   private final ContentBlockingController mContentBlockingController;
   private final Autocomplete.StorageProxy mAutocompleteStorageProxy;
   private final ProfilerController mProfilerController;
+  private final GeckoScreenChangeListener mScreenChangeListener;
 
   private GeckoRuntime() {
     mWebExtensionController = new WebExtensionController(this);
     mContentBlockingController = new ContentBlockingController();
     mAutocompleteStorageProxy = new Autocomplete.StorageProxy();
     mProfilerController = new ProfilerController();
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+      mScreenChangeListener = new GeckoScreenChangeListener();
+    } else {
+      mScreenChangeListener = null;
+    }
 
     if (sRuntime != null) {
       throw new IllegalStateException("Only one GeckoRuntime instance is allowed");
@@ -457,6 +464,12 @@ public final class GeckoRuntime implements Parcelable {
 
     // Add process lifecycle listener to react to backgrounding events.
     ProcessLifecycleOwner.get().getLifecycle().addObserver(new LifecycleListener());
+
+    // Add Display Manager listener to listen screen orientation change.
+    if (mScreenChangeListener != null) {
+      mScreenChangeListener.enable();
+    }
+
     mProfilerController.addMarker(
         "GeckoView Initialization START", mProfilerController.getProfilerTime());
     return true;
@@ -568,6 +581,11 @@ public final class GeckoRuntime implements Parcelable {
     }
 
     GeckoSystemStateListener.getInstance().shutdown();
+
+    if (mScreenChangeListener != null) {
+      mScreenChangeListener.disable();
+    }
+
     GeckoThread.forceQuit();
   }
 
