@@ -56,6 +56,14 @@ NativeInputTrack* NativeInputTrack::Create(
   return track;
 }
 
+NativeInputTrack::NativeInputTrack(TrackRate aSampleRate,
+                                   const PrincipalHandle& aPrincipalHandle)
+    : ProcessedMediaTrack(aSampleRate, MediaSegment::AUDIO, new AudioSegment()),
+      mPrincipalHandle(aPrincipalHandle),
+      mIsBufferingAppended(false),
+      mInputChannels(0),
+      mUserCount(0) {}
+
 size_t NativeInputTrack::AddUser() {
   MOZ_ASSERT(NS_IsMainThread());
   mUserCount += 1;
