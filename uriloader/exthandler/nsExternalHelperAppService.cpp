@@ -1957,6 +1957,39 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     alwaysAsk = true;
   }
 
+  // If adding new checks, make sure this is the last check before telemetry
+  // and going ahead with opening the file!
+#ifdef XP_WIN
+  /* We need to see whether the file we've got here could be
+   * executable.  If it could, we had better not try to open it!
+   * We can skip this check, though, if we have a setting to open in a
+   * helper app.
+   */
+  if (!alwaysAsk && action != nsIMIMEInfo::saveToDisk &&
+      !shouldAutomaticallyHandleInternally) {
+    nsCOMPtr<nsIHandlerApp> prefApp;
+    mMimeInfo->GetPreferredApplicationHandler(getter_AddRefs(prefApp));
+    if (action != nsIMIMEInfo::useHelperApp || !prefApp) {
+      nsCOMPtr<nsIFile> fileToTest;
+      GetTargetFile(getter_AddRefs(fileToTest));
+      if (fileToTest) {
+        bool isExecutable;
+        rv = fileToTest->IsExecutable(&isExecutable);
+        if (NS_FAILED(rv) || mTempFileIsExecutable ||
+            isExecutable) {  // checking NS_FAILED, because paranoia is good
+          alwaysAsk = true;
+        }
+      } else {  // Paranoia is good here too, though this really should not
+                // happen
+        NS_WARNING(
+            "GetDownloadInfo returned a null file after the temp file has been "
+            "set up! ");
+        alwaysAsk = true;
+      }
+    }
+  }
+#endif
+
   nsAutoCString actionTelem;
   if (alwaysAsk) {
     actionTelem.AssignLiteral("ask");
@@ -1985,39 +2018,6 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     // abort the load....
   } else {
     // We need to do the save/open immediately, then.
-#ifdef XP_WIN
-    /* We need to see whether the file we've got here could be
-     * executable.  If it could, we had better not try to open it!
-     * We can skip this check, though, if we have a setting to open in a
-     * helper app.
-     * This code mirrors the code in
-     * nsExternalAppHandler::SetDownloadToLaunch so that what we
-     * test here is as close as possible to what will really be
-     * happening if we decide to execute
-     */
-    nsCOMPtr<nsIHandlerApp> prefApp;
-    mMimeInfo->GetPreferredApplicationHandler(getter_AddRefs(prefApp));
-    if (action != nsIMIMEInfo::useHelperApp || !prefApp) {
-      nsCOMPtr<nsIFile> fileToTest;
-      GetTargetFile(getter_AddRefs(fileToTest));
-      if (fileToTest) {
-        bool isExecutable;
-        rv = fileToTest->IsExecutable(&isExecutable);
-        if (NS_FAILED(rv) ||
-            isExecutable) {  // checking NS_FAILED, because paranoia is good
-          action = nsIMIMEInfo::saveToDisk;
-        }
-      } else {  // Paranoia is good here too, though this really should not
-                // happen
-        NS_WARNING(
-            "GetDownloadInfo returned a null file after the temp file has been "
-            "set up! ");
-        action = nsIMIMEInfo::saveToDisk;
-      }
-    }
-
-#endif
-
     if (action == nsIMIMEInfo::useHelperApp ||
         action == nsIMIMEInfo::useSystemDefault ||
         shouldAutomaticallyHandleInternally) {
