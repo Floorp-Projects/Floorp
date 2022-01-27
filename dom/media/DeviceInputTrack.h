@@ -30,12 +30,15 @@ class NativeInputTrack : public ProcessedMediaTrack {
   // Graph thread APIs: Redirect calls from GraphDriver to mDataUsers
   void NotifyOutputData(MediaTrackGraphImpl* aGraph, AudioDataValue* aBuffer,
                         size_t aFrames, TrackRate aRate, uint32_t aChannels);
+  void DeviceChanged(MediaTrackGraphImpl* aGraph);
+
+  // Graph thread APIs: Get input audio data and event from graph
   void NotifyInputStopped(MediaTrackGraphImpl* aGraph);
   void NotifyInputData(MediaTrackGraphImpl* aGraph,
                        const AudioDataValue* aBuffer, size_t aFrames,
                        TrackRate aRate, uint32_t aChannels,
                        uint32_t aAlreadyBuffered);
-  void DeviceChanged(MediaTrackGraphImpl* aGraph);
+
 
   // Any thread
   NativeInputTrack* AsNativeInputTrack() override { return this; }
