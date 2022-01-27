@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_EarlyHintsPreload_h
-#define mozilla_net_EarlyHintsPreload_h
+#ifndef mozilla_net_EarlyHintsService_h
+#define mozilla_net_EarlyHintsService_h
 
 #include "nsStringFwd.h"
 #include "mozilla/Maybe.h"
@@ -14,10 +14,10 @@
 
 namespace mozilla::net {
 
-class EarlyHintsPreloader {
+class EarlyHintsService {
  public:
-  EarlyHintsPreloader() = default;
-  ~EarlyHintsPreloader() = default;
+  EarlyHintsService() = default;
+  ~EarlyHintsService() = default;
   void EarlyHint(const nsACString& linkHeader);
   void FinalResponse(uint32_t aResponseStatus);
   void Cancel();
@@ -32,4 +32,4 @@ class EarlyHintsPreloader {
 
 }  // namespace mozilla::net
 
-#endif  // mozilla_net_EarlyHintsPreload_h
+#endif  // mozilla_net_EarlyHintsService_h
