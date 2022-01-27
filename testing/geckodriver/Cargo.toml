@@ -31,5 +31,8 @@ uuid = { version = "0.8", features = ["v4"] }
 webdriver = { path = "../webdriver" }
 zip = { version = "0.4", default-features = false, features = ["deflate"] }
 
+[dev-dependencies]
+tempfile = "3"
+
 [[bin]]
 name = "geckodriver"
