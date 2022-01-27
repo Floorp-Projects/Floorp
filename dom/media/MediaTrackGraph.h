@@ -107,16 +107,6 @@ class AudioDataListenerInterface {
   virtual ~AudioDataListenerInterface() = default;
 
  public:
-  /* These are for cubeb audio input & output streams: */
-  /**
-   * Output data to speakers, for use as the "far-end" data for echo
-   * cancellation.  This is not guaranteed to be in any particular size
-   * chunks.
-   */
-  virtual void NotifyOutputData(MediaTrackGraphImpl* aGraph,
-                                AudioDataValue* aBuffer, size_t aFrames,
-                                TrackRate aRate, uint32_t aChannels) = 0;
-
   /**
    * Number of audio input channels.
    */
