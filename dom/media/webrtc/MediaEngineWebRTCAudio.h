@@ -226,7 +226,7 @@ class AudioInputTrack : public ProcessedMediaTrack {
   RefPtr<MediaInputPort> mPort;
 
   // Only accessed on the main thread. Used for bookkeeping on main thread, such
-  // that CloseAudioInput can be idempotent.
+  // that DisconnectDeviceInput can be idempotent.
   // XXX Should really be a CubebUtils::AudioDeviceID, but they aren't
   // copyable (opaque pointers)
   RefPtr<AudioDataListener> mInputListener;
@@ -245,10 +245,10 @@ class AudioInputTrack : public ProcessedMediaTrack {
   // Users of audio inputs go through the track so it can track when the
   // last track referencing an input goes away, so it can close the cubeb
   // input. Main thread only.
-  nsresult OpenAudioInput(CubebUtils::AudioDeviceID aId,
-                          AudioDataListener* aListener,
-                          const PrincipalHandle& aPrincipal);
-  void CloseAudioInput();
+  nsresult ConnectDeviceInput(CubebUtils::AudioDeviceID aId,
+                              AudioDataListener* aListener,
+                              const PrincipalHandle& aPrincipal);
+  void DisconnectDeviceInput();
   Maybe<CubebUtils::AudioDeviceID> DeviceId() const;
   void Destroy() override;
   void SetInputProcessing(RefPtr<AudioInputProcessing> aInputProcessing);
