@@ -724,8 +724,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   /**
    * Devices to use for cubeb input & output, or nullptr for default device.
    * A MediaTrackGraph always has an output (even if silent).
-   * If `mDeviceTrackMap.Count() != 0`, this MediaTrackGraph wants audio
-   * input.
+   * If `mNativeInputTrack` is not NULL, this MediaTrackGraph wants audio input.
    *
    * All mInputDeviceID access is on the graph thread except for reads via
    * InputDeviceID(), which are racy but used only for comparison.
@@ -736,12 +735,11 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   std::atomic<CubebUtils::AudioDeviceID> mInputDeviceID;
   CubebUtils::AudioDeviceID mOutputDeviceID;
 
-  // Maps AudioDeviceID to a device track that delivers audio input/output
-  // data and send device-changed signals to its listeners.  This is only
-  // touched on the graph thread. The NativeInputTrack* here is used for
-  // for bookkeeping on the graph thread. The owner of the NativeInputTrack is
-  // mDeviceTracks, which is only touched by main thread.
-  nsTHashMap<CubebUtils::AudioDeviceID, NativeInputTrack*> mDeviceTrackMap;
+  // Track the native input device in graph. Graph thread only.
+  // TODO: Once multiple input devices is supported,
+  // mNativeInputTrack->mDeviceId could replace mInputDeviceID since no other
+  // thread will read mInputDeviceID.
+  RefPtr<NativeInputTrack> mNativeInputTrack;
 
   /**
    * List of resume operations waiting for a switch to an AudioCallbackDriver.
