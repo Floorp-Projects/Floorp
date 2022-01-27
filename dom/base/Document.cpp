@@ -11924,7 +11924,6 @@ nsresult Document::CloneDocHelper(Document* clone) const {
     }
 
     clone->mIsSrcdocDocument = mIsSrcdocDocument;
-
     clone->SetContainer(mDocumentContainer);
 
     // Setup the navigation time. This will be needed by any animations in the
@@ -11949,7 +11948,11 @@ nsresult Document::CloneDocHelper(Document* clone) const {
   clone->SetChromeXHRDocURI(mChromeXHRDocURI);
   clone->SetPrincipals(NodePrincipal(), mPartitionedPrincipal);
   clone->mActiveStoragePrincipal = mActiveStoragePrincipal;
-  clone->mDocumentBaseURI = mDocumentBaseURI;
+  // NOTE(emilio): Intentionally setting this to the GetDocBaseURI rather than
+  // just mDocumentBaseURI, so that srcdoc iframes get the right base URI even
+  // when printed standalone via window.print() (where there won't be a parent
+  // document to grab the URI from).
+  clone->mDocumentBaseURI = GetDocBaseURI();
   clone->SetChromeXHRDocBaseURI(mChromeXHRDocBaseURI);
   clone->mReferrerInfo =
       static_cast<dom::ReferrerInfo*>(mReferrerInfo.get())->Clone();
