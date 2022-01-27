@@ -7,7 +7,6 @@ export * from "../reducers/sources";
 export * from "../reducers/tabs";
 export * from "../reducers/pause";
 export * from "../reducers/threads";
-export * from "../reducers/breakpoints";
 export * from "../reducers/pending-breakpoints";
 
 export {
@@ -18,7 +17,7 @@ export {
 } from "../reducers/source-actors";
 
 export * from "./ast";
-export { getXHRBreakpoints, shouldPauseOnAnyXHR } from "./breakpoints";
+export * from "./breakpoints";
 export {
   getClosestBreakpoint,
   getBreakpointAtLocation,
