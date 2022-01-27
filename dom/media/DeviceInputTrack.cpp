@@ -181,6 +181,26 @@ void NativeInputTrack::DeviceChanged(MediaTrackGraphImpl* aGraph) {
   }
 }
 
+uint32_t NativeInputTrack::MaxRequestedInputChannels() const {
+  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  uint32_t maxInputChannels = 0;
+  for (const auto& listener : mDataUsers) {
+    maxInputChannels = std::max(maxInputChannels,
+                                listener->RequestedInputChannelCount(mGraph));
+  }
+  return maxInputChannels;
+}
+
+bool NativeInputTrack::HasVoiceInput() const {
+  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  for (const auto& listener : mDataUsers) {
+    if (listener->IsVoiceInput(mGraph)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 #undef LOG_INTERNAL
 #undef LOG
 #undef TRACK_GRAPH_LOG_INTERNAL
