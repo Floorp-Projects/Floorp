@@ -5,7 +5,6 @@
 export * from "../reducers/expressions";
 export * from "../reducers/sources";
 export * from "../reducers/tabs";
-export * from "../reducers/event-listeners";
 export * from "../reducers/pause";
 export * from "../reducers/threads";
 export * from "../reducers/breakpoints";
@@ -31,23 +30,18 @@ export {
 } from "../reducers/quick-open";
 
 export * from "./ast";
+export { getXHRBreakpoints, shouldPauseOnAnyXHR } from "./breakpoints";
 export {
   getClosestBreakpoint,
   getBreakpointAtLocation,
   getBreakpointsAtLine,
   getClosestBreakpointPosition,
 } from "./breakpointAtLocation";
-export {
-  getVisibleBreakpoints,
-  getFirstVisibleBreakpoints,
-} from "./visibleBreakpoints";
-export { inComponent } from "./inComponent";
-export { isSelectedFrameVisible } from "./isSelectedFrameVisible";
-export { getCallStackFrames } from "./getCallStackFrames";
 export { getBreakpointSources } from "./breakpointSources";
+export * from "./event-listeners";
+export { getCallStackFrames } from "./getCallStackFrames";
 export { isLineInScope } from "./isLineInScope";
-export { getXHRBreakpoints, shouldPauseOnAnyXHR } from "./breakpoints";
-export * from "./visibleColumnBreakpoints";
+export { isSelectedFrameVisible } from "./isSelectedFrameVisible";
 export {
   getSelectedFrame,
   getSelectedFrames,
@@ -55,6 +49,11 @@ export {
 } from "./pause";
 export * from "./tabs";
 export * from "./threads";
+export {
+  getVisibleBreakpoints,
+  getFirstVisibleBreakpoints,
+} from "./visibleBreakpoints";
+export * from "./visibleColumnBreakpoints";
 
 import { objectInspector } from "devtools/client/shared/components/reps/index";
 
