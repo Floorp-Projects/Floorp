@@ -933,6 +933,7 @@ namespace dom {
 class Element;
 class ImageBitmap;
 class ImageData;
+class OffscreenCanvas;
 }  // namespace dom
 
 struct TexImageSource {
@@ -944,6 +945,8 @@ struct TexImageSource {
 
   const dom::ImageBitmap* mImageBitmap = nullptr;
   const dom::ImageData* mImageData = nullptr;
+
+  const dom::OffscreenCanvas* mOffscreenCanvas = nullptr;
 
   const dom::Element* mDomElem = nullptr;
   ErrorResult* mOut_error = nullptr;
