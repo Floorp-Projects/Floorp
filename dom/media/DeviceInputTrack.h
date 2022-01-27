@@ -14,14 +14,6 @@ namespace mozilla {
 
 // MediaTrack subclass storing the raw audio data from microphone.
 class NativeInputTrack : public ProcessedMediaTrack {
-  ~NativeInputTrack() = default;
-  NativeInputTrack(TrackRate aSampleRate,
-                   const PrincipalHandle& aPrincipalHandle)
-      : ProcessedMediaTrack(aSampleRate, MediaSegment::AUDIO,
-                            new AudioSegment()),
-        mPrincipalHandle(aPrincipalHandle),
-        mIsBufferingAppended(false) {}
-
  public:
   // Main Thread API
   static NativeInputTrack* Create(MediaTrackGraphImpl* aGraph,
@@ -55,6 +47,10 @@ class NativeInputTrack : public ProcessedMediaTrack {
   nsTArray<RefPtr<AudioDataListener>> mDataUsers;
 
  private:
+  NativeInputTrack(TrackRate aSampleRate,
+                   const PrincipalHandle& aPrincipalHandle);
+  ~NativeInputTrack() = default;
+
   // Indicate whether we append extra frames in mPendingData. The extra number
   // of frames is in [0, WEBAUDIO_BLOCK_SIZE] range.
   bool mIsBufferingAppended;
