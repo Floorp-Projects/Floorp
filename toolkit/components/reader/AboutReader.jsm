@@ -881,6 +881,8 @@ AboutReader.prototype = {
     let bodyWidth = this._doc.body.clientWidth;
 
     let setImageMargins = function(img) {
+      img.classList.add("moz-reader-block-img");
+
       // If the image is at least as wide as the window, make it fill edge-to-edge on mobile.
       if (img.naturalWidth >= windowWidth) {
         img.setAttribute("moz-reader-full-width", true);
