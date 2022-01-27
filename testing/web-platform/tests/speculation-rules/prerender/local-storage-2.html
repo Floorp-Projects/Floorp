@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<title>Same-origin prerendering can access localStorage</title>
+<meta name="timeout" content="long">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/common/utils.js"></script>
+<script src="resources/utils.js"></script>
+<body>
+<script>
+
+setup(() => assertSpeculationRulesIsSupported());
+
+promise_test(async t => {
+  const initialValue = "initial_set";
+  window.localStorage.setItem('initial', initialValue);
+
+  const {result, activate} = await prerenderScript(async () => {
+    window.localStorage.setItem('prerender', 'prerender_set');
+    return window.localStorage.getItem('initial');
+  }, t);
+
+  await activate();
+
+  assert_equals(
+    result, initialValue,
+      'prerendering page should be able to read from local storage');
+  assert_equals(
+      window.localStorage.getItem('prerender'), 'prerender_set',
+      'prerendering page should be able to write to local storage');
+}, 'prerendering page should be able to access local storage');
+
+</script>
+</body>
