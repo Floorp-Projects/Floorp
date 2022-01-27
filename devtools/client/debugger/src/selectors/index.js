@@ -10,7 +10,6 @@ export * from "../reducers/threads";
 export * from "../reducers/breakpoints";
 export * from "../reducers/pending-breakpoints";
 export * from "../reducers/ui";
-export * from "../reducers/source-tree";
 
 export {
   getSourceActor,
@@ -42,6 +41,7 @@ export {
 export * from "./preview";
 export * from "./project-text-search";
 export * from "./quick-open";
+export * from "./source-tree";
 export * from "./tabs";
 export * from "./threads";
 export {
