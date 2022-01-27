@@ -82,7 +82,6 @@ else
       sleep 2
     esac
     AC_PROG_CXX
-    MOZ_PATH_PROGS(AS, $AS as, $CC)
     AC_CHECK_PROGS(OTOOL, otool, :)
 fi
 
