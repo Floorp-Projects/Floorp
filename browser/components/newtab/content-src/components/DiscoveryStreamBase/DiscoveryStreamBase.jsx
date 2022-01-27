@@ -210,6 +210,7 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             type={component.type}
             dispatch={this.props.dispatch}
             items={component.properties.items}
+            hybridLayout={component.properties.hybridLayout}
             hideCardBackground={component.properties.hideCardBackground}
             fourCardLayout={component.properties.fourCardLayout}
             hideDescriptions={component.properties.hideDescriptions}

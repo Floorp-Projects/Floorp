@@ -53,6 +53,7 @@ export class CardGrid extends React.PureComponent {
   renderCards() {
     let { items } = this.props;
     const {
+      hybridLayout,
       hideCardBackground,
       fourCardLayout,
       hideDescriptions,
@@ -150,23 +151,23 @@ export class CardGrid extends React.PureComponent {
     const variantClass = this.props.display_variant
       ? `ds-card-grid-${this.props.display_variant}`
       : ``;
-
     const hideCardBackgroundClass = hideCardBackground
       ? `ds-card-grid-hide-background`
       : ``;
     const fourCardLayoutClass = fourCardLayout
       ? `ds-card-grid-four-card-variant`
       : ``;
-
     const hideDescriptionsClassName = !hideDescriptions
       ? `ds-card-grid-include-descriptions`
       : ``;
-
     const compactGridClassName = compactGrid ? `ds-card-grid-compact` : ``;
+    const hybridLayoutClassName = hybridLayout
+      ? `ds-card-grid-hybrid-layout`
+      : ``;
 
     return (
       <div
-        className={`ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`}
+        className={`ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${hybridLayoutClassName} ${hideCardBackgroundClass} ${fourCardLayoutClass} ${hideDescriptionsClassName} ${compactGridClassName}`}
       >
         {cards}
       </div>
