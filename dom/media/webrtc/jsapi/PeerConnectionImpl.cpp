@@ -2664,6 +2664,13 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
               return;
             }
 
+            if (audioStats->packets_sent == 0) {
+              // By spec: "The lifetime of all RTP monitored objects starts
+              // when the RTP stream is first used: When the first RTP packet
+              // is sent or received on the SSRC it represents"
+              return;
+            }
+
             // First, fill in remote stat with rtcp receiver data, if present.
             // ReceiverReports have less information than SenderReports, so fill
             // in what we can.
@@ -2744,10 +2751,18 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
               streamStats = Some(kv->second);
             }
 
+            if (!streamStats ||
+                streamStats->rtp_stats.first_packet_time_ms == -1) {
+              // By spec: "The lifetime of all RTP monitored objects starts
+              // when the RTP stream is first used: When the first RTP packet
+              // is sent or received on the SSRC it represents"
+              return;
+            }
+
             // First, fill in remote stat with rtcp receiver data, if present.
             // ReceiverReports have less information than SenderReports, so fill
             // in what we can.
-            if (streamStats && streamStats->report_block_data) {
+            if (streamStats->report_block_data) {
               const webrtc::ReportBlockData& rtcpReportData =
                   *streamStats->report_block_data;
               RTCRemoteInboundRtpStreamStats remote;
@@ -2781,31 +2796,29 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
             // present)
             RTCOutboundRtpStreamStats local;
             constructCommonOutboundRtpStats(local);
-            streamStats.apply([&](auto& aStreamStats) {
-              local.mPacketsSent.Construct(
-                  aStreamStats.rtp_stats.transmitted.packets);
-              local.mBytesSent.Construct(
-                  aStreamStats.rtp_stats.transmitted.payload_bytes);
-              local.mNackCount.Construct(
-                  aStreamStats.rtcp_packet_type_counts.nack_packets);
-              local.mFirCount.Construct(
-                  aStreamStats.rtcp_packet_type_counts.fir_packets);
-              local.mPliCount.Construct(
-                  aStreamStats.rtcp_packet_type_counts.pli_packets);
-              local.mFramesEncoded.Construct(aStreamStats.frames_encoded);
-              if (aStreamStats.qp_sum) {
-                local.mQpSum.Construct(*aStreamStats.qp_sum);
-              }
-            });
+            local.mPacketsSent.Construct(
+                streamStats->rtp_stats.transmitted.packets);
+            local.mBytesSent.Construct(
+                streamStats->rtp_stats.transmitted.payload_bytes);
+            local.mNackCount.Construct(
+                streamStats->rtcp_packet_type_counts.nack_packets);
+            local.mFirCount.Construct(
+                streamStats->rtcp_packet_type_counts.fir_packets);
+            local.mPliCount.Construct(
+                streamStats->rtcp_packet_type_counts.pli_packets);
+            local.mFramesEncoded.Construct(streamStats->frames_encoded);
+            if (streamStats->qp_sum) {
+              local.mQpSum.Construct(*streamStats->qp_sum);
+            }
             /*
              * Potential new stats that are now available upstream.
             local.mHeaderBytesSent.Construct(
-                aStreamStats.rtp_stats.transmitted.header_bytes +
-                aStreamStats.rtp_stats.transmitted.padding_bytes);
+                streamStats->rtp_stats.transmitted.header_bytes +
+                streamStats->rtp_stats.transmitted.padding_bytes);
             local.mRetransmittedPacketsSent.Construct(
-                aStreamStats.rtp_stats.retransmitted.packets);
+                streamStats->rtp_stats.retransmitted.packets);
             local.mRetransmittedBytesSent.Construct(
-                aStreamStats.rtp_stats.retransmitted.payload_bytes);
+                streamStats->rtp_stats.retransmitted.payload_bytes);
             local.mTargetBitrate.Construct(videoStats->target_media_bitrate_bps);
             local.mTotalEncodedBytesTarget.Construct(
                 videoStats->total_encoded_bytes_target);
