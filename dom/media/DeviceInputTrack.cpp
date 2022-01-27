@@ -46,19 +46,22 @@ namespace mozilla {
 
 /* static */
 NativeInputTrack* NativeInputTrack::Create(
-    MediaTrackGraphImpl* aGraph, const PrincipalHandle& aPrincipalHandle) {
+    MediaTrackGraphImpl* aGraph, CubebUtils::AudioDeviceID aDeviceId,
+    const PrincipalHandle& aPrincipalHandle) {
   MOZ_ASSERT(NS_IsMainThread());
 
   NativeInputTrack* track =
-      new NativeInputTrack(aGraph->GraphRate(), aPrincipalHandle);
+      new NativeInputTrack(aGraph->GraphRate(), aDeviceId, aPrincipalHandle);
   LOG("Create NativeInputTrack %p in MTG %p", track, aGraph);
   aGraph->AddTrack(track);
   return track;
 }
 
 NativeInputTrack::NativeInputTrack(TrackRate aSampleRate,
+                                   CubebUtils::AudioDeviceID aDeviceId,
                                    const PrincipalHandle& aPrincipalHandle)
     : ProcessedMediaTrack(aSampleRate, MediaSegment::AUDIO, new AudioSegment()),
+      mDeviceId(aDeviceId),
       mPrincipalHandle(aPrincipalHandle),
       mIsBufferingAppended(false),
       mInputChannels(0),
