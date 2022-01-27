@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { getThreadPauseState } from "../reducers/pause";
-import { getSelectedSourceId, getSelectedLocation } from "../reducers/sources";
+import { getSelectedSourceId, getSelectedLocation } from "../selectors/sources";
 
 import { isGeneratedId } from "devtools-source-map";
 

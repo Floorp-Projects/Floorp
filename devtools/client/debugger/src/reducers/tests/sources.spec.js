@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import update, { initialSourcesState, getDisplayedSources } from "../sources";
+import update, { initialSourcesState } from "../sources";
+import { getDisplayedSources } from "../../selectors/sources";
 import { initialThreadsState } from "../threads";
 import updateSourceActors from "../source-actors";
 import { prefs } from "../../utils/prefs";

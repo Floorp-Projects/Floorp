@@ -17,9 +17,8 @@ import {
   getDisplayedSources,
   getFocusedSourceItem,
   getContext,
+  getGeneratedSourceByURL,
 } from "../../selectors";
-
-import { getGeneratedSourceByURL } from "../../reducers/sources";
 
 // Actions
 import actions from "../../actions";

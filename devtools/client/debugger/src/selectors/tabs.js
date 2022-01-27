@@ -6,7 +6,7 @@ import { createSelector } from "reselect";
 import { makeShallowQuery } from "../utils/resource";
 import { getPrettySourceURL } from "../utils/source";
 
-import { getSources, resourceAsSourceBase } from "../reducers/sources";
+import { getSources, resourceAsSourceBase } from "../selectors/sources";
 
 export const getTabs = state => state.tabs.tabs;
 
