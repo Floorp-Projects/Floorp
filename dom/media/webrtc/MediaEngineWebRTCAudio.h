@@ -16,7 +16,7 @@
 namespace mozilla {
 
 class AudioInputProcessing;
-class AudioInputTrack;
+class AudioProcessingTrack;
 
 // This class is created and used exclusively on the Media Manager thread, with
 // exactly two exceptions:
@@ -92,9 +92,9 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
   // The current preferences for the APM's various processing stages.
   MediaEnginePrefs mCurrentPrefs;
 
-  // The AudioInputTrack used to inteface with the MediaTrackGraph. Set in
+  // The AudioProcessingTrack used to inteface with the MediaTrackGraph. Set in
   // SetTrack as part of the initialization, and nulled in ::Deallocate.
-  RefPtr<AudioInputTrack> mTrack;
+  RefPtr<AudioProcessingTrack> mTrack;
 
   // See note at the top of this class.
   RefPtr<AudioInputProcessing> mInputProcessing;
@@ -201,7 +201,7 @@ class AudioInputProcessing : public AudioDataListener {
   // operates in "pull" mode, and we append silence only, releasing the audio
   // input track.
   bool mEnabled;
-  // Whether or not we've ended and removed the AudioInputTrack.
+  // Whether or not we've ended and removed the AudioProcessingTrack.
   bool mEnded;
   // When processing is enabled, the number of packets received by this
   // instance, to implement periodic logging.
@@ -217,7 +217,7 @@ class AudioInputProcessing : public AudioDataListener {
 };
 
 // MediaTrack subclass tailored for MediaEngineWebRTCMicrophoneSource.
-class AudioInputTrack : public ProcessedMediaTrack {
+class AudioProcessingTrack : public ProcessedMediaTrack {
   // Only accessed on the graph thread.
   RefPtr<AudioInputProcessing> mInputProcessing;
 
@@ -234,11 +234,11 @@ class AudioInputTrack : public ProcessedMediaTrack {
   // Only accessed on the main thread.
   Maybe<CubebUtils::AudioDeviceID> mDeviceId;
 
-  explicit AudioInputTrack(TrackRate aSampleRate)
+  explicit AudioProcessingTrack(TrackRate aSampleRate)
       : ProcessedMediaTrack(aSampleRate, MediaSegment::AUDIO,
                             new AudioSegment()) {}
 
-  ~AudioInputTrack() = default;
+  ~AudioProcessingTrack() = default;
 
  public:
   // Main Thread API
@@ -252,7 +252,7 @@ class AudioInputTrack : public ProcessedMediaTrack {
   Maybe<CubebUtils::AudioDeviceID> DeviceId() const;
   void Destroy() override;
   void SetInputProcessing(RefPtr<AudioInputProcessing> aInputProcessing);
-  static AudioInputTrack* Create(MediaTrackGraph* aGraph);
+  static AudioProcessingTrack* Create(MediaTrackGraph* aGraph);
 
   // Graph Thread API
   void DestroyImpl() override;
@@ -273,7 +273,7 @@ class AudioInputTrack : public ProcessedMediaTrack {
                         size_t aFrames, TrackRate aRate, uint32_t aChannels);
 
   // Any thread
-  AudioInputTrack* AsAudioInputTrack() override { return this; }
+  AudioProcessingTrack* AsAudioInputTrack() override { return this; }
 
  private:
   // Graph thread API

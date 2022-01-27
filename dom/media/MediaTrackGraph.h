@@ -86,7 +86,7 @@ enum class AudioContextState : uint8_t;
  * reprocess it. This is triggered automatically by the MediaTrackGraph.
  */
 
-class AudioInputTrack;
+class AudioProcessingTrack;
 class AudioNodeEngine;
 class AudioNodeExternalInputTrack;
 class AudioNodeTrack;
@@ -352,7 +352,7 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
   friend class MediaInputPort;
   friend class AudioNodeExternalInputTrack;
 
-  virtual AudioInputTrack* AsAudioInputTrack() { return nullptr; }
+  virtual AudioProcessingTrack* AsAudioInputTrack() { return nullptr; }
   virtual SourceMediaTrack* AsSourceTrack() { return nullptr; }
   virtual ProcessedMediaTrack* AsProcessedTrack() { return nullptr; }
   virtual AudioNodeTrack* AsAudioNodeTrack() { return nullptr; }
