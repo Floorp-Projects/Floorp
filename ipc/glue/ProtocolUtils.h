@@ -177,7 +177,6 @@ class IProtocol : public HasResultCodes {
 
   typedef base::ProcessId ProcessId;
   typedef IPC::Message Message;
-  typedef IPC::MessageInfo MessageInfo;
 
   IProtocol(ProtocolId aProtoId, Side aSide)
       : mId(0),
@@ -276,7 +275,6 @@ class IProtocol : public HasResultCodes {
   // Helpers for calling `Send` on our underlying IPC channel.
   bool ChannelSend(IPC::Message* aMsg);
   bool ChannelSend(IPC::Message* aMsg, IPC::Message* aReply);
-  bool ChannelCall(IPC::Message* aMsg, IPC::Message* aReply);
   template <typename Value>
   void ChannelSend(IPC::Message* aMsg, ResolveCallback<Value>&& aResolve,
                    RejectCallback&& aReject) {
@@ -473,26 +471,13 @@ class IToplevelProtocol : public IProtocol {
   void ArtificialSleep() {}
 #endif
 
-  virtual void EnteredCxxStack() {}
-  virtual void ExitedCxxStack() {}
-  virtual void EnteredCall() {}
-  virtual void ExitedCall() {}
-
   bool IsOnCxxStack() const;
-
-  virtual RacyInterruptPolicy MediateInterruptRace(const MessageInfo& parent,
-                                                   const MessageInfo& child) {
-    return RIPChildWins;
-  }
 
   /**
    * Return true if windows messages can be handled while waiting for a reply
    * to a sync IPDL message.
    */
   virtual bool HandleWindowsMessages(const Message& aMsg) const { return true; }
-
-  virtual void OnEnteredSyncSend() {}
-  virtual void OnExitedSyncSend() {}
 
   virtual void ProcessRemoteNativeEventsInInterruptCall() {}
 

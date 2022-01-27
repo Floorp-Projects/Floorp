@@ -104,9 +104,6 @@ class MessageChannel : HasResultCodes {
   friend class ProtocolFuzzerHelper;
 #endif
 
-  class CxxStackFrame;
-  class InterruptFrame;
-
   typedef mozilla::Monitor Monitor;
 
   // We could templatize the actor type but it would unnecessarily
@@ -147,7 +144,6 @@ class MessageChannel : HasResultCodes {
   static constexpr int32_t kNoTimeout = INT32_MIN;
 
   typedef IPC::Message Message;
-  typedef IPC::MessageInfo MessageInfo;
   typedef mozilla::ipc::Transport Transport;
   using ScopedPort = mozilla::ipc::ScopedPort;
 
@@ -256,9 +252,6 @@ class MessageChannel : HasResultCodes {
   // Synchronously send |msg| (i.e., wait for |reply|)
   bool Send(UniquePtr<Message> aMsg, Message* aReply);
 
-  // Make an Interrupt call to the other side of the channel
-  bool Call(UniquePtr<Message> aMsg, Message* aReply);
-
   bool CanSend() const;
 
   // Remove and return a callback that needs reply
@@ -277,7 +270,7 @@ class MessageChannel : HasResultCodes {
 
   void SetReplyTimeoutMs(int32_t aTimeoutMs);
 
-  bool IsOnCxxStack() const { return !mCxxStackFrames.empty(); }
+  bool IsOnCxxStack() const { return mOnCxxStack; }
 
   void CancelCurrentTransaction();
 
@@ -323,10 +316,9 @@ class MessageChannel : HasResultCodes {
 
 #ifdef OS_WIN
   struct MOZ_STACK_CLASS SyncStackFrame {
-    SyncStackFrame(MessageChannel* channel, bool interrupt);
+    explicit SyncStackFrame(MessageChannel* channel);
     ~SyncStackFrame();
 
-    bool mInterrupt;
     bool mSpinNestedEvents;
     bool mListenerNotified;
     MessageChannel* mChannel;
@@ -377,13 +369,11 @@ class MessageChannel : HasResultCodes {
 
   void Clear();
 
-  bool InterruptEventOccurred();
   bool HasPendingEvents();
 
   void ProcessPendingRequests(AutoEnterTransaction& aTransaction);
   bool ProcessPendingRequest(Message&& aUrgent);
 
-  void MaybeUndeferIncall();
   void EnqueuePendingMessages();
 
   // Dispatches an incoming message to its appropriate handler.
@@ -394,8 +384,6 @@ class MessageChannel : HasResultCodes {
   void DispatchSyncMessage(ActorLifecycleProxy* aProxy, const Message& aMsg,
                            Message*& aReply);
   void DispatchAsyncMessage(ActorLifecycleProxy* aProxy, const Message& aMsg);
-  void DispatchInterruptMessage(ActorLifecycleProxy* aProxy, Message&& aMsg,
-                                size_t aStackDepth);
 
   // Return true if the wait ended because a notification was received.
   //
@@ -408,7 +396,6 @@ class MessageChannel : HasResultCodes {
   // So in sum: true is a meaningful return value; false isn't,
   // necessarily.
   bool WaitForSyncNotify(bool aHandleWindowsMessages);
-  bool WaitForInterruptNotify();
 
   bool WaitResponse(bool aWaitTimedOut);
 
@@ -419,58 +406,18 @@ class MessageChannel : HasResultCodes {
 
   void RepostAllMessages();
 
-  // The "remote view of stack depth" can be different than the
-  // actual stack depth when there are out-of-turn replies.  When we
-  // receive one, our actual Interrupt stack depth doesn't decrease, but
-  // the other side (that sent the reply) thinks it has.  So, the
-  // "view" returned here is |stackDepth| minus the number of
-  // out-of-turn replies.
-  //
-  // Only called from the worker thread.
-  size_t RemoteViewOfStackDepth(size_t stackDepth) const {
-    AssertWorkerThread();
-    return stackDepth - mOutOfTurnReplies.size();
-  }
-
   int32_t NextSeqno() {
     AssertWorkerThread();
     return (mSide == ChildSide) ? --mNextSeqno : ++mNextSeqno;
   }
 
-  // This helper class manages mCxxStackDepth on behalf of MessageChannel.
-  // When the stack depth is incremented from zero to non-zero, it invokes
-  // a callback, and similarly for when the depth goes from non-zero to zero.
-  void EnteredCxxStack();
-  void ExitedCxxStack();
-
-  void EnteredCall();
-  void ExitedCall();
-
-  void EnteredSyncSend();
-  void ExitedSyncSend();
-
   void DebugAbort(const char* file, int line, const char* cond, const char* why,
                   bool reply = false);
-
-  // This method is only safe to call on the worker thread, or in a
-  // debugger with all threads paused.
-  void DumpInterruptStack(const char* const pfx = "") const;
 
   void AddProfilerMarker(const IPC::Message& aMessage,
                          MessageDirection aDirection);
 
  private:
-  // Called from both threads
-  size_t InterruptStackDepth() const {
-    mMonitor->AssertCurrentThreadOwns();
-    return mInterruptStack.size();
-  }
-
-  bool AwaitingInterruptReply() const {
-    mMonitor->AssertCurrentThreadOwns();
-    return !mInterruptStack.empty();
-  }
-
   // Returns true if we're dispatching an async message's callback.
   bool DispatchingAsyncMessage() const {
     AssertWorkerThread();
@@ -506,7 +453,6 @@ class MessageChannel : HasResultCodes {
 
   bool WasTransactionCanceled(int transaction);
   bool ShouldDeferMessage(const Message& aMsg);
-  bool ShouldDeferInterruptMessage(const Message& aMsg, size_t aStackDepth);
   void OnMessageReceivedFromLink(Message&& aMsg);
   void OnChannelErrorFromLink();
 
@@ -577,7 +523,6 @@ class MessageChannel : HasResultCodes {
   void RunMessage(MessageTask& aTask);
 
   typedef LinkedList<RefPtr<MessageTask>> MessageQueue;
-  typedef std::map<size_t, Message> MessageMap;
   typedef std::map<size_t, UniquePtr<UntypedCallbackHolder>> CallbackMap;
   typedef IPC::Message::msgid_t msgid_t;
 
@@ -700,38 +645,11 @@ class MessageChannel : HasResultCodes {
 
   // Queue of all incoming messages.
   //
-  // If both this side and the other side are functioning correctly, the queue
-  // can only be in certain configurations.  Let
-  //
-  //   |A<| be an async in-message,
-  //   |S<| be a sync in-message,
-  //   |C<| be an Interrupt in-call,
-  //   |R<| be an Interrupt reply.
-  //
-  // The queue can only match this configuration
-  //
-  //  A<* (S< | C< | R< (?{mInterruptStack.size() == 1} A<* (S< | C<)))
-  //
-  // The other side can send as many async messages |A<*| as it wants before
-  // sending us a blocking message.
-  //
-  // The first case is |S<|, a sync in-msg.  The other side must be blocked,
-  // and thus can't send us any more messages until we process the sync
+  // If both this side and the other side are functioning correctly, the other
+  // side can send as many async messages as it wants before sending us a
+  // blocking message.  After sending a blocking message, the other side must be
+  // blocked, and thus can't send us any more messages until we process the sync
   // in-msg.
-  //
-  // The second case is |C<|, an Interrupt in-call; the other side must be
-  // blocked. (There's a subtlety here: this in-call might have raced with an
-  // out-call, but we detect that with the mechanism below,
-  // |mRemoteStackDepth|, and races don't matter to the queue.)
-  //
-  // Final case, the other side replied to our most recent out-call |R<|.
-  // If that was the *only* out-call on our stack,
-  // |?{mInterruptStack.size() == 1}|, then other side "finished with us,"
-  // and went back to its own business.  That business might have included
-  // sending any number of async message |A<*| until sending a blocking
-  // message |(S< | C<)|.  If we had more than one Interrupt call on our
-  // stack, the other side *better* not have sent us another blocking
-  // message, because it's blocked on a reply from us.
   //
   MessageQueue mPending;
 
@@ -740,63 +658,13 @@ class MessageChannel : HasResultCodes {
   // context).
   size_t mMaybeDeferredPendingCount = 0;
 
-  // Stack of all the out-calls on which this channel is awaiting responses.
-  // Each stack refers to a different protocol and the stacks are mutually
-  // exclusive: multiple outcalls of the same kind cannot be initiated while
-  // another is active.
-  std::stack<MessageInfo> mInterruptStack;
-
-  // This is what we think the Interrupt stack depth is on the "other side" of
-  // this Interrupt channel.  We maintain this variable so that we can detect
-  // racy Interrupt calls.  With each Interrupt out-call sent, we send along
-  // what *we* think the stack depth of the remote side is *before* it will
-  // receive the Interrupt call.
-  //
-  // After sending the out-call, our stack depth is "incremented" by pushing
-  // that pending message onto mPending.
-  //
-  // Then when processing an in-call |c|, it must be true that
-  //
-  //   mInterruptStack.size() == c.remoteDepth
-  //
-  // I.e., my depth is actually the same as what the other side thought it
-  // was when it sent in-call |c|.  If this fails to hold, we have detected
-  // racy Interrupt calls.
-  //
-  // We then increment mRemoteStackDepth *just before* processing the
-  // in-call, since we know the other side is waiting on it, and decrement
-  // it *just after* finishing processing that in-call, since our response
-  // will pop the top of the other side's |mPending|.
-  //
-  // One nice aspect of this race detection is that it is symmetric; if one
-  // side detects a race, then the other side must also detect the same race.
-  size_t mRemoteStackDepthGuess = 0;
-
-  // Approximation of code frames on the C++ stack. It can only be
-  // interpreted as the implication:
-  //
-  //  !mCxxStackFrames.empty() => MessageChannel code on C++ stack
-  //
-  // This member is only accessed on the worker thread, and so is not
-  // protected by mMonitor.  It is managed exclusively by the helper
-  // |class CxxStackFrame|.
-  mozilla::Vector<InterruptFrame> mCxxStackFrames;
-
-  // Did we process an Interrupt out-call during this stack?  Only meaningful in
-  // ExitedCxxStack(), from which this variable is reset.
-  bool mSawInterruptOutMsg = false;
-
-  // Map of replies received "out of turn", because of Interrupt
-  // in-calls racing with replies to outstanding in-calls.  See
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=521929.
-  MessageMap mOutOfTurnReplies;
+  // Is there currently MessageChannel logic for this channel on the C++ stack?
+  // This member is only accessed on the worker thread, and so is not protected
+  // by mMonitor.
+  bool mOnCxxStack = false;
 
   // Map of async Callbacks that are still waiting replies.
   CallbackMap mPendingResponses;
-
-  // Stack of Interrupt in-calls that were deferred because of race
-  // conditions.
-  std::stack<Message> mDeferred;
 
 #ifdef OS_WIN
   HANDLE mEvent;
