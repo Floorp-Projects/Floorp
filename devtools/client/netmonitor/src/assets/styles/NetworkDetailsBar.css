@@ -543,10 +543,13 @@
   padding-top: 4px;
 }
 
-.network-monitor .custom-section,
-.network-monitor .http-custom-section {
+.network-monitor .custom-section {
   flex-direction: column;
   margin-top: 0.5em;
+}
+
+.network-monitor .http-custom-section {
+  flex-direction: column;
 }
 
 .network-monitor .custom-method-value {
