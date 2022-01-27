@@ -13,6 +13,11 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/RecursiveMutex.h"
 
+#ifdef DEBUG
+#  include "MainThreadUtils.h"
+#  include "nsIEventTarget.h"
+#endif
+
 class nsIInputStream;
 class nsILoadGroup;
 class nsIStreamListener;

@@ -39,7 +39,6 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
    * Ensure _form is updated when location-changed is emitted.
    */
   _locationChangedPre(line, column) {
-    this._clearOriginalLocation();
     this._form.line = line;
     this._form.column = column;
   }
@@ -156,40 +155,6 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
 
   get layerName() {
     return this._form.layerName;
-  }
-
-  _clearOriginalLocation() {
-    this._originalLocation = null;
-  }
-
-  getOriginalLocation() {
-    if (this._originalLocation) {
-      return Promise.resolve(this._originalLocation);
-    }
-    const parentSheet = this.parentStyleSheet;
-    if (!parentSheet) {
-      // This rule doesn't belong to a stylesheet so it is an inline style.
-      // Inline styles do not have any mediaText so we can return early.
-      return Promise.resolve(this.location);
-    }
-    return parentSheet
-      .getOriginalLocation(this.line, this.column)
-      .then(({ fromSourceMap, source, line, column }) => {
-        const location = {
-          href: source,
-          line: line,
-          column: column,
-          mediaText: this.mediaText,
-        };
-        if (fromSourceMap === false) {
-          location.source = this.parentStyleSheet;
-        }
-        if (!source) {
-          location.href = this.href;
-        }
-        this._originalLocation = location;
-        return location;
-      });
   }
 
   async modifySelector(node, value) {

@@ -4,8 +4,8 @@
 
 import { createSelector } from "reselect";
 
-import { getBreakpointsList } from "../reducers/breakpoints";
-import { getSelectedSource } from "../reducers/sources";
+import { getBreakpointsList } from "./breakpoints";
+import { getSelectedSource } from "../selectors/sources";
 
 import { sortSelectedBreakpoints } from "../utils/breakpoint";
 import { getSelectedLocation } from "../utils/selected-location";

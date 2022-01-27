@@ -12,7 +12,6 @@ from pprint import pformat
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
-from taskgraph.util.memoize import memoize
 from taskgraph.util.readonlydict import ReadOnlyDict
 from taskgraph.util.schema import validate_schema
 from taskgraph.util.vcs import get_repository
@@ -26,11 +25,6 @@ from voluptuous import (
 
 class ParameterMismatch(Exception):
     """Raised when a parameters.yml has extra or missing parameters."""
-
-
-@memoize
-def _repo():
-    return get_repository(os.getcwd())
 
 
 # Please keep this list sorted and in sync with taskcluster/docs/parameters.rst
@@ -64,25 +58,27 @@ base_schema = Schema(
 )
 
 
-def _get_defaults():
+def _get_defaults(repo_root=None):
+    repo = get_repository(repo_root or os.getcwd())
+
     return {
-        "base_repository": _repo().get_url(),
+        "base_repository": repo.get_url(),
         "build_date": int(time.time()),
         "do_not_optimize": [],
         "existing_tasks": {},
         "filters": ["target_tasks_method"],
-        "head_ref": _repo().head_ref,
-        "head_repository": _repo().get_url(),
-        "head_rev": _repo().head_ref,
+        "head_ref": repo.head_ref,
+        "head_repository": repo.get_url(),
+        "head_rev": repo.head_ref,
         "head_tag": "",
         "level": "3",
         "moz_build_date": datetime.now().strftime("%Y%m%d%H%M%S"),
         "optimize_target_tasks": True,
         "owner": "nobody@mozilla.com",
-        "project": _repo().get_url().rsplit("/", 1)[1],
+        "project": repo.get_url().rsplit("/", 1)[1],
         "pushdate": int(time.time()),
         "pushlog_id": "0",
-        "repository_type": _repo().tool,
+        "repository_type": repo.tool,
         "target_tasks_method": "default",
         "tasks_for": "",
     }
@@ -115,14 +111,14 @@ def extend_parameters_schema(schema, defaults_fn=None):
 class Parameters(ReadOnlyDict):
     """An immutable dictionary with nicer KeyError messages on failure"""
 
-    def __init__(self, strict=True, **kwargs):
+    def __init__(self, strict=True, repo_root=None, **kwargs):
         self.strict = strict
         self.spec = kwargs.pop("spec", None)
         self._id = None
 
         if not self.strict:
             # apply defaults to missing parameters
-            kwargs = Parameters._fill_defaults(**kwargs)
+            kwargs = Parameters._fill_defaults(repo_root=repo_root, **kwargs)
 
         ReadOnlyDict.__init__(self, **kwargs)
 
@@ -159,10 +155,10 @@ class Parameters(ReadOnlyDict):
         return os.path.splitext(os.path.basename(spec))[0]
 
     @staticmethod
-    def _fill_defaults(**kwargs):
+    def _fill_defaults(repo_root=None, **kwargs):
         defaults = {}
         for fn in defaults_functions:
-            defaults.update(fn())
+            defaults.update(fn(repo_root))
 
         for name, default in defaults.items():
             if name not in kwargs:
@@ -257,7 +253,9 @@ class Parameters(ReadOnlyDict):
         return pformat(dict(self), indent=2)
 
 
-def load_parameters_file(spec, strict=True, overrides=None, trust_domain=None):
+def load_parameters_file(
+    spec, strict=True, overrides=None, trust_domain=None, repo_root=None
+):
     """
     Load parameters from a path, url, decision task-id or project.
 
@@ -273,7 +271,7 @@ def load_parameters_file(spec, strict=True, overrides=None, trust_domain=None):
     overrides["spec"] = spec
 
     if not spec:
-        return Parameters(strict=strict, **overrides)
+        return Parameters(strict=strict, repo_root=repo_root, **overrides)
 
     try:
         # reading parameters from a local parameters.yml file
@@ -307,15 +305,21 @@ def load_parameters_file(spec, strict=True, overrides=None, trust_domain=None):
         raise TypeError(f"Parameters file `{spec}` is not JSON or YAML")
 
     kwargs.update(overrides)
-    return Parameters(strict=strict, **kwargs)
+    return Parameters(strict=strict, repo_root=repo_root, **kwargs)
 
 
 def parameters_loader(spec, strict=True, overrides=None):
     def get_parameters(graph_config):
+        try:
+            repo_root = graph_config.vcs_root
+        except Exception:
+            repo_root = None
+
         parameters = load_parameters_file(
             spec,
             strict=strict,
             overrides=overrides,
+            repo_root=repo_root,
             trust_domain=graph_config["trust-domain"],
         )
         parameters.check()

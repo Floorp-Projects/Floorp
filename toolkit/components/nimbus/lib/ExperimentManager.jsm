@@ -411,6 +411,9 @@ class _ExperimentManager {
     for (const { slug } of this.store.getAllActive()) {
       this.unenroll(slug, "studies-opt-out");
     }
+    for (const { slug } of this.store.getAllRollouts()) {
+      this.unenroll(slug, "studies-opt-out");
+    }
   }
 
   /**

@@ -7,9 +7,6 @@
  * @module reducers/exceptionss
  */
 
-import { createSelector } from "reselect";
-import { getSelectedSource, getSourceActorsForSource } from "../selectors";
-
 export function initialExceptionsState() {
   return {
     exceptions: {},
@@ -45,54 +42,6 @@ function updateExceptions(state, action) {
       [sourceActorId]: [exception],
     },
   };
-}
-
-// Selectors
-export function getExceptionsMap(state) {
-  return state.exceptions.exceptions;
-}
-
-export const getSelectedSourceExceptions = createSelector(
-  getSelectedSourceActors,
-  getExceptionsMap,
-  (sourceActors, exceptions) => {
-    const sourceExceptions = [];
-
-    sourceActors.forEach(sourceActor => {
-      const actorId = sourceActor.id;
-
-      if (exceptions[actorId]) {
-        sourceExceptions.push(...exceptions[actorId]);
-      }
-    });
-
-    return sourceExceptions;
-  }
-);
-
-function getSelectedSourceActors(state) {
-  const selectedSource = getSelectedSource(state);
-  if (!selectedSource) {
-    return [];
-  }
-  return getSourceActorsForSource(state, selectedSource.id);
-}
-
-export function hasException(state, line, column) {
-  return !!getSelectedException(state, line, column);
-}
-
-export function getSelectedException(state, line, column) {
-  const sourceExceptions = getSelectedSourceExceptions(state);
-
-  if (!sourceExceptions) {
-    return;
-  }
-
-  return sourceExceptions.find(
-    sourceExc =>
-      sourceExc.lineNumber === line && sourceExc.columnNumber === column
-  );
 }
 
 export default update;

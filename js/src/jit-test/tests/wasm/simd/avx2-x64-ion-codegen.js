@@ -106,3 +106,71 @@ c4 e2 79 58 c0            vpbroadcastd %xmm0, %xmm0`],
            ['i32', 'v128.load32_splat',
             'c4 c2 79 18 04 ..         vbroadcastssl \\(%r15,%r\\w+,1\\), %xmm0']], {memory: 1});
 }
+
+// Using VEX during shuffle ops
+codegenTestX64_v128xv128_v128_avxhack([
+     // Identity op on second argument should generate a move
+    ['i8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15',
+     'c5 f9 6f c1               vmovdqa %xmm1, %xmm0'],
+
+     // Broadcast a byte from first argument
+    ['i8x16.shuffle 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5',
+     `
+c5 f1 60 c1               vpunpcklbw %xmm1, %xmm1, %xmm0
+c5 fa 70 c0 55            vpshufhw \\$0x55, %xmm0, %xmm0
+c5 f9 70 c0 aa            vpshufd \\$0xAA, %xmm0, %xmm0`],
+
+     // Broadcast a word from first argument
+    ['i8x16.shuffle 4 5 4 5 4 5 4 5 4 5 4 5 4 5 4 5',
+     `
+c5 fb 70 c1 aa            vpshuflw \\$0xAA, %xmm1, %xmm0
+c5 f9 70 c0 00            vpshufd \\$0x00, %xmm0, %xmm0`],
+
+     // Permute words
+     ['i8x16.shuffle 2 3 0 1 6 7 4 5 10 11 8 9 14 15 12 13',
+`
+c5 fb 70 c1 b1            vpshuflw \\$0xB1, %xmm1, %xmm0
+c5 fa 70 c0 b1            vpshufhw \\$0xB1, %xmm0, %xmm0`],
+
+     // Permute doublewords
+     ['i8x16.shuffle 4 5 6 7 0 1 2 3 12 13 14 15 8 9 10 11',
+      'c5 f9 70 c1 b1            vpshufd \\$0xB1, %xmm1, %xmm0'],
+
+     // Interleave doublewords
+     ['i8x16.shuffle 0 1 2 3 16 17 18 19 4 5 6 7 20 21 22 23',
+      'c5 f1 62 c2               vpunpckldq %xmm2, %xmm1, %xmm0'],
+
+     // Interleave quadwords
+     ['i8x16.shuffle 24 25 26 27 28 29 30 31 8 9 10 11 12 13 14 15',
+      'c5 e9 6d c1               vpunpckhqdq %xmm1, %xmm2, %xmm0'],
+     
+     // Rotate right
+    ['i8x16.shuffle 13 14 15 0 1 2 3 4 5 6 7 8 9 10 11 12',
+     `c4 e3 71 0f c1 0d         vpalignr \\$0x0D, %xmm1, %xmm1, %xmm0`],
+    ['i8x16.shuffle 28 29 30 31 0 1 2 3 4 5 6 7 8 9 10 11',
+     `c4 e3 71 0f c2 0c         vpalignr \\$0x0C, %xmm2, %xmm1, %xmm0`]]);
+
+if (isAvxPresent(2)) {
+     codegenTestX64_v128xv128_v128_avxhack([
+          // Broadcast low byte from second argument
+          ['i8x16.shuffle 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0',
+           'c4 e2 79 78 c1            vpbroadcastb %xmm1, %xmm0'],
+
+          // Broadcast low word from third argument
+          ['i8x16.shuffle 16 17 16 17 16 17 16 17 16 17 16 17 16 17 16 17',
+          'c4 e2 79 79 c2            vpbroadcastw %xmm2, %xmm0'],
+
+          // Broadcast low doubleword from second argument
+          ['i8x16.shuffle 0 1 2 3 0 1 2 3 0 1 2 3 0 1 2 3',
+           'c4 e2 79 58 c1            vpbroadcastd %xmm1, %xmm0']]);
+}
+
+// Testing AVX optimization where VPBLENDVB accepts four XMM registers as args.
+codegenTestX64_adhoc(
+     `(func (export "f") (param v128 v128 v128 v128) (result v128)
+        (i8x16.shuffle 0 17 2 3 4 5 6 7 24 25 26 11 12 13 30 15
+          (local.get 2)(local.get 3)))`,
+     'f',
+`
+66 0f 6f 0d ${RIPRADDR}   movdqax ${RIPR}, %xmm1
+c4 e3 69 4c c3 10         vpblendvb %xmm1, %xmm3, %xmm2, %xmm0`);

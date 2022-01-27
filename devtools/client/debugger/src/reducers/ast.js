@@ -58,49 +58,4 @@ function update(state = initialASTState(), action) {
   }
 }
 
-// NOTE: we'd like to have the app state fully typed
-// https://github.com/firefox-devtools/debugger/blob/master/src/reducers/sources.js#L179-L185
-
-export function getSymbols(state, source) {
-  if (!source) {
-    return null;
-  }
-
-  return state.ast.symbols[source.id] || null;
-}
-
-export function hasSymbols(state, source) {
-  const symbols = getSymbols(state, source);
-
-  if (!symbols) {
-    return false;
-  }
-
-  return !symbols.loading;
-}
-
-export function getFramework(state, source) {
-  const symbols = getSymbols(state, source);
-  if (symbols && !symbols.loading) {
-    return symbols.framework;
-  }
-}
-
-export function isSymbolsLoading(state, source) {
-  const symbols = getSymbols(state, source);
-  if (!symbols) {
-    return false;
-  }
-
-  return symbols.loading;
-}
-
-export function getInScopeLines(state, location) {
-  return state.ast.inScopeLines[makeBreakpointId(location)];
-}
-
-export function hasInScopeLines(state, location) {
-  return !!getInScopeLines(state, location);
-}
-
 export default update;

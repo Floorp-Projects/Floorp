@@ -1355,6 +1355,11 @@ void MacroAssembler::shuffleInt8x16(const uint8_t lanes[16], FloatRegister rhs,
   MacroAssemblerX86Shared::shuffleInt8x16(lhsDest, rhs, lhsDest, lanes);
 }
 
+void MacroAssembler::shuffleInt8x16(const uint8_t lanes[16], FloatRegister lhs,
+                                    FloatRegister rhs, FloatRegister dest) {
+  MacroAssemblerX86Shared::shuffleInt8x16(lhs, rhs, dest, lanes);
+}
+
 void MacroAssembler::blendInt8x16(const uint8_t lanes[16], FloatRegister lhs,
                                   FloatRegister rhs, FloatRegister dest,
                                   FloatRegister temp) {
@@ -1372,44 +1377,44 @@ void MacroAssembler::laneSelectSimd128(FloatRegister mask,
   MacroAssemblerX86Shared::laneSelectSimd128(lhs, rhsDest, mask, rhsDest);
 }
 
-void MacroAssembler::interleaveHighInt16x8(FloatRegister rhs,
-                                           FloatRegister lhsDest) {
-  vpunpckhwd(rhs, lhsDest, lhsDest);
+void MacroAssembler::interleaveHighInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  vpunpckhwd(rhs, lhs, dest);
 }
 
-void MacroAssembler::interleaveHighInt32x4(FloatRegister rhs,
-                                           FloatRegister lhsDest) {
-  vpunpckhdq(rhs, lhsDest, lhsDest);
+void MacroAssembler::interleaveHighInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  vpunpckhdq(rhs, lhs, dest);
 }
 
-void MacroAssembler::interleaveHighInt64x2(FloatRegister rhs,
-                                           FloatRegister lhsDest) {
-  vpunpckhqdq(rhs, lhsDest, lhsDest);
+void MacroAssembler::interleaveHighInt64x2(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  vpunpckhqdq(rhs, lhs, dest);
 }
 
-void MacroAssembler::interleaveHighInt8x16(FloatRegister rhs,
-                                           FloatRegister lhsDest) {
-  vpunpckhbw(rhs, lhsDest, lhsDest);
+void MacroAssembler::interleaveHighInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  vpunpckhbw(rhs, lhs, dest);
 }
 
-void MacroAssembler::interleaveLowInt16x8(FloatRegister rhs,
-                                          FloatRegister lhsDest) {
-  vpunpcklwd(rhs, lhsDest, lhsDest);
+void MacroAssembler::interleaveLowInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                          FloatRegister dest) {
+  vpunpcklwd(rhs, lhs, dest);
 }
 
-void MacroAssembler::interleaveLowInt32x4(FloatRegister rhs,
-                                          FloatRegister lhsDest) {
-  vpunpckldq(rhs, lhsDest, lhsDest);
+void MacroAssembler::interleaveLowInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                          FloatRegister dest) {
+  vpunpckldq(rhs, lhs, dest);
 }
 
-void MacroAssembler::interleaveLowInt64x2(FloatRegister rhs,
-                                          FloatRegister lhsDest) {
-  vpunpcklqdq(rhs, lhsDest, lhsDest);
+void MacroAssembler::interleaveLowInt64x2(FloatRegister lhs, FloatRegister rhs,
+                                          FloatRegister dest) {
+  vpunpcklqdq(rhs, lhs, dest);
 }
 
-void MacroAssembler::interleaveLowInt8x16(FloatRegister rhs,
-                                          FloatRegister lhsDest) {
-  vpunpcklbw(rhs, lhsDest, lhsDest);
+void MacroAssembler::interleaveLowInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                          FloatRegister dest) {
+  vpunpcklbw(rhs, lhs, dest);
 }
 
 void MacroAssembler::permuteInt8x16(const uint8_t lanes[16], FloatRegister src,
@@ -1438,10 +1443,11 @@ void MacroAssembler::permuteInt32x4(const uint32_t lanes[4], FloatRegister src,
           dest);
 }
 
-void MacroAssembler::concatAndRightShiftSimd128(FloatRegister rhs,
-                                                FloatRegister lhsDest,
+void MacroAssembler::concatAndRightShiftSimd128(FloatRegister lhs,
+                                                FloatRegister rhs,
+                                                FloatRegister dest,
                                                 uint32_t shift) {
-  vpalignr(Operand(rhs), lhsDest, lhsDest, shift);
+  vpalignr(Operand(rhs), lhs, dest, shift);
 }
 
 void MacroAssembler::leftShiftSimd128(Imm32 count, FloatRegister src,

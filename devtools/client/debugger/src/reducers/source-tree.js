@@ -32,11 +32,3 @@ function updateExpanded(state, action) {
     expanded: new Set(action.expanded),
   };
 }
-
-export function getExpandedState(state) {
-  return state.sourceTree.expanded;
-}
-
-export function getFocusedSourceItem(state) {
-  return state.sourceTree.focusedItem;
-}

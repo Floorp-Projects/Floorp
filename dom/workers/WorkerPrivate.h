@@ -1469,12 +1469,12 @@ class AutoSyncLoopHolder {
   }
 
   bool Run() {
-    CheckedUnsafePtr<WorkerPrivate> keepAliveWP = mWorkerPrivate;
+    CheckedUnsafePtr<WorkerPrivate> workerPrivate = mWorkerPrivate;
     mWorkerPrivate = nullptr;
 
-    keepAliveWP->AssertIsOnWorkerThread();
+    workerPrivate->AssertIsOnWorkerThread();
 
-    return keepAliveWP->RunCurrentSyncLoop();
+    return workerPrivate->RunCurrentSyncLoop();
   }
 
   nsIEventTarget* GetEventTarget() const {

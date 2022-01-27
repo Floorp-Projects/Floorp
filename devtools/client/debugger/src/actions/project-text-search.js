@@ -18,10 +18,10 @@ import {
 import { isThirdParty } from "../utils/source";
 import { loadSourceText } from "./sources/loadSourceText";
 import {
-  statusType,
   getTextSearchOperation,
   getTextSearchStatus,
-} from "../reducers/project-text-search";
+} from "../selectors/project-text-search";
+import { statusType } from "../reducers/project-text-search";
 
 export function addSearchQuery(cx, query) {
   return { type: "ADD_QUERY", cx, query };

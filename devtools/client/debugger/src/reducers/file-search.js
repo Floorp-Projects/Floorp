@@ -67,19 +67,4 @@ function update(state = initialFileSearchState(), action) {
   }
 }
 
-// NOTE: we'd like to have the app state fully typed
-// https://github.com/firefox-devtools/debugger/blob/master/src/reducers/sources.js#L179-L185
-
-export function getFileSearchQuery(state) {
-  return state.fileSearch.query;
-}
-
-export function getFileSearchModifiers(state) {
-  return state.fileSearch.modifiers;
-}
-
-export function getFileSearchResults(state) {
-  return state.fileSearch.searchResults;
-}
-
 export default update;

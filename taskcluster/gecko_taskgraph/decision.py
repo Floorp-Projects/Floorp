@@ -12,6 +12,7 @@ from collections import defaultdict
 
 import yaml
 from redo import retry
+from taskgraph.parameters import Parameters
 from taskgraph.util.yaml import load_yaml
 from voluptuous import Required, Optional, Any
 
@@ -19,7 +20,7 @@ from . import GECKO, create
 from .actions import render_actions_json
 from .create import create_tasks
 from .generator import TaskGraphGenerator
-from .parameters import Parameters, get_version, get_app_version
+from .parameters import get_version, get_app_version
 from .taskgraph import TaskGraph
 from .try_option_syntax import parse_message
 from .util.backstop import is_backstop, BACKSTOP_INDEX
@@ -274,11 +275,13 @@ def get_decision_parameters(graph_config, options):
             "head_repository",
             "head_rev",
             "head_ref",
+            "head_tag",
             "project",
             "pushlog_id",
             "pushdate",
             "owner",
             "level",
+            "repository_type",
             "target_tasks_method",
             "tasks_for",
         ]

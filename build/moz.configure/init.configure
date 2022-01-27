@@ -882,6 +882,23 @@ def target_is_sparc(target):
 set_define("SPARC64", target_is_sparc)
 
 
+@depends(target, when=target_is_android)
+def android_cpu_arch(target):
+    d = {
+        "aarch64": "arm64-v8a",
+        "arm": "armeabi-v7a",
+        "x86": "x86",
+        "x86_64": "x86_64",
+    }
+    if target.cpu not in d:
+        die(f"Cannot determine android_cpu_arch: unknown target.cpu: {target.cpu}")
+    return d[target.cpu]
+
+
+set_config("ANDROID_CPU_ARCH", android_cpu_arch)
+add_old_configure_assignment("ANDROID_CPU_ARCH", android_cpu_arch)
+
+
 @depends("--enable-project", build_environment, "--help")
 @imports(_from="os.path", _import="exists")
 def include_project_configure(project, build_env, help):

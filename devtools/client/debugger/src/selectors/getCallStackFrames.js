@@ -7,8 +7,8 @@ import {
   getSelectedSource,
   getSourceInSources,
   getBlackBoxRanges,
-} from "../reducers/sources";
-import { getCurrentThreadFrames } from "../reducers/pause";
+} from "../selectors/sources";
+import { getCurrentThreadFrames } from "./pause";
 import { annotateFrames } from "../utils/pause/frames";
 import { isFrameBlackBoxed } from "../utils/source";
 import { createSelector } from "reselect";
