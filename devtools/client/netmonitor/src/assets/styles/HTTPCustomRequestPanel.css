@@ -4,20 +4,22 @@
 
 .network-monitor .http-custom-method-and-url .http-custom-url-value {
   grid-column: 2 / 2;
-  grid-row: 2 / 2;
+  grid-row: 1 / 2;
   margin-inline-start: 12px;
 }
 
 .network-monitor .http-custom-method-and-url .http-custom-method-value {
   grid-column: 1 / 1;
-  grid-row: 2 / 2;
+  grid-row: 1 / 1;
+  align-self: start;
+  margin: 4px 0;
+  padding-top: 4px;
 }
 
 .network-monitor .tabpanel-summary-container.http-custom-method-and-url {
   display: grid;
   grid-template-columns: auto 1fr;
   width: 100%;
-  height: 26px;
   padding: 3px;
 }
 
@@ -31,12 +33,10 @@
 }
 
 .network-monitor .http-custom-method-and-url .http-custom-url-value {
-  padding-inline-start: 7px;
-}
-
-.network-monitor .http-custom-method-and-url input {
   font-weight: normal;
   min-width: 9ch;
+  padding: 4px;
+  padding-inline-start: 7px;
 }
 
 .network-monitor .http-custom-method-and-url input ::placeholder {
@@ -79,7 +79,6 @@
   display: flex;
   justify-content: end;
   flex-wrap: wrap-reverse;
-  justify-content: end;
   gap: 8px;
   margin-block: 16px 12px;
   margin-inline: 16px;
@@ -146,6 +145,11 @@
   border-inline-start: 1px solid var(--grey-60);
 }
 
+:root.theme-dark .network-monitor .http-custom-method-and-url .http-custom-url-value:focus-visible {
+  outline: auto;
+  outline-color: var(--blue-50);
+}
+
 :root.theme-dark .network-monitor #http-custom-request-clear-button {
   background-color: var(--toolbarbutton-background);
   border: 1px solid var(--theme-splitter-color);
@@ -186,6 +190,11 @@
 
 :root.theme-light .network-monitor .http-custom-method-and-url .http-custom-url-value {
   border-inline-start: 1px solid var(--grey-30);
+}
+
+:root.theme-light .network-monitor .http-custom-method-and-url .http-custom-url-value:focus-visible {
+  outline: auto;
+  outline-color: var(--blue-50);
 }
 
 :root.theme-light .network-details-bar .http-custom-request-label.http-custom-header {
