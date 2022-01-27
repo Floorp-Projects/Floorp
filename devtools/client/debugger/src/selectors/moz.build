@@ -20,6 +20,7 @@ CompiledModules(
     "pause.js",
     "preview.js",
     "project-text-search.js",
+    "quick-open.js",
     "tabs.js",
     "threads.js",
     "visibleBreakpoints.js",
