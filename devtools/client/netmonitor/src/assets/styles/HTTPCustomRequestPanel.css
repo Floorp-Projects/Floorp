@@ -2,6 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+.network-monitor .tabpanel-summary-container:is(.http-custom-section, .http-custom-method-and-url ) {
+  padding-inline-start: 0;
+  margin: 0;
+}
+
+.network-monitor .tabpanel-summary-container.http-custom-method-and-url {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  width: 100%;
+}
+
 .network-monitor .http-custom-method-and-url .http-custom-url-value {
   grid-column: 2 / 2;
   grid-row: 1 / 2;
@@ -12,24 +23,15 @@
   grid-column: 1 / 1;
   grid-row: 1 / 1;
   align-self: start;
-  margin: 4px 0;
+  margin-inline-start: 10px;
   padding-top: 4px;
-}
-
-.network-monitor .tabpanel-summary-container.http-custom-method-and-url {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  width: 100%;
-  padding: 3px;
-}
-
-.network-monitor .http-custom-method-and-url :is(.http-custom-method-value, .http-custom-url-value) {
-  border: 0;
-}
-
-.network-monitor .http-custom-method-value select {
   font-size: 11px;
   line-height: 13px;
+}
+
+.network-monitor .http-custom-method-and-url :is(.http-custom-method-value, .http-custom-url-value),
+.tabpanel-summary-container.http-custom-section .tabpanel-summary-input {
+  border: 0;
 }
 
 .network-monitor .http-custom-method-and-url .http-custom-url-value {
@@ -46,10 +48,19 @@
   margin-inline-end: 8px;
 }
 
+.network-monitor .tabpanel-summary-container .http-custom-request-label {
+  padding: 6px 13px;
+  font-size: 12px;
+  line-height: 14px;
+}
+
 .network-monitor .http-custom-request-panel textarea {
-  font-weight: 400;
-  margin-top: 4px;
-  padding: 8px;
+  color: var(--grey-50);
+  font-weight: normal;
+  padding: 14px;
+  padding-top: 8px;
+  font-size: 11px;
+  line-height: 13px;
   direction: ltr;
 }
 
@@ -65,9 +76,8 @@
   overflow: auto;
 }
 
-.network-monitor .http-custom-request-panel-content > div:not(.http-custom-request) {
-  margin-bottom: 12px;
-  padding-inline: 16px;
+.tabpanel-summary-container .http-custom-section {
+  border: 1px solid var(--grey-25);
 }
 
 .network-monitor .http-custom-request {
@@ -132,22 +142,30 @@
   background-color: var(--grey-85);
 }
 
-:root.theme-dark .network-monitor .tabpanel-summary-container.http-custom-method-and-url {
+:root.theme-dark .network-monitor .tabpanel-summary-container:is(.http-custom-method-and-url, .http-custom-section),
+:root.theme-dark .network-monitor .tabpanel-summary-container .http-custom-request-label {
   border-bottom: 1px solid var(--grey-60);
 }
 
-:root.theme-dark .network-monitor .http-custom-method-and-url .http-custom-method-value,
-:root.theme-dark .network-monitor .http-custom-method-and-url .http-custom-url-value {
+:root.theme-dark .network-monitor .http-custom-method-and-url :is(.http-custom-method-value, .http-custom-url-value),
+:root.theme-dark .network-monitor .tabpanel-summary-container .tabpanel-summary-input {
   background-color: var(--grey-85);
+  color: white;
 }
 
 :root.theme-dark .network-monitor .http-custom-method-and-url .http-custom-url-value {
   border-inline-start: 1px solid var(--grey-60);
 }
 
-:root.theme-dark .network-monitor .http-custom-method-and-url .http-custom-url-value:focus-visible {
-  outline: auto;
-  outline-color: var(--blue-50);
+:root.theme-dark .network-monitor .http-custom-method-and-url .http-custom-url-value:focus {
+  outline: 2px solid var(--blue-50);
+  width: calc(100% - 15px);
+}
+
+:root.theme-dark .network-monitor .tabpanel-summary-container .tabpanel-summary-input:focus {
+  outline: 2px solid var(--blue-50);
+  margin-inline-start: 2px;
+  width: calc(100% - 5px);
 }
 
 :root.theme-dark .network-monitor #http-custom-request-clear-button {
@@ -180,7 +198,8 @@
 }
 
 /* Light theme */
-:root.theme-light .network-monitor .tabpanel-summary-container.http-custom-method-and-url {
+:root.theme-light .network-monitor .tabpanel-summary-container:is(.http-custom-method-and-url, .http-custom-section),
+:root.theme-light .network-monitor .tabpanel-summary-container .http-custom-request-label {
   border-bottom: 1px solid var(--grey-30);
 }
 
@@ -192,9 +211,20 @@
   border-inline-start: 1px solid var(--grey-30);
 }
 
-:root.theme-light .network-monitor .http-custom-method-and-url .http-custom-url-value:focus-visible {
-  outline: auto;
-  outline-color: var(--blue-50);
+:root.theme-light .network-monitor .http-custom-method-and-url .http-custom-url-value:focus {
+  outline: 2px solid var(--blue-50);
+  width: calc(100% - 15px);
+}
+
+:root.theme-light .network-monitor .tabpanel-summary-container .tabpanel-summary-input:focus {
+  outline: 2px solid var(--blue-50);
+  margin-inline-start: 2px;
+  width: calc(100% - 5px);
+}
+
+:root.theme-light .network-monitor .tabpanel-summary-container .http-custom-request-label {
+  background-color: var(--grey-10);
+  color: var(--grey-90);
 }
 
 :root.theme-light .network-details-bar .http-custom-request-label.http-custom-header {

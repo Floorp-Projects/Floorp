@@ -26,7 +26,10 @@ const CUSTOM_HEADERS = L10N.getStr("netmonitor.custom.headers");
 const CUSTOM_NEW_REQUEST_URL_LABEL = L10N.getStr(
   "netmonitor.custom.newRequestUrlLabel"
 );
-const CUSTOM_POSTDATA = L10N.getStr("netmonitor.custom.postData");
+const CUSTOM_POSTDATA = L10N.getStr("netmonitor.custom.postBody");
+const CUSTOM_POSTDATA_PLACEHOLDER = L10N.getStr(
+  "netmonitor.custom.postBody.placeholder"
+);
 const CUSTOM_QUERY = L10N.getStr("netmonitor.custom.query");
 const CUSTOM_SEND = L10N.getStr("netmonitor.custom.send");
 const CUSTOM_CLEAR = L10N.getStr("netmonitor.custom.clear");
@@ -307,6 +310,7 @@ class HTTPCustomRequestPanel extends Component {
             className: "tabpanel-summary-input",
             id: "http-custom-postdata-value",
             name: "requestPostData",
+            placeholder: CUSTOM_POSTDATA_PLACEHOLDER,
             onChange: this.handleInputChange,
             rows: 6,
             value: requestPostData,
