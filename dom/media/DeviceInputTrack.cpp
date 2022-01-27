@@ -119,16 +119,6 @@ uint32_t NativeInputTrack::NumberOfChannels() const {
   return mInputChannels;
 }
 
-void NativeInputTrack::NotifyOutputData(MediaTrackGraphImpl* aGraph,
-                                        AudioDataValue* aBuffer, size_t aFrames,
-                                        TrackRate aRate, uint32_t aChannels) {
-  MOZ_ASSERT(aGraph->OnGraphThreadOrNotRunning());
-  MOZ_ASSERT(aGraph == mGraph, "Receive output data from another graph");
-  for (auto& listener : mDataUsers) {
-    listener->NotifyOutputData(aGraph, aBuffer, aFrames, aRate, aChannels);
-  }
-}
-
 void NativeInputTrack::NotifyInputStopped(MediaTrackGraphImpl* aGraph) {
   MOZ_ASSERT(aGraph->OnGraphThreadOrNotRunning());
   MOZ_ASSERT(aGraph == mGraph,

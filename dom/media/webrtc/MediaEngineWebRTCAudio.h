@@ -113,9 +113,8 @@ class AudioInputProcessing : public AudioDataListener {
   void Process(MediaTrackGraphImpl* aGraph, GraphTime aFrom, GraphTime aTo,
                AudioSegment* aInput, AudioSegment* aOutput);
 
-  void NotifyOutputData(MediaTrackGraphImpl* aGraph, AudioDataValue* aBuffer,
-                        size_t aFrames, TrackRate aRate,
-                        uint32_t aChannels) override;
+  void ProcessOutputData(MediaTrackGraphImpl* aGraph, AudioDataValue* aBuffer,
+                         size_t aFrames, TrackRate aRate, uint32_t aChannels);
   bool IsVoiceInput(MediaTrackGraphImpl* aGraph) const override {
     // If we're passing data directly without AEC or any other process, this
     // means that all voice-processing has been disabled intentionaly. In this
@@ -268,6 +267,10 @@ class AudioInputTrack : public ProcessedMediaTrack {
   // needs to be empty.
   void GetInputSourceData(AudioSegment& aOutput, const MediaInputPort* aPort,
                           GraphTime aFrom, GraphTime aTo) const;
+  // Pass the graph's mixed audio output to mInputProcessing for processing as
+  // the reverse stream.
+  void NotifyOutputData(MediaTrackGraphImpl* aGraph, AudioDataValue* aBuffer,
+                        size_t aFrames, TrackRate aRate, uint32_t aChannels);
 
   // Any thread
   AudioInputTrack* AsAudioInputTrack() override { return this; }
