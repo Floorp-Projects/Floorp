@@ -12,7 +12,6 @@ export * from "../reducers/pending-breakpoints";
 export * from "../reducers/ui";
 export * from "../reducers/project-text-search";
 export * from "../reducers/source-tree";
-export * from "../reducers/preview";
 
 export {
   getSourceActor,
@@ -47,6 +46,7 @@ export {
   getSelectedFrames,
   getVisibleSelectedFrame,
 } from "./pause";
+export * from "./preview";
 export * from "./tabs";
 export * from "./threads";
 export {
