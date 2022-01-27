@@ -79,13 +79,6 @@ export function hasSymbols(state, source) {
   return !symbols.loading;
 }
 
-export function getFramework(state, source) {
-  const symbols = getSymbols(state, source);
-  if (symbols && !symbols.loading) {
-    return symbols.framework;
-  }
-}
-
 export function isSymbolsLoading(state, source) {
   const symbols = getSymbols(state, source);
   if (!symbols) {
