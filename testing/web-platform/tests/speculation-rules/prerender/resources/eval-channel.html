@@ -18,6 +18,13 @@
           }
         });
 
+      window.import_script_to_prerendered_page = src => {
+        const script = document.createElement('script');
+        script.src = src;
+        document.head.appendChild(script);
+        return new Promise(resolve => script.addEventListener('load', resolve));
+      }
+
       window.addEventListener('error', error =>
         logChannel.postMessage('[Prerendered Page Error]', {message: error.message, stack: error.stack}));
 

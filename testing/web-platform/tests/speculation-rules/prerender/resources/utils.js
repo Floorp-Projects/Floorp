@@ -201,8 +201,19 @@ async function create_prerendered_page(t) {
     });
   });
 
+  async function activate() {
+    initChannel.postMessage('activate');
+    const prerendering = await exec(() => new Promise(resolve =>
+      document.addEventListener('prerenderingchange', () => {
+        resolve(document.prerendering);
+      })));
+
+    if (prerendering)
+      throw new Error('Should not be prerendering at this point')
+  }
+
   return {
     exec,
-    activate: () => initChannel.postMessage('activate')
+    activate
   };
 }
