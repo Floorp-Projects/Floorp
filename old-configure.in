@@ -211,7 +211,6 @@ dnl ========================================================
 dnl Android libstdc++
 dnl ========================================================
 
-MOZ_ANDROID_CPU_ARCH
 if test "$COMPILE_ENVIRONMENT"; then
     MOZ_ANDROID_STLPORT
 fi # COMPILE_ENVIRONMENT
