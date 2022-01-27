@@ -122,7 +122,7 @@ var gMoreFromMozillaPane = {
         region: "global",
         button: {
           id: "mozillaVPN",
-          label_string_id: "more-from-moz-button-mozilla-vpn",
+          label_string_id: "more-from-moz-button-mozilla-vpn-2",
           actionURL: "https://www.mozilla.org/products/vpn/",
         },
       };
@@ -137,7 +137,7 @@ var gMoreFromMozillaPane = {
         region: "na",
         button: {
           id: "mozillaRally",
-          label_string_id: "more-from-moz-button-mozilla-rally",
+          label_string_id: "more-from-moz-button-mozilla-rally-2",
           actionURL: "https://rally.mozilla.org/",
         },
       };
@@ -167,7 +167,9 @@ var gMoreFromMozillaPane = {
       if (this.option === "advanced") {
         // So that we can build a selector that applies to .product-info differently
         // for different products.
-        template.querySelector("vbox.advanced").id = `${product.id}-vbox`;
+        template.querySelector(
+          ".mozilla-product-item.advanced"
+        ).id = `${product.id}-div`;
 
         template.querySelector(".product-img").id = `${product.id}-image`;
         desc.setAttribute(
@@ -186,8 +188,8 @@ var gMoreFromMozillaPane = {
       if (actionElement) {
         actionElement.hidden = false;
         actionElement.id = `${this.option}-${product.button.id}`;
-        actionElement.setAttribute(
-          "data-l10n-id",
+        document.l10n.setAttributes(
+          actionElement,
           product.button.label_string_id
         );
 
@@ -198,7 +200,7 @@ var gMoreFromMozillaPane = {
           );
           actionElement.setAttribute("target", "_blank");
         } else {
-          actionElement.addEventListener("command", function() {
+          actionElement.addEventListener("click", function() {
             let mainWindow = window.windowRoot.ownerGlobal;
             mainWindow.openTrustedLinkIn(
               gMoreFromMozillaPane.getURL(
@@ -242,24 +244,19 @@ var gMoreFromMozillaPane = {
           "more-from-moz-qr-code-firefox-mobile-img"
         );
 
-        // Note that the QR code image itself is _not_ a link; this is a link that
-        // is directly below the image.
-        let qrc_btn = template.querySelector(".qr-code-button");
+        let qrc_link = template.querySelector(".qr-code-link");
 
         // So the telemetry includes info about which option is being used
-        qrc_btn.id = `${this.option}-${product.qrcode.button.id}`;
-        qrc_btn.setAttribute(
+        qrc_link.id = `${this.option}-${product.qrcode.button.id}`;
+        qrc_link.setAttribute(
           "data-l10n-id",
           product.qrcode.button.label.string_id
         );
-        qrc_btn.setAttribute(
-          "href",
-          this.getURL(
-            product.qrcode.button.actionURL,
-            product.region,
-            this.option,
-            true
-          )
+        qrc_link.href = this.getURL(
+          product.qrcode.button.actionURL,
+          product.region,
+          this.option,
+          true
         );
       }
 
