@@ -10,12 +10,18 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.PopupWindow
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.feature.top.sites.TopSite
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.TopSiteItemBinding
+import org.mozilla.fenix.ext.bitmapForUrl
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
@@ -72,27 +78,37 @@ class TopSiteItemViewHolder(
             binding.topSiteTitle.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null)
         }
 
-        when (topSite.url) {
-            SupportUtils.POCKET_TRENDING_URL -> {
-                binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_pocket))
+        if (topSite is TopSite.Provided) {
+            CoroutineScope(IO).launch {
+                itemView.context.components.core.client.bitmapForUrl(topSite.imageUrl)?.let { bitmap ->
+                    withContext(Main) {
+                        binding.faviconImage.setImageBitmap(bitmap)
+                    }
+                }
             }
-            SupportUtils.BAIDU_URL -> {
-                binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_baidu))
-            }
-            SupportUtils.JD_URL -> {
-                binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_jd))
-            }
-            SupportUtils.PDD_URL -> {
-                binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_pdd))
-            }
-            SupportUtils.TC_URL -> {
-                binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_tc))
-            }
-            SupportUtils.MEITUAN_URL -> {
-                binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_meituan))
-            }
-            else -> {
-                itemView.context.components.core.icons.loadIntoView(binding.faviconImage, topSite.url)
+        } else {
+            when (topSite.url) {
+                SupportUtils.POCKET_TRENDING_URL -> {
+                    binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_pocket))
+                }
+                SupportUtils.BAIDU_URL -> {
+                    binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_baidu))
+                }
+                SupportUtils.JD_URL -> {
+                    binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_jd))
+                }
+                SupportUtils.PDD_URL -> {
+                    binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_pdd))
+                }
+                SupportUtils.TC_URL -> {
+                    binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_tc))
+                }
+                SupportUtils.MEITUAN_URL -> {
+                    binding.faviconImage.setImageDrawable(getDrawable(itemView.context, R.drawable.ic_meituan))
+                }
+                else -> {
+                    itemView.context.components.core.icons.loadIntoView(binding.faviconImage, topSite.url)
+                }
             }
         }
 

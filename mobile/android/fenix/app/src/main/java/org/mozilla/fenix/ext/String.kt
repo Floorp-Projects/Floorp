@@ -4,20 +4,13 @@
 
 package org.mozilla.fenix.ext
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.text.Editable
 import android.util.Patterns
 import android.webkit.URLUtil
 import androidx.core.net.toUri
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import mozilla.components.concept.fetch.Client
-import mozilla.components.concept.fetch.Request
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
-import java.io.IOException
 import java.net.IDN
 import java.util.Locale
 
@@ -110,14 +103,3 @@ fun String.simplifiedUrl(): String {
  * Returns an [Editable] for the provided string.
  */
 fun String.toEditable(): Editable = Editable.Factory.getInstance().newEditable(this)
-
-suspend fun bitmapForUrl(url: String, client: Client): Bitmap? = withContext(Dispatchers.IO) {
-    // Code below will cache it in Gecko's cache, which ensures that as long as we've fetched it once,
-    // we will be able to display this avatar as long as the cache isn't purged (e.g. via 'clear user data').
-    val body = try {
-        client.fetch(Request(url, useCaches = true)).body
-    } catch (e: IOException) {
-        return@withContext null
-    }
-    body.useStream { BitmapFactory.decodeStream(it) }
-}

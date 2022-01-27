@@ -114,7 +114,7 @@ class AccountUiView(
     private suspend fun toRoundedDrawable(
         url: String,
         context: Context
-    ) = bitmapForUrl(url, httpClient)?.let { bitmap ->
+    ) = httpClient.bitmapForUrl(url)?.let { bitmap ->
         RoundedBitmapDrawableFactory.create(context.resources, bitmap).apply {
             isCircular = true
             setAntiAlias(true)
