@@ -39,6 +39,10 @@ const ICONS = {
     src: "chrome://devtools/skin/images/browsers/edge.svg",
     isMobileIconNeeded: false,
   },
+  ie: {
+    src: "chrome://devtools/skin/images/browsers/ie.svg",
+    isMobileIconNeeded: false,
+  },
 };
 
 class BrowserIcon extends PureComponent {
