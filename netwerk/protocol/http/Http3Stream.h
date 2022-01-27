@@ -160,6 +160,11 @@ class Http3Stream final : public nsAHttpSegmentReader,
 
   nsresult mSocketInCondition = NS_ERROR_NOT_INITIALIZED;
   nsresult mSocketOutCondition = NS_ERROR_NOT_INITIALIZED;
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  uint32_t mRequestBodyLenExpected{0};
+  uint32_t mRequestBodyLenSent{0};
+#endif
 };
 
 }  // namespace net
