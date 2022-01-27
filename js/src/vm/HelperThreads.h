@@ -185,6 +185,9 @@ inline void CancelOffThreadIonCompile(JSRuntime* runtime) {
 bool HasOffThreadIonCompile(JS::Realm* realm);
 #endif
 
+// True iff the current thread is a ParseTask or a DelazifyTask.
+bool CurrentThreadIsParseThread();
+
 /*
  * Cancel all scheduled, in progress or finished parses for runtime.
  *
