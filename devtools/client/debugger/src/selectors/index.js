@@ -12,7 +12,6 @@ export * from "../reducers/breakpoints";
 export * from "../reducers/pending-breakpoints";
 export * from "../reducers/ui";
 export * from "../reducers/file-search";
-export * from "../reducers/ast";
 export * from "../reducers/project-text-search";
 export * from "../reducers/source-tree";
 export * from "../reducers/preview";
@@ -31,6 +30,7 @@ export {
   getQuickOpenType,
 } from "../reducers/quick-open";
 
+export * from "./ast";
 export {
   getClosestBreakpoint,
   getBreakpointAtLocation,
