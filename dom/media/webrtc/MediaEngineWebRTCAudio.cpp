@@ -408,7 +408,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start() {
   MOZ_ASSERT(mState == kAllocated || mState == kStopped);
 
   // This check is unreliable due to potential in-flight device updates.
-  // Multiple input devices are reliably excluded in OpenAudioInputImpl(),
+  // Multiple input devices are reliably excluded in ConnectDeviceInputImpl(),
   // but the check here provides some error reporting most of the
   // time.
   CubebUtils::AudioDeviceID deviceID = mDeviceInfo->DeviceID();
@@ -428,7 +428,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start() {
 
         track->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
             track, inputProcessing, StartStopMessage::Start));
-        track->OpenAudioInput(deviceID, inputProcessing, principal);
+        track->ConnectDeviceInput(deviceID, inputProcessing, principal);
       }));
 
   ApplySettings(mCurrentPrefs);
@@ -460,7 +460,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::Stop() {
         track->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
             track, inputProcessing, StartStopMessage::Stop));
         MOZ_ASSERT(track->DeviceId().value() == deviceInfo->DeviceID());
-        track->CloseAudioInput();
+        track->DisconnectDeviceInput();
       }));
 
   MOZ_ASSERT(mState == kStarted, "Should be started when stopping");
@@ -1171,7 +1171,7 @@ void AudioInputProcessing::ResetAudioProcessing(MediaTrackGraphImpl* aGraph) {
 
 void AudioInputTrack::Destroy() {
   MOZ_ASSERT(NS_IsMainThread());
-  CloseAudioInput();
+  DisconnectDeviceInput();
 
   MediaTrack::Destroy();
 }
@@ -1322,9 +1322,9 @@ void AudioInputTrack::SetInputProcessingImpl(
   mInputProcessing = std::move(aInputProcessing);
 }
 
-nsresult AudioInputTrack::OpenAudioInput(CubebUtils::AudioDeviceID aId,
-                                         AudioDataListener* aListener,
-                                         const PrincipalHandle& aPrincipal) {
+nsresult AudioInputTrack::ConnectDeviceInput(
+    CubebUtils::AudioDeviceID aId, AudioDataListener* aListener,
+    const PrincipalHandle& aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(GraphImpl());
   MOZ_ASSERT(!mInputListener);
@@ -1346,7 +1346,7 @@ nsresult AudioInputTrack::OpenAudioInput(CubebUtils::AudioDeviceID aId,
   return NS_OK;
 }
 
-void AudioInputTrack::CloseAudioInput() {
+void AudioInputTrack::DisconnectDeviceInput() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(GraphImpl());
   if (!mInputListener) {
