@@ -392,33 +392,28 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   TrackTime PlayAudio(AudioMixer* aMixer, const TrackKeyAndVolume& aTkv,
                       GraphTime aPlayedTime);
 
-  /* Called on the main thread when AudioInputTrack requests audio data from an
-   * input device aID. */
-  NativeInputTrack* GetOrCreateDeviceTrack(
-      CubebUtils::AudioDeviceID aID, const PrincipalHandle& aPrincipalHandle);
+  /* Do not call this directly. For users who need to get a NativeInputTrack,
+   * use NativeInputTrack::OpenAudio() instead. This should only be used in
+   * NativeInputTrack to get the existing NativeInputTrack paired with the given
+   * device in this graph. Main thread only.*/
+  NativeInputTrack* GetNativeInputTrack();
 
   /* Runs off a message on the graph thread when something requests audio from
    * an input audio device of ID aID, and delivers the input audio frames to
    * aListener. */
-  void OpenAudioInputImpl(CubebUtils::AudioDeviceID aID,
-                          AudioDataListener* aListener,
-                          NativeInputTrack* aInputTrack);
+  void OpenAudioInputImpl(NativeInputTrack* aTrack);
   /* Called on the main thread when something requests audio from an input
    * audio device aID. */
-  virtual nsresult OpenAudioInput(CubebUtils::AudioDeviceID aID,
-                                  AudioDataListener* aListener) override;
+  virtual void OpenAudioInput(NativeInputTrack* aTrack) override;
 
   /* Runs off a message on the graph when input audio from aID is not needed
    * anymore, for a particular track. It can be that other tracks still need
    * audio from this audio input device. */
-  void CloseAudioInputImpl(CubebUtils::AudioDeviceID aID,
-                           AudioDataListener* aListener,
-                           NativeInputTrack* aInputTrack);
+  void CloseAudioInputImpl(CubebUtils::AudioDeviceID aID);
   /* Called on the main thread when input audio from aID is not needed
    * anymore, for a particular track. It can be that other tracks still need
    * audio from this audio input device. */
-  virtual void CloseAudioInput(CubebUtils::AudioDeviceID aID,
-                               AudioDataListener* aListener) override;
+  virtual void CloseAudioInput(NativeInputTrack* aTrack) override;
 
   /* Add or remove an audio output for this track. All tracks that have an
    * audio output are mixed and written to a single audio output stream. */
@@ -724,7 +719,8 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   /**
    * Devices to use for cubeb input & output, or nullptr for default device.
    * A MediaTrackGraph always has an output (even if silent).
-   * If `mNativeInputTrack` is not NULL, this MediaTrackGraph wants audio input.
+   * If `mNativeInputTrackOnGraph` is not NULL, this MediaTrackGraph wants audio
+   * input.
    *
    * All mInputDeviceID access is on the graph thread except for reads via
    * InputDeviceID(), which are racy but used only for comparison.
@@ -737,9 +733,9 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
 
   // Track the native input device in graph. Graph thread only.
   // TODO: Once multiple input devices is supported,
-  // mNativeInputTrack->mDeviceId could replace mInputDeviceID since no other
-  // thread will read mInputDeviceID.
-  RefPtr<NativeInputTrack> mNativeInputTrack;
+  // mNativeInputTrackOnGraph->mDeviceId could replace mInputDeviceID since no
+  // other thread will read mInputDeviceID.
+  RefPtr<NativeInputTrack> mNativeInputTrackOnGraph;
 
   /**
    * List of resume operations waiting for a switch to an AudioCallbackDriver.
@@ -1013,9 +1009,9 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   uint32_t mMaxOutputChannelCount;
 
   /*
-   * Hold the NativeInputTrack for a certain device
+   * Hold the NativeInputTrack for a certain device.
    */
-  nsTHashMap<CubebUtils::AudioDeviceID, RefPtr<NativeInputTrack>> mDeviceTracks;
+  RefPtr<NativeInputTrack> mNativeInputTrackOnMain;
 };
 
 }  // namespace mozilla

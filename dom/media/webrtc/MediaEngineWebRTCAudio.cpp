@@ -1330,13 +1330,20 @@ nsresult AudioInputTrack::OpenAudioInput(CubebUtils::AudioDeviceID aId,
   MOZ_ASSERT(!mInputListener);
   MOZ_ASSERT(mDeviceId.isNothing());
   mInputListener = aListener;
-  NativeInputTrack* input =
-      GraphImpl()->GetOrCreateDeviceTrack(aId, aPrincipal);
-  MOZ_ASSERT(input);
-  LOG("Open device %p (InputTrack=%p) for Mic source %p", aId, input, this);
-  mPort = AllocateInputPort(input);
   mDeviceId.emplace(aId);
-  return GraphImpl()->OpenAudioInput(aId, mInputListener.get());
+
+  auto r = NativeInputTrack::OpenAudio(GraphImpl(), aId, aPrincipal,
+                                       mInputListener.get());
+  if (r.isErr()) {
+    NS_WARNING("Failed to open audio device.");
+    return r.unwrapErr();
+  }
+  RefPtr<NativeInputTrack> input = r.unwrap();
+  MOZ_ASSERT(input);
+  LOG("Open device %p (InputTrack=%p) for Mic source %p", aId, input.get(),
+      this);
+  mPort = AllocateInputPort(input.get());
+  return NS_OK;
 }
 
 void AudioInputTrack::CloseAudioInput() {
@@ -1347,11 +1354,13 @@ void AudioInputTrack::CloseAudioInput() {
   }
   MOZ_ASSERT(mPort);
   MOZ_ASSERT(mDeviceId.isSome());
-  LOG("Close device %p (InputTrack=%p) for Mic source %p ", mDeviceId.value(),
-      mPort->GetSource(), this);
+  RefPtr<NativeInputTrack> input(mPort->GetSource()->AsNativeInputTrack());
+  LOG("Close device %p (InputTrack=%p) for Mic source %p ", *mDeviceId,
+      input.get(), this);
   mPort->Destroy();
-  GraphImpl()->CloseAudioInput(mDeviceId.extract(), mInputListener);
+  NativeInputTrack::CloseAudio(std::move(input), mInputListener.get());
   mInputListener = nullptr;
+  mDeviceId = Nothing();
 }
 
 Maybe<CubebUtils::AudioDeviceID> AudioInputTrack::DeviceId() const {
