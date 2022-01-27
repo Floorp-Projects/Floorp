@@ -1317,22 +1317,6 @@ class Protocol(ipdl.ast.Protocol):
         assert self.decl.type.isToplevel()
         return ExprVar("ShouldContinueFromReplyTimeout")
 
-    def enteredCxxStackVar(self):
-        assert self.decl.type.isToplevel()
-        return ExprVar("EnteredCxxStack")
-
-    def exitedCxxStackVar(self):
-        assert self.decl.type.isToplevel()
-        return ExprVar("ExitedCxxStack")
-
-    def enteredCallVar(self):
-        assert self.decl.type.isToplevel()
-        return ExprVar("EnteredCall")
-
-    def exitedCallVar(self):
-        assert self.decl.type.isToplevel()
-        return ExprVar("ExitedCall")
-
     def routingId(self, actorThis=None):
         if self.decl.type.isToplevel():
             return ExprVar("MSG_ROUTING_CONTROL")
@@ -1906,10 +1890,15 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
     else:
         syncEnum = "ASYNC"
 
+    # FIXME(bug ???) - remove support for interrupt messages from the IPDL compiler.
     if md.decl.type.isInterrupt():
-        interruptEnum = "INTERRUPT"
-    else:
-        interruptEnum = "NOT_INTERRUPT"
+        func.addcode(
+            """
+            static_assert(
+                false,
+                "runtime support for intr messages has been removed from IPDL");
+            """
+        )
 
     if md.decl.type.isCtor():
         ctorEnum = "CONSTRUCTOR"
@@ -1927,7 +1916,6 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
             messageEnum(compression),
             messageEnum(ctorEnum),
             messageEnum(syncEnum),
-            messageEnum(interruptEnum),
             messageEnum(replyEnum),
         ],
     )
@@ -3802,28 +3790,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             )
             shouldcontinue.addcode("return true;\n")
 
-            # void Entered*()/Exited*(); default to no-op
-            entered = MethodDefn(
-                MethodDecl(p.enteredCxxStackVar().name, methodspec=MethodSpec.OVERRIDE)
-            )
-            exited = MethodDefn(
-                MethodDecl(p.exitedCxxStackVar().name, methodspec=MethodSpec.OVERRIDE)
-            )
-            enteredcall = MethodDefn(
-                MethodDecl(p.enteredCallVar().name, methodspec=MethodSpec.OVERRIDE)
-            )
-            exitedcall = MethodDefn(
-                MethodDecl(p.exitedCallVar().name, methodspec=MethodSpec.OVERRIDE)
-            )
-
             self.cls.addstmts(
                 [
                     processingerror,
                     shouldcontinue,
-                    entered,
-                    exited,
-                    enteredcall,
-                    exitedcall,
                     Whitespace.NL,
                 ]
             )
