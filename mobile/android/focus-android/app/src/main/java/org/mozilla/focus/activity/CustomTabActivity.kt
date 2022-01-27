@@ -10,8 +10,6 @@ import android.util.AttributeSet
 import android.view.View
 import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.concept.engine.EngineView
-import mozilla.components.feature.session.SessionFeature
-import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.locale.LocaleAwareAppCompatActivity
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.R
@@ -24,7 +22,7 @@ import org.mozilla.focus.fragment.BrowserFragment
  */
 class CustomTabActivity : LocaleAwareAppCompatActivity() {
     private lateinit var customTabId: String
-    private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
+    private lateinit var browserFragment: BrowserFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,8 +46,9 @@ class CustomTabActivity : LocaleAwareAppCompatActivity() {
         setContentView(R.layout.activity_customtab)
 
         if (savedInstanceState == null) {
+            browserFragment = BrowserFragment.createForTab(customTabId)
             supportFragmentManager.beginTransaction()
-                .add(R.id.container, BrowserFragment.createForTab(customTabId))
+                .add(R.id.container, browserFragment)
                 .commit()
         }
     }
@@ -69,7 +68,7 @@ class CustomTabActivity : LocaleAwareAppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (sessionFeature.onBackPressed()) {
+        if (browserFragment.sessionFeature.onBackPressed()) {
             return
         } else {
             super.onBackPressed()
@@ -79,21 +78,8 @@ class CustomTabActivity : LocaleAwareAppCompatActivity() {
     override fun onCreateView(name: String, context: Context, attrs: AttributeSet): View? {
         return if (name == EngineView::class.java.name) {
             val engineView = components.engine.createView(context, attrs)
-            setSessionFeature(engineView)
             engineView.asView()
         } else super.onCreateView(name, context, attrs)
-    }
-
-    private fun setSessionFeature(engineView: EngineView) {
-        sessionFeature.set(
-            SessionFeature(
-                components.store,
-                components.sessionUseCases.goBack,
-                engineView,
-                customTabId
-            ),
-            this, engineView.asView()
-        )
     }
 
     companion object {

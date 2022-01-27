@@ -107,7 +107,7 @@ class BrowserFragment :
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val fullScreenIntegration = ViewBoundFeatureWrapper<FullScreenIntegration>()
 
-    private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
+    internal val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
     private val promptFeature = ViewBoundFeatureWrapper<PromptFeature>()
     private val contextMenuFeature = ViewBoundFeatureWrapper<ContextMenuFeature>()
     private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()
