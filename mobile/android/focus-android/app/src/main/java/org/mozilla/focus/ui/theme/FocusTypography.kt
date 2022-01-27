@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.sp
+import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.focus.R
 
 val metropolis = FontFamily(
@@ -30,7 +31,11 @@ data class FocusTypography(
     val materialTypography: Typography,
     val links: TextStyle,
     val dialogTitle: TextStyle,
-    val dialogInput: TextStyle
+    val dialogInput: TextStyle,
+    val onboardingTitle: TextStyle,
+    val onboardingSubtitle: TextStyle,
+    val onboardingDescription: TextStyle,
+    val onboardingButton: TextStyle
 ) {
     val h1: TextStyle get() = materialTypography.h1
     val h2: TextStyle get() = materialTypography.h2
@@ -71,5 +76,29 @@ val focusTypography: FocusTypography
             fontFamily = metropolis,
             fontSize = 20.sp,
             color = focusColors.onPrimary
+        ),
+        onboardingTitle = TextStyle(
+            fontFamily = metropolis,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 20.sp,
+            color = PhotonColors.DarkGrey90
+        ),
+        onboardingSubtitle = TextStyle(
+            fontFamily = metropolis,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 14.sp,
+            color = PhotonColors.DarkGrey90
+        ),
+        onboardingDescription = TextStyle(
+            fontFamily = metropolis,
+            fontWeight = FontWeight.Normal,
+            fontSize = 14.sp,
+            color = PhotonColors.DarkGrey05
+        ),
+        onboardingButton = TextStyle(
+            fontFamily = metropolis,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 14.sp,
+            color = PhotonColors.White
         )
     )

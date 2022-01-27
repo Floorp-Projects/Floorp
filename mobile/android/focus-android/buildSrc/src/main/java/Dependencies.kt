@@ -14,6 +14,7 @@ object Versions {
         const val browser = "1.3.0"
         const val core = "1.3.2"
         const val compose = compose_version
+        const val compose_constraint_layout = "1.0.0-beta02"
         const val cardview = "1.0.0"
         const val recyclerview = "1.2.0"
         const val palette = "1.0.0"
@@ -57,6 +58,8 @@ object Dependencies {
     const val androidx_compose_foundation = "androidx.compose.foundation:foundation:${Versions.AndroidX.compose}"
     const val androidx_compose_material = "androidx.compose.material:material:${Versions.AndroidX.compose}"
     const val androidx_compose_runtime_livedata = "androidx.compose.runtime:runtime-livedata:${Versions.AndroidX.compose}"
+    const val androidx_compose_constraint_layout =
+        "androidx.constraintlayout:constraintlayout-compose:${Versions.AndroidX.compose_constraint_layout}"
     const val androidx_core_ktx = "androidx.core:core-ktx:${Versions.AndroidX.core}"
     const val androidx_palette = "androidx.palette:palette-ktx:${Versions.AndroidX.palette}"
     const val androidx_preferences = "androidx.preference:preference-ktx:${Versions.AndroidX.preferences}"

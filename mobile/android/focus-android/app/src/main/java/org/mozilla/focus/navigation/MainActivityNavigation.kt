@@ -17,6 +17,7 @@ import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.fragment.UrlInputFragment
 import org.mozilla.focus.fragment.about.AboutFragment
+import org.mozilla.focus.fragment.onboarding.OnboardingFragment
 import org.mozilla.focus.locale.screen.LanguageFragment
 import org.mozilla.focus.settings.GeneralSettingsFragment
 import org.mozilla.focus.settings.InstalledSearchEnginesSettingsFragment
@@ -32,6 +33,7 @@ import org.mozilla.focus.settings.permissions.SitePermissionsFragment
 import org.mozilla.focus.settings.privacy.PrivacySecuritySettingsFragment
 import org.mozilla.focus.settings.privacy.studies.StudiesFragment
 import org.mozilla.focus.state.Screen
+import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.ViewUtils
 import kotlin.collections.forEach as withEach
 
@@ -134,9 +136,14 @@ class MainActivityNavigation(
      * Show first run onboarding.
      */
     fun firstRun() {
+        val onboardingFragment = if (Features.ONBOARDING) {
+            OnboardingFragment.create()
+        } else {
+            FirstrunFragment.create()
+        }
         activity.supportFragmentManager
             .beginTransaction()
-            .replace(R.id.container, FirstrunFragment.create(), FirstrunFragment.FRAGMENT_TAG)
+            .replace(R.id.container, onboardingFragment, FirstrunFragment.FRAGMENT_TAG)
             .commit()
     }
 

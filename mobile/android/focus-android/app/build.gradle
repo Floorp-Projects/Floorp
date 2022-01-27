@@ -189,6 +189,7 @@ dependencies {
     implementation Dependencies.androidx_compose_ui_tooling
     implementation Dependencies.androidx_compose_foundation
     implementation Dependencies.androidx_compose_material
+    implementation Dependencies.androidx_compose_constraint_layout
     implementation Dependencies.androidx_compose_runtime_livedata
     implementation Dependencies.androidx_core_ktx
     implementation Dependencies.androidx_lifecycle_extensions

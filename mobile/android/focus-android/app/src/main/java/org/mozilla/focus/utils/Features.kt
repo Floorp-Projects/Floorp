@@ -17,4 +17,12 @@ object Features {
      * Erase tabs CFR
      */
     var SHOW_ERASE_CFR = AppConstants.isDevOrNightlyBuild
+
+    /**
+     * Replace the current [FirstrunFragment.kt] which has multiple cards with
+     * [OnboardingFragment.kt] which has a new design
+     * When this flag it will be removed all classes, methods, tests, etc. which
+     * has "firstrun" in their name should be renamed to use "onboarding"
+     */
+    val ONBOARDING = AppConstants.isDevOrNightlyBuild
 }
