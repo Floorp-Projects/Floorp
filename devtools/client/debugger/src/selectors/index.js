@@ -19,12 +19,6 @@ export {
   getSourceActorsForThread,
 } from "../reducers/source-actors";
 
-export {
-  getQuickOpenEnabled,
-  getQuickOpenQuery,
-  getQuickOpenType,
-} from "../reducers/quick-open";
-
 export * from "./ast";
 export { getXHRBreakpoints, shouldPauseOnAnyXHR } from "./breakpoints";
 export {
@@ -47,6 +41,7 @@ export {
 } from "./pause";
 export * from "./preview";
 export * from "./project-text-search";
+export * from "./quick-open";
 export * from "./tabs";
 export * from "./threads";
 export {
