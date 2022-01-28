@@ -349,14 +349,6 @@ void NativeLayerRootWayland::UpdateLayersOnMainThread() {
   }
 }
 
-void NativeLayerRootWayland::PauseCompositor() {
-  MutexAutoLock lock(mMutex);
-
-  for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
-    layer->EnsureParentSurface(nullptr);
-  }
-}
-
 NativeLayerWayland::NativeLayerWayland(
     const IntSize& aSize, bool aIsOpaque,
     SurfacePoolHandleWayland* aSurfacePoolHandle)

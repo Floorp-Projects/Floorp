@@ -63,12 +63,6 @@ class NativeLayerRootWayland final : public NativeLayerRoot {
   void PrepareForCommit() override { mFrameInProcess = true; };
   bool CommitToScreen() override;
 
-  // When the compositor is paused the wl_surface of the MozContainer will
-  // get destroyed. We thus have to recreate subsurface relationships for
-  // all tiles after resume. This is a implementation specific quirk of
-  // our GTK-Wayland backend.
-  void PauseCompositor() override;
-
   void UpdateLayersOnMainThread();
   void AfterFrameClockAfterPaint();
   void RequestFrameCallback(CallbackFunc aCallbackFunc, void* aCallbackData);
