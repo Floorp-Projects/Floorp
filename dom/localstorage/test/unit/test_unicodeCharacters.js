@@ -149,6 +149,7 @@ async function testSteps() {
 
   const testFetchMode = async (testType, storeAndLookup) => {
     const testPairs = [
+      { testEmptyValue: [""] },
       { testSampleKey: [getEncodingSample()] },
       { testSeparatedKey: [getSeparatedBasePlane()] },
       { testJoinedKey: [getJoinedBasePlane()] },
