@@ -78,6 +78,8 @@ add_task(async function() {
     );
   };
 
+  const kTabCloseIconWidth = 13;
+
   let isExpectedChange = function(r) {
     // We expect all changes to be within the tab strip.
     if (!inTabStrip(r)) {
@@ -98,7 +100,9 @@ add_task(async function() {
     let isSecondTabRect =
       inRange(
         r.x1,
-        firstTabRect.right - 1, // -1 for the border on Win7
+        // When the animation starts the tab close icon overflows.
+        // -1 for the border on Win7
+        firstTabRect.right - kTabCloseIconWidth - 1,
         firstTabRect.right + firstTabRect.width
       ) &&
       r.x2 <
@@ -113,7 +117,10 @@ add_task(async function() {
     // The '+' icon moves with an animation. At the end of the animation
     // the former and new positions can touch each other causing the rect
     // to have twice the icon's width.
-    if (r.h == 13 && r.w <= 2 * 13 + kMaxEmptyPixels) {
+    if (
+      r.h == kTabCloseIconWidth &&
+      r.w <= 2 * kTabCloseIconWidth + kMaxEmptyPixels
+    ) {
       return true;
     }
 
