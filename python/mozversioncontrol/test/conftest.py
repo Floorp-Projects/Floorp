@@ -7,6 +7,8 @@ from __future__ import absolute_import
 import os
 import subprocess
 
+from pathlib import Path
+
 import pytest
 
 
@@ -21,7 +23,8 @@ SETUP = {
         hg phase --public .
         """,
         """
-        echo "[paths]\ndefault = ../remoterepo" > .hg/hgrc
+        echo [paths] > .hg/hgrc
+        echo "default = ../remoterepo" >> .hg/hgrc
         """,
     ],
     "git": [
@@ -29,6 +32,8 @@ SETUP = {
         echo "foo" > foo
         echo "bar" > bar
         git init
+        git config user.name "Testing McTesterson"
+        git config user.email "<test@example.org>"
         git add *
         git commit -am "Initial commit"
         """,
@@ -41,8 +46,9 @@ SETUP = {
 }
 
 
-def shell(cmd):
-    subprocess.check_call(cmd, shell=True)
+def shell(cmd, working_dir):
+    for step in cmd.split(os.linesep):
+        subprocess.check_call(step, shell=True, cwd=working_dir)
 
 
 @pytest.yield_fixture(params=["git", "hg"])
@@ -58,12 +64,11 @@ def repo(tmpdir, request):
     repo = tmpdir.mkdir("repo")
     repo.vcs = vcs
 
+    working_dir = str(Path(repo.strpath).resolve())
+
     # This creates a step iterator. Each time next() is called
     # on it, the next set of instructions will be executed.
-    repo.step = (shell(cmd) for cmd in steps)
-
-    oldcwd = os.getcwd()
-    os.chdir(repo.strpath)
+    repo.step = (shell(cmd, working_dir) for cmd in steps)
 
     next(repo.step)
 
@@ -72,4 +77,3 @@ def repo(tmpdir, request):
     next(repo.step)
 
     yield repo
-    os.chdir(oldcwd)
