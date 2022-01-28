@@ -135,41 +135,36 @@ RuleEditor.prototype = {
 
     this.updateSourceLink();
 
-    const hasMediaText = this.rule.mediaText;
-    const hasLayer = typeof this.rule.domRule.layerName !== "undefined";
-    if (hasMediaText || hasLayer) {
-      const parts = [];
-
-      if (hasLayer) {
-        // The layer can be anonymous, in such case its name is an empty string
-        parts.push(
-          `@layer${
-            this.rule.domRule.layerName ? " " + this.rule.domRule.layerName : ""
-          }`
-        );
-      }
-      if (hasMediaText) {
-        parts.push(`@media ${this.rule.mediaText}`);
-      }
-
-      // For now, we can only have at most a layer and a media query (if the rule stylesheet
-      // was imported with a layer name and the parent rule is a media query) so we can get
-      // await with displaying them one after the other.
-      // This might change with Bug 1751417 where we'll show the whole tree of media/layer
-      const text = parts.join(" ");
+    if (this.rule.domRule.ancestorData.length > 0) {
+      const parts = this.rule.domRule.ancestorData.map(ancestorData => {
+        if (ancestorData.type == "layer") {
+          return `@layer${ancestorData.value ? " " + ancestorData.value : ""}`;
+        }
+        if (ancestorData.type == "media") {
+          return `@media ${ancestorData.value}`;
+        }
+        // We shouldn't get here as `type` can only be set to "layer" or "media", but just
+        // in case, let's return an empty string.
+        console.warn("Unknown ancestor data type:", ancestorData.type);
+        return ``;
+      });
 
       // We force the string to be LTR in CSS, but as @ is listed as having neutral
       // directionality and starting a string with this char would default to RTL for that
       // character (when in RTL locale), and then the next char (`m` of `media`, or `l` of `layer`)
       // would start a new LTR visual run, since it is strongly LTR (through `direction` CSS property).
       // To have the `@` properly displayed, we force LTR with \u202A
-      const title = `${text.replaceAll("@", "\u202A@")}`;
+      const title = `${parts.join("\n").replaceAll("@", "\u202A@")}`;
 
-      createChild(this.element, "span", {
-        class: "ruleview-rule-parent-data theme-link",
+      const ancestorDataEl = createChild(this.element, "ul", {
+        class: "ruleview-rule-ancestor-data theme-link",
         title,
-        textContent: text,
       });
+      for (const part of parts) {
+        createChild(ancestorDataEl, "li", {
+          textContent: part,
+        });
+      }
     }
 
     const code = createChild(this.element, "div", {

@@ -43,7 +43,7 @@ add_task(async function() {
   let linkText = getRuleViewLinkTextByIndex(view, 1);
   is(linkText, "inline:3", "link text at index 1 has expected content.");
 
-  const mediaText = getRuleViewMediaTextByIndex(view, 1);
+  const mediaText = getRuleViewAncestorRulesDataTextByIndex(view, 1);
   is(
     mediaText,
     "@media screen and (min-width: 10px)",
@@ -53,7 +53,7 @@ add_task(async function() {
   linkText = getRuleViewLinkTextByIndex(view, 2);
   is(linkText, "inline:7", "link text at index 2 has expected content.");
   is(
-    getRuleViewMediaElementByIndex(view, 2),
+    getRuleViewAncestorRulesDataElementByIndex(view, 2),
     null,
     "There is no media text element for rule at index 2"
   );
@@ -70,13 +70,3 @@ add_task(async function() {
     ".unmatched should not be matched."
   );
 });
-
-function getRuleViewMediaElementByIndex(view, ruleIndex) {
-  return view.styleDocument.querySelector(
-    `.ruleview-rule:nth-of-type(${ruleIndex + 1}) .ruleview-rule-parent-data`
-  );
-}
-
-function getRuleViewMediaTextByIndex(view, ruleIndex) {
-  return getRuleViewMediaElementByIndex(view, ruleIndex)?.textContent;
-}
