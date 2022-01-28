@@ -1315,7 +1315,8 @@ nsresult nsHttpConnectionMgr::TryDispatchTransaction(
 
   RefPtr<HttpConnectionBase> conn = GetH2orH3ActiveConn(
       ent, (!gHttpHandler->IsSpdyEnabled() || (caps & NS_HTTP_DISALLOW_SPDY)),
-      (!gHttpHandler->IsHttp3Enabled() || (caps & NS_HTTP_DISALLOW_HTTP3)));
+      (!StaticPrefs::network_http_http3_enable() ||
+       (caps & NS_HTTP_DISALLOW_HTTP3)));
   if (conn) {
     if (trans->IsWebsocketUpgrade() && !conn->CanAcceptWebsocket()) {
       // This is a websocket transaction and we already have a h2 connection

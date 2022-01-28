@@ -27,7 +27,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.use_https_rr_as_altsvc");
   Services.prefs.clearUserPref("network.dns.echconfig.enabled");
   Services.prefs.clearUserPref("network.dns.http3_echconfig.enabled");
-  Services.prefs.clearUserPref("network.http.http3.enabled");
+  Services.prefs.clearUserPref("network.http.http3.enable");
   Services.prefs.clearUserPref("network.http.spdy.enabled");
   if (trrServer) {
     await trrServer.stop();
@@ -452,7 +452,7 @@ add_task(async function testOneRecordsHasEchConfig() {
   trrServer = null;
 });
 
-// Test the case that "network.http.http3.enabled" and
+// Test the case that "network.http.http3.enable" and
 // "network.http.spdy.enabled" are true/false.
 add_task(async function testHttp3AndHttp2Pref() {
   dns.clearCache(true);
@@ -460,7 +460,7 @@ add_task(async function testHttp3AndHttp2Pref() {
   let trrServer = new TRRServer();
   await trrServer.start();
 
-  Services.prefs.setBoolPref("network.http.http3.enabled", false);
+  Services.prefs.setBoolPref("network.http.http3.enable", false);
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", false);
   Services.prefs.setBoolPref("network.dns.http3_echconfig.enabled", false);
   Services.prefs.setIntPref("network.trr.mode", 3);
@@ -522,7 +522,7 @@ add_task(async function testHttp3AndHttp2Pref() {
   Services.prefs.setBoolPref("network.http.spdy.enabled", false);
   checkResult(inRecord, false, false);
 
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
   checkResult(inRecord, false, false, {
     expectedPriority: 1,
     expectedName: "test.foo_h3.com",
