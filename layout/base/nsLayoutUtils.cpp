@@ -3336,15 +3336,15 @@ void nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
       }
 
       if (doFullRebuild) {
-        list->DeleteAll(builder);
-        list->RestoreState();
-
         if (useRetainedBuilder) {
           retainedBuilder->ClearFramesWithProps();
+          retainedBuilder->ClearReuseableDisplayItems();
           mozilla::RDLUtils::AssertFrameSubtreeUnmodified(
               builder->RootReferenceFrame());
-          MOZ_ASSERT(retainedBuilder->List()->IsEmpty());
         }
+
+        list->DeleteAll(builder);
+        list->RestoreState();
 
         builder->ClearRetainedWindowRegions();
         builder->ClearWillChangeBudgets();

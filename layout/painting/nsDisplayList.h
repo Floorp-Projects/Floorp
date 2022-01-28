@@ -1700,6 +1700,24 @@ class nsDisplayListBuilder {
   }
 
   /**
+   * Adds display item |aItem| to the reuseable display items set.
+   */
+  void AddReusableDisplayItem(nsDisplayItem* aItem);
+
+  /**
+   * Removes display item |aItem| from the reuseable display items set.
+   * This is needed because display items are sometimes deleted during
+   * display list building.
+   * Called by |nsDisplayItem::Destroy()| when the item has been reused.
+   */
+  void RemoveReusedDisplayItem(nsDisplayItem* aItem);
+
+  /**
+   * Clears the reuseable display items set.
+   */
+  void ClearReuseableDisplayItems();
+
+  /**
    * Marks the given display item |aItem| as reused, and updates the necessary
    * display list builder state.
    */
@@ -1900,6 +1918,9 @@ class nsDisplayListBuilder {
 
   bool mIsForContent;
   bool mIsReusingStackingContextItems;
+
+  // Stores reusable items collected during display list preprocessing.
+  nsTHashSet<nsDisplayItem*> mReuseableItems;
 };
 
 class nsDisplayItem;
@@ -2094,6 +2115,11 @@ class nsDisplayItem : public nsDisplayItemLink {
     if (aBuilder->IsForPainting() && aBuilder->IsForContent()) {
       DL_LOGV("Destroying display item %p (%s)", this, Name());
     }
+
+    if (IsReusedItem()) {
+      aBuilder->RemoveReusedDisplayItem(this);
+    }
+
     this->~nsDisplayItem();
     aBuilder->Destroy(type, this);
   }
