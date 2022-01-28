@@ -3,6 +3,15 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
+AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "1",
+  "43"
+);
+
 add_task(
   {
     // TODO(Bug 1725478): remove the skip if once webidl API bindings will be hidden based on permissions.
@@ -166,7 +175,7 @@ add_task(async function test_get_get_all_clear_all_alarms() {
   await extension.unload();
 });
 
-async function test_alarm_fires_with_options(alarmCreateOptions) {
+function getAlarmExtension(alarmCreateOptions, extOpts = {}) {
   info(
     `Test alarms.create fires with options: ${JSON.stringify(
       alarmCreateOptions
@@ -184,7 +193,7 @@ async function test_alarm_fires_with_options(alarmCreateOptions) {
         "alarm has the expected name"
       );
       clearTimeout(timer);
-      browser.test.notifyPass("alarms-create-with-options");
+      browser.test.sendMessage("alarms-create-with-options");
     });
 
     browser.alarms.create(ALARM_NAME, createOptions);
@@ -193,20 +202,27 @@ async function test_alarm_fires_with_options(alarmCreateOptions) {
       browser.test.fail("alarm fired within expected time");
       let wasCleared = await browser.alarms.clear(ALARM_NAME);
       browser.test.assertTrue(wasCleared, "alarm was cleared");
-      browser.test.notifyFail("alarms-create-with-options");
+      browser.test.sendMessage("alarms-create-with-options");
     }, 10000);
   }
 
-  let extension = ExtensionTestUtils.loadExtension({
+  let { persistent, useAddonManager } = extOpts;
+  return ExtensionTestUtils.loadExtension({
+    useAddonManager,
     // Pass the alarms.create options to the background page.
     background: `(${backgroundScript})(${JSON.stringify(alarmCreateOptions)})`,
     manifest: {
       permissions: ["alarms"],
+      background: { persistent },
     },
   });
+}
+
+async function test_alarm_fires_with_options(alarmCreateOptions) {
+  let extension = getAlarmExtension(alarmCreateOptions);
 
   await extension.startup();
-  await extension.awaitFinish("alarms-create-with-options");
+  await extension.awaitMessage("alarms-create-with-options");
 
   // Defer unloading the extension so the asynchronous event listener
   // reply finishes.
@@ -229,3 +245,72 @@ add_task(async function test_alarm_fires() {
     "privacy.resistFingerprinting.reduceTimerPrecision.jitter"
   );
 });
+
+function trackEvents(wrapper) {
+  let events = new Map();
+  for (let event of ["background-script-event", "start-background-script"]) {
+    events.set(event, false);
+    wrapper.extension.once(event, () => events.set(event, true));
+  }
+  return events;
+}
+
+add_task(
+  {
+    // TODO(Bug 1725478): remove the skip if once webidl API bindings will be hidden based on permissions.
+    skip_if: () => ExtensionTestUtils.isInBackgroundServiceWorkerTests(),
+    pref_set: [
+      ["privacy.resistFingerprinting.reduceTimerPrecision.jitter", false],
+      ["extensions.webextensions.background-delayed-startup", true],
+      ["extensions.eventPages.enabled", true],
+    ],
+  },
+  async function test_alarm_persists() {
+    await AddonTestUtils.promiseStartupManager();
+    // ensure normal delayed startup notification had already happened at some point
+    Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
+
+    let extension = getAlarmExtension(
+      { periodInMinutes: 0.01 },
+      { useAddonManager: "permanent", persistent: false }
+    );
+    info(`wait startup`);
+    await extension.startup();
+    assertPersistentListeners(extension, "alarms", "onAlarm", {
+      primed: false,
+    });
+    info(`wait first alarm`);
+    await extension.awaitMessage("alarms-create-with-options");
+
+    // Shutdown the background page
+    await extension.terminateBackground();
+    assertPersistentListeners(extension, "alarms", "onAlarm", {
+      primed: true,
+    });
+
+    // Test an early startup event
+    let events = trackEvents(extension);
+    ok(
+      !events.get("background-script-event"),
+      "Should not have received a background script event"
+    );
+    ok(
+      !events.get("start-background-script"),
+      "Background script should not be started"
+    );
+
+    info("waiting for alarm to wake background");
+    await extension.awaitMessage("alarms-create-with-options");
+    ok(
+      events.get("background-script-event"),
+      "Should have received a background script event"
+    );
+    ok(
+      events.get("start-background-script"),
+      "Background script should be started"
+    );
+
+    await extension.unload();
+    await AddonTestUtils.promiseShutdownManager();
+  }
+);
