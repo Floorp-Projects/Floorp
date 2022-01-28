@@ -193,7 +193,7 @@ def setup_http3_tests(config, jobs):
             yield job
             continue
         job.setdefault("perftest-btime-variants", []).append(
-            "firefox.preference=network.http.http3.enable:true"
+            "firefox.preference=network.http.http3.enabled:true"
         )
         yield job
 

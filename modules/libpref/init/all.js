@@ -1413,6 +1413,9 @@ pref("network.http.spdy.default-hpack-buffer", 65536); // 64k
 pref("network.http.spdy.websockets", true);
 pref("network.http.spdy.enable-hpack-dump", false);
 
+// Http3 parameters
+pref("network.http.http3.enabled", true);
+
 // Http3 qpack table size.
 pref("network.http.http3.default-qpack-table-size", 65536); // 64k
 // Maximal number of streams that can be blocked on waiting for qpack
