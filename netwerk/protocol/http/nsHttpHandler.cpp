@@ -154,22 +154,23 @@ static void ExperimentUserAgentUpdated(const char* /* aNimbusPref */,
   const char uaFormat[] =
 #ifdef XP_WIN
 #  ifdef HAVE_64BIT_BUILD
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:%d.0) Gecko/20100101 "
-      "Firefox/%d.0"
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 "
+      "Firefox/100.0"
 #  else
-      "Mozilla/5.0 (Windows NT 10.0; rv:%d.0) Gecko/20100101 Firefox/%d.0"
+      "Mozilla/5.0 (Windows NT 10.0; rv:100.0) Gecko/20100101 Firefox/100.0"
 #  endif
 #elif defined(XP_MACOSX)
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:%d.0) Gecko/20100101 "
-      "Firefox/%d.0"
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:100.0) Gecko/20100101 "
+      "Firefox/100.0"
+#elif defined(ANDROID)
+      "Mozilla/5.0 (Android 10; Mobile; rv:100.0) Gecko/100.0 Firefox/100.0"
 #else
-      // Linux, Android, FreeBSD, etc
-      "Mozilla/5.0 (X11; Linux x86_64; rv:%d.0) Gecko/20100101 Firefox/%d.0"
+      // Linux, FreeBSD, etc
+      "Mozilla/5.0 (X11; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0"
 #endif
       ;
 
-  aExperimentUserAgent->Truncate();
-  aExperimentUserAgent->AppendPrintf(uaFormat, firefoxVersion, firefoxVersion);
+  aExperimentUserAgent->Assign(uaFormat);
 }
 
 #ifdef ANDROID
