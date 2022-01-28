@@ -6,14 +6,52 @@
 
 #include "vm/Watchtower.h"
 
+#include "js/CallAndConstruct.h"
 #include "js/Id.h"
+#include "vm/Compartment.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/NativeObject.h"
+#include "vm/Realm.h"
 
+#include "vm/Compartment-inl.h"
 #include "vm/JSObject-inl.h"
 
 using namespace js;
+
+static bool InvokeWatchtowerCallback(JSContext* cx, const char* kind,
+                                     HandleObject obj, HandleValue extra) {
+  // Invoke the callback set by the setWatchtowerCallback testing function with
+  // arguments (kind, obj, extra).
+
+  if (!cx->watchtowerTestingCallbackRef()) {
+    return true;
+  }
+
+  RootedString kindString(cx, NewStringCopyZ<CanGC>(cx, kind));
+  if (!kindString) {
+    return false;
+  }
+
+  constexpr size_t NumArgs = 3;
+  JS::RootedValueArray<NumArgs> argv(cx);
+  argv[0].setString(kindString);
+  argv[1].setObject(*obj);
+  argv[2].set(extra);
+
+  RootedValue funVal(cx, ObjectValue(*cx->watchtowerTestingCallbackRef()));
+  AutoRealm ar(cx, &funVal.toObject());
+
+  for (size_t i = 0; i < NumArgs; i++) {
+    if (!cx->compartment()->wrap(cx, argv[i])) {
+      return false;
+    }
+  }
+
+  RootedValue rval(cx);
+  return JS_CallFunctionValue(cx, nullptr, funVal, HandleValueArray(argv),
+                              &rval);
+}
 
 static bool ReshapeForShadowedProp(JSContext* cx, HandleNativeObject obj,
                                    HandleId id) {
@@ -53,6 +91,13 @@ bool Watchtower::watchPropertyAddSlow(JSContext* cx, HandleNativeObject obj,
   // See also the 'Shape Teleporting Optimization' comment in jit/CacheIR.cpp.
   if (obj->isUsedAsPrototype()) {
     if (!ReshapeForShadowedProp(cx, obj, id)) {
+      return false;
+    }
+  }
+
+  if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
+    RootedValue val(cx, IdToValue(id));
+    if (!InvokeWatchtowerCallback(cx, "add-prop", obj, val)) {
       return false;
     }
   }
@@ -111,6 +156,13 @@ bool Watchtower::watchProtoChangeSlow(JSContext* cx, HandleObject obj) {
 
   if (obj->isUsedAsPrototype()) {
     if (!ReshapeForProtoMutation(cx, obj)) {
+      return false;
+    }
+  }
+
+  if (MOZ_UNLIKELY(obj->useWatchtowerTestingCallback())) {
+    if (!InvokeWatchtowerCallback(cx, "proto-change", obj,
+                                  JS::UndefinedHandleValue)) {
       return false;
     }
   }
