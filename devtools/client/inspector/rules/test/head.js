@@ -1176,3 +1176,31 @@ function checkCSSVariableOutput(
   ok(target, "The target element should exist");
   is(target.dataset.variable, expectedDatasetValue);
 }
+
+/**
+ * Return specific rule ancestor data element (i.e. the one containing @layer / @media
+ * information) from the Rules view
+ *
+ * @param {RulesView} view
+ *        The RulesView instance.
+ * @param {Number} ruleIndex
+ * @returns {HTMLElement}
+ */
+function getRuleViewAncestorRulesDataElementByIndex(view, ruleIndex) {
+  return view.styleDocument.querySelector(
+    `.ruleview-rule:nth-of-type(${ruleIndex + 1}) .ruleview-rule-ancestor-data`
+  );
+}
+
+/**
+ * Return specific rule ancestor data text from the Rules view.
+ * Will return something like "@layer topLayer\n@media screen\n@layer".
+ *
+ * @param {RulesView} view
+ *        The RulesView instance.
+ * @param {Number} ruleIndex
+ * @returns {String}
+ */
+function getRuleViewAncestorRulesDataTextByIndex(view, ruleIndex) {
+  return getRuleViewAncestorRulesDataElementByIndex(view, ruleIndex)?.innerText;
+}
