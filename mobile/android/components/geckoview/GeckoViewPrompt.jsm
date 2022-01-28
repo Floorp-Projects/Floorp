@@ -64,11 +64,11 @@ class PromptFactory {
     }
 
     if (className === "HTMLSelectElement") {
-      if (target.multiple) {
+      if (!target.isCombobox) {
         this._handleSelect(target, /* aIsDropDown = */ false);
         return;
       }
-      // non-multiple select is handled by mozshowdropdown.
+      // combobox select is handled by mozshowdropdown.
       return;
     }
 
