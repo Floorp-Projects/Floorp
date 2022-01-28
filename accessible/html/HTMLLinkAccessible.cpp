@@ -5,7 +5,6 @@
 
 #include "HTMLLinkAccessible.h"
 
-#include "CacheConstants.h"
 #include "nsCoreUtils.h"
 #include "DocAccessible.h"
 #include "Role.h"
@@ -14,7 +13,6 @@
 #include "nsContentUtils.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/MutationEventBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -98,26 +96,6 @@ bool HTMLLinkAccessible::DoAction(uint8_t aIndex) const {
 
   DoCommand();
   return true;
-}
-
-bool HTMLLinkAccessible::AttributeChangesState(nsAtom* aAttribute) {
-  return aAttribute == nsGkAtoms::href ||
-         HyperTextAccessibleWrap::AttributeChangesState(aAttribute);
-}
-
-void HTMLLinkAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
-                                             nsAtom* aAttribute,
-                                             int32_t aModType,
-                                             const nsAttrValue* aOldValue,
-                                             uint64_t aOldState) {
-  HyperTextAccessibleWrap::DOMAttributeChanged(aNameSpaceID, aAttribute,
-                                               aModType, aOldValue, aOldState);
-
-  if (aAttribute == nsGkAtoms::href &&
-      (aModType == dom::MutationEvent_Binding::ADDITION ||
-       aModType == dom::MutationEvent_Binding::REMOVAL)) {
-    SendCache(CacheDomain::Actions, CacheUpdateType::Update);
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
