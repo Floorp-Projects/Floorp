@@ -44,7 +44,6 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["experiment-apis"] += [
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug0000000-testbed-css-injection.css",
     "injections/css/bug1561371-mail.google.com-allow-horizontal-scrolling.css",
-    "injections/css/bug1570119-teamcoco.com-scrollbar-width.css",
     "injections/css/bug1570328-developer-apple.com-transform-scale.css",
     "injections/css/bug1575000-apply.lloydsbank.co.uk-radio-buttons-fix.css",
     "injections/css/bug1605611-maps.google.com-directions-time.css",
@@ -61,13 +60,14 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1712833-buskocchi.desuca.co.jp-fix-map-height.css",
     "injections/css/bug1719870-lcbo.com-table-clearfix.css",
     "injections/css/bug1727080-nexity.fr-svg-size-fix.css",
-    "injections/css/bug1728140-map-size-fix.css",
     "injections/css/bug1738313-curriculum.gov.bc.ca-bootstrap-fix.css",
     "injections/css/bug1738316-vuoriclothing.com-flexbox-fix.css",
     "injections/css/bug1740542-tesla.com-footer-links.css",
     "injections/css/bug1741234-patient.alphalabs.ca-height-fix.css",
-    "injections/css/bug1743041-lu.ma-display-fix.css",
     "injections/css/bug1743614-storytel.com-flex-min-width.css",
+    "injections/css/bug1748455-reddit.com-gallery-image-width-fix.css",
+    "injections/css/bug1749565-bonappetit.com-grid-width-fix.css",
+    "injections/css/bug1751022-chotot.com-image-width-fix.css",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
@@ -84,6 +84,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1724764-amextravel.com-window-print.js",
     "injections/js/bug1724868-news.yahoo.co.jp-ua-override.js",
     "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
+    "injections/js/bug1751065-chanel.com-effectiveType-shim.js",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
