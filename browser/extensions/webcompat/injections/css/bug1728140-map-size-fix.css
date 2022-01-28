@@ -1,9 +1,0 @@
-/**
- * air-quality.com - Map size is too small and unusable.
- * Bug #1728140 - https://bugzilla.mozilla.org/show_bug.cgi?id=1728140
- * WebCompat issue #73118 - https://webcompat.com/issues/73118
- */
-
-#map_wrapper {
-  height: 100%;
-}
