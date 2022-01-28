@@ -28,6 +28,9 @@ const {
 const {
   WatchpointMap,
 } = require("devtools/server/actors/utils/watchpoint-map");
+const {
+  isHiddenSource,
+} = require("devtools/server/actors/utils/sources-manager");
 
 const { logEvent } = require("devtools/server/actors/utils/logEvent");
 
@@ -935,7 +938,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       packet.why = reason;
 
       if (!sourceActor) {
-        // If the frame location is in a source that not pass the 'allowSource'
+        // If the frame location is in a source that not pass the 'isHiddenSource'
         // check and thus has no actor, we do not bother pausing.
         return undefined;
       }
@@ -2066,7 +2069,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
    * @returns true, if the source was added; false otherwise.
    */
   _addSource(source) {
-    if (!this.sourcesManager.allowSource(source)) {
+    if (isHiddenSource(source)) {
       return false;
     }
 
