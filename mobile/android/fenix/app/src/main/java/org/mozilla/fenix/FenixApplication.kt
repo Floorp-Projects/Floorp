@@ -66,7 +66,6 @@ import org.mozilla.fenix.components.Core
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
-import org.mozilla.fenix.components.metrics.SecurePrefsTelemetry
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.isCustomEngine
 import org.mozilla.fenix.ext.isKnownSearchDomain
@@ -273,8 +272,6 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                             System.currentTimeMillis() - Core.HISTORY_METADATA_MAX_AGE_IN_MS
                         )
                     }
-
-                    SecurePrefsTelemetry(this@FenixApplication, components.analytics.experiments).startTests()
                 }
                 // Account manager initialization needs to happen on the main thread.
                 GlobalScope.launch(Dispatchers.Main) {

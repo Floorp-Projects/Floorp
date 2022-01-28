@@ -23,9 +23,9 @@ import org.mozilla.fenix.ReleaseChannel
 import org.mozilla.fenix.components.metrics.AdjustMetricsService
 import org.mozilla.fenix.components.metrics.GleanMetricsService
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.experiments.NimbusFeatures
 import org.mozilla.fenix.experiments.createNimbus
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_VENDOR
@@ -109,11 +109,9 @@ class Analytics(
     }
 
     val experiments: NimbusApi by lazyMonitored {
-        createNimbus(context, BuildConfig.NIMBUS_ENDPOINT)
-    }
-
-    val features: NimbusFeatures by lazyMonitored {
-        NimbusFeatures(context)
+        createNimbus(context, BuildConfig.NIMBUS_ENDPOINT).also { api ->
+            FxNimbus.api = api
+        }
     }
 }
 

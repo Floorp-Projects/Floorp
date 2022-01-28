@@ -70,6 +70,7 @@ buildscript {
         classpath Deps.osslicenses_plugin
 
         classpath "org.mozilla.components:tooling-glean-gradle:${Versions.mozilla_android_components}"
+        classpath "org.mozilla.components:tooling-nimbus-gradle:${Versions.mozilla_android_components}"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files

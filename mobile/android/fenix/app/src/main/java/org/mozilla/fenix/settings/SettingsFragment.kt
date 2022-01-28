@@ -40,8 +40,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.AmoCollectionOverrideDialogBinding
-import org.mozilla.fenix.experiments.ExperimentBranch
-import org.mozilla.fenix.experiments.FeatureId
 import org.mozilla.fenix.ext.application
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
@@ -50,10 +48,10 @@ import org.mozilla.fenix.ext.navigateToNotificationsSettings
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.REQUEST_CODE_BROWSER_ROLE
-import org.mozilla.fenix.ext.getVariables
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.ext.showToolbar
-import org.mozilla.fenix.ext.withExperiment
+import org.mozilla.fenix.nimbus.FxNimbus
+import org.mozilla.fenix.nimbus.MessageSurfaceId
 import org.mozilla.fenix.settings.account.AccountUiView
 import org.mozilla.fenix.utils.BrowsersCache
 import org.mozilla.fenix.utils.Settings
@@ -161,10 +159,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
         super.onResume()
 
         // Use nimbus to set the title, and a trivial addition
-        val experiments = requireContext().components.analytics.experiments
-        val variables = experiments.getVariables(FeatureId.NIMBUS_VALIDATION)
-        val title = variables.getText("settings-title") ?: getString(R.string.settings_title)
-        val suffix = variables.getString("settings-title-punctuation") ?: ""
+        val nimbusValidation = FxNimbus.features.nimbusValidation.value()
+
+        val title = nimbusValidation.settingsTitle
+        val suffix = nimbusValidation.settingsPunctuation
 
         showToolbar("$title$suffix")
 
@@ -606,12 +604,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    private fun isDefaultBrowserExperimentBranch(): Boolean {
-        val experiments = context?.components?.analytics?.experiments
-        return experiments?.withExperiment(FeatureId.DEFAULT_BROWSER) { experimentBranch ->
-            (experimentBranch == ExperimentBranch.DEFAULT_BROWSER_SETTINGS_MENU)
-        } == true
-    }
+    private fun isDefaultBrowserExperimentBranch(): Boolean =
+        FxNimbus.features.defaultBrowserMessage.value().messageLocation == MessageSurfaceId.SETTINGS
 
     private fun isFirefoxDefaultBrowser(): Boolean {
         val browsers = BrowsersCache.all(requireContext())

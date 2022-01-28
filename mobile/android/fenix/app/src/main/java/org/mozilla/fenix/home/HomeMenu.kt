@@ -26,10 +26,9 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.AccountState
 import org.mozilla.fenix.components.accounts.FenixAccountManager
-import org.mozilla.fenix.experiments.FeatureId
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.getVariables
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.whatsnew.WhatsNew
 
@@ -112,7 +111,6 @@ class HomeMenu(
 
     @Suppress("ComplexMethod")
     private fun coreMenuItems(): List<BrowserMenuItem> {
-        val experiments = context.components.analytics.experiments
         val settings = context.components.settings
 
         val bookmarksItem = BrowserMenuImageText(
@@ -176,10 +174,15 @@ class HomeMenu(
         }
 
         // Use nimbus to set the icon and title.
-        val variables = experiments.getVariables(FeatureId.NIMBUS_VALIDATION)
+        val nimbusValidation = FxNimbus.features.nimbusValidation.value()
+        val settingsIcon = context.resources.getIdentifier(
+            nimbusValidation.settingsIcon,
+            "drawable",
+            context.packageName
+        )
         val settingsItem = BrowserMenuImageText(
-            variables.getText("settings-title") ?: context.getString(R.string.browser_menu_settings),
-            variables.getDrawableResource("settings-icon") ?: R.drawable.mozac_ic_settings,
+            nimbusValidation.settingsTitle,
+            settingsIcon,
             primaryTextColor
         ) {
             onItemTapped.invoke(Item.Settings)

@@ -1,0 +1,89 @@
+---
+channels:
+  - release
+  - beta
+  - nightly
+  - developer
+features:
+  homescreen:
+    description: The homescreen that the user goes to when they press home or new tab.
+    variables:
+      sections-enabled:
+        description: "This property provides a lookup table of whether or not the given section should be enabled.
+        If the section is enabled, it should be toggleable in the settings screen, and on by default."
+        type: Map<HomeScreenSection, Boolean>
+        default:
+          {
+            "top-sites": true,
+            "jump-back-in": true,
+            "recently-saved": true,
+            "recent-explorations": true,
+            "pocket": true
+          }
+    defaults:
+      - channel: nightly
+        value: {
+          "sections-enabled": {
+            "top-sites": true,
+            "jump-back-in": true,
+            "recently-saved": true,
+            "recent-explorations": true,
+            "pocket": true
+          }
+        }
+  nimbus-validation:
+    description: "A feature that does not correspond to an application feature suitable for showing
+    that Nimbus is working. This should never be used in production."
+    variables:
+      settings-title:
+        description: The title of displayed in the Settings screen and app menu.
+        type: Text
+        default: browser_menu_settings
+      settings-punctuation:
+        description: The emoji displayed in the Settings screen title.
+        type: String
+        default: ""
+      settings-icon:
+        description: The drawable displayed in the app menu for Settings
+        type: String
+        default: mozac_ic_settings
+  search-term-groups:
+    description: A feature allowing the grouping of URLs around the search term that it came from.
+    variables:
+      enabled:
+        description: If true, the feature shows up on the homescreen and on the new tab screen.
+        type: Boolean
+        default: false
+  default-browser-message:
+    description: A small feature allowing experiments on the placement of a default browser message.
+    variables:
+      message-location:
+        description: Where is the message to be put.
+        type: MessageSurfaceId
+        default: homescreen-banner
+types:
+  objects: {}
+  enums:
+    HomeScreenSection:
+        description: The identifiers for the sections of the homescreen.
+        variants:
+          top-sites:
+            description: The frecency and pinned sites.
+          recently-saved:
+            description: The sites the user has bookmarked recently.
+          jump-back-in:
+            description: The tabs the user was looking immediately before being interrupted.
+          recent-explorations:
+            description: The tab groups
+          pocket:
+            description: The pocket section. This should only be available in the US.
+    MessageSurfaceId:
+        description: The identity of a message surface, used in the default browser experiments
+        variants:
+            app-menu-item:
+              description: An item in the default toolbar menu.
+            settings:
+              description: A setting in the settings screen.
+            homescreen-banner:
+              description: A banner in the homescreen.
+

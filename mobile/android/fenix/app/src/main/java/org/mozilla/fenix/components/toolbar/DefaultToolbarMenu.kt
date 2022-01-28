@@ -37,11 +37,10 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixAccountManager
-import org.mozilla.fenix.experiments.ExperimentBranch
-import org.mozilla.fenix.experiments.FeatureId
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.ext.withExperiment
+import org.mozilla.fenix.nimbus.FxNimbus
+import org.mozilla.fenix.nimbus.MessageSurfaceId
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.BrowsersCache
 
@@ -361,6 +360,7 @@ open class DefaultToolbarMenu(
 
     @VisibleForTesting(otherwise = PRIVATE)
     val coreMenuItems by lazy {
+        val defaultBrowserItem = getSetDefaultBrowserItem()
         val menuItems =
             listOfNotNull(
                 if (shouldUseBottomToolbar) null else menuToolbar,
@@ -372,8 +372,8 @@ open class DefaultToolbarMenu(
                 extensionsItem,
                 syncMenuItem,
                 BrowserMenuDivider(),
-                getSetDefaultBrowserItem(),
-                getSetDefaultBrowserItem()?.let { BrowserMenuDivider() },
+                defaultBrowserItem,
+                defaultBrowserItem?.let { BrowserMenuDivider() },
                 findInPageItem,
                 desktopSiteItem,
                 customizeReaderView.apply { visible = ::shouldShowReaderViewCustomization },
@@ -446,23 +446,17 @@ open class DefaultToolbarMenu(
         }
     }
 
-    private fun getSetDefaultBrowserItem(): BrowserMenuImageText? {
-        val experiments = context.components.analytics.experiments
-        val browsers = BrowsersCache.all(context)
-
-        return experiments.withExperiment(FeatureId.DEFAULT_BROWSER) { experimentBranch ->
-            if (experimentBranch == ExperimentBranch.DEFAULT_BROWSER_TOOLBAR_MENU &&
-                !browsers.isFirefoxDefaultBrowser
+    private fun getSetDefaultBrowserItem(): BrowserMenuImageText? =
+        if (BrowsersCache.all(context).isFirefoxDefaultBrowser) {
+            null
+        } else if (FxNimbus.features.defaultBrowserMessage.value().messageLocation == MessageSurfaceId.APP_MENU_ITEM) {
+            BrowserMenuImageText(
+                label = context.getString(R.string.preferences_set_as_default_browser),
+                imageResource = R.mipmap.ic_launcher
             ) {
-                return@withExperiment BrowserMenuImageText(
-                    label = context.getString(R.string.preferences_set_as_default_browser),
-                    imageResource = R.mipmap.ic_launcher
-                ) {
-                    onItemTapped.invoke(ToolbarMenu.Item.SetDefaultBrowser)
-                }
-            } else {
-                null
+                onItemTapped.invoke(ToolbarMenu.Item.SetDefaultBrowser)
             }
+        } else {
+            null
         }
-    }
 }
