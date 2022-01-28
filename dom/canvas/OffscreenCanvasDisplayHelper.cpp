@@ -6,7 +6,6 @@
 
 #include "OffscreenCanvasDisplayHelper.h"
 #include "mozilla/gfx/CanvasManagerChild.h"
-#include "mozilla/gfx/Swizzle.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/TextureWrapperImage.h"
@@ -44,18 +43,16 @@ RefPtr<layers::ImageContainer> OffscreenCanvasDisplayHelper::GetImageContainer()
   return mImageContainer;
 }
 
-void OffscreenCanvasDisplayHelper::UpdateContext(
-    CanvasContextType aType, const Maybe<int32_t>& aChildId) {
+void OffscreenCanvasDisplayHelper::UpdateContext(CanvasContextType aType,
+                                                 int32_t aChildId) {
   MutexAutoLock lock(mMutex);
   mImageContainer =
       MakeRefPtr<layers::ImageContainer>(layers::ImageContainer::ASYNCHRONOUS);
   mType = aType;
-  mContextChildId = aChildId;
 
   if (aChildId) {
-    mContextManagerId = Some(gfx::CanvasManagerChild::Get()->Id());
-  } else {
-    mContextManagerId.reset();
+    mContextManagerId = gfx::CanvasManagerChild::Get()->Id();
+    mContextChildId = aChildId;
   }
 
   MaybeQueueInvalidateElement();
@@ -122,11 +119,9 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
           texture, gfx::IntRect(gfx::IntPoint(0, 0), mData.mSize));
     }
   } else {
-    surface = aContext->GetFrontBufferSnapshot(/* requireAlphaPremult */ false);
+    surface = aContext->GetFrontBufferSnapshot(/* requireAlphaPremult */ true);
     if (surface) {
-      auto surfaceImage = MakeRefPtr<layers::SourceSurfaceImage>(surface);
-      surfaceImage->SetTextureFlags(flags);
-      image = surfaceImage;
+      image = new layers::SourceSurfaceImage(surface);
     }
   }
 
@@ -143,6 +138,8 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
     mImageContainer->ClearAllImages();
   }
 
+  mFrontBufferDesc = std::move(desc);
+  mFrontBufferSurface = std::move(surface);
   return true;
 }
 
@@ -185,76 +182,27 @@ OffscreenCanvasDisplayHelper::GetSurfaceSnapshot() {
   Maybe<layers::SurfaceDescriptor> desc;
 
   bool hasAlpha;
-  gl::OriginPos originPos;
-  Maybe<uint32_t> managerId;
-  Maybe<int32_t> childId;
-  HTMLCanvasElement* canvasElement;
+  uint32_t managerId;
+  int32_t childId;
 
   {
     MutexAutoLock lock(mMutex);
+    if (mFrontBufferSurface) {
+      RefPtr<gfx::SourceSurface> surface = mFrontBufferSurface;
+      return surface.forget();
+    }
+
     hasAlpha = !mData.mIsOpaque;
-    originPos = mData.mOriginPos;
     managerId = mContextManagerId;
     childId = mContextChildId;
-    canvasElement = mCanvasElement;
   }
 
-  if (managerId && childId) {
-    // The context lives in the compositor process.
-    return gfx::CanvasManagerChild::Get()->GetSnapshot(
-        managerId.value(), childId.value(), hasAlpha);
-  }
-
-  // If we don't have any protocol IDs, it is possible it is a main thread
-  // OffscreenCanvas instance. If so, then the element's OffscreenCanvas is
-  // not neutered and has access to the context. We can use that to get the
-  // snapshot directly.
-  if (!canvasElement) {
+  if (NS_WARN_IF(!managerId || !childId)) {
     return nullptr;
   }
 
-  const auto* offscreenCanvas = canvasElement->GetOffscreenCanvas();
-  nsICanvasRenderingContextInternal* context = offscreenCanvas->GetContext();
-  if (!context) {
-    return nullptr;
-  }
-
-  RefPtr<gfx::SourceSurface> surface =
-      context->GetFrontBufferSnapshot(/* requireAlphaPremult */ true);
-  if (!surface) {
-    return nullptr;
-  }
-
-  switch (originPos) {
-    case gl::OriginPos::BottomLeft: {
-      RefPtr<gfx::DataSourceSurface> dataSurface = surface->GetDataSurface();
-      if (!dataSurface) {
-        return nullptr;
-      }
-
-      gfx::DataSourceSurface::ScopedMap map(dataSurface,
-                                            gfx::DataSourceSurface::READ_WRITE);
-      if (!map.IsMapped()) {
-        return nullptr;
-      }
-
-      // The buffer we read back from WebGL has its rows inverted.
-      const gfx::SurfaceFormat format = surface->GetFormat();
-      const gfx::IntSize size = surface->GetSize();
-      if (!gfx::SwizzleYFlipData(map.GetData(), map.GetStride(), format,
-                                 map.GetData(), map.GetStride(), format,
-                                 size)) {
-        return nullptr;
-      }
-    } break;
-    case gl::OriginPos::TopLeft:
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unhandled origin position!");
-      break;
-  }
-
-  return surface.forget();
+  return gfx::CanvasManagerChild::Get()->GetSnapshot(managerId, childId,
+                                                     hasAlpha);
 }
 
 already_AddRefed<layers::Image> OffscreenCanvasDisplayHelper::GetAsImage() {
