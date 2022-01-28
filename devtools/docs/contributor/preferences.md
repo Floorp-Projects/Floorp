@@ -35,8 +35,8 @@ when running in Launchpad.
 
 DevTools relies on Services.pref to handle preferences. You can access the API docs for
 this service at:
-* [API docs for nsIPrefBranch](https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/nsIPrefBranch)
-* [API docs for nsIPrefService](https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/nsIPrefService)
+* [Source for nsIPrefBranch](https://searchfox.org/mozilla-central/source/modules/libpref/nsIPrefBranch.idl)
+* [Source for nsIPrefService](https://searchfox.org/mozilla-central/source/modules/libpref/nsIPrefService.idl)
 
 If you are using Launchpad, note that only a subset of nsIPrefService methods are
 implemented (addObserver and removeObserver). Launchpad relies on a Services shim file

@@ -67,7 +67,7 @@ Restart the browser to apply configuration changes.
 
 <!--TODO: aren't some of these preferences enabled by default now in local builds? -->
 
-These settings allow you to use the [browser toolbox](https://developer.mozilla.org/docs/Tools/Browser_Toolbox) to inspect the DevTools themselves, set breakpoints inside of DevTools code in the *Browser* environment.
+These settings allow you to use the [browser toolbox](https://firefox-source-docs.mozilla.org/devtools-user/browser_toolbox/) to inspect the DevTools themselves, set breakpoints inside of DevTools code in the *Browser* environment.
 
 Open DevTools, and click the "Toolbox Options" gear icon in the top right (the image underneath is outdated). <!--TODO update image-->
 

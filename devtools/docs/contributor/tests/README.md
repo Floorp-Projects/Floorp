@@ -12,7 +12,6 @@ We use three suites of tests:
 * [Chrome mochitests](mochitest-chrome.md): Unit-test style of tests, but with a browser window. Mostly testing APIs that interact with the DOM.
 * [DevTools mochitests](mochitest-devtools.md): Integration style of tests. Fires up a whole browser window with every test and you can test clicking on buttons, etc.
 
-More information about the different types of tests can be found on the [automated testing page](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Automated_testing) at MDN.
 
 To run all DevTools tests, regardless of suite type:
 

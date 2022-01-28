@@ -1,5 +1,5 @@
 # Panel SVGs
-These are the guidelines for creating devtools SVGs to make sure they're as small and neatly formatted as possible. The Mozilla Developer SVG guidelines can be found [here](https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/SVG_Guidelines).
+These are the guidelines for creating devtools SVGs to make sure they're as small and neatly formatted as possible. The Mozilla Developer SVG guidelines can be found [here](https://developer.mozilla.org/en-US/docs/Web/SVG).
 
 ## Explanation of Pixel Grid
 Since so many of our SVGs appear so small, designing them on the pixel grid will help them not appear fuzzy when they're sized down to 16x16 pixels. There is program-specific documentation in both the [Illustrator](#illustrator) and [Sketch](#sketch) sections.
