@@ -353,7 +353,6 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   webgpu::CanvasContext* GetWebGPUContext();
 
   bool IsOffscreen() const { return !!mOffscreenCanvas; }
-  OffscreenCanvas* GetOffscreenCanvas() const { return mOffscreenCanvas; }
 
   RefPtr<layers::ImageContainer> GetImageContainer();
 
