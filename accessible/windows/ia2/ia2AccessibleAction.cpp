@@ -56,7 +56,7 @@ ia2AccessibleAction::nActions(long* aActionCount) {
 
 STDMETHODIMP
 ia2AccessibleAction::doAction(long aActionIndex) {
-  AccessibleWrap* acc = LocalAcc();
+  Accessible* acc = Acc();
   if (!acc) return CO_E_OBJNOTCONNECTED;
 
   uint8_t index = static_cast<uint8_t>(aActionIndex);
