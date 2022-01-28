@@ -63,7 +63,7 @@ Device::Device(Adapter* const aParent, RawId aId,
       mLimits(new SupportedLimits(aParent, std::move(aRawLimits))),
       mBridge(aParent->mBridge),
       mQueue(new class Queue(this, aParent->mBridge, aId)) {
-  mBridge->RegisterDevice(mId, this);
+  mBridge->RegisterDevice(this);
 }
 
 Device::~Device() { Cleanup(); }
@@ -73,6 +73,13 @@ void Device::Cleanup() {
     mValid = false;
     mBridge->UnregisterDevice(mId);
   }
+}
+
+void Device::CleanupUnregisteredInParent() {
+  if (mBridge) {
+    mBridge->FreeUnregisteredInParentDevice(mId);
+  }
+  mValid = false;
 }
 
 void Device::GetLabel(nsAString& aValue) const { aValue = mLabel; }

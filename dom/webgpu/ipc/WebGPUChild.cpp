@@ -202,17 +202,15 @@ RefPtr<AdapterPromise> WebGPUChild::InstanceRequestAdapter(
           });
 }
 
-Maybe<RawId> WebGPUChild::AdapterRequestDevice(
+Maybe<DeviceRequest> WebGPUChild::AdapterRequestDevice(
     RawId aSelfId, const dom::GPUDeviceDescriptor& aDesc,
     ffi::WGPULimits* aLimits) {
-  RawId id = ffi::wgpu_client_make_device_id(mClient, aSelfId);
-
   ffi::WGPUDeviceDescriptor desc = {};
   ffi::wgpu_client_fill_default_limits(&desc.limits);
 
   const auto featureBits = Adapter::MakeFeatureBits(aDesc.mRequiredFeatures);
   if (!featureBits) {
-    return {};
+    return Nothing();
   }
   desc.features = *featureBits;
 
@@ -283,14 +281,17 @@ Maybe<RawId> WebGPUChild::AdapterRequestDevice(
     }
   }
 
+  RawId id = ffi::wgpu_client_make_device_id(mClient, aSelfId);
+
   ByteBuf bb;
   ffi::wgpu_client_serialize_device_descriptor(&desc, ToFFI(&bb));
-  if (SendAdapterRequestDevice(aSelfId, std::move(bb), id)) {
-    *aLimits = desc.limits;
-    return Some(id);
-  }
-  ffi::wgpu_client_kill_device_id(mClient, id);
-  return Nothing();
+
+  DeviceRequest request;
+  request.mId = id;
+  request.mPromise = SendAdapterRequestDevice(aSelfId, std::move(bb), id);
+  *aLimits = desc.limits;
+
+  return Some(std::move(request));
 }
 
 RawId WebGPUChild::DeviceCreateBuffer(RawId aSelfId,
@@ -979,8 +980,8 @@ void WebGPUChild::SwapChainPresent(wr::ExternalImageId aExternalImageId,
   SendSwapChainPresent(aExternalImageId, aTextureId, encoderId);
 }
 
-void WebGPUChild::RegisterDevice(RawId aId, Device* aDevice) {
-  mDeviceMap.insert({aId, aDevice});
+void WebGPUChild::RegisterDevice(Device* const aDevice) {
+  mDeviceMap.insert({aDevice->mId, aDevice});
 }
 
 void WebGPUChild::UnregisterDevice(RawId aId) {
@@ -988,6 +989,11 @@ void WebGPUChild::UnregisterDevice(RawId aId) {
   if (IsOpen()) {
     SendDeviceDestroy(aId);
   }
+}
+
+void WebGPUChild::FreeUnregisteredInParentDevice(RawId aId) {
+  ffi::wgpu_client_kill_device_id(mClient, aId);
+  mDeviceMap.erase(aId);
 }
 
 }  // namespace webgpu
