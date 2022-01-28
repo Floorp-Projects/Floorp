@@ -5362,6 +5362,24 @@ gfxRect SVGTextFrame::TransformFrameRectFromTextChild(
   return result - framePosition;
 }
 
+Rect SVGTextFrame::TransformFrameRectFromTextChild(
+    const Rect& aRect, const nsIFrame* aChildFrame) {
+  nscoord appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
+  nsRect r = LayoutDevicePixel::ToAppUnits(
+      LayoutDeviceRect::FromUnknownRect(aRect), appUnitsPerDevPixel);
+  gfxRect resultCssUnits = TransformFrameRectFromTextChild(r, aChildFrame);
+  float devPixelPerCSSPixel =
+      float(AppUnitsPerCSSPixel()) / appUnitsPerDevPixel;
+  resultCssUnits.Scale(devPixelPerCSSPixel);
+  return ToRect(resultCssUnits);
+}
+
+Point SVGTextFrame::TransformFramePointFromTextChild(
+    const Point& aPoint, const nsIFrame* aChildFrame) {
+  return TransformFrameRectFromTextChild(Rect(aPoint, Size(1, 1)), aChildFrame)
+      .TopLeft();
+}
+
 void SVGTextFrame::AppendDirectlyOwnedAnonBoxes(
     nsTArray<OwnedAnonBox>& aResult) {
   MOZ_ASSERT(PrincipalChildList().FirstChild(), "Must have our anon box");

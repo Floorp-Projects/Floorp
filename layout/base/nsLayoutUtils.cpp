@@ -2221,46 +2221,120 @@ bool nsLayoutUtils::AuthorSpecifiedBorderBackgroundDisablesTheming(
          aAppearance == StyleAppearance::MenulistButton;
 }
 
-nsLayoutUtils::TransformResult nsLayoutUtils::TransformPoints(
-    nsIFrame* aFromFrame, nsIFrame* aToFrame, uint32_t aPointCount,
-    CSSPoint* aPoints) {
-  const nsIFrame* nearestCommonAncestor =
-      FindNearestCommonAncestorFrame(aFromFrame, aToFrame);
-  if (!nearestCommonAncestor) {
-    return NO_COMMON_ANCESTOR;
+static SVGTextFrame* GetContainingSVGTextFrame(const nsIFrame* aFrame) {
+  if (!SVGUtils::IsInSVGTextSubtree(aFrame)) {
+    return nullptr;
   }
-  Matrix4x4Flagged downToDest = GetTransformToAncestor(
-      RelativeTo{aToFrame}, RelativeTo{nearestCommonAncestor});
-  if (downToDest.IsSingular()) {
-    return NONINVERTIBLE_TRANSFORM;
-  }
-  downToDest.Invert();
-  Matrix4x4Flagged upToAncestor = GetTransformToAncestor(
-      RelativeTo{aFromFrame}, RelativeTo{nearestCommonAncestor});
-  CSSToLayoutDeviceScale devPixelsPerCSSPixelFromFrame =
-      aFromFrame->PresContext()->CSSToDevPixelScale();
-  CSSToLayoutDeviceScale devPixelsPerCSSPixelToFrame =
-      aToFrame->PresContext()->CSSToDevPixelScale();
-  for (uint32_t i = 0; i < aPointCount; ++i) {
-    LayoutDevicePoint devPixels = aPoints[i] * devPixelsPerCSSPixelFromFrame;
-    // What should the behaviour be if some of the points aren't invertible
-    // and others are? Just assume all points are for now.
-    Point toDevPixels =
-        downToDest
-            .ProjectPoint(
-                (upToAncestor.TransformPoint(Point(devPixels.x, devPixels.y))))
-            .As2DPoint();
-    // Divide here so that when the devPixelsPerCSSPixels are the same, we get
-    // the correct answer instead of some inaccuracy multiplying a number by its
-    // reciprocal.
-    aPoints[i] = LayoutDevicePoint(toDevPixels.x, toDevPixels.y) /
-                 devPixelsPerCSSPixelToFrame;
-  }
-  return TRANSFORM_SUCCEEDED;
+
+  return static_cast<SVGTextFrame*>(nsLayoutUtils::GetClosestFrameOfType(
+      aFrame->GetParent(), LayoutFrameType::SVGText));
 }
 
-nsLayoutUtils::TransformResult nsLayoutUtils::TransformPoint(
-    RelativeTo aFromFrame, RelativeTo aToFrame, nsPoint& aPoint) {
+static bool TransformGfxPointFromAncestor(RelativeTo aFrame,
+                                          const Point& aPoint,
+                                          RelativeTo aAncestor,
+                                          Maybe<Matrix4x4Flagged>& aMatrixCache,
+                                          Point* aOut) {
+  SVGTextFrame* text = GetContainingSVGTextFrame(aFrame.mFrame);
+
+  if (!aMatrixCache) {
+    auto matrix = nsLayoutUtils::GetTransformToAncestor(
+        RelativeTo{text ? text : aFrame.mFrame, aFrame.mViewportType},
+        aAncestor);
+    if (matrix.IsSingular()) {
+      return false;
+    }
+    matrix.Invert();
+    aMatrixCache.emplace(matrix);
+  }
+
+  const Matrix4x4Flagged& ctm = *aMatrixCache;
+  Point4D point = ctm.ProjectPoint(aPoint);
+  if (!point.HasPositiveWCoord()) {
+    return false;
+  }
+
+  *aOut = point.As2DPoint();
+
+  if (text) {
+    *aOut = text->TransformFramePointToTextChild(*aOut, aFrame.mFrame);
+  }
+
+  return true;
+}
+
+static Point TransformGfxPointToAncestor(
+    RelativeTo aFrame, const Point& aPoint, RelativeTo aAncestor,
+    Maybe<Matrix4x4Flagged>& aMatrixCache) {
+  if (SVGTextFrame* text = GetContainingSVGTextFrame(aFrame.mFrame)) {
+    Point result =
+        text->TransformFramePointFromTextChild(aPoint, aFrame.mFrame);
+    return TransformGfxPointToAncestor(RelativeTo{text}, result, aAncestor,
+                                       aMatrixCache);
+  }
+  if (!aMatrixCache) {
+    aMatrixCache.emplace(
+        nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor));
+  }
+  return aMatrixCache->ProjectPoint(aPoint).As2DPoint();
+}
+
+static Rect TransformGfxRectToAncestor(
+    RelativeTo aFrame, const Rect& aRect, RelativeTo aAncestor,
+    bool* aPreservesAxisAlignedRectangles = nullptr,
+    Maybe<Matrix4x4Flagged>* aMatrixCache = nullptr,
+    bool aStopAtStackingContextAndDisplayPortAndOOFFrame = false,
+    nsIFrame** aOutAncestor = nullptr) {
+  Rect result;
+  Matrix4x4Flagged ctm;
+  if (SVGTextFrame* text = GetContainingSVGTextFrame(aFrame.mFrame)) {
+    result = text->TransformFrameRectFromTextChild(aRect, aFrame.mFrame);
+
+    result = TransformGfxRectToAncestor(
+        RelativeTo{text}, result, aAncestor, nullptr, aMatrixCache,
+        aStopAtStackingContextAndDisplayPortAndOOFFrame, aOutAncestor);
+    if (aPreservesAxisAlignedRectangles) {
+      // TransformFrameRectFromTextChild could involve any kind of transform, we
+      // could drill down into it to get an answer out of it but we don't yet.
+      *aPreservesAxisAlignedRectangles = false;
+    }
+    return result;
+  }
+  if (aMatrixCache && *aMatrixCache) {
+    // We are given a matrix to use, so use it
+    ctm = aMatrixCache->value();
+  } else {
+    // Else, compute it
+    uint32_t flags = 0;
+    if (aStopAtStackingContextAndDisplayPortAndOOFFrame) {
+      flags |= nsIFrame::STOP_AT_STACKING_CONTEXT_AND_DISPLAY_PORT;
+    }
+    ctm = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor, flags,
+                                                aOutAncestor);
+    if (aMatrixCache) {
+      // and put it in the cache, if provided
+      *aMatrixCache = Some(ctm);
+    }
+  }
+  // Fill out the axis-alignment flag
+  if (aPreservesAxisAlignedRectangles) {
+    // TransformFrameRectFromTextChild could involve any kind of transform, we
+    // could drill down into it to get an answer out of it but we don't yet.
+    Matrix matrix2d;
+    *aPreservesAxisAlignedRectangles =
+        ctm.Is2D(&matrix2d) && matrix2d.PreservesAxisAlignedRectangles();
+  }
+  const nsIFrame* ancestor = aOutAncestor ? *aOutAncestor : aAncestor.mFrame;
+  float factor = ancestor->PresContext()->AppUnitsPerDevPixel();
+  Rect maxBounds =
+      Rect(float(nscoord_MIN) / factor * 0.5, float(nscoord_MIN) / factor * 0.5,
+           float(nscoord_MAX) / factor, float(nscoord_MAX) / factor);
+  return ctm.TransformAndClipBounds(aRect, maxBounds);
+}
+
+nsLayoutUtils::TransformResult nsLayoutUtils::TransformPoints(
+    RelativeTo aFromFrame, RelativeTo aToFrame, uint32_t aPointCount,
+    CSSPoint* aPoints) {
   // Conceptually, {ViewportFrame, Visual} is an ancestor of
   // {ViewportFrame, Layout}, so factor that into the nearest ancestor
   // computation.
@@ -2273,30 +2347,41 @@ nsLayoutUtils::TransformResult nsLayoutUtils::TransformPoint(
   if (!nearestCommonAncestor.mFrame) {
     return NO_COMMON_ANCESTOR;
   }
-  Matrix4x4Flagged downToDest =
-      GetTransformToAncestor(aToFrame, nearestCommonAncestor);
-  if (downToDest.IsSingular()) {
-    return NONINVERTIBLE_TRANSFORM;
+  CSSToLayoutDeviceScale devPixelsPerCSSPixelFromFrame =
+      aFromFrame.mFrame->PresContext()->CSSToDevPixelScale();
+  CSSToLayoutDeviceScale devPixelsPerCSSPixelToFrame =
+      aToFrame.mFrame->PresContext()->CSSToDevPixelScale();
+  Maybe<Matrix4x4Flagged> cacheTo;
+  Maybe<Matrix4x4Flagged> cacheFrom;
+  for (uint32_t i = 0; i < aPointCount; ++i) {
+    LayoutDevicePoint devPixels = aPoints[i] * devPixelsPerCSSPixelFromFrame;
+    // What should the behaviour be if some of the points aren't invertible
+    // and others are? Just assume all points are for now.
+    Point toDevPixels =
+        TransformGfxPointToAncestor(aFromFrame, Point(devPixels.x, devPixels.y),
+                                    nearestCommonAncestor, cacheTo);
+    Point result;
+    if (!TransformGfxPointFromAncestor(
+            aToFrame, toDevPixels, nearestCommonAncestor, cacheFrom, &result)) {
+      return NONINVERTIBLE_TRANSFORM;
+    }
+    // Divide here so that when the devPixelsPerCSSPixels are the same, we get
+    // the correct answer instead of some inaccuracy multiplying a number by its
+    // reciprocal.
+    aPoints[i] =
+        LayoutDevicePoint(result.x, result.y) / devPixelsPerCSSPixelToFrame;
   }
-  downToDest.Invert();
-  Matrix4x4Flagged upToAncestor =
-      GetTransformToAncestor(aFromFrame, nearestCommonAncestor);
-
-  float devPixelsPerAppUnitFromFrame =
-      1.0f / aFromFrame.mFrame->PresContext()->AppUnitsPerDevPixel();
-  float devPixelsPerAppUnitToFrame =
-      1.0f / aToFrame.mFrame->PresContext()->AppUnitsPerDevPixel();
-  Point4D toDevPixels = downToDest.ProjectPoint(upToAncestor.TransformPoint(
-      Point(aPoint.x * devPixelsPerAppUnitFromFrame,
-            aPoint.y * devPixelsPerAppUnitFromFrame)));
-  if (!toDevPixels.HasPositiveWCoord()) {
-    // Not strictly true, but we failed to get a valid point in this
-    // coordinate space.
-    return NONINVERTIBLE_TRANSFORM;
-  }
-  aPoint.x = NSToCoordRound(toDevPixels.x / devPixelsPerAppUnitToFrame);
-  aPoint.y = NSToCoordRound(toDevPixels.y / devPixelsPerAppUnitToFrame);
   return TRANSFORM_SUCCEEDED;
+}
+
+nsLayoutUtils::TransformResult nsLayoutUtils::TransformPoint(
+    RelativeTo aFromFrame, RelativeTo aToFrame, nsPoint& aPoint) {
+  CSSPoint point = CSSPoint::FromAppUnits(aPoint);
+  auto result = TransformPoints(aFromFrame, aToFrame, 1, &point);
+  if (result == TRANSFORM_SUCCEEDED) {
+    aPoint = CSSPoint::ToAppUnits(point);
+  }
+  return result;
 }
 
 nsLayoutUtils::TransformResult nsLayoutUtils::TransformRect(
@@ -2312,23 +2397,18 @@ nsLayoutUtils::TransformResult nsLayoutUtils::TransformRect(
     return NONINVERTIBLE_TRANSFORM;
   }
   downToDest.Invert();
-  Matrix4x4Flagged upToAncestor = GetTransformToAncestor(
-      RelativeTo{aFromFrame}, RelativeTo{nearestCommonAncestor});
+  aRect = TransformFrameRectToAncestor(aFromFrame, aRect,
+                                       RelativeTo{nearestCommonAncestor});
 
   float devPixelsPerAppUnitFromFrame =
-      1.0f / aFromFrame->PresContext()->AppUnitsPerDevPixel();
+      1.0f / nearestCommonAncestor->PresContext()->AppUnitsPerDevPixel();
   float devPixelsPerAppUnitToFrame =
       1.0f / aToFrame->PresContext()->AppUnitsPerDevPixel();
   gfx::Rect toDevPixels = downToDest.ProjectRectBounds(
-      upToAncestor.ProjectRectBounds(
-          gfx::Rect(aRect.x * devPixelsPerAppUnitFromFrame,
-                    aRect.y * devPixelsPerAppUnitFromFrame,
-                    aRect.width * devPixelsPerAppUnitFromFrame,
-                    aRect.height * devPixelsPerAppUnitFromFrame),
-          Rect(-std::numeric_limits<Float>::max() * 0.5f,
-               -std::numeric_limits<Float>::max() * 0.5f,
-               std::numeric_limits<Float>::max(),
-               std::numeric_limits<Float>::max())),
+      gfx::Rect(aRect.x * devPixelsPerAppUnitFromFrame,
+                aRect.y * devPixelsPerAppUnitFromFrame,
+                aRect.width * devPixelsPerAppUnitFromFrame,
+                aRect.height * devPixelsPerAppUnitFromFrame),
       Rect(-std::numeric_limits<Float>::max() * devPixelsPerAppUnitFromFrame *
                0.5f,
            -std::numeric_limits<Float>::max() * devPixelsPerAppUnitFromFrame *
@@ -2436,83 +2516,17 @@ bool nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
   return true;
 }
 
-static bool TransformGfxPointFromAncestor(RelativeTo aFrame,
-                                          const Point& aPoint,
-                                          RelativeTo aAncestor, Point* aOut) {
-  Matrix4x4Flagged ctm =
-      nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor);
-  ctm.Invert();
-  Point4D point = ctm.ProjectPoint(aPoint);
-  if (!point.HasPositiveWCoord()) {
-    return false;
-  }
-  *aOut = point.As2DPoint();
-  return true;
-}
-
-static Rect TransformGfxRectToAncestor(
-    RelativeTo aFrame, const Rect& aRect, RelativeTo aAncestor,
-    bool* aPreservesAxisAlignedRectangles = nullptr,
-    Maybe<Matrix4x4Flagged>* aMatrixCache = nullptr,
-    bool aStopAtStackingContextAndDisplayPortAndOOFFrame = false,
-    nsIFrame** aOutAncestor = nullptr) {
-  Matrix4x4Flagged ctm;
-  if (aMatrixCache && *aMatrixCache) {
-    // We are given a matrix to use, so use it
-    ctm = aMatrixCache->value();
-  } else {
-    // Else, compute it
-    uint32_t flags = 0;
-    if (aStopAtStackingContextAndDisplayPortAndOOFFrame) {
-      flags |= nsIFrame::STOP_AT_STACKING_CONTEXT_AND_DISPLAY_PORT;
-    }
-    ctm = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestor, flags,
-                                                aOutAncestor);
-    if (aMatrixCache) {
-      // and put it in the cache, if provided
-      *aMatrixCache = Some(ctm);
-    }
-  }
-  // Fill out the axis-alignment flag
-  if (aPreservesAxisAlignedRectangles) {
-    Matrix matrix2d;
-    *aPreservesAxisAlignedRectangles =
-        ctm.Is2D(&matrix2d) && matrix2d.PreservesAxisAlignedRectangles();
-  }
-  const nsIFrame* ancestor = aOutAncestor ? *aOutAncestor : aAncestor.mFrame;
-  float factor = ancestor->PresContext()->AppUnitsPerDevPixel();
-  Rect maxBounds =
-      Rect(float(nscoord_MIN) / factor * 0.5, float(nscoord_MIN) / factor * 0.5,
-           float(nscoord_MAX) / factor, float(nscoord_MAX) / factor);
-  return ctm.TransformAndClipBounds(aRect, maxBounds);
-}
-
-static SVGTextFrame* GetContainingSVGTextFrame(const nsIFrame* aFrame) {
-  if (!SVGUtils::IsInSVGTextSubtree(aFrame)) {
-    return nullptr;
-  }
-
-  return static_cast<SVGTextFrame*>(nsLayoutUtils::GetClosestFrameOfType(
-      aFrame->GetParent(), LayoutFrameType::SVGText));
-}
-
 nsPoint nsLayoutUtils::TransformAncestorPointToFrame(RelativeTo aFrame,
                                                      const nsPoint& aPoint,
                                                      RelativeTo aAncestor) {
-  SVGTextFrame* text = GetContainingSVGTextFrame(aFrame.mFrame);
-
   float factor = aFrame.mFrame->PresContext()->AppUnitsPerDevPixel();
   Point result(NSAppUnitsToFloatPixels(aPoint.x, factor),
                NSAppUnitsToFloatPixels(aPoint.y, factor));
 
-  if (!TransformGfxPointFromAncestor(
-          text ? RelativeTo{text, aFrame.mViewportType} : aFrame, result,
-          aAncestor, &result)) {
+  Maybe<Matrix4x4Flagged> matrixCache;
+  if (!TransformGfxPointFromAncestor(aFrame, result, aAncestor, matrixCache,
+                                     &result)) {
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-  }
-
-  if (text) {
-    result = text->TransformFramePointToTextChild(result, aFrame.mFrame);
   }
 
   return nsPoint(NSFloatPixelsToAppUnits(float(result.x), factor),
@@ -2527,39 +2541,15 @@ nsRect nsLayoutUtils::TransformFrameRectToAncestor(
     nsIFrame** aOutAncestor /* = nullptr */) {
   MOZ_ASSERT(IsAncestorFrameCrossDocInProcess(aAncestor.mFrame, aFrame),
              "Fix the caller");
-
-  SVGTextFrame* text = GetContainingSVGTextFrame(aFrame);
-
   float srcAppUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-  Rect result;
-
-  if (text) {
-    result = ToRect(text->TransformFrameRectFromTextChild(aRect, aFrame));
-
-    // |result| from TransformFrameRectFromTextChild() is in user space (css
-    // pixel), should convert to device pixel
-    float devPixelPerCSSPixel =
-        float(AppUnitsPerCSSPixel()) / srcAppUnitsPerDevPixel;
-    result.Scale(devPixelPerCSSPixel);
-
-    result = TransformGfxRectToAncestor(
-        RelativeTo{text}, result, aAncestor, nullptr, aMatrixCache,
-        aStopAtStackingContextAndDisplayPortAndOOFFrame, aOutAncestor);
-    // TransformFrameRectFromTextChild could involve any kind of transform, we
-    // could drill down into it to get an answer out of it but we don't yet.
-    if (aPreservesAxisAlignedRectangles)
-      *aPreservesAxisAlignedRectangles = false;
-  } else {
-    result =
-        Rect(NSAppUnitsToFloatPixels(aRect.x, srcAppUnitsPerDevPixel),
-             NSAppUnitsToFloatPixels(aRect.y, srcAppUnitsPerDevPixel),
-             NSAppUnitsToFloatPixels(aRect.width, srcAppUnitsPerDevPixel),
-             NSAppUnitsToFloatPixels(aRect.height, srcAppUnitsPerDevPixel));
-    result = TransformGfxRectToAncestor(
-        RelativeTo{aFrame}, result, aAncestor, aPreservesAxisAlignedRectangles,
-        aMatrixCache, aStopAtStackingContextAndDisplayPortAndOOFFrame,
-        aOutAncestor);
-  }
+  Rect result(NSAppUnitsToFloatPixels(aRect.x, srcAppUnitsPerDevPixel),
+              NSAppUnitsToFloatPixels(aRect.y, srcAppUnitsPerDevPixel),
+              NSAppUnitsToFloatPixels(aRect.width, srcAppUnitsPerDevPixel),
+              NSAppUnitsToFloatPixels(aRect.height, srcAppUnitsPerDevPixel));
+  result = TransformGfxRectToAncestor(
+      RelativeTo{aFrame}, result, aAncestor, aPreservesAxisAlignedRectangles,
+      aMatrixCache, aStopAtStackingContextAndDisplayPortAndOOFFrame,
+      aOutAncestor);
 
   float destAppUnitsPerDevPixel =
       aAncestor.mFrame->PresContext()->AppUnitsPerDevPixel();
