@@ -1297,6 +1297,10 @@ richlistitem .text-link:hover {
   margin-inline-start: 4px;
 }
 
+#moreFromMozillaCategory .text-link.hidden {
+  display: none;
+}
+
 #firefox-mobile {
   background-image: url("chrome://devtools/skin/images/browsers/mobile.svg");
   padding-top: 5px;
