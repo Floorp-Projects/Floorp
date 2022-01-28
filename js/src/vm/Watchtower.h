@@ -38,10 +38,12 @@ class Watchtower {
 
  public:
   static bool watchesPropertyAdd(NativeObject* obj) {
-    return obj->useWatchtowerTestingCallback() || obj->isUsedAsPrototype();
+    return obj->hasAnyFlag({ObjectFlag::IsUsedAsPrototype,
+                            ObjectFlag::UseWatchtowerTestingCallback});
   }
   static bool watchesProtoChange(JSObject* obj) {
-    return obj->useWatchtowerTestingCallback() || obj->isUsedAsPrototype();
+    return obj->hasAnyFlag({ObjectFlag::IsUsedAsPrototype,
+                            ObjectFlag::UseWatchtowerTestingCallback});
   }
 
   static bool watchPropertyAdd(JSContext* cx, HandleNativeObject obj,
