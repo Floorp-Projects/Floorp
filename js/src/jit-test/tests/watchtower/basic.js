@@ -39,3 +39,15 @@ addWatchtowerTarget(o);
 addWatchtowerTarget(from);
 Object.assign(o, from);
 assertEq(log.join("\n"), "add-prop: x\nadd-prop: y\nadd-prop: z\nadd-prop: a");
+
+function testJit() {
+    for (var i = 0; i < 20; i++) {
+        o = {};
+        addWatchtowerTarget(o);
+        log = [];
+        o.x = 1;
+        o.y = 2;
+        assertEq(log.join("\n"), "add-prop: x\nadd-prop: y");
+    }
+}
+testJit();
