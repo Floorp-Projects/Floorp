@@ -10665,13 +10665,13 @@ AttachDecision UnaryArithIRGenerator::tryAttachInt32() {
   if (op_ == JSOp::BitNot) {
     return AttachDecision::NoAction;
   }
-  if (!val_.isInt32() || !res_.isInt32()) {
+  if (!CanConvertToInt32ForToNumber(val_) || !res_.isInt32()) {
     return AttachDecision::NoAction;
   }
 
   ValOperandId valId(writer.setInputOperandId(0));
 
-  Int32OperandId intId = writer.guardToInt32(valId);
+  Int32OperandId intId = EmitGuardToInt32ForToNumber(writer, valId, val_);
   switch (op_) {
     case JSOp::Pos:
       writer.loadInt32Result(intId);
