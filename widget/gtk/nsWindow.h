@@ -77,17 +77,6 @@ extern mozilla::LazyLogModule gWidgetVsync;
 
 #endif /* MOZ_LOGGING */
 
-#ifdef MOZ_WAYLAND
-gboolean WindowDragMotionHandler(GtkWidget* aWidget,
-                                 GdkDragContext* aDragContext,
-                                 RefPtr<DataOffer> aDataOffer, gint aX, gint aY,
-                                 guint aTime);
-gboolean WindowDragDropHandler(GtkWidget* aWidget, GdkDragContext* aDragContext,
-                               RefPtr<DataOffer> aDataOffer, gint aX, gint aY,
-                               guint aTime);
-void WindowDragLeaveHandler(GtkWidget* aWidget);
-#endif
-
 class gfxPattern;
 class nsIFrame;
 #if !GTK_CHECK_VERSION(3, 18, 0)
