@@ -8,10 +8,10 @@
 const TEST_URI = `
   <style>
   body {
-    border-block-color: lime;
+    -moz-binding: none;
   }
   div {
-    border-block-width: 1px;
+    -moz-binding: none;
   }
   </style>
   <body><div></div></body>
