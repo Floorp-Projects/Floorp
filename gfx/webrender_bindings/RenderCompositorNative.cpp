@@ -96,11 +96,9 @@ RenderedFrameId RenderCompositorNative::EndFrame(
   return frameId;
 }
 
-void RenderCompositorNative::Pause() { mNativeLayerRoot->PauseCompositor(); }
+void RenderCompositorNative::Pause() {}
 
-bool RenderCompositorNative::Resume() {
-  return mNativeLayerRoot->ResumeCompositor();
-}
+bool RenderCompositorNative::Resume() { return true; }
 
 inline layers::WebRenderCompositor RenderCompositorNative::CompositorType()
     const {

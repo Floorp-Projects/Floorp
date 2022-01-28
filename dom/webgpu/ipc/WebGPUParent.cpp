@@ -281,12 +281,17 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
 }
 
 ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
-    RawId aSelfId, const ipc::ByteBuf& aByteBuf, RawId aNewId) {
+    RawId aSelfId, const ipc::ByteBuf& aByteBuf, RawId aNewId,
+    AdapterRequestDeviceResolver&& resolver) {
   ErrorBuffer error;
   ffi::wgpu_server_adapter_request_device(mContext, aSelfId, ToFFI(&aByteBuf),
                                           aNewId, error.ToFFI());
-  mErrorScopeMap.insert({aSelfId, ErrorScopeStack()});
-  ForwardError(0, error);
+  if (ForwardError(0, error)) {
+    resolver(false);
+  } else {
+    mErrorScopeMap.insert({aSelfId, ErrorScopeStack()});
+    resolver(true);
+  }
   return IPC_OK();
 }
 

@@ -119,11 +119,9 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
           texture, gfx::IntRect(gfx::IntPoint(0, 0), mData.mSize));
     }
   } else {
-    surface = aContext->GetFrontBufferSnapshot(/* requireAlphaPremult */ false);
+    surface = aContext->GetFrontBufferSnapshot(/* requireAlphaPremult */ true);
     if (surface) {
-      auto surfaceImage = MakeRefPtr<layers::SourceSurfaceImage>(surface);
-      surfaceImage->SetTextureFlags(flags);
-      image = surfaceImage;
+      image = new layers::SourceSurfaceImage(surface);
     }
   }
 
@@ -140,6 +138,8 @@ bool OffscreenCanvasDisplayHelper::CommitFrameToCompositor(
     mImageContainer->ClearAllImages();
   }
 
+  mFrontBufferDesc = std::move(desc);
+  mFrontBufferSurface = std::move(surface);
   return true;
 }
 
@@ -187,6 +187,11 @@ OffscreenCanvasDisplayHelper::GetSurfaceSnapshot() {
 
   {
     MutexAutoLock lock(mMutex);
+    if (mFrontBufferSurface) {
+      RefPtr<gfx::SourceSurface> surface = mFrontBufferSurface;
+      return surface.forget();
+    }
+
     hasAlpha = !mData.mIsOpaque;
     managerId = mContextManagerId;
     childId = mContextChildId;

@@ -733,7 +733,6 @@ def gtest(
             device_serial,
             remote_test_root,
             libxul_path,
-            enable_webrender,
             InstallIntent.NO if no_install else InstallIntent.YES,
         )
 
@@ -846,7 +845,6 @@ def android_gtest(
     device_serial,
     remote_test_root,
     libxul_path,
-    enable_webrender,
     install,
 ):
     # setup logging for mozrunner
@@ -890,7 +888,6 @@ def android_gtest(
         remote_test_root,
         libxul_path,
         None,
-        enable_webrender,
     ):
         exit_code = 1
     tester.cleanup()

@@ -138,11 +138,8 @@ this.proxy = class extends ExtensionAPI {
       proxy: {
         onRequest: new EventManager({
           context,
-          name: `proxy.onRequest`,
-          persistent: {
-            module: "proxy",
-            event: "onRequest",
-          },
+          module: "proxy",
+          event: "onRequest",
           register: (fire, filter, info) => {
             return registerProxyFilterEvent(
               context,

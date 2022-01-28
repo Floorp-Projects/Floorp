@@ -785,6 +785,7 @@ nsUnknownContentTypeDialog.prototype = {
     if (
       this.mLauncher.targetFileIsExecutable ||
       ((mimeType == "application/octet-stream" ||
+        mimeType == "application/x-msdos-program" ||
         mimeType == "application/x-msdownload") &&
         !openWithDefaultOK)
     ) {
