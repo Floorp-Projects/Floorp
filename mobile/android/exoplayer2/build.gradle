@@ -19,6 +19,9 @@ android {
     compileSdkVersion project.ext.compileSdkVersion
 
     defaultConfig {
+        targetSdkVersion project.ext.targetSdkVersion
+        minSdkVersion project.ext.minSdkVersion
+
         versionCode project.ext.versionCode
         versionName project.ext.versionName
     }
