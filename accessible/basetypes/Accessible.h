@@ -223,6 +223,11 @@ class Accessible {
     TranslateString(name, aDescription);
   }
 
+  /**
+   * Invoke the accessible action.
+   */
+  virtual bool DoAction(uint8_t aIndex) const = 0;
+
   // Type "is" methods
 
   bool IsDoc() const { return HasGenericType(eDocument); }

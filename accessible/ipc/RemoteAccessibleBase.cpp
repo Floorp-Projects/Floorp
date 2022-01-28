@@ -567,6 +567,16 @@ void RemoteAccessibleBase<Derived>::ActionNameAt(uint8_t aIndex,
 }
 
 template <class Derived>
+bool RemoteAccessibleBase<Derived>::DoAction(uint8_t aIndex) const {
+  if (ActionCount() < aIndex + 1) {
+    return false;
+  }
+
+  Unused << mDoc->SendDoActionAsync(mID, aIndex);
+  return true;
+}
+
+template <class Derived>
 void RemoteAccessibleBase<Derived>::ARIAGroupPosition(
     int32_t* aLevel, int32_t* aSetSize, int32_t* aPosInSet) const {
   if (!mCachedFields) {
