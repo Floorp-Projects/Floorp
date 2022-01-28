@@ -352,7 +352,12 @@ void ServiceWorkerRegistrar::RemoveAll() {
 
 void ServiceWorkerRegistrar::LoadData() {
   MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(!mDataLoaded);
+#ifdef DEBUG
+  {
+    MonitorAutoLock lock(mMonitor);
+    MOZ_ASSERT(!mDataLoaded);
+  }
+#endif
 
   nsresult rv = ReadData();
 
@@ -373,10 +378,9 @@ bool ServiceWorkerRegistrar::ReloadDataForTest() {
   }
 
   MOZ_ASSERT(NS_IsMainThread());
+  MonitorAutoLock lock(mMonitor);
   mData.Clear();
   mDataLoaded = false;
-
-  MonitorAutoLock lock(mMonitor);
 
   nsCOMPtr<nsIEventTarget> target =
       do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
@@ -826,47 +830,48 @@ nsresult ServiceWorkerRegistrar::ReadData() {
 
   stream->Close();
 
-  // XXX: The following code is writing to mData without holding a
-  //      monitor lock.  This might be ok since this is currently
-  //      only called at startup where we block the main thread
-  //      preventing further operation until it completes.  We should
-  //      consider better locking here in the future.
+  // We currently only call this at startup where we block the main thread
+  // preventing further operation until it completes, however take the lock
+  // in case that changes
 
-  // Copy data over to mData.
-  for (uint32_t i = 0; i < tmpData.Length(); ++i) {
-    // Older versions could sometimes write out empty, useless entries.
-    // Prune those here.
-    if (!ServiceWorkerRegistrationDataIsValid(tmpData[i])) {
-      continue;
-    }
+  {
+    MonitorAutoLock lock(mMonitor);
+    // Copy data over to mData.
+    for (uint32_t i = 0; i < tmpData.Length(); ++i) {
+      // Older versions could sometimes write out empty, useless entries.
+      // Prune those here.
+      if (!ServiceWorkerRegistrationDataIsValid(tmpData[i])) {
+        continue;
+      }
 
-    bool match = false;
-    if (dedupe) {
-      MOZ_ASSERT(overwrite);
-      // If this is an old profile, then we might need to deduplicate.  In
-      // theory this can be removed in the future (Bug 1248449)
-      for (uint32_t j = 0; j < mData.Length(); ++j) {
-        // Use same comparison as RegisterServiceWorker. Scope contains
-        // basic origin information.  Combine with any principal attributes.
-        if (Equivalent(tmpData[i], mData[j])) {
-          // Last match wins, just like legacy loading used to do in
-          // the ServiceWorkerManager.
-          mData[j] = tmpData[i];
-          // Dupe found, so overwrite file with reduced list.
-          match = true;
-          break;
+      bool match = false;
+      if (dedupe) {
+        MOZ_ASSERT(overwrite);
+        // If this is an old profile, then we might need to deduplicate.  In
+        // theory this can be removed in the future (Bug 1248449)
+        for (uint32_t j = 0; j < mData.Length(); ++j) {
+          // Use same comparison as RegisterServiceWorker. Scope contains
+          // basic origin information.  Combine with any principal attributes.
+          if (Equivalent(tmpData[i], mData[j])) {
+            // Last match wins, just like legacy loading used to do in
+            // the ServiceWorkerManager.
+            mData[j] = tmpData[i];
+            // Dupe found, so overwrite file with reduced list.
+            match = true;
+            break;
+          }
         }
-      }
-    } else {
+      } else {
 #ifdef DEBUG
-      // Otherwise assert no duplications in debug builds.
-      for (uint32_t j = 0; j < mData.Length(); ++j) {
-        MOZ_ASSERT(!Equivalent(tmpData[i], mData[j]));
-      }
+        // Otherwise assert no duplications in debug builds.
+        for (uint32_t j = 0; j < mData.Length(); ++j) {
+          MOZ_ASSERT(!Equivalent(tmpData[i], mData[j]));
+        }
 #endif
-    }
-    if (!match) {
-      mData.AppendElement(tmpData[i]);
+      }
+      if (!match) {
+        mData.AppendElement(tmpData[i]);
+      }
     }
   }
 
