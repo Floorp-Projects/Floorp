@@ -132,13 +132,3 @@ type = "boolean"
 bug-numbers = [1673971]
 is-public = true
 default-value = false
-
-[firefox-100]
-title = "experimental-features-firefox-100"
-description = "experimental-features-firefox-100-description"
-restart-required = false
-preference = "general.useragent.forceVersion100"
-type = "boolean"
-bug-numbers = [1748798]
-is-public = true
-default-value = false
