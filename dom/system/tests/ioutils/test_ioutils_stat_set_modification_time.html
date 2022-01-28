@@ -81,33 +81,52 @@
     });
 
     add_task(async function test_setModificationTime_and_stat() {
-      info("Test attempt to setModificationTime a file");
-
       const tmpDir = await PathUtils.getTempDir();
 
       const tmpFileName = PathUtils.join(tmpDir, "test_setModificationTime_and_stat.tmp");
-      await createFile(tmpFileName);
+      {
+        info("Test attempt to setModificationTime a file");
+        await createFile(tmpFileName);
 
-      const oldFileInfo = await IOUtils.stat(tmpFileName);
-      await sleep(500);
+        const oldFileInfo = await IOUtils.stat(tmpFileName);
+        await sleep(500);
 
-      // Now update the time stamp.
-      const stamp = await IOUtils.setModificationTime(tmpFileName);
-      const newFileInfo = await IOUtils.stat(tmpFileName);
+        // Now update the time stamp.
+        const stamp = await IOUtils.setModificationTime(tmpFileName);
+        const newFileInfo = await IOUtils.stat(tmpFileName);
 
-      ok(
-        newFileInfo.lastModified > oldFileInfo.lastModified,
-        "IOUtils::setModificationTime can update the lastModified time stamp on the file system"
-      );
-      is(
-        stamp,
-        newFileInfo.lastModified,
-        "IOUtils::setModificationTime returns the updated time stamp."
-      );
+        ok(
+          newFileInfo.lastModified > oldFileInfo.lastModified,
+          "IOUtils::setModificationTime can update the lastModified time stamp on the file system"
+        );
+        is(
+          stamp,
+          newFileInfo.lastModified,
+          "IOUtils::setModificationTime returns the updated time stamp."
+        );
+      }
 
-      info("Test attempt to setModificationTime a directory");
       const tmpDirName = PathUtils.join(tmpDir, "test_setModificationTime_and_stat.tmp.d");
-      await createDir(tmpDirName);
+      {
+        info("Test attempt to setModificationTime a directory");
+        await createDir(tmpDirName);
+
+        const oldFileInfo = await IOUtils.stat(tmpDirName);
+        await sleep(500);
+
+        const stamp = await IOUtils.setModificationTime(tmpDirName);
+        const newFileInfo = await IOUtils.stat(tmpDirName);
+
+        ok(
+          newFileInfo.lastModified > oldFileInfo.lastModified,
+          "IOUtils::setModificationTime can update the lastModified time stamp on a directory"
+        );
+        is(
+          stamp,
+          newFileInfo.lastModified,
+          "IOUtils::setModificationTime returns the updated time stamp on a directory"
+        );
+      }
 
       await cleanup(tmpFileName, tmpDirName);
     });
