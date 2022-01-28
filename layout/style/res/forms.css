@@ -161,10 +161,6 @@ textarea > scrollbar {
   visibility: hidden;
 }
 
-::-moz-text-control-preview {
-  overflow: hidden;
-}
-
 :not(:-moz-autofill-preview)::-moz-text-control-editing-root,
 :placeholder-shown:not(:autofill)::placeholder,
 :autofill::-moz-text-control-preview {
@@ -1012,5 +1008,4 @@ input:autofill, select:autofill {
 
 input:-moz-autofill-preview, select:-moz-autofill-preview {
   color: GrayText;
-  font-family: system-ui !important;
 }
