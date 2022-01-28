@@ -31,7 +31,7 @@ class ThreadEventQueue::NestedSink : public ThreadTargetSink {
 
   void Disconnect(const MutexAutoLock& aProofOfLock) final { mQueue = nullptr; }
 
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) {
     if (mQueue) {
       return mQueue->SizeOfIncludingThis(aMallocSizeOf);
     }
@@ -237,14 +237,17 @@ void ThreadEventQueue::PopEventQueue(nsIEventTarget* aTarget) {
 }
 
 size_t ThreadEventQueue::SizeOfExcludingThis(
-    mozilla::MallocSizeOf aMallocSizeOf) const {
+    mozilla::MallocSizeOf aMallocSizeOf) {
   size_t n = 0;
 
   n += mBaseQueue->SizeOfIncludingThis(aMallocSizeOf);
 
-  n += mNestedQueues.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (auto& queue : mNestedQueues) {
-    n += queue.mEventTarget->SizeOfIncludingThis(aMallocSizeOf);
+  {
+    MutexAutoLock lock(mLock);
+    n += mNestedQueues.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    for (auto& queue : mNestedQueues) {
+      n += queue.mEventTarget->SizeOfIncludingThis(aMallocSizeOf);
+    }
   }
 
   return SynchronizedEventQueue::SizeOfExcludingThis(aMallocSizeOf) + n;
@@ -256,10 +259,12 @@ already_AddRefed<nsIThreadObserver> ThreadEventQueue::GetObserver() {
 }
 
 already_AddRefed<nsIThreadObserver> ThreadEventQueue::GetObserverOnThread() {
+  // only written on this thread
   return do_AddRef(mObserver);
 }
 
 void ThreadEventQueue::SetObserver(nsIThreadObserver* aObserver) {
+  // Always called from the thread - single writer
   MutexAutoLock lock(mLock);
   nsCOMPtr observer = aObserver;
   mObserver.swap(observer);

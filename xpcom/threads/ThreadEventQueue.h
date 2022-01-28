@@ -52,8 +52,7 @@ class ThreadEventQueue final : public SynchronizedEventQueue {
 
   Mutex& MutexRef() { return mLock; }
 
-  size_t SizeOfExcludingThis(
-      mozilla::MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) override;
 
  private:
   class NestedSink;
@@ -63,7 +62,7 @@ class ThreadEventQueue final : public SynchronizedEventQueue {
   bool PutEventInternal(already_AddRefed<nsIRunnable>&& aEvent,
                         EventQueuePriority aPriority, NestedSink* aQueue);
 
-  UniquePtr<EventQueue> mBaseQueue;
+  const UniquePtr<EventQueue> mBaseQueue;
 
   struct NestedQueueItem {
     UniquePtr<EventQueue> mQueue;
