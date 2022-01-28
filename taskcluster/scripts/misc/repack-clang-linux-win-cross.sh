@@ -1,15 +1,19 @@
 #!/bin/bash
 set -x -e -v
 
-# This script is to repack a linux clang with Windows clang-cl.exe and compiler runtime.
+# This script is for building clang for windows targets on a Linux host,
+# including native Windows Compiler-RT libraries.
 
 cd $MOZ_FETCHES_DIR
 
-# We already have the Linux clang extracted in $MOZ_FETCHES_DIR/clang by fetch-content
-# We have a non-extracted clang-cl/clang.tar.zst for Windows clang-cl that we need to extract
-# files from.
+# We have a native linux64 toolchain in $MOZ_FETCHES_DIR/clang
+# We have a native x86 windows compiler-rt in $MOZ_FETCHES_DIR/x86/compiler-rt
+# We have a native x86_64 windows compiler-rt in $MOZ_FETCHES_DIR/x86_64/compiler-rt
+clang_lib=$(echo clang/lib/clang/*/lib)
+mkdir -p $clang_lib/windows
+cp x86/compiler-rt/lib/windows/* $clang_lib/windows
+cp x86_64/compiler-rt/lib/windows/* $clang_lib/windows
 
-$GECKO_PATH/taskcluster/scripts/misc/zstdpy -d clang-cl/clang.tar.zst | tar -x --wildcards clang/lib/clang/*/lib/windows
 tar caf clang.tar.zst clang
 
 # Put a tarball in the artifacts dir

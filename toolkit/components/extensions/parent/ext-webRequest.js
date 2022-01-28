@@ -104,18 +104,15 @@ function registerEvent(
   };
 }
 
-function makeWebRequestEvent(context, name) {
+function makeWebRequestEvent(context, event) {
   return new EventManager({
     context,
-    name: `webRequest.${name}`,
-    persistent: {
-      module: "webRequest",
-      event: name,
-    },
+    module: "webRequest",
+    event,
     register: (fire, filter, info) => {
       return registerEvent(
         context.extension,
-        name,
+        event,
         fire,
         filter,
         info,

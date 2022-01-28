@@ -30,9 +30,9 @@ class WebGPUParent final : public PWebGPUParent {
       const dom::GPURequestAdapterOptions& aOptions,
       const nsTArray<RawId>& aTargetIds,
       InstanceRequestAdapterResolver&& resolver);
-  ipc::IPCResult RecvAdapterRequestDevice(RawId aSelfId,
-                                          const ipc::ByteBuf& aByteBuf,
-                                          RawId aNewId);
+  ipc::IPCResult RecvAdapterRequestDevice(
+      RawId aSelfId, const ipc::ByteBuf& aByteBuf, RawId aNewId,
+      AdapterRequestDeviceResolver&& resolver);
   ipc::IPCResult RecvAdapterDestroy(RawId aSelfId);
   ipc::IPCResult RecvDeviceDestroy(RawId aSelfId);
   ipc::IPCResult RecvBufferReturnShmem(RawId aSelfId, Shmem&& aShmem);

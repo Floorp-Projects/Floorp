@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -e
+set -e -x
 
 target=$1
 shift
@@ -62,6 +62,7 @@ case "$target" in
     -DDARWIN_osx_SYSROOT=$MOZ_FETCHES_DIR/MacOSX11.0.sdk
     -DDARWIN_macosx_OVERRIDE_SDK_VERSION=11.0
     -DDARWIN_osx_BUILTIN_ARCHS=$arch
+    -DLLVM_DEFAULT_TARGET_TRIPLE=$target
   "
   # compiler-rt build script expects to find `codesign` in $PATH.
   # Give it a fake one.
@@ -107,6 +108,38 @@ aarch64-unknown-linux-gnu)
   "
   PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
   ;;
+*-pc-windows-msvc)
+  VSPATH="$MOZ_FETCHES_DIR/vs2017_15.9.6"
+  SDK_VERSION=10.0.17134.0
+
+  export INCLUDE="${VSPATH}/VC/include;${VSPATH}/VC/atlmfc/include;${VSPATH}/SDK/Include/${SDK_VERSION}/ucrt;${VSPATH}/SDK/Include/${SDK_VERSION}/shared;${VSPATH}/SDK/Include/${SDK_VERSION}/um"
+  case "$target" in
+  i686-pc-windows-msvc)
+    VCARCH=x86
+    ;;
+  x86_64-pc-windows-msvc)
+    VCARCH=x64
+    ;;
+  aarch64-pc-windows-msvc)
+    VCARCH=arm64
+    ;;
+  esac
+  export LIB="${VSPATH}/VC/lib/${VCARCH};${VSPATH}/VC/atlmfc/lib/${VCARCH};${VSPATH}/SDK/Lib/${SDK_VERSION}/um/${VCARCH};${VSPATH}/SDK/Lib/${SDK_VERSION}/ucrt/${VCARCH}"
+  export LD_PRELOAD=$MOZ_FETCHES_DIR/liblowercase/liblowercase.so
+  export LOWERCASE_DIRS=$VSPATH
+  clang=$MOZ_FETCHES_DIR/clang/bin/clang-cl
+  clangxx=$clang
+  ar=lib
+  EXTRA_CMAKE_FLAGS="
+    -DCMAKE_SYSTEM_NAME=Windows
+    -DCMAKE_LINKER=$MOZ_FETCHES_DIR/clang/bin/lld-link
+    -DCMAKE_MT=$MOZ_FETCHES_DIR/clang/bin/llvm-mt
+    -DCMAKE_RC_COMPILER=$MOZ_FETCHES_DIR/clang/bin/llvm-rc
+    -DCMAKE_C_FLAGS='--target=$target -fms-compatibility-version=19.15.26726'
+    -DCMAKE_CXX_FLAGS='--target=$target -fms-compatibility-version=19.15.26726'
+    -DCMAKE_ASM_FLAGS=--target=$target
+  "
+  ;;
 *)
   echo $target is not supported yet
   exit 1
@@ -121,18 +154,27 @@ mkdir compiler-rt
 cd compiler-rt
 
 for patchfile in "$@"; do
-  patch -d $MOZ_FETCHES_DIR/llvm-project -p1 < $GECKO_PATH/$patchfile
+  case $patchfile in
+  *.json)
+      jq -r '.patches[]' $GECKO_PATH/$patchfile | while read p; do
+        patch -d $MOZ_FETCHES_DIR/llvm-project -p1 < $GECKO_PATH/$(dirname $patchfile)/$p
+      done
+      ;;
+  *)
+      patch -d $MOZ_FETCHES_DIR/llvm-project -p1 < $GECKO_PATH/$patchfile
+      ;;
+  esac
 done
 
 eval cmake \
   $MOZ_FETCHES_DIR/llvm-project/compiler-rt \
   -GNinja \
   -DCMAKE_C_COMPILER=$clang \
-  -DCMAKE_CXX_COMPILER=$clang++ \
+  -DCMAKE_CXX_COMPILER=${clangxx:-$clang++} \
   -DCMAKE_C_COMPILER_TARGET=$target \
   -DCMAKE_CXX_COMPILER_TARGET=$target \
   -DCMAKE_ASM_COMPILER_TARGET=$target \
-  -DCMAKE_AR=$MOZ_FETCHES_DIR/clang/bin/llvm-ar \
+  -DCMAKE_AR=$MOZ_FETCHES_DIR/clang/bin/llvm-${ar:-ar} \
   -DCMAKE_RANLIB=$MOZ_FETCHES_DIR/clang/bin/llvm-ranlib \
   -DCMAKE_BUILD_TYPE=Release \
   -DLLVM_ENABLE_ASSERTIONS=OFF \

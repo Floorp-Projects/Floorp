@@ -164,7 +164,8 @@ For example, extending our example above:
          myapi: {
            onSomething: new EventManager({
              context,
-             name: "myapi.onSomething",
+             module: "myapi",
+             event: "onSomething",
              register: (fire, minValue) => {
                const callback = value => {
                  if (value >= minValue) {
@@ -225,7 +226,8 @@ which is a Promise that resolves to the listener's return value:
          myapi: {
            onSomething: new EventManager({
              context,
-             name: "myapi.onSomething",
+             module: "myapi",
+             event: "onSomething",
              register: fire => {
                const callback = async (value) => {
                  let rv = await fire.async(value);
@@ -311,4 +313,78 @@ to dispatch listeners:
   unless you have a detailed understanding of Javascript compartments
   and cross-compartment wrappers.
 
+Event Persistence
+-----------------
+
+Events are persisted in some circumstances.  Persisted events can either
+block startup, and/or cause an event page or service worker to be started.
+
+The event listener must be registered synchronously in the top level scope
+of the background.  Event listeners registered later, or asynchronously, are
+not persisted.
+
+Currently only WebRequestBlocking and Proxy events are able to block
+at startup, causing an addon to start earlier in Firefox startup.  Whether
+a module can block startup is defined by a ``startupBlocking`` flag in
+the module definition files (``ext-toolkit.json`` or ``ext-browser.json``).
+As well, these are the only events persisted for persistent background scripts.
+
+Events implemented only in a child process, without a parent process counterpart,
+cannot be persisted.
+
+To make a persistent listener, the ExtensionAPI class in the module must also
+provide a ``primeListeners`` method.  The ``module`` and ``event`` params are
+required for the ``EventManager`` constructor.
+
+This requires structuring the listener registration code in a way that it can
+be used by both the ``primeListener`` call and in the constructor for ``EventManager``.
+
+``primeListener`` must return an object with an ``unregister`` and ``convert`` method, while
+the ``register`` callback passed to  the ``EventManager`` constructor is expected to return
+the ``unregister`` method.
+
+.. code-block:: js
+
+   function somethingListener(fire, minValue) => {
+     const callback = value => {
+       if (value >= minValue) {
+         fire.async(value);
+       }
+     };
+     RegisterSomeInternalCallback(callback);
+     return {
+       unregister() {
+         UnregisterInternalCallback(callback);
+       },
+       convert(_fire, context) {
+         fire = _fire;
+       }
+     };
+   }
+
+   this.myapi = class extends ExtensionAPI {
+     primeListener(extension, event, fire, params, isInStartup) {
+       if (event == "onSomething") {
+         // Note that we return the object with unregister and convert here.
+         return somethingListener(fire, ...params);
+       }
+       // If an event other than onSomething was requested, we are not returning
+       // anything for it, thus it would not be persistable.
+     }
+     getAPI(context) {
+       return {
+         myapi: {
+           onSomething: new EventManager({
+             context,
+             module: "myapi",
+             event: "onSomething",
+             register: (fire, minValue) => {
+               // Note that we return unregister here.
+               return somethingListener(fire, minValue).unregister;
+             }
+           }).api()
+         }
+       }
+     }
+   }
 

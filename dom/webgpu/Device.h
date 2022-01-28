@@ -106,6 +106,8 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
       gfx::IntSize* aDefaultSize);
   bool CheckNewWarning(const nsACString& aMessage);
 
+  void CleanupUnregisteredInParent();
+
  private:
   ~Device();
   void Cleanup();
