@@ -21,7 +21,7 @@ const TOP_SITES = [
 const FIREFOX_SUGGEST_LABEL = "Firefox Suggest";
 
 // %s is replaced with the engine name.
-const ENGINE_SUGGESTIONS_LABEL = "%s Suggestions";
+const ENGINE_SUGGESTIONS_LABEL = "%s suggestions";
 
 // Allow more time for Mac machines so they don't time out in verify mode.
 if (AppConstants.platform == "macosx") {
