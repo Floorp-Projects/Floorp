@@ -24,7 +24,6 @@ const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 const {
   webExtensionTargetSpec,
 } = require("devtools/shared/specs/targets/webextension");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 const Targets = require("devtools/server/actors/targets/index");
 const TargetActorMixin = require("devtools/server/actors/targets/target-actor-mixin");
@@ -135,9 +134,6 @@ webExtensionTargetPrototype.initialize = function(
     },
   });
 
-  // Bind the _allowSource helper to this, it is used in the
-  // WindowGlobalTargetActor to lazily create the SourcesManager instance.
-  this._allowSource = this._allowSource.bind(this);
   this._onParentExit = this._onParentExit.bind(this);
 
   this._chromeGlobal.addMessageListener(
@@ -298,58 +294,6 @@ webExtensionTargetPrototype.isExtensionWindowDescendent = function(window) {
   // We may have an iframe that loads http content which won't use the add-on principal.
   const rootWin = window.docShell.sameTypeRootTreeItem.domWindow;
   return rootWin.document.nodePrincipal.addonId == this.addonId;
-};
-
-/**
- * Return true if the given source is associated with this addon and should be
- * added to the visible sources (retrieved and used by the webbrowser actor module).
- */
-webExtensionTargetPrototype._allowSource = function(source) {
-  // Use the source.element to detect the allowed source, if any.
-  if (source.element) {
-    try {
-      const domEl = unwrapDebuggerObjectGlobal(source.element);
-      return this.isExtensionWindowDescendent(domEl.ownerGlobal);
-    } catch (e) {
-      // If the source's window is dead then the above will throw.
-      DevToolsUtils.reportException("WebExtensionTarget.allowSource", e);
-      return false;
-    }
-  }
-
-  // Fallback to check the uri if there is no source.element associated to the source.
-
-  // Retrieve the first component of source.url in the form "url1 -> url2 -> ...".
-  const url = source.url.split(" -> ").pop();
-
-  // Filter out the code introduced by evaluating code in the webconsole.
-  if (url === "debugger eval code" || url === "debugger eager eval code") {
-    return false;
-  }
-
-  let uri;
-
-  // Try to decode the url.
-  try {
-    uri = Services.io.newURI(url);
-  } catch (err) {
-    Cu.reportError(`Unexpected invalid url: ${url}`);
-    return false;
-  }
-
-  // Filter out resource and chrome sources (which are related to the loaded internals).
-  if (["resource", "chrome", "file"].includes(uri.scheme)) {
-    return false;
-  }
-
-  try {
-    const addonID = this.aps.extensionURIToAddonId(uri);
-
-    return addonID == this.addonId;
-  } catch (err) {
-    // extensionURIToAddonId raises an exception on non-extension URLs.
-    return false;
-  }
 };
 
 /**

@@ -350,12 +350,6 @@ const windowGlobalTargetPrototype = {
   // filter console messages by addonID), set to an empty (no options) object by default.
   consoleAPIListenerOptions: {},
 
-  // Optional SourcesManager filter function (e.g. used by the WebExtensionActor to filter
-  // sources by addonID), allow all sources by default.
-  _allowSource() {
-    return true;
-  },
-
   /*
    * Return a Debugger instance or create one if there is none yet
    */
@@ -544,10 +538,7 @@ const windowGlobalTargetPrototype = {
 
   get sourcesManager() {
     if (!this._sourcesManager) {
-      this._sourcesManager = new SourcesManager(
-        this.threadActor,
-        this._allowSource
-      );
+      this._sourcesManager = new SourcesManager(this.threadActor);
     }
     return this._sourcesManager;
   },
