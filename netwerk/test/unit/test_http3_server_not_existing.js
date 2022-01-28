@@ -6,7 +6,7 @@
 let httpsUri;
 
 registerCleanupFunction(async () => {
-  Services.prefs.clearUserPref("network.http.http3.enable");
+  Services.prefs.clearUserPref("network.http.http3.enabled");
   Services.prefs.clearUserPref("network.dns.localDomains");
   Services.prefs.clearUserPref("network.dns.disableIPv6");
   Services.prefs.clearUserPref(
@@ -53,7 +53,7 @@ add_task(async function test_fatal_error() {
   let h2Port = env.get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
 
-  Services.prefs.setBoolPref("network.http.http3.enable", true);
+  Services.prefs.setBoolPref("network.http.http3.enabled", true);
   Services.prefs.setCharPref("network.dns.localDomains", "foo.example.com");
   Services.prefs.setBoolPref("network.dns.disableIPv6", true);
   // Set AltSvc to point to not existing HTTP3 server on port 443

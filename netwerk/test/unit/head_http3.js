@@ -16,7 +16,7 @@ async function http3_setup_tests(http3version) {
   let h3Route = "foo.example.com:" + h3Port;
   do_get_profile();
 
-  Services.prefs.setBoolPref("network.http.http3.enable", true);
+  Services.prefs.setBoolPref("network.http.http3.enabled", true);
   Services.prefs.setCharPref("network.dns.localDomains", "foo.example.com");
   Services.prefs.setBoolPref("network.dns.disableIPv6", true);
   Services.prefs.setCharPref(
@@ -97,7 +97,7 @@ function altsvcSetupPromise(chan, listener) {
 }
 
 function http3_clear_prefs() {
-  Services.prefs.clearUserPref("network.http.http3.enable");
+  Services.prefs.clearUserPref("network.http.http3.enabled");
   Services.prefs.clearUserPref("network.dns.localDomains");
   Services.prefs.clearUserPref("network.dns.disableIPv6");
   Services.prefs.clearUserPref(
