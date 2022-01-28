@@ -679,7 +679,8 @@
 .ruleview-highlight > .ruleview-namecontainer,
 .ruleview-highlight > .ruleview-propertyvaluecontainer,
 .ruleview-highlight > .ruleview-rule-source-label,
-.ruleview-highlight > .ruleview-selector {
+.ruleview-highlight > .ruleview-selector,
+.ruleview-rule-ancestor-data li.ruleview-highlight {
   background-color: var(--rule-highlight-background-color);
 }
 
@@ -706,6 +707,9 @@ ul.ruleview-rule-ancestor-data {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  /* When there's a search and this element is highlighted, this prevents the background
+     color to be applied to the whole width of the parent ul block */
+  max-width: max-content;
 }
 
 .ruleview-selectorcontainer {
