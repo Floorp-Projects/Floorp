@@ -8,9 +8,8 @@ import os
 import re
 
 from redo import retry
-from taskgraph.parameters import Parameters
-
 from gecko_taskgraph import try_option_syntax
+from gecko_taskgraph.parameters import Parameters
 from gecko_taskgraph.util.attributes import (
     match_run_on_projects,
     match_run_on_hg_branches,

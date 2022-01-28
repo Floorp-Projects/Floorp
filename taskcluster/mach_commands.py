@@ -360,13 +360,13 @@ def show_actions(command_context, options):
     import gecko_taskgraph
     import gecko_taskgraph.actions
     import gecko_taskgraph.generator
-    from taskgraph.parameters import parameters_loader
+    import gecko_taskgraph.parameters
 
     try:
         setup_logging(
             command_context, quiet=options["quiet"], verbose=options["verbose"]
         )
-        parameters = parameters_loader(options["parameters"])
+        parameters = gecko_taskgraph.parameters.parameters_loader(options["parameters"])
 
         tgg = gecko_taskgraph.generator.TaskGraphGenerator(
             root_dir=options.get("root"),
