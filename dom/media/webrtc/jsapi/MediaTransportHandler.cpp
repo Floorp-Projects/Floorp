@@ -14,6 +14,7 @@
 // Config stuff
 #include "mozilla/dom/RTCConfigurationBinding.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_network.h"
 
 // Parsing STUN/TURN URIs
 #include "nsIURI.h"
@@ -194,7 +195,7 @@ already_AddRefed<MediaTransportHandler> MediaTransportHandler::Create(
   RefPtr<MediaTransportHandler> result;
   if (XRE_IsContentProcess() &&
       Preferences::GetBool("media.peerconnection.mtransport_process") &&
-      Preferences::GetBool("network.process.enabled")) {
+      StaticPrefs::network_process_enabled()) {
     result = new MediaTransportHandlerIPC(aCallbackThread);
   } else {
     result = new MediaTransportHandlerSTS(aCallbackThread);
