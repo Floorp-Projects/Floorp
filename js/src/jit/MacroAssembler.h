@@ -3634,7 +3634,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void wasmTrap(wasm::Trap trap, wasm::BytecodeOffset bytecodeOffset);
   void wasmInterruptCheck(Register tls, wasm::BytecodeOffset bytecodeOffset);
 #ifdef ENABLE_WASM_EXCEPTIONS
-  size_t wasmStartTry();
+  [[nodiscard]] bool wasmStartTry(size_t* tryNoteIndex);
 #endif
 
   // Returns a pair: the offset of the undefined (trapping) instruction, and
