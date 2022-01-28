@@ -722,9 +722,6 @@ Darwin)
   ;;
 esac
 
-if test "$MOZ_BUILD_APP" = "tools/crashreporter"; then
-    WRAP_STL_INCLUDES=
-fi
 if test "$MOZ_BUILD_APP" = "tools/crashreporter/injector"; then
     WRAP_STL_INCLUDES=
 fi
