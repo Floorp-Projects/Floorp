@@ -453,6 +453,7 @@ UNIFIED_SOURCES += [
     "vm/UsageStatistics.cpp",
     "vm/Value.cpp",
     "vm/Warnings.cpp",
+    "vm/Watchtower.cpp",
     "vm/WellKnownAtom.cpp",
     "vm/WindowProxy.cpp",
     "vm/Xdr.cpp",
