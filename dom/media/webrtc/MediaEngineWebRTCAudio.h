@@ -16,7 +16,7 @@
 namespace mozilla {
 
 class AudioInputProcessing;
-class AudioInputTrack;
+class AudioProcessingTrack;
 
 // This class is created and used exclusively on the Media Manager thread, with
 // exactly two exceptions:
@@ -92,9 +92,9 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
   // The current preferences for the APM's various processing stages.
   MediaEnginePrefs mCurrentPrefs;
 
-  // The AudioInputTrack used to inteface with the MediaTrackGraph. Set in
+  // The AudioProcessingTrack used to inteface with the MediaTrackGraph. Set in
   // SetTrack as part of the initialization, and nulled in ::Deallocate.
-  RefPtr<AudioInputTrack> mTrack;
+  RefPtr<AudioProcessingTrack> mTrack;
 
   // See note at the top of this class.
   RefPtr<AudioInputProcessing> mInputProcessing;
@@ -113,9 +113,8 @@ class AudioInputProcessing : public AudioDataListener {
   void Process(MediaTrackGraphImpl* aGraph, GraphTime aFrom, GraphTime aTo,
                AudioSegment* aInput, AudioSegment* aOutput);
 
-  void NotifyOutputData(MediaTrackGraphImpl* aGraph, AudioDataValue* aBuffer,
-                        size_t aFrames, TrackRate aRate,
-                        uint32_t aChannels) override;
+  void ProcessOutputData(MediaTrackGraphImpl* aGraph, AudioDataValue* aBuffer,
+                         size_t aFrames, TrackRate aRate, uint32_t aChannels);
   bool IsVoiceInput(MediaTrackGraphImpl* aGraph) const override {
     // If we're passing data directly without AEC or any other process, this
     // means that all voice-processing has been disabled intentionaly. In this
@@ -202,7 +201,7 @@ class AudioInputProcessing : public AudioDataListener {
   // operates in "pull" mode, and we append silence only, releasing the audio
   // input track.
   bool mEnabled;
-  // Whether or not we've ended and removed the AudioInputTrack.
+  // Whether or not we've ended and removed the AudioProcessingTrack.
   bool mEnded;
   // When processing is enabled, the number of packets received by this
   // instance, to implement periodic logging.
@@ -218,7 +217,7 @@ class AudioInputProcessing : public AudioDataListener {
 };
 
 // MediaTrack subclass tailored for MediaEngineWebRTCMicrophoneSource.
-class AudioInputTrack : public ProcessedMediaTrack {
+class AudioProcessingTrack : public ProcessedMediaTrack {
   // Only accessed on the graph thread.
   RefPtr<AudioInputProcessing> mInputProcessing;
 
@@ -227,7 +226,7 @@ class AudioInputTrack : public ProcessedMediaTrack {
   RefPtr<MediaInputPort> mPort;
 
   // Only accessed on the main thread. Used for bookkeeping on main thread, such
-  // that CloseAudioInput can be idempotent.
+  // that DisconnectDeviceInput can be idempotent.
   // XXX Should really be a CubebUtils::AudioDeviceID, but they aren't
   // copyable (opaque pointers)
   RefPtr<AudioDataListener> mInputListener;
@@ -235,25 +234,25 @@ class AudioInputTrack : public ProcessedMediaTrack {
   // Only accessed on the main thread.
   Maybe<CubebUtils::AudioDeviceID> mDeviceId;
 
-  explicit AudioInputTrack(TrackRate aSampleRate)
+  explicit AudioProcessingTrack(TrackRate aSampleRate)
       : ProcessedMediaTrack(aSampleRate, MediaSegment::AUDIO,
                             new AudioSegment()) {}
 
-  ~AudioInputTrack() = default;
+  ~AudioProcessingTrack() = default;
 
  public:
   // Main Thread API
   // Users of audio inputs go through the track so it can track when the
   // last track referencing an input goes away, so it can close the cubeb
   // input. Main thread only.
-  nsresult OpenAudioInput(CubebUtils::AudioDeviceID aId,
-                          AudioDataListener* aListener,
-                          const PrincipalHandle& aPrincipal);
-  void CloseAudioInput();
+  nsresult ConnectDeviceInput(CubebUtils::AudioDeviceID aId,
+                              AudioDataListener* aListener,
+                              const PrincipalHandle& aPrincipal);
+  void DisconnectDeviceInput();
   Maybe<CubebUtils::AudioDeviceID> DeviceId() const;
   void Destroy() override;
   void SetInputProcessing(RefPtr<AudioInputProcessing> aInputProcessing);
-  static AudioInputTrack* Create(MediaTrackGraph* aGraph);
+  static AudioProcessingTrack* Create(MediaTrackGraph* aGraph);
 
   // Graph Thread API
   void DestroyImpl() override;
@@ -268,9 +267,13 @@ class AudioInputTrack : public ProcessedMediaTrack {
   // needs to be empty.
   void GetInputSourceData(AudioSegment& aOutput, const MediaInputPort* aPort,
                           GraphTime aFrom, GraphTime aTo) const;
+  // Pass the graph's mixed audio output to mInputProcessing for processing as
+  // the reverse stream.
+  void NotifyOutputData(MediaTrackGraphImpl* aGraph, AudioDataValue* aBuffer,
+                        size_t aFrames, TrackRate aRate, uint32_t aChannels);
 
   // Any thread
-  AudioInputTrack* AsAudioInputTrack() override { return this; }
+  AudioProcessingTrack* AsAudioInputTrack() override { return this; }
 
  private:
   // Graph thread API

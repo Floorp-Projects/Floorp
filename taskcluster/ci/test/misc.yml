@@ -34,6 +34,13 @@ telemetry-tests-client:
     suite: telemetry-tests-client
     treeherder-symbol: tt(c)
     variants: [fission]
+    run-on-projects:
+        by-variant:
+            fission: built-projects
+            default:
+                by-test-platform:
+                    linux.*: ['trunk']
+                    default: []
     max-run-time: 1200
     tier: default
     mozharness:
@@ -70,7 +77,8 @@ test-verify:
                     # linux / windows -qr skipped because they were previously skipped via test-platforms.yml
                     .*(linux|windows)(?!.*(-ccov|-asan|-shippable)).*-qr.*: []
                     # do not run on mozilla-central, beta or release: usually just confirms earlier results
-                    default: ['integration']
+                    linux.*: ['integration']
+                    default: []
     built-projects-only: true
     target:
         by-test-platform:
@@ -148,7 +156,8 @@ test-verify-gpu:
                     .*-asan/.*: []
                     .*shippable.*: []
                     # do not run on mozilla-central, beta or release: usually just confirms earlier results
-                    default: ['integration']
+                    linux.*: ['integration']
+                    default: []
     built-projects-only: true
     optimization:
         test-verify: ["test-verify-gpu"]
