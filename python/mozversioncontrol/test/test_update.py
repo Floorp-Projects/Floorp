@@ -37,7 +37,7 @@ STEPS = {
 }
 
 
-def test_commit(repo):
+def test_update(repo):
     vcs = get_repository_object(repo.strpath)
     rev0 = vcs.head_ref
 
