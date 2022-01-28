@@ -47,6 +47,27 @@ GFX2D_API bool SwizzleData(const uint8_t* aSrc, int32_t aSrcStride,
                            const IntSize& aSize);
 
 /**
+ * Flips rows of source and swizzles it to destination. Source and destination
+ * may be the same to swizzle in-place; this will fail if it cannot allocate a
+ * temporary buffer.
+ */
+GFX2D_API bool SwizzleYFlipData(const uint8_t* aSrc, int32_t aSrcStride,
+                                SurfaceFormat aSrcFormat, uint8_t* aDst,
+                                int32_t aDstStride, SurfaceFormat aDstFormat,
+                                const IntSize& aSize);
+
+/**
+ * Flips rows of source and premultiplies/swizzles it to destination. Source and
+ * destination may be the same to premultiply/swizzle in-place; this will fail
+ * if it cannot allocate a temporary buffer.
+ */
+GFX2D_API bool PremultiplyYFlipData(const uint8_t* aSrc, int32_t aSrcStride,
+                                    SurfaceFormat aSrcFormat, uint8_t* aDst,
+                                    int32_t aDstStride,
+                                    SurfaceFormat aDstFormat,
+                                    const IntSize& aSize);
+
+/**
  * Swizzles source and writes it to destination. Source and destination may be
  * the same to swizzle in-place.
  */
