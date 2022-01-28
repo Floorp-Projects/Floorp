@@ -30,12 +30,9 @@ const MINIFIED_SOURCE_REGEXP = /\bmin\.js$/;
  * the sources, etc for ThreadActors.
  */
 class SourcesManager extends EventEmitter {
-  constructor(threadActor, allowSourceFn = () => true) {
+  constructor(threadActor) {
     super();
     this._thread = threadActor;
-    this.allowSource = source => {
-      return !isHiddenSource(source) && allowSourceFn(source);
-    };
 
     this.blackBoxedSources = new Map();
 
@@ -92,7 +89,7 @@ class SourcesManager extends EventEmitter {
   createSourceActor(source) {
     assert(source, "SourcesManager.prototype.source needs a source");
 
-    if (!this.allowSource(source)) {
+    if (isHiddenSource(source)) {
       return null;
     }
 
