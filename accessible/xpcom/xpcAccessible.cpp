@@ -452,24 +452,20 @@ xpcAccessible::GroupPosition(int32_t* aGroupLevel,
                              int32_t* aSimilarItemsInGroup,
                              int32_t* aPositionInGroup) {
   NS_ENSURE_ARG_POINTER(aGroupLevel);
-  *aGroupLevel = 0;
-
   NS_ENSURE_ARG_POINTER(aSimilarItemsInGroup);
-  *aSimilarItemsInGroup = 0;
-
   NS_ENSURE_ARG_POINTER(aPositionInGroup);
-  *aPositionInGroup = 0;
 
-  GroupPos groupPos;
-  if (LocalAccessible* acc = IntlGeneric()->AsLocal()) {
-    groupPos = acc->GroupPosition();
-  } else {
 #if defined(XP_WIN)
+  if (IntlGeneric()->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    *aGroupLevel = 0;
+    *aSimilarItemsInGroup = 0;
+    *aPositionInGroup = 0;
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    groupPos = IntlGeneric()->AsRemote()->GroupPosition();
-#endif
   }
+#endif
+
+  GroupPos groupPos = IntlGeneric()->GroupPosition();
 
   *aGroupLevel = groupPos.level;
   *aSimilarItemsInGroup = groupPos.setSize;
