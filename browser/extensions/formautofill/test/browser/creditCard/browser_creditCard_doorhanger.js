@@ -1,6 +1,10 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
-
+/*
+  We use arbitrary timeouts here to ensure that the input event queue is cleared
+  before we assert any information about the UI, otherwise there's a reasonable chance
+  that the UI won't be ready and we will get an invalid test result.
+*/
 add_task(async function test_submit_creditCard_cancel_saving() {
   await SpecialPowers.pushPrefEnv({
     set: [[CREDITCARDS_USED_STATUS_PREF, 0]],
@@ -947,5 +951,197 @@ add_task(async function test_submit_creditCard_with_invalid_network() {
   );
 
   SpecialPowers.clearUserPref(CREDITCARDS_USED_STATUS_PREF);
+  await removeAllRecords();
+});
+
+/*
+  The next four tests look very similar because if we try to do multiple
+  credit card operations in one test, there's a good chance the test will timeout
+  and produce an invalid result.
+  We mitigate this issue by having each test only deal with one credit card in storage
+  and one credit card operation.
+*/
+add_task(async function test_submit_third_party_creditCard_logo() {
+  const amexCard = {
+    "cc-number": "374542158116607",
+    "cc-type": "amex",
+    "cc-name": "John Doe",
+  };
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
+    async function(browser) {
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+      await SpecialPowers.spawn(browser, [amexCard], async function(card) {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+        name.focus();
+        name.setUserInput("User 1");
+
+        let number = form.querySelector("#cc-number");
+        number.setUserInput(card["cc-number"]);
+
+        // Wait 100ms before submission to make sure the input value applied
+        await new Promise(resolve => content.setTimeout(resolve, 100));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await promiseShown;
+      let doorhanger = getNotification();
+      let creditCardLogo = doorhanger.querySelector(".desc-message-box image");
+      let creditCardLogoWithoutExtension = creditCardLogo.src.split(".", 1)[0];
+
+      is(
+        creditCardLogoWithoutExtension,
+        "chrome://formautofill/content/third-party/cc-logo-amex",
+        "CC logo should be amex"
+      );
+
+      await clickDoorhangerButton(SECONDARY_BUTTON);
+    }
+  );
+});
+
+add_task(async function test_update_third_party_creditCard_logo() {
+  const amexCard = {
+    "cc-number": "374542158116607",
+    "cc-type": "amex",
+    "cc-name": "John Doe",
+  };
+
+  await saveCreditCard(amexCard);
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 1, "1 credit card in storage");
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
+    async function(browser) {
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+      await SpecialPowers.spawn(browser, [amexCard], async function(card) {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+
+        name.focus();
+        name.setUserInput("Mark Smith");
+        form.querySelector("#cc-number").setUserInput(card["cc-number"]);
+        form.querySelector("#cc-exp-month").setUserInput("4");
+        form
+          .querySelector("#cc-exp-year")
+          .setUserInput(new Date().getFullYear());
+        // Wait 100ms before submission to make sure the input value applied
+        await new Promise(resolve => content.setTimeout(resolve, 100));
+        form.querySelector("input[type=submit").click();
+      });
+
+      await promiseShown;
+
+      let doorhanger = getNotification();
+      let creditCardLogo = doorhanger.querySelector(".desc-message-box image");
+      let creditCardLogoWithoutExtension = creditCardLogo.src.split(".", 1)[0];
+      is(
+        creditCardLogoWithoutExtension,
+        `chrome://formautofill/content/third-party/cc-logo-amex`,
+        `CC Logo should be amex`
+      );
+      await clickDoorhangerButton(SECONDARY_BUTTON);
+    }
+  );
+  await removeAllRecords();
+});
+
+add_task(async function test_submit_generic_creditCard_logo() {
+  const genericCard = {
+    "cc-number": "937899583135",
+    "cc-name": "John Doe",
+  };
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
+    async function(browser) {
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+      await SpecialPowers.spawn(browser, [genericCard], async function(card) {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+        name.focus();
+        name.setUserInput("User 1");
+
+        let number = form.querySelector("#cc-number");
+        number.setUserInput(card["cc-number"]);
+
+        // Wait 100ms before submission to make sure the input value applied
+        await new Promise(resolve => content.setTimeout(resolve, 100));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await promiseShown;
+      let doorhanger = getNotification();
+      let creditCardLogo = doorhanger.querySelector(".desc-message-box image");
+      let creditCardLogoWithoutExtension = creditCardLogo.src.split(".", 1)[0];
+
+      is(
+        creditCardLogoWithoutExtension,
+        "chrome://formautofill/content/icon-credit-card-generic",
+        "CC logo should be generic"
+      );
+
+      await clickDoorhangerButton(SECONDARY_BUTTON);
+    }
+  );
+  await removeAllRecords();
+});
+
+add_task(async function test_update_generic_creditCard_logo() {
+  const genericCard = {
+    "cc-number": "937899583135",
+    "cc-name": "John Doe",
+  };
+
+  await saveCreditCard(genericCard);
+  let creditCards = await getCreditCards();
+  is(creditCards.length, 1, "1 credit card in storage");
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: CREDITCARD_FORM_URL },
+    async function(browser) {
+      let promiseShown = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+      await SpecialPowers.spawn(browser, [genericCard], async function(card) {
+        let form = content.document.getElementById("form");
+        let name = form.querySelector("#cc-name");
+
+        name.focus();
+        name.setUserInput("Mark Smith");
+        form.querySelector("#cc-number").setUserInput(card["cc-number"]);
+        form.querySelector("#cc-exp-month").setUserInput("4");
+        form
+          .querySelector("#cc-exp-year")
+          .setUserInput(new Date().getFullYear());
+        // Wait 100ms before submission to make sure the input value applied
+        await new Promise(resolve => content.setTimeout(resolve, 100));
+        form.querySelector("input[type=submit").click();
+      });
+
+      await promiseShown;
+
+      let doorhanger = getNotification();
+      let creditCardLogo = doorhanger.querySelector(".desc-message-box image");
+      let creditCardLogoWithoutExtension = creditCardLogo.src.split(".", 1)[0];
+      is(
+        creditCardLogoWithoutExtension,
+        `chrome://formautofill/content/icon-credit-card-generic`,
+        `CC Logo should be generic`
+      );
+      await clickDoorhangerButton(SECONDARY_BUTTON);
+    }
+  );
   await removeAllRecords();
 });
