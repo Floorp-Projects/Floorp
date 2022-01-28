@@ -5,6 +5,7 @@
 
 #include "HTMLElementAccessibles.h"
 
+#include "CacheConstants.h"
 #include "DocAccessible.h"
 #include "nsAccUtils.h"
 #include "nsTextEquivUtils.h"
@@ -54,6 +55,19 @@ Relation HTMLLabelAccessible::RelationByType(RelationType aType) const {
   }
 
   return rel;
+}
+
+void HTMLLabelAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
+                                              nsAtom* aAttribute,
+                                              int32_t aModType,
+                                              const nsAttrValue* aOldValue,
+                                              uint64_t aOldState) {
+  HyperTextAccessibleWrap::DOMAttributeChanged(aNameSpaceID, aAttribute,
+                                               aModType, aOldValue, aOldState);
+
+  if (aAttribute == nsGkAtoms::_for) {
+    SendCache(CacheDomain::Actions, CacheUpdateType::Update);
+  }
 }
 
 uint8_t HTMLLabelAccessible::ActionCount() const {
