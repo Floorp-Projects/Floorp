@@ -21,9 +21,9 @@ job-defaults:
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier:
         by-variant:
-            fission: 2
+            fission: default
             headless: 2
-            default: default
+            default: 2
     variants:
         - fission
         - webrender-sw
@@ -35,7 +35,8 @@ job-defaults:
             fission: built-projects
             headless:
                 by-test-platform:
-                    (linux.*64)(-shippable)?-qr/opt: built-projects
+                    linux.*(tsan|ccov).*: []
+                    linux.*64(-shippable)?-qr/opt: ['trunk']
                     default: []
             headless+fission:
                 by-test-platform:
@@ -43,7 +44,7 @@ job-defaults:
                     default: []
             webrender-sw:
                 by-test-platform:
-                    .*/debug: built-projects
+                    linux.*/debug: ['trunk']
                     default: []
             webrender-sw+fission:
                 by-test-platform:
