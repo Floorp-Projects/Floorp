@@ -25,15 +25,13 @@ more-from-moz-mozilla-rally-description = Put your data to work for a better int
 # This string is specific to the product Mozilla Rally which is US only.
 more-from-moz-mozilla-rally-description-advanced = Donate your data to research studies working to create a safer, more open internet that helps people, not Big Tech.
 # This string is specific to the product Mozilla Rally which is US only.
-more-from-moz-button-mozilla-rally =
-  .label = Join { -rally-short-name }
+more-from-moz-button-mozilla-rally-2 = Join { -rally-short-name }
 
 more-from-moz-qr-code-box-firefox-mobile-title = Download using your mobile device. Point your camera at the QR code. When a link appears, tap it.
 more-from-moz-qr-code-box-firefox-mobile-button = Send an email to your phone instead
 more-from-moz-qr-code-firefox-mobile-img =
   .alt = QR code to download { -brand-product-name } Mobile
 
-more-from-moz-button-mozilla-vpn =
-  .label = Get VPN
+more-from-moz-button-mozilla-vpn-2 = Get VPN
 
 more-from-moz-learn-more-link = Learn more

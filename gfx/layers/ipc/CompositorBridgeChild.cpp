@@ -86,8 +86,7 @@ CompositorBridgeChild::CompositorBridgeChild(CompositorManagerChild* aManager)
       mFwdTransactionId(0),
       mThread(NS_GetCurrentThread()),
       mProcessToken(0),
-      mSectionAllocator(nullptr),
-      mPaintLock("CompositorBridgeChild.mPaintLock") {
+      mSectionAllocator(nullptr) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -337,20 +336,8 @@ void CompositorBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
     gfxCriticalNote << "Receive IPC close with reason=AbnormalShutdown";
   }
 
-  {
-    // We take the lock to update these fields, since they are read from the
-    // paint thread. We don't need the lock to init them, since that happens
-    // on the main thread before the paint thread can ever grab a reference
-    // to the CompositorBridge object.
-    //
-    // Note that it is useful to take this lock for one other reason: It also
-    // tells us whether GetIPCChannel is safe to call. If we access the IPC
-    // channel within this lock, when mCanSend is true, then we know it has not
-    // been zapped by IPDL.
-    MonitorAutoLock lock(mPaintLock);
-    mCanSend = false;
-    mActorDestroyed = true;
-  }
+  mCanSend = false;
+  mActorDestroyed = true;
 
   if (mProcessToken && XRE_IsParentProcess()) {
     GPUProcessManager::Get()->NotifyRemoteActorDestroyed(mProcessToken);
