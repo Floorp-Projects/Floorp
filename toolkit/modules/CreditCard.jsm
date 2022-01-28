@@ -336,8 +336,9 @@ class CreditCard {
   }
 
   /**
-   * !!! DEPRECATED !!!
+   *
    * Please use getLabelInfo above, as it allows for localization.
+   * @deprecated
    */
   static getLabel({ number, name }) {
     let parts = [];
@@ -447,6 +448,33 @@ class CreditCard {
       affix: "****",
       label: maskedNumber.replace(/^\**/, ""),
     };
+  }
+
+  static getCreditCardLogo(network) {
+    const PATH = "chrome://formautofill/content/";
+    const THIRD_PARTY_PATH = PATH + "third-party/";
+    switch (network) {
+      case "amex":
+        return THIRD_PARTY_PATH + "cc-logo-amex.png";
+      case "cartebancaire":
+        return THIRD_PARTY_PATH + "cc-logo-cartebancaire.png";
+      case "diners":
+        return THIRD_PARTY_PATH + "cc-logo-diners.svg";
+      case "discover":
+        return THIRD_PARTY_PATH + "cc-logo-discover.png";
+      case "jcb":
+        return THIRD_PARTY_PATH + "cc-logo-jcb.svg";
+      case "mastercard":
+        return THIRD_PARTY_PATH + "cc-logo-mastercard.svg";
+      case "mir":
+        return THIRD_PARTY_PATH + "cc-logo-mir.svg";
+      case "unionpay":
+        return THIRD_PARTY_PATH + "cc-logo-unionpay.svg";
+      case "visa":
+        return THIRD_PARTY_PATH + "cc-logo-visa.svg";
+      default:
+        return PATH + "icon-credit-card-generic.svg";
+    }
   }
 
   static getMaskedNumber(number) {
