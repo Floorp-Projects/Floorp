@@ -442,8 +442,7 @@ task-priority:
         'mozilla-inbound': 'low'
         'default': 'very-low'
 
-taskgraph:
-    register: gecko_taskgraph:register
+taskgraph: {}
 
 workers:
     aliases:

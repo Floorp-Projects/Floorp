@@ -17,14 +17,3 @@ MAX_DEPENDENCIES = 99
 # This is normally switched on via the --fast/-F flag to `mach taskgraph`
 # Currently this skips toolchain task optimizations and schema validation
 fast = False
-
-
-def register(graph_config):
-    """Used to register Gecko specific extensions.
-
-    Args:
-        graph_config: The graph configuration object.
-    """
-    from gecko_taskgraph.parameters import register_parameters
-
-    register_parameters()
