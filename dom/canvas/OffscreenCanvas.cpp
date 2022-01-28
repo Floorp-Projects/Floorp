@@ -144,7 +144,7 @@ void OffscreenCanvas::GetContext(
     return;
   }
 
-  Maybe<int32_t> childId;
+  int32_t childId = 0;
 
   MOZ_ASSERT(mCurrentContext);
   switch (mCurrentContextType) {
@@ -157,7 +157,7 @@ void OffscreenCanvas::GetContext(
       auto* webgl = static_cast<ClientWebGLContext*>(mCurrentContext.get());
       WebGLChild* webglChild = webgl->GetChild();
       if (webglChild) {
-        childId.emplace(webglChild->Id());
+        childId = webglChild->Id();
       }
       aResult.SetValue().SetAsWebGLRenderingContext() = *webgl;
       break;
