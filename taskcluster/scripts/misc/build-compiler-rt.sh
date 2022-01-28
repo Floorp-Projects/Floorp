@@ -62,6 +62,7 @@ case "$target" in
     -DDARWIN_osx_SYSROOT=$MOZ_FETCHES_DIR/MacOSX11.0.sdk
     -DDARWIN_macosx_OVERRIDE_SDK_VERSION=11.0
     -DDARWIN_osx_BUILTIN_ARCHS=$arch
+    -DLLVM_DEFAULT_TARGET_TRIPLE=$target
   "
   # compiler-rt build script expects to find `codesign` in $PATH.
   # Give it a fake one.
