@@ -48,7 +48,6 @@ class ia2AccessibleAction : public IAccessibleAction {
 
  private:
   AccessibleWrap* LocalAcc();
-  Accessible* Acc();
 };
 
 }  // namespace a11y

@@ -33,7 +33,6 @@
 #include "TableCellAccessible.h"
 #include "TreeWalker.h"
 #include "HTMLElementAccessibles.h"
-#include "ImageAccessible.h"
 
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
@@ -281,6 +280,24 @@ KeyBinding LocalAccessible::AccessKey() const {
 }
 
 KeyBinding LocalAccessible::KeyboardShortcut() const { return KeyBinding(); }
+
+void LocalAccessible::TranslateString(const nsString& aKey,
+                                      nsAString& aStringOut) {
+  nsCOMPtr<nsIStringBundleService> stringBundleService =
+      components::StringBundle::Service();
+  if (!stringBundleService) return;
+
+  nsCOMPtr<nsIStringBundle> stringBundle;
+  stringBundleService->CreateBundle(
+      "chrome://global-platform/locale/accessible.properties",
+      getter_AddRefs(stringBundle));
+  if (!stringBundle) return;
+
+  nsAutoString xsValue;
+  nsresult rv = stringBundle->GetStringFromName(
+      NS_ConvertUTF16toUTF8(aKey).get(), xsValue);
+  if (NS_SUCCEEDED(rv)) aStringOut.Assign(xsValue);
+}
 
 uint64_t LocalAccessible::VisibilityState() const {
   if (IPCAccessibilityActive() &&
@@ -1238,7 +1255,8 @@ bool LocalAccessible::AttributeChangesState(nsAtom* aAttribute) {
          aAttribute == nsGkAtoms::aria_busy ||
          aAttribute == nsGkAtoms::aria_multiline ||
          aAttribute == nsGkAtoms::aria_multiselectable ||
-         aAttribute == nsGkAtoms::contenteditable;
+         aAttribute == nsGkAtoms::contenteditable ||
+         (aAttribute == nsGkAtoms::href && IsHTMLLink());
 }
 
 void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
@@ -1381,14 +1399,6 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
       }
     }
     return;
-  }
-
-  if ((aAttribute == nsGkAtoms::aria_expanded ||
-       aAttribute == nsGkAtoms::href) &&
-      (aModType == dom::MutationEvent_Binding::ADDITION ||
-       aModType == dom::MutationEvent_Binding::REMOVAL)) {
-    // The presence of aria-expanded adds an expand/collapse action.
-    SendCache(CacheDomain::Actions, CacheUpdateType::Update);
   }
 
   if (aAttribute == nsGkAtoms::alt &&
@@ -3260,30 +3270,6 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
         fields->SetAttribute(attr, value);
       } else if (aUpdateType == CacheUpdateType::Update) {
         fields->SetAttribute(attr, DeleteEntry());
-      }
-    }
-  }
-
-  if (aCacheDomain & CacheDomain::Actions) {
-    uint8_t actionCount = ActionCount();
-    ImageAccessible* imgAcc = AsImage();
-    bool hasLongDesc = imgAcc && imgAcc->HasLongDesc();
-
-    if (actionCount && !(actionCount == 1 && hasLongDesc)) {
-      // We only cache the first action that is not showlongdesc.
-      nsAutoString actionName;
-      ActionNameAt(0, actionName);
-      RefPtr<nsAtom> actionAtom = NS_Atomize(actionName);
-      fields->SetAttribute(nsGkAtoms::action, actionAtom);
-    } else if (aUpdateType == CacheUpdateType::Update) {
-      fields->SetAttribute(nsGkAtoms::action, DeleteEntry());
-    }
-
-    if (imgAcc) {
-      if (hasLongDesc) {
-        fields->SetAttribute(nsGkAtoms::longdesc, true);
-      } else if (aUpdateType == CacheUpdateType::Update) {
-        fields->SetAttribute(nsGkAtoms::longdesc, DeleteEntry());
       }
     }
   }

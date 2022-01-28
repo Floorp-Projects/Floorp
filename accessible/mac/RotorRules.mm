@@ -314,7 +314,11 @@ uint16_t RotorHeadingLevelRule::Match(Accessible* aAcc) {
   // "unmatch" otherwise, the match persists.
   if ((result & nsIAccessibleTraversalRule::FILTER_MATCH)) {
     int32_t currLevel = 0;
-    GroupPos groupPos = aAcc->GroupPosition();
+    if (LocalAccessible* acc = aAcc->AsLocal()) {
+      currLevel = acc->GroupPosition().level;
+    } else if (RemoteAccessible* proxy = aAcc->AsRemote()) {
+      currLevel = proxy->GroupPosition().level;
+    }
 
     if (currLevel != mLevel) {
       result &= ~nsIAccessibleTraversalRule::FILTER_MATCH;

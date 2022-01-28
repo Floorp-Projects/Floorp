@@ -249,9 +249,12 @@ ia2Accessible::get_groupPosition(long* aGroupLevel, long* aSimilarItemsInGroup,
   *aSimilarItemsInGroup = 0;
   *aPositionInGroup = 0;
 
-  Accessible* acc = Acc();
-  if (acc) {
+  if (!Acc()) {
     return CO_E_OBJNOTCONNECTED;
+  }
+  AccessibleWrap* acc = LocalAcc();
+  if (!acc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
   }
 
   GroupPos groupPos = acc->GroupPosition();
