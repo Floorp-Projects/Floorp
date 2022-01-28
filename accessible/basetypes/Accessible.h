@@ -201,33 +201,6 @@ class Accessible {
    */
   virtual nsAtom* TagName() const = 0;
 
-  //////////////////////////////////////////////////////////////////////////////
-  // ActionAccessible
-
-  /**
-   * Return the number of actions that can be performed on this accessible.
-   */
-  virtual uint8_t ActionCount() const = 0;
-
-  /**
-   * Return action name at given index.
-   */
-  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) = 0;
-
-  /**
-   * Default to localized action name.
-   */
-  void ActionDescriptionAt(uint8_t aIndex, nsAString& aDescription) {
-    nsAutoString name;
-    ActionNameAt(aIndex, name);
-    TranslateString(name, aDescription);
-  }
-
-  /**
-   * Invoke the accessible action.
-   */
-  virtual bool DoAction(uint8_t aIndex) const = 0;
-
   // Type "is" methods
 
   bool IsDoc() const { return HasGenericType(eDocument); }
@@ -342,11 +315,6 @@ class Accessible {
   LocalAccessible* AsLocal();
 
   virtual HyperTextAccessibleBase* AsHyperTextBase() { return nullptr; }
-
-  /**
-   * Return the localized string for the given key.
-   */
-  static void TranslateString(const nsString& aKey, nsAString& aStringOut);
 
  protected:
   // Some abstracted group utility methods.

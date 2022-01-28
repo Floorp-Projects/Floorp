@@ -6,7 +6,6 @@
 
 #include "LocalAccessible-inl.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 #include "AccAttributes.h"
 #include "nsAccUtils.h"
 #include "nsComponentManagerUtils.h"
@@ -452,20 +451,24 @@ xpcAccessible::GroupPosition(int32_t* aGroupLevel,
                              int32_t* aSimilarItemsInGroup,
                              int32_t* aPositionInGroup) {
   NS_ENSURE_ARG_POINTER(aGroupLevel);
+  *aGroupLevel = 0;
+
   NS_ENSURE_ARG_POINTER(aSimilarItemsInGroup);
+  *aSimilarItemsInGroup = 0;
+
   NS_ENSURE_ARG_POINTER(aPositionInGroup);
+  *aPositionInGroup = 0;
 
+  GroupPos groupPos;
+  if (LocalAccessible* acc = IntlGeneric()->AsLocal()) {
+    groupPos = acc->GroupPosition();
+  } else {
 #if defined(XP_WIN)
-  if (IntlGeneric()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    *aGroupLevel = 0;
-    *aSimilarItemsInGroup = 0;
-    *aPositionInGroup = 0;
     return NS_ERROR_NOT_IMPLEMENTED;
-  }
+#else
+    groupPos = IntlGeneric()->AsRemote()->GroupPosition();
 #endif
-
-  GroupPos groupPos = IntlGeneric()->GroupPosition();
+  }
 
   *aGroupLevel = groupPos.level;
   *aSimilarItemsInGroup = groupPos.setSize;
@@ -658,68 +661,57 @@ xpcAccessible::GetActionCount(uint8_t* aActionCount) {
   *aActionCount = 0;
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
+  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
 #if defined(XP_WIN)
-  if (IntlGeneric()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-  }
+#else
+    *aActionCount = proxy->ActionCount();
 #endif
-
-  *aActionCount = IntlGeneric()->ActionCount();
+  } else {
+    *aActionCount = Intl()->ActionCount();
+  }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessible::GetActionName(uint8_t aIndex, nsAString& aName) {
+  if (!IntlGeneric()) return NS_ERROR_FAILURE;
+
+  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
 #if defined(XP_WIN)
-  if (IntlGeneric()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-  }
+#else
+    nsString name;
+    proxy->ActionNameAt(aIndex, name);
+    aName.Assign(name);
 #endif
+  } else {
+    if (aIndex >= Intl()->ActionCount()) return NS_ERROR_INVALID_ARG;
 
-  aName.Truncate();
-
-  if (!IntlGeneric()) {
-    return NS_ERROR_FAILURE;
+    Intl()->ActionNameAt(aIndex, aName);
   }
-
-  if (aIndex >= IntlGeneric()->ActionCount()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsAutoString name;
-  IntlGeneric()->ActionNameAt(aIndex, name);
-
-  aName.Assign(name);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 xpcAccessible::GetActionDescription(uint8_t aIndex, nsAString& aDescription) {
+  if (!IntlGeneric()) return NS_ERROR_FAILURE;
+
+  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
 #if defined(XP_WIN)
-  if (IntlGeneric()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-  }
+#else
+    nsString description;
+    proxy->ActionDescriptionAt(aIndex, description);
+    aDescription.Assign(description);
 #endif
+  } else {
+    if (aIndex >= Intl()->ActionCount()) return NS_ERROR_INVALID_ARG;
 
-  aDescription.Truncate();
-
-  if (!IntlGeneric()) {
-    return NS_ERROR_FAILURE;
+    Intl()->ActionDescriptionAt(aIndex, aDescription);
   }
-
-  if (aIndex >= IntlGeneric()->ActionCount()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsAutoString description;
-  IntlGeneric()->ActionDescriptionAt(aIndex, description);
-
-  aDescription.Assign(description);
 
   return NS_OK;
 }
@@ -728,14 +720,15 @@ NS_IMETHODIMP
 xpcAccessible::DoAction(uint8_t aIndex) {
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
+  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
 #if defined(XP_WIN)
-  if (IntlGeneric()->IsRemote() &&
-      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-  }
+#else
+    return proxy->DoAction(aIndex) ? NS_OK : NS_ERROR_INVALID_ARG;
 #endif
-
-  return IntlGeneric()->DoAction(aIndex) ? NS_OK : NS_ERROR_INVALID_ARG;
+  } else {
+    return Intl()->DoAction(aIndex) ? NS_OK : NS_ERROR_INVALID_ARG;
+  }
 }
 
 NS_IMETHODIMP

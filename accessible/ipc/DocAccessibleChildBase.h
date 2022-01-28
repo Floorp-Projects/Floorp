@@ -63,9 +63,6 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
       const uint64_t& aID, const uint64_t& aCacheDomain,
       AccAttributes* aFields) override;
 
-  virtual mozilla::ipc::IPCResult RecvDoActionAsync(
-      const uint64_t& aID, const uint8_t& aIndex) override;
-
  protected:
   static void FlattenTree(LocalAccessible* aRoot,
                           nsTArray<LocalAccessible*>& aTree);
