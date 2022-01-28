@@ -86,7 +86,6 @@ if CONFIG["MOZ_WAYLAND"]:
         "DMABufSurface.cpp",
         "MozContainerWayland.cpp",
         "nsClipboardWayland.cpp",
-        "nsClipboardWaylandAsync.cpp",
         "nsWaylandDisplay.cpp",
         "WaylandBuffer.cpp",
         "WindowSurfaceWaylandMultiBuffer.cpp",

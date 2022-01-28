@@ -12,7 +12,6 @@
 #include "nsClipboardX11.h"
 #if defined(MOZ_WAYLAND)
 #  include "nsClipboardWayland.h"
-#  include "nsClipboardWaylandAsync.h"
 #endif
 #include "nsIURI.h"
 #include "nsIFile.h"
@@ -110,11 +109,7 @@ nsresult nsClipboard::Init(void) {
     mContext = new nsRetrievalContextX11();
 #if defined(MOZ_WAYLAND)
   } else if (widget::GdkIsWaylandDisplay()) {
-    if (StaticPrefs::widget_wayland_async_clipboard_enabled_AtStartup()) {
-      mContext = new nsRetrievalContextWaylandAsync();
-    } else {
-      mContext = new nsRetrievalContextWayland();
-    }
+    mContext = new nsRetrievalContextWaylandAsync();
 #endif
   } else {
     NS_WARNING("Missing nsRetrievalContext for nsClipboard!");
