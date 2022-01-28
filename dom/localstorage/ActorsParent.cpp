@@ -3658,8 +3658,14 @@ nsresult ConnectionWriteOptimizer::PerformInsertOrUpdate(
         QM_TRY(MOZ_TO_RESULT(stmt.BindInt32ByName(
             "compression_type"_ns,
             static_cast<int32_t>(aValue.GetCompressionType()))));
-        QM_TRY(MOZ_TO_RESULT(
-            stmt.BindUTF8StringAsBlobByName("value"_ns, aValue.AsCString())));
+
+        if (0u == aValue.Length()) {  // Otherwise empty string becomes null
+          QM_TRY(MOZ_TO_RESULT(
+              stmt.BindUTF8StringByName("value"_ns, aValue.AsCString())));
+        } else {
+          QM_TRY(MOZ_TO_RESULT(
+              stmt.BindUTF8StringAsBlobByName("value"_ns, aValue.AsCString())));
+        }
 
         return Ok{};
       })));
