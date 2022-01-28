@@ -101,8 +101,8 @@ class L10NRepackFormatterMixin(object):
         self._dictionaries = {}
 
     def add(self, path, file):
+        base, relpath = self._get_base(path)
         if path.endswith(".dic"):
-            base, relpath = self._get_base(path)
             if relpath.startswith("dictionaries/"):
                 root, ext = mozpath.splitext(mozpath.basename(path))
                 self._dictionaries[root] = path
@@ -112,6 +112,14 @@ class L10NRepackFormatterMixin(object):
             # The GeneratedFile content is only really generated after
             # all calls to formatter.add.
             file = GeneratedFile(lambda: json.dumps(data))
+        elif relpath.startswith("META-INF/"):
+            # Ignore signatures inside omnijars.  We drop these items: if we
+            # don't treat them as omnijar resources, they will be included in
+            # the top-level package, and that's not how omnijars are signed (Bug
+            # 1750676).  If we treat them as omnijar resources, they will stay
+            # in the omnijar, as expected -- but the signatures won't be valid
+            # after repacking.  Therefore, drop them.
+            return
         super(L10NRepackFormatterMixin, self).add(path, file)
 
 
