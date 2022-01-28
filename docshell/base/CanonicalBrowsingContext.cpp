@@ -814,7 +814,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
           mActiveEntry = newActiveEntry;
         } else if (LOAD_TYPE_HAS_FLAGS(
                        aLoadType, nsIWebNavigation::LOAD_FLAGS_IS_REFRESH) &&
-                   !ShouldAddEntryForRefresh(newActiveEntry)) {
+                   !ShouldAddEntryForRefresh(newActiveEntry) && mActiveEntry) {
           addEntry = false;
           mActiveEntry->ReplaceWith(*newActiveEntry);
         } else {
