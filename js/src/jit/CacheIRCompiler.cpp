@@ -1159,6 +1159,7 @@ void CacheIRWriter::copyStubData(uint8_t* dest) const {
         AsGCPtr<jsid>(destWords)->init(jsid::fromRawBits(field.asWord()));
         break;
       case StubField::Type::RawInt64:
+      case StubField::Type::Double:
         *reinterpret_cast<uint64_t*>(destWords) = field.asInt64();
         break;
       case StubField::Type::Value:
@@ -1183,6 +1184,7 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
       case StubField::Type::RawInt32:
       case StubField::Type::RawPointer:
       case StubField::Type::RawInt64:
+      case StubField::Type::Double:
         break;
       case StubField::Type::Shape: {
         // For CCW IC stubs, we can store same-zone but cross-compartment
@@ -6999,6 +7001,22 @@ void CacheIRCompiler::emitLoadValueStubField(StubFieldOffset val,
   } else {
     Address addr(ICStubReg, stubDataOffset_ + val.getOffset());
     masm.loadValue(addr, dest);
+  }
+}
+
+void CacheIRCompiler::emitLoadDoubleValueStubField(StubFieldOffset val,
+                                                   ValueOperand dest,
+                                                   FloatRegister scratch) {
+  MOZ_ASSERT(val.getStubFieldType() == StubField::Type::Double);
+
+  if (stubFieldPolicy_ == StubFieldPolicy::Constant) {
+    MOZ_ASSERT(mode_ == Mode::Ion);
+    double d = doubleStubField(val.getOffset());
+    masm.moveValue(DoubleValue(d), dest);
+  } else {
+    Address addr(ICStubReg, stubDataOffset_ + val.getOffset());
+    masm.loadDouble(addr, scratch);
+    masm.boxDouble(scratch, dest, scratch);
   }
 }
 

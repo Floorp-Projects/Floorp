@@ -72,6 +72,7 @@ class MOZ_RAII CacheIRCloner {
   jsid getIdField(uint32_t stubOffset);
   const Value getValueField(uint32_t stubOffset);
   uint64_t getRawInt64Field(uint32_t stubOffset);
+  double getDoubleField(uint32_t stubOffset);
   gc::AllocSite* getAllocSiteField(uint32_t stubOffset);
 };
 
