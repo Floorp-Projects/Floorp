@@ -11,6 +11,7 @@
 #include "Role.h"
 #include "AccAttributes.h"
 #include "AccIterator.h"
+#include "CacheConstants.h"
 #include "States.h"
 
 #include "imgIContainer.h"
@@ -18,6 +19,7 @@
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/MutationEventBinding.h"
 #include "nsContentUtils.h"
 #include "nsIImageLoadingContent.h"
 #include "nsPIDOMWindow.h"
@@ -104,6 +106,20 @@ ENameValueFlag ImageAccessible::NativeName(nsString& aName) const {
 }
 
 role ImageAccessible::NativeRole() const { return roles::GRAPHIC; }
+
+void ImageAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
+                                          nsAtom* aAttribute, int32_t aModType,
+                                          const nsAttrValue* aOldValue,
+                                          uint64_t aOldState) {
+  LinkableAccessible::DOMAttributeChanged(aNameSpaceID, aAttribute, aModType,
+                                          aOldValue, aOldState);
+
+  if (aAttribute == nsGkAtoms::longdesc &&
+      (aModType == dom::MutationEvent_Binding::ADDITION ||
+       aModType == dom::MutationEvent_Binding::REMOVAL)) {
+    SendCache(CacheDomain::Actions, CacheUpdateType::Update);
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // LocalAccessible
