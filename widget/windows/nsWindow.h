@@ -537,6 +537,8 @@ class nsWindow final : public nsWindowBase {
                                        const WinPointerInfo& aPointerInfo,
                                        mozilla::MouseButton aButton);
 
+  void SetSizeModeInternal(nsSizeMode aMode);
+
  protected:
   static bool IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult);
   void IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam);
