@@ -102,20 +102,6 @@ fission-webrender-sw:
                 - "--setpref=gfx.webrender.software=true"
                 - "--setpref=fission.autostart=true"
 
-# TODO: After 2022-01-01, verify this variant is still needed.
-fission-webgl-ipc:
-    description: "{description} with fission and WebGL IPC process enabled"
-    contact: jgilbert
-    suffix: "fis-gli"
-    replace:
-        e10s: true
-    merge:
-        mozharness:
-            extra-options:
-                - "--setpref=fission.autostart=true"
-                - "--setpref=dom.serviceWorkers.parent_intercept=true"
-                - "--setpref=webgl.out-of-process=true"
-
 socketprocess:
     description: "{description} with socket process enabled"
     contact: kershaw
