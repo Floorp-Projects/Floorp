@@ -27,6 +27,8 @@
 #  include "nsIObserverService.h"
 #endif
 #include "gfxPlatform.h"
+#include "nsAppRunner.h"
+#include "mozilla/XREAppData.h"
 #include "ScreenHelperGTK.h"
 #include "HeadlessScreenHelper.h"
 #include "mozilla/widget/ScreenManager.h"
@@ -257,13 +259,9 @@ nsresult nsAppShell::Init() {
       // See https://bugzilla.gnome.org/show_bug.cgi?id=747634
       //
       // Only bother doing this for the parent process, since it's the one
-      // creating top-level windows. (At this point, a child process hasn't
-      // received the list of registered chrome packages, so the
-      // GetBrandShortName call would fail anyway.)
-      nsAutoString brandName;
-      mozilla::widget::WidgetUtils::GetBrandShortName(brandName);
-      if (!brandName.IsEmpty()) {
-        gdk_set_program_class(NS_ConvertUTF16toUTF8(brandName).get());
+      // creating top-level windows.
+      if (gAppData) {
+        gdk_set_program_class(gAppData->remotingName);
       }
     }
   }
