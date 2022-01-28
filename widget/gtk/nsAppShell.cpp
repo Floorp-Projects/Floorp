@@ -347,9 +347,20 @@ void nsAppShell::ScheduleNativeEventCallback() {
 }
 
 bool nsAppShell::ProcessNextNativeEvent(bool mayWait) {
-  bool ret = g_main_context_iteration(nullptr, mayWait);
+  bool didProcessEvent = false;
+  if (mayWait) {
+    // Block until we get an event. If g_main_context_iteration returns false,
+    // keep calling it until it returns true. It can return false if it is
+    // interrupted by a signal, for example during profiling, and we want to
+    // ignore such interruptions.
+    while (!didProcessEvent) {
+      didProcessEvent = g_main_context_iteration(nullptr, true);
+    }
+  } else {
+    didProcessEvent = g_main_context_iteration(nullptr, false);
+  }
 #ifdef MOZ_WAYLAND
   mozilla::widget::WaylandDispatchDisplays();
 #endif
-  return ret;
+  return didProcessEvent;
 }
