@@ -8512,12 +8512,7 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
     GtkWidget* tmpWindow = gtk_window_new(GTK_WINDOW_POPUP);
     gtk_widget_realize(tmpWindow);
 
-    g_object_ref(mContainer);
-    gtk_container_remove(
-        GTK_CONTAINER(gtk_widget_get_parent(GTK_WIDGET(mContainer))),
-        GTK_WIDGET(mContainer));
-    gtk_container_add(GTK_CONTAINER(tmpWindow), GTK_WIDGET(mContainer));
-    g_object_unref(mContainer);
+    gtk_widget_reparent(GTK_WIDGET(mContainer), tmpWindow);
     gtk_widget_unrealize(GTK_WIDGET(mShell));
 
     if (aState) {
@@ -8543,12 +8538,7 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
     gtk_widget_size_allocate(GTK_WIDGET(mShell), &allocation);
 
     gtk_widget_realize(GTK_WIDGET(mShell));
-    g_object_ref(mContainer);
-    gtk_container_remove(
-        GTK_CONTAINER(gtk_widget_get_parent(GTK_WIDGET(mContainer))),
-        GTK_WIDGET(mContainer));
-    gtk_container_add(GTK_CONTAINER(mShell), GTK_WIDGET(mContainer));
-    g_object_unref(mContainer);
+    gtk_widget_reparent(GTK_WIDGET(mContainer), GTK_WIDGET(mShell));
 
     // Label mShell toplevel window so property_notify_event_cb callback
     // can find its way home.
