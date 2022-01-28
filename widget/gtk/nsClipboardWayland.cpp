@@ -28,21 +28,21 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-nsRetrievalContextWaylandAsync::nsRetrievalContextWaylandAsync(void)
+nsRetrievalContextWayland::nsRetrievalContextWayland(void)
     : mClipboardRequestNumber(0),
       mClipboardDataReceived(),
       mClipboardData(nullptr),
       mClipboardDataLength(0),
-      mMutex("nsRetrievalContextWaylandAsync") {}
+      mMutex("nsRetrievalContextWayland") {}
 
 struct AsyncClipboardData {
   AsyncClipboardData(ClipboardDataType aDataType, int aClipboardRequestNumber,
-                     RefPtr<nsRetrievalContextWaylandAsync> aRetrievalContex)
+                     RefPtr<nsRetrievalContextWayland> aRetrievalContex)
       : mClipboardRequestNumber(aClipboardRequestNumber),
         mRetrievalContex(std::move(aRetrievalContex)),
         mDataType(aDataType) {}
   int mClipboardRequestNumber;
-  RefPtr<nsRetrievalContextWaylandAsync> mRetrievalContex;
+  RefPtr<nsRetrievalContextWayland> mRetrievalContex;
   ClipboardDataType mDataType;
 };
 
@@ -51,7 +51,7 @@ static void wayland_clipboard_contents_received_async(
   LOGCLIP("wayland_clipboard_contents_received_async() selection_data = %p\n",
           selection_data);
   AsyncClipboardData* fastTrack = static_cast<AsyncClipboardData*>(data);
-  fastTrack->mRetrievalContex->TransferAsyncClipboardData(
+  fastTrack->mRetrievalContex->TransferClipboardData(
       fastTrack->mDataType, fastTrack->mClipboardRequestNumber, selection_data);
   delete fastTrack;
 }
@@ -60,16 +60,16 @@ static void wayland_clipboard_text_received(GtkClipboard* clipboard,
                                             const gchar* text, gpointer data) {
   LOGCLIP("wayland_clipboard_text_received() text = %p\n", text);
   AsyncClipboardData* fastTrack = static_cast<AsyncClipboardData*>(data);
-  fastTrack->mRetrievalContex->TransferAsyncClipboardData(
+  fastTrack->mRetrievalContex->TransferClipboardData(
       fastTrack->mDataType, fastTrack->mClipboardRequestNumber, (void*)text);
   delete fastTrack;
 }
 
-void nsRetrievalContextWaylandAsync::TransferAsyncClipboardData(
+void nsRetrievalContextWayland::TransferClipboardData(
     ClipboardDataType aDataType, int aClipboardRequestNumber,
     const void* aData) {
   LOGCLIP(
-      "nsRetrievalContextWaylandAsync::TransferAsyncClipboardData(), "
+      "nsRetrievalContextWayland::TransferClipboardData(), "
       "aSelectionData = %p\n",
       aData);
 
@@ -136,18 +136,18 @@ void nsRetrievalContextWaylandAsync::TransferAsyncClipboardData(
   }
 }
 
-GdkAtom* nsRetrievalContextWaylandAsync::GetTargets(int32_t aWhichClipboard,
-                                                    int* aTargetNum) {
-  LOGCLIP("nsRetrievalContextWaylandAsync::GetTargets()\n");
+GdkAtom* nsRetrievalContextWayland::GetTargets(int32_t aWhichClipboard,
+                                               int* aTargetNum) {
+  LOGCLIP("nsRetrievalContextWayland::GetTargets()\n");
 
   if (!mMutex.TryLock()) {
-    LOGCLIP("  nsRetrievalContextWaylandAsync is already used!\n");
+    LOGCLIP("  nsRetrievalContextWayland is already used!\n");
     *aTargetNum = 0;
     return nullptr;
   }
 
   // GetTargets() does not use ReleaseClipboardData() so we always need to
-  // unlock nsRetrievalContextWaylandAsync.
+  // unlock nsRetrievalContextWayland.
   auto unlock = mozilla::MakeScopeExit([&] { mMutex.Unlock(); });
 
   MOZ_RELEASE_ASSERT(mClipboardData == nullptr && mClipboardDataLength == 0,
@@ -167,7 +167,7 @@ GdkAtom* nsRetrievalContextWaylandAsync::GetTargets(int32_t aWhichClipboard,
   }
 
   // mClipboardDataLength is only signed integer, see
-  // nsRetrievalContextWaylandAsync::TransferAsyncClipboardData()
+  // nsRetrievalContextWayland::TransferClipboardData()
   *aTargetNum = (int)mClipboardDataLength;
   GdkAtom* targets = static_cast<GdkAtom*>((void*)mClipboardData);
 
@@ -178,13 +178,12 @@ GdkAtom* nsRetrievalContextWaylandAsync::GetTargets(int32_t aWhichClipboard,
   return targets;
 }
 
-const char* nsRetrievalContextWaylandAsync::GetClipboardData(
+const char* nsRetrievalContextWayland::GetClipboardData(
     const char* aMimeType, int32_t aWhichClipboard, uint32_t* aContentLength) {
-  LOGCLIP("nsRetrievalContextWaylandAsync::GetClipboardData() mime %s\n",
-          aMimeType);
+  LOGCLIP("nsRetrievalContextWayland::GetClipboardData() mime %s\n", aMimeType);
 
   if (!mMutex.TryLock()) {
-    LOGCLIP("  nsRetrievalContextWaylandAsync is already used!\n");
+    LOGCLIP("  nsRetrievalContextWayland is already used!\n");
     *aContentLength = 0;
     return nullptr;
   }
@@ -210,15 +209,15 @@ const char* nsRetrievalContextWaylandAsync::GetClipboardData(
   return reinterpret_cast<const char*>(mClipboardData);
 }
 
-const char* nsRetrievalContextWaylandAsync::GetClipboardText(
+const char* nsRetrievalContextWayland::GetClipboardText(
     int32_t aWhichClipboard) {
   GdkAtom selection = GetSelectionAtom(aWhichClipboard);
 
-  LOGCLIP("nsRetrievalContextWaylandAsync::GetClipboardText(), clipboard %s\n",
+  LOGCLIP("nsRetrievalContextWayland::GetClipboardText(), clipboard %s\n",
           (selection == GDK_SELECTION_PRIMARY) ? "Primary" : "Selection");
 
   if (!mMutex.TryLock()) {
-    LOGCLIP("  nsRetrievalContextWaylandAsync is already used!\n");
+    LOGCLIP("  nsRetrievalContextWayland is already used!\n");
     return nullptr;
   }
 
@@ -238,7 +237,7 @@ const char* nsRetrievalContextWaylandAsync::GetClipboardText(
   return reinterpret_cast<const char*>(mClipboardData);
 }
 
-bool nsRetrievalContextWaylandAsync::WaitForClipboardContent() {
+bool nsRetrievalContextWayland::WaitForClipboardContent() {
   int iteration = 1;
 
   PRTime entryTime = PR_Now();
@@ -259,9 +258,9 @@ bool nsRetrievalContextWaylandAsync::WaitForClipboardContent() {
   return mClipboardDataReceived && mClipboardData != nullptr;
 }
 
-void nsRetrievalContextWaylandAsync::ReleaseClipboardData(
+void nsRetrievalContextWayland::ReleaseClipboardData(
     const char* aClipboardData) {
-  LOGCLIP("nsRetrievalContextWaylandAsync::ReleaseClipboardData [%p]\n",
+  LOGCLIP("nsRetrievalContextWayland::ReleaseClipboardData [%p]\n",
           aClipboardData);
   if (aClipboardData != mClipboardData) {
     NS_WARNING("Wayland clipboard: Releasing unknown clipboard data!");

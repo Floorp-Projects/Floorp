@@ -5,8 +5,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __nsClipboardWaylandAsync_h_
-#define __nsClipboardWaylandAsync_h_
+#ifndef __nsClipboardWayland_h_
+#define __nsClipboardWayland_h_
 
 #include <gtk/gtk.h>
 #include <gdk/gdkwayland.h>
@@ -18,9 +18,9 @@
 #include "nsClipboard.h"
 #include "nsWaylandDisplay.h"
 
-class nsRetrievalContextWaylandAsync : public nsRetrievalContext {
+class nsRetrievalContextWayland : public nsRetrievalContext {
  public:
-  nsRetrievalContextWaylandAsync();
+  nsRetrievalContextWayland();
 
   // Successful call of GetClipboardData()/GetClipboardText() needs to be paired
   // with ReleaseClipboardData().
@@ -35,9 +35,8 @@ class nsRetrievalContextWaylandAsync : public nsRetrievalContext {
   virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
                               int* aTargetNum) override;
 
-  void TransferAsyncClipboardData(ClipboardDataType aDataType,
-                                  int aClipboardRequestNumber,
-                                  const void* aData);
+  void TransferClipboardData(ClipboardDataType aDataType,
+                             int aClipboardRequestNumber, const void* aData);
 
   bool HasSelectionSupport(void) override { return true; }
 

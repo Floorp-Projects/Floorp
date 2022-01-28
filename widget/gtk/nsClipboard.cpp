@@ -109,7 +109,7 @@ nsresult nsClipboard::Init(void) {
     mContext = new nsRetrievalContextX11();
 #if defined(MOZ_WAYLAND)
   } else if (widget::GdkIsWaylandDisplay()) {
-    mContext = new nsRetrievalContextWaylandAsync();
+    mContext = new nsRetrievalContextWayland();
 #endif
   } else {
     NS_WARNING("Missing nsRetrievalContext for nsClipboard!");
