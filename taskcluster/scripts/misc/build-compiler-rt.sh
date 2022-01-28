@@ -121,7 +121,16 @@ mkdir compiler-rt
 cd compiler-rt
 
 for patchfile in "$@"; do
-  patch -d $MOZ_FETCHES_DIR/llvm-project -p1 < $GECKO_PATH/$patchfile
+  case $patchfile in
+  *.json)
+      jq -r '.patches[]' $GECKO_PATH/$patchfile | while read p; do
+        patch -d $MOZ_FETCHES_DIR/llvm-project -p1 < $GECKO_PATH/$(dirname $patchfile)/$p
+      done
+      ;;
+  *)
+      patch -d $MOZ_FETCHES_DIR/llvm-project -p1 < $GECKO_PATH/$patchfile
+      ;;
+  esac
 done
 
 eval cmake \

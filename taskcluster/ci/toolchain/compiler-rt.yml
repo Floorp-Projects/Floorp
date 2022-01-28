@@ -18,9 +18,9 @@ android-aarch64-compiler-rt-13:
     run:
         arguments:
             - aarch64-linux-android
-            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+            - build/build-clang/clang-13.json
         resources:
-            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+            - build/build-clang/clang-13.json
     fetches:
         fetch:
             - clang-13
@@ -35,9 +35,9 @@ android-arm-compiler-rt-13:
     run:
         arguments:
             - armv7-linux-android
-            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+            - build/build-clang/clang-13.json
         resources:
-            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+            - build/build-clang/clang-13.json
     fetches:
         fetch:
             - clang-13
@@ -52,9 +52,9 @@ android-x86-compiler-rt-13:
     run:
         arguments:
             - i686-linux-android
-            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+            - build/build-clang/clang-13.json
         resources:
-            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+            - build/build-clang/clang-13.json
     fetches:
         fetch:
             - clang-13
@@ -69,9 +69,9 @@ android-x64-compiler-rt-13:
     run:
         arguments:
             - x86_64-linux-android
-            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+            - build/build-clang/clang-13.json
         resources:
-            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+            - build/build-clang/clang-13.json
     fetches:
         fetch:
             - clang-13
@@ -86,9 +86,9 @@ linux64-aarch64-compiler-rt-13:
     run:
         arguments:
             - aarch64-unknown-linux-gnu
-            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+            - build/build-clang/clang-13.json
         resources:
-            - 'build/build-clang/find_symbolizer_linux_clang_10.patch'
+            - build/build-clang/clang-13.json
     fetches:
         fetch:
             - clang-13
@@ -104,6 +104,9 @@ macosx64-x64-compiler-rt-13:
     run:
         arguments:
             - x86_64-apple-darwin
+            - build/build-clang/clang-13.json
+        resources:
+            - build/build-clang/clang-13.json
     fetches:
         fetch:
             - clang-13
@@ -119,6 +122,9 @@ macosx64-aarch64-compiler-rt-13:
     run:
         arguments:
             - aarch64-apple-darwin
+            - build/build-clang/clang-13.json
+        resources:
+            - build/build-clang/clang-13.json
     fetches:
         fetch:
             - clang-13
