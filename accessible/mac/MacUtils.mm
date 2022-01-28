@@ -55,7 +55,7 @@ NSArray<mozAccessible*>* ConvertToNSArray(nsTArray<RemoteAccessible*>& aArray) {
 NSString* LocalizedString(const nsString& aString) {
   nsString text;
 
-  LocalAccessible::TranslateString(aString, text);
+  Accessible::TranslateString(aString, text);
 
   return text.IsEmpty() ? nil : nsCocoaUtils::ToNSString(text);
 }
