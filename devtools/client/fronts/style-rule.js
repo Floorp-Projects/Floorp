@@ -112,10 +112,6 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
     return this._mediaText;
   }
 
-  get parentRule() {
-    return this.conn.getFrontByID(this._form.parentRule);
-  }
-
   get parentStyleSheet() {
     const resourceCommand = this.targetFront.commands.resourceCommand;
     if (

@@ -318,12 +318,6 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       },
     };
 
-    if (this.rawRule.parentRule) {
-      form.parentRule = this.pageStyle._styleRef(
-        this.rawRule.parentRule
-      ).actorID;
-    }
-
     // Go through all ancestor so we can build an array of all the media queries and
     // layers this rule is in.
     for (const ancestorRule of this.ancestorRules) {
