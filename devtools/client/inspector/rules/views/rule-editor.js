@@ -156,12 +156,12 @@ RuleEditor.prototype = {
       // To have the `@` properly displayed, we force LTR with \u202A
       const title = `${parts.join("\n").replaceAll("@", "\u202A@")}`;
 
-      const ancestorDataEl = createChild(this.element, "ul", {
+      this.ancestorDataEl = createChild(this.element, "ul", {
         class: "ruleview-rule-ancestor-data theme-link",
         title,
       });
       for (const part of parts) {
-        createChild(ancestorDataEl, "li", {
+        createChild(this.ancestorDataEl, "li", {
           textContent: part,
         });
       }
