@@ -102,7 +102,7 @@
 
     <!-- Border -->
     <!-- Default, Divider, Dotted -->
-    <color name="fx_mobile_border_color_default">@color/photonLightGrey30</color>
+    <color name="fx_mobile_border_color_primary">@color/photonLightGrey30</color>
     <!-- Onboarding -->
     <color name="fx_mobile_border_color_inverted" tools:ignore="UnusedResources">@color/photonDarkGrey05</color>
     <!-- Form parts -->

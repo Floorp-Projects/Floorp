@@ -89,7 +89,7 @@ private val darkColorPalette = FirefoxColors(
     iconAccentYellow = PhotonColors.Yellow20,
     iconGradientStart = PhotonColors.Violet20,
     iconGradientEnd = PhotonColors.Blue20,
-    borderDefault = PhotonColors.DarkGrey05,
+    borderPrimary = PhotonColors.DarkGrey05,
     borderInverted = PhotonColors.LightGrey30,
     borderFormDefault = PhotonColors.LightGrey05,
     borderAccent = PhotonColors.Violet40,
@@ -146,7 +146,7 @@ private val lightColorPalette = FirefoxColors(
     iconAccentYellow = PhotonColors.Yellow60,
     iconGradientStart = PhotonColors.Violet50,
     iconGradientEnd = PhotonColors.Blue60,
-    borderDefault = PhotonColors.LightGrey30,
+    borderPrimary = PhotonColors.LightGrey30,
     borderInverted = PhotonColors.DarkGrey05,
     borderFormDefault = PhotonColors.DarkGrey90,
     borderAccent = PhotonColors.Ink20,
@@ -208,7 +208,7 @@ class FirefoxColors(
     iconAccentYellow: Color,
     iconGradientStart: Color,
     iconGradientEnd: Color,
-    borderDefault: Color,
+    borderPrimary: Color,
     borderInverted: Color,
     borderFormDefault: Color,
     borderAccent: Color,
@@ -365,7 +365,7 @@ class FirefoxColors(
     // Border
 
     // Default, Divider, Dotted
-    var borderDefault by mutableStateOf(borderDefault)
+    var borderPrimary by mutableStateOf(borderPrimary)
         private set
     // Onboarding
     var borderInverted by mutableStateOf(borderInverted)
@@ -432,7 +432,7 @@ class FirefoxColors(
         iconAccentYellow = other.iconAccentYellow
         iconGradientStart = other.iconGradientStart
         iconGradientEnd = other.iconGradientEnd
-        borderDefault = other.borderDefault
+        borderPrimary = other.borderPrimary
         borderInverted = other.borderInverted
         borderFormDefault = other.borderFormDefault
         borderAccent = other.borderAccent
@@ -489,7 +489,7 @@ class FirefoxColors(
         iconAccentYellow = iconAccentYellow,
         iconGradientStart = iconGradientStart,
         iconGradientEnd = iconGradientEnd,
-        borderDefault = borderDefault,
+        borderPrimary = borderPrimary,
         borderInverted = borderInverted,
         borderFormDefault = borderFormDefault,
         borderAccent = borderAccent,
