@@ -184,6 +184,10 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual nsAtom* TagName() const override;
 
+  virtual uint8_t ActionCount() const override;
+
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+
   // Methods that interact with content.
 
   virtual void TakeFocus() const override;
