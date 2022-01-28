@@ -444,6 +444,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   bool IsHttp3VersionSupported(const nsACString& version);
 
   static bool IsHttp3SupportedByServer(nsHttpResponseHead* aResponseHead);
+  bool IsHttp3Enabled() const { return mHttp3Enabled; }
   uint32_t DefaultQpackTableSize() const { return mQpackTableSize; }
   uint16_t DefaultHttp3MaxBlockedStreams() const {
     return (uint16_t)mHttp3MaxBlockedStreams;
@@ -737,6 +738,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // The default size (in bytes) of the HPACK decompressor table.
   uint32_t mDefaultHpackBuffer{4096};
 
+  Atomic<bool, Relaxed> mHttp3Enabled{true};
   // Http3 parameters
   Atomic<uint32_t, Relaxed> mQpackTableSize{4096};
   // uint16_t is enough here, but Atomic only supports uint32_t or uint64_t.

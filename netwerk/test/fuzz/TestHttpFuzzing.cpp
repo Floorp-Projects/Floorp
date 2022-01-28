@@ -56,7 +56,7 @@ static int FuzzingInitNetworkHttp2(int* argc, char*** argv) {
 
 static int FuzzingInitNetworkHttp3(int* argc, char*** argv) {
   Preferences::SetBool("fuzzing.necko.http3", true);
-  Preferences::SetBool("network.http.http3.enable", true);
+  Preferences::SetBool("network.http.http3.enabled", true);
   Preferences::SetCString("network.http.http3.alt-svc-mapping-for-testing",
                           "fuzz.bad.tld;h3=:443");
   httpSpec = "https://fuzz.bad.tld/";
