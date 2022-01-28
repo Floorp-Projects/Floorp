@@ -42,6 +42,7 @@
 #include "vm/RegExpObject.h"
 #include "vm/SelfHosting.h"
 #include "vm/ThrowMsgKind.h"  // ThrowCondition
+#include "vm/Watchtower.h"
 #include "wasm/WasmInstance.h"
 
 #include "jit/BaselineFrame-inl.h"
@@ -4554,6 +4555,11 @@ bool SetPropIRGenerator::canAttachAddSlotStub(HandleObject obj, HandleId id) {
     if (prop.isFound()) {
       return false;
     }
+  }
+
+  // For now we don't optimize Watchtower-monitored objects.
+  if (Watchtower::watchesPropertyAdd(obj.as<NativeObject>())) {
+    return false;
   }
 
   // Object must be extensible, or we must be initializing a private
