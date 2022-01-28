@@ -1749,7 +1749,7 @@ class UrlbarView {
         case UrlbarUtils.RESULT_TYPE.URL:
           return { id: "urlbar-group-firefox-suggest" };
         case UrlbarUtils.RESULT_TYPE.SEARCH:
-          // Show "{ $engine } Suggestions" if it's not the first label.
+          // Show "{ $engine } suggestions" if it's not the first label.
           if (currentLabel && row.result.payload.suggestion) {
             let engineName =
               row.result.payload.engine || Services.search.defaultEngine.name;
