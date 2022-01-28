@@ -14516,6 +14516,17 @@
     "bug_numbers": [1238433, 1570634],
     "description": "Percentage of frames decoded frames dropped in an HTMLVideoElement"
   },
+  "VIDEO_DROPPED_FRAMES_PROPORTION_EXPONENTIAL" : {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["bryce@mozilla.com", "padenot@mozila.com", "alwu@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "bug_numbers": [1238433, 1570634, 1752207],
+    "description": "Percentage of frames decoded frames dropped in an HTMLVideoElement"
+  },
   "MEDIA_DECODER_BACKEND_USED": {
     "record_in_processes": ["main", "content", "gpu"],
     "products": ["firefox", "fennec"],
