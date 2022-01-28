@@ -29,7 +29,7 @@
     //  dump(`\tBrowser outer width/height: ${window.outerWidth}/${window.outerHeight}`);
     dump("\n__metrics\n");
     TalosPowersParent.exec("dumpAboutSupport");
-    TalosPowersContent.goQuitApplication(true);
+    TalosPowersContent.goQuitApplication(true /* waitForStartupFinished */);
   });
   </script>
 
