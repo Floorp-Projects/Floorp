@@ -91,7 +91,8 @@ class BackgroundPage extends HiddenExtensionPage {
 
     if (context) {
       // Wait until all event listeners registered by the script so far
-      // to be handled.
+      // to be handled. We then set listenerPromises to null, which indicates
+      // to addListener that the background script has finished loading.
       await Promise.all(context.listenerPromises);
       context.listenerPromises = null;
     }
