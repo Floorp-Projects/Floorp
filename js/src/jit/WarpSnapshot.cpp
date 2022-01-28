@@ -318,6 +318,7 @@ void WarpCacheIR::traceData(JSTracer* trc) {
         case StubField::Type::RawInt32:
         case StubField::Type::RawPointer:
         case StubField::Type::RawInt64:
+        case StubField::Type::Double:
           break;
         case StubField::Type::Shape: {
           uintptr_t word = stubInfo_->getStubRawWord(stubData_, offset);

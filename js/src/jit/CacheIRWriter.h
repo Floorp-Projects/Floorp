@@ -9,6 +9,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Casting.h"
 #include "mozilla/Maybe.h"
 
 #include <stddef.h>
@@ -229,6 +230,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   }
   void writeRawInt64Field(uint64_t val) {
     addStubField(val, StubField::Type::RawInt64);
+  }
+  void writeDoubleField(double d) {
+    uint64_t bits = mozilla::BitwiseCast<uint64_t>(d);
+    addStubField(bits, StubField::Type::Double);
   }
   void writeAllocSiteField(gc::AllocSite* ptr) {
     addStubField(uintptr_t(ptr), StubField::Type::AllocSite);
