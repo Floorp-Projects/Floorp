@@ -10728,14 +10728,14 @@ AttachDecision UnaryArithIRGenerator::tryAttachNumber() {
   if (op_ == JSOp::BitNot) {
     return AttachDecision::NoAction;
   }
-  if (!val_.isNumber()) {
+  if (!CanConvertToDoubleForToNumber(val_)) {
     return AttachDecision::NoAction;
   }
   MOZ_ASSERT(res_.isNumber());
 
   ValOperandId valId(writer.setInputOperandId(0));
-  NumberOperandId numId = writer.guardIsNumber(valId);
-  Int32OperandId truncatedId;
+  NumberOperandId numId = EmitGuardToDoubleForToNumber(writer, valId, val_);
+
   switch (op_) {
     case JSOp::Pos:
       writer.loadDoubleResult(numId);
