@@ -65,8 +65,6 @@ class Rule {
     this.inherited = options.inherited || null;
     this.keyframes = options.keyframes || null;
 
-    this.mediaText =
-      this.domRule && this.domRule.mediaText ? this.domRule.mediaText : "";
     this.cssProperties = this.elementStyle.ruleView.cssProperties;
     this.inspector = this.elementStyle.ruleView.inspector;
     this.store = this.elementStyle.ruleView.store;
@@ -125,7 +123,7 @@ class Rule {
       title += ":" + this.ruleLine;
     }
 
-    return title + (this.mediaText ? " @media " + this.mediaText : "");
+    return title;
   }
 
   get inheritedSource() {

@@ -310,6 +310,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       type: this.type,
       line: this.line || undefined,
       column: this.column,
+      ancestorData: [],
       traits: {
         // Indicates whether StyleRuleActor implements and can use the setRuleText method.
         // It cannot use it if the stylesheet was programmatically mutated via the CSSOM.
@@ -321,25 +322,29 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       form.parentRule = this.pageStyle._styleRef(
         this.rawRule.parentRule
       ).actorID;
+    }
 
-      // CSS rules that we call media rules are STYLE_RULES that are children
-      // of MEDIA_RULEs. We need to check the parentRule to check if a rule is
-      // a media rule so we do this here instead of in the switch statement
-      // below.
-      if (this.rawRule.parentRule.type === CSSRule.MEDIA_RULE) {
-        form.media = [];
-        for (let i = 0, n = this.rawRule.parentRule.media.length; i < n; i++) {
-          form.media.push(this.rawRule.parentRule.media.item(i));
-        }
-      }
-
+    // Go through all ancestor so we can build an array of all the media queries and
+    // layers this rule is in.
+    for (const ancestorRule of this.ancestorRules) {
       if (
-        ChromeUtils.getClassName(this.rawRule.parentRule) ===
-        "CSSLayerBlockRule"
+        ancestorRule.type === CSSRule.MEDIA_RULE &&
+        ancestorRule.rawRule.media?.length
       ) {
-        form.layerName = this.rawRule.parentRule.name;
+        form.ancestorData.push({
+          type: "media",
+          value: Array.from(ancestorRule.rawRule.media).join(", "),
+        });
+      } else if (
+        ChromeUtils.getClassName(ancestorRule.rawRule) === "CSSLayerBlockRule"
+      ) {
+        form.ancestorData.push({
+          type: "layer",
+          value: ancestorRule.rawRule.name,
+        });
       }
     }
+
     if (this._parentSheet) {
       if (this.pageStyle.hasStyleSheetWatcherSupport) {
         form.parentStyleSheet = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
@@ -351,12 +356,13 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         ).actorID;
       }
 
-      // Only override layerName if it wasn't set from the parent rule
-      if (
-        typeof this._parentSheet.ownerRule?.layerName !== "undefined" &&
-        form.layerName == undefined
-      ) {
-        form.layerName = this._parentSheet.ownerRule.layerName;
+      // If the rule is in a imported stylesheet with a specified layer, put it at the top
+      // of the ancestor data array.
+      if (typeof this._parentSheet.ownerRule?.layerName !== "undefined") {
+        form.ancestorData.unshift({
+          type: "layer",
+          value: this._parentSheet.ownerRule.layerName,
+        });
       }
     }
 

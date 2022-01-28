@@ -694,13 +694,17 @@
 }
 
 /* @media and @layer rule info element */
-.ruleview-rule-parent-data {
+ul.ruleview-rule-ancestor-data {
   max-width: 100%;
   display: inline-block;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ruleview-rule-ancestor-data li {
   overflow: hidden;
   text-overflow: ellipsis;
-  /* we only want to have it displayed on a single line. The whole string is available on
-     the title attribute of the element anyway */
   white-space: nowrap;
 }
 

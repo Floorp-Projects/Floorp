@@ -30,6 +30,9 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
     this.actorID = form.actor;
     this._form = form;
     this.traits = form.traits || {};
+    // @backward-compat { version 98 }
+    // This property isn't used anymore except when debugging older servers.
+    // This can be removed when 98 is in release
     if (this._mediaText) {
       this._mediaText = null;
     }
@@ -89,9 +92,15 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
   get selectors() {
     return this._form.selectors;
   }
+  // @backward-compat { version 98 }
+  // This getter isn't used anymore except when debugging older servers. This can be
+  // removed when 98 is in release.
   get media() {
     return this._form.media;
   }
+  // @backward-compat { version 98 }
+  // This getter isn't used anymore except when debugging older servers. This can be
+  // removed when 98 is in release.
   get mediaText() {
     if (!this._form.media) {
       return null;
@@ -153,8 +162,16 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
     };
   }
 
-  get layerName() {
-    return this._form.layerName;
+  get ancestorData() {
+    // @backward-compat { version 98 }
+    // ancestorData was added to the actor form in 98, so for older servers, we need to
+    // return a similar structure, with `mediaText` info in it. (@layer information was
+    // also added in 98, so older server won't have this data)
+    if (typeof this._form.ancestorData === "undefined") {
+      return this.mediaText ? [{ type: "media", value: this.mediaText }] : [];
+    }
+
+    return this._form.ancestorData;
   }
 
   async modifySelector(node, value) {
