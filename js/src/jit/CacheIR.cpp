@@ -10701,6 +10701,29 @@ AttachDecision UnaryArithIRGenerator::tryAttachInt32() {
   return AttachDecision::Attach;
 }
 
+static bool CanConvertToDoubleForToNumber(const Value& v) {
+  return v.isNumber() || v.isBoolean() || v.isNullOrUndefined();
+}
+
+static NumberOperandId EmitGuardToDoubleForToNumber(CacheIRWriter& writer,
+                                                    ValOperandId id,
+                                                    const Value& v) {
+  if (v.isNumber()) {
+    return writer.guardIsNumber(id);
+  }
+  if (v.isBoolean()) {
+    BooleanOperandId boolId = writer.guardToBoolean(id);
+    return writer.booleanToNumber(boolId);
+  }
+  if (v.isNull()) {
+    writer.guardIsNull(id);
+    return writer.loadDoubleConstant(0.0);
+  }
+  MOZ_ASSERT(v.isUndefined());
+  writer.guardIsUndefined(id);
+  return writer.loadDoubleConstant(JS::GenericNaN());
+}
+
 AttachDecision UnaryArithIRGenerator::tryAttachNumber() {
   if (op_ == JSOp::BitNot) {
     return AttachDecision::NoAction;
@@ -11134,16 +11157,17 @@ AttachDecision BinaryArithIRGenerator::tryAttachDouble() {
     return AttachDecision::NoAction;
   }
 
-  // Check guard conditions
-  if (!lhs_.isNumber() || !rhs_.isNumber()) {
+  // Check guard conditions.
+  if (!CanConvertToDoubleForToNumber(lhs_) ||
+      !CanConvertToDoubleForToNumber(rhs_)) {
     return AttachDecision::NoAction;
   }
 
   ValOperandId lhsId(writer.setInputOperandId(0));
   ValOperandId rhsId(writer.setInputOperandId(1));
 
-  NumberOperandId lhs = writer.guardIsNumber(lhsId);
-  NumberOperandId rhs = writer.guardIsNumber(rhsId);
+  NumberOperandId lhs = EmitGuardToDoubleForToNumber(writer, lhsId, lhs_);
+  NumberOperandId rhs = EmitGuardToDoubleForToNumber(writer, rhsId, rhs_);
 
   switch (op_) {
     case JSOp::Add:
