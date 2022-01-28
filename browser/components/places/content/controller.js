@@ -1546,7 +1546,7 @@ var PlacesControllerDragHelper = {
    * @param {object} insertionPoint The insertion point where the items should
    *                                be dropped.
    * @param {object} dt             The dataTransfer information for the drop.
-   * @param {object} view           The view or the tree element. This allows
+   * @param {object} [view]         The view or the tree element. This allows
    *                                batching to take place.
    */
   async onDrop(insertionPoint, dt, view) {
@@ -1563,6 +1563,7 @@ var PlacesControllerDragHelper = {
     // DataTransfer is only valid during the synchronous handling of the `drop`
     // event handler callback.
     let nodes = [];
+    let externalDrag = false;
     for (let i = 0; i < dropCount; ++i) {
       let flavor = this.getFirstValidFlavor(dt.mozTypesAt(i));
       if (!flavor) {
@@ -1576,6 +1577,11 @@ var PlacesControllerDragHelper = {
           continue;
         }
         handled.add(data);
+      }
+
+      // Check that the drag/drop is not internal
+      if (i == 0 && !flavor.startsWith("text/x-moz-place")) {
+        externalDrag = true;
       }
 
       if (flavor != TAB_DROP_TYPE) {
@@ -1594,6 +1600,41 @@ var PlacesControllerDragHelper = {
         });
       } else {
         throw new Error("bogus data was passed as a tab");
+      }
+    }
+
+    // If a single javascript url is being dropped from the urlbar or an external source,
+    // show the bookmark dialog as a speedbump protection against malicious cases.
+    if (
+      nodes.length == 1 &&
+      externalDrag &&
+      nodes[0].uri?.startsWith("javascript")
+    ) {
+      let uri;
+      try {
+        uri = Services.io.newURI(nodes[0].uri);
+      } catch (ex) {
+        // Invalid uri, we skip this code and the entry will be discarded later.
+      }
+
+      if (uri) {
+        let bookmarkGuid = await PlacesUIUtils.showBookmarkDialog(
+          {
+            action: "add",
+            type: "bookmark",
+            defaultInsertionPoint: insertionPoint,
+            hiddenRows: ["folderPicker"],
+            title: nodes[0].title,
+            uri,
+          },
+          BrowserWindowTracker.getTopWindow() // `window` may be the Library.
+        );
+
+        if (bookmarkGuid && view) {
+          view.selectItems([bookmarkGuid], false);
+        }
+
+        return;
       }
     }
 
