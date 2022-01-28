@@ -14,6 +14,7 @@
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_network.h"
 
 namespace mozilla {
 
@@ -52,8 +53,8 @@ static bool SocketProcessEnabled() {
   static bool sInited = false;
   static bool sSocketProcessEnabled = false;
   if (!sInited) {
-    sSocketProcessEnabled = Preferences::GetBool("network.process.enabled") &&
-                            XRE_IsContentProcess();
+    sSocketProcessEnabled =
+        StaticPrefs::network_process_enabled() && XRE_IsContentProcess();
     sInited = true;
   }
 
