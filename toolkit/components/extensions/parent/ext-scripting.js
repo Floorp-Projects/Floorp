@@ -94,6 +94,12 @@ const execute = (context, details, kind, method) => {
     options.cssOrigin = "author";
   }
 
+  // There is no need to execute anything when we have an empty list of frame
+  // IDs because (1) it isn't invalid and (2) nothing will get executed.
+  if (options.frameIds && options.frameIds.length === 0) {
+    return [];
+  }
+
   // This function is derived from `_execute()` in `parent/ext-tabs-base.js`,
   // make sure to keep both in sync when relevant.
   return tab.queryContent("Execute", options);

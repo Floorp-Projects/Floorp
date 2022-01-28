@@ -49,6 +49,7 @@ add_task(async function test_executeScript_params_validation() {
   let extension = makeExtension({
     async background() {
       const tabs = await browser.tabs.query({ active: true });
+      const tabId = tabs[0].id;
 
       const TEST_CASES = [
         {
@@ -80,7 +81,7 @@ add_task(async function test_executeScript_params_validation() {
           title: "both allFrames and frameIds are passed",
           executeScriptParams: {
             target: {
-              tabId: tabs[0].id,
+              tabId,
               allFrames: true,
               frameIds: [1, 2, 3],
             },
@@ -88,18 +89,13 @@ add_task(async function test_executeScript_params_validation() {
           },
           expectedError: /Cannot specify both 'allFrames' and 'frameIds'/,
         },
-        // TODO: Bug 1751154 - we probably don't want to reject with an error
-        // in this case.
         {
-          title: "empty array of frameIds",
+          title: "invalid IDs in frameIds",
           executeScriptParams: {
-            target: {
-              tabId: tabs[0].id,
-              frameIds: [],
-            },
-            files: ["script.js"],
+            target: { tabId, frameIds: [0, 1, 2] },
+            func: () => {},
           },
-          expectedError: /Missing host permission for the tab/,
+          expectedError: "Invalid frame IDs: [1, 2].",
         },
       ];
 
@@ -140,7 +136,7 @@ add_task(async function test_executeScript_with_wrong_host_permissions() {
             browser.test.fail("Unexpected execution");
           },
         }),
-        /Missing host permission for the tab/,
+        "Missing host permission for the tab",
         "expected host permission error"
       );
 
@@ -516,40 +512,52 @@ add_task(async function test_executeScript_in_multiple_frameIds() {
         return document.title;
       };
 
-      const results = await browser.scripting.executeScript({
-        target: { tabId, frameIds },
-        func: getTitle,
-      });
+      const TEST_CASES = [
+        {
+          title: "multiple frame IDs",
+          params: {
+            target: { tabId, frameIds },
+            func: getTitle,
+          },
+          expectedResults: [
+            {
+              frameId: frameIds[0],
+              result: "file contains iframe",
+            },
+            {
+              frameId: frameIds[1],
+              result: "file contains img",
+            },
+          ],
+        },
+        {
+          title: "empty list of frame IDs",
+          params: {
+            target: { tabId, frameIds: [] },
+            func: getTitle,
+          },
+          expectedResults: [],
+        },
+      ];
 
-      browser.test.assertEq(
-        2,
-        results.length,
-        "got expected number of results"
-      );
-      // Sort injection results by frameId to always assert the results in the
-      // same order.
-      results.sort((a, b) => a.frameId - b.frameId);
+      for (const { title, params, expectedResults } of TEST_CASES) {
+        const results = await browser.scripting.executeScript(params);
 
-      browser.test.assertEq(
-        "file contains iframe",
-        results[0].result,
-        "got the expected title in results[0]"
-      );
-      browser.test.assertEq(
-        frameIds[0],
-        results[0].frameId,
-        "got the expected frameId in results[0]"
-      );
-      browser.test.assertEq(
-        "file contains img",
-        results[1].result,
-        "got the expected title in results[1]"
-      );
-      browser.test.assertEq(
-        frameIds[1],
-        results[1].frameId,
-        "got the expected frameId in results[1]"
-      );
+        browser.test.assertEq(
+          expectedResults.length,
+          results.length,
+          `${title} - got expected number of results`
+        );
+        // Sort injection results by frameId to always assert the results in
+        // the same order.
+        results.sort((a, b) => a.frameId - b.frameId);
+
+        browser.test.assertEq(
+          JSON.stringify(expectedResults),
+          JSON.stringify(results),
+          `${title} - got expected results`
+        );
+      }
 
       browser.test.notifyPass("execute-script");
     },
@@ -651,7 +659,7 @@ add_task(async function test_executeScript_with_frameId_and_wrong_host_permissio
             browser.test.fail("Unexpected execution");
           },
         }),
-        /Frame not found, or missing host permission/,
+        "Missing host permission for the tab or frames",
         "got the expected error message"
       );
 
