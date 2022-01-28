@@ -1296,10 +1296,6 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
             }
 
             context->multi = PR_FALSE;
-            if ((key_type != CKK_NSS_CHACHA20) && (key_type != CKK_CHACHA20)) {
-                crv = CKR_KEY_TYPE_INCONSISTENT;
-                break;
-            }
             att = sftk_FindAttribute(key, CKA_VALUE);
             if (att == NULL) {
                 crv = CKR_KEY_HANDLE_INVALID;
