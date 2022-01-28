@@ -27,6 +27,10 @@ namespace js {
 //
 // - Invalidating the shape teleporting optimization. See the "Shape Teleporting
 //   Optimization" SMDOC comment in CacheIR.cpp.
+//
+// There's also a testing mechanism that lets us write tests for Watchtower
+// hooks. See setWatchtowerCallback and addWatchtowerTarget defined in
+// TestingFunctions.cpp.
 class Watchtower {
   static bool watchPropertyAddSlow(JSContext* cx, HandleNativeObject obj,
                                    HandleId id);
@@ -34,10 +38,10 @@ class Watchtower {
 
  public:
   static bool watchesPropertyAdd(NativeObject* obj) {
-    return obj->isUsedAsPrototype();
+    return obj->useWatchtowerTestingCallback() || obj->isUsedAsPrototype();
   }
   static bool watchesProtoChange(JSObject* obj) {
-    return obj->isUsedAsPrototype();
+    return obj->useWatchtowerTestingCallback() || obj->isUsedAsPrototype();
   }
 
   static bool watchPropertyAdd(JSContext* cx, HandleNativeObject obj,
