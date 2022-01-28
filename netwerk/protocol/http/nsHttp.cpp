@@ -971,7 +971,7 @@ nsresult HttpProxyResponseToErrorCode(uint32_t aStatusCode) {
 }
 
 SupportedAlpnType IsAlpnSupported(const nsACString& aAlpn) {
-  if (gHttpHandler->IsHttp3Enabled() &&
+  if (StaticPrefs::network_http_http3_enable() &&
       gHttpHandler->IsHttp3VersionSupported(aAlpn)) {
     return SupportedAlpnType::HTTP_3;
   }
