@@ -860,6 +860,11 @@ void net_EnsurePSMInit();
  */
 bool NS_IsAboutBlank(nsIURI* uri);
 
+/**
+ * Test whether a URI is "about:srcdoc".  |uri| must not be null
+ */
+bool NS_IsAboutSrcdoc(nsIURI* uri);
+
 nsresult NS_GenerateHostPort(const nsCString& host, int32_t port,
                              nsACString& hostLine);
 
