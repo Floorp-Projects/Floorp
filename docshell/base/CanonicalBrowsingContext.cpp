@@ -741,7 +741,7 @@ void CanonicalBrowsingContext::CallOnAllTopDescendants(
 
 void CanonicalBrowsingContext::SessionHistoryCommit(
     uint64_t aLoadId, const nsID& aChangeID, uint32_t aLoadType, bool aPersist,
-    bool aCloneEntryChildren, bool aChannelExpired) {
+    bool aCloneEntryChildren, bool aChannelExpired, uint32_t aCacheKey) {
   MOZ_LOG(gSHLog, LogLevel::Verbose,
           ("CanonicalBrowsingContext::SessionHistoryCommit %p %" PRIu64, this,
            aLoadId));
@@ -755,6 +755,9 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
       }
 
       RefPtr<SessionHistoryEntry> newActiveEntry = mLoadingEntries[i].mEntry;
+      if (aCacheKey != 0) {
+        newActiveEntry->SetCacheKey(aCacheKey);
+      }
 
       if (aChannelExpired) {
         newActiveEntry->SharedInfo()->mExpired = true;
