@@ -68,6 +68,7 @@ private val darkColorPalette = FirefoxColors(
     textDisabled = PhotonColors.LightGrey05A40,
     textWarning = PhotonColors.Red20,
     textAccent = PhotonColors.Violet20,
+    textAccentDisabled = PhotonColors.Violet20A60,
     textOnColor = PhotonColors.LightGrey05,
     textActionPrimary = PhotonColors.LightGrey05,
     textActionSecondary = PhotonColors.DarkGrey90,
@@ -125,6 +126,7 @@ private val lightColorPalette = FirefoxColors(
     textDisabled = PhotonColors.DarkGrey90A40,
     textWarning = PhotonColors.Red80,
     textAccent = PhotonColors.Violet70,
+    textAccentDisabled = PhotonColors.Violet70A80,
     textOnColor = PhotonColors.LightGrey05,
     textActionPrimary = PhotonColors.LightGrey05,
     textActionSecondary = PhotonColors.DarkGrey90,
@@ -187,6 +189,7 @@ class FirefoxColors(
     textDisabled: Color,
     textWarning: Color,
     textAccent: Color,
+    textAccentDisabled: Color,
     textOnColor: Color,
     textActionPrimary: Color,
     textActionSecondary: Color,
@@ -301,6 +304,9 @@ class FirefoxColors(
     // Small heading, Text link
     var textAccent by mutableStateOf(textAccent)
         private set
+    // Small heading, Text link
+    var textAccentDisabled by mutableStateOf(textAccentDisabled)
+        private set
     // Text Inverted/On Color
     var textOnColor by mutableStateOf(textOnColor)
         private set
@@ -411,6 +417,7 @@ class FirefoxColors(
         textDisabled = other.textDisabled
         textWarning = other.textWarning
         textAccent = other.textAccent
+        textAccentDisabled = other.textAccentDisabled
         textOnColor = other.textOnColor
         textActionPrimary = other.textActionPrimary
         textActionSecondary = other.textSecondary
@@ -468,6 +475,7 @@ class FirefoxColors(
         textDisabled = textDisabled,
         textWarning = textWarning,
         textAccent = textAccent,
+        textAccentDisabled = textAccentDisabled,
         textOnColor = textOnColor,
         textActionPrimary = textActionPrimary,
         textActionSecondary = textActionSecondary,

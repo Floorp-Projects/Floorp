@@ -61,6 +61,8 @@
     <color name="fx_mobile_text_color_warning" tools:ignore="UnusedResources">@color/photonRed20</color>
     <!-- Small heading, Text link -->
     <color name="fx_mobile_text_color_accent">@color/photonViolet20</color>
+    <!-- Small heading, Text link -->
+    <color name="fx_mobile_text_color_accent_disabled" tools:ignore="UnusedResources">@color/photonViolet20A60</color>
     <!-- Text Inverted/On Color -->
     <color name="fx_mobile_text_color_oncolor" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <!-- Action Primary text -->
