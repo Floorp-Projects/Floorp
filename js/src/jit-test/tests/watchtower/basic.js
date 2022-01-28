@@ -28,3 +28,14 @@ add-prop: getter
 proto-change
 proto-change
 add-prop: 12345`);
+
+// Object.assign edge case.
+o = {};
+o.x = 1;
+delete o.x;
+let from = {x: 1, y: 2, z: 3, a: 4};
+log = [];
+addWatchtowerTarget(o);
+addWatchtowerTarget(from);
+Object.assign(o, from);
+assertEq(log.join("\n"), "add-prop: x\nadd-prop: y\nadd-prop: z\nadd-prop: a");

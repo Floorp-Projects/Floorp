@@ -36,7 +36,8 @@
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/RegExpObject.h"
 #include "vm/StringObject.h"
-#include "vm/ToSource.h"       // js::ValueToSource
+#include "vm/ToSource.h"  // js::ValueToSource
+#include "vm/Watchtower.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 
 #ifdef ENABLE_RECORD_TUPLE
@@ -910,8 +911,8 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
   // enumerable/writable/configurable data properties, try to use its shape.
   if (toWasEmpty && !hasPropsWithNonDefaultAttrs &&
       toPlain->canReuseShapeForNewProperties(fromPlain->shape())) {
-    MOZ_ASSERT(!toPlain->isUsedAsPrototype(),
-               "prototypes require extra checks for shape teleporting");
+    MOZ_ASSERT(!Watchtower::watchesPropertyAdd(toPlain),
+               "watched objects require Watchtower calls");
     Shape* newShape = fromPlain->shape();
     if (!toPlain->setShapeAndUpdateSlots(cx, newShape)) {
       return false;
