@@ -29,22 +29,37 @@ sealed class PromptRequest(
      * Value type that represents a request for a single choice prompt.
      * @property choices All the possible options.
      * @property onConfirm A callback indicating which option was selected.
+     * @property onDismiss A callback executed when dismissed.
      */
-    data class SingleChoice(val choices: Array<Choice>, val onConfirm: (Choice) -> Unit) : PromptRequest()
+    data class SingleChoice(
+        val choices: Array<Choice>,
+        val onConfirm: (Choice) -> Unit,
+        override val onDismiss: () -> Unit
+    ) : PromptRequest(), Dismissible
 
     /**
      * Value type that represents a request for a multiple choice prompt.
      * @property choices All the possible options.
      * @property onConfirm A callback indicating witch options has been selected.
+     * @property onDismiss A callback executed when dismissed.
      */
-    data class MultipleChoice(val choices: Array<Choice>, val onConfirm: (Array<Choice>) -> Unit) : PromptRequest()
+    data class MultipleChoice(
+        val choices: Array<Choice>,
+        val onConfirm: (Array<Choice>) -> Unit,
+        override val onDismiss: () -> Unit
+    ) : PromptRequest(), Dismissible
 
     /**
      * Value type that represents a request for a menu choice prompt.
      * @property choices All the possible options.
      * @property onConfirm A callback indicating which option was selected.
+     * @property onDismiss A callback executed when dismissed.
      */
-    data class MenuChoice(val choices: Array<Choice>, val onConfirm: (Choice) -> Unit) : PromptRequest()
+    data class MenuChoice(
+        val choices: Array<Choice>,
+        val onConfirm: (Choice) -> Unit,
+        override val onDismiss: () -> Unit
+    ) : PromptRequest(), Dismissible
 
     /**
      * Value type that represents a request for an alert prompt.
@@ -141,7 +156,9 @@ sealed class PromptRequest(
      * @property type indicate which [Type] of selection de user wants.
      * @property onConfirm callback that is called when the date is selected.
      * @property onClear callback that is called when the user requests the picker to be clear up.
+     * @property onDismiss A callback executed when dismissed.
      */
+    @Suppress("LongParameterList")
     class TimeSelection(
         val title: String,
         val initialDate: java.util.Date,
@@ -149,8 +166,9 @@ sealed class PromptRequest(
         val maximumDate: java.util.Date?,
         val type: Type = Type.DATE,
         val onConfirm: (java.util.Date) -> Unit,
-        val onClear: () -> Unit
-    ) : PromptRequest() {
+        val onClear: () -> Unit,
+        override val onDismiss: () -> Unit
+    ) : PromptRequest(), Dismissible {
         enum class Type {
             DATE, DATE_AND_TIME, TIME, MONTH
         }
@@ -172,8 +190,8 @@ sealed class PromptRequest(
         val captureMode: FacingMode = FacingMode.NONE,
         val onSingleFileSelected: (Context, Uri) -> Unit,
         val onMultipleFilesSelected: (Context, Array<Uri>) -> Unit,
-        val onDismiss: () -> Unit
-    ) : PromptRequest() {
+        override val onDismiss: () -> Unit
+    ) : PromptRequest(), Dismissible {
 
         /**
          * @deprecated Use the new primary constructor.

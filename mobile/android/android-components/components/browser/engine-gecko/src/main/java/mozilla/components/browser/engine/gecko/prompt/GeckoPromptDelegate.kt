@@ -181,6 +181,11 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
         val choices = convertToChoices(geckoPrompt.choices)
+
+        val onDismiss: () -> Unit = {
+            geckoPrompt.dismissSafely(geckoResult)
+        }
+
         val onConfirmSingleChoice: (Choice) -> Unit = { selectedChoice ->
             if (!geckoPrompt.isComplete) {
                 geckoResult.complete(geckoPrompt.confirm(selectedChoice.id))
@@ -196,15 +201,18 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         val promptRequest = when (geckoPrompt.type) {
             GECKO_PROMPT_CHOICE_TYPE.SINGLE -> SingleChoice(
                 choices,
-                onConfirmSingleChoice
+                onConfirmSingleChoice,
+                onDismiss
             )
             GECKO_PROMPT_CHOICE_TYPE.MENU -> MenuChoice(
                 choices,
-                onConfirmSingleChoice
+                onConfirmSingleChoice,
+                onDismiss
             )
             GECKO_PROMPT_CHOICE_TYPE.MULTIPLE -> MultipleChoice(
                 choices,
-                onConfirmMultipleSelection
+                onConfirmMultipleSelection,
+                onDismiss
             )
             else -> throw InvalidParameterException("${geckoPrompt.type} is not a valid Gecko @Choice.ChoiceType")
         }
@@ -299,6 +307,11 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                 geckoResult.complete(prompt.confirm(it))
             }
         }
+
+        val onDismiss: () -> Unit = {
+            prompt.dismissSafely(geckoResult)
+        }
+
         val onClear: () -> Unit = {
             onConfirm("")
         }
@@ -322,7 +335,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             prompt.maxValue,
             onClear,
             format,
-            onConfirm
+            onConfirm,
+            onDismiss
         )
 
         return geckoResult
@@ -614,7 +628,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         maxDateString: String?,
         onClear: () -> Unit,
         format: String,
-        onConfirm: (String) -> Unit
+        onConfirm: (String) -> Unit,
+        onDismiss: () -> Unit
     ) {
         val initialDate = initialDateString.toDate(format)
         val minDate = if (minDateString.isNullOrEmpty()) null else minDateString.toDate()
@@ -640,7 +655,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     maxDate,
                     selectionType,
                     onSelect,
-                    onClear
+                    onClear,
+                    onDismiss
                 )
             )
         }

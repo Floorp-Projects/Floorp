@@ -35,28 +35,28 @@ class PromptRequestTest {
 
     @Test
     fun `SingleChoice`() {
-        val single = SingleChoice(emptyArray()) {}
+        val single = SingleChoice(emptyArray(), {}, {})
         single.onConfirm(Choice(id = "", label = ""))
         assertNotNull(single.choices)
     }
 
     @Test
     fun `MultipleChoice`() {
-        val multiple = MultipleChoice(emptyArray()) {}
+        val multiple = MultipleChoice(emptyArray(), {}, {})
         multiple.onConfirm(arrayOf(Choice(id = "", label = "")))
         assertNotNull(multiple.choices)
     }
 
     @Test
     fun `MenuChoice`() {
-        val menu = MenuChoice(emptyArray()) {}
+        val menu = MenuChoice(emptyArray(), {}, {})
         menu.onConfirm(Choice(id = "", label = ""))
         assertNotNull(menu.choices)
     }
 
     @Test
     fun `Alert`() {
-        val alert = Alert("title", "message", true, {}) {}
+        val alert = Alert("title", "message", true, {}, {})
 
         assertEquals(alert.title, "title")
         assertEquals(alert.message, "message")
@@ -80,8 +80,9 @@ class PromptRequestTest {
             "label",
             "value",
             true,
+            { _, _ -> },
             {}
-        ) { _, _ -> }
+        )
 
         assertEquals(textPrompt.title, "title")
         assertEquals(textPrompt.inputLabel, "label")
@@ -100,8 +101,10 @@ class PromptRequestTest {
             Date(),
             Date(),
             Type.DATE,
+            {},
+            {},
             {}
-        ) {}
+        )
 
         assertEquals(dateRequest.title, "title")
         assertEquals(dateRequest.type, Type.DATE)
@@ -120,8 +123,9 @@ class PromptRequestTest {
             true,
             PromptRequest.File.FacingMode.NONE,
             { _, _ -> },
-            { _, _ -> }
-        ) {}
+            { _, _ -> },
+            {}
+        )
 
         assertTrue(filePickerRequest.mimeTypes.isEmpty())
         assertTrue(filePickerRequest.isMultipleFilesSelection)
@@ -145,9 +149,9 @@ class PromptRequestTest {
             false,
             false,
             false,
-            { _, _ -> }
-        ) {
-        }
+            { _, _ -> },
+            {}
+        )
 
         assertEquals(promptRequest.title, "title")
         assertEquals(promptRequest.message, "message")
@@ -199,8 +203,9 @@ class PromptRequestTest {
             "neutral",
             onConfirmPositiveButton,
             onConfirmNegativeButton,
-            onConfirmNeutralButton
-        ) {}
+            onConfirmNeutralButton,
+            {}
+        )
 
         assertEquals(confirmRequest.title, "title")
         assertEquals(confirmRequest.message, "message")
@@ -219,7 +224,7 @@ class PromptRequestTest {
         val onLoginConfirm: (LoginEntry) -> Unit = {}
         val entry = LoginEntry("origin", username = "username", password = "password")
 
-        val loginSaveRequest = SaveLoginPrompt(0, listOf(entry), onLoginDismiss, onLoginConfirm)
+        val loginSaveRequest = SaveLoginPrompt(0, listOf(entry), onLoginConfirm, onLoginDismiss)
 
         assertEquals(loginSaveRequest.logins, listOf(entry))
         assertEquals(loginSaveRequest.hint, 0)
@@ -235,7 +240,7 @@ class PromptRequestTest {
         val login = Login(guid = "test-guid", origin = "origin", username = "username", password = "password")
 
         val loginSelectRequest =
-            SelectLoginPrompt(listOf(login), onLoginDismiss, onLoginConfirm)
+            SelectLoginPrompt(listOf(login), onLoginConfirm, onLoginDismiss)
 
         assertEquals(loginSelectRequest.logins, listOf(login))
 

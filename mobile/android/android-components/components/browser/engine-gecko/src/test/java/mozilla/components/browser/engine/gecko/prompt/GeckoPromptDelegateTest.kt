@@ -79,7 +79,7 @@ class GeckoPromptDelegateTest {
     @Test
     fun `onChoicePrompt called with CHOICE_TYPE_SINGLE must provide a SingleChoice PromptRequest`() {
         val mockSession = GeckoEngineSession(runtime)
-        var promptRequestSingleChoice: PromptRequest = MultipleChoice(arrayOf()) {}
+        var promptRequestSingleChoice: PromptRequest = MultipleChoice(arrayOf(), {}, {})
         var confirmWasCalled = false
         val gecko = GeckoPromptDelegate(mockSession)
         val geckoChoice = object : GeckoChoice() {}
@@ -117,7 +117,7 @@ class GeckoPromptDelegateTest {
     @Test
     fun `onChoicePrompt called with CHOICE_TYPE_MULTIPLE must provide a MultipleChoice PromptRequest`() {
         val mockSession = GeckoEngineSession(runtime)
-        var promptRequestSingleChoice: PromptRequest = SingleChoice(arrayOf()) {}
+        var promptRequestSingleChoice: PromptRequest = SingleChoice(arrayOf(), {}, {})
         var confirmWasCalled = false
         val gecko = GeckoPromptDelegate(mockSession)
         val mockGeckoChoice = object : GeckoChoice() {}
@@ -154,7 +154,7 @@ class GeckoPromptDelegateTest {
     @Test
     fun `onChoicePrompt called with CHOICE_TYPE_MENU must provide a MenuChoice PromptRequest`() {
         val mockSession = GeckoEngineSession(runtime)
-        var promptRequestSingleChoice: PromptRequest = PromptRequest.MenuChoice(arrayOf()) {}
+        var promptRequestSingleChoice: PromptRequest = PromptRequest.MenuChoice(arrayOf(), {}, {})
         var confirmWasCalled = false
         val gecko = GeckoPromptDelegate(mockSession)
         val geckoChoice = object : GeckoChoice() {}
