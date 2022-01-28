@@ -128,7 +128,6 @@ addTest(async function testMediaQuery() {
 
   const ruleWithMedia = applied[1].rule;
   is(ruleWithMedia.type, 1, "Entry 1 is a rule style");
-  is(ruleWithMedia.parentRule.type, 4, "Entry 1's parent rule is a media rule");
   is(ruleWithMedia.ancestorData[0].type, "media", "Entry 1's rule ancestor data holds the media rule data...");
   is(ruleWithMedia.ancestorData[0].value, "screen", "...with the expected value");
 
