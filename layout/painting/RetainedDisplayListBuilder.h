@@ -195,6 +195,9 @@ struct RetainedDisplayListBuilder {
    * the frames in the modified frame lists.
    */
   void ClearFramesWithProps();
+
+  void ClearReuseableDisplayItems() { mBuilder.ClearReuseableDisplayItems(); }
+
   void AddSizeOfIncludingThis(nsWindowSizes&) const;
 
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(Cached, RetainedDisplayListBuilder)
@@ -272,9 +275,6 @@ struct RetainedDisplayListBuilder {
   RetainedDisplayList mList;
   WeakFrame mPreviousCaret;
   RetainedDisplayListMetrics mMetrics;
-
-  // Stores reusable items collected during display list preprocessing.
-  nsTArray<nsDisplayItem*> mPreviousItems;
 };
 
 namespace RDLUtils {
