@@ -401,10 +401,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
   virtual mozilla::ipc::IPCResult RecvActionCount(const uint64_t& aID,
                                                   uint8_t* aCount) override;
 
-  virtual mozilla::ipc::IPCResult RecvActionDescriptionAt(
-      const uint64_t& aID, const uint8_t& aIndex,
-      nsString* aDescription) override;
-
   virtual mozilla::ipc::IPCResult RecvActionNameAt(const uint64_t& aID,
                                                    const uint8_t& aIndex,
                                                    nsString* aName) override;

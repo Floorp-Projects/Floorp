@@ -749,19 +749,26 @@ bool RemoteAccessible::DoAction(uint8_t aIndex) {
   return success;
 }
 
-uint8_t RemoteAccessible::ActionCount() {
+uint8_t RemoteAccessible::ActionCount() const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::ActionCount();
+  }
+
   uint8_t count = 0;
   Unused << mDoc->SendActionCount(mID, &count);
   return count;
 }
 
-void RemoteAccessible::ActionDescriptionAt(uint8_t aIndex,
-                                           nsString& aDescription) {
-  Unused << mDoc->SendActionDescriptionAt(mID, aIndex, &aDescription);
-}
+void RemoteAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    RemoteAccessibleBase<RemoteAccessible>::ActionNameAt(aIndex, aName);
+    return;
+  }
 
-void RemoteAccessible::ActionNameAt(uint8_t aIndex, nsString& aName) {
-  Unused << mDoc->SendActionNameAt(mID, aIndex, &aName);
+  nsAutoString name;
+  Unused << mDoc->SendActionNameAt(mID, aIndex, &name);
+
+  aName.Assign(name);
 }
 
 KeyBinding RemoteAccessible::AccessKey() {
