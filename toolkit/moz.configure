@@ -2522,15 +2522,18 @@ option(
     env="MOZ_APP_REMOTINGNAME",
     nargs=1,
     help="Used for the internal program name, which affects profile name "
-    "and remoting. If not set, defaults to MOZ_APP_NAME.",
+    "and remoting. If not set, defaults to MOZ_APP_NAME if the update channel "
+    "is release, and MOZ_APP_NAME-MOZ_UPDATE_CHANNEL otherwise.",
 )
 
 
-@depends("MOZ_APP_REMOTINGNAME", moz_app_name)
-def moz_app_remotingname(value, moz_app_name):
+@depends("MOZ_APP_REMOTINGNAME", moz_app_name, update_channel)
+def moz_app_remotingname(value, moz_app_name, update_channel):
     if value:
         return value[0]
-    return moz_app_name
+    if update_channel == "release":
+        return moz_app_name
+    return moz_app_name + "-" + update_channel
 
 
 set_config("MOZ_APP_REMOTINGNAME", moz_app_remotingname)
