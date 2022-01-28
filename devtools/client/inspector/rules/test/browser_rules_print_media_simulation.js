@@ -28,6 +28,11 @@ add_task(async function() {
   info("Select a div that will change according to print simulation");
   await selectNode("div", inspector);
   ok(ruleViewHasColor("#f00"), "The rule view shows the expected initial rule");
+  is(
+    getRuleViewAncestorRulesDataElementByIndex(view, 1),
+    null,
+    "No media query information are displayed initially"
+  );
 
   info("Click on the button and wait for print media to be applied");
   button.click();
@@ -40,6 +45,11 @@ add_task(async function() {
     true,
     "The rules view was updated with the rule view from the print media query"
   );
+  is(
+    getRuleViewAncestorRulesDataTextByIndex(view, 1),
+    "@media print",
+    "Media queries information are displayed"
+  );
 
   info("Select the node from the remote iframe");
   await selectNodeInFrames(["iframe", "html"], inspector);
@@ -47,6 +57,11 @@ add_task(async function() {
   ok(
     ruleViewHasColor("#0ff"),
     "The simulation is also applied on the remote iframe"
+  );
+  is(
+    getRuleViewAncestorRulesDataTextByIndex(view, 1),
+    "@media print",
+    "Media queries information are displayed for the node on the remote iframe as well"
   );
 
   info("Select the top level div again");
@@ -59,10 +74,20 @@ add_task(async function() {
   ok(true, "The button is no longer checked");
 
   await waitFor(() => ruleViewHasColor("#f00"));
+  is(
+    getRuleViewAncestorRulesDataElementByIndex(view, 1),
+    null,
+    "media query is no longer displayed"
+  );
 
   info("Select the node from the remote iframe again");
   await selectNodeInFrames(["iframe", "html"], inspector);
 
   await waitFor(() => ruleViewHasColor("#ff0"));
   ok(true, "The simulation stopped on the remote iframe as well");
+  is(
+    getRuleViewAncestorRulesDataElementByIndex(view, 1),
+    null,
+    "media query is no longer displayed on the remote iframe as well"
+  );
 });
