@@ -1198,9 +1198,13 @@ richlistitem .text-link:hover {
   margin-inline-start: 6px;
 }
 
+#moreFromMozillaCategory-header .title {
+  margin-block-end: 4px;
+}
+
 #moreFromMozillaCategory-header .subtitle {
   color: var(--in-content-text-color);
-  margin: 4px 0 10px;
+  margin-block-end: 24px;
   line-height: 1.4em;
 }
 
@@ -1209,7 +1213,7 @@ richlistitem .text-link:hover {
 }
 
 #moreFromMozillaCategory .product-title {
-  margin: 4px 0;
+  margin: 4px 0 3px;
   background-repeat: no-repeat;
   background-size: contain;
   padding-inline-start: 30px;
@@ -1226,8 +1230,8 @@ richlistitem .text-link:hover {
 /* The firefox-mobile product has three columns and needs to constrain the
  * .product-info section to one of them.
  */
-#firefox-mobile-vbox.advanced .product-info {
-  min-width: 200px;
+#firefox-mobile-div.advanced .product-info {
+  max-width: 200px;
 }
 
 #moreFromMozillaCategory .product-img {
@@ -1242,6 +1246,7 @@ richlistitem .text-link:hover {
 }
 
 #moreFromMozillaCategory .description {
+  display: inline flow-root;
   color: var(--in-content-text-color);
   padding-inline-start: 30px;
   margin: 2px 0;
@@ -1253,7 +1258,7 @@ richlistitem .text-link:hover {
 }
 
 #moreFromMozillaCategory .small-button {
-  margin-block: 16px;
+  margin-block: 14px 2px;
   margin-inline: 30px 0;
 }
 
@@ -1261,7 +1266,7 @@ richlistitem .text-link:hover {
   margin: 24px 0;
 }
 
-#moreFromMozillaCategory vbox.advanced {
+#moreFromMozillaCategory .mozilla-product-item.advanced {
   box-shadow: 0 2px 6px rgba(58, 57, 68, 0.2);
   border-radius: 4px;
 
@@ -1271,7 +1276,7 @@ richlistitem .text-link:hover {
 }
 
 @media (prefers-color-scheme: dark) {
-  #moreFromMozillaCategory vbox.advanced {
+  #moreFromMozillaCategory .mozilla-product-item.advanced {
     background-color: rgb(66, 65, 77);
   }
 }
@@ -1282,12 +1287,13 @@ richlistitem .text-link:hover {
 
 #moreFromMozillaCategory .text-link {
   line-height: 1.4em;
+
   margin-block: 2px 0;
   margin-inline: 6px 0;
 }
 
 #moreFromMozillaCategory .simple .text-link {
-  display: block;
+  display: inline flow-root;
   margin-inline-start: 4px;
 }
 
@@ -1308,6 +1314,10 @@ richlistitem .text-link:hover {
   background-image: url("chrome://browser/skin/preferences/img-mobile.svg");
 }
 
+.advanced #firefox-mobile-image {
+  display: flex;
+}
+
 #mozilla-vpn-image {
   background-image: url("chrome://browser/skin/preferences/img-vpn.svg");
 }
@@ -1323,13 +1333,13 @@ richlistitem .text-link:hover {
 .qr-code-box:not([hidden="true"]) {
   max-width: 320px; /* a unit better than px for this & next? */
   min-height: 204px;
-  margin-block: 10px;
+  margin-block: 10px 0;
   margin-inline-start: 30px;
   background-color: var(--in-content-box-info-background);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-around;
+  justify-content: space-evenly;
   border-radius: 4px;
 }
 
@@ -1381,7 +1391,7 @@ richlistitem .text-link:hover {
 
 .qr-code-box-title {
   font-size: .87em;
-  font-weight: 600;
+  font-weight: normal;
   line-height: 1.42em;
 
   text-align: center;
@@ -1391,11 +1401,13 @@ richlistitem .text-link:hover {
 }
 
 .simple .qr-code-box-title {
-  width: 302px;
+  margin-block: 0;
+  width: 296px;
 }
 
 .simple .qr-code-box {
-  padding: 4px 20px 24px;
+  padding-inline: 24px;
+  padding-block: 20px
 }
 
 .simple .qr-code-box-image {
@@ -1408,18 +1420,16 @@ richlistitem .text-link:hover {
   margin-block: revert;
 }
 
-#moreFromMozillaCategory .qr-code-button {
+#moreFromMozillaCategory .qr-code-link {
   font-size: .87em;
-  font-weight: 400;
   line-height: 1.42em;
-  flex: 2 0 auto;
-  margin-block-start: 10px;
+  margin-block-start: 0;
   margin-inline: 0; /* make sure we're correctly centered by overriding button rule */
 }
 
-#moreFromMozillaCategory .advanced .qr-code-button {
+#moreFromMozillaCategory .advanced .qr-code-link {
   margin-inline: 16px;
-  padding-block-start: 30px;
+  margin-block-start: 30px;
 }
 
 @media (prefers-color-scheme: dark) {

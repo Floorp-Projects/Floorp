@@ -8,6 +8,13 @@ job-defaults:
     max-run-time: 5400
     test-manifest-loader: null  # don't load tests in the taskgraph
     variants: ["fission"]
+    run-on-projects:
+        by-variant:
+            fission: built-projects
+            default:
+                by-test-platform:
+                    linux.*: ['trunk']
+                    default: []
     mozharness:
         script: firefox_ui_tests/functional.py
         config:
