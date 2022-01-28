@@ -53,6 +53,11 @@ LOCAL_INCLUDES += [
     "/xpcom/build",
 ]
 
+# The pthred_create() interposer needs to be linked as early as possible so
+# that it will appear before libpthread when resolving symbols.
+if CONFIG["OS_ARCH"] == "Linux" and CONFIG["MOZ_CRASHREPORTER"]:
+    USE_LIBS += ["pthread_create_interposer"]
+
 if CONFIG["LIBFUZZER"]:
     USE_LIBS += ["fuzzer"]
     LOCAL_INCLUDES += [
