@@ -120,7 +120,7 @@ You can learn more about E10S [from this blog post](https://timtaubert.de/blog/2
 
 One of the direct consequences of E10S on tests is that you cannot retrieve and manipulate objects from the content page as you'd do without E10S.
 
-So when creating a new test, if this test needs to access the content page in any way, you can use [the message manager](https://developer.mozilla.org/en-US/docs/The_message_manager) to communicate with a script loaded in the content process to do things for you instead of accessing objects in the page directly.
+So when creating a new test, if this test needs to access the content page in any way, you can use [the message manager or JSActors](https://firefox-source-docs.mozilla.org/dom/ipc/jsactors.html) to communicate with a script loaded in the content process to do things for you instead of accessing objects in the page directly.
 
 You can use the helper `ContentTask.spawn()` for this. See [this list of DevTools tests that use that helper for examples](https://searchfox.org/mozilla-central/search?q=ContentTask.spawn%28&path=devtools%2Fclient).
 
