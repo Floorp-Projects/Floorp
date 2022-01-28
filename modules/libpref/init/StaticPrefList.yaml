@@ -8769,12 +8769,6 @@
   type: RelaxedAtomicBool
   value: false
   mirror: always
-
-# Use DRM display for VA-API ffmpeg video decoding on Linux
-- name: media.ffmpeg.vaapi-drm-display.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
 #endif # MOZ_WAYLAND
 #endif  # MOZ_FFMPEG
 
