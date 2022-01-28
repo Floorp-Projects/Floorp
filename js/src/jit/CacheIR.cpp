@@ -226,6 +226,10 @@ jsid CacheIRCloner::getIdField(uint32_t stubOffset) {
 const Value CacheIRCloner::getValueField(uint32_t stubOffset) {
   return Value::fromRawBits(uint64_t(readStubInt64(stubOffset)));
 }
+double CacheIRCloner::getDoubleField(uint32_t stubOffset) {
+  uint64_t bits = uint64_t(readStubInt64(stubOffset));
+  return mozilla::BitwiseCast<double>(bits);
+}
 
 IRGenerator::IRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
                          CacheKind cacheKind, ICState state)

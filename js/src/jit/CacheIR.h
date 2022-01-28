@@ -243,6 +243,7 @@ class StubField {
     RawInt64,
     First64BitType = RawInt64,
     Value,
+    Double,
 
     Limit
   };

@@ -6,6 +6,7 @@
 
 #include "jit/WarpCacheIRTranspiler.h"
 
+#include "mozilla/Casting.h"
 #include "mozilla/Maybe.h"
 
 #include "jsmath.h"
@@ -183,6 +184,11 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
     uint64_t raw =
         static_cast<uint64_t>(stubInfo_->getStubRawInt64(stubData_, offset));
     return Value::fromRawBits(raw);
+  }
+  double doubleStubField(uint32_t offset) {
+    uint64_t raw =
+        static_cast<uint64_t>(stubInfo_->getStubRawInt64(stubData_, offset));
+    return mozilla::BitwiseCast<double>(raw);
   }
 
   // This must only be called when the caller knows the object is tenured and
