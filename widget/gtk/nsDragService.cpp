@@ -49,10 +49,6 @@
 #include "ScreenHelperGTK.h"
 #include "nsArrayUtils.h"
 #include "nsStringStream.h"
-#ifdef MOZ_WAYLAND
-#  include "nsClipboardWayland.h"
-#  include "gfxPlatformGtk.h"
-#endif
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsEscape.h"
@@ -125,13 +121,7 @@ nsDragService::nsDragService()
     : mScheduledTask(eDragTaskNone),
       mTaskSource(0),
       mScheduledTaskIsRunning(false),
-      mCachedDragContext()
-#ifdef MOZ_WAYLAND
-      ,
-      mPendingWaylandDataOffer(nullptr),
-      mTargetWaylandDataOffer(nullptr)
-#endif
-{
+      mCachedDragContext() {
   // We have to destroy the hidden widget before the event loop stops
   // running.
   nsCOMPtr<nsIObserverService> obsServ =
@@ -528,9 +518,6 @@ nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
 
   // We're done with the drag context.
   mTargetDragContextForRemote = nullptr;
-#ifdef MOZ_WAYLAND
-  mTargetWaylandDataOfferForRemote = nullptr;
-#endif
   mTargetWindow = nullptr;
   mPendingWindow = nullptr;
   mCachedDragContext = 0;
@@ -989,12 +976,6 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
   if (mTargetDragContext) {
     tmp = gdk_drag_context_list_targets(mTargetDragContext);
   }
-#ifdef MOZ_WAYLAND
-  else if (mTargetWaylandDataOffer) {
-    tmp = mTargetWaylandDataOffer->GetDragTargets();
-  }
-  GList* tmp_head = tmp;
-#endif
 
   for (; tmp; tmp = tmp->next) {
     /* Bug 331198 */
@@ -1033,14 +1014,6 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
     g_free(name);
   }
 
-#ifdef MOZ_WAYLAND
-  // mTargetWaylandDataOffer->GetDragTargets allocates the list
-  // so we need to free it here.
-  if (!mTargetDragContext && tmp_head) {
-    g_list_free(tmp_head);
-  }
-#endif
-
   if (!*_retval) {
     LOGDRAGSERVICE(("  %s is not supported", aDataFlavor));
   }
@@ -1073,33 +1046,6 @@ void nsDragService::ReplyToDragMotion(GdkDragContext* aDragContext) {
   LOGDRAGSERVICE(("  gdk_drag_status() action %d", action));
   gdk_drag_status(aDragContext, action, mTargetTime);
 }
-
-#ifdef MOZ_WAYLAND
-void nsDragService::ReplyToDragMotion(RefPtr<DataOffer> aDragContext) {
-  LOGDRAGSERVICE(("nsDragService::ReplyToDragMotion %d", mCanDrop));
-
-  GdkDragAction action = (GdkDragAction)0;
-  if (mCanDrop) {
-    // notify the dragger if we can drop
-    switch (mDragAction) {
-      case DRAGDROP_ACTION_COPY:
-        action = GDK_ACTION_COPY;
-        break;
-      case DRAGDROP_ACTION_LINK:
-        action = GDK_ACTION_LINK;
-        break;
-      case DRAGDROP_ACTION_NONE:
-        action = (GdkDragAction)0;
-        break;
-      default:
-        action = GDK_ACTION_MOVE;
-        break;
-    }
-  }
-
-  aDragContext->SetDragStatus(action);
-}
-#endif
 
 void nsDragService::EnsureCachedDataValidForContext(
     GdkDragContext* aDragContext) {
@@ -1167,12 +1113,6 @@ bool nsDragService::IsTargetContextList(void) {
   if (mTargetDragContext) {
     tmp = gdk_drag_context_list_targets(mTargetDragContext);
   }
-#ifdef MOZ_WAYLAND
-  GList* tmp_head = nullptr;
-  if (mTargetWaylandDataOffer) {
-    tmp_head = tmp = mTargetWaylandDataOffer->GetDragTargets();
-  }
-#endif
 
   // walk the list of context targets and see if one of them is a list
   // of items.
@@ -1185,14 +1125,6 @@ bool nsDragService::IsTargetContextList(void) {
     g_free(name);
     if (retval) break;
   }
-
-#ifdef MOZ_WAYLAND
-  // mTargetWaylandDataOffer->GetDragTargets allocates the list
-  // so we need to free it here.
-  if (mTargetWaylandDataOffer && tmp_head) {
-    g_list_free(tmp_head);
-  }
-#endif
 
   return retval;
 }
@@ -1253,13 +1185,6 @@ void nsDragService::GetTargetDragData(GdkAtom aFlavor,
       gtk_main_iteration();
     }
   }
-#ifdef MOZ_WAYLAND
-  else if (mTargetWaylandDataOffer) {
-    mTargetDragData = mTargetWaylandDataOffer->GetDragData(
-        gdk_atom_name(aFlavor), &mTargetDragDataLen);
-    mTargetDragDataReceived = true;
-  }
-#endif
 
 #ifdef MOZ_LOGGING
   if (mTargetDragDataLen && mTargetDragData) {
@@ -1472,8 +1397,7 @@ void nsDragService::SourceEndDragSession(GdkDragContext* aContext,
   }
 
   // Schedule the appropriate drag end dom events.
-  Schedule(eDragTaskSourceEnd, nullptr, nullptr, nullptr,
-           LayoutDeviceIntPoint(), 0);
+  Schedule(eDragTaskSourceEnd, nullptr, nullptr, LayoutDeviceIntPoint(), 0);
 }
 
 static void CreateURIList(nsIArray* aItems, nsACString& aURIList) {
@@ -2160,7 +2084,6 @@ static void invisibleSourceDragEnd(GtkWidget* aWidget, GdkDragContext* aContext,
 
 gboolean nsDragService::ScheduleMotionEvent(nsWindow* aWindow,
                                             GdkDragContext* aDragContext,
-                                            RefPtr<DataOffer> aWaylandDataOffer,
                                             LayoutDeviceIntPoint aWindowPoint,
                                             guint aTime) {
   if (aDragContext && mScheduledTask == eDragTaskMotion) {
@@ -2174,27 +2097,23 @@ gboolean nsDragService::ScheduleMotionEvent(nsWindow* aWindow,
 
   // Returning TRUE means we'll reply with a status message, unless we first
   // get a leave.
-  return Schedule(eDragTaskMotion, aWindow, aDragContext, aWaylandDataOffer,
-                  aWindowPoint, aTime);
+  return Schedule(eDragTaskMotion, aWindow, aDragContext, aWindowPoint, aTime);
 }
 
 void nsDragService::ScheduleLeaveEvent() {
   // We don't know at this stage whether a drop signal will immediately
   // follow.  If the drop signal gets sent it will happen before we return
   // to the main loop and the scheduled leave task will be replaced.
-  if (!Schedule(eDragTaskLeave, nullptr, nullptr, nullptr,
-                LayoutDeviceIntPoint(), 0)) {
+  if (!Schedule(eDragTaskLeave, nullptr, nullptr, LayoutDeviceIntPoint(), 0)) {
     NS_WARNING("Drag leave after drop");
   }
 }
 
 gboolean nsDragService::ScheduleDropEvent(nsWindow* aWindow,
                                           GdkDragContext* aDragContext,
-                                          RefPtr<DataOffer> aWaylandDataOffer,
                                           LayoutDeviceIntPoint aWindowPoint,
                                           guint aTime) {
-  if (!Schedule(eDragTaskDrop, aWindow, aDragContext, aWaylandDataOffer,
-                aWindowPoint, aTime)) {
+  if (!Schedule(eDragTaskDrop, aWindow, aDragContext, aWindowPoint, aTime)) {
     NS_WARNING("Additional drag drop ignored");
     return FALSE;
   }
@@ -2217,7 +2136,6 @@ const char* nsDragService::GetDragServiceTaskName(DragTask aTask) {
 
 gboolean nsDragService::Schedule(DragTask aTask, nsWindow* aWindow,
                                  GdkDragContext* aDragContext,
-                                 RefPtr<DataOffer> aWaylandDataOffer,
                                  LayoutDeviceIntPoint aWindowPoint,
                                  guint aTime) {
   // If there is an existing leave or motion task scheduled, then that
@@ -2242,9 +2160,6 @@ gboolean nsDragService::Schedule(DragTask aTask, nsWindow* aWindow,
   mScheduledTask = aTask;
   mPendingWindow = aWindow;
   mPendingDragContext = aDragContext;
-#ifdef MOZ_WAYLAND
-  mPendingWaylandDataOffer = aWaylandDataOffer;
-#endif
   mPendingWindowPoint = aWindowPoint;
   mPendingTime = aTime;
 
@@ -2335,9 +2250,6 @@ gboolean nsDragService::RunScheduledTask() {
                   mTargetWindow.get(), mTargetWidget.get()));
 
   mTargetDragContext = std::move(mPendingDragContext);
-#ifdef MOZ_WAYLAND
-  mTargetWaylandDataOffer = std::move(mPendingWaylandDataOffer);
-#endif
   mTargetTime = mPendingTime;
 
   // http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#drag-and-drop-processing-model
@@ -2370,9 +2282,6 @@ gboolean nsDragService::RunScheduledTask() {
     if (task == eDragTaskMotion) {
       if (TakeDragEventDispatchedToChildProcess()) {
         mTargetDragContextForRemote = mTargetDragContext;
-#ifdef MOZ_WAYLAND
-        mTargetWaylandDataOfferForRemote = mTargetWaylandDataOffer;
-#endif
       } else {
         // Reply to tell the source whether we can drop and what
         // action would be taken.
@@ -2402,9 +2311,6 @@ gboolean nsDragService::RunScheduledTask() {
   LOGDRAGSERVICE(("  clear mTargetWindow mTargetWidget and other data\n"));
   mTargetWidget = nullptr;
   mTargetDragContext = nullptr;
-#ifdef MOZ_WAYLAND
-  mTargetWaylandDataOffer = nullptr;
-#endif
 
   // If we got another drag signal while running the sheduled task, that
   // must have happened while running a nested event loop.  Leave the task
@@ -2437,11 +2343,6 @@ void nsDragService::UpdateDragAction() {
   if (mTargetDragContext) {
     gdkAction = gdk_drag_context_get_actions(mTargetDragContext);
   }
-#ifdef MOZ_WAYLAND
-  else if (mTargetWaylandDataOffer) {
-    gdkAction = mTargetWaylandDataOffer->GetAvailableDragActions();
-  }
-#endif
 
   // set the default just in case nothing matches below
   if (gdkAction & GDK_ACTION_DEFAULT)
@@ -2471,12 +2372,6 @@ nsDragService::UpdateDragEffect() {
     ReplyToDragMotion(mTargetDragContextForRemote);
     mTargetDragContextForRemote = nullptr;
   }
-#ifdef MOZ_WAYLAND
-  else if (mTargetWaylandDataOfferForRemote) {
-    ReplyToDragMotion(mTargetWaylandDataOfferForRemote);
-    mTargetWaylandDataOfferForRemote = nullptr;
-  }
-#endif
   return NS_OK;
 }
 
@@ -2484,11 +2379,6 @@ void nsDragService::ReplyToDragMotion() {
   if (mTargetDragContext) {
     ReplyToDragMotion(mTargetDragContext);
   }
-#ifdef MOZ_WAYLAND
-  else if (mTargetWaylandDataOffer) {
-    ReplyToDragMotion(mTargetWaylandDataOffer);
-  }
-#endif
 }
 
 void nsDragService::DispatchMotionEvents() {
