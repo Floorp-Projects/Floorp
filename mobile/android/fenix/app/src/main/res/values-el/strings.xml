@@ -25,8 +25,6 @@
 
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">1 ανοικτή καρτέλα. Πατήστε για εναλλαγή καρτελών.</string>
-    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s ανοικτές καρτέλες. Πατήστε για εναλλαγή καρτελών.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d επιλογή(ές)</string>
@@ -125,8 +123,6 @@
     <string name="tab_tray_inactive_auto_close_body">Το Firefox μπορεί να κλείσει τις καρτέλες που δεν έχετε προβάλει τον περασμένο μήνα.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Κλείσιμο</string>
-    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
-    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">Ενεργοποίηση αυτόματου κλεισίματος</string>
 
     <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_turn_on_auto_close_button_2">Ενεργοποίηση αυτόματου κλεισίματος</string>
@@ -137,9 +133,6 @@
     <string name="home_screen_shortcut_open_new_tab_2">Νέα καρτέλα</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Νέα ιδιωτική καρτέλα</string>
-
-    <!-- Heading for the Top Sites block -->
-    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Κορυφαίοι ιστότοποι</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -189,8 +182,6 @@
     <string name="browser_menu_refresh">Ανανέωση</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Διακοπή</string>
-    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Αποθήκευση σελιδοδείκτη</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">Επεξεργασία σελιδοδείκτη</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -486,6 +477,14 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Ταπετσαρίες</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Χορηγούμενες συντομεύσεις</string>
+
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">Προβολή</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">Το πρόσθετο δεν υποστηρίζεται</string>
@@ -594,8 +593,6 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Ενεργοποίηση Sync</string>
-    <!-- Preference for pairing -->
-    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Σάρωση κωδικού σύζευξης στο Firefox για υπολογιστή</string>
     <!-- Preference for account login -->
     <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">Σύνδεση</string>
 
@@ -786,8 +783,6 @@
     <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">Ανοικτές καρτέλες</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">Αποθήκευση στη συλλογή</string>
-    <!-- Text shown in the menu for the collection selector -->
-    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Επιλογή</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Κοινή χρήση όλων των καρτελών</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -944,8 +939,6 @@
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
     <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">Μενού σελιδοδεικτών</string>
-    <!-- Screen title for editing bookmarks -->
-    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Επεξεργασία σελιδοδείκτη</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">Επιλογή φακέλου</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1228,7 +1221,7 @@
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">ΑΝΑΙΡΕΣΗ</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string moz:removedIn="96" name="snackbar_top_site_removed" tools:ignore="UnusedResources">Ο ιστότοπος αφαιρέθηκε</string>
+    <string name="snackbar_top_site_removed">Ο ιστότοπος αφαιρέθηκε</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">Αναίρεση</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -1967,10 +1960,12 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, το κατάλαβα</string>
 
-    <!-- Label for the preference to show the most visited top sites on the homepage -->
-    <string name="top_sites_toggle_top_recent_sites_3">Πιο συχνοί κορυφαίοι ιστότοποι</string>
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Πιο συχνοί κορυφαίοι ιστότοποι</string>
 
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">Συντομεύσεις</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Όνομα</string>
 	<!-- Hint for renaming title of a top site -->
 	<string name="top_site_name_hint">Όνομα κορυφαίας σελίδας</string>
@@ -1984,12 +1979,6 @@
     <string name="inactive_tabs_title">Ανενεργές καρτέλες</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Κλείσιμο όλων των ανενεργών καρτελών</string>
-    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string moz:removedIn="95" name="inactive_tabs_description" tools:ignore="UnusedResources">Οι καρτέλες θα είναι διαθέσιμες εδώ για %s. Έπειτα, οι καρτέλες θα κλείσουν αυτόματα.</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 ημέρες</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 εβδομάδα</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
@@ -2004,9 +1993,6 @@
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Παρακαλούμε βοηθήστε μας να βελτιωθούμε</string>
-
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
     <string name="inactive_tabs_survey_header_1">Βοηθήστε μας να βελτιώσουμε το Firefox</string>
 
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
@@ -2016,11 +2002,7 @@
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_do_it_myself">Θέλω να κλείνω εγώ τις παλιές καρτέλες</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Ο χρόνος αδράνειας είναι πολύ μεγάλος</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_time_too_long_option_1">Η χρονική περίοδος των δύο εβδομάδων είναι πολύ μεγάλη</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Ο χρόνος αδράνειας είναι πολύ μικρός</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_time_too_short_option_1">Η χρονική περίοδος των δύο εβδομάδων είναι πολύ μικρή</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->

@@ -1870,6 +1870,8 @@
     <string name="bookmark_deletion_confirmation">¿Seguro que quiere eliminar este marcador?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">Agregar a los sitios principales</string>
+    <!-- Browser menu button that removes a top site from the home fragment -->
+    <string name="browser_menu_remove_from_top_sites">Quitar de los sitios principales</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Verificado por: %1$s</string>
@@ -1947,7 +1949,9 @@
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Sitios favoritos más visitados</string>
 
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">Accesos directos</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nombre</string>
 	<!-- Hint for renaming title of a top site -->
 	<string name="top_site_name_hint">Nombre del sitio principal</string>

@@ -25,8 +25,6 @@
 
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">1 onglet ouvert. Appuyez pour changer d’onglet.</string>
-    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s onglets ouverts. Appuyez pour changer d’onglet.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d sélectionnés</string>
@@ -118,8 +116,6 @@
     <string name="tab_tray_inactive_auto_close_body">Firefox peut fermer les onglets que vous n’avez pas consultés au cours du mois dernier.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Fermer</string>
-    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
-    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">Activer la fermeture automatique</string>
 
     <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_turn_on_auto_close_button_2">Activer la fermeture automatique</string>
@@ -130,9 +126,6 @@
     <string name="home_screen_shortcut_open_new_tab_2">Nouvel onglet</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nouvel onglet nav. privée</string>
-
-    <!-- Heading for the Top Sites block -->
-    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Sites principaux</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -183,8 +176,6 @@
     <string name="browser_menu_refresh">Actualiser</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Arrêter</string>
-    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Marque-page</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">Modifier le marque-page</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -482,6 +473,23 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Fonds d’écran</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Raccourcis sponsorisés</string>
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">Fond d’écran : %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">Fond d’écran mis à jour !</string>
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">Afficher</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label">Appuyez sur le logo pour changer de fond d’écran</string>
+    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_description">Parcourez et mettez à jour l’image sans quitter la page d’accueil.</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">Ce module complémentaire n’est pas pris en charge</string>
@@ -593,8 +601,6 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Activer Sync</string>
-    <!-- Preference for pairing -->
-    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Scanner le code d’association depuis Firefox pour ordinateur</string>
     <!-- Preference for account login -->
     <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">Connexion</string>
 
@@ -784,8 +790,6 @@
     <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">Onglets ouverts</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">Enregistrer dans une collection</string>
-    <!-- Text shown in the menu for the collection selector -->
-    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Sélectionner</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Partager tous les onglets</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -944,8 +948,6 @@
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
     <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">Menu des marque-pages</string>
-    <!-- Screen title for editing bookmarks -->
-    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Modifier le marque-page</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">Sélectionner un dossier</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1245,7 +1247,7 @@
     <string name="snackbar_deleted_undo">ANNULER</string>
 
     <!-- Text shown in snackbar when user removes a top site -->
-    <string moz:removedIn="96" name="snackbar_top_site_removed" tools:ignore="UnusedResources">Site supprimé</string>
+    <string name="snackbar_top_site_removed">Site supprimé</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">Annuler</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -1901,6 +1903,8 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="bookmark_deletion_confirmation">Voulez-vous vraiment supprimer ce marque-page ?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">Ajouter aux sites principaux</string>
+    <!-- Browser menu button that removes a top site from the home fragment -->
+    <string name="browser_menu_remove_from_top_sites">Retirer des sites principaux</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Vérifié par : %1$s</string>
@@ -1974,10 +1978,12 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">J’ai compris</string>
 
-    <!-- Label for the preference to show the most visited top sites on the homepage -->
-    <string name="top_sites_toggle_top_recent_sites_3">Les sites les plus visités</string>
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Les sites les plus visités</string>
 
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">Raccourcis</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Nom</string>
 	<!-- Hint for renaming title of a top site -->
 	<string name="top_site_name_hint">Nom du site principal</string>
@@ -1991,12 +1997,6 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <string name="inactive_tabs_title">Onglets inactifs</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Fermer tous les onglets inactifs</string>
-    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string moz:removedIn="95" name="inactive_tabs_description" tools:ignore="UnusedResources">Les onglets sont disponibles ici pendant %s jours. Après ce délai, les onglets seront automatiquement fermés.</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 jours</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 semaine</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
@@ -2012,8 +2012,6 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Merci de nous aider à nous améliorer</string>
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
     <string name="inactive_tabs_survey_header_1">Aidez à améliorer Firefox</string>
 
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
@@ -2024,11 +2022,7 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_do_it_myself">Je préfère effacer moi-même les anciens onglets</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Le temps d’inactivité est trop long</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_time_too_long_option_1">Le délai de deux semaines est trop long</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Le temps d’inactivité est trop court</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_time_too_short_option_1">Le délai de deux semaines est trop court</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
