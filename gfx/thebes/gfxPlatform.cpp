@@ -170,8 +170,6 @@ static int32_t gLastUsedFrameRate = -1;
 
 const ContentDeviceData* gContentDeviceInitData = nullptr;
 
-static Mutex* gGfxPlatformPrefsLock = nullptr;
-
 Atomic<bool, MemoryOrdering::ReleaseAcquire> gfxPlatform::gCMSInitialized;
 CMSMode gfxPlatform::gCMSMode = CMSMode::Off;
 
@@ -878,8 +876,6 @@ void gfxPlatform::Init() {
 
   InitMoz2DLogging();
 
-  gGfxPlatformPrefsLock = new Mutex("gfxPlatform::gGfxPlatformPrefsLock");
-
   /* Initialize the GfxInfo service.
    * Note: we can't call functions on GfxInfo that depend
    * on gPlatform until after it has been initialized
@@ -1266,9 +1262,6 @@ void gfxPlatform::Shutdown() {
   }
 
   gfx::Factory::ShutDown();
-
-  delete gGfxPlatformPrefsLock;
-
   gfxVars::Shutdown();
   gfxFont::DestroySingletons();
 
