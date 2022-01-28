@@ -827,10 +827,36 @@ def readelf_when(compile_env, target, host):
 check_prog(
     "READELF",
     readelf,
-    what="readelf",
     when=readelf_when,
     paths=clang_search_path,
     validate=validate_readelf,
+)
+
+
+@depends(llvm_tool("llvm-objcopy"), toolchain_prefix)
+def objcopy(llvm_objcopy, toolchain_prefix):
+    commands = [llvm_objcopy[0], "objcopy"]
+    for prefix in toolchain_prefix or ():
+        commands.insert(1, "%sreadelf" % prefix)
+    return tuple(commands)
+
+
+def validate_objcopy(path):
+    if "llvm-objcopy" not in path:
+        return True
+    # llvm-objcopy doesn't support --only-keep-debug before llvm 9.0.
+    retcode, stdout, stderr = get_cmd_output(path, "--help")
+    return retcode == 0 and any(
+        l.startswith("  --only-keep-debug ") for l in stdout.splitlines()
+    )
+
+
+check_prog(
+    "OBJCOPY",
+    objcopy,
+    when=readelf_when,
+    paths=clang_search_path,
+    validate=validate_objcopy,
 )
 
 option("--enable-dtrace", help="Build with dtrace support")
