@@ -732,15 +732,14 @@ NS_IMETHODIMP
 xpcAccessible::DoAction(uint8_t aIndex) {
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
-  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
 #if defined(XP_WIN)
+  if (IntlGeneric()->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    return proxy->DoAction(aIndex) ? NS_OK : NS_ERROR_INVALID_ARG;
-#endif
-  } else {
-    return Intl()->DoAction(aIndex) ? NS_OK : NS_ERROR_INVALID_ARG;
   }
+#endif
+
+  return IntlGeneric()->DoAction(aIndex) ? NS_OK : NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP
