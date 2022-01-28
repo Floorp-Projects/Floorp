@@ -10,10 +10,7 @@ job-defaults:
             android-em-7.*: geckoview-test_runner.apk
             android-hw-.*: geckoview-test_runner.apk
             default: null
-    tier:
-        by-variant:
-            fission: 2
-            default: default
+    tier: default
     test-manifest-loader: null  # don't load tests in the taskgraph
     mozharness:
         script:
@@ -55,8 +52,8 @@ crashtest:
         by-variant:
             fission:
                 by-test-platform:
-                    (windows10|linux1804|macosx1).*-qr/.*: ['trunk']
-                    default: []
+                    android.*: []
+                    default: built-projects
             wayland:
                 by-test-platform:
                     linux1804-64-qr/debug: built-projects
@@ -81,20 +78,17 @@ crashtest:
                     default: []
             default:
                 by-test-platform:
-                    windows10-aarch64-qr/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    linux.*asan/opt: []
-                    .*(-asan|-tsan|10-32|7-32).*: built-projects
+                    linux.*64-ccov-qr/opt: []
+                    linux1804-32.*: []
+                    .*-tsan-qr/opt: []
+                    linux.*: ['trunk']  # linux opt/debug/asan
                     android.*: built-projects
-                    (linux|windows|macos)(?!.*-qr).*: []
-                    default: built-projects
+                    default: []
     max-run-time: 3600
     tier:
         by-variant:
-            fission:
-                by-test-platform:
-                    linux1804-64-qr/debug: 1
-                    default: 2
+            fission: default
             default:
                 by-test-platform:
                     windows10-aarch64-qr.*: 2
@@ -137,9 +131,7 @@ jsreftest:
             default: 3
     max-run-time:
         by-test-platform:
-            windows10-64-2004-ccov.*/.*: 7200
-            macosx.*64-ccov.*/.*: 7200
-            linux.*64-ccov.*/.*: 7200
+            .*ccov.*: 7200
             default: 3600
     variants: ['fission']
     run-on-projects:
@@ -150,9 +142,14 @@ jsreftest:
                     default: built-projects
             default:
                 by-test-platform:
+                    linux.*64-ccov-qr/opt: []
+                    linux1804-32.*: []
+                    .*-tsan-qr/opt: []
+                    linux.*: ['trunk']  # linux opt/debug/asan
                     android-hw-.*-aarch64(?:-shippable)?-qr/.*: ['mozilla-central', 'release']
                     android-hw-.*-arm7(?:-shippable)?-qr/.*: ['mozilla-central', 'release']
-                    default: built-projects
+                    android.*: built-projects
+                    default: []
     virtualization: virtual
 
 reftest:
@@ -185,8 +182,6 @@ reftest:
                     android.*/.*: []
                     linux.*asan/opt: []
                     windows10-aarch64-qr/opt: []
-                    .*(mingwclang|-asan|-tsan|10-32|7-32).*: built-projects
-                    (linux|windows|macos|android-em)(?!.*-qr).*: []
                     default: built-projects
             wayland:
                 by-test-platform:
@@ -212,13 +207,13 @@ reftest:
                     default: []
             default:
                 by-test-platform:
-                    windows10-aarch64-qr/.*: []
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    linux.*asan/opt: []
-                    .*(mingwclang|-asan|-tsan|10-32|7-32).*: built-projects
+                    linux.*64-ccov-qr/opt: []
+                    linux1804-32.*: []
+                    .*-tsan-qr/opt: []
+                    linux.*: ['trunk']  # linux opt/debug/asan
                     android.*: built-projects
-                    (linux|windows|macos|android-em)(?!.*-qr).*: []
-                    default: built-projects
+                    default: []
     max-run-time:
         by-test-platform:
             windows10-32-mingwclang-qr/debug: 5400
@@ -235,10 +230,7 @@ reftest:
                 default: true
     tier:
         by-variant:
-            fission:
-                by-test-platform:
-                    linux1804-64-qr/debug: 1
-                    default: 2
+            fission: default
             default:
                 by-test-platform:
                     windows10-aarch64-qr.*: 2

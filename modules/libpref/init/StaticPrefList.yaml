@@ -1480,7 +1480,11 @@
 # be loaded normally as-if users normally navigated to the page.
 - name: browser.soft_reload.only_force_validate_top_level_document
   type: bool
+#if defined(EARLY_BETA_OR_EARLIER)
   value: true
+#else
+  value: false
+#endif
   mirror: always
 
 #---------------------------------------------------------------------------

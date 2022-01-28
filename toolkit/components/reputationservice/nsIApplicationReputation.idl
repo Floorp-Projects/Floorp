@@ -60,6 +60,17 @@ interface nsIApplicationReputationService : nsISupports {
    *        The filename to check.
    */
   bool isBinary(in AUTF8String aFilename);
+
+  /**
+   * Check if a file with this name should be treated as an executable,
+   * and should not be opened without caution.
+   * Will return true if the filename's extension is in sExecutableExts
+   * in nsLocalFileCommon.h.
+   *
+   * @param aFilename
+   *        The filename to check.
+   */
+  bool isExecutable(in AUTF8String aFilename);
 };
 
 /**

@@ -38,7 +38,7 @@ parent:
   async BumpImplicitBindGroupLayout(RawId pipelineId, bool isCompute, uint32_t index, RawId assignId);
 
   async InstanceRequestAdapter(GPURequestAdapterOptions options, RawId[] ids) returns (ByteBuf byteBuf);
-  async AdapterRequestDevice(RawId selfId, ByteBuf buf, RawId newId);
+  async AdapterRequestDevice(RawId selfId, ByteBuf buf, RawId newId) returns (bool success);
   async AdapterDestroy(RawId selfId);
   async BufferReturnShmem(RawId selfId, Shmem shmem);
   async BufferMap(RawId selfId, WGPUHostMap hostMap, uint64_t offset, uint64_t size) returns (Shmem sm);

@@ -206,8 +206,6 @@ bool NativeLayerRootWayland::CommitToScreen(const MutexAutoLock& aProofOfLock) {
 
       auto transform2DInversed = transform2D.Inverse();
       Rect bufferClip = transform2DInversed.TransformBounds(surfaceRectClipped);
-      // avoid floating point issues - we always expect integer values here
-      bufferClip.Round();
       layer->SetViewportSourceRect(bufferClip);
 
       layer->Commit();
@@ -348,14 +346,6 @@ void NativeLayerRootWayland::UpdateLayersOnMainThread() {
     mGdkAfterPaintId =
         g_signal_connect_after(frameClock, "after-paint",
                                G_CALLBACK(sAfterFrameClockAfterPaint), this);
-  }
-}
-
-void NativeLayerRootWayland::PauseCompositor() {
-  MutexAutoLock lock(mMutex);
-
-  for (RefPtr<NativeLayerWayland>& layer : mSublayers) {
-    layer->EnsureParentSurface(nullptr);
   }
 }
 
@@ -698,11 +688,14 @@ void NativeLayerWayland::SetSubsurfacePosition(int aX, int aY) {
 void NativeLayerWayland::SetViewportSourceRect(const Rect aSourceRect) {
   MutexAutoLock lock(mMutex);
 
-  if (aSourceRect == mViewportSourceRect) {
+  Rect bufferRect = Rect(0, 0, mSize.width, mSize.height);
+  Rect sourceRect = aSourceRect.Intersect(bufferRect);
+
+  if (mViewportSourceRect == sourceRect) {
     return;
   }
 
-  mViewportSourceRect = aSourceRect;
+  mViewportSourceRect = sourceRect;
   wp_viewport_set_source(mViewport, wl_fixed_from_double(mViewportSourceRect.x),
                          wl_fixed_from_double(mViewportSourceRect.y),
                          wl_fixed_from_double(mViewportSourceRect.width),
