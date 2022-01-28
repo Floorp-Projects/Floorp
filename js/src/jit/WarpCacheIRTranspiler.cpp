@@ -1375,6 +1375,13 @@ bool WarpCacheIRTranspiler::emitLoadInt32Constant(uint32_t valOffset,
   return defineOperand(resultId, valConst);
 }
 
+bool WarpCacheIRTranspiler::emitLoadDoubleConstant(uint32_t valOffset,
+                                                   NumberOperandId resultId) {
+  double val = doubleStubField(valOffset);
+  auto* valConst = constant(DoubleValue(val));
+  return defineOperand(resultId, valConst);
+}
+
 bool WarpCacheIRTranspiler::emitLoadBooleanConstant(bool val,
                                                     BooleanOperandId resultId) {
   auto* valConst = constant(BooleanValue(val));

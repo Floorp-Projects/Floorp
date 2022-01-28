@@ -7280,6 +7280,19 @@ bool CacheIRCompiler::emitLoadBooleanConstant(bool val,
   return true;
 }
 
+bool CacheIRCompiler::emitLoadDoubleConstant(uint32_t valOffset,
+                                             NumberOperandId resultId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  ValueOperand output = allocator.defineValueRegister(masm, resultId);
+  StubFieldOffset val(valOffset, StubField::Type::Double);
+
+  AutoScratchFloatRegister floatReg(this);
+
+  emitLoadDoubleValueStubField(val, output, floatReg);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadUndefined(ValOperandId resultId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
