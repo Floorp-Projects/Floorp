@@ -2374,6 +2374,9 @@ pref("devtools.application.enabled", true);
 // Enable the custom formatters feature
 // TODO remove once the custom formatters feature is stable (see bug 1734614)
 pref("devtools.custom-formatters", false);
+// This preference represents the user's choice to enable the custom formatters feature.
+// While the preference above will be removed once the feature is stable, this one is menat to stay.
+pref("devtools.custom-formatters.enabled", false);
 
 // The default Network Monitor UI settings
 pref("devtools.netmonitor.panes-network-details-width", 550);
