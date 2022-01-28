@@ -229,7 +229,8 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         prompt: PromptDelegate.AlertPrompt
     ): GeckoResult<PromptResponse> {
         val geckoResult = GeckoResult<PromptResponse>()
-        val onConfirm: () -> Unit = { prompt.dismissSafely(geckoResult) }
+        val onDismiss: () -> Unit = { prompt.dismissSafely(geckoResult) }
+        val onConfirm: (Boolean) -> Unit = { _ -> onDismiss() }
         val title = prompt.title ?: ""
         val message = prompt.message ?: ""
 
@@ -239,10 +240,9 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     title,
                     message,
                     false,
-                    onConfirm
-                ) { _ ->
-                    onConfirm()
-                }
+                    onConfirm,
+                    onDismiss
+                )
             )
         }
         return geckoResult
@@ -403,6 +403,11 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         val inputLabel = prompt.message ?: ""
         val inputValue = prompt.defaultValue ?: ""
         val onDismiss: () -> Unit = { prompt.dismissSafely(geckoResult) }
+        val onConfirm: (Boolean, String) -> Unit = { _, valueInput ->
+            if (!prompt.isComplete) {
+                geckoResult.complete(prompt.confirm(valueInput))
+            }
+        }
 
         geckoEngineSession.notifyObservers {
             onPromptRequest(
@@ -411,12 +416,9 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
                     inputLabel,
                     inputValue,
                     false,
+                    onConfirm,
                     onDismiss
-                ) { _, valueInput ->
-                    if (!prompt.isComplete) {
-                        geckoResult.complete(prompt.confirm(valueInput))
-                    }
-                }
+                )
             )
         }
 

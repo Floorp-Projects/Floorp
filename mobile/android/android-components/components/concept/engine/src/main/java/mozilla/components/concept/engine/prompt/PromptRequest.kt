@@ -66,15 +66,15 @@ sealed class PromptRequest(
      * @property title of the dialog.
      * @property message the body of the dialog.
      * @property hasShownManyDialogs tells if this page has shown multiple prompts within a short period of time.
-     * @property onDismiss callback to let the page know the user dismissed the dialog.
      * @property onConfirm tells the web page if it should continue showing alerts or not.
+     * @property onDismiss callback to let the page know the user dismissed the dialog.
      */
     data class Alert(
         val title: String,
         val message: String,
         val hasShownManyDialogs: Boolean = false,
-        override val onDismiss: () -> Unit,
-        val onConfirm: (Boolean) -> Unit
+        val onConfirm: (Boolean) -> Unit,
+        override val onDismiss: () -> Unit
     ) : PromptRequest(), Dismissible
 
     /**
@@ -94,39 +94,39 @@ sealed class PromptRequest(
     /**
      * Value type that represents a request for a select credit card prompt.
      * @property creditCards a list of [CreditCard]s to select from.
-     * @property onDismiss callback to let the page know the user dismissed the dialog.
      * @property onConfirm callback that is called when the user confirms the credit card selection.
+     * @property onDismiss callback to let the page know the user dismissed the dialog.
      */
     data class SelectCreditCard(
         val creditCards: List<CreditCard>,
-        override val onDismiss: () -> Unit,
-        val onConfirm: (CreditCard) -> Unit
+        val onConfirm: (CreditCard) -> Unit,
+        override val onDismiss: () -> Unit
     ) : PromptRequest(), Dismissible
 
     /**
      * Value type that represents a request for a save login prompt.
      * @property hint a value that helps to determine the appropriate prompting behavior.
      * @property logins a list of logins that are associated with the current domain.
-     * @property onDismiss callback to let the page know the user dismissed the dialog.
      * @property onConfirm callback that is called when the user wants to save the login.
+     * @property onDismiss callback to let the page know the user dismissed the dialog.
      */
     data class SaveLoginPrompt(
         val hint: Int,
         val logins: List<LoginEntry>,
-        override val onDismiss: () -> Unit,
-        val onConfirm: (LoginEntry) -> Unit
+        val onConfirm: (LoginEntry) -> Unit,
+        override val onDismiss: () -> Unit
     ) : PromptRequest(shouldDismissOnLoad = false), Dismissible
 
     /**
      * Value type that represents a request for a select login prompt.
      * @property logins a list of logins that are associated with the current domain.
-     * @property onDismiss callback to let the page know the user dismissed the dialog.
      * @property onConfirm callback that is called when the user wants to save the login.
+     * @property onDismiss callback to let the page know the user dismissed the dialog.
      */
     data class SelectLoginPrompt(
         val logins: List<Login>,
-        override val onDismiss: () -> Unit,
-        val onConfirm: (Login) -> Unit
+        val onConfirm: (Login) -> Unit,
+        override val onDismiss: () -> Unit
     ) : PromptRequest(), Dismissible
 
     /**
@@ -135,16 +135,16 @@ sealed class PromptRequest(
      * @property inputLabel the label of the field the user should fill.
      * @property inputValue the default value of the field.
      * @property hasShownManyDialogs tells if this page has shown multiple prompts within a short period of time.
-     * @property onDismiss callback to let the page know the user dismissed the dialog.
      * @property onConfirm tells the web page if it should continue showing alerts or not.
+     * @property onDismiss callback to let the page know the user dismissed the dialog.
      */
     data class TextPrompt(
         val title: String,
         val inputLabel: String,
         val inputValue: String,
         val hasShownManyDialogs: Boolean = false,
-        override val onDismiss: () -> Unit,
-        val onConfirm: (Boolean, String) -> Unit
+        val onConfirm: (Boolean, String) -> Unit,
+        override val onDismiss: () -> Unit
     ) : PromptRequest(), Dismissible
 
     /**

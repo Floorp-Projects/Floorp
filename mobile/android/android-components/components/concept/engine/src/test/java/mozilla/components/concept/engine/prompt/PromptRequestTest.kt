@@ -101,7 +101,7 @@ class PromptRequestTest {
             Date(),
             Date(),
             Type.DATE,
-            {},
+            { _ -> },
             {},
             {}
         )

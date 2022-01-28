@@ -440,16 +440,17 @@ class SystemEngineView @JvmOverloads constructor(
                 result.cancel()
             }
 
+            val onConfirm: (Boolean) -> Unit = { _ -> result.confirm() }
+
             session.notifyObservers {
                 onPromptRequest(
                     PromptRequest.Alert(
                         title,
                         message ?: "",
                         false,
+                        onConfirm,
                         onDismiss
-                    ) { _ ->
-                        result.confirm()
-                    }
+                    )
                 )
             }
             return true
@@ -481,8 +482,8 @@ class SystemEngineView @JvmOverloads constructor(
                         message ?: "",
                         defaultValue ?: "",
                         false,
-                        onDismiss,
-                        onConfirm
+                        onConfirm,
+                        onDismiss
                     )
                 )
             }

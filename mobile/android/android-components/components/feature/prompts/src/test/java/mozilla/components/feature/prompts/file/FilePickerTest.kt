@@ -242,7 +242,7 @@ class FilePickerTest {
         var wasDismissed = false
         val onConfirm: (Boolean) -> Unit = { wasConfirmed = true }
         val onDismiss = { wasDismissed = true }
-        val invalidRequest = PromptRequest.Alert("", "", false, onDismiss, onConfirm)
+        val invalidRequest = PromptRequest.Alert("", "", false, onConfirm, onDismiss)
         val spiedFilePicker = spy(filePicker)
         val selected = prepareSelectedSession(invalidRequest)
         val intent = Intent()
