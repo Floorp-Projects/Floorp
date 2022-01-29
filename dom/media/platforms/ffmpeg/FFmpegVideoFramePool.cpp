@@ -20,14 +20,16 @@ RefPtr<layers::Image> VideoFrameSurfaceVAAPI::GetAsImage() {
 }
 
 VideoFrameSurfaceVAAPI::VideoFrameSurfaceVAAPI(DMABufSurface* aSurface)
-    : mSurface(aSurface) {
+    : mSurface(aSurface),
+      mLib(nullptr),
+      mAVHWFramesContext(nullptr),
+      mHWAVBuffer(nullptr) {
   // Create global refcount object to track mSurface usage over
   // gects rendering engine. We can't release it until it's used
   // by GL compositor / WebRender.
   MOZ_ASSERT(mSurface);
   MOZ_RELEASE_ASSERT(mSurface->GetAsDMABufSurfaceYUV());
   mSurface->GlobalRefCountCreate();
-  mSurface->GlobalRefAdd();
   FFMPEG_LOG("VideoFrameSurfaceVAAPI: creating surface UID = %d",
              mSurface->GetUID());
 }
@@ -52,12 +54,14 @@ void VideoFrameSurfaceVAAPI::ReleaseVAAPIData(bool aForFrameRecycle) {
   // In such case we don't care as the dmabuf surface will not be
   // recycled for another frame and stays here untill last fd of it
   // is closed.
-  mLib->av_buffer_unref(&mHWAVBuffer);
-  mLib->av_buffer_unref(&mAVHWFramesContext);
+  if (mLib) {
+    mLib->av_buffer_unref(&mHWAVBuffer);
+    mLib->av_buffer_unref(&mAVHWFramesContext);
+  }
 
+  // If we want to recycle the frame, make sure it's not used
+  // by gecko rendering pipeline.
   if (aForFrameRecycle) {
-    // If we want to recycle the frame, make sure it's not used
-    // by gecko rendering pipeline.
     MOZ_DIAGNOSTIC_ASSERT(!IsUsed());
     mSurface->ReleaseSurface();
   }
@@ -94,7 +98,6 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetFreeVideoFrameSurface() {
     }
     auto* vaapiSurface = surface->AsVideoFrameSurfaceVAAPI();
     vaapiSurface->ReleaseVAAPIData();
-    vaapiSurface->MarkAsUsed();
     return surface;
   }
   return nullptr;
@@ -136,9 +139,10 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
     FFMPEG_LOG("Reusing VA-API DMABufSurface UID = %d", surface->GetUID());
   }
 
-  if (auto* vaapiSurface = videoSurface->AsVideoFrameSurfaceVAAPI()) {
-    vaapiSurface->LockVAAPIData(aAVCodecContext, aAVFrame, aLib);
-  }
+  auto* vaapiSurface = videoSurface->AsVideoFrameSurfaceVAAPI();
+  vaapiSurface->LockVAAPIData(aAVCodecContext, aAVFrame, aLib);
+  vaapiSurface->MarkAsUsed();
+
   return videoSurface;
 }
 
