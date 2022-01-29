@@ -179,6 +179,7 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
   using DrawTarget = gfx::DrawTarget;
   using Path = gfx::Path;
   using Point = gfx::Point;
+  using Rect = gfx::Rect;
 
  protected:
   explicit SVGTextFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
@@ -329,6 +330,14 @@ class SVGTextFrame final : public SVGDisplayContainerFrame {
    */
   gfxRect TransformFrameRectFromTextChild(const nsRect& aRect,
                                           const nsIFrame* aChildFrame);
+
+  /** As above, but taking and returning a device px rect. */
+  Rect TransformFrameRectFromTextChild(const Rect& aRect,
+                                       const nsIFrame* aChildFrame);
+
+  /** As above, but with a single point */
+  Point TransformFramePointFromTextChild(const Point& aPoint,
+                                         const nsIFrame* aChildFrame);
 
   // Return our ::-moz-svg-text anonymous box.
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;

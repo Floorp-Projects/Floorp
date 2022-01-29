@@ -161,7 +161,6 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
   int (*vaSyncSurface)(void*, unsigned int);
   int (*vaInitialize)(void* dpy, int* major_version, int* minor_version);
   int (*vaTerminate)(void* dpy);
-  void* (*vaGetDisplayWl)(struct wl_display* display);
   void* (*vaGetDisplayDRM)(int fd);
 #endif
 
@@ -169,7 +168,6 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
   PRLibrary* mAVUtilLib;
 #ifdef MOZ_WAYLAND
   PRLibrary* mVALib;
-  PRLibrary* mVALibWayland;
   PRLibrary* mVALibDrm;
 #endif
 

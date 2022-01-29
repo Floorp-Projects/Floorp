@@ -2,7 +2,7 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 318:
+/***/ 707:
 /***/ ((__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) => {
 
 
@@ -10,13 +10,13 @@
 var react = __webpack_require__(294);
 // EXTERNAL MODULE: ./node_modules/react-dom/index.js
 var react_dom = __webpack_require__(935);
-;// CONCATENATED MODULE: ./content/panels/js/components/PopularTopics/PopularTopics.jsx
+;// CONCATENATED MODULE: ./content/panels/js/components/PopularTopicsLegacy/PopularTopicsLegacy.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-function PopularTopics(props) {
+function PopularTopicsLegacy(props) {
   return /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("h3", {
     "data-l10n-id": "pocket-panel-home-explore-popular-topics"
   }), /*#__PURE__*/react.createElement("ul", null, props.topics.map(item => /*#__PURE__*/react.createElement("li", {
@@ -33,7 +33,7 @@ function PopularTopics(props) {
   }));
 }
 
-/* harmony default export */ const PopularTopics_PopularTopics = (PopularTopics);
+/* harmony default export */ const PopularTopicsLegacy_PopularTopicsLegacy = (PopularTopicsLegacy);
 ;// CONCATENATED MODULE: ./content/panels/js/components/Header/Header.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -189,7 +189,7 @@ HomeOverlay.prototype = {
       // so ensure we only show a topics section for English browsers.
 
       if (locale.startsWith("en")) {
-        react_dom.render( /*#__PURE__*/react.createElement(PopularTopics_PopularTopics, {
+        react_dom.render( /*#__PURE__*/react.createElement(PopularTopicsLegacy_PopularTopicsLegacy, {
           pockethost: templateData.pockethost,
           utmsource: templateData.utmsource,
           topics: [{
@@ -948,6 +948,25 @@ function ArticleList(props) {
 }
 
 /* harmony default export */ const ArticleList_ArticleList = (ArticleList);
+;// CONCATENATED MODULE: ./content/panels/js/components/PopularTopics/PopularTopics.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function PopularTopics(props) {
+  return /*#__PURE__*/react.createElement("ul", {
+    className: "stp_popular_topics"
+  }, props.topics.map(topic => /*#__PURE__*/react.createElement("li", {
+    key: `item-${topic.topic}`,
+    className: "stp_popular_topic"
+  }, /*#__PURE__*/react.createElement("a", {
+    className: "stp_popular_topic_link",
+    href: `https://${props.pockethost}/explore/${topic.topic}?utm_source=${props.utmsource}`
+  }, topic.title))));
+}
+
+/* harmony default export */ const PopularTopics_PopularTopics = (PopularTopics);
 ;// CONCATENATED MODULE: ./content/panels/js/style-guide/overlay.js
 
 
@@ -1251,7 +1270,7 @@ window.pktPanelMessaging = messages;
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(318)))
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(707)))
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()

@@ -170,6 +170,10 @@ class JSObject
     return shape()->hasObjectFlag(flag);
   }
 
+  bool hasAnyFlag(js::ObjectFlags flags) const {
+    return shape()->objectFlags().hasAnyFlag(flags);
+  }
+
   // Change this object's shape for a prototype mutation.
   //
   // Note: the caller must ensure the object has a mutable proto, is extensible,
@@ -193,6 +197,14 @@ class JSObject
   }
   static bool setIsUsedAsPrototype(JSContext* cx, JS::HandleObject obj) {
     return setFlag(cx, obj, js::ObjectFlag::IsUsedAsPrototype);
+  }
+
+  bool useWatchtowerTestingCallback() const {
+    return hasFlag(js::ObjectFlag::UseWatchtowerTestingCallback);
+  }
+  static bool setUseWatchtowerTestingCallback(JSContext* cx,
+                                              JS::HandleObject obj) {
+    return setFlag(cx, obj, js::ObjectFlag::UseWatchtowerTestingCallback);
   }
 
   inline bool isBoundFunction() const;

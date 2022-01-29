@@ -994,8 +994,8 @@ class nsLayoutUtils {
     NO_COMMON_ANCESTOR,
     NONINVERTIBLE_TRANSFORM
   };
-  static TransformResult TransformPoints(nsIFrame* aFromFrame,
-                                         nsIFrame* aToFrame,
+  static TransformResult TransformPoints(RelativeTo aFromFrame,
+                                         RelativeTo aToFrame,
                                          uint32_t aPointCount,
                                          CSSPoint* aPoints);
 

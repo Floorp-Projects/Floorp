@@ -118,6 +118,7 @@ ReadableByteStreamControllerGetBYOBRequest(
         aController->PendingPullIntos().getFirst();
 
     // Step 1.2:
+    aRv.MightThrowJSException();
     JS::Rooted<JSObject*> buffer(aCx, firstDescriptor->Buffer());
     JS::Rooted<JSObject*> view(
         aCx, JS_NewUint8ArrayWithBuffer(
@@ -638,6 +639,8 @@ void ReadableByteStreamControllerProcessPullIntoDescriptorsUsingQueue(
 void ReadableByteStreamControllerEnqueue(
     JSContext* aCx, ReadableByteStreamController* aController,
     JS::Handle<JSObject*> aChunk, ErrorResult& aRv) {
+  aRv.MightThrowJSException();
+
   // Step 1.
   ReadableStream* stream = aController->Stream();
 
@@ -898,6 +901,7 @@ void ReadableByteStreamController::PullSteps(JSContext* aCx,
     }
 
     // Step 3.6
+    aRv.MightThrowJSException();
     JS::Rooted<JSObject*> buffer(aCx, entry->Buffer());
     JS::Rooted<JSObject*> view(
         aCx, JS_NewUint8ArrayWithBuffer(aCx, buffer, entry->ByteOffset(),
@@ -924,6 +928,7 @@ void ReadableByteStreamController::PullSteps(JSContext* aCx,
   // Step 5.
   if (autoAllocateChunkSize) {
     // Step 5.1
+    aRv.MightThrowJSException();
     JS::Rooted<JSObject*> buffer(
         aCx, JS::NewArrayBuffer(aCx, *autoAllocateChunkSize));
     // Step 5.2
@@ -1013,6 +1018,7 @@ JSObject* ReadableByteStreamControllerConvertPullIntoDescriptor(
   MOZ_ASSERT(bytesFilled % elementSize == 0);
 
   // Step 5. Let buffer be ! TransferArrayBuffer(pullIntoDescriptor’s buffer).
+  aRv.MightThrowJSException();
   JS::Rooted<JSObject*> srcBuffer(aCx, pullIntoDescriptor->Buffer());
   JS::Rooted<JSObject*> buffer(aCx, TransferArrayBuffer(aCx, srcBuffer));
   if (!buffer) {
@@ -1247,6 +1253,7 @@ void ReadableByteStreamControllerRespond(
   }
 
   // Step 6.
+  aRv.MightThrowJSException();
   JS::Rooted<JSObject*> buffer(aCx, firstDescriptor->Buffer());
   JS::Rooted<JSObject*> transferredBuffer(aCx,
                                           TransferArrayBuffer(aCx, buffer));
@@ -1265,6 +1272,8 @@ void ReadableByteStreamControllerRespond(
 void ReadableByteStreamControllerRespondWithNewView(
     JSContext* aCx, ReadableByteStreamController* aController,
     JS::Handle<JSObject*> aView, ErrorResult& aRv) {
+  aRv.MightThrowJSException();
+
   // Step 1.
   MOZ_ASSERT(!aController->PendingPullIntos().isEmpty());
 
@@ -1473,6 +1482,8 @@ void ReadableByteStreamControllerPullInto(
     JSContext* aCx, ReadableByteStreamController* aController,
     JS::HandleObject aView, ReadIntoRequest* aReadIntoRequest,
     ErrorResult& aRv) {
+  aRv.MightThrowJSException();
+
   // Step 1. Let stream be controller.[[stream]].
   ReadableStream* stream = aController->Stream();
 
