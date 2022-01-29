@@ -270,6 +270,21 @@ LightweightThemeConsumer.prototype = {
       return true;
     })();
 
+    // If this is a per-window dark theme, set the color scheme override so
+    // child BrowsingContexts, such as embedded prompts, get themed
+    // appropriately.
+    // If not, reset the color scheme override field. This is required to reset
+    // the color scheme on theme switch.
+    if (
+      useDarkTheme &&
+      !updateGlobalThemeData &&
+      this._win.browsingContext == this._win.browsingContext.top
+    ) {
+      this._win.browsingContext.prefersColorSchemeOverride = "dark";
+    } else {
+      this._win.browsingContext.prefersColorSchemeOverride = "none";
+    }
+
     let theme = useDarkTheme ? themeData.darkTheme : themeData.theme;
     if (!theme) {
       theme = { id: DEFAULT_THEME_ID };
