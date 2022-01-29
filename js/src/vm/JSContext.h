@@ -731,6 +731,17 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
     return cycleDetectorVector_.ref();
   }
 
+ private:
+  js::ContextData<JS::PersistentRooted<JSFunction*>> watchtowerTestingCallback_;
+
+ public:
+  JSFunction*& watchtowerTestingCallbackRef() {
+    if (!watchtowerTestingCallback_.ref().initialized()) {
+      watchtowerTestingCallback_.ref().init(this);
+    }
+    return watchtowerTestingCallback_.ref().get();
+  }
+
   /* Client opaque pointer. */
   js::UnprotectedData<void*> data;
 

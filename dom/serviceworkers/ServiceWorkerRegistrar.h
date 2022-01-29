@@ -96,9 +96,9 @@ class ServiceWorkerRegistrar : public nsIObserver,
 
   bool IsSupportedVersion(const nsACString& aVersion) const;
 
+ protected:
   mozilla::Monitor mMonitor;
 
- protected:
   // protected by mMonitor.
   nsCOMPtr<nsIFile> mProfileDir;
   nsTArray<ServiceWorkerRegistrationData> mData;

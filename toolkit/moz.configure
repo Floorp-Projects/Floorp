@@ -2639,14 +2639,14 @@ with only_when(compile_environment):
 
 # Crash reporting
 # ==============================================================
-@depends(target, developer_options)
-def crashreporter_default(target, developer_options):
+@depends(target, developer_options, artifact_builds)
+def crashreporter_default(target, developer_options, artifacts):
     if target.kernel in ("WINNT", "Darwin"):
         return True
     if target.kernel == "Linux" and target.cpu in ("x86", "x86_64", "arm", "aarch64"):
         # The crash reporter prevents crash stacktraces to be logged in the
         # logs on Android, so we leave it out by default in developer builds.
-        return target.os != "Android" or not developer_options
+        return target.os != "Android" or not developer_options or artifacts
 
 
 option(

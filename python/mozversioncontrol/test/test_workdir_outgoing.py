@@ -6,6 +6,8 @@ from __future__ import absolute_import
 
 import os
 
+from pathlib import Path
+
 import mozunit
 
 from mozversioncontrol import get_repository_object
@@ -59,7 +61,7 @@ def assert_files(actual, expected):
 
 def test_workdir_outgoing(repo):
     vcs = get_repository_object(repo.strpath)
-    assert vcs.path == repo.strpath
+    assert vcs.path == str(Path(repo.strpath).resolve())
 
     remotepath = "../remoterepo" if repo.vcs == "hg" else "upstream/master"
 

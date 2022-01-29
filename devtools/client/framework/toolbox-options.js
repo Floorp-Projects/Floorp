@@ -443,6 +443,16 @@ OptionsPanel.prototype = {
       });
     }
 
+    if (GetPref("devtools.custom-formatters")) {
+      prefDefinitions.push({
+        pref: "devtools.custom-formatters.enabled",
+        l10nLabelId: "options-enable-custom-formatters-label",
+        l10nTooltipId: "options-enable-custom-formatters-tooltip",
+        id: "devtools-custom-formatters",
+        parentId: "context-options",
+      });
+    }
+
     if (this.toolbox.isBrowserToolbox) {
       // The Multiprocess Browser Toolbox is only displayed in the settings
       // panel for the Browser Toolbox, or when debugging the main process in
@@ -481,8 +491,18 @@ OptionsPanel.prototype = {
       });
     }
 
-    const createPreferenceOption = ({ pref, label, id, onChange }) => {
+    const createPreferenceOption = ({
+      pref,
+      label,
+      l10nLabelId,
+      l10nTooltipId,
+      id,
+      onChange,
+    }) => {
       const inputLabel = this.panelDoc.createElement("label");
+      if (l10nTooltipId) {
+        this.panelDoc.l10n.setAttributes(inputLabel, l10nTooltipId);
+      }
       const checkbox = this.panelDoc.createElement("input");
       checkbox.setAttribute("type", "checkbox");
       if (GetPref(pref)) {
@@ -497,7 +517,11 @@ OptionsPanel.prototype = {
       });
 
       const inputSpanLabel = this.panelDoc.createElement("span");
-      inputSpanLabel.textContent = label;
+      if (l10nLabelId) {
+        this.panelDoc.l10n.setAttributes(inputSpanLabel, l10nLabelId);
+      } else if (label) {
+        inputSpanLabel.textContent = label;
+      }
       inputLabel.appendChild(checkbox);
       inputLabel.appendChild(inputSpanLabel);
 

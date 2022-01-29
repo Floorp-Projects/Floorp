@@ -45,6 +45,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val FORMS5_HTML_PATH = "/assets/www/forms5.html"
         const val SELECT_HTML_PATH = "/assets/www/select.html"
         const val SELECT_MULTIPLE_HTML_PATH = "/assets/www/select-multiple.html"
+        const val SELECT_LISTBOX_HTML_PATH = "/assets/www/select-listbox.html"
         const val ADDRESS_FORM_HTML_PATH = "/assets/www/address_form.html"
         const val FORMS_AUTOCOMPLETE_HTML_PATH = "/assets/www/forms_autocomplete.html"
         const val FORMS_ID_VALUE_HTML_PATH = "/assets/www/forms_id_value.html"

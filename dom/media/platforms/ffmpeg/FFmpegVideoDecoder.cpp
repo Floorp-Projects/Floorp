@@ -199,23 +199,10 @@ bool FFmpegVideoDecoder<LIBAV_VER>::CreateVAAPIDeviceContext() {
   AVHWDeviceContext* hwctx = (AVHWDeviceContext*)mVAAPIDeviceContext->data;
   AVVAAPIDeviceContext* vactx = (AVVAAPIDeviceContext*)hwctx->hwctx;
 
-  if (StaticPrefs::media_ffmpeg_vaapi_drm_display_enabled()) {
-    mDisplay = mLib->vaGetDisplayDRM(widget::GetDMABufDevice()->GetDRMFd());
-    if (!mDisplay) {
-      FFMPEG_LOG("  Can't get DRM VA-API display.");
-      return false;
-    }
-  } else {
-    wl_display* display = widget::WaylandDisplayGetWLDisplay();
-    if (!display) {
-      FFMPEG_LOG("  Can't get default wayland display.");
-      return false;
-    }
-    mDisplay = mLib->vaGetDisplayWl(display);
-    if (!mDisplay) {
-      FFMPEG_LOG("  Can't get Wayland VA-API display.");
-      return false;
-    }
+  mDisplay = mLib->vaGetDisplayDRM(widget::GetDMABufDevice()->GetDRMFd());
+  if (!mDisplay) {
+    FFMPEG_LOG("  Can't get DRM VA-API display.");
+    return false;
   }
 
   hwctx->user_opaque = new VAAPIDisplayHolder<LIBAV_VER>(mLib, mDisplay);

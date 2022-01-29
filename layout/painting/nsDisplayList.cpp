@@ -1552,6 +1552,7 @@ const nsIFrame* nsDisplayListBuilder::FindReferenceFrameFor(
 
   if (aOffset) {
     *aOffset = aFrame->GetOffsetToCrossDoc(mReferenceFrame);
+    MaybeApplyAdditionalOffset();
   }
 
   return mReferenceFrame;
@@ -2006,6 +2007,32 @@ void nsDisplayListBuilder::BuildCompositorHitTestInfoIfNeeded(
   if (info != CompositorHitTestInvisibleToHit) {
     aList->AppendNewToTop<nsDisplayCompositorHitTestInfo>(this, aFrame);
   }
+}
+
+void nsDisplayListBuilder::AddReusableDisplayItem(nsDisplayItem* aItem) {
+  mReuseableItems.Insert(aItem);
+}
+
+void nsDisplayListBuilder::RemoveReusedDisplayItem(nsDisplayItem* aItem) {
+  MOZ_ASSERT(aItem->IsReusedItem());
+  mReuseableItems.Remove(aItem);
+}
+
+void nsDisplayListBuilder::ClearReuseableDisplayItems() {
+  const size_t total = mReuseableItems.Count();
+
+  size_t reused = 0;
+  for (auto* item : mReuseableItems) {
+    if (item->IsReusedItem()) {
+      reused++;
+      item->SetReusable();
+    } else {
+      item->Destroy(this);
+    }
+  }
+
+  DL_LOGI("RDL - Reused %zu of %zu SC display items", reused, total);
+  mReuseableItems.Clear();
 }
 
 void nsDisplayListBuilder::ReuseDisplayItem(nsDisplayItem* aItem) {

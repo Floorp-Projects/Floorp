@@ -2294,31 +2294,10 @@ static UINT GetCurrentShowCmd(HWND aWnd) {
   return pl.showCmd;
 }
 
-void nsWindow::SetSizeModeInternal(nsSizeMode aMode,
-                                   nsIScreen* aFullscreenTarget) {
-  // Let's not try and do anything if we're already in that state.
-  // (This is needed to prevent problems when calling window.minimize(), which
-  // calls us directly, and then the OS triggers another call to us.)
-  if (aMode == mSizeMode) return;
-
-  const bool currentlyFullscreen = mSizeMode == nsSizeMode_Fullscreen;
-  const bool requestedFullscreen = aMode == nsSizeMode_Fullscreen;
-  const bool fullscreenChanging = currentlyFullscreen || requestedFullscreen;
-
-  MOZ_DIAGNOSTIC_ASSERT(currentlyFullscreen == mFullscreenMode);
-
-  if (fullscreenChanging) {
-    if (mWidgetListener) {
-      mWidgetListener->FullscreenWillChange(requestedFullscreen);
-    }
-
-    mFullscreenMode = requestedFullscreen;
-  }
-
+void nsWindow::SetSizeModeInternal(nsSizeMode aMode) {
   // save the requested state
   mLastSizeMode = mSizeMode;
   nsBaseWidget::SetSizeMode(aMode);
-
   if (mIsVisible) {
     switch (aMode) {
       case nsSizeMode_Fullscreen:
@@ -2334,8 +2313,6 @@ void nsWindow::SetSizeModeInternal(nsSizeMode aMode,
         break;
 
       default:
-        MOZ_ASSERT(aMode == nsSizeMode_Normal);
-
         // Don't call ::ShowWindow if we're trying to "restore" a window that is
         // already in a normal state.  Prevents a bug where snapping to one side
         // of the screen and then minimizing would cause Windows to forget our
@@ -2346,40 +2323,8 @@ void nsWindow::SetSizeModeInternal(nsSizeMode aMode,
     }
   }
 
-  if (fullscreenChanging) {
-    // taskbarInfo will be nullptr pre Windows 7 until Bug 680227 is resolved.
-    nsCOMPtr<nsIWinTaskbar> taskbarInfo = do_GetService(NS_TASKBAR_CONTRACTID);
-
-    if (requestedFullscreen && taskbarInfo) {
-      // Notify the taskbar that we will be entering full screen mode.
-      taskbarInfo->PrepareFullScreenHWND(mWnd, TRUE);
-    }
-
-    // If we are going fullscreen, the window size continues to change
-    // and the window will be reflow again then.
-    UpdateNonClientMargins(mSizeMode, /* Reflow */ !requestedFullscreen);
-
-    // Will call hide chrome, reposition window. Note this will
-    // also cache dimensions for restoration, so it should only
-    // be called once per fullscreen request.
-    nsBaseWidget::InfallibleMakeFullScreen(requestedFullscreen,
-                                           aFullscreenTarget);
-
-    if (mIsVisible && aMode != nsSizeMode_Minimized) {
-      DispatchFocusToTopLevelWindow(true);
-    }
-
-    if (!requestedFullscreen && taskbarInfo) {
-      // Notify the taskbar that we have exited full screen mode.
-      taskbarInfo->PrepareFullScreenHWND(mWnd, FALSE);
-    }
-
-    OnSizeModeChange(mSizeMode);
-
-    if (mWidgetListener) {
-      mWidgetListener->FullscreenChanged(requestedFullscreen);
-    }
-  } else if (mIsVisible && aMode != nsSizeMode_Minimized) {
+  // we activate here to ensure that the right child window is focused
+  if (mIsVisible && (aMode == nsSizeMode_Maximized || aMode == nsSizeMode_Fullscreen)) {
     DispatchFocusToTopLevelWindow(true);
   }
 }
@@ -2394,7 +2339,22 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
     return;
   }
 
-  SetSizeModeInternal(aMode, nullptr);
+  // Let's not try and do anything if we're already in that state.
+  // (This is needed to prevent problems when calling window.minimize(), which
+  // calls us directly, and then the OS triggers another call to us.)
+  if (aMode == mSizeMode) return;
+
+  if (aMode == nsSizeMode_Fullscreen) {
+    MakeFullScreen(true, nullptr);
+  } else if ((mSizeMode == nsSizeMode_Fullscreen) && (aMode == nsSizeMode_Normal)) {
+    // If we are in fullscreen mode, minimize should work like normal and
+    // return us to fullscreen mode when unminimized. Maximize isn't really
+    // available and won't do anything. "Restore" should do the same thing as
+    // requesting to end fullscreen.
+    MakeFullScreen(false, nullptr);
+  } else {
+    SetSizeModeInternal(aMode);
+  }
 }
 
 void DoGetWorkspaceID(HWND aWnd, nsAString* aWorkspaceID) {
@@ -3719,11 +3679,60 @@ void nsWindow::CleanupFullscreenTransition() {
 }
 
 nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
+  if (mFullscreenMode == aFullScreen) {
+    return NS_OK;
+  }
+
+  if (mWidgetListener) {
+    mWidgetListener->FullscreenWillChange(aFullScreen);
+  }
+
+  mFullscreenMode = aFullScreen;
   if (aFullScreen) {
     mOldSizeMode = mSizeMode;
-    SetSizeModeInternal(nsSizeMode_Fullscreen, aTargetScreen);
+    SetSizeModeInternal(nsSizeMode_Fullscreen);
   } else {
-    SetSizeModeInternal(mOldSizeMode, aTargetScreen);
+    if (mSizeMode != mOldSizeMode) {
+      SetSizeModeInternal(mOldSizeMode);
+    }
+
+    MOZ_ASSERT(mSizeMode == mOldSizeMode);
+  }
+
+  // taskbarInfo will be nullptr pre Windows 7 until Bug 680227 is resolved.
+  nsCOMPtr<nsIWinTaskbar> taskbarInfo = do_GetService(NS_TASKBAR_CONTRACTID);
+
+  // Notify the taskbar that we will be entering full screen mode.
+  if (aFullScreen && taskbarInfo) {
+    taskbarInfo->PrepareFullScreenHWND(mWnd, TRUE);
+  }
+
+  // If we are going fullscreen, the window size continues to change
+  // and the window will be reflow again then.
+  UpdateNonClientMargins(mSizeMode, /* Reflow */ !aFullScreen);
+
+  // Will call hide chrome, reposition window. Note this will
+  // also cache dimensions for restoration, so it should only
+  // be called once per fullscreen request.
+  nsBaseWidget::InfallibleMakeFullScreen(aFullScreen, aTargetScreen);
+
+  if (mIsVisible && !aFullScreen && mSizeMode == nsSizeMode_Normal) {
+    MOZ_ASSERT(mSizeMode == mOldSizeMode);
+
+    // Ensure the window exiting fullscreen get activated. Window
+    // activation might be bypassed in SetSizeMode.
+    DispatchFocusToTopLevelWindow(true);
+  }
+
+  // Notify the taskbar that we have exited full screen mode.
+  if (!aFullScreen && taskbarInfo) {
+    taskbarInfo->PrepareFullScreenHWND(mWnd, FALSE);
+  }
+
+  OnSizeModeChange(mSizeMode);
+
+  if (mWidgetListener) {
+    mWidgetListener->FullscreenChanged(aFullScreen);
   }
 
   return NS_OK;
