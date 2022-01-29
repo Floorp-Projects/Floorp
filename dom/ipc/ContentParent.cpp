@@ -5927,7 +5927,9 @@ nsresult ContentParent::AboutToLoadHttpFtpDocumentForChild(
   }
 
   nsCOMPtr<nsIPrincipal> principal;
-  rv = ssm->GetChannelResultPrincipal(aChannel, getter_AddRefs(principal));
+  nsCOMPtr<nsIPrincipal> partitionedPrincipal;
+  rv = ssm->GetChannelResultPrincipals(aChannel, getter_AddRefs(principal),
+                                       getter_AddRefs(partitionedPrincipal));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Let the caller know we're going to send main thread IPC for updating
@@ -5938,7 +5940,13 @@ nsresult ContentParent::AboutToLoadHttpFtpDocumentForChild(
 
   TransmitBlobURLsForPrincipal(principal);
 
+  // Tranmit permissions for both regular and partitioned principal so that the
+  // content process can get permissions for the partitioned principal. For
+  // example, the desk-notification permission for a partitioned service worker.
   rv = TransmitPermissionsForPrincipal(principal);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = TransmitPermissionsForPrincipal(partitionedPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsLoadFlags newLoadFlags;
