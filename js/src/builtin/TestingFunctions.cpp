@@ -3019,6 +3019,38 @@ static bool NewObjectWithAddPropertyHook(JSContext* cx, unsigned argc,
   return true;
 }
 
+static bool SetWatchtowerCallback(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  JSFunction* fun = nullptr;
+  if (args.length() != 1 || !IsFunctionObject(args[0], &fun)) {
+    JS_ReportErrorASCII(cx, "Expected a single function argument.");
+    return false;
+  }
+
+  cx->watchtowerTestingCallbackRef() = fun;
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool AddWatchtowerTarget(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() != 1 || !args[0].isObject()) {
+    JS_ReportErrorASCII(cx, "Expected a single object argument.");
+    return false;
+  }
+
+  RootedObject obj(cx, &args[0].toObject());
+  if (!JSObject::setUseWatchtowerTestingCallback(cx, obj)) {
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
 struct TestExternalString : public JSExternalStringCallbacks {
   void finalize(char16_t* chars) const override { js_free(chars); }
   size_t sizeOfBuffer(const char16_t* chars,
@@ -8115,6 +8147,18 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Returns a new object with an addProperty JSClass hook. This hook\n"
 "  increments the value of the _propertiesAdded data property on the object\n"
 "  when a new property is added."),
+
+    JS_FN_HELP("setWatchtowerCallback", SetWatchtowerCallback, 1, 0,
+"setWatchtowerCallback(function)",
+"  Use the given function as callback for objects added to Watchtower by\n"
+"  addWatchtowerTarget. The callback is called with the following arguments:\n"
+"  - kind: a string describing the kind of mutation, for example \"add-prop\"\n"
+"  - object: the object being mutated\n"
+"  - extra: an extra value, for example the name of the property being added"),
+
+    JS_FN_HELP("addWatchtowerTarget", AddWatchtowerTarget, 1, 0,
+"addWatchtowerTarget(object)",
+"  Invoke the watchtower callback for changes to this object."),
 
     JS_FN_HELP("newString", NewString, 2, 0,
 "newString(str[, options])",

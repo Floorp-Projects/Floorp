@@ -335,6 +335,30 @@ class PromptDelegateTest : BaseSessionTest() {
 
     @Test
     @WithDisplay(width = 100, height = 100)
+    fun selectTestSize() {
+        mainSession.loadTestPath(SELECT_LISTBOX_HTML_PATH)
+        sessionRule.waitForPageStop()
+
+        val result = GeckoResult<Void>()
+        sessionRule.delegateUntilTestEnd(object : PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onChoicePrompt(session: GeckoSession, prompt: PromptDelegate.ChoicePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat("Should not be multiple", prompt.type, equalTo(PromptDelegate.ChoicePrompt.Type.SINGLE));
+                assertThat("There should be three choices", prompt.choices.size, equalTo(3));
+                assertThat("First choice is correct", prompt.choices[0].label, equalTo("ABC"));
+                assertThat("Second choice is correct", prompt.choices[1].label, equalTo("DEF"));
+                assertThat("Third choice is correct", prompt.choices[2].label, equalTo("GHI"));
+                result.complete(null);
+                return null
+            }
+        })
+
+        mainSession.synthesizeTap(10, 10)
+        sessionRule.waitForResult(result)
+    }
+
+    @Test
+    @WithDisplay(width = 100, height = 100)
     fun selectTestMultiple() {
         mainSession.loadTestPath(SELECT_MULTIPLE_HTML_PATH)
         sessionRule.waitForPageStop()

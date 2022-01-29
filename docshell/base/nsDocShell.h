@@ -1093,7 +1093,9 @@ class nsDocShell final : public nsDocLoader,
   // Sets the active entry to the current loading entry. aPersist is used in the
   // case a new session history entry is added to the session history.
   // aExpired is true if the relevant nsIChannel has its cache token expired.
-  void MoveLoadingToActiveEntry(bool aPersist, bool aExpired);
+  // aCacheKey is the channel's cache key.
+  void MoveLoadingToActiveEntry(bool aPersist, bool aExpired,
+                                uint32_t aCacheKey);
 
   void ActivenessMaybeChanged();
 

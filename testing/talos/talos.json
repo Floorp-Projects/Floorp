@@ -13,8 +13,7 @@
             "tests": ["tart_flex", "ts_paint_flex"]
         },
         "other": {
-            "_comment": "Bug 1220362 - Disabled startup_about_home_paint_cached for high frequency intermittents",
-            "tests": ["a11yr", "ts_paint", "twinopen", "sessionrestore", "sessionrestore_no_auto_restore", "tabpaint", "cpstartup", "startup_about_home_paint", "pdfpaint", "cross_origin_pageload"]
+            "tests": ["a11yr", "ts_paint", "twinopen", "sessionrestore", "sessionrestore_no_auto_restore", "tabpaint", "cpstartup", "startup_about_home_paint", "pdfpaint", "cross_origin_pageload", "startup_about_home_paint_cached"]
         },
         "sessionrestore-many-windows": {
             "tests": ["sessionrestore_many_windows"]

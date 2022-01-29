@@ -582,11 +582,11 @@ void AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(nsIChannel* aChannel) {
     auto* basePrin = BasePrincipal::Cast(topWindowPrincipal);
     bool isThirdParty = true;
 
-    // For about:blank, we can't just compare uri to determine whether the page
-    // is third-party, so we use channel result principal instead. By doing
-    // this, an about:blank inherits the principal from its parent is considered
-    // not a third-party.
-    if (NS_IsAboutBlank(uri)) {
+    // For about:blank and about:srcdoc, we can't just compare uri to determine
+    // whether the page is third-party, so we use channel result principal
+    // instead. By doing this, an the resource inherits the principal from
+    // its parent is considered not a third-party.
+    if (NS_IsAboutBlank(uri) || NS_IsAboutSrcdoc(uri)) {
       nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
       if (NS_WARN_IF(!ssm)) {
         return;
@@ -626,8 +626,9 @@ bool AntiTrackingUtils::IsThirdPartyWindow(nsPIDOMWindowInner* aWindow,
   // We assume that the window is foreign to the URI by default.
   bool thirdParty = true;
 
-  // This is to comply with ThirdPartyUtil::IsThirdPartyWindow API.
-  if (aURI && !NS_IsAboutBlank(aURI)) {
+  // We will skip checking URIs for about:blank and about:srcdoc because they
+  // have no domain. So, comparing them will always fail.
+  if (aURI && !NS_IsAboutBlank(aURI) && !NS_IsAboutSrcdoc(aURI)) {
     nsCOMPtr<nsIScriptObjectPrincipal> scriptObjPrin =
         do_QueryInterface(aWindow);
     if (!scriptObjPrin) {

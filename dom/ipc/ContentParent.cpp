@@ -7221,11 +7221,12 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyOnHistoryReload(
 mozilla::ipc::IPCResult ContentParent::RecvHistoryCommit(
     const MaybeDiscarded<BrowsingContext>& aContext, const uint64_t& aLoadID,
     const nsID& aChangeID, const uint32_t& aLoadType, const bool& aPersist,
-    const bool& aCloneEntryChildren, const bool& aChannelExpired) {
+    const bool& aCloneEntryChildren, const bool& aChannelExpired,
+    const uint32_t& aCacheKey) {
   if (!aContext.IsDiscarded()) {
     aContext.get_canonical()->SessionHistoryCommit(
         aLoadID, aChangeID, aLoadType, aPersist, aCloneEntryChildren,
-        aChannelExpired);
+        aChannelExpired, aCacheKey);
   }
 
   return IPC_OK();

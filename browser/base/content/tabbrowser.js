@@ -2541,6 +2541,12 @@
       return this.addTab(aURI, params);
     },
 
+    /**
+     * @returns {object}
+     *    The new tab. The return value will be null if the tab couldn't be
+     *    created; this shouldn't normally happen, and an error will be logged
+     *    to the console if it does.
+     */
     // eslint-disable-next-line complexity
     addTab(
       aURI,
@@ -2824,15 +2830,9 @@
           // but we were opened from another browser, set the cross group
           // opener ID:
           if (openerBrowser && !openWindowInfo) {
-            try {
-              b.browsingContext.setCrossGroupOpener(
-                openerBrowser.browsingContext
-              );
-            } catch (ex) {
-              // Shouldn't happen, but we shouldn't break tabbrowser if
-              // this failed.
-              Cu.reportError(ex);
-            }
+            b.browsingContext.setCrossGroupOpener(
+              openerBrowser.browsingContext
+            );
           }
         }
       } catch (e) {
@@ -2844,7 +2844,7 @@
           this._tabListeners.delete(t);
           this.getPanel(t.linkedBrowser).remove();
         }
-        throw e;
+        return null;
       }
 
       // Hack to ensure that the about:newtab, and about:welcome favicon is loaded
