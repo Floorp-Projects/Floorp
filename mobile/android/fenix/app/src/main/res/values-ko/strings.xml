@@ -233,7 +233,7 @@
     <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
     <string name="browser_menu_read_close">리더뷰 닫기</string>
     <!-- Browser menu button to open the current page in an external app -->
-    <string name="browser_menu_open_app_link">앱으로 열기</string>
+    <string name="browser_menu_open_app_link">앱에서 열기</string>
 
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string moz:removedIn="96" name="browser_menu_read_appearance" tools:ignore="UnusedResources">모양</string>
@@ -979,9 +979,9 @@
     <!-- Bookmark overflow menu share button -->
     <string name="bookmark_menu_share_button">공유</string>
     <!-- Bookmark overflow menu open in new tab button -->
-    <string name="bookmark_menu_open_in_new_tab_button">새 탭에 열기</string>
+    <string name="bookmark_menu_open_in_new_tab_button">새 탭에서 열기</string>
     <!-- Bookmark overflow menu open in private tab button -->
-    <string name="bookmark_menu_open_in_private_tab_button">사생활 보호 탭에 열기</string>
+    <string name="bookmark_menu_open_in_private_tab_button">사생활 보호 탭에서 열기</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">삭제</string>
 

@@ -22,8 +22,6 @@
 
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">1 tab agored. Tapio i newid tabiau.</string>
-    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s tab agored. Tapio i newid tabiau.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d wedi’u dewis</string>
@@ -117,8 +115,6 @@
     <string name="tab_tray_inactive_auto_close_body">Gall Firefox gau tabiau nad ydych wedi edrych arnyn nhw dros y mis diwethaf.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Cau</string>
-    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
-    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">Troi autogau ymlaen</string>
 
     <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_turn_on_auto_close_button_2">Troi autogau ymlaen</string>
@@ -129,9 +125,6 @@
     <string name="home_screen_shortcut_open_new_tab_2">Tab newydd</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Tab preifat newydd</string>
-
-    <!-- Heading for the Top Sites block -->
-    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Hoff wefannau</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -181,8 +174,6 @@
     <string name="browser_menu_refresh">Adnewyddu</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Atal</string>
-    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Nod Tudalen</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">Golygu nod tudalen</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -476,6 +467,23 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Papur wal</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Llwybrau byr wedi’u noddi</string>
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">Eitem papur wal: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">Papur wal wedi’i ddiweddaru!</string>
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">Golwg</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label">Tapiwch y logo i newid y papur wal</string>
+    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_description">Cylchwch drwyddyn nhw a diweddaru’r ddelwedd heb adael y dudalen gartref.</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">Nid yw’r ychwanegyn yn cael ei gefnogi</string>
@@ -583,8 +591,6 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Cychwyn Sync</string>
-    <!-- Preference for pairing -->
-    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Sganiwch god paru yn Firefox bwrdd gwaith</string>
     <!-- Preference for account login -->
     <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">Mewngofnodi</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -773,8 +779,6 @@
     <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">Agor Tabiau</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">Cadw i Gasgliad</string>
-    <!-- Text shown in the menu for the collection selector -->
-    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Dewis</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Rhannu pob tab</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -932,8 +936,6 @@
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
     <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">Dewislen nodau tudalen</string>
-    <!-- Screen title for editing bookmarks -->
-    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Golygu nod tudalen</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">Dewis ffolder</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1215,7 +1217,7 @@
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">DADWNEUD</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string moz:removedIn="96" name="snackbar_top_site_removed" tools:ignore="UnusedResources">Tynnwyd y wefan</string>
+    <string name="snackbar_top_site_removed">Tynnwyd y wefan</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">Dadwneud</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -1866,6 +1868,8 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="bookmark_deletion_confirmation">Ydych chi’n siŵr eich bod am ddileu’r nod tudalen yma?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">Ychwanegu i Hoff wefan</string>
+    <!-- Browser menu button that removes a top site from the home fragment -->
+    <string name="browser_menu_remove_from_top_sites">Tynnu o’r hoff wefannau</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Dilyswyd gan: %1$s</string>
@@ -1940,10 +1944,12 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Iawn, Wedi deall!</string>
 
-    <!-- Label for the preference to show the most visited top sites on the homepage -->
-    <string name="top_sites_toggle_top_recent_sites_3">Dangos yr hoff wefannau yr ymwelwyd â nhw amlaf</string>
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Dangos yr hoff wefannau yr ymwelwyd â nhw amlaf</string>
 
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">Llwybrau byr</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Enw</string>
 	<!-- Hint for renaming title of a top site -->
 	<string name="top_site_name_hint">Enw’r hoff wefan</string>
@@ -1957,12 +1963,6 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="inactive_tabs_title">Tabiau anweithredol</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Caewch bob tab anweithredol</string>
-    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string moz:removedIn="95" name="inactive_tabs_description" tools:ignore="UnusedResources">Mae tabiau ar gael yma am %s. Wedi hynny, bydd y tabiau’n cael eu cau’n awtomatig.</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 diwrnod</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 wythnos</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
@@ -1977,8 +1977,6 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Helpwch ni i wella, os gwelwch yn dda</string>
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
     <string name="inactive_tabs_survey_header_1">Helpwch i wella Firefox</string>
 
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
@@ -1988,11 +1986,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_do_it_myself">Rwy’n hoffi clirio hen dabiau fy hun</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Mae’r amser i anweithredol yn rhy hir</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_time_too_long_option_1">Mae’r cyfnod o bythefnos yn rhy hir</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Mae’r amser i anweithredol yn rhy fyr</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_time_too_short_option_1">Mae’r cyfnod o bythefnos yn rhy fyr</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
