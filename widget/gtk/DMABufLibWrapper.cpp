@@ -272,15 +272,6 @@ bool nsDMABufDevice::IsDMABufTexturesEnabled() {
 #else
 bool nsDMABufDevice::IsDMABufTexturesEnabled() { return false; }
 #endif
-bool nsDMABufDevice::IsDMABufVideoEnabled() {
-  LOGDMABUF(
-      ("nsDMABufDevice::IsDMABufVideoEnabled: EGL %d DMABufEnabled %d  "
-       "!media_ffmpeg_dmabuf_textures_disabled %d\n",
-       gfx::gfxVars::UseEGL(), IsDMABufEnabled(),
-       !StaticPrefs::media_ffmpeg_dmabuf_textures_disabled()));
-  return !StaticPrefs::media_ffmpeg_dmabuf_textures_disabled() &&
-         gfx::gfxVars::UseDMABuf() && IsDMABufEnabled();
-}
 bool nsDMABufDevice::IsDMABufVAAPIEnabled() {
   LOGDMABUF(
       ("nsDMABufDevice::IsDMABufVAAPIEnabled: EGL %d "

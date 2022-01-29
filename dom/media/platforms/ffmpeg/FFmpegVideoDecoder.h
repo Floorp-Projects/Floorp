@@ -132,16 +132,12 @@ class FFmpegVideoDecoder<LIBAV_VER>
 
   MediaResult CreateImageVAAPI(int64_t aOffset, int64_t aPts, int64_t aDuration,
                                MediaDataDecoder::DecodedData& aResults);
-  MediaResult CreateImageDMABuf(int64_t aOffset, int64_t aPts,
-                                int64_t aDuration,
-                                MediaDataDecoder::DecodedData& aResults);
 #endif
 
 #ifdef MOZ_WAYLAND_USE_VAAPI
   AVBufferRef* mVAAPIDeviceContext;
   bool mEnableHardwareDecoding;
   VADisplay mDisplay;
-  bool mUseDMABufSurfaces;
   UniquePtr<VideoFramePool> mVideoFramePool;
   static nsTArray<AVCodecID> mAcceleratedFormats;
 #endif
