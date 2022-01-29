@@ -22,20 +22,15 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ReadableStreamBYOBReader,
-                                   ReadableStreamGenericReader,
-                                   mReadIntoRequests)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(ReadableStreamBYOBReader,
+                                                ReadableStreamGenericReader,
+                                                mReadIntoRequests)
 NS_IMPL_ADDREF_INHERITED(ReadableStreamBYOBReader, ReadableStreamGenericReader)
 NS_IMPL_RELEASE_INHERITED(ReadableStreamBYOBReader, ReadableStreamGenericReader)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamBYOBReader)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END_INHERITING(ReadableStreamGenericReader)
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ReadableStreamBYOBReader,
-                                               ReadableStreamGenericReader)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 JSObject* ReadableStreamBYOBReader::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
