@@ -6,27 +6,18 @@ import React from "react";
 
 function PopularTopics(props) {
   return (
-    <>
-      <h3 data-l10n-id="pocket-panel-home-explore-popular-topics"></h3>
-      <ul>
-        {props.topics.map(item => (
-          <li key={`item-${item.topic}`}>
-            <a
-              className="pkt_ext_topic"
-              href={`https://${props.pockethost}/explore/${item.topic}?utm_source=${props.utmsource}`}
-            >
-              {item.title}
-              <span className="pkt_ext_chevron_right"></span>
-            </a>
-          </li>
-        ))}
-      </ul>
-      <a
-        className="pkt_ext_discover"
-        href={`https://${props.pockethost}/explore?utm_source=${props.utmsource}`}
-        data-l10n-id="pocket-panel-home-discover-more"
-      />
-    </>
+    <ul className="stp_popular_topics">
+      {props.topics.map(topic => (
+        <li key={`item-${topic.topic}`} className="stp_popular_topic">
+          <a
+            className="stp_popular_topic_link"
+            href={`https://${props.pockethost}/explore/${topic.topic}?utm_source=${props.utmsource}`}
+          >
+            {topic.title}
+          </a>
+        </li>
+      ))}
+    </ul>
   );
 }
 
