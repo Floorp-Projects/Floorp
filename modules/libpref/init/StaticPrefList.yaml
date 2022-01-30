@@ -4981,6 +4981,21 @@
   value: 5000
   mirror: always
 
+# Temporary pref to test website compatibility with Firefox 100 UA string. This
+# pref will be removed in Firefox 100 because it will no longer needed.
+- name: general.useragent.forceVersion100
+  type: bool
+  value: false
+  mirror: always
+
+# Temporary pref to remember whether we have handled the Nimbus enrollment
+# event for the Firefox 100 UA experiment. This pref will be removed in Firefox
+# 100 because the experiment will have ended.
+- name: general.useragent.handledVersionExperimentEnrollment
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "geo."
 #---------------------------------------------------------------------------
@@ -8758,12 +8773,6 @@
     mirror: always
 
 #ifdef MOZ_WAYLAND
-# Disable DMABuf for ffmpeg video textures on Linux
-- name: media.ffmpeg.dmabuf-textures.disabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Use VA-API for ffmpeg video playback on Linux
 - name: media.ffmpeg.vaapi.enabled
   type: RelaxedAtomicBool
