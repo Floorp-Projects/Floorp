@@ -1,4 +1,4 @@
-// |jit-test| skip-if: helperThreadCount() === 0
+// |jit-test| skip-if: helperThreadCount() === 0 || isLcovEnabled()
 
 // Extra GCs can empty the StencilCache to reclaim memory. This lines
 // re-configure the gc-zeal setting to prevent this from happening in this test
