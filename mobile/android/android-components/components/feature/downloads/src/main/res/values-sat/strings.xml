@@ -46,4 +46,9 @@
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">%1$s ᱵᱟᱝ ᱠᱷᱩᱞᱟᱹ ᱫᱟᱲᱮᱞᱟᱱᱟ</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">ᱨᱮᱫ ᱰᱟᱩᱱᱞᱚᱰ ᱞᱟᱹᱜᱤᱫ ᱨᱮᱫ ᱟᱨ ᱢᱮᱰᱤᱭᱟ ᱯᱟᱹᱨᱢᱤᱥᱚᱱ ᱟᱫᱮᱨ ᱫᱚᱨᱠᱟᱨ ᱾ ᱮᱱᱰᱨᱚᱭᱮᱰ ᱥᱟᱡᱟᱣ ᱛᱮ ᱪᱟᱞᱟᱜ ᱢᱮ, ᱯᱟᱹᱨᱢᱤᱥᱚᱱ ᱨᱮ ᱴᱤᱯᱟᱹᱣ ᱢᱮ, ᱟᱨ ᱮᱢ ᱪᱷᱚ ᱨᱮ ᱴᱤᱯᱟᱹᱣ ᱢᱮ ᱾</string>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">ᱰᱟᱩᱱᱞᱚᱰ ᱠᱚ ᱵᱟᱹᱰᱨᱟᱹᱭ ᱢᱮ</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">ᱯᱨᱟᱭᱣᱮᱴ ᱵᱽᱨᱟᱩᱡᱤᱝ ᱨᱮ ᱛᱟᱦᱮᱸᱱ ᱢᱮ</string>
 </resources>
