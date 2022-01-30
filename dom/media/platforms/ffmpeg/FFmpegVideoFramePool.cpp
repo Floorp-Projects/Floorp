@@ -15,25 +15,24 @@
 
 namespace mozilla {
 
-RefPtr<layers::Image> VideoFrameSurfaceDMABuf::GetAsImage() {
+RefPtr<layers::Image> VideoFrameSurfaceVAAPI::GetAsImage() {
   return new layers::DMABUFSurfaceImage(mSurface);
 }
 
-VideoFrameSurfaceDMABuf::VideoFrameSurfaceDMABuf(DMABufSurface* aSurface)
-    : mSurface(aSurface) {
+VideoFrameSurfaceVAAPI::VideoFrameSurfaceVAAPI(DMABufSurface* aSurface)
+    : mSurface(aSurface),
+      mLib(nullptr),
+      mAVHWFramesContext(nullptr),
+      mHWAVBuffer(nullptr) {
   // Create global refcount object to track mSurface usage over
   // gects rendering engine. We can't release it until it's used
   // by GL compositor / WebRender.
   MOZ_ASSERT(mSurface);
   MOZ_RELEASE_ASSERT(mSurface->GetAsDMABufSurfaceYUV());
   mSurface->GlobalRefCountCreate();
-  mSurface->GlobalRefAdd();
-  FFMPEG_LOG("VideoFrameSurfaceDMABuf: creating surface UID = %d",
+  FFMPEG_LOG("VideoFrameSurfaceVAAPI: creating surface UID = %d",
              mSurface->GetUID());
 }
-
-VideoFrameSurfaceVAAPI::VideoFrameSurfaceVAAPI(DMABufSurface* aSurface)
-    : VideoFrameSurfaceDMABuf(aSurface) {}
 
 void VideoFrameSurfaceVAAPI::LockVAAPIData(AVCodecContext* aAVCodecContext,
                                            AVFrame* aAVFrame,
@@ -55,12 +54,14 @@ void VideoFrameSurfaceVAAPI::ReleaseVAAPIData(bool aForFrameRecycle) {
   // In such case we don't care as the dmabuf surface will not be
   // recycled for another frame and stays here untill last fd of it
   // is closed.
-  mLib->av_buffer_unref(&mHWAVBuffer);
-  mLib->av_buffer_unref(&mAVHWFramesContext);
+  if (mLib) {
+    mLib->av_buffer_unref(&mHWAVBuffer);
+    mLib->av_buffer_unref(&mAVHWFramesContext);
+  }
 
+  // If we want to recycle the frame, make sure it's not used
+  // by gecko rendering pipeline.
   if (aForFrameRecycle) {
-    // If we want to recycle the frame, make sure it's not used
-    // by gecko rendering pipeline.
     MOZ_DIAGNOSTIC_ASSERT(!IsUsed());
     mSurface->ReleaseSurface();
   }
@@ -73,8 +74,7 @@ VideoFrameSurfaceVAAPI::~VideoFrameSurfaceVAAPI() {
   ReleaseVAAPIData(/* aForFrameRecycle */ false);
 }
 
-VideoFramePool::VideoFramePool(bool aUseVAAPI)
-    : mUseVAAPI(aUseVAAPI), mSurfaceLock("VideoFramePoolSurfaceLock") {}
+VideoFramePool::VideoFramePool() : mSurfaceLock("VideoFramePoolSurfaceLock") {}
 
 VideoFramePool::~VideoFramePool() {
   MutexAutoLock lock(mSurfaceLock);
@@ -82,14 +82,11 @@ VideoFramePool::~VideoFramePool() {
 }
 
 void VideoFramePool::ReleaseUnusedVAAPIFrames() {
-  if (!mUseVAAPI) {
-    return;
-  }
   MutexAutoLock lock(mSurfaceLock);
   for (const auto& surface : mDMABufSurfaces) {
-    auto* dmabufSurface = surface->AsVideoFrameSurfaceVAAPI();
-    if (!dmabufSurface->IsUsed()) {
-      dmabufSurface->ReleaseVAAPIData();
+    auto* vaapiSurface = surface->AsVideoFrameSurfaceVAAPI();
+    if (!vaapiSurface->IsUsed()) {
+      vaapiSurface->ReleaseVAAPIData();
     }
   }
 }
@@ -99,10 +96,8 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetFreeVideoFrameSurface() {
     if (surface->IsUsed()) {
       continue;
     }
-    if (auto* vaapiSurface = surface->AsVideoFrameSurfaceVAAPI()) {
-      vaapiSurface->ReleaseVAAPIData();
-    }
-    surface->MarkAsUsed();
+    auto* vaapiSurface = surface->AsVideoFrameSurfaceVAAPI();
+    vaapiSurface->ReleaseVAAPIData();
     return surface;
   }
   return nullptr;
@@ -111,9 +106,6 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetFreeVideoFrameSurface() {
 RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
     VADRMPRIMESurfaceDescriptor& aVaDesc, AVCodecContext* aAVCodecContext,
     AVFrame* aAVFrame, FFmpegLibWrapper* aLib) {
-  // VADRMPRIMESurfaceDescriptor can be used with VA-API only.
-  MOZ_ASSERT(mUseVAAPI);
-
   if (aVaDesc.fourcc != VA_FOURCC_NV12 && aVaDesc.fourcc != VA_FOURCC_YV12 &&
       aVaDesc.fourcc != VA_FOURCC_P010) {
     FFMPEG_LOG("Unsupported VA-API surface format %d", aVaDesc.fourcc);
@@ -129,7 +121,7 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
       return nullptr;
     }
     FFMPEG_LOG("Created new VA-API DMABufSurface UID = %d", surface->GetUID());
-    RefPtr<VideoFrameSurfaceDMABuf> surf = new VideoFrameSurfaceVAAPI(surface);
+    RefPtr<VideoFrameSurfaceVAAPI> surf = new VideoFrameSurfaceVAAPI(surface);
     if (!mTextureCreationWorks) {
       mTextureCreationWorks = Some(surface->VerifyTextureCreation());
     }
@@ -147,48 +139,11 @@ RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
     FFMPEG_LOG("Reusing VA-API DMABufSurface UID = %d", surface->GetUID());
   }
 
-  if (auto* vaapiSurface = videoSurface->AsVideoFrameSurfaceVAAPI()) {
-    vaapiSurface->LockVAAPIData(aAVCodecContext, aAVFrame, aLib);
-  }
+  auto* vaapiSurface = videoSurface->AsVideoFrameSurfaceVAAPI();
+  vaapiSurface->LockVAAPIData(aAVCodecContext, aAVFrame, aLib);
+  vaapiSurface->MarkAsUsed();
+
   return videoSurface;
-}
-
-RefPtr<VideoFrameSurface> VideoFramePool::GetVideoFrameSurface(
-    AVPixelFormat aPixelFormat, AVFrame* aFrame) {
-  // We should not use SW surfaces when VA-API is enabled.
-  MOZ_ASSERT(!mUseVAAPI);
-  MOZ_ASSERT(aFrame);
-
-  // With SW decode we support only YUV420P format with DMABuf surfaces.
-  if (aPixelFormat != AV_PIX_FMT_YUV420P) {
-    return nullptr;
-  }
-
-  MutexAutoLock lock(mSurfaceLock);
-  if (RefPtr<VideoFrameSurface> videoSurface = GetFreeVideoFrameSurface()) {
-    RefPtr<DMABufSurfaceYUV> surface = videoSurface->GetDMABufSurface();
-    if (!surface->UpdateYUVData((void**)aFrame->data, aFrame->linesize)) {
-      return nullptr;
-    }
-    FFMPEG_LOG("Reusing SW DMABufSurface UID = %d", surface->GetUID());
-    return videoSurface;
-  }
-  RefPtr<DMABufSurfaceYUV> surface = DMABufSurfaceYUV::CreateYUVSurface(
-      aFrame->width, aFrame->height, (void**)aFrame->data, aFrame->linesize);
-  if (!surface) {
-    return nullptr;
-  }
-  RefPtr<VideoFrameSurfaceDMABuf> surf = new VideoFrameSurfaceDMABuf(surface);
-  if (!mTextureCreationWorks) {
-    mTextureCreationWorks = Some(surface->VerifyTextureCreation());
-  }
-  if (!*mTextureCreationWorks) {
-    FFMPEG_LOG("  failed to create texture over DMABuf memory!");
-    return nullptr;
-  }
-  FFMPEG_LOG("Created new SW DMABufSurface UID = %d", surface->GetUID());
-  mDMABufSurfaces.AppendElement(surf);
-  return surf;
 }
 
 }  // namespace mozilla
