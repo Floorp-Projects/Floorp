@@ -41,7 +41,10 @@ add_task(async function sanitizeStorageAccessPermissions() {
     Services.perms.ALLOW_ACTION
   );
 
-  await Sanitizer.sanitize(["history"], { range: [timestamp, Date.now()] });
+  await Sanitizer.sanitize(["history"], {
+    // Sanitizer and ClearDataService work with time range in PRTime (microseconds)
+    range: [timestamp * 1000, Date.now() * 1000],
+  });
 
   Assert.equal(
     PermissionTestUtils.testExactPermission(
