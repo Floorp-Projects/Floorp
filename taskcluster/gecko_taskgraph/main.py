@@ -106,7 +106,7 @@ def get_taskgraph_generator(root, parameters):
 
 def format_taskgraph(options, parameters, logfile=None):
     import gecko_taskgraph
-    from gecko_taskgraph.parameters import parameters_loader
+    from taskgraph.parameters import parameters_loader
 
     if logfile:
         oldhandler = logging.root.handlers[-1]
@@ -135,7 +135,7 @@ def format_taskgraph(options, parameters, logfile=None):
 
 
 def dump_output(out, path=None, params_spec=None):
-    from gecko_taskgraph.parameters import Parameters
+    from taskgraph.parameters import Parameters
 
     params_name = Parameters.format_spec(params_spec)
     fh = None
@@ -157,7 +157,7 @@ def dump_output(out, path=None, params_spec=None):
 
 
 def generate_taskgraph(options, parameters, logdir):
-    from gecko_taskgraph.parameters import Parameters
+    from taskgraph.parameters import Parameters
 
     def logfile(spec):
         """Determine logfile given a parameters specification."""
@@ -315,7 +315,7 @@ def generate_taskgraph(options, parameters, logdir):
 )
 def show_taskgraph(options):
     from mozversioncontrol import get_repository_object as get_repository
-    from gecko_taskgraph.parameters import Parameters
+    from taskgraph.parameters import Parameters, parameters_loader
 
     if options.pop("verbose", False):
         logging.root.setLevel(logging.DEBUG)
@@ -352,10 +352,12 @@ def show_taskgraph(options):
 
     parameters: List[Any[str, Parameters]] = options.pop("parameters")
     if not parameters:
-        kwargs = {
+        overrides = {
             "target-kind": options.get("target_kind"),
         }
-        parameters = [Parameters(strict=False, **kwargs)]  # will use default values
+        parameters = [
+            parameters_loader(None, strict=False, overrides=overrides)
+        ]  # will use default values
 
     for param in parameters[:]:
         if isinstance(param, str) and os.path.isdir(param):
