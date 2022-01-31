@@ -30,22 +30,20 @@ TupleObject* TupleObject::create(JSContext* cx, Handle<TupleType*> tuple) {
   return tup;
 }
 
-TupleType* TupleObject::unbox() const {
-  return &getFixedSlot(PrimitiveValueSlot)
-              .toExtendedPrimitive()
-              .as<TupleType>();
+// Caller is responsible for rooting the result
+TupleType& TupleObject::unbox() const {
+  return getFixedSlot(PrimitiveValueSlot).toExtendedPrimitive().as<TupleType>();
 }
 
-bool TupleObject::maybeUnbox(JSObject* obj, MutableHandle<TupleType*> tupp) {
+// Caller is responsible for rooting the result
+mozilla::Maybe<TupleType&> TupleObject::maybeUnbox(JSObject* obj) {
+  Maybe<TupleType&> result = mozilla::Nothing();
   if (obj->is<TupleType>()) {
-    tupp.set(&obj->as<TupleType>());
-    return true;
+    result.emplace(obj->as<TupleType>());
+  } else if (obj->is<TupleObject>()) {
+    result.emplace(obj->as<TupleObject>().unbox());
   }
-  if (obj->is<TupleObject>()) {
-    tupp.set(obj->as<TupleObject>().unbox());
-    return true;
-  }
-  return false;
+  return result;
 }
 
 bool tup_mayResolve(const JSAtomState&, jsid id, JSObject*) {
@@ -56,7 +54,7 @@ bool tup_mayResolve(const JSAtomState&, jsid id, JSObject*) {
 bool tup_resolve(JSContext* cx, HandleObject obj, HandleId id,
                  bool* resolvedp) {
   RootedValue value(cx);
-  *resolvedp = obj->as<TupleObject>().unbox()->getOwnProperty(id, &value);
+  *resolvedp = obj->as<TupleObject>().unbox().getOwnProperty(id, &value);
 
   if (*resolvedp) {
     static const unsigned TUPLE_ELEMENT_ATTRS =
