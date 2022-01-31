@@ -321,7 +321,7 @@ void U2FTokenManager::Register(
   mLastTransactionId = aTransactionId;
 
   // Determine whether direct attestation was requested.
-  bool directAttestationRequested = false;
+  bool noneAttestationRequested = true;
 
 // On Android, let's always reject direct attestations until we have a
 // mechanism to solicit user consent, from Bug 1550164
@@ -332,17 +332,16 @@ void U2FTokenManager::Register(
     AttestationConveyancePreference attestation =
         extra.attestationConveyancePreference();
 
-    directAttestationRequested =
-        attestation == AttestationConveyancePreference::Direct;
+    noneAttestationRequested =
+        attestation == AttestationConveyancePreference::None;
   }
 #endif  // not MOZ_WIDGET_ANDROID
 
   // Start a register request immediately if direct attestation
   // wasn't requested or the test pref is set.
-  if (!directAttestationRequested ||
+  if (noneAttestationRequested ||
       U2FPrefManager::Get()->GetAllowDirectAttestationForTesting()) {
-    // Force "none" attestation when "direct" attestation wasn't requested.
-    DoRegister(aTransactionInfo, !directAttestationRequested);
+    DoRegister(aTransactionInfo, noneAttestationRequested);
     return;
   }
 
