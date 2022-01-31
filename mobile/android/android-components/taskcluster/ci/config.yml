@@ -72,7 +72,6 @@ treeherder:
         lib-fetch-okhttp: lib-fetch-okhttp
         lib-jexl: lib-jexl
         lib-publicsuffixlist: lib-publicsuffixlist
-        lib-push-amazon: lib-push-amazon
         lib-push-firebase: lib-push-firebase
         lib-state: lib-state
         samples-compose-browser: samples-compose-browser

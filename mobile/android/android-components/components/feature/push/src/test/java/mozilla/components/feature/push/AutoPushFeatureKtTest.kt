@@ -30,12 +30,6 @@ class AutoPushFeatureKtTest {
         assertEquals("updates.push.services.mozilla.com", config.serverHost)
         assertEquals(Protocol.HTTPS, config.protocol)
         assertEquals(ServiceType.FCM, config.serviceType)
-
-        val config2 = PushConfig("sample-browser", "push.test.mozilla.com", Protocol.HTTP, ServiceType.ADM)
-        assertEquals("sample-browser", config2.senderId)
-        assertEquals("push.test.mozilla.com", config2.serverHost)
-        assertEquals(Protocol.HTTP, config2.protocol)
-        assertEquals(ServiceType.ADM, config2.serviceType)
     }
 
     @Test

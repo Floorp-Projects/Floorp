@@ -26,7 +26,7 @@ permalink: /changelog/
 * **lib-crash**
   * 🚒 Bug fixed [issue #11627](https://github.com/mozilla-mobile/android-components/issues/11627) - Firefox crash notification is not displayed on devices with Android 11/Android 12
 
-* **lib/publicsuffixlist**
+* **lib-publicsuffixlist**
   * ⚠️ **This is a breaking change**: Removed `String.urlToTrimmedHost` extension method.
 
 * **feature-top-sites**
@@ -40,6 +40,9 @@ permalink: /changelog/
 * **service-glean**
   * 🆙 Updated Glean to version 43.0.2 ([changelog](https://github.com/mozilla/glean/releases/tag/v43.0.2))
     * Includes new `build_date` metric
+
+* **lib-push-amazon**
+  * ❌ **This is a breaking change**: This component is now removed since we no longer support it.
 
 # 97.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v96.0.0...v97.0.0)

@@ -7,7 +7,7 @@ package mozilla.components.concept.push
 import android.content.Context
 
 /**
- * Implemented by push services like Firebase Cloud Messaging and Amazon Device Messaging SDKs to allow
+ * Implemented by push services like Firebase Cloud Messaging SDKs to allow
  * the [PushProcessor] to manage their lifecycle.
  */
 interface PushService {

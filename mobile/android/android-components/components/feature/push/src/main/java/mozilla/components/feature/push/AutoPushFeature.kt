@@ -380,11 +380,11 @@ internal inline fun exceptionHandler(crossinline onError: (PushError) -> Unit) =
 }
 
 /**
- * Supported push services. These are currently limited to Firebase Cloud Messaging and Amazon Device Messaging.
+ * Supported push services. This are currently limited to Firebase Cloud Messaging and
+ * (previously) Amazon Device Messaging.
  */
 enum class ServiceType {
-    FCM,
-    ADM
+    FCM
 }
 
 /**

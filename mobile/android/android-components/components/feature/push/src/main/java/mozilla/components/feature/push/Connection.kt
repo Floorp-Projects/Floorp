@@ -266,7 +266,6 @@ internal class RustPushConnection(
 @VisibleForTesting
 internal fun ServiceType.toBridgeType() = when (this) {
     ServiceType.FCM -> BridgeType.FCM
-    ServiceType.ADM -> BridgeType.ADM
 }
 
 /**

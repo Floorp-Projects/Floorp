@@ -95,7 +95,6 @@
 /components/lib/fetch-okhttp/               @mozilla-mobile/act
 /components/lib/jexl/                       @mozilla-mobile/act
 /components/lib/publicsuffixlist/           @mozilla-mobile/act
-/components/lib/push-amazon/                @jonalmeida
 /components/lib/push-firebase/              @jonalmeida
 /components/lib/state/                      @csadilek
 

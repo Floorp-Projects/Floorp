@@ -41,7 +41,6 @@ class ConnectionKtTest {
     @Test
     fun `ServiceType to BridgeType`() {
         assertEquals(BridgeType.FCM, ServiceType.FCM.toBridgeType())
-        assertEquals(BridgeType.ADM, ServiceType.ADM.toBridgeType())
     }
 
     @Test
