@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -799,7 +799,9 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="preference_https_only_title">Csak HTTPS mód</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preference_https_only_summary2">Automatikusan HTTPS-sel próbál kapcsolódni a webhelyekhez a nagyobb biztonság érdekében. A HTTPS-kapcsolatok biztonságos, titkosított kapcsolatot biztosítanak a felkeresett webhelyekkel.</string>
+    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">Automatikusan HTTPS-sel próbál kapcsolódni a webhelyekhez a nagyobb biztonság érdekében. A HTTPS-kapcsolatok biztonságos, titkosított kapcsolatot biztosítanak a felkeresett webhelyekkel.</string>
+
+    <string name="preference_https_only_summary3">Automatikusan HTTPS titkosítási protokoll használatával próbál meg csatlakozni a webhelyekhez a fokozott biztonság érdekében.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Kivételek</string>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:moz="http://mozac.org/tools">
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
     <!-- ####################################################################################### -->
     <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
     <!-- ## into a separate file like strings_references.xml                                  ## -->
@@ -799,7 +799,9 @@ Wählen Sie aus dem %1$s-Menü die Option „Zu Verknüpfungen hinzufügen“</s
     <string name="preference_https_only_title">Nur-HTTPS-Modus</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preference_https_only_summary2">Versucht automatisch, eine Verbindung zu Websites herzustellen, die HTTPS verwenden, um die Sicherheit zu erhöhen. HTTPS-Verbindungen bieten eine sichere, verschlüsselte Verbindung zu den von Ihnen besuchten Websites.</string>
+    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">Versucht automatisch, eine Verbindung zu Websites herzustellen, die HTTPS verwenden, um die Sicherheit zu erhöhen. HTTPS-Verbindungen bieten eine sichere, verschlüsselte Verbindung zu den von Ihnen besuchten Websites.</string>
+
+    <string name="preference_https_only_summary3">Automatisch versuchen, eine Verbindung zu Websites herzustellen, die das HTTPS-Verschlüsselungsprotokoll verwenden, um die Sicherheit zu erhöhen.</string>
 
     <!-- Preference for exceptions tracking protection -->
     <string name="preference_exceptions">Ausnahmen</string>
