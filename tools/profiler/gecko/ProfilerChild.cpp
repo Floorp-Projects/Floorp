@@ -382,6 +382,20 @@ mozilla::ipc::IPCResult ProfilerChild::RecvGatherProfile(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ProfilerChild::RecvGetGatherProfileProgress(
+    GetGatherProfileProgressResolver&& aResolve) {
+  if (mGatherProfileProgress) {
+    aResolve(GatherProfileProgress{
+        mGatherProfileProgress->Progress().ToUnderlyingType(),
+        nsCString(mGatherProfileProgress->LastLocation())});
+  } else {
+    aResolve(
+        GatherProfileProgress{ProportionValue::MakeInvalid().ToUnderlyingType(),
+                              nsCString("No gather-profile in progress")});
+  }
+  return IPC_OK();
+}
+
 void ProfilerChild::ActorDestroy(ActorDestroyReason aActorDestroyReason) {
   mDestroyed = true;
 }
