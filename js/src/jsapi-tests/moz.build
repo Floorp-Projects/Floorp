@@ -94,6 +94,7 @@ UNIFIED_SOURCES += [
     "testPromise.cpp",
     "testPropCache.cpp",
     "testReadableStream.cpp",
+    "testRecordTupleToSource.cpp",
     "testRegExp.cpp",
     "testResolveRecursion.cpp",
     "tests.cpp",

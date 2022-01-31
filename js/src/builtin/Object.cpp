@@ -301,6 +301,17 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
     return nullptr;
   }
 
+#ifdef ENABLE_RECORD_TUPLE
+  if (IsExtendedPrimitiveWrapper(*obj)) {
+    if (obj->is<TupleObject>()) {
+      Rooted<TupleType*> tup(cx, &obj->as<TupleObject>().unbox());
+      return TupleToSource(cx, tup);
+    }
+    MOZ_ASSERT(obj->is<RecordObject>());
+    return RecordToSource(cx, obj->as<RecordObject>().unbox());
+  }
+#endif
+
   bool comma = false;
 
   auto AddProperty = [cx, &comma, &buf](HandleId id, HandleValue val,
