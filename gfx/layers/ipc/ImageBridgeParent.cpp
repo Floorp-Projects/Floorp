@@ -15,6 +15,7 @@
 #include "mozilla/HalTypes.h"   // for hal::THREAD_PRIORITY_COMPOSITOR
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/MessageChannel.h"  // for MessageChannel, etc
+#include "mozilla/ipc/Transport.h"       // for Transport
 #include "mozilla/media/MediaSystemResourceManagerParent.h"  // for MediaSystemResourceManagerParent
 #include "mozilla/layers/BufferTexture.h"
 #include "mozilla/layers/CompositableTransactionParent.h"

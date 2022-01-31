@@ -34,6 +34,9 @@
 #include "nsTArrayForwardDeclare.h"
 #include "nsTHashSet.h"
 
+// XXX Things that could be replaced by a forward header
+#include "mozilla/ipc/Transport.h"  // for Transport
+
 // XXX Things that could be moved to ProtocolUtils.cpp
 #include "base/process_util.h"  // for CloseProcessHandle
 #include "prenv.h"              // for PR_GetEnv

@@ -26,11 +26,11 @@ namespace IPC {
 class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
  public:
   using ChannelId = Channel::ChannelId;
-  using ChannelHandle = Channel::ChannelHandle;
 
   // Mirror methods of Channel, see ipc_channel.h for description.
   ChannelImpl(const ChannelId& channel_id, Mode mode, Listener* listener);
-  ChannelImpl(ChannelHandle pipe, Mode mode, Listener* listener);
+  ChannelImpl(const ChannelId& channel_id, HANDLE server_pipe, Mode mode,
+              Listener* listener);
   ~ChannelImpl() {
     if (pipe_ != INVALID_HANDLE_VALUE ||
         other_process_ != INVALID_HANDLE_VALUE) {
@@ -39,6 +39,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   }
   bool Connect();
   void Close();
+  HANDLE GetServerPipeHandle() const;
   void StartAcceptingHandles(Mode mode);
   Listener* set_listener(Listener* listener) {
     Listener* old = listener_;

@@ -26,10 +26,12 @@
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/BrowserParent.h"
-#include "mozilla/gfx/2D.h"       // for DrawTarget
-#include "mozilla/gfx/Point.h"    // for IntSize
-#include "mozilla/gfx/Rect.h"     // for IntSize
-#include "mozilla/gfx/gfxVars.h"  // for gfxVars
+#include "mozilla/gfx/2D.h"         // for DrawTarget
+#include "mozilla/gfx/Point.h"      // for IntSize
+#include "mozilla/gfx/Rect.h"       // for IntSize
+#include "mozilla/gfx/gfxVars.h"    // for gfxVars
+#include "mozilla/ipc/Transport.h"  // for Transport
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
 #include "mozilla/layers/APZSampler.h"             // for APZSampler

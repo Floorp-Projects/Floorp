@@ -9,6 +9,7 @@
 
 #include "base/process.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ipc/Transport.h"
 #include "nsTArrayForwardDeclare.h"
 
 #ifdef DEBUG
@@ -54,6 +55,7 @@ class BackgroundParent final {
   typedef base::ProcessId ProcessId;
   typedef mozilla::dom::BlobImpl BlobImpl;
   typedef mozilla::dom::ContentParent ContentParent;
+  typedef mozilla::ipc::Transport Transport;
 
  public:
   // This function allows the caller to determine if the given parent actor

@@ -10,6 +10,7 @@
 #include "MediaResult.h"
 #include "base/process.h"
 #include "mozilla/dom/PContent.h"
+#include "mozilla/ipc/Transport.h"
 #include "mozilla/gmp/PGMPServiceChild.h"
 #include "mozilla/MozPromise.h"
 #include "nsIAsyncShutdown.h"
