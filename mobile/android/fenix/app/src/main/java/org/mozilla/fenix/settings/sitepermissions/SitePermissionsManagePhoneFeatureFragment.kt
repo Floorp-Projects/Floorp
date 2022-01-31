@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings.sitepermissions
 
 import android.content.Intent
-import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
@@ -19,6 +18,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.RadioButton
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.navArgs
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
@@ -35,6 +35,7 @@ import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.PhoneFeature.AUTOPLAY_AUDIBLE
 import org.mozilla.fenix.settings.PhoneFeature.AUTOPLAY_INAUDIBLE
 import org.mozilla.fenix.settings.setStartCheckedIndicator
+import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.Settings
 
 const val AUTOPLAY_BLOCK_ALL = 0
@@ -243,9 +244,13 @@ class SitePermissionsManagePhoneFeatureFragment : Fragment() {
         val subTextSize =
             resources.getDimensionPixelSize(R.dimen.phone_feature_label_recommended_text_size)
         val recommendedSpannable = SpannableString(subText)
+        val subTextColor = ContextCompat.getColor(
+            requireContext(),
+            ThemeManager.resolveAttribute(R.attr.secondaryText, requireContext())
+        )
 
         recommendedSpannable.setSpan(
-            ForegroundColorSpan(Color.GRAY),
+            ForegroundColorSpan(subTextColor),
             0,
             recommendedSpannable.length,
             SPAN_EXCLUSIVE_INCLUSIVE
