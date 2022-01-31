@@ -14,6 +14,7 @@
 #include "mozilla/ProfilerThreadRegistrationInfo.h"
 #include "mozilla/ProfilerThreadRegistry.h"
 #include "mozilla/ProfilerUtils.h"
+#include "mozilla/ProgressLogger.h"
 #include "mozilla/UniquePtrExtensions.h"
 
 #include "nsIThread.h"
@@ -3670,7 +3671,8 @@ TEST(GeckoProfiler, StreamJSONForThisProcess)
 // an incomplete profile.
 bool do_profiler_stream_json_for_this_process(
     SpliceableJSONWriter& aWriter, double aSinceTime, bool aIsShuttingDown,
-    ProfilerCodeAddressService* aService);
+    ProfilerCodeAddressService* aService,
+    mozilla::ProgressLogger aProgressLogger);
 
 TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
 {
@@ -3698,7 +3700,8 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
             ASSERT_TRUE(::do_profiler_stream_json_for_this_process(
                 w, /* double aSinceTime */ 0.0,
                 /* bool aIsShuttingDown */ false,
-                /* ProfilerCodeAddressService* aService */ nullptr));
+                /* ProfilerCodeAddressService* aService */ nullptr,
+                mozilla::ProgressLogger{}));
             w.End();
           }),
       NS_DISPATCH_SYNC);
@@ -3717,7 +3720,8 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
             ASSERT_TRUE(!::do_profiler_stream_json_for_this_process(
                 w, /* double aSinceTime */ 0.0,
                 /* bool aIsShuttingDown */ false,
-                /* ProfilerCodeAddressService* aService */ nullptr));
+                /* ProfilerCodeAddressService* aService */ nullptr,
+                mozilla::ProgressLogger{}));
           }),
       NS_DISPATCH_SYNC);
   thread->Shutdown();

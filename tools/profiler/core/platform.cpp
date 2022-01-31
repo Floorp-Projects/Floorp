@@ -185,6 +185,7 @@
 #endif
 
 using namespace mozilla;
+using namespace mozilla::literals::ProportionValue_literals;
 
 using mozilla::profiler::detail::RacyFeatures;
 using ThreadRegistration = mozilla::profiler::ThreadRegistration;
@@ -2958,8 +2959,38 @@ profiler_code_address_service_for_presymbolication() {
 static void locked_profiler_stream_json_for_this_process(
     PSLockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime,
     const PreRecordedMetaInformation& aPreRecordedMetaInformation,
-    bool aIsShuttingDown, ProfilerCodeAddressService* aService) {
+    bool aIsShuttingDown, ProfilerCodeAddressService* aService,
+    mozilla::ProgressLogger aProgressLogger) {
   LOG("locked_profiler_stream_json_for_this_process");
+
+#ifdef DEBUG
+  PRIntervalTime slowWithSleeps = 0;
+  if (!XRE_IsParentProcess()) {
+    for (const auto& filter : ActivePS::Filters(aLock)) {
+      if (filter == "test-debug-child-slow-json") {
+        LOG("test-debug-child-slow-json");
+        // There are 10 slow-downs below, each will sleep 250ms, for a total of
+        // 2.5s, which should trigger the first progress request after 1s, and
+        // the next progress which will have advanced further, so this profile
+        // shouldn't get dropped.
+        slowWithSleeps = PR_MillisecondsToInterval(250);
+      } else if (filter == "test-debug-child-very-slow-json") {
+        LOG("test-debug-child-very-slow-json");
+        // Wait for more than 2s without any progress, which should get this
+        // profile discarded.
+        PR_Sleep(PR_SecondsToInterval(5));
+      }
+    }
+  }
+#  define SLOW_DOWN_FOR_TESTING()                                        \
+    if (slowWithSleeps != 0) {                                           \
+      DEBUG_LOG("progress=%.0f%%, sleep...",                             \
+                aProgressLogger.GetGlobalProgress().ToDouble() * 100.0); \
+      PR_Sleep(slowWithSleeps);                                          \
+    }
+#else                             // #ifdef DEBUG
+#  define SLOW_DOWN_FOR_TESTING() /* No slow-downs */
+#endif                            // #ifdef DEBUG #else
 
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
@@ -2969,12 +3000,19 @@ static void locked_profiler_stream_json_for_this_process(
 
   ProfileBuffer& buffer = ActivePS::Buffer(aLock);
 
+  aProgressLogger.SetLocalProgress(1_pc, "Locked profile buffer");
+
+  SLOW_DOWN_FOR_TESTING();
+
   // If there is a set "Window length", discard older data.
   Maybe<double> durationS = ActivePS::Duration(aLock);
   if (durationS.isSome()) {
     const double durationStartMs = collectionStartMs - *durationS * 1000;
     buffer.DiscardSamplesBeforeTime(durationStartMs);
   }
+  aProgressLogger.SetLocalProgress(2_pc, "Discarded old data");
+
+  SLOW_DOWN_FOR_TESTING();
 
 #if defined(GP_OS_android)
   // Java thread profile data should be collected before serializing the meta
@@ -2995,6 +3033,7 @@ static void locked_profiler_stream_json_for_this_process(
   ProfileBuffer javaBuffer(javaBufferManager);
   if (ActivePS::FeatureJava(aLock)) {
     CollectJavaThreadProfileData(javaBuffer);
+    aProgressLogger.SetLocalProgress(3_pc, "Collected Java thread");
   }
 #endif
 
@@ -3002,6 +3041,9 @@ static void locked_profiler_stream_json_for_this_process(
   aWriter.StartArrayProperty("libs");
   AppendSharedLibraries(aWriter);
   aWriter.EndArray();
+  aProgressLogger.SetLocalProgress(4_pc, "Wrote library information");
+
+  SLOW_DOWN_FOR_TESTING();
 
   // Put meta data
   aWriter.StartObjectProperty("meta");
@@ -3010,47 +3052,79 @@ static void locked_profiler_stream_json_for_this_process(
                              aPreRecordedMetaInformation);
   }
   aWriter.EndObject();
+  aProgressLogger.SetLocalProgress(5_pc, "Wrote profile metadata");
+
+  SLOW_DOWN_FOR_TESTING();
 
   // Put page data
   aWriter.StartArrayProperty("pages");
   { StreamPages(aLock, aWriter); }
   aWriter.EndArray();
+  aProgressLogger.SetLocalProgress(6_pc, "Wrote pages");
 
-  buffer.StreamProfilerOverheadToJSON(aWriter, CorePS::ProcessStartTime(),
-                                      aSinceTime);
-  buffer.StreamCountersToJSON(aWriter, CorePS::ProcessStartTime(), aSinceTime);
+  buffer.StreamProfilerOverheadToJSON(
+      aWriter, CorePS::ProcessStartTime(), aSinceTime,
+      aProgressLogger.CreateSubLoggerTo(10_pc, "Wrote profiler overheads"));
+
+  buffer.StreamCountersToJSON(
+      aWriter, CorePS::ProcessStartTime(), aSinceTime,
+      aProgressLogger.CreateSubLoggerTo(14_pc, "Wrote counters"));
+
+  SLOW_DOWN_FOR_TESTING();
 
   // Lists the samples for each thread profile
   aWriter.StartArrayProperty("threads");
   {
     ActivePS::DiscardExpiredDeadProfiledThreads(aLock);
+    aProgressLogger.SetLocalProgress(15_pc, "Discarded expired profiles");
+
     ThreadRegistry::LockedRegistry lockedRegistry;
     ActivePS::ProfiledThreadList threads =
         ActivePS::ProfiledThreads(lockedRegistry, aLock);
 
+    const uint32_t threadCount = uint32_t(threads.length());
+
+    SLOW_DOWN_FOR_TESTING();
+
     // Prepare the streaming context for each thread.
     ProcessStreamingContext processStreamingContext(
-        threads.length(), CorePS::ProcessStartTime(), aSinceTime);
-    for (ActivePS::ProfiledThreadListElement& thread : threads) {
+        threadCount, CorePS::ProcessStartTime(), aSinceTime);
+    for (auto&& [i, progressLogger] : aProgressLogger.CreateLoopSubLoggersTo(
+             20_pc, threadCount, "Preparing thread streaming contexts...")) {
+      ActivePS::ProfiledThreadListElement& thread = threads[i];
       MOZ_RELEASE_ASSERT(thread.mProfiledThreadData);
       processStreamingContext.AddThreadStreamingContext(
-          *thread.mProfiledThreadData, buffer, thread.mJSContext, aService);
+          *thread.mProfiledThreadData, buffer, thread.mJSContext, aService,
+          std::move(progressLogger));
     }
+
+    SLOW_DOWN_FOR_TESTING();
 
     // Read the buffer once, and extract all samples and markers that the
     // context expects.
-    buffer.StreamSamplesAndMarkersToJSON(processStreamingContext);
+    buffer.StreamSamplesAndMarkersToJSON(
+        processStreamingContext, aProgressLogger.CreateSubLoggerTo(
+                                     "Processing samples and markers...", 80_pc,
+                                     "Processed samples and markers"));
+
+    SLOW_DOWN_FOR_TESTING();
 
     // Stream each thread from the pre-filled context.
-    for (ThreadStreamingContext& threadStreamingContext :
-         std::move(processStreamingContext)) {
+    ThreadStreamingContext* const contextListBegin =
+        processStreamingContext.begin();
+    MOZ_ASSERT(uint32_t(processStreamingContext.end() - contextListBegin) ==
+               threadCount);
+    for (auto&& [i, progressLogger] : aProgressLogger.CreateLoopSubLoggersTo(
+             92_pc, threadCount, "Streaming threads...")) {
+      ThreadStreamingContext& threadStreamingContext = contextListBegin[i];
       threadStreamingContext.FinalizeWriter();
       threadStreamingContext.mProfiledThreadData.StreamJSON(
           std::move(threadStreamingContext), aWriter,
           CorePS::ProcessName(aLock), CorePS::ETLDplus1(aLock),
           CorePS::ProcessStartTime(), ActivePS::FeatureJSTracer(aLock),
-          aService);
+          aService, std::move(progressLogger));
     }
+    aProgressLogger.SetLocalProgress(92_pc, "Wrote samples and markers");
 
 #if defined(GP_OS_android)
     if (ActivePS::FeatureJava(aLock)) {
@@ -3068,7 +3142,11 @@ static void locked_profiler_stream_json_for_this_process(
       profiledThreadData.StreamJSON(
           javaBuffer, nullptr, aWriter, CorePS::ProcessName(aLock),
           CorePS::ETLDplus1(aLock), CorePS::ProcessStartTime(), aSinceTime,
-          ActivePS::FeatureJSTracer(aLock), nullptr);
+          ActivePS::FeatureJSTracer(aLock), nullptr,
+          aProgressLogger.CreateSubLoggerTo("Streaming Java thread...", 96_pc,
+                                            "Streamed Java thread"));
+    } else {
+      aProgressLogger.SetLocalProgress(96_pc, "No Java thread");
     }
 #endif
 
@@ -3076,9 +3154,14 @@ static void locked_profiler_stream_json_for_this_process(
         ActivePS::MoveBaseProfileThreads(aLock);
     if (baseProfileThreads) {
       aWriter.Splice(MakeStringSpan(baseProfileThreads.get()));
+      aProgressLogger.SetLocalProgress(97_pc, "Wrote baseprofiler data");
+    } else {
+      aProgressLogger.SetLocalProgress(97_pc, "No baseprofiler data");
     }
   }
   aWriter.EndArray();
+
+  SLOW_DOWN_FOR_TESTING();
 
   if (ActivePS::FeatureJSTracer(aLock)) {
     aWriter.StartArrayProperty("jsTracerDictionary");
@@ -3093,9 +3176,17 @@ static void locked_profiler_stream_json_for_this_process(
     }
     aWriter.EndArray();
   }
+  aProgressLogger.SetLocalProgress(98_pc, "Handled JS Tracer dictionary");
+
+  SLOW_DOWN_FOR_TESTING();
 
   aWriter.StartArrayProperty("pausedRanges");
-  { buffer.StreamPausedRangesToJSON(aWriter, aSinceTime); }
+  {
+    buffer.StreamPausedRangesToJSON(
+        aWriter, aSinceTime,
+        aProgressLogger.CreateSubLoggerTo("Streaming pauses...", 99_pc,
+                                          "Streamed pauses"));
+  }
   aWriter.EndArray();
 
   const double collectionEndMs = profiler_time();
@@ -3107,17 +3198,26 @@ static void locked_profiler_stream_json_for_this_process(
   // been overwritten due to buffer wraparound by then).
   buffer.AddEntry(ProfileBufferEntry::CollectionStart(collectionStartMs));
   buffer.AddEntry(ProfileBufferEntry::CollectionEnd(collectionEndMs));
+
+#ifdef DEBUG
+  if (slowWithSleeps != 0) {
+    LOG("locked_profiler_stream_json_for_this_process done");
+  }
+#endif  // DEBUG
 }
 
 // Keep this internal function non-static, so it may be used by tests.
 bool do_profiler_stream_json_for_this_process(
     SpliceableJSONWriter& aWriter, double aSinceTime, bool aIsShuttingDown,
-    ProfilerCodeAddressService* aService) {
+    ProfilerCodeAddressService* aService,
+    mozilla::ProgressLogger aProgressLogger) {
   LOG("profiler_stream_json_for_this_process");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   const auto preRecordedMetaInformation = PreRecordMetaInformation();
+
+  aProgressLogger.SetLocalProgress(2_pc, "PreRecordMetaInformation done");
 
   if (profiler_is_active()) {
     invoke_profiler_state_change_callbacks(ProfilingState::GeneratingProfile);
@@ -3129,21 +3229,26 @@ bool do_profiler_stream_json_for_this_process(
     return false;
   }
 
-  locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime,
-                                               preRecordedMetaInformation,
-                                               aIsShuttingDown, aService);
+  locked_profiler_stream_json_for_this_process(
+      lock, aWriter, aSinceTime, preRecordedMetaInformation, aIsShuttingDown,
+      aService,
+      aProgressLogger.CreateSubLoggerFromTo(
+          3_pc, "locked_profiler_stream_json_for_this_process started", 100_pc,
+          "locked_profiler_stream_json_for_this_process done"));
   return true;
 }
 
 bool profiler_stream_json_for_this_process(
     SpliceableJSONWriter& aWriter, double aSinceTime, bool aIsShuttingDown,
-    ProfilerCodeAddressService* aService) {
+    ProfilerCodeAddressService* aService,
+    mozilla::ProgressLogger aProgressLogger) {
   MOZ_RELEASE_ASSERT(
       !XRE_IsParentProcess() || NS_IsMainThread(),
       "In the parent process, profiles should only be generated from the main "
       "thread, otherwise they will be incomplete.");
   return do_profiler_stream_json_for_this_process(aWriter, aSinceTime,
-                                                  aIsShuttingDown, aService);
+                                                  aIsShuttingDown, aService,
+                                                  std::move(aProgressLogger));
 }
 
 // END saving/streaming code
@@ -5000,15 +5105,23 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown) {
 
 static bool WriteProfileToJSONWriter(SpliceableChunkedJSONWriter& aWriter,
                                      double aSinceTime, bool aIsShuttingDown,
-                                     ProfilerCodeAddressService* aService) {
+                                     ProfilerCodeAddressService* aService,
+                                     mozilla::ProgressLogger aProgressLogger) {
   LOG("WriteProfileToJSONWriter");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   aWriter.Start();
   {
-    if (!profiler_stream_json_for_this_process(aWriter, aSinceTime,
-                                               aIsShuttingDown, aService)) {
+    if (!profiler_stream_json_for_this_process(
+            aWriter, aSinceTime, aIsShuttingDown, aService,
+            aProgressLogger.CreateSubLoggerFromTo(
+                0_pc,
+                "WriteProfileToJSONWriter: "
+                "profiler_stream_json_for_this_process started",
+                100_pc,
+                "WriteProfileToJSONWriter: "
+                "profiler_stream_json_for_this_process done"))) {
       return false;
     }
 
@@ -5040,24 +5153,44 @@ UniquePtr<char[]> profiler_get_profile(double aSinceTime,
       profiler_code_address_service_for_presymbolication();
 
   SpliceableChunkedJSONWriter b;
-  if (!WriteProfileToJSONWriter(b, aSinceTime, aIsShuttingDown,
-                                service.get())) {
+  if (!WriteProfileToJSONWriter(b, aSinceTime, aIsShuttingDown, service.get(),
+                                ProgressLogger{})) {
     return nullptr;
   }
   return b.ChunkedWriteFunc().CopyData();
 }
 
-void profiler_get_profile_json_into_lazily_allocated_buffer(
-    const std::function<char*(size_t)>& aAllocator, double aSinceTime,
-    bool aIsShuttingDown) {
-  LOG("profiler_get_profile_json_into_lazily_allocated_buffer");
+bool profiler_get_profile_json(
+    SpliceableChunkedJSONWriter& aSpliceableChunkedJSONWriter,
+    double aSinceTime, bool aIsShuttingDown,
+    mozilla::ProgressLogger aProgressLogger) {
+  LOG("profiler_get_profile_json");
 
   UniquePtr<ProfilerCodeAddressService> service =
       profiler_code_address_service_for_presymbolication();
 
+  return WriteProfileToJSONWriter(
+      aSpliceableChunkedJSONWriter, aSinceTime, aIsShuttingDown, service.get(),
+      aProgressLogger.CreateSubLoggerFromTo(
+          0.1_pc, "profiler_get_profile_json: WriteProfileToJSONWriter started",
+          99.9_pc, "profiler_get_profile_json: WriteProfileToJSONWriter done"));
+}
+
+void profiler_get_profile_json_into_lazily_allocated_buffer(
+    const std::function<char*(size_t)>& aAllocator, double aSinceTime,
+    bool aIsShuttingDown, mozilla::ProgressLogger aProgressLogger) {
+  LOG("profiler_get_profile_json_into_lazily_allocated_buffer");
+
   SpliceableChunkedJSONWriter b;
-  if (!WriteProfileToJSONWriter(b, aSinceTime, aIsShuttingDown,
-                                service.get())) {
+  if (!profiler_get_profile_json(
+          b, aSinceTime, aIsShuttingDown,
+          aProgressLogger.CreateSubLoggerFromTo(
+              1_pc,
+              "profiler_get_profile_json_into_lazily_allocated_buffer: "
+              "profiler_get_profile_json started",
+              98_pc,
+              "profiler_get_profile_json_into_lazily_allocated_buffer: "
+              "profiler_get_profile_json done"))) {
     return;
   }
 
@@ -5203,9 +5336,9 @@ static void locked_profiler_save_profile_to_file(
     SpliceableJSONWriter w(MakeUnique<OStreamJSONWriteFunc>(stream));
     w.Start();
     {
-      locked_profiler_stream_json_for_this_process(aLock, w, /* sinceTime */ 0,
-                                                   aPreRecordedMetaInformation,
-                                                   aIsShuttingDown, nullptr);
+      locked_profiler_stream_json_for_this_process(
+          aLock, w, /* sinceTime */ 0, aPreRecordedMetaInformation,
+          aIsShuttingDown, nullptr, ProgressLogger{});
 
       w.StartArrayProperty("processes");
       Vector<nsCString> exitProfiles = ActivePS::MoveExitProfiles(aLock);
