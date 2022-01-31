@@ -43,6 +43,10 @@ class SharedMemoryBasic;
 
 }  // namespace ipc
 
+namespace wr {
+struct SampledScrollOffset;
+}  // namespace wr
+
 namespace layers {
 
 class AsyncDragMetrics;
@@ -1196,7 +1200,7 @@ class AsyncPanZoomController {
       AsyncTransformComponents aComponents = LayoutAndVisual,
       std::size_t aSampleIndex = 0) const;
 
-  LayoutDevicePoint GetAsyncScrollDeltaForSampling() const;
+  AutoTArray<wr::SampledScrollOffset, 2> GetSampledScrollOffsets() const;
 
   /**
    * Returns the "zoom" bits of the transform. This includes both the rasterized

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ExternalScrollId, PipelineId, PropertyBinding, PropertyBindingId, ReferenceFrameKind};
-use api::{APZScrollGeneration, HasScrollLinkedEffect};
+use api::{APZScrollGeneration, HasScrollLinkedEffect, SampledScrollOffset};
 use api::{TransformStyle, StickyOffsetBounds, SpatialTreeItemKey};
 use api::units::*;
 use crate::internal_types::PipelineInstanceId;
@@ -325,7 +325,9 @@ impl SpatialNode {
         self.children.push(child);
     }
 
-    pub fn set_scroll_offset(&mut self, offset: &LayoutVector2D) -> bool {
+    pub fn set_scroll_offsets(&mut self, mut offsets: Vec<SampledScrollOffset>) -> bool {
+        debug_assert!(offsets.len() > 0);
+
         let scrolling = match self.node_type {
             SpatialNodeType::ScrollFrame(ref mut scrolling) => scrolling,
             _ => {
@@ -334,13 +336,15 @@ impl SpatialNode {
             }
         };
 
-        let new_offset = -*offset - scrolling.external_scroll_offset;
+        for element in offsets.iter_mut() {
+            element.offset = -element.offset - scrolling.external_scroll_offset;
+        }
 
-        if new_offset == scrolling.offset {
+        if scrolling.offsets == offsets {
             return false;
         }
 
-        scrolling.offset = new_offset;
+        scrolling.offsets = offsets;
         true
     }
 
@@ -690,12 +694,12 @@ impl SpatialNode {
                 state.scroll_offset = info.current_offset;
             }
             SpatialNodeType::ScrollFrame(ref scrolling) => {
-                state.parent_accumulated_scroll_offset += scrolling.offset;
-                state.nearest_scrolling_ancestor_offset = scrolling.offset;
+                state.parent_accumulated_scroll_offset += scrolling.offset();
+                state.nearest_scrolling_ancestor_offset = scrolling.offset();
                 state.nearest_scrolling_ancestor_viewport = scrolling.viewport_rect;
                 state.preserves_3d = false;
                 state.external_id = Some(scrolling.external_id);
-                state.scroll_offset = scrolling.offset + scrolling.external_scroll_offset;
+                state.scroll_offset = scrolling.offset() + scrolling.external_scroll_offset;
             }
             SpatialNodeType::ReferenceFrame(ref info) => {
                 state.external_id = None;
@@ -713,7 +717,7 @@ impl SpatialNode {
 
     pub fn scroll_offset(&self) -> LayoutVector2D {
         match self.node_type {
-            SpatialNodeType::ScrollFrame(ref scrolling) => scrolling.offset,
+            SpatialNodeType::ScrollFrame(ref scrolling) => scrolling.offset(),
             _ => LayoutVector2D::zero(),
         }
     }
@@ -781,18 +785,19 @@ pub struct ScrollFrameInfo {
     /// pre-scrolled in their local coordinates.
     pub external_scroll_offset: LayoutVector2D,
 
-    /// The negated scroll offset of this scroll node. including the
-    /// pre-scrolled amount. If, for example, a scroll node was pre-scrolled
-    /// to y=10 (10 pixels down from the initial unscrolled position), then
+    /// A set of a pair of negated scroll offset and scroll generation of this
+    /// scroll node. The negated scroll offset is including the pre-scrolled
+    /// amount. If, for example, a scroll node was pre-scrolled to y=10 (10
+    /// pixels down from the initial unscrolled position), then
     /// `external_scroll_offset` would be (0,10), and this `offset` field would
     /// be (0,-10). If WebRender is then asked to change the scroll position by
     /// an additional 10 pixels (without changing the pre-scroll amount in the
     /// display list), `external_scroll_offset` would remain at (0,10) and
     /// `offset` would change to (0,-20).
-    pub offset: LayoutVector2D,
+    pub offsets: Vec<SampledScrollOffset>,
 
     /// The generation of the external_scroll_offset.
-    /// This will be used to pick up the most appropriate scroll offset sampled
+    /// This is used to pick up the most appropriate scroll offset sampled
     /// off the main thread.
     pub offset_generation: APZScrollGeneration,
 
@@ -814,13 +819,41 @@ impl ScrollFrameInfo {
     ) -> ScrollFrameInfo {
         ScrollFrameInfo {
             viewport_rect,
-            offset: -external_scroll_offset,
             scrollable_size,
             external_id,
             frame_kind,
             external_scroll_offset,
+            offsets: vec![SampledScrollOffset{
+                // If this scroll frame is a newly created one, using
+                // `external_scroll_offset` and `offset_generation` is correct.
+                // If this scroll frame is a result of updating an existing
+                // scroll frame and if there have already been sampled async
+                // scroll offsets by APZ, then these offsets will be replaced in
+                // SpatialTree::set_scroll_offsets via a
+                // RenderBackend::update_document call.
+                offset: -external_scroll_offset,
+                generation: offset_generation.clone(),
+            }],
             offset_generation,
             has_scroll_linked_effect,
+        }
+    }
+
+    pub fn offset(&self) -> LayoutVector2D {
+        debug_assert!(self.offsets.len() > 0, "There should be at least one sampled offset!");
+
+        if self.has_scroll_linked_effect == HasScrollLinkedEffect::No {
+            // If there's no scroll-linked effect, use the one-frame delay offset.
+            return self.offsets.first().map_or(LayoutVector2D::zero(), |sampled| sampled.offset);
+        }
+
+        match self.offsets.iter().find(|sampled| sampled.generation == self.offset_generation) {
+            // If we found an offset having the same generation, use it.
+            Some(sampled) => sampled.offset,
+            // If we don't have any offset having the same generation, i.e.
+            // the generation of this scroll frame is behind sampled offsets,
+            // use the first queued sampled offset.
+            _ => self.offsets.first().map_or(LayoutVector2D::zero(), |sampled| sampled.offset),
         }
     }
 }
