@@ -5105,24 +5105,37 @@ UniquePtr<char[]> profiler_get_profile(double aSinceTime,
   return b.ChunkedWriteFunc().CopyData();
 }
 
+bool profiler_get_profile_json(
+    SpliceableChunkedJSONWriter& aSpliceableChunkedJSONWriter,
+    double aSinceTime, bool aIsShuttingDown,
+    mozilla::ProgressLogger aProgressLogger) {
+  LOG("profiler_get_profile_json");
+
+  UniquePtr<ProfilerCodeAddressService> service =
+      profiler_code_address_service_for_presymbolication();
+
+  return WriteProfileToJSONWriter(
+      aSpliceableChunkedJSONWriter, aSinceTime, aIsShuttingDown, service.get(),
+      aProgressLogger.CreateSubLoggerFromTo(
+          0.1_pc, "profiler_get_profile_json: WriteProfileToJSONWriter started",
+          99.9_pc, "profiler_get_profile_json: WriteProfileToJSONWriter done"));
+}
+
 void profiler_get_profile_json_into_lazily_allocated_buffer(
     const std::function<char*(size_t)>& aAllocator, double aSinceTime,
     bool aIsShuttingDown, mozilla::ProgressLogger aProgressLogger) {
   LOG("profiler_get_profile_json_into_lazily_allocated_buffer");
 
-  UniquePtr<ProfilerCodeAddressService> service =
-      profiler_code_address_service_for_presymbolication();
-
   SpliceableChunkedJSONWriter b;
-  if (!WriteProfileToJSONWriter(
-          b, aSinceTime, aIsShuttingDown, service.get(),
+  if (!profiler_get_profile_json(
+          b, aSinceTime, aIsShuttingDown,
           aProgressLogger.CreateSubLoggerFromTo(
               1_pc,
               "profiler_get_profile_json_into_lazily_allocated_buffer: "
-              "WriteProfileToJSONWriter started",
+              "profiler_get_profile_json started",
               98_pc,
               "profiler_get_profile_json_into_lazily_allocated_buffer: "
-              "WriteProfileToJSONWriter done"))) {
+              "profiler_get_profile_json done"))) {
     return;
   }
 
