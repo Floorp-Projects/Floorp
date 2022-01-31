@@ -7,10 +7,12 @@
 #ifndef nsProfiler_h
 #define nsProfiler_h
 
+#include "base/process.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/ProfileJSONWriter.h"
+#include "mozilla/ProportionValue.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Vector.h"
 #include "nsIProfiler.h"
@@ -33,8 +35,6 @@ class nsProfiler final : public nsIProfiler {
     return static_cast<nsProfiler*>(iprofiler.get());
   }
 
-  void GatheredOOPProfile(const nsACString& aProfile);
-
  private:
   ~nsProfiler();
 
@@ -43,9 +43,12 @@ class nsProfiler final : public nsIProfiler {
       SymbolTablePromise;
 
   RefPtr<GatheringPromise> StartGathering(double aSinceTime);
+  void GatheredOOPProfile(base::ProcessId aChildPid,
+                          const nsACString& aProfile);
   void FinishGathering();
   void ResetGathering();
   static void GatheringTimerCallback(nsITimer* aTimer, void* aClosure);
+  void RestartGatheringTimer();
 
   RefPtr<SymbolTablePromise> GetSymbolTableMozPromise(
       const nsACString& aDebugPath, const nsACString& aBreakpadID);
@@ -55,12 +58,29 @@ class nsProfiler final : public nsIProfiler {
     uint64_t mBufferPositionAtGatherTime;
   };
 
+  struct PendingProfile {
+    base::ProcessId childPid;
+
+    mozilla::ProportionValue progressProportion;
+    nsCString progressLocation;
+
+    mozilla::TimeStamp lastProgressRequest;
+    mozilla::TimeStamp lastProgressResponse;
+    mozilla::TimeStamp lastProgressChange;
+
+    explicit PendingProfile(base::ProcessId aChildPid) : childPid(aChildPid) {}
+  };
+
+  PendingProfile* GetPendingProfile(base::ProcessId aChildPid);
+  // Returns false if the request could not be sent.
+  bool SendProgressRequest(PendingProfile& aPendingProfile);
+
   // These fields are all related to profile gathering.
   mozilla::Vector<ExitProfile> mExitProfiles;
   mozilla::Maybe<mozilla::MozPromiseHolder<GatheringPromise>> mPromiseHolder;
   nsCOMPtr<nsIThread> mSymbolTableThread;
   mozilla::Maybe<SpliceableChunkedJSONWriter> mWriter;
-  uint32_t mPendingProfiles;
+  mozilla::Vector<PendingProfile> mPendingProfiles;
   bool mGathering;
   nsCOMPtr<nsITimer> mGatheringTimer;
 };

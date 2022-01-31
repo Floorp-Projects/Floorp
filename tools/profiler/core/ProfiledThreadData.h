@@ -74,19 +74,22 @@ class ProfiledThreadData final {
 
   mozilla::NotNull<mozilla::UniquePtr<UniqueStacks>> PrepareUniqueStacks(
       const ProfileBuffer& aBuffer, JSContext* aCx,
-      ProfilerCodeAddressService* aService);
+      ProfilerCodeAddressService* aService,
+      mozilla::ProgressLogger aProgressLogger);
 
   void StreamJSON(const ProfileBuffer& aBuffer, JSContext* aCx,
                   SpliceableJSONWriter& aWriter, const nsACString& aProcessName,
                   const nsACString& aETLDplus1,
                   const mozilla::TimeStamp& aProcessStartTime,
                   double aSinceTime, bool aJSTracerEnabled,
-                  ProfilerCodeAddressService* aService);
+                  ProfilerCodeAddressService* aService,
+                  mozilla::ProgressLogger aProgressLogger);
   void StreamJSON(ThreadStreamingContext&& aThreadStreamingContext,
                   SpliceableJSONWriter& aWriter, const nsACString& aProcessName,
                   const nsACString& aETLDplus1,
                   const mozilla::TimeStamp& aProcessStartTime,
-                  bool aJSTracerEnabled, ProfilerCodeAddressService* aService);
+                  bool aJSTracerEnabled, ProfilerCodeAddressService* aService,
+                  mozilla::ProgressLogger aProgressLogger);
 
   const mozilla::profiler::ThreadRegistrationInfo& Info() const {
     return mThreadInfo;
@@ -159,7 +162,8 @@ struct ThreadStreamingContext {
 
   ThreadStreamingContext(ProfiledThreadData& aProfiledThreadData,
                          const ProfileBuffer& aBuffer, JSContext* aCx,
-                         ProfilerCodeAddressService* aService);
+                         ProfilerCodeAddressService* aService,
+                         mozilla::ProgressLogger aProgressLogger);
 
   void FinalizeWriter();
 };
@@ -178,7 +182,8 @@ class ProcessStreamingContext {
   // should be called exactly the number of times specified in the constructor.
   void AddThreadStreamingContext(ProfiledThreadData& aProfiledThreadData,
                                  const ProfileBuffer& aBuffer, JSContext* aCx,
-                                 ProfilerCodeAddressService* aService);
+                                 ProfilerCodeAddressService* aService,
+                                 mozilla::ProgressLogger aProgressLogger);
 
   // Retrieve the ThreadStreamingContext for a given thread id.
   // Returns null if that thread id doesn't correspond to any profiled thread.
@@ -224,7 +229,7 @@ ProfilerThreadId StreamSamplesAndMarkers(
     const nsACString& aETLDplus1, const mozilla::TimeStamp& aProcessStartTime,
     const mozilla::TimeStamp& aRegisterTime,
     const mozilla::TimeStamp& aUnregisterTime, double aSinceTime,
-    UniqueStacks& aUniqueStacks);
+    UniqueStacks& aUniqueStacks, mozilla::ProgressLogger aProgressLogger);
 void StreamSamplesAndMarkers(const char* aName,
                              ThreadStreamingContext& aThreadData,
                              SpliceableJSONWriter& aWriter,
@@ -232,6 +237,7 @@ void StreamSamplesAndMarkers(const char* aName,
                              const nsACString& aETLDplus1,
                              const mozilla::TimeStamp& aProcessStartTime,
                              const mozilla::TimeStamp& aRegisterTime,
-                             const mozilla::TimeStamp& aUnregisterTime);
+                             const mozilla::TimeStamp& aUnregisterTime,
+                             mozilla::ProgressLogger aProgressLogger);
 
 #endif  // ProfiledThreadData_h

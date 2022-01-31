@@ -9,6 +9,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/JSONWriter.h"
+#include "mozilla/ProgressLogger.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
@@ -406,7 +407,7 @@ class UniqueJSONStrings {
 
   // Start with a copy of the strings from another list.
   MFBT_API explicit UniqueJSONStrings(
-      const UniqueJSONStrings& aOther,
+      const UniqueJSONStrings& aOther, ProgressLogger aProgressLogger,
       JSONWriter::CollectionStyle aStyle = JSONWriter::MultiLineStyle);
 
   MFBT_API ~UniqueJSONStrings();

@@ -161,6 +161,9 @@ class ProfilerParentTracker final {
   static void ProfilerStarted(uint32_t aEntries);
   static void ProfilerWillStopIfStarted();
 
+  // Number of non-destroyed tracked ProfilerParents.
+  static size_t ProfilerParentCount();
+
   template <typename FuncType>
   static void Enumerate(FuncType&& aIterFunc);
 
@@ -497,6 +500,20 @@ void ProfilerParentTracker::ProfilerWillStopIfStarted() {
   tracker->mMaybeController = Nothing{};
 }
 
+/* static */
+size_t ProfilerParentTracker::ProfilerParentCount() {
+  size_t count = 0;
+  ProfilerParentTracker* tracker = GetInstance();
+  if (tracker) {
+    for (ProfilerParent* profilerParent : tracker->mProfilerParents) {
+      if (!profilerParent->mDestroyed) {
+        ++count;
+      }
+    }
+  }
+  return count;
+}
+
 template <typename FuncType>
 /* static */
 void ProfilerParentTracker::Enumerate(FuncType&& aIterFunc) {
@@ -628,17 +645,30 @@ ProfilerParent::~ProfilerParent() {
 }
 
 /* static */
-nsTArray<RefPtr<ProfilerParent::SingleProcessProfilePromise>>
+nsTArray<ProfilerParent::SingleProcessProfilePromiseAndChildPid>
 ProfilerParent::GatherProfiles() {
+  nsTArray<SingleProcessProfilePromiseAndChildPid> results;
   if (!NS_IsMainThread()) {
-    return nsTArray<RefPtr<ProfilerParent::SingleProcessProfilePromise>>();
+    return results;
   }
 
-  nsTArray<RefPtr<SingleProcessProfilePromise>> results;
+  results.SetCapacity(ProfilerParentTracker::ProfilerParentCount());
   ProfilerParentTracker::Enumerate([&](ProfilerParent* profilerParent) {
-    results.AppendElement(profilerParent->SendGatherProfile());
+    results.AppendElement(SingleProcessProfilePromiseAndChildPid{
+        profilerParent->SendGatherProfile(), profilerParent->mChildPid});
   });
   return results;
+}
+
+/* static */
+RefPtr<ProfilerParent::SingleProcessProgressPromise>
+ProfilerParent::RequestGatherProfileProgress(base::ProcessId aChildPid) {
+  RefPtr<SingleProcessProgressPromise> promise;
+  ProfilerParentTracker::ForChild(
+      aChildPid, [&promise](ProfilerParent* profilerParent) {
+        promise = profilerParent->SendGetGatherProfileProgress();
+      });
+  return promise;
 }
 
 // Magic value for ProfileBufferChunkManagerUpdate::unreleasedBytes meaning
