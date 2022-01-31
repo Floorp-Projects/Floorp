@@ -394,10 +394,6 @@ bool wasm::HasPlatformSupport(JSContext* cx) {
     return false;
   }
 
-  if (!JitOptions.supportsFloatingPoint) {
-    return false;
-  }
-
   if (!JitOptions.supportsUnalignedAccesses) {
     return false;
   }

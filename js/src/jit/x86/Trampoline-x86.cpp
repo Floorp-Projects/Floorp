@@ -820,12 +820,7 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
       break;
 
     case Type_Double:
-      if (JitOptions.supportsFloatingPoint) {
-        masm.Pop(ReturnDoubleReg);
-      } else {
-        masm.assumeUnreachable(
-            "Unable to pop to float reg, with no FP support.");
-      }
+      masm.Pop(ReturnDoubleReg);
       break;
 
     default:
@@ -871,13 +866,8 @@ uint32_t JitRuntime::generatePreBarrier(JSContext* cx, MacroAssembler& masm,
   masm.pop(temp1);
 
   LiveRegisterSet save;
-  if (JitOptions.supportsFloatingPoint) {
-    save.set() = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
-                             FloatRegisterSet(FloatRegisters::VolatileMask));
-  } else {
-    save.set() = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
-                             FloatRegisterSet());
-  }
+  save.set() = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
+                           FloatRegisterSet(FloatRegisters::VolatileMask));
   masm.PushRegsInMask(save);
 
   masm.movl(ImmPtr(cx->runtime()), ecx);
