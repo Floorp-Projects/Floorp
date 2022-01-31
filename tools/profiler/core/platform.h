@@ -35,6 +35,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ProfileBufferEntrySerialization.h"
+#include "mozilla/ProfileJSONWriter.h"
 #include "mozilla/ProfilerUtils.h"
 #include "mozilla/ProgressLogger.h"
 #include "mozilla/TimeStamp.h"
@@ -84,15 +85,17 @@ typedef uint8_t* Address;
 // future sampling; this is not time critical, nor dependent on anything else.
 extern mozilla::Atomic<int, mozilla::MemoryOrdering::Relaxed> gSkipSampling;
 
-namespace mozilla {
-class JSONWriter;
-}
 void AppendSharedLibraries(mozilla::JSONWriter& aWriter);
 
 // Convert the array of strings to a bitfield.
 uint32_t ParseFeaturesFromStringArray(const char** aFeatures,
                                       uint32_t aFeatureCount,
                                       bool aIsStartup = false);
+
+bool profiler_get_profile_json(
+    SpliceableChunkedJSONWriter& aSpliceableChunkedJSONWriter,
+    double aSinceTime, bool aIsShuttingDown,
+    mozilla::ProgressLogger aProgressLogger);
 
 void profiler_get_profile_json_into_lazily_allocated_buffer(
     const std::function<char*(size_t)>& aAllocator, double aSinceTime,
