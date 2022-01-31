@@ -268,7 +268,9 @@ static void ReadCPUInfo(int* flagsEax, int* flagsEbx, int* flagsEcx,
 #endif
 }
 
-void CPUInfo::SetSSEVersion() {
+void CPUInfo::ComputeFlags() {
+  MOZ_ASSERT(!FlagsHaveBeenComputed());
+
   int flagsEax = 1;
   int flagsEbx = 0;
   int flagsEcx = 0;
@@ -339,4 +341,6 @@ void CPUInfo::SetSSEVersion() {
   bmi1Present = (flagsEbx & BMI1Bit);
   bmi2Present = bmi1Present && (flagsEbx & BMI2Bit);
   avx2Present = avxPresent && (flagsEbx & AVX2Bit);
+
+  MOZ_ASSERT(FlagsHaveBeenComputed());
 }

@@ -12677,7 +12677,7 @@ int main(int argc, char** argv) {
   }
 
   // Recompute flags.
-  js::jit::CPUInfo::GetSSEVersion();
+  js::jit::CPUInfo::ComputeFlags();
 #endif
 
 #ifndef JS_CODEGEN_NONE
