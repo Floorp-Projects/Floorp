@@ -161,6 +161,9 @@ class ProfilerParentTracker final {
   static void ProfilerStarted(uint32_t aEntries);
   static void ProfilerWillStopIfStarted();
 
+  // Number of non-destroyed tracked ProfilerParents.
+  static size_t ProfilerParentCount();
+
   template <typename FuncType>
   static void Enumerate(FuncType&& aIterFunc);
 
@@ -497,6 +500,20 @@ void ProfilerParentTracker::ProfilerWillStopIfStarted() {
   tracker->mMaybeController = Nothing{};
 }
 
+/* static */
+size_t ProfilerParentTracker::ProfilerParentCount() {
+  size_t count = 0;
+  ProfilerParentTracker* tracker = GetInstance();
+  if (tracker) {
+    for (ProfilerParent* profilerParent : tracker->mProfilerParents) {
+      if (!profilerParent->mDestroyed) {
+        ++count;
+      }
+    }
+  }
+  return count;
+}
+
 template <typename FuncType>
 /* static */
 void ProfilerParentTracker::Enumerate(FuncType&& aIterFunc) {
@@ -635,6 +652,7 @@ ProfilerParent::GatherProfiles() {
   }
 
   nsTArray<RefPtr<SingleProcessProfilePromise>> results;
+  results.SetCapacity(ProfilerParentTracker::ProfilerParentCount());
   ProfilerParentTracker::Enumerate([&](ProfilerParent* profilerParent) {
     results.AppendElement(profilerParent->SendGatherProfile());
   });
