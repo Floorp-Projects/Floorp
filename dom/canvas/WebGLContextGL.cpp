@@ -719,6 +719,17 @@ void WebGLContext::Hint(GLenum target, GLenum mode) {
   const FuncScope funcScope(*this, "hint");
   if (IsContextLost()) return;
 
+  switch (mode) {
+    case LOCAL_GL_FASTEST:
+    case LOCAL_GL_NICEST:
+    case LOCAL_GL_DONT_CARE:
+      break;
+    default:
+      return ErrorInvalidEnumArg("mode", mode);
+  }
+
+  // -
+
   bool isValid = false;
 
   switch (target) {
@@ -738,8 +749,9 @@ void WebGLContext::Hint(GLenum target, GLenum mode) {
       }
       break;
   }
-
   if (!isValid) return ErrorInvalidEnumInfo("target", target);
+
+  // -
 
   gl->fHint(target, mode);
 }
