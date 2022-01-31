@@ -978,6 +978,8 @@ class LocalAccessible : public nsISupports, public Accessible {
                                  int32_t* aPosInSet) const override;
 
   // Data Members
+  // mContent can be null in a DocAccessible if the document has no body or
+  // root element.
   nsCOMPtr<nsIContent> mContent;
   RefPtr<DocAccessible> mDoc;
 
