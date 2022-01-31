@@ -457,6 +457,10 @@ class AwsyGatherer(FrameworkGatherer):
         dropdown_suite_name = suite_name.replace(" ", "-")
         result = f".. dropdown:: {title} ({test_description})\n"
         result += f"   :container: + anchor-id-{title}-{dropdown_suite_name}\n\n"
+
+        awsy_data = read_yaml(self._yaml_path)["suites"]["Awsy tests"]
+        if "owner" in awsy_data.keys():
+            result += f"   **Owner**: {awsy_data['owner']}\n\n"
         result += "   * **Test Task**:\n"
 
         # tp5 tests are represented by awsy-e10s test names
