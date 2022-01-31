@@ -364,7 +364,8 @@ add_task(async function test_deleteUserInteractionForClearingHistory() {
   await new Promise(resolve => {
     return Services.clearData.deleteUserInteractionForClearingHistory(
       [principalWithStorage],
-      timestamp,
+      // ClearDataService takes PRTime (microseconds)
+      timestamp * 1000,
       resolve
     );
   });

@@ -38,10 +38,10 @@ STEPS = {
 
 
 def test_update(repo):
-    vcs = get_repository_object(repo.strpath)
+    vcs = get_repository_object(repo.dir)
     rev0 = vcs.head_ref
 
-    next(repo.step)
+    repo.execute_next_step()
     rev1 = vcs.head_ref
     assert rev0 != rev1
 
@@ -55,7 +55,7 @@ def test_update(repo):
     assert vcs.head_ref == rev1
 
     # Update should fail with dirty working directory.
-    next(repo.step)
+    repo.execute_next_step()
     with pytest.raises(CalledProcessError):
         vcs.update(rev0)
 

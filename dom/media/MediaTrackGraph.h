@@ -352,7 +352,7 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
   friend class MediaInputPort;
   friend class AudioNodeExternalInputTrack;
 
-  virtual AudioProcessingTrack* AsAudioInputTrack() { return nullptr; }
+  virtual AudioProcessingTrack* AsAudioProcessingTrack() { return nullptr; }
   virtual SourceMediaTrack* AsSourceTrack() { return nullptr; }
   virtual ProcessedMediaTrack* AsProcessedTrack() { return nullptr; }
   virtual AudioNodeTrack* AsAudioNodeTrack() { return nullptr; }

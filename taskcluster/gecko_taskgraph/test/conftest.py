@@ -8,6 +8,8 @@ from mach.logging import LoggingManager
 from responses import RequestsMock
 from taskgraph.config import GraphConfig
 
+from taskgraph.parameters import Parameters
+
 from gecko_taskgraph import (
     GECKO,
     generator,
@@ -18,7 +20,6 @@ from gecko_taskgraph.actions import render_actions_json
 from gecko_taskgraph.config import load_graph_config
 from gecko_taskgraph.generator import TaskGraphGenerator, Kind
 from gecko_taskgraph.optimize import OptimizationStrategy
-from gecko_taskgraph.parameters import Parameters
 from gecko_taskgraph.util.templates import merge
 
 

@@ -970,7 +970,8 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
   // If it did split nodes, but topmost ancestor inline element is split
   // at start of it, we don't need the empty inline element.  Let's remove
   // it now.
-  if (HTMLEditUtils::IsEmptyNode(
+  if (splitResult.GetPreviousContent() &&
+      HTMLEditUtils::IsEmptyNode(
           *splitResult.GetPreviousContent(),
           {EmptyCheckOption::TreatSingleBRElementAsVisible,
            EmptyCheckOption::TreatListItemAsVisible,

@@ -7,6 +7,20 @@
   SimpleTest.waitForExplicitFinish();
 
   async function run() {
+    // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
+    // Acquire storage access permission here so that the BroadcastChannel used to
+    // communicate with the opened windows works in xorigin tests. Otherwise,
+    // the iframe containing this page is isolated from first-party storage access,
+    // which isolates BroadcastChannel communication.
+    if (SimpleTest.xOrigin) {
+      SpecialPowers.wrap(document).notifyUserGestureActivation();
+      await SpecialPowers.addPermission(
+        "storageAccessAPI",
+        true,
+        window.location.href
+       );
+      await SpecialPowers.wrap(document).requestStorageAccess();
+    }
     const channel = new BroadcastChannel("strongworker");
     await navigator.locks.request("exclusive", async () => {
       await new Promise(resolve => {
