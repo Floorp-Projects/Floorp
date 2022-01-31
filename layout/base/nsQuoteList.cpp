@@ -10,6 +10,7 @@
 #include "nsReadableUtils.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsContainerFrame.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Text.h"
@@ -52,12 +53,14 @@ nsString nsQuoteNode::Text() {
 
   if (quotesProp.IsAuto()) {
     // Look up CLDR-derived quotation marks for the language of the context.
-    const nsIFrame* frame = mPseudoFrame->GetParent();
+    const nsIFrame* frame = mPseudoFrame->GetInFlowParent();
     // Parent of the pseudo is the element around which the quotes are applied;
     // we want lang from *its* parent, unless it is the root.
     // XXX Are there other cases where we shouldn't look up to the parent?
     if (!frame->Style()->IsRootElementStyle()) {
-      frame = frame->GetParent();
+      if (const nsIFrame* parent = frame->GetInFlowParent()) {
+        frame = parent;
+      }
     }
     const intl::Quotes* quotes =
         intl::QuotesForLang(frame->StyleFont()->mLanguage);
