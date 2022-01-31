@@ -1189,6 +1189,8 @@ class AsyncPanZoomController {
       AsyncTransformConsumer aMode,
       AsyncTransformComponents aComponents = LayoutAndVisual) const;
 
+  LayoutDevicePoint GetAsyncScrollDeltaForSampling() const;
+
   /**
    * Returns the "zoom" bits of the transform. This includes both the rasterized
    * (layout device to layer scale) and async (layer scale to parent layer

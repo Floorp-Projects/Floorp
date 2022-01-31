@@ -4558,6 +4558,39 @@ LayoutDeviceToParentLayerScale AsyncPanZoomController::GetCurrentPinchZoomScale(
   return scale / Metrics().GetDevPixelsPerCSSPixel();
 }
 
+LayoutDevicePoint AsyncPanZoomController::GetAsyncScrollDeltaForSampling()
+    const {
+  AssertOnSamplerThread();
+
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+
+  const AsyncTransformComponents asyncTransformComponents =
+      GetZoomAnimationId()
+          ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
+          : LayoutAndVisual;
+  ParentLayerPoint layerTranslation =
+      GetCurrentAsyncTransformWithOverscroll(
+          AsyncPanZoomController::eForCompositing, asyncTransformComponents)
+          .TransformPoint(ParentLayerPoint(0, 0));
+
+  // If layerTranslation includes only the layout component of the async
+  // transform then it has not been scaled by the async zoom, so we want to
+  // divide it by the resolution. If layerTranslation includes the visual
+  // component, then we should use the pinch zoom scale, which includes the
+  // async zoom. However, we only use LayoutAndVisual for non-zoomable APZCs,
+  // so it makes no difference.
+  LayoutDeviceToParentLayerScale resolution =
+      GetCumulativeResolution() * LayerToParentLayerScale(1.0f);
+
+  // The positive translation means the painted content is supposed to
+  // move down (or to the right), and that corresponds to a reduction in
+  // the scroll offset. Since we are effectively giving WR the async
+  // scroll delta here, we want to negate the translation.
+  LayoutDevicePoint asyncScrollDelta = -layerTranslation / resolution;
+
+  return asyncScrollDelta;
+}
+
 bool AsyncPanZoomController::SuppressAsyncScrollOffset() const {
   return mScrollMetadata.IsApzForceDisabled() ||
          (Metrics().IsMinimalDisplayPort() &&
