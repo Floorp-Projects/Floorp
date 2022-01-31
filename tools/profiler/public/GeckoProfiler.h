@@ -27,6 +27,7 @@
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ProfilerState.h"
 #include "mozilla/ProfilerThreadState.h"
+#include "mozilla/ProgressLogger.h"
 
 enum class IsFastShutdown {
   No,
@@ -511,7 +512,8 @@ mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0,
 bool profiler_stream_json_for_this_process(
     mozilla::baseprofiler::SpliceableJSONWriter& aWriter, double aSinceTime = 0,
     bool aIsShuttingDown = false,
-    ProfilerCodeAddressService* aService = nullptr);
+    ProfilerCodeAddressService* aService = nullptr,
+    mozilla::ProgressLogger aProgressLogger = {});
 
 // Get the profile and write it into a file. A no-op if the profile is
 // inactive.
