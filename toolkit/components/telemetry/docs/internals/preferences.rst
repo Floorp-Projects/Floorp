@@ -39,7 +39,7 @@ mozconfig Defines
   When Not Defined:
 
   * Disables ``app.shield.optoutstudies.enabled``
-  * Removes the Data Collection Preferences UI in ``privacy.xhtml``
+  * Removes parts of the Data Collection Preferences UI in ``privacy.xhtml``
 
 ``MOZILLA_OFFICIAL``
 
