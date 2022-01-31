@@ -44,7 +44,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
   Svc: "resource://services-sync/util.js",
   SyncTelemetry: "resource://services-sync/telemetry.js",
   Weave: "resource://services-sync/main.js",
@@ -365,14 +364,6 @@ var TPS = {
         default:
           Logger.AssertTrue(false, "invalid action: " + action);
       }
-    }
-    if (action === ACTION_ADD) {
-      // Ideally we'd do the right thing (probably resolving bug 1383832, or
-      // waiting for sessionstore events in TPS), but waiting enough time to
-      // be reasonably confident the sessionstore time has fired is simpler.
-      // Without this timeout, we are likely to see "error locating tab"
-      // on subsequent syncs.
-      await new Promise(resolve => setTimeout(resolve, 2500));
     }
     Logger.logPass("executing action " + action.toUpperCase() + " on tabs");
   },
