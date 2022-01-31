@@ -1176,10 +1176,16 @@ class AsyncPanZoomController {
    * When only the eLayout component is requested, the returned translation
    * should really be a LayerPoint, rather than a ParentLayerPoint, as it will
    * not be scaled by the asynchronous zoom.
+   * |aMode| specifies whether the async transform is queried for the purpose of
+   * hit testing (eHitTesting) in which case the latest values from |Metrics()|
+   * are used, or for compositing (eCompositing) in which case a sampled value
+   * from |mSampledState| is used.
+   * |aSampleIndex| specifies which sample in |mSampledState| to use.
    */
   AsyncTransform GetCurrentAsyncTransform(
       AsyncTransformConsumer aMode,
-      AsyncTransformComponents aComponents = LayoutAndVisual) const;
+      AsyncTransformComponents aComponents = LayoutAndVisual,
+      std::size_t aSampleIndex = 0) const;
 
   /**
    * Returns the same transform as GetCurrentAsyncTransform(), but includes
@@ -1187,7 +1193,8 @@ class AsyncPanZoomController {
    */
   AsyncTransformComponentMatrix GetCurrentAsyncTransformWithOverscroll(
       AsyncTransformConsumer aMode,
-      AsyncTransformComponents aComponents = LayoutAndVisual) const;
+      AsyncTransformComponents aComponents = LayoutAndVisual,
+      std::size_t aSampleIndex = 0) const;
 
   LayoutDevicePoint GetAsyncScrollDeltaForSampling() const;
 
@@ -1249,15 +1256,15 @@ class AsyncPanZoomController {
    * store the required value from the last time it was sampled by calling
    * SampleCompositedAsyncTransform(), depending on who is asking.
    */
-  CSSRect GetEffectiveLayoutViewport(
-      AsyncTransformConsumer aMode,
-      const RecursiveMutexAutoLock& aProofOfLock) const;
-  CSSPoint GetEffectiveScrollOffset(
-      AsyncTransformConsumer aMode,
-      const RecursiveMutexAutoLock& aProofOfLock) const;
+  CSSRect GetEffectiveLayoutViewport(AsyncTransformConsumer aMode,
+                                     const RecursiveMutexAutoLock& aProofOfLock,
+                                     std::size_t aSampleIndex = 0) const;
+  CSSPoint GetEffectiveScrollOffset(AsyncTransformConsumer aMode,
+                                    const RecursiveMutexAutoLock& aProofOfLock,
+                                    std::size_t aSampleIndex = 0) const;
   CSSToParentLayerScale GetEffectiveZoom(
-      AsyncTransformConsumer aMode,
-      const RecursiveMutexAutoLock& aProofOfLock) const;
+      AsyncTransformConsumer aMode, const RecursiveMutexAutoLock& aProofOfLock,
+      std::size_t aSampleIndex = 0) const;
 
   /**
    * Returns the visible portion of the content scrolled by this APZC, in
