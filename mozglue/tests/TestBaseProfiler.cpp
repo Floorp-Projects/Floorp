@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BaseProfileJSONWriter.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/ProgressLogger.h"
 #include "mozilla/ProportionValue.h"
 
 #ifdef MOZ_GECKO_PROFILER
@@ -423,6 +424,186 @@ void TestProportionValue() {
 template <typename Arg0, typename... Args>
 bool AreAllEqual(Arg0&& aArg0, Args&&... aArgs) {
   return ((aArg0 == aArgs) && ...);
+}
+
+void TestProgressLogger() {
+  printf("TestProgressLogger...\n");
+
+  using mozilla::ProgressLogger;
+  using mozilla::ProportionValue;
+  using namespace mozilla::literals::ProportionValue_literals;
+
+  auto progressRefPtr = mozilla::MakeRefPtr<ProgressLogger::SharedProgress>();
+  MOZ_RELEASE_ASSERT(progressRefPtr);
+  MOZ_RELEASE_ASSERT(progressRefPtr->Progress().IsExactlyZero());
+
+  {
+    ProgressLogger pl(progressRefPtr, "Started", "All done");
+    MOZ_RELEASE_ASSERT(progressRefPtr->Progress().IsExactlyZero());
+    MOZ_RELEASE_ASSERT(pl.GetGlobalProgress().IsExactlyZero());
+    MOZ_RELEASE_ASSERT(AreAllEqual(progressRefPtr->LastLocation(),
+                                   pl.GetLastGlobalLocation(), "Started"));
+
+    // At this top level, the scale is 1:1.
+    pl.SetLocalProgress(10_pc, "Top 10%");
+    MOZ_RELEASE_ASSERT(
+        AreAllEqual(progressRefPtr->Progress(), pl.GetGlobalProgress(), 10_pc));
+    MOZ_RELEASE_ASSERT(AreAllEqual(progressRefPtr->LastLocation(),
+                                   pl.GetLastGlobalLocation(), "Top 10%"));
+
+    pl.SetLocalProgress(0_pc, "Restarted");
+    MOZ_RELEASE_ASSERT(
+        AreAllEqual(progressRefPtr->Progress(), pl.GetGlobalProgress(), 0_pc));
+    MOZ_RELEASE_ASSERT(AreAllEqual(progressRefPtr->LastLocation(),
+                                   pl.GetLastGlobalLocation(), "Restarted"));
+
+    {
+      // Create a sub-logger for the whole global range. Notice that this is
+      // moving the current progress back to 0.
+      ProgressLogger plSub1 =
+          pl.CreateSubLoggerFromTo(0_pc, "Sub1 started", 100_pc, "Sub1 ended");
+      MOZ_RELEASE_ASSERT(progressRefPtr->Progress().IsExactlyZero());
+      MOZ_RELEASE_ASSERT(pl.GetGlobalProgress().IsExactlyZero());
+      MOZ_RELEASE_ASSERT(plSub1.GetGlobalProgress().IsExactlyZero());
+      MOZ_RELEASE_ASSERT(AreAllEqual(
+          progressRefPtr->LastLocation(), pl.GetLastGlobalLocation(),
+          plSub1.GetLastGlobalLocation(), "Sub1 started"));
+
+      // At this level, the scale is still 1:1.
+      plSub1.SetLocalProgress(10_pc, "Sub1 10%");
+      MOZ_RELEASE_ASSERT(AreAllEqual(progressRefPtr->Progress(),
+                                     pl.GetGlobalProgress(),
+                                     plSub1.GetGlobalProgress(), 10_pc));
+      MOZ_RELEASE_ASSERT(AreAllEqual(
+          progressRefPtr->LastLocation(), pl.GetLastGlobalLocation(),
+          plSub1.GetLastGlobalLocation(), "Sub1 10%"));
+
+      {
+        // Create a sub-logger half the global range.
+        //   0              0.25   0.375    0.5    0.625    0.75             1
+        //   |---------------|-------|-------|-------|-------|---------------|
+        // plSub2:           0      0.25    0.5     0.75     1
+        ProgressLogger plSub2 = plSub1.CreateSubLoggerFromTo(
+            25_pc, "Sub2 started", 75_pc, "Sub2 ended");
+        MOZ_RELEASE_ASSERT(AreAllEqual(
+            progressRefPtr->Progress(), pl.GetGlobalProgress(),
+            plSub1.GetGlobalProgress(), plSub2.GetGlobalProgress(), 25_pc));
+        MOZ_RELEASE_ASSERT(AreAllEqual(
+            progressRefPtr->LastLocation(), pl.GetLastGlobalLocation(),
+            plSub1.GetLastGlobalLocation(), plSub2.GetLastGlobalLocation(),
+            "Sub2 started"));
+
+        plSub2.SetLocalProgress(25_pc, "Sub2 25%");
+        MOZ_RELEASE_ASSERT(AreAllEqual(
+            progressRefPtr->Progress(), pl.GetGlobalProgress(),
+            plSub1.GetGlobalProgress(), plSub2.GetGlobalProgress(), 37.5_pc));
+        MOZ_RELEASE_ASSERT(AreAllEqual(
+            progressRefPtr->LastLocation(), pl.GetLastGlobalLocation(),
+            plSub1.GetLastGlobalLocation(), plSub2.GetLastGlobalLocation(),
+            "Sub2 25%"));
+
+        plSub2.SetLocalProgress(50_pc, "Sub2 50%");
+        MOZ_RELEASE_ASSERT(AreAllEqual(
+            progressRefPtr->Progress(), pl.GetGlobalProgress(),
+            plSub1.GetGlobalProgress(), plSub2.GetGlobalProgress(), 50_pc));
+        MOZ_RELEASE_ASSERT(AreAllEqual(
+            progressRefPtr->LastLocation(), pl.GetLastGlobalLocation(),
+            plSub1.GetLastGlobalLocation(), plSub2.GetLastGlobalLocation(),
+            "Sub2 50%"));
+
+        {
+          // Create a sub-logger half the parent range.
+          //   0              0.25   0.375    0.5    0.625    0.75             1
+          //   |---------------|-------|-------|-------|-------|---------------|
+          // plSub2:           0      0.25    0.5     0.75     1
+          // plSub3:                           0      0.5      1
+          ProgressLogger plSub3 = plSub2.CreateSubLoggerTo(
+              "Sub3 started", 100_pc, ProgressLogger::NO_LOCATION_UPDATE);
+          MOZ_RELEASE_ASSERT(AreAllEqual(
+              progressRefPtr->Progress(), pl.GetGlobalProgress(),
+              plSub1.GetGlobalProgress(), plSub2.GetGlobalProgress(),
+              plSub3.GetGlobalProgress(), 50_pc));
+          MOZ_RELEASE_ASSERT(AreAllEqual(
+              progressRefPtr->LastLocation(), pl.GetLastGlobalLocation(),
+              plSub1.GetLastGlobalLocation(), plSub2.GetLastGlobalLocation(),
+              plSub3.GetLastGlobalLocation(), "Sub3 started"));
+
+          plSub3.SetLocalProgress(50_pc, "Sub3 50%");
+          MOZ_RELEASE_ASSERT(AreAllEqual(
+              progressRefPtr->Progress(), pl.GetGlobalProgress(),
+              plSub1.GetGlobalProgress(), plSub2.GetGlobalProgress(),
+              plSub3.GetGlobalProgress(), 62.5_pc));
+          MOZ_RELEASE_ASSERT(AreAllEqual(
+              progressRefPtr->LastLocation(), pl.GetLastGlobalLocation(),
+              plSub1.GetLastGlobalLocation(), plSub2.GetLastGlobalLocation(),
+              plSub3.GetLastGlobalLocation(), "Sub3 50%"));
+        }  // End of plSub3
+
+        // When plSub3 ends, progress moves to its 100%, which is also plSub2's
+        // 100%, which is plSub1's and the global progress of 75%
+        MOZ_RELEASE_ASSERT(AreAllEqual(
+            progressRefPtr->Progress(), pl.GetGlobalProgress(),
+            plSub1.GetGlobalProgress(), plSub2.GetGlobalProgress(), 75_pc));
+        // But location is still at the last explicit update.
+        MOZ_RELEASE_ASSERT(AreAllEqual(
+            progressRefPtr->LastLocation(), pl.GetLastGlobalLocation(),
+            plSub1.GetLastGlobalLocation(), plSub2.GetLastGlobalLocation(),
+            "Sub3 50%"));
+      }  // End of plSub2
+
+      MOZ_RELEASE_ASSERT(AreAllEqual(progressRefPtr->Progress(),
+                                     pl.GetGlobalProgress(),
+                                     plSub1.GetGlobalProgress(), 75_pc));
+      MOZ_RELEASE_ASSERT(AreAllEqual(
+          progressRefPtr->LastLocation(), pl.GetLastGlobalLocation(),
+          plSub1.GetLastGlobalLocation(), "Sub2 ended"));
+    }  // End of plSub1
+
+    MOZ_RELEASE_ASSERT(progressRefPtr->Progress().IsExactlyOne());
+    MOZ_RELEASE_ASSERT(pl.GetGlobalProgress().IsExactlyOne());
+    MOZ_RELEASE_ASSERT(AreAllEqual(progressRefPtr->LastLocation(),
+                                   pl.GetLastGlobalLocation(), "Sub1 ended"));
+
+    const auto loopStart = 75_pc;
+    const auto loopEnd = 87.5_pc;
+    const uint32_t loopCount = 8;
+    uint32_t expectedIndex = 0u;
+    auto expectedIterationStart = loopStart;
+    const auto iterationIncrement = (loopEnd - loopStart) / loopCount;
+    for (auto&& [index, loopPL] : pl.CreateLoopSubLoggersFromTo(
+             loopStart, loopEnd, loopCount, "looping...")) {
+      MOZ_RELEASE_ASSERT(index == expectedIndex);
+      ++expectedIndex;
+      MOZ_RELEASE_ASSERT(
+          AreAllEqual(progressRefPtr->Progress(), pl.GetGlobalProgress(),
+                      loopPL.GetGlobalProgress(), expectedIterationStart));
+      MOZ_RELEASE_ASSERT(AreAllEqual(
+          progressRefPtr->LastLocation(), pl.GetLastGlobalLocation(),
+          loopPL.GetLastGlobalLocation(), "looping..."));
+
+      loopPL.SetLocalProgress(50_pc, "half");
+      MOZ_RELEASE_ASSERT(loopPL.GetGlobalProgress() ==
+                         expectedIterationStart + iterationIncrement / 2u);
+      MOZ_RELEASE_ASSERT(
+          AreAllEqual(progressRefPtr->Progress(), pl.GetGlobalProgress(),
+                      loopPL.GetGlobalProgress(),
+                      expectedIterationStart + iterationIncrement / 2u));
+      MOZ_RELEASE_ASSERT(AreAllEqual(progressRefPtr->LastLocation(),
+                                     pl.GetLastGlobalLocation(),
+                                     loopPL.GetLastGlobalLocation(), "half"));
+
+      expectedIterationStart = expectedIterationStart + iterationIncrement;
+    }
+    MOZ_RELEASE_ASSERT(AreAllEqual(progressRefPtr->Progress(),
+                                   pl.GetGlobalProgress(),
+                                   expectedIterationStart));
+    MOZ_RELEASE_ASSERT(AreAllEqual(progressRefPtr->LastLocation(),
+                                   pl.GetLastGlobalLocation(), "looping..."));
+  }  // End of pl
+  MOZ_RELEASE_ASSERT(progressRefPtr->Progress().IsExactlyOne());
+  MOZ_RELEASE_ASSERT(AreAllEqual(progressRefPtr->LastLocation(), "All done"));
+
+  printf("TestProgressLogger done\n");
 }
 
 #ifdef MOZ_GECKO_PROFILER
@@ -4948,6 +5129,7 @@ int main()
 
   TestProfilerUtils();
   TestProportionValue();
+  TestProgressLogger();
   // Note that there are two `TestProfiler{,Markers}` functions above, depending
   // on whether MOZ_GECKO_PROFILER is #defined.
   TestProfiler();
