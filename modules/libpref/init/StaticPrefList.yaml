@@ -4099,7 +4099,7 @@
 # Whether the WebMIDI API is enabled
 - name: dom.webmidi.enabled
   type: bool
-  value: false
+  value: @IS_NOT_ANDROID@
   mirror: always
 
 # midi permission is addon-gated
