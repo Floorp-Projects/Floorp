@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-
 // Implementation note: It seems tempting to use if cfg!(feature = ...) directly
 // in the macro, but that doesn't work, as the feature would be evaluated
 // against the dependent crate.
