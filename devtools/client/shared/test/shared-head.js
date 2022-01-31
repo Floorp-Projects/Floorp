@@ -1934,14 +1934,38 @@ async function getFluentStringHelper(resourceIds) {
    * Get the string from a message id. It throws when the message is not found.
    *
    * @param {string} id
+   * @param {string} attributeName: attribute name if you need to access a specific attribute
+   *                 defined in the fluent string, e.g. setting "title" for this param
+   *                 will retrieve the `title` string in
+   *                    compatibility-issue-browsers-list =
+   *                      .title = This is the title
    * @param {Record<string, FluentVariable>} [args] optional
    * @returns {string}
    */
-  return (id, args) => {
-    const string = reactLocalization.getString(id, args);
+  return (id, attributeName, args) => {
+    let string;
+
+    if (!attributeName) {
+      string = reactLocalization.getString(id, args);
+    } else {
+      for (const bundle of reactLocalization.bundles) {
+        const msg = bundle.getMessage(id);
+        if (msg?.attributes[attributeName]) {
+          string = bundle.formatPattern(
+            msg.attributes[attributeName],
+            args,
+            []
+          );
+          break;
+        }
+      }
+    }
+
     if (!string) {
       throw new Error(
-        `Could not find a string for "${id}". Was the correct resource bundle loaded?`
+        `Could not find a string for "${id}"${
+          attributeName ? ` and attribute "${attributeName}")` : ""
+        }. Was the correct resource bundle loaded?`
       );
     }
     return string;
