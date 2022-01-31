@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 
+import shutil
 import os
 import subprocess
 
@@ -46,6 +47,19 @@ SETUP = {
 }
 
 
+class RepoTestFixture:
+    def __init__(self, repo_dir: Path, vcs: str, steps: [str]):
+        self.dir = repo_dir
+        self.vcs = vcs
+
+        # This creates a step iterator. Each time execute_next_step()
+        # is called the next set of instructions will be executed.
+        self.steps = (shell(cmd, self.dir) for cmd in steps)
+
+    def execute_next_step(self):
+        next(self.steps)
+
+
 def shell(cmd, working_dir):
     for step in cmd.split(os.linesep):
         subprocess.check_call(step, shell=True, cwd=working_dir)
@@ -53,27 +67,22 @@ def shell(cmd, working_dir):
 
 @pytest.yield_fixture(params=["git", "hg"])
 def repo(tmpdir, request):
+    tmpdir = Path(tmpdir)
     vcs = request.param
     steps = SETUP[vcs]
 
     if hasattr(request.module, "STEPS"):
         steps.extend(request.module.STEPS[vcs])
 
-    # tmpdir and repo are py.path objects
-    # http://py.readthedocs.io/en/latest/path.html
-    repo = tmpdir.mkdir("repo")
-    repo.vcs = vcs
+    repo_dir = (tmpdir / "repo").resolve()
+    (tmpdir / "repo").mkdir()
 
-    working_dir = str(Path(repo.strpath).resolve())
+    repo_test_fixture = RepoTestFixture(repo_dir, vcs, steps)
 
-    # This creates a step iterator. Each time next() is called
-    # on it, the next set of instructions will be executed.
-    repo.step = (shell(cmd, working_dir) for cmd in steps)
+    repo_test_fixture.execute_next_step()
 
-    next(repo.step)
+    shutil.copytree(str(repo_dir), str(tmpdir / "remoterepo"))
 
-    repo.copy(tmpdir.join("remoterepo"))
+    repo_test_fixture.execute_next_step()
 
-    next(repo.step)
-
-    yield repo
+    yield repo_test_fixture

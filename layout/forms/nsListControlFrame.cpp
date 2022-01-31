@@ -855,7 +855,8 @@ nsListControlFrame::AddOption(int32_t aIndex) {
 }
 
 static int32_t DecrementAndClamp(int32_t aSelectionIndex, int32_t aLength) {
-  return aLength == 0 ? nsListControlFrame::kNothingSelected : std::max(0, aSelectionIndex - 1);
+  return aLength == 0 ? nsListControlFrame::kNothingSelected
+                      : std::max(0, aSelectionIndex - 1);
 }
 
 NS_IMETHODIMP

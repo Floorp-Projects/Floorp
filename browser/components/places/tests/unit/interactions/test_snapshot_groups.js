@@ -17,14 +17,22 @@ async function delete_all_groups() {
   }
 }
 
-async function addInteractionsAndSnapshots(urls) {
-  for (let url of urls) {
-    await addInteractions([
-      {
-        url,
-      },
-    ]);
-    await Snapshots.add({ url });
+/**
+ * Adds interactions and snapshots for the supplied data.
+ *
+ * @param {string[]|InteractionInfo[]} data
+ *   Either an array of urls, or an array of InteractionInfo objects suitable
+ *   for passing to `addInteractions`.
+ */
+async function addInteractionsAndSnapshots(data) {
+  for (let item of data) {
+    if (typeof item == "string") {
+      await addInteractions([{ url: item }]);
+      await Snapshots.add({ url: item });
+    } else {
+      await addInteractions([item]);
+      await Snapshots.add({ url: item.url });
+    }
   }
 }
 
@@ -52,19 +60,28 @@ add_task(async function test_add_and_query_no_snapshots() {
 
 add_task(async function test_add_and_query() {
   await delete_all_groups();
-  let urls = [TEST_URL1, TEST_URL2, TEST_URL3];
-  await addInteractionsAndSnapshots(urls);
+
+  let now = Date.now();
+  let data = [
+    { url: TEST_URL1, created_at: now - 30000, updated_at: now - 30000 },
+    { url: TEST_URL2, created_at: now - 20000, updated_at: now - 20000 },
+    { url: TEST_URL3, created_at: now - 10000, updated_at: now - 10000 },
+  ];
+  await addInteractionsAndSnapshots(data);
 
   let newGroup = { title: "Test Group", builder: "domain" };
-
-  await SnapshotGroups.add(newGroup, urls);
+  await SnapshotGroups.add(
+    newGroup,
+    data.map(d => d.url)
+  );
 
   let groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
   assertSnapshotGroup(groups[0], {
     title: "Test Group",
     builder: "domain",
-    snapshotCount: urls.length,
+    snapshotCount: data.length,
+    lastAccessed: now - 10000,
   });
 });
 

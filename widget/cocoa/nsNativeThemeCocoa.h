@@ -285,8 +285,7 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
 
     mozilla::Variant<mozilla::gfx::sRGBColor, MenuIconParams, MenuItemParams, CheckboxOrRadioParams,
                      ButtonParams, DropdownParams, SpinButtonParams, SegmentParams, TextFieldParams,
-                     ProgressParams, MeterParams, TreeHeaderCellParams, ScaleParams,
-                     bool>
+                     ProgressParams, MeterParams, TreeHeaderCellParams, ScaleParams, bool>
         mVariant;
 
     enum Widget mWidget;

@@ -260,8 +260,9 @@ fn parse_args(app: &mut App) -> ProgramResult<Operation> {
         }
     };
 
-    let android_storage =
-        args.value_of_t::<AndroidStorageInput>("android_storage").unwrap_or(AndroidStorageInput::Auto);
+    let android_storage = args
+        .value_of_t::<AndroidStorageInput>("android_storage")
+        .unwrap_or(AndroidStorageInput::Auto);
 
     let binary = args.value_of("binary").map(PathBuf::from);
 
