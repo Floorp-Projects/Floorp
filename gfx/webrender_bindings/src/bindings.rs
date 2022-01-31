@@ -2800,6 +2800,8 @@ pub extern "C" fn wr_dp_define_scroll_layer(
     content_rect: LayoutRect,
     clip_rect: LayoutRect,
     scroll_offset: LayoutVector2D,
+    scroll_offset_generation: APZScrollGeneration,
+    has_scroll_linked_effect: HasScrollLinkedEffect,
     key: SpatialTreeItemKey,
 ) -> WrSpatialId {
     assert!(unsafe { is_in_main_thread() });
@@ -2810,6 +2812,8 @@ pub extern "C" fn wr_dp_define_scroll_layer(
         content_rect,
         clip_rect,
         scroll_offset,
+        scroll_offset_generation,
+        has_scroll_linked_effect,
         key,
     );
 

@@ -60,6 +60,8 @@ impl Example for App {
                 (0, 0).by(1000, 1000),
                 scrollbox,
                 LayoutVector2D::zero(),
+                APZScrollGeneration::default(),
+                HasScrollLinkedEffect::No,
                 SpatialTreeItemKey::new(0, 0),
             );
             let space_and_clip1 = SpaceAndClipInfo {
@@ -96,6 +98,8 @@ impl Example for App {
                 (0, 100).to(300, 1000),
                 (0, 100).to(200, 300),
                 LayoutVector2D::zero(),
+                APZScrollGeneration::default(),
+                HasScrollLinkedEffect::No,
                 SpatialTreeItemKey::new(0, 1),
             );
             let space_and_clip2 = SpaceAndClipInfo {
