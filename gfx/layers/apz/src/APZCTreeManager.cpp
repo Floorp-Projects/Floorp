@@ -736,16 +736,6 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
   for (const auto& mapping : mApzcMap) {
     AsyncPanZoomController* apzc = mapping.second.apzc;
 
-    const AsyncTransformComponents asyncTransformComponents =
-        apzc->GetZoomAnimationId()
-            ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
-            : LayoutAndVisual;
-    ParentLayerPoint layerTranslation =
-        apzc->GetCurrentAsyncTransformWithOverscroll(
-                AsyncPanZoomController::eForCompositing,
-                asyncTransformComponents)
-            .TransformPoint(ParentLayerPoint(0, 0));
-
     if (Maybe<CompositionPayload> payload = apzc->NotifyScrollSampling()) {
       if (wrBridgeParent && aVsyncId) {
         wrBridgeParent->AddPendingScrollPayload(*payload, *aVsyncId);
@@ -790,19 +780,7 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
                                          apzc->IsAsyncZooming());
     }
 
-    // If layerTranslation includes only the layout component of the async
-    // transform then it has not been scaled by the async zoom, so we want to
-    // divide it by the resolution. If layerTranslation includes the visual
-    // component, then we should use the pinch zoom scale, which includes the
-    // async zoom. However, we only use LayoutAndVisual for non-zoomable APZCs,
-    // so it makes no difference.
-    LayoutDeviceToParentLayerScale resolution =
-        apzc->GetCumulativeResolution() * LayerToParentLayerScale(1.0f);
-    // The positive translation means the painted content is supposed to
-    // move down (or to the right), and that corresponds to a reduction in
-    // the scroll offset. Since we are effectively giving WR the async
-    // scroll delta here, we want to negate the translation.
-    LayoutDevicePoint asyncScrollDelta = -layerTranslation / resolution;
+    LayoutDevicePoint asyncScrollDelta = apzc->GetAsyncScrollDeltaForSampling();
     aTxn.UpdateScrollPosition(wr::AsPipelineId(apzc->GetGuid().mLayersId),
                               apzc->GetGuid().mScrollId,
                               wr::ToLayoutVector2D(asyncScrollDelta));
