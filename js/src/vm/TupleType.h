@@ -73,6 +73,7 @@ bool IsTuple(const Value& v);
 extern bool tuple_toReversed(JSContext* cx, unsigned argc, Value* vp);
 extern bool tuple_with(JSContext* cx, unsigned argc, Value* vp);
 extern bool tuple_slice(JSContext* cx, unsigned argc, Value* vp);
+extern bool tuple_is_tuple(JSContext* cx, unsigned argc, Value* vp);
 extern bool tuple_value_of(JSContext* cx, unsigned argc, Value* vp);
 extern bool tuple_construct(JSContext* cx, unsigned argc, Value* vp);
 
