@@ -14,6 +14,7 @@
 #include "mojo/core/ports/port_ref.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/ipc/Transport.h"
 #include "mozilla/ipc/ScopedPort.h"
 
 namespace IPC {

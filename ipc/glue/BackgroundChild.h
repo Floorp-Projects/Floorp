@@ -8,6 +8,7 @@
 #define mozilla_ipc_backgroundchild_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ipc/Transport.h"
 
 class nsIEventTarget;
 
@@ -63,6 +64,8 @@ class BackgroundChild final {
   friend class mozilla::dom::ContentParent;
   friend class mozilla::dom::ContentProcess;
   friend class mozilla::net::SocketProcessChild;
+
+  typedef mozilla::ipc::Transport Transport;
 
  public:
   // See above.

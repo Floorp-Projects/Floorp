@@ -18,6 +18,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 
 #include "mozilla/ipc/MessageChannel.h"
+#include "mozilla/ipc/Transport.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/StaticMutex.h"
 #if defined(DEBUG) || defined(FUZZING)
