@@ -24,8 +24,8 @@ use std::sync::Mutex;
 #[cfg(feature = "with_gecko")]
 use {std::convert::TryInto, std::sync::atomic::AtomicU32, xpcom::interfaces::nsIXULRuntime};
 
-use super::HashState;
 use super::metrics::__glean_metric_maps;
+use super::HashState;
 
 type EventRecord = (u64, HashMap<i32, String>);
 

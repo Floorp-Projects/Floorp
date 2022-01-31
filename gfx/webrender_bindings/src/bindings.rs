@@ -406,7 +406,7 @@ impl ExternalImageHandler for WrExternalImageHandler {
                 WrExternalImageType::NativeTexture => ExternalImageSource::NativeTexture(image.handle),
                 WrExternalImageType::RawData => {
                     ExternalImageSource::RawData(unsafe { make_slice(image.buff, image.size) })
-                }
+                },
                 WrExternalImageType::Invalid => ExternalImageSource::Invalid,
             },
         }
@@ -627,7 +627,7 @@ pub extern "C" fn wr_renderer_render(
             *out_stats = results.stats;
             out_dirty_rects.extend(results.dirty_rects);
             true
-        }
+        },
         Err(errors) => {
             for e in errors {
                 warn!(" Failed to render: {:?}", e);
@@ -637,7 +637,7 @@ pub extern "C" fn wr_renderer_render(
                 }
             }
             false
-        }
+        },
     }
 }
 
@@ -1056,7 +1056,7 @@ impl AsyncPropertySampler for SamplerCallback {
             Some(id) => {
                 generated_frame_id_value = id;
                 &generated_frame_id_value
-            }
+            },
             None => ptr::null_mut(),
         };
         let mut transaction = Transaction::new();
@@ -1153,7 +1153,7 @@ pub unsafe extern "C" fn remove_program_binary_disk_cache(prof_path: &nsAString)
         Err(_) => {
             error!("Failed to remove program binary disk cache");
             false
-        }
+        },
     }
 }
 
@@ -1699,7 +1699,7 @@ pub extern "C" fn wr_window_new(
             }
             *out_err = msg.into_raw();
             return false;
-        }
+        },
     };
 
     unsafe {
@@ -2255,11 +2255,11 @@ fn generate_capture_path(path: *const c_char) -> Option<PathBuf> {
                 writeln!(file, "mozilla-central {}", moz_revision).unwrap();
             }
             Some(path)
-        }
+        },
         Err(e) => {
             warn!("Unable to create path '{:?}' for capture: {:?}", path, e);
             None
-        }
+        },
     }
 }
 
@@ -2309,7 +2309,7 @@ fn read_font_descriptor(bytes: &mut WrVecU8, _index: u32) -> NativeFontHandle {
             // Lucida Grande is the fallback font in Gecko, so use that here.
             CGFont::from_name(&CFString::from_static_string("Lucida Grande"))
                 .expect("Failed reading font descriptor and could not load fallback font")
-        }
+        },
     };
     NativeFontHandle(font)
 }
@@ -2541,7 +2541,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
                     1.0,
                 ));
                 has_opacity_animation = true;
-            }
+            },
             WrAnimationType::Transform => {
                 transform_binding = Some((
                     PropertyBinding::Binding(
@@ -2553,7 +2553,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
                     ),
                     anim.key,
                 ));
-            }
+            },
             _ => unreachable!("{:?} should not create a stacking context", anim.effect_type),
         }
     }
@@ -2579,7 +2579,7 @@ pub extern "C" fn wr_dp_push_stacking_context(
             Some(scroll_id) => {
                 debug_assert_eq!(params.reference_frame_kind, WrReferenceFrameKind::Perspective);
                 Some(ExternalScrollId(*scroll_id, state.pipeline_id))
-            }
+            },
             None => None,
         };
 
@@ -3978,7 +3978,7 @@ pub extern "C" fn wr_shaders_new(
                 gfx_critical_note(msg.as_ptr());
             }
             return ptr::null_mut();
-        }
+        },
     }));
 
     let shaders = WrShaders(shaders);
