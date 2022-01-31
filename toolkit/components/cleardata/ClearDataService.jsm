@@ -838,10 +838,10 @@ const StorageAccessCleaner = {
     for (let principal of aPrincipalsWithStorage) {
       baseDomainsWithStorage.add(principal.baseDomain);
     }
-
     for (let perm of Services.perms.getAllByTypeSince(
       "storageAccessAPI",
-      aFrom
+      // The permission manager uses milliseconds instead of microseconds
+      aFrom / 1000
     )) {
       if (!baseDomainsWithStorage.has(perm.principal.baseDomain)) {
         Services.perms.removePermission(perm);
