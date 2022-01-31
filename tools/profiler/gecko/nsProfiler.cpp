@@ -808,7 +808,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
   // Do this before the call to profiler_stream_json_for_this_process() because
   // that call is slow and we want to let the other processes grab their
   // profiles as soon as possible.
-  nsTArray<RefPtr<ProfilerParent::SingleProcessProfilePromise>> profiles =
+  nsTArray<ProfilerParent::SingleProcessProfilePromiseAndChildPid> profiles =
       ProfilerParent::GatherProfiles();
 
   mWriter.emplace();
@@ -885,7 +885,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
         GetMainThreadSerialEventTarget());
 
     for (auto profile : profiles) {
-      profile->Then(
+      profile.profilePromise->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [self = RefPtr<nsProfiler>(this)](mozilla::ipc::Shmem&& aResult) {
             const nsDependentCSubstring profileString(aResult.get<char>(),
