@@ -11,6 +11,7 @@
 #include "mozilla/dom/locks/PLockManagerParent.h"
 #include "mozilla/dom/locks/LockRequestParent.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/WeakPtr.h"
 
 namespace mozilla::dom::locks {
 
