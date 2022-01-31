@@ -3070,10 +3070,11 @@
         this.removeTab(leftoverTab);
       }
 
+      TabBarVisibility.update();
+
       if (tabs.length > 1 || !tabs[0].selected) {
         this._updateTabsAfterInsert();
         this.tabContainer._setPositionalAttributes();
-        TabBarVisibility.update();
 
         for (let tab of tabs) {
           // If tabToSelect is a tab, we didn't reuse the selected tab.
