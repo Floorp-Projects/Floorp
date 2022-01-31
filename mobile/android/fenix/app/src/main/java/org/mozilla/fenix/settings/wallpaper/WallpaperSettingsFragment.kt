@@ -19,6 +19,7 @@ import androidx.navigation.fragment.findNavController
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.wallpapers.Wallpaper
 import org.mozilla.fenix.wallpapers.WallpaperManager
@@ -71,5 +72,9 @@ class WallpaperSettingsFragment : Fragment() {
                 }
             }
         }
+    }
+    override fun onResume() {
+        super.onResume()
+        showToolbar(getString(R.string.customize_wallpapers))
     }
 }

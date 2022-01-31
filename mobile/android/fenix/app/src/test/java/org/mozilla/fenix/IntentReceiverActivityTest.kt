@@ -7,6 +7,7 @@ package org.mozilla.fenix
 import android.app.Activity
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY
+import android.net.Uri
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -53,6 +54,7 @@ class IntentReceiverActivityTest {
         every { intentProcessors.externalAppIntentProcessors } returns emptyList()
         every { intentProcessors.fennecPageShortcutIntentProcessor } returns mockIntentProcessor()
         every { intentProcessors.migrationIntentProcessor } returns mockIntentProcessor()
+        every { intentProcessors.externalDeepLinkIntentProcessor } returns mockIntentProcessor()
 
         coEvery { intentProcessors.intentProcessor.process(any()) } returns true
     }
@@ -77,6 +79,26 @@ class IntentReceiverActivityTest {
         assertEquals(HomeActivity::class.java.name, actualIntent.component?.className)
         assertEquals(true, actualIntent.flags == FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY)
     }
+
+    @Test
+    fun `GIVEN a deeplink intent WHEN processing the intent THEN add the className HomeActivity`() =
+        runBlockingTest {
+            val uri = Uri.parse(BuildConfig.DEEP_LINK_SCHEME + "://settings_wallpapers")
+            val intent = Intent("", uri)
+
+            coEvery { intentProcessors.intentProcessor.process(any()) } returns false
+            coEvery { intentProcessors.externalDeepLinkIntentProcessor.process(any()) } returns true
+
+            val activity =
+                Robolectric.buildActivity(IntentReceiverActivity::class.java, intent).get()
+            attachMocks(activity)
+            activity.processIntent(intent)
+
+            val shadow = shadowOf(activity)
+            val actualIntent = shadow.peekNextStartedActivity()
+
+            assertEquals(HomeActivity::class.java.name, actualIntent.component?.className)
+        }
 
     @Test
     fun `process intent with action OPEN_PRIVATE_TAB`() = runBlockingTest {

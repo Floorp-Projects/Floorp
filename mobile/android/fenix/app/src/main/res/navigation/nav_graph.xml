@@ -49,6 +49,10 @@
         app:destination="@id/historyMetadataGroupFragment" />
 
     <action
+        android:id="@+id/action_global_wallpaperSettingsFragment"
+        app:destination="@id/wallpaperSettingsFragment" />
+
+    <action
         android:id="@+id/action_global_shareFragment"
         app:destination="@id/shareFragment" />
     <action

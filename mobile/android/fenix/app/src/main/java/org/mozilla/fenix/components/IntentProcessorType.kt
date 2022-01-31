@@ -11,7 +11,7 @@ import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.migration.MigrationProgressActivity
 
 enum class IntentProcessorType {
-    EXTERNAL_APP, NEW_TAB, MIGRATION, OTHER;
+    EXTERNAL_APP, NEW_TAB, MIGRATION, EXTERNAL_DEEPLINK, OTHER;
 
     /**
      * The destination activity based on this intent
@@ -19,7 +19,7 @@ enum class IntentProcessorType {
     val activityClassName: String
         get() = when (this) {
             EXTERNAL_APP -> ExternalAppBrowserActivity::class.java.name
-            NEW_TAB, OTHER -> HomeActivity::class.java.name
+            NEW_TAB, EXTERNAL_DEEPLINK, OTHER -> HomeActivity::class.java.name
             MIGRATION -> MigrationProgressActivity::class.java.name
         }
 
@@ -29,7 +29,7 @@ enum class IntentProcessorType {
     fun shouldOpenToBrowser(intent: Intent): Boolean = when (this) {
         EXTERNAL_APP -> true
         NEW_TAB -> intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
-        MIGRATION, OTHER -> false
+        MIGRATION, EXTERNAL_DEEPLINK, OTHER -> false
     }
 }
 
@@ -44,5 +44,6 @@ fun IntentProcessors.getType(processor: IntentProcessor?) = when {
     intentProcessor == processor ||
         privateIntentProcessor == processor ||
         fennecPageShortcutIntentProcessor == processor -> IntentProcessorType.NEW_TAB
+    externalDeepLinkIntentProcessor == processor -> IntentProcessorType.EXTERNAL_DEEPLINK
     else -> IntentProcessorType.OTHER
 }

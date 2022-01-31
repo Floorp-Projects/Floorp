@@ -54,5 +54,8 @@ enum class GlobalDirections(val navDirections: NavDirections, val destinationId:
     SettingsTrackingProtection(
         NavGraphDirections.actionGlobalTrackingProtectionFragment(),
         R.id.trackingProtectionFragment
+    ),
+    WallpaperSettings(
+        NavGraphDirections.actionGlobalWallpaperSettingsFragment(), R.id.wallpaperSettingsFragment
     )
 }

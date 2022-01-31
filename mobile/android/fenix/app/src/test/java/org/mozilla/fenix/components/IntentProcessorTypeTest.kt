@@ -104,6 +104,15 @@ class IntentProcessorTypeTest {
     }
 
     @Test
+    fun `get type for Deeplink intent processor`() {
+        val processor = testContext.components.intentProcessors.externalDeepLinkIntentProcessor
+        val type = testContext.components.intentProcessors.getType(processor)
+
+        assertEquals(IntentProcessorType.EXTERNAL_DEEPLINK, type)
+        assertEquals(HomeActivity::class.java.name, type.activityClassName)
+    }
+
+    @Test
     fun `get type for generic intent processor`() {
         val processor = object : IntentProcessor {
             override fun process(intent: Intent) = true

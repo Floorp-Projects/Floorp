@@ -21,6 +21,7 @@ import mozilla.components.support.migration.MigrationIntentProcessor
 import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.customtabs.FennecWebAppIntentProcessor
 import org.mozilla.fenix.home.intent.FennecBookmarkShortcutsIntentProcessor
+import org.mozilla.fenix.intent.ExternalDeepLinkIntentProcessor
 import org.mozilla.fenix.perf.lazyMonitored
 
 /**
@@ -59,6 +60,10 @@ class IntentProcessors(
 
     val privateCustomTabIntentProcessor by lazyMonitored {
         CustomTabIntentProcessor(customTabsUseCases.add, context.resources, isPrivate = true)
+    }
+
+    val externalDeepLinkIntentProcessor by lazyMonitored {
+        ExternalDeepLinkIntentProcessor()
     }
 
     val externalAppIntentProcessors by lazyMonitored {
