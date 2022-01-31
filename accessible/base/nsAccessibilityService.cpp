@@ -308,12 +308,17 @@ nsAccessibilityService::ListenersChanged(nsIArray* aEventChanges) {
           // Create an accessible for a inaccessible element having click event
           // handler.
           document->ContentInserted(content, content->GetNextSibling());
-        } else if (acc && acc->IsHTMLLink() && !acc->AsHTMLLink()->IsLinked()) {
-          // Notify of a LINKED state change if an HTML link gets a click
-          // listener but does not have an href attribute.
-          RefPtr<AccEvent> linkedChangeEvent =
-              new AccStateChangeEvent(acc, states::LINKED);
-          document->FireDelayedEvent(linkedChangeEvent);
+        } else if (acc) {
+          if (acc->IsHTMLLink() && !acc->AsHTMLLink()->IsLinked()) {
+            // Notify of a LINKED state change if an HTML link gets a click
+            // listener but does not have an href attribute.
+            RefPtr<AccEvent> linkedChangeEvent =
+                new AccStateChangeEvent(acc, states::LINKED);
+            document->FireDelayedEvent(linkedChangeEvent);
+          }
+
+          // A click listener change might mean losing or gaining an action.
+          acc->SendCache(CacheDomain::Actions, CacheUpdateType::Update);
         }
       }
     }
