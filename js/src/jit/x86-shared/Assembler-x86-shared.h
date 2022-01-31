@@ -183,21 +183,14 @@ class CPUInfo {
   static const int AVX_PRESENT_BIT = 8;
 
   static SSEVersion GetSSEVersion() {
-    if (maxSSEVersion == UnknownSSE) {
-      SetSSEVersion();
-    }
-
-    MOZ_ASSERT(maxSSEVersion != UnknownSSE);
+    MOZ_ASSERT(FlagsHaveBeenComputed());
     MOZ_ASSERT_IF(maxEnabledSSEVersion != UnknownSSE,
                   maxSSEVersion <= maxEnabledSSEVersion);
     return maxSSEVersion;
   }
 
   static bool IsAVXPresent() {
-    if (MOZ_UNLIKELY(maxSSEVersion == UnknownSSE)) {
-      SetSSEVersion();
-    }
-
+    MOZ_ASSERT(FlagsHaveBeenComputed());
     MOZ_ASSERT_IF(!avxEnabled, !avxPresent);
     return avxPresent;
   }
@@ -216,8 +209,6 @@ class CPUInfo {
   static bool bmi2Present;
   static bool lzcntPresent;
   static bool avx2Present;
-
-  static void SetSSEVersion();
 
   static void SetMaxEnabledSSEVersion(SSEVersion v) {
     if (maxEnabledSSEVersion == UnknownSSE) {
@@ -257,6 +248,8 @@ class CPUInfo {
   }
 
   static bool FlagsHaveBeenComputed() { return maxSSEVersion != UnknownSSE; }
+
+  static void ComputeFlags();
 
   // The following should be called only after calling ResetSSEFlagsForTesting.
   // If several are called, the most restrictive setting is kept.
