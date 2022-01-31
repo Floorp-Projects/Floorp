@@ -8,6 +8,8 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/BaseProfileJSONWriter.h"
+#include "mozilla/FloatingPoint.h"
+#include "mozilla/ProportionValue.h"
 
 #ifdef MOZ_GECKO_PROFILER
 #  include "mozilla/BaseProfilerMarkerTypes.h"
@@ -224,6 +226,203 @@ void TestProfilerUtils() {
                             mozilla::baseprofiler::BaseProfilerThreadId>);
 
   printf("TestProfilerUtils done\n");
+}
+
+void TestProportionValue() {
+  printf("TestProportionValue...\n");
+
+  using mozilla::ProportionValue;
+
+#define STATIC_ASSERT_EQ(a, b) \
+  static_assert((a) == (b));   \
+  MOZ_RELEASE_ASSERT((a) == (b));
+
+#define STATIC_ASSERT(e) STATIC_ASSERT_EQ(e, true)
+
+  // Conversion from&to double.
+  STATIC_ASSERT_EQ(ProportionValue().ToDouble(), 0.0);
+  STATIC_ASSERT_EQ(ProportionValue(0.0).ToDouble(), 0.0);
+  STATIC_ASSERT_EQ(ProportionValue(0.5).ToDouble(), 0.5);
+  STATIC_ASSERT_EQ(ProportionValue(1.0).ToDouble(), 1.0);
+
+  // Clamping.
+  STATIC_ASSERT_EQ(
+      ProportionValue(std::numeric_limits<double>::min()).ToDouble(), 0.0);
+  STATIC_ASSERT_EQ(
+      ProportionValue(std::numeric_limits<long double>::min()).ToDouble(), 0.0);
+  STATIC_ASSERT_EQ(ProportionValue(-1.0).ToDouble(), 0.0);
+  STATIC_ASSERT_EQ(ProportionValue(-0.01).ToDouble(), 0.0);
+  STATIC_ASSERT_EQ(ProportionValue(-0.0).ToDouble(), 0.0);
+  STATIC_ASSERT_EQ(ProportionValue(1.01).ToDouble(), 1.0);
+  STATIC_ASSERT_EQ(
+      ProportionValue(std::numeric_limits<double>::max()).ToDouble(), 1.0);
+
+  // User-defined literal.
+  {
+    using namespace mozilla::literals::ProportionValue_literals;
+    STATIC_ASSERT_EQ(0_pc, ProportionValue(0.0));
+    STATIC_ASSERT_EQ(0._pc, ProportionValue(0.0));
+    STATIC_ASSERT_EQ(50_pc, ProportionValue(0.5));
+    STATIC_ASSERT_EQ(50._pc, ProportionValue(0.5));
+    STATIC_ASSERT_EQ(100_pc, ProportionValue(1.0));
+    STATIC_ASSERT_EQ(100._pc, ProportionValue(1.0));
+    STATIC_ASSERT_EQ(101_pc, ProportionValue(1.0));
+    STATIC_ASSERT_EQ(100.01_pc, ProportionValue(1.0));
+    STATIC_ASSERT_EQ(1000_pc, ProportionValue(1.0));
+    STATIC_ASSERT_EQ(1000._pc, ProportionValue(1.0));
+  }
+  {
+    // ProportionValue_literals is an inline namespace of mozilla::literals, so
+    // it's optional.
+    using namespace mozilla::literals;
+    STATIC_ASSERT_EQ(0_pc, ProportionValue(0.0));
+    STATIC_ASSERT_EQ(0._pc, ProportionValue(0.0));
+    STATIC_ASSERT_EQ(50_pc, ProportionValue(0.5));
+    STATIC_ASSERT_EQ(50._pc, ProportionValue(0.5));
+    STATIC_ASSERT_EQ(100_pc, ProportionValue(1.0));
+    STATIC_ASSERT_EQ(100._pc, ProportionValue(1.0));
+    STATIC_ASSERT_EQ(101_pc, ProportionValue(1.0));
+    STATIC_ASSERT_EQ(100.01_pc, ProportionValue(1.0));
+    STATIC_ASSERT_EQ(1000_pc, ProportionValue(1.0));
+    STATIC_ASSERT_EQ(1000._pc, ProportionValue(1.0));
+  }
+
+  // Invalid construction, conversion to double NaN.
+  MOZ_RELEASE_ASSERT(mozilla::IsNaN(ProportionValue::MakeInvalid().ToDouble()));
+
+  using namespace mozilla::literals::ProportionValue_literals;
+
+  // Conversion to&from underlying integral number.
+  STATIC_ASSERT_EQ(
+      ProportionValue::FromUnderlyingType((0_pc).ToUnderlyingType()).ToDouble(),
+      0.0);
+  STATIC_ASSERT_EQ(
+      ProportionValue::FromUnderlyingType((50_pc).ToUnderlyingType())
+          .ToDouble(),
+      0.5);
+  STATIC_ASSERT_EQ(
+      ProportionValue::FromUnderlyingType((100_pc).ToUnderlyingType())
+          .ToDouble(),
+      1.0);
+  STATIC_ASSERT(ProportionValue::FromUnderlyingType(
+                    ProportionValue::MakeInvalid().ToUnderlyingType())
+                    .IsInvalid());
+
+  // IsExactlyZero.
+  STATIC_ASSERT(ProportionValue().IsExactlyZero());
+  STATIC_ASSERT((0_pc).IsExactlyZero());
+  STATIC_ASSERT(!(50_pc).IsExactlyZero());
+  STATIC_ASSERT(!(100_pc).IsExactlyZero());
+  STATIC_ASSERT(!ProportionValue::MakeInvalid().IsExactlyZero());
+
+  // IsExactlyOne.
+  STATIC_ASSERT(!ProportionValue().IsExactlyOne());
+  STATIC_ASSERT(!(0_pc).IsExactlyOne());
+  STATIC_ASSERT(!(50_pc).IsExactlyOne());
+  STATIC_ASSERT((100_pc).IsExactlyOne());
+  STATIC_ASSERT(!ProportionValue::MakeInvalid().IsExactlyOne());
+
+  // IsValid.
+  STATIC_ASSERT(ProportionValue().IsValid());
+  STATIC_ASSERT((0_pc).IsValid());
+  STATIC_ASSERT((50_pc).IsValid());
+  STATIC_ASSERT((100_pc).IsValid());
+  STATIC_ASSERT(!ProportionValue::MakeInvalid().IsValid());
+
+  // IsInvalid.
+  STATIC_ASSERT(!ProportionValue().IsInvalid());
+  STATIC_ASSERT(!(0_pc).IsInvalid());
+  STATIC_ASSERT(!(50_pc).IsInvalid());
+  STATIC_ASSERT(!(100_pc).IsInvalid());
+  STATIC_ASSERT(ProportionValue::MakeInvalid().IsInvalid());
+
+  // Addition.
+  STATIC_ASSERT_EQ((0_pc + 0_pc).ToDouble(), 0.0);
+  STATIC_ASSERT_EQ((0_pc + 100_pc).ToDouble(), 1.0);
+  STATIC_ASSERT_EQ((100_pc + 0_pc).ToDouble(), 1.0);
+  STATIC_ASSERT_EQ((100_pc + 100_pc).ToDouble(), 1.0);
+  STATIC_ASSERT((ProportionValue::MakeInvalid() + 50_pc).IsInvalid());
+  STATIC_ASSERT((50_pc + ProportionValue::MakeInvalid()).IsInvalid());
+
+  // Subtraction.
+  STATIC_ASSERT_EQ((0_pc - 0_pc).ToDouble(), 0.0);
+  STATIC_ASSERT_EQ((0_pc - 100_pc).ToDouble(), 0.0);
+  STATIC_ASSERT_EQ((100_pc - 0_pc).ToDouble(), 1.0);
+  STATIC_ASSERT_EQ((100_pc - 100_pc).ToDouble(), 0.0);
+  STATIC_ASSERT((ProportionValue::MakeInvalid() - 50_pc).IsInvalid());
+  STATIC_ASSERT((50_pc - ProportionValue::MakeInvalid()).IsInvalid());
+
+  // Multiplication.
+  STATIC_ASSERT_EQ((0_pc * 0_pc).ToDouble(), 0.0);
+  STATIC_ASSERT_EQ((0_pc * 100_pc).ToDouble(), 0.0);
+  STATIC_ASSERT_EQ((50_pc * 50_pc).ToDouble(), 0.25);
+  STATIC_ASSERT_EQ((50_pc * 100_pc).ToDouble(), 0.5);
+  STATIC_ASSERT_EQ((100_pc * 50_pc).ToDouble(), 0.5);
+  STATIC_ASSERT_EQ((100_pc * 0_pc).ToDouble(), 0.0);
+  STATIC_ASSERT_EQ((100_pc * 100_pc).ToDouble(), 1.0);
+  STATIC_ASSERT((ProportionValue::MakeInvalid() * 50_pc).IsInvalid());
+  STATIC_ASSERT((50_pc * ProportionValue::MakeInvalid()).IsInvalid());
+
+  // Division by a positive integer value.
+  STATIC_ASSERT_EQ((100_pc / 1u).ToDouble(), 1.0);
+  STATIC_ASSERT_EQ((100_pc / 2u).ToDouble(), 0.5);
+  STATIC_ASSERT_EQ(
+      (ProportionValue::FromUnderlyingType(6u) / 2u).ToUnderlyingType(), 3u);
+  STATIC_ASSERT_EQ(
+      (ProportionValue::FromUnderlyingType(5u) / 2u).ToUnderlyingType(), 2u);
+  STATIC_ASSERT_EQ(
+      (ProportionValue::FromUnderlyingType(1u) / 2u).ToUnderlyingType(), 0u);
+  STATIC_ASSERT_EQ(
+      (ProportionValue::FromUnderlyingType(0u) / 2u).ToUnderlyingType(), 0u);
+  STATIC_ASSERT((100_pc / 0u).IsInvalid());
+  STATIC_ASSERT((ProportionValue::MakeInvalid() / 2u).IsInvalid());
+
+  // Multiplication by a positive integer value.
+  STATIC_ASSERT_EQ((100_pc * 1u).ToDouble(), 1.0);
+  STATIC_ASSERT_EQ((50_pc * 1u).ToDouble(), 0.5);
+  STATIC_ASSERT_EQ((50_pc * 2u).ToDouble(), 1.0);
+  STATIC_ASSERT_EQ((50_pc * 3u).ToDouble(), 1.0);  // Clamped.
+  STATIC_ASSERT_EQ(
+      (ProportionValue::FromUnderlyingType(1u) * 2u).ToUnderlyingType(), 2u);
+  STATIC_ASSERT((ProportionValue::MakeInvalid() * 2u).IsInvalid());
+
+  // Verifying PV - u < (PV / u) * u <= PV, with n=3, PV between 6 and 9 :
+  STATIC_ASSERT_EQ(
+      (ProportionValue::FromUnderlyingType(6u) / 3u).ToUnderlyingType(), 2u);
+  STATIC_ASSERT_EQ(
+      (ProportionValue::FromUnderlyingType(7u) / 3u).ToUnderlyingType(), 2u);
+  STATIC_ASSERT_EQ(
+      (ProportionValue::FromUnderlyingType(8u) / 3u).ToUnderlyingType(), 2u);
+  STATIC_ASSERT_EQ(
+      (ProportionValue::FromUnderlyingType(9u) / 3u).ToUnderlyingType(), 3u);
+
+  // Direct comparisons.
+  STATIC_ASSERT_EQ(0_pc, 0_pc);
+  STATIC_ASSERT(0_pc == 0_pc);
+  STATIC_ASSERT(!(0_pc == 100_pc));
+  STATIC_ASSERT(0_pc != 100_pc);
+  STATIC_ASSERT(!(0_pc != 0_pc));
+  STATIC_ASSERT(0_pc < 100_pc);
+  STATIC_ASSERT(!(0_pc < 0_pc));
+  STATIC_ASSERT(0_pc <= 0_pc);
+  STATIC_ASSERT(0_pc <= 100_pc);
+  STATIC_ASSERT(!(100_pc <= 0_pc));
+  STATIC_ASSERT(100_pc > 0_pc);
+  STATIC_ASSERT(!(100_pc > 100_pc));
+  STATIC_ASSERT(100_pc >= 0_pc);
+  STATIC_ASSERT(100_pc >= 100_pc);
+  STATIC_ASSERT(!(0_pc >= 100_pc));
+  // 0.5 is binary-friendly, so we can double it and compare it exactly.
+  STATIC_ASSERT_EQ(50_pc + 50_pc, 100_pc);
+
+#undef STATIC_ASSERT_EQ
+
+  printf("TestProportionValue done\n");
+}
+
+template <typename Arg0, typename... Args>
+bool AreAllEqual(Arg0&& aArg0, Args&&... aArgs) {
+  return ((aArg0 == aArgs) && ...);
 }
 
 #ifdef MOZ_GECKO_PROFILER
@@ -4748,6 +4947,7 @@ int main()
 #endif  // MOZ_GECKO_PROFILER
 
   TestProfilerUtils();
+  TestProportionValue();
   // Note that there are two `TestProfiler{,Markers}` functions above, depending
   // on whether MOZ_GECKO_PROFILER is #defined.
   TestProfiler();
