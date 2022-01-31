@@ -215,10 +215,10 @@ const SnapshotGroups = new (class SnapshotGroups {
 
     let rows = await db.executeCached(
       `
-      SELECT g.id, g.title, g.builder, g.builder_data, COUNT(h.url) AS snapshot_count, MAX(h.last_visit_date) AS last_access
+      SELECT g.id, g.title, g.builder, g.builder_data, COUNT(s.group_id) AS snapshot_count, MAX(sn.last_interaction_at) AS last_access
       FROM moz_places_metadata_snapshots_groups g
       LEFT JOIN moz_places_metadata_groups_to_snapshots s ON s.group_id = g.id
-      LEFT JOIN moz_places h ON h.id = s.place_id
+      LEFT JOIN moz_places_metadata_snapshots sn ON sn.place_id = s.place_id
       WHERE builder = :builder OR :builder = ""
       GROUP BY g.id ${sizeFragment}
       ORDER BY last_access DESC
@@ -320,6 +320,7 @@ const SnapshotGroups = new (class SnapshotGroups {
       builder: row.getResultByName("builder"),
       builderMetadata: JSON.parse(row.getResultByName("builder_data")),
       snapshotCount: row.getResultByName("snapshot_count"),
+      lastAccessed: row.getResultByName("last_access"),
     };
 
     return snapshotGroup;
