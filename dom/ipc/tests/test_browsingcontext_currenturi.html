@@ -61,13 +61,26 @@ let BROADCAST_ONLOAD_URL =
     new URL("file_broadcast_currenturi_onload.html", location.href);
 
 async function broadcastLoadTest(baseURI, callback) {
+  // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
+  // Acquire storage access permission here so that the BroadcastChannel used to
+  // communicate with the opened windows works in xorigin tests. Otherwise,
+  // the iframe containing this page is isolated from first-party storage access,
+  // which isolates BroadcastChannel communication.
+  if (isXOrigin) {
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
+    await SpecialPowers.addPermission(
+      "storageAccessAPI",
+      true,
+      window.location.href
+     );
+    await SpecialPowers.wrap(document).requestStorageAccess();
+  }
   let loaded = new Promise(resolve => {
     let chan = new BroadcastChannel("test_broadcast_onload");
     chan.onmessage = event => {
       resolve(event.data);
     };
   });
-
   let srcURL = new URL(BROADCAST_ONLOAD_URL.pathname, baseURI);
   callback(srcURL.href);
 
