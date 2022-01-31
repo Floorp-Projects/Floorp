@@ -81,10 +81,12 @@ void HTMLLabelAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
 }
 
 bool HTMLLabelAccessible::DoAction(uint8_t aIndex) const {
-  if (aIndex != 0) return false;
+  if (aIndex == 0 && ActionCount()) {
+    DoCommand();
+    return true;
+  }
 
-  DoCommand();
-  return true;
+  return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
