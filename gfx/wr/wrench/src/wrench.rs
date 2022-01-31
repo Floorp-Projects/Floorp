@@ -577,7 +577,10 @@ impl Wrench {
         }
 
         for (id, offset) in scroll_offsets {
-            txn.set_scroll_offset(*id, *offset);
+            txn.set_scroll_offsets(*id, vec![SampledScrollOffset {
+                offset: *offset,
+                generation: APZScrollGeneration::default(),
+            }]);
         }
 
         txn.generate_frame(0, RenderReasons::TESTING);

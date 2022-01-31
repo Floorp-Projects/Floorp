@@ -4560,8 +4560,8 @@ LayoutDeviceToParentLayerScale AsyncPanZoomController::GetCurrentPinchZoomScale(
   return scale / Metrics().GetDevPixelsPerCSSPixel();
 }
 
-LayoutDevicePoint AsyncPanZoomController::GetAsyncScrollDeltaForSampling()
-    const {
+AutoTArray<wr::SampledScrollOffset, 2>
+AsyncPanZoomController::GetSampledScrollOffsets() const {
   AssertOnSamplerThread();
 
   RecursiveMutexAutoLock lock(mRecursiveMutex);
@@ -4570,10 +4570,6 @@ LayoutDevicePoint AsyncPanZoomController::GetAsyncScrollDeltaForSampling()
       GetZoomAnimationId()
           ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
           : LayoutAndVisual;
-  ParentLayerPoint layerTranslation =
-      GetCurrentAsyncTransformWithOverscroll(
-          AsyncPanZoomController::eForCompositing, asyncTransformComponents)
-          .TransformPoint(ParentLayerPoint(0, 0));
 
   // If layerTranslation includes only the layout component of the async
   // transform then it has not been scaled by the async zoom, so we want to
@@ -4584,13 +4580,27 @@ LayoutDevicePoint AsyncPanZoomController::GetAsyncScrollDeltaForSampling()
   LayoutDeviceToParentLayerScale resolution =
       GetCumulativeResolution() * LayerToParentLayerScale(1.0f);
 
-  // The positive translation means the painted content is supposed to
-  // move down (or to the right), and that corresponds to a reduction in
-  // the scroll offset. Since we are effectively giving WR the async
-  // scroll delta here, we want to negate the translation.
-  LayoutDevicePoint asyncScrollDelta = -layerTranslation / resolution;
+  AutoTArray<wr::SampledScrollOffset, 2> sampledOffsets;
 
-  return asyncScrollDelta;
+  for (std::deque<SampledAPZCState>::size_type index = 0;
+       index < mSampledState.size(); index++) {
+    ParentLayerPoint layerTranslation =
+        GetCurrentAsyncTransformWithOverscroll(
+            AsyncPanZoomController::eForCompositing, asyncTransformComponents,
+            index)
+            .TransformPoint(ParentLayerPoint(0, 0));
+
+    // The positive translation means the painted content is supposed to
+    // move down (or to the right), and that corresponds to a reduction in
+    // the scroll offset. Since we are effectively giving WR the async
+    // scroll delta here, we want to negate the translation.
+    LayoutDevicePoint asyncScrollDelta = -layerTranslation / resolution;
+    sampledOffsets.AppendElement(wr::SampledScrollOffset{
+        wr::ToLayoutVector2D(asyncScrollDelta),
+        wr::ToWrAPZScrollGeneration(mSampledState[index].Generation())});
+  }
+
+  return sampledOffsets;
 }
 
 bool AsyncPanZoomController::SuppressAsyncScrollOffset() const {

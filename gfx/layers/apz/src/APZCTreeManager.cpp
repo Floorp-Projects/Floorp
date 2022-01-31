@@ -780,10 +780,10 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
                                          apzc->IsAsyncZooming());
     }
 
-    LayoutDevicePoint asyncScrollDelta = apzc->GetAsyncScrollDeltaForSampling();
+    nsTArray<wr::SampledScrollOffset> sampledOffsets =
+        apzc->GetSampledScrollOffsets();
     aTxn.UpdateScrollPosition(wr::AsPipelineId(apzc->GetGuid().mLayersId),
-                              apzc->GetGuid().mScrollId,
-                              wr::ToLayoutVector2D(asyncScrollDelta));
+                              apzc->GetGuid().mScrollId, sampledOffsets);
 
 #if defined(MOZ_WIDGET_ANDROID)
     // Send the root frame metrics to java through the UIController
