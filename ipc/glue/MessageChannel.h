@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "MessageLink.h"  // for HasResultCodes
+#include "mozilla/ipc/Transport.h"
 #include "mozilla/ipc/ScopedPort.h"
 
 class MessageLoop;
@@ -143,6 +144,7 @@ class MessageChannel : HasResultCodes {
   static constexpr int32_t kNoTimeout = INT32_MIN;
 
   typedef IPC::Message Message;
+  typedef mozilla::ipc::Transport Transport;
   using ScopedPort = mozilla::ipc::ScopedPort;
 
   explicit MessageChannel(const char* aName, IToplevelProtocol* aListener);

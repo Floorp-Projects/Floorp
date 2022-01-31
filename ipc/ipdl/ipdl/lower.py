@@ -1411,11 +1411,15 @@ class _DecorateWithCxxStuff(ipdl.ast.Visitor):
                 Typedef(Type("mozilla::ipc::ActorHandle"), "ActorHandle"),
                 Typedef(Type("base::ProcessId"), "ProcessId"),
                 Typedef(Type("mozilla::ipc::ProtocolId"), "ProtocolId"),
+                Typedef(Type("mozilla::ipc::Transport"), "Transport"),
                 Typedef(Type("mozilla::ipc::Endpoint"), "Endpoint", ["FooSide"]),
                 Typedef(
                     Type("mozilla::ipc::ManagedEndpoint"),
                     "ManagedEndpoint",
                     ["FooSide"],
+                ),
+                Typedef(
+                    Type("mozilla::ipc::TransportDescriptor"), "TransportDescriptor"
                 ),
                 Typedef(Type("mozilla::UniquePtr"), "UniquePtr", ["T"]),
                 Typedef(
