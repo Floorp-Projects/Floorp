@@ -2963,6 +2963,35 @@ static void locked_profiler_stream_json_for_this_process(
     mozilla::ProgressLogger aProgressLogger) {
   LOG("locked_profiler_stream_json_for_this_process");
 
+#ifdef DEBUG
+  PRIntervalTime slowWithSleeps = 0;
+  if (!XRE_IsParentProcess()) {
+    for (const auto& filter : ActivePS::Filters(aLock)) {
+      if (filter == "test-debug-child-slow-json") {
+        LOG("test-debug-child-slow-json");
+        // There are 10 slow-downs below, each will sleep 250ms, for a total of
+        // 2.5s, which should trigger the first progress request after 1s, and
+        // the next progress which will have advanced further, so this profile
+        // shouldn't get dropped.
+        slowWithSleeps = PR_MillisecondsToInterval(250);
+      } else if (filter == "test-debug-child-very-slow-json") {
+        LOG("test-debug-child-very-slow-json");
+        // Wait for more than 2s without any progress, which should get this
+        // profile discarded.
+        PR_Sleep(PR_SecondsToInterval(5));
+      }
+    }
+  }
+#  define SLOW_DOWN_FOR_TESTING()                                        \
+    if (slowWithSleeps != 0) {                                           \
+      DEBUG_LOG("progress=%.0f%%, sleep...",                             \
+                aProgressLogger.GetGlobalProgress().ToDouble() * 100.0); \
+      PR_Sleep(slowWithSleeps);                                          \
+    }
+#else                             // #ifdef DEBUG
+#  define SLOW_DOWN_FOR_TESTING() /* No slow-downs */
+#endif                            // #ifdef DEBUG #else
+
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
   AUTO_PROFILER_STATS(locked_profiler_stream_json_for_this_process);
@@ -2973,6 +3002,8 @@ static void locked_profiler_stream_json_for_this_process(
 
   aProgressLogger.SetLocalProgress(1_pc, "Locked profile buffer");
 
+  SLOW_DOWN_FOR_TESTING();
+
   // If there is a set "Window length", discard older data.
   Maybe<double> durationS = ActivePS::Duration(aLock);
   if (durationS.isSome()) {
@@ -2980,6 +3011,8 @@ static void locked_profiler_stream_json_for_this_process(
     buffer.DiscardSamplesBeforeTime(durationStartMs);
   }
   aProgressLogger.SetLocalProgress(2_pc, "Discarded old data");
+
+  SLOW_DOWN_FOR_TESTING();
 
 #if defined(GP_OS_android)
   // Java thread profile data should be collected before serializing the meta
@@ -3010,6 +3043,8 @@ static void locked_profiler_stream_json_for_this_process(
   aWriter.EndArray();
   aProgressLogger.SetLocalProgress(4_pc, "Wrote library information");
 
+  SLOW_DOWN_FOR_TESTING();
+
   // Put meta data
   aWriter.StartObjectProperty("meta");
   {
@@ -3018,6 +3053,8 @@ static void locked_profiler_stream_json_for_this_process(
   }
   aWriter.EndObject();
   aProgressLogger.SetLocalProgress(5_pc, "Wrote profile metadata");
+
+  SLOW_DOWN_FOR_TESTING();
 
   // Put page data
   aWriter.StartArrayProperty("pages");
@@ -3033,6 +3070,8 @@ static void locked_profiler_stream_json_for_this_process(
       aWriter, CorePS::ProcessStartTime(), aSinceTime,
       aProgressLogger.CreateSubLoggerTo(14_pc, "Wrote counters"));
 
+  SLOW_DOWN_FOR_TESTING();
+
   // Lists the samples for each thread profile
   aWriter.StartArrayProperty("threads");
   {
@@ -3044,6 +3083,8 @@ static void locked_profiler_stream_json_for_this_process(
         ActivePS::ProfiledThreads(lockedRegistry, aLock);
 
     const uint32_t threadCount = uint32_t(threads.length());
+
+    SLOW_DOWN_FOR_TESTING();
 
     // Prepare the streaming context for each thread.
     ProcessStreamingContext processStreamingContext(
@@ -3057,12 +3098,16 @@ static void locked_profiler_stream_json_for_this_process(
           std::move(progressLogger));
     }
 
+    SLOW_DOWN_FOR_TESTING();
+
     // Read the buffer once, and extract all samples and markers that the
     // context expects.
     buffer.StreamSamplesAndMarkersToJSON(
         processStreamingContext, aProgressLogger.CreateSubLoggerTo(
                                      "Processing samples and markers...", 80_pc,
                                      "Processed samples and markers"));
+
+    SLOW_DOWN_FOR_TESTING();
 
     // Stream each thread from the pre-filled context.
     ThreadStreamingContext* const contextListBegin =
@@ -3116,6 +3161,8 @@ static void locked_profiler_stream_json_for_this_process(
   }
   aWriter.EndArray();
 
+  SLOW_DOWN_FOR_TESTING();
+
   if (ActivePS::FeatureJSTracer(aLock)) {
     aWriter.StartArrayProperty("jsTracerDictionary");
     {
@@ -3130,6 +3177,8 @@ static void locked_profiler_stream_json_for_this_process(
     aWriter.EndArray();
   }
   aProgressLogger.SetLocalProgress(98_pc, "Handled JS Tracer dictionary");
+
+  SLOW_DOWN_FOR_TESTING();
 
   aWriter.StartArrayProperty("pausedRanges");
   {
@@ -3149,6 +3198,12 @@ static void locked_profiler_stream_json_for_this_process(
   // been overwritten due to buffer wraparound by then).
   buffer.AddEntry(ProfileBufferEntry::CollectionStart(collectionStartMs));
   buffer.AddEntry(ProfileBufferEntry::CollectionEnd(collectionEndMs));
+
+#ifdef DEBUG
+  if (slowWithSleeps != 0) {
+    LOG("locked_profiler_stream_json_for_this_process done");
+  }
+#endif  // DEBUG
 }
 
 // Keep this internal function non-static, so it may be used by tests.
