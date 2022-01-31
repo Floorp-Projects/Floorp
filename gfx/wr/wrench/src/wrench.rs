@@ -562,7 +562,7 @@ impl Wrench {
         &mut self,
         frame_number: u32,
         display_lists: Vec<(PipelineId, BuiltDisplayList)>,
-        scroll_offsets: &HashMap<ExternalScrollId, LayoutVector2D>,
+        scroll_offsets: &HashMap<ExternalScrollId, Vec<SampledScrollOffset>>,
     ) {
         let root_background_color = Some(ColorF::new(1.0, 1.0, 1.0, 1.0));
 
@@ -576,11 +576,8 @@ impl Wrench {
             );
         }
 
-        for (id, offset) in scroll_offsets {
-            txn.set_scroll_offsets(*id, vec![SampledScrollOffset {
-                offset: *offset,
-                generation: APZScrollGeneration::default(),
-            }]);
+        for (id, offsets) in scroll_offsets {
+            txn.set_scroll_offsets(*id, offsets.clone());
         }
 
         txn.generate_frame(0, RenderReasons::TESTING);

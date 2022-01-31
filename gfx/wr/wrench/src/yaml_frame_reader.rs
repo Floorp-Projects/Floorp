@@ -338,7 +338,7 @@ pub struct YamlFrameReader {
 
     /// A HashMap of offsets which specify what scroll offsets particular
     /// scroll layers should be initialized with.
-    scroll_offsets: HashMap<ExternalScrollId, LayoutVector2D>,
+    scroll_offsets: HashMap<ExternalScrollId, Vec<SampledScrollOffset>>,
     next_external_scroll_id: u64,
 
     image_map: HashMap<(PathBuf, Option<i64>), (ImageKey, LayoutSize)>,
@@ -1823,6 +1823,11 @@ impl YamlFrameReader {
         let content_size = yaml["content-size"].as_size().unwrap_or(clip_rect.size());
         let content_rect = LayoutRect::from_origin_and_size(clip_rect.min, content_size);
         let external_scroll_offset = yaml["external-scroll-offset"].as_vector().unwrap_or(LayoutVector2D::zero());
+        let scroll_generation = yaml["scroll-generation"].as_i64().map_or(APZScrollGeneration::default(), |v| v as u64);
+        let has_scroll_linked_effect =
+        yaml["has-scroll-linked-effect"].as_bool().map_or(HasScrollLinkedEffect::default(),
+            |v| if v { HasScrollLinkedEffect::Yes } else { HasScrollLinkedEffect::No }
+        );
 
         let numeric_id = yaml["id"].as_i64().map(|id| id as u64);
 
@@ -1830,7 +1835,23 @@ impl YamlFrameReader {
         self.next_external_scroll_id += 1;
 
         if let Some(vector) = yaml["scroll-offset"].as_vector() {
-            self.scroll_offsets.insert(external_id, vector);
+            self.scroll_offsets.insert(
+                external_id,
+                vec![SampledScrollOffset {
+                    offset: vector,
+                    generation: APZScrollGeneration::default(),
+                }],
+            );
+        }
+
+        if !yaml["scroll-offsets"].is_badvalue() {
+            let mut offsets = Vec::new();
+            for entry in yaml["scroll-offsets"].as_vec().unwrap() {
+                let offset = entry["offset"].as_vector().unwrap_or(LayoutVector2D::zero());
+                let generation = entry["generation"].as_i64().map_or(APZScrollGeneration::default(), |v| v as u64);
+                offsets.push(SampledScrollOffset { offset, generation });
+            }
+            self.scroll_offsets.insert(external_id, offsets);
         }
 
         let clip_to_frame = yaml["clip-to-frame"].as_bool().unwrap_or(false);
@@ -1850,8 +1871,8 @@ impl YamlFrameReader {
             content_rect,
             clip_rect,
             external_scroll_offset,
-            APZScrollGeneration::default(),
-            HasScrollLinkedEffect::No,
+            scroll_generation,
+            has_scroll_linked_effect,
             self.next_spatial_key(),
         );
         if let Some(numeric_id) = numeric_id {
@@ -2166,7 +2187,13 @@ impl YamlFrameReader {
         if is_root {
             if let Some(vector) = yaml["scroll-offset"].as_vector() {
                 let external_id = ExternalScrollId(0, dl.pipeline_id);
-                self.scroll_offsets.insert(external_id, vector);
+                self.scroll_offsets.insert(
+                    external_id,
+                    vec![SampledScrollOffset {
+                        offset: vector,
+                        generation: APZScrollGeneration::default(),
+                    }],
+                );
             }
         }
 
