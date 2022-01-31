@@ -121,7 +121,11 @@ bool jit::InitializeJit() {
 #endif
 
   // Note: jit flags need to be initialized after the InitARMFlags call above.
-  JitOptions.supportsFloatingPoint = MacroAssembler::SupportsFloatingPoint();
+  // This is the final point where we can set disableJitBackend = true, before
+  // we use this flag below with the HasJitBackend call.
+  if (!MacroAssembler::SupportsFloatingPoint()) {
+    JitOptions.disableJitBackend = true;
+  }
   JitOptions.supportsUnalignedAccesses =
       MacroAssembler::SupportsUnalignedAccesses();
 
