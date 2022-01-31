@@ -62,11 +62,9 @@ crashtest:
             webrender-sw:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
-                    macosx101.*64-qr/debug: built-projects
-                    linux.*-64-qr/debug: built-projects
-                    linux.*-64(-tsan|-asan)-qr/opt: built-projects
-                    windows10-64-2004-asan-qr/opt: built-projects
-                    windows10-64-2004-qr/debug: built-projects
+                    linux.*64-(ccov|tsan)-qr/opt: []
+                    linux1804-32.*: []
+                    linux.*: ['trunk']  # linux opt/debug/asan
                     default: []
             webrender-sw+fission:
                 by-test-platform:
@@ -191,11 +189,9 @@ reftest:
             webrender-sw:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
-                    linux1804-64-qr/debug: built-projects
-                    linux1804-64(-asan|-tsan)-qr/opt: built-projects
-                    macosx101.*64-qr/debug: built-projects
-                    windows10-64-2004(-asan)?-qr/opt: built-projects
-                    windows7-32(?:-shippable)?-qr/opt: built-projects
+                    linux.*64-(ccov|tsan)-qr/opt: []
+                    linux1804-32.*: []
+                    linux.*: ['trunk']  # linux opt/debug/asan
                     default: []
             webrender-sw+fission:
                 by-test-platform:

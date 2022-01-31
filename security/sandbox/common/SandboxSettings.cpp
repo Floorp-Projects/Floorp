@@ -39,8 +39,8 @@ const char* ContentWin32kLockdownStateToString(
 
     case ContentWin32kLockdownState::PrefNotSet:
       return "Win32k Lockdown disabled -- Preference not set";
-	
-	case ContentWin32kLockdownState::MissingRemoteWebGL:
+
+    case ContentWin32kLockdownState::MissingRemoteWebGL:
       return "Win32k Lockdown disabled -- Missing Remote WebGL";
   }
 

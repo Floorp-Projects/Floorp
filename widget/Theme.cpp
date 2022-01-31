@@ -1405,7 +1405,7 @@ UniquePtr<ScrollbarDrawing> Theme::ScrollbarStyle() {
     default:
       break;
   }
-  // Default to native scrollbar style for each platform.
+    // Default to native scrollbar style for each platform.
 #ifdef XP_WIN
   if (IsWin11OrLater()) {
     return MakeUnique<ScrollbarDrawingWin11>();

@@ -9,4 +9,6 @@
 //! 'toolkit/components/glean/pings.yaml`.
 
 #[cfg(not(feature = "cargo-clippy"))]
-include!(mozbuild::objdir_path!("toolkit/components/glean/api/src/pings.rs"));
+include!(mozbuild::objdir_path!(
+    "toolkit/components/glean/api/src/pings.rs"
+));

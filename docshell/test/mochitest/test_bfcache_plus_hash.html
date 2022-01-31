@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=646641
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=646641">Mozilla Bug 646641</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -57,71 +57,91 @@ function waitForShow(n) {
   expectedPageshowNum = n;
 }
 
-function* test() {
-  window.open("file_bfcache_plus_hash_1.html", "", "noopener");
-  waitForLoad(1);
-  waitForShow(1);
-  yield undefined;
-  yield undefined;
 
-  bc1.postMessage("pushState");
 
-  waitForLoad(2);
-  waitForShow(2);
-  yield undefined;
-  yield undefined;
+function executeTest() {
+  function* test() {
+    window.open("file_bfcache_plus_hash_1.html", "", "noopener");
+    waitForLoad(1);
+    waitForShow(1);
+    yield undefined;
+    yield undefined;
 
-  // Now go back 2.  The first page should be retrieved from bfcache.
-  bc2.postMessage("go-2");
-  waitForShow(1);
-  yield undefined;
+    bc1.postMessage("pushState");
 
-  bc1.postMessage("close");
-}
+    waitForLoad(2);
+    waitForShow(2);
+    yield undefined;
+    yield undefined;
 
-var bc1 = new BroadcastChannel("bug646641_1");
-var bc2 = new BroadcastChannel("bug646641_2");
-bc1.onmessage = (msgEvent) => {
-  var msg = msgEvent.data.message;
-  var n = msgEvent.data.num;
-  if (msg == "childLoad") {
-    if (n == expectedLoadNum) {
-      debug("Got load " + n);
-      expectedLoadNum = -1;
+    // Now go back 2.  The first page should be retrieved from bfcache.
+    bc2.postMessage("go-2");
+    waitForShow(1);
+    yield undefined;
 
-      // Spin the event loop before calling gGen.next() so the generator runs
-      // outside the onload handler.  This prevents us from encountering all
-      // sorts of docshell quirks.
-      setTimeout(function() { gGen.next(); }, 0);
-    } else {
-      debug("Got unexpected load " + n);
-      ok(false, "Got unexpected load " + n);
-    }
-  } else if (msg == "childPageshow") {
-    if (n == expectedPageshowNum) {
-      debug("Got expected pageshow " + n);
-      expectedPageshowNum = -1;
-      ok(true, "Got expected pageshow " + n);
-      setTimeout(function() { gGen.next(); }, 0);
-    } else {
-      debug("Got unexpected pageshow " + n);
-      ok(false, "Got unexpected pageshow " + n);
-    }
-  } else if (msg == "closed") {
-    bc1.close();
-    bc2.close();
-    SimpleTest.finish();
+    bc1.postMessage("close");
   }
+
+  var bc1 = new BroadcastChannel("bug646641_1");
+  var bc2 = new BroadcastChannel("bug646641_2");
+  bc1.onmessage = (msgEvent) => {
+    var msg = msgEvent.data.message;
+    var n = msgEvent.data.num;
+    if (msg == "childLoad") {
+      if (n == expectedLoadNum) {
+        debug("Got load " + n);
+        expectedLoadNum = -1;
+
+        // Spin the event loop before calling gGen.next() so the generator runs
+        // outside the onload handler.  This prevents us from encountering all
+        // sorts of docshell quirks.
+        setTimeout(function() { gGen.next(); }, 0);
+      } else {
+        debug("Got unexpected load " + n);
+        ok(false, "Got unexpected load " + n);
+      }
+    } else if (msg == "childPageshow") {
+      if (n == expectedPageshowNum) {
+        debug("Got expected pageshow " + n);
+        expectedPageshowNum = -1;
+        ok(true, "Got expected pageshow " + n);
+        setTimeout(function() { gGen.next(); }, 0);
+      } else {
+        debug("Got unexpected pageshow " + n);
+        ok(false, "Got unexpected pageshow " + n);
+      }
+    } else if (msg == "closed") {
+      bc1.close();
+      bc2.close();
+      SimpleTest.finish();
+    }
+  }
+
+  bc2.onmessage = bc1.onmessage;
+
+  var gGen = test();
+
+  // If Fission is disabled, the pref is no-op.
+  SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+    gGen.next();
+  });
+}
+if (isXOrigin) {
+  // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
+  // Acquire storage access permission here so that the BroadcastChannel used to
+  // communicate with the opened windows works in xorigin tests. Otherwise,
+  // the iframe containing this page is isolated from first-party storage access,
+  // which isolates BroadcastChannel communication.
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+  SpecialPowers.addPermission("storageAccessAPI", true, window.location.href).then(() => {
+    SpecialPowers.wrap(document).requestStorageAccess().then(() => {
+      executeTest();
+    });
+  });
+} else {
+  executeTest();
 }
 
-bc2.onmessage = bc1.onmessage;
-
-var gGen = test();
-
-// If Fission is disabled, the pref is no-op.
-SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
-  gGen.next();
-});
 
 </script>
 </pre>

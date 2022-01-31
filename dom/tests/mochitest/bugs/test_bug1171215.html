@@ -13,7 +13,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1022869
   SimpleTest.waitForExplicitFinish();
 
   /** Test for Bug 1022869 **/
-  function startTest() {
+  async function startTest() {
+    // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
+    // Acquire storage access permission here so that the storage used to
+    // hold cookies with the opened windows works in xorigin tests. Otherwise,
+    // the iframe containing this page is isolated from first-party storage
+    // access, which denies access to the same cookie store
+    if (isXOrigin) {
+      SpecialPowers.wrap(document).notifyUserGestureActivation();
+      await SpecialPowers.addPermission(
+        "storageAccessAPI",
+        true,
+        window.location.href
+       );
+      await SpecialPowers.wrap(document).requestStorageAccess();
+    }
     // Initialize our cookie.
     document.cookie = "a=b";
 
