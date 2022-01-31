@@ -59,6 +59,8 @@ class ProfilerChild final : public PProfilerChild,
       const TimeStamp& aTimeStamp) override;
   mozilla::ipc::IPCResult RecvGatherProfile(
       GatherProfileResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvGetGatherProfileProgress(
+      GetGatherProfileProgressResolver&& aResolve) override;
   mozilla::ipc::IPCResult RecvClearAllPages() override;
 
   void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
