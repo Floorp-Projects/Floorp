@@ -11417,23 +11417,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.disableBailoutLoopCheck = true;
   }
 
-#if defined(JS_CODEGEN_ARM)
-  if (const char* str = op.getStringOption("arm-hwcap")) {
-    jit::ParseARMHwCapFlags(str);
-    jit::ComputeJitSupportFlags();
-  }
-
-  int32_t fill = op.getIntOption("arm-asm-nop-fill");
-  if (fill >= 0) {
-    jit::Assembler::NopFill = fill;
-  }
-
-  int32_t poolMaxOffset = op.getIntOption("asm-pool-max-offset");
-  if (poolMaxOffset >= 5 && poolMaxOffset <= 1024) {
-    jit::Assembler::AsmPoolMaxOffset = poolMaxOffset;
-  }
-#endif
-
 #if defined(JS_SIMULATOR_ARM)
   if (op.getBoolOption("arm-sim-icache-checks")) {
     jit::SimulatorProcess::ICacheCheckingDisableCount = 0;
@@ -12352,6 +12335,22 @@ int main(int argc, char** argv) {
   if (op.getBoolOption("no-jit-backend")) {
     JS::DisableJitBackend();
   }
+
+#if defined(JS_CODEGEN_ARM)
+  if (const char* str = op.getStringOption("arm-hwcap")) {
+    jit::SetARMHwCapFlagsString(str);
+  }
+
+  int32_t fill = op.getIntOption("arm-asm-nop-fill");
+  if (fill >= 0) {
+    jit::Assembler::NopFill = fill;
+  }
+
+  int32_t poolMaxOffset = op.getIntOption("asm-pool-max-offset");
+  if (poolMaxOffset >= 5 && poolMaxOffset <= 1024) {
+    jit::Assembler::AsmPoolMaxOffset = poolMaxOffset;
+  }
+#endif
 
   // Start the engine.
   if (const char* message = JS_InitWithFailureDiagnostic()) {
