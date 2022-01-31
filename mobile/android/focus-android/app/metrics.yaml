@@ -229,12 +229,13 @@ mozilla_products:
       - https://github.com/mozilla-mobile/focus-android/issues/5295
     data_reviews:
       - https://github.com/mozilla-mobile/focus-android/pull/5303
+      - https://github.com/mozilla-mobile/focus-android/pull/6315
     data_sensitivity:
       - technical
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2022-02-01"
+    expires: "2023-02-01"
 
 settings_screen:
   whats_new_tapped:
