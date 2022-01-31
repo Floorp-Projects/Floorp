@@ -18,76 +18,98 @@
    * The page which is loaded from session history should be persisted if
    * expectedPersisted is true.
    */
+
+  SimpleTest.waitForExplicitFinish();
   var testUrl1 = "testUrl1_bfcache.html";
-  var bc1 = new BroadcastChannel("testUrl1_bfcache");
-  var bc2 = new BroadcastChannel("testUrl2_bfcache");
-  bc1.onmessage = function(event) {
-    if (event.data == "closed") {
-      info("Closed");
-      runTest();
-      return;
+
+
+  function executeTest() {
+    var bc1 = new BroadcastChannel("testUrl1_bfcache");
+    var bc2 = new BroadcastChannel("testUrl2_bfcache");
+    bc1.onmessage = function(event) {
+      if (event.data == "closed") {
+        info("Closed");
+        runTest();
+        return;
+      }
+      page1Shown(event.data);
+    };
+    bc2.onmessage = function(event) { page2Shown(event.data); };
+
+    var counter = 0;
+    var expectedPersisted = false;
+    var bc = new BroadcastChannel("a");
+
+    function page1Shown(e) {
+      if (counter == 0) {
+        ok(!e.persisted, "test page should have been persisted initially");
+        bc1.postMessage("load");
+      } else {
+        is(e.persisted, expectedPersisted, "test page should have been persisted in pageshow");
+        bc1.postMessage("close");
+      }
+
+      counter++;
     }
-    page1Shown(event.data);
-  };
-  bc2.onmessage = function(event) { page2Shown(event.data); };
 
-  var counter = 0;
-  var expectedPersisted = false;
-  var bc = new BroadcastChannel("a");
+    function page2Shown(e) {
+      if (!expectedPersisted) {
+        SimpleTest.executeSoon(function() {
+          info("Posting a message.");
+          bc.postMessage(42);
+        });
+      }
 
-  function page1Shown(e) {
-    if (counter == 0) {
-      ok(!e.persisted, "test page should have been persisted initially");
-      bc1.postMessage("load");
-    } else {
-      is(e.persisted, expectedPersisted, "test page should have been persisted in pageshow");
-      bc1.postMessage("close");
-    }
-
-    counter++;
-  }
-
-  function page2Shown(e) {
-    if (!expectedPersisted) {
       SimpleTest.executeSoon(function() {
-        info("Posting a message.");
-        bc.postMessage(42);
+        info("Going back");
+        bc2.postMessage("back");
       });
     }
 
-    SimpleTest.executeSoon(function() {
-      info("Going back");
-      bc2.postMessage("back");
-    });
-  }
+    var tests = [
+      { expectedPersisted: true },
+      { expectedPersisted: false },
+    ];
 
-  var tests = [
-    { expectedPersisted: true },
-    { expectedPersisted: false },
-  ];
+    function runTest() {
+      if (!tests.length) {
+        bc.close();
+        bc1.close();
+        bc2.close();
+        SimpleTest.finish();
+        return;
+      }
 
-  function runTest() {
-    if (!tests.length) {
-      bc.close();
-      bc1.close();
-      bc2.close();
-      SimpleTest.finish();
-      return;
+      var test = tests.shift();
+
+      counter = 0;
+      expectedPersisted = test.expectedPersisted;
+      window.open(testUrl1, "", "noopener");
     }
 
-    var test = tests.shift();
 
-    counter = 0;
-    expectedPersisted = test.expectedPersisted;
-    window.open(testUrl1, "", "noopener");
+    // If Fission is disabled, the pref is no-op.
+    SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+      runTest();
+    });
+
   }
 
-  SimpleTest.waitForExplicitFinish();
-
-  // If Fission is disabled, the pref is no-op.
-  SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
-    runTest();
-  });
+  if (isXOrigin) {
+    // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
+    // Acquire storage access permission here so that the BroadcastChannel used to
+    // communicate with the opened windows works in xorigin tests. Otherwise,
+    // the iframe containing this page is isolated from first-party storage access,
+    // which isolates BroadcastChannel communication.
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
+    SpecialPowers.addPermission("storageAccessAPI", true, window.location.href).then(() => {
+      SpecialPowers.wrap(document).requestStorageAccess().then(() => {
+        executeTest();
+      });
+    });
+  } else {
+    executeTest();
+  }
 
   </script>
 </body>
