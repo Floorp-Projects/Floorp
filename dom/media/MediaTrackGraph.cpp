@@ -789,7 +789,7 @@ void MediaTrackGraphImpl::NotifyOutputData(AudioDataValue* aBuffer,
   MOZ_ASSERT(mNativeInputTrackOnGraph->mDeviceId == mInputDeviceID);
 
   for (const auto& track : mTracks) {
-    if (const auto& t = track->AsAudioProcessingTrack(); t) {
+    if (const auto& t = track->AsAudioProcessingTrack()) {
       t->NotifyOutputData(this, aBuffer, aFrames, aRate, aChannels);
     }
   }
