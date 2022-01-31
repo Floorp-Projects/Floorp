@@ -620,12 +620,12 @@ void nsMenuFrame::OpenMenu(bool aSelectFirstItem) {
   // Open the menu asynchronously.
   mContent->OwnerDoc()->Dispatch(
       TaskCategory::Other,
-      NS_NewRunnableFunction(
-          "AsyncOpenMenu", [content = RefPtr{mContent.get()}, aSelectFirstItem] {
-            if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
-              pm->ShowMenu(content, aSelectFirstItem);
-            }
-          }));
+      NS_NewRunnableFunction("AsyncOpenMenu", [content = RefPtr{mContent.get()},
+                                               aSelectFirstItem] {
+        if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
+          pm->ShowMenu(content, aSelectFirstItem);
+        }
+      }));
 }
 
 void nsMenuFrame::CloseMenu(bool aDeselectMenu) {
