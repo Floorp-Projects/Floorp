@@ -46,7 +46,7 @@ using std::string;
 
 NS_IMPL_ISUPPORTS(nsProfiler, nsIProfiler)
 
-nsProfiler::nsProfiler() : mPendingProfiles(0), mGathering(false) {}
+nsProfiler::nsProfiler() : mGathering(false) {}
 
 nsProfiler::~nsProfiler() {
   if (mSymbolTableThread) {
@@ -739,7 +739,18 @@ nsProfiler::GetBufferInfo(uint32_t* aCurrentPosition, uint32_t* aTotalSize,
   self->FinishGathering();
 }
 
-void nsProfiler::GatheredOOPProfile(const nsACString& aProfile) {
+nsProfiler::PendingProfile* nsProfiler::GetPendingProfile(
+    base::ProcessId aChildPid) {
+  for (PendingProfile& pendingProfile : mPendingProfiles) {
+    if (pendingProfile.childPid == aChildPid) {
+      return &pendingProfile;
+    }
+  }
+  return nullptr;
+}
+
+void nsProfiler::GatheredOOPProfile(base::ProcessId aChildPid,
+                                    const nsACString& aProfile) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   if (!profiler_is_active()) {
@@ -761,12 +772,15 @@ void nsProfiler::GatheredOOPProfile(const nsACString& aProfile) {
     mWriter->Splice(PromiseFlatCString(aProfile));
   }
 
-  mPendingProfiles--;
+  if (PendingProfile* pendingProfile = GetPendingProfile(aChildPid);
+      pendingProfile) {
+    mPendingProfiles.erase(pendingProfile);
 
-  if (mPendingProfiles == 0) {
-    // We've got all of the async profiles now. Let's
-    // finish off the profile and resolve the Promise.
-    FinishGathering();
+    if (mPendingProfiles.empty()) {
+      // We've got all of the async profiles now. Let's finish off the profile
+      // and resolve the Promise.
+      FinishGathering();
+    }
   }
 
   // Not finished yet, restart the timer to let any remaining child enough time
@@ -811,6 +825,11 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
   nsTArray<ProfilerParent::SingleProcessProfilePromiseAndChildPid> profiles =
       ProfilerParent::GatherProfiles();
 
+  MOZ_ASSERT(mPendingProfiles.empty());
+  if (!mPendingProfiles.reserve(profiles.Length())) {
+    return GatheringPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
+  }
+
   mWriter.emplace();
 
   TimeStamp streamingStart = TimeStamp::Now();
@@ -848,8 +867,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
   // come in, they will be inserted and end up in the right spot.
   // FinishGathering() will close the array and the root object.
 
-  mPendingProfiles = profiles.Length();
-  if (mPendingProfiles != 0) {
+  if (!profiles.IsEmpty()) {
     // There *are* pending profiles, let's add handlers for their promises.
 
     // We want a reasonable timeout value while waiting for child profiles.
@@ -862,7 +880,7 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
     // time.
     // And multiply again by 2, for the extra processing and comms, and other
     // work that may happen.
-    const uint32_t parentToChildrenFactor = mPendingProfiles * 2;
+    const uint32_t parentToChildrenFactor = profiles.Length() * 2;
     // And we add a number seconds by default. In some lopsided cases, the
     // parent-to-child serializing ratio could be much greater than expected,
     // so the user could force it to be a bigger number if needed.
@@ -884,17 +902,20 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
         streamingTimeoutMs, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, "",
         GetMainThreadSerialEventTarget());
 
-    for (auto profile : profiles) {
+    MOZ_ASSERT(mPendingProfiles.capacity() >= profiles.Length());
+    for (const auto& profile : profiles) {
+      mPendingProfiles.infallibleAppend(PendingProfile{profile.childPid});
       profile.profilePromise->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [self = RefPtr<nsProfiler>(this)](mozilla::ipc::Shmem&& aResult) {
+          [self = RefPtr<nsProfiler>(this),
+           childPid = profile.childPid](mozilla::ipc::Shmem&& aResult) {
             const nsDependentCSubstring profileString(aResult.get<char>(),
                                                       aResult.Size<char>() - 1);
-            self->GatheredOOPProfile(profileString);
+            self->GatheredOOPProfile(childPid, profileString);
           },
-          [self =
-               RefPtr<nsProfiler>(this)](ipc::ResponseRejectReason&& aReason) {
-            self->GatheredOOPProfile(""_ns);
+          [self = RefPtr<nsProfiler>(this),
+           childPid = profile.childPid](ipc::ResponseRejectReason&& aReason) {
+            self->GatheredOOPProfile(childPid, ""_ns);
           });
     }
   } else {
@@ -972,7 +993,7 @@ void nsProfiler::ResetGathering() {
     mPromiseHolder->RejectIfExists(NS_ERROR_DOM_ABORT_ERR, __func__);
     mPromiseHolder.reset();
   }
-  mPendingProfiles = 0;
+  mPendingProfiles.clearAndFree();
   mGathering = false;
   if (mGatheringTimer) {
     mGatheringTimer->Cancel();
