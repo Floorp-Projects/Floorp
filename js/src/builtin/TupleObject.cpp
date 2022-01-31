@@ -46,6 +46,22 @@ mozilla::Maybe<TupleType&> TupleObject::maybeUnbox(JSObject* obj) {
   return result;
 }
 
+bool js::IsTuple(JSObject& obj) {
+  return (obj.is<TupleType>() || obj.is<TupleObject>());
+}
+
+// Caller is responsible for rooting the result
+mozilla::Maybe<TupleType&> js::ThisTupleValue(JSContext* cx, HandleValue val) {
+  if (!js::IsTuple(val)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_BAD_TUPLE_OBJECT);
+    return mozilla::Nothing();
+  }
+  Maybe<TupleType&> result = mozilla::Nothing();
+  result.emplace(TupleType::thisTupleValue(val));
+  return (result);
+}
+
 bool tup_mayResolve(const JSAtomState&, jsid id, JSObject*) {
   // tup_resolve ignores non-integer ids.
   return id.isInt();

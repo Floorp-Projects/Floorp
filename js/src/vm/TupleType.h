@@ -50,6 +50,8 @@ class TupleType final : public js::NativeObject {
   // This can be used to compare atomized tuples.
   static bool sameValueZero(TupleType* lhs, TupleType* rhs);
 
+  static TupleType& thisTupleValue(const Value& val);
+
  private:
   template <bool Comparator(JSContext*, HandleValue, HandleValue, bool*)>
   static bool sameValueWith(JSContext* cx, TupleType* lhs, TupleType* rhs,
@@ -62,6 +64,7 @@ namespace js {
 
 extern JSString* TupleToSource(JSContext* cx, Handle<TupleType*> tup);
 
+bool IsTuple(const Value& v);
 }  // namespace js
 
 #endif
