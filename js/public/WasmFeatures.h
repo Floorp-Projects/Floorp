@@ -113,7 +113,7 @@
                /* flag predicate     */ true,                                 \
                /* shell flag         */ "extended-const",                     \
                /* preference name    */ "extended_const")                     \
-  EXPERIMENTAL(                                                               \
+  TENTATIVE(                                                                  \
       /* capitalized name   */ Exceptions,                                    \
       /* lower case name    */ exceptions,                                    \
       /* compile predicate  */ WASM_EXCEPTIONS_ENABLED,                       \
