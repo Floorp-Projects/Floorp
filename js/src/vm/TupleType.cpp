@@ -36,6 +36,9 @@ using namespace js;
 
 static bool TupleConstructor(JSContext* cx, unsigned argc, Value* vp);
 
+static const JSFunctionSpec tuple_static_methods[] = {
+    JS_FN("isTuple", tuple_is_tuple, 1, 0), JS_FS_END};
+
 static const JSFunctionSpec tuple_methods[] = {
     JS_SELF_HOSTED_FN("toSorted", "TupleToSorted", 1, 0),
     JS_SELF_HOSTED_FN("toSpliced", "TupleToSpliced", 2, 0),
@@ -513,6 +516,11 @@ bool js::tuple_construct(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+bool js::tuple_is_tuple(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return IsTupleUnchecked(cx, args);
+}
+
 TupleType* TupleType::createUnchecked(JSContext* cx, HandleArrayObject aObj) {
   gc::AllocKind allocKind = GuessArrayGCKind(aObj->getDenseInitializedLength());
 
@@ -592,7 +600,7 @@ const JSClass TupleType::protoClass_ = {
 const ClassSpec TupleType::classSpec_ = {
     GenericCreateConstructor<TupleConstructor, 0, gc::AllocKind::FUNCTION>,
     GenericCreatePrototype<TupleType>,
-    nullptr,
+    tuple_static_methods,
     nullptr,
     tuple_methods,
     properties_,
