@@ -37,7 +37,7 @@ add_task(async function setup() {
 add_task(async function test_idle_daily() {
   sinon.reset();
 
-  SnapshotMonitor.observe(null, "idle-daily");
+  await SnapshotMonitor.observe(null, "idle-daily");
 
   Assert.ok(
     fakeBuilder.rebuild.calledOnce,

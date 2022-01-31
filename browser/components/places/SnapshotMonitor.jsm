@@ -10,8 +10,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
+  DomainGroupBuilder: "resource:///modules/DomainGroupBuilder.jsm",
   Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
+  Snapshots: "resource:///modules/Snapshots.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -87,7 +89,7 @@ const SnapshotMonitor = new (class SnapshotMonitor {
     if (this.testGroupBuilders) {
       return this.testGroupBuilders;
     }
-    return [];
+    return [DomainGroupBuilder];
   }
 
   /**
@@ -132,8 +134,9 @@ const SnapshotMonitor = new (class SnapshotMonitor {
     this.#currentTargetTime = null;
 
     if (rebuild) {
+      let snapshots = await Snapshots.query({ limit: -1 });
       for (let builder of this.#groupBuilders) {
-        await builder.rebuild();
+        await builder.rebuild(snapshots);
       }
     } else {
       for (let builder of this.#groupBuilders) {
@@ -173,13 +176,21 @@ const SnapshotMonitor = new (class SnapshotMonitor {
     );
   }
 
-  observe(subject, topic, data) {
+  /**
+   * observe function for nsIObserver. This is async so that we can call it in
+   * tests and know that the triggerBuilders for idle-daily has finished.
+   *
+   * @param {object} subject
+   * @param {string} topic
+   * @param {nsISupports} data
+   */
+  async observe(subject, topic, data) {
     if (topic == "places-snapshots-added") {
       this.#onSnapshotAdded(JSON.parse(data));
     } else if (topic == "places-snapshots-deleted") {
       this.#onSnapshotRemoved(JSON.parse(data));
     } else if (topic == "idle-daily") {
-      this.#triggerBuilders(true);
+      await this.#triggerBuilders(true);
     }
   }
 
