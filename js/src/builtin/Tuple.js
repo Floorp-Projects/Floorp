@@ -567,3 +567,85 @@ function TupleFlatMap(mapperFunction /*, thisArg*/) {
     /* Step 6. */
     return std_Tuple_unchecked(flat);
 }
+
+function TupleFrom(items, /*, mapFn, thisArg */) {
+    /* Step 1 */
+    var mapping;
+    var mapfn = arguments.length < 2 ? undefined : arguments[1];
+    var thisArg = arguments.length < 3 ? undefined : arguments[2];
+    if (mapfn === undefined) {
+        mapping = false;
+    } else {
+        /* Step 2 */
+        if (!IsCallable(mapfn)) {
+            ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, arguments[1]));
+        }
+        mapping = true;
+    }
+
+    /* Step 3 */
+    var list = [];
+
+    /* Step 4 */
+    var k = 0;
+
+    /* Step 5 */
+    let usingIterator = GetMethod(items, GetBuiltinSymbol("iterator"));
+
+    /* Step 6 */
+    if (usingIterator !== undefined) {
+        /* Step 6a. */
+        let adder = function(value) {
+            var mappedValue;
+            /* Step 6a.i */
+            if (mapping) {
+                /* Step 6a.i.1. */
+                mappedValue = callContentFunction(mapfn, thisArg, value, k);
+            } else {
+                /* Step 6a.ii. */
+                mappedValue = value;
+            }
+            /* Step 6a.iii. */
+            if (IsObject(mappedValue)) {
+                ThrowTypeError(JSMSG_RECORD_TUPLE_NO_OBJECT);
+            }
+            /* Step 6a.iv. */
+            DefineDataProperty(list, k, mappedValue);
+            /* Step 6a.v. */
+            k++;
+        };
+        /* Step 6b. */
+        /* Following Object.fromEntries(), inline AddEntriesFromiterator */
+        var iteratorRecord = MakeIteratorWrapper(items, usingIterator);
+
+        for (var nextValue of allowContentIter(iteratorRecord)) {
+            adder(nextValue);
+        }
+        /* Step 6c. */
+        return std_Tuple_unchecked(list);
+    }
+    /* Step 7 */
+    /* We assume items is an array-like object */
+    /* Step 8 */
+    let arrayLike = ToObject(items);
+    /* Step 9 */
+    let len = ToLength(arrayLike.length);
+    /* Step 10 */
+    while (k < len) {
+        /* Step 10a not necessary */
+        /* Step 10b */
+        let kValue = arrayLike[k];
+        /* Step 10c-d */
+        let mappedValue = mapping ? callContentFunction(mapfn, thisArg, kValue, k) : kValue;
+        /* Step 10e */
+        if (IsObject(mappedValue)) {
+            ThrowTypeError(JSMSG_RECORD_TUPLE_NO_OBJECT);
+        }
+        /* Step 10f */
+        DefineDataProperty(list, k, mappedValue);
+        /* Step 10g */
+        k++;
+    }
+    /* Step 11 */
+    return std_Tuple_unchecked(list);
+}
