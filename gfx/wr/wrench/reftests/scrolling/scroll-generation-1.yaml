@@ -1,0 +1,18 @@
+# Test that an scroll frame having two different generations' scroll-offsets.
+root:
+  items:
+    - type: scroll-frame
+      bounds: [0, 0, 100, 100]
+      content-size: [100, 1000]
+      scroll-offsets:
+        - offset: [0, 0]
+          generation: 1
+        - offset: [0, -10]
+          generation: 2
+      external-scroll-offset: [0, 50]
+      scroll-generation: 2
+      has-scroll-linked-effect: true
+      items:
+        - type: rect
+          color: green
+          bounds: [0, 50, 100, 100]
