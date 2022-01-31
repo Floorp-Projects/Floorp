@@ -9,14 +9,21 @@ import shutil
 import unittest
 import tempfile
 
+import pytest
 from mozunit import main, MockedOpen
 from taskgraph.util.yaml import load_yaml
 from unittest.mock import patch
 
 from gecko_taskgraph import decision
+from gecko_taskgraph.parameters import register_parameters
 
 
 FAKE_GRAPH_CONFIG = {"product-dir": "browser", "taskgraph": {}}
+
+
+@pytest.fixture(scope="module", autouse=True)
+def register():
+    register_parameters()
 
 
 class TestDecision(unittest.TestCase):
@@ -56,11 +63,13 @@ class TestGetDecisionParameters(unittest.TestCase):
             "head_repository": "https://hg.mozilla.org/mozilla-central",
             "head_rev": "abcd",
             "head_ref": "ef01",
+            "head_tag": "",
             "message": "",
             "project": "mozilla-central",
             "pushlog_id": "143",
             "pushdate": 1503691511,
             "owner": "nobody@mozilla.com",
+            "repository_type": "hg",
             "tasks_for": "hg-push",
             "level": "3",
         }
