@@ -123,6 +123,13 @@ addAccessibleTask(
 
     let acc = findAccessibleChildByID(docAcc, "li_clickable1");
     await untilCacheIs(() => acc.actionCount, 0, "li has no actions");
+    let thrown = false;
+    try {
+      acc.doAction(0);
+    } catch (e) {
+      thrown = true;
+    }
+    ok(thrown, "doAction should throw exception");
 
     // Remove 'for' from label
     await invokeContentTask(browser, [], () => {
@@ -130,6 +137,14 @@ addAccessibleTask(
     });
     acc = findAccessibleChildByID(docAcc, "label1");
     await untilCacheIs(() => acc.actionCount, 0, "label has no actions");
+    thrown = false;
+    try {
+      acc.doAction(0);
+      ok(false, "doAction should throw exception");
+    } catch (e) {
+      thrown = true;
+    }
+    ok(thrown, "doAction should throw exception");
 
     // Add 'longdesc' to image
     await invokeContentTask(browser, [], () => {

@@ -743,7 +743,11 @@ void RemoteAccessible::SetSelected(bool aSelect) {
   Unused << mDoc->SendSetSelected(mID, aSelect);
 }
 
-bool RemoteAccessible::DoAction(uint8_t aIndex) {
+bool RemoteAccessible::DoAction(uint8_t aIndex) const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::DoAction(aIndex);
+  }
+
   bool success = false;
   Unused << mDoc->SendDoAction(mID, aIndex, &success);
   return success;

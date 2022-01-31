@@ -216,7 +216,6 @@ bool UnselectAll();
 void TakeSelection();
 void SetSelected(bool aSelect);
 
-bool DoAction(uint8_t aIndex);
 KeyBinding AccessKey();
 KeyBinding KeyboardShortcut();
 void AtkKeyBinding(nsString& aBinding);

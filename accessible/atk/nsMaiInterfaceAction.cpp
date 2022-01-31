@@ -18,13 +18,12 @@ using namespace mozilla::a11y;
 extern "C" {
 
 static gboolean doActionCB(AtkAction* aAction, gint aActionIndex) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
-  if (accWrap) {
-    return accWrap->DoAction(aActionIndex);
+  AtkObject* atkObject = ATK_OBJECT(aAction);
+  if (Accessible* acc = GetInternalObj(atkObject)) {
+    return acc->DoAction(aActionIndex);
   }
 
-  RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aAction));
-  return proxy && proxy->DoAction(aActionIndex);
+  return false;
 }
 
 static gint getActionCountCB(AtkAction* aAction) {
