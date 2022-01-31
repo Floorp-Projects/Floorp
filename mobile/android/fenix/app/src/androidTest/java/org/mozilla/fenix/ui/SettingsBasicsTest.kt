@@ -89,61 +89,6 @@ class SettingsBasicsTest {
     }
 
     @Test
-    fun searchSettingsItemsTest() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openSearchSubMenu {
-            verifySearchToolbar()
-            verifyDefaultSearchEngineHeader()
-            verifySearchEngineList()
-        }
-    }
-
-    @Test
-    fun selectNewDefaultSearchEngine() {
-        // Goes through the settings and changes the default search engine, then verifies it has changed.
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openSearchSubMenu {
-            changeDefaultSearchEngine("DuckDuckGo")
-        }.goBack {
-        }.goBack {
-            verifyDefaultSearchEngine("DuckDuckGo")
-        }
-    }
-
-    @Test
-    fun toggleShowVisitedSitesAndBookmarks() {
-        // Bookmarks a few websites, toggles the history and bookmarks setting to off, then verifies if the visited and bookmarked websites do not show in the suggestions.
-        val page1 = getGenericAsset(mockWebServer, 1)
-        val page2 = getGenericAsset(mockWebServer, 2)
-        val page3 = getGenericAsset(mockWebServer, 3)
-
-        homeScreen {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(page1.url) {
-        }.openThreeDotMenu {
-        }.bookmarkPage { }
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(page2.url) {
-            verifyUrl(page2.url.toString())
-        }.openThreeDotMenu {
-        }.bookmarkPage { }
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(page3.url) {
-            mDevice.waitForIdle()
-        }
-
-        navigationToolbar {
-            verifyNoHistoryBookmarks()
-        }
-    }
-
-    @Test
     fun changeThemeSetting() {
         // Goes through the settings and changes the default search engine, then verifies it changes.
         homeScreen {
