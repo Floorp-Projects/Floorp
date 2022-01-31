@@ -16,7 +16,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/ipc/Transport.h"
 
 class PickleIterator;
 
