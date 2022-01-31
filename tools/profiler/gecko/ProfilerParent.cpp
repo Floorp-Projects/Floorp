@@ -645,16 +645,17 @@ ProfilerParent::~ProfilerParent() {
 }
 
 /* static */
-nsTArray<RefPtr<ProfilerParent::SingleProcessProfilePromise>>
+nsTArray<ProfilerParent::SingleProcessProfilePromiseAndChildPid>
 ProfilerParent::GatherProfiles() {
+  nsTArray<SingleProcessProfilePromiseAndChildPid> results;
   if (!NS_IsMainThread()) {
-    return nsTArray<RefPtr<ProfilerParent::SingleProcessProfilePromise>>();
+    return results;
   }
 
-  nsTArray<RefPtr<SingleProcessProfilePromise>> results;
   results.SetCapacity(ProfilerParentTracker::ProfilerParentCount());
   ProfilerParentTracker::Enumerate([&](ProfilerParent* profilerParent) {
-    results.AppendElement(profilerParent->SendGatherProfile());
+    results.AppendElement(SingleProcessProfilePromiseAndChildPid{
+        profilerParent->SendGatherProfile(), profilerParent->mChildPid});
   });
   return results;
 }
