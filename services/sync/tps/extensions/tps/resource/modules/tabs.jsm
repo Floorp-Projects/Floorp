@@ -11,9 +11,6 @@ const EXPORTED_SYMBOLS = ["BrowserTabs"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { Weave } = ChromeUtils.import("resource://services-sync/main.js");
-const { TabStateFlusher } = ChromeUtils.import(
-  "resource:///modules/sessionstore/TabStateFlusher.jsm"
-);
 const { Logger } = ChromeUtils.import("resource://tps/logger.jsm");
 
 // Unfortunately, due to where TPS is run, we can't directly reuse the logic from
@@ -57,9 +54,6 @@ var BrowserTabs = {
     });
 
     browser.selectedTab = newtab;
-    // We might sync before SessionStore is done recording information, so try
-    // and force it to record everything. This is overkill, but effective.
-    await TabStateFlusher.flushWindow(mainWindow);
   },
 
   /**
