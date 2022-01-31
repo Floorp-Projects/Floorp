@@ -54,8 +54,8 @@ class ProfileBuffer final {
   // that are currently in the buffer at or after aRangeStart, in samples
   // for the given thread.
   void AddJITInfoForRange(uint64_t aRangeStart, ProfilerThreadId aThreadId,
-                          JSContext* aContext,
-                          JITFrameInfo& aJITFrameInfo) const;
+                          JSContext* aContext, JITFrameInfo& aJITFrameInfo,
+                          mozilla::ProgressLogger aProgressLogger) const;
 
   // Stream JSON for samples in the buffer to aWriter, using the supplied
   // UniqueStacks object.
@@ -67,30 +67,34 @@ class ProfileBuffer final {
   // words, you need to have called AddJITInfoForRange for every range that
   // might contain JIT frame information before calling this method.
   // Return the thread ID of the streamed sample(s), or 0.
-  ProfilerThreadId StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
-                                       ProfilerThreadId aThreadId,
-                                       double aSinceTime,
-                                       UniqueStacks& aUniqueStacks) const;
+  ProfilerThreadId StreamSamplesToJSON(
+      SpliceableJSONWriter& aWriter, ProfilerThreadId aThreadId,
+      double aSinceTime, UniqueStacks& aUniqueStacks,
+      mozilla::ProgressLogger aProgressLogger) const;
 
   void StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
                            ProfilerThreadId aThreadId,
                            const mozilla::TimeStamp& aProcessStartTime,
-                           double aSinceTime,
-                           UniqueStacks& aUniqueStacks) const;
+                           double aSinceTime, UniqueStacks& aUniqueStacks,
+                           mozilla::ProgressLogger aProgressLogger) const;
 
   // Stream samples and markers from all threads that `aProcessStreamingContext`
   // accepts.
   void StreamSamplesAndMarkersToJSON(
-      ProcessStreamingContext& aProcessStreamingContext) const;
+      ProcessStreamingContext& aProcessStreamingContext,
+      mozilla::ProgressLogger aProgressLogger) const;
 
   void StreamPausedRangesToJSON(SpliceableJSONWriter& aWriter,
-                                double aSinceTime) const;
-  void StreamProfilerOverheadToJSON(SpliceableJSONWriter& aWriter,
-                                    const mozilla::TimeStamp& aProcessStartTime,
-                                    double aSinceTime) const;
+                                double aSinceTime,
+                                mozilla::ProgressLogger aProgressLogger) const;
+  void StreamProfilerOverheadToJSON(
+      SpliceableJSONWriter& aWriter,
+      const mozilla::TimeStamp& aProcessStartTime, double aSinceTime,
+      mozilla::ProgressLogger aProgressLogger) const;
   void StreamCountersToJSON(SpliceableJSONWriter& aWriter,
                             const mozilla::TimeStamp& aProcessStartTime,
-                            double aSinceTime) const;
+                            double aSinceTime,
+                            mozilla::ProgressLogger aProgressLogger) const;
 
   // Find (via |aLastSample|) the most recent sample for the thread denoted by
   // |aThreadId| and clone it, patching in the current time as appropriate.
@@ -197,8 +201,8 @@ class ProfileBuffer final {
   ProfilerThreadId DoStreamSamplesAndMarkersToJSON(
       GetStreamingParametersForThreadCallback&&
           aGetStreamingParametersForThreadCallback,
-      double aSinceTime,
-      ProcessStreamingContext* aStreamingContextForMarkers) const;
+      double aSinceTime, ProcessStreamingContext* aStreamingContextForMarkers,
+      mozilla::ProgressLogger aProgressLogger) const;
 
   double mFirstSamplingTimeUs = 0.0;
   double mLastSamplingTimeUs = 0.0;

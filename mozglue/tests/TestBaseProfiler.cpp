@@ -4705,7 +4705,8 @@ void TestUniqueJSONStrings() {
       ujs.WriteElement(writer, "external1");
       ujs.WriteElement(writer, "external0");
     }
-    UJS ujsCopy(ujs, mozilla::JSONWriter::SingleLineStyle);
+    UJS ujsCopy(ujs, mozilla::ProgressLogger{},
+                mozilla::JSONWriter::SingleLineStyle);
     VerifyUniqueStringContents(
         [](SCJW& aWriter, UJS& aUniqueStrings) {
           aUniqueStrings.WriteElement(aWriter, "string0");

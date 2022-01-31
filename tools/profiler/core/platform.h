@@ -36,6 +36,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ProfileBufferEntrySerialization.h"
 #include "mozilla/ProfilerUtils.h"
+#include "mozilla/ProgressLogger.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
@@ -95,7 +96,7 @@ uint32_t ParseFeaturesFromStringArray(const char** aFeatures,
 
 void profiler_get_profile_json_into_lazily_allocated_buffer(
     const std::function<char*(size_t)>& aAllocator, double aSinceTime,
-    bool aIsShuttingDown);
+    bool aIsShuttingDown, mozilla::ProgressLogger aProgressLogger);
 
 // Flags to conveniently track various JS instrumentations.
 enum class JSInstrumentationFlags {
