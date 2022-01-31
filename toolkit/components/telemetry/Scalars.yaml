@@ -307,6 +307,27 @@ browser.engagement:
       - 'main'
       - 'account-ecosystem'
 
+  mirror_for_uri_count:
+    bug_numbers:
+      - 1741674
+      - 1752890
+    description: >
+      The count of the total non-unique http(s) URIs visited in a subsession, including
+      page reloads, after the session has been restored. URIs on minimized or background
+      tabs may also be counted towards this. Private browsing is included in this count.
+      Used for comparing with browser.engagement.total_uri_count_normal_and_private_mode
+      as a mirror of Glean's browser.engagement.uri_count.
+    expires: '100'
+    kind: uint
+    notification_emails:
+      - chutten@mozilla.com
+      - loines@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
   unfiltered_uri_count:
     bug_numbers:
       - 1304647
@@ -370,6 +391,27 @@ browser.engagement:
     record_into_store:
       - 'main'
       - 'account-ecosystem'
+
+  mirror_for_active_ticks:
+    bug_numbers:
+      - 1741674
+      - 1752890
+    description: >
+      The count of the number of five-second intervals ('ticks') the user
+      was considered 'active' in a subsession. Session activity involves keyboard or mouse
+      interaction with the application. It does not take into account whether or not the window
+      has focus or is in the foreground, only if it is receiving these interaction events.
+      Used for comparing with browser.engagement.active_ticks as a mirror for
+      Glean's browser.engagement.active_ticks
+    expires: '100'
+    kind: uint
+    notification_emails:
+      - chutten@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
 
   profile_count:
     bug_numbers:
