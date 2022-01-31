@@ -33,6 +33,7 @@
 #include "TableCellAccessible.h"
 #include "TreeWalker.h"
 #include "HTMLElementAccessibles.h"
+#include "ImageAccessible.h"
 
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
@@ -3282,14 +3283,26 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   }
 
   if (aCacheDomain & CacheDomain::Actions) {
-    if (ActionCount()) {
-      // We only cache the first action.
+    uint8_t actionCount = ActionCount();
+    ImageAccessible* imgAcc = AsImage();
+    bool hasLongDesc = imgAcc && imgAcc->HasLongDesc();
+
+    if (actionCount && !(actionCount == 1 && hasLongDesc)) {
+      // We only cache the first action that is not showlongdesc.
       nsAutoString actionName;
       ActionNameAt(0, actionName);
       RefPtr<nsAtom> actionAtom = NS_Atomize(actionName);
       fields->SetAttribute(nsGkAtoms::action, actionAtom);
     } else if (aUpdateType == CacheUpdateType::Update) {
       fields->SetAttribute(nsGkAtoms::action, DeleteEntry());
+    }
+
+    if (imgAcc) {
+      if (hasLongDesc) {
+        fields->SetAttribute(nsGkAtoms::longdesc, true);
+      } else if (aUpdateType == CacheUpdateType::Update) {
+        fields->SetAttribute(nsGkAtoms::longdesc, DeleteEntry());
+      }
     }
   }
 
