@@ -38,7 +38,8 @@ static bool TupleConstructor(JSContext* cx, unsigned argc, Value* vp);
 
 static const JSFunctionSpec tuple_static_methods[] = {
     JS_FN("isTuple", tuple_is_tuple, 1, 0),
-    JS_SELF_HOSTED_FN("from", "TupleFrom", 1, 0), JS_FS_END};
+    JS_SELF_HOSTED_FN("from", "TupleFrom", 1, 0), JS_FN("of", tuple_of, 0, 0),
+    JS_FS_END};
 
 static const JSFunctionSpec tuple_methods[] = {
     JS_SELF_HOSTED_FN("toSorted", "TupleToSorted", 1, 0),
@@ -498,6 +499,18 @@ bool TupleConstructor(JSContext* cx, unsigned argc, Value* vp) {
                        BEGIN: Tuple.prototype methods
 \*===========================================================================*/
 
+static bool ArrayToTuple(JSContext* cx, const CallArgs& args) {
+  RootedArrayObject aObj(cx, &args.rval().toObject().as<ArrayObject>());
+  TupleType* tup = TupleType::createUnchecked(cx, aObj);
+
+  if (!tup) {
+    return false;
+  }
+
+  args.rval().setExtendedPrimitive(*tup);
+  return true;
+}
+
 // Takes an array as a single argument and returns a tuple of the
 // array elements, without copying the array
 // Should only be called from self-hosted tuple methods;
@@ -507,14 +520,8 @@ bool js::tuple_construct(JSContext* cx, unsigned argc, Value* vp) {
 
   MOZ_ASSERT(args[0].toObject().is<ArrayObject>());
 
-  RootedArrayObject aObj(cx, &args[0].toObject().as<ArrayObject>());
-  TupleType* tup = TupleType::createUnchecked(cx, aObj);
-  if (!tup) {
-    return false;
-  }
-  args.rval().setExtendedPrimitive(*tup);
-
-  return true;
+  args.rval().set(args[0]);
+  return ArrayToTuple(cx, args);
 }
 
 bool js::tuple_is_tuple(JSContext* cx, unsigned argc, Value* vp) {
@@ -552,6 +559,30 @@ TupleType* TupleType::createUnchecked(JSContext* cx, HandleArrayObject aObj) {
 
   tup->finishInitialization(cx);
   return tup;
+}
+
+bool js::tuple_of(JSContext* cx, unsigned argc, Value* vp) {
+  /* Step 1 */
+  CallArgs args = CallArgsFromVp(argc, vp);
+  size_t len = args.length();
+  Value* items = args.array();
+
+  /* Step 2 */
+  for (size_t i = 0; i < len; i++) {
+    if (items[i].isObject()) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_RECORD_TUPLE_NO_OBJECT, "Tuple.of");
+      return false;
+    }
+  }
+  /* Step 3 */
+  ArrayObject* result = js::NewDenseCopiedArray(cx, len, items, GenericObject);
+  if (!result) {
+    return false;
+  }
+  args.rval().setObject(*result);
+  /* Step 4 */
+  return ArrayToTuple(cx, args);
 }
 
 bool js::IsTuple(const Value& v) {
