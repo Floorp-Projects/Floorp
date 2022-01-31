@@ -202,6 +202,7 @@ browsertime-benchmark:
             - ares6
             - [assorted-dom, dom]
             - [jetstream2, js2]
+            - [matrix-react-bench, mrb]
             - [motionmark-animometer, mm-a]
             - [motionmark-htmlsuite, mm-h]
             - [speedometer, sp]
@@ -271,6 +272,7 @@ browsertime-benchmark:
                     .*-qr/.*: 2100
                     default: 1500
             jetstream2: 8000
+            matrix-react-bench: 1500
             motionmark-htmlsuite: 1500
             unity-webgl: 1500
             default: 900
@@ -278,6 +280,7 @@ browsertime-benchmark:
         fetch:
             - assorted-dom
             - jetstream2
+            - matrix-react-bench
             - unity-webgl
 
 browsertime-benchmark-wasm:
