@@ -13,6 +13,7 @@
 #endif
 
 #include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/FOGIPC.h"
 
 namespace mozilla::ipc {
 
@@ -68,6 +69,11 @@ mozilla::ipc::IPCResult UtilityProcessParent::RecvAddMemoryReport(
   if (mMemoryReportRequest) {
     mMemoryReportRequest->RecvReport(aReport);
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult UtilityProcessParent::RecvFOGData(ByteBuf&& aBuf) {
+  glean::FOGData(std::move(aBuf));
   return IPC_OK();
 }
 
