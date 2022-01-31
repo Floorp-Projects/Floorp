@@ -28,42 +28,35 @@ static gboolean doActionCB(AtkAction* aAction, gint aActionIndex) {
 }
 
 static gint getActionCountCB(AtkAction* aAction) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
-  if (accWrap) {
-    return accWrap->ActionCount();
+  AtkObject* atkObject = ATK_OBJECT(aAction);
+  if (Accessible* acc = GetInternalObj(atkObject)) {
+    return acc->ActionCount();
   }
 
-  RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aAction));
-  return proxy ? proxy->ActionCount() : 0;
+  return 0;
 }
 
 static const gchar* getActionDescriptionCB(AtkAction* aAction,
                                            gint aActionIndex) {
+  AtkObject* atkObject = ATK_OBJECT(aAction);
   nsAutoString description;
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
-  if (accWrap) {
-    accWrap->ActionDescriptionAt(aActionIndex, description);
-  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aAction))) {
-    proxy->ActionDescriptionAt(aActionIndex, description);
-  } else {
-    return nullptr;
+  if (Accessible* acc = GetInternalObj(atkObject)) {
+    acc->ActionDescriptionAt(aActionIndex, description);
+    return AccessibleWrap::ReturnString(description);
   }
 
-  return AccessibleWrap::ReturnString(description);
+  return nullptr;
 }
 
 static const gchar* getActionNameCB(AtkAction* aAction, gint aActionIndex) {
+  AtkObject* atkObject = ATK_OBJECT(aAction);
   nsAutoString autoStr;
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
-  if (accWrap) {
-    accWrap->ActionNameAt(aActionIndex, autoStr);
-  } else if (RemoteAccessible* proxy = GetProxy(ATK_OBJECT(aAction))) {
-    proxy->ActionNameAt(aActionIndex, autoStr);
-  } else {
-    return nullptr;
+  if (Accessible* acc = GetInternalObj(atkObject)) {
+    acc->ActionDescriptionAt(aActionIndex, autoStr);
+    return AccessibleWrap::ReturnString(autoStr);
   }
 
-  return AccessibleWrap::ReturnString(autoStr);
+  return nullptr;
 }
 
 static const gchar* getKeyBindingCB(AtkAction* aAction, gint aActionIndex) {
