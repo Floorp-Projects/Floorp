@@ -1378,16 +1378,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvActionCount(const uint64_t& aID,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvActionDescriptionAt(
-    const uint64_t& aID, const uint8_t& aIndex, nsString* aDescription) {
-  LocalAccessible* acc = IdToAccessible(aID);
-  if (acc) {
-    acc->ActionDescriptionAt(aIndex, *aDescription);
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChild::RecvActionNameAt(
     const uint64_t& aID, const uint8_t& aIndex, nsString* aName) {
   LocalAccessible* acc = IdToAccessible(aID);
