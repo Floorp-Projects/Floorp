@@ -6279,7 +6279,7 @@ void MacroAssemblerARM::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
 
   // NOTE: the generated code must match the assembly code in gen_store in
   // GenerateAtomicOperations.py
-  asMasm().memoryBarrierAfter(access.sync());
+  asMasm().memoryBarrierBefore(access.sync());
 
   BufferOffset store;
   if (type == Scalar::Int64) {
