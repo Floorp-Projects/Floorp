@@ -2190,6 +2190,54 @@ async function setLogPoint(dbg, index, value) {
   await onBreakpointSet;
 }
 
+/**
+ * Instantiate a HTTP Server that serves files from a given test folder.
+ * The test folder should be made of multiple sub folder named: v1, v2, v3,...
+ * We will serve the content from one of these sub folder
+ * and switch to the next one, each time `httpServer.switchToNextVersion()`
+ * is called.
+ *
+ * @return Object Test server with two functions:
+ *   - urlFor(path)
+ *     Returns the absolute url for a given file.
+ *   - switchToNextVersion() 
+ *     Start serving files from the next available sub folder.
+ */
+function createVersionizedHttpTestServer(testFolderName) {
+  const httpServer = createTestHTTPServer();
+
+  let currentVersion = 1;
+
+  httpServer.registerPrefixHandler("/", async (request, response) => {
+    response.processAsync();
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    if (request.path.endsWith(".js")) {
+      response.setHeader("Content-Type", "application/javascript");
+    } else if (request.path.endsWith(".js.map")) {
+      response.setHeader("Content-Type", "application/json");
+    }
+    if (request.path == "/" || request.path == "/index.html") {
+      response.setHeader("Content-Type", "text/html");
+    }
+    const url = URL_ROOT + `examples/${testFolderName}/v${currentVersion}${request.path}`;
+    info("[test-http-server] serving: " + url);
+    const content = await fetch(url);
+    const text = await content.text();
+    response.write(text);
+    response.finish();
+  });
+
+  return {
+    switchToNextVersion() {
+      currentVersion++;
+    },
+    urlFor(path) {
+      const port = httpServer.identity.primaryPort;
+      return `http://localhost:${port}/${path}`;
+    },
+  };
+}
+
 // This module is also loaded for Browser Toolbox tests, within the browser toolbox process
 // which doesn't contain mochitests resource://testing-common URL.
 // This isn't important to allow rejections in the context of the browser toolbox tests.

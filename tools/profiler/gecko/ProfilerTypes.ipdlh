@@ -29,4 +29,9 @@ struct ProfileBufferChunkManagerUpdate {
   ProfileBufferChunkMetadata[] newlyReleasedChunks;
 };
 
+struct GatherProfileProgress {
+  uint32_t progressProportionValueUnderlyingType;
+  nsCString progressLocation;
+};
+
 } // namespace mozilla
