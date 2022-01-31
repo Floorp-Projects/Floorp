@@ -60,7 +60,7 @@ extern mozilla::LazyLogModule gProfilerLog;
 #define LOG_TEST MOZ_LOG_TEST(gProfilerLog, mozilla::LogLevel::Info)
 #define LOG(arg, ...)                            \
   MOZ_LOG(gProfilerLog, mozilla::LogLevel::Info, \
-          ("[%" PRIu64 "d] " arg,                \
+          ("[%" PRIu64 "] " arg,                 \
            uint64_t(profiler_current_process_id().ToNumber()), ##__VA_ARGS__))
 
 // These are for MOZ_LOG="prof:4" or higher. It should be used for logging that
