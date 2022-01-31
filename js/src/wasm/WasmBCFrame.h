@@ -28,7 +28,10 @@
 #include "wasm/WasmBCStk.h"
 #include "wasm/WasmConstants.h"  // For MaxFrameSize
 
-// The stack frame.
+// [SMDOC] Wasm baseline compiler's stack frame.
+//
+// For background, see "Wasm's ABIs" in WasmFrame.h, the following should never
+// be in conflict with that.
 //
 // The stack frame has four parts ("below" means at lower addresses):
 //
