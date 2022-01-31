@@ -116,8 +116,20 @@ bool jit::InitializeJit() {
   JitOptions.supportsUnalignedAccesses =
       MacroAssembler::SupportsUnalignedAccesses();
 
+  if (HasJitBackend()) {
+    if (!InitProcessExecutableMemory()) {
+      return false;
+    }
+  }
+
   CheckPerf();
   return true;
+}
+
+void jit::ShutdownJit() {
+  if (HasJitBackend() && !JSRuntime::hasLiveRuntimes()) {
+    ReleaseProcessExecutableMemory();
+  }
 }
 
 bool jit::JitSupportsWasmSimd() {
