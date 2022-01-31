@@ -217,7 +217,6 @@ UNIFIED_SOURCES += [
     "ScrollAnimationBezierPhysics.cpp",
     "ScrollAnimationMSDPhysics.cpp",
     "ScrollbarActivity.cpp",
-    "ScrollGeneration.cpp",
     "ScrollPositionUpdate.cpp",
     "ScrollSnap.cpp",
     "ScrollVelocityQueue.cpp",
@@ -225,6 +224,12 @@ UNIFIED_SOURCES += [
     "TextOverflow.cpp",
     "ViewportFrame.cpp",
     "WBRFrame.cpp",
+]
+
+SOURCES += [
+    # If this file gets compiled with ScrollPositionUpdate.cpp, the specialized
+    # `operator<<` for ScrollGeneration<> won't be visible
+    "ScrollGeneration.cpp",
 ]
 
 GeneratedFile(

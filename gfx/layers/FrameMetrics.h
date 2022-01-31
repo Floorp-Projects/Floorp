@@ -347,11 +347,14 @@ struct FrameMetrics {
 
   const CSSToParentLayerScale& GetZoom() const { return mZoom; }
 
-  void SetScrollGeneration(const ScrollGeneration& aScrollGeneration) {
+  void SetScrollGeneration(
+      const MainThreadScrollGeneration& aScrollGeneration) {
     mScrollGeneration = aScrollGeneration;
   }
 
-  ScrollGeneration GetScrollGeneration() const { return mScrollGeneration; }
+  MainThreadScrollGeneration GetScrollGeneration() const {
+    return mScrollGeneration;
+  }
 
   ViewID GetScrollId() const { return mScrollId; }
 
@@ -594,7 +597,7 @@ struct FrameMetrics {
   CSSToParentLayerScale mZoom;
 
   // The scroll generation counter used to acknowledge the scroll offset update.
-  ScrollGeneration mScrollGeneration;
+  MainThreadScrollGeneration mScrollGeneration;
 
   // A bounding size for our composition bounds (no larger than the
   // cross-process RCD-RSF's composition size), in local CSS pixels.

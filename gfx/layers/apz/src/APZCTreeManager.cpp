@@ -279,7 +279,8 @@ APZCTreeManager::APZCTreeManager(LayersId aRootLayersId,
       mApzcTreeLog("apzctree"),
       mTestDataLock("APZTestDataLock"),
       mDPI(160.0),
-      mHitTester(std::move(aHitTester)) {
+      mHitTester(std::move(aHitTester)),
+      mScrollGenerationLock("APZScrollGenerationLock") {
   RefPtr<APZCTreeManager> self(this);
   NS_DispatchToMainThread(NS_NewRunnableFunction(
       "layers::APZCTreeManager::APZCTreeManager",
