@@ -8,9 +8,10 @@
 const TEST_URL1 = "https://example.com/";
 const TEST_URL2 = "https://example.com/12345";
 const TEST_URL3 = "https://example.com/67890";
+const TEST_URL4 = "https://example.com/135246";
 
 async function delete_all_groups() {
-  let groups = await SnapshotGroups.query();
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
   for (let group of groups) {
     await SnapshotGroups.delete(group.id);
   }
@@ -27,7 +28,9 @@ async function addInteractionsAndSnapshots(urls) {
   }
 }
 
-add_task(async function setup() {});
+add_task(async function setup() {
+  Services.prefs.setIntPref("browser.places.snapshots.minGroupSize", 4);
+});
 
 // A group where the urls are not snapshots should exclude those urls
 add_task(async function test_add_and_query_no_snapshots() {
@@ -38,7 +41,7 @@ add_task(async function test_add_and_query_no_snapshots() {
   );
   Assert.equal(id, 1, "id of newly added group should be 1");
 
-  let groups = await SnapshotGroups.query();
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
   assertSnapshotGroup(groups[0], {
     title: "Group",
@@ -48,7 +51,7 @@ add_task(async function test_add_and_query_no_snapshots() {
 });
 
 add_task(async function test_add_and_query() {
-  delete_all_groups();
+  await delete_all_groups();
   let urls = [TEST_URL1, TEST_URL2, TEST_URL3];
   await addInteractionsAndSnapshots(urls);
 
@@ -56,7 +59,7 @@ add_task(async function test_add_and_query() {
 
   await SnapshotGroups.add(newGroup, urls);
 
-  let groups = await SnapshotGroups.query();
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
   assertSnapshotGroup(groups[0], {
     title: "Test Group",
@@ -66,7 +69,7 @@ add_task(async function test_add_and_query() {
 });
 
 add_task(async function test_add_and_query_builderMetadata() {
-  delete_all_groups();
+  await delete_all_groups();
   let urls = [TEST_URL1, TEST_URL2, TEST_URL3];
 
   let newGroup = {
@@ -77,7 +80,7 @@ add_task(async function test_add_and_query_builderMetadata() {
 
   await SnapshotGroups.add(newGroup, urls);
 
-  let groups = await SnapshotGroups.query();
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
   assertSnapshotGroup(groups[0], {
     title: "Test Group",
@@ -88,7 +91,7 @@ add_task(async function test_add_and_query_builderMetadata() {
 });
 
 add_task(async function test_add_and_query_with_builder() {
-  delete_all_groups();
+  await delete_all_groups();
   let urls = [TEST_URL1, TEST_URL2, TEST_URL3];
 
   let newGroup = {
@@ -100,10 +103,13 @@ add_task(async function test_add_and_query_with_builder() {
   await SnapshotGroups.add(newGroup, urls);
 
   // A query with the incorrect builder shouldn't return any groups
-  let groups = await SnapshotGroups.query({ builder: "incorrect builder" });
+  let groups = await SnapshotGroups.query({
+    builder: "incorrect builder",
+    skipMinimum: true,
+  });
   Assert.equal(groups.length, 0, "Should return 0 SnapshotGroups");
 
-  groups = await SnapshotGroups.query({ builder: "domain" });
+  groups = await SnapshotGroups.query({ builder: "domain", skipMinimum: true });
   Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
 
   assertSnapshotGroup(groups[0], {
@@ -115,7 +121,7 @@ add_task(async function test_add_and_query_with_builder() {
 });
 
 add_task(async function test_update_metadata() {
-  let groups = await SnapshotGroups.query();
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(groups.length, 1, "Should return 1 snapshot group");
   Assert.equal(
     groups[0].title,
@@ -127,7 +133,7 @@ add_task(async function test_update_metadata() {
   groups[0].builder = "pinned";
   await SnapshotGroups.updateMetadata(groups[0]);
 
-  let updated_groups = await SnapshotGroups.query();
+  let updated_groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(updated_groups.length, 1, "Should return 1 SnapshotGroup");
   assertSnapshotGroup(groups[0], {
     title: "Modified title",
@@ -137,12 +143,12 @@ add_task(async function test_update_metadata() {
 });
 
 add_task(async function test_delete_group() {
-  let groups = await SnapshotGroups.query();
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
 
   await SnapshotGroups.delete(groups[0].id);
 
-  groups = await SnapshotGroups.query();
+  groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(
     groups.length,
     0,
@@ -151,7 +157,7 @@ add_task(async function test_delete_group() {
 });
 
 add_task(async function test_add_multiple_and_query_snapshot() {
-  let urls = [TEST_URL1, TEST_URL2, TEST_URL3];
+  let urls = [TEST_URL1, TEST_URL2, TEST_URL3, TEST_URL4];
   await addInteractionsAndSnapshots(urls);
 
   let id = await SnapshotGroups.add(
@@ -166,7 +172,7 @@ add_task(async function test_add_multiple_and_query_snapshot() {
   );
   Assert.equal(second_id, 2, "id of next newly added group should be 2");
 
-  let groups = await SnapshotGroups.query();
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(groups.length, 2, "Should return 2 SnapshotGroups");
   assertSnapshotGroup(groups[0], {
     title: "Second Group",
@@ -182,12 +188,12 @@ add_task(async function test_add_multiple_and_query_snapshot() {
 
 add_task(async function test_add_and_query_no_url() {
   await delete_all_groups();
-  let groups = await SnapshotGroups.query();
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(groups.length, 0, "Should return 0 SnapshotGroups");
 
   await SnapshotGroups.add({ title: "No url group", builder: "domain" }, []);
 
-  let newGroups = await SnapshotGroups.query();
+  let newGroups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(newGroups.length, 1, "Should return 1 SnapshotGroups");
   assertSnapshotGroup(newGroups[0], {
     title: "No url group",
@@ -205,7 +211,7 @@ add_task(async function test_get_snapshots() {
   let newGroup = { title: "Test Group", builder: "domain" };
   await SnapshotGroups.add(newGroup, urls);
 
-  let groups = await SnapshotGroups.query();
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
 
   let snapshots = await SnapshotGroups.getSnapshots({ id: groups[0].id });
@@ -219,7 +225,7 @@ add_task(async function test_get_snapshots() {
 });
 
 add_task(async function test_get_snapshots_count() {
-  let groups = await SnapshotGroups.query();
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
 
   let snapshots = await SnapshotGroups.getSnapshots({
@@ -232,7 +238,7 @@ add_task(async function test_get_snapshots_count() {
 });
 
 add_task(async function test_get_snapshots_startIndex() {
-  let groups = await SnapshotGroups.query();
+  let groups = await SnapshotGroups.query({ skipMinimum: true });
   Assert.equal(groups.length, 1, "Should return 1 SnapshotGroup");
 
   let snapshots = await SnapshotGroups.getSnapshots({
@@ -242,4 +248,35 @@ add_task(async function test_get_snapshots_startIndex() {
   Assert.equal(snapshots.length, 2, "Should return 2 Snapshots");
 
   await assertSnapshotList(snapshots, [{ url: TEST_URL2 }, { url: TEST_URL1 }]);
+});
+
+add_task(async function test_minimum_size() {
+  let groups = await SnapshotGroups.query();
+  Assert.equal(
+    groups.length,
+    0,
+    "Should return no groups when they are under the snapshot size limit."
+  );
+
+  // TODO: Ideally this would use `updateUrls` to update 'Test Group' but that
+  // api is not implemented yet.
+  let newGroup = { title: "Test Group 2", builder: "domain" };
+  await SnapshotGroups.add(newGroup, [
+    TEST_URL1,
+    TEST_URL2,
+    TEST_URL3,
+    TEST_URL4,
+  ]);
+
+  groups = await SnapshotGroups.query();
+  Assert.equal(
+    groups.length,
+    1,
+    "Should have returned one group above the snapshot size limit"
+  );
+  assertSnapshotGroup(groups[0], {
+    title: "Test Group 2",
+    builder: "domain",
+    snapshotCount: 4,
+  });
 });
