@@ -2339,6 +2339,10 @@ Toolbox.prototype = {
    * Update the visual state of the Frame picker button.
    */
   updateFrameButton() {
+    if (this.isDestroying()) {
+      return;
+    }
+
     if (this.currentToolId === "options" && this.frameMap.size <= 1) {
       // If the button is only visible because the user is on the Options panel, disable
       // the button and set an appropriate description.
