@@ -38,6 +38,8 @@ class UtilityProcessParent final
                                const bool& aMinimizeMemoryUsage,
                                const Maybe<ipc::FileDescriptor>& aDMDFile);
 
+  mozilla::ipc::IPCResult RecvFOGData(ByteBuf&& aBuf);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
