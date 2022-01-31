@@ -476,12 +476,18 @@ void PeerConnectionCtx::AddPeerConnection(const std::string& aKey,
 
     SharedThreadPoolWebRtcTaskQueueFactory taskQueueFactory;
     constexpr bool supportTailDispatch = true;
-    auto callWorkerThread = WrapUnique(
-        taskQueueFactory
-            .CreateTaskQueueWrapper("CallWorker", supportTailDispatch,
-                                    webrtc::TaskQueueFactory::Priority::NORMAL,
-                                    MediaThreadType::WEBRTC_CALL_THREAD)
-            .release());
+    // Note the NonBlocking DeletionPolicy!
+    // This task queue is passed into libwebrtc as a raw pointer.
+    // WebrtcCallWrapper guarantees that it outlives its webrtc::Call instance.
+    // Outside of libwebrtc we must use ref-counting to either the
+    // WebrtcCallWrapper or to the CallWorkerThread to keep it alive.
+    auto callWorkerThread =
+        WrapUnique(taskQueueFactory
+                       .CreateTaskQueueWrapper<DeletionPolicy::NonBlocking>(
+                           "CallWorker", supportTailDispatch,
+                           webrtc::TaskQueueFactory::Priority::NORMAL,
+                           MediaThreadType::WEBRTC_CALL_THREAD)
+                       .release());
 
     UniquePtr<webrtc::WebRtcKeyValueConfig> trials =
         WrapUnique(new NoTrialsConfig());
