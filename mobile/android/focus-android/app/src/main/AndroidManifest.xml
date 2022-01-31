@@ -139,6 +139,9 @@
         <service android:name=".downloads.DownloadService"
             android:exported="false" />
 
+        <service android:name=".media.MediaSessionService"
+            android:exported="false" />
+
         <service android:name=".session.SessionNotificationService"
             android:exported="false" />
 

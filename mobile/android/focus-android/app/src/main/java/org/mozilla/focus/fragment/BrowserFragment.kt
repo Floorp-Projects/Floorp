@@ -40,6 +40,7 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.downloads.manager.FetchDownloadManager
 import mozilla.components.feature.downloads.share.ShareDownloadFeature
+import mozilla.components.feature.media.fullscreen.MediaSessionFullscreenFeature
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
@@ -118,6 +119,7 @@ class BrowserFragment :
     private val appLinksFeature = ViewBoundFeatureWrapper<AppLinksFeature>()
     private val topSitesFeature = ViewBoundFeatureWrapper<TopSitesFeature>()
     private var sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
+    private var fullScreenMediaSessionFeature = ViewBoundFeatureWrapper<MediaSessionFullscreenFeature>()
 
     private val toolbarIntegration = ViewBoundFeatureWrapper<BrowserToolbarIntegration>()
 
@@ -320,6 +322,13 @@ class BrowserFragment :
                 view = view
             )
         }
+
+        // Feature that handles MediaSession state changes
+        fullScreenMediaSessionFeature.set(
+            feature = MediaSessionFullscreenFeature(requireActivity(), requireComponents.store),
+            owner = this,
+            view = view
+        )
 
         setSitePermissions(view)
     }
