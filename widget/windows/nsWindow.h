@@ -187,8 +187,7 @@ class nsWindow final : public nsWindowBase {
                                            nsISupports* aData,
                                            nsIRunnable* aCallback) override;
   virtual void CleanupFullscreenTransition() override;
-  virtual nsresult MakeFullScreen(bool aFullScreen,
-                                  nsIScreen* aScreen = nullptr) override;
+  virtual nsresult MakeFullScreen(bool aFullScreen) override;
   virtual void HideWindowChrome(bool aShouldHide) override;
   virtual void Invalidate(bool aEraseBackground = false,
                           bool aUpdateNCArea = false,

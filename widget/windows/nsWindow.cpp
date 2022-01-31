@@ -2324,7 +2324,8 @@ void nsWindow::SetSizeModeInternal(nsSizeMode aMode) {
   }
 
   // we activate here to ensure that the right child window is focused
-  if (mIsVisible && (aMode == nsSizeMode_Maximized || aMode == nsSizeMode_Fullscreen)) {
+  if (mIsVisible &&
+      (aMode == nsSizeMode_Maximized || aMode == nsSizeMode_Fullscreen)) {
     DispatchFocusToTopLevelWindow(true);
   }
 }
@@ -2345,13 +2346,14 @@ void nsWindow::SetSizeMode(nsSizeMode aMode) {
   if (aMode == mSizeMode) return;
 
   if (aMode == nsSizeMode_Fullscreen) {
-    MakeFullScreen(true, nullptr);
-  } else if ((mSizeMode == nsSizeMode_Fullscreen) && (aMode == nsSizeMode_Normal)) {
+    MakeFullScreen(true);
+  } else if ((mSizeMode == nsSizeMode_Fullscreen) &&
+             (aMode == nsSizeMode_Normal)) {
     // If we are in fullscreen mode, minimize should work like normal and
     // return us to fullscreen mode when unminimized. Maximize isn't really
     // available and won't do anything. "Restore" should do the same thing as
     // requesting to end fullscreen.
-    MakeFullScreen(false, nullptr);
+    MakeFullScreen(false);
   } else {
     SetSizeModeInternal(aMode);
   }
@@ -3678,7 +3680,7 @@ void nsWindow::CleanupFullscreenTransition() {
   mTransitionWnd = nullptr;
 }
 
-nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
+nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
   if (mFullscreenMode == aFullScreen) {
     return NS_OK;
   }
@@ -3714,7 +3716,7 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
   // Will call hide chrome, reposition window. Note this will
   // also cache dimensions for restoration, so it should only
   // be called once per fullscreen request.
-  nsBaseWidget::InfallibleMakeFullScreen(aFullScreen, aTargetScreen);
+  nsBaseWidget::InfallibleMakeFullScreen(aFullScreen);
 
   if (mIsVisible && !aFullScreen && mSizeMode == nsSizeMode_Normal) {
     MOZ_ASSERT(mSizeMode == mOldSizeMode);
