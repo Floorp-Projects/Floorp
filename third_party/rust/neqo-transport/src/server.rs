@@ -20,7 +20,6 @@ use crate::addr_valid::{AddressValidation, AddressValidationResult};
 use crate::cid::{ConnectionId, ConnectionIdDecoder, ConnectionIdGenerator, ConnectionIdRef};
 use crate::connection::{Connection, Output, State};
 use crate::packet::{PacketBuilder, PacketType, PublicPacket};
-use crate::tparams::PreferredAddress;
 use crate::{ConnectionParameters, QuicVersion, Res};
 
 use std::cell::RefCell;
@@ -158,8 +157,6 @@ pub struct Server {
     zero_rtt_checker: ServerZeroRttChecker,
     /// A connection ID generator.
     cid_generator: Rc<RefCell<dyn ConnectionIdGenerator>>,
-    /// The preferred address(es).
-    preferred_address: Option<PreferredAddress>,
     /// Connection parameters.
     conn_params: ConnectionParameters,
     /// Active connection attempts, keyed by `AttemptKey`.  Initial packets with
@@ -210,7 +207,6 @@ impl Server {
             anti_replay,
             zero_rtt_checker: ServerZeroRttChecker::new(zero_rtt_checker),
             cid_generator,
-            preferred_address: None,
             conn_params,
             active_attempts: HashMap::default(),
             connections: Rc::default(),
@@ -237,11 +233,6 @@ impl Server {
     /// default values.
     pub fn set_ciphers(&mut self, ciphers: impl AsRef<[Cipher]>) {
         self.ciphers = Vec::from(ciphers.as_ref());
-    }
-
-    /// Set a preferred address.
-    pub fn set_preferred_address(&mut self, spa: PreferredAddress) {
-        self.preferred_address = Some(spa);
     }
 
     pub fn enable_ech(

@@ -277,7 +277,6 @@ pub struct SecretAgent {
     now: TimeHolder,
 
     extension_handlers: Vec<ExtensionTracker>,
-    inf: Option<SecretAgentInfo>,
 
     /// The encrypted client hello (ECH) configuration that is in use.
     /// Empty if ECH is not enabled.
@@ -300,7 +299,6 @@ impl SecretAgent {
             now: TimeHolder::default(),
 
             extension_handlers: Vec::new(),
-            inf: None,
 
             ech_config: Vec::new(),
         })
@@ -795,7 +793,12 @@ impl ResumptionToken {
 
 /// A TLS Client.
 #[derive(Debug)]
-#[allow(clippy::box_vec)] // We need the Box.
+#[allow(
+    renamed_and_removed_lints,
+    clippy::box_vec,
+    unknown_lints,
+    clippy::box_collection
+)] // We need the Box.
 pub struct Client {
     agent: SecretAgent,
 
@@ -983,14 +986,12 @@ impl ZeroRttChecker for AllowZeroRtt {
 
 #[derive(Debug)]
 struct ZeroRttCheckState {
-    fd: *mut ssl::PRFileDesc,
     checker: Pin<Box<dyn ZeroRttChecker>>,
 }
 
 impl ZeroRttCheckState {
-    pub fn new(fd: *mut ssl::PRFileDesc, checker: Box<dyn ZeroRttChecker>) -> Self {
+    pub fn new(checker: Box<dyn ZeroRttChecker>) -> Self {
         Self {
-            fd,
             checker: Pin::new(checker),
         }
     }
@@ -1085,7 +1086,7 @@ impl Server {
         max_early_data: u32,
         checker: Box<dyn ZeroRttChecker>,
     ) -> Res<()> {
-        let mut check_state = Box::pin(ZeroRttCheckState::new(self.agent.fd, checker));
+        let mut check_state = Box::pin(ZeroRttCheckState::new(checker));
         unsafe {
             ssl::SSL_HelloRetryRequestCallback(
                 self.agent.fd,

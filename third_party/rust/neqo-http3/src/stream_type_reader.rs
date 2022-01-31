@@ -7,7 +7,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 use crate::control_stream_local::HTTP3_UNI_STREAM_TYPE_CONTROL;
-use crate::hframe::H3_FRAME_TYPE_HEADERS;
+use crate::frames::H3_FRAME_TYPE_HEADERS;
 use crate::{CloseType, Error, Http3StreamType, ReceiveOutput, RecvStream, Res, Stream};
 use neqo_common::{qtrace, Decoder, IncrementalDecoderUint, Role};
 use neqo_qpack::decoder::QPACK_UNI_STREAM_TYPE_DECODER;
@@ -246,7 +246,7 @@ mod tests {
     use test_fixture::{connect, now};
 
     use crate::control_stream_local::HTTP3_UNI_STREAM_TYPE_CONTROL;
-    use crate::hframe::H3_FRAME_TYPE_HEADERS;
+    use crate::frames::H3_FRAME_TYPE_HEADERS;
     use crate::{CloseType, Error, NewStreamType, ReceiveOutput, RecvStream, Res};
     use neqo_common::{Encoder, Role};
     use neqo_qpack::decoder::QPACK_UNI_STREAM_TYPE_DECODER;

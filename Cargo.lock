@@ -1217,6 +1217,7 @@ dependencies = [
  "ident_case",
  "proc-macro2",
  "quote",
+ "strsim",
  "syn",
 ]
 
@@ -1437,6 +1438,27 @@ checksum = "cd8d03faa7fe0c1431609dfad7bbe827af30f82e1e2ae6f7ee4fca6bd764bc28"
 dependencies = [
  "cfg-if 0.1.10",
  "packed_simd",
+]
+
+[[package]]
+name = "enumset"
+version = "1.0.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6216d2c19a6fb5f29d1ada1dc7bc4367a8cbf0fa4af5cf12e07b5bbdde6b5b2c"
+dependencies = [
+ "enumset_derive",
+]
+
+[[package]]
+name = "enumset_derive"
+version = "0.5.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6451128aa6655d880755345d085494cf7561a6bee7c8dc821e5d77e6d267ecd4"
+dependencies = [
+ "darling",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -3408,8 +3430,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.5.6"
-source = "git+https://github.com/mozilla/neqo?tag=v0.5.6#b9b6e1d4f459b5fab2c59aa784639a3e9b18538e"
+version = "0.5.7"
+source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
 dependencies = [
  "chrono",
  "env_logger",
@@ -3421,11 +3443,12 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.5.6"
-source = "git+https://github.com/mozilla/neqo?tag=v0.5.6#b9b6e1d4f459b5fab2c59aa784639a3e9b18538e"
+version = "0.5.7"
+source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
 dependencies = [
  "bindgen",
  "log",
+ "mozbuild",
  "neqo-common",
  "serde",
  "serde_derive",
@@ -3434,9 +3457,10 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.5.6"
-source = "git+https://github.com/mozilla/neqo?tag=v0.5.6#b9b6e1d4f459b5fab2c59aa784639a3e9b18538e"
+version = "0.5.7"
+source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
 dependencies = [
+ "enumset",
  "lazy_static",
  "log",
  "neqo-common",
@@ -3451,8 +3475,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.5.6"
-source = "git+https://github.com/mozilla/neqo?tag=v0.5.6#b9b6e1d4f459b5fab2c59aa784639a3e9b18538e"
+version = "0.5.7"
+source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
 dependencies = [
  "lazy_static",
  "log",
@@ -3465,8 +3489,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.5.6"
-source = "git+https://github.com/mozilla/neqo?tag=v0.5.6#b9b6e1d4f459b5fab2c59aa784639a3e9b18538e"
+version = "0.5.7"
+source = "git+https://github.com/mozilla/neqo?tag=v0.5.7#f3de275b12c40f45718ce43a0482e771ba6cd4b8"
 dependencies = [
  "indexmap",
  "lazy_static",

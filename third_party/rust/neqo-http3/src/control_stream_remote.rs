@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::hframe::{HFrame, HFrameReader};
+use crate::frames::{FrameReader, HFrame, StreamReaderConnectionWrapper};
 use crate::{CloseType, Error, Http3StreamType, ReceiveOutput, RecvStream, Res, Stream};
 use neqo_common::qdebug;
 use neqo_transport::{Connection, StreamId};
@@ -13,7 +13,7 @@ use neqo_transport::{Connection, StreamId};
 #[derive(Debug)]
 pub(crate) struct ControlStreamRemote {
     stream_id: StreamId,
-    frame_reader: HFrameReader,
+    frame_reader: FrameReader,
 }
 
 impl ::std::fmt::Display for ControlStreamRemote {
@@ -26,16 +26,24 @@ impl ControlStreamRemote {
     pub fn new(stream_id: StreamId) -> Self {
         Self {
             stream_id,
-            frame_reader: HFrameReader::new(),
+            frame_reader: FrameReader::new(),
         }
     }
 
     /// Check if a stream is the control stream and read received data.
     pub fn receive_single(&mut self, conn: &mut Connection) -> Res<Option<HFrame>> {
         qdebug!([self], "Receiving data.");
-        match self.frame_reader.receive(conn, self.stream_id)? {
+        match self
+            .frame_reader
+            .receive(&mut StreamReaderConnectionWrapper::new(
+                conn,
+                self.stream_id,
+            ))? {
             (_, true) => Err(Error::HttpClosedCriticalStream),
-            (s, false) => Ok(s),
+            (s, false) => {
+                qdebug!([self], "received {:?}", s);
+                Ok(s)
+            }
         }
     }
 }
