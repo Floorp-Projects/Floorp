@@ -1255,8 +1255,7 @@ bool LocalAccessible::AttributeChangesState(nsAtom* aAttribute) {
          aAttribute == nsGkAtoms::aria_busy ||
          aAttribute == nsGkAtoms::aria_multiline ||
          aAttribute == nsGkAtoms::aria_multiselectable ||
-         aAttribute == nsGkAtoms::contenteditable ||
-         (aAttribute == nsGkAtoms::href && IsHTMLLink());
+         aAttribute == nsGkAtoms::contenteditable;
 }
 
 void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
@@ -1399,6 +1398,14 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
       }
     }
     return;
+  }
+
+  if ((aAttribute == nsGkAtoms::aria_expanded ||
+       aAttribute == nsGkAtoms::href) &&
+      (aModType == dom::MutationEvent_Binding::ADDITION ||
+       aModType == dom::MutationEvent_Binding::REMOVAL)) {
+    // The presence of aria-expanded adds an expand/collapse action.
+    SendCache(CacheDomain::Actions, CacheUpdateType::Update);
   }
 
   if (aAttribute == nsGkAtoms::alt &&
@@ -3271,6 +3278,18 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       } else if (aUpdateType == CacheUpdateType::Update) {
         fields->SetAttribute(attr, DeleteEntry());
       }
+    }
+  }
+
+  if (aCacheDomain & CacheDomain::Actions) {
+    if (ActionCount()) {
+      // We only cache the first action.
+      nsAutoString actionName;
+      ActionNameAt(0, actionName);
+      RefPtr<nsAtom> actionAtom = NS_Atomize(actionName);
+      fields->SetAttribute(nsGkAtoms::action, actionAtom);
+    } else if (aUpdateType == CacheUpdateType::Update) {
+      fields->SetAttribute(nsGkAtoms::action, DeleteEntry());
     }
   }
 
