@@ -4495,13 +4495,14 @@ CSSPoint AsyncPanZoomController::GetCurrentAsyncScrollOffsetInCssPixels(
 }
 
 AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
-    AsyncTransformConsumer aMode, AsyncTransformComponents aComponents) const {
+    AsyncTransformConsumer aMode, AsyncTransformComponents aComponents,
+    std::size_t aSampleIndex) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
 
   CSSToParentLayerScale effectiveZoom;
   if (aComponents.contains(AsyncTransformComponent::eVisual)) {
-    effectiveZoom = GetEffectiveZoom(aMode, lock);
+    effectiveZoom = GetEffectiveZoom(aMode, lock, aSampleIndex);
   } else {
     effectiveZoom =
         Metrics().LayersPixelsPerCSSPixel() * LayerToParentLayerScale(1.0f);
@@ -4516,8 +4517,8 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
     // is entirely async.
 
     CSSPoint currentVisualOffset =
-        GetEffectiveScrollOffset(aMode, lock) -
-        GetEffectiveLayoutViewport(aMode, lock).TopLeft();
+        GetEffectiveScrollOffset(aMode, lock, aSampleIndex) -
+        GetEffectiveLayoutViewport(aMode, lock, aSampleIndex).TopLeft();
 
     translation += currentVisualOffset * effectiveZoom;
   }
@@ -4528,7 +4529,7 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
     }
 
     CSSPoint currentLayoutOffset =
-        GetEffectiveLayoutViewport(aMode, lock).TopLeft();
+        GetEffectiveLayoutViewport(aMode, lock, aSampleIndex).TopLeft();
 
     translation +=
         (currentLayoutOffset - lastPaintLayoutOffset) * effectiveZoom;
@@ -4539,9 +4540,10 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
 
 AsyncTransformComponentMatrix
 AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(
-    AsyncTransformConsumer aMode, AsyncTransformComponents aComponents) const {
+    AsyncTransformConsumer aMode, AsyncTransformComponents aComponents,
+    std::size_t aSampleIndex) const {
   AsyncTransformComponentMatrix asyncTransform =
-      GetCurrentAsyncTransform(aMode, aComponents);
+      GetCurrentAsyncTransform(aMode, aComponents, aSampleIndex);
   // The overscroll transform is considered part of the visual component of
   // the async transform, because it should apply to fixed content as well.
   if (aComponents.contains(AsyncTransformComponent::eVisual)) {
@@ -4598,37 +4600,37 @@ bool AsyncPanZoomController::SuppressAsyncScrollOffset() const {
 }
 
 CSSRect AsyncPanZoomController::GetEffectiveLayoutViewport(
-    AsyncTransformConsumer aMode,
-    const RecursiveMutexAutoLock& aProofOfLock) const {
+    AsyncTransformConsumer aMode, const RecursiveMutexAutoLock& aProofOfLock,
+    std::size_t aSampleIndex) const {
   if (aMode == eForCompositing && SuppressAsyncScrollOffset()) {
     return mLastContentPaintMetrics.GetLayoutViewport();
   }
   if (aMode == eForCompositing) {
-    return mSampledState.front().GetLayoutViewport();
+    return mSampledState[aSampleIndex].GetLayoutViewport();
   }
   return Metrics().GetLayoutViewport();
 }
 
 CSSPoint AsyncPanZoomController::GetEffectiveScrollOffset(
-    AsyncTransformConsumer aMode,
-    const RecursiveMutexAutoLock& aProofOfLock) const {
+    AsyncTransformConsumer aMode, const RecursiveMutexAutoLock& aProofOfLock,
+    std::size_t aSampleIndex) const {
   if (aMode == eForCompositing && SuppressAsyncScrollOffset()) {
     return mLastContentPaintMetrics.GetVisualScrollOffset();
   }
   if (aMode == eForCompositing) {
-    return mSampledState.front().GetVisualScrollOffset();
+    return mSampledState[aSampleIndex].GetVisualScrollOffset();
   }
   return Metrics().GetVisualScrollOffset();
 }
 
 CSSToParentLayerScale AsyncPanZoomController::GetEffectiveZoom(
-    AsyncTransformConsumer aMode,
-    const RecursiveMutexAutoLock& aProofOfLock) const {
+    AsyncTransformConsumer aMode, const RecursiveMutexAutoLock& aProofOfLock,
+    std::size_t aSampleIndex) const {
   if (aMode == eForCompositing && SuppressAsyncScrollOffset()) {
     return mLastContentPaintMetrics.GetZoom();
   }
   if (aMode == eForCompositing) {
-    return mSampledState.front().GetZoom();
+    return mSampledState[aSampleIndex].GetZoom();
   }
   return Metrics().GetZoom();
 }
