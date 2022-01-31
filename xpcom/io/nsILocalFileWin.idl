@@ -45,7 +45,7 @@ interface nsILocalFileWin : nsIFile
      * it will typically be the short pathname on filesystems that
      * support both short and long path forms.
      */
-    readonly attribute AString canonicalPath;
+    [noscript] readonly attribute AString canonicalPath;
     [noscript] readonly attribute ACString nativeCanonicalPath;
 
     /**
