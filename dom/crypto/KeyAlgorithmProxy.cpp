@@ -49,9 +49,10 @@ bool KeyAlgorithmProxy::ReadStructuredClone(JSStructuredCloneReader* aReader) {
     return false;
   }
 
-  mType = (KeyAlgorithmType)type;
-  switch (mType) {
+  switch (type) {
     case AES: {
+      mType = AES;
+
       uint32_t length;
       if (!JS_ReadUint32Pair(aReader, &length, &dummy)) {
         return false;
@@ -62,6 +63,8 @@ bool KeyAlgorithmProxy::ReadStructuredClone(JSStructuredCloneReader* aReader) {
       return true;
     }
     case HMAC: {
+      mType = HMAC;
+
       if (!JS_ReadUint32Pair(aReader, &mHmac.mLength, &dummy) ||
           !StructuredCloneHolder::ReadString(aReader, mHmac.mHash.mName)) {
         return false;
@@ -71,6 +74,8 @@ bool KeyAlgorithmProxy::ReadStructuredClone(JSStructuredCloneReader* aReader) {
       return true;
     }
     case RSA: {
+      mType = RSA;
+
       uint32_t modulusLength;
       nsString hashName;
       if (!JS_ReadUint32Pair(aReader, &modulusLength, &dummy) ||
@@ -84,6 +89,8 @@ bool KeyAlgorithmProxy::ReadStructuredClone(JSStructuredCloneReader* aReader) {
       return true;
     }
     case EC: {
+      mType = EC;
+
       nsString namedCurve;
       if (!StructuredCloneHolder::ReadString(aReader, mEc.mNamedCurve)) {
         return false;
@@ -92,6 +99,8 @@ bool KeyAlgorithmProxy::ReadStructuredClone(JSStructuredCloneReader* aReader) {
       mEc.mName = mName;
       return true;
     }
+    default:
+      return false;
   }
 
   return false;
