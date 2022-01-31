@@ -34,6 +34,8 @@ struct ScrollGeneration {
   // Dummy constructor, needed for IPDL purposes. Not intended for manual use.
   ScrollGeneration();
 
+  uint64_t Raw() const { return mValue; }
+
   bool operator<(const ScrollGeneration<Tag>& aOther) const;
   bool operator==(const ScrollGeneration<Tag>& aOther) const;
   bool operator!=(const ScrollGeneration<Tag>& aOther) const;

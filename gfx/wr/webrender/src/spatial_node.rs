@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ExternalScrollId, PipelineId, PropertyBinding, PropertyBindingId, ReferenceFrameKind, ScrollLocation};
+use api::{ExternalScrollId, PipelineId, PropertyBinding, PropertyBindingId, ReferenceFrameKind};
+use api::{APZScrollGeneration, HasScrollLinkedEffect, ScrollLocation};
 use api::{TransformStyle, StickyOffsetBounds, SpatialTreeItemKey};
 use api::units::*;
 use crate::internal_types::PipelineInstanceId;
@@ -194,6 +195,8 @@ impl SceneSpatialNode {
         content_size: &LayoutSize,
         frame_kind: ScrollFrameKind,
         external_scroll_offset: LayoutVector2D,
+        offset_generation: APZScrollGeneration,
+        has_scroll_linked_effect: HasScrollLinkedEffect,
         is_root_coord_system: bool,
     ) -> Self {
         let node_type = SpatialNodeType::ScrollFrame(ScrollFrameInfo::new(
@@ -205,6 +208,8 @@ impl SceneSpatialNode {
                 external_id,
                 frame_kind,
                 external_scroll_offset,
+                offset_generation,
+                has_scroll_linked_effect,
             )
         );
 
@@ -769,7 +774,7 @@ impl SpatialNode {
 
     pub fn matches_external_id(&self, external_id: ExternalScrollId) -> bool {
         match self.node_type {
-            SpatialNodeType::ScrollFrame(info) if info.external_id == external_id => true,
+            SpatialNodeType::ScrollFrame(ref info) if info.external_id == external_id => true,
             _ => false,
         }
     }
@@ -801,7 +806,7 @@ pub enum ScrollFrameKind {
     Explicit,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ScrollFrameInfo {
@@ -839,6 +844,15 @@ pub struct ScrollFrameInfo {
     /// display list), `external_scroll_offset` would remain at (0,10) and
     /// `offset` would change to (0,-20).
     pub offset: LayoutVector2D,
+
+    /// The generation of the external_scroll_offset.
+    /// This will be used to pick up the most appropriate scroll offset sampled
+    /// off the main thread.
+    pub offset_generation: APZScrollGeneration,
+
+    /// Whether the document containing this scroll frame has any scroll-linked
+    /// effect or not.
+    pub has_scroll_linked_effect: HasScrollLinkedEffect,
 }
 
 /// Manages scrolling offset.
@@ -849,6 +863,8 @@ impl ScrollFrameInfo {
         external_id: ExternalScrollId,
         frame_kind: ScrollFrameKind,
         external_scroll_offset: LayoutVector2D,
+        offset_generation: APZScrollGeneration,
+        has_scroll_linked_effect: HasScrollLinkedEffect,
     ) -> ScrollFrameInfo {
         ScrollFrameInfo {
             viewport_rect,
@@ -857,6 +873,8 @@ impl ScrollFrameInfo {
             external_id,
             frame_kind,
             external_scroll_offset,
+            offset_generation,
+            has_scroll_linked_effect,
         }
     }
 }
@@ -957,6 +975,8 @@ fn test_cst_perspective_relative_scroll() {
         &LayoutSize::new(100.0, 500.0),
         ScrollFrameKind::Explicit,
         LayoutVector2D::zero(),
+        APZScrollGeneration::default(),
+        HasScrollLinkedEffect::No,
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 1), PipelineId::dummy(), pid),
     );
 
@@ -968,6 +988,8 @@ fn test_cst_perspective_relative_scroll() {
         &LayoutSize::new(100.0, 500.0),
         ScrollFrameKind::Explicit,
         LayoutVector2D::new(0.0, 50.0),
+        APZScrollGeneration::default(),
+        HasScrollLinkedEffect::No,
         SpatialNodeUid::external(SpatialTreeItemKey::new(0, 3), PipelineId::dummy(), pid),
     );
 

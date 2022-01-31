@@ -1850,6 +1850,8 @@ impl YamlFrameReader {
             content_rect,
             clip_rect,
             external_scroll_offset,
+            APZScrollGeneration::default(),
+            HasScrollLinkedEffect::No,
             self.next_spatial_key(),
         );
         if let Some(numeric_id) = numeric_id {

@@ -281,6 +281,8 @@ fn build_display_list(
         LayoutRect::from_size(layout_size),
         LayoutRect::from_size(layout_size),
         LayoutVector2D::zero(),
+        APZScrollGeneration::default(),
+        HasScrollLinkedEffect::No,
         SpatialTreeItemKey::new(0, 1),
     );
 

@@ -18,6 +18,7 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
+#include "mozilla/ScrollGeneration.h"
 #include "mozilla/TypeTraits.h"
 #include "Units.h"
 #include "nsIWidgetListener.h"
@@ -887,6 +888,17 @@ static inline wr::WindowSizeMode ToWrWindowSizeMode(nsSizeMode aSizeMode) {
       MOZ_ASSERT_UNREACHABLE("Tried to convert invalid size mode.");
       return wr::WindowSizeMode::Invalid;
   }
+}
+
+static inline wr::APZScrollGeneration ToWrAPZScrollGeneration(
+    const mozilla::APZScrollGeneration& aGeneration) {
+  return wr::APZScrollGeneration(aGeneration.Raw());
+}
+
+static inline wr::HasScrollLinkedEffect ToWrHasScrollLinkedEffect(
+    bool aHasScrollLinkedEffect) {
+  return aHasScrollLinkedEffect ? wr::HasScrollLinkedEffect::Yes
+                                : wr::HasScrollLinkedEffect::No;
 }
 
 }  // namespace wr
