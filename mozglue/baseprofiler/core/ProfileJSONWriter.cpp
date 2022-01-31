@@ -13,18 +13,30 @@ UniqueJSONStrings::UniqueJSONStrings(JSONWriter::CollectionStyle aStyle) {
 }
 
 UniqueJSONStrings::UniqueJSONStrings(const UniqueJSONStrings& aOther,
+                                     ProgressLogger aProgressLogger,
                                      JSONWriter::CollectionStyle aStyle) {
+  using namespace mozilla::literals::ProportionValue_literals;  // For `10_pc`.
+
   mStringTableWriter.StartBareList(aStyle);
   uint32_t count = aOther.mStringHashToIndexMap.count();
   if (count != 0) {
-    MOZ_RELEASE_ASSERT(mStringHashToIndexMap.reserve(count));
-    for (auto iter = aOther.mStringHashToIndexMap.iter(); !iter.done();
-         iter.next()) {
+    MOZ_ALWAYS_TRUE(mStringHashToIndexMap.reserve(count));
+    auto iter = aOther.mStringHashToIndexMap.iter();
+    for (auto&& [unusedIndex, progressLogger] :
+         aProgressLogger.CreateLoopSubLoggersFromTo(
+             10_pc, 90_pc, count, "Copying unique strings...")) {
+      (void)unusedIndex;
+      if (iter.done()) {
+        break;
+      }
       mStringHashToIndexMap.putNewInfallible(iter.get().key(),
                                              iter.get().value());
+      iter.next();
     }
+    aProgressLogger.SetLocalProgress(90_pc, "Copied unique strings");
     mStringTableWriter.CopyAndSplice(
         aOther.mStringTableWriter.ChunkedWriteFunc());
+    aProgressLogger.SetLocalProgress(100_pc, "Spliced unique strings");
   }
 }
 
