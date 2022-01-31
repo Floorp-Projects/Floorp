@@ -32,7 +32,7 @@ scripts:
 
   tddmc: karma start karma.mc.config.js --tdd
 
-  debugcoverage: open logs/coverage/index.html
+  debugcoverage: open logs/coverage/lcov-report/index.html
 
   # lint: Run various linters with mach or local dev dependencies
   lint:
