@@ -458,6 +458,7 @@ const Snapshots = new (class Snapshots {
    * @param {object} [options]
    * @param {number} [options.limit]
    *   A numerical limit to the number of snapshots to retrieve, defaults to 100.
+   *   -1 may be used to get all snapshots, e.g. for use by the group builders.
    * @param {boolean} [options.includeTombstones]
    *   Whether to include tombstones in the snapshots to obtain.
    * @param {number} [options.type]
@@ -474,7 +475,8 @@ const Snapshots = new (class Snapshots {
     let db = await PlacesUtils.promiseDBConnection();
 
     let clauses = [];
-    let bindings = { limit };
+    let bindings = {};
+    let limitStatement = "";
 
     if (!includeTombstones) {
       clauses.push("removed_at IS NULL");
@@ -483,6 +485,11 @@ const Snapshots = new (class Snapshots {
     if (type) {
       clauses.push("type = :type");
       bindings.type = type;
+    }
+
+    if (limit != -1) {
+      limitStatement = "LIMIT :limit";
+      bindings.limit = limit;
     }
 
     let whereStatement = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
@@ -500,7 +507,7 @@ const Snapshots = new (class Snapshots {
       ${whereStatement}
       GROUP BY s.place_id
       ORDER BY last_interaction_at DESC
-      LIMIT :limit
+      ${limitStatement}
     `,
       bindings
     );
