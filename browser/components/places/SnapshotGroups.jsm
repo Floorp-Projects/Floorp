@@ -16,6 +16,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Snapshots: "resource:///modules/Snapshots.jsm",
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "MIN_GROUP_SIZE",
+  "browser.places.snapshots.minGroupSize",
+  5
+);
+
 /**
  * @typedef {object} SnapshotGroup
  *   This object represents a group of snapshots.
@@ -95,7 +102,7 @@ const SnapshotGroups = new (class SnapshotGroups {
         await db.execute(
           `
           INSERT INTO moz_places_metadata_groups_to_snapshots (group_id, place_id)
-          SELECT :id, s.place_id 
+          SELECT :id, s.place_id
           FROM moz_places h
           JOIN moz_places_metadata_snapshots s
           ON h.id = s.place_id
@@ -183,11 +190,22 @@ const SnapshotGroups = new (class SnapshotGroups {
    *   A numerical limit to the number of snapshots to retrieve, defaults to 50.
    * @param {string} [options.builder]
    *   Limit searching snapshot groups to results from a particular builder.
+   * @param {boolean} [options.skipMinimum]
+   *   Skips the minimim limit for number of urls in a snapshot group. This is
+   *   intended for builders to be able to store and retrieve possible groups
+   *   that are below the current limit.
    * @returns {SnapshotGroup[]}
    *   An array of snapshot groups, in descending order of last access time.
    */
-  async query({ limit = 50, builder = "" } = {}) {
+  async query({ limit = 50, builder = "", skipMinimum = false } = {}) {
     let db = await PlacesUtils.promiseDBConnection();
+
+    let params = { builder, limit };
+    let sizeFragment = "";
+    if (!skipMinimum) {
+      sizeFragment = "HAVING snapshot_count >= :minGroupSize";
+      params.minGroupSize = MIN_GROUP_SIZE;
+    }
 
     let rows = await db.executeCached(
       `
@@ -196,11 +214,11 @@ const SnapshotGroups = new (class SnapshotGroups {
       LEFT JOIN moz_places_metadata_groups_to_snapshots s ON s.group_id = g.id
       LEFT JOIN moz_places h ON h.id = s.place_id
       WHERE builder = :builder OR :builder = ""
-      GROUP BY g.id
+      GROUP BY g.id ${sizeFragment}
       ORDER BY last_access DESC
       LIMIT :limit
         `,
-      { builder, limit }
+      params
     );
 
     return rows.map(row => this.#translateSnapshotGroupRow(row));
@@ -214,9 +232,9 @@ const SnapshotGroups = new (class SnapshotGroups {
    * @param {object} options
    * @param {number} options.id
    *   The id of the snapshot group to get the snapshots for.
-   * @param {number} options.startIndex
+   * @param {number} [options.startIndex]
    *   The start index of the snapshots to return.
-   * @param {number} options.count
+   * @param {number} [options.count]
    *   The number of snapshots to return.
    * @param {boolean} [sortDescending]
    *   Whether or not to sortDescending. Defaults to true.
@@ -226,7 +244,7 @@ const SnapshotGroups = new (class SnapshotGroups {
    *   An array of snapshots, in descending order of last interaction time
    */
   async getSnapshots({
-    id = "",
+    id,
     startIndex = 0,
     count = 50,
     sortDescending = true,
