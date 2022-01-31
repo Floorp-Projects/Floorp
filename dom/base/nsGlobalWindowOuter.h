@@ -363,7 +363,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   void MacFullscreenMenubarOverlapChanged(
       mozilla::DesktopCoord aOverlapAmount) final;
   bool SetWidgetFullscreen(FullscreenReason aReason, bool aIsFullscreen,
-                           nsIWidget* aWidget, nsIScreen* aScreen);
+                           nsIWidget* aWidget);
   bool Fullscreen() const;
 
   // nsIInterfaceRequestor
