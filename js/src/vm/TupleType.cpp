@@ -37,7 +37,8 @@ using namespace js;
 static bool TupleConstructor(JSContext* cx, unsigned argc, Value* vp);
 
 static const JSFunctionSpec tuple_static_methods[] = {
-    JS_FN("isTuple", tuple_is_tuple, 1, 0), JS_FS_END};
+    JS_FN("isTuple", tuple_is_tuple, 1, 0),
+    JS_SELF_HOSTED_FN("from", "TupleFrom", 1, 0), JS_FS_END};
 
 static const JSFunctionSpec tuple_methods[] = {
     JS_SELF_HOSTED_FN("toSorted", "TupleToSorted", 1, 0),
