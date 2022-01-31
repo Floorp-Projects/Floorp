@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::ExtendedConnectSession;
+use super::WebTransportSession;
 use crate::{
     CloseType, Http3StreamInfo, Http3StreamType, ReceiveOutput, RecvStream, RecvStreamEvents, Res,
     SendStream, SendStreamEvents, Stream,
@@ -21,7 +21,7 @@ pub const WEBTRANSPORT_STREAM: u64 = 0x41;
 pub struct WebTransportRecvStream {
     stream_id: StreamId,
     events: Box<dyn RecvStreamEvents>,
-    session: Rc<RefCell<ExtendedConnectSession>>,
+    session: Rc<RefCell<WebTransportSession>>,
     session_id: StreamId,
     fin: bool,
 }
@@ -31,7 +31,7 @@ impl WebTransportRecvStream {
         stream_id: StreamId,
         session_id: StreamId,
         events: Box<dyn RecvStreamEvents>,
-        session: Rc<RefCell<ExtendedConnectSession>>,
+        session: Rc<RefCell<WebTransportSession>>,
     ) -> Self {
         Self {
             stream_id,
@@ -89,7 +89,7 @@ pub struct WebTransportSendStream {
     stream_id: StreamId,
     state: WebTransportSenderStreamState,
     events: Box<dyn SendStreamEvents>,
-    session: Rc<RefCell<ExtendedConnectSession>>,
+    session: Rc<RefCell<WebTransportSession>>,
     session_id: StreamId,
 }
 
@@ -98,7 +98,7 @@ impl WebTransportSendStream {
         stream_id: StreamId,
         session_id: StreamId,
         events: Box<dyn SendStreamEvents>,
-        session: Rc<RefCell<ExtendedConnectSession>>,
+        session: Rc<RefCell<WebTransportSession>>,
         local: bool,
     ) -> Self {
         Self {

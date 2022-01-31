@@ -144,8 +144,8 @@ pub fn init() {
 #[cfg(debug_assertions)]
 fn enable_ssl_trace() {
     let opt = ssl::Opt::Locking.as_int();
-    let mut _v: ::std::os::raw::c_int = 0;
-    secstatus_to_res(unsafe { ssl::SSL_OptionGetDefault(opt, &mut _v) })
+    let mut v: ::std::os::raw::c_int = 0;
+    secstatus_to_res(unsafe { ssl::SSL_OptionGetDefault(opt, &mut v) })
         .expect("SSL_OptionGetDefault failed");
 }
 
