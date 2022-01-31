@@ -4309,7 +4309,7 @@ void AsyncPanZoomController::RequestContentRepaint(
                         : APZScrollAnimationType::TriggeredByUserInput;
   }
   RepaintRequest request(aFrameMetrics, aDisplayportMargins, aUpdateType,
-                         animationType);
+                         animationType, mScrollGeneration);
 
   // If we're trying to paint what we already think is painted, discard this
   // request since it's a pointless paint.
@@ -4387,6 +4387,13 @@ bool AsyncPanZoomController::UpdateAnimation(
 
   TimeDuration sampleTimeDelta = aSampleTime - mLastSampleTime;
   mLastSampleTime = aSampleTime;
+
+  // Bump the scroll generation before we call RequestContentRepaint below
+  // so that the RequestContentRepaint call will surely use the new
+  // generation.
+  if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
+    mScrollGeneration = treeManagerLocal->NewAPZScrollGeneration();
+  }
 
   if (mAnimation) {
     bool continueAnimation = mAnimation->Sample(Metrics(), sampleTimeDelta);
@@ -4606,7 +4613,8 @@ bool AsyncPanZoomController::SampleCompositedAsyncTransform(
     const RecursiveMutexAutoLock& aProofOfLock) {
   MOZ_ASSERT(mSampledState.size() <= 2);
   bool sampleChanged = (mSampledState.back() != SampledAPZCState(Metrics()));
-  mSampledState.emplace_back(Metrics(), std::move(mScrollPayload));
+  mSampledState.emplace_back(Metrics(), std::move(mScrollPayload),
+                             mScrollGeneration);
   return sampleChanged;
 }
 
@@ -4615,7 +4623,10 @@ void AsyncPanZoomController::ResampleCompositedAsyncTransform(
   // This only gets called during testing situations, so the fact that this
   // drops the scroll payload from mSampledState.front() is not really a
   // problem.
-  mSampledState.front() = SampledAPZCState(Metrics());
+  if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
+    mScrollGeneration = treeManagerLocal->NewAPZScrollGeneration();
+  }
+  mSampledState.front() = SampledAPZCState(Metrics(), {}, mScrollGeneration);
 }
 
 void AsyncPanZoomController::ApplyAsyncTestAttributes(

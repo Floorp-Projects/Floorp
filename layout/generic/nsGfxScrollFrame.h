@@ -496,7 +496,12 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool IsApzAnimationInProgress() const {
     return mCurrentAPZScrollAnimationType != APZScrollAnimationType::No;
   }
-  ScrollGeneration CurrentScrollGeneration() const { return mScrollGeneration; }
+  MainThreadScrollGeneration CurrentScrollGeneration() const {
+    return mScrollGeneration;
+  }
+  APZScrollGeneration ScrollGenerationOnApz() const {
+    return mScrollGenerationOnApz;
+  }
   nsPoint LastScrollDestination() const { return mDestination; }
   nsTArray<ScrollPositionUpdate> GetScrollUpdates() const;
   bool HasScrollUpdates() const { return !mScrollUpdates.IsEmpty(); }
@@ -505,7 +510,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   using IncludeApzAnimation = nsIScrollableFrame::IncludeApzAnimation;
   bool IsScrollAnimating(IncludeApzAnimation = IncludeApzAnimation::Yes) const;
 
-  void ResetScrollInfoIfNeeded(const ScrollGeneration& aGeneration,
+  void ResetScrollInfoIfNeeded(const MainThreadScrollGeneration& aGeneration,
+                               const APZScrollGeneration& aGenerationOnApz,
                                APZScrollAnimationType aAPZScrollAnimationType);
   bool WantAsyncScroll() const;
   Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
@@ -592,7 +598,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nsTArray<nsIScrollPositionListener*> mListeners;
   ScrollOrigin mLastScrollOrigin;
   Maybe<nsPoint> mApzSmoothScrollDestination;
-  ScrollGeneration mScrollGeneration;
+  MainThreadScrollGeneration mScrollGeneration;
+  APZScrollGeneration mScrollGenerationOnApz;
 
   nsTArray<ScrollPositionUpdate> mScrollUpdates;
 
@@ -1101,8 +1108,11 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   bool IsScrollAnimating(IncludeApzAnimation aIncludeApz) final {
     return mHelper.IsScrollAnimating(aIncludeApz);
   }
-  mozilla::ScrollGeneration CurrentScrollGeneration() const final {
+  mozilla::MainThreadScrollGeneration CurrentScrollGeneration() const final {
     return mHelper.CurrentScrollGeneration();
+  }
+  mozilla::APZScrollGeneration ScrollGenerationOnApz() const final {
+    return mHelper.ScrollGenerationOnApz();
   }
   nsPoint LastScrollDestination() final {
     return mHelper.LastScrollDestination();
@@ -1112,9 +1122,11 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   }
   bool HasScrollUpdates() const final { return mHelper.HasScrollUpdates(); }
   void ResetScrollInfoIfNeeded(
-      const mozilla::ScrollGeneration& aGeneration,
+      const mozilla::MainThreadScrollGeneration& aGeneration,
+      const mozilla::APZScrollGeneration& aGenerationOnApz,
       mozilla::APZScrollAnimationType aAPZScrollAnimationType) final {
-    mHelper.ResetScrollInfoIfNeeded(aGeneration, aAPZScrollAnimationType);
+    mHelper.ResetScrollInfoIfNeeded(aGeneration, aGenerationOnApz,
+                                    aAPZScrollAnimationType);
   }
   bool WantAsyncScroll() const final { return mHelper.WantAsyncScroll(); }
   mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
@@ -1562,8 +1574,11 @@ class nsXULScrollFrame final : public nsBoxFrame,
   bool IsScrollAnimating(IncludeApzAnimation aIncludeApz) final {
     return mHelper.IsScrollAnimating(aIncludeApz);
   }
-  mozilla::ScrollGeneration CurrentScrollGeneration() const final {
+  mozilla::MainThreadScrollGeneration CurrentScrollGeneration() const final {
     return mHelper.CurrentScrollGeneration();
+  }
+  mozilla::APZScrollGeneration ScrollGenerationOnApz() const final {
+    return mHelper.ScrollGenerationOnApz();
   }
   nsPoint LastScrollDestination() final {
     return mHelper.LastScrollDestination();
@@ -1573,9 +1588,11 @@ class nsXULScrollFrame final : public nsBoxFrame,
   }
   bool HasScrollUpdates() const final { return mHelper.HasScrollUpdates(); }
   void ResetScrollInfoIfNeeded(
-      const mozilla::ScrollGeneration& aGeneration,
+      const mozilla::MainThreadScrollGeneration& aGeneration,
+      const mozilla::APZScrollGeneration& aGenerationOnApz,
       mozilla::APZScrollAnimationType aAPZScrollAnimationType) final {
-    mHelper.ResetScrollInfoIfNeeded(aGeneration, aAPZScrollAnimationType);
+    mHelper.ResetScrollInfoIfNeeded(aGeneration, aGenerationOnApz,
+                                    aAPZScrollAnimationType);
   }
   bool WantAsyncScroll() const final { return mHelper.WantAsyncScroll(); }
   mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(

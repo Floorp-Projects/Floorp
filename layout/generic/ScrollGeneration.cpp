@@ -8,31 +8,42 @@
 
 namespace mozilla {
 
-uint64_t ScrollGeneration::sCounter = 0;
+template <typename Tag>
+ScrollGeneration<Tag>::ScrollGeneration() : mValue(0) {}
 
-ScrollGeneration ScrollGeneration::New() {
-  uint64_t value = ++sCounter;
-  return ScrollGeneration(value);
-}
+template <typename Tag>
+ScrollGeneration<Tag>::ScrollGeneration(uint64_t aValue) : mValue(aValue) {}
 
-ScrollGeneration::ScrollGeneration() : mValue(0) {}
-
-ScrollGeneration::ScrollGeneration(uint64_t aValue) : mValue(aValue) {}
-
-bool ScrollGeneration::operator<(const ScrollGeneration& aOther) const {
+template <typename Tag>
+bool ScrollGeneration<Tag>::operator<(
+    const ScrollGeneration<Tag>& aOther) const {
   return mValue < aOther.mValue;
 }
 
-bool ScrollGeneration::operator==(const ScrollGeneration& aOther) const {
+template <typename Tag>
+bool ScrollGeneration<Tag>::operator==(
+    const ScrollGeneration<Tag>& aOther) const {
   return mValue == aOther.mValue;
 }
 
-bool ScrollGeneration::operator!=(const ScrollGeneration& aOther) const {
+template <typename Tag>
+bool ScrollGeneration<Tag>::operator!=(
+    const ScrollGeneration<Tag>& aOther) const {
   return !(*this == aOther);
 }
 
-std::ostream& operator<<(std::ostream& aStream, const ScrollGeneration& aGen) {
+template <typename Tag>
+std::ostream& operator<<(std::ostream& aStream,
+                         const ScrollGeneration<Tag>& aGen) {
   return aStream << aGen.mValue;
 }
+
+template struct ScrollGeneration<APZTag>;
+template struct ScrollGeneration<MainThreadTag>;
+
+template std::ostream& operator<<(std::ostream&,
+                                  const ScrollGeneration<APZTag>&);
+template std::ostream& operator<<(std::ostream&,
+                                  const ScrollGeneration<MainThreadTag>&);
 
 }  // namespace mozilla

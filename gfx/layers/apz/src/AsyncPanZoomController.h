@@ -1091,6 +1091,10 @@ class AsyncPanZoomController {
   // Accessing mScrollPayload needs to be protected by mRecursiveMutex
   Maybe<CompositionPayload> mScrollPayload;
 
+  // Representing sampled scroll offset generation, this value is bumped up
+  // every time this APZC sampled new scroll offset.
+  APZScrollGeneration mScrollGeneration;
+
   friend class Axis;
 
  public:

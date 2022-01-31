@@ -64,7 +64,8 @@ struct RepaintRequest {
   RepaintRequest(const FrameMetrics& aOther,
                  const ScreenMargin& aDisplayportMargins,
                  const ScrollOffsetUpdateType aScrollUpdateType,
-                 APZScrollAnimationType aScrollAnimationType)
+                 APZScrollAnimationType aScrollAnimationType,
+                 const APZScrollGeneration& aScrollGenerationOnApz)
       : mScrollId(aOther.GetScrollId()),
         mPresShellResolution(aOther.GetPresShellResolution()),
         mCompositionBounds(aOther.GetCompositionBounds()),
@@ -73,6 +74,7 @@ struct RepaintRequest {
         mScrollOffset(aOther.GetVisualScrollOffset()),
         mZoom(aOther.GetZoom()),
         mScrollGeneration(aOther.GetScrollGeneration()),
+        mScrollGenerationOnApz(aScrollGenerationOnApz),
         mDisplayPortMargins(aDisplayportMargins),
         mPresShellId(aOther.GetPresShellId()),
         mLayoutViewport(aOther.GetLayoutViewport()),
@@ -166,7 +168,13 @@ struct RepaintRequest {
 
   bool GetScrollOffsetUpdated() const { return mScrollUpdateType != eNone; }
 
-  ScrollGeneration GetScrollGeneration() const { return mScrollGeneration; }
+  MainThreadScrollGeneration GetScrollGeneration() const {
+    return mScrollGeneration;
+  }
+
+  APZScrollGeneration GetScrollGenerationOnApz() const {
+    return mScrollGenerationOnApz;
+  }
 
   ScrollableLayerGuid::ViewID GetScrollId() const { return mScrollId; }
 
@@ -246,8 +254,15 @@ struct RepaintRequest {
   // the APZC.
   CSSToParentLayerScale mZoom;
 
-  // The scroll generation counter used to acknowledge the scroll offset update.
-  ScrollGeneration mScrollGeneration;
+  // The scroll generation counter used to acknowledge the scroll offset update
+  // on the main-thread.
+  MainThreadScrollGeneration mScrollGeneration;
+
+  // The scroll generation counter stored in each SampledAPZState and the
+  // scrollable frame on the main-thread and used to compare with each other
+  // in the WebRender renderer thread to tell which sampled scroll offset
+  // matches the scroll offset used on the main-thread.
+  APZScrollGeneration mScrollGenerationOnApz;
 
   // A display port expressed as layer margins that apply to the rect of what
   // is drawn of the scrollable element.

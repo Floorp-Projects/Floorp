@@ -10,6 +10,8 @@
 
 namespace mozilla {
 
+static ScrollGenerationCounter sGenerationCounter;
+
 ScrollPositionUpdate::ScrollPositionUpdate()
     : mType(ScrollUpdateType::Absolute),
       mScrollMode(ScrollMode::Normal),
@@ -20,7 +22,7 @@ ScrollPositionUpdate::ScrollPositionUpdate()
 ScrollPositionUpdate ScrollPositionUpdate::NewScrollframe(
     nsPoint aInitialPosition) {
   ScrollPositionUpdate ret;
-  ret.mScrollGeneration = ScrollGeneration::New();
+  ret.mScrollGeneration = sGenerationCounter.NewMainThreadGeneration();
   ret.mScrollMode = ScrollMode::Instant;
   ret.mDestination = CSSPoint::FromAppUnits(aInitialPosition);
   return ret;
@@ -33,7 +35,7 @@ ScrollPositionUpdate ScrollPositionUpdate::NewScroll(ScrollOrigin aOrigin,
   MOZ_ASSERT(aOrigin != ScrollOrigin::None);
 
   ScrollPositionUpdate ret;
-  ret.mScrollGeneration = ScrollGeneration::New();
+  ret.mScrollGeneration = sGenerationCounter.NewMainThreadGeneration();
   ret.mType = ScrollUpdateType::Absolute;
   ret.mScrollMode = ScrollMode::Instant;
   ret.mScrollOrigin = aOrigin;
@@ -45,7 +47,7 @@ ScrollPositionUpdate ScrollPositionUpdate::NewScroll(ScrollOrigin aOrigin,
 ScrollPositionUpdate ScrollPositionUpdate::NewRelativeScroll(
     nsPoint aSource, nsPoint aDestination) {
   ScrollPositionUpdate ret;
-  ret.mScrollGeneration = ScrollGeneration::New();
+  ret.mScrollGeneration = sGenerationCounter.NewMainThreadGeneration();
   ret.mType = ScrollUpdateType::Relative;
   ret.mScrollMode = ScrollMode::Instant;
   ret.mScrollOrigin = ScrollOrigin::Relative;
@@ -62,7 +64,7 @@ ScrollPositionUpdate ScrollPositionUpdate::NewSmoothScroll(
   MOZ_ASSERT(aOrigin != ScrollOrigin::None);
 
   ScrollPositionUpdate ret;
-  ret.mScrollGeneration = ScrollGeneration::New();
+  ret.mScrollGeneration = sGenerationCounter.NewMainThreadGeneration();
   ret.mType = ScrollUpdateType::Absolute;
   ret.mScrollMode = ScrollMode::SmoothMsd;
   ret.mScrollOrigin = aOrigin;
@@ -78,7 +80,7 @@ ScrollPositionUpdate ScrollPositionUpdate::NewPureRelativeScroll(
   MOZ_ASSERT(aOrigin != ScrollOrigin::None);
 
   ScrollPositionUpdate ret;
-  ret.mScrollGeneration = ScrollGeneration::New();
+  ret.mScrollGeneration = sGenerationCounter.NewMainThreadGeneration();
   ret.mType = ScrollUpdateType::PureRelative;
   ret.mScrollMode = aMode;
   ret.mScrollOrigin = aOrigin;
@@ -93,7 +95,7 @@ bool ScrollPositionUpdate::operator==(
   return mScrollGeneration == aOther.mScrollGeneration;
 }
 
-ScrollGeneration ScrollPositionUpdate::GetGeneration() const {
+MainThreadScrollGeneration ScrollPositionUpdate::GetGeneration() const {
   return mScrollGeneration;
 }
 
