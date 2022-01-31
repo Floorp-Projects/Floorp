@@ -916,3 +916,49 @@ fn session_flow_control_affects_all_streams() {
         SMALL_MAX_DATA
     );
 }
+
+fn connect_w_different_limit(bidi_limit: u64, unidi_limit: u64) {
+    let mut client = default_client();
+    let out = client.process(None, now());
+    let mut server = new_server(
+        ConnectionParameters::default()
+            .max_streams(StreamType::BiDi, bidi_limit)
+            .max_streams(StreamType::UniDi, unidi_limit),
+    );
+    let out = server.process(out.dgram(), now());
+
+    let out = client.process(out.dgram(), now());
+    mem::drop(server.process(out.dgram(), now()));
+
+    assert!(maybe_authenticate(&mut client));
+
+    let mut bidi_events = 0;
+    let mut unidi_events = 0;
+    let mut connected_events = 0;
+    for e in client.events() {
+        match e {
+            ConnectionEvent::SendStreamCreatable { stream_type } => {
+                if stream_type == StreamType::BiDi {
+                    bidi_events += 1;
+                } else {
+                    unidi_events += 1;
+                }
+            }
+            ConnectionEvent::StateChange(state) if state == State::Connected => {
+                connected_events += 1;
+            }
+            _ => {}
+        }
+    }
+    assert_eq!(bidi_events, usize::from(bidi_limit > 0));
+    assert_eq!(unidi_events, usize::from(unidi_limit > 0));
+    assert_eq!(connected_events, 1);
+}
+
+#[test]
+fn client_stream_creatable_event() {
+    connect_w_different_limit(0, 0);
+    connect_w_different_limit(0, 1);
+    connect_w_different_limit(1, 0);
+    connect_w_different_limit(1, 1);
+}

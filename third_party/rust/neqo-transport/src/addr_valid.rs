@@ -165,11 +165,7 @@ impl AddressValidation {
         now: Instant,
     ) -> Option<ConnectionId> {
         let peer_addr = Self::encode_aad(peer_address, retry);
-        let data = if let Ok(d) = self.self_encrypt.open(&peer_addr, token) {
-            d
-        } else {
-            return None;
-        };
+        let data = self.self_encrypt.open(&peer_addr, token).ok()?;
         let mut dec = Decoder::new(&data);
         match dec.decode_uint(4) {
             Some(d) => {

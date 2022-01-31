@@ -1,6 +1,6 @@
 [package]
 name = "neqo-crypto"
-version = "0.5.6"
+version = "0.5.7"
 authors = ["Martin Thomson <mt@lowentropy.net>"]
 edition = "2018"
 build = "build.rs"
@@ -15,6 +15,7 @@ bindgen = {version = "0.56", default-features = false, features= ["runtime"]}
 serde = "1.0"
 serde_derive = "1.0"
 toml = "0.4"
+mozbuild = {version = "0.1", optional = true}
 
 [dev-dependencies]
 test-fixture = { path = "../test-fixture" }
@@ -22,5 +23,5 @@ test-fixture = { path = "../test-fixture" }
 [features]
 default = ["deny-warnings"]
 deny-warnings = []
-gecko = []
+gecko = ["mozbuild"]
 fuzzing = []

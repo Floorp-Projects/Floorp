@@ -4,17 +4,18 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::hframe::{HFrame, HFrameReader, H3_FRAME_TYPE_HEADERS};
+use crate::frames::{FrameReader, HFrame, StreamReaderConnectionWrapper, H3_FRAME_TYPE_HEADERS};
 use crate::push_controller::PushController;
 use crate::{
     headers_checks::{headers_valid, is_interim},
     priority::PriorityHandler,
     qlog, CloseType, Error, Http3StreamInfo, Http3StreamType, HttpRecvStream, HttpRecvStreamEvents,
-    MessageType, ReceiveOutput, RecvStream, Res, Stream,
+    MessageType, Priority, ReceiveOutput, RecvStream, Res, Stream,
 };
 use neqo_common::{qdebug, qinfo, qtrace, Header};
 use neqo_qpack::decoder::QPackDecoder;
 use neqo_transport::{Connection, StreamId};
+use std::any::Any;
 use std::cell::RefCell;
 use std::cmp::min;
 use std::collections::VecDeque;
@@ -52,11 +53,11 @@ pub struct RecvMessageInfo {
  */
 #[derive(Debug)]
 enum RecvMessageState {
-    WaitingForResponseHeaders { frame_reader: HFrameReader },
+    WaitingForResponseHeaders { frame_reader: FrameReader },
     DecodingHeaders { header_block: Vec<u8>, fin: bool },
-    WaitingForData { frame_reader: HFrameReader },
+    WaitingForData { frame_reader: FrameReader },
     ReadingData { remaining_data_len: usize },
-    WaitingForFinAfterTrailers { frame_reader: HFrameReader },
+    WaitingForFinAfterTrailers { frame_reader: FrameReader },
     ClosePending, // Close must first be read by application
     Closed,
     ExtendedConnect,
@@ -98,9 +99,9 @@ impl RecvMessage {
         Self {
             state: RecvMessageState::WaitingForResponseHeaders {
                 frame_reader: if message_info.header_frame_type_read {
-                    HFrameReader::new_with_type(H3_FRAME_TYPE_HEADERS)
+                    FrameReader::new_with_type(H3_FRAME_TYPE_HEADERS)
                 } else {
-                    HFrameReader::new()
+                    FrameReader::new()
                 },
             },
             message_type: message_info.message_type,
@@ -124,7 +125,7 @@ impl RecvMessage {
              }
             RecvMessageState::WaitingForData { ..} => {
                 // TODO implement trailers, for now just ignore them.
-                self.state = RecvMessageState::WaitingForFinAfterTrailers{frame_reader: HFrameReader::new()};
+                self.state = RecvMessageState::WaitingForFinAfterTrailers{frame_reader: FrameReader::new()};
             }
             RecvMessageState::WaitingForFinAfterTrailers {..} => {
                 return Err(Error::HttpFrameUnexpected);
@@ -188,14 +189,15 @@ impl RecvMessage {
             self.set_closed();
         } else {
             self.state = if is_web_transport {
+                self.stream_type = Http3StreamType::ExtendedConnect;
                 RecvMessageState::ExtendedConnect
             } else if interim {
                 RecvMessageState::WaitingForResponseHeaders {
-                    frame_reader: HFrameReader::new(),
+                    frame_reader: FrameReader::new(),
                 }
             } else {
                 RecvMessageState::WaitingForData {
-                    frame_reader: HFrameReader::new(),
+                    frame_reader: FrameReader::new(),
                 }
             };
         }
@@ -264,7 +266,10 @@ impl RecvMessage {
                 RecvMessageState::WaitingForResponseHeaders { frame_reader }
                 | RecvMessageState::WaitingForData { frame_reader }
                 | RecvMessageState::WaitingForFinAfterTrailers { frame_reader } => {
-                    match frame_reader.receive(conn, self.stream_id)? {
+                    match frame_reader.receive(&mut StreamReaderConnectionWrapper::new(
+                        conn,
+                        self.stream_id,
+                    ))? {
                         (None, true) => {
                             break self.set_state_to_close_pending(post_readable_event);
                         }
@@ -410,7 +415,7 @@ impl RecvStream for RecvMessage {
                     let to_read = min(*remaining_data_len, buf.len() - written);
                     let (amount, fin) = conn
                         .stream_recv(self.stream_id, &mut buf[written..written + to_read])
-                        .map_err(|e| Error::map_stream_recv_errors(&e))?;
+                        .map_err(|e| Error::map_stream_recv_errors(&Error::from(e)))?;
                     qlog::h3_data_moved_up(conn.qlog_mut(), self.stream_id, amount);
 
                     debug_assert!(amount <= to_read);
@@ -425,7 +430,7 @@ impl RecvStream for RecvMessage {
                         break Ok((written, fin));
                     } else if *remaining_data_len == 0 {
                         self.state = RecvMessageState::WaitingForData {
-                            frame_reader: HFrameReader::new(),
+                            frame_reader: FrameReader::new(),
                         };
                         self.receive_internal(conn, false)?;
                     } else {
@@ -468,15 +473,30 @@ impl HttpRecvStream for RecvMessage {
         self.receive(conn)
     }
 
-    fn priority_handler_mut(&mut self) -> &mut PriorityHandler {
-        &mut self.priority_handler
+    fn maybe_update_priority(&mut self, priority: Priority) -> bool {
+        self.priority_handler.maybe_update_priority(priority)
+    }
+
+    fn priority_update_frame(&mut self) -> Option<HFrame> {
+        self.priority_handler.maybe_encode_frame(self.stream_id)
+    }
+
+    fn priority_update_sent(&mut self) {
+        self.priority_handler.priority_update_sent();
     }
 
     fn set_new_listener(&mut self, conn_events: Box<dyn HttpRecvStreamEvents>) {
+        self.state = RecvMessageState::WaitingForData {
+            frame_reader: FrameReader::new(),
+        };
         self.conn_events = conn_events;
     }
 
     fn extended_connect_wait_for_response(&self) -> bool {
         matches!(self.state, RecvMessageState::ExtendedConnect)
+    }
+
+    fn any(&self) -> &dyn Any {
+        self
     }
 }

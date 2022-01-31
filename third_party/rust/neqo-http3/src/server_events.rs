@@ -8,7 +8,9 @@
 
 use crate::connection::Http3State;
 use crate::connection_server::Http3ServerHandler;
-use crate::{Http3StreamInfo, Http3StreamType, Priority, Res};
+use crate::{
+    features::extended_connect::SessionCloseReason, Http3StreamInfo, Http3StreamType, Priority, Res,
+};
 use neqo_common::{qdebug, qinfo, Header};
 use neqo_transport::server::ActiveConnectionRef;
 use neqo_transport::{AppError, Connection, StreamId, StreamType};
@@ -234,6 +236,11 @@ impl WebTransportRequest {
         }
     }
 
+    #[must_use]
+    pub fn state(&self) -> Http3State {
+        self.stream_handler.handler.borrow().state()
+    }
+
     /// Respond to a `WebTransport` session request.
     /// # Errors
     /// It may return `InvalidStreamId` if a stream does not exist anymore.
@@ -246,6 +253,22 @@ impl WebTransportRequest {
                 &mut self.stream_handler.conn.borrow_mut(),
                 self.stream_handler.stream_info.stream_id(),
                 accept,
+            )
+    }
+
+    /// # Errors
+    /// It may return `InvalidStreamId` if a stream does not exist anymore.
+    /// Also return an error if the stream was closed on the transport layer,
+    /// but that information is not yet consumed on the  http/3 layer.
+    pub fn close_session(&mut self, error: u32, message: &str) -> Res<()> {
+        self.stream_handler
+            .handler
+            .borrow_mut()
+            .webtransport_close_session(
+                &mut self.stream_handler.conn.borrow_mut(),
+                self.stream_handler.stream_info.stream_id(),
+                error,
+                message,
             )
     }
 
@@ -314,7 +337,7 @@ pub enum WebTransportServerEvent {
     },
     SessionClosed {
         session: WebTransportRequest,
-        error: Option<AppError>,
+        reason: SessionCloseReason,
     },
     NewStream(Http3OrWebTransportStream),
 }
@@ -473,10 +496,10 @@ impl Http3ServerEvents {
     pub(crate) fn webtransport_session_closed(
         &self,
         session: WebTransportRequest,
-        error: Option<AppError>,
+        reason: SessionCloseReason,
     ) {
         self.insert(Http3ServerEvent::WebTransport(
-            WebTransportServerEvent::SessionClosed { session, error },
+            WebTransportServerEvent::SessionClosed { session, reason },
         ));
     }
 
