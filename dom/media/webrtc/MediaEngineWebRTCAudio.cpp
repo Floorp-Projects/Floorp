@@ -350,11 +350,11 @@ void MediaEngineWebRTCMicrophoneSource::SetTrack(
     const RefPtr<MediaTrack>& aTrack, const PrincipalHandle& aPrincipal) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aTrack);
-  MOZ_ASSERT(aTrack->AsAudioInputTrack());
+  MOZ_ASSERT(aTrack->AsAudioProcessingTrack());
 
   MOZ_ASSERT(!mTrack);
   MOZ_ASSERT(mPrincipal == PRINCIPAL_HANDLE_NONE);
-  mTrack = aTrack->AsAudioInputTrack();
+  mTrack = aTrack->AsAudioProcessingTrack();
   mPrincipal = aPrincipal;
 
   mInputProcessing =
