@@ -65,11 +65,32 @@ async function assertIssueList(panel, expectedIssues) {
     return;
   }
 
+  const getFluentString = await getFluentStringHelper([
+    "devtools/client/compatibility.ftl",
+  ]);
+
   for (const expectedIssue of expectedIssues) {
     const property = expectedIssue.property;
     info(`Check an element for ${property}`);
     const issueEl = getIssueItem(property, panel);
     ok(issueEl, `Issue element for the ${property} is in the panel`);
+
+    if (expectedIssue.unsupportedBrowsers) {
+      const unsupportedBrowserListEl = issueEl.querySelector(
+        ".compatibility-unsupported-browser-list"
+      );
+      is(
+        unsupportedBrowserListEl.getAttribute("title"),
+        getFluentString("compatibility-issue-browsers-list", "title", {
+          browsers: expectedIssue.unsupportedBrowsers
+            .map(
+              ({ name, status, version }) =>
+                `${name} ${version}${status ? ` (${status})` : ""}`
+            )
+            .join("\n"),
+        })
+      );
+    }
 
     for (const [key, value] of Object.entries(expectedIssue)) {
       const datasetKey = toCamelCase(`qa-${key}`);
