@@ -508,10 +508,7 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
 
-  /**
-   * Invoke the accessible action.
-   */
-  virtual bool DoAction(uint8_t aIndex) const;
+  virtual bool DoAction(uint8_t aIndex) const override;
 
   /**
    * Return access key, such as Alt+D.
