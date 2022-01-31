@@ -12,6 +12,7 @@
 #include "base/basictypes.h"
 #include "build/build_config.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WeakPtr.h"
 #include "chrome/common/ipc_message.h"
 
@@ -39,6 +40,10 @@ class Channel {
 #else
   struct ChannelId {};
 #endif
+
+  // For channels which are created after initialization, handles to the pipe
+  // endpoints may be passed around directly using IPC messages.
+  using ChannelHandle = mozilla::UniqueFileHandle;
 
   // Implemented by consumers of a Channel to receive messages.
   //
@@ -97,17 +102,8 @@ class Channel {
   //
   Channel(const ChannelId& channel_id, Mode mode, Listener* listener);
 
-  // XXX it would nice not to have yet more platform-specific code in
-  // here but it's just not worth the trouble.
-#if defined(OS_POSIX)
-  // Connect to a pre-created channel |fd| as |mode|.
-  Channel(int fd, Mode mode, Listener* listener);
-#elif defined(OS_WIN)
-  // Connect to a pre-created channel as |mode|.  Clients connect to
-  // the pre-existing server pipe, and servers take over |server_pipe|.
-  Channel(const ChannelId& channel_id, void* server_pipe, Mode mode,
-          Listener* listener);
-#endif
+  // Initialize a pre-created channel |pipe| as |mode|.
+  Channel(ChannelHandle pipe, Mode mode, Listener* listener);
 
   ~Channel();
 
@@ -157,9 +153,6 @@ class Channel {
   // Return the file descriptor for communication with the peer.
   int GetFileDescriptor() const;
 
-  // Reset the file descriptor for communication with the peer.
-  void ResetFileDescriptor(int fd);
-
   // Close the client side of the socketpair.
   void CloseClientFileDescriptor();
 
@@ -174,9 +167,6 @@ class Channel {
 #  endif
 
 #elif defined(OS_WIN)
-  // Return the server pipe handle.
-  void* GetServerPipeHandle() const;
-
   // Tell this pipe to accept handles. Exactly one side of the IPC connection
   // must be set as `MODE_SERVER`, and that side will be responsible for calling
   // `DuplicateHandle` to transfer the handle between processes.
@@ -199,6 +189,10 @@ class Channel {
   // See ipc_channel_posix.cc for further details on how this is used.
   static void SetClientChannelFd(int fd);
 #endif  // defined(MOZ_WIDGET_ANDROID)
+
+  // Create a new pair of pipe endpoints which can be used to establish a
+  // native IPC::Channel connection.
+  static bool CreateRawPipe(ChannelHandle* server, ChannelHandle* client);
 
  private:
   // PIMPL to which all channel calls are delegated.
