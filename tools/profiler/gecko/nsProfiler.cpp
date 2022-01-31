@@ -739,6 +739,22 @@ nsProfiler::GetBufferInfo(uint32_t* aCurrentPosition, uint32_t* aTotalSize,
   self->FinishGathering();
 }
 
+void nsProfiler::RestartGatheringTimer() {
+  if (mGatheringTimer) {
+    uint32_t delayMs = 0;
+    const nsresult r = mGatheringTimer->GetDelay(&delayMs);
+    mGatheringTimer->Cancel();
+    if (NS_FAILED(r) || delayMs == 0 ||
+        NS_FAILED(mGatheringTimer->InitWithNamedFuncCallback(
+            GatheringTimerCallback, this, delayMs,
+            nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
+            "nsProfilerGatheringTimer"))) {
+      // Can't restart the timer, so we can't wait any longer.
+      FinishGathering();
+    }
+  }
+}
+
 nsProfiler::PendingProfile* nsProfiler::GetPendingProfile(
     base::ProcessId aChildPid) {
   for (PendingProfile& pendingProfile : mPendingProfiles) {
@@ -785,18 +801,7 @@ void nsProfiler::GatheredOOPProfile(base::ProcessId aChildPid,
 
   // Not finished yet, restart the timer to let any remaining child enough time
   // to do their profile-streaming.
-  if (mGatheringTimer) {
-    uint32_t delayMs = 0;
-    const nsresult r = mGatheringTimer->GetDelay(&delayMs);
-    mGatheringTimer->Cancel();
-    mGatheringTimer = nullptr;
-    if (NS_SUCCEEDED(r) && delayMs != 0) {
-      Unused << NS_NewTimerWithFuncCallback(
-          getter_AddRefs(mGatheringTimer), GatheringTimerCallback, this,
-          delayMs, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, "",
-          GetMainThreadSerialEventTarget());
-    }
-  }
+  RestartGatheringTimer();
 }
 
 RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
@@ -899,8 +904,8 @@ RefPtr<nsProfiler::GatheringPromise> nsProfiler::StartGathering(
         parentTimeMs * parentToChildrenFactor + childTimeoutS * 1000;
     Unused << NS_NewTimerWithFuncCallback(
         getter_AddRefs(mGatheringTimer), GatheringTimerCallback, this,
-        streamingTimeoutMs, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, "",
-        GetMainThreadSerialEventTarget());
+        streamingTimeoutMs, nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
+        "nsProfilerGatheringTimer", GetMainThreadSerialEventTarget());
 
     MOZ_ASSERT(mPendingProfiles.capacity() >= profiles.Length());
     for (const auto& profile : profiles) {

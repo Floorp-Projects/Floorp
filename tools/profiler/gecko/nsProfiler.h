@@ -47,6 +47,7 @@ class nsProfiler final : public nsIProfiler {
   void FinishGathering();
   void ResetGathering();
   static void GatheringTimerCallback(nsITimer* aTimer, void* aClosure);
+  void RestartGatheringTimer();
 
   RefPtr<SymbolTablePromise> GetSymbolTableMozPromise(
       const nsACString& aDebugPath, const nsACString& aBreakpadID);
