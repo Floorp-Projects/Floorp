@@ -236,41 +236,37 @@ class CPUInfo {
   static bool IsLZCNTPresent() { return lzcntPresent; }
   static bool IsAVX2Present() { return avx2Present; }
 
-  // The SSE flags can become set at startup when we JIT non-JS code eagerly;
-  // thus we must reset the flags before setting any flags explicitly during
-  // testing, so that the flags can be in a consistent state.
-
-  static void ResetSSEFlagsForTesting() {
-    maxSSEVersion = UnknownSSE;
-    maxEnabledSSEVersion = UnknownSSE;
-    avxPresent = false;
-    avxEnabled = false;
-  }
-
   static bool FlagsHaveBeenComputed() { return maxSSEVersion != UnknownSSE; }
 
   static void ComputeFlags();
 
-  // The following should be called only after calling ResetSSEFlagsForTesting.
-  // If several are called, the most restrictive setting is kept.
+  // The following should be called only before JS_Init (where the flags are
+  // computed). If several are called, the most restrictive setting is kept.
 
   static void SetSSE3Disabled() {
+    MOZ_ASSERT(!FlagsHaveBeenComputed());
     SetMaxEnabledSSEVersion(SSE2);
     avxEnabled = false;
   }
   static void SetSSSE3Disabled() {
+    MOZ_ASSERT(!FlagsHaveBeenComputed());
     SetMaxEnabledSSEVersion(SSE3);
     avxEnabled = false;
   }
   static void SetSSE41Disabled() {
+    MOZ_ASSERT(!FlagsHaveBeenComputed());
     SetMaxEnabledSSEVersion(SSSE3);
     avxEnabled = false;
   }
   static void SetSSE42Disabled() {
+    MOZ_ASSERT(!FlagsHaveBeenComputed());
     SetMaxEnabledSSEVersion(SSE4_1);
     avxEnabled = false;
   }
-  static void SetAVXEnabled() { avxEnabled = true; }
+  static void SetAVXEnabled() {
+    MOZ_ASSERT(!FlagsHaveBeenComputed());
+    avxEnabled = true;
+  }
 };
 
 class AssemblerX86Shared : public AssemblerShared {
