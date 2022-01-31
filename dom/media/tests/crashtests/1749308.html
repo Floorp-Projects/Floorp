@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+    window.addEventListener("load", () => {
+      const context = new AudioContext({})
+      const controller = new AbortController()
+      let processor = context.createScriptProcessor(512, 27, 2)
+      processor.addEventListener("audioprocess", async () => {}, { signal: controller.signal })
+      processor = null;
+      SpecialPowers.forceGC()
+      for (let i = 0; i < 7; i++) {
+        controller.abort();
+      }
+    })
+  </script>
+</head>
+</html>
