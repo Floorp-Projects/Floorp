@@ -1099,8 +1099,22 @@ function ArraySpeciesCreate(originalArray, length) {
 
 // ES 2017 draft (April 8, 2016) 22.1.3.1.1
 function IsConcatSpreadable(O) {
+    /* Use an intermediate var in order to evade a lint error for
+     * unreachable code (the linter doesn't recognize preprocessor
+     * directives) */
+    var maybeSpreadable = true;
+
     // Step 1.
-    if (!IsObject(O))
+    if (!IsObject(O)) {
+        maybeSpreadable = false;
+#ifdef ENABLE_RECORD_TUPLE
+        // This check ensures that unboxed Tuples are spreadable
+        if (IsTuple(O)) {
+            return true;
+        }
+#endif
+    }
+    if (!maybeSpreadable)
         return false;
 
     // Step 2.
@@ -1111,7 +1125,12 @@ function IsConcatSpreadable(O) {
         return ToBoolean(spreadable);
 
     // Step 4.
-    return IsArray(O);
+    spreadable |= IsArray(O);
+#ifdef ENABLE_RECORD_TUPLE
+    // This check ensures that Tuple object wrappers are spreadable
+    spreadable |= IsTuple(O);
+#endif
+    return spreadable;
 }
 
 // ES 2016 draft Mar 25, 2016 22.1.3.1.

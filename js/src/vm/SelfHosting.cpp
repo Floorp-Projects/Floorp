@@ -141,6 +141,7 @@ static bool intrinsic_ToObject(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 #ifdef ENABLE_RECORD_TUPLE
+
 bool intrinsic_ThisTupleValue(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
@@ -159,7 +160,7 @@ bool intrinsic_TupleLength(JSContext* cx, unsigned argc, Value* vp) {
   if (!result) {
     return false;
   }
-  args.rval().setNumber((*result).getDenseInitializedLength());
+  args.rval().setInt32((*result).getDenseInitializedLength());
   return true;
 }
 #endif
@@ -813,8 +814,10 @@ static bool intrinsic_ThisTimeValue(JSContext* cx, unsigned argc, Value* vp) {
 static bool intrinsic_IsPackedArray(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].isObject());
-  args.rval().setBoolean(IsPackedArray(&args[0].toObject()));
+  MOZ_ASSERT(args[0].hasObjectPayload());
+  args.rval().setBoolean(
+      (args[0].isObject() && IsPackedArray(&args[0].toObject())) ||
+      IF_RECORD_TUPLE(IsTuple(args[0]), false));
   return true;
 }
 
@@ -2518,6 +2521,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_String_includes", str_includes, 1, 0),
     JS_FN("std_String_indexOf", str_indexOf, 1, 0),
     JS_FN("std_String_startsWith", str_startsWith, 1, 0),
+#ifdef ENABLE_RECORD_TUPLE
+    JS_FN("std_Tuple_unchecked", tuple_construct, 1, 0),
+#endif
     JS_FN("std_TypedArray_buffer", js::TypedArray_bufferGetter, 1, 0),
 
     JS_FS_END};
