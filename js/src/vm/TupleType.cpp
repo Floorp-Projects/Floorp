@@ -235,7 +235,7 @@ bool TupleType::sameValueWith(JSContext* cx, TupleType* lhs, TupleType* rhs,
   return true;
 }
 
-JSString* js::TupleToSource(JSContext* cx, TupleType* tup) {
+JSString* js::TupleToSource(JSContext* cx, Handle<TupleType*> tup) {
   JSStringBuilder sb(cx);
 
   if (!sb.append("#[")) {
@@ -297,30 +297,33 @@ bool TupleConstructor(JSContext* cx, unsigned argc, Value* vp) {
                        BEGIN: Tuple.prototype methods
 \*===========================================================================*/
 
-bool IsTuple(HandleValue v) {
+bool IsTuple(const Value& v) {
   if (v.isExtendedPrimitive()) return v.toExtendedPrimitive().is<TupleType>();
   if (v.isObject()) return v.toObject().is<TupleObject>();
   return false;
-};
-
-static MOZ_ALWAYS_INLINE TupleType* ThisTupleValue(HandleValue val) {
-  MOZ_ASSERT(IsTuple(val));
-  return val.isExtendedPrimitive() ? &val.toExtendedPrimitive().as<TupleType>()
-                                   : val.toObject().as<TupleObject>().unbox();
 }
+
+// Caller is responsible for rooting the result
+TupleType& ThisTupleValue(const Value& val) {
+  MOZ_ASSERT(IsTuple(val));
+  return (val.isExtendedPrimitive() ? val.toExtendedPrimitive().as<TupleType>()
+                                    : val.toObject().as<TupleObject>().unbox());
+}
+
+bool HandleIsTuple(HandleValue v) { return IsTuple(v.get()); }
 
 // 8.2.3.2 get Tuple.prototype.length
 bool lengthAccessor_impl(JSContext* cx, const CallArgs& args) {
   // Step 1.
-  TupleType* tuple = ThisTupleValue(args.thisv());
+  TupleType& tuple = ThisTupleValue(args.thisv().get());
   // Step 2.
-  args.rval().setInt32(tuple->length());
+  args.rval().setInt32(tuple.length());
   return true;
 }
 
 bool TupleType::lengthAccessor(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return CallNonGenericMethod<IsTuple, lengthAccessor_impl>(cx, args);
+  return CallNonGenericMethod<HandleIsTuple, lengthAccessor_impl>(cx, args);
 }
 
 /*===========================================================================*\

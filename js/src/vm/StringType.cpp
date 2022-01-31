@@ -2212,9 +2212,13 @@ JSString* js::ToStringSlow(
   }
 #ifdef ENABLE_RECORD_TUPLE
   else if (arg.isExtendedPrimitive()) {
+    if (!allowGC) {
+      return nullptr;
+    }
     JSObject& obj = arg.toExtendedPrimitive();
     if (obj.is<js::TupleType>()) {
-      str = js::TupleToSource(cx, &obj.as<js::TupleType>());
+      Rooted<TupleType*> tup(cx, &obj.as<js::TupleType>());
+      str = js::TupleToSource(cx, tup);
     } else if (obj.is<js::RecordType>()) {
       str = js::RecordToSource(cx, &obj.as<js::RecordType>());
     } else {

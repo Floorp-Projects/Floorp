@@ -20,9 +20,9 @@ class TupleObject : public NativeObject {
 
   static TupleObject* create(JSContext* cx, Handle<TupleType*> record);
 
-  JS::TupleType* unbox() const;
+  JS::TupleType& unbox() const;
 
-  static bool maybeUnbox(JSObject* obj, MutableHandle<TupleType*> tupp);
+  static mozilla::Maybe<TupleType&> maybeUnbox(JSObject* obj);
 };
 
 }  // namespace js
