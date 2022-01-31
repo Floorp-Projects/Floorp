@@ -426,7 +426,13 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * Returns the current generation counter for the scrollframe. This counter
    * increments every time the scroll position is set.
    */
-  virtual mozilla::ScrollGeneration CurrentScrollGeneration() const = 0;
+  virtual mozilla::MainThreadScrollGeneration CurrentScrollGeneration()
+      const = 0;
+  /**
+   * The APZ scroll generation associated with the last APZ scroll offset for
+   * which we processed a repaint request.
+   */
+  virtual mozilla::APZScrollGeneration ScrollGenerationOnApz() const = 0;
   /**
    * LastScrollDestination returns the destination of the most recently
    * requested smooth scroll animation.
@@ -450,7 +456,8 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * animation.
    */
   virtual void ResetScrollInfoIfNeeded(
-      const mozilla::ScrollGeneration& aGeneration,
+      const mozilla::MainThreadScrollGeneration& aGeneration,
+      const mozilla::APZScrollGeneration& aGenerationOnApz,
       mozilla::APZScrollAnimationType aAPZScrollAnimationType) = 0;
   /**
    * Determine whether it is desirable to be able to asynchronously scroll this

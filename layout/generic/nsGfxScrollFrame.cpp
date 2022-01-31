@@ -7324,12 +7324,15 @@ bool ScrollFrameHelper::IsScrollAnimating(
 }
 
 void ScrollFrameHelper::ResetScrollInfoIfNeeded(
-    const ScrollGeneration& aGeneration,
+    const MainThreadScrollGeneration& aGeneration,
+    const APZScrollGeneration& aGenerationOnApz,
     APZScrollAnimationType aAPZScrollAnimationType) {
   if (aGeneration == mScrollGeneration) {
     mLastScrollOrigin = ScrollOrigin::None;
     mApzAnimationRequested = false;
   }
+
+  mScrollGenerationOnApz = aGenerationOnApz;
   // We can reset this regardless of scroll generation, as this is only set
   // here, as a response to APZ requesting a repaint.
   mCurrentAPZScrollAnimationType = aAPZScrollAnimationType;
