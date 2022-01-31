@@ -60,7 +60,7 @@
     display: grid;
     grid-template-areas: "a b c" "d d d";
     grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: fit-content() 1fr;
+    grid-template-rows: fit-content(100%) 1fr;
   }
 
   .tab[data-l10n-id="label-overrides"] {

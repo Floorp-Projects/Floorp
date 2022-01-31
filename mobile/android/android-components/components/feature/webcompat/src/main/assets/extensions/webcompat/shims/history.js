@@ -4,19 +4,21 @@
 
 "use strict";
 
-/**
- * Hamropatro's oauth logins with Google and Facebook redirect through a
- * different subdomain, and so require the use of the Storage Access API
- * for dFPI. This shim calls requestStorageAccess on behalf of the site
- * when a user logs in using Google or Facebook.
+/*
+ * Bug 1624853 - Shim Storage Access API on history.com
+ *
+ * history.com uses Adobe as a necessary third party to authenticating
+ * with a TV provider. In order to accomodate this, we grant storage access
+ * to the Adobe domain via the Storage Access API when the login or logout
+ * buttons are clicked, then forward the click to continue as normal.
  */
 
-// Origin we need to request storage access for.
-const STORAGE_ACCESS_ORIGIN = "https://hamropatro.firebaseapp.com";
-
 console.warn(
-  `When using oauth, Firefox calls the Storage Access API on behalf of the site. See https://bugzilla.mozilla.org/show_bug.cgi?id=1660446 for details.`
+  `When using oauth, Firefox calls the Storage Access API on behalf of the site. See https://bugzilla.mozilla.org/show_bug.cgi?id=1624853 for details.`
 );
+
+// Third-party origin we need to request storage access for.
+const STORAGE_ACCESS_ORIGIN = "https://sp.auth.adobe.com";
 
 document.documentElement.addEventListener(
   "click",
@@ -26,13 +28,13 @@ document.documentElement.addEventListener(
       return;
     }
 
-    const button = target.closest("button");
+    const button = target.closest("a");
     if (!button) {
       return;
     }
 
-    const buttonText = button.innerText?.toLowerCase();
-    if (buttonText?.includes("facebook") || buttonText?.includes("google")) {
+    const buttonLink = button.href;
+    if (buttonLink?.startsWith("https://www.history.com/mvpd-auth")) {
       button.disabled = true;
       button.style.opacity = 0.5;
       e.stopPropagation();

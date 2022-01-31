@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Mozilla Android Components - Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "29.1.0",
+  "version": "30.0.0",
   "applications": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -98,6 +98,7 @@
     "shims/apstag.js",
     "shims/bmauth.js",
     "shims/chartbeat.js",
+    "shims/crave-ca.js",
     "shims/criteo.js",
     "shims/cxense.js",
     "shims/eluminate.js",
@@ -114,6 +115,7 @@
     "shims/google-publisher-tags.js",
     "shims/google-safeframe.html",
     "shims/hamropatro.js",
+    "shims/history.js",
     "shims/humblebundle.js",
     "shims/iaspet.js",
     "shims/kinja.js",

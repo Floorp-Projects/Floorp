@@ -633,25 +633,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1727100 - Add UA override for slack.com
-     *
-     * Slack locks some features (like Huddles, and some Call features) behind
-     * UA sniffing. However, in our tests, everything appears to be working fine
-     * if we spoof as Chrome.
-     */
-    id: "bug1727100",
-    platform: "desktop",
-    domain: "slack.com",
-    bug: "1727100",
-    config: {
-      matches: ["*://app.slack.com/*"],
-      uaTransformer: () => {
-        return UAHelpers.getDeviceAppropriateChromeUA("95.0.4638.54");
-      },
-    },
-  },
-  {
-    /*
      * Bug 1738317 - Add UA override for vmos.cn
      * Webcompat issue #90432 - https://github.com/webcompat/web-bugs/issues/90432
      *
@@ -808,6 +789,35 @@ const AVAILABLE_UA_OVERRIDES = [
         return originalUA
           .replace("Firefox/100.0", "Firefox/96.0")
           .replace("rv:100.0", "rv:96.0");
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1751232 - Add override for sites returning desktop layout for Android 12
+     * Webcompat issue #92978 - https://github.com/webcompat/web-bugs/issues/92978
+     *
+     * A number of news sites returns desktop layout for Android 12 only. Changing it
+     * to Android 12.0 fixes the issue
+     */
+    id: "bug1751232",
+    platform: "android",
+    domain: "Sites with desktop layout for Android 12",
+    bug: "1751232",
+    config: {
+      matches: [
+        "*://*.dw.com/*",
+        "*://*.abc10.com/*",
+        "*://*.wnep.com/*",
+        "*://*.dn.se/*",
+        "*://*.dailymail.co.uk/*",
+      ],
+      uaTransformer: originalUA => {
+        if (!originalUA.includes("Android 12;")) {
+          return originalUA;
+        }
+
+        return originalUA.replace("Android 12;", "Android 12.0;");
       },
     },
   },

@@ -146,7 +146,18 @@ if (window[window.GoogleAnalyticsObject || "ga"]?.loaded === undefined) {
     remove: t => ga("remove", t),
   });
 
+  // Process any GA command queue the site pre-declares (bug 1736850)
+  const q = window[window.GoogleAnalyticsObject || "ga"]?.q;
   window[window.GoogleAnalyticsObject || "ga"] = ga;
+
+  if (Array.isArray(q)) {
+    const push = o => {
+      ga(...o);
+      return true;
+    };
+    q.push = push;
+    q.forEach(o => push(o));
+  }
 
   // Also process the Google Tag Manager dataLayer (bug 1713688)
   const dl = window.dataLayer;
