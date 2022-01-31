@@ -24,9 +24,6 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">Otvorené karty: 1. Ťuknutím prepnete karty.</string>
 
-    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">Otvorené karty: %1$s. Ťuknutím prepnete karty.</string>
-
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">Počet vybraných položiek: %1$d</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
@@ -118,8 +115,6 @@
     <string name="tab_tray_inactive_auto_close_body">Firefox môže zavrieť karty, ktoré ste za posledný mesiac nevideli.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Zavrieť</string>
-    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
-    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">Zapnúť automatické zatváranie</string>
 
     <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_turn_on_auto_close_button_2">Zapnúť automatické zatváranie</string>
@@ -130,9 +125,6 @@
     <string name="home_screen_shortcut_open_new_tab_2">Nová karta</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nová súkromná karta</string>
-
-    <!-- Heading for the Top Sites block -->
-    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Top stránky</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -182,8 +174,6 @@
     <string name="browser_menu_refresh">Obnoviť</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Zastaviť</string>
-    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Pridať medzi záložky</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">Upraviť záložku</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -484,6 +474,23 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Tapety</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Sponzorované skratky</string>
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">Položka tapety: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">Tapeta bola aktualizovaná!</string>
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">Zobraziť</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label">Tapetu zmeníte klepnutím na logo</string>
+    <!-- Description for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_description">Umožní prechádzať a aktualizovať obrázky bez opustenia domovskej stránky.</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">Doplnok nie je podporovaný</string>
@@ -592,8 +599,6 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Zapnúť synchronizáciu</string>
-    <!-- Preference for pairing -->
-    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Naskenujte párovací kód zobrazený vo Firefoxe na počítači</string>
     <!-- Preference for account login -->
     <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">Prihlásiť sa</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -780,8 +785,6 @@
     <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">Otvorené karty</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">Uložiť do kolekcie</string>
-    <!-- Text shown in the menu for the collection selector -->
-    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Vybrať</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Zobraziť všetky karty</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -939,8 +942,6 @@
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
     <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">Ponuka záložiek</string>
-    <!-- Screen title for editing bookmarks -->
-    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Úprava záložky</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">Výber priečinku</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1224,7 +1225,7 @@
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">SPÄŤ</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string moz:removedIn="96" name="snackbar_top_site_removed" tools:ignore="UnusedResources">Stránka bola odstránená</string>
+    <string name="snackbar_top_site_removed">Stránka bola odstránená</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">Späť</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -1872,6 +1873,8 @@
     <string name="bookmark_deletion_confirmation">Naozaj chcete odstrániť túto záložku?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">Pridať do top stránok</string>
+    <!-- Browser menu button that removes a top site from the home fragment -->
+    <string name="browser_menu_remove_from_top_sites">Odstrániť z top stránok</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Overil ju: %1$s</string>
@@ -1946,10 +1949,12 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Ok, rozumiem</string>
 
-    <!-- Label for the preference to show the most visited top sites on the homepage -->
-    <string name="top_sites_toggle_top_recent_sites_3">Najnavštevovanejšie stránky</string>
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Najnavštevovanejšie stránky</string>
 
-    <!-- Title text displayed in the rename top site dialog. -->
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">Skratky</string>
+	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Názov</string>
 	<!-- Hint for renaming title of a top site -->
 	<string name="top_site_name_hint">Názov top stránky</string>
@@ -1963,12 +1968,6 @@
     <string name="inactive_tabs_title">Neaktívne karty</string>
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Zavrieť všetky neaktívne karty</string>
-    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string moz:removedIn="95" name="inactive_tabs_description" tools:ignore="UnusedResources">Karty sú tu k dispozícii %s. Po uplynutí tejto doby sa karty automaticky zatvoria.</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 dní</string>
-    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 týždeň</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
@@ -1983,8 +1982,6 @@
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Pomôžte nám zlepšiť sa</string>
-    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
     <string name="inactive_tabs_survey_header_1">Pomôžte zlepšiť Firefox</string>
 
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
@@ -1994,11 +1991,7 @@
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_do_it_myself">Rád si prečistím staré karty sám</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Čas neaktivity je príliš dlhý</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_time_too_long_option_1">Dvojtýždňové obdobie je príliš dlhé</string>
-    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Čas do neaktivity je príliš krátky</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_time_too_short_option_1">Dvojtýždňové obdobie je príliš krátke</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
