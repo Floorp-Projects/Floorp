@@ -41,6 +41,11 @@ class UtilityProcessChild final : public PUtilityProcessChild {
       const Maybe<ipc::FileDescriptor>& DMDFile,
       const RequestMemoryReportResolver& aResolver);
 
+  mozilla::ipc::IPCResult RecvFlushFOGData(FlushFOGDataResolver&& aResolver);
+
+  mozilla::ipc::IPCResult RecvTestTriggerMetrics(
+      TestTriggerMetricsResolver&& aResolve);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
