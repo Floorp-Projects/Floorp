@@ -120,9 +120,7 @@ class LayerActivityTracker final
   explicit LayerActivityTracker(nsIEventTarget* aEventTarget)
       : nsExpirationTracker<LayerActivity, 4>(
             GENERATION_MS, "LayerActivityTracker", aEventTarget) {}
-  ~LayerActivityTracker() override {
-    AgeAllGenerations();
-  }
+  ~LayerActivityTracker() override { AgeAllGenerations(); }
 
   void NotifyExpired(LayerActivity* aObject) override;
 };
