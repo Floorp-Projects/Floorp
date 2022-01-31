@@ -282,24 +282,6 @@ KeyBinding LocalAccessible::AccessKey() const {
 
 KeyBinding LocalAccessible::KeyboardShortcut() const { return KeyBinding(); }
 
-void LocalAccessible::TranslateString(const nsString& aKey,
-                                      nsAString& aStringOut) {
-  nsCOMPtr<nsIStringBundleService> stringBundleService =
-      components::StringBundle::Service();
-  if (!stringBundleService) return;
-
-  nsCOMPtr<nsIStringBundle> stringBundle;
-  stringBundleService->CreateBundle(
-      "chrome://global-platform/locale/accessible.properties",
-      getter_AddRefs(stringBundle));
-  if (!stringBundle) return;
-
-  nsAutoString xsValue;
-  nsresult rv = stringBundle->GetStringFromName(
-      NS_ConvertUTF16toUTF8(aKey).get(), xsValue);
-  if (NS_SUCCEEDED(rv)) aStringOut.Assign(xsValue);
-}
-
 uint64_t LocalAccessible::VisibilityState() const {
   if (IPCAccessibilityActive() &&
       StaticPrefs::accessibility_cache_enabled_AtStartup()) {

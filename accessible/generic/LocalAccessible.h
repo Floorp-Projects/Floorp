@@ -679,11 +679,6 @@ class LocalAccessible : public nsISupports, public Accessible {
   bool IsActiveDescendant(LocalAccessible** aWidget = nullptr) const;
 
   /**
-   * Return the localized string for the given key.
-   */
-  static void TranslateString(const nsString& aKey, nsAString& aStringOut);
-
-  /**
    * Return true if the accessible is defunct.
    */
   bool IsDefunct() const;
