@@ -13,3 +13,4 @@ suites:
             dmd: "FF"
             tp5: "FF"
             tp6: "FF"
+        owner: ":mccr8 and Perftest Team"
