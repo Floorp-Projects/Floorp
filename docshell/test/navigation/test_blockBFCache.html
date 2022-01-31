@@ -149,7 +149,7 @@ const dontBlockBFCacheTests = [
         el.src = URL.createObjectURL(ms);
         el.preload = "auto";
       }).then(el => {
-        el.src = ""; 
+        el.src = "";
         return el;
       });
     },
@@ -157,112 +157,133 @@ const dontBlockBFCacheTests = [
 */
 ];
 
-let bc = new BroadcastChannel("bfcache_blocking");
 
-function promiseMessage(type) {
-  return new Promise((resolve, reject) => {
-    bc.addEventListener("message", (e) => {
-      if (e.data.type == type) {
-        resolve(e.data);
-      }
-    }, { once: true });
+
+function executeTest() {
+
+  let bc = new BroadcastChannel("bfcache_blocking");
+
+  function promiseMessage(type) {
+    return new Promise((resolve, reject) => {
+      bc.addEventListener("message", (e) => {
+        if (e.data.type == type) {
+          resolve(e.data);
+        }
+      }, { once: true });
+    });
+  }
+
+  function promisePageShow(shouldBePersisted) {
+    return promiseMessage("pageshow").then(data => data.persisted == shouldBePersisted);
+  }
+
+  function promisePageShowFromBFCache(e) {
+    return promisePageShow(true);
+  }
+
+  function promisePageShowNotFromBFCache(e) {
+    return promisePageShow(false);
+  }
+
+  function runTests(testArray, shouldBlockBFCache) {
+    for (const { name, prefs = {}, test, waitForDone } of testArray) {
+      add_task(async function() {
+        await SpecialPowers.pushPrefEnv(prefs, async function() {
+          // Load a mostly blank page that we can communicate with over
+          // BroadcastChannel (though it will close the BroadcastChannel after
+          // receiving the next "load" message, to avoid blocking BFCache).
+          let loaded = promisePageShowNotFromBFCache();
+          window.open("file_blockBFCache.html", "", "noopener");
+          await loaded;
+
+          // Load the same page with a different URL.
+          loaded = promisePageShowNotFromBFCache();
+          bc.postMessage({ message: "load", url: `file_blockBFCache.html?${name}_${shouldBlockBFCache}` });
+          await loaded;
+
+          // Run test script in the second page.
+          bc.postMessage({ message: "runScript", fun: test.toString() });
+          await promiseMessage("runScriptDone");
+
+          // Go back to the first page (this should just come from the BFCache).
+          let goneBack = promisePageShowFromBFCache();
+          bc.postMessage({ message: "back" });
+          await goneBack;
+
+          // Go forward again to the second page and check that it does/doesn't come
+          // from the BFCache.
+          let goneForward = promisePageShow(!shouldBlockBFCache);
+          bc.postMessage({ message: "forward" });
+          let result = await goneForward;
+          ok(result, `Page ${shouldBlockBFCache ? "should" : "should not"} have been blocked from going into the BFCache (${name})`);
+
+          // If the test will keep running after navigation, then we need to make
+          // sure it's completely done before moving to the next test, to avoid
+          // interfering with any following tests. If waitForDone is defined then
+          // it'll return a Promise that we can use to wait for the end of the
+          // test.
+          if (waitForDone) {
+            await waitForDone();
+          }
+
+          // Do a similar test, but replace the bfcache test page with a new page,
+          // not a page coming from the session history.
+
+          // Load the same page with a different URL.
+          loaded = promisePageShowNotFromBFCache();
+          bc.postMessage({ message: "load", url: `file_blockBFCache.html?p2_${name}_${shouldBlockBFCache}` });
+          await loaded;
+
+          // Run the test script.
+          bc.postMessage({ message: "runScript", fun: test.toString() });
+          await promiseMessage("runScriptDone");
+
+          // Load a new page.
+          loaded = promisePageShowNotFromBFCache();
+          bc.postMessage({ message: "load", url: "file_blockBFCache.html" });
+          await loaded;
+
+          // Go back to the previous page and check that it does/doesn't come
+          // from the BFCache.
+          goneBack = promisePageShow(!shouldBlockBFCache);
+          bc.postMessage({ message: "back" });
+          result = await goneBack;
+          ok(result, `Page ${shouldBlockBFCache ? "should" : "should not"} have been blocked from going into the BFCache (${name})`);
+
+          if (waitForDone) {
+            await waitForDone();
+          }
+
+          bc.postMessage({ message: "close" });
+
+          SpecialPowers.popPrefEnv();
+        });
+      });
+    }
+  }
+
+  // If Fission is disabled, the pref is no-op.
+  SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+    runTests(blockBFCacheTests, true);
+    runTests(dontBlockBFCacheTests, false);
   });
 }
 
-function promisePageShow(shouldBePersisted) {
-  return promiseMessage("pageshow").then(data => data.persisted == shouldBePersisted);
-}
-
-function promisePageShowFromBFCache(e) {
-  return promisePageShow(true);
-}
-
-function promisePageShowNotFromBFCache(e) {
-  return promisePageShow(false);
-}
-
-function runTests(testArray, shouldBlockBFCache) {
-  for (const { name, prefs = {}, test, waitForDone } of testArray) {
-    add_task(async function() {
-      await SpecialPowers.pushPrefEnv(prefs, async function() {
-        // Load a mostly blank page that we can communicate with over
-        // BroadcastChannel (though it will close the BroadcastChannel after
-        // receiving the next "load" message, to avoid blocking BFCache).
-        let loaded = promisePageShowNotFromBFCache();
-        window.open("file_blockBFCache.html", "", "noopener");
-        await loaded;
-
-        // Load the same page with a different URL.
-        loaded = promisePageShowNotFromBFCache();
-        bc.postMessage({ message: "load", url: `file_blockBFCache.html?${name}_${shouldBlockBFCache}` });
-        await loaded;
-
-        // Run test script in the second page.
-        bc.postMessage({ message: "runScript", fun: test.toString() });
-        await promiseMessage("runScriptDone");
-
-        // Go back to the first page (this should just come from the BFCache).
-        let goneBack = promisePageShowFromBFCache();
-        bc.postMessage({ message: "back" });
-        await goneBack;
-
-        // Go forward again to the second page and check that it does/doesn't come
-        // from the BFCache.
-        let goneForward = promisePageShow(!shouldBlockBFCache);
-        bc.postMessage({ message: "forward" });
-        let result = await goneForward;
-        ok(result, `Page ${shouldBlockBFCache ? "should" : "should not"} have been blocked from going into the BFCache (${name})`);
-
-        // If the test will keep running after navigation, then we need to make
-        // sure it's completely done before moving to the next test, to avoid
-        // interfering with any following tests. If waitForDone is defined then
-        // it'll return a Promise that we can use to wait for the end of the
-        // test.
-        if (waitForDone) {
-          await waitForDone();
-        }
-
-        // Do a similar test, but replace the bfcache test page with a new page,
-        // not a page coming from the session history.
-
-        // Load the same page with a different URL.
-        loaded = promisePageShowNotFromBFCache();
-        bc.postMessage({ message: "load", url: `file_blockBFCache.html?p2_${name}_${shouldBlockBFCache}` });
-        await loaded;
-
-        // Run the test script.
-        bc.postMessage({ message: "runScript", fun: test.toString() });
-        await promiseMessage("runScriptDone");
-
-        // Load a new page.
-        loaded = promisePageShowNotFromBFCache();
-        bc.postMessage({ message: "load", url: "file_blockBFCache.html" });
-        await loaded;
-
-        // Go back to the previous page and check that it does/doesn't come
-        // from the BFCache.
-        goneBack = promisePageShow(!shouldBlockBFCache);
-        bc.postMessage({ message: "back" });
-        result = await goneBack;
-        ok(result, `Page ${shouldBlockBFCache ? "should" : "should not"} have been blocked from going into the BFCache (${name})`);
-
-        if (waitForDone) {
-          await waitForDone();
-        }
-
-        bc.postMessage({ message: "close" });
-
-        SpecialPowers.popPrefEnv();
-      });
+if (isXOrigin) {
+  // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
+  // Acquire storage access permission here so that the BroadcastChannel used to
+  // communicate with the opened windows works in xorigin tests. Otherwise,
+  // the iframe containing this page is isolated from first-party storage access,
+  // which isolates BroadcastChannel communication.
+  SpecialPowers.wrap(document).notifyUserGestureActivation();
+  SpecialPowers.addPermission("storageAccessAPI", true, window.location.href).then(() => {
+    SpecialPowers.wrap(document).requestStorageAccess().then(() => {
+      executeTest();
     });
-  }
+  });
+} else {
+  executeTest();
 }
-
-// If Fission is disabled, the pref is no-op.
-SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
-  runTests(blockBFCacheTests, true);
-  runTests(dontBlockBFCacheTests, false);
-});
 
 </script>
 </body>
