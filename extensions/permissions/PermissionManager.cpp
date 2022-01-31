@@ -2440,6 +2440,10 @@ NS_IMETHODIMP PermissionManager::GetAll(
 NS_IMETHODIMP PermissionManager::GetAllByTypeSince(
     const nsACString& aPrefix, int64_t aSince,
     nsTArray<RefPtr<nsIPermission>>& aResult) {
+  // Check that aSince is a reasonable point in time, not in the future
+  if (aSince > (PR_Now() / PR_USEC_PER_MSEC)) {
+    return NS_ERROR_INVALID_ARG;
+  }
   return GetPermissionEntries(
       [&](const PermissionEntry& aPermEntry) {
         return mTypeArray[aPermEntry.mType].Equals(aPrefix) &&
