@@ -1438,7 +1438,7 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
 
 #ifdef ENABLE_RECORD_TUPLE
   if (obj->is<TupleObject>()) {
-    Rooted<TupleType*> tup(cx, obj->as<TupleObject>().unbox());
+    Rooted<TupleType*> tup(cx, &obj->as<TupleObject>().unbox());
     return TryEnumerableOwnPropertiesNative<kind>(cx, tup, rval, optimized);
   } else if (obj->is<RecordObject>()) {
     Rooted<RecordType*> tup(cx, obj->as<RecordObject>().unbox());

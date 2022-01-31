@@ -60,7 +60,8 @@ class TupleType final : public js::NativeObject {
 
 namespace js {
 
-extern JSString* TupleToSource(JSContext* cx, TupleType* tup);
-}
+extern JSString* TupleToSource(JSContext* cx, Handle<TupleType*> tup);
+
+}  // namespace js
 
 #endif

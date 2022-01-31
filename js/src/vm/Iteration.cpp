@@ -273,11 +273,12 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
 
         return true;
       } else {
-        Rooted<TupleType*> tup(cx);
-        if (TupleObject::maybeUnbox(pobj, &tup)) {
+        mozilla::Maybe<TupleType&> tup = TupleObject::maybeUnbox(pobj);
+        if (tup) {
+          uint32_t len = (*tup).length();
           RootedId id(cx);
 
-          for (size_t i = 0; i < tup->length(); i++) {
+          for (size_t i = 0; i < len; i++) {
             if (!JS_IndexToId(cx, i, &id)) {
               return false;
             }

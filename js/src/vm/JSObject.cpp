@@ -3492,7 +3492,7 @@ bool js::Unbox(JSContext* cx, HandleObject obj, MutableHandleValue vp) {
   } else if (obj->is<RecordObject>()) {
     vp.setExtendedPrimitive(*obj->as<RecordObject>().unbox());
   } else if (obj->is<TupleObject>()) {
-    vp.setExtendedPrimitive(*obj->as<TupleObject>().unbox());
+    vp.setExtendedPrimitive(obj->as<TupleObject>().unbox());
 #endif
   } else {
     vp.setUndefined();
