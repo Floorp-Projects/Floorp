@@ -187,9 +187,12 @@ impl Example for App {
                 if let Some(offset) = offset {
                     self.scroll_offset += offset;
 
-                    txn.set_scroll_offset(
+                    txn.set_scroll_offsets(
                         ExternalScrollId(EXT_SCROLL_ID_CONTENT, PipelineId::dummy()),
-                        self.scroll_offset,
+                        vec![SampledScrollOffset {
+                            offset: self.scroll_offset,
+                            generation: APZScrollGeneration::default(),
+                        }],
                     );
                     txn.generate_frame(0, RenderReasons::empty());
                 }
@@ -206,9 +209,12 @@ impl Example for App {
 
                 self.scroll_offset += LayoutVector2D::new(dx, dy);
 
-                txn.set_scroll_offset(
+                txn.set_scroll_offsets(
                     ExternalScrollId(EXT_SCROLL_ID_CONTENT, PipelineId::dummy()),
-                    self.scroll_offset,
+                    vec![SampledScrollOffset {
+                            offset: self.scroll_offset,
+                            generation: APZScrollGeneration::default(),
+                    }],
                 );
 
                 txn.generate_frame(0, RenderReasons::empty());

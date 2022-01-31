@@ -332,8 +332,8 @@ void TransactionWrapper::AppendTransformProperties(
 void TransactionWrapper::UpdateScrollPosition(
     const wr::WrPipelineId& aPipelineId,
     const layers::ScrollableLayerGuid::ViewID& aScrollId,
-    const wr::LayoutVector2D& aScrollOffset) {
-  wr_transaction_scroll_layer(mTxn, aPipelineId, aScrollId, aScrollOffset);
+    const nsTArray<wr::SampledScrollOffset>& aSampledOffsets) {
+  wr_transaction_scroll_layer(mTxn, aPipelineId, aScrollId, &aSampledOffsets);
 }
 
 void TransactionWrapper::UpdateIsTransformAsyncZooming(uint64_t aAnimationId,
