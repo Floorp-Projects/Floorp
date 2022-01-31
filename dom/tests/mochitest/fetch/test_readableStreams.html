@@ -37,6 +37,20 @@ async function tests() {
   await test_noUint8Array(IFRAME_COMPARTMENT);
   await workify('test_noUint8Array');
 
+  // Bug 1746646: Make mochitests work with TCP enabled (cookieBehavior = 5)
+  // Acquire storage access permission here so that the cache works in xorigin
+  // tests. Otherwise, the iframe containing this page is isolated from
+  // first-party storage access, which isolates the caches object.
+  if (isXOrigin) {
+    SpecialPowers.wrap(document).notifyUserGestureActivation();
+    await SpecialPowers.addPermission(
+      "storageAccessAPI",
+      true,
+      window.location.href
+    );
+    await SpecialPowers.wrap(document).requestStorageAccess();
+  }
+
   await test_nativeStream_cache(SAME_COMPARTMENT);
   await test_nativeStream_cache(IFRAME_COMPARTMENT);
   await workify('test_nativeStream_cache');
