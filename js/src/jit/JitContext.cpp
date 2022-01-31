@@ -22,6 +22,10 @@
 #include "js/HeapAPI.h"
 #include "vm/JSContext.h"
 
+#ifdef JS_CODEGEN_ARM64
+#  include "jit/arm64/vixl/Cpu-vixl.h"
+#endif
+
 #if defined(ANDROID)
 #  include <sys/system_properties.h>
 #endif
@@ -105,6 +109,11 @@ bool jit::InitializeJit() {
 
 #if defined(JS_CODEGEN_ARM)
   InitARMFlags();
+#endif
+
+#ifdef JS_CODEGEN_ARM64
+  // Initialize instruction cache flushing.
+  vixl::CPU::SetUp();
 #endif
 
 #ifndef JS_CODEGEN_NONE
