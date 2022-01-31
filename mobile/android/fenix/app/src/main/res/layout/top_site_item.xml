@@ -7,7 +7,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/top_site_item"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/top_sites_item_size"
+    android:layout_height="wrap_content"
     android:layout_marginTop="@dimen/top_sites_item_margin_top"
     android:layout_marginBottom="@dimen/top_sites_item_margin_bottom"
     android:orientation="vertical">
@@ -41,6 +41,26 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/favicon_card"
-        tools:ignore="RtlCompat,SmallSp" />
+        tools:ignore="RtlCompat,SmallSp"
+        tools:text="Mozilla"/>
+
+    <TextView
+        android:id="@+id/top_site_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxWidth="84dp"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:singleLine="true"
+        android:text="@string/top_sites_sponsored_label"
+        android:textColor="@color/fx_mobile_text_color_secondary"
+        android:textSize="10sp"
+        android:visibility="invisible"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/top_site_title"
+        tools:ignore="RtlCompat,SmallSp"
+        tools:visibility="visible"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

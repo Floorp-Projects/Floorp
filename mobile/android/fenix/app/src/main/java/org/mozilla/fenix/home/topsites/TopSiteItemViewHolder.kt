@@ -9,6 +9,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.PopupWindow
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
+import androidx.core.view.isVisible
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
@@ -80,6 +81,8 @@ class TopSiteItemViewHolder(
         }
 
         if (topSite is TopSite.Provided) {
+            binding.topSiteSubtitle.isVisible = true
+
             CoroutineScope(IO).launch {
                 itemView.context.components.core.client.bitmapForUrl(topSite.imageUrl)?.let { bitmap ->
                     withContext(Main) {

@@ -1905,6 +1905,8 @@
     <string name="top_sites_menu_settings">Settings</string>
     <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
     <string name="top_sites_menu_sponsor_privacy">Our sponsors &amp; your privacy</string>
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">Sponsored</string>
 
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
