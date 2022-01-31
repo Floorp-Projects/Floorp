@@ -217,7 +217,6 @@ object TelemetryWrapper {
                     resources.getString(R.string.pref_key_autocomplete_preinstalled),
                     resources.getString(R.string.pref_key_autocomplete_custom),
                     resources.getString(R.string.pref_key_remote_debugging),
-                    resources.getString(R.string.pref_key_homescreen_tips),
                     resources.getString(R.string.pref_key_show_search_suggestions)
                 )
                 .setSettingsProvider(TelemetrySettingsProvider(context))

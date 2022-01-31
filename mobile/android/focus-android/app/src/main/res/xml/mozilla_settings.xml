@@ -7,12 +7,6 @@
              We keep a plain "About" as the title here in xml as a fallback, but AboutPreference
              will use the substitution regardless of what is set here. -->
 
-    <SwitchPreference
-        android:key="@string/pref_key_homescreen_tips"
-        android:defaultValue="true"
-        android:layout="@layout/focus_preference_no_icon"
-        android:title="@string/preference_homescreen_tips" />
-
     <org.mozilla.focus.widget.AboutPreference
         android:key="@string/pref_key_about"
         android:layout="@layout/focus_preference_new_tab"

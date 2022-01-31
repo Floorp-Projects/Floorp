@@ -4,11 +4,9 @@
 
 package org.mozilla.focus.settings
 
-import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.preference.Preference
 import mozilla.components.browser.state.state.SessionState
-import org.mozilla.focus.GleanMetrics.ProTips
 import org.mozilla.focus.R
 import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.ext.components
@@ -16,28 +14,18 @@ import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.showToolbar
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.SupportUtils
 
 class MozillaSettingsFragment :
-    BaseSettingsFragment(),
-    SharedPreferences.OnSharedPreferenceChangeListener {
+    BaseSettingsFragment() {
     override fun onCreatePreferences(p0: Bundle?, p1: String?) {
         addPreferencesFromResource(R.xml.mozilla_settings)
     }
 
     override fun onResume() {
         super.onResume()
-
-        preferenceManager.sharedPreferences.registerOnSharedPreferenceChangeListener(this)
-
         showToolbar(getString(R.string.preference_category_mozilla))
-    }
-
-    override fun onPause() {
-        preferenceManager.sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
-        super.onPause()
     }
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
@@ -86,15 +74,6 @@ class MozillaSettingsFragment :
             }
         }
         return super.onPreferenceTreeClick(preference)
-    }
-
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
-        if (isAdded && key == requireContext().getString(R.string.pref_key_homescreen_tips)) {
-            TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
-            ProTips.tipsSettingChanged.record(
-                ProTips.TipsSettingChangedExtra(sharedPreferences.all[key] as Boolean)
-            )
-        }
     }
 
     companion object {

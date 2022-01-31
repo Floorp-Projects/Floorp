@@ -32,18 +32,10 @@
             android:paddingEnd="24dp"
             android:scaleType="centerInside"
             app:srcCompat="@drawable/wordmark2"
-            app:layout_constraintBottom_toTopOf="@id/home_tips"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/topSites" />
-
-        <org.mozilla.focus.tips.TipsHorizontalCarousel
-            android:id="@+id/home_tips"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

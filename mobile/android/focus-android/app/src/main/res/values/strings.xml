@@ -364,7 +364,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">Show home screen tips</string>
+    <string name="preference_homescreen_tips" moz:removedIn="105" tools:ignore="UnusedResources">Show home screen tips</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Add search engine</string>
@@ -785,7 +785,7 @@
 
     <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
 The new line here must be kept as the second half of the string is clickable for the user. -->
-    <string name="tip_disable_tracking_protection3">Site missing content or acting strange?\n
+    <string name="tip_disable_tracking_protection3" moz:removedIn="105" tools:ignore="UnusedResources">Site missing content or acting strange?\n
     Try turning off Enhanced Tracking Protection</string>
 
     <!-- Tip displayed on home view explaining how to add sites to homescreen
@@ -813,7 +813,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
-    <string name="tip_request_desktop2">Want to see the full version of a site?\n
+    <string name="tip_request_desktop2" moz:removedIn="105" tools:ignore="UnusedResources">Want to see the full version of a site?\n
         Switch on Desktop Site from the %1$s menu</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
@@ -821,17 +821,17 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Want to keep Enhanced Tracking Protection off for a site you trust?\n
+    <string name="tip_explain_allowlist3" moz:removedIn="105" tools:ignore="UnusedResources">Want to keep Enhanced Tracking Protection off for a site you trust?\n
         Add it to the Allowlist in Settings
     </string>
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">Why yes, we do have a fresh new look!\n Read more about this and other updates to %1$s.</string>
+    <string name="tip_fresh_look" moz:removedIn="105" tools:ignore="UnusedResources">Why yes, we do have a fresh new look!\n Read more about this and other updates to %1$s.</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Create shortcuts to the sites you visit most:\n
+    <string name="tip_about_shortcuts" moz:removedIn="105" tools:ignore="UnusedResources">Create shortcuts to the sites you visit most:\n
     Select Add to Shortcuts from the %1$s menu</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->

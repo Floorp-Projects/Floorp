@@ -81,11 +81,6 @@
     <color name="onboarding_indicator_default">#7FFFFFFF</color>
     <color name="onboarding_indicator_selected">#FFFFFFFF</color>
 
-    <!-- Home Tips -->
-    <color name="tip_dot_background">@color/photonInk50</color>
-    <color name="tip_text_color">@color/secondaryText</color>
-    <color name="tip_deeplink_color">@color/accent</color>
-
     <!-- Session -->
     <color name="colorSession">@color/photonLightGrey05</color>
     <color name="colorActiveSession">@color/photonViolet05</color>

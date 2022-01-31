@@ -6,15 +6,12 @@ package org.mozilla.focus.activity.robots
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.swipeLeft
-import androidx.test.espresso.action.ViewActions.swipeRight
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
-import org.hamcrest.Matchers.not
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.TestHelper.getStringResource
@@ -31,8 +28,6 @@ class HomeScreenRobot {
     }
 
     fun skipFirstRun() = onView(withId(R.id.skip)).perform(click())
-
-    fun clickStartBrowsing() = mDevice.findObject(UiSelector().text("Start browsing")).click()
 
     fun verifyOnboardingFirstSlide() {
         firstSlide.check(matches(isDisplayed()))
@@ -53,31 +48,6 @@ class HomeScreenRobot {
     fun clickOnboardingNextBtn() = nextBtn.click()
 
     fun clickOnboardingFinishBtn() = finishBtn.click()
-
-    fun verifyTipsCarouselIsDisplayed(enabled: Boolean) {
-        if (enabled) {
-            homeScreenTips.check(matches(isDisplayed()))
-        } else {
-            homeScreenTips.check(matches(not(isDisplayed())))
-        }
-    }
-
-    fun verifyTipText(text: String) {
-        val tipText = mDevice.findObject(UiSelector().text(text))
-        assertTrue(tipText.waitForExists(waitingTime))
-    }
-
-    fun scrollLeftTipsCarousel() {
-        homeScreenTips
-            .check(matches(isDisplayed()))
-            .perform(swipeLeft())
-    }
-
-    fun scrollRightTipsCarousel() {
-        homeScreenTips
-            .check(matches(isDisplayed()))
-            .perform(swipeRight())
-    }
 
     fun verifyPageShortcutExists(title: String) {
         assertTrue(
@@ -123,15 +93,6 @@ class HomeScreenRobot {
             return ThreeDotMainMenuRobot.Transition()
         }
 
-        fun clickLinkFromTips(linkText: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            val tipTextLink = mDevice.findObject(UiSelector().textContains(linkText))
-            tipTextLink.waitForExists(waitingTime)
-            tipTextLink.click()
-
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
-        }
-
         fun clickPageShortcut(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.findObject(UiSelector().text(title)).waitForExists(waitingTimeShort)
             mDevice.findObject(UiSelector().text(title)).click()
@@ -174,7 +135,5 @@ private val finishBtn = mDevice.findObject(
         .resourceId("$packageName:id/finish")
         .enabled(true)
 )
-
-private val homeScreenTips = onView(withId(R.id.home_tips))
 
 private val topSitesList = mDevice.findObject(UiSelector().resourceId("$packageName:id/topSites"))

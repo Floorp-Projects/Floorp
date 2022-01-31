@@ -686,23 +686,6 @@ pro_tips:
           The tip code of tip being clicked.
           Can be one of fresh_look_tip, allow_list_tip, request_desktop_tip.
         type: string
-  tips_setting_changed:
-    type: event
-    description: |
-      Display setting for tips has changed.
-    bugs:
-      - https://github.com/mozilla-mobile/focus-android/issues/5541
-    data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/5940
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: 107
-    extra_keys:
-      is_enabled:
-        description: The new setting true for ON, false for OFF
-        type: boolean
 
 preferences:
   user_theme:

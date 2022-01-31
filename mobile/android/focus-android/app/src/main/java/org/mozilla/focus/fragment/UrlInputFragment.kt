@@ -6,7 +6,6 @@ package org.mozilla.focus.fragment
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
-import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -14,11 +13,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.text.TextUtilsCompat
-import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
-import androidx.preference.PreferenceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -39,7 +35,6 @@ import org.mozilla.focus.GleanMetrics.SearchBar
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.databinding.FragmentUrlinputBinding
-import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.defaultSearchEngineName
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
@@ -47,7 +42,6 @@ import org.mozilla.focus.ext.settings
 import org.mozilla.focus.input.InputToolbarIntegration
 import org.mozilla.focus.menu.home.HomeMenu
 import org.mozilla.focus.menu.home.HomeMenuItem
-import org.mozilla.focus.nimbus.FocusNimbus
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment
 import org.mozilla.focus.state.AppAction
@@ -57,21 +51,13 @@ import org.mozilla.focus.topsites.DefaultTopSitesStorage.Companion.TOP_SITES_MAX
 import org.mozilla.focus.topsites.DefaultTopSitesView
 import org.mozilla.focus.topsites.TopSitesOverlay
 import org.mozilla.focus.ui.theme.FocusTheme
-import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
 import org.mozilla.focus.utils.SearchUtils
 import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
-import java.util.Locale
 import kotlin.coroutines.CoroutineContext
-
-private const val TIP_ONE_CAROUSEL_POSITION = 1
-private const val TIP_TWO_CAROUSEL_POSITION = 2
-private const val TIP_THREE_CAROUSEL_POSITION = 3
-private const val TIP_FOUR_CAROUSEL_POSITION = 4
-private const val TIP_FIVE_CAROUSEL_POSITION = 5
 
 class FocusCrashException : Exception()
 
@@ -84,20 +70,16 @@ class FocusCrashException : Exception()
 class UrlInputFragment :
     BaseFragment(),
     View.OnClickListener,
-    SharedPreferences.OnSharedPreferenceChangeListener,
     CoroutineScope {
     companion object {
-        @JvmField
-        val FRAGMENT_TAG = "url_input"
+        const val FRAGMENT_TAG = "url_input"
 
-        private const val duckDuckGo = "DuckDuckGo"
+        private const val ARGUMENT_ANIMATION = "animation"
+        private const val ARGUMENT_SESSION_UUID = "sesssion_uuid"
 
-        private val ARGUMENT_ANIMATION = "animation"
-        private val ARGUMENT_SESSION_UUID = "sesssion_uuid"
+        private const val ANIMATION_BROWSER_SCREEN = "browser_screen"
 
-        private val ANIMATION_BROWSER_SCREEN = "browser_screen"
-
-        private val ANIMATION_DURATION = 200
+        private const val ANIMATION_DURATION = 200
 
         @JvmStatic
         fun createWithoutSession(): UrlInputFragment {
@@ -150,9 +132,6 @@ class UrlInputFragment :
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        PreferenceManager.getDefaultSharedPreferences(context)
-            .registerOnSharedPreferenceChangeListener(this)
 
         // Get session from session manager if there's a session UUID in the fragment's arguments
         arguments?.getString(ARGUMENT_SESSION_UUID)?.let { id ->
@@ -227,26 +206,6 @@ class UrlInputFragment :
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    private fun updateTipsLabel() {
-        val context = context ?: return
-        val tips = context.components.tipManager.getAvailableTips()
-        binding.homeTips.tipsAdapter.submitList(tips)
-        updateTipsPosition()
-    }
-
-    /**
-     * The pro tips should start from right to left if the language is read right to left
-     * (example Persian)
-     */
-    private fun updateTipsPosition() {
-        val isRightToLeftLanguage = TextUtilsCompat.getLayoutDirectionFromLocale(
-            Locale.getDefault()
-        ) == ViewCompat.LAYOUT_DIRECTION_RTL
-        if (isRightToLeftLanguage) {
-            binding.homeTips.scrollToPosition(binding.homeTips.tipsAdapter.itemCount - 1)
-        }
     }
 
     private fun adjustViewToStatusBarHeight(statusBarHeight: Int) {
@@ -347,11 +306,6 @@ class UrlInputFragment :
 
         binding.browserToolbar.editMode()
         setHomeMenu()
-        if (!FocusNimbus.features.onboarding.value().isCfrEnabled) {
-            updateTipsLabel()
-        } else {
-            binding.homeTips.visibility = View.GONE
-        }
     }
 
     private fun setHomeMenu() {
@@ -574,8 +528,6 @@ class UrlInputFragment :
 
             ViewUtils.hideKeyboard(binding.browserToolbar)
 
-            if (handleL10NTrigger(input)) return
-
             val (isUrl, url, searchTerms) = normalizeUrlAndSearchTerms(input)
 
             openUrl(url, searchTerms)
@@ -593,29 +545,6 @@ class UrlInputFragment :
                 BrowserSearch.searchCount["action"].add()
             }
         }
-    }
-
-    // This isn't that complex, and is only used for l10n screenshots.
-    @Suppress("ComplexMethod")
-    private fun handleL10NTrigger(input: String): Boolean {
-        if (!AppConstants.isDevBuild) return false
-
-        var triggerHandled = true
-
-        when (input) {
-            "l10n:tip:1" -> binding.homeTips.scrollToPosition(TIP_ONE_CAROUSEL_POSITION)
-            "l10n:tip:2" -> binding.homeTips.scrollToPosition(TIP_TWO_CAROUSEL_POSITION)
-            "l10n:tip:3" -> binding.homeTips.scrollToPosition(TIP_THREE_CAROUSEL_POSITION)
-            "l10n:tip:4" -> binding.homeTips.scrollToPosition(TIP_FOUR_CAROUSEL_POSITION)
-            "l10n:tip:5" -> binding.homeTips.scrollToPosition(TIP_FIVE_CAROUSEL_POSITION)
-            else -> triggerHandled = false
-        }
-
-        if (triggerHandled) {
-            binding.browserToolbar.displayMode()
-            binding.browserToolbar.editMode()
-        }
-        return triggerHandled
     }
 
     private fun handleCrashTrigger(input: String) {
@@ -722,9 +651,5 @@ class UrlInputFragment :
 
             binding.searchViewContainer.visibility = View.VISIBLE
         }
-    }
-
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
-        if (key == activity?.getString(R.string.pref_key_homescreen_tips)) { updateTipsLabel() }
     }
 }

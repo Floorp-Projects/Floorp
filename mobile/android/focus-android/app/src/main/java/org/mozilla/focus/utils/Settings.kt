@@ -200,12 +200,6 @@ class Settings(
             false
         )
 
-    fun shouldDisplayHomescreenTips() =
-        preferences.getBoolean(
-            getPreferenceKey(R.string.pref_key_homescreen_tips),
-            true
-        )
-
     fun shouldShowSearchSuggestions(): Boolean =
         preferences.getBoolean(
             getPreferenceKey(R.string.pref_key_show_search_suggestions),
