@@ -45,6 +45,9 @@ class ProfilerParent final : public PProfilerParent {
     base::ProcessId childPid;
   };
 
+  using SingleProcessProgressPromise =
+      MozPromise<GatherProfileProgress, ResponseRejectReason, true>;
+
   // The following static methods can be called on any thread, but they are
   // no-ops on anything other than the main thread.
   // If called on the main thread, the call will be broadcast to all
@@ -58,6 +61,15 @@ class ProfilerParent final : public PProfilerParent {
 
   // Returns the profiles to expect, as promises and child pids.
   static nsTArray<SingleProcessProfilePromiseAndChildPid> GatherProfiles();
+
+  // Send a request to get the GatherProfiles() progress update from one child
+  // process, returns a promise to be resolved with that progress.
+  // The promise RefPtr may be null if the child process is unknown.
+  // Progress may be invalid, if the request arrived after the child process
+  // had already responded to the main GatherProfile() IPC, or something went
+  // very wrong in that process.
+  static RefPtr<SingleProcessProgressPromise> RequestGatherProfileProgress(
+      base::ProcessId aChildPid);
 
   static void ProfilerStarted(nsIProfilerStartParams* aParams);
   static void ProfilerWillStopIfStarted();
