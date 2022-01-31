@@ -7024,7 +7024,7 @@ static bool IsFullscreenSupported(GtkWidget* aShell) {
 #endif
 }
 
-nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
+nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
   LOG("nsWindow::MakeFullScreen aFullScreen %d\n", aFullScreen);
 
   if (GdkIsX11Display() && !IsFullscreenSupported(mShell)) {
