@@ -921,7 +921,6 @@
 </groupbox>
 
 <!-- Firefox Data Collection and Use -->
-#ifdef MOZ_DATA_REPORTING
 <hbox id="dataCollectionCategory"
       class="subcategory"
       hidden="true"
@@ -938,6 +937,7 @@
            class="learnMore" is="text-link"
            data-l10n-id="collection-privacy-notice"/>
   </description>
+#ifdef MOZ_DATA_REPORTING
   <description>
     <hbox id="telemetry-container" class="info-box-container smaller-font-size" hidden="true">
       <hbox class="info-icon-container">
@@ -1003,8 +1003,23 @@
     </hbox>
 #endif
   </vbox>
-</groupbox>
 #endif
+  <vbox id="privacySegmentationSection" data-subcategory="privacy-segmentation" hidden="true">
+    <hbox align="center">
+      <!-- TODO: Bug 1752172, provisional copy  -->
+      <checkbox id="privacySegmentationCheck"
+                preference="browser.privacySegmentation.enabled"
+                class="tail-with-learn-more"
+                label="Always ask before enabling new features that use my data"
+                accesskey="A">
+      </checkbox>
+      <!-- TODO: Bug 1752172, provisional copy  -->
+      <label id="privacy-segmentation-learn-more-link"
+             class="learnMore"
+             is="text-link">Learn more</label>
+    </hbox>
+  </vbox>
+</groupbox>
 
 <hbox id="securityCategory"
       class="subcategory"
