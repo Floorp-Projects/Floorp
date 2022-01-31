@@ -14,6 +14,7 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
+import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -179,6 +180,26 @@ class SettingsSearchTest {
         }.openSearch {
             typeSearch("mozilla")
             verifyNoSuggestionsAreDisplayed(activityTestRule, "mozilla firefox")
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun toggleVoiceSearchTest() {
+        homeScreen {
+        }.openSearch {
+            verifyVoiceSearchButtonVisibility(true)
+            startVoiceSearch()
+        }.dismissSearchBar {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSearchSubMenu {
+            toggleVoiceSearch()
+            exitMenu()
+        }
+        homeScreen {
+        }.openSearch {
+            verifyVoiceSearchButtonVisibility(false)
         }
     }
 }

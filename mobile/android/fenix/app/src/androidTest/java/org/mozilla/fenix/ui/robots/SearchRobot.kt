@@ -38,6 +38,7 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.startsWith
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
@@ -57,6 +58,23 @@ class SearchRobot {
     fun verifySearchView() = assertSearchView()
     fun verifyBrowserToolbar() = assertBrowserToolbarEditView()
     fun verifyScanButton() = assertScanButton()
+
+    fun verifyVoiceSearchButtonVisibility(enabled: Boolean) {
+        if (enabled) {
+            assertTrue(voiceSearchButton.waitForExists(waitingTime))
+        } else {
+            assertFalse(voiceSearchButton.waitForExists(waitingTime))
+        }
+    }
+
+    fun startVoiceSearch() {
+        voiceSearchButton.click()
+        assertTrue(
+            mDevice.findObject(UiSelector().packageName("com.google.android.googlequicksearchbox"))
+                .exists()
+        )
+    }
+
     fun verifySearchEngineButton() = assertSearchButton()
     fun verifySearchWithText() = assertSearchWithText()
     fun verifySearchEngineResults(rule: ComposeTestRule, searchEngineName: String, count: Int) =
@@ -447,3 +465,5 @@ private fun assertPastedToolbarText(expectedText: String) {
         )
     ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }
+
+private val voiceSearchButton = mDevice.findObject(UiSelector().description("Voice search"))

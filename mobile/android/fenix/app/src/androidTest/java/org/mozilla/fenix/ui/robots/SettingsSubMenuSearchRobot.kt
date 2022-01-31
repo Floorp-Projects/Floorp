@@ -51,6 +51,15 @@ class SettingsSubMenuSearchRobot {
     fun disableShowSearchSuggestions() = toggleShowSearchSuggestions()
     fun enableShowSearchShortcuts() = toggleShowSearchShortcuts()
 
+    fun toggleVoiceSearch() {
+        onView(withId(androidx.preference.R.id.recycler_view)).perform(
+            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+                hasDescendant(withText("Show voice search"))
+            )
+        )
+        onView(withText("Show voice search")).perform(click())
+    }
+
     fun openAddSearchEngineMenu() = addSearchEngineButton().click()
 
     fun verifyAddSearchEngineList() = assertAddSearchEngineList()
