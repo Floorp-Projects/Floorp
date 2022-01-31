@@ -828,5 +828,11 @@ MSG_DEF(JSMSG_RECORD_TUPLE_NO_OBJECT,                    0, JSEXN_TYPEERR, "Reco
 MSG_DEF(JSMSG_RECORD_NO_PROTO,                           0, JSEXN_SYNTAXERR, "__proto__ is not a valid literal key in records")
 MSG_DEF(JSMSG_RECORD_NO_SYMBOL_KEY,						 0, JSEXN_TYPEERR, "Symbols cannot be used as record keys")
 MSG_DEF(JSMSG_RECORD_INVALID_DESCRIPTOR,                 0, JSEXN_TYPEERR, "Invalid record property descriptor")
+MSG_DEF(JSMSG_BAD_TUPLE_LENGTH,        0, JSEXN_TYPEERR, "attempted to create excessively long tuple")
+MSG_DEF(JSMSG_BAD_TUPLE_INDEX,        0, JSEXN_RANGEERR, "index out of range for tuple")
+MSG_DEF(JSMSG_BAD_TUPLE_OBJECT, 0, JSEXN_TYPEERR, "value of TupleObject must be a Tuple")
+MSG_DEF(JSMSG_EMPTY_TUPLE_REDUCE, 0, JSEXN_TYPEERR, "reduce of empty tuple with no initial values")
+MSG_DEF(JSMSG_RECORD_TUPLE_TO_NUMBER,        0, JSEXN_TYPEERR, "can't convert Record or Tuple to number")
+MSG_DEF(JSMSG_BAD_RECORD_TUPLE_WEAKMAP_KEY, 0, JSEXN_TYPEERR, "a Record or Tuple WeakMap key must contain a Box")
 
 //clang-format on
