@@ -25,11 +25,11 @@ STEPS = {
 
 
 def test_commit(repo):
-    vcs = get_repository_object(repo.strpath)
+    vcs = get_repository_object(repo.dir)
     assert vcs.working_directory_clean()
 
     # Modify both foo and bar
-    next(repo.step)
+    repo.execute_next_step()
     assert not vcs.working_directory_clean()
 
     # Commit just bar
