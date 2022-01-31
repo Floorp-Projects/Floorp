@@ -1,0 +1,13 @@
+# Test that an scroll frame having no scroll-offsets, this is kinda crash test.
+root:
+  items:
+    - type: scroll-frame
+      bounds: [0, 0, 100, 100]
+      content-size: [100, 1000]
+      external-scroll-offset: [0, 60]
+      scroll-generation: 2
+      has-scroll-linked-effect: true
+      items:
+        - type: rect
+          color: green
+          bounds: [0, 60, 100, 100]
