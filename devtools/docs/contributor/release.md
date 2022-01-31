@@ -44,14 +44,14 @@ You can use either desktop or mobile versions of Firefox as the server. Mobile i
 
 - Start the current Nightly (release XX) as Client
 - Prepare Firefox (release XX -1) as the Server. Either
-  https://play.google.com/store/apps/details?id=org.mozilla.firefox_beta (mobile beta) or
+  [https://play.google.com/store/apps/details?id=org.mozilla.firefox_beta](https://play.google.com/store/apps/details?id=org.mozilla.firefox_beta) (mobile beta) or
   Desktop Beta or DevEdition
 
 #### Same version test
 
 - Start the current Nightly (release XX) as Client
 - Prepare Firefox (also for release XX) as the Server. Either
-  https://play.google.com/store/apps/details?id=org.mozilla.fenix (mobile nightly)
+  [https://play.google.com/store/apps/details?id=org.mozilla.fenix](https://play.google.com/store/apps/details?id=org.mozilla.fenix) (mobile nightly)
   or Desktop Nightly
 
 ### Tests
@@ -64,7 +64,7 @@ You can use either desktop or mobile versions of Firefox as the server. Mobile i
 
 #### Debug targets:
 
-- On the Server Firefox, open a tab to https://mdn.github.io/sw-test/
+- On the Server Firefox, open a tab to [https://mdn.github.io/sw-test/](https://mdn.github.io/sw-test/)
 - On the Client Firefox, check in the Runtime Page for the Server Firefox that you can see the new tab as well as the corresponding service worker
 - On the Client Firefox, open the Profiler by clicking the Profile Performance button and record a short profile by clicking the Start, then the Stop button. Verify that the profiler opens a new tab with the recording.
 - On the Server Firefox, close the tab you just opened
@@ -73,7 +73,7 @@ You can use either desktop or mobile versions of Firefox as the server. Mobile i
 
 #### Inspect a remote target:
 
-- On the Server Firefox, open a tab to https://juliandescottes.github.io/webcomponents-playground/debugger-example/
+- On the Server Firefox, open a tab to [https://juliandescottes.github.io/webcomponents-playground/debugger-example/](https://juliandescottes.github.io/webcomponents-playground/debugger-example/)
 - On the Client Firefox, click on Inspect for this tab. Check that toolbox opens. Now we will verify that the toolbox is working.
 - Open Inspector, check that no panel is blank. Check that selecting another element in the markup-view updates the computed view.
 - Open Console, check that you see the "script loaded" message. Type "1+1" in the console, check you get "2".
@@ -82,7 +82,7 @@ You can use either desktop or mobile versions of Firefox as the server. Mobile i
 
 #### Inspect a remote extension:
 
-- On the Server Firefox, install any extension (for instance https://addons.mozilla.org/en-US/firefox/addon/devtools-highlighter/ )
+- On the Server Firefox, install any extension (for instance [https://addons.mozilla.org/en-US/firefox/addon/devtools-highlighter/](https://addons.mozilla.org/en-US/firefox/addon/devtools-highlighter/))
 - On the Client Firefox, check the extension is displayed in the Extensions category
 - Click on Inspect, check the toolbox opens.
 - Check the Inspector, Console, Debugger and Netmonitor UIs for empty panels.
