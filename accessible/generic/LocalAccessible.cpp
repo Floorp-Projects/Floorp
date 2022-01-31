@@ -3252,7 +3252,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     fields->SetAttribute(nsGkAtoms::state, state);
   }
 
-  if (aCacheDomain & CacheDomain::GroupInfo) {
+  if (aCacheDomain & CacheDomain::GroupInfo && mContent) {
     for (nsAtom* attr : {nsGkAtoms::aria_level, nsGkAtoms::aria_setsize,
                          nsGkAtoms::aria_posinset}) {
       int32_t value = 0;
@@ -3291,7 +3291,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
   if (aUpdateType == CacheUpdateType::Initial) {
     // Add fields which never change and thus only need to be included in the
     // initial cache push.
-    if (mContent->IsElement()) {
+    if (mContent && mContent->IsElement()) {
       fields->SetAttribute(nsGkAtoms::tag, mContent->NodeInfo()->NameAtom());
 
       if (IsTextField() || IsDateTimeField()) {
