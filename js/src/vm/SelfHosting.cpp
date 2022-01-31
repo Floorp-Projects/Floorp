@@ -151,6 +151,17 @@ bool intrinsic_ThisTupleValue(JSContext* cx, unsigned argc, Value* vp) {
   args.rval().setExtendedPrimitive(*result);
   return true;
 }
+
+bool intrinsic_TupleLength(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  mozilla::Maybe<TupleType&> result = js::ThisTupleValue(cx, args[0]);
+  if (!result) {
+    return false;
+  }
+  args.rval().setNumber((*result).getDenseInitializedLength());
+  return true;
+}
 #endif
 
 static bool intrinsic_IsObject(JSContext* cx, unsigned argc, Value* vp) {
@@ -2350,6 +2361,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("ToObject", intrinsic_ToObject, 1, 0, IntrinsicToObject),
     JS_FN("ToPropertyKey", intrinsic_ToPropertyKey, 1, 0),
     JS_FN("ToSource", intrinsic_ToSource, 1, 0),
+#ifdef ENABLE_RECORD_TUPLE
+    JS_FN("TupleLength", intrinsic_TupleLength, 1, 0),
+#endif
     JS_FN("TypedArrayBitwiseSlice", intrinsic_TypedArrayBitwiseSlice, 4, 0),
     JS_FN("TypedArrayBuffer", intrinsic_TypedArrayBuffer, 1, 0),
     JS_INLINABLE_FN("TypedArrayByteOffset", intrinsic_TypedArrayByteOffset, 1,
