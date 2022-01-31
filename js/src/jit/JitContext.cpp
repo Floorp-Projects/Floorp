@@ -107,21 +107,17 @@ bool jit::InitializeJit() {
   InitARMFlags();
 #endif
 
-  // Note: jit flags need to be initialized after the InitARMFlags call above.
-  ComputeJitSupportFlags();
-
-  CheckPerf();
-
 #ifndef JS_CODEGEN_NONE
   MOZ_ASSERT(js::jit::CPUFlagsHaveBeenComputed());
 #endif
-  return true;
-}
 
-void jit::ComputeJitSupportFlags() {
+  // Note: jit flags need to be initialized after the InitARMFlags call above.
   JitOptions.supportsFloatingPoint = MacroAssembler::SupportsFloatingPoint();
   JitOptions.supportsUnalignedAccesses =
       MacroAssembler::SupportsUnalignedAccesses();
+
+  CheckPerf();
+  return true;
 }
 
 bool jit::JitSupportsWasmSimd() {
