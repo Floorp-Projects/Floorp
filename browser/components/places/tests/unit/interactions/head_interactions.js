@@ -321,6 +321,13 @@ function assertSnapshotGroup(group, expected) {
       "Should have the expected snapshotCount"
     );
   }
+  if (expected.lastAccessed != null) {
+    Assert.equal(
+      group.lastAccessed,
+      expected.lastAccessed,
+      "Should have the expected lastAccessed value"
+    );
+  }
 }
 
 /**
