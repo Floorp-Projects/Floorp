@@ -1688,7 +1688,7 @@ static nsresult GetNSSProfilePath(nsAutoCString& aProfilePath) {
     return NS_ERROR_FAILURE;
   }
   nsAutoString u16ProfilePath;
-  rv = profileFileWin->GetCanonicalPath(u16ProfilePath);
+  rv = profileFileWin->GetPath(u16ProfilePath);
   CopyUTF16toUTF8(u16ProfilePath, aProfilePath);
 #else
   rv = profileFile->GetNativePath(aProfilePath);
