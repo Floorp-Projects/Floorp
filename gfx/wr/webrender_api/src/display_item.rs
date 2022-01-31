@@ -7,7 +7,7 @@ use peek_poke::PeekPoke;
 use std::ops::Not;
 // local imports
 use crate::font;
-use crate::{PipelineId, PropertyBinding};
+use crate::{APZScrollGeneration, HasScrollLinkedEffect, PipelineId, PropertyBinding};
 use crate::color::ColorF;
 use crate::image::{ColorDepth, ImageKey};
 use crate::units::*;
@@ -334,6 +334,10 @@ pub struct ScrollFrameDescriptor {
     /// should be added to those display item coordinates in order to get a
     /// normalized value that is consistent across display lists.
     pub external_scroll_offset: LayoutVector2D,
+    /// The generation of the external_scroll_offset.
+    pub scroll_offset_generation: APZScrollGeneration,
+    /// Whether this scrollframe document has any scroll-linked effect or not.
+    pub has_scroll_linked_effect: HasScrollLinkedEffect,
     /// A unique (per-pipeline) key for this spatial that is stable across display lists.
     pub key: SpatialTreeItemKey,
 }

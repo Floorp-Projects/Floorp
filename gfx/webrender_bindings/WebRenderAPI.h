@@ -475,6 +475,8 @@ class DisplayListBuilder final {
       const layers::ScrollableLayerGuid::ViewID& aViewId,
       const Maybe<wr::WrSpatialId>& aParent, const wr::LayoutRect& aContentRect,
       const wr::LayoutRect& aClipRect, const wr::LayoutVector2D& aScrollOffset,
+      wr::APZScrollGeneration aScrollOffsetGeneration,
+      wr::HasScrollLinkedEffect aHasScrollLinkedEffect,
       wr::SpatialTreeItemKey aKey);
 
   void PushRect(const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,

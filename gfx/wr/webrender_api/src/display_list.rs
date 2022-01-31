@@ -20,7 +20,7 @@ use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 // local imports
 use crate::display_item as di;
 use crate::display_item_cache::*;
-use crate::{PipelineId, PropertyBinding};
+use crate::{APZScrollGeneration, HasScrollLinkedEffect, PipelineId, PropertyBinding};
 use crate::gradient_builder::GradientBuilder;
 use crate::color::ColorF;
 use crate::font::{FontInstanceKey, GlyphInstance, GlyphOptions};
@@ -1883,6 +1883,8 @@ impl DisplayListBuilder {
         content_rect: LayoutRect,
         frame_rect: LayoutRect,
         external_scroll_offset: LayoutVector2D,
+        scroll_offset_generation: APZScrollGeneration,
+        has_scroll_linked_effect: HasScrollLinkedEffect,
         key: di::SpatialTreeItemKey,
     ) -> di::SpatialId {
         let scroll_frame_id = self.generate_spatial_index();
@@ -1902,6 +1904,8 @@ impl DisplayListBuilder {
             scroll_frame_id,
             external_id,
             external_scroll_offset,
+            scroll_offset_generation,
+            has_scroll_linked_effect,
             key,
         });
 

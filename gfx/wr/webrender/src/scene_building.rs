@@ -42,7 +42,7 @@ use api::{FilterOp, FilterPrimitive, FontInstanceKey, FontSize, GlyphInstance, G
 use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth, QualitySettings};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId, MixBlendMode, StackingContextFlags};
 use api::{PropertyBinding, ReferenceFrameKind, ScrollFrameDescriptor, ReferenceFrameMapper};
-use api::{Shadow, SpaceAndClipInfo, SpatialId, StickyFrameDescriptor, ImageMask, ItemTag};
+use api::{APZScrollGeneration, HasScrollLinkedEffect, Shadow, SpaceAndClipInfo, SpatialId, StickyFrameDescriptor, ImageMask, ItemTag};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
 use api::{ReferenceTransformBinding, Rotation, FillRule, SpatialTreeItem, ReferenceFrameDescriptor};
 use api::units::*;
@@ -916,6 +916,8 @@ impl<'a> SceneBuilder<'a> {
             &content_size,
             ScrollFrameKind::Explicit,
             info.external_scroll_offset,
+            info.scroll_offset_generation,
+            info.has_scroll_linked_effect,
             SpatialNodeUid::external(info.key, pipeline_id, instance_id),
         );
     }
@@ -998,6 +1000,8 @@ impl<'a> SceneBuilder<'a> {
                 is_root_pipeline,
             },
             LayoutVector2D::zero(),
+            APZScrollGeneration::default(),
+            HasScrollLinkedEffect::No,
             SpatialNodeUid::root_scroll_frame(iframe_pipeline_id, instance_id),
         );
 
@@ -2444,6 +2448,8 @@ impl<'a> SceneBuilder<'a> {
                 is_root_pipeline: true,
             },
             LayoutVector2D::zero(),
+            APZScrollGeneration::default(),
+            HasScrollLinkedEffect::No,
             SpatialNodeUid::root_scroll_frame(pipeline_id, instance),
         );
     }
@@ -2596,6 +2602,8 @@ impl<'a> SceneBuilder<'a> {
         content_size: &LayoutSize,
         frame_kind: ScrollFrameKind,
         external_scroll_offset: LayoutVector2D,
+        scroll_offset_generation: APZScrollGeneration,
+        has_scroll_linked_effect: HasScrollLinkedEffect,
         uid: SpatialNodeUid,
     ) -> SpatialNodeIndex {
         let node_index = self.spatial_tree.add_scroll_frame(
@@ -2606,6 +2614,8 @@ impl<'a> SceneBuilder<'a> {
             content_size,
             frame_kind,
             external_scroll_offset,
+            scroll_offset_generation,
+            has_scroll_linked_effect,
             uid,
         );
         self.id_to_index_mapper_stack.last_mut().unwrap().add_spatial_node(new_node_id, node_index);
