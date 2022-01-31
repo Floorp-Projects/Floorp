@@ -660,6 +660,17 @@ ProfilerParent::GatherProfiles() {
   return results;
 }
 
+/* static */
+RefPtr<ProfilerParent::SingleProcessProgressPromise>
+ProfilerParent::RequestGatherProfileProgress(base::ProcessId aChildPid) {
+  RefPtr<SingleProcessProgressPromise> promise;
+  ProfilerParentTracker::ForChild(
+      aChildPid, [&promise](ProfilerParent* profilerParent) {
+        promise = profilerParent->SendGetGatherProfileProgress();
+      });
+  return promise;
+}
+
 // Magic value for ProfileBufferChunkManagerUpdate::unreleasedBytes meaning
 // that this is a final update from a child.
 constexpr static uint64_t scUpdateUnreleasedBytesFINAL = uint64_t(-1);
