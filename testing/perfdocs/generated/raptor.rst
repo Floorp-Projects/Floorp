@@ -728,6 +728,236 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 
 
+.. dropdown:: matrix-react-bench
+   :container: + anchor-id-matrix-react-bench-b
+
+   **Owner**: :jandem and SpiderMonkey Team
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **expected**: pass
+   * **fetch task**: matrix-react-bench
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **page cycles**: 30
+   * **page timeout**: 2000000
+   * **subtest lower is better**: true
+   * **subtest unit**: ms
+   * **test url**: `<http://\<host\>:\<port\>/matrix-react-bench/matrix_demo.html>`__
+   * **type**: benchmark
+   * **unit**: ms
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-clang-trunk-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-benchmark-firefox-matrix-react-bench-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-firefox-matrix-react-bench-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-benchmark-firefox-matrix-react-bench-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-firefox-matrix-react-bench-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-benchmark-chrome-matrix-react-bench-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-chromium-matrix-react-bench-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-firefox-matrix-react-bench-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-firefox-matrix-react-bench-fis-e10s**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-macosx1015-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-benchmark-chrome-matrix-react-bench-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-chromium-matrix-react-bench-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-firefox-matrix-react-bench-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-firefox-matrix-react-bench-fis-e10s**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+   .. list-table:: **test-windows10-32-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-benchmark-firefox-matrix-react-bench-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-firefox-matrix-react-bench-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-32-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-benchmark-chrome-matrix-react-bench-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-chromium-matrix-react-bench-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-firefox-matrix-react-bench-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-firefox-matrix-react-bench-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-benchmark-firefox-matrix-react-bench-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-firefox-matrix-react-bench-fis-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-benchmark-chrome-matrix-react-bench-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-chromium-matrix-react-bench-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-firefox-matrix-react-bench-e10s**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-benchmark-firefox-matrix-react-bench-fis-e10s**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
+
 .. dropdown:: motionmark-animometer
    :container: + anchor-id-motionmark-animometer-b
 
