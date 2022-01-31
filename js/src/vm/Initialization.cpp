@@ -176,10 +176,6 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
 
   js::coverage::InitLCov();
 
-  if (js::jit::HasJitBackend()) {
-    RETURN_IF_FAIL(js::jit::InitProcessExecutableMemory());
-  }
-
   RETURN_IF_FAIL(js::MemoryProtectionExceptionHandler::install());
 
   RETURN_IF_FAIL(js::jit::InitializeJit());
@@ -306,12 +302,9 @@ JS_PUBLIC_API void JS_ShutDown(void) {
 
   js::FinishDateTimeState();
 
-  if (!JSRuntime::hasLiveRuntimes()) {
-    if (js::jit::HasJitBackend()) {
-      js::jit::ReleaseProcessExecutableMemory();
-    }
-    MOZ_ASSERT(!js::LiveMappedBufferCount());
-  }
+  js::jit::ShutdownJit();
+
+  MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), !js::LiveMappedBufferCount());
 
   js::ShutDownMallocAllocator();
 
