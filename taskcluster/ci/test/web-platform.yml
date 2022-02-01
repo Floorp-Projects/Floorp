@@ -95,11 +95,9 @@ web-platform-tests:
             default:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    linux.*64-ccov-qr/opt: []
-                    linux1804-32.*: []
-                    .*-tsan-qr/opt: []
                     android.*: built-projects
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
     mozharness:
         chunked: true
@@ -182,17 +180,14 @@ web-platform-tests-reftest:
             webrender-sw:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
-                    linux.*64-(ccov|tsan)-qr/opt: []
-                    linux1804-32.*: []
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
             default:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    linux.*64-ccov-qr/opt: []
-                    linux1804-32.*: []
-                    .*-tsan-qr/opt: []
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android.*: built-projects
                     default: []
     tier:
@@ -266,9 +261,8 @@ web-platform-tests-wdspec:
             webrender-sw:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
-                    linux.*64-(ccov|tsan)-qr/opt: []
-                    linux1804-32.*: []
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
             webrender-sw+fission:
                 by-test-platform:
@@ -278,9 +272,8 @@ web-platform-tests-wdspec:
                     default: []
             headless:
                 by-test-platform:
-                    linux.*64-(ccov|tsan)-qr/opt: []
-                    linux1804-32.*: []
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
             headless+fission:
                 by-test-platform:
@@ -288,10 +281,8 @@ web-platform-tests-wdspec:
                     default: built-projects
             default:
                 by-test-platform:
-                    linux.*64-ccov-qr/opt: []
-                    linux1804-32.*: []
-                    .*-tsan-qr/opt: []
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android.*: built-projects
                     default: []
     tier:
@@ -362,17 +353,14 @@ web-platform-tests-crashtest:
             webrender-sw:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
-                    linux.*64-(ccov|tsan)-qr/opt: []
-                    linux1804-32.*: []
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
             default:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    linux.*64-ccov-qr/opt: []
-                    linux1804-32.*: []
-                    .*-tsan-qr/opt: []
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android.*: built-projects
                     default: []
     tier: default
@@ -409,16 +397,13 @@ web-platform-tests-print-reftest:
             webrender-sw:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
-                    linux.*64-(ccov|tsan)-qr/opt: []
-                    linux1804-32.*: []
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
             default:
                 by-test-platform:
-                    linux.*64-ccov-qr/opt: []
-                    linux1804-32.*: []
-                    .*-tsan-qr/opt: []
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android.*: built-projects
                     default: []
     mozharness:
