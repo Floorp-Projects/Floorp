@@ -1466,7 +1466,7 @@ nsresult JsepSessionImpl::SetRemoteDescriptionAnswer(JsepSdpType type,
   return NS_OK;
 }
 
-JsepTransceiver* JsepSessionImpl::GetTransceiverForLevel(size_t level) {
+JsepTransceiver* JsepSessionImpl::GetTransceiverForLevel(size_t level) const {
   for (auto& [id, transceiver] : mTransceivers) {
     (void)id;  // Lame, but no better way to do this right now.
     if (transceiver->HasLevel() && (transceiver->GetLevel() == level)) {
@@ -1477,7 +1477,8 @@ JsepTransceiver* JsepSessionImpl::GetTransceiverForLevel(size_t level) {
   return nullptr;
 }
 
-JsepTransceiver* JsepSessionImpl::GetTransceiverForMid(const std::string& mid) {
+JsepTransceiver* JsepSessionImpl::GetTransceiverForMid(
+    const std::string& mid) const {
   for (auto& [id, transceiver] : mTransceivers) {
     (void)id;  // Lame, but no better way to do this right now.
     if (transceiver->IsAssociated() && (transceiver->GetMid() == mid)) {
@@ -1561,7 +1562,7 @@ JsepTransceiver* JsepSessionImpl::GetTransceiverForRemote(
 }
 
 JsepTransceiver* JsepSessionImpl::GetTransceiverWithTransport(
-    const std::string& transportId) {
+    const std::string& transportId) const {
   for (const auto& [id, transceiver] : mTransceivers) {
     (void)id;  // Lame, but no better way to do this right now.
     if (transceiver->HasOwnTransport() &&
