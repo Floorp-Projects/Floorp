@@ -358,7 +358,7 @@ function ArrayGroupBy(callbackfn/*, thisArg*/) {
     }
 
     /* Step 7. Let obj be ! OrdinaryObjectCreate(null). */
-    var object = std_Object_create(null);
+    var object = {};
 
     /* Step 8. For each Record { [[Key]], [[Elements]] } g of groups, do
      *  a. Let elements be ! CreateArrayFromList(g.[[Elements]]).
