@@ -4612,13 +4612,25 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
             mPanInProgress = true;
           }
 
+          const bool isPageMode =
+              StaticPrefs::apz_gtk_kinetic_scroll_delta_mode() != 2;
+          const double multiplier =
+              isPageMode
+                  ? StaticPrefs::
+                        apz_gtk_kinetic_scroll_page_delta_mode_multiplier()
+                  : StaticPrefs::
+                            apz_gtk_kinetic_scroll_pixel_delta_mode_multiplier() *
+                        FractionalScaleFactor();
+          ScreenPoint deltas(float(aEvent->delta_x * multiplier),
+                             float(aEvent->delta_y * multiplier));
+
           LayoutDeviceIntPoint touchPoint = GetRefPoint(this, aEvent);
           PanGestureInput panEvent(
               eventType, aEvent->time, GetEventTimeStamp(aEvent->time),
-              ScreenPoint(touchPoint.x, touchPoint.y),
-              ScreenPoint(aEvent->delta_x, aEvent->delta_y),
+              ScreenPoint(touchPoint.x, touchPoint.y), deltas,
               KeymapWrapper::ComputeKeyModifiers(aEvent->state));
-          panEvent.mDeltaType = PanGestureInput::PANDELTA_PAGE;
+          panEvent.mDeltaType = isPageMode ? PanGestureInput::PANDELTA_PAGE
+                                           : PanGestureInput::PANDELTA_PIXEL;
           panEvent.mSimulateMomentum = true;
 
           DispatchPanGestureInput(panEvent);
