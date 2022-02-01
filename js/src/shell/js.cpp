@@ -625,9 +625,6 @@ bool shell::enableWeakRefs = false;
 bool shell::enableToSource = false;
 bool shell::enablePropertyErrorMessageFix = false;
 bool shell::enableIteratorHelpers = false;
-#ifdef NIGHTLY_BUILD
-bool shell::enableArrayGrouping = true;
-#endif
 bool shell::enablePrivateClassFields = false;
 bool shell::enablePrivateClassMethods = false;
 bool shell::enableErgonomicBrandChecks = true;
@@ -4246,9 +4243,6 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setToSourceEnabled(enableToSource)
       .setPropertyErrorMessageFixEnabled(enablePropertyErrorMessageFix)
       .setIteratorHelpersEnabled(enableIteratorHelpers)
-#ifdef NIGHTLY_BUILD
-      .setArrayGroupingEnabled(enableArrayGrouping)
-#endif
 #ifdef ENABLE_NEW_SET_METHODS
       .setNewSetMethodsEnabled(enableNewSetMethods)
 #endif
@@ -11060,9 +11054,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enablePropertyErrorMessageFix =
       !op.getBoolOption("disable-property-error-message-fix");
   enableIteratorHelpers = op.getBoolOption("enable-iterator-helpers");
-#ifdef NIGHTLY_BUILD
-  enableArrayGrouping = op.getBoolOption("enable-array-grouping");
-#endif
   enablePrivateClassFields = !op.getBoolOption("disable-private-fields");
   enablePrivateClassMethods = !op.getBoolOption("disable-private-methods");
   enableErgonomicBrandChecks =
@@ -11105,9 +11096,6 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setPrivateClassFields(enablePrivateClassFields)
       .setPrivateClassMethods(enablePrivateClassMethods)
       .setErgnomicBrandChecks(enableErgonomicBrandChecks)
-#ifdef NIGHTLY_BUILD
-      .setArrayGrouping(enableArrayGrouping)
-#endif
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
       .setChangeArrayByCopy(enableChangeArrayByCopy)
 #endif
@@ -12045,8 +12033,6 @@ int main(int argc, char** argv) {
                         "property of null or undefined") ||
       !op.addBoolOption('\0', "enable-iterator-helpers",
                         "Enable iterator helpers") ||
-      !op.addBoolOption('\0', "enable-array-grouping",
-                        "Enable Array Grouping") ||
       !op.addBoolOption('\0', "disable-private-fields",
                         "Disable private class fields") ||
       !op.addBoolOption('\0', "disable-private-methods",

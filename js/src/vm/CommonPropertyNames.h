@@ -219,8 +219,6 @@
   MACRO_(global, global, "global")                                             \
   MACRO_(globalThis, globalThis, "globalThis")                                 \
   MACRO_(group, group, "group")                                                \
-  MACRO_(groupBy, groupBy, "groupBy")                                          \
-  MACRO_(groupByToMap, groupByToMap, "groupByToMap")                           \
   MACRO_(groups, groups, "groups")                                             \
   MACRO_(h11, h11, "h11")                                                      \
   MACRO_(h12, h12, "h12")                                                      \
