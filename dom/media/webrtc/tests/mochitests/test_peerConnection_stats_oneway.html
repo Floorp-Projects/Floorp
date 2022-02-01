@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="stats.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+createHTML({
+  bug: "1225722",
+  title: "WebRTC Stats composition and sanity for a one-way peer connection"
+});
+
+runNetworkTest(async function (options) {
+  // We don't know how to get QP value when using Android system codecs.
+  if (navigator.userAgent.includes("Android")) {
+    await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false],
+                    ["media.webrtc.hw.h264.enabled", false]);
+  }
+
+  // For accurate comparisons of `remoteTimestamp` (not using reduced precision)
+  // to `timestamp` (using reduced precision).
+  await pushPrefs(["privacy.resistFingerprinting.reduceTimerPrecision.jitter",
+                   false]);
+
+  const test = new PeerConnectionTest(options);
+
+  test.chain.insertAfter("PC_LOCAL_WAIT_FOR_MEDIA_FLOW",
+    [PC_LOCAL_TEST_LOCAL_STATS]);
+
+  test.chain.insertAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW",
+    [PC_REMOTE_TEST_REMOTE_STATS]);
+
+  const testOneWayStats = (stats, codecType) => {
+    const codecs = [];
+    stats.forEach(stat => {
+      if (stat.type == "codec") {
+        codecs.push(stat);
+        is(stat.codecType, codecType, "One-way codec has specific codecType");
+      }
+    });
+    is(codecs.length, 2, "One audio and one video codec");
+    if (codecs.length == 2) {
+      isnot(codecs[0].mimeType.slice(0, 5), codecs[1].mimeType.slice(0, 5),
+        "Different media type for audio vs video mime types");
+    }
+  };
+
+  test.chain.append([
+    async function PC_LOCAL_TEST_CODECTYPE_ENCODE(test) {
+      testOneWayStats(await test.pcLocal._pc.getStats(), "encode");
+    },
+    async function PC_REMOTE_TEST_CODECTYPE_DECODE(test) {
+      testOneWayStats(await test.pcRemote._pc.getStats(), "decode");
+    },
+  ]);
+
+  test.setMediaConstraints([{audio: true}, {video: true}], []);
+  await test.run();
+});
+</script>
+</pre>
+</body>
+</html>
