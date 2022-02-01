@@ -18,7 +18,7 @@ class nsRetrievalContextX11 : public nsRetrievalContext {
                                        int32_t aWhichClipboard,
                                        uint32_t* aContentLength) override;
   virtual const char* GetClipboardText(int32_t aWhichClipboard) override;
-  virtual void ReleaseClipboardData(const char* aClipboardData) override;
+  virtual void ReleaseClipboardData(const char** aClipboardData) override;
 
   virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
                               int* aTargetNums) override;
