@@ -553,7 +553,10 @@ const DownloadsIndicatorView = {
       return;
     }
 
-    DownloadsPanel.showPanel(/* openedManually */ true);
+    DownloadsPanel.showPanel(
+      /* openedManually */ true,
+      aEvent.type.startsWith("key")
+    );
     aEvent.stopPropagation();
   },
 

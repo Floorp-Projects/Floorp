@@ -522,6 +522,61 @@ nsAtom* RemoteAccessibleBase<Derived>::TagName() const {
 }
 
 template <class Derived>
+uint8_t RemoteAccessibleBase<Derived>::ActionCount() const {
+  uint8_t actionCount = 0;
+  if (mCachedFields) {
+    if (mCachedFields->HasAttribute(nsGkAtoms::action)) {
+      actionCount++;
+    }
+
+    if (mCachedFields->HasAttribute(nsGkAtoms::longdesc)) {
+      actionCount++;
+    }
+    VERIFY_CACHE(CacheDomain::Actions);
+  }
+
+  return actionCount;
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::ActionNameAt(uint8_t aIndex,
+                                                 nsAString& aName) {
+  if (mCachedFields) {
+    aName.Truncate();
+    auto action =
+        mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::action);
+    bool haslongdesc = mCachedFields->HasAttribute(nsGkAtoms::longdesc);
+    switch (aIndex) {
+      case 0:
+        if (action) {
+          (*action)->ToString(aName);
+        } else if (haslongdesc) {
+          aName.AssignLiteral("showlongdesc");
+        }
+        break;
+      case 1:
+        if (action && haslongdesc) {
+          aName.AssignLiteral("showlongdesc");
+        }
+        break;
+      default:
+        break;
+    }
+  }
+  VERIFY_CACHE(CacheDomain::Actions);
+}
+
+template <class Derived>
+bool RemoteAccessibleBase<Derived>::DoAction(uint8_t aIndex) const {
+  if (ActionCount() < aIndex + 1) {
+    return false;
+  }
+
+  Unused << mDoc->SendDoActionAsync(mID, aIndex);
+  return true;
+}
+
+template <class Derived>
 void RemoteAccessibleBase<Derived>::ARIAGroupPosition(
     int32_t* aLevel, int32_t* aSetSize, int32_t* aPosInSet) const {
   if (!mCachedFields) {

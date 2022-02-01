@@ -168,8 +168,7 @@ class nsWindow final : public nsBaseWidget {
                                    uint16_t aDuration, nsISupports* aData,
                                    nsIRunnable* aCallback) override;
   already_AddRefed<nsIScreen> GetWidgetScreen() override;
-  nsresult MakeFullScreen(bool aFullScreen,
-                          nsIScreen* aTargetScreen = nullptr) override;
+  nsresult MakeFullScreen(bool aFullScreen) override;
   void HideWindowChrome(bool aShouldHide) override;
 
   /**

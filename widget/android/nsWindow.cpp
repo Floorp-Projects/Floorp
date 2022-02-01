@@ -2181,7 +2181,7 @@ nsEventStatus nsWindow::DispatchEvent(WidgetGUIEvent* aEvent) {
   return nsEventStatus_eIgnore;
 }
 
-nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*) {
+nsresult nsWindow::MakeFullScreen(bool aFullScreen) {
   if (!mAndroidView) {
     return NS_ERROR_NOT_AVAILABLE;
   }

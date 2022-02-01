@@ -47,6 +47,7 @@ treeherder:
         'M-aab': 'Mochitests with AAB test_runner.'
         'M-1proc': 'Mochitests without e10s'
         'M-a11y-checks': 'Mochitests with accessibility checks enabled'
+        'M-a11y-checks-fis': 'Mochitests with accessibility checks enabled and fission enabled'
         'M-dfpi': 'Mochitests with dFPI enabled'
         'M-dfpi-fis': 'Mochitests with dFPI and Fission enabled'
         'M-dfpi-fis-xorig': 'Mochitests with dFPI, cross-origin and fission enabled'

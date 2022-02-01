@@ -41,7 +41,7 @@
 
     add_task(async function test_createUnique() {
       const tempDir = PathUtils.join(
-        await PathUtils.getTempDir(),
+        PathUtils.tempDir,
         "test_createUnique.tmp.d"
       );
 

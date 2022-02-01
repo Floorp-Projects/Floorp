@@ -97,7 +97,7 @@
     "testmc:build": "npm run bundle:webpack",
     "testmc:unit": "karma start karma.mc.config.js",
     "tddmc": "karma start karma.mc.config.js --tdd",
-    "debugcoverage": "open logs/coverage/index.html",
+    "debugcoverage": "open logs/coverage/lcov-report/index.html",
     "lint": "npm-run-all lint:*",
     "lint:codespell": "(cd $npm_package_config_mc_root && ./mach lint -l codespell $npm_package_config_newtab_path)",
     "lint:eslint": "(cd $npm_package_config_mc_root && ./mach lint -l eslint $npm_package_config_newtab_path)",

@@ -245,7 +245,7 @@ var DownloadsPanel = {
    * initialized the first time this method is called, and the panel is shown
    * only when data is ready.
    */
-  showPanel(openedManually = false) {
+  showPanel(openedManually = false, isKeyPress = false) {
     Services.telemetry.scalarAdd("downloads.panel_shown", 1);
     DownloadsCommon.log("Opening the downloads panel.");
 
@@ -263,7 +263,7 @@ var DownloadsPanel = {
     // called while another window is closing (like the window for selecting
     // whether to save or open the file), and that would cause the panel to
     // close immediately.
-    setTimeout(() => this._openPopupIfDataReady(openedManually), 0);
+    setTimeout(() => this._openPopupIfDataReady(openedManually, isKeyPress), 0);
 
     DownloadsCommon.log("Waiting for the downloads panel to appear.");
     this._state = this.kStateWaitingData;
@@ -636,7 +636,7 @@ var DownloadsPanel = {
   /**
    * Opens the downloads panel when data is ready to be displayed.
    */
-  _openPopupIfDataReady(openedManually) {
+  _openPopupIfDataReady(openedManually, isKeyPress) {
     // We don't want to open the popup if we already displayed it, or if we are
     // still loading data.
     if (this._state != this.kStateWaitingData || DownloadsView.loading) {
@@ -674,6 +674,11 @@ var DownloadsPanel = {
     }
 
     DownloadsCommon.log("Opening downloads panel popup.");
+
+    if (isKeyPress) {
+      // If the panel was opened via a keypress, enable focus indicators.
+      this.keyFocusing = true;
+    }
 
     // Delay displaying the panel because this function will sometimes be
     // called while another window is closing (like the window for selecting
