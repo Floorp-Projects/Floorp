@@ -33,6 +33,10 @@ urlbar:
     Exposure is sent once per browsing session after the first urlbar query is
     made.
   variables:
+    bestMatchEnabled:
+      type: boolean
+      fallbackPref: browser.urlbar.bestMatch.enabled
+      description: Whether best match results are enabled
     merinoClientVariants:
       type: string
       fallbackPref: browser.urlbar.merino.clientVariants
