@@ -2979,9 +2979,8 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
       ->Then(
           mThread, __func__,
           [report = std::move(report), idGen = mIdGenerator](
-              const nsTArray<UniquePtr<dom::RTCStatsCollection>>&
-                  aStats) mutable {
-            idGen->RewriteIds(aStats, report.get());
+              nsTArray<UniquePtr<dom::RTCStatsCollection>> aStats) mutable {
+            idGen->RewriteIds(std::move(aStats), report.get());
             return dom::RTCStatsReportPromise::CreateAndResolve(
                 std::move(report), __func__);
           },

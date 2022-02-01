@@ -143,6 +143,12 @@ class RTCStatsReport final : public nsWrapperCache {
   nsCOMPtr<nsPIDOMWindowInner> mParent;
 };
 
+void MergeStats(UniquePtr<dom::RTCStatsCollection> aFromStats,
+                dom::RTCStatsCollection* aIntoStats);
+
+void FlattenStats(nsTArray<UniquePtr<dom::RTCStatsCollection>> aFromStats,
+                  dom::RTCStatsCollection* aIntoStats);
+
 }  // namespace dom
 }  // namespace mozilla
 
