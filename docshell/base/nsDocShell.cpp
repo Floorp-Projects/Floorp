@@ -390,7 +390,8 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mWillChangeProcess(false),
       mIsNavigating(false),
       mSuspendMediaWhenInactive(false),
-      mForcedAutodetection(false) {
+      mForcedAutodetection(false),
+      mCheckingSessionHistory(false) {
   // If no outer window ID was provided, generate a new one.
   if (aContentWindowID == 0) {
     mContentWindowID = nsContentUtils::GenerateWindowId();
@@ -788,6 +789,11 @@ nsresult nsDocShell::LoadURI(nsDocShellLoadState* aLoadState,
       ("nsDocShell[%p]: loading %s with flags 0x%08x", this,
        aLoadState->URI()->GetSpecOrDefault().get(), aLoadState->LoadFlags()));
 
+  // Always clear mCheckingSessionHistory. MaybeHandleSubframeHistory uses it
+  // internally when querying session history information from the parent
+  // process.
+  mCheckingSessionHistory = false;
+
   if ((!aLoadState->LoadIsFromSessionHistory() &&
        !LOAD_TYPE_HAS_FLAGS(aLoadState->LoadType(),
                             LOAD_FLAGS_REPLACE_HISTORY)) ||
@@ -891,6 +897,83 @@ bool nsDocShell::IsLoadingFromSessionHistory() {
   return mActiveEntryIsLoadingFromSessionHistory;
 }
 
+// StopDetector is modeled similarly to OnloadBlocker; it is a rather
+// dummy nsIRequest implementation which can be added to an nsILoadGroup to
+// detect Cancel calls.
+class StopDetector final : public nsIRequest {
+ public:
+  StopDetector() = default;
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUEST
+
+  bool Canceled() { return mCanceled; }
+
+ private:
+  ~StopDetector() = default;
+
+  bool mCanceled = false;
+};
+
+NS_IMPL_ISUPPORTS(StopDetector, nsIRequest)
+
+NS_IMETHODIMP
+StopDetector::GetName(nsACString& aResult) {
+  aResult.AssignLiteral("about:stop-detector");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StopDetector::IsPending(bool* aRetVal) {
+  *aRetVal = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StopDetector::GetStatus(nsresult* aStatus) {
+  *aStatus = NS_OK;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StopDetector::Cancel(nsresult aStatus) {
+  mCanceled = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StopDetector::Suspend(void) { return NS_OK; }
+NS_IMETHODIMP
+StopDetector::Resume(void) { return NS_OK; }
+
+NS_IMETHODIMP
+StopDetector::GetLoadGroup(nsILoadGroup** aLoadGroup) {
+  *aLoadGroup = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StopDetector::SetLoadGroup(nsILoadGroup* aLoadGroup) { return NS_OK; }
+
+NS_IMETHODIMP
+StopDetector::GetLoadFlags(nsLoadFlags* aLoadFlags) {
+  *aLoadFlags = nsIRequest::LOAD_NORMAL;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StopDetector::GetTRRMode(nsIRequest::TRRMode* aTRRMode) {
+  return GetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
+StopDetector::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
+  return SetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
+StopDetector::SetLoadFlags(nsLoadFlags aLoadFlags) { return NS_OK; }
+
 bool nsDocShell::MaybeHandleSubframeHistory(
     nsDocShellLoadState* aLoadState, bool aContinueHandlingSubframeHistory) {
   // First, verify if this is a subframe.
@@ -933,7 +1016,9 @@ bool nsDocShell::MaybeHandleSubframeHistory(
           !GetCreatedDynamically()) {
         if (XRE_IsContentProcess()) {
           dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
-          if (contentChild) {
+          nsCOMPtr<nsILoadGroup> loadGroup;
+          GetLoadGroup(getter_AddRefs(loadGroup));
+          if (contentChild && loadGroup && !mCheckingSessionHistory) {
             RefPtr<Document> parentDoc = parentDS->GetDocument();
             parentDoc->BlockOnload();
             RefPtr<BrowsingContext> browsingContext = mBrowsingContext;
@@ -941,11 +1026,34 @@ bool nsDocShell::MaybeHandleSubframeHistory(
                 mBrowsingContext->GetCurrentLoadIdentifier();
             RefPtr<nsDocShellLoadState> loadState = aLoadState;
             bool isNavigating = mIsNavigating;
+            RefPtr<StopDetector> stopDetector = new StopDetector();
+            loadGroup->AddRequest(stopDetector, nullptr);
+            // Need to set mCheckingSessionHistory so that
+            // GetIsAttemptingToNavigate() returns true.
+            mCheckingSessionHistory = true;
 
             auto resolve =
                 [currentLoadIdentifier, browsingContext, parentDoc, loadState,
-                 isNavigating](
+                 isNavigating, loadGroup, stopDetector](
                     mozilla::Maybe<LoadingSessionHistoryInfo>&& aResult) {
+                  RefPtr<nsDocShell> docShell =
+                      static_cast<nsDocShell*>(browsingContext->GetDocShell());
+                  auto unblockParent = MakeScopeExit(
+                      [loadGroup, stopDetector, parentDoc, docShell]() {
+                        if (docShell) {
+                          docShell->mCheckingSessionHistory = false;
+                        }
+                        loadGroup->RemoveRequest(stopDetector, nullptr, NS_OK);
+                        parentDoc->UnblockOnload(false);
+                      });
+
+                  if (!docShell || !docShell->mCheckingSessionHistory) {
+                    return;
+                  }
+
+                  if (stopDetector->Canceled()) {
+                    return;
+                  }
                   if (currentLoadIdentifier ==
                           browsingContext->GetCurrentLoadIdentifier() &&
                       aResult.isSome()) {
@@ -954,16 +1062,20 @@ bool nsDocShell::MaybeHandleSubframeHistory(
                     // history, index doesn't need to be updated.
                     loadState->SetLoadIsFromSessionHistory(0, false);
                   }
-                  RefPtr<nsDocShell> docShell =
-                      static_cast<nsDocShell*>(browsingContext->GetDocShell());
-                  if (docShell) {
-                    // We got the results back from the parent process, call
-                    // LoadURI again with the possibly updated data.
-                    docShell->LoadURI(loadState, isNavigating, true);
-                  }
-                  parentDoc->UnblockOnload(false);
+
+                  // We got the results back from the parent process, call
+                  // LoadURI again with the possibly updated data.
+                  docShell->LoadURI(loadState, isNavigating, true);
                 };
-            auto reject = [parentDoc](mozilla::ipc::ResponseRejectReason) {
+            auto reject = [loadGroup, stopDetector, browsingContext,
+                           parentDoc](mozilla::ipc::ResponseRejectReason) {
+              RefPtr<nsDocShell> docShell =
+                  static_cast<nsDocShell*>(browsingContext->GetDocShell());
+              if (docShell) {
+                docShell->mCheckingSessionHistory = false;
+              }
+              // In practise reject shouldn't be called ever.
+              loadGroup->RemoveRequest(stopDetector, nullptr, NS_OK);
               parentDoc->UnblockOnload(false);
             };
             contentChild->SendGetLoadingSessionHistoryInfoFromParent(
@@ -13412,7 +13524,7 @@ bool nsDocShell::GetIsAttemptingToNavigate() {
     }
   }
 
-  return false;
+  return mCheckingSessionHistory;
 }
 
 void nsDocShell::SetLoadingSessionHistoryInfo(
