@@ -14,6 +14,9 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 const { PanelTestProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/PanelTestProvider.jsm"
 );
+const { ASRouter } = ChromeUtils.import(
+  "resource://activity-stream/lib/ASRouter.jsm"
+);
 
 /**
  * These tests ensure that the experiment and remote default capabilities
@@ -49,6 +52,39 @@ function waitForTelemetryEvent(category) {
     }
     return null;
   }, "waiting for telemetry event");
+}
+
+async function setupMSExperimentWithMessage(message) {
+  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "pbNewtab",
+    enabled: true,
+    value: message,
+  });
+  Services.prefs.setStringPref(
+    "browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments",
+    '{"id":"messaging-experiments","enabled":true,"type":"remote-experiments","messageGroups":["pbNewtab"],"updateCycleInMs":0}'
+  );
+  // Reload the provider
+  await ASRouter._updateMessageProviders();
+  // Wait to load the messages from the messaging-experiments provider
+  await ASRouter.loadMessagesFromAllProviders();
+
+  registerCleanupFunction(async () => {
+    // Reload the provider again at cleanup to remove the experiment message
+    await ASRouter._updateMessageProviders();
+    // Wait to load the messages from the messaging-experiments provider
+    await ASRouter.loadMessagesFromAllProviders();
+    Services.prefs.clearUserPref(
+      "browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments"
+    );
+  });
+
+  Assert.ok(
+    ASRouter.state.messages.find(m => m.id.includes(message.id)),
+    "Experiment message found in ASRouter state"
+  );
+
+  return doExperimentCleanup;
 }
 
 add_task(async function test_experiment_plain_text() {
@@ -225,6 +261,7 @@ add_task(async function test_experiment_click_info_telemetry() {
     featureId: "privatebrowsing",
     enabled: true,
     value: {
+      infoEnabled: true,
       infoLinkUrl: "http://example.com",
     },
   });
@@ -453,42 +490,22 @@ add_task(async function test_experiment_top_promo() {
 
 add_task(async function test_experiment_messaging_system() {
   const LOCALE = Services.locale.appLocaleAsBCP47;
-  let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "pbNewtab",
-    enabled: true,
-    value: {
-      id: "PB_NEWTAB_MESSAGING_SYSTEM",
-      template: "pb_newtab",
-      content: {
-        promoEnabled: true,
-        infoEnabled: true,
-        infoBody: "fluent:about-private-browsing-info-title",
-        promoLinkText: "fluent:about-private-browsing-prominent-cta",
-        infoLinkUrl: "http://foo.example.com/%LOCALE%",
-        promoLinkUrl: "http://bar.example.com/%LOCALE%",
-      },
-      // Priority ensures this message is picked over the one in
-      // OnboardingMessageProvider
-      priority: 5,
-      targeting: "true",
+  let doExperimentCleanup = await setupMSExperimentWithMessage({
+    id: "PB_NEWTAB_MESSAGING_SYSTEM",
+    template: "pb_newtab",
+    content: {
+      promoEnabled: true,
+      infoEnabled: true,
+      infoBody: "fluent:about-private-browsing-info-title",
+      promoLinkText: "fluent:about-private-browsing-prominent-cta",
+      infoLinkUrl: "http://foo.example.com/%LOCALE%",
+      promoLinkUrl: "http://bar.example.com/%LOCALE%",
     },
+    // Priority ensures this message is picked over the one in
+    // OnboardingMessageProvider
+    priority: 5,
+    targeting: "true",
   });
-  Services.prefs.setStringPref(
-    "browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments",
-    '{"id":"messaging-experiments","enabled":true,"type":"remote-experiments","messageGroups":["pbNewtab"],"updateCycleInMs":0}'
-  );
-  const { ASRouter } = ChromeUtils.import(
-    "resource://activity-stream/lib/ASRouter.jsm"
-  );
-  // Reload the provider
-  await ASRouter._updateMessageProviders();
-  // Wait to load the messages from the messaging-experiments provider
-  await ASRouter.loadMessagesFromAllProviders();
-
-  Assert.ok(
-    ASRouter.state.messages.find(m => m.id === "PB_NEWTAB_MESSAGING_SYSTEM"),
-    "Experiment message found in ASRouter state"
-  );
 
   Services.telemetry.clearEvents();
 
@@ -536,5 +553,114 @@ add_task(async function test_experiment_messaging_system() {
   );
 
   await BrowserTestUtils.closeWindow(win);
+  await doExperimentCleanup();
+});
+
+add_task(async function test_experiment_messaging_system_impressions() {
+  const LOCALE = Services.locale.appLocaleAsBCP47;
+  let doExperimentCleanup = await setupMSExperimentWithMessage({
+    id: `PB_NEWTAB_MESSAGING_SYSTEM_${Math.random()}`,
+    template: "pb_newtab",
+    content: {
+      promoEnabled: true,
+      infoEnabled: true,
+      infoBody: "fluent:about-private-browsing-info-title",
+      promoLinkText: "fluent:about-private-browsing-prominent-cta",
+      infoLinkUrl: "http://foo.example.com/%LOCALE%",
+      promoLinkUrl: "http://bar.example.com/%LOCALE%",
+    },
+    frequency: {
+      lifetime: 2,
+    },
+    // Priority ensures this message is picked over the one in
+    // OnboardingMessageProvider
+    priority: 5,
+    targeting: "true",
+  });
+  let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
+
+  await SpecialPowers.spawn(tab1, [LOCALE], async function(locale) {
+    is(
+      content.document.querySelector(".promo a").getAttribute("href"),
+      "http://bar.example.com/" + locale,
+      "should format the promoLinkUrl url"
+    );
+  });
+
+  let { win: win2, tab: tab2 } = await openTabAndWaitForRender();
+
+  await SpecialPowers.spawn(tab2, [LOCALE], async function(locale) {
+    is(
+      content.document.querySelector(".promo a").getAttribute("href"),
+      "http://bar.example.com/" + locale,
+      "should format the promoLinkUrl url"
+    );
+  });
+
+  let { win: win3, tab: tab3 } = await openTabAndWaitForRender();
+
+  await SpecialPowers.spawn(tab3, [], async function() {
+    is(
+      content.document
+        .querySelector(".promo a")
+        .getAttribute("href")
+        ?.includes("example.com"),
+      false,
+      "should no longer render the experiment message after 2 impressions"
+    );
+  });
+
+  await BrowserTestUtils.closeWindow(win1);
+  await BrowserTestUtils.closeWindow(win2);
+  await BrowserTestUtils.closeWindow(win3);
+  await doExperimentCleanup();
+});
+
+add_task(async function test_experiment_messaging_system_dismiss() {
+  const LOCALE = Services.locale.appLocaleAsBCP47;
+  let doExperimentCleanup = await setupMSExperimentWithMessage({
+    id: `PB_NEWTAB_MESSAGING_SYSTEM_${Math.random()}`,
+    template: "pb_newtab",
+    content: {
+      promoEnabled: true,
+      infoEnabled: true,
+      infoBody: "fluent:about-private-browsing-info-title",
+      promoLinkText: "fluent:about-private-browsing-prominent-cta",
+      infoLinkUrl: "http://foo.example.com/%LOCALE%",
+      promoLinkUrl: "http://bar.example.com/%LOCALE%",
+    },
+    // Priority ensures this message is picked over the one in
+    // OnboardingMessageProvider
+    priority: 5,
+    targeting: "true",
+  });
+
+  let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
+
+  await SpecialPowers.spawn(tab1, [LOCALE], async function(locale) {
+    is(
+      content.document.querySelector(".promo a").getAttribute("href"),
+      "http://bar.example.com/" + locale,
+      "should format the promoLinkUrl url"
+    );
+
+    content.document.querySelector("#dismiss-btn").click();
+  });
+
+  let { win: win2, tab: tab2 } = await openTabAndWaitForRender();
+
+  await SpecialPowers.spawn(tab2, [], async function() {
+    is(
+      content.document
+        .querySelector(".promo a")
+        .getAttribute("href")
+        ?.includes("example.com"),
+      false,
+      "should no longer render the experiment message after blocking"
+    );
+  });
+
+  await BrowserTestUtils.closeWindow(win1);
+  await BrowserTestUtils.closeWindow(win2);
   await doExperimentCleanup();
 });
