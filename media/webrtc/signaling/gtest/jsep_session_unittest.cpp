@@ -732,13 +732,13 @@ class JsepSessionTest : public JsepSessionTestBase,
   void EnsureNegotiationFailure(SdpMediaSection::MediaType type,
                                 const std::string& codecName) {
     for (auto& codec : mSessionOff->Codecs()) {
-      if (codec->mType == type && codec->mName != codecName) {
+      if (codec->Type() == type && codec->mName != codecName) {
         codec->mEnabled = false;
       }
     }
 
     for (auto& codec : mSessionAns->Codecs()) {
-      if (codec->mType == type && codec->mName == codecName) {
+      if (codec->Type() == type && codec->mName == codecName) {
         codec->mEnabled = false;
       }
     }
@@ -7055,7 +7055,7 @@ TEST_F(JsepSessionTest, TestAnswerPTAsymmetryRtxApt) {
 
 TEST_F(JsepSessionTest, TestOfferNoRtx) {
   for (auto& codec : mSessionOff->Codecs()) {
-    if (codec->mType == SdpMediaSection::kVideo) {
+    if (codec->Type() == SdpMediaSection::kVideo) {
       JsepVideoCodecDescription* videoCodec =
           static_cast<JsepVideoCodecDescription*>(codec.get());
       videoCodec->mRtxEnabled = false;
@@ -7091,7 +7091,7 @@ TEST_F(JsepSessionTest, TestOfferNoRtx) {
 
 TEST_F(JsepSessionTest, TestOneWayRtx) {
   for (auto& codec : mSessionAns->Codecs()) {
-    if (codec->mType == SdpMediaSection::kVideo) {
+    if (codec->Type() == SdpMediaSection::kVideo) {
       JsepVideoCodecDescription* videoCodec =
           static_cast<JsepVideoCodecDescription*>(codec.get());
       videoCodec->mRtxEnabled = false;
@@ -7185,7 +7185,7 @@ TEST_F(JsepSessionTest, TestOfferRtxNoMsid) {
 
 TEST_F(JsepSessionTest, TestDuplicatePayloadTypes) {
   for (auto& codec : mSessionOff->Codecs()) {
-    if (codec->mType == SdpMediaSection::kVideo) {
+    if (codec->Type() == SdpMediaSection::kVideo) {
       JsepVideoCodecDescription* videoCodec =
           static_cast<JsepVideoCodecDescription*>(codec.get());
       videoCodec->mRtxPayloadType = "97";

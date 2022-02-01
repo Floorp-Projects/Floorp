@@ -669,7 +669,7 @@ class ConfigureCodec {
   }
 
   void operator()(UniquePtr<JsepCodecDescription>& codec) const {
-    switch (codec->mType) {
+    switch (codec->Type()) {
       case SdpMediaSection::kAudio: {
         JsepAudioCodecDescription& audioCodec =
             static_cast<JsepAudioCodecDescription&>(*codec);
@@ -769,7 +769,7 @@ class ConfigureRedCodec {
   }
 
   void operator()(UniquePtr<JsepCodecDescription>& codec) const {
-    if (codec->mType == SdpMediaSection::kVideo && codec->mEnabled == false) {
+    if (codec->Type() == SdpMediaSection::kVideo && !codec->mEnabled) {
       uint8_t pt = (uint8_t)strtoul(codec->mDefaultPt.c_str(), nullptr, 10);
       // don't search for the codec payload type unless we have a valid
       // conversion (non-zero)
@@ -906,11 +906,11 @@ nsresult PeerConnectionImpl::GetDatachannelParameters(
   }
 
   for (const auto& codec : encoding.GetCodecs()) {
-    if (codec->mType != SdpMediaSection::kApplication) {
+    if (codec->Type() != SdpMediaSection::kApplication) {
       CSFLogError(LOGTAG,
                   "%s: Codec type for m=application was %u, this "
                   "is a bug.",
-                  __FUNCTION__, static_cast<unsigned>(codec->mType));
+                  __FUNCTION__, static_cast<unsigned>(codec->Type()));
       MOZ_ASSERT(false, "Codec for m=application was not \"application\"");
       return NS_ERROR_FAILURE;
     }

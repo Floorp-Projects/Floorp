@@ -64,7 +64,7 @@ void JsepTrack::PopulateCodecs(
     const std::vector<UniquePtr<JsepCodecDescription>>& prototype) {
   mPrototypeCodecs.clear();
   for (const auto& prototypeCodec : prototype) {
-    if (prototypeCodec->mType == mType) {
+    if (prototypeCodec->Type() == mType) {
       mPrototypeCodecs.emplace_back(prototypeCodec->Clone());
       mPrototypeCodecs.back()->mDirection = mDirection;
     }
@@ -209,7 +209,7 @@ void JsepTrack::PruneSsrcs(size_t aNumSsrcs) {
 bool JsepTrack::IsRtxEnabled(
     const std::vector<UniquePtr<JsepCodecDescription>>& codecs) const {
   for (const auto& codec : codecs) {
-    if (codec->mType == SdpMediaSection::kVideo &&
+    if (codec->Type() == SdpMediaSection::kVideo &&
         static_cast<const JsepVideoCodecDescription*>(codec.get())
             ->mRtxEnabled) {
       return true;
@@ -414,7 +414,7 @@ std::vector<UniquePtr<JsepCodecDescription>> JsepTrack::NegotiateCodecs(
         codec->mDefaultPt = fmt;
 
         // Remember whether we negotiated rtx and the associated pt for later.
-        if (codec->mType == SdpMediaSection::kVideo) {
+        if (codec->Type() == SdpMediaSection::kVideo) {
           JsepVideoCodecDescription* videoCodec =
               static_cast<JsepVideoCodecDescription*>(codec.get());
           JsepVideoCodecDescription* cloneVideoCodec =
