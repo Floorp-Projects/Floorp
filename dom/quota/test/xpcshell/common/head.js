@@ -223,6 +223,13 @@ function persisted(principal, callback) {
   return request;
 }
 
+function estimateOrigin(principal, callback) {
+  let request = SpecialPowers._getQuotaManager().estimate(principal);
+  request.callback = callback;
+
+  return request;
+}
+
 function listOrigins(callback) {
   let request = SpecialPowers._getQuotaManager().listOrigins(callback);
   request.callback = callback;

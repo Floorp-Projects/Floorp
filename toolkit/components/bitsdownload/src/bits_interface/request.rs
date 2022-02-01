@@ -328,7 +328,7 @@ impl BitsRequest {
     #[allow(non_snake_case)]
     fn get_bits_transfer_error_nsIBitsRequest(&self) -> Result<i32, nsresult> {
         let error_type = match self.download_status_error_type.get() {
-            None => nsIBits::ERROR_TYPE_SUCCESS as i32,
+            None => nsIBits::ERROR_TYPE_SUCCESS,
             Some(error_type) => error_type.bits_code(),
         };
         Ok(error_type)

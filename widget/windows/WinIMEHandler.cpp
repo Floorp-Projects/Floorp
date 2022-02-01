@@ -1069,7 +1069,7 @@ bool IMEHandler::MaybeCreateNativeCaret(nsWindow* aWindow) {
   options.mRelativeToInsertionPoint = true;
   queryCaretRectEvent.InitForQueryCaretRect(0, options);
 
-  aWindow->DispatchWindowEvent(&queryCaretRectEvent);
+  aWindow->DispatchWindowEvent(queryCaretRectEvent);
   if (NS_WARN_IF(queryCaretRectEvent.Failed())) {
     return false;
   }

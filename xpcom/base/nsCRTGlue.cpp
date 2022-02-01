@@ -227,14 +227,6 @@ void NS_MakeRandomString(char* aBuf, int32_t aBufLen) {
 
 #endif
 
-#ifdef HAVE_VA_COPY
-#  define VARARGS_ASSIGN(foo, bar) VA_COPY(foo, bar)
-#elif defined(HAVE_VA_LIST_AS_ARRAY)
-#  define VARARGS_ASSIGN(foo, bar) foo[0] = bar[0]
-#else
-#  define VARARGS_ASSIGN(foo, bar) (foo) = (bar)
-#endif
-
 #if defined(XP_WIN)
 void vprintf_stderr(const char* aFmt, va_list aArgs) {
   if (IsDebuggerPresent()) {
@@ -244,7 +236,7 @@ void vprintf_stderr(const char* aFmt, va_list aArgs) {
       auto buf = MakeUnique<char[]>(lengthNeeded);
       if (buf) {
         va_list argsCpy;
-        VARARGS_ASSIGN(argsCpy, aArgs);
+        va_copy(argsCpy, aArgs);
         vsnprintf(buf.get(), lengthNeeded, aFmt, argsCpy);
         buf[lengthNeeded - 1] = '\0';
         va_end(argsCpy);

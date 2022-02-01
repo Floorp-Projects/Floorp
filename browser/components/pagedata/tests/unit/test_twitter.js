@@ -9,6 +9,7 @@
 add_task(async function test_twitter_card() {
   await verifyPageData(
     `
+      <!DOCTYPE html>
       <html>
       <head>
         <meta name="twitter:card" content="summary_large_image">

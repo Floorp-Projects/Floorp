@@ -38,9 +38,35 @@ export class CardGrid extends React.PureComponent {
     );
   }
 
+  renderDSSubHeader(title) {
+    return (
+      <div className="section-top-bar ds-sub-header">
+        <h3 className="section-title-container">
+          <span className="section-title">
+            <FluentOrText message={title} />
+          </span>
+        </h3>
+      </div>
+    );
+  }
+
   renderCards() {
-    let { items } = this.props;
-    const { lastCardMessageEnabled, loadMoreThreshold } = this.props;
+    let { items, compact } = this.props;
+    const {
+      hideDescriptions,
+      lastCardMessageEnabled,
+      saveToPocketCard,
+      loadMoreThreshold,
+      compactGrid,
+      compactImages,
+      imageGradient,
+      newSponsoredLabel,
+      titleLines,
+      descLines,
+      readTime,
+      essentialReadsHeader,
+      editorsPicksHeader,
+    } = this.props;
     let showLastCardMessage = lastCardMessageEnabled;
     if (this.showLoadMore) {
       items = loadMoreThreshold;
@@ -65,6 +91,7 @@ export class CardGrid extends React.PureComponent {
             raw_image_src={rec.raw_image_src}
             word_count={rec.word_count}
             time_to_read={rec.time_to_read}
+            displayReadTime={readTime}
             title={rec.title}
             excerpt={rec.excerpt}
             url={rec.url}
@@ -72,7 +99,6 @@ export class CardGrid extends React.PureComponent {
             shim={rec.shim}
             type={this.props.type}
             context={rec.context}
-            compact={this.props.compact}
             sponsor={rec.sponsor}
             sponsored_by_override={rec.sponsored_by_override}
             dispatch={this.props.dispatch}
@@ -82,8 +108,13 @@ export class CardGrid extends React.PureComponent {
             bookmarkGuid={rec.bookmarkGuid}
             engagement={rec.engagement}
             display_engagement_labels={this.props.display_engagement_labels}
-            include_descriptions={this.props.include_descriptions}
-            saveToPocketCard={this.props.saveToPocketCard}
+            hideDescriptions={hideDescriptions}
+            saveToPocketCard={saveToPocketCard}
+            compactImages={compactImages}
+            imageGradient={imageGradient}
+            newSponsoredLabel={newSponsoredLabel}
+            titleLines={titleLines}
+            descLines={descLines}
             cta={rec.cta}
             cta_variant={this.props.cta_variant}
             is_video={this.props.enable_video_playheads && rec.is_video}
@@ -91,6 +122,17 @@ export class CardGrid extends React.PureComponent {
           />
         )
       );
+    }
+
+    // If we have both header, inject the second one after the second row.
+    // For now this is English only.
+    if (essentialReadsHeader && editorsPicksHeader) {
+      // For compact second row is 8 cards, and regular it is 6 cards.
+      if (compact) {
+        cards.splice(8, 0, this.renderDSSubHeader("Editor’s Picks"));
+      } else {
+        cards.splice(6, 0, this.renderDSSubHeader("Editor’s Picks"));
+      }
     }
 
     // Replace last card with "you are all caught up card"
@@ -107,17 +149,17 @@ export class CardGrid extends React.PureComponent {
       ? `ds-card-grid-${this.props.display_variant}`
       : ``;
 
-    const compactClass = this.props.compact
-      ? `ds-card-grid-compact-variant`
-      : ``;
+    const compactClass = compact ? `ds-card-grid-compact-variant` : ``;
 
-    const includeDescriptions = this.props.include_descriptions
+    const hideDescriptionsClassName = !hideDescriptions
       ? `ds-card-grid-include-descriptions`
       : ``;
 
+    const compactGridClassName = compactGrid ? `ds-card-grid-compact` : ``;
+
     return (
       <div
-        className={`ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${compactClass} ${includeDescriptions}`}
+        className={`ds-card-grid ds-card-grid-${this.props.border} ${variantClass} ${compactClass} ${hideDescriptionsClassName} ${compactGridClassName}`}
       >
         {cards}
       </div>

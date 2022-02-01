@@ -11,7 +11,7 @@ use alloc::{
     vec::Vec,
 };
 
-use crate::buf::IntoIter;
+use crate::buf::{IntoIter, UninitSlice};
 use crate::bytes::Vtable;
 #[allow(unused)]
 use crate::loom::sync::atomic::AtomicMut;
@@ -380,6 +380,8 @@ impl BytesMut {
     /// If `len` is greater than the buffer's current length, this has no
     /// effect.
     ///
+    /// Existing underlying capacity is preserved.
+    ///
     /// The [`split_off`] method can emulate `truncate`, but this causes the
     /// excess bytes to be returned instead of dropped.
     ///
@@ -402,7 +404,7 @@ impl BytesMut {
         }
     }
 
-    /// Clears the buffer, removing all data.
+    /// Clears the buffer, removing all data. Existing capacity is preserved.
     ///
     /// # Examples
     ///
@@ -445,7 +447,7 @@ impl BytesMut {
             let additional = new_len - len;
             self.reserve(additional);
             unsafe {
-                let dst = self.bytes_mut().as_mut_ptr();
+                let dst = self.chunk_mut().as_mut_ptr();
                 ptr::write_bytes(dst, value, additional);
                 self.set_len(new_len);
             }
@@ -684,7 +686,7 @@ impl BytesMut {
         self.reserve(cnt);
 
         unsafe {
-            let dst = self.maybe_uninit_bytes();
+            let dst = self.uninit_slice();
             // Reserved above
             debug_assert!(dst.len() >= cnt);
 
@@ -819,7 +821,7 @@ impl BytesMut {
     }
 
     fn try_unsplit(&mut self, other: BytesMut) -> Result<(), BytesMut> {
-        if other.is_empty() {
+        if other.capacity() == 0 {
             return Ok(());
         }
 
@@ -910,12 +912,12 @@ impl BytesMut {
     }
 
     #[inline]
-    fn maybe_uninit_bytes(&mut self) -> &mut [mem::MaybeUninit<u8>] {
+    fn uninit_slice(&mut self) -> &mut UninitSlice {
         unsafe {
             let ptr = self.ptr.as_ptr().offset(self.len as isize);
             let len = self.cap - self.len;
 
-            slice::from_raw_parts_mut(ptr as *mut mem::MaybeUninit<u8>, len)
+            UninitSlice::from_raw_parts_mut(ptr, len)
         }
     }
 }
@@ -944,7 +946,7 @@ impl Buf for BytesMut {
     }
 
     #[inline]
-    fn bytes(&self) -> &[u8] {
+    fn chunk(&self) -> &[u8] {
         self.as_slice()
     }
 
@@ -961,12 +963,12 @@ impl Buf for BytesMut {
         }
     }
 
-    fn to_bytes(&mut self) -> crate::Bytes {
-        self.split().freeze()
+    fn copy_to_bytes(&mut self, len: usize) -> crate::Bytes {
+        self.split_to(len).freeze()
     }
 }
 
-impl BufMut for BytesMut {
+unsafe impl BufMut for BytesMut {
     #[inline]
     fn remaining_mut(&self) -> usize {
         usize::MAX - self.len()
@@ -985,11 +987,11 @@ impl BufMut for BytesMut {
     }
 
     #[inline]
-    fn bytes_mut(&mut self) -> &mut [mem::MaybeUninit<u8>] {
+    fn chunk_mut(&mut self) -> &mut UninitSlice {
         if self.capacity() == self.len() {
             self.reserve(64);
         }
-        self.maybe_uninit_bytes()
+        self.uninit_slice()
     }
 
     // Specialize these methods so they can skip checking `remaining_mut`
@@ -1000,7 +1002,7 @@ impl BufMut for BytesMut {
         Self: Sized,
     {
         while src.has_remaining() {
-            let s = src.bytes();
+            let s = src.chunk();
             let l = s.len();
             self.extend_from_slice(s);
             src.advance(l);
@@ -1009,6 +1011,19 @@ impl BufMut for BytesMut {
 
     fn put_slice(&mut self, src: &[u8]) {
         self.extend_from_slice(src);
+    }
+
+    fn put_bytes(&mut self, val: u8, cnt: usize) {
+        self.reserve(cnt);
+        unsafe {
+            let dst = self.uninit_slice();
+            // Reserved above
+            debug_assert!(dst.len() >= cnt);
+
+            ptr::write_bytes(dst.as_mut_ptr(), val, cnt);
+
+            self.advance_mut(cnt);
+        }
     }
 }
 
@@ -1250,6 +1265,7 @@ impl Shared {
     }
 }
 
+#[inline]
 fn original_capacity_to_repr(cap: usize) -> usize {
     let width = PTR_WIDTH - ((cap >> MIN_ORIGINAL_CAPACITY_WIDTH).leading_zeros() as usize);
     cmp::min(
@@ -1476,6 +1492,7 @@ impl PartialEq<Bytes> for BytesMut {
     }
 }
 
+#[inline]
 fn vptr(ptr: *mut u8) -> NonNull<u8> {
     if cfg!(debug_assertions) {
         NonNull::new(ptr).expect("Vec pointer should be non-null")

@@ -11,10 +11,11 @@
 #include "mozilla/dom/MIDITypes.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/MIDITypes.h"
 #include "mozilla/Unused.h"
 #include "nsISupportsImpl.h"  // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
+#include "MIDILog.h"
 
 using namespace mozilla::ipc;
 
@@ -34,9 +35,16 @@ NS_IMPL_ADDREF_INHERITED(MIDIPort, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MIDIPort, DOMEventTargetHelper)
 
 MIDIPort::MIDIPort(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent)
-    : DOMEventTargetHelper(aWindow), mMIDIAccessParent(aMIDIAccessParent) {
+    : DOMEventTargetHelper(aWindow),
+      mMIDIAccessParent(aMIDIAccessParent),
+      mKeepAlive(false) {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aMIDIAccessParent);
+
+  Document* aDoc = GetOwner()->GetExtantDoc();
+  if (aDoc) {
+    aDoc->DisallowBFCaching();
+  }
 }
 
 MIDIPort::~MIDIPort() {
@@ -65,13 +73,21 @@ bool MIDIPort::Initialize(const MIDIPortInfo& aPortInfo, bool aSysexEnabled) {
     return false;
   }
   mPort = port;
+  LOG("MIDIPort::Initialize (%s, %s)",
+      NS_ConvertUTF16toUTF8(mPort->Name()).get(),
+      MIDIPortTypeValues::strings[uint32_t(mPort->Type())].value);
   // Make sure to increase the ref count for the port, so it can be cleaned up
   // by the IPC manager.
   mPort->SetActorAlive();
   return true;
 }
 
-void MIDIPort::UnsetIPCPort() { mPort = nullptr; }
+void MIDIPort::UnsetIPCPort() {
+  LOG("MIDIPort::UnsetIPCPort (%s, %s)",
+      NS_ConvertUTF16toUTF8(mPort->Name()).get(),
+      MIDIPortTypeValues::strings[uint32_t(mPort->Type())].value);
+  mPort = nullptr;
+}
 
 void MIDIPort::GetId(nsString& aRetVal) const {
   MOZ_ASSERT(mPort);
@@ -114,6 +130,7 @@ bool MIDIPort::SysexEnabled() const {
 }
 
 already_AddRefed<Promise> MIDIPort::Open() {
+  LOG("MIDIPort::Open");
   MOZ_ASSERT(mPort);
   RefPtr<Promise> p;
   if (mOpeningPromise) {
@@ -132,6 +149,7 @@ already_AddRefed<Promise> MIDIPort::Open() {
 }
 
 already_AddRefed<Promise> MIDIPort::Close() {
+  LOG("MIDIPort::Close");
   MOZ_ASSERT(mPort);
   RefPtr<Promise> p;
   if (mClosingPromise) {
@@ -150,12 +168,15 @@ already_AddRefed<Promise> MIDIPort::Close() {
 }
 
 void MIDIPort::Notify(const void_t& aVoid) {
+  LOG("MIDIPort::notify MIDIAccess shutting down, dropping reference.");
   // If we're getting notified, it means the MIDIAccess parent object is dead.
   // Nullify our copy.
   mMIDIAccessParent = nullptr;
 }
 
 void MIDIPort::FireStateChangeEvent() {
+  StateChange();
+
   MOZ_ASSERT(mPort);
   if (mPort->ConnectionState() == MIDIPortConnectionState::Open ||
       mPort->ConnectionState() == MIDIPortConnectionState::Pending) {
@@ -173,10 +194,20 @@ void MIDIPort::FireStateChangeEvent() {
       mClosingPromise = nullptr;
     }
   }
+
   if (mPort->DeviceState() == MIDIPortDeviceState::Connected &&
       mPort->ConnectionState() == MIDIPortConnectionState::Pending) {
     mPort->SendOpen();
   }
+
+  if (mPort->ConnectionState() == MIDIPortConnectionState::Open ||
+      (mPort->DeviceState() == MIDIPortDeviceState::Connected &&
+       mPort->ConnectionState() == MIDIPortConnectionState::Pending)) {
+    KeepAliveOnStatechange();
+  } else {
+    DontKeepAliveOnStatechange();
+  }
+
   // Fire MIDIAccess events first so that the port is no longer in the port
   // maps.
   if (mMIDIAccessParent) {
@@ -190,8 +221,31 @@ void MIDIPort::FireStateChangeEvent() {
   DispatchTrustedEvent(event);
 }
 
+void MIDIPort::StateChange() {}
+
 void MIDIPort::Receive(const nsTArray<MIDIMessage>& aMsg) {
   MOZ_CRASH("We should never get here!");
+}
+
+void MIDIPort::DisconnectFromOwner() {
+  DontKeepAliveOnStatechange();
+  mPort->SendClose();
+
+  DOMEventTargetHelper::DisconnectFromOwner();
+}
+
+void MIDIPort::KeepAliveOnStatechange() {
+  if (!mKeepAlive) {
+    mKeepAlive = true;
+    KeepAliveIfHasListenersFor(nsGkAtoms::onstatechange);
+  }
+}
+
+void MIDIPort::DontKeepAliveOnStatechange() {
+  if (mKeepAlive) {
+    IgnoreKeepAliveIfHasListenersFor(nsGkAtoms::onstatechange);
+    mKeepAlive = false;
+  }
 }
 
 }  // namespace mozilla::dom

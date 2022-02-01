@@ -5,3 +5,4 @@ export MKFSHFS=$MOZ_FETCHES_DIR/hfsplus-tools/newfs_hfs
 export DMG_TOOL=$MOZ_FETCHES_DIR/dmg/dmg
 export HFS_TOOL=$MOZ_FETCHES_DIR/dmg/hfsplus
 ac_add_options --disable-compile-environment
+ac_add_options --target=x86_64-apple-darwin

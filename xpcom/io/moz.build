@@ -99,6 +99,7 @@ EXPORTS.mozilla += [
     "SnappyCompressOutputStream.h",
     "SnappyFrameUtils.h",
     "SnappyUncompressInputStream.h",
+    "StreamBufferSource.h",
 ]
 
 UNIFIED_SOURCES += [

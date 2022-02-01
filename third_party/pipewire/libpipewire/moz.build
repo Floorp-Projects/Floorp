@@ -8,7 +8,8 @@ SOURCES += [
     'mozpipewire.cpp',
 ]
 
-CXXFLAGS += CONFIG['TK_CFLAGS']
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG['MOZ_GTK3_CFLAGS']
 
 LOCAL_INCLUDES += ['/third_party/pipewire']
 

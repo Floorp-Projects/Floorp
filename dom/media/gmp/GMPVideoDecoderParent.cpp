@@ -436,7 +436,7 @@ mozilla::ipc::IPCResult GMPVideoDecoderParent::RecvParentShmemForPool(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult GMPVideoDecoderParent::AnswerNeedShmem(
+mozilla::ipc::IPCResult GMPVideoDecoderParent::RecvNeedShmem(
     const uint32_t& aFrameBufferSize, Shmem* aMem) {
   ipc::Shmem mem;
 

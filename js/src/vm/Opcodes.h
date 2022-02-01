@@ -211,6 +211,9 @@
  *
  * [Index]
  *   [Constants]
+ *   [Compound primitives]
+ *     Record literals
+ *     Tuple literals
  *   [Expressions]
  *     Unary operators
  *     Binary operators
@@ -1528,6 +1531,94 @@
      *   Stack: => regexp
      */ \
     MACRO(RegExp, reg_exp, NULL, 5, 0, 1, JOF_REGEXP) \
+    /*
+     * Initialize a new record, preallocating `length` memory slots. `length` can still grow
+     * if needed, for example when using the spread operator.
+     *
+     * Implements: [RecordLiteral Evaluation][1] step 1.
+     *
+     * [1]: https://tc39.es/proposal-record-tuple/#sec-record-initializer-runtime-semantics-evaluation
+     *
+     *   Category: Compound primitives
+     *   Type: Record literals
+     *   Operands: uint32_t length
+     *   Stack: => rval
+     */ \
+    IF_RECORD_TUPLE(MACRO(InitRecord, init_record, NULL, 5, 0, 1, JOF_UINT32)) \
+    /*
+     * Add the last element in the stack to the preceding tuple.
+     *
+     * Implements: [AddPropertyIntoRecordEntriesList][1].
+     *
+     * [1]: https://tc39.es/proposal-record-tuple/#sec-addpropertyintorecordentrieslist
+     *
+     *   Category: Compound primitives
+     *   Type: Record literals
+     *   Operands:
+     *   Stack: record, key, value => record
+     */ \
+    IF_RECORD_TUPLE(MACRO(AddRecordProperty, add_record_property, NULL, 1, 3, 1, JOF_BYTE)) \
+    /*
+     * Add the last element in the stack to the preceding tuple.
+     *
+     * Implements: [RecordPropertyDefinitionEvaluation][1] for
+     *   RecordPropertyDefinition : ... AssignmentExpression
+     *
+     * [1]: https://tc39.es/proposal-record-tuple/#sec-addpropertyintorecordentrieslist
+     *
+     *   Category: Compound primitives
+     *   Type: Record literals
+     *   Operands:
+     *   Stack: record, value => record
+     */ \
+    IF_RECORD_TUPLE(MACRO(AddRecordSpread, add_record_spread, NULL, 1, 2, 1, JOF_BYTE)) \
+    /*
+     * Mark a record as "initialized", going from "write-only" mode to
+     * "read-only" mode.
+     *
+     *   Category: Compound primitives
+     *   Type: Record literals
+     *   Operands:
+     *   Stack: record => record
+     */ \
+    IF_RECORD_TUPLE(MACRO(FinishRecord, finish_record, NULL, 1, 1, 1, JOF_BYTE)) \
+    /*
+     * Initialize a new tuple, preallocating `length` memory slots. `length` can still grow
+     * if needed, for example when using the spread operator.
+     *
+     * Implements: [TupleLiteral Evaluation][1] step 1.
+     *
+     * [1]: https://tc39.es/proposal-record-tuple/#sec-tuple-initializer-runtime-semantics-evaluation
+     *
+     *   Category: Compound primitives
+     *   Type: Tuple literals
+     *   Operands: uint32_t length
+     *   Stack: => rval
+     */ \
+    IF_RECORD_TUPLE(MACRO(InitTuple, init_tuple, NULL, 5, 0, 1, JOF_UINT32)) \
+    /*
+     * Add the last element in the stack to the preceding tuple.
+     *
+     * Implements: [AddValueToTupleSequenceList][1].
+     *
+     * [1]: https://tc39.es/proposal-record-tuple/#sec-addvaluetotuplesequencelist
+     *
+     *   Category: Compound primitives
+     *   Type: Tuple literals
+     *   Operands:
+     *   Stack: tuple, element => tuple
+     */ \
+    IF_RECORD_TUPLE(MACRO(AddTupleElement, add_tuple_element, NULL, 1, 2, 1, JOF_BYTE)) \
+    /*
+     * Mark a tuple as "initialized", going from "write-only" mode to
+     * "read-only" mode.
+     *
+     *   Category: Compound primitives
+     *   Type: Tuple literals
+     *   Operands:
+     *   Stack: tuple => tuple
+     */ \
+    IF_RECORD_TUPLE(MACRO(FinishTuple, finish_tuple, NULL, 1, 1, 1, JOF_BYTE)) \
     /*
      * Push a new function object.
      *
@@ -3511,13 +3602,13 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  MACRO(228)                                   \
-  MACRO(229)                                   \
-  MACRO(230)                                   \
-  MACRO(231)                                   \
-  MACRO(232)                                   \
-  MACRO(233)                                   \
-  MACRO(234)                                   \
+  IF_RECORD_TUPLE(/* empty */, MACRO(228))     \
+  IF_RECORD_TUPLE(/* empty */, MACRO(229))     \
+  IF_RECORD_TUPLE(/* empty */, MACRO(230))     \
+  IF_RECORD_TUPLE(/* empty */, MACRO(231))     \
+  IF_RECORD_TUPLE(/* empty */, MACRO(232))     \
+  IF_RECORD_TUPLE(/* empty */, MACRO(233))     \
+  IF_RECORD_TUPLE(/* empty */, MACRO(234))     \
   MACRO(235)                                   \
   MACRO(236)                                   \
   MACRO(237)                                   \

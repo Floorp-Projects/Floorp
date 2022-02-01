@@ -1,9 +1,17 @@
-#![allow(clippy::eq_op, clippy::shadow_unrelated, clippy::wildcard_imports)]
+#![allow(
+    clippy::eq_op,
+    clippy::items_after_statements,
+    clippy::needless_pass_by_value,
+    clippy::shadow_unrelated,
+    clippy::wildcard_imports
+)]
 
 mod common;
 
 use self::common::*;
-use anyhow::ensure;
+use anyhow::{anyhow, ensure};
+use std::cell::Cell;
+use std::future;
 
 #[test]
 fn test_messages() {
@@ -39,6 +47,33 @@ fn test_ensure() {
     };
     assert_eq!(
         f().unwrap_err().to_string(),
-        "Condition failed: `v + v == 1`",
+        "Condition failed: `v + v == 1` (2 vs 1)",
     );
+}
+
+#[test]
+fn test_temporaries() {
+    fn require_send_sync(_: impl Send + Sync) {}
+
+    require_send_sync(async {
+        // If anyhow hasn't dropped any temporary format_args it creates by the
+        // time it's done evaluating, those will stick around until the
+        // semicolon, which is on the other side of the await point, making the
+        // enclosing future non-Send.
+        future::ready(anyhow!("...")).await;
+    });
+
+    fn message(cell: Cell<&str>) -> &str {
+        cell.get()
+    }
+
+    require_send_sync(async {
+        future::ready(anyhow!(message(Cell::new("...")))).await;
+    });
+}
+
+#[test]
+fn test_brace_escape() {
+    let err = anyhow!("unterminated ${{..}} expression");
+    assert_eq!("unterminated ${..} expression", err.to_string());
 }

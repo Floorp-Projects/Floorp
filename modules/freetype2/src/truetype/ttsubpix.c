@@ -315,7 +315,7 @@
   static const SPH_TweakRule  SKIP_NONPIXEL_Y_MOVES_Rules
                               [SKIP_NONPIXEL_Y_MOVES_RULES_SIZE] =
   {
-    /* fix vwxyz thinness*/
+    /* fix vwxyz thinness */
     { "Consolas", 0, "", 0 },
     /* Fix thin middle stems */
     { "Core MS Legacy Fonts", 0, "Regular", 0 },

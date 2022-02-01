@@ -71,6 +71,7 @@
 #include "nsIFrameInlines.h"
 #include "mozilla/intl/Bidi.h"
 #include "mozilla/intl/Segmenter.h"
+#include "mozilla/intl/UnicodeProperties.h"
 #include "mozilla/ServoStyleSet.h"
 
 #include <algorithm>
@@ -2157,8 +2158,17 @@ static already_AddRefed<gfxTextRun> GetHyphenTextRun(nsTextFrame* aTextFrame,
 
   RefPtr<nsFontMetrics> fm =
       nsLayoutUtils::GetInflatedFontMetricsForFrame(aTextFrame);
-  return fm->GetThebesFontGroup()->MakeHyphenTextRun(
-      dt, aTextFrame->PresContext()->AppUnitsPerDevPixel());
+  auto* fontGroup = fm->GetThebesFontGroup();
+  auto appPerDev = aTextFrame->PresContext()->AppUnitsPerDevPixel();
+  const auto& hyphenateChar = aTextFrame->StyleText()->mHyphenateCharacter;
+  if (hyphenateChar.IsAuto()) {
+    return fontGroup->MakeHyphenTextRun(dt, appPerDev);
+  }
+  auto* missingFonts = aTextFrame->PresContext()->MissingFontRecorder();
+  const NS_ConvertUTF8toUTF16 hyphenStr(hyphenateChar.AsString().AsString());
+  return fontGroup->MakeTextRun(hyphenStr.BeginReading(), hyphenStr.Length(),
+                                dt, appPerDev, gfx::ShapedTextFlags(),
+                                nsTextFrameUtils::Flags(), missingFonts);
 }
 
 already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
@@ -2240,8 +2250,8 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
     }
     fontStyle = f->StyleFont();
     nsIFrame* parent = mLineContainer->GetParent();
-    if (NS_MATHML_MATHVARIANT_NONE != fontStyle->mMathVariant) {
-      if (NS_MATHML_MATHVARIANT_NORMAL != fontStyle->mMathVariant) {
+    if (StyleMathVariant::None != fontStyle->mMathVariant) {
+      if (StyleMathVariant::Normal != fontStyle->mMathVariant) {
         anyMathMLStyling = true;
       }
     } else if (mLineContainer->HasAnyStateBits(NS_FRAME_IS_IN_SINGLE_CHAR_MI)) {
@@ -3640,7 +3650,13 @@ void nsTextFrame::PropertyProvider::CalcTabWidths(Range aRange,
 
 gfxFloat nsTextFrame::PropertyProvider::GetHyphenWidth() const {
   if (mHyphenWidth < 0) {
-    mHyphenWidth = GetFontGroup()->GetHyphenWidth(this);
+    const auto& hyphenateChar = mTextStyle->mHyphenateCharacter;
+    if (hyphenateChar.IsAuto()) {
+      mHyphenWidth = GetFontGroup()->GetHyphenWidth(this);
+    } else {
+      RefPtr<gfxTextRun> hyphRun = GetHyphenTextRun(mFrame, nullptr);
+      mHyphenWidth = hyphRun ? hyphRun->GetAdvanceWidth() : 0;
+    }
   }
   return mHyphenWidth + mLetterSpacing;
 }
@@ -8369,9 +8385,10 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
   // should extend to entire orthographic "syllable" clusters, we don't
   // want to allow this to split a ligature.
   bool allowSplitLigature;
+  bool usesIndicHalfForms = false;
 
-  typedef unicode::Script Script;
-  Script script = unicode::GetScriptCode(usv);
+  typedef intl::Script Script;
+  Script script = intl::UnicodeProperties::GetScriptCode(usv);
   switch (script) {
     default:
       allowSplitLigature = true;
@@ -8392,6 +8409,9 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
     case Script::BENGALI:
     case Script::DEVANAGARI:
     case Script::GUJARATI:
+      usesIndicHalfForms = true;
+      [[fallthrough]];
+
     case Script::GURMUKHI:
     case Script::KANNADA:
     case Script::MALAYALAM:
@@ -8434,6 +8454,33 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
   FindClusterEnd(aTextRun, endOffset, &iter, allowSplitLigature);
 
   i = iter.GetOriginalOffset() - aOffset;
+
+  // Heuristic for Indic scripts that like to form conjuncts:
+  // If we ended at a virama that is ligated with the preceding character
+  // (e.g. creating a half-form), then don't stop here; include the next
+  // cluster as well so that we don't break a conjunct.
+  //
+  // Unfortunately this cannot distinguish between a letter+virama that ligate
+  // to create a half-form (in which case we have a conjunct that should not
+  // be broken) and a letter+virama that ligate purely for presentational
+  // reasons to position the (visible) virama component (in which case breaking
+  // after the virama would be acceptable). So results may be imperfect,
+  // depending how the font has chosen to implement visible viramas.
+  if (usesIndicHalfForms) {
+    while (i + 1 < length &&
+           !aTextRun->IsLigatureGroupStart(iter.GetSkippedOffset())) {
+      char32_t c = aFrag->ScalarValueAt(AssertedCast<uint32_t>(aOffset + i));
+      if (intl::UnicodeProperties::GetCombiningClass(c) ==
+          HB_UNICODE_COMBINING_CLASS_VIRAMA) {
+        iter.AdvanceOriginal(1);
+        FindClusterEnd(aTextRun, endOffset, &iter, allowSplitLigature);
+        i = iter.GetOriginalOffset() - aOffset;
+      } else {
+        break;
+      }
+    }
+  }
+
   if (i + 1 == length) {
     return true;
   }
@@ -10238,25 +10285,25 @@ bool nsTextFrame::IsEmpty() {
 
 #ifdef DEBUG_FRAME_DUMP
 // Translate the mapped content into a string that's printable
-void nsTextFrame::ToCString(nsCString& aBuf,
-                            int32_t* aTotalContentLength) const {
+void nsTextFrame::ToCString(nsCString& aBuf) const {
   // Get the frames text content
   const nsTextFragment* frag = TextFragment();
   if (!frag) {
     return;
   }
 
-  // Compute the total length of the text content.
-  *aTotalContentLength = frag->GetLength();
-
   const uint32_t contentLength = AssertedCast<uint32_t>(GetContentLength());
-  // Set current fragment and current fragment offset
   if (0 == contentLength) {
     return;
   }
+
+  // Limit the length to fragment length in case the text has not been reflowed.
+  const uint32_t fragLength =
+      std::min(frag->GetLength(), AssertedCast<uint32_t>(GetContentEnd()));
+
   uint32_t fragOffset = AssertedCast<uint32_t>(GetContentOffset());
-  const uint32_t n = fragOffset + contentLength;
-  while (fragOffset < n) {
+
+  while (fragOffset < fragLength) {
     char16_t ch = frag->CharAt(fragOffset++);
     if (ch == '\r') {
       aBuf.AppendLiteral("\\r");
@@ -10274,10 +10321,9 @@ void nsTextFrame::ToCString(nsCString& aBuf,
 
 nsresult nsTextFrame::GetFrameName(nsAString& aResult) const {
   MakeFrameName(u"Text"_ns, aResult);
-  int32_t totalContentLength;
   nsAutoCString tmp;
-  ToCString(tmp, &totalContentLength);
-  tmp.SetLength(std::min(tmp.Length(), 50u));
+  ToCString(tmp);
+  tmp.SetLength(std::min<size_t>(tmp.Length(), 50u));
   aResult += u"\""_ns + NS_ConvertASCIItoUTF16(tmp) + u"\""_ns;
   return NS_OK;
 }

@@ -1031,6 +1031,16 @@ interface nsILoadInfo : nsISupports
   attribute nsIURI resultPrincipalURI;
 
   /**
+   * This is the URI used to create the most recent channel in the load's
+   * redirect chain, if it's different from channel's `originalURI`.
+   * This is always null for loads not handled by DocumentLoadListener. If
+   * non-null, channelCreationOriginalURI will be used instead of channel's
+   * originalURI to re-create the channel in the final content process selected
+   * to perform the load.
+   */
+  attribute nsIURI channelCreationOriginalURI;
+
+  /**
    * Returns a unique nsID used to construct the null principal for the
    * resulting resource if the SANDBOXED_ORIGIN flag is set.  This is used by
    * GetChannelResultPrincipal() to ensure that the same null principal is

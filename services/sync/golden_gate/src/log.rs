@@ -53,7 +53,7 @@ impl LogSink {
             let mut raw_max_level = 0i16;
             let rv = unsafe { logger.GetMaxLevel(&mut raw_max_level) };
             let max_level = if rv.succeeded() {
-                match raw_max_level as i64 {
+                match raw_max_level {
                     mozIServicesLogSink::LEVEL_ERROR => LevelFilter::Error,
                     mozIServicesLogSink::LEVEL_WARN => LevelFilter::Warn,
                     mozIServicesLogSink::LEVEL_DEBUG => LevelFilter::Debug,

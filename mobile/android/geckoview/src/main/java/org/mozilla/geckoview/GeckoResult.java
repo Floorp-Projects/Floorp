@@ -797,7 +797,7 @@ public class GeckoResult<T> {
    *
    * @param other The result that this result should mirror
    */
-  private void completeFrom(final GeckoResult<T> other) {
+  public void completeFrom(final @Nullable GeckoResult<T> other) {
     if (other == null) {
       complete(null);
       return;

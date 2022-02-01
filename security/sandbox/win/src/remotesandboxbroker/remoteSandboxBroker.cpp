@@ -99,7 +99,7 @@ bool RemoteSandboxBroker::LaunchApp(
 
   uint64_t handle = 0;
   bool ok = false;
-  bool rv = mParent.CallLaunchApp(std::move(mParameters), &ok, &handle) && ok;
+  bool rv = mParent.SendLaunchApp(std::move(mParameters), &ok, &handle) && ok;
   mParameters.shareHandles().Clear();
   if (!rv) {
     return false;

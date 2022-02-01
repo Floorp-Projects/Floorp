@@ -47,7 +47,7 @@ interface nsISFVBareItem : nsISupports {
      * Used to identify type of bare item without querying for interface
      * (like nsISFVString, etc).
      */
-    readonly attribute long long type;
+    readonly attribute long type;
 };
 
 [scriptable, builtinclass, uuid(843eea44-990a-422c-bbf2-2aa4ba9ee4d2)]

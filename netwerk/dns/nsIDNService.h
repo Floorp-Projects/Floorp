@@ -8,12 +8,13 @@
 
 #include "nsIIDNService.h"
 #include "nsCOMPtr.h"
-#include "nsUnicodeScriptCodes.h"
 #include "nsWeakReference.h"
 
-#include "unicode/uidna.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/intl/UnicodeScriptCodes.h"
 #include "mozilla/net/IDNBlocklistUtils.h"
+#include "mozilla/intl/IDNA.h"
+#include "mozilla/UniquePtr.h"
 
 #include "nsString.h"
 
@@ -147,8 +148,7 @@ class nsIDNService final : public nsIIDNService,
    * For the "Moderately restrictive" profile, Latin is also allowed
    *  with other scripts except Cyrillic and Greek
    */
-  bool illegalScriptCombo(mozilla::unicode::Script script,
-                          int32_t& savedScript);
+  bool illegalScriptCombo(mozilla::intl::Script script, int32_t& savedScript);
 
   /**
    * Convert a DNS label from ASCII to Unicode using IDNA2008
@@ -161,7 +161,7 @@ class nsIDNService final : public nsIIDNService,
   nsresult IDNA2008StringPrep(const nsAString& input, nsAString& output,
                               stringPrepFlag flag);
 
-  UIDNA* mIDNA;
+  mozilla::UniquePtr<mozilla::intl::IDNA> mIDNA;
 
   // We use this mutex to guard access to:
   // |mIDNBlocklist|, |mShowPunycode|, |mRestrictionProfile|,

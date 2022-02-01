@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/RDDChild.h"
 #include "mozilla/RDDProcessManager.h"
 #include "mozilla/WinDllServices.h"
@@ -129,6 +130,10 @@ MultiGetUntrustedModulesData::GetUntrustedModuleLoadEvents() {
   dom::ContentParent::GetAll(contentParents);
   for (auto&& contentParent : contentParents) {
     AddPending(contentParent->SendGetUntrustedModulesData());
+  }
+
+  if (auto* socketActor = net::SocketProcessParent::GetSingleton()) {
+    AddPending(socketActor->SendGetUntrustedModulesData());
   }
 
   if (RDDProcessManager* rddMgr = RDDProcessManager::Get()) {

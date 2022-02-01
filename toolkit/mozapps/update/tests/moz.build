@@ -40,6 +40,8 @@ LOCAL_INCLUDES += [
 if CONFIG["OS_ARCH"] == "WINNT":
     OS_LIBS += [
         "shlwapi",
+        "user32",
+        "uuid",
     ]
 
 USE_LIBS += [

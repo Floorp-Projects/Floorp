@@ -231,7 +231,7 @@ Status float_to_int(const float* const row_in, pixel_type* const row_out,
   JXL_ASSERT(sizeof(pixel_type) * 8 >= bits);
   if (!fp) {
     for (size_t x = 0; x < xsize; ++x) {
-      row_out[x] = row_in[x] * factor + 0.5f;
+      row_out[x] = row_in[x] * factor + (row_in[x] < 0 ? -0.5f : 0.5f);
     }
     return true;
   }

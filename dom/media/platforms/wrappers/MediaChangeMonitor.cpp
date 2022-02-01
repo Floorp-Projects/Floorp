@@ -20,6 +20,11 @@
 
 namespace mozilla {
 
+extern LazyLogModule gMediaDecoderLog;
+
+#define LOG(x, ...) \
+  MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, (x, ##__VA_ARGS__))
+
 // H264ChangeMonitor is used to ensure that only AVCC or AnnexB is fed to the
 // underlying MediaDataDecoder. The H264ChangeMonitor allows playback of content
 // where the SPS NAL may not be provided in the init segment (e.g. AVC3 or Annex
@@ -154,7 +159,9 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
   explicit VPXChangeMonitor(const VideoInfo& aInfo)
       : mCurrentConfig(aInfo),
         mCodec(VPXDecoder::IsVP8(aInfo.mMimeType) ? VPXDecoder::Codec::VP8
-                                                  : VPXDecoder::Codec::VP9) {
+                                                  : VPXDecoder::Codec::VP9),
+        mDisplayAspectRatioFromContainer((float)(aInfo.mDisplay.Width()) /
+                                         (float)(aInfo.mDisplay.Height())) {
     mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
   }
 
@@ -207,9 +214,26 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
                            "content and will request a new decoder");
       rv = NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
     }
+
+    LOG("Detect inband %s resolution changes, image (%d,%d)->(%d,%d), display "
+        "(%" PRId32 ",%" PRId32 ")->(%" PRId32 ",%" PRId32 "), DAR %f->%f",
+        mCodec == VPXDecoder::Codec::VP9 ? "VP9" : "VP8",
+        mCurrentConfig.mImage.Width(), mCurrentConfig.mImage.Height(),
+        info.mImage.Width(), info.mImage.Height(),
+        mCurrentConfig.mDisplay.Width(), mCurrentConfig.mDisplay.Height(),
+        info.mDisplay.Width(), info.mDisplay.Height(),
+        mDisplayAspectRatioFromContainer, info.mDisplayAspectRatio);
+
     mInfo = Some(info);
     mCurrentConfig.mImage = info.mImage;
-    mCurrentConfig.mDisplay = info.mDisplay;
+    // For the display information, we choose to trust the container more. From
+    // our experience, the display information contained in byte stream is less
+    // trustworty. Therefore, we will update the display only when the new
+    // display matches the original DAR in the container.
+    if (FuzzyEqualsMultiplicative(info.mDisplayAspectRatio,
+                                  mDisplayAspectRatioFromContainer)) {
+      mCurrentConfig.mDisplay = info.mDisplay;
+    }
     mCurrentConfig.mColorDepth = gfx::ColorDepthForBitDepth(info.mBitDepth);
     mCurrentConfig.mColorSpace = Some(info.ColorSpace());
     mCurrentConfig.mColorRange = info.ColorRange();
@@ -237,6 +261,7 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
   Maybe<VPXDecoder::VPXStreamInfo> mInfo;
   uint32_t mStreamID = 0;
   RefPtr<TrackInfoSharedPtr> mTrackInfo;
+  const float mDisplayAspectRatioFromContainer;
 };
 
 MediaChangeMonitor::MediaChangeMonitor(
@@ -755,5 +780,7 @@ void MediaChangeMonitor::FlushThenShutdownDecoder(
           })
       ->Track(mFlushRequest);
 }
+
+#undef LOG
 
 }  // namespace mozilla

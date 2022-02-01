@@ -11,6 +11,7 @@
 
 #  include "mozilla/AbstractThread.h"
 #  include "mozilla/Maybe.h"
+#  include "mozilla/ProfilerRunnable.h"
 #  include "mozilla/UniquePtr.h"
 #  include "nsIDirectTaskDispatcher.h"
 #  include "nsISupportsImpl.h"
@@ -39,6 +40,7 @@ class SimpleTaskQueue {
     while (!queue.empty()) {
       nsCOMPtr<nsIRunnable> r = std::move(queue.front());
       queue.pop();
+      AUTO_PROFILE_FOLLOWING_RUNNABLE(r);
       r->Run();
     }
   }
@@ -224,6 +226,7 @@ class AutoTaskDispatcher : public TaskDispatcher {
       MaybeDrainDirectTasks();
 
       for (size_t i = 0; i < mTasks->mRegularTasks.Length(); ++i) {
+        AUTO_PROFILE_FOLLOWING_RUNNABLE(mTasks->mRegularTasks[i]);
         mTasks->mRegularTasks[i]->Run();
 
         // Scope direct tasks tightly to the task that generated them.

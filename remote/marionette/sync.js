@@ -13,7 +13,6 @@ const EXPORTED_SYMBOLS = [
   "Sleep",
   "TimedPromise",
   "waitForEvent",
-  "waitForLoadEvent",
   "waitForMessage",
   "waitForObserverTopic",
 ];
@@ -27,10 +26,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
 
   error: "chrome://remote/content/shared/webdriver/Errors.jsm",
-  EventDispatcher:
-    "chrome://remote/content/marionette/actors/MarionetteEventsParent.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
-  truncate: "chrome://remote/content/shared/Format.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () =>
@@ -522,47 +518,6 @@ function waitForEvent(
       capture,
       wantsUntrusted
     );
-  });
-}
-
-/**
- * Wait for a load event to be fired on a specific browsing context.
- * The supported events are:
- *   - beforeunload
- *   - DOMContentLoaded
- *   - hashchange
- *   - pagehide
- *   - pageshow
- *   - popstate
- *
- * @param {string} eventName
- *     The specific load event name to wait for.
- * @param {function(): BrowsingContext} browsingContextFn
- *     A function that returns the reference to the browsing context for which
- *     the load event should be fired.
- *
- * @return {Promise.<Object>}
- *     Promise which resolves when the load event has been fired
- */
-function waitForLoadEvent(eventName, browsingContextFn) {
-  let onPageLoad;
-  return new Promise(resolve => {
-    onPageLoad = (_, data) => {
-      // Ignore load events from other browsing contexts
-      if (data.browsingContext !== browsingContextFn()) {
-        return;
-      }
-
-      logger.trace(
-        truncate`[${data.browsingContext.id}] Received event ${data.type} for ${data.documentURI}`
-      );
-
-      if (data.type === eventName) {
-        EventDispatcher.off("page-load", onPageLoad);
-        resolve(data);
-      }
-    };
-    EventDispatcher.on("page-load", onPageLoad);
   });
 }
 

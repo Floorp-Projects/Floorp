@@ -105,17 +105,17 @@ class SendPortListRunnable final : public MIDIBackgroundRunnable {
  */
 class SetStatusRunnable final : public MIDIBackgroundRunnable {
  public:
-  SetStatusRunnable(const nsAString& aPortId, MIDIPortDeviceState aState,
+  SetStatusRunnable(MIDIPortParent* aPort, MIDIPortDeviceState aState,
                     MIDIPortConnectionState aConnection)
       : MIDIBackgroundRunnable("SetStatusRunnable"),
-        mPortId(aPortId),
+        mPort(aPort),
         mState(aState),
         mConnection(aConnection) {}
   ~SetStatusRunnable() = default;
   void RunInternal() override;
 
  private:
-  nsString mPortId;
+  MIDIPortParent* mPort;
   MIDIPortDeviceState mState;
   MIDIPortConnectionState mConnection;
 };

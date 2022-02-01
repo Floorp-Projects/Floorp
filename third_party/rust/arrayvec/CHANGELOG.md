@@ -1,6 +1,20 @@
 Recent Changes (arrayvec)
 =========================
 
+## 0.7.2
+
+- Add `.as_mut_str()` to `ArrayString` by @clarfonthey
+- Add `remaining_capacity` to `ArrayString` by @bhgomes
+- Add `zero_filled` constructor by @c410-f3r
+- Optimize `retain` by @TennyZhuang and @niklasf
+- Make the following methods `const` by @bhgomes:
+  - len
+  - is_empty
+  - capacity
+  - is_full
+  - remaining_capacity
+  - CapacityError::new
+
 ## 0.7.1
 
 - Add new ArrayVec methods `.take()` and `.into_inner_unchecked()` by @conradludgate

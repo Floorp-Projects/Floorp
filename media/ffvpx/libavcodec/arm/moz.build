@@ -5,8 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    'fft_fixed_init_arm.c',
-    'fft_fixed_neon.S',
     'fft_init_arm.c',
     'fft_neon.S',
     'fft_vfp.S',

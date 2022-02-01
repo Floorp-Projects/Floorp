@@ -32,16 +32,28 @@ impl Receiver {
     /// If `timeout` is `Some`, the thread is blocked for **at most** `timeout`
     /// duration. If `timeout` is `None`, then the thread is blocked until the
     /// shutdown signal is received.
-    pub(crate) fn wait(&mut self, timeout: Option<Duration>) {
-        use crate::runtime::enter::{enter, try_enter};
+    ///
+    /// If the timeout has elapsed, it returns `false`, otherwise it returns `true`.
+    pub(crate) fn wait(&mut self, timeout: Option<Duration>) -> bool {
+        use crate::runtime::enter::try_enter;
 
-        let mut e = if std::thread::panicking() {
-            match try_enter() {
-                Some(enter) => enter,
-                _ => return,
+        if timeout == Some(Duration::from_nanos(0)) {
+            return true;
+        }
+
+        let mut e = match try_enter(false) {
+            Some(enter) => enter,
+            _ => {
+                if std::thread::panicking() {
+                    // Don't panic in a panic
+                    return false;
+                } else {
+                    panic!(
+                        "Cannot drop a runtime in a context where blocking is not allowed. \
+                        This happens when a runtime is dropped from within an asynchronous context."
+                    );
+                }
             }
-        } else {
-            enter()
         };
 
         // The oneshot completes with an Err
@@ -50,9 +62,10 @@ impl Receiver {
         // current thread (usually, shutting down a runtime stored in a
         // thread-local).
         if let Some(timeout) = timeout {
-            let _ = e.block_on_timeout(&mut self.rx, timeout);
+            e.block_on_timeout(&mut self.rx, timeout).is_ok()
         } else {
             let _ = e.block_on(&mut self.rx);
+            true
         }
     }
 }

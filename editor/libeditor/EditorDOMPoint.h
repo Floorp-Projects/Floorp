@@ -497,8 +497,7 @@ class EditorDOMPointBase final {
     if (mChild == mParent->GetFirstChild()) {
       const_cast<SelfType*>(this)->mOffset = mozilla::Some(0);
     } else {
-      const_cast<SelfType*>(this)->mOffset =
-          mozilla::Some(mParent->ComputeIndexOf(mChild));
+      const_cast<SelfType*>(this)->mOffset = mParent->ComputeIndexOf(mChild);
     }
     return mOffset.value();
   }

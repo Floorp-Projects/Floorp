@@ -91,9 +91,9 @@ struct CFLFunction {
       fdme_v += IfThenElse(av >= thres, zero, dme);
     }
 
-    *fpeps = first_derivative_peps + GetLane(SumOfLanes(fdpe_v));
-    *fmeps = first_derivative_meps + GetLane(SumOfLanes(fdme_v));
-    return first_derivative + GetLane(SumOfLanes(fd_v));
+    *fpeps = first_derivative_peps + GetLane(SumOfLanes(df, fdpe_v));
+    *fmeps = first_derivative_meps + GetLane(SumOfLanes(df, fdme_v));
+    return first_derivative + GetLane(SumOfLanes(df, fd_v));
   }
 
   const float* JXL_RESTRICT values_m;
@@ -124,8 +124,8 @@ int32_t FindBestMultiplier(const float* values_m, const float* values_s,
       cb = MulAdd(a, b, cb);
     }
     // + distance_mul * x^2 * num
-    x = -GetLane(SumOfLanes(cb)) /
-        (GetLane(SumOfLanes(ca)) + num * distance_mul * 0.5f);
+    x = -GetLane(SumOfLanes(df, cb)) /
+        (GetLane(SumOfLanes(df, ca)) + num * distance_mul * 0.5f);
   } else {
     constexpr float eps = 1;
     constexpr float kClamp = 20.0f;

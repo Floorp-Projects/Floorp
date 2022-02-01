@@ -118,11 +118,11 @@ where
 
 // Forwarding impl of Sink from the underlying stream
 #[cfg(feature = "sink")]
-impl<S, Fut, F, Item> Sink<Item> for Scan<S, S, Fut, F>
+impl<St, S, Fut, F, Item> Sink<Item> for Scan<St, S, Fut, F>
 where
-    S: Stream + Sink<Item>,
+    St: Stream + Sink<Item>,
 {
-    type Error = S::Error;
+    type Error = St::Error;
 
     delegate_sink!(stream, Item);
 }

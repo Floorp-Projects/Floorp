@@ -88,40 +88,11 @@ included_inclnames_to_ignore = set(
         "prtypes.h",  # NSPR
         "selfhosted.out.h",  # generated in $OBJDIR
         "shellmoduleloader.out.h",  # generated in $OBJDIR
-        "unicode/basictz.h",  # ICU
         "unicode/locid.h",  # ICU
-        "unicode/plurrule.h",  # ICU
-        "unicode/putil.h",  # ICU
-        "unicode/timezone.h",  # ICU
-        "unicode/ucal.h",  # ICU
         "unicode/uchar.h",  # ICU
-        "unicode/uclean.h",  # ICU
-        "unicode/ucol.h",  # ICU
-        "unicode/ucurr.h",  # ICU
-        "unicode/udat.h",  # ICU
-        "unicode/udata.h",  # ICU
-        "unicode/udateintervalformat.h",  # ICU
-        "unicode/udatpg.h",  # ICU
-        "unicode/udisplaycontext.h",  # ICU
-        "unicode/uenum.h",  # ICU
-        "unicode/ufieldpositer.h",  # ICU
-        "unicode/uformattedvalue.h",  # ICU
-        "unicode/ulistformatter.h",  # ICU
-        "unicode/uldnames.h",  # ICU
-        "unicode/uloc.h",  # ICU
-        "unicode/umachine.h",  # ICU
         "unicode/uniset.h",  # ICU
         "unicode/unistr.h",  # ICU
-        "unicode/unorm2.h",  # ICU
-        "unicode/unum.h",  # ICU
-        "unicode/unumberformatter.h",  # ICU
-        "unicode/unumsys.h",  # ICU
-        "unicode/upluralrules.h",  # ICU
-        "unicode/ureldatefmt.h",  # ICU
-        "unicode/ures.h",  # ICU
-        "unicode/ustring.h",  # ICU
         "unicode/utypes.h",  # ICU
-        "unicode/uversion.h",  # ICU
         "vtune/VTuneWrapper.h",  # VTune
         "wasm/WasmIntrinsicGenerated.h",  # generated in $OBJDIR"
         "zydis/ZydisAPI.h",  # Zydis

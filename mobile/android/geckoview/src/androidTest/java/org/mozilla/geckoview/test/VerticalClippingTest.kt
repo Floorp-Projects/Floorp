@@ -66,7 +66,7 @@ class VerticalClippingTest : BaseSessionTest() {
         // Disable failing test on Webrender. Bug 1670267
         assumeThat(sessionRule.env.isWebrender, equalTo(false))
         sessionRule.display?.setVerticalClipping(45)
-        sessionRule.session.loadTestPath(FIXED_BOTTOM)
+        mainSession.loadTestPath(FIXED_BOTTOM)
         sessionRule.waitUntilCalled(object : ContentDelegate {
             @AssertCalled(count = 1)
             override fun onFirstContentfulPaint(session: GeckoSession) {

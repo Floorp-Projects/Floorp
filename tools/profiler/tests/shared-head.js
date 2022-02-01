@@ -21,7 +21,7 @@ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const defaultSettings = {
   entries: 8 * 1024 * 1024, // 8M entries = 64MB
   interval: 1, // ms
-  features: ["threads"],
+  features: [],
   threads: ["GeckoMain"],
 };
 
@@ -44,7 +44,7 @@ function startProfiler(callersSettings) {
 
 function startProfilerForMarkerTests() {
   startProfiler({
-    features: ["threads", "nostacksampling", "js"],
+    features: ["nostacksampling", "js"],
     threads: ["GeckoMain", "DOM Worker"],
   });
 }

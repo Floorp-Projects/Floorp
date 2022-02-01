@@ -9,8 +9,8 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk" and CONFIG["MOZ_X11"]:
     SOURCES += [
         "gdk-screenshot.cpp",
     ]
-    CXXFLAGS += CONFIG["TK_CFLAGS"]
-    OS_LIBS += CONFIG["TK_LIBS"]
+    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
+    OS_LIBS += CONFIG["MOZ_GTK3_LIBS"]
     if CONFIG["MOZ_ENABLE_DBUS"]:
         OS_LIBS += CONFIG["MOZ_DBUS_GLIB_LIBS"]
 
@@ -23,7 +23,10 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     if CONFIG["CC_TYPE"] in ("clang", "gcc"):
         WIN32_EXE_LDFLAGS += ["-municode"]
     OS_LIBS += [
+        "advapi32",
+        "gdi32",
         "gdiplus",
+        "user32",
     ]
 
 NO_PGO = True

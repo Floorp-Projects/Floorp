@@ -38,7 +38,6 @@
 
 #include "nsHtml5AttributeName.h"
 #include "nsHtml5ElementName.h"
-#include "nsHtml5MetaScanner.h"
 #include "nsHtml5Portability.h"
 #include "nsHtml5StackNode.h"
 #include "nsHtml5StateSnapshot.h"

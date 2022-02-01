@@ -23,7 +23,7 @@ const {
 } = require("devtools/client/webconsole/test/node/fixtures/stubs/index");
 const serviceContainer = require("devtools/client/webconsole/test/node/fixtures/serviceContainer");
 
-const EXPECTED_URL = "http://mochi.test:8888/inexistent.html";
+const EXPECTED_URL = "https://example.com/inexistent.html";
 const EXPECTED_STATUS = /\[HTTP\/\d\.\d \d+ [A-Za-z ]+ \d+ms\]/;
 
 describe("NetworkEventMessage component:", () => {

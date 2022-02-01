@@ -4,7 +4,7 @@
 
 use api::BorderRadius;
 use api::units::*;
-use euclid::{Point2D, Rect, Box2D, Size2D, Vector2D};
+use euclid::{Point2D, Rect, Box2D, Size2D, Vector2D, point2};
 use euclid::{default, Transform2D, Transform3D, Scale};
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOf, MallocSizeOfOps};
 use plane_split::{Clipper, Polygon};
@@ -126,7 +126,7 @@ impl<T> VecHelper<T> for Vec<T> {
 // TODO(gw): We should try and incorporate F <-> T units here,
 //           but it's a bit tricky to do that now with the
 //           way the current spatial tree works.
-#[derive(Debug, Clone, Copy, MallocSizeOf)]
+#[derive(Debug, Clone, Copy, MallocSizeOf, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ScaleOffset {
@@ -1450,11 +1450,14 @@ impl<T: MallocSizeOf> MallocSizeOf for PrimaryArc<T> {
 /// modifications:
 ///
 /// * Removed `xMajor` parameter.
+/// * All arithmetics is done with double precision.
 pub fn scale_factors<Src, Dst>(
     mat: &Transform3D<f32, Src, Dst>
 ) -> (f32, f32) {
+    let m11 = mat.m11 as f64;
+    let m12 = mat.m12 as f64;
     // Determinant is just of the 2D component.
-    let det = mat.m11 * mat.m22 - mat.m12 * mat.m21;
+    let det = m11 * mat.m22 as f64 - m12 * mat.m21 as f64;
     if det == 0.0 {
         return (0.0, 0.0);
     }
@@ -1462,10 +1465,23 @@ pub fn scale_factors<Src, Dst>(
     // ignore mirroring
     let det = det.abs();
 
-    let major = (mat.m11 * mat.m11 + mat.m12 * mat.m12).sqrt();
+    let major = (m11 * m11 + m12 * m12).sqrt();
     let minor = if major != 0.0 { det / major } else { 0.0 };
 
-    (major, minor)
+    (major as f32, minor as f32)
+}
+
+#[test]
+fn scale_factors_large() {
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1748499
+    let mat = Transform3D::<f32, (), ()>::new(
+        1.6534229920333123e27, 3.673100922561787e27, 0.0, 0.0,
+        -3.673100922561787e27, 1.6534229920333123e27, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        -828140552192.0, -1771307401216.0, 0.0, 1.0,
+    );
+    let (major, minor) = scale_factors(&mat);
+    assert!(major.is_normal() && minor.is_normal());
 }
 
 /// Clamp scaling factor to a power of two.
@@ -1533,6 +1549,142 @@ macro_rules! c_str {
                                      as *const std::os::raw::c_char)
         }
     }
+}
+
+// Find a rectangle that is contained by the sum of r1 and r2.
+pub fn conservative_union_rect<U>(r1: &Box2D<f32, U>, r2: &Box2D<f32, U>) -> Box2D<f32, U> {
+    //  +---+---+   +--+-+--+
+    //  |   |   |   |  | |  |
+    //  |   |   |   |  | |  |
+    //  +---+---+   +--+-+--+
+    if r1.min.y == r2.min.y && r1.max.y == r2.max.y {
+        if r2.min.x <= r1.max.x && r2.max.x >= r1.min.x {
+            let min_x = f32::min(r1.min.x, r2.min.x);
+            let max_x = f32::max(r1.max.x, r2.max.x);
+
+            return Box2D {
+                min: point2(min_x, r1.min.y),
+                max: point2(max_x, r1.max.y),
+            }
+        }
+    }
+
+    //  +----+    +----+
+    //  |    |    |    |
+    //  |    |    +----+
+    //  +----+    |    |
+    //  |    |    +----+
+    //  |    |    |    |
+    //  +----+    +----+
+    if r1.min.x == r2.min.x && r1.max.x == r2.max.x {
+        if r2.min.y <= r1.max.y && r2.max.y >= r1.min.y {
+            let min_y = f32::min(r1.min.y, r2.min.y);
+            let max_y = f32::max(r1.max.y, r2.max.y);
+
+            return Box2D {
+                min: point2(r1.min.x, min_y),
+                max: point2(r1.max.x, max_y),
+            }
+        }
+    }
+
+    if r1.area() >= r2.area() { *r1 } else {*r2 }
+}
+
+#[test]
+fn test_conservative_union_rect() {
+    // Adjacent, x axis
+    let r = conservative_union_rect(
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+        &LayoutRect { min: point2(4.0, 2.0), max: point2(9.0, 6.0) },
+    );
+    assert_eq!(r, LayoutRect { min: point2(1.0, 2.0), max: point2(9.0, 6.0) });
+
+    let r = conservative_union_rect(
+        &LayoutRect { min: point2(4.0, 2.0), max: point2(9.0, 6.0) },
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+    );
+    assert_eq!(r, LayoutRect { min: point2(1.0, 2.0), max: point2(9.0, 6.0) });
+
+    // Averlapping adjacent, x axis
+    let r = conservative_union_rect(
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+        &LayoutRect { min: point2(3.0, 2.0), max: point2(8.0, 6.0) },
+    );
+    assert_eq!(r, LayoutRect { min: point2(1.0, 2.0), max: point2(8.0, 6.0) });
+
+    let r = conservative_union_rect(
+        &LayoutRect { min: point2(5.0, 2.0), max: point2(8.0, 6.0) },
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(6.0, 6.0) },
+    );
+    assert_eq!(r, LayoutRect { min: point2(1.0, 2.0), max: point2(8.0, 6.0) });
+
+    // Adjacent but not touching, x axis
+    let r = conservative_union_rect(
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+        &LayoutRect { min: point2(6.0, 2.0), max: point2(11.0, 6.0) },
+    );
+    assert_eq!(r, LayoutRect { min: point2(6.0, 2.0), max: point2(11.0, 6.0) });
+
+    let r = conservative_union_rect(
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+        &LayoutRect { min: point2(-6.0, 2.0), max: point2(-5.0, 6.0) },
+    );
+    assert_eq!(r, LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) });
+
+
+    // Adjacent, y axis
+    let r = conservative_union_rect(
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+        &LayoutRect { min: point2(1.0, 6.0), max: point2(4.0, 10.0) },
+    );
+    assert_eq!(r, LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 10.0) });
+
+    let r = conservative_union_rect(
+        &LayoutRect { min: point2(1.0, 5.0), max: point2(4.0, 9.0) },
+        &LayoutRect { min: point2(1.0, 1.0), max: point2(4.0, 5.0) },
+    );
+    assert_eq!(r, LayoutRect { min: point2(1.0, 1.0), max: point2(4.0, 9.0) });
+
+    // Averlapping adjacent, y axis
+    let r = conservative_union_rect(
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+        &LayoutRect { min: point2(1.0, 3.0), max: point2(4.0, 7.0) },
+    );
+    assert_eq!(r, LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 7.0) });
+
+    let r = conservative_union_rect(
+        &LayoutRect { min: point2(1.0, 4.0), max: point2(4.0, 8.0) },
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+    );
+    assert_eq!(r, LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 8.0) });
+
+    // Adjacent but not touching, y axis
+    let r = conservative_union_rect(
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+        &LayoutRect { min: point2(1.0, 10.0), max: point2(4.0, 15.0) },
+    );
+    assert_eq!(r, LayoutRect { min: point2(1.0, 10.0), max: point2(4.0, 15.0) });
+
+    let r = conservative_union_rect(
+        &LayoutRect { min: point2(1.0, 5.0), max: point2(4.0, 9.0) },
+        &LayoutRect { min: point2(1.0, 0.0), max: point2(4.0, 3.0) },
+    );
+    assert_eq!(r, LayoutRect { min: point2(1.0, 5.0), max: point2(4.0, 9.0) });
+
+
+    // Contained
+    let r = conservative_union_rect(
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+        &LayoutRect { min: point2(0.0, 1.0), max: point2(10.0, 12.0) },
+    );
+    assert_eq!(r, LayoutRect { min: point2(0.0, 1.0), max: point2(10.0, 12.0) });
+
+    let r = conservative_union_rect(
+        &LayoutRect { min: point2(0.0, 1.0), max: point2(10.0, 12.0) },
+        &LayoutRect { min: point2(1.0, 2.0), max: point2(4.0, 6.0) },
+    );
+    assert_eq!(r, LayoutRect { min: point2(0.0, 1.0), max: point2(10.0, 12.0) });
 }
 
 /// This is inspired by the `weak-table` crate.

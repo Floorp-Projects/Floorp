@@ -9,7 +9,7 @@ namespace _ipdltest {
 // NB: needs to be RPC so that the parent blocks on the child's crash.
 intr protocol PTestCrashCleanup {
 child:
-    intr DIEDIEDIE();
+    [LegacyIntr] intr DIEDIEDIE();
     async __delete__();
 };
 

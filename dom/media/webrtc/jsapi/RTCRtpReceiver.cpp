@@ -26,6 +26,7 @@
 #include "mozilla/Preferences.h"
 #include "TransceiverImpl.h"
 #include "libwebrtcglue/AudioConduit.h"
+#include "RTCStatsIdGenerator.h"
 
 namespace mozilla::dom {
 
@@ -92,7 +93,8 @@ RTCRtpReceiver::RTCRtpReceiver(
     const std::string& aPCHandle, MediaTransportHandler* aTransportHandler,
     JsepTransceiver* aJsepTransceiver, nsISerialEventTarget* aMainThread,
     AbstractThread* aCallThread, nsISerialEventTarget* aStsThread,
-    MediaSessionConduit* aConduit, TransceiverImpl* aTransceiverImpl)
+    MediaSessionConduit* aConduit, RTCStatsIdGenerator* aIdGenerator,
+    TransceiverImpl* aTransceiverImpl)
     : mWindow(aWindow),
       mPCHandle(aPCHandle),
       mJsepTransceiver(aJsepTransceiver),
@@ -100,6 +102,7 @@ RTCRtpReceiver::RTCRtpReceiver(
       mCallThread(aCallThread),
       mStsThread(aStsThread),
       mTransportHandler(aTransportHandler),
+      mIdGenerator(aIdGenerator),
       mTransceiverImpl(aTransceiverImpl),
       INIT_CANONICAL(mSsrc, 0),
       INIT_CANONICAL(mVideoRtxSsrc, 0),
@@ -162,12 +165,14 @@ already_AddRefed<Promise> RTCRtpReceiver::GetStats() {
   RTCStatsPromise::All(mMainThread, promises)
       ->Then(
           mMainThread, __func__,
-          [promise, window = mWindow](
+          [promise, window = mWindow, idGen = mIdGenerator](
               const nsTArray<UniquePtr<RTCStatsCollection>>& aStats) {
+            RTCStatsCollection opaqueStats;
+            idGen->RewriteIds(aStats, &opaqueStats);
+
             RefPtr<RTCStatsReport> report(new RTCStatsReport(window));
-            for (const auto& stats : aStats) {
-              report->Incorporate(*stats);
-            }
+            report->Incorporate(opaqueStats);
+
             promise->MaybeResolve(std::move(report));
           },
           [promise](nsresult aError) {

@@ -38,9 +38,8 @@ class TestDeletionRequestPing(FOGTestCase):
 
         debug_tag = "my-test-tag"
         tagging_script = """\
-        let FOG = Components.classes["@mozilla.org/toolkit/glean;1"]
-            .createInstance(Components.interfaces.nsIFOG);
-        FOG.setTagPings("{}");
+        const {{ Services }} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+        Services.fog.setTagPings("{}");
         """.format(
             debug_tag
         )

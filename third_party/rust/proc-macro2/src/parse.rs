@@ -461,7 +461,7 @@ fn cooked_byte_string(mut input: Cursor) -> Result<Cursor, Reject> {
 fn raw_string(input: Cursor) -> Result<Cursor, Reject> {
     let mut chars = input.char_indices();
     let mut n = 0;
-    while let Some((i, ch)) = chars.next() {
+    for (i, ch) in &mut chars {
         match ch {
             '"' => {
                 n = i;
@@ -621,8 +621,7 @@ fn float_digits(input: Cursor) -> Result<Cursor, Reject> {
                 chars.next();
                 if chars
                     .peek()
-                    .map(|&ch| ch == '.' || is_ident_start(ch))
-                    .unwrap_or(false)
+                    .map_or(false, |&ch| ch == '.' || is_ident_start(ch))
                 {
                     return Err(Reject);
                 }
@@ -817,12 +816,12 @@ fn doc_comment(input: Cursor) -> PResult<Vec<TokenTree>> {
         TokenTree::Punct(Punct::new('=', Spacing::Alone)),
         TokenTree::Literal(crate::Literal::string(comment)),
     ];
-    for tt in stream.iter_mut() {
+    for tt in &mut stream {
         tt.set_span(span);
     }
     let group = Group::new(Delimiter::Bracket, stream.into_iter().collect());
     trees.push(crate::Group::_new_stable(group).into());
-    for tt in trees.iter_mut() {
+    for tt in &mut trees {
         tt.set_span(span);
     }
     Ok((rest, trees))

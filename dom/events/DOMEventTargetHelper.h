@@ -64,8 +64,10 @@ class DOMEventTargetHelper : public dom::EventTarget,
   bool ComputeDefaultWantsUntrusted(ErrorResult& aRv) override;
 
   using EventTarget::DispatchEvent;
-  bool DispatchEvent(dom::Event& aEvent, dom::CallerType aCallerType,
-                     ErrorResult& aRv) override;
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool DispatchEvent(dom::Event& aEvent,
+                                                 dom::CallerType aCallerType,
+                                                 ErrorResult& aRv) override;
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
@@ -156,10 +158,8 @@ class DOMEventTargetHelper : public dom::EventTarget,
 
   virtual void LastRelease() {}
 
-  void KeepAliveIfHasListenersFor(const nsAString& aType);
   void KeepAliveIfHasListenersFor(nsAtom* aType);
 
-  void IgnoreKeepAliveIfHasListenersFor(const nsAString& aType);
   void IgnoreKeepAliveIfHasListenersFor(nsAtom* aType);
 
   void BindToOwner(nsIGlobalObject* aOwner);
@@ -174,10 +174,7 @@ class DOMEventTargetHelper : public dom::EventTarget,
   nsPIDOMWindowInner* MOZ_NON_OWNING_REF mOwnerWindow;
   bool mHasOrHasHadOwnerWindow;
 
-  struct {
-    nsTArray<nsString> mStrings;
-    nsTArray<RefPtr<nsAtom>> mAtoms;
-  } mKeepingAliveTypes;
+  nsTArray<RefPtr<nsAtom>> mKeepingAliveTypes;
 
   bool mIsKeptAlive;
 };

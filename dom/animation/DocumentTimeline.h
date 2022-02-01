@@ -68,6 +68,8 @@ class DocumentTimeline final : public AnimationTimeline,
 
   Document* GetDocument() const override { return mDocument; }
 
+  bool IsMonotonicallyIncreasing() const override { return true; }
+
  protected:
   TimeStamp GetCurrentTimeStamp() const;
   nsRefreshDriver* GetRefreshDriver() const;

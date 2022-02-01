@@ -83,4 +83,12 @@ function dataURItoArrayBuffer(dataURI) {
 	}
 }());
 
+(
+	function(){
+    var menu_elem_content_2 = document.querySelector("#scan-code")
+    var menu_elem_content_3 = document.querySelector("#qrsave")
+
+    menu_elem_content_2.innerText = browser.i18n.getMessage("scan-code")
+    menu_elem_content_3.innerText = browser.i18n.getMessage("save-code")
+}())
 

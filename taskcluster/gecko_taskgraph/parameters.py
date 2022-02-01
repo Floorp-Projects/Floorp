@@ -21,7 +21,6 @@ from voluptuous import (
 )
 
 from . import GECKO
-from .util.attributes import release_level
 
 logger = logging.getLogger(__name__)
 
@@ -99,17 +98,6 @@ base_schema = Schema(
         Required("version"): str,
     }
 )
-
-
-def extend_parameters_schema(schema):
-    """
-    Extend the schema for parameters to include per-project configuration.
-
-    This should be called by the `gecko_taskgraph.register` function in the
-    graph-configuration.
-    """
-    global base_schema
-    base_schema = base_schema.extend(schema)
 
 
 class Parameters(ReadOnlyDict):
@@ -227,13 +215,6 @@ class Parameters(ReadOnlyDict):
         except KeyError:
             raise KeyError(f"taskgraph parameter {k!r} not found")
 
-    def is_try(self):
-        """
-        Determine whether this graph is being built on a try project or for
-        `mach try fuzzy`.
-        """
-        return "try" in self["project"] or self["try_mode"] == "try_select"
-
     def file_url(self, path, pretty=False):
         """
         Determine the VCS URL for viewing a file in the tree, suitable for
@@ -254,14 +235,6 @@ class Parameters(ReadOnlyDict):
 
         endpoint = "file" if pretty else "raw-file"
         return f"{repo}/{endpoint}/{rev}/{path}"
-
-    def release_level(self):
-        """
-        Whether this is a staging release or not.
-
-        :return str: One of "production" or "staging".
-        """
-        return release_level(self["project"])
 
     def __str__(self):
         return f"Parameters(id={self.id}) (from {self.format_spec(self.spec)})"

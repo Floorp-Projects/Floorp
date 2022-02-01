@@ -673,8 +673,6 @@ void RespondWithHandler::ResolvedCallback(JSContext* aCx,
     return;
   }
 
-  Telemetry::ScalarAdd(Telemetry::ScalarID::SW_SYNTHESIZED_RES_COUNT, 1);
-
   if (mRequestMode == RequestMode::Same_origin &&
       response->Type() == ResponseType::Cors) {
     Telemetry::ScalarAdd(Telemetry::ScalarID::SW_CORS_RES_FOR_SO_REQ_COUNT, 1);
@@ -797,9 +795,8 @@ void FetchEvent::RespondWith(JSContext* aCx, Promise& aArg, ErrorResult& aRv) {
         ir->GetFragment(), spec, line, column);
 
     aArg.AppendNativeHandler(handler);
-  } else {
-    MOZ_ASSERT(mRespondWithHandler);
-
+    // mRespondWithHandler can be nullptr for self-dispatched FetchEvent.
+  } else if (mRespondWithHandler) {
     mRespondWithHandler->RespondWithCalledAt(spec, line, column);
     aArg.AppendNativeHandler(mRespondWithHandler);
     mRespondWithHandler = nullptr;
@@ -846,7 +843,8 @@ void FetchEvent::ReportCanceled() {
     ::AsyncLog(mChannel.get(), mPreventDefaultScriptSpec,
                mPreventDefaultLineNumber, mPreventDefaultColumnNumber,
                "InterceptionCanceledWithURL"_ns, requestURL);
-  } else {
+    // mRespondWithHandler could be nullptr for self-dispatched FetchEvent.
+  } else if (mRespondWithHandler) {
     mRespondWithHandler->ReportCanceled(mPreventDefaultScriptSpec,
                                         mPreventDefaultLineNumber,
                                         mPreventDefaultColumnNumber);

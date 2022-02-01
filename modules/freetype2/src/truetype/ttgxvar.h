@@ -106,9 +106,9 @@ FT_BEGIN_HEADER
 
   typedef struct  GX_DeltaSetIdxMapRec_
   {
-    FT_UInt   mapCount;
-    FT_UInt*  outerIndex;             /* indices to item var data */
-    FT_UInt*  innerIndex;             /* indices to delta set     */
+    FT_ULong  mapCount;
+    FT_UInt*  outerIndex;               /* indices to item var data */
+    FT_UInt*  innerIndex;               /* indices to delta set     */
 
   } GX_DeltaSetIdxMapRec, *GX_DeltaSetIdxMap;
 

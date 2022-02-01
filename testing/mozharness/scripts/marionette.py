@@ -145,15 +145,6 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
                     "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor.",  # NOQA: E501
                 },
             ],
-            [
-                ["--enable-webrender"],
-                {
-                    "action": "store_true",
-                    "dest": "enable_webrender",
-                    "default": False,
-                    "help": "Enable the WebRender compositor in Gecko.",
-                },
-            ],
         ]
         + copy.deepcopy(testing_config_options)
         + copy.deepcopy(code_coverage_config_options)
@@ -338,9 +329,6 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
 
         if self.config.get("app_arg"):
             config_fmt_args["app_arg"] = self.config["app_arg"]
-
-        if self.config["enable_webrender"]:
-            cmd.append("--enable-webrender")
 
         cmd.extend(["--setpref={}".format(p) for p in self.config["extra_prefs"]])
 

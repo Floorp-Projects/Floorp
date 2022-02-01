@@ -79,6 +79,9 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             if kwargs["install_fonts"] is None:
                 kwargs["install_fonts"] = True
 
+            if not kwargs["device_serial"]:
+                kwargs["device_serial"] = ["emulator-5554"]
+
         if kwargs["config"] is None:
             kwargs["config"] = os.path.join(
                 self.topobjdir, "_tests", "web-platform", "wptrunner.local.ini"

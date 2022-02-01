@@ -210,9 +210,7 @@ class BackgroundParentImpl : public PBackgroundParent,
   bool DeallocPFileDescriptorSetParent(
       PFileDescriptorSetParent* aActor) override;
 
-  PVsyncParent* AllocPVsyncParent() override;
-
-  bool DeallocPVsyncParent(PVsyncParent* aActor) override;
+  already_AddRefed<PVsyncParent> AllocPVsyncParent() override;
 
   already_AddRefed<mozilla::psm::PVerifySSLServerCertParent>
   AllocPVerifySSLServerCertParent(
@@ -294,6 +292,8 @@ class BackgroundParentImpl : public PBackgroundParent,
   mozilla::ipc::IPCResult RecvPMessagePortConstructor(
       PMessagePortParent* aActor, const nsID& aUUID,
       const nsID& aDestinationUUID, const uint32_t& aSequenceID) override;
+
+  already_AddRefed<PIPCClientCertsParent> AllocPIPCClientCertsParent() override;
 
   bool DeallocPMessagePortParent(PMessagePortParent* aActor) override;
 

@@ -3,12 +3,12 @@ namespace _ipdltest {
 
 intr protocol PTestRaceDeferral {
 parent:
-    intr Lose();
+    [LegacyIntr] intr Lose();
 
 child:
     async StartRace();
-    intr Win();
-    intr Rpc();
+    [LegacyIntr] intr Win();
+    [LegacyIntr] intr Rpc();
     async __delete__();
 
 // Test that messages deferred due to race resolution are

@@ -49,7 +49,7 @@ class NetworkEventWatcher {
     // Boolean to know if we keep previous document network events or not.
     this.persist = false;
     this.listener = new NetworkObserver(
-      { browserId: this.browserId, addonId: watcherActor.context.addonId },
+      { sessionContext: watcherActor.sessionContext },
       { onNetworkEvent: this.onNetworkEvent.bind(this) }
     );
 
@@ -59,10 +59,6 @@ class NetworkEventWatcher {
 
   get conn() {
     return this.watcherActor.conn;
-  }
-
-  get browserId() {
-    return this.watcherActor.context.browserId;
   }
 
   /**
@@ -154,14 +150,16 @@ class NetworkEventWatcher {
       return;
     }
     // If we persist, we will keep all requests allocated.
-    if (this.persist) {
+    // For now, consider that the Browser console and toolbox persist all the requests.
+    if (this.persist || this.watcherActor.sessionContext.type == "all") {
       return;
     }
     // If the watcher is bound to one browser element (i.e. a tab), ignore
     // windowGlobals related to other browser elements
     if (
-      this.watcherActor.context.type == "browser-element" &&
-      windowGlobal.browsingContext.browserId != this.browserId
+      this.watcherActor.sessionContext.type == "browser-element" &&
+      windowGlobal.browsingContext.browserId !=
+        this.watcherActor.sessionContext.browserId
     ) {
       return;
     }
@@ -186,10 +184,16 @@ class NetworkEventWatcher {
         // So do this when navigating a second time, we will navigate from a distinct WindowGlobal
         // and check that this is the top level window global and not an iframe one.
         // So that we avoid clearing the top navigation when an iframe navigates
+        //
+        // Avoid destroying the request if innerWindowId isn't set. This happens when we reload many times in a row.
+        // The previous navigation request will be cancelled and because of that its innerWindowId will be null.
+        // But the frontend will receive it after the navigation begins (after will-navigate) and will display it
+        // and try to fetch extra data about it. So, avoid destroying its NetworkEventActor.
       } else if (
+        child.innerWindowId &&
         child.innerWindowId != innerWindowId &&
         windowGlobal.browsingContext ==
-          this.watcherActor.browserElement.browsingContext
+          this.watcherActor.browserElement?.browsingContext
       ) {
         child.destroy();
       }
@@ -205,7 +209,8 @@ class NetworkEventWatcher {
       );
     }
     const actor = new NetworkEventActor(
-      this,
+      this.watcherActor.conn,
+      this.watcherActor.sessionContext,
       {
         onNetworkEventUpdate: this.onNetworkEventUpdate.bind(this),
         onNetworkEventDestroy: this.onNetworkEventDestroy.bind(this),
@@ -311,11 +316,8 @@ class NetworkEventWatcher {
 
   /**
    * Stop watching for network event related to a given Watcher Actor.
-   *
-   * @param WatcherActor watcherActor
-   *        The watcher actor from which we should stop observing network events
    */
-  destroy(watcherActor) {
+  destroy() {
     if (this.listener) {
       this.listener.destroy();
       Services.obs.removeObserver(this, "window-global-destroyed");

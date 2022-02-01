@@ -83,6 +83,11 @@ void DocAccessibleChildBase::InsertIntoIpcTree(LocalAccessible* aParent,
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     nsTArray<CacheData> cache(shownTree.Length());
     for (LocalAccessible* acc : shownTree) {
+      if (mDoc->IsAccessibleBeingMoved(acc)) {
+        // Even though we send moves as a hide and a show, we don't want to
+        // push the cache again for moves.
+        continue;
+      }
       RefPtr<AccAttributes> fields =
           acc->BundleFieldsForCache(CacheDomain::All, CacheUpdateType::Initial);
       if (fields->Count()) {

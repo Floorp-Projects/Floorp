@@ -404,7 +404,7 @@ fn tasks_are_scheduled_fairly() {
 }
 
 // Tests that the use of park/unpark in user-code has no
-// effect on the expected behaviour of the executor.
+// effect on the expected behavior of the executor.
 #[test]
 fn park_unpark_independence() {
     let mut done = false;

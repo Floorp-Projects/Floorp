@@ -1,0 +1,20 @@
+{
+  "header-main": {
+    "message": "실험　"
+  },
+    "exper": {
+      "message": "Floorp 사용자 에이전트 변경 "
+  },
+    "info":{
+      "message":"Floorp / 8.3.6과 같이 Floorp로 식별하는 FloorP의 사용자 에이전트에 문자열을 추가하십시오. 기본적으로 이것은 Firefox와 동일합니다."
+  },
+    "True":{
+      "message":"장애를 입히다"
+  },
+    "False":{
+      "message":"할 수있게하다"
+  },
+    "Feedback": {
+      "message": "피드백 보내기 "
+  }
+}

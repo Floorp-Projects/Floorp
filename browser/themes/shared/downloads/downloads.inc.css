@@ -9,7 +9,7 @@
 %define item #downloadsListBox > richlistitem
 %define itemFinished @item@[state="1"]
 %define itemNotFinished @item@:not([state="1"])
-%define itemFocused #downloadsListBox:focus > @item@[selected]
+%define itemFocused #downloadsListBox:focus > richlistitem[selected]
 
 /*** Panel and outer controls ***/
 
@@ -17,7 +17,20 @@
   background: transparent;
   color: inherit;
   appearance: none;
+  border: 0;
   margin: 0;
+}
+
+@media not (prefers-contrast) {
+  #downloadsListBox[disabled] {
+    opacity: var(--downloads-item-disabled-opacity) !important;
+  }
+}
+
+@media (prefers-contrast) {
+  #downloadsListBox[disabled] {
+    color: GrayText;
+  }
 }
 
 #emptyDownloads {
@@ -43,16 +56,16 @@
 
 @itemFinished@[exists].hoveringMainArea:hover,
 @item@:is(.openWhenFinished).hoveringMainArea:hover,
-@item@:not([verdict]) > .downloadButton:hover,
 @item@[verdict]:hover,
 @item@:hover:is(.openWhenFinished),
-.downloadsPanelFooterButton:hover {
+.downloadsPanelFooterButton:hover,
+@keyfocus@ @itemFocused@,
+#downloadsHistory:focus {
   background-color: var(--panel-item-hover-bgcolor);
 }
 
 @itemFinished@[exists].hoveringMainArea:hover:active,
 @item@:is(.openWhenFinished).hoveringMainArea:hover:active,
-@item@:not([verdict]) > .downloadButton:hover:active,
 .downloadsPanelFooterButton[open="true"],
 @item@[verdict]:hover:active {
   background-color: var(--panel-item-active-bgcolor);
@@ -164,11 +177,15 @@
   height: 32px;
   margin: 0;
   margin-inline-start: 4px;
-  border: none;
+  border: 1px solid transparent;
   padding: 0;
   background: transparent;
   color: inherit;
   border-radius: 4px;
+  --button-hover-bgcolor: var(--panel-item-hover-bgcolor);
+  --button-hover-color: inherit;
+  --button-active-bgcolor: var(--panel-item-active-bgcolor);
+  --button-active-color: inherit;
 }
 
 .downloadButton > .button-box > .button-icon {
@@ -182,6 +199,28 @@
 .downloadButton > .button-box > .button-text {
   margin: 0 !important;
   padding: 0;
+}
+
+@media (prefers-contrast) {
+  .downloadButton {
+    background-color: ButtonFace;
+    color: ButtonText;
+    border-color: currentColor;
+    --button-hover-bgcolor: SelectedItem;
+    --button-hover-color: SelectedItemText;
+    --button-active-bgcolor: ButtonFace;
+    --button-active-color: ButtonText;
+  }
+}
+
+.downloadButton:hover:not(:active) {
+  background-color: var(--button-hover-bgcolor);
+  color: var(--button-hover-color);
+  border-color: var(--button-hover-bgcolor);
+}
+.downloadButton:hover:active {
+  background-color: var(--button-active-bgcolor);
+  color: var(--button-active-color);
 }
 
 /*** Button icons ***/

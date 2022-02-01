@@ -650,7 +650,7 @@ impl<'a, F: ?Sized + Future + Unpin> Future for Box<'a, F> {
 macro_rules! array_impls {
     ($($N: expr)+) => {
         $(
-            /// This impl replaces unsize coersion.
+            /// This impl replaces unsize coercion.
             impl<'a, T> From<Box<'a, [T; $N]>> for Box<'a, [T]> {
                 fn from(mut arr: Box<'a, [T; $N]>) -> Box<'a, [T]> {
                     let ptr = core::ptr::slice_from_raw_parts_mut(arr.as_mut_ptr(), $N);
@@ -660,7 +660,7 @@ macro_rules! array_impls {
             }
 
 
-            /// This impl replaces unsize coersion.
+            /// This impl replaces unsize coercion.
             impl<'a, T> TryFrom<Box<'a, [T]>> for Box<'a, [T; $N]> {
                 type Error = Box<'a, [T]>;
                 fn try_from(mut slice: Box<'a, [T]>) -> Result<Box<'a, [T; $N]>, Box<'a, [T]>> {

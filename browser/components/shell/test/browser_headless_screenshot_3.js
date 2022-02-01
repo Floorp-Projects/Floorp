@@ -1,15 +1,20 @@
 "use strict";
 
 add_task(async function() {
+  const cwdScreenshotPath = PathUtils.join(
+    Services.dirsvc.get("CurWorkD", Ci.nsIFile).path,
+    "screenshot.png"
+  );
+
   // Test invalid URL arguments (either no argument or too many arguments).
-  await testFileCreationNegative(["-screenshot"], "screenshot.png");
+  await testFileCreationNegative(["-screenshot"], cwdScreenshotPath);
   await testFileCreationNegative(
     [
       "http://mochi.test:8888/browser/browser/components/shell/test/headless.html",
       "http://mochi.test:8888/headless.html",
       "-screenshot",
     ],
-    "screenshot.png"
+    cwdScreenshotPath
   );
 
   // Test all four basic variations of the "window-size" argument.
@@ -21,7 +26,7 @@ add_task(async function() {
       "-window-size",
       "800",
     ],
-    "screenshot.png"
+    cwdScreenshotPath
   );
   await testFileCreationPositive(
     [
@@ -30,7 +35,7 @@ add_task(async function() {
       "-screenshot",
       "-window-size=800",
     ],
-    "screenshot.png"
+    cwdScreenshotPath
   );
   await testFileCreationPositive(
     [
@@ -40,7 +45,7 @@ add_task(async function() {
       "--window-size",
       "800",
     ],
-    "screenshot.png"
+    cwdScreenshotPath
   );
   await testFileCreationPositive(
     [
@@ -49,6 +54,6 @@ add_task(async function() {
       "-screenshot",
       "--window-size=800",
     ],
-    "screenshot.png"
+    cwdScreenshotPath
   );
 });

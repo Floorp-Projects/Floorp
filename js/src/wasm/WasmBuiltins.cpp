@@ -277,8 +277,8 @@ const SymbolicAddressSignature SASigExceptionNew = {
     {_PTR, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigThrowException = {
     SymbolicAddress::ThrowException,
-    _RoN,
-    _FailOnNullPtr,
+    _VOID,
+    _FailOnNegI32,
     2,
     {_PTR, _RoN, _END}};
 const SymbolicAddressSignature SASigConsumePendingException = {
@@ -289,7 +289,7 @@ const SymbolicAddressSignature SASigConsumePendingException = {
     {_PTR, _END}};
 const SymbolicAddressSignature SASigPushRefIntoExn = {
     SymbolicAddress::PushRefIntoExn,
-    _I32,
+    _VOID,
     _FailOnNegI32,
     3,
     {_PTR, _RoN, _RoN, _END}};
@@ -567,8 +567,16 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
 
         rfe->kind = ResumeFromException::RESUME_WASM_CATCH;
         rfe->framePointer = (uint8_t*)iter.frame();
+        rfe->tlsData = iter.instance()->tlsData();
+
+        size_t offsetAdjustment = 0;
+        if (iter.frame()->callerIsTrampolineFP()) {
+          offsetAdjustment =
+              FrameWithTls::sizeOfTlsFields() + IndirectStubAdditionalAlignment;
+        }
         rfe->stackPointer =
-            (uint8_t*)(rfe->framePointer - tryNote->framePushed);
+            (uint8_t*)(rfe->framePointer -
+                       (tryNote->framePushed + offsetAdjustment));
         rfe->target = iter.instance()->codeBase(tier) + tryNote->entryPoint;
 
         // Make sure to clear trapping state if we got here due to a trap.
@@ -635,26 +643,6 @@ static void* WasmHandleThrow(jit::ResumeFromException* rfe) {
   return rfe;
 }
 
-// Unconditionally returns nullptr per calling convention of HandleTrap().
-static void* ReportError(JSContext* cx, unsigned errorNumber) {
-  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, errorNumber);
-
-  if (cx->isThrowingOutOfMemory()) {
-    return nullptr;
-  }
-
-  // Distinguish exceptions thrown from traps from other RuntimeErrors.
-  RootedValue exn(cx);
-  if (!cx->getPendingException(&exn)) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(exn.isObject() && exn.toObject().is<ErrorObject>());
-  exn.toObject().as<ErrorObject>().setFromWasmTrap();
-
-  return nullptr;
-};
-
 // Has the same return-value convention as HandleTrap().
 static void* CheckInterrupt(JSContext* cx, JitActivation* activation) {
   ResetInterruptState(cx);
@@ -679,26 +667,46 @@ static void* WasmHandleTrap() {
   JitActivation* activation = CallingActivation(cx);
 
   switch (activation->wasmTrapData().trap) {
-    case Trap::Unreachable:
-      return ReportError(cx, JSMSG_WASM_UNREACHABLE);
-    case Trap::IntegerOverflow:
-      return ReportError(cx, JSMSG_WASM_INTEGER_OVERFLOW);
-    case Trap::InvalidConversionToInteger:
-      return ReportError(cx, JSMSG_WASM_INVALID_CONVERSION);
-    case Trap::IntegerDivideByZero:
-      return ReportError(cx, JSMSG_WASM_INT_DIVIDE_BY_ZERO);
-    case Trap::IndirectCallToNull:
-      return ReportError(cx, JSMSG_WASM_IND_CALL_TO_NULL);
-    case Trap::IndirectCallBadSig:
-      return ReportError(cx, JSMSG_WASM_IND_CALL_BAD_SIG);
-    case Trap::NullPointerDereference:
-      return ReportError(cx, JSMSG_WASM_DEREF_NULL);
-    case Trap::BadCast:
-      return ReportError(cx, JSMSG_WASM_BAD_CAST);
-    case Trap::OutOfBounds:
-      return ReportError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
-    case Trap::UnalignedAccess:
-      return ReportError(cx, JSMSG_WASM_UNALIGNED_ACCESS);
+    case Trap::Unreachable: {
+      ReportTrapError(cx, JSMSG_WASM_UNREACHABLE);
+      return nullptr;
+    }
+    case Trap::IntegerOverflow: {
+      ReportTrapError(cx, JSMSG_WASM_INTEGER_OVERFLOW);
+      return nullptr;
+    }
+    case Trap::InvalidConversionToInteger: {
+      ReportTrapError(cx, JSMSG_WASM_INVALID_CONVERSION);
+      return nullptr;
+    }
+    case Trap::IntegerDivideByZero: {
+      ReportTrapError(cx, JSMSG_WASM_INT_DIVIDE_BY_ZERO);
+      return nullptr;
+    }
+    case Trap::IndirectCallToNull: {
+      ReportTrapError(cx, JSMSG_WASM_IND_CALL_TO_NULL);
+      return nullptr;
+    }
+    case Trap::IndirectCallBadSig: {
+      ReportTrapError(cx, JSMSG_WASM_IND_CALL_BAD_SIG);
+      return nullptr;
+    }
+    case Trap::NullPointerDereference: {
+      ReportTrapError(cx, JSMSG_WASM_DEREF_NULL);
+      return nullptr;
+    }
+    case Trap::BadCast: {
+      ReportTrapError(cx, JSMSG_WASM_BAD_CAST);
+      return nullptr;
+    }
+    case Trap::OutOfBounds: {
+      ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
+      return nullptr;
+    }
+    case Trap::UnalignedAccess: {
+      ReportTrapError(cx, JSMSG_WASM_UNALIGNED_ACCESS);
+      return nullptr;
+    }
     case Trap::CheckInterrupt:
       return CheckInterrupt(cx, activation);
     case Trap::StackOverflow: {
@@ -714,7 +722,8 @@ static void* WasmHandleTrap() {
       if (activation->wasmExitTls()->isInterrupted()) {
         return CheckInterrupt(cx, activation);
       }
-      return ReportError(cx, JSMSG_OVER_RECURSED);
+      ReportTrapError(cx, JSMSG_OVER_RECURSED);
+      return nullptr;
     }
     case Trap::ThrowReported:
       // Error was already reported under another name.
@@ -1288,7 +1297,7 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       MOZ_ASSERT(*abiType == ToABIType(SASigExceptionNew));
       return FuncCast(Instance::exceptionNew, *abiType);
     case SymbolicAddress::ThrowException:
-      *abiType = Args_General2;
+      *abiType = Args_Int32_GeneralGeneral;
       MOZ_ASSERT(*abiType == ToABIType(SASigThrowException));
       return FuncCast(Instance::throwException, *abiType);
     case SymbolicAddress::ConsumePendingException:

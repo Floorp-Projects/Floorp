@@ -12,14 +12,17 @@ g.eval(`
 `);
 
 let counter = 0;
+let thenCalled = false;
 dbg.onEnterFrame = frame => {
     frame.onPop = completion => {
         if (counter++ === 0) {
             let genObj = completion.return.unsafeDereference();
 
-            genObj.next().then(({value, done}) => {
-                assertEq(value, "ponies");
-                assertEq(done, true);
+            // The following call enqueues the request before it becomes
+            // suspendedStart, that breaks the assumption in the spec,
+            // and there's no correct interpretation.
+            genObj.next().then(() => {
+                thenCalled = true;
             });
         }
     };
@@ -27,7 +30,34 @@ dbg.onEnterFrame = frame => {
 
 let it = g.f();
 
-it.next().then(({value, done}) => {
-    assertEq(value, undefined);
-    assertEq(done, true);
-});
+assertEq(counter, 1);
+
+let caught = false;
+try {
+  // The async generator is already in the invalid state, and the following
+  // call fails.
+  it.next();
+} catch (e) {
+  caught = true;
+}
+assertEq(caught, true);
+
+caught = false;
+try {
+  it.throw();
+} catch (e) {
+  caught = true;
+}
+assertEq(caught, true);
+
+caught = false;
+try {
+  it.return();
+} catch (e) {
+  caught = true;
+}
+assertEq(caught, true);
+
+drainJobQueue();
+
+assertEq(thenCalled, false);

@@ -13,12 +13,16 @@
           "properties": {
             "features": {
               "type": "array",
-              "items":  {
+              "items": {
                 "type": "object",
                 "properties": {
                   "featureId": {
                     "type": "string",
                     "description": "The identifier for the feature flag"
+                  },
+                  "isEarlyStartup": {
+                    "type": "boolean",
+                    "description": "Early startup features are stored to prefs."
                   },
                   "value": {
                     "anyOf": [
@@ -47,6 +51,10 @@
         "active": {
           "type": "boolean",
           "description": "Experiment status"
+        },
+        "isRollout": {
+          "type": "boolean",
+          "description": "If this is true, the enrollment is a rollout. If it is missing or false, it is an experiment."
         },
         "enrollmentId": {
           "type": "string",

@@ -720,7 +720,7 @@ ssl_KEAEnabled(const sslSocket *ss, SSLKEAType keaType)
                     return PR_TRUE;
                 }
             } else {
-                if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3 &&
+                if (ss->vrange.min < SSL_LIBRARY_VERSION_TLS_1_3 &&
                     !ss->opt.requireDHENamedGroups) {
                     /* The client enables DHE cipher suites even if no DHE groups
                      * are enabled. Only if this isn't TLS 1.3 and named groups

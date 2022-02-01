@@ -74,6 +74,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       strippedUrlToTopPrefixAndTitle: new Map(),
       urlToTabResultType: new Map(),
       addedRemoteTabUrls: new Set(),
+      addedSwitchTabUrls: new Set(),
       canShowPrivateSearch: context.results.length > 1,
       canShowTailSuggestions: true,
       // Form history and remote suggestions added so far.  Used for deduping
@@ -82,13 +83,10 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       suggestions: new Set(),
       canAddTabToSearch: true,
       hasUnitConversionResult: false,
+      maxHeuristicResultSpan: 0,
+      maxTabToSearchResultSpan: 0,
       // When you add state, update _copyState() as necessary.
     };
-
-    // If the heuristic is hidden, increment the available span.
-    if (UrlbarPrefs.get("experimental.hideHeuristic")) {
-      state.availableResultSpan++;
-    }
 
     // Do the first pass over all results to build some state.
     for (let result of context.results) {
@@ -109,6 +107,30 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       this._updateStatePreAdd(result, state);
     }
 
+    // Now that the first pass is done, adjust the available result span.
+    if (state.maxTabToSearchResultSpan) {
+      // Subtract the max tab-to-search span.
+      state.availableResultSpan = Math.max(
+        state.availableResultSpan - state.maxTabToSearchResultSpan,
+        0
+      );
+    }
+    if (state.maxHeuristicResultSpan) {
+      if (UrlbarPrefs.get("experimental.hideHeuristic")) {
+        // The heuristic is hidden. The muxer will include it but the view will
+        // hide it. Increase the available span to compensate so that the total
+        // visible span accurately reflects `context.maxResults`.
+        state.availableResultSpan += state.maxHeuristicResultSpan;
+      } else if (context.maxResults > 0) {
+        // `context.maxResults` is positive. Make sure there's room for the
+        // heuristic even if it means exceeding `context.maxResults`.
+        state.availableResultSpan = Math.max(
+          state.availableResultSpan,
+          state.maxHeuristicResultSpan
+        );
+      }
+    }
+
     // Determine the result groups to use for this sort.  In search mode with
     // an engine, show search suggestions first.
     let rootGroup = context.searchMode?.engineName
@@ -123,16 +145,23 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       state
     );
 
-    // Add global suggestedIndex results.
-    let suggestedIndexResults = state.resultsByGroup.get(
-      UrlbarUtils.RESULT_GROUP.SUGGESTED_INDEX
-    );
-    if (suggestedIndexResults) {
-      this._addSuggestedIndexResults(
-        suggestedIndexResults,
-        sortedResults,
-        state
+    // Add global suggestedIndex results unless the max result count is zero,
+    // which isn't really supported but it's easy to honor here. We add them all
+    // even if they exceed the max because we assume they're high-priority
+    // results that should always be shown, and as long as the max is positive
+    // it's not a problem to exceed it sometimes. In practice that will happen
+    // only for small, non-default values of `maxRichResults`.
+    if (context.maxResults > 0) {
+      let suggestedIndexResults = state.resultsByGroup.get(
+        UrlbarUtils.RESULT_GROUP.SUGGESTED_INDEX
       );
+      if (suggestedIndexResults) {
+        this._addSuggestedIndexResults(
+          suggestedIndexResults,
+          sortedResults,
+          state
+        );
+      }
     }
 
     context.results = sortedResults;
@@ -158,6 +187,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       ),
       urlToTabResultType: new Map(state.urlToTabResultType),
       addedRemoteTabUrls: new Set(state.addedRemoteTabUrls),
+      addedSwitchTabUrls: new Set(state.addedSwitchTabUrls),
       suggestions: new Set(state.suggestions),
     });
 
@@ -684,7 +714,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       return false;
     }
 
-    if (result.providerName == "TabToSearch") {
+    if (result.providerName == UrlbarProviderTabToSearch.name) {
       // Discard the result if a tab-to-search result was added already.
       if (!state.canAddTabToSearch) {
         return false;
@@ -775,6 +805,14 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       if (maybeDupeType == UrlbarUtils.RESULT_TYPE.TAB_SWITCH) {
         return false;
       }
+    }
+
+    // Discard switch-to-tab results that dupes another switch-to-tab result.
+    if (
+      result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH &&
+      state.addedSwitchTabUrls.has(result.payload.url)
+    ) {
+      return false;
     }
 
     // Discard history results that dupe either remote or switch-to-tab results.
@@ -884,17 +922,36 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *   Global state that we use to make decisions during this sort.
    */
   _updateStatePreAdd(result, state) {
+    // Keep track of the largest heuristic result span.
+    if (result.heuristic && this._canAddResult(result, state)) {
+      state.maxHeuristicResultSpan = Math.max(
+        state.maxHeuristicResultSpan,
+        UrlbarUtils.getSpanForResult(result)
+      );
+    }
+
     // Subtract from `availableResultSpan` the span of global suggestedIndex
-    // results so there will be room for them at the end of the sort.
+    // results so there will be room for them at the end of the sort. Except
+    // when `maxRichResults` is zero and other special cases, we assume
+    // suggestedIndex results will always be shown regardless of the total
+    // available result span, `context.maxResults`, and `maxRichResults`.
     if (
       result.hasSuggestedIndex &&
       !result.isSuggestedIndexRelativeToGroup &&
       this._canAddResult(result, state)
     ) {
-      state.availableResultSpan = Math.max(
-        state.availableResultSpan - UrlbarUtils.getSpanForResult(result),
-        0
-      );
+      let span = UrlbarUtils.getSpanForResult(result);
+      if (result.providerName == UrlbarProviderTabToSearch.name) {
+        state.maxTabToSearchResultSpan = Math.max(
+          state.maxTabToSearchResultSpan,
+          span
+        );
+      } else {
+        state.availableResultSpan = Math.max(
+          state.availableResultSpan - span,
+          0
+        );
+      }
     }
 
     // Save some state we'll use later to dedupe URL results.
@@ -1018,7 +1075,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
 
     // Avoid multiple tab-to-search results.
     // TODO (Bug 1670185): figure out better strategies to manage this case.
-    if (result.providerName == "TabToSearch") {
+    if (result.providerName == UrlbarProviderTabToSearch.name) {
       state.canAddTabToSearch = false;
       // We want to record in urlbar.tips once per engagement per engine. Since
       // whether these results are shown is dependent on the Muxer, we must
@@ -1039,6 +1096,11 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // dedupe these.
     if (result.type == UrlbarUtils.RESULT_TYPE.REMOTE_TAB) {
       state.addedRemoteTabUrls.add(result.payload.url);
+    }
+
+    // Keep track of which switch tabs we've added to dedupe switch tabs.
+    if (result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH) {
+      state.addedSwitchTabUrls.add(result.payload.url);
     }
   }
 
@@ -1084,7 +1146,33 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
 
     // Sort the positive results ascending so that results at the end of the
     // array don't end up offset by later insertions at the front.
-    positive.sort((a, b) => a.suggestedIndex - b.suggestedIndex);
+    positive.sort((a, b) => {
+      if (a.suggestedIndex !== b.suggestedIndex) {
+        return a.suggestedIndex - b.suggestedIndex;
+      }
+
+      if (a.providerName === b.providerName) {
+        return 0;
+      }
+
+      // If same suggestedIndex, change the displaying order along to following
+      // provider priority.
+      // TabToSearch > QuickSuggest > Other providers
+      if (a.providerName === UrlbarProviderTabToSearch.name) {
+        return 1;
+      }
+      if (b.providerName === UrlbarProviderTabToSearch.name) {
+        return -1;
+      }
+      if (a.providerName === UrlbarProviderQuickSuggest.name) {
+        return 1;
+      }
+      if (b.providerName === UrlbarProviderQuickSuggest.name) {
+        return -1;
+      }
+
+      return 0;
+    });
 
     // Conversely, sort the negative results descending so that results at the
     // front of the array don't end up offset by later insertions at the end.
@@ -1096,12 +1184,24 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // before a positive result in the same query. Even if we did, we have to
     // insert one before the other, and there's no right or wrong order.
     for (let results of [positive, negative]) {
+      let prevResult;
+      let prevIndex;
       for (let result of results) {
         if (this._canAddResult(result, state)) {
-          let index =
-            result.suggestedIndex >= 0
-              ? Math.min(result.suggestedIndex, sortedResults.length)
-              : Math.max(result.suggestedIndex + sortedResults.length + 1, 0);
+          let index;
+          if (
+            prevResult &&
+            prevResult.suggestedIndex == result.suggestedIndex
+          ) {
+            index = prevIndex;
+          } else {
+            index =
+              result.suggestedIndex >= 0
+                ? Math.min(result.suggestedIndex, sortedResults.length)
+                : Math.max(result.suggestedIndex + sortedResults.length + 1, 0);
+          }
+          prevResult = result;
+          prevIndex = index;
           sortedResults.splice(index, 0, result);
           usedLimits.availableSpan += UrlbarUtils.getSpanForResult(result);
           usedLimits.maxResultCount++;

@@ -89,7 +89,7 @@ let DefaultTabUnloaderMethods = {
     // No need to iterate browser contexts for hasActivePeerConnection
     // because hasActivePeerConnection is set only in the top window.
     return webrtcUI.browserHasStreams(browser) ||
-      browser.browsingContext?.topWindowContext?.hasActivePeerConnections
+      browser.browsingContext?.currentWindowGlobal?.hasActivePeerConnections()
       ? weight
       : 0;
   },

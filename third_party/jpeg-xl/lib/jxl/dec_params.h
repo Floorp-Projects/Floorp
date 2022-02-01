@@ -26,6 +26,8 @@ struct DecompressParams {
   bool keep_dct = false;
   // If true, render spot colors (otherwise only returned as extra channels)
   bool render_spotcolors = true;
+  // If true, coalesce frames (otherwise return unblended frames)
+  bool coalescing = true;
 
   // These cannot be kOn because they need encoder support.
   Override preview = Override::kDefault;

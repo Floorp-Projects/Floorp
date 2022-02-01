@@ -57,11 +57,10 @@ add_task(async function test_check_matching_works() {
     extensions: BLOCKLIST_DATA,
   });
 
-  let blocklistGlobal = ChromeUtils.import(
-    "resource://gre/modules/Blocklist.jsm",
-    null
+  const { BlocklistPrivate } = ChromeUtils.import(
+    "resource://gre/modules/Blocklist.jsm"
   );
-  let parsedEntries = blocklistGlobal.ExtensionBlocklistRS._entries;
+  let parsedEntries = BlocklistPrivate.ExtensionBlocklistRS._entries;
 
   // Unfortunately, the parsed entries aren't in the same order as the original.
   function strForTypeOf(val) {

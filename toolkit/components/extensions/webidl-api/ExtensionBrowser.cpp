@@ -218,5 +218,83 @@ ExtensionTest* ExtensionBrowser::GetExtensionTest() {
   return mExtensionTest;
 }
 
+// static
+void ExtensionEventWakeupMap::ToMapKey(const nsAString& aAPINamespace,
+                                       const nsAString& aAPIName,
+                                       nsAString& aResultMapKey) {
+  aResultMapKey.Truncate();
+  aResultMapKey.AppendPrintf("%s.%s",
+                             NS_ConvertUTF16toUTF8(aAPINamespace).get(),
+                             NS_ConvertUTF16toUTF8(aAPIName).get());
+}
+
+nsresult ExtensionEventWakeupMap::IncrementListeners(
+    const nsAString& aAPINamespace, const nsAString& aAPIName) {
+  nsString key;
+  ToMapKey(aAPINamespace, aAPIName, key);
+  auto maybeCount = MaybeGet(key);
+  if (maybeCount.isSome()) {
+    InsertOrUpdate(key, maybeCount.value() + 1);
+  } else {
+    InsertOrUpdate(key, 1);
+  }
+
+  return NS_OK;
+}
+
+nsresult ExtensionEventWakeupMap::DecrementListeners(
+    const nsAString& aAPINamespace, const nsAString& aAPIName) {
+  nsString key;
+  ToMapKey(aAPINamespace, aAPIName, key);
+  auto maybeCount = MaybeGet(key);
+  if (maybeCount.isSome()) {
+    MOZ_ASSERT(maybeCount.value() >= 1, "Unexpected counter value set to zero");
+    uint64_t val = maybeCount.value() - 1;
+    if (val == 0) {
+      Remove(key);
+    } else {
+      InsertOrUpdate(key, val);
+    }
+  }
+
+  return NS_OK;
+}
+
+bool ExtensionEventWakeupMap::HasListener(const nsAString& aAPINamespace,
+                                          const nsAString& aAPIName) {
+  nsString key;
+  ToMapKey(aAPINamespace, aAPIName, key);
+  auto maybeCount = MaybeGet(key);
+  return (maybeCount.isSome() && maybeCount.value() > 0);
+}
+
+nsresult ExtensionBrowser::TrackWakeupEventListener(
+    JSContext* aCx, const nsString& aAPINamespace, const nsString& aAPIName) {
+  auto* workerPrivate = mozilla::dom::GetWorkerPrivateFromContext(aCx);
+  if (workerPrivate->WorkerScriptExecutedSuccessfully()) {
+    // Ignore if the worker script has already executed all its synchronous
+    // statements.
+    return NS_OK;
+  }
+  mExpectedEventWakeupMap.IncrementListeners(aAPINamespace, aAPIName);
+  return NS_OK;
+}
+
+nsresult ExtensionBrowser::UntrackWakeupEventListener(
+    JSContext* aCx, const nsString& aAPINamespace, const nsString& aAPIName) {
+  auto* workerPrivate = mozilla::dom::GetWorkerPrivateFromContext(aCx);
+  if (workerPrivate->WorkerScriptExecutedSuccessfully()) {
+    // Ignore if the worker script has already executed all its synchronous
+    return NS_OK;
+  }
+  mExpectedEventWakeupMap.DecrementListeners(aAPINamespace, aAPIName);
+  return NS_OK;
+}
+
+bool ExtensionBrowser::HasWakeupEventListener(const nsString& aAPINamespace,
+                                              const nsString& aAPIName) {
+  return mExpectedEventWakeupMap.HasListener(aAPINamespace, aAPIName);
+}
+
 }  // namespace extensions
 }  // namespace mozilla

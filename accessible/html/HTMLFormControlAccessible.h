@@ -31,9 +31,11 @@ class HTMLRadioButtonAccessible : public RadioButtonAccessible {
 
   // LocalAccessible
   virtual uint64_t NativeState() const override;
-  virtual void GetPositionAndSizeInternal(int32_t* aPosInSet,
-                                          int32_t* aSetSize) override;
   virtual Relation RelationByType(RelationType aType) const override;
+
+ protected:
+  virtual void GetPositionAndSetSize(int32_t* aPosInSet,
+                                     int32_t* aSetSize) override;
 
  private:
   Relation ComputeGroupAttributes(int32_t* aPosInSet, int32_t* aSetSize) const;
@@ -335,23 +337,29 @@ class HTMLMeterAccessible : public LeafAccessible {
  * Accessible for HTML date/time inputs.
  */
 template <a11y::role R>
-class HTMLDateTimeAccessible : public AccessibleWrap {
+class HTMLDateTimeAccessible : public HyperTextAccessibleWrap {
  public:
   HTMLDateTimeAccessible(nsIContent* aContent, DocAccessible* aDoc)
-      : AccessibleWrap(aContent, aDoc) {}
+      : HyperTextAccessibleWrap(aContent, aDoc) {
+    mType = eHTMLDateTimeFieldType;
+  }
 
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLDateTimeAccessible, AccessibleWrap)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLDateTimeAccessible,
+                                       HyperTextAccessibleWrap)
 
   // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override { return R; }
   virtual already_AddRefed<AccAttributes> NativeAttributes() override {
-    RefPtr<AccAttributes> attributes = AccessibleWrap::NativeAttributes();
+    RefPtr<AccAttributes> attributes =
+        HyperTextAccessibleWrap::NativeAttributes();
     // Unfortunately, an nsStaticAtom can't be passed as a
     // template argument, so fetch the type from the DOM.
-    nsString type;
-    if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                                       type)) {
-      attributes->SetAttribute(nsGkAtoms::textInputType, std::move(type));
+    if (const nsAttrValue* attr =
+            mContent->AsElement()->GetParsedAttr(nsGkAtoms::type)) {
+      RefPtr<nsAtom> inputType = attr->GetAsAtom();
+      if (inputType) {
+        attributes->SetAttribute(nsGkAtoms::textInputType, inputType);
+      }
     }
     return attributes.forget();
   }

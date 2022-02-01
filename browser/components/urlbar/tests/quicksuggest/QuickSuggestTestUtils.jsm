@@ -161,19 +161,15 @@ class QSTestUtils {
     this.info?.("initNimbusFeature awaiting ExperimentAPI.ready");
     await ExperimentAPI.ready();
 
-    this.info?.(
-      "initNimbusFeature awaiting ExperimentFakes.remoteDefaultsHelper"
-    );
-    await ExperimentFakes.remoteDefaultsHelper({
-      feature: NimbusFeatures.urlbar,
-      configuration: {
-        slug: "QuickSuggestTestUtils",
-        variables: { enabled: true },
-        targeting: "true",
-      },
+    this.info?.("initNimbusFeature awaiting ExperimentFakes.enrollWithRollout");
+    let doCleanup = await ExperimentFakes.enrollWithRollout({
+      featureId: NimbusFeatures.urlbar.featureId,
+      value: { enabled: true },
     });
 
     this.info?.("initNimbusFeature done");
+
+    this.registerCleanupFunction(doCleanup);
   }
 
   /**
@@ -333,16 +329,12 @@ class QSTestUtils {
    *
    * @param {number} index
    *   The expected zero-based index of the quick suggest result.
-   * @param {string} search_query
-   *   The search string that triggered the quick suggest result.
    * @param {object} spy
    *   A `sinon.spy` object. See `createTelemetryPingSpy`.
    * @param {string} [advertiser]
    *   The expected advertiser in the ping.
    * @param {number} [block_id]
    *   The expected block_id in the ping.
-   * @param {string} [matched_keywords]
-   *   The expected matched_keywords in the ping.
    * @param {string} [reporting_url]
    *   The expected reporting_url in the ping.
    * @param {string} [scenario]
@@ -353,8 +345,6 @@ class QSTestUtils {
     spy,
     advertiser = "test-advertiser",
     block_id = 1,
-    search_query = undefined,
-    matched_keywords = search_query,
     reporting_url = "http://impression.reporting.test.com/",
     scenario = "offline",
   }) {
@@ -371,11 +361,9 @@ class QSTestUtils {
     let expectedPayload = {
       advertiser,
       block_id,
-      matched_keywords,
       position: index + 1,
       reporting_url,
       scenario,
-      search_query,
     };
     let actualPayload = {};
     for (let key of Object.keys(expectedPayload)) {

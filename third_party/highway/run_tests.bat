@@ -5,7 +5,7 @@ cd %~dp0
 if not exist build_win mkdir build_win
 
 cd build_win
-cmake .. -G Ninja || goto error
+cmake .. -DHWY_WARNINGS_ARE_ERRORS:BOOL=ON -G Ninja || goto error
 ninja || goto error
 ctest -j || goto error
 

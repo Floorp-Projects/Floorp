@@ -127,7 +127,7 @@ impl MonitorRunnable {
     }
 
     pub fn dispatch(&self, thread: RefPtr<nsIThread>) -> Result<(), nsresult> {
-        unsafe { thread.DispatchFromScript(self.coerce(), nsIEventTarget::DISPATCH_NORMAL as u32) }
+        unsafe { thread.DispatchFromScript(self.coerce(), nsIEventTarget::DISPATCH_NORMAL) }
             .to_result()
     }
 

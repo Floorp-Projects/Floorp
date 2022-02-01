@@ -1270,6 +1270,12 @@ restart:
       }
       return true;
 
+#ifdef ENABLE_RECORD_TUPLE
+    case ParseNodeKind::RecordExpr:
+    case ParseNodeKind::TupleExpr:
+      MOZ_CRASH("Record and Tuple are not supported yet");
+#endif
+
     // Most other binary operations (parsed as lists in SpiderMonkey) may
     // perform conversions triggering side effects.  Math operations perform
     // ToNumber and may fail invoking invalid user-defined toString/valueOf:
@@ -5507,10 +5513,20 @@ bool BytecodeEmitter::emitAsyncIterator() {
 }
 
 bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
+  // [stack] NEXT ITER ARR I
+  return emitSpread(allowSelfHosted, 2, JSOp::InitElemInc);
+  // [stack] ARR FINAL_INDEX
+}
+
+bool BytecodeEmitter::emitSpread(bool allowSelfHosted, int spreadeeStackItems,
+                                 JSOp storeElementOp) {
   LoopControl loopInfo(this, StatementKind::Spread);
+  // In the [stack] annotations, (spreadee) can be "ARR I" (when spreading
+  // into an array or into call parameters, or "TUPLE" (when spreading into a
+  // tuple)
 
   if (!loopInfo.emitLoopHead(this, Nothing())) {
-    //              [stack] NEXT ITER ARR I
+    //              [stack] NEXT ITER (spreadee)
     return false;
   }
 
@@ -5522,39 +5538,39 @@ bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
     // Spread operations can't contain |continue|, so don't bother setting loop
     // and enclosing "update" offsets, as we do with for-loops.
 
-    if (!emitDupAt(3, 2)) {
-      //            [stack] NEXT ITER ARR I NEXT ITER
+    if (!emitDupAt(spreadeeStackItems + 1, 2)) {
+      //            [stack] NEXT ITER (spreadee) NEXT ITER
       return false;
     }
     if (!emitIteratorNext(Nothing(), IteratorKind::Sync, allowSelfHosted)) {
-      //            [stack] NEXT ITER ARR I RESULT
+      //            [stack] NEXT ITER (spreadee) RESULT
       return false;
     }
     if (!emit1(JSOp::Dup)) {
-      //            [stack] NEXT ITER ARR I RESULT RESULT
+      //            [stack] NEXT ITER (spreadee) RESULT RESULT
       return false;
     }
     if (!emitAtomOp(JSOp::GetProp, TaggedParserAtomIndex::WellKnown::done())) {
-      //            [stack] NEXT ITER ARR I RESULT DONE
+      //            [stack] NEXT ITER (spreadee) RESULT DONE
       return false;
     }
     if (!emitJump(JSOp::JumpIfTrue, &loopInfo.breaks)) {
-      //            [stack] NEXT ITER ARR I RESULT
+      //            [stack] NEXT ITER (spreadee) RESULT
       return false;
     }
 
     // Emit code to assign result.value to the iteration variable.
     if (!emitAtomOp(JSOp::GetProp, TaggedParserAtomIndex::WellKnown::value())) {
-      //            [stack] NEXT ITER ARR I VALUE
+      //            [stack] NEXT ITER (spreadee) VALUE
       return false;
     }
-    if (!emit1(JSOp::InitElemInc)) {
-      //            [stack] NEXT ITER ARR (I+1)
+    if (!emit1(storeElementOp)) {
+      //            [stack] NEXT ITER (spreadee)
       return false;
     }
 
     if (!loopInfo.emitLoopEnd(this, JSOp::Goto, TryNoteKind::ForOf)) {
-      //            [stack] NEXT ITER ARR (I+1)
+      //            [stack] NEXT ITER (spreadee)
       return false;
     }
 
@@ -5569,17 +5585,17 @@ bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
   // No continues should occur in spreads.
   MOZ_ASSERT(!loopInfo.continues.offset.valid());
 
-  if (!emit2(JSOp::Pick, 4)) {
-    //              [stack] ITER ARR FINAL_INDEX RESULT NEXT
+  if (!emit2(JSOp::Pick, spreadeeStackItems + 2)) {
+    //              [stack] ITER (spreadee) RESULT NEXT
     return false;
   }
-  if (!emit2(JSOp::Pick, 4)) {
-    //              [stack] ARR FINAL_INDEX RESULT NEXT ITER
+  if (!emit2(JSOp::Pick, spreadeeStackItems + 2)) {
+    //              [stack] (spreadee) RESULT NEXT ITER
     return false;
   }
 
   return emitPopN(3);
-  //                [stack] ARR FINAL_INDEX
+  //                [stack] (spreadee)
 }
 
 bool BytecodeEmitter::emitInitializeForInOrOfTarget(TernaryNode* forHead) {
@@ -10468,6 +10484,126 @@ bool BytecodeEmitter::emitSpreadIntoArray(UnaryNode* elem) {
   return true;
 }
 
+#ifdef ENABLE_RECORD_TUPLE
+bool BytecodeEmitter::emitRecordLiteral(ListNode* record) {
+  if (!emitUint32Operand(JSOp::InitRecord, record->count())) {
+    //              [stack] RECORD
+    return false;
+  }
+
+  for (ParseNode* propdef : record->contents()) {
+    if (propdef->isKind(ParseNodeKind::Spread)) {
+      if (!emitTree(propdef->as<UnaryNode>().kid())) {
+        //          [stack] RECORD SPREADEE
+        return false;
+      }
+      if (!emit1(JSOp::AddRecordSpread)) {
+        //          [stack] RECORD
+        return false;
+      }
+    } else {
+      BinaryNode* prop = &propdef->as<BinaryNode>();
+
+      ParseNode* key = prop->left();
+      ParseNode* value = prop->right();
+
+      switch (key->getKind()) {
+        case ParseNodeKind::ObjectPropertyName:
+          if (!emitStringOp(JSOp::String, key->as<NameNode>().atom())) {
+            return false;
+          }
+          break;
+        case ParseNodeKind::ComputedName:
+          if (!emitTree(key->as<UnaryNode>().kid())) {
+            return false;
+          }
+          break;
+        default:
+          MOZ_ASSERT(key->isKind(ParseNodeKind::StringExpr) ||
+                     key->isKind(ParseNodeKind::NumberExpr) ||
+                     key->isKind(ParseNodeKind::BigIntExpr));
+          if (!emitTree(key)) {
+            return false;
+          }
+          break;
+      }
+      //            [stack] RECORD KEY
+
+      if (!emitTree(value)) {
+        //          [stack] RECORD KEY VALUE
+        return false;
+      }
+
+      if (!emit1(JSOp::AddRecordProperty)) {
+        //          [stack] RECORD
+        return false;
+      }
+    }
+  }
+
+  if (!emit1(JSOp::FinishRecord)) {
+    //              [stack] RECORD
+    return false;
+  }
+
+  return true;
+}
+
+bool BytecodeEmitter::emitTupleLiteral(ListNode* tuple) {
+  if (!emitUint32Operand(JSOp::InitTuple, tuple->count())) {
+    //              [stack] TUPLE
+    return false;
+  }
+
+  for (ParseNode* elt : tuple->contents()) {
+    if (elt->isKind(ParseNodeKind::Spread)) {
+      ParseNode* expr = elt->as<UnaryNode>().kid();
+
+      if (!emitTree(expr)) {
+        //          [stack] TUPLE VALUE
+        return false;
+      }
+      if (!emitIterator()) {
+        //          [stack] TUPLE NEXT ITER
+        return false;
+      }
+      if (!emit2(JSOp::Pick, 2)) {
+        //          [stack] NEXT ITER TUPLE
+        return false;
+      }
+      if (!emitSpread(allowSelfHostedIter(expr), /* spreadeeStackItems = */ 1,
+                      JSOp::AddTupleElement)) {
+        //          [stack] TUPLE
+        return false;
+      }
+    } else {
+      if (!emitTree(elt)) {
+        //          [stack] TUPLE VALUE
+        return false;
+      }
+
+      // Update location to throw errors about non-primitive elements
+      // in the correct position.
+      if (!updateSourceCoordNotes(elt->pn_pos.begin)) {
+        return false;
+      }
+
+      if (!emit1(JSOp::AddTupleElement)) {
+        //          [stack] TUPLE
+        return false;
+      }
+    }
+  }
+
+  if (!emit1(JSOp::FinishTuple)) {
+    //              [stack] TUPLE
+    return false;
+  }
+
+  return true;
+}
+#endif
+
 static inline JSOp UnaryOpParseNodeKindToJSOp(ParseNodeKind pnk) {
   switch (pnk) {
     case ParseNodeKind::ThrowStmt:
@@ -11671,6 +11807,20 @@ bool BytecodeEmitter::emitTree(
         return false;
       }
       break;
+
+#ifdef ENABLE_RECORD_TUPLE
+    case ParseNodeKind::RecordExpr:
+      if (!emitRecordLiteral(&pn->as<ListNode>())) {
+        return false;
+      }
+      break;
+
+    case ParseNodeKind::TupleExpr:
+      if (!emitTupleLiteral(&pn->as<ListNode>())) {
+        return false;
+      }
+      break;
+#endif
 
     case ParseNodeKind::PropertyNameExpr:
     case ParseNodeKind::PosHolder:

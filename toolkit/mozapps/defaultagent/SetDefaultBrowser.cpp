@@ -200,7 +200,8 @@ static bool VerifyUserDefault(const wchar_t* aExt, const wchar_t* aProgID) {
   return true;
 }
 
-HRESULT SetDefaultBrowserUserChoice(const wchar_t* aAumi) {
+HRESULT SetDefaultBrowserUserChoice(
+    const wchar_t* aAumi, const wchar_t* const* aExtraFileExtensions) {
   auto urlProgID = FormatProgID(L"FirefoxURL", aAumi);
   if (!CheckProgIDExists(urlProgID.get())) {
     LOG_ERROR_MESSAGE(L"ProgID %s not found", urlProgID.get());
@@ -249,6 +250,18 @@ HRESULT SetDefaultBrowserUserChoice(const wchar_t* aAumi) {
       ok = false;
       break;
     }
+  }
+
+  const wchar_t* const* extraFileExtension = aExtraFileExtensions;
+  while (ok && extraFileExtension && *extraFileExtension) {
+    if (!SetUserChoice(*extraFileExtension, sid.get(), htmlProgID.get())) {
+      ok = false;
+    } else if (!VerifyUserDefault(*extraFileExtension, htmlProgID.get())) {
+      defaultRejected = true;
+      ok = false;
+    }
+
+    extraFileExtension++;
   }
 
   // Notify shell to refresh icons

@@ -73,8 +73,8 @@ class GMPVideoEncoderParent : public GMPVideoEncoderProxy,
   mozilla::ipc::IPCResult RecvError(const GMPErr& aError) override;
   mozilla::ipc::IPCResult RecvShutdown() override;
   mozilla::ipc::IPCResult RecvParentShmemForPool(Shmem&& aFrameBuffer) override;
-  mozilla::ipc::IPCResult AnswerNeedShmem(const uint32_t& aEncodedBufferSize,
-                                          Shmem* aMem) override;
+  mozilla::ipc::IPCResult RecvNeedShmem(const uint32_t& aEncodedBufferSize,
+                                        Shmem* aMem) override;
   mozilla::ipc::IPCResult Recv__delete__() override;
 
   bool mIsOpen;

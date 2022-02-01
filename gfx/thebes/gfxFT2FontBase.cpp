@@ -158,7 +158,7 @@ static inline gfxRect ScaleGlyphBounds(const IntRect& aBounds,
  * exists.  aWidth/aBounds is only set when this returns a non-zero glyph id.
  * This is just for use during initialization, and doesn't use the width cache.
  */
-uint32_t gfxFT2FontBase::GetCharExtents(char aChar, gfxFloat* aWidth,
+uint32_t gfxFT2FontBase::GetCharExtents(uint32_t aChar, gfxFloat* aWidth,
                                         gfxRect* aBounds) {
   FT_UInt gid = GetGlyph(aChar);
   int32_t width;
@@ -249,7 +249,7 @@ void gfxFT2FontBase::InitMetrics() {
       case FontSizeAdjust::Tag::IcHeight: {
         bool vertical = FontSizeAdjust::Tag(mStyle.sizeAdjustBasis) ==
                         FontSizeAdjust::Tag::IcHeight;
-        gfxFloat advance = GetCharAdvance(0x6C34, vertical);
+        gfxFloat advance = GetCharAdvance(kWaterIdeograph, vertical);
         aspect = advance > 0.0 ? advance / mAdjustedSize : 1.0;
         break;
       }
@@ -294,6 +294,7 @@ void gfxFT2FontBase::InitMetrics() {
     mMetrics.maxAdvance = spaceWidth;
     mMetrics.aveCharWidth = spaceWidth;
     mMetrics.zeroWidth = spaceWidth;
+    mMetrics.ideographicWidth = emHeight;
     const gfxFloat xHeight = 0.5 * emHeight;
     mMetrics.xHeight = xHeight;
     mMetrics.capHeight = mMetrics.maxAscent;
@@ -469,6 +470,12 @@ void gfxFT2FontBase::InitMetrics() {
     mMetrics.zeroWidth = -1.0;  // indicates not found
   }
 
+  if (GetCharExtents(kWaterIdeograph, &width)) {
+    mMetrics.ideographicWidth = width;
+  } else {
+    mMetrics.ideographicWidth = -1.0;
+  }
+
   // If we didn't get a usable x-height or cap-height above, try measuring
   // specific glyphs. This can be affected by hinting, leading to erratic
   // behavior across font sizes and system configuration, so we prefer to
@@ -532,11 +539,12 @@ void gfxFT2FontBase::InitMetrics() {
     //    printf("font name: %s %f\n", NS_ConvertUTF16toUTF8(GetName()).get(), GetStyle()->size);
     //    printf ("pango font %s\n", pango_font_description_to_string (pango_font_describe (font)));
 
-    fprintf (stderr, "Font: %s\n", NS_ConvertUTF16toUTF8(GetName()).get());
+    fprintf (stderr, "Font: %s\n", GetName().get());
     fprintf (stderr, "    emHeight: %f emAscent: %f emDescent: %f\n", mMetrics.emHeight, mMetrics.emAscent, mMetrics.emDescent);
     fprintf (stderr, "    maxAscent: %f maxDescent: %f\n", mMetrics.maxAscent, mMetrics.maxDescent);
     fprintf (stderr, "    internalLeading: %f externalLeading: %f\n", mMetrics.externalLeading, mMetrics.internalLeading);
     fprintf (stderr, "    spaceWidth: %f aveCharWidth: %f xHeight: %f\n", mMetrics.spaceWidth, mMetrics.aveCharWidth, mMetrics.xHeight);
+    fprintf (stderr, "    ideographicWidth: %f\n", mMetrics.ideographicWidth);
     fprintf (stderr, "    uOff: %f uSize: %f stOff: %f stSize: %f\n", mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize);
 #endif
 }

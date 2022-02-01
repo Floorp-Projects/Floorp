@@ -299,3 +299,38 @@ fn test_impl_type_parameter_defaults() {
         self_ty: Type::Tuple,
     }"###);
 }
+
+#[test]
+fn test_impl_trait_trailing_plus() {
+    let tokens = quote! {
+        fn f() -> impl Sized + {}
+    };
+
+    snapshot!(tokens as Item, @r###"
+    Item::Fn {
+        vis: Inherited,
+        sig: Signature {
+            ident: "f",
+            generics: Generics,
+            output: Type(
+                Type::ImplTrait {
+                    bounds: [
+                        Trait(TraitBound {
+                            modifier: None,
+                            path: Path {
+                                segments: [
+                                    PathSegment {
+                                        ident: "Sized",
+                                        arguments: None,
+                                    },
+                                ],
+                            },
+                        }),
+                    ],
+                },
+            ),
+        },
+        block: Block,
+    }
+    "###);
+}

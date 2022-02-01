@@ -20,6 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
   PageThumbsStorage: "resource://gre/modules/PageThumbs.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  PlacesPreviews: "resource://gre/modules/PlacesPreviews.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -108,8 +109,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
  *   The date/time of the last interaction with the snapshot.
  * @property {Interactions.DOCUMENT_TYPE} documentType
  *   The document type of the snapshot.
- * @property {boolean} userPersisted
- *   True if the user created or persisted the snapshot in some way.
+ * @property {Snapshots.USER_PERSISTED} userPersisted
+ *   Whether the user created the snapshot and if they did, through what action.
  * @property {Map<type, data>} pageData
  *   Collection of PageData by type. See PageDataService.jsm
  * @property {Number} overlappingVisitScore
@@ -128,6 +129,15 @@ XPCOMUtils.defineLazyPreferenceGetter(
  *     Sent when a snapshot is removed.
  */
 const Snapshots = new (class Snapshots {
+  USER_PERSISTED = {
+    // The snapshot was created automatically.
+    NO: 0,
+    // The user created the snapshot manually, e.g. snapshot keyboard shortcut.
+    MANUAL: 1,
+    // The user pinned the page which caused the snapshot to be created.
+    PINNED: 2,
+  };
+
   constructor() {
     // TODO: we should update the pagedata periodically. We first need a way to
     // track when the last update happened, we may add an updated_at column to
@@ -136,7 +146,9 @@ const Snapshots = new (class Snapshots {
     // last notified pages to avoid hitting the same page continuously.
     // PageDataService.on("page-data", this.#onPageData);
 
-    PageThumbs.addExpirationFilter(this);
+    if (!PlacesPreviews.enabled) {
+      PageThumbs.addExpirationFilter(this);
+    }
   }
 
   /**
@@ -216,7 +228,7 @@ const Snapshots = new (class Snapshots {
       } else {
         // TODO: queuing a fetch will notify page-data once done, if any data
         // was found, but we're not yet handling that, see the constructor.
-        PageDataService.queueFetch(url).catch(console.error);
+        PageDataService.queueFetch(url);
       }
 
       this.#downloadPageImage(url, pageData?.image);
@@ -279,7 +291,11 @@ const Snapshots = new (class Snapshots {
       // No metadata image was found, start the process to capture a thumbnail
       // so it will be ready when needed. Ignore any errors since we can
       // fallback to a favicon.
-      BackgroundPageThumbs.captureIfMissing(url).catch(console.error);
+      if (PlacesPreviews.enabled) {
+        PlacesPreviews.update(url).catch(console.error);
+      } else {
+        BackgroundPageThumbs.captureIfMissing(url).catch(console.error);
+      }
     }
   }
 
@@ -312,17 +328,17 @@ const Snapshots = new (class Snapshots {
    * Adds a new snapshot.
    *
    * If the snapshot already exists, and this is a user-persisted addition,
-   * then the userPersisted flag will be set, and the removed_at flag will be
+   * then the userPersisted value will be updated, and the removed_at flag will be
    * cleared.
    *
    * @param {object} details
    * @param {string} details.url
    *   The url associated with the snapshot.
-   * @param {boolean} [details.userPersisted]
-   *   True if the user created or persisted the snapshot in some way, defaults to
-   *   false.
+   * @param {Snapshots.USER_PERSISTED} [details.userPersisted]
+   *   Whether the user created the snapshot and if they did, through what
+   *   action, defaults to USER_PERSISTED.NO.
    */
-  async add({ url, userPersisted = false }) {
+  async add({ url, userPersisted = this.USER_PERSISTED.NO }) {
     if (!url) {
       throw new Error("Missing url parameter to Snapshots.add()");
     }
@@ -353,7 +369,7 @@ const Snapshots = new (class Snapshots {
             LEFT JOIN moz_places_metadata m ON m.place_id = h.id
             WHERE h.url_hash = hash(:url) AND h.url = :url
             GROUP BY h.id
-            ON CONFLICT DO UPDATE SET user_persisted = :userPersisted, removed_at = NULL WHERE :userPersisted = 1
+            ON CONFLICT DO UPDATE SET user_persisted = :userPersisted, removed_at = NULL WHERE :userPersisted <> 0
             RETURNING place_id, created_at, user_persisted
           `,
           {
@@ -369,7 +385,7 @@ const Snapshots = new (class Snapshots {
           // and we only overwrite it when the new request is user_persisted.
           if (
             rows[0].getResultByName("created_at") != now &&
-            !rows[0].getResultByName("user_persisted")
+            rows[0].getResultByName("user_persisted") == this.USER_PERSISTED.NO
           ) {
             return null;
           }
@@ -513,7 +529,7 @@ const Snapshots = new (class Snapshots {
   }
 
   /**
-   * Queries interaction times from the database.
+   * Queries the place id from moz_places for a given url
    *
    * @param {string} url
    *   url to query the place_id of
@@ -541,10 +557,13 @@ const Snapshots = new (class Snapshots {
   /**
    * Queries snapshots that were browsed within an hour of visiting the given context url
    *
+   *   For example, if a user visited Site A two days ago, we would generate a list of snapshots that were visited within an hour of that visit.
+   *   Site A may have also been visited four days ago, we would like to see what websites were browsed then.
+   *
    * @param {string} context_url
    *   the url that we're collection snapshots whose interactions overlapped
    * @returns {Snapshot[]}
-   *   Returns array of overlapping snapshots in order of descending last interaction time.
+   *   Returns array of overlapping snapshots in order of descending overlappingVisitScore (Calculated as 1.0 to 0.0, as the overlap gap goes to snapshot_overlap_limit)
    */
   async queryOverlapping(context_url) {
     await this.#ensureVersionUpdates();
@@ -560,7 +579,7 @@ const Snapshots = new (class Snapshots {
     let rows = await db.executeCached(
       `SELECT h.url AS url, h.title AS title, o.overlappingVisitScore, created_at, removed_at,
       document_type, first_interaction_at, last_interaction_at,
-      user_persisted, description, site_name, preview_image_url, group_concat(e.data, ",") AS page_data,
+      user_persisted, description, site_name, preview_image_url, group_concat('[' || e.type || ', ' || e.data || ']') AS page_data,
       h.visit_count
       FROM moz_places_metadata_snapshots s
       JOIN moz_places h ON h.id = s.place_id
@@ -597,6 +616,54 @@ const Snapshots = new (class Snapshots {
     return rows.map(row =>
       this.#translateRow(row, { includeOverlappingVisitScore: true })
     );
+  }
+
+  /**
+   * Queries snapshots which have interactions sharing a common referrer with the context url
+   *
+   * @param {string} context_url
+   *   the url that we're collecting snapshots for
+   * @param {string} referrer_url
+   *   the referrer of the url we're collecting snapshots for (may be empty)
+   * @returns {Snapshot[]}
+   *   Returns array of snapshots with the common referrer
+   */
+  async queryCommonReferrer(context_url, referrer_url) {
+    await this.#ensureVersionUpdates();
+    let db = await PlacesUtils.promiseDBConnection();
+
+    let context_place_id = await this.queryPlaceIdFromUrl(context_url);
+    if (context_place_id == -1) {
+      return [];
+    }
+
+    let context_referrer_id = await this.queryPlaceIdFromUrl(referrer_url);
+    if (context_referrer_id == -1) {
+      return [];
+    }
+
+    let rows = await db.executeCached(
+      `
+      SELECT h.id, h.url AS url, h.title AS title, s.created_at,
+        removed_at, s.document_type, first_interaction_at, last_interaction_at, user_persisted,
+        description, site_name, preview_image_url, h.visit_count,
+        group_concat('[' || e.type || ', ' || e.data || ']') AS page_data
+      FROM moz_places_metadata_snapshots s
+      JOIN moz_places h
+      ON h.id = s.place_id
+      LEFT JOIN moz_places_metadata_snapshots_extra e
+      ON e.place_id = s.place_id
+      WHERE s.place_id != :context_place_id AND s.place_id IN (SELECT DISTINCT place_id FROM moz_places_metadata WHERE referrer_place_id = :context_referrer_id)
+      GROUP BY s.place_id
+    `,
+      { context_referrer_id, context_place_id }
+    );
+
+    return rows.map(row => {
+      let snapshot = this.#translateRow(row);
+      snapshot.commonReferrerScore = 1.0;
+      return snapshot;
+    });
   }
 
   /**
@@ -673,7 +740,7 @@ const Snapshots = new (class Snapshots {
         row.getResultByName("last_interaction_at")
       ),
       documentType: row.getResultByName("document_type"),
-      userPersisted: !!row.getResultByName("user_persisted"),
+      userPersisted: row.getResultByName("user_persisted"),
       overlappingVisitScore,
       pageData: pageData ?? new Map(),
       visitCount: row.getResultByName("visit_count"),
@@ -697,12 +764,16 @@ const Snapshots = new (class Snapshots {
       return snapshot.image;
     }
     const url = snapshot.url;
-    await BackgroundPageThumbs.captureIfMissing(url).catch(console.error);
-    const exists = await PageThumbsStorage.fileExistsForURL(url);
-    if (exists) {
-      return PageThumbs.getThumbnailURL(url);
+    if (PlacesPreviews.enabled) {
+      if (await PlacesPreviews.update(url).catch(console.error)) {
+        return PlacesPreviews.getPageThumbURL(url);
+      }
+    } else {
+      await BackgroundPageThumbs.captureIfMissing(url).catch(console.error);
+      if (await PageThumbsStorage.fileExistsForURL(url)) {
+        return PageThumbs.getThumbnailURL(url);
+      }
     }
-
     return null;
   }
 

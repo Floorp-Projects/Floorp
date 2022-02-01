@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import, unicode_literals
 
-import os
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -81,20 +81,20 @@ def test_register_command_sets_up_class_at_runtime(registrar):
     @Command("cmd_foo", category="testing", virtualenv_name="env_foo")
     def run_foo(command_context):
         assert (
-            os.path.basename(command_context.virtualenv_manager.virtualenv_root)
-            == "env_foo"
+            Path(command_context.virtualenv_manager.virtualenv_root).name == "env_foo"
         )
         inner_function("foo")
 
     @Command("cmd_bar", category="testing", virtualenv_name="env_bar")
     def run_bar(command_context):
         assert (
-            os.path.basename(command_context.virtualenv_manager.virtualenv_root)
-            == "env_bar"
+            Path(command_context.virtualenv_manager.virtualenv_root).name == "env_bar"
         )
         inner_function("bar")
 
-    def from_environment_patch(topsrcdir, state_dir, virtualenv_name, dir):
+    def from_environment_patch(
+        topsrcdir: str, state_dir: str, virtualenv_name, directory: str
+    ):
         return CommandSiteManager(
             "",
             "",

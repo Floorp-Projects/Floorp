@@ -383,7 +383,7 @@
 
     stream->size  = 0x7FFFFFFFL;  /* don't know the real size! */
     stream->pos   = 0;
-    stream->base  = 0;
+    stream->base  = NULL;
     stream->read  = ft_lzw_stream_io;
     stream->close = ft_lzw_stream_close;
 

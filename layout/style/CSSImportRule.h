@@ -38,6 +38,7 @@ class CSSImportRule final : public css::Rule {
   dom::MediaList* GetMedia();
   StyleSheet* GetStyleSheet() const { return mChildSheet; }
   StyleSheet* GetStyleSheetForBindings();
+  void GetLayerName(nsACString&) const;
 
   // Clear the mSheet pointer on this rule and descendants.
   void DropSheetReference() final;

@@ -27,4 +27,5 @@ user_pref("dom.forms.datetime-local", true);
 user_pref("dom.gamepad.enabled", true);
 user_pref("dom.gamepad.non_standard_events.enabled", true);
 // Enable form autofill feature testing.
-user_pref("extensions.formautofill.available", "on");
+user_pref("extensions.formautofill.addresses.available", "on");
+user_pref("extensions.formautofill.creditCards.available", "on");

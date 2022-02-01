@@ -156,6 +156,17 @@ export function Colorways(props) {
                 <Localized
                   text={typeof description === "object" ? description : {}}
                 >
+                  <span
+                    className="sr-only colorway label"
+                    id={`${id}-label`}
+                    data-l10n-args={JSON.stringify({
+                      colorwayName: label,
+                    })}
+                  />
+                </Localized>
+                <Localized
+                  text={typeof description === "object" ? description : {}}
+                >
                   <input
                     type="radio"
                     data-colorway={id}
@@ -167,6 +178,7 @@ export function Colorways(props) {
                     data-l10n-args={JSON.stringify({
                       colorwayName: label,
                     })}
+                    aria-labelledby={`${id}-label`}
                   />
                 </Localized>
                 <div

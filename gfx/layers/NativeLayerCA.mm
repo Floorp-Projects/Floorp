@@ -1223,6 +1223,34 @@ CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
   return GetRepresentation(aRepresentation).UnderlyingCALayer();
 }
 
+static NSString* NSStringForOSType(OSType type) {
+  unichar c[4];
+  c[0] = (type >> 24) & 0xFF;
+  c[1] = (type >> 16) & 0xFF;
+  c[2] = (type >> 8) & 0xFF;
+  c[3] = (type >> 0) & 0xFF;
+  NSString* string = [[NSString stringWithCharacters:c length:4] autorelease];
+  return string;
+}
+
+/* static */ void LogSurface(IOSurfaceRef aSurfaceRef, CVPixelBufferRef aBuffer,
+                             CMVideoFormatDescriptionRef aFormat) {
+  NSLog(@"VIDEO_LOG: LogSurface...\n");
+
+  CFDictionaryRef surfaceValues = IOSurfaceCopyAllValues(aSurfaceRef);
+  NSLog(@"Surface values are %@.\n", surfaceValues);
+  CFRelease(surfaceValues);
+
+  CGColorSpaceRef colorSpace = CVImageBufferGetColorSpace(aBuffer);
+  NSLog(@"ColorSpace is %@.\n", colorSpace);
+
+  OSType codec = CMFormatDescriptionGetMediaSubType(aFormat);
+  NSLog(@"Codec is %@.\n", NSStringForOSType(codec));
+
+  CFDictionaryRef extensions = CMFormatDescriptionGetExtensions(aFormat);
+  NSLog(@"Format extensions are %@.\n", extensions);
+}
+
 bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
   MOZ_ASSERT([mContentCALayer isKindOfClass:[AVSampleBufferDisplayLayer class]]);
 
@@ -1234,6 +1262,36 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
     MOZ_ASSERT(pixelBuffer == nullptr, "Failed call shouldn't allocate memory.");
     return false;
   }
+
+#ifdef NIGHTLY_BUILD
+  if (StaticPrefs::gfx_core_animation_specialize_video_check_color_space()) {
+    // Ensure the resulting pixel buffer has a color space. If it doesn't, then modify
+    // the surface and create the buffer again.
+    CFTypeRefPtr<CGColorSpaceRef> colorSpace =
+        CFTypeRefPtr<CGColorSpaceRef>::WrapUnderGetRule(CVImageBufferGetColorSpace(pixelBuffer));
+    if (!colorSpace) {
+      printf("VIDEO_LOG: pixel buffer created by EnqueueSurface has no color space.\n");
+
+      // Use our main display color space.
+      colorSpace = CFTypeRefPtr<CGColorSpaceRef>::WrapUnderCreateRule(
+          CGDisplayCopyColorSpace(CGMainDisplayID()));
+      auto colorData =
+          CFTypeRefPtr<CFDataRef>::WrapUnderCreateRule(CGColorSpaceCopyICCData(colorSpace.get()));
+      IOSurfaceSetValue(aSurfaceRef, CFSTR("IOSurfaceColorSpace"), colorData.get());
+
+      // Get rid of our old pixel buffer and create a new one.
+      CFRelease(pixelBuffer);
+      cvValue =
+          CVPixelBufferCreateWithIOSurface(kCFAllocatorDefault, aSurfaceRef, nullptr, &pixelBuffer);
+      if (cvValue != kCVReturnSuccess) {
+        MOZ_ASSERT(pixelBuffer == nullptr, "Failed call shouldn't allocate memory.");
+        return false;
+      }
+    }
+    MOZ_ASSERT(CVImageBufferGetColorSpace(pixelBuffer), "Pixel buffer should have a color space.");
+  }
+#endif
+
   CFTypeRefPtr<CVPixelBufferRef> pixelBufferDeallocator =
       CFTypeRefPtr<CVPixelBufferRef>::WrapUnderCreateRule(pixelBuffer);
 
@@ -1247,9 +1305,29 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
   CFTypeRefPtr<CMVideoFormatDescriptionRef> formatDescriptionDeallocator =
       CFTypeRefPtr<CMVideoFormatDescriptionRef>::WrapUnderCreateRule(formatDescription);
 
+#ifdef NIGHTLY_BUILD
+  if (StaticPrefs::gfx_core_animation_specialize_video_log()) {
+    LogSurface(aSurfaceRef, pixelBuffer, formatDescription);
+  }
+#endif
+
+  CMSampleTimingInfo timingInfo = kCMTimingInfoInvalid;
+
+  bool spoofTiming = false;
+#ifdef NIGHTLY_BUILD
+  spoofTiming = StaticPrefs::gfx_core_animation_specialize_video_spoof_timing();
+#endif
+  if (spoofTiming) {
+    // Since we don't have timing information for the sample, set the sample to play at the
+    // current timestamp.
+    CMTimebaseRef timebase = [(AVSampleBufferDisplayLayer*)mContentCALayer controlTimebase];
+    CMTime nowTime = CMTimebaseGetTime(timebase);
+    timingInfo = {.presentationTimeStamp = nowTime};
+  }
+
   CMSampleBufferRef sampleBuffer = nullptr;
-  osValue = CMSampleBufferCreateReadyWithImageBuffer(
-      kCFAllocatorDefault, pixelBuffer, formatDescription, &kCMTimingInfoInvalid, &sampleBuffer);
+  osValue = CMSampleBufferCreateReadyWithImageBuffer(kCFAllocatorDefault, pixelBuffer,
+                                                     formatDescription, &timingInfo, &sampleBuffer);
   if (osValue != noErr) {
     MOZ_ASSERT(sampleBuffer == nullptr, "Failed call shouldn't allocate memory.");
     return false;
@@ -1257,17 +1335,19 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
   CFTypeRefPtr<CMSampleBufferRef> sampleBufferDeallocator =
       CFTypeRefPtr<CMSampleBufferRef>::WrapUnderCreateRule(sampleBuffer);
 
-  // Since we don't have timing information for the sample, before we enqueue it, we
-  // attach an attribute that specifies that the sample should be played immediately.
-  CFArrayRef attachmentsArray = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
-  if (!attachmentsArray || CFArrayGetCount(attachmentsArray) == 0) {
-    // No dictionary to alter.
-    return false;
+  if (!spoofTiming) {
+    // Since we don't have timing information for the sample, before we enqueue it, we
+    // attach an attribute that specifies that the sample should be played immediately.
+    CFArrayRef attachmentsArray = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
+    if (!attachmentsArray || CFArrayGetCount(attachmentsArray) == 0) {
+      // No dictionary to alter.
+      return false;
+    }
+    CFMutableDictionaryRef sample0Dictionary =
+        (__bridge CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachmentsArray, 0);
+    CFDictionarySetValue(sample0Dictionary, kCMSampleAttachmentKey_DisplayImmediately,
+                         kCFBooleanTrue);
   }
-  CFMutableDictionaryRef sample0Dictionary =
-      (__bridge CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachmentsArray, 0);
-  CFDictionarySetValue(sample0Dictionary, kCMSampleAttachmentKey_DisplayImmediately,
-                       kCFBooleanTrue);
 
   [(AVSampleBufferDisplayLayer*)mContentCALayer enqueueSampleBuffer:sampleBuffer];
 
@@ -1331,6 +1411,11 @@ bool NativeLayerCA::Representation::ApplyChanges(
     mWrappingCALayer.edgeAntialiasingMask = 0;
     if (aSpecializeVideo) {
       mContentCALayer = [[AVSampleBufferDisplayLayer layer] retain];
+      CMTimebaseRef timebase;
+      CMTimebaseCreateWithMasterClock(kCFAllocatorDefault, CMClockGetHostTimeClock(), &timebase);
+      CMTimebaseSetRate(timebase, 1.0f);
+      [(AVSampleBufferDisplayLayer*)mContentCALayer setControlTimebase:timebase];
+      CFRelease(timebase);
     } else {
       mContentCALayer = [[CALayer layer] retain];
     }

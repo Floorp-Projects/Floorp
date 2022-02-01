@@ -93,26 +93,25 @@ SECTION .text
 
 %macro PREP_REGS 2 ; w, h
     ; off1/2/3[k] [6 total] from [tapq+12+(dir+0/2/6)*2+k]
-    mov           dird, r6m
+    mov           dird, r7m
     lea         tableq, [cdef_filter_%1x%2_8bpc_jmptable]
     lea           dirq, [tableq+dirq*2*4]
 %if %1 == 4
  %if %2 == 4
-  DEFINE_ARGS dst, stride, left, top, pri, sec, \
-              table, dir, dirjmp, dst4, stride3, k
+  DEFINE_ARGS dst, stride, left, top, bot, pri, sec, \
+              table, dir, dirjmp, stride3, k
  %else
-  DEFINE_ARGS dst, stride, left, top, pri, sec, \
-              table, dir, dirjmp, dst4, dst8, stride3, k
-    lea          dst8q, [dstq+strideq*8]
+  DEFINE_ARGS dst, stride, left, top, bot, pri, sec, \
+              table, dir, dirjmp, dst4, stride3, k
+    lea          dst4q, [dstq+strideq*4]
  %endif
 %else
-  DEFINE_ARGS dst, stride, h, top1, pri, sec, \
-              table, dir, dirjmp, top2, dst4, stride3, k
+  DEFINE_ARGS dst, stride, h, top1, bot, pri, sec, \
+              table, dir, dirjmp, top2, stride3, k
     mov             hq, -8
     lea          top1q, [top1q+strideq*0]
     lea          top2q, [top1q+strideq*1]
 %endif
-    lea          dst4q, [dstq+strideq*4]
 %if %1 == 4
     lea       stride3q, [strideq*3]
 %endif
@@ -280,17 +279,17 @@ SECTION .text
 
 %macro BORDER_PREP_REGS 2 ; w, h
     ; off1/2/3[k] [6 total] from [tapq+12+(dir+0/2/6)*2+k]
-    mov           dird, r6m
+    mov           dird, r7m
     lea           dirq, [tableq+dirq*2+14]
 %if %1*%2*2/mmsize > 1
  %if %1 == 4
-    DEFINE_ARGS dst, stride, dir, stk, pri, sec, stride3, h, off, k
+    DEFINE_ARGS dst, stride, k, dir, stk, pri, sec, stride3, h, off
  %else
-    DEFINE_ARGS dst, stride, dir, stk, pri, sec, h, off, k
+    DEFINE_ARGS dst, stride, k, dir, stk, pri, sec, h, off
  %endif
     mov             hd, %1*%2*2/mmsize
 %else
-    DEFINE_ARGS dst, stride, dir, stk, pri, sec, stride3, off, k
+    DEFINE_ARGS dst, stride, k, dir, stk, pri, sec, stride3, off
 %endif
     lea           stkq, [px]
     pxor           m11, m11
@@ -385,10 +384,10 @@ SECTION .text
     packuswb        m4, m4
     vextracti128   xm5, m4, 1
 %if %1 == 4
-    movd [dstq+strideq*0], xm4
+    movd   [dstq+strideq*0], xm4
     pextrd [dstq+strideq*1], xm4, 1
-    movd [dstq+strideq*2], xm5
-    pextrd [dstq+stride3q], xm5, 1
+    movd   [dstq+strideq*2], xm5
+    pextrd [dstq+stride3q ], xm5, 1
 %else
     movq [dstq+strideq*0], xm4
     movq [dstq+strideq*1], xm5
@@ -397,14 +396,13 @@ SECTION .text
 
 %macro CDEF_FILTER 2 ; w, h
 INIT_YMM avx2
-cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
-                                    pri, sec, dir, damping, edge
+cglobal cdef_filter_%1x%2_8bpc, 5, 10, 0, dst, stride, left, top, bot, \
+                                          pri, sec, dir, damping, edge
 %assign stack_offset_entry stack_offset
     mov          edged, edgem
     cmp          edged, 0xf
     jne .border_block
 
-    PUSH            r9
     PUSH           r10
     PUSH           r11
 %if %2 == 4
@@ -413,7 +411,7 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     PUSH  r%+regs_used
   %assign regs_used regs_used+1
  %endif
-    ALLOC_STACK 0x60, 16
+    ALLOC_STACK   0x60, 16
     pmovzxbw       xm0, [leftq+1]
     vpermq          m0, m0, q0110
     psrldq          m1, m0, 4
@@ -439,7 +437,7 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     PUSH  r%+regs_used
   %assign regs_used regs_used+1
  %endif
-    ALLOC_STACK 8*2+%1*%2*2+32, 16
+    ALLOC_STACK 8*4+%1*%2*2+32, 16
     lea            r11, [strideq*3]
     movu           xm4, [dstq+strideq*2]
     pmovzxwq        m0, [leftq+0]
@@ -447,15 +445,17 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     vinserti128     m4, [dstq+r11], 1
     pmovzxbd        m2, [leftq+1]
     pmovzxbd        m3, [leftq+9]
-    mova    [rsp+0x10], m0
-    mova    [rsp+0x30], m1
-    mova    [rsp+0x50], m2
-    mova    [rsp+0x70], m3
-    mova    [rsp+0x90], m4
+    mov       [rsp+16], botq
+    mova    [rsp+0x20], m0
+    mova    [rsp+0x40], m1
+    mova    [rsp+0x60], m2
+    mova    [rsp+0x80], m3
+    mova    [rsp+0xa0], m4
+    lea           botq, [dstq+strideq*4]
 %endif
 
- DEFINE_ARGS dst, stride, left, top, pri, secdmp, zero, pridmp, damping
-    mov       dampingd, r7m
+ DEFINE_ARGS dst, stride, left, top, bot, pri, secdmp, zero, pridmp, damping
+    mov       dampingd, r8m
     xor          zerod, zerod
     movifnidn     prid, prim
     sub       dampingd, 31
@@ -474,13 +474,13 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     add        secdmpd, dampingd
     mov        [rsp+8], secdmpq                 ; sec_shift
 
- DEFINE_ARGS dst, stride, left, top, pri, secdmp, table, pridmp
+ DEFINE_ARGS dst, stride, left, top, bot, pri, secdmp, table, pridmp
     lea         tableq, [tap_table]
     vpbroadcastb   m13, [tableq+pridmpq]        ; pri_shift_mask
     vpbroadcastb   m14, [tableq+secdmpq]        ; sec_shift_mask
 
     ; pri/sec_taps[k] [4 total]
- DEFINE_ARGS dst, stride, left, top, pri, sec, table, dir
+ DEFINE_ARGS dst, stride, left, top, bot, pri, sec, table, dir
     vpbroadcastb    m0, xm0                     ; pri_strength
     vpbroadcastb    m1, xm1                     ; sec_strength
     and           prid, 1
@@ -505,21 +505,21 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     pxor            m9, m9
     ADJUST_PIXEL    %1, %2, m9, m10, 1
 %if %1*%2 > mmsize
-    mov           dstq, dst4q
-    lea          top1q, [rsp+0x90]
-    lea          top2q, [rsp+0xA0]
-    lea          dst4q, [dst4q+strideq*4]
+    lea           dstq, [dstq+strideq*4]
+    lea          top1q, [rsp+0xa0]
+    lea          top2q, [rsp+0xb0]
+    mov           botq, [rsp+16]
     add             hq, 4
     jl .v_loop
 %endif
     RET
 
 .pri_only:
- DEFINE_ARGS dst, stride, left, top, pri, _, table, pridmp
+ DEFINE_ARGS dst, stride, left, top, bot, pri, _, table, pridmp
     lea         tableq, [tap_table]
     vpbroadcastb   m13, [tableq+pridmpq]        ; pri_shift_mask
     ; pri/sec_taps[k] [4 total]
- DEFINE_ARGS dst, stride, left, top, pri, _, table, dir
+ DEFINE_ARGS dst, stride, left, top, bot, pri, _, table, dir
     vpbroadcastb    m0, xm0                     ; pri_strength
     and           prid, 1
     lea           priq, [tableq+priq*2+8]       ; pri_taps
@@ -537,26 +537,26 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     jge .pri_k_loop
     ADJUST_PIXEL    %1, %2, m1, m3
 %if %1*%2 > mmsize
-    mov           dstq, dst4q
-    lea          top1q, [rsp+0x90]
-    lea          top2q, [rsp+0xA0]
-    lea          dst4q, [dst4q+strideq*4]
+    lea           dstq, [dstq+strideq*4]
+    lea          top1q, [rsp+0xa0]
+    lea          top2q, [rsp+0xb0]
+    mov           botq, [rsp+16]
     add             hq, 4
     jl .pri_v_loop
 %endif
     RET
 
 .sec_only:
- DEFINE_ARGS dst, stride, left, top, _, secdmp, zero, _, damping
+ DEFINE_ARGS dst, stride, left, top, bot, _, secdmp, zero, _, damping
     movd           xm1, secdmpd
     lzcnt      secdmpd, secdmpd
     add        secdmpd, dampingd
     mov        [rsp+8], secdmpq                 ; sec_shift
- DEFINE_ARGS dst, stride, left, top, _, secdmp, table
+ DEFINE_ARGS dst, stride, left, top, bot, _, secdmp, table
     lea         tableq, [tap_table]
     vpbroadcastb   m14, [tableq+secdmpq]        ; sec_shift_mask
     ; pri/sec_taps[k] [4 total]
- DEFINE_ARGS dst, stride, left, top, _, sec, table, dir
+ DEFINE_ARGS dst, stride, left, top, bot, _, sec, table, dir
     vpbroadcastb    m1, xm1                     ; sec_strength
     lea           secq, [tableq+12]             ; sec_taps
     PREP_REGS       %1, %2
@@ -574,10 +574,10 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     jge .sec_k_loop
     ADJUST_PIXEL    %1, %2, m0, m2
 %if %1*%2 > mmsize
-    mov           dstq, dst4q
-    lea          top1q, [rsp+0x90]
-    lea          top2q, [rsp+0xA0]
-    lea          dst4q, [dst4q+strideq*4]
+    lea           dstq, [dstq+strideq*4]
+    lea          top1q, [rsp+0xa0]
+    lea          top2q, [rsp+0xb0]
+    mov           botq, [rsp+16]
     add             hq, 4
     jl .sec_v_loop
 %endif
@@ -593,7 +593,7 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     psrldq         m11, m6, 2
     psrldq         m12, m10, 2
     vinserti128     m6, [dstq+stride3q -1], 1
-    vinserti128    m10, [dstq+strideq*4-1], 1
+    vinserti128    m10, [botq          -1], 1
     vpblendd        m5, m11, 0x10
     vpblendd        m9, m12, 0x10
     movu           m11, [blend_4x4+16]
@@ -616,7 +616,7 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     psrldq        xm10, 2
     shufps        xm10, xm9, q2020   ; +3 +4 +5 +6
     movd           xm9, [dst4q+stride3q -1]
-    pinsrd         xm9, [dst4q+strideq*4-1], 1
+    pinsrd         xm9, [botq           -1], 1
     shufps        xm11, xm9, q1020   ; +5 +6 +7 +8
     pmovzxbw        m9, [leftq+3]
     vinserti128     m6, xm11, 1
@@ -630,15 +630,15 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     vbroadcasti128 m10, [dstq+strideq*1-1]
     vbroadcasti128 m11, [dstq+strideq*2-1]
     movhps         xm5, [dstq+strideq*0+1]
-    vinserti128     m6, m10, [dstq+stride3q -1], 1
-    vinserti128     m9, m11, [dstq+strideq*4-1], 1
+    vinserti128     m6, m10, [dstq+stride3q-1], 1
+    vinserti128     m9, m11, [botq         -1], 1
     psrldq         m10, 2
     psrldq         m11, 2
     punpcklqdq      m6, m9
     movu            m9, [r13+hq*2*1+16*1]
     punpcklqdq     m10, m11
     vpblendd        m5, m10, 0xF0
-    vpblendvb       m6, [rsp+gprsize+80+hq*8+64+8*1], m9
+    vpblendvb       m6, [rsp+gprsize+0x60+hq*8+64+8*1], m9
 %endif
     ret
 .d1k0:
@@ -688,7 +688,7 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     vinserti128     m9, [dstq+stride3q -1], 1
     movu           m10, [blend_8x8_0+16]
     punpcklqdq      m6, m5, m9
-    vpblendvb       m6, [rsp+gprsize+80+hq*8+64], m10
+    vpblendvb       m6, [rsp+gprsize+0x60+hq*8+64], m10
     psrldq          m5, 2
     psrldq          m9, 2
     punpcklqdq      m5, m9
@@ -707,7 +707,7 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     vpblendd        m9, m11, 0x10
     movu           m10, [blend_4x4]
     vinserti128     m5, [dstq+stride3q +1], 1
-    vinserti128    m12, [dstq+strideq*4+1], 1
+    vinserti128    m12, [botq          +1], 1
     punpckldq       m6, m9
     punpckldq       m5, m12
     vpblendvb       m6, [rsp+gprsize+0x40], m10
@@ -727,7 +727,7 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     shufps        xm10, xm11, q2020
     movd           xm9, [dst4q+stride3q +1]
     vinserti128     m6, xm10, 1
-    pinsrd         xm9, [dst4q+strideq*4+1], 1
+    pinsrd         xm9, [botq           +1], 1
     psrldq        xm11, 2
     pmovzxbw       m10, [leftq-1]
     shufps        xm11, xm9, q1020
@@ -744,9 +744,9 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     movu           m11, [r13+hq*2*1+16*1]
     punpcklqdq     m10, m5, m9
     vinserti128     m5, [dstq+stride3q -1], 1
-    vinserti128     m9, [dstq+strideq*4-1], 1
+    vinserti128     m9, [botq          -1], 1
     vpblendd        m6, m10, 0xF0
-    vpblendvb       m6, [rsp+gprsize+80+hq*8+64-8*1], m11
+    vpblendvb       m6, [rsp+gprsize+0x60+hq*8+64-8*1], m11
     psrldq          m5, 2
     psrldq          m9, 2
     punpcklqdq      m5, m9
@@ -763,8 +763,8 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     vpblendd       xm6, [dstq+strideq*0-4], 0x2
     vpblendd        m5, m9, 0x22
     vpblendd        m6, m5, 0x30
-    vinserti128     m5, [dstq+stride3q    ], 1
-    vpblendd        m5, [dstq+strideq*4-20], 0x20
+    vinserti128     m5, [dstq+stride3q   ], 1
+    vpblendd        m5, [botq         -20], 0x20
  %else
     movd           xm6, [topq +strideq*1]
     movd           xm5, [dstq +strideq*1]
@@ -775,7 +775,7 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     pinsrd         xm5, [dstq +strideq*2], 1
     pinsrd         xm9, [dst4q+strideq*0], 1
     pinsrd        xm10, [dst4q+strideq*2], 1
-    pinsrd        xm11, [dst4q+strideq*4], 1
+    pinsrd        xm11, [botq           ], 1
     punpcklqdq     xm6, xm5
     punpcklqdq     xm5, xm9
     punpcklqdq     xm9, xm10
@@ -789,7 +789,7 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     movq           xm9, [dstq+stride3q ]
     movhps         xm6, [dstq+strideq*0]
     movhps         xm5, [dstq+strideq*2]
-    movhps         xm9, [dstq+strideq*4]
+    movhps         xm9, [botq          ]
     vinserti128     m6, xm5, 1
     vinserti128     m5, xm9, 1
 %endif
@@ -797,16 +797,16 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
 .d0k1:
 %if %1 == 4
  %if %2 == 4
-    movd           xm6, [dstq +strideq*2-2]
-    movd           xm9, [dstq +stride3q -2]
-    movd           xm5, [topq +strideq*0+2]
-    movd          xm10, [topq +strideq*1+2]
+    movd           xm6, [dstq+strideq*2-2]
+    movd           xm9, [dstq+stride3q -2]
+    movd           xm5, [topq+strideq*0+2]
+    movd          xm10, [topq+strideq*1+2]
     pinsrw         xm6, [leftq+4], 0
     pinsrw         xm9, [leftq+6], 0
-    vinserti128     m5, [dstq +strideq*0+2], 1
-    vinserti128    m10, [dstq +strideq*1+2], 1
-    vinserti128     m6, [dst4q+strideq*0-2], 1
-    vinserti128     m9, [dst4q+strideq*1-2], 1
+    vinserti128     m5, [dstq+strideq*0+2], 1
+    vinserti128    m10, [dstq+strideq*1+2], 1
+    vinserti128     m6, [botq+strideq*0-2], 1
+    vinserti128     m9, [botq+strideq*1-2], 1
     punpckldq       m5, m10
     punpckldq       m6, m9
  %else
@@ -818,31 +818,31 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     pinsrw        xm10, [dst4q+stride3q   ], 3
     pinsrd         xm5, [topq +strideq*1+2], 1
     movhps         xm9, [dst4q+strideq*1-2]
-    pinsrd        xm10, [dst8q+strideq*0-2], 2
+    pinsrd        xm10, [botq +strideq*0-2], 2
     pinsrd         xm5, [dstq +strideq*0+2], 2
-    pinsrd        xm10, [dst8q+strideq*1-2], 3
+    pinsrd        xm10, [botq +strideq*1-2], 3
     pinsrd         xm5, [dstq +strideq*1+2], 3
     shufps        xm11, xm6, xm9, q3131
     shufps         xm6, xm9, q2020
     movu            m9, [blend_4x8_3+8]
     vinserti128     m6, xm10, 1
     vinserti128     m5, xm11, 1
-    vpblendvb       m6, [rsp+gprsize+16+8], m9
+    vpblendvb       m6, [rsp+gprsize+0x10+8], m9
  %endif
 %else
     lea            r13, [blend_8x8_1+16]
-    movq           xm6, [dstq +strideq*2-2]
-    movq           xm9, [dstq +stride3q -2]
-    movq           xm5, [top1q          +2]
-    movq          xm10, [top2q          +2]
+    movq           xm6, [dstq+strideq*2-2]
+    movq           xm9, [dstq+stride3q -2]
+    movq           xm5, [top1q         +2]
+    movq          xm10, [top2q         +2]
     movu           m11, [r13+hq*2*2+16*2]
-    vinserti128     m6, [dst4q+strideq*0-2], 1
-    vinserti128     m9, [dst4q+strideq*1-2], 1
-    vinserti128     m5, [dstq +strideq*0+2], 1
-    vinserti128    m10, [dstq +strideq*1+2], 1
+    vinserti128     m6, [botq+strideq*0-2], 1
+    vinserti128     m9, [botq+strideq*1-2], 1
+    vinserti128     m5, [dstq+strideq*0+2], 1
+    vinserti128    m10, [dstq+strideq*1+2], 1
     punpcklqdq      m6, m9
     punpcklqdq      m5, m10
-    vpblendvb       m6, [rsp+gprsize+16+hq*8+64+8*2], m11
+    vpblendvb       m6, [rsp+gprsize+0x20+hq*8+64+8*2], m11
 %endif
     ret
 .d1k1:
@@ -856,14 +856,14 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     psrldq         m12, m9, 4
     vpblendd        m5, m11, 0x10
     movq          xm11, [leftq+2]
-    vinserti128     m6, [dstq+stride3q -2], 1
+    vinserti128     m6, [dstq+stride3q-2], 1
     punpckldq     xm11, xm11
     vpblendd       m10, m12, 0x10
     pcmpeqd        m12, m12
     pmovzxwd       m11, xm11
     psrld          m12, 16
     punpckldq       m6, m9
-    vpbroadcastd    m9, [dstq+strideq*4-2]
+    vpbroadcastd    m9, [botq-2]
     vpblendvb       m6, m11, m12
     punpckldq       m5, m10
     vpblendd        m6, m9, 0x20
@@ -877,7 +877,7 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     movhps         xm6, [dstq +strideq*2-2]
     movhps         xm9, [dst4q+strideq*0-2]
     movhps        xm10, [dst4q+strideq*2-2]
-    pinsrd        xm11, [dst4q+strideq*4-2], 1
+    pinsrd        xm11, [botq           -2], 1
     shufps         xm5, xm6, q3110
     shufps         xm6, xm9, q2020
     shufps         xm9, xm10, q3131
@@ -885,7 +885,7 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     movu           m11, [blend_4x8_2+4]
     vinserti128     m6, xm10, 1
     vinserti128     m5, xm9, 1
-    vpblendvb       m6, [rsp+gprsize+16+4], m11
+    vpblendvb       m6, [rsp+gprsize+0x10+4], m11
  %endif
 %else
     lea            r13, [blend_8x8_1+16]
@@ -895,11 +895,11 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     movhps         xm5, [dstq+strideq*0+2]
     shufps         m10, m6, m9, q2121
     vinserti128     m6, [dstq+stride3q -2], 1
-    vinserti128     m9, [dstq+strideq*4-2], 1
+    vinserti128     m9, [botq          -2], 1
     movu           m11, [r13+hq*2*1+16*1]
     vpblendd        m5, m10, 0xF0
     punpcklqdq      m6, m9
-    vpblendvb       m6, [rsp+gprsize+16+hq*8+64+8*1], m11
+    vpblendvb       m6, [rsp+gprsize+0x20+hq*8+64+8*1], m11
 %endif
     ret
 .d2k1:
@@ -936,7 +936,7 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     pblendw         m6, m11, 0x55
  %endif
 %else
-    mova           m11, [rsp+gprsize+16+hq*8+64]
+    mova           m11, [rsp+gprsize+0x20+hq*8+64]
     movu           xm5, [dstq+strideq*0-2]
     movu           xm9, [dstq+strideq*1-2]
     vinserti128     m5, [dstq+strideq*2-2], 1
@@ -959,7 +959,7 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     psrldq          m5, m11, 4
     psrldq         m10, m12, 4
     vinserti128     m5, [dstq+stride3q +2], 1
-    vinserti128    m10, [dstq+strideq*4+2], 1
+    vinserti128    m10, [botq          +2], 1
     vpblendd        m6, m11, 0x10
     vpblendd        m9, m12, 0x10
     punpckldq       m6, m9
@@ -974,7 +974,7 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     movhps         xm5, [dstq +strideq*2-2]
     movhps         xm9, [dst4q+strideq*0-2]
     movhps        xm10, [dst4q+strideq*2-2]
-    pinsrd        xm11, [dst4q+strideq*4+2], 1
+    pinsrd        xm11, [botq           +2], 1
     shufps         xm6, xm5, q2010
     shufps         xm5, xm9, q3131
     shufps         xm9, xm10, q2020
@@ -982,7 +982,7 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     movu           m11, [blend_4x8_2]
     vinserti128     m6, xm9, 1
     vinserti128     m5, xm10, 1
-    vpblendvb       m6, [rsp+gprsize+16-4], m11
+    vpblendvb       m6, [rsp+gprsize+0x10-4], m11
  %endif
 %else
     lea            r13, [blend_8x8_1+8]
@@ -992,26 +992,26 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     movhps         xm6, [dstq+strideq*0-2]
     punpcklqdq      m9, m5, m10
     vinserti128     m5, [dstq+stride3q -2], 1
-    vinserti128    m10, [dstq+strideq*4-2], 1
+    vinserti128    m10, [botq          -2], 1
     movu           m11, [r13+hq*2*1+16*1]
     vpblendd        m6, m9, 0xF0
     shufps          m5, m10, q2121
-    vpblendvb       m6, [rsp+gprsize+16+hq*8+64-8*1], m11
+    vpblendvb       m6, [rsp+gprsize+0x20+hq*8+64-8*1], m11
 %endif
     ret
 .d4k1:
 %if %1 == 4
  %if %2 == 4
-    vinserti128     m6, [dstq +strideq*0-2], 1
-    vinserti128     m9, [dstq +strideq*1-2], 1
-    movd           xm5, [dstq +strideq*2+2]
-    movd          xm10, [dstq +stride3q +2]
+    vinserti128     m6, [dstq+strideq*0-2], 1
+    vinserti128     m9, [dstq+strideq*1-2], 1
+    movd           xm5, [dstq+strideq*2+2]
+    movd          xm10, [dstq+stride3q +2]
     pblendw         m6, [leftq-16+0], 0x01
     pblendw         m9, [leftq-16+2], 0x01
-    vinserti128     m5, [dst4q+strideq*0+2], 1
-    vinserti128    m10, [dst4q+strideq*1+2], 1
-    vpblendd        m6, [topq +strideq*0-2], 0x01
-    vpblendd        m9, [topq +strideq*1-2], 0x01
+    vinserti128     m5, [botq+strideq*0+2], 1
+    vinserti128    m10, [botq+strideq*1+2], 1
+    vpblendd        m6, [topq+strideq*0-2], 0x01
+    vpblendd        m9, [topq+strideq*1-2], 0x01
     punpckldq       m5, m10
     punpckldq       m6, m9
  %else
@@ -1024,46 +1024,46 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     movhps         xm9, [dst4q+strideq*1-2]
     pinsrd        xm10, [dst4q+stride3q +2], 1
     pinsrd         xm6, [dstq +strideq*0-2], 2
-    pinsrd        xm10, [dst8q+strideq*0+2], 2
+    pinsrd        xm10, [botq +strideq*0+2], 2
     pinsrd         xm6, [dstq +strideq*1-2], 3
-    pinsrd        xm10, [dst8q+strideq*1+2], 3
+    pinsrd        xm10, [botq +strideq*1+2], 3
     shufps        xm11, xm5, xm9, q2020
     shufps         xm5, xm9, q3131
     movu            m9, [blend_4x8_3]
     vinserti128     m6, xm11, 1
     vinserti128     m5, xm10, 1
-    vpblendvb       m6, [rsp+gprsize+16-8], m9
+    vpblendvb       m6, [rsp+gprsize+0x10-8], m9
  %endif
 %else
     lea            r13, [blend_8x8_1]
     movu           m11, [r13+hq*2*2+16*2]
-    movq           xm6, [top1q          -2]
-    movq           xm9, [top2q          -2]
-    movq           xm5, [dstq +strideq*2+2]
-    movq          xm10, [dstq +stride3q +2]
-    vinserti128     m6, [dstq +strideq*0-2], 1
-    vinserti128     m9, [dstq +strideq*1-2], 1
-    vinserti128     m5, [dst4q+strideq*0+2], 1
-    vinserti128    m10, [dst4q+strideq*1+2], 1
+    movq           xm6, [top1q         -2]
+    movq           xm9, [top2q         -2]
+    movq           xm5, [dstq+strideq*2+2]
+    movq          xm10, [dstq+stride3q +2]
+    vinserti128     m6, [dstq+strideq*0-2], 1
+    vinserti128     m9, [dstq+strideq*1-2], 1
+    vinserti128     m5, [botq+strideq*0+2], 1
+    vinserti128    m10, [botq+strideq*1+2], 1
     punpcklqdq      m6, m9
-    vpblendvb       m6, [rsp+gprsize+16+hq*8+64-8*2], m11
+    vpblendvb       m6, [rsp+gprsize+0x20+hq*8+64-8*2], m11
     punpcklqdq      m5, m10
 %endif
     ret
 .d5k1:
 %if %1 == 4
  %if %2 == 4
-    movd           xm6, [topq +strideq*0-1]
-    movd           xm9, [topq +strideq*1-1]
-    movd           xm5, [dstq +strideq*2+1]
-    movd          xm10, [dstq +stride3q +1]
+    movd           xm6, [topq+strideq*0-1]
+    movd           xm9, [topq+strideq*1-1]
+    movd           xm5, [dstq+strideq*2+1]
+    movd          xm10, [dstq+stride3q +1]
     pcmpeqd        m12, m12
     pmovzxbw       m11, [leftq-8+1]
     psrld          m12, 24
-    vinserti128     m6, [dstq +strideq*0-1], 1
-    vinserti128     m9, [dstq +strideq*1-1], 1
-    vinserti128     m5, [dst4q+strideq*0+1], 1
-    vinserti128    m10, [dst4q+strideq*1+1], 1
+    vinserti128     m6, [dstq+strideq*0-1], 1
+    vinserti128     m9, [dstq+strideq*1-1], 1
+    vinserti128     m5, [botq+strideq*0+1], 1
+    vinserti128    m10, [botq+strideq*1+1], 1
     punpckldq       m6, m9
     pxor            m9, m9
     vpblendd       m12, m9, 0x0F
@@ -1079,9 +1079,9 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     movhps         xm9, [dst4q+strideq*1-1]
     pinsrd        xm10, [dst4q+stride3q +1], 1
     pinsrd         xm6, [dstq +strideq*0-1], 2
-    pinsrd        xm10, [dst8q+strideq*0+1], 2
+    pinsrd        xm10, [botq +strideq*0+1], 2
     pinsrd         xm6, [dstq +strideq*1-1], 3
-    pinsrd        xm10, [dst8q+strideq*1+1], 3
+    pinsrd        xm10, [botq +strideq*1+1], 3
     shufps        xm11, xm5, xm9, q2020
     vinserti128     m6, xm11, 1
     pmovzxbw       m11, [leftq-3]
@@ -1095,30 +1095,30 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
 %else
     lea            r13, [blend_8x8_0]
     movu           m11, [r13+hq*2*2+16*2]
-    movq           xm6, [top1q          -1]
-    movq           xm9, [top2q          -1]
-    movq           xm5, [dstq +strideq*2+1]
-    movq          xm10, [dstq +stride3q +1]
-    vinserti128     m6, [dstq +strideq*0-1], 1
-    vinserti128     m9, [dstq +strideq*1-1], 1
-    vinserti128     m5, [dst4q+strideq*0+1], 1
-    vinserti128    m10, [dst4q+strideq*1+1], 1
+    movq           xm6, [top1q         -1]
+    movq           xm9, [top2q         -1]
+    movq           xm5, [dstq+strideq*2+1]
+    movq          xm10, [dstq+stride3q +1]
+    vinserti128     m6, [dstq+strideq*0-1], 1
+    vinserti128     m9, [dstq+strideq*1-1], 1
+    vinserti128     m5, [botq+strideq*0+1], 1
+    vinserti128    m10, [botq+strideq*1+1], 1
     punpcklqdq      m6, m9
     punpcklqdq      m5, m10
-    vpblendvb       m6, [rsp+gprsize+80+hq*8+64-8*2], m11
+    vpblendvb       m6, [rsp+gprsize+0x60+hq*8+64-8*2], m11
 %endif
     ret
 .d6k1:
 %if %1 == 4
  %if %2 == 4
-    movd           xm6, [topq +strideq*0]
-    movd           xm9, [topq +strideq*1]
-    movd           xm5, [dstq +strideq*2]
-    movd          xm10, [dstq +stride3q ]
-    vinserti128     m6, [dstq +strideq*0], 1
-    vinserti128     m9, [dstq +strideq*1], 1
-    vinserti128     m5, [dst4q+strideq*0], 1
-    vinserti128    m10, [dst4q+strideq*1], 1
+    movd           xm6, [topq+strideq*0]
+    movd           xm9, [topq+strideq*1]
+    movd           xm5, [dstq+strideq*2]
+    movd          xm10, [dstq+stride3q ]
+    vinserti128     m6, [dstq+strideq*0], 1
+    vinserti128     m9, [dstq+strideq*1], 1
+    vinserti128     m5, [botq+strideq*0], 1
+    vinserti128    m10, [botq+strideq*1], 1
     punpckldq       m6, m9
     punpckldq       m5, m10
  %else
@@ -1130,22 +1130,22 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     pinsrd         xm9, [dst4q+stride3q ], 1
     pinsrd         xm5, [dst4q+strideq*0], 2
     pinsrd         xm6, [dstq +strideq*0], 2
-    pinsrd         xm9, [dst8q+strideq*0], 2
+    pinsrd         xm9, [botq +strideq*0], 2
     pinsrd         xm5, [dst4q+strideq*1], 3
     pinsrd         xm6, [dstq +strideq*1], 3
-    pinsrd         xm9, [dst8q+strideq*1], 3
+    pinsrd         xm9, [botq +strideq*1], 3
     vinserti128     m6, xm5, 1
     vinserti128     m5, xm9, 1
  %endif
 %else
-    movq           xm5, [dstq +strideq*2]
-    movq           xm9, [dst4q+strideq*0]
-    movq           xm6, [top1q          ]
-    movq          xm10, [dstq +strideq*0]
-    movhps         xm5, [dstq +stride3q ]
-    movhps         xm9, [dst4q+strideq*1]
-    movhps         xm6, [top2q          ]
-    movhps        xm10, [dstq +strideq*1]
+    movq           xm5, [dstq+strideq*2]
+    movq           xm9, [botq+strideq*0]
+    movq           xm6, [top1q         ]
+    movq          xm10, [dstq+strideq*0]
+    movhps         xm5, [dstq+stride3q ]
+    movhps         xm9, [botq+strideq*1]
+    movhps         xm6, [top2q         ]
+    movhps        xm10, [dstq+strideq*1]
     vinserti128     m5, xm9, 1
     vinserti128     m6, xm10, 1
 %endif
@@ -1153,16 +1153,16 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
 .d7k1:
 %if %1 == 4
  %if %2 == 4
-    movd           xm5, [dstq +strideq*2-1]
-    movd           xm9, [dstq +stride3q -1]
-    movd           xm6, [topq +strideq*0+1]
-    movd          xm10, [topq +strideq*1+1]
+    movd           xm5, [dstq+strideq*2-1]
+    movd           xm9, [dstq+stride3q -1]
+    movd           xm6, [topq+strideq*0+1]
+    movd          xm10, [topq+strideq*1+1]
     pinsrb         xm5, [leftq+ 5], 0
     pinsrb         xm9, [leftq+ 7], 0
-    vinserti128     m6, [dstq +strideq*0+1], 1
-    vinserti128    m10, [dstq +strideq*1+1], 1
-    vinserti128     m5, [dst4q+strideq*0-1], 1
-    vinserti128     m9, [dst4q+strideq*1-1], 1
+    vinserti128     m6, [dstq+strideq*0+1], 1
+    vinserti128    m10, [dstq+strideq*1+1], 1
+    vinserti128     m5, [botq+strideq*0-1], 1
+    vinserti128     m9, [botq+strideq*1-1], 1
     punpckldq       m6, m10
     punpckldq       m5, m9
  %else
@@ -1175,9 +1175,9 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     movhps        xm10, [dst4q+strideq*1-1]
     pinsrd        xm11, [dst4q+stride3q -1], 1
     pinsrd         xm6, [dstq +strideq*0+1], 2
-    pinsrd        xm11, [dst8q+strideq*0-1], 2
+    pinsrd        xm11, [botq +strideq*0-1], 2
     pinsrd         xm6, [dstq +strideq*1+1], 3
-    pinsrd        xm11, [dst8q+strideq*1-1], 3
+    pinsrd        xm11, [botq +strideq*1-1], 3
     shufps         xm5, xm9, xm10, q2020
     vinserti128     m5, xm11, 1
     pmovzxbw       m11, [leftq+5]
@@ -1190,31 +1190,26 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
  %endif
 %else
     lea            r13, [blend_8x8_0+16]
-    movq           xm5, [dstq +strideq*2-1]
-    movq           xm9, [dst4q+strideq*0-1]
-    movq           xm6, [top1q          +1]
-    movq          xm10, [dstq +strideq*0+1]
-    movhps         xm5, [dstq +stride3q -1]
-    movhps         xm9, [dst4q+strideq*1-1]
-    movhps         xm6, [top2q          +1]
-    movhps        xm10, [dstq +strideq*1+1]
+    movq           xm5, [dstq+strideq*2-1]
+    movq           xm9, [botq+strideq*0-1]
+    movq           xm6, [top1q         +1]
+    movq          xm10, [dstq+strideq*0+1]
+    movhps         xm5, [dstq+stride3q -1]
+    movhps         xm9, [botq+strideq*1-1]
+    movhps         xm6, [top2q         +1]
+    movhps        xm10, [dstq+strideq*1+1]
     movu           m11, [r13+hq*2*2+16*2]
     vinserti128     m5, xm9, 1
     vinserti128     m6, xm10, 1
-    vpblendvb       m5, [rsp+gprsize+80+hq*8+64+8*2], m11
+    vpblendvb       m5, [rsp+gprsize+0x60+hq*8+64+8*2], m11
 %endif
     ret
 
 .border_block:
- DEFINE_ARGS dst, stride, left, top, pri, sec, stride3, dst4, edge
+ DEFINE_ARGS dst, stride, left, top, bot, pri, sec, stride3, dst4, edge
 %define rstk rsp
 %assign stack_offset stack_offset_entry
-%if %1 == 4 && %2 == 8
-    PUSH            r9
- %assign regs_used 10
-%else
- %assign regs_used 9
-%endif
+%assign regs_used 10
 %if STACK_ALIGNMENT < 32
     PUSH  r%+regs_used
  %assign regs_used regs_used+1
@@ -1398,22 +1393,21 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
 .left_done:
 
     ; bottom
-    DEFINE_ARGS dst, stride, dst8, dummy1, pri, sec, stride3, dummy3, edge
+ DEFINE_ARGS dst, stride, _, _, bot, pri, sec, stride3, _, edge
     test         edgeb, 8                   ; have_bottom
     jz .no_bottom
-    lea          dst8q, [dstq+%2*strideq]
     test         edgeb, 1                   ; have_left
     jz .bottom_no_left
     test         edgeb, 2                   ; have_right
     jz .bottom_no_right
-    pmovzxbw        m1, [dst8q-(%1/2)]
-    pmovzxbw        m2, [dst8q+strideq-(%1/2)]
+    pmovzxbw        m1, [botq+strideq*0-(%1/2)]
+    pmovzxbw        m2, [botq+strideq*1-(%1/2)]
     movu   [px+(%2+0)*32-%1], m1
     movu   [px+(%2+1)*32-%1], m2
     jmp .bottom_done
 .bottom_no_right:
-    pmovzxbw        m1, [dst8q-%1]
-    pmovzxbw        m2, [dst8q+strideq-%1]
+    pmovzxbw        m1, [botq+strideq*0-%1]
+    pmovzxbw        m2, [botq+strideq*1-%1]
     movu  [px+(%2+0)*32-%1*2], m1
     movu  [px+(%2+1)*32-%1*2], m2
 %if %1 == 8
@@ -1425,8 +1419,8 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
 .bottom_no_left:
     test          edgeb, 2                  ; have_right
     jz .bottom_no_left_right
-    pmovzxbw        m1, [dst8q]
-    pmovzxbw        m2, [dst8q+strideq]
+    pmovzxbw        m1, [botq+strideq*0]
+    pmovzxbw        m2, [botq+strideq*1]
     mova   [px+(%2+0)*32+0], m1
     mova   [px+(%2+1)*32+0], m2
     movd   [px+(%2+0)*32-4], xm14
@@ -1434,14 +1428,14 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     jmp .bottom_done
 .bottom_no_left_right:
 %if %1 == 4
-    movd           xm1, [dst8q]
-    pinsrd         xm1, [dst8q+strideq], 1
+    movd           xm1, [botq+strideq*0]
+    pinsrd         xm1, [botq+strideq*1], 1
     pmovzxbw       xm1, xm1
     movq   [px+(%2+0)*32+0], xm1
     movhps [px+(%2+1)*32+0], xm1
 %else
-    pmovzxbw       xm1, [dst8q]
-    pmovzxbw       xm2, [dst8q+strideq]
+    pmovzxbw       xm1, [botq+strideq*0]
+    pmovzxbw       xm2, [botq+strideq*1]
     mova   [px+(%2+0)*32+0], xm1
     mova   [px+(%2+1)*32+0], xm2
 %endif
@@ -1456,13 +1450,13 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
 .bottom_done:
 
     ; actual filter
-    INIT_YMM avx2
-    DEFINE_ARGS dst, stride, pridmp, damping, pri, secdmp, stride3, zero
+ INIT_YMM avx2
+ DEFINE_ARGS dst, stride, _, pridmp, damping, pri, secdmp, stride3, zero
 %undef edged
     ; register to shuffle values into after packing
     vbroadcasti128 m12, [shufb_lohi]
 
-    mov       dampingd, r7m
+    mov       dampingd, r8m
     xor          zerod, zerod
     movifnidn     prid, prim
     sub       dampingd, 31
@@ -1481,13 +1475,13 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     add        secdmpd, dampingd
     mov        [rsp+8], secdmpq                 ; sec_shift
 
-    DEFINE_ARGS dst, stride, pridmp, table, pri, secdmp, stride3
+ DEFINE_ARGS dst, stride, _, pridmp, table, pri, secdmp, stride3
     lea         tableq, [tap_table]
     vpbroadcastb   m13, [tableq+pridmpq]        ; pri_shift_mask
     vpbroadcastb   m14, [tableq+secdmpq]        ; sec_shift_mask
 
     ; pri/sec_taps[k] [4 total]
-    DEFINE_ARGS dst, stride, dir, table, pri, sec, stride3
+ DEFINE_ARGS dst, stride, _, dir, table, pri, sec, stride3
     vpbroadcastb    m0, xm0                     ; pri_strength
     vpbroadcastb    m1, xm1                     ; sec_strength
     and           prid, 1
@@ -1520,10 +1514,10 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     RET
 
 .border_pri_only:
- DEFINE_ARGS dst, stride, pridmp, table, pri, _, stride3
+ DEFINE_ARGS dst, stride, _, pridmp, table, pri, _, stride3
     lea         tableq, [tap_table]
     vpbroadcastb   m13, [tableq+pridmpq]        ; pri_shift_mask
- DEFINE_ARGS dst, stride, dir, table, pri, _, stride3
+ DEFINE_ARGS dst, stride, _, dir, table, pri, _, stride3
     vpbroadcastb    m0, xm0                     ; pri_strength
     and           prid, 1
     lea           priq, [tableq+priq*2+8]       ; pri_taps
@@ -1549,15 +1543,15 @@ cglobal cdef_filter_%1x%2_8bpc, 4, 9, 0, dst, stride, left, top, \
     RET
 
 .border_sec_only:
- DEFINE_ARGS dst, stride, _, damping, _, secdmp, stride3, zero
+ DEFINE_ARGS dst, stride, _, _, damping, _, secdmp, stride3
     movd           xm1, secdmpd
     lzcnt      secdmpd, secdmpd
     add        secdmpd, dampingd
     mov        [rsp+8], secdmpq                 ; sec_shift
- DEFINE_ARGS dst, stride, _, table, _, secdmp, stride3
+ DEFINE_ARGS dst, stride, _, _, table, _, secdmp, stride3
     lea         tableq, [tap_table]
     vpbroadcastb   m14, [tableq+secdmpq]        ; sec_shift_mask
- DEFINE_ARGS dst, stride, dir, table, _, sec, stride3
+ DEFINE_ARGS dst, stride, _, dir, table, _, sec, stride3
     vpbroadcastb    m1, xm1                     ; sec_strength
     lea           secq, [tableq+12]             ; sec_taps
     BORDER_PREP_REGS %1, %2

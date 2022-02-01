@@ -18,7 +18,7 @@ WebGLBuffer::~WebGLBuffer() {
   mByteLength = 0;
   mFetchInvalidator.InvalidateCaches();
 
-  mIndexCache = nullptr;
+  mIndexCache.reset();
   mIndexRanges.clear();
 
   if (!mContext) return;
@@ -105,7 +105,7 @@ void WebGLBuffer::BufferData(const GLenum target, const uint64_t size,
   const void* uploadData = maybeData;
   UniqueBuffer maybeCalloc;
   if (!uploadData) {
-    maybeCalloc = calloc(1, AssertedCast<size_t>(size));
+    maybeCalloc = UniqueBuffer::Take(calloc(1, AssertedCast<size_t>(size)));
     if (!maybeCalloc) {
       mContext->ErrorOutOfMemory("Failed to alloc zeros.");
       return;
@@ -117,7 +117,7 @@ void WebGLBuffer::BufferData(const GLenum target, const uint64_t size,
   UniqueBuffer newIndexCache;
   if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER &&
       mContext->mNeedsIndexValidation) {
-    newIndexCache = malloc(AssertedCast<size_t>(size));
+    newIndexCache = UniqueBuffer::Take(malloc(AssertedCast<size_t>(size)));
     if (!newIndexCache) {
       mContext->ErrorOutOfMemory("Failed to alloc index cache.");
       return;
@@ -148,7 +148,7 @@ void WebGLBuffer::BufferData(const GLenum target, const uint64_t size,
       // Truncate
       mByteLength = 0;
       mFetchInvalidator.InvalidateCaches();
-      mIndexCache = nullptr;
+      mIndexCache.reset();
       return;
     }
   } else {

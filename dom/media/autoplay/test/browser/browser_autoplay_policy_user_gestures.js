@@ -67,7 +67,6 @@ function setupTestPreferences() {
       ["media.autoplay.blocking_policy", 0],
       ["media.autoplay.block-event.enabled", true],
       ["media.autoplay.block-webaudio", true],
-      ["media.navigator.permission.fake", true],
     ],
   });
 }

@@ -12,6 +12,7 @@
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Selection.h"
@@ -82,8 +83,8 @@ void SelectionChangeEventDispatcher::OnSelectionChange(Document* aDoc,
       !aSel->IsBlockingSelectionChangeEvents()) {
     bool changed = mOldDirection != aSel->GetDirection();
     if (!changed) {
-      for (size_t i = 0; i < mOldRanges.Length(); i++) {
-        if (!mOldRanges[i].Equals(aSel->GetRangeAt(static_cast<int32_t>(i)))) {
+      for (const uint32_t i : IntegerRange(mOldRanges.Length())) {
+        if (!mOldRanges[i].Equals(aSel->GetRangeAt(i))) {
           changed = true;
           break;
         }
@@ -97,7 +98,7 @@ void SelectionChangeEventDispatcher::OnSelectionChange(Document* aDoc,
 
   // The ranges have actually changed, update the mOldRanges array
   mOldRanges.ClearAndRetainStorage();
-  for (size_t i = 0; i < aSel->RangeCount(); i++) {
+  for (const uint32_t i : IntegerRange(aSel->RangeCount())) {
     mOldRanges.AppendElement(RawRangeData(aSel->GetRangeAt(i)));
   }
   mOldDirection = aSel->GetDirection();

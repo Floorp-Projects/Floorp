@@ -1,6 +1,7 @@
 use crate::future::poll_fn;
 use crate::io::{AsyncRead, AsyncWrite, PollEvented};
 use crate::net::tcp::split::{split, ReadHalf, WriteHalf};
+use crate::net::tcp::split_owned::{split_owned, OwnedReadHalf, OwnedWriteHalf};
 use crate::net::ToSocketAddrs;
 
 use bytes::Buf;
@@ -20,9 +21,16 @@ cfg_tcp! {
     /// A TCP stream can either be created by connecting to an endpoint, via the
     /// [`connect`] method, or by [accepting] a connection from a [listener].
     ///
+    /// Reading and writing to a `TcpStream` is usually done using the
+    /// convenience methods found on the [`AsyncReadExt`] and [`AsyncWriteExt`]
+    /// traits. Examples import these traits through [the prelude].
+    ///
     /// [`connect`]: method@TcpStream::connect
     /// [accepting]: method@super::TcpListener::accept
     /// [listener]: struct@super::TcpListener
+    /// [`AsyncReadExt`]: trait@crate::io::AsyncReadExt
+    /// [`AsyncWriteExt`]: trait@crate::io::AsyncWriteExt
+    /// [the prelude]: crate::prelude
     ///
     /// # Examples
     ///
@@ -42,6 +50,11 @@ cfg_tcp! {
     ///     Ok(())
     /// }
     /// ```
+    ///
+    /// The [`write_all`] method is defined on the [`AsyncWriteExt`] trait.
+    ///
+    /// [`write_all`]: fn@crate::io::AsyncWriteExt::write_all
+    /// [`AsyncWriteExt`]: trait@crate::io::AsyncWriteExt
     pub struct TcpStream {
         io: PollEvented<mio::net::TcpStream>,
     }
@@ -50,13 +63,17 @@ cfg_tcp! {
 impl TcpStream {
     /// Opens a TCP connection to a remote host.
     ///
-    /// `addr` is an address of the remote host. Anything which implements
-    /// `ToSocketAddrs` trait can be supplied for the address.
+    /// `addr` is an address of the remote host. Anything which implements the
+    /// [`ToSocketAddrs`] trait can be supplied as the address. Note that
+    /// strings only implement this trait when the **`dns`** feature is enabled,
+    /// as strings may contain domain names that need to be resolved.
     ///
     /// If `addr` yields multiple addresses, connect will be attempted with each
     /// of the addresses until a connection is successful. If none of the
     /// addresses result in a successful connection, the error returned from the
     /// last connection attempt (the last address) is returned.
+    ///
+    /// [`ToSocketAddrs`]: trait@crate::net::ToSocketAddrs
     ///
     /// # Examples
     ///
@@ -76,6 +93,31 @@ impl TcpStream {
     ///     Ok(())
     /// }
     /// ```
+    ///
+    /// Without the `dns` feature:
+    ///
+    /// ```no_run
+    /// use tokio::net::TcpStream;
+    /// use tokio::prelude::*;
+    /// use std::error::Error;
+    /// use std::net::Ipv4Addr;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), Box<dyn Error>> {
+    ///     // Connect to a peer
+    ///     let mut stream = TcpStream::connect((Ipv4Addr::new(127, 0, 0, 1), 8080)).await?;
+    ///
+    ///     // Write some data.
+    ///     stream.write_all(b"hello world!").await?;
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// The [`write_all`] method is defined on the [`AsyncWriteExt`] trait.
+    ///
+    /// [`write_all`]: fn@crate::io::AsyncWriteExt::write_all
+    /// [`AsyncWriteExt`]: trait@crate::io::AsyncWriteExt
     pub async fn connect<A: ToSocketAddrs>(addr: A) -> io::Result<TcpStream> {
         let addrs = addr.to_socket_addrs().await?;
 
@@ -302,6 +344,11 @@ impl TcpStream {
     ///     Ok(())
     /// }
     /// ```
+    ///
+    /// The [`read`] method is defined on the [`AsyncReadExt`] trait.
+    ///
+    /// [`read`]: fn@crate::io::AsyncReadExt::read
+    /// [`AsyncReadExt`]: trait@crate::io::AsyncReadExt
     pub async fn peek(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         poll_fn(|cx| self.poll_peek(cx, buf)).await
     }
@@ -612,10 +659,33 @@ impl TcpStream {
         self.io.get_ref().set_linger(dur)
     }
 
+    // These lifetime markers also appear in the generated documentation, and make
+    // it more clear that this is a *borrowed* split.
+    #[allow(clippy::needless_lifetimes)]
     /// Splits a `TcpStream` into a read half and a write half, which can be used
     /// to read and write the stream concurrently.
-    pub fn split(&mut self) -> (ReadHalf<'_>, WriteHalf<'_>) {
+    ///
+    /// This method is more efficient than [`into_split`], but the halves cannot be
+    /// moved into independently spawned tasks.
+    ///
+    /// [`into_split`]: TcpStream::into_split()
+    pub fn split<'a>(&'a mut self) -> (ReadHalf<'a>, WriteHalf<'a>) {
         split(self)
+    }
+
+    /// Splits a `TcpStream` into a read half and a write half, which can be used
+    /// to read and write the stream concurrently.
+    ///
+    /// Unlike [`split`], the owned halves can be moved to separate tasks, however
+    /// this comes at the cost of a heap allocation.
+    ///
+    /// **Note:** Dropping the write half will shut down the write half of the TCP
+    /// stream. This is equivalent to calling [`shutdown(Write)`] on the `TcpStream`.
+    ///
+    /// [`split`]: TcpStream::split()
+    /// [`shutdown(Write)`]: fn@crate::net::TcpStream::shutdown
+    pub fn into_split(self) -> (OwnedReadHalf, OwnedWriteHalf) {
+        split_owned(self)
     }
 
     // == Poll IO functions that takes `&self` ==

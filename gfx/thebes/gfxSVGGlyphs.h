@@ -132,6 +132,8 @@ class gfxSVGGlyphs {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
+  gfxFontEntry* FontEntry() const { return mFontEntry; }
+
  private:
   Element* GetGlyphElement(uint32_t aGlyphId);
 

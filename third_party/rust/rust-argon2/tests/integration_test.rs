@@ -8,10 +8,7 @@
 
 // These tests are based on Argon's test.c test suite.
 
-extern crate argon2;
-extern crate hex;
-
-use argon2::{Error, Config, ThreadMode, Variant, Version};
+use argon2::{Config, Error, ThreadMode, Variant, Version};
 use hex::ToHex;
 
 #[cfg(not(debug_assertions))]
@@ -997,8 +994,14 @@ fn test_verify_encoded_with_wrong_password_version13() {
 #[test]
 fn test_encoded_len_returns_correct_length() {
     assert_eq!(argon2::encoded_len(Variant::Argon2d, 256, 1, 1, 8, 32), 83);
-    assert_eq!(argon2::encoded_len(Variant::Argon2i, 4096, 10, 10, 8, 32), 86);
-    assert_eq!(argon2::encoded_len(Variant::Argon2id, 65536, 100, 10, 8, 32), 89);
+    assert_eq!(
+        argon2::encoded_len(Variant::Argon2i, 4096, 10, 10, 8, 32),
+        86
+    );
+    assert_eq!(
+        argon2::encoded_len(Variant::Argon2id, 65536, 100, 10, 8, 32),
+        89
+    );
 }
 
 #[test]
@@ -1050,21 +1053,20 @@ fn hash_test(
     hex: &str,
     enc: &str,
 ) {
+    let threads = if cfg!(feature = "crossbeam-utils") { p } else { 1 };
     let config = Config {
         variant: var,
         version: ver,
         mem_cost: m,
         time_cost: t,
         lanes: p,
-        thread_mode: ThreadMode::from_threads(p),
+        thread_mode: ThreadMode::from_threads(threads),
         secret: &[],
         ad: &[],
         hash_length: 32,
     };
     let hash = argon2::hash_raw(pwd, salt, &config).unwrap();
-    let mut hex_str = String::new();
-    let res = hash.write_hex(&mut hex_str);
-    assert_eq!(res, Ok(()));
+    let hex_str = hash.encode_hex::<String>();
     assert_eq!(hex_str.as_str(), hex);
 
     let encoded = argon2::hash_encoded(pwd, salt, &config).unwrap();

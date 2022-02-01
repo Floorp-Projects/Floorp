@@ -7,13 +7,19 @@
 #ifndef NS_UNICODEPROPERTIES_H
 #define NS_UNICODEPROPERTIES_H
 
+#include "mozilla/intl/UnicodeProperties.h"
+
 #include "nsBidiUtils.h"
 #include "nsUGenCategory.h"
-#include "nsUnicodeScriptCodes.h"
 #include "harfbuzz/hb.h"
 
-#include "unicode/uchar.h"
-#include "unicode/uscript.h"
+struct nsCharProps2 {
+  // Currently only 4 bits are defined here, so 4 more could be added without
+  // affecting the storage requirements for this struct. Or we could pack two
+  // records per byte, at the cost of a slightly more complex accessor.
+  unsigned char mVertOrient : 2;
+  unsigned char mIdType : 2;
+};
 
 const nsCharProps2& GetCharProps2(uint32_t aCh);
 
@@ -57,45 +63,21 @@ const uint32_t kEmojiSkinToneLast = 0x1f3ff;
 
 extern const hb_unicode_general_category_t sICUtoHBcategory[];
 
-inline uint32_t GetMirroredChar(uint32_t aCh) { return u_charMirror(aCh); }
-
-inline bool HasMirroredChar(uint32_t aCh) { return u_isMirrored(aCh); }
-
-inline uint8_t GetCombiningClass(uint32_t aCh) {
-  return u_getCombiningClass(aCh);
-}
-
 inline uint8_t GetGeneralCategory(uint32_t aCh) {
-  return sICUtoHBcategory[u_charType(aCh)];
-}
-
-inline nsCharType GetBidiCat(uint32_t aCh) {
-  return nsCharType(u_charDirection(aCh));
+  return sICUtoHBcategory[intl::UnicodeProperties::CharType(aCh)];
 }
 
 inline int8_t GetNumericValue(uint32_t aCh) {
-  UNumericType type =
-      UNumericType(u_getIntPropertyValue(aCh, UCHAR_NUMERIC_TYPE));
-  return type == U_NT_DECIMAL || type == U_NT_DIGIT
-             ? int8_t(u_getNumericValue(aCh))
-             : -1;
+  return intl::UnicodeProperties::GetNumericValue(aCh);
 }
 
 inline uint8_t GetLineBreakClass(uint32_t aCh) {
-  return u_getIntPropertyValue(aCh, UCHAR_LINE_BREAK);
+  return intl::UnicodeProperties::GetIntPropertyValue(
+      aCh, intl::UnicodeProperties::IntProperty::LineBreak);
 }
 
-inline Script GetScriptCode(uint32_t aCh) {
-  UErrorCode err = U_ZERO_ERROR;
-  return Script(uscript_getScript(aCh, &err));
-}
-
-inline bool HasScript(uint32_t aCh, Script aScript) {
-  return uscript_hasScript(aCh, UScriptCode(aScript));
-}
-
-inline uint32_t GetScriptTagForCode(Script aScriptCode) {
-  const char* tag = uscript_getShortName(UScriptCode(aScriptCode));
+inline uint32_t GetScriptTagForCode(intl::Script aScriptCode) {
+  const char* tag = intl::UnicodeProperties::GetScriptShortName(aScriptCode);
   if (tag) {
     return HB_TAG(tag[0], tag[1], tag[2], tag[3]);
   }
@@ -104,28 +86,22 @@ inline uint32_t GetScriptTagForCode(Script aScriptCode) {
 }
 
 inline PairedBracketType GetPairedBracketType(uint32_t aCh) {
-  return PairedBracketType(
-      u_getIntPropertyValue(aCh, UCHAR_BIDI_PAIRED_BRACKET_TYPE));
+  return PairedBracketType(intl::UnicodeProperties::GetIntPropertyValue(
+      aCh, intl::UnicodeProperties::IntProperty::BidiPairedBracketType));
 }
-
-inline uint32_t GetPairedBracket(uint32_t aCh) {
-  return u_getBidiPairedBracket(aCh);
-}
-
-inline uint32_t GetUppercase(uint32_t aCh) { return u_toupper(aCh); }
-
-inline uint32_t GetLowercase(uint32_t aCh) { return u_tolower(aCh); }
 
 inline uint32_t GetTitlecaseForLower(
     uint32_t aCh)  // maps LC to titlecase, UC unchanged
 {
-  return u_isULowercase(aCh) ? u_totitle(aCh) : aCh;
+  return intl::UnicodeProperties::IsLowercase(aCh)
+             ? intl::UnicodeProperties::ToTitle(aCh)
+             : aCh;
 }
 
 inline uint32_t GetTitlecaseForAll(
     uint32_t aCh)  // maps both UC and LC to titlecase
 {
-  return u_totitle(aCh);
+  return intl::UnicodeProperties::ToTitle(aCh);
 }
 
 inline uint32_t GetFoldedcase(uint32_t aCh) {
@@ -135,62 +111,22 @@ inline uint32_t GetFoldedcase(uint32_t aCh) {
   if (aCh == 0x0130 || aCh == 0x0131) {
     return 'i';
   }
-  return u_foldCase(aCh, U_FOLD_CASE_DEFAULT);
-}
-
-inline bool IsEastAsianWidthFHWexcludingEmoji(uint32_t aCh) {
-  switch (u_getIntPropertyValue(aCh, UCHAR_EAST_ASIAN_WIDTH)) {
-    case U_EA_FULLWIDTH:
-    case U_EA_HALFWIDTH:
-      return true;
-    case U_EA_WIDE:
-      return u_hasBinaryProperty(aCh, UCHAR_EMOJI) ? false : true;
-    case U_EA_AMBIGUOUS:
-    case U_EA_NARROW:
-    case U_EA_NEUTRAL:
-      return false;
-  }
-  return false;
-}
-
-inline bool IsEastAsianWidthAFW(uint32_t aCh) {
-  switch (u_getIntPropertyValue(aCh, UCHAR_EAST_ASIAN_WIDTH)) {
-    case U_EA_AMBIGUOUS:
-    case U_EA_FULLWIDTH:
-    case U_EA_WIDE:
-      return true;
-    case U_EA_HALFWIDTH:
-    case U_EA_NARROW:
-    case U_EA_NEUTRAL:
-      return false;
-  }
-  return false;
-}
-
-inline bool IsEastAsianWidthFW(uint32_t aCh) {
-  switch (u_getIntPropertyValue(aCh, UCHAR_EAST_ASIAN_WIDTH)) {
-    case U_EA_FULLWIDTH:
-    case U_EA_WIDE:
-      return true;
-    case U_EA_AMBIGUOUS:
-    case U_EA_HALFWIDTH:
-    case U_EA_NARROW:
-    case U_EA_NEUTRAL:
-      return false;
-  }
-  return false;
+  return intl::UnicodeProperties::FoldCase(aCh);
 }
 
 inline bool IsDefaultIgnorable(uint32_t aCh) {
-  return u_hasBinaryProperty(aCh, UCHAR_DEFAULT_IGNORABLE_CODE_POINT);
+  return intl::UnicodeProperties::HasBinaryProperty(
+      aCh, intl::UnicodeProperties::BinaryProperty::DefaultIgnorableCodePoint);
 }
 
 inline EmojiPresentation GetEmojiPresentation(uint32_t aCh) {
-  if (!u_hasBinaryProperty(aCh, UCHAR_EMOJI)) {
+  if (!intl::UnicodeProperties::HasBinaryProperty(
+          aCh, intl::UnicodeProperties::BinaryProperty::Emoji)) {
     return TextOnly;
   }
 
-  if (u_hasBinaryProperty(aCh, UCHAR_EMOJI_PRESENTATION)) {
+  if (intl::UnicodeProperties::HasBinaryProperty(
+          aCh, intl::UnicodeProperties::BinaryProperty::EmojiPresentation)) {
     return EmojiDefault;
   }
   return TextDefault;
@@ -270,11 +206,6 @@ uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength);
 // or if we can revert to simply getting the combining class and comparing
 // to the values we care about at runtime.
 bool IsCombiningDiacritic(uint32_t aCh);
-
-// Keep this function in sync with is_math_symbol in base_chars.py.
-inline bool IsMathOrMusicSymbol(uint32_t aCh) {
-  return u_charType(aCh) == U_MATH_SYMBOL || u_charType(aCh) == U_OTHER_SYMBOL;
-}
 
 // Remove diacritics from a character
 uint32_t GetNaked(uint32_t aCh);

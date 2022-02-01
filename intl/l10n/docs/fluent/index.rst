@@ -20,5 +20,6 @@ Other resources:
  * `Fluent Syntax Guide <http://projectfluent.org/fluent/guide/>`_
  * `Fluent Wiki <https://github.com/projectfluent/fluent/wiki>`_
  * `Fluent.js Wiki <https://github.com/projectfluent/fluent.js/wiki>`_
+ * `Fluent DOM L10n Tutorial <https://projectfluent.org/dom-l10n-documentation/>`_
 
 .. _Fluent: http://projectfluent.org/

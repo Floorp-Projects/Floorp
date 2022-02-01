@@ -202,6 +202,22 @@ class KeymapWrapper {
    * from xkb_keymap. We call that from Wayland backend routines.
    */
   static void SetModifierMasks(xkb_keymap* aKeymap);
+
+  /**
+   * Wayland global focus handlers
+   */
+  static void SetFocusIn(wl_surface* aFocusSurface, uint32_t aFocusSerial);
+  static void SetFocusOut(wl_surface* aFocusSurface);
+  static void GetFocusInfo(wl_surface** aFocusSurface, uint32_t* aFocusSerial);
+
+  static void SetSeat(wl_seat* aSeat);
+  static wl_seat* GetSeat();
+
+  /**
+   * EnsureInstance() is provided on Wayland to register Wayland callbacks
+   * early.
+   */
+  static void EnsureInstance();
 #endif
 
   /**
@@ -466,6 +482,12 @@ class KeymapWrapper {
    */
   void SetModifierMask(xkb_keymap* aKeymap, ModifierIndex aModifierIndex,
                        const char* aModifierName);
+#endif
+
+#ifdef MOZ_WAYLAND
+  wl_seat* mSeat = nullptr;
+  wl_surface* mFocusSurface = nullptr;
+  uint32_t mFocusSerial = 0;
 #endif
 };
 

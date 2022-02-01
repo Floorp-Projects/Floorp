@@ -22,45 +22,33 @@
        var input;
        var output;
        function checkCallbacks(port) {
-         ok(true, "Got port " + port.connection + " for " + port.name);
-         if (port.connection == "open") {
-           checkCount++;
+         if (checkCount < 2) {
+           ok(port.connection === "open", "Got port " + port.connection + " for " + port.name);
          } else {
-           if (!reopened) {
-             reopened = true;
-             // Ports are closed. Fire rest of tests.
-             input.onmidimessage = checkReturn;
-             output.send([0x90, 0x00, 0x7F]);
-           }
+          ok(port.connection === "closed", "Got port " + port.connection + " for " + port.name);
          }
-         if (checkCount == 3) {
+
+         checkCount++;
+         if (checkCount == 4) {
            input.onstatechange = undefined;
            output.onstatechange = undefined;
-           input.close();
-           output.close();
            SimpleTest.finish();
          }
        }
        function checkReturn(event) {
-         checkCount++;
          ok(true, "Got echo message back");
          MIDITestUtils.checkPacket(event.data, [0x90, 0x00, 0x7f]);
-         if (checkCount == 3) {
-           input.onstatechange = undefined;
-           output.onstatechange = undefined;
-           input.close();
-           output.close();
-           SimpleTest.finish();
-         }
+         input.close();
+         output.close();
        }
 
        input = access.inputs.get(MIDITestUtils.inputInfo.id);
        output = access.outputs.get(MIDITestUtils.outputInfo.id);
-       // We automatically open ports, so close them first.
        input.onstatechange = (event) => { checkCallbacks(event.port); };
        output.onstatechange = (event) => { checkCallbacks(event.port); };
-       input.close();
-       output.close();
+       // Ports are closed. Fire rest of tests.
+       input.onmidimessage = checkReturn;
+       output.send([0x90, 0x00, 0x7F]);
      }
     </script>
   </body>

@@ -157,6 +157,8 @@ extern "C" const char* __lsan_default_suppressions() {
          // help diagnose these.
          //
          "leak:libcairo.so\n"
+         // https://github.com/OpenPrinting/cups/pull/317
+         "leak:libcups.so\n"
          "leak:libdl.so\n"
          "leak:libdricore.so\n"
          "leak:libdricore9.2.1.so\n"

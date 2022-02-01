@@ -117,7 +117,7 @@ mod plan_log {
     impl PlanLogger {
         fn new() -> Self {
             let out_file = std::env::var("QUERY_PLAN_LOG").unwrap_or_default();
-            let output: Box<dyn Write + Send> = if out_file != "" {
+            let output: Box<dyn Write + Send> = if !out_file.is_empty() {
                 let mut file = std::fs::OpenOptions::new()
                     .create(true)
                     .append(true)

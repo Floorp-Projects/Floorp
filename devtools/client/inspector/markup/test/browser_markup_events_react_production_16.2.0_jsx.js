@@ -24,25 +24,19 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_LIB + ":93:417",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: `function() {}`
+        attributes: ["Bubbling"],
+        handler: `function() {}`,
       },
       {
         type: "onClick",
         filename: TEST_LIB_BABEL + ":26:34",
-        attributes: [
-          "Bubbling",
-          "React"
-        ],
+        attributes: ["React", "Bubbling"],
         handler: `
           function inlineFunction() {
             alert("inlineFunction");
-          }`
-      }
-    ]
+          }`,
+      },
+    ],
   },
   {
     selector: "#externaljsx",
@@ -50,25 +44,19 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_LIB + ":93:417",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: `function() {}`
+        attributes: ["Bubbling"],
+        handler: `function() {}`,
       },
       {
         type: "onClick",
         filename: TEST_EXTERNAL_LISTENERS + ":4:25",
-        attributes: [
-          "Bubbling",
-          "React"
-        ],
+        attributes: ["React", "Bubbling"],
         handler: `
           function externalFunction() {
             alert("externalFunction");
-          }`
-      }
-    ]
+          }`,
+      },
+    ],
   },
   {
     selector: "#externalinlinejsx",
@@ -76,37 +64,28 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_LIB + ":93:417",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
-        handler: `function() {}`
+        attributes: ["Bubbling"],
+        handler: `function() {}`,
       },
       {
         type: "onClick",
         filename: TEST_EXTERNAL_LISTENERS + ":4:25",
-        attributes: [
-          "Bubbling",
-          "React"
-        ],
+        attributes: ["React", "Bubbling"],
         handler: `
           function externalFunction() {
             alert("externalFunction");
-          }`
+          }`,
       },
       {
         type: "onMouseUp",
         filename: TEST_LIB_BABEL + ":26:34",
-        attributes: [
-          "Bubbling",
-          "React"
-        ],
+        attributes: ["React", "Bubbling"],
         handler: `
           function inlineFunction() {
             alert("inlineFunction");
-          }`
-      }
-    ]
+          }`,
+      },
+    ],
   },
   {
     selector: "#externalcapturingjsx",
@@ -114,17 +93,14 @@ const TEST_DATA = [
       {
         type: "onClickCapture",
         filename: TEST_EXTERNAL_LISTENERS + ":8:34",
-        attributes: [
-          "Capturing",
-          "React"
-        ],
+        attributes: ["React", "Capturing"],
         handler: `
           function externalCapturingFunction() {
             alert("externalCapturingFunction");
-          }`
-      }
-    ]
-  }
+          }`,
+      },
+    ],
+  },
 ];
 /* eslint-enable */
 

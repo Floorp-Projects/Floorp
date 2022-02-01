@@ -1,3 +1,16 @@
+s! {
+    pub struct termios2 {
+        pub c_iflag: ::tcflag_t,
+        pub c_oflag: ::tcflag_t,
+        pub c_cflag: ::tcflag_t,
+        pub c_lflag: ::tcflag_t,
+        pub c_line: ::cc_t,
+        pub c_cc: [::cc_t; 23],
+        pub c_ispeed: ::speed_t,
+        pub c_ospeed: ::speed_t,
+    }
+}
+
 // arch/mips/include/uapi/asm/socket.h
 pub const SOL_SOCKET: ::c_int = 0xffff;
 
@@ -94,3 +107,27 @@ pub const SO_TIMESTAMPING: ::c_int = 37;
 // pub const SCM_TIMESTAMP: ::c_int = SO_TIMESTAMP;
 pub const SCM_TIMESTAMPNS: ::c_int = SO_TIMESTAMPNS;
 pub const SCM_TIMESTAMPING: ::c_int = SO_TIMESTAMPING;
+
+pub const TIOCMGET: ::Ioctl = 0x741d;
+pub const TIOCMBIS: ::Ioctl = 0x741b;
+pub const TIOCMBIC: ::Ioctl = 0x741c;
+pub const TIOCMSET: ::Ioctl = 0x741a;
+pub const TCGETS2: ::Ioctl = 0x4030542a;
+pub const TCSETS2: ::Ioctl = 0x8030542b;
+pub const TCSETSW2: ::Ioctl = 0x8030542c;
+pub const TCSETSF2: ::Ioctl = 0x8030542d;
+
+pub const TIOCM_LE: ::c_int = 0x001;
+pub const TIOCM_DTR: ::c_int = 0x002;
+pub const TIOCM_RTS: ::c_int = 0x004;
+pub const TIOCM_ST: ::c_int = 0x010;
+pub const TIOCM_SR: ::c_int = 0x020;
+pub const TIOCM_CTS: ::c_int = 0x040;
+pub const TIOCM_CAR: ::c_int = 0x100;
+pub const TIOCM_CD: ::c_int = TIOCM_CAR;
+pub const TIOCM_RNG: ::c_int = 0x200;
+pub const TIOCM_RI: ::c_int = TIOCM_RNG;
+pub const TIOCM_DSR: ::c_int = 0x400;
+
+pub const BOTHER: ::speed_t = 0o010000;
+pub const IBSHIFT: ::tcflag_t = 16;

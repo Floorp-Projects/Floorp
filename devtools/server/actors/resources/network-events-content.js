@@ -62,10 +62,6 @@ class NetworkEventContentWatcher {
     return this.targetActor.conn;
   }
 
-  get browserId() {
-    return this.targetActor.browserId;
-  }
-
   httpFailedOpeningRequest(subject, topic) {
     const channel = subject.QueryInterface(Ci.nsIHttpChannel);
 
@@ -76,41 +72,21 @@ class NetworkEventContentWatcher {
       return;
     }
 
-    const event = NetworkUtils.createNetworkEvent(channel, {
-      blockedReason: channel.loadInfo.requestBlockingReason,
-    });
-
-    // For same-origin iframe targets, we're notified about this event from both the top-level
-    // target *and* the iframe one. We ignore the event if it doesn't come from the same
-    // browsing context as the target's one to avoid duplicate messages in the netmonitor.
     if (
-      this.targetActor.ignoreSubFrames &&
-      event.browsingContextID !== this.targetActor.browsingContext.id
+      !NetworkUtils.matchRequest(channel, {
+        targetActor: this.targetActor,
+      })
     ) {
       return;
     }
 
-    const actor = new NetworkEventActor(
-      this,
-      {
-        onNetworkEventUpdate: this.onNetworkEventUpdated.bind(this),
-        onNetworkEventDestroy: this.onNetworkEventDestroyed.bind(this),
+    this.onNetworkEventAvailable(channel, {
+      networkEventOptions: {
+        blockedReason: channel.loadInfo.requestBlockingReason,
       },
-      event
-    );
-    this.targetActor.manage(actor);
-
-    const resource = actor.asResource();
-
-    this._networkEvents.set(resource.resourceId, {
-      resourceId: resource.resourceId,
-      resourceType: resource.resourceType,
-      types: [],
-      resourceUpdates: {},
+      resourceOverrides: null,
+      onNetworkEventUpdate: this.onFailedNetworkEventUpdated.bind(this),
     });
-
-    this.onAvailable([resource]);
-    NetworkUtils.fetchRequestHeadersAndCookies(channel, actor, {});
   }
 
   httpOnImageCacheResponse(subject, topic) {
@@ -123,16 +99,47 @@ class NetworkEventContentWatcher {
 
     const channel = subject.QueryInterface(Ci.nsIHttpChannel);
 
-    const event = NetworkUtils.createNetworkEvent(channel, {
-      fromCache: true,
+    if (
+      !NetworkUtils.matchRequest(channel, {
+        targetActor: this.targetActor,
+      })
+    ) {
+      return;
+    }
+
+    // Only one network request should be created per URI for images from the cache
+    const hasNetworkEventForURI = Array.from(this._networkEvents.values()).find(
+      networkEvent => networkEvent.url === channel.URI.spec
+    );
+
+    if (hasNetworkEventForURI) {
+      return;
+    }
+
+    this.onNetworkEventAvailable(channel, {
+      networkEventOptions: { fromCache: true },
+      resourceOverrides: {
+        status: 200,
+        statusText: "OK",
+        totalTime: 0,
+        mimeType: channel.contentType,
+        contentSize: channel.contentLength,
+      },
+      onNetworkEventUpdate: this.onImageCacheNetworkEventUpdated.bind(this),
     });
+  }
+
+  onNetworkEventAvailable(
+    channel,
+    { networkEventOptions, resourceOverrides, onNetworkEventUpdate }
+  ) {
+    const event = NetworkUtils.createNetworkEvent(channel, networkEventOptions);
 
     const actor = new NetworkEventActor(
-      this,
+      this.conn,
+      this.targetActor.sessionContext,
       {
-        onNetworkEventUpdate: this.onNetworkEventUpdatedForImageCache.bind(
-          this
-        ),
+        onNetworkEventUpdate,
         onNetworkEventDestroy: this.onNetworkEventDestroyed.bind(this),
       },
       event
@@ -144,24 +151,33 @@ class NetworkEventContentWatcher {
     this._networkEvents.set(resource.resourceId, {
       resourceId: resource.resourceId,
       resourceType: resource.resourceType,
+      url: resource.url,
       types: [],
       resourceUpdates: {},
     });
 
-    // The channel we get here is a dummy channel and no real internet
-    // connection has been made, thus some dummy values need to be
-    // set.
-    resource.status = 200;
-    resource.statusText = "OK";
-    resource.totalTime = 0;
-    resource.mimeType = channel.contentType;
-    resource.contentSize = channel.contentLength;
+    // Override the default resource property values if need be
+    if (resourceOverrides) {
+      for (const prop in resourceOverrides) {
+        resource[prop] = resourceOverrides[prop];
+      }
+    }
 
     this.onAvailable([resource]);
     NetworkUtils.fetchRequestHeadersAndCookies(channel, actor, {});
   }
 
-  onNetworkEventUpdatedForImageCache(updateResource) {
+  /*
+   * When an update is needed for a network event.
+   *
+   * @param {Object} updateResource
+   *                 The resource to be updated
+   * @param {Array} allRequiredUpdates
+   *                The updates that are essential to be received before notifying
+   *                the client. Other updates may or may not be available.
+   */
+
+  onNetworkEventUpdated(updateResource, allRequiredUpdates) {
     const networkEvent = this._networkEvents.get(updateResource.resourceId);
 
     if (!networkEvent) {
@@ -173,26 +189,20 @@ class NetworkEventContentWatcher {
     resourceUpdates[`${updateResource.updateType}Available`] = true;
     types.push(updateResource.updateType);
 
-    if (types.includes("requestHeaders")) {
+    if (allRequiredUpdates.every(header => types.includes(header))) {
       this.onUpdated([{ resourceType, resourceId, resourceUpdates }]);
     }
   }
 
-  onNetworkEventUpdated(updateResource) {
-    const networkEvent = this._networkEvents.get(updateResource.resourceId);
+  onFailedNetworkEventUpdated(updateResource) {
+    this.onNetworkEventUpdated(updateResource, [
+      "requestHeaders",
+      "requestCookies",
+    ]);
+  }
 
-    if (!networkEvent) {
-      return;
-    }
-
-    const { resourceId, resourceType, resourceUpdates, types } = networkEvent;
-
-    resourceUpdates[`${updateResource.updateType}Available`] = true;
-    types.push(updateResource.updateType);
-
-    if (types.includes("requestHeaders") && types.includes("requestCookies")) {
-      this.onUpdated([{ resourceType, resourceId, resourceUpdates }]);
-    }
+  onImageCacheNetworkEventUpdated(updateResource) {
+    this.onNetworkEventUpdated(updateResource, ["requestHeaders"]);
   }
 
   onNetworkEventDestroyed(channelId) {

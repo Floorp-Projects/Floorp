@@ -312,6 +312,9 @@ MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
     case eMouseExitFromWidget:
       mType = MOUSE_WIDGET_EXIT;
       break;
+    case eMouseExploreByTouch:
+      mType = MOUSE_EXPLORE_BY_TOUCH;
+      break;
     case eMouseHitTest:
       mType = MOUSE_HITTEST;
       break;
@@ -369,6 +372,9 @@ WidgetMouseEvent MouseInput::ToWidgetEvent(nsIWidget* aWidget) const {
     case MOUSE_WIDGET_EXIT:
       msg = eMouseExitFromWidget;
       exitFrom = Some(WidgetMouseEvent::ePlatformChild);
+      break;
+    case MOUSE_EXPLORE_BY_TOUCH:
+      msg = eMouseExploreByTouch;
       break;
     case MOUSE_HITTEST:
       msg = eMouseHitTest;

@@ -7,6 +7,8 @@ from __future__ import unicode_literals
 import sys
 import unittest
 
+from pathlib import Path
+
 from mozfile.mozfile import NamedTemporaryFile
 
 from mach.config import (
@@ -243,7 +245,7 @@ class TestConfigSettings(unittest.TestCase):
         s = ConfigSettings()
         s.register_provider(Provider1)
 
-        s.load_file(temp.name)
+        s.load_file(Path(temp.name))
 
         self.assertEqual(s.foo.bar, "bar_value")
 
@@ -260,7 +262,7 @@ class TestConfigSettings(unittest.TestCase):
         s = ConfigSettings()
         s.register_provider(Provider1)
 
-        s.load_files([temp1.name, temp2.name])
+        s.load_files([Path(temp1.name), Path(temp2.name)])
 
         self.assertEqual(s.foo.bar, "value2")
 

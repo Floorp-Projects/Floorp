@@ -20,6 +20,10 @@
 #include "vm/JSContext.h"   // CHECK_THREAD
 #include "vm/JSObject.h"    // js::ToPrimitive
 #include "vm/StringType.h"  // js::EqualStrings
+#ifdef ENABLE_RECORD_TUPLE
+#  include "vm/RecordType.h"
+#  include "vm/TupleType.h"
+#endif
 
 #include "builtin/Boolean-inl.h"  // js::EmulatesUndefined
 #include "vm/JSContext-inl.h"     // JSContext::check
@@ -41,6 +45,38 @@ static bool EqualGivenSameType(JSContext* cx, JS::Handle<JS::Value> lval,
     *equal = JS::BigInt::equal(lval.toBigInt(), rval.toBigInt());
     return true;
   }
+
+#ifdef ENABLE_RECORD_TUPLE
+  // Record & Tuple proposal, section 3.2.6 (Strict Equality Comparison), step 3
+  //  - https://tc39.es/proposal-record-tuple/#sec-strict-equality-comparison
+  //
+  // When computing equality, records and tuples are compared using the
+  // SameValueZero algorithm.
+  //
+  // NOTE: Since Records and Tuples are impemented as ExtendedPrimitives,
+  // "SameType" refers to the fact that both lval and rval are
+  // ExtendedPrimitives. They can still be different types (for example, a
+  // Record and a Tuple).
+  if (lval.isExtendedPrimitive()) {
+    JSObject* lobj = &lval.toExtendedPrimitive();
+    JSObject* robj = &rval.toExtendedPrimitive();
+
+    if (lobj->getClass() != robj->getClass()) {
+      *equal = false;
+      return true;
+    }
+
+    if (lobj->is<js::RecordType>()) {
+      return js::RecordType::sameValueZero(cx, &lobj->as<js::RecordType>(),
+                                           &robj->as<js::RecordType>(), equal);
+    }
+    if (lobj->is<js::TupleType>()) {
+      return js::TupleType::sameValueZero(cx, &lobj->as<js::TupleType>(),
+                                          &robj->as<js::TupleType>(), equal);
+    }
+    MOZ_CRASH("Unknown ExtendedPrimitive type");
+  }
+#endif
 
   if (lval.isGCThing()) {  // objects or symbols
     *equal = (lval.toGCThing() == rval.toGCThing());
@@ -234,13 +270,79 @@ bool js::SameValue(JSContext* cx, JS::Handle<JS::Value> v1,
     return true;
   }
 
-  if (IsNaN(v1) && IsNaN(v2)) {
-    *same = true;
-    return true;
+#ifdef ENABLE_RECORD_TUPLE
+  if (v1.isExtendedPrimitive()) {
+    JSObject* lobj = &v1.toExtendedPrimitive();
+    JSObject* robj = &v2.toExtendedPrimitive();
+
+    if (lobj->getClass() != robj->getClass()) {
+      *same = false;
+      return true;
+    }
+
+    if (lobj->is<js::RecordType>()) {
+      return js::RecordType::sameValue(cx, &lobj->as<js::RecordType>(),
+                                       &robj->as<js::RecordType>(), same);
+    }
+    if (lobj->is<js::TupleType>()) {
+      return js::TupleType::sameValue(cx, &lobj->as<js::TupleType>(),
+                                      &robj->as<js::TupleType>(), same);
+    }
+    MOZ_CRASH("Unknown ExtendedPrimitive type");
+  }
+#endif
+
+  return js::SameValueZero(cx, v1, v2, same);
+}
+
+#ifdef ENABLE_RECORD_TUPLE
+bool js::SameValueZeroLinear(const JS::Value& lval, const JS::Value& rval) {
+  if (lval.isNumber() && rval.isNumber()) {
+    return IsNaN(lval) ? IsNaN(rval) : lval.toNumber() == rval.toNumber();
   }
 
-  return js::StrictlyEqual(cx, v1, v2, same);
+  if (lval.type() != rval.type()) {
+    return false;
+  }
+
+  switch (lval.type()) {
+    case ValueType::Double:
+      return IsNaN(lval) ? IsNaN(rval) : lval.toDouble() == rval.toDouble();
+
+    case ValueType::BigInt:
+      // BigInt values are considered equal if they represent the same
+      // mathematical value.
+      return BigInt::equal(lval.toBigInt(), rval.toBigInt());
+
+    case ValueType::String:
+      MOZ_ASSERT(lval.toString()->isLinear() && rval.toString()->isLinear());
+      return EqualStrings(&lval.toString()->asLinear(),
+                          &rval.toString()->asLinear());
+
+    case ValueType::ExtendedPrimitive: {
+      JSObject& lobj = lval.toExtendedPrimitive();
+      JSObject& robj = rval.toExtendedPrimitive();
+      if (lobj.getClass() != robj.getClass()) {
+        return false;
+      }
+      if (lobj.is<RecordType>()) {
+        return RecordType::sameValueZero(&lobj.as<RecordType>(),
+                                         &robj.as<RecordType>());
+      }
+      MOZ_ASSERT(lobj.is<TupleType>());
+      return TupleType::sameValueZero(&lobj.as<TupleType>(),
+                                      &robj.as<TupleType>());
+    }
+
+    default:
+      if (lval.isGCThing()) {  // objects or symbols
+        return lval.toGCThing() == rval.toGCThing();
+      }
+
+      return lval.payloadAsRawUint32() == rval.payloadAsRawUint32();
+  }
 }
+#endif
 
 JS_PUBLIC_API bool JS::SameValue(JSContext* cx, Handle<Value> value1,
                                  Handle<Value> value2, bool* same) {
@@ -249,4 +351,14 @@ JS_PUBLIC_API bool JS::SameValue(JSContext* cx, Handle<Value> value1,
   cx->check(value1, value2);
   MOZ_ASSERT(same);
   return js::SameValue(cx, value1, value2, same);
+}
+
+bool js::SameValueZero(JSContext* cx, Handle<Value> v1, Handle<Value> v2,
+                       bool* same) {
+  if (IsNaN(v1) && IsNaN(v2)) {
+    *same = true;
+    return true;
+  }
+
+  return js::StrictlyEqual(cx, v1, v2, same);
 }

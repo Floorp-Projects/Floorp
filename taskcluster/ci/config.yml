@@ -87,6 +87,7 @@ treeherder:
         'remote': 'Remote debugging protocol tests'
         'T': 'Talos performance tests'
         'T-fis': 'Talos performance tests with fission enabled'
+        'T-fis-swr': 'Talos performance tests with fission enabled and software webrender'
         'T-gli': 'Talos performance tests with WebGL over IPC'
         'T-Prof': 'Talos performance tests on Firefox with Gecko Profiling'
         'T-Prof-fis': 'Talos performance tests on Firefox with fission and Gecko Profiling'

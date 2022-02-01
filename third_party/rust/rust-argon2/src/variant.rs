@@ -6,9 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use crate::error::Error;
+use crate::result::Result;
 use std::fmt;
-use super::error::Error;
-use super::result::Result;
 
 /// The Argon2 variant.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -91,12 +91,11 @@ impl fmt::Display for Variant {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
 
-    use error::Error;
-    use super::*;
+    use crate::error::Error;
+    use crate::variant::Variant;
 
     #[test]
     fn as_lowercase_str_returns_correct_str() {

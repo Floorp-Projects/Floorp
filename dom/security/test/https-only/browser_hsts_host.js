@@ -75,6 +75,11 @@ function observer(subject, topic, state) {
 
 function onExamineResponse(subject) {
   let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+  // If message was already read or is not related to "example.com",
+  // don't examine it.
+  if (!channel.URI.spec.includes("example.com") || readMessage) {
+    return;
+  }
   info("onExamineResponse with " + channel.URI.spec);
   if (channel.URI.spec.includes("reset")) {
     try {
@@ -103,6 +108,13 @@ function onNewMessage(msgObj) {
   // ensure that request is not upgraded HTTPS-Only.
   if (message.includes("Upgrading insecure request")) {
     ok(false, "Top-Level upgrade shouldn't get logged");
+    testFinished = true;
+  } else if (
+    message.includes("Upgrading insecure speculative TCP connection")
+  ) {
+    // TODO: Check assertion
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1735683
+    ok(true, "Top-Level upgrade shouldn't get logged");
     testFinished = true;
   } else if (gBrowser.selectedBrowser.currentURI.scheme === "https") {
     ok(true, "Top-Level upgrade shouldn't get logged");

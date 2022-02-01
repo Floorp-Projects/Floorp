@@ -168,6 +168,10 @@ class ReftestRunner(MozbuildObject):
             args.e10s = False
             print("using e10s=False for non-geckoview app")
 
+        # Disable fission until geckoview supports fission by default.
+        # Need fission on Android? Use '--setpref fission.autostart=true'
+        args.fission = False
+
         # A symlink and some path manipulations are required so that test
         # manifests can be found both locally and remotely (via a url)
         # using the same relative path.

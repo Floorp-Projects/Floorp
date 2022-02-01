@@ -114,8 +114,8 @@ Status PatchDictionary::Decode(BitReader* br, size_t xsize, size_t ysize,
                            " > %" PRIuS,
                            pos.y, ref_pos.ysize, ysize);
       }
-      for (size_t i = 0; i < shared_->metadata->m.extra_channel_info.size() + 1;
-           i++) {
+      for (size_t j = 0; j < shared_->metadata->m.extra_channel_info.size() + 1;
+           j++) {
         uint32_t blend_mode = read_num(kPatchBlendModeContext);
         if (blend_mode >= uint32_t(PatchBlendMode::kNumBlendModes)) {
           return JXL_FAILURE("Invalid patch blend mode: %u", blend_mode);
@@ -125,7 +125,7 @@ Status PatchDictionary::Decode(BitReader* br, size_t xsize, size_t ysize,
         if (UsesAlpha(info.mode)) {
           *uses_extra_channels = true;
         }
-        if (info.mode != PatchBlendMode::kNone && i > 0) {
+        if (info.mode != PatchBlendMode::kNone && j > 0) {
           *uses_extra_channels = true;
         }
         if (UsesAlpha(info.mode) &&

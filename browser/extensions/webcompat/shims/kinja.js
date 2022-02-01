@@ -4,7 +4,7 @@
 
 /* globals exportFunction */
 
-"use-strict";
+"use strict";
 
 /**
  * Kinja powered blogs rely on storage access to https://kinja.com to enable

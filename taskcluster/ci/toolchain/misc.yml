@@ -74,7 +74,7 @@ linux64-mar-tools:
         symbol: TL(mar-tools)
     fetches:
         toolchain:
-            - linux64-clang-7
+            - linux64-clang-13
             - linux64-binutils
     run:
         script: build-mar-tools.sh
@@ -180,11 +180,14 @@ linux64-liblowercase:
 
 linux64-wine:
     description: "Wine build for Windows Cross Compile"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TL(wine)
         tier: 1
     worker:
         max-run-time: 10800
+    run-on-projects: [trunk]
     run:
         script: build-wine.sh
         toolchain-artifact: public/build/wine.tar.zst
@@ -209,6 +212,8 @@ win32-pdbstr:
 
 win64-pdbstr:
     description: "pdbstr for 64-bits Windows"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TW64(pdbstr)
     worker-type: b-win2012
@@ -217,6 +222,7 @@ win64-pdbstr:
             - name: project/gecko/pdbstr/pdbstr.tar.zst
               path: pdbstr.tar.zst
               type: file
+    run-on-projects: [trunk]
     run:
         script: exfiltrate-pdbstr.sh
         arguments: ['x64']
@@ -224,8 +230,11 @@ win64-pdbstr:
 
 linux64-winchecksec:
     description: "winchecksec"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TL(winchecksec)
+    run-on-projects: [trunk]
     run:
         script: build-winchecksec.sh
         toolchain-artifact: public/build/winchecksec.tar.zst
@@ -236,11 +245,14 @@ linux64-winchecksec:
 
 win64-winchecksec:
     description: "winchecksec"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TW64(winchecksec)
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+    run-on-projects: [trunk]
     run:
         script: build-winchecksec.sh
         toolchain-artifact: public/build/winchecksec.tar.zst
@@ -263,16 +275,19 @@ linux64-makecab:
         fetch:
             - makecab
         toolchain:
-            - linux64-rust-1.47
+            - linux64-rust-1.57
 
 win64-mozmake:
     description: "mozmake for Windows"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TW64(mozmake)
     worker:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
     worker-type: b-win2012
+    run-on-projects: [trunk]
     run:
         script: build-mozmake.sh
         toolchain-artifact: public/build/mozmake.tar.zst
@@ -283,8 +298,11 @@ win64-mozmake:
 
 nsis:
     description: "NSIS for Linux and Windows"
+    attributes:
+        local-toolchain: true
     treeherder:
         symbol: TL(nsis)
+    run-on-projects: [trunk]
     run:
         script: build-nsis.sh
         toolchain-artifact: public/build/nsis.tar.zst

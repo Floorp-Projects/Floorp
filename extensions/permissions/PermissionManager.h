@@ -20,6 +20,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/ThreadBound.h"
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
@@ -194,15 +195,6 @@ class PermissionManager final : public nsIPermissionManager,
       nsIURI* aURI, const OriginAttributes* aOriginAttributes,
       const nsACString& aType, uint32_t* aPermission);
 
-  /**
-   * Initialize the permission-manager service.
-   * The permission manager is always initialized at startup because when it
-   * was lazy-initialized on demand, it was possible for it to be created
-   * once shutdown had begun, resulting in the manager failing to correctly
-   * shutdown because it missed its shutdown observer notification.
-   */
-  static void Startup();
-
   nsresult RemovePermissionsWithAttributes(OriginAttributesPattern& aAttrs);
 
   /**
@@ -373,6 +365,7 @@ class PermissionManager final : public nsIPermissionManager,
 
  private:
   ~PermissionManager();
+  static StaticMutex sCreationMutex;
 
   /**
    * Get all permissions for a given principal, which should not be isolated
@@ -529,7 +522,7 @@ class PermissionManager final : public nsIPermissionManager,
                                       uint32_t aExpireType, int64_t aExpireTime,
                                       int64_t aModificationTime, int64_t aId);
 
-  nsCOMPtr<nsIAsyncShutdownClient> GetShutdownPhase() const;
+  nsCOMPtr<nsIAsyncShutdownClient> GetAsyncShutdownBarrier() const;
 
   void MaybeCompleteShutdown();
 
@@ -645,8 +638,6 @@ class PermissionManager final : public nsIPermissionManager,
   void CompleteMigrations();
 
   bool mMemoryOnlyDB;
-
-  bool mBlockerAdded;
 
   nsTHashtable<PermissionHashKey> mPermissionTable;
   // a unique, monotonically increasing id used to identify each database entry

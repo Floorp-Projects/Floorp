@@ -51,9 +51,7 @@ static bool sInited = 0;
 // before we first CC benignly violate the black-gray invariant, due
 // to dom::TraceBlackJS().
 uint32_t nsCCUncollectableMarker::sGeneration = 1;
-#ifdef MOZ_XUL
-#  include "nsXULPrototypeCache.h"
-#endif
+#include "nsXULPrototypeCache.h"
 
 NS_IMPL_ISUPPORTS(nsCCUncollectableMarker, nsIObserver)
 
@@ -366,12 +364,10 @@ nsresult nsCCUncollectableMarker::Observe(nsISupports* aSubject,
     }
   }
 
-#ifdef MOZ_XUL
   nsXULPrototypeCache* xulCache = nsXULPrototypeCache::GetInstance();
   if (xulCache) {
     xulCache->MarkInCCGeneration(sGeneration);
   }
-#endif
 
   enum ForgetSkippableCleanupState {
     eInitial = 0,

@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.16] - 2020-12-31
+### Changed
+- Update `cfg-if` to v1.0. [#173]
+- Implement `std::error::Error` for the `Error` type on additional targets. [#169]
+
+### Fixed
+- Multithreaded WASM support. [#171]
+
+[#173]: https://github.com/rust-random/getrandom/pull/173
+[#171]: https://github.com/rust-random/getrandom/pull/171
+[#169]: https://github.com/rust-random/getrandom/pull/169
+
+## [0.1.15] - 2020-09-10
+### Changed
+- Added support for Internet Explorer 11 [#139]
+- Fix Webpack require warning with `wasm-bindgen` [#137]
+
+[#137]: https://github.com/rust-random/getrandom/pull/137
+[#139]: https://github.com/rust-random/getrandom/pull/139
+
 ## [0.1.14] - 2020-01-07
 ### Changed
 - Remove use of spin-locks in the `use_file` module. [#125]

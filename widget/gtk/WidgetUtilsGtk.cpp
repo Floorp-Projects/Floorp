@@ -5,6 +5,7 @@
 
 #include "WidgetUtilsGtk.h"
 
+#include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/UniquePtr.h"
 #include "nsReadableUtils.h"
 #include "nsWindow.h"
@@ -81,6 +82,49 @@ bool GdkIsX11Display() {
                                  ? GdkIsX11Display(gdk_display_get_default())
                                  : false;
   return isX11Display;
+}
+
+bool IsRunningUnderFlatpak() {
+  // https://gitlab.gnome.org/GNOME/gtk/-/blob/4300a5c609306ce77cbc8a3580c19201dccd8d13/gdk/gdk.c#L472
+  static bool sRunning = [] {
+    return g_file_test("/.flatpak-info", G_FILE_TEST_EXISTS);
+  }();
+  return sRunning;
+}
+
+bool ShouldUsePortal(PortalKind aPortalKind) {
+  static bool sFlatpakPortalEnv = [] {
+    if (IsRunningUnderFlatpak()) {
+      return true;
+    }
+    const char* portalEnvString = g_getenv("GTK_USE_PORTAL");
+    return portalEnvString && atoi(portalEnvString) != 0;
+  }();
+
+  bool autoBehavior = sFlatpakPortalEnv;
+  const int32_t pref = [&] {
+    switch (aPortalKind) {
+      case PortalKind::FilePicker:
+        return StaticPrefs::widget_use_xdg_desktop_portal_file_picker();
+      case PortalKind::MimeHandler:
+        return StaticPrefs::widget_use_xdg_desktop_portal_mime_handler();
+      case PortalKind::Print:
+        // Print portal still needs more work, so auto behavior is just when
+        // flatpak is enabled.
+        autoBehavior = IsRunningUnderFlatpak();
+        return StaticPrefs::widget_use_xdg_desktop_portal_print();
+    }
+    return 2;
+  }();
+
+  switch (pref) {
+    case 0:
+      return false;
+    case 1:
+      return true;
+    default:
+      return autoBehavior;
+  }
 }
 
 nsTArray<nsCString> ParseTextURIList(const nsACString& aData) {

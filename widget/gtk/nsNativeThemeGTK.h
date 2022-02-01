@@ -84,8 +84,7 @@ class nsNativeThemeGTK final : public nsNativeBasicTheme {
   ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
                                    Overlay) override;
 
-  explicit nsNativeThemeGTK(
-      mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawingGTK);
+  nsNativeThemeGTK();
 
  protected:
   virtual ~nsNativeThemeGTK();

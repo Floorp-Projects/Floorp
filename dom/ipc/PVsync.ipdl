@@ -18,7 +18,7 @@ namespace dom {
  * notify the vsync event from chrome to content process. It also provides the
  * interfaces for content to observe/unobserve vsync event notifications.
  */
-async protocol PVsync
+[RefCounted] async protocol PVsync
 {
   manager PBackground or PBrowser;
 

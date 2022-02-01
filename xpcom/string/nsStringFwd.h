@@ -45,11 +45,11 @@ template <typename T>
 class nsTSubstringSplitter;
 
 template <typename T>
-using nsTStringComparator = int (*)(const T*, const T*, uint32_t, uint32_t);
+using nsTStringComparator = int (*)(const T*, const T*, size_t, size_t);
 
 // The default string comparator (case-sensitive comparision)
 template <typename T>
-int nsTDefaultStringComparator(const T*, const T*, uint32_t, uint32_t);
+int nsTDefaultStringComparator(const T*, const T*, size_t, size_t);
 
 // We define this version without a size param instead of providing a
 // default value for N so that so there is a default typename that doesn't

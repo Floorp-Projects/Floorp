@@ -533,6 +533,12 @@ class RefTest(object):
             options.extraProfileFiles.append(os.path.join(here, "chrome"))
 
         self.copyExtraFilesToProfile(options, profile)
+
+        self.log.info(
+            "Running with e10s: {}".format(prefs["browser.tabs.remote.autostart"])
+        )
+        self.log.info("Running with fission: {}".format(prefs["fission.autostart"]))
+
         return profile
 
     def environment(self, **kwargs):
@@ -573,11 +579,9 @@ class RefTest(object):
         self.leakLogFile = os.path.join(profileDir, "runreftest_leaks.log")
         browserEnv["XPCOM_MEM_BLOAT_LOG"] = self.leakLogFile
 
-        if options.enable_webrender:
-            browserEnv["MOZ_WEBRENDER"] = "1"
-            browserEnv["MOZ_ACCELERATED"] = "1"
-        else:
-            browserEnv["MOZ_WEBRENDER"] = "0"
+        # TODO: this is always defined (as part of --enable-webrender which is default)
+        #       can we make this default in the browser?
+        browserEnv["MOZ_ACCELERATED"] = "1"
 
         if options.headless:
             browserEnv["MOZ_HEADLESS"] = "1"
@@ -880,9 +884,6 @@ class RefTest(object):
 
         # browser environment
         env = self.buildBrowserEnv(options, profile.profile)
-
-        self.log.info("Running with e10s: {}".format(options.e10s))
-        self.log.info("Running with fission: {}".format(options.fission))
 
         def timeoutHandler():
             self.handleTimeout(timeout, proc, options.utilityPath, debuggerInfo)

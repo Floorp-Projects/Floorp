@@ -659,6 +659,8 @@ struct PlanarYCbCrData {
   gfx::IntRect GetPictureRect() const {
     return gfx::IntRect(mPicX, mPicY, mPicSize.width, mPicSize.height);
   }
+
+  static Maybe<PlanarYCbCrData> From(const SurfaceDescriptorBuffer&);
 };
 
 // This type is currently only used for AVIF and therefore makes some

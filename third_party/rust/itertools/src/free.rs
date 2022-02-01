@@ -14,8 +14,8 @@ use alloc::{
     string::String,
 };
 
-#[cfg(feature = "use_alloc")]
 use crate::Itertools;
+use crate::intersperse::{Intersperse, IntersperseWith};
 
 pub use crate::adaptors::{
     interleave,
@@ -34,6 +34,41 @@ pub use crate::zip_eq_impl::zip_eq;
 pub use crate::merge_join::merge_join_by;
 #[cfg(feature = "use_alloc")]
 pub use crate::rciter_impl::rciter;
+
+/// Iterate `iterable` with a particular value inserted between each element.
+///
+/// [`IntoIterator`] enabled version of [`Iterator::intersperse`].
+///
+/// ```
+/// use itertools::intersperse;
+///
+/// itertools::assert_equal(intersperse((0..3), 8), vec![0, 8, 1, 8, 2]);
+/// ```
+pub fn intersperse<I>(iterable: I, element: I::Item) -> Intersperse<I::IntoIter>
+    where I: IntoIterator,
+          <I as IntoIterator>::Item: Clone
+{
+    Itertools::intersperse(iterable.into_iter(), element)
+}
+
+/// Iterate `iterable` with a particular value created by a function inserted
+/// between each element.
+///
+/// [`IntoIterator`] enabled version of [`Iterator::intersperse_with`].
+///
+/// ```
+/// use itertools::intersperse_with;
+///
+/// let mut i = 10;
+/// itertools::assert_equal(intersperse_with((0..3), || { i -= 1; i }), vec![0, 9, 1, 8, 2]);
+/// assert_eq!(i, 8);
+/// ```
+pub fn intersperse_with<I, F>(iterable: I, element: F) -> IntersperseWith<I::IntoIter, F>
+    where I: IntoIterator,
+          F: FnMut() -> I::Item
+{
+    Itertools::intersperse_with(iterable.into_iter(), element)
+}
 
 /// Iterate `iterable` with a running index.
 ///

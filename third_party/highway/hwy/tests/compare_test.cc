@@ -27,25 +27,6 @@ namespace hwy {
 namespace HWY_NAMESPACE {
 
 // All types.
-struct TestMask {
-  template <typename T, class D>
-  HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const size_t N = Lanes(d);
-    auto lanes = AllocateAligned<T>(N);
-
-    std::fill(lanes.get(), lanes.get() + N, T(0));
-    const auto actual_false = MaskFromVec(Load(d, lanes.get()));
-    HWY_ASSERT_MASK_EQ(d, MaskFalse(d), actual_false);
-
-    memset(lanes.get(), 0xFF, N * sizeof(T));
-    const auto actual_true = MaskFromVec(Load(d, lanes.get()));
-    HWY_ASSERT_MASK_EQ(d, MaskTrue(d), actual_true);
-  }
-};
-
-HWY_NOINLINE void TestAllMask() { ForAllTypes(ForPartialVectors<TestMask>()); }
-
-// All types.
 struct TestEquality {
   template <typename T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
@@ -57,8 +38,14 @@ struct TestEquality {
     const auto mask_true = MaskTrue(d);
 
     HWY_ASSERT_MASK_EQ(d, mask_false, Eq(v2, v3));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Eq(v3, v2));
     HWY_ASSERT_MASK_EQ(d, mask_true, Eq(v2, v2));
     HWY_ASSERT_MASK_EQ(d, mask_true, Eq(v2, v2b));
+
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne(v2, v3));
+    HWY_ASSERT_MASK_EQ(d, mask_true, Ne(v3, v2));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Ne(v2, v2));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Ne(v2, v2b));
   }
 };
 
@@ -90,6 +77,37 @@ void EnsureGreater(D d, TFromD<D> a, TFromD<D> b, const char* file, int line) {
 
 #define HWY_ENSURE_GREATER(d, a, b) EnsureGreater(d, a, b, __FILE__, __LINE__)
 
+struct TestStrictUnsigned {
+  template <typename T, class D>
+  HWY_NOINLINE void operator()(T /*unused*/, D d) {
+    const T max = LimitsMax<T>();
+    const auto v0 = Zero(d);
+    const auto v2 = And(Iota(d, T(2)), Set(d, 255));  // 0..255
+
+    const auto mask_false = MaskFalse(d);
+
+    // Individual values of interest
+    HWY_ENSURE_GREATER(d, 2, 1);
+    HWY_ENSURE_GREATER(d, 1, 0);
+    HWY_ENSURE_GREATER(d, 128, 127);
+    HWY_ENSURE_GREATER(d, max, max / 2);
+    HWY_ENSURE_GREATER(d, max, 1);
+    HWY_ENSURE_GREATER(d, max, 0);
+
+    // Also use Iota to ensure lanes are independent
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt(v2, v0));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Gt(v0, v2));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt(v0, v0));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Gt(v0, v0));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Lt(v2, v2));
+    HWY_ASSERT_MASK_EQ(d, mask_false, Gt(v2, v2));
+  }
+};
+
+HWY_NOINLINE void TestAllStrictUnsigned() {
+  ForUnsignedTypes(ForPartialVectors<TestStrictUnsigned>());
+}
+
 struct TestStrictInt {
   template <typename T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
@@ -97,7 +115,7 @@ struct TestStrictInt {
     const T max = LimitsMax<T>();
     const auto v0 = Zero(d);
     const auto v2 = And(Iota(d, T(2)), Set(d, 127));  // 0..127
-    const auto vn = Neg(v2) - Set(d, 1);              // -1..-128
+    const auto vn = Sub(Neg(v2), Set(d, 1));          // -1..-128
 
     const auto mask_false = MaskFalse(d);
     const auto mask_true = MaskTrue(d);
@@ -131,14 +149,14 @@ struct TestStrictInt {
 };
 
 HWY_NOINLINE void TestAllStrictInt() {
-  ForSignedTypes(ForExtendableVectors<TestStrictInt>());
+  ForSignedTypes(ForPartialVectors<TestStrictInt>());
 }
 
 struct TestStrictFloat {
   template <typename T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const T huge_neg = -1E35;
-    const T huge_pos = 1E36;
+    const T huge_neg = T(-1E35);
+    const T huge_pos = T(1E36);
     const auto v0 = Zero(d);
     const auto v2 = Iota(d, T(2));
     const auto vn = Neg(v2);
@@ -173,13 +191,13 @@ struct TestStrictFloat {
 };
 
 HWY_NOINLINE void TestAllStrictFloat() {
-  ForFloatTypes(ForExtendableVectors<TestStrictFloat>());
+  ForFloatTypes(ForPartialVectors<TestStrictFloat>());
 }
 
 struct TestWeakFloat {
   template <typename T, class D>
   HWY_NOINLINE void operator()(T /*unused*/, D d) {
-    const auto v2 = Iota(d, 2);
+    const auto v2 = Iota(d, T(2));
     const auto vn = Iota(d, -T(Lanes(d)));
 
     const auto mask_false = MaskFalse(d);
@@ -206,12 +224,20 @@ HWY_NOINLINE void TestAllWeakFloat() {
 HWY_AFTER_NAMESPACE();
 
 #if HWY_ONCE
+
 namespace hwy {
 HWY_BEFORE_TEST(HwyCompareTest);
-HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllMask);
 HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllEquality);
+HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllStrictUnsigned);
 HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllStrictInt);
 HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllStrictFloat);
 HWY_EXPORT_AND_TEST_P(HwyCompareTest, TestAllWeakFloat);
 }  // namespace hwy
+
+// Ought not to be necessary, but without this, no tests run on RVV.
+int main(int argc, char** argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 #endif

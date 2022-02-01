@@ -470,6 +470,13 @@ pub mod future {
     assert_not_impl!(PollFn<*const ()>: Sync);
     assert_impl!(PollFn<PhantomPinned>: Unpin);
 
+    assert_impl!(PollImmediate<SendStream>: Send);
+    assert_not_impl!(PollImmediate<LocalStream<()>>: Send);
+    assert_impl!(PollImmediate<SyncStream>: Sync);
+    assert_not_impl!(PollImmediate<LocalStream<()>>: Sync);
+    assert_impl!(PollImmediate<UnpinStream>: Unpin);
+    assert_not_impl!(PollImmediate<PinnedStream>: Unpin);
+
     assert_impl!(Ready<()>: Send);
     assert_not_impl!(Ready<*const ()>: Send);
     assert_impl!(Ready<()>: Sync);
@@ -809,6 +816,12 @@ pub mod io {
     assert_not_impl!(Seek<'_, *const ()>: Sync);
     assert_impl!(Seek<'_, ()>: Unpin);
     assert_not_impl!(Seek<'_, PhantomPinned>: Unpin);
+
+    assert_impl!(SeeKRelative<'_, ()>: Send);
+    assert_not_impl!(SeeKRelative<'_, *const ()>: Send);
+    assert_impl!(SeeKRelative<'_, ()>: Sync);
+    assert_not_impl!(SeeKRelative<'_, *const ()>: Sync);
+    assert_impl!(SeeKRelative<'_, PhantomPinned>: Unpin);
 
     assert_impl!(Sink: Send);
     assert_impl!(Sink: Sync);
@@ -1430,6 +1443,14 @@ pub mod stream {
     assert_not_impl!(Peek<'_, LocalStream<()>>: Sync);
     assert_impl!(Peek<'_, PinnedStream>: Unpin);
 
+    assert_impl!(PeekMut<'_, SendStream<()>>: Send);
+    assert_not_impl!(PeekMut<'_, SendStream>: Send);
+    assert_not_impl!(PeekMut<'_, LocalStream<()>>: Send);
+    assert_impl!(PeekMut<'_, SyncStream<()>>: Sync);
+    assert_not_impl!(PeekMut<'_, SyncStream>: Sync);
+    assert_not_impl!(PeekMut<'_, LocalStream<()>>: Sync);
+    assert_impl!(PeekMut<'_, PinnedStream>: Unpin);
+
     assert_impl!(Peekable<SendStream<()>>: Send);
     assert_not_impl!(Peekable<SendStream>: Send);
     assert_not_impl!(Peekable<LocalStream>: Send);
@@ -1450,6 +1471,13 @@ pub mod stream {
     assert_impl!(PollFn<()>: Sync);
     assert_not_impl!(PollFn<*const ()>: Sync);
     assert_impl!(PollFn<PhantomPinned>: Unpin);
+
+    assert_impl!(PollImmediate<SendStream>: Send);
+    assert_not_impl!(PollImmediate<LocalStream<()>>: Send);
+    assert_impl!(PollImmediate<SyncStream>: Sync);
+    assert_not_impl!(PollImmediate<LocalStream<()>>: Sync);
+    assert_impl!(PollImmediate<UnpinStream>: Unpin);
+    assert_not_impl!(PollImmediate<PinnedStream>: Unpin);
 
     assert_impl!(ReadyChunks<SendStream<()>>: Send);
     assert_not_impl!(ReadyChunks<SendStream>: Send);

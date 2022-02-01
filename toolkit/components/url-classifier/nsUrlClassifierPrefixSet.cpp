@@ -447,6 +447,8 @@ nsresult nsUrlClassifierPrefixSet::LoadPrefixes(nsCOMPtr<nsIInputStream>& in) {
 
 uint32_t nsUrlClassifierPrefixSet::CalculatePreallocateSize() const {
   uint32_t fileSize = 4 * sizeof(uint32_t);
+  MutexAutoLock lock(mLock);
+
   MOZ_RELEASE_ASSERT(mTotalPrefixes >= mIndexPrefixes.Length());
   uint32_t deltas = mTotalPrefixes - mIndexPrefixes.Length();
   fileSize += mIndexPrefixes.Length() * sizeof(uint32_t);

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ServiceWorkerRegistrar.h"
+#include "ServiceWorkerManager.h"
 #include "mozilla/dom/ServiceWorkerRegistrarTypes.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/net/MozURL.h"
@@ -44,6 +45,13 @@
 #include "ServiceWorkerUtils.h"
 
 using namespace mozilla::ipc;
+
+extern mozilla::LazyLogModule sWorkerTelemetryLog;
+
+#ifdef LOG
+#  undef LOG
+#endif
+#define LOG(_args) MOZ_LOG(sWorkerTelemetryLog, LogLevel::Debug, _args);
 
 namespace mozilla {
 namespace dom {
@@ -170,12 +178,12 @@ ServiceWorkerRegistrar::ServiceWorkerRegistrar()
       mFileGeneration(kInvalidGeneration),
       mRetryCount(0),
       mShuttingDown(false),
-      mRunnableDispatched(false) {
+      mSaveDataRunnableDispatched(false) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
 ServiceWorkerRegistrar::~ServiceWorkerRegistrar() {
-  MOZ_ASSERT(!mRunnableDispatched);
+  MOZ_ASSERT(!mSaveDataRunnableDispatched);
 }
 
 void ServiceWorkerRegistrar::GetRegistrations(
@@ -281,6 +289,18 @@ void ServiceWorkerRegistrar::UnregisterServiceWorker(
 
     for (uint32_t i = 0; i < mData.Length(); ++i) {
       if (Equivalent(tmp, mData[i])) {
+        gServiceWorkersRegistered--;
+        if (mData[i].currentWorkerHandlesFetch()) {
+          gServiceWorkersRegisteredFetch--;
+        }
+        // Update Telemetry
+        Telemetry::ScalarSet(Telemetry::ScalarID::SERVICEWORKER_REGISTRATIONS,
+                             u"All"_ns, gServiceWorkersRegistered);
+        Telemetry::ScalarSet(Telemetry::ScalarID::SERVICEWORKER_REGISTRATIONS,
+                             u"Fetch"_ns, gServiceWorkersRegisteredFetch);
+        LOG(("Unregister ServiceWorker: %u, fetch %u\n",
+             gServiceWorkersRegistered, gServiceWorkersRegisteredFetch));
+
         mData.RemoveElementAt(i);
         mDataGeneration = GetNextGeneration();
         deleted = true;
@@ -900,8 +920,14 @@ void ServiceWorkerRegistrar::RegisterServiceWorkerInternal(
   bool found = false;
   for (uint32_t i = 0, len = mData.Length(); i < len; ++i) {
     if (Equivalent(aData, mData[i])) {
-      mData[i] = aData;
       found = true;
+      if (mData[i].currentWorkerHandlesFetch()) {
+        // Decrement here if we found it, in case the new registration no
+        // longer handles Fetch.  If it continues to handle fetch, we'll
+        // bump it back later.
+        gServiceWorkersRegisteredFetch--;
+      }
+      mData[i] = aData;
       break;
     }
   }
@@ -909,7 +935,20 @@ void ServiceWorkerRegistrar::RegisterServiceWorkerInternal(
   if (!found) {
     MOZ_ASSERT(ServiceWorkerRegistrationDataIsValid(aData));
     mData.AppendElement(aData);
+    // We didn't find an entry to update, so we have 1 more
+    gServiceWorkersRegistered++;
   }
+  // Handles bumping both for new registrations and updates
+  if (aData.currentWorkerHandlesFetch()) {
+    gServiceWorkersRegisteredFetch++;
+  }
+  // Update Telemetry
+  Telemetry::ScalarSet(Telemetry::ScalarID::SERVICEWORKER_REGISTRATIONS,
+                       u"All"_ns, gServiceWorkersRegistered);
+  Telemetry::ScalarSet(Telemetry::ScalarID::SERVICEWORKER_REGISTRATIONS,
+                       u"Fetch"_ns, gServiceWorkersRegisteredFetch);
+  LOG(("Register: %u, fetch %u\n", gServiceWorkersRegistered,
+       gServiceWorkersRegisteredFetch));
 
   mDataGeneration = GetNextGeneration();
 }
@@ -955,7 +994,7 @@ void ServiceWorkerRegistrar::MaybeScheduleSaveData() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mShuttingDown);
 
-  if (mShuttingDown || mRunnableDispatched ||
+  if (mShuttingDown || mSaveDataRunnableDispatched ||
       mDataGeneration <= mFileGeneration) {
     return;
   }
@@ -978,7 +1017,7 @@ void ServiceWorkerRegistrar::MaybeScheduleSaveData() {
   nsresult rv = target->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  mRunnableDispatched = true;
+  mSaveDataRunnableDispatched = true;
 }
 
 void ServiceWorkerRegistrar::ShutdownCompleted() {
@@ -1005,9 +1044,9 @@ nsresult ServiceWorkerRegistrar::SaveData(
 
 void ServiceWorkerRegistrar::DataSaved(uint32_t aFileGeneration) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mRunnableDispatched);
+  MOZ_ASSERT(mSaveDataRunnableDispatched);
 
-  mRunnableDispatched = false;
+  mSaveDataRunnableDispatched = false;
 
   // Check for shutdown before possibly triggering any more saves
   // runnables.
@@ -1049,7 +1088,7 @@ void ServiceWorkerRegistrar::DataSaved(uint32_t aFileGeneration) {
 void ServiceWorkerRegistrar::MaybeScheduleShutdownCompleted() {
   AssertIsOnBackgroundThread();
 
-  if (mRunnableDispatched || !mShuttingDown) {
+  if (mSaveDataRunnableDispatched || !mShuttingDown) {
     return;
   }
 
@@ -1287,10 +1326,10 @@ void ServiceWorkerRegistrar::ProfileStopped() {
     //   can't get to.
     // - All Shutdown() does is set mShuttingDown=true (essential for
     //   invariants) and invoke MaybeScheduleShutdownCompleted().
-    // - Since there is no PBackground thread, mRunnableDispatched must be false
-    //   because only MaybeScheduleSaveData() set it and it only runs on the
-    //   background thread, so it cannot have run.  And so we would expect
-    //   MaybeScheduleShutdownCompleted() to schedule an invocation of
+    // - Since there is no PBackground thread, mSaveDataRunnableDispatched must
+    //   be false because only MaybeScheduleSaveData() set it and it only runs
+    //   on the background thread, so it cannot have run.  And so we would
+    //   expect MaybeScheduleShutdownCompleted() to schedule an invocation of
     //   ShutdownCompleted on the main thread.
     //
     // So it's appropriate for us to set mShuttingDown=true (as Shutdown would
@@ -1301,7 +1340,11 @@ void ServiceWorkerRegistrar::ProfileStopped() {
     return;
   }
 
-  child->SendShutdownServiceWorkerRegistrar();
+  if (!child->SendShutdownServiceWorkerRegistrar()) {
+    // If we get here, the PBackground thread has probably gone nuts and we
+    // want to know it. We could try to mitigate as above for xpcshell.
+    MOZ_CRASH("Unable to send the ShutdownServiceWorkerRegistrar message.");
+  }
 }
 
 // Async shutdown blocker methods
@@ -1326,7 +1369,7 @@ ServiceWorkerRegistrar::GetState(nsIPropertyBag** aBagOut) {
   MOZ_TRY(propertyBag->SetPropertyAsBool(u"shuttingDown"_ns, mShuttingDown));
 
   MOZ_TRY(propertyBag->SetPropertyAsBool(u"saveDataRunnableDispatched"_ns,
-                                         mRunnableDispatched));
+                                         mSaveDataRunnableDispatched));
 
   propertyBag.forget(aBagOut);
 

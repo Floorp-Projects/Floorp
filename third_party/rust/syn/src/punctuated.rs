@@ -193,7 +193,7 @@ impl<T, P> Punctuated<T, P> {
         if self.last.is_some() {
             self.last.take().map(|t| Pair::End(*t))
         } else {
-            self.inner.pop().map(|(t, d)| Pair::Punctuated(t, d))
+            self.inner.pop().map(|(t, p)| Pair::Punctuated(t, p))
         }
     }
 
@@ -937,16 +937,16 @@ impl<T, P> Pair<T, P> {
     /// the final one and there is no trailing punctuation.
     pub fn punct(&self) -> Option<&P> {
         match self {
-            Pair::Punctuated(_, d) => Some(d),
+            Pair::Punctuated(_, p) => Some(p),
             Pair::End(_) => None,
         }
     }
 
     /// Creates a punctuated pair out of a syntax tree node and an optional
     /// following punctuation.
-    pub fn new(t: T, d: Option<P>) -> Self {
-        match d {
-            Some(d) => Pair::Punctuated(t, d),
+    pub fn new(t: T, p: Option<P>) -> Self {
+        match p {
+            Some(p) => Pair::Punctuated(t, p),
             None => Pair::End(t),
         }
     }
@@ -955,7 +955,7 @@ impl<T, P> Pair<T, P> {
     /// optional following punctuation.
     pub fn into_tuple(self) -> (T, Option<P>) {
         match self {
-            Pair::Punctuated(t, d) => (t, Some(d)),
+            Pair::Punctuated(t, p) => (t, Some(p)),
             Pair::End(t) => (t, None),
         }
     }

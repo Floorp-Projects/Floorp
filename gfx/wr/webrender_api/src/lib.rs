@@ -187,15 +187,6 @@ impl ExternalEvent {
     }
 }
 
-/// Describe whether or not scrolling should be clamped by the content bounds.
-#[derive(Copy, Clone, Deserialize, Serialize)]
-pub enum ScrollClamping {
-    ///
-    ToContentBounds,
-    ///
-    NoClamping,
-}
-
 /// A handler to integrate WebRender with the thread that contains the `Renderer`.
 pub trait RenderNotifier: Send {
     ///

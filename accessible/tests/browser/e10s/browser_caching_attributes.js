@@ -7,6 +7,11 @@
 /* import-globals-from ../../mochitest/attributes.js */
 loadScripts({ name: "attributes.js", dir: MOCHITESTS_DIR });
 
+const isCacheEnabled = Services.prefs.getBoolPref(
+  "accessibility.cache.enabled",
+  false
+);
+
 /**
  * Default textbox accessible attributes.
  */
@@ -130,5 +135,71 @@ addAccessibleTask(
       testAbsentAttrs(textbox, unexpected);
     }
   },
-  { iframe: true, remoteIframe: true }
+  {
+    // These tests don't work yet with the parent process cache enabled.
+    topLevel: !isCacheEnabled,
+    iframe: !isCacheEnabled,
+    remoteIframe: !isCacheEnabled,
+  }
+);
+
+/**
+ * Test caching of the tag attribute.
+ */
+addAccessibleTask(
+  `
+<p id="p">text</p>
+<textarea id="textarea"></textarea>
+  `,
+  async function(browser, docAcc) {
+    testAttrs(docAcc, { tag: "body" }, true);
+    const p = findAccessibleChildByID(docAcc, "p");
+    testAttrs(p, { tag: "p" }, true);
+    const textLeaf = p.firstChild;
+    testAbsentAttrs(textLeaf, { tag: "" });
+    const textarea = findAccessibleChildByID(docAcc, "textarea");
+    testAttrs(textarea, { tag: "textarea" }, true);
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);
+
+/**
+ * Test caching of the text-input-type attribute.
+ */
+addAccessibleTask(
+  `
+  <input id="default">
+  <input id="email" type="email">
+  <input id="password" type="password">
+  <input id="text" type="text">
+  <input id="date" type="date">
+  <input id="time" type="time">
+  <input id="checkbox" type="checkbox">
+  <input id="radio" type="radio">
+  `,
+  async function(browser, docAcc) {
+    function testInputType(id, inputType) {
+      if (inputType == undefined) {
+        testAbsentAttrs(findAccessibleChildByID(docAcc, id), {
+          "text-input-type": "",
+        });
+      } else {
+        testAttrs(
+          findAccessibleChildByID(docAcc, id),
+          { "text-input-type": inputType },
+          true
+        );
+      }
+    }
+
+    testInputType("default");
+    testInputType("email", "email");
+    testInputType("password", "password");
+    testInputType("text", "text");
+    testInputType("date", "date");
+    testInputType("time", "time");
+    testInputType("checkbox");
+    testInputType("radio");
+  },
+  { chrome: true, topLevel: true, iframe: false, remoteIframe: false }
 );

@@ -1133,6 +1133,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   void cmpPtr(Register lhs, ImmPtr rhs) {
     Cmp(ARMRegister(lhs, 64), Operand(uint64_t(rhs.value)));
   }
+  void cmpPtr(Register lhs, Imm64 rhs) {
+    Cmp(ARMRegister(lhs, 64), Operand(uint64_t(rhs.value)));
+  }
   void cmpPtr(Register lhs, Register rhs) {
     Cmp(ARMRegister(lhs, 64), ARMRegister(rhs, 64));
   }
@@ -2221,11 +2224,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
 #endif
   }
 
-  void loadWasmGlobalPtr(uint32_t globalDataOffset, Register dest) {
-    loadPtr(Address(WasmTlsReg,
-                    offsetof(wasm::TlsData, globalArea) + globalDataOffset),
-            dest);
-  }
   void loadWasmPinnedRegsFromTls() {
     loadPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, memoryBase)), HeapReg);
   }

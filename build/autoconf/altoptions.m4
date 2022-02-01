@@ -15,7 +15,6 @@ dnl MOZ_ARG_DISABLE_BOOL(          NAME, HELP, IF-NO [, IF-YES [, ELSE]])
 dnl MOZ_ARG_ENABLE_STRING(         NAME, HELP, IF-SET [, ELSE])
 dnl MOZ_ARG_WITH_BOOL(             NAME, HELP, IF-YES [, IF-NO [, ELSE])
 dnl MOZ_ARG_WITH_STRING(           NAME, HELP, IF-SET [, ELSE])
-dnl MOZ_ARG_HEADER(Comment)
 dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
 
 define([MOZ_DIVERSION_ARGS], 12)
@@ -65,10 +64,6 @@ AC_DEFUN([MOZ_ARG_WITH_BOOL],
 dnl MOZ_ARG_WITH_STRING(NAME, HELP, IF-SET [, ELSE])
 AC_DEFUN([MOZ_ARG_WITH_STRING],
 [MOZ_AC_ARG_WITH([$1], [$2], [$3], [$4])])
-
-dnl MOZ_ARG_HEADER(Comment)
-dnl This is used by webconfig to group options
-define(MOZ_ARG_HEADER, [# $1])
 
 dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
 AC_DEFUN([MOZ_READ_MOZCONFIG],

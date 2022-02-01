@@ -236,7 +236,7 @@
 
 @keyframes urlbar-grow {
   0% {
-    transform: scaleX(.99) scaleY(.95);
+    transform: scaleX(.99) scaleY(.98);
   }
   100% {
     transform: scale(1.0);

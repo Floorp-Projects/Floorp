@@ -206,6 +206,28 @@ add_task(async function searchWithAlias() {
   await UrlbarTestUtils.promisePopupClose(window);
 });
 
+// Calls search() and passes in a search engine without including a restriction
+// token or engine alias in the search string. Simulates pasting into the newtab
+// handoff field with search suggestions disabled.
+add_task(async function searchEngineWithNoToken() {
+  await UrlbarTestUtils.promisePopupOpen(window, async () =>
+    gURLBar.search("no-alias", {
+      searchEngine: aliasEngine,
+      searchModeEntry: "handoff",
+    })
+  );
+
+  Assert.ok(gURLBar.hasAttribute("focused"), "Urlbar is focused");
+
+  await UrlbarTestUtils.assertSearchMode(window, {
+    engineName: aliasEngine.name,
+    entry: "handoff",
+  });
+  await assertUrlbarValue("no-alias");
+  await UrlbarTestUtils.exitSearchMode(window);
+  await UrlbarTestUtils.promisePopupClose(window);
+});
+
 /**
  * Asserts that the one-off search buttons are or aren't visible.
  *

@@ -212,8 +212,9 @@ testMethod(q, "declarationInstantiation");
 testMethod(q, "evaluation");
 
 if (helperThreadCount() > 0) {
-  offThreadCompileModule(``);
-  let r = finishOffThreadModule();
+  offThreadCompileModuleToStencil(``);
+  let stencil = finishOffThreadCompileModuleToStencil();
+  let r = instantiateModuleStencil(stencil);
   r.declarationInstantiation();
   r.evaluation();
   testMethod(r, "declarationInstantiation");

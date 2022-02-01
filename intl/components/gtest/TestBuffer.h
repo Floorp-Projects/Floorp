@@ -108,7 +108,7 @@ class TestBuffer {
    *     Expected:
    *      u"09/23/2002, 08:07:30 PM"
    */
-  bool verboseMatches(const CharType* aExpected) {
+  [[nodiscard]] bool verboseMatches(const CharType* aExpected) {
     std::basic_string_view<CharType> actualSV(data(), length());
     std::basic_string_view<CharType> expectedSV(aExpected);
 

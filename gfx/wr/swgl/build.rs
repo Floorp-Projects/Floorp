@@ -184,15 +184,18 @@ fn main() {
         // that we're more likely to be throughput bound vs latency bound. Having fewer
         // instructions makes things easier on the processor and in places where it matters we can
         // probably explicitly use reciprocal instructions and avoid the refinement step.
+        // Also, allow checks for non-finite values which fast-math may disable.
         if tool.is_like_msvc() {
             build.flag("/fp:fast")
                  .flag("-Xclang")
-                 .flag("-mrecip=none");
+                 .flag("-mrecip=none")
+                 .flag("/clang:-fno-finite-math-only");
         } else if tool.is_like_clang() {
             // gcc only supports -mrecip=none on some targets so to keep
             // things simple we don't use -ffast-math with gcc at all
             build.flag("-ffast-math")
-                 .flag("-mrecip=none");
+                 .flag("-mrecip=none")
+                 .flag("-fno-finite-math-only");
         }
     }
 

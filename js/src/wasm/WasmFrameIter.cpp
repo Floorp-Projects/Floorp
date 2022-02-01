@@ -36,6 +36,16 @@ using namespace js::wasm;
 using mozilla::DebugOnly;
 using mozilla::Maybe;
 
+static TlsData* ExtractCallerTlsFromFrameWithTls(Frame* fp) {
+  return *reinterpret_cast<TlsData**>(reinterpret_cast<uint8_t*>(fp) +
+                                      FrameWithTls::callerTlsOffset());
+}
+
+static const TlsData* ExtractCalleeTlsFromFrameWithTls(const Frame* fp) {
+  return *reinterpret_cast<TlsData* const*>(
+      reinterpret_cast<const uint8_t*>(fp) + FrameWithTls::calleeTlsOffset());
+}
+
 /*****************************************************************************/
 // WasmFrameIter implementation
 

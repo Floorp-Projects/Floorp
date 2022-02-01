@@ -429,8 +429,8 @@ float EstimateEntropy(const AcStrategy& acs, size_t x, size_t y,
     }
     entropy_v += nzeros_v * cost1;
 
-    entropy += GetLane(SumOfLanes(entropy_v));
-    size_t num_nzeros = GetLane(SumOfLanes(nzeros_v));
+    entropy += GetLane(SumOfLanes(df, entropy_v));
+    size_t num_nzeros = GetLane(SumOfLanes(df, nzeros_v));
     // Add #bit of num_nonzeros, as an estimate of the cost for encoding the
     // number of non-zeros of the block.
     size_t nbits = CeilLog2Nonzero(num_nzeros + 1) + 1;
@@ -441,9 +441,9 @@ float EstimateEntropy(const AcStrategy& acs, size_t x, size_t y,
   float ret =
       entropy +
       masking *
-          ((config.info_loss_multiplier * GetLane(SumOfLanes(info_loss))) +
+          ((config.info_loss_multiplier * GetLane(SumOfLanes(df, info_loss))) +
            (config.info_loss_multiplier2 *
-            sqrt(num_blocks * GetLane(SumOfLanes(info_loss2)))));
+            sqrt(num_blocks * GetLane(SumOfLanes(df, info_loss2)))));
   return ret;
 }
 

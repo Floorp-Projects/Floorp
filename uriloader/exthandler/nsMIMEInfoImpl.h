@@ -115,6 +115,8 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
    */
   virtual nsresult LoadUriInternal(nsIURI* aURI) = 0;
 
+  bool AutomationOnlyCheckIfLaunchStubbed(nsIFile* aFile);
+
   static already_AddRefed<nsIProcess> InitProcess(nsIFile* aApp,
                                                   nsresult* aResult);
 

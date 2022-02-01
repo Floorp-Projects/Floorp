@@ -68,8 +68,8 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
         RefPtr<Adapter> adapter = new Adapter(instance, info);
         promise->MaybeResolve(adapter);
       },
-      [promise](const Maybe<ipc::ResponseRejectReason>& aRv) {
-        if (aRv.isSome()) {
+      [promise](const Maybe<ipc::ResponseRejectReason>& aResponseReason) {
+        if (aResponseReason.isSome()) {
           promise->MaybeRejectWithAbortError("Internal communication error!");
         } else {
           promise->MaybeRejectWithInvalidStateError(

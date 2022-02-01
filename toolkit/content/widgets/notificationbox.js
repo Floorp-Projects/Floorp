@@ -89,7 +89,8 @@
      *        the notification based on severity (using the "type" attribute), and
      *        only the notification with the highest priority is displayed.
      *    label
-     *        The main message text, or a DocumentFragment containing elements to
+     *        The main message text (as string), or object (with l10n-id, l10n-args),
+     *        or a DocumentFragment containing elements to
      *        add as children of the notification's main <description> element.
      *    eventCallback
      *        This may be called with the "removed", "dismissed" or "disconnected"
@@ -196,6 +197,18 @@
             aNotification.label.DOCUMENT_FRAGMENT_NODE
         ) {
           newitem.messageText.appendChild(aNotification.label);
+        } else if (
+          aNotification.label &&
+          typeof aNotification.label == "object" &&
+          "l10n-id" in aNotification.label
+        ) {
+          let message = document.createElement("span");
+          document.l10n.setAttributes(
+            message,
+            aNotification.label["l10n-id"],
+            aNotification.label["l10n-args"]
+          );
+          newitem.messageText.appendChild(message);
         } else {
           newitem.messageText.textContent = aNotification.label;
         }

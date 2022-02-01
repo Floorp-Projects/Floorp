@@ -15,7 +15,9 @@ remote.jar:
   # shared modules (all protocols)
   content/shared/Format.jsm (shared/Format.jsm)
   content/shared/Log.jsm (shared/Log.jsm)
+  content/shared/Navigate.jsm (shared/Navigate.jsm)
   content/shared/RecommendedPreferences.jsm (shared/RecommendedPreferences.jsm)
+  content/shared/Stack.jsm (shared/Stack.jsm)
   content/shared/Sync.jsm (shared/Sync.jsm)
   content/shared/TabManager.jsm (shared/TabManager.jsm)
   content/shared/WebSocketConnection.jsm (shared/WebSocketConnection.jsm)
@@ -37,6 +39,7 @@ remote.jar:
   content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameActor.jsm (shared/messagehandler/transports/js-window-actors/MessageHandlerFrameActor.jsm)
   content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameChild.jsm (shared/messagehandler/transports/js-window-actors/MessageHandlerFrameChild.jsm)
   content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameParent.jsm (shared/messagehandler/transports/js-window-actors/MessageHandlerFrameParent.jsm)
+  content/shared/messagehandler/transports/FrameContextUtils.jsm (shared/messagehandler/transports/FrameContextUtils.jsm)
   content/shared/messagehandler/transports/FrameTransport.jsm (shared/messagehandler/transports/FrameTransport.jsm)
 
   # shared modules (WebDriver HTTP / BiDi only)

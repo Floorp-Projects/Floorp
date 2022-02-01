@@ -9,9 +9,8 @@
 #include "mozilla/PresShell.h"
 #include "nsRefreshDriver.h"
 
-nsICanvasRenderingContextInternal::nsICanvasRenderingContextInternal()
-    : mSharedPtrPtr(
-          std::make_shared<nsICanvasRenderingContextInternal*>(this)) {}
+nsICanvasRenderingContextInternal::nsICanvasRenderingContextInternal() =
+    default;
 
 nsICanvasRenderingContextInternal::~nsICanvasRenderingContextInternal() =
     default;
@@ -19,6 +18,16 @@ nsICanvasRenderingContextInternal::~nsICanvasRenderingContextInternal() =
 mozilla::PresShell* nsICanvasRenderingContextInternal::GetPresShell() {
   if (mCanvasElement) {
     return mCanvasElement->OwnerDoc()->GetPresShell();
+  }
+  return nullptr;
+}
+
+nsIGlobalObject* nsICanvasRenderingContextInternal::GetParentObject() const {
+  if (mCanvasElement) {
+    return mCanvasElement->OwnerDoc()->GetScopeObject();
+  }
+  if (mOffscreenCanvas) {
+    return mOffscreenCanvas->GetParentObject();
   }
   return nullptr;
 }

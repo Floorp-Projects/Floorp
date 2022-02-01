@@ -27,8 +27,8 @@ toolbarbutton.tabbable {
 }
 
 toolbarbutton:-moz-focusring {
-  outline: 1px dotted;
-  outline-offset: -2px;
+  outline: var(--default-focusring);
+  outline-offset: calc(-1 * var(--default-focusring-width) - 1px);
 }
 
 toolbarbutton[disabled="true"] {

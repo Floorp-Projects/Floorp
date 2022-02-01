@@ -1,3 +1,10 @@
+## Version 0.8.4
+
+* Fixed recognition of `?>`, `]]>` and `/>` tokens as characters.
+* Fixed writer output operations to use `write_all` to ensure that the data
+  is written fully.
+* The document declaration is now written before any characters automatically.
+
 ## Version 0.8.3
 
 * Added a new parser option, `ignore_root_level_whitespace`, which makes the parser

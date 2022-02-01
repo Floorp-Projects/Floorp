@@ -103,15 +103,18 @@ public class TestCrashHandler extends Service {
      * and that its intent should be checked for correctness.
      *
      * @param expectFatal Whether the incoming crash is expected to be fatal or not.
+     * @param expectedProcessType The type of process the incoming crash is expected to be for.
      */
-    public void setEvalNextCrashDump(final boolean expectFatal) {
+    public void setEvalNextCrashDump(final boolean expectFatal, final String expectedProcessType) {
       setEvalResult(null);
       mReceiver.post(
           new Runnable() {
             @Override
             public void run() {
-              final Message msg =
-                  Message.obtain(null, MSG_EVAL_NEXT_CRASH_DUMP, expectFatal ? 1 : 0, 0);
+              final Bundle bundle = new Bundle();
+              bundle.putBoolean(GeckoRuntime.EXTRA_CRASH_FATAL, expectFatal);
+              bundle.putString(GeckoRuntime.EXTRA_CRASH_PROCESS_TYPE, expectedProcessType);
+              final Message msg = Message.obtain(null, MSG_EVAL_NEXT_CRASH_DUMP, bundle);
               msg.replyTo = mMessenger;
 
               try {
@@ -170,6 +173,7 @@ public class TestCrashHandler extends Service {
   private static final class MessageHandler extends Handler {
     private Messenger mReplyToMessenger;
     private boolean mExpectFatal = false;
+    private String mExpectedProcessType;
 
     MessageHandler() {}
 
@@ -177,7 +181,9 @@ public class TestCrashHandler extends Service {
     public void handleMessage(final Message msg) {
       if (msg.what == MSG_EVAL_NEXT_CRASH_DUMP) {
         mReplyToMessenger = msg.replyTo;
-        mExpectFatal = msg.arg1 != 0;
+        Bundle bundle = (Bundle) msg.obj;
+        mExpectFatal = bundle.getBoolean(GeckoRuntime.EXTRA_CRASH_FATAL);
+        mExpectedProcessType = bundle.getString(GeckoRuntime.EXTRA_CRASH_PROCESS_TYPE);
         return;
       }
 
@@ -203,6 +209,10 @@ public class TestCrashHandler extends Service {
 
     public boolean getExpectFatal() {
       return mExpectFatal;
+    }
+
+    public String getExpectedProcessType() {
+      return mExpectedProcessType;
     }
   }
 
@@ -237,6 +247,16 @@ public class TestCrashHandler extends Service {
       return new EvalResult(false, "Fatality should match");
     }
 
+    final String expectedProcessType = mMsgHandler.getExpectedProcessType();
+    final String processType = intent.getStringExtra(GeckoRuntime.EXTRA_CRASH_PROCESS_TYPE);
+    if (processType == null) {
+      return new EvalResult(false, "Intent missing process type");
+    }
+    if (!processType.equals(expectedProcessType)) {
+      return new EvalResult(
+          false, "Expected process type " + expectedProcessType + ", found " + processType);
+    }
+
     return new EvalResult(true, "Crash Dump OK");
   }
 
@@ -244,6 +264,10 @@ public class TestCrashHandler extends Service {
   public synchronized int onStartCommand(final Intent intent, final int flags, final int startId) {
     if (mMsgHandler != null) {
       mMsgHandler.reportResult(evalCrashInfo(intent));
+      // We must manually call stopSelf() here to ensure the Service gets killed once the client
+      // unbinds. If we don't, then when the next client attempts to bind for a different test,
+      // onBind() will not be called, and mMsgHandler will not get set.
+      stopSelf();
       return Service.START_NOT_STICKY;
     }
 

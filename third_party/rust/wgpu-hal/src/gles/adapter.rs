@@ -189,6 +189,14 @@ impl super::Adapter {
         log::debug!("Extensions: {:#?}", extensions);
 
         let ver = Self::parse_version(&version).ok()?;
+        if ver < (3, 0) {
+            log::warn!(
+                "Returned GLES context is {}.{}, when 3.0+ was requested",
+                ver.0,
+                ver.1
+            );
+            return None;
+        }
 
         let supports_storage = ver >= (3, 1);
         let supports_work_group_params = ver >= (3, 1);
@@ -271,14 +279,18 @@ impl super::Adapter {
         downlevel_flags.set(
             wgt::DownlevelFlags::VERTEX_STORAGE,
             max_storage_block_size != 0
+                && max_storage_buffers_per_shader_stage != 0
                 && (vertex_shader_storage_blocks != 0 || vertex_ssbo_false_zero),
         );
         downlevel_flags.set(wgt::DownlevelFlags::FRAGMENT_STORAGE, supports_storage);
 
         let mut features = wgt::Features::empty()
-            | wgt::Features::TEXTURE_COMPRESSION_ETC2
             | wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
             | wgt::Features::CLEAR_COMMANDS;
+        features.set(
+            wgt::Features::ADDRESS_MODE_CLAMP_TO_BORDER,
+            extensions.contains("GL_EXT_texture_border_clamp"),
+        );
         features.set(
             wgt::Features::DEPTH_CLIP_CONTROL,
             extensions.contains("GL_EXT_depth_clamp"),
@@ -287,6 +299,18 @@ impl super::Adapter {
             wgt::Features::VERTEX_WRITABLE_STORAGE,
             downlevel_flags.contains(wgt::DownlevelFlags::VERTEX_STORAGE)
                 && vertex_shader_storage_textures != 0,
+        );
+        features.set(
+            wgt::Features::TEXTURE_COMPRESSION_ETC2,
+            // This is a part of GLES-3 but not WebGL2 core
+            !cfg!(target_arch = "wasm32") || extensions.contains("WEBGL_compressed_texture_etc"),
+        );
+        //Note: `wgt::Features::TEXTURE_COMPRESSION_BC` can't be fully supported, but there are
+        // "WEBGL_compressed_texture_s3tc" and "WEBGL_compressed_texture_s3tc_srgb" which could partially cover it
+        features.set(
+            wgt::Features::TEXTURE_COMPRESSION_ASTC_LDR,
+            extensions.contains("GL_KHR_texture_compression_astc_ldr")
+                || extensions.contains("WEBGL_compressed_texture_astc"),
         );
 
         let mut private_caps = super::PrivateCapabilities::empty();
@@ -309,11 +333,11 @@ impl super::Adapter {
         );
         private_caps.set(
             super::PrivateCapabilities::INDEX_BUFFER_ROLE_CHANGE,
-            cfg!(not(target_arch = "wasm32")),
+            !cfg!(target_arch = "wasm32"),
         );
         private_caps.set(
             super::PrivateCapabilities::CAN_DISABLE_DRAW_BUFFER,
-            cfg!(not(target_arch = "wasm32")),
+            !cfg!(target_arch = "wasm32"),
         );
 
         let max_texture_size = gl.get_parameter_i32(glow::MAX_TEXTURE_SIZE) as u32;
@@ -378,6 +402,18 @@ impl super::Adapter {
             max_push_constant_size: 0,
             min_uniform_buffer_offset_alignment,
             min_storage_buffer_offset_alignment,
+            max_inter_stage_shader_components: gl.get_parameter_i32(glow::MAX_VARYING_COMPONENTS)
+                as u32,
+            max_compute_workgroup_storage_size: if supports_work_group_params {
+                gl.get_parameter_i32(glow::MAX_COMPUTE_SHARED_MEMORY_SIZE) as u32
+            } else {
+                0
+            },
+            max_compute_invocations_per_workgroup: if supports_work_group_params {
+                gl.get_parameter_i32(glow::MAX_COMPUTE_WORK_GROUP_INVOCATIONS) as u32
+            } else {
+                0
+            },
             max_compute_workgroup_size_x: if supports_work_group_params {
                 gl.get_parameter_indexed_i32(glow::MAX_COMPUTE_WORK_GROUP_SIZE, 0) as u32
             } else {
@@ -550,6 +586,8 @@ impl crate::Adapter<super::Api> for super::Adapter {
             Tf::Rg8Uint | Tf::Rg8Sint | Tf::R32Uint | Tf::R32Sint => {
                 unfiltered_color | Tfc::STORAGE
             }
+            Tf::R16Unorm | Tf::Rg16Unorm | Tf::Rgba16Unorm => filtered_color,
+            Tf::R16Snorm | Tf::Rg16Snorm | Tf::Rgba16Snorm => filtered_color,
             Tf::R32Float => unfiltered_color,
             Tf::Rg16Uint | Tf::Rg16Sint => unfiltered_color,
             Tf::Rg16Float | Tf::Rgba8Unorm | Tf::Rgba8UnormSrgb => filtered_color | Tfc::STORAGE,

@@ -1,0 +1,26 @@
+jobs:
+- template: azure-pipelines-template.yml
+  parameters:
+    name: macOS
+    vmImage: macOS-latest
+    target: x86_64-apple-darwin
+- template: azure-pipelines-template.yml
+  parameters:
+    name: Linux
+    vmImage: ubuntu-latest
+    target: x86_64-unknown-linux-gnu
+- template: azure-pipelines-template.yml
+  parameters:
+    name: Windows
+    vmImage: vs2017-win2016
+    target: x86_64-pc-windows-msvc
+- template: azure-pipelines-template.yml
+  parameters:
+    name: Windows_GNU
+    vmImage: vs2017-win2016
+    target: i686-pc-windows-gnu
+- template: azure-pipelines-template.yml
+  parameters:
+    name: Linux_WASM
+    vmImage: ubuntu-latest
+    target: x86_64-unknown-linux-gnu

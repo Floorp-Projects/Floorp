@@ -15,9 +15,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "matchRequest",
-  "devtools/server/actors/network-monitor/network-observer",
-  true
+  "NetworkUtils",
+  "devtools/server/actors/network-monitor/utils/network-utils"
 );
 loader.lazyRequireGetter(
   this,
@@ -107,7 +106,7 @@ StackTraceCollector.prototype = {
       }
     }
 
-    if (!matchRequest(channel, this.filters)) {
+    if (!NetworkUtils.matchRequest(channel, this.filters)) {
       return;
     }
 

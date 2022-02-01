@@ -30,9 +30,7 @@ add_task(
     );
     Assert.equal(packet2.why.type, "breakpoint");
 
-    threadFront.resume();
-
-    const packet3 = await waitForPause(threadFront);
+    const packet3 = await resumeAndWaitForPause(threadFront);
     testDbgStatement(packet3);
 
     await resume(threadFront);

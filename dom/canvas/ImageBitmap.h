@@ -200,6 +200,11 @@ class ImageBitmap final : public nsISupports, public nsWrapperCache {
       ErrorResult& aRv);
 
   static already_AddRefed<ImageBitmap> CreateInternal(
+      nsIGlobalObject* aGlobal, OffscreenCanvas& aOffscreenCanvas,
+      const Maybe<gfx::IntRect>& aCropRect, const ImageBitmapOptions& aOptions,
+      ErrorResult& aRv);
+
+  static already_AddRefed<ImageBitmap> CreateInternal(
       nsIGlobalObject* aGlobal, ImageData& aImageData,
       const Maybe<gfx::IntRect>& aCropRect, const ImageBitmapOptions& aOptions,
       ErrorResult& aRv);

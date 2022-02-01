@@ -12,11 +12,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    `JxlDecoderGetBoxType`, `JxlDecoderGetBoxSizeRaw` and
    `JxlDecoderSetDecompressBoxes`
  - decoder API: ability to mark the input is finished: `JxlDecoderCloseInput`
+ - encoder API: ability to add metadata boxes, added new functions
+   `JxlEncoderAddBox`, `JxlEncoderUseBoxes`, `JxlEncoderCloseBoxes` and
+   `JxlEncoderCloseFrames`.
+ - decoder API: new function `JxlDecoderSetCoalesced` to allow decoding
+   non-coalesced (unblended) frames, e.g. layers of a composite still image
+   or the cropped frames of a recompressed GIF/APNG.
+ - decoder API: field added to `JxlFrameHeader`: a `JxlLayerInfo` struct
+   that contains crop dimensions and offsets and blending information for
+   the non-coalesced case.
+ - decoder API: new function `JxlDecoderGetExtraChannelBlendInfo` to get
+   the blending information for extra channels in the non-coalesced case.
 
 ### Changed
-- decoder API: `JxlDecoderCloseInput` is required when using JXL_DEC_BOX, and
-  also encouraged, but not required for backwards compatiblity, for any other
-  usage of the decoder.
+- decoder API: using `JxlDecoderCloseInput` at the end of all input is required
+  when using JXL_DEC_BOX, and is now also encouraged in other cases, but not
+  required in those other cases for backwards compatiblity.
+- encoder API: `JxlEncoderCloseInput` now closes both frames and boxes input.
 
 ## [0.6.1] - 2021-10-29
 ### Changed

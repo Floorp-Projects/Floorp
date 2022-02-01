@@ -6,13 +6,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use crate::context::Context;
+use crate::decoded::Decoded;
+use crate::error::Error;
+use crate::result::Result;
+use crate::variant::Variant;
+use crate::version::Version;
 use base64;
-use super::context::Context;
-use super::decoded::Decoded;
-use super::error::Error;
-use super::result::Result;
-use super::variant::Variant;
-use super::version::Version;
 
 /// Structure containing the options.
 struct Options {
@@ -43,13 +43,13 @@ pub fn decode_string(encoded: &str) -> Result<Decoded> {
         let hash = base64::decode(items[5])?;
 
         Ok(Decoded {
-            variant: variant,
-            version: version,
+            variant,
+            version,
             mem_cost: options.mem_cost,
             time_cost: options.time_cost,
             parallelism: options.parallelism,
-            salt: salt,
-            hash: hash,
+            salt,
+            hash,
         })
     } else if items.len() == 5 {
         decode_empty(items[0])?;
@@ -59,18 +59,17 @@ pub fn decode_string(encoded: &str) -> Result<Decoded> {
         let hash = base64::decode(items[4])?;
 
         Ok(Decoded {
-            variant: variant,
+            variant,
             version: Version::Version10,
             mem_cost: options.mem_cost,
             time_cost: options.time_cost,
             parallelism: options.parallelism,
-            salt: salt,
-            hash: hash,
+            salt,
+            hash,
         })
     } else {
-        return Err(Error::DecodingFail);
+        Err(Error::DecodingFail)
     }
-
 }
 
 fn decode_empty(str: &str) -> Result<()> {
@@ -132,7 +131,7 @@ fn decode_version(str: &str) -> Result<Version> {
 }
 
 /// Encodes the hash and context.
-pub fn encode_string(context: &Context, hash: &Vec<u8>) -> String {
+pub fn encode_string(context: &Context, hash: &[u8]) -> String {
     format!(
         "${}$v={}$m={},t={},p={}${}${}",
         context.config.variant,
@@ -156,18 +155,22 @@ pub fn num_len(number: u32) -> u32 {
     len
 }
 
-
 #[cfg(test)]
 mod tests {
 
-    use config::Config;
-    use context::Context;
-    use decoded::Decoded;
-    use error::Error;
-    use thread_mode::ThreadMode;
-    use variant::Variant;
-    use version::Version;
-    use super::*;
+    #[cfg(feature = "crossbeam-utils")]
+    use crate::config::Config;
+    #[cfg(feature = "crossbeam-utils")]
+    use crate::context::Context;
+    use crate::decoded::Decoded;
+    #[cfg(feature = "crossbeam-utils")]
+    use crate::encoding::encode_string;
+    use crate::encoding::{base64_len, decode_string, num_len};
+    use crate::error::Error;
+    #[cfg(feature = "crossbeam-utils")]
+    use crate::thread_mode::ThreadMode;
+    use crate::variant::Variant;
+    use crate::version::Version;
 
     #[test]
     fn base64_len_returns_correct_length() {
@@ -360,6 +363,7 @@ mod tests {
         assert_eq!(result, Err(Error::DecodingFail));
     }
 
+    #[cfg(feature = "crossbeam-utils")]
     #[test]
     fn encode_string_returns_correct_string() {
         let hash = b"12345678901234567890123456789012".to_vec();

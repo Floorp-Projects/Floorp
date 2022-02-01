@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Storage inspector test for Cache</title>
+</head>
+<body>
+  <h1>Cache overflow</h1>
+<script>
+  "use strict";
+  async function setup() { // eslint-disable-line no-unused-vars
+    const cache = await caches.open("lorem");
+    for (let i = 0; i < 100; i++) {
+      await cache.add(`storage-blank.html?${i}`);
+    }
+  }
+  function clear() { // eslint-disable-line no-unused-vars
+    return caches.delete("lorem");
+  }
+</script>
+
+</body>
+</html>

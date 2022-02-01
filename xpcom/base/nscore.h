@@ -151,19 +151,6 @@
 
 #define XPCOM_API(type) NS_EXTERN_C type
 
-#if (defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING))
-/* Make refcnt logging part of the build. This doesn't mean that
- * actual logging will occur (that requires a separate enable; see
- * nsTraceRefcnt and nsISupportsImpl.h for more information).  */
-#  define NS_BUILD_REFCNT_LOGGING
-#endif
-
-/* If NO_BUILD_REFCNT_LOGGING is defined then disable refcnt logging
- * in the build. This overrides FORCE_BUILD_REFCNT_LOGGING. */
-#if defined(NO_BUILD_REFCNT_LOGGING)
-#  undef NS_BUILD_REFCNT_LOGGING
-#endif
-
 /* If a program allocates memory for the lifetime of the app, it doesn't make
  * sense to touch memory pages and free that memory at shutdown,
  * unless we are running leak stats.

@@ -1846,6 +1846,12 @@ bool JSStructuredCloneWriter::startWrite(HandleValue v) {
       case ESClass::Function:
         break;
 
+#ifdef ENABLE_RECORD_TUPLE
+      case ESClass::Record:
+      case ESClass::Tuple:
+        MOZ_CRASH("Record and Tuple are not supported");
+#endif
+
       case ESClass::Other: {
         if (obj->canUnwrapAs<TypedArrayObject>()) {
           return writeTypedArray(obj);

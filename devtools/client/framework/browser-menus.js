@@ -13,7 +13,6 @@
  */
 
 const { Cu } = require("chrome");
-const Services = require("Services");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const MENUS_L10N = new LocalizationHelper(
   "devtools/client/locales/menus.properties"
@@ -293,15 +292,10 @@ function addTopLevelItems(doc) {
   menu.insertBefore(pageSourceMenu, extensionsForDevelopersMenu);
 
   const taskManagerMenu = doc.getElementById("menu_taskManager");
-  if (Services.prefs.getBoolPref("browser.proton.enabled", false)) {
-    const remoteDebuggingMenu = doc.getElementById(
-      "menu_devtools_remotedebugging"
-    );
-    menu.insertBefore(taskManagerMenu, remoteDebuggingMenu);
-  } else {
-    // When proton is preffed off, this is in the "more" section instead.
-    taskManagerMenu.hidden = true;
-  }
+  const remoteDebuggingMenu = doc.getElementById(
+    "menu_devtools_remotedebugging"
+  );
+  menu.insertBefore(taskManagerMenu, remoteDebuggingMenu);
 }
 
 /**

@@ -19,19 +19,19 @@ import org.junit.runner.RunWith
 class StorageControllerTest : BaseSessionTest() {
 
     @Test fun clearData() {
-        sessionRule.session.loadUri("https://example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
-        sessionRule.session.evaluateJS("""
+        mainSession.evaluateJS("""
             localStorage.setItem('ctx', 'test');
             document.cookie = 'ctx=test';
         """)
 
-        var localStorage = sessionRule.session.evaluateJS("""
+        var localStorage = mainSession.evaluateJS("""
             localStorage.getItem('ctx') || 'null'
         """) as String
 
-        var cookie = sessionRule.session.evaluateJS("""
+        var cookie = mainSession.evaluateJS("""
             document.cookie || 'null'
         """) as String
 
@@ -46,11 +46,11 @@ class StorageControllerTest : BaseSessionTest() {
             sessionRule.runtime.storageController.clearData(
                 StorageController.ClearFlags.ALL))
 
-        localStorage = sessionRule.session.evaluateJS("""
+        localStorage = mainSession.evaluateJS("""
             localStorage.getItem('ctx') || 'null'
         """) as String
 
-        cookie = sessionRule.session.evaluateJS("""
+        cookie = mainSession.evaluateJS("""
             document.cookie || 'null'
         """) as String
 
@@ -63,19 +63,19 @@ class StorageControllerTest : BaseSessionTest() {
     }
 
     @Test fun clearDataFlags() {
-        sessionRule.session.loadUri("https://example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
-        sessionRule.session.evaluateJS("""
+        mainSession.evaluateJS("""
             localStorage.setItem('ctx', 'test');
             document.cookie = 'ctx=test';
         """)
 
-        var localStorage = sessionRule.session.evaluateJS("""
+        var localStorage = mainSession.evaluateJS("""
             localStorage.getItem('ctx') || 'null'
         """) as String
 
-        var cookie = sessionRule.session.evaluateJS("""
+        var cookie = mainSession.evaluateJS("""
             document.cookie || 'null'
         """) as String
 
@@ -90,11 +90,11 @@ class StorageControllerTest : BaseSessionTest() {
             sessionRule.runtime.storageController.clearData(
                 StorageController.ClearFlags.COOKIES))
 
-        localStorage = sessionRule.session.evaluateJS("""
+        localStorage = mainSession.evaluateJS("""
             localStorage.getItem('ctx') || 'null'
         """) as String
 
-        cookie = sessionRule.session.evaluateJS("""
+        cookie = mainSession.evaluateJS("""
             document.cookie || 'null'
         """) as String
 
@@ -114,7 +114,7 @@ class StorageControllerTest : BaseSessionTest() {
                    cookie,
                    equalTo("null"))
 
-        sessionRule.session.evaluateJS("""
+        mainSession.evaluateJS("""
             document.cookie = 'ctx=test';
         """)
 
@@ -122,11 +122,11 @@ class StorageControllerTest : BaseSessionTest() {
             sessionRule.runtime.storageController.clearData(
                 StorageController.ClearFlags.DOM_STORAGES))
 
-        localStorage = sessionRule.session.evaluateJS("""
+        localStorage = mainSession.evaluateJS("""
             localStorage.getItem('ctx') || 'null'
         """) as String
 
-        cookie = sessionRule.session.evaluateJS("""
+        cookie = mainSession.evaluateJS("""
             document.cookie || 'null'
         """) as String
 
@@ -137,7 +137,7 @@ class StorageControllerTest : BaseSessionTest() {
                    cookie,
                    equalTo("ctx=test"))
 
-        sessionRule.session.evaluateJS("""
+        mainSession.evaluateJS("""
             localStorage.setItem('ctx', 'test');
         """)
 
@@ -145,11 +145,11 @@ class StorageControllerTest : BaseSessionTest() {
             sessionRule.runtime.storageController.clearData(
                 StorageController.ClearFlags.SITE_DATA))
 
-        localStorage = sessionRule.session.evaluateJS("""
+        localStorage = mainSession.evaluateJS("""
             localStorage.getItem('ctx') || 'null'
         """) as String
 
-        cookie = sessionRule.session.evaluateJS("""
+        cookie = mainSession.evaluateJS("""
             document.cookie || 'null'
         """) as String
 
@@ -162,19 +162,19 @@ class StorageControllerTest : BaseSessionTest() {
     }
 
     @Test fun clearDataFromHost() {
-        sessionRule.session.loadUri("https://example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
-        sessionRule.session.evaluateJS("""
+        mainSession.evaluateJS("""
             localStorage.setItem('ctx', 'test');
             document.cookie = 'ctx=test';
         """)
 
-        var localStorage = sessionRule.session.evaluateJS("""
+        var localStorage = mainSession.evaluateJS("""
             localStorage.getItem('ctx') || 'null'
         """) as String
 
-        var cookie = sessionRule.session.evaluateJS("""
+        var cookie = mainSession.evaluateJS("""
             document.cookie || 'null'
         """) as String
 
@@ -190,11 +190,11 @@ class StorageControllerTest : BaseSessionTest() {
                 "test.com",
                 StorageController.ClearFlags.ALL))
 
-        localStorage = sessionRule.session.evaluateJS("""
+        localStorage = mainSession.evaluateJS("""
             localStorage.getItem('ctx') || 'null'
         """) as String
 
-        cookie = sessionRule.session.evaluateJS("""
+        cookie = mainSession.evaluateJS("""
             document.cookie || 'null'
         """) as String
 
@@ -210,11 +210,11 @@ class StorageControllerTest : BaseSessionTest() {
                 "example.com",
                 StorageController.ClearFlags.ALL))
 
-        localStorage = sessionRule.session.evaluateJS("""
+        localStorage = mainSession.evaluateJS("""
             localStorage.getItem('ctx') || 'null'
         """) as String
 
-        cookie = sessionRule.session.evaluateJS("""
+        cookie = mainSession.evaluateJS("""
             document.cookie || 'null'
         """) as String
 
@@ -231,19 +231,19 @@ class StorageControllerTest : BaseSessionTest() {
 
         // Set site data for both root domain and subdomain.
         for(domain in domains) {
-            sessionRule.session.loadUri("https://" + domain)
+            mainSession.loadUri("https://" + domain)
             sessionRule.waitForPageStop()
 
-            sessionRule.session.evaluateJS("""
+            mainSession.evaluateJS("""
                 localStorage.setItem('ctx', 'test');
                 document.cookie = 'ctx=test';
             """)
 
-            var localStorage = sessionRule.session.evaluateJS("""
+            var localStorage = mainSession.evaluateJS("""
                 localStorage.getItem('ctx') || 'null'
             """) as String
 
-            var cookie = sessionRule.session.evaluateJS("""
+            var cookie = mainSession.evaluateJS("""
                 document.cookie || 'null'
             """) as String
 
@@ -263,14 +263,14 @@ class StorageControllerTest : BaseSessionTest() {
                 StorageController.ClearFlags.ALL))
 
         for(domain in domains) {
-            sessionRule.session.loadUri("https://" + domain)
+            mainSession.loadUri("https://" + domain)
             sessionRule.waitForPageStop()
 
-            var localStorage = sessionRule.session.evaluateJS("""
+            var localStorage = mainSession.evaluateJS("""
                 localStorage.getItem('ctx') || 'null'
             """) as String
 
-            var cookie = sessionRule.session.evaluateJS("""
+            var cookie = mainSession.evaluateJS("""
                 document.cookie || 'null'
             """) as String
 
@@ -290,14 +290,14 @@ class StorageControllerTest : BaseSessionTest() {
                 StorageController.ClearFlags.ALL))
 
         for(domain in domains) {
-            sessionRule.session.loadUri("https://" + domain)
+            mainSession.loadUri("https://" + domain)
             sessionRule.waitForPageStop()
 
-            var localStorage = sessionRule.session.evaluateJS("""
+            var localStorage = mainSession.evaluateJS("""
                 localStorage.getItem('ctx') || 'null'
             """) as String
 
-            var cookie = sessionRule.session.evaluateJS("""
+            var cookie = mainSession.evaluateJS("""
                 document.cookie || 'null'
             """) as String
 

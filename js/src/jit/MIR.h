@@ -352,10 +352,13 @@ class AliasSet {
     // Internal state of the random number generator
     RNG = 1 << 16,
 
-    Last = RNG,
-    Any = Last | (Last - 1),
+    // The pendingException slot on the wasm tls object.
+    WasmPendingException = 1 << 17,
 
-    NumCategories = 17,
+    Last = WasmPendingException,
+
+    Any = Last | (Last - 1),
+    NumCategories = 18,
 
     // Indicates load or store.
     Store_ = 1 << 31
@@ -595,8 +598,8 @@ class MDefinition : public MNode {
   // called on the same instruction to mutate the instruction, such as
   // updating the return type, the range and the specialization of the
   // instruction.
-  virtual bool needTruncation(TruncateKind kind);
-  virtual void truncate();
+  virtual bool needTruncation(TruncateKind kind) const;
+  virtual void truncate(TruncateKind kind);
 
   // Determine what kind of truncate this node prefers for the operand at the
   // given index.
@@ -1201,6 +1204,9 @@ class MVariadicT : public T {
   }
 };
 
+// An instruction with a variable number of operands. Note that the
+// MFoo::New constructor for variadic instructions fallibly
+// initializes the operands_ array and must be checked for OOM.
 using MVariadicInstruction = MVariadicT<MInstruction>;
 
 MIR_OPCODE_CLASS_GENERATED
@@ -1227,7 +1233,8 @@ class MLimitedTruncate : public MUnaryInstruction,
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   void computeRange(TempAllocator& alloc) override;
-  bool needTruncation(TruncateKind kind) override;
+  bool needTruncation(TruncateKind kind) const override;
+  void truncate(TruncateKind kind) override;
   TruncateKind operandTruncateKind(size_t index) const override;
   TruncateKind truncateKind() const { return truncate_; }
   void setTruncateKind(TruncateKind kind) { truncate_ = kind; }
@@ -1311,8 +1318,8 @@ class MConstant : public MNullaryInstruction {
   }
 
   void computeRange(TempAllocator& alloc) override;
-  bool needTruncation(TruncateKind kind) override;
-  void truncate() override;
+  bool needTruncation(TruncateKind kind) const override;
+  void truncate(TruncateKind kind) override;
 
   bool canProduceFloat32() const override;
 
@@ -2665,8 +2672,8 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
 
   void trySpecializeFloat32(TempAllocator& alloc) override;
   bool isFloat32Commutative() const override { return true; }
-  bool needTruncation(TruncateKind kind) override;
-  void truncate() override;
+  bool needTruncation(TruncateKind kind) const override;
+  void truncate(TruncateKind kind) override;
   TruncateKind operandTruncateKind(size_t index) const override;
 
 #ifdef DEBUG
@@ -2723,6 +2730,7 @@ class MBox : public MUnaryInstruction, public NoTypePolicy::Data {
 static inline Assembler::Condition JSOpToCondition(
     MCompare::CompareType compareType, JSOp op) {
   bool isSigned = (compareType != MCompare::Compare_UInt32 &&
+                   compareType != MCompare::Compare_UInt64 &&
                    compareType != MCompare::Compare_UIntPtr);
   return JSOpToCondition(op, isSigned);
 }
@@ -3012,8 +3020,8 @@ class MToDouble : public MToFPInstruction {
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   void computeRange(TempAllocator& alloc) override;
-  bool needTruncation(TruncateKind kind) override;
-  void truncate() override;
+  bool needTruncation(TruncateKind kind) const override;
+  void truncate(TruncateKind kind) override;
   TruncateKind operandTruncateKind(size_t index) const override;
 
 #ifdef DEBUG
@@ -4739,8 +4747,8 @@ class MAdd : public MBinaryArithInstruction {
 
   bool fallible() const;
   void computeRange(TempAllocator& alloc) override;
-  bool needTruncation(TruncateKind kind) override;
-  void truncate() override;
+  bool needTruncation(TruncateKind kind) const override;
+  void truncate(TruncateKind kind) override;
   TruncateKind operandTruncateKind(size_t index) const override;
 
   [[nodiscard]] bool writeRecoverData(
@@ -4776,8 +4784,8 @@ class MSub : public MBinaryArithInstruction {
 
   bool fallible() const;
   void computeRange(TempAllocator& alloc) override;
-  bool needTruncation(TruncateKind kind) override;
-  void truncate() override;
+  bool needTruncation(TruncateKind kind) const override;
+  void truncate(TruncateKind kind) override;
   TruncateKind operandTruncateKind(size_t index) const override;
 
   [[nodiscard]] bool writeRecoverData(
@@ -4869,8 +4877,8 @@ class MMul : public MBinaryArithInstruction {
   bool isFloat32Commutative() const override { return true; }
 
   void computeRange(TempAllocator& alloc) override;
-  bool needTruncation(TruncateKind kind) override;
-  void truncate() override;
+  bool needTruncation(TruncateKind kind) const override;
+  void truncate(TruncateKind kind) override;
   TruncateKind operandTruncateKind(size_t index) const override;
 
   Mode mode() const { return mode_; }
@@ -4980,8 +4988,8 @@ class MDiv : public MBinaryArithInstruction {
 
   void computeRange(TempAllocator& alloc) override;
   bool fallible() const;
-  bool needTruncation(TruncateKind kind) override;
-  void truncate() override;
+  bool needTruncation(TruncateKind kind) const override;
+  void truncate(TruncateKind kind) override;
   void collectRangeInfoPreTrunc() override;
   TruncateKind operandTruncateKind(size_t index) const override;
 
@@ -5158,8 +5166,8 @@ class MMod : public MBinaryArithInstruction {
   bool fallible() const;
 
   void computeRange(TempAllocator& alloc) override;
-  bool needTruncation(TruncateKind kind) override;
-  void truncate() override;
+  bool needTruncation(TruncateKind kind) const override;
+  void truncate(TruncateKind kind) override;
   void collectRangeInfoPreTrunc() override;
   TruncateKind operandTruncateKind(size_t index) const override;
 
@@ -5834,8 +5842,8 @@ class MPhi final : public MDefinition,
   void setCanConsumeFloat32(bool can) { canConsumeFloat32_ = can; }
 
   TruncateKind operandTruncateKind(size_t index) const override;
-  bool needTruncation(TruncateKind kind) override;
-  void truncate() override;
+  bool needTruncation(TruncateKind kind) const override;
+  void truncate(TruncateKind kind) override;
 
   PhiUsage getUsageAnalysis() const { return usageAnalysis_; }
   void setUsageAnalysis(PhiUsage pu) {
@@ -9015,11 +9023,13 @@ class MWasmLoadTls : public MUnaryInstruction, public NoTypePolicy::Data {
     // are allowed.
     MOZ_ASSERT(aliases_.flags() ==
                    AliasSet::Load(AliasSet::WasmHeapMeta).flags() ||
+               aliases_.flags() ==
+                   AliasSet::Load(AliasSet::WasmPendingException).flags() ||
                aliases_.flags() == AliasSet::None().flags());
 
     // The only types supported at the moment.
     MOZ_ASSERT(type == MIRType::Pointer || type == MIRType::Int32 ||
-               type == MIRType::Int64);
+               type == MIRType::Int64 || type == MIRType::RefOrNull);
 
     setMovable();
     setResultType(type);
@@ -9896,14 +9906,16 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
   FixedList<AnyRegister> argRegs_;
   uint32_t stackArgAreaSizeUnaligned_;
   ABIArg instanceArg_;
+  bool inTry_;
 
   MWasmCall(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee,
-            uint32_t stackArgAreaSizeUnaligned)
+            uint32_t stackArgAreaSizeUnaligned, bool inTry)
       : MVariadicInstruction(classOpcode),
         desc_(desc),
         callee_(callee),
         builtinMethodFailureMode_(wasm::FailureMode::Infallible),
-        stackArgAreaSizeUnaligned_(stackArgAreaSizeUnaligned) {}
+        stackArgAreaSizeUnaligned_(stackArgAreaSizeUnaligned),
+        inTry_(inTry) {}
 
  public:
   INSTRUCTION_HEADER(WasmCall)
@@ -9917,7 +9929,7 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
 
   static MWasmCall* New(TempAllocator& alloc, const wasm::CallSiteDesc& desc,
                         const wasm::CalleeDesc& callee, const Args& args,
-                        uint32_t stackArgAreaSizeUnaligned,
+                        uint32_t stackArgAreaSizeUnaligned, bool inTry,
                         MDefinition* tableIndex = nullptr);
 
   static MWasmCall* NewBuiltinInstanceMethodCall(
@@ -9944,6 +9956,10 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
   bool possiblyCalls() const override { return true; }
 
   const ABIArg& instanceArg() const { return instanceArg_; }
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+  bool inTry() { return inTry_; }
+#endif
 };
 
 class MWasmSelect : public MTernaryInstruction, public NoTypePolicy::Data {
@@ -10405,6 +10421,140 @@ class MIonToWasmCall final : public MVariadicInstruction,
   bool isConsistentFloat32Use(MUse* use) const override;
 #endif
 };
+
+// Wasm Exception Handling
+
+// Get a pointer to an exception's data pointer stored in an ArrayBufferObject.
+class MWasmExceptionDataPointer : public MUnaryInstruction,
+                                  public NoTypePolicy::Data {
+  explicit MWasmExceptionDataPointer(MDefinition* exn)
+      : MUnaryInstruction(classOpcode, exn) {
+    MOZ_ASSERT(exn != nullptr);
+    MOZ_ASSERT(exn->type() == MIRType::RefOrNull);
+    setResultType(MIRType::Pointer);
+    // This guard below is crucial in keeping the exception live where this
+    // instruction is being used to load and store values from the exception
+    // buffer.
+    setGuard();  // Not movable, not removable for the above reasons.
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmExceptionDataPointer)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, exn))
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::Any);
+  }
+};
+
+// Load a Wasm numeric or Simd128 value from an MWasmExceptionDataPointer.
+class MWasmLoadExceptionDataValue : public MUnaryInstruction,
+                                    public NoTypePolicy::Data {
+  uint32_t offset_;
+
+  MWasmLoadExceptionDataValue(MDefinition* exnDataPtr, uint32_t offset,
+                              MIRType type)
+      : MUnaryInstruction(classOpcode, exnDataPtr), offset_(offset) {
+    MOZ_ASSERT(IsNumberType(type) || type == MIRType::Simd128);
+    setResultType(type);
+    // This guard below is crucial in keeping this loading instruction in an
+    // area where the MWasmExceptionDataPointer exnDataPtr's exn argument is
+    // live.
+    setGuard();  // Not movable, not removable for the above reasons.
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmLoadExceptionDataValue)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, exnDataPtr))
+
+  uint32_t offset() const { return offset_; }
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::Any);
+  }
+};
+
+// Store a Wasm numeric or Simd128 value to an MWasmExceptionDataPointer.
+class MWasmStoreExceptionDataValue : public MBinaryInstruction,
+                                     public NoTypePolicy::Data {
+  uint32_t offset_;
+
+  MWasmStoreExceptionDataValue(MDefinition* exnDataPtr, uint32_t offset,
+                               MDefinition* value)
+      : MBinaryInstruction(classOpcode, exnDataPtr, value), offset_(offset) {
+    // Even though an AliasSet::Store makes the instruction effectful thus not
+    // removable, we set an additional guard as a precaution measure to make
+    // sure the exception which is the argument of exnDataPtr is still live.
+    setGuard();  // Not removable, not movable.
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmStoreExceptionDataValue)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, exnDataPtr), (1, value))
+
+  uint32_t offset() const { return offset_; }
+
+  // Using AliasSet::Store marks the instruction as effectful, which makes it
+  // non removable.
+  AliasSet getAliasSet() const override {
+    return AliasSet::Store(AliasSet::Any);
+  }
+};
+
+// Get a pointer to an exception's refs pointer stored in an ArrayObject.
+class MWasmExceptionRefsPointer : public MUnaryInstruction,
+                                  public NoTypePolicy::Data {
+  uint32_t refCount_ = 0;
+
+  MWasmExceptionRefsPointer(MDefinition* exn, uint32_t refCount)
+      : MUnaryInstruction(classOpcode, exn), refCount_(refCount) {
+    setResultType(MIRType::Pointer);
+    // This guard below is crucial in keeping the exception live where this
+    // instruction is being used to load values from the exception's refs array.
+    setGuard();  // Not movable, not removable for the above reasons.
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmExceptionRefsPointer)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, exn))
+
+  uint32_t refCount() const { return refCount_; }
+  AliasSet getAliasSet() const override {
+    return AliasSet::Store(AliasSet::Any);
+  }
+};
+
+// Load a Wasm reference or rtt value from an MWasmExceptionRefsPointer.
+class MWasmLoadExceptionRefsValue : public MUnaryInstruction,
+                                    public NoTypePolicy::Data {
+  int32_t offset_;
+
+  MWasmLoadExceptionRefsValue(MDefinition* exnRefsPtr, int32_t offset)
+      : MUnaryInstruction(classOpcode, exnRefsPtr), offset_(offset) {
+    setResultType(MIRType::RefOrNull);
+    // This guard below is crucial in keeping this loading instruction in an
+    // area where the MWasmExceptionRefsPointer exnRefsPtr's exn argument is
+    // live.
+    setGuard();  // Not movable, not removable for the above reasons.
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmLoadExceptionRefsValue)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, exnRefsPtr))
+
+  int32_t offset() const { return offset_; }
+
+  AliasSet getAliasSet() const override {
+    return AliasSet::Load(AliasSet::Any);
+  }
+};
+
+// End Wasm Exception Handling
 
 #undef INSTRUCTION_HEADER
 

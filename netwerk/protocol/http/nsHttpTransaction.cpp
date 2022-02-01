@@ -26,7 +26,9 @@
 #include "nsHttpDigestAuth.h"
 #include "nsHttpHandler.h"
 #include "nsHttpNTLMAuth.h"
-#include "nsHttpNegotiateAuth.h"
+#ifdef MOZ_AUTH_EXTENSION
+#  include "nsHttpNegotiateAuth.h"
+#endif
 #include "nsHttpRequestHead.h"
 #include "nsHttpResponseHead.h"
 #include "nsICancelable.h"
@@ -527,9 +529,6 @@ void nsHttpTransaction::SetConnection(nsAHttpConnection* conn) {
     mConnection = conn;
     if (mConnection) {
       mIsHttp3Used = mConnection->Version() == HttpVersion::v3_0;
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-      mConnection->SanityCheck();
-#endif
     }
   }
 }
@@ -1872,7 +1871,8 @@ char* nsHttpTransaction::LocateHttpStart(char* buf, uint32_t len,
   // mLineBuf can contain partial match from previous search
   if (!mLineBuf.IsEmpty()) {
     MOZ_ASSERT(mLineBuf.Length() < HTTPHeaderLen);
-    int32_t checkChars = std::min(len, HTTPHeaderLen - mLineBuf.Length());
+    int32_t checkChars =
+        std::min<uint32_t>(len, HTTPHeaderLen - mLineBuf.Length());
     if (nsCRT::strncasecmp(buf, HTTPHeader + mLineBuf.Length(), checkChars) ==
         0) {
       mLineBuf.Append(buf, checkChars);
@@ -2440,18 +2440,34 @@ nsresult nsHttpTransaction::ProcessData(char* buf, uint32_t count,
     if (count && bytesConsumed) memmove(buf, buf + bytesConsumed, count);
 
     // report the completed response header
-    if (mActivityDistributor && mResponseHead && mHaveAllHeaders &&
-        !mReportedResponseHeader) {
-      mReportedResponseHeader = true;
-      nsAutoCString completeResponseHeaders;
-      mResponseHead->Flatten(completeResponseHeaders, false);
-      completeResponseHeaders.AppendLiteral("\r\n");
-      rv = mActivityDistributor->ObserveActivityWithArgs(
-          HttpActivityArgs(mChannelId), NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
-          NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_HEADER, PR_Now(), 0,
-          completeResponseHeaders);
-      if (NS_FAILED(rv)) {
-        LOG3(("ObserveActivity failed (%08x)", static_cast<uint32_t>(rv)));
+    if (mActivityDistributor && mResponseHead && mHaveAllHeaders) {
+      auto reportResponseHeader = [&](uint32_t aSubType) {
+        nsAutoCString completeResponseHeaders;
+        mResponseHead->Flatten(completeResponseHeaders, false);
+        completeResponseHeaders.AppendLiteral("\r\n");
+        rv = mActivityDistributor->ObserveActivityWithArgs(
+            HttpActivityArgs(mChannelId),
+            NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION, aSubType, PR_Now(), 0,
+            completeResponseHeaders);
+        if (NS_FAILED(rv)) {
+          LOG3(("ObserveActivity failed (%08x)", static_cast<uint32_t>(rv)));
+        }
+      };
+
+      if (mConnection->IsProxyConnectInProgress()) {
+        nsCOMPtr<nsIHttpActivityDistributor> distributor =
+            do_QueryInterface(mActivityDistributor);
+        bool observeProxyResponse = false;
+        if (distributor) {
+          Unused << distributor->GetObserveProxyResponse(&observeProxyResponse);
+          if (observeProxyResponse) {
+            reportResponseHeader(
+                NS_HTTP_ACTIVITY_SUBTYPE_PROXY_RESPONSE_HEADER);
+          }
+        }
+      } else if (!mReportedResponseHeader) {
+        mReportedResponseHeader = true;
+        reportResponseHeader(NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_HEADER);
       }
     }
   }
@@ -2632,7 +2648,9 @@ bool nsHttpTransaction::IsStickyAuthSchemeAt(nsACString const& auth) {
     // using a new instance because of thread safety of auth modules refcnt
     nsCOMPtr<nsIHttpAuthenticator> authenticator;
     if (schema.EqualsLiteral("negotiate")) {
+#ifdef MOZ_AUTH_EXTENSION
       authenticator = new nsHttpNegotiateAuth();
+#endif
     } else if (schema.EqualsLiteral("basic")) {
       authenticator = new nsHttpBasicAuth();
     } else if (schema.EqualsLiteral("digest")) {

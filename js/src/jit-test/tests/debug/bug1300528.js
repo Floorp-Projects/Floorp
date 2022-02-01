@@ -16,13 +16,14 @@ for (lfLocal in this) {
         lfGlobal[lfLocal] = this[lfLocal];
     }
 }
-lfGlobal.offThreadCompileScript(`
+lfGlobal.offThreadCompileToStencil(`
   var dbg = new Debugger(g);
   dbg.onEnterFrame = function (frame) {
     var frameThis = frame.this;
   }
 `);
-lfGlobal.runOffThreadScript();
+var stencil = lfGlobal.finishOffThreadCompileToStencil();
+lfGlobal.evalStencil(stencil);
 assertThrowsInstanceOf(test, ReferenceError);
 function test() {
     function check(fun, msg, todo) {

@@ -30,6 +30,9 @@ def prepare_mozconfig(mozconfig):
 
 @depends("OLD_CONFIGURE", build_project)
 def old_configure(old_configure, build_project):
+    if not old_configure:
+        die("The OLD_CONFIGURE environment variable must be set")
+
     # os.path.abspath in the sandbox will ensure forward slashes on Windows,
     # which is actually necessary because this path actually ends up literally
     # as $0, and backslashes there breaks autoconf's detection of the source
@@ -91,35 +94,13 @@ def old_configure_options(*options):
 @old_configure_options(
     "--cache-file",
     "--datadir",
-    "--enable-crashreporter",
-    "--enable-dbus",
-    "--enable-debug-js-modules",
-    "--enable-dump-painting",
-    "--enable-extensions",
-    "--enable-libproxy",
-    "--enable-logrefcnt",
-    "--enable-necko-wifi",
-    "--enable-negotiateauth",
     "--enable-official-branding",
-    "--enable-parental-controls",
-    "--enable-sandbox",
-    "--enable-system-extension-dirs",
-    "--enable-system-pixman",
-    "--enable-universalchardet",
-    "--enable-updater",
-    "--enable-xul",
-    "--enable-zipwriter",
     "--includedir",
     "--libdir",
     "--prefix",
-    "--with-android-max-sdk",
-    "--with-android-min-sdk",
     "--with-branding",
     "--with-distribution-id",
     "--with-macbundlename-prefix",
-    "--with-system-libevent",
-    "--with-system-png",
-    "--with-user-appdir",
     "--x-includes",
     "--x-libraries",
 )
@@ -146,7 +127,7 @@ def old_configure_for(old_configure_path, extra_env=None):
         prepare_configure_options,
         altered_path,
         extra_env,
-        check_build_environment,
+        build_environment,
         old_configure_path,
         "MOZILLABUILD",
         awk,

@@ -410,6 +410,11 @@ body[lwt-newtab-brighttext] {
   outline: initial;
   outline-offset: initial;
 }
+.onboardingContainer .tiles-theme-section .theme .icon.colorway,
+.onboardingContainer .tiles-theme-section .theme .label.colorway {
+  width: 20px;
+  height: 20px;
+}
 .onboardingContainer .tiles-theme-section .theme .icon {
   background-size: cover;
   width: 40px;
@@ -418,10 +423,6 @@ body[lwt-newtab-brighttext] {
   outline: 1px solid var(--in-content-border-color);
   outline-offset: -0.5px;
   z-index: -1;
-}
-.onboardingContainer .tiles-theme-section .theme .icon.colorway {
-  width: 20px;
-  height: 20px;
 }
 .onboardingContainer .tiles-theme-section .theme .icon:dir(rtl) {
   transform: scaleX(-1);

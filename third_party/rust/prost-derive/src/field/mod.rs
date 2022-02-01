@@ -32,7 +32,7 @@ impl Field {
     /// If the meta items are invalid, an error will be returned.
     /// If the field should be ignored, `None` is returned.
     pub fn new(attrs: Vec<Attribute>, inferred_tag: Option<u32>) -> Result<Option<Field>, Error> {
-        let attrs = prost_attrs(attrs)?;
+        let attrs = prost_attrs(attrs);
 
         // TODO: check for ignore attribute.
 
@@ -58,7 +58,7 @@ impl Field {
     /// If the meta items are invalid, an error will be returned.
     /// If the field should be ignored, `None` is returned.
     pub fn new_oneof(attrs: Vec<Attribute>) -> Result<Option<Field>, Error> {
-        let attrs = prost_attrs(attrs)?;
+        let attrs = prost_attrs(attrs);
 
         // TODO: check for ignore attribute.
 
@@ -135,7 +135,7 @@ impl Field {
     pub fn default(&self) -> TokenStream {
         match *self {
             Field::Scalar(ref scalar) => scalar.default(),
-            _ => quote!(::std::default::Default::default()),
+            _ => quote!(::core::default::Default::default()),
         }
     }
 
@@ -184,8 +184,8 @@ pub enum Label {
 }
 
 impl Label {
-    fn as_str(&self) -> &'static str {
-        match *self {
+    fn as_str(self) -> &'static str {
+        match self {
             Label::Optional => "optional",
             Label::Required => "required",
             Label::Repeated => "repeated",
@@ -193,7 +193,7 @@ impl Label {
     }
 
     fn variants() -> slice::Iter<'static, Label> {
-        const VARIANTS: &'static [Label] = &[Label::Optional, Label::Required, Label::Repeated];
+        const VARIANTS: &[Label] = &[Label::Optional, Label::Required, Label::Repeated];
         VARIANTS.iter()
     }
 
@@ -224,8 +224,8 @@ impl fmt::Display for Label {
 }
 
 /// Get the items belonging to the 'prost' list attribute, e.g. `#[prost(foo, bar="baz")]`.
-pub(super) fn prost_attrs(attrs: Vec<Attribute>) -> Result<Vec<Meta>, Error> {
-    Ok(attrs
+fn prost_attrs(attrs: Vec<Attribute>) -> Vec<Meta> {
+    attrs
         .iter()
         .flat_map(Attribute::parse_meta)
         .flat_map(|meta| match meta {
@@ -244,7 +244,7 @@ pub(super) fn prost_attrs(attrs: Vec<Attribute>) -> Result<Vec<Meta>, Error> {
                 NestedMeta::Lit(lit) => bail!("invalid prost attribute: {:?}", lit),
             }
         })
-        .collect())
+        .collect()
 }
 
 pub fn set_option<T>(option: &mut Option<T>, value: T, message: &str) -> Result<(), Error>
@@ -350,7 +350,7 @@ fn tags_attr(attr: &Meta) -> Result<Option<Vec<u32>>, Error> {
                     bail!("invalid tag attribute: {:?}", attr);
                 }
             }
-            return Ok(Some(tags));
+            Ok(Some(tags))
         }
         Meta::NameValue(MetaNameValue {
             lit: Lit::Str(ref lit),
@@ -360,7 +360,7 @@ fn tags_attr(attr: &Meta) -> Result<Option<Vec<u32>>, Error> {
             .split(',')
             .map(|s| s.trim().parse::<u32>().map_err(Error::from))
             .collect::<Result<Vec<u32>, _>>()
-            .map(|tags| Some(tags)),
+            .map(Some),
         _ => bail!("invalid tag attribute: {:?}", attr),
     }
 }

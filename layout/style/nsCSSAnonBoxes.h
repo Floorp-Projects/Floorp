@@ -18,9 +18,7 @@ class nsCSSAnonBoxes {
   using PseudoStyle = mozilla::PseudoStyle;
 
  public:
-#ifdef MOZ_XUL
   static bool IsTreePseudoElement(nsAtom* aPseudo);
-#endif
   static bool IsNonElement(PseudoStyleType aPseudo) {
     return aPseudo == PseudoStyleType::mozText ||
            aPseudo == PseudoStyleType::oofPlaceholder ||

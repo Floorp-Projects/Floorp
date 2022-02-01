@@ -4,10 +4,11 @@ var g = newGlobal({ newCompartment: true });
 var dbg = new Debugger;
 var gw = dbg.addDebuggee(g);
 lfOffThreadGlobal = g;
-lfOffThreadGlobal.offThreadCompileScript(`
+lfOffThreadGlobal.offThreadCompileToStencil(`
     grayRoot()[0] = "foo";
   `);
-lfOffThreadGlobal.runOffThreadScript();
+var stencil = lfOffThreadGlobal.finishOffThreadCompileToStencil();
+lfOffThreadGlobal.evalStencil(stencil);
 var g = newGlobal({newCompartment: true});
 var gw = dbg.addDebuggee(g);
 lfOffThreadGlobal = null;

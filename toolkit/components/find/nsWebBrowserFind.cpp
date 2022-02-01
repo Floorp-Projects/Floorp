@@ -429,8 +429,8 @@ nsresult nsWebBrowserFind::GetSearchLimits(nsRange* aSearchRange,
   NS_ENSURE_ARG_POINTER(aSel);
 
   // There is a selection.
-  uint32_t count = aSel->RangeCount();
-  if (count < 1) {
+  const uint32_t rangeCount = aSel->RangeCount();
+  if (rangeCount < 1) {
     return SetRangeAroundDocument(aSearchRange, aStartPt, aEndPt, aDoc);
   }
 
@@ -458,7 +458,7 @@ nsresult nsWebBrowserFind::GetSearchLimits(nsRange* aSearchRange,
   if (!mFindBackwards && !aWrap) {
     // This isn't quite right, since the selection's ranges aren't
     // necessarily in order; but they usually will be.
-    range = aSel->GetRangeAt(count - 1);
+    range = aSel->GetRangeAt(rangeCount - 1);
     if (!range) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -496,7 +496,7 @@ nsresult nsWebBrowserFind::GetSearchLimits(nsRange* aSearchRange,
   }
   // Forward, wrapping: DocStart to SelEnd
   else if (!mFindBackwards && aWrap) {
-    range = aSel->GetRangeAt(count - 1);
+    range = aSel->GetRangeAt(rangeCount - 1);
     if (!range) {
       return NS_ERROR_UNEXPECTED;
     }

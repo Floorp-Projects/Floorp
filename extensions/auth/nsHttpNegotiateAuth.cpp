@@ -319,6 +319,10 @@ class GetNextTokenCompleteEvent final : public nsIRunnable,
   nsCOMPtr<nsISupports> mContinuationState;
 };
 
+inline nsISupports* ToSupports(GetNextTokenCompleteEvent* aEvent) {
+  return static_cast<nsIRunnable*>(aEvent);
+}
+
 NS_IMPL_ISUPPORTS(GetNextTokenCompleteEvent, nsIRunnable, nsICancelable)
 
 //
@@ -336,7 +340,7 @@ class GetNextTokenRunnable final : public mozilla::Runnable {
       const nsACString& challenge, bool isProxyAuth, const nsAString& domain,
       const nsAString& username, const nsAString& password,
       nsISupports* sessionState, nsISupports* continuationState,
-      GetNextTokenCompleteEvent* aCompleteEvent)
+      nsMainThreadPtrHandle<GetNextTokenCompleteEvent>& aCompleteEvent)
       : mozilla::Runnable("GetNextTokenRunnable"),
         mAuthChannel(authChannel),
         mChallenge(challenge),
@@ -413,7 +417,7 @@ class GetNextTokenRunnable final : public mozilla::Runnable {
   nsString mPassword;
   nsCOMPtr<nsISupports> mSessionState;
   nsCOMPtr<nsISupports> mContinuationState;
-  RefPtr<GetNextTokenCompleteEvent> mCompleteEvent;
+  nsMainThreadPtrHandle<GetNextTokenCompleteEvent> mCompleteEvent;
 };
 
 }  // anonymous namespace
@@ -428,12 +432,13 @@ nsHttpNegotiateAuth::GenerateCredentialsAsync(
   NS_ENSURE_ARG(aCallback);
   NS_ENSURE_ARG_POINTER(aCancelable);
 
-  RefPtr<GetNextTokenCompleteEvent> cancelEvent =
-      new GetNextTokenCompleteEvent(aCallback);
-
   nsMainThreadPtrHandle<nsIHttpAuthenticableChannel> handle(
       new nsMainThreadPtrHolder<nsIHttpAuthenticableChannel>(
           "nsIHttpAuthenticableChannel", authChannel, false));
+  nsMainThreadPtrHandle<GetNextTokenCompleteEvent> cancelEvent(
+      new nsMainThreadPtrHolder<GetNextTokenCompleteEvent>(
+          "GetNextTokenCompleteEvent", new GetNextTokenCompleteEvent(aCallback),
+          false));
   nsCOMPtr<nsIRunnable> getNextTokenRunnable = new GetNextTokenRunnable(
       handle, challenge, isProxyAuth, domain, username, password, sessionState,
       continuationState, cancelEvent);
@@ -442,7 +447,8 @@ nsHttpNegotiateAuth::GenerateCredentialsAsync(
       getNextTokenRunnable, nsIEventTarget::DISPATCH_EVENT_MAY_BLOCK);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  cancelEvent.forget(aCancelable);
+  RefPtr<GetNextTokenCompleteEvent> cancelable(cancelEvent.get());
+  cancelable.forget(aCancelable);
   return NS_OK;
 }
 

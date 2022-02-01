@@ -53,12 +53,6 @@ class nsWindowBase : public nsBaseWidget {
   virtual WidgetEventTime CurrentMessageWidgetEventTime() const = 0;
 
   /*
-   * Dispatch a gecko event for this widget.
-   * Returns true if it's consumed.  Otherwise, false.
-   */
-  virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent) = 0;
-
-  /*
    * Dispatch a gecko keyboard event for this widget. This
    * is called by KeyboardLayout to dispatch gecko events.
    * Returns true if it's consumed.  Otherwise, false.

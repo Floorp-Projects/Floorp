@@ -4,6 +4,50 @@ ChangeLog for rust-argon2
 This documents all notable changes to
 [rust-argon2](https://github.com/sru-systems/rust-argon2).
 
+
+## 0.8.3
+
+- Replace transmute with to_le_bytes.
+- Update base64 to version 0.13.
+- Update crossbeam-utils to version 0.8.
+- Update hex to version 0.4.
+- Derive Clone for Error struct.
+- Add optional serde support for Error struct.
+
+
+## 0.8.2
+
+- Change base64 to latest version (0.12).
+
+
+## 0.8.1
+
+- Fix issue with verifying multi-lane hashes with parallelism disabled (#27)
+
+## 0.8.0
+
+- Make parallelism optional via feature flag.
+
+
+## 0.7.0
+
+- Update crossbeam-utils dependency to 0.7.
+
+
+## 0.6.1
+
+- Use constant time equals to compare hashes.
+
+
+## 0.6.0
+
+- Use 2018 edition or Rust
+- Use &dyn error::Error instead of &error::Error
+- Fix clippy lints
+- Allow callers of encode_string to pass any &[u8]
+- Update base64 dependency.
+
+
 ## 0.5.1
 
 - Use crossbeam utils 0.6 instead of crossbeam 0.5

@@ -23,6 +23,7 @@
 #include "nsHtml5AtomTable.h"
 #include "nsWeakReference.h"
 #include "nsHtml5StreamListener.h"
+#include "nsCharsetSource.h"
 
 class nsHtml5Parser final : public nsIParser, public nsSupportsWeakReference {
  public:

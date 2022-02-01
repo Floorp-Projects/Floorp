@@ -113,7 +113,7 @@ interface nsIContentViewer : nsISupports
    */
   readonly attribute boolean beforeUnloadFiring;
 
-  void pageHide(in boolean isUnload);
+  [can_run_script] void pageHide(in boolean isUnload);
 
   /**
    * All users of a content viewer are responsible for calling both

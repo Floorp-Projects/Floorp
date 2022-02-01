@@ -27,39 +27,35 @@ UNIFIED_SOURCES += [
     "nsBoxLayout.cpp",
     "nsBoxLayoutState.cpp",
     "nsButtonBoxFrame.cpp",
+    "nsDeckFrame.cpp",
+    "nsDocElementBoxFrame.cpp",
+    "nsImageBoxFrame.cpp",
+    "nsLeafBoxFrame.cpp",
+    "nsMenuBarFrame.cpp",
+    "nsMenuBarListener.cpp",
+    "nsMenuFrame.cpp",
+    "nsMenuPopupFrame.cpp",
+    "nsPopupSetFrame.cpp",
     "nsRepeatService.cpp",
+    "nsResizerFrame.cpp",
     "nsRootBoxFrame.cpp",
     "nsScrollbarButtonFrame.cpp",
     "nsScrollbarFrame.cpp",
     "nsSliderFrame.cpp",
+    "nsSplitterFrame.cpp",
     "nsSprocketLayout.cpp",
     "nsStackLayout.cpp",
+    "nsTextBoxFrame.cpp",
+    "nsTitleBarFrame.cpp",
+    "nsXULPopupManager.cpp",
     "nsXULTooltipListener.cpp",
 ]
 
-if CONFIG["MOZ_XUL"]:
-    UNIFIED_SOURCES += [
-        "nsDeckFrame.cpp",
-        "nsDocElementBoxFrame.cpp",
-        "nsImageBoxFrame.cpp",
-        "nsLeafBoxFrame.cpp",
-        "nsMenuBarFrame.cpp",
-        "nsMenuBarListener.cpp",
-        "nsMenuFrame.cpp",
-        "nsMenuPopupFrame.cpp",
-        "nsPopupSetFrame.cpp",
-        "nsResizerFrame.cpp",
-        "nsSplitterFrame.cpp",
-        "nsTextBoxFrame.cpp",
-        "nsTitleBarFrame.cpp",
-        "nsXULPopupManager.cpp",
-    ]
+DIRS += ["tree"]
 
-if CONFIG["MOZ_XUL"]:
-    DIRS += ["tree"]
-
-CFLAGS += CONFIG["TK_CFLAGS"]
-CXXFLAGS += CONFIG["TK_CFLAGS"]
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
+    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
 include("/ipc/chromium/chromium-config.mozbuild")
 

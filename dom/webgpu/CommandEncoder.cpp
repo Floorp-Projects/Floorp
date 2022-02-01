@@ -170,6 +170,30 @@ void CommandEncoder::CopyTextureToTexture(
   }
 }
 
+void CommandEncoder::PushDebugGroup(const nsAString& aString) {
+  if (mValid) {
+    ipc::ByteBuf bb;
+    const NS_ConvertUTF16toUTF8 utf8(aString);
+    ffi::wgpu_command_encoder_push_debug_group(utf8.get(), ToFFI(&bb));
+    mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
+  }
+}
+void CommandEncoder::PopDebugGroup() {
+  if (mValid) {
+    ipc::ByteBuf bb;
+    ffi::wgpu_command_encoder_pop_debug_group(ToFFI(&bb));
+    mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
+  }
+}
+void CommandEncoder::InsertDebugMarker(const nsAString& aString) {
+  if (mValid) {
+    ipc::ByteBuf bb;
+    const NS_ConvertUTF16toUTF8 utf8(aString);
+    ffi::wgpu_command_encoder_insert_debug_marker(utf8.get(), ToFFI(&bb));
+    mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
+  }
+}
+
 already_AddRefed<ComputePassEncoder> CommandEncoder::BeginComputePass(
     const dom::GPUComputePassDescriptor& aDesc) {
   RefPtr<ComputePassEncoder> pass = new ComputePassEncoder(this, aDesc);

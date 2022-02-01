@@ -150,20 +150,24 @@ mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvConfigurePAC(
 mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvGetProxyForURI(
     const nsCString& aTestURI, const nsCString& aTestHost,
     GetProxyForURIResolver&& aResolver) {
-  // When PAC is waiting for DNS result, we need to wait.
+  RefPtr<ProxyAutoConfigChild> self = this;
+  auto callResolver = [self, testURI(aTestURI), testHost(aTestHost),
+                       resolver{std::move(aResolver)}]() {
+    if (!self->CanSend()) {
+      return;
+    }
+
+    nsCString result;
+    nsresult rv = self->mPAC->GetProxyForURI(testURI, testHost, result);
+    resolver(Tuple<const nsresult&, const nsCString&>(rv, result));
+  };
   if (mPAC->WaitingForDNSResolve()) {
-    RefPtr<ProxyAutoConfigChild> self = this;
-    NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-        "ProxyAutoConfigChild::RecvGetProxyForURI",
-        [self, testURI(aTestURI), testHost(aTestHost),
-         resolver{std::move(aResolver)}]() mutable {
-          self->RecvGetProxyForURI(testURI, testHost, std::move(resolver));
-        }));
+    mPAC->RegisterDNSResolveCallback(
+        [resolverCallback{std::move(callResolver)}]() { resolverCallback(); });
     return IPC_OK();
   }
-  nsCString result;
-  nsresult rv = mPAC->GetProxyForURI(aTestURI, aTestHost, result);
-  aResolver(Tuple<const nsresult&, const nsCString&>(rv, result));
+
+  callResolver();
   return IPC_OK();
 }
 
@@ -173,8 +177,7 @@ mozilla::ipc::IPCResult ProxyAutoConfigChild::RecvGC() {
 }
 
 void ProxyAutoConfigChild::ActorDestroy(ActorDestroyReason aWhy) {
-  UniquePtr<ProxyAutoConfig> pac(std::move(mPAC));
-  pac->Shutdown();
+  mPAC->Shutdown();
 
   // To avoid racing with the main thread, we need to dispatch
   // ProxyAutoConfigChild::Destroy again.

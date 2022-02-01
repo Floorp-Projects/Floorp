@@ -7,7 +7,6 @@
 const EXPORTED_SYMBOLS = [
   "_RemoteSettingsExperimentLoader",
   "RemoteSettingsExperimentLoader",
-  "RemoteDefaultsLoader",
 ];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -39,7 +38,6 @@ XPCOMUtils.defineLazyServiceGetter(
 
 const COLLECTION_ID_PREF = "messaging-system.rsexperimentloader.collection_id";
 const COLLECTION_ID_FALLBACK = "nimbus-desktop-experiments";
-const COLLECTION_REMOTE_DEFAULTS = "nimbus-desktop-defaults";
 const ENABLED_PREF = "messaging-system.rsexperimentloader.enabled";
 const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 
@@ -60,117 +58,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "NIMBUS_DEBUG",
   NIMBUS_DEBUG_PREF,
   false
-);
-
-/**
- * Responsible for pre-fetching remotely defined configurations from
- * Remote Settings.
- */
-const RemoteDefaultsLoader = {
-  async syncRemoteDefaults(reason) {
-    log.debug("Fetching remote defaults for NimbusFeatures.");
-    try {
-      await this._onUpdatesReady(
-        await this._remoteSettingsClient.get(),
-        reason
-      );
-    } catch (e) {
-      Cu.reportError(e);
-    }
-    log.debug("Finished fetching remote defaults.");
-  },
-
-  async _onUpdatesReady(remoteDefaults = [], reason = "unknown") {
-    const matches = [];
-    const existingConfigIds = ExperimentManager.store.getAllExistingRemoteConfigIds();
-
-    if (remoteDefaults.length) {
-      await ExperimentManager.store.ready();
-
-      // Iterate over remote defaults: at most 1 per feature
-      for (let remoteDefault of remoteDefaults) {
-        if (!remoteDefault.configurations) {
-          continue;
-        }
-        // Iterate over feature configurations and apply first which matches targeting
-        for (let configuration of remoteDefault.configurations) {
-          let result;
-          if (
-            configuration.bucketConfig &&
-            !(await ExperimentManager.isInBucketAllocation(
-              configuration.bucketConfig
-            ))
-          ) {
-            log.debug(
-              "Remote Configuration was not applied because of the bucket sampling"
-            );
-            continue;
-          }
-          try {
-            result = await RemoteSettingsExperimentLoader.evaluateJexl(
-              configuration.targeting,
-              {
-                activeRemoteDefaults: existingConfigIds,
-                source: configuration.slug,
-              }
-            );
-          } catch (e) {
-            Cu.reportError(e);
-          }
-          if (result) {
-            log.debug(
-              `Setting remote defaults for feature: ${
-                remoteDefault.id
-              }: ${JSON.stringify(configuration)}`
-            );
-
-            matches.push(remoteDefault.id);
-
-            const existing = ExperimentManager.store.getRemoteConfig(
-              remoteDefault.id
-            );
-
-            ExperimentManager.store.updateRemoteConfigs(
-              remoteDefault.id,
-              configuration
-            );
-
-            // Update Telemetry environment. Note that we should always update during initialization,
-            // but after that we don't need to.
-            if (
-              reason === "init" ||
-              !existing ||
-              existing.slug !== configuration.slug
-            ) {
-              ExperimentManager.setRemoteDefaultActive(
-                remoteDefault.id,
-                configuration.slug
-              );
-            }
-            break;
-          } else {
-            log.debug(
-              `Remote default config ${configuration.slug} for ${remoteDefault.id} did not match due to targeting`
-            );
-          }
-        }
-      }
-    }
-
-    // Remove any pre-existing configurations that weren't found
-    for (const id of existingConfigIds) {
-      if (!matches.includes(id)) {
-        ExperimentManager.setRemoteDefaultInactive(id);
-      }
-    }
-
-    // Do final cleanup
-    ExperimentManager.store.finalizeRemoteConfigs(matches);
-  },
-};
-
-XPCOMUtils.defineLazyGetter(RemoteDefaultsLoader, "_remoteSettingsClient", () =>
-  RemoteSettings(COLLECTION_REMOTE_DEFAULTS)
 );
 
 class _RemoteSettingsExperimentLoader {
@@ -214,8 +101,6 @@ class _RemoteSettingsExperimentLoader {
 
   async init() {
     if (this._initialized || !this.enabled || !this.studiesEnabled) {
-      // Resolves any Promise waiting for Remote Settings data
-      ExperimentManager.store.finalizeRemoteConfigs([]);
       return;
     }
 
@@ -223,10 +108,7 @@ class _RemoteSettingsExperimentLoader {
     CleanupManager.addCleanupHandler(() => this.uninit());
     this._initialized = true;
 
-    await Promise.all([
-      this.updateRecipes(),
-      RemoteDefaultsLoader.syncRemoteDefaults("init"),
-    ]);
+    await this.updateRecipes();
   }
 
   uninit() {
@@ -239,13 +121,9 @@ class _RemoteSettingsExperimentLoader {
   }
 
   async evaluateJexl(jexlString, customContext) {
-    if (
-      customContext &&
-      !customContext.experiment &&
-      !customContext.activeRemoteDefaults
-    ) {
+    if (customContext && !customContext.experiment) {
       throw new Error(
-        "Expected an .experiment or .activeRemoteDefaults property in second param of this function"
+        "Expected an .experiment property in second param of this function"
       );
     }
 
@@ -324,9 +202,10 @@ class _RemoteSettingsExperimentLoader {
     let recipeMismatches = [];
     if (recipes && !loadingError) {
       for (const r of recipes) {
+        let type = r.isRollout ? "rollout" : "experiment";
         if (await this.checkTargeting(r)) {
           matches++;
-          log.debug(`${r.id} matched`);
+          log.debug(`[${type}] ${r.id} matched`);
           await this.manager.onRecipe(r, "rs-loader");
         } else {
           log.debug(`${r.id} did not match due to targeting`);
@@ -409,10 +288,7 @@ class _RemoteSettingsExperimentLoader {
     // The callbacks will be called soon after the timer is registered
     timerManager.registerTimer(
       TIMER_NAME,
-      () => {
-        this.updateRecipes("timer");
-        RemoteDefaultsLoader.syncRemoteDefaults("timer");
-      },
+      () => this.updateRecipes("timer"),
       this.intervalInSeconds
     );
     log.debug("Registered update timer");

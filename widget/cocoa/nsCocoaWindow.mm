@@ -408,6 +408,9 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
           features |= NSWindowStyleMaskClosable;
         }
       }
+      if (aBorderStyle & eBorderStyle_minimize) {
+        features |= NSWindowStyleMaskMiniaturizable;
+      }
       break;
     case eWindowType_toplevel:
     case eWindowType_dialog:
@@ -780,12 +783,12 @@ void nsCocoaWindow::Show(bool bState) {
 
   if (!mWindow) return;
 
-  // We need to re-execute sometimes in order to bring already-visible
-  // windows forward.
-  if (!mSheetNeedsShow && !bState && ![mWindow isVisible]) return;
-
-  // Protect against re-entering.
-  if (bState && [mWindow isBeingShown]) return;
+  if (!mSheetNeedsShow) {
+    // Early exit if our current visibility state is already the requested state.
+    if (bState == ([mWindow isVisible] || [mWindow isBeingShown])) {
+      return;
+    }
+  }
 
   [mWindow setBeingShown:bState];
   if (bState && !mWasShown) {
@@ -928,8 +931,7 @@ void nsCocoaWindow::Show(bool bState) {
               behavior = NSWindowAnimationBehaviorDocumentWindow;
               break;
             default:
-              MOZ_ASSERT_UNREACHABLE("unexpected mAnimationType value");
-              // fall through
+              MOZ_FALLTHROUGH_ASSERT("unexpected mAnimationType value");
             case nsIWidget::eGenericWindowAnimation:
               behavior = NSWindowAnimationBehaviorDefault;
               break;
@@ -3681,6 +3683,34 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   }
 }
 
+static bool ScreenHasNotch(nsCocoaWindow* aGeckoWindow) {
+  if (@available(macOS 12.0, *)) {
+    nsCOMPtr<nsIScreen> widgetScreen = aGeckoWindow->GetWidgetScreen();
+    NSScreen* cocoaScreen = ScreenHelperCocoa::CocoaScreenForScreen(widgetScreen);
+    return cocoaScreen.safeAreaInsets.top != 0.0f;
+  }
+  return false;
+}
+
+static bool ShouldShiftByMenubarHeightInFullscreen(nsCocoaWindow* aWindow) {
+  switch (StaticPrefs::widget_macos_shift_by_menubar_on_fullscreen()) {
+    case 0:
+      return false;
+    case 1:
+      return true;
+    default:
+      break;
+  }
+  // TODO: On notch-less macbooks, this creates extra space when the
+  // "automatically show and hide the menubar on fullscreen" option is unchecked
+  // (default checked). We tried to detect that in bug 1737831 but it wasn't
+  // reliable enough, see the regressions from that bug. For now, stick to the
+  // good behavior for default configurations (that is, shift by menubar height
+  // on notch-less macbooks, and don't for devices that have a notch). This will
+  // need refinement in the future.
+  return !ScreenHasNotch(aWindow);
+}
+
 - (void)updateTitlebarShownAmount:(CGFloat)aShownAmount {
   NSInteger styleMask = [self styleMask];
   if (!(styleMask & NSWindowStyleMaskFullScreen)) {
@@ -3693,10 +3723,10 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   // if the menubar is shown or is in the process of being shown, and 0
   // otherwise. Since we are multiplying the menubar height by aShownAmount, we
   // always want the full height.
-  if ([[NSApp mainMenu] menuBarHeight] > 0) {
-    mMenuBarHeight = [[NSApp mainMenu] menuBarHeight];
+  CGFloat menuBarHeight = NSApp.mainMenu.menuBarHeight;
+  if (menuBarHeight > 0.0f) {
+    mMenuBarHeight = menuBarHeight;
   }
-
   if ([[self delegate] isKindOfClass:[WindowDelegate class]]) {
     WindowDelegate* windowDelegate = (WindowDelegate*)[self delegate];
     nsCocoaWindow* geckoWindow = [windowDelegate geckoWidget];
@@ -3704,12 +3734,14 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
       return;
     }
 
-    nsIWidgetListener* listener = geckoWindow->GetWidgetListener();
-    if (listener) {
+    if (nsIWidgetListener* listener = geckoWindow->GetWidgetListener()) {
       // Use the titlebar height cached in our frame rather than
       // [ToolbarWindow titlebarHeight]. titlebarHeight returns 0 when we're in
       // fullscreen.
-      CGFloat shiftByPixels = (mInitialTitlebarHeight + mMenuBarHeight) * aShownAmount;
+      CGFloat shiftByPixels = mInitialTitlebarHeight * aShownAmount;
+      if (ShouldShiftByMenubarHeightInFullscreen(geckoWindow)) {
+        shiftByPixels += mMenuBarHeight * aShownAmount;
+      }
       // Use mozilla::DesktopToLayoutDeviceScale rather than the
       // DesktopToLayoutDeviceScale in nsCocoaWindow. The latter accounts for
       // screen DPI. We don't want that because the revealAmount property

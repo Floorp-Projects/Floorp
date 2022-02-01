@@ -12,7 +12,6 @@ EXPORTS += [
     "nsSpecialCasingData.h",
     "nsUnicharUtils.h",
     "nsUnicodeProperties.h",
-    "nsUnicodeScriptCodes.h",
 ]
 
 UNIFIED_SOURCES += [

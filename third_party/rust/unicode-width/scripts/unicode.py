@@ -292,7 +292,7 @@ if __name__ == "__main__":
         rf.write("""
 /// The version of [Unicode](http://www.unicode.org/)
 /// that this version of unicode-width is based on.
-pub const UNICODE_VERSION: (u64, u64, u64) = (%s, %s, %s);
+pub const UNICODE_VERSION: (u8, u8, u8) = (%s, %s, %s);
 
 """ % unicode_version)
         gencats = load_unicode_data("UnicodeData.txt")

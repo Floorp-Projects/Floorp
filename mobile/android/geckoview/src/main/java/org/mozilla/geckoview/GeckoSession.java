@@ -1099,6 +1099,19 @@ public class GeckoSession {
                 return;
               }
 
+              if (!IntentUtils.isUriSafeForScheme(uri)) {
+                delegate.onLoadError(
+                    session,
+                    uri,
+                    new WebRequestError(
+                        WebRequestError.ERROR_MALFORMED_URI,
+                        WebRequestError.ERROR_CATEGORY_URI,
+                        null));
+                res.complete(true);
+                addMarker.run();
+                return;
+              }
+
               final String trigger = TextUtils.isEmpty(triggeringUri) ? null : triggeringUri;
               final NavigationDelegate.LoadRequest req =
                   new NavigationDelegate.LoadRequest(
@@ -1829,7 +1842,8 @@ public class GeckoSession {
       return GeckoResult.allow();
     }
 
-    final GeckoResult<AllowOrDeny> result = new GeckoResult<>();
+    // Always run the callback on the UI thread regardless of what thread we were called in.
+    final GeckoResult<AllowOrDeny> result = new GeckoResult<>(ThreadUtils.getUiHandler());
 
     ThreadUtils.runOnUiThread(
         () -> {
@@ -1871,16 +1885,48 @@ public class GeckoSession {
     mEventDispatcher.dispatch("GeckoView:Stop", null);
   }
 
-  /** Go back in history. */
+  /**
+   * Go back in history and assumes the call was based on a user interaction.
+   *
+   * @see #goBack(boolean)
+   */
   @AnyThread
   public void goBack() {
-    mEventDispatcher.dispatch("GeckoView:GoBack", null);
+    goBack(true);
   }
 
-  /** Go forward in history. */
+  /**
+   * Go back in history.
+   *
+   * @param userInteraction Whether the action was invoked by a user interaction.
+   */
+  @AnyThread
+  public void goBack(final boolean userInteraction) {
+    final GeckoBundle msg = new GeckoBundle(1);
+    msg.putBoolean("userInteraction", userInteraction);
+    mEventDispatcher.dispatch("GeckoView:GoBack", msg);
+  }
+
+  /**
+   * Go forward in history and assumes the call was based on a user interaction.
+   *
+   * @see #goForward(boolean)
+   */
   @AnyThread
   public void goForward() {
-    mEventDispatcher.dispatch("GeckoView:GoForward", null);
+    goForward(true);
+  }
+
+  /**
+   * Go forward in history.
+   *
+   * @param userInteraction Whether the action was invoked by a user interaction.
+   */
+  @AnyThread
+  public void goForward(final boolean userInteraction) {
+    final GeckoBundle msg = new GeckoBundle(1);
+    msg.putBoolean("userInteraction", userInteraction);
+    mEventDispatcher.dispatch("GeckoView:GoForward", msg);
   }
 
   /**
@@ -5052,6 +5098,20 @@ public class GeckoSession {
   }
 
   /**
+   * Get a matrix for transforming from layout device client coordinates to screen coordinates.
+   *
+   * @param matrix Matrix to be replaced by the transformation matrix.
+   * @see #getClientToScreenMatrix(Matrix)
+   * @see #getPageToSurfaceMatrix(Matrix)
+   */
+  @UiThread
+  /* package */ void getClientToScreenOffsetMatrix(@NonNull final Matrix matrix) {
+    ThreadUtils.assertOnUiThread();
+
+    matrix.postTranslate(mLeft, mTop);
+  }
+
+  /**
    * Get the bounds of the client area in client coordinates. The returned top-left coordinates are
    * always (0, 0). Use the matrix from {@link #getClientToSurfaceMatrix(Matrix)} or {@link
    * #getClientToScreenMatrix(Matrix)} to map these bounds to surface or screen coordinates,
@@ -5415,10 +5475,16 @@ public class GeckoSession {
       /** The media type is audio. */
       public static final int TYPE_AUDIO = 1;
 
-      /** A string giving the origin-specific source identifier. */
+      /** A string giving a unique source identifier. */
       public final @NonNull String id;
 
-      /** A string giving the non-origin-specific source identifier. */
+      /**
+       * A string giving a unique source identifier.
+       *
+       * @deprecated Instead use {@link #id}, which is the same string.
+       */
+      @Deprecated
+      @DeprecationSchedule(id = "media-source-rawId", version = 100)
       public final @NonNull String rawId;
 
       /**
@@ -5470,7 +5536,7 @@ public class GeckoSession {
 
       /* package */ MediaSource(final GeckoBundle media) {
         id = media.getString("id");
-        rawId = media.getString("rawId");
+        rawId = id;
         name = media.getString("name");
         source = getSourceFromString(media.getString("mediaSource"));
         type = getTypeFromString(media.getString("type"));

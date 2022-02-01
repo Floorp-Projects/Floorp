@@ -613,7 +613,7 @@ mod large {
     /// AddAssign bigint to bigint.
     #[inline]
     pub fn iadd(x: &mut Vec<Limb>, y: &[Limb]) {
-        iadd_impl(x, y, 0)
+        iadd_impl(x, y, 0);
     }
 
     /// Add bigint to bigint.
@@ -859,13 +859,13 @@ pub(crate) trait Math: Clone + Sized + Default {
     /// Multiply by a power of 2.
     #[inline]
     fn imul_pow2(&mut self, n: u32) {
-        self.ishl(n as usize)
+        self.ishl(n as usize);
     }
 
     /// Multiply by a power of 5.
     #[inline]
     fn imul_pow5(&mut self, n: u32) {
-        small::imul_pow5(self.data_mut(), n)
+        small::imul_pow5(self.data_mut(), n);
     }
 
     /// MulAssign by a power of 10.

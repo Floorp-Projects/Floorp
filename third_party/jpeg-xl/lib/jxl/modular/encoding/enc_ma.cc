@@ -60,7 +60,7 @@ float EstimateBits(const int32_t *counts, int32_t *rounded_counts,
     bits_lanes -=
         IfThenElse(counts_v == zero, zero, counts_v * BitCast(df, nbps));
   }
-  return GetLane(SumOfLanes(bits_lanes));
+  return GetLane(SumOfLanes(df, bits_lanes));
 }
 
 void MakeSplitNode(size_t pos, int property, int splitval, Predictor lpred,

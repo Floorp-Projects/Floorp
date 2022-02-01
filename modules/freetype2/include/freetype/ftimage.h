@@ -28,11 +28,6 @@
 #define FTIMAGE_H_
 
 
-  /* STANDALONE_ is from ftgrays.c */
-#ifndef STANDALONE_
-#endif
-
-
 FT_BEGIN_HEADER
 
 
@@ -700,11 +695,13 @@ FT_BEGIN_HEADER
    *   to get a simple enumeration without assigning special numbers.
    */
 #ifndef FT_IMAGE_TAG
-#define FT_IMAGE_TAG( value, _x1, _x2, _x3, _x4 )  \
-          value = ( ( (unsigned long)_x1 << 24 ) | \
-                    ( (unsigned long)_x2 << 16 ) | \
-                    ( (unsigned long)_x3 << 8  ) | \
-                      (unsigned long)_x4         )
+
+#define FT_IMAGE_TAG( value, _x1, _x2, _x3, _x4 )                         \
+          value = ( ( FT_STATIC_BYTE_CAST( unsigned long, _x1 ) << 24 ) | \
+                    ( FT_STATIC_BYTE_CAST( unsigned long, _x2 ) << 16 ) | \
+                    ( FT_STATIC_BYTE_CAST( unsigned long, _x3 ) << 8  ) | \
+                      FT_STATIC_BYTE_CAST( unsigned long, _x4 )         )
+
 #endif /* FT_IMAGE_TAG */
 
 

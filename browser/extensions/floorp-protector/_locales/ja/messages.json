@@ -1,0 +1,20 @@
+{
+  "header-main": {
+    "message": "試験運用機能　"
+  },
+    "exper": {
+      "message": "ユーザエージェントを変更 "
+  },
+    "info":{
+      "message":"Floorp のユーザエージェントに、Floorp/8.3.6 などのFloorpだとわかる文字列を追加します。既定では、Firefox と同じになっています。"
+  },
+    "True":{
+      "message":"無効"
+  },
+    "False":{
+      "message":"有効"
+  },
+    "Feedback": {
+      "message": "フィードバックを送信"
+  }
+}

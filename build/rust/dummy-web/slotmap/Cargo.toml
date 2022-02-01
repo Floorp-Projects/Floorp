@@ -1,0 +1,8 @@
+[package]
+name = "slotmap"
+version = "1.100.0"
+edition = "2018"
+license = "MIT OR Apache-2.0"
+
+[lib]
+path = "lib.rs"

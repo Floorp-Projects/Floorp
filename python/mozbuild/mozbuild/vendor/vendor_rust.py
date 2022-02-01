@@ -63,6 +63,13 @@ Cargo.lock to the HEAD version, run `git checkout -- Cargo.lock` or
 """
 
 
+PACKAGES_WE_ALWAYS_WANT_AN_OVERRIDE_OF = [
+    "autocfg",
+    "cmake",
+    "vcpkg",
+]
+
+
 class VendorRust(MozbuildObject):
     def get_cargo_path(self):
         try:
@@ -589,6 +596,39 @@ license file's hash.
             )
             self.repository.clean_directory(vendor_dir)
             sys.exit(1)
+
+        with open(os.path.join(self.topsrcdir, "Cargo.lock")) as fh:
+            cargo_lock = pytoml.load(fh)
+            failed = False
+            for package in cargo_lock.get("patch", {}).get("unused", []):
+                self.log(
+                    logging.ERROR,
+                    "unused_patch",
+                    {"crate": package["name"]},
+                    """Unused patch in top-level Cargo.toml for {crate}.""",
+                )
+                failed = True
+
+            for package in cargo_lock["package"]:
+                if package["name"] in PACKAGES_WE_ALWAYS_WANT_AN_OVERRIDE_OF:
+                    # When the in-tree version is used, there is `source` for
+                    # it in Cargo.lock, which is what we expect.
+                    if package.get("source"):
+                        self.log(
+                            logging.ERROR,
+                            "non_overridden",
+                            {
+                                "crate": package["name"],
+                                "version": package["version"],
+                                "source": package["source"],
+                            },
+                            "Crate {crate} v{version} must be overridden but isn't "
+                            "and comes from {source}.",
+                        )
+                        failed = True
+            if failed:
+                self.repository.clean_directory(vendor_dir)
+                sys.exit(1)
 
         self.repository.add_remove_files(vendor_dir)
 

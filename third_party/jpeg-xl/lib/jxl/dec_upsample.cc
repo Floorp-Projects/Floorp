@@ -176,8 +176,8 @@ void Upsample(const ImageF& src, const Rect& src_rect, ImageF* dst,
         min = Min(LoadU(df, raw_min_row + sx + fx), min);
         max = Max(LoadU(df, raw_max_row + sx + fx), max);
       }
-      min = MinOfLanes(min);
-      max = MaxOfLanes(max);
+      min = MinOfLanes(df, min);
+      max = MaxOfLanes(df, max);
       for (size_t lx = 0; lx < N; lx += V) {
         StoreU(min, df, min_row + N * sx + lx);
         StoreU(max, df, max_row + N * sx + lx);

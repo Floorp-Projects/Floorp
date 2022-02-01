@@ -48,23 +48,31 @@ enum class ProcType {
   WebLargeAllocation,
   WebCOOPCOEP,
   WebServiceWorker,
-  // the rest matches GeckoProcessTypes.h
-  Browser,  // Default is named Browser here
-  IPDLUnitTest,
-  GMPlugin,
-  GPU,
-  VR,
-  RDD,
-  Socket,
-  RemoteSandboxBroker,
-#ifdef MOZ_ENABLE_FORKSERVER
-  ForkServer,
-#endif
+// the rest matches GeckoProcessTypes.h
+#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, proc_typename, \
+                           process_bin_type, procinfo_typename,               \
+                           webidl_typename, allcaps_name)                     \
+  procinfo_typename,
+#define SKIP_PROCESS_TYPE_CONTENT
+#ifndef MOZ_ENABLE_FORKSERVER
+#  define SKIP_PROCESS_TYPE_FORKSERVER
+#endif  // MOZ_ENABLE_FORKSERVER
+#include "mozilla/GeckoProcessTypes.h"
+#undef SKIP_PROCESS_TYPE_CONTENT
+#ifndef MOZ_ENABLE_FORKSERVER
+#  undef SKIP_PROCESS_TYPE_FORKSERVER
+#endif  // MOZ_ENABLE_FORKSERVER
+#undef GECKO_PROCESS_TYPE
   Preallocated,
   // Unknown type of process
   Unknown,
   Max = Unknown,
 };
+
+/* Get the CPU frequency to use to convert cycle time values to actual time.
+ * @returns the TSC (Time Stamp Counter) frequency in MHz, or 0 if converting
+ * cycle time values should not be attempted. */
+int GetCycleTimeFrequencyMHz();
 
 struct ThreadInfo {
   // Thread Id.
@@ -73,6 +81,7 @@ struct ThreadInfo {
   nsString name;
   // CPU time in ns.
   uint64_t cpuTime = 0;
+  // CPU time in cycles if available.
   uint64_t cpuCycleCount = 0;
 };
 

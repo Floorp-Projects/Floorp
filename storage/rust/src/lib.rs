@@ -154,7 +154,7 @@ impl Conn {
         if rv.failed() {
             return TransactionBehavior::Deferred;
         }
-        match typ as i64 {
+        match typ {
             mozIStorageAsyncConnection::TRANSACTION_IMMEDIATE => TransactionBehavior::Immediate,
             mozIStorageAsyncConnection::TRANSACTION_EXCLUSIVE => TransactionBehavior::Exclusive,
             _ => TransactionBehavior::Deferred,

@@ -82,6 +82,7 @@ import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.Image;
 import org.mozilla.geckoview.MediaSession;
+import org.mozilla.geckoview.OrientationController;
 import org.mozilla.geckoview.OverscrollEdgeEffect;
 import org.mozilla.geckoview.PanZoomController;
 import org.mozilla.geckoview.ProfilerController;
@@ -607,6 +608,7 @@ package org.mozilla.geckoview {
     method @NonNull public synchronized GeckoResult<Boolean> cancel();
     method public synchronized void complete(@Nullable T);
     method public synchronized void completeExceptionally(@NonNull Throwable);
+    method public void completeFrom(@Nullable GeckoResult<T>);
     method @AnyThread @NonNull public static GeckoResult<AllowOrDeny> deny();
     method @NonNull public <U> GeckoResult<U> exceptionally(@NonNull GeckoResult.OnExceptionListener<U>);
     method @NonNull public GeckoResult<Void> finally_(@NonNull Runnable);
@@ -662,6 +664,7 @@ package org.mozilla.geckoview {
     method @NonNull @UiThread public ContentBlockingController getContentBlockingController();
     method @NonNull @UiThread public static synchronized GeckoRuntime getDefault(@NonNull Context);
     method @Nullable @UiThread public GeckoRuntime.Delegate getDelegate();
+    method @NonNull @UiThread public OrientationController getOrientationController();
     method @NonNull @UiThread public ProfilerController getProfilerController();
     method @Nullable @UiThread public GeckoRuntime.ServiceWorkerDelegate getServiceWorkerDelegate();
     method @AnyThread @NonNull public GeckoRuntimeSettings getSettings();
@@ -679,8 +682,12 @@ package org.mozilla.geckoview {
     method @UiThread public void setWebNotificationDelegate(@Nullable WebNotificationDelegate);
     method @AnyThread public void shutdown();
     field public static final String ACTION_CRASHED = "org.mozilla.gecko.ACTION_CRASHED";
+    field public static final String CRASHED_PROCESS_TYPE_BACKGROUND_CHILD = "BACKGROUND_CHILD";
+    field public static final String CRASHED_PROCESS_TYPE_FOREGROUND_CHILD = "FOREGROUND_CHILD";
+    field public static final String CRASHED_PROCESS_TYPE_MAIN = "MAIN";
     field public static final Parcelable.Creator<GeckoRuntime> CREATOR;
-    field public static final String EXTRA_CRASH_FATAL = "fatal";
+    field @Deprecated @DeprecationSchedule(id="crashreporter-fatal",version=100) public static final String EXTRA_CRASH_FATAL = "fatal";
+    field public static final String EXTRA_CRASH_PROCESS_TYPE = "processType";
     field public static final String EXTRA_EXTRAS_PATH = "extrasPath";
     field public static final String EXTRA_MINIDUMP_PATH = "minidumpPath";
   }
@@ -830,7 +837,9 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public GeckoResult<String> getUserAgent();
     method @NonNull @UiThread public WebExtension.SessionController getWebExtensionController();
     method @AnyThread public void goBack();
+    method @AnyThread public void goBack(boolean);
     method @AnyThread public void goForward();
+    method @AnyThread public void goForward(boolean);
     method @AnyThread public void gotoHistoryIndex(int);
     method @AnyThread public boolean isOpen();
     method @AnyThread public void load(@NonNull GeckoSession.Loader);
@@ -1057,7 +1066,7 @@ package org.mozilla.geckoview {
     field public static final int TYPE_VIDEO = 0;
     field @NonNull public final String id;
     field @Nullable public final String name;
-    field @NonNull public final String rawId;
+    field @Deprecated @DeprecationSchedule(id="media-source-rawId",version=100) @NonNull public final String rawId;
     field public final int source;
     field public final int type;
   }
@@ -1536,6 +1545,16 @@ package org.mozilla.geckoview {
     field public final double duration;
     field public final double playbackRate;
     field public final double position;
+  }
+
+  public class OrientationController {
+    method @Nullable @UiThread public OrientationController.OrientationDelegate getDelegate();
+    method @UiThread public void setDelegate(@Nullable OrientationController.OrientationDelegate);
+  }
+
+  @UiThread public static interface OrientationController.OrientationDelegate {
+    method @Nullable default public GeckoResult<AllowOrDeny> onOrientationLock(@NonNull int);
+    method @Nullable default public void onOrientationUnlock();
   }
 
   @UiThread public final class OverscrollEdgeEffect {

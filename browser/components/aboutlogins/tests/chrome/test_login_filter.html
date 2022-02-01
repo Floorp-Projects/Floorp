@@ -115,6 +115,64 @@ add_task(async function test_list_filtered() {
     }, `Waiting for the search result count to update to ${testObj.resultExpectedCount} (tc#${testObj.testCase})`);
   }
 });
+
+  add_task(async function test_keys_in_filter() {
+    const LOGINS = [{
+      guid: "123456789",
+      origin: "https://example.com",
+      username: "user1",
+      password: "pass1",
+    }, {
+      guid: "987654321",
+      origin: "https://example.com",
+      username: "user2",
+      password: "pass2",
+    }, {
+      guid: "333333333",
+      origin: "https://example.com",
+      username: "user3",
+      password: "pass3",
+    }];
+    gLoginList.setLogins(LOGINS);
+
+    const ol = gLoginList.shadowRoot.querySelector("ol");
+    const loginFilterInput = gLoginFilter.shadowRoot.querySelector("input");
+    loginFilterInput.focus();
+
+    // Up/down keys must select previous/next item in the list
+    function pressKeyAndExpectSelection(key, selectedIndex) {
+      sendKey(key);
+      ok(ol.querySelectorAll(".login-list-item[data-guid]:not([hidden])")[selectedIndex]?.classList?.contains("keyboard-selected"),
+        `item ${selectedIndex} should be marked as keyboard-selected`);
+    }
+
+    pressKeyAndExpectSelection("DOWN", 1);
+    pressKeyAndExpectSelection("DOWN", 2);
+
+    // ENTER key in search box must click on selected item in the list
+    const selectedGuid = LOGINS[2].guid;
+    isnot(ol.querySelector(".selected").dataset.guid, selectedGuid, "item must not be selected");
+    sendKey("RETURN");
+    is(ol.querySelector(".selected").dataset.guid, selectedGuid, "item must be selected");
+
+    pressKeyAndExpectSelection("DOWN", 2);
+    pressKeyAndExpectSelection("UP", 1);
+    pressKeyAndExpectSelection("UP", 0);
+    pressKeyAndExpectSelection("UP", 0);
+
+    // ESC must clear search box
+    async function expectItemCount(count) {
+      await SimpleTest.promiseWaitForCondition(() =>
+        JSON.parse(gLoginList.shadowRoot.querySelector(".count").getAttribute("data-l10n-args"))?.count == count,
+        `Waiting for the search result count to update to ${count}`);
+    }
+
+    sendString("unique string");
+    await expectItemCount(0);
+    sendKey("Escape");
+    ok(!loginFilterInput.value, "ESC must clear filter input");
+    await expectItemCount(LOGINS.length);
+  });
 </script>
 
 </body>

@@ -37,7 +37,7 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( FT_ULong )
   cid_get_offset( FT_Byte**  start,
-                  FT_Byte    offsize );
+                  FT_UInt    offsize );
 
   FT_LOCAL( FT_Error )
   cid_face_open( CID_Face  face,

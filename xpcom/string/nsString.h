@@ -49,7 +49,7 @@ class NS_LossyConvertUTF16toASCII : public nsAutoCString {
     LossyAppendUTF16toASCII(mozilla::MakeStringSpan(aString), *this);
   }
 
-  NS_LossyConvertUTF16toASCII(const char16ptr_t aString, uint32_t aLength) {
+  NS_LossyConvertUTF16toASCII(const char16ptr_t aString, size_t aLength) {
     LossyAppendUTF16toASCII(
         Substring(static_cast<const char16_t*>(aString), aLength), *this);
   }
@@ -69,7 +69,7 @@ class NS_ConvertASCIItoUTF16 : public nsAutoString {
     AppendASCIItoUTF16(mozilla::MakeStringSpan(aCString), *this);
   }
 
-  NS_ConvertASCIItoUTF16(const char* aCString, uint32_t aLength) {
+  NS_ConvertASCIItoUTF16(const char* aCString, size_t aLength) {
     AppendASCIItoUTF16(Substring(aCString, aLength), *this);
   }
 
@@ -95,7 +95,7 @@ class NS_ConvertUTF16toUTF8 : public nsAutoCString {
     AppendUTF16toUTF8(mozilla::MakeStringSpan(aString), *this);
   }
 
-  NS_ConvertUTF16toUTF8(const char16ptr_t aString, uint32_t aLength) {
+  NS_ConvertUTF16toUTF8(const char16ptr_t aString, size_t aLength) {
     AppendUTF16toUTF8(Substring(static_cast<const char16_t*>(aString), aLength),
                       *this);
   }
@@ -119,7 +119,7 @@ class NS_ConvertUTF8toUTF16 : public nsAutoString {
     AppendUTF8toUTF16(mozilla::MakeStringSpan(aCString), *this);
   }
 
-  NS_ConvertUTF8toUTF16(const char* aCString, uint32_t aLength) {
+  NS_ConvertUTF8toUTF16(const char* aCString, size_t aLength) {
     AppendUTF8toUTF16(Substring(aCString, aLength), *this);
   }
 

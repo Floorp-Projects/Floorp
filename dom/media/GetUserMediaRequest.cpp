@@ -17,7 +17,7 @@ namespace mozilla::dom {
 
 GetUserMediaRequest::GetUserMediaRequest(
     nsPIDOMWindowInner* aInnerWindow, const nsAString& aCallID,
-    RefPtr<MediaDeviceSetRefCnt> aMediaDeviceSet,
+    RefPtr<LocalMediaDeviceSetRefCnt> aMediaDeviceSet,
     const MediaStreamConstraints& aConstraints, bool aIsSecure,
     bool aIsHandlingUserInput)
     : mInnerWindowID(aInnerWindow->WindowID()),
@@ -31,7 +31,7 @@ GetUserMediaRequest::GetUserMediaRequest(
 
 GetUserMediaRequest::GetUserMediaRequest(
     nsPIDOMWindowInner* aInnerWindow, const nsAString& aCallID,
-    RefPtr<MediaDeviceSetRefCnt> aMediaDeviceSet,
+    RefPtr<LocalMediaDeviceSetRefCnt> aMediaDeviceSet,
     const AudioOutputOptions& aAudioOutputOptions, bool aIsSecure,
     bool aIsHandlingUserInput)
     : mInnerWindowID(aInnerWindow->WindowID()),

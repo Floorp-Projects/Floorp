@@ -115,6 +115,9 @@ Review groups
    * - #xpcom-reviewers
      - Changes related to XPCOM
      - `Member list <https://phabricator.services.mozilla.com/project/members/125/>`__
+   * - #media-playback-reviewers
+     - `Media playback <https://wiki.mozilla.org/Modules/All#Media_Playback>`__
+     - `Member list <https://phabricator.services.mozilla.com/project/profile/159/>`__
 
 To create a new group, fill a `new bug in Conduit::Administration <https://bugzilla.mozilla.org/enter_bug.cgi?product=Conduit&component=Administration>`__.
 See `bug 1613306 <https://bugzilla.mozilla.org/show_bug.cgi?id=1613306>`__ as example.

@@ -43,31 +43,6 @@ void nsAccUtils::SetAccGroupAttrs(AccAttributes* aAttributes, int32_t aLevel,
   }
 }
 
-int32_t nsAccUtils::GetDefaultLevel(const LocalAccessible* aAccessible) {
-  roles::Role role = aAccessible->Role();
-
-  if (role == roles::OUTLINEITEM) return 1;
-
-  if (role == roles::ROW) {
-    LocalAccessible* parent = aAccessible->LocalParent();
-    // It is a row inside flatten treegrid. Group level is always 1 until it
-    // is overriden by aria-level attribute.
-    if (parent && parent->Role() == roles::TREE_TABLE) return 1;
-  }
-
-  return 0;
-}
-
-int32_t nsAccUtils::GetARIAOrDefaultLevel(const LocalAccessible* aAccessible) {
-  int32_t level = 0;
-  nsCoreUtils::GetUIntAttr(aAccessible->GetContent(), nsGkAtoms::aria_level,
-                           &level);
-
-  if (level != 0) return level;
-
-  return GetDefaultLevel(aAccessible);
-}
-
 int32_t nsAccUtils::GetLevelForXULContainerItem(nsIContent* aContent) {
   nsCOMPtr<nsIDOMXULContainerItemElement> item =
       aContent->AsElement()->AsXULContainerItem();

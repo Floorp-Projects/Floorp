@@ -145,6 +145,9 @@ class DocAccessibleParent : public RemoteAccessible,
       const mozilla::a11y::CacheUpdateType& aUpdateType,
       nsTArray<CacheData>&& aData, const bool& aFinal) override;
 
+  virtual mozilla::ipc::IPCResult RecvAccessiblesWillMove(
+      nsTArray<uint64_t>&& aIDs) override;
+
 #if !defined(XP_WIN)
   virtual mozilla::ipc::IPCResult RecvAnnouncementEvent(
       const uint64_t& aID, const nsString& aAnnouncement,
@@ -348,6 +351,12 @@ class DocAccessibleParent : public RemoteAccessible,
   [[nodiscard]] bool CheckDocTree() const;
   xpcAccessibleGeneric* GetXPCAccessible(RemoteAccessible* aProxy);
 
+  /**
+   * If this Accessible is being moved, prepare it for reuse. Otherwise, it is
+   * being removed, so shut it down.
+   */
+  void ShutdownOrPrepareForMove(RemoteAccessible* aAcc);
+
   nsTArray<uint64_t> mChildDocs;
   uint64_t mParentDoc;
 
@@ -367,6 +376,7 @@ class DocAccessibleParent : public RemoteAccessible,
    * proxy object so we can't use a real map.
    */
   nsTHashtable<ProxyEntry> mAccessibles;
+  nsTHashSet<uint64_t> mMovingIDs;
   uint64_t mActorID;
   bool mTopLevel;
   bool mTopLevelInContentProcess;

@@ -238,7 +238,6 @@ describe('Page.click', function () {
       )
     ).toBe('clicked');
   });
-  // See https://github.com/puppeteer/puppeteer/issues/7175
   it('should double click the button', async () => {
     const { page, server } = getTestState();
 
@@ -328,25 +327,20 @@ describe('Page.click', function () {
     await frame.click('button');
     expect(await frame.evaluate(() => globalThis.result)).toBe('Clicked');
   });
-  it(
-    'should click the button with deviceScaleFactor set',
-    async () => {
-      const { page, server } = getTestState();
+  it('should click the button with deviceScaleFactor set', async () => {
+    const { page, server } = getTestState();
 
-      await page.setViewport({ width: 400, height: 400, deviceScaleFactor: 5 });
-      expect(await page.evaluate(() => window.devicePixelRatio)).toBe(5);
-      await page.setContent(
-        '<div style="width:100px;height:100px">spacer</div>'
-      );
-      await utils.attachFrame(
-        page,
-        'button-test',
-        server.PREFIX + '/input/button.html'
-      );
-      const frame = page.frames()[1];
-      const button = await frame.$('button');
-      await button.click();
-      expect(await frame.evaluate(() => globalThis.result)).toBe('Clicked');
-    }
-  );
+    await page.setViewport({ width: 400, height: 400, deviceScaleFactor: 5 });
+    expect(await page.evaluate(() => window.devicePixelRatio)).toBe(5);
+    await page.setContent('<div style="width:100px;height:100px">spacer</div>');
+    await utils.attachFrame(
+      page,
+      'button-test',
+      server.PREFIX + '/input/button.html'
+    );
+    const frame = page.frames()[1];
+    const button = await frame.$('button');
+    await button.click();
+    expect(await frame.evaluate(() => globalThis.result)).toBe('Clicked');
+  });
 });

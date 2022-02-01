@@ -101,8 +101,7 @@ class ModuleCache {
    * @param {Destination} destination
    *     The destination.
    * @return {Array.<class<Module>=>}
-   *     An array of Module classes. Will contain `null` items if the module
-   *     name is not implemented in a given layer.
+   *     An array of Module classes.
    */
   getAllModuleClasses(moduleName, destination) {
     const destinationType = destination.type;

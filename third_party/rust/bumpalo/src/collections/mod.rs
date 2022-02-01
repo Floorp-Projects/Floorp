@@ -21,6 +21,9 @@ mod str;
 pub mod string;
 pub use self::string::String;
 
+mod collect_in;
+pub use collect_in::{CollectIn, FromIteratorIn};
+
 // pub mod binary_heap;
 // mod btree;
 // pub mod linked_list;

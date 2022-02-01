@@ -89,6 +89,8 @@ nsMediaSnifferFtypEntry sFtypEntries[] = {
      PatternLabel::ftyp_M4P},
     {PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "qt  ", VIDEO_QUICKTIME),
      PatternLabel::ftyp_qt},
+    {PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "crx ", APPLICATION_OCTET_STREAM),
+     PatternLabel::ftyp_crx},
     {PATTERN_ENTRY("\xFF\xFF\xFF", "iso", VIDEO_MP4),
      PatternLabel::ftyp_iso},  // Could be isom or iso2.
     {PATTERN_ENTRY("\xFF\xFF\xFF\xFF", "mmp4", VIDEO_MP4),

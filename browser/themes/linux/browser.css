@@ -399,10 +399,7 @@ menuitem.bookmark-item {
   /* When temporarily showing the menu bar, make it at least as tall as the tab
    * bar such that the window controls don't appear to move up. */
   :root[tabsintitlebar] #toolbar-menubar[autohide="true"] {
-    height: var(--tab-min-height);
-  }
-  :root[tabsintitlebar][sizemode="normal"] #toolbar-menubar[autohide="true"] {
-    height: var(--tab-min-height);
+    height: calc(var(--tab-min-height) + 2 * var(--tab-block-margin));
   }
 
   /* Make #TabsToolbar transparent as we style underlying #titlebar with

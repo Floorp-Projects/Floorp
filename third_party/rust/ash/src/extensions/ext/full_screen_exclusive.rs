@@ -3,7 +3,6 @@ use crate::vk;
 use crate::{Device, Instance};
 use std::ffi::CStr;
 use std::mem;
-use std::ptr;
 
 #[derive(Clone)]
 pub struct FullScreenExclusive {
@@ -42,26 +41,15 @@ impl FullScreenExclusive {
         physical_device: vk::PhysicalDevice,
         surface_info: &vk::PhysicalDeviceSurfaceInfo2KHR,
     ) -> VkResult<Vec<vk::PresentModeKHR>> {
-        let mut count = 0;
-        self.full_screen_exclusive_fn
-            .get_physical_device_surface_present_modes2_ext(
-                physical_device,
-                surface_info,
-                &mut count,
-                ptr::null_mut(),
-            )
-            .result()?;
-        let mut present_modes = Vec::<vk::PresentModeKHR>::with_capacity(count as usize);
-        let err_code = self
-            .full_screen_exclusive_fn
-            .get_physical_device_surface_present_modes2_ext(
-                physical_device,
-                surface_info,
-                &mut count,
-                present_modes.as_mut_ptr(),
-            );
-        present_modes.set_len(count as usize);
-        err_code.result_with_success(present_modes)
+        read_into_uninitialized_vector(|count, data| {
+            self.full_screen_exclusive_fn
+                .get_physical_device_surface_present_modes2_ext(
+                    physical_device,
+                    surface_info,
+                    count,
+                    data,
+                )
+        })
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkReleaseFullScreenExclusiveModeEXT.html>"]

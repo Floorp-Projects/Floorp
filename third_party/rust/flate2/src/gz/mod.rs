@@ -356,4 +356,33 @@ mod tests {
         write!(f, "Hello world").unwrap();
         f.flush().unwrap();
     }
+
+    use crate::gz::bufread::tests::BlockingCursor;
+    #[test]
+    // test function read_and_forget of Buffer
+    fn blocked_partial_header_read() {
+        // this is a reader which receives data afterwards
+        let mut r = BlockingCursor::new();
+        let data = vec![1, 2, 3];
+
+        match r.write_all(&data) {
+            Ok(()) => {}
+            _ => {
+                panic!("Unexpected result for write_all");
+            }
+        }
+        r.set_position(0);
+
+        // this is unused except for the buffering
+        let mut decoder = read::GzDecoder::new(r);
+        let mut out = Vec::with_capacity(7);
+        match decoder.read(&mut out) {
+            Err(e) => {
+                assert_eq!(e.kind(), std::io::ErrorKind::WouldBlock);
+            }
+            _ => {
+                panic!("Unexpected result for decoder.read");
+            }
+        }
+    }
 }

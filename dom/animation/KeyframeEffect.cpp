@@ -1687,9 +1687,13 @@ bool KeyframeEffect::ShouldBlockAsyncTransformAnimations(
     return true;
   }
 
+  MOZ_ASSERT(mAnimation);
+  // Note: If the geometric animations are using scroll-timeline, we don't need
+  // to synchronize transform animations with them.
   const bool enableMainthreadSynchronizationWithGeometricAnimations =
       StaticPrefs::
-          dom_animations_mainthread_synchronization_with_geometric_animations();
+          dom_animations_mainthread_synchronization_with_geometric_animations() &&
+      !mAnimation->UsingScrollTimeline();
 
   for (const AnimationProperty& property : mProperties) {
     // If there is a property for animations level that is overridden by
@@ -2023,6 +2027,13 @@ KeyframeEffect::MatchForCompositor KeyframeEffect::IsMatchForCompositor(
     // run on the compositor and others to run on the main thread, so if any
     // need to be synchronized with the main thread, run them all there.
     return KeyframeEffect::MatchForCompositor::NoAndBlockThisProperty;
+  }
+
+  // Unconditionally disable OMTA for scroll-timeline.
+  // FIXME: Bug 1737180: Once we support OMTA for scroll-timeline, we can just
+  // drop this.
+  if (mAnimation->UsingScrollTimeline()) {
+    return KeyframeEffect::MatchForCompositor::No;
   }
 
   if (!HasEffectiveAnimationOfPropertySet(aPropertySet, aEffects)) {

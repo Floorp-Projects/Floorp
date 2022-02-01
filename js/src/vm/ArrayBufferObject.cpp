@@ -1824,6 +1824,22 @@ JS_PUBLIC_API bool JS::DetachArrayBuffer(JSContext* cx, HandleObject obj) {
   return true;
 }
 
+JS_PUBLIC_API bool JS::HasDefinedArrayBufferDetachKey(JSContext* cx,
+                                                      HandleObject obj,
+                                                      bool* isDefined) {
+  Rooted<ArrayBufferObject*> unwrappedBuffer(
+      cx, UnwrapOrReportArrayBuffer(cx, obj));
+  if (!unwrappedBuffer) {
+    return false;
+  }
+
+  if (unwrappedBuffer->isWasm() || unwrappedBuffer->isPreparedForAsmJS()) {
+    *isDefined = true;
+  }
+
+  return true;
+}
+
 JS_PUBLIC_API bool JS::IsDetachedArrayBufferObject(JSObject* obj) {
   ArrayBufferObject* aobj = obj->maybeUnwrapIf<ArrayBufferObject>();
   if (!aobj) {
@@ -2044,25 +2060,84 @@ JS::ArrayBuffer JS::ArrayBuffer::unwrap(JSObject* maybeWrapped) {
   return fromObject(ab);
 }
 
-void JS::ArrayBufferCopyData(JSContext* cx, Handle<JSObject*> toBlock,
+bool JS::ArrayBufferCopyData(JSContext* cx, Handle<JSObject*> toBlock,
                              size_t toIndex, Handle<JSObject*> fromBlock,
                              size_t fromIndex, size_t count) {
-  MOZ_ASSERT(toBlock->is<ArrayBufferObjectMaybeShared>());
-  MOZ_ASSERT(fromBlock->is<ArrayBufferObjectMaybeShared>());
+  Rooted<ArrayBufferObjectMaybeShared*> unwrappedToBlock(
+      cx, toBlock->maybeUnwrapIf<ArrayBufferObjectMaybeShared>());
+  if (!unwrappedToBlock) {
+    ReportAccessDenied(cx);
+    return false;
+  }
 
-  // If both are array bufferrs, can use ArrayBufferCopyData
-  if (toBlock->is<ArrayBufferObject>() && fromBlock->is<ArrayBufferObject>()) {
-    Rooted<ArrayBufferObject*> toArray(cx, &toBlock->as<ArrayBufferObject>());
-    Rooted<ArrayBufferObject*> fromArray(cx,
-                                         &fromBlock->as<ArrayBufferObject>());
+  Rooted<ArrayBufferObjectMaybeShared*> unwrappedFromBlock(
+      cx, fromBlock->maybeUnwrapIf<ArrayBufferObjectMaybeShared>());
+  if (!unwrappedFromBlock) {
+    ReportAccessDenied(cx);
+    return false;
+  }
+
+  // Verify that lengths still make sense and throw otherwise.
+  if (toIndex + count < toIndex ||      // size_t overflow
+      fromIndex + count < fromIndex ||  // size_t overflow
+      toIndex + count > unwrappedToBlock->byteLength() ||
+      fromIndex + count > unwrappedFromBlock->byteLength()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_ARRAYBUFFER_COPY_RANGE);
+    return false;
+  }
+
+  // If both are array buffers, can use ArrayBufferCopyData
+  if (unwrappedToBlock->is<ArrayBufferObject>() &&
+      unwrappedFromBlock->is<ArrayBufferObject>()) {
+    Rooted<ArrayBufferObject*> toArray(
+        cx, &unwrappedToBlock->as<ArrayBufferObject>());
+    Rooted<ArrayBufferObject*> fromArray(
+        cx, &unwrappedFromBlock->as<ArrayBufferObject>());
     ArrayBufferObject::copyData(toArray, toIndex, fromArray, fromIndex, count);
-    return;
+    return true;
   }
 
   Rooted<ArrayBufferObjectMaybeShared*> toArray(
-      cx, &toBlock->as<ArrayBufferObjectMaybeShared>());
+      cx, &unwrappedToBlock->as<ArrayBufferObjectMaybeShared>());
   Rooted<ArrayBufferObjectMaybeShared*> fromArray(
-      cx, &toBlock->as<ArrayBufferObjectMaybeShared>());
+      cx, &unwrappedFromBlock->as<ArrayBufferObjectMaybeShared>());
   SharedArrayBufferObject::copyData(toArray, toIndex, fromArray, fromIndex,
                                     count);
+
+  return true;
+}
+
+// https://tc39.es/ecma262/#sec-clonearraybuffer
+// We only support the case where cloneConstructor is %ArrayBuffer%. Note,
+// this means that cloning a SharedArrayBuffer will produce an ArrayBuffer
+JSObject* JS::ArrayBufferClone(JSContext* cx, Handle<JSObject*> srcBuffer,
+                               size_t srcByteOffset, size_t srcLength) {
+  MOZ_ASSERT(srcBuffer->is<ArrayBufferObjectMaybeShared>());
+
+  // 2. (reordered) If IsDetachedBuffer(srcBuffer) is true, throw a TypeError
+  // exception.
+  if (IsDetachedArrayBufferObject(srcBuffer)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TYPED_ARRAY_DETACHED);
+    return nullptr;
+  }
+
+  // 1. Let targetBuffer be ? AllocateArrayBuffer(cloneConstructor, srcLength).
+  JS::RootedObject targetBuffer(cx, JS::NewArrayBuffer(cx, srcLength));
+  if (!targetBuffer) {
+    return nullptr;
+  }
+
+  // 3. Let srcBlock be srcBuffer.[[ArrayBufferData]].
+  // 4. Let targetBlock be targetBuffer.[[ArrayBufferData]].
+  // 5. Perform CopyDataBlockBytes(targetBlock, 0, srcBlock, srcByteOffset,
+  // srcLength).
+  if (!ArrayBufferCopyData(cx, targetBuffer, 0, srcBuffer, srcByteOffset,
+                           srcLength)) {
+    return nullptr;
+  }
+
+  // 6. Return targetBuffer.
+  return targetBuffer;
 }

@@ -4,5 +4,5 @@ sync protocol tooWeakIntrSync {
 
     // it's an error to declare a sync protocol with an interrupt message
 parent:
-  intr Msg();
+  [LegacyIntr] intr Msg();
 };

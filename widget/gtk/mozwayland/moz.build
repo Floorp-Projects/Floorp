@@ -13,4 +13,4 @@ EXPORTS.mozilla.widget += [
 
 SharedLibrary("mozwayland")
 
-CFLAGS += CONFIG["TK_CFLAGS"]
+CFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]

@@ -485,6 +485,7 @@ class WebGLSyncJS final : public nsWrapperCache,
   friend class webgl::AvailabilityRunnable;
 
   bool mCanBeAvailable = false;
+  bool mHasWarnedNotAvailable = false;
   bool mSignaled = false;
 
  public:
@@ -691,8 +692,7 @@ struct TexImageSourceAdapter final : public TexImageSource {
  * Base class for all IDL implementations of WebGLContext
  */
 class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
-                                 public nsWrapperCache,
-                                 public SupportsWeakPtr {
+                                 public nsWrapperCache {
   friend class webgl::AvailabilityRunnable;
   friend class webgl::ObjectJS;
   friend class webgl::ProgramKeepAlive;
@@ -772,13 +772,14 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   bool CreateHostContext(const uvec2& requestedSize);
   void ThrowEvent_WebGLContextCreationError(const std::string&) const;
 
+  void UpdateCanvasParameters();
+
  public:
   void MarkCanvasDirty();
 
   void MarkContextClean() override {}
 
   void OnBeforePaintTransaction() override;
-  ClientWebGLContext* AsWebgl() override { return this; }
 
   mozilla::dom::WebGLChild* GetChild() const {
     if (!mNotLost) return nullptr;
@@ -1008,8 +1009,11 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   void Present(WebGLFramebufferJS*, layers::TextureType,
                const bool webvr = false);
-  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebufferJS*,
-                                                  const bool webvr = false);
+  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(
+      WebGLFramebufferJS*, const bool webvr = false) override;
+  Maybe<layers::SurfaceDescriptor> PresentFrontBuffer(
+      WebGLFramebufferJS*, layers::TextureType,
+      const bool webvr = false) override;
   RefPtr<gfx::SourceSurface> GetFrontBufferSnapshot(
       bool requireAlphaPremult = true) override;
 
@@ -1040,8 +1044,9 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
       strong->Flush(flushGl);
     };
 
-    already_AddRefed<mozilla::Runnable> runnable = NS_NewRunnableFunction(
-        "enqueue Event_webglcontextrestored", DeferredFlush);
+    already_AddRefed<mozilla::CancelableRunnable> runnable =
+        NS_NewCancelableRunnableFunction("enqueue Event_webglcontextrestored",
+                                         DeferredFlush);
     NS_DispatchToCurrentThread(std::move(runnable));
   }
 

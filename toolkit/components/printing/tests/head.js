@@ -6,10 +6,6 @@ let pickerMocked = false;
 
 class PrintHelper {
   static async withTestPage(testFn, pagePathname, useHTTPS = false) {
-    await SpecialPowers.pushPrefEnv({
-      set: [["print.tab_modal.enabled", true]],
-    });
-
     let pageUrl = "";
     if (pagePathname) {
       pageUrl = useHTTPS

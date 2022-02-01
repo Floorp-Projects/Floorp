@@ -6,9 +6,9 @@ from __future__ import division, print_function, unicode_literals
 
 import math
 import os
-import platform
 import shutil
 import sys
+from pathlib import Path
 
 if sys.version_info[0] < 3:
     import __builtin__ as builtins
@@ -140,31 +140,6 @@ CATEGORIES = {
     },
 }
 
-INSTALL_PYTHON_GUIDANCE_LINUX = """
-See https://firefox-source-docs.mozilla.org/setup/linux_build.html#installingpython
-for guidance on how to install Python on your system.
-""".strip()
-
-INSTALL_PYTHON_GUIDANCE_OSX = """
-See https://firefox-source-docs.mozilla.org/setup/macos_build.html
-for guidance on how to prepare your system to build Firefox. Perhaps
-you need to update Xcode, or install Python using brew?
-""".strip()
-
-INSTALL_PYTHON_GUIDANCE_MOZILLABUILD = """
-Python is provided by MozillaBuild; ensure your MozillaBuild
-installation is up to date.
-See https://firefox-source-docs.mozilla.org/setup/windows_build.html#install-mozillabuild
-for details.
-""".strip()
-
-INSTALL_PYTHON_GUIDANCE_OTHER = """
-We do not have specific instructions for your platform on how to
-install Python. You may find Pyenv (https://github.com/pyenv/pyenv)
-helpful, if your system package manager does not provide a way to
-install a recent enough Python 3.
-""".strip()
-
 
 def _activate_python_environment(topsrcdir, get_state_dir):
     from mach.site import MachSiteManager
@@ -176,22 +151,40 @@ def _activate_python_environment(topsrcdir, get_state_dir):
     mach_environment.activate()
 
 
-def initialize(topsrcdir):
-    # Ensure we are running Python 3.6+. We run this check as soon as
-    # possible to avoid a cryptic import/usage error.
-    if sys.version_info < (3, 6):
-        print("Python 3.6+ is required to run mach.")
-        print("You are running Python", platform.python_version())
-        if sys.platform.startswith("linux"):
-            print(INSTALL_PYTHON_GUIDANCE_LINUX)
-        elif sys.platform.startswith("darwin"):
-            print(INSTALL_PYTHON_GUIDANCE_OSX)
-        elif "MOZILLABUILD" in os.environ:
-            print(INSTALL_PYTHON_GUIDANCE_MOZILLABUILD)
-        else:
-            print(INSTALL_PYTHON_GUIDANCE_OTHER)
-        sys.exit(1)
+def _maybe_activate_mozillabuild_environment():
+    if sys.platform != "win32":
+        return
 
+    mozillabuild = Path(os.environ.get("MOZILLABUILD", r"C:\mozilla-build"))
+    assert mozillabuild.exists(), (
+        f'MozillaBuild was not found at "{mozillabuild}".\n'
+        "If it's installed in a different location, please "
+        'set the "MOZILLABUILD" environment variable '
+        "accordingly."
+    )
+
+    for entry in os.environ.get("PATH", "").split(":"):
+        entry = Path(entry)
+        if mozillabuild in entry.parents:
+            # We're already running with MozillaBuild directories in our PATH: either
+            # that's because we're inside the MozillaBuild shell, or the active developer
+            # has manually set up the PATH entries.
+            return
+
+    use_msys2 = (mozillabuild / "msys2").exists()
+    if use_msys2:
+        mozillabuild_msys_tools_path = mozillabuild / "msys2" / "usr" / "bin"
+    else:
+        mozillabuild_msys_tools_path = mozillabuild / "msys" / "bin"
+
+    os.environ.setdefault("MOZILLABUILD", str(mozillabuild))
+    os.environ["PATH"] += (
+        f"{os.pathsep}{mozillabuild_msys_tools_path}"
+        f"{os.pathsep}{mozillabuild / 'bin'}"
+    )
+
+
+def initialize(topsrcdir):
     # This directory was deleted in bug 1666345, but there may be some ignored
     # files here. We can safely just delete it for the user so they don't have
     # to clean the repo themselves.
@@ -219,6 +212,7 @@ def initialize(topsrcdir):
     _activate_python_environment(
         topsrcdir, lambda: os.path.normpath(get_state_dir(True, topsrcdir=topsrcdir))
     )
+    _maybe_activate_mozillabuild_environment()
 
     import mach.base
     import mach.main

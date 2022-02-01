@@ -148,7 +148,7 @@ int av_compare_ts(int64_t ts_a, AVRational tb_a, int64_t ts_b, AVRational tb_b)
 {
     int64_t a = tb_a.num * (int64_t)tb_b.den;
     int64_t b = tb_b.num * (int64_t)tb_a.den;
-    if ((FFABS(ts_a)|a|FFABS(ts_b)|b) <= INT_MAX)
+    if ((FFABS64U(ts_a)|a|FFABS64U(ts_b)|b) <= INT_MAX)
         return (ts_a*a > ts_b*b) - (ts_a*a < ts_b*b);
     if (av_rescale_rnd(ts_a, a, b, AV_ROUND_DOWN) < ts_b)
         return -1;
@@ -198,7 +198,7 @@ int64_t av_add_stable(AVRational ts_tb, int64_t ts, AVRational inc_tb, int64_t i
     m = inc_tb.num * (int64_t)ts_tb.den;
     d = inc_tb.den * (int64_t)ts_tb.num;
 
-    if (m % d == 0)
+    if (m % d == 0 && ts <= INT64_MAX - m / d)
         return ts + m / d;
     if (m < d)
         return ts;
@@ -206,6 +206,10 @@ int64_t av_add_stable(AVRational ts_tb, int64_t ts, AVRational inc_tb, int64_t i
     {
         int64_t old = av_rescale_q(ts, ts_tb, inc_tb);
         int64_t old_ts = av_rescale_q(old, inc_tb, ts_tb);
-        return av_rescale_q(old + 1, inc_tb, ts_tb) + (ts - old_ts);
+
+        if (old == INT64_MAX || old == AV_NOPTS_VALUE || old_ts == AV_NOPTS_VALUE)
+            return ts;
+
+        return av_sat_add64(av_rescale_q(old + 1, inc_tb, ts_tb), ts - old_ts);
     }
 }

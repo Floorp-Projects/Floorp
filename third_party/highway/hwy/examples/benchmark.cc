@@ -16,7 +16,9 @@
 #define HWY_TARGET_INCLUDE "hwy/examples/benchmark.cc"
 #include "hwy/foreach_target.h"
 
+#include <inttypes.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #include <memory>
@@ -57,7 +59,7 @@ template <class Benchmark>
 void RunBenchmark(const char* caption) {
   printf("%10s: ", caption);
   const size_t kNumInputs = 1;
-  const size_t num_items = Benchmark::NumItems() * Unpredictable1();
+  const size_t num_items = Benchmark::NumItems() * size_t(Unpredictable1());
   const FuncInput inputs[kNumInputs] = {num_items};
   Result results[kNumInputs];
 
@@ -77,16 +79,17 @@ void RunBenchmark(const char* caption) {
   benchmark.Verify(num_items);
 
   for (size_t i = 0; i < num_results; ++i) {
-    const double cycles_per_item = results[i].ticks / results[i].input;
+    const double cycles_per_item = results[i].ticks / double(results[i].input);
     const double mad = results[i].variability * cycles_per_item;
-    printf("%6zu: %6.3f (+/- %5.3f)\n", results[i].input, cycles_per_item, mad);
+    printf("%6" PRIu64 ": %6.3f (+/- %5.3f)\n",
+           static_cast<uint64_t>(results[i].input), cycles_per_item, mad);
   }
 }
 
 void Intro() {
   HWY_ALIGN const float in[16] = {1, 2, 3, 4, 5, 6};
   HWY_ALIGN float out[16];
-  HWY_FULL(float) d;  // largest possible vector
+  const ScalableTag<float> d;  // largest possible vector
   for (size_t i = 0; i < 16; i += Lanes(d)) {
     const auto vec = Load(d, in + i);  // aligned!
     auto result = vec * vec;
@@ -103,22 +106,22 @@ class BenchmarkDot : public TwoArray {
   BenchmarkDot() : dot_{-1.0f} {}
 
   FuncOutput operator()(const size_t num_items) {
-    HWY_FULL(float) d;
+    const ScalableTag<float> d;
     const size_t N = Lanes(d);
     using V = decltype(Zero(d));
-    constexpr int unroll = 8;
+    constexpr size_t unroll = 8;
     // Compiler doesn't make independent sum* accumulators, so unroll manually.
     // Some older compilers might not be able to fit the 8 arrays in registers,
     // so manual unrolling can be helpfull if you run into this issue.
     // 2 FMA ports * 4 cycle latency = 8x unrolled.
     V sum[unroll];
-    for (int i = 0; i < unroll; ++i) {
+    for (size_t i = 0; i < unroll; ++i) {
       sum[i] = Zero(d);
     }
     const float* const HWY_RESTRICT pa = &a_[0];
     const float* const HWY_RESTRICT pb = b_;
     for (size_t i = 0; i < num_items; i += unroll * N) {
-      for (int j = 0; j < unroll; ++j) {
+      for (size_t j = 0; j < unroll; ++j) {
         const auto a = Load(d, pa + i + j * N);
         const auto b = Load(d, pb + i + j * N);
         sum[j] = MulAdd(a, b, sum[j]);
@@ -126,12 +129,12 @@ class BenchmarkDot : public TwoArray {
     }
     // Reduction tree: sum of all accumulators by pairs into sum[0], then the
     // lanes.
-    for (int power = 1; power < unroll; power *= 2) {
-      for (int i = 0; i < unroll; i += 2 * power) {
+    for (size_t power = 1; power < unroll; power *= 2) {
+      for (size_t i = 0; i < unroll; i += 2 * power) {
         sum[i] += sum[i + power];
       }
     }
-    dot_ = GetLane(SumOfLanes(sum[0]));
+    dot_ = GetLane(SumOfLanes(d, sum[0]));
     return static_cast<FuncOutput>(dot_);
   }
   void Verify(size_t num_items) {
@@ -166,7 +169,7 @@ struct BenchmarkDelta : public TwoArray {
 #elif HWY_CAP_GE256
     // Larger vectors are split into 128-bit blocks, easiest to use the
     // unaligned load support to shift between them.
-    const HWY_FULL(float) df;
+    const ScalableTag<float> df;
     const size_t N = Lanes(df);
     size_t i;
     b_[0] = a_[0];

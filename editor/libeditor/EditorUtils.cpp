@@ -13,6 +13,7 @@
 
 #include "gfxFontUtils.h"
 #include "mozilla/ComputedStyle.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLBRElement.h"
@@ -126,6 +127,62 @@ void AutoRangeArray::EnsureOnlyEditableRanges(const Element& aEditingHost) {
     }
   }
   mAnchorFocusRange = mRanges.IsEmpty() ? nullptr : mRanges.LastElement().get();
+}
+
+void AutoRangeArray::EnsureRangesInTextNode(const Text& aTextNode) {
+  auto GetOffsetInTextNode = [&aTextNode](const nsINode* aNode,
+                                          uint32_t aOffset) -> uint32_t {
+    MOZ_DIAGNOSTIC_ASSERT(aNode);
+    if (aNode == &aTextNode) {
+      return aOffset;
+    }
+    const nsIContent* anonymousDivElement = aTextNode.GetParent();
+    MOZ_DIAGNOSTIC_ASSERT(anonymousDivElement);
+    MOZ_DIAGNOSTIC_ASSERT(anonymousDivElement->IsHTMLElement(nsGkAtoms::div));
+    MOZ_DIAGNOSTIC_ASSERT(anonymousDivElement->GetFirstChild() == &aTextNode);
+    if (aNode == anonymousDivElement && aOffset == 0u) {
+      return 0u;  // Point before the text node so that use start of the text.
+    }
+    MOZ_DIAGNOSTIC_ASSERT(aNode->IsInclusiveDescendantOf(anonymousDivElement));
+    // Point after the text node so that use end of the text.
+    return aTextNode.TextDataLength();
+  };
+  for (uint32_t i : IntegerRange(mRanges.Length())) {
+    const OwningNonNull<nsRange>& range = mRanges[i];
+    if (MOZ_LIKELY(range->GetStartContainer() == &aTextNode &&
+                   range->GetEndContainer() == &aTextNode)) {
+      continue;
+    }
+    range->SetStartAndEnd(
+        const_cast<Text*>(&aTextNode),
+        GetOffsetInTextNode(range->GetStartContainer(), range->StartOffset()),
+        const_cast<Text*>(&aTextNode),
+        GetOffsetInTextNode(range->GetEndContainer(), range->EndOffset()));
+  }
+
+  if (MOZ_UNLIKELY(mRanges.Length() >= 2)) {
+    // For avoiding to handle same things in same range, we should drop and
+    // merge unnecessary ranges.  Note that the ranges never overlap
+    // because selection ranges are not allowed it so that we need to check only
+    // end offset vs start offset of next one.
+    for (uint32_t i : Reversed(IntegerRange(mRanges.Length() - 1u))) {
+      MOZ_ASSERT(mRanges[i]->EndOffset() < mRanges[i + 1]->StartOffset());
+      // XXX Should we delete collapsed range unless the index is 0?  Without
+      //     Selection API, such situation cannot happen so that `TextEditor`
+      //     may behave unexpectedly.
+      if (MOZ_UNLIKELY(mRanges[i]->EndOffset() >=
+                       mRanges[i + 1]->StartOffset())) {
+        const uint32_t newEndOffset = mRanges[i + 1]->EndOffset();
+        mRanges.RemoveElementAt(i + 1);
+        if (MOZ_UNLIKELY(NS_WARN_IF(newEndOffset > mRanges[i]->EndOffset()))) {
+          // So, this case shouldn't happen.
+          mRanges[i]->SetStartAndEnd(
+              const_cast<Text*>(&aTextNode), mRanges[i]->StartOffset(),
+              const_cast<Text*>(&aTextNode), newEndOffset);
+        }
+      }
+    }
+  }
 }
 
 Result<nsIEditor::EDirection, nsresult>
@@ -546,10 +603,11 @@ bool EditorUtils::IsPointInSelection(const Selection& aSelection,
     return false;
   }
 
-  uint32_t rangeCount = aSelection.RangeCount();
-  for (uint32_t i = 0; i < rangeCount; i++) {
+  const uint32_t rangeCount = aSelection.RangeCount();
+  for (const uint32_t i : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(aSelection.RangeCount() == rangeCount);
     RefPtr<const nsRange> range = aSelection.GetRangeAt(i);
-    if (!range) {
+    if (MOZ_UNLIKELY(NS_WARN_IF(!range))) {
       // Don't bail yet, iterate through them all
       continue;
     }

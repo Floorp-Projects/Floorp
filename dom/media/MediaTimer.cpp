@@ -53,10 +53,10 @@ void MediaTimer::Destroy() {
   {
     MonitorAutoLock lock(mMonitor);
     Reject();
-  }
 
-  // Cancel the timer if necessary.
-  CancelTimerIfArmed();
+    // Cancel the timer if necessary.
+    CancelTimerIfArmed();
+  }
 
   delete this;
 }

@@ -187,7 +187,7 @@ bool GMPVideoDecoderChild::Alloc(size_t aSize,
   bool rv;
 #ifndef SHMEM_ALLOC_IN_CHILD
   ++mNeedShmemIntrCount;
-  rv = CallNeedShmem(aSize, aMem);
+  rv = SendNeedShmem(aSize, aMem);
   --mNeedShmemIntrCount;
   if (mPendingDecodeComplete && mNeedShmemIntrCount == 0) {
     mPendingDecodeComplete = false;

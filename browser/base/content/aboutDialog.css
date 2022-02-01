@@ -90,18 +90,16 @@ image.update-throbber {
   }
 }
 
-description > .text-link,
-description > .text-link:focus {
+description > .text-link {
   margin: 0;
   padding: 0;
 }
 
 #submit-feedback {
-  padding-inline-start: 10px;
+  margin-inline-start: .9em;
 }
 
-.bottom-link,
-.bottom-link:focus {
+.bottom-link {
   text-align: center;
   margin: 0 40px;
 }

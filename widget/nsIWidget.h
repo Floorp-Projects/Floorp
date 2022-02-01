@@ -534,6 +534,11 @@ class nsIWidget : public nsISupports {
   virtual nsIWidgetListener* GetPreviouslyAttachedWidgetListener() = 0;
 
   /**
+   * Notifies the root widget of a non-blank paint.
+   */
+  virtual void DidGetNonBlankPaint() {}
+
+  /**
    * Accessor functions to get and set the listener which handles various
    * actions for the widget.
    */
@@ -1330,6 +1335,12 @@ class nsIWidget : public nsISupports {
    */
   virtual void DispatchEventToAPZOnly(mozilla::WidgetInputEvent* aEvent) = 0;
 
+  /*
+   * Dispatch a gecko event for this widget.
+   * Returns true if it's consumed.  Otherwise, false.
+   */
+  virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent& event) = 0;
+
   // A structure that groups the statuses from APZ dispatch and content
   // dispatch.
   struct ContentAndAPZEventStatus {
@@ -1359,6 +1370,10 @@ class nsIWidget : public nsISupports {
    * Returns true if APZ is in use, false otherwise.
    */
   virtual bool AsyncPanZoomEnabled() const = 0;
+
+  /**
+   */
+  virtual void SwipeFinished() = 0;
 
   /**
    * Enables the dropping of files to a widget.

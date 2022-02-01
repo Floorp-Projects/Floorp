@@ -1,6 +1,8 @@
 //! Test using `Bytes` with an allocator that hands out "odd" pointers for
 //! vectors (pointers where the LSB is set).
 
+#![cfg(not(miri))] // Miri does not support custom allocators (also, Miri is "odd" by default with 50% chance)
+
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::ptr;
 

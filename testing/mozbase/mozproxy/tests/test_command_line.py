@@ -81,7 +81,7 @@ class OutputHandler(object):
 
 @pytest.fixture(scope="module")
 def install_mozproxy():
-    build = MozbuildObject.from_environment(cwd=here, virtualenv_name="python-test")
+    build = MozbuildObject.from_environment(cwd=here)
     build.virtualenv_manager.activate()
 
     mozbase = os.path.join(build.topsrcdir, "testing", "mozbase")

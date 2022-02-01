@@ -320,6 +320,13 @@ class SyntaxParseHandler {
   ListNodeType newObjectLiteral(uint32_t begin) {
     return NodeUnparenthesizedObject;
   }
+
+#ifdef ENABLE_RECORD_TUPLE
+  ListNodeType newRecordLiteral(uint32_t begin) { return NodeGeneric; }
+
+  ListNodeType newTupleLiteral(uint32_t begin) { return NodeGeneric; }
+#endif
+
   ListNodeType newClassMemberList(uint32_t begin) { return NodeGeneric; }
   ClassNamesType newClassNames(Node outer, Node inner, const TokenPos& pos) {
     return NodeGeneric;

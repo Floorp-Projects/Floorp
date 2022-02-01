@@ -226,9 +226,10 @@ namespace JS {
 template <>
 struct GCPolicy<jsid> {
   static void trace(JSTracer* trc, jsid* idp, const char* name) {
-    // It's not safe to trace unbarriered pointers except as part of root
-    // marking.
-    UnsafeTraceRoot(trc, idp, name);
+    // This should only be called as part of root marking since that's the only
+    // time we should trace unbarriered GC thing pointers. This will assert if
+    // called at other times.
+    TraceRoot(trc, idp, name);
   }
   static bool isValid(jsid id) {
     return !id.isGCThing() ||

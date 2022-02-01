@@ -43,6 +43,10 @@ s! {
         pub bh_datalen: u32,
         pub bh_hdrlen: ::c_ushort,
     }
+
+    pub struct malloc_zone_t {
+        __private: [::uintptr_t; 18], // FIXME: keeping private for now
+    }
 }
 
 s_no_extra_traits! {

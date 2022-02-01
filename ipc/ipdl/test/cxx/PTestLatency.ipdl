@@ -9,11 +9,11 @@ child:
     async __delete__();
     async Ping();
     async Ping5();
-    intr Rpc();
+    [LegacyIntr] intr Rpc();
     async Spam();
-    intr Synchro();
+    [LegacyIntr] intr Synchro();
     [Compress] async CompressedSpam(uint32_t seqno);
-    intr Synchro2() returns (uint32_t lastSeqno,
+    [LegacyIntr] intr Synchro2() returns (uint32_t lastSeqno,
                             uint32_t numMessagesDispatched);
 
 parent:

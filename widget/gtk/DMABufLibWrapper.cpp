@@ -275,11 +275,12 @@ bool nsDMABufDevice::IsDMABufVideoEnabled() {
 bool nsDMABufDevice::IsDMABufVAAPIEnabled() {
   LOGDMABUF(
       ("nsDMABufDevice::IsDMABufVAAPIEnabled: EGL %d DMABufEnabled %d  "
-       "media_ffmpeg_vaapi_enabled %d CanUseHardwareVideoDecoding %d\n",
+       "media_ffmpeg_vaapi_enabled %d CanUseHardwareVideoDecoding %d "
+       "XRE_IsRDDProcess %d\n",
        gfx::gfxVars::UseEGL(), IsDMABufEnabled(),
        StaticPrefs::media_ffmpeg_vaapi_enabled(),
-       gfx::gfxVars::CanUseHardwareVideoDecoding()));
-  return StaticPrefs::media_ffmpeg_vaapi_enabled() &&
+       gfx::gfxVars::CanUseHardwareVideoDecoding(), XRE_IsRDDProcess()));
+  return StaticPrefs::media_ffmpeg_vaapi_enabled() && XRE_IsRDDProcess() &&
          gfx::gfxVars::UseDMABuf() && IsDMABufEnabled() &&
          gfx::gfxVars::CanUseHardwareVideoDecoding();
 }

@@ -498,28 +498,37 @@ class AnimationInspector {
   }
 
   async setAnimationsPlaybackRate(playbackRate) {
+    if (!this.inspector) {
+      return; // Already destroyed or another node selected.
+    }
+
     let animations = this.state.animations;
     // "changed" event on each animation will fire respectively when the playback
     // rate changed. Since for each occurrence of event, change of UI is urged.
     // To avoid this, disable the listeners once in order to not capture the event.
     this.setAnimationStateChangedListenerEnabled(false);
-
     try {
       await this.animationsFront.setPlaybackRates(animations, playbackRate);
       animations = await this.refreshAnimationsState(animations);
     } catch (e) {
-      // Expected if we've already been destroyed or other node have been selected
-      // in the meantime.
+      // Expected if we've already been destroyed or another node has been
+      // selected in the meantime.
       console.error(e);
       return;
     } finally {
       this.setAnimationStateChangedListenerEnabled(true);
     }
 
-    await this.fireUpdateAction(animations);
+    if (animations) {
+      await this.fireUpdateAction(animations);
+    }
   }
 
   async setAnimationsPlayState(doPlay) {
+    if (!this.inspector) {
+      return; // Already destroyed or another node selected.
+    }
+
     let { animations, timeScale } = this.state;
 
     try {
@@ -558,6 +567,9 @@ class AnimationInspector {
    * @param {Bool} isEnabled
    */
   setAnimationStateChangedListenerEnabled(isEnabled) {
+    if (!this.inspector) {
+      return; // Already destroyed.
+    }
     if (isEnabled) {
       for (const animation of this.state.animations) {
         animation.on("changed", this.onAnimationStateChanged);

@@ -384,16 +384,15 @@ def Version(v):
 # The function may handle the option like a typical @depends function would,
 # but it is recommended it emits a deprecation error message suggesting an
 # alternative option to use if there is one.
-
-
 @template
 def deprecated_option(*args, **kwargs):
     assert "help" not in kwargs
     kwargs["help"] = "Deprecated"
     opt = option(*args, **kwargs)
+    kwargs = {k: v for k, v in kwargs.items() if k == "when"}
 
     def decorator(func):
-        @depends(opt.option)
+        @depends(opt.option, **kwargs)
         def deprecated(value):
             if value.origin != "default":
                 return func(value)

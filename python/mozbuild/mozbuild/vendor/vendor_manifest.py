@@ -36,8 +36,8 @@ class VendorManifest(MozbuildObject):
 
         # Check that updatebot key is available for libraries with existing
         # moz.yaml files but missing updatebot information
-        if "updatebot" in self.manifest:
-            ref_type = self.manifest["updatebot"]["tracking"]
+        if "vendoring" in self.manifest:
+            ref_type = self.manifest["vendoring"]["tracking"]
             if ref_type == "tag":
                 ref, timestamp = self.source_host.upstream_tag(revision)
             else:
@@ -65,36 +65,65 @@ class VendorManifest(MozbuildObject):
             print("%s %s" % (ref, timestamp))
             return
 
-        self.fetch_and_unpack(ref)
+        def perform_step(step):
+            return step not in self.manifest["vendoring"].get(
+                "skip-vendoring-steps", []
+            )
 
-        self.log(logging.INFO, "vendor", {}, "Removing unnecessary files.")
-        self.clean_upstream()
+        if perform_step("fetch"):
+            self.fetch_and_unpack(ref)
+        else:
+            self.log(logging.INFO, "vendor", {}, "Skipping fetching upstream source.")
 
-        self.log(logging.INFO, "vendor", {}, "Updating moz.yaml.")
-        self.update_yaml(yaml_file, ref, timestamp)
+        if perform_step("exclude"):
+            self.log(logging.INFO, "vendor", {}, "Removing unnecessary files.")
+            self.clean_upstream()
+        else:
+            self.log(logging.INFO, "vendor", {}, "Skipping removing excluded files.")
 
-        self.log(logging.INFO, "vendor", {}, "Updating files")
-        self.update_files(ref, yaml_file)
+        if perform_step("update-moz-yaml"):
+            self.log(logging.INFO, "vendor", {}, "Updating moz.yaml.")
+            self.update_yaml(yaml_file, ref, timestamp)
+        else:
+            self.log(logging.INFO, "vendor", {}, "Skipping updating the moz.yaml file.")
 
-        self.log(
-            logging.INFO, "vendor", {}, "Registering changes with version control."
-        )
-        self.repository.add_remove_files(
-            self.manifest["vendoring"]["vendor-directory"], os.path.dirname(yaml_file)
-        )
+        if perform_step("update-actions"):
+            self.log(logging.INFO, "vendor", {}, "Updating files")
+            self.update_files(ref, yaml_file)
+        else:
+            self.log(logging.INFO, "vendor", {}, "Skipping running the update actions.")
 
-        self.log(logging.INFO, "vendor", {}, "Updating moz.build files")
-        self.update_moz_build(
-            self.manifest["vendoring"]["vendor-directory"],
-            os.path.dirname(yaml_file),
-            add_to_exports,
-        )
+        if perform_step("hg-add"):
+            self.log(
+                logging.INFO, "vendor", {}, "Registering changes with version control."
+            )
+            self.repository.add_remove_files(
+                self.manifest["vendoring"]["vendor-directory"],
+                os.path.dirname(yaml_file),
+            )
+        else:
+            self.log(
+                logging.INFO,
+                "vendor",
+                {},
+                "Skipping registering changes with version control.",
+            )
+
+        if perform_step("update-moz-build"):
+            self.log(logging.INFO, "vendor", {}, "Updating moz.build files")
+            self.update_moz_build(
+                self.manifest["vendoring"]["vendor-directory"],
+                os.path.dirname(yaml_file),
+                add_to_exports,
+            )
+        else:
+            self.log(logging.INFO, "vendor", {}, "Skipping update of moz.build files")
 
         self.log(
             logging.INFO,
             "done",
             {"revision": revision},
-            "Update to version '{revision}' ready to commit.",
+            "Update to version '{revision}' completed.",
         )
 
     def get_source_host(self):
@@ -110,6 +139,10 @@ class VendorManifest(MozbuildObject):
             from mozbuild.vendor.host_googlesource import GoogleSourceHost
 
             return GoogleSourceHost(self.manifest)
+        elif self.manifest["vendoring"]["source-hosting"] == "angle":
+            from mozbuild.vendor.host_angle import AngleHost
+
+            return AngleHost(self.manifest)
         else:
             raise Exception(
                 "Unknown source host: " + self.manifest["vendoring"]["source-hosting"]
@@ -238,7 +271,7 @@ class VendorManifest(MozbuildObject):
                     logging.INFO,
                     "vendor",
                     {"src": src, "dst": dst},
-                    "Performing copy-file action src: {src} dst: {dst}",
+                    "action: copy-file src: {src} dst: {dst}",
                 )
 
                 with open(src) as f:
@@ -286,7 +319,7 @@ class VendorManifest(MozbuildObject):
                     logging.INFO,
                     "vendor",
                     {"file": file},
-                    "Performing replace-in-file action file: {file}",
+                    "action: replace-in-file file: {file}",
                 )
 
                 with open(file) as f:
@@ -303,19 +336,32 @@ class VendorManifest(MozbuildObject):
                     logging.INFO,
                     "vendor",
                     {"path": path},
-                    "Performing delete-path action path: {path}",
+                    "action: delete-path path: {path}",
                 )
                 mozfile.remove(path)
             elif update["action"] == "run-script":
                 script = get_full_path(update["script"], support_cwd=True)
-                run_dir = get_full_path(update["cwd"])
+                run_dir = get_full_path(update["cwd"], support_cwd=True)
+
+                args = []
+                for a in update.get("args", []):
+                    if a == "{revision}":
+                        args.append(revision)
+                    else:
+                        args.append(a)
+
                 self.log(
                     logging.INFO,
                     "vendor",
-                    {"script": script, "run_dir": run_dir},
-                    "Performing run-script action script: {script} working dir: {run_dir}",
+                    {"script": script, "run_dir": run_dir, "args": args},
+                    "action: run-script script: {script} working dir: {run_dir} args: {args}",
                 )
-                self.run_process(args=[script], cwd=run_dir, log_name=script)
+                self.run_process(
+                    args=[script] + args,
+                    cwd=run_dir,
+                    log_name=script,
+                    require_unix_environment=True,
+                )
             else:
                 assert False, "Unknown action supplied (how did this pass validation?)"
 

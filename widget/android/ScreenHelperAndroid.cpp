@@ -63,8 +63,8 @@ void ScreenHelperAndroid::Refresh() {
     mScreens.InsertOrUpdate(0, std::move(screen));
   }
 
-  ScreenManager& manager = ScreenManager::GetSingleton();
-  manager.Refresh(ToTArray<AutoTArray<RefPtr<Screen>, 1>>(mScreens.Values()));
+  ScreenManager::Refresh(
+      ToTArray<AutoTArray<RefPtr<Screen>, 1>>(mScreens.Values()));
 }
 
 already_AddRefed<Screen> ScreenHelperAndroid::ScreenForId(uint32_t aScreenId) {

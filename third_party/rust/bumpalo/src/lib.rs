@@ -154,7 +154,7 @@ Bumpalo is a `no_std` crate. It depends only on the `alloc` and `core` crates.
 
 ## Thread support
 
-The `Bump` is `!Send`, which makes it hard to use in certain situations around threads ‒ for
+The `Bump` is `!Sync`, which makes it hard to use in certain situations around threads ‒ for
 example in `rayon`.
 
 The [`bumpalo-herd`](https://crates.io/crates/bumpalo-herd) crate provides a pool of `Bump`
@@ -485,6 +485,19 @@ struct ChunkFooter {
     ptr: Cell<NonNull<u8>>,
 }
 
+impl ChunkFooter {
+    // Returns the start and length of the currently allocated region of this
+    // chunk.
+    fn as_raw_parts(&self) -> (*const u8, usize) {
+        let data = self.data.as_ptr() as usize;
+        let ptr = self.ptr.get().as_ptr() as usize;
+        debug_assert!(data <= ptr);
+        debug_assert!(ptr <= self as *const _ as usize);
+        let len = self as *const _ as usize - ptr;
+        (ptr as *const u8, len)
+    }
+}
+
 impl Default for Bump {
     fn default() -> Bump {
         Bump::new()
@@ -539,7 +552,7 @@ const MALLOC_OVERHEAD: usize = 16;
 // we want to request a chunk of memory that has at least X bytes usable for
 // allocations (where X is aligned to CHUNK_ALIGN), then we expect that the
 // after adding a footer, malloc overhead and alignment, the chunk of memory
-// the allocator actually sets asside for us is X+OVERHEAD rounded up to the
+// the allocator actually sets aside for us is X+OVERHEAD rounded up to the
 // nearest suitable size boundary.
 const OVERHEAD: usize = (MALLOC_OVERHEAD + FOOTER_SIZE + (CHUNK_ALIGN - 1)) & !(CHUNK_ALIGN - 1);
 
@@ -1580,7 +1593,33 @@ impl Bump {
     /// }
     /// ```
     pub fn iter_allocated_chunks(&mut self) -> ChunkIter<'_> {
+        // SAFE: Ensured by mutable borrow of `self`.
+        let raw = unsafe { self.iter_allocated_chunks_raw() };
         ChunkIter {
+            raw,
+            bump: PhantomData,
+        }
+    }
+
+    /// Returns an iterator over raw pointers to chunks of allocated memory that
+    /// this arena has bump allocated into.
+    ///
+    /// This is an unsafe version of [`iter_allocated_chunks()`](Bump::iter_allocated_chunks),
+    /// with the caller responsible for safe usage of the returned pointers as
+    /// well as ensuring that the iterator is not invalidated by new
+    /// allocations.
+    ///
+    /// ## Safety
+    ///
+    /// Allocations from this arena must not be performed while the returned
+    /// iterator is alive. If reading the chunk data (or casting to a reference)
+    /// the caller must ensure that there exist no mutable references to
+    /// previously allocated data.
+    ///
+    /// In addition, all of the caveats when reading the chunk data from
+    /// [`iter_allocated_chunks()`](Bump::iter_allocated_chunks) still apply.
+    pub unsafe fn iter_allocated_chunks_raw(&self) -> ChunkRawIter<'_> {
+        ChunkRawIter {
             footer: Some(self.current_chunk_footer.get()),
             bump: PhantomData,
         }
@@ -1714,7 +1753,7 @@ impl Bump {
 /// [`iter_allocated_chunks`]: ./struct.Bump.html#method.iter_allocated_chunks
 #[derive(Debug)]
 pub struct ChunkIter<'a> {
-    footer: Option<NonNull<ChunkFooter>>,
+    raw: ChunkRawIter<'a>,
     bump: PhantomData<&'a mut Bump>,
 }
 
@@ -1722,22 +1761,46 @@ impl<'a> Iterator for ChunkIter<'a> {
     type Item = &'a [mem::MaybeUninit<u8>];
     fn next(&mut self) -> Option<&'a [mem::MaybeUninit<u8>]> {
         unsafe {
-            let foot = self.footer?;
-            let foot = foot.as_ref();
-            let data = foot.data.as_ptr() as usize;
-            let ptr = foot.ptr.get().as_ptr() as usize;
-            debug_assert!(data <= ptr);
-            debug_assert!(ptr <= foot as *const _ as usize);
-
-            let len = foot as *const _ as usize - ptr;
+            let (ptr, len) = self.raw.next()?;
             let slice = slice::from_raw_parts(ptr as *const mem::MaybeUninit<u8>, len);
-            self.footer = foot.prev.get();
             Some(slice)
         }
     }
 }
 
 impl<'a> iter::FusedIterator for ChunkIter<'a> {}
+
+/// An iterator over raw pointers to chunks of allocated memory that this
+/// arena has bump allocated into.
+///
+/// See [`ChunkIter`] for details regarding the returned chunks.
+///
+/// This struct is created by the [`iter_allocated_chunks_raw`] method on
+/// [`Bump`]. See that function for a safety description regarding reading from
+/// the returned items.
+///
+/// [`Bump`]: ./struct.Bump.html
+/// [`iter_allocated_chunks_raw`]: ./struct.Bump.html#method.iter_allocated_chunks_raw
+#[derive(Debug)]
+pub struct ChunkRawIter<'a> {
+    footer: Option<NonNull<ChunkFooter>>,
+    bump: PhantomData<&'a Bump>,
+}
+
+impl Iterator for ChunkRawIter<'_> {
+    type Item = (*mut u8, usize);
+    fn next(&mut self) -> Option<(*mut u8, usize)> {
+        unsafe {
+            let foot = self.footer?;
+            let foot = foot.as_ref();
+            let (ptr, len) = foot.as_raw_parts();
+            self.footer = foot.prev.get();
+            Some((ptr as *mut u8, len))
+        }
+    }
+}
+
+impl iter::FusedIterator for ChunkRawIter<'_> {}
 
 #[inline(never)]
 #[cold]

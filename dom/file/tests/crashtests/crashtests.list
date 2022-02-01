@@ -1,2 +1,3 @@
 skip-if(ThreadSanitizer) load 1480354.html
 load 1562891.html
+skip-if(Android||ThreadSanitizer) load 1747185.html # Crashes on Android, times out on TSan.

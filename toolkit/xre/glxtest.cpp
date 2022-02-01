@@ -106,10 +106,12 @@ typedef void* (*PFNEGLGETPROCADDRESS)(const char*);
 #define EGL_RED_SIZE 0x3024
 #define EGL_NONE 0x3038
 #define EGL_VENDOR 0x3053
+#define EGL_EXTENSIONS 0x3055
 #define EGL_CONTEXT_CLIENT_VERSION 0x3098
 #define EGL_OPENGL_API 0x30A2
 #define EGL_DEVICE_EXT 0x322C
 #define EGL_DRM_DEVICE_FILE_EXT 0x3233
+#define EGL_DRM_RENDER_NODE_FILE_EXT 0x3377
 
 // stuff from xf86drm.h
 #define DRM_NODE_RENDER 2
@@ -349,11 +351,11 @@ static bool device_has_name(const drmDevice* device, const char* name) {
   return false;
 }
 
-static void get_render_name(const char* name) {
+static bool get_render_name(const char* name) {
   void* libdrm = dlopen(LIBDRM_FILENAME, RTLD_LAZY);
   if (!libdrm) {
     record_warning("Failed to open libdrm");
-    return;
+    return false;
   }
 
   typedef int (*DRMGETDEVICES2)(uint32_t, drmDevicePtr*, int);
@@ -368,7 +370,7 @@ static void get_render_name(const char* name) {
     record_warning(
         "libdrm missing methods for drmGetDevices2 or drmFreeDevice");
     dlclose(libdrm);
-    return;
+    return false;
   }
 
   uint32_t flags = 0;
@@ -376,20 +378,20 @@ static void get_render_name(const char* name) {
   if (devices_len < 0) {
     record_warning("drmGetDevices2 failed");
     dlclose(libdrm);
-    return;
+    return false;
   }
   drmDevice** devices = (drmDevice**)calloc(devices_len, sizeof(drmDevice*));
   if (!devices) {
     record_warning("Allocation error");
     dlclose(libdrm);
-    return;
+    return false;
   }
   devices_len = drmGetDevices2(flags, devices, devices_len);
   if (devices_len < 0) {
     free(devices);
     record_warning("drmGetDevices2 failed");
     dlclose(libdrm);
-    return;
+    return false;
   }
 
   const drmDevice* match = nullptr;
@@ -400,6 +402,7 @@ static void get_render_name(const char* name) {
     }
   }
 
+  bool result = false;
   if (!match) {
     record_warning("Cannot find DRM device");
   } else if (!(match->available_nodes & (1 << DRM_NODE_RENDER))) {
@@ -410,6 +413,7 @@ static void get_render_name(const char* name) {
         "MESA_VENDOR_ID\n0x%04x\n"
         "MESA_DEVICE_ID\n0x%04x\n",
         match->deviceinfo.pci->vendor_id, match->deviceinfo.pci->device_id);
+    result = true;
   }
 
   for (int i = 0; i < devices_len; i++) {
@@ -418,6 +422,7 @@ static void get_render_name(const char* name) {
   free(devices);
 
   dlclose(libdrm);
+  return result;
 }
 #endif
 
@@ -456,7 +461,8 @@ static bool get_gles_status(EGLDisplay dpy,
       cast<PFNEGLQUERYDISPLAYATTRIBEXTPROC>(
           eglGetProcAddress("eglQueryDisplayAttribEXT"));
 
-  if (!eglChooseConfig || !eglCreateContext || !eglMakeCurrent) {
+  if (!eglChooseConfig || !eglCreateContext || !eglMakeCurrent ||
+      !eglQueryDeviceStringEXT) {
     record_warning("libEGL missing methods for GL test");
     return false;
   }
@@ -530,22 +536,25 @@ static bool get_gles_status(EGLDisplay dpy,
     return false;
   }
 
-  if (eglQueryDeviceStringEXT) {
-    EGLDeviceEXT device = nullptr;
-
-    if (eglQueryDisplayAttribEXT(dpy, EGL_DEVICE_EXT, (EGLAttrib*)&device) ==
-        EGL_TRUE) {
+  EGLDeviceEXT device;
+  if (eglQueryDisplayAttribEXT(dpy, EGL_DEVICE_EXT, (EGLAttrib*)&device) ==
+      EGL_TRUE) {
+    const char* deviceExtensions =
+        eglQueryDeviceStringEXT(device, EGL_EXTENSIONS);
+    if (strstr(deviceExtensions, "EGL_MESA_device_software")) {
+      record_value("MESA_ACCELERATED\nFALSE\n");
+    } else {
+#ifdef MOZ_WAYLAND
       const char* deviceString =
           eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
-      if (deviceString) {
-        record_value("MESA_ACCELERATED\nTRUE\n");
-
-#ifdef MOZ_WAYLAND
-        get_render_name(deviceString);
-#endif
-      } else {
-        record_value("MESA_ACCELERATED\nFALSE\n");
+      if (!deviceString || !get_render_name(deviceString)) {
+        const char* renderNodeString =
+            eglQueryDeviceStringEXT(device, EGL_DRM_RENDER_NODE_FILE_EXT);
+        if (renderNodeString) {
+          record_value("DRM_RENDERDEVICE\n%s\n", renderNodeString);
+        }
       }
+#endif
     }
   }
 

@@ -119,16 +119,16 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
                            nsIFrame* aTargetFrame, nsEventStatus* aStatus,
                            nsIContent* aOverrideClickTarget);
 
-  void PostHandleKeyboardEvent(WidgetKeyboardEvent* aKeyboardEvent,
-                               nsIFrame* aTargetFrame, nsEventStatus& aStatus);
+  MOZ_CAN_RUN_SCRIPT void PostHandleKeyboardEvent(
+      WidgetKeyboardEvent* aKeyboardEvent, nsIFrame* aTargetFrame,
+      nsEventStatus& aStatus);
 
   /**
    * DispatchLegacyMouseScrollEvents() dispatches eLegacyMouseLineOrPageScroll
    * event and eLegacyMousePixelScroll event for compatibility with old Gecko.
    */
-  void DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
-                                       WidgetWheelEvent* aEvent,
-                                       nsEventStatus* aStatus);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DispatchLegacyMouseScrollEvents(
+      nsIFrame* aTargetFrame, WidgetWheelEvent* aEvent, nsEventStatus* aStatus);
 
   void NotifyDestroyPresContext(nsPresContext* aPresContext);
   void SetPresContext(nsPresContext* aPresContext);
@@ -386,10 +386,9 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * specified content.  This returns the primary frame for the content (or null
    * if it goes away during the event).
    */
-  nsIFrame* DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
-                                        EventMessage aMessage,
-                                        nsIContent* aTargetContent,
-                                        nsIContent* aRelatedContent);
+  MOZ_CAN_RUN_SCRIPT nsIFrame* DispatchMouseOrPointerEvent(
+      WidgetMouseEvent* aMouseEvent, EventMessage aMessage,
+      nsIContent* aTargetContent, nsIContent* aRelatedContent);
   /**
    * Synthesize DOM pointerover and pointerout events
    */
@@ -404,17 +403,21 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * Tell this ESM and ESMs in parent documents that the mouse is
    * over some content in this document.
    */
-  void NotifyMouseOver(WidgetMouseEvent* aMouseEvent, nsIContent* aContent);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void NotifyMouseOver(
+      WidgetMouseEvent* aMouseEvent, nsIContent* aContent);
   /**
    * Tell this ESM and ESMs in affected child documents that the mouse
    * has exited this document's currently hovered content.
+   * TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+   *
    * @param aMouseEvent the event that triggered the mouseout
    * @param aMovingInto the content node we've moved into.  This is used to set
    *        the relatedTarget for mouseout events.  Also, if it's non-null
    *        NotifyMouseOut will NOT change the current hover content to null;
    *        in that case the caller is responsible for updating hover state.
    */
-  void NotifyMouseOut(WidgetMouseEvent* aMouseEvent, nsIContent* aMovingInto);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
+                                                  nsIContent* aMovingInto);
   MOZ_CAN_RUN_SCRIPT void GenerateDragDropEnterExit(
       nsPresContext* aPresContext, WidgetDragEvent* aDragEvent);
 
@@ -767,9 +770,11 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * @param aDelta              The delta value of the event.
    * @param aDeltaDirection     The X/Y direction of dispatching event.
    */
-  void SendLineScrollEvent(nsIFrame* aTargetFrame, WidgetWheelEvent* aEvent,
-                           EventState& aState, int32_t aDelta,
-                           DeltaDirection aDeltaDirection);
+  MOZ_CAN_RUN_SCRIPT void SendLineScrollEvent(nsIFrame* aTargetFrame,
+                                              WidgetWheelEvent* aEvent,
+                                              EventState& aState,
+                                              int32_t aDelta,
+                                              DeltaDirection aDeltaDirection);
 
   /**
    * SendPixelScrollEvent() dispatches a MozMousePixelScroll event for the
@@ -784,9 +789,11 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * @param aPixelDelta         The delta value of the event.
    * @param aDeltaDirection     The X/Y direction of dispatching event.
    */
-  void SendPixelScrollEvent(nsIFrame* aTargetFrame, WidgetWheelEvent* aEvent,
-                            EventState& aState, int32_t aPixelDelta,
-                            DeltaDirection aDeltaDirection);
+  MOZ_CAN_RUN_SCRIPT void SendPixelScrollEvent(nsIFrame* aTargetFrame,
+                                               WidgetWheelEvent* aEvent,
+                                               EventState& aState,
+                                               int32_t aPixelDelta,
+                                               DeltaDirection aDeltaDirection);
 
   /**
    * ComputeScrollTargetAndMayAdjustWheelEvent() returns the scrollable frame
@@ -1160,7 +1167,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   // member variables for the d&d gesture state machine
   LayoutDeviceIntPoint mGestureDownPoint;  // screen coordinates
   // The content to use as target if we start a d&d (what we drag).
-  nsCOMPtr<nsIContent> mGestureDownContent;
+  RefPtr<nsIContent> mGestureDownContent;
   // The content of the frame where the mouse-down event occurred. It's the same
   // as the target in most cases but not always - for example when dragging
   // an <area> of an image map this is the image. (bug 289667)

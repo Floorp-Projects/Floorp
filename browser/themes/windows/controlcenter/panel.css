@@ -39,6 +39,6 @@
 }
 
 .protections-popup-tp-switch:-moz-focusring {
-  outline: 1px dotted;
+  outline: var(--default-focusring);
   outline-offset: unset;
 }

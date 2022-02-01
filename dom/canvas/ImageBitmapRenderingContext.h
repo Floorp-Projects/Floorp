@@ -54,8 +54,11 @@ class ImageBitmapRenderingContext final
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ImageBitmapRenderingContext)
 
+  void GetCanvas(
+      Nullable<OwningHTMLCanvasElementOrOffscreenCanvas>& retval) const;
+
   void TransferImageBitmap(ImageBitmap& aImageBitmap);
-  void TransferFromImageBitmap(ImageBitmap& aImageBitmap);
+  void TransferFromImageBitmap(ImageBitmap* aImageBitmap);
 
   // nsICanvasRenderingContextInternal
   virtual int32_t GetWidth() override { return mWidth; }

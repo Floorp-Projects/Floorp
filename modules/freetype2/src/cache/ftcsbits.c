@@ -111,7 +111,7 @@
     FTC_SFamilyClass  clazz;
 
 
-    if ( (FT_UInt)(gindex - gnode->gindex) >= snode->count )
+    if ( gindex - gnode->gindex >= snode->count )
     {
       FT_ERROR(( "ftc_snode_load: invalid glyph index" ));
       return FT_THROW( Invalid_Argument );
@@ -342,8 +342,8 @@
 
     if (list_changed)
       *list_changed = FALSE;
-    result = FT_BOOL( gnode->family == gquery->family                    &&
-                      (FT_UInt)( gindex - gnode->gindex ) < snode->count );
+    result = FT_BOOL( gnode->family == gquery->family       &&
+                      gindex - gnode->gindex < snode->count );
     if ( result )
     {
       /* check if we need to load the glyph bitmap now */

@@ -41,7 +41,6 @@ job-defaults:
                     - unittests/mac_unittest.py
                 windows.*:
                     - unittests/win_unittest.py
-    python-3: true
 
 mochitest-plain:
     description: "Mochitest plain run"
@@ -108,7 +107,6 @@ mochitest-plain:
         by-test-platform:
             linux.*64-tsan-qr/opt: xlarge  # runs out of memory on default/m3.large
             default: default
-    e10s: true
     max-run-time: 5400
     allow-software-gl-layers: false
     mozharness:
@@ -129,23 +127,23 @@ mochitest-a11y:
     schedules-component: mochitest-a11y
     test-manifest-loader: default  # ensure we don't run with manifest-scheduling
     loopback-video: true
-    e10s: false
+    run-without-variant: false
     variants:
-        - fission
-        - socketprocess_networking
-        - wayland
-        - webrender-sw
+        - 1proc
+        - socketprocess_networking+1proc
+        - wayland+1proc
+        - webrender-sw+1proc
     run-on-projects:
         by-variant:
-            socketprocess_networking:
+            socketprocess_networking+1proc:
                 by-test-platform:
                     linux.*64-qr/debug: built-projects
                     default: []
-            wayland:
+            wayland+1proc:
                 by-test-platform:
                     linux.*64-qr/debug: built-projects
                     default: []
-            webrender-sw:
+            webrender-sw+1proc:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux.*64-qr/debug: built-projects
@@ -255,7 +253,6 @@ mochitest-browser-chrome-failures:
     tier: 3
     chunks: 2
     max-run-time: 2700
-    e10s: true
     variants:
         - fission
         - socketprocess_networking
@@ -340,22 +337,23 @@ mochitest-chrome:
     treeherder-symbol: M(c)
     schedules-component: mochitest-chrome
     loopback-video: true
+    run-without-variant: false
     variants:
-        - fission
-        - socketprocess_networking
-        - wayland
-        - webrender-sw
+        - 1proc
+        - socketprocess_networking+1proc
+        - wayland+1proc
+        - webrender-sw+1proc
     run-on-projects:
         by-variant:
-            socketprocess_networking:
+            socketprocess_networking+1proc:
                 by-test-platform:
                     linux.*64-qr/debug: built-projects
                     default: []
-            wayland:
+            wayland+1proc:
                 by-test-platform:
                     linux.*64-qr/debug: built-projects
                     default: []
-            webrender-sw:
+            webrender-sw+1proc:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux.*64-qr/debug: built-projects
@@ -373,7 +371,6 @@ mochitest-chrome:
             (linux.*64|windows.*|macosx1015-64)/debug: 3
             default: 2
     max-run-time: 3600
-    e10s: false
     mozharness:
         mochitest-flavor: chrome
         chunked: true
@@ -497,7 +494,6 @@ mochitest-plain-gpu:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     default: built-projects
     virtualization: virtual-with-gpu
-    e10s: true
     tier:
         by-variant:
             fission: 2
@@ -526,7 +522,6 @@ mochitest-chrome-gpu:
     treeherder-symbol: M(gpu-c)
     loopback-video: true
     virtualization: virtual-with-gpu
-    e10s: true
     variants:
         - fission
         - socketprocess_networking
@@ -717,7 +712,6 @@ mochitest-media-failures:
             macosx1100.*: 2
             macosx1015.*: 1
     max-run-time: 2700
-    e10s: true
     mozharness:
         mochitest-flavor: plain
         chunked: true
@@ -745,7 +739,6 @@ mochitest-plain-headless:
         by-test-platform:
             linux.*/debug: 16
             default: 5
-    e10s: true
     max-run-time: 5400
     allow-software-gl-layers: false
     tier: 2
@@ -795,10 +788,8 @@ mochitest-valgrind:
     loopback-video: true
     chunks: 40
     max-run-time: 14400
-    # We could re-enable e10s later.
-    # There's no intrinsic reason not to use it.
-    e10s: false
-    variants: []
+    run-without-variant: false
+    variants: ["1proc"]
     allow-software-gl-layers: false
     mozharness:
         mochitest-flavor: plain
@@ -809,7 +800,6 @@ mochitest-webgl1-core:
     treeherder-symbol: M(gl1c)
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
-    e10s: true
     test-manifest-loader: null  # don't load tests in the taskgraph
     loopback-video: true
     max-run-time:
@@ -871,7 +861,6 @@ mochitest-webgl1-ext:
         by-test-platform:
             android.*: 2
             default: 1
-    e10s: true
     test-manifest-loader: null  # don't load tests in the taskgraph
     loopback-video: true
     max-run-time: 2700
@@ -932,7 +921,6 @@ mochitest-webgl2-core:
         by-test-platform:
             android.*: 2
             default: 1
-    e10s: true
     test-manifest-loader: null  # don't load tests in the taskgraph
     loopback-video: true
     max-run-time: 1800
@@ -1021,7 +1009,6 @@ mochitest-webgl2-ext:
                     default: []
             default: built-projects
     chunks: 4
-    e10s: true
     test-manifest-loader: null  # don't load tests in the taskgraph
     loopback-video: true
     max-run-time: 2700
@@ -1044,7 +1031,6 @@ mochitest-webgl2-deqp:
         - webrender-sw
     run-on-projects: []  # Don't run this for now.
     chunks: 4
-    e10s: true
     loopback-video: true
     max-run-time: 1800
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
@@ -1060,7 +1046,6 @@ mochitest-webgpu:
     treeherder-symbol: M(webgpu)
     schedules-component: mochitest-plain
     virtualization: virtual-with-gpu
-    e10s: true
     loopback-video: true
     variants:
         - fission

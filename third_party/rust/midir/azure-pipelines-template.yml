@@ -1,0 +1,106 @@
+jobs:
+- job: ${{ parameters.name }}
+  pool:
+    vmImage: ${{ parameters.vmImage }}
+  strategy:
+    matrix:
+      stable:
+        rustup_toolchain: stable-${{ parameters.target }}
+        features: ""
+      ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
+        beta:
+          rustup_toolchain: beta-${{ parameters.target }}
+          features: ""
+        nightly:
+          rustup_toolchain: nightly-${{ parameters.target }}
+          features: ""
+      ${{ if startsWith(parameters.name, 'Windows') }}:
+        stable-winrt:
+          rustup_toolchain: stable-${{ parameters.target }}
+          features: "winrt"
+        ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
+          beta-winrt:
+            rustup_toolchain: beta-${{ parameters.target }}
+            features: "winrt"
+          nightly-winrt:
+            rustup_toolchain: nightly-${{ parameters.target }}
+            features: "winrt"
+      ${{ if and(not(startsWith(parameters.name, 'Windows')), not(endsWith(parameters.name, 'WASM'))) }}:
+        stable-jack:
+          rustup_toolchain: stable-${{ parameters.target }}
+          features: "jack"
+        ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master') }}:
+          beta-jack:
+            rustup_toolchain: beta-${{ parameters.target }}
+            features: "jack"
+          nightly-jack:
+            rustup_toolchain: nightly-${{ parameters.target }}
+            features: "jack"
+  steps:
+  - ${{ if not(startsWith(parameters.name, 'Windows')) }}:
+    # Linux and macOS
+    - script: |
+        curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $RUSTUP_TOOLCHAIN
+        export PATH="$HOME/.cargo/bin:$PATH"
+        echo "##vso[task.setvariable variable=PATH;]$PATH"
+      displayName: Install Rust
+  - ${{ if and(startsWith(parameters.name, 'Linux'), not(endsWith(parameters.name, 'WASM'))) }}:
+    # Linux only
+    - script: |
+        sudo apt-get update && sudo apt-get install -y libasound2-dev libjack-jackd2-dev
+      displayName: Install ALSA and Jack dependencies
+  - ${{ if startsWith(parameters.name, 'macOS') }}:
+    # macOS only
+    - script: |
+        if [ "$FEATURES" = "jack" ]; then
+          curl -LOS https://github.com/jackaudio/jackaudio.github.com/releases/download/1.9.11/JackOSX.0.92_b3.zip && unzip JackOSX.0.92_b3.zip && sudo installer -pkg JackOSX.0.92_b3.pkg -target /
+        fi
+      displayName: Install Jack dependencies
+  - ${{ if endsWith(parameters.name, 'WASM') }}:
+    # WASM only
+    - script: |
+        rustup target add wasm32-unknown-unknown
+      displayName: Add wasm32-unknown-unknown target
+  - ${{ if startsWith(parameters.name, 'Windows') }}:
+    # Windows
+    - script: |
+        curl -sSf -o rustup-init.exe https://win.rustup.rs
+        rustup-init.exe -y --default-toolchain %RUSTUP_TOOLCHAIN%
+        set PATH=%PATH%;%USERPROFILE%\.cargo\bin
+        echo "##vso[task.setvariable variable=PATH;]%PATH%;%USERPROFILE%\.cargo\bin"
+      displayName: Install Rust (Windows)
+  # All platforms
+  - script: |
+        rustc -Vv
+        cargo -V
+    displayName: Query installed versions
+  - ${{ if not(endsWith(parameters.name, 'WASM')) }}:
+    # Use bash for cross-platform env variable syntax
+    - bash: cargo build --verbose --features "$FEATURES"
+      displayName: Build
+    - bash: cargo build --features "$FEATURES" --example test_list_ports
+      displayName: Build example program
+    - ${{ if not(startsWith(parameters.name, 'Linux')) }}:
+      # Tests cannot run on Linux (missing ALSA driver) or with Jack (Jack not running)
+      - bash: |
+          if [[ "$FEATURES" != *"jack"* ]]; then
+            cargo test --verbose --features "$FEATURES"
+          fi
+        displayName: Run unit tests
+      - bash: |
+          if [[ "$FEATURES" != *"jack"* ]]; then
+            cargo run --features "$FEATURES" --example test_list_ports
+          fi
+        displayName: Run example program
+  - ${{ if endsWith(parameters.name, 'WASM') }}:
+    # WebAssembly
+    - script: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -f
+      displayName: Install wasm-pack
+    #- bash: cargo build --verbose --target wasm32-unknown-unknown --features "$FEATURES"
+    #  displayName: Build
+    - bash: |
+        cd examples/browser
+        wasm-pack build --target=no-modules --dev
+      displayName: Build WASM example program
+    - bash: wasm-pack test --chrome
+      displayName: Run WASM tests

@@ -21,6 +21,7 @@ class ReadableStreamDefaultTeePullAlgorithm;
 // A closure capturing the free variables in the ReadableStreamTee family of
 // algorithms.
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
+// https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamtee
 struct TeeState : public nsISupports {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TeeState)
@@ -33,11 +34,26 @@ struct TeeState : public nsISupports {
   ReadableStream* GetStream() const { return mStream; }
   void SetStream(ReadableStream* aStream) { mStream = aStream; }
 
-  ReadableStreamDefaultReader* GetReader() const { return mReader; }
-  void SetReader(ReadableStreamDefaultReader* aReader) { mReader = aReader; }
+  ReadableStreamGenericReader* GetReader() const { return mReader; }
+  void SetReader(ReadableStreamGenericReader* aReader) { mReader = aReader; }
+
+  ReadableStreamDefaultReader* GetDefaultReader() const {
+    return mReader->AsDefault();
+  }
 
   bool ReadAgain() const { return mReadAgain; }
   void SetReadAgain(bool aReadAgain) { mReadAgain = aReadAgain; }
+
+  // ReadableByteStreamTee uses ReadAgainForBranch{1,2};
+  bool ReadAgainForBranch1() const { return ReadAgain(); }
+  void SetReadAgainForBranch1(bool aReadAgainForBranch1) {
+    SetReadAgain(aReadAgainForBranch1);
+  }
+
+  bool ReadAgainForBranch2() const { return mReadAgainForBranch2; }
+  void SetReadAgainForBranch2(bool aReadAgainForBranch2) {
+    mReadAgainForBranch2 = aReadAgainForBranch2;
+  }
 
   bool Reading() const { return mReading; }
   void SetReading(bool aReading) { mReading = aReading; }
@@ -48,11 +64,25 @@ struct TeeState : public nsISupports {
   bool Canceled2() const { return mCanceled2; }
   void SetCanceled2(bool aCanceled2) { mCanceled2 = aCanceled2; }
 
+  void SetCanceled(size_t aStreamIndex, bool aCanceled) {
+    MOZ_ASSERT(aStreamIndex == 1 || aStreamIndex == 2);
+    aStreamIndex == 1 ? SetCanceled1(aCanceled) : SetCanceled2(aCanceled);
+  }
+  bool Canceled(size_t aStreamIndex) {
+    MOZ_ASSERT(aStreamIndex == 1 || aStreamIndex == 2);
+    return aStreamIndex == 1 ? Canceled1() : Canceled2();
+  }
+
   JS::Value Reason1() const { return mReason1; }
   void SetReason1(JS::HandleValue aReason1) { mReason1 = aReason1; }
 
   JS::Value Reason2() const { return mReason2; }
   void SetReason2(JS::HandleValue aReason2) { mReason2 = aReason2; }
+
+  void SetReason(size_t aStreamIndex, JS::HandleValue aReason) {
+    MOZ_ASSERT(aStreamIndex == 1 || aStreamIndex == 2);
+    aStreamIndex == 1 ? SetReason1(aReason) : SetReason2(aReason);
+  }
 
   ReadableStream* Branch1() const { return mBranch1; }
   void SetBranch1(already_AddRefed<ReadableStream> aBranch1) {
@@ -79,20 +109,40 @@ struct TeeState : public nsISupports {
     return mPullAlgorithm;
   }
 
+  // Some code is better served by using an index into various internal slots to
+  // avoid duplication: Here we provide alternative accessors for that case.
+  ReadableStream* Branch(size_t index) const {
+    MOZ_ASSERT(index == 1 || index == 2);
+    return index == 1 ? Branch1() : Branch2();
+  }
+
+  void SetReadAgainForBranch(size_t index, bool value) {
+    MOZ_ASSERT(index == 1 || index == 2);
+    if (index == 1) {
+      SetReadAgainForBranch1(value);
+      return;
+    }
+    SetReadAgainForBranch2(value);
+  }
+
  private:
   TeeState(JSContext* aCx, ReadableStream* aStream, bool aCloneForBranch2);
 
   // Implicit:
   RefPtr<ReadableStream> mStream;
 
-  // Step 3.
-  RefPtr<ReadableStreamDefaultReader> mReader;
+  // Step 3. (Step Numbering is based on ReadableStreamDefaultTee)
+  RefPtr<ReadableStreamGenericReader> mReader;
 
   // Step 4.
   bool mReading = false;
 
   // Step 5.
+  // (Aliased to readAgainForBranch1, for the purpose of ReadableByteStreamTee)
   bool mReadAgain = false;
+
+  // ReadableByteStreamTee
+  bool mReadAgainForBranch2 = false;
 
   // Step 6.
   bool mCanceled1 = false;

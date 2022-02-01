@@ -840,6 +840,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CanvasRenderingContext2D)
     }
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CanvasRenderingContext2D)
@@ -1495,13 +1496,6 @@ bool CanvasRenderingContext2D::TryBasicTarget(
 
   aOutProvider = new PersistentBufferProviderBasic(aOutDT);
   return true;
-}
-
-ClientWebGLContext* CanvasRenderingContext2D::AsWebgl() {
-  if (mBufferProvider) {
-    return mBufferProvider->AsWebgl();
-  }
-  return nullptr;
 }
 
 PresShell* CanvasRenderingContext2D::GetPresShell() {
@@ -2172,6 +2166,37 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
     video.MarkAsContentSource(
         mozilla::dom::HTMLVideoElement::CallerAPI::CREATE_PATTERN);
     element = &video;
+  } else if (aSource.IsOffscreenCanvas()) {
+    OffscreenCanvas& canvas = aSource.GetAsOffscreenCanvas();
+
+    nsIntSize size = canvas.GetWidthHeight();
+    if (size.width == 0) {
+      aError.ThrowInvalidStateError("Passed-in canvas has width 0");
+      return nullptr;
+    }
+
+    if (size.height == 0) {
+      aError.ThrowInvalidStateError("Passed-in canvas has height 0");
+      return nullptr;
+    }
+
+    nsICanvasRenderingContextInternal* srcCanvas = canvas.GetContext();
+    if (!srcCanvas) {
+      aError.ThrowInvalidStateError("Passed-in canvas has no context");
+      return nullptr;
+    }
+
+    RefPtr<SourceSurface> srcSurf = srcCanvas->GetSurfaceSnapshot();
+    if (!srcSurf) {
+      aError.ThrowInvalidStateError(
+          "Passed-in canvas failed to create snapshot");
+      return nullptr;
+    }
+
+    RefPtr<CanvasPattern> pat = new CanvasPattern(
+        this, srcSurf, repeatMode, nullptr, canvas.IsWriteOnly(), false);
+
+    return pat.forget();
   } else {
     // Special case for ImageBitmap
     ImageBitmap& imgBitmap = aSource.GetAsImageBitmap();
@@ -4502,6 +4527,18 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
     if (canvas->IsWriteOnly()) {
       SetWriteOnly();
     }
+  } else if (aImage.IsOffscreenCanvas()) {
+    OffscreenCanvas& canvas = aImage.GetAsOffscreenCanvas();
+    srcSurf = canvas.GetSurfaceSnapshot();
+    if (!srcSurf) {
+      return;
+    }
+
+    if (canvas.IsWriteOnly()) {
+      SetWriteOnly();
+    }
+
+    imgSize = intrinsicImgSize = srcSurf->GetSize();
   } else if (aImage.IsImageBitmap()) {
     ImageBitmap& imageBitmap = aImage.GetAsImageBitmap();
     srcSurf = imageBitmap.PrepareForDrawTarget(mTarget);
@@ -5418,7 +5455,7 @@ bool CanvasRenderingContext2D::UpdateWebRenderCanvasData(
 
   if (!mResetLayer && renderer) {
     CanvasRendererData data;
-    data.mContext = mSharedPtrPtr;
+    data.mContext = this;
     data.mSize = GetSize();
 
     if (renderer->IsDataValid(data)) {
@@ -5441,7 +5478,7 @@ bool CanvasRenderingContext2D::UpdateWebRenderCanvasData(
 bool CanvasRenderingContext2D::InitializeCanvasRenderer(
     nsDisplayListBuilder* aBuilder, CanvasRenderer* aRenderer) {
   CanvasRendererData data;
-  data.mContext = mSharedPtrPtr;
+  data.mContext = this;
   data.mSize = GetSize();
   data.mIsOpaque = mOpaque;
   data.mDoPaintCallbacks = true;

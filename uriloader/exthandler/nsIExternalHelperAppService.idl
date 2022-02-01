@@ -139,6 +139,13 @@ interface nsIHelperAppLauncher : nsICancelable
    */
   void setDownloadToLaunch(in boolean aHandleInternally, in nsIFile aFile);
 
+
+  /**
+   * Use the MIMEInfo associated with us to open a file that is already local.
+   * Will no-op if `source` is not a local file.
+   */
+  void launchLocalFile();
+
   /**
    * Callback invoked by nsIHelperAppLauncherDialog::promptForSaveToFileAsync
    * after the user has chosen a file through the File Picker (or dismissed it).

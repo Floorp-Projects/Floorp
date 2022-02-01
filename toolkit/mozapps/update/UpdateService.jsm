@@ -301,14 +301,7 @@ const ONLY_INSTANCE_CHECK_DEFAULT_TIMEOUT_MS = 6 * 60 * 60 * 1000; // 6 hours
 // that value to this so that the pref can't effectively disable the feature.
 const ONLY_INSTANCE_CHECK_MAX_TIMEOUT_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
 
-// Object to keep track of the current phase of the update and whether there
-// has been a write failure for the phase so only one telemetry ping is made
-// for the phase.
-var gUpdateFileWriteInfo = { phase: null, failure: false };
 var gUpdateMutexHandle = null;
-// The permissions of the update directory should be fixed no more than once per
-// session
-var gUpdateDirPermissionFixAttempted = false;
 // This is the file stream used for the log file.
 var gLogfileOutputStream;
 // This value will be set to true if it appears that BITS is being used by
@@ -745,10 +738,6 @@ function getCanApplyUpdates() {
         "access to the update directory. Exception: " +
         e
     );
-    // Attempt to fix the update directory permissions. If successful the next
-    // time this function is called the write access check to the update
-    // directory will succeed.
-    fixUpdateDirectoryPermissions();
     return false;
   }
 
@@ -1171,10 +1160,7 @@ function readBinaryTransparencyResult(dir) {
 function writeStatusFile(dir, state) {
   let statusFile = dir.clone();
   statusFile.append(FILE_UPDATE_STATUS);
-  let success = writeStringToFile(statusFile, state);
-  if (!success) {
-    handleCriticalWriteFailure(statusFile.path);
-  }
+  writeStringToFile(statusFile, state);
 }
 
 /**
@@ -1195,10 +1181,7 @@ function writeStatusFile(dir, state) {
 function writeVersionFile(dir, version) {
   let versionFile = dir.clone();
   versionFile.append(FILE_UPDATE_VERSION);
-  let success = writeStringToFile(versionFile, version);
-  if (!success) {
-    handleCriticalWriteFailure(versionFile.path);
-  }
+  writeStringToFile(versionFile, version);
 }
 
 /**
@@ -1809,122 +1792,6 @@ function pingStateAndStatusCodes(aUpdate, aStartup, aStatus) {
     );
   }
   AUSTLMY.pingStateCode(suffix, stateCode);
-}
-
-/**
- * Asynchronously fixes the update directory permissions. This is currently only
- * available on Windows.
- *
- * @return true if the permission-fixing process was started, and false if the
- *         permission-fixing process was not started or the platform is not
- *         supported.
- */
-function fixUpdateDirectoryPermissions() {
-  if (AppConstants.platform != "win") {
-    LOG(
-      "There is currently no implementation for fixing update directory " +
-        "permissions on this platform"
-    );
-    return false;
-  }
-
-  if (!gUpdateDirPermissionFixAttempted) {
-    // Never try to fix permissions more than one time during a session.
-    gUpdateDirPermissionFixAttempted = true;
-
-    LOG("Attempting to fix update directory permissions");
-    try {
-      Cc["@mozilla.org/updates/update-processor;1"]
-        .createInstance(Ci.nsIUpdateProcessor)
-        .fixUpdateDirectoryPerms(shouldUseService());
-    } catch (e) {
-      LOG(
-        "Attempt to fix update directory permissions failed. Exception: " + e
-      );
-      return false;
-    }
-    return true;
-  }
-  return false;
-}
-
-/**
- * This function should be called whenever we fail to write to a file required
- * for update to function. This function will, if possible, attempt to fix the
- * file permissions. If the file permissions cannot be fixed, the user will be
- * prompted to reinstall.
- *
- * All functionality happens asynchronously.
- *
- * Returns false if the permission-fixing process cannot be started. Since this
- * is asynchronous, a true return value does not mean that the permissions were
- * actually fixed.
- *
- * @param path A string representing the path that could not be written. This
- *             value will only be used for logging purposes.
- */
-function handleCriticalWriteFailure(path) {
-  LOG(
-    "handleCriticalWriteFailure - Unable to write to critical update file: " +
-      path
-  );
-  if (!gUpdateFileWriteInfo.failure) {
-    gUpdateFileWriteInfo.failure = true;
-    let patchType = AUSTLMY.PATCH_UNKNOWN;
-    let update = UM.readyUpdate || UM.downloadingUpdate;
-    if (update) {
-      let patch = update.selectedPatch;
-      if (patch.type == "complete") {
-        patchType = AUSTLMY.PATCH_COMPLETE;
-      } else if (patch.type == "partial") {
-        patchType = AUSTLMY.PATCH_PARTIAL;
-      }
-    }
-
-    if (gUpdateFileWriteInfo.phase == "check") {
-      let updateServiceInstance = UpdateServiceFactory.createInstance();
-      let pingSuffix = updateServiceInstance._pingSuffix;
-      if (!pingSuffix) {
-        // If pingSuffix isn't defined then this this is a manual check which
-        // isn't recorded at this time.
-        AUSTLMY.pingCheckCode(pingSuffix, AUSTLMY.CHK_ERR_WRITE_FAILURE);
-      }
-    } else if (gUpdateFileWriteInfo.phase == "download") {
-      AUSTLMY.pingDownloadCode(patchType, AUSTLMY.DWNLD_ERR_WRITE_FAILURE);
-    } else if (gUpdateFileWriteInfo.phase == "stage") {
-      let suffix = patchType + "_" + AUSTLMY.STAGE;
-      AUSTLMY.pingStateCode(suffix, AUSTLMY.STATE_WRITE_FAILURE);
-    } else if (gUpdateFileWriteInfo.phase == "startup") {
-      let suffix = patchType + "_" + AUSTLMY.STARTUP;
-      AUSTLMY.pingStateCode(suffix, AUSTLMY.STATE_WRITE_FAILURE);
-    } else {
-      // Temporary failure code to see if there are failures without an update
-      // phase.
-      AUSTLMY.pingDownloadCode(
-        patchType,
-        AUSTLMY.DWNLD_UNKNOWN_PHASE_ERR_WRITE_FAILURE
-      );
-    }
-  }
-
-  return fixUpdateDirectoryPermissions();
-}
-
-/**
- * This is a convenience function for calling the above function depending on a
- * boolean success value.
- *
- * @param wroteSuccessfully A boolean representing whether or not the write was
- *                          successful. When this is true, this function does
- *                          nothing.
- * @param path A string representing the path to the file that the operation
- *             attempted to write to. This value is only used for logging
- *             purposes.
- */
-function handleCriticalWriteResult(wroteSuccessfully, path) {
-  if (!wroteSuccessfully) {
-    handleCriticalWriteFailure(path);
-  }
 }
 
 /**
@@ -2741,7 +2608,6 @@ UpdateService.prototype = {
       // update is broken and they should reinstall.
       return;
     }
-    gUpdateFileWriteInfo = { phase: "startup", failure: false };
     if (!this.canCheckForUpdates) {
       LOG(
         "UpdateService:_postUpdateProcessing - unable to check for " +
@@ -4239,7 +4105,6 @@ UpdateManager.prototype = {
           "stream. Exception: " +
           e
       );
-      fixUpdateDirectoryPermissions();
       return updates;
     }
     try {
@@ -4475,12 +4340,7 @@ UpdateManager.prototype = {
     // the lifetime of an active update and the file should always be updated
     // when saveUpdates is called.
     let promises = [];
-    promises[0] = this._writeUpdatesToXMLFile(
-      updates,
-      FILE_ACTIVE_UPDATE_XML
-    ).then(wroteSuccessfully =>
-      handleCriticalWriteResult(wroteSuccessfully, FILE_ACTIVE_UPDATE_XML)
-    );
+    promises[0] = this._writeUpdatesToXMLFile(updates, FILE_ACTIVE_UPDATE_XML);
     // The update history stored in the updates.xml file should only need to be
     // updated when an active update has been added to it in which case
     // |_updatesDirty| will be true.
@@ -4489,8 +4349,6 @@ UpdateManager.prototype = {
       promises[1] = this._writeUpdatesToXMLFile(
         this._getUpdates(),
         FILE_UPDATES_XML
-      ).then(wroteSuccessfully =>
-        handleCriticalWriteResult(wroteSuccessfully, FILE_UPDATES_XML)
       );
     }
     return Promise.all(promises);
@@ -4725,7 +4583,6 @@ Checker.prototype = {
    */
   checkForUpdates: function UC_checkForUpdates(listener, force) {
     LOG("Checker: checkForUpdates, force: " + force);
-    gUpdateFileWriteInfo = { phase: "check", failure: false };
     if (!listener) {
       throw Components.Exception("", Cr.NS_ERROR_NULL_POINTER);
     }
@@ -5378,7 +5235,6 @@ Downloader.prototype = {
    */
   downloadUpdate: function Downloader_downloadUpdate(update) {
     LOG("UpdateService:_downloadUpdate");
-    gUpdateFileWriteInfo = { phase: "download", failure: false };
     if (!update) {
       AUSTLMY.pingDownloadCode(undefined, AUSTLMY.DWNLD_ERR_NO_UPDATE);
       throw Components.Exception("", Cr.NS_ERROR_NULL_POINTER);
@@ -5880,7 +5736,6 @@ Downloader.prototype = {
     );
     // Prevent the preference from setting a value greater than 20.
     maxFail = Math.min(maxFail, 20);
-    let permissionFixingInProgress = false;
     LOG(
       "Downloader:onStopRequest - status: " +
         status +
@@ -5946,12 +5801,6 @@ Downloader.prototype = {
           deleteActiveUpdate = true;
 
           cleanUpDownloadingUpdateDir();
-
-          let failedWrite = readyDir.clone();
-          failedWrite.append(FILE_UPDATE_MAR);
-          permissionFixingInProgress = handleCriticalWriteFailure(
-            failedWrite.path
-          );
         }
       } else {
         LOG("Downloader:onStopRequest - download verification failed");
@@ -6013,11 +5862,6 @@ Downloader.prototype = {
         status == Cr.NS_ERROR_FILE_READ_ONLY
       ) {
         LOG("Downloader:onStopRequest - permission error");
-        // This will either fix the permissions, or asynchronously show the
-        // reinstall prompt if it cannot fix them.
-        let patchFile = getDownloadingUpdateDir();
-        patchFile.append(FILE_UPDATE_MAR);
-        permissionFixingInProgress = handleCriticalWriteFailure(patchFile.path);
         nonDownloadFailure = true;
       } else {
         LOG("Downloader:onStopRequest - non-verification failure");
@@ -6154,7 +5998,7 @@ Downloader.prototype = {
         }
       }
 
-      if (allFailed && !permissionFixingInProgress) {
+      if (allFailed) {
         let downloadAttempts = Services.prefs.getIntPref(
           PREF_APP_UPDATE_DOWNLOAD_ATTEMPTS,
           0
@@ -6231,7 +6075,6 @@ Downloader.prototype = {
           "Downloader:onStopRequest - attempting to stage update: " +
             this._update.name
         );
-        gUpdateFileWriteInfo = { phase: "stage", failure: false };
         // Stage the update
         try {
           Cc["@mozilla.org/updates/update-processor;1"]

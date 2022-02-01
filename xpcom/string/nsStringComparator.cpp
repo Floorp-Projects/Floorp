@@ -11,8 +11,7 @@
 #include "nsTStringComparator.cpp"
 
 int nsCaseInsensitiveCStringComparator(const char* aLhs, const char* aRhs,
-                                       uint32_t aLhsLength,
-                                       uint32_t aRhsLength) {
+                                       size_t aLhsLength, size_t aRhsLength) {
 #if defined(LIBFUZZER) && defined(LINUX)
   // Make sure libFuzzer can see this string compare by calling the POSIX
   // native function which is intercepted. We also call this if the lengths

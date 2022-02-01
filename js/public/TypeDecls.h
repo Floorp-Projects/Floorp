@@ -48,6 +48,10 @@ typedef unsigned char Latin1Char;
 
 class JS_PUBLIC_API Symbol;
 class JS_PUBLIC_API BigInt;
+#ifdef ENABLE_RECORD_TUPLE
+class JS_PUBLIC_API RecordType;
+class JS_PUBLIC_API TupleType;
+#endif
 class JS_PUBLIC_API Value;
 
 class JS_PUBLIC_API Compartment;
@@ -126,5 +130,16 @@ using MutableHandleVector = MutableHandle<StackGCVector<T>>;
 }  // namespace JS
 
 using jsid = JS::PropertyKey;
+
+#ifdef ENABLE_RECORD_TUPLE
+// This takes 1 or 2 parameters. ... is just used so that
+// it's possible to omit the comma when passing a single
+// param:
+//     IF_RECORD_TUPLE(doThis)
+//     IF_RECORD_TUPLE(doThis, elseThis)
+#  define IF_RECORD_TUPLE(x, ...) x
+#else
+#  define IF_RECORD_TUPLE(x, ...) __VA_ARGS__
+#endif
 
 #endif /* js_TypeDecls_h */

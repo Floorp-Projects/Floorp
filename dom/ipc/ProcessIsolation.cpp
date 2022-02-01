@@ -698,7 +698,8 @@ Result<NavigationIsolationOptions, nsresult> IsolationOptionsForNavigation(
       MOZ_LOG(gProcessIsolationLog, LogLevel::Verbose,
               ("current uri: %s", uri->GetSpecOrDefault().get()));
     }
-    options.mTryUseBFCache = aTopBC->AllowedInBFCache(aChannelId);
+    options.mTryUseBFCache =
+        aTopBC->AllowedInBFCache(aChannelId, aChannelCreationURI);
     if (options.mTryUseBFCache) {
       options.mReplaceBrowsingContext = true;
       options.mActiveSessionHistoryEntry =

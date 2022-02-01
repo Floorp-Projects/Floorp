@@ -43,6 +43,7 @@ jobs-from:
     - misc.yml
     - nasm.yml
     - node.yml
+    - pkgconf.yml
     - resourcemonitor.yml
     - rust.yml
     - rust-size.yml

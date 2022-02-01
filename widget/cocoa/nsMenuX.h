@@ -116,7 +116,7 @@ class nsMenuX final : public nsMenuParentX,
   // Fires the popupshowing event and returns whether the handler allows the popup to open.
   // When calling this method, the caller must hold a strong reference to this object, because other
   // references to this object can be dropped during the handling of the DOM event.
-  bool OnOpen();
+  MOZ_CAN_RUN_SCRIPT bool OnOpen();
 
   void PopupShowingEventWasSentAndApprovedExternally() { DidFirePopupShowing(); }
 
@@ -124,7 +124,8 @@ class nsMenuX final : public nsMenuParentX,
   // Ignored if the menu is already considered open.
   // When calling this method, the caller must hold a strong reference to this object, because other
   // references to this object can be dropped during the handling of the DOM event.
-  void MenuOpened();
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void MenuOpened();
 
   // Called from the menu delegate during menuDidClose, or to simulate closing.
   // Ignored if the menu is already considered closed.
@@ -203,22 +204,24 @@ class nsMenuX final : public nsMenuParentX,
   NSInteger CalculateNativeInsertionPoint(const MenuChild& aChild);
 
   // Fires the popupshown event.
-  void MenuOpenedAsync();
+  MOZ_CAN_RUN_SCRIPT void MenuOpenedAsync();
 
   // Called from mPendingAsyncMenuCloseRunnable asynchronously after MenuClosed(), so that it runs
   // after any potential menuItemHit calls for clicked menu items.
   // Fires popuphiding and popuphidden events.
   // When calling this method, the caller must hold a strong reference to this object, because other
   // references to this object can be dropped during the handling of the DOM event.
-  void MenuClosedAsync();
+  MOZ_CAN_RUN_SCRIPT void MenuClosedAsync();
 
   // If mPendingAsyncMenuOpenRunnable is non-null, call MenuOpenedAsync() to send out the pending
   // popupshown event.
-  void FlushMenuOpenedRunnable();
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FlushMenuOpenedRunnable();
 
   // If mPendingAsyncMenuCloseRunnable is non-null, call MenuClosedAsync() to send out pending
   // popuphiding/popuphidden events.
-  void FlushMenuClosedRunnable();
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FlushMenuClosedRunnable();
 
   // Make sure the NSMenu contains at least one item, even if mVisibleItemsCount is zero.
   // Otherwise it won't open.

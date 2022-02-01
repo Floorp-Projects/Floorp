@@ -296,7 +296,9 @@ static bool FormatListToParts(JSContext* cx, mozilla::intl::ListFormat* lf,
       return false;
     }
 
-    MOZ_ASSERT(part.second > beginIndex);
+    // There could be an empty string so the endIndex coule be equal to
+    // beginIndex.
+    MOZ_ASSERT(part.second >= beginIndex);
     JSLinearString* partStr = NewDependentString(cx, overallResult, beginIndex,
                                                  part.second - beginIndex);
     if (!partStr) {

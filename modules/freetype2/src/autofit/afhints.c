@@ -862,7 +862,7 @@
   {
     FT_Error   error   = FT_Err_Ok;
     AF_Point   points;
-    FT_UInt    old_max, new_max;
+    FT_Int     old_max, new_max;
     FT_Fixed   x_scale = hints->x_scale;
     FT_Fixed   y_scale = hints->y_scale;
     FT_Pos     x_delta = hints->x_delta;
@@ -879,8 +879,8 @@
     hints->axis[1].num_edges    = 0;
 
     /* first of all, reallocate the contours array if necessary */
-    new_max = (FT_UInt)outline->n_contours;
-    old_max = (FT_UInt)hints->max_contours;
+    new_max = outline->n_contours;
+    old_max = hints->max_contours;
 
     if ( new_max <= AF_CONTOURS_EMBEDDED )
     {
@@ -895,12 +895,12 @@
       if ( hints->contours == hints->embedded.contours )
         hints->contours = NULL;
 
-      new_max = ( new_max + 3 ) & ~3U; /* round up to a multiple of 4 */
+      new_max = ( new_max + 3 ) & ~3; /* round up to a multiple of 4 */
 
       if ( FT_RENEW_ARRAY( hints->contours, old_max, new_max ) )
         goto Exit;
 
-      hints->max_contours = (FT_Int)new_max;
+      hints->max_contours = new_max;
     }
 
     /*
@@ -908,8 +908,8 @@
      * note that we reserve two additional point positions, used to
      * hint metrics appropriately
      */
-    new_max = (FT_UInt)( outline->n_points + 2 );
-    old_max = (FT_UInt)hints->max_points;
+    new_max = outline->n_points + 2;
+    old_max = hints->max_points;
 
     if ( new_max <= AF_POINTS_EMBEDDED )
     {
@@ -924,12 +924,12 @@
       if ( hints->points == hints->embedded.points )
         hints->points = NULL;
 
-      new_max = ( new_max + 2 + 7 ) & ~7U; /* round up to a multiple of 8 */
+      new_max = ( new_max + 2 + 7 ) & ~7; /* round up to a multiple of 8 */
 
       if ( FT_RENEW_ARRAY( hints->points, old_max, new_max ) )
         goto Exit;
 
-      hints->max_points = (FT_Int)new_max;
+      hints->max_points = new_max;
     }
 
     hints->num_points   = outline->n_points;

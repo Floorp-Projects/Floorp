@@ -148,7 +148,7 @@ pub enum Command {
         dst: crate::command::ImageCopyTexture,
         size: wgt::Extent3d,
     },
-    FillBuffer {
+    ClearBuffer {
         dst: id::BufferId,
         offset: wgt::BufferAddress,
         size: Option<wgt::BufferSize>,
@@ -168,6 +168,9 @@ pub enum Command {
         destination: id::BufferId,
         destination_offset: wgt::BufferAddress,
     },
+    PushDebugGroup(String),
+    PopDebugGroup,
+    InsertDebugMarker(String),
     RunComputePass {
         base: crate::command::BasePass<crate::command::ComputeCommand>,
     },

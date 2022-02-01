@@ -1,0 +1,20 @@
+{
+  "header-main": {
+    "message": "实验　"
+  },
+    "exper": {
+      "message": "更改 Floorp 用户代理　"
+  },
+    "info":{
+      "message":"在 Floorp 的用户代理中添加一个字符串，表明其为 Floorp，例如 Floorp/8.3.6。默认情况下，这与 Firefox 相同。"
+  },
+    "True":{
+      "message":"禁用"
+  },
+    "False":{
+      "message":"启用"
+  },
+    "Feedback": {
+      "message": "发送反馈"
+  }
+}

@@ -1,6 +1,7 @@
 // |jit-test| skip-if: helperThreadCount() === 0
 
 gczeal(0);
-offThreadCompileScript("");
+offThreadCompileToStencil("");
 startgc(0);
-runOffThreadScript();
+var stencil = finishOffThreadCompileToStencil();
+evalStencil(stencil);

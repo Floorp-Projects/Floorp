@@ -46,7 +46,7 @@ declare_args() {
 }
 
 # Make sure glib is not used if building for ChromeOS/Chromecast
-assert(!use_glib || (is_linux && !is_chromeos && !is_chromecast))
+assert(!use_glib || ((is_linux || is_bsd) && !is_chromeos && !is_chromecast))
 
 # Whether to use atk, the Accessibility ToolKit library
 use_atk = is_desktop_linux && !is_chromecast && use_glib

@@ -8,6 +8,7 @@
 
 #include "LocalAccessible-inl.h"
 #include "HyperTextAccessible-inl.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/dom/Selection.h"
 #include "nsAccUtils.h"
 
@@ -263,7 +264,7 @@ bool TextRange::SetSelectionAt(int32_t aSelectionNum) const {
   if (aSelectionNum == static_cast<int32_t>(rangeCount)) {
     range = nsRange::Create(mRoot->GetContent());
   } else {
-    range = domSel->GetRangeAt(aSelectionNum);
+    range = domSel->GetRangeAt(AssertedCast<uint32_t>(aSelectionNum));
   }
 
   if (!range) {
@@ -400,8 +401,11 @@ void TextRange::TextRangesFromSelection(dom::Selection* aSelection,
 
   aRanges->SetCapacity(aSelection->RangeCount());
 
-  for (uint32_t idx = 0; idx < aSelection->RangeCount(); idx++) {
+  const uint32_t rangeCount = aSelection->RangeCount();
+  for (const uint32_t idx : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(aSelection->RangeCount() == rangeCount);
     const nsRange* DOMRange = aSelection->GetRangeAt(idx);
+    MOZ_ASSERT(DOMRange);
     HyperTextAccessible* startContainer =
         nsAccUtils::GetTextContainer(DOMRange->GetStartContainer());
     HyperTextAccessible* endContainer =

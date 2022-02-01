@@ -23,13 +23,13 @@ struct LaunchParameters {
   bool enableLogging;
 };
 
-[NeedsOtherPid]
-intr protocol PRemoteSandboxBroker
+[NeedsOtherPid, NestedUpTo=inside_sync]
+sync protocol PRemoteSandboxBroker
 {
 parent:
   async InitCrashReporter(NativeThreadId threadId);
 child:
-  intr LaunchApp(LaunchParameters params)
+  [Nested=inside_sync] sync LaunchApp(LaunchParameters params)
     returns (bool ok, uint64_t handle);
 };
 

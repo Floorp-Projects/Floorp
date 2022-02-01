@@ -100,20 +100,21 @@ SECTION .text
 
 %macro WIENER 0
 %if ARCH_X86_64
-DECLARE_REG_TMP 4, 10, 7, 11, 12, 13, 14 ; ring buffer pointers
-cglobal wiener_filter7_8bpc, 5, 15, 16, -384*12-16, dst, dst_stride, left, lpf, \
-                                                    lpf_stride, w, edge, flt, h, x
+DECLARE_REG_TMP 9, 7, 10, 11, 12, 13, 14 ; ring buffer pointers
+cglobal wiener_filter7_8bpc, 4, 15, 16, -384*12-16, dst, stride, left, lpf, \
+                                                    w, h, edge, flt, x
+    %define tmpstrideq strideq
     %define base 0
-    mov           fltq, fltmp
-    mov          edged, r8m
+    mov           fltq, r6mp
     mov             wd, wm
-    mov             hd, r6m
+    movifnidn       hd, hm
+    mov          edged, r7m
     movq           m14, [fltq]
     add           lpfq, wq
+    movq            m7, [fltq+16]
+    add           dstq, wq
     lea             t1, [rsp+wq*2+16]
     mova           m15, [pw_2056]
-    add           dstq, wq
-    movq            m7, [fltq+16]
     neg             wq
 %if cpuflag(ssse3)
     pshufb         m14, [wiener_init]
@@ -143,7 +144,7 @@ DECLARE_REG_TMP 4, 0, _, 5
     %define m11         [stk+96]
     %define stk_off     112
 %endif
-cglobal wiener_filter7_8bpc, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, lpf_stride
+cglobal wiener_filter7_8bpc, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, tmpstride
     %define base        r6-pb_right_ext_mask-21
     %define stk         esp
     %define dstq        leftq
@@ -152,7 +153,7 @@ cglobal wiener_filter7_8bpc, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, lpf_stri
     %define dstmp       [stk+12]
     %define hd    dword [stk+16]
     %define wq          [stk+20]
-    %define dst_strideq [stk+24]
+    %define strideq     [stk+24]
     %define leftmp      [stk+28]
     %define t2          [stk+32]
     %define t4          [stk+36]
@@ -164,28 +165,28 @@ cglobal wiener_filter7_8bpc, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, lpf_stri
     %define m13         [stk+64]
     %define m14         [stk+80]
     %define m15         [base+pw_2056]
-    mov             r1, r7m ; flt
+    mov             r1, r6m ; flt
     mov             r0, r0m ; dst
-    mov             r5, r5m ; w
+    mov             r4, r4m ; w
     mov           lpfq, lpfm
-    mov             r2, r8m ; edge
-    mov             r4, r6m ; h
+    mov             r2, r7m ; edge
+    mov             r5, r5m ; h
     movq            m3, [r1+ 0]
     movq            m7, [r1+16]
-    add             r0, r5
-    mov             r1, r1m ; dst_stride
-    add           lpfq, r5
+    add             r0, r4
+    mov             r1, r1m ; stride
+    add           lpfq, r4
     mov          edged, r2
     mov             r2, r2m ; left
     mov          dstmp, r0
-    lea             t1, [rsp+r5*2+stk_off]
-    mov             hd, r4
-    neg             r5
-    mov    lpf_strideq, lpf_stridem
+    lea             t1, [rsp+r4*2+stk_off]
+    mov             hd, r5
+    neg             r4
     LEA             r6, pb_right_ext_mask+21
-    mov             wq, r5
-    mov    dst_strideq, r1
+    mov             wq, r4
+    mov        strideq, r1
     mov         leftmp, r2
+    mov             r4, r1
 %if cpuflag(ssse3)
     pshufb          m3, [base+wiener_init]
     pshufd          m1, m3, q2222
@@ -209,16 +210,15 @@ cglobal wiener_filter7_8bpc, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, lpf_stri
     test         edgeb, 4 ; LR_HAVE_TOP
     jz .no_top
     call .h_top
-    add           lpfq, lpf_strideq
+    add           lpfq, strideq
     mov             t6, t1
     mov             t5, t1
     add             t1, 384*2
     call .h_top
-    lea             t3, [lpfq+lpf_strideq*4]
+    lea             t3, [lpfq+tmpstrideq*4]
     mov           lpfq, dstmp
-    mov [rsp+gprsize*1], lpf_strideq
-    add             t3, lpf_strideq
-    mov [rsp+gprsize*0], t3 ; below
+    add             t3, tmpstrideq
+    mov          [rsp], t3 ; below
     mov             t4, t1
     add             t1, 384*2
     call .h
@@ -226,13 +226,13 @@ cglobal wiener_filter7_8bpc, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, lpf_stri
     mov             t2, t1
     dec             hd
     jz .v1
-    add           lpfq, dst_strideq
+    add           lpfq, strideq
     add             t1, 384*2
     call .h
     mov             t2, t1
     dec             hd
     jz .v2
-    add           lpfq, dst_strideq
+    add           lpfq, strideq
     add             t1, 384*2
     call .h
     dec             hd
@@ -245,19 +245,18 @@ cglobal wiener_filter7_8bpc, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, lpf_stri
     jnz .main_loop
     test         edgeb, 8 ; LR_HAVE_BOTTOM
     jz .v3
-    mov           lpfq, [rsp+gprsize*0]
+    mov           lpfq, [rsp]
     call .hv_bottom
-    add           lpfq, [rsp+gprsize*1]
+    add           lpfq, strideq
     call .hv_bottom
 .v1:
     call mangle(private_prefix %+ _wiener_filter7_8bpc_ssse3).v
     RET
 .no_top:
-    lea             t3, [lpfq+lpf_strideq*4]
+    lea             t3, [lpfq+tmpstrideq*4]
     mov           lpfq, dstmp
-    mov [rsp+gprsize*1], lpf_strideq
-    lea             t3, [t3+lpf_strideq*2]
-    mov [rsp+gprsize*0], t3
+    lea             t3, [t3+tmpstrideq*2]
+    mov          [rsp], t3
     call .h
     mov             t6, t1
     mov             t5, t1
@@ -266,13 +265,13 @@ cglobal wiener_filter7_8bpc, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, lpf_stri
     mov             t2, t1
     dec             hd
     jz .v1
-    add           lpfq, dst_strideq
+    add           lpfq, strideq
     add             t1, 384*2
     call .h
     mov             t2, t1
     dec             hd
     jz .v2
-    add           lpfq, dst_strideq
+    add           lpfq, strideq
     add             t1, 384*2
     call .h
     dec             hd
@@ -456,7 +455,7 @@ cglobal wiener_filter7_8bpc, 0, 7, 8, -384*12-stk_off, _, x, left, lpf, lpf_stri
     ret
 ALIGN function_align
 .hv:
-    add           lpfq, dst_strideq
+    add           lpfq, strideq
     mov             xq, wq
     test         edgeb, 1 ; LR_HAVE_LEFT
     jz .hv_extend_left
@@ -573,7 +572,7 @@ ALIGN function_align
     mova     [dstq+xq], m0
     add             xq, 16
     jl .hv_loop
-    add           dstq, dst_strideq
+    add           dstq, strideq
 %if ARCH_X86_64
     mov             t6, t5
     mov             t5, t4
@@ -668,7 +667,7 @@ ALIGN function_align
     mova     [dstq+xq], m0
     add             xq, 16
     jl .v_loop
-    add           dstq, dst_strideq
+    add           dstq, strideq
 %if ARCH_X86_64
     mov             t6, t5
     mov             t5, t4
@@ -686,19 +685,19 @@ ALIGN function_align
 %endif
 
 %if ARCH_X86_64
-cglobal wiener_filter5_8bpc, 5, 13, 16, 384*8+16, dst, dst_stride, left, lpf, \
-                                                  lpf_stride, w, edge, flt, h, x
-    mov           fltq, fltmp
-    mov          edged, r8m
+cglobal wiener_filter5_8bpc, 4, 13, 16, 384*8+16, dst, stride, left, lpf, \
+                                                  w, h, edge, flt, x
+    mov           fltq, r6mp
     mov             wd, wm
-    mov             hd, r6m
+    movifnidn       hd, hm
+    mov          edged, r7m
     movq           m14, [fltq]
     add           lpfq, wq
+    movq            m7, [fltq+16]
+    add           dstq, wq
     mova            m8, [pw_m16380]
     lea             t1, [rsp+wq*2+16]
     mova           m15, [pw_2056]
-    add           dstq, wq
-    movq            m7, [fltq+16]
     neg             wq
 %if cpuflag(ssse3)
     pshufb         m14, [wiener_init]
@@ -721,34 +720,34 @@ cglobal wiener_filter5_8bpc, 5, 13, 16, 384*8+16, dst, dst_stride, left, lpf, \
     %define m11         [stk+80]
     %define stk_off     96
 %endif
-cglobal wiener_filter5_8bpc, 0, 7, 8, -384*8-stk_off, _, x, left, lpf, lpf_stride
+cglobal wiener_filter5_8bpc, 0, 7, 8, -384*8-stk_off, _, x, left, lpf, tmpstride
     %define stk         esp
     %define leftmp      [stk+28]
     %define m8          [base+pw_m16380]
     %define m12         [base+wiener_l_shuf]
     %define m14         [stk+48]
-    mov             r1, r7m ; flt
+    mov             r1, r6m ; flt
     mov             r0, r0m ; dst
-    mov             r5, r5m ; w
+    mov             r4, r4m ; w
     mov           lpfq, lpfm
-    mov             r2, r8m ; edge
-    mov             r4, r6m ; h
+    mov             r2, r7m ; edge
+    mov             r5, r5m ; h
     movq            m2, [r1+ 0]
     movq            m7, [r1+16]
-    add             r0, r5
-    mov             r1, r1m ; dst_stride
-    add           lpfq, r5
+    add             r0, r4
+    mov             r1, r1m ; stride
+    add           lpfq, r4
     mov          edged, r2
     mov             r2, r2m ; left
     mov          dstmp, r0
-    lea             t1, [rsp+r5*2+stk_off]
-    mov             hd, r4
-    neg             r5
-    mov    lpf_strideq, lpf_stridem
+    lea             t1, [rsp+r4*2+stk_off]
+    mov             hd, r5
+    neg             r4
     LEA             r6, pb_right_ext_mask+21
-    mov             wq, r5
-    mov    dst_strideq, r1
+    mov             wq, r4
+    mov        strideq, r1
     mov         leftmp, r2
+    mov             r4, r1
 %if cpuflag(ssse3)
     pshufb          m2, [base+wiener_init]
     pshufd          m1, m2, q3333
@@ -769,22 +768,21 @@ cglobal wiener_filter5_8bpc, 0, 7, 8, -384*8-stk_off, _, x, left, lpf, lpf_strid
     test         edgeb, 4 ; LR_HAVE_TOP
     jz .no_top
     call .h_top
-    add           lpfq, lpf_strideq
+    add           lpfq, strideq
     mov             t4, t1
     add             t1, 384*2
     call .h_top
-    lea             xq, [lpfq+lpf_strideq*4]
+    lea             xq, [lpfq+tmpstrideq*4]
     mov           lpfq, dstmp
     mov             t3, t1
     add             t1, 384*2
-    mov [rsp+gprsize*1], lpf_strideq
-    add             xq, lpf_strideq
-    mov [rsp+gprsize*0], xq ; below
+    add             xq, tmpstrideq
+    mov          [rsp], xq ; below
     call .h
     mov             t2, t1
     dec             hd
     jz .v1
-    add           lpfq, dst_strideq
+    add           lpfq, strideq
     add             t1, 384*2
     call .h
     dec             hd
@@ -797,25 +795,24 @@ cglobal wiener_filter5_8bpc, 0, 7, 8, -384*8-stk_off, _, x, left, lpf, lpf_strid
     jnz .main_loop
     test         edgeb, 8 ; LR_HAVE_BOTTOM
     jz .v2
-    mov           lpfq, [rsp+gprsize*0]
+    mov           lpfq, [rsp]
     call .hv_bottom
-    add           lpfq, [rsp+gprsize*1]
+    add           lpfq, strideq
     call .hv_bottom
 .end:
     RET
 .no_top:
-    lea             t3, [lpfq+lpf_strideq*4]
+    lea             t3, [lpfq+tmpstrideq*4]
     mov           lpfq, dstmp
-    mov [rsp+gprsize*1], lpf_strideq
-    lea             t3, [t3+lpf_strideq*2]
-    mov [rsp+gprsize*0], t3
+    lea             t3, [t3+tmpstrideq*2]
+    mov          [rsp], t3
     call .h
     mov             t4, t1
     mov             t3, t1
     mov             t2, t1
     dec             hd
     jz .v1
-    add           lpfq, dst_strideq
+    add           lpfq, strideq
     add             t1, 384*2
     call .h
     dec             hd
@@ -830,7 +827,7 @@ cglobal wiener_filter5_8bpc, 0, 7, 8, -384*8-stk_off, _, x, left, lpf, lpf_strid
     jnz .main
 .v2:
     call mangle(private_prefix %+ _wiener_filter5_8bpc_ssse3).v
-    add           dstq, dst_strideq
+    add           dstq, strideq
     mov             t4, t3
     mov             t3, t2
     mov             t2, t1
@@ -957,7 +954,7 @@ cglobal wiener_filter5_8bpc, 0, 7, 8, -384*8-stk_off, _, x, left, lpf, lpf_strid
     ret
 ALIGN function_align
 .hv:
-    add           lpfq, dst_strideq
+    add           lpfq, strideq
     mov             xq, wq
     test         edgeb, 1 ; LR_HAVE_LEFT
     jz .hv_extend_left
@@ -1052,7 +1049,7 @@ ALIGN function_align
     mova     [dstq+xq], m0
     add             xq, 16
     jl .hv_loop
-    add           dstq, dst_strideq
+    add           dstq, strideq
     mov             t4, t3
     mov             t3, t2
     mov             t2, t1
@@ -1171,30 +1168,29 @@ WIENER
 %endmacro
 
 %if ARCH_X86_32
-DECLARE_REG_TMP 0, 1, 2, 3, 4
+DECLARE_REG_TMP 0, 1, 2, 3, 5
  %if STACK_ALIGNMENT < 16
   %assign extra_stack 5*16
  %else
   %assign extra_stack 3*16
  %endif
 cglobal sgr_filter_5x5_8bpc, 1, 7, 8, -400*24-16-extra_stack, \
-                             dst, dst_stride, left, lpf, lpf_stride, w, params, h
+                             dst, stride, left, lpf, w
  %if STACK_ALIGNMENT < 16
   %define dstm         dword [esp+calloff+16*0+4*6]
-  %define dst_stridemp dword [esp+calloff+16*0+4*7]
+  %define stridemp     dword [esp+calloff+16*0+4*7]
   %define leftm        dword [esp+calloff+16*3+4*0]
   %define lpfm         dword [esp+calloff+16*3+4*1]
-  %define lpf_stridem  dword [esp+calloff+16*3+4*2]
-  %define w0m          dword [esp+calloff+16*3+4*3]
-  %define hd           dword [esp+calloff+16*3+4*4]
-  %define edgeb         byte [esp+calloff+16*3+4*5]
-  %define edged        dword [esp+calloff+16*3+4*5]
+  %define w0m          dword [esp+calloff+16*3+4*2]
+  %define hd           dword [esp+calloff+16*3+4*3]
+  %define edgeb         byte [esp+calloff+16*3+4*4]
+  %define edged        dword [esp+calloff+16*3+4*4]
   %define leftmp leftm
  %else
   %define w0m wm
-  %define hd dword r6m
-  %define edgeb  byte r8m
-  %define edged dword r8m
+  %define hd dword r5m
+  %define edgeb  byte r7m
+  %define edged dword r7m
  %endif
  %define hvsrcm dword [esp+calloff+4*0]
  %define w1m    dword [esp+calloff+4*1]
@@ -1208,39 +1204,36 @@ cglobal sgr_filter_5x5_8bpc, 1, 7, 8, -400*24-16-extra_stack, \
  %define m11 [base+sgr_lshuf5]
  %define m12 [base+pd_34816]
  %define m13 [base+pb_0to15]
-
- %define r10 r5
+ %define r10 r4
  %define base r6-$$
  %assign calloff 0
  %if STACK_ALIGNMENT < 16
-    mov    dst_strideq, [rstk+stack_offset+ 8]
+    mov        strideq, [rstk+stack_offset+ 8]
     mov          leftq, [rstk+stack_offset+12]
     mov           lpfq, [rstk+stack_offset+16]
-    mov    lpf_strideq, [rstk+stack_offset+20]
-    mov             wd, [rstk+stack_offset+24]
+    mov             wd, [rstk+stack_offset+20]
     mov           dstm, dstq
-    mov   dst_stridemp, dst_strideq
+    mov       stridemp, strideq
     mov          leftm, leftq
-    mov             r1, [rstk+stack_offset+28]
-    mov             r2, [rstk+stack_offset+36]
+    mov             r1, [rstk+stack_offset+24]
+    mov             r2, [rstk+stack_offset+32]
     mov           lpfm, lpfq
-    mov    lpf_stridem, lpf_strideq
     mov             hd, r1
     mov          edged, r2
  %endif
 %else
-DECLARE_REG_TMP 4, 9, 7, 11, 12
-cglobal sgr_filter_5x5_8bpc, 5, 15, 14, -400*24-16, dst, dst_stride, left, lpf, \
-                                                    lpf_stride, w, edge, params, h
+DECLARE_REG_TMP 8, 7, 9, 11, 12
+cglobal sgr_filter_5x5_8bpc, 4, 15, 14, -400*24-16, dst, stride, left, lpf, \
+                                                    w, h, edge, params
 %endif
 %if ARCH_X86_64 || STACK_ALIGNMENT >= 16
     mov             wd, wm
 %endif
 %if ARCH_X86_64
-    mov        paramsq, paramsmp
+    mov        paramsq, r6mp
     lea            r13, [sgr_x_by_x-0xf03]
-    mov          edged, r8m
-    mov             hd, r6m
+    movifnidn       hd, hm
+    mov          edged, r7m
     movu            m9, [paramsq]
     add           lpfq, wq
     mova            m8, [pb_1]
@@ -1258,11 +1251,10 @@ cglobal sgr_filter_5x5_8bpc, 5, 15, 14, -400*24-16, dst, dst_stride, left, lpf, 
     pxor            m6, m6
     mova           m11, [sgr_lshuf5]
     psllw           m7, 4
- DEFINE_ARGS dst, dst_stride, left, lpf, lpf_stride, _, edge, _, h, _, w
- %define lpfm        [rsp+0]
- %define lpf_stridem [rsp+8]
+ DEFINE_ARGS dst, stride, left, lpf, _, h, edge, _, _, _, w
+ %define lpfm [rsp]
 %else
-    mov             r1, [rstk+stack_offset+32] ; params
+    mov             r1, [rstk+stack_offset+28] ; params
     LEA             r6, $$
     movu            m1, [r1]
     add           lpfm, wq
@@ -1283,22 +1275,22 @@ cglobal sgr_filter_5x5_8bpc, 5, 15, 14, -400*24-16, dst, dst_stride, left, lpf, 
     mov            w1m, wd
     sub             wd, 2
     mov           lpfq, lpfm
-    mov    lpf_strideq, lpf_stridem
     mov            w0m, wd
+ %define strideq r5
 %endif
     test         edgeb, 4 ; LR_HAVE_TOP
     jz .no_top
     call .h_top
-    add           lpfq, lpf_strideq
+    add           lpfq, stridemp
     movif32        t2m, t1
     mov             t2, t1
     call .top_fixup
     add             t1, 400*6
     call .h_top
-    lea            r10, [lpfq+lpf_strideq*4]
+    movif32    strideq, stridemp
+    lea            r10, [lpfq+strideq*4]
     mov           lpfq, dstq
-    movif64 lpf_stridem, lpf_strideq
-    add            r10, lpf_strideq
+    add            r10, strideq
     mov           lpfm, r10 ; below
     movif32        t0m, t2
     mov             t0, t2
@@ -1307,7 +1299,7 @@ cglobal sgr_filter_5x5_8bpc, 5, 15, 14, -400*24-16, dst, dst_stride, left, lpf, 
     or           edged, 16
     call .h
 .main:
-    add           lpfq, dst_stridemp
+    add           lpfq, stridemp
     movif32         t4, t4m
     call .hv
     call .prep_n
@@ -1315,16 +1307,16 @@ cglobal sgr_filter_5x5_8bpc, 5, 15, 14, -400*24-16, dst, dst_stride, left, lpf, 
     jl .extend_bottom
 .main_loop:
     movif32       lpfq, hvsrcm
-    add           lpfq, dst_stridemp
+    add           lpfq, stridemp
 %if ARCH_X86_64
     test            hb, hb
 %else
-    mov             r5, hd
-    test            r5, r5
+    mov             r4, hd
+    test            r4, r4
 %endif
     jz .odd_height
     call .h
-    add           lpfq, dst_stridemp
+    add           lpfq, stridemp
     call .hv
     movif32       dstq, dstm
     call .n0
@@ -1336,7 +1328,7 @@ cglobal sgr_filter_5x5_8bpc, 5, 15, 14, -400*24-16, dst, dst_stride, left, lpf, 
     jz .extend_bottom
     mov           lpfq, lpfm
     call .h_top
-    add           lpfq, lpf_stridem
+    add           lpfq, stridemp
     call .hv_bottom
 .end:
     movif32       dstq, dstm
@@ -1363,10 +1355,10 @@ cglobal sgr_filter_5x5_8bpc, 5, 15, 14, -400*24-16, dst, dst_stride, left, lpf, 
     call .v
     jmp .end
 .no_top:
-    lea            r10, [lpfq+lpf_strideq*4]
+    movif32    strideq, stridemp
+    lea            r10, [lpfq+strideq*4]
     mov           lpfq, dstq
-    movif64 lpf_stridem, lpf_strideq
-    lea            r10, [r10+lpf_strideq*2]
+    lea            r10, [r10+strideq*2]
     mov           lpfm, r10
     call .h
     lea             t2, [t1+400*6]
@@ -1402,9 +1394,9 @@ cglobal sgr_filter_5x5_8bpc, 5, 15, 14, -400*24-16, dst, dst_stride, left, lpf, 
 %assign calloff 4
 .h: ; horizontal boxsum
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
- %define leftq r5
+ %define leftq r4
 %endif
     test         edgeb, 1 ; LR_HAVE_LEFT
     jz .h_extend_left
@@ -1422,7 +1414,7 @@ cglobal sgr_filter_5x5_8bpc, 5, 15, 14, -400*24-16, dst, dst_stride, left, lpf, 
     jmp .h_main
 .h_top:
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %endif
     test         edgeb, 1 ; LR_HAVE_LEFT
     jz .h_extend_left
@@ -1476,7 +1468,7 @@ cglobal sgr_filter_5x5_8bpc, 5, 15, 14, -400*24-16, dst, dst_stride, left, lpf, 
     ret
 .top_fixup:
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov             wd, w0m
 %endif
@@ -1496,7 +1488,7 @@ cglobal sgr_filter_5x5_8bpc, 5, 15, 14, -400*24-16, dst, dst_stride, left, lpf, 
 ALIGN function_align
 .hv: ; horizontal boxsum + vertical boxsum + ab
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov         hvsrcm, lpfq
 %endif
@@ -1516,7 +1508,7 @@ ALIGN function_align
     jmp .hv_main
 .hv_bottom:
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov         hvsrcm, lpfq
 %endif
@@ -1633,7 +1625,7 @@ ALIGN function_align
     jmp .hv_main2
 .v: ; vertical boxsum + ab
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov             wd, w0m
 %endif
@@ -1688,7 +1680,7 @@ ALIGN function_align
     jl .v_loop
     ret
 .prep_n: ; initial neighbor setup
-    movif64         wq, r5
+    movif64         wq, r4
     movif32         wd, w1m
 .prep_n_loop:
     movu            m0, [t4+wq*2+ 2]
@@ -1720,7 +1712,7 @@ ALIGN function_align
     ret
 ALIGN function_align
 .n0: ; neighbor + output (even rows)
-    movif64         wq, r5
+    movif64         wq, r4
     movif32         wd, w1m
 .n0_loop:
     movu            m0, [t4+wq*2+ 2]
@@ -1769,11 +1761,11 @@ ALIGN function_align
     movq     [dstq+wq], m0
     add             wq, 8
     jl .n0_loop
-    add           dstq, dst_stridemp
+    add           dstq, stridemp
     ret
 ALIGN function_align
 .n1: ; neighbor + output (odd rows)
-    movif64         wq, r5
+    movif64         wq, r4
     movif32         wd, w1m
 .n1_loop:
     movq            m0, [dstq+wq]
@@ -1798,7 +1790,7 @@ ALIGN function_align
     movq     [dstq+wq], m0
     add             wq, 8
     jl .n1_loop
-    add           dstq, dst_stridemp
+    add           dstq, stridemp
     movif32       dstm, dstq
     ret
 
@@ -1809,23 +1801,22 @@ ALIGN function_align
   %assign extra_stack 2*16
  %endif
 cglobal sgr_filter_3x3_8bpc, 1, 7, 8, -400*42-16-extra_stack, \
-                             dst, dst_stride, left, lpf, lpf_stride, w, params, h
+                             dst, stride, left, lpf, w
  %if STACK_ALIGNMENT < 16
   %define dstm         dword [esp+calloff+16*2+4*0]
-  %define dst_stridemp dword [esp+calloff+16*2+4*1]
+  %define stridemp     dword [esp+calloff+16*2+4*1]
   %define leftm        dword [esp+calloff+16*2+4*2]
   %define lpfm         dword [esp+calloff+16*2+4*3]
-  %define lpf_stridem  dword [esp+calloff+16*2+4*4]
-  %define w0m          dword [esp+calloff+16*2+4*5]
-  %define hd           dword [esp+calloff+16*2+4*6]
-  %define edgeb         byte [esp+calloff+16*2+4*7]
-  %define edged        dword [esp+calloff+16*2+4*7]
+  %define w0m          dword [esp+calloff+16*2+4*4]
+  %define hd           dword [esp+calloff+16*2+4*5]
+  %define edgeb         byte [esp+calloff+16*2+4*6]
+  %define edged        dword [esp+calloff+16*2+4*6]
   %define leftmp leftm
  %else
   %define w0m wm
-  %define hd dword r6m
-  %define edgeb  byte r8m
-  %define edged dword r8m
+  %define hd dword r5m
+  %define edgeb  byte r7m
+  %define edged dword r7m
  %endif
  %define hvsrcm dword [esp+calloff+4*0]
  %define w1m    dword [esp+calloff+4*1]
@@ -1840,33 +1831,31 @@ cglobal sgr_filter_3x3_8bpc, 1, 7, 8, -400*42-16-extra_stack, \
  %define base r6-$$
  %assign calloff 0
  %if STACK_ALIGNMENT < 16
-    mov    dst_strideq, [rstk+stack_offset+ 8]
+    mov        strideq, [rstk+stack_offset+ 8]
     mov          leftq, [rstk+stack_offset+12]
     mov           lpfq, [rstk+stack_offset+16]
-    mov    lpf_strideq, [rstk+stack_offset+20]
-    mov             wd, [rstk+stack_offset+24]
+    mov             wd, [rstk+stack_offset+20]
     mov           dstm, dstq
-    mov   dst_stridemp, dst_strideq
+    mov       stridemp, strideq
     mov          leftm, leftq
-    mov             r1, [rstk+stack_offset+28]
-    mov             r2, [rstk+stack_offset+36]
+    mov             r1, [rstk+stack_offset+24]
+    mov             r2, [rstk+stack_offset+32]
     mov           lpfm, lpfq
-    mov    lpf_stridem, lpf_strideq
     mov             hd, r1
     mov          edged, r2
  %endif
 %else
-cglobal sgr_filter_3x3_8bpc, 5, 15, 14, -400*42-8, dst, dst_stride, left, lpf, \
-                                                   lpf_stride, w, edge, params, h
+cglobal sgr_filter_3x3_8bpc, 4, 15, 14, -400*42-8, dst, stride, left, lpf, \
+                                                   w, h, edge, params
 %endif
 %if ARCH_X86_64 || STACK_ALIGNMENT >= 16
     mov             wd, wm
 %endif
 %if ARCH_X86_64
-    mov        paramsq, paramsmp
+    mov        paramsq, r6mp
     lea            r13, [sgr_x_by_x-0xf03]
-    mov          edged, r8m
-    mov             hd, r6m
+    mov             hd, hm
+    mov          edged, r7m
     movq            m9, [paramsq+4]
     add           lpfq, wq
     lea             t1, [rsp+wq*2+12]
@@ -1883,10 +1872,10 @@ cglobal sgr_filter_3x3_8bpc, 5, 15, 14, -400*42-8, dst, dst_stride, left, lpf, \
     pxor            m6, m6
     mova           m13, [sgr_lshuf3]
     psllw           m7, 4
- DEFINE_ARGS dst, dst_stride, left, lpf, lpf_stride, _, edge, _, h, _, w
+ DEFINE_ARGS dst, stride, left, lpf, _, h, edge, _, _, _, w
  %define lpfm [rsp]
 %else
-    mov             r1, [rstk+stack_offset+32] ; params
+    mov             r1, [rstk+stack_offset+28] ; params
     LEA             r6, $$
     movq            m1, [r1+4]
     add           lpfm, wq
@@ -1907,19 +1896,20 @@ cglobal sgr_filter_3x3_8bpc, 5, 15, 14, -400*42-8, dst, dst_stride, left, lpf, \
     mov            w1m, wd
     sub             wd, 2
     mov           lpfq, lpfm
-    mov    lpf_strideq, lpf_stridem
     mov            w0m, wd
+ %define strideq r5
 %endif
     test         edgeb, 4 ; LR_HAVE_TOP
     jz .no_top
     call .h_top
-    add           lpfq, lpf_strideq
+    add           lpfq, stridemp
     mov             t2, t1
     add             t1, 400*6
     call .h_top
-    lea            r10, [lpfq+lpf_strideq*4]
+    movif32    strideq, stridemp
+    lea            r10, [lpfq+strideq*4]
     mov           lpfq, dstq
-    add            r10, lpf_strideq
+    add            r10, strideq
     mov           lpfm, r10 ; below
     movif32         t4, t4m
     call .hv0
@@ -1927,24 +1917,24 @@ cglobal sgr_filter_3x3_8bpc, 5, 15, 14, -400*42-8, dst, dst_stride, left, lpf, \
     dec             hd
     jz .height1
     movif32       lpfq, hvsrcm
-    add           lpfq, dst_stridemp
+    add           lpfq, stridemp
     call .hv1
     call .prep_n
     sub             hd, 2
     jl .extend_bottom
 .main_loop:
     movif32       lpfq, hvsrcm
-    add           lpfq, dst_stridemp
+    add           lpfq, stridemp
     call .hv0
 %if ARCH_X86_64
     test            hb, hb
 %else
-    mov             r5, hd
-    test            r5, r5
+    mov             r4, hd
+    test            r4, r4
 %endif
     jz .odd_height
     movif32       lpfq, hvsrcm
-    add           lpfq, dst_stridemp
+    add           lpfq, stridemp
     call .hv1
     call .n0
     call .n1
@@ -1954,12 +1944,8 @@ cglobal sgr_filter_3x3_8bpc, 5, 15, 14, -400*42-8, dst, dst_stride, left, lpf, \
     jz .extend_bottom
     mov           lpfq, lpfm
     call .hv0_bottom
-%if ARCH_X86_64
-    add           lpfq, lpf_strideq
-%else
-    mov           lpfq, hvsrcm
-    add           lpfq, lpf_stridem
-%endif
+    movif32       lpfq, hvsrcm
+    add           lpfq, stridemp
     call .hv1_bottom
 .end:
     call .n0
@@ -1984,13 +1970,14 @@ cglobal sgr_filter_3x3_8bpc, 5, 15, 14, -400*42-8, dst, dst_stride, left, lpf, \
     call .v1
     jmp .end
 .no_top:
-    lea            r10, [lpfq+lpf_strideq*4]
+    movif32    strideq, stridemp
+    lea            r10, [lpfq+strideq*4]
     mov           lpfq, dstq
-    lea            r10, [r10+lpf_strideq*2]
+    lea            r10, [r10+strideq*2]
     mov           lpfm, r10
     call .h
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov             wq, w0m
     mov         hvsrcm, lpfq
@@ -2028,9 +2015,9 @@ cglobal sgr_filter_3x3_8bpc, 5, 15, 14, -400*42-8, dst, dst_stride, left, lpf, \
 %assign calloff 4
 .h: ; horizontal boxsum
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
- %define leftq r5
+ %define leftq r4
 %endif
     test         edgeb, 1 ; LR_HAVE_LEFT
     jz .h_extend_left
@@ -2048,7 +2035,7 @@ cglobal sgr_filter_3x3_8bpc, 5, 15, 14, -400*42-8, dst, dst_stride, left, lpf, \
     jmp .h_main
 .h_top:
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %endif
     test         edgeb, 1 ; LR_HAVE_LEFT
     jz .h_extend_left
@@ -2087,7 +2074,7 @@ cglobal sgr_filter_3x3_8bpc, 5, 15, 14, -400*42-8, dst, dst_stride, left, lpf, \
 ALIGN function_align
 .hv0: ; horizontal boxsum + vertical boxsum + ab (even rows)
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov         hvsrcm, lpfq
 %endif
@@ -2107,7 +2094,7 @@ ALIGN function_align
     jmp .hv0_main
 .hv0_bottom:
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov         hvsrcm, lpfq
 %endif
@@ -2196,7 +2183,7 @@ ALIGN function_align
 ALIGN function_align
 .hv1: ; horizontal boxsums + vertical boxsums + ab (odd rows)
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov         hvsrcm, lpfq
 %endif
@@ -2216,7 +2203,7 @@ ALIGN function_align
     jmp .hv1_main
 .hv1_bottom:
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov         hvsrcm, lpfq
 %endif
@@ -2301,7 +2288,7 @@ ALIGN function_align
     ret
 .v0: ; vertical boxsums + ab (even rows)
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov             wd, w0m
 %endif
@@ -2356,7 +2343,7 @@ ALIGN function_align
     ret
 .v1: ; vertical boxsums + ab (odd rows)
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov             wd, w0m
 %endif
@@ -2410,7 +2397,7 @@ ALIGN function_align
     mov             t1, r10
     ret
 .prep_n: ; initial neighbor setup
-    movif64         wq, r5
+    movif64         wq, r4
     movif32         wd, w1m
 .prep_n_loop:
     movu            m0, [t4+wq*2+400*0+ 4]
@@ -2463,7 +2450,7 @@ ALIGN function_align
     ret
 ALIGN function_align
 .n0: ; neighbor + output (even rows)
-    movif64         wq, r5
+    movif64         wq, r4
     movif32         wd, w1m
 .n0_loop:
     movu            m3, [t4+wq*2+400*0+4]
@@ -2515,11 +2502,11 @@ ALIGN function_align
     movq     [dstq+wq], m0
     add             wq, 8
     jl .n0_loop
-    add           dstq, dst_stridemp
+    add           dstq, stridemp
     ret
 ALIGN function_align
 .n1: ; neighbor + output (odd rows)
-    movif64         wq, r5
+    movif64         wq, r4
     movif32         wd, w1m
 .n1_loop:
     movu            m3, [t4+wq*2+400*2+4]
@@ -2571,7 +2558,7 @@ ALIGN function_align
     movq     [dstq+wq], m0
     add             wq, 8
     jl .n1_loop
-    add           dstq, dst_stridemp
+    add           dstq, stridemp
     movif32       dstm, dstq
     ret
 
@@ -2582,23 +2569,22 @@ ALIGN function_align
   %assign extra_stack 8*16
  %endif
 cglobal sgr_filter_mix_8bpc, 1, 7, 8, -400*66-48-extra_stack, \
-                             dst, dst_stride, left, lpf, lpf_stride, w, params, h
+                             dst, stride, left, lpf, w
  %if STACK_ALIGNMENT < 16
   %define dstm         dword [esp+calloff+16*8+4*0]
-  %define dst_stridemp dword [esp+calloff+16*8+4*1]
+  %define stridemp     dword [esp+calloff+16*8+4*1]
   %define leftm        dword [esp+calloff+16*8+4*2]
   %define lpfm         dword [esp+calloff+16*8+4*3]
-  %define lpf_stridem  dword [esp+calloff+16*8+4*4]
-  %define w0m          dword [esp+calloff+16*8+4*5]
-  %define hd           dword [esp+calloff+16*8+4*6]
-  %define edgeb         byte [esp+calloff+16*8+4*7]
-  %define edged        dword [esp+calloff+16*8+4*7]
+  %define w0m          dword [esp+calloff+16*8+4*4]
+  %define hd           dword [esp+calloff+16*8+4*5]
+  %define edgeb         byte [esp+calloff+16*8+4*6]
+  %define edged        dword [esp+calloff+16*8+4*6]
   %define leftmp leftm
  %else
   %define w0m wm
-  %define hd dword r6m
-  %define edgeb  byte r8m
-  %define edged dword r8m
+  %define hd dword r5m
+  %define edgeb  byte r7m
+  %define edged dword r7m
  %endif
  %define hvsrcm dword [esp+calloff+4*0]
  %define w1m    dword [esp+calloff+4*1]
@@ -2616,34 +2602,31 @@ cglobal sgr_filter_mix_8bpc, 1, 7, 8, -400*66-48-extra_stack, \
  %define base r6-$$
  %assign calloff 0
  %if STACK_ALIGNMENT < 16
-    mov    dst_strideq, [rstk+stack_offset+ 8]
+    mov        strideq, [rstk+stack_offset+ 8]
     mov          leftq, [rstk+stack_offset+12]
     mov           lpfq, [rstk+stack_offset+16]
-    mov    lpf_strideq, [rstk+stack_offset+20]
-    mov             wd, [rstk+stack_offset+24]
+    mov             wd, [rstk+stack_offset+20]
     mov           dstm, dstq
-    mov   dst_stridemp, dst_strideq
+    mov       stridemp, strideq
     mov          leftm, leftq
-    mov             r1, [rstk+stack_offset+28]
-    mov             r2, [rstk+stack_offset+36]
+    mov             r1, [rstk+stack_offset+24]
+    mov             r2, [rstk+stack_offset+32]
     mov           lpfm, lpfq
-    mov    lpf_stridem, lpf_strideq
     mov             hd, r1
     mov          edged, r2
  %endif
 %else
-cglobal sgr_filter_mix_8bpc, 5, 15, 16, -400*66-40, dst, dst_stride, left, \
-                                                    lpf, lpf_stride, w, edge, \
-                                                    params, h
+cglobal sgr_filter_mix_8bpc, 4, 15, 16, -400*66-40, dst, stride, left, lpf, \
+                                                    w, h, edge, params
 %endif
 %if ARCH_X86_64 || STACK_ALIGNMENT >= 16
     mov             wd, wm
 %endif
 %if ARCH_X86_64
-    mov        paramsq, paramsmp
+    mov        paramsq, r6mp
     lea            r13, [sgr_x_by_x-0xf03]
-    mov          edged, r8m
-    mov             hd, r6m
+    movifnidn       hd, hm
+    mov          edged, r7m
     mova           m15, [paramsq]
     add           lpfq, wq
     mova            m9, [pd_0xffff]
@@ -2663,10 +2646,10 @@ cglobal sgr_filter_mix_8bpc, 5, 15, 16, -400*66-40, dst, dst_stride, left, \
     punpckhqdq     m15, m15 ; w0 w1
     pxor            m6, m6
     psllw          m15, 2
- DEFINE_ARGS dst, dst_stride, left, lpf, lpf_stride, _, edge, _, h, _, w
+ DEFINE_ARGS dst, stride, left, lpf, _, h, edge, _, _, _, w
  %define lpfm [rsp]
 %else
-    mov             r1, [rstk+stack_offset+32] ; params
+    mov             r1, [rstk+stack_offset+28] ; params
     LEA             r6, $$
     mova            m2, [r1]
     add           lpfm, wq
@@ -2693,13 +2676,13 @@ cglobal sgr_filter_mix_8bpc, 5, 15, 16, -400*66-40, dst, dst_stride, left, \
     mova           m15, m2
     mova            m6, m3
     mov           lpfq, lpfm
-    mov    lpf_strideq, lpf_stridem
     mov            w0m, wd
+ %define strideq r5
 %endif
     test         edgeb, 4 ; LR_HAVE_TOP
     jz .no_top
     call .h_top
-    add           lpfq, lpf_strideq
+    add           lpfq, stridemp
     mov             t2, t1
 %if ARCH_X86_64
     call mangle(private_prefix %+ _sgr_filter_5x5_8bpc_ssse3).top_fixup
@@ -2709,9 +2692,10 @@ cglobal sgr_filter_mix_8bpc, 5, 15, 16, -400*66-40, dst, dst_stride, left, \
 %endif
     add             t1, 400*12
     call .h_top
-    lea            r10, [lpfq+lpf_strideq*4]
+    movif32    strideq, stridemp
+    lea            r10, [lpfq+strideq*4]
     mov           lpfq, dstq
-    add            r10, lpf_strideq
+    add            r10, strideq
     mov           lpfm, r10 ; below
     movif32         t4, t4m
     call .hv0
@@ -2719,24 +2703,24 @@ cglobal sgr_filter_mix_8bpc, 5, 15, 16, -400*66-40, dst, dst_stride, left, \
     dec             hd
     jz .height1
     movif32       lpfq, hvsrcm
-    add           lpfq, dst_stridemp
+    add           lpfq, stridemp
     call .hv1
     call .prep_n
     sub             hd, 2
     jl .extend_bottom
 .main_loop:
     movif32       lpfq, hvsrcm
-    add           lpfq, dst_stridemp
+    add           lpfq, stridemp
     call .hv0
 %if ARCH_X86_64
     test            hd, hd
 %else
-    mov             r5, hd
-    test            r5, r5
+    mov             r4, hd
+    test            r4, r4
 %endif
     jz .odd_height
     movif32       lpfq, hvsrcm
-    add           lpfq, dst_stridemp
+    add           lpfq, stridemp
     call .hv1
     call .n0
     call .n1
@@ -2746,12 +2730,8 @@ cglobal sgr_filter_mix_8bpc, 5, 15, 16, -400*66-40, dst, dst_stride, left, \
     jz .extend_bottom
     mov           lpfq, lpfm
     call .hv0_bottom
-%if ARCH_X86_64
-    add           lpfq, lpf_strideq
-%else
-    mov           lpfq, hvsrcm
-    add           lpfq, lpf_stridem
-%endif
+    movif32       lpfq, hvsrcm
+    add           lpfq, stridemp
     call .hv1_bottom
 .end:
     call .n0
@@ -2776,13 +2756,14 @@ cglobal sgr_filter_mix_8bpc, 5, 15, 16, -400*66-40, dst, dst_stride, left, \
     call .v1
     jmp .end
 .no_top:
-    lea            r10, [lpfq+lpf_strideq*4]
+    movif32    strideq, stridemp
+    lea            r10, [lpfq+strideq*4]
     mov           lpfq, dstq
-    lea            r10, [r10+lpf_strideq*2]
+    lea            r10, [r10+strideq*2]
     mov           lpfm, r10
     call .h
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov             wq, w0m
     mov         hvsrcm, lpfq
@@ -2833,9 +2814,9 @@ cglobal sgr_filter_mix_8bpc, 5, 15, 16, -400*66-40, dst, dst_stride, left, \
 %assign calloff 4
 .h: ; horizontal boxsum
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
- %define leftq r5
+ %define leftq r4
 %endif
     test         edgeb, 1 ; LR_HAVE_LEFT
     jz .h_extend_left
@@ -2853,7 +2834,7 @@ cglobal sgr_filter_mix_8bpc, 5, 15, 16, -400*66-40, dst, dst_stride, left, \
     jmp .h_main
 .h_top:
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %endif
     test         edgeb, 1 ; LR_HAVE_LEFT
     jz .h_extend_left
@@ -2913,7 +2894,7 @@ cglobal sgr_filter_mix_8bpc, 5, 15, 16, -400*66-40, dst, dst_stride, left, \
 ALIGN function_align
 .hv0: ; horizontal boxsum + vertical boxsum + ab3 (even rows)
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov         hvsrcm, lpfq
 %endif
@@ -2933,7 +2914,7 @@ ALIGN function_align
     jmp .hv0_main
 .hv0_bottom:
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov         hvsrcm, lpfq
 %endif
@@ -3054,7 +3035,7 @@ ALIGN function_align
 ALIGN function_align
 .hv1: ; horizontal boxsums + vertical boxsums + ab (odd rows)
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov         hvsrcm, lpfq
 %endif
@@ -3074,7 +3055,7 @@ ALIGN function_align
     jmp .hv1_main
 .hv1_bottom:
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov         hvsrcm, lpfq
 %endif
@@ -3237,7 +3218,7 @@ ALIGN function_align
     ret
 .v0: ; vertical boxsums + ab3 (even rows)
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov             wd, w0m
 %endif
@@ -3309,7 +3290,7 @@ ALIGN function_align
     ret
 .v1: ; vertical boxsums + ab (odd rows)
 %if ARCH_X86_64
-    lea             wq, [r5-2]
+    lea             wq, [r4-2]
 %else
     mov             wd, w0m
 %endif
@@ -3422,7 +3403,7 @@ ALIGN function_align
     mov             t1, r10
     ret
 .prep_n: ; initial neighbor setup
-    movif64         wq, r5
+    movif64         wq, r4
     movif32         wd, w1m
 .prep_n_loop:
     movu            m0, [t4+wq*2+400*0+ 2]
@@ -3499,7 +3480,7 @@ ALIGN function_align
     ret
 ALIGN function_align
 .n0: ; neighbor + output (even rows)
-    movif64         wq, r5
+    movif64         wq, r4
     movif32         wd, w1m
 .n0_loop:
     movu            m0, [t4+wq*2+ 4]
@@ -3616,11 +3597,11 @@ ALIGN function_align
     movq     [dstq+wq], m0
     add             wq, 8
     jl .n0_loop
-    add           dstq, dst_stridemp
+    add           dstq, stridemp
     ret
 ALIGN function_align
 .n1: ; neighbor + output (odd rows)
-    movif64         wq, r5
+    movif64         wq, r4
     movif32         wd, w1m
 .n1_loop:
     movu            m3, [t4+wq*2+400*4+4]
@@ -3695,6 +3676,6 @@ ALIGN function_align
     movq     [dstq+wq], m0
     add             wq, 8
     jl .n1_loop
-    add           dstq, dst_stridemp
+    add           dstq, stridemp
     movif32       dstm, dstq
     ret

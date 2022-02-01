@@ -68,14 +68,12 @@ class RootAccessible : public DocAccessibleWrap, public nsIDOMEventListener {
    */
   void HandlePopupHidingEvent(nsINode* aNode);
 
-#ifdef MOZ_XUL
   void HandleTreeRowCountChangedEvent(dom::Event* aEvent,
                                       XULTreeAccessible* aAccessible);
   void HandleTreeInvalidatedEvent(dom::Event* aEvent,
                                   XULTreeAccessible* aAccessible);
 
   uint32_t GetChromeFlags() const;
-#endif
 };
 
 inline RootAccessible* LocalAccessible::AsRoot() {

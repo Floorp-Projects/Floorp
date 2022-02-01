@@ -5,6 +5,9 @@
 from __future__ import print_function, absolute_import
 
 import sys
+
+from pathlib import Path
+from typing import Union
 from unittest.mock import Mock
 
 
@@ -12,7 +15,7 @@ class NoopTelemetry(object):
     def __init__(self, failed_glean_import):
         self._failed_glean_import = failed_glean_import
 
-    def metrics(self, metrics_path):
+    def metrics(self, metrics_path: Union[str, Path]):
         return Mock()
 
     def submit(self, is_bootstrap):
@@ -43,7 +46,7 @@ class GleanTelemetry(object):
     ):
         self._metrics_cache = {}
 
-    def metrics(self, metrics_path):
+    def metrics(self, metrics_path: Union[str, Path]):
         if metrics_path not in self._metrics_cache:
             from glean import load_metrics
 

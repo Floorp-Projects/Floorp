@@ -259,7 +259,7 @@
 //! implementations for some async methods, there are two resolutions. Either
 //! you can add Send and/or Sync as supertraits (Send if there are `&mut self`
 //! methods with default implementations, Sync if there are `&self` methods with
-//! default implementions) to constrain all implementors of the trait such that
+//! default implementations) to constrain all implementors of the trait such that
 //! the default implementations are applicable to them:
 //!
 //! ```
@@ -303,7 +303,16 @@
 //! let object = &value as &dyn ObjectSafe;
 //! ```
 
-#![allow(clippy::match_like_matches_macro)] // matches! requires Rust 1.42
+#![allow(
+    clippy::default_trait_access,
+    clippy::doc_markdown,
+    clippy::if_not_else,
+    clippy::items_after_statements,
+    clippy::module_name_repetitions,
+    clippy::shadow_unrelated,
+    clippy::similar_names,
+    clippy::too_many_lines
+)]
 
 extern crate proc_macro;
 
@@ -312,7 +321,6 @@ mod expand;
 mod lifetime;
 mod parse;
 mod receiver;
-mod respan;
 
 use crate::args::Args;
 use crate::expand::expand;

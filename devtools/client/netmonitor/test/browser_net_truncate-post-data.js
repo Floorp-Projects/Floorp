@@ -8,9 +8,6 @@
  * Verifies that requests with large post data are truncated and error is displayed.
  */
 add_task(async function() {
-  // Using https-first for this test is blocked on Bug 1733420.
-  await pushPref("dom.security.https_first", false);
-
   const { monitor, tab } = await initNetMonitor(POST_JSON_URL, {
     requestCount: 1,
   });

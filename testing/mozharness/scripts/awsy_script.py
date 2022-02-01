@@ -60,15 +60,6 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
                 },
             ],
             [
-                ["--enable-webrender"],
-                {
-                    "action": "store_true",
-                    "dest": "enable_webrender",
-                    "default": False,
-                    "help": "Enable the WebRender compositor in Gecko.",
-                },
-            ],
-            [
                 ["--base"],
                 {
                     "action": "store_true",
@@ -292,9 +283,6 @@ class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
         if dmd_enabled:
             cmd.append("--setpref=security.sandbox.content.level=0")
         cmd.append(test_file)
-
-        if self.config["enable_webrender"]:
-            cmd.append("--enable-webrender")
 
         env["STYLO_THREADS"] = "4"
 

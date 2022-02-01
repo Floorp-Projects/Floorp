@@ -41,6 +41,7 @@
 #include "mozilla/EditorUtils.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RangeUtils.h"
 #include "mozilla/Services.h"
@@ -905,7 +906,7 @@ nsresult mozInlineSpellChecker::SpellCheckRange(nsRange* aRange) {
 // mozInlineSpellChecker::GetMisspelledWord
 
 NS_IMETHODIMP
-mozInlineSpellChecker::GetMisspelledWord(nsINode* aNode, int32_t aOffset,
+mozInlineSpellChecker::GetMisspelledWord(nsINode* aNode, uint32_t aOffset,
                                          nsRange** newword) {
   if (NS_WARN_IF(!aNode)) {
     return NS_ERROR_INVALID_ARG;
@@ -920,7 +921,7 @@ mozInlineSpellChecker::GetMisspelledWord(nsINode* aNode, int32_t aOffset,
 // mozInlineSpellChecker::ReplaceWord
 
 NS_IMETHODIMP
-mozInlineSpellChecker::ReplaceWord(nsINode* aNode, int32_t aOffset,
+mozInlineSpellChecker::ReplaceWord(nsINode* aNode, uint32_t aOffset,
                                    const nsAString& aNewWord) {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(aNewWord.IsEmpty())) {
     return NS_ERROR_FAILURE;
@@ -1228,11 +1229,12 @@ nsresult mozInlineSpellChecker::DoSpellCheckSelection(
   // elements inside the selection
   nsTArray<RefPtr<nsRange>> ranges;
 
-  int32_t count = aSpellCheckSelection->RangeCount();
-
-  for (int32_t idx = 0; idx < count; idx++) {
+  const uint32_t rangeCount = aSpellCheckSelection->RangeCount();
+  for (const uint32_t idx : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(aSpellCheckSelection->RangeCount() == rangeCount);
     nsRange* range = aSpellCheckSelection->GetRangeAt(idx);
-    if (range) {
+    MOZ_ASSERT(range);
+    if (MOZ_LIKELY(range)) {
       ranges.AppendElement(range);
     }
   }
@@ -1251,7 +1253,7 @@ nsresult mozInlineSpellChecker::DoSpellCheckSelection(
       mozInlineSpellStatus::CreateForRange(*this, nullptr);
 
   bool doneChecking;
-  for (int32_t idx = 0; idx < count; idx++) {
+  for (uint32_t idx : IntegerRange(rangeCount)) {
     // We can consider this word as "added" since we know it has no spell
     // check range over it that needs to be deleted. All the old ranges
     // were cleared above. We also need to clear the word count so that we
@@ -1434,6 +1436,7 @@ nsresult mozInlineSpellChecker::SpellCheckerSlice::Execute() {
     // get the range for the current word.
     nsINode* const beginNode = word.mNodeOffsetRange.Begin().Node();
     nsINode* const endNode = word.mNodeOffsetRange.End().Node();
+    // TODO: Make them `uint32_t`
     const int32_t beginOffset = word.mNodeOffsetRange.Begin().Offset();
     const int32_t endOffset = word.mNodeOffsetRange.End().Offset();
 
@@ -1450,7 +1453,8 @@ nsresult mozInlineSpellChecker::SpellCheckerSlice::Execute() {
                                                std::move(checkRanges));
 
       // move the range to encompass the stuff that needs checking.
-      nsresult rv = mStatus->mRange->SetStart(beginNode, beginOffset);
+      nsresult rv = mStatus->mRange->SetStart(
+          beginNode, AssertedCast<uint32_t>(beginOffset));
       if (NS_FAILED(rv)) {
         // The range might be unhappy because the beginning is after the
         // end. This is possible when the requested end was in the middle
@@ -1473,14 +1477,15 @@ nsresult mozInlineSpellChecker::SpellCheckerSlice::Execute() {
       ErrorResult erv;
       // likewise, if this word is inside new text, we won't bother testing
       if (!mStatus->GetCreatedRange() ||
-          !mStatus->GetCreatedRange()->IsPointInRange(*beginNode, beginOffset,
-                                                      erv)) {
+          !mStatus->GetCreatedRange()->IsPointInRange(
+              *beginNode, AssertedCast<uint32_t>(beginOffset), erv)) {
         MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Debug,
                 ("%s: removing ranges for some interval.", __FUNCTION__));
 
         nsTArray<RefPtr<nsRange>> ranges;
         mSpellCheckSelection.GetRangesForInterval(
-            *beginNode, beginOffset, *endNode, endOffset, true, ranges, erv);
+            *beginNode, AssertedCast<uint32_t>(beginOffset), *endNode,
+            AssertedCast<uint32_t>(endOffset), true, ranges, erv);
         ENSURE_SUCCESS(erv, erv.StealNSResult());
         oldRangesToRemove.AppendElements(std::move(ranges));
       }
@@ -1671,10 +1676,10 @@ nsresult mozInlineSpellChecker::ResumeCheck(
             ("%s: no active dictionary.", __FUNCTION__));
 
     // no active dictionary
-    int32_t count = spellCheckSelection->RangeCount();
-    for (int32_t index = count - 1; index >= 0; index--) {
+    for (const uint32_t index :
+         Reversed(IntegerRange(spellCheckSelection->RangeCount()))) {
       RefPtr<nsRange> checkRange = spellCheckSelection->GetRangeAt(index);
-      if (checkRange) {
+      if (MOZ_LIKELY(checkRange)) {
         RemoveRange(spellCheckSelection, checkRange);
       }
     }
@@ -1710,7 +1715,7 @@ nsresult mozInlineSpellChecker::ResumeCheck(
 // static
 nsresult mozInlineSpellChecker::IsPointInSelection(Selection& aSelection,
                                                    nsINode* aNode,
-                                                   int32_t aOffset,
+                                                   uint32_t aOffset,
                                                    nsRange** aRange) {
   *aRange = nullptr;
 
@@ -1733,11 +1738,11 @@ nsresult mozInlineSpellChecker::CleanupRangesInSelection(
   // can happen if the node containing a highlighted word was removed.
   if (!aSelection) return NS_ERROR_FAILURE;
 
-  int32_t count = aSelection->RangeCount();
-
-  for (int32_t index = 0; index < count; index++) {
-    nsRange* checkRange = aSelection->GetRangeAt(index);
-    if (checkRange) {
+  // TODO: Rewrite this with reversed ranged-loop, it might make this simpler.
+  int64_t count = aSelection->RangeCount();
+  for (int64_t index = 0; index < count; index++) {
+    nsRange* checkRange = aSelection->GetRangeAt(static_cast<uint32_t>(index));
+    if (MOZ_LIKELY(checkRange)) {
       if (checkRange->Collapsed()) {
         RemoveRange(aSelection, checkRange);
         index--;

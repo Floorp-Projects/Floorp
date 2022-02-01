@@ -647,6 +647,16 @@ class MacroAssemblerX86Shared : public Assembler {
     moveSimd128Float(src, dest);
     return dest;
   }
+  FloatRegister reusedInputSimd128FloatIfNotOther(FloatRegister src,
+                                                  FloatRegister dest,
+                                                  FloatRegister other) {
+    MOZ_ASSERT(src.isSimd128() && dest.isSimd128());
+    if (HasAVX() && src != other) {
+      return src;
+    }
+    moveSimd128Float(src, dest);
+    return dest;
+  }
   void loadUnalignedSimd128(const Operand& src, FloatRegister dest) {
     vmovups(src, dest);
   }

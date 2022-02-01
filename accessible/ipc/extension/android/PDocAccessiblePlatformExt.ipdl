@@ -27,8 +27,6 @@ child:
 
   async Paste(uint64_t aID);
 
-  async ExploreByTouch(uint64_t aID, float aX, float aY);
-
 parent:
   async SetPivotBoundaries(PDocAccessible aFirstDoc, uint64_t aFirst, PDocAccessible aLastDoc, uint64_t aLast);
   };

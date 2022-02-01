@@ -13,6 +13,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/intl/Locale.h"
 #include "mozilla/intl/MeasureUnit.h"
+#include "mozilla/intl/MeasureUnitGenerated.h"
 #include "mozilla/intl/NumberFormat.h"
 #include "mozilla/intl/NumberingSystem.h"
 #include "mozilla/intl/NumberRangeFormat.h"
@@ -34,7 +35,6 @@
 #include "builtin/intl/DecimalNumber.h"
 #include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
-#include "builtin/intl/MeasureUnitGenerated.h"
 #include "builtin/intl/RelativeTimeFormat.h"
 #include "ds/Sort.h"
 #include "gc/FreeOp.h"
@@ -274,7 +274,7 @@ bool js::intl_availableMeasurementUnits(JSContext* cx, unsigned argc,
 
 static constexpr size_t MaxUnitLength() {
   size_t length = 0;
-  for (const auto& unit : intl::simpleMeasureUnits) {
+  for (const auto& unit : mozilla::intl::simpleMeasureUnits) {
     length = std::max(length, std::char_traits<char>::length(unit.name));
   }
   return length * 2 + std::char_traits<char>::length("-per-");

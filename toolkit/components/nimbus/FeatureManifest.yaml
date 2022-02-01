@@ -4,6 +4,15 @@
 
 # Features must be added here to be accessible through the NimbusFeature API.
 
+testFeature:
+  description: Test only feature
+  hasExposure: false
+  isEarlyStartup: true
+  variables:
+    testInt:
+      type: int
+      fallbackPref: nimbus.testing.testInt
+      description: Int pref used by platform API tests
 search:
   description: The Search Services
   hasExposure: false
@@ -67,6 +76,10 @@ urlbar:
         - history
         - offline
         - online
+    quickSuggestAllowPositionInSuggestions:
+      type: boolean
+      fallbackPref: browser.urlbar.quicksuggest.allowPositionInSuggestions
+      description: Whether quick suggest results can be shown in position specified in the suggestions.
     quickSuggestShouldShowOnboardingDialog:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.shouldShowOnboardingDialog
@@ -197,6 +210,82 @@ pocketNewtab:
       description: >-
         A save to Pocket button inside the card, shown on the card thumbnail, on
         hover.
+    hideDescriptions:
+      type: boolean
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.hideDescriptions.enabled
+      description: >-
+        Hide or display descriptions for Pocket stories on newtab.
+    compactGrid:
+      type: boolean
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.compactGrid.enabled
+      description: >-
+        Reduce the number of pixels between the Pocket cards on newtab.
+    compactImages:
+      type: boolean
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.compactImages.enabled
+      description: >-
+        Reduce the height on Pocket card images on newtab.
+    imageGradient:
+      type: boolean
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.imageGradient.enabled
+      description: >-
+        Add a gradient to the bottom of Pocket card images on newtab to blend the
+        image in with the card.
+    titleLines:
+      type: int
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.titleLines
+      description: >-
+        Changes the maximum number of lines a title can be for Pocket cards on newtab.
+    descLines:
+      type: int
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.descLines
+      description: >-
+        Changes the maximum number of lines a description can be for Pocket cards on newtab.
+    essentialReadsHeader:
+      type: boolean
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.essentialReadsHeader.enabled
+      description: >-
+        Updates the Pocket section header and title to say "Today’s Essential Reads",
+        moves the "Recommended by Pocket" header to the right side.
+    editorsPicksHeader:
+      type: boolean
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.editorsPicksHeader.enabled
+      description: >-
+        Updates the Pocket section header and title to say "Editor’s Picks", if used with
+        essentialReadsHeader, creates a second section 2 rows down for editorsPicksHeader.
+    readTime:
+      type: boolean
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.readTime.enabled
+      description: >-
+        Displays an estimated read time for Pocket cards on newtab.
+    newSponsoredLabel:
+      type: boolean
+      fallbackPref: >-
+        browser.newtabpage.activity-stream.discoverystream.newSponsoredLabel.enabled
+      description: >-
+        Updates the sponsored label position to below the image for Pocket cards on newtab.
+saveToPocket:
+  description: The save to Pocket feature
+  hasExposure: false
+  isEarlyStartup: true
+  variables:
+    layoutRefresh:
+      type: boolean
+      fallbackPref: extensions.pocket.refresh.layout.enabled
+      description: Enable the new Pocket panels.
+    emailButton:
+      type: boolean
+      fallbackPref: extensions.pocket.refresh.emailButton.enabled
+      description: Just for the new Pocket panels, enables the email signup button.
 password-autocomplete:
   description: A special autocomplete UI for password fields.
   hasExposure: false
@@ -216,6 +305,10 @@ shellService:
       type: boolean
       fallbackPref: browser.shell.setDefaultBrowserUserChoice
       description: Should it set as default browser
+    setDefaultPDFHandler:
+      type: boolean
+      fallbackPref: browser.shell.setDefaultPDFHandler
+      description: Should setting it as the default browser set it as the default PDF handler.
 upgradeDialog:
   description: The dialog shown for major upgrades
   hasExposure: false

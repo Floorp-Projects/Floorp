@@ -11,6 +11,28 @@
 #include <ostream>
 
 namespace mozilla {
+
+std::ostream& operator<<(std::ostream& aOut, const Side& aSide) {
+#define Emit(x) \
+  case x:       \
+    aOut << #x; \
+    break
+
+  switch (aSide) {
+    Emit(eSideTop);
+    Emit(eSideBottom);
+    Emit(eSideLeft);
+    Emit(eSideRight);
+    default:
+      NS_ERROR("unknown side");
+      aOut << int(aSide);
+      break;
+  }
+
+#undef Emit
+  return aOut;
+}
+
 namespace gfx {
 
 std::ostream& operator<<(std::ostream& aOut, const SurfaceFormat& aFormat) {

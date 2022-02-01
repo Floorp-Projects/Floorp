@@ -247,6 +247,19 @@ class TextEditor final : public EditorBase,
     }
   }
 
+  dom::Text* GetTextNode() {
+    MOZ_DIAGNOSTIC_ASSERT(GetRoot());
+    MOZ_DIAGNOSTIC_ASSERT(GetRoot()->GetFirstChild());
+    MOZ_DIAGNOSTIC_ASSERT(GetRoot()->GetFirstChild()->IsText());
+    if (MOZ_UNLIKELY(!GetRoot() || !GetRoot()->GetFirstChild())) {
+      return nullptr;
+    }
+    return GetRoot()->GetFirstChild()->GetAsText();
+  }
+  const dom::Text* GetTextNode() const {
+    return const_cast<TextEditor*>(this)->GetTextNode();
+  }
+
  protected:  // May be called by friends.
   /****************************************************************************
    * Some friend classes are allowed to call the following protected methods.

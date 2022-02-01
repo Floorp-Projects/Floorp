@@ -36,6 +36,7 @@ class TRRServiceParent : public TRRServiceBase,
   mozilla::ipc::IPCResult RecvInitTRRConnectionInfo();
   mozilla::ipc::IPCResult RecvSetConfirmationState(uint32_t aNewState);
   uint32_t GetConfirmationState() { return mConfirmationState; }
+  virtual void ReadEtcHostsFile() override;
 
  private:
   virtual ~TRRServiceParent();

@@ -48,4 +48,27 @@ add_task(async function() {
     ],
     screenshotPath
   );
+
+  // Test with additional command options
+  await testFileCreationPositive(
+    [
+      "-url",
+      "http://mochi.test:8888/browser/browser/components/shell/test/headless.html",
+      "-screenshot",
+      screenshotPath,
+      "-attach-console",
+    ],
+    screenshotPath
+  );
+  await testFileCreationPositive(
+    [
+      "-url",
+      "http://mochi.test:8888/browser/browser/components/shell/test/headless.html",
+      "-attach-console",
+      "-screenshot",
+      screenshotPath,
+      "-headless",
+    ],
+    screenshotPath
+  );
 });

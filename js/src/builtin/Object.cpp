@@ -39,6 +39,11 @@
 #include "vm/ToSource.h"       // js::ValueToSource
 #include "vm/WellKnownAtom.h"  // js_*_str
 
+#ifdef ENABLE_RECORD_TUPLE
+#  include "builtin/RecordObject.h"
+#  include "builtin/TupleObject.h"
+#endif
+
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
@@ -1430,6 +1435,16 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
     return true;
   }
 
+#ifdef ENABLE_RECORD_TUPLE
+  if (obj->is<TupleObject>()) {
+    Rooted<TupleType*> tup(cx, obj->as<TupleObject>().unbox());
+    return TryEnumerableOwnPropertiesNative<kind>(cx, tup, rval, optimized);
+  } else if (obj->is<RecordObject>()) {
+    Rooted<RecordType*> tup(cx, obj->as<RecordObject>().unbox());
+    return TryEnumerableOwnPropertiesNative<kind>(cx, tup, rval, optimized);
+  }
+#endif
+
   HandleNativeObject nobj = obj.as<NativeObject>();
 
   // Resolve lazy properties on |nobj|.
@@ -1534,6 +1549,58 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
       properties[i].set(value);
     }
   }
+#ifdef ENABLE_RECORD_TUPLE
+  else if (obj->is<RecordType>()) {
+    RecordType* rec = &obj->as<RecordType>();
+    RootedArrayObject keys(cx, rec->keys());
+    RootedId keyId(cx);
+    RootedString keyStr(cx);
+
+    MOZ_ASSERT(properties.empty(), "records cannot have dense elements");
+    if (!properties.resize(keys->length())) {
+      return false;
+    }
+
+    for (size_t i = 0; i < keys->length(); i++) {
+      MOZ_ASSERT(keys->getDenseElement(i).isString());
+      if (kind == EnumerableOwnPropertiesKind::Keys ||
+          kind == EnumerableOwnPropertiesKind::Names) {
+        value.set(keys->getDenseElement(i));
+      } else if (kind == EnumerableOwnPropertiesKind::Values) {
+        keyStr.set(keys->getDenseElement(i).toString());
+
+        if (!JS_StringToId(cx, keyStr, &keyId)) {
+          return false;
+        }
+        MOZ_ALWAYS_TRUE(rec->getOwnProperty(cx, keyId, &value));
+      } else {
+        MOZ_ASSERT(kind == EnumerableOwnPropertiesKind::KeysAndValues);
+
+        key.set(keys->getDenseElement(i));
+        keyStr.set(key.toString());
+
+        if (!JS_StringToId(cx, keyStr, &keyId)) {
+          return false;
+        }
+        MOZ_ALWAYS_TRUE(rec->getOwnProperty(cx, keyId, &value));
+
+        if (!NewValuePair(cx, key, value, &value)) {
+          return false;
+        }
+      }
+
+      properties[i].set(value);
+    }
+
+    // Uh, goto... When using records, we already get the (sorted) properties
+    // from its sorted keys, so we don't read them again as "own properties".
+    // We could use an `if` or some refactoring to skip the next logic, but
+    // goto makes it easer to keep the logic separated in
+    // "#ifdef ENABLE_RECORD_TUPLE" blocks.
+    // This should be refactored when the #ifdefs are removed.
+    goto end;
+  }
+#endif
 
   // Up to this point no side-effects through accessor properties are
   // possible which could have replaced |obj| with a non-native object.
@@ -1655,6 +1722,10 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
     }
   }
 
+#ifdef ENABLE_RECORD_TUPLE
+end:
+#endif
+
   JSObject* array =
       NewDenseCopiedArray(cx, properties.length(), properties.begin());
   if (!array) {
@@ -1674,7 +1745,8 @@ static bool EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args) {
                 "Only implemented for Object.keys and Object.entries");
 
   // Step 1. (Step 1 of Object.{keys,values,entries}, really.)
-  RootedObject obj(cx, ToObject(cx, args.get(0)));
+  RootedObject obj(cx, IF_RECORD_TUPLE(ToObjectOrGetObjectPayload, ToObject)(
+                           cx, args.get(0)));
   if (!obj) {
     return false;
   }
@@ -1785,7 +1857,8 @@ static bool obj_keys(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Step 1.
-  RootedObject obj(cx, ToObject(cx, args.get(0)));
+  RootedObject obj(cx, IF_RECORD_TUPLE(ToObjectOrGetObjectPayload, ToObject)(
+                           cx, args.get(0)));
   if (!obj) {
     return false;
   }

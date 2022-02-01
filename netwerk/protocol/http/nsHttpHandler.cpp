@@ -2209,6 +2209,7 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
     if (mAltSvcCache) {
       mAltSvcCache->ClearAltServiceMappings();
     }
+    nsCORSListenerProxy::ClearPrivateBrowsingCache();
   } else if (!strcmp(topic, "browser:purge-session-history")) {
     if (mConnMgr) {
       Unused << mConnMgr->ClearConnectionHistory();

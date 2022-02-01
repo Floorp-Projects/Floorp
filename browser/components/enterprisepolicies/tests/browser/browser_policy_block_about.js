@@ -9,25 +9,25 @@ const policiesToTest = [
     policies: {
       BlockAboutAddons: true,
     },
-    urls: ["about:addons"],
+    urls: ["about:addons", "about:ADDONS"],
   },
   {
     policies: {
       BlockAboutConfig: true,
     },
-    urls: ["about:config"],
+    urls: ["about:config", "about:Config"],
   },
   {
     policies: {
       BlockAboutProfiles: true,
     },
-    urls: ["about:profiles"],
+    urls: ["about:profiles", "about:pRofiles"],
   },
   {
     policies: {
       BlockAboutSupport: true,
     },
-    urls: ["about:support"],
+    urls: ["about:support", "about:suPPort"],
   },
   {
     policies: {
@@ -66,7 +66,7 @@ add_task(async function testAboutTask() {
     policyJSON.policies = policyToTest.policies;
     for (let url of policyToTest.urls) {
       if (url.startsWith("about")) {
-        let feature = url.split(":")[1];
+        let feature = url.split(":")[1].toLowerCase();
         let aboutModule = Cc[ABOUT_CONTRACT + feature].getService(
           Ci.nsIAboutModule
         );

@@ -18,31 +18,17 @@ linux64-clang-5.0:
     run:
         script: build-clang.sh
         arguments:
-            - 'build/build-clang/clang-5.0-linux64.json'
+            - 'build/build-clang/linux64.json'
+            - 'build/build-clang/clang-5.0.json'
+            - 'build/build-clang/2stages.json'
         resources:
-            - 'build/build-clang/clang-5.0-linux64.json'
+            - 'build/build-clang/linux64.json'
+            - 'build/build-clang/clang-5.0.json'
+            - 'build/build-clang/2stages.json'
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
             - clang-5.0
-        toolchain:
-            - linux64-toolchain-sysroot
-
-linux64-clang-7:
-    description: "Clang 7 toolchain build"
-    treeherder:
-        symbol: TL(clang7)
-    run:
-        using: toolchain-script
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/clang-7-linux64.json'
-        resources:
-            - 'build/build-clang/clang-7-linux64.json'
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        fetch:
-            - clang-7
         toolchain:
             - linux64-toolchain-sysroot
 
@@ -89,25 +75,6 @@ linux64-clang-13-mingw-x64:
         toolchain:
             - linux64-clang-13
 
-linux64-clang-10:
-    description: "Clang 10 toolchain build"
-    treeherder:
-        symbol: TL(clang10)
-    run:
-        using: toolchain-script
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/clang-10-linux64.json'
-        resources:
-            - 'build/build-clang/clang-10-linux64.json'
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        fetch:
-            - clang-10
-        toolchain:
-            - linux64-toolchain-sysroot
-            - wasm32-wasi-compiler-rt-10
-
 linux64-clang-trunk:
     description: "Clang trunk toolchain build"
     attributes:
@@ -118,9 +85,13 @@ linux64-clang-trunk:
         using: toolchain-script
         script: build-clang.sh
         arguments:
-            - 'build/build-clang/clang-trunk-linux64.json'
+            - 'build/build-clang/linux64.json'
+            - 'build/build-clang/clang-trunk.json'
+            - 'build/build-clang/2stages.json'
         resources:
-            - 'build/build-clang/clang-trunk-linux64.json'
+            - 'build/build-clang/linux64.json'
+            - 'build/build-clang/clang-trunk.json'
+            - 'build/build-clang/2stages.json'
         toolchain-artifact: public/build/clang.tar.zst
     run-on-projects: []
     fetches:
@@ -141,9 +112,11 @@ linux64-clang-13:
         using: toolchain-script
         script: build-clang.sh
         arguments:
-            - 'build/build-clang/clang-13-linux64.json'
+            - 'build/build-clang/linux64.json'
+            - 'build/build-clang/clang-13.json'
         resources:
-            - 'build/build-clang/clang-13-linux64.json'
+            - 'build/build-clang/linux64.json'
+            - 'build/build-clang/clang-13.json'
         toolchain-alias: linux64-clang
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
@@ -268,9 +241,11 @@ macosx64-clang-13:
     run:
         script: build-clang.sh
         arguments:
-            - 'build/build-clang/clang-13-macosx64.json'
+            - 'build/build-clang/macosx64.json'
+            - 'build/build-clang/clang-13.json'
         resources:
-            - 'build/build-clang/clang-13-macosx64.json'
+            - 'build/build-clang/macosx64.json'
+            - 'build/build-clang/clang-13.json'
         toolchain-alias: macosx64-clang
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
@@ -298,9 +273,11 @@ macosx64-aarch64-clang-13:
     run:
         script: build-clang.sh
         arguments:
-            - 'build/build-clang/clang-13-macosx64.json'
+            - 'build/build-clang/macosx64.json'
+            - 'build/build-clang/clang-13.json'
         resources:
-            - 'build/build-clang/clang-13-macosx64.json'
+            - 'build/build-clang/macosx64.json'
+            - 'build/build-clang/clang-13.json'
         toolchain-alias: macosx64-aarch64-clang
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
@@ -328,9 +305,11 @@ win64-clang-13:
     run:
         script: build-clang.sh
         arguments:
-            - 'build/build-clang/clang-13-win64.json'
+            - 'build/build-clang/win64.json'
+            - 'build/build-clang/clang-13.json'
         resources:
-            - 'build/build-clang/clang-13-win64.json'
+            - 'build/build-clang/win64.json'
+            - 'build/build-clang/clang-13.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: win64-clang
         toolchain-artifact: public/build/clang.tar.zst
@@ -354,9 +333,13 @@ win64-clang-13-2stage:
     run:
         script: build-clang.sh
         arguments:
-            - 'build/build-clang/clang-13-win64-2stage.json'
+            - 'build/build-clang/win64.json'
+            - 'build/build-clang/clang-13.json'
+            - 'build/build-clang/2stages.json'
         resources:
-            - 'build/build-clang/clang-13-win64-2stage.json'
+            - 'build/build-clang/win64.json'
+            - 'build/build-clang/clang-13.json'
+            - 'build/build-clang/2stages.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: win64-clang-2stage
         toolchain-artifact: public/build/clang.tar.zst

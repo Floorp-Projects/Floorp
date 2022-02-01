@@ -45,36 +45,30 @@ right_ext_mask:
 endconst
 
 // void dav1d_wiener_filter7_16bpc_neon(pixel *p, const ptrdiff_t p_stride,
-//                                      const pixel (*left)[4],
-//                                      const pixel *lpf, const ptrdiff_t lpf_stride,
+//                                      const pixel (*left)[4], const pixel *lpf,
 //                                      const int w, int h,
 //                                      const int16_t filter[2][8],
 //                                      const enum LrEdgeFlags edges,
 //                                      const int bitdepth_max);
 function wiener_filter7_16bpc_neon, export=1
         ldr             w8,  [sp]
-#ifdef __APPLE__
-        ldr             w9,  [sp, #4]
-#else
-        ldr             w9,  [sp, #8]
-#endif
         stp             x29, x30, [sp, #-32]!
         stp             d8,  d9,  [sp, #16]
         mov             x29, sp
-        ld1             {v0.8h, v1.8h},  [x7]
-        tst             w8,  #4               // LR_HAVE_TOP
+        ld1             {v0.8h, v1.8h},  [x6]
+        tst             w7,  #4               // LR_HAVE_TOP
         sub_sp          384*2*6
 
-        dup             v28.8h,  w9           // bitdepth_max
-        clz             w9,  w9
+        dup             v28.8h,  w8           // bitdepth_max
+        clz             w8,  w8
         movi            v30.4s,  #1
-        sub             w10, w9,  #38         // -(bitdepth + 6)
-        sub             w11, w9,  #11         // round_bits_v
-        sub             w9,  w9,  #25         // -round_bits_h
+        sub             w10, w8,  #38         // -(bitdepth + 6)
+        sub             w11, w8,  #11         // round_bits_v
+        sub             w8,  w8,  #25         // -round_bits_h
         neg             w10, w10              // bitdepth + 6
         neg             w11, w11              // -round_bits_v
         dup             v2.4s,   w10
-        dup             v29.4s,  w9           // -round_bits_h
+        dup             v29.4s,  w8           // -round_bits_h
         dup             v27.4s,  w11          // -round_bits_v
         movi            v31.8h,  #0x20, lsl #8  // 1 << 13 = 8192
         ushl            v30.4s,  v30.4s,  v2.4s // 1 << (bitdepth + 6)
@@ -94,50 +88,48 @@ function wiener_filter7_16bpc_neon, export=1
         mov             x16, x2               // backup left
         mov             x2,  #0
         bl              wiener_filter7_h_16bpc_neon
-        add             x3,  x3,  x4          // lpf += lpf_stride
+        add             x3,  x3,  x1          // lpf += stride
         mov             x9,  x14              // t6
         mov             x10, x14              // t5
         add             x14, x14, #384*2      // t1 += 384*2
         bl              wiener_filter7_h_16bpc_neon
-        add             x3,  x3,  x4,  lsl #2
-        add             x3,  x3,  x4          // lpf += lpf_stride*5
+        add             x3,  x3,  x1,  lsl #2
+        add             x3,  x3,  x1          // lpf += stride*5
         mov             x11, x14              // t4
         add             x14, x14, #384*2      // t1 += 384*2
         mov             x2,  x16              // left
         mov             x16, x3               // backup lpf
         mov             x3,  x0               // lpf = p
         bl              wiener_filter7_h_16bpc_neon
-        subs            w6,  w6,  #1          // h--
+        subs            w5,  w5,  #1          // h--
         mov             x12, x14              // t3
         mov             x13, x14              // t2
         b.eq            L(v1_7)
-        add             x3,  x3,  x1          // src += p_stride
+        add             x3,  x3,  x1          // src += stride
         add             x14, x14, #384*2      // t1 += 384*2
         bl              wiener_filter7_h_16bpc_neon
         mov             x13, x14              // t2
-        subs            w6,  w6,  #1          // h--
+        subs            w5,  w5,  #1          // h--
         b.eq            L(v2_7)
-        add             x3,  x3,  x1          // src += p_stride
+        add             x3,  x3,  x1          // src += stride
         add             x14, x14, #384*2      // t1 += 384*2
         bl              wiener_filter7_h_16bpc_neon
-        subs            w6,  w6,  #1          // h--
+        subs            w5,  w5,  #1          // h--
         b.eq            L(v3_7)
-        add             x3,  x3,  x1          // src += p_stride
+        add             x3,  x3,  x1          // src += stride
 
 L(main_7):
         add             x15, x14, #384*2      // t0 = t1 + 384*2
 L(main_loop_7):
         bl              wiener_filter7_hv_16bpc_neon
-        subs            w6,  w6,  #1          // h--
+        subs            w5,  w5,  #1          // h--
         b.ne            L(main_loop_7)
-        tst             w8,  #8 // LR_HAVE_BOTTOM
+        tst             w7,  #8 // LR_HAVE_BOTTOM
         b.eq            L(v3_7)
 
         mov             x3,  x16              // restore lpf
         mov             x2,  #0               // left = NULL
-        sub             x4,  x4,  x1          // lpf_stride - p_stride
         bl              wiener_filter7_hv_16bpc_neon
-        add             x3,  x3,  x4          // src += lpf_stride - p_stride
         bl              wiener_filter7_hv_16bpc_neon
 L(v1_7):
         bl              wiener_filter7_v_16bpc_neon
@@ -148,12 +140,12 @@ L(v1_7):
         ret
 
 L(no_top_7):
-        add             x3,  x3,  x4,  lsl #2
-        add             x16, x3,  x4,  lsl #1 // lpf += lpf_stride*6, backup
+        add             x3,  x3,  x1,  lsl #2
+        add             x16, x3,  x1,  lsl #1 // lpf += stride*6, backup
         mov             x3,  x0               // lpf = p
 
         bl              wiener_filter7_h_16bpc_neon
-        subs            w6,  w6,  #1          // h--
+        subs            w5,  w5,  #1          // h--
         mov             x9,  x14              // t6
         mov             x10, x14              // t5
         mov             x11, x14              // t4
@@ -163,22 +155,22 @@ L(no_top_7):
         add             x3,  x3,  x1          // src += p_stride
         add             x14, x14, #384*2      // t1 += 384*2
         bl              wiener_filter7_h_16bpc_neon
-        subs            w6,  w6,  #1          // h--
+        subs            w5,  w5,  #1          // h--
         mov             x13, x14              // t2
         b.eq            L(v2_7)
         add             x3,  x3,  x1          // src += p_stride
         add             x14, x14, #384*2      // t1 += 384*2
         bl              wiener_filter7_h_16bpc_neon
-        subs            w6,  w6,  #1          // h--
+        subs            w5,  w5,  #1          // h--
         b.eq            L(v3_7)
         add             x3,  x3,  x1          // src += p_stride
         add             x15, x14, #384*2      // t0 = t1 + 384*2
         bl              wiener_filter7_hv_16bpc_neon
-        subs            w6,  w6,  #1          // h--
+        subs            w5,  w5,  #1          // h--
         b.eq            L(v3_7)
         add             x15, x15, #384*2*4    // t0 += 384*2*4
         bl              wiener_filter7_hv_16bpc_neon
-        subs            w6,  w6,  #1          // h--
+        subs            w5,  w5,  #1          // h--
         b.ne            L(main_7)
 L(v3_7):
         bl              wiener_filter7_v_16bpc_neon
@@ -189,11 +181,11 @@ endfunc
 
 
 function wiener_filter7_h_16bpc_neon
-        stp             x3,  x5,  [sp, #-32]!
+        stp             x3,  x4,  [sp, #-32]!
         str             x14,      [sp, #16]
 
         // Set up the src pointers to include the left edge, for LR_HAVE_LEFT, left == NULL
-        tst             w8,  #1 // LR_HAVE_LEFT
+        tst             w7,  #1 // LR_HAVE_LEFT
         b.eq            1f
         // LR_HAVE_LEFT
         cbnz            x2,  0f
@@ -227,13 +219,13 @@ function wiener_filter7_h_16bpc_neon
 2:
         ld1             {v4.8h}, [x3], #16
 
-        tst             w8,  #2 // LR_HAVE_RIGHT
+        tst             w7,  #2 // LR_HAVE_RIGHT
         b.ne            4f
 
 3:      // !LR_HAVE_RIGHT
 
         // Check whether we need to pad the right edge
-        cmp             w5,  #19
+        cmp             w4,  #19
         b.ge            4f   // If w >= 19, all used input pixels are valid
 
         // 1 <= w < 19, w+3 pixels valid in v2-v4. For w>=9,
@@ -242,14 +234,14 @@ function wiener_filter7_h_16bpc_neon
 
         // The padding pixel is v2/3/4.h[w+2]. x3 points at the next input, ie
         // v2/3/4.h[24]. Thus read from x3[w-22] to find the padding pixel.
-        sub             w17, w5,  #22
+        sub             w17, w4,  #22
         // Insert padding in v2/3/4.h[w+3] onwards; fuse the +3 (*2) into the
         // buffer pointer.
-        movrel          x7,  right_ext_mask, -6
+        movrel          x6,  right_ext_mask, -6
         ldr             h26, [x3,  w17, sxtw #1]
-        sub             x7,  x7,  w5,  uxtw #1
+        sub             x6,  x6,  w4,  uxtw #1
         dup             v26.8h,  v26.h[0]
-        ld1             {v23.16b, v24.16b, v25.16b}, [x7]
+        ld1             {v23.16b, v24.16b, v25.16b}, [x6]
 
         bit             v2.16b,  v26.16b, v23.16b
         bit             v3.16b,  v26.16b, v24.16b
@@ -314,20 +306,20 @@ function wiener_filter7_h_16bpc_neon
         sub             v6.8h,   v6.8h,   v31.8h
         sub             v7.8h,   v7.8h,   v31.8h
 
-        subs            w5,  w5,  #16
+        subs            w4,  w4,  #16
 
         st1             {v6.8h, v7.8h}, [x14], #32
 
         b.le            0f
         mov             v2.16b,  v4.16b
-        tst             w8,  #2 // LR_HAVE_RIGHT
+        tst             w7,  #2 // LR_HAVE_RIGHT
         ld1             {v3.8h, v4.8h}, [x3], #32
         b.ne            4b // If we don't need to pad, just keep filtering.
         b               3b // If we need to pad, check how many pixels we have left.
 
 0:
         ldr             x14,      [sp, #16]
-        ldp             x3,  x5,  [sp], #32
+        ldp             x3,  x4,  [sp], #32
         ret
 endfunc
 
@@ -337,7 +329,7 @@ function wiener_filter7_v_16bpc_neon
         stp             x10, x11, [sp, #-64]!
         stp             x12, x13, [sp, #16]
         stp             x14, x14, [sp, #32]
-        stp             x0,  x5,  [sp, #48]
+        stp             x0,  x4,  [sp, #48]
 1:
         ld1             {v16.8h, v17.8h}, [x9],  #32
         ld1             {v18.8h, v19.8h}, [x10], #32
@@ -384,11 +376,11 @@ function wiener_filter7_v_16bpc_neon
         sqxtun2         v3.8h,   v5.4s
         umin            v2.8h,   v2.8h,   v28.8h  // bitdepth_max
         umin            v3.8h,   v3.8h,   v28.8h
-        subs            w5,  w5,  #16
+        subs            w4,  w4,  #16
         st1             {v2.8h, v3.8h}, [x0], #32
         b.gt            1b
 
-        ldp             x0,  x5,  [sp, #48]
+        ldp             x0,  x4,  [sp, #48]
         ldp             x13, x14, [sp, #32]
         ldp             x11, x12, [sp, #16]
         ldp             x9,  x10, [sp], #64
@@ -404,10 +396,10 @@ function wiener_filter7_hv_16bpc_neon
         stp             x12, x13, [sp, #16]
         stp             x14, x15, [sp, #32]
         stp             x10, x0,  [sp, #48]
-        stp             x3,  x5,  [sp, #64]
+        stp             x3,  x4,  [sp, #64]
 
         // Set up the src pointers to include the left edge, for LR_HAVE_LEFT, left == NULL
-        tst             w8,  #1 // LR_HAVE_LEFT
+        tst             w7,  #1 // LR_HAVE_LEFT
         b.eq            1f
         // LR_HAVE_LEFT
         cbnz            x2,  0f
@@ -440,13 +432,13 @@ function wiener_filter7_hv_16bpc_neon
 2:
         ld1             {v4.8h}, [x3], #16
 
-        tst             w8,  #2 // LR_HAVE_RIGHT
+        tst             w7,  #2 // LR_HAVE_RIGHT
         b.ne            4f
 
 3:      // !LR_HAVE_RIGHT
 
         // Check whether we need to pad the right edge
-        cmp             w5,  #19
+        cmp             w4,  #19
         b.ge            4f   // If w >= 19, all used input pixels are valid
 
         // 1 <= w < 19, w+3 pixels valid in v2-v4. For w>=9,
@@ -455,14 +447,14 @@ function wiener_filter7_hv_16bpc_neon
 
         // The padding pixel is v2/3/4.h[w+2]. x3 points at the next input, ie
         // v2/3/4.h[24]. Thus read from x3[w-22] to find the padding pixel.
-        sub             w17, w5,  #22
+        sub             w17, w4,  #22
         // Insert padding in v2/3/4.h[w+3] onwards; fuse the +3 (*2) into the
         // buffer pointer.
-        movrel          x7,  right_ext_mask, -6
+        movrel          x6,  right_ext_mask, -6
         ldr             h26, [x3,  w17, sxtw #1]
-        sub             x7,  x7,  w5,  uxtw #1
+        sub             x6,  x6,  w4,  uxtw #1
         dup             v26.8h,  v26.h[0]
-        ld1             {v23.16b, v24.16b, v25.16b}, [x7]
+        ld1             {v23.16b, v24.16b, v25.16b}, [x6]
 
         bit             v2.16b,  v26.16b, v23.16b
         bit             v3.16b,  v26.16b, v24.16b
@@ -571,19 +563,19 @@ function wiener_filter7_hv_16bpc_neon
         st1             {v6.8h, v7.8h}, [x15], #32
         umin            v18.8h,  v18.8h,  v28.8h  // bitdepth_max
         umin            v19.8h,  v19.8h,  v28.8h
-        subs            w5,  w5,  #16
+        subs            w4,  w4,  #16
 
         st1             {v18.8h, v19.8h}, [x0], #32
 
         b.le            0f
         mov             v2.16b,  v4.16b
-        tst             w8,  #2 // LR_HAVE_RIGHT
+        tst             w7,  #2 // LR_HAVE_RIGHT
         ld1             {v3.8h, v4.8h}, [x3], #32
         b.ne            4b // If we don't need to pad, just keep filtering.
         b               3b // If we need to pad, check how many pixels we have left.
 
 0:
-        ldp             x3,  x5,  [sp, #64]
+        ldp             x3,  x4,  [sp, #64]
         ldp             x15, x0,  [sp, #48]
         ldp             x13, x14, [sp, #32]
         ldp             x11, x12, [sp, #16]
@@ -596,36 +588,30 @@ function wiener_filter7_hv_16bpc_neon
 endfunc
 
 // void dav1d_wiener_filter5_16bpc_neon(pixel *p, const ptrdiff_t p_stride,
-//                                      const pixel (*left)[4],
-//                                      const pixel *lpf, const ptrdiff_t lpf_stride,
+//                                      const pixel (*left)[4], const pixel *lpf,
 //                                      const int w, int h,
 //                                      const int16_t filter[2][8],
 //                                      const enum LrEdgeFlags edges,
 //                                      const int bitdepth_max);
 function wiener_filter5_16bpc_neon, export=1
         ldr             w8,  [sp]
-#ifdef __APPLE__
-        ldr             w9,  [sp, #4]
-#else
-        ldr             w9,  [sp, #8]
-#endif
         stp             x29, x30, [sp, #-32]!
         stp             d8,  d9,  [sp, #16]
         mov             x29, sp
-        ld1             {v0.8h, v1.8h},  [x7]
-        tst             w8,  #4               // LR_HAVE_TOP
+        ld1             {v0.8h, v1.8h},  [x6]
+        tst             w7,  #4               // LR_HAVE_TOP
         sub_sp          384*2*4
 
-        dup             v28.8h,  w9           // bitdepth_max
-        clz             w9,  w9
+        dup             v28.8h,  w8           // bitdepth_max
+        clz             w8,  w8
         movi            v30.4s,  #1
-        sub             w10, w9,  #38         // -(bitdepth + 6)
-        sub             w11, w9,  #11         // round_bits_v
-        sub             w9,  w9,  #25         // -round_bits_h
+        sub             w10, w8,  #38         // -(bitdepth + 6)
+        sub             w11, w8,  #11         // round_bits_v
+        sub             w8,  w8,  #25         // -round_bits_h
         neg             w10, w10              // bitdepth + 6
         neg             w11, w11              // -round_bits_v
         dup             v2.4s,   w10
-        dup             v29.4s,  w9           // -round_bits_h
+        dup             v29.4s,  w8           // -round_bits_h
         dup             v27.4s,  w11          // -round_bits_v
         movi            v31.8h,  #0x20, lsl #8  // 1 << 13 = 8192
         ushl            v30.4s,  v30.4s,  v2.4s // 1 << (bitdepth + 6)
@@ -643,42 +629,40 @@ function wiener_filter5_16bpc_neon, export=1
         mov             x16, x2               // backup left
         mov             x2,  #0
         bl              wiener_filter5_h_16bpc_neon
-        add             x3,  x3,  x4          // lpf += lpf_stride
+        add             x3,  x3,  x1          // lpf += stride
         mov             x11, x14              // t4
         add             x14, x14, #384*2      // t1 += 384*2
         bl              wiener_filter5_h_16bpc_neon
-        add             x3,  x3,  x4,  lsl #2
-        add             x3,  x3,  x4          // lpf += lpf_stride*5
+        add             x3,  x3,  x1,  lsl #2
+        add             x3,  x3,  x1          // lpf += stride*5
         mov             x12, x14              // t3
         add             x14, x14, #384*2      // t1 += 384*2
         mov             x2,  x16              // left
         mov             x16, x3               // backup lpf
         mov             x3,  x0               // lpf = p
         bl              wiener_filter5_h_16bpc_neon
-        subs            w6,  w6,  #1          // h--
+        subs            w5,  w5,  #1          // h--
         mov             x13, x14              // t2
         b.eq            L(v1_5)
-        add             x3,  x3,  x1          // src += p_stride
+        add             x3,  x3,  x1          // src += stride
         add             x14, x14, #384*2      // t1 += 384*2
         bl              wiener_filter5_h_16bpc_neon
-        subs            w6,  w6,  #1          // h--
+        subs            w5,  w5,  #1          // h--
         b.eq            L(v2_5)
-        add             x3,  x3,  x1          // src += p_stride
+        add             x3,  x3,  x1          // src += stride
 
 L(main_5):
         mov             x15, x11              // t0 = t4
 L(main_loop_5):
         bl              wiener_filter5_hv_16bpc_neon
-        subs            w6,  w6,  #1          // h--
+        subs            w5,  w5,  #1          // h--
         b.ne            L(main_loop_5)
-        tst             w8,  #8 // LR_HAVE_BOTTOM
+        tst             w7,  #8 // LR_HAVE_BOTTOM
         b.eq            L(v2_5)
 
         mov             x3,  x16              // restore lpf
         mov             x2,  #0               // left = NULL
-        sub             x4,  x4,  x1          // lpf_stride - p_stride
         bl              wiener_filter5_hv_16bpc_neon
-        add             x3,  x3,  x4          // src += lpf_stride - p_stride
         bl              wiener_filter5_hv_16bpc_neon
 L(end_5):
 
@@ -688,29 +672,29 @@ L(end_5):
         ret
 
 L(no_top_5):
-        add             x3,  x3,  x4,  lsl #2
-        add             x16, x3,  x4,  lsl #1 // lpf += lpf_stride*6, backup
+        add             x3,  x3,  x1,  lsl #2
+        add             x16, x3,  x1,  lsl #1 // lpf += stride*6, backup
         mov             x3,  x0               // lpf = p
 
         bl              wiener_filter5_h_16bpc_neon
-        subs            w6,  w6,  #1          // h--
+        subs            w5,  w5,  #1          // h--
         mov             x11, x14              // t4
         mov             x12, x14              // t3
         mov             x13, x14              // t2
         b.eq            L(v1_5)
-        add             x3,  x3,  x1          // src += p_stride
+        add             x3,  x3,  x1          // src += stride
         add             x14, x14, #384*2      // t1 += 384*2
         bl              wiener_filter5_h_16bpc_neon
-        subs            w6,  w6,  #1          // h--
+        subs            w5,  w5,  #1          // h--
         b.eq            L(v2_5)
-        add             x3,  x3,  x1          // src += p_stride
+        add             x3,  x3,  x1          // src += stride
         add             x15, x14, #384*2      // t0 = t1 + 384*2
         bl              wiener_filter5_hv_16bpc_neon
-        subs            w6,  w6,  #1          // h--
+        subs            w5,  w5,  #1          // h--
         b.eq            L(v2_5)
         add             x15, x15, #384*2*3    // t0 += 384*2*3
         bl              wiener_filter5_hv_16bpc_neon
-        subs            w6,  w6,  #1          // h--
+        subs            w5,  w5,  #1          // h--
         b.ne            L(main_5)
 L(v2_5):
         bl              wiener_filter5_v_16bpc_neon
@@ -725,11 +709,11 @@ endfunc
 
 
 function wiener_filter5_h_16bpc_neon
-        stp             x3,  x5,  [sp, #-32]!
+        stp             x3,  x4,  [sp, #-32]!
         str             x14,      [sp, #16]
 
         // Set up the src pointers to include the left edge, for LR_HAVE_LEFT, left == NULL
-        tst             w8,  #1 // LR_HAVE_LEFT
+        tst             w7,  #1 // LR_HAVE_LEFT
         b.eq            1f
         // LR_HAVE_LEFT
         cbnz            x2,  0f
@@ -763,13 +747,13 @@ function wiener_filter5_h_16bpc_neon
 2:
         ld1             {v4.8h}, [x3], #16
 
-        tst             w8,  #2 // LR_HAVE_RIGHT
+        tst             w7,  #2 // LR_HAVE_RIGHT
         b.ne            4f
 
 3:      // !LR_HAVE_RIGHT
 
         // Check whether we need to pad the right edge
-        cmp             w5,  #18
+        cmp             w4,  #18
         b.ge            4f   // If w >= 18, all used input pixels are valid
 
         // 1 <= w < 18, w+2 pixels valid in v2-v4. For w>=9,
@@ -778,14 +762,14 @@ function wiener_filter5_h_16bpc_neon
 
         // The padding pixel is v2/3/4.h[w+2]. x3 points at the next input, ie
         // v2/3/4.h[24]. Thus read from x3[w-23] to find the padding pixel.
-        sub             w17, w5,  #23
+        sub             w17, w4,  #23
         // Insert padding in v2/3/4.h[w+2] onwards; fuse the +2 (*2) into the
         // buffer pointer.
-        movrel          x7,  right_ext_mask, -4
+        movrel          x6,  right_ext_mask, -4
         ldr             h26, [x3,  w17, sxtw #1]
-        sub             x7,  x7,  w5,  uxtw #1
+        sub             x6,  x6,  w4,  uxtw #1
         dup             v26.8h,  v26.h[0]
-        ld1             {v23.16b, v24.16b, v25.16b}, [x7]
+        ld1             {v23.16b, v24.16b, v25.16b}, [x6]
 
         bit             v2.16b,  v26.16b, v23.16b
         bit             v3.16b,  v26.16b, v24.16b
@@ -839,27 +823,27 @@ function wiener_filter5_h_16bpc_neon
         sub             v6.8h,   v6.8h,   v31.8h
         sub             v7.8h,   v7.8h,   v31.8h
 
-        subs            w5,  w5,  #16
+        subs            w4,  w4,  #16
 
         st1             {v6.8h, v7.8h}, [x14], #32
 
         b.le            0f
         mov             v2.16b,  v4.16b
-        tst             w8,  #2 // LR_HAVE_RIGHT
+        tst             w7,  #2 // LR_HAVE_RIGHT
         ld1             {v3.8h, v4.8h}, [x3], #32
         b.ne            4b // If we don't need to pad, just keep filtering.
         b               3b // If we need to pad, check how many pixels we have left.
 
 0:
         ldr             x14,      [sp, #16]
-        ldp             x3,  x5,  [sp], #32
+        ldp             x3,  x4,  [sp], #32
         ret
 endfunc
 
 function wiener_filter5_v_16bpc_neon
         stp             x11, x12, [sp, #-48]!
         stp             x13, x14, [sp, #16]
-        stp             x0,  x5,  [sp, #32]
+        stp             x0,  x4,  [sp, #32]
 1:
         ld1             {v16.8h, v17.8h}, [x11], #32
         ld1             {v18.8h, v19.8h}, [x12], #32
@@ -897,11 +881,11 @@ function wiener_filter5_v_16bpc_neon
         umin            v2.8h,   v2.8h,   v28.8h  // bitdepth_max
         umin            v3.8h,   v3.8h,   v28.8h
 
-        subs            w5,  w5,  #16
+        subs            w4,  w4,  #16
         st1             {v2.8h, v3.8h}, [x0], #32
         b.gt            1b
 
-        ldp             x0,  x5,  [sp, #32]
+        ldp             x0,  x4,  [sp, #32]
         ldp             x13, x14, [sp, #16]
         ldp             x11, x12, [sp], #48
 
@@ -914,10 +898,10 @@ function wiener_filter5_hv_16bpc_neon
         stp             x12, x13, [sp, #-64]!
         stp             x14, x15, [sp, #16]
         stp             x12, x0,  [sp, #32]
-        stp             x3,  x5,  [sp, #48]
+        stp             x3,  x4,  [sp, #48]
 
         // Set up the src pointers to include the left edge, for LR_HAVE_LEFT, left == NULL
-        tst             w8,  #1 // LR_HAVE_LEFT
+        tst             w7,  #1 // LR_HAVE_LEFT
         b.eq            1f
         // LR_HAVE_LEFT
         cbnz            x2,  0f
@@ -950,13 +934,13 @@ function wiener_filter5_hv_16bpc_neon
 2:
         ld1             {v4.8h}, [x3], #16
 
-        tst             w8,  #2 // LR_HAVE_RIGHT
+        tst             w7,  #2 // LR_HAVE_RIGHT
         b.ne            4f
 
 3:      // !LR_HAVE_RIGHT
 
         // Check whether we need to pad the right edge
-        cmp             w5,  #18
+        cmp             w4,  #18
         b.ge            4f   // If w >= 18, all used input pixels are valid
 
         // 1 <= w < 18, w+2 pixels valid in v2-v4. For w>=9,
@@ -965,14 +949,14 @@ function wiener_filter5_hv_16bpc_neon
 
         // The padding pixel is v2/3/4.h[w+1]. x3 points at the next input, ie
         // v2/3/4.h[24]. Thus read from x3[w-23] to find the padding pixel.
-        sub             w17, w5,  #23
+        sub             w17, w4,  #23
         // Insert padding in v2/3/4.h[w+2] onwards; fuse the +2 (*2) into the
         // buffer pointer.
-        movrel          x7,  right_ext_mask, -4
+        movrel          x6,  right_ext_mask, -4
         ldr             h26, [x3,  w17, sxtw #1]
-        sub             x7,  x7,  w5,  uxtw #1
+        sub             x6,  x6,  w4,  uxtw #1
         dup             v26.8h,  v26.h[0]
-        ld1             {v23.16b, v24.16b, v25.16b}, [x7]
+        ld1             {v23.16b, v24.16b, v25.16b}, [x6]
 
         bit             v2.16b,  v26.16b, v23.16b
         bit             v3.16b,  v26.16b, v24.16b
@@ -1059,19 +1043,19 @@ function wiener_filter5_hv_16bpc_neon
         umin            v8.8h,   v8.8h,   v28.8h  // bitdepth_max
         umin            v9.8h,   v9.8h,   v28.8h
 
-        subs            w5,  w5,  #16
+        subs            w4,  w4,  #16
 
         st1             {v8.8h, v9.8h}, [x0], #32
 
         b.le            0f
         mov             v2.16b,  v4.16b
-        tst             w8,  #2 // LR_HAVE_RIGHT
+        tst             w7,  #2 // LR_HAVE_RIGHT
         ld1             {v3.8h, v4.8h}, [x3], #32
         b.ne            4b // If we don't need to pad, just keep filtering.
         b               3b // If we need to pad, check how many pixels we have left.
 
 0:
-        ldp             x3,  x5,  [sp, #48]
+        ldp             x3,  x4,  [sp, #48]
         ldp             x15, x0,  [sp, #32]
         ldp             x13, x14, [sp, #16]
         ldp             x11, x12, [sp], #64

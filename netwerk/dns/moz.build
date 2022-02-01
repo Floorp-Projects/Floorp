@@ -7,7 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Networking: DNS")
 
-DIRS += ["mdns", "tests"]
+DIRS += ["tests"]
 
 XPIDL_SOURCES += [
     "nsIDNSByTypeRecord.idl",

@@ -94,8 +94,8 @@ Status Heuristics(PassesEncoderState* enc_state,
               cb = MulAdd(a, b, cb);
             }
           }
-          float best =
-              -GetLane(SumOfLanes(cb)) / (GetLane(SumOfLanes(ca)) + 1e-9f);
+          float best = -GetLane(SumOfLanes(df, cb)) /
+                       (GetLane(SumOfLanes(df, ca)) + 1e-9f);
           int8_t& res = (c == 0 ? shared.cmap.ytox_map : shared.cmap.ytob_map)
                             .Row(ty)[tx];
           res = std::max(-128.0f, std::min(127.0f, roundf(best)));
@@ -124,8 +124,8 @@ Status Heuristics(PassesEncoderState* enc_state,
                 max = IfThenElse(max > nn, max, nn);
               }
             }
-            row_out_avg[x] = GetLane(SumOfLanes(sum));
-            row_out[x] = GetLane(MaxOfLanes(max));
+            row_out_avg[x] = GetLane(SumOfLanes(df4, sum));
+            row_out[x] = GetLane(MaxOfLanes(df4, max));
           }
         }
       },

@@ -18,7 +18,7 @@ const MAX_FALLBACK_RANK: usize = 250;
 /// instead of needing to pass around all three as distinct function
 /// parameters.
 pub(crate) struct Pre<'a> {
-    /// State that tracks the effectivess of a prefilter.
+    /// State that tracks the effectiveness of a prefilter.
     pub(crate) state: &'a mut PrefilterState,
     /// The actual prefilter function.
     pub(crate) prefn: PrefilterFn,
@@ -146,7 +146,7 @@ impl core::fmt::Debug for PrefilterFn {
 /// The use of prefilters in this implementation does use a heuristic to detect
 /// when a prefilter might not be carrying its weight, and will dynamically
 /// disable its use. Nevertheless, this configuration option gives callers
-/// the ability to disable pefilters if you have knowledge that they won't be
+/// the ability to disable prefilters if you have knowledge that they won't be
 /// useful.
 #[derive(Clone, Copy, Debug)]
 #[non_exhaustive]

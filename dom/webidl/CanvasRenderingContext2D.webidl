@@ -33,6 +33,7 @@ typedef (HTMLImageElement or
 typedef (HTMLOrSVGImageElement or
          HTMLCanvasElement or
          HTMLVideoElement or
+         OffscreenCanvas or
          ImageBitmap) CanvasImageSource;
 
 [Exposed=Window]

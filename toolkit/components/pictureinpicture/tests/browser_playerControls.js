@@ -22,11 +22,6 @@ add_task(async () => {
       gBrowser,
     },
     async browser => {
-      let isVideoMuted = () => {
-        return SpecialPowers.spawn(browser, [videoID], async videoID => {
-          return content.document.getElementById(videoID).muted;
-        });
-      };
       let waitForVideoEvent = eventType => {
         return BrowserTestUtils.waitForContentEvent(browser, eventType, true);
       };
@@ -58,16 +53,16 @@ add_task(async () => {
 
       // Try the mute button
       let mutedPromise = waitForVideoEvent("volumechange");
-      ok(!(await isVideoMuted()), "The audio is playing.");
+      ok(!(await isVideoMuted(browser, videoID)), "The audio is playing.");
       EventUtils.synthesizeMouseAtCenter(audioButton, {}, pipWin);
       await mutedPromise;
-      ok(await isVideoMuted(), "The audio is muted.");
+      ok(await isVideoMuted(browser, videoID), "The audio is muted.");
 
       // Try the unmute button
       let unmutedPromise = waitForVideoEvent("volumechange");
       EventUtils.synthesizeMouseAtCenter(audioButton, {}, pipWin);
       await unmutedPromise;
-      ok(!(await isVideoMuted()), "The audio is playing.");
+      ok(!(await isVideoMuted(browser, videoID)), "The audio is playing.");
 
       // Try the unpip button.
       let pipClosed = BrowserTestUtils.domWindowClosed(pipWin);

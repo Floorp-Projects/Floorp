@@ -146,7 +146,7 @@ HGRC_PATH = Path(user_config_dir("hg")).joinpath("hgrc")
 )
 @CommandArgument(
     "actions",
-    choices=("prep", "create", "push"),
+    choices=("prep", "create", "push", "clean"),
     nargs="+",
     # This help block will be poorly formatted until we fix bug 1714239
     help="""
@@ -154,6 +154,7 @@ HGRC_PATH = Path(user_config_dir("hg")).joinpath("hgrc")
     "create": create the en-US strings commit an optionally create an
               outgoing() patch.
     "push": push the en-US strings to the quarantine repo.
+    "clean": clean up any sub-repos.
     """,
 )
 def cross_channel(
@@ -318,6 +319,11 @@ def _do_create_content(
         else:
             command_context.log(logging.INFO, "push", {}, "Skipping empty push.")
 
+    if "clean" in actions:
+        for repo_config in config.get("source", {}).values():
+            if repo_config.get("post-clobber", False):
+                _nuke_hg_repo(command_context, str(repo_config["path"]))
+
     return status
 
 
@@ -397,3 +403,7 @@ def _check_hg_repo(command_context, path, heads=None):
 
 def _clone_hg_repo(command_context, url, path):
     _retry_run_process(command_context, ["hg", "clone", url, str(path)])
+
+
+def _nuke_hg_repo(command_context, path):
+    _retry_run_process(command_context, ["rm", "-rf", str(path)])

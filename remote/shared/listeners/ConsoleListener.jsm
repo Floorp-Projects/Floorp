@@ -14,6 +14,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
   Services: "resource://gre/modules/Services.jsm",
 
+  getFramesFromStack: "chrome://remote/content/shared/Stack.jsm",
   Log: "chrome://remote/content/shared/Log.jsm",
 });
 
@@ -28,7 +29,7 @@ XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
  * Example:
  * ```
  * const onJavascriptError = (eventName, data = {}) => {
- *   const { level, message, timestamp } = data;
+ *   const { level, message, stacktrace, timestamp } = data;
  *   ...
  * };
  *
@@ -38,8 +39,19 @@ XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
  * ...
  * listener.stopListening();
  * ```
+ *
+ * @emits message
+ *    The ConsoleListener emits "error", "warning" and "info" events, with the
+ *    following object as payload:
+ *      - {String} level - Importance, one of `info`, `warning`, `error`,
+ *        `debug`, `trace`.
+ *      - {String} message - Actual message from the console entry.
+ *      - {Array<StackFrame>} stacktrace - List of stack frames,
+ *        starting from most recent.
+ *      - {Number} timeStamp - Timestamp when the method was called.
  */
 class ConsoleListener {
+  #emittedMessages;
   #innerWindowId;
   #listening;
 
@@ -52,8 +64,9 @@ class ConsoleListener {
   constructor(innerWindowId) {
     EventEmitter.decorate(this);
 
-    this.#listening = false;
+    this.#emittedMessages = new Set();
     this.#innerWindowId = innerWindowId;
+    this.#listening = false;
   }
 
   get listening() {
@@ -62,6 +75,7 @@ class ConsoleListener {
 
   destroy() {
     this.stopListening();
+    this.#emittedMessages = null;
   }
 
   startListening() {
@@ -69,9 +83,12 @@ class ConsoleListener {
       return;
     }
 
-    // Bug 1731574: Retrieve cached messages first before registering the
-    // listener to avoid duplicated messages.
     Services.console.registerListener(this.#onConsoleMessage);
+
+    // Emit cached messages after registering the listener, to make sure we
+    // don't miss any message.
+    this.#emitCachedMessages();
+
     this.#listening = true;
   }
 
@@ -84,12 +101,28 @@ class ConsoleListener {
     this.#listening = false;
   }
 
+  #emitCachedMessages() {
+    const cachedMessages = Services.console.getMessageArray() || [];
+
+    for (const message of cachedMessages) {
+      this.#onConsoleMessage(message);
+    }
+  }
+
   #onConsoleMessage = message => {
     if (!(message instanceof Ci.nsIScriptError)) {
       // For now ignore basic nsIConsoleMessage instances, which are only
       // relevant to Chrome code and do not have a valid window reference.
       return;
     }
+
+    // Bail if this message was already emitted, useful to filter out cached
+    // messages already received by the consumer.
+    if (this.#emittedMessages.has(message)) {
+      return;
+    }
+
+    this.#emittedMessages.add(message);
 
     if (message.innerWindowID !== this.#innerWindowId) {
       // If the message doesn't match the innerWindowId of the current context
@@ -117,7 +150,7 @@ class ConsoleListener {
     this.emit(level, {
       level,
       message: message.errorMessage,
-      rawMessage: message,
+      stacktrace: getFramesFromStack(message.stack),
       timeStamp: message.timeStamp,
     });
   };

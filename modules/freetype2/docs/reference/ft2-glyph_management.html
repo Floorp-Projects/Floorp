@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.11.0">
+        <meta name="description" content="API Reference Documentation for FreeType-2.11.1">
       
       
       
@@ -18,7 +18,7 @@
     
     
       
-        <title>Glyph Management - FreeType-2.11.0 API Reference</title>
+        <title>Glyph Management - FreeType-2.11.1 API Reference</title>
       
     
     
@@ -82,7 +82,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="index.html" title="FreeType-2.11.0 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.11.0 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.11.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.11.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
@@ -94,7 +94,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            FreeType-2.11.0 API Reference
+            FreeType-2.11.1 API Reference
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -161,12 +161,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="index.html" title="FreeType-2.11.0 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.11.0 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.11.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.11.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
     </a>
-    FreeType-2.11.0 API Reference
+    FreeType-2.11.1 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -1556,9 +1556,9 @@
 <h2 id="ft_glyph_transform">FT_Glyph_Transform<a class="headerlink" href="#ft_glyph_transform" title="Permanent link">&para;</a></h2>
 <p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
 <div class = "codehilite"><pre><code>  FT_EXPORT( <a href="ft2-basic_types.html#ft_error">FT_Error</a> )
-  <b>FT_Glyph_Transform</b>( <a href="ft2-glyph_management.html#ft_glyph">FT_Glyph</a>    glyph,
-                      <a href="ft2-basic_types.html#ft_matrix">FT_Matrix</a>*  matrix,
-                      <a href="ft2-basic_types.html#ft_vector">FT_Vector</a>*  delta );
+  <b>FT_Glyph_Transform</b>( <a href="ft2-glyph_management.html#ft_glyph">FT_Glyph</a>          glyph,
+                      <span class="keyword">const</span> <a href="ft2-basic_types.html#ft_matrix">FT_Matrix</a>*  matrix,
+                      <span class="keyword">const</span> <a href="ft2-basic_types.html#ft_vector">FT_Vector</a>*  delta );
 </code></pre></div>
 
 <p>Transform a glyph image if its format is scalable.</p>
@@ -1680,10 +1680,10 @@
 <h2 id="ft_glyph_to_bitmap">FT_Glyph_To_Bitmap<a class="headerlink" href="#ft_glyph_to_bitmap" title="Permanent link">&para;</a></h2>
 <p>Defined in FT_GLYPH_H (freetype/ftglyph.h).</p>
 <div class = "codehilite"><pre><code>  FT_EXPORT( <a href="ft2-basic_types.html#ft_error">FT_Error</a> )
-  <b>FT_Glyph_To_Bitmap</b>( <a href="ft2-glyph_management.html#ft_glyph">FT_Glyph</a>*       the_glyph,
-                      <a href="ft2-base_interface.html#ft_render_mode">FT_Render_Mode</a>  render_mode,
-                      <a href="ft2-basic_types.html#ft_vector">FT_Vector</a>*      origin,
-                      <a href="ft2-basic_types.html#ft_bool">FT_Bool</a>         destroy );
+  <b>FT_Glyph_To_Bitmap</b>( <a href="ft2-glyph_management.html#ft_glyph">FT_Glyph</a>*         the_glyph,
+                      <a href="ft2-base_interface.html#ft_render_mode">FT_Render_Mode</a>    render_mode,
+                      <span class="keyword">const</span> <a href="ft2-basic_types.html#ft_vector">FT_Vector</a>*  origin,
+                      <a href="ft2-basic_types.html#ft_bool">FT_Bool</a>           destroy );
 </code></pre></div>
 
 <p>Convert a given glyph object to a bitmap glyph object.</p>

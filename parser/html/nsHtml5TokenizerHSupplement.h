@@ -14,6 +14,16 @@ inline nsHtml5HtmlAttributes* GetAttributes() { return attributes; }
  */
 bool EnsureBufferSpace(int32_t aLength);
 
+bool TemplatePushedOrHeadPopped();
+
+void RememberGt(int32_t aPos);
+
+void AtKilobyteBoundary() { suspendAfterCurrentTokenIfNotInText(); }
+
+bool IsInTokenStartedAtKilobyteBoundary() {
+  return suspensionAfterCurrentNonTextTokenPending();
+}
+
 mozilla::UniquePtr<nsHtml5Highlighter> mViewSource;
 
 /**
@@ -28,7 +38,13 @@ bool FlushViewSource();
 
 void StartViewSource(const nsAutoString& aTitle);
 
+void StartViewSourceCharacters();
+
 void EndViewSource();
+
+void RewindViewSource();
+
+void SetViewSourceOpSink(nsAHtml5TreeOpSink* aOpSink);
 
 void errGarbageAfterLtSlash();
 

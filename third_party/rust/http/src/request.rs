@@ -878,6 +878,25 @@ impl Builder {
         })
     }
 
+    /// Get the HTTP version for this request
+    ///
+    /// By default this is HTTP/1.1.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use http::*;
+    ///
+    /// let mut req = Request::builder();
+    /// assert_eq!(req.version_ref().unwrap(), &Version::HTTP_11 );
+    ///
+    /// req = req.version(Version::HTTP_2);
+    /// assert_eq!(req.version_ref().unwrap(), &Version::HTTP_2 );
+    /// ```
+    pub fn version_ref(&self) -> Option<&Version> {
+        self.inner.as_ref().ok().map(|h| &h.version)
+    }
+
     /// Appends a header to this request builder.
     ///
     /// This function will append the provided key/value as a header to the

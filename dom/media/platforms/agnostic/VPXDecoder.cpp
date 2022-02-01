@@ -352,6 +352,8 @@ bool VPXDecoder::GetStreamInfo(Span<const uint8_t> aBuffer,
 
     // aspect ratio isn't found in the VP8 frame header.
     aInfo.mImage = aInfo.mDisplay = gfx::IntSize(width, height);
+    aInfo.mDisplayAspectRatio =
+        (float)(aInfo.mDisplay.Width()) / (float)(aInfo.mDisplay.Height());
     return true;
   }
 
@@ -449,6 +451,8 @@ bool VPXDecoder::GetStreamInfo(Span<const uint8_t> aBuffer,
     } else {
       aInfo.mDisplay = aInfo.mImage;
     }
+    aInfo.mDisplayAspectRatio =
+        (float)(aInfo.mDisplay.Width()) / (float)(aInfo.mDisplay.Height());
   };
 
   if (aInfo.mKeyFrame) {

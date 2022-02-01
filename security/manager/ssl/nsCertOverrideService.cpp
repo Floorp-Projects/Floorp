@@ -323,8 +323,13 @@ nsresult nsCertOverrideService::Read(const MutexAutoLock& aProofOfLock) {
 
     Tokenizer parser(buffer);
     nsDependentCSubstring host;
-    if (!parser.ReadUntil(Tokenizer::Token::Char(':'), host) ||
-        host.Length() == 0) {
+    if (parser.CheckChar('[')) {  // this is a IPv6 address
+      if (!parser.ReadUntil(Tokenizer::Token::Char(']'), host) ||
+          host.Length() == 0 || !parser.CheckChar(':')) {
+        continue;
+      }
+    } else if (!parser.ReadUntil(Tokenizer::Token::Char(':'), host) ||
+               host.Length() == 0) {
       continue;
     }
     int32_t port = -1;
@@ -811,7 +816,16 @@ nsCertOverrideService::GetOverrides(
 void nsCertOverrideService::GetHostWithPort(const nsACString& aHostName,
                                             int32_t aPort,
                                             nsACString& aRetval) {
-  nsAutoCString hostPort(aHostName);
+  nsAutoCString hostPort;
+  if (aHostName.Contains(':')) {
+    // if aHostName is an IPv6 address, add brackets to match the internal
+    // representation, which always stores IPv6 addresses with brackets
+    hostPort.Append('[');
+    hostPort.Append(aHostName);
+    hostPort.Append(']');
+  } else {
+    hostPort.Append(aHostName);
+  }
   if (aPort == -1) {
     aPort = 443;
   }

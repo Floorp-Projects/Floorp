@@ -429,9 +429,6 @@ class RemoteReftest(RefTest):
         # browser environment
         env = self.buildBrowserEnv(options, profile.profile)
 
-        self.log.info("Running with e10s: {}".format(options.e10s))
-        self.log.info("Running with fission: {}".format(options.fission))
-
         rpm = RemoteProcessMonitor(
             binary,
             self.device,

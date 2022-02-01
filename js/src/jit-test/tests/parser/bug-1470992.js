@@ -1,4 +1,4 @@
 // |jit-test| skip-if: helperThreadCount() === 0
 
-offThreadCompileModule("export { x };");
+offThreadCompileModuleToStencil("export { x };");
 gcslice(10);

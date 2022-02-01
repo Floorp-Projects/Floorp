@@ -146,6 +146,12 @@ class ConfigEnvironment(object):
         else:
             self.import_prefix = self.dll_prefix
             self.import_suffix = self.dll_suffix
+        if self.substs.get("HOST_IMPORT_LIB_SUFFIX"):
+            self.host_import_prefix = self.substs.get("HOST_LIB_PREFIX", "")
+            self.host_import_suffix = ".%s" % self.substs["HOST_IMPORT_LIB_SUFFIX"]
+        else:
+            self.host_import_prefix = self.host_dll_prefix
+            self.host_import_suffix = self.host_dll_suffix
         self.bin_suffix = self.substs.get("BIN_SUFFIX", "")
 
         global_defines = [name for name in self.defines]

@@ -15,23 +15,23 @@ impl MmapInner {
         ))
     }
 
-    pub fn map(_: usize, _: &File, _: u64) -> io::Result<MmapInner> {
+    pub fn map(_: usize, _: &File, _: u64, _: bool) -> io::Result<MmapInner> {
         MmapInner::new()
     }
 
-    pub fn map_exec(_: usize, _: &File, _: u64) -> io::Result<MmapInner> {
+    pub fn map_exec(_: usize, _: &File, _: u64, _: bool) -> io::Result<MmapInner> {
         MmapInner::new()
     }
 
-    pub fn map_mut(_: usize, _: &File, _: u64) -> io::Result<MmapInner> {
+    pub fn map_mut(_: usize, _: &File, _: u64, _: bool) -> io::Result<MmapInner> {
         MmapInner::new()
     }
 
-    pub fn map_copy(_: usize, _: &File, _: u64) -> io::Result<MmapInner> {
+    pub fn map_copy(_: usize, _: &File, _: u64, _: bool) -> io::Result<MmapInner> {
         MmapInner::new()
     }
 
-    pub fn map_copy_read_only(_: usize, _: &File, _: u64) -> io::Result<MmapInner> {
+    pub fn map_copy_read_only(_: usize, _: &File, _: u64, _: bool) -> io::Result<MmapInner> {
         MmapInner::new()
     }
 
@@ -73,4 +73,8 @@ impl MmapInner {
     pub fn len(&self) -> usize {
         unreachable!("self unconstructable");
     }
+}
+
+pub fn file_len(file: &File) -> io::Result<u64> {
+    Ok(file.metadata()?.len())
 }

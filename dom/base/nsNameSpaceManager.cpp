@@ -182,11 +182,9 @@ nsresult NS_NewElement(Element** aResult,
   if (ns == kNameSpaceID_XHTML) {
     return NS_NewHTMLElement(aResult, ni.forget(), aFromParser, isAtom);
   }
-#ifdef MOZ_XUL
   if (ns == kNameSpaceID_XUL) {
     return NS_NewXULElement(aResult, ni.forget(), aFromParser, isAtom);
   }
-#endif
   if (ns == kNameSpaceID_MathML) {
     // If the mathml.disabled pref. is true, convert all MathML nodes into
     // disabled MathML nodes by swapping the namespace.
@@ -218,9 +216,7 @@ nsresult NS_NewElement(Element** aResult,
 
 bool nsNameSpaceManager::HasElementCreator(int32_t aNameSpaceID) {
   return aNameSpaceID == kNameSpaceID_XHTML ||
-#ifdef MOZ_XUL
          aNameSpaceID == kNameSpaceID_XUL ||
-#endif
          aNameSpaceID == kNameSpaceID_MathML ||
          aNameSpaceID == kNameSpaceID_SVG || false;
 }

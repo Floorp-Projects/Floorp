@@ -12,7 +12,7 @@
 
 namespace mozilla::widget {
 
-class ScrollbarDrawingWin final : public ScrollbarDrawing {
+class ScrollbarDrawingWin : public ScrollbarDrawing {
  public:
   ScrollbarDrawingWin() = default;
   virtual ~ScrollbarDrawingWin() = default;
@@ -46,6 +46,8 @@ class ScrollbarDrawingWin final : public ScrollbarDrawing {
 
   void RecomputeScrollbarParams() override;
 };
+
+static constexpr uint32_t kDefaultWinScrollbarSize = 17;
 
 }  // namespace mozilla::widget
 

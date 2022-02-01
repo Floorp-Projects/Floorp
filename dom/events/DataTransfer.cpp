@@ -437,7 +437,7 @@ already_AddRefed<nsINode> DataTransfer::GetMozSourceNode() {
 }
 
 already_AddRefed<DOMStringList> DataTransfer::MozTypesAt(
-    uint32_t aIndex, CallerType aCallerType, ErrorResult& aRv) const {
+    uint32_t aIndex, ErrorResult& aRv) const {
   // Only the first item is valid for clipboard events
   if (aIndex > 0 && (mEventMessage == eCut || mEventMessage == eCopy ||
                      mEventMessage == ePaste)) {
@@ -453,10 +453,6 @@ already_AddRefed<DOMStringList> DataTransfer::MozTypesAt(
 
     bool addFile = false;
     for (uint32_t i = 0; i < items.Length(); i++) {
-      if (items[i]->ChromeOnly() && aCallerType != CallerType::System) {
-        continue;
-      }
-
       // NOTE: The reason why we get the internal type here is because we want
       // kFileMime to appear in the types list for backwards compatibility
       // reasons.
@@ -538,10 +534,9 @@ nsresult DataTransfer::GetDataAtInternal(const nsAString& aFormat,
 void DataTransfer::MozGetDataAt(JSContext* aCx, const nsAString& aFormat,
                                 uint32_t aIndex,
                                 JS::MutableHandle<JS::Value> aRetval,
-                                nsIPrincipal& aSubjectPrincipal,
                                 mozilla::ErrorResult& aRv) {
   nsCOMPtr<nsIVariant> data;
-  aRv = GetDataAtInternal(aFormat, aIndex, &aSubjectPrincipal,
+  aRv = GetDataAtInternal(aFormat, aIndex, nsContentUtils::GetSystemPrincipal(),
                           getter_AddRefs(data));
   if (aRv.Failed()) {
     return;
@@ -570,21 +565,17 @@ bool DataTransfer::PrincipalMaySetData(const nsAString& aType,
       return false;
     }
 
-    if (aType.EqualsASCII(kFileMime) || aType.EqualsASCII(kFilePromiseMime)) {
-      NS_WARNING(
-          "Disallowing adding x-moz-file or x-moz-file-promize types to "
-          "DataTransfer");
-      return false;
-    }
-
-    // Disallow content from creating x-moz-place flavors, so that it cannot
-    // create fake Places smart queries exposing user data, but give a free
-    // pass to WebExtensions.
-    auto principal = BasePrincipal::Cast(aPrincipal);
-    if (!principal->AddonPolicy() &&
-        StringBeginsWith(aType, u"text/x-moz-place"_ns)) {
-      NS_WARNING("Disallowing adding moz-place types to DataTransfer");
-      return false;
+    // Don't allow adding internal types of the form */x-moz-*, but
+    // special-case the url types as they are simple variations of urls.
+    // In addition, allow x-moz-place flavors to be added by WebExtensions.
+    if (FindInReadable(kInternal_Mimetype_Prefix, aType) &&
+        !StringBeginsWith(aType, u"text/x-moz-url"_ns)) {
+      auto principal = BasePrincipal::Cast(aPrincipal);
+      if (!principal->AddonPolicy() ||
+          !StringBeginsWith(aType, u"text/x-moz-place"_ns)) {
+        NS_WARNING("Disallowing adding this type to DataTransfer");
+        return false;
+      }
     }
   }
 
@@ -732,18 +723,17 @@ nsresult DataTransfer::SetDataAtInternal(const nsAString& aFormat,
 
 void DataTransfer::MozSetDataAt(JSContext* aCx, const nsAString& aFormat,
                                 JS::Handle<JS::Value> aData, uint32_t aIndex,
-                                nsIPrincipal& aSubjectPrincipal,
                                 ErrorResult& aRv) {
   nsCOMPtr<nsIVariant> data;
   aRv = nsContentUtils::XPConnect()->JSValToVariant(aCx, aData,
                                                     getter_AddRefs(data));
   if (!aRv.Failed()) {
-    aRv = SetDataAtInternal(aFormat, data, aIndex, &aSubjectPrincipal);
+    aRv = SetDataAtInternal(aFormat, data, aIndex,
+                            nsContentUtils::GetSystemPrincipal());
   }
 }
 
 void DataTransfer::MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
-                                  nsIPrincipal& aSubjectPrincipal,
                                   ErrorResult& aRv) {
   if (IsReadOnly()) {
     aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
@@ -762,7 +752,8 @@ void DataTransfer::MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
     return;
   }
 
-  MozClearDataAtHelper(aFormat, aIndex, aSubjectPrincipal, aRv);
+  MozClearDataAtHelper(aFormat, aIndex, *nsContentUtils::GetSystemPrincipal(),
+                       aRv);
 
   // If we just cleared the 0-th index, and there are still more than 1 indexes
   // remaining, MozClearDataAt should cause the 1st index to become the 0th

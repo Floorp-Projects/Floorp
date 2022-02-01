@@ -3581,32 +3581,19 @@ def writeSanctionedSimpleUnitIdentifiersFiles(all_units, sanctioned_units):
             "var sanctionedSimpleUnitIdentifiers = {};".format(sanctioned_units_object)
         )
 
-    measure_unit_files = [
-        (js_src_builtin_intl_dir, "js::intl", "builtin_intl_MeasureUnitGenerated_h"),
-        (
-            intl_components_src_dir,
-            "mozilla::intl",
-            "intl_components_MeasureUnitGenerated_h",
-        ),
-    ]
+    sanctioned_h_file = os.path.join(intl_components_src_dir, "MeasureUnitGenerated.h")
+    with io.open(sanctioned_h_file, mode="w", encoding="utf-8", newline="") as f:
+        println = partial(print, file=f)
 
-    for (dir, ns, guard) in measure_unit_files:
-        sanctioned_h_file = os.path.join(dir, "MeasureUnitGenerated.h")
-        with io.open(sanctioned_h_file, mode="w", encoding="utf-8", newline="") as f:
-            println = partial(print, file=f)
+        println(generatedFileWarning)
 
-            println(generatedFileWarning)
+        println(
+            """
+#ifndef intl_components_MeasureUnitGenerated_h
+#define intl_components_MeasureUnitGenerated_h
 
-            println(
-                f"""
-#ifndef {guard}
-#define {guard}
+namespace mozilla::intl {
 
-namespace {ns} {{"""
-            )
-
-            println(
-                """
 struct SimpleMeasureUnit {
   const char* const type;
   const char* const name;
@@ -3619,25 +3606,23 @@ struct SimpleMeasureUnit {
  */
 inline constexpr SimpleMeasureUnit simpleMeasureUnits[] = {
     // clang-format off"""
-            )
+        )
 
-            for unit_name in sorted(sanctioned_units):
-                println(
-                    '  {{"{}", "{}"}},'.format(find_unit_type(unit_name), unit_name)
-                )
+        for unit_name in sorted(sanctioned_units):
+            println('  {{"{}", "{}"}},'.format(find_unit_type(unit_name), unit_name))
 
-            println(
-                f"""
+        println(
+            """
     // clang-format on
-}};
+};
 
-}}  // namespace {ns}
+}  // namespace mozilla::intl
 
 #endif
 """.strip(
-                    "\n"
-                )
+                "\n"
             )
+        )
 
     writeUnitTestFiles(all_units, sanctioned_units)
 

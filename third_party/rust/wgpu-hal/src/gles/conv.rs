@@ -12,6 +12,8 @@ impl super::AdapterShared {
             Tf::R8Sint => (glow::R8I, glow::RED_INTEGER, glow::BYTE),
             Tf::R16Uint => (glow::R16UI, glow::RED_INTEGER, glow::UNSIGNED_SHORT),
             Tf::R16Sint => (glow::R16I, glow::RED_INTEGER, glow::SHORT),
+            Tf::R16Unorm => (glow::R16, glow::RED, glow::UNSIGNED_SHORT),
+            Tf::R16Snorm => (glow::R16_SNORM, glow::RED, glow::SHORT),
             Tf::R16Float => (glow::R16F, glow::RED, glow::HALF_FLOAT),
             Tf::Rg8Unorm => (glow::RG8, glow::RG, glow::UNSIGNED_BYTE),
             Tf::Rg8Snorm => (glow::RG8, glow::RG, glow::BYTE),
@@ -22,6 +24,8 @@ impl super::AdapterShared {
             Tf::R32Float => (glow::R32F, glow::RED, glow::FLOAT),
             Tf::Rg16Uint => (glow::RG16UI, glow::RG_INTEGER, glow::UNSIGNED_SHORT),
             Tf::Rg16Sint => (glow::RG16I, glow::RG_INTEGER, glow::SHORT),
+            Tf::Rg16Unorm => (glow::RG16, glow::RG, glow::UNSIGNED_SHORT),
+            Tf::Rg16Snorm => (glow::RG16_SNORM, glow::RG, glow::SHORT),
             Tf::Rg16Float => (glow::RG16F, glow::RG, glow::HALF_FLOAT),
             Tf::Rgba8Unorm => (glow::RGBA8, glow::RGBA, glow::UNSIGNED_BYTE),
             Tf::Rgba8UnormSrgb => (glow::SRGB8_ALPHA8, glow::RGBA, glow::UNSIGNED_BYTE),
@@ -45,6 +49,8 @@ impl super::AdapterShared {
             Tf::Rg32Float => (glow::RG32F, glow::RG, glow::FLOAT),
             Tf::Rgba16Uint => (glow::RGBA16UI, glow::RGBA_INTEGER, glow::UNSIGNED_SHORT),
             Tf::Rgba16Sint => (glow::RGBA16I, glow::RGBA_INTEGER, glow::SHORT),
+            Tf::Rgba16Unorm => (glow::RGBA16, glow::RGBA, glow::UNSIGNED_SHORT),
+            Tf::Rgba16Snorm => (glow::RGBA16_SNORM, glow::RGBA, glow::SHORT),
             Tf::Rgba16Float => (glow::RGBA16F, glow::RGBA, glow::HALF_FLOAT),
             Tf::Rgba32Uint => (glow::RGBA32UI, glow::RGBA_INTEGER, glow::UNSIGNED_INT),
             Tf::Rgba32Sint => (glow::RGBA32I, glow::RGBA_INTEGER, glow::INT),
@@ -61,13 +67,13 @@ impl super::AdapterShared {
                 glow::UNSIGNED_INT,
             ),
             Tf::Rgb9e5Ufloat => (glow::RGB9_E5, glow::RGB, glow::UNSIGNED_INT_5_9_9_9_REV),
-            Tf::Bc1RgbaUnorm
-            | Tf::Bc1RgbaUnormSrgb
-            | Tf::Bc2RgbaUnorm
-            | Tf::Bc2RgbaUnormSrgb
-            | Tf::Bc3RgbaUnorm
-            | Tf::Bc3RgbaUnormSrgb
-            | Tf::Bc4RUnorm
+            Tf::Bc1RgbaUnorm => (glow::COMPRESSED_RGBA_S3TC_DXT1_EXT, glow::RGBA, 0),
+            Tf::Bc1RgbaUnormSrgb => (glow::COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT, glow::RGBA, 0),
+            Tf::Bc2RgbaUnorm => (glow::COMPRESSED_RGBA_S3TC_DXT3_EXT, glow::RGBA, 0),
+            Tf::Bc2RgbaUnormSrgb => (glow::COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT, glow::RGBA, 0),
+            Tf::Bc3RgbaUnorm => (glow::COMPRESSED_RGBA_S3TC_DXT5_EXT, glow::RGBA, 0),
+            Tf::Bc3RgbaUnormSrgb => (glow::COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT, glow::RGBA, 0),
+            Tf::Bc4RUnorm
             | Tf::Bc4RSnorm
             | Tf::Bc5RgUnorm
             | Tf::Bc5RgSnorm
@@ -98,34 +104,46 @@ impl super::AdapterShared {
             Tf::EacR11Snorm => (glow::COMPRESSED_SIGNED_R11_EAC, glow::RED, 0),
             Tf::EacRg11Unorm => (glow::COMPRESSED_RG11_EAC, glow::RG, 0),
             Tf::EacRg11Snorm => (glow::COMPRESSED_SIGNED_RG11_EAC, glow::RG, 0),
-            Tf::Astc4x4RgbaUnorm
-            | Tf::Astc4x4RgbaUnormSrgb
-            | Tf::Astc5x4RgbaUnorm
-            | Tf::Astc5x4RgbaUnormSrgb
-            | Tf::Astc5x5RgbaUnorm
-            | Tf::Astc5x5RgbaUnormSrgb
-            | Tf::Astc6x5RgbaUnorm
-            | Tf::Astc6x5RgbaUnormSrgb
-            | Tf::Astc6x6RgbaUnorm
-            | Tf::Astc6x6RgbaUnormSrgb
-            | Tf::Astc8x5RgbaUnorm
-            | Tf::Astc8x5RgbaUnormSrgb
-            | Tf::Astc8x6RgbaUnorm
-            | Tf::Astc8x6RgbaUnormSrgb
-            | Tf::Astc10x5RgbaUnorm
-            | Tf::Astc10x5RgbaUnormSrgb
-            | Tf::Astc10x6RgbaUnorm
-            | Tf::Astc10x6RgbaUnormSrgb
-            | Tf::Astc8x8RgbaUnorm
-            | Tf::Astc8x8RgbaUnormSrgb
-            | Tf::Astc10x8RgbaUnorm
-            | Tf::Astc10x8RgbaUnormSrgb
-            | Tf::Astc10x10RgbaUnorm
-            | Tf::Astc10x10RgbaUnormSrgb
-            | Tf::Astc12x10RgbaUnorm
-            | Tf::Astc12x10RgbaUnormSrgb
-            | Tf::Astc12x12RgbaUnorm
-            | Tf::Astc12x12RgbaUnormSrgb => unimplemented!(),
+            Tf::Astc4x4RgbaUnorm => (glow::COMPRESSED_RGBA_ASTC_4x4_KHR, glow::RGBA, 0),
+            Tf::Astc4x4RgbaUnormSrgb => (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR, glow::RGBA, 0),
+            Tf::Astc5x4RgbaUnorm => (glow::COMPRESSED_RGBA_ASTC_5x4_KHR, glow::RGBA, 0),
+            Tf::Astc5x4RgbaUnormSrgb => (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR, glow::RGBA, 0),
+            Tf::Astc5x5RgbaUnorm => (glow::COMPRESSED_RGBA_ASTC_5x5_KHR, glow::RGBA, 0),
+            Tf::Astc5x5RgbaUnormSrgb => (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR, glow::RGBA, 0),
+            Tf::Astc6x5RgbaUnorm => (glow::COMPRESSED_RGBA_ASTC_6x5_KHR, glow::RGBA, 0),
+            Tf::Astc6x5RgbaUnormSrgb => (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR, glow::RGBA, 0),
+            Tf::Astc6x6RgbaUnorm => (glow::COMPRESSED_RGBA_ASTC_6x6_KHR, glow::RGBA, 0),
+            Tf::Astc6x6RgbaUnormSrgb => (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR, glow::RGBA, 0),
+            Tf::Astc8x5RgbaUnorm => (glow::COMPRESSED_RGBA_ASTC_8x5_KHR, glow::RGBA, 0),
+            Tf::Astc8x5RgbaUnormSrgb => (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR, glow::RGBA, 0),
+            Tf::Astc8x6RgbaUnorm => (glow::COMPRESSED_RGBA_ASTC_8x6_KHR, glow::RGBA, 0),
+            Tf::Astc8x6RgbaUnormSrgb => (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR, glow::RGBA, 0),
+            Tf::Astc8x8RgbaUnorm => (glow::COMPRESSED_RGBA_ASTC_8x8_KHR, glow::RGBA, 0),
+            Tf::Astc8x8RgbaUnormSrgb => (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR, glow::RGBA, 0),
+            Tf::Astc10x5RgbaUnorm => (glow::COMPRESSED_RGBA_ASTC_10x5_KHR, glow::RGBA, 0),
+            Tf::Astc10x5RgbaUnormSrgb => {
+                (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR, glow::RGBA, 0)
+            }
+            Tf::Astc10x6RgbaUnorm => (glow::COMPRESSED_RGBA_ASTC_10x6_KHR, glow::RGBA, 0),
+            Tf::Astc10x6RgbaUnormSrgb => {
+                (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR, glow::RGBA, 0)
+            }
+            Tf::Astc10x8RgbaUnorm => (glow::COMPRESSED_RGBA_ASTC_10x8_KHR, glow::RGBA, 0),
+            Tf::Astc10x8RgbaUnormSrgb => {
+                (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR, glow::RGBA, 0)
+            }
+            Tf::Astc10x10RgbaUnorm => (glow::COMPRESSED_RGBA_ASTC_10x10_KHR, glow::RGBA, 0),
+            Tf::Astc10x10RgbaUnormSrgb => {
+                (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR, glow::RGBA, 0)
+            }
+            Tf::Astc12x10RgbaUnorm => (glow::COMPRESSED_RGBA_ASTC_12x10_KHR, glow::RGBA, 0),
+            Tf::Astc12x10RgbaUnormSrgb => {
+                (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR, glow::RGBA, 0)
+            }
+            Tf::Astc12x12RgbaUnorm => (glow::COMPRESSED_RGBA_ASTC_12x12_KHR, glow::RGBA, 0),
+            Tf::Astc12x12RgbaUnormSrgb => {
+                (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR, glow::RGBA, 0)
+            }
         };
 
         super::TextureFormatDesc {

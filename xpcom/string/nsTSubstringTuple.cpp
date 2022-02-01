@@ -32,9 +32,9 @@ typename nsTSubstringTuple<T>::size_type nsTSubstringTuple<T>::Length() const {
  */
 
 template <typename T>
-void nsTSubstringTuple<T>::WriteTo(char_type* aBuf, uint32_t aBufLen) const {
+void nsTSubstringTuple<T>::WriteTo(char_type* aBuf, size_type aBufLen) const {
   MOZ_RELEASE_ASSERT(aBufLen >= mFragB->Length(), "buffer too small");
-  uint32_t headLen = aBufLen - mFragB->Length();
+  size_type headLen = aBufLen - mFragB->Length();
   if (mHead) {
     mHead->WriteTo(aBuf, headLen);
   } else {

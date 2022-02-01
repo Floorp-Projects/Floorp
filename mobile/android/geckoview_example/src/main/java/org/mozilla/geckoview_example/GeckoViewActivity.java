@@ -81,6 +81,7 @@ import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.GeckoWebExecutor;
 import org.mozilla.geckoview.Image;
+import org.mozilla.geckoview.OrientationController;
 import org.mozilla.geckoview.RuntimeTelemetry;
 import org.mozilla.geckoview.SlowScriptResponse;
 import org.mozilla.geckoview.WebExtension;
@@ -776,6 +777,7 @@ public class GeckoViewActivity extends AppCompatActivity
 
       sGeckoRuntime.getWebExtensionController().setDebuggerDelegate(sExtensionManager);
       sGeckoRuntime.setAutocompleteStorageDelegate(new ExampleAutocompleteStorageDelegate());
+      sGeckoRuntime.getOrientationController().setDelegate(new ExampleOrientationDelegate());
 
       // `getSystemService` call requires API level 23
       if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
@@ -1077,7 +1079,7 @@ public class GeckoViewActivity extends AppCompatActivity
   @Override
   public void onRestoreInstanceState(Bundle savedInstanceState) {
     super.onRestoreInstanceState(savedInstanceState);
-    if (savedInstanceState != null) {
+    if (savedInstanceState != null && mGeckoView.getSession() != null) {
       mTabSessionManager.setCurrentSession((TabSession) mGeckoView.getSession());
       sGeckoRuntime.getWebExtensionController().setTabActive(mGeckoView.getSession(), true);
     } else {
@@ -1593,6 +1595,14 @@ public class GeckoViewActivity extends AppCompatActivity
     @Override
     public void onLoginSave(@NonNull Autocomplete.LoginEntry login) {
       mStorage.put(login.guid, login);
+    }
+  }
+
+  private class ExampleOrientationDelegate implements OrientationController.OrientationDelegate {
+    @Override
+    public GeckoResult<AllowOrDeny> onOrientationLock(@NonNull int aOrientation) {
+      setRequestedOrientation(aOrientation);
+      return GeckoResult.allow();
     }
   }
 

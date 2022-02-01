@@ -5,7 +5,7 @@ import copy
 
 import gecko_taskgraph
 from gecko_taskgraph.transforms.base import TransformSequence
-from gecko_taskgraph.util.attributes import keymatch
+from gecko_taskgraph.util.attributes import keymatch, is_try
 from gecko_taskgraph.util.chunking import (
     chunk_manifests,
     get_manifest_loader,
@@ -40,7 +40,7 @@ def set_test_verify_chunks(config, tasks):
             env = config.params.get("try_task_config", {}) or {}
             env = env.get("templates", {}).get("env", {})
             task["chunks"] = perfile_number_of_chunks(
-                config.params.is_try(),
+                is_try(config.params),
                 env.get("MOZHARNESS_TEST_PATHS", ""),
                 config.params.get("head_repository", ""),
                 config.params.get("head_rev", ""),

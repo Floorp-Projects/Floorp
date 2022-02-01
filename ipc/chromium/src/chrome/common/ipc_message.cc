@@ -30,7 +30,7 @@ Message::Message()
 }
 
 Message::Message(int32_t routing_id, msgid_t type, uint32_t segment_capacity,
-                 HeaderFlags flags, bool recordWriteLatency)
+                 HeaderFlags flags)
     : UserMessage(&kUserMessageTypeInfo),
       Pickle(sizeof(Header), segment_capacity) {
   MOZ_COUNT_CTOR(IPC::Message);
@@ -46,9 +46,6 @@ Message::Message(int32_t routing_id, msgid_t type, uint32_t segment_capacity,
   header()->num_send_rights = 0;
 #endif
   header()->event_footer_size = 0;
-  if (recordWriteLatency) {
-    create_time_ = mozilla::TimeStamp::Now();
-  }
 }
 
 Message::Message(const char* data, int data_len)
@@ -72,7 +69,7 @@ Message::Message(Message&& other)
 
 /*static*/ Message* Message::IPDLMessage(int32_t routing_id, msgid_t type,
                                          HeaderFlags flags) {
-  return new Message(routing_id, type, 0, flags, true);
+  return new Message(routing_id, type, 0, flags);
 }
 
 /*static*/ Message* Message::ForSyncDispatchError(NestedLevel level) {

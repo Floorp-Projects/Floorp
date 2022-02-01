@@ -427,12 +427,11 @@ struct AssertionConditionType {
     } while (false)
 #endif /* DEBUG */
 
-#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
 #  define MOZ_DIAGNOSTIC_ASSERT(...)                                    \
     MOZ_ASSERT_GLUE(                                                    \
         MOZ_PASTE_PREFIX_AND_ARG_COUNT(MOZ_ASSERT_HELPER, __VA_ARGS__), \
         ("MOZ_DIAGNOSTIC_ASSERT", __VA_ARGS__))
-#  define MOZ_DIAGNOSTIC_ASSERT_ENABLED 1
 #else
 #  define MOZ_DIAGNOSTIC_ASSERT(...) \
     do {                             \
@@ -612,6 +611,21 @@ struct AssertionConditionType {
 #define MOZ_ALWAYS_FALSE(expr) MOZ_ALWAYS_TRUE(!(expr))
 #define MOZ_ALWAYS_OK(expr) MOZ_ALWAYS_TRUE((expr).isOk())
 #define MOZ_ALWAYS_ERR(expr) MOZ_ALWAYS_TRUE((expr).isErr())
+
+/*
+ * These are disabled when fuzzing
+ */
+#ifdef FUZZING
+#  define MOZ_CRASH_UNLESS_FUZZING(...) \
+    do {                                \
+    } while (0)
+#  define MOZ_ASSERT_UNLESS_FUZZING(...) \
+    do {                                 \
+    } while (0)
+#else
+#  define MOZ_CRASH_UNLESS_FUZZING(...) MOZ_CRASH(__VA_ARGS__)
+#  define MOZ_ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(__VA_ARGS__)
+#endif
 
 #undef MOZ_DUMP_ASSERTION_STACK
 #undef MOZ_CRASH_CRASHREPORT

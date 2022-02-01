@@ -47,7 +47,7 @@
 #     This will generate (or overwrite!) the files
 #
 #         nsUnicodePropertyData.cpp
-#         nsUnicodeScriptCodes.h
+#         UnicodeScriptCodes.h
 #
 #     in the current directory.
 
@@ -71,7 +71,7 @@ if ($#ARGV != 1) {
 # This will generate (or overwrite!) the files
 #
 #     nsUnicodePropertyData.cpp
-#     nsUnicodeScriptCodes.h
+#     UnicodeScriptCodes.h
 #
 # in the current directory.
 __EOT
@@ -132,7 +132,7 @@ my %idType = (
   "Deprecated"        => 12
 );
 
-# These match the IdentifierType enum in nsUnicodeProperties.h.
+# These match the IdentifierType enum in UnicodeProperties.h.
 my %mappedIdType = (
   "Restricted"   => 0,
   "Allowed"      => 1
@@ -292,9 +292,7 @@ my $timestamp = gmtime();
 
 open DATA_TABLES, "> nsUnicodePropertyData.cpp" or die "unable to open nsUnicodePropertyData.cpp for output";
 
-my $licenseBlock = q[
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* This Source Code Form is subject to the terms of the Mozilla Public
+my $licenseBlock = q[/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -324,7 +322,7 @@ $versionInfo
 
 __END
 
-open HEADER, "> nsUnicodeScriptCodes.h" or die "unable to open nsUnicodeScriptCodes.h for output";
+open HEADER, "> UnicodeScriptCodes.h" or die "unable to open UnicodeScriptCodes.h for output";
 
 print HEADER <<__END;
 $licenseBlock
@@ -338,8 +336,8 @@ $versionInfo
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
  */
 
-#ifndef NS_UNICODE_SCRIPT_CODES
-#define NS_UNICODE_SCRIPT_CODES
+#ifndef intl_components_UnicodeScriptCodes_h_
+#define intl_components_UnicodeScriptCodes_h_
 
 __END
 
@@ -351,16 +349,7 @@ sub sprintCharProps2_short
   return sprintf("{%d,%d},",
                  $verticalOrientation[$usv], $idtype[$usv]);
 }
-my $type = q|
-struct nsCharProps2 {
-  // Currently only 4 bits are defined here, so 4 more could be added without
-  // affecting the storage requirements for this struct. Or we could pack two
-  // records per byte, at the cost of a slightly more complex accessor.
-  unsigned char mVertOrient:2;
-  unsigned char mIdType:2;
-};
-|;
-&genTables("CharProp2", $type, "nsCharProps2", 9, 7, \&sprintCharProps2_short, 16, 1, 1);
+&genTables("CharProp2", "", "nsCharProps2", 9, 7, \&sprintCharProps2_short, 16, 1, 1);
 
 sub sprintHanVariants
 {
@@ -485,8 +474,7 @@ __END
 
 close DATA_TABLES;
 
-print HEADER "namespace mozilla {\n";
-print HEADER "namespace unicode {\n";
+print HEADER "namespace mozilla::intl {\n";
 print HEADER "enum class Script : int16_t {\n";
 for (my $i = 0; $i < scalar @scriptCodeToName; ++$i) {
   print HEADER "  ", $scriptCodeToName[$i], " = ", $i, ",\n";
@@ -494,15 +482,7 @@ for (my $i = 0; $i < scalar @scriptCodeToName; ++$i) {
 print HEADER "\n  NUM_SCRIPT_CODES = ", scalar @scriptCodeToName, ",\n";
 print HEADER "\n  INVALID = -1\n";
 print HEADER "};\n";
-print HEADER <<__END;
-
-// mozilla::intl::ScriptExtensionVector assumes sizeof(Script) is equal to
-// sizeof(int16_t), so if the data type of Script is changed then
-// ScriptExtensionVector needs to be updated accordingly.
-static_assert(sizeof(Script) == sizeof(int16_t));
-__END
-print HEADER "} // namespace unicode\n";
-print HEADER "} // namespace mozilla\n\n";
+print HEADER "} // namespace mozilla::intl\n\n";
 
 print HEADER <<__END;
 #endif

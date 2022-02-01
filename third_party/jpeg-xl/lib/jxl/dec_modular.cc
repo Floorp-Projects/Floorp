@@ -160,17 +160,21 @@ Status ModularFrameDecoder::DecodeGlobalInfo(BitReader* reader,
     nb_chans = 1;
   }
   do_color = decode_color;
-  if (!do_color) nb_chans = 0;
   size_t nb_extra = metadata.extra_channel_info.size();
   bool has_tree = reader->ReadBits(1);
-  if (has_tree) {
-    size_t tree_size_limit = std::min(
-        static_cast<size_t>(1 << 22),
-        1024 + frame_dim.xsize * frame_dim.ysize * (nb_chans + nb_extra) / 16);
-    JXL_RETURN_IF_ERROR(DecodeTree(reader, &tree, tree_size_limit));
-    JXL_RETURN_IF_ERROR(
-        DecodeHistograms(reader, (tree.size() + 1) / 2, &code, &context_map));
+  if (!allow_truncated_group ||
+      reader->TotalBitsConsumed() < reader->TotalBytes() * kBitsPerByte) {
+    if (has_tree) {
+      size_t tree_size_limit =
+          std::min(static_cast<size_t>(1 << 22),
+                   1024 + frame_dim.xsize * frame_dim.ysize *
+                              (nb_chans + nb_extra) / 16);
+      JXL_RETURN_IF_ERROR(DecodeTree(reader, &tree, tree_size_limit));
+      JXL_RETURN_IF_ERROR(
+          DecodeHistograms(reader, (tree.size() + 1) / 2, &code, &context_map));
+    }
   }
+  if (!do_color) nb_chans = 0;
 
   bool fp = metadata.bit_depth.floating_point_sample;
 
@@ -257,12 +261,10 @@ void ModularFrameDecoder::MaybeDropFullImage() {
   }
 }
 
-Status ModularFrameDecoder::DecodeGroup(const Rect& rect, BitReader* reader,
-                                        int minShift, int maxShift,
-                                        const ModularStreamId& stream,
-                                        bool zerofill,
-                                        PassesDecoderState* dec_state,
-                                        ImageBundle* output) {
+Status ModularFrameDecoder::DecodeGroup(
+    const Rect& rect, BitReader* reader, int minShift, int maxShift,
+    const ModularStreamId& stream, bool zerofill, PassesDecoderState* dec_state,
+    ImageBundle* output, bool allow_truncated) {
   JXL_DASSERT(stream.kind == ModularStreamId::kModularDC ||
               stream.kind == ModularStreamId::kModularAC);
   const size_t xsize = rect.xsize();
@@ -302,9 +304,11 @@ Status ModularFrameDecoder::DecodeGroup(const Rect& rect, BitReader* reader,
   if (gi.channel.empty()) return true;
   ModularOptions options;
   if (!zerofill) {
-    if (!ModularGenericDecompress(
-            reader, gi, /*header=*/nullptr, stream.ID(frame_dim), &options,
-            /*undo_transforms=*/true, &tree, &code, &context_map)) {
+    if (!ModularGenericDecompress(reader, gi, /*header=*/nullptr,
+                                  stream.ID(frame_dim), &options,
+                                  /*undo_transforms=*/true, &tree, &code,
+                                  &context_map, allow_truncated) &&
+        !allow_truncated) {
       return JXL_FAILURE("Failed to decode modular group");
     }
   }

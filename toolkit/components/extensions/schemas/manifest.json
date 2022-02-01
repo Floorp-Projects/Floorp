@@ -407,6 +407,31 @@
         }
       },
       {
+        "id": "WebExtensionSitePermissionsManifest",
+        "type": "object",
+        "description": "Represents a WebExtension site permissions manifest.json file",
+
+        "$import": "ManifestBase",
+        "properties": {
+          "site_permissions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "SitePermission"
+            }
+          },
+          "install_origins": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1,
+            "items": {
+              "type": "string",
+              "format": "origin"
+            }
+          }
+        }
+      },
+      {
         "id": "ThemeIcons",
         "type": "object",
         "properties": {
@@ -485,6 +510,18 @@
         "choices": [
           { "$ref": "Permission" },
           { "$ref": "MatchPattern" }
+        ]
+      },
+      {
+        "id": "SitePermission",
+        "choices": [
+          {
+            "type": "string",
+            "enum": [
+              "midi",
+              "midi-sysex"
+            ]
+          }
         ]
       },
       {

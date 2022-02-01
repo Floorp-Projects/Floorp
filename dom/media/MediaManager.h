@@ -5,7 +5,6 @@
 #ifndef MOZILLA_MEDIAMANAGER_H
 #define MOZILLA_MEDIAMANAGER_H
 
-#include "MediaEngine.h"
 #include "MediaEnginePrefs.h"
 #include "MediaEventSource.h"
 #include "mozilla/dom/GetUserMediaRequest.h"
@@ -38,16 +37,21 @@
 #  include "transport/runnable_utils.h"
 #endif
 
+class AudioDeviceInfo;
 class nsIPrefBranch;
 
 namespace mozilla {
+class MediaEngine;
+class MediaEngineSource;
 class TaskQueue;
 class MediaTimer;
+class MediaTrack;
 namespace dom {
 struct AudioOutputOptions;
 struct MediaStreamConstraints;
 struct MediaTrackConstraints;
 struct MediaTrackConstraintSet;
+struct MediaTrackSettings;
 enum class CallerType : uint32_t;
 enum class MediaDeviceKind : uint8_t;
 }  // namespace dom
@@ -61,26 +65,61 @@ class GetUserMediaWindowListener;
 class MediaManager;
 class DeviceListener;
 
-class MediaDevice : public nsIMediaDevice {
+/**
+ * Device info that is independent of any Window.
+ * MediaDevices can be shared, unlike LocalMediaDevices.
+ */
+class MediaDevice final {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDevice)
+
+  /**
+   * Whether source device does end-run around cross origin restrictions.
+   */
+  enum class IsScary { No, Yes };
+  MediaDevice(MediaEngine* aEngine, dom::MediaSourceEnum aMediaSource,
+              const nsString& aRawName, const nsString& aRawID,
+              const nsString& aRawGroupID, IsScary aIsScary);
+
+  MediaDevice(MediaEngine* aEngine,
+              const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
+              const nsString& aRawID);
+
+  static RefPtr<MediaDevice> CopyWithNewRawGroupId(
+      const RefPtr<MediaDevice>& aOther, const nsString& aRawGroupID);
+
+  dom::MediaSourceEnum GetMediaSource() const;
+
+ protected:
+  ~MediaDevice();
+
+ public:
+  const RefPtr<MediaEngine> mEngine;
+  const RefPtr<AudioDeviceInfo> mAudioDeviceInfo;
+  const dom::MediaSourceEnum mMediaSource;
+  const dom::MediaDeviceKind mKind;
+  const bool mScary;
+  const bool mIsFake;
+  const nsString mType;
+  const nsString mRawID;
+  const nsString mRawGroupID;
+  const nsString mRawName;
+};
+
+/**
+ * Device info that is specific to a particular Window.  If the device is a
+ * source device, then a single corresponding MediaEngineSource is provided,
+ * which can provide a maximum of one capture stream.  LocalMediaDevices are
+ * not shared, but APIs returning LocalMediaDevices return a new object each
+ * call.
+ */
+class LocalMediaDevice final : public nsIMediaDevice {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEDIADEVICE
 
-  MediaDevice(const RefPtr<MediaEngineSource>& aSource, const nsString& aName,
-              const nsString& aID, const nsString& aGroupID,
-              const nsString& aRawID);
-
-  MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
-              const nsString& aID, const nsString& aGroupID,
-              const nsString& aRawID = u""_ns);
-
-  MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
-              const nsString& aGroupID, const nsString& aRawID,
-              const nsString& aRawGroupID);
-
-  MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
-              const nsString& aGroupID, const nsString& aRawID,
-              const nsString& aRawGroupID, const nsString& aName);
+  LocalMediaDevice(RefPtr<const MediaDevice> aRawDevice, const nsString& aID,
+                   const nsString& aGroupID, const nsString& aName);
 
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
@@ -90,7 +129,7 @@ class MediaDevice : public nsIMediaDevice {
                     const MediaEnginePrefs& aPrefs, uint64_t aWindowId,
                     const char** aOutBadConstraint);
   void SetTrack(const RefPtr<MediaTrack>& aTrack,
-                const PrincipalHandle& aPrincipal);
+                const nsMainThreadPtrHandle<nsIPrincipal>& aPrincipal);
   nsresult Start();
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
                        const MediaEnginePrefs& aPrefs,
@@ -99,37 +138,40 @@ class MediaDevice : public nsIMediaDevice {
   nsresult Stop();
   nsresult Deallocate();
 
-  void GetSettings(dom::MediaTrackSettings& aOutSettings) const;
+  void GetSettings(dom::MediaTrackSettings& aOutSettings);
+  MediaEngineSource* Source();
+  // Returns null if not a physical audio device.
+  AudioDeviceInfo* GetAudioDeviceInfo() const {
+    return mRawDevice->mAudioDeviceInfo;
+  }
+  dom::MediaSourceEnum GetMediaSource() const {
+    return mRawDevice->GetMediaSource();
+  }
+  dom::MediaDeviceKind Kind() const { return mRawDevice->mKind; }
+  bool IsFake() const { return mRawDevice->mIsFake; }
+  const nsString& RawID() { return mRawDevice->mRawID; }
 
-  dom::MediaSourceEnum GetMediaSource() const;
-
- protected:
-  virtual ~MediaDevice() = default;
+ private:
+  virtual ~LocalMediaDevice() = default;
 
   static uint32_t FitnessDistance(
       nsString aN,
       const dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters&
           aConstraint);
 
- private:
   static bool StringsContain(const dom::OwningStringOrStringSequence& aStrings,
                              nsString aN);
   static uint32_t FitnessDistance(
       nsString aN, const dom::ConstrainDOMStringParameters& aParams);
 
  public:
-  const RefPtr<MediaEngineSource> mSource;
-  const RefPtr<AudioDeviceInfo> mSinkInfo;
-  const dom::MediaDeviceKind mKind;
-  const bool mScary;
-  const bool mIsFake;
-  const nsString mType;
+  const RefPtr<const MediaDevice> mRawDevice;
   const nsString mName;
   const nsString mID;
   const nsString mGroupID;
-  const nsString mRawID;
-  const nsString mRawGroupID;
-  const nsString mRawName;
+
+ private:
+  RefPtr<MediaEngineSource> mSource;
 };
 
 typedef nsRefPtrHashtable<nsUint64HashKey, GetUserMediaWindowListener>
@@ -216,38 +258,37 @@ class MediaManager final : public nsIMediaManagerService,
 
   using MediaDeviceSet = nsTArray<RefPtr<MediaDevice>>;
   using MediaDeviceSetRefCnt = media::Refcountable<MediaDeviceSet>;
+  using LocalMediaDeviceSet = nsTArray<RefPtr<LocalMediaDevice>>;
+  using LocalMediaDeviceSetRefCnt = media::Refcountable<LocalMediaDeviceSet>;
 
   using StreamPromise =
       MozPromise<RefPtr<DOMMediaStream>, RefPtr<MediaMgrError>, true>;
-  using DevicePromise =
-      MozPromise<RefPtr<MediaDevice>, RefPtr<MediaMgrError>, true>;
   using DeviceSetPromise =
       MozPromise<RefPtr<MediaDeviceSetRefCnt>, RefPtr<MediaMgrError>, true>;
+  using LocalDevicePromise =
+      MozPromise<RefPtr<LocalMediaDevice>, RefPtr<MediaMgrError>, true>;
+  using LocalDeviceSetPromise = MozPromise<RefPtr<LocalMediaDeviceSetRefCnt>,
+                                           RefPtr<MediaMgrError>, true>;
   using MgrPromise = MozPromise<bool, RefPtr<MediaMgrError>, true>;
-  using BadConstraintsPromise =
-      MozPromise<const char*, RefPtr<MediaMgrError>, true>;
 
   RefPtr<StreamPromise> GetUserMedia(
       nsPIDOMWindowInner* aWindow,
       const dom::MediaStreamConstraints& aConstraints,
       dom::CallerType aCallerType);
 
-  RefPtr<DeviceSetPromise> EnumerateDevices(nsPIDOMWindowInner* aWindow);
+  RefPtr<LocalDeviceSetPromise> EnumerateDevices(nsPIDOMWindowInner* aWindow);
 
-  enum class DeviceEnumerationType : uint8_t {
-    Normal,  // Enumeration should not return loopback or fake devices
-    Fake,    // Enumeration should return fake device(s)
-    Loopback /* Enumeration should return loopback device(s) (possibly in
-             addition to normal devices) */
+  enum class EnumerationFlag {
+    AllowPermissionRequest,
+    EnumerateAudioOutputs,
+    ForceFakes,
   };
-  RefPtr<MgrPromise> EnumerateDevicesImpl(
+  using EnumerationFlags = EnumSet<EnumerationFlag>;
+  RefPtr<LocalDeviceSetPromise> EnumerateDevicesImpl(
       nsPIDOMWindowInner* aWindow, dom::MediaSourceEnum aVideoInputType,
-      dom::MediaSourceEnum aAudioInputType, MediaSinkEnum aAudioOutputType,
-      DeviceEnumerationType aVideoInputEnumType,
-      DeviceEnumerationType aAudioInputEnumType, bool aForceNoPermRequest,
-      const RefPtr<MediaDeviceSetRefCnt>& aOutDevices);
+      dom::MediaSourceEnum aAudioInputType, EnumerationFlags aFlags);
 
-  RefPtr<DevicePromise> SelectAudioOutput(
+  RefPtr<LocalDevicePromise> SelectAudioOutput(
       nsPIDOMWindowInner* aWindow, const dom::AudioOutputOptions& aOptions,
       dom::CallerType aCallerType);
 
@@ -259,6 +300,8 @@ class MediaManager final : public nsIMediaManagerService,
   MediaEventSource<void>& DeviceListChangeEvent() {
     return mDeviceListChangeEvent;
   }
+  RefPtr<LocalDeviceSetPromise> AnonymizeDevices(
+      nsPIDOMWindowInner* aWindow, RefPtr<const MediaDeviceSetRefCnt> aDevices);
 
   MediaEnginePrefs mPrefs;
 
@@ -266,11 +309,7 @@ class MediaManager final : public nsIMediaManagerService,
   static nsresult GenerateUUID(nsAString& aResult);
   static nsresult AnonymizeId(nsAString& aId, const nsACString& aOriginKey);
 
- public:  // TODO: make private once we upgrade to GCC 4.8+ on linux.
-  static void AnonymizeDevices(MediaDeviceSet& aDevices,
-                               const nsACString& aOriginKey,
-                               const uint64_t aWindowId);
-
+ public:
   /**
    * This function tries to guess the group id for a video device in aDevices
    * based on the device name. If the name of only one audio device in aAudios
@@ -284,17 +323,13 @@ class MediaManager final : public nsIMediaManagerService,
                                        const MediaDeviceSet& aAudios);
 
  private:
-  RefPtr<MgrPromise> EnumerateRawDevices(
+  RefPtr<DeviceSetPromise> EnumerateRawDevices(
       dom::MediaSourceEnum aVideoInputType,
-      dom::MediaSourceEnum aAudioInputType, MediaSinkEnum aAudioOutputType,
-      DeviceEnumerationType aVideoInputEnumType,
-      DeviceEnumerationType aAudioInputEnumType, bool aForceNoPermRequest,
-      const RefPtr<MediaDeviceSetRefCnt>& aOutDevices);
+      dom::MediaSourceEnum aAudioInputType, EnumerationFlags aFlags);
 
-  RefPtr<BadConstraintsPromise> SelectSettings(
+  RefPtr<LocalDeviceSetPromise> SelectSettings(
       const dom::MediaStreamConstraints& aConstraints,
-      dom::CallerType aCallerType,
-      const RefPtr<MediaDeviceSetRefCnt>& aSources);
+      dom::CallerType aCallerType, RefPtr<LocalMediaDeviceSetRefCnt> aDevices);
 
   void GetPref(nsIPrefBranch* aBranch, const char* aPref, const char* aData,
                int32_t* aVal);
@@ -312,6 +347,7 @@ class MediaManager final : public nsIMediaManagerService,
 
   void RemoveMediaDevicesCallback(uint64_t aWindowID);
   void DeviceListChanged();
+  void HandleDeviceListChanged();
 
   // Returns the number of incomplete tasks associated with this window,
   // including the newly added task.
@@ -321,30 +357,17 @@ class MediaManager final : public nsIMediaManagerService,
   RefPtr<GetUserMediaTask> TakeGetUserMediaTask(const nsAString& aCallID);
   // Intended for use with "media.navigator.permission.disabled" to bypass the
   // permission prompt and use the first appropriate device.
-  void NotifyAllowed(const nsString& aCallID, const MediaDeviceSet& aDevices);
+  void NotifyAllowed(const nsString& aCallID,
+                     const LocalMediaDeviceSet& aDevices);
 
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
-
-  struct nsStringHasher {
-    using Key = nsString;
-    using Lookup = nsString;
-
-    static HashNumber hash(const Lookup& aLookup) {
-      return HashString(aLookup.get());
-    }
-
-    static bool match(const Key& aKey, const Lookup& aLookup) {
-      return aKey == aLookup;
-    }
-  };
 
   // ONLY access from MainThread so we don't need to lock
   WindowTable mActiveWindows;
   nsRefPtrHashtable<nsStringHashKey, GetUserMediaTask> mActiveCallbacks;
   nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mCallIds;
   nsTArray<RefPtr<dom::GetUserMediaRequest>> mPendingGUMRequest;
-  using DeviceIdSet = HashSet<nsString, nsStringHasher, InfallibleAllocPolicy>;
-  DeviceIdSet mDeviceIDs;
+  TimeStamp mUnhandledDeviceChangeTime;
   RefPtr<MediaTimer> mDeviceChangeTimer;
   bool mCamerasMuted = false;
   bool mMicrophonesMuted = false;

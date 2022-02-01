@@ -64,6 +64,12 @@ add_task(async function unsupportedSchemes() {
         "moz-extension://uuid/not/manifest.json*",
       ],
     },
+    {
+      // While the scheme is supported, the URL is invalid.
+      testUrl: "http://",
+      matchingPatterns: [],
+      nonmatchingPatterns: ["http://*/*", "<all_urls>"],
+    },
   ];
 
   async function testScript(testcases) {
@@ -149,19 +155,13 @@ add_task(async function unsupportedSchemes() {
   await extension.unload();
 });
 
-// Tests that a menu item is shown on links with an unsupported scheme if
-// targetUrlPatterns is not set.
-add_task(async function unsupportedSchemeWithoutPattern() {
-  function background() {
+async function testLinkMenuWithoutTargetUrlPatterns(linkUrl) {
+  function background(expectedLinkUrl) {
     let menuId;
     browser.contextMenus.onShown.addListener(({ menuIds, linkUrl }) => {
       browser.test.assertEq(1, menuIds.length, "Expected number of menus");
       browser.test.assertEq(menuId, menuIds[0], "Expected menu ID");
-      browser.test.assertEq(
-        "unsupported-scheme:data",
-        linkUrl,
-        "Expected linkUrl"
-      );
+      browser.test.assertEq(expectedLinkUrl, linkUrl, "Expected linkUrl");
       browser.test.sendMessage("done");
     });
     menuId = browser.contextMenus.create(
@@ -179,12 +179,12 @@ add_task(async function unsupportedSchemeWithoutPattern() {
     manifest: {
       permissions: ["contextMenus"],
     },
-    background,
+    background: `(${background})("${linkUrl}")`,
     files: {
       "testpage.js": `browser.test.sendMessage("ready")`,
       "testpage.html": `
         <!DOCTYPE html><meta charset="utf-8">
-        <a id="test_link_element" href="unsupported-scheme:data">Test link</a>
+        <a id="test_link_element" href="${linkUrl}">Test link</a>
         <script src="testpage.js"></script>
       `,
     },
@@ -197,6 +197,18 @@ add_task(async function unsupportedSchemeWithoutPattern() {
   await closeContextMenu();
 
   await extension.unload();
+}
+
+// Tests that a menu item is shown on links with an unsupported scheme if
+// targetUrlPatterns is not set.
+add_task(async function unsupportedSchemeWithoutPattern() {
+  await testLinkMenuWithoutTargetUrlPatterns("unsupported-scheme:data");
+});
+
+// Tests that a menu item is shown on links with an invalid http:-URL if
+// targetUrlPatterns is not set.
+add_task(async function invalidHttpUrlWithoutPattern() {
+  await testLinkMenuWithoutTargetUrlPatterns("http://");
 });
 
 add_task(async function privileged_are_allowed_to_use_restrictedSchemes() {

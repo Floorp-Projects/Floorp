@@ -47,7 +47,7 @@ SOURCES += [
 ]
 if CONFIG['MOZ_WAYLAND']:
     SOURCES += [
-        'hwcontext_vaapi.c',
+        'hwcontext_vaapi.c'
     ]
     USE_LIBS += ['mozva']
 
@@ -56,12 +56,14 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
         'adler32.c',
         'base64.c',
         'color_utils.c',
+        'film_grain_params.c',
         'integer.c',
         'intmath.c',
         'lls.c',
         'pixelutils.c',
         'threadmessage.c',
-        'timecode.c'
+        'timecode.c',
+        'video_enc_params.c'
     ]
 
 SYMBOLS_FILE =  'avutil.symbols'

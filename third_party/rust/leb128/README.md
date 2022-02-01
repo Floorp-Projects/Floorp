@@ -1,6 +1,6 @@
 # `leb128`
 
-[![](http://meritbadge.herokuapp.com/leb128) ![](https://img.shields.io/crates/d/leb128.png)](https://crates.io/crates/leb128) [![Build Status](https://travis-ci.org/gimli-rs/leb128.png?branch=master)](https://travis-ci.org/gimli-rs/leb128) [![Coverage Status](https://coveralls.io/repos/github/gimli-rs/leb128/badge.svg?branch=master)](https://coveralls.io/github/gimli-rs/leb128?branch=master)
+[![](https://img.shields.io/crates/v/leb128.svg) ![](https://img.shields.io/crates/d/leb128.png)](https://crates.io/crates/leb128) [![Build Status](https://travis-ci.org/gimli-rs/leb128.png?branch=master)](https://travis-ci.org/gimli-rs/leb128) [![Coverage Status](https://coveralls.io/repos/github/gimli-rs/leb128/badge.svg?branch=master)](https://coveralls.io/github/gimli-rs/leb128?branch=master)
 
 Read and write DWARF's "Little Endian Base 128" (LEB128) variable length integer
 encoding.
@@ -40,7 +40,7 @@ assert_eq!(val, -12345);
 
 ## Documentation
 
-[Documentation](http://gimli-rs.github.io/leb128/leb128/index.html)
+[Documentation](https://gimli-rs.github.io/leb128/leb128/index.html)
 
 ## Read-Eval-Print-Loop for LEB128
 
@@ -101,8 +101,8 @@ error
 
 Licensed under either of
 
-  * Apache License, Version 2.0 ([`LICENSE-APACHE`](./LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-  * MIT license ([`LICENSE-MIT`](./LICENSE-MIT) or http://opensource.org/licenses/MIT)
+  * Apache License, Version 2.0 ([`LICENSE-APACHE`](./LICENSE-APACHE) or https://www.apache.org/licenses/LICENSE-2.0)
+  * MIT license ([`LICENSE-MIT`](./LICENSE-MIT) or https://opensource.org/licenses/MIT)
 
 at your option.
 

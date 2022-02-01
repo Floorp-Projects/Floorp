@@ -239,7 +239,6 @@ var AbstractInfo = function AbstractInfo(
   isDir,
   isSymLink,
   size,
-  winBirthDate,
   lastAccessDate,
   lastWriteDate,
   winAttributes
@@ -248,7 +247,6 @@ var AbstractInfo = function AbstractInfo(
   this._isDir = isDir;
   this._isSymLink = isSymLink;
   this._size = size;
-  this._winBirthDate = winBirthDate;
   this._lastAccessDate = lastAccessDate;
   this._lastModificationDate = lastWriteDate;
   this._winAttributes = winAttributes;
@@ -285,18 +283,6 @@ AbstractInfo.prototype = {
    */
   get size() {
     return this._size;
-  },
-  // Deprecated
-  get creationDate() {
-    return this._winBirthDate;
-  },
-  /**
-   * The date of creation of this file.
-   *
-   * @type {Date}
-   */
-  get winBirthDate() {
-    return this._winBirthDate;
   },
   /**
    * The date of last access to this file.
@@ -341,7 +327,6 @@ var AbstractEntry = function AbstractEntry(
   isDir,
   isSymLink,
   name,
-  winCreationDate,
   winLastWriteDate,
   winLastAccessDate,
   path
@@ -349,7 +334,6 @@ var AbstractEntry = function AbstractEntry(
   this._isDir = isDir;
   this._isSymLink = isSymLink;
   this._name = name;
-  this._winCreationDate = winCreationDate;
   this._winLastWriteDate = winLastWriteDate;
   this._winLastAccessDate = winLastAccessDate;
   this._path = path;
@@ -374,13 +358,6 @@ AbstractEntry.prototype = {
    */
   get name() {
     return this._name;
-  },
-  /**
-   * The creation time of this file.
-   * @type {Date}
-   */
-  get winCreationDate() {
-    return this._winCreationDate;
   },
   /**
    * The last modification time of this file.

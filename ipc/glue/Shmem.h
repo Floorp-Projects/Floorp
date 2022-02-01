@@ -16,6 +16,7 @@
 #include "nsDebug.h"
 
 #include "mozilla/ipc/SharedMemory.h"
+#include "mozilla/Range.h"
 #include "mozilla/UniquePtr.h"
 
 /**
@@ -130,6 +131,11 @@ class Shmem final {
     AssertAligned<T>();
 
     return mSize / sizeof(T);
+  }
+
+  template <typename T>
+  Range<T> Range() const {
+    return {get<T>(), Size<T>()};
   }
 
   // These shouldn't be used directly, use the IPDL interface instead.

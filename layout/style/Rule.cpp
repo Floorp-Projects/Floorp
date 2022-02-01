@@ -100,10 +100,11 @@ void Rule::AssertParentRuleType() {
   // this->Type() here since it's virtual.
   if (mParentRule) {
     auto type = mParentRule->Type();
-    MOZ_ASSERT(
-        type == StyleCssRuleType::Media || type == StyleCssRuleType::Document ||
-        type == StyleCssRuleType::Supports ||
-        type == StyleCssRuleType::Keyframes || type == StyleCssRuleType::Layer);
+    MOZ_ASSERT(type == StyleCssRuleType::Media ||
+               type == StyleCssRuleType::Document ||
+               type == StyleCssRuleType::Supports ||
+               type == StyleCssRuleType::Keyframes ||
+               type == StyleCssRuleType::LayerBlock);
   }
 }
 #endif

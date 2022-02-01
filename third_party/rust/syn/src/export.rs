@@ -1,6 +1,5 @@
 pub use std::clone::Clone;
 pub use std::cmp::{Eq, PartialEq};
-pub use std::convert::From;
 pub use std::default::Default;
 pub use std::fmt::{self, Debug, Formatter};
 pub use std::hash::{Hash, Hasher};

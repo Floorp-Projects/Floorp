@@ -92,6 +92,10 @@ nsMIMEInfoWin::LaunchWithFile(nsIFile* aFile) {
   NS_ASSERTION(mClass == eMIMEInfo,
                "nsMIMEInfoBase should have mClass == eMIMEInfo");
 
+  if (AutomationOnlyCheckIfLaunchStubbed(aFile)) {
+    return NS_OK;
+  }
+
   if (mPreferredAction == useSystemDefault) {
     if (mDefaultApplication &&
         StaticPrefs::browser_pdf_launchDefaultEdgeAsApp()) {

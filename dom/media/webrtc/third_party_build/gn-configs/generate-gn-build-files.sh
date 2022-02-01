@@ -92,6 +92,8 @@ elif [ "x$SYS_NAME" = "xMINGW32_NT-6.2" ]; then
   CONFIGS="$CONFIGS x64_True_x64_win x64_False_x64_win"
   CONFIGS="$CONFIGS x64_True_x86_win x64_False_x86_win"
   IS_WIN=1
+elif [ "x$SYS_NAME" = "xOpenBSD" ]; then
+  CONFIGS="x64_False_x64_openbsd x64_True_x64_openbsd"
 else
   # Ensure rust has the correct targets for building x86 and arm64.  These
   # operations succeed quickly if previously completed.

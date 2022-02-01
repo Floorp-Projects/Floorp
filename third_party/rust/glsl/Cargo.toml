@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "glsl"
-version = "4.0.3"
+version = "4.1.1"
 authors = ["Dimitri Sabadie <dimitri.sabadie@gmail.com>"]
 description = "A GLSL450/GLSL460 parser."
 homepage = "https://github.com/phaazon/glsl"

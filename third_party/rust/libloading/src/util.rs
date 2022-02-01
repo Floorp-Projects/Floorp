@@ -1,10 +1,10 @@
-use std::ffi::{CStr, CString};
 use std::borrow::Cow;
+use std::ffi::{CStr, CString};
 use std::os::raw;
 
 use crate::Error;
 
-/// Checks for last byte and avoids allocating if it is zero.
+/// Checks for the last byte and avoids allocating if it is zero.
 ///
 /// Non-last null bytes still result in an error.
 pub(crate) fn cstr_cow_from_bytes(slice: &[u8]) -> Result<Cow<'_, CStr>, Error> {
@@ -13,11 +13,14 @@ pub(crate) fn cstr_cow_from_bytes(slice: &[u8]) -> Result<Cow<'_, CStr>, Error> 
         // Slice out of 0 elements
         None => unsafe { Cow::Borrowed(CStr::from_ptr(&ZERO)) },
         // Slice with trailing 0
-        Some(&0) => Cow::Borrowed(CStr::from_bytes_with_nul(slice)
-            .map_err(|source| Error::CreateCStringWithTrailing { source })?),
+        Some(&0) => Cow::Borrowed(
+            CStr::from_bytes_with_nul(slice)
+                .map_err(|source| Error::CreateCStringWithTrailing { source })?,
+        ),
         // Slice with no trailing 0
-        Some(_) => Cow::Owned(CString::new(slice)
-            .map_err(|source| Error::CreateCString { source })?),
+        Some(_) => {
+            Cow::Owned(CString::new(slice).map_err(|source| Error::CreateCString { source })?)
+        }
     })
 }
 

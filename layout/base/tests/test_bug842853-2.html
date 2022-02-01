@@ -14,11 +14,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=842853
 
 SimpleTest.waitForExplicitFinish();
 
-function verifyAfterLoad() {
+async function verifyAfterLoad() {
   var e = document.getElementsByTagName('iframe')[0];
   var win = e.contentWindow;
   if (win.location.hash != '') {
-    is(win.scrollY,500);
+    const resolution = await SpecialPowers.spawn(window.top, [], () => {
+      return SpecialPowers.getDOMWindowUtils(content.window).getResolution();
+    });
+    // Allow a half pixel difference if the top document's resolution is lower
+    // than 1.0 because the scroll position is aligned with screen pixels
+    // instead of CSS pixels.
+    const tolerance = resolution < 1.0 ? 0.5 : 0.0;
+    isfuzzy(win.scrollY, 500, tolerance);
     SimpleTest.finish();
     return;
   }

@@ -21,7 +21,7 @@ const size_t kMaxCFF2ArgumentStack = 513;
 // http://www.adobe.com/devnet/font/pdfs/5177.Type2.pdf
 //
 // The validation will fail if one of the following conditions is met:
-//  1. The code uses more than 48 values of argument stack.
+//  1. The code uses more than the max argument stack size (48 for CFF1; 513 for CFF2)
 //  2. The code uses deeply nested subroutine calls (more than 10 levels.)
 //  3. The code passes invalid number of operands to an operator.
 //  4. The code calls an undefined global or local subroutine.
@@ -29,12 +29,9 @@ const size_t kMaxCFF2ArgumentStack = 513;
 //     an ordinary fonts, and could be dangerous: random, put, get, index, roll.
 //
 // Arguments:
+//  cff: parent OpenTypeCFF reference
 //  global_subrs_index: Global subroutines which could be called by a charstring
 //                      in |char_strings_index|.
-//  fd_select: A map from glyph # to font #.
-//  local_subrs_per_font: A list of Local Subrs associated with FDArrays. Can be
-//                        empty.
-//  local_subrs: A Local Subrs associated with Top DICT. Can be NULL.
 //  cff_table: A buffer which contains actual byte code of charstring, global
 //             subroutines and local subroutines.
 bool ValidateCFFCharStrings(
@@ -95,7 +92,17 @@ enum CharStringOperator {
   kFlex = (12 << 8) + 35,
   kHFlex1 = (12 << 8) + 36,
   kFlex1 = (12 << 8) + 37,
-  // Operators that are undocumented, such as 'blend', will be rejected.
+  // Operators that are undocumented will be rejected.
+};
+
+struct CharStringContext {
+  bool endchar_seen = false;
+  bool width_seen = false;
+  size_t num_stems = 0;
+  bool cff2 = false;
+  bool blend_seen = false;
+  bool vsindex_seen = false;
+  int32_t vsindex = 0;
 };
 
 }  // namespace ots

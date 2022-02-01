@@ -289,7 +289,69 @@ typedef struct {
   uint64_t extensions;
 } JxlHeaderExtensions;
 
-/** The header of one displayed frame. */
+/** Frame blend modes.
+ * If coalescing is enabled (default), this can be ignored.
+ */
+typedef enum {
+  JXL_BLEND_REPLACE = 0,
+  JXL_BLEND_ADD = 1,
+  JXL_BLEND_BLEND = 2,
+  JXL_BLEND_MULADD = 3,
+  JXL_BLEND_MUL = 4,
+} JxlBlendMode;
+
+/** The information about blending the color channels or a single extra channel.
+ * If coalescing is enabled (default), this can be ignored.
+ */
+typedef struct {
+  /** Blend mode.
+   * Always equal to JXL_BLEND_REPLACE if coalescing is enabled.
+   */
+  JxlBlendMode blendmode;
+  /** Reference frame ID to use as the 'bottom' layer (0-3).
+   */
+  uint32_t source;
+  /** Which extra channel to use as the 'alpha' channel for blend modes
+   * JXL_BLEND_BLEND and JXL_BLEND_MULADD.
+   */
+  uint32_t alpha;
+  /** Clamp values to [0,1] for the purpose of blending.
+   */
+  JXL_BOOL clamp;
+} JxlBlendInfo;
+
+/** The information about layers.
+ * If coalescing is enabled (default), this can be ignored.
+ */
+typedef struct {
+  /** Horizontal offset of the frame (can be negative, always zero if coalescing
+   * is enabled)
+   */
+  int32_t crop_x0;
+  /** Vertical offset of the frame (can be negative, always zero if coalescing
+   * is enabled)
+   */
+  int32_t crop_y0;
+  /** Width of the frame (number of columns, always equal to image width if
+   * coalescing is enabled)
+   */
+  uint32_t xsize;
+  /** Height of the frame (number of rows, always equal to image height if
+   * coalescing is enabled)
+   */
+  uint32_t ysize;
+  /** The blending info for the color channels. Blending info for extra channels
+   * has to be retrieved separately using JxlDecoderGetExtraChannelBlendInfo.
+   */
+  JxlBlendInfo blend_info;
+  /** After blending, save the frame as reference frame with this ID (0-3).
+   * Special case: if the frame duration is nonzero, ID 0 means "will not be
+   * referenced in the future".
+   */
+  uint32_t save_as_reference;
+} JxlLayerInfo;
+
+/** The header of one displayed frame or non-coalesced layer. */
 typedef struct {
   /** How long to wait after rendering in ticks. The duration in seconds of a
    * tick is given by tps_numerator and tps_denominator in JxlAnimationHeader.
@@ -314,6 +376,10 @@ typedef struct {
   /** Indicates this is the last animation frame.
    */
   JXL_BOOL is_last;
+
+  /** Information about the layer in case of no coalescing.
+   */
+  JxlLayerInfo layer_info;
 } JxlFrameHeader;
 
 #if defined(__cplusplus) || defined(c_plusplus)

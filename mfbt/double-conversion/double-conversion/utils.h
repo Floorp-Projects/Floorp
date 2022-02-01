@@ -32,12 +32,14 @@
 #include <cstring>
 
 #include "mozilla/Assertions.h"
+
 #ifndef DOUBLE_CONVERSION_ASSERT
 #define DOUBLE_CONVERSION_ASSERT(condition)         \
     MOZ_ASSERT(condition)
 #endif
 #ifndef DOUBLE_CONVERSION_UNIMPLEMENTED
-#define DOUBLE_CONVERSION_UNIMPLEMENTED() MOZ_CRASH()
+#define DOUBLE_CONVERSION_UNIMPLEMENTED() \
+    MOZ_CRASH("DOUBLE_CONVERSION_UNIMPLEMENTED")
 #endif
 #ifndef DOUBLE_CONVERSION_NO_RETURN
 #ifdef _MSC_VER
@@ -49,10 +51,11 @@
 #ifndef DOUBLE_CONVERSION_UNREACHABLE
 #ifdef _MSC_VER
 void DOUBLE_CONVERSION_NO_RETURN abort_noreturn();
-inline void abort_noreturn() { MOZ_CRASH(); }
+inline void abort_noreturn() { MOZ_CRASH("abort_noreturn"); }
 #define DOUBLE_CONVERSION_UNREACHABLE()   (abort_noreturn())
 #else
-#define DOUBLE_CONVERSION_UNREACHABLE()   MOZ_CRASH()
+#define DOUBLE_CONVERSION_UNREACHABLE()   \
+    MOZ_CRASH("DOUBLE_CONVERSION_UNREACHABLE")
 #endif
 #endif
 
@@ -108,6 +111,7 @@ int main(int argc, char** argv) {
     defined(__ARMEL__) || defined(__avr32__) || defined(_M_ARM) || defined(_M_ARM64) || \
     defined(__hppa__) || defined(__ia64__) || \
     defined(__mips__) || \
+    defined(__loongarch__) || \
     defined(__nios2__) || defined(__ghs) || \
     defined(__powerpc__) || defined(__ppc__) || defined(__ppc64__) || \
     defined(_POWER) || defined(_ARCH_PPC) || defined(_ARCH_PPC64) || \

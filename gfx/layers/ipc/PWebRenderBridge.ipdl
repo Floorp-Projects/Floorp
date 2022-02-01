@@ -68,6 +68,7 @@ parent:
   sync GetSnapshot(PTexture texture) returns (bool aNeedsYFlip);
   async SetLayersObserverEpoch(LayersObserverEpoch childEpoch);
   async ClearCachedResources();
+  async SetDefaultClearColor(uint32_t aColor);
   // Invalidate rendered frame
   async InvalidateRenderedFrame();
   // Schedule a composite if one isn't already scheduled.

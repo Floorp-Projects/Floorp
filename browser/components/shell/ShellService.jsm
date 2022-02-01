@@ -121,6 +121,38 @@ let ShellServiceInternal = {
   },
 
   /*
+   * Invoke the Windows Default Browser agent with the given options.
+   *
+   * Separated for easy stubbing in tests.
+   */
+  _callExternalDefaultBrowserAgent(options = {}) {
+    const wdba = Services.dirsvc.get("XREExeF", Ci.nsIFile);
+    wdba.leafName = "default-browser-agent.exe";
+    return Subprocess.call({
+      ...options,
+      command: options.command || wdba.path,
+    });
+  },
+
+  /*
+   * Check if UserChoice is impossible.
+   *
+   * Separated for easy stubbing in tests.
+   *
+   * @return string telemetry result like "Err*", or null if UserChoice
+   * is possible.
+   */
+  _userChoiceImpossibleTelemetryResult() {
+    if (!ShellService.checkAllProgIDsExist()) {
+      return "ErrProgID";
+    }
+    if (!ShellService.checkBrowserUserChoiceHashes()) {
+      return "ErrHash";
+    }
+    return null;
+  },
+
+  /*
    * Set the default browser through the UserChoice registry keys on Windows.
    *
    * NOTE: This does NOT open the System Settings app for manual selection
@@ -144,24 +176,24 @@ let ShellServiceInternal = {
     let telemetryResult = "ErrOther";
 
     try {
-      if (!ShellService.checkAllProgIDsExist()) {
-        telemetryResult = "ErrProgID";
+      telemetryResult =
+        this._userChoiceImpossibleTelemetryResult() ?? "ErrOther";
+      if (telemetryResult == "ErrProgID") {
         throw new Error("checkAllProgIDsExist() failed");
       }
-
-      if (!ShellService.checkBrowserUserChoiceHashes()) {
-        telemetryResult = "ErrHash";
+      if (telemetryResult == "ErrHash") {
         throw new Error("checkBrowserUserChoiceHashes() failed");
       }
 
-      const wdba = Services.dirsvc.get("XREExeF", Ci.nsIFile);
-      wdba.leafName = "default-browser-agent.exe";
       const aumi = XreDirProvider.getInstallHash();
 
       telemetryResult = "ErrLaunchExe";
-      const exeProcess = await Subprocess.call({
-        command: wdba.path,
-        arguments: ["set-default-browser-user-choice", aumi],
+      const exeArgs = ["set-default-browser-user-choice", aumi];
+      if (NimbusFeatures.shellService.getVariable("setDefaultPDFHandler")) {
+        exeArgs.push(".pdf");
+      }
+      const exeProcess = await this._callExternalDefaultBrowserAgent({
+        arguments: exeArgs,
       });
       telemetryResult = "ErrOther";
 
@@ -255,6 +287,21 @@ let ShellServiceInternal = {
     Services.telemetry
       .getHistogramById("BROWSER_SET_DEFAULT_ERROR")
       .add(setAsDefaultError);
+  },
+
+  /**
+   * Determine if we're the default handler for the given file extension (like
+   * ".pdf") or protocol (like "https").  Windows-only for now.
+   *
+   * @returns true if we are the default handler, false otherwise.
+   */
+  isDefaultHandlerFor(aFileExtensionOrProtocol) {
+    if (AppConstants.platform == "win") {
+      return this.shellService
+        .QueryInterface(Ci.nsIWindowsShellService)
+        .isDefaultHandlerFor(aFileExtensionOrProtocol);
+    }
+    return false;
   },
 
   /**

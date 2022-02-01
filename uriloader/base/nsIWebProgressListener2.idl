@@ -64,6 +64,6 @@ interface nsIWebProgressListener2 : nsIWebProgressListener {
    */
   boolean onRefreshAttempted(in nsIWebProgress aWebProgress,
                              in nsIURI aRefreshURI,
-                             in long aMillis,
+                             in unsigned long aMillis,
                              in boolean aSameURI);
 };

@@ -17,6 +17,7 @@
 
 // SIMD/multicore-friendly planar image representation with row accessors.
 
+#include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -102,7 +103,7 @@ struct ImageBase {
 #if defined(ADDRESS_SANITIZER) || defined(MEMORY_SANITIZER) || \
     defined(THREAD_SANITIZER)
     if (y >= ysize_) {
-      HWY_ABORT("Row(%zu) >= %u\n", y, ysize_);
+      HWY_ABORT("Row(%" PRIu64 ") >= %u\n", static_cast<uint64_t>(y), ysize_);
     }
 #endif
 
@@ -221,9 +222,14 @@ class Image3 {
 
   Image3(ImageT&& plane0, ImageT&& plane1, ImageT&& plane2) {
     if (!SameSize(plane0, plane1) || !SameSize(plane0, plane2)) {
-      HWY_ABORT("Not same size: %zu x %zu, %zu x %zu, %zu x %zu\n",
-                plane0.xsize(), plane0.ysize(), plane1.xsize(), plane1.ysize(),
-                plane2.xsize(), plane2.ysize());
+      HWY_ABORT("Not same size: %" PRIu64 " x %" PRIu64 ", %" PRIu64
+                " x %" PRIu64 ", %" PRIu64 " x %" PRIu64 "\n",
+                static_cast<uint64_t>(plane0.xsize()),
+                static_cast<uint64_t>(plane0.ysize()),
+                static_cast<uint64_t>(plane1.xsize()),
+                static_cast<uint64_t>(plane1.ysize()),
+                static_cast<uint64_t>(plane2.xsize()),
+                static_cast<uint64_t>(plane2.ysize()));
     }
     planes_[0] = std::move(plane0);
     planes_[1] = std::move(plane1);
@@ -288,7 +294,9 @@ class Image3 {
 #if defined(ADDRESS_SANITIZER) || defined(MEMORY_SANITIZER) || \
     defined(THREAD_SANITIZER)
     if (c >= kNumPlanes || y >= ysize()) {
-      HWY_ABORT("PlaneRow(%zu, %zu) >= %zu\n", c, y, ysize());
+      HWY_ABORT("PlaneRow(%" PRIu64 ", %" PRIu64 ") >= %" PRIu64 "\n",
+                static_cast<uint64_t>(c), static_cast<uint64_t>(y),
+                static_cast<uint64_t>(ysize()));
     }
 #endif
     // Use the first plane's stride because the compiler might not realize they

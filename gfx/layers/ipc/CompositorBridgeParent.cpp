@@ -241,6 +241,7 @@ void CompositorBridgeParent::FinishShutdown() {
   }
 
   // TODO: this should be empty by now...
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
   sIndirectLayerTrees.clear();
 }
 

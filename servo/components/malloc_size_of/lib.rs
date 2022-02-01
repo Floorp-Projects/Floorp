@@ -55,7 +55,6 @@ extern crate content_security_policy;
 extern crate crossbeam_channel;
 extern crate cssparser;
 extern crate euclid;
-extern crate hashglobe;
 #[cfg(feature = "servo")]
 extern crate hyper;
 #[cfg(feature = "servo")]
@@ -72,7 +71,6 @@ extern crate smallbitvec;
 extern crate smallvec;
 #[cfg(feature = "servo")]
 extern crate string_cache;
-extern crate thin_slice;
 #[cfg(feature = "servo")]
 extern crate time;
 #[cfg(feature = "url")]
@@ -247,24 +245,6 @@ impl<T: ?Sized> MallocShallowSizeOf for Box<T> {
 }
 
 impl<T: MallocSizeOf + ?Sized> MallocSizeOf for Box<T> {
-    fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
-        self.shallow_size_of(ops) + (**self).size_of(ops)
-    }
-}
-
-impl<T> MallocShallowSizeOf for thin_slice::ThinBoxedSlice<T> {
-    fn shallow_size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
-        let mut n = 0;
-        unsafe {
-            n += thin_slice::ThinBoxedSlice::spilled_storage(self)
-                .map_or(0, |ptr| ops.malloc_size_of(ptr));
-            n += ops.malloc_size_of(&**self);
-        }
-        n
-    }
-}
-
-impl<T: MallocSizeOf> MallocSizeOf for thin_slice::ThinBoxedSlice<T> {
     fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
         self.shallow_size_of(ops) + (**self).size_of(ops)
     }
@@ -487,8 +467,6 @@ macro_rules! malloc_size_of_hash_set {
 }
 
 malloc_size_of_hash_set!(std::collections::HashSet<T, S>);
-malloc_size_of_hash_set!(hashglobe::hash_set::HashSet<T, S>);
-malloc_size_of_hash_set!(hashglobe::fake::HashSet<T, S>);
 
 macro_rules! malloc_size_of_hash_map {
     ($ty:ty) => {
@@ -528,8 +506,6 @@ macro_rules! malloc_size_of_hash_map {
 }
 
 malloc_size_of_hash_map!(std::collections::HashMap<K, V, S>);
-malloc_size_of_hash_map!(hashglobe::hash_map::HashMap<K, V, S>);
-malloc_size_of_hash_map!(hashglobe::fake::HashMap<K, V, S>);
 
 impl<K, V> MallocShallowSizeOf for std::collections::BTreeMap<K, V>
 where

@@ -9,7 +9,7 @@ class CommandContext(object):
     """Holds run-time state so it can easily be passed to command providers."""
 
     def __init__(
-        self, cwd=None, settings=None, log_manager=None, commands=None, **kwargs
+        self, cwd: str, settings=None, log_manager=None, commands=None, **kwargs
     ):
         self.cwd = cwd
         self.settings = settings

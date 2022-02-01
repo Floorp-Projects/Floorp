@@ -198,6 +198,34 @@ add_task(async function test_addon_normalinstalled() {
   await addon.uninstall();
 });
 
+add_task(async function test_extensionsettings_string() {
+  await setupPolicyEngineWithJson({
+    policies: {
+      ExtensionSettings: '{"*": {"installation_mode": "blocked"}}',
+    },
+  });
+
+  let extensionSettings = Services.policies.getExtensionSettings("*");
+  equal(extensionSettings.installation_mode, "blocked");
+});
+
+add_task(async function test_extensionsettings_string() {
+  let restrictedDomains = Services.prefs.getCharPref(
+    "extensions.webextensions.restrictedDomains"
+  );
+  await setupPolicyEngineWithJson({
+    policies: {
+      ExtensionSettings:
+        '{"*": {"restricted_domains": ["example.com","example.org"]}}',
+    },
+  });
+
+  let newRestrictedDomains = Services.prefs.getCharPref(
+    "extensions.webextensions.restrictedDomains"
+  );
+  equal(newRestrictedDomains, restrictedDomains + ",example.com,example.org");
+});
+
 add_task(async function test_theme() {
   let themeFile = AddonTestUtils.createTempWebExtensionFile({
     manifest: {

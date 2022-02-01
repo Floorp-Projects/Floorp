@@ -137,7 +137,6 @@ class DMABufSurface {
 
  protected:
   virtual bool Create(const mozilla::layers::SurfaceDescriptor& aDesc) = 0;
-  bool FenceImportFromFd();
 
   void GlobalRefCountImport(int aFd);
   void GlobalRefCountDelete();

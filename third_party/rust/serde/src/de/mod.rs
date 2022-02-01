@@ -1007,7 +1007,7 @@ pub trait Deserializer<'de>: Sized {
     /// `Deserializer`.
     ///
     /// If the `Visitor` would benefit from taking ownership of `String` data,
-    /// indiciate this to the `Deserializer` by using `deserialize_string`
+    /// indicate this to the `Deserializer` by using `deserialize_string`
     /// instead.
     fn deserialize_str<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
@@ -1714,7 +1714,7 @@ pub trait SeqAccess<'de> {
     }
 }
 
-impl<'de, 'a, A> SeqAccess<'de> for &'a mut A
+impl<'de, 'a, A: ?Sized> SeqAccess<'de> for &'a mut A
 where
     A: SeqAccess<'de>,
 {
@@ -1867,7 +1867,7 @@ pub trait MapAccess<'de> {
     }
 }
 
-impl<'de, 'a, A> MapAccess<'de> for &'a mut A
+impl<'de, 'a, A: ?Sized> MapAccess<'de> for &'a mut A
 where
     A: MapAccess<'de>,
 {

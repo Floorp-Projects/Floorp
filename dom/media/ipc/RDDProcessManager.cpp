@@ -391,4 +391,14 @@ RefPtr<MemoryReportingProcess> RDDProcessManager::GetProcessMemoryReporter() {
   return new RDDMemoryReporter();
 }
 
+RefPtr<PRDDChild::TestTriggerMetricsPromise>
+RDDProcessManager::TestTriggerMetrics() {
+  if (!NS_WARN_IF(!mRDDChild)) {
+    return mRDDChild->SendTestTriggerMetrics();
+  }
+
+  return PRDDChild::TestTriggerMetricsPromise::CreateAndReject(
+      ipc::ResponseRejectReason::SendError, __func__);
+}
+
 }  // namespace mozilla

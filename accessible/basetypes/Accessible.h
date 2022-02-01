@@ -18,6 +18,8 @@ struct nsRoleMapEntry;
 namespace mozilla {
 namespace a11y {
 
+class AccAttributes;
+class AccGroupInfo;
 class HyperTextAccessibleBase;
 class LocalAccessible;
 class RemoteAccessible;
@@ -48,6 +50,19 @@ enum ENameValueFlag {
    * Tooltip was used as a name.
    */
   eNameFromTooltip
+};
+
+/**
+ * Group position (level, position in set and set size).
+ */
+struct GroupPos {
+  GroupPos() : level(0), posInSet(0), setSize(0) {}
+  GroupPos(int32_t aLevel, int32_t aPosInSet, int32_t aSetSize)
+      : level(aLevel), posInSet(aPosInSet), setSize(aSetSize) {}
+
+  int32_t level;
+  int32_t posInSet;
+  int32_t setSize;
 };
 
 class Accessible {
@@ -111,6 +126,11 @@ class Accessible {
   bool HasGenericType(AccGenericType aType) const;
 
   /**
+   * Return group position (level, position in set and set size).
+   */
+  virtual GroupPos GroupPosition();
+
+  /**
    * Return embedded accessible child at the given index.
    */
   virtual Accessible* EmbeddedChildAt(uint32_t aIndex) = 0;
@@ -163,9 +183,19 @@ class Accessible {
    */
   virtual uint32_t StartOffset();
 
+  /**
+   * Return object attributes for the accessible.
+   */
+  virtual already_AddRefed<AccAttributes> Attributes() = 0;
+
   // Methods that interact with content.
 
   virtual void TakeFocus() const = 0;
+
+  /**
+   * Return tag name of associated DOM node.
+   */
+  virtual nsAtom* TagName() const = 0;
 
   // Type "is" methods
 
@@ -268,6 +298,8 @@ class Accessible {
     return mType == eHTMLTextFieldType || mType == eHTMLTextPasswordFieldType;
   }
 
+  bool IsDateTimeField() const { return mType == eHTMLDateTimeFieldType; }
+
   virtual bool HasNumericValue() const = 0;
 
   // Remote/Local types
@@ -279,6 +311,42 @@ class Accessible {
   LocalAccessible* AsLocal();
 
   virtual HyperTextAccessibleBase* AsHyperTextBase() { return nullptr; }
+
+ protected:
+  // Some abstracted group utility methods.
+
+  /**
+   * Get ARIA group attributes.
+   */
+  virtual void ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
+                                 int32_t* aPosInSet) const = 0;
+
+  /**
+   * Return group info if there is an up-to-date version.
+   */
+  virtual AccGroupInfo* GetGroupInfo() const = 0;
+
+  /**
+   * Return group info or create and update.
+   */
+  virtual AccGroupInfo* GetOrCreateGroupInfo() = 0;
+
+  /*
+   * Return calculated group level based on accessible hierarchy.
+   *
+   * @param aFast  [in] Don't climb up tree. Calculate level from aria and
+   *                    roles.
+   */
+  virtual int32_t GetLevel(bool aFast) const;
+
+  /**
+   * Calculate position in group and group size ('posinset' and 'setsize') based
+   * on accessible hierarchy.
+   *
+   * @param  aPosInSet  [out] accessible position in the group
+   * @param  aSetSize   [out] the group size
+   */
+  virtual void GetPositionAndSetSize(int32_t* aPosInSet, int32_t* aSetSize);
 
  private:
   static const uint8_t kTypeBits = 6;
@@ -292,6 +360,7 @@ class Accessible {
   uint8_t mRoleMapEntryIndex;
 
   friend class DocAccessibleChildBase;
+  friend class AccGroupInfo;
 };
 
 }  // namespace a11y

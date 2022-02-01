@@ -335,7 +335,7 @@ MockCubeb* MockCubeb::AsMock(cubeb* aContext) {
 }
 
 int MockCubeb::EnumerateDevices(cubeb_device_type aType,
-                                cubeb_device_collection* collection) {
+                                cubeb_device_collection* aCollection) {
 #ifdef ANDROID
   EXPECT_TRUE(false) << "This is not to be called on Android.";
 #endif
@@ -346,23 +346,29 @@ int MockCubeb::EnumerateDevices(cubeb_device_type aType,
   if (aType & CUBEB_DEVICE_TYPE_OUTPUT) {
     count += mOutputDevices.Length();
   }
-  collection->device = new cubeb_device_info[count];
-  collection->count = count;
+  aCollection->device = new cubeb_device_info[count];
+  aCollection->count = count;
 
   uint32_t collection_index = 0;
   if (aType & CUBEB_DEVICE_TYPE_INPUT) {
     for (auto& device : mInputDevices) {
-      collection->device[collection_index] = device;
+      aCollection->device[collection_index] = device;
       collection_index++;
     }
   }
   if (aType & CUBEB_DEVICE_TYPE_OUTPUT) {
     for (auto& device : mOutputDevices) {
-      collection->device[collection_index] = device;
+      aCollection->device[collection_index] = device;
       collection_index++;
     }
   }
 
+  return CUBEB_OK;
+}
+
+int MockCubeb::DestroyDeviceCollection(cubeb_device_collection* aCollection) {
+  delete[] aCollection->device;
+  aCollection->count = 0;
   return CUBEB_OK;
 }
 

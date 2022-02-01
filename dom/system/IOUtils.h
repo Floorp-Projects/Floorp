@@ -124,6 +124,29 @@ class IOUtils final {
   static already_AddRefed<Promise> Exists(GlobalObject& aGlobal,
                                           const nsAString& aPath);
 
+#if defined(XP_WIN)
+  static already_AddRefed<Promise> GetWindowsAttributes(GlobalObject& aGlobal,
+                                                        const nsAString& aPath);
+
+  static already_AddRefed<Promise> SetWindowsAttributes(
+      GlobalObject& aGlobal, const nsAString& aPath,
+      const mozilla::dom::WindowsFileAttributes& aAttrs);
+#elif defined(XP_MACOSX)
+  static already_AddRefed<Promise> HasMacXAttr(GlobalObject& aGlobal,
+                                               const nsAString& aPath,
+                                               const nsACString& aAttr);
+  static already_AddRefed<Promise> GetMacXAttr(GlobalObject& aGlobal,
+                                               const nsAString& aPath,
+                                               const nsACString& aAttr);
+  static already_AddRefed<Promise> SetMacXAttr(GlobalObject& aGlobal,
+                                               const nsAString& aPath,
+                                               const nsACString& aAttr,
+                                               const Uint8Array& aValue);
+  static already_AddRefed<Promise> DelMacXAttr(GlobalObject& aGlobal,
+                                               const nsAString& aPath,
+                                               const nsACString& aAttr);
+#endif
+
   static void GetProfileBeforeChange(GlobalObject& aGlobal,
                                      JS::MutableHandle<JS::Value>,
                                      ErrorResult& aRv);
@@ -157,6 +180,10 @@ class IOUtils final {
   class MozLZ4;
   class EventQueue;
   class State;
+
+  template <typename Fn>
+  static already_AddRefed<Promise> WithPromiseAndState(GlobalObject& aGlobal,
+                                                       Fn aFn);
 
   /**
    * Dispatch a task on the event queue and resolve or reject the associated
@@ -367,6 +394,38 @@ class IOUtils final {
    * @return Whether or not the file exists.
    */
   static Result<bool, IOError> ExistsSync(nsIFile* aFile);
+
+#if defined(XP_WIN)
+  /**
+   * Return the Windows-specific attributes of the file.
+   *
+   * @param aFile The location of the file.
+   *
+   * @return The Windows-specific attributes of the file.
+   */
+  static Result<uint32_t, IOError> GetWindowsAttributesSync(nsIFile* aFile);
+
+  /**
+   * Set the Windows-specific attributes of the file.
+   *
+   * @param aFile  The location of the file.
+   * @param aAttrs The attributes to set on the file.
+   *
+   * @return |Ok| if the attributes were successfully set, or an error.
+   */
+  static Result<Ok, IOError> SetWindowsAttributesSync(
+      nsIFile* aFile, const uint32_t aSetAttrs, const uint32_t aClearAttrs);
+#elif defined(XP_MACOSX)
+  static Result<bool, IOError> HasMacXAttrSync(nsIFile* aFile,
+                                               const nsCString& aAttr);
+  static Result<nsTArray<uint8_t>, IOError> GetMacXAttrSync(
+      nsIFile* aFile, const nsCString& aAttr);
+  static Result<Ok, IOError> SetMacXAttrSync(nsIFile* aFile,
+                                             const nsCString& aAttr,
+                                             const nsTArray<uint8_t>& aValue);
+  static Result<Ok, IOError> DelMacXAttrSync(nsIFile* aFile,
+                                             const nsCString& aAttr);
+#endif
 
   enum class EventQueueStatus {
     Uninitialized,

@@ -421,6 +421,27 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
   }
 }
 
+void GCSchedulingState::updateHighFrequencyMode(
+    const mozilla::TimeStamp& lastGCTime, const mozilla::TimeStamp& currentTime,
+    const GCSchedulingTunables& tunables) {
+  if (js::SupportDifferentialTesting()) {
+    return;
+  }
+
+  inHighFrequencyGCMode_ =
+      !lastGCTime.IsNull() &&
+      lastGCTime + tunables.highFrequencyThreshold() > currentTime;
+}
+
+void GCSchedulingState::updateHighFrequencyModeForReason(JS::GCReason reason) {
+  // These reason indicate that the embedding isn't triggering GC slices often
+  // enough and allocation rate is high.
+  if (reason == JS::GCReason::ALLOC_TRIGGER ||
+      reason == JS::GCReason::TOO_MUCH_MALLOC) {
+    inHighFrequencyGCMode_ = true;
+  }
+}
+
 // GC thresholds may exceed the range of size_t on 32-bit platforms, so these
 // are calculated using 64-bit integers and clamped.
 static inline size_t ToClampedSize(uint64_t bytes) {

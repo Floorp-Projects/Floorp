@@ -111,12 +111,6 @@ class IdleSchedulerParent final
   static uint32_t sMaxConcurrentGCs;
   static uint32_t sActiveGCs;
 
-  // True if we should record some telemetry for GCs in the next Schedule().
-  // This is set to true by either requesting a GC job or scheduling a GC job.
-  static bool sRecordGCTelemetry;
-  // The current number of waiting GCs.
-  static uint32_t sNumWaitingGC;
-
   // Counting all the child processes which have at least one prioritized
   // operation.
   static uint32_t sChildProcessesRunningPrioritizedOperation;

@@ -86,6 +86,8 @@ class MIDIAccess final : public DOMEventTargetHelper,
   void Shutdown();
   IMPL_EVENT_HANDLER(statechange);
 
+  void DisconnectFromOwner() override;
+
  private:
   MIDIAccess(nsPIDOMWindowInner* aWindow, bool aSysexEnabled,
              Promise* aAccessPromise);

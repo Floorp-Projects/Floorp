@@ -1,0 +1,20 @@
+{
+  "header-main": {
+    "message": "Experiments　"
+  },
+    "exper": {
+      "message": "Change Floorp User Agent "
+  },
+    "info":{
+      "message":"Add a string to Floorp's user agent that identifies it as Floorp, such as Floorp/8.3.6. By default, this is the same as Firefox."
+  },
+    "True":{
+      "message":"Disable"
+  },
+    "False":{
+      "message":"Enable"
+  },
+    "Feedback": {
+      "message": "Send Feedback"
+  }
+}

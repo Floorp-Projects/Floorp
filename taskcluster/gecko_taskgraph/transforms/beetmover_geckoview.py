@@ -13,7 +13,10 @@ from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.beetmover import (
     craft_release_properties as beetmover_craft_release_properties,
 )
-from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
+from gecko_taskgraph.util.attributes import (
+    copy_attributes_from_dependent_job,
+    release_level,
+)
 from gecko_taskgraph.util.declarative_artifacts import (
     get_geckoview_template_vars,
     get_geckoview_upstream_artifacts,
@@ -63,7 +66,7 @@ def resolve_keys(config, jobs):
             job,
             "bucket-scope",
             item_name=job["label"],
-            **{"release-level": config.params.release_level()},
+            **{"release-level": release_level(config.params["project"])},
         )
         yield job
 

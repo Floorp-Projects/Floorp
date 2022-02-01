@@ -69,6 +69,7 @@ elif CONFIG["OS_TARGET"] == "SunOS":
 elif CONFIG["OS_TARGET"] == "WINNT":
     OS_LIBS += [
         "advapi32",
+        "wsock32",
         "ws2_32",
         "mswsock",
         "winmm",

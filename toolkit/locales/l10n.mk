@@ -137,10 +137,6 @@ endif
 	$(NSINSTALL) -D $(DIST)/l10n-stage/$(PKG_PATH)
 	(cd $(DIST)/l10n-stage; \
 	  $(MAKE_PACKAGE))
-ifdef MOZ_MAKE_COMPLETE_MAR
-	$(MAKE) -C $(MOZDEPTH)/tools/update-packaging full-update AB_CD=$(AB_CD) \
-	  PACKAGE_BASE_DIR='$(ABS_DIST)/l10n-stage'
-endif
 # packaging done, undo l10n stuff
 ifneq (en,$(LPROJ_ROOT))
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

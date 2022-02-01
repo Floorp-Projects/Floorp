@@ -179,7 +179,7 @@ void MediaTransportHandlerIPC::SetProxyConfig(
 
 void MediaTransportHandlerIPC::EnsureProvisionalTransport(
     const std::string& aTransportId, const std::string& aLocalUfrag,
-    const std::string& aLocalPwd, size_t aComponentCount) {
+    const std::string& aLocalPwd, int aComponentCount) {
   mInitPromise->Then(
       mCallbackThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerIPC>(this)](bool /*dummy*/) {

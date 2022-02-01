@@ -196,7 +196,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
   }
   mLastPaintBounds = mBounds;
 
-#ifdef MOZ_XUL
   if (!aDC && (renderer->GetBackendType() == LayersBackend::LAYERS_NONE) &&
       (eTransparencyTransparent == mTransparencyMode)) {
     // For layered translucent windows all drawing should go to memory DC and no
@@ -213,16 +212,11 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
     // GetLayerManager().
     aDC = mBasicLayersSurface->GetTransparentDC();
   }
-#endif
 
   HDC hDC = aDC ? aDC : (::BeginPaint(mWnd, &ps));
   mPaintDC = hDC;
 
-#ifdef MOZ_XUL
   bool forceRepaint = aDC || (eTransparencyTransparent == mTransparencyMode);
-#else
-  bool forceRepaint = nullptr != aDC;
-#endif
   LayoutDeviceIntRegion region = GetRegionToPaint(forceRepaint, ps, hDC);
 
   if (knowsCompositor && layerManager) {
@@ -263,7 +257,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
       case LayersBackend::LAYERS_NONE: {
         RefPtr<gfxASurface> targetSurface;
 
-#if defined(MOZ_XUL)
         // don't support transparency for non-GDI rendering, for now
         if (eTransparencyTransparent == mTransparencyMode) {
           // This mutex needs to be held when EnsureTransparentSurface is
@@ -271,7 +264,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
           MutexAutoLock lock(mBasicLayersSurface->GetTransparentSurfaceLock());
           targetSurface = mBasicLayersSurface->EnsureTransparentSurface();
         }
-#endif
 
         RefPtr<gfxWindowsSurface> targetSurfaceWin;
         if (!targetSurface) {
@@ -300,7 +292,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
 
         // don't need to double buffer with anything but GDI
         BufferMode doubleBuffering = mozilla::layers::BufferMode::BUFFER_NONE;
-#ifdef MOZ_XUL
         switch (mTransparencyMode) {
           case eTransparencyGlass:
           case eTransparencyBorderlessGlass:
@@ -315,9 +306,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
                 Rect(0.f, 0.f, dt->GetSize().width, dt->GetSize().height));
             break;
         }
-#else
-        doubleBuffering = mozilla::layers::BufferMode::BUFFERED;
-#endif
 
         RefPtr<gfxContext> thebesContext = gfxContext::CreateOrNull(dt);
         MOZ_ASSERT(thebesContext);  // already checked draw target above
@@ -328,14 +316,12 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
           result = listener->PaintWindow(this, region);
         }
 
-#ifdef MOZ_XUL
         if (eTransparencyTransparent == mTransparencyMode) {
           // Data from offscreen drawing surface was copied to memory bitmap of
           // transparent bitmap. Now it can be read from memory bitmap to apply
           // alpha channel and after that displayed on the screen.
           mBasicLayersSurface->RedrawTransparentWindow();
         }
-#endif
       } break;
       case LayersBackend::LAYERS_WR: {
         result = listener->PaintWindow(this, region);

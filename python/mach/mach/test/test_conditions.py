@@ -5,7 +5,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-import os
+from pathlib import Path
 
 from buildconfig import topsrcdir
 from mach.base import MachError
@@ -44,7 +44,9 @@ class TestConditions(TestBase):
     """Tests for conditionally filtering commands."""
 
     def _run(self, args, context_handler=_populate_bare_context):
-        return self._run_mach(args, "conditions.py", context_handler=context_handler)
+        return self._run_mach(
+            args, Path("conditions.py"), context_handler=context_handler
+        )
 
     def test_conditions_pass(self):
         """Test that a command which passes its conditions is runnable."""
@@ -78,12 +80,12 @@ class TestConditions(TestBase):
     def test_invalid_type(self):
         """Test that a condition which is not callable raises an exception."""
 
-        m = Mach(os.getcwd())
+        m = Mach(str(Path.cwd()))
         m.define_category("testing", "Mach unittest", "Testing for mach core", 10)
         self.assertRaises(
             MachError,
             m.load_commands_from_file,
-            os.path.join(PROVIDER_DIR, "conditions_invalid.py"),
+            PROVIDER_DIR / "conditions_invalid.py",
         )
 
     def test_help_message(self):

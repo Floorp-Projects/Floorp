@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<body>
+<script>
+let channel = new MessageChannel();
+channel.port1.onmessage = event => {
+    if (event.data === 'intercepted') {
+        const iframe = document.querySelector('iframe');
+        iframe.sandbox = '';
+        navigator.serviceWorker.controller.postMessage({ type: 'ack' });
+    }
+};
+navigator.serviceWorker.controller.postMessage({ type: 'register', port: channel.port2 }, [channel.port2]);
+</script>
+<iframe src='inner'></iframe>
+</body>

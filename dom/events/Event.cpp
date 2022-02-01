@@ -303,6 +303,36 @@ EventTarget* Event::GetComposedTarget() const {
 
 void Event::SetTrusted(bool aTrusted) { mEvent->mFlags.mIsTrusted = aTrusted; }
 
+bool Event::ShouldIgnoreChromeEventTargetListener() const {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!XRE_IsParentProcess()) {
+    return false;
+  }
+  if (EventTarget* currentTarget = GetCurrentTarget();
+      NS_WARN_IF(!currentTarget) || !currentTarget->IsRootWindow()) {
+    return false;
+  }
+  EventTarget* et = GetOriginalTarget();
+  if (NS_WARN_IF(!et)) {
+    return false;
+  }
+  nsIGlobalObject* global = et->GetOwnerGlobal();
+  if (NS_WARN_IF(!global)) {
+    return false;
+  }
+  nsPIDOMWindowInner* win = global->AsInnerWindow();
+  if (NS_WARN_IF(!win)) {
+    return false;
+  }
+  BrowsingContext* bc = win->GetBrowsingContext();
+  if (NS_WARN_IF(!bc)) {
+    return false;
+  }
+  // If this is a content event on an nsWindowRoot, then we also handle this in
+  // InProcessBrowserChildMessageManager, so we can ignore this event.
+  return bc->IsContent();
+}
+
 bool Event::Init(mozilla::dom::EventTarget* aGlobal) {
   if (!mIsMainThreadEvent) {
     return IsCurrentThreadRunningChromeWorker();

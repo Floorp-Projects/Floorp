@@ -16,10 +16,6 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
 const PLAYER_URI = "chrome://global/content/pictureinpicture/player.xhtml";
 var PLAYER_FEATURES =
   "chrome,titlebar=yes,alwaysontop,lockaspectratio,resizable";
@@ -29,8 +25,6 @@ if (!AppConstants.MOZ_WIDGET_GTK) {
 }
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 const PIP_ENABLED_PREF = "media.videocontrols.picture-in-picture.enabled";
-const MULTI_PIP_ENABLED_PREF =
-  "media.videocontrols.picture-in-picture.allow-multiple";
 const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";
 const TOGGLE_POSITION_PREF =
@@ -100,12 +94,7 @@ class PictureInPictureParent extends JSWindowActorParent {
          * Content has requested that its Picture in Picture window go away.
          */
         let reason = aMessage.data.reason;
-
-        if (PictureInPicture.isMultiPipEnabled) {
-          PictureInPicture.closeSinglePipWindow({ reason, actorRef: this });
-        } else {
-          PictureInPicture.closeAllPipWindows({ reason });
-        }
+        PictureInPicture.closeSinglePipWindow({ reason, actorRef: this });
         break;
       }
       case "PictureInPicture:Playing": {
@@ -312,35 +301,6 @@ var PictureInPicture = {
   },
 
   /**
-   * Find and close any pre-existing Picture in Picture windows. Used exclusively
-   * when multiple PiP window support is turned off. All windows can be closed because it
-   * is assumed that only 1 window is open when it is called.
-   *
-   * @param {Object} closeData
-   *   Additional data required to complete a close operation on a PiP window
-   * @param {string} closeData.reason
-   *   The reason why this PiP is being closed
-   */
-  async closeAllPipWindows(closeData) {
-    const { reason } = closeData;
-
-    // This uses an enumerator, but there really should only be one of
-    // these things.
-    for (let win of Services.wm.getEnumerator(WINDOW_TYPE)) {
-      if (win.closed) {
-        continue;
-      }
-      this._focusPipBrowserWindow(win);
-      let closedPromise = new Promise(resolve => {
-        win.addEventListener("unload", resolve, { once: true });
-      });
-      gCloseReasons.set(win, reason);
-      win.close();
-      await closedPromise;
-    }
-  },
-
-  /**
    * A request has come up from content to open a Picture in Picture
    * window.
    *
@@ -362,18 +322,7 @@ var PictureInPicture = {
    *   the player component inside it has finished loading.
    */
   async handlePictureInPictureRequest(wgp, videoData) {
-    if (!this.isMultiPipEnabled) {
-      // If there's a pre-existing PiP window, close it first if multiple
-      // pips are disabled
-      await this.closeAllPipWindows({ reason: "new-pip" });
-
-      gCurrentPlayerCount = 1;
-    } else {
-      // track specific number of open pip players if multi pip is
-      // enabled
-
-      gCurrentPlayerCount += 1;
-    }
+    gCurrentPlayerCount += 1;
 
     Services.telemetry.scalarSetMaximum(
       "pictureinpicture.most_concurrent_players",
@@ -918,10 +867,3 @@ var PictureInPicture = {
     return { top, left, width, height };
   },
 };
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  PictureInPicture,
-  "isMultiPipEnabled",
-  MULTI_PIP_ENABLED_PREF,
-  false
-);

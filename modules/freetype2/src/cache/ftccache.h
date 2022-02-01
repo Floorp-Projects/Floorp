@@ -251,7 +251,7 @@ FT_BEGIN_HEADER
           goto NewNode_;                                                 \
         }                                                                \
         else                                                             \
-          _pnode = &((*_pnode)->link);                                   \
+          _pnode = &(*_pnode)->link;                                     \
       }                                                                  \
     }                                                                    \
                                                                          \

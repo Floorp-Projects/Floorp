@@ -2,4 +2,4 @@
 
 gczeal(0);
 startgc(45);
-offThreadCompileScript("print(1)");
+offThreadCompileToStencil("print(1)");

@@ -25,12 +25,6 @@ async function waitForUrl(url, toolbox, browserTab, win) {
 
 // Test that ensures the remote page can go forward and back via UI buttons
 add_task(async function() {
-  // Disable bfcache for Fission for now.
-  // If Fission is disabled, the pref is no-op.
-  await SpecialPowers.pushPrefEnv({
-    set: [["fission.bfcacheInParent", false]],
-  });
-
   const browserTab = await addTab(ORIGINAL_URL);
 
   const { document, tab, window } = await openAboutDebugging();
@@ -48,17 +42,23 @@ add_task(async function() {
   const toolbox = getToolbox(devtoolsWindow);
 
   info("Navigating to another URL");
+  let onTargetSwitched = toolbox.commands.targetCommand.once("switched-target");
   const urlInput = devtoolsDocument.querySelector(".devtools-textinput");
   await synthesizeUrlKeyInput(devToolsToolbox, urlInput, OTHER_URL);
   await waitForUrl(OTHER_URL, toolbox, browserTab, window);
+  await onTargetSwitched;
 
   info("Clicking back button");
+  onTargetSwitched = toolbox.commands.targetCommand.once("switched-target");
   devtoolsDocument.querySelector(".qa-back-button").click();
   await waitForUrl(ORIGINAL_URL, toolbox, browserTab, window);
+  await onTargetSwitched;
 
   info("Clicking the forward button");
+  onTargetSwitched = toolbox.commands.targetCommand.once("switched-target");
   devtoolsDocument.querySelector(".qa-forward-button").click();
   await waitForUrl(OTHER_URL, toolbox, browserTab, window);
+  await onTargetSwitched;
 
   ok(true, "Clicking back and forward works!");
 });

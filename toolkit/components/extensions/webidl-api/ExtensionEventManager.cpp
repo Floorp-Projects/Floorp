@@ -112,6 +112,10 @@ void ExtensionEventManager::AddListener(
 
   auto request = SendAddListener(mEventName);
   request->Run(mGlobal, aCx, {}, wrappedCb, aRv);
+
+  if (!aRv.Failed() && mAPIObjectType.IsEmpty()) {
+    mExtensionBrowser->TrackWakeupEventListener(aCx, mAPINamespace, mEventName);
+  }
 }
 
 void ExtensionEventManager::RemoveListener(dom::Function& aCallback,
@@ -137,6 +141,11 @@ void ExtensionEventManager::RemoveListener(dom::Function& aCallback,
 
   if (NS_WARN_IF(aRv.Failed())) {
     return;
+  }
+
+  if (mAPIObjectType.IsEmpty()) {
+    mExtensionBrowser->UntrackWakeupEventListener(cx, mAPINamespace,
+                                                  mEventName);
   }
 
   mListeners.remove(cb);

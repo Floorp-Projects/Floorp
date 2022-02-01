@@ -168,10 +168,6 @@ class BackgroundChildImpl : public PBackgroundChild,
 
   virtual bool DeallocPCamerasChild(PCamerasChild* aActor) override;
 
-  virtual PVsyncChild* AllocPVsyncChild() override;
-
-  virtual bool DeallocPVsyncChild(PVsyncChild* aActor) override;
-
   virtual PUDPSocketChild* AllocPUDPSocketChild(
       const Maybe<PrincipalInfo>& aPrincipalInfo,
       const nsCString& aFilter) override;

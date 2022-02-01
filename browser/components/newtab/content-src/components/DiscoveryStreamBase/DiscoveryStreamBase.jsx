@@ -158,6 +158,8 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             link_text={component.header && component.header.link_text}
             link_url={component.header && component.header.link_url}
             icon={component.header && component.header.icon}
+            essentialReadsHeader={component.essentialReadsHeader}
+            editorsPicksHeader={component.editorsPicksHeader}
           />
         );
       case "SectionTitle":
@@ -209,7 +211,16 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             dispatch={this.props.dispatch}
             items={component.properties.items}
             compact={component.properties.compact}
-            include_descriptions={!component.properties.compact}
+            hideDescriptions={component.properties.hideDescriptions}
+            compactGrid={component.properties.compactGrid}
+            compactImages={component.properties.compactImages}
+            imageGradient={component.properties.imageGradient}
+            newSponsoredLabel={component.properties.newSponsoredLabel}
+            titleLines={component.properties.titleLines}
+            descLines={component.properties.descLines}
+            essentialReadsHeader={component.properties.essentialReadsHeader}
+            editorsPicksHeader={component.properties.editorsPicksHeader}
+            readTime={component.properties.readTime}
             loadMoreEnabled={component.loadMoreEnabled}
             lastCardMessageEnabled={component.lastCardMessageEnabled}
             saveToPocketCard={component.saveToPocketCard}
@@ -234,11 +245,12 @@ export class _DiscoveryStreamBase extends React.PureComponent {
   }
 
   render() {
+    const { locale } = this.props;
     // Select layout render data by adding spocs and position to recommendations
     const { layoutRender } = selectLayoutRender({
       state: this.props.DiscoveryStream,
       prefs: this.props.Prefs.values,
-      locale: this.props.locale,
+      locale,
     });
     const { config } = this.props.DiscoveryStream;
 
@@ -282,7 +294,28 @@ export class _DiscoveryStreamBase extends React.PureComponent {
         title: topStories.title,
       },
     };
+
     const privacyLinkComponent = extractComponent("PrivacyLink");
+    let learnMore = {
+      link: {
+        href: message.header.link_url,
+        message: message.header.link_text,
+      },
+    };
+    let sectionTitle = message.header.title;
+    let subTitle = "";
+
+    // If we're in one of these experiments, override the default message.
+    // For now this is English only.
+    if (message.essentialReadsHeader || message.editorsPicksHeader) {
+      learnMore = null;
+      subTitle = "Recommended By Pocket";
+      if (message.essentialReadsHeader) {
+        sectionTitle = "Today’s Essential Reads";
+      } else if (message.editorsPicksHeader) {
+        sectionTitle = "Editor’s Picks";
+      }
+    }
 
     // Render a DS-style TopSites then the rest if any in a collapsible section
     return (
@@ -311,15 +344,11 @@ export class _DiscoveryStreamBase extends React.PureComponent {
             dispatch={this.props.dispatch}
             id={topStories.id}
             isFixed={true}
-            learnMore={{
-              link: {
-                href: message.header.link_url,
-                message: message.header.link_text,
-              },
-            }}
+            learnMore={learnMore}
             privacyNoticeURL={topStories.privacyNoticeURL}
             showPrefName={topStories.pref.feed}
-            title={message.header.title}
+            title={sectionTitle}
+            subTitle={subTitle}
             eventSource="CARDGRID"
           >
             {this.renderLayout(layoutRender)}

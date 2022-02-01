@@ -1824,12 +1824,10 @@ pub(crate) mod parsing {
 
     #[cfg(feature = "full")]
     fn path_or_macro_or_struct(input: ParseStream, allow_struct: AllowStruct) -> Result<Expr> {
+        let begin = input.fork();
         let expr: ExprPath = input.parse()?;
-        if expr.qself.is_some() {
-            return Ok(Expr::Path(expr));
-        }
 
-        if input.peek(Token![!]) && !input.peek(Token![!=]) {
+        if expr.qself.is_none() && input.peek(Token![!]) && !input.peek(Token![!=]) {
             let mut contains_arguments = false;
             for segment in &expr.path.segments {
                 match segment.arguments {
@@ -1857,7 +1855,12 @@ pub(crate) mod parsing {
 
         if allow_struct.0 && input.peek(token::Brace) {
             let outer_attrs = Vec::new();
-            expr_struct_helper(input, outer_attrs, expr.path).map(Expr::Struct)
+            let expr_struct = expr_struct_helper(input, outer_attrs, expr.path)?;
+            if expr.qself.is_some() {
+                Ok(Expr::Verbatim(verbatim::between(begin, input)))
+            } else {
+                Ok(Expr::Struct(expr_struct))
+            }
         } else {
             Ok(Expr::Path(expr))
         }

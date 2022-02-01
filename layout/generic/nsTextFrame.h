@@ -309,7 +309,7 @@ class nsTextFrame : public nsIFrame {
   void List(FILE* out = stderr, const char* aPrefix = "",
             ListFlags aFlags = ListFlags()) const final;
   nsresult GetFrameName(nsAString& aResult) const final;
-  void ToCString(nsCString& aBuf, int32_t* aTotalContentLength) const;
+  void ToCString(nsCString& aBuf) const;
   void ListTextRuns(FILE* out, nsTHashSet<const void*>& aSeen) const final;
 #endif
 

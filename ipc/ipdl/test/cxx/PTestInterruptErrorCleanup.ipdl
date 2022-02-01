@@ -3,8 +3,8 @@ namespace _ipdltest {
 
 intr protocol PTestInterruptErrorCleanup {
 child:
-    intr Error();
-    intr __delete__();
+    [LegacyIntr] intr Error();
+    [LegacyIntr] intr __delete__();
 };
 
 } // namespace _ipdltest

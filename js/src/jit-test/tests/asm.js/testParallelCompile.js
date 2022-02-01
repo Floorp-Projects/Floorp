@@ -12,9 +12,10 @@ module += "return f0";
 var script = "(function() {\n" + module + "})";
 
 for (var i = 0; i < 10; i++) {
-    offThreadCompileScript(script);
+    offThreadCompileToStencil(script);
     var f = new Function(module);
-    var g = runOffThreadScript();
+    var stencil = finishOffThreadCompileToStencil();
+    var g = evalStencil(stencil);
     assertEq(isAsmJSModule(f), true);
     assertEq(isAsmJSModule(g), true);
 }

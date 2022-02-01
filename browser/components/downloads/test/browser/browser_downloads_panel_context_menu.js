@@ -315,11 +315,11 @@ async function testDownloadContextMenu({
 
   // open panel
   await task_openPanel();
-  await TestUtils.waitForCondition(
-    () =>
-      document.getElementById("downloadsListBox").childElementCount ==
-      downloads.length
-  );
+  await TestUtils.waitForCondition(() => {
+    let downloadsListBox = document.getElementById("downloadsListBox");
+    downloadsListBox.removeAttribute("disabled");
+    return downloadsListBox.childElementCount == downloads.length;
+  });
 
   info("trigger the context menu");
   let itemTarget = document.querySelector(

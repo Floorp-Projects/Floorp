@@ -8,7 +8,7 @@ use std::{
 };
 
 use crate::errors::L10nRegistrySetupError;
-use crate::source::FileSource;
+use crate::source::{FileSource, ResourceId};
 
 use crate::env::ErrorReporter;
 use crate::fluent::FluentBundle;
@@ -68,10 +68,10 @@ impl<'a, B> L10nRegistryLocked<'a, B> {
         &'l self,
         metasource: usize,
         langid: &'l LanguageIdentifier,
-        res_id: &'l str,
+        resource_id: &'l ResourceId,
     ) -> impl Iterator<Item = &FileSource> {
         self.iter(metasource)
-            .filter(move |source| source.has_file(langid, res_id) != Some(false))
+            .filter(move |source| source.has_file(langid, resource_id) != Some(false))
     }
 }
 
@@ -247,15 +247,21 @@ where
     type Stream = GenerateBundles<P, B>;
     type LocalesIter = std::vec::IntoIter<LanguageIdentifier>;
 
-    fn bundles_iter(&self, locales: Self::LocalesIter, resource_ids: Vec<String>) -> Self::Iter {
+    fn bundles_iter(
+        &self,
+        locales: Self::LocalesIter,
+        resource_ids: Vec<ResourceId>,
+    ) -> Self::Iter {
+        let resource_ids = resource_ids.into_iter().collect();
         self.generate_bundles_sync(locales, resource_ids)
     }
 
     fn bundles_stream(
         &self,
         locales: Self::LocalesIter,
-        resource_ids: Vec<String>,
+        resource_ids: Vec<ResourceId>,
     ) -> Self::Stream {
+        let resource_ids = resource_ids.into_iter().collect();
         self.generate_bundles(locales, resource_ids)
     }
 }

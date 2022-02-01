@@ -2582,11 +2582,6 @@ class nsLayoutUtils {
 #endif
 
   /**
-   * Helper method to get touch action behaviour from the frame
-   */
-  static mozilla::StyleTouchAction GetTouchActionFromFrame(nsIFrame* aFrame);
-
-  /**
    * Helper method to transform |aBounds| from aFrame to aAncestorFrame,
    * and combine it with |aPreciseTargetDest| if it is axis-aligned, or
    * combine it with |aImpreciseTargetDest| if not. The transformed rect is

@@ -18,13 +18,24 @@
 
 mod buf_impl;
 mod buf_mut;
-pub mod ext;
+mod chain;
 mod iter;
+mod limit;
+#[cfg(feature = "std")]
+mod reader;
+mod take;
+mod uninit_slice;
 mod vec_deque;
+#[cfg(feature = "std")]
+mod writer;
 
 pub use self::buf_impl::Buf;
 pub use self::buf_mut::BufMut;
-#[cfg(feature = "std")]
-pub use self::buf_mut::IoSliceMut;
-pub use self::ext::{BufExt, BufMutExt};
+pub use self::chain::Chain;
 pub use self::iter::IntoIter;
+pub use self::limit::Limit;
+pub use self::take::Take;
+pub use self::uninit_slice::UninitSlice;
+
+#[cfg(feature = "std")]
+pub use self::{reader::Reader, writer::Writer};

@@ -3073,6 +3073,16 @@ template <typename Unit, class AnyCharsAccess>
         break;
 
       case '#': {
+#ifdef ENABLE_RECORD_TUPLE
+        if (matchCodeUnit('{')) {
+          simpleKind = TokenKind::HashCurly;
+          break;
+        }
+        if (matchCodeUnit('[')) {
+          simpleKind = TokenKind::HashBracket;
+          break;
+        }
+#endif
         if (options().privateClassFields) {
           TokenStart start(this->sourceUnits, -1);
           const Unit* identStart =

@@ -3,7 +3,6 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["Glean"]);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
@@ -22,8 +21,7 @@ add_task(
     do_get_profile();
 
     // We need to initialize it once, otherwise operations will be stuck in the pre-init queue.
-    let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
-    FOG.initializeFOG();
+    Services.fog.initializeFOG();
   }
 );
 
@@ -81,8 +79,7 @@ add_task(
   { skip_if: () => !runningInParent },
   async function test_child_metrics() {
     await run_test_in_child("test_GleanIPC.js");
-    let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
-    await FOG.testFlushAllChildren();
+    await Services.fog.testFlushAllChildren();
 
     Assert.equal(Glean.testOnly.badCode.testGetValue(), BAD_CODE_COUNT);
 

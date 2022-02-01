@@ -6,17 +6,19 @@
 
 #include <math.h>
 
+#include "EditAction.h"
 #include "HTMLEditorEventListener.h"
 #include "HTMLEditUtils.h"
-#include "mozilla/EditAction.h"
+
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/mozalloc.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EventTarget.h"
-#include "mozilla/mozalloc.h"
 #include "nsAString.h"
 #include "nsAlgorithm.h"
 #include "nsCOMPtr.h"
@@ -611,9 +613,7 @@ nsresult HTMLEditor::SetFinalPosition(int32_t aX, int32_t aY) {
 
 void HTMLEditor::AddPositioningOffset(int32_t& aX, int32_t& aY) {
   // Get the positioning offset
-  int32_t positioningOffset =
-      Preferences::GetInt("editor.positioning.offset", 0);
-
+  const int32_t positioningOffset = StaticPrefs::editor_positioning_offset();
   aX += positioningOffset;
   aY += positioningOffset;
 }

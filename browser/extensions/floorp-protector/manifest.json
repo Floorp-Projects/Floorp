@@ -1,0 +1,41 @@
+{
+  "default_locale":"en",
+  "applications": {
+    "gecko": {
+      "id": "floorp-protector@mozilla.org"
+    }
+  },
+  "experiment_apis": {
+    "aboutConfigPrefs": {
+        "schema": "protectionAPIs/aboutConfigPrefs.json",
+        "parent": {
+            "scopes": ["addon_parent"],
+            "script": "protectionAPIs/aboutConfigPrefs.js",
+            "paths": [["aboutConfigPrefs"]]
+        }
+    }
+},
+  "browser_action":{
+    "browser_style": true,
+    "default_icon": "science_white_48dp.svg",
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "128": "science_white_48dp.svg"
+  },
+  "manifest_version": 2,
+  "name": "Floorp-protector",
+  "version": "1.0.0",
+  "permissions": [
+  "tabs",
+  "webNavigation",
+  "webRequest",
+  "webRequestBlocking",
+  "<all_urls>"
+],
+"background": {
+  "scripts": [
+      "background.js"
+  ]
+ }
+}

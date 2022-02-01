@@ -6,10 +6,11 @@ license = "MPL-2.0"
 description = "Shared Rust code for libxul"
 
 [dependencies]
+moz_asserts = "0.1"
 geckoservo = { path = "../../../../servo/ports/geckolib" }
 kvstore = { path = "../../../components/kvstore" }
 lmdb-rkv-sys = { version = "0.11", features = ["mdb_idl_logn_9"] }
-mp4parse_capi = { git = "https://github.com/mozilla/mp4parse-rust", rev = "a25713781eac774c531af43ba833ef86cb920889", features = ["missing-pixi-permitted"] }
+mp4parse_capi = { git = "https://github.com/mozilla/mp4parse-rust", rev = "3bfc47d9a571d0842676043ba60716318e946c06", features = ["missing-pixi-permitted"] }
 nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
 netwerk_helper = { path = "../../../../netwerk/base/rust-helper" }
@@ -19,12 +20,10 @@ static_prefs = { path = "../../../../modules/libpref/init/static_prefs" }
 profiler_helper = { path = "../../../../tools/profiler/rust-helper", optional = true }
 mozurl = { path = "../../../../netwerk/base/mozurl" }
 webrender_bindings = { path = "../../../../gfx/webrender_bindings" }
-cubeb-coreaudio = { git = "https://github.com/mozilla/cubeb-coreaudio-rs", rev = "41de71f88cd266a380e601326ec16280cad6028c", optional = true }
-cubeb-pulse = { git = "https://github.com/mozilla/cubeb-pulse-rs", rev="9695281319fcb3e40db6a32cc0661548d6192f4d", optional = true, features=["pulse-dlopen"] }
+cubeb-coreaudio = { git = "https://github.com/mozilla/cubeb-coreaudio-rs", rev = "dea28d0c7d9952bbf430701ee244f6a4349c98f1", optional = true }
+cubeb-pulse = { git = "https://github.com/mozilla/cubeb-pulse-rs", rev="f2456201dbfdc467b80f0ff6bbb1b8a6faf7df02", optional = true, features=["pulse-dlopen"] }
 cubeb-sys = { version = "0.9", optional = true, features=["gecko-in-tree"] }
 encoding_glue = { path = "../../../../intl/encoding_glue" }
-audioipc-client = { git = "https://github.com/mozilla/audioipc-2", rev = "470320364f59672c0e1ee60240f2cd15f0e5b52f", optional = true }
-audioipc-server = { git = "https://github.com/mozilla/audioipc-2", rev = "470320364f59672c0e1ee60240f2cd15f0e5b52f", optional = true }
 authenticator = "0.3.1"
 gkrust_utils = { path = "../../../../xpcom/rust/gkrust_utils" }
 gecko_logger = { path = "../../../../xpcom/rust/gecko_logger" }
@@ -54,6 +53,7 @@ fluent-langneg = { version = "0.13", features = ["cldr"] }
 fluent-langneg-ffi = { path = "../../../../intl/locale/rust/fluent-langneg-ffi" }
 rust_minidump_writer_linux = { path = "../../../crashreporter/rust_minidump_writer_linux", optional = true }
 gecko-profiler = { path = "../../../../tools/profiler/rust-api"}
+midir_impl = { path = "../../../../dom/midi/midir_impl", optional = true }
 
 # Note: `modern_sqlite` means rusqlite's bindings file be for a sqlite with
 # version less than or equal to what we link to. This isn't a problem because we
@@ -61,23 +61,32 @@ gecko-profiler = { path = "../../../../tools/profiler/rust-api"}
 # changing this version.
 rusqlite = { version = "0.24.1", features = ["modern_sqlite", "in_gecko"] }
 
-fluent = { version = "0.16", features = ["fluent-pseudo"] }
+fluent = { version = "0.16.0", features = ["fluent-pseudo"] }
 fluent-ffi = { path = "../../../../intl/l10n/rust/fluent-ffi" }
 l10nregistry-ffi = { path = "../../../../intl/l10n/rust/l10nregistry-ffi" }
-l10nregistry = { git = "https://github.com/mozilla/l10nregistry-rs", rev = "fd02134161505f978e132114cbabdac057ce3b71" }
-fluent-fallback = "0.5"
+l10nregistry = { git = "https://github.com/mozilla/l10nregistry-rs.git", rev = "9da98c6e5325a5f2997191727eaa82c0ebc2004c" }
+fluent-fallback = "0.6.0"
 localization-ffi = { path = "../../../../intl/l10n/rust/localization-ffi" }
 
 processtools = { path = "../../../components/processtools" }
 qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], default-features = false }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "8a576fbe79199fa8664f64285524017f74ebcc5f"}
+viaduct = { git = "https://github.com/mozilla/application-services", rev = "c51b63595a27a6ef45161012323e0261475c10c9"}
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+audioipc2-client = { git = "https://github.com/kinetiknz/audioipc-2", rev = "8af513c9b0cd5dd46f6ce98e1d5349a30061d0aa", optional = true } # macos (v2) branch
+audioipc2-server = { git = "https://github.com/kinetiknz/audioipc-2", rev = "8af513c9b0cd5dd46f6ce98e1d5349a30061d0aa", optional = true } # macos (v2) branch
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+audioipc-client = { git = "https://github.com/mozilla/audioipc-2", rev = "515bb210a93f520642fd3a60f391652680b3e988", optional = true }
+audioipc-server = { git = "https://github.com/mozilla/audioipc-2", rev = "515bb210a93f520642fd3a60f391652680b3e988", optional = true }
 
 [features]
 default = []
-cubeb-remoting = ["cubeb-sys", "audioipc-client", "audioipc-server"]
+moz_asserts_nightly = ["moz_asserts/nightly"]
+moz_asserts_diagnostic = ["moz_asserts/diagnostic"]
+cubeb-remoting = ["cubeb-sys", "audioipc-client", "audioipc-server", "audioipc2-client", "audioipc2-server"]
 cubeb_coreaudio_rust = ["cubeb-sys", "cubeb-coreaudio"]
 cubeb_pulse_rust = ["cubeb-sys", "cubeb-pulse"]
 gecko_debug = ["geckoservo/gecko_debug", "nsstring/gecko_debug"]
@@ -100,6 +109,7 @@ glean_with_gecko = ["fog_control/with_gecko"]
 oxidized_breakpad = ["rust_minidump_writer_linux"]
 with_dbus = ["audio_thread_priority/with_dbus"]
 thread_sanitizer = ["xpcom/thread_sanitizer"]
+webmidi_midir_impl = ["midir_impl"]
 
 [lib]
 path = "lib.rs"

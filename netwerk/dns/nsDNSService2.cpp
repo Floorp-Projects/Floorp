@@ -351,6 +351,9 @@ nsDNSRecord::GetEffectiveTRRMode(uint32_t* aMode) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDNSRecord::GetTtl(uint32_t* aTtl) { return mHostRecord->GetTtl(aTtl); }
+
 class nsDNSByTypeRecord : public nsIDNSByTypeRecord,
                           public nsIDNSTXTRecord,
                           public nsIDNSHTTPSSVCRecord {

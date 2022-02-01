@@ -62,6 +62,7 @@ const SPECIALVALUES = new Set([
  *   color.hsl === "hsl(0, 100%, 50%)"
  *   color.hsla === "hsla(0, 100%, 50%, 1)" // If alpha channel is present
  *                                             then we return this.rgba.
+ *   color.hwb === "hwb(0, 0%, 0%)"
  *
  *   color.toString() === "#f00"; // Outputs the color type determined in the
  *                                   COLOR_UNIT_PREF constant (above).
@@ -79,6 +80,7 @@ function CssColor(colorValue, supportsCssColor4ColorFunction = false) {
 module.exports.colorUtils = {
   CssColor: CssColor,
   rgbToHsl: rgbToHsl,
+  rgbToHwb: rgbToHwb,
   rgbToLab: rgbToLab,
   setAlpha: setAlpha,
   classifyColor: classifyColor,
@@ -100,6 +102,7 @@ CssColor.COLORUNIT = {
   name: "name",
   rgb: "rgb",
   hsl: "hsl",
+  hwb: "hwb",
 };
 
 CssColor.prototype = {
@@ -363,6 +366,22 @@ CssColor.prototype = {
     return this._hsl(1);
   },
 
+  get hwb() {
+    const invalidOrSpecialValue = this._getInvalidOrSpecialValue();
+    if (invalidOrSpecialValue !== false) {
+      return invalidOrSpecialValue;
+    }
+    if (this.lowerCased.startsWith("hwb(")) {
+      // The color is valid and begins with hwb(.
+      return this.authored;
+    }
+    if (this.hasAlpha) {
+      const a = this.getRGBATuple().a;
+      return this._hwb(a);
+    }
+    return this._hwb();
+  },
+
   /**
    * Check whether the current color value is in the special list e.g.
    * transparent or invalid.
@@ -403,7 +422,9 @@ CssColor.prototype = {
   nextColorUnit: function() {
     // Reorder the formats array to have the current format at the
     // front so we can cycle through.
-    let formats = ["hex", "hsl", "rgb", "name"];
+    // Put "name" at the end as that provides a hex value if there's
+    // no name for the color.
+    let formats = ["hex", "hsl", "rgb", "hwb", "name"];
     const currentFormat = classifyColor(this.toString());
     const putOnEnd = formats.splice(0, formats.indexOf(currentFormat));
     formats = [...formats, ...putOnEnd];
@@ -441,6 +462,9 @@ CssColor.prototype = {
         break;
       case CssColor.COLORUNIT.rgb:
         color = this.rgb;
+        break;
+      case CssColor.COLORUNIT.hwb:
+        color = this.hwb;
         break;
       default:
         color = this.rgb;
@@ -497,6 +521,19 @@ CssColor.prototype = {
       return "hsla(" + h + ", " + s + "%, " + l + "%, " + maybeAlpha + ")";
     }
     return "hsl(" + h + ", " + s + "%, " + l + "%)";
+  },
+
+  _hwb: function(maybeAlpha) {
+    if (this.lowerCased.startsWith("hwb(") && maybeAlpha === undefined) {
+      // We can use it as-is.
+      return this.authored;
+    }
+
+    const { r, g, b } = this.getRGBATuple();
+    const [hue, white, black] = rgbToHwb([r, g, b]);
+    return `hwb(${hue} ${white}% ${black}%${
+      maybeAlpha !== undefined ? " / " + maybeAlpha : ""
+    })`;
   },
 
   /**
@@ -559,6 +596,26 @@ function rgbToHsl([r, g, b]) {
   }
 
   return [roundTo(h, 1), roundTo(s * 100, 1), roundTo(l * 100, 1)];
+}
+
+/**
+ * Convert RGB value to HWB
+ *
+ * @param {array} rgb
+ *         Array of RGB values
+ * @return {array}
+ *         Array of HWB values.
+ */
+function rgbToHwb([r, g, b]) {
+  const hsl = rgbToHsl([r, g, b]);
+
+  r = r / 255;
+  g = g / 255;
+  b = b / 255;
+
+  const white = Math.min(r, g, b);
+  const black = 1 - Math.max(r, g, b);
+  return [roundTo(hsl[0], 1), roundTo(white * 100, 1), roundTo(black * 100, 1)];
 }
 
 /**
@@ -627,7 +684,7 @@ function roundTo(number, digits) {
 }
 
 /**
- * Takes a color value of any type (hex, hsl, hsla, rgb, rgba)
+ * Takes a color value of any type (hex, hsl, hsla, rgb, rgba, hwb)
  * and an alpha value to generate an rgba string with the correct
  * alpha value.
  *
@@ -672,6 +729,8 @@ function classifyColor(value) {
     return CssColor.COLORUNIT.rgb;
   } else if (value.startsWith("hsl(") || value.startsWith("hsla(")) {
     return CssColor.COLORUNIT.hsl;
+  } else if (value.startsWith("hwb(")) {
+    return CssColor.COLORUNIT.hwb;
   } else if (/^#[0-9a-f]+$/.exec(value)) {
     return CssColor.COLORUNIT.hex;
   }
@@ -736,6 +795,31 @@ function hslToRGB([h, s, l]) {
   const g = Math.round(255 * _hslValue(m1, m2, h));
   const b = Math.round(255 * _hslValue(m1, m2, h - 1.0 / 3.0));
   return [r, g, b];
+}
+
+/**
+ * A helper function to convert an HWB color to an RGB color
+ *
+ * @param {Array} - An array where the first entry is the hue of the color
+ *                in the range 0 - 360, the second value is the whiteness
+ *                of the color in the range 0 - 100, and the third value is
+ *                the blackness of the color in the range 0 - 100.
+ * @return {Object} An object of the form {r, g, b, a}; or null if the
+ *                  name was not a valid color.
+ */
+function hwbToRGB([hue, white, black]) {
+  if (white + black >= 1) {
+    const gray = Math.round((white / (white + black)) * 255);
+    return [gray, gray, gray];
+  }
+  const rgb = hslToRGB([hue, 1, 0.5]);
+  for (let i = 0; i < 3; i++) {
+    rgb[i] /= 255;
+    rgb[i] *= 1 - white - black;
+    rgb[i] += white;
+    rgb[i] = Math.round(rgb[i] * 255);
+  }
+  return rgb;
 }
 
 /**
@@ -877,6 +961,41 @@ const COLOR_COMPONENT_TYPE = {
   number: "number",
   percentage: "percentage",
 };
+
+/**
+ * Parse a color function
+ *
+ * @param {CSSLexer} lexer The lexer.
+ * @param {String} funcName The name of the color function.
+ * @param {Boolean} useCssColor4ColorFunction
+ *        Use css-color-4 color function or not.
+ * @return {Array} An array of the form [r,g,b,a] for RGB colors,
+ * [h,s,l,a] for HSL colors, or [h,w,b,a] for HWB colors.
+ */
+function parseColorFunction(lexer, funcName, useCssColor4ColorFunction) {
+  switch (funcName) {
+    case "hsl":
+      return useCssColor4ColorFunction
+        ? parseHsl(lexer)
+        : parseOldStyleHsl(lexer, false);
+    case "hsla":
+      return useCssColor4ColorFunction
+        ? parseHsl(lexer)
+        : parseOldStyleHsl(lexer, true);
+    case "hwb":
+      return parseHwb(lexer);
+    case "rgb":
+      return useCssColor4ColorFunction
+        ? parseRgb(lexer)
+        : parseOldStyleRgb(lexer, false);
+    case "rgba":
+      return useCssColor4ColorFunction
+        ? parseRgb(lexer)
+        : parseOldStyleRgb(lexer, true);
+    default:
+      throw new Error("Invalid color function.");
+  }
+}
 
 /**
  * Parse a <integer> or a <number> or a <percentage> color component. If
@@ -1242,6 +1361,44 @@ function parseOldStyleRgb(lexer, hasAlpha) {
 }
 
 /**
+ * A helper function to parse the color components of an hwb() function.
+ *
+ * @param {CSSLexer} lexer The lexer
+ * @return {Array} An array of the form [hue, white, black, alpha];
+ *         or null on error.
+ */
+function parseHwb(lexer) {
+  // comma-less expression:
+  // hwb() = hwb( <hue> <whiteness> <blackness> [ / <alpha-value> ]? )
+  //
+  // <hue> = <number> | <angle>
+  // <whiteness> = <percentage>
+  // <blackness> = <percentage>
+  // <alpha-value> = <number> | <percentage>
+
+  const hwb = [];
+  const a = [];
+
+  // Parse hue.
+  if (!parseHue(lexer, hwb)) {
+    return null;
+  }
+
+  // Parse whiteness, blackness, and opacity.
+  // The whiteness and blackness are <percentage>, so reuse the <percentage>
+  // version of the parseColorComponent function for them.
+  if (
+    parseColorComponent(lexer, COLOR_COMPONENT_TYPE.percentage, "", hwb) &&
+    parseColorComponent(lexer, COLOR_COMPONENT_TYPE.percentage, "", hwb) &&
+    parseColorOpacityAndCloseParen(lexer, "/", a)
+  ) {
+    return [...hwbToRGB(hwb), ...a];
+  }
+
+  return null;
+}
+
+/**
  * Convert a string representing a color to an object holding the
  * color's components.  Any valid CSS color form can be passed in.
  *
@@ -1282,7 +1439,7 @@ function colorToRGBA(name, useCssColor4ColorFunction = false, toArray = false) {
     return hexToRGBA(func.text);
   }
 
-  const expectedFunctions = ["rgba", "rgb", "hsla", "hsl"];
+  const expectedFunctions = ["rgba", "rgb", "hsla", "hsl", "hwb"];
   if (
     !func ||
     func.tokenType !== "function" ||
@@ -1291,17 +1448,7 @@ function colorToRGBA(name, useCssColor4ColorFunction = false, toArray = false) {
     return null;
   }
 
-  const hsl = func.text === "hsl" || func.text === "hsla";
-
-  let vals;
-  if (!useCssColor4ColorFunction) {
-    const hasAlpha = func.text === "rgba" || func.text === "hsla";
-    vals = hsl
-      ? parseOldStyleHsl(lexer, hasAlpha)
-      : parseOldStyleRgb(lexer, hasAlpha);
-  } else {
-    vals = hsl ? parseHsl(lexer) : parseRgb(lexer);
-  }
+  const vals = parseColorFunction(lexer, func.text, useCssColor4ColorFunction);
 
   if (!vals) {
     return null;

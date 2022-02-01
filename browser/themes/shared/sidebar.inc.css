@@ -10,6 +10,7 @@
   background-color: var(--sidebar-background-color);
   color: var(--sidebar-text-color);
   text-shadow: none;
+  min-width: 34px !important;
 }
 
 #sidebar-header {

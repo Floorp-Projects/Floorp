@@ -2962,7 +2962,6 @@ impl TileCacheInstance {
         composite_state: &mut CompositeState,
         gpu_cache: &mut GpuCache,
         is_root_tile_cache: bool,
-        surfaces: &mut [SurfaceInfo],
     ) {
         // This primitive exists on the last element on the current surface stack.
         profile_scope!("update_prim_dependencies");
@@ -2984,10 +2983,12 @@ impl TileCacheInstance {
             // surface stack, mapping the primitive rect into each surface space, including
             // the inflation factor from each intermediate surface.
             let mut current_pic_clip_rect = prim_clip_chain.pic_clip_rect;
-            let mut current_spatial_node_index = surfaces[prim_surface_index.0].surface_spatial_node_index;
+            let mut current_spatial_node_index = frame_context
+                .surfaces[prim_surface_index.0]
+                .surface_spatial_node_index;
 
             for surface_index in surface_stack.iter().rev() {
-                let surface = &surfaces[surface_index.0];
+                let surface = &frame_context.surfaces[surface_index.0];
 
                 let map_local_to_surface = SpaceMapper::new_with_target(
                     surface.surface_spatial_node_index,
@@ -3325,38 +3326,6 @@ impl TileCacheInstance {
         let sub_slice = &mut self.sub_slices[sub_slice_index];
 
         if let Some(mut backdrop_candidate) = backdrop_candidate {
-
-            // Update whether the surface that this primitive exists on
-            // can be considered opaque. Any backdrop kind other than
-            // a clear primitive (e.g. color, gradient, image) can be
-            // considered.
-            match backdrop_candidate.kind {
-                Some(BackdropKind::Color { .. }) | None => {
-                    let surface = &mut surfaces[prim_surface_index.0];
-
-                    let is_same_coord_system = frame_context.spatial_tree.is_matching_coord_system(
-                        prim_spatial_node_index,
-                        surface.surface_spatial_node_index,
-                    );
-
-                    // To be an opaque backdrop, it must:
-                    // - Be the same coordinate system (axis-aligned)
-                    // - Have no clip mask
-                    // - Have a rect that covers the surface local rect
-                    if is_same_coord_system &&
-                       !prim_clip_chain.needs_mask &&
-                       prim_clip_chain.pic_clip_rect.contains_box(&surface.rect)
-                    {
-                        // Note that we use `prim_clip_chain.pic_clip_rect` here rather
-                        // than `backdrop_candidate.opaque_rect`. The former is in the
-                        // local space of the surface, the latter is in the local space
-                        // of the top level tile-cache.
-                        surface.is_opaque = true;
-                    }
-                }
-                Some(BackdropKind::Clear) => {}
-            }
-
             let is_suitable_backdrop = match backdrop_candidate.kind {
                 Some(BackdropKind::Clear) => {
                     // Clear prims are special - they always end up in their own slice,
@@ -3373,10 +3342,15 @@ impl TileCacheInstance {
                     // Specifically, we currently require:
                     //  - The primitive is on the main picture cache surface.
                     //  - Same coord system as picture cache (ensures rects are axis-aligned).
-                    let same_coord_system = frame_context.spatial_tree.is_matching_coord_system(
-                        prim_spatial_node_index,
-                        self.spatial_node_index,
-                    );
+                    //  - No clip masks exist.
+                    let same_coord_system = {
+                        let prim_spatial_node = frame_context.spatial_tree
+                            .get_spatial_node(prim_spatial_node_index);
+                        let surface_spatial_node = &frame_context.spatial_tree
+                            .get_spatial_node(self.spatial_node_index);
+
+                        prim_spatial_node.coordinate_system_id == surface_spatial_node.coordinate_system_id
+                    };
 
                     same_coord_system && on_picture_surface
                 }
@@ -3689,8 +3663,6 @@ impl PictureScratchBuffer {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct SurfaceIndex(pub usize);
 
-pub const ROOT_SURFACE_INDEX: SurfaceIndex = SurfaceIndex(0);
-
 /// Describes the render task configuration for a picture surface.
 #[derive(Debug)]
 pub enum SurfaceRenderTasks {
@@ -3717,9 +3689,8 @@ pub struct SurfaceInfo {
     /// A local rect defining the size of this surface, in the
     /// coordinate system of the surface itself.
     pub rect: PictureRect,
-    /// If true, we have determined during the visibility pass
-    /// that this surface is opaque.
-    pub is_opaque: bool,
+    /// Part of the surface that we know to be opaque.
+    pub opaque_rect: PictureRect,
     /// Helper structs for mapping local rects in different
     /// coordinate systems into the surface coordinates.
     pub map_local_to_surface: SpaceMapper<LayoutPixel, PicturePixel>,
@@ -3767,7 +3738,7 @@ impl SurfaceInfo {
 
         SurfaceInfo {
             rect: PictureRect::zero(),
-            is_opaque: false,
+            opaque_rect: PictureRect::zero(),
             map_local_to_surface,
             render_tasks: None,
             raster_spatial_node_index,
@@ -3973,6 +3944,10 @@ pub struct PrimitiveCluster {
     /// during the first picture traversal, which is needed for local scale
     /// determination, and render task size calculations.
     bounding_rect: LayoutRect,
+    /// a part of the cluster that we know to be opaque if any. Does not always
+    /// describe the entire opaque region, but all content within that rect must
+    /// be opaque.
+    pub opaque_rect: LayoutRect,
     /// The range of primitive instance indices associated with this cluster.
     pub prim_range: Range<usize>,
     /// Various flags / state for this cluster.
@@ -3988,6 +3963,7 @@ impl PrimitiveCluster {
     ) -> Self {
         PrimitiveCluster {
             bounding_rect: LayoutRect::zero(),
+            opaque_rect: LayoutRect::zero(),
             spatial_node_index,
             flags,
             prim_range: first_instance_index..first_instance_index
@@ -4248,7 +4224,7 @@ impl PicturePrimitive {
         }
     }
 
-    fn resolve_scene_properties(&mut self, properties: &SceneProperties) -> bool {
+    fn resolve_scene_properties(&mut self, properties: &SceneProperties) {
         match self.composite_mode {
             Some(PictureCompositeMode::Filter(ref mut filter)) => {
                 match *filter {
@@ -4257,20 +4233,35 @@ impl PicturePrimitive {
                     }
                     _ => {}
                 }
-
-                filter.is_visible()
             }
-            _ => true,
+            _ => {}
         }
     }
 
-    pub fn is_visible(&self) -> bool {
-        match self.composite_mode {
-            Some(PictureCompositeMode::Filter(ref filter)) => {
-                filter.is_visible()
+    pub fn is_visible(
+        &self,
+        spatial_tree: &SpatialTree,
+    ) -> bool {
+        if let Some(PictureCompositeMode::Filter(ref filter)) = self.composite_mode {
+            if !filter.is_visible() {
+                return false;
             }
-            _ => true,
         }
+
+        // For out-of-preserve-3d pictures, the backface visibility is determined by
+        // the local transform only.
+        // Note: we aren't taking the transform relativce to the parent picture,
+        // since picture tree can be more dense than the corresponding spatial tree.
+        if !self.is_backface_visible {
+            if let Picture3DContext::Out = self.context_3d {
+                match spatial_tree.get_local_visible_face(self.spatial_node_index) {
+                    VisibleFace::Front => {}
+                    VisibleFace::Back => return false,
+                }
+            }
+        }
+
+        true
     }
 
     // TODO(gw): We have the PictureOptions struct available. We
@@ -4311,7 +4302,7 @@ impl PicturePrimitive {
         pic_index: PictureIndex,
         surface_spatial_node_index: SpatialNodeIndex,
         raster_spatial_node_index: SpatialNodeIndex,
-        parent_surface_index: SurfaceIndex,
+        parent_surface_index: Option<SurfaceIndex>,
         parent_subpixel_mode: SubpixelMode,
         frame_state: &mut FrameBuildingState,
         frame_context: &FrameBuildingContext,
@@ -4321,7 +4312,7 @@ impl PicturePrimitive {
         self.primary_render_task_id = None;
         self.secondary_render_task_id = None;
 
-        if !self.is_visible() {
+        if !self.is_visible(frame_context.spatial_tree) {
             return None;
         }
 
@@ -4345,7 +4336,7 @@ impl PicturePrimitive {
                 (
                     raster_spatial_node_index,
                     surface_spatial_node_index,
-                    parent_surface_index,
+                    parent_surface_index.expect("bug: no parent"),
                     0.0,
                 )
             }
@@ -4781,6 +4772,7 @@ impl PicturePrimitive {
             }
             Some(ref mut raster_config) => {
                 let pic_rect = self.precise_local_rect.cast_unit();
+                let parent_surface_index = parent_surface_index.expect("bug: no parent for child surface");
 
                 let mut device_pixel_scale = frame_state
                     .surfaces[raster_config.surface_index.0]
@@ -5661,30 +5653,12 @@ impl PicturePrimitive {
 
     /// Do initial checks to determine whether this picture should be drawn as part of the
     /// frame build.
-    pub fn pre_update_visibility_check(
+    pub fn pre_update(
         &mut self,
         frame_context: &FrameBuildingContext,
-    ) -> bool {
-        // Resolve animation properties, and early out if the filter
-        // properties make this picture invisible.
-        if !self.resolve_scene_properties(frame_context.scene_properties) {
-            return false;
-        }
-
-        // For out-of-preserve-3d pictures, the backface visibility is determined by
-        // the local transform only.
-        // Note: we aren't taking the transform relativce to the parent picture,
-        // since picture tree can be more dense than the corresponding spatial tree.
-        if !self.is_backface_visible {
-            if let Picture3DContext::Out = self.context_3d {
-                match frame_context.spatial_tree.get_local_visible_face(self.spatial_node_index) {
-                    VisibleFace::Front => {}
-                    VisibleFace::Back => return false,
-                }
-            }
-        }
-
-        true
+    ) {
+        // Resolve animation properties
+        self.resolve_scene_properties(frame_context.scene_properties);
     }
 
     /// Called during initial picture traversal, before we know the
@@ -5694,163 +5668,173 @@ impl PicturePrimitive {
         &mut self,
         frame_context: &FrameBuildingContext,
         tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
-        current_surface_index: SurfaceIndex,
+        current_surface_index: Option<SurfaceIndex>,
         surfaces: &mut Vec<SurfaceInfo>,
     ) -> SurfaceIndex {
         // Reset raster config in case we early out below.
         self.raster_config = None;
 
-        // Assume we don't create a surface by default.
-        // TODO: This (and all the separate surface code can disappear once composite_mode is not an Option)
-        let mut surface_index = current_surface_index;
-
-        if let Some(ref composite_mode) = self.composite_mode {
-            // Retrieve the positioning node information for the parent surface.
-            let current_surface = &surfaces[current_surface_index.0];
-            let parent_raster_node_index = current_surface.raster_spatial_node_index;
-            let parent_device_pixel_scale = current_surface.device_pixel_scale;
-            let surface_spatial_node_index = self.spatial_node_index;
-
-            let surface_to_parent_transform = frame_context.spatial_tree
-                .get_relative_transform(surface_spatial_node_index, parent_raster_node_index);
-
-            // Currently, we ensure that the scaling factor is >= 1.0 as a smaller scale factor can result in blurry output.
-            let mut min_scale = 1.0;
-            let mut max_scale = 1.0e32;
-
-            // Check if there is perspective or if an SVG filter is applied, and thus whether a new
-            // rasterization root should be established.
-            let establishes_raster_root = match composite_mode {
-                PictureCompositeMode::TileCache { slice_id } => {
-                    let tile_cache = tile_caches.get_mut(&slice_id).unwrap();
-
-                    // We only update the raster scale if we're in high quality zoom mode, or there is no
-                    // pinch-zoom active. This means that in low quality pinch-zoom, we retain the initial
-                    // scale factor until the zoom ends, then select a high quality zoom factor for the next
-                    // frame to be drawn.
-                    let update_raster_scale =
-                        !frame_context.fb_config.low_quality_pinch_zoom ||
-                        !frame_context.spatial_tree.get_spatial_node(tile_cache.spatial_node_index).is_ancestor_or_self_zooming;
-
-                    if update_raster_scale {
-                        // Get the complete scale-offset from local space to device space
-                        let local_to_device = get_relative_scale_offset(
-                            tile_cache.spatial_node_index,
-                            frame_context.root_spatial_node_index,
-                            frame_context.spatial_tree,
-                        );
-
-                        tile_cache.current_raster_scale = local_to_device.scale.x;
+        let surface_index = match self.composite_mode {
+            Some(ref composite_mode) => {
+                // Retrieve the positioning node information for the parent surface.
+                let (parent_raster_node_index, parent_device_pixel_scale) = match current_surface_index {
+                    Some(index) => {
+                        let current_surface = &surfaces[index.0];
+                        (current_surface.raster_spatial_node_index, current_surface.device_pixel_scale)
                     }
-
-                    // We may need to minify when zooming out picture cache tiles
-                    min_scale = 0.0;
-
-                    if frame_context.fb_config.low_quality_pinch_zoom {
-                        // Force the scale for this tile cache to be the currently selected
-                        // local raster scale, so we don't need to rasterize tiles during
-                        // the pinch-zoom.
-                        min_scale = tile_cache.current_raster_scale;
-                        max_scale = tile_cache.current_raster_scale;
+                    None => {
+                        let root_spatial_node_index = frame_context.spatial_tree.root_reference_frame_index();
+                        (root_spatial_node_index, Scale::new(1.0))
                     }
+                };
+                let surface_spatial_node_index = self.spatial_node_index;
 
-                    // We know that picture cache tiles are always axis-aligned, but we want to establish
-                    // raster roots for them, so that we can easily control the scale factors used depending
-                    // on whether we want to zoom in high-performance or high-quality mode.
-                    true
-                }
-                PictureCompositeMode::SvgFilter(..) => {
-                    // Filters must be applied before transforms, to do this, we can mark this picture as establishing a raster root.
-                    true
-                }
-                PictureCompositeMode::MixBlend(..) |
-                PictureCompositeMode::Filter(..) |
-                PictureCompositeMode::ComponentTransferFilter(..) |
-                PictureCompositeMode::Blit(..) => {
-                    // TODO(gw): As follow ups, individually move each of these composite modes to create raster roots.
-                    surface_to_parent_transform.is_perspective()
-                }
-            };
+                let surface_to_parent_transform = frame_context.spatial_tree
+                    .get_relative_transform(surface_spatial_node_index, parent_raster_node_index);
 
-            let (raster_spatial_node_index, device_pixel_scale) = if establishes_raster_root {
-                // If a raster root is established, this surface should be scaled based on the scale factors of the surface raster to parent raster transform.
-                // This scaling helps ensure that the content in this surface does not become blurry or pixelated when composited in the parent surface.
-                let scale_factors = surface_to_parent_transform.scale_factors();
+                // Currently, we ensure that the scaling factor is >= 1.0 as a smaller scale factor can result in blurry output.
+                let mut min_scale = 1.0;
+                let mut max_scale = 1.0e32;
 
-                // Pick the largest scale factor of the transform for the scaling factor.
-                let scaling_factor = scale_factors.0.max(scale_factors.1).max(min_scale).min(max_scale);
+                // Check if there is perspective or if an SVG filter is applied, and thus whether a new
+                // rasterization root should be established.
+                let establishes_raster_root = match composite_mode {
+                    PictureCompositeMode::TileCache { slice_id } => {
+                        let tile_cache = tile_caches.get_mut(&slice_id).unwrap();
 
-                let device_pixel_scale = parent_device_pixel_scale * Scale::new(scaling_factor);
-                (surface_spatial_node_index, device_pixel_scale)
-            } else {
-                (parent_raster_node_index, parent_device_pixel_scale)
-            };
+                        // We only update the raster scale if we're in high quality zoom mode, or there is no
+                        // pinch-zoom active. This means that in low quality pinch-zoom, we retain the initial
+                        // scale factor until the zoom ends, then select a high quality zoom factor for the next
+                        // frame to be drawn.
+                        let update_raster_scale =
+                            !frame_context.fb_config.low_quality_pinch_zoom ||
+                            !frame_context.spatial_tree.get_spatial_node(tile_cache.spatial_node_index).is_ancestor_or_self_zooming;
 
-            let scale_factors = frame_context
-                    .spatial_tree
-                    .get_relative_transform(surface_spatial_node_index, raster_spatial_node_index)
-                    .scale_factors();
+                        if update_raster_scale {
+                            // Get the complete scale-offset from local space to device space
+                            let local_to_device = get_relative_scale_offset(
+                                tile_cache.spatial_node_index,
+                                frame_context.root_spatial_node_index,
+                                frame_context.spatial_tree,
+                            );
 
-            // This inflation factor is to be applied to all primitives within the surface.
-            // Only inflate if the caller hasn't already inflated the bounding rects for this filter.
-            let mut inflation_factor = 0.0;
-            if self.options.inflate_if_required {
-                match composite_mode {
-                    PictureCompositeMode::Filter(Filter::Blur(width, height)) => {
-                        let blur_radius = f32::max(clamp_blur_radius(*width, scale_factors), clamp_blur_radius(*height, scale_factors));
-                        // The amount of extra space needed for primitives inside
-                        // this picture to ensure the visibility check is correct.
-                        inflation_factor = blur_radius * BLUR_SAMPLE_SCALE;
+                            tile_cache.current_raster_scale = local_to_device.scale.x;
+                        }
+
+                        // We may need to minify when zooming out picture cache tiles
+                        min_scale = 0.0;
+
+                        if frame_context.fb_config.low_quality_pinch_zoom {
+                            // Force the scale for this tile cache to be the currently selected
+                            // local raster scale, so we don't need to rasterize tiles during
+                            // the pinch-zoom.
+                            min_scale = tile_cache.current_raster_scale;
+                            max_scale = tile_cache.current_raster_scale;
+                        }
+
+                        // We know that picture cache tiles are always axis-aligned, but we want to establish
+                        // raster roots for them, so that we can easily control the scale factors used depending
+                        // on whether we want to zoom in high-performance or high-quality mode.
+                        true
                     }
-                    PictureCompositeMode::SvgFilter(ref primitives, _) => {
-                        let mut max = 0.0;
-                        for primitive in primitives {
-                            if let FilterPrimitiveKind::Blur(ref blur) = primitive.kind {
-                                max = f32::max(max, blur.width);
-                                max = f32::max(max, blur.height);
+                    PictureCompositeMode::SvgFilter(..) => {
+                        // Filters must be applied before transforms, to do this, we can mark this picture as establishing a raster root.
+                        true
+                    }
+                    PictureCompositeMode::MixBlend(..) |
+                    PictureCompositeMode::Filter(..) |
+                    PictureCompositeMode::ComponentTransferFilter(..) |
+                    PictureCompositeMode::Blit(..) => {
+                        // TODO(gw): As follow ups, individually move each of these composite modes to create raster roots.
+                        surface_to_parent_transform.is_perspective()
+                    }
+                };
+
+                let (raster_spatial_node_index, device_pixel_scale) = if establishes_raster_root {
+                    // If a raster root is established, this surface should be scaled based on the scale factors of the surface raster to parent raster transform.
+                    // This scaling helps ensure that the content in this surface does not become blurry or pixelated when composited in the parent surface.
+                    let scale_factors = surface_to_parent_transform.scale_factors();
+
+                    // Pick the largest scale factor of the transform for the scaling factor.
+                    let scaling_factor = scale_factors.0.max(scale_factors.1).max(min_scale).min(max_scale);
+
+                    let device_pixel_scale = parent_device_pixel_scale * Scale::new(scaling_factor);
+                    (surface_spatial_node_index, device_pixel_scale)
+                } else {
+                    (parent_raster_node_index, parent_device_pixel_scale)
+                };
+
+                let scale_factors = frame_context
+                        .spatial_tree
+                        .get_relative_transform(surface_spatial_node_index, raster_spatial_node_index)
+                        .scale_factors();
+
+                // This inflation factor is to be applied to all primitives within the surface.
+                // Only inflate if the caller hasn't already inflated the bounding rects for this filter.
+                let mut inflation_factor = 0.0;
+                if self.options.inflate_if_required {
+                    match composite_mode {
+                        PictureCompositeMode::Filter(Filter::Blur(width, height)) => {
+                            let blur_radius = f32::max(clamp_blur_radius(*width, scale_factors), clamp_blur_radius(*height, scale_factors));
+                            // The amount of extra space needed for primitives inside
+                            // this picture to ensure the visibility check is correct.
+                            inflation_factor = blur_radius * BLUR_SAMPLE_SCALE;
+                        }
+                        PictureCompositeMode::SvgFilter(ref primitives, _) => {
+                            let mut max = 0.0;
+                            for primitive in primitives {
+                                if let FilterPrimitiveKind::Blur(ref blur) = primitive.kind {
+                                    max = f32::max(max, blur.width);
+                                    max = f32::max(max, blur.height);
+                                }
                             }
+                            inflation_factor = clamp_blur_radius(max, scale_factors) * BLUR_SAMPLE_SCALE;
                         }
-                        inflation_factor = clamp_blur_radius(max, scale_factors) * BLUR_SAMPLE_SCALE;
-                    }
-                    PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
-                        // TODO(gw): This is incorrect, since we don't consider the drop shadow
-                        //           offset. However, fixing that is a larger task, so this is
-                        //           an improvement on the current case (this at least works where
-                        //           the offset of the drop-shadow is ~0, which is often true).
+                        PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
+                            // TODO(gw): This is incorrect, since we don't consider the drop shadow
+                            //           offset. However, fixing that is a larger task, so this is
+                            //           an improvement on the current case (this at least works where
+                            //           the offset of the drop-shadow is ~0, which is often true).
 
-                        // Can't use max_by_key here since f32 isn't Ord
-                        let mut max_blur_radius: f32 = 0.0;
-                        for shadow in shadows {
-                            max_blur_radius = max_blur_radius.max(shadow.blur_radius);
+                            // Can't use max_by_key here since f32 isn't Ord
+                            let mut max_blur_radius: f32 = 0.0;
+                            for shadow in shadows {
+                                max_blur_radius = max_blur_radius.max(shadow.blur_radius);
+                            }
+
+                            inflation_factor = clamp_blur_radius(max_blur_radius, scale_factors) * BLUR_SAMPLE_SCALE;
                         }
-
-                        inflation_factor = clamp_blur_radius(max_blur_radius, scale_factors) * BLUR_SAMPLE_SCALE;
+                        _ => {}
                     }
-                    _ => {}
                 }
+
+                let surface = SurfaceInfo::new(
+                    surface_spatial_node_index,
+                    raster_spatial_node_index,
+                    inflation_factor,
+                    frame_context.global_screen_world_rect,
+                    &frame_context.spatial_tree,
+                    device_pixel_scale,
+                    scale_factors,
+                );
+
+                let surface_index = SurfaceIndex(surfaces.len());
+                surfaces.push(surface);
+
+                self.raster_config = Some(RasterConfig {
+                    composite_mode: composite_mode.clone(),
+                    establishes_raster_root,
+                    surface_index,
+                    root_scaling_factor: 1.0,
+                    clipped_bounding_rect: WorldRect::zero(),
+                });
+
+                surface_index
             }
-
-            let surface = SurfaceInfo::new(
-                surface_spatial_node_index,
-                raster_spatial_node_index,
-                inflation_factor,
-                frame_context.global_screen_world_rect,
-                &frame_context.spatial_tree,
-                device_pixel_scale,
-                scale_factors,
-            );
-
-            surface_index = SurfaceIndex(surfaces.len());
-            surfaces.push(surface);
-
-            self.raster_config = Some(RasterConfig {
-                composite_mode: composite_mode.clone(),
-                establishes_raster_root,
-                surface_index,
-                root_scaling_factor: 1.0,
-                clipped_bounding_rect: WorldRect::zero(),
-            });
-        }
+            None => {
+                current_surface_index.expect("bug: pass-through picture without parent surface")
+            }
+        };
 
         surface_index
     }
@@ -5862,7 +5846,7 @@ impl PicturePrimitive {
     pub fn propagate_bounding_rect(
         &mut self,
         surface_index: SurfaceIndex,
-        parent_surface_index: SurfaceIndex,
+        parent_surface_index: Option<SurfaceIndex>,
         surfaces: &mut [SurfaceInfo],
         frame_context: &FrameBuildingContext,
         data_stores: &mut DataStores,
@@ -5998,16 +5982,18 @@ impl PicturePrimitive {
             }
 
             // Propagate up to parent surface, now that we know this surface's static rect
-            let parent_surface = &mut surfaces[parent_surface_index.0];
-            parent_surface.map_local_to_surface.set_target_spatial_node(
-                self.spatial_node_index,
-                frame_context.spatial_tree,
-            );
-            if let Some(parent_surface_rect) = parent_surface
-                .map_local_to_surface
-                .map(&surface_rect)
-            {
-                parent_surface.rect = parent_surface.rect.union(&parent_surface_rect);
+            if let Some(parent_surface_index) = parent_surface_index {
+                let parent_surface = &mut surfaces[parent_surface_index.0];
+                parent_surface.map_local_to_surface.set_target_spatial_node(
+                    self.spatial_node_index,
+                    frame_context.spatial_tree,
+                );
+                if let Some(parent_surface_rect) = parent_surface
+                    .map_local_to_surface
+                    .map(&surface_rect)
+                {
+                    parent_surface.rect = parent_surface.rect.union(&parent_surface_rect);
+                }
             }
         }
     }

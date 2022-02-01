@@ -560,7 +560,7 @@
     if ( lwfn_file_name[0] )
     {
       err = lookup_lwfn_by_fond( pathname, lwfn_file_name,
-                                 buff, sizeof ( buff )  );
+                                 buff, sizeof ( buff ) );
       if ( !err )
         have_lwfn = 1;
     }

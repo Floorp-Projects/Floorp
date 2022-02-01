@@ -35,6 +35,9 @@ class HTMLMeterElement final : public nsGenericHTMLElement {
 
   /* @return the value */
   double Value() const;
+  /* Returns the percentage that this element should be filed based on the
+   * min/max/value */
+  double Position() const;
   void SetValue(double aValue, ErrorResult& aRv) {
     SetDoubleAttr(nsGkAtoms::value, aValue, aRv);
   }

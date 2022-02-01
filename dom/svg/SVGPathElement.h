@@ -46,12 +46,23 @@ class SVGPathElement final : public SVGPathElementBase {
   virtual bool AttributeDefinesGeometry(const nsAtom* aName) override;
   virtual bool IsMarkable() override;
   virtual void GetMarkPoints(nsTArray<SVGMark>* aMarks) override;
+  /*
+   * Note: This function maps d attribute to CSS d property, and we don't flush
+   * style in this function because some callers don't need it, so if the caller
+   * needs style to be flushed (e.g. DOM APIs), the caller should flush style
+   * before calling this.
+   */
   virtual already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
 
   /**
    * This returns a path without the extra little line segments that
    * ApproximateZeroLengthSubpathSquareCaps can insert if we have square-caps.
    * See the comment for that function for more info on that.
+   *
+   * Note: This function maps d attribute to CSS d property, and we don't flush
+   * style in this function because some callers don't need it, so if the caller
+   * needs style to be flushed (e.g. DOM APIs), the caller should flush style
+   * before calling this.
    */
   virtual already_AddRefed<Path> GetOrBuildPathForMeasuring() override;
 
@@ -68,7 +79,7 @@ class SVGPathElement final : public SVGPathElementBase {
   }
 
   // WebIDL
-  uint32_t GetPathSegAtLength(float distance);
+  MOZ_CAN_RUN_SCRIPT uint32_t GetPathSegAtLength(float distance);
   already_AddRefed<DOMSVGPathSegClosePath> CreateSVGPathSegClosePath();
   already_AddRefed<DOMSVGPathSegMovetoAbs> CreateSVGPathSegMovetoAbs(float x,
                                                                      float y);

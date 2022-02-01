@@ -994,9 +994,22 @@ struct ProfileBufferEntryWriter::Serializer<std::tuple<Ts...>> {
 
 template <typename... Ts>
 struct ProfileBufferEntryReader::Deserializer<std::tuple<Ts...>> {
+  template <size_t I>
+  static void TupleIReadInto(ProfileBufferEntryReader& aER,
+                             std::tuple<Ts...>& aTuple) {
+    aER.ReadIntoObject(std::get<I>(aTuple));
+  }
+
+  template <size_t... Is>
+  static void TupleReadInto(ProfileBufferEntryReader& aER,
+                            std::tuple<Ts...>& aTuple,
+                            std::index_sequence<Is...>) {
+    (TupleIReadInto<Is>(aER, aTuple), ...);
+  }
+
   static void ReadInto(ProfileBufferEntryReader& aER,
                        std::tuple<Ts...>& aTuple) {
-    aER.ReadBytes(&aTuple, Bytes(aTuple));
+    TupleReadInto(aER, aTuple, std::index_sequence_for<Ts...>());
   }
 
   static std::tuple<Ts...> Read(ProfileBufferEntryReader& aER) {
@@ -1055,8 +1068,20 @@ struct ProfileBufferEntryWriter::Serializer<Tuple<Ts...>> {
 
 template <typename... Ts>
 struct ProfileBufferEntryReader::Deserializer<Tuple<Ts...>> {
+  template <size_t I>
+  static void TupleIReadInto(ProfileBufferEntryReader& aER,
+                             Tuple<Ts...>& aTuple) {
+    aER.ReadIntoObject(Get<I>(aTuple));
+  }
+
+  template <size_t... Is>
+  static void TupleReadInto(ProfileBufferEntryReader& aER, Tuple<Ts...>& aTuple,
+                            std::index_sequence<Is...>) {
+    (TupleIReadInto<Is>(aER, aTuple), ...);
+  }
+
   static void ReadInto(ProfileBufferEntryReader& aER, Tuple<Ts...>& aTuple) {
-    aER.ReadBytes(&aTuple, Bytes(aTuple));
+    TupleReadInto(aER, aTuple, std::index_sequence_for<Ts...>());
   }
 
   static Tuple<Ts...> Read(ProfileBufferEntryReader& aER) {

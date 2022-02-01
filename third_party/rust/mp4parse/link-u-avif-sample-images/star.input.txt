@@ -1,0 +1,9 @@
+file 'star.png'
+duration 0.1
+file 'star90.png'
+duration 0.1
+file 'star180.png'
+duration 0.1
+file 'star270.png'
+duration 0.1
+file 'star.png'

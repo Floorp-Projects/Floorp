@@ -269,6 +269,11 @@ DeviceResetReason:
     Reason why a DirectX device has been reset, Windows only.
   type: string
 
+DistributionID:
+  description: >
+    Product application's distribution ID.
+  type: string
+
 DOMFissionEnabled:
   description: >
     Set to 1 when DOM fission is enabled, and subframes are potentially loaded
@@ -306,6 +311,12 @@ ExpectedStreamLen:
 ExperimentalFeatures:
   description: >
     Comma-separated list of enabled experimental features from about:preferences#experimental.
+  type: string
+  ping: true
+
+FontName:
+  description: >
+    Set before attempting to load a font to help diagnose crashes during loading.
   type: string
   ping: true
 

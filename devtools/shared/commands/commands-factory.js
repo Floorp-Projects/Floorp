@@ -126,14 +126,17 @@ exports.CommandsFactory = {
   },
 
   /**
-   * One method to handle the whole setup sequence to connect to RDP backend for the Browser Console.
-   *
-   * This will instantiate a special DevTools module loader for the DevToolsServer.
-   * Then spawn a DevToolsClient to connect to it.
-   * Get a Main Process Descriptor from it.
-   * Finally spawn a commands object for this descriptor.
+   * This method will spawn a special `DevToolsClient`
+   * which is meant to debug the same Firefox instance
+   * and especially be able to debug chrome code.
+   * The chrome code typically runs in the system principal.
+   * This principal is a singleton which is shared among most Firefox internal codebase
+   * (JSM, privileged html documents, JS-XPCOM,...)
+   * In order to be able to debug these script we need to connect to a special DevToolsServer
+   * that runs in a dedicated and distinct system principal which is different from
+   * the one shared with the rest of Firefox frontend codebase.
    */
-  async forBrowserConsole() {
+  async spawnClientToDebugSystemPrincipal() {
     // The Browser console ends up using the debugger in autocomplete.
     // Because the debugger can't be running in the same compartment than its debuggee,
     // we have to load the server in a dedicated Loader, flagged with
@@ -160,6 +163,23 @@ exports.CommandsFactory = {
 
     const client = new DevToolsClient(customDevToolsServer.connectPipe());
     await client.connect();
+
+    return client;
+  },
+
+  /**
+   * One method to handle the whole setup sequence to connect to RDP backend for the Browser Console.
+   *
+   * This will instantiate a special DevTools module loader for the DevToolsServer.
+   * Then spawn a DevToolsClient to connect to it.
+   * Get a Main Process Descriptor from it.
+   * Finally spawn a commands object for this descriptor.
+   */
+  async forBrowserConsole() {
+    // The Browser console ends up using the debugger in autocomplete.
+    // Because the debugger can't be running in the same compartment than its debuggee,
+    // we have to load the server in a dedicated Loader and so spawn a special client
+    const client = await this.spawnClientToDebugSystemPrincipal();
 
     const descriptor = await client.mainRoot.getMainProcess();
 

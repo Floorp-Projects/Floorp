@@ -9,10 +9,9 @@ function testCompile(sourceIsLazy1, sourceIsLazy2,
                      forceFullParse1, forceFullParse2) {
   const stencil = compileToStencil(code, { sourceIsLazy: sourceIsLazy1,
                                            forceFullParse: forceFullParse1 });
-  assertThrowsInstanceOf(() => {
-    evalStencil(stencil, { sourceIsLazy: sourceIsLazy2,
-                           forceFullParse: forceFullParse2 });
-  }, Error);
+  // The laziness options are ignored for instantiation, and no error is thrown.
+  evalStencil(stencil, { sourceIsLazy: sourceIsLazy2,
+                         forceFullParse: forceFullParse2 });
 }
 
 function testOffThreadCompile(sourceIsLazy1, sourceIsLazy2,
@@ -20,10 +19,9 @@ function testOffThreadCompile(sourceIsLazy1, sourceIsLazy2,
   offThreadCompileToStencil(code, { sourceIsLazy: sourceIsLazy1,
                                     forceFullParse: forceFullParse1 });
   const stencil = finishOffThreadCompileToStencil();
-  assertThrowsInstanceOf(() => {
-    evalStencil(stencil, { sourceIsLazy: sourceIsLazy2,
-                           forceFullParse: forceFullParse2 });
-  }, Error);
+  // The laziness options are ignored for instantiation, and no error is thrown.
+  evalStencil(stencil, { sourceIsLazy: sourceIsLazy2,
+                         forceFullParse: forceFullParse2 });
 }
 
 function testXDR(sourceIsLazy1, sourceIsLazy2,
@@ -41,10 +39,15 @@ function testOffThreadXDR(sourceIsLazy1, sourceIsLazy2,
   evaluate(t, { sourceIsLazy: sourceIsLazy1,
                 forceFullParse: forceFullParse1,
                 saveIncrementalBytecode: true });
-  offThreadDecodeScript(t, { sourceIsLazy: sourceIsLazy2,
-                             forceFullParse: forceFullParse2 });
+
   // The compile options are ignored when decoding, and no error is thrown.
-  runOffThreadDecodedScript();
+  offThreadDecodeStencil(t, { sourceIsLazy: sourceIsLazy2,
+                             forceFullParse: forceFullParse2 });
+  const stencil = finishOffThreadDecodeStencil();
+
+  // The laziness options are ignored for instantiation, and no error is thrown.
+  evalStencil(stencil, { sourceIsLazy: sourceIsLazy2,
+                         forceFullParse: forceFullParse2 });
 }
 
 const optionsList = [

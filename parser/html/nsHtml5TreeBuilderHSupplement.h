@@ -25,6 +25,15 @@ nsHtml5TreeOpStage* mSpeculativeLoadStage;
 nsresult mBroken;
 bool mCurrentHtmlScriptIsAsyncOrDefer;
 bool mPreventScriptExecution;
+/**
+ * Whether to actually generate speculative load operations that actually
+ * represent speculative loads as opposed to other operations traveling
+ * in the same queue. True for normal loads and false for XHR, plain text,
+ * and View Source. Needed, because we can't just null-check
+ * mSpeculativeLoadStage, since it is used for transferring encoding
+ * information even in the XHR/plain text/View Source cases.
+ */
+bool mGenerateSpeculativeLoads;
 #ifdef DEBUG
 bool mActive;
 #endif
@@ -84,7 +93,8 @@ void MarkAsBrokenFromPortability(nsresult aRv);
 public:
 explicit nsHtml5TreeBuilder(nsHtml5OplessBuilder* aBuilder);
 
-nsHtml5TreeBuilder(nsAHtml5TreeOpSink* aOpSink, nsHtml5TreeOpStage* aStage);
+nsHtml5TreeBuilder(nsAHtml5TreeOpSink* aOpSink, nsHtml5TreeOpStage* aStage,
+                   bool aGenerateSpeculativeLoads);
 
 ~nsHtml5TreeBuilder();
 
@@ -104,8 +114,21 @@ bool Flush(bool aDiscretionary = false);
 
 void FlushLoads();
 
+/**
+ * Sets the document charset via the speculation queue.
+ *
+ * @param aCommitEncodingSpeculation true iff the main thread should
+ *                           treat the first speculation as an
+ *                           encoding speculation.
+ */
 void SetDocumentCharset(NotNull<const Encoding*> aEncoding,
-                        int32_t aCharsetSource);
+                        nsCharsetSource aCharsetSource,
+                        bool aCommitEncodingSpeculation);
+
+/**
+ * Updates the charset source via the op queue.
+ */
+void UpdateCharsetSource(nsCharsetSource aCharsetSource);
 
 void StreamEnded();
 

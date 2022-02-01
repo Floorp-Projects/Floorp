@@ -143,8 +143,14 @@ describe("Multistage AboutWelcome module", () => {
       const colorwaysOptionIcons = wrapper.find(
         ".tiles-theme-section .theme .icon"
       );
+
+      const colorwaysLabels = wrapper.find(
+        ".tiles-theme-section .theme span.sr-only"
+      );
+
       assert.strictEqual(colorwaysOptions.length, 2);
       assert.strictEqual(colorwaysOptionIcons.length, 2);
+      assert.strictEqual(colorwaysLabels.length, 2);
 
       // First colorway option
       // Default theme radio option is selected by default
@@ -175,6 +181,12 @@ describe("Multistage AboutWelcome module", () => {
       assert.strictEqual(
         colorwaysOptions.last().prop("data-colorway"),
         "abstract"
+      );
+
+      //Colorway should be labelled for screen readers (parent label is for tooltip only, and does not describe the Colorway)
+      assert.strictEqual(
+        colorwaysOptions.last().prop("aria-labelledby"),
+        "abstract-label"
       );
     });
 

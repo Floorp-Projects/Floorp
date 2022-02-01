@@ -22,7 +22,6 @@
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsUnicodeProperties.h"
 #include "nsCRT.h"
 #include "mozilla/Casting.h"
 #include "mozilla/EditorUtils.h"
@@ -31,6 +30,8 @@
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/intl/Segmenter.h"
+#include "mozilla/intl/UnicodeProperties.h"
+#include "nsUnicodeProperties.h"
 #include "mozilla/Span.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_converter.h"
@@ -148,8 +149,8 @@ int32_t nsPlainTextSerializer::CurrentLine::FindWrapIndexForContent(
   // bug 333064 for more information. We break only at ASCII spaces.
   if (aWrapColumn >= prefixwidth) {
     // Search backward from the adjusted wrap column or from the text end.
-    goodSpace = static_cast<int32_t>(
-        std::min(aWrapColumn - prefixwidth, mContent.Length() - 1));
+    goodSpace =
+        std::min<int32_t>(aWrapColumn - prefixwidth, mContent.Length() - 1);
     while (goodSpace >= 0) {
       if (nsCRT::IsAsciiSpace(mContent.CharAt(goodSpace))) {
         return goodSpace;
@@ -1803,7 +1804,7 @@ int32_t GetUnicharWidth(char32_t aCh) {
     return 1;
   }
 
-  return unicode::IsEastAsianWidthFW(aCh) ? 2 : 1;
+  return intl::UnicodeProperties::IsEastAsianWidthFW(aCh) ? 2 : 1;
 }
 
 int32_t GetUnicharStringWidth(Span<const char16_t> aString) {

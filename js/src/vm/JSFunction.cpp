@@ -66,6 +66,10 @@
 #include "vm/WellKnownAtom.h"  // js_*_str
 #include "vm/WrapperObject.h"
 #include "wasm/AsmJS.h"
+#ifdef ENABLE_RECORD_TUPLE
+#  include "vm/RecordType.h"
+#  include "vm/TupleType.h"
+#endif
 
 #include "debugger/DebugAPI-inl.h"
 #include "vm/FrameIter-inl.h"  // js::FrameIter::unaliasedForEachActual
@@ -2216,6 +2220,11 @@ void js::ReportIncompatibleMethod(JSContext* cx, const CallArgs& args,
                  !thisv.toObject().staticPrototype() ||
                  thisv.toObject().staticPrototype()->getClass() != clasp);
       break;
+#  ifdef ENABLE_RECORD_TUPLE
+    case ValueType::ExtendedPrimitive:
+      MOZ_CRASH("ExtendedPrimitive is not supported yet");
+      break;
+#  endif
     case ValueType::String:
       MOZ_ASSERT(clasp != &StringObject::class_);
       break;

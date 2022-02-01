@@ -666,13 +666,7 @@ TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Fling) {
   EXPECT_GT(parentApzc->GetFrameMetrics().GetVisualScrollOffset().y, 10);
 }
 
-TEST_F(APZScrollHandoffTester, CrossApzcAxisLock_NoTouchAction) {
-  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
-  TestCrossApzcAxisLock();
-}
-
 TEST_F(APZScrollHandoffTester, CrossApzcAxisLock_TouchAction) {
-  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", true);
   TestCrossApzcAxisLock();
 }
 

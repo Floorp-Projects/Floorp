@@ -11,7 +11,7 @@ intr protocol PTestDescSub {
 child:
     async __delete__();
 
-    intr PTestDescSubsub();
+    [LegacyIntr] intr PTestDescSubsub();
 };
 
 }

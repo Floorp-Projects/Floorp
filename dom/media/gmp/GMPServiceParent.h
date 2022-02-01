@@ -164,7 +164,6 @@ class GeckoMediaPluginServiceParent final
 
   // Protected by mMutex from the base class.
   nsTArray<RefPtr<GMPParent>> mPlugins;
-  bool mShuttingDown;
 
   // True if we've inspected MOZ_GMP_PATH on the GMP thread and loaded any
   // plugins found there into mPlugins.
@@ -183,6 +182,7 @@ class GeckoMediaPluginServiceParent final
     T mValue;
   };
 
+  MainThreadOnly<bool> mShuttingDown;
   MainThreadOnly<bool> mWaitingForPluginsSyncShutdown;
 
   nsTArray<nsString> mPluginsWaitingForDeletion;

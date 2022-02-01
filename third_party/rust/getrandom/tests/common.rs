@@ -38,7 +38,7 @@ fn test_huge() {
     getrandom(&mut huge).unwrap();
 }
 
-#[cfg(any(unix, windows, target_os = "redox", target_os = "fuchsia"))]
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn test_multithreading() {
     use std::sync::mpsc::channel;

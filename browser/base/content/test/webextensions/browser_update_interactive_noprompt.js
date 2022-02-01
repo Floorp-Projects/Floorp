@@ -24,7 +24,7 @@ async function testUpdateNoPrompt(
   updateVersion = "2.0"
 ) {
   // Navigate away to ensure that BrowserOpenAddonMgr() opens a new tab
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:robots");
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:mozilla");
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
   // Install initial version of the test extension

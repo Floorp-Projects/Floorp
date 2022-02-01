@@ -9,6 +9,7 @@
 
 #include "mozilla/ContentIterator.h"
 #include "mozilla/dom/AbstractRange.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/mozalloc.h"
 #include "nsAtom.h"
 #include "nsComponentManagerUtils.h"
@@ -187,25 +188,6 @@ void FilteredContentIterator::Last() {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// ContentToParentOffset: returns the content node's parent and offset.
-//
-static void ContentToParentOffset(nsIContent* aContent, nsIContent** aParent,
-                                  int32_t* aOffset) {
-  if (!aParent || !aOffset) return;
-
-  *aParent = nullptr;
-  *aOffset = 0;
-
-  if (!aContent) return;
-
-  nsCOMPtr<nsIContent> parent = aContent->GetParent();
-  if (!parent) return;
-
-  *aOffset = parent->ComputeIndexOf(aContent);
-  parent.forget(aParent);
-}
-
-///////////////////////////////////////////////////////////////////////////
 // ContentIsInTraversalRange: returns true if content is visited during
 // the traversal of the range in the specified mode.
 //
@@ -216,21 +198,34 @@ static bool ContentIsInTraversalRange(nsIContent* aContent, bool aIsPreMode,
                                       int32_t aEndOffset) {
   NS_ENSURE_TRUE(aStartContainer && aEndContainer && aContent, false);
 
-  nsCOMPtr<nsIContent> parentNode;
-  int32_t indx = 0;
+  nsIContent* parentContent = aContent->GetParent();
+  if (MOZ_UNLIKELY(NS_WARN_IF(!parentContent))) {
+    return false;
+  }
+  Maybe<uint32_t> offsetInParent = parentContent->ComputeIndexOf(aContent);
+  NS_WARNING_ASSERTION(
+      offsetInParent.isSome(),
+      "Content is not in the parent, is this called during a DOM mutation?");
+  if (MOZ_UNLIKELY(NS_WARN_IF(offsetInParent.isNothing()))) {
+    return false;
+  }
 
-  ContentToParentOffset(aContent, getter_AddRefs(parentNode), &indx);
-
-  NS_ENSURE_TRUE(parentNode, false);
-
-  if (!aIsPreMode) ++indx;
+  if (!aIsPreMode) {
+    MOZ_ASSERT(*offsetInParent != UINT32_MAX);
+    ++(*offsetInParent);
+  }
 
   const Maybe<int32_t> startRes = nsContentUtils::ComparePoints(
-      aStartContainer, aStartOffset, parentNode, indx);
+      aStartContainer, aStartOffset, parentContent, *offsetInParent);
+  if (MOZ_UNLIKELY(NS_WARN_IF(!startRes))) {
+    return false;
+  }
   const Maybe<int32_t> endRes = nsContentUtils::ComparePoints(
-      aEndContainer, aEndOffset, parentNode, indx);
-  return !NS_WARN_IF(!startRes || !endRes) && (*startRes <= 0) &&
-         (*endRes >= 0);
+      aEndContainer, aEndOffset, parentContent, *offsetInParent);
+  if (MOZ_UNLIKELY(NS_WARN_IF(!endRes))) {
+    return false;
+  }
+  return *startRes <= 0 && *endRes >= 0;
 }
 
 static bool ContentIsInTraversalRange(nsRange* aRange, nsIContent* aNextContent,

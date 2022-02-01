@@ -12,6 +12,13 @@ with Files("**"):
 
 TEST_DIRS += ["test"]
 
+if CONFIG["FUZZING"]:
+    if CONFIG["FUZZING_INTERFACES"]:
+        TEST_DIRS += ["fuzztest"]
+
+# Add libFuzzer configuration directives
+include("/tools/fuzzing/libfuzzer-config.mozbuild")
+
 XPIDL_SOURCES += [
     "mozIDOMWindow.idl",
     "nsIContentPolicy.idl",
@@ -141,6 +148,7 @@ EXPORTS.mozilla.dom += [
     "!UseCounterWorkerList.h",
     "AbstractRange.h",
     "AncestorIterator.h",
+    "AnimationFrameProvider.h",
     "AnonymousContent.h",
     "Attr.h",
     "AutoPrintEventDispatcher.h",
@@ -288,6 +296,7 @@ if CONFIG["FUZZING"]:
 
 UNIFIED_SOURCES += [
     "AbstractRange.cpp",
+    "AnimationFrameProvider.cpp",
     "AnonymousContent.cpp",
     "Attr.cpp",
     "AttrArray.cpp",
@@ -564,8 +573,8 @@ include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
 
-if CONFIG["MOZ_X11"]:
-    CXXFLAGS += CONFIG["TK_CFLAGS"]
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
 GeneratedFile(
     "UseCounterList.h",

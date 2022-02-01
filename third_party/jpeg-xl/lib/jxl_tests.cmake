@@ -27,6 +27,7 @@ set(TEST_FILES
   jxl/enc_photon_noise_test.cc
   jxl/encode_test.cc
   jxl/entropy_coder_test.cc
+  jxl/fast_dct_test.cc
   jxl/fast_math_test.cc
   jxl/fields_test.cc
   jxl/filters_internal_test.cc

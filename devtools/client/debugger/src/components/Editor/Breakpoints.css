@@ -84,7 +84,8 @@
   stroke: var(--logpoint-stroke);
 }
 
-.editor.new-breakpoint.breakpoint-disabled svg {
+.editor.new-breakpoint.breakpoint-disabled svg,
+.blackboxed-line .editor.new-breakpoint svg {
   fill-opacity: var(--breakpoint-disabled-opacity);
   stroke-opacity: var(--breakpoint-disabled-opacity);
 }

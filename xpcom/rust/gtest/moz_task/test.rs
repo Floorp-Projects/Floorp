@@ -6,8 +6,6 @@ use moz_task;
 use std::{
     future::Future,
     pin::Pin,
-    sync::atomic::{AtomicBool, Ordering::Relaxed},
-    sync::Arc,
     task::{Context, Poll, Waker},
 };
 
@@ -15,21 +13,25 @@ use std::{
 struct MyFuture {
     poll_count: u32,
     waker: Option<Waker>,
+    expect_main_thread: bool,
 }
 
-impl Default for MyFuture {
-    fn default() -> Self {
+impl MyFuture {
+    fn new(expect_main_thread: bool) -> Self {
         Self {
             poll_count: 0,
             waker: None,
+            expect_main_thread,
         }
     }
 }
 
 impl Future for MyFuture {
-    type Output = ();
+    type Output = u32;
 
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<()> {
+    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<u32> {
+        assert_eq!(moz_task::is_main_thread(), self.expect_main_thread);
+
         self.poll_count += 1;
 
         if let Some(waker) = &mut self.waker {
@@ -43,7 +45,7 @@ impl Future for MyFuture {
 
         println!("Poll count = {}", self.poll_count);
         if self.poll_count > 5 {
-                Poll::Ready(())
+            Poll::Ready(self.poll_count)
         } else {
             // Just notify the task that we need to re-polled.
             if let Some(waker) = &self.waker {
@@ -56,17 +58,21 @@ impl Future for MyFuture {
 
 #[no_mangle]
 pub extern "C" fn Rust_Future(it_worked: *mut bool) {
-    let done = Arc::new(AtomicBool::new(false));
-    let done2 = done.clone();
-
-    moz_task::spawn_current_thread(async move {
-        MyFuture::default().await;
-        done.store(true, Relaxed);
-    })
-    .unwrap();
-
+    let future = async move {
+        assert_eq!(MyFuture::new(true).await, 6);
+        assert_eq!(
+            moz_task::spawn_local("Rust_Future inner spawn_local", MyFuture::new(true)).await,
+            6
+        );
+        assert_eq!(
+            moz_task::spawn("Rust_Future inner spawn", MyFuture::new(false)).await,
+            6
+        );
+        unsafe {
+            *it_worked = true;
+        }
+    };
     unsafe {
-        moz_task::gtest_only::spin_event_loop_until(move || done2.load(Relaxed)).unwrap();
-        *it_worked = true;
+        moz_task::gtest_only::spin_event_loop_until("Rust_Future", future).unwrap();
     };
 }

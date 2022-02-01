@@ -8,11 +8,6 @@
  * header is visible only if there are requests in the list.
  */
 add_task(async function() {
-  // Using https-first for this test is blocked on Bug 1733420.
-  // We expect a > 0 latency, but we always get -1 for HTTPS requests using
-  // httpd.js.
-  await pushPref("dom.security.https_first", false);
-
   const { monitor } = await initNetMonitor(SIMPLE_URL, {
     requestCount: 1,
   });

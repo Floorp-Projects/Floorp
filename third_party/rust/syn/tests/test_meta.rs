@@ -1,3 +1,5 @@
+#![allow(clippy::shadow_unrelated, clippy::too_many_lines)]
+
 #[macro_use]
 mod macros;
 

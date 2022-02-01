@@ -251,6 +251,7 @@ UNIFIED_SOURCES += [
     "ChannelMediaResource.cpp",
     "CloneableWithRangeMediaResource.cpp",
     "CrossGraphPort.cpp",
+    "DeviceInputTrack.cpp",
     "DOMMediaStream.cpp",
     "DynamicResampler.cpp",
     "FileBlockCache.cpp",

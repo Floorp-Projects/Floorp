@@ -40,13 +40,11 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
         EXPORTS.mozilla.layers += [
             "d3d11/CompositorD3D11.h",
             "d3d11/DeviceAttachmentsD3D11.h",
-            "d3d11/DiagnosticsD3D11.h",
             "d3d11/HelpersD3D11.h",
             "d3d11/ShaderDefinitionsD3D11.h",
             "d3d11/TextureD3D11.h",
         ]
         UNIFIED_SOURCES += [
-            "d3d11/DiagnosticsD3D11.cpp",
             "d3d11/TextureD3D11.cpp",
         ]
         SOURCES += [
@@ -466,7 +464,7 @@ IPDL_SOURCES += [
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
+if CONFIG["COMPILE_ENVIRONMENT"] and CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     GeneratedFile(
         "CompositorD3D11Shaders.h",
         script="d3d11/genshaders.py",
@@ -497,7 +495,9 @@ if CONFIG["ENABLE_TESTS"]:
 MOCHITEST_MANIFESTS += ["apz/test/mochitest/mochitest.ini"]
 BROWSER_CHROME_MANIFESTS += ["apz/test/mochitest/browser.ini"]
 
-CXXFLAGS += CONFIG["TK_CFLAGS"]
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
+
 CXXFLAGS += ["-Werror=switch"]
 
 LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]

@@ -477,7 +477,7 @@ pub trait MergePredicate<T> {
     fn merge_pred(&mut self, a: &T, b: &T) -> bool;
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MergeLte;
 
 impl<T: PartialOrd> MergePredicate<T> for MergeLte {
@@ -849,6 +849,13 @@ pub struct FilterOk<I, F> {
     f: F
 }
 
+impl<I, F> fmt::Debug for FilterOk<I, F>
+where
+    I: fmt::Debug,
+{
+    debug_fmt_fields!(FilterOk, iter);
+}
+
 /// Create a new `FilterOk` iterator.
 pub fn filter_ok<I, F, T, E>(iter: I, f: F) -> FilterOk<I, F>
     where I: Iterator<Item = Result<T, E>>,
@@ -915,6 +922,13 @@ impl<I, F, T, E> FusedIterator for FilterOk<I, F>
 pub struct FilterMapOk<I, F> {
     iter: I,
     f: F
+}
+
+impl<I, F> fmt::Debug for FilterMapOk<I, F>
+where
+    I: fmt::Debug,
+{
+    debug_fmt_fields!(FilterMapOk, iter);
 }
 
 fn transpose_result<T, E>(result: Result<Option<T>, E>) -> Option<Result<T, E>> {
@@ -995,6 +1009,13 @@ pub struct Positions<I, F> {
     count: usize,
 }
 
+impl<I, F> fmt::Debug for Positions<I, F>
+where
+    I: fmt::Debug,
+{
+    debug_fmt_fields!(Positions, iter, count);
+}
+
 /// Create a new `Positions` iterator.
 pub fn positions<I, F>(iter: I, f: F) -> Positions<I, F>
     where I: Iterator,
@@ -1056,6 +1077,13 @@ impl<I, F> FusedIterator for Positions<I, F>
 pub struct Update<I, F> {
     iter: I,
     f: F,
+}
+
+impl<I, F> fmt::Debug for Update<I, F>
+where
+    I: fmt::Debug,
+{
+    debug_fmt_fields!(Update, iter);
 }
 
 /// Create a new `Update` iterator.

@@ -4,6 +4,7 @@
 //! "core" is handed off to a new thread allowing the scheduler to continue to
 //! make progress while the originating thread blocks.
 
+use crate::coop;
 use crate::loom::rand::seed;
 use crate::loom::sync::{Arc, Mutex};
 use crate::park::{Park, Unpark};
@@ -172,35 +173,69 @@ pub(super) fn create(size: usize, park: Parker) -> (Arc<Shared>, Launch) {
 }
 
 cfg_blocking! {
+    use crate::runtime::enter::EnterContext;
+
     pub(crate) fn block_in_place<F, R>(f: F) -> R
     where
         F: FnOnce() -> R,
     {
         // Try to steal the worker core back
-        struct Reset;
+        struct Reset(coop::Budget);
 
         impl Drop for Reset {
             fn drop(&mut self) {
                 CURRENT.with(|maybe_cx| {
                     if let Some(cx) = maybe_cx {
                         let core = cx.worker.core.take();
-                        *cx.core.borrow_mut() = core;
+                        let mut cx_core = cx.core.borrow_mut();
+                        assert!(cx_core.is_none());
+                        *cx_core = core;
+
+                        // Reset the task budget as we are re-entering the
+                        // runtime.
+                        coop::set(self.0);
                     }
                 });
             }
         }
 
+        let mut had_entered = false;
+
         CURRENT.with(|maybe_cx| {
-            let cx = maybe_cx.expect("can call blocking only when running in a spawned task");
+            match (crate::runtime::enter::context(),  maybe_cx.is_some()) {
+                (EnterContext::Entered { .. }, true) => {
+                    // We are on a thread pool runtime thread, so we just need to set up blocking.
+                    had_entered = true;
+                }
+                (EnterContext::Entered { allow_blocking }, false) => {
+                    // We are on an executor, but _not_ on the thread pool.
+                    // That is _only_ okay if we are in a thread pool runtime's block_on method:
+                    if allow_blocking {
+                        had_entered = true;
+                        return;
+                    } else {
+                        // This probably means we are on the basic_scheduler or in a LocalSet,
+                        // where it is _not_ okay to block.
+                        panic!("can call blocking only when running on the multi-threaded runtime");
+                    }
+                }
+                (EnterContext::NotEntered, true) => {
+                    // This is a nested call to block_in_place (we already exited).
+                    // All the necessary setup has already been done.
+                    return;
+                }
+                (EnterContext::NotEntered, false) => {
+                    // We are outside of the tokio runtime, so blocking is fine.
+                    // We can also skip all of the thread pool blocking setup steps.
+                    return;
+                }
+            }
+
+            let cx = maybe_cx.expect("no .is_some() == false cases above should lead here");
 
             // Get the worker core. If none is set, then blocking is fine!
             let core = match cx.core.borrow_mut().take() {
-                Some(core) => {
-                    // We are effectively leaving the executor, so we need to
-                    // forcibly end budgeting.
-                    crate::coop::stop();
-                    core
-                },
+                Some(core) => core,
                 None => return,
             };
 
@@ -222,9 +257,15 @@ cfg_blocking! {
             runtime::spawn_blocking(move || run(worker));
         });
 
-        let _reset = Reset;
+        if had_entered {
+            // Unset the current task's budget. Blocking sections are not
+            // constrained by task budgets.
+            let _reset = Reset(coop::stop());
 
-        f()
+            crate::runtime::enter::exit(f)
+        } else {
+            f()
+        }
     }
 }
 
@@ -256,7 +297,7 @@ fn run(worker: Arc<Worker>) {
         core: RefCell::new(None),
     };
 
-    let _enter = crate::runtime::enter();
+    let _enter = crate::runtime::enter(true);
 
     CURRENT.set(&cx, || {
         // This should always be an error. It only returns a `Result` to support
@@ -304,7 +345,7 @@ impl Context {
         *self.core.borrow_mut() = Some(core);
 
         // Run the task
-        crate::coop::budget(|| {
+        coop::budget(|| {
             task.run();
 
             // As long as there is budget remaining and a task exists in the
@@ -323,7 +364,7 @@ impl Context {
                     None => return Ok(core),
                 };
 
-                if crate::coop::has_budget_remaining() {
+                if coop::has_budget_remaining() {
                     // Run the LIFO task, then loop
                     *self.core.borrow_mut() = Some(core);
                     task.run();
@@ -530,7 +571,9 @@ impl Core {
         }
 
         // Drain the queue
-        while let Some(_) = self.next_local_task() {}
+        while self.next_local_task().is_some() {}
+
+        park.shutdown();
     }
 
     fn drain_pending_drop(&mut self, worker: &Worker) {
@@ -752,7 +795,7 @@ impl Shared {
         }
 
         // Drain the injection queue
-        while let Some(_) = self.inject.pop() {}
+        while self.inject.pop().is_some() {}
     }
 
     fn ptr_eq(&self, other: &Shared) -> bool {

@@ -1224,7 +1224,7 @@ TEST(JxlTest, RoundtripYCbCr420) {
   CodecInOut io3;
   EXPECT_TRUE(DecodeFile(dparams, compressed, &io3, pool));
 
-  EXPECT_LE(compressed.size(), 1320000u);
+  EXPECT_LE(compressed.size(), 1325000u);
 
   // we're comparing an original PNG with a YCbCr 4:2:0 version
   EXPECT_THAT(ButteraugliDistance(io, io3, cparams.ba_params,

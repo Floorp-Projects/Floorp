@@ -9,6 +9,7 @@ members = [
   "js/src/rust",
   "js/src/wasm/cranelift",
   "netwerk/test/http3server",
+  "security/manager/ssl/ipcclientcerts",
   "security/manager/ssl/osclientcerts",
   "testing/geckodriver",
   "toolkit/crashreporter/rust_minidump_writer_linux",
@@ -78,43 +79,36 @@ opt-level = 2
 opt-level = 2
 
 [patch.crates-io]
-chardetng = { git = "https://github.com/hsivonen/chardetng", rev="302c995f91f44cf26e77dc4758ad56c3ff0153ad" }
-chardetng_c = { git = "https://github.com/hsivonen/chardetng_c", rev="ed8a4c6f900a90d4dbc1d64b856e61490a1c3570" }
-libudev-sys = { path = "dom/webauthn/libudev-sys" }
-packed_simd = { git = "https://github.com/hsivonen/packed_simd", rev="8b4bd7d8229660a749dbe419a57ea01df9de5453" }
-minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer_linux.git", rev = "029ac0d54b237f27dc7d8d4e51bc0fb076e5e852" }
-# The following overrides point to dummy projects, as a temporary measure until this is resolved:
-# https://github.com/rust-lang/cargo/issues/6179
-js-sys = { git = "https://github.com/kvark/dummy-web" }
-slotmap = { git = "https://github.com/kvark/dummy-web" }
-wasm-bindgen = { git = "https://github.com/kvark/dummy-web" }
-web-sys = { git = "https://github.com/kvark/dummy-web" }
-
-[patch.crates-io.cranelift-codegen]
-git = "https://github.com/bytecodealliance/wasmtime"
-rev = "824fa69756523f2b6d49029fe25de94130b1f144"
-
-[patch.crates-io.cranelift-wasm]
-git = "https://github.com/bytecodealliance/wasmtime"
-rev = "824fa69756523f2b6d49029fe25de94130b1f144"
+# The build system doesn't want those to be used, but they are pulled anyways (because
+# dependencies can't be disabled based on features), but remain unused. We ensure they
+# stay unused by overriding them with crates that contain enough to build the current
+# code and will fail the build in unwanted cases.
+cmake = { path = "build/rust/cmake" }
+vcpkg = { path = "build/rust/vcpkg" }
 
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
-[patch.crates-io.autocfg]
-path = "third_party/rust/autocfg"
+autocfg = { path = "third_party/rust/autocfg" }
+
+# The following overrides point to dummy projects, as a temporary measure until this is resolved:
+# https://github.com/rust-lang/cargo/issues/6179
+js-sys = { path = "build/rust/dummy-web/js-sys" }
+slotmap = { path = "build/rust/dummy-web/slotmap" }
+wasm-bindgen = { path = "build/rust/dummy-web/wasm-bindgen" }
+web-sys = { path = "build/rust/dummy-web/web-sys" }
+
+# Overrides to allow easier use of common internal crates.
+moz_asserts = { path = "mozglue/static/rust/moz_asserts" }
+
+# Other overrides
+chardetng = { git = "https://github.com/hsivonen/chardetng", rev="3484d3e3ebdc8931493aa5df4d7ee9360a90e76b" }
+chardetng_c = { git = "https://github.com/hsivonen/chardetng_c", rev="ed8a4c6f900a90d4dbc1d64b856e61490a1c3570" }
+coremidi = { git = "https://github.com/chris-zen/coremidi.git", rev="fc68464b5445caf111e41f643a2e69ccce0b4f83" }
+libudev-sys = { path = "dom/webauthn/libudev-sys" }
+packed_simd = { git = "https://github.com/hsivonen/packed_simd", rev="8b4bd7d8229660a749dbe419a57ea01df9de5453" }
+midir = { git = "https://github.com/mozilla/midir.git", rev = "4c11f0ffb5d6a10de4aff40a7b81218b33b94e6f" }
+minidump_writer_linux = { git = "https://github.com/msirringhaus/minidump_writer_linux.git", rev = "029ac0d54b237f27dc7d8d4e51bc0fb076e5e852" }
 
 # Patch mio 0.6 to use winapi 0.3 and miow 0.3, getting rid of winapi 0.2.
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.
 [patch.crates-io.mio]
 path = "third_party/rust/mio-0.6.23"
-
-[patch.crates-io.prost-derive]
-path = "third_party/rust/prost-derive"
-
-# Patched to work around https://github.com/rust-lang/rust/issues/88576
-[patch.crates-io.winapi-util]
-path = "third_party/rust/winapi-util"
-
-# Pick upstream patch for GCC 11 on armhf linux.
-[patch.crates-io.cc]
-git = "https://github.com/alexcrichton/cc-rs/"
-rev = "b2f6b146b75299c444e05bbde50d03705c7c4b6e"

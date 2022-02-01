@@ -42,7 +42,7 @@ cfg_resource_drivers! {
 mod thread;
 pub(crate) use self::thread::ParkThread;
 
-cfg_blocking_impl! {
+cfg_block_on! {
     pub(crate) use self::thread::{CachedParkThread, ParkError};
 }
 
@@ -88,6 +88,9 @@ pub(crate) trait Park {
     /// an implementation detail. Refer to the documentation for the specific
     /// `Park` implementation
     fn park_timeout(&mut self, duration: Duration) -> Result<(), Self::Error>;
+
+    /// Release all resources holded by the parker for proper leak-free shutdown
+    fn shutdown(&mut self);
 }
 
 /// Unblock a thread blocked by the associated `Park` instance.

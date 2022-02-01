@@ -31,13 +31,13 @@ export function readTimeFromWordCount(wordCount) {
 export const DSSource = ({
   source,
   timeToRead,
-  compact,
+  newSponsoredLabel,
   context,
   sponsor,
   sponsored_by_override,
 }) => {
-  // If we are compact, try to display sponsored label or time to read here.
-  if (compact) {
+  // First try to display sponsored label or time to read here.
+  if (newSponsoredLabel) {
     // If we can display something for spocs, do so.
     if (sponsored_by_override || sponsor || context) {
       return (
@@ -45,23 +45,24 @@ export const DSSource = ({
           context={context}
           sponsor={sponsor}
           sponsored_by_override={sponsored_by_override}
+          newSponsoredLabel="new-sponsored-label"
         />
       );
     }
+  }
 
-    // If we are not a spoc, and can display a time to read value.
-    if (timeToRead) {
-      return (
-        <p className="source clamp time-to-read">
-          <FluentOrText
-            message={{
-              id: `newtab-label-source-read-time`,
-              values: { source, timeToRead },
-            }}
-          />
-        </p>
-      );
-    }
+  // If we are not a spoc, and can display a time to read value.
+  if (timeToRead) {
+    return (
+      <p className="source clamp time-to-read">
+        <FluentOrText
+          message={{
+            id: `newtab-label-source-read-time`,
+            values: { source, timeToRead },
+          }}
+        />
+      </p>
+    );
   }
 
   // Otherwise display a default source.
@@ -75,7 +76,7 @@ export const DefaultMeta = ({
   title,
   excerpt,
   timeToRead,
-  compact,
+  newSponsoredLabel,
   context,
   context_type,
   cta,
@@ -89,8 +90,8 @@ export const DefaultMeta = ({
     <div className="info-wrap">
       <DSSource
         source={source}
-        compact={compact}
         timeToRead={timeToRead}
+        newSponsoredLabel={newSponsoredLabel}
         context={context}
         sponsor={sponsor}
         sponsored_by_override={sponsored_by_override}
@@ -105,7 +106,7 @@ export const DefaultMeta = ({
         </div>
       )}
     </div>
-    {!compact && (
+    {!newSponsoredLabel && (
       <DSContextFooter
         context_type={context_type}
         context={context}
@@ -116,18 +117,16 @@ export const DefaultMeta = ({
       />
     )}
     {/* Sponsored label is normally in the way of any message.
-        Compact cards sponsored label is moved to just under the thumbnail,
+        newSponsoredLabel cards sponsored label is moved to just under the thumbnail,
         so we can display both, so we specifically don't pass in context. */}
-    {compact && (
-      <div className="story-footer">
-        <DSMessageFooter
-          context_type={context_type}
-          context={null}
-          display_engagement_labels={display_engagement_labels}
-          engagement={engagement}
-          saveToPocketCard={saveToPocketCard}
-        />
-      </div>
+    {newSponsoredLabel && (
+      <DSMessageFooter
+        context_type={context_type}
+        context={null}
+        display_engagement_labels={display_engagement_labels}
+        engagement={engagement}
+        saveToPocketCard={saveToPocketCard}
+      />
     )}
   </div>
 );
@@ -407,16 +406,38 @@ export class _DSCard extends React.PureComponent {
       );
     }
     const isButtonCTA = this.props.cta_variant === "button";
-    const includeDescriptions = this.props.include_descriptions;
-    const { saveToPocketCard } = this.props;
-    const baseClass = `ds-card ${this.props.is_video ? `video-card` : ``}`;
-    const excerpt = includeDescriptions ? this.props.excerpt : "";
 
-    const timeToRead =
-      this.props.time_to_read || readTimeFromWordCount(this.props.word_count);
+    const {
+      is_video,
+      saveToPocketCard,
+      hideDescriptions,
+      compactImages,
+      imageGradient,
+      titleLines = 3,
+      descLines = 3,
+      displayReadTime,
+    } = this.props;
+    const excerpt = !hideDescriptions ? this.props.excerpt : "";
+
+    let timeToRead;
+    if (displayReadTime) {
+      timeToRead =
+        this.props.time_to_read || readTimeFromWordCount(this.props.word_count);
+    }
+
+    const videoCardClassName = is_video ? `video-card` : ``;
+    const compactImagesClassName = compactImages ? `ds-card-compact-image` : ``;
+    const imageGradientClassName = imageGradient
+      ? `ds-card-image-gradient`
+      : ``;
+    const titleLinesName = `ds-card-title-lines-${titleLines}`;
+    const descLinesClassName = `ds-card-desc-lines-${descLines}`;
 
     return (
-      <div className={baseClass} ref={this.setContextMenuButtonHostRef}>
+      <div
+        className={`ds-card ${videoCardClassName} ${videoCardClassName} ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName}`}
+        ref={this.setContextMenuButtonHostRef}
+      >
         <SafeAnchor
           className="ds-card-link"
           dispatch={this.props.dispatch}
@@ -445,7 +466,6 @@ export class _DSCard extends React.PureComponent {
               timeToRead={timeToRead}
               context={this.props.context}
               context_type={this.props.context_type}
-              compact={this.props.compact}
               engagement={this.props.engagement}
               cta={this.props.cta}
               sponsor={this.props.sponsor}
@@ -457,11 +477,11 @@ export class _DSCard extends React.PureComponent {
               source={this.props.source}
               title={this.props.title}
               excerpt={excerpt}
+              newSponsoredLabel={this.props.newSponsoredLabel}
               timeToRead={timeToRead}
               context={this.props.context}
               engagement={this.props.engagement}
               context_type={this.props.context_type}
-              compact={this.props.compact}
               cta={this.props.cta}
               cta_variant={this.props.cta_variant}
               sponsor={this.props.sponsor}

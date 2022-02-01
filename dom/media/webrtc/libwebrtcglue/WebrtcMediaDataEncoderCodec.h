@@ -52,11 +52,6 @@ class WebrtcMediaDataEncoder : public RefCountedWebrtcVideoEncoder {
   already_AddRefed<MediaDataEncoder> CreateEncoder(
       const webrtc::VideoCodec* aCodecSettings);
   bool InitEncoder();
-  /*
-    webrtc::RTPFragmentationHeader GetFragHeader(
-        const webrtc::VideoCodecType aCodecType,
-        const RefPtr<MediaRawData>& aFrame);
-  */
 
   const RefPtr<TaskQueue> mTaskQueue;
   const RefPtr<PEMFactory> mFactory;

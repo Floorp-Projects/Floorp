@@ -53,6 +53,7 @@ if CONFIG["MOZ_BUILD_APP"] != "tools/update-packaging":
         ]
     elif CONFIG["OS_ARCH"] == "Darwin":
         OS_LIBS += [
+            "-framework CoreFoundation",
             "-framework Security",
         ]
 

@@ -182,6 +182,81 @@ assertEq(
   1
 );
 
+// Simple uses of throw of some Wasm vectortype values (Simd128).
+if (wasmSimdEnabled()) {
+  assertEq(
+    wasmEvalText(
+      `(module
+         (type (func (param v128 v128 v128 v128)))
+         (tag $exn (type 0))
+         (func (export "f") (result i32)
+           try (result i32)
+             (v128.const i32x4 42 41 40 39)
+             (v128.const f32x4 4.2 4.1 0.40 3.9)
+             (v128.const i64x2 42 41)
+             (v128.const f64x2 4.2 4.1)
+             (throw $exn)
+           catch $exn
+             drop drop drop
+             (i64x2.all_true)
+           end))`
+    ).exports.f(),
+    1
+  );
+
+  assertEq(
+    wasmEvalText(
+      `(module
+         (type (func (param v128 v128 v128 v128)))
+         (tag $exn (type 0))
+         (func $foo (param v128 v128 v128 v128) (result i32)
+           (throw $exn (local.get 0)
+                       (local.get 1)
+                       (local.get 2)
+                       (local.get 3)))
+         (func (export "f") (result i32)
+           try (result i32)
+             (v128.const i32x4 42 41 40 39)
+             (v128.const f32x4 4.2 4.1 0.40 3.9)
+             (v128.const i64x2 42 41)
+             (v128.const f64x2 4.2 4.1)
+             (call $foo)
+           catch $exn
+             drop drop drop
+             (i64x2.all_true)
+           end))`
+    ).exports.f(),
+    1
+  );
+
+  {
+    let imports =
+        wasmEvalText(
+          `(module
+             (tag $exn (export "exn") (param v128))
+             (func (export "throws") (param v128) (result v128)
+               (throw $exn (local.get 0))
+               (v128.const i32x4 9 10 11 12)))`).exports;
+
+    let mod =
+        `(module
+           (import "m" "exn" (tag $exn (param v128)))
+           (import "m" "throws" (func $throws (param v128) (result v128)))
+           (func (export "f") (result i32) (local v128)
+             (v128.const i32x4 1 2 3 4)
+             (local.tee 0)
+             (try (param v128) (result v128)
+               (do (call $throws))
+               (catch $exn)
+               (catch_all (v128.const i32x4 5 6 7 8)))
+             (local.get 0)
+             (i32x4.eq)
+             (i32x4.all_true)))`;
+
+    assertEq(wasmEvalText(mod, { m : imports }).exports.f(), 1);
+  }
+}
+
 // Further nested call frames should be ok.
 assertEq(
   wasmEvalText(
@@ -204,6 +279,45 @@ assertEq(
          end))`
   ).exports.f(),
   1
+);
+
+// Basic throwing from loop.
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (tag $exn)
+       ;; For the purpose of this test, the params below should be increasing.
+       (func (export "f") (param $depth_to_throw_exn i32)
+                          (param $maximum_loop_iterations i32)
+                          (result i32)
+                          (local $loop_counter i32)
+         ;; The loop is counting down.
+         (local.get $maximum_loop_iterations)
+         (local.set $loop_counter)
+         (block $catch
+           (loop $loop
+             (if (i32.eqz (local.get $loop_counter))
+                 (then
+                   (return (i32.const 440)))
+                 (else
+                   (try
+                     (do
+                       (if (i32.eq (local.get $depth_to_throw_exn)
+                                   (local.get $loop_counter))
+                         (then
+                           (throw $exn))
+                         (else
+                           (local.set $loop_counter
+                                      (i32.sub (local.get $loop_counter)
+                                               (i32.const 1))))))
+                     (catch $exn (br $catch))
+                     (catch_all))))
+               (br $loop))
+             (return (i32.const 10001)))
+         (i32.const 10000)))`
+  ).exports.f(2, 4),
+  10000
 );
 
 // Ensure conditional throw works.
@@ -272,6 +386,103 @@ assertEq(
          (local.get 0)))`
   ).exports.f(),
   42
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (tag $exn)
+       (func (export "f") (result i32)
+         (try
+           (do throw $exn)
+           (catch $exn
+             (try
+               (do (throw $exn))
+               (catch $exn))))
+         (i32.const 27)))`
+  ).exports.f(),
+  27
+);
+
+{
+  let nested_throw_in_block_and_in_catch =
+      wasmEvalText(
+        `(module
+           (tag $exn)
+           (func $throw
+             (throw $exn))
+           (func (export "f") (param $arg i32) (result i32)
+             (block (result i32)
+               (try (result i32)
+                 (do
+                   (call $throw)
+                   (unreachable))
+                 (catch $exn
+                   (if (result i32)
+                     (local.get $arg)
+                     (then
+                       (try (result i32)
+                         (do
+                           (call $throw)
+                           (unreachable))
+                         (catch $exn
+                           (i32.const 27))))
+                     (else
+                       (i32.const 11))))))))`
+      ).exports.f;
+
+  assertEq(nested_throw_in_block_and_in_catch(1), 27);
+  assertEq(nested_throw_in_block_and_in_catch(0), 11);
+}
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (tag $thrownExn)
+       (tag $notThrownExn)
+       (func (export "f") (result i32)
+         (try (result i32)
+           (do
+             (try (result i32)
+               (do (throw $thrownExn))
+               (catch $notThrownExn
+                 (i32.const 19))
+               (catch $thrownExn
+                 (i32.const 20))
+               (catch_all
+                 (i32.const 21)))))))`
+  ).exports.f(),
+  20
+);
+
+// Test that uncaught exceptions get propagated.
+assertEq(
+  wasmEvalText(
+    `(module
+       (tag $thrownExn)
+       (tag $notThrownExn)
+       (func (export "f") (result i32) (local i32)
+         (try
+           (do
+             (try
+               (do
+                 (try
+                   (do (throw $thrownExn))
+                   (catch $notThrownExn
+                     (local.set 0
+                       (i32.or (local.get 0)
+                               (i32.const 1))))))
+               (catch $notThrownExn
+                 (local.set 0
+                   (i32.or (local.get 0)
+                           (i32.const 2))))))
+           (catch $thrownExn
+             (local.set 0
+               (i32.or (local.get 0)
+                       (i32.const 4)))))
+         (local.get 0)))`
+  ).exports.f(),
+  4
 );
 
 // Test tag dispatch for catches.
@@ -562,6 +773,26 @@ assertEq(
   42
 );
 
+assertEq(
+  wasmEvalText(
+    `(module
+       (tag $exn0)
+       (tag $exn1)
+       (tag $exn2)
+       (tag $exn3)
+       (tag $exn4)
+       (tag $exn5)
+       (func (export "f") (result i32)
+         (try (result i32)
+           (do (throw $exn4))
+           (catch $exn5 (i32.const 5))
+           (catch $exn2 (i32.const 2))
+           (catch $exn4 (i32.const 4)) ;; Caught here.
+           (catch $exn4 (i32.const 44)))))`
+  ).exports.f(),
+  4
+);
+
 // Try catch with block parameters.
 assertEq(
   wasmEvalText(
@@ -756,36 +987,42 @@ assertErrorMessage(
   "too much recursion"
 );
 
-// Ensure memory operations work after a throw. This is also testing that the
-// WasmTlsReg/HeapReg are set correctly when throwing.
+// Test all implemented instructions in a single module.
 {
-  let exports = wasmEvalText(
-    `(module $m
-       (memory $mem (data "bar"))
-       (type (func))
-       (tag $exn (export "e") (type 0))
-       (func (export "f")
-         (throw $exn)))`
-  ).exports;
+  let divFunctypeInline =
+      `(param $numerator i32) (param $denominator i32) (result i32)`;
 
-  assertEq(
-    wasmEvalText(
-      `(module
-         (type (func))
-         (import "m" "e" (tag $e (type 0)))
-         (import "m" "f" (func $foreign))
-         (memory $mem (data "foo"))
-         (func (export "f") (result i32)
-           try
-             call $foreign
-           catch $e
-           end
-           (i32.const 0)
-           (i32.load8_u)))`,
-      { m: exports }
-    ).exports.f(),
-    102
-  );
+  let safediv = wasmEvalText(
+    `(module
+       (tag $divexn (param i32 i32))
+       (tag $notThrownExn (param i32))
+       (func $throwingdiv ${divFunctypeInline}
+          (local.get $numerator)
+          (local.get $denominator)
+          (if (param i32 i32) (result i32)
+            (i32.eqz (local.get $denominator))
+            (then
+              (try (param i32 i32)
+                (do (throw $divexn))
+                (delegate 0))
+              (i32.const 9))
+            (else
+              i32.div_u)))
+       (func $safediv (export "safediv") ${divFunctypeInline}
+          (local.get $numerator)
+          (local.get $denominator)
+          (try (param i32 i32) (result i32)
+            (do
+              (call $throwingdiv))
+            (catch $notThrownExn)
+            (catch $divexn
+              i32.add)
+            (catch_all
+              (i32.const 44)))))`
+  ).exports.safediv;
+
+  assertEq(safediv(6, 3), 2);
+  assertEq(safediv(6, 0), 6);
 }
 
 // Test simple rethrow.
@@ -979,7 +1216,27 @@ assertEq(
   13
 );
 
+assertEq(
+  wasmEvalText(
+    `(module
+       (tag (param i32))
+       (func (export "f") (result i32)
+         (try (result i32)
+           (do (try
+                 (do (i32.const 13)
+                     (throw 0))
+                 (catch 0
+                   (i32.const 111)
+                   (rethrow 0)))
+               (i32.const 222))
+           (catch 0))))`
+  ).exports.f(),
+  13
+);
+
 // Test try-delegate blocks.
+
+// Dead delegate to caller
 assertEq(
   wasmEvalText(
     `(module
@@ -994,6 +1251,7 @@ assertEq(
   1
 );
 
+// Nested try-delegate.
 assertEq(
   wasmEvalText(
     `(module
@@ -1013,6 +1271,7 @@ assertEq(
   1
 );
 
+// Non-throwing and breaking try-delegate.
 assertEq(
   wasmEvalText(
     `(module
@@ -1022,8 +1281,8 @@ assertEq(
            i32.const 1
            br 0
          delegate 0))`
-  ).exports.f(),
-  1
+    ).exports.f(),
+    1
 );
 
 assertEq(
@@ -1035,13 +1294,14 @@ assertEq(
            i32.const 1
            return
          delegate 0))`
-  ).exports.f(),
-  1
-);
+    ).exports.f(),
+    1
+  );
 
+// More nested try-delegate.
 assertEq(
-  wasmEvalText(
-    `(module
+    wasmEvalText(
+      `(module
        (type (func (param i32)))
        (tag $exn (type 0))
        (func (export "f") (result i32)
@@ -1137,6 +1397,8 @@ assertEq(
 );
 
 // Test delegation to function body and blocks.
+
+// Non-throwing.
 assertEq(
   wasmEvalText(
     `(module
@@ -1149,6 +1411,7 @@ assertEq(
   1
 );
 
+// Block target.
 assertEq(
   wasmEvalText(
     `(module
@@ -1168,6 +1431,7 @@ assertEq(
   1
 );
 
+// Catch target.
 assertEq(
   wasmEvalText(
     `(module
@@ -1189,6 +1453,7 @@ assertEq(
   1
 );
 
+// Target function body.
 assertEq(
   wasmEvalText(
     `(module
@@ -1212,4 +1477,52 @@ assertEq(
          end))`
   ).exports.f(),
   42
+);
+
+// Try-delegate from inside a loop.
+assertEq(
+  wasmEvalText(
+    `(module
+       (tag $exn)
+       ;; For the purpose of this test, the params below should be increasing.
+       (func (export "f") (param $depth_to_throw_exn i32)
+                          (param $maximum_loop_iterations i32)
+                          (result i32)
+                          (local $loop_countdown i32)
+                          ;; Counts how many times the loop was started.
+                          (local $loop_verifier i32)
+         ;; The loop is counting down.
+         (local.get $maximum_loop_iterations)
+         (local.set $loop_countdown)
+         (try $catch_exn (result i32)
+           (do
+             (try
+               (do
+                 (loop $loop
+                   ;; Counts how many times the loop was started.
+                   (local.set $loop_verifier
+                              (i32.add (i32.const 1)
+                                       (local.get $loop_verifier)))
+                   (if (i32.eqz (local.get $loop_countdown))
+                     (then (return (i32.const 440)))
+                     (else
+                       (try $rethrow_label
+                         (do
+                           (if (i32.eq (local.get $depth_to_throw_exn)
+                                       (local.get $loop_countdown))
+                               (then (throw $exn))
+                               (else
+                                 (local.set $loop_countdown
+                                            (i32.sub (local.get $loop_countdown)
+                                                     (i32.const 1))))))
+                         (catch $exn (try
+                                       (do (rethrow $rethrow_label))
+                                       (delegate $catch_exn))))))
+                   (br $loop)))
+               (catch_all unreachable))
+             (i32.const 2000))
+           (catch_all (i32.const 10000)))
+         (i32.add (local.get $loop_verifier))))`
+  ).exports.f(3, 5),
+  10003
 );

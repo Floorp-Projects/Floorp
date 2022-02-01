@@ -71,6 +71,19 @@ class ObjectBase : public nsWrapperCache {
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                \
   NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(T)
 
+#define GPU_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(T, ...) \
+  NS_IMPL_CYCLE_COLLECTION_CLASS(T)                             \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(T)                      \
+    tmp->Cleanup();                                             \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(__VA_ARGS__)                \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER           \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR                    \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_END                           \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(T)                    \
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(__VA_ARGS__)              \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                         \
+  NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(T)
+
 #define GPU_IMPL_CYCLE_COLLECTION(T, ...)            \
   NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(T, AddRef)    \
   NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(T, Release) \

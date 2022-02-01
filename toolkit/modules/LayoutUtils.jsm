@@ -9,8 +9,8 @@ var EXPORTED_SYMBOLS = ["LayoutUtils"];
 
 var LayoutUtils = {
   /**
-   * For a given DOM element, returns its position in "screen"
-   * coordinates.
+   * For a given DOM element, returns its position in screen coordinates
+   * (<https://developer.mozilla.org/en-US/docs/Web/CSS/CSSOM_View/Coordinate_systems#screen>).
    */
   getElementBoundingScreenRect(aElement) {
     let rect = aElement.getBoundingClientRect();

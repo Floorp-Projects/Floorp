@@ -23,6 +23,7 @@ class IdleTaskRunnerTask;
 // true to completely remove the runner.
 class IdleTaskRunner {
  public:
+  friend class IdleTaskRunnerTask;
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IdleTaskRunner)
 
   // Return true if some meaningful work was done.
@@ -32,6 +33,12 @@ class IdleTaskRunner {
   // stop processing. This can be an alternative to Cancel() or
   // work together in different way.
   using MayStopProcessingCallbackType = std::function<bool()>;
+
+  // A callback to be invoked when an interrupt is requested
+  // (eg during an idle activity when the user presses a key.)
+  // The callback takes an "interrupt priority" value as its
+  // sole parameter.
+  using RequestInterruptCallbackType = std::function<void(uint32_t)>;
 
  public:
   // An IdleTaskRunner has (up to) three phases:
@@ -53,7 +60,8 @@ class IdleTaskRunner {
       const CallbackType& aCallback, const char* aRunnableName,
       TimeDuration aStartDelay, TimeDuration aMaxDelay,
       TimeDuration aMinimumUsefulBudget, bool aRepeating,
-      const MayStopProcessingCallbackType& aMayStopProcessing);
+      const MayStopProcessingCallbackType& aMayStopProcessing,
+      const RequestInterruptCallbackType& aRequestInterrupt = nullptr);
 
   void Run();
 
@@ -77,7 +85,8 @@ class IdleTaskRunner {
       const CallbackType& aCallback, const char* aRunnableName,
       TimeDuration aStartDelay, TimeDuration aMaxDelay,
       TimeDuration aMinimumUsefulBudget, bool aRepeating,
-      const MayStopProcessingCallbackType& aMayStopProcessing);
+      const MayStopProcessingCallbackType& aMayStopProcessing,
+      const RequestInterruptCallbackType& aRequestInterrupt);
   ~IdleTaskRunner();
   void CancelTimer();
   void SetTimerInternal(TimeDuration aDelay);
@@ -103,6 +112,7 @@ class IdleTaskRunner {
   bool mRepeating;
   bool mTimerActive;
   MayStopProcessingCallbackType mMayStopProcessing;
+  RequestInterruptCallbackType mRequestInterrupt;
   const char* mName;
   RefPtr<IdleTaskRunnerTask> mTask;
 };

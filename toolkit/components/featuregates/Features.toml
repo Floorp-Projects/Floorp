@@ -9,17 +9,6 @@ bug-numbers = [1607954]
 is-public = true
 default-value = {default = false, nightly = true}
 
-[css-cascade-layers]
-title = "experimental-features-css-cascade-layers"
-description = "experimental-features-css-cascade-layers-description"
-description-links = {spec = "https://drafts.csswg.org/css-cascade-5/#layering", bugzilla = "https://bugzilla.mozilla.org/show_bug.cgi?id=1699215"}
-restart-required = false
-preference = "layout.css.cascade-layers.enabled"
-type = "boolean"
-bug-numbers = [1699215]
-is-public = true
-default-value = {default = false, nightly = true}
-
 [web-api-webgpu]
 title = "experimental-features-web-gpu2"
 description = "experimental-features-web-gpu-description2"
@@ -61,8 +50,8 @@ restart-required = false
 preference = "devtools.webconsole.input.context"
 type = "boolean"
 bug-numbers = [1605154, 1605153]
-is-public = {default = false, nightly = true}
-default-value = {default = false, nightly = true}
+is-public = true
+default-value = true
 
 [devtools-compatibility-panel]
 title = "experimental-features-devtools-compatibility-panel"
@@ -82,7 +71,7 @@ restart-required = false
 preference = "network.cookie.sameSite.laxByDefault"
 type = "boolean"
 bug-numbers = [1618610, 1617609]
-default-value = true
+default-value = {default = false, early_beta_or_earlier = true}
 is-public = true
 
 [cookie-samesite-none-requires-secure]
@@ -93,7 +82,7 @@ preference = "network.cookie.sameSite.noneRequiresSecure"
 type = "boolean"
 bug-numbers = [1618610, 1617609]
 is-public = true
-default-value = true
+default-value = {default = false, early_beta_or_earlier = true}
 
 [abouthome-startup-cache]
 title = "experimental-features-abouthome-startup-cache"
@@ -113,7 +102,7 @@ preference = "network.cookie.sameSite.schemeful"
 type = "boolean"
 bug-numbers = [1651119, 1617609]
 is-public = true
-default-value = false
+default-value = {default = false, early_beta_or_earlier = true}
 
 [devtools-serviceworker-debugger-support]
 title = "experimental-features-devtools-serviceworker-debugger-support"
@@ -144,27 +133,6 @@ type = "boolean"
 bug-numbers = [1697865]
 is-public = true
 default-value = false
-
-[fission]
-title = "experimental-features-fission"
-description = "experimental-features-fission-description"
-description-links = {wiki = "https://wiki.mozilla.org/Project_Fission"}
-restart-required = true
-preference = "fission.autostart"
-type = "boolean"
-bug-numbers = [1652134]
-is-public = true
-default-value = false
-
-[multi-pip]
-title = "experimental-features-multi-pip"
-description = "experimental-features-multi-pip-description"
-restart-required = false
-preference = "media.videocontrols.picture-in-picture.allow-multiple"
-type = "boolean"
-bug-numbers = [1676162]
-is-public = true
-default-value = true
 
 [url-bar-ime-search]
 title = "experimental-features-ime-search"

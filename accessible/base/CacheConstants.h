@@ -19,6 +19,7 @@ class CacheDomain {
   static constexpr uint64_t Text = ((uint64_t)0x1) << 4;
   static constexpr uint64_t DOMNodeID = ((uint64_t)0x1) << 5;
   static constexpr uint64_t State = ((uint64_t)0x1) << 6;
+  static constexpr uint64_t GroupInfo = ((uint64_t)0x1) << 7;
   static constexpr uint64_t All = ~((uint64_t)0x0);
 };
 

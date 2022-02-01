@@ -1,11 +1,13 @@
 {
   "applications": {
+    "browser_style": true,
     "gecko": {
       "id": "qr-code@mozilla.org"
     }
   },
   "manifest_version": 2,
   "name": "qr-code",
+  "default_locale": "en",
   "page_action": {
     "browser_style": true,
     "default_icon": "icon.svg",

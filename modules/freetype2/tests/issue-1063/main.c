@@ -1,4 +1,3 @@
-#include <limits.h>
 #include <stdio.h>
 
 #include <freetype/freetype.h>
@@ -19,7 +18,7 @@ main( void )
    * command-line.
    */
   const char*  testdata_dir = getenv( "FREETYPE_TESTS_DATA_DIR" );
-  char         filepath[PATH_MAX];
+  char         filepath[FILENAME_MAX];
 
 
   snprintf( filepath, sizeof( filepath ), "%s/%s",

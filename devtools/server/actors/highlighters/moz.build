@@ -21,6 +21,7 @@ DevToolsModules(
     "measuring-tool.js",
     "node-tabbing-order.js",
     "paused-debugger.js",
+    "remote-node-picker-notice.js",
     "rulers.js",
     "selector.js",
     "shapes.js",

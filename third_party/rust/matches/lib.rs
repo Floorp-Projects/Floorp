@@ -1,3 +1,5 @@
+#![no_std]
+
 /// Check if an expression matches a refutable pattern.
 ///
 /// Syntax: `matches!(` *expression* `,` *pattern* `)`

@@ -30,7 +30,8 @@
 
 #define decl_fn(type, name) \
     decl_##type##_fn(BF(dav1d_##name, ssse3)); \
-    decl_##type##_fn(BF(dav1d_##name, avx2))
+    decl_##type##_fn(BF(dav1d_##name, avx2)); \
+    decl_##type##_fn(BF(dav1d_##name, avx512icl))
 #define init_fn(type0, type1, name, suffix) \
     c->type0[type1] = BF(dav1d_##name, suffix)
 
@@ -123,5 +124,23 @@ COLD void bitfn(dav1d_intra_pred_dsp_init_x86)(Dav1dIntraPredDSPContext *const c
     init_cfl_ac_fn(DAV1D_PIXEL_LAYOUT_I444 - 1, ipred_cfl_ac_444, avx2);
 
     c->pal_pred = BF(dav1d_pal_pred, avx2);
+
+    if (!(flags & DAV1D_X86_CPU_FLAG_AVX512ICL)) return;
+
+#if BITDEPTH == 8
+    init_angular_ipred_fn(DC_PRED,       ipred_dc,       avx512icl);
+    init_angular_ipred_fn(DC_128_PRED,   ipred_dc_128,   avx512icl);
+    init_angular_ipred_fn(TOP_DC_PRED,   ipred_dc_top,   avx512icl);
+    init_angular_ipred_fn(LEFT_DC_PRED,  ipred_dc_left,  avx512icl);
+    init_angular_ipred_fn(HOR_PRED,      ipred_h,        avx512icl);
+    init_angular_ipred_fn(VERT_PRED,     ipred_v,        avx512icl);
+    init_angular_ipred_fn(PAETH_PRED,    ipred_paeth,    avx512icl);
+    init_angular_ipred_fn(SMOOTH_PRED,   ipred_smooth,   avx512icl);
+    init_angular_ipred_fn(SMOOTH_H_PRED, ipred_smooth_h, avx512icl);
+    init_angular_ipred_fn(SMOOTH_V_PRED, ipred_smooth_v, avx512icl);
+    init_angular_ipred_fn(FILTER_PRED,   ipred_filter,   avx512icl);
+
+    c->pal_pred = BF(dav1d_pal_pred, avx512icl);
+#endif
 #endif
 }

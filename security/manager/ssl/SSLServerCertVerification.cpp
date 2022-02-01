@@ -522,34 +522,18 @@ static SECStatus BlockServerCertChangeForSpdy(
 // Gather telemetry on whether the end-entity cert for a server has the
 // required TLS Server Authentication EKU, or any others
 void GatherEKUTelemetry(const UniqueCERTCertList& certList) {
+  MOZ_ASSERT(!CERT_LIST_EMPTY(certList));
+  if (CERT_LIST_EMPTY(certList)) {
+    return;
+  }
   CERTCertListNode* endEntityNode = CERT_LIST_HEAD(certList);
-  CERTCertListNode* rootNode = CERT_LIST_TAIL(certList);
-  MOZ_ASSERT(!(CERT_LIST_END(endEntityNode, certList) ||
-               CERT_LIST_END(rootNode, certList)));
-  if (CERT_LIST_END(endEntityNode, certList) ||
-      CERT_LIST_END(rootNode, certList)) {
+  MOZ_ASSERT(endEntityNode);
+  if (!endEntityNode) {
     return;
   }
   CERTCertificate* endEntityCert = endEntityNode->cert;
   MOZ_ASSERT(endEntityCert);
   if (!endEntityCert) {
-    return;
-  }
-
-  // Only log telemetry if the root CA is built-in
-  CERTCertificate* rootCert = rootNode->cert;
-  MOZ_ASSERT(rootCert);
-  if (!rootCert) {
-    return;
-  }
-  bool isBuiltIn = false;
-  Input rootInput;
-  Result rv = rootInput.Init(rootCert->derCert.data, rootCert->derCert.len);
-  if (rv != Result::Success) {
-    return;
-  }
-  rv = IsCertBuiltInRoot(rootInput, isBuiltIn);
-  if (rv != Success || !isBuiltIn) {
     return;
   }
 
@@ -628,8 +612,12 @@ void GatherRootCATelemetry(const UniqueCERTCertList& certList) {
 
 // There are various things that we want to measure about certificate
 // chains that we accept.  This is a single entry point for all of them.
-void GatherSuccessfulValidationTelemetry(const UniqueCERTCertList& certList) {
-  GatherEKUTelemetry(certList);
+void GatherSuccessfulValidationTelemetry(const UniqueCERTCertList& certList,
+                                         bool isCertListRootBuiltInRoot) {
+  if (isCertListRootBuiltInRoot) {
+    // Only gather this telemetry if the root CA is built-in
+    GatherEKUTelemetry(certList);
+  }
   GatherRootCATelemetry(certList);
 }
 
@@ -765,6 +753,7 @@ static void CollectCertTelemetry(
     KeySizeStatus aKeySizeStatus, SHA1ModeResult aSha1ModeResult,
     const PinningTelemetryInfo& aPinningTelemetryInfo,
     const nsTArray<nsTArray<uint8_t>>& aBuiltCertChain,
+    bool aIsBuiltCertChainRootBuiltInRoot,
     const CertificateTransparencyInfo& aCertificateTransparencyInfo) {
   UniqueCERTCertList builtCertChainList(CERT_NewCertList());
   if (!builtCertChainList) {
@@ -818,7 +807,8 @@ static void CollectCertTelemetry(
   }
 
   if (aCertVerificationResult == Success) {
-    GatherSuccessfulValidationTelemetry(builtCertChainList);
+    GatherSuccessfulValidationTelemetry(builtCertChainList,
+                                        aIsBuiltCertChainRootBuiltInRoot);
     GatherCertificateTransparencyTelemetry(builtCertChainList,
                                            aEVStatus == EVStatus::EV,
                                            aCertificateTransparencyInfo);
@@ -830,7 +820,7 @@ static void AuthCertificateSetResults(
     nsTArray<nsTArray<uint8_t>>&& aBuiltCertChain,
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, EVStatus aEvStatus,
-    bool aSucceeded, bool aIsCertChainRootBuiltInRoot) {
+    bool aSucceeded, bool aIsBuiltCertChainRootBuiltInRoot) {
   MOZ_ASSERT(aInfoObject);
   if (aSucceeded) {
     // Certificate verification succeeded. Delete any potential record of
@@ -844,7 +834,7 @@ static void AuthCertificateSetResults(
             ("AuthCertificate setting NEW cert %p", aCert));
 
     aInfoObject->SetIsBuiltCertChainRootBuiltInRoot(
-        aIsCertChainRootBuiltInRoot);
+        aIsBuiltCertChainRootBuiltInRoot);
     aInfoObject->SetCertificateTransparencyStatus(
         aCertificateTransparencyStatus);
   } else {
@@ -867,7 +857,7 @@ Result AuthCertificate(
     /*out*/ nsTArray<nsTArray<uint8_t>>& builtCertChain,
     /*out*/ EVStatus& evStatus,
     /*out*/ CertificateTransparencyInfo& certificateTransparencyInfo,
-    /*out*/ bool& aIsCertChainRootBuiltInRoot) {
+    /*out*/ bool& aIsBuiltCertChainRootBuiltInRoot) {
   CertVerifier::OCSPStaplingStatus ocspStaplingStatus =
       CertVerifier::OCSP_STAPLING_NEVER_CHECKED;
   KeySizeStatus keySizeStatus = KeySizeStatus::NeverChecked;
@@ -889,10 +879,11 @@ Result AuthCertificate(
       sctsFromTLSExtension, dcInfo, aOriginAttributes, &evStatus,
       &ocspStaplingStatus, &keySizeStatus, &sha1ModeResult,
       &pinningTelemetryInfo, &certificateTransparencyInfo,
-      &aIsCertChainRootBuiltInRoot);
+      &aIsBuiltCertChainRootBuiltInRoot);
 
   CollectCertTelemetry(rv, evStatus, ocspStaplingStatus, keySizeStatus,
                        sha1ModeResult, pinningTelemetryInfo, builtCertChain,
+                       aIsBuiltCertChainRootBuiltInRoot,
                        certificateTransparencyInfo);
 
   return rv;
@@ -1368,7 +1359,7 @@ void SSLServerCertVerificationResult::Dispatch(
     nsTArray<nsTArray<uint8_t>>&& aPeerCertChain,
     uint16_t aCertificateTransparencyStatus, EVStatus aEVStatus,
     bool aSucceeded, PRErrorCode aFinalError, uint32_t aCollectedErrors,
-    bool aIsCertChainRootBuiltInRoot, uint32_t aProviderFlags) {
+    bool aIsBuiltCertChainRootBuiltInRoot, uint32_t aProviderFlags) {
   mCert = aCert;
   mBuiltChain = std::move(aBuiltChain);
   mPeerCertChain = std::move(aPeerCertChain);
@@ -1377,7 +1368,7 @@ void SSLServerCertVerificationResult::Dispatch(
   mSucceeded = aSucceeded;
   mFinalError = aFinalError;
   mCollectedErrors = aCollectedErrors;
-  mIsBuiltCertChainRootBuiltInRoot = aIsCertChainRootBuiltInRoot;
+  mIsBuiltCertChainRootBuiltInRoot = aIsBuiltCertChainRootBuiltInRoot;
   mProviderFlags = aProviderFlags;
 
   nsresult rv;

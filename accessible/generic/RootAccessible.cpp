@@ -20,9 +20,7 @@
 #include "Relation.h"
 #include "Role.h"
 #include "States.h"
-#ifdef MOZ_XUL
-#  include "XULTreeAccessible.h"
-#endif
+#include "XULTreeAccessible.h"
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/CustomEvent.h"
@@ -43,9 +41,7 @@
 #include "nsFocusManager.h"
 #include "nsGlobalWindow.h"
 
-#ifdef MOZ_XUL
-#  include "nsIAppWindow.h"
-#endif
+#include "nsIAppWindow.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -82,7 +78,6 @@ ENameValueFlag RootAccessible::Name(nsString& aName) const {
 }
 
 // RootAccessible protected member
-#ifdef MOZ_XUL
 uint32_t RootAccessible::GetChromeFlags() const {
   // Return the flag set for the top level window as defined
   // by nsIWebBrowserChrome::CHROME_WINDOW_[FLAGNAME]
@@ -100,13 +95,11 @@ uint32_t RootAccessible::GetChromeFlags() const {
   appWin->GetChromeFlags(&chromeFlags);
   return chromeFlags;
 }
-#endif
 
 uint64_t RootAccessible::NativeState() const {
   uint64_t state = DocAccessibleWrap::NativeState();
   if (state & states::DEFUNCT) return state;
 
-#ifdef MOZ_XUL
   uint32_t chromeFlags = GetChromeFlags();
   if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
     state |= states::SIZEABLE;
@@ -118,7 +111,6 @@ uint64_t RootAccessible::NativeState() const {
     state |= states::MOVEABLE;
   }
   if (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL) state |= states::MODAL;
-#endif
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm && fm->GetActiveWindow() == mDocumentNode->GetWindow()) {
@@ -286,7 +278,6 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
       targetDocument->GetAccessibleOrContainer(aTarget);
   if (!accessible) return;
 
-#ifdef MOZ_XUL
   XULTreeAccessible* treeAcc = accessible->AsXULTree();
   if (treeAcc) {
     if (eventType.EqualsLiteral("TreeRowCountChanged")) {
@@ -299,7 +290,6 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
       return;
     }
   }
-#endif
 
   if (eventType.EqualsLiteral("RadioStateChange")) {
     uint64_t state = accessible->State();
@@ -336,7 +326,6 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
   }
 
   LocalAccessible* treeItemAcc = nullptr;
-#ifdef MOZ_XUL
   // If it's a tree element, need the currently selected item.
   if (treeAcc) {
     treeItemAcc = accessible->CurrentItem();
@@ -387,9 +376,7 @@ void RootAccessible::ProcessDOMEvent(Event* aDOMEvent, nsINode* aTarget) {
       nsEventShell::FireEvent(selChangeEvent);
       return;
     }
-  } else
-#endif
-      if (eventType.EqualsLiteral("AlertActive")) {
+  } else if (eventType.EqualsLiteral("AlertActive")) {
     nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_ALERT, accessible);
   } else if (eventType.EqualsLiteral("popupshown")) {
     HandlePopupShownEvent(accessible);
@@ -643,7 +630,6 @@ void RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode) {
   }
 }
 
-#ifdef MOZ_XUL
 static void GetPropertyBagFromEvent(Event* aEvent,
                                     nsIPropertyBag2** aPropertyBag) {
   *aPropertyBag = nullptr;
@@ -700,7 +686,6 @@ void RootAccessible::HandleTreeInvalidatedEvent(
 
   aAccessible->TreeViewInvalidated(startRow, endRow, startCol, endCol);
 }
-#endif
 
 RemoteAccessible* RootAccessible::GetPrimaryRemoteTopLevelContentDoc() const {
   nsCOMPtr<nsIDocShellTreeOwner> owner;

@@ -2,7 +2,7 @@
 // Distributed under the Boost Software License, Version 1.0.
 // See accompanying file LICENSE or copy at http://www.boost.org/LICENSE_1_0.txt
 
-#define _XOPEN_SOURCE
+#define _XOPEN_SOURCE 600
 #define _POSIX_C_SOURCE 200809L
 #define _WIN32_WINNT 0x0600
 

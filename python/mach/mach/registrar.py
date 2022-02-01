@@ -5,6 +5,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import time
+from cProfile import Profile
+from pathlib import Path
 
 import six
 
@@ -85,7 +87,9 @@ class MachRegistrar(object):
 
         return fail_conditions
 
-    def _run_command_handler(self, handler, context, debug_command=False, **kwargs):
+    def _run_command_handler(
+        self, handler, context, debug_command=False, profile_command=False, **kwargs
+    ):
         instance = MachRegistrar._instance(handler, context, **kwargs)
         fail_conditions = MachRegistrar._fail_conditions(handler, instance)
         if fail_conditions:
@@ -97,6 +101,11 @@ class MachRegistrar(object):
         self.command_depth += 1
         fn = handler.func
 
+        profile = None
+        if profile_command:
+            profile = Profile()
+            profile.enable()
+
         start_time = time.time()
 
         if debug_command:
@@ -107,6 +116,19 @@ class MachRegistrar(object):
             result = fn(instance, **kwargs)
 
         end_time = time.time()
+
+        if profile_command:
+            profile.disable()
+            profile_file = (
+                Path(context.topdir) / f"mach_profile_{handler.name}.cProfile"
+            )
+            profile.dump_stats(profile_file)
+            print(
+                f'Mach command profile created at "{profile_file}". To visualize, use '
+                f"snakeviz:"
+            )
+            print("python3 -m pip install snakeviz")
+            print(f"python3 -m snakeviz {profile_file.name}")
 
         result = result or 0
         assert isinstance(result, six.integer_types)

@@ -107,6 +107,7 @@ void TestMIDIPlatformService::Init() {
   MIDIPlatformService::Get()->AddPortInfo(mControlInputPort);
   MIDIPlatformService::Get()->AddPortInfo(mControlOutputPort);
   MIDIPlatformService::Get()->AddPortInfo(mAlwaysClosedTestOutputPort);
+  MIDIPlatformService::Get()->AddPortInfo(mStateTestOutputPort);
   nsCOMPtr<nsIRunnable> r(new SendPortListRunnable());
 
   // Start the IO Thread.
@@ -123,8 +124,8 @@ void TestMIDIPlatformService::Open(MIDIPortParent* aPort) {
   }
   // Connection events are just simulated on the background thread, no need to
   // push to IO thread.
-  nsCOMPtr<nsIRunnable> r(new SetStatusRunnable(aPort->MIDIPortInterface::Id(),
-                                                aPort->DeviceState(), s));
+  nsCOMPtr<nsIRunnable> r(
+      new SetStatusRunnable(aPort, aPort->DeviceState(), s));
   NS_DispatchToCurrentThread(r);
 }
 
@@ -134,8 +135,7 @@ void TestMIDIPlatformService::ScheduleClose(MIDIPortParent* aPort) {
     // Connection events are just simulated on the background thread, no need to
     // push to IO thread.
     nsCOMPtr<nsIRunnable> r(new SetStatusRunnable(
-        aPort->MIDIPortInterface::Id(), aPort->DeviceState(),
-        MIDIPortConnectionState::Closed));
+        aPort, aPort->DeviceState(), MIDIPortConnectionState::Closed));
     NS_DispatchToCurrentThread(r);
   }
 }
@@ -220,8 +220,8 @@ void TestMIDIPlatformService::ProcessMessages(const nsAString& aPortId) {
             // messages.
             case 0x01: {
               nsTArray<uint8_t> msgs;
-              const uint8_t msg[] = {0xF0, 0x01, 0xF8, 0x02, 0x03,
-                                     0x04, 0xF9, 0x05, 0xF7};
+              const uint8_t msg[] = {0xF0, 0x01, 0xFA, 0x02, 0x03,
+                                     0x04, 0xF8, 0x05, 0xF7};
               // Can't use AppendElements on an array here, so just do range
               // based loading.
               for (const auto& s : msg) {

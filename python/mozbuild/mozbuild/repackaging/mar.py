@@ -11,6 +11,8 @@ import shutil
 import zipfile
 import tarfile
 import subprocess
+from pathlib import Path
+
 import mozpack.path as mozpath
 from mozbuild.repackaging.application_ini import get_application_ini_value
 from mozbuild.util import ensureParentDir
@@ -83,7 +85,12 @@ def repackage_mar(topsrcdir, package, mar, output, arch=None, mar_channel_id=Non
         if sys.platform == "win32":
             # make_full_update.sh is a bash script, and Windows needs to
             # explicitly call out the shell to execute the script from Python.
-            cmd.insert(0, env["MOZILLABUILD"] + "/msys/bin/bash.exe")
+
+            mozillabuild = os.environ["MOZILLABUILD"]
+            if (Path(mozillabuild) / "msys2").exists():
+                cmd.insert(0, mozillabuild + "/msys2/usr/bin/bash.exe")
+            else:
+                cmd.insert(0, mozillabuild + "/msys/bin/bash.exe")
         subprocess.check_call(cmd, env=env)
 
     finally:

@@ -179,6 +179,7 @@ pub use crate::repeatn::repeat_n;
 #[allow(deprecated)]
 pub use crate::sources::{repeat_call, unfold, iterate};
 pub use crate::with_position::Position;
+pub use crate::unziptuple::{multiunzip, MultiUnzip};
 pub use crate::ziptuple::multizip;
 mod adaptors;
 mod either_or_both;
@@ -237,6 +238,7 @@ mod tuple_impl;
 mod duplicates_impl;
 #[cfg(feature = "use_std")]
 mod unique_impl;
+mod unziptuple;
 mod with_position;
 mod zip_eq_impl;
 mod zip_longest;
@@ -660,7 +662,7 @@ pub trait Itertools : Iterator {
     }
 
     /// Return an iterator over all contiguous windows producing tuples of
-    /// a specific size (up to 4).
+    /// a specific size (up to 12).
     ///
     /// `tuple_windows` clones the iterator elements so that they can be
     /// part of successive windows, this makes it most suited for iterators
@@ -702,7 +704,7 @@ pub trait Itertools : Iterator {
 
     /// Return an iterator over all windows, wrapping back to the first
     /// elements when the window would otherwise exceed the length of the
-    /// iterator, producing tuples of a specific size (up to 4).
+    /// iterator, producing tuples of a specific size (up to 12).
     ///
     /// `circular_tuple_windows` clones the iterator elements so that they can be
     /// part of successive windows, this makes it most suited for iterators
@@ -735,7 +737,7 @@ pub trait Itertools : Iterator {
         tuple_impl::circular_tuple_windows(self)
     }
     /// Return an iterator that groups the items in tuples of a specific size
-    /// (up to 4).
+    /// (up to 12).
     ///
     /// See also the method [`.next_tuple()`](Itertools::next_tuple).
     ///
@@ -2241,6 +2243,7 @@ pub trait Itertools : Iterator {
     /// assert_eq!((0..10).fold1(|x, y| x + y).unwrap_or(0), 45);
     /// assert_eq!((0..0).fold1(|x, y| x * y), None);
     /// ```
+    #[deprecated(since = "0.10.2", note = "Use `Iterator::reduce` instead")]
     fn fold1<F>(mut self, f: F) -> Option<Self::Item>
         where F: FnMut(Self::Item, Self::Item) -> Self::Item,
               Self: Sized,
@@ -2665,6 +2668,43 @@ pub trait Itertools : Iterator {
         v.into_iter()
     }
 
+    /// Sort all iterator elements into a new iterator in ascending order. The key function is
+    /// called exactly once per key.
+    ///
+    /// **Note:** This consumes the entire iterator, uses the
+    /// [`slice::sort_by_cached_key`] method and returns the result as a new
+    /// iterator that owns its elements.
+    ///
+    /// The sorted iterator, if directly collected to a `Vec`, is converted
+    /// without any extra copying or allocation cost.
+    ///
+    /// ```
+    /// use itertools::Itertools;
+    ///
+    /// // sort people in descending order by age
+    /// let people = vec![("Jane", 20), ("John", 18), ("Jill", 30), ("Jack", 27)];
+    ///
+    /// let oldest_people_first = people
+    ///     .into_iter()
+    ///     .sorted_by_cached_key(|x| -x.1)
+    ///     .map(|(person, _age)| person);
+    ///
+    /// itertools::assert_equal(oldest_people_first,
+    ///                         vec!["Jill", "Jack", "Jane", "John"]);
+    /// ```
+    /// ```
+    #[cfg(feature = "use_alloc")]
+    fn sorted_by_cached_key<K, F>(self, f: F) -> VecIntoIter<Self::Item>
+    where
+        Self: Sized,
+        K: Ord,
+        F: FnMut(&Self::Item) -> K,
+    {
+        let mut v = Vec::from_iter(self);
+        v.sort_by_cached_key(f);
+        v.into_iter()
+    }
+
     /// Sort the k smallest elements into a new iterator, in ascending order.
     ///
     /// **Note:** This consumes the entire iterator, and returns the result
@@ -2770,6 +2810,8 @@ pub trait Itertools : Iterator {
     /// Return a `HashMap` of keys mapped to `Vec`s of values. Keys and values
     /// are taken from `(Key, Value)` tuple pairs yielded by the input iterator.
     ///
+    /// Essentially a shorthand for `.into_grouping_map().collect::<Vec<_>>()`.
+    ///
     /// ```
     /// use itertools::Itertools;
     ///
@@ -2791,8 +2833,8 @@ pub trait Itertools : Iterator {
 
     /// Return an `Iterator` on a `HashMap`. Keys mapped to `Vec`s of values. The key is specified
     /// in the closure.
-    /// Different to `into_group_map_by` because the key is still present. It is also more general.
-    /// You can also fold the `group_map`.
+    ///
+    /// Essentially a shorthand for `.into_grouping_map_by(f).collect::<Vec<_>>()`.
     ///
     /// ```
     /// use itertools::Itertools;
@@ -3400,6 +3442,33 @@ pub trait Itertools : Iterator {
         F: FnMut(Self::Item) -> K,
     {
         self.map(f).counts()
+    }
+
+    /// Converts an iterator of tuples into a tuple of containers.
+    ///
+    /// `unzip()` consumes an entire iterator of n-ary tuples, producing `n` collections, one for each
+    /// column.
+    ///
+    /// This function is, in some sense, the opposite of [`multizip`].
+    /// 
+    /// ```
+    /// use itertools::Itertools;
+    ///
+    /// let inputs = vec![(1, 2, 3), (4, 5, 6), (7, 8, 9)];
+    ///
+    /// let (a, b, c): (Vec<_>, Vec<_>, Vec<_>) = inputs
+    ///     .into_iter()
+    ///     .multiunzip();
+    ///
+    /// assert_eq!(a, vec![1, 4, 7]);
+    /// assert_eq!(b, vec![2, 5, 8]);
+    /// assert_eq!(c, vec![3, 6, 9]);
+    /// ```
+    fn multiunzip<FromI>(self) -> FromI
+    where
+        Self: Sized + MultiUnzip<FromI>,
+    {
+        MultiUnzip::multiunzip(self)
     }
 }
 

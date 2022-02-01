@@ -13,6 +13,12 @@
 #include "nsTArray.h"
 
 namespace mozilla {
+
+namespace media {
+template <typename T>
+class Refcountable;
+}
+
 // This class implements a cache for accessing the audio device list.
 // It can be accessed on any thread.
 class CubebDeviceEnumerator final {
@@ -21,23 +27,16 @@ class CubebDeviceEnumerator final {
 
   static CubebDeviceEnumerator* GetInstance();
   static void Shutdown();
+  using AudioDeviceSet = media::Refcountable<nsTArray<RefPtr<AudioDeviceInfo>>>;
   // This method returns a list of all the input audio devices
   // (sources) available on this machine.
   // This method is safe to call from all threads.
-  void EnumerateAudioInputDevices(
-      nsTArray<RefPtr<AudioDeviceInfo>>& aOutDevices);
+  RefPtr<const AudioDeviceSet> EnumerateAudioInputDevices();
   // Similar for the audio audio devices (sinks). Also thread safe.
-  void EnumerateAudioOutputDevices(
-      nsTArray<RefPtr<AudioDeviceInfo>>& aOutDevices);
-  // From a cubeb device id, return the info for this device, if it's still a
-  // valid id, or nullptr otherwise.
-  // This method is safe to call from any thread.
-  already_AddRefed<AudioDeviceInfo> DeviceInfoFromID(
-      CubebUtils::AudioDeviceID aID);
+  RefPtr<const AudioDeviceSet> EnumerateAudioOutputDevices();
   // From a device name, return the info for this device, if it's a valid name,
   // or nullptr otherwise.
   // This method is safe to call from any thread.
-  already_AddRefed<AudioDeviceInfo> DeviceInfoFromName(const nsString& aName);
   enum class Side {
     INPUT,
     OUTPUT,
@@ -68,11 +67,11 @@ class CubebDeviceEnumerator final {
   // Invalidates the cached audio input device list, can be called on any
   // thread.
   void AudioDeviceListChanged(Side aSide);
-  void EnumerateAudioDevices(Side aSide);
+  RefPtr<const AudioDeviceSet> EnumerateAudioDevices(Side aSide);
   // Synchronize access to mInputDevices and mOutputDevices;
   Mutex mMutex;
-  nsTArray<RefPtr<AudioDeviceInfo>> mInputDevices;
-  nsTArray<RefPtr<AudioDeviceInfo>> mOutputDevices;
+  RefPtr<const AudioDeviceSet> mInputDevices;
+  RefPtr<const AudioDeviceSet> mOutputDevices;
   // If mManual*Invalidation is true, then it is necessary to query the device
   // list each time instead of relying on automatic invalidation of the cache by
   // cubeb itself. Set in the constructor and then can be access on any thread.

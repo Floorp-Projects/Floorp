@@ -10,6 +10,7 @@ This is the nascent documentation of the Firefox front-end code.
    urlbar/index
    /toolkit/mozapps/update/docs/BackgroundUpdates
    BrowserUsageTelemetry
+   CommandLineParameters
    components/enterprisepolicies/docs/index
    extensions/formautofill/docs/index
    components/newtab/docs/index

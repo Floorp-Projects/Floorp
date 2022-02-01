@@ -195,7 +195,9 @@ pub(crate) unsafe fn fwd_find<V: Vector>(
 }
 
 /// Search for an occurrence of two rare bytes from the needle in the chunk
-/// pointed to by ptr, with the end of the haystack pointed to by end_ptr.
+/// pointed to by ptr, with the end of the haystack pointed to by end_ptr. When
+/// an occurrence is found, memcmp is run to check if a match occurs at the
+/// corresponding position.
 ///
 /// rare1chunk and rare2chunk correspond to vectors with the rare1 and rare2
 /// bytes repeated in each 8-bit lane, respectively.
@@ -210,7 +212,7 @@ pub(crate) unsafe fn fwd_find<V: Vector>(
 ///
 /// It must be safe to do an unaligned read of size(V) bytes starting at both
 /// (ptr + rare1i) and (ptr + rare2i). It must also be safe to do unaligned
-/// loads on ptr up to end_ptr.
+/// loads on ptr up to (end_ptr - needle.len()).
 #[inline(always)]
 unsafe fn fwd_find_in_chunk<V: Vector>(
     fwd: &Forward,

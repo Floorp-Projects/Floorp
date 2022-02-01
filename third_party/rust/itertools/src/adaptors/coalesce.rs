@@ -119,6 +119,10 @@ pub type DedupBy<I, Pred> = CoalesceBy<I, DedupPred2CoalescePred<Pred>, <I as It
 #[derive(Clone)]
 pub struct DedupPred2CoalescePred<DP>(DP);
 
+impl<DP> fmt::Debug for DedupPred2CoalescePred<DP> {
+    debug_fmt_fields!(DedupPred2CoalescePred,);
+}
+
 pub trait DedupPredicate<T> {
     // TODO replace by Fn(&T, &T)->bool once Rust supports it
     fn dedup_pair(&mut self, a: &T, b: &T) -> bool;
@@ -137,7 +141,7 @@ where
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DedupEq;
 
 impl<T: PartialEq> DedupPredicate<T> for DedupEq {
@@ -186,7 +190,7 @@ where
 pub type DedupByWithCount<I, Pred> =
     CoalesceBy<I, DedupPredWithCount2CoalescePred<Pred>, (usize, <I as Iterator>::Item)>;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DedupPredWithCount2CoalescePred<DP>(DP);
 
 impl<DP, T> CoalescePredicate<T, (usize, T)> for DedupPredWithCount2CoalescePred<DP>

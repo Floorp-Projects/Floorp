@@ -38,11 +38,11 @@ def install_moz_phab(command_context, force=False):
         sys.exit(1)
 
     active_metadata = MozSiteMetadata.from_runtime()
-    external_python = active_metadata.external_python.python_path
+    original_python = active_metadata.original_python.python_path
     is_external_python_virtualenv = (
         subprocess.check_output(
             [
-                external_python,
+                original_python,
                 "-c",
                 "import sys; print(sys.prefix != sys.base_prefix)",
             ]
@@ -53,7 +53,7 @@ def install_moz_phab(command_context, force=False):
     # pip3 is part of Python since 3.4, however some distros choose to
     # remove core components from languages, so show a useful error message
     # if pip3 is missing.
-    has_pip = subprocess.run([external_python, "-c", "import pip"]).returncode == 0
+    has_pip = subprocess.run([original_python, "-c", "import pip"]).returncode == 0
     if not has_pip:
         command_context.log(
             logging.ERROR,
@@ -64,7 +64,7 @@ def install_moz_phab(command_context, force=False):
         )
         sys.exit(1)
 
-    command = [external_python, "-m", "pip", "install", "--upgrade", "MozPhab"]
+    command = [original_python, "-m", "pip", "install", "--upgrade", "MozPhab"]
 
     if (
         sys.platform.startswith("linux")
@@ -111,7 +111,7 @@ def install_moz_phab(command_context, force=False):
     # 4. Join the two paths, and execute the script at that location
 
     info = subprocess.check_output(
-        [external_python, "-m", "pip", "show", "-f", "MozPhab"],
+        [original_python, "-m", "pip", "show", "-f", "MozPhab"],
         universal_newlines=True,
     )
     mozphab_package_location = re.compile(r"Location: (.*)").search(info).group(1)

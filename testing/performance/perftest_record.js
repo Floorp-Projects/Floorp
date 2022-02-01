@@ -8,11 +8,34 @@ async function pageload_test(context, commands) {
   let testUrl = context.options.browsertime.url;
   let secondaryUrl = context.options.browsertime.secondary_url;
   let testName = context.options.browsertime.testName;
+  let input_cmds = context.options.browsertime.commands || "";
 
   // Wait for browser to settle
   await commands.wait.byTime(1000);
 
   await commands.measure.start(testUrl);
+  if (input_cmds) {
+    context.log.info("Searching for cookie prompt elements...");
+    let cmds = input_cmds.split(";;;");
+    for (let cmdstr of cmds) {
+      let [cmd, ...args] = cmdstr.split(":::");
+      context.log.info(cmd, args);
+      let result = await commands.js.run(
+        `return document.evaluate("` +
+          args +
+          `", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;`
+      );
+      if (result) {
+        context.log.info("Element found, clicking on it.");
+        await run_command(cmdstr, context, commands);
+      } else {
+        context.log.info(
+          "Element not found! The cookie prompt may have not appeared, please check the screenshots."
+        );
+        break;
+      }
+    }
+  }
   commands.screenshot.take("test_url_" + testName);
 
   if (secondaryUrl !== null) {
@@ -82,22 +105,27 @@ async function interactive_test(input_cmds, context, commands) {
   await commands.navigate("about:blank");
 
   for (let cmdstr of cmds) {
-    let [cmd, ...args] = cmdstr.split(":::");
-    let [func, parent_mod] = await get_command_function(cmd, commands);
+    await run_command(cmdstr, context, commands);
+  }
+}
 
-    try {
-      await func.call(parent_mod, ...args);
-    } catch (e) {
-      context.log.info(
-        `Exception found while running \`commands.${cmd}(${args})\`: ` + e
-      );
-    }
+async function run_command(cmdstr, context, commands) {
+  let [cmd, ...args] = cmdstr.split(":::");
+  let [func, parent_mod] = await get_command_function(cmd, commands);
+
+  try {
+    await func.call(parent_mod, ...args);
+  } catch (e) {
+    context.log.info(
+      `Exception found while running \`commands.${cmd}(${args})\`: ` + e
+    );
   }
 }
 
 async function test(context, commands) {
   let input_cmds = context.options.browsertime.commands;
-  if (input_cmds) {
+  let test_type = context.options.browsertime.testType;
+  if (test_type == "interactive") {
     await interactive_test(input_cmds, context, commands);
   } else {
     await pageload_test(context, commands);

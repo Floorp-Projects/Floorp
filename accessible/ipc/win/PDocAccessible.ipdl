@@ -92,6 +92,12 @@ parent:
    */
   async Cache(CacheUpdateType aUpdateType, CacheData[] aData, bool aFinal);
 
+  /*
+   * Tell the parent process that the given Accessibles are about to be moved
+   * via subsequent hide and show events.
+   */
+  async AccessiblesWillMove(uint64_t[] aIDs);
+
 child:
   /**
    * We use IDispatchHolder instead of IAccessibleHolder for the following two

@@ -35,9 +35,6 @@ def setup_awsy_argument_parser():
     return parser
 
 
-AWSY_PATH = os.path.dirname(os.path.realpath(__file__))
-if AWSY_PATH not in sys.path:
-    sys.path.append(AWSY_PATH)
 from awsy import ITERATIONS, PER_TAB_PAUSE, SETTLE_WAIT_TIME, MAX_TABS
 
 

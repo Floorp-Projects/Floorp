@@ -17,25 +17,34 @@ Form autofill test: preview and highlight
 
 "use strict";
 
-const MOCK_STORAGE = [{
-  organization: "Sesame Street",
-  "street-address": "123 Sesame Street.",
-  tel: "+13453453456",
-}, {
-  organization: "Mozilla",
-  "street-address": "331 E. Evelyn Avenue",
-}, {
-  organization: "Tel org",
-  tel: "+12223334444",
-}];
+const MOCK_STORAGE = [
+  {
+    organization: "Sesame Street",
+    "street-address": "123 Sesame Street.",
+    tel: "+13453453456",
+  },
+  {
+    organization: "Mozilla",
+    "street-address": "331 E. Evelyn Avenue",
+  },
+  {
+    organization: "Tel org",
+    tel: "+12223334444",
+  },
+  {
+    organization: "Random Org",
+    "address-level1": "First Admin Level",
+    tel: "+13453453456",
+  }
+];
 
 
 initPopupListener();
 
 add_task(async function setup_storage() {
-  await addAddress(MOCK_STORAGE[0]);
-  await addAddress(MOCK_STORAGE[1]);
-  await addAddress(MOCK_STORAGE[2]);
+  for (const storage of MOCK_STORAGE) {
+    await addAddress(storage);
+  }
 });
 
 add_task(async function check_preview() {
@@ -82,6 +91,12 @@ add_task(async function check_filled_highlight() {
     <p><label>streetAddress: <input id="street-address" autocomplete="street-address"></label></p>
     <p><label>tel: <input id="tel" autocomplete="tel"></label></p>
     <p><label>country: <input id="country" autocomplete="country"></label></p>
+    <p><label>address-level1:
+      <select id="address-level1" autocomplete="address-level1">
+        <option>First Admin Level</option>
+        <option>Second Admin Level</option>
+      </select>
+    </label></p>
   </form>
 
 </div>

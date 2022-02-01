@@ -120,23 +120,20 @@ extern const nsCString kHttp3Versions[];
 // Encodes the TRR mode.
 #define NS_HTTP_TRR_MODE_MASK ((1 << 19) | (1 << 20))
 
-// The connection could bring the peeked data for sniffing
-#define NS_HTTP_CALL_CONTENT_SNIFFER (1 << 21)
-
 // Disallow the use of the HTTP3 protocol. This is meant for the contexts
 // such as HTTP upgrade which are not supported by HTTP3.
-#define NS_HTTP_DISALLOW_HTTP3 (1 << 22)
+#define NS_HTTP_DISALLOW_HTTP3 (1 << 21)
 
 // Force a transaction to stay in pending queue until the HTTPS RR is
 // available.
-#define NS_HTTP_FORCE_WAIT_HTTP_RR (1 << 23)
+#define NS_HTTP_FORCE_WAIT_HTTP_RR (1 << 22)
 
 // This is used for a temporary workaround for a web-compat issue. The flag is
 // only set on CORS preflight request to allowed sending client certificates
 // on a connection for an anonymous request.
-#define NS_HTTP_LOAD_ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT (1 << 24)
+#define NS_HTTP_LOAD_ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT (1 << 23)
 
-#define NS_HTTP_DISALLOW_HTTPS_RR (1 << 25)
+#define NS_HTTP_DISALLOW_HTTPS_RR (1 << 24)
 
 #define NS_HTTP_TRR_FLAGS_FROM_MODE(x) ((static_cast<uint32_t>(x) & 3) << 19)
 

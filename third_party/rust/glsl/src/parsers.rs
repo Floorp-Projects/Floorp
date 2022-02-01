@@ -1123,7 +1123,7 @@ pub fn logical_or_expr(i: &str) -> ParserResult<syntax::Expr> {
   let (i, a) = logical_xor_expr(i)?;
 
   fold_many0(
-    preceded(delimited(blank, tag("||"), blank), logical_or_expr),
+    preceded(delimited(blank, tag("||"), blank), logical_xor_expr),
     a,
     move |acc, b| syntax::Expr::Binary(syntax::BinaryOp::Or, Box::new(acc), Box::new(b)),
   )(i)
@@ -1134,7 +1134,7 @@ pub fn logical_xor_expr(i: &str) -> ParserResult<syntax::Expr> {
   let (i, a) = logical_and_expr(i)?;
 
   fold_many0(
-    preceded(delimited(blank, tag("^^"), blank), logical_xor_expr),
+    preceded(delimited(blank, tag("^^"), blank), logical_and_expr),
     a,
     move |acc, b| syntax::Expr::Binary(syntax::BinaryOp::Xor, Box::new(acc), Box::new(b)),
   )(i)
@@ -1145,7 +1145,7 @@ pub fn logical_and_expr(i: &str) -> ParserResult<syntax::Expr> {
   let (i, a) = inclusive_or_expr(i)?;
 
   fold_many0(
-    preceded(delimited(blank, tag("&&"), blank), logical_and_expr),
+    preceded(delimited(blank, tag("&&"), blank), inclusive_or_expr),
     a,
     move |acc, b| syntax::Expr::Binary(syntax::BinaryOp::And, Box::new(acc), Box::new(b)),
   )(i)

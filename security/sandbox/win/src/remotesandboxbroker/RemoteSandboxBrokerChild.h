@@ -21,8 +21,8 @@ class RemoteSandboxBrokerChild : public PRemoteSandboxBrokerChild {
   bool Init(base::ProcessId aParentPid, mozilla::ipc::ScopedPort aPort);
 
  private:
-  mozilla::ipc::IPCResult AnswerLaunchApp(LaunchParameters&& aParams,
-                                          bool* aOutOk, uint64_t* aOutHandle);
+  mozilla::ipc::IPCResult RecvLaunchApp(LaunchParameters&& aParams,
+                                        bool* aOutOk, uint64_t* aOutHandle);
 
   void ActorDestroy(ActorDestroyReason aWhy);
   SandboxBroker mSandboxBroker;

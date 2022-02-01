@@ -1,3 +1,7 @@
+#[cfg(feature = "std")]
+use crate::buf::{reader, Reader};
+use crate::buf::{take, Chain, Take};
+
 use core::{cmp, mem, ptr};
 
 #[cfg(feature = "std")]
@@ -12,7 +16,7 @@ macro_rules! buf_get_impl {
         // this Option<ret> trick is to avoid keeping a borrow on self
         // when advance() is called (mut borrow) and to call bytes() only once
         let ret = $this
-            .bytes()
+            .chunk()
             .get(..SIZE)
             .map(|src| unsafe { $typ::$conv(*(src as *const _ as *const [_; SIZE])) });
 
@@ -74,7 +78,7 @@ pub trait Buf {
     /// the buffer.
     ///
     /// This value is greater than or equal to the length of the slice returned
-    /// by `bytes`.
+    /// by `chunk()`.
     ///
     /// # Examples
     ///
@@ -111,31 +115,34 @@ pub trait Buf {
     ///
     /// let mut buf = &b"hello world"[..];
     ///
-    /// assert_eq!(buf.bytes(), &b"hello world"[..]);
+    /// assert_eq!(buf.chunk(), &b"hello world"[..]);
     ///
     /// buf.advance(6);
     ///
-    /// assert_eq!(buf.bytes(), &b"world"[..]);
+    /// assert_eq!(buf.chunk(), &b"world"[..]);
     /// ```
     ///
     /// # Implementer notes
     ///
     /// This function should never panic. Once the end of the buffer is reached,
-    /// i.e., `Buf::remaining` returns 0, calls to `bytes` should return an
+    /// i.e., `Buf::remaining` returns 0, calls to `chunk()` should return an
     /// empty slice.
-    fn bytes(&self) -> &[u8];
+    // The `chunk` method was previously called `bytes`. This alias makes the rename
+    // more easily discoverable.
+    #[cfg_attr(docsrs, doc(alias = "bytes"))]
+    fn chunk(&self) -> &[u8];
 
     /// Fills `dst` with potentially multiple slices starting at `self`'s
     /// current position.
     ///
-    /// If the `Buf` is backed by disjoint slices of bytes, `bytes_vectored` enables
+    /// If the `Buf` is backed by disjoint slices of bytes, `chunk_vectored` enables
     /// fetching more than one slice at once. `dst` is a slice of `IoSlice`
     /// references, enabling the slice to be directly used with [`writev`]
     /// without any further conversion. The sum of the lengths of all the
     /// buffers in `dst` will be less than or equal to `Buf::remaining()`.
     ///
     /// The entries in `dst` will be overwritten, but the data **contained** by
-    /// the slices **will not** be modified. If `bytes_vectored` does not fill every
+    /// the slices **will not** be modified. If `chunk_vectored` does not fill every
     /// entry in `dst`, then `dst` is guaranteed to contain all remaining slices
     /// in `self.
     ///
@@ -145,7 +152,7 @@ pub trait Buf {
     /// # Implementer notes
     ///
     /// This function should never panic. Once the end of the buffer is reached,
-    /// i.e., `Buf::remaining` returns 0, calls to `bytes_vectored` must return 0
+    /// i.e., `Buf::remaining` returns 0, calls to `chunk_vectored` must return 0
     /// without mutating `dst`.
     ///
     /// Implementations should also take care to properly handle being called
@@ -153,13 +160,13 @@ pub trait Buf {
     ///
     /// [`writev`]: http://man7.org/linux/man-pages/man2/readv.2.html
     #[cfg(feature = "std")]
-    fn bytes_vectored<'a>(&'a self, dst: &mut [IoSlice<'a>]) -> usize {
+    fn chunks_vectored<'a>(&'a self, dst: &mut [IoSlice<'a>]) -> usize {
         if dst.is_empty() {
             return 0;
         }
 
         if self.has_remaining() {
-            dst[0] = IoSlice::new(self.bytes());
+            dst[0] = IoSlice::new(self.chunk());
             1
         } else {
             0
@@ -168,7 +175,7 @@ pub trait Buf {
 
     /// Advance the internal cursor of the Buf
     ///
-    /// The next call to `bytes` will return a slice starting `cnt` bytes
+    /// The next call to `chunk()` will return a slice starting `cnt` bytes
     /// further into the underlying buffer.
     ///
     /// # Examples
@@ -178,11 +185,11 @@ pub trait Buf {
     ///
     /// let mut buf = &b"hello world"[..];
     ///
-    /// assert_eq!(buf.bytes(), &b"hello world"[..]);
+    /// assert_eq!(buf.chunk(), &b"hello world"[..]);
     ///
     /// buf.advance(6);
     ///
-    /// assert_eq!(buf.bytes(), &b"world"[..]);
+    /// assert_eq!(buf.chunk(), &b"world"[..]);
     /// ```
     ///
     /// # Panics
@@ -249,7 +256,7 @@ pub trait Buf {
             let cnt;
 
             unsafe {
-                let src = self.bytes();
+                let src = self.chunk();
                 cnt = cmp::min(src.len(), dst.len() - off);
 
                 ptr::copy_nonoverlapping(src.as_ptr(), dst[off..].as_mut_ptr(), cnt);
@@ -279,7 +286,7 @@ pub trait Buf {
     /// This function panics if there is no more remaining data in `self`.
     fn get_u8(&mut self) -> u8 {
         assert!(self.remaining() >= 1);
-        let ret = self.bytes()[0];
+        let ret = self.chunk()[0];
         self.advance(1);
         ret
     }
@@ -302,7 +309,7 @@ pub trait Buf {
     /// This function panics if there is no more remaining data in `self`.
     fn get_i8(&mut self) -> i8 {
         assert!(self.remaining() >= 1);
-        let ret = self.bytes()[0] as i8;
+        let ret = self.chunk()[0] as i8;
         self.advance(1);
         ret
     }
@@ -791,21 +798,110 @@ pub trait Buf {
         f64::from_bits(Self::get_u64_le(self))
     }
 
-    /// Consumes remaining bytes inside self and returns new instance of `Bytes`
+    /// Consumes `len` bytes inside self and returns new instance of `Bytes`
+    /// with this data.
+    ///
+    /// This function may be optimized by the underlying type to avoid actual
+    /// copies. For example, `Bytes` implementation will do a shallow copy
+    /// (ref-count increment).
     ///
     /// # Examples
     ///
     /// ```
     /// use bytes::Buf;
     ///
-    /// let bytes = (&b"hello world"[..]).to_bytes();
-    /// assert_eq!(&bytes[..], &b"hello world"[..]);
+    /// let bytes = (&b"hello world"[..]).copy_to_bytes(5);
+    /// assert_eq!(&bytes[..], &b"hello"[..]);
     /// ```
-    fn to_bytes(&mut self) -> crate::Bytes {
+    fn copy_to_bytes(&mut self, len: usize) -> crate::Bytes {
         use super::BufMut;
-        let mut ret = crate::BytesMut::with_capacity(self.remaining());
-        ret.put(self);
+
+        assert!(len <= self.remaining(), "`len` greater than remaining");
+
+        let mut ret = crate::BytesMut::with_capacity(len);
+        ret.put(self.take(len));
         ret.freeze()
+    }
+
+    /// Creates an adaptor which will read at most `limit` bytes from `self`.
+    ///
+    /// This function returns a new instance of `Buf` which will read at most
+    /// `limit` bytes.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bytes::{Buf, BufMut};
+    ///
+    /// let mut buf = b"hello world"[..].take(5);
+    /// let mut dst = vec![];
+    ///
+    /// dst.put(&mut buf);
+    /// assert_eq!(dst, b"hello");
+    ///
+    /// let mut buf = buf.into_inner();
+    /// dst.clear();
+    /// dst.put(&mut buf);
+    /// assert_eq!(dst, b" world");
+    /// ```
+    fn take(self, limit: usize) -> Take<Self>
+    where
+        Self: Sized,
+    {
+        take::new(self, limit)
+    }
+
+    /// Creates an adaptor which will chain this buffer with another.
+    ///
+    /// The returned `Buf` instance will first consume all bytes from `self`.
+    /// Afterwards the output is equivalent to the output of next.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bytes::Buf;
+    ///
+    /// let mut chain = b"hello "[..].chain(&b"world"[..]);
+    ///
+    /// let full = chain.copy_to_bytes(11);
+    /// assert_eq!(full.chunk(), b"hello world");
+    /// ```
+    fn chain<U: Buf>(self, next: U) -> Chain<Self, U>
+    where
+        Self: Sized,
+    {
+        Chain::new(self, next)
+    }
+
+    /// Creates an adaptor which implements the `Read` trait for `self`.
+    ///
+    /// This function returns a new value which implements `Read` by adapting
+    /// the `Read` trait functions to the `Buf` trait functions. Given that
+    /// `Buf` operations are infallible, none of the `Read` functions will
+    /// return with `Err`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bytes::{Bytes, Buf};
+    /// use std::io::Read;
+    ///
+    /// let buf = Bytes::from("hello world");
+    ///
+    /// let mut reader = buf.reader();
+    /// let mut dst = [0; 1024];
+    ///
+    /// let num = reader.read(&mut dst).unwrap();
+    ///
+    /// assert_eq!(11, num);
+    /// assert_eq!(&dst[..11], &b"hello world"[..]);
+    /// ```
+    #[cfg(feature = "std")]
+    fn reader(self) -> Reader<Self>
+    where
+        Self: Sized,
+    {
+        reader::new(self)
     }
 }
 
@@ -815,13 +911,13 @@ macro_rules! deref_forward_buf {
             (**self).remaining()
         }
 
-        fn bytes(&self) -> &[u8] {
-            (**self).bytes()
+        fn chunk(&self) -> &[u8] {
+            (**self).chunk()
         }
 
         #[cfg(feature = "std")]
-        fn bytes_vectored<'b>(&'b self, dst: &mut [IoSlice<'b>]) -> usize {
-            (**self).bytes_vectored(dst)
+        fn chunks_vectored<'b>(&'b self, dst: &mut [IoSlice<'b>]) -> usize {
+            (**self).chunks_vectored(dst)
         }
 
         fn advance(&mut self, cnt: usize) {
@@ -908,8 +1004,8 @@ macro_rules! deref_forward_buf {
             (**self).get_int_le(nbytes)
         }
 
-        fn to_bytes(&mut self) -> crate::Bytes {
-            (**self).to_bytes()
+        fn copy_to_bytes(&mut self, len: usize) -> crate::Bytes {
+            (**self).copy_to_bytes(len)
         }
     };
 }
@@ -929,42 +1025,13 @@ impl Buf for &[u8] {
     }
 
     #[inline]
-    fn bytes(&self) -> &[u8] {
+    fn chunk(&self) -> &[u8] {
         self
     }
 
     #[inline]
     fn advance(&mut self, cnt: usize) {
         *self = &self[cnt..];
-    }
-}
-
-impl Buf for Option<[u8; 1]> {
-    fn remaining(&self) -> usize {
-        if self.is_some() {
-            1
-        } else {
-            0
-        }
-    }
-
-    fn bytes(&self) -> &[u8] {
-        self.as_ref()
-            .map(AsRef::as_ref)
-            .unwrap_or(Default::default())
-    }
-
-    fn advance(&mut self, cnt: usize) {
-        if cnt == 0 {
-            return;
-        }
-
-        if self.is_none() {
-            panic!("overflow");
-        } else {
-            assert_eq!(1, cnt);
-            *self = None;
-        }
     }
 }
 
@@ -981,7 +1048,7 @@ impl<T: AsRef<[u8]>> Buf for std::io::Cursor<T> {
         len - pos as usize
     }
 
-    fn bytes(&self) -> &[u8] {
+    fn chunk(&self) -> &[u8] {
         let len = self.get_ref().as_ref().len();
         let pos = self.position();
 

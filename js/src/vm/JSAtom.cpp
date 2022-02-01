@@ -20,6 +20,7 @@
 
 #include "jstypes.h"
 
+#include "frontend/CompilationStencil.h"
 #include "gc/GC.h"
 #include "gc/Marking.h"
 #include "gc/MaybeRooted.h"
@@ -28,9 +29,16 @@
 #include "js/Symbol.h"
 #include "util/Text.h"
 #include "vm/JSContext.h"
+#include "vm/JSObject.h"
 #include "vm/StaticStrings.h"
+#include "vm/StringType.h"
 #include "vm/SymbolType.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
+
+#ifdef ENABLE_RECORD_TUPLE
+#  include "vm/RecordType.h"
+#  include "vm/TupleType.h"
+#endif
 
 #include "gc/AtomMarking-inl.h"
 #include "vm/JSContext-inl.h"
@@ -186,8 +194,9 @@ MOZ_ALWAYS_INLINE AtomSet::Ptr js::FrozenAtomSet::readonlyThreadsafeLookup(
 }
 
 bool JSRuntime::initializeAtoms(JSContext* cx) {
+  JS::AutoAssertNoGC nogc;
+
   MOZ_ASSERT(!atoms_);
-  MOZ_ASSERT(!permanentAtomsDuringInit_);
   MOZ_ASSERT(!permanentAtoms_);
 
   if (parentRuntime) {
@@ -202,8 +211,15 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
     return bool(atoms_);
   }
 
-  permanentAtomsDuringInit_ = js_new<AtomSet>(JS_PERMANENT_ATOM_SIZE);
-  if (!permanentAtomsDuringInit_) {
+#ifdef DEBUG
+  gc.assertNoPermanentSharedThings();
+#endif
+
+  // NOTE: There's no GC, but `gc.freezePermanentSharedThings` below contains
+  //       a function call that's marked as "Can GC".
+  Rooted<UniquePtr<AtomSet>> atomSet(cx,
+                                     cx->new_<AtomSet>(JS_PERMANENT_ATOM_SIZE));
+  if (!atomSet) {
     return false;
   }
 
@@ -234,7 +250,9 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
       reinterpret_cast<ImmutablePropertyNamePtr*>(commonNames.ref());
   for (size_t i = 0; i < uint32_t(WellKnownAtomId::Limit); i++) {
     const auto& info = wellKnownAtomInfos[i];
-    JSAtom* atom = Atomize(cx, info.hash, info.content, info.length);
+    JSAtom* atom = PermanentlyAtomizeChars(
+        cx, *atomSet, info.hash,
+        reinterpret_cast<const Latin1Char*>(info.content), info.length);
     if (!atom) {
       return false;
     }
@@ -243,7 +261,9 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
   }
 
   for (const auto& info : symbolDescInfo) {
-    JSAtom* atom = Atomize(cx, info.hash, info.content, info.length);
+    JSAtom* atom = PermanentlyAtomizeChars(
+        cx, *atomSet, info.hash,
+        reinterpret_cast<const Latin1Char*>(info.content), info.length);
     if (!atom) {
       return false;
     }
@@ -254,30 +274,55 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
 
   emptyString = commonNames->empty;
 
+  // The self-hosted atoms are those that exist in a self-hosted JS source file,
+  // but are not defined in any of the well-known atom collections.
+  if (!cx->runtime()->selfHostStencil_->instantiateSelfHostedAtoms(
+          cx, *atomSet, cx->runtime()->selfHostStencilInput_->atomCache)) {
+    return false;
+  }
+
   // Create the well-known symbols.
   auto wks = js_new<WellKnownSymbols>();
   if (!wks) {
     return false;
   }
 
-  // Prevent GC until we have fully initialized the well known symbols table.
-  // Faster than zeroing the array and null checking during every GC.
-  gc::AutoSuppressGC nogc(cx);
+  {
+    // Prevent GC until we have fully initialized the well known symbols table.
+    // Faster than zeroing the array and null checking during every GC.
+    gc::AutoSuppressGC nogc(cx);
 
-  ImmutablePropertyNamePtr* descriptions =
-      commonNames->wellKnownSymbolDescriptions();
-  ImmutableSymbolPtr* symbols = reinterpret_cast<ImmutableSymbolPtr*>(wks);
-  for (size_t i = 0; i < JS::WellKnownSymbolLimit; i++) {
-    HandlePropertyName description = descriptions[i];
-    JS::Symbol* symbol = JS::Symbol::new_(cx, JS::SymbolCode(i), description);
-    if (!symbol) {
-      ReportOutOfMemory(cx);
-      return false;
+    ImmutablePropertyNamePtr* descriptions =
+        commonNames->wellKnownSymbolDescriptions();
+    ImmutableSymbolPtr* symbols = reinterpret_cast<ImmutableSymbolPtr*>(wks);
+    for (size_t i = 0; i < JS::WellKnownSymbolLimit; i++) {
+      HandlePropertyName description = descriptions[i];
+      JS::Symbol* symbol = JS::Symbol::new_(cx, JS::SymbolCode(i), description);
+      if (!symbol) {
+        ReportOutOfMemory(cx);
+        return false;
+      }
+      symbols[i].init(symbol);
     }
-    symbols[i].init(symbol);
+
+    wellKnownSymbols = wks;
   }
 
-  wellKnownSymbols = wks;
+  gc.freezePermanentSharedThings();
+
+  // The permanent atoms table has now been populated.
+  permanentAtoms_ =
+      js_new<FrozenAtomSet>(atomSet.release());  // Takes ownership.
+  if (!permanentAtoms_) {
+    return false;
+  }
+
+  // Initialize the main atoms table.
+  atoms_ = js_new<AtomsTable>();
+  if (!atoms_) {
+    return false;
+  }
+
   return true;
 }
 
@@ -285,7 +330,6 @@ void JSRuntime::finishAtoms() {
   js_delete(atoms_.ref());
 
   if (!parentRuntime) {
-    js_delete(permanentAtomsDuringInit_.ref());
     js_delete(permanentAtoms_.ref());
     js_delete(staticStrings.ref());
     js_delete(commonNames.ref());
@@ -293,7 +337,6 @@ void JSRuntime::finishAtoms() {
   }
 
   atoms_ = nullptr;
-  permanentAtomsDuringInit_ = nullptr;
   permanentAtoms_ = nullptr;
   staticStrings = nullptr;
   commonNames = nullptr;
@@ -316,39 +359,6 @@ void js::TraceAtoms(JSTracer* trc) {
   JSRuntime* rt = trc->runtime();
   if (rt->permanentAtomsPopulated()) {
     rt->atoms().tracePinnedAtoms(trc);
-  }
-}
-
-static void TracePermanentAtoms(JSTracer* trc, AtomSet::Range atoms) {
-  for (; !atoms.empty(); atoms.popFront()) {
-    JSAtom* atom = atoms.front().unbarrieredGet();
-    MOZ_ASSERT(atom->isPermanentAtom());
-    TraceProcessGlobalRoot(trc, atom, "permanent atom");
-  }
-}
-
-void JSRuntime::tracePermanentThingsDuringInit(JSTracer* trc) {
-  // Permanent atoms and symbols only need to be traced during initialization.
-  if (!permanentAtomsDuringInit_) {
-    return;
-  }
-
-  // This table is not used in child runtimes, who share the permanent atoms and
-  // symbols from the parent.
-  MOZ_ASSERT(!parentRuntime);
-
-  TracePermanentAtoms(trc, permanentAtomsDuringInit_->all());
-  TraceWellKnownSymbols(trc);
-}
-
-void js::TraceWellKnownSymbols(JSTracer* trc) {
-  JSRuntime* rt = trc->runtime();
-  MOZ_ASSERT(!rt->parentRuntime);
-
-  if (WellKnownSymbols* wks = rt->wellKnownSymbols) {
-    for (size_t i = 0; i < JS::WellKnownSymbolLimit; i++) {
-      TraceProcessGlobalRoot(trc, wks->get(i).get(), "well_known_symbol");
-    }
   }
 }
 
@@ -433,23 +443,6 @@ size_t AtomsTable::sizeOfIncludingThis(
   return size;
 }
 
-bool JSRuntime::initMainAtomsTables(JSContext* cx) {
-  MOZ_ASSERT(!parentRuntime);
-  MOZ_ASSERT(!permanentAtomsPopulated());
-
-  gc.freezePermanentSharedThings();
-
-  // The permanent atoms table has now been populated.
-  permanentAtoms_ =
-      js_new<FrozenAtomSet>(permanentAtomsDuringInit_);  // Takes ownership.
-  permanentAtomsDuringInit_ = nullptr;
-
-  // Initialize the main atoms table.
-  MOZ_ASSERT(!atoms_);
-  atoms_ = js_new<AtomsTable>();
-  return atoms_;
-}
-
 template <typename CharT>
 static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
     JSContext* cx, const CharT* chars, size_t length,
@@ -457,8 +450,7 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
 
 template <typename CharT>
 static MOZ_NEVER_INLINE JSAtom* PermanentlyAtomizeAndCopyChars(
-    JSContext* cx, Maybe<AtomSet::AddPtr>& zonePtr, const CharT* chars,
-    size_t length, const Maybe<uint32_t>& indexValue,
+    JSContext* cx, AtomSet& Atomset, const CharT* chars, size_t length,
     const AtomHasher::Lookup& lookup);
 
 template <typename CharT>
@@ -483,13 +475,7 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
     }
   }
 
-  // This function can be called during initialization, while the permanent
-  // atoms table is being created. In this case all atoms created are added to
-  // the permanent atoms table.
-  if (!cx->permanentAtomsPopulated()) {
-    return PermanentlyAtomizeAndCopyChars(cx, zonePtr, chars, length,
-                                          indexValue, lookup);
-  }
+  MOZ_ASSERT(cx->permanentAtomsPopulated());
 
   AtomSet::Ptr pp = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
   if (pp) {
@@ -529,6 +515,11 @@ template <typename CharT>
 static MOZ_ALWAYS_INLINE JSAtom* AllocateNewAtom(
     JSContext* cx, const CharT* chars, size_t length,
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup);
+
+template <typename CharT>
+static MOZ_ALWAYS_INLINE JSAtom* AllocateNewPermanentAtom(
+    JSContext* cx, const CharT* chars, size_t length,
+    const AtomHasher::Lookup& lookup);
 
 template <typename CharT>
 MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
@@ -590,36 +581,26 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyChars(
 
 template <typename CharT>
 static MOZ_NEVER_INLINE JSAtom* PermanentlyAtomizeAndCopyChars(
-    JSContext* cx, Maybe<AtomSet::AddPtr>& zonePtr, const CharT* chars,
-    size_t length, const Maybe<uint32_t>& indexValue,
+    JSContext* cx, AtomSet& atomSet, const CharT* chars, size_t length,
     const AtomHasher::Lookup& lookup) {
   MOZ_ASSERT(!cx->permanentAtomsPopulated());
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
 
-  JSRuntime* rt = cx->runtime();
-  AtomSet& atoms = *rt->permanentAtomsDuringInit();
-  AtomSet::AddPtr p = atoms.lookupForAdd(lookup);
+  AtomSet::AddPtr p = atomSet.lookupForAdd(lookup);
   if (p) {
     return p->get();
   }
 
-  JSAtom* atom = AllocateNewAtom(cx, chars, length, indexValue, lookup);
+  JSAtom* atom = AllocateNewPermanentAtom(cx, chars, length, lookup);
   if (!atom) {
     return nullptr;
   }
 
-  atom->morphIntoPermanentAtom();
-
   // We are single threaded at this point, and the operations we've done since
   // then can't GC; therefore the atoms table has not been modified and p is
   // still valid.
-  if (!atoms.add(p, atom)) {
+  if (!atomSet.add(p, atom)) {
     ReportOutOfMemory(cx); /* SystemAllocPolicy does not report OOM. */
-    return nullptr;
-  }
-
-  if (zonePtr && MOZ_UNLIKELY(!cx->zone()->atomCache().add(*zonePtr, atom))) {
-    ReportOutOfMemory(cx);
     return nullptr;
   }
 
@@ -715,6 +696,31 @@ static MOZ_ALWAYS_INLINE JSAtom* AllocateNewAtom(
     if (atom->isIndexSlow(&index)) {
       atom->setIsIndex(index);
     }
+  }
+
+  return atom;
+}
+
+template <typename CharT>
+static MOZ_ALWAYS_INLINE JSAtom* AllocateNewPermanentAtom(
+    JSContext* cx, const CharT* chars, size_t length,
+    const AtomHasher::Lookup& lookup) {
+  AutoAllocInAtomsZone ac(cx);
+
+  JSLinearString* linear = MakeLinearStringForAtomization(cx, chars, length);
+  if (!linear) {
+    // Do not bother with a last-ditch GC here since we are very early in
+    // startup and there is no potential garbage to collect.
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  JSAtom* atom = linear->morphAtomizedStringIntoPermanentAtom(lookup.hash);
+  MOZ_ASSERT(atom->hash() == lookup.hash);
+
+  uint32_t index;
+  if (atom->isIndexSlow(&index)) {
+    atom->setIsIndex(index);
   }
 
   return atom;
@@ -825,6 +831,23 @@ template JSAtom* js::AtomizeChars(JSContext* cx, HashNumber hash,
 
 template JSAtom* js::AtomizeChars(JSContext* cx, HashNumber hash,
                                   const char16_t* chars, size_t length);
+
+template <typename CharT>
+JSAtom* js::PermanentlyAtomizeChars(JSContext* cx, AtomSet& atomSet,
+                                    HashNumber hash, const CharT* chars,
+                                    size_t length) {
+  if (JSAtom* s = cx->staticStrings().lookup(chars, length)) {
+    return s;
+  }
+
+  AtomHasher::Lookup lookup(hash, chars, length);
+  return PermanentlyAtomizeAndCopyChars(cx, atomSet, chars, length, lookup);
+}
+
+template JSAtom* js::PermanentlyAtomizeChars(JSContext* cx, AtomSet& atomSet,
+                                             HashNumber hash,
+                                             const Latin1Char* chars,
+                                             size_t length);
 
 JSAtom* js::AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars,
                              size_t utf8ByteLength) {
@@ -949,11 +972,7 @@ static JSAtom* ToAtomSlow(
   }
   if (v.isBigInt()) {
     RootedBigInt i(cx, v.toBigInt());
-    JSAtom* atom = BigIntToAtom<allowGC>(cx, i);
-    if (!allowGC && !atom) {
-      cx->recoverFromOutOfMemory();
-    }
-    return atom;
+    return BigIntToAtom<allowGC>(cx, i);
   }
   MOZ_ASSERT(v.isUndefined());
   return cx->names().undefined;
@@ -982,6 +1001,37 @@ JSAtom* js::ToAtom(JSContext* cx,
 template JSAtom* js::ToAtom<CanGC>(JSContext* cx, HandleValue v);
 
 template JSAtom* js::ToAtom<NoGC>(JSContext* cx, const Value& v);
+
+#ifdef ENABLE_RECORD_TUPLE
+bool js::EnsureAtomized(JSContext* cx, MutableHandleValue v, bool* updated) {
+  if (v.isString()) {
+    if (v.toString()->isAtom()) {
+      *updated = false;
+      return true;
+    }
+
+    JSAtom* atom = AtomizeString(cx, v.toString());
+    if (!atom) {
+      return false;
+    }
+    v.setString(atom);
+    *updated = true;
+    return true;
+  }
+
+  *updated = false;
+
+  if (v.isExtendedPrimitive()) {
+    JSObject& obj = v.toExtendedPrimitive();
+    if (obj.is<RecordType>()) {
+      return obj.as<RecordType>().ensureAtomized(cx);
+    }
+    MOZ_ASSERT(obj.is<TupleType>());
+    return obj.as<TupleType>().ensureAtomized(cx);
+  }
+  return true;
+}
+#endif
 
 Handle<PropertyName*> js::ClassName(JSProtoKey key, JSContext* cx) {
   return ClassName(key, cx->names());

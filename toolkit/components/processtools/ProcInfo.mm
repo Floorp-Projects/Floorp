@@ -43,6 +43,8 @@ nsresult GetGpuTimeSinceProcessStartInMs(uint64_t* aResult) {
   return NS_OK;
 }
 
+int GetCycleTimeFrequencyMHz() { return 0; }
+
 ProcInfoPromise::ResolveOrRejectValue GetProcInfoSync(nsTArray<ProcInfoRequest>&& aRequests) {
   ProcInfoPromise::ResolveOrRejectValue result;
 

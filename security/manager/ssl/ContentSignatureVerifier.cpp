@@ -336,7 +336,7 @@ static nsresult VerifyContentSignatureInternal(
   SECItem rawSignatureItem = {
       siBuffer,
       BitwiseCast<unsigned char*, const char*>(rawSignature.get()),
-      rawSignature.Length(),
+      uint32_t(rawSignature.Length()),
   };
   // We have a raw ecdsa signature r||s so we have to DER-encode it first
   // Note that we have to check rawSignatureItem->len % 2 here as

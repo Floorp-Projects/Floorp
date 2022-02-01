@@ -1638,24 +1638,14 @@ impl Device {
         &self,
         pipeline_cache: vk::PipelineCache,
     ) -> VkResult<Vec<u8>> {
-        let mut data_size: usize = 0;
-        self.device_fn_1_0
-            .get_pipeline_cache_data(
+        read_into_uninitialized_vector(|count, data| {
+            self.device_fn_1_0.get_pipeline_cache_data(
                 self.handle(),
                 pipeline_cache,
-                &mut data_size,
-                ptr::null_mut(),
+                count,
+                data as _,
             )
-            .result()?;
-        let mut data: Vec<u8> = Vec::with_capacity(data_size);
-        let err_code = self.device_fn_1_0.get_pipeline_cache_data(
-            self.handle(),
-            pipeline_cache,
-            &mut data_size,
-            data.as_mut_ptr() as _,
-        );
-        data.set_len(data_size);
-        err_code.result_with_success(data)
+        })
     }
 
     #[doc = "<https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkMergePipelineCaches.html>"]
@@ -2107,21 +2097,16 @@ impl Device {
         &self,
         image: vk::Image,
     ) -> Vec<vk::SparseImageMemoryRequirements> {
-        let mut count = 0;
-        self.device_fn_1_0.get_image_sparse_memory_requirements(
-            self.handle(),
-            image,
-            &mut count,
-            ptr::null_mut(),
-        );
-        let mut data = Vec::with_capacity(count as usize);
-        self.device_fn_1_0.get_image_sparse_memory_requirements(
-            self.handle(),
-            image,
-            &mut count,
-            data.as_mut_ptr(),
-        );
-        data.set_len(count as usize);
-        data
+        read_into_uninitialized_vector(|count, data| {
+            self.device_fn_1_0.get_image_sparse_memory_requirements(
+                self.handle(),
+                image,
+                count,
+                data,
+            );
+            vk::Result::SUCCESS
+        })
+        // The closure always returns SUCCESS
+        .unwrap()
     }
 }

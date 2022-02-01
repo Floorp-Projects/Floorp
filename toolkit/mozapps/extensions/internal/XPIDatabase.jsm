@@ -96,7 +96,6 @@ const PENDING_INSTALL_METADATA = [
   "userDisabled",
   "softDisabled",
   "embedderDisabled",
-  "existingAddonID",
   "sourceURI",
   "releaseNotesURI",
   "installDate",
@@ -146,6 +145,8 @@ const PROP_JSON_FIELDS = [
   "incognito",
   "userPermissions",
   "optionalPermissions",
+  "sitePermissions",
+  "siteOrigin",
   "icons",
   "iconURL",
   "blocklistState",
@@ -158,7 +159,12 @@ const PROP_JSON_FIELDS = [
   "rootURI",
 ];
 
-const SIGNED_TYPES = new Set(["extension", "locale", "theme"]);
+const SIGNED_TYPES = new Set([
+  "extension",
+  "locale",
+  "theme",
+  "sitepermission",
+]);
 
 // Time to wait before async save of XPI JSON database, in milliseconds
 const ASYNC_SAVE_DELAY_MS = 20;
@@ -784,7 +790,7 @@ class AddonInternal {
     // when the extension has opted out or it gets the permission automatically
     // on every extension startup (as system, privileged and builtin addons).
     if (
-      this.type === "extension" &&
+      (this.type === "extension" || this.type == "sitepermission") &&
       this.incognito !== "not_allowed" &&
       this.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED &&
       this.signedState !== AddonManager.SIGNEDSTATE_SYSTEM &&
@@ -1396,6 +1402,8 @@ function defineAddonWrapperProperty(name, getter) {
   "validInstallOrigins",
   "dependencies",
   "signedState",
+  "sitePermissions",
+  "siteOrigin",
   "isCorrectlySigned",
 ].forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {
@@ -1485,15 +1493,22 @@ const updatedAddonFluentIds = new Map([
     ) {
       // Built-in themes are localized with Fluent instead of the WebExtension API.
       let addonIdPrefix = addon.id.replace("@mozilla.org", "");
-      if (addonIdPrefix.endsWith("colorway")) {
-        // Colorway themes combine an unlocalized color name with a localized
-        // variant name. Their ids have the format
-        // {colorName}-{variantName}-colorway@mozilla.org.
+      const colorwaySuffix = "colorway";
+      if (addonIdPrefix.endsWith(colorwaySuffix)) {
         if (aProp == "description") {
           // Colorway themes do not have a description.
           return null;
         }
+        // Colorway themes combine an unlocalized color name with a localized
+        // variant name. Their ids have the format
+        // {colorName}-{variantName}-colorway@mozilla.org. The variant name may
+        // be omitted ({colorName}-colorway@mozilla.org), in which case the
+        // unlocalized name from the theme's manifest will be used.
         let [colorName, variantName] = addonIdPrefix.split("-", 2);
+        if (variantName == colorwaySuffix) {
+          // This theme doesn't have a localized variant name.
+          return addon.defaultLocale.name;
+        }
         // We're not using toLocaleUpperCase because these color names are
         // always in English.
         colorName = colorName[0].toUpperCase() + colorName.slice(1);

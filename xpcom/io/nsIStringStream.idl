@@ -7,9 +7,14 @@
 
 %{C++
 #include "mozilla/MemoryReporting.h"
+
+namespace mozilla {
+class StreamBufferSource;
+}  // namespace mozilla
 %}
 
 native MallocSizeOf(mozilla::MallocSizeOf);
+[ptr] native StreamBufferSource(mozilla::StreamBufferSource);
 
 /**
  * nsIStringInputStream
@@ -70,6 +75,14 @@ interface nsIStringInputStream : nsIInputStream
      * @param dataLen   - stream data length (-1 if length should be computed)
      */
     [noscript] void shareData(in string data, in long dataLen);
+
+    /**
+     * SetDataSource - assign data to the input stream.  the input stream holds
+     * a strong reference to the given data buffer until it is destroyed.
+     *
+     * @param source    - stream data source
+     */
+    [noscript] void setDataSource(in StreamBufferSource source);
 
     [noscript, notxpcom]
     size_t SizeOfIncludingThisIfUnshared(in MallocSizeOf aMallocSizeOf);

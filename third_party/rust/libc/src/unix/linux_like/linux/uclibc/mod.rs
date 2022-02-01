@@ -2,6 +2,18 @@ pub type shmatt_t = ::c_ulong;
 pub type msgqnum_t = ::c_ulong;
 pub type msglen_t = ::c_ulong;
 pub type regoff_t = ::c_int;
+pub type __rlimit_resource_t = ::c_uint;
+pub type __priority_which_t = ::c_uint;
+
+cfg_if! {
+    if #[cfg(doc)] {
+        // Used in `linux::arch` to define ioctl constants.
+        pub(crate) type Ioctl = ::c_int;
+    } else {
+        #[doc(hidden)]
+        pub type Ioctl = ::c_int;
+    }
+}
 
 s! {
     pub struct statvfs {  // Different than GNU!
@@ -33,6 +45,32 @@ s! {
         __translate: *mut ::c_char,
         __re_nsub: ::size_t,
         __bitfield: u8,
+    }
+
+    pub struct rtentry {
+        pub rt_pad1: ::c_ulong,
+        pub rt_dst: ::sockaddr,
+        pub rt_gateway: ::sockaddr,
+        pub rt_genmask: ::sockaddr,
+        pub rt_flags: ::c_ushort,
+        pub rt_pad2: ::c_short,
+        pub rt_pad3: ::c_ulong,
+        pub rt_tos: ::c_uchar,
+        pub rt_class: ::c_uchar,
+        #[cfg(target_pointer_width = "64")]
+        pub rt_pad4: [::c_short; 3usize],
+        #[cfg(not(target_pointer_width = "64"))]
+        pub rt_pad4: ::c_short,
+        pub rt_metric: ::c_short,
+        pub rt_dev: *mut ::c_char,
+        pub rt_mtu: ::c_ulong,
+        pub rt_window: ::c_ulong,
+        pub rt_irtt: ::c_ushort,
+    }
+
+    pub struct __exit_status {
+        pub e_termination: ::c_short,
+        pub e_exit: ::c_short,
     }
 }
 
@@ -223,6 +261,93 @@ pub const PRIO_USER: ::c_int = 2;
 
 pub const ST_RELATIME: ::c_ulong = 4096;
 
+pub const AF_NFC: ::c_int = PF_NFC;
+pub const BUFSIZ: ::c_int = 4096;
+pub const EDEADLOCK: ::c_int = EDEADLK;
+pub const EXTA: ::c_uint = B19200;
+pub const EXTB: ::c_uint = B38400;
+pub const EXTPROC: ::c_int = 0200000;
+pub const FAN_MARK_FILESYSTEM: ::c_int = 0x00000100;
+pub const FAN_MARK_INODE: ::c_int = 0x00000000;
+pub const FAN_MARK_MOUNT: ::c_int = 0x10;
+pub const FIONREAD: ::c_int = 0x541B;
+pub const FOPEN_MAX: ::c_int = 16;
+pub const F_GETOWN: ::c_int = 9;
+pub const F_OFD_GETLK: ::c_int = 36;
+pub const F_OFD_SETLK: ::c_int = 37;
+pub const F_OFD_SETLKW: ::c_int = 38;
+pub const F_RDLCK: ::c_int = 0;
+pub const F_SETOWN: ::c_int = 8;
+pub const F_UNLCK: ::c_int = 2;
+pub const F_WRLCK: ::c_int = 1;
+pub const IPV6_MULTICAST_ALL: ::c_int = 29;
+pub const IPV6_ROUTER_ALERT_ISOLATE: ::c_int = 30;
+pub const MAP_HUGE_SHIFT: ::c_int = 26;
+pub const MAP_HUGE_MASK: ::c_int = 0x3f;
+pub const MAP_HUGE_64KB: ::c_int = 16 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_512KB: ::c_int = 19 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_1MB: ::c_int = 20 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_2MB: ::c_int = 21 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_8MB: ::c_int = 23 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_16MB: ::c_int = 24 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_32MB: ::c_int = 25 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_256MB: ::c_int = 28 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_512MB: ::c_int = 29 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_1GB: ::c_int = 30 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_2GB: ::c_int = 31 << MAP_HUGE_SHIFT;
+pub const MAP_HUGE_16GB: ::c_int = 34 << MAP_HUGE_SHIFT;
+pub const MINSIGSTKSZ: ::c_int = 2048;
+pub const MSG_COPY: ::c_int = 040000;
+pub const NI_MAXHOST: ::socklen_t = 1025;
+pub const O_TMPFILE: ::c_int = 020000000 | O_DIRECTORY;
+pub const PACKET_MR_UNICAST: ::c_int = 3;
+pub const PF_NFC: ::c_int = 39;
+pub const PF_VSOCK: ::c_int = 40;
+pub const POSIX_MADV_DONTNEED: ::c_int = 4;
+pub const PTRACE_EVENT_STOP: ::c_int = 128;
+pub const PTRACE_PEEKSIGINFO: ::c_int = 0x4209;
+pub const RLIMIT_AS: ::c_int = 9;
+pub const RLIMIT_MEMLOCK: ::c_int = 8;
+pub const RLIMIT_NLIMITS: ::c_int = 15;
+pub const RLIMIT_NOFILE: ::c_int = 7;
+pub const RLIMIT_NPROC: ::c_int = 6;
+pub const RLIMIT_RSS: ::c_int = 5;
+pub const RLIMIT_RTTIME: ::c_int = 15;
+pub const RTLD_NOLOAD: ::c_int = 0x00004;
+pub const RUSAGE_THREAD: ::c_int = 1;
+pub const SHM_EXEC: ::c_int = 0100000;
+pub const SIGPOLL: ::c_int = SIGIO;
+pub const SOCK_DCCP: ::c_int = 6;
+pub const SOCK_PACKET: ::c_int = 10;
+pub const TCFLSH: ::c_int = 0x540B;
+pub const TCGETA: ::c_int = 0x5405;
+pub const TCGETS: ::c_int = 0x5401;
+pub const TCP_COOKIE_TRANSACTIONS: ::c_int = 15;
+pub const TCSBRK: ::c_int = 0x5409;
+pub const TCSETA: ::c_int = 0x5406;
+pub const TCSETAF: ::c_int = 0x5408;
+pub const TCSETAW: ::c_int = 0x5407;
+pub const TCSETS: ::c_int = 0x5402;
+pub const TCSETSF: ::c_int = 0x5404;
+pub const TCSETSW: ::c_int = 0x5403;
+pub const TCXONC: ::c_int = 0x540A;
+pub const TIOCCONS: ::c_int = 0x541D;
+pub const TIOCEXCL: ::c_int = 0x540C;
+pub const TIOCGPGRP: ::c_int = 0x540F;
+pub const TIOCGSERIAL: ::c_int = 0x541E;
+pub const TIOCGSOFTCAR: ::c_int = 0x5419;
+pub const TIOCINQ: ::c_int = FIONREAD;
+pub const TIOCLINUX: ::c_int = 0x541C;
+pub const TIOCNXCL: ::c_int = 0x540D;
+pub const TIOCOUTQ: ::c_int = 0x5411;
+pub const TIOCSCTTY: ::c_int = 0x540E;
+pub const TIOCSPGRP: ::c_int = 0x5410;
+pub const TIOCSSOFTCAR: ::c_int = 0x541A;
+pub const TIOCSTI: ::c_int = 0x5412;
+pub const UDP_GRO: ::c_int = 104;
+pub const UDP_SEGMENT: ::c_int = 103;
+pub const YESEXPR: ::c_int = ((5) << 8) | (0);
+
 extern "C" {
     pub fn gettimeofday(tp: *mut ::timeval, tz: *mut ::timezone) -> ::c_int;
 
@@ -287,6 +412,21 @@ extern "C" {
         iovcnt: ::c_int,
         offset: ::off64_t,
     ) -> ::ssize_t;
+
+    pub fn sethostid(hostid: ::c_long) -> ::c_int;
+    pub fn fanotify_mark(
+        fd: ::c_int,
+        flags: ::c_uint,
+        mask: u64,
+        dirfd: ::c_int,
+        path: *const ::c_char,
+    ) -> ::c_int;
+    pub fn getrlimit64(resource: ::__rlimit_resource_t, rlim: *mut ::rlimit64) -> ::c_int;
+    pub fn setrlimit64(resource: ::__rlimit_resource_t, rlim: *const ::rlimit64) -> ::c_int;
+    pub fn getrlimit(resource: ::__rlimit_resource_t, rlim: *mut ::rlimit) -> ::c_int;
+    pub fn setrlimit(resource: ::__rlimit_resource_t, rlim: *const ::rlimit) -> ::c_int;
+    pub fn getpriority(which: ::__priority_which_t, who: ::id_t) -> ::c_int;
+    pub fn setpriority(which: ::__priority_which_t, who: ::id_t, prio: ::c_int) -> ::c_int;
 }
 
 cfg_if! {

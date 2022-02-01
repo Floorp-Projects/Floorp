@@ -10,11 +10,17 @@
 #include "mozilla/layers/LayersTypes.h"  // for TouchBehaviorFlags
 #include "RelativeTo.h"                  // for RelativeTo
 
-class nsIFrame;
 class nsIWidget;
-
 namespace mozilla {
-namespace layers {
+
+namespace dom {
+class Document;
+}  // namespace dom
+
+class WidgetTouchEvent;
+}  // namespace mozilla
+
+namespace mozilla::layers {
 
 /*
  * Helper class to figure out the allowed touch behavior for frames, as per
@@ -23,17 +29,16 @@ namespace layers {
 class TouchActionHelper {
  public:
   /*
-   * Performs hit testing on content, finds frame that corresponds to the aPoint
-   * and retrieves touch-action css property value from it according the rules
-   * specified in the spec:
+   * Performs hit testing on content, finds frame that corresponds to the touch
+   * points of aEvent and retrieves touch-action CSS property value from it
+   * according the rules specified in the spec:
    * http://www.w3.org/TR/pointerevents/#the-touch-action-css-property.
    */
-  static TouchBehaviorFlags GetAllowedTouchBehavior(
-      nsIWidget* aWidget, RelativeTo aRootFrame,
-      const LayoutDeviceIntPoint& aPoint);
+  static nsTArray<TouchBehaviorFlags> GetAllowedTouchBehavior(
+      nsIWidget* aWidget, dom::Document* aDocument,
+      const WidgetTouchEvent& aPoint);
 };
 
-}  // namespace layers
-}  // namespace mozilla
+}  // namespace mozilla::layers
 
 #endif /*__mozilla_layers_TouchActionHelper_h__ */

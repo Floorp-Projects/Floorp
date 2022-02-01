@@ -960,12 +960,21 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   // Emit bytecode for the spread operator.
   //
-  // emitSpread expects the current index (I) of the array, the array itself
-  // and the iterator to be on the stack in that order (iterator on the bottom).
-  // It will pop the iterator and I, then iterate over the iterator by calling
-  // |.next()| and put the results into the I-th element of array with
-  // incrementing I, then push the result I (it will be original I +
-  // iteration count). The stack after iteration will look like |ARRAY INDEX|.
+  // emitSpread expects some values representing the spread target (an array or
+  // a tuple), the iterator and it's next() method to be on the stack in that
+  // order (iterator's next() on the bottom).
+  // The number of values representing the spread target is
+  // `spreadeeStackItems`: it's 2 for arrays (one for the array and one for the
+  // index) and 1 for tuples (the tuple itself).
+  // Since arrays and tuples use different opcodes to initialize new elements,
+  // it must be specified using `storeElementOp`.
+  // When emitSpread() finishes, the stack only contains the values representing
+  // the spread target.
+  [[nodiscard]] bool emitSpread(bool allowSelfHosted, int spreadeeStackItems,
+                                JSOp storeElementOp);
+  // This shortcut can be used when spreading into arrays, as it assumes
+  // `spreadeeStackItems = 2` (|ARRAY INDEX|) and `storeElementOp =
+  // JSOp::InitElemInc`
   [[nodiscard]] bool emitSpread(bool allowSelfHosted = false);
 
   enum class ClassNameKind {
@@ -996,6 +1005,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                                CallNode* call,
                                                CallOrNewEmitter& cone,
                                                OptionalEmitter& oe);
+
+#ifdef ENABLE_RECORD_TUPLE
+  [[nodiscard]] bool emitRecordLiteral(ListNode* record);
+  [[nodiscard]] bool emitTupleLiteral(ListNode* tuple);
+#endif
 
   [[nodiscard]] bool emitExportDefault(BinaryNode* exportNode);
 

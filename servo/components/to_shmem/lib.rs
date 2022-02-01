@@ -18,7 +18,6 @@ extern crate smallbitvec;
 extern crate smallvec;
 #[cfg(feature = "string_cache")]
 extern crate string_cache;
-extern crate thin_slice;
 
 use servo_arc::{Arc, ThinArc};
 use smallbitvec::{InternalStorage, SmallBitVec};
@@ -40,7 +39,6 @@ use std::os::raw::c_void;
 use std::ptr::{self, NonNull};
 use std::slice;
 use std::str;
-use thin_slice::ThinBoxedSlice;
 
 /// Result type for ToShmem::to_shmem.
 ///
@@ -338,23 +336,6 @@ impl<T: ToShmem> ToShmem for Box<[T]> {
         unsafe {
             let dest = to_shmem_slice(self.iter(), builder)?;
             Ok(ManuallyDrop::new(Box::from_raw(dest)))
-        }
-    }
-}
-
-impl<T: ToShmem> ToShmem for ThinBoxedSlice<T> {
-    fn to_shmem(&self, builder: &mut SharedMemoryBuilder) -> Result<Self> {
-        // We could support this if we needed but in practice we will never
-        // need to handle such big ThinBoxedSlices.
-        assert!(
-            self.spilled_storage().is_none(),
-            "ToShmem failed for ThinBoxedSlice: too many entries ({})",
-            self.len(),
-        );
-
-        unsafe {
-            let dest = to_shmem_slice(self.iter(), builder)?;
-            Ok(ManuallyDrop::new(ThinBoxedSlice::from_raw(dest)))
         }
     }
 }

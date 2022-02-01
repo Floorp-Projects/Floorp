@@ -506,6 +506,8 @@ bool ProxyAutoConfig::ResolveAddress(const nsCString& aHostName,
     return false;
   });
 
+  MaybeInvokeDNSResolveCallbacks();
+
   if (NS_FAILED(helper->mStatus)) {
     return false;
   }
@@ -841,7 +843,29 @@ nsresult ProxyAutoConfig::SetupJS() {
   mConcatenatedPACData.Truncate();
   mPACURI.Truncate();
 
+  MaybeInvokeDNSResolveCallbacks();
   return NS_OK;
+}
+
+void ProxyAutoConfig::MaybeInvokeDNSResolveCallbacks() {
+  if (mDNSResolveCallbacks.IsEmpty()) {
+    return;
+  }
+
+  // This function could be called in the middle of SetupJS(). If this is the
+  // case, we should wait until mJSContext is ready to use. Otherwise,
+  // GetProxyForURI() would fail.
+  if (!mJSContext || !mJSContext->IsOK()) {
+    return;
+  }
+
+  NS_DispatchToCurrentThread(
+      NS_NewRunnableFunction("InvokeDNSResolveCallback",
+                             [callbacks{std::move(mDNSResolveCallbacks)}]() {
+                               for (auto& callback : callbacks) {
+                                 callback();
+                               }
+                             }));
 }
 
 void ProxyAutoConfig::GetProxyForURIWithCallback(
@@ -946,6 +970,7 @@ void ProxyAutoConfig::Shutdown() {
   mShutdown = true;
   delete mJSContext;
   mJSContext = nullptr;
+  mDNSResolveCallbacks.Clear();
 }
 
 bool ProxyAutoConfig::SrcAddress(const NetAddr* remoteAddress,

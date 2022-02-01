@@ -65,12 +65,12 @@ add_task(async function maxViewTime() {
   await assertSnapshots([
     {
       url: TEST_URL1,
-      userPersisted: false,
+      userPersisted: Snapshots.USER_PERSISTED.NO,
       documentType: Interactions.DOCUMENT_TYPE.GENERIC,
     },
     {
       url: TEST_URL3,
-      userPersisted: false,
+      userPersisted: Snapshots.USER_PERSISTED.NO,
       documentType: Interactions.DOCUMENT_TYPE.MEDIA,
     },
   ]);
@@ -118,7 +118,7 @@ add_task(async function cumulative() {
   await assertSnapshots([
     {
       url: TEST_URL1,
-      userPersisted: false,
+      userPersisted: Snapshots.USER_PERSISTED.NO,
     },
   ]);
 
@@ -165,12 +165,12 @@ add_task(async function tombstoned() {
 
   await Snapshots.add({
     url: TEST_URL1,
-    userPersisted: true,
+    userPersisted: Snapshots.USER_PERSISTED.MANUAL,
   });
 
   assertSnapshot(await Snapshots.get(TEST_URL1, true), {
     url: TEST_URL1,
-    userPersisted: true,
+    userPersisted: Snapshots.USER_PERSISTED.MANUAL,
   });
 
   await assertTopicNotObserved(TOPIC_ADDED, () =>
@@ -182,10 +182,10 @@ add_task(async function tombstoned() {
     ])
   );
 
-  // Shouldn't have overwritten the userPersisted flag.
+  // Shouldn't have overwritten the userPersisted value.
   assertSnapshot(await Snapshots.get(TEST_URL1, true), {
     url: TEST_URL1,
-    userPersisted: true,
+    userPersisted: Snapshots.USER_PERSISTED.MANUAL,
   });
 
   await assertUrlNotification(TOPIC_DELETED, [TEST_URL1], () =>
@@ -194,7 +194,7 @@ add_task(async function tombstoned() {
 
   assertSnapshot(await Snapshots.get(TEST_URL1, true), {
     url: TEST_URL1,
-    userPersisted: true,
+    userPersisted: Snapshots.USER_PERSISTED.MANUAL,
     removedAt,
   });
 
@@ -210,7 +210,7 @@ add_task(async function tombstoned() {
   // Shouldn't have overwritten the tombstone flag.
   assertSnapshot(await Snapshots.get(TEST_URL1, true), {
     url: TEST_URL1,
-    userPersisted: true,
+    userPersisted: Snapshots.USER_PERSISTED.MANUAL,
     removedAt,
   });
 

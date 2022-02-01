@@ -667,13 +667,12 @@ def browsertime(
         logging.INFO,
         "browsertime",
         {},
-        "[WARNING] This tool is UNSUPPORTED by the perftest team and it is NOT recommended "
-        "to use for performance testing. Instead, if you are looking to perform "
-        "performance tests on your patch, use `./mach raptor --browsertime`.\n\n"
-        "You can get visual-metrics by using the --browsertime-video and "
-        "--browsertime-visualmetrics. Here is a sample command for raptor-browsertime: \n"
-        "\t./mach raptor --browsertime -t amazon --browsertime-video "
-        "--browsertime-visualmetrics\n\n"
+        "[INFO] This command should be used for browsertime setup only.\n"
+        "If you are looking to run performance tests on your patch, use "
+        "`./mach raptor --browsertime` instead.\n\nYou can get visual-metrics "
+        "by using the --browsertime-video and --browsertime-visualmetrics. "
+        "Here is a sample command for raptor-browsertime: \n\t`./mach raptor "
+        "--browsertime -t amazon --browsertime-video --browsertime-visualmetrics`\n\n"
         "See this wiki page for more information if needed: "
         "https://wiki.mozilla.org/TestEngineering/Performance/Raptor/Browsertime\n\n",
     )

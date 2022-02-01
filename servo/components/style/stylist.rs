@@ -4,7 +4,9 @@
 
 //! Selector matching.
 
-use crate::applicable_declarations::{ApplicableDeclarationBlock, ApplicableDeclarationList};
+use crate::applicable_declarations::{
+    ApplicableDeclarationBlock, ApplicableDeclarationList, CascadePriority,
+};
 use crate::context::{CascadeInputs, QuirksMode};
 use crate::dom::{TElement, TShadowRoot};
 use crate::element_state::{DocumentState, ElementState};
@@ -31,16 +33,17 @@ use crate::stylesheets::keyframes_rule::KeyframesAnimation;
 use crate::stylesheets::layer_rule::{LayerId, LayerName, LayerOrder};
 use crate::stylesheets::viewport_rule::{self, MaybeNew, ViewportRule};
 #[cfg(feature = "gecko")]
-use crate::stylesheets::{CounterStyleRule, FontFaceRule, FontFeatureValuesRule, PageRule};
+use crate::stylesheets::{
+    CounterStyleRule, FontFaceRule, FontFeatureValuesRule, PageRule, ScrollTimelineRule,
+};
 use crate::stylesheets::{
     CssRule, EffectiveRulesIterator, Origin, OriginSet, PerOrigin, PerOriginIter,
 };
 use crate::stylesheets::{StyleRule, StylesheetContents, StylesheetInDocument};
 use crate::thread_state::{self, ThreadState};
-use crate::{Atom, LocalName, Namespace, WeakAtom};
-use fallible::FallibleVec;
+use crate::AllocErr;
+use crate::{Atom, LocalName, Namespace, ShrinkIfNeeded, WeakAtom};
 use fxhash::FxHashMap;
-use hashglobe::FailedAllocationError;
 use malloc_size_of::MallocSizeOf;
 #[cfg(feature = "gecko")]
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOfOps, MallocUnconditionalShallowSizeOf};
@@ -54,6 +57,7 @@ use selectors::NthIndexCache;
 use servo_arc::{Arc, ArcBorrow};
 use smallbitvec::SmallBitVec;
 use smallvec::SmallVec;
+use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 use std::sync::Mutex;
 use std::{mem, ops};
@@ -109,7 +113,7 @@ trait CascadeDataCacheEntry: Sized {
         collection: SheetCollectionFlusher<S>,
         guard: &SharedRwLockReadGuard,
         old_entry: &Self,
-    ) -> Result<Arc<Self>, FailedAllocationError>
+    ) -> Result<Arc<Self>, AllocErr>
     where
         S: StylesheetInDocument + PartialEq + 'static;
     /// Measures heap memory usage.
@@ -146,7 +150,7 @@ where
         collection: SheetCollectionFlusher<S>,
         guard: &SharedRwLockReadGuard,
         old_entry: &Entry,
-    ) -> Result<Option<Arc<Entry>>, FailedAllocationError>
+    ) -> Result<Option<Arc<Entry>>, AllocErr>
     where
         S: StylesheetInDocument + PartialEq + 'static,
     {
@@ -265,7 +269,7 @@ impl CascadeDataCacheEntry for UserAgentCascadeData {
         collection: SheetCollectionFlusher<S>,
         guard: &SharedRwLockReadGuard,
         _old: &Self,
-    ) -> Result<Arc<Self>, FailedAllocationError>
+    ) -> Result<Arc<Self>, AllocErr>
     where
         S: StylesheetInDocument + PartialEq + 'static,
     {
@@ -288,7 +292,7 @@ impl CascadeDataCacheEntry for UserAgentCascadeData {
             )?;
         }
 
-        new_data.cascade_data.compute_layer_order();
+        new_data.cascade_data.did_finish_rebuild();
 
         Ok(Arc::new(new_data))
     }
@@ -381,7 +385,7 @@ impl DocumentCascadeData {
         quirks_mode: QuirksMode,
         mut flusher: DocumentStylesheetFlusher<'a, S>,
         guards: &StylesheetGuards,
-    ) -> Result<(), FailedAllocationError>
+    ) -> Result<(), AllocErr>
     where
         S: StylesheetInDocument + PartialEq + 'static,
     {
@@ -594,7 +598,7 @@ impl Stylist {
         old_data: &CascadeData,
         collection: SheetCollectionFlusher<S>,
         guard: &SharedRwLockReadGuard,
-    ) -> Result<Option<Arc<CascadeData>>, FailedAllocationError>
+    ) -> Result<Option<Arc<CascadeData>>, AllocErr>
     where
         S: StylesheetInDocument + PartialEq + 'static,
     {
@@ -1496,9 +1500,15 @@ impl Stylist {
             /* pseudo = */ None,
             self.rule_tree.root(),
             guards,
-            block
-                .declaration_importance_iter()
-                .map(|(declaration, _)| (declaration, Origin::Author)),
+            block.declaration_importance_iter().map(|(declaration, _)| {
+                (
+                    declaration,
+                    CascadePriority::new(
+                        CascadeLevel::same_tree_author_normal(),
+                        LayerOrder::root(),
+                    ),
+                )
+            }),
             Some(parent_style),
             Some(parent_style),
             Some(parent_style),
@@ -1547,6 +1557,83 @@ impl Stylist {
     }
 }
 
+/// A vector that is sorted in layer order.
+#[derive(Clone, Debug, Deref, MallocSizeOf)]
+pub struct LayerOrderedVec<T>(Vec<(T, LayerId)>);
+impl<T> Default for LayerOrderedVec<T> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
+}
+
+/// A map that is sorted in layer order.
+#[derive(Clone, Debug, Deref, MallocSizeOf)]
+pub struct LayerOrderedMap<T>(PrecomputedHashMap<Atom, SmallVec<[(T, LayerId); 1]>>);
+impl<T> Default for LayerOrderedMap<T> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
+}
+
+impl<T: 'static> LayerOrderedVec<T> {
+    fn clear(&mut self) {
+        self.0.clear();
+    }
+    fn push(&mut self, v: T, id: LayerId) {
+        self.0.push((v, id));
+    }
+    fn sort(&mut self, layers: &[CascadeLayer]) {
+        self.0
+            .sort_by_key(|&(_, ref id)| layers[id.0 as usize].order)
+    }
+}
+
+impl<T: 'static> LayerOrderedMap<T> {
+    fn clear(&mut self) {
+        self.0.clear();
+    }
+    fn try_insert(&mut self, name: Atom, v: T, id: LayerId) -> Result<(), AllocErr> {
+        self.try_insert_with(name, v, id, |_, _| Ordering::Equal)
+    }
+    fn try_insert_with(
+        &mut self,
+        name: Atom,
+        v: T,
+        id: LayerId,
+        cmp: impl Fn(&T, &T) -> Ordering,
+    ) -> Result<(), AllocErr> {
+        self.0.try_reserve(1)?;
+        let vec = self.0.entry(name).or_default();
+        if let Some(&mut (ref mut val, ref last_id)) = vec.last_mut() {
+            if *last_id == id {
+                if cmp(&val, &v) != Ordering::Greater {
+                    *val = v;
+                }
+                return Ok(());
+            }
+        }
+        vec.push((v, id));
+        Ok(())
+    }
+    fn sort(&mut self, layers: &[CascadeLayer]) {
+        self.sort_with(layers, |_, _| Ordering::Equal)
+    }
+    fn sort_with(&mut self, layers: &[CascadeLayer], cmp: impl Fn(&T, &T) -> Ordering) {
+        for (_, v) in self.0.iter_mut() {
+            v.sort_by(|&(ref v1, ref id1), &(ref v2, ref id2)| {
+                let order1 = layers[id1.0 as usize].order;
+                let order2 = layers[id2.0 as usize].order;
+                order1.cmp(&order2).then_with(|| cmp(v1, v2))
+            })
+        }
+    }
+    /// Get an entry on the LayerOrderedMap by name.
+    pub fn get(&self, name: &Atom) -> Option<&T> {
+        let vec = self.0.get(name)?;
+        Some(&vec.last()?.0)
+    }
+}
+
 /// This struct holds data which users of Stylist may want to extract
 /// from stylesheets which can be done at the same time as updating.
 #[derive(Clone, Debug, Default)]
@@ -1554,31 +1641,39 @@ impl Stylist {
 pub struct ExtraStyleData {
     /// A list of effective font-face rules and their origin.
     #[cfg(feature = "gecko")]
-    pub font_faces: Vec<Arc<Locked<FontFaceRule>>>,
+    pub font_faces: LayerOrderedVec<Arc<Locked<FontFaceRule>>>,
 
     /// A list of effective font-feature-values rules.
     #[cfg(feature = "gecko")]
-    pub font_feature_values: Vec<Arc<Locked<FontFeatureValuesRule>>>,
+    pub font_feature_values: LayerOrderedVec<Arc<Locked<FontFeatureValuesRule>>>,
 
     /// A map of effective counter-style rules.
     #[cfg(feature = "gecko")]
-    pub counter_styles: PrecomputedHashMap<Atom, Arc<Locked<CounterStyleRule>>>,
+    pub counter_styles: LayerOrderedMap<Arc<Locked<CounterStyleRule>>>,
 
     /// A map of effective page rules.
     #[cfg(feature = "gecko")]
-    pub pages: Vec<Arc<Locked<PageRule>>>,
+    pub pages: LayerOrderedVec<Arc<Locked<PageRule>>>,
+
+    /// A map of effective scroll-timeline rules.
+    #[cfg(feature = "gecko")]
+    pub scroll_timelines: LayerOrderedMap<Arc<Locked<ScrollTimelineRule>>>,
 }
 
 #[cfg(feature = "gecko")]
 impl ExtraStyleData {
     /// Add the given @font-face rule.
-    fn add_font_face(&mut self, rule: &Arc<Locked<FontFaceRule>>) {
-        self.font_faces.push(rule.clone());
+    fn add_font_face(&mut self, rule: &Arc<Locked<FontFaceRule>>, layer: LayerId) {
+        self.font_faces.push(rule.clone(), layer);
     }
 
     /// Add the given @font-feature-values rule.
-    fn add_font_feature_values(&mut self, rule: &Arc<Locked<FontFeatureValuesRule>>) {
-        self.font_feature_values.push(rule.clone());
+    fn add_font_feature_values(
+        &mut self,
+        rule: &Arc<Locked<FontFeatureValuesRule>>,
+        layer: LayerId,
+    ) {
+        self.font_feature_values.push(rule.clone(), layer);
     }
 
     /// Add the given @counter-style rule.
@@ -1586,18 +1681,36 @@ impl ExtraStyleData {
         &mut self,
         guard: &SharedRwLockReadGuard,
         rule: &Arc<Locked<CounterStyleRule>>,
-    ) {
+        layer: LayerId,
+    ) -> Result<(), AllocErr> {
         let name = rule.read_with(guard).name().0.clone();
-        self.counter_styles.insert(name, rule.clone());
+        self.counter_styles.try_insert(name, rule.clone(), layer)
     }
 
     /// Add the given @page rule.
-    fn add_page(&mut self, rule: &Arc<Locked<PageRule>>) {
-        self.pages.push(rule.clone());
+    fn add_page(&mut self, rule: &Arc<Locked<PageRule>>, layer: LayerId) {
+        self.pages.push(rule.clone(), layer);
     }
-}
 
-impl ExtraStyleData {
+    /// Add the given @scroll-timeline rule.
+    fn add_scroll_timeline(
+        &mut self,
+        guard: &SharedRwLockReadGuard,
+        rule: &Arc<Locked<ScrollTimelineRule>>,
+        layer: LayerId,
+    ) -> Result<(), AllocErr> {
+        let name = rule.read_with(guard).name.as_atom().clone();
+        self.scroll_timelines.try_insert(name, rule.clone(), layer)
+    }
+
+    fn sort_by_layer(&mut self, layers: &[CascadeLayer]) {
+        self.font_faces.sort(layers);
+        self.font_feature_values.sort(layers);
+        self.counter_styles.sort(layers);
+        self.pages.sort(layers);
+        self.scroll_timelines.sort(layers);
+    }
+
     fn clear(&mut self) {
         #[cfg(feature = "gecko")]
         {
@@ -1605,7 +1718,20 @@ impl ExtraStyleData {
             self.font_feature_values.clear();
             self.counter_styles.clear();
             self.pages.clear();
+            self.scroll_timelines.clear();
         }
+    }
+}
+
+// Don't let a prefixed keyframes animation override
+// a non-prefixed one.
+fn compare_keyframes_in_same_layer(v1: &KeyframesAnimation, v2: &KeyframesAnimation) -> Ordering {
+    if v1.vendor_prefix.is_some() == v2.vendor_prefix.is_some() {
+        Ordering::Equal
+    } else if v2.vendor_prefix.is_some() {
+        Ordering::Greater
+    } else {
+        Ordering::Less
     }
 }
 
@@ -1629,6 +1755,7 @@ impl MallocSizeOf for ExtraStyleData {
         n += self.font_feature_values.shallow_size_of(ops);
         n += self.counter_styles.shallow_size_of(ops);
         n += self.pages.shallow_size_of(ops);
+        n += self.scroll_timelines.shallow_size_of(ops);
         n
     }
 }
@@ -1873,6 +2000,15 @@ impl ElementAndPseudoRules {
         self.element_map.clear();
         self.pseudos_map.clear();
     }
+
+    fn shrink_if_needed(&mut self) {
+        self.element_map.shrink_if_needed();
+        for pseudo in self.pseudos_map.iter_mut() {
+            if let Some(ref mut pseudo) = pseudo {
+                pseudo.shrink_if_needed();
+            }
+        }
+    }
 }
 
 impl PartElementAndPseudoRules {
@@ -1963,7 +2099,7 @@ pub struct CascadeData {
 
     /// A map with all the animations at this `CascadeData`'s origin, indexed
     /// by name.
-    animations: PrecomputedHashMap<Atom, KeyframesAnimation>,
+    animations: LayerOrderedMap<KeyframesAnimation>,
 
     /// A map from cascade layer name to layer order.
     layer_id: FxHashMap<LayerName, LayerId>,
@@ -2029,7 +2165,7 @@ impl CascadeData {
         quirks_mode: QuirksMode,
         collection: SheetCollectionFlusher<S>,
         guard: &SharedRwLockReadGuard,
-    ) -> Result<(), FailedAllocationError>
+    ) -> Result<(), AllocErr>
     where
         S: StylesheetInDocument + PartialEq + 'static,
     {
@@ -2059,7 +2195,7 @@ impl CascadeData {
             result.is_ok()
         });
 
-        self.compute_layer_order();
+        self.did_finish_rebuild();
 
         result
     }
@@ -2127,6 +2263,27 @@ impl CascadeData {
         self.layers[id.0 as usize].order
     }
 
+    fn did_finish_rebuild(&mut self) {
+        self.shrink_maps_if_needed();
+        self.compute_layer_order();
+    }
+
+    fn shrink_maps_if_needed(&mut self) {
+        self.normal_rules.shrink_if_needed();
+        if let Some(ref mut host_rules) = self.host_rules {
+            host_rules.shrink_if_needed();
+        }
+        if let Some(ref mut slotted_rules) = self.slotted_rules {
+            slotted_rules.shrink_if_needed();
+        }
+        self.invalidation_map.shrink_if_needed();
+        self.attribute_dependencies.shrink_if_needed();
+        self.mapped_ids.shrink_if_needed();
+        self.layer_id.shrink_if_needed();
+        self.selectors_for_cache_revalidation.shrink_if_needed();
+
+    }
+
     fn compute_layer_order(&mut self) {
         debug_assert_ne!(
             self.layers.len(),
@@ -2164,6 +2321,9 @@ impl CascadeData {
                 order.inc();
             }
         }
+        self.extra_data.sort_by_layer(&self.layers);
+        self.animations
+            .sort_with(&self.layers, compare_keyframes_in_same_layer);
     }
 
     /// Collects all the applicable media query results into `results`.
@@ -2224,7 +2384,7 @@ impl CascadeData {
         mut current_layer: &mut LayerName,
         current_layer_id: LayerId,
         mut precomputed_pseudo_element_decls: Option<&mut PrecomputedPseudoElementDeclarations>,
-    ) -> Result<(), FailedAllocationError>
+    ) -> Result<(), AllocErr>
     where
         S: StylesheetInDocument + 'static,
     {
@@ -2310,12 +2470,14 @@ impl CascadeData {
                             // We choose the last one quite arbitrarily,
                             // expecting it's slightly more likely to be more
                             // specific.
-                            self.part_rules
+                            let map = self
+                                .part_rules
                                 .get_or_insert_with(|| Box::new(Default::default()))
-                                .for_insertion(pseudo_element)
-                                .try_entry(parts.last().unwrap().clone().0)?
-                                .or_insert_with(SmallVec::new)
-                                .try_push(rule)?;
+                                .for_insertion(pseudo_element);
+                            map.try_reserve(1)?;
+                            let vec = map.entry(parts.last().unwrap().clone().0).or_default();
+                            vec.try_reserve(1)?;
+                            vec.push(rule);
                         } else {
                             // NOTE(emilio): It's fine to look at :host and then at
                             // ::slotted(..), since :host::slotted(..) could never
@@ -2337,64 +2499,45 @@ impl CascadeData {
                     self.rules_source_order += 1;
                 },
                 CssRule::Keyframes(ref keyframes_rule) => {
-                    use hashglobe::hash_map::Entry;
-
-                    let keyframes_rule = keyframes_rule.read_with(guard);
                     debug!("Found valid keyframes rule: {:?}", *keyframes_rule);
-                    match self
-                        .animations
-                        .try_entry(keyframes_rule.name.as_atom().clone())?
-                    {
-                        Entry::Vacant(e) => {
-                            e.insert(KeyframesAnimation::from_keyframes(
-                                &keyframes_rule.keyframes,
-                                keyframes_rule.vendor_prefix.clone(),
-                                current_layer_id,
-                                guard,
-                            ));
-                        },
-                        Entry::Occupied(mut e) => {
-                            // Don't let a prefixed keyframes animation override
-                            // a non-prefixed one.
-                            //
-                            // TODO(emilio): This will need to be harder for
-                            // layers.
-                            let needs_insert = keyframes_rule.vendor_prefix.is_none() ||
-                                e.get().vendor_prefix.is_some();
-                            if needs_insert {
-                                e.insert(KeyframesAnimation::from_keyframes(
-                                    &keyframes_rule.keyframes,
-                                    keyframes_rule.vendor_prefix.clone(),
-                                    current_layer_id,
-                                    guard,
-                                ));
-                            }
-                        },
-                    }
+                    let keyframes_rule = keyframes_rule.read_with(guard);
+                    let name = keyframes_rule.name.as_atom().clone();
+                    let animation = KeyframesAnimation::from_keyframes(
+                        &keyframes_rule.keyframes,
+                        keyframes_rule.vendor_prefix.clone(),
+                        guard,
+                    );
+                    self.animations.try_insert_with(
+                        name,
+                        animation,
+                        current_layer_id,
+                        compare_keyframes_in_same_layer,
+                    )?;
                 },
                 #[cfg(feature = "gecko")]
-                CssRule::ScrollTimeline(..) => {
-                    // TODO: Bug 1676791: set the timeline into animation.
-                    // https://phabricator.services.mozilla.com/D126452
-                    //
+                CssRule::ScrollTimeline(ref rule) => {
                     // Note: Bug 1733260: we may drop @scroll-timeline rule once this spec issue
                     // https://github.com/w3c/csswg-drafts/issues/6674 gets landed.
+                    self.extra_data
+                        .add_scroll_timeline(guard, rule, current_layer_id)?;
                 },
                 #[cfg(feature = "gecko")]
                 CssRule::FontFace(ref rule) => {
-                    self.extra_data.add_font_face(rule);
+                    self.extra_data.add_font_face(rule, current_layer_id);
                 },
                 #[cfg(feature = "gecko")]
                 CssRule::FontFeatureValues(ref rule) => {
-                    self.extra_data.add_font_feature_values(rule);
+                    self.extra_data
+                        .add_font_feature_values(rule, current_layer_id);
                 },
                 #[cfg(feature = "gecko")]
                 CssRule::CounterStyle(ref rule) => {
-                    self.extra_data.add_counter_style(guard, rule);
+                    self.extra_data
+                        .add_counter_style(guard, rule, current_layer_id)?;
                 },
                 #[cfg(feature = "gecko")]
                 CssRule::Page(ref rule) => {
-                    self.extra_data.add_page(rule);
+                    self.extra_data.add_page(rule, current_layer_id);
                 },
                 CssRule::Viewport(..) => {},
                 _ => {
@@ -2512,35 +2655,25 @@ impl CascadeData {
                         self.effective_media_query_results.saw_effective(media_rule);
                     }
                 },
-                CssRule::Layer(ref lock) => {
-                    use crate::stylesheets::layer_rule::LayerRuleKind;
-
+                CssRule::LayerBlock(ref lock) => {
                     let layer_rule = lock.read_with(guard);
-                    match layer_rule.kind {
-                        LayerRuleKind::Block { ref name, .. } => {
-                            children_layer_id = maybe_register_layers(
-                                self,
-                                name.as_ref(),
-                                &mut current_layer,
-                                &mut layer_names_to_pop,
-                            );
-                        },
-                        LayerRuleKind::Statement { ref names } => {
-                            for name in &**names {
-                                let mut pushed = 0;
-                                // There are no children, so we can ignore the
-                                // return value.
-                                maybe_register_layers(
-                                    self,
-                                    Some(name),
-                                    &mut current_layer,
-                                    &mut pushed,
-                                );
-                                for _ in 0..pushed {
-                                    current_layer.0.pop();
-                                }
-                            }
-                        },
+                    children_layer_id = maybe_register_layers(
+                        self,
+                        layer_rule.name.as_ref(),
+                        &mut current_layer,
+                        &mut layer_names_to_pop,
+                    );
+                },
+                CssRule::LayerStatement(ref lock) => {
+                    let layer_rule = lock.read_with(guard);
+                    for name in &*layer_rule.names {
+                        let mut pushed = 0;
+                        // There are no children, so we can ignore the
+                        // return value.
+                        maybe_register_layers(self, Some(name), &mut current_layer, &mut pushed);
+                        for _ in 0..pushed {
+                            current_layer.0.pop();
+                        }
                     }
                 },
                 // We don't care about any other rule.
@@ -2578,7 +2711,7 @@ impl CascadeData {
         guard: &SharedRwLockReadGuard,
         rebuild_kind: SheetRebuildKind,
         mut precomputed_pseudo_element_decls: Option<&mut PrecomputedPseudoElementDeclarations>,
-    ) -> Result<(), FailedAllocationError>
+    ) -> Result<(), AllocErr>
     where
         S: StylesheetInDocument + 'static,
     {
@@ -2656,7 +2789,8 @@ impl CascadeData {
                 CssRule::Page(..) |
                 CssRule::Viewport(..) |
                 CssRule::Document(..) |
-                CssRule::Layer(..) |
+                CssRule::LayerBlock(..) |
+                CssRule::LayerStatement(..) |
                 CssRule::FontFeatureValues(..) => {
                     // Not affected by device changes.
                     continue;
@@ -2754,7 +2888,7 @@ impl CascadeDataCacheEntry for CascadeData {
         collection: SheetCollectionFlusher<S>,
         guard: &SharedRwLockReadGuard,
         old: &Self,
-    ) -> Result<Arc<Self>, FailedAllocationError>
+    ) -> Result<Arc<Self>, AllocErr>
     where
         S: StylesheetInDocument + PartialEq + 'static,
     {

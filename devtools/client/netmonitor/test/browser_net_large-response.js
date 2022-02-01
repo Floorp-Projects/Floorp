@@ -10,11 +10,6 @@
 const HTML_LONG_URL = CONTENT_TYPE_SJS + "?fmt=html-long";
 
 add_task(async function() {
-  // Using https-first for this test is blocked on Bug 1733420.
-  // We cannot assert status text "OK" with HTTPS requests to httpd.js, instead
-  // we get "Connected"
-  await pushPref("dom.security.https_first", false);
-
   const { tab, monitor } = await initNetMonitor(CUSTOM_GET_URL, {
     requestCount: 1,
   });

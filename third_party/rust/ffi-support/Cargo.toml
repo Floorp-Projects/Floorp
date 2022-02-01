@@ -13,14 +13,14 @@
 [package]
 edition = "2018"
 name = "ffi-support"
-version = "0.4.3"
+version = "0.4.4"
 authors = ["Thom Chiovoloni <tchiovoloni@mozilla.com>"]
 description = "A crate to help expose Rust functions over the FFI."
 readme = "README.md"
 keywords = ["ffi", "bindings"]
 categories = ["development-tools::ffi"]
 license = "Apache-2.0 / MIT"
-repository = "https://github.com/mozilla/application-services"
+repository = "https://github.com/mozilla/ffi-support"
 [dependencies.backtrace]
 version = "0.3"
 optional = true

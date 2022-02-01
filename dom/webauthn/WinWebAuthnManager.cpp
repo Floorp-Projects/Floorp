@@ -192,7 +192,8 @@ void WinWebAuthnManager::Register(
 
   // Client Data
   WEBAUTHN_CLIENT_DATA WebAuthNClientData = {
-      WEBAUTHN_CLIENT_DATA_CURRENT_VERSION, aInfo.ClientDataJSON().Length(),
+      WEBAUTHN_CLIENT_DATA_CURRENT_VERSION,
+      (DWORD)aInfo.ClientDataJSON().Length(),
       (BYTE*)(aInfo.ClientDataJSON().get()), WEBAUTHN_HASH_ALGORITHM_SHA_256};
 
   // Algorithms
@@ -534,7 +535,8 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
 
   // Client Data
   WEBAUTHN_CLIENT_DATA WebAuthNClientData = {
-      WEBAUTHN_CLIENT_DATA_CURRENT_VERSION, aInfo.ClientDataJSON().Length(),
+      WEBAUTHN_CLIENT_DATA_CURRENT_VERSION,
+      (DWORD)aInfo.ClientDataJSON().Length(),
       (BYTE*)(aInfo.ClientDataJSON().get()), WEBAUTHN_HASH_ALGORITHM_SHA_256};
 
   if (aInfo.Extra().isSome()) {

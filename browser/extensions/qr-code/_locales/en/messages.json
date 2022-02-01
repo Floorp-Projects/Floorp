@@ -1,0 +1,8 @@
+{
+    "scan-code": {
+      "message": "Scan the QR code"
+    },
+    "save-code": {
+      "message": "Save the QR code"
+    }
+}

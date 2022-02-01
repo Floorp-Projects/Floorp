@@ -3,7 +3,8 @@
 m = 'x';
 for (var i = 0; i < 10; i++)
     m += m;
-offThreadCompileScript("", ({elementAttributeName: m}));
+offThreadCompileToStencil("", ({elementAttributeName: m}));
 var n = newGlobal();
 gczeal(2,1);
-n.runOffThreadScript();
+var stencil = n.finishOffThreadCompileToStencil();
+n.evalStencil(stencil);

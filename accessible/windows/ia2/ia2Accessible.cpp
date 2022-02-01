@@ -453,12 +453,9 @@ ia2Accessible::get_attributes(BSTR* aAttributes) {
   if (!aAttributes) return E_INVALIDARG;
   *aAttributes = nullptr;
 
-  if (!Acc()) {
-    return CO_E_OBJNOTCONNECTED;
-  }
-  AccessibleWrap* acc = LocalAcc();
+  Accessible* acc = Acc();
   if (!acc) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
+    return CO_E_OBJNOTCONNECTED;
   }
 
   // The format is name:value;name:value; with \ for escaping these

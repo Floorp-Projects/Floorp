@@ -72,25 +72,20 @@ to execute `autogen.sh`  in advance; this script clones  the 'dlg' git
 submodule and copies some files into FreeType's source tree.
 
 
-contributing
-------------
+Code of Conduct
+---------------
 
-If you want to contribute to FreeType it is recommended to install the
-`git-merge-changelog` program – we use a `ChangeLog` file, which often
-prevents   simple   merging   due  to   conflicts.    Most   GNU/Linux
-distributions  have a  package  for this  program;  otherwise you  can
-install it via the 'gnulib' git repository.  Detailed instructions can
-be found at the beginning of
+Please note that  this project is released with a  Contributor Code of
+Conduct (CoC).  By participating in this project you agree to abide by
+its terms, which you can find in the following link:
 
-  https://git.savannah.gnu.org/cgit/gnulib.git/tree/lib/git-merge-changelog.c
+  https://www.freedesktop.org/wiki/CodeOfConduct
 
-To make  it actually work, add  to file `.git/config` in  the FreeType
-git repository (or to your `$HOME/.gitconfig` file) the lines
+CoC issues may  be raised to the project maintainers  at the following
+address:
 
-  [merge "merge-changelog"]
-     name = GNU-style ChangeLog merge driver
-     driver = /usr/local/bin/git-merge-changelog %O %A %B
-
+  wl@gnu.org
+  apodtele@gmail.com
 
 ----------------------------------------------------------------------
 

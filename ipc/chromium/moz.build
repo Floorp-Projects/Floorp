@@ -123,7 +123,8 @@ if os_solaris:
         "src/base/time_posix.cc",
     ]
 
-CXXFLAGS += CONFIG["TK_CFLAGS"]
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
 TEST_DIRS += [
     "gtest",

@@ -198,7 +198,6 @@ extern void*  _af_debug_hints;
    *   outline according to the results of the glyph analyzer.
    */
 
-#define AFWRTSYS_H_  /* don't load header files */
 #undef  WRITING_SYSTEM
 #define WRITING_SYSTEM( ws, WS )    \
           AF_WRITING_SYSTEM_ ## WS,
@@ -207,13 +206,11 @@ extern void*  _af_debug_hints;
   typedef enum  AF_WritingSystem_
   {
 
-#include "afwrtsys.h"
+#include "afws-iter.h"
 
     AF_WRITING_SYSTEM_MAX   /* do not remove */
 
   } AF_WritingSystem;
-
-#undef  AFWRTSYS_H_
 
 
   typedef struct  AF_WritingSystemClassRec_

@@ -154,21 +154,21 @@ async function callRequestStorageAccess(callback, expectFail) {
   return [threw, rejected];
 }
 
-async function waitUntilPermission(url, name) {
+async function waitUntilPermission(
+  url,
+  name,
+  value = SpecialPowers.Services.perms.ALLOW_ACTION
+) {
   let originAttributes = SpecialPowers.isContentWindowPrivate(window)
     ? { privateBrowsingId: 1 }
     : {};
   await new Promise(resolve => {
     let id = setInterval(async _ => {
       if (
-        await SpecialPowers.testPermission(
-          name,
-          SpecialPowers.Services.perms.ALLOW_ACTION,
-          {
-            url,
-            originAttributes,
-          }
-        )
+        await SpecialPowers.testPermission(name, value, {
+          url,
+          originAttributes,
+        })
       ) {
         clearInterval(id);
         resolve();

@@ -6,7 +6,6 @@
 # Leaf constants to pass to Frame's leafness argument.
 LEAF = "Leaf"
 NOT_LEAF = "NotLeaf"
-DYNAMIC_LEAF = "DynamicLeaf"
 
 
 class FrameClass:

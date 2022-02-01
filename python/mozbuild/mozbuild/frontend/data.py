@@ -436,6 +436,12 @@ class Linkable(ContextDerived):
             compiler_type = self.config.substs.get(type_var)
             if compiler_type in ("gcc", "clang"):
                 lib = "-l%s" % lib
+            elif self.KIND == "host":
+                lib = "%s%s%s" % (
+                    self.config.host_import_prefix,
+                    lib,
+                    self.config.host_import_suffix,
+                )
             else:
                 lib = "%s%s%s" % (
                     self.config.import_prefix,

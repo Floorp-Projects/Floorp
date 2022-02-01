@@ -22,7 +22,7 @@
 #ifdef DISABLE_LIBASOUND_DLOPEN
 #define WRAP(x) x
 #else
-#define WRAP(x) cubeb_##x
+#define WRAP(x) (*cubeb_##x)
 #define LIBASOUND_API_VISIT(X)                                                 \
   X(snd_config)                                                                \
   X(snd_config_add)                                                            \
@@ -660,11 +660,11 @@ init_local_config_with_workaround(char const * pcm_name)
 
   lconf = NULL;
 
-  if (*WRAP(snd_config) == NULL) {
+  if (WRAP(snd_config) == NULL) {
     return NULL;
   }
 
-  r = WRAP(snd_config_copy)(&lconf, *WRAP(snd_config));
+  r = WRAP(snd_config_copy)(&lconf, WRAP(snd_config));
   if (r < 0) {
     return NULL;
   }

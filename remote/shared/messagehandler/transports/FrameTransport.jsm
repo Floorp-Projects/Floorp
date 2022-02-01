@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
   CONTEXT_DESCRIPTOR_TYPES:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
+  isBrowsingContextCompatible:
+    "chrome://remote/content/shared/messagehandler/transports/FrameContextUtils.jsm",
   MessageHandlerFrameActor:
     "chrome://remote/content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameActor.jsm",
 });
@@ -148,36 +150,11 @@ class FrameTransport {
       }
 
       for (const { browsingContext } of win.gBrowser.browsers) {
-        // Skip window globals running in the parent process, unless we want to
-        // support debugging Chrome context, see Bug 1713440.
-        const isChrome = browsingContext.currentWindowGlobal.osPid === -1;
-
-        // Skip temporary initial documents that are about to be replaced by
-        // another document. The new document will be linked to a new window
-        // global, new JSWindowActors, etc. So attempting to forward any command
-        // to the temporary initial document would be useless as it has no
-        // connection to the real document that will be loaded shortly after.
-        // The new document will be handled as a new context, which should rely
-        // on session data (Bug 1713443) to setup the necessary configuration
-        // , events, etc.
-        const isInitialDocument =
-          browsingContext.currentWindowGlobal.isInitialDocument;
-        if (isChrome || isInitialDocument) {
-          continue;
+        if (isBrowsingContextCompatible(browsingContext, { browserId })) {
+          browsingContexts = browsingContexts.concat(
+            browsingContext.getAllBrowsingContextsInSubtree()
+          );
         }
-
-        // If a browserId was provided, skip browsing contexts which are not
-        // associated with this browserId.
-        if (
-          typeof browserId !== "undefined" &&
-          browsingContext.browserId !== browserId
-        ) {
-          continue;
-        }
-
-        browsingContexts = browsingContexts.concat(
-          browsingContext.getAllBrowsingContextsInSubtree()
-        );
       }
     }
 

@@ -226,11 +226,9 @@ class ServoStyleSet {
   already_AddRefed<ComputedStyle> ResolveNonInheritingAnonymousBoxStyle(
       PseudoStyleType);
 
-#ifdef MOZ_XUL
   already_AddRefed<ComputedStyle> ResolveXULTreePseudoStyle(
       dom::Element* aParentElement, nsCSSAnonBoxPseudoStaticAtom* aPseudoTag,
       ComputedStyle* aParentStyle, const AtomArray& aInputWord);
-#endif
 
   size_t SheetCount(Origin) const;
   StyleSheet* SheetAt(Origin, size_t aIndex) const;
@@ -355,6 +353,8 @@ class ServoStyleSet {
   void AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
 
   const RawServoCounterStyleRule* CounterStyleRuleForName(nsAtom* aName);
+
+  const RawServoScrollTimelineRule* ScrollTimelineRuleForName(nsAtom* aName);
 
   // Get all the currently-active font feature values set.
   already_AddRefed<gfxFontFeatureValueSet> BuildFontFeatureValueSet();

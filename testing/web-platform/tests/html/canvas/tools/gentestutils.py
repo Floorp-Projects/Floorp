@@ -404,13 +404,15 @@ def genTestUtils(TESTOUTPUTDIR, IMAGEOUTPUTDIR, TEMPLATEFILE, NAME2DIRFILE, ISOF
                 'fallback':fallback, 'attributes':attributes,
                 'context_args': context_args
             }
-
-            f = codecs.open('%s/%s%s.html' % (TESTOUTPUTDIR, mapped_name, name_variant), 'w', 'utf-8')
-            f.write(templates['w3c'] % template_params)
             if ISOFFSCREENCANVAS:
+                f = codecs.open('%s/%s%s.html' % (TESTOUTPUTDIR, mapped_name, name_variant), 'w', 'utf-8')
+                f.write(templates['w3coffscreencanvas'] % template_params)
                 timeout = '// META: timeout=%s\n' % test['timeout'] if 'timeout' in test else ''
                 template_params['timeout'] = timeout
                 f = codecs.open('%s/%s%s.worker.js' % (TESTOUTPUTDIR, mapped_name, name_variant), 'w', 'utf-8')
                 f.write(templates['w3cworker'] % template_params)
+            else:
+                f = codecs.open('%s/%s%s.html' % (TESTOUTPUTDIR, mapped_name, name_variant), 'w', 'utf-8')
+                f.write(templates['w3ccanvas'] % template_params)
 
     print()

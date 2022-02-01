@@ -31,7 +31,8 @@ mozilla::ipc::IPCResult MIDIPortParent::RecvSend(
 }
 
 mozilla::ipc::IPCResult MIDIPortParent::RecvOpen() {
-  if (MIDIPlatformService::IsRunning()) {
+  if (MIDIPlatformService::IsRunning() &&
+      mConnectionState == MIDIPortConnectionState::Closed) {
     MIDIPlatformService::Get()->Open(this);
   }
   return IPC_OK();

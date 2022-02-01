@@ -35,7 +35,6 @@ job-defaults:
         extra-options:
             - --browsertime
             - --conditioned-profile=settled
-    python-3: true
 
 browsertime-tp6:
     <<: &tp6-defaults
@@ -433,7 +432,7 @@ browsertime-tp6-live:
             - [google-slides, gslides]
             - imdb
             - imgur
-            - instagram
+            # - instagram (see bug 1736999)
             - linkedin
             - microsoft
             - netflix

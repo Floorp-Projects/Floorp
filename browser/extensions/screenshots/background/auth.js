@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* globals log */
-/* globals main, deviceInfo, analytics, catcher, communication, browser */
+/* globals main, makeUuid, deviceInfo, analytics, catcher, communication, browser */
 
 "use strict";
 
@@ -30,7 +30,7 @@ this.auth = (function() {
 
   function generateRegistrationInfo() {
     const info = {
-      secret: crypto.randomUUID(),
+      secret: makeUuid(),
       registered: false,
     };
     return info;

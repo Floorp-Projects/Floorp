@@ -14,6 +14,7 @@ pub type nl_item = ::c_int;
 pub type idtype_t = ::c_uint;
 pub type loff_t = ::c_longlong;
 pub type pthread_key_t = ::c_uint;
+pub type pthread_spinlock_t = ::c_int;
 
 pub type __u8 = ::c_uchar;
 pub type __u16 = ::c_ushort;
@@ -541,6 +542,45 @@ s! {
         pub can_id: canid_t,
         pub can_mask: canid_t,
     }
+
+    // linux/filter.h
+    pub struct sock_filter {
+        pub code: ::__u16,
+        pub jt: ::__u8,
+        pub jf: ::__u8,
+        pub k: ::__u32,
+    }
+
+    pub struct sock_fprog {
+        pub len: ::c_ushort,
+        pub filter: *mut sock_filter,
+    }
+
+    // linux/seccomp.h
+    pub struct seccomp_data {
+        pub nr: ::c_int,
+        pub arch: ::__u32,
+        pub instruction_pointer: ::__u64,
+        pub args: [::__u64; 6],
+    }
+
+    pub struct nlmsghdr {
+        pub nlmsg_len: u32,
+        pub nlmsg_type: u16,
+        pub nlmsg_flags: u16,
+        pub nlmsg_seq: u32,
+        pub nlmsg_pid: u32,
+    }
+
+    pub struct nlmsgerr {
+        pub error: ::c_int,
+        pub msg: nlmsghdr,
+    }
+
+    pub struct nlattr {
+        pub nla_len: u16,
+        pub nla_type: u16,
+    }
 }
 
 s_no_extra_traits! {
@@ -627,6 +667,19 @@ s_no_extra_traits! {
         pub mq_curmsgs: ::c_long,
         #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
         pad: [::c_long; 4],
+    }
+}
+
+cfg_if! {
+    if #[cfg(not(all(target_env = "musl", target_arch = "mips")))] {
+        s_no_extra_traits! {
+            // linux/net_tstamp.h
+            #[allow(missing_debug_implementations)]
+            pub struct sock_txtime {
+                pub clockid: ::clockid_t,
+                pub flags: ::__u32,
+            }
+        }
     }
 }
 
@@ -1277,6 +1330,7 @@ pub const POSIX_MADV_NORMAL: ::c_int = 0;
 pub const POSIX_MADV_RANDOM: ::c_int = 1;
 pub const POSIX_MADV_SEQUENTIAL: ::c_int = 2;
 pub const POSIX_MADV_WILLNEED: ::c_int = 3;
+pub const POSIX_SPAWN_USEVFORK: ::c_int = 64;
 
 pub const S_IEXEC: mode_t = 64;
 pub const S_IWRITE: mode_t = 128;
@@ -1438,6 +1492,8 @@ pub const PTHREAD_MUTEX_NORMAL: ::c_int = 0;
 pub const PTHREAD_MUTEX_RECURSIVE: ::c_int = 1;
 pub const PTHREAD_MUTEX_ERRORCHECK: ::c_int = 2;
 pub const PTHREAD_MUTEX_DEFAULT: ::c_int = PTHREAD_MUTEX_NORMAL;
+pub const PTHREAD_MUTEX_STALLED: ::c_int = 0;
+pub const PTHREAD_MUTEX_ROBUST: ::c_int = 1;
 pub const PTHREAD_PROCESS_PRIVATE: ::c_int = 0;
 pub const PTHREAD_PROCESS_SHARED: ::c_int = 1;
 pub const __SIZEOF_PTHREAD_COND_T: usize = 48;
@@ -1453,6 +1509,8 @@ pub const SCHED_BATCH: ::c_int = 3;
 pub const SCHED_IDLE: ::c_int = 5;
 
 pub const SCHED_RESET_ON_FORK: ::c_int = 0x40000000;
+
+pub const CLONE_PIDFD: ::c_int = 0x1000;
 
 // netinet/in.h
 // NOTE: These are in addition to the constants defined in src/unix/mod.rs
@@ -1497,11 +1555,6 @@ pub const SHM_UNLOCK: ::c_int = 12;
 pub const SHM_HUGETLB: ::c_int = 0o4000;
 #[cfg(not(all(target_env = "uclibc", target_arch = "mips")))]
 pub const SHM_NORESERVE: ::c_int = 0o10000;
-
-pub const EPOLLRDHUP: ::c_int = 0x2000;
-pub const EPOLLEXCLUSIVE: ::c_int = 0x10000000;
-pub const EPOLLWAKEUP: ::c_int = 0x20000000;
-pub const EPOLLONESHOT: ::c_int = 0x40000000;
 
 pub const QFMT_VFS_OLD: ::c_int = 1;
 pub const QFMT_VFS_V0: ::c_int = 2;
@@ -1576,6 +1629,7 @@ cfg_if! {
 
 pub const MREMAP_MAYMOVE: ::c_int = 1;
 pub const MREMAP_FIXED: ::c_int = 2;
+pub const MREMAP_DONTUNMAP: ::c_int = 4;
 
 pub const PR_SET_PDEATHSIG: ::c_int = 1;
 pub const PR_GET_PDEATHSIG: ::c_int = 2;
@@ -1704,6 +1758,23 @@ pub const SECCOMP_MODE_DISABLED: ::c_uint = 0;
 pub const SECCOMP_MODE_STRICT: ::c_uint = 1;
 pub const SECCOMP_MODE_FILTER: ::c_uint = 2;
 
+pub const SECCOMP_FILTER_FLAG_TSYNC: ::c_ulong = 1;
+pub const SECCOMP_FILTER_FLAG_LOG: ::c_ulong = 2;
+pub const SECCOMP_FILTER_FLAG_SPEC_ALLOW: ::c_ulong = 4;
+
+pub const SECCOMP_RET_KILL_PROCESS: ::c_uint = 0x80000000;
+pub const SECCOMP_RET_KILL_THREAD: ::c_uint = 0x00000000;
+pub const SECCOMP_RET_KILL: ::c_uint = SECCOMP_RET_KILL_THREAD;
+pub const SECCOMP_RET_TRAP: ::c_uint = 0x00030000;
+pub const SECCOMP_RET_ERRNO: ::c_uint = 0x00050000;
+pub const SECCOMP_RET_TRACE: ::c_uint = 0x7ff00000;
+pub const SECCOMP_RET_LOG: ::c_uint = 0x7ffc0000;
+pub const SECCOMP_RET_ALLOW: ::c_uint = 0x7fff0000;
+
+pub const SECCOMP_RET_ACTION_FULL: ::c_uint = 0xffff0000;
+pub const SECCOMP_RET_ACTION: ::c_uint = 0x7fff0000;
+pub const SECCOMP_RET_DATA: ::c_uint = 0x0000ffff;
+
 pub const ITIMER_REAL: ::c_int = 0;
 pub const ITIMER_VIRTUAL: ::c_int = 1;
 pub const ITIMER_PROF: ::c_int = 2;
@@ -1750,6 +1821,18 @@ pub const MFD_CLOEXEC: ::c_uint = 0x0001;
 pub const MFD_ALLOW_SEALING: ::c_uint = 0x0002;
 pub const MFD_HUGETLB: ::c_uint = 0x0004;
 
+// linux/close_range.h
+pub const CLOSE_RANGE_UNSHARE: ::c_uint = 1 << 1;
+pub const CLOSE_RANGE_CLOEXEC: ::c_uint = 1 << 2;
+
+// linux/openat2.h
+pub const RESOLVE_NO_XDEV: ::__u64 = 0x01;
+pub const RESOLVE_NO_MAGICLINKS: ::__u64 = 0x02;
+pub const RESOLVE_NO_SYMLINKS: ::__u64 = 0x04;
+pub const RESOLVE_BENEATH: ::__u64 = 0x08;
+pub const RESOLVE_IN_ROOT: ::__u64 = 0x10;
+pub const RESOLVE_CACHED: ::__u64 = 0x20;
+
 // these are used in the p_type field of Elf32_Phdr and Elf64_Phdr, which has
 // the type Elf32Word and Elf64Word respectively. Luckily, both of those are u32
 // so we can use that type here to avoid having to cast.
@@ -1766,6 +1849,9 @@ pub const PT_LOOS: u32 = 0x60000000;
 pub const PT_GNU_EH_FRAME: u32 = 0x6474e550;
 pub const PT_GNU_STACK: u32 = 0x6474e551;
 pub const PT_GNU_RELRO: u32 = 0x6474e552;
+pub const PT_HIOS: u32 = 0x6fffffff;
+pub const PT_LOPROC: u32 = 0x70000000;
+pub const PT_HIPROC: u32 = 0x7fffffff;
 
 // linux/if_ether.h
 pub const ETH_ALEN: ::c_int = 6;
@@ -2319,6 +2405,8 @@ pub const NETLINK_TX_RING: ::c_int = 7;
 pub const NETLINK_LISTEN_ALL_NSID: ::c_int = 8;
 pub const NETLINK_LIST_MEMBERSHIPS: ::c_int = 9;
 pub const NETLINK_CAP_ACK: ::c_int = 10;
+pub const NETLINK_EXT_ACK: ::c_int = 11;
+pub const NETLINK_GET_STRICT_CHK: ::c_int = 12;
 
 pub const NLA_F_NESTED: ::c_int = 1 << 15;
 pub const NLA_F_NET_BYTEORDER: ::c_int = 1 << 14;
@@ -2467,6 +2555,12 @@ pub const SOF_TIMESTAMPING_RX_SOFTWARE: ::c_uint = 1 << 3;
 pub const SOF_TIMESTAMPING_SOFTWARE: ::c_uint = 1 << 4;
 pub const SOF_TIMESTAMPING_SYS_HARDWARE: ::c_uint = 1 << 5;
 pub const SOF_TIMESTAMPING_RAW_HARDWARE: ::c_uint = 1 << 6;
+cfg_if! {
+    if #[cfg(not(all(target_env = "musl", target_arch = "mips")))] {
+        pub const SOF_TXTIME_DEADLINE_MODE: u32 = 1 << 0;
+        pub const SOF_TXTIME_REPORT_ERRORS: u32 = 1 << 1;
+    }
+}
 
 // linux/if_alg.h
 pub const ALG_SET_KEY: ::c_int = 1;
@@ -2994,6 +3088,15 @@ pub const SOL_CAN_BASE: ::c_int = 100;
 pub const CAN_INV_FILTER: canid_t = 0x20000000;
 pub const CAN_RAW_FILTER_MAX: ::c_int = 512;
 
+// linux/can/raw.h
+pub const SOL_CAN_RAW: ::c_int = SOL_CAN_BASE + CAN_RAW;
+pub const CAN_RAW_FILTER: ::c_int = 1;
+pub const CAN_RAW_ERR_FILTER: ::c_int = 2;
+pub const CAN_RAW_LOOPBACK: ::c_int = 3;
+pub const CAN_RAW_RECV_OWN_MSGS: ::c_int = 4;
+pub const CAN_RAW_FD_FRAMES: ::c_int = 5;
+pub const CAN_RAW_JOIN_FILTERS: ::c_int = 6;
+
 f! {
     pub fn NLA_ALIGN(len: ::c_int) -> ::c_int {
         return ((len) + NLA_ALIGNTO - 1) & !(NLA_ALIGNTO - 1)
@@ -3314,7 +3417,7 @@ extern "C" {
     pub fn lremovexattr(path: *const c_char, name: *const c_char) -> ::c_int;
     pub fn fremovexattr(filedes: ::c_int, name: *const c_char) -> ::c_int;
     pub fn signalfd(fd: ::c_int, mask: *const ::sigset_t, flags: ::c_int) -> ::c_int;
-    pub fn timerfd_create(clockid: ::c_int, flags: ::c_int) -> ::c_int;
+    pub fn timerfd_create(clockid: ::clockid_t, flags: ::c_int) -> ::c_int;
     pub fn timerfd_gettime(fd: ::c_int, curr_value: *mut itimerspec) -> ::c_int;
     pub fn timerfd_settime(
         fd: ::c_int,
@@ -3381,6 +3484,16 @@ extern "C" {
         addr: *mut ::sockaddr,
         len: *mut ::socklen_t,
         flg: ::c_int,
+    ) -> ::c_int;
+    pub fn pthread_getaffinity_np(
+        thread: ::pthread_t,
+        cpusetsize: ::size_t,
+        cpuset: *mut ::cpu_set_t,
+    ) -> ::c_int;
+    pub fn pthread_setaffinity_np(
+        thread: ::pthread_t,
+        cpusetsize: ::size_t,
+        cpuset: *const ::cpu_set_t,
     ) -> ::c_int;
     pub fn pthread_setschedprio(native: ::pthread_t, priority: ::c_int) -> ::c_int;
     pub fn reboot(how_to: ::c_int) -> ::c_int;
@@ -3512,10 +3625,16 @@ extern "C" {
         timeout: *const ::timespec,
         sigmask: *const sigset_t,
     ) -> ::c_int;
+    pub fn pthread_mutex_consistent(mutex: *mut pthread_mutex_t) -> ::c_int;
     pub fn pthread_mutex_timedlock(
         lock: *mut pthread_mutex_t,
         abstime: *const ::timespec,
     ) -> ::c_int;
+    pub fn pthread_spin_init(lock: *mut ::pthread_spinlock_t, pshared: ::c_int) -> ::c_int;
+    pub fn pthread_spin_destroy(lock: *mut ::pthread_spinlock_t) -> ::c_int;
+    pub fn pthread_spin_lock(lock: *mut ::pthread_spinlock_t) -> ::c_int;
+    pub fn pthread_spin_trylock(lock: *mut ::pthread_spinlock_t) -> ::c_int;
+    pub fn pthread_spin_unlock(lock: *mut ::pthread_spinlock_t) -> ::c_int;
     pub fn clone(
         cb: extern "C" fn(*mut ::c_void) -> ::c_int,
         child_stack: *mut ::c_void,
@@ -3621,6 +3740,14 @@ extern "C" {
     pub fn pthread_mutexattr_getpshared(
         attr: *const pthread_mutexattr_t,
         pshared: *mut ::c_int,
+    ) -> ::c_int;
+    pub fn pthread_mutexattr_getrobust(
+        attr: *const pthread_mutexattr_t,
+        robustness: *mut ::c_int,
+    ) -> ::c_int;
+    pub fn pthread_mutexattr_setrobust(
+        attr: *mut pthread_mutexattr_t,
+        robustness: ::c_int,
     ) -> ::c_int;
     pub fn popen(command: *const c_char, mode: *const c_char) -> *mut ::FILE;
     pub fn faccessat(
@@ -3770,6 +3897,32 @@ extern "C" {
     pub fn iconv_close(cd: iconv_t) -> ::c_int;
 
     pub fn gettid() -> ::pid_t;
+
+    pub fn timer_create(
+        clockid: ::clockid_t,
+        sevp: *mut ::sigevent,
+        timerid: *mut ::timer_t,
+    ) -> ::c_int;
+    pub fn timer_delete(timerid: ::timer_t) -> ::c_int;
+    pub fn timer_getoverrun(timerid: ::timer_t) -> ::c_int;
+    pub fn timer_gettime(timerid: ::timer_t, curr_value: *mut ::itimerspec) -> ::c_int;
+    pub fn timer_settime(
+        timerid: ::timer_t,
+        flags: ::c_int,
+        new_value: *const ::itimerspec,
+        old_value: *mut ::itimerspec,
+    ) -> ::c_int;
+
+    pub fn gethostid() -> ::c_long;
+
+    pub fn pthread_getcpuclockid(thread: ::pthread_t, clk_id: *mut ::clockid_t) -> ::c_int;
+    pub fn memmem(
+        haystack: *const ::c_void,
+        haystacklen: ::size_t,
+        needle: *const ::c_void,
+        needlelen: ::size_t,
+    ) -> *mut ::c_void;
+    pub fn sched_getcpu() -> ::c_int;
 }
 
 cfg_if! {
@@ -3798,3 +3951,10 @@ cfg_if! {
     }
 }
 expand_align!();
+
+cfg_if! {
+    if #[cfg(libc_non_exhaustive)] {
+        mod non_exhaustive;
+        pub use self::non_exhaustive::*;
+    }
+}

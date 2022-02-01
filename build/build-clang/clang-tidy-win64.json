@@ -1,8 +1,5 @@
 {
     "stages": "1",
-    "build_libcxx": false,
-    "build_type": "Release",
-    "assertions": false,
     "build_clang_tidy": true,
     "cc": "cl.exe",
     "cxx": "cl.exe",

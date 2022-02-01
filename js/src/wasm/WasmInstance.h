@@ -285,7 +285,7 @@ class Instance {
 #ifdef ENABLE_WASM_EXCEPTIONS
   static void* exceptionNew(Instance* instance, uint32_t exnIndex,
                             uint32_t nbytes);
-  static void* throwException(Instance* instance, JSObject* exn);
+  static int32_t throwException(Instance* instance, JSObject* exn);
   static uint32_t consumePendingException(Instance* instance);
   static int32_t pushRefIntoExn(Instance* instance, JSObject* exn,
                                 JSObject* ref);
@@ -303,6 +303,10 @@ using UniqueInstance = UniquePtr<Instance>;
 bool ResultsToJSValue(JSContext* cx, ResultType type, void* registerResultLoc,
                       Maybe<char*> stackResultsLoc, MutableHandleValue rval,
                       CoercionLevel level = CoercionLevel::Spec);
+
+// Report an error to `cx` and mark it as a 'trap' so that it cannot be caught
+// by wasm exception handlers.
+void ReportTrapError(JSContext* cx, unsigned errorNumber);
 
 }  // namespace wasm
 }  // namespace js

@@ -1,3 +1,11 @@
+//! [![github]](https://github.com/dtolnay/proc-macro2)&ensp;[![crates-io]](https://crates.io/crates/proc-macro2)&ensp;[![docs-rs]](crate)
+//!
+//! [github]: https://img.shields.io/badge/github-8da0cb?style=for-the-badge&labelColor=555555&logo=github
+//! [crates-io]: https://img.shields.io/badge/crates.io-fc8d62?style=for-the-badge&labelColor=555555&logo=rust
+//! [docs-rs]: https://img.shields.io/badge/docs.rs-66c2a5?style=for-the-badge&labelColor=555555&logoColor=white&logo=data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDUxMiA1MTIiPjxwYXRoIGZpbGw9IiNmNWY1ZjUiIGQ9Ik00ODguNiAyNTAuMkwzOTIgMjE0VjEwNS41YzAtMTUtOS4zLTI4LjQtMjMuNC0zMy43bC0xMDAtMzcuNWMtOC4xLTMuMS0xNy4xLTMuMS0yNS4zIDBsLTEwMCAzNy41Yy0xNC4xIDUuMy0yMy40IDE4LjctMjMuNCAzMy43VjIxNGwtOTYuNiAzNi4yQzkuMyAyNTUuNSAwIDI2OC45IDAgMjgzLjlWMzk0YzAgMTMuNiA3LjcgMjYuMSAxOS45IDMyLjJsMTAwIDUwYzEwLjEgNS4xIDIyLjEgNS4xIDMyLjIgMGwxMDMuOS01MiAxMDMuOSA1MmMxMC4xIDUuMSAyMi4xIDUuMSAzMi4yIDBsMTAwLTUwYzEyLjItNi4xIDE5LjktMTguNiAxOS45LTMyLjJWMjgzLjljMC0xNS05LjMtMjguNC0yMy40LTMzLjd6TTM1OCAyMTQuOGwtODUgMzEuOXYtNjguMmw4NS0zN3Y3My4zek0xNTQgMTA0LjFsMTAyLTM4LjIgMTAyIDM4LjJ2LjZsLTEwMiA0MS40LTEwMi00MS40di0uNnptODQgMjkxLjFsLTg1IDQyLjV2LTc5LjFsODUtMzguOHY3NS40em0wLTExMmwtMTAyIDQxLjQtMTAyLTQxLjR2LS42bDEwMi0zOC4yIDEwMiAzOC4ydi42em0yNDAgMTEybC04NSA0Mi41di03OS4xbDg1LTM4Ljh2NzUuNHptMC0xMTJsLTEwMiA0MS40LTEwMi00MS40di0uNmwxMDItMzguMiAxMDIgMzguMnYuNnoiPjwvcGF0aD48L3N2Zz4K
+//!
+//! <br>
+//!
 //! A wrapper around the procedural macro API of the compiler's [`proc_macro`]
 //! crate. This library serves two purposes:
 //!
@@ -78,11 +86,25 @@
 //! a different thread.
 
 // Proc-macro2 types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/proc-macro2/1.0.27")]
+#![doc(html_root_url = "https://docs.rs/proc-macro2/1.0.33")]
 #![cfg_attr(any(proc_macro_span, super_unstable), feature(proc_macro_span))]
-#![cfg_attr(super_unstable, feature(proc_macro_raw_ident, proc_macro_def_site))]
+#![cfg_attr(super_unstable, feature(proc_macro_def_site))]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
-#![allow(clippy::needless_doctest_main, clippy::vec_init_then_push)]
+#![allow(
+    clippy::cast_lossless,
+    clippy::cast_possible_truncation,
+    clippy::doc_markdown,
+    clippy::items_after_statements,
+    clippy::manual_assert,
+    clippy::must_use_candidate,
+    clippy::needless_doctest_main,
+    clippy::shadow_unrelated,
+    clippy::trivially_copy_pass_by_ref,
+    clippy::unnecessary_wraps,
+    clippy::unused_self,
+    clippy::used_underscore_binding,
+    clippy::vec_init_then_push
+)]
 
 #[cfg(use_proc_macro)]
 extern crate proc_macro;
@@ -210,14 +232,14 @@ impl From<TokenTree> for TokenStream {
 
 impl Extend<TokenTree> for TokenStream {
     fn extend<I: IntoIterator<Item = TokenTree>>(&mut self, streams: I) {
-        self.inner.extend(streams)
+        self.inner.extend(streams);
     }
 }
 
 impl Extend<TokenStream> for TokenStream {
     fn extend<I: IntoIterator<Item = TokenStream>>(&mut self, streams: I) {
         self.inner
-            .extend(streams.into_iter().map(|stream| stream.inner))
+            .extend(streams.into_iter().map(|stream| stream.inner));
     }
 }
 
@@ -388,7 +410,7 @@ impl Span {
     /// of the macro. This is the same hygiene behavior as `macro_rules`.
     ///
     /// This function requires Rust 1.45 or later.
-    #[cfg(hygiene)]
+    #[cfg(not(no_hygiene))]
     pub fn mixed_site() -> Span {
         Span::_new(imp::Span::mixed_site())
     }
@@ -706,7 +728,7 @@ impl Group {
     /// by this group, but rather it will only set the span of the delimiter
     /// tokens at the level of the `Group`.
     pub fn set_span(&mut self, span: Span) {
-        self.inner.set_span(span.inner)
+        self.inner.set_span(span.inner);
     }
 }
 
@@ -977,7 +999,7 @@ impl Ord for Ident {
 
 impl Hash for Ident {
     fn hash<H: Hasher>(&self, hasher: &mut H) {
-        self.to_string().hash(hasher)
+        self.to_string().hash(hasher);
     }
 }
 

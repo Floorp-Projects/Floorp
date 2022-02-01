@@ -24,6 +24,52 @@ add_task(async function test_downloads_panel_opens() {
   DownloadsPanel.hidePanel();
 });
 
+add_task(async function test_customizemode_doesnt_wreck_things() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.download.improvements_to_download_panel", true]],
+  });
+
+  // Enter customize mode:
+  let customizationReadyPromise = BrowserTestUtils.waitForEvent(
+    gNavToolbox,
+    "customizationready"
+  );
+  gCustomizeMode.enter();
+  await customizationReadyPromise;
+
+  info("try to open the panel (will not work, in customize mode)");
+  let promise = promisePanelOpened();
+  DownloadsCommon.getData(window)._notifyDownloadEvent("start");
+  await TestUtils.waitForCondition(
+    () => DownloadsPanel._state == DownloadsPanel.kStateHidden,
+    "Should try to show but stop short and hide the panel"
+  );
+  is(
+    DownloadsPanel._state,
+    DownloadsPanel.kStateHidden,
+    "Should not start opening the panel."
+  );
+
+  let afterCustomizationPromise = BrowserTestUtils.waitForEvent(
+    gNavToolbox,
+    "aftercustomization"
+  );
+  gCustomizeMode.exit();
+  await afterCustomizationPromise;
+
+  DownloadsCommon.getData(window)._notifyDownloadEvent("start");
+  is(
+    DownloadsPanel.isPanelShowing,
+    true,
+    "Panel state should indicate a preparation to be opened"
+  );
+  await promise;
+
+  is(DownloadsPanel.panel.state, "open", "Panel should be opened");
+
+  DownloadsPanel.hidePanel();
+});
+
 /**
  * Make sure the downloads panel _does not_ open automatically if we set the
  * pref telling it not to do that.
@@ -74,6 +120,7 @@ add_task(async function test_downloads_panel_opening_pref() {
   await promiseDownloadStartedNotification;
 
   is(DownloadsPanel.panel.state, "closed", "Panel should be closed");
+  await SpecialPowers.popPrefEnv();
 });
 
 /**
@@ -126,4 +173,56 @@ add_task(async function test_downloads_panel_remains_closed() {
   await promiseDownloadStartedNotification;
 
   is(DownloadsPanel.panel.state, "closed", "Panel should be closed");
+
+  for (let download of downloads) {
+    await publicList.remove(download);
+  }
+  is((await publicList.getAll()).length, 0, "Should have no downloads left.");
+});
+
+/**
+ * Make sure the downloads panel doesn't open if the window isn't in the
+ * foreground.
+ */
+add_task(async function test_downloads_panel_inactive_window() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.download.improvements_to_download_panel", true]],
+  });
+
+  let oldShowEventNotification = DownloadsIndicatorView.showEventNotification;
+
+  registerCleanupFunction(async () => {
+    DownloadsIndicatorView.showEventNotification = oldShowEventNotification;
+  });
+
+  let promiseDownloadStartedNotification = new Promise(resolve => {
+    // Instead of downloads panel opening, download notification should be shown.
+    DownloadsIndicatorView.showEventNotification = aType => {
+      if (aType == "start") {
+        DownloadsIndicatorView.showEventNotification = oldShowEventNotification;
+        resolve();
+      }
+    };
+  });
+
+  let testRunnerWindow = Array.from(Services.wm.getEnumerator("")).find(
+    someWin => someWin != window
+  );
+
+  await SimpleTest.promiseFocus(testRunnerWindow);
+
+  DownloadsCommon.getData(window)._notifyDownloadEvent("start");
+
+  is(
+    DownloadsPanel.isPanelShowing,
+    false,
+    "Panel state should NOT indicate a preparation to be opened"
+  );
+
+  await promiseDownloadStartedNotification;
+  await SimpleTest.promiseFocus(window);
+
+  is(DownloadsPanel.panel.state, "closed", "Panel should be closed");
+
+  testRunnerWindow = null;
 });

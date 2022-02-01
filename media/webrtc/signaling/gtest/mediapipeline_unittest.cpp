@@ -52,8 +52,10 @@ namespace {
 class MainAsCurrent : public TaskQueueWrapper {
  public:
   MainAsCurrent()
-      : TaskQueueWrapper(MakeRefPtr<TaskQueue>(
-            do_AddRef(GetMainThreadEventTarget()), "MainAsCurrentTaskQueue")),
+      : TaskQueueWrapper(
+            MakeRefPtr<TaskQueue>(do_AddRef(GetMainThreadEventTarget()),
+                                  "MainAsCurrentTaskQueue"),
+            "MainAsCurrent"_ns),
         mSetter(this) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
   }
@@ -204,7 +206,7 @@ class LoopbackTransport : public MediaTransportHandler {
   void EnsureProvisionalTransport(const std::string& aTransportId,
                                   const std::string& aLocalUfrag,
                                   const std::string& aLocalPwd,
-                                  size_t aComponentCount) override {}
+                                  int aComponentCount) override {}
 
   void SetTargetForDefaultLocalAddressLookup(const std::string& aTargetIp,
                                              uint16_t aTargetPort) override {}

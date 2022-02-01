@@ -101,10 +101,7 @@ if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
 if CONFIG["BUILD_CTYPES"]:
     DIRS += ["ctypes"]
 
-if CONFIG["MOZ_XUL"]:
-    DIRS += ["autocomplete", "printingui", "satchel"]
-
-DIRS += ["captivedetect"]
+DIRS += ["autocomplete", "printingui", "satchel", "captivedetect"]
 
 if CONFIG["OS_TARGET"] != "Android":
     DIRS += ["terminator"]

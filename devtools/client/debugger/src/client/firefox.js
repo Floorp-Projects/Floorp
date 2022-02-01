@@ -3,11 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import { setupCommands, clientCommands } from "./firefox/commands";
-import {
-  setupCreate,
-  createPause,
-  prepareSourcePayload,
-} from "./firefox/create";
+import { setupCreate, createPause } from "./firefox/create";
 import { features } from "../utils/prefs";
 
 import { recordEvent } from "../utils/telemetry";
@@ -153,18 +149,7 @@ function onTargetDestroyed({ targetFront }) {
 }
 
 async function onSourceAvailable(sources) {
-  const frontendSources = await Promise.all(
-    sources
-      .filter(source => {
-        return !source.targetFront.isDestroyed();
-      })
-      .map(async source => {
-        const threadFront = await source.targetFront.getFront("thread");
-        const frontendSource = prepareSourcePayload(threadFront, source);
-        return frontendSource;
-      })
-  );
-  await actions.newGeneratedSources(frontendSources);
+  await actions.newGeneratedSources(sources);
 }
 
 async function onThreadStateAvailable(resources) {

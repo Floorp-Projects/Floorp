@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScriptLoadRequest.h"
+#include "GeckoProfiler.h"
 
 #include "mozilla/dom/Document.h"
 #include "mozilla/HoldDropJSObjects.h"
@@ -13,6 +14,7 @@
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "js/OffThreadScriptCompilation.h"
+#include "js/SourceText.h"
 
 #include "ModuleLoadRequest.h"
 #include "nsContentUtils.h"
@@ -21,6 +23,8 @@
 #include "nsISupportsPriority.h"
 #include "ScriptLoadRequest.h"
 #include "ScriptSettings.h"
+
+using JS::SourceText;
 
 namespace mozilla {
 namespace dom {
@@ -167,12 +171,12 @@ void ScriptLoadRequest::MaybeCancelOffThreadScript() {
   JSContext* cx = danger::GetJSContext();
   // Follow the same conditions as ScriptLoader::AttemptAsyncScriptCompile
   if (IsModuleRequest()) {
-    JS::CancelOffThreadModule(cx, mOffThreadToken);
+    JS::CancelCompileModuleToStencilOffThread(cx, mOffThreadToken);
   } else if (IsSource()) {
-    JS::CancelOffThreadScript(cx, mOffThreadToken);
+    JS::CancelCompileToStencilOffThread(cx, mOffThreadToken);
   } else {
     MOZ_ASSERT(IsBytecode());
-    JS::CancelOffThreadScriptDecoder(cx, mOffThreadToken);
+    JS::CancelDecodeStencilOffThread(cx, mOffThreadToken);
   }
 
   // Cancellation request above should guarantee removal of the parse task, so
@@ -270,6 +274,104 @@ void ScriptLoadRequest::SetIsLoadRequest(nsIScriptElement* aElement) {
   MOZ_ASSERT(IsPreload());
   mFetchOptions->mElement = do_QueryInterface(aElement);
   mFetchOptions->mIsPreload = false;
+}
+
+nsresult ScriptLoadRequest::GetScriptSource(JSContext* aCx,
+                                            MaybeSourceText* aMaybeSource) {
+  // If there's no script text, we try to get it from the element
+  if (mIsInline) {
+    nsAutoString inlineData;
+    GetScriptElement()->GetScriptText(inlineData);
+
+    size_t nbytes = inlineData.Length() * sizeof(char16_t);
+    JS::UniqueTwoByteChars chars(
+        static_cast<char16_t*>(JS_malloc(aCx, nbytes)));
+    if (!chars) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    memcpy(chars.get(), inlineData.get(), nbytes);
+
+    SourceText<char16_t> srcBuf;
+    if (!srcBuf.init(aCx, std::move(chars), inlineData.Length())) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    aMaybeSource->construct<SourceText<char16_t>>(std::move(srcBuf));
+    return NS_OK;
+  }
+
+  size_t length = ScriptTextLength();
+  if (IsUTF16Text()) {
+    JS::UniqueTwoByteChars chars;
+    chars.reset(ScriptText<char16_t>().extractOrCopyRawBuffer());
+    if (!chars) {
+      JS_ReportOutOfMemory(aCx);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    SourceText<char16_t> srcBuf;
+    if (!srcBuf.init(aCx, std::move(chars), length)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    aMaybeSource->construct<SourceText<char16_t>>(std::move(srcBuf));
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(IsUTF8Text());
+  UniquePtr<Utf8Unit[], JS::FreePolicy> chars;
+  chars.reset(ScriptText<Utf8Unit>().extractOrCopyRawBuffer());
+  if (!chars) {
+    JS_ReportOutOfMemory(aCx);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  SourceText<Utf8Unit> srcBuf;
+  if (!srcBuf.init(aCx, std::move(chars), length)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  aMaybeSource->construct<SourceText<Utf8Unit>>(std::move(srcBuf));
+  return NS_OK;
+}
+
+void ScriptLoadRequest::GetProfilerLabel(nsACString& aOutString) {
+  if (!profiler_is_active()) {
+    aOutString.Append("<script> element");
+    return;
+  }
+  aOutString.Append("<script");
+  if (IsAsyncScript()) {
+    aOutString.Append(" async");
+  } else if (IsDeferredScript()) {
+    aOutString.Append(" defer");
+  }
+  if (IsModuleRequest()) {
+    aOutString.Append(" type=\"module\"");
+  }
+
+  nsAutoCString url;
+  if (mURI) {
+    mURI->GetAsciiSpec(url);
+  } else {
+    url = "<unknown>";
+  }
+
+  if (mIsInline) {
+    if (GetParserCreated() != NOT_FROM_PARSER) {
+      aOutString.Append("> inline at line ");
+      aOutString.AppendInt(mLineNo);
+      aOutString.Append(" of ");
+    } else {
+      aOutString.Append("> inline (dynamically created) in ");
+    }
+    aOutString.Append(url);
+  } else {
+    aOutString.Append(" src=\"");
+    aOutString.Append(url);
+    aOutString.Append("\">");
+  }
 }
 
 //////////////////////////////////////////////////////////////

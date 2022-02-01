@@ -8,6 +8,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.test.BaseSessionTest
 import org.mozilla.geckoview.test.TestCrashHandler
 import org.mozilla.geckoview.test.TestRuntimeService
@@ -30,7 +31,7 @@ class ParentCrashTest : BaseSessionTest() {
         val client = TestCrashHandler.Client(targetContext)
 
         assertTrue(client.connect(timeout))
-        client.setEvalNextCrashDump(/* expectFatal */ true)
+        client.setEvalNextCrashDump(/* expectFatal */ true, GeckoRuntime.CRASHED_PROCESS_TYPE_MAIN)
 
         val runtime = TestRuntimeService.RuntimeInstance.start(
             targetContext, RuntimeCrashTestService::class.java, temporaryProfile.get())

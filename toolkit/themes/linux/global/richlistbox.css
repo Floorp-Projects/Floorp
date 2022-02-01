@@ -27,22 +27,16 @@ richlistbox:where(:focus) > richlistitem[selected="true"] {
   color: SelectedItemText;
 }
 
-richlistbox[seltype="multiple"]:focus > richlistitem[current="true"] {
-  outline: 1px dotted SelectedItem;
-  outline-offset: -1px;
-}
-
-richlistbox[seltype="multiple"]:focus > richlistitem[current="true"][selected="true"] {
-  outline: 1px dotted #F3D982; /* TODO: find a suitable system color */
-}
-
-richlistbox.theme-listbox:focus > richlistitem[selected="true"][current="true"] {
-  outline: 1px dotted #F3D982;
-}
-
+richlistbox[seltype="multiple"]:focus > richlistitem[current="true"],
 richlistbox.theme-listbox:focus > richlistitem[current="true"] {
-  outline: 1px dotted SelectedItem;
-  outline-offset: -1px;
+  outline: var(--default-focusring);
+  outline-color: SelectedItem;
+  outline-offset: calc(-1 * var(--default-focusring-width));
+}
+
+richlistbox[seltype="multiple"]:focus > richlistitem[current="true"][selected="true"],
+richlistbox.theme-listbox:focus > richlistitem[current="true"][selected="true"] {
+  outline-color: #F3D982; /* TODO: find a suitable system color */
 }
 
 richlistbox.theme-listbox:not(:focus) > richlistitem[selected="true"] {

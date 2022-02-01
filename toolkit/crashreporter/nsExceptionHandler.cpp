@@ -1245,17 +1245,18 @@ static bool LaunchCrashHandlerService(const XP_CHAR* aProgramPath,
   else if (pid == 0) {
     // Invoke the crash handler service using am
     if (androidUserSerial) {
-      Unused << execlp(
-          "/system/bin/am", "/system/bin/am", androidStartServiceCommand,
-          "--user", androidUserSerial, "-a", "org.mozilla.gecko.ACTION_CRASHED",
-          "-n", aProgramPath, "--es", "minidumpPath", aMinidumpPath, "--es",
-          "extrasPath", extrasPath, "--ez", "fatal", "true", (char*)0);
+      Unused << execlp("/system/bin/am", "/system/bin/am",
+                       androidStartServiceCommand, "--user", androidUserSerial,
+                       "-a", "org.mozilla.gecko.ACTION_CRASHED", "-n",
+                       aProgramPath, "--es", "minidumpPath", aMinidumpPath,
+                       "--es", "extrasPath", extrasPath, "--ez", "fatal",
+                       "true", "--es", "processType", "MAIN", (char*)0);
     } else {
       Unused << execlp(
           "/system/bin/am", "/system/bin/am", androidStartServiceCommand, "-a",
           "org.mozilla.gecko.ACTION_CRASHED", "-n", aProgramPath, "--es",
           "minidumpPath", aMinidumpPath, "--es", "extrasPath", extrasPath,
-          "--ez", "fatal", "true", (char*)0);
+          "--ez", "fatal", "true", "--es", "processType", "MAIN", (char*)0);
     }
     _exit(1);
 

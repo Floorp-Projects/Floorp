@@ -7,9 +7,6 @@
 const isOSX = Services.appinfo.OS === "Darwin";
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["print.tab_modal.enabled", false]],
-  });
   CustomizableUI.addWidgetToArea(
     "print-button",
     CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
@@ -35,24 +32,23 @@ add_task(async function() {
       let printButton = document.getElementById("print-button");
       ok(printButton, "Print button exists in Panel Menu");
 
-      if (isOSX) {
-        let panelHiddenPromise = promiseOverflowHidden(window);
-        document.getElementById("widget-overflow").hidePopup();
-        await panelHiddenPromise;
-        info("Menu panel was closed");
-      } else {
-        printButton.click();
-        await TestUtils.waitForCondition(() => gInPrintPreviewMode);
+      printButton.click();
 
-        ok(gInPrintPreviewMode, "Entered print preview mode");
+      // Ensure we're showing the preview...
+      await BrowserTestUtils.waitForCondition(() => {
+        let preview = document.querySelector(".printPreviewBrowser");
+        return preview && BrowserTestUtils.is_visible(preview);
+      });
 
-        // close print preview
-        if (gInPrintPreviewMode) {
-          PrintUtils.exitPrintPreview();
-          await TestUtils.waitForCondition(() => !window.gInPrintPreviewMode);
-          info("Exited print preview");
-        }
-      }
+      ok(true, "Entered print preview mode");
+
+      gBrowser.getTabDialogBox(gBrowser.selectedBrowser).abortAllDialogs();
+      // Wait for the preview to go away
+      await BrowserTestUtils.waitForCondition(
+        () => !document.querySelector(".printPreviewBrowser")
+      );
+
+      info("Exited print preview");
     }
   );
 });

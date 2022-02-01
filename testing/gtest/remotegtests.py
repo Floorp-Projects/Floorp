@@ -35,7 +35,7 @@ class RemoteGTests(object):
     def __init__(self):
         self.device = None
 
-    def build_environment(self, shuffle, test_filter, enable_webrender):
+    def build_environment(self, shuffle, test_filter):
         """
         Create and return a dictionary of all the appropriate env variables
         and values.
@@ -58,10 +58,9 @@ class RemoteGTests(object):
             env["GTEST_SHUFFLE"] = "True"
         if test_filter:
             env["GTEST_FILTER"] = test_filter
-        if enable_webrender:
-            env["MOZ_WEBRENDER"] = "1"
-        else:
-            env["MOZ_WEBRENDER"] = "0"
+
+        # webrender needs gfx.webrender.all=true, gtest doesn't use prefs
+        env["MOZ_WEBRENDER"] = "1"
 
         return env
 
@@ -76,7 +75,6 @@ class RemoteGTests(object):
         remote_test_root,
         libxul_path,
         symbols_path,
-        enable_webrender,
     ):
         """
         Launch the test app, run gtest, collect test results and wait for completion.
@@ -121,7 +119,7 @@ class RemoteGTests(object):
 
         if test_filter is not None:
             test_filter = six.ensure_text(test_filter)
-        env = self.build_environment(shuffle, test_filter, enable_webrender)
+        env = self.build_environment(shuffle, test_filter)
         args = [
             "-unittest",
             "--gtest_death_test_style=threadsafe",
@@ -421,13 +419,6 @@ class remoteGtestOptions(argparse.ArgumentParser):
             default=None,
             help="Path to gtest directory containing test support files.",
         )
-        self.add_argument(
-            "--enable-webrender",
-            action="store_true",
-            dest="enable_webrender",
-            default=False,
-            help="Enable the WebRender compositor in Gecko.",
-        )
         self.add_argument("args", nargs=argparse.REMAINDER)
 
 
@@ -470,7 +461,6 @@ def main():
             options.remote_test_root,
             options.libxul_path,
             options.symbols_path,
-            options.enable_webrender,
         )
     except KeyboardInterrupt:
         log.info("gtest | Received keyboard interrupt")

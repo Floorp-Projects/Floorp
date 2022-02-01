@@ -140,12 +140,8 @@ def install_certificates():
 
 
 def install_chrome(channel):
-    deb_prefix = "https://dl.google.com/linux/direct/"
     if channel in ("experimental", "dev"):
-        # Pinned since 98.0.4710.4 began crashing on startup.
-        # See https://github.com/web-platform-tests/wpt/issues/31714.
-        deb_archive = "google-chrome-unstable_97.0.4692.20-1_amd64.deb"
-        deb_prefix = "https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-unstable/"
+        deb_archive = "google-chrome-unstable_current_amd64.deb"
     elif channel == "beta":
         deb_archive = "google-chrome-beta_current_amd64.deb"
     elif channel == "stable":
@@ -154,7 +150,7 @@ def install_chrome(channel):
         raise ValueError("Unrecognized release channel: %s" % channel)
 
     dest = os.path.join("/tmp", deb_archive)
-    deb_url = deb_prefix + deb_archive
+    deb_url = "https://dl.google.com/linux/direct/%s" % deb_archive
     with open(dest, "wb") as f:
         get_download_to_descriptor(f, deb_url)
 

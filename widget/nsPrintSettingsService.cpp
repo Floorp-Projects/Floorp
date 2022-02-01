@@ -139,7 +139,6 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
   aSettings->GetIsCancelled(&data->isCancelled());
   aSettings->GetPrintSilent(&data->printSilent());
   aSettings->GetShrinkToFit(&data->shrinkToFit());
-  aSettings->GetShowPrintProgress(&data->showPrintProgress());
 
   aSettings->GetPaperId(data->paperId());
   aSettings->GetPaperWidth(&data->paperWidth());
@@ -228,7 +227,6 @@ nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
   settings->SetIsCancelled(data.isCancelled());
   settings->SetPrintSilent(data.printSilent());
   settings->SetShrinkToFit(data.shrinkToFit());
-  settings->SetShowPrintProgress(data.showPrintProgress());
 
   settings->SetPaperId(data.paperId());
 

@@ -49,12 +49,14 @@ add_task(async function test_ensure_bundled_addons_are_localized() {
   for (let id of colorwayThemes) {
     let l10nId = id.replace("@mozilla.org", "");
     let [, variantName] = l10nId.split("-", 2);
-    let defaultFluentId = `extension-colorways-${variantName}-name`;
-    let fluentId =
-      updatedAddonFluentIds.get(defaultFluentId) || defaultFluentId;
-    ok(
-      bundle.hasMessage(fluentId),
-      `l10n id for ${id} \"name\" attribute should exist`
-    );
+    if (variantName != "colorway") {
+      let defaultFluentId = `extension-colorways-${variantName}-name`;
+      let fluentId =
+        updatedAddonFluentIds.get(defaultFluentId) || defaultFluentId;
+      ok(
+        bundle.hasMessage(fluentId),
+        `l10n id for ${id} \"name\" attribute should exist`
+      );
+    }
   }
 });

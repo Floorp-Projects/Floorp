@@ -143,7 +143,7 @@ impl MergeTask {
                 unsafe { logger.GetMaxLevel(&mut level) }.to_result().ok()?;
                 Some(level)
             })
-            .map(|level| match level as i64 {
+            .map(|level| match level {
                 mozIServicesLogSink::LEVEL_ERROR => LevelFilter::Error,
                 mozIServicesLogSink::LEVEL_WARN => LevelFilter::Warn,
                 mozIServicesLogSink::LEVEL_DEBUG => LevelFilter::Debug,

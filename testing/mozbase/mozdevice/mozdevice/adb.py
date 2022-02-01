@@ -2089,14 +2089,21 @@ class ADBDevice(ADBCommand):
                 exitcode = adb_process.proc.poll()
         else:
             stdout2 = io.open(adb_process.stdout_file.name, "rb")
+            partial = b""
             while ((time.time() - start_time) <= float(timeout)) and exitcode is None:
                 try:
                     line = _timed_read_line(stdout2)
                     if line and len(line) > 0:
-                        line = line.rstrip()
-                        if self._verbose:
-                            self._logger.info(six.ensure_str(line))
-                        stdout_callback(line)
+                        if line.endswith(b"\n") or line.endswith(b"\r"):
+                            line = partial + line
+                            partial = b""
+                            line = line.rstrip()
+                            if self._verbose:
+                                self._logger.info(six.ensure_str(line))
+                            stdout_callback(line)
+                        else:
+                            # no more output available now, but more to come?
+                            partial = partial + line
                     else:
                         # no new output, so sleep and poll
                         time.sleep(self._polling_interval)
@@ -2122,8 +2129,16 @@ class ADBDevice(ADBCommand):
         if stdout_callback:
             line = stdout2.readline()
             while line:
-                stdout_callback(line.rstrip())
+                if line.endswith(b"\n") or line.endswith(b"\r"):
+                    line = partial + line
+                    partial = b""
+                    stdout_callback(line.rstrip())
+                else:
+                    # no more output available now, but more to come?
+                    partial = partial + line
                 line = stdout2.readline()
+            if partial:
+                stdout_callback(partial)
             stdout2.close()
 
         adb_process.stdout_file.seek(0, os.SEEK_SET)

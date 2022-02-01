@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.11.0">
+        <meta name="description" content="API Reference Documentation for FreeType-2.11.1">
       
       
       
@@ -18,7 +18,7 @@
     
     
       
-        <title>Base Interface - FreeType-2.11.0 API Reference</title>
+        <title>Base Interface - FreeType-2.11.1 API Reference</title>
       
     
     
@@ -82,7 +82,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="index.html" title="FreeType-2.11.0 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.11.0 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.11.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.11.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
@@ -94,7 +94,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            FreeType-2.11.0 API Reference
+            FreeType-2.11.1 API Reference
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -161,12 +161,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="index.html" title="FreeType-2.11.0 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.11.0 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.11.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.11.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
     </a>
-    FreeType-2.11.0 API Reference
+    FreeType-2.11.1 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -2464,7 +2464,8 @@
 
 <h4>note</h4>
 
-<p>By default, FreeType enables a Unicode charmap and tags it with <code>FT_ENCODING_UNICODE</code> when it is either provided or can be generated from PostScript glyph name dictionaries in the font file. All other encodings are considered legacy and tagged only if explicitly defined in the font file. Otherwise, <code>FT_ENCODING_NONE</code> is used.</p>
+<p>When loading a font, FreeType makes a Unicode charmap active if possible (either if the font provides such a charmap, or if FreeType can synthesize one from PostScript glyph name dictionaries; in either case, the charmap is tagged with <code>FT_ENCODING_UNICODE</code>). If such a charmap is synthesized, it is placed at the first position of the charmap array.</p>
+<p>All other encodings are considered legacy and tagged only if explicitly defined in the font file. Otherwise, <code>FT_ENCODING_NONE</code> is used.</p>
 <p><code>FT_ENCODING_NONE</code> is set by the BDF and PCF drivers if the charmap is neither Unicode nor ISO-8859-1 (otherwise it is set to <code>FT_ENCODING_UNICODE</code>). Use <code><a href="ft2-bdf_fonts.html#ft_get_bdf_charset_id">FT_Get_BDF_Charset_ID</a></code> to find out which encoding is really present. If, for example, the <code>cs_registry</code> field is &lsquo;KOI8&rsquo; and the <code>cs_encoding</code> field is &lsquo;R&rsquo;, the font is encoded in KOI8-R.</p>
 <p><code>FT_ENCODING_NONE</code> is always set (with a single exception) by the winfonts driver. Use <code><a href="ft2-winfnt_fonts.html#ft_get_winfnt_header">FT_Get_WinFNT_Header</a></code> and examine the <code>charset</code> field of the <code><a href="ft2-winfnt_fonts.html#ft_winfnt_headerrec">FT_WinFNT_HeaderRec</a></code> structure to find out which encoding is really present. For example, <code><a href="ft2-winfnt_fonts.html#ft_winfnt_id_xxx">FT_WinFNT_ID_CP1251</a></code> (204) means Windows code page 1251 (for Russian).</p>
 <p><code>FT_ENCODING_NONE</code> is set if <code>platform_id</code> is <code><a href="ft2-truetype_tables.html#tt_platform_xxx">TT_PLATFORM_MACINTOSH</a></code> and <code>encoding_id</code> is not <code>TT_MAC_ID_ROMAN</code> (otherwise it is set to <code>FT_ENCODING_APPLE_ROMAN</code>).</p>
@@ -2476,11 +2477,12 @@
 <h2 id="ft_enc_tag">FT_ENC_TAG<a class="headerlink" href="#ft_enc_tag" title="Permanent link">&para;</a></h2>
 <p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
 <div class = "codehilite"><pre><code>#<span class="keyword">ifndef</span> <b>FT_ENC_TAG</b>
-#<span class="keyword">define</span> <b>FT_ENC_TAG</b>( value, a, b, c, d )         \
-          value = ( ( (<a href="ft2-basic_types.html#ft_uint32">FT_UInt32</a>)(a) &lt;&lt; 24 ) |  \
-                    ( (<a href="ft2-basic_types.html#ft_uint32">FT_UInt32</a>)(b) &lt;&lt; 16 ) |  \
-                    ( (<a href="ft2-basic_types.html#ft_uint32">FT_UInt32</a>)(c) &lt;&lt;  8 ) |  \
-                      (<a href="ft2-basic_types.html#ft_uint32">FT_UInt32</a>)(d)         )
+
+#<span class="keyword">define</span> <b>FT_ENC_TAG</b>( value, a, b, c, d )                             \
+          value = ( ( FT_STATIC_BYTE_CAST( <a href="ft2-basic_types.html#ft_uint32">FT_UInt32</a>, a ) &lt;&lt; 24 ) | \
+                    ( FT_STATIC_BYTE_CAST( <a href="ft2-basic_types.html#ft_uint32">FT_UInt32</a>, b ) &lt;&lt; 16 ) | \
+                    ( FT_STATIC_BYTE_CAST( <a href="ft2-basic_types.html#ft_uint32">FT_UInt32</a>, c ) &lt;&lt;  8 ) | \
+                      FT_STATIC_BYTE_CAST( <a href="ft2-basic_types.html#ft_uint32">FT_UInt32</a>, d )         )
 
 #<span class="keyword">endif</span> /* <b>FT_ENC_TAG</b> */
 </code></pre></div>
@@ -3250,6 +3252,7 @@
 <p>FreeType error code. 0&nbsp;means success.</p>
 <h4>note</h4>
 
+<p>The <code>pathname</code> string should be recognizable as such by a standard <code>fopen</code> call on your system; in particular, this means that <code>pathname</code> must not contain null bytes. If that is not sufficient to address all file name possibilities (for example, to handle wide character file names on Windows in UTF-16 encoding) you might use <code><a href="ft2-base_interface.html#ft_open_face">FT_Open_Face</a></code> to pass a memory array or a stream object instead.</p>
 <p>Use <code><a href="ft2-base_interface.html#ft_done_face">FT_Done_Face</a></code> to destroy the created <code><a href="ft2-base_interface.html#ft_face">FT_Face</a></code> object (along with its slot and sizes).</p>
 <hr>
 
@@ -3561,7 +3564,7 @@
 <p>The size in bytes of the file in memory.</p>
 </td></tr>
 <tr><td class="val" id="pathname">pathname</td><td class="desc">
-<p>A pointer to an 8-bit file pathname. The pointer is not owned by FreeType.</p>
+<p>A pointer to an 8-bit file pathname, which must be a C&nbsp;string (i.e., no null bytes except at the very end). The pointer is not owned by FreeType.</p>
 </td></tr>
 <tr><td class="val" id="stream">stream</td><td class="desc">
 <p>A handle to a source stream object.</p>
@@ -4174,7 +4177,8 @@
 
 <h2 id="ft_load_target_mode">FT_LOAD_TARGET_MODE<a class="headerlink" href="#ft_load_target_mode" title="Permanent link">&para;</a></h2>
 <p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
-<div class = "codehilite"><pre><code>#<span class="keyword">define</span> <b>FT_LOAD_TARGET_MODE</b>( x )  ( (<a href="ft2-base_interface.html#ft_render_mode">FT_Render_Mode</a>)( ( (x) &gt;&gt; 16 ) &amp; 15 ) )
+<div class = "codehilite"><pre><code>#<span class="keyword">define</span> <b>FT_LOAD_TARGET_MODE</b>( x )                               \
+          FT_STATIC_CAST( <a href="ft2-base_interface.html#ft_render_mode">FT_Render_Mode</a>, ( (x) &gt;&gt; 16 ) &amp; 15 )
 </code></pre></div>
 
 <p>Return the <code><a href="ft2-base_interface.html#ft_render_mode">FT_Render_Mode</a></code> corresponding to a given <code><a href="ft2-base_interface.html#ft_load_target_xxx">FT_LOAD_TARGET_XXX</a></code> value.</p>
@@ -4964,7 +4968,7 @@ for pixel in buffer
 
 <h2 id="ft_load_target_xxx">FT_LOAD_TARGET_XXX<a class="headerlink" href="#ft_load_target_xxx" title="Permanent link">&para;</a></h2>
 <p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
-<div class = "codehilite"><pre><code>#<span class="keyword">define</span> FT_LOAD_TARGET_( x )   ( (<a href="ft2-basic_types.html#ft_int32">FT_Int32</a>)( (x) &amp; 15 ) &lt;&lt; 16 )
+<div class = "codehilite"><pre><code>#<span class="keyword">define</span> FT_LOAD_TARGET_( x )   ( FT_STATIC_CAST( <a href="ft2-basic_types.html#ft_int32">FT_Int32</a>, (x) &amp; 15 ) &lt;&lt; 16 )
 
 #<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_target_normal">FT_LOAD_TARGET_NORMAL</a>  FT_LOAD_TARGET_( <a href="ft2-base_interface.html#ft_render_mode_normal">FT_RENDER_MODE_NORMAL</a> )
 #<span class="keyword">define</span> <a href="ft2-base_interface.html#ft_load_target_light">FT_LOAD_TARGET_LIGHT</a>   FT_LOAD_TARGET_( <a href="ft2-base_interface.html#ft_render_mode_light">FT_RENDER_MODE_LIGHT</a>  )

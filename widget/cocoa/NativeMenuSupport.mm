@@ -26,7 +26,7 @@ already_AddRefed<NativeMenu> NativeMenuSupport::CreateNativeContextMenu(dom::Ele
 }
 
 bool NativeMenuSupport::ShouldUseNativeContextMenus() {
-  return StaticPrefs::widget_macos_native_context_menus() && StaticPrefs::browser_proton_enabled();
+  return StaticPrefs::widget_macos_native_context_menus();
 }
 
 }  // namespace mozilla::widget

@@ -1287,10 +1287,6 @@ nsresult nsHttpChannel::SetupTransaction() {
   // See bug #466080. Transfer LOAD_ANONYMOUS flag to socket-layer.
   if (mLoadFlags & LOAD_ANONYMOUS) mCaps |= NS_HTTP_LOAD_ANONYMOUS;
 
-  if (mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) {
-    mCaps |= NS_HTTP_CALL_CONTENT_SNIFFER;
-  }
-
   if (LoadTimingEnabled()) mCaps |= NS_HTTP_TIMING_ENABLED;
 
   if (mUpgradeProtocolCallback) {
@@ -1600,8 +1596,8 @@ nsresult nsHttpChannel::CallOnStartRequest() {
       }
     } else {
       if (docListener) {
-        docListener->AttachStreamFilter(request.mChildProcessId)
-            ->ChainTo(request.mPromise.forget(), __func__);
+        docListener->AttachStreamFilter()->ChainTo(request.mPromise.forget(),
+                                                   __func__);
       } else {
         request.mPromise->Reject(false, __func__);
       }
@@ -2380,9 +2376,10 @@ nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
       }
       break;
 
+    case 408:
     case 425:
     case 429:
-      // Do not cache 425 and 429.
+      // Do not cache 408, 425 and 429.
       CloseCacheEntry(false);
       [[fallthrough]];  // process normally
     default:
@@ -5934,7 +5931,7 @@ void nsHttpChannel::MaybeResolveProxyAndBeginConnect() {
   // settings if we are never going to make a network connection.
   if (!mProxyInfo &&
       !(mLoadFlags & (LOAD_ONLY_FROM_CACHE | LOAD_NO_NETWORK_IO)) &&
-      !LoadBypassProxy() && NS_SUCCEEDED(ResolveProxy())) {
+      !BypassProxy() && NS_SUCCEEDED(ResolveProxy())) {
     return;
   }
 
@@ -6388,8 +6385,7 @@ base::ProcessId nsHttpChannel::ProcessId() {
   return base::GetCurrentProcId();
 }
 
-auto nsHttpChannel::AttachStreamFilter(base::ProcessId aChildProcessId)
-    -> RefPtr<ChildEndpointPromise> {
+auto nsHttpChannel::AttachStreamFilter() -> RefPtr<ChildEndpointPromise> {
   LOG(("nsHttpChannel::AttachStreamFilter [this=%p]", this));
   MOZ_ASSERT(!LoadOnStartRequestCalled());
 
@@ -6408,7 +6404,6 @@ auto nsHttpChannel::AttachStreamFilter(base::ProcessId aChildProcessId)
   if (RefPtr<DocumentLoadListener> docParent = do_QueryObject(parentChannel)) {
     StreamFilterRequest* request = mStreamFilterRequests.AppendElement();
     request->mPromise = new ChildEndpointPromise::Private(__func__);
-    request->mChildProcessId = aChildProcessId;
     return request->mPromise;
   }
 

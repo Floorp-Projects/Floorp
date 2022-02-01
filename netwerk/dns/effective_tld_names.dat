@@ -3765,11 +3765,10 @@ org.kw
 // ky : http://www.icta.ky/da_ky_reg_dom.php
 // Confirmed by registry <kysupport@perimeterusa.com> 2008-06-17
 ky
-edu.ky
-gov.ky
 com.ky
-org.ky
+edu.ky
 net.ky
+org.ky
 
 // kz : https://en.wikipedia.org/wiki/.kz
 // see also: http://www.nic.kz/rules/index.jsp
@@ -11106,6 +11105,10 @@ cloudns.us
 // Submitted by Angelo Gladding <angelo@lahacker.net>
 cnpy.gdn
 
+// Codeberg e. V. : https://codeberg.org
+// Submitted by Moritz Marquardt <git@momar.de>
+codeberg.page
+
 // CoDNS B.V.
 co.nl
 co.no
@@ -11964,6 +11967,10 @@ futuremailing.at
 // GDS : https://www.gov.uk/service-manual/operations/operating-servicegovuk-subdomains
 // Submitted by David Illsley <david.illsley@digital.cabinet-office.gov.uk>
 service.gov.uk
+
+// CDDO : https://www.gov.uk/guidance/get-an-api-domain-on-govuk
+// Submitted by Jamie Tanna <jamie.tanna@digital.cabinet-office.gov.uk>
+api.gov.uk
 
 // Gehirn Inc. : https://www.gehirn.co.jp/
 // Submitted by Kohei YOSHIDA <tech@gehirn.co.jp>
@@ -13479,6 +13486,10 @@ gdansk.pl
 gdynia.pl
 med.pl
 sopot.pl
+
+// team.blue https://team.blue
+// Submitted by Cedric Dubois <cedric.dubois@team.blue>
+site.tb-hosting.com
 
 // Teckids e.V. : https://www.teckids.org
 // Submitted by Dominik George <dominik.george@teckids.org>

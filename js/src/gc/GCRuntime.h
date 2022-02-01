@@ -285,6 +285,10 @@ class GCRuntime {
   void finishRoots();
   void finish();
 
+#ifdef DEBUG
+  void assertNoPermanentSharedThings();
+#endif
+
   void freezePermanentSharedThings();
   template <typename T>
   void freezeAtomsZoneArenas(AllocKind kind, ArenaList& arenaList);
@@ -696,7 +700,6 @@ class GCRuntime {
   void incrementalSlice(SliceBudget& budget, const MaybeGCOptions& options,
                         JS::GCReason reason, bool budgetWasIncreased);
 
-  void waitForBackgroundTasksBeforeSlice();
   bool mightSweepInThisSlice(bool nonIncremental);
   void collectNurseryFromMajorGC(const MaybeGCOptions& options,
                                  JS::GCReason reason);
@@ -804,8 +807,10 @@ class GCRuntime {
 
   bool allCCVisibleZonesWereCollected();
   void sweepZones(JSFreeOp* fop, bool destroyingRuntime);
+  bool shouldDecommit() const;
   void startDecommit();
-  void decommitFreeArenas(const bool& canel, AutoLockGC& lock);
+  void decommitEmptyChunks(const bool& cancel, AutoLockGC& lock);
+  void decommitFreeArenas(const bool& cancel, AutoLockGC& lock);
   void decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock);
 
   // Compacting GC. Implemented in Compacting.cpp.
@@ -920,6 +925,12 @@ class GCRuntime {
 
   // State used for managing atom mark bitmaps in each zone.
   AtomMarkingRuntime atomMarking;
+
+  /*
+   * Pointer to a callback that, if set, will be used to create a
+   * budget for internally-triggered GCs.
+   */
+  MainThreadData<JS::CreateSliceBudgetCallback> createBudgetCallback;
 
  private:
   // Arenas used for permanent things created at startup and shared by child

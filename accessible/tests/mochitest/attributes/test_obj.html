@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("autocomplete", {"autocomplete": "true"}, true);
       testAttrs("checkbox", {"checkable": "true"}, true);
       testAttrs("checkedCheckbox", {"checkable": "true"}, true);
-      testAbsentAttrs("checkedMenuitem", {"checkable": "true"}, true);
+      testAbsentAttrs("checkedMenuitem", {"checkable": "true"});
       testAttrs("checkedMenuitemCheckbox", {"checkable": "true"}, true);
       testAttrs("checkedMenuitemRadio", {"checkable": "true"}, true);
       testAttrs("checkedOption", {"checkable": "true"}, true);
@@ -148,7 +148,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("th2", { "axis": "social" }, true);
 
       // don't barf on an empty abbr element.
-      testAbsentAttrs("th3", { "abbr": "" }, true);
+      testAbsentAttrs("th3", { "abbr": "" });
 
       // application accessible
       if (WIN) {

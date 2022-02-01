@@ -17,10 +17,17 @@ elif toolkit == "android":
 else:
     DIRS += ["other"]
 
-DIRS += ["aom", "base", "basetypes", "generic", "html", "interfaces", "ipc", "xpcom"]
-
-if CONFIG["MOZ_XUL"]:
-    DIRS += ["xul"]
+DIRS += [
+    "aom",
+    "base",
+    "basetypes",
+    "generic",
+    "html",
+    "interfaces",
+    "ipc",
+    "xpcom",
+    "xul",
+]
 
 TEST_DIRS += ["tests/mochitest"]
 

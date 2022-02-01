@@ -22,6 +22,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ServoBindings.h"
@@ -291,12 +292,12 @@ class IsItemInRangeComparator {
 
   int operator()(const nsRange* const aRange) const {
     int32_t cmp = nsContentUtils::ComparePoints_Deprecated(
-        &mNode, static_cast<int32_t>(mEndOffset), aRange->GetStartContainer(),
-        static_cast<int32_t>(aRange->StartOffset()), nullptr, mCache);
+        &mNode, mEndOffset, aRange->GetStartContainer(), aRange->StartOffset(),
+        nullptr, mCache);
     if (cmp == 1) {
       cmp = nsContentUtils::ComparePoints_Deprecated(
-          &mNode, static_cast<int32_t>(mStartOffset), aRange->GetEndContainer(),
-          static_cast<int32_t>(aRange->EndOffset()), nullptr, mCache);
+          &mNode, mStartOffset, aRange->GetEndContainer(), aRange->EndOffset(),
+          nullptr, mCache);
       if (cmp == -1) {
         return 0;
       }
@@ -369,19 +370,15 @@ bool nsINode::IsSelected(const uint32_t aStartOffset,
         if (middle + 1 < high &&
             (middlePlus1 = selection->GetRangeAt(middle + 1)) &&
             nsContentUtils::ComparePoints_Deprecated(
-                this, static_cast<int32_t>(aEndOffset),
-                middlePlus1->GetStartContainer(),
-                static_cast<int32_t>(middlePlus1->StartOffset()), nullptr,
-                &cache) > 0) {
+                this, aEndOffset, middlePlus1->GetStartContainer(),
+                middlePlus1->StartOffset(), nullptr, &cache) > 0) {
           result = 1;
           // if node start < end of middle - 1, result = -1
         } else if (middle >= 1 &&
                    (middleMinus1 = selection->GetRangeAt(middle - 1)) &&
                    nsContentUtils::ComparePoints_Deprecated(
-                       this, static_cast<int32_t>(aStartOffset),
-                       middleMinus1->GetEndContainer(),
-                       static_cast<int32_t>(middleMinus1->EndOffset()), nullptr,
-                       &cache) < 0) {
+                       this, aStartOffset, middleMinus1->GetEndContainer(),
+                       middleMinus1->EndOffset(), nullptr, &cache) < 0) {
           result = -1;
         } else {
           break;
@@ -865,7 +862,7 @@ void nsINode::Normalize() {
   }
 
   // We're relying on mozAutoSubtreeModified to keep the doc alive here.
-  Document* doc = OwnerDoc();
+  RefPtr<Document> doc = OwnerDoc();
 
   // Batch possible DOMSubtreeModified events.
   mozAutoSubtreeModified subtree(doc, nullptr);
@@ -875,10 +872,11 @@ void nsINode::Normalize() {
   bool hasRemoveListeners = nsContentUtils::HasMutationListeners(
       doc, NS_EVENT_BITS_MUTATION_NODEREMOVED);
   if (hasRemoveListeners) {
-    for (uint32_t i = 0; i < nodes.Length(); ++i) {
-      nsINode* parentNode = nodes[i]->GetParentNode();
-      if (parentNode) {  // Node may have already been removed.
-        nsContentUtils::MaybeFireNodeRemoved(nodes[i], parentNode);
+    for (nsCOMPtr<nsIContent>& node : nodes) {
+      // Node may have already been removed.
+      if (nsCOMPtr<nsINode> parentNode = node->GetParentNode()) {
+        // TODO: Bug 1622253
+        nsContentUtils::MaybeFireNodeRemoved(MOZ_KnownLive(node), parentNode);
       }
     }
   }
@@ -985,8 +983,8 @@ void nsINode::LookupPrefix(const nsAString& aNamespaceURI, nsAString& aPrefix) {
 }
 
 uint16_t nsINode::CompareDocumentPosition(nsINode& aOtherNode,
-                                          int32_t* aThisIndex,
-                                          int32_t* aOtherIndex) const {
+                                          Maybe<uint32_t>* aThisIndex,
+                                          Maybe<uint32_t>* aOtherIndex) const {
   if (this == &aOtherNode) {
     return 0;
   }
@@ -1083,24 +1081,24 @@ uint16_t nsINode::CompareDocumentPosition(nsINode& aOtherNode,
     const nsINode* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {
       // child1 or child2 can be an attribute here. This will work fine since
-      // ComputeIndexOf will return -1 for the attribute making the
+      // ComputeIndexOf will return Nothing for the attribute making the
       // attribute be considered before any child.
-      int32_t child1Index;
+      Maybe<uint32_t> child1Index;
       bool cachedChild1Index = false;
       if (&aOtherNode == child1 && aOtherIndex) {
         cachedChild1Index = true;
-        child1Index =
-            *aOtherIndex != -1 ? *aOtherIndex : parent->ComputeIndexOf(child1);
+        child1Index = aOtherIndex->isSome() ? *aOtherIndex
+                                            : parent->ComputeIndexOf(child1);
       } else {
         child1Index = parent->ComputeIndexOf(child1);
       }
 
-      int32_t child2Index;
+      Maybe<uint32_t> child2Index;
       bool cachedChild2Index = false;
       if (this == child2 && aThisIndex) {
         cachedChild2Index = true;
         child2Index =
-            *aThisIndex != -1 ? *aThisIndex : parent->ComputeIndexOf(child2);
+            aThisIndex->isSome() ? *aThisIndex : parent->ComputeIndexOf(child2);
       } else {
         child2Index = parent->ComputeIndexOf(child2);
       }
@@ -1418,7 +1416,7 @@ bool nsINode::Traverse(nsINode* tmp, nsCycleCollectionTraversalCallback& cb) {
         nsIContent* parent = tmp->GetParent();
         if (parent && !parent->UnoptimizableCCNode() &&
             parent->HasKnownLiveWrapper()) {
-          MOZ_ASSERT(parent->ComputeIndexOf(tmp) >= 0,
+          MOZ_ASSERT(parent->ComputeIndexOf(tmp).isSome(),
                      "Parent doesn't own us?");
           return false;
         }
@@ -1626,14 +1624,14 @@ nsIContent* nsINode::GetPreviousSibling() const {
 struct IndexCacheSlot {
   const nsINode* mParent;
   const nsINode* mChild;
-  int32_t mChildIndex;
+  uint32_t mChildIndex;
 };
 
 static IndexCacheSlot sIndexCache[CACHE_NUM_SLOTS];
 
 static inline void AddChildAndIndexToCache(const nsINode* aParent,
                                            const nsINode* aChild,
-                                           int32_t aChildIndex) {
+                                           uint32_t aChildIndex) {
   uint32_t index = CACHE_GET_INDEX(aParent);
   sIndexCache[index].mParent = aParent;
   sIndexCache[index].mChild = aChild;
@@ -1642,21 +1640,21 @@ static inline void AddChildAndIndexToCache(const nsINode* aParent,
 
 static inline void GetChildAndIndexFromCache(const nsINode* aParent,
                                              const nsINode** aChild,
-                                             int32_t* aChildIndex) {
+                                             Maybe<uint32_t>* aChildIndex) {
   uint32_t index = CACHE_GET_INDEX(aParent);
   if (sIndexCache[index].mParent == aParent) {
     *aChild = sIndexCache[index].mChild;
-    *aChildIndex = sIndexCache[index].mChildIndex;
+    *aChildIndex = Some(sIndexCache[index].mChildIndex);
   } else {
     *aChild = nullptr;
-    *aChildIndex = -1;
+    *aChildIndex = Nothing();
   }
 }
 
 static inline void RemoveFromCache(const nsINode* aParent) {
   uint32_t index = CACHE_GET_INDEX(aParent);
   if (sIndexCache[index].mParent == aParent) {
-    sIndexCache[index] = {nullptr, nullptr, -1};
+    sIndexCache[index] = {nullptr, nullptr, UINT32_MAX};
   }
 }
 
@@ -1741,46 +1739,61 @@ nsIContent* nsINode::GetChildAt_Deprecated(uint32_t aIndex) const {
   return child;
 }
 
-int32_t nsINode::ComputeIndexOf(const nsINode* aChild) const {
-  if (!aChild) {
+int32_t nsINode::ComputeIndexOf_Deprecated(
+    const nsINode* aPossibleChild) const {
+  Maybe<uint32_t> maybeIndex = ComputeIndexOf(aPossibleChild);
+  if (!maybeIndex) {
     return -1;
   }
+  MOZ_ASSERT(*maybeIndex <= INT32_MAX,
+             "ComputeIndexOf_Deprecated() returns unsupported index value, use "
+             "ComputeIndex() instead");
+  return static_cast<int32_t>(*maybeIndex);
+}
 
-  if (aChild->GetParentNode() != this) {
-    return -1;
+Maybe<uint32_t> nsINode::ComputeIndexOf(const nsINode* aPossibleChild) const {
+  if (!aPossibleChild) {
+    return Nothing();
   }
 
-  if (aChild == GetLastChild()) {
-    return GetChildCount() - 1;
+  if (aPossibleChild->GetParentNode() != this) {
+    return Nothing();
+  }
+
+  if (aPossibleChild == GetLastChild()) {
+    MOZ_ASSERT(GetChildCount());
+    return Some(GetChildCount() - 1);
   }
 
   if (mChildCount >= CACHE_CHILD_LIMIT) {
     const nsINode* child;
-    int32_t childIndex;
-    GetChildAndIndexFromCache(this, &child, &childIndex);
+    Maybe<uint32_t> maybeChildIndex;
+    GetChildAndIndexFromCache(this, &child, &maybeChildIndex);
     if (child) {
-      if (child == aChild) {
-        return childIndex;
+      if (child == aPossibleChild) {
+        return maybeChildIndex;
       }
 
-      int32_t nextIndex = childIndex;
-      int32_t prevIndex = childIndex;
+      uint32_t nextIndex = *maybeChildIndex;
+      uint32_t prevIndex = *maybeChildIndex;
       nsINode* prev = child->GetPreviousSibling();
       nsINode* next = child->GetNextSibling();
       do {
         if (next) {
+          MOZ_ASSERT(nextIndex < UINT32_MAX);
           ++nextIndex;
-          if (next == aChild) {
-            AddChildAndIndexToCache(this, aChild, nextIndex);
-            return nextIndex;
+          if (next == aPossibleChild) {
+            AddChildAndIndexToCache(this, aPossibleChild, nextIndex);
+            return Some(nextIndex);
           }
           next = next->GetNextSibling();
         }
         if (prev) {
+          MOZ_ASSERT(prevIndex > 0);
           --prevIndex;
-          if (prev == aChild) {
-            AddChildAndIndexToCache(this, aChild, prevIndex);
-            return prevIndex;
+          if (prev == aPossibleChild) {
+            AddChildAndIndexToCache(this, aPossibleChild, prevIndex);
+            return Some(prevIndex);
           }
           prev = prev->GetPreviousSibling();
         }
@@ -1788,21 +1801,38 @@ int32_t nsINode::ComputeIndexOf(const nsINode* aChild) const {
     }
   }
 
-  int32_t index = 0;
+  uint32_t index = 0u;
   nsINode* current = mFirstChild;
   while (current) {
     MOZ_ASSERT(current->GetParentNode() == this);
-    if (current == aChild) {
+    if (current == aPossibleChild) {
       if (mChildCount >= CACHE_CHILD_LIMIT) {
         AddChildAndIndexToCache(this, current, index);
       }
-      return index;
+      return Some(index);
     }
     current = current->GetNextSibling();
+    MOZ_ASSERT(index < UINT32_MAX);
     ++index;
   }
 
-  return -1;
+  return Nothing();
+}
+
+Maybe<uint32_t> nsINode::ComputeIndexInParentNode() const {
+  nsINode* parent = GetParentNode();
+  if (MOZ_UNLIKELY(!parent)) {
+    return Nothing();
+  }
+  return parent->ComputeIndexOf(this);
+}
+
+Maybe<uint32_t> nsINode::ComputeIndexInParentContent() const {
+  nsIContent* parent = GetParent();
+  if (MOZ_UNLIKELY(!parent)) {
+    return Nothing();
+  }
+  return parent->ComputeIndexOf(this);
 }
 
 static already_AddRefed<nsINode> GetNodeFromNodeOrString(
@@ -2243,14 +2273,20 @@ static void EnsureAllowedAsChild(nsINode* aNewChild, nsINode* aParent,
         return;
       }
 
-      int32_t doctypeIndex = aParent->ComputeIndexOf(docTypeContent);
-      int32_t insertIndex = aParent->ComputeIndexOf(aRefChild);
+      // The docTypeContent is retrived from the child list of the Document
+      // node so that doctypeIndex is never Nothing.
+      const Maybe<uint32_t> doctypeIndex =
+          aParent->ComputeIndexOf(docTypeContent);
+      MOZ_ASSERT(doctypeIndex.isSome());
+      // If aRefChild is an NAC, its index can be Nothing.
+      const Maybe<uint32_t> insertIndex = aParent->ComputeIndexOf(aRefChild);
 
       // Now we're OK in the following two cases only:
       // 1) We're replacing something that's not before the doctype
       // 2) We're inserting before something that comes after the doctype
-      bool ok = aIsReplace ? (insertIndex >= doctypeIndex)
-                           : insertIndex > doctypeIndex;
+      const bool ok = MOZ_LIKELY(insertIndex.isSome()) &&
+                      (aIsReplace ? *insertIndex >= *doctypeIndex
+                                  : *insertIndex > *doctypeIndex);
       if (!ok) {
         aRv.ThrowHierarchyRequestError(
             "Cannot insert a root element before the doctype");
@@ -2292,13 +2328,16 @@ static void EnsureAllowedAsChild(nsINode* aNewChild, nsINode* aParent,
         return;
       }
 
-      int32_t rootIndex = aParent->ComputeIndexOf(rootElement);
-      int32_t insertIndex = aParent->ComputeIndexOf(aRefChild);
+      // rootElement is now in the child list of the Document node so that
+      // ComputeIndexOf must success to find it.
+      const Maybe<uint32_t> rootIndex = aParent->ComputeIndexOf(rootElement);
+      MOZ_ASSERT(rootIndex.isSome());
+      const Maybe<uint32_t> insertIndex = aParent->ComputeIndexOf(aRefChild);
 
       // Now we're OK if and only if insertIndex <= rootIndex.  Indeed, either
       // we end up replacing aRefChild or we end up before it.  Either one is
       // ok as long as aRefChild is not after rootElement.
-      if (insertIndex > rootIndex) {
+      if (MOZ_LIKELY(insertIndex.isSome()) && *insertIndex > *rootIndex) {
         aRv.ThrowHierarchyRequestError(
             "Cannot have a DocumentType node after the root element");
       }
@@ -2430,8 +2469,7 @@ nsINode* nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
 
     // If the new node already has a parent, fire for removing from old
     // parent
-    nsINode* oldParent = aNewChild->GetParentNode();
-    if (oldParent) {
+    if (nsCOMPtr<nsINode> oldParent = aNewChild->GetParentNode()) {
       nsContentUtils::MaybeFireNodeRemoved(aNewChild, oldParent);
     }
 

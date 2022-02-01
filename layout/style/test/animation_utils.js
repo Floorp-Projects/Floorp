@@ -435,6 +435,7 @@ const RunningOn = {
   Compositor: 1,
   Either: 2,
   TodoMainThread: 3,
+  TodoCompositor: 4,
 };
 
 const ExpectComparisonTo = {
@@ -620,10 +621,9 @@ const ExpectComparisonTo = {
 
     // Compare animated value with expected
     var actualValue = normalize(actualStr);
-    if (actualValue === null) {
-      ok(false, desc + ": should return a valid result - got " + actualStr);
-      return;
-    }
+    // Note: the actualStr should be empty string when using todoCompositor, so
+    // actualValue is null in this case. However, compare() should handle null
+    // well.
     okOrTodo(
       compare(expectedValue, actualValue, tolerance),
       desc +
@@ -692,6 +692,11 @@ const ExpectComparisonTo = {
   };
 
   window.matricesRoughlyEqual = function(a, b, tolerance) {
+    // Error handle if a or b is invalid.
+    if (!a || !b) {
+      return false;
+    }
+
     tolerance = tolerance || 0.00011;
     for (var i = 0; i < 4; i++) {
       for (var j = 0; j < 4; j++) {

@@ -7,6 +7,7 @@
 #include "mozilla/dom/ElementInternals.h"
 
 #include "mozilla/dom/CustomElementRegistry.h"
+#include "mozilla/dom/CustomEvent.h"
 #include "mozilla/dom/ElementInternalsBinding.h"
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/HTMLElement.h"
@@ -19,7 +20,7 @@
 namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ElementInternals, mSubmissionValue,
-                                      mState, mValidity)
+                                      mState, mValidity, mValidationAnchor)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ElementInternals)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ElementInternals)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ElementInternals)
@@ -187,8 +188,18 @@ void ElementInternals::SetValidity(
    *    then throw a "NotFoundError" DOMException. Otherwise, set element's
    *    validation anchor to anchor.
    */
-  // TODO: Bug 1738262 - Support validation anchor for form-associated custom
-  //       element.
+  nsGenericHTMLElement* anchor =
+      aAnchor.WasPassed() ? &aAnchor.Value() : nullptr;
+  // TODO: maybe create something like IsShadowIncludingDescendantOf if there
+  //       are other places also need such check.
+  if (anchor && (anchor == mTarget ||
+                 !anchor->IsShadowIncludingInclusiveDescendantOf(mTarget))) {
+    aRv.ThrowNotFoundError(
+        "Validation anchor is not a shadow-including descendant of target"
+        "element");
+    return;
+  }
+  mValidationAnchor = anchor;
 }
 
 // https://html.spec.whatwg.org/#dom-elementinternals-willvalidate
@@ -232,6 +243,49 @@ bool ElementInternals::CheckValidity(ErrorResult& aRv) {
   return nsIConstraintValidation::CheckValidity(*mTarget);
 }
 
+// https://html.spec.whatwg.org/#dom-elementinternals-reportvalidity
+bool ElementInternals::ReportValidity(ErrorResult& aRv) {
+  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+    aRv.ThrowNotSupportedError(
+        "Target element is not a form-associated custom element");
+    return false;
+  }
+
+  bool defaultAction = true;
+  if (nsIConstraintValidation::CheckValidity(*mTarget, &defaultAction)) {
+    return true;
+  }
+
+  if (!defaultAction) {
+    return false;
+  }
+
+  AutoTArray<RefPtr<Element>, 1> invalidElements;
+  invalidElements.AppendElement(mTarget);
+
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(mTarget->GetOwnerGlobal())) {
+    return false;
+  }
+  JS::Rooted<JS::Value> detail(jsapi.cx());
+  if (!ToJSValue(jsapi.cx(), invalidElements, &detail)) {
+    return false;
+  }
+
+  mTarget->UpdateState(true);
+
+  RefPtr<CustomEvent> event =
+      NS_NewDOMCustomEvent(mTarget->OwnerDoc(), nullptr, nullptr);
+  event->InitCustomEvent(jsapi.cx(), u"MozInvalidForm"_ns,
+                         /* CanBubble */ true,
+                         /* Cancelable */ true, detail);
+  event->SetTrusted(true);
+  event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
+  mTarget->DispatchEvent(*event);
+
+  return false;
+}
+
 // https://html.spec.whatwg.org/#dom-elementinternals-labels
 already_AddRefed<nsINodeList> ElementInternals::GetLabels(
     ErrorResult& aRv) const {
@@ -241,6 +295,16 @@ already_AddRefed<nsINodeList> ElementInternals::GetLabels(
     return nullptr;
   }
   return mTarget->Labels();
+}
+
+nsGenericHTMLElement* ElementInternals::GetValidationAnchor(
+    ErrorResult& aRv) const {
+  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+    aRv.ThrowNotSupportedError(
+        "Target element is not a form-associated custom element");
+    return nullptr;
+  }
+  return mValidationAnchor;
 }
 
 void ElementInternals::SetForm(HTMLFormElement* aForm) { mForm = aForm; }

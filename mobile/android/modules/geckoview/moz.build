@@ -7,7 +7,7 @@
 EXTRA_JS_MODULES += [
     "AndroidLog.jsm",
     "BrowserUsageTelemetry.jsm",
-    "ContentCrashHandler.jsm",
+    "ChildCrashHandler.jsm",
     "DelayedInit.jsm",
     "GeckoViewActorChild.jsm",
     "GeckoViewActorManager.jsm",

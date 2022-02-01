@@ -41,7 +41,8 @@ template struct StyleStrong<RawServoAnimationValue>;
 template struct StyleStrong<RawServoDeclarationBlock>;
 template struct StyleStrong<RawServoStyleSheetContents>;
 template struct StyleStrong<RawServoKeyframe>;
-template struct StyleStrong<RawServoLayerRule>;
+template struct StyleStrong<RawServoLayerBlockRule>;
+template struct StyleStrong<RawServoLayerStatementRule>;
 template struct StyleStrong<RawServoMediaList>;
 template struct StyleStrong<RawServoStyleRule>;
 template struct StyleStrong<RawServoImportRule>;
@@ -1050,6 +1051,10 @@ inline AspectRatio StyleAspectRatio::ToLayoutRatio() const {
   return HasRatio() ? ratio.AsRatio().ToLayoutRatio(auto_ ? UseBoxSizing::No
                                                           : UseBoxSizing::Yes)
                     : AspectRatio();
+}
+
+inline nsAtom* StyleTimelineOrKeyframesName::AsAtom() const {
+  return IsIdent() ? AsIdent().AsAtom() : AsQuotedString().AsAtom();
 }
 
 }  // namespace mozilla

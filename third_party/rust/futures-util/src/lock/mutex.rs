@@ -66,7 +66,6 @@ impl Waiter {
     }
 }
 
-#[allow(clippy::identity_op)] // https://github.com/rust-lang/rust-clippy/issues/3445
 const IS_LOCKED: usize = 1 << 0;
 const HAS_WAITERS: usize = 1 << 1;
 

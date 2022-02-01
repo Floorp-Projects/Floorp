@@ -369,6 +369,8 @@ class PresShell final : public nsStubDocumentObserver,
   void MaybeNotifyShowDynamicToolbar();
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
+  void RefreshZoomConstraintsForScreenSizeChange();
+
  private:
   /**
    * This is what ResizeReflowIgnoreOverride does when not shrink-wrapping (that
@@ -912,7 +914,9 @@ class PresShell final : public nsStubDocumentObserver,
   }
 
   void ActivenessMaybeChanged();
+  // See ComputeActiveness() for details of these two booleans.
   bool IsActive() const { return mIsActive; }
+  bool IsInActiveTab() const { return mIsInActiveTab; }
 
   /**
    * Keep track of how many times this presshell has been rendered to
@@ -1727,8 +1731,12 @@ class PresShell final : public nsStubDocumentObserver,
  private:
   ~PresShell();
 
-  void SetIsActive(bool aIsActive);
-  bool ShouldBeActive() const;
+  void SetIsActive(bool aIsActive, bool aIsInActiveTab);
+  struct Activeness {
+    bool mShouldBeActive = false;
+    bool mIsInActiveTab = false;
+  };
+  Activeness ComputeActiveness() const;
 
   MOZ_CAN_RUN_SCRIPT
   void PaintInternal(nsView* aViewToPaint, PaintInternalFlags aFlags);
@@ -2821,8 +2829,8 @@ class PresShell final : public nsStubDocumentObserver,
   // mDocument and mPresContext should've never been cleared nor swapped with
   // another instance while PresShell instance is alive so that it's safe to
   // call their can-run- script methods without local RefPtr variables.
-  RefPtr<Document> const mDocument;
-  RefPtr<nsPresContext> const mPresContext;
+  MOZ_KNOWN_LIVE RefPtr<Document> const mDocument;
+  MOZ_KNOWN_LIVE RefPtr<nsPresContext> const mPresContext;
   // The document's style set owns it but we maintain a ref, may be null.
   RefPtr<StyleSheet> mPrefStyleSheet;
   UniquePtr<nsCSSFrameConstructor> mFrameConstructor;
@@ -2927,8 +2935,6 @@ class PresShell final : public nsStubDocumentObserver,
   // or all frames are constructed, we won't paint anything but
   // our <body> background and scrollbars.
   nsCOMPtr<nsITimer> mPaintSuppressionTimer;
-
-  nsCOMPtr<nsITimer> mDelayedPaintTimer;
 
   // Information about live content (which still stay in DOM tree).
   // Used in case we need re-dispatch event after sending pointer event,
@@ -3084,6 +3090,7 @@ class PresShell final : public nsStubDocumentObserver,
   bool mIgnoreFrameDestruction : 1;
 
   bool mIsActive : 1;
+  bool mIsInActiveTab : 1;
   bool mFrozen : 1;
   bool mIsFirstPaint : 1;
   bool mObservesMutationsForPrint : 1;

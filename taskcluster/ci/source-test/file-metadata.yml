@@ -35,34 +35,6 @@ bugzilla-components:
         files-changed:
             - "**"
 
-test-info-fission:
-    description: Generate test manifest metadata for tests disabled on fission
-    treeherder:
-        symbol: test-info(fission)
-        tier: 2
-    index:
-        product: source
-        job-name: test-info-fission
-    worker:
-        docker-image: {in-tree: debian11-amd64-build}
-    run-on-projects: ['mozilla-central']
-    fetches:
-        toolchain:
-            - linux64-clang
-            - linux64-clang-tidy
-            - linux64-rust
-            - linux64-cbindgen
-            - linux64-nasm
-            - linux64-node
-            - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi
-    run:
-        using: run-task
-        cwd: '{checkout}'
-        command: >-
-            source taskcluster/scripts/misc/source-test-common.sh &&
-            ./mach test-info report --show-tests --show-summary --filter-keys=fail-if,fails-if,random-if,skip-if --filter-values='(?<!!)fission' --output-file /builds/worker/artifacts/test-info-fission.json
-
 test-info-xorigin:
     description: Generate test manifest metadata for tests disabled on cross-origin
     treeherder:

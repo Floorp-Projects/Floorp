@@ -2150,7 +2150,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   openArgs.allowHttp3() = LoadAllowHttp3();
   openArgs.allowAltSvc() = LoadAllowAltSvc();
   openArgs.beConservative() = LoadBeConservative();
-  openArgs.bypassProxy() = LoadBypassProxy();
+  openArgs.bypassProxy() = BypassProxy();
   openArgs.tlsFlags() = mTlsFlags;
   openArgs.initialRwin() = mInitialRwin;
 

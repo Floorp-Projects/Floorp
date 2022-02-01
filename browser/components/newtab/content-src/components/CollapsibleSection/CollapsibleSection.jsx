@@ -52,7 +52,7 @@ export class _CollapsibleSection extends React.PureComponent {
       menuButtonHover,
       showContextMenu,
     } = this.state;
-    const { id, collapsed, learnMore, title } = this.props;
+    const { id, collapsed, learnMore, title, subTitle } = this.props;
     const active = menuButtonHover || showContextMenu;
     let bodyStyle;
     if (isAnimating && !collapsed) {
@@ -64,6 +64,7 @@ export class _CollapsibleSection extends React.PureComponent {
     if (this.props.hideTitle) {
       titleStyle = { visibility: "hidden" };
     }
+    const hasSubtitleClassName = subTitle ? `has-subtitle` : ``;
     return (
       <section
         className={`collapsible-section ${this.props.className}${
@@ -73,7 +74,10 @@ export class _CollapsibleSection extends React.PureComponent {
         data-section-id={id}
       >
         <div className="section-top-bar">
-          <h3 className="section-title-container" style={titleStyle}>
+          <h3
+            className={`section-title-container ${hasSubtitleClassName}`}
+            style={titleStyle}
+          >
             <span className="section-title">
               <FluentOrText message={title} />
             </span>
@@ -86,6 +90,11 @@ export class _CollapsibleSection extends React.PureComponent {
                 </span>
               )}
             </span>
+            {subTitle && (
+              <span className="section-sub-title">
+                <FluentOrText message={subTitle} />
+              </span>
+            )}
           </h3>
         </div>
         <ErrorBoundary className="section-body-fallback">

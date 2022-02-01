@@ -228,7 +228,7 @@ describe('ElementHandle specs', function () {
       );
       const error = await button.click().catch((error_) => error_);
       expect(error.message).toBe(
-        'Node is either not visible or not an HTMLElement'
+        'Node is either not clickable or not an HTMLElement'
       );
     });
     it('should throw for recursively hidden nodes', async () => {
@@ -242,7 +242,7 @@ describe('ElementHandle specs', function () {
       );
       const error = await button.click().catch((error_) => error_);
       expect(error.message).toBe(
-        'Node is either not visible or not an HTMLElement'
+        'Node is either not clickable or not an HTMLElement'
       );
     });
     it('should throw for <br> elements', async () => {
@@ -252,8 +252,31 @@ describe('ElementHandle specs', function () {
       const br = await page.$('br');
       const error = await br.click().catch((error_) => error_);
       expect(error.message).toBe(
-        'Node is either not visible or not an HTMLElement'
+        'Node is either not clickable or not an HTMLElement'
       );
+    });
+  });
+
+  describe('Element.waitForSelector', () => {
+    it('should wait correctly with waitForSelector on an element', async () => {
+      const { page } = getTestState();
+      const waitFor = page.waitForSelector('.foo');
+      // Set the page content after the waitFor has been started.
+      await page.setContent(
+        '<div id="not-foo"></div><div class="bar">bar2</div><div class="foo">Foo1</div>'
+      );
+      let element = await waitFor;
+      expect(element).toBeDefined();
+
+      const innerWaitFor = element.waitForSelector('.bar');
+      await element.evaluate((el) => {
+        el.innerHTML = '<div class="bar">bar1</div>';
+      });
+      element = await innerWaitFor;
+      expect(element).toBeDefined();
+      expect(
+        await element.evaluate((el: HTMLElement) => el.innerText)
+      ).toStrictEqual('bar1');
     });
   });
 
@@ -281,6 +304,32 @@ describe('ElementHandle specs', function () {
         const visible = i < 10;
         expect(await button.isIntersectingViewport()).toBe(visible);
       }
+    });
+    it('should work with threshold', async () => {
+      const { page, server } = getTestState();
+
+      await page.goto(server.PREFIX + '/offscreenbuttons.html');
+      // a button almost cannot be seen
+      // sometimes we expect to return false by isIntersectingViewport1
+      const button = await page.$('#btn11');
+      expect(
+        await button.isIntersectingViewport({
+          threshold: 0.001,
+        })
+      ).toBe(false);
+    });
+    it('should work with threshold of 1', async () => {
+      const { page, server } = getTestState();
+
+      await page.goto(server.PREFIX + '/offscreenbuttons.html');
+      // a button almost cannot be seen
+      // sometimes we expect to return false by isIntersectingViewport1
+      const button = await page.$('#btn0');
+      expect(
+        await button.isIntersectingViewport({
+          threshold: 1,
+        })
+      ).toBe(true);
     });
   });
 
@@ -391,6 +440,33 @@ describe('ElementHandle specs', function () {
       const element = await waitFor;
 
       expect(element).toBeDefined();
+    });
+
+    it('should wait correctly with waitForSelector on an element', async () => {
+      const { page, puppeteer } = getTestState();
+      puppeteer.registerCustomQueryHandler('getByClass', {
+        queryOne: (element, selector) => element.querySelector(`.${selector}`),
+      });
+      const waitFor = page.waitForSelector('getByClass/foo');
+
+      // Set the page content after the waitFor has been started.
+      await page.setContent(
+        '<div id="not-foo"></div><div class="bar">bar2</div><div class="foo">Foo1</div>'
+      );
+      let element = await waitFor;
+      expect(element).toBeDefined();
+
+      const innerWaitFor = element.waitForSelector('getByClass/bar');
+
+      await element.evaluate((el) => {
+        el.innerHTML = '<div class="bar">bar1</div>';
+      });
+
+      element = await innerWaitFor;
+      expect(element).toBeDefined();
+      expect(
+        await element.evaluate((el: HTMLElement) => el.innerText)
+      ).toStrictEqual('bar1');
     });
 
     it('should wait correctly with waitFor', async () => {

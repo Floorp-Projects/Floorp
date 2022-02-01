@@ -238,7 +238,7 @@ THE SOFTWARE.
       {
         for ( j = 0; j < sizeof ( tableNames ) / sizeof ( tableNames[0] );
               j++ )
-          if ( tables[i].type == (FT_UInt)( 1 << j ) )
+          if ( tables[i].type == 1UL << j )
             name = tableNames[j];
 
         FT_TRACE4(( "  %d: type=%s, format=0x%lX,"
@@ -613,7 +613,8 @@ THE SOFTWARE.
 
     strings[string_size] = '\0';
 
-    if ( FT_QNEW_ARRAY( properties, nprops ) )
+    /* zero out in case of failure */
+    if ( FT_NEW_ARRAY( properties, nprops ) )
       goto Bail;
 
     face->properties = properties;
@@ -1612,7 +1613,7 @@ THE SOFTWARE.
         else
         {
           /* this is a heuristical value */
-          bsize->width = (FT_Short)FT_MulDiv( bsize->height, 2, 3 );
+          bsize->width = ( bsize->height * 2 + 1 ) / 3;
         }
 
         prop = pcf_find_property( face, "POINT_SIZE" );

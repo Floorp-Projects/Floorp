@@ -735,8 +735,8 @@ class MOZ_RAII SharedPrefMapBuilder {
     explicit UniqueStringTableBuilder(size_t aCapacity) : mEntries(aCapacity) {}
 
     StringTableEntry Add(const nsTString<CharType>& aKey) {
-      auto entry =
-          mEntries.AppendElement(Entry{mSize, aKey.Length(), aKey.get()});
+      auto entry = mEntries.AppendElement(
+          Entry{mSize, uint32_t(aKey.Length()), aKey.get()});
 
       mSize += entry->mLength + 1;
 

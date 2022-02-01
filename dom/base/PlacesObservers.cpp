@@ -8,6 +8,7 @@
 
 #include "PlacesWeakCallbackWrapper.h"
 #include "nsIWeakReferenceUtils.h"
+#include "nsIXPConnect.h"
 #include "mozilla/ClearOnShutdown.h"
 
 namespace mozilla::dom {
@@ -62,7 +63,10 @@ using WeakJSListeners = ListenerCollection<WeakPtr<PlacesWeakCallbackWrapper>>;
 using WeakNativeListeners =
     ListenerCollection<WeakPtr<places::INativePlacesEventCallback>>;
 
-static bool gCallingListeners = false;
+// Even if NotifyListeners is called any timing, we mange the notifications with
+// adding to this queue, then sending in sequence. This avoids sending nested
+// notifications while previous ones are still being sent.
+static nsTArray<Sequence<OwningNonNull<PlacesEvent>>> gNotificationQueue;
 
 uint32_t GetEventTypeFlag(PlacesEventType aEventType) {
   if (aEventType == PlacesEventType::None) {
@@ -88,29 +92,28 @@ uint32_t GetFlagsForEvents(
   return flags;
 }
 
-template <class TWrapped, class TUnwrapped>
+template <class TWrapped, class TUnwrapped, class TListenerCollection>
 MOZ_CAN_RUN_SCRIPT void CallListeners(
-    uint32_t aEventFlags, FlaggedArray<TWrapped>& aListeners,
-    const Sequence<OwningNonNull<PlacesEvent>>& aEvents,
+    uint32_t aEventFlags, const Sequence<OwningNonNull<PlacesEvent>>& aEvents,
+    unsigned long aListenersLengthToCall,
     const std::function<TUnwrapped(TWrapped&)>& aUnwrapListener,
     const std::function<void(TUnwrapped&,
                              const Sequence<OwningNonNull<PlacesEvent>>&)>&
         aCallListener) {
-  for (uint32_t i = 0; i < aListeners.Length(); i++) {
-    Flagged<TWrapped>& l = aListeners[i];
-    TUnwrapped unwrapped = aUnwrapListener(l.value);
+  auto& listeners = *TListenerCollection::GetListeners();
+  for (uint32_t i = 0; i < aListenersLengthToCall; i++) {
+    Flagged<TWrapped>& listener = listeners[i];
+    TUnwrapped unwrapped = aUnwrapListener(listener.value);
     if (!unwrapped) {
-      aListeners.RemoveElementAt(i);
-      i--;
       continue;
     }
 
-    if ((l.flags & aEventFlags) == aEventFlags) {
+    if ((listener.flags & aEventFlags) == aEventFlags) {
       aCallListener(unwrapped, aEvents);
-    } else if (l.flags & aEventFlags) {
+    } else if (listener.flags & aEventFlags) {
       Sequence<OwningNonNull<PlacesEvent>> filtered;
       for (const OwningNonNull<PlacesEvent>& event : aEvents) {
-        if (l.flags & GetEventTypeFlag(event->Type())) {
+        if (listener.flags & GetEventTypeFlag(event->Type())) {
           bool success = !!filtered.AppendElement(event, fallible);
           MOZ_RELEASE_ASSERT(success);
         }
@@ -161,7 +164,7 @@ void PlacesObservers::RemoveListener(
     GlobalObject& aGlobal, const nsTArray<PlacesEventType>& aEventTypes,
     PlacesEventCallback& aCallback, ErrorResult& rv) {
   uint32_t flags = GetFlagsForEventTypes(aEventTypes);
-  if (gCallingListeners) {
+  if (!gNotificationQueue.IsEmpty()) {
     FlaggedArray<RefPtr<PlacesEventCallback>>* listeners =
         JSListeners::GetListenersToRemove();
     Flagged<RefPtr<PlacesEventCallback>> pair(flags, &aCallback);
@@ -175,7 +178,7 @@ void PlacesObservers::RemoveListener(
     GlobalObject& aGlobal, const nsTArray<PlacesEventType>& aEventTypes,
     PlacesWeakCallbackWrapper& aCallback, ErrorResult& rv) {
   uint32_t flags = GetFlagsForEventTypes(aEventTypes);
-  if (gCallingListeners) {
+  if (!gNotificationQueue.IsEmpty()) {
     FlaggedArray<WeakPtr<PlacesWeakCallbackWrapper>>* listeners =
         WeakJSListeners::GetListenersToRemove();
     WeakPtr<PlacesWeakCallbackWrapper> weakCb(&aCallback);
@@ -192,7 +195,7 @@ void PlacesObservers::RemoveListener(
     const nsTArray<PlacesEventType>& aEventTypes,
     places::INativePlacesEventCallback* aCallback) {
   uint32_t flags = GetFlagsForEventTypes(aEventTypes);
-  if (gCallingListeners) {
+  if (!gNotificationQueue.IsEmpty()) {
     FlaggedArray<WeakPtr<places::INativePlacesEventCallback>>* listeners =
         WeakNativeListeners::GetListenersToRemove();
     Flagged<WeakPtr<places::INativePlacesEventCallback>> pair(flags, aCallback);
@@ -268,6 +271,27 @@ void PlacesObservers::RemoveListener(
   }
 }
 
+template <class TWrapped, class TUnwrapped, class TListenerCollection>
+void CleanupListeners(
+    const std::function<TUnwrapped(TWrapped&)>& aUnwrapListener,
+    const std::function<void(Flagged<TWrapped>&)>& aRemoveListener) {
+  auto& listeners = *TListenerCollection::GetListeners();
+  for (uint32_t i = 0; i < listeners.Length(); i++) {
+    Flagged<TWrapped>& listener = listeners[i];
+    TUnwrapped unwrapped = aUnwrapListener(listener.value);
+    if (!unwrapped) {
+      listeners.RemoveElementAt(i);
+      i--;
+    }
+  }
+
+  auto& listenersToRemove = *TListenerCollection::GetListenersToRemove();
+  for (auto& listener : listenersToRemove) {
+    aRemoveListener(listener);
+  }
+  listenersToRemove.Clear();
+}
+
 void PlacesObservers::NotifyListeners(
     GlobalObject& aGlobal, const Sequence<OwningNonNull<PlacesEvent>>& aEvents,
     ErrorResult& rv) {
@@ -277,69 +301,92 @@ void PlacesObservers::NotifyListeners(
 void PlacesObservers::NotifyListeners(
     const Sequence<OwningNonNull<PlacesEvent>>& aEvents) {
   MOZ_ASSERT(aEvents.Length() > 0, "Must pass a populated array of events");
-  MOZ_RELEASE_ASSERT(!gCallingListeners);
-  gCallingListeners = true;
-
-  if (aEvents.Length() > 0) {
-    uint32_t flags = GetFlagsForEvents(aEvents);
-
-    CallListeners<RefPtr<PlacesEventCallback>, RefPtr<PlacesEventCallback>>(
-        flags, *JSListeners::GetListeners(), aEvents,
-        [](auto& cb) { return cb; },
-        // MOZ_CAN_RUN_SCRIPT_BOUNDARY because on Windows this gets called from
-        // some internals of the std::function implementation that we can't
-        // annotate.  We handle this by annotating CallListeners and making sure
-        // it holds a strong ref to the callback.
-        [&](auto& cb, const auto& events)
-            MOZ_CAN_RUN_SCRIPT_BOUNDARY { MOZ_KnownLive(cb)->Call(events); });
-
-    CallListeners<WeakPtr<places::INativePlacesEventCallback>,
-                  RefPtr<places::INativePlacesEventCallback>>(
-        flags, *WeakNativeListeners::GetListeners(), aEvents,
-        [](auto& cb) { return cb.get(); },
-        [&](auto& cb, const Sequence<OwningNonNull<PlacesEvent>>& events) {
-          cb->HandlePlacesEvent(events);
-        });
-
-    CallListeners<WeakPtr<PlacesWeakCallbackWrapper>,
-                  RefPtr<PlacesWeakCallbackWrapper>>(
-        flags, *WeakJSListeners::GetListeners(), aEvents,
-        [](auto& cb) { return cb.get(); },
-        // MOZ_CAN_RUN_SCRIPT_BOUNDARY because on Windows this gets called from
-        // some internals of the std::function implementation that we can't
-        // annotate.  We handle this by annotating CallListeners and making sure
-        // it holds a strong ref to the callback.
-        [&](auto& cb, const auto& events) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-          RefPtr<PlacesEventCallback> callback(cb->mCallback);
-          callback->Call(events);
-        });
+  if (aEvents.Length() == 0) {
+    return;
   }
 
-  auto& listenersToRemove = *JSListeners::GetListenersToRemove();
-  if (listenersToRemove.Length() > 0) {
-    for (auto& listener : listenersToRemove) {
-      RemoveListener(listener.flags, *listener.value);
-    }
+#ifdef DEBUG
+  if (!gNotificationQueue.IsEmpty()) {
+    NS_WARNING(
+        "Avoid nested Places notifications if possible, the order of events "
+        "cannot be guaranteed");
+    nsCOMPtr<nsIXPConnect> xpc = nsIXPConnect::XPConnect();
+    Unused << xpc->DebugDumpJSStack(false, false, false);
   }
-  listenersToRemove.Clear();
+#endif
 
-  auto& weakListenersToRemove = *WeakJSListeners::GetListenersToRemove();
-  if (weakListenersToRemove.Length() > 0) {
-    for (auto& listener : weakListenersToRemove) {
-      RemoveListener(listener.flags, *listener.value.get());
-    }
+  gNotificationQueue.AppendElement(aEvents);
+
+  // If gNotificationQueue has only the events we added now, start to notify.
+  // Otherwise, as it already started the notification processing,
+  // rely on the processing.
+  if (gNotificationQueue.Length() == 1) {
+    NotifyNext();
   }
-  weakListenersToRemove.Clear();
+}
 
-  auto& nativeListenersToRemove = *WeakNativeListeners::GetListenersToRemove();
-  if (nativeListenersToRemove.Length() > 0) {
-    for (auto& listener : nativeListenersToRemove) {
-      RemoveListener(listener.flags, listener.value.get());
-    }
+void PlacesObservers::NotifyNext() {
+  auto events = gNotificationQueue[0];
+  uint32_t flags = GetFlagsForEvents(events);
+
+  // Send up to the number of current listeners, to avoid handling listeners
+  // added during this notification.
+  unsigned long jsListenersLength = JSListeners::GetListeners()->Length();
+  unsigned long weakNativeListenersLength =
+      WeakNativeListeners::GetListeners()->Length();
+  unsigned long weakJSListenersLength =
+      WeakJSListeners::GetListeners()->Length();
+
+  CallListeners<RefPtr<PlacesEventCallback>, RefPtr<PlacesEventCallback>,
+                JSListeners>(
+      flags, events, jsListenersLength, [](auto& cb) { return cb; },
+      // MOZ_CAN_RUN_SCRIPT_BOUNDARY because on Windows this gets called from
+      // some internals of the std::function implementation that we can't
+      // annotate.  We handle this by annotating CallListeners and making sure
+      // it holds a strong ref to the callback.
+      [&](auto& cb, const auto& events)
+          MOZ_CAN_RUN_SCRIPT_BOUNDARY { MOZ_KnownLive(cb)->Call(events); });
+
+  CallListeners<WeakPtr<places::INativePlacesEventCallback>,
+                RefPtr<places::INativePlacesEventCallback>,
+                WeakNativeListeners>(
+      flags, events, weakNativeListenersLength,
+      [](auto& cb) { return cb.get(); },
+      [&](auto& cb, const Sequence<OwningNonNull<PlacesEvent>>& events) {
+        cb->HandlePlacesEvent(events);
+      });
+
+  CallListeners<WeakPtr<PlacesWeakCallbackWrapper>,
+                RefPtr<PlacesWeakCallbackWrapper>, WeakJSListeners>(
+      flags, events, weakJSListenersLength, [](auto& cb) { return cb.get(); },
+      // MOZ_CAN_RUN_SCRIPT_BOUNDARY because on Windows this gets called from
+      // some internals of the std::function implementation that we can't
+      // annotate.  We handle this by annotating CallListeners and making sure
+      // it holds a strong ref to the callback.
+      [&](auto& cb, const auto& events) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+        RefPtr<PlacesEventCallback> callback(cb->mCallback);
+        callback->Call(events);
+      });
+
+  gNotificationQueue.RemoveElementAt(0);
+
+  CleanupListeners<RefPtr<PlacesEventCallback>, RefPtr<PlacesEventCallback>,
+                   JSListeners>(
+      [](auto& cb) { return cb; },
+      [&](auto& cb) { RemoveListener(cb.flags, *cb.value); });
+  CleanupListeners<WeakPtr<PlacesWeakCallbackWrapper>,
+                   RefPtr<PlacesWeakCallbackWrapper>, WeakJSListeners>(
+      [](auto& cb) { return cb.get(); },
+      [&](auto& cb) { RemoveListener(cb.flags, *cb.value.get()); });
+  CleanupListeners<WeakPtr<places::INativePlacesEventCallback>,
+                   RefPtr<places::INativePlacesEventCallback>,
+                   WeakNativeListeners>(
+      [](auto& cb) { return cb.get(); },
+      [&](auto& cb) { RemoveListener(cb.flags, cb.value.get()); });
+
+  if (!gNotificationQueue.IsEmpty()) {
+    NotifyNext();
   }
-  nativeListenersToRemove.Clear();
-
-  gCallingListeners = false;
 }
 
 }  // namespace mozilla::dom

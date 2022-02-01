@@ -22,8 +22,7 @@ add_task(
     threadFront.setBreakpoint(location2, { condition: "a === 1" });
 
     // Continue until the breakpoint is hit.
-    threadFront.resume();
-    const packet2 = await waitForPause(threadFront);
+    const packet2 = await resumeAndWaitForPause(threadFront);
 
     // Check the return value.
     Assert.equal(packet2.why.type, "breakpoint");
@@ -32,7 +31,7 @@ add_task(
     // Remove the breakpoint.
     await threadFront.removeBreakpoint(location2);
 
-    threadFront.resume();
+    await threadFront.resume();
   })
 );
 

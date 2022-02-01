@@ -186,7 +186,7 @@ addonsManager:
       These events are recorded during the install and update flow for extensions and themes,
       the value of the event is an install_id shared by the events related to the same install
       or update flow.
-    objects: ["extension", "theme", "locale", "dictionary", "other", "unknown"]
+    objects: ["extension", "theme", "locale", "dictionary", "sitepermission", "other", "unknown"]
     methods: ["install", "update"]
     extra_keys:
       addon_id: A string which identify the extension (when available)
@@ -228,7 +228,7 @@ addonsManager:
       These events are recorded at the end of the install flow, but only when
       the source that originally triggered the add-on installation is "amo" or
       "disco". The value of an event is the SHA256 hash of the addon_id.
-    objects: ["extension", "theme", "locale", "dictionary", "other", "unknown"]
+    objects: ["extension", "theme", "locale", "dictionary", "sitepermission", "other", "unknown"]
     extra_keys:
       addon_id: >
         A string which identifies the add-on. This value might be trimmed.
@@ -259,7 +259,7 @@ addonsManager:
       This events are recorded when an installed add-ons is being disable/enabled/uninstalled,
       the value of the event is the addon_id (which also allow to correlate multiple events
       related to each other).
-    objects: ["extension", "theme", "locale", "dictionary", "other"]
+    objects: ["extension", "theme", "locale", "dictionary", "sitepermission", "other"]
     methods: ["disable", "enable", "sideload_prompt", "uninstall"]
     extra_keys:
       source: >
@@ -2055,13 +2055,14 @@ security.ui.protections:
       - 1650468
       - 1661756
       - 1678201
+      - 1739287
     description: >
       User arrived on the protection report. This also includes a 'value' attribute which defaults to 'direct' or will be the value that a referring website addds to the url. This also indicates if the vpn banner has been seen.
-    expiry_version: "97"
+    expiry_version: "107"
     record_in_processes: ["content"]
     release_channel_collection: opt-out
     notification_emails:
-      - ewright@mozilla.com
+      - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
     products:
       - firefox
@@ -2077,13 +2078,14 @@ security.ui.protections:
       - 1612091
       - 1643428
       - 1678201
+      - 1739287
     description: >
       User closed on the protection report.
-    expiry_version: "97"
+    expiry_version: "107"
     record_in_processes: ["content"]
     release_channel_collection: opt-out
     notification_emails:
-      - ewright@mozilla.com
+      - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
     products:
       - firefox
@@ -2100,6 +2102,7 @@ security.ui.protections:
       - 1643428
       - 1661756
       - 1678201
+      - 1739287
     description: >
       User interaction by click events on the protection report.
     objects: [
@@ -2118,11 +2121,11 @@ security.ui.protections:
       "vpn_app_link_android",
       "vpn_app_link_ios",
     ]
-    expiry_version: "97"
+    expiry_version: "107"
     record_in_processes: ["content"]
     release_channel_collection: opt-out
     notification_emails:
-      - ewright@mozilla.com
+      - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
     products:
       - firefox
@@ -2136,17 +2139,18 @@ security.ui.app_menu:
       - 1616229
       - 1643428
       - 1678201
+      - 1739287
     description: >
       Privacy and Security click events on app menu.
     objects: [
       "open_full_report",
     ]
-    expiry_version: "97"
+    expiry_version: "107"
     record_in_processes:
       - main
     release_channel_collection: opt-out
     notification_emails:
-      - ewright@mozilla.com
+      - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
     products:
       - firefox
@@ -2159,13 +2163,12 @@ security.ui.protectionspopup:
       - 1607488
       - 1643428
       - 1678201
+      - 1739287
     description: >
       How many times the protections panel was opened.
-    expiry_version: "97"
+    expiry_version: "107"
     notification_emails:
-      - ewright@mozilla.com
-      - nhnt11@mozilla.com
-      - jhofmann@mozilla.com
+      - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
     record_in_processes:
@@ -2195,13 +2198,12 @@ security.ui.protectionspopup:
       - 1607488
       - 1643428
       - 1678201
+      - 1739287
     description: >
       User interaction by click events in the protections panel.
-    expiry_version: "97"
+    expiry_version: "107"
     notification_emails:
-      - ewright@mozilla.com
-      - nhnt11@mozilla.com
-      - jhofmann@mozilla.com
+      - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
     record_in_processes:
@@ -2936,6 +2938,7 @@ installation:
     objects:
       - full # if the full installer was run directly
       - stub # if the stub installer was used
+      - msix # if the installation was done through an MSIX package
     release_channel_collection: opt-out
     record_in_processes: ["main"]
     products: ["firefox"]
@@ -2945,11 +2948,13 @@ installation:
       build_id: The build ID of the application installed by the installer (not necessarily the current version)
       admin_user: Whether the installer is running from an elevated admin user
       install_existed: Whether there was already an install in this location
+      other_inst: Whether there was already any non-MSIX install on this system
+      other_msix_inst: Whether there was already any MSIX install on this system
       profdir_existed: Whether the top-level profile directory existed
       silent: '(optional, present if object is "full") Whether this was a silent install'
       from_msi: '(optional, present if object is "full") Whether this was an MSI install'
       default_path: '(optional, present if object is "full") Whether the default path was used'
-    bug_numbers: [1660198, 1725295]
+    bug_numbers: [1660198, 1725295, 1743465]
     notification_emails:
       - application-update-telemetry-alerts@mozilla.com
       - rtestard@mozilla.com
@@ -3062,3 +3067,24 @@ memory_watcher:
     bug_numbers: [1715858]
     notification_emails:
       - tkikuchi@mozilla.com
+
+service_request:
+  bypass:
+    description: >
+      This event is recorded by a small set of services when a proxy failure
+      causes a service to re-request with a proxy bypass.  It records some
+      basic information such as the type of proxy configuration, and the source
+      of the proxy configuration.  The value of the event is the name of the
+      service that triggers the event (e.g. telemetry, remote-settings).
+    methods: ["bypass"]
+    objects: ["proxy_info"]
+    release_channel_collection: opt-out
+    expiry_version: never
+    record_in_processes: ["main"]
+    products: ["firefox"]
+    bug_numbers: [1732792, 1732793, 1733481, 1733994, 1732388]
+    notification_emails:
+      - scaraveo@mozilla.com
+    extra_keys:
+      source: the source of the proxy configuration.  e.g. policy, prefs or extension_id
+      type: the type for the proxy configuration source.  e.g. api or string version of nsIProtocolProxyService.proxyConfigType

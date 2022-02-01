@@ -385,7 +385,7 @@ add_task(async function test_metasources() {
     "/browser/menu5.ftl",
     "/browser/menu6.ftl",
     "/browser/menu7.ftl",
-    "/browser/menu8.ftl"
+    {path: "/browser/menu8.ftl", optional: false},
   ];
 
   const bundles = l10nReg.generateBundlesSync(["en-US"], res);
@@ -399,6 +399,137 @@ add_task(async function test_metasources() {
   // each metasource giving 512 bundles in total. Otherwise, we generate
   // 4^8 = 65536 bundles.
   equal(nbundles, 512);
+
+  // cleanup
+  l10nReg.clearSources();
+});
+
+/**
+ * This test verifies that when a required resource is missing for a locale,
+ * we do not produce a bundle for that locale.
+ */
+add_task(function test_missing_required_resource() {
+  const fs = [
+    { path: "./platform/data/locales/en-US/test.ftl", source: "test-key = en-US value" },
+    { path: "./platform/data/locales/pl/missing-in-en-US.ftl", source: "missing-key = pl value" },
+    { path: "./platform/data/locales/pl/test.ftl", source: "test-key = pl value" },
+  ];
+  let source = L10nFileSource.createMock("platform", "", ["en-US", "pl"], "./platform/data/locales/{locale}/", fs);
+  l10nReg.registerSources([source]);
+
+  equal(l10nReg.getSourceNames().length, 1);
+  equal(l10nReg.hasSource("platform"), true);
+
+
+  // returns correct contexts for [en-US, pl]
+
+  let bundles = l10nReg.generateBundlesSync(["en-US", "pl"], ["test.ftl", "missing-in-en-US.ftl"]);
+  let bundle0 = (bundles.next()).value;
+
+  equal(bundle0.locales[0], "pl");
+  equal(bundle0.hasMessage("test-key"), true);
+  equal(bundle0.hasMessage("missing-key"), true);
+
+  let msg0 = bundle0.getMessage("test-key");
+  equal(bundle0.formatPattern(msg0.value), "pl value");
+
+  let msg1 = bundle0.getMessage("missing-key");
+  equal(bundle0.formatPattern(msg1.value), "pl value");
+
+  equal((bundles.next()).done, true);
+
+
+  // returns correct contexts for [pl, en-US]
+
+  bundles = l10nReg.generateBundlesSync(["pl", "en-US"], ["test.ftl", {path: "missing-in-en-US.ftl", optional: false}]);
+  bundle0 = (bundles.next()).value;
+
+  equal(bundle0.locales[0], "pl");
+  equal(bundle0.hasMessage("test-key"), true);
+
+  msg0 = bundle0.getMessage("test-key");
+  equal(bundle0.formatPattern(msg0.value), "pl value");
+
+  msg1 = bundle0.getMessage("missing-key");
+  equal(bundle0.formatPattern(msg1.value), "pl value");
+
+  equal((bundles.next()).done, true);
+
+  // cleanup
+  l10nReg.clearSources();
+});
+
+/**
+ * This test verifies that when an optional resource is missing, we continue
+ * to produce a bundle for that locale. The bundle will have missing entries
+ * with regard to the missing optional resource.
+ */
+add_task(function test_missing_optional_resource() {
+  const fs = [
+    { path: "./platform/data/locales/en-US/test.ftl", source: "test-key = en-US value" },
+    { path: "./platform/data/locales/pl/missing-in-en-US.ftl", source: "missing-key = pl value" },
+    { path: "./platform/data/locales/pl/test.ftl", source: "test-key = pl value" },
+  ];
+  let source = L10nFileSource.createMock("platform", "", ["en-US", "pl"], "./platform/data/locales/{locale}/", fs);
+  l10nReg.registerSources([source]);
+
+  equal(l10nReg.getSourceNames().length, 1);
+  equal(l10nReg.hasSource("platform"), true);
+
+
+  // returns correct contexts for [en-US, pl]
+
+  let bundles = l10nReg.generateBundlesSync(["en-US", "pl"], ["test.ftl", { path: "missing-in-en-US.ftl", optional: true }]);
+  let bundle0 = (bundles.next()).value;
+
+  equal(bundle0.locales[0], "en-US");
+  equal(bundle0.hasMessage("test-key"), true);
+  equal(bundle0.hasMessage("missing-key"), false);
+
+  let msg0 = bundle0.getMessage("test-key");
+  equal(bundle0.formatPattern(msg0.value), "en-US value");
+
+  equal(bundle0.getMessage("missing-key"), null);
+
+  let bundle1 = (bundles.next()).value;
+
+  equal(bundle1.locales[0], "pl");
+  equal(bundle1.hasMessage("test-key"), true);
+  equal(bundle1.hasMessage("missing-key"), true);
+
+  msg0 = bundle1.getMessage("test-key");
+  equal(bundle1.formatPattern(msg0.value), "pl value");
+
+  msg1 = bundle1.getMessage("missing-key");
+  equal(bundle1.formatPattern(msg1.value), "pl value");
+
+  equal((bundles.next()).done, true);
+
+  // returns correct contexts for [pl, en-US]
+
+  bundles = l10nReg.generateBundlesSync(["pl", "en-US"], ["test.ftl", { path: "missing-in-en-US.ftl", optional: true }]);
+  bundle0 = (bundles.next()).value;
+
+  equal(bundle0.locales[0], "pl");
+  equal(bundle0.hasMessage("test-key"), true);
+  equal(bundle0.hasMessage("missing-key"), true);
+
+  msg0 = bundle0.getMessage("test-key");
+  equal(bundle0.formatPattern(msg0.value), "pl value");
+
+  msg1 = bundle0.getMessage("missing-key");
+  equal(bundle0.formatPattern(msg1.value), "pl value");
+
+  bundle1 = (bundles.next()).value;
+
+  equal(bundle1.locales[0], "en-US");
+  equal(bundle1.hasMessage("test-key"), true);
+  equal(bundle1.hasMessage("missing-key"), false);
+
+  msg0 = bundle1.getMessage("test-key");
+  equal(bundle1.formatPattern(msg0.value), "en-US value");
+
+  equal(bundle1.getMessage("missing-key"), null);
 
   // cleanup
   l10nReg.clearSources();

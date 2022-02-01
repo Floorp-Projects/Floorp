@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=367028
+-->
+<head>
+<title>Test for Bug 367028</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<style>
+#scroller {
+  display: block;
+  width: 200px;
+  height: 100px;
+  overflow: scroll;
+  background: beige;
+  border: 1px solid black;
+}
+
+#biggerblock {
+  display: block;
+  width: 100px;
+  height: 150px;
+  line-height: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  background: khaki;
+}
+</style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=367028">Mozilla Bug 367028</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<a id="scroller" href="#">
+  block anchor<span id="biggerblock">bigger block</span>
+</a>
+<script type="application/javascript">
+
+function waitForEvent(aTarget, aEvent) {
+  return new Promise(aResolve => {
+    aTarget.addEventListener(aEvent, aResolve, { once: true });
+  });
+}
+
+/** Test for Bug 367028 **/
+
+add_task(async function drag_thumb_in_link() {
+  let scroller = document.getElementById("scroller");
+  scroller.ondragstart = function(e) {
+    e.preventDefault();
+    ok(false, "dragging on scroller bar should not trigger drag-and-drop operation");
+    scroller.ondragstart = null;
+  };
+
+  // Click the scroll bar.
+  let x = scroller.getBoundingClientRect().width - 5;
+  let y = scroller.getBoundingClientRect().height - 70;
+  synthesizeMouse(scroller, x, y, { type : "mousedown" }, window);
+  synthesizeMouse(scroller, x, y, { type : "mousemove" }, window);
+
+  let scrollPromise = waitForEvent(scroller, "scroll");
+  x = scroller.getBoundingClientRect().width + 20;
+  y = scroller.getBoundingClientRect().height - 30;
+  synthesizeMouse(scroller, x, y, { type : "mousemove" }, window);
+  synthesizeMouse(scroller, x, y, { type : "mouseup" }, window);
+  await scrollPromise;
+
+  ok(true, "Dragging scroller bar should scroll");
+  scroller.ondragstart = null;
+});
+
+</script>
+</body>
+</html>

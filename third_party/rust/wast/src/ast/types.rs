@@ -617,6 +617,11 @@ pub struct ModuleType<'a> {
 
 impl<'a> Parse<'a> for ModuleType<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
+        // See comments in `nested_module.rs` for why this is tested here.
+        if parser.parens_depth() > 100 {
+            return Err(parser.error("module type nesting too deep"));
+        }
+
         let mut imports = Vec::new();
         while parser.peek2::<kw::import>() {
             imports.push(parser.parens(|p| p.parse())?);
@@ -658,6 +663,11 @@ pub struct InstanceType<'a> {
 
 impl<'a> Parse<'a> for InstanceType<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
+        // See comments in `nested_module.rs` for why this is tested here.
+        if parser.parens_depth() > 100 {
+            return Err(parser.error("instance type nesting too deep"));
+        }
+
         let mut exports = Vec::new();
         while !parser.is_empty() {
             exports.push(parser.parens(|p| p.parse())?);

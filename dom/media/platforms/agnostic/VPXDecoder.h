@@ -62,6 +62,13 @@ class VPXDecoder : public MediaDataDecoder,
   struct VPXStreamInfo {
     gfx::IntSize mImage;
     gfx::IntSize mDisplay;
+    // In VP8 frame header, nothing can tell about the display aspect ratio, so
+    // we simply calculate it from image size.
+    // In VP9 frame header, `render_and_frame_size_different` can indicate if
+    // display size is different from frame size.
+    // However, if this ratio is different from the one in the container, we
+    // tend to trust the container more, not the byte stream.
+    float mDisplayAspectRatio = 0.0;
     bool mKeyFrame = false;
 
     uint8_t mProfile = 0;

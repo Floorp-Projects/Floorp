@@ -5,6 +5,11 @@
 "use strict";
 
 Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/gfx/layers/apz/test/mochitest/apz_test_utils.js",
+  this
+);
+
+Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js",
   this
 );
@@ -15,78 +20,105 @@ function waitForWhile() {
   });
 }
 
-// From https://developer.apple.com/documentation/coregraphics/cgscrollphase/kcgscrollphasebegan?language=occ , etc.
-const kCGScrollPhaseBegan = 1;
-const kCGScrollPhaseChanged = 2;
-const kCGScrollPhaseEnded = 4;
+const NativePanHandlerForWindows = {
+  beginPhase: SpecialPowers.DOMWindowUtils.PHASE_BEGIN,
+  updatePhase: SpecialPowers.DOMWindowUtils.PHASE_UPDATE,
+  endPhase: SpecialPowers.DOMWindowUtils.PHASE_END,
+  promiseNativePanEvent: promiseNativeTouchpadPan,
+  deltaOnRTL: 50,
+};
+
+const NativePanHandlerForMac = {
+  // From https://developer.apple.com/documentation/coregraphics/cgscrollphase/kcgscrollphasebegan?language=occ , etc.
+  beginPhase: 1, // kCGScrollPhaseBegan
+  updatePhase: 2, // kCGScrollPhaseChanged
+  endPhase: 4, // kCGScrollPhaseEnded
+  promiseNativePanEvent: promiseNativePanGestureEventAndWaitForObserver,
+  deltaOnRTL: -50,
+};
+
+function getPanHandler() {
+  switch (getPlatform()) {
+    case "windows":
+      return NativePanHandlerForWindows;
+    case "mac":
+      return NativePanHandlerForMac;
+    default:
+      throw new Error(
+        "There's no native pan handler on platform " + getPlatform()
+      );
+  }
+}
+
+const NativePanHandler = getPanHandler();
 
 async function panRightToLeft(aElement, aX, aY) {
-  await promiseNativePanGestureEventAndWaitForObserver(
+  await NativePanHandler.promiseNativePanEvent(
     aElement,
     aX,
     aY,
-    -50,
+    NativePanHandler.deltaOnRTL,
     0,
-    kCGScrollPhaseBegan
+    NativePanHandler.beginPhase
   );
-  await promiseNativePanGestureEventAndWaitForObserver(
+  await NativePanHandler.promiseNativePanEvent(
     aElement,
     aX,
     aY,
-    -50,
+    NativePanHandler.deltaOnRTL,
     0,
-    kCGScrollPhaseChanged
+    NativePanHandler.updatePhase
   );
-  await promiseNativePanGestureEventAndWaitForObserver(
+  await NativePanHandler.promiseNativePanEvent(
     aElement,
     aX,
     aY,
-    -50,
+    NativePanHandler.deltaOnRTL,
     0,
-    kCGScrollPhaseChanged
+    NativePanHandler.updatePhase
   );
-  await promiseNativePanGestureEventAndWaitForObserver(
+  await NativePanHandler.promiseNativePanEvent(
     aElement,
     aX,
     aY,
     0,
     0,
-    kCGScrollPhaseEnded
+    NativePanHandler.endPhase
   );
 }
 
 async function panLeftToRight(aElement, aX, aY) {
-  await promiseNativePanGestureEventAndWaitForObserver(
+  await NativePanHandler.promiseNativePanEvent(
     aElement,
     aX,
     aY,
-    50,
+    -NativePanHandler.deltaOnRTL,
     0,
-    kCGScrollPhaseBegan
+    NativePanHandler.beginPhase
   );
-  await promiseNativePanGestureEventAndWaitForObserver(
+  await NativePanHandler.promiseNativePanEvent(
     aElement,
     aX,
     aY,
-    50,
+    -NativePanHandler.deltaOnRTL,
     0,
-    kCGScrollPhaseChanged
+    NativePanHandler.updatePhase
   );
-  await promiseNativePanGestureEventAndWaitForObserver(
+  await NativePanHandler.promiseNativePanEvent(
     aElement,
     aX,
     aY,
-    50,
+    -NativePanHandler.deltaOnRTL,
     0,
-    kCGScrollPhaseChanged
+    NativePanHandler.updatePhase
   );
-  await promiseNativePanGestureEventAndWaitForObserver(
+  await NativePanHandler.promiseNativePanEvent(
     aElement,
     aX,
     aY,
     0,
     0,
-    kCGScrollPhaseEnded
+    NativePanHandler.endPhase
   );
 }
 
@@ -121,7 +153,7 @@ add_task(async () => {
 
   // Try to navigate forward.
   await panRightToLeft(tab.linkedBrowser, 100, 100);
-  // NOTE: The last kCGScrollPhaseEnded shouldn't fire a wheel event since
+  // NOTE: The last endPhase shouldn't fire a wheel event since
   // its delta is zero.
   is(wheelEventCount, 3, "Received 3 wheel events");
 
@@ -135,14 +167,17 @@ add_task(async () => {
     tab.linkedBrowser,
     firstPage
   );
+  let stoppedLoadingPromise = BrowserTestUtils.browserStopped(
+    tab.linkedBrowser,
+    firstPage
+  );
   await panLeftToRight(tab.linkedBrowser, 100, 100);
-  // NOTE: We only get a wheel event for the kCGScrollPhaseBegan, rest of events
-  // have been captured by the swipe gesture module.
+  // NOTE: We only get a wheel event for the beginPhase, rest of events have
+  // been captured by the swipe gesture module.
   is(wheelEventCount, 1, "Received a wheel event");
 
   // Make sure the gesture triggered going back to the previous page.
-  await startLoadingPromise;
-  await BrowserTestUtils.browserStopped(tab.linkedBrowser, firstPage);
+  await Promise.all([startLoadingPromise, stoppedLoadingPromise]);
 
   ok(gBrowser.webNavigation.canGoForward);
 
@@ -152,11 +187,14 @@ add_task(async () => {
     tab.linkedBrowser,
     secondPage
   );
+  stoppedLoadingPromise = BrowserTestUtils.browserStopped(
+    tab.linkedBrowser,
+    secondPage
+  );
   await panRightToLeft(tab.linkedBrowser, 100, 100);
   is(wheelEventCount, 1, "Received a wheel event");
 
-  await startLoadingPromise;
-  await BrowserTestUtils.browserStopped(tab.linkedBrowser, secondPage);
+  await Promise.all([startLoadingPromise, stoppedLoadingPromise]);
 
   ok(gBrowser.webNavigation.canGoBack);
 

@@ -28,6 +28,12 @@
 #include "vm/PlainObject.h"         // js::PlainObject
 #include "vm/TypedArrayObject.h"
 
+#ifdef ENABLE_RECORD_TUPLE
+#  include "builtin/RecordObject.h"
+#  include "builtin/TupleObject.h"
+#  include "vm/RecordTupleShared.h"
+#endif
+
 #include "gc/Nursery-inl.h"
 #include "vm/ArrayObject-inl.h"
 #include "vm/BytecodeLocation-inl.h"
@@ -1488,7 +1494,12 @@ bool js::NativeDefineProperty(JSContext* cx, HandleNativeObject obj,
   if (prop.isNotFound()) {
     // Note: We are sharing the property definition machinery with private
     //       fields. Private fields may be added to non-extensible objects.
-    if (!obj->isExtensible() && !id.isPrivateName()) {
+    if (!obj->isExtensible() && !id.isPrivateName() &&
+        // R&T wrappers are non-extensible, but we still want to be able to
+        // lazily resolve their properties. We can special-case them to
+        // allow doing so.
+        IF_RECORD_TUPLE(
+            !(IsExtendedPrimitiveWrapper(*obj) && desc_.resolving()), true)) {
       return result.fail(JSMSG_CANT_DEFINE_PROP_OBJECT_NOT_EXTENSIBLE);
     }
 
@@ -2599,6 +2610,10 @@ static bool CallJSDeletePropertyOp(JSContext* cx, JSDeletePropertyOp op,
 // ES6 draft rev31 9.1.10 [[Delete]]
 bool js::NativeDeleteProperty(JSContext* cx, HandleNativeObject obj,
                               HandleId id, ObjectOpResult& result) {
+#ifdef ENABLE_RECORD_TUPLE
+  MOZ_ASSERT(!js::IsExtendedPrimitive(*obj));
+#endif
+
   // Steps 2-3.
   PropertyResult prop;
   if (!NativeLookupOwnProperty<CanGC>(cx, obj, id, &prop)) {
@@ -2652,14 +2667,19 @@ bool js::CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
       "CopyDataPropertiesNative should only be called during object literal "
       "construction"
       "which precludes that |target| is the prototype of any other object");
+#ifdef ENABLE_RECORD_TUPLE
+  MOZ_ASSERT(!js::IsExtendedPrimitive(*target));
+#endif
 
   *optimized = false;
 
   // Don't use the fast path if |from| may have extra indexed or lazy
   // properties.
   if (from->getDenseInitializedLength() > 0 || from->isIndexed() ||
-      from->is<TypedArrayObject>() || from->getClass()->getNewEnumerate() ||
-      from->getClass()->getEnumerate()) {
+      from->is<TypedArrayObject>() ||
+      IF_RECORD_TUPLE(from->is<RecordObject>() || from->is<TupleObject>(),
+                      false) ||
+      from->getClass()->getNewEnumerate() || from->getClass()->getEnumerate()) {
     return true;
   }
 

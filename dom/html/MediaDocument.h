@@ -36,8 +36,7 @@ class MediaDocument : public nsHTMLDocument {
                                      nsILoadGroup* aLoadGroup,
                                      nsISupports* aContainer,
                                      nsIStreamListener** aDocListener,
-                                     bool aReset = true,
-                                     nsIContentSink* aSink = nullptr) override;
+                                     bool aReset = true) override;
 
   virtual bool WillIgnoreCharsetOverride() override { return true; }
 

@@ -1,0 +1,33 @@
+{
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "superdrag.js"
+      ],"run_at": "document_end"
+    }
+  ],
+  "permissions": [
+    "tabs",
+    "storage",
+    "downloads",
+    "clipboardWrite",
+    "notifications",
+    "search"
+  ],
+  "manifest_version": 2,
+  "name": "Floorp System Addon - SuperDrag -",
+  "version": "1",
+  "applications": {
+    "gecko": {
+      "id": "superdrag@floorp.ablaze.one"
+    }
+  }
+}

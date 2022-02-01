@@ -238,6 +238,7 @@ extern "C" {
     pub fn dbus_message_set_no_reply(message: *mut DBusMessage, no_reply: u32);
     pub fn dbus_message_get_auto_start(message: *mut DBusMessage) -> u32;
     pub fn dbus_message_set_auto_start(message: *mut DBusMessage, no_reply: u32);
+    pub fn dbus_message_copy(message: *const DBusMessage) -> *mut DBusMessage;
 
     pub fn dbus_message_iter_append_basic(iter: *mut DBusMessageIter, t: c_int, value: *const c_void) -> u32;
     pub fn dbus_message_iter_append_fixed_array(iter: *mut DBusMessageIter, element_type: c_int,
@@ -272,6 +273,7 @@ extern "C" {
     pub fn dbus_watch_get_enabled(watch: *mut DBusWatch) -> u32;
     pub fn dbus_watch_get_flags(watch: *mut DBusWatch) -> c_uint;
     pub fn dbus_watch_get_unix_fd(watch: *mut DBusWatch) -> c_int;
+    pub fn dbus_watch_get_socket(watch: *mut DBusWatch) -> c_int;
     pub fn dbus_watch_handle(watch: *mut DBusWatch, flags: c_uint) -> u32;
     pub fn dbus_watch_get_data(watch: *mut DBusWatch) -> *mut c_void;
     pub fn dbus_watch_set_data(watch: *mut DBusWatch, user_data: *mut c_void,

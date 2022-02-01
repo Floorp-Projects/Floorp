@@ -121,7 +121,7 @@ pub fn migrate(tx: &Transaction<'_>, filename: &Path) -> Result<MigrationInfo> {
         };
         // Do our "grouping"
         if parsed.ext_id != last_ext_id {
-            if last_ext_id != "" && !curr_values.is_empty() {
+            if !last_ext_id.is_empty() && !curr_values.is_empty() {
                 // a different extension id - write what we have to the DB.
                 let entries = do_insert(tx, &last_ext_id, curr_values)?;
                 mi.extensions_successful += 1;
@@ -141,7 +141,7 @@ pub fn migrate(tx: &Transaction<'_>, filename: &Path) -> Result<MigrationInfo> {
         }
     }
     // and the last one
-    if last_ext_id != "" && !curr_values.is_empty() {
+    if !last_ext_id.is_empty() && !curr_values.is_empty() {
         // a different extension id - write what we have to the DB.
         let entries = do_insert(tx, &last_ext_id, curr_values)?;
         mi.extensions_successful += 1;

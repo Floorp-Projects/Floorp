@@ -9,6 +9,17 @@
 // eslint-disable-next-line no-var
 var EXPORTED_SYMBOLS = ["PersonalityProviderWorker"];
 
+// A helper function to create a hash out of a file.
+async function _getFileHash(filepath) {
+  const data = await IOUtils.read(filepath);
+  // File is an instance of Uint8Array
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  const uint8 = new Uint8Array(digest);
+  // return the two-digit hexadecimal code for a byte
+  const toHex = b => b.toString(16).padStart(2, "0");
+  return Array.from(uint8, toHex).join("");
+}
+
 /**
  * V2 provider builds and ranks an interest profile (also called an “interest vector”) off the browse history.
  * This allows Firefox to classify pages into topics, by examining the text found on the page.
@@ -58,7 +69,7 @@ const PersonalityProviderWorker = class PersonalityProviderWorker {
    */
   async maybeDownloadAttachment(record, retries = 3) {
     const {
-      attachment: { filename, size },
+      attachment: { filename, hash, size },
     } = record;
     await IOUtils.makeDirectory(await this.getPersonalityProviderDir());
     const localFilePath = PathUtils.join(
@@ -71,7 +82,8 @@ const PersonalityProviderWorker = class PersonalityProviderWorker {
       retry++ < retries &&
       // exists is an issue for perf because I might not need to call it.
       (!(await IOUtils.exists(localFilePath)) ||
-        (await IOUtils.stat(localFilePath)).size !== size)
+        (await IOUtils.stat(localFilePath)).size !== size ||
+        (await _getFileHash(localFilePath)) !== hash)
     ) {
       await this._downloadAttachment(record);
     }

@@ -48,9 +48,9 @@ void TextDecoder::Decode(Span<const uint8_t> aInput, const bool aStream,
                          nsAString& aOutDecodedString, ErrorResult& aRv) {
   aOutDecodedString.Truncate();
 
-  CheckedInt<size_t> needed = mDecoder->MaxUTF16BufferLength(aInput.Length());
-  if (!needed.isValid() ||
-      needed.value() > std::numeric_limits<nsAString::size_type>::max()) {
+  CheckedInt<nsAString::size_type> needed =
+      mDecoder->MaxUTF16BufferLength(aInput.Length());
+  if (!needed.isValid()) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }

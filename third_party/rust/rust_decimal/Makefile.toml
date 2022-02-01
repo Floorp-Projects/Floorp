@@ -1,14 +1,39 @@
 [config]
 default_to_workspace = false
 
+[env]
+FUZZ_RUNS = 1000
+
 [tasks.build]
 command = "cargo"
 args = ["build"]
+
+[tasks.format]
+workspace = true
+install_crate = "rustfmt"
+command = "cargo"
+args = ["fmt", "--", "--emit=files"]
+
+[tasks.clippy]
+workspace = true
+install_crate = "clippy"
+command = "cargo"
+args = ["clippy"]
+
+[tasks.outdated]
+install_crate = "cargo-outdated"
+command = "cargo"
+args = ["outdated", "-R"]
 
 [tasks.bench]
 toolchain = "nightly"
 command = "cargo"
 args = ["bench", "${@}"]
+
+[tasks.bench-maths]
+toolchain = "nightly"
+command = "cargo"
+args = ["bench", "--features", "maths", "${@}"]
 
 [tasks.bench-legacy]
 toolchain = "nightly"
@@ -65,16 +90,23 @@ dependencies = ["test-no-std"]
 command = "cargo"
 args = ["test"]
 
-[tasks.format]
-workspace = true
-install_crate = "rustfmt"
-command = "cargo"
-args = ["fmt", "--", "--emit=files"]
+[tasks.fuzz]
+dependencies = [
+    "fuzz-arithmetic",
+    "fuzz-constructors"
+]
 
-[tasks.outdated]
-install_crate = "cargo-outdated"
+[tasks.fuzz-arithmetic]
+toolchain = "nightly"
+install_crate = "cargo-fuzz"
 command = "cargo"
-args = ["outdated", "-R"]
+args = ["fuzz", "run", "arithmetic", "--", "-runs=${FUZZ_RUNS}"]
+
+[tasks.fuzz-constructors]
+toolchain = "nightly"
+install_crate = "cargo-fuzz"
+command = "cargo"
+args = ["fuzz", "run", "constructors", "--", "-runs=${FUZZ_RUNS}"]
 
 [tasks.test-all]
 dependencies = [
@@ -84,15 +116,15 @@ dependencies = [
     "test-maths",
     "test-misc",
     "test-db",
+    "test-rocket-traits",
     "test-serde",
     "test-macros"
 ]
 
 [tasks.test-db]
 dependencies = [
-    "test-db-postgres",
-    "test-db-tokio-postgres",
-    "test-db-diesel-postgres"
+    "test-db-mysql-all",
+    "test-db-postgres-all"
 ]
 
 [tasks.test-serde]
@@ -123,6 +155,7 @@ args = ["test", "--workspace", "--features=legacy-ops"]
 dependencies = [
     "test-maths-default",
     "test-maths-legacy",
+    "test-maths-nopanic",
 ]
 
 [tasks.test-maths-default]
@@ -133,9 +166,29 @@ args = ["test", "--workspace", "--no-default-features", "--features=maths", "mat
 command = "cargo"
 args = ["test", "--workspace", "--no-default-features", "--features=maths,legacy-ops", "maths", "--", "--skip", "generated"]
 
+[tasks.test-maths-nopanic]
+command = "cargo"
+args = ["test", "--workspace", "--no-default-features", "--features=maths-nopanic", "maths", "--", "--skip", "generated"]
+
 [tasks.test-misc]
 command = "cargo"
 args = ["test", "--workspace", "--no-default-features", "--features=rust-fuzz", "rust_fuzz", "--", "--skip", "generated"]
+
+[tasks.test-db-mysql-all]
+dependencies = [
+    "test-db-diesel-mysql"
+]
+
+[tasks.test-db-diesel-mysql]
+command = "cargo"
+args = ["test", "--workspace", "--tests", "--features=db-diesel-mysql", "db", "--", "--skip", "generated"]
+
+[tasks.test-db-postgres-all]
+dependencies = [
+    "test-db-postgres",
+    "test-db-tokio-postgres",
+    "test-db-diesel-postgres"
+]
 
 [tasks.test-db-postgres]
 command = "cargo"
@@ -148,6 +201,10 @@ args = ["test", "--workspace", "--tests", "--features=db-tokio-postgres", "db", 
 [tasks.test-db-diesel-postgres]
 command = "cargo"
 args = ["test", "--workspace", "--tests", "--features=db-diesel-postgres", "db", "--", "--skip", "generated"]
+
+[tasks.test-rocket-traits]
+command = "cargo"
+args = ["test", "--workspace", "--features=rocket-traits"]
 
 [tasks.test-serde-float]
 command = "cargo"

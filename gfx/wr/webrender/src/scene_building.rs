@@ -57,7 +57,7 @@ use crate::hit_test::HitTestingScene;
 use crate::intern::Interner;
 use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter, PlaneSplitter, PlaneSplitterIndex, PipelineInstanceId};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureOptions};
-use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList};
+use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList, SurfaceInfo};
 use crate::picture_graph::PictureGraph;
 use crate::prim_store::{PrimitiveInstance, register_prim_chase_id};
 use crate::prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveStore};
@@ -463,6 +463,11 @@ pub struct SceneBuilder<'a> {
     /// A map of pipeline ids encountered during scene build - used to create unique
     /// pipeline instance ids as they are encountered.
     pipeline_instance_ids: FastHashMap<PipelineId, u32>,
+
+    /// A list of surfaces (backing textures) that are relevant for this scene.
+    /// Every picture is assigned to a surface (either a new surface if the picture
+    /// has a composite mode, or the parent surface if it's a pass-through).
+    surfaces: Vec<SurfaceInfo>,
 }
 
 impl<'a> SceneBuilder<'a> {
@@ -518,6 +523,7 @@ impl<'a> SceneBuilder<'a> {
             plane_splitters: Vec::new(),
             prim_instances: Vec::new(),
             pipeline_instance_ids: FastHashMap::default(),
+            surfaces: Vec::new(),
         };
 
         builder.build_all(&root_pipeline);
@@ -549,6 +555,7 @@ impl<'a> SceneBuilder<'a> {
             picture_graph: builder.picture_graph,
             plane_splitters: builder.plane_splitters,
             prim_instances: builder.prim_instances,
+            surfaces: builder.surfaces,
         }
     }
 
@@ -2913,8 +2920,6 @@ impl<'a> SceneBuilder<'a> {
         // For line decorations, we can construct the render task cache key
         // here during scene building, since it doesn't depend on device
         // pixel ratio or transform.
-        let mut info = info.clone();
-
         let size = get_line_decoration_size(
             &info.rect.size(),
             orientation,
@@ -2923,32 +2928,6 @@ impl<'a> SceneBuilder<'a> {
         );
 
         let cache_key = size.map(|size| {
-            // If dotted, adjust the clip rect to ensure we don't draw a final
-            // partial dot.
-            if style == LineStyle::Dotted {
-                let clip_size = match orientation {
-                    LineOrientation::Horizontal => {
-                        LayoutSize::new(
-                            size.width * (info.rect.width() / size.width).floor(),
-                            info.rect.height(),
-                        )
-                    }
-                    LineOrientation::Vertical => {
-                        LayoutSize::new(
-                            info.rect.width(),
-                            size.height * (info.rect.height() / size.height).floor(),
-                        )
-                    }
-                };
-                let clip_rect = LayoutRect::from_origin_and_size(
-                    info.rect.min,
-                    clip_size,
-                );
-                info.clip_rect = clip_rect
-                    .intersection(&info.clip_rect)
-                    .unwrap_or_else(LayoutRect::zero);
-            }
-
             LineDecorationCacheKey {
                 style,
                 orientation,
@@ -2991,11 +2970,11 @@ impl<'a> SceneBuilder<'a> {
                 };
 
                 match border.source {
-                    NinePatchBorderSource::Image(image_key) => {
+                    NinePatchBorderSource::Image(key, rendering) => {
                         let prim = ImageBorder {
                             request: ImageRequest {
-                                key: image_key,
-                                rendering: ImageRendering::Auto,
+                                key,
+                                rendering,
                                 tile: None,
                             },
                             nine_patch,

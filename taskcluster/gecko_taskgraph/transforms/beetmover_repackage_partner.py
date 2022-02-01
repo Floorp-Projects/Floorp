@@ -9,7 +9,10 @@ Transform the beetmover task into an actual task description.
 from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.transforms.beetmover import craft_release_properties
-from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
+from gecko_taskgraph.util.attributes import (
+    copy_attributes_from_dependent_job,
+    release_level,
+)
 from gecko_taskgraph.util.partners import (
     get_ftp_platform,
     get_partner_config_by_kind,
@@ -57,7 +60,7 @@ def resolve_keys(config, jobs):
             job,
             "partner-bucket-scope",
             item_name=job["label"],
-            **{"release-level": config.params.release_level()},
+            **{"release-level": release_level(config.params["project"])},
         )
         yield job
 

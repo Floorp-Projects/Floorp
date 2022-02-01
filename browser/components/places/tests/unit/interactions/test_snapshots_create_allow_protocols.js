@@ -32,10 +32,13 @@ add_task(async function test_add_snapshot() {
   for (let { url, canSnapshot } of tests) {
     await PlacesTestUtils.addVisits(url);
     if (canSnapshot) {
-      await Snapshots.add({ url, userPersisted: true });
+      await Snapshots.add({
+        url,
+        userPersisted: Snapshots.USER_PERSISTED.MANUAL,
+      });
     } else {
       await Assert.rejects(
-        Snapshots.add({ url, userPersisted: true }),
+        Snapshots.add({ url, userPersisted: Snapshots.USER_PERSISTED.MANUAL }),
         /url cannot be added/,
         `Check ${url} cannot be added to snapshots`
       );

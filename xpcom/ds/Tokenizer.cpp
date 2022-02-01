@@ -598,7 +598,7 @@ bool TokenizerBase<TChar>::IsCustom(
   }
 
   if (aLongest) {
-    *aLongest = std::max(*aLongest, aCustomToken.mCustom.Length());
+    *aLongest = std::max<uint32_t>(*aLongest, aCustomToken.mCustom.Length());
   }
 
   // This is not very likely to happen according to how we call this method

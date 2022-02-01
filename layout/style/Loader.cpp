@@ -63,9 +63,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "ReferrerInfo.h"
 
-#ifdef MOZ_XUL
-#  include "nsXULPrototypeCache.h"
-#endif
+#include "nsXULPrototypeCache.h"
 
 #include "nsError.h"
 

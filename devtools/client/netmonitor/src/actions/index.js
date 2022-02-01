@@ -6,6 +6,7 @@
 
 const batching = require("devtools/client/netmonitor/src/actions/batching");
 const filters = require("devtools/client/netmonitor/src/actions/filters");
+const httpCustomRequest = require("devtools/client/netmonitor/src/actions/http-custom-request");
 const requests = require("devtools/client/netmonitor/src/actions/requests");
 const selection = require("devtools/client/netmonitor/src/actions/selection");
 const sort = require("devtools/client/netmonitor/src/actions/sort");
@@ -19,6 +20,7 @@ Object.assign(
   exports,
   batching,
   filters,
+  httpCustomRequest,
   requests,
   search,
   selection,

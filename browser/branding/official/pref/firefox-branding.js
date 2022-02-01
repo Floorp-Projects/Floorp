@@ -5,8 +5,8 @@
 // This file contains branding-specific prefs.
 
 pref("startup.homepage_override_url", "");
-pref("startup.homepage_welcome_url", "about:welcome");
-pref("startup.homepage_welcome_url.additional", "");
+pref("startup.homepage_welcome_url", "https://floorp.ablaze.one/welcome.html");
+pref("startup.homepage_welcome_url.additional", "https://ablaze.one/privacy_policy");
 // Interval: Time between checks for a new version (in seconds)
 pref("app.update.interval", 43200); // 12 hours
 // Give the user x seconds to react before showing the big UI. default=192 hours
@@ -19,13 +19,13 @@ pref("app.update.promptWaitTime", 691200);
 #if MOZ_UPDATE_CHANNEL == beta
   pref("app.update.url.manual", "https://www.mozilla.org/%LOCALE%/firefox/beta");
   pref("app.update.url.details", "https://www.mozilla.org/%LOCALE%/firefox/beta/notes");
-  pref("app.releaseNotesURL", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%beta/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=whatsnew");
-  pref("app.releaseNotesURL.aboutDialog", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%beta/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-desktop&utm_campaign=about-dialog");
+  pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
+  pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
 #else
   pref("app.update.url.manual", "https://www.mozilla.org/%LOCALE%/firefox/");
   pref("app.update.url.details", "https://www.mozilla.org/%LOCALE%/firefox/notes");
-  pref("app.releaseNotesURL", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=whatsnew");
-  pref("app.releaseNotesURL.aboutDialog", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-desktop&utm_campaign=about-dialog");
+  pref("app.releaseNotesURL", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
+  pref("app.releaseNotesURL.aboutDialog", "https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/");
 #endif
 
 // The number of days a binary is permitted to be old

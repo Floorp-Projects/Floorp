@@ -8,10 +8,10 @@
 
 #include "nsAppShell.h"
 #include "nsCOMPtr.h"
-#include "nsIScreenManager.h"
 
 #include "mozilla/Hal.h"
 #include "mozilla/java/GeckoScreenOrientationNatives.h"
+#include "mozilla/widget/ScreenManager.h"
 
 namespace mozilla {
 
@@ -21,29 +21,15 @@ class GeckoScreenOrientation final
 
  public:
   static void OnOrientationChange(int16_t aOrientation, int16_t aAngle) {
-    nsCOMPtr<nsIScreenManager> screenMgr =
-        do_GetService("@mozilla.org/gfx/screenmanager;1");
-    nsCOMPtr<nsIScreen> screen;
+    RefPtr<widget::Screen> screen =
+        widget::ScreenManager::GetSingleton().GetPrimaryScreen();
+    hal::ScreenConfiguration screenConfiguration =
+        screen->ToScreenConfiguration();
+    screenConfiguration.orientation() =
+        static_cast<hal::ScreenOrientation>(aOrientation);
+    screenConfiguration.angle() = aAngle;
 
-    if (!screenMgr ||
-        NS_FAILED(screenMgr->GetPrimaryScreen(getter_AddRefs(screen))) ||
-        !screen) {
-      return;
-    }
-
-    nsIntRect rect;
-    int32_t colorDepth, pixelDepth;
-
-    if (NS_FAILED(
-            screen->GetRect(&rect.x, &rect.y, &rect.width, &rect.height)) ||
-        NS_FAILED(screen->GetColorDepth(&colorDepth)) ||
-        NS_FAILED(screen->GetPixelDepth(&pixelDepth))) {
-      return;
-    }
-
-    hal::NotifyScreenConfigurationChange(hal::ScreenConfiguration(
-        rect, static_cast<hal::ScreenOrientation>(aOrientation), aAngle,
-        colorDepth, pixelDepth));
+    hal::NotifyScreenConfigurationChange(screenConfiguration);
   }
 };
 

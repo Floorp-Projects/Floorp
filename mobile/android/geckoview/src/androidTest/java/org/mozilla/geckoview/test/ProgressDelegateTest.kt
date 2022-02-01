@@ -22,7 +22,7 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.*
 class ProgressDelegateTest : BaseSessionTest() {
 
     fun testProgress(path: String) {
-        sessionRule.session.loadTestPath(path)
+        mainSession.loadTestPath(path)
         sessionRule.waitForPageStop()
 
         var counter = 0
@@ -68,7 +68,7 @@ class ProgressDelegateTest : BaseSessionTest() {
 
 
     @Test fun load() {
-        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : ProgressDelegate {
@@ -98,8 +98,8 @@ class ProgressDelegateTest : BaseSessionTest() {
 
     @Ignore
     @Test fun multipleLoads() {
-        sessionRule.session.loadUri(UNKNOWN_HOST_URI)
-        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        mainSession.loadUri(UNKNOWN_HOST_URI)
+        mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStops(2)
 
         sessionRule.forCallbacksDuringWait(object : ProgressDelegate {
@@ -120,10 +120,10 @@ class ProgressDelegateTest : BaseSessionTest() {
     }
 
     @Test fun reload() {
-        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        sessionRule.session.reload()
+        mainSession.reload()
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : ProgressDelegate {
@@ -145,12 +145,12 @@ class ProgressDelegateTest : BaseSessionTest() {
     }
 
     @Test fun goBackAndForward() {
-        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
-        sessionRule.session.loadTestPath(HELLO2_HTML_PATH)
+        mainSession.loadTestPath(HELLO2_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        sessionRule.session.goBack()
+        mainSession.goBack()
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : ProgressDelegate {
@@ -170,7 +170,7 @@ class ProgressDelegateTest : BaseSessionTest() {
             }
         })
 
-        sessionRule.session.goForward()
+        mainSession.goForward()
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : ProgressDelegate {
@@ -194,7 +194,7 @@ class ProgressDelegateTest : BaseSessionTest() {
     @Test fun correctSecurityInfoForValidTLS_automation() {
         assumeThat(sessionRule.env.isAutomation, equalTo(true))
 
-        sessionRule.session.loadUri("https://example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : ProgressDelegate {
@@ -234,7 +234,7 @@ class ProgressDelegateTest : BaseSessionTest() {
     @Test fun correctSecurityInfoForValidTLS_local() {
         assumeThat(sessionRule.env.isAutomation, equalTo(false))
 
-        sessionRule.session.loadUri("https://mozilla-modern.badssl.com")
+        mainSession.loadUri("https://mozilla-modern.badssl.com")
         sessionRule.waitForPageStop()
 
         sessionRule.forCallbacksDuringWait(object : ProgressDelegate {
@@ -272,7 +272,7 @@ class ProgressDelegateTest : BaseSessionTest() {
 
     @LargeTest
     @Test fun noSecurityInfoForExpiredTLS() {
-        sessionRule.session.loadUri(if (sessionRule.env.isAutomation)
+        mainSession.loadUri(if (sessionRule.env.isAutomation)
                                         "https://expired.example.com"
                                     else
                                         "https://expired.badssl.com")
@@ -454,7 +454,7 @@ class ProgressDelegateTest : BaseSessionTest() {
     @Test fun noHistoryDelegateOnSessionStateChange() {
         // TODO: Bug 1648158
         assumeThat(sessionRule.env.isFission, equalTo(false))
-        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         sessionRule.waitUntilCalled(object : ProgressDelegate {

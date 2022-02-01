@@ -25,6 +25,11 @@
 #include "vm/SelfHosting.h"
 #include "vm/SymbolType.h"
 
+#ifdef ENABLE_RECORD_TUPLE
+#  include "vm/RecordType.h"
+#  include "vm/TupleType.h"
+#endif
+
 #include "gc/Marking-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -36,6 +41,19 @@ using mozilla::NumberEqualsInt32;
 
 /*** HashableValue **********************************************************/
 
+static PreBarrieredValue NormalizeDoubleValue(double d) {
+  int32_t i;
+  if (NumberEqualsInt32(d, &i)) {
+    // Normalize int32_t-valued doubles to int32_t for faster hashing and
+    // testing. Note: we use NumberEqualsInt32 here instead of NumberIsInt32
+    // because we want -0 and 0 to be normalized to the same thing.
+    return Int32Value(i);
+  }
+
+  // Normalize the sign bit of a NaN.
+  return JS::CanonicalizedDoubleValue(d);
+}
+
 bool HashableValue::setValue(JSContext* cx, HandleValue v) {
   if (v.isString()) {
     // Atomize so that hash() and operator==() are fast and infallible.
@@ -45,24 +63,30 @@ bool HashableValue::setValue(JSContext* cx, HandleValue v) {
     }
     value = StringValue(str);
   } else if (v.isDouble()) {
-    double d = v.toDouble();
-    int32_t i;
-    if (NumberEqualsInt32(d, &i)) {
-      // Normalize int32_t-valued doubles to int32_t for faster hashing and
-      // testing. Note: we use NumberEqualsInt32 here instead of NumberIsInt32
-      // because we want -0 and 0 to be normalized to the same thing.
-      value = Int32Value(i);
+    value = NormalizeDoubleValue(v.toDouble());
+#ifdef ENABLE_RECORD_TUPLE
+  } else if (v.isExtendedPrimitive()) {
+    JSObject& obj = v.toExtendedPrimitive();
+    if (obj.is<RecordType>()) {
+      if (!obj.as<RecordType>().ensureAtomized(cx)) {
+        return false;
+      }
     } else {
-      // Normalize the sign bit of a NaN.
-      value = JS::CanonicalizedDoubleValue(d);
+      MOZ_ASSERT(obj.is<TupleType>());
+      if (!obj.as<TupleType>().ensureAtomized(cx)) {
+        return false;
+      }
     }
+    value = v;
+#endif
   } else {
     value = v;
   }
 
   MOZ_ASSERT(value.isUndefined() || value.isNull() || value.isBoolean() ||
              value.isNumber() || value.isString() || value.isSymbol() ||
-             value.isObject() || value.isBigInt());
+             value.isObject() || value.isBigInt() ||
+             IF_RECORD_TUPLE(value.isExtendedPrimitive(), false));
   return true;
 }
 
@@ -86,6 +110,21 @@ static HashNumber HashValue(const Value& v,
   if (v.isBigInt()) {
     return MaybeForwarded(v.toBigInt())->hash();
   }
+#ifdef ENABLE_RECORD_TUPLE
+  if (v.isExtendedPrimitive()) {
+    JSObject* obj = MaybeForwarded(&v.toExtendedPrimitive());
+    auto hasher = [&hcs](const Value& v) {
+      return HashValue(
+          v.isDouble() ? NormalizeDoubleValue(v.toDouble()).get() : v, hcs);
+    };
+
+    if (obj->is<RecordType>()) {
+      return obj->as<RecordType>().hash(hasher);
+    }
+    MOZ_ASSERT(obj->is<TupleType>());
+    return obj->as<TupleType>().hash(hasher);
+  }
+#endif
   if (v.isObject()) {
     return hcs.scramble(v.asRawBits());
   }
@@ -98,14 +137,30 @@ HashNumber HashableValue::hash(const mozilla::HashCodeScrambler& hcs) const {
   return HashValue(value, hcs);
 }
 
+#ifdef ENABLE_RECORD_TUPLE
+inline bool SameExtendedPrimitiveType(const PreBarrieredValue& a,
+                                      const PreBarrieredValue& b) {
+  return a.toExtendedPrimitive().getClass() ==
+         b.toExtendedPrimitive().getClass();
+}
+#endif
+
 bool HashableValue::operator==(const HashableValue& other) const {
   // Two HashableValues are equal if they have equal bits.
   bool b = (value.asRawBits() == other.value.asRawBits());
 
-  // BigInt values are considered equal if they represent the same
-  // mathematical value.
-  if (!b && (value.isBigInt() && other.value.isBigInt())) {
-    b = BigInt::equal(value.toBigInt(), other.value.toBigInt());
+  if (!b && (value.type() == other.value.type())) {
+    if (value.isBigInt()) {
+      // BigInt values are considered equal if they represent the same
+      // mathematical value.
+      b = BigInt::equal(value.toBigInt(), other.value.toBigInt());
+    }
+#ifdef ENABLE_RECORD_TUPLE
+    else if (value.isExtendedPrimitive() &&
+             SameExtendedPrimitiveType(value, other.value)) {
+      b = js::SameValueZeroLinear(value, other.value);
+    }
+#endif
   }
 
 #ifdef DEBUG
@@ -113,7 +168,7 @@ bool HashableValue::operator==(const HashableValue& other) const {
   JSContext* cx = TlsContext.get();
   RootedValue valueRoot(cx, value);
   RootedValue otherRoot(cx, other.value);
-  MOZ_ASSERT(SameValue(cx, valueRoot, otherRoot, &same));
+  MOZ_ASSERT(SameValueZero(cx, valueRoot, otherRoot, &same));
   MOZ_ASSERT(same == b);
 #endif
   return b;
@@ -540,7 +595,7 @@ class js::OrderedHashTableRef : public gc::BufferableRef {
 template <typename ObjectT>
 [[nodiscard]] inline static bool PostWriteBarrierImpl(ObjectT* obj,
                                                       const Value& keyValue) {
-  if (MOZ_LIKELY(!keyValue.isObject() && !keyValue.isBigInt())) {
+  if (MOZ_LIKELY(!keyValue.hasObjectPayload() && !keyValue.isBigInt())) {
     MOZ_ASSERT_IF(keyValue.isGCThing(), !IsInsideNursery(keyValue.toGCThing()));
     return true;
   }

@@ -10,6 +10,7 @@
 #include "mozilla/TextUtils.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Utf8.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
@@ -28,6 +29,7 @@
 #include "nsReadableUtils.h"
 
 #include <direct.h>
+#include <fileapi.h>
 #include <windows.h>
 #include <shlwapi.h>
 #include <aclapi.h>
@@ -1052,7 +1054,7 @@ nsLocalFile::InitWithPath(const nsAString& aFilePath) {
   if (secondChar == L':') {
     // Make sure we have a valid drive, later code assumes the drive letter
     // is a single char a-z or A-Z.
-    if (PathGetDriveNumberW(aFilePath.Data()) == -1) {
+    if (MozPathGetDriveNumber<wchar_t>(aFilePath.Data()) == -1) {
       return NS_ERROR_FILE_UNRECOGNIZED_PATH;
     }
   }
@@ -2647,6 +2649,22 @@ nsLocalFile::SetFileSize(int64_t aFileSize) {
   return rv;
 }
 
+static nsresult GetDiskSpaceAttributes(const nsString& aResolvedPath,
+                                       int64_t* aFreeBytesAvailable,
+                                       int64_t* aTotalBytes) {
+  ULARGE_INTEGER liFreeBytesAvailableToCaller;
+  ULARGE_INTEGER liTotalNumberOfBytes;
+  if (::GetDiskFreeSpaceExW(aResolvedPath.get(), &liFreeBytesAvailableToCaller,
+                            &liTotalNumberOfBytes, nullptr)) {
+    *aFreeBytesAvailable = liFreeBytesAvailableToCaller.QuadPart;
+    *aTotalBytes = liTotalNumberOfBytes.QuadPart;
+
+    return NS_OK;
+  }
+
+  return ConvertWinError(::GetLastError());
+}
+
 NS_IMETHODIMP
 nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
   // Check we are correctly initialized.
@@ -2656,7 +2674,12 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  ResolveAndStat();
+  *aDiskSpaceAvailable = 0;
+
+  nsresult rv = ResolveAndStat();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   if (mFileInfo64.type == PR_FILE_FILE) {
     // Since GetDiskFreeSpaceExW works only on directories, use the parent.
@@ -2666,14 +2689,36 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
     }
   }
 
-  ULARGE_INTEGER liFreeBytesAvailableToCaller, liTotalNumberOfBytes;
-  if (::GetDiskFreeSpaceExW(mResolvedPath.get(), &liFreeBytesAvailableToCaller,
-                            &liTotalNumberOfBytes, nullptr)) {
-    *aDiskSpaceAvailable = liFreeBytesAvailableToCaller.QuadPart;
-    return NS_OK;
+  int64_t dummy = 0;
+  return GetDiskSpaceAttributes(mResolvedPath, aDiskSpaceAvailable, &dummy);
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetDiskCapacity(int64_t* aDiskCapacity) {
+  // Check we are correctly initialized.
+  CHECK_mWorkingPath();
+
+  if (NS_WARN_IF(!aDiskCapacity)) {
+    return NS_ERROR_INVALID_ARG;
   }
-  *aDiskSpaceAvailable = 0;
-  return NS_OK;
+
+  *aDiskCapacity = 0;
+
+  nsresult rv = ResolveAndStat();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (mFileInfo64.type == PR_FILE_FILE) {
+    // Since GetDiskFreeSpaceExW works only on directories, use the parent.
+    nsCOMPtr<nsIFile> parent;
+    if (NS_SUCCEEDED(GetParent(getter_AddRefs(parent))) && parent) {
+      return parent->GetDiskCapacity(aDiskCapacity);
+    }
+  }
+
+  int64_t dummy = 0;
+  return GetDiskSpaceAttributes(mResolvedPath, &dummy, aDiskCapacity);
 }
 
 NS_IMETHODIMP
@@ -3079,43 +3124,36 @@ nsLocalFile::SetPersistentDescriptor(const nsACString& aPersistentDescriptor) {
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetFileAttributesWin(uint32_t* aAttribs) {
-  *aAttribs = 0;
+nsLocalFile::GetReadOnly(bool* aReadOnly) {
+  NS_ENSURE_ARG_POINTER(aReadOnly);
+
   DWORD dwAttrs = GetFileAttributesW(mWorkingPath.get());
   if (dwAttrs == INVALID_FILE_ATTRIBUTES) {
     return NS_ERROR_FILE_INVALID_PATH;
   }
 
-  if (!(dwAttrs & FILE_ATTRIBUTE_NOT_CONTENT_INDEXED)) {
-    *aAttribs |= WFA_SEARCH_INDEXED;
-  }
+  *aReadOnly = dwAttrs & FILE_ATTRIBUTE_READONLY;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLocalFile::SetFileAttributesWin(uint32_t aAttribs) {
+nsLocalFile::SetReadOnly(bool aReadOnly) {
   DWORD dwAttrs = GetFileAttributesW(mWorkingPath.get());
   if (dwAttrs == INVALID_FILE_ATTRIBUTES) {
     return NS_ERROR_FILE_INVALID_PATH;
   }
 
-  if (aAttribs & WFA_SEARCH_INDEXED) {
-    dwAttrs &= ~FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
-  } else {
-    dwAttrs |= FILE_ATTRIBUTE_NOT_CONTENT_INDEXED;
-  }
-
-  if (aAttribs & WFA_READONLY) {
+  if (aReadOnly) {
     dwAttrs |= FILE_ATTRIBUTE_READONLY;
-  } else if ((aAttribs & WFA_READWRITE) &&
-             (dwAttrs & FILE_ATTRIBUTE_READONLY)) {
+  } else {
     dwAttrs &= ~FILE_ATTRIBUTE_READONLY;
   }
 
   if (SetFileAttributesW(mWorkingPath.get(), dwAttrs) == 0) {
     return NS_ERROR_FAILURE;
   }
+
   return NS_OK;
 }
 
@@ -3176,6 +3214,36 @@ nsLocalFile::Reveal() {
 
   return NS_DispatchBackgroundTask(task,
                                    nsIEventTarget::DISPATCH_EVENT_MAY_BLOCK);
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetWindowsFileAttributes(uint32_t* aAttrs) {
+  NS_ENSURE_ARG_POINTER(aAttrs);
+
+  DWORD dwAttrs = ::GetFileAttributesW(mWorkingPath.get());
+  if (dwAttrs == INVALID_FILE_ATTRIBUTES) {
+    return ConvertWinError(GetLastError());
+  }
+
+  *aAttrs = dwAttrs;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLocalFile::SetWindowsFileAttributes(uint32_t aSetAttrs,
+                                      uint32_t aClearAttrs) {
+  DWORD dwAttrs = ::GetFileAttributesW(mWorkingPath.get());
+  if (dwAttrs == INVALID_FILE_ATTRIBUTES) {
+    return ConvertWinError(GetLastError());
+  }
+
+  dwAttrs = (dwAttrs & ~aClearAttrs) | aSetAttrs;
+
+  if (::SetFileAttributesW(mWorkingPath.get(), dwAttrs) == 0) {
+    return ConvertWinError(GetLastError());
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

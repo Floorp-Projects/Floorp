@@ -9,12 +9,6 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 );
 
 add_task(async function test_print_pdf_on_frame_load() {
-  // window.print() only shows print preview when print.tab_modal.enabled is
-  // true.
-  await SpecialPowers.pushPrefEnv({
-    set: [["print.tab_modal.enabled", true]],
-  });
-
   is(
     document.querySelector(".printPreviewBrowser"),
     null,

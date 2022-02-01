@@ -45,6 +45,10 @@
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/Realm-inl.h"
+#ifdef ENABLE_RECORD_TUPLE
+#  include "vm/RecordType.h"
+#  include "vm/TupleType.h"
+#endif
 
 using namespace js;
 
@@ -1681,12 +1685,12 @@ template JSLinearString* NewStringCopyN<NoGC>(JSContext* cx,
                                               const Latin1Char* s, size_t n,
                                               gc::InitialHeap heap);
 
-template <js::AllowGC allowGC>
 JSLinearString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8,
                                    gc::InitialHeap heap) {
   JS::SmallestEncoding encoding = JS::FindSmallestEncoding(utf8);
   if (encoding == JS::SmallestEncoding::ASCII) {
-    return NewStringCopyN<allowGC>(cx, utf8.begin().get(), utf8.length(), heap);
+    return NewStringCopyN<js::CanGC>(cx, utf8.begin().get(), utf8.length(),
+                                     heap);
   }
 
   size_t length;
@@ -1698,7 +1702,7 @@ JSLinearString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8,
       return nullptr;
     }
 
-    return NewString<allowGC>(cx, std::move(latin1), length, heap);
+    return NewString<js::CanGC>(cx, std::move(latin1), length, heap);
   }
 
   MOZ_ASSERT(encoding == JS::SmallestEncoding::UTF16);
@@ -1710,12 +1714,8 @@ JSLinearString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8,
     return nullptr;
   }
 
-  return NewString<allowGC>(cx, std::move(utf16), length, heap);
+  return NewString<js::CanGC>(cx, std::move(utf16), length, heap);
 }
-
-template JSLinearString* NewStringCopyUTF8N<CanGC>(JSContext* cx,
-                                                   const JS::UTF8Chars utf8,
-                                                   gc::InitialHeap heap);
 
 MOZ_ALWAYS_INLINE JSString* ExternalStringCache::lookup(const char16_t* chars,
                                                         size_t len) const {
@@ -2113,7 +2113,20 @@ JSString* js::ToStringSlow(
     }
     RootedBigInt i(cx, v.toBigInt());
     str = BigInt::toString<CanGC>(cx, i, 10);
-  } else {
+  }
+#ifdef ENABLE_RECORD_TUPLE
+  else if (arg.isExtendedPrimitive()) {
+    JSObject& obj = arg.toExtendedPrimitive();
+    if (obj.is<js::TupleType>()) {
+      str = js::TupleToSource(cx, &obj.as<js::TupleType>());
+    } else if (obj.is<js::RecordType>()) {
+      str = js::RecordToSource(cx, &obj.as<js::RecordType>());
+    } else {
+      MOZ_CRASH("Unsupported ExtendedPrimitive type");
+    }
+  }
+#endif
+  else {
     MOZ_ASSERT(v.isUndefined());
     str = cx->names().undefined;
   }

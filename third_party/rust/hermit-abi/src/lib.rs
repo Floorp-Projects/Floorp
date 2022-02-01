@@ -2,6 +2,9 @@
 //! [RustyHermit](https://github.com/hermitcore/libhermit-rs).
 
 #![no_std]
+#![allow(clippy::missing_safety_doc)]
+#![allow(clippy::result_unit_err)]
+
 extern crate libc;
 
 pub mod tcplistener;

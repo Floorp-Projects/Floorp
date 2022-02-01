@@ -364,7 +364,8 @@ class nsXULElement : public nsStyledElement {
   MOZ_CAN_RUN_SCRIPT
   virtual mozilla::Result<bool, nsresult> PerformAccesskey(
       bool aKeyCausesActivation, bool aIsTrustedEvent) override;
-  void ClickWithInputSource(uint16_t aInputSource, bool aIsTrustedEvent);
+  MOZ_CAN_RUN_SCRIPT void ClickWithInputSource(uint16_t aInputSource,
+                                               bool aIsTrustedEvent);
 
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
   virtual bool IsFocusableInternal(int32_t* aTabIndex,
@@ -476,7 +477,9 @@ class nsXULElement : public nsStyledElement {
     SetXULAttr(nsGkAtoms::src, aValue, rv);
   }
   nsIControllers* GetControllers(mozilla::ErrorResult& rv);
-  void Click(mozilla::dom::CallerType aCallerType);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Click(mozilla::dom::CallerType aCallerType);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void DoCommand();
   // Style() inherited from nsStyledElement
 

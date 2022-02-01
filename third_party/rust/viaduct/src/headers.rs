@@ -44,7 +44,7 @@ fn trim_string<S: AsRef<str> + Into<String>>(s: S) -> String {
 }
 
 fn is_valid_header_value(value: &str) -> bool {
-    value.bytes().all(|b| (32 <= b && b < 127) || b == b'\t')
+    value.bytes().all(|b| (32..127).contains(&b) || b == b'\t')
 }
 
 impl Header {

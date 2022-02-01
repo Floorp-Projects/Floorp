@@ -31,8 +31,7 @@ async function run_test() {
       file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o444);
     }
     file.QueryInterface(Ci.nsILocalFileWin);
-    file.fileAttributesWin |= file.WFA_READONLY;
-    file.fileAttributesWin &= ~file.WFA_READWRITE;
+    file.readOnly = true;
     Assert.ok(file.exists(), MSG_SHOULD_EXIST + getMsgPath(file.path));
     Assert.ok(!file.isWritable(), "the file should not be writeable");
   });
@@ -42,8 +41,7 @@ async function run_test() {
       let file = getUpdateDirFile(aFileLeafName);
       if (file.exists()) {
         file.QueryInterface(Ci.nsILocalFileWin);
-        file.fileAttributesWin |= file.WFA_READWRITE;
-        file.fileAttributesWin &= ~file.WFA_READONLY;
+        file.readOnly = false;
         file.remove(false);
       }
     });

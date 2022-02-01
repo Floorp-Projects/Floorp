@@ -39,6 +39,7 @@
 #include "nsIFrame.h"
 #include <algorithm>
 #include "nsTextNode.h"
+#include "nsDocShell.h"
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 

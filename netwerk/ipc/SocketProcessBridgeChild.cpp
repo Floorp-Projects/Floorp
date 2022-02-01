@@ -6,6 +6,7 @@
 #include "SocketProcessBridgeChild.h"
 #include "SocketProcessLogging.h"
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/Endpoint.h"
@@ -13,6 +14,7 @@
 #include "nsIObserverService.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_network.h"
 
 namespace mozilla {
 
@@ -51,8 +53,8 @@ static bool SocketProcessEnabled() {
   static bool sInited = false;
   static bool sSocketProcessEnabled = false;
   if (!sInited) {
-    sSocketProcessEnabled = Preferences::GetBool("network.process.enabled") &&
-                            XRE_IsContentProcess();
+    sSocketProcessEnabled =
+        StaticPrefs::network_process_enabled() && XRE_IsContentProcess();
     sInited = true;
   }
 
@@ -154,7 +156,8 @@ mozilla::ipc::IPCResult SocketProcessBridgeChild::RecvTest() {
 void SocketProcessBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
   LOG(("SocketProcessBridgeChild::ActorDestroy\n"));
   if (AbnormalShutdown == aWhy) {
-    if (gNeckoChild) {
+    if (gNeckoChild &&
+        !AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
       // Let NeckoParent know that the socket process connections must be
       // rebuilt.
       gNeckoChild->SendResetSocketProcessBridge();

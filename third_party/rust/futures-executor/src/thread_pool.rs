@@ -245,7 +245,7 @@ impl ThreadPoolBuilder {
     /// Execute closure `f` just prior to shutting down each worker thread.
     ///
     /// This hook is intended for bookkeeping and monitoring.
-    /// The closure `f` will be dropped after the `builder` is droppped
+    /// The closure `f` will be dropped after the `builder` is dropped
     /// and all threads in the pool have executed it.
     ///
     /// The closure provided will receive an index corresponding to the worker
@@ -367,7 +367,7 @@ mod tests {
             .create()
             .unwrap();
 
-        // After ThreadPoolBuilder is deconstructed, the tx should be droped
+        // After ThreadPoolBuilder is deconstructed, the tx should be dropped
         // so that we can use rx as an iterator.
         let count = rx.into_iter().count();
         assert_eq!(count, 2);

@@ -37,6 +37,7 @@
 #include "nsINode.h"
 #include "nsIWidget.h"
 #include "nsThreadUtils.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "mozilla/Services.h"
@@ -514,7 +515,8 @@ nsresult nsIOService::LaunchSocketProcess() {
     return NS_OK;
   }
 
-  if (mShutdown) {
+  // We shouldn't launch socket prcess when shutdown begins.
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     return NS_OK;
   }
 
@@ -527,7 +529,7 @@ nsresult nsIOService::LaunchSocketProcess() {
     return NS_OK;
   }
 
-  if (!Preferences::GetBool("network.process.enabled", true)) {
+  if (!StaticPrefs::network_process_enabled()) {
     LOG(("nsIOService skipping LaunchSocketProcess because of the pref"));
     return NS_OK;
   }
@@ -679,8 +681,7 @@ void nsIOService::OnProcessUnexpectedShutdown(SocketProcessHost* aHost) {
 RefPtr<MemoryReportingProcess> nsIOService::GetSocketProcessMemoryReporter() {
   // Check the prefs here again, since we don't want to create
   // SocketProcessMemoryReporter for some tests.
-  if (!Preferences::GetBool("network.process.enabled") ||
-      !SocketProcessReady()) {
+  if (!StaticPrefs::network_process_enabled() || !SocketProcessReady()) {
     return nullptr;
   }
 
@@ -1215,7 +1216,10 @@ nsIOService::GetOffline(bool* offline) {
 }
 
 NS_IMETHODIMP
-nsIOService::SetOffline(bool offline) {
+nsIOService::SetOffline(bool offline) { return SetOfflineInternal(offline); }
+
+nsresult nsIOService::SetOfflineInternal(bool offline,
+                                         bool notifySocketProcess) {
   LOG(("nsIOService::SetOffline offline=%d\n", offline));
   // When someone wants to go online (!offline) after we got XPCOM shutdown
   // throw ERROR_NOT_AVAILABLE to prevent return to online state.
@@ -1244,7 +1248,7 @@ nsIOService::SetOffline(bool offline) {
                                              NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC,
                                              offline ? u"true" : u"false");
     }
-    if (SocketProcessReady()) {
+    if (SocketProcessReady() && notifySocketProcess) {
       Unused << mSocketProcess->GetActor()->SendSetOffline(offline);
     }
   }
@@ -1578,6 +1582,13 @@ void nsIOService::SetHttpHandlerAlreadyShutingDown() {
 NS_IMETHODIMP
 nsIOService::Observe(nsISupports* subject, const char* topic,
                      const char16_t* data) {
+  if (UseSocketProcess() && SocketProcessReady() &&
+      mObserverTopicForSocketProcess.Contains(nsDependentCString(topic))) {
+    nsCString topicStr(topic);
+    nsString dataStr(data);
+    Unused << mSocketProcess->GetActor()->SendNotifyObserver(topicStr, dataStr);
+  }
+
   if (!strcmp(topic, kProfileChangeNetTeardownTopic)) {
     if (!mHttpHandlerAlreadyShutingDown) {
       mNetTearingDownStarted = PR_IntervalNow();
@@ -1585,12 +1596,12 @@ nsIOService::Observe(nsISupports* subject, const char* topic,
     mHttpHandlerAlreadyShutingDown = false;
     if (!mOffline) {
       mOfflineForProfileChange = true;
-      SetOffline(true);
+      SetOfflineInternal(true, false);
     }
   } else if (!strcmp(topic, kProfileChangeNetRestoreTopic)) {
     if (mOfflineForProfileChange) {
       mOfflineForProfileChange = false;
-      SetOffline(false);
+      SetOfflineInternal(false, false);
     }
   } else if (!strcmp(topic, kProfileDoChange)) {
     if (data && u"startup"_ns.Equals(data)) {
@@ -1620,7 +1631,7 @@ nsIOService::Observe(nsISupports* subject, const char* topic,
     }
     mHttpHandlerAlreadyShutingDown = false;
 
-    SetOffline(true);
+    SetOfflineInternal(true, false);
 
     if (mCaptivePortalService) {
       static_cast<CaptivePortalService*>(mCaptivePortalService.get())->Stop();
@@ -1646,17 +1657,6 @@ nsIOService::Observe(nsISupports* subject, const char* topic,
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1152048#c19
     nsCOMPtr<nsIRunnable> wakeupNotifier = new nsWakeupNotifier(this);
     NS_DispatchToMainThread(wakeupNotifier);
-  }
-
-  if (UseSocketProcess() &&
-      mObserverTopicForSocketProcess.Contains(nsDependentCString(topic))) {
-    nsCString topicStr(topic);
-    nsString dataStr(data);
-    auto sendObserver = [topicStr, dataStr]() {
-      Unused << gIOService->mSocketProcess->GetActor()->SendNotifyObserver(
-          topicStr, dataStr);
-    };
-    CallOrWaitForSocketProcess(sendObserver);
   }
 
   return NS_OK;

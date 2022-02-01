@@ -64,6 +64,11 @@ class OpenTypeCFF : public Table {
   // CFF2 VariationStore regionIndexCount.
   std::vector<uint16_t> region_index_count;
 
+  // CFF2 vsindex: per FontDICT->PrivateDICT
+  // default of 0 is stored for each font if not
+  // explicitly set in Font's PrivateDICT.
+  std::vector<int32_t> vsindex_per_font;
+
  protected:
   bool ValidateFDSelect(uint16_t num_glyphs);
 

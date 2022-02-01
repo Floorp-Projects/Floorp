@@ -82,3 +82,25 @@ test_runner(async function test_pktUI_getAndShowRecsForItem_locale({
 
   Assert.ok(getRecsForItemStub.notCalled);
 });
+
+test_runner(async function test_pktUI_showPanel({ sandbox }) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.pocket.site", "test-site"],
+      ["extensions.pocket.refresh.layout.enabled", true],
+    ],
+  });
+  const testFrame = {
+    setAttribute: sandbox.stub(),
+    style: { width: 0, height: 0 },
+  };
+  pktUI.setToolbarPanelFrame(testFrame);
+
+  pktUI.showPanel("about:pocket-saved", { width: 10, height: 10 });
+
+  Assert.deepEqual(testFrame.setAttribute.args[0], [
+    "src",
+    `about:pocket-saved?layoutRefresh=true&pockethost=test-site&locale=${SpecialPowers.Services.locale.appLocaleAsBCP47}`,
+  ]);
+  Assert.deepEqual(testFrame.style, { width: "10px", height: "10px" });
+});

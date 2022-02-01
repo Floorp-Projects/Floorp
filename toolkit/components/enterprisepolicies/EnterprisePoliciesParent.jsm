@@ -562,6 +562,8 @@ class JSONPoliciesProvider {
     try {
       let data = Cu.readUTF8File(configFile);
       if (data) {
+        log.debug(`policies.json path = ${configFile.path}`);
+        log.debug(`policies.json content = ${data}`);
         this._policies = JSON.parse(data).policies;
 
         if (!this._policies) {
@@ -596,11 +598,9 @@ class WindowsGPOPoliciesProvider {
 
     // Machine policies override user policies, so we read
     // user policies first and then replace them if necessary.
-    log.debug("root = HKEY_CURRENT_USER");
     this._readData(wrk, wrk.ROOT_KEY_CURRENT_USER);
     // We don't access machine policies in testing
     if (!Cu.isInAutomation && !isXpcshell) {
-      log.debug("root = HKEY_LOCAL_MACHINE");
       this._readData(wrk, wrk.ROOT_KEY_LOCAL_MACHINE);
     }
   }
@@ -627,6 +627,13 @@ class WindowsGPOPoliciesProvider {
       }
       wrk.open(root, regLocation, wrk.ACCESS_READ);
       if (wrk.hasChild("Mozilla\\" + Services.appinfo.name)) {
+        log.debug(
+          `root = ${
+            root == wrk.ROOT_KEY_CURRENT_USER
+              ? "HKEY_CURRENT_USER"
+              : "HKEY_LOCAL_MACHINE"
+          }`
+        );
         this._policies = WindowsGPOParser.readPolicies(wrk, this._policies);
       }
       wrk.close();

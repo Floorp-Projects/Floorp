@@ -55,7 +55,6 @@ interface nsIScriptGlobalObject;
 interface nsIStructuredCloneContainer;
 interface nsIDOMStorage;
 interface nsIPrincipal;
-interface nsIWebBrowserPrint;
 interface nsIPrivacyTransitionObserver;
 interface nsIReflowObserver;
 interface nsIScrollObserver;

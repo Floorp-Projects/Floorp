@@ -132,7 +132,7 @@
 
 
     /* allocate and zero out */
-    (void)FT_ALLOC( p, sz );
+    FT_MEM_ALLOC( p, sz );
     return p;
   }
 
@@ -467,12 +467,13 @@
                             FT_ULong     count )
   {
     FT_Error  error = FT_Err_Ok;
-    FT_ULong  delta;
 
 
     for (;;)
     {
-      delta = (FT_ULong)( zip->limit - zip->cursor );
+      FT_ULong  delta = (FT_ULong)( zip->limit - zip->cursor );
+
+
       if ( delta >= count )
         delta = count;
 

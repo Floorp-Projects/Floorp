@@ -117,8 +117,8 @@
       /* capitalized name   */ Exceptions,                                    \
       /* lower case name    */ exceptions,                                    \
       /* compile predicate  */ WASM_EXCEPTIONS_ENABLED,                       \
-      /* compiler predicate */ BaselineAvailable(cx),                         \
-      /* flag predicate     */ !IsFuzzingIon(cx) && !IsFuzzingCranelift(cx),  \
+      /* compiler predicate */ BaselineAvailable(cx) || IonAvailable(cx),     \
+      /* flag predicate     */ !IsFuzzingCranelift(cx),                       \
       /* shell flag         */ "exceptions",                                  \
       /* preference name    */ "exceptions")                                  \
   EXPERIMENTAL(/* capitalized name   */ FunctionReferences,                   \

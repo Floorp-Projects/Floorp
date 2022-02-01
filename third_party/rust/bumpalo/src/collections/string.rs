@@ -855,7 +855,7 @@ impl<'bump> String<'bump> {
         self.vec
     }
 
-    /// Convert this `String<'bump>` into a `&'bump str`. This is analagous to
+    /// Convert this `String<'bump>` into a `&'bump str`. This is analogous to
     /// `std::string::String::into_boxed_str`.
     ///
     /// # Example

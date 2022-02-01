@@ -23,6 +23,7 @@ class nsIPrincipal;
 namespace mozilla {
 class DataChannel;
 class PeerIdentity;
+class RTCStatsIdGenerator;
 namespace dom {
 class MediaStreamTrack;
 }  // namespace dom
@@ -92,6 +93,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   nsresult AddTransceiver(JsepTransceiver* aJsepTransceiver,
                           dom::MediaStreamTrack* aSendTrack,
                           SharedWebrtcState* aSharedWebrtcState,
+                          RTCStatsIdGenerator* aIdGenerator,
                           RefPtr<TransceiverImpl>* aTransceiverImpl);
 
   void GetTransmitPipelinesMatching(

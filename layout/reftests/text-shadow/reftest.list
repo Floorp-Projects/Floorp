@@ -1,5 +1,3 @@
-== 723669.html 723669-ref.html
-
 == chrome://reftest/content/text-shadow/basic.xhtml chrome://reftest/content/text-shadow/basic-ref.xhtml
 random-if(Android) == chrome://reftest/content/text-shadow/basic-negcoord.xhtml chrome://reftest/content/text-shadow/basic-negcoord-ref.xhtml
 != chrome://reftest/content/text-shadow/blur.xhtml chrome://reftest/content/text-shadow/blur-notref.xhtml
@@ -7,23 +5,6 @@ random-if(Android) == chrome://reftest/content/text-shadow/basic-negcoord.xhtml 
 == chrome://reftest/content/text-shadow/multiple-noblur.xhtml chrome://reftest/content/text-shadow/multiple-noblur-ref.xhtml
 fuzzy-if(swgl&&!Android,2-2,6320-6320) random-if(useDrawSnapshot) == blur-opacity.html blur-opacity-ref.html
 
-== basic.html basic-ref.html
-== basic-negcoord.html basic-negcoord-ref.html
-== basic-opacity.html basic-opacity-ref.html
-!= blur.html blur-notref.html
-== color-inherit.html color-inherit-ref.html
-== color-parserorder.html color-parserorder-ref.html
-== decorations-multiple-zorder.html decorations-multiple-zorder-ref.html
-== multiple-noblur.html multiple-noblur-ref.html
-== quirks-decor-noblur.html quirks-decor-noblur-ref.html
-== standards-decor-noblur.html standards-decor-noblur-ref.html
-== padding-decoration.html padding-decoration-ref.html
-== textindent.html textindent-ref.html
-== lineoverflow.html lineoverflow-ref.html
-
-== overflow-not-scrollable-1.html overflow-not-scrollable-1-ref.html
-== overflow-not-scrollable-1.html overflow-not-scrollable-1-ref2.html
-== overflow-not-scrollable-2.html overflow-not-scrollable-2-ref.html
 fuzzy-if(cocoaWidget,0-27,0-2) fuzzy-if(winWidget,0-47,0-2) == overflow-clip.html overflow-clip-ref.html
 
 needs-focus != text-shadow-selected-1.html text-shadow-selected-1-notref.html

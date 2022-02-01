@@ -1342,6 +1342,10 @@ void MTypeOfIs::printOpcode(GenericPrinter& out) const {
     case JSTYPE_BIGINT:
       name = "bigint";
       break;
+#  ifdef ENABLE_RECORD_TUPLE
+    case JSTYPE_RECORD:
+    case JSTYPE_TUPLE:
+#  endif
     case JSTYPE_LIMIT:
       MOZ_CRASH("Unexpected type");
   }
@@ -3832,6 +3836,9 @@ static JSType TypeOfName(JSLinearString* str) {
   static constexpr std::array types = {
       JSTYPE_UNDEFINED, JSTYPE_OBJECT,  JSTYPE_FUNCTION, JSTYPE_STRING,
       JSTYPE_NUMBER,    JSTYPE_BOOLEAN, JSTYPE_SYMBOL,   JSTYPE_BIGINT,
+#ifdef ENABLE_RECORD_TUPLE
+      JSTYPE_RECORD,    JSTYPE_TUPLE,
+#endif
   };
   static_assert(types.size() == JSTYPE_LIMIT);
 
@@ -3941,6 +3948,11 @@ bool MCompare::tryFoldTypeOf(bool* result) {
     case JSTYPE_LIMIT:
       *result = (jsop() == JSOp::StrictNe || jsop() == JSOp::Ne);
       return true;
+#ifdef ENABLE_RECORD_TUPLE
+    case JSTYPE_RECORD:
+    case JSTYPE_TUPLE:
+      MOZ_CRASH("Records and Tuples are not supported yet.");
+#endif
   }
 
   return false;
@@ -5382,10 +5394,10 @@ MDefinition* MWasmUnsignedToFloat32::foldsTo(TempAllocator& alloc) {
 
 MWasmCall* MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc,
                           const wasm::CalleeDesc& callee, const Args& args,
-                          uint32_t stackArgAreaSizeUnaligned,
+                          uint32_t stackArgAreaSizeUnaligned, bool inTry,
                           MDefinition* tableIndex) {
   MWasmCall* call =
-      new (alloc) MWasmCall(desc, callee, stackArgAreaSizeUnaligned);
+      new (alloc) MWasmCall(desc, callee, stackArgAreaSizeUnaligned, inTry);
 
   if (!call->argRegs_.init(alloc, args.length())) {
     return nullptr;
@@ -5416,7 +5428,7 @@ MWasmCall* MWasmCall::NewBuiltinInstanceMethodCall(
     uint32_t stackArgAreaSizeUnaligned) {
   auto callee = wasm::CalleeDesc::builtinInstanceMethod(builtin);
   MWasmCall* call = MWasmCall::New(alloc, desc, callee, args,
-                                   stackArgAreaSizeUnaligned, nullptr);
+                                   stackArgAreaSizeUnaligned, false, nullptr);
   if (!call) {
     return nullptr;
   }
@@ -5705,95 +5717,6 @@ MDefinition* MIsNullOrUndefined::foldsTo(TempAllocator& alloc) {
 
 AliasSet MHomeObjectSuperBase::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
-}
-
-static MDefinition* SkipObjectGuards(MDefinition* ins) {
-  // These instructions don't modify the object and just guard specific
-  // properties.
-  while (true) {
-    if (ins->isGuardShape()) {
-      ins = ins->toGuardShape()->object();
-      continue;
-    }
-    if (ins->isGuardNullProto()) {
-      ins = ins->toGuardNullProto()->object();
-      continue;
-    }
-    if (ins->isGuardProto()) {
-      ins = ins->toGuardProto()->object();
-      continue;
-    }
-
-    break;
-  }
-
-  return ins;
-}
-
-MDefinition* MGuardShape::foldsTo(TempAllocator& alloc) {
-  MDefinition* ins = dependency();
-  if (!ins) {
-    return this;
-  }
-
-  if (!ins->block()->dominates(block())) {
-    return this;
-  }
-
-  auto AssertShape = [](TempAllocator& alloc, MGuardShape* ins) {
-#ifdef DEBUG
-    auto* assert = MAssertShape::New(alloc, ins->object(),
-                                     const_cast<Shape*>(ins->shape()));
-    ins->block()->insertBefore(ins, assert);
-#endif
-  };
-
-  if (ins->isAddAndStoreSlot()) {
-    auto* add = ins->toAddAndStoreSlot();
-
-    if (SkipObjectGuards(add->object()) != SkipObjectGuards(object()) ||
-        add->shape() != shape()) {
-      return this;
-    }
-
-    AssertShape(alloc, this);
-    return object();
-  }
-
-  if (ins->isAllocateAndStoreSlot()) {
-    auto* allocate = ins->toAllocateAndStoreSlot();
-
-    if (SkipObjectGuards(allocate->object()) != SkipObjectGuards(object()) ||
-        allocate->shape() != shape()) {
-      return this;
-    }
-
-    AssertShape(alloc, this);
-    return object();
-  }
-
-  if (ins->isStart()) {
-    // The guard doesn't depend on any other instruction that is modifying
-    // the object operand, so check it directly.
-    auto* obj = SkipObjectGuards(object());
-    if (!obj->isNewObject()) {
-      return this;
-    }
-
-    JSObject* templateObject = obj->toNewObject()->templateObject();
-    if (!templateObject) {
-      return this;
-    }
-
-    if (templateObject->shape() != shape()) {
-      return this;
-    }
-
-    AssertShape(alloc, this);
-    return object();
-  }
-
-  return this;
 }
 
 MDefinition* MGuardValue::foldsTo(TempAllocator& alloc) {

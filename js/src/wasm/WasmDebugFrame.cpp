@@ -37,7 +37,7 @@ DebugFrame* DebugFrame::from(Frame* fp) {
   size_t offsetAdjustment = 0;
   if (fp->callerIsTrampolineFP()) {
     offsetAdjustment =
-        FrameWithTls::sizeWithoutFrame() + IndirectStubAdditionalAlignment;
+        FrameWithTls::sizeOfTlsFields() + IndirectStubAdditionalAlignment;
   }
   auto* df = reinterpret_cast<DebugFrame*>(
       (uint8_t*)fp - (DebugFrame::offsetOfFrame() + offsetAdjustment));

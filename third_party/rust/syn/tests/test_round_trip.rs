@@ -1,6 +1,7 @@
 #![cfg(not(syn_disable_nightly_tests))]
 #![recursion_limit = "1024"]
 #![feature(rustc_private)]
+#![allow(clippy::manual_assert)]
 
 extern crate rustc_ast;
 extern crate rustc_errors;
@@ -14,6 +15,7 @@ use quote::quote;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use rustc_ast::ast::{
     AngleBracketedArg, AngleBracketedArgs, Crate, GenericArg, GenericParamKind, Generics,
+    WhereClause,
 };
 use rustc_ast::mut_visit::{self, MutVisitor};
 use rustc_errors::PResult;
@@ -85,7 +87,7 @@ fn test(path: &Path, failed: &AtomicUsize, abort_after: usize) {
     let back = quote!(#krate).to_string();
     let edition = repo::edition(path).parse().unwrap();
 
-    rustc_span::with_session_globals(edition, || {
+    rustc_span::create_session_if_not_set_then(edition, |_| {
         let equal = match panic::catch_unwind(|| {
             let sess = ParseSess::new(FilePathMapping::empty());
             let before = match librustc_parse(content, &sess) {
@@ -193,6 +195,12 @@ fn normalize(krate: &mut Crate) {
                 }
             });
             mut_visit::noop_visit_generics(e, self);
+        }
+
+        fn visit_where_clause(&mut self, e: &mut WhereClause) {
+            if e.predicates.is_empty() {
+                e.has_where_token = false;
+            }
         }
     }
 

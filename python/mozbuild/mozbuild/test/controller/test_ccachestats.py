@@ -228,6 +228,133 @@ class TestCcacheStats(unittest.TestCase):
         timestamp=time.strftime("%c"), timestamp2=time.strftime("%c")
     )
 
+    VERSION_3_5_GIT = """
+    ccache version 3.5.1+2_gf5309092_dirty
+
+    Copyright (C) 2002-2007 Andrew Tridgell
+    Copyright (C) 2009-2019 Joel Rosdahl
+
+    This program is free software; you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free Software
+    Foundation; either version 3 of the License, or (at your option) any later
+    version.
+    """
+
+    VERSION_4_2 = """
+    ccache version 4.2.1
+
+    Copyright (C) 2002-2007 Andrew Tridgell
+    Copyright (C) 2009-2021 Joel Rosdahl and other contributors
+
+    See <https://ccache.dev/credits.html> for a complete list of contributors.
+
+    This program is free software; you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free Software
+    Foundation; either version 3 of the License, or (at your option) any later
+    version.
+    """
+
+    VERSION_4_4 = """
+    ccache version 4.4
+    Features: file-storage http-storage
+
+    Copyright (C) 2002-2007 Andrew Tridgell
+    Copyright (C) 2009-2021 Joel Rosdahl and other contributors
+
+    See <https://ccache.dev/credits.html> for a complete list of contributors.
+
+    This program is free software; you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free Software
+    Foundation; either version 3 of the License, or (at your option) any later
+    version.
+    """
+
+    VERSION_4_4_2 = """
+    ccache version 4.4.2
+    Features: file-storage http-storage
+
+    Copyright (C) 2002-2007 Andrew Tridgell
+    Copyright (C) 2009-2021 Joel Rosdahl and other contributors
+
+    See <https://ccache.dev/credits.html> for a complete list of contributors.
+
+    This program is free software; you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free Software
+    Foundation; either version 3 of the License, or (at your option) any later
+    version.
+    """
+
+    VERSION_4_5 = """
+    ccache version 4.5.1
+    Features: file-storage http-storage redis-storage
+
+    Copyright (C) 2002-2007 Andrew Tridgell
+    Copyright (C) 2009-2021 Joel Rosdahl and other contributors
+
+    See <https://ccache.dev/credits.html> for a complete list of contributors.
+
+    This program is free software; you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free Software
+    Foundation; either version 3 of the License, or (at your option) any later
+    version.
+    """
+
+    STAT10 = """
+Summary:
+  Cache directory:          /home/suer/.ccache
+  Primary config:           /home/suer/.ccache/ccache.conf
+  Secondary config:         /etc/ccache.conf
+  Stats updated:            {timestamp}
+  Hits:                      916 / 9343 (9.80 %)
+    Direct:                  197 /  197 (100.0 %)
+    Preprocessed:            719 /  719 (100.0 %)
+  Misses:                   8427
+    Direct:                    0
+    Preprocessed:              0
+  Errors:                      1
+  Uncacheable:              1251
+Primary storage:
+  Hits:                        0 /    0
+  Misses:                      0
+  Cache size (GB):          4.41 / 5.00 (88.27 %)
+  Files:                    4425
+  Cleanups:                  161
+Errors:
+  Missing cache file:          1
+Uncacheable:
+  Autoconf compile/link:     418
+  Bad compiler arguments:      6
+  Called for linking:        569
+  Called for preprocessing:  110
+  Compilation failed:         49
+  No input file:               9
+  Preprocessing failed:       90
+    """.format(
+        timestamp=time.strftime("%c")
+    )
+
+    STAT11 = """
+Summary:
+  Cache directory:  /home/suer/.ccache
+  Primary config:   /home/suer/.ccache/ccache.conf
+  Secondary config: /etc/ccache.conf
+  Stats updated:    {timestamp}
+  Hits:                0 /    0
+    Direct:            0 /    0
+    Preprocessed:      0 /    0
+  Misses:              0
+    Direct:            0
+    Preprocessed:      0
+Primary storage:
+  Hits:                0 /    0
+  Misses:              0
+  Cache size (GB):  0.00 / 5.00 (0.00 %)
+  Files:               0
+  Cleanups:           16
+    """.format(
+        timestamp=time.strftime("%c")
+    )
+
     def test_parse_garbage_stats_message(self):
         self.assertRaises(ValueError, CCacheStats, self.STAT_GARBAGE)
 
@@ -294,6 +421,21 @@ class TestCcacheStats(unittest.TestCase):
         # Test parsing 3.5 output.
         stat9 = CCacheStats(self.STAT9)
         self.assertTrue(stat9)
+
+    def test_stats_version44(self):
+        # verify version checks
+        self.assertFalse(CCacheStats._is_version_4_4_or_newer(self.VERSION_3_5_GIT))
+        self.assertFalse(CCacheStats._is_version_4_4_or_newer(self.VERSION_4_2))
+        self.assertTrue(CCacheStats._is_version_4_4_or_newer(self.VERSION_4_4))
+        self.assertTrue(CCacheStats._is_version_4_4_or_newer(self.VERSION_4_4_2))
+        self.assertTrue(CCacheStats._is_version_4_4_or_newer(self.VERSION_4_5))
+
+        # Test parsing 4.4+ output.
+        stat10 = CCacheStats(self.STAT10, True)
+        self.assertTrue(stat10)
+
+        stat11 = CCacheStats(self.STAT11, True)
+        self.assertTrue(stat11)
 
 
 if __name__ == "__main__":

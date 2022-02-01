@@ -112,6 +112,16 @@ describe("<DSCard>", () => {
     assert.equal(contextFooter.find(".story-sponsored-label").text(), context);
   });
 
+  it("should render Sponsored Context for a spoc element", () => {
+    wrapper = mount(
+      <DSCard displayReadTime={true} time_to_read={4} {...DEFAULT_PROPS} />
+    );
+    wrapper.setState({ isSeen: true });
+    const defaultMeta = wrapper.find(DefaultMeta);
+    assert.lengthOf(defaultMeta, 1);
+    assert.equal(defaultMeta.props().timeToRead, 4);
+  });
+
   describe("onLinkClick", () => {
     it("should call dispatch with the correct events", () => {
       wrapper.setProps({ id: "fooidx", pos: 1, type: "foo" });
@@ -402,25 +412,37 @@ describe("<DSCard>", () => {
       // Add active class name to DSCard wrapper
       // to simulate menu open state
       cardNode.classList.add("active");
-      assert.equal(cardNode.className, "ds-card active");
+      assert.equal(
+        cardNode.className,
+        "ds-card ds-card-title-lines-3 ds-card-desc-lines-3 active"
+      );
 
       wrapper.instance().onMenuUpdate(false);
       wrapper.update();
 
-      assert.equal(cardNode.className, "ds-card");
+      assert.equal(
+        cardNode.className,
+        "ds-card ds-card-title-lines-3 ds-card-desc-lines-3"
+      );
     });
 
     it("Should add active on Menu Show", async () => {
       await wrapper.instance().onMenuShow();
       wrapper.update();
-      assert.equal(cardNode.className, "ds-card active");
+      assert.equal(
+        cardNode.className,
+        "ds-card ds-card-title-lines-3 ds-card-desc-lines-3 active"
+      );
     });
 
     it("Should add last-item to support resized window", async () => {
       fakeWindow.scrollMaxX = 20;
       await wrapper.instance().onMenuShow();
       wrapper.update();
-      assert.equal(cardNode.className, "ds-card last-item active");
+      assert.equal(
+        cardNode.className,
+        "ds-card ds-card-title-lines-3 ds-card-desc-lines-3 last-item active"
+      );
     });
 
     it("should remove .active and .last-item classes", () => {
@@ -488,7 +510,9 @@ describe("<DSSource> component", () => {
     assert.equal(sourceElement.text(), "Mozilla");
   });
   it("should return a SponsorLabel with compact and a sponsor", () => {
-    const wrapper = shallow(<DSSource compact={true} sponsor="Mozilla" />);
+    const wrapper = shallow(
+      <DSSource newSponsoredLabel={true} sponsor="Mozilla" />
+    );
     const sponsorLabel = wrapper.find(SponsorLabel);
     assert.lengthOf(sponsorLabel, 1);
   });
@@ -508,7 +532,7 @@ describe("<DSSource> component", () => {
   it("should prioritize a SponsorLabel if for some reason it gets everything", () => {
     const wrapper = shallow(
       <DSSource
-        compact={true}
+        newSponsoredLabel={true}
         sponsor="Mozilla"
         source="Mozilla"
         timeToRead="2000"

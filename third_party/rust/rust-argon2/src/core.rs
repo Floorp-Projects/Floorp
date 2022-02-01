@@ -6,15 +6,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::block::Block;
-use super::common;
-use super::context::Context;
-use super::memory::Memory;
-use super::variant::Variant;
-use super::version::Version;
+use crate::block::Block;
+use crate::common;
+use crate::context::Context;
+use crate::memory::Memory;
+use crate::variant::Variant;
+use crate::version::Version;
 use blake2b_simd::Params;
+#[cfg(feature = "crossbeam-utils")]
 use crossbeam_utils::thread::scope;
-use std::mem;
 
 /// Position of the block currently being operated on.
 #[derive(Clone, Debug)]
@@ -61,7 +61,7 @@ fn blake2b(out: &mut [u8], input: &[&[u8]]) {
 }
 
 fn f_bla_mka(x: u64, y: u64) -> u64 {
-    let m = 0xFFFFFFFFu64;
+    let m = 0xFFFF_FFFFu64;
     let xy = (x & m) * (y & m);
     x.wrapping_add(y.wrapping_add(xy.wrapping_add(xy)))
 }
@@ -173,16 +173,17 @@ fn fill_first_blocks(context: &Context, memory: &mut Memory, h0: &mut [u8]) {
     for lane in 0..context.config.lanes {
         let start = common::PREHASH_DIGEST_LENGTH;
         // H'(H0||0||i)
-        h0[start..(start + 4)].clone_from_slice(&u32_as_32le(0));
-        h0[(start + 4)..(start + 8)].clone_from_slice(&u32_as_32le(lane));
+        h0[start..(start + 4)].clone_from_slice(&u32::to_le_bytes(0));
+        h0[(start + 4)..(start + 8)].clone_from_slice(&u32::to_le_bytes(lane));
         hprime(memory[(lane, 0)].as_u8_mut(), &h0);
 
         // H'(H0||1||i)
-        h0[start..(start + 4)].clone_from_slice(&u32_as_32le(1));
+        h0[start..(start + 4)].clone_from_slice(&u32::to_le_bytes(1));
         hprime(memory[(lane, 1)].as_u8_mut(), &h0);
     }
 }
 
+#[cfg(feature = "crossbeam-utils")]
 fn fill_memory_blocks_mt(context: &Context, memory: &mut Memory) {
     for p in 0..context.config.time_cost {
         for s in 0..common::SYNC_POINTS {
@@ -201,6 +202,11 @@ fn fill_memory_blocks_mt(context: &Context, memory: &mut Memory) {
             });
         }
     }
+}
+
+#[cfg(not(feature = "crossbeam-utils"))]
+fn fill_memory_blocks_mt(_: &Context, _: &mut Memory) {
+    unimplemented!()
 }
 
 fn fill_memory_blocks_st(context: &Context, memory: &mut Memory) {
@@ -278,15 +284,16 @@ fn fill_segment(context: &Context, position: &Position, memory: &mut Memory) {
         }
 
         // 1.2.2 Computing the lane of the reference block
-        let mut ref_lane = (pseudo_rand >> 32) % context.config.lanes as u64;
-        if (position.pass == 0) && (position.slice == 0) {
-            // Can not reference other lanes yet
-            ref_lane = position.lane as u64;
-        }
+        // If (position.pass == 0) && (position.slice == 0): can not reference other lanes yet
+        let ref_lane = if (position.pass == 0) && (position.slice == 0) {
+            position.lane as u64
+        } else {
+            (pseudo_rand >> 32) % context.config.lanes as u64
+        };
 
         // 1.2.3 Computing the number of possible reference block within the lane.
         position.index = i;
-        let pseudo_rand_u32 = (pseudo_rand & 0xFFFFFFFF) as u32;
+        let pseudo_rand_u32 = (pseudo_rand & 0xFFFF_FFFF) as u32;
         let same_lane = ref_lane == (position.lane as u64);
         let ref_index = index_alpha(context, &position, pseudo_rand_u32, same_lane);
 
@@ -294,16 +301,12 @@ fn fill_segment(context: &Context, position: &Position, memory: &mut Memory) {
         let index = context.lane_length as u64 * ref_lane + ref_index as u64;
         let mut curr_block = memory[curr_offset].clone();
         {
-            let ref prev_block = memory[prev_offset];
-            let ref ref_block = memory[index];
-            if context.config.version == Version::Version10 {
+            let prev_block = &memory[prev_offset];
+            let ref_block = &memory[index];
+            if context.config.version == Version::Version10 || position.pass == 0 {
                 fill_block(prev_block, ref_block, &mut curr_block, false);
             } else {
-                if position.pass == 0 {
-                    fill_block(prev_block, ref_block, &mut curr_block, false);
-                } else {
-                    fill_block(prev_block, ref_block, &mut curr_block, true);
-                }
+                fill_block(prev_block, ref_block, &mut curr_block, true);
             }
         }
 
@@ -326,20 +329,20 @@ fn g(a: &mut u64, b: &mut u64, c: &mut u64, d: &mut u64) {
 
 fn h0(context: &Context) -> [u8; common::PREHASH_SEED_LENGTH] {
     let input = [
-        &u32_as_32le(context.config.lanes),
-        &u32_as_32le(context.config.hash_length),
-        &u32_as_32le(context.config.mem_cost),
-        &u32_as_32le(context.config.time_cost),
-        &u32_as_32le(context.config.version.as_u32()),
-        &u32_as_32le(context.config.variant.as_u32()),
+        &u32::to_le_bytes(context.config.lanes),
+        &u32::to_le_bytes(context.config.hash_length),
+        &u32::to_le_bytes(context.config.mem_cost),
+        &u32::to_le_bytes(context.config.time_cost),
+        &u32::to_le_bytes(context.config.version.as_u32()),
+        &u32::to_le_bytes(context.config.variant.as_u32()),
         &len_as_32le(context.pwd),
-        context.pwd.as_ref(),
+        context.pwd,
         &len_as_32le(context.salt),
-        context.salt.as_ref(),
+        context.salt,
         &len_as_32le(context.config.secret),
-        context.config.secret.as_ref(),
+        context.config.secret,
         &len_as_32le(context.config.ad),
-        context.config.ad.as_ref(),
+        context.config.ad,
     ];
     let mut out = [0u8; common::PREHASH_SEED_LENGTH];
     blake2b(&mut out[0..common::PREHASH_DIGEST_LENGTH], &input);
@@ -349,12 +352,12 @@ fn h0(context: &Context) -> [u8; common::PREHASH_SEED_LENGTH] {
 fn hprime(out: &mut [u8], input: &[u8]) {
     let out_len = out.len();
     if out_len <= common::BLAKE2B_OUT_LENGTH {
-        blake2b(out, &[&u32_as_32le(out_len as u32), input]);
+        blake2b(out, &[&u32::to_le_bytes(out_len as u32), input]);
     } else {
         let ai_len = 32;
         let mut out_buffer = [0u8; common::BLAKE2B_OUT_LENGTH];
         let mut in_buffer = [0u8; common::BLAKE2B_OUT_LENGTH];
-        blake2b(&mut out_buffer, &[&u32_as_32le(out_len as u32), input]);
+        blake2b(&mut out_buffer, &[&u32::to_le_bytes(out_len as u32), input]);
         out[0..ai_len].clone_from_slice(&out_buffer[0..ai_len]);
         let mut out_pos = ai_len;
         let mut to_produce = out_len - ai_len;
@@ -382,34 +385,28 @@ fn index_alpha(context: &Context, position: &Position, pseudo_rand: u32, same_la
         if position.slice == 0 {
             // First slice
             position.index - 1
+        } else if same_lane {
+            // The same lane => add current segment
+            position.slice * context.segment_length + position.index - 1
+        } else if position.index == 0 {
+            position.slice * context.segment_length - 1
         } else {
-            if same_lane {
-                // The same lane => add current segment
-                position.slice * context.segment_length + position.index - 1
-            } else {
-                if position.index == 0 {
-                    position.slice * context.segment_length - 1
-                } else {
-                    position.slice * context.segment_length
-                }
-            }
+            position.slice * context.segment_length
         }
     } else {
         // Second pass
         if same_lane {
             context.lane_length - context.segment_length + position.index - 1
+        } else if position.index == 0 {
+            context.lane_length - context.segment_length - 1
         } else {
-            if position.index == 0 {
-                context.lane_length - context.segment_length - 1
-            } else {
-                context.lane_length - context.segment_length
-            }
+            context.lane_length - context.segment_length
         }
     };
     let reference_area_size = reference_area_size as u64;
     let mut relative_position = pseudo_rand as u64;
-    relative_position = relative_position * relative_position >> 32;
-    relative_position = reference_area_size - 1 - (reference_area_size * relative_position >> 32);
+    relative_position = (relative_position * relative_position) >> 32;
+    relative_position = reference_area_size - 1 - ((reference_area_size * relative_position) >> 32);
 
     // 1.2.5 Computing starting position
     let start_position: u32 = if position.pass != 0 {
@@ -428,7 +425,7 @@ fn index_alpha(context: &Context, position: &Position, pseudo_rand: u32, same_la
 }
 
 fn len_as_32le(slice: &[u8]) -> [u8; 4] {
-    u32_as_32le(slice.len() as u32)
+    u32::to_le_bytes(slice.len() as u32)
 }
 
 fn next_addresses(address_block: &mut Block, input_block: &mut Block, zero_block: &Block) {
@@ -467,8 +464,4 @@ fn p(
 
 fn rotr64(w: u64, c: u32) -> u64 {
     (w >> c) | (w << (64 - c))
-}
-
-fn u32_as_32le(val: u32) -> [u8; 4] {
-    unsafe { mem::transmute(val.to_le()) }
 }

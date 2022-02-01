@@ -10,11 +10,20 @@ async function runBackgroundTask(commandLine) {
     Ci.nsIEnvironment
   );
 
-  let exitCode =
-    env.get("MOZ_TEST_PROCESS_UPDATES") == "!ShouldProcessUpdates()" ? 80 : 81;
+  const get = env.get("MOZ_TEST_PROCESS_UPDATES");
+  let exitCode = 81;
+  if (get == "ShouldNotProcessUpdates(): OtherInstanceRunning") {
+    exitCode = 80;
+  }
+  if (get == "ShouldNotProcessUpdates(): DevToolsLaunching") {
+    exitCode = 79;
+  }
+  if (get == "ShouldNotProcessUpdates(): NotAnUpdatingTask") {
+    exitCode = 78;
+  }
   console.debug(`runBackgroundTask: shouldprocessupdates`, {
     exists: env.exists("MOZ_TEST_PROCESS_UPDATES"),
-    get: env.get("MOZ_TEST_PROCESS_UPDATES"),
+    get,
   });
   console.error(
     `runBackgroundTask: shouldprocessupdates exiting with exitCode ${exitCode}`

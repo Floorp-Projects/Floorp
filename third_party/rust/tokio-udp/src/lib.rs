@@ -1,4 +1,13 @@
+#![doc(html_root_url = "https://docs.rs/tokio-tcp/0.1.6")]
+#![deny(missing_docs, missing_debug_implementations)]
+
 //! UDP bindings for `tokio`.
+//!
+//! > **Note:** This crate is **deprecated in tokio 0.2.x** and has been moved
+//! > into[`tokio::udp`] behind the `udp` [feature flag].
+//!
+//! [`tokio::udp`]: https://docs.rs/tokio/latest/tokio/udp/index.html
+//! [feature flag]: https://docs.rs/tokio/latest/tokio/index.html#feature-flags
 //!
 //! This module contains the UDP networking types, similar to the standard
 //! library, which can be used to implement networking protocols.
@@ -16,9 +25,6 @@
 //! [`UdpFramed`]: struct.UdpFramed.html
 //! [`framed`]: struct.UdpSocket.html#method.framed
 
-#![doc(html_root_url = "https://docs.rs/tokio-tcp/0.1.1")]
-#![deny(missing_docs, warnings, missing_debug_implementations)]
-
 extern crate bytes;
 #[macro_use]
 extern crate futures;
@@ -29,15 +35,12 @@ extern crate tokio_codec;
 extern crate tokio_io;
 extern crate tokio_reactor;
 
-#[cfg(feature = "unstable-futures")]
-extern crate futures2;
-
 mod frame;
-mod socket;
-mod send_dgram;
 mod recv_dgram;
+mod send_dgram;
+mod socket;
 
 pub use self::frame::UdpFramed;
-pub use self::socket::UdpSocket;
-pub use self::send_dgram::SendDgram;
 pub use self::recv_dgram::RecvDgram;
+pub use self::send_dgram::SendDgram;
+pub use self::socket::UdpSocket;

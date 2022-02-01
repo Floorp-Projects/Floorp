@@ -198,8 +198,8 @@ scheme host and port.""")
                         help="Android package name to run tests against")
     android_group.add_argument("--keep-app-data-directory", action="store_true",
                         help="Don't delete the app data directory")
-    android_group.add_argument("--device-serial", action="store",
-                              help="Running Android instance to connect to, if not emulator-5554")
+    android_group.add_argument("--device-serial", action="append", default=[],
+                        help="Running Android instances to connect to, if not emulator-5554")
 
     config_group = parser.add_argument_group("Configuration")
     config_group.add_argument("--binary", action="store",
@@ -286,10 +286,6 @@ scheme host and port.""")
                              default=None, help="Don't preload a gecko instance for faster restarts")
     gecko_group.add_argument("--disable-e10s", dest="gecko_e10s", action="store_false", default=True,
                              help="Run tests without electrolysis preferences")
-    gecko_group.add_argument("--enable-webrender", dest="enable_webrender", action="store_true", default=None,
-                             help="Enable the WebRender compositor in Gecko (defaults to disabled).")
-    gecko_group.add_argument("--no-enable-webrender", dest="enable_webrender", action="store_false",
-                             help="Disable the WebRender compositor in Gecko.")
     gecko_group.add_argument("--enable-fission", dest="enable_fission", action="store_true", default=None,
                              help="Enable fission in Gecko (defaults to enabled; "
                              "this option only exists for backward compatibility).")
@@ -549,6 +545,18 @@ def check_args(kwargs):
             print("--test-groups file %s not found" % kwargs["test_groups_file"])
             sys.exit(1)
 
+    # When running on Android, the number of workers is decided by the number of
+    # emulators. Each worker will use one emulator to run the Android browser.
+    if kwargs["device_serial"]:
+        if kwargs["processes"] is None:
+            kwargs["processes"] = len(kwargs["device_serial"])
+        elif len(kwargs["device_serial"]) != kwargs["processes"]:
+            print("--processes does not match number of devices")
+            sys.exit(1)
+        elif len(set(kwargs["device_serial"])) != len(kwargs["device_serial"]):
+            print("Got duplicate --device-serial value")
+            sys.exit(1)
+
     if kwargs["processes"] is None:
         kwargs["processes"] = 1
 
@@ -611,9 +619,6 @@ def check_args(kwargs):
 
     if kwargs["reftest_screenshot"] is None:
         kwargs["reftest_screenshot"] = "unexpected" if not kwargs["debug_test"] else "always"
-
-    if kwargs["enable_webrender"] is None:
-        kwargs["enable_webrender"] = False
 
     if kwargs["preload_browser"] is None:
         # Default to preloading a gecko instance if we're only running a single process

@@ -812,19 +812,7 @@ items from that key's value."
         )
 
     def _query_mach(self):
-        dirs = self.query_abs_dirs()
-
-        if "MOZILLABUILD" in os.environ:
-            # We found many issues with intermittent build failures when not
-            # invoking mach via bash.
-            # See bug 1364651 before considering changing.
-            mach = [
-                os.path.join(os.environ["MOZILLABUILD"], "msys", "bin", "bash.exe"),
-                os.path.join(dirs["abs_src_dir"], "mach"),
-            ]
-        else:
-            mach = [sys.executable, "mach"]
-        return mach
+        return [sys.executable, "mach"]
 
     def _run_mach_command_in_build_env(self, args, use_subprocess=False):
         """Run a mach command in a build context."""

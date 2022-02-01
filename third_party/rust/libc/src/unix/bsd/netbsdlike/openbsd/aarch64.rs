@@ -1,6 +1,20 @@
 pub type c_long = i64;
 pub type c_ulong = u64;
 pub type c_char = u8;
+pub type ucontext_t = sigcontext;
+
+s! {
+    pub struct sigcontext {
+        __sc_unused: ::c_int,
+        pub sc_mask: ::c_int,
+        pub sc_sp: ::c_ulong,
+        pub sc_lr: ::c_ulong,
+        pub sc_elr: ::c_ulong,
+        pub sc_spsr: ::c_ulong,
+        pub sc_x: [::c_ulong; 30],
+        pub sc_cookie: ::c_long,
+    }
+}
 
 // should be pub(crate), but that requires Rust 1.18.0
 cfg_if! {

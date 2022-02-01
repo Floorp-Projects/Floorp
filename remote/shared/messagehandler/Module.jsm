@@ -38,6 +38,17 @@ class Module {
     return this._messageHandler;
   }
 
+  static get supportedEvents() {
+    return [];
+  }
+
+  static supportsEvent(event) {
+    return (
+      this.supportsMethod("_subscribeEvent") &&
+      this.supportedEvents.includes(event)
+    );
+  }
+
   static supportsMethod(methodName) {
     return typeof this.prototype[methodName] === "function";
   }

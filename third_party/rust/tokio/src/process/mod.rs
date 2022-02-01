@@ -6,6 +6,8 @@
 //! variants) return "future aware" types that interoperate with Tokio. The asynchronous process
 //! support is provided through signal handling on Unix and system APIs on Windows.
 //!
+//! [`std::process::Command`]: std::process::Command
+//!
 //! # Examples
 //!
 //! Here's an example program which will spawn `echo hello world` and then wait
@@ -140,6 +142,9 @@ use std::task::Poll;
 /// [output](Command::output).
 ///
 /// `Command` uses asynchronous versions of some `std` types (for example [`Child`]).
+///
+/// [`std::process::Command`]: std::process::Command
+/// [`Child`]: struct@Child
 #[derive(Debug)]
 pub struct Command {
     std: StdCommand,
@@ -171,7 +176,7 @@ impl Command {
     /// The search path to be used may be controlled by setting the
     /// `PATH` environment variable on the Command,
     /// but this has some implementation limitations on Windows
-    /// (see issue rust-lang/rust#37519).
+    /// (see issue [rust-lang/rust#37519]).
     ///
     /// # Examples
     ///
@@ -181,6 +186,8 @@ impl Command {
     /// use tokio::process::Command;
     /// let command = Command::new("sh");
     /// ```
+    ///
+    /// [rust-lang/rust#37519]: https://github.com/rust-lang/rust/issues/37519
     pub fn new<S: AsRef<OsStr>>(program: S) -> Command {
         Self::from(StdCommand::new(program))
     }
@@ -204,7 +211,7 @@ impl Command {
     ///
     /// To pass multiple arguments see [`args`].
     ///
-    /// [`args`]: #method.args
+    /// [`args`]: method@Self::args
     ///
     /// # Examples
     ///
@@ -226,7 +233,7 @@ impl Command {
     ///
     /// To pass a single argument see [`arg`].
     ///
-    /// [`arg`]: #method.arg
+    /// [`arg`]: method@Self::arg
     ///
     /// # Examples
     ///
@@ -701,13 +708,17 @@ where
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         // Keep track of task budget
-        ready!(crate::coop::poll_proceed(cx));
+        let coop = ready!(crate::coop::poll_proceed(cx));
 
         let ret = Pin::new(&mut self.inner).poll(cx);
 
         if let Poll::Ready(Ok(_)) = ret {
             // Avoid the overhead of trying to kill a reaped process
             self.kill_on_drop = false;
+        }
+
+        if ret.is_ready() {
+            coop.made_progress();
         }
 
         ret
@@ -755,6 +766,32 @@ impl Child {
     /// Forces the child to exit.
     ///
     /// This is equivalent to sending a SIGKILL on unix platforms.
+    ///
+    /// If the child has to be killed remotely, it is possible to do it using
+    /// a combination of the select! macro and a oneshot channel. In the following
+    /// example, the child will run until completion unless a message is sent on
+    /// the oneshot channel. If that happens, the child is killed immediately
+    /// using the `.kill()` method.
+    ///
+    /// ```no_run
+    /// use tokio::process::Command;
+    /// use tokio::sync::oneshot::channel;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let (send, recv) = channel::<()>();
+    ///     let mut child = Command::new("sleep").arg("1").spawn().unwrap();
+    ///     tokio::spawn(async move { send.send(()) });
+    ///     tokio::select! {
+    ///         _ = &mut child => {}
+    ///         _ = recv => {
+    ///             &mut child.kill();
+    ///             // NB: await the child here to avoid a zombie process on Unix platforms
+    ///             child.await.unwrap();
+    ///         }
+    ///     }
+    /// }
+
     pub fn kill(&mut self) -> io::Result<()> {
         self.child.kill()
     }
@@ -872,6 +909,11 @@ impl AsyncWrite for ChildStdin {
 }
 
 impl AsyncRead for ChildStdout {
+    unsafe fn prepare_uninitialized_buffer(&self, _buf: &mut [std::mem::MaybeUninit<u8>]) -> bool {
+        // https://github.com/rust-lang/rust/blob/09c817eeb29e764cfc12d0a8d94841e3ffe34023/src/libstd/process.rs#L314
+        false
+    }
+
     fn poll_read(
         mut self: Pin<&mut Self>,
         cx: &mut Context<'_>,
@@ -882,6 +924,11 @@ impl AsyncRead for ChildStdout {
 }
 
 impl AsyncRead for ChildStderr {
+    unsafe fn prepare_uninitialized_buffer(&self, _buf: &mut [std::mem::MaybeUninit<u8>]) -> bool {
+        // https://github.com/rust-lang/rust/blob/09c817eeb29e764cfc12d0a8d94841e3ffe34023/src/libstd/process.rs#L375
+        false
+    }
+
     fn poll_read(
         mut self: Pin<&mut Self>,
         cx: &mut Context<'_>,

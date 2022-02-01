@@ -151,6 +151,7 @@ class nsCertOverrideService final : public nsICertOverrideService,
                           const nsACString& dbKey,
                           const mozilla::MutexAutoLock& aProofOfLock);
 
+  // Set in constructor only
   RefPtr<mozilla::TaskQueue> mWriterTaskQueue;
 
   // Only accessed on the main thread

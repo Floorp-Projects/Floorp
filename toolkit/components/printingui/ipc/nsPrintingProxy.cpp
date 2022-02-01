@@ -18,7 +18,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsPrintSettingsService.h"
 #include "nsServiceManagerUtils.h"
-#include "PrintProgressDialogChild.h"
 #include "PrintSettingsDialogChild.h"
 
 using namespace mozilla;
@@ -119,60 +118,6 @@ nsPrintingProxy::ShowPrintDialog(mozIDOMWindowProxy* parent,
 }
 
 NS_IMETHODIMP
-nsPrintingProxy::ShowPrintProgressDialog(
-    mozIDOMWindowProxy* parent,
-    nsIPrintSettings* printSettings,  // ok to be null
-    nsIObserver* openDialogObserver,  // ok to be null
-    bool isForPrinting, nsIWebProgressListener** webProgressListener,
-    nsIPrintProgressParams** printProgressParams, bool* notifyOnOpen) {
-  NS_ENSURE_ARG(parent);
-  NS_ENSURE_ARG(webProgressListener);
-  NS_ENSURE_ARG(printProgressParams);
-  NS_ENSURE_ARG(notifyOnOpen);
-
-  // Get the BrowserChild for this nsIDOMWindow, which we can then pass up to
-  // the parent.
-  nsCOMPtr<nsPIDOMWindowOuter> pwin = nsPIDOMWindowOuter::From(parent);
-  NS_ENSURE_STATE(pwin);
-  nsCOMPtr<nsIDocShell> docShell = pwin->GetDocShell();
-  NS_ENSURE_STATE(docShell);
-  nsCOMPtr<nsIBrowserChild> tabchild = docShell->GetBrowserChild();
-  BrowserChild* pBrowser = static_cast<BrowserChild*>(tabchild.get());
-
-  RefPtr<PrintProgressDialogChild> dialogChild =
-      new PrintProgressDialogChild(openDialogObserver, printSettings);
-
-  SendPPrintProgressDialogConstructor(dialogChild);
-
-  // Get the RemotePrintJob if we have one available.
-  RefPtr<RemotePrintJobChild> remotePrintJob;
-  if (printSettings) {
-    nsCOMPtr<nsIPrintSession> printSession;
-    nsresult rv = printSettings->GetPrintSession(getter_AddRefs(printSession));
-    if (NS_SUCCEEDED(rv) && printSession) {
-      remotePrintJob = printSession->GetRemotePrintJob();
-    }
-  }
-
-  // NOTE: We set notifyOnOpen to true unconditionally. If the parent process
-  // would get `false` for notifyOnOpen, then it will synthesize a notification
-  // which will be sent asynchronously down to the child.
-  *notifyOnOpen = true;
-  mozilla::Unused << SendShowProgress(pBrowser, dialogChild, remotePrintJob,
-                                      isForPrinting);
-
-  // If we have a RemotePrintJob that will be being used as a more general
-  // forwarder for print progress listeners. Once we always have one we can
-  // remove the interface from PrintProgressDialogChild.
-  if (!remotePrintJob) {
-    NS_ADDREF(*webProgressListener = dialogChild);
-  }
-  NS_ADDREF(*printProgressParams = dialogChild);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsPrintingProxy::ShowPageSetupDialog(mozIDOMWindowProxy* parent,
                                      nsIPrintSettings* printSettings) {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -192,22 +137,6 @@ nsresult nsPrintingProxy::SavePrintSettings(nsIPrintSettings* aPS,
 
   Unused << SendSavePrintSettings(settings, aUsePrinterNamePrefix, aFlags, &rv);
   return rv;
-}
-
-PPrintProgressDialogChild* nsPrintingProxy::AllocPPrintProgressDialogChild() {
-  // The parent process will never initiate the PPrintProgressDialog
-  // protocol connection, so no need to provide an allocator here.
-  MOZ_ASSERT_UNREACHABLE(
-      "Allocator for PPrintProgressDialogChild should not "
-      "be called on nsPrintingProxy.");
-  return nullptr;
-}
-
-bool nsPrintingProxy::DeallocPPrintProgressDialogChild(
-    PPrintProgressDialogChild* aActor) {
-  // The PrintProgressDialogChild implements refcounting, and
-  // will take itself out.
-  return true;
 }
 
 PPrintSettingsDialogChild* nsPrintingProxy::AllocPPrintSettingsDialogChild() {

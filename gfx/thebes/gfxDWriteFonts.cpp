@@ -103,6 +103,10 @@ bool gfxDWriteFont::InitDWriteSupport() {
 
   if (XRE_IsParentProcess()) {
     UpdateSystemTextVars();
+  } else {
+    // UpdateClearTypeVars doesn't update the vars in non parent processes, but
+    // it does set sForceGDIClassicEnabled so we still need to call it.
+    UpdateClearTypeVars();
   }
   DWriteSettings::Initialize();
 
@@ -323,7 +327,7 @@ void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
       case FontSizeAdjust::Tag::IcHeight: {
         bool vertical = FontSizeAdjust::Tag(mStyle.sizeAdjustBasis) ==
                         FontSizeAdjust::Tag::IcHeight;
-        gfxFloat advance = GetCharAdvance(0x6C34, vertical);
+        gfxFloat advance = GetCharAdvance(kWaterIdeograph, vertical);
         aspect = advance > 0.0 ? advance / mAdjustedSize : 1.0;
         break;
       }
@@ -434,6 +438,8 @@ void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
   }
 
   mMetrics->zeroWidth = GetCharAdvance('0');
+
+  mMetrics->ideographicWidth = GetCharAdvance(kWaterIdeograph);
 
   mMetrics->underlineOffset = fontMetrics.underlinePosition * mFUnitsConvFactor;
   mMetrics->underlineSize = fontMetrics.underlineThickness * mFUnitsConvFactor;
@@ -746,64 +752,33 @@ void gfxDWriteFont::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 }
 
 already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
-    mozilla::gfx::DrawTarget* aTarget) {
+    const TextRunDrawParams& aRunParams) {
   if (mAzureScaledFontUsedClearType != UsingClearType()) {
     mAzureScaledFont = nullptr;
+    mAzureScaledFontGDI = nullptr;
   }
-  if (!mAzureScaledFont) {
+  bool forceGDI = aRunParams.allowGDI && GetForceGDIClassic();
+  RefPtr<ScaledFont>& azureScaledFont =
+      forceGDI ? mAzureScaledFontGDI : mAzureScaledFont;
+  if (!azureScaledFont) {
     gfxDWriteFontEntry* fe = static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
-    bool forceGDI = GetForceGDIClassic();
     bool useEmbeddedBitmap =
         (gfxVars::SystemTextRenderingMode() == DWRITE_RENDERING_MODE_DEFAULT ||
          forceGDI) &&
         fe->IsCJKFont() && HasBitmapStrikeForSize(NS_lround(mAdjustedSize));
 
     const gfxFontStyle* fontStyle = GetStyle();
-    mAzureScaledFont = Factory::CreateScaledFontForDWriteFont(
+    azureScaledFont = Factory::CreateScaledFontForDWriteFont(
         mFontFace, fontStyle, GetUnscaledFont(), GetAdjustedSize(),
         useEmbeddedBitmap, forceGDI);
-    if (!mAzureScaledFont) {
+    if (!azureScaledFont) {
       return nullptr;
     }
-    InitializeScaledFont();
+    InitializeScaledFont(azureScaledFont);
     mAzureScaledFontUsedClearType = UsingClearType();
   }
 
-  RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
-  return scaledFont.forget();
-}
-
-already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFontNoGDI(
-    mozilla::gfx::DrawTarget* aTarget) {
-  if (!GetForceGDIClassic()) {
-    return GetScaledFont(aTarget);
-  }
-
-  if (mAzureScaledFontNoGDIUsedClearType != UsingClearType()) {
-    mAzureScaledFontNoGDI = nullptr;
-  }
-  if (!mAzureScaledFontNoGDI) {
-    gfxDWriteFontEntry* fe = static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
-    bool useEmbeddedBitmap =
-        gfxVars::SystemTextRenderingMode() == DWRITE_RENDERING_MODE_DEFAULT &&
-        fe->IsCJKFont() && HasBitmapStrikeForSize(NS_lround(mAdjustedSize));
-
-    const gfxFontStyle* fontStyle = GetStyle();
-    mAzureScaledFontNoGDI = Factory::CreateScaledFontForDWriteFont(
-        mFontFace, fontStyle, GetUnscaledFont(), GetAdjustedSize(),
-        useEmbeddedBitmap, false);
-    if (!mAzureScaledFontNoGDI) {
-      return nullptr;
-    }
-    float angle = AngleForSyntheticOblique();
-    if (angle != 0.0f) {
-      mAzureScaledFontNoGDI->SetSyntheticObliqueAngle(angle);
-    }
-    mAzureScaledFontNoGDIUsedClearType = UsingClearType();
-  }
-
-  RefPtr<ScaledFont> scaledFont(mAzureScaledFontNoGDI);
-  return scaledFont.forget();
+  return do_AddRef(azureScaledFont);
 }
 
 bool gfxDWriteFont::ShouldRoundXOffset(cairo_t* aCairo) const {

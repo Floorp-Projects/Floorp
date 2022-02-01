@@ -74,3 +74,15 @@ diff --git a/media/ffvpx/libavutil/hwcontext_vaapi.c b/media/ffvpx/libavutil/hwc
  
  typedef struct VAAPIDevicePriv {
 
+diff -up media/ffvpx/libavcodec/vaapi_decode.c.old media/ffvpx/libavcodec/vaapi_decode.c
+diff -up media/ffvpx/libavutil/fftime.h.old media/ffvpx/libavutil/fftime.h
+--- media/ffvpx/libavutil/fftime.h.old	2021-12-06 14:51:40.378642713 +0100
++++ media/ffvpx/libavutil/fftime.h	2021-12-06 14:51:54.618098212 +0100
+@@ -22,6 +22,7 @@
+ #define AVUTIL_TIME_H
+ 
+ #include <stdint.h>
++#include <time.h>
+ 
+ /**
+  * Get the current time in microseconds.

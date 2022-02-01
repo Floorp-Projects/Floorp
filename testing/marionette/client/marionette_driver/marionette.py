@@ -949,45 +949,34 @@ class Marionette(object):
             # Restore the context as used before the restart
             self.set_context(context)
 
-    def _request_in_app_shutdown(self, *shutdown_flags):
+    def _request_in_app_shutdown(self, flags=None, safe_mode=False):
         """Attempt to quit the currently running instance from inside the
-        application.
-
-        Duplicate entries in `shutdown_flags` are removed, and
-        `"eForceQuit"` is added if no other `*Quit` flags are given.
-        This provides backwards compatible behaviour with earlier
-        Firefoxen.
+        application. If shutdown is prevented by some component the quit
+        will be forced.
 
         This method effectively calls `Services.startup.quit` in Gecko.
-        Possible flag values are listed at http://mzl.la/1X0JZsC.
+        Possible flag values are listed at https://bit.ly/3IYcjYi.
 
-        :param shutdown_flags: Optional additional quit masks to include.
-            Duplicates are removed, and `"eForceQuit"` is added if no
-            flags ending with `"Quit"` are present.
+        :param flags: Optional additional quit masks to include.
 
-        :throws InvalidArgumentException: If there are multiple
-            `shutdown_flags` ending with `"Quit"`.
+        :param safe_mode: Optional flag to indicate that the application has to
+            be restarted in safe mode.
 
         :returns: A dictionary containing details of the application shutdown.
                   The `cause` property reflects the reason, and `forced` indicates
                   that something prevented the shutdown and the application had
                   to be forced to shutdown.
+
+        :throws InvalidArgumentException: If there are multiple
+            `shutdown_flags` ending with `"Quit"`.
         """
-
-        # The vast majority of this function was implemented inside
-        # the quit command as part of bug 1337743, and can be
-        # removed from here in Firefox 55 at the earliest.
-
-        # remove duplicates
-        flags = set(shutdown_flags)
-
-        # add eForceQuit if there are no *Quits
-        if not any(flag.endswith("Quit") for flag in flags):
-            flags = flags | set(("eForceQuit",))
-
-        body = None
-        if len(flags) > 0:
-            body = {"flags": list(flags)}
+        body = {}
+        if flags is not None:
+            body["flags"] = list(
+                flags,
+            )
+        if safe_mode:
+            body["safeMode"] = safe_mode
 
         return self._send_message("Marionette:Quit", body)
 
@@ -1067,19 +1056,24 @@ class Marionette(object):
         return quit_details
 
     @do_process_check
-    def restart(self, clean=False, in_app=False, callback=None):
+    def restart(self, callback=None, clean=False, in_app=False, safe_mode=False):
         """
         This will terminate the currently running instance, and spawn a new instance
         with the same profile and then reuse the session id when creating a session again.
 
+        :param callback: If provided and `in_app` is True, the callback will be
+                         used to trigger the restart.
+
         :param clean: If False the same profile will be used after the restart. Note
                       that the in app initiated restart always maintains the same
                       profile.
+
         :param in_app: If True, marionette will cause a restart from within the
                        browser. Otherwise the browser will be restarted immediately
                        by killing the process.
-        :param callback: If provided and `in_app` is True, the callback will be
-                         used to trigger the restart.
+
+        :param safe_mode: Optional flag to indicate that the application has to
+            be restarted in safe mode.
 
         :returns: A dictionary containing details of the application restart.
                   The `cause` property reflects the reason, and `forced` indicates
@@ -1094,6 +1088,11 @@ class Marionette(object):
         context = self._send_message("Marionette:GetContext", key="value")
 
         restart_details = {"cause": "restart", "forced": False}
+
+        # Safe mode is only available with in_app restarts.
+        if safe_mode:
+            in_app = True
+
         if in_app:
             if clean:
                 raise ValueError(
@@ -1113,7 +1112,9 @@ class Marionette(object):
                 if callback is not None:
                     callback()
                 else:
-                    restart_details = self._request_in_app_shutdown("eRestart")
+                    restart_details = self._request_in_app_shutdown(
+                        flags=["eRestart"], safe_mode=safe_mode
+                    )
 
             except IOError:
                 # A possible IOError should be ignored at this point, given that

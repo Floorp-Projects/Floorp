@@ -19,10 +19,7 @@ const TEST_DATA = [
       {
         type: "load",
         filename: TEST_URL + ":29:38",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
+        attributes: ["Bubbling"],
         handler: `
           () => {
             const handler1 = function liveDivDblClick() {
@@ -76,15 +73,12 @@ const TEST_DATA = [
             $(div).click(handler7);
             $(div).click(handler8);
             $(div).keydown(handler9);
-          }`
+          }`,
       },
       {
         type: "load",
         filename: URL_ROOT_SSL + TEST_LIB + ":1224:17",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
+        attributes: ["Bubbling"],
         handler: `
           function(event) {
             if (typeof jQuery == "undefined") return false;
@@ -117,9 +111,9 @@ const TEST_DATA = [
             if (jQuery.browser.msie) event.target = event.preventDefault = event.stopPropagation = event.handler = event.data = null;
 
             return returnValue;
-          }`
-      }
-    ]
+          }`,
+      },
+    ],
   },
   {
     selector: "#testdiv",
@@ -127,32 +121,25 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":36:43",
-        attributes: [
-          "jQuery"
-        ],
+        attributes: ["jQuery"],
         handler: `
           function divClick1() {
             alert(7);
-          }`
+          }`,
       },
       {
         type: "click",
         filename: TEST_URL + ":37:43",
-        attributes: [
-          "jQuery"
-        ],
+        attributes: ["jQuery"],
         handler: `
           function divClick2() {
             alert(8);
-          }`
+          }`,
       },
       {
         type: "click",
         filename: URL_ROOT_SSL + TEST_LIB + ":1224:17",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
+        attributes: ["Bubbling"],
         handler: `
           function(event) {
             if (typeof jQuery == "undefined") return false;
@@ -185,26 +172,21 @@ const TEST_DATA = [
             if (jQuery.browser.msie) event.target = event.preventDefault = event.stopPropagation = event.handler = event.data = null;
 
             return returnValue;
-          }`
+          }`,
       },
       {
         type: "keydown",
         filename: TEST_URL + ":38:44",
-        attributes: [
-          "jQuery"
-        ],
+        attributes: ["jQuery"],
         handler: `
           function divKeyDown() {
             alert(9);
-          }`
+          }`,
       },
       {
         type: "keydown",
         filename: URL_ROOT_SSL + TEST_LIB + ":1224:17",
-        attributes: [
-          "Bubbling",
-          "DOM2"
-        ],
+        attributes: ["Bubbling"],
         handler: `
           function(event) {
             if (typeof jQuery == "undefined") return false;
@@ -237,10 +219,10 @@ const TEST_DATA = [
             if (jQuery.browser.msie) event.target = event.preventDefault = event.stopPropagation = event.handler = event.data = null;
 
             return returnValue;
-          }`
-      }
-    ]
-  }
+          }`,
+      },
+    ],
+  },
 ];
 /* eslint-enable */
 

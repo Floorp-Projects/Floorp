@@ -344,14 +344,11 @@ class EventDispatcher {
    * eVoidEvent.
    * @note Use this method when dispatching a WidgetEvent.
    */
-  // This should obviously be MOZ_CAN_RUN_SCRIPT, but that's a bit of
-  // a project.  See bug 1539884.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  static nsresult Dispatch(nsISupports* aTarget, nsPresContext* aPresContext,
-                           WidgetEvent* aEvent, dom::Event* aDOMEvent = nullptr,
-                           nsEventStatus* aEventStatus = nullptr,
-                           EventDispatchingCallback* aCallback = nullptr,
-                           nsTArray<dom::EventTarget*>* aTargets = nullptr);
+  MOZ_CAN_RUN_SCRIPT static nsresult Dispatch(
+      nsISupports* aTarget, nsPresContext* aPresContext, WidgetEvent* aEvent,
+      dom::Event* aDOMEvent = nullptr, nsEventStatus* aEventStatus = nullptr,
+      EventDispatchingCallback* aCallback = nullptr,
+      nsTArray<dom::EventTarget*>* aTargets = nullptr);
 
   /**
    * Dispatches an event.
@@ -361,10 +358,9 @@ class EventDispatcher {
    * Otherwise this works like EventDispatcher::Dispatch.
    * @note Use this method when dispatching a dom::Event.
    */
-  static nsresult DispatchDOMEvent(nsISupports* aTarget, WidgetEvent* aEvent,
-                                   dom::Event* aDOMEvent,
-                                   nsPresContext* aPresContext,
-                                   nsEventStatus* aEventStatus);
+  MOZ_CAN_RUN_SCRIPT static nsresult DispatchDOMEvent(
+      nsISupports* aTarget, WidgetEvent* aEvent, dom::Event* aDOMEvent,
+      nsPresContext* aPresContext, nsEventStatus* aEventStatus);
 
   /**
    * Creates a DOM Event.  Returns null if the event type is unsupported.

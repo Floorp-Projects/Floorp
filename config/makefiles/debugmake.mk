@@ -68,8 +68,6 @@ showbuild:
 		CPP \
 		LD \
 		AR \
-		IMPLIB \
-		FILTER \
 		MKSHLIB \
 		MKCSHLIB \
 		RC \

@@ -3,5 +3,8 @@
 load(libdir + "asserts.js")
 
 // Don't assert.
-offThreadCompileModule("export { x };");
-assertThrowsInstanceOf(() => finishOffThreadModule(), SyntaxError);
+offThreadCompileModuleToStencil("export { x };");
+assertThrowsInstanceOf(() => {
+  var stencil = finishOffThreadCompileModuleToStencil();
+  instantiateModuleStencil(stencil);
+}, SyntaxError);

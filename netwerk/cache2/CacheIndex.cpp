@@ -243,9 +243,7 @@ NS_INTERFACE_MAP_BEGIN(CacheIndex)
   NS_INTERFACE_MAP_ENTRY(nsIRunnable)
 NS_INTERFACE_MAP_END
 
-CacheIndex::CacheIndex()
-
-{
+CacheIndex::CacheIndex() {
   sLock.AssertCurrentThreadOwns();
   LOG(("CacheIndex::CacheIndex [this=%p]", this));
   MOZ_ASSERT(!gInstance, "multiple CacheIndex instances!");
@@ -3746,7 +3744,7 @@ size_t CacheIndex::SizeOfExcludingThisInternal(
 
 // static
 size_t CacheIndex::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-  sLock.AssertCurrentThreadOwns();
+  StaticMutexAutoLock lock(sLock);
 
   if (!gInstance) return 0;
 
@@ -3757,7 +3755,8 @@ size_t CacheIndex::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
 size_t CacheIndex::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
   StaticMutexAutoLock lock(sLock);
 
-  return mallocSizeOf(gInstance) + SizeOfExcludingThis(mallocSizeOf);
+  return mallocSizeOf(gInstance) +
+         (gInstance ? gInstance->SizeOfExcludingThisInternal(mallocSizeOf) : 0);
 }
 
 // static

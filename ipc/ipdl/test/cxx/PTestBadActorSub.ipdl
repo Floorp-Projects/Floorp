@@ -7,7 +7,7 @@ intr protocol PTestBadActorSub {
   manager PTestBadActor;
 
 child:
-  intr __delete__();
+  [LegacyIntr] intr __delete__();
 
 parent:
   async Ping();

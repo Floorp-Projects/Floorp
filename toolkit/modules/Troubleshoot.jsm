@@ -105,6 +105,9 @@ const PREFS_FOR_DISPLAY = [
   "webgl.",
   "widget.dmabuf",
   "widget.use-xdg-desktop-portal",
+  "widget.use-xdg-desktop-portal.file-picker",
+  "widget.use-xdg-desktop-portal.mime-handler",
+  "widget.use-xdg-desktop-portal.print",
   "widget.wayland",
 ];
 
@@ -303,6 +306,7 @@ var dataProviders = {
       "extension",
       "locale",
       "dictionary",
+      "sitepermission",
     ]);
     addons = addons.filter(e => !e.isSystem);
     addons.sort(function(a, b) {
@@ -864,7 +868,7 @@ var dataProviders = {
       prefRollouts,
       prefStudies,
       nimbusExperiments,
-      remoteConfigs,
+      nimbusRollouts,
     ] = await Promise.all(
       [
         NormandyAddonStudies.getAllActive(),
@@ -875,7 +879,7 @@ var dataProviders = {
           .then(() => ExperimentManager.store.getAllActive()),
         ExperimentManager.store
           .ready()
-          .then(() => ExperimentManager.store.getAllRemoteConfigs()),
+          .then(() => ExperimentManager.store.getAllRollouts()),
       ].map(promise =>
         promise
           .catch(error => {
@@ -891,7 +895,7 @@ var dataProviders = {
       prefRollouts,
       prefStudies,
       nimbusExperiments,
-      remoteConfigs,
+      nimbusRollouts,
     });
   },
 };

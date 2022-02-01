@@ -387,8 +387,8 @@ pub fn usage(db: &Connection) -> Result<Vec<UsageInfo>> {
         let num_keys = serde_json::from_str::<JsonObject>(&data)?.len();
         Ok(UsageInfo {
             ext_id,
-            num_bytes,
             num_keys,
+            num_bytes,
         })
     })
 }

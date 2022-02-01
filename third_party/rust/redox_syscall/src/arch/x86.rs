@@ -1,7 +1,7 @@
 use super::error::{Error, Result};
 
 pub unsafe fn syscall0(mut a: usize) -> Result<usize> {
-    asm!("int 0x80"
+    llvm_asm!("int 0x80"
         : "={eax}"(a)
         : "{eax}"(a)
         : "memory"
@@ -11,7 +11,7 @@ pub unsafe fn syscall0(mut a: usize) -> Result<usize> {
 }
 
 pub unsafe fn syscall1(mut a: usize, b: usize) -> Result<usize> {
-    asm!("int 0x80"
+    llvm_asm!("int 0x80"
         : "={eax}"(a)
         : "{eax}"(a), "{ebx}"(b)
         : "memory"
@@ -22,7 +22,7 @@ pub unsafe fn syscall1(mut a: usize, b: usize) -> Result<usize> {
 
 // Clobbers all registers - special for clone
 pub unsafe fn syscall1_clobber(mut a: usize, b: usize) -> Result<usize> {
-    asm!("int 0x80"
+    llvm_asm!("int 0x80"
         : "={eax}"(a)
         : "{eax}"(a), "{ebx}"(b)
         : "memory", "ebx", "ecx", "edx", "esi", "edi"
@@ -32,7 +32,7 @@ pub unsafe fn syscall1_clobber(mut a: usize, b: usize) -> Result<usize> {
 }
 
 pub unsafe fn syscall2(mut a: usize, b: usize, c: usize) -> Result<usize> {
-    asm!("int 0x80"
+    llvm_asm!("int 0x80"
         : "={eax}"(a)
         : "{eax}"(a), "{ebx}"(b), "{ecx}"(c)
         : "memory"
@@ -42,7 +42,7 @@ pub unsafe fn syscall2(mut a: usize, b: usize, c: usize) -> Result<usize> {
 }
 
 pub unsafe fn syscall3(mut a: usize, b: usize, c: usize, d: usize) -> Result<usize> {
-    asm!("int 0x80"
+    llvm_asm!("int 0x80"
         : "={eax}"(a)
         : "{eax}"(a), "{ebx}"(b), "{ecx}"(c), "{edx}"(d)
         : "memory"
@@ -52,7 +52,7 @@ pub unsafe fn syscall3(mut a: usize, b: usize, c: usize, d: usize) -> Result<usi
 }
 
 pub unsafe fn syscall4(mut a: usize, b: usize, c: usize, d: usize, e: usize) -> Result<usize> {
-    asm!("int 0x80"
+    llvm_asm!("int 0x80"
         : "={eax}"(a)
         : "{eax}"(a), "{ebx}"(b), "{ecx}"(c), "{edx}"(d), "{esi}"(e)
         : "memory"
@@ -63,7 +63,7 @@ pub unsafe fn syscall4(mut a: usize, b: usize, c: usize, d: usize, e: usize) -> 
 
 pub unsafe fn syscall5(mut a: usize, b: usize, c: usize, d: usize, e: usize, f: usize)
                        -> Result<usize> {
-    asm!("int 0x80"
+    llvm_asm!("int 0x80"
         : "={eax}"(a)
         : "{eax}"(a), "{ebx}"(b), "{ecx}"(c), "{edx}"(d), "{esi}"(e), "{edi}"(f)
         : "memory"

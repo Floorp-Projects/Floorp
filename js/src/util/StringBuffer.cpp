@@ -116,7 +116,7 @@ JSLinearString* JSStringBuilder::finishString() {
     return cx_->names().empty;
   }
 
-  if (!JSString::validateLength(cx_, len)) {
+  if (MOZ_UNLIKELY(!JSString::validateLength(cx_, len))) {
     return nullptr;
   }
 

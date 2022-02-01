@@ -40,12 +40,6 @@ WindowSurfaceX11Image::WindowSurfaceX11Image(Display* aDisplay, Window aWindow,
 WindowSurfaceX11Image::~WindowSurfaceX11Image() {
   if (mTransparencyBitmap) {
     delete[] mTransparencyBitmap;
-
-    Display* xDisplay = mWindowSurface->XDisplay();
-    Window xDrawable = mWindowSurface->XDrawable();
-
-    XShapeCombineMask(xDisplay, xDrawable, ShapeBounding, 0, 0, X11None,
-                      ShapeSet);
   }
 }
 

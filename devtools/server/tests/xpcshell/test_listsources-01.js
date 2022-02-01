@@ -39,7 +39,7 @@ add_task(
         " might have had to send one to determine feature support."
     );
 
-    threadFront.resume();
+    await threadFront.resume();
   })
 );
 

@@ -12,13 +12,7 @@
 #include "nsNativeBasicTheme.h"
 #include "nsNativeTheme.h"
 
-using mozilla::ComputedStyle;
-using mozilla::EventStates;
-using mozilla::Maybe;
-using mozilla::Nothing;
-using mozilla::Some;
-using mozilla::StyleAppearance;
-using mozilla::StyleScrollbarWidth;
+namespace mozilla::widget {
 
 LayoutDeviceIntSize ScrollbarDrawingWin::GetMinimumWidgetSize(
     nsPresContext* aPresContext, StyleAppearance aAppearance,
@@ -35,14 +29,20 @@ LayoutDeviceIntSize ScrollbarDrawingWin::GetMinimumWidgetSize(
         return LayoutDeviceIntSize{};
       }
       [[fallthrough]];
+    case StyleAppearance::ScrollbarVertical:
+    case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarthumbVertical:
     case StyleAppearance::ScrollbarthumbHorizontal: {
-      auto* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-      auto width = style->StyleUIReset()->mScrollbarWidth;
-      auto sizes = GetScrollbarSizes(aPresContext, width, Overlay::No);
+      if ((aAppearance == StyleAppearance::ScrollbarHorizontal ||
+           aAppearance == StyleAppearance::ScrollbarVertical) &&
+          !aPresContext->UseOverlayScrollbars()) {
+        return LayoutDeviceIntSize{};
+      }
       // TODO: for short scrollbars it could be nice if the thumb could shrink
       // under this size.
+      auto sizes = GetScrollbarSizes(aPresContext, aFrame);
       const bool isHorizontal =
+          aAppearance == StyleAppearance::ScrollbarHorizontal ||
           aAppearance == StyleAppearance::ScrollbarthumbHorizontal ||
           aAppearance == StyleAppearance::ScrollbarbuttonLeft ||
           aAppearance == StyleAppearance::ScrollbarbuttonRight;
@@ -77,6 +77,9 @@ Maybe<nsITheme::Transparency> ScrollbarDrawingWin::GetScrollbarPartTransparency(
           break;
       }
     }
+    if (aFrame->PresContext()->UseOverlayScrollbars()) {
+      return Some(nsITheme::eTransparent);
+    }
   }
 
   switch (aAppearance) {
@@ -88,6 +91,8 @@ Maybe<nsITheme::Transparency> ScrollbarDrawingWin::GetScrollbarPartTransparency(
       // performance, because we create layers for them. This better be
       // true across all Windows themes! If it's not true, we should
       // paint an opaque background for them to make it true!
+      // TODO(emilio): Unclear how much this optimization matters in practice
+      // now we're in a WR-only world.
       return Some(nsITheme::eOpaque);
     default:
       break;
@@ -152,7 +157,7 @@ bool ScrollbarDrawingWin::PaintScrollbarThumb(
 }
 
 void ScrollbarDrawingWin::RecomputeScrollbarParams() {
-  uint32_t defaultSize = 17;
+  uint32_t defaultSize = kDefaultWinScrollbarSize;
   uint32_t overrideSize =
       StaticPrefs::widget_non_native_theme_scrollbar_size_override();
   if (overrideSize > 0) {
@@ -167,3 +172,5 @@ void ScrollbarDrawingWin::RecomputeScrollbarParams() {
         LookAndFeel::IntID::SystemVerticalScrollbarWidth, defaultSize);
   }
 }
+
+}  // namespace mozilla::widget

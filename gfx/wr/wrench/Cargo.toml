@@ -7,7 +7,7 @@ license = "MPL-2.0"
 edition = "2018"
 
 [dependencies]
-base64 = "0.12"
+base64 = "0.13"
 env_logger = { version = "0.5", optional = true }
 gleam = "0.13"
 glutin = "0.21"

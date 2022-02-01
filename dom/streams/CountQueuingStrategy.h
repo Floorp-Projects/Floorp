@@ -52,7 +52,7 @@ class CountQueuingStrategy final : public nsISupports, public nsWrapperCache {
 
   double HighWaterMark() const { return mHighWaterMark; }
 
-  already_AddRefed<Function> Size() const;
+  already_AddRefed<Function> GetSize(ErrorResult& aRv);
 
  private:
   double mHighWaterMark = 0.0;

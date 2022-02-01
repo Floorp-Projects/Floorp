@@ -658,20 +658,12 @@ static AtkAttributeSet* ConvertToAtkAttributeSet(AccAttributes* aAttributes) {
   return objAttributeSet;
 }
 
-AtkAttributeSet* GetAttributeSet(LocalAccessible* aAccessible) {
-  RefPtr<AccAttributes> attributes = aAccessible->Attributes();
-  return ConvertToAtkAttributeSet(attributes);
-}
-
 AtkAttributeSet* getAttributesCB(AtkObject* aAtkObj) {
-  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  if (accWrap) return GetAttributeSet(accWrap);
-
-  RemoteAccessible* proxy = GetProxy(aAtkObj);
-  if (!proxy) return nullptr;
-
-  RefPtr<AccAttributes> attributes = nullptr;
-  proxy->Attributes(&attributes);
+  Accessible* acc = GetInternalObj(aAtkObj);
+  if (!acc) {
+    return nullptr;
+  }
+  RefPtr<AccAttributes> attributes = acc->Attributes();
   return ConvertToAtkAttributeSet(attributes);
 }
 

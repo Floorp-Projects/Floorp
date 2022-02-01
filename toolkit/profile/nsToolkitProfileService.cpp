@@ -1450,25 +1450,9 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
   // uses that named profile or without a name it opens the profile manager.
   ar = CheckArg(*aArgc, aArgv, "p", &arg);
   if (ar == ARG_BAD) {
-    ar = CheckArg(*aArgc, aArgv, "osint");
-    if (ar == ARG_FOUND) {
-      PR_fprintf(
-          PR_STDERR,
-          "Error: argument -p is invalid when argument --osint is specified\n");
-      return NS_ERROR_FAILURE;
-    }
-
     return NS_ERROR_SHOW_PROFILE_MANAGER;
   }
   if (ar) {
-    ar = CheckArg(*aArgc, aArgv, "osint");
-    if (ar == ARG_FOUND) {
-      PR_fprintf(
-          PR_STDERR,
-          "Error: argument -p is invalid when argument --osint is specified\n");
-      return NS_ERROR_FAILURE;
-    }
-
     rv = GetProfileByName(nsDependentCString(arg), getter_AddRefs(mCurrent));
     if (NS_SUCCEEDED(rv)) {
       mStartupReason = u"argument-p"_ns;

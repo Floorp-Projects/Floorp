@@ -82,8 +82,8 @@ class GMPVideoDecoderParent final : public PGMPVideoDecoderParent,
   mozilla::ipc::IPCResult RecvShutdown() override;
   mozilla::ipc::IPCResult RecvParentShmemForPool(
       Shmem&& aEncodedBuffer) override;
-  mozilla::ipc::IPCResult AnswerNeedShmem(const uint32_t& aFrameBufferSize,
-                                          Shmem* aMem) override;
+  mozilla::ipc::IPCResult RecvNeedShmem(const uint32_t& aFrameBufferSize,
+                                        Shmem* aMem) override;
   mozilla::ipc::IPCResult Recv__delete__() override;
 
   void UnblockResetAndDrain();

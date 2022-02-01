@@ -20,11 +20,12 @@ evaluate(`
   var g = newGlobal({newCompartment: true});
   var gw = dbg.addDebuggee(g);
 `);
-lfOffThreadGlobal.offThreadCompileScript(`
+lfOffThreadGlobal.offThreadCompileToStencil(`
   gcparam("markStackLimit", 1);
   grayRoot()[0] = "foo";
 `);
-lfOffThreadGlobal.runOffThreadScript();
+var stencil = lfOffThreadGlobal.finishOffThreadCompileToStencil();
+lfOffThreadGlobal.evalStencil(stencil);
 eval(`
   var lfOffThreadGlobal = newGlobal({newCompartment: true});
   try { evaluate(\`

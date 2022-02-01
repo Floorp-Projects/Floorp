@@ -931,6 +931,8 @@ BookmarkExporter.prototype = {
     this._writeLine(
       '<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">'
     );
+    this._writeLine(`<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'none'; img-src data: *; object-src 'none'"></meta>`);
     this._writeLine("<TITLE>Bookmarks</TITLE>");
   },
 

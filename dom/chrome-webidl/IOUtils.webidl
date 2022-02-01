@@ -213,6 +213,71 @@ namespace IOUtils {
    * @return A promise that resolves to whether or not the given file exists.
    */
   Promise<boolean> exists(DOMString path);
+
+#if defined(XP_WIN)
+  /**
+   * Return the Windows-specific file attributes of the file at the given path.
+   *
+   * @param path An absolute file path.
+   *
+   * @return A promise that resolves to the Windows-specific file attributes.
+   */
+  Promise<WindowsFileAttributes> getWindowsAttributes(DOMString path);
+
+  /**
+   * Set the Windows-specific file attributes of the file at the given path.
+   *
+   * @param path An absolute file path.
+   * @param attrs The attributes to set. Attributes will only be set if they are
+   *              |true| or |false| (i.e., |undefined| attributes are not
+   *              changed).
+   *
+   * @return A promise that resolves is the attributes were set successfully.
+   */
+  Promise<void> setWindowsAttributes(DOMString path, optional WindowsFileAttributes attrs = {});
+#elif defined(XP_MACOSX)
+  /**
+   * Return whether or not the file has a specific extended attribute.
+   *
+   * @param path An absolute path.
+   * @param attr The attribute to check for.
+   *
+   * @return A promise that resolves to whether or not the file has an extended
+   *         attribute, or rejects with an error.
+   */
+  Promise<boolean> hasMacXAttr(DOMString path, UTF8String attr);
+  /**
+   * Return the value of an extended attribute for a file.
+   *
+   * @param path An absolute path.
+   * @param attr The attribute to get the value of.
+   *
+   * @return A promise that resolves to the value of the extended attribute, or
+   *         rejects with an error.
+   */
+  Promise<Uint8Array> getMacXAttr(DOMString path, UTF8String attr);
+  /**
+   * Set the extended attribute on a file.
+   *
+   * @param path  An absolute path.
+   * @param attr  The attribute to set.
+   * @param value The value of the attribute to set.
+   *
+   * @return A promise that resolves to whether or not the file has an extended
+   *         attribute, or rejects with an error.
+   */
+  Promise<void> setMacXAttr(DOMString path, UTF8String attr, Uint8Array value);
+  /**
+   * Delete the extended attribute on a file.
+   *
+   * @param path An absolute path.
+   * @param attr The attribute to delete.
+   *
+   * @return A promise that resolves if the attribute was deleted, or rejects
+   *         with an error.
+   */
+  Promise<void> delMacXAttr(DOMString path, UTF8String attr);
+#endif
 };
 
 [Exposed=Window]
@@ -468,3 +533,23 @@ dictionary FileInfo {
    */
   unsigned long permissions;
 };
+
+#ifdef XP_WIN
+/**
+ * Windows-specific file attributes.
+ */
+dictionary WindowsFileAttributes {
+  /**
+   * Whether or not the file is read-only.
+   */
+  boolean readOnly;
+  /**
+   * Whether or not the file is hidden.
+   */
+  boolean hidden;
+  /**
+   * Whether or not the file is classified as a system file.
+   */
+  boolean system;
+};
+#endif

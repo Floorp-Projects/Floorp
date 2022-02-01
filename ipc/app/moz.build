@@ -37,7 +37,10 @@ if CONFIG["OS_ARCH"] == "WINNT":
         ]
 
         OS_LIBS += [
+            "advapi32",
+            "user32",
             "version",
+            "winmm",
         ]
 
         USE_LIBS += [
@@ -60,16 +63,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
     # Don't build plugin-container.exe with CETCOMPAT for the moment, so that
     # we can enable it using a pref during testing.
     LINK_FLAGS["CETCOMPAT"] = []
-
-if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_TARGET"] == "Darwin":
-    # For sandbox includes and the include dependencies those have
-    LOCAL_INCLUDES += [
-        "/security/sandbox/chromium",
-        "/security/sandbox/chromium-shim",
-    ]
-    USE_LIBS += [
-        "mozsandbox",
-    ]
 
 if CONFIG["CC_TYPE"] == "clang-cl":
     # Always enter a Windows program through wmain, whether or not we're

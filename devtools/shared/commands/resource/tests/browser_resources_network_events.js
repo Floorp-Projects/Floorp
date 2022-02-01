@@ -7,405 +7,294 @@
 
 const ResourceCommand = require("devtools/shared/commands/resource/resource-command");
 
-const EXAMPLE_DOMAIN = "https://example.com/";
-const TEST_URI = `${URL_ROOT_SSL}network_document.html`;
+// We are borrowing tests from the netmonitor frontend
+const NETMONITOR_TEST_FOLDER =
+  "https://example.com/browser/devtools/client/netmonitor/test/";
+const CSP_URL = `${NETMONITOR_TEST_FOLDER}html_csp-test-page.html`;
+const JS_CSP_URL = `${NETMONITOR_TEST_FOLDER}js_websocket-worker-test.js`;
+const CSS_CSP_URL = `${NETMONITOR_TEST_FOLDER}internal-loaded.css`;
 
-add_task(async function() {
-  info("Test network events");
-  await testNetworkEventResourcesWithExistingResources();
-  await testNetworkEventResourcesWithoutExistingResources();
-  await testNetworkEventResourcesFromTheContentProcess();
+const CSP_BLOCKED_REASON_CODE = 4000;
+
+add_task(async function testContentProcessRequests() {
+  info(`Tests for NETWORK_EVENT resources fired from the content process`);
+
+  const expectedAvailable = [
+    {
+      url: CSP_URL,
+      method: "GET",
+      isNavigationRequest: true,
+    },
+    {
+      url: JS_CSP_URL,
+      method: "GET",
+      blockedReason: CSP_BLOCKED_REASON_CODE,
+      isNavigationRequest: false,
+    },
+    {
+      url: CSS_CSP_URL,
+      method: "GET",
+      blockedReason: CSP_BLOCKED_REASON_CODE,
+      isNavigationRequest: false,
+    },
+  ];
+  const expectedUpdated = [
+    {
+      url: CSP_URL,
+      method: "GET",
+      isNavigationRequest: true,
+    },
+    {
+      url: JS_CSP_URL,
+      method: "GET",
+      blockedReason: CSP_BLOCKED_REASON_CODE,
+      isNavigationRequest: false,
+    },
+    {
+      url: CSS_CSP_URL,
+      method: "GET",
+      blockedReason: CSP_BLOCKED_REASON_CODE,
+      isNavigationRequest: false,
+    },
+  ];
+
+  await assertNetworkResourcesOnPage(
+    CSP_URL,
+    expectedAvailable,
+    expectedUpdated
+  );
 });
 
-async function testNetworkEventResourcesWithExistingResources() {
-  info(`Tests for network event resources with the existing resources`);
-  await testNetworkEventResources({
-    ignoreExistingResources: false,
-    // 1 available event fired, for the existing resource in the cache.
-    // 1 available event fired, when live request is created.
-    totalExpectedOnAvailableCounts: 2,
-    // 1 update events fired, when live request is updated.
-    totalExpectedOnUpdatedCounts: 1,
-    expectedResourcesOnAvailable: {
-      [`${EXAMPLE_DOMAIN}cached_post.html`]: {
-        resourceType: ResourceCommand.TYPES.NETWORK_EVENT,
-        method: "POST",
-        isNavigationRequest: false,
-      },
-      [`${EXAMPLE_DOMAIN}live_get.html`]: {
-        resourceType: ResourceCommand.TYPES.NETWORK_EVENT,
-        method: "GET",
-        isNavigationRequest: false,
-      },
+add_task(async function testCanceledRequest() {
+  info(`Tests for NETWORK_EVENT resources with a canceled request`);
+
+  // Do a XHR request that we cancel against a slow loading page
+  const requestUrl =
+    "https://example.org/document-builder.sjs?delay=1000&html=foo";
+  const html =
+    "<!DOCTYPE html><script>(" +
+    function(xhrUrl) {
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", xhrUrl);
+      xhr.send(null);
+    } +
+    ")(" +
+    JSON.stringify(requestUrl) +
+    ")</script>";
+  const pageUrl =
+    "https://example.org/document-builder.sjs?html=" + encodeURIComponent(html);
+
+  const expectedAvailable = [
+    {
+      url: pageUrl,
+      method: "GET",
+      isNavigationRequest: true,
     },
-    expectedResourcesOnUpdated: {
-      [`${EXAMPLE_DOMAIN}live_get.html`]: {
-        resourceType: ResourceCommand.TYPES.NETWORK_EVENT,
-        method: "GET",
-      },
+    {
+      url: requestUrl,
+      method: "GET",
+      isNavigationRequest: false,
+      blockedReason: "NS_BINDING_ABORTED",
     },
-  });
-}
-
-async function testNetworkEventResourcesWithoutExistingResources() {
-  info(`Tests for network event resources without the existing resources`);
-  await testNetworkEventResources({
-    ignoreExistingResources: true,
-    // 1 available event fired, when live request is created.
-    totalExpectedOnAvailableCounts: 1,
-    // 1 update events fired, when live request is updated.
-    totalExpectedOnUpdatedCounts: 1,
-    expectedResourcesOnAvailable: {
-      [`${EXAMPLE_DOMAIN}live_get.html`]: {
-        resourceType: ResourceCommand.TYPES.NETWORK_EVENT,
-        method: "GET",
-        isNavigationRequest: false,
-      },
+  ];
+  const expectedUpdated = [
+    {
+      url: pageUrl,
+      method: "GET",
+      isNavigationRequest: true,
     },
-    expectedResourcesOnUpdated: {
-      [`${EXAMPLE_DOMAIN}live_get.html`]: {
-        resourceType: ResourceCommand.TYPES.NETWORK_EVENT,
-        method: "GET",
-      },
+    {
+      url: requestUrl,
+      method: "GET",
+      isNavigationRequest: false,
+      blockedReason: "NS_BINDING_ABORTED",
     },
-  });
-}
+  ];
 
-async function testNetworkEventResources(options) {
-  const tab = await addTab(TEST_URI);
-  const { client, resourceCommand, targetCommand } = await initResourceCommand(
-    tab
-  );
-
-  info(
-    `Trigger some network requests *before* calling ResourceCommand.watchResources
-     in order to assert the behavior of already existing network events.`
-  );
-
-  let onResourceAvailable = () => {};
-  let onResourceUpdated = () => {};
-
-  // Lets make sure there is already a network event resource in the cache.
-  const waitOnRequestForResourceCommandCache = new Promise(resolve => {
-    onResourceAvailable = resources => {
-      for (const resource of resources) {
-        is(
-          resource.resourceType,
-          resourceCommand.TYPES.NETWORK_EVENT,
-          "Received a network event resource"
-        );
+  // Register a one-off listener to cancel the XHR request
+  // Using XMLHttpRequest's abort() method from the content process
+  // isn't reliable and would introduce many race condition in the test.
+  // Canceling the request via nsIRequest.cancel privileged method,
+  // from the parent process is much more reliable.
+  const observer = {
+    QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
+    observe(subject, topic, data) {
+      subject = subject.QueryInterface(Ci.nsIHttpChannel);
+      if (subject.URI.spec == requestUrl) {
+        subject.cancel(Cr.NS_BINDING_ABORTED);
+        Services.obs.removeObserver(observer, "http-on-modify-request");
       }
-    };
+    },
+  };
+  Services.obs.addObserver(observer, "http-on-modify-request");
 
-    onResourceUpdated = updates => {
-      for (const { resource } of updates) {
-        is(
-          resource.resourceType,
-          resourceCommand.TYPES.NETWORK_EVENT,
-          "Received a network update event resource"
-        );
-        resolve();
-      }
-    };
-
-    resourceCommand
-      .watchResources([resourceCommand.TYPES.NETWORK_EVENT], {
-        onAvailable: onResourceAvailable,
-        onUpdated: onResourceUpdated,
-      })
-      .then(() => {
-        // We can only trigger the requests once `watchResources` settles, otherwise the
-        // thread might be paused.
-        triggerNetworkRequests(tab.linkedBrowser, [cachedRequest]);
-      });
-  });
-
-  await waitOnRequestForResourceCommandCache;
-
-  const actualResourcesOnAvailable = {};
-  const actualResourcesOnUpdated = {};
-
-  let {
-    totalExpectedOnAvailableCounts,
-    totalExpectedOnUpdatedCounts,
-    expectedResourcesOnAvailable,
-    expectedResourcesOnUpdated,
-
-    ignoreExistingResources,
-  } = options;
-
-  const waitForAllExpectedOnAvailableEvents = waitUntil(
-    () => totalExpectedOnAvailableCounts == 0
+  await assertNetworkResourcesOnPage(
+    pageUrl,
+    expectedAvailable,
+    expectedUpdated
   );
-  const waitForAllExpectedOnUpdatedEvents = waitUntil(
-    () => totalExpectedOnUpdatedCounts == 0
+});
+
+add_task(async function testIframeRequest() {
+  info(`Tests for NETWORK_EVENT resources with an iframe`);
+
+  // Do a XHR request that we cancel against a slow loading page
+  const iframeRequestUrl =
+    "https://example.org/document-builder.sjs?html=iframe-request";
+  const iframeHtml = `iframe<script>fetch("${iframeRequestUrl}")</script>`;
+  const iframeUrl =
+    "https://example.org/document-builder.sjs?html=" +
+    encodeURIComponent(iframeHtml);
+  const html = `top-document<iframe src="${iframeUrl}"></iframe>`;
+  const pageUrl =
+    "https://example.org/document-builder.sjs?html=" + encodeURIComponent(html);
+
+  const expectedAvailable = [
+    {
+      url: pageUrl,
+      method: "GET",
+      isNavigationRequest: true,
+      // The top level navigation request relates to the previous top level target.
+      // Unfortunately, it is hard to test because it is racy.
+      // The target front might be destroyed and `targetFront.url` will be null.
+      // Or not just yet and be equal to "about:blank".
+    },
+    {
+      url: iframeUrl,
+      method: "GET",
+      isNavigationRequest: false,
+      targetFrontUrl: pageUrl,
+    },
+    {
+      url: iframeRequestUrl,
+      method: "GET",
+      isNavigationRequest: false,
+      targetFrontUrl: iframeUrl,
+    },
+  ];
+  const expectedUpdated = [
+    {
+      url: pageUrl,
+      method: "GET",
+      isNavigationRequest: true,
+    },
+    {
+      url: iframeUrl,
+      method: "GET",
+      isNavigationRequest: false,
+    },
+    {
+      url: iframeRequestUrl,
+      method: "GET",
+      isNavigationRequest: false,
+    },
+  ];
+
+  await assertNetworkResourcesOnPage(
+    pageUrl,
+    expectedAvailable,
+    expectedUpdated
   );
+});
+
+async function assertNetworkResourcesOnPage(
+  url,
+  expectedAvailable,
+  expectedUpdated
+) {
+  // First open a blank document to avoid spawning any request
+  const tab = await addTab("about:blank");
+
+  const commands = await CommandsFactory.forTab(tab);
+  await commands.targetCommand.startListening();
+  const { resourceCommand } = commands;
 
   const onAvailable = resources => {
     for (const resource of resources) {
-      is(
-        resource.resourceType,
-        resourceCommand.TYPES.NETWORK_EVENT,
-        "Received a network event resource"
+      // Immediately assert the resource, as the same resource object
+      // will be notified to onUpdated and so if we assert it later
+      // we will not highlight attributes that aren't set yet from onAvailable.
+      const idx = expectedAvailable.findIndex(e => e.url === resource.url);
+      ok(
+        idx != -1,
+        "Found a matching available notification for: " + resource.url
       );
-      actualResourcesOnAvailable[resource.url] = resource;
-      totalExpectedOnAvailableCounts--;
+      // Remove the match from the list in case there is many requests with the same url
+      const [expected] = expectedAvailable.splice(idx, 1);
+
+      assertResources(resource, expected);
     }
   };
-
   const onUpdated = updates => {
     for (const { resource } of updates) {
-      is(
-        resource.resourceType,
-        resourceCommand.TYPES.NETWORK_EVENT,
-        "Received a network update event resource"
+      const idx = expectedUpdated.findIndex(e => e.url === resource.url);
+      ok(
+        idx != -1,
+        "Found a matching updated notification for: " + resource.url
       );
-      actualResourcesOnUpdated[resource.url] = resource;
-      totalExpectedOnUpdatedCounts--;
+      // Remove the match from the list in case there is many requests with the same url
+      const [expected] = expectedUpdated.splice(idx, 1);
+
+      assertResources(resource, expected);
     }
   };
 
+  // Start observing for network events before loading the test page
   await resourceCommand.watchResources([resourceCommand.TYPES.NETWORK_EVENT], {
     onAvailable,
     onUpdated,
-    ignoreExistingResources,
   });
 
-  info(
-    `Trigger the rest of the requests *after* calling ResourceCommand.watchResources
-     in order to assert the behavior of live network events.`
+  // Load the test page that fires network requests
+  const onLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+  await onLoaded;
+
+  // Make sure we processed all the expected request updates
+  await waitFor(
+    () => expectedAvailable.length == 0,
+    "Wait for all expected available notifications"
   );
-  await triggerNetworkRequests(tab.linkedBrowser, [liveRequest]);
-
-  await Promise.all([
-    waitForAllExpectedOnAvailableEvents,
-    waitForAllExpectedOnUpdatedEvents,
-  ]);
-
-  info("Check the resources on available");
-  is(
-    Object.keys(actualResourcesOnAvailable).length,
-    Object.keys(expectedResourcesOnAvailable).length,
-    "Got the expected number of network events fired onAvailable"
+  await waitFor(
+    () => expectedUpdated.length == 0,
+    "Wait for all expected updated notifications"
   );
 
-  // assert that the resourceId for the the available and updated events match
-  is(
-    actualResourcesOnAvailable[`${EXAMPLE_DOMAIN}live_get.html`].resourceId,
-    actualResourcesOnUpdated[`${EXAMPLE_DOMAIN}live_get.html`].resourceId,
-    "The resource id's are the same"
-  );
-
-  // assert the resources emitted when the network event is created
-  for (const key in expectedResourcesOnAvailable) {
-    const expected = expectedResourcesOnAvailable[key];
-    const actual = actualResourcesOnAvailable[key];
-    assertResources(actual, expected);
-  }
-
-  info("Check the resources on updated");
-
-  is(
-    Object.keys(actualResourcesOnUpdated).length,
-    Object.keys(expectedResourcesOnUpdated).length,
-    "Got the expected number of network events fired onUpdated"
-  );
-
-  // assert the resources emitted when the network event is updated
-  for (const key in expectedResourcesOnUpdated) {
-    const expected = expectedResourcesOnUpdated[key];
-    const actual = actualResourcesOnUpdated[key];
-    assertResources(actual, expected);
-  }
-
-  await resourceCommand.unwatchResources(
-    [resourceCommand.TYPES.NETWORK_EVENT],
-    {
-      onAvailable,
-      onUpdated,
-      ignoreExistingResources,
-    }
-  );
-
-  await resourceCommand.unwatchResources(
-    [resourceCommand.TYPES.NETWORK_EVENT],
-    {
-      onAvailable: onResourceAvailable,
-      onUpdated: onResourceUpdated,
-    }
-  );
-  targetCommand.destroy();
-  await client.close();
-  BrowserTestUtils.removeTab(tab);
-}
-
-async function testNetworkEventResourcesFromTheContentProcess() {
-  info(`Tests for network event resources from the content process`);
-
-  const CSP_URL =
-    EXAMPLE_DOMAIN +
-    "browser/devtools/client/netmonitor/test/html_csp-test-page.html";
-  const JS_CSP_URL =
-    EXAMPLE_DOMAIN +
-    "browser/devtools/client/netmonitor/test/js_websocket-worker-test.js";
-  const CSS_CSP_URL =
-    EXAMPLE_DOMAIN +
-    "browser/devtools/client/netmonitor/test/internal-loaded.css";
-
-  const CSP_BLOCKED_REASON_CODE = 4000;
-
-  const allResourcesOnAvailable = [];
-  const allResourcesOnUpdate = [];
-
-  const tab = await addTab(CSP_URL);
-  const { client, resourceCommand, targetCommand } = await initResourceCommand(
-    tab
-  );
-
-  let onAvailable = () => {};
-  let onUpdated = () => {};
-
-  await new Promise(resolve => {
-    onAvailable = resources => {
-      for (const resource of resources) {
-        allResourcesOnAvailable.push(resource);
-      }
-    };
-    onUpdated = updates => {
-      for (const { resource } of updates) {
-        allResourcesOnUpdate.push(resource);
-      }
-      // Make sure we get 3 updates for the 3 requests sent
-      if (allResourcesOnUpdate.length == 3) {
-        resolve();
-      }
-    };
-
-    resourceCommand
-      .watchResources([resourceCommand.TYPES.NETWORK_EVENT], {
-        onAvailable,
-        onUpdated,
-      })
-      .then(() => reloadBrowser());
+  resourceCommand.unwatchResources([resourceCommand.TYPES.NETWORK_EVENT], {
+    onAvailable,
+    onUpdated,
   });
 
-  is(
-    allResourcesOnAvailable.length,
-    3,
-    "Got three network events fired on available"
-  );
-  is(
-    allResourcesOnUpdate.length,
-    3,
-    "Got three network events fired on update"
-  );
+  await commands.destroy();
 
-  // Find the page's request
-  const availablePageResource = allResourcesOnAvailable.find(
-    resource => resource.url === CSP_URL
-  );
-  is(
-    availablePageResource.resourceType,
-    resourceCommand.TYPES.NETWORK_EVENT,
-    "This is a network event resource"
-  );
-  is(
-    availablePageResource.isNavigationRequest,
-    true,
-    "The page request is correctly flaged as a navigation request"
-  );
-
-  // Find the Blocked CSP JS resource
-  const availableJSResource = allResourcesOnAvailable.find(
-    resource => resource.url === JS_CSP_URL
-  );
-  const updateJSResource = allResourcesOnUpdate.find(
-    update => update.url === JS_CSP_URL
-  );
-
-  // Assert the data for the CSP blocked JS script file
-  is(
-    availableJSResource.resourceType,
-    resourceCommand.TYPES.NETWORK_EVENT,
-    "This is a network event resource"
-  );
-  is(
-    availableJSResource.blockedReason,
-    CSP_BLOCKED_REASON_CODE,
-    "The js resource is blocked by CSP"
-  );
-
-  is(
-    updateJSResource.resourceType,
-    resourceCommand.TYPES.NETWORK_EVENT,
-    "This is a network event resource"
-  );
-  is(
-    updateJSResource.blockedReason,
-    CSP_BLOCKED_REASON_CODE,
-    "The js resource is blocked by CSP"
-  );
-
-  // Find the Blocked CSP CSS resource
-  const availableCSSResource = allResourcesOnAvailable.find(
-    resource => resource.url === CSS_CSP_URL
-  );
-
-  const updateCSSResource = allResourcesOnUpdate.find(
-    update => update.url === CSS_CSP_URL
-  );
-
-  // Assert the data for the CSP blocked CSS file
-  is(
-    availableCSSResource.resourceType,
-    resourceCommand.TYPES.NETWORK_EVENT,
-    "This is a network event resource"
-  );
-  is(
-    availableCSSResource.blockedReason,
-    CSP_BLOCKED_REASON_CODE,
-    "The css resource is blocked by CSP"
-  );
-
-  is(
-    updateCSSResource.resourceType,
-    resourceCommand.TYPES.NETWORK_EVENT,
-    "This is a network event resource"
-  );
-  is(
-    updateCSSResource.blockedReason,
-    CSP_BLOCKED_REASON_CODE,
-    "The css resource is blocked by CSP"
-  );
-
-  await resourceCommand.unwatchResources(
-    [resourceCommand.TYPES.NETWORK_EVENT],
-    {
-      onAvailable,
-      onUpdated,
-    }
-  );
-
-  targetCommand.destroy();
-  await client.close();
   BrowserTestUtils.removeTab(tab);
 }
 
 function assertResources(actual, expected) {
   is(
     actual.resourceType,
-    expected.resourceType,
+    ResourceCommand.TYPES.NETWORK_EVENT,
     "The resource type is correct"
   );
-  is(actual.method, expected.method, "The method is correct");
-  if ("isNavigationRequest" in expected) {
-    is(
-      actual.isNavigationRequest,
-      expected.isNavigationRequest,
-      "The isNavigationRequest attribute is correct"
-    );
+  is(
+    typeof actual.innerWindowId,
+    "number",
+    "All requests have an innerWindowId attribute"
+  );
+  ok(
+    actual.targetFront.isTargetFront,
+    "All requests have a targetFront attribute"
+  );
+
+  for (const name in expected) {
+    if (name == "targetFrontUrl") {
+      is(
+        actual.targetFront.url,
+        expected[name],
+        "The request matches the right target front"
+      );
+    } else {
+      is(actual[name], expected[name], `The '${name}' attribute is correct`);
+    }
   }
 }
-
-const cachedRequest = `await fetch("/cached_post.html", { method: "POST" });`;
-const liveRequest = `await fetch("/live_get.html", { method: "GET" });`;

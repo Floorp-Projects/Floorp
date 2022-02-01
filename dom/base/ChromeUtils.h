@@ -88,6 +88,9 @@ class ChromeUtils {
                                 const ProfilerMarkerOptionsOrDouble& aOptions,
                                 const Optional<nsACString>& text);
 
+  static void GetXPCOMErrorName(GlobalObject& aGlobal, uint32_t aErrorCode,
+                                nsACString& aRetval);
+
   static void OriginAttributesToSuffix(
       GlobalObject& aGlobal, const dom::OriginAttributesDictionary& aAttrs,
       nsCString& aSuffix);
@@ -184,6 +187,8 @@ class ChromeUtils {
 
   static already_AddRefed<Promise> RequestProcInfo(GlobalObject& aGlobal,
                                                    ErrorResult& aRv);
+
+  static bool VsyncEnabled(GlobalObject& aGlobal);
 
   static void Import(const GlobalObject& aGlobal, const nsAString& aResourceURI,
                      const Optional<JS::Handle<JSObject*>>& aTargetObj,

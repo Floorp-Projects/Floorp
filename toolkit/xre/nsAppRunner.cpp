@@ -707,6 +707,9 @@ static void EnsureFissionAutostartInitialized() {
   } else if (EnvHasValue("MOZ_FORCE_ENABLE_FISSION")) {
     gFissionAutostart = true;
     gFissionDecisionStatus = nsIXULRuntime::eFissionEnabledByEnv;
+  } else if (EnvHasValue("MOZ_FORCE_DISABLE_FISSION")) {
+    gFissionAutostart = false;
+    gFissionDecisionStatus = nsIXULRuntime::eFissionDisabledByEnv;
   } else {
     // NOTE: This will take into account changes to the default due to
     // `InitializeFissionExperimentStatus`.
@@ -973,22 +976,15 @@ nsXULAppInfo::GetWidgetToolkit(nsACString& aResult) {
 // Ensure that the GeckoProcessType enum, defined in xpcom/build/nsXULAppAPI.h,
 // is synchronized with the const unsigned longs defined in
 // xpcom/system/nsIXULRuntime.idl.
-#define SYNC_ENUMS(a, b)                                                   \
-  static_assert(nsIXULRuntime::PROCESS_TYPE_##a ==                         \
-                    static_cast<int>(GeckoProcessType_##b),                \
-                "GeckoProcessType in nsXULAppAPI.h not synchronized with " \
+#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, proc_typename, \
+                           process_bin_type, procinfo_typename,               \
+                           webidl_typename, allcaps_name)                     \
+  static_assert(nsIXULRuntime::PROCESS_TYPE_##allcaps_name ==                 \
+                    static_cast<int>(GeckoProcessType_##enum_name),           \
+                "GeckoProcessType in nsXULAppAPI.h not synchronized with "    \
                 "nsIXULRuntime.idl");
-
-SYNC_ENUMS(DEFAULT, Default)
-SYNC_ENUMS(CONTENT, Content)
-SYNC_ENUMS(IPDLUNITTEST, IPDLUnitTest)
-SYNC_ENUMS(GMPLUGIN, GMPlugin)
-SYNC_ENUMS(GPU, GPU)
-SYNC_ENUMS(VR, VR)
-SYNC_ENUMS(RDD, RDD)
-SYNC_ENUMS(SOCKET, Socket)
-SYNC_ENUMS(SANDBOX_BROKER, RemoteSandboxBroker)
-SYNC_ENUMS(FORKSERVER, ForkServer)
+#include "mozilla/GeckoProcessTypes.h"
+#undef GECKO_PROCESS_TYPE
 
 // .. and ensure that that is all of them:
 static_assert(GeckoProcessType_ForkServer + 1 == GeckoProcessType_End,
@@ -1115,6 +1111,9 @@ nsXULAppInfo::GetFissionDecisionStatusString(nsACString& aResult) {
       break;
     case eFissionEnabledByEnv:
       aResult = "enabledByEnv";
+      break;
+    case eFissionDisabledByEnv:
+      aResult = "disabledByEnv";
       break;
     case eFissionDisabledBySafeMode:
       aResult = "disabledBySafeMode";
@@ -1275,26 +1274,6 @@ NS_IMETHODIMP
 nsXULAppInfo::GetReplacedLockTime(PRTime* aReplacedLockTime) {
   if (!gProfileLock) return NS_ERROR_NOT_AVAILABLE;
   gProfileLock->GetReplacedLockTime(aReplacedLockTime);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULAppInfo::GetIsReleaseOrBeta(bool* aResult) {
-#ifdef RELEASE_OR_BETA
-  *aResult = true;
-#else
-  *aResult = false;
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULAppInfo::GetIsOfficialBranding(bool* aResult) {
-#ifdef MOZ_OFFICIAL_BRANDING
-  *aResult = true;
-#else
-  *aResult = false;
-#endif
   return NS_OK;
 }
 
@@ -4141,29 +4120,57 @@ bool IsWaylandEnabled() {
   if (!waylandDisplay) {
     return false;
   }
-
-  const char* x11Display = PR_GetEnv("DISPLAY");
-  // MOZ_ENABLE_WAYLAND is our primary Wayland on/off switch.
-  const char* waylandPref = PR_GetEnv("MOZ_ENABLE_WAYLAND");
-  bool enableWayland = !x11Display || (waylandPref && *waylandPref == '1');
-  if (!enableWayland) {
-    const char* backendPref = PR_GetEnv("GDK_BACKEND");
-    enableWayland = (backendPref && strncmp(backendPref, "wayland", 7) == 0);
-    if (enableWayland) {
-      NS_WARNING(
-          "Wayland backend should be enabled by MOZ_ENABLE_WAYLAND=1."
-          "GDK_BACKEND is a Gtk3 debug variable and may cause various issues.");
+  const bool gtkIsNewEnough = !gtk_check_version(3, 22, 0);
+  const bool enabled = [] {
+    if (!PR_GetEnv("DISPLAY")) {
+      // No X11 display, so try to run wayland.
+      return true;
     }
+    // MOZ_ENABLE_WAYLAND is our primary Wayland on/off switch.
+    if (const char* waylandPref = PR_GetEnv("MOZ_ENABLE_WAYLAND")) {
+      return *waylandPref == '1';
+    }
+    if (const char* backendPref = PR_GetEnv("GDK_BACKEND")) {
+      if (!strncmp(backendPref, "wayland", 7)) {
+        NS_WARNING(
+            "Wayland backend should be enabled by MOZ_ENABLE_WAYLAND=1."
+            "GDK_BACKEND is a Gtk3 debug variable and may cause issues.");
+        return true;
+      }
+    }
+    return false;
+  }();
+  if (enabled && !gtkIsNewEnough) {
+    NS_WARNING(
+        "Running Wayland backend on Gtk3 < 3.22. Expect issues/glitches");
   }
-  if (enableWayland && gtk_check_version(3, 22, 0) != nullptr) {
-    NS_WARNING("Running Wayland backen on Gtk3 < 3.22. Expect issues/glitches");
-  }
-  return enableWayland;
+  return enabled;
 }
 #endif
 
 #if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
-bool ShouldProcessUpdates(nsXREDirProvider& aDirProvider) {
+enum struct ShouldNotProcessUpdatesReason {
+  DevToolsLaunching,
+  NotAnUpdatingTask,
+  OtherInstanceRunning,
+};
+
+const char* ShouldNotProcessUpdatesReasonAsString(
+    ShouldNotProcessUpdatesReason aReason) {
+  switch (aReason) {
+    case ShouldNotProcessUpdatesReason::DevToolsLaunching:
+      return "DevToolsLaunching";
+    case ShouldNotProcessUpdatesReason::NotAnUpdatingTask:
+      return "NotAnUpdatingTask";
+    case ShouldNotProcessUpdatesReason::OtherInstanceRunning:
+      return "OtherInstanceRunning";
+    default:
+      MOZ_CRASH("impossible value for ShouldNotProcessUpdatesReason");
+  }
+}
+
+Maybe<ShouldNotProcessUpdatesReason> ShouldNotProcessUpdates(
+    nsXREDirProvider& aDirProvider) {
   // Do not process updates if we're launching devtools, as evidenced by
   // "--chrome ..." with the browser toolbox chrome document URL.
 
@@ -4178,8 +4185,8 @@ bool ShouldProcessUpdates(nsXREDirProvider& aDirProvider) {
   const char* chromeParam = nullptr;
   if (ARG_FOUND == CheckArg("chrome", &chromeParam, CheckArgFlag::None)) {
     if (!chromeParam || !strcmp(BROWSER_TOOLBOX_WINDOW_URL, chromeParam)) {
-      NS_WARNING("!ShouldProcessUpdates(): launching devtools");
-      return false;
+      NS_WARNING("ShouldNotProcessUpdates(): DevToolsLaunching");
+      return Some(ShouldNotProcessUpdatesReason::DevToolsLaunching);
     }
   }
 
@@ -4187,7 +4194,25 @@ bool ShouldProcessUpdates(nsXREDirProvider& aDirProvider) {
   // Do not process updates if we're running a background task mode and another
   // instance is already running.  This avoids periodic maintenance updating
   // underneath a browsing session.
-  if (BackgroundTasks::IsBackgroundTaskMode()) {
+  Maybe<nsCString> backgroundTasks = BackgroundTasks::GetBackgroundTasks();
+  if (backgroundTasks.isSome()) {
+    // Only process updates for specific tasks: at this time, the
+    // `backgroundupdate` task and the test-only `shouldprocessupdates` task.
+    //
+    // Background tasks can be sparked by Firefox instances that are shutting
+    // down, which can cause races between the task startup trying to update and
+    // Firefox trying to invoke the updater.  This happened when converting
+    // `pingsender` to a background task, since it is launched to send pings at
+    // shutdown: Bug 1736373.
+    //
+    // We'd prefer to have this be a property of the task definition sibling to
+    // `backgroundTaskTimeoutSec`, but when we reach this code we're well before
+    // we can load the task JSM.
+    if (!BackgroundTasks::IsUpdatingTaskName(backgroundTasks.ref())) {
+      NS_WARNING("ShouldNotProcessUpdates(): NotAnUpdatingTask");
+      return Some(ShouldNotProcessUpdatesReason::NotAnUpdatingTask);
+    }
+
     // At this point we have a dir provider but no XPCOM directory service.  We
     // launch the update sync manager using that information so that it doesn't
     // need to ask for (and fail to find) the directory service.
@@ -4197,7 +4222,7 @@ bool ShouldProcessUpdates(nsXREDirProvider& aDirProvider) {
                                        getter_AddRefs(anAppFile));
     if (NS_FAILED(rv) || !anAppFile) {
       // Strange, but not a reason to skip processing updates.
-      return true;
+      return Nothing();
     }
 
     auto updateSyncManager = new nsUpdateSyncManager(anAppFile);
@@ -4205,13 +4230,13 @@ bool ShouldProcessUpdates(nsXREDirProvider& aDirProvider) {
     bool otherInstance = false;
     updateSyncManager->IsOtherInstanceRunning(&otherInstance);
     if (otherInstance) {
-      NS_WARNING("!ShouldProcessUpdates(): other instance is running");
-      return false;
+      NS_WARNING("ShouldNotProcessUpdates(): OtherInstanceRunning");
+      return Some(ShouldNotProcessUpdatesReason::OtherInstanceRunning);
     }
   }
 #  endif
 
-  return true;
+  return Nothing();
 }
 #endif
 
@@ -4575,7 +4600,9 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 #endif
 
 #if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
-  if (ShouldProcessUpdates(mDirProvider)) {
+  Maybe<ShouldNotProcessUpdatesReason> shouldNotProcessUpdatesReason =
+      ShouldNotProcessUpdates(mDirProvider);
+  if (shouldNotProcessUpdatesReason.isNothing()) {
     // Check for and process any available updates
     nsCOMPtr<nsIFile> updRoot;
     bool persistent;
@@ -4633,7 +4660,12 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
       // Support for testing *not* processing an update.  The launched process
       // can witness this environment variable and conclude that its runtime
       // environment resulted in not processing updates.
-      SaveToEnv("MOZ_TEST_PROCESS_UPDATES=!ShouldProcessUpdates()");
+
+      SaveToEnv(nsPrintfCString(
+                    "MOZ_TEST_PROCESS_UPDATES=ShouldNotProcessUpdates(): %s",
+                    ShouldNotProcessUpdatesReasonAsString(
+                        shouldNotProcessUpdatesReason.value()))
+                    .get());
     }
   }
 #endif
@@ -5639,10 +5671,11 @@ bool XRE_IsE10sParentProcess() {
 #endif
 }
 
-#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, xre_name, \
-                           bin_type)                                     \
-  bool XRE_Is##xre_name##Process() {                                     \
-    return XRE_GetProcessType() == GeckoProcessType_##enum_name;         \
+#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, proc_typename, \
+                           process_bin_type, procinfo_typename,               \
+                           webidl_typename, allcaps_name)                     \
+  bool XRE_Is##proc_typename##Process() {                                     \
+    return XRE_GetProcessType() == GeckoProcessType_##enum_name;              \
   }
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE
@@ -5747,10 +5780,11 @@ mozilla::BinPathType XRE_GetChildProcBinPathType(
   }
 
   switch (aProcessType) {
-#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, xre_name, \
-                           bin_type)                                     \
-  case GeckoProcessType_##enum_name:                                     \
-    return BinPathType::bin_type;
+#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, proc_typename, \
+                           process_bin_type, procinfo_typename,               \
+                           webidl_typename, allcaps_name)                     \
+  case GeckoProcessType_##enum_name:                                          \
+    return BinPathType::process_bin_type;
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE
     default:

@@ -3,18 +3,18 @@
 
 "use strict";
 
-var { CrashStore, CrashManager } = ChromeUtils.import(
-  "resource://gre/modules/CrashManager.jsm",
-  null
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { CrashManager } = ChromeUtils.import(
+  "resource://gre/modules/CrashManager.jsm"
 );
-ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
-ChromeUtils.import("resource://gre/modules/Services.jsm", this);
-ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", this);
-
-ChromeUtils.import("resource://testing-common/CrashManagerTest.jsm", this);
-ChromeUtils.import(
-  "resource://testing-common/TelemetryArchiveTesting.jsm",
-  this
+const { TelemetryArchiveTesting } = ChromeUtils.import(
+  "resource://testing-common/TelemetryArchiveTesting.jsm"
+);
+const { configureLogging, getManager, sleep } = ChromeUtils.import(
+  "resource://testing-common/CrashManagerTest.jsm"
+);
+const { TelemetryEnvironment } = ChromeUtils.import(
+  "resource://gre/modules/TelemetryEnvironment.jsm"
 );
 
 const DUMMY_DATE = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
@@ -52,6 +52,35 @@ add_task(async function test_get_manager() {
 
   await m.createDummyDump(true);
   await m.createDummyDump(false);
+});
+
+add_task(async function test_valid_process() {
+  let m = await getManager();
+  Assert.ok(m, "CrashManager obtained.");
+
+  Assert.ok(!m.isValidProcessType(42));
+  Assert.ok(!m.isValidProcessType(null));
+  Assert.ok(!m.isValidProcessType("default"));
+
+  Assert.ok(m.isValidProcessType("main"));
+});
+
+add_task(async function test_process_ping() {
+  let m = await getManager();
+  Assert.ok(m, "CrashManager obtained.");
+
+  Assert.ok(!m.isPingAllowed(42));
+  Assert.ok(!m.isPingAllowed(null));
+  Assert.ok(!m.isPingAllowed("default"));
+
+  Assert.ok(!m.isPingAllowed("main"));
+  Assert.ok(!m.isPingAllowed("ipdlunittest"));
+  Assert.ok(!m.isPingAllowed("gmplugin"));
+  Assert.ok(!m.isPingAllowed("remotesandboxbroker"));
+  Assert.ok(!m.isPingAllowed("forkserver"));
+
+  Assert.ok(m.isPingAllowed("content"));
+  Assert.ok(m.isPingAllowed("gpu"));
 });
 
 // Unsubmitted dump files on disk are detected properly.
@@ -186,7 +215,12 @@ add_task(async function test_prune_old() {
   let oldDate = new Date(Date.now() - 86400000);
   let newDate = new Date(Date.now() - 10000);
   await m.createEventsFile("1", "crash.main.3", oldDate, "id1", "{}");
-  await m.addCrash(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_CRASH, "id2", newDate);
+  await m.addCrash(
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT],
+    m.CRASH_TYPE_CRASH,
+    "id2",
+    newDate
+  );
 
   await m.aggregateEventsFiles();
 
@@ -224,7 +258,6 @@ add_task(async function test_schedule_maintenance() {
 });
 
 const crashId = "3cb67eba-0dc7-6f78-6a569a0e-172287ec";
-const crashPingUuid = "103dbdf2-339b-4b9c-a7cc-5f9506ea9d08";
 const productName = "Firefox";
 const productId = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 const sha256Hash =
@@ -417,7 +450,7 @@ add_task(async function test_high_water_mark() {
   }
 
   let count = await m.aggregateEventsFiles();
-  Assert.equal(count, CrashStore.prototype.HIGH_WATER_DAILY_THRESHOLD + 1);
+  Assert.equal(count, store.HIGH_WATER_DAILY_THRESHOLD + 1);
 
   // Need to fetch again in case the first one was garbage collected.
   store = await m._getStore();
@@ -432,68 +465,68 @@ add_task(async function test_addCrash() {
   Assert.equal(crashes.length, 0);
 
   await m.addCrash(
-    m.PROCESS_TYPE_MAIN,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT],
     m.CRASH_TYPE_CRASH,
     "main-crash",
     DUMMY_DATE
   );
   await m.addCrash(
-    m.PROCESS_TYPE_MAIN,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT],
     m.CRASH_TYPE_HANG,
     "main-hang",
     DUMMY_DATE
   );
   await m.addCrash(
-    m.PROCESS_TYPE_CONTENT,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT],
     m.CRASH_TYPE_CRASH,
     "content-crash",
     DUMMY_DATE
   );
   await m.addCrash(
-    m.PROCESS_TYPE_CONTENT,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT],
     m.CRASH_TYPE_HANG,
     "content-hang",
     DUMMY_DATE
   );
   await m.addCrash(
-    m.PROCESS_TYPE_GMPLUGIN,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_GMPLUGIN],
     m.CRASH_TYPE_CRASH,
     "gmplugin-crash",
     DUMMY_DATE
   );
   await m.addCrash(
-    m.PROCESS_TYPE_GPU,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_GPU],
     m.CRASH_TYPE_CRASH,
     "gpu-crash",
     DUMMY_DATE
   );
   await m.addCrash(
-    m.PROCESS_TYPE_VR,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_VR],
     m.CRASH_TYPE_CRASH,
     "vr-crash",
     DUMMY_DATE
   );
   await m.addCrash(
-    m.PROCESS_TYPE_RDD,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_RDD],
     m.CRASH_TYPE_CRASH,
     "rdd-crash",
     DUMMY_DATE
   );
   await m.addCrash(
-    m.PROCESS_TYPE_SOCKET,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_SOCKET],
     m.CRASH_TYPE_CRASH,
     "socket-crash",
     DUMMY_DATE
   );
 
   await m.addCrash(
-    m.PROCESS_TYPE_MAIN,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT],
     m.CRASH_TYPE_CRASH,
     "changing-item",
     DUMMY_DATE
   );
   await m.addCrash(
-    m.PROCESS_TYPE_CONTENT,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT],
     m.CRASH_TYPE_HANG,
     "changing-item",
     DUMMY_DATE_2
@@ -507,76 +540,170 @@ add_task(async function test_addCrash() {
   let crash = map.get("main-crash");
   Assert.ok(!!crash);
   Assert.equal(crash.crashDate, DUMMY_DATE);
-  Assert.equal(crash.type, m.PROCESS_TYPE_MAIN + "-" + m.CRASH_TYPE_CRASH);
-  Assert.ok(crash.isOfType(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_CRASH));
+  Assert.equal(
+    crash.type,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT] +
+      "-" +
+      m.CRASH_TYPE_CRASH
+  );
+  Assert.ok(
+    crash.isOfType(
+      m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT],
+      m.CRASH_TYPE_CRASH
+    )
+  );
 
   crash = map.get("main-hang");
   Assert.ok(!!crash);
   Assert.equal(crash.crashDate, DUMMY_DATE);
-  Assert.equal(crash.type, m.PROCESS_TYPE_MAIN + "-" + m.CRASH_TYPE_HANG);
-  Assert.ok(crash.isOfType(m.PROCESS_TYPE_MAIN, m.CRASH_TYPE_HANG));
+  Assert.equal(
+    crash.type,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT] +
+      "-" +
+      m.CRASH_TYPE_HANG
+  );
+  Assert.ok(
+    crash.isOfType(
+      m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT],
+      m.CRASH_TYPE_HANG
+    )
+  );
 
   crash = map.get("content-crash");
   Assert.ok(!!crash);
   Assert.equal(crash.crashDate, DUMMY_DATE);
-  Assert.equal(crash.type, m.PROCESS_TYPE_CONTENT + "-" + m.CRASH_TYPE_CRASH);
-  Assert.ok(crash.isOfType(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_CRASH));
+  Assert.equal(
+    crash.type,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT] +
+      "-" +
+      m.CRASH_TYPE_CRASH
+  );
+  Assert.ok(
+    crash.isOfType(
+      m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT],
+      m.CRASH_TYPE_CRASH
+    )
+  );
 
   crash = map.get("content-hang");
   Assert.ok(!!crash);
   Assert.equal(crash.crashDate, DUMMY_DATE);
-  Assert.equal(crash.type, m.PROCESS_TYPE_CONTENT + "-" + m.CRASH_TYPE_HANG);
-  Assert.ok(crash.isOfType(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_HANG));
+  Assert.equal(
+    crash.type,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT] +
+      "-" +
+      m.CRASH_TYPE_HANG
+  );
+  Assert.ok(
+    crash.isOfType(
+      m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT],
+      m.CRASH_TYPE_HANG
+    )
+  );
 
   crash = map.get("gmplugin-crash");
   Assert.ok(!!crash);
   Assert.equal(crash.crashDate, DUMMY_DATE);
-  Assert.equal(crash.type, m.PROCESS_TYPE_GMPLUGIN + "-" + m.CRASH_TYPE_CRASH);
-  Assert.ok(crash.isOfType(m.PROCESS_TYPE_GMPLUGIN, m.CRASH_TYPE_CRASH));
+  Assert.equal(
+    crash.type,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_GMPLUGIN] +
+      "-" +
+      m.CRASH_TYPE_CRASH
+  );
+  Assert.ok(
+    crash.isOfType(
+      m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_GMPLUGIN],
+      m.CRASH_TYPE_CRASH
+    )
+  );
 
   crash = map.get("gpu-crash");
   Assert.ok(!!crash);
   Assert.equal(crash.crashDate, DUMMY_DATE);
-  Assert.equal(crash.type, m.PROCESS_TYPE_GPU + "-" + m.CRASH_TYPE_CRASH);
-  Assert.ok(crash.isOfType(m.PROCESS_TYPE_GPU, m.CRASH_TYPE_CRASH));
+  Assert.equal(
+    crash.type,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_GPU] + "-" + m.CRASH_TYPE_CRASH
+  );
+  Assert.ok(
+    crash.isOfType(
+      m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_GPU],
+      m.CRASH_TYPE_CRASH
+    )
+  );
 
   crash = map.get("vr-crash");
   Assert.ok(!!crash);
   Assert.equal(crash.crashDate, DUMMY_DATE);
-  Assert.equal(crash.type, m.PROCESS_TYPE_VR + "-" + m.CRASH_TYPE_CRASH);
-  Assert.ok(crash.isOfType(m.PROCESS_TYPE_VR, m.CRASH_TYPE_CRASH));
+  Assert.equal(
+    crash.type,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_VR] + "-" + m.CRASH_TYPE_CRASH
+  );
+  Assert.ok(
+    crash.isOfType(
+      m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_VR],
+      m.CRASH_TYPE_CRASH
+    )
+  );
 
   crash = map.get("rdd-crash");
   Assert.ok(!!crash);
   Assert.equal(crash.crashDate, DUMMY_DATE);
-  Assert.equal(crash.type, m.PROCESS_TYPE_RDD + "-" + m.CRASH_TYPE_CRASH);
-  Assert.ok(crash.isOfType(m.PROCESS_TYPE_RDD, m.CRASH_TYPE_CRASH));
+  Assert.equal(
+    crash.type,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_RDD] + "-" + m.CRASH_TYPE_CRASH
+  );
+  Assert.ok(
+    crash.isOfType(
+      m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_RDD],
+      m.CRASH_TYPE_CRASH
+    )
+  );
 
   crash = map.get("socket-crash");
   Assert.ok(!!crash);
   Assert.equal(crash.crashDate, DUMMY_DATE);
-  Assert.equal(crash.type, m.PROCESS_TYPE_SOCKET + "-" + m.CRASH_TYPE_CRASH);
-  Assert.ok(crash.isOfType(m.PROCESS_TYPE_SOCKET, m.CRASH_TYPE_CRASH));
+  Assert.equal(
+    crash.type,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_SOCKET] +
+      "-" +
+      m.CRASH_TYPE_CRASH
+  );
+  Assert.ok(
+    crash.isOfType(
+      m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_SOCKET],
+      m.CRASH_TYPE_CRASH
+    )
+  );
 
   crash = map.get("changing-item");
   Assert.ok(!!crash);
   Assert.equal(crash.crashDate, DUMMY_DATE_2);
-  Assert.equal(crash.type, m.PROCESS_TYPE_CONTENT + "-" + m.CRASH_TYPE_HANG);
-  Assert.ok(crash.isOfType(m.PROCESS_TYPE_CONTENT, m.CRASH_TYPE_HANG));
+  Assert.equal(
+    crash.type,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT] +
+      "-" +
+      m.CRASH_TYPE_HANG
+  );
+  Assert.ok(
+    crash.isOfType(
+      m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT],
+      m.CRASH_TYPE_HANG
+    )
+  );
 });
 
 add_task(async function test_child_process_crash_ping() {
   let m = await getManager();
   const EXPECTED_PROCESSES = [
-    m.PROCESS_TYPE_CONTENT,
-    m.PROCESS_TYPE_GPU,
-    m.PROCESS_TYPE_VR,
-    m.PROCESS_TYPE_RDD,
-    m.PROCESS_TYPE_SOCKET,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT],
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_GPU],
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_VR],
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_RDD],
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_SOCKET],
   ];
 
   const UNEXPECTED_PROCESSES = [
-    m.PROCESS_TYPE_GMPLUGIN,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_GMPLUGIN],
     null,
     12, // non-string process type
   ];
@@ -587,7 +714,10 @@ add_task(async function test_child_process_crash_ping() {
   // Add a child-process crash for each allowed process type.
   for (let p of EXPECTED_PROCESSES) {
     // Generate a ping.
-    const remoteType = p === m.PROCESS_TYPE_CONTENT ? "web" : undefined;
+    const remoteType =
+      p === m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT]
+        ? "web"
+        : undefined;
     let id = await m.createDummyDump();
     await m.addCrash(p, m.CRASH_TYPE_CRASH, id, DUMMY_DATE, {
       RemoteType: remoteType,
@@ -668,7 +798,7 @@ add_task(async function test_addSubmissionAttemptAndResult() {
   Assert.equal(crashes.length, 0);
 
   await m.addCrash(
-    m.PROCESS_TYPE_MAIN,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT],
     m.CRASH_TYPE_CRASH,
     "main-crash",
     DUMMY_DATE
@@ -715,7 +845,7 @@ add_task(async function test_addSubmissionAttemptEarlyCall() {
     });
 
   await m.addCrash(
-    m.PROCESS_TYPE_MAIN,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT],
     m.CRASH_TYPE_CRASH,
     "main-crash",
     DUMMY_DATE
@@ -739,7 +869,7 @@ add_task(async function test_setCrashClassifications() {
   let m = await getManager();
 
   await m.addCrash(
-    m.PROCESS_TYPE_MAIN,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT],
     m.CRASH_TYPE_CRASH,
     "main-crash",
     DUMMY_DATE
@@ -753,13 +883,30 @@ add_task(async function test_setRemoteCrashID() {
   let m = await getManager();
 
   await m.addCrash(
-    m.PROCESS_TYPE_MAIN,
+    m.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT],
     m.CRASH_TYPE_CRASH,
     "main-crash",
     DUMMY_DATE
   );
   await m.setRemoteCrashID("main-crash", "bp-1");
   Assert.equal((await m.getCrashes())[0].remoteID, "bp-1");
+});
+
+add_task(async function test_addCrashWrong() {
+  let m = await getManager();
+
+  let crashes = await m.getCrashes();
+  Assert.equal(crashes.length, 0);
+
+  await m.addCrash(
+    m.processTypes[-1], // passing a wrong type to force 'undefined', it should
+    m.CRASH_TYPE_CRASH, // fail in the end and not record it
+    "wrong-content-crash",
+    DUMMY_DATE
+  );
+
+  crashes = await m.getCrashes();
+  Assert.equal(crashes.length, 0);
 });
 
 add_task(async function test_telemetryHistogram() {
@@ -772,11 +919,16 @@ add_task(async function test_telemetryHistogram() {
   let processTypes = [];
   let crashTypes = [];
 
-  // Gather all process and crash types
+  // Gather all process types
+  for (let field in m.processTypes) {
+    if (m.isPingAllowed(m.processTypes[field])) {
+      processTypes.push(m.processTypes[field]);
+    }
+  }
+
+  // Gather all crash types
   for (let field in m) {
-    if (field.startsWith("PROCESS_TYPE_")) {
-      processTypes.push(m[field]);
-    } else if (field.startsWith("CRASH_TYPE_")) {
+    if (field.startsWith("CRASH_TYPE_")) {
       crashTypes.push(m[field]);
     }
   }
@@ -793,6 +945,10 @@ add_task(async function test_telemetryHistogram() {
       keysCount++;
     }
   }
+
+  // Ensure that we have generated some crash, otherwise it could indicate
+  // something silently regressing
+  Assert.greater(keysCount, 2);
 
   // Check that we have the expected keys.
   let snap = h.snapshot();

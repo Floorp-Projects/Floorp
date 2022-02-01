@@ -439,7 +439,14 @@ StorageActors.defaults = function(typeName, observationTopics) {
           }
         }
 
-        toReturn.total = this.getObjectsSize(host, names, options);
+        if (this.typeName === "Cache") {
+          // Cache storage contains several items per name but misses a custom
+          // `getObjectsSize` implementation, as implemented for IndexedDB.
+          // See Bug 1745242.
+          toReturn.total = toReturn.data.length;
+        } else {
+          toReturn.total = this.getObjectsSize(host, names, options);
+        }
       } else {
         let obj = await this.getValuesForHost(
           host,

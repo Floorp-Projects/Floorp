@@ -1,6 +1,8 @@
+#![allow(deprecated, unused_must_use)]
+
 extern crate futures;
-extern crate tokio_udp;
 extern crate tokio_codec;
+extern crate tokio_udp;
 #[macro_use]
 extern crate tokio_io;
 extern crate bytes;
@@ -9,17 +11,19 @@ extern crate env_logger;
 use std::io;
 use std::net::SocketAddr;
 
-use futures::{Future, Poll, Stream, Sink};
+use futures::{Future, Poll, Sink, Stream};
 
-use tokio_udp::{UdpSocket, UdpFramed};
-use tokio_codec::{Encoder, Decoder};
-use bytes::{BytesMut, BufMut};
+use bytes::{BufMut, BytesMut};
+use tokio_codec::{Decoder, Encoder, LinesCodec};
+use tokio_udp::{UdpFramed, UdpSocket};
 
 macro_rules! t {
-    ($e:expr) => (match $e {
-        Ok(e) => e,
-        Err(e) => panic!("{} failed with {:?}", stringify!($e), e),
-    })
+    ($e:expr) => {
+        match $e {
+            Ok(e) => e,
+            Err(e) => panic!("{} failed with {:?}", stringify!($e), e),
+        }
+    };
 }
 
 fn send_messages<S: SendFn + Clone, R: RecvFn + Clone>(send: S, recv: R) {
@@ -45,7 +49,7 @@ fn send_messages<S: SendFn + Clone, R: RecvFn + Clone>(send: S, recv: R) {
 
 #[test]
 fn send_to_and_recv_from() {
-   send_messages(SendTo {}, RecvFrom {});
+    send_messages(SendTo {}, RecvFrom {});
 }
 
 #[test]
@@ -61,7 +65,12 @@ trait SendFn {
 struct SendTo {}
 
 impl SendFn for SendTo {
-    fn send(&self, socket: &mut UdpSocket, buf: &[u8], addr: &SocketAddr) -> Result<usize, io::Error> {
+    fn send(
+        &self,
+        socket: &mut UdpSocket,
+        buf: &[u8],
+        addr: &SocketAddr,
+    ) -> Result<usize, io::Error> {
         socket.send_to(buf, addr)
     }
 }
@@ -70,7 +79,12 @@ impl SendFn for SendTo {
 struct Send {}
 
 impl SendFn for Send {
-    fn send(&self, socket: &mut UdpSocket, buf: &[u8], addr: &SocketAddr) -> Result<usize, io::Error> {
+    fn send(
+        &self,
+        socket: &mut UdpSocket,
+        buf: &[u8],
+        addr: &SocketAddr,
+    ) -> Result<usize, io::Error> {
         socket.connect(addr).expect("could not connect");
         socket.send(buf)
     }
@@ -99,7 +113,9 @@ impl<S: SendFn> Future for SendMessage<S> {
     type Error = io::Error;
 
     fn poll(&mut self) -> Poll<UdpSocket, io::Error> {
-        let n = try_nb!(self.send.send(self.socket.as_mut().unwrap(), &self.data[..], &self.addr));
+        let n = try_nb!(self
+            .send
+            .send(self.socket.as_mut().unwrap(), &self.data[..], &self.addr));
 
         assert_eq!(n, self.data.len());
 
@@ -115,8 +131,12 @@ trait RecvFn {
 struct RecvFrom {}
 
 impl RecvFn for RecvFrom {
-    fn recv(&self, socket: &mut UdpSocket, buf: &mut [u8],
-            expected_addr: &SocketAddr) -> Result<usize, io::Error> {
+    fn recv(
+        &self,
+        socket: &mut UdpSocket,
+        buf: &mut [u8],
+        expected_addr: &SocketAddr,
+    ) -> Result<usize, io::Error> {
         socket.recv_from(buf).map(|(s, addr)| {
             assert_eq!(addr, *expected_addr);
             s
@@ -128,7 +148,12 @@ impl RecvFn for RecvFrom {
 struct Recv {}
 
 impl RecvFn for Recv {
-    fn recv(&self, socket: &mut UdpSocket, buf: &mut [u8], _: &SocketAddr) -> Result<usize, io::Error> {
+    fn recv(
+        &self,
+        socket: &mut UdpSocket,
+        buf: &mut [u8],
+        _: &SocketAddr,
+    ) -> Result<usize, io::Error> {
         socket.recv(buf)
     }
 }
@@ -141,8 +166,12 @@ struct RecvMessage<R> {
 }
 
 impl<R: RecvFn> RecvMessage<R> {
-    fn new(socket: UdpSocket, recv: R, expected_addr: SocketAddr,
-           expected_data: &'static [u8]) -> RecvMessage<R> {
+    fn new(
+        socket: UdpSocket,
+        recv: R,
+        expected_addr: SocketAddr,
+        expected_data: &'static [u8],
+    ) -> RecvMessage<R> {
         RecvMessage {
             socket: Some(socket),
             recv: recv,
@@ -158,8 +187,11 @@ impl<R: RecvFn> Future for RecvMessage<R> {
 
     fn poll(&mut self) -> Poll<UdpSocket, io::Error> {
         let mut buf = vec![0u8; 10 + self.expected_data.len() * 10];
-        let n = try_nb!(self.recv.recv(&mut self.socket.as_mut().unwrap(), &mut buf[..],
-                                       &self.expected_addr));
+        let n = try_nb!(self.recv.recv(
+            &mut self.socket.as_mut().unwrap(),
+            &mut buf[..],
+            &self.expected_addr
+        ));
 
         assert_eq!(n, self.expected_data.len());
         assert_eq!(&buf[..self.expected_data.len()], &self.expected_data[..]);
@@ -217,8 +249,8 @@ impl Encoder for ByteCodec {
 }
 
 #[test]
-fn send_framed() {
-    drop(env_logger::init());
+fn send_framed_byte_codec() {
+    drop(env_logger::try_init());
 
     let mut a_soc = t!(UdpSocket::bind(&t!("127.0.0.1:0".parse())));
     let mut b_soc = t!(UdpSocket::bind(&t!("127.0.0.1:0".parse())));
@@ -257,4 +289,194 @@ fn send_framed() {
         assert_eq!(msg, data);
         assert_eq!(a_addr, addr);
     }
+}
+
+#[test]
+fn send_framed_lines_codec() {
+    drop(env_logger::try_init());
+
+    let a_soc = t!(UdpSocket::bind(&t!("127.0.0.1:0".parse())));
+    let b_soc = t!(UdpSocket::bind(&t!("127.0.0.1:0".parse())));
+    let a_addr = t!(a_soc.local_addr());
+    let b_addr = t!(b_soc.local_addr());
+
+    let a = UdpFramed::new(a_soc, ByteCodec);
+    let b = UdpFramed::with_decode(b_soc, LinesCodec::new(), true);
+
+    let msg = b"1\r\n2\r\n3\r\n".to_vec();
+
+    let send = a.send((msg.clone(), b_addr));
+    t!(send.wait());
+
+    let mut recv = Stream::wait(b).map(|e| e.unwrap());
+
+    assert_eq!(recv.next(), Some(("1".to_string(), a_addr)));
+    assert_eq!(recv.next(), Some(("2".to_string(), a_addr)));
+    assert_eq!(recv.next(), Some(("3".to_string(), a_addr)));
+}
+
+#[test]
+fn recv_framed_codec_errs() {
+    drop(env_logger::try_init());
+
+    #[derive(Debug)]
+    struct LinesCodecMaxLen {
+        max_len: usize,
+        codec: LinesCodec,
+    }
+
+    impl LinesCodecMaxLen {
+        fn new(max_len: usize) -> Self {
+            Self {
+                max_len,
+                codec: LinesCodec::new(),
+            }
+        }
+    }
+
+    impl Decoder for LinesCodecMaxLen {
+        type Item = String;
+        type Error = io::Error;
+
+        fn decode(&mut self, buf: &mut BytesMut) -> Result<Option<String>, io::Error> {
+            let opt_string = self.codec.decode_eof(buf)?;
+            match opt_string {
+                None => Ok(None),
+                Some(string) => {
+                    if string.len() > self.max_len {
+                        Err(io::Error::new(io::ErrorKind::InvalidData, "Too big"))
+                    } else {
+                        Ok(Some(string))
+                    }
+                }
+            }
+        }
+    }
+
+    let a_soc = t!(UdpSocket::bind(&t!("127.0.0.1:0".parse())));
+    let b_soc = t!(UdpSocket::bind(&t!("127.0.0.1:0".parse())));
+    let a_addr = t!(a_soc.local_addr());
+    let b_addr = t!(b_soc.local_addr());
+
+    {
+        let a = UdpFramed::new(a_soc, ByteCodec);
+        let b = UdpFramed::new(b_soc, LinesCodecMaxLen::new(/*max_len*/ 1));
+
+        let msg = b"hello world".to_vec(); // hello world is too big
+
+        let send = a.send((msg.clone(), b_addr));
+        let a = t!(send.wait());
+
+        let msg = b"1\r\n".to_vec(); // fits ok
+        let send = a.send((msg.clone(), b_addr));
+        t!(send.wait());
+
+        let mut b = Stream::wait(b);
+
+        let hello_world = b.next().unwrap();
+        assert!(hello_world.is_err()); // first one is too big
+
+        let mut recv = b.map(|e| e.unwrap());
+
+        // and then we restore the state and continue receiving
+        assert_eq!(recv.next(), Some(("1".to_string(), a_addr)));
+    }
+}
+
+#[test]
+fn send_framed_lines_codec_with_non_terminating_frame() {
+    drop(env_logger::try_init());
+
+    let a_soc = t!(UdpSocket::bind(&t!("127.0.0.1:0".parse())));
+    let b_soc = t!(UdpSocket::bind(&t!("127.0.0.1:0".parse())));
+    let a_addr = t!(a_soc.local_addr());
+    let b_addr = t!(b_soc.local_addr());
+
+    let a = UdpFramed::new(a_soc, ByteCodec);
+    let b = UdpFramed::with_decode(b_soc, LinesCodec::new(), true);
+
+    // This has no terminating delimiter thus we want to return the rest of the
+    // frame and this tests that if decode fails, we try to decode_eof.
+    let msg = b"1\r\n2\r\n3".to_vec();
+
+    let send = a.send((msg.clone(), b_addr));
+    t!(send.wait());
+
+    let mut recv = Stream::wait(b).map(|e| e.unwrap());
+
+    assert_eq!(recv.next(), Some(("1".to_string(), a_addr)));
+    assert_eq!(recv.next(), Some(("2".to_string(), a_addr)));
+    assert_eq!(recv.next(), Some(("3".to_string(), a_addr)));
+}
+
+#[test]
+fn recv_multi_framed_lines_codec_errs() {
+    drop(env_logger::try_init());
+
+    #[derive(Debug)]
+    struct LinesCodecMaxLen {
+        max_len: usize,
+        codec: LinesCodec,
+    }
+
+    impl LinesCodecMaxLen {
+        fn new(max_len: usize) -> Self {
+            Self {
+                max_len,
+                codec: LinesCodec::new(),
+            }
+        }
+    }
+
+    impl Decoder for LinesCodecMaxLen {
+        type Item = String;
+        type Error = io::Error;
+
+        fn decode(&mut self, buf: &mut BytesMut) -> Result<Option<String>, io::Error> {
+            return self.codec.decode(buf);
+        }
+
+        fn decode_eof(&mut self, buf: &mut BytesMut) -> Result<Option<String>, io::Error> {
+            let opt_string = self.codec.decode_eof(buf)?;
+            match opt_string {
+                None => Ok(None),
+                Some(string) => {
+                    if string.len() > self.max_len {
+                        Err(io::Error::new(io::ErrorKind::InvalidData, "Too big"))
+                    } else {
+                        Ok(Some(string))
+                    }
+                }
+            }
+        }
+    }
+
+    let a_soc = t!(UdpSocket::bind(&t!("127.0.0.1:0".parse())));
+    let b_soc = t!(UdpSocket::bind(&t!("127.0.0.1:0".parse())));
+    let a_addr = t!(a_soc.local_addr());
+    let b_addr = t!(b_soc.local_addr());
+
+    let a = UdpFramed::new(a_soc, ByteCodec);
+    let b = UdpFramed::with_decode(b_soc, LinesCodecMaxLen::new(/*max_len*/ 1), true);
+
+    let msg = b"hello world".to_vec(); // hello world is too big
+
+    let send = a.send((msg.clone(), b_addr));
+    let a = t!(send.wait());
+
+    let msg = b"1\r\n2\r\n3\r\n".to_vec();
+    let send = a.send((msg.clone(), b_addr));
+    t!(send.wait());
+
+    let mut b = Stream::wait(b);
+
+    let hello_world = b.next().unwrap();
+    assert!(hello_world.is_err()); // first one is too big
+
+    let mut recv = b.map(|e| e.unwrap());
+
+    // and then we restore the state and continue receiving
+    assert_eq!(recv.next(), Some(("1".to_string(), a_addr)));
+    assert_eq!(recv.next(), Some(("2".to_string(), a_addr)));
+    assert_eq!(recv.next(), Some(("3".to_string(), a_addr)));
 }

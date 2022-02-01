@@ -23,7 +23,7 @@ TEST(TestInputStreamLengthHelper, NonLengthStream)
 
   bool called = false;
   InputStreamLengthHelper::GetAsyncLength(stream, [&](int64_t aLength) {
-    ASSERT_EQ(buf.Length(), aLength);
+    ASSERT_EQ(int64_t(buf.Length()), aLength);
     called = true;
   });
 

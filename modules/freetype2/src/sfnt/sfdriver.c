@@ -1292,13 +1292,15 @@
                             /* TT_Get_Colr_Layer_Func  get_colr_layer  */
 
     PUT_COLOR_LAYERS_V1( tt_face_get_colr_glyph_paint ),
-                 /* TT_Get_Colr_Glyph_Paint_Func  get_colr_glyph_paint */
+              /* TT_Get_Color_Glyph_Paint_Func    get_colr_glyph_paint */
+    PUT_COLOR_LAYERS_V1( tt_face_get_color_glyph_clipbox ),
+              /* TT_Get_Color_Glyph_ClipBox_Func  get_clipbox          */
     PUT_COLOR_LAYERS_V1( tt_face_get_paint_layers ),
-                 /* TT_Get_Paint_Layers_Func      get_paint_layers     */
+              /* TT_Get_Paint_Layers_Func         get_paint_layers     */
     PUT_COLOR_LAYERS_V1( tt_face_get_colorline_stops ),
-                 /* TT_Get_Paint                  get_paint            */
+              /* TT_Get_Paint                     get_paint            */
     PUT_COLOR_LAYERS_V1( tt_face_get_paint ),
-                 /* TT_Get_Colorline_Stops_Func   get_colorline_stops  */
+              /* TT_Get_Colorline_Stops_Func      get_colorline_stops  */
 
     PUT_COLOR_LAYERS( tt_face_colr_blend_layer ),
                             /* TT_Blend_Colr_Func      colr_blend      */

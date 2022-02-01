@@ -3,7 +3,7 @@
 use futures::{executor::block_on, try_join};
 
 // TODO: This abuses https://github.com/rust-lang/rust/issues/58733 in order to
-// test behaviour of the `try_join!` macro with the never type before it is
+// test behavior of the `try_join!` macro with the never type before it is
 // stabilized. Once `!` is again stabilized this can be removed and replaced
 // with direct use of `!` below where `Never` is used.
 trait MyTrait {

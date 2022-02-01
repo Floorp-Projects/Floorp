@@ -26,9 +26,10 @@ struct ErrorEventInit;
 // notifies it of an error via nsIScriptGlobalObject::HandleScriptError.
 // Returns true if HandleDOMEvent was actually called, in which case
 // aStatus will be filled in with the status.
-bool NS_HandleScriptError(nsIScriptGlobalObject* aScriptGlobal,
-                          const mozilla::dom::ErrorEventInit& aErrorEvent,
-                          nsEventStatus* aStatus);
+// TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+MOZ_CAN_RUN_SCRIPT_BOUNDARY bool NS_HandleScriptError(
+    nsIScriptGlobalObject* aScriptGlobal,
+    const mozilla::dom::ErrorEventInit& aErrorEvent, nsEventStatus* aStatus);
 
 // Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
 #define NS_ISCRIPTGLOBALOBJECT_IID                   \

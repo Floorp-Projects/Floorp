@@ -30,10 +30,12 @@ URLQueryStringStripper* URLQueryStringStripper::GetOrCreate() {
     gQueryStringStripper = new URLQueryStringStripper();
     gQueryStringStripper->Init();
 
-    RunOnShutdown([&] {
-      gQueryStringStripper->Shutdown();
-      gQueryStringStripper = nullptr;
-    });
+    RunOnShutdown(
+        [&] {
+          gQueryStringStripper->Shutdown();
+          gQueryStringStripper = nullptr;
+        },
+        ShutdownPhase::XPCOMShutdown);
   }
 
   return gQueryStringStripper;

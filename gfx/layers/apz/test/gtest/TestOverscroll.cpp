@@ -247,8 +247,7 @@ TEST_F(APZCOverscrollTester, OverScroll_Bug1152051b) {
   // panning can trigger functions that clear the overscroll animation state
   // in other ways.
   APZEventResult result = TouchDown(apzc, ScreenIntPoint(10, 10), mcc->Time());
-  if (StaticPrefs::layout_css_touch_action_enabled() &&
-      result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
+  if (result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(apzc, result.mInputBlockId);
   }
   TouchUp(apzc, ScreenIntPoint(10, 10), mcc->Time());

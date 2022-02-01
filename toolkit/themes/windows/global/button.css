@@ -37,8 +37,8 @@ button:where(:hover:active) {
 /* .......... focused state .......... */
 
 button:focus-visible {
-  outline: 1px dotted;
-  outline-offset: -3px;
+  outline: var(--default-focusring);
+  outline-offset: calc(-1 * var(--default-focusring-width) - 2px);
 }
 
 @media (prefers-color-scheme: dark) {

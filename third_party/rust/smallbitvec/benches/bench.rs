@@ -16,6 +16,8 @@ extern crate rand;
 extern crate smallbitvec;
 extern crate test;
 
+use std::hash::{Hash, Hasher};
+
 use bit_vec::BitVec;
 use rand::{weak_rng, Rng, XorShiftRng};
 use smallbitvec::SmallBitVec;
@@ -214,4 +216,24 @@ fn bench_remove_big(b: &mut Bencher) {
             v.remove(0);
         }
     });
+}
+
+#[bench]
+fn bench_hash_small(b: &mut Bencher) {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    let v = SmallBitVec::from_elem(USIZE_BITS, false);
+    b.iter(|| {
+        v.hash(&mut hasher);
+    });
+    black_box(hasher.finish());
+}
+
+#[bench]
+fn bench_hash_big(b: &mut Bencher) {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    let v = SmallBitVec::from_elem(BENCH_BITS, false);
+    b.iter(|| {
+        v.hash(&mut hasher);
+    });
+    black_box(hasher.finish());
 }

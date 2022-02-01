@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-"use-strict";
+"use strict";
 
 /**
  * Tests that when receiving the "clear-site-data" header - with dFPI enabled -

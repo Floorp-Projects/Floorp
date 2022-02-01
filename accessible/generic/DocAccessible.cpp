@@ -1090,6 +1090,10 @@ void DocAccessible::BindToDocument(LocalAccessible* aAccessible,
       mNotificationController->ScheduleRelocation(aAccessible);
     }
   }
+
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    mInsertedAccessibles.EnsureInserted(aAccessible);
+  }
 }
 
 void DocAccessible::UnbindFromDocument(LocalAccessible* aAccessible) {
@@ -1383,6 +1387,23 @@ void DocAccessible::ProcessBoundsChanged() {
 
   if (data.Length()) {
     IPCDoc()->SendCache(CacheUpdateType::Update, data, true);
+  }
+}
+
+void DocAccessible::SendAccessiblesWillMove() {
+  if (!mIPCDoc || !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return;
+  }
+  nsTArray<uint64_t> ids;
+  for (LocalAccessible* acc : mMovedAccessibles) {
+    // If acc is defunct or not in a document, it was removed after it was
+    // moved.
+    if (!acc->IsDefunct() && acc->IsInDocument()) {
+      ids.AppendElement(reinterpret_cast<uintptr_t>(acc->UniqueID()));
+    }
+  }
+  if (!ids.IsEmpty()) {
+    mIPCDoc->SendAccessiblesWillMove(ids);
   }
 }
 
@@ -2250,6 +2271,18 @@ void DocAccessible::PutChildrenBack(
   aChildren->RemoveLastElements(aChildren->Length() - aStartIdx);
 }
 
+void DocAccessible::TrackMovedAccessible(LocalAccessible* aAcc) {
+  // If an Accessible is inserted and moved during the same tick, don't track
+  // it as a move because it hasn't been shown yet.
+  if (!mInsertedAccessibles.Contains(aAcc)) {
+    mMovedAccessibles.EnsureInserted(aAcc);
+  }
+  // When we move an Accessible, we're also moving its descendants.
+  for (uint32_t c = 0, count = aAcc->ContentChildCount(); c < count; ++c) {
+    TrackMovedAccessible(aAcc->ContentChildAt(c));
+  }
+}
+
 bool DocAccessible::MoveChild(LocalAccessible* aChild,
                               LocalAccessible* aNewParent,
                               int32_t aIdxInParent) {
@@ -2289,6 +2322,9 @@ bool DocAccessible::MoveChild(LocalAccessible* aChild,
   if (curParent == aNewParent) {
     MOZ_ASSERT(aChild->IndexInParent() != aIdxInParent, "No move case");
     curParent->RelocateChild(aIdxInParent, aChild);
+    if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+      TrackMovedAccessible(aChild);
+    }
 
 #ifdef A11Y_LOG
     logging::TreeInfo("move child: parent tree after", logging::eVerbose,
@@ -2315,6 +2351,9 @@ bool DocAccessible::MoveChild(LocalAccessible* aChild,
 
   TreeMutation imut(aNewParent);
   aNewParent->InsertChildAt(aIdxInParent, aChild);
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    TrackMovedAccessible(aChild);
+  }
   imut.AfterInsertion(aChild);
   imut.Done();
 

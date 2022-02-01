@@ -140,6 +140,7 @@ where
 
 /// JSON input source that reads from a std::io input stream.
 #[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 pub struct IoRead<R>
 where
     R: io::Read,
@@ -224,7 +225,7 @@ where
                     return result(self, scratch);
                 }
                 b'\\' => {
-                    tri!(parse_escape(self, scratch));
+                    tri!(parse_escape(self, validate, scratch));
                 }
                 _ => {
                     if validate {
@@ -464,7 +465,7 @@ impl<'a> SliceRead<'a> {
                 b'\\' => {
                     scratch.extend_from_slice(&self.slice[start..self.index]);
                     self.index += 1;
-                    tri!(parse_escape(self, scratch));
+                    tri!(parse_escape(self, validate, scratch));
                     start = self.index;
                 }
                 _ => {
@@ -653,8 +654,9 @@ impl<'a> Read<'a> for StrRead<'a> {
 
     fn parse_str<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'a, 's, str>> {
         self.delegate.parse_str_bytes(scratch, true, |_, bytes| {
-            // The input is assumed to be valid UTF-8 and the \u-escapes are
-            // checked along the way, so don't need to check here.
+            // The deserialization input came in as &str with a UTF-8 guarantee,
+            // and the \u-escapes are checked along the way, so don't need to
+            // check here.
             Ok(unsafe { str::from_utf8_unchecked(bytes) })
         })
     }
@@ -676,7 +678,7 @@ impl<'a> Read<'a> for StrRead<'a> {
 
     #[cfg(feature = "raw_value")]
     fn begin_raw_buffering(&mut self) {
-        self.delegate.begin_raw_buffering()
+        self.delegate.begin_raw_buffering();
     }
 
     #[cfg(feature = "raw_value")]
@@ -716,7 +718,7 @@ where
     }
 
     fn discard(&mut self) {
-        R::discard(self)
+        R::discard(self);
     }
 
     fn position(&self) -> Position {
@@ -752,7 +754,7 @@ where
 
     #[cfg(feature = "raw_value")]
     fn begin_raw_buffering(&mut self) {
-        R::begin_raw_buffering(self)
+        R::begin_raw_buffering(self);
     }
 
     #[cfg(feature = "raw_value")]
@@ -766,7 +768,7 @@ where
     const should_early_return_if_failed: bool = R::should_early_return_if_failed;
 
     fn set_failed(&mut self, failed: &mut bool) {
-        R::set_failed(self, failed)
+        R::set_failed(self, failed);
     }
 }
 
@@ -815,6 +817,16 @@ where
     }
 }
 
+fn peek_or_eof<'de, R>(read: &mut R) -> Result<u8>
+where
+    R: ?Sized + Read<'de>,
+{
+    match tri!(read.peek()) {
+        Some(b) => Ok(b),
+        None => error(read, ErrorCode::EofWhileParsingString),
+    }
+}
+
 fn error<'de, R, T>(read: &R, reason: ErrorCode) -> Result<T>
 where
     R: ?Sized + Read<'de>,
@@ -829,7 +841,11 @@ fn as_str<'de, 's, R: Read<'de>>(read: &R, slice: &'s [u8]) -> Result<&'s str> {
 
 /// Parses a JSON escape sequence and appends it into the scratch space. Assumes
 /// the previous byte read was a backslash.
-fn parse_escape<'de, R: Read<'de>>(read: &mut R, scratch: &mut Vec<u8>) -> Result<()> {
+fn parse_escape<'de, R: Read<'de>>(
+    read: &mut R,
+    validate: bool,
+    scratch: &mut Vec<u8>,
+) -> Result<()> {
     let ch = tri!(next_or_eof(read));
 
     match ch {
@@ -842,19 +858,56 @@ fn parse_escape<'de, R: Read<'de>>(read: &mut R, scratch: &mut Vec<u8>) -> Resul
         b'r' => scratch.push(b'\r'),
         b't' => scratch.push(b'\t'),
         b'u' => {
+            fn encode_surrogate(scratch: &mut Vec<u8>, n: u16) {
+                scratch.extend_from_slice(&[
+                    (n >> 12 & 0b0000_1111) as u8 | 0b1110_0000,
+                    (n >> 6 & 0b0011_1111) as u8 | 0b1000_0000,
+                    (n & 0b0011_1111) as u8 | 0b1000_0000,
+                ]);
+            }
+
             let c = match tri!(read.decode_hex_escape()) {
-                0xDC00..=0xDFFF => {
-                    return error(read, ErrorCode::LoneLeadingSurrogateInHexEscape);
+                n @ 0xDC00..=0xDFFF => {
+                    return if validate {
+                        error(read, ErrorCode::LoneLeadingSurrogateInHexEscape)
+                    } else {
+                        encode_surrogate(scratch, n);
+                        Ok(())
+                    };
                 }
 
-                // Non-BMP characters are encoded as a sequence of
-                // two hex escapes, representing UTF-16 surrogates.
+                // Non-BMP characters are encoded as a sequence of two hex
+                // escapes, representing UTF-16 surrogates. If deserializing a
+                // utf-8 string the surrogates are required to be paired,
+                // whereas deserializing a byte string accepts lone surrogates.
                 n1 @ 0xD800..=0xDBFF => {
-                    if tri!(next_or_eof(read)) != b'\\' {
-                        return error(read, ErrorCode::UnexpectedEndOfHexEscape);
+                    if tri!(peek_or_eof(read)) == b'\\' {
+                        read.discard();
+                    } else {
+                        return if validate {
+                            read.discard();
+                            error(read, ErrorCode::UnexpectedEndOfHexEscape)
+                        } else {
+                            encode_surrogate(scratch, n1);
+                            Ok(())
+                        };
                     }
-                    if tri!(next_or_eof(read)) != b'u' {
-                        return error(read, ErrorCode::UnexpectedEndOfHexEscape);
+
+                    if tri!(peek_or_eof(read)) == b'u' {
+                        read.discard();
+                    } else {
+                        return if validate {
+                            read.discard();
+                            error(read, ErrorCode::UnexpectedEndOfHexEscape)
+                        } else {
+                            encode_surrogate(scratch, n1);
+                            // The \ prior to this byte started an escape sequence,
+                            // so we need to parse that now. This recursive call
+                            // does not blow the stack on malicious input because
+                            // the escape is not \u, so it will be handled by one
+                            // of the easy nonrecursive cases.
+                            parse_escape(read, validate, scratch)
+                        };
                     }
 
                     let n2 = tri!(read.decode_hex_escape());

@@ -8,10 +8,16 @@
 #define mozilla_dom_ReadableStreamGenericReader_h
 
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/ReadableStream.h"
+#include "mozilla/dom/ReadableStreamDefaultReaderBinding.h"
+#include "nsISupports.h"
+#include "nsCycleCollectionParticipant.h"
 
 namespace mozilla {
 namespace dom {
+
+class ReadableStream;
+class ReadableStreamDefaultReader;
+class ReadableStreamBYOBReader;
 
 // Base class for internal slots of readable stream readers
 class ReadableStreamGenericReader : public nsISupports {
@@ -23,6 +29,11 @@ class ReadableStreamGenericReader : public nsISupports {
       : mGlobal(std::move(aGlobal)) {}
 
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
+
+  virtual bool IsDefault() = 0;
+  virtual bool IsBYOB() = 0;
+  virtual ReadableStreamDefaultReader* AsDefault() = 0;
+  virtual ReadableStreamBYOBReader* AsBYOB() = 0;
 
   Promise* ClosedPromise() { return mClosedPromise; }
   void SetClosedPromise(already_AddRefed<Promise>&& aClosedPromise) {
@@ -38,6 +49,12 @@ class ReadableStreamGenericReader : public nsISupports {
     SetStream(stream.forget());
   }
 
+  // IDL Methods
+  already_AddRefed<Promise> Closed() const;
+
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Cancel(
+      JSContext* aCx, JS::Handle<JS::Value> aReason, ErrorResult& aRv);
+
  protected:
   virtual ~ReadableStreamGenericReader() = default;
 
@@ -45,6 +62,14 @@ class ReadableStreamGenericReader : public nsISupports {
   RefPtr<Promise> mClosedPromise;
   RefPtr<ReadableStream> mStream;
 };
+
+bool ReadableStreamReaderGenericInitialize(JSContext* aCx,
+                                           ReadableStreamGenericReader* aReader,
+                                           ReadableStream* aStream,
+                                           ErrorResult& aRv);
+
+void ReadableStreamReaderGenericRelease(ReadableStreamGenericReader* aReader,
+                                        ErrorResult& aRv);
 
 }  // namespace dom
 }  // namespace mozilla

@@ -23,6 +23,8 @@ pub struct ParseError {
   pub info: String,
 }
 
+impl std::error::Error for ParseError {}
+
 impl fmt::Display for ParseError {
   fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
     write!(f, "error: {}", self.info)

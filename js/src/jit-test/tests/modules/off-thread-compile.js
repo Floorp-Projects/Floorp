@@ -5,8 +5,9 @@
 load(libdir + "asserts.js");
 
 function offThreadParseAndEvaluate(source) {
-    offThreadCompileModule(source);
-    let m = finishOffThreadModule();
+    offThreadCompileModuleToStencil(source);
+    let stencil = finishOffThreadCompileModuleToStencil();
+    let m = instantiateModuleStencil(stencil);
     m.declarationInstantiation();
     return m.evaluation();
 }

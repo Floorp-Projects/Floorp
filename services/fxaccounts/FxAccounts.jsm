@@ -1622,4 +1622,5 @@ XPCOMUtils.defineLazyGetter(this, "fxAccounts", function() {
   return a;
 });
 
-var EXPORTED_SYMBOLS = ["fxAccounts", "FxAccounts"];
+// `AccountState` is exported for tests.
+var EXPORTED_SYMBOLS = ["fxAccounts", "FxAccounts", "AccountState"];

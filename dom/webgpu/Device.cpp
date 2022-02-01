@@ -21,6 +21,8 @@
 #include "RenderBundleEncoder.h"
 #include "RenderPipeline.h"
 #include "Sampler.h"
+#include "SupportedFeatures.h"
+#include "SupportedLimits.h"
 #include "Texture.h"
 #include "TextureView.h"
 #include "ValidationError.h"
@@ -51,9 +53,13 @@ JSObject* Device::CreateExternalArrayBuffer(JSContext* aCx, size_t aOffset,
                                     &mapFreeCallback, nullptr);
 }
 
-Device::Device(Adapter* const aParent, RawId aId)
+Device::Device(Adapter* const aParent, RawId aId,
+               UniquePtr<ffi::WGPULimits> aRawLimits)
     : DOMEventTargetHelper(aParent->GetParentObject()),
       mId(aId),
+      // features are filled in Adapter::RequestDevice
+      mFeatures(new SupportedFeatures(aParent)),
+      mLimits(new SupportedLimits(aParent, std::move(aRawLimits))),
       mBridge(aParent->mBridge),
       mQueue(new class Queue(this, aParent->mBridge, aId)) {
   mBridge->RegisterDevice(mId, this);
@@ -70,8 +76,6 @@ void Device::Cleanup() {
 
 void Device::GetLabel(nsAString& aValue) const { aValue = mLabel; }
 void Device::SetLabel(const nsAString& aLabel) { mLabel = aLabel; }
-
-const RefPtr<Queue>& Device::GetQueue() const { return mQueue; }
 
 already_AddRefed<Buffer> Device::CreateBuffer(
     const dom::GPUBufferDescriptor& aDesc, ErrorResult& aRv) {
@@ -246,8 +250,8 @@ already_AddRefed<Texture> Device::InitSwapChain(
     } else {
       MOZ_CRASH("Unexpected union");
     }
+    *aCanvasSize = size;
   }
-  *aCanvasSize = size;
 
   const layers::RGBDescriptor rgbDesc(size, aFormat);
   // buffer count doesn't matter much, will be created on demand

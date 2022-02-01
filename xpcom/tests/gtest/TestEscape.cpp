@@ -201,3 +201,38 @@ TEST(Escape, AppleNSURLEscapeLists)
     EXPECT_STREQ(toEscape.BeginReading(), escaped.BeginReading());
   }
 }
+
+// Test external handler URLs are properly escaped.
+TEST(Escape, EscapeURLExternalHandlerURLs)
+{
+  const nsCString input[] = {
+      "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ;/?:@&=+$,!'()*-._~#[]"_ns,
+      " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"_ns,
+      "custom_proto:Hello World"_ns,
+      "custom_proto:Hello%20World"_ns,
+      "myApp://\"foo\" 'bar' `foo`"_ns,
+      "translator://en-de?view=übersicht"_ns,
+      "foo:some\\path\\here"_ns,
+      "web+foo://user:1234@example.com:8080?foo=bar"_ns,
+      "ext+bar://id='myId'"_ns};
+
+  const nsCString expected[] = {
+      "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ;/?:@&=+$,!'()*-._~#[]"_ns,
+      "%20!%22#$%&'()*+,-./0123456789:;%3C=%3E?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[%5C]%5E_%60abcdefghijklmnopqrstuvwxyz%7B%7C%7D~"_ns,
+      "custom_proto:Hello%20World"_ns,
+      "custom_proto:Hello%20World"_ns,
+      "myApp://%22foo%22%20'bar'%20%60foo%60"_ns,
+      "translator://en-de?view=%C3%BCbersicht"_ns,
+      "foo:some%5Cpath%5Chere"_ns,
+      "web+foo://user:1234@example.com:8080?foo=bar"_ns,
+      "ext+bar://id='myId'"_ns};
+
+  for (size_t i = 0; i < ArrayLength(input); i++) {
+    nsCString src(input[i]);
+    nsCString dst;
+    nsresult rv =
+        NS_EscapeURL(src, esc_ExtHandler | esc_AlwaysCopy, dst, fallible);
+    EXPECT_EQ(rv, NS_OK);
+    ASSERT_TRUE(dst.Equals(expected[i]));
+  }
+}

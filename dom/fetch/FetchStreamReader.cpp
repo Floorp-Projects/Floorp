@@ -198,12 +198,13 @@ void FetchStreamReader::StartConsuming(JSContext* aCx, JS::HandleObject aStream,
 NS_IMETHODIMP
 FetchStreamReader::OnOutputStreamReady(nsIAsyncOutputStream* aStream) {
   NS_ASSERT_OWNINGTHREAD(FetchStreamReader);
-  MOZ_ASSERT(aStream == mPipeOut);
-  MOZ_ASSERT(mReader);
-
   if (mStreamClosed) {
     return NS_OK;
   }
+
+  // Only assert if we know the stream is not closed yet.
+  MOZ_ASSERT(aStream == mPipeOut);
+  MOZ_ASSERT(mReader);
 
   if (!mBuffer.IsEmpty()) {
     return WriteBuffer();

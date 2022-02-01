@@ -81,9 +81,11 @@ A string of JSON data can be parsed into a `serde_json::Value` by the
 [`from_reader`][from_reader] for parsing from any `io::Read` like a File or
 a TCP stream.
 
+<div align="right">
 <a href="https://play.rust-lang.org/?edition=2018&gist=d69d8e3156d4bb81c4461b60b772ab72" target="_blank">
-<img align="right" width="50" src="https://raw.githubusercontent.com/serde-rs/serde-rs.github.io/master/img/run.png">
+<img align="center" width="85" src="https://raw.githubusercontent.com/serde-rs/serde-rs.github.io/master/img/runtab.png">
 </a>
+</div>
 
 ```rust
 use serde_json::{Result, Value};
@@ -139,9 +141,11 @@ in one of the dozens of places it is used in your code.
 Serde provides a powerful way of mapping JSON data into Rust data structures
 largely automatically.
 
+<div align="right">
 <a href="https://play.rust-lang.org/?edition=2018&gist=15cfab66d38ff8a15a9cf1d8d897ac68" target="_blank">
-<img align="right" width="50" src="https://raw.githubusercontent.com/serde-rs/serde-rs.github.io/master/img/run.png">
+<img align="center" width="85" src="https://raw.githubusercontent.com/serde-rs/serde-rs.github.io/master/img/runtab.png">
 </a>
+</div>
 
 ```rust
 use serde::{Deserialize, Serialize};
@@ -206,9 +210,11 @@ derive]* page of the Serde site.
 Serde JSON provides a [`json!` macro][macro] to build `serde_json::Value`
 objects with very natural JSON syntax.
 
+<div align="right">
 <a href="https://play.rust-lang.org/?edition=2018&gist=6ccafad431d72b62e77cc34c8e879b24" target="_blank">
-<img align="right" width="50" src="https://raw.githubusercontent.com/serde-rs/serde-rs.github.io/master/img/run.png">
+<img align="center" width="85" src="https://raw.githubusercontent.com/serde-rs/serde-rs.github.io/master/img/runtab.png">
 </a>
+</div>
 
 ```rust
 use serde_json::json;
@@ -239,9 +245,11 @@ be interpolated directly into the JSON value as you are building it. Serde
 will check at compile time that the value you are interpolating is able to
 be represented as JSON.
 
+<div align="right">
 <a href="https://play.rust-lang.org/?edition=2018&gist=f9101a6e61dfc9e02c6a67f315ed24f2" target="_blank">
-<img align="right" width="50" src="https://raw.githubusercontent.com/serde-rs/serde-rs.github.io/master/img/run.png">
+<img align="center" width="85" src="https://raw.githubusercontent.com/serde-rs/serde-rs.github.io/master/img/runtab.png">
 </a>
+</div>
 
 ```rust
 let full_name = "John Doe";
@@ -270,9 +278,11 @@ A data structure can be converted to a JSON string by
 [`serde_json::to_writer`][to_writer] which serializes to any `io::Write`
 such as a File or a TCP stream.
 
+<div align="right">
 <a href="https://play.rust-lang.org/?edition=2018&gist=3472242a08ed2ff88a944f2a2283b0ee" target="_blank">
-<img align="right" width="50" src="https://raw.githubusercontent.com/serde-rs/serde-rs.github.io/master/img/run.png">
+<img align="center" width="85" src="https://raw.githubusercontent.com/serde-rs/serde-rs.github.io/master/img/runtab.png">
 </a>
+</div>
 
 ```rust
 use serde::{Deserialize, Serialize};
@@ -350,7 +360,7 @@ serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 For JSON support in Serde without a memory allocator, please see the
 [`serde-json-core`] crate.
 
-[`serde-json-core`]: https://japaric.github.io/serde-json-core/serde_json_core/
+[`serde-json-core`]: https://github.com/rust-embedded-community/serde-json-core
 
 [value]: https://docs.serde.rs/serde_json/value/enum.Value.html
 [from_str]: https://docs.serde.rs/serde_json/de/fn.from_str.html

@@ -45,6 +45,8 @@ categories:
         - testing/ci-configs
         - testing/marionette
         - testing/geckodriver
+        - testing/xpcshell
+        - web-platform
         - gtest
         - tools/fuzzing
         - tools/sanitizer

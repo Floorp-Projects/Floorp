@@ -32,7 +32,6 @@ class GTests(object):
         cwd,
         symbols_path=None,
         utility_path=None,
-        enable_webrender=False,
     ):
         """
         Run a single C++ unit test program.
@@ -51,7 +50,7 @@ class GTests(object):
         Return True if the program exits with a zero status, False otherwise.
         """
         self.xre_path = xre_path
-        env = self.build_environment(enable_webrender)
+        env = self.build_environment()
         log.info("Running gtest")
 
         if cwd and not os.path.isdir(cwd):
@@ -129,7 +128,7 @@ class GTests(object):
 
         return env
 
-    def build_environment(self, enable_webrender):
+    def build_environment(self):
         """
         Create and return a dictionary of all the appropriate env variables
         and values. On a remote system, we overload this to set different
@@ -168,11 +167,9 @@ class GTests(object):
                 # This should be |testFail| instead of |info|. See bug 1050891.
                 log.info("gtest | Failed to find ASan symbolizer at %s", llvmsym)
 
-        if enable_webrender:
-            env["MOZ_WEBRENDER"] = "1"
-            env["MOZ_ACCELERATED"] = "1"
-        else:
-            env["MOZ_WEBRENDER"] = "0"
+        # webrender needs gfx.webrender.all=true, gtest doesn't use prefs
+        env["MOZ_WEBRENDER"] = "1"
+        env["MOZ_ACCELERATED"] = "1"
 
         return env
 
@@ -206,13 +203,6 @@ class gtestOptions(argparse.ArgumentParser):
             dest="utility_path",
             default=None,
             help="path to a directory containing utility program binaries",
-        )
-        self.add_argument(
-            "--enable-webrender",
-            action="store_true",
-            dest="enable_webrender",
-            default=False,
-            help="Enable the WebRender compositor in Gecko.",
         )
         self.add_argument("args", nargs=argparse.REMAINDER)
 
@@ -253,7 +243,6 @@ def main():
             options.cwd,
             symbols_path=options.symbols_path,
             utility_path=options.utility_path,
-            enable_webrender=options.enable_webrender,
         )
     except Exception as e:
         log.error(str(e))

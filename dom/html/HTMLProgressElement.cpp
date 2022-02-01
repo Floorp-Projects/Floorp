@@ -30,7 +30,8 @@ NS_IMPL_ELEMENT_CLONE(HTMLProgressElement)
 EventStates HTMLProgressElement::IntrinsicState() const {
   EventStates state = nsGenericHTMLElement::IntrinsicState();
 
-  if (IsIndeterminate()) {
+  const nsAttrValue* attrValue = mAttrs.GetAttr(nsGkAtoms::value);
+  if (!attrValue || attrValue->Type() != nsAttrValue::eDoubleValue) {
     state |= NS_EVENT_STATE_INDETERMINATE;
   }
 
@@ -73,16 +74,11 @@ double HTMLProgressElement::Max() const {
 }
 
 double HTMLProgressElement::Position() const {
-  if (IsIndeterminate()) {
+  if (State().HasState(NS_EVENT_STATE_INDETERMINATE)) {
     return kIndeterminatePosition;
   }
 
   return Value() / Max();
-}
-
-bool HTMLProgressElement::IsIndeterminate() const {
-  const nsAttrValue* attrValue = mAttrs.GetAttr(nsGkAtoms::value);
-  return !attrValue || attrValue->Type() != nsAttrValue::eDoubleValue;
 }
 
 JSObject* HTMLProgressElement::WrapNode(JSContext* aCx,

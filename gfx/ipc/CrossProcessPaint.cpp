@@ -121,11 +121,14 @@ PaintFragment PaintFragment::Record(dom::BrowsingContext* aBc,
 
   RenderDocumentFlags renderDocFlags = RenderDocumentFlags::None;
   if (!(aFlags & CrossProcessPaintFlags::DrawView)) {
-    renderDocFlags = (RenderDocumentFlags::IgnoreViewportScrolling |
-                      RenderDocumentFlags::DocumentRelative);
+    renderDocFlags |= RenderDocumentFlags::IgnoreViewportScrolling |
+                      RenderDocumentFlags::DocumentRelative;
     if (aFlags & CrossProcessPaintFlags::ResetScrollPosition) {
       renderDocFlags |= RenderDocumentFlags::ResetViewportScrolling;
     }
+  }
+  if (aFlags & CrossProcessPaintFlags::UseHighQualityScaling) {
+    renderDocFlags |= RenderDocumentFlags::UseHighQualityScaling;
   }
 
   // Perform the actual rendering
@@ -207,7 +210,8 @@ bool CrossProcessPaint::Start(dom::WindowGlobalParent* aRoot,
 
   dom::TabId rootId = GetTabId(aRoot);
 
-  RefPtr<CrossProcessPaint> resolver = new CrossProcessPaint(aScale, rootId);
+  RefPtr<CrossProcessPaint> resolver =
+      new CrossProcessPaint(aScale, rootId, aFlags);
   RefPtr<CrossProcessPaint::ResolvePromise> promise;
 
   if (aRoot->IsInProcess()) {
@@ -291,7 +295,7 @@ RefPtr<CrossProcessPaint::ResolvePromise> CrossProcessPaint::Start(
     nsTHashSet<uint64_t>&& aDependencies) {
   MOZ_ASSERT(!aDependencies.IsEmpty());
   RefPtr<CrossProcessPaint> resolver =
-      new CrossProcessPaint(1.0, dom::TabId(0));
+      new CrossProcessPaint(1.0, dom::TabId(0), CrossProcessPaintFlags::None);
 
   RefPtr<CrossProcessPaint::ResolvePromise> promise = resolver->Init();
 
@@ -307,8 +311,9 @@ RefPtr<CrossProcessPaint::ResolvePromise> CrossProcessPaint::Start(
   return promise;
 }
 
-CrossProcessPaint::CrossProcessPaint(float aScale, dom::TabId aRoot)
-    : mRoot{aRoot}, mScale{aScale}, mPendingFragments{0} {}
+CrossProcessPaint::CrossProcessPaint(float aScale, dom::TabId aRoot,
+                                     CrossProcessPaintFlags aFlags)
+    : mRoot{aRoot}, mScale{aScale}, mPendingFragments{0}, mFlags{aFlags} {}
 
 CrossProcessPaint::~CrossProcessPaint() = default;
 
@@ -405,8 +410,7 @@ void CrossProcessPaint::QueuePaint(dom::CanonicalBrowsingContext* aBc) {
     }
 
     // TODO: Apply some sort of clipping to visible bounds here (Bug 1562720)
-    QueuePaint(wgp, Nothing(), NS_RGBA(0, 0, 0, 0),
-               CrossProcessPaintFlags::DrawView);
+    QueuePaint(wgp, Nothing(), NS_RGBA(0, 0, 0, 0), GetFlagsForDependencies());
     return;
   }
 
@@ -429,7 +433,7 @@ void CrossProcessPaint::QueuePaint(dom::CanonicalBrowsingContext* aBc) {
         // 1562720)
         wgp->DrawSnapshotInternal(self, Nothing(), self->mScale,
                                   NS_RGBA(0, 0, 0, 0),
-                                  (uint32_t)CrossProcessPaintFlags::DrawView);
+                                  (uint32_t)self->GetFlagsForDependencies());
       },
       [self = RefPtr{this}]() {
         CPP_LOG(

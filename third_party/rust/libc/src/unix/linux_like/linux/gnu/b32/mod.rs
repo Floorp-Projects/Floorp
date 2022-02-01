@@ -14,6 +14,7 @@ pub type __u64 = ::c_ulonglong;
 pub type __fsword_t = i32;
 pub type fsblkcnt64_t = u64;
 pub type fsfilcnt64_t = u64;
+pub type __syscall_ulong_t = ::c_ulong;
 
 cfg_if! {
     if #[cfg(target_arch = "riscv32")] {
@@ -137,6 +138,23 @@ s! {
         pub imr_multiaddr: ::in_addr,
         pub imr_address: ::in_addr,
         pub imr_ifindex: ::c_int,
+    }
+
+    pub struct semid_ds {
+        pub sem_perm: ipc_perm,
+        #[cfg(target_arch = "powerpc")]
+        __reserved: ::__syscall_ulong_t,
+        pub sem_otime: ::time_t,
+        #[cfg(not(any(target_arch = "mips", target_arch = "powerpc")))]
+        __reserved: ::__syscall_ulong_t,
+        #[cfg(target_arch = "powerpc")]
+        __reserved2: ::__syscall_ulong_t,
+        pub sem_ctime: ::time_t,
+        #[cfg(not(any(target_arch = "mips", target_arch = "powerpc")))]
+        __reserved2: ::__syscall_ulong_t,
+        pub sem_nsems: ::__syscall_ulong_t,
+        __glibc_reserved3: ::__syscall_ulong_t,
+        __glibc_reserved4: ::__syscall_ulong_t,
     }
 }
 

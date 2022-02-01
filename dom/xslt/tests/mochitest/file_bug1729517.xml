@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="#stylesheet"?>
+<!DOCTYPE root [
+  <!ATTLIST xsl:stylesheet id ID #IMPLIED>
+]>
+<root>
+  <xsl:stylesheet id="stylesheet" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+  <xsl:template match="/">
+    <html>
+      <head>
+        <title>[]</title>
+        <script type="text/javascript">
+          let failed = [];
+          function fail(desc) {
+            failed.push(desc);
+            document.title = JSON.stringify(failed);
+          }
+
+          function doStuff() {
+            fail("documents sandboxed without allow-scripts should NOT be able to run inline scripts");
+          }
+        </script>
+        <script src="file_bug1729517.js" />
+      </head>
+      <body onload="fail('documents sandboxed without allow-scripts should NOT be able to run script from event handlers'); doStuff();">
+        <img src="about:blank" onerror="fail('documents sandboxed without allow-scripts should NOT be able to run script from event handlers');" />
+      </body>
+    </html>
+  </xsl:template>
+</xsl:stylesheet>
+</root>

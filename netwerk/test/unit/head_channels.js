@@ -454,3 +454,13 @@ function _getBinaryUtil(binaryUtilName) {
   Assert.ok(utilBin.exists(), `Binary util ${binaryUtilName} should exist`);
   return utilBin;
 }
+
+function promiseAsyncOpen(chan) {
+  return new Promise(resolve => {
+    chan.asyncOpen(
+      new ChannelListener((req, buf, ctx, isCache, cacheId) => {
+        resolve({ req, buf, ctx, isCache, cacheId });
+      })
+    );
+  });
+}

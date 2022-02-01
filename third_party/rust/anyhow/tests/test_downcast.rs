@@ -85,6 +85,15 @@ fn test_drop() {
 }
 
 #[test]
+fn test_as_ref() {
+    let error = bail_error().unwrap_err();
+    let ref_dyn: &dyn StdError = error.as_ref();
+    assert_eq!("oh no!", ref_dyn.to_string());
+    let ref_dyn_send_sync: &(dyn StdError + Send + Sync) = error.as_ref();
+    assert_eq!("oh no!", ref_dyn_send_sync.to_string());
+}
+
+#[test]
 fn test_large_alignment() {
     #[repr(align(64))]
     #[derive(Debug)]

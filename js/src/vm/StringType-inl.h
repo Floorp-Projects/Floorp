@@ -111,8 +111,16 @@ static MOZ_ALWAYS_INLINE JSLinearString* TryEmptyOrStaticString(
 
 MOZ_ALWAYS_INLINE bool JSString::validateLength(JSContext* maybecx,
                                                 size_t length) {
+  return validateLengthInternal<js::CanGC>(maybecx, length);
+}
+
+template <js::AllowGC allowGC>
+MOZ_ALWAYS_INLINE bool JSString::validateLengthInternal(JSContext* maybecx,
+                                                        size_t length) {
   if (MOZ_UNLIKELY(length > JSString::MAX_LENGTH)) {
-    js::ReportAllocationOverflow(maybecx);
+    if constexpr (allowGC) {
+      js::ReportAllocationOverflow(maybecx);
+    }
     return false;
   }
 
@@ -158,7 +166,7 @@ MOZ_ALWAYS_INLINE JSRope* JSRope::new_(
     typename js::MaybeRooted<JSString*, allowGC>::HandleType left,
     typename js::MaybeRooted<JSString*, allowGC>::HandleType right,
     size_t length, js::gc::InitialHeap heap) {
-  if (!validateLength(cx, length)) {
+  if (MOZ_UNLIKELY(!validateLengthInternal<allowGC>(cx, length))) {
     return nullptr;
   }
   JSRope* str = js::AllocateString<JSRope, allowGC>(cx, heap);
@@ -254,7 +262,7 @@ template <js::AllowGC allowGC, typename CharT>
 MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::new_(
     JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars, size_t length,
     js::gc::InitialHeap heap) {
-  if (!validateLength(cx, length)) {
+  if (MOZ_UNLIKELY(!validateLengthInternal<allowGC>(cx, length))) {
     return nullptr;
   }
 
@@ -367,7 +375,7 @@ MOZ_ALWAYS_INLINE void JSExternalString::init(
 MOZ_ALWAYS_INLINE JSExternalString* JSExternalString::new_(
     JSContext* cx, const char16_t* chars, size_t length,
     const JSExternalStringCallbacks* callbacks) {
-  if (!validateLength(cx, length)) {
+  if (MOZ_UNLIKELY(!validateLength(cx, length))) {
     return nullptr;
   }
   JSExternalString* str = js::Allocate<JSExternalString>(cx);

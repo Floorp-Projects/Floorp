@@ -1859,12 +1859,6 @@ toolbar#nav-bar {
         if self.mozLogs:
             browserEnv["MOZ_LOG"] = MOZ_LOG
 
-        if options.enable_webrender:
-            browserEnv["MOZ_WEBRENDER"] = "1"
-            browserEnv["MOZ_ACCELERATED"] = "1"
-        else:
-            browserEnv["MOZ_WEBRENDER"] = "0"
-
         return browserEnv
 
     def killNamedProc(self, pname, orphans=True):
@@ -2119,10 +2113,6 @@ toolbar#nav-bar {
             # test) results in spurious intermittent failures.
             "gfx.font_rendering.fallback.async": False,
         }
-
-        # Ideally we should set this in a manifest, but a11y tests do not run by manifest.
-        if options.flavor == "a11y":
-            prefs["plugin.load_flash_only"] = False
 
         if options.flavor == "browser" and options.timeout:
             prefs["testing.browserTestHarness.timeout"] = options.timeout
@@ -2857,12 +2847,15 @@ toolbar#nav-bar {
         """Prepare, configure, run tests and cleanup"""
         self.extraPrefs = parse_preferences(options.extraPrefs)
 
+        if "fission.autostart" not in self.extraPrefs:
+            self.extraPrefs["fission.autostart"] = options.fission
+
         # for test manifest parsing.
         mozinfo.update(
             {
                 "a11y_checks": options.a11y_checks,
                 "e10s": options.e10s,
-                "fission": self.extraPrefs.get("fission.autostart", False),
+                "fission": self.extraPrefs.get("fission.autostart", True),
                 "headless": options.headless,
                 # Until the test harness can understand default pref values,
                 # (https://bugzilla.mozilla.org/show_bug.cgi?id=1577912) this value
@@ -2875,7 +2868,7 @@ toolbar#nav-bar {
                 "sessionHistoryInParent": self.extraPrefs.get(
                     "fission.sessionHistoryInParent", False
                 )
-                or self.extraPrefs.get("fission.autostart", False),
+                or self.extraPrefs.get("fission.autostart", True),
                 "socketprocess_e10s": self.extraPrefs.get(
                     "network.process.enabled", False
                 ),
@@ -2886,7 +2879,6 @@ toolbar#nav-bar {
                 "verify": options.verify,
                 "verify_fission": options.verify_fission,
                 "webgl_ipc": self.extraPrefs.get("webgl.out-of-process", False),
-                "webrender": options.enable_webrender,
                 "xorigin": options.xOriginTests,
             }
         )

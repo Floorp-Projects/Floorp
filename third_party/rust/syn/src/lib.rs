@@ -250,15 +250,17 @@
 //!   dynamic library libproc_macro from rustc toolchain.
 
 // Syn types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/syn/1.0.73")]
+#![doc(html_root_url = "https://docs.rs/syn/1.0.82")]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![allow(non_camel_case_types)]
 // Ignored clippy lints.
 #![allow(
+    clippy::collapsible_match, // https://github.com/rust-lang/rust-clippy/issues/7575
     clippy::doc_markdown,
     clippy::eval_order_dependence,
     clippy::inherent_to_string,
     clippy::large_enum_variant,
+    clippy::manual_assert,
     clippy::manual_map, // https://github.com/rust-lang/rust-clippy/issues/6795
     clippy::match_on_vec_items,
     clippy::missing_panics_doc,
@@ -822,6 +824,7 @@ mod verbatim;
 #[cfg(all(any(feature = "full", feature = "derive"), feature = "printing"))]
 mod print;
 
+#[cfg(any(feature = "full", feature = "derive"))]
 use crate::__private::private;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -889,6 +892,9 @@ pub fn parse<T: parse::Parse>(tokens: proc_macro::TokenStream) -> Result<T> {
 }
 
 /// Parse a proc-macro2 token stream into the chosen syntax tree node.
+///
+/// This function will check that the input is fully parsed. If there are
+/// any unparsed tokens at the end of the stream, an error is returned.
 ///
 /// This function parses a `proc_macro2::TokenStream` which is commonly useful
 /// when the input comes from a node of the Syn syntax tree, for example the

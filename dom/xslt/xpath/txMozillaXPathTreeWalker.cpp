@@ -16,6 +16,7 @@
 #include "nsAttrName.h"
 #include "nsNameSpaceManager.h"
 #include "nsTArray.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/Element.h"
@@ -520,9 +521,14 @@ int txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
         return node < otherNode ? -1 : 1;
       }
 
-      return parent->ComputeIndexOf(node) < parent->ComputeIndexOf(otherNode)
-                 ? -1
-                 : 1;
+      const Maybe<uint32_t> indexOfNode = parent->ComputeIndexOf(node);
+      const Maybe<uint32_t> indexOfOtherNode =
+          parent->ComputeIndexOf(otherNode);
+      if (MOZ_LIKELY(indexOfNode.isSome() && indexOfOtherNode.isSome())) {
+        return *indexOfNode < *indexOfOtherNode ? -1 : 1;
+      }
+      // XXX Keep the odd traditional behavior for now.
+      return indexOfNode.isNothing() && indexOfOtherNode.isSome() ? -1 : 1;
     }
 
     parents.AppendElement(node);
@@ -558,12 +564,15 @@ int txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
         return node < otherNode ? -1 : 1;
       }
 
-      int32_t index = parent->ComputeIndexOf(node);
-      int32_t otherIndex = parent->ComputeIndexOf(otherNode);
-      NS_ASSERTION(index != otherIndex && index >= 0 && otherIndex >= 0,
-                   "invalid index in compareTreePosition");
-
-      return index < otherIndex ? -1 : 1;
+      const Maybe<uint32_t> index = parent->ComputeIndexOf(node);
+      const Maybe<uint32_t> otherIndex = parent->ComputeIndexOf(otherNode);
+      if (MOZ_LIKELY(index.isSome() && otherIndex.isSome())) {
+        NS_ASSERTION(*index != *otherIndex, "invalid index in comparePosition");
+        return *index < *otherIndex ? -1 : 1;
+      }
+      NS_ASSERTION(false, "invalid index in comparePosition");
+      // XXX Keep the odd traditional behavior for now.
+      return index.isNothing() && otherIndex.isSome() ? -1 : 1;
     }
 
     parent = node;

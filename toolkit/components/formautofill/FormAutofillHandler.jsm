@@ -497,12 +497,13 @@ class FormAutofillSection {
         continue;
       }
 
-      // Only reset value for input element.
-      if (
-        fieldDetail.state == FIELD_STATES.AUTO_FILLED &&
-        ChromeUtils.getClassName(element) === "HTMLInputElement"
-      ) {
-        element.setUserInput("");
+      if (fieldDetail.state == FIELD_STATES.AUTO_FILLED) {
+        if (ChromeUtils.getClassName(element) === "HTMLInputElement") {
+          element.setUserInput("");
+        } else if (ChromeUtils.getClassName(element) === "HTMLSelectElement") {
+          // If we can't find a selected option, then we should just reset to the first option's value
+          this._resetSelectElementValue(element);
+        }
       }
     }
   }
@@ -714,6 +715,9 @@ class FormAutofillSection {
           // Restore the dim fields to initial state as well once we knew
           // that user had intention to clear the filled form manually.
           for (const fieldDetail of dimFieldDetails) {
+            // If we can't find a selected option, then we should just reset to the first option's value
+            let element = fieldDetail.elementWeakRef.get();
+            this._resetSelectElementValue(element);
             this._changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
           }
           this.filledRecordGUID = null;
@@ -721,6 +725,21 @@ class FormAutofillSection {
         break;
       }
     }
+  }
+  /**
+   * Resets a <select> element to its selected option or the first option if there is none selected.
+   *
+   * @param {HTMLElement} element
+   * @memberof FormAutofillSection
+   */
+  _resetSelectElementValue(element) {
+    if (!element.options.length) {
+      return;
+    }
+    let selected = [...element.options].find(option =>
+      option.hasAttribute("selected")
+    );
+    element.value = selected ? selected.value : element.options[0].value;
   }
 }
 

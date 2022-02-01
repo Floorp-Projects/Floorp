@@ -44,6 +44,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MappedDeclarations.h"
+#include "mozilla/Maybe.h"
 
 #include "nsLayoutUtils.h"
 
@@ -60,7 +61,13 @@ static bool IsPreviousSibling(nsINode* aSubject, nsINode* aNode) {
 
   nsINode* parent = aSubject->GetParentNode();
   if (parent && parent == aNode->GetParentNode()) {
-    return parent->ComputeIndexOf(aSubject) < parent->ComputeIndexOf(aNode);
+    const Maybe<uint32_t> indexOfSubject = parent->ComputeIndexOf(aSubject);
+    const Maybe<uint32_t> indexOfNode = parent->ComputeIndexOf(aNode);
+    if (MOZ_LIKELY(indexOfSubject.isSome() && indexOfNode.isSome())) {
+      return *indexOfSubject < *indexOfNode;
+    }
+    // XXX Keep the odd traditional behavior for now.
+    return indexOfSubject.isNothing() && indexOfNode.isSome();
   }
 
   return false;

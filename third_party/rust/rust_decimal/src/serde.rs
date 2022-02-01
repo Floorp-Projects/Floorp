@@ -174,11 +174,12 @@ impl serde::Serialize for Decimal {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_str(crate::str::to_str_internal(self, true, None).as_ref())
+        let value = crate::str::to_str_internal(self, true, None);
+        serializer.serialize_str(value.0.as_ref())
     }
 }
 
-#[cfg(feature = "serde-float")]
+#[cfg(all(feature = "serde-float", not(feature = "serde-arbitrary-precision")))]
 impl serde::Serialize for Decimal {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -186,6 +187,18 @@ impl serde::Serialize for Decimal {
     {
         use num_traits::ToPrimitive;
         serializer.serialize_f64(self.to_f64().unwrap())
+    }
+}
+
+#[cfg(all(feature = "serde-float", feature = "serde-arbitrary-precision"))]
+impl serde::Serialize for Decimal {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serde_json::Number::from_str(&self.to_string())
+            .map_err(serde::ser::Error::custom)?
+            .serialize(serializer)
     }
 }
 
@@ -254,6 +267,14 @@ mod test {
     }
 
     #[test]
+    #[cfg(not(feature = "serde-float"))]
+    fn serialize_negative_zero() {
+        let record = Record { amount: -Decimal::ZERO };
+        let serialized = serde_json::to_string(&record).unwrap();
+        assert_eq!("{\"amount\":\"-0\"}", serialized);
+    }
+
+    #[test]
     #[cfg(feature = "serde-float")]
     fn serialize_decimal() {
         let record = Record {
@@ -261,6 +282,32 @@ mod test {
         };
         let serialized = serde_json::to_string(&record).unwrap();
         assert_eq!("{\"amount\":1.234}", serialized);
+    }
+
+    #[test]
+    #[cfg(all(feature = "serde-float", feature = "serde-arbitrary-precision"))]
+    fn serialize_decimal_roundtrip() {
+        let record = Record {
+            // 4.81 is intentionally chosen as it is unrepresentable as a floating point number, meaning this test
+            // would fail if the `serde-arbitrary-precision` was not activated.
+            amount: Decimal::new(481, 2),
+        };
+        let serialized = serde_json::to_string(&record).unwrap();
+        assert_eq!("{\"amount\":4.81}", serialized);
+        let deserialized: Record = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(record.amount, deserialized.amount);
+    }
+
+    #[test]
+    #[cfg(all(feature = "serde-str", not(feature = "serde-float")))]
+    fn serialize_decimal_roundtrip() {
+        let record = Record {
+            amount: Decimal::new(481, 2),
+        };
+        let serialized = serde_json::to_string(&record).unwrap();
+        assert_eq!("{\"amount\":\"4.81\"}", serialized);
+        let deserialized: Record = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(record.amount, deserialized.amount);
     }
 
     #[test]

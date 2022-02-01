@@ -552,47 +552,6 @@ std::vector<PatchInfo> FindTextLikePatches(
   constexpr size_t kMinMaxPatchSize = 20;
   if (max_patch_size < kMinMaxPatchSize) return {};
 
-  // Ensure that the specified set of patches doesn't produce out-of-bounds
-  // pixels.
-  // TODO(veluca): figure out why this is still necessary even with RCTs that
-  // don't depend on bit depth.
-  if (state->cparams.modular_mode && state->cparams.quality_pair.first >= 100) {
-    constexpr size_t kMaxPatchArea = kMaxPatchSize * kMaxPatchSize;
-    std::vector<float> min_then_max_px(2 * kMaxPatchArea);
-    for (size_t i = 0; i < info.size(); i++) {
-      for (size_t c = 0; c < 3; c++) {
-        float* JXL_RESTRICT min_px = min_then_max_px.data();
-        float* JXL_RESTRICT max_px = min_px + kMaxPatchArea;
-        std::fill(min_px, min_px + kMaxPatchArea, 1);
-        std::fill(max_px, max_px + kMaxPatchArea, 0);
-        size_t xsize = info[i].first.xsize;
-        for (size_t j = 0; j < info[i].second.size(); j++) {
-          size_t bx = info[i].second[j].first;
-          size_t by = info[i].second[j].second;
-          for (size_t iy = 0; iy < info[i].first.ysize; iy++) {
-            for (size_t ix = 0; ix < xsize; ix++) {
-              float v = opsin_rows[c][(by + iy) * opsin_stride + bx + ix];
-              if (v < min_px[iy * xsize + ix]) min_px[iy * xsize + ix] = v;
-              if (v > max_px[iy * xsize + ix]) max_px[iy * xsize + ix] = v;
-            }
-          }
-        }
-        for (size_t iy = 0; iy < info[i].first.ysize; iy++) {
-          for (size_t ix = 0; ix < xsize; ix++) {
-            float smallest = min_px[iy * xsize + ix];
-            float biggest = max_px[iy * xsize + ix];
-            JXL_ASSERT(smallest <= biggest);
-            float& out = info[i].first.fpixels[c][iy * xsize + ix];
-            // Clamp fpixels so that subtracting the patch never creates a
-            // negative value, or a value above 1.
-            JXL_ASSERT(biggest - 1 <= smallest);
-            out = std::max(smallest, out);
-            out = std::min(biggest - 1.f, out);
-          }
-        }
-      }
-    }
-  }
   return info;
 }
 

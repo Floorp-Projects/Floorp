@@ -7,7 +7,7 @@ namespace _ipdltest {
 intr protocol PTestDesc {
     manages PTestDescSub; 
 child:
-    intr PTestDescSub(nullable PTestDescSubsub dummy);
+    [LegacyIntr] intr PTestDescSub(nullable PTestDescSubsub dummy);
 
     async Test(PTestDescSubsub a);
 

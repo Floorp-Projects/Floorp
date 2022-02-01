@@ -8,7 +8,6 @@ const { storageTypePool } = require("devtools/server/actors/storage");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Ci } = require("chrome");
 const Services = require("Services");
-const { isWindowIncluded } = require("devtools/shared/layout/utils");
 
 // ms of delay to throttle updates
 const BATCH_DELAY = 200;
@@ -207,6 +206,9 @@ class StorageActorMock extends EventEmitter {
       // creating any global.
       return null;
     }
+    if (!this.isIncludedInTopLevelWindow(window)) {
+      return null;
+    }
     this.childWindowPool.add(window);
     for (let i = 0; i < docShell.childCount; i++) {
       const child = docShell.getChildAt(i);
@@ -224,7 +226,7 @@ class StorageActorMock extends EventEmitter {
   }
 
   isIncludedInTopLevelWindow(window) {
-    return isWindowIncluded(this.window, window);
+    return this.targetActor.windows.includes(window);
   }
 
   getWindowFromInnerWindowID(innerID) {

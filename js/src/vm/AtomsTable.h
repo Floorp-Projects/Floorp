@@ -33,7 +33,15 @@ struct AtomHasher {
   }
 };
 
-using AtomSet = JS::GCHashSet<WeakHeapPtrAtom, AtomHasher, SystemAllocPolicy>;
+// Note: Use a 'class' here to make forward declarations easier to use.
+class AtomSet
+    : public JS::GCHashSet<WeakHeapPtrAtom, AtomHasher, SystemAllocPolicy> {
+  using Base = JS::GCHashSet<WeakHeapPtrAtom, AtomHasher, SystemAllocPolicy>;
+
+ public:
+  AtomSet() = default;
+  explicit AtomSet(size_t length) : Base(length){};
+};
 
 // This class is a wrapper for AtomSet that is used to ensure the AtomSet is
 // not modified. It should only expose read-only methods from AtomSet.

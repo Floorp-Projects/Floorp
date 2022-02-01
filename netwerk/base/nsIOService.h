@@ -199,6 +199,8 @@ class nsIOService final : public nsIIOService,
 
   void DestroySocketProcess();
 
+  nsresult SetOfflineInternal(bool offline, bool notifySocketProcess = true);
+
  private:
   mozilla::Atomic<bool, mozilla::Relaxed> mOffline{true};
   mozilla::Atomic<bool, mozilla::Relaxed> mOfflineForProfileChange{false};

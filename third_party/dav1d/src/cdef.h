@@ -52,7 +52,8 @@ typedef const void *const_left_pixel_row_2px;
 // order to get access to pre-filter top pixels, use $top.
 #define decl_cdef_fn(name) \
 void (name)(pixel *dst, ptrdiff_t stride, const_left_pixel_row_2px left, \
-            const pixel *top, int pri_strength, int sec_strength, \
+            const pixel *top, const pixel *bottom, \
+            int pri_strength, int sec_strength, \
             int dir, int damping, enum CdefEdgeFlags edges HIGHBD_DECL_SUFFIX)
 typedef decl_cdef_fn(*cdef_fn);
 

@@ -776,13 +776,12 @@ Status ColorSpaceTransform::Init(const ColorEncoding& c_src,
 #endif
   }
 
-  // Special-case for BT.2100 HLG/PQ and SRGB <=> linear:
+  // Special-case SRGB <=> linear and when PQ or HLG is involved:
   const bool src_linear = c_src.tf.IsLinear();
   const bool dst_linear = c_dst.tf.IsLinear();
-  if (((c_src.tf.IsPQ() || c_src.tf.IsHLG()) && dst_linear) ||
-      ((c_dst.tf.IsPQ() || c_dst.tf.IsHLG()) && src_linear) ||
-      ((c_src.tf.IsPQ() != c_dst.tf.IsPQ()) && intensity_target_ != 10000) ||
-      (c_src.tf.IsSRGB() && dst_linear) || (c_dst.tf.IsSRGB() && src_linear)) {
+  if (c_src.tf.IsPQ() || c_src.tf.IsHLG() || c_dst.tf.IsPQ() ||
+      c_dst.tf.IsHLG() || (c_src.tf.IsSRGB() && dst_linear) ||
+      (c_dst.tf.IsSRGB() && src_linear)) {
     // Construct new profiles as if the data were already/still linear.
     ColorEncoding c_linear_src = c_src;
     ColorEncoding c_linear_dst = c_dst;

@@ -251,7 +251,7 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   // helper routine to determine if a point is inside of the passed in
   // selection.
   static nsresult IsPointInSelection(mozilla::dom::Selection& aSelection,
-                                     nsINode* aNode, int32_t aOffset,
+                                     nsINode* aNode, uint32_t aOffset,
                                      nsRange** aRange);
 
   nsresult CleanupRangesInSelection(mozilla::dom::Selection* aSelection);

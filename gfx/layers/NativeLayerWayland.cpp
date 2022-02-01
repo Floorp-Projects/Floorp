@@ -76,6 +76,11 @@ NativeLayerRootWayland::NativeLayerRootWayland(MozContainer* aContainer)
 }
 
 NativeLayerRootWayland::~NativeLayerRootWayland() {
+  GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(mContainer));
+  if (gdkWindow) {
+    GdkFrameClock* frameClock = gdk_window_get_frame_clock(gdkWindow);
+    g_signal_handlers_disconnect_by_data(frameClock, this);
+  }
   g_object_unref(mContainer);
 }
 
@@ -189,7 +194,8 @@ bool NativeLayerRootWayland::CommitToScreen(const MutexAutoLock& aProofOfLock) {
 
     if (roundf(surfaceRectClipped.width) > 0 &&
         roundf(surfaceRectClipped.height) > 0) {
-      layer->SetBufferTransformFlipped(transform2D.HasNegativeScaling());
+      layer->SetBufferTransformFlipped(transform2D._11 < 0.0,
+                                       transform2D._22 < 0.0);
 
       double bufferScale = moz_container_wayland_get_scale(mContainer);
       layer->SetSubsurfacePosition(floor(surfaceRectClipped.x / bufferScale),
@@ -338,9 +344,9 @@ void NativeLayerRootWayland::UpdateLayersOnMainThread() {
   }
 
   if (!mGdkAfterPaintId && gdkWindow) {
-    GdkFrameClock* frame_clock = gdk_window_get_frame_clock(gdkWindow);
+    GdkFrameClock* frameClock = gdk_window_get_frame_clock(gdkWindow);
     mGdkAfterPaintId =
-        g_signal_connect_after(frame_clock, "after-paint",
+        g_signal_connect_after(frameClock, "after-paint",
                                G_CALLBACK(sAfterFrameClockAfterPaint), this);
   }
 }
@@ -647,19 +653,31 @@ void NativeLayerWayland::EnsureParentSurface(wl_surface* aParentSurface) {
   }
 }
 
-void NativeLayerWayland::SetBufferTransformFlipped(bool aFlipped) {
+void NativeLayerWayland::SetBufferTransformFlipped(bool aFlippedX,
+                                                   bool aFlippedY) {
   MutexAutoLock lock(mMutex);
 
-  if (aFlipped == mBufferTransformFlipped) {
+  if (aFlippedX == mBufferTransformFlippedX &&
+      aFlippedY == mBufferTransformFlippedY) {
     return;
   }
 
-  mBufferTransformFlipped = aFlipped;
-  if (mBufferTransformFlipped) {
-    wl_surface_set_buffer_transform(mWlSurface,
-                                    WL_OUTPUT_TRANSFORM_FLIPPED_180);
+  mBufferTransformFlippedX = aFlippedX;
+  mBufferTransformFlippedY = aFlippedY;
+
+  if (mBufferTransformFlippedY) {
+    if (mBufferTransformFlippedX) {
+      wl_surface_set_buffer_transform(mWlSurface, WL_OUTPUT_TRANSFORM_180);
+    } else {
+      wl_surface_set_buffer_transform(mWlSurface,
+                                      WL_OUTPUT_TRANSFORM_FLIPPED_180);
+    }
   } else {
-    wl_surface_set_buffer_transform(mWlSurface, WL_OUTPUT_TRANSFORM_NORMAL);
+    if (mBufferTransformFlippedX) {
+      wl_surface_set_buffer_transform(mWlSurface, WL_OUTPUT_TRANSFORM_FLIPPED);
+    } else {
+      wl_surface_set_buffer_transform(mWlSurface, WL_OUTPUT_TRANSFORM_NORMAL);
+    }
   }
 }
 

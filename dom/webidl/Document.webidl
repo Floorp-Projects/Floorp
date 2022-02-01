@@ -459,11 +459,11 @@ partial interface Document {
   // trying to load when we hit an error, rather than the error page's own URI.
   [ChromeOnly] readonly attribute URI? mozDocumentURIIfNotForErrorPages;
 
-  // A promise that is resolved, with this document itself, when we have both
-  // fired DOMContentLoaded and are ready to start layout.  This is used for the
-  // "document_idle" webextension script injection point.
+  // A promise that is resolved when we have both fired DOMContentLoaded and
+  // are ready to start layout.
+  // This is used for the  "document_idle" webextension script injection point.
   [ChromeOnly, Throws]
-  readonly attribute Promise<Document> documentReadyForIdle;
+  readonly attribute Promise<void> documentReadyForIdle;
 
   // Lazily created command dispatcher, returns null if the document is not
   // chrome privileged.

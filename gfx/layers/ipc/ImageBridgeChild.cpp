@@ -590,56 +590,7 @@ void ImageBridgeChild::IdentifyCompositorTextureHost(
 
 void ImageBridgeChild::UpdateTextureFactoryIdentifier(
     const TextureFactoryIdentifier& aIdentifier) {
-  // ImageHost is incompatible between WebRender enabled and WebRender disabled.
-  // Then drop all ImageContainers' ImageClients during disabling WebRender.
-  bool disablingWebRender =
-      GetCompositorBackendType() == LayersBackend::LAYERS_WR &&
-      aIdentifier.mParentBackend != LayersBackend::LAYERS_WR;
-
-  // Do not update TextureFactoryIdentifier if aIdentifier is going to disable
-  // WebRender, but gecko is still using WebRender. Since gecko uses different
-  // incompatible ImageHost and TextureHost between WebRender and non-WebRender.
-  //
-  // Even when WebRender is still in use, if non-accelerated widget is opened,
-  // aIdentifier disables WebRender at ImageBridgeChild.
-  if (disablingWebRender && gfxVars::UseWebRender()) {
-    return;
-  }
-
-  // D3DTexture might become obsolte. To prevent to use obsoleted D3DTexture,
-  // drop all ImageContainers' ImageClients.
-
-  // During re-creating GPU process, there was a period that ImageBridgeChild
-  // was re-created, but ImageBridgeChild::UpdateTextureFactoryIdentifier() was
-  // not called yet. In the period, if ImageBridgeChild::CreateImageClient() is
-  // called, ImageBridgeParent creates incompatible ImageHost than
-  // WebRenderImageHost.
-  bool initializingWebRender =
-      GetCompositorBackendType() != LayersBackend::LAYERS_WR &&
-      aIdentifier.mParentBackend == LayersBackend::LAYERS_WR;
-
-  bool needsDrop = disablingWebRender || initializingWebRender;
-
-#if defined(XP_WIN)
-  RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetImageDevice();
-  mImageDevice = device;
-#endif
-
   IdentifyTextureHost(aIdentifier);
-  if (needsDrop) {
-    nsTArray<RefPtr<ImageContainerListener> > listeners;
-    {
-      MutexAutoLock lock(mContainerMapLock);
-      for (const auto& entry : mImageContainerListeners) {
-        listeners.AppendElement(entry.second);
-      }
-    }
-    // Drop ImageContainer's ImageClient whithout holding mContainerMapLock to
-    // avoid deadlock.
-    for (auto container : listeners) {
-      container->DropImageClient();
-    }
-  }
 }
 
 RefPtr<ImageClient> ImageBridgeChild::CreateImageClient(

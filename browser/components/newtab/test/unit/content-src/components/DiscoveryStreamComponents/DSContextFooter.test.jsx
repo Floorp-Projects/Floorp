@@ -1,6 +1,7 @@
 import {
   DSContextFooter,
   StatusMessage,
+  DSMessageFooter,
 } from "content-src/components/DiscoveryStreamComponents/DSContextFooter/DSContextFooter";
 import React from "react";
 import { mount } from "enzyme";
@@ -141,5 +142,16 @@ describe("<DSContextFooter>", () => {
       `div[data-l10n-id='${removeBookmarkFluentID}']`
     );
     assert.isTrue(removedBookmarkStatusMessage.exists());
+  });
+  it("should render a story footer", () => {
+    wrapper = mount(
+      <DSMessageFooter
+        context_type={bookmarkBadge}
+        engagement={engagement}
+        display_engagement_labels={true}
+      />
+    );
+
+    assert.lengthOf(wrapper.find(".story-footer"), 1);
   });
 });

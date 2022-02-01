@@ -135,7 +135,10 @@ class nsDocLoader : public nsIDocumentLoader,
 
   uint32_t ChildCount() const { return mChildList.Length(); }
 
-  void OOPChildrenLoadingIsEmpty() { DocLoaderIsEmpty(true); }
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void OOPChildrenLoadingIsEmpty() {
+    DocLoaderIsEmpty(true);
+  }
 
  protected:
   explicit nsDocLoader(bool aNotifyAboutBackgroundRequests);
@@ -186,7 +189,7 @@ class nsDocLoader : public nsIDocumentLoader,
                             nsIURI* aUri, uint32_t aFlags);
 
   [[nodiscard]] bool RefreshAttempted(nsIWebProgress* aWebProgress,
-                                      nsIURI* aURI, int32_t aDelay,
+                                      nsIURI* aURI, uint32_t aDelay,
                                       bool aSameURI);
 
   // this function is overridden by the docshell, it is provided so that we
@@ -218,7 +221,9 @@ class nsDocLoader : public nsIDocumentLoader,
 
   // Inform a parent docloader that aChild is done calling its onload
   // handler.
-  void ChildDoneWithOnload(nsIDocumentLoader* aChild) {
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void ChildDoneWithOnload(
+      nsIDocumentLoader* aChild) {
     mChildrenInOnload.RemoveObject(aChild);
     DocLoaderIsEmpty(true);
   }
@@ -230,7 +235,7 @@ class nsDocLoader : public nsIDocumentLoader,
   // aFlushLayout is true.
   // @param aOverrideStatus An optional status to use when notifying listeners
   // of the completed load, instead of using the load group's status.
-  void DocLoaderIsEmpty(
+  MOZ_CAN_RUN_SCRIPT void DocLoaderIsEmpty(
       bool aFlushLayout,
       const mozilla::Maybe<nsresult>& aOverrideStatus = mozilla::Nothing());
 

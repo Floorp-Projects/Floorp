@@ -23,7 +23,14 @@ def assert_base_entry(entry,
 
     if stacktrace is not None:
         assert "stackTrace" in entry
-        assert isinstance(entry["stackTrace"], list)
+        assert isinstance(entry["stackTrace"], object)
+        assert "callFrames" in entry["stackTrace"]
+
+        call_frames = entry["stackTrace"]["callFrames"]
+        assert isinstance(call_frames, list)
+        assert len(call_frames) == len(stacktrace)
+        for index in range(0, len(call_frames)):
+            assert call_frames[index] == stacktrace[index]
 
 
 def assert_console_entry(entry,
@@ -75,11 +82,12 @@ def create_console_api_message(current_session, inline, text):
 
 
 def create_javascript_error(current_session, inline, error_message="foo"):
-    expected_text = current_session.execute_script(
-        f"const err = new Error('{error_message}'); return err.toString()")
-    current_session.url = inline(
-        f"<script>function bar() {{ throw new Error('{error_message}'); }}; bar();</script>")
-    return expected_text
+    return current_session.execute_script(f"""
+        const script = document.createElement("script");
+        script.append(document.createTextNode(`(() => {{throw new Error('{error_message}')}})()`));
+        document.body.append(script);
+        const err = new Error('{error_message}'); return err.toString()
+    """)
 
 
 def create_log(current_session, inline, log_type, text="foo"):

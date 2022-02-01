@@ -904,6 +904,7 @@ function generate_grain_\type\()_8bpc_neon, export=1
         br              x16
 
 L(generate_grain_\type\()_lag0):
+        AARCH64_VALID_JUMP_TARGET
 .ifc \type, y
         mov             w1,  #GRAIN_HEIGHT
         bl              generate_grain_rows_neon
@@ -952,6 +953,7 @@ L(generate_grain_\type\()_lag0):
         ret
 
 L(generate_grain_\type\()_lag1):
+        AARCH64_VALID_JUMP_TARGET
         ld1r            {v27.16b}, [x4], #1 // ar_coeffs_y[0]
         ld1r            {v28.16b}, [x4], #1 // ar_coeffs_y[1]
         ld1r            {v29.16b}, [x4]     // ar_coeffs_y[2]
@@ -991,6 +993,7 @@ L(generate_grain_\type\()_lag1):
         ret
 
 L(generate_grain_\type\()_lag2):
+        AARCH64_VALID_JUMP_TARGET
         ld1             {v30.16b}, [x4]     // ar_coeffs_y[0-11], ar_coeffs_uv[0-12]
 
         smov            w4,  v30.b[10]
@@ -1018,6 +1021,7 @@ L(generate_grain_\type\()_lag2):
         ret
 
 L(generate_grain_\type\()_lag3):
+        AARCH64_VALID_JUMP_TARGET
         ld1             {v29.16b, v30.16b}, [x4] // ar_coeffs_y[0-23], ar_coeffs_uv[0-24]
         stp             d8,  d9,  [sp, #16]
         stp             d10, d11, [sp, #32]
@@ -1125,6 +1129,7 @@ function generate_grain_\type\()_8bpc_neon, export=1
         br              x16
 
 L(generate_grain_\type\()_lag0):
+        AARCH64_VALID_JUMP_TARGET
         dup             v28.8h,  w7
         ld1r            {v27.16b}, [x4]     // ar_coeffs_uv[0]
         movi            v0.16b,  #0
@@ -1162,6 +1167,7 @@ L(generate_grain_\type\()_lag0):
         ret
 
 L(generate_grain_\type\()_lag1):
+        AARCH64_VALID_JUMP_TARGET
         ld1r            {v27.16b}, [x4], #1 // ar_coeffs_uv[0]
         ld1r            {v28.16b}, [x4], #1 // ar_coeffs_uv[1]
         ld1r            {v29.16b}, [x4]     // ar_coeffs_uv[2]
@@ -1188,6 +1194,7 @@ L(generate_grain_\type\()_lag1):
         ret
 
 L(generate_grain_\type\()_lag2):
+        AARCH64_VALID_JUMP_TARGET
         ld1             {v30.16b}, [x4]     // ar_coeffs_uv[0-12]
 
         smov            w4,  v30.b[10]
@@ -1210,6 +1217,7 @@ L(generate_grain_\type\()_lag2):
         ret
 
 L(generate_grain_\type\()_lag3):
+        AARCH64_VALID_JUMP_TARGET
         ldr             q29,      [x4]      // ar_coeffs_uv[0-15]
         ldr             q30,      [x4, #16] // ar_coeffs_uv[16-24]
         stp             d8,  d9,  [sp, #16]
@@ -1402,6 +1410,7 @@ endfunc
 function fgy_loop_neon
 .macro fgy ox, oy
 L(loop_\ox\oy):
+        AARCH64_VALID_JUMP_TARGET
 1:
         ld1             {v0.16b,  v1.16b},  [x1],  x2 // src
 .if \ox
@@ -1649,6 +1658,7 @@ fguv 444, 0, 0
 function fguv_loop_sx0_neon
 .macro fguv_loop_sx0 csfl, ox, oy
 L(fguv_loop_sx0_csfl\csfl\()_\ox\oy):
+        AARCH64_VALID_JUMP_TARGET
 1:
         ld1             {v0.16b,  v1.16b},  [x6],  x7  // luma
         ld1             {v6.16b,  v7.16b},  [x1],  x2  // src
@@ -1827,6 +1837,7 @@ endfunc
 function fguv_loop_sx1_neon
 .macro fguv_loop_sx1 csfl, ox, oy
 L(fguv_loop_sx1_csfl\csfl\()_\ox\oy):
+        AARCH64_VALID_JUMP_TARGET
 1:
         ld1             {v0.16b, v1.16b},  [x6],  x7  // luma
         ld1             {v6.16b},          [x1],  x2  // src

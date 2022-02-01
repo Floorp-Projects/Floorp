@@ -166,6 +166,12 @@ ARCHIVE_FILES = {
         },
         {
             "source": buildconfig.topsrcdir,
+            "base": "xpcom/geckoprocesstypes_generator",
+            "pattern": "**",
+            "dest": "tools/geckoprocesstypes_generator",
+        },
+        {
+            "source": buildconfig.topsrcdir,
             "base": "third_party/python/six",
             "pattern": "**",
             "dest": "tools/six",

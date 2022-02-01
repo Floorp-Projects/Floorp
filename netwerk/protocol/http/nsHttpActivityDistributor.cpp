@@ -191,5 +191,22 @@ nsHttpActivityDistributor::RemoveObserver(nsIHttpActivityObserver* aObserver) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHttpActivityDistributor::GetObserveProxyResponse(
+    bool* aObserveProxyResponse) {
+  NS_ENSURE_ARG_POINTER(aObserveProxyResponse);
+
+  MutexAutoLock lock(mLock);
+  *aObserveProxyResponse = mObserveProxyResponse;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpActivityDistributor::SetObserveProxyResponse(bool aObserveProxyResponse) {
+  MutexAutoLock lock(mLock);
+  mObserveProxyResponse = aObserveProxyResponse;
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla

@@ -431,16 +431,10 @@ function accessibleTask(doc, task, options = {}) {
     gIsRemoteIframe = options.remoteIframe;
     gIsIframe = options.iframe || gIsRemoteIframe;
     let url;
-    if (options.chrome) {
+    if (options.chrome && doc.endsWith("html")) {
       // Load with a chrome:// URL so this loads as a chrome document in the
       // parent process.
-      if (doc.endsWith("html")) {
-        url = `${CURRENT_DIR}${doc}`;
-      } else {
-        const urlObj = new URL(`${CURRENT_DIR}chrome-document-builder.html`);
-        urlObj.searchParams.append("html", doc);
-        url = urlObj.href;
-      }
+      url = `${CURRENT_DIR}${doc}`;
     } else if (doc.endsWith("html") && !gIsIframe) {
       url = `${CURRENT_CONTENT_DIR}${doc}`;
     } else {
@@ -474,7 +468,22 @@ function accessibleTask(doc, task, options = {}) {
     await BrowserTestUtils.withNewTab(
       {
         gBrowser,
-        url,
+        // For chrome, we need a non-remote browser.
+        opening: !options.chrome
+          ? url
+          : () => {
+              // Passing forceNotRemote: true still sets maychangeremoteness,
+              // which will cause data: URIs to load remotely. There's no way to
+              // avoid this with gBrowser or BrowserTestUtils. Therefore, we
+              // load a blank document initially and replace it below.
+              gBrowser.selectedTab = BrowserTestUtils.addTab(
+                gBrowser,
+                "about:blank",
+                {
+                  forceNotRemote: true,
+                }
+              );
+            },
       },
       async function(browser) {
         registerCleanupFunction(() => {
@@ -485,6 +494,16 @@ function accessibleTask(doc, task, options = {}) {
             }
           }
         });
+
+        if (options.chrome) {
+          await SpecialPowers.pushPrefEnv({
+            set: [["security.allow_unsafe_parent_loads", true]],
+          });
+          // Ensure this never becomes a remote browser.
+          browser.removeAttribute("maychangeremoteness");
+          // Now we can load our page without it becoming remote.
+          browser.setAttribute("src", url);
+        }
 
         await SimpleTest.promiseFocus(browser);
         await loadContentScripts(browser, "Common.jsm");

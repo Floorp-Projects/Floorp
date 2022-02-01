@@ -3,16 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/CSSEditUtils.h"
+#include "CSSEditUtils.h"
 
+#include "ChangeStyleTransaction.h"
+#include "HTMLEditor.h"
 #include "HTMLEditUtils.h"
+
 #include "mozilla/Assertions.h"
-#include "mozilla/ChangeStyleTransaction.h"
-#include "mozilla/HTMLEditor.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/DeclarationBlock.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_editor.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/Element.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
 #include "nsCSSProps.h"
@@ -25,7 +28,6 @@
 #include "nsAtom.h"
 #include "nsIContent.h"
 #include "nsICSSDeclaration.h"
-#include "mozilla/dom/Document.h"
 #include "nsINode.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsUtils.h"
@@ -279,10 +281,8 @@ const CSSEditUtils::CSSEquivTable hrAlignEquivTable[] = {
 #undef CSS_EQUIV_TABLE_NONE
 
 CSSEditUtils::CSSEditUtils(HTMLEditor* aHTMLEditor)
-    : mHTMLEditor(aHTMLEditor), mIsCSSPrefChecked(true) {
-  // let's retrieve the value of the "CSS editing" pref
-  mIsCSSPrefChecked = Preferences::GetBool("editor.use_css", mIsCSSPrefChecked);
-}
+    : mHTMLEditor(aHTMLEditor),
+      mIsCSSPrefChecked(StaticPrefs::editor_use_css()) {}
 
 // Answers true if we have some CSS equivalence for the HTML style defined
 // by aProperty and/or aAttribute for the node aNode
@@ -610,7 +610,7 @@ bool CSSEditUtils::IsCSSInvertible(nsAtom& aProperty, nsAtom* aAttribute) {
 
 // static
 void CSSEditUtils::GetDefaultBackgroundColor(nsAString& aColor) {
-  if (Preferences::GetBool("editor.use_custom_colors", false)) {
+  if (MOZ_UNLIKELY(StaticPrefs::editor_use_custom_colors())) {
     nsresult rv = Preferences::GetString("editor.background_color", aColor);
     // XXX Why don't you validate the pref value?
     if (NS_FAILED(rv)) {
@@ -637,10 +637,9 @@ void CSSEditUtils::GetDefaultBackgroundColor(nsAString& aColor) {
 
 // static
 void CSSEditUtils::GetDefaultLengthUnit(nsAString& aLengthUnit) {
-  nsresult rv =
-      Preferences::GetString("editor.css.default_length_unit", aLengthUnit);
   // XXX Why don't you validate the pref value?
-  if (NS_FAILED(rv)) {
+  if (MOZ_UNLIKELY(NS_FAILED(Preferences::GetString(
+          "editor.css.default_length_unit", aLengthUnit)))) {
     aLengthUnit.AssignLiteral("px");
   }
 }

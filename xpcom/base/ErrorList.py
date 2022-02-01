@@ -935,9 +935,10 @@ with modules["URILOADER"]:
     # doesn't need to be reparsed from the original source.
     errors["NS_ERROR_PARSED_DATA_CACHED"] = FAILURE(33)
 
-    # This success code indicates that a refresh header was found and
-    # successfully setup.
-    errors["NS_REFRESHURI_HEADER_FOUND"] = SUCCESS(2)
+    # When browser.tabs.documentchannel.parent-controlled pref and SHIP
+    # are enabled and a load gets cancelled due to another one
+    # starting, the error is NS_BINDING_CANCELLED_OLD_LOAD.
+    errors["NS_BINDING_CANCELLED_OLD_LOAD"] = FAILURE(39)
 
 
 # =======================================================================

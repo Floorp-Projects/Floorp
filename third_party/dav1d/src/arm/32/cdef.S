@@ -34,10 +34,10 @@
 // n2 = s4/d2
 // w2 = d2/q1
 .macro pad_top_bottom s1, s2, w, stride, n1, w1, n2, w2, align, ret
-        tst             r6,  #1 // CDEF_HAVE_LEFT
+        tst             r7,  #1 // CDEF_HAVE_LEFT
         beq             2f
         // CDEF_HAVE_LEFT
-        tst             r6,  #2 // CDEF_HAVE_RIGHT
+        tst             r7,  #2 // CDEF_HAVE_RIGHT
         beq             1f
         // CDEF_HAVE_LEFT+CDEF_HAVE_RIGHT
         ldrh            r12, [\s1, #-2]
@@ -61,7 +61,7 @@
         vst1.16         {\w2}, [r0, :\align]
         vstr            s11, [r0, #2*\w]
 .if \ret
-        pop             {r4-r7,pc}
+        pop             {r4-r8,pc}
 .else
         add             r0,  r0,  #2*\stride
         b               3f
@@ -86,7 +86,7 @@
         vst1.16         {\w2}, [r0, :\align]
         vstr            s12, [r0, #2*\w]
 .if \ret
-        pop             {r4-r7,pc}
+        pop             {r4-r8,pc}
 .else
         add             r0,  r0,  #2*\stride
         b               3f
@@ -94,7 +94,7 @@
 
 2:
         // !CDEF_HAVE_LEFT
-        tst             r6,  #2 // CDEF_HAVE_RIGHT
+        tst             r7,  #2 // CDEF_HAVE_RIGHT
         beq             1f
         // !CDEF_HAVE_LEFT+CDEF_HAVE_RIGHT
         vldr            \n1, [\s1]
@@ -114,7 +114,7 @@
         vst1.16         {\w2}, [r0, :\align]
         vstr            s9,  [r0, #2*\w]
 .if \ret
-        pop             {r4-r7,pc}
+        pop             {r4-r8,pc}
 .else
         add             r0,  r0,  #2*\stride
         b               3f
@@ -134,7 +134,7 @@
         vst1.16         {\w2}, [r0, :\align]
         vstr            s12, [r0, #2*\w]
 .if \ret
-        pop             {r4-r7,pc}
+        pop             {r4-r8,pc}
 .else
         add             r0,  r0,  #2*\stride
 .endif
@@ -151,7 +151,8 @@
 
 // void dav1d_cdef_paddingX_8bpc_neon(uint16_t *tmp, const pixel *src,
 //                                    ptrdiff_t src_stride, const pixel (*left)[2],
-//                                    const pixel *const top, int h,
+//                                    const pixel *const top,
+//                                    const pixel *const bottom, int h,
 //                                    enum CdefEdgeFlags edges);
 
 // n1 = s0/d0
@@ -160,13 +161,13 @@
 // w2 = d2/q1
 .macro padding_func w, stride, n1, w1, n2, w2, align
 function cdef_padding\w\()_8bpc_neon, export=1
-        push            {r4-r7,lr}
-        ldrd            r4,  r5,  [sp, #20]
-        ldr             r6,  [sp, #28]
-        cmp             r6,  #0xf // fully edged
+        push            {r4-r8,lr}
+        ldrd            r4,  r5,  [sp, #24]
+        ldrd            r6,  r7,  [sp, #32]
+        cmp             r7,  #0xf // fully edged
         beq             cdef_padding\w\()_edged_8bpc_neon
         vmov.i16        q3,  #0x8000
-        tst             r6,  #4 // CDEF_HAVE_TOP
+        tst             r7,  #4 // CDEF_HAVE_TOP
         bne             1f
         // !CDEF_HAVE_TOP
         sub             r12, r0,  #2*(2*\stride+2)
@@ -178,23 +179,23 @@ function cdef_padding\w\()_8bpc_neon, export=1
         b               3f
 1:
         // CDEF_HAVE_TOP
-        add             r7,  r4,  r2
+        add             r8,  r4,  r2
         sub             r0,  r0,  #2*(2*\stride)
-        pad_top_bottom  r4,  r7,  \w, \stride, \n1, \w1, \n2, \w2, \align, 0
+        pad_top_bottom  r4,  r8,  \w, \stride, \n1, \w1, \n2, \w2, \align, 0
 
         // Middle section
 3:
-        tst             r6,  #1 // CDEF_HAVE_LEFT
+        tst             r7,  #1 // CDEF_HAVE_LEFT
         beq             2f
         // CDEF_HAVE_LEFT
-        tst             r6,  #2 // CDEF_HAVE_RIGHT
+        tst             r7,  #2 // CDEF_HAVE_RIGHT
         beq             1f
         // CDEF_HAVE_LEFT+CDEF_HAVE_RIGHT
 0:
         vld1.16         {d2[]}, [r3, :16]!
         ldrh            r12, [r1, #\w]
         load_n_incr     d0,  r1,  r2,  \w
-        subs            r5,  r5,  #1
+        subs            r6,  r6,  #1
         vmov.16         d2[1], r12
         vmovl.u8        q0,  d0
         vmovl.u8        q1,  d2
@@ -208,7 +209,7 @@ function cdef_padding\w\()_8bpc_neon, export=1
         // CDEF_HAVE_LEFT+!CDEF_HAVE_RIGHT
         vld1.16         {d2[]}, [r3, :16]!
         load_n_incr     d0,  r1,  r2,  \w
-        subs            r5,  r5,  #1
+        subs            r6,  r6,  #1
         vmovl.u8        q0,  d0
         vmovl.u8        q1,  d2
         vstr            s4,  [r0, #-4]
@@ -218,14 +219,14 @@ function cdef_padding\w\()_8bpc_neon, export=1
         bgt             1b
         b               3f
 2:
-        tst             r6,  #2 // CDEF_HAVE_RIGHT
+        tst             r7,  #2 // CDEF_HAVE_RIGHT
         beq             1f
         // !CDEF_HAVE_LEFT+CDEF_HAVE_RIGHT
 0:
         ldrh            r12, [r1, #\w]
         load_n_incr     d0,  r1,  r2,  \w
         vdup.16         d2,  r12
-        subs            r5,  r5,  #1
+        subs            r6,  r6,  #1
         vmovl.u8        q0,  d0
         vmovl.u8        q1,  d2
         vstr            s12, [r0, #-4]
@@ -237,7 +238,7 @@ function cdef_padding\w\()_8bpc_neon, export=1
 1:
         // !CDEF_HAVE_LEFT+!CDEF_HAVE_RIGHT
         load_n_incr     d0,  r1,  r2,  \w
-        subs            r5,  r5,  #1
+        subs            r6,  r6,  #1
         vmovl.u8        q0,  d0
         vstr            s12, [r0, #-4]
         vst1.16         {\w1}, [r0, :\align]
@@ -246,7 +247,7 @@ function cdef_padding\w\()_8bpc_neon, export=1
         bgt             1b
 
 3:
-        tst             r6,  #8 // CDEF_HAVE_BOTTOM
+        tst             r7,  #8 // CDEF_HAVE_BOTTOM
         bne             1f
         // !CDEF_HAVE_BOTTOM
         sub             r12, r0,  #4
@@ -255,11 +256,11 @@ function cdef_padding\w\()_8bpc_neon, export=1
 .if \w == 8
         vst1.16         {q2,q3}, [r12]!
 .endif
-        pop             {r4-r7,pc}
+        pop             {r4-r8,pc}
 1:
         // CDEF_HAVE_BOTTOM
-        add             r7,  r1,  r2
-        pad_top_bottom  r1,  r7,  \w, \stride, \n1, \w1, \n2, \w2, \align, 1
+        add             r8,  r5,  r2
+        pad_top_bottom  r5,  r8,  \w, \stride, \n1, \w1, \n2, \w2, \align, 1
 endfunc
 .endm
 
@@ -268,7 +269,8 @@ padding_func 4, 8,  s0, d0, s4, d2, 64
 
 // void cdef_paddingX_edged_8bpc_neon(uint16_t *tmp, const pixel *src,
 //                                    ptrdiff_t src_stride, const pixel (*left)[2],
-//                                    const pixel *const top, int h,
+//                                    const pixel *const top,
+//                                    const pixel *const bottom, int h,
 //                                    enum CdefEdgeFlags edges);
 
 .macro padding_func_edged w, stride, reg, align
@@ -277,16 +279,16 @@ function cdef_padding\w\()_edged_8bpc_neon
 
         ldrh            r12, [r4, #-2]
         vldr            \reg, [r4]
-        add             r7,  r4,  r2
+        add             r8,  r4,  r2
         strh            r12, [r0, #-2]
         ldrh            r12, [r4, #\w]
         vstr            \reg, [r0]
         strh            r12, [r0, #\w]
 
-        ldrh            r12, [r7, #-2]
-        vldr            \reg, [r7]
+        ldrh            r12, [r8, #-2]
+        vldr            \reg, [r8]
         strh            r12, [r0, #\stride-2]
-        ldrh            r12, [r7, #\w]
+        ldrh            r12, [r8, #\w]
         vstr            \reg, [r0, #\stride]
         strh            r12, [r0, #\stride+\w]
         add             r0,  r0,  #2*\stride
@@ -297,28 +299,28 @@ function cdef_padding\w\()_edged_8bpc_neon
         str             r12, [r0, #-2]
         ldrh            r12, [r1, #\w]
         add             r1,  r1,  r2
-        subs            r5,  r5,  #1
+        subs            r6,  r6,  #1
         vstr            \reg, [r0]
         str             r12, [r0, #\w]
         add             r0,  r0,  #\stride
         bgt             0b
 
-        ldrh            r12, [r1, #-2]
-        vldr            \reg, [r1]
-        add             r7,  r1,  r2
+        ldrh            r12, [r5, #-2]
+        vldr            \reg, [r5]
+        add             r8,  r5,  r2
         strh            r12, [r0, #-2]
-        ldrh            r12, [r1, #\w]
+        ldrh            r12, [r5, #\w]
         vstr            \reg, [r0]
         strh            r12, [r0, #\w]
 
-        ldrh            r12, [r7, #-2]
-        vldr            \reg, [r7]
+        ldrh            r12, [r8, #-2]
+        vldr            \reg, [r8]
         strh            r12, [r0, #\stride-2]
-        ldrh            r12, [r7, #\w]
+        ldrh            r12, [r8, #\w]
         vstr            \reg, [r0, #\stride]
         strh            r12, [r0, #\stride+\w]
 
-        pop             {r4-r7,pc}
+        pop             {r4-r8,pc}
 endfunc
 .endm
 

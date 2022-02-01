@@ -6,9 +6,6 @@ from __future__ import absolute_import, unicode_literals
 
 import os
 import sys
-import warnings
-
-from recommonmark.transform import AutoStructify
 
 # Set up Python environment to load build system packages.
 OUR_DIR = os.path.dirname(__file__)
@@ -35,6 +32,7 @@ sys.path[:0] = [os.path.join(topsrcdir, p) for p in EXTRA_PATHS]
 sys.path.insert(0, OUR_DIR)
 
 extensions = [
+    "myst_parser",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.doctest",
@@ -44,7 +42,6 @@ extensions = [
     "mozbuild.sphinx",
     "sphinx_js",
     "sphinxcontrib.mermaid",
-    "recommonmark",
     "sphinx_copybutton",
     "sphinx_markdown_tables",
     "sphinx_panels",
@@ -100,7 +97,7 @@ else:
 
 
 html_static_path = ["_static"]
-htmlhelp_basename = "MozillaTreeDocs"
+htmlhelp_basename = "FirefoxTreeDocs"
 
 moz_project_name = "main"
 
@@ -121,25 +118,5 @@ def install_sphinx_panels(app, pagename, templatename, context, doctree):
 
 
 def setup(app):
-    app.add_config_value(
-        "recommonmark_config",
-        {
-            # Crashes with sphinx
-            "enable_inline_math": False,
-            # We use it for testing/web-platform/tests
-            "enable_eval_rst": True,
-        },
-        True,
-    )
-
-    # Silent a warning
-    # https://github.com/readthedocs/recommonmark/issues/177
-    warnings.filterwarnings(
-        action="ignore",
-        category=UserWarning,
-        message=r".*Container node skipped.*",
-    )
-
     app.add_css_file("custom_theme.css")
-    app.add_transform(AutoStructify)
     app.connect("html-page-context", install_sphinx_panels)

@@ -98,7 +98,6 @@ rtc_library("libaom_av1_encoder") {
   poisonous = [ "software_video_codecs" ]
   public = [ "libaom_av1_encoder.h" ]
   deps = [
-    ":scalable_video_controller",
     "../../../../api/video_codecs:video_codecs_api",
   ]
   absl_deps = [
@@ -110,6 +109,7 @@ rtc_library("libaom_av1_encoder") {
   if (enable_libaom) {
     sources = [ "libaom_av1_encoder.cc" ]
     deps += [
+      ":scalable_video_controller",
       "../..:video_codec_interface",
       "../../../../api:scoped_refptr",
       "../../../../api/video:encoded_image",

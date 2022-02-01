@@ -176,12 +176,12 @@ impl<'s> Store<'s> {
         };
 
         let typ: i64 = step.get_by_name("type")?;
-        let kind = match typ {
-            nsINavBookmarksService::TYPE_BOOKMARK => match url.as_ref() {
+        let kind = match u16::try_from(typ) {
+            Ok(nsINavBookmarksService::TYPE_BOOKMARK) => match url.as_ref() {
                 Some(u) if u.scheme() == "place" => Kind::Query,
                 _ => Kind::Bookmark,
             },
-            nsINavBookmarksService::TYPE_FOLDER => {
+            Ok(nsINavBookmarksService::TYPE_FOLDER) => {
                 let is_livemark: i64 = step.get_by_name("isLivemark")?;
                 if is_livemark == 1 {
                     Kind::Livemark
@@ -189,7 +189,7 @@ impl<'s> Store<'s> {
                     Kind::Folder
                 }
             }
-            nsINavBookmarksService::TYPE_SEPARATOR => Kind::Separator,
+            Ok(nsINavBookmarksService::TYPE_SEPARATOR) => Kind::Separator,
             _ => return Err(Error::UnknownItemType(typ)),
         };
 
@@ -207,8 +207,8 @@ impl<'s> Store<'s> {
             None
         } else {
             let sync_status: i64 = step.get_by_name("syncStatus")?;
-            match sync_status {
-                nsINavBookmarksService::SYNC_STATUS_NORMAL => None,
+            match u16::try_from(sync_status) {
+                Ok(nsINavBookmarksService::SYNC_STATUS_NORMAL) => None,
                 _ => match kind {
                     Kind::Bookmark | Kind::Query => {
                         let raw_title: nsString = step.get_by_name("title")?;
@@ -1218,42 +1218,42 @@ trait Column<T> {
 
 impl Column<i64> for Kind {
     fn from_column(raw: i64) -> Result<Kind> {
-        Ok(match raw {
-            mozISyncedBookmarksMerger::KIND_BOOKMARK => Kind::Bookmark,
-            mozISyncedBookmarksMerger::KIND_QUERY => Kind::Query,
-            mozISyncedBookmarksMerger::KIND_FOLDER => Kind::Folder,
-            mozISyncedBookmarksMerger::KIND_LIVEMARK => Kind::Livemark,
-            mozISyncedBookmarksMerger::KIND_SEPARATOR => Kind::Separator,
+        Ok(match i16::try_from(raw) {
+            Ok(mozISyncedBookmarksMerger::KIND_BOOKMARK) => Kind::Bookmark,
+            Ok(mozISyncedBookmarksMerger::KIND_QUERY) => Kind::Query,
+            Ok(mozISyncedBookmarksMerger::KIND_FOLDER) => Kind::Folder,
+            Ok(mozISyncedBookmarksMerger::KIND_LIVEMARK) => Kind::Livemark,
+            Ok(mozISyncedBookmarksMerger::KIND_SEPARATOR) => Kind::Separator,
             _ => return Err(Error::UnknownItemKind(raw)),
         })
     }
 
     fn into_column(self) -> i64 {
         match self {
-            Kind::Bookmark => mozISyncedBookmarksMerger::KIND_BOOKMARK,
-            Kind::Query => mozISyncedBookmarksMerger::KIND_QUERY,
-            Kind::Folder => mozISyncedBookmarksMerger::KIND_FOLDER,
-            Kind::Livemark => mozISyncedBookmarksMerger::KIND_LIVEMARK,
-            Kind::Separator => mozISyncedBookmarksMerger::KIND_SEPARATOR,
+            Kind::Bookmark => mozISyncedBookmarksMerger::KIND_BOOKMARK as i64,
+            Kind::Query => mozISyncedBookmarksMerger::KIND_QUERY as i64,
+            Kind::Folder => mozISyncedBookmarksMerger::KIND_FOLDER as i64,
+            Kind::Livemark => mozISyncedBookmarksMerger::KIND_LIVEMARK as i64,
+            Kind::Separator => mozISyncedBookmarksMerger::KIND_SEPARATOR as i64,
         }
     }
 }
 
 impl Column<i64> for Validity {
     fn from_column(raw: i64) -> Result<Validity> {
-        Ok(match raw {
-            mozISyncedBookmarksMerger::VALIDITY_VALID => Validity::Valid,
-            mozISyncedBookmarksMerger::VALIDITY_REUPLOAD => Validity::Reupload,
-            mozISyncedBookmarksMerger::VALIDITY_REPLACE => Validity::Replace,
+        Ok(match i16::try_from(raw) {
+            Ok(mozISyncedBookmarksMerger::VALIDITY_VALID) => Validity::Valid,
+            Ok(mozISyncedBookmarksMerger::VALIDITY_REUPLOAD) => Validity::Reupload,
+            Ok(mozISyncedBookmarksMerger::VALIDITY_REPLACE) => Validity::Replace,
             _ => return Err(Error::UnknownItemValidity(raw).into()),
         })
     }
 
     fn into_column(self) -> i64 {
         match self {
-            Validity::Valid => mozISyncedBookmarksMerger::VALIDITY_VALID,
-            Validity::Reupload => mozISyncedBookmarksMerger::VALIDITY_REUPLOAD,
-            Validity::Replace => mozISyncedBookmarksMerger::VALIDITY_REPLACE,
+            Validity::Valid => mozISyncedBookmarksMerger::VALIDITY_VALID as i64,
+            Validity::Reupload => mozISyncedBookmarksMerger::VALIDITY_REUPLOAD as i64,
+            Validity::Replace => mozISyncedBookmarksMerger::VALIDITY_REPLACE as i64,
         }
     }
 }

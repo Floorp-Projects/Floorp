@@ -105,6 +105,14 @@ s! {
         pub f_namemax: ::c_ulong,
         __f_spare: [::c_int; 6],
     }
+
+    pub struct pthread_barrier_t {
+        __private: [i64; 4],
+    }
+
+    pub struct pthread_spinlock_t {
+        __private: i64,
+    }
 }
 
 s_no_extra_traits! {
@@ -323,6 +331,12 @@ f! {
 
 extern "C" {
     pub fn getauxval(type_: ::c_ulong) -> ::c_ulong;
+    pub fn __system_property_wait(
+        pi: *const ::prop_info,
+        __old_serial: u32,
+        __new_serial_ptr: *mut u32,
+        __relative_timeout: *const ::timespec,
+    ) -> bool;
 }
 
 cfg_if! {

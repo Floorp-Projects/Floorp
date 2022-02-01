@@ -18,6 +18,7 @@ import {
 import { loadSourceText } from "./loadSourceText";
 import { mapFrames } from "../pause";
 import { selectSpecificLocation } from "../sources";
+import { createPrettyPrintOriginalSource } from "../../client/firefox/create";
 
 import {
   getSource,
@@ -66,18 +67,7 @@ export function createPrettySource(cx, sourceId) {
     const source = getSourceFromId(getState(), sourceId);
     const url = getPrettyOriginalSourceURL(source);
     const id = generatedToOriginalId(sourceId, url);
-
-    const prettySource = {
-      id,
-      url,
-      relativeUrl: url,
-      isBlackBoxed: false,
-      isPrettyPrinted: true,
-      isWasm: false,
-      isExtension: false,
-      extensionName: null,
-      isOriginal: true,
-    };
+    const prettySource = createPrettyPrintOriginalSource(id, url);
 
     dispatch({ type: "ADD_SOURCE", cx, source: prettySource });
 

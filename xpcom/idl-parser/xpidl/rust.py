@@ -514,7 +514,7 @@ vtable_entry_tmpl = """\
 
 const_wrapper_tmpl = """\
 %(docs)s
-pub const %(name)s: i64 = %(val)s;
+pub const %(name)s: %(type)s = %(val)s;
 """
 
 
@@ -609,6 +609,7 @@ def write_interface(iface, fd):
                 const_wrapper_tmpl
                 % {
                     "docs": doccomments(member.doccomments),
+                    "type": member.realtype.rustType("in"),
                     "name": member.name,
                     "val": member.getValue(),
                 }

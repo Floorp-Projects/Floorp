@@ -71,9 +71,9 @@ job-defaults:
         kind: test
         platform:
             by-platform:
-                linux64.*: linux64-shippable/opt
-                osx.*: macosx1014-64-shippable/opt
-                windows10-64.*: windows10-64-shippable/opt
+                linux64.*: linux64-shippable-qr/opt
+                osx.*: macosx1015-64-shippable-qr/opt
+                windows10-64.*: windows10-64-shippable-qr/opt
         tier: 3
     worker:
         docker-image:
@@ -110,7 +110,7 @@ job-defaults:
     worker-type:
         by-platform:
             linux64.*: t-linux-xlarge
-            osx.*: t-osx-1014
+            osx.*: t-osx-1015-r8
             windows10-64.*: t-win10-64
 
 jobs:

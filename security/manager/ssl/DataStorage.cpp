@@ -116,8 +116,8 @@ already_AddRefed<DataStorage> DataStorage::GetFromRawFileName(
       aFilename, [&] { return RefPtr{new DataStorage(aFilename)}; }));
 }
 
-size_t DataStorage::SizeOfIncludingThis(
-    mozilla::MallocSizeOf aMallocSizeOf) const {
+size_t DataStorage::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) {
+  MutexAutoLock lock(mMutex);
   size_t sizeOfExcludingThis =
       mPersistentDataTable.ShallowSizeOfExcludingThis(aMallocSizeOf) +
       mTemporaryDataTable.ShallowSizeOfExcludingThis(aMallocSizeOf) +

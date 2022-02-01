@@ -203,9 +203,9 @@ class RangeBoundaryBase {
     MOZ_ASSERT(mRef);
     MOZ_ASSERT(mRef->GetParentNode() == mParent);
 
-    const int32_t index = mParent->ComputeIndexOf(mRef);
-    MOZ_ASSERT(index >= 0);
-    mOffset.emplace(static_cast<uint32_t>(index + 1));
+    const Maybe<uint32_t> index = mParent->ComputeIndexOf(mRef);
+    MOZ_ASSERT(*index != UINT32_MAX);
+    mOffset.emplace(MOZ_LIKELY(index.isSome()) ? *index + 1u : 0u);
   }
 
   void InvalidateOffset() {

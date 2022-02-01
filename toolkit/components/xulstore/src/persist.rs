@@ -19,12 +19,11 @@ use crate::{
     statics::get_database,
 };
 use crossbeam_utils::atomic::AtomicCell;
-use moz_task::{dispatch_background_task_with_options, DispatchOptions, Task, TaskRunnable};
+use moz_task::{DispatchOptions, Task, TaskRunnable};
 use nserror::nsresult;
 use once_cell::sync::Lazy;
 use rkv::{StoreError as RkvStoreError, Value};
 use std::{collections::HashMap, sync::Mutex, thread::sleep, time::Duration};
-use xpcom::RefPtr;
 
 /// A map of key/value pairs to persist.  Values are Options so we can
 /// use the same structure for both puts and deletes, with a `None` value
@@ -129,10 +128,8 @@ pub(crate) fn persist(key: String, value: Option<String>) -> XULStoreResult<()> 
         // If *changes* was `None`, then this is the first change since
         // the last time we persisted, so dispatch a new PersistTask.
         let task = Box::new(PersistTask::new());
-        dispatch_background_task_with_options(
-            RefPtr::new(TaskRunnable::new("XULStore::Persist", task)?.coerce()),
-            DispatchOptions::default().may_block(true),
-        )?;
+        TaskRunnable::new("XULStore::Persist", task)?
+            .dispatch_background_task_with_options(DispatchOptions::default().may_block(true))?;
     }
 
     // Now insert the key/value pair into the map.  The unwrap() call here

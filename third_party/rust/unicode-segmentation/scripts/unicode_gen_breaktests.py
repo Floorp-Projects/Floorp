@@ -17,23 +17,23 @@
 #
 # Since this should not require frequent updates, we just store this
 # out-of-line and check the unicode.rs file into git.
+from __future__ import print_function
 
 import unicode, re, os, fileinput
 
 def load_test_data(f, optsplit=[]):
-    outls = []
-    testRe1 = re.compile("^÷\s+([^\s].*[^\s])\s+÷\s+#\s+÷\s+\[0.2\].*?([÷×].*)\s+÷\s+\[0.3\]\s*$")
+    testRe1 = re.compile(r"^÷\s+([^\s].*[^\s])\s+÷\s+#\s+÷\s+\[0.2\].*?([÷×].*)\s+÷\s+\[0.3\]\s*$")
 
     unicode.fetch(f)
     data = []
     for line in fileinput.input(os.path.basename(f)):
         # lines that include a test start with the ÷ character
-        if len(line) < 2 or line[0:2] != '÷':
+        if len(line) < 2 or not line.startswith('÷'):
             continue
 
         m = testRe1.match(line)
         if not m:
-            print "error: no match on line where test was expected: %s" % line
+            print("error: no match on line where test was expected: %s" % line)
             continue
 
         # process the characters in this test case
@@ -48,9 +48,9 @@ def load_test_data(f, optsplit=[]):
         # make sure that we have break info for each break!
         assert len(chars) - 1 == len(info)
 
-        outls.append((chars, info))
+        data.append((chars, info))
 
-    return outls
+    return data
 
 def process_split_info(s, c, o):
     outcs = []
@@ -59,7 +59,7 @@ def process_split_info(s, c, o):
 
     # are we on a × or a ÷?
     isX = False
-    if s[0:2] == '×':
+    if s.startswith('×'):
         isX = True
 
     # find each instance of '(÷|×) [x.y] '
@@ -81,10 +81,10 @@ def process_split_info(s, c, o):
 
         idx = 1
         while idx < len(s):
-            if s[idx:idx+2] == '×':
+            if s[idx:].startswith('×'):
                 isX = True
                 break
-            if s[idx:idx+2] == '÷':
+            if s[idx:].startswith('÷'):
                 isX = False
                 break
             idx += 1
@@ -172,7 +172,7 @@ def create_grapheme_data(f):
     stype = "&'static [(&'static str, &'static [&'static str])]"
     dtype = "&'static [(&'static str, &'static [&'static str], &'static [&'static str])]"
     f.write("    // official Unicode test data\n")
-    f.write("    // http://www.unicode.org/Public/UNIDATA/auxiliary/GraphemeBreakTest.txt\n")
+    f.write("    // http://www.unicode.org/Public/%s/ucd/auxiliary/GraphemeBreakTest.txt\n" % unicode.UNICODE_VERSION_NUMBER)
     unicode.emit_table(f, "TEST_SAME", test_same, stype, True, showfun, True)
     unicode.emit_table(f, "TEST_DIFF", test_diff, dtype, True, showfun, True)
 
@@ -187,11 +187,26 @@ def create_words_data(f):
 
     wtype = "&'static [(&'static str, &'static [&'static str])]"
     f.write("    // official Unicode test data\n")
-    f.write("    // http://www.unicode.org/Public/UNIDATA/auxiliary/WordBreakTest.txt\n")
+    f.write("    // http://www.unicode.org/Public/%s/ucd/auxiliary/WordBreakTest.txt\n" % unicode.UNICODE_VERSION_NUMBER)
     unicode.emit_table(f, "TEST_WORD", test, wtype, True, showfun, True)
+
+def create_sentence_data(f):
+    d = load_test_data("auxiliary/SentenceBreakTest.txt")
+
+    test = []
+
+    for (c, i) in d:
+        allchars = [cn for s in c for cn in s]
+        test.append((allchars, c))
+
+    wtype = "&'static [(&'static str, &'static [&'static str])]"
+    f.write("    // official Unicode test data\n")
+    f.write("    // http://www.unicode.org/Public/%s/ucd/auxiliary/SentenceBreakTest.txt\n" % unicode.UNICODE_VERSION_NUMBER)
+    unicode.emit_table(f, "TEST_SENTENCE", test, wtype, True, showfun, True)
 
 if __name__ == "__main__":
     with open("testdata.rs", "w") as rf:
         rf.write(unicode.preamble)
         create_grapheme_data(rf)
         create_words_data(rf)
+        create_sentence_data(rf)

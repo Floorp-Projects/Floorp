@@ -926,7 +926,7 @@ var gPrivacyPane = {
         "blockCookiesSocialMedia"
       );
       let l10nID = gStatePartitioningMVPEnabled
-        ? "sitedata-option-block-cross-site-tracking-cookies-including-social-media"
+        ? "sitedata-option-block-cross-site-tracking-cookies"
         : "sitedata-option-block-cross-site-and-social-media-trackers";
       document.l10n.setAttributes(contentBlockOptionSocialMedia, l10nID);
     }
@@ -936,7 +936,7 @@ var gPrivacyPane = {
       );
       document.l10n.setAttributes(
         contentBlockOptionIsolate,
-        "sitedata-option-block-cross-site-cookies-including-social-media"
+        "sitedata-option-block-cross-site-cookies"
       );
     }
 

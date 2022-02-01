@@ -19,6 +19,7 @@ class Prefs:
 
 
 ENV_ENABLE_FISSION = "MOZ_FORCE_ENABLE_FISSION"
+ENV_DISABLE_FISSION = "MOZ_FORCE_DISABLE_FISSION"
 ENV_DISABLE_E10S = "MOZ_FORCE_DISABLE_E10S"
 
 
@@ -27,12 +28,13 @@ DECISION_STATUS = {
     "experimentTreatment": 2,
     "disabledByE10sEnv": 3,
     "enabledByEnv": 4,
-    "disabledBySafeMode": 5,
-    "enabledByDefault": 6,
-    "disabledByDefault": 7,
-    "enabledByUserPref": 8,
-    "disabledByUserPref": 9,
-    "disabledByE10sOther": 10,
+    "disabledByEnv": 5,
+    "disabledBySafeMode": 6,
+    "enabledByDefault": 7,
+    "disabledByDefault": 8,
+    "enabledByUserPref": 9,
+    "disabledByUserPref": 10,
+    "disabledByE10sOther": 11,
 }
 
 
@@ -84,35 +86,6 @@ class TestFissionAutostart(MarionetteTestCase):
                 "%s should have the value `%r`, but has `%r`"
                 % (prop, value, status[prop]),
             )
-
-    def check_pref_locked(self):
-        PREF = Prefs.FISSION_AUTOSTART
-
-        if PREF in self.marionette.instance.required_prefs:
-            return True
-
-        res = self.execute_script(
-            r"""
-          const { AppConstants } = ChromeUtils.import(
-            "resource://gre/modules/AppConstants.jsm"
-          );
-          return {
-            prefLocked: Services.prefs.prefIsLocked(arguments[0]),
-            releaseOrBeta: AppConstants.RELEASE_OR_BETA,
-            nightlyBuild: AppConstants.NIGHTLY_BUILD,
-          };
-        """,
-            script_args=(PREF,),
-        )
-
-        self.nightly_build = res["nightlyBuild"]
-
-        if res["prefLocked"]:
-            self.assertTrue(
-                res["releaseOrBeta"], "Preference should only be locked on release/beta"
-            )
-            return True
-        return False
 
     def set_env(self, env, value):
         self.execute_script(
@@ -180,9 +153,32 @@ class TestFissionAutostart(MarionetteTestCase):
     def setUp(self):
         super(TestFissionAutostart, self).setUp()
 
+        # If we have configured marionette to require a particular value for
+        # `fission.autostart`, remove it as a forced pref until `tearDown`, and
+        # perform a clean restart, so we run this test without the pref
+        # pre-configured.
+        self.fissionRequired = None
+        if Prefs.FISSION_AUTOSTART in self.marionette.instance.required_prefs:
+            self.fissionRequired = self.marionette.instance.required_prefs[
+                Prefs.FISSION_AUTOSTART
+            ]
+            del self.marionette.instance.required_prefs[Prefs.FISSION_AUTOSTART]
+            self.marionette.restart(clean=True)
+
         self.setUpSession()
 
+        # Fission status must start out with `enabledByDefault`
+        self.check_fission_status(
+            enabled=True,
+            experiment=ExperimentStatus.UNENROLLED,
+            decision="enabledByDefault",
+        )
+
     def tearDown(self):
+        if self.fissionRequired is not None:
+            self.marionette.instance.required_prefs[
+                Prefs.FISSION_AUTOSTART
+            ] = self.fissionRequired
         self.marionette.restart(clean=True)
 
         super(TestFissionAutostart, self).tearDown()
@@ -191,45 +187,41 @@ class TestFissionAutostart(MarionetteTestCase):
         """Tests that changes to preferences during runtime do not have any
         effect on the current session."""
 
-        if self.check_pref_locked():
-            # Need to be able to flip Fission prefs for this test to work.
-            return
+        self.check_fission_status(
+            enabled=True,
+            experiment=ExperimentStatus.UNENROLLED,
+            decision="enabledByDefault",
+        )
+
+        self.restart(prefs={Prefs.FISSION_AUTOSTART: False})
 
         self.check_fission_status(
             enabled=False,
             experiment=ExperimentStatus.UNENROLLED,
-            decision="disabledByDefault",
-        )
-
-        self.restart(prefs={Prefs.FISSION_AUTOSTART: True})
-
-        self.check_fission_status(
-            enabled=True,
-            experiment=ExperimentStatus.UNENROLLED,
-            decision="enabledByUserPref",
+            decision="disabledByUserPref",
         )
 
         self.set_enrollment_status(ExperimentStatus.ENROLLED_CONTROL)
         self.check_fission_status(
-            enabled=True,
+            enabled=False,
             experiment=ExperimentStatus.UNENROLLED,
-            decision="enabledByUserPref",
+            decision="disabledByUserPref",
         )
 
-        self.marionette.set_pref(Prefs.FISSION_AUTOSTART, False)
+        self.marionette.set_pref(Prefs.FISSION_AUTOSTART, True)
         self.check_fission_status(
-            enabled=True,
+            enabled=False,
             experiment=ExperimentStatus.UNENROLLED,
-            decision="enabledByUserPref",
-            dynamic=False,
+            decision="disabledByUserPref",
+            dynamic=True,
         )
 
         self.marionette.clear_pref(Prefs.FISSION_AUTOSTART)
         self.check_fission_status(
-            enabled=True,
+            enabled=False,
             experiment=ExperimentStatus.UNENROLLED,
-            decision="enabledByUserPref",
-            dynamic=False,
+            decision="disabledByUserPref",
+            dynamic=True,
         )
 
         self.restart()
@@ -256,14 +248,10 @@ class TestFissionAutostart(MarionetteTestCase):
         )
 
     def test_fission_precedence(self):
-        if self.check_pref_locked():
-            # Need to be able to flip Fission prefs for this test to work.
-            return
-
         self.check_fission_status(
-            enabled=False,
+            enabled=True,
             experiment=ExperimentStatus.UNENROLLED,
-            decision="disabledByDefault",
+            decision="enabledByDefault",
         )
 
         self.restart(
@@ -277,19 +265,30 @@ class TestFissionAutostart(MarionetteTestCase):
         )
 
         self.restart(
-            prefs={Prefs.FISSION_AUTOSTART: True}, env={ENV_ENABLE_FISSION: ""}
+            prefs={Prefs.FISSION_AUTOSTART: True},
+            env={ENV_DISABLE_FISSION: "1", ENV_ENABLE_FISSION: ""},
         )
         self.check_fission_status(
-            enabled=True,
+            enabled=False,
             experiment=ExperimentStatus.UNENROLLED,
-            decision="enabledByUserPref",
+            decision="disabledByEnv",
+            dynamic=True,
+        )
+
+        self.restart(
+            prefs={Prefs.FISSION_AUTOSTART: False}, env={ENV_DISABLE_FISSION: ""}
+        )
+        self.check_fission_status(
+            enabled=False,
+            experiment=ExperimentStatus.UNENROLLED,
+            decision="disabledByUserPref",
         )
 
         self.restart(prefs={Prefs.FISSION_AUTOSTART: None})
         self.check_fission_status(
-            enabled=False,
+            enabled=True,
             experiment=ExperimentStatus.UNENROLLED,
-            decision="disabledByDefault",
+            decision="enabledByDefault",
         )
 
         self.set_enrollment_status(ExperimentStatus.ENROLLED_TREATMENT)
@@ -339,10 +338,6 @@ class TestFissionAutostart(MarionetteTestCase):
         )
 
     def test_fission_startup(self):
-        if self.check_pref_locked():
-            # Need to be able to flip Fission prefs for this test to work.
-            return
-
         # Starting the browser with STARTUP_ENROLLMENT_STATUS set to treatment
         # should make the current session run under treatment.
         with self.full_restart() as profile:
@@ -384,9 +379,9 @@ class TestFissionAutostart(MarionetteTestCase):
             "Should unenroll startup pref after shutdown",
         )
         self.check_fission_status(
-            enabled=False,
+            enabled=True,
             experiment=ExperimentStatus.UNENROLLED,
-            decision="disabledByDefault",
+            decision="enabledByDefault",
         )
 
         # If the browser is started with a customized `fisison.autostart`,

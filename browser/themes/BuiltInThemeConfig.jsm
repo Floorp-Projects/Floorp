@@ -40,6 +40,54 @@ const BuiltInThemeConfig = new Map([
     },
   ],
   [
+    "2022red-colorway@mozilla.org",
+    {
+      version: "1.0",
+      path: "resource://builtin-themes/monochromatic/2022red/",
+      expiry: "2022-05-03",
+    },
+  ],
+  [
+    "2022orange-colorway@mozilla.org",
+    {
+      version: "1.0",
+      path: "resource://builtin-themes/monochromatic/2022orange/",
+      expiry: "2022-05-03",
+    },
+  ],
+  [
+    "2022green-colorway@mozilla.org",
+    {
+      version: "1.0",
+      path: "resource://builtin-themes/monochromatic/2022green/",
+      expiry: "2022-05-03",
+    },
+  ],
+  [
+    "2022yellow-colorway@mozilla.org",
+    {
+      version: "1.0",
+      path: "resource://builtin-themes/monochromatic/2022yellow/",
+      expiry: "2022-05-03",
+    },
+  ],
+  [
+    "2022purple-colorway@mozilla.org",
+    {
+      version: "1.0",
+      path: "resource://builtin-themes/monochromatic/2022purple/",
+      expiry: "2022-05-03",
+    },
+  ],
+  [
+    "2022blue-colorway@mozilla.org",
+    {
+      version: "1.0",
+      path: "resource://builtin-themes/monochromatic/2022blue/",
+      expiry: "2022-05-03",
+    },
+  ],
+  [
     "lush-soft-colorway@mozilla.org",
     {
       version: "1.0",

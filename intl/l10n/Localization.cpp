@@ -103,7 +103,22 @@ already_AddRefed<Localization> Localization::Create(
   return MakeAndAddRef<Localization>(aResourceIds, aIsSync);
 }
 
+/* static */
+already_AddRefed<Localization> Localization::Create(
+    const nsTArray<ffi::GeckoResourceId>& aResourceIds, bool aIsSync) {
+  return MakeAndAddRef<Localization>(aResourceIds, aIsSync);
+}
+
 Localization::Localization(const nsTArray<nsCString>& aResIds, bool aIsSync) {
+  auto ffiResourceIds{L10nRegistry::ResourceIdsToFFI(aResIds)};
+  ffi::localization_new(&ffiResourceIds, aIsSync, nullptr,
+                        getter_AddRefs(mRaw));
+
+  RegisterObservers();
+}
+
+Localization::Localization(const nsTArray<ffi::GeckoResourceId>& aResIds,
+                           bool aIsSync) {
   ffi::localization_new(&aResIds, aIsSync, nullptr, getter_AddRefs(mRaw));
 
   RegisterObservers();
@@ -112,14 +127,16 @@ Localization::Localization(const nsTArray<nsCString>& aResIds, bool aIsSync) {
 Localization::Localization(nsIGlobalObject* aGlobal,
                            const nsTArray<nsCString>& aResIds, bool aIsSync)
     : mGlobal(aGlobal) {
-  ffi::localization_new(&aResIds, aIsSync, nullptr, getter_AddRefs(mRaw));
+  nsTArray<ffi::GeckoResourceId> resourceIds{
+      L10nRegistry::ResourceIdsToFFI(aResIds)};
+  ffi::localization_new(&resourceIds, aIsSync, nullptr, getter_AddRefs(mRaw));
 
   RegisterObservers();
 }
 
 Localization::Localization(nsIGlobalObject* aGlobal, bool aIsSync)
     : mGlobal(aGlobal) {
-  nsTArray<nsCString> resIds;
+  nsTArray<ffi::GeckoResourceId> resIds;
   ffi::localization_new(&resIds, aIsSync, nullptr, getter_AddRefs(mRaw));
 
   RegisterObservers();
@@ -132,10 +149,11 @@ Localization::Localization(nsIGlobalObject* aGlobal, bool aIsSync,
 }
 
 already_AddRefed<Localization> Localization::Constructor(
-    const GlobalObject& aGlobal, const Sequence<nsCString>& aResourceIds,
-    bool aIsSync, const Optional<NonNull<L10nRegistry>>& aRegistry,
+    const GlobalObject& aGlobal,
+    const Sequence<OwningUTF8StringOrResourceId>& aResourceIds, bool aIsSync,
+    const Optional<NonNull<L10nRegistry>>& aRegistry,
     const Optional<Sequence<nsCString>>& aLocales, ErrorResult& aRv) {
-  nsTArray<nsCString> resIds = ToTArray<nsTArray<nsCString>>(aResourceIds);
+  auto ffiResourceIds{L10nRegistry::ResourceIdsToFFI(aResourceIds)};
   Maybe<nsTArray<nsCString>> locales;
 
   if (aLocales.WasPassed()) {
@@ -149,7 +167,7 @@ already_AddRefed<Localization> Localization::Constructor(
   RefPtr<const ffi::LocalizationRc> raw;
 
   bool result = ffi::localization_new_with_locales(
-      &resIds, aIsSync,
+      &ffiResourceIds, aIsSync,
       aRegistry.WasPassed() ? aRegistry.Value().Raw() : nullptr,
       locales.ptrOr(nullptr), getter_AddRefs(raw));
 
@@ -199,21 +217,43 @@ void Localization::RegisterObservers() {
 
 void Localization::OnChange() { ffi::localization_on_change(mRaw.get()); }
 
-void Localization::AddResourceId(const nsACString& aResourceId) {
+void Localization::AddResourceId(const ffi::GeckoResourceId& aResourceId) {
   ffi::localization_add_res_id(mRaw.get(), &aResourceId);
 }
-
-uint32_t Localization::RemoveResourceId(const nsACString& aResourceId) {
-  return ffi::localization_remove_res_id(mRaw.get(), &aResourceId);
+void Localization::AddResourceId(const nsCString& aResourceId) {
+  auto ffiResourceId{L10nRegistry::ResourceIdToFFI(aResourceId)};
+  AddResourceId(ffiResourceId);
+}
+void Localization::AddResourceId(
+    const dom::OwningUTF8StringOrResourceId& aResourceId) {
+  auto ffiResourceId{L10nRegistry::ResourceIdToFFI(aResourceId)};
+  AddResourceId(ffiResourceId);
 }
 
-void Localization::AddResourceIds(const nsTArray<nsCString>& aResourceIds) {
-  ffi::localization_add_res_ids(mRaw.get(), &aResourceIds);
+uint32_t Localization::RemoveResourceId(
+    const ffi::GeckoResourceId& aResourceId) {
+  return ffi::localization_remove_res_id(mRaw.get(), &aResourceId);
+}
+uint32_t Localization::RemoveResourceId(const nsCString& aResourceId) {
+  auto ffiResourceId{L10nRegistry::ResourceIdToFFI(aResourceId)};
+  return RemoveResourceId(ffiResourceId);
+}
+uint32_t Localization::RemoveResourceId(
+    const dom::OwningUTF8StringOrResourceId& aResourceId) {
+  auto ffiResourceId{L10nRegistry::ResourceIdToFFI(aResourceId)};
+  return RemoveResourceId(ffiResourceId);
+}
+
+void Localization::AddResourceIds(
+    const nsTArray<dom::OwningUTF8StringOrResourceId>& aResourceIds) {
+  auto ffiResourceIds{L10nRegistry::ResourceIdsToFFI(aResourceIds)};
+  ffi::localization_add_res_ids(mRaw.get(), &ffiResourceIds);
 }
 
 uint32_t Localization::RemoveResourceIds(
-    const nsTArray<nsCString>& aResourceIds) {
-  return ffi::localization_remove_res_ids(mRaw.get(), &aResourceIds);
+    const nsTArray<dom::OwningUTF8StringOrResourceId>& aResourceIds) {
+  auto ffiResourceIds{L10nRegistry::ResourceIdsToFFI(aResourceIds)};
+  return ffi::localization_remove_res_ids(mRaw.get(), &ffiResourceIds);
 }
 
 already_AddRefed<Promise> Localization::FormatValue(

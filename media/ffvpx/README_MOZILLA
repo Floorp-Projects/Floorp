@@ -55,6 +55,9 @@ Run in the ffmpeg original tree:
 $ for i in `cat $PATH_CENTRAL/media/ffvpx/FILES`; do git diff $REV_LASTSYNC HEAD >> patch.diff; done
 Then apply patch.diff on the ffvpx tree.
 
+You can also directly copy existing files from new ffmpeg checkout by rsync:
+rsync -av --existing ffmpeg-new-dif ffmpeg-mozilla-dir
+
 Compilation will reveal if any files are missing.
 
 Apply linux-vaapi-build.patch patch to enable build VA-API support for Linux.

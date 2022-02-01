@@ -483,7 +483,10 @@ mozilla::StyleDefaultFontSizes Gecko_GetBaseSize(nsAtom* lang);
 
 struct GeckoFontMetrics {
   mozilla::Length mXSize;
-  mozilla::Length mChSize;  // negatives indicate not found.
+  mozilla::Length mChSize;     // negatives indicate not found.
+  mozilla::Length mCapHeight;  // negatives indicate not found.
+  mozilla::Length mIcWidth;    // negatives indicate not found.
+  mozilla::Length mAscent;
 };
 
 GeckoFontMetrics Gecko_GetFontMetrics(const nsPresContext*, bool is_vertical,
@@ -588,7 +591,7 @@ bool Gecko_MediaFeatures_PrefersReducedMotion(const mozilla::dom::Document*);
 mozilla::StylePrefersContrast Gecko_MediaFeatures_PrefersContrast(
     const mozilla::dom::Document*);
 mozilla::StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(
-    const mozilla::dom::Document*);
+    const mozilla::dom::Document*, bool aUseContent);
 
 mozilla::PointerCapabilities Gecko_MediaFeatures_PrimaryPointerCapabilities(
     const mozilla::dom::Document*);

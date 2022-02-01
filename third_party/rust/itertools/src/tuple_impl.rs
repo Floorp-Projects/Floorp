@@ -11,7 +11,7 @@ use std::marker::PhantomData;
 // hiding the implementation details of `TupleCollect`.
 // See https://github.com/rust-itertools/itertools/issues/387
 
-/// Implemented for homogeneous tuples of size up to 4.
+/// Implemented for homogeneous tuples of size up to 12.
 pub trait HomogeneousTuple
     : TupleCollect
 {}
@@ -77,7 +77,7 @@ impl<T> ExactSizeIterator for TupleBuffer<T>
 /// An iterator that groups the items in tuples of a specific size.
 ///
 /// See [`.tuples()`](crate::Itertools::tuples) for more information.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 pub struct Tuples<I, T>
     where I: Iterator<Item = T::Item>,

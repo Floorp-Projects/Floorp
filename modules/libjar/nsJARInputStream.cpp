@@ -350,7 +350,8 @@ nsresult nsJARInputStream::ReadDirectory(char* aBuffer, uint32_t aCount,
 }
 
 uint32_t nsJARInputStream::CopyDataToBuffer(char*& aBuffer, uint32_t& aCount) {
-  const uint32_t writeLength = std::min(aCount, mBuffer.Length() - mCurPos);
+  const uint32_t writeLength =
+      std::min<uint32_t>(aCount, mBuffer.Length() - mCurPos);
 
   if (writeLength > 0) {
     std::copy(mBuffer.get() + mCurPos, mBuffer.get() + mCurPos + writeLength,

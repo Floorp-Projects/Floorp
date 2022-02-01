@@ -8,8 +8,3 @@
 
 // Always run in e10s
 user_pref("browser.tabs.remote.autostart", true);
-
-// Explicitly turn off fission so we don't accidentally use the wrong default
-// value. This can be removed once harnesses and tasks assume fission by
-// default.
-user_pref("fission.autostart", false);

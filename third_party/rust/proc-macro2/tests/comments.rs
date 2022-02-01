@@ -1,16 +1,16 @@
 use proc_macro2::{Delimiter, Literal, Spacing, TokenStream, TokenTree};
 
 // #[doc = "..."] -> "..."
-fn lit_of_outer_doc_comment(tokens: TokenStream) -> Literal {
+fn lit_of_outer_doc_comment(tokens: &TokenStream) -> Literal {
     lit_of_doc_comment(tokens, false)
 }
 
 // #![doc = "..."] -> "..."
-fn lit_of_inner_doc_comment(tokens: TokenStream) -> Literal {
+fn lit_of_inner_doc_comment(tokens: &TokenStream) -> Literal {
     lit_of_doc_comment(tokens, true)
 }
 
-fn lit_of_doc_comment(tokens: TokenStream, inner: bool) -> Literal {
+fn lit_of_doc_comment(tokens: &TokenStream, inner: bool) -> Literal {
     let mut iter = tokens.clone().into_iter();
     match iter.next().unwrap() {
         TokenTree::Punct(punct) => {
@@ -71,30 +71,30 @@ fn incomplete() {
 #[test]
 fn lit() {
     let stream = "/// doc".parse::<TokenStream>().unwrap();
-    let lit = lit_of_outer_doc_comment(stream);
+    let lit = lit_of_outer_doc_comment(&stream);
     assert_eq!(lit.to_string(), "\" doc\"");
 
     let stream = "//! doc".parse::<TokenStream>().unwrap();
-    let lit = lit_of_inner_doc_comment(stream);
+    let lit = lit_of_inner_doc_comment(&stream);
     assert_eq!(lit.to_string(), "\" doc\"");
 
     let stream = "/** doc */".parse::<TokenStream>().unwrap();
-    let lit = lit_of_outer_doc_comment(stream);
+    let lit = lit_of_outer_doc_comment(&stream);
     assert_eq!(lit.to_string(), "\" doc \"");
 
     let stream = "/*! doc */".parse::<TokenStream>().unwrap();
-    let lit = lit_of_inner_doc_comment(stream);
+    let lit = lit_of_inner_doc_comment(&stream);
     assert_eq!(lit.to_string(), "\" doc \"");
 }
 
 #[test]
 fn carriage_return() {
     let stream = "///\r\n".parse::<TokenStream>().unwrap();
-    let lit = lit_of_outer_doc_comment(stream);
+    let lit = lit_of_outer_doc_comment(&stream);
     assert_eq!(lit.to_string(), "\"\"");
 
     let stream = "/**\r\n*/".parse::<TokenStream>().unwrap();
-    let lit = lit_of_outer_doc_comment(stream);
+    let lit = lit_of_outer_doc_comment(&stream);
     assert_eq!(lit.to_string(), "\"\\r\\n\"");
 
     "///\r".parse::<TokenStream>().unwrap_err();

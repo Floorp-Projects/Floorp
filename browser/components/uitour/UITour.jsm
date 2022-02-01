@@ -6,64 +6,27 @@
 
 var EXPORTED_SYMBOLS = ["UITour"];
 
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { TelemetryController } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryController.jsm"
-);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "fxAccounts",
-  "resource://gre/modules/FxAccounts.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "FxAccounts",
-  "resource://gre/modules/FxAccounts.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ProfileAge",
-  "resource://gre/modules/ProfileAge.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "AboutReaderParent",
-  "resource:///actors/AboutReaderParent.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ResetProfile",
-  "resource://gre/modules/ResetProfile.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "UpdateUtils",
-  "resource://gre/modules/UpdateUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "BrowserUsageTelemetry",
-  "resource:///modules/BrowserUsageTelemetry.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "PanelMultiView",
-  "resource:///modules/PanelMultiView.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AboutReaderParent: "resource:///actors/AboutReaderParent.jsm",
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
+  BuiltInThemeConfig: "resource:///modules/BuiltInThemeConfig.jsm",
+  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
+  fxAccounts: "resource://gre/modules/FxAccounts.jsm",
+  FxAccounts: "resource://gre/modules/FxAccounts.jsm",
+  PanelMultiView: "resource:///modules/PanelMultiView.jsm",
+  ProfileAge: "resource://gre/modules/ProfileAge.jsm",
+  ResetProfile: "resource://gre/modules/ResetProfile.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  TelemetryController: "resource://gre/modules/TelemetryController.jsm",
+  UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
+});
 
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL = "browser.uitour.loglevel";
@@ -81,6 +44,13 @@ const BACKGROUND_PAGE_ACTIONS_ALLOWED = new Set([
   "setTreatmentTag",
 ]);
 const MAX_BUTTONS = 4;
+
+// Array of which colorway/theme ids can be activated.
+XPCOMUtils.defineLazyGetter(this, "COLORWAY_IDS", () =>
+  [...BuiltInThemeConfig.keys()].filter(id =>
+    id.endsWith("-colorway@mozilla.org")
+  )
+);
 
 // Prefix for any target matching a search engine.
 const TARGET_SEARCHENGINE_PREFIX = "searchEngine-";
@@ -1590,6 +1560,9 @@ var UITour = {
       case "availableTargets":
         this.getAvailableTargets(aBrowser, aWindow, aCallbackID);
         break;
+      case "colorway":
+        this.sendPageCallback(aBrowser, aCallbackID, COLORWAY_IDS);
+        break;
       case "search":
       case "selectedSearchEngine":
         Services.search
@@ -1651,7 +1624,7 @@ var UITour = {
     }
   },
 
-  setConfiguration(aWindow, aConfiguration, aValue) {
+  async setConfiguration(aWindow, aConfiguration, aValue) {
     switch (aConfiguration) {
       case "defaultBrowser":
         // Ignore aValue in this case because the default browser can only
@@ -1662,6 +1635,22 @@ var UITour = {
             shell.setDefaultBrowser(true, false);
           }
         } catch (e) {}
+        break;
+      case "colorway":
+        // Potentially revert to a previous theme.
+        let toEnable = this._prevTheme;
+
+        // Activate the allowed colorway.
+        if (COLORWAY_IDS.includes(aValue)) {
+          // Save the previous theme if this is the first activation.
+          if (!this._prevTheme) {
+            this._prevTheme = (
+              await AddonManager.getAddonsByTypes(["theme"])
+            ).find(theme => theme.isActive);
+          }
+          toEnable = await AddonManager.getAddonByID(aValue);
+        }
+        toEnable?.enable();
         break;
       default:
         log.error(

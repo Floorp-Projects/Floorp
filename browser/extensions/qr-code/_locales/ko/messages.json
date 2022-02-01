@@ -1,0 +1,8 @@
+{
+    "scan-code": {
+      "message": "QR 코드를 스캔하십시오"
+    },
+    "save-code": {
+      "message": "코드 저장"
+    }
+}

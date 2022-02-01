@@ -206,12 +206,17 @@ typedef enum {
    * JxlDecoderGetFrameHeader can be used at this point. A note on frames:
    * a JPEG XL image can have internal frames that are not intended to be
    * displayed (e.g. used for compositing a final frame), but this only returns
-   * displayed frames. A displayed frame either has an animation duration or is
-   * the only or last frame in the image. This event occurs max once per
-   * displayed frame, always later than JXL_DEC_COLOR_ENCODING, and always
-   * earlier than any pixel data. While JPEG XL supports encoding a single frame
-   * as the composition of multiple internal sub-frames also called frames, this
-   * event is not indicated for the internal frames.
+   * displayed frames, unless JxlDecoderSetCoalescing was set to JXL_FALSE: in
+   * that case, the individual layers are returned, without blending. Note that
+   * even when coalescing is disabled, only frames of type kRegularFrame are
+   * returned; frames of type kReferenceOnly and kLfFrame are always for
+   * internal purposes only and cannot be accessed. A displayed frame either has
+   * an animation duration or is the only or last frame in the image. This event
+   * occurs max once per displayed frame, always later than
+   * JXL_DEC_COLOR_ENCODING, and always earlier than any pixel data. While JPEG
+   * XL supports encoding a single frame as the composition of multiple internal
+   * sub-frames also called frames, this event is not indicated for the internal
+   * frames.
    */
   JXL_DEC_FRAME = 0x400,
 
@@ -228,11 +233,12 @@ typedef enum {
    */
   JXL_DEC_DC_IMAGE = 0x800,
 
-  /** Informative event by JxlDecoderProcessInput: full frame decoded.
-   * JxlDecoderSetImageOutBuffer must be used after getting the basic image
-   * information to be able to get the image pixels, if not this return status
-   * only indicates we're past this point in the codestream. This event occurs
-   * max once per frame and always later than JXL_DEC_DC_IMAGE.
+  /** Informative event by JxlDecoderProcessInput: full frame (or layer, in case
+   * coalescing is disabled) is decoded. JxlDecoderSetImageOutBuffer must be
+   * used after getting the basic image information to be able to get the image
+   * pixels, if not this return status only indicates we're past this point in
+   * the codestream. This event occurs max once per frame and always later than
+   * JXL_DEC_DC_IMAGE.
    */
   JXL_DEC_FULL_IMAGE = 0x1000,
 
@@ -417,6 +423,22 @@ JxlDecoderSetKeepOrientation(JxlDecoder* dec, JXL_BOOL keep_orientation);
  */
 JXL_EXPORT JxlDecoderStatus
 JxlDecoderSetRenderSpotcolors(JxlDecoder* dec, JXL_BOOL render_spotcolors);
+
+/** Enables or disables coalescing of zero-duration frames. By default, frames
+ * are returned with coalescing enabled, i.e. all frames have the image
+ * dimensions, and are blended if needed. When coalescing is disabled, frames
+ * can have arbitrary dimensions, a non-zero crop offset, and blending is not
+ * performed. For display, coalescing is recommended. For loading a multi-layer
+ * still image as separate layers (as opposed to the merged image), coalescing
+ * has to be disabled.
+ *
+ * @param dec decoder object
+ * @param coalescing JXL_TRUE to enable coalescing (default), JXL_FALSE to
+ * disable it.
+ * @return JXL_DEC_SUCCESS if no error, JXL_DEC_ERROR otherwise.
+ */
+JXL_EXPORT JxlDecoderStatus JxlDecoderSetCoalescing(JxlDecoder* dec,
+                                                    JXL_BOOL coalescing);
 
 /**
  * Decodes JPEG XL file using the available bytes. Requires input has been
@@ -771,6 +793,21 @@ JXL_EXPORT JxlDecoderStatus JxlDecoderGetFrameName(const JxlDecoder* dec,
                                                    char* name, size_t size);
 
 /**
+ * Outputs the blend information for the current frame for a specific extra
+ * channel. This function can be called when JXL_DEC_FRAME occurred for the
+ * current frame, even when have_animation in the JxlBasicInfo is JXL_FALSE.
+ * This information is only useful if coalescing is disabled; otherwise the
+ * decoder will have performed blending already.
+ *
+ * @param dec decoder object
+ * @param index the index of the extra channel
+ * @param blend_info struct to copy the information into
+ * @return JXL_DEC_SUCCESS on success, JXL_DEC_ERROR on error
+ */
+JXL_EXPORT JxlDecoderStatus JxlDecoderGetExtraChannelBlendInfo(
+    const JxlDecoder* dec, size_t index, JxlBlendInfo* blend_info);
+
+/**
  * Returns the minimum size in bytes of the DC image output buffer
  * for the given format. This is the buffer for JxlDecoderSetDCOutBuffer.
  * Requires the basic image information is available in the decoder.
@@ -811,7 +848,11 @@ JXL_EXPORT JXL_DEPRECATED JxlDecoderStatus JxlDecoderSetDCOutBuffer(
 /**
  * Returns the minimum size in bytes of the image output pixel buffer for the
  * given format. This is the buffer for JxlDecoderSetImageOutBuffer. Requires
- * the basic image information is available in the decoder.
+ * that the basic image information is available in the decoder in the case of
+ * coalescing enabled (default). In case coalescing is disabled, this can only
+ * be called after the JXL_DEC_FRAME event occurs. In that case, it will return
+ * the size required to store the possibly cropped frame (which can be larger or
+ * smaller than the image dimensions).
  *
  * @param dec decoder object
  * @param format format of the pixels.

@@ -31,8 +31,8 @@ pub(crate) fn cmp_impl(d1: &Decimal, d2: &Decimal) -> Ordering {
     }
 
     // Otherwise, do a deep comparison
-    let d1 = Dec64::new(&d1);
-    let d2 = Dec64::new(&d2);
+    let d1 = Dec64::new(d1);
+    let d2 = Dec64::new(d2);
     // We know both signs are the same here so flip it here.
     // Negative is handled differently. i.e. 0.5 > 0.01 however -0.5 < -0.01
     if d1.negative {

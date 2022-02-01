@@ -58,7 +58,7 @@ platform(linux,mac) == draw_calls(8) color_targets(8) alpha_targets(0) svg-filte
 platform(linux,mac) == svg-filter-drop-shadow.yaml svg-filter-drop-shadow.png
 == fuzzy(1,10000) svg-srgb-to-linear.yaml srgb-to-linear-ref.yaml
 platform(linux,mac) == fuzzy(5,35250) svg-filter-drop-shadow-rotate.yaml svg-filter-drop-shadow-rotate-ref.yaml
-platform(linux,mac) fuzzy(3,3184) == svg-filter-blur-transforms.yaml svg-filter-blur-transforms.png
+platform(linux,mac) fuzzy(3,3550) == svg-filter-blur-transforms.yaml svg-filter-blur-transforms.png
 platform(linux,mac) == svg-filter-drop-shadow-on-viewport-edge.yaml svg-filter-drop-shadow-on-viewport-edge.png
 fuzzy(1,1) platform(linux,mac) == svg-filter-drop-shadow-perspective.yaml svg-filter-drop-shadow-perspective.png
 #== backdrop-filter-basic.yaml backdrop-filter-basic-ref.yaml

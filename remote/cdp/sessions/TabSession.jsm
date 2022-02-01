@@ -50,13 +50,15 @@ class TabSession extends Session {
 
     this.requestPromises.clear();
 
-    this.mm.sendAsyncMessage("remote:destroy", {
+    // this.mm might be null if the browser of the TabTarget was already closed.
+    // See Bug 1747301.
+    this.mm?.sendAsyncMessage("remote:destroy", {
       browsingContextId: this.browsingContext.id,
     });
 
-    this.mm.removeMessageListener("remote:event", this);
-    this.mm.removeMessageListener("remote:result", this);
-    this.mm.removeMessageListener("remote:error", this);
+    this.mm?.removeMessageListener("remote:event", this);
+    this.mm?.removeMessageListener("remote:result", this);
+    this.mm?.removeMessageListener("remote:error", this);
   }
 
   execute(id, domain, command, params) {

@@ -68,12 +68,6 @@ function checkPopupHide() {
   );
 }
 
-var gObserver = {
-  QueryInterface: ChromeUtils.generateQI(["nsIFormSubmitObserver"]),
-
-  notifyInvalidSubmit(aFormElement, aInvalidElements) {},
-};
-
 var testId = 0;
 
 function incrementTest() {
@@ -438,53 +432,6 @@ add_task(async function() {
   await popupHiddenPromise;
 
   gBrowser.removeCurrentTab();
-});
-
-/**
- * In this test, we check that nothing happen if the invalid form is
- * submitted in a background tab.
- */
-add_task(async function() {
-  // Observers don't propagate currently across processes. We may add support for this in the
-  // future via the addon compat layer.
-  if (gMultiProcessBrowser) {
-    return;
-  }
-
-  incrementTest();
-  let uri =
-    getDocHeader() +
-    "<form target='t' action='data:text/html,'><input id='i' required><input id='s' type='submit'></form>" +
-    getDocFooter();
-  let browser = await openNewTab(uri, true);
-  isnot(
-    gBrowser.selectedBrowser,
-    browser,
-    "This tab should have been loaded in background"
-  );
-
-  let notifierPromise = new Promise((resolve, reject) => {
-    gObserver.notifyInvalidSubmit = function() {
-      executeSoon(function() {
-        checkPopupHide();
-
-        // Clean-up
-        Services.obs.removeObserver(gObserver, "invalidformsubmit");
-        gObserver.notifyInvalidSubmit = function() {};
-        resolve();
-      });
-    };
-
-    Services.obs.addObserver(gObserver, "invalidformsubmit");
-
-    executeSoon(function() {
-      browser.contentDocument.getElementById("s").click();
-    });
-  });
-
-  await notifierPromise;
-
-  gBrowser.removeTab(gBrowser.getTabForBrowser(browser));
 });
 
 /**

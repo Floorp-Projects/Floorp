@@ -88,7 +88,7 @@ add_task(async function pagedata() {
   await assertSnapshots([
     {
       url: TEST_URL1,
-      userPersisted: false,
+      userPersisted: Snapshots.USER_PERSISTED.NO,
       documentType: Interactions.DOCUMENT_TYPE.GENERIC,
     },
   ]);
@@ -121,12 +121,12 @@ add_task(async function pagedata() {
     [
       {
         url: TEST_URL1,
-        userPersisted: false,
+        userPersisted: Snapshots.USER_PERSISTED.NO,
         documentType: Interactions.DOCUMENT_TYPE.GENERIC,
       },
       {
         url: TEST_URL2,
-        userPersisted: false,
+        userPersisted: Snapshots.USER_PERSISTED.NO,
         documentType: Interactions.DOCUMENT_TYPE.GENERIC,
       },
     ],
@@ -148,7 +148,10 @@ add_task(async function pagedata() {
   );
 
   info("Ensure adding back the snapshot adds pagedata for it");
-  await Snapshots.add({ url: TEST_URL1, userPersisted: true });
+  await Snapshots.add({
+    url: TEST_URL1,
+    userPersisted: Snapshots.USER_PERSISTED.MANUAL,
+  });
   snap = await Snapshots.get(TEST_URL1);
   Assert.equal(snap.siteName, "Mozilla", "Should have the site name.");
   Assert.equal(snap.description, "We build the Firefox web browser");

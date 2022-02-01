@@ -35,8 +35,8 @@ def FixupMsysPath(path):
     trying to pass an absolute path on a remote server. This function attempts
     to un-mangle such paths."""
     if "OSTYPE" in os.environ and os.environ["OSTYPE"] == "msys":
-        # sort of awful, find out where our shell is (should be in msys/bin)
-        # and strip the first part of that path out of the other path
+        # sort of awful, find out where our shell is (should be in msys2/usr/bin
+        # or msys/bin) and strip the first part of that path out of the other path
         if "SHELL" in os.environ:
             sh = os.environ["SHELL"]
             msys = sh[: sh.find("/bin")]

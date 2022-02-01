@@ -39,7 +39,7 @@ add_task(async function() {
             var crash = crashes[0];
             ok(
               crash.isOfType(
-                crashMan.PROCESS_TYPE_CONTENT,
+                crashMan.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT],
                 crashMan.CRASH_TYPE_CRASH
               ),
               "Record should be a content crash"

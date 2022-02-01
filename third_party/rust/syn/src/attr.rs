@@ -2,6 +2,7 @@ use super::*;
 use crate::punctuated::Punctuated;
 use proc_macro2::TokenStream;
 use std::iter;
+use std::slice;
 
 #[cfg(feature = "parsing")]
 use crate::parse::{Parse, ParseBuffer, ParseStream, Parser, Result};
@@ -469,11 +470,8 @@ pub trait FilterAttrs<'a> {
     fn inner(self) -> Self::Ret;
 }
 
-impl<'a, T> FilterAttrs<'a> for T
-where
-    T: IntoIterator<Item = &'a Attribute>,
-{
-    type Ret = iter::Filter<T::IntoIter, fn(&&Attribute) -> bool>;
+impl<'a> FilterAttrs<'a> for &'a [Attribute] {
+    type Ret = iter::Filter<slice::Iter<'a, Attribute>, fn(&&Attribute) -> bool>;
 
     fn outer(self) -> Self::Ret {
         fn is_outer(attr: &&Attribute) -> bool {
@@ -482,7 +480,7 @@ where
                 AttrStyle::Inner(_) => false,
             }
         }
-        self.into_iter().filter(is_outer)
+        self.iter().filter(is_outer)
     }
 
     fn inner(self) -> Self::Ret {
@@ -492,7 +490,7 @@ where
                 AttrStyle::Outer => false,
             }
         }
-        self.into_iter().filter(is_inner)
+        self.iter().filter(is_inner)
     }
 }
 

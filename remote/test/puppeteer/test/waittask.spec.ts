@@ -58,6 +58,18 @@ describe('waittask specs', function () {
       await waitFor;
       expect(found).toBe(true);
     });
+    it('should allow you to select an element with parenthesis-starting xpath', async () => {
+      const { page, server } = getTestState();
+      let found = false;
+      const waitFor = page.waitFor('(//img)[200]').then(() => {
+        found = true;
+      });
+      await page.goto(server.EMPTY_PAGE);
+      expect(found).toBe(false);
+      await page.goto(server.PREFIX + '/grid.html');
+      await waitFor;
+      expect(found).toBe(true);
+    });
     it('should not allow you to select an element with single slash xpath', async () => {
       const { page } = getTestState();
 
@@ -281,7 +293,11 @@ describe('waittask specs', function () {
       const div = await page.$('div');
       let resolved = false;
       const waitForFunction = page
-        .waitForFunction((element) => !element.parentElement, {}, div)
+        .waitForFunction(
+          (element) => element.localName === 'div' && !element.parentElement,
+          {},
+          div
+        )
         .then(() => (resolved = true));
       expect(resolved).toBe(false);
       await page.evaluate((element: HTMLElement) => element.remove(), div);

@@ -13,10 +13,5 @@ if CONFIG["NS_PRINTING"]:
     UNIFIED_SOURCES += [
         "nsPrintingPromptService.cpp",
     ]
-    if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows" or CONFIG["MOZ_PDF_PRINTING"]:
-        UNIFIED_SOURCES += [
-            "nsPrintProgress.cpp",
-            "nsPrintProgressParams.cpp",
-        ]
 
 FINAL_LIBRARY = "xul"

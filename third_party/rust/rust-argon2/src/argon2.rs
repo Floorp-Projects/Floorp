@@ -6,15 +6,17 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::context::Context;
-use super::config::Config;
-use super::core;
-use super::encoding;
-use super::memory::Memory;
-use super::result::Result;
-use super::thread_mode::ThreadMode;
-use super::variant::Variant;
-use super::version::Version;
+use crate::config::Config;
+use crate::context::Context;
+use crate::core;
+use crate::encoding;
+use crate::memory::Memory;
+use crate::result::Result;
+use crate::thread_mode::ThreadMode;
+use crate::variant::Variant;
+use crate::version::Version;
+
+use constant_time_eq::constant_time_eq;
 
 /// Returns the length of the encoded string.
 ///
@@ -37,7 +39,7 @@ use super::version::Version;
 /// let enc_len = argon2::encoded_len(variant, mem, time, parallelism, salt_len, hash_len);
 /// assert_eq!(enc_len, 86);
 /// ```
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 pub fn encoded_len(
     variant: Variant,
     mem_cost: u32,
@@ -81,8 +83,16 @@ pub fn encoded_len(
 /// let salt = b"somesalt";
 /// let mut config = Config::default();
 /// config.variant = Variant::Argon2d;
-/// config.lanes = 4;
-/// config.thread_mode = ThreadMode::Parallel;
+#[cfg_attr(feature = "crossbeam-utils", doc = "config.lanes = 4;")]
+#[cfg_attr(
+    feature = "crossbeam-utils",
+    doc = "config.thread_mode = ThreadMode::Parallel;"
+)]
+#[cfg_attr(not(feature = "crossbeam-utils"), doc = "config.lanes = 1;")]
+#[cfg_attr(
+    not(feature = "crossbeam-utils"),
+    doc = "config.thread_mode = ThreadMode::Sequential;"
+)]
 /// let encoded = argon2::hash_encoded(pwd, salt, &config).unwrap();
 /// ```
 pub fn hash_encoded(pwd: &[u8], salt: &[u8], config: &Config) -> Result<String> {
@@ -183,15 +193,16 @@ pub fn hash_encoded_old(
     ad: &[u8],
     hash_len: u32,
 ) -> Result<String> {
+    let threads = if cfg!(feature = "crossbeam-utils") { threads } else { 1 };
     let config = Config {
-        variant: variant,
-        version: version,
-        mem_cost: mem_cost,
-        time_cost: time_cost,
-        lanes: lanes,
+        variant,
+        version,
+        mem_cost,
+        time_cost,
+        lanes,
         thread_mode: ThreadMode::from_threads(threads),
-        secret: secret,
-        ad: ad,
+        secret,
+        ad,
         hash_length: hash_len,
     };
     hash_encoded(pwd, salt, &config)
@@ -252,13 +263,14 @@ pub fn hash_encoded_std(
     salt: &[u8],
     hash_len: u32,
 ) -> Result<String> {
+    let threads = if cfg!(feature = "crossbeam-utils") { parallelism } else { 1 };
     let config = Config {
-        variant: variant,
-        version: version,
-        mem_cost: mem_cost,
-        time_cost: time_cost,
+        variant,
+        version,
+        mem_cost,
+        time_cost,
         lanes: parallelism,
-        thread_mode: ThreadMode::from_threads(parallelism),
+        thread_mode: ThreadMode::from_threads(threads),
         secret: &[],
         ad: &[],
         hash_length: hash_len,
@@ -291,8 +303,16 @@ pub fn hash_encoded_std(
 /// let salt = b"somesalt";
 /// let mut config = Config::default();
 /// config.variant = Variant::Argon2d;
-/// config.lanes = 4;
-/// config.thread_mode = ThreadMode::Parallel;
+#[cfg_attr(feature = "crossbeam-utils", doc = "config.lanes = 4;")]
+#[cfg_attr(
+    feature = "crossbeam-utils",
+    doc = "config.thread_mode = ThreadMode::Parallel;"
+)]
+#[cfg_attr(not(feature = "crossbeam-utils"), doc = "config.lanes = 1;")]
+#[cfg_attr(
+    not(feature = "crossbeam-utils"),
+    doc = "config.thread_mode = ThreadMode::Sequential;"
+)]
 /// let vec = argon2::hash_raw(pwd, salt, &config).unwrap();
 /// ```
 pub fn hash_raw(pwd: &[u8], salt: &[u8], config: &Config) -> Result<Vec<u8>> {
@@ -392,15 +412,16 @@ pub fn hash_raw_old(
     ad: &[u8],
     hash_len: u32,
 ) -> Result<Vec<u8>> {
+    let threads = if cfg!(feature = "crossbeam-utils") { threads } else { 1 };
     let config = Config {
-        variant: variant,
-        version: version,
-        mem_cost: mem_cost,
-        time_cost: time_cost,
-        lanes: lanes,
+        variant,
+        version,
+        mem_cost,
+        time_cost,
+        lanes,
         thread_mode: ThreadMode::from_threads(threads),
-        secret: secret,
-        ad: ad,
+        secret,
+        ad,
         hash_length: hash_len,
     };
     hash_raw(pwd, salt, &config)
@@ -461,13 +482,14 @@ pub fn hash_raw_std(
     salt: &[u8],
     hash_len: u32,
 ) -> Result<Vec<u8>> {
+    let threads = if cfg!(feature = "crossbeam-utils") { parallelism } else { 1 };
     let config = Config {
-        variant: variant,
-        version: version,
-        mem_cost: mem_cost,
-        time_cost: time_cost,
+        variant,
+        version,
+        mem_cost,
+        time_cost,
         lanes: parallelism,
-        thread_mode: ThreadMode::from_threads(parallelism),
+        thread_mode: ThreadMode::from_threads(threads),
         secret: &[],
         ad: &[],
         hash_length: hash_len,
@@ -509,15 +531,16 @@ pub fn verify_encoded(encoded: &str, pwd: &[u8]) -> Result<bool> {
 /// ```
 pub fn verify_encoded_ext(encoded: &str, pwd: &[u8], secret: &[u8], ad: &[u8]) -> Result<bool> {
     let decoded = encoding::decode_string(encoded)?;
+    let threads = if cfg!(feature = "crossbeam-utils") { decoded.parallelism } else { 1 };
     let config = Config {
         variant: decoded.variant,
         version: decoded.version,
         mem_cost: decoded.mem_cost,
         time_cost: decoded.time_cost,
         lanes: decoded.parallelism,
-        thread_mode: ThreadMode::from_threads(decoded.parallelism),
-        secret: secret,
-        ad: ad,
+        thread_mode: ThreadMode::from_threads(threads),
+        secret,
+        ad,
         hash_length: decoded.hash.len() as u32,
     };
     verify_raw(pwd, &decoded.salt, &decoded.hash, &config)
@@ -546,7 +569,8 @@ pub fn verify_raw(pwd: &[u8], salt: &[u8], hash: &[u8], config: &Config) -> Resu
         ..config.clone()
     };
     let context = Context::new(config, pwd, salt)?;
-    Ok(run(&context) == hash)
+    let calculated_hash = run(&context);
+    Ok(constant_time_eq(hash, &calculated_hash))
 }
 
 /// Verifies the password with the supplied settings (pre 0.2.0 `verify_raw`).
@@ -619,15 +643,16 @@ pub fn verify_raw_old(
     ad: &[u8],
     hash: &[u8],
 ) -> Result<bool> {
+    let threads = if cfg!(feature = "crossbeam-utils") { threads } else { 1 };
     let config = Config {
-        variant: variant,
-        version: version,
-        mem_cost: mem_cost,
-        time_cost: time_cost,
-        lanes: lanes,
+        variant,
+        version,
+        mem_cost,
+        time_cost,
+        lanes,
         thread_mode: ThreadMode::from_threads(threads),
-        secret: secret,
-        ad: ad,
+        secret,
+        ad,
         hash_length: hash.len() as u32,
     };
     verify_raw(pwd, salt, hash, &config)
@@ -695,13 +720,14 @@ pub fn verify_raw_std(
     salt: &[u8],
     hash: &[u8],
 ) -> Result<bool> {
+    let threads = if cfg!(feature = "crossbeam-utils") { parallelism } else { 1 };
     let config = Config {
-        variant: variant,
-        version: version,
-        mem_cost: mem_cost,
-        time_cost: time_cost,
+        variant,
+        version,
+        mem_cost,
+        time_cost,
         lanes: parallelism,
-        thread_mode: ThreadMode::from_threads(parallelism),
+        thread_mode: ThreadMode::from_threads(threads),
         secret: &[],
         ad: &[],
         hash_length: hash.len() as u32,
@@ -714,4 +740,21 @@ fn run(context: &Context) -> Vec<u8> {
     core::initialize(context, &mut memory);
     core::fill_memory_blocks(context, &mut memory);
     core::finalize(context, &memory)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn single_thread_verification_multi_lane_hash() {
+        /*
+        let hash = hash_encoded(b"foo", b"abcdefghijklmnopqrstuvwxyz", &Config {
+            lanes: 4, thread_mode: ThreadMode::Parallel,
+            ..Config::default()
+        });
+        */
+        let hash = "$argon2i$v=19$m=4096,t=3,p=4$YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXo$BvBk2OaSofBHfbrUW61nHrWB/43xgfs/QJJ5DkMAd8I";
+        verify_encoded(hash, b"foo").unwrap();
+    }
 }

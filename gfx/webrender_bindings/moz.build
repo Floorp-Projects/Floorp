@@ -124,5 +124,7 @@ FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
     "/gfx/cairo/cairo/src",
 ]
-CXXFLAGS += CONFIG["TK_CFLAGS"]
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
+    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
+
 CXXFLAGS += ["-Werror=switch"]

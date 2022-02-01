@@ -6,20 +6,26 @@
 
 // Bug 1521188 - Indicate grid/flex container/item in infobar
 // Check the text content of the highlighter nodeinfo bar.
-const STRINGS_URI = "devtools/shared/locales/highlighters.properties";
-const L10N = new LocalizationHelper(STRINGS_URI);
+const HighlightersBundle = new Localization(
+  ["devtools/shared/highlighters.ftl"],
+  true
+);
 
 const TEST_URI = URL_ROOT + "doc_inspector_infobar_04.html";
 
 const CLASS_GRID_TYPE = "box-model-infobar-grid-type";
 const CLASS_FLEX_TYPE = "box-model-infobar-flex-type";
 
-const FLEX_CONTAINER_TEXT = L10N.getStr("flexType.container");
-const FLEX_ITEM_TEXT = L10N.getStr("flexType.item");
-const FLEX_DUAL_TEXT = L10N.getStr("flexType.dual");
-const GRID_CONTAINER_TEXT = L10N.getStr("gridType.container");
-const GRID_ITEM_TEXT = L10N.getStr("gridType.item");
-const GRID_DUAL_TEXT = L10N.getStr("gridType.dual");
+const FLEX_CONTAINER_TEXT = HighlightersBundle.formatValueSync(
+  "flextype-container"
+);
+const FLEX_ITEM_TEXT = HighlightersBundle.formatValueSync("flextype-item");
+const FLEX_DUAL_TEXT = HighlightersBundle.formatValueSync("flextype-dual");
+const GRID_CONTAINER_TEXT = HighlightersBundle.formatValueSync(
+  "gridtype-container"
+);
+const GRID_ITEM_TEXT = HighlightersBundle.formatValueSync("gridtype-item");
+const GRID_DUAL_TEXT = HighlightersBundle.formatValueSync("gridtype-dual");
 
 const TEST_DATA = [
   {

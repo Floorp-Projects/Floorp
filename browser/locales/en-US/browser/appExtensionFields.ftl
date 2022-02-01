@@ -17,6 +17,12 @@ extension-firefox-compact-dark-description=A theme with a dark color scheme.
 extension-firefox-alpenglow-name=Firefox Alpenglow
 extension-firefox-alpenglow-description=Use a colorful appearance for buttons, menus, and windows.
 
+extension-floorp-lepton-name=Move the horizontal tab
+extension-floorp-lepton-description=Move horizontal tabs to the bottom of the bookmarks bar
+
+extension-floorp-edge-name=Optimized for vertical tabs
+extension-floorp-edge-description=Optimizes Floorp for vertical tabs. Make better use of your screen!
+
 ## Colorway Themes
 ## These themes are variants of a colorway. The colorway is specified in the
 ## $colorway-name variable.

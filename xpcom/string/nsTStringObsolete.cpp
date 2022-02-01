@@ -120,7 +120,7 @@ typename nsTString<T>::size_type nsTString<T>::Mid(
  */
 
 template <typename T>
-bool nsTString<T>::SetCharAt(char16_t aChar, uint32_t aIndex) {
+bool nsTString<T>::SetCharAt(char16_t aChar, index_type aIndex) {
   if (aIndex >= this->mLength) return false;
 
   if (!this->EnsureMutable()) this->AllocFailed(this->mLength);
@@ -291,7 +291,7 @@ bool nsTString<T>::ReplaceSubstring(const self_type& aTarget,
   // because the rest of the algorithm relies on having access to all of the
   // original string.  In other words, we over-allocate in the shrinking case.
   uint32_t oldLen = this->mLength;
-  mozilla::Result<uint32_t, nsresult> r =
+  auto r =
       this->StartBulkWriteImpl(XPCOM_MAX(oldLen, newLength.value()), oldLen);
   if (r.isErr()) {
     return false;

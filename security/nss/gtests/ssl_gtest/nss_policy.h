@@ -9,6 +9,7 @@
 
 #include "prtypes.h"
 #include "secoid.h"
+#include "nss.h"
 
 namespace nss_test {
 
@@ -36,25 +37,52 @@ class NssPolicy {
   PRUint32 clear_;
 };
 
+// container class to hold a temp option
+class NssOption {
+ public:
+  NssOption() : id_(-1), value_(0) {}
+  NssOption(PRInt32 _id, PRInt32 _value) : id_(_id), value_(_value) {}
+  NssOption(const NssOption &o) : id_(o.id_), value_(o.value_) {}
+  // clone the current option for this id
+  NssOption(PRInt32 _id) : id_(_id), value_(0) { NSS_OptionGet(id_, &value_); }
+  PRInt32 id(void) const { return id_; }
+  PRInt32 value(void) const { return value_; }
+  operator bool() const { return id_ != -1; }
+
+ private:
+  PRInt32 id_;
+  PRInt32 value_;
+};
+
 // set the policy indicated in NssPolicy and restor the old policy
 // when we go out of scope
 class NssManagePolicy {
  public:
-  NssManagePolicy(const NssPolicy &p) : policy_(p), current_(~(PRUint32)0) {
+  NssManagePolicy(const NssPolicy &p, const NssOption &o)
+      : policy_(p), save_policy_(~(PRUint32)0), option_(o), save_option_(0) {
     if (p) {
-      (void)NSS_GetAlgorithmPolicy(p.oid(), &current_);
+      (void)NSS_GetAlgorithmPolicy(p.oid(), &save_policy_);
       (void)NSS_SetAlgorithmPolicy(p.oid(), p.set(), p.clear());
+    }
+    if (o) {
+      (void)NSS_OptionGet(o.id(), &save_option_);
+      (void)NSS_OptionSet(o.id(), o.value());
     }
   }
   ~NssManagePolicy() {
     if (policy_) {
-      (void)NSS_SetAlgorithmPolicy(policy_.oid(), current_, ~current_);
+      (void)NSS_SetAlgorithmPolicy(policy_.oid(), save_policy_, ~save_policy_);
+    }
+    if (option_) {
+      (void)NSS_OptionSet(option_.id(), save_option_);
     }
   }
 
  private:
   NssPolicy policy_;
-  PRUint32 current_;
+  PRUint32 save_policy_;
+  NssOption option_;
+  PRInt32 save_option_;
 };
 
 // wrapping PRFileDesc this way ensures that tests that attempt to access
@@ -62,8 +90,9 @@ class NssManagePolicy {
 // the policy that was bound to that socket with TlsAgent::SetPolicy().
 class NssManagedFileDesc {
  public:
-  NssManagedFileDesc(PRFileDesc *fd, const NssPolicy &policy)
-      : fd_(fd), managed_policy_(policy) {}
+  NssManagedFileDesc(PRFileDesc *fd, const NssPolicy &policy,
+                     const NssOption &option)
+      : fd_(fd), managed_policy_(policy, option) {}
   PRFileDesc *get(void) const { return fd_; }
   operator PRFileDesc *() const { return fd_; }
   bool operator==(PRFileDesc *fd) const { return fd_ == fd; }

@@ -49,7 +49,7 @@ async function testAwait({ threadFront, debuggee }) {
   equal(step2.frame.where.line, 5);
   equal(step2.frame.where.column, 10);
   equal(debuggee.r, "yay");
-  resume(threadFront);
+  await resume(threadFront);
 }
 
 async function testInterleaving({ threadFront, debuggee }) {
@@ -87,7 +87,7 @@ async function testInterleaving({ threadFront, debuggee }) {
   equal(step3.frame.where.line, 9);
   equal(debuggee.result, "yay");
 
-  resume(threadFront);
+  await resume(threadFront);
 }
 
 async function testMultipleSteps({ threadFront, debuggee }) {
@@ -158,5 +158,5 @@ async function testGenerator({ threadFront, debuggee }) {
 
   const step3 = await stepOver(threadFront);
   equal(step3.frame.where.line, 7);
-  resume(threadFront);
+  await resume(threadFront);
 }

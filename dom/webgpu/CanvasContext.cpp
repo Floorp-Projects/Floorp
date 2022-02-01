@@ -21,8 +21,9 @@ namespace webgpu {
 NS_IMPL_CYCLE_COLLECTING_ADDREF(CanvasContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(CanvasContext)
 
-GPU_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CanvasContext, mTexture, mBridge,
-                                       mCanvasElement, mOffscreenCanvas)
+GPU_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(CanvasContext, mTexture,
+                                                mBridge, mCanvasElement,
+                                                mOffscreenCanvas)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CanvasContext)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -61,11 +62,14 @@ bool CanvasContext::UpdateWebRenderCanvasData(
 void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aDesc) {
   Unconfigure();
 
+  // these formats are guaranteed by the spec
   switch (aDesc.mFormat) {
     case dom::GPUTextureFormat::Rgba8unorm:
+    case dom::GPUTextureFormat::Rgba8unorm_srgb:
       mGfxFormat = gfx::SurfaceFormat::R8G8B8A8;
       break;
     case dom::GPUTextureFormat::Bgra8unorm:
+    case dom::GPUTextureFormat::Bgra8unorm_srgb:
       mGfxFormat = gfx::SurfaceFormat::B8G8R8A8;
       break;
     default:
@@ -102,13 +106,20 @@ void CanvasContext::Unconfigure() {
   }
   mBridge = nullptr;
   mTexture = nullptr;
+  mGfxFormat = gfx::SurfaceFormat::UNKNOWN;
 }
 
 dom::GPUTextureFormat CanvasContext::GetPreferredFormat(Adapter&) const {
   return dom::GPUTextureFormat::Bgra8unorm;
 }
 
-RefPtr<Texture> CanvasContext::GetCurrentTexture() { return mTexture; }
+RefPtr<Texture> CanvasContext::GetCurrentTexture(ErrorResult& aRv) {
+  if (!mTexture) {
+    aRv.ThrowOperationError("Canvas not configured");
+    return nullptr;
+  }
+  return mTexture;
+}
 
 bool CanvasContext::UpdateWebRenderLocalCanvasData(
     layers::WebRenderLocalCanvasData* aCanvasData) {

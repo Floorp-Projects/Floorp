@@ -38,6 +38,10 @@ wrappers.
 
 ## Release Notes
 
+### 0.9.8
+
+* Remove year from copyright notices.
+
 ### 0.9.7
 
 * Specify a `links` value in the Cargo manifest.

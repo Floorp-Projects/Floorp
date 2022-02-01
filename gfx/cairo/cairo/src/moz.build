@@ -72,13 +72,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'beos':
     SOURCES += [
         'cairo-beos-surface.cpp',
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
-    EXPORTS.cairo += [
-        'cairo-ps.h',
-    ]
-    SOURCES += [
-        'cairo-ps-surface.c',
-    ]
 
 if CONFIG['MOZ_X11']:
     EXPORTS.cairo += [

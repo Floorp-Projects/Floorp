@@ -8,7 +8,6 @@ job-defaults:
         by-test-platform:
             android-em-7.*: geckoview-test_runner.apk
             default: null
-    python-3: true
     mozharness:
         script:
             by-test-platform:
@@ -64,12 +63,13 @@ xpcshell:
             macosx.*-64(-shippable|-devedition|-asan)?(-qr)?/.*: 2
             linux1804-64(-qr)?/debug: 6
             .*-tsan-qr/opt: 8
-            windows.*(-shippable|-devedition|-asan|.*-qr)?/.*: 2
+            windows.*(-shippable|-devedition|-asan|.*-qr)?/.*: 4
             default: 5
     max-run-time:
         by-test-platform:
             windows.*(-shippable)/opt: 5400
             .*64-ccov(-qr)?/.*: 7200
+            .*64-2004-ccov(-qr)?/.*: 7200  # Windows 10 x64 2004 CCov specific, the line above does not catch this case.
             .*-tsan-qr/opt: 7200
             default: 2700
     allow-software-gl-layers: false
@@ -81,6 +81,12 @@ xpcshell:
                     windows10-64-2004-asan.*: 3
                     android-em-7.0-x86_64-qr/debug-isolated-process: 3
                     default: default
+    mozharness:
+        extra-options:
+            by-test-platform:
+                windows10.*:
+                    - --threads=2
+                default: []
     fetches:
         toolchain:
             by-test-platform:

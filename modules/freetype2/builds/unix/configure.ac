@@ -11,13 +11,13 @@
 # indicate that you have read the license and understand and accept it
 # fully.
 
-AC_INIT([FreeType], [2.11], [freetype@nongnu.org], [freetype])
+AC_INIT([FreeType], [2.11.1], [freetype@nongnu.org], [freetype])
 AC_CONFIG_SRCDIR([ftconfig.h.in])
 
 
 # Don't forget to update `docs/VERSIONS.TXT'!
 
-version_info='24:0:18'
+version_info='24:1:18'
 AC_SUBST([version_info])
 ft_version=`echo $version_info | tr : .`
 AC_SUBST([ft_version])
@@ -103,78 +103,6 @@ AC_CHECK_HEADERS([fcntl.h unistd.h])
 # checks for typedefs, structures, and compiler characteristics
 
 AC_C_CONST
-AC_CHECK_SIZEOF([int])
-AC_CHECK_SIZEOF([long])
-AC_TYPE_LONG_LONG_INT
-
-
-# check whether cpp computation of size of int and long in ftconfig.h.in works
-
-AC_MSG_CHECKING([whether cpp computation of bit length in ftconfig.h.in works])
-orig_CPPFLAGS="${CPPFLAGS}"
-CPPFLAGS="-I${srcdir} -I. -I${srcdir}/../../include ${CPPFLAGS}"
-
-ac_clean_files=
-if test ! -f ft2build.h; then
-  ac_clean_files=ft2build.h
-  touch ft2build.h
-fi
-
-cat > conftest.c <<\_ACEOF
-#include <limits.h>
-#define FT_CONFIG_OPTIONS_H <freetype/config/ftoption.h>
-#define FT_CONFIG_STANDARD_LIBRARY_H <freetype/config/ftstdlib.h>
-#define FT_UINT_MAX  UINT_MAX
-#define FT_ULONG_MAX ULONG_MAX
-#include "ftconfig.h.in"
-_ACEOF
-echo >> conftest.c "#if FT_SIZEOF_INT == "${ac_cv_sizeof_int}
-echo >> conftest.c "ac_cpp_ft_sizeof_int="${ac_cv_sizeof_int}
-echo >> conftest.c "#endif"
-echo >> conftest.c "#if FT_SIZEOF_LONG == "${ac_cv_sizeof_long}
-echo >> conftest.c "ac_cpp_ft_sizeof_long="${ac_cv_sizeof_long}
-echo >> conftest.c "#endif"
-
-${CPP} ${CPPFLAGS} conftest.c | ${GREP} ac_cpp_ft > conftest.sh
-eval `cat conftest.sh`
-rm -f conftest.* $ac_clean_files
-
-if test x != "x${ac_cpp_ft_sizeof_int}" \
-   -a x != x"${ac_cpp_ft_sizeof_long}"; then
-  unset ft_use_autoconf_sizeof_types
-else
-  ft_use_autoconf_sizeof_types=yes
-fi
-
-AC_ARG_ENABLE(biarch-config,
-[  --enable-biarch-config  install biarch ftconfig.h to support multiple
-                          architectures by single file], [], [])
-
-case :${ft_use_autoconf_sizeof_types}:${enable_biarch_config}: in
-  :yes:yes:)
-    AC_MSG_RESULT([broken but use it])
-    unset ft_use_autoconf_sizeof_types
-    ;;
-  ::no:)
-    AC_MSG_RESULT([works but ignore it])
-    ft_use_autoconf_sizeof_types=yes
-    ;;
-  ::yes: | :::)
-    AC_MSG_RESULT([yes])
-    unset ft_use_autoconf_sizeof_types
-    ;;
-  *)
-    AC_MSG_RESULT([no])
-    ft_use_autoconf_sizeof_types=yes
-    ;;
-esac
-
-if test x"${ft_use_autoconf_sizeof_types}" = xyes; then
-  AC_DEFINE([FT_USE_AUTOCONF_SIZEOF_TYPES], [],
-            [Define if autoconf sizeof types should be used.])
-fi
-
-CPPFLAGS="${orig_CPPFLAGS}"
 
 AC_ARG_ENABLE([freetype-config],
   AS_HELP_STRING([--enable-freetype-config], [install freetype-config]),

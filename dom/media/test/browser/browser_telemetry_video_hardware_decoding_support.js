@@ -22,24 +22,41 @@ add_task(async function testVideoCodecs() {
     { fileName: "gizmo.webm", type: "video/vp9" },
     { fileName: "bipbop_short_vp8.webm", type: "video/vp8" },
     { fileName: "av1.mp4", type: "video/av1" },
+    { fileName: "bunny_hd_5s.mp4", type: "video/avc", hd: true },
   ];
-  const SCALAR_NAME = "media.video_hardware_decoding_support";
+  const ALL_SCALAR = "media.video_hardware_decoding_support";
+  const HD_SCALAR = "media.video_hd_hardware_decoding_support";
 
   for (const file of testFiles) {
-    const { fileName, type } = file;
+    const { fileName, type, hd } = file;
     let video = document.createElement("video");
     video.src = GetTestWebBasedURL(fileName);
     await video.play();
     let snapshot = Services.telemetry.getSnapshotForKeyedScalars("main", false)
       .parent;
     ok(
-      snapshot.hasOwnProperty(SCALAR_NAME),
-      `Found stored scalar '${SCALAR_NAME}'`
+      snapshot.hasOwnProperty(ALL_SCALAR),
+      `Found stored scalar '${ALL_SCALAR}'`
     );
     ok(
-      snapshot[SCALAR_NAME].hasOwnProperty(type),
-      `Found key '${type}' in '${SCALAR_NAME}'`
+      snapshot[ALL_SCALAR].hasOwnProperty(type),
+      `Found key '${type}' in '${ALL_SCALAR}'`
     );
+    if (hd) {
+      ok(
+        snapshot.hasOwnProperty(HD_SCALAR),
+        `HD video '${fileName}' should record a scalar '${HD_SCALAR}'`
+      );
+      ok(
+        snapshot[HD_SCALAR].hasOwnProperty(type),
+        `Found key '${type}' in '${HD_SCALAR}'`
+      );
+    } else {
+      ok(
+        !snapshot.hasOwnProperty(HD_SCALAR),
+        `SD video won't store a scalar '${HD_SCALAR}'`
+      );
+    }
     video.src = "";
     Services.telemetry.clearScalars();
   }

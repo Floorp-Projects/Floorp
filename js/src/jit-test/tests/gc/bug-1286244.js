@@ -3,6 +3,6 @@
 // This will fail with --no-threads.
 verifyprebarriers();
 var lfGlobal = newGlobal();
-lfGlobal.offThreadCompileScript(`
+lfGlobal.offThreadCompileToStencil(`
   version(185);
 `);

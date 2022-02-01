@@ -558,6 +558,44 @@ FT_BEGIN_HEADER
   /**************************************************************************
    *
    * @functype:
+   *   TT_Get_Color_Glyph_ClipBox_Func
+   *
+   * @description:
+   *   Search for a 'COLR' v1 clip box for the specified `base_glyph` and
+   *   fill the `clip_box` parameter with the 'COLR' v1 'ClipBox' information
+   *   if one is found.
+   *
+   * @input:
+   *   face ::
+   *     A handle to the parent face object.
+   *
+   *   base_glyph ::
+   *     The glyph index for which to retrieve the clip box.
+   *
+   * @output:
+   *   clip_box ::
+   *     The clip box for the requested `base_glyph` if one is found.  The
+   *     clip box is computed taking scale and transformations configured on
+   *     the @FT_Face into account.  @FT_ClipBox contains @FT_Vector values
+   *     in 26.6 format.
+   *
+   * @note:
+   *     To retrieve the clip box in font units, reset scale to units-per-em
+   *     and remove transforms configured using @FT_Set_Transform.
+   *
+   * @return:
+   *   Value~1 if a ClipBox is found.  If no clip box is found or an
+   *   error occured, value~0 is returned.
+   */
+  typedef FT_Bool
+  ( *TT_Get_Color_Glyph_ClipBox_Func )( TT_Face      face,
+                                        FT_UInt      base_glyph,
+                                        FT_ClipBox*  clip_box );
+
+
+  /**************************************************************************
+   *
+   * @functype:
    *   TT_Get_Paint_Layers_Func
    *
    * @description:
@@ -890,17 +928,18 @@ FT_BEGIN_HEADER
     TT_Set_SBit_Strike_Func      set_sbit_strike;
     TT_Load_Strike_Metrics_Func  load_strike_metrics;
 
-    TT_Load_Table_Func             load_cpal;
-    TT_Load_Table_Func             load_colr;
-    TT_Free_Table_Func             free_cpal;
-    TT_Free_Table_Func             free_colr;
-    TT_Set_Palette_Func            set_palette;
-    TT_Get_Colr_Layer_Func         get_colr_layer;
-    TT_Get_Color_Glyph_Paint_Func  get_colr_glyph_paint;
-    TT_Get_Paint_Layers_Func       get_paint_layers;
-    TT_Get_Colorline_Stops_Func    get_colorline_stops;
-    TT_Get_Paint_Func              get_paint;
-    TT_Blend_Colr_Func             colr_blend;
+    TT_Load_Table_Func               load_cpal;
+    TT_Load_Table_Func               load_colr;
+    TT_Free_Table_Func               free_cpal;
+    TT_Free_Table_Func               free_colr;
+    TT_Set_Palette_Func              set_palette;
+    TT_Get_Colr_Layer_Func           get_colr_layer;
+    TT_Get_Color_Glyph_Paint_Func    get_colr_glyph_paint;
+    TT_Get_Color_Glyph_ClipBox_Func  get_color_glyph_clipbox;
+    TT_Get_Paint_Layers_Func         get_paint_layers;
+    TT_Get_Colorline_Stops_Func      get_colorline_stops;
+    TT_Get_Paint_Func                get_paint;
+    TT_Blend_Colr_Func               colr_blend;
 
     TT_Get_Metrics_Func  get_metrics;
 
@@ -951,6 +990,7 @@ FT_BEGIN_HEADER
           set_palette_,                  \
           get_colr_layer_,               \
           get_colr_glyph_paint_,         \
+          get_color_glyph_clipbox,       \
           get_paint_layers_,             \
           get_colorline_stops_,          \
           get_paint_,                    \
@@ -995,6 +1035,7 @@ FT_BEGIN_HEADER
     set_palette_,                        \
     get_colr_layer_,                     \
     get_colr_glyph_paint_,               \
+    get_color_glyph_clipbox,             \
     get_paint_layers_,                   \
     get_colorline_stops_,                \
     get_paint_,                          \

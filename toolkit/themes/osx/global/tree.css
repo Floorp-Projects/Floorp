@@ -4,6 +4,16 @@
 
 %include ../../shared/tree.inc.css
 
+@media not (prefers-contrast) {
+  /* We show a `SelectedItem` background on selected rows, so we do not need the
+     dotted outline in that case. For users who have Full Keyboard Access
+     enabled, macOS draws a blue highlight above the row highlight, so keyboard-
+     only users can still discern the currently-selected row when multiple rows
+     are selected. */
+  treechildren::-moz-tree-row(selected, current, focus) {
+    outline: none;
+  }
+}
 
 /* ::::: editable tree ::::: */
 

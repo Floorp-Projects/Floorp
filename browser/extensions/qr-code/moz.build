@@ -17,5 +17,29 @@ FINAL_TARGET_FILES.features["qr-code@mozilla.org"] += [
 
 ]
 
+FINAL_TARGET_FILES.features["qr-code@mozilla.org"]["_locales"]["ja"] += [
+    "_locales/ja/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["qr-code@mozilla.org"]["_locales"]["en"] += [
+    "_locales/en/messages.json",
+]
+
+FINAL_TARGET_FILES.features["qr-code@mozilla.org"]["_locales"]["ko"] += [
+    "_locales/ko/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["qr-code@mozilla.org"]["_locales"]["ru"] += [
+    "_locales/ru/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["qr-code@mozilla.org"]["_locales"]["zh_TW"] += [
+    "_locales/zh_TW/messages.json",
+]  
+
+FINAL_TARGET_FILES.features["qr-code@mozilla.org"]["_locales"]["zh_CN"] += [
+    "_locales/zh_CN/messages.json",
+]  
+
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "qr-code")

@@ -3,6 +3,8 @@ $header-font-size: 17;
 $header-line-height: 24;
 $excerpt-font-size: 14;
 $excerpt-line-height: 20;
+$ds-card-image-gradient-fade: rgba(0, 0, 0, 0);
+$ds-card-image-gradient-solid: rgba(0, 0, 0, 1);
 
 .ds-card {
   display: flex;
@@ -244,6 +246,11 @@ $excerpt-line-height: 20;
       color: var(--newtab-text-secondary-color);
     }
 
+    .new-sponsored-label {
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
     .cta-button {
       background-color: var(--newtab-button-secondary-color);
       width: 100%;
@@ -290,6 +297,40 @@ $excerpt-line-height: 20;
       &:hover {
         text-decoration: underline;
       }
+    }
+  }
+
+  &.ds-card-title-lines-2 .meta .title {
+    // show only 2 lines of copy
+    @include limit-visible-lines(2, $header-line-height, $header-font-size);
+  }
+
+  &.ds-card-title-lines-1 .meta .title {
+    // show only 1 line of copy
+    @include limit-visible-lines(1, $header-line-height, $header-font-size);
+  }
+
+  &.ds-card-desc-lines-2 .meta .excerpt {
+    // show only 2 lines of copy
+    @include limit-visible-lines(2, $excerpt-line-height, $excerpt-font-size);
+  }
+
+  &.ds-card-desc-lines-1 .meta .excerpt {
+    // show only 1 line of copy
+    @include limit-visible-lines(1, $excerpt-line-height, $excerpt-font-size);
+  }
+
+  &.ds-card-compact-image .img {
+    padding-top: 47%;
+  }
+
+  &.ds-card-image-gradient {
+    img {
+      mask-image: linear-gradient(to top, $ds-card-image-gradient-fade, $ds-card-image-gradient-solid 40px);
+    }
+
+    .meta {
+      padding: 3px 15px 11px;
     }
   }
 

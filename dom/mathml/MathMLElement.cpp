@@ -634,25 +634,25 @@ void MathMLElement::MapMathMLAttributesInto(
                                        "tailed",
                                        "looped",
                                        "stretched"};
-    static const int32_t values[MOZ_ARRAY_LENGTH(sizes)] = {
-        NS_MATHML_MATHVARIANT_NORMAL,
-        NS_MATHML_MATHVARIANT_BOLD,
-        NS_MATHML_MATHVARIANT_ITALIC,
-        NS_MATHML_MATHVARIANT_BOLD_ITALIC,
-        NS_MATHML_MATHVARIANT_SCRIPT,
-        NS_MATHML_MATHVARIANT_BOLD_SCRIPT,
-        NS_MATHML_MATHVARIANT_FRAKTUR,
-        NS_MATHML_MATHVARIANT_DOUBLE_STRUCK,
-        NS_MATHML_MATHVARIANT_BOLD_FRAKTUR,
-        NS_MATHML_MATHVARIANT_SANS_SERIF,
-        NS_MATHML_MATHVARIANT_BOLD_SANS_SERIF,
-        NS_MATHML_MATHVARIANT_SANS_SERIF_ITALIC,
-        NS_MATHML_MATHVARIANT_SANS_SERIF_BOLD_ITALIC,
-        NS_MATHML_MATHVARIANT_MONOSPACE,
-        NS_MATHML_MATHVARIANT_INITIAL,
-        NS_MATHML_MATHVARIANT_TAILED,
-        NS_MATHML_MATHVARIANT_LOOPED,
-        NS_MATHML_MATHVARIANT_STRETCHED};
+    static const StyleMathVariant values[MOZ_ARRAY_LENGTH(sizes)] = {
+        StyleMathVariant::Normal,
+        StyleMathVariant::Bold,
+        StyleMathVariant::Italic,
+        StyleMathVariant::BoldItalic,
+        StyleMathVariant::Script,
+        StyleMathVariant::BoldScript,
+        StyleMathVariant::Fraktur,
+        StyleMathVariant::DoubleStruck,
+        StyleMathVariant::BoldFraktur,
+        StyleMathVariant::SansSerif,
+        StyleMathVariant::BoldSansSerif,
+        StyleMathVariant::SansSerifItalic,
+        StyleMathVariant::SansSerifBoldItalic,
+        StyleMathVariant::Monospace,
+        StyleMathVariant::Initial,
+        StyleMathVariant::Tailed,
+        StyleMathVariant::Looped,
+        StyleMathVariant::Stretched};
     for (uint32_t i = 0; i < ArrayLength(sizes); ++i) {
       if (str.LowerCaseEqualsASCII(sizes[i])) {
         aDecls.SetKeywordValue(eCSSProperty__moz_math_variant, values[i]);

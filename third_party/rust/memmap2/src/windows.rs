@@ -435,6 +435,6 @@ fn allocation_granularity() -> usize {
     }
 }
 
-pub fn file_len(file: &File) -> io::Result<usize> {
-    Ok(file.metadata()?.len() as usize)
+pub fn file_len(file: &File) -> io::Result<u64> {
+    Ok(file.metadata()?.len())
 }

@@ -41,6 +41,8 @@ class GeckoInstance(object):
         # and causing false-positive test failures. See bug 1176798, bug 1177018,
         # bug 1210465.
         "apz.content_response_timeout": 60000,
+        # Don't pull Top Sites content from the network
+        "browser.topsites.contile.enabled": False,
         # Defensively disable data reporting systems
         "datareporting.healthreport.documentServerURI": "http://%(server)s/dummy/healthreport/",
         "datareporting.healthreport.logging.consoleEnabled": False,
@@ -52,6 +54,8 @@ class GeckoInstance(object):
         "datareporting.policy.dataSubmissionPolicyBypassNotification": True,
         # Automatically unload beforeunload alerts
         "dom.disable_beforeunload": True,
+        # Enabling the support for File object creation in the content process.
+        "dom.file.createInChild": True,
         # Disable the ProcessHangMonitor
         "dom.ipc.reportProcessHangs": False,
         # No slow script dialogs
@@ -83,6 +87,8 @@ class GeckoInstance(object):
         "geo.provider.testing": True,
         # Do not scan Wifi
         "geo.wifi.scan": False,
+        # Ensure webrender is on, no need for environment variables
+        "gfx.webrender.all": True,
         # Disable idle-daily notifications to avoid expensive operations
         # that may cause unexpected test timeouts.
         "idle.lastDailyNotification": -1,
@@ -112,10 +118,6 @@ class GeckoInstance(object):
         "signon.rememberSignons": False,
         # Prevent starting into safe mode after application crashes
         "toolkit.startup.max_resumed_crashes": -1,
-        # Enabling the support for File object creation in the content process.
-        "dom.file.createInChild": True,
-        # Don't pull Top Sites content from the network
-        "browser.topsites.contile.enabled": False,
     }
 
     def __init__(
@@ -132,7 +134,6 @@ class GeckoInstance(object):
         workspace=None,
         verbose=0,
         headless=False,
-        enable_webrender=False,
     ):
         self.runner_class = Runner
         self.app_args = app_args or []
@@ -152,7 +153,6 @@ class GeckoInstance(object):
         self._gecko_log = None
         self.verbose = verbose
         self.headless = headless
-        self.enable_webrender = enable_webrender
 
         # keep track of errors to decide whether instance is unresponsive
         self.unresponsive_count = 0
@@ -331,12 +331,6 @@ class GeckoInstance(object):
             env["MOZ_HEADLESS"] = "1"
             env["DISPLAY"] = "77"  # Set a fake display.
 
-        if self.enable_webrender:
-            env["MOZ_WEBRENDER"] = "1"
-            env["MOZ_ACCELERATED"] = "1"
-        else:
-            env["MOZ_WEBRENDER"] = "0"
-
         # environment variables needed for crashreporting
         # https://developer.mozilla.org/docs/Environment_variables_affecting_crash_reporting
         env.update(
@@ -483,10 +477,6 @@ class FennecInstance(GeckoInstance):
         }
 
         env = {} if self.env is None else self.env.copy()
-        if self.enable_webrender:
-            env["MOZ_WEBRENDER"] = "1"
-        else:
-            env["MOZ_WEBRENDER"] = "0"
 
         runner_args = {
             "app": self.package_name,

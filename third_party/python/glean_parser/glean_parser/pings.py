@@ -14,7 +14,7 @@ from typing import Dict, List, Optional
 from . import util
 
 
-RESERVED_PING_NAMES = ["baseline", "metrics", "events", "deletion-request"]
+RESERVED_PING_NAMES = ["baseline", "metrics", "events", "deletion-request", "default"]
 
 
 class Ping:
@@ -24,6 +24,7 @@ class Ping:
         description: str,
         bugs: List[str],
         notification_emails: List[str],
+        metadata: Optional[Dict] = None,
         data_reviews: Optional[List[str]] = None,
         include_client_id: bool = False,
         send_if_empty: bool = False,
@@ -40,6 +41,9 @@ class Ping:
 
         self.bugs = bugs
         self.notification_emails = notification_emails
+        if metadata is None:
+            metadata = {}
+        self.metadata = metadata
         if data_reviews is None:
             data_reviews = []
         self.data_reviews = data_reviews
@@ -53,7 +57,7 @@ class Ping:
             no_lint = []
         self.no_lint = no_lint
 
-        # _validated indicates whether this metric has already been jsonschema
+        # _validated indicates whether this ping has already been jsonschema
         # validated (but not any of the Python-level validation).
         if not _validated:
             data: Dict[str, util.JSONType] = {

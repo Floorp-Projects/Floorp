@@ -18,7 +18,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":59:67",
-        attributes: ["Bubbling", "DOM2"],
+        attributes: ["Bubbling"],
         handler:
           "function(foo2, bar2) {\n" +
           '  alert("documentElement event listener clicked");\n' +
@@ -27,7 +27,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":55:51",
-        attributes: ["Bubbling", "DOM2"],
+        attributes: ["Bubbling"],
         handler:
           "function(foo, bar) {\n" +
           '  alert("document event listener clicked");\n' +
@@ -36,7 +36,7 @@ const TEST_DATA = [
       {
         type: "load",
         filename: TEST_URL,
-        attributes: ["Bubbling", "DOM0"],
+        attributes: ["Bubbling"],
         handler: "function onload(event) {\n" + "  init();\n" + "}",
       },
     ],
@@ -47,7 +47,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":1:0",
-        attributes: ["Bubbling", "DOM2"],
+        attributes: ["Bubbling"],
         handler: "function anonymous() {\n" + "\n" + "}",
       },
     ],
@@ -58,7 +58,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":1:0",
-        attributes: ["Bubbling", "DOM2"],
+        attributes: ["Bubbling"],
         handler:
           "function anonymous(a, b, c) {\n" +
           '  alert("constructedFuncWithBodyString");\n' +
@@ -72,7 +72,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":26:47",
-        attributes: ["Bubbling", "DOM2"],
+        attributes: ["Bubbling"],
         handler:
           "function multi() {\n" + '  alert("multipleAssignment");\n' + "}",
       },
@@ -84,7 +84,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: "[native code]",
-        attributes: ["Bubbling", "DOM2"],
+        attributes: ["Bubbling"],
         handler: "function() {\n" + "  [native code]\n" + "}",
       },
     ],
@@ -95,7 +95,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: "[native code]",
-        attributes: ["Bubbling", "DOM2"],
+        attributes: ["Bubbling"],
         handler: "function pow(, ) {\n" + "  [native code]\n" + "}",
       },
     ],
@@ -106,7 +106,7 @@ const TEST_DATA = [
       {
         type: "click",
         filename: TEST_URL + ":80:29",
-        attributes: ["Bubbling", "DOM2"],
+        attributes: ["Bubbling"],
         handler:
           "function(event) {\n" +
           "  switch (event.type) {\n" +

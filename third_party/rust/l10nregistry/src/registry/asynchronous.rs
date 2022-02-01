@@ -12,7 +12,7 @@ use crate::{
     source::{ResourceOption, ResourceStatus},
 };
 
-use fluent_fallback::generator::BundleStream;
+use fluent_fallback::{generator::BundleStream, types::ResourceId};
 use futures::{
     stream::{Collect, FuturesOrdered},
     Stream, StreamExt,
@@ -30,7 +30,7 @@ where
     pub fn generate_bundles_for_lang(
         &self,
         langid: LanguageIdentifier,
-        resource_ids: Vec<String>,
+        resource_ids: Vec<ResourceId>,
     ) -> GenerateBundles<P, B> {
         let lang_ids = vec![langid];
 
@@ -40,7 +40,7 @@ where
     pub fn generate_bundles(
         &self,
         locales: std::vec::IntoIter<LanguageIdentifier>,
-        resource_ids: Vec<String>,
+        resource_ids: Vec<ResourceId>,
     ) -> GenerateBundles<P, B> {
         GenerateBundles::new(self.clone(), locales, resource_ids)
     }
@@ -89,7 +89,7 @@ pub struct GenerateBundles<P, B> {
     reg: L10nRegistry<P, B>,
     locales: std::vec::IntoIter<LanguageIdentifier>,
     current_metasource: usize,
-    res_ids: Vec<String>,
+    resource_ids: Vec<ResourceId>,
     state: State<P, B>,
 }
 
@@ -97,13 +97,13 @@ impl<P, B> GenerateBundles<P, B> {
     fn new(
         reg: L10nRegistry<P, B>,
         locales: std::vec::IntoIter<LanguageIdentifier>,
-        res_ids: Vec<String>,
+        resource_ids: Vec<ResourceId>,
     ) -> Self {
         Self {
             reg,
             locales,
             current_metasource: 0,
-            res_ids,
+            resource_ids,
             state: State::Empty,
         }
     }
@@ -120,7 +120,7 @@ impl Future for TestResult {
         let pinned = Pin::new(&mut self.0);
         pinned
             .poll(cx)
-            .map(|set| set.iter().map(|c| c.is_some()).collect())
+            .map(|set| set.iter().map(|c| !c.is_required_and_missing()).collect())
     }
 }
 
@@ -134,12 +134,12 @@ impl<'l, P, B> AsyncTester for GenerateBundles<P, B> {
         let stream = query
             .iter()
             .map(|(res_idx, source_idx)| {
-                let res = &self.res_ids[*res_idx];
+                let resource_id = &self.resource_ids[*res_idx];
                 lock.source_idx(self.current_metasource, *source_idx)
-                    .fetch_file(locale, res)
+                    .fetch_file(locale, resource_id)
             })
             .collect::<FuturesOrdered<_>>();
-        TestResult(stream.collect())
+        TestResult(stream.collect::<_>())
     }
 }
 
@@ -155,7 +155,7 @@ macro_rules! try_next_metasource {
         if $self.current_metasource > 0 {
             $self.current_metasource -= 1;
             let solver = ParallelProblemSolver::new(
-                $self.res_ids.len(),
+                $self.resource_ids.len(),
                 $self.reg.lock().metasource_len($self.current_metasource),
             );
             $self.state = State::Solver {
@@ -187,7 +187,7 @@ where
                                 self.current_metasource,
                                 locale.clone(),
                                 &order,
-                                &self.res_ids,
+                                &self.resource_ids,
                                 &self.reg.shared.provider,
                             );
                             self.state.put_back_solver(solver);
@@ -209,7 +209,7 @@ where
                             self.reg.shared.provider.report_errors(vec![
                                 L10nRegistryError::MissingResource {
                                     locale: self.state.get_locale().clone(),
-                                    res_id: self.res_ids[idx].clone(),
+                                    resource_id: self.resource_ids[idx].clone(),
                                 },
                             ]);
                             self.state = State::Empty;
@@ -228,7 +228,7 @@ where
                 let number_of_metasources = self.reg.lock().number_of_metasources() - 1;
                 self.current_metasource = number_of_metasources;
                 let solver = ParallelProblemSolver::new(
-                    self.res_ids.len(),
+                    self.resource_ids.len(),
                     self.reg.lock().metasource_len(self.current_metasource),
                 );
                 self.state = State::Solver { locale, solver };

@@ -112,12 +112,6 @@ using JS::CompileOptions;
 using JS::ReadOnlyCompileOptions;
 using JS::SourceText;
 
-#ifdef HAVE_VA_LIST_AS_ARRAY
-#  define JS_ADDRESSOF_VA_LIST(ap) ((va_list*)(ap))
-#else
-#  define JS_ADDRESSOF_VA_LIST(ap) (&(ap))
-#endif
-
 // See preprocessor definition of JS_BITS_PER_WORD in jstypes.h; make sure
 // JS_64BIT (used internally) agrees with it
 #ifdef JS_64BIT
@@ -2317,6 +2311,7 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
 
   borrowBuffer = rhs.borrowBuffer;
   usePinnedBytecode = rhs.usePinnedBytecode;
+  allocateInstantiationStorage = rhs.allocateInstantiationStorage;
 
   introductionType = rhs.introductionType;
   introductionLineno = rhs.introductionLineno;
@@ -2954,14 +2949,14 @@ JS_PUBLIC_API JSString* JS_NewStringCopyUTF8Z(JSContext* cx,
                                               const JS::ConstUTF8CharsZ s) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  return NewStringCopyUTF8Z<CanGC>(cx, s);
+  return NewStringCopyUTF8Z(cx, s);
 }
 
 JS_PUBLIC_API JSString* JS_NewStringCopyUTF8N(JSContext* cx,
                                               const JS::UTF8Chars s) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  return NewStringCopyUTF8N<CanGC>(cx, s);
+  return NewStringCopyUTF8N(cx, s);
 }
 
 JS_PUBLIC_API bool JS_StringHasBeenPinned(JSContext* cx, JSString* str) {

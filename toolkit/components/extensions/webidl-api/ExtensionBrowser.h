@@ -37,6 +37,23 @@ already_AddRefed<Runnable> CreateWorkerDestroyedRunnable(
     const uint64_t aServiceWorkerDescriptorId,
     const nsCOMPtr<nsIURI>& aWorkerBaseURI);
 
+// An HashMap used to keep track of listeners registered synchronously while
+// the worker script is executing, used internally by nsIServiceWorkerManager
+// wakeforExtensionAPIEvent method to resolve to true if the worker script
+// spawned did have a listener subscribed for the related API event name.
+class ExtensionEventWakeupMap final
+    : public nsTHashMap<nsStringHashKey, uint64_t> {
+  static void ToMapKey(const nsAString& aAPINamespace,
+                       const nsAString& aAPIName, nsAString& aResultMapKey);
+
+ public:
+  nsresult IncrementListeners(const nsAString& aAPINamespace,
+                              const nsAString& aAPIName);
+  nsresult DecrementListeners(const nsAString& aAPINamespace,
+                              const nsAString& aAPIName);
+  bool HasListener(const nsAString& aAPINamespace, const nsAString& aAPIName);
+};
+
 class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsIGlobalObject> mGlobal;
   JS::Heap<JS::Value> mLastError;
@@ -46,6 +63,9 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   RefPtr<ExtensionRuntime> mExtensionRuntime;
   RefPtr<ExtensionTest> mExtensionTest;
   nsTHashMap<nsStringHashKey, WeakPtr<ExtensionPort>> mPortsLookup;
+
+  // `[APINamespace].[APIName]` => int64 (listeners count)
+  ExtensionEventWakeupMap mExpectedEventWakeupMap;
 
   ~ExtensionBrowser() = default;
 
@@ -61,6 +81,17 @@ class ExtensionBrowser final : public nsISupports, public nsWrapperCache {
   // caller will know that the error value wasn't checked by the callback and
   // should be reported to the console
   bool ClearLastError();
+
+  // Helpers used to keep track of the event listeners added during the
+  // initial sync worker script execution.
+  nsresult TrackWakeupEventListener(JSContext* aCx,
+                                    const nsString& aAPINamespace,
+                                    const nsString& aAPIName);
+  nsresult UntrackWakeupEventListener(JSContext* aCx,
+                                      const nsString& aAPINamespace,
+                                      const nsString& aAPIName);
+  bool HasWakeupEventListener(const nsString& aAPINamespace,
+                              const nsString& aAPIName);
 
   // Helpers used for the ExtensionPort.
 

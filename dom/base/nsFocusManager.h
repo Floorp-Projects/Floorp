@@ -163,6 +163,9 @@ class nsFocusManager final : public nsIFocusManager,
    */
   void UpdateCaretForCaretBrowsingMode();
 
+  /** @see nsIFocusManager.getLastFocusMethod() */
+  uint32_t GetLastFocusMethod(nsPIDOMWindowOuter*) const;
+
   /**
    * Returns the content node that would be focused if aWindow was in an
    * active window. This will traverse down the frame hierarchy, starting at

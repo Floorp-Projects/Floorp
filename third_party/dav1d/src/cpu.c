@@ -33,12 +33,19 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#elif defined(__linux__)
-#include <sched.h>
-#include <unistd.h>
 #elif defined(__APPLE__)
 #include <sys/sysctl.h>
 #include <sys/types.h>
+#else
+#include <pthread.h>
+#include <unistd.h>
+#endif
+
+#ifdef HAVE_PTHREAD_NP_H
+#include <pthread_np.h>
+#endif
+#if defined(__FreeBSD__)
+#define cpu_set_t cpuset_t
 #endif
 
 static unsigned flags = 0;
@@ -46,9 +53,6 @@ static unsigned flags = 0;
 #if __has_feature(memory_sanitizer)
 // memory sanitizer is inherently incompatible with asm
 static unsigned flags_mask = 0;
-#elif ARCH_X86
-/* Disable AVX-512 by default for the time being */
-static unsigned flags_mask = ~DAV1D_X86_CPU_FLAG_AVX512ICL;
 #else
 static unsigned flags_mask = -1;
 #endif
@@ -88,19 +92,17 @@ COLD int dav1d_num_logical_processors(Dav1dContext *const c) {
     GetNativeSystemInfo(&system_info);
     return system_info.dwNumberOfProcessors;
 #endif
-#elif defined(__linux__)
-#ifdef CPU_COUNT
+#elif defined(HAVE_PTHREAD_GETAFFINITY_NP) && defined(CPU_COUNT)
     cpu_set_t affinity;
-    if (!sched_getaffinity(0, sizeof(affinity), &affinity))
+    if (!pthread_getaffinity_np(pthread_self(), sizeof(affinity), &affinity))
         return CPU_COUNT(&affinity);
-#else
-    return (int)sysconf(_SC_NPROCESSORS_ONLN);
-#endif
 #elif defined(__APPLE__)
     int num_processors;
     size_t length = sizeof(num_processors);
     if (!sysctlbyname("hw.logicalcpu", &num_processors, &length, NULL, 0))
         return num_processors;
+#elif defined(_SC_NPROCESSORS_ONLN)
+    return (int)sysconf(_SC_NPROCESSORS_ONLN);
 #endif
     dav1d_log(c, "Unable to detect thread count, defaulting to single-threaded mode\n");
     return 1;

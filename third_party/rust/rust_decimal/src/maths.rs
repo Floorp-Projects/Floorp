@@ -1,9 +1,14 @@
 use crate::prelude::*;
 use num_traits::pow::Pow;
 
-const TWO: Decimal = Decimal::from_parts_raw(2, 0, 0, 0);
-const PI: Decimal = Decimal::from_parts_raw(1102470953, 185874565, 1703060790, 1835008);
+// Tolerance for inaccuracies when calculating exp
 const EXP_TOLERANCE: Decimal = Decimal::from_parts(2, 0, 0, false, 7);
+// Approximation of 1/ln(10) = 0.4342944819032518276511289189
+const LN10_INVERSE: Decimal = Decimal::from_parts_raw(1763037029, 1670682625, 235431510, 1835008);
+// Total iterations of taylor series for Trig.
+const TRIG_SERIES_UPPER_BOUND: usize = 6;
+// PI / 8
+const EIGHTH_PI: Decimal = Decimal::from_parts_raw(2822163429, 3244459792, 212882598, 1835008);
 
 // Table representing {index}!
 const FACTORIAL: [Decimal; 28] = [
@@ -93,9 +98,19 @@ pub trait MathematicalOps {
     /// The square root of a Decimal. Uses a standard Babylonian method.
     fn sqrt(&self) -> Option<Decimal>;
 
-    /// The natural logarithm for a Decimal. Uses a [fast estimation algorithm](https://en.wikipedia.org/wiki/Natural_logarithm#High_precision)
-    /// This is more accurate on larger numbers and less on numbers less than 1.
+    /// Calculates the natural logarithm for a Decimal calculated using Taylor's series.
     fn ln(&self) -> Decimal;
+
+    /// Calculates the checked natural logarithm for a Decimal calculated using Taylor's series.
+    /// Returns `None` for negative numbers or zero.
+    fn checked_ln(&self) -> Option<Decimal>;
+
+    /// Calculates the base 10 logarithm of a specified Decimal number.
+    fn log10(&self) -> Decimal;
+
+    /// Calculates the checked base 10 logarithm of a specified Decimal number.
+    /// Returns `None` for negative numbers or zero.
+    fn checked_log10(&self) -> Option<Decimal>;
 
     /// Abramowitz Approximation of Error Function from [wikipedia](https://en.wikipedia.org/wiki/Error_function#Numerical_approximations)
     fn erf(&self) -> Decimal;
@@ -108,6 +123,28 @@ pub trait MathematicalOps {
 
     /// The Probability density function for a Normal distribution returning `None` on overflow.
     fn checked_norm_pdf(&self) -> Option<Decimal>;
+
+    /// Computes the sine of a number (in radians).
+    /// Panics upon overflow.
+    fn sin(&self) -> Decimal;
+
+    /// Computes the checked sine of a number (in radians).
+    fn checked_sin(&self) -> Option<Decimal>;
+
+    /// Computes the cosine of a number (in radians).
+    /// Panics upon overflow.
+    fn cos(&self) -> Decimal;
+
+    /// Computes the checked cosine of a number (in radians).
+    fn checked_cos(&self) -> Option<Decimal>;
+
+    /// Computes the tangent of a number (in radians).
+    /// Panics upon overflow or upon approaching a limit.
+    fn tan(&self) -> Decimal;
+
+    /// Computes the checked tangent of a number (in radians).
+    /// Returns None on limit.
+    fn checked_tan(&self) -> Option<Decimal>;
 }
 
 impl MathematicalOps for Decimal {
@@ -144,7 +181,7 @@ impl MathematicalOps for Decimal {
         }
 
         let mut term = *self;
-        let mut result = self + Decimal::ONE;
+        let mut result = self.checked_add(Decimal::ONE)?;
 
         for factorial in FACTORIAL.iter().skip(2) {
             term = self.checked_mul(term)?;
@@ -269,11 +306,11 @@ impl MathematicalOps for Decimal {
                 return None;
             }
 
-            if exp.is_sign_negative() {
-                return self.checked_powi(-(exp.lo() as i64));
+            return if exp.is_sign_negative() {
+                self.checked_powi(-(exp.lo() as i64))
             } else {
-                return self.checked_powu(exp.lo() as u64);
-            }
+                self.checked_powu(exp.lo() as u64)
+            };
         }
 
         // We do some approximations since we've got a decimal exponent.
@@ -298,7 +335,7 @@ impl MathematicalOps for Decimal {
         }
 
         // Start with an arbitrary number as the first guess
-        let mut result = self / TWO;
+        let mut result = self / Decimal::TWO;
         // Too small to represent, so we start with self
         // Future iterations could actually avoid using a decimal altogether and use a buffered
         // vector, only combining back into a decimal on return
@@ -314,28 +351,132 @@ impl MathematicalOps for Decimal {
             assert!(circuit_breaker < 1000, "geo mean circuit breaker");
 
             last = result;
-            result = (result + self / result) / TWO;
+            result = (result + self / result) / Decimal::TWO;
         }
 
         Some(result)
     }
 
+    #[cfg(feature = "maths-nopanic")]
     fn ln(&self) -> Decimal {
-        const C4: Decimal = Decimal::from_parts_raw(4, 0, 0, 0);
-        const C256: Decimal = Decimal::from_parts_raw(256, 0, 0, 0);
-        const EIGHT_LN2: Decimal = Decimal::from_parts(1406348788, 262764557, 3006046716, false, 28);
-
-        if self.is_sign_positive() {
-            if *self == Decimal::ONE {
-                Decimal::ZERO
-            } else {
-                let rhs = C4 / (self * C256);
-                let arith_geo_mean = arithmetic_geo_mean_of_2(&Decimal::ONE, &rhs);
-                (PI / (arith_geo_mean * TWO)) - EIGHT_LN2
-            }
-        } else {
-            Decimal::ZERO
+        match self.checked_ln() {
+            Some(result) => result,
+            None => Decimal::ZERO,
         }
+    }
+
+    #[cfg(not(feature = "maths-nopanic"))]
+    fn ln(&self) -> Decimal {
+        match self.checked_ln() {
+            Some(result) => result,
+            None => {
+                if self.is_sign_negative() {
+                    panic!("Unable to calculate ln for negative numbers")
+                } else if self.is_zero() {
+                    panic!("Unable to calculate ln for zero")
+                } else {
+                    panic!("Calculation of ln failed for unknown reasons")
+                }
+            }
+        }
+    }
+
+    fn checked_ln(&self) -> Option<Decimal> {
+        if self.is_sign_negative() || self.is_zero() {
+            return None;
+        }
+        if self.is_one() {
+            return Some(Decimal::ZERO);
+        }
+
+        // Approximate using Taylor Series
+        let mut x = *self;
+        let mut count = 0;
+        while x >= Decimal::ONE {
+            x *= Decimal::E_INVERSE;
+            count += 1;
+        }
+        while x <= Decimal::E_INVERSE {
+            x *= Decimal::E;
+            count -= 1;
+        }
+        x -= Decimal::ONE;
+        if x.is_zero() {
+            return Some(Decimal::new(count, 0));
+        }
+        let mut result = Decimal::ZERO;
+        let mut iteration = 0;
+        let mut y = Decimal::ONE;
+        let mut last = Decimal::ONE;
+        while last != result && iteration < 100 {
+            iteration += 1;
+            last = result;
+            y *= -x;
+            result += y / Decimal::new(iteration, 0);
+        }
+        Some(Decimal::new(count, 0) - result)
+    }
+
+    #[cfg(feature = "maths-nopanic")]
+    fn log10(&self) -> Decimal {
+        match self.checked_log10() {
+            Some(result) => result,
+            None => Decimal::ZERO,
+        }
+    }
+
+    #[cfg(not(feature = "maths-nopanic"))]
+    fn log10(&self) -> Decimal {
+        match self.checked_log10() {
+            Some(result) => result,
+            None => {
+                if self.is_sign_negative() {
+                    panic!("Unable to calculate log10 for negative numbers")
+                } else if self.is_zero() {
+                    panic!("Unable to calculate log10 for zero")
+                } else {
+                    panic!("Calculation of log10 failed for unknown reasons")
+                }
+            }
+        }
+    }
+
+    fn checked_log10(&self) -> Option<Decimal> {
+        use crate::ops::array::{div_by_u32, is_all_zero};
+        // Early exits
+        if self.is_sign_negative() || self.is_zero() {
+            return None;
+        }
+        if self.is_one() {
+            return Some(Decimal::ZERO);
+        }
+        // This uses a very basic method for calculating log10. We know the following is true:
+        //   log10(n) = ln(n) / ln(10)
+        // From this we can perform some small optimizations:
+        //  1. ln(10) is a constant
+        //  2. Multiplication is faster than division, so we can pre-calculate the constant 1/ln(10)
+        // This allows us to then simplify log10(n) to:
+        //   log10(n) = C * ln(n)
+        // Before doing all of this however, we see if there are simple calculations to be made.
+        let mut working = self.mantissa_array3();
+        let mut result = 0;
+        let mut invalid_early_exit = false;
+        while !is_all_zero(&working) {
+            let remainder = div_by_u32(&mut working, 10u32);
+            if remainder != 0 {
+                invalid_early_exit = true;
+                break;
+            }
+            result += 1;
+            if working[2] == 0 && working[1] == 0 && working[0] == 1 {
+                break;
+            }
+        }
+        if !invalid_early_exit {
+            return Some((result - self.scale()).into());
+        }
+
+        self.checked_ln().map(|result| LN10_INVERSE * result)
     }
 
     fn erf(&self) -> Decimal {
@@ -357,7 +498,7 @@ impl MathematicalOps for Decimal {
     }
 
     fn norm_cdf(&self) -> Decimal {
-        (Decimal::ONE + (self / Decimal::from_parts(2318911239, 3292722, 0, false, 16)).erf()) / TWO
+        (Decimal::ONE + (self / Decimal::from_parts(2318911239, 3292722, 0, false, 16)).erf()) / Decimal::TWO
     }
 
     fn norm_pdf(&self) -> Decimal {
@@ -370,8 +511,194 @@ impl MathematicalOps for Decimal {
     fn checked_norm_pdf(&self) -> Option<Decimal> {
         let sqrt2pi = Decimal::from_parts_raw(2133383024, 2079885984, 1358845910, 1835008);
         let factor = -self.checked_powi(2)?;
-        let factor = factor.checked_div(TWO)?;
+        let factor = factor.checked_div(Decimal::TWO)?;
         factor.checked_exp()?.checked_div(sqrt2pi)
+    }
+
+    fn sin(&self) -> Decimal {
+        match self.checked_sin() {
+            Some(x) => x,
+            None => panic!("Sin overflowed"),
+        }
+    }
+
+    fn checked_sin(&self) -> Option<Decimal> {
+        if self.is_zero() {
+            return Some(Decimal::ZERO);
+        }
+        if self.is_sign_negative() {
+            // -Sin(-x)
+            return (-self).checked_sin().map(|x| -x);
+        }
+        if self >= &Decimal::TWO_PI {
+            // Reduce large numbers early - we can do this using rem to constrain to a range
+            let adjusted = self.checked_rem(Decimal::TWO_PI)?;
+            return adjusted.checked_sin();
+        }
+        if self >= &Decimal::PI {
+            // -Sin(x-π)
+            return (self - Decimal::PI).checked_sin().map(|x| -x);
+        }
+        if self >= &Decimal::QUARTER_PI {
+            // Cos(π2-x)
+            return (Decimal::HALF_PI - self).checked_cos();
+        }
+
+        // Taylor series:
+        // ∑(n=0 to ∞) : ((−1)^n / (2n + 1)!) * x^(2n + 1) , x∈R
+        // First few expansions:
+        // x^1/1! - x^3/3! + x^5/5! - x^7/7! + x^9/9!
+        let mut result = Decimal::ZERO;
+        for n in 0..TRIG_SERIES_UPPER_BOUND {
+            let x = 2 * n + 1;
+            let element = self.checked_powi(x as i64)?.checked_div(FACTORIAL[x])?;
+            if n & 0x1 == 0 {
+                result += element;
+            } else {
+                result -= element;
+            }
+        }
+        Some(result)
+    }
+
+    fn cos(&self) -> Decimal {
+        match self.checked_cos() {
+            Some(x) => x,
+            None => panic!("Cos overflowed"),
+        }
+    }
+
+    fn checked_cos(&self) -> Option<Decimal> {
+        if self.is_zero() {
+            return Some(Decimal::ONE);
+        }
+        if self.is_sign_negative() {
+            // Cos(-x)
+            return (-self).checked_cos();
+        }
+        if self >= &Decimal::TWO_PI {
+            // Reduce large numbers early - we can do this using rem to constrain to a range
+            let adjusted = self.checked_rem(Decimal::TWO_PI)?;
+            return adjusted.checked_cos();
+        }
+        if self >= &Decimal::PI {
+            // -Cos(x-π)
+            return (self - Decimal::PI).checked_cos().map(|x| -x);
+        }
+        if self >= &Decimal::QUARTER_PI {
+            // Sin(π2-x)
+            return (Decimal::HALF_PI - self).checked_sin();
+        }
+
+        // Taylor series:
+        // ∑(n=0 to ∞) : ((−1)^n / (2n)!) * x^(2n) , x∈R
+        // First few expansions:
+        // x^0/0! - x^2/2! + x^4/4! - x^6/6! + x^8/8!
+        let mut result = Decimal::ZERO;
+        for n in 0..TRIG_SERIES_UPPER_BOUND {
+            let x = 2 * n;
+            let element = self.checked_powi(x as i64)?.checked_div(FACTORIAL[x])?;
+            if n & 0x1 == 0 {
+                result += element;
+            } else {
+                result -= element;
+            }
+        }
+        Some(result)
+    }
+
+    fn tan(&self) -> Decimal {
+        match self.checked_tan() {
+            Some(x) => x,
+            None => panic!("Tan overflowed"),
+        }
+    }
+
+    fn checked_tan(&self) -> Option<Decimal> {
+        if self.is_zero() {
+            return Some(Decimal::ZERO);
+        }
+        if self.is_sign_negative() {
+            // -Tan(-x)
+            return (-self).checked_tan().map(|x| -x);
+        }
+        if self >= &Decimal::TWO_PI {
+            // Reduce large numbers early - we can do this using rem to constrain to a range
+            let adjusted = self.checked_rem(Decimal::TWO_PI)?;
+            return adjusted.checked_tan();
+        }
+        // Reduce to 0 <= x <= PI
+        if self >= &Decimal::PI {
+            // Tan(x-π)
+            return (self - Decimal::PI).checked_tan();
+        }
+        // Reduce to 0 <= x <= PI/2
+        if self > &Decimal::HALF_PI {
+            // We can use the symmetrical function inside the first quadrant
+            // e.g. tan(x) = -tan((PI/2 - x) + PI/2)
+            return ((Decimal::HALF_PI - self) + Decimal::HALF_PI).checked_tan().map(|x| -x);
+        }
+
+        // It has now been reduced to 0 <= x <= PI/2. If it is >= PI/4 we can make it even smaller
+        // by calculating tan(PI/2 - x) and taking the reciprocal
+        if self > &Decimal::QUARTER_PI {
+            return match (Decimal::HALF_PI - self).checked_tan() {
+                Some(x) => Decimal::ONE.checked_div(x),
+                None => None,
+            };
+        }
+
+        // Due the way that tan(x) sharply tends towards infinity, we try to optimize
+        // the resulting accuracy by using Trigonometric identity when > PI/8. We do this by
+        // replacing the angle with one that is half as big.
+        if self > &EIGHTH_PI {
+            // Work out tan(x/2)
+            let tan_half = (self / Decimal::TWO).checked_tan()?;
+            // Work out the dividend i.e. 2tan(x/2)
+            let dividend = Decimal::TWO.checked_mul(tan_half)?;
+
+            // Work out the divisor i.e. 1 - tan^2(x/2)
+            let squared = tan_half.checked_mul(tan_half)?;
+            let divisor = Decimal::ONE - squared;
+            // Treat this as infinity
+            if divisor.is_zero() {
+                return None;
+            }
+            return dividend.checked_div(divisor);
+        }
+
+        // Do a polynomial approximation based upon the Maclaurin series.
+        // This can be simplified to something like:
+        //
+        // ∑(n=1,3,5,7,9)(f(n)(0)/n!)x^n
+        //
+        // First few expansions (which we leverage):
+        // (f'(0)/1!)x^1 + (f'''(0)/3!)x^3 + (f'''''(0)/5!)x^5 + (f'''''''/7!)x^7
+        //
+        // x + (1/3)x^3 + (2/15)x^5 + (17/315)x^7 + (62/2835)x^9 + (1382/155925)x^11
+        //
+        // (Generated by https://www.wolframalpha.com/widgets/view.jsp?id=fe1ad8d4f5dbb3cb866d0c89beb527a6)
+        // The more terms, the better the accuracy. This generates accuracy within approx 10^-8 for angles
+        // less than PI/8.
+        const SERIES: [(Decimal, u64); 6] = [
+            // 1 / 3
+            (Decimal::from_parts_raw(89478485, 347537611, 180700362, 1835008), 3),
+            // 2 / 15
+            (Decimal::from_parts_raw(894784853, 3574988881, 72280144, 1835008), 5),
+            // 17 / 315
+            (Decimal::from_parts_raw(905437054, 3907911371, 2925624, 1769472), 7),
+            // 62 / 2835
+            (Decimal::from_parts_raw(3191872741, 2108928381, 11855473, 1835008), 9),
+            // 1382 / 155925
+            (Decimal::from_parts_raw(3482645539, 2612995122, 4804769, 1835008), 11),
+            // 21844 / 6081075
+            (Decimal::from_parts_raw(4189029078, 2192791200, 1947296, 1835008), 13),
+        ];
+        let mut result = *self;
+        for (fraction, pow) in SERIES {
+            result += fraction * self.powu(pow);
+        }
+        Some(result)
     }
 }
 
@@ -407,39 +734,12 @@ impl Pow<f64> for Decimal {
     }
 }
 
-/// Returns the convergence of both the arithmetic and geometric mean.
-/// Used internally.
-fn arithmetic_geo_mean_of_2(a: &Decimal, b: &Decimal) -> Decimal {
-    const TOLERANCE: Decimal = Decimal::from_parts(5, 0, 0, false, 7);
-    let diff = (a - b).abs();
-
-    if diff < TOLERANCE {
-        *a
-    } else {
-        arithmetic_geo_mean_of_2(&mean_of_2(a, b), &geo_mean_of_2(a, b))
-    }
-}
-
-/// The Arithmetic mean. Used internally.
-fn mean_of_2(a: &Decimal, b: &Decimal) -> Decimal {
-    (a + b) / TWO
-}
-
-/// The geometric mean. Used internally.
-fn geo_mean_of_2(a: &Decimal, b: &Decimal) -> Decimal {
-    // TODO: This can overflow unnecessarily. We should keep this in an internal representation until
-    //       absolutely necessary to convert back.
-    (a * b).sqrt().unwrap()
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
 
-    use std::str::FromStr;
-
     #[test]
-    fn factorials() {
+    fn test_factorials() {
         assert_eq!("1", FACTORIAL[0].to_string(), "0!");
         assert_eq!("1", FACTORIAL[1].to_string(), "1!");
         assert_eq!("2", FACTORIAL[2].to_string(), "2!");
@@ -468,55 +768,5 @@ mod test {
         assert_eq!("15511210043330985984000000", FACTORIAL[25].to_string(), "25!");
         assert_eq!("403291461126605635584000000", FACTORIAL[26].to_string(), "26!");
         assert_eq!("10888869450418352160768000000", FACTORIAL[27].to_string(), "27!");
-    }
-
-    #[test]
-    fn test_geo_mean_of_2() {
-        let test_cases = &[
-            (
-                Decimal::from_str("2").unwrap(),
-                Decimal::from_str("2").unwrap(),
-                Decimal::from_str("2").unwrap(),
-            ),
-            (
-                Decimal::from_str("4").unwrap(),
-                Decimal::from_str("3").unwrap(),
-                Decimal::from_str("3.4641016151377545870548926830").unwrap(),
-            ),
-            (
-                Decimal::from_str("12").unwrap(),
-                Decimal::from_str("3").unwrap(),
-                Decimal::from_str("6.000000000000000000000000000").unwrap(),
-            ),
-        ];
-
-        for case in test_cases {
-            assert_eq!(case.2, geo_mean_of_2(&case.0, &case.1));
-        }
-    }
-
-    #[test]
-    fn test_mean_of_2() {
-        let test_cases = &[
-            (
-                Decimal::from_str("2").unwrap(),
-                Decimal::from_str("2").unwrap(),
-                Decimal::from_str("2").unwrap(),
-            ),
-            (
-                Decimal::from_str("4").unwrap(),
-                Decimal::from_str("3").unwrap(),
-                Decimal::from_str("3.5").unwrap(),
-            ),
-            (
-                Decimal::from_str("12").unwrap(),
-                Decimal::from_str("3").unwrap(),
-                Decimal::from_str("7.5").unwrap(),
-            ),
-        ];
-
-        for case in test_cases {
-            assert_eq!(case.2, mean_of_2(&case.0, &case.1));
-        }
     }
 }

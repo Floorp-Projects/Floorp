@@ -26,7 +26,7 @@ linux64-sccache:
         toolchain-artifact: public/build/sccache.tar.zst
     fetches:
         toolchain:
-            - linux64-rust-1.47
+            - linux64-rust-1.57
             - linux64-clang-13
             - linux64-binutils
             - sysroot-x86_64-linux-gnu
@@ -42,7 +42,7 @@ macosx64-sccache:
         toolchain-artifact: public/build/sccache.tar.zst
     fetches:
         toolchain:
-            - linux64-rust-macos-1.47
+            - linux64-rust-macos-1.57
             - linux64-clang-13
             - linux64-cctools-port-clang-13
             - macosx64-sdk-11.0
@@ -58,7 +58,7 @@ macosx64-aarch64-sccache:
         toolchain-artifact: public/build/sccache.tar.zst
     fetches:
         toolchain:
-            - linux64-rust-macos-1.49
+            - linux64-rust-macos-1.57
             - linux64-clang-13
             - linux64-cctools-port-clang-13
             - macosx64-sdk-11.0
@@ -78,4 +78,4 @@ win64-sccache:
         tooltool-downloads: internal
     fetches:
         toolchain:
-            - win64-rust-1.47
+            - win64-rust-1.57

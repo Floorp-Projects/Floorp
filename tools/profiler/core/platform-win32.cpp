@@ -99,7 +99,26 @@ void Sampler::Disable(PSLockRef aLock) {}
 
 static void StreamMetaPlatformSampleUnits(PSLockRef aLock,
                                           SpliceableJSONWriter& aWriter) {
-  aWriter.StringProperty("threadCPUDelta", "variable CPU cycles");
+  static const Span<const char> units =
+      (GetCycleTimeFrequencyMHz() != 0) ? MakeStringSpan("ns")
+                                        : MakeStringSpan("variable CPU cycles");
+  aWriter.StringProperty("threadCPUDelta", units);
+}
+
+/* static */
+uint64_t RunningTimes::ConvertRawToJson(uint64_t aRawValue) {
+  static const uint64_t cycleTimeFrequencyMHz = GetCycleTimeFrequencyMHz();
+  if (cycleTimeFrequencyMHz == 0u) {
+    return aRawValue;
+  }
+
+  constexpr uint64_t GHZ_PER_MHZ = 1'000u;
+  // To get ns, we need to divide cycles by a frequency in GHz, i.e.:
+  // cycles / (f_MHz / GHZ_PER_MHZ). To avoid losing the integer precision of
+  // f_MHz, this is computed as (cycles * GHZ_PER_MHZ) / f_MHz.
+  // Adding GHZ_PER_MHZ/2 to (cycles * GHZ_PER_MHZ) will round to nearest when
+  // the result of the division is truncated.
+  return (aRawValue * GHZ_PER_MHZ + (GHZ_PER_MHZ / 2u)) / cycleTimeFrequencyMHz;
 }
 
 static RunningTimes GetThreadRunningTimesDiff(

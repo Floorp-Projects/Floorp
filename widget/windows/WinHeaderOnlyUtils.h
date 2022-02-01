@@ -12,6 +12,8 @@
 #include <winnt.h>
 #include <winternl.h>
 #include <objbase.h>
+#include <shlwapi.h>
+#undef ParseURL
 #include <stdlib.h>
 #include <tuple>
 
@@ -628,6 +630,18 @@ inline UniquePtr<wchar_t[]> GetFullBinaryPath() {
   return GetFullModulePath(nullptr);
 }
 
+// Generates the install directory without a trailing path separator.
+inline bool GetInstallDirectory(UniquePtr<wchar_t[]>& installPath) {
+  installPath = GetFullBinaryPath();
+  // It's not safe to use PathRemoveFileSpecW with strings longer than MAX_PATH
+  // (including null terminator).
+  if (wcslen(installPath.get()) >= MAX_PATH) {
+    return false;
+  }
+  ::PathRemoveFileSpecW(installPath.get());
+  return true;
+}
+
 class ModuleVersion final {
  public:
   constexpr ModuleVersion() : mVersion(0ULL) {}
@@ -787,6 +801,35 @@ inline UniquePtr<wchar_t[]> GetPackageFamilyName() {
   }
 
   return packageIdentity;
+}
+
+// This implementation is equivalent to PathGetDriveNumber[AW].
+// We define our own version because using PathGetDriveNumber
+// delay-loads shlwapi.dll, which may fail when the process is
+// sandboxed.
+template <typename T>
+int MozPathGetDriveNumber(const T* aPath) {
+  const auto ToDriveNumber = [](const T* aPath) -> int {
+    if (*aPath == '\0' || *(aPath + 1) != ':') {
+      return -1;
+    }
+
+    T c = *aPath;
+    return (c >= 'A' && c <= 'Z')   ? c - 'A'
+           : (c >= 'a' && c <= 'z') ? c - 'a'
+                                    : -1;
+  };
+
+  if (!aPath) {
+    return -1;
+  }
+
+  if (*aPath == '\\' && *(aPath + 1) == '\\' && *(aPath + 2) == '?' &&
+      *(aPath + 3) == '\\') {
+    return ToDriveNumber(aPath + 4);
+  }
+
+  return ToDriveNumber(aPath);
 }
 
 }  // namespace mozilla

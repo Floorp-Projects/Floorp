@@ -31,6 +31,7 @@ glean_with_gecko = ["gkrust-shared/glean_with_gecko"]
 with_dbus = ["gkrust-shared/with_dbus"]
 thread_sanitizer = ["gkrust-shared/thread_sanitizer"]
 oxidized_breakpad = ["gkrust-shared/oxidized_breakpad"]
+webmidi_midir_impl = ["gkrust-shared/webmidi_midir_impl"]
 
 [dependencies]
 bench-collections-gtest = { path = "../../../../xpcom/rust/gtest/bench-collections" }

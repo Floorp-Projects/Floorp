@@ -15,26 +15,24 @@
 //! assert_eq!(-42, N42::I32);
 //! ```
 
+use crate::sealed::Sealed;
+
 /// A **marker trait** to designate that a type is not zero. All number types in this
 /// crate implement `NonZero` except `B0`, `U0`, and `Z0`.
-pub trait NonZero {}
+pub trait NonZero: Sealed {}
 
 /// A **marker trait** to designate that a type is zero. Only `B0`, `U0`, and `Z0`
 /// implement this trait.
-pub trait Zero {}
+pub trait Zero: Sealed {}
 
 /// A **Marker trait** for the types `Greater`, `Equal`, and `Less`.
-///
-/// This trait should not be implemented for anything outside this crate.
-pub trait Ord {
+pub trait Ord: Sealed {
     #[allow(missing_docs)]
     fn to_ordering() -> ::core::cmp::Ordering;
 }
 
 /// The **marker trait** for compile time bits.
-///
-/// This trait should not be implemented for anything outside this crate.
-pub trait Bit: Copy + Default {
+pub trait Bit: Sealed + Copy + Default + 'static {
     #[allow(missing_docs)]
     const U8: u8;
     #[allow(missing_docs)]
@@ -51,8 +49,6 @@ pub trait Bit: Copy + Default {
 
 /// The **marker trait** for compile time unsigned integers.
 ///
-/// This trait should not be implemented for anything outside this crate.
-///
 /// # Example
 /// ```rust
 /// use typenum::{Unsigned, U3};
@@ -60,7 +56,7 @@ pub trait Bit: Copy + Default {
 /// assert_eq!(U3::to_u32(), 3);
 /// assert_eq!(U3::I32, 3);
 /// ```
-pub trait Unsigned: Copy + Default {
+pub trait Unsigned: Sealed + Copy + Default + 'static {
     #[allow(missing_docs)]
     const U8: u8;
     #[allow(missing_docs)]
@@ -120,8 +116,6 @@ pub trait Unsigned: Copy + Default {
 
 /// The **marker trait** for compile time signed integers.
 ///
-/// This trait should not be implemented for anything outside this crate.
-///
 /// # Example
 /// ```rust
 /// use typenum::{Integer, P3};
@@ -129,7 +123,7 @@ pub trait Unsigned: Copy + Default {
 /// assert_eq!(P3::to_i32(), 3);
 /// assert_eq!(P3::I32, 3);
 /// ```
-pub trait Integer {
+pub trait Integer: Sealed + Copy + Default + 'static {
     #[allow(missing_docs)]
     const I8: i8;
     #[allow(missing_docs)]
@@ -161,16 +155,12 @@ pub trait Integer {
 
 /// The **marker trait** for type-level arrays of type-level numbers.
 ///
-/// This trait should not be implemented for anything outside this crate.
-///
 /// Someday, it may contain an associated constant to produce a runtime array,
 /// like the other marker traits here. However, that is blocked by [this
 /// issue](https://github.com/rust-lang/rust/issues/44168).
-pub trait TypeArray {}
+pub trait TypeArray: Sealed {}
 
 /// The **marker trait** for type-level numbers which are a power of two.
-///
-/// This trait should not be implemented for anything outside this crate.
 ///
 /// # Examples
 ///
@@ -196,5 +186,4 @@ pub trait TypeArray {}
 /// only_p2::<P511>();
 /// only_p2::<P1023>();
 /// ```
-
-pub trait PowerOfTwo {}
+pub trait PowerOfTwo: Sealed {}

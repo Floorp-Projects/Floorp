@@ -3,8 +3,8 @@ use crate::env::ErrorReporter;
 use crate::errors::L10nRegistryError;
 use crate::fluent::{FluentBundle, FluentError};
 use crate::solver::{SerialProblemSolver, SyncTester};
-use fluent_fallback::generator::BundleIterator;
-
+use crate::source::ResourceOption;
+use fluent_fallback::{generator::BundleIterator, types::ResourceId};
 use unic_langid::LanguageIdentifier;
 
 impl<'a, B> L10nRegistryLocked<'a, B> {
@@ -13,7 +13,7 @@ impl<'a, B> L10nRegistryLocked<'a, B> {
         metasource: usize,
         locale: LanguageIdentifier,
         source_order: &[usize],
-        res_ids: &[String],
+        resource_ids: &[ResourceId],
         error_reporter: &P,
     ) -> Option<Result<FluentBundle, (FluentBundle, Vec<FluentError>)>>
     where
@@ -28,19 +28,21 @@ impl<'a, B> L10nRegistryLocked<'a, B> {
 
         let mut errors = vec![];
 
-        for (&source_idx, path) in source_order.iter().zip(res_ids.iter()) {
+        for (&source_idx, resource_id) in source_order.iter().zip(resource_ids.iter()) {
             let source = self.source_idx(metasource, source_idx);
-            if let Some(res) = source.fetch_file_sync(&locale, path, /* overload */ true) {
+            if let ResourceOption::Some(res) =
+                source.fetch_file_sync(&locale, resource_id, /* overload */ true)
+            {
                 if source.options.allow_override {
                     bundle.add_resource_overriding(res);
                 } else if let Err(err) = bundle.add_resource(res) {
                     errors.extend(err.into_iter().map(|error| L10nRegistryError::FluentError {
-                        path: path.clone(),
+                        resource_id: resource_id.clone(),
                         loc: None,
                         error,
                     }));
                 }
-            } else {
+            } else if resource_id.is_required() {
                 return None;
             }
         }
@@ -60,7 +62,7 @@ where
     pub fn generate_bundles_for_lang_sync(
         &self,
         langid: LanguageIdentifier,
-        resource_ids: Vec<String>,
+        resource_ids: Vec<ResourceId>,
     ) -> GenerateBundlesSync<P, B> {
         let lang_ids = vec![langid];
 
@@ -70,7 +72,7 @@ where
     pub fn generate_bundles_sync(
         &self,
         locales: std::vec::IntoIter<LanguageIdentifier>,
-        resource_ids: Vec<String>,
+        resource_ids: Vec<ResourceId>,
     ) -> GenerateBundlesSync<P, B> {
         GenerateBundlesSync::new(self.clone(), locales, resource_ids)
     }
@@ -119,7 +121,7 @@ pub struct GenerateBundlesSync<P, B> {
     reg: L10nRegistry<P, B>,
     locales: std::vec::IntoIter<LanguageIdentifier>,
     current_metasource: usize,
-    res_ids: Vec<String>,
+    resource_ids: Vec<ResourceId>,
     state: State,
 }
 
@@ -127,13 +129,13 @@ impl<P, B> GenerateBundlesSync<P, B> {
     fn new(
         reg: L10nRegistry<P, B>,
         locales: std::vec::IntoIter<LanguageIdentifier>,
-        res_ids: Vec<String>,
+        resource_ids: Vec<ResourceId>,
     ) -> Self {
         Self {
             reg,
             locales,
             current_metasource: 0,
-            res_ids,
+            resource_ids,
             state: State::Empty,
         }
     }
@@ -142,12 +144,13 @@ impl<P, B> GenerateBundlesSync<P, B> {
 impl<P, B> SyncTester for GenerateBundlesSync<P, B> {
     fn test_sync(&self, res_idx: usize, source_idx: usize) -> bool {
         let locale = self.state.get_locale();
-        let res = &self.res_ids[res_idx];
-        self.reg
+        let resource_id = &self.resource_ids[res_idx];
+        !self
+            .reg
             .lock()
             .source_idx(self.current_metasource, source_idx)
-            .fetch_file_sync(locale, res, /* overload */ true)
-            .is_some()
+            .fetch_file_sync(locale, resource_id, /* overload */ true)
+            .is_required_and_missing()
     }
 }
 
@@ -164,7 +167,7 @@ where
                     .provider
                     .report_errors(vec![L10nRegistryError::MissingResource {
                         locale: self.state.get_locale().clone(),
-                        res_id: self.res_ids[idx].clone(),
+                        resource_id: self.resource_ids[idx].clone(),
                     }]);
             }
             self.state.put_back_solver(solver);
@@ -173,7 +176,7 @@ where
 
         if let Some(locale) = self.locales.next() {
             let mut solver = SerialProblemSolver::new(
-                self.res_ids.len(),
+                self.resource_ids.len(),
                 self.reg.lock().metasource_len(self.current_metasource),
             );
             self.state = State::Locale(locale.clone());
@@ -183,7 +186,7 @@ where
                     .provider
                     .report_errors(vec![L10nRegistryError::MissingResource {
                         locale,
-                        res_id: self.res_ids[idx].clone(),
+                        resource_id: self.resource_ids[idx].clone(),
                     }]);
             }
             self.state.put_back_solver(solver);
@@ -196,7 +199,7 @@ macro_rules! try_next_metasource {
         if $self.current_metasource > 0 {
             $self.current_metasource -= 1;
             let solver = SerialProblemSolver::new(
-                $self.res_ids.len(),
+                $self.resource_ids.len(),
                 $self.reg.lock().metasource_len($self.current_metasource),
             );
             $self.state = State::Solver {
@@ -226,7 +229,7 @@ where
                             self.current_metasource,
                             locale.clone(),
                             &order,
-                            &self.res_ids,
+                            &self.resource_ids,
                             &self.reg.shared.provider,
                         );
                         self.state.put_back_solver(solver);
@@ -246,7 +249,7 @@ where
                         self.reg.shared.provider.report_errors(vec![
                             L10nRegistryError::MissingResource {
                                 locale: self.state.get_locale().clone(),
-                                res_id: self.res_ids[idx].clone(),
+                                resource_id: self.resource_ids[idx].clone(),
                             },
                         ]);
                     }
@@ -260,7 +263,7 @@ where
             }
             self.current_metasource = self.reg.lock().number_of_metasources() - 1;
             let solver = SerialProblemSolver::new(
-                self.res_ids.len(),
+                self.resource_ids.len(),
                 self.reg.lock().metasource_len(self.current_metasource),
             );
             self.state = State::Solver { locale, solver };

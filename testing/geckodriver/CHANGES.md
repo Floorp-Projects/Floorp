@@ -6,6 +6,17 @@ All notable changes to this program are documented in this file.
 0.30.0  (2021-09-16, `d372710b98a6`)
 ------------------------------------
 
+### Security Fixes
+
+- CVE-2021-4138
+
+  Fixed a DNS rebinding issues by enforcing a stricter `Host` header check.
+
+  Reported by Gabriel Corona.
+
+  - Improved `Host` header checks to reject requests not sent to a well-known
+    local hostname or IP, or the server-specified hostname.
+
 ### Known problems
 
 - geckodriver restricts connections to local IP addresses. This can interfere
@@ -49,9 +60,6 @@ All notable changes to this program are documented in this file.
   specified. At the end of the session they will be removed.
 
 ### Fixed
-
-- Improved Host header checks to reject requests not sent to a well-known
-  local hostname or IP, or the server-specified hostname.
 
 - Added validation that the `--host` argument resolves to a local IP address.
 
@@ -224,6 +232,11 @@ All notable changes to this program are documented in this file.
 ### Security Fixes
 
 - CVE-2020-15660
+
+  Improved validation of incoming requests to prevent remote
+  requests being treated as local.
+
+  Reported by Gabriel Corona.
 
   - Added additional checks on the `Content-Type` header for `POST`
     requests to disallow `application/x-www-form-urlencoded`,

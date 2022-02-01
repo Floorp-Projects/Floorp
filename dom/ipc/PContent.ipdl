@@ -35,7 +35,9 @@ include protocol PSpeechSynthesis;
 include protocol PTestShell;
 include protocol PRemoteSpellcheckEngine;
 include protocol PWebBrowserPersistDocument;
+#ifdef MOZ_WEBRTC
 include protocol PWebrtcGlobal;
+#endif
 include protocol PWindowGlobal;
 include protocol PURLClassifier;
 include protocol PURLClassifierLocal;
@@ -451,7 +453,9 @@ sync protocol PContent
     manages PTestShell;
     manages PRemoteSpellcheckEngine;
     manages PWebBrowserPersistDocument;
+#ifdef MOZ_WEBRTC
     manages PWebrtcGlobal;
+#endif
     manages PURLClassifier;
     manages PURLClassifierLocal;
     manages PScriptCache;
@@ -979,9 +983,6 @@ child:
   async DispatchBeforeUnloadToSubtree(MaybeDiscardedBrowsingContext aStartingAt)
       returns (PermitUnloadResult result);
 
-  async CanSavePresentation(MaybeDiscardedBrowsingContext aTopLevelContext,
-      uint64_t? aDocumentChannelId) returns (bool success);
-
   // Update the cached list of codec supported in the given process.
   async UpdateMediaCodecsSupported(RemoteDecodeIn aLocation, MediaCodecsSupported aSupported);
 
@@ -1054,7 +1055,9 @@ parent:
 
     async PMedia();
 
+#ifdef MOZ_WEBRTC
     async PWebrtcGlobal();
+#endif
 
     async CreateAudioIPCConnection() returns (FileDescOrError fd);
 

@@ -60,15 +60,13 @@ pub fn low_bits_of_u64(val: u64) -> u8 {
     low_bits_of_byte(byte as u8)
 }
 
-/// A module for reading signed and unsigned integers that have been LEB128
-/// encoded.
+/// A module for reading LEB128-encoded signed and unsigned integers.
 pub mod read {
     use super::{low_bits_of_byte, CONTINUATION_BIT, SIGN_BIT};
     use std::fmt;
     use std::io;
 
-    /// An enumeration of the possible errors that can occur when reading a
-    /// number encoded with LEB128.
+    /// An error type for reading LEB128-encoded values.
     #[derive(Debug)]
     pub enum Error {
         /// There was an underlying IO error.
@@ -85,23 +83,17 @@ pub mod read {
 
     impl fmt::Display for Error {
         fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-            write!(
-                f,
-                "leb128::read::Error: {}",
-                ::std::error::Error::description(self)
-            )
+            match *self {
+                Error::IoError(ref e) => e.fmt(f),
+                Error::Overflow => {
+                    write!(f, "The number being read is larger than can be represented")
+                }
+            }
         }
     }
 
-    impl ::std::error::Error for Error {
-        fn description(&self) -> &str {
-            match *self {
-                Error::IoError(ref e) => e.description(),
-                Error::Overflow => "The number being read is larger than can be represented",
-            }
-        }
-
-        fn cause(&self) -> Option<&::std::error::Error> {
+    impl std::error::Error for Error {
+        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
             match *self {
                 Error::IoError(ref e) => Some(e),
                 Error::Overflow => None,
@@ -109,20 +101,25 @@ pub mod read {
         }
     }
 
-    /// Read an unsigned LEB128 number from the given `std::io::Read`able and
-    /// return it or an error if reading failed.
+    /// Read an unsigned LEB128-encoded number from the `std::io::Read` stream
+    /// `r`.
+    ///
+    /// On success, return the number.
     pub fn unsigned<R>(r: &mut R) -> Result<u64, Error>
     where
-        R: io::Read,
+        R: ?Sized + io::Read,
     {
         let mut result = 0;
         let mut shift = 0;
 
         loop {
             let mut buf = [0];
-            try!(r.read_exact(&mut buf));
+            r.read_exact(&mut buf)?;
 
             if shift == 63 && buf[0] != 0x00 && buf[0] != 0x01 {
+                while buf[0] & CONTINUATION_BIT != 0 {
+                    r.read_exact(&mut buf)?;
+                }
                 return Err(Error::Overflow);
             }
 
@@ -137,11 +134,12 @@ pub mod read {
         }
     }
 
-    /// Read a signed LEB128 number from the given `std::io::Read`able and
-    /// return it or an error if reading failed.
+    /// Read a signed LEB128-encoded number from the `std::io::Read` stream `r`.
+    ///
+    /// On success, return the number.
     pub fn signed<R>(r: &mut R) -> Result<i64, Error>
     where
-        R: io::Read,
+        R: ?Sized + io::Read,
     {
         let mut result = 0;
         let mut shift = 0;
@@ -150,10 +148,13 @@ pub mod read {
 
         loop {
             let mut buf = [0];
-            try!(r.read_exact(&mut buf));
+            r.read_exact(&mut buf)?;
 
             byte = buf[0];
             if shift == 63 && byte != 0x00 && byte != 0x7f {
+                while buf[0] & CONTINUATION_BIT != 0 {
+                    r.read_exact(&mut buf)?;
+                }
                 return Err(Error::Overflow);
             }
 
@@ -175,14 +176,14 @@ pub mod read {
     }
 }
 
-/// A module for writing integers encoded as LEB128.
+/// A module for writing LEB128-encoded signed and unsigned integers.
 pub mod write {
     use super::{low_bits_of_u64, CONTINUATION_BIT};
     use std::io;
 
-    /// Write the given unsigned number using the LEB128 encoding to the given
-    /// `std::io::Write`able. Returns the number of bytes written to `w`, or an
-    /// error if writing failed.
+    /// Write `val` to the `std::io::Write` stream `w` as an unsigned LEB128 value.
+    ///
+    /// On success, return the number of bytes written to `w`.
     pub fn unsigned<W>(w: &mut W, mut val: u64) -> Result<usize, io::Error>
     where
         W: ?Sized + io::Write,
@@ -197,7 +198,7 @@ pub mod write {
             }
 
             let buf = [byte];
-            try!(w.write_all(&buf));
+            w.write_all(&buf)?;
             bytes_written += 1;
 
             if val == 0 {
@@ -206,9 +207,9 @@ pub mod write {
         }
     }
 
-    /// Write the given signed number using the LEB128 encoding to the given
-    /// `std::io::Write`able. Returns the number of bytes written to `w`, or an
-    /// error if writing failed.
+    /// Write `val` to the `std::io::Write` stream `w` as a signed LEB128 value.
+    ///
+    /// On success, return the number of bytes written to `w`.
     pub fn signed<W>(w: &mut W, mut val: i64) -> Result<usize, io::Error>
     where
         W: ?Sized + io::Write,
@@ -229,7 +230,7 @@ pub mod write {
             }
 
             let buf = [byte];
-            try!(w.write_all(&buf));
+            w.write_all(&buf)?;
             bytes_written += 1;
 
             if done {
@@ -310,6 +311,21 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_read_unsigned_thru_dyn_trait() {
+        fn read(r: &mut dyn io::Read) -> u64 {
+            read::unsigned(r).expect("Should read number")
+        }
+
+        let buf = [0u8];
+
+        let mut readable = &buf[..];
+        assert_eq!(0, read(&mut readable));
+
+        let mut readable = io::Cursor::new(buf);
+        assert_eq!(0, read(&mut readable));
+    }
+
     // Examples from the DWARF 4 standard, section 7.6, figure 23.
     #[test]
     fn test_read_signed() {
@@ -362,6 +378,21 @@ mod tests {
             -129,
             read::signed(&mut readable).expect("Should read number")
         );
+    }
+
+    #[test]
+    fn test_read_signed_thru_dyn_trait() {
+        fn read(r: &mut dyn io::Read) -> i64 {
+            read::signed(r).expect("Should read number")
+        }
+
+        let buf = [0u8];
+
+        let mut readable = &buf[..];
+        assert_eq!(0, read(&mut readable));
+
+        let mut readable = io::Cursor::new(buf);
+        assert_eq!(0, read(&mut readable));
     }
 
     #[test]
@@ -422,6 +453,38 @@ mod tests {
             Err(e) => assert_eq!(e.kind(), io::ErrorKind::WriteZero),
             otherwise => panic!("Unexpected: {:?}", otherwise),
         }
+    }
+
+    #[test]
+    fn test_write_unsigned_thru_dyn_trait() {
+        fn write(w: &mut dyn io::Write, val: u64) -> usize {
+            write::unsigned(w, val).expect("Should write number")
+        }
+        let mut buf = [0u8; 1];
+
+        let mut writable = &mut buf[..];
+        assert_eq!(write(&mut writable, 0), 1);
+        assert_eq!(buf[0], 0);
+
+        let mut writable = Vec::from(&buf[..]);
+        assert_eq!(write(&mut writable, 0), 1);
+        assert_eq!(buf[0], 0);
+    }
+
+    #[test]
+    fn test_write_signed_thru_dyn_trait() {
+        fn write(w: &mut dyn io::Write, val: i64) -> usize {
+            write::signed(w, val).expect("Should write number")
+        }
+        let mut buf = [0u8; 1];
+
+        let mut writable = &mut buf[..];
+        assert_eq!(write(&mut writable, 0), 1);
+        assert_eq!(buf[0], 0);
+
+        let mut writable = Vec::from(&buf[..]);
+        assert_eq!(write(&mut writable, 0), 1);
+        assert_eq!(buf[0], 0);
     }
 
     #[test]
@@ -551,6 +614,39 @@ mod tests {
         assert_eq!(
             read::unsigned(&mut readable).expect("Should read first number"),
             1u64
+        );
+    }
+
+    #[test]
+    fn test_read_multiple_with_overflow() {
+        let buf = [
+            0b1111_1111,
+            0b1111_1111,
+            0b1111_1111,
+            0b1111_1111,
+            0b1111_1111,
+            0b1111_1111,
+            0b1111_1111,
+            0b1111_1111,
+            0b1111_1111,
+            0b1111_1111,
+            0b0111_1111, // Overflow!
+            0b1110_0100,
+            0b1110_0000,
+            0b0000_0010, // 45156
+        ];
+        let mut readable = &buf[..];
+
+        assert!(if let read::Error::Overflow =
+            read::unsigned(&mut readable).expect_err("Should fail with Error::Overflow")
+        {
+            true
+        } else {
+            false
+        });
+        assert_eq!(
+            read::unsigned(&mut readable).expect("Should succeed with correct value"),
+            45156
         );
     }
 }

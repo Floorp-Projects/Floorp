@@ -13,18 +13,25 @@ assertThrowsInstanceOf(() => evaluate("\nsaveStack().line", { lineNumber: maxLin
                        RangeError);
 
 if (helperThreadCount() > 0) {
-  offThreadCompileScript("saveStack().line");
-  assertEq(runOffThreadScript(), 1);
+  offThreadCompileToStencil("saveStack().line");
+  var stencil = finishOffThreadCompileToStencil();
+  assertEq(evalStencil(stencil), 1);
 
-  offThreadCompileScript("saveStack().line", { lineNumber: maxLine });
-  assertEq(runOffThreadScript(), maxLine);
+  offThreadCompileToStencil("saveStack().line", { lineNumber: maxLine });
+  stencil = finishOffThreadCompileToStencil();
+  assertEq(evalStencil(stencil), maxLine);
 
-  offThreadCompileScript("\nsaveStack().line");
-  assertEq(runOffThreadScript(), 2);
+  offThreadCompileToStencil("\nsaveStack().line");
+  stencil = finishOffThreadCompileToStencil();
+  assertEq(evalStencil(stencil), 2);
 
-  offThreadCompileScript("\nsaveStack().line", { lineNumber: 1000 });
-  assertEq(runOffThreadScript(), 1001);
+  offThreadCompileToStencil("\nsaveStack().line", { lineNumber: 1000 });
+  stencil = finishOffThreadCompileToStencil();
+  assertEq(evalStencil(stencil), 1001);
 
-  offThreadCompileScript("\nsaveStack().line", { lineNumber: maxLine });
-  assertThrowsInstanceOf(runOffThreadScript, RangeError);
+  offThreadCompileToStencil("\nsaveStack().line", { lineNumber: maxLine });
+  assertThrowsInstanceOf(() => {
+    stencil = finishOffThreadCompileToStencil();
+    evalStencil(stencil);
+  }, RangeError);
 }

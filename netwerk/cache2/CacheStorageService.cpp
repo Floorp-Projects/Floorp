@@ -2173,7 +2173,7 @@ void CacheStorageService::TelemetryRecordEntryCreation(
                                  timeStamp, TimeStamp::NowLoRes());
 }
 
-void CacheStorageService::TelemetryRecordEntryRemoval(CacheEntry const* entry) {
+void CacheStorageService::TelemetryRecordEntryRemoval(CacheEntry* entry) {
   MOZ_ASSERT(CacheStorageService::IsOnManagementThread());
 
   // Doomed entries must not be considered, we are only interested in purged
@@ -2229,6 +2229,7 @@ size_t CacheStorageService::SizeOfIncludingThis(
 NS_IMETHODIMP
 CacheStorageService::CollectReports(nsIHandleReportCallback* aHandleReport,
                                     nsISupports* aData, bool aAnonymize) {
+  MutexAutoLock lock(mLock);
   MOZ_COLLECT_REPORT("explicit/network/cache2/io", KIND_HEAP, UNITS_BYTES,
                      CacheFileIOManager::SizeOfIncludingThis(MallocSizeOf),
                      "Memory used by the cache IO manager.");
@@ -2236,8 +2237,6 @@ CacheStorageService::CollectReports(nsIHandleReportCallback* aHandleReport,
   MOZ_COLLECT_REPORT("explicit/network/cache2/index", KIND_HEAP, UNITS_BYTES,
                      CacheIndex::SizeOfIncludingThis(MallocSizeOf),
                      "Memory used by the cache index.");
-
-  MutexAutoLock lock(mLock);
 
   // Report the service instance, this doesn't report entries, done lower
   MOZ_COLLECT_REPORT("explicit/network/cache2/service", KIND_HEAP, UNITS_BYTES,

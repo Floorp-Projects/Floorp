@@ -78,6 +78,7 @@ import org.mozilla.geckoview.GeckoSession.SelectionActionDelegate;
 import org.mozilla.geckoview.GeckoSession.TextInputDelegate;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.MediaSession;
+import org.mozilla.geckoview.OrientationController;
 import org.mozilla.geckoview.RuntimeTelemetry;
 import org.mozilla.geckoview.SessionTextInput;
 import org.mozilla.geckoview.WebExtension;
@@ -769,6 +770,7 @@ public class GeckoSessionTestRule implements TestRule {
     DEFAULT_RUNTIME_DELEGATES.add(Autocomplete.StorageDelegate.class);
     DEFAULT_RUNTIME_DELEGATES.add(ActivityDelegate.class);
     DEFAULT_RUNTIME_DELEGATES.add(GeckoRuntime.Delegate.class);
+    DEFAULT_RUNTIME_DELEGATES.add(OrientationController.OrientationDelegate.class);
     DEFAULT_RUNTIME_DELEGATES.add(ServiceWorkerDelegate.class);
     DEFAULT_RUNTIME_DELEGATES.add(WebNotificationDelegate.class);
     DEFAULT_RUNTIME_DELEGATES.add(WebExtensionController.PromptDelegate.class);
@@ -795,6 +797,7 @@ public class GeckoSessionTestRule implements TestRule {
           ActivityDelegate,
           Autocomplete.StorageDelegate,
           GeckoRuntime.Delegate,
+          OrientationController.OrientationDelegate,
           ServiceWorkerDelegate,
           WebExtensionController.PromptDelegate,
           WebNotificationDelegate,
@@ -978,6 +981,10 @@ public class GeckoSessionTestRule implements TestRule {
       runtime.setActivityDelegate((ActivityDelegate) delegate);
     } else if (cls == GeckoRuntime.Delegate.class) {
       runtime.setDelegate((GeckoRuntime.Delegate) delegate);
+    } else if (cls == OrientationController.OrientationDelegate.class) {
+      runtime
+          .getOrientationController()
+          .setDelegate((OrientationController.OrientationDelegate) delegate);
     } else if (cls == ServiceWorkerDelegate.class) {
       runtime.setServiceWorkerDelegate((ServiceWorkerDelegate) delegate);
     } else if (cls == WebNotificationDelegate.class) {
@@ -1001,6 +1008,8 @@ public class GeckoSessionTestRule implements TestRule {
       return runtime.getActivityDelegate();
     } else if (cls == GeckoRuntime.Delegate.class) {
       return runtime.getDelegate();
+    } else if (cls == OrientationController.OrientationDelegate.class) {
+      return runtime.getOrientationController().getDelegate();
     } else if (cls == ServiceWorkerDelegate.class) {
       return runtime.getServiceWorkerDelegate();
     } else if (cls == WebNotificationDelegate.class) {
@@ -2319,18 +2328,17 @@ public class GeckoSessionTestRule implements TestRule {
   }
 
   /**
-   * Gets the color of a link for a given URI and selector.
+   * Gets the color of a link for a given selector.
    *
-   * @param uri Page where the link is present.
    * @param selector Selector that matches the link
    * @return String representing the color, e.g. rgb(0, 0, 255)
    */
-  public String getLinkColor(final String uri, final String selector) {
+  public String getLinkColor(final GeckoSession session, final String selector) {
     return (String)
         webExtensionApiCall(
+            session,
             "GetLinkColor",
             args -> {
-              args.put("uri", uri);
               args.put("selector", selector);
             });
   }
@@ -2390,8 +2398,9 @@ public class GeckoSessionTestRule implements TestRule {
   }
 
   /** Invokes nsIDOMWindowUtils.setResolutionAndScaleTo. */
-  public void setResolutionAndScaleTo(final float resolution) {
+  public void setResolutionAndScaleTo(final GeckoSession session, final float resolution) {
     webExtensionApiCall(
+        session,
         "SetResolutionAndScaleTo",
         args -> {
           args.put("resolution", resolution);
@@ -2406,6 +2415,16 @@ public class GeckoSessionTestRule implements TestRule {
   /** Invokes a simplified version of promiseAllPaintsDone in paint_listener.js. */
   public void promiseAllPaintsDone(final GeckoSession session) {
     webExtensionApiCall(session, "PromiseAllPaintsDone", null);
+  }
+
+  /** Returns true if Gecko is using a GPU process. */
+  public boolean usingGpuProcess() {
+    return (Boolean) webExtensionApiCall("UsingGpuProcess", null);
+  }
+
+  /** Causes the GPU process to crash. */
+  public void crashGpuProcess() {
+    webExtensionApiCall("CrashGpuProcess", null);
   }
 
   private Object webExtensionApiCall(

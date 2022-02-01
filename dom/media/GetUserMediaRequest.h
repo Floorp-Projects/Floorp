@@ -19,7 +19,7 @@ class nsPIDOMWindowInner;
 
 namespace mozilla {
 
-class MediaDevice;
+class LocalMediaDevice;
 
 namespace media {
 template <typename T>
@@ -34,19 +34,19 @@ enum class GetUserMediaRequestType : uint8_t;
 
 class GetUserMediaRequest : public nsISupports, public nsWrapperCache {
  public:
-  using MediaDeviceSetRefCnt =
-      media::Refcountable<nsTArray<RefPtr<MediaDevice>>>;
+  using LocalMediaDeviceSetRefCnt =
+      media::Refcountable<nsTArray<RefPtr<LocalMediaDevice>>>;
 
   // For getUserMedia "getUserMedia:request"
   GetUserMediaRequest(nsPIDOMWindowInner* aInnerWindow,
                       const nsAString& aCallID,
-                      RefPtr<MediaDeviceSetRefCnt> aMediaDeviceSet,
+                      RefPtr<LocalMediaDeviceSetRefCnt> aMediaDeviceSet,
                       const MediaStreamConstraints& aConstraints,
                       bool aIsSecure, bool aIsHandlingUserInput);
   // For selectAudioOutput "getUserMedia:request"
   GetUserMediaRequest(nsPIDOMWindowInner* aInnerWindow,
                       const nsAString& aCallID,
-                      RefPtr<MediaDeviceSetRefCnt> aMediaDeviceSet,
+                      RefPtr<LocalMediaDeviceSetRefCnt> aMediaDeviceSet,
                       const AudioOutputOptions& aAudioOutputOptions,
                       bool aIsSecure, bool aIsHandlingUserInput);
   // For "recording-device-stopped"
@@ -79,7 +79,7 @@ class GetUserMediaRequest : public nsISupports, public nsWrapperCache {
   const nsString mCallID;
   const nsString mRawID;
   const nsString mMediaSource;
-  const RefPtr<MediaDeviceSetRefCnt> mMediaDeviceSet;
+  const RefPtr<LocalMediaDeviceSetRefCnt> mMediaDeviceSet;
   UniquePtr<MediaStreamConstraints> mConstraints;
   UniquePtr<AudioOutputOptions> mAudioOutputOptions;
   GetUserMediaRequestType mType;

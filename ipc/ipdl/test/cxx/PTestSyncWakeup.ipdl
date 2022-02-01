@@ -3,7 +3,7 @@ namespace _ipdltest {
 
 intr protocol PTestSyncWakeup {
 both:
-    intr StackFrame();
+    [LegacyIntr] intr StackFrame();
 
 child:
     async Start();

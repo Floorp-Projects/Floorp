@@ -25,7 +25,7 @@ sync-guid = { path = "../support/guid", features = ["rusqlite_support", "random"
 url = { version = "2.1", features = ["serde"] }
 
 [dependencies.rusqlite]
-version = "0.24.1"
+version = "0.24.2"
 features = ["functions", "bundled", "serde_json", "unlock_notify", "column_decltype"]
 
 [dev-dependencies]

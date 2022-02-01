@@ -455,44 +455,44 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         this.store.getState().Prefs.values[PREF_HARDCODED_BASIC_LAYOUT] ||
         this.store.getState().Prefs.values[PREF_REGION_BASIC_LAYOUT];
 
-      let spocPositions = this.store
-        .getState()
-        .Prefs.values?.pocketConfig?.spocPositions?.split(`,`);
-
-      const loadMoreEnabled = this.store.getState().Prefs.values?.pocketConfig
-        ?.loadMore;
-
-      const lastCardMessageEnabled = this.store.getState().Prefs.values
-        ?.pocketConfig?.lastCardMessageEnabled;
-
-      const saveToPocketCard = this.store.getState().Prefs.values?.pocketConfig
-        ?.saveToPocketCard;
-
       const sponsoredCollectionsEnabled = this.store.getState().Prefs.values[
         PREF_COLLECTIONS_ENABLED
       ];
 
-      const compactLayout = this.store.getState().Prefs.values?.pocketConfig
-        ?.compactLayout;
+      const pocketConfig =
+        this.store.getState().Prefs.values?.pocketConfig || {};
+
       let items = isBasicLayout ? 3 : 21;
-      if (compactLayout) {
+      if (pocketConfig.compactLayout) {
         items = isBasicLayout ? 4 : 24;
       }
-
-      const newFooterSection = this.store.getState().Prefs.values?.pocketConfig
-        ?.newFooterSection;
 
       // Set a hardcoded layout if one is needed.
       // Changing values in this layout in memory object is unnecessary.
       layoutResp = getHardcodedLayout({
         items,
-        spocPositions: this.parseSpocPositions(spocPositions),
         sponsoredCollectionsEnabled,
-        compactLayout,
-        loadMoreEnabled,
-        lastCardMessageEnabled,
-        newFooterSection,
-        saveToPocketCard,
+        spocPositions: this.parseSpocPositions(
+          pocketConfig.spocPositions?.split(`,`)
+        ),
+        compactLayout: pocketConfig.compactLayout,
+        loadMore: pocketConfig.loadMore,
+        lastCardMessageEnabled: pocketConfig.lastCardMessageEnabled,
+        saveToPocketCard: pocketConfig.saveToPocketCard,
+        newFooterSection: pocketConfig.newFooterSection,
+        hideDescriptions: pocketConfig.hideDescriptions,
+        compactGrid: pocketConfig.compactGrid,
+        compactImages: pocketConfig.compactImages,
+        imageGradient: pocketConfig.imageGradient,
+        newSponsoredLabel: pocketConfig.newSponsoredLabel,
+        titleLines: pocketConfig.titleLines,
+        descLines: pocketConfig.descLines,
+        // For now essentialReadsHeader and editorsPicksHeader are English only.
+        essentialReadsHeader:
+          this.locale.startsWith("en-") && pocketConfig.essentialReadsHeader,
+        editorsPicksHeader:
+          this.locale.startsWith("en-") && pocketConfig.editorsPicksHeader,
+        readTime: pocketConfig.readTime,
       });
     }
 
@@ -1859,28 +1859,48 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   }
 };
 
-// This function generates a hardcoded layout each call.
-// This is because modifying the original object would
-// persist across pref changes and system_tick updates.
-//
-// NOTE: There is some branching logic in the template.
-//   `items` How many items to include in the primary card grid.
-//   `spocPositions` Changes the position of spoc cards.
-//   `sponsoredCollectionsEnabled` Tuns on and off the sponsored collection section.
-//   `compactLayout` Changes cards to smaller more compact cards.
-//   `loadMoreEnabled` Hide half the Pocket stories behind a load more button.
-//   `lastCardMessageEnabled` Shows a message card at the end of the feed.
-//   `newFooterSection` Changes the layout of the topics section.
-//   `saveToPocketCard` Cards have a save to Pocket button over their thumbnail on hover.
+/* This function generates a hardcoded layout each call.
+   This is because modifying the original object would
+   persist across pref changes and system_tick updates.
+
+   NOTE: There is some branching logic in the template.
+     `items` How many items to include in the primary card grid.
+     `spocPositions` Changes the position of spoc cards.
+     `sponsoredCollectionsEnabled` Tuns on and off the sponsored collection section.
+     `compactLayout` Changes cards to smaller more compact cards.
+     `loadMore` Hide half the Pocket stories behind a load more button.
+     `lastCardMessageEnabled` Shows a message card at the end of the feed.
+     `newFooterSection` Changes the layout of the topics section.
+     `saveToPocketCard` Cards have a save to Pocket button over their thumbnail on hover.
+     `hideDescriptions` Hide or display descriptions for Pocket stories.
+     `compactGrid` Reduce the number of pixels between the Pocket cards.
+     `compactImages` Reduce the height on Pocket card images.
+     `imageGradient` Add a gradient to the bottom of Pocket card images to blend the image in with the card.
+     `newSponsoredLabel` Updates the sponsored label position to below the image.
+     `titleLines` Changes the maximum number of lines a title can be for Pocket cards.
+     `descLines` Changes the maximum number of lines a description can be for Pocket cards.
+     `essentialReadsHeader` Updates the Pocket section header and title to say "Today’s Essential Reads", moves the "Recommended by Pocket" header to the right side.
+     `editorsPicksHeader` Updates the Pocket section header and title to say "Editor’s Picks", if used with essentialReadsHeader, creates a second section 2 rows down for editorsPicks.
+*/
 getHardcodedLayout = ({
   items = 21,
   spocPositions = [2, 4, 11, 20],
   sponsoredCollectionsEnabled = false,
   compactLayout = false,
-  loadMoreEnabled = false,
+  loadMore = false,
   lastCardMessageEnabled = false,
   newFooterSection = false,
   saveToPocketCard = false,
+  hideDescriptions = true,
+  compactGrid = false,
+  compactImages = false,
+  imageGradient = false,
+  newSponsoredLabel = false,
+  titleLines = 3,
+  descLines = 3,
+  essentialReadsHeader = false,
+  editorsPicksHeader = false,
+  readTime = false,
 }) => ({
   lastUpdate: Date.now(),
   spocs: {
@@ -1933,6 +1953,8 @@ getHardcodedLayout = ({
           : []),
         {
           type: "Message",
+          essentialReadsHeader,
+          editorsPicksHeader,
           header: {
             title: {
               id: "newtab-section-header-pocket",
@@ -1955,8 +1977,18 @@ getHardcodedLayout = ({
           properties: {
             items,
             compact: compactLayout,
+            hideDescriptions: hideDescriptions || compactLayout,
+            compactImages,
+            imageGradient,
+            newSponsoredLabel: newSponsoredLabel || compactLayout,
+            titleLines,
+            descLines,
+            compactGrid,
+            essentialReadsHeader,
+            editorsPicksHeader,
+            readTime: readTime || compactLayout,
           },
-          loadMoreEnabled,
+          loadMore,
           lastCardMessageEnabled,
           saveToPocketCard,
           cta_variant: "link",

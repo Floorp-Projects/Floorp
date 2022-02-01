@@ -13,11 +13,12 @@
 [package]
 edition = "2018"
 name = "itertools"
-version = "0.10.1"
+version = "0.10.3"
 authors = ["bluss"]
 exclude = ["/bors.toml"]
 description = "Extra iterator adaptors, iterator methods, free functions, and macros."
 documentation = "https://docs.rs/itertools/"
+readme = "README.md"
 keywords = ["iterator", "data-structure", "zip", "product", "group-by"]
 categories = ["algorithms", "rust-patterns"]
 license = "MIT/Apache-2.0"

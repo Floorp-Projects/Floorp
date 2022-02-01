@@ -9,16 +9,17 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 
 #include "MOZMenuOpeningCoordinator.h"
 #include "nsISupports.h"
 #include "nsGkAtoms.h"
-#include "nsGkAtoms.h"
 #include "nsMenuGroupOwnerX.h"
 #include "nsMenuItemX.h"
 #include "nsMenuUtilsX.h"
+#include "nsNativeThemeColors.h"
 #include "nsObjCExceptions.h"
 #include "nsThreadUtils.h"
 #include "PresShell.h"
@@ -32,7 +33,7 @@ using dom::Element;
 
 namespace widget {
 
-NativeMenuMac::NativeMenuMac(mozilla::dom::Element* aElement)
+NativeMenuMac::NativeMenuMac(dom::Element* aElement)
     : mElement(aElement), mContainerStatusBarItem(nil) {
   MOZ_RELEASE_ASSERT(aElement->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menupopup));
   mMenuGroupOwner = new nsMenuGroupOwnerX(aElement, nullptr);
@@ -192,8 +193,8 @@ void NativeMenuMac::OnMenuDidOpen(dom::Element* aPopupElement) {
   }
 }
 
-void NativeMenuMac::OnMenuWillActivateItem(mozilla::dom::Element* aPopupElement,
-                                           mozilla::dom::Element* aMenuItemElement) {
+void NativeMenuMac::OnMenuWillActivateItem(dom::Element* aPopupElement,
+                                           dom::Element* aMenuItemElement) {
   // Our caller isn't keeping us alive, so make sure we stay alive throughout this function in case
   // one of the observer notifications destroys us.
   RefPtr<NativeMenuMac> kungFuDeathGrip(this);
@@ -218,7 +219,7 @@ void NativeMenuMac::OnMenuClosed(dom::Element* aPopupElement) {
 }
 
 static NSView* NativeViewForContent(nsIContent* aContent) {
-  mozilla::dom::Document* doc = aContent->GetUncomposedDoc();
+  dom::Document* doc = aContent->GetUncomposedDoc();
   if (!doc) {
     return nil;
   }
@@ -237,18 +238,28 @@ static NSView* NativeViewForContent(nsIContent* aContent) {
   return (NSView*)widget->GetNativeData(NS_NATIVE_WIDGET);
 }
 
-void NativeMenuMac::ShowAsContextMenu(const mozilla::DesktopPoint& aPosition) {
+static NSAppearance* NativeAppearanceForContent(nsIContent* aContent) {
+  nsIFrame* f = aContent->GetPrimaryFrame();
+  if (!f) {
+    return nil;
+  }
+  return NSAppearanceForColorScheme(LookAndFeel::ColorSchemeForFrame(f));
+}
+
+void NativeMenuMac::ShowAsContextMenu(const DesktopPoint& aPosition) {
   mMenu->PopupShowingEventWasSentAndApprovedExternally();
 
   NSMenu* menu = mMenu->NativeNSMenu();
   NSView* view = NativeViewForContent(mMenu->Content());
+  NSAppearance* appearance = NativeAppearanceForContent(mMenu->Content());
   NSPoint locationOnScreen = nsCocoaUtils::GeckoPointToCocoaPoint(aPosition);
 
   // Let the MOZMenuOpeningCoordinator do the actual opening, so that this ShowAsContextMenu call
   // does not spawn a nested event loop, which would be surprising to our callers.
   mOpeningHandle = [MOZMenuOpeningCoordinator.sharedInstance asynchronouslyOpenMenu:menu
                                                                    atScreenPosition:locationOnScreen
-                                                                            forView:view];
+                                                                            forView:view
+                                                                     withAppearance:appearance];
 }
 
 bool NativeMenuMac::Close() {

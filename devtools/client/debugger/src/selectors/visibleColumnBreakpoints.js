@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { groupBy } from "lodash";
 import { createSelector } from "reselect";
 
 import {
@@ -29,23 +28,30 @@ function contains(location, range) {
 }
 
 function groupBreakpoints(breakpoints, selectedSource) {
+  const breakpointsMap = {};
   if (!breakpoints) {
-    return {};
+    return breakpointsMap;
   }
 
-  const map = groupBy(
-    breakpoints.filter(breakpoint => !breakpoint.options.hidden),
-    breakpoint => getSelectedLocation(breakpoint, selectedSource).line
-  );
+  for (const breakpoint of breakpoints) {
+    if (breakpoint.options.hidden) {
+      continue;
+    }
+    const location = getSelectedLocation(breakpoint, selectedSource);
+    const { line, column } = location;
 
-  for (const line in map) {
-    map[line] = groupBy(
-      map[line],
-      breakpoint => getSelectedLocation(breakpoint, selectedSource).column
-    );
+    if (!breakpointsMap[line]) {
+      breakpointsMap[line] = {};
+    }
+
+    if (!breakpointsMap[line][column]) {
+      breakpointsMap[line][column] = [];
+    }
+
+    breakpointsMap[line][column].push(breakpoint);
   }
 
-  return map;
+  return breakpointsMap;
 }
 
 function findBreakpoint(location, breakpointMap) {

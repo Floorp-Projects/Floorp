@@ -4,15 +4,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Floorp プロテクションは今回の試験的機能に含まれないので削除
+
 DIRS += [
+    "floorp-experimental",
     "doh-rollout",
     "formautofill",
     "screenshots",
     "webcompat",
     "report-site-issue",
     "pictureinpicture",
-    "proxy-failover",
     "search-detection",
+    "floorp-rss-read",
+    "floorpsync",
+    "open-closed",
+    "translate",
+    "qr-code",
+    "superdrag",
+    "tab-s",
+    "notify",
 ]
 
 if CONFIG["NIGHTLY_BUILD"]:

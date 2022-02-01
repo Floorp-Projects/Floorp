@@ -704,6 +704,11 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
 
   rv = OnOutputStreamReady(mSocketOut);
 
+  if (NS_SUCCEEDED(rv) && mContinueHandshakeDone) {
+    mContinueHandshakeDone();
+  }
+  mContinueHandshakeDone = nullptr;
+
 failed_activation:
   if (NS_FAILED(rv)) {
     mTransaction = nullptr;
@@ -837,6 +842,7 @@ void nsHttpConnection::Close(nsresult reason, bool aIsShutdown) {
 
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   mTlsHandshakeComplitionPending = false;
+  mContinueHandshakeDone = nullptr;
   // Ensure TCP keepalive timer is stopped.
   if (mTCPKeepaliveTransitionTimer) {
     mTCPKeepaliveTransitionTimer->Cancel();
@@ -2647,7 +2653,23 @@ void nsHttpConnection::HandshakeDoneInternal() {
     uint32_t infoIndex;
     const SpdyInformation* info = gHttpHandler->SpdyInfo();
     if (NS_SUCCEEDED(info->GetNPNIndex(negotiatedNPN, &infoIndex))) {
-      StartSpdy(ssl, info->Version[infoIndex]);
+      if (mTransaction) {
+        StartSpdy(ssl, info->Version[infoIndex]);
+      } else {
+        LOG(
+            ("nsHttpConnection::HandshakeDone [this=%p] set "
+             "mContinueHandshakeDone",
+             this));
+        RefPtr<nsHttpConnection> self = this;
+        mContinueHandshakeDone = [self = RefPtr{this}, ssl(ssl),
+                                  info(info->Version[infoIndex])]() {
+          LOG(("nsHttpConnection do mContinueHandshakeDone [this=%p]",
+               self.get()));
+          self->StartSpdy(ssl, info);
+          self->FinishNPNSetup(true, true);
+        };
+        return;
+      }
     }
   } else {
     LOG(("nsHttpConnection::HandshakeDone [this=%p] - %" PRId64 " bytes "

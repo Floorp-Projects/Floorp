@@ -150,36 +150,6 @@ add_task(async function test_sendOverSizedPing() {
   });
 });
 
-add_task(async function test_healthPingOnTop() {
-  PingServer.clearRequests();
-  TelemetryHealthPing.testReset();
-
-  let PING_TYPE = "priority-ping";
-
-  // Fake now to be in throttled state.
-  let now = fakeNow(2050, 1, 2, 0, 0, 0);
-  fakeMidnightPingFuzzingDelay(60 * 1000);
-
-  for (let value of [PING_TYPE, PING_TYPE, "health", PING_TYPE]) {
-    TelemetryController.submitExternalPing(value, {});
-  }
-
-  // Now trigger sending pings again.
-  fakeNow(futureDate(now, 5 * 60 * 1000));
-  await TelemetrySend.notifyCanUpload();
-  let { SendScheduler } = ChromeUtils.import(
-    "resource://gre/modules/TelemetrySend.jsm"
-  );
-  SendScheduler.triggerSendingPings(true);
-
-  let pings = await PingServer.promiseNextPings(4);
-  Assert.equal(
-    pings[0].type,
-    "health",
-    "Should have received the health ping first."
-  );
-});
-
 add_task(async function test_sendOnTimeout() {
   TelemetryHealthPing.testReset();
   await TelemetrySend.reset();

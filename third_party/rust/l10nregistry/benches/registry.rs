@@ -3,10 +3,11 @@ use criterion::criterion_main;
 use criterion::Criterion;
 
 use futures::stream::StreamExt;
+use l10nregistry::source::ResourceId;
 use l10nregistry::testing::{FileSource, RegistrySetup, TestFileFetcher};
 use unic_langid::LanguageIdentifier;
 
-fn get_paths() -> Vec<String> {
+fn get_paths() -> Vec<ResourceId> {
     let paths: Vec<&'static str> = vec![
         "branding/brand.ftl",
         "browser/sanitize.ftl",
@@ -27,7 +28,7 @@ fn get_paths() -> Vec<String> {
         "toolkit/featuregates/features.ftl",
     ];
 
-    paths.iter().map(|s| s.to_string()).collect()
+    paths.into_iter().map(ResourceId::from).collect()
 }
 
 fn registry_bench(c: &mut Criterion) {

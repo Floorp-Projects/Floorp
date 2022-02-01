@@ -2561,6 +2561,12 @@ void WebRenderBridgeParent::FlushRendering(wr::RenderReasons aReasons,
   }
 }
 
+ipc::IPCResult WebRenderBridgeParent::RecvSetDefaultClearColor(
+    const uint32_t& aColor) {
+  SetClearColor(gfx::DeviceColor::FromABGR(aColor));
+  return IPC_OK();
+}
+
 void WebRenderBridgeParent::SetClearColor(const gfx::DeviceColor& aColor) {
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
 

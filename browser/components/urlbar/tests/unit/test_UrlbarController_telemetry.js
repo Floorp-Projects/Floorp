@@ -200,7 +200,7 @@ add_task(async function test_n_autocomplete_results() {
         new UrlbarResult(
           UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
           UrlbarUtils.RESULT_SOURCE.TABS,
-          { url: TEST_URL + "/i" }
+          { url: TEST_URL + "/" + i }
         ),
       ],
       false

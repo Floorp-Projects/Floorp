@@ -75,14 +75,14 @@ SECTION .text
 %if ARCH_X86_32
 DECLARE_REG_TMP 5, 3
 %elif WIN64
-DECLARE_REG_TMP 7, 4
+DECLARE_REG_TMP 8, 4
 %else
-DECLARE_REG_TMP 7, 8
+DECLARE_REG_TMP 8, 6
 %endif
 
 %macro CDEF_FILTER 2 ; w, h
 %if ARCH_X86_64
-    DEFINE_ARGS dst, stride, tmp, pridmp, pri, sec, dir
+    DEFINE_ARGS dst, stride, _, tmp, pridmp, pri, sec, dir
     mova            m8, [base+pw_2048]
 %else
     DEFINE_ARGS dst, pridmp, tmp, sec, pri, _, dir
@@ -90,20 +90,20 @@ DECLARE_REG_TMP 7, 8
     %define         m9  [rsp+16*1+gprsize]
     %define        m10  [rsp+16*2+gprsize]
 %endif
-    movifnidn     prid, r4m
-    movifnidn     secd, r5m
+    movifnidn     prid, r5m
+    movifnidn     secd, r6m
     test          prid, prid
     jz .sec_only
-    movd            m6, r4m
+    movd            m6, r5m
 %if ARCH_X86_32
     mov       [rsp+24], pridmpd
 %endif
     bsr        pridmpd, prid
     lea           tmpd, [priq*4]
-    cmp      dword r9m, 0x3ff ; if (bpc == 10)
+    cmp     dword r10m, 0x3ff ; if (bpc == 10)
     cmove         prid, tmpd  ;     pri <<= 2
-    mov           tmpd, r7m   ; damping
-    mov           dird, r6m
+    mov           tmpd, r8m   ; damping
+    mov           dird, r7m
     and           prid, 16
     pshufb          m6, m7    ; splat
     lea           dirq, [base+dir_table+dirq*2]
@@ -155,10 +155,10 @@ DECLARE_REG_TMP 7, 8
 .end:
     RET
 .sec_only:
-    mov           tmpd, r7m ; damping
-    movd            m6, r5m
+    mov           tmpd, r8m ; damping
+    movd            m6, r6m
     tzcnt         secd, secd
-    mov           dird, r6m
+    mov           dird, r7m
     pshufb          m6, m7
     sub           tmpd, secd
     lea           dirq, [base+dir_table+dirq*2]
@@ -172,7 +172,11 @@ DECLARE_REG_TMP 7, 8
 %endrep
     jmp .end
 %if %1 == %2
-DEFINE_ARGS dst, stride, tmp, off, pri, _, dir
+ %if ARCH_X86_64
+  DEFINE_ARGS dst, stride, _, tmp, off, pri, _, dir
+ %else
+  DEFINE_ARGS dst, stride, tmp, off, pri, _, dir
+ %endif
 ALIGN function_align
 .pri:
     movsx         offq, byte [dirq+4]    ; off_k0
@@ -649,16 +653,18 @@ ALIGN function_align
 
 INIT_XMM ssse3
 %if ARCH_X86_64
-cglobal cdef_filter_4x4_16bpc, 4, 8, 9, 32*10, dst, stride, left, top, pri, sec, edge
+cglobal cdef_filter_4x4_16bpc, 5, 9, 9, 32*10, dst, stride, left, top, bot, \
+                                               pri, sec, edge
     %define         px  rsp+32*4
 %else
 cglobal cdef_filter_4x4_16bpc, 2, 7, 8, -32*11, dst, stride, edge, top, left
+    %define       botq  topq
     %define         px  rsp+32*5
 %endif
     %define       base  t0-dir_table
     %define  pri_shift  px-16*6
     %define  sec_shift  px-16*5
-    mov          edged, r8m
+    mov          edged, r9m
     LEA             t0, dir_table
     movu            m0, [dstq+strideq*0]
     movu            m1, [dstq+strideq*1]
@@ -693,15 +699,15 @@ cglobal cdef_filter_4x4_16bpc, 2, 7, 8, -32*11, dst, stride, edge, top, left
 .top_done:
     test         edgeb, 8 ; HAVE_BOTTOM
     jz .no_bottom
-    lea             r3, [dstq+strideq*4]
-    movu            m0, [r3+strideq*0]
-    movu            m1, [r3+strideq*1]
+    movifnidn     botq, r4mp
+    movu            m0, [botq+strideq*0]
+    movu            m1, [botq+strideq*1]
     mova   [px+32*4+0], m0
     mova   [px+32*5+0], m1
     test         edgeb, 1 ; HAVE_LEFT
     jz .bottom_no_left
-    movd            m0, [r3+strideq*0-4]
-    movd            m1, [r3+strideq*1-4]
+    movd            m0, [botq+strideq*0-4]
+    movd            m1, [botq+strideq*1-4]
     movd   [px+32*4-4], m0
     movd   [px+32*5-4], m1
     jmp .bottom_done
@@ -734,11 +740,12 @@ cglobal cdef_filter_4x4_16bpc, 2, 7, 8, -32*11, dst, stride, edge, top, left
     CDEF_FILTER      4, 4
 
 %if ARCH_X86_64
-cglobal cdef_filter_4x8_16bpc, 4, 8, 9, 32*14, dst, stride, left, top, pri, sec, edge
+cglobal cdef_filter_4x8_16bpc, 5, 9, 9, 32*14, dst, stride, left, top, bot, \
+                                               pri, sec, edge
 %else
 cglobal cdef_filter_4x8_16bpc, 2, 7, 8, -32*15, dst, stride, edge, top, left
 %endif
-    mov          edged, r8m
+    mov          edged, r9m
     LEA             t0, dir_table
     movu            m0, [dstq+strideq*0]
     movu            m1, [dstq+strideq*1]
@@ -783,15 +790,15 @@ cglobal cdef_filter_4x8_16bpc, 2, 7, 8, -32*15, dst, stride, edge, top, left
 .top_done:
     test         edgeb, 8 ; HAVE_BOTTOM
     jz .no_bottom
-    lea             r3, [dstq+strideq*8]
-    movu            m0, [r3+strideq*0]
-    movu            m1, [r3+strideq*1]
+    movifnidn     botq, r4mp
+    movu            m0, [botq+strideq*0]
+    movu            m1, [botq+strideq*1]
     mova   [px+32*8+0], m0
     mova   [px+32*9+0], m1
     test         edgeb, 1 ; HAVE_LEFT
     jz .bottom_no_left
-    movd            m0, [r3+strideq*0-4]
-    movd            m1, [r3+strideq*1-4]
+    movd            m0, [botq+strideq*0-4]
+    movd            m1, [botq+strideq*1-4]
     movd   [px+32*8-4], m0
     movd   [px+32*9-4], m1
     jmp .bottom_done
@@ -832,11 +839,12 @@ cglobal cdef_filter_4x8_16bpc, 2, 7, 8, -32*15, dst, stride, edge, top, left
     CDEF_FILTER      4, 8
 
 %if ARCH_X86_64
-cglobal cdef_filter_8x8_16bpc, 4, 8, 9, 32*14, dst, stride, left, top, pri, sec, edge
+cglobal cdef_filter_8x8_16bpc, 5, 9, 9, 32*14, dst, stride, left, top, bot, \
+                                               pri, sec, edge
 %else
 cglobal cdef_filter_8x8_16bpc, 2, 7, 8, -32*15, dst, stride, edge, top, left
 %endif
-    mov          edged, r8m
+    mov          edged, r9m
     LEA             t0, dir_table
     mova            m0, [dstq+strideq*0+ 0]
     movd            m1, [dstq+strideq*0+16]
@@ -903,19 +911,19 @@ cglobal cdef_filter_8x8_16bpc, 2, 7, 8, -32*15, dst, stride, edge, top, left
 .top_done:
     test         edgeb, 8 ; HAVE_BOTTOM
     jz .no_bottom
-    lea             r3, [dstq+strideq*8]
-    mova            m0, [r3+strideq*0+ 0]
-    movd            m1, [r3+strideq*0+16]
-    mova            m2, [r3+strideq*1+ 0]
-    movd            m3, [r3+strideq*1+16]
+    movifnidn     botq, r4mp
+    mova            m0, [botq+strideq*0+ 0]
+    movd            m1, [botq+strideq*0+16]
+    mova            m2, [botq+strideq*1+ 0]
+    movd            m3, [botq+strideq*1+16]
     mova  [px+32*8+ 0], m0
     movd  [px+32*8+16], m1
     mova  [px+32*9+ 0], m2
     movd  [px+32*9+16], m3
     test         edgeb, 1 ; HAVE_LEFT
     jz .bottom_no_left
-    movd            m0, [r3+strideq*0-4]
-    movd            m1, [r3+strideq*1-4]
+    movd            m0, [botq+strideq*0-4]
+    movd            m1, [botq+strideq*1-4]
     movd  [px+32*8- 4], m0
     movd  [px+32*9- 4], m1
     jmp .bottom_done

@@ -24,13 +24,9 @@ add_task(async function remote_disable() {
     return;
   }
 
-  await ExperimentFakes.remoteDefaultsHelper({
-    feature: NimbusFeatures.shellService,
-    configuration: {
-      slug: "shellService_remoteDisable",
-      variables: { disablePin: true, enabled: true },
-      targeting: "true",
-    },
+  let doCleanup = await ExperimentFakes.enrollWithRollout({
+    featureId: NimbusFeatures.shellService.featureId,
+    value: { disablePin: true, enabled: true },
   });
 
   Assert.equal(
@@ -38,6 +34,8 @@ add_task(async function remote_disable() {
     false,
     "Pinning disabled via nimbus"
   );
+
+  await doCleanup();
 });
 
 add_task(async function restore_default() {

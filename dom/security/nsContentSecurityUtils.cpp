@@ -11,6 +11,8 @@
 #include "mozilla/Components.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIChannel.h"
@@ -31,7 +33,8 @@
 #include "js/ContextOptions.h"
 #include "js/PropertyAndElement.h"  // JS_GetElement
 #include "js/RegExp.h"
-#include "js/RegExpFlags.h"  // JS::RegExpFlags
+#include "js/RegExpFlags.h"           // JS::RegExpFlags
+#include "js/friend/ErrorMessages.h"  // JSMSG_UNSAFE_FILENAME
 #include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
@@ -893,19 +896,6 @@ nsresult ParseCSPAndEnforceFrameAncestorCheck(
     nsIChannel* aChannel, nsIContentSecurityPolicy** aOutCSP) {
   MOZ_ASSERT(aChannel);
 
-  // CSP can only hang off an http channel, if this channel is not
-  // an http channel then there is nothing to do here.
-  nsCOMPtr<nsIHttpChannel> httpChannel;
-  nsresult rv = nsContentSecurityUtils::GetHttpChannelFromPotentialMultiPart(
-      aChannel, getter_AddRefs(httpChannel));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (!httpChannel) {
-    return NS_OK;
-  }
-
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   ExtContentPolicyType contentType = loadInfo->GetExternalContentPolicyType();
   // frame-ancestor check only makes sense for subdocument and object loads,
@@ -915,35 +905,60 @@ nsresult ParseCSPAndEnforceFrameAncestorCheck(
     return NS_OK;
   }
 
-  nsAutoCString tCspHeaderValue, tCspROHeaderValue;
-
-  Unused << httpChannel->GetResponseHeader("content-security-policy"_ns,
-                                           tCspHeaderValue);
-
-  Unused << httpChannel->GetResponseHeader(
-      "content-security-policy-report-only"_ns, tCspROHeaderValue);
-
-  // if there are no CSP values, then there is nothing to do here.
-  if (tCspHeaderValue.IsEmpty() && tCspROHeaderValue.IsEmpty()) {
-    return NS_OK;
+  // CSP can only hang off an http channel, if this channel is not
+  // an http channel then there is nothing to do here,
+  // except with add-ons, where the CSP is stored in a WebExtensionPolicy.
+  nsCOMPtr<nsIHttpChannel> httpChannel;
+  nsresult rv = nsContentSecurityUtils::GetHttpChannelFromPotentialMultiPart(
+      aChannel, getter_AddRefs(httpChannel));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
-  NS_ConvertASCIItoUTF16 cspHeaderValue(tCspHeaderValue);
-  NS_ConvertASCIItoUTF16 cspROHeaderValue(tCspROHeaderValue);
+  nsAutoCString tCspHeaderValue, tCspROHeaderValue;
+  if (httpChannel) {
+    Unused << httpChannel->GetResponseHeader("content-security-policy"_ns,
+                                             tCspHeaderValue);
 
-  RefPtr<nsCSPContext> csp = new nsCSPContext();
+    Unused << httpChannel->GetResponseHeader(
+        "content-security-policy-report-only"_ns, tCspROHeaderValue);
+
+    // if there are no CSP values, then there is nothing to do here.
+    if (tCspHeaderValue.IsEmpty() && tCspROHeaderValue.IsEmpty()) {
+      return NS_OK;
+    }
+  }
+
   nsCOMPtr<nsIPrincipal> resultPrincipal;
   rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
       aChannel, getter_AddRefs(resultPrincipal));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIURI> selfURI;
-  aChannel->GetURI(getter_AddRefs(selfURI));
 
-  nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
-  nsAutoString referrerSpec;
-  if (referrerInfo) {
-    referrerInfo->GetComputedReferrerSpec(referrerSpec);
+  RefPtr<extensions::WebExtensionPolicy> addonPolicy;
+  if (!httpChannel) {
+    addonPolicy = BasePrincipal::Cast(resultPrincipal)->AddonPolicy();
+    if (!addonPolicy) {
+      // Neither a HTTP channel, nor a moz-extension:-resource.
+      // CSP is not supported.
+      return NS_OK;
+    }
   }
+
+  RefPtr<nsCSPContext> csp = new nsCSPContext();
+  nsCOMPtr<nsIURI> selfURI;
+  nsAutoString referrerSpec;
+  if (httpChannel) {
+    aChannel->GetURI(getter_AddRefs(selfURI));
+    nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
+    if (referrerInfo) {
+      referrerInfo->GetComputedReferrerSpec(referrerSpec);
+    }
+  } else {
+    // aChannel::GetURI would return the jar: or file:-URI for extensions.
+    // Use the "final" URI to get the actual moz-extension:-URL.
+    NS_GetFinalChannelURI(aChannel, getter_AddRefs(selfURI));
+  }
+
   uint64_t innerWindowID = loadInfo->GetInnerWindowID();
 
   rv = csp->SetRequestContextWithPrincipal(resultPrincipal, selfURI,
@@ -952,16 +967,24 @@ nsresult ParseCSPAndEnforceFrameAncestorCheck(
     return rv;
   }
 
-  // ----- if there's a full-strength CSP header, apply it.
-  if (!cspHeaderValue.IsEmpty()) {
-    rv = CSP_AppendCSPFromHeader(csp, cspHeaderValue, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  if (addonPolicy) {
+    csp->AppendPolicy(addonPolicy->BaseCSP(), false, false);
+    csp->AppendPolicy(addonPolicy->ExtensionPageCSP(), false, false);
+  } else {
+    NS_ConvertASCIItoUTF16 cspHeaderValue(tCspHeaderValue);
+    NS_ConvertASCIItoUTF16 cspROHeaderValue(tCspROHeaderValue);
 
-  // ----- if there's a report-only CSP header, apply it.
-  if (!cspROHeaderValue.IsEmpty()) {
-    rv = CSP_AppendCSPFromHeader(csp, cspROHeaderValue, true);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // ----- if there's a full-strength CSP header, apply it.
+    if (!cspHeaderValue.IsEmpty()) {
+      rv = CSP_AppendCSPFromHeader(csp, cspHeaderValue, false);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // ----- if there's a report-only CSP header, apply it.
+    if (!cspROHeaderValue.IsEmpty()) {
+      rv = CSP_AppendCSPFromHeader(csp, cspROHeaderValue, true);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   // ----- Enforce frame-ancestor policy on any applied policies
@@ -1189,8 +1212,8 @@ void nsContentSecurityUtils::AssertAboutPageHasCSP(Document* aDocument) {
 #endif
 
 /* static */
-bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
-                                                    bool aIsSystemRealm) {
+bool nsContentSecurityUtils::ValidateScriptFilename(JSContext* cx,
+                                                    const char* aFilename) {
   // If the pref is permissive, allow everything
   if (StaticPrefs::security_allow_parent_unrestricted_js_loads()) {
     return true;
@@ -1261,11 +1284,6 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
     return true;
   }
 
-  auto kAllowedExtensionScriptFilenames = {
-      u"/experiment-apis/translateUi/TranslationBrowserChromeUi.js"_ns,
-      u"/experiment-apis/translateUi/TranslationBrowserChromeUiManager.js"_ns,
-      u"/experiment-apis/translateUi/content/translation-notification.js"_ns};
-
   if (StringBeginsWith(filenameU, u"moz-extension://"_ns)) {
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), aFilename);
@@ -1275,22 +1293,21 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
           ExtensionPolicyService::GetSingleton().GetByHost(url.Host());
 
       if (policy && policy->IsPrivileged()) {
-        bool matchedAnAllowlist = false;
-        for (auto allowedFilename : kAllowedExtensionScriptFilenames) {
-          if (StringBeginsWith(url.FilePath(), allowedFilename)) {
-            matchedAnAllowlist = true;
-          }
-        }
-
-        if (matchedAnAllowlist) {
-          MOZ_LOG(sCSMLog, LogLevel::Debug,
-                  ("Allowing a javascript load of %s because the web extension "
-                   "it is "
-                   "associated with is privileged.",
-                   aFilename));
-          return true;
-        }
+        MOZ_LOG(sCSMLog, LogLevel::Debug,
+                ("Allowing a javascript load of %s because the web extension "
+                 "it is associated with is privileged.",
+                 aFilename));
+        return true;
       }
+    }
+  } else if (!NS_IsMainThread()) {
+    WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
+    if (workerPrivate && workerPrivate->IsPrivilegedAddonGlobal()) {
+      MOZ_LOG(sCSMLog, LogLevel::Debug,
+              ("Allowing a javascript load of %s because the web extension "
+               "it is associated with is privileged.",
+               aFilename));
+      return true;
     }
   }
 
@@ -1320,8 +1337,7 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
 
   // Log to MOZ_LOG
   MOZ_LOG(sCSMLog, LogLevel::Error,
-          ("ValidateScriptFilename System:%i %s\n", (aIsSystemRealm ? 1 : 0),
-           aFilename));
+          ("ValidateScriptFilename Failed: %s\n", aFilename));
 
   // Send Telemetry
   FilenameTypeAndDetails fileNameTypeAndDetails =
@@ -1360,10 +1376,22 @@ bool nsContentSecurityUtils::ValidateScriptFilename(const char* aFilename,
 #elif defined(FUZZING)
   auto crashString = nsContentSecurityUtils::SmartFormatCrashString(
       aFilename,
-      NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second.value()).get(),
+      fileNameTypeAndDetails.second.isSome()
+          ? NS_ConvertUTF16toUTF8(fileNameTypeAndDetails.second.value()).get()
+          : "(None)",
       "Blocking a script load %s from file %s");
   MOZ_CRASH_UNSAFE_PRINTF("%s", crashString.get());
 #endif
+
+  // If we got here we are going to return false, so set the error context
+  const char* utf8Filename;
+  if (mozilla::IsUtf8(mozilla::MakeStringSpan(aFilename))) {
+    utf8Filename = aFilename;
+  } else {
+    utf8Filename = "(invalid UTF-8 filename)";
+  }
+  JS_ReportErrorNumberUTF8(cx, js::GetErrorMessage, nullptr,
+                           JSMSG_UNSAFE_FILENAME, utf8Filename);
 
   // Presently we are not enforcing any restrictions for the script filename,
   // we're only reporting Telemetry. In the future we will assert in debug

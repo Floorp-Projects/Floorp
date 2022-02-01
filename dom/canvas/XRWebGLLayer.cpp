@@ -104,7 +104,7 @@ already_AddRefed<XRWebGLLayer> XRWebGLLayer::Constructor(
       return nullptr;
     }
 
-    const auto document = gl->GetParentObject()->OwnerDoc();
+    const auto document = gl->GetCanvas()->OwnerDoc();
     if (aXRWebGLLayerInitDict.mAlpha) {
       nsContentUtils::ReportToConsoleNonLocalized(
           u"XRWebGLLayer doesn't support no alpha value. "
@@ -264,9 +264,7 @@ void XRWebGLLayer::EndAnimationFrame() {
   }
 }
 
-HTMLCanvasElement* XRWebGLLayer::GetCanvas() {
-  return mWebGL->GetParentObject();
-}
+HTMLCanvasElement* XRWebGLLayer::GetCanvas() { return mWebGL->GetCanvas(); }
 
 void XRWebGLLayer::SessionEnded() { DeleteFramebuffer(); }
 

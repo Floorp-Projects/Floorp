@@ -94,7 +94,6 @@ def browser_kwargs(logger, test_type, run_info_data, config, **kwargs):
             "certutil_binary": kwargs["certutil_binary"],
             "ca_certificate_path": config.ssl_config["ca_cert_path"],
             "e10s": kwargs["gecko_e10s"],
-            "enable_webrender": kwargs["enable_webrender"],
             "enable_fission": run_info_data["fission"],
             "stackfix_dir": kwargs["stackfix_dir"],
             "binary_args": kwargs["binary_args"],
@@ -177,7 +176,6 @@ def executor_kwargs(logger, test_type, test_environment, run_info_data,
                                   kwargs["debug_info"],
                                   kwargs["stylo_threads"],
                                   kwargs["headless"],
-                                  kwargs["enable_webrender"],
                                   kwargs["chaos_mode_flags"])
             leak_report_file = setup_leak_report(kwargs["leak_check"], profile, environ)
 
@@ -268,11 +266,11 @@ def run_info_browser_version(**kwargs):
 
 
 def update_properties():
-    return (["os", "debug", "webrender", "fission", "e10s", "processor", "swgl"],
+    return (["os", "debug", "fission", "e10s", "processor", "swgl"],
             {"os": ["version"], "processor": ["bits"]})
 
 
-def get_environ(logger, binary, debug_info, stylo_threads, headless, enable_webrender,
+def get_environ(logger, binary, debug_info, stylo_threads, headless,
                 chaos_mode_flags=None):
     env = test_environment(xrePath=os.path.abspath(os.path.dirname(binary)),
                            debugger=debug_info is not None,
@@ -286,11 +284,6 @@ def get_environ(logger, binary, debug_info, stylo_threads, headless, enable_webr
         env["MOZ_CHAOSMODE"] = str(chaos_mode_flags)
     if headless:
         env["MOZ_HEADLESS"] = "1"
-    if enable_webrender:
-        env["MOZ_WEBRENDER"] = "1"
-        env["MOZ_ACCELERATED"] = "1"
-    else:
-        env["MOZ_WEBRENDER"] = "0"
     return env
 
 
@@ -313,7 +306,7 @@ class FirefoxInstanceManager:
     __metaclass__ = ABCMeta
 
     def __init__(self, logger, binary, binary_args, profile_creator, debug_info,
-                 chaos_mode_flags, headless, enable_webrender, stylo_threads,
+                 chaos_mode_flags, headless, stylo_threads,
                  leak_check, stackfix_dir, symbols_path, asan):
         """Object that manages starting and stopping instances of Firefox."""
         self.logger = logger
@@ -323,7 +316,6 @@ class FirefoxInstanceManager:
         self.debug_info = debug_info
         self.chaos_mode_flags = chaos_mode_flags
         self.headless = headless
-        self.enable_webrender = enable_webrender
         self.stylo_threads = stylo_threads
         self.leak_check = leak_check
         self.stackfix_dir = stackfix_dir
@@ -365,7 +357,7 @@ class FirefoxInstanceManager:
         profile.set_preferences({"marionette.port": marionette_port})
 
         env = get_environ(self.logger, self.binary, self.debug_info, self.stylo_threads,
-                          self.headless, self.enable_webrender, self.chaos_mode_flags)
+                          self.headless, self.chaos_mode_flags)
 
         args = self.binary_args[:] if self.binary_args else []
         args += [cmd_arg("marionette"), "about:blank"]
@@ -785,7 +777,7 @@ class FirefoxBrowser(Browser):
 
     def __init__(self, logger, binary, prefs_root, test_type, extra_prefs=None, debug_info=None,
                  symbols_path=None, stackwalk_binary=None, certutil_binary=None,
-                 ca_certificate_path=None, e10s=False, enable_webrender=False, enable_fission=True,
+                 ca_certificate_path=None, e10s=False, enable_fission=True,
                  stackfix_dir=None, binary_args=None, timeout_multiplier=None, leak_check=False,
                  asan=False, stylo_threads=1, chaos_mode_flags=None, config=None,
                  browser_channel="nightly", headless=None, preload_browser=False,
@@ -832,7 +824,6 @@ class FirefoxBrowser(Browser):
                                                      debug_info,
                                                      chaos_mode_flags,
                                                      headless,
-                                                     enable_webrender,
                                                      stylo_threads,
                                                      leak_check,
                                                      stackfix_dir,

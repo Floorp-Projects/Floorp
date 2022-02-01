@@ -19,7 +19,8 @@ with Files("*IMContextWrapper*"):
 with Files("*nsGtkKeyUtils*"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
-DIRS += ["mozgtk"]
+if CONFIG["COMPILE_ENVIRONMENT"]:
+    DIRS += ["mozgtk"]
 
 if CONFIG["MOZ_WAYLAND"]:
     DIRS += ["wayland", "mozwayland"]
@@ -153,8 +154,8 @@ DEFINES["CAIRO_GFX"] = True
 
 DEFINES["MOZ_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"]
 
-CFLAGS += CONFIG["TK_CFLAGS"]
-CXXFLAGS += CONFIG["TK_CFLAGS"]
+CFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
+CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
 if CONFIG["MOZ_WAYLAND"]:
     CFLAGS += CONFIG["MOZ_WAYLAND_CFLAGS"]

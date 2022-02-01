@@ -26,10 +26,13 @@
 #include "libavutil/internal.h"
 #include "libavutil/mathematics.h"
 #include "libavutil/mem.h"
-#include "avcodec.h"
+
 #include "bytestream.h"
 #include "internal.h"
+#include "packet.h"
+#include "packet_internal.h"
 
+#if FF_API_INIT_PACKET
 void av_init_packet(AVPacket *pkt)
 {
     pkt->pts                  = AV_NOPTS_VALUE;
@@ -47,6 +50,16 @@ FF_ENABLE_DEPRECATION_WARNINGS
     pkt->side_data            = NULL;
     pkt->side_data_elems      = 0;
 }
+#endif
+
+static void get_packet_defaults(AVPacket *pkt)
+{
+    memset(pkt, 0, sizeof(*pkt));
+
+    pkt->pts             = AV_NOPTS_VALUE;
+    pkt->dts             = AV_NOPTS_VALUE;
+    pkt->pos             = -1;
+}
 
 AVPacket *av_packet_alloc(void)
 {
@@ -54,7 +67,7 @@ AVPacket *av_packet_alloc(void)
     if (!pkt)
         return pkt;
 
-    av_packet_unref(pkt);
+    get_packet_defaults(pkt);
 
     return pkt;
 }
@@ -90,7 +103,7 @@ int av_new_packet(AVPacket *pkt, int size)
     if (ret < 0)
         return ret;
 
-    av_init_packet(pkt);
+    get_packet_defaults(pkt);
     pkt->buf      = buf;
     pkt->data     = buf->data;
     pkt->size     = size;
@@ -127,7 +140,8 @@ int av_grow_packet(AVPacket *pkt, int grow_by)
                 return AVERROR(ENOMEM);
         }
 
-        if (new_size + data_offset > pkt->buf->size) {
+        if (new_size + data_offset > pkt->buf->size ||
+            !av_buffer_is_writable(pkt->buf)) {
             int ret = av_buffer_realloc(&pkt->buf, new_size + data_offset);
             if (ret < 0) {
                 pkt->data = old_data;
@@ -327,12 +341,16 @@ int av_packet_add_side_data(AVPacket *pkt, enum AVPacketSideDataType type,
 
 
 uint8_t *av_packet_new_side_data(AVPacket *pkt, enum AVPacketSideDataType type,
-                                 int size)
+                                 buffer_size_t size)
 {
     int ret;
     uint8_t *data;
 
+#if FF_API_BUFFER_SIZE_T
     if ((unsigned)size > INT_MAX - AV_INPUT_BUFFER_PADDING_SIZE)
+#else
+    if (size > SIZE_MAX - AV_INPUT_BUFFER_PADDING_SIZE)
+#endif
         return NULL;
     data = av_mallocz(size + AV_INPUT_BUFFER_PADDING_SIZE);
     if (!data)
@@ -348,7 +366,7 @@ uint8_t *av_packet_new_side_data(AVPacket *pkt, enum AVPacketSideDataType type,
 }
 
 uint8_t *av_packet_get_side_data(const AVPacket *pkt, enum AVPacketSideDataType type,
-                                 int *size)
+                                 buffer_size_t *size)
 {
     int i;
 
@@ -394,6 +412,10 @@ const char *av_packet_side_data_name(enum AVPacketSideDataType type)
     case AV_PKT_DATA_ENCRYPTION_INIT_INFO:       return "Encryption initialization data";
     case AV_PKT_DATA_ENCRYPTION_INFO:            return "Encryption info";
     case AV_PKT_DATA_AFD:                        return "Active Format Description data";
+    case AV_PKT_DATA_PRFT:                       return "Producer Reference Time";
+    case AV_PKT_DATA_ICC_PROFILE:                return "ICC Profile";
+    case AV_PKT_DATA_DOVI_CONF:                  return "DOVI configuration record";
+    case AV_PKT_DATA_S12M_TIMECODE:              return "SMPTE ST 12-1:2014 timecode";
     }
     return NULL;
 }
@@ -485,48 +507,61 @@ int av_packet_split_side_data(AVPacket *pkt){
 }
 #endif
 
+#if FF_API_BUFFER_SIZE_T
 uint8_t *av_packet_pack_dictionary(AVDictionary *dict, int *size)
+#else
+uint8_t *av_packet_pack_dictionary(AVDictionary *dict, size_t *size)
+#endif
 {
-    AVDictionaryEntry *t = NULL;
     uint8_t *data = NULL;
     *size = 0;
 
     if (!dict)
         return NULL;
 
-    while ((t = av_dict_get(dict, "", t, AV_DICT_IGNORE_SUFFIX))) {
-        const size_t keylen   = strlen(t->key);
-        const size_t valuelen = strlen(t->value);
-        const size_t new_size = *size + keylen + 1 + valuelen + 1;
-        uint8_t *const new_data = av_realloc(data, new_size);
+    for (int pass = 0; pass < 2; pass++) {
+        const AVDictionaryEntry *t = NULL;
+        size_t total_length = 0;
 
-        if (!new_data)
-            goto fail;
-        data = new_data;
-        if (new_size > INT_MAX)
-            goto fail;
+        while ((t = av_dict_get(dict, "", t, AV_DICT_IGNORE_SUFFIX))) {
+            for (int i = 0; i < 2; i++) {
+                const char  *str = i ? t->value : t->key;
+                const size_t len = strlen(str) + 1;
 
-        memcpy(data + *size, t->key, keylen + 1);
-        memcpy(data + *size + keylen + 1, t->value, valuelen + 1);
-
-        *size = new_size;
+                if (pass)
+                    memcpy(data + total_length, str, len);
+#if FF_API_BUFFER_SIZE_T
+                else if (len > INT_MAX - total_length)
+#else
+                else if (len > SIZE_MAX - total_length)
+#endif
+                    return NULL;
+                total_length += len;
+            }
+        }
+        if (pass)
+            break;
+        data = av_malloc(total_length);
+        if (!data)
+            return NULL;
+        *size = total_length;
     }
 
     return data;
-
-fail:
-    av_freep(&data);
-    *size = 0;
-    return NULL;
 }
 
+#if FF_API_BUFFER_SIZE_T
 int av_packet_unpack_dictionary(const uint8_t *data, int size, AVDictionary **dict)
+#else
+int av_packet_unpack_dictionary(const uint8_t *data, size_t size,
+                                AVDictionary **dict)
+#endif
 {
     const uint8_t *end;
-    int ret = 0;
+    int ret;
 
     if (!dict || !data || !size)
-        return ret;
+        return 0;
     end = data + size;
     if (size && end[-1])
         return AVERROR_INVALIDDATA;
@@ -539,15 +574,15 @@ int av_packet_unpack_dictionary(const uint8_t *data, int size, AVDictionary **di
 
         ret = av_dict_set(dict, key, val, 0);
         if (ret < 0)
-            break;
+            return ret;
         data = val + strlen(val) + 1;
     }
 
-    return ret;
+    return 0;
 }
 
 int av_packet_shrink_side_data(AVPacket *pkt, enum AVPacketSideDataType type,
-                               int size)
+                               buffer_size_t size)
 {
     int i;
 
@@ -582,7 +617,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
     dst->side_data_elems      = 0;
     for (i = 0; i < src->side_data_elems; i++) {
         enum AVPacketSideDataType type = src->side_data[i].type;
-        int size          = src->side_data[i].size;
+        buffer_size_t size = src->side_data[i].size;
         uint8_t *src_data = src->side_data[i].data;
         uint8_t *dst_data = av_packet_new_side_data(dst, type, size);
 
@@ -600,18 +635,18 @@ void av_packet_unref(AVPacket *pkt)
 {
     av_packet_free_side_data(pkt);
     av_buffer_unref(&pkt->buf);
-    av_init_packet(pkt);
-    pkt->data = NULL;
-    pkt->size = 0;
+    get_packet_defaults(pkt);
 }
 
 int av_packet_ref(AVPacket *dst, const AVPacket *src)
 {
     int ret;
 
+    dst->buf = NULL;
+
     ret = av_packet_copy_props(dst, src);
     if (ret < 0)
-        return ret;
+        goto fail;
 
     if (!src->buf) {
         ret = packet_alloc(&dst->buf, src->size);
@@ -635,7 +670,7 @@ int av_packet_ref(AVPacket *dst, const AVPacket *src)
 
     return 0;
 fail:
-    av_packet_free_side_data(dst);
+    av_packet_unref(dst);
     return ret;
 }
 
@@ -655,9 +690,7 @@ AVPacket *av_packet_clone(const AVPacket *src)
 void av_packet_move_ref(AVPacket *dst, AVPacket *src)
 {
     *dst = *src;
-    av_init_packet(src);
-    src->data = NULL;
-    src->size = 0;
+    get_packet_defaults(src);
 }
 
 int av_packet_make_refcounted(AVPacket *pkt)
@@ -717,10 +750,77 @@ FF_ENABLE_DEPRECATION_WARNINGS
 #endif
 }
 
+int avpriv_packet_list_put(PacketList **packet_buffer,
+                           PacketList **plast_pktl,
+                           AVPacket      *pkt,
+                           int (*copy)(AVPacket *dst, const AVPacket *src),
+                           int flags)
+{
+    PacketList *pktl = av_mallocz(sizeof(PacketList));
+    int ret;
+
+    if (!pktl)
+        return AVERROR(ENOMEM);
+
+    if (copy) {
+        ret = copy(&pktl->pkt, pkt);
+        if (ret < 0) {
+            av_free(pktl);
+            return ret;
+        }
+    } else {
+        ret = av_packet_make_refcounted(pkt);
+        if (ret < 0) {
+            av_free(pktl);
+            return ret;
+        }
+        av_packet_move_ref(&pktl->pkt, pkt);
+    }
+
+    if (*packet_buffer)
+        (*plast_pktl)->next = pktl;
+    else
+        *packet_buffer = pktl;
+
+    /* Add the packet in the buffered packet list. */
+    *plast_pktl = pktl;
+    return 0;
+}
+
+int avpriv_packet_list_get(PacketList **pkt_buffer,
+                           PacketList **pkt_buffer_end,
+                           AVPacket      *pkt)
+{
+    PacketList *pktl;
+    if (!*pkt_buffer)
+        return AVERROR(EAGAIN);
+    pktl        = *pkt_buffer;
+    *pkt        = pktl->pkt;
+    *pkt_buffer = pktl->next;
+    if (!pktl->next)
+        *pkt_buffer_end = NULL;
+    av_freep(&pktl);
+    return 0;
+}
+
+void avpriv_packet_list_free(PacketList **pkt_buf, PacketList **pkt_buf_end)
+{
+    PacketList *tmp = *pkt_buf;
+
+    while (tmp) {
+        PacketList *pktl = tmp;
+        tmp = pktl->next;
+        av_packet_unref(&pktl->pkt);
+        av_freep(&pktl);
+    }
+    *pkt_buf     = NULL;
+    *pkt_buf_end = NULL;
+}
+
 int ff_side_data_set_encoder_stats(AVPacket *pkt, int quality, int64_t *error, int error_count, int pict_type)
 {
     uint8_t *side_data;
-    int side_data_size;
+    buffer_size_t side_data_size;
     int i;
 
     side_data = av_packet_get_side_data(pkt, AV_PKT_DATA_QUALITY_STATS, &side_data_size);
@@ -738,6 +838,28 @@ int ff_side_data_set_encoder_stats(AVPacket *pkt, int quality, int64_t *error, i
     side_data[5] = error_count;
     for (i = 0; i<error_count; i++)
         AV_WL64(side_data+8 + 8*i , error[i]);
+
+    return 0;
+}
+
+int ff_side_data_set_prft(AVPacket *pkt, int64_t timestamp)
+{
+    AVProducerReferenceTime *prft;
+    uint8_t *side_data;
+    buffer_size_t side_data_size;
+
+    side_data = av_packet_get_side_data(pkt, AV_PKT_DATA_PRFT, &side_data_size);
+    if (!side_data) {
+        side_data_size = sizeof(AVProducerReferenceTime);
+        side_data = av_packet_new_side_data(pkt, AV_PKT_DATA_PRFT, side_data_size);
+    }
+
+    if (!side_data || side_data_size < sizeof(AVProducerReferenceTime))
+        return AVERROR(ENOMEM);
+
+    prft = (AVProducerReferenceTime *)side_data;
+    prft->wallclock = timestamp;
+    prft->flags = 0;
 
     return 0;
 }

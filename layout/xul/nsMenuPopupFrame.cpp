@@ -117,7 +117,6 @@ nsMenuPopupFrame::nsMenuPopupFrame(ComputedStyle* aStyle,
       mIsOpenChanged(false),
       mIsContextMenu(false),
       mAdjustOffsetForContextMenu(false),
-      mGeneratedChildren(false),
       mMenuCanOverlapOSBar(false),
       mShouldAutoPosition(true),
       mInContentShell(true),
@@ -135,6 +134,41 @@ nsMenuPopupFrame::nsMenuPopupFrame(ComputedStyle* aStyle,
 }  // ctor
 
 nsMenuPopupFrame::~nsMenuPopupFrame() = default;
+
+bool nsMenuPopupFrame::ShouldCreateWidgetUpfront() const {
+  if (mPopupType != ePopupTypeMenu) {
+    // Any panel with a type attribute, such as the autocomplete popup, is
+    // always generated right away.
+    return mContent->AsElement()->HasAttr(nsGkAtoms::type);
+  }
+  // Generate the widget up-front if the following is true:
+  //
+  // - If the parent menu is a <menulist> unless its sizetopopup is set to
+  // "none".
+  // - For other elements, if the parent menu has a sizetopopup attribute.
+  //
+  // In these cases the size of the parent menu is dependent on the size of the
+  // popup, so the widget needs to exist in order to calculate this size.
+  nsIContent* parentContent = mContent->GetParent();
+  if (!parentContent) {
+    return true;
+  }
+
+  if (parentContent->IsXULElement(nsGkAtoms::menulist)) {
+    Element* parent = parentContent->AsElement();
+    nsAutoString sizedToPopup;
+    if (!parent->GetAttr(nsGkAtoms::sizetopopup, sizedToPopup)) {
+      // No prop set, generate child frames normally for the default value
+      // ("pref").
+      return true;
+    }
+    // Don't generate child frame only if the property is set to none.
+    return !sizedToPopup.EqualsLiteral("none");
+  }
+
+  return parentContent->IsElement() &&
+         parentContent->AsElement()->HasAttr(nsGkAtoms::sizetopopup);
+}
 
 void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                             nsIFrame* aPrevInFlow) {
@@ -178,10 +212,13 @@ void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
       mInContentShell = false;
     }
   }
-  // To improve performance, create the widget for the popup only if it is not
-  // a leaf. Leaf popups such as menus will create their widgets later when
-  // the popup opens.
-  if (!IsLeaf() && !ourView->HasWidget()) {
+
+  // To improve performance, create the widget for the popup if needed. Popups
+  // such as menus will create their widgets later when the popup opens.
+  //
+  // FIXME(emilio): Doing this up-front for all menupopups causes a bunch of
+  // assertions, while it's supposed to be just an optimization.
+  if (!ourView->HasWidget() && ShouldCreateWidgetUpfront()) {
     CreateWidgetForView(ourView);
   }
 
@@ -267,9 +304,6 @@ void nsMenuPopupFrame::EnsureWidget(bool aRecreate) {
     ourView->DestroyWidget();
   }
   if (!ourView->HasWidget()) {
-    NS_ASSERTION(aRecreate || (!mGeneratedChildren &&
-                               !PrincipalChildList().FirstChild()),
-                 "Creating widget for MenuPopupFrame with children");
     CreateWidgetForView(ourView);
   }
 }
@@ -401,7 +435,8 @@ void nsMenuPopupFrame::SetPopupState(nsPopupState aState) {
   }
 }
 
-NS_IMETHODIMP nsXULPopupShownEvent::Run() {
+// TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
+MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsXULPopupShownEvent::Run() {
   nsMenuPopupFrame* popup = do_QueryFrame(mPopup->GetPrimaryFrame());
   // Set the state to visible if the popup is still open.
   if (popup && popup->IsOpen()) {
@@ -449,49 +484,6 @@ void nsXULPopupShownEvent::CancelListener() {
 NS_IMPL_ISUPPORTS_INHERITED(nsXULPopupShownEvent, Runnable,
                             nsIDOMEventListener);
 
-bool nsMenuPopupFrame::IsLeafDynamic() const {
-  if (mGeneratedChildren) return false;
-
-  if (mPopupType != ePopupTypeMenu) {
-    // any panel with a type attribute, such as the autocomplete popup,
-    // is always generated right away.
-    return !mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::type);
-  }
-
-  // menu popups generate their child frames lazily only when opened, so
-  // behave like a leaf frame. However, generate child frames normally if the
-  // following is true:
-  //
-  // - If the parent menu is a <menulist> unless its sizetopopup is set to
-  // "none".
-  // - For other elements, if the parent menu has a sizetopopup attribute.
-  //
-  // In these cases the size of the parent menu is dependent on the size of
-  // the popup, so the frames need to exist in order to calculate this size.
-  nsIContent* parentContent = mContent->GetParent();
-  if (!parentContent) {
-    return false;
-  }
-
-  if (parentContent->IsXULElement(nsGkAtoms::menulist)) {
-    Element* parent = parentContent->AsElement();
-    if (!parent->HasAttr(kNameSpaceID_None, nsGkAtoms::sizetopopup)) {
-      // No prop set, generate child frames normally for the
-      // default value ("pref").
-      return false;
-    }
-
-    nsAutoString sizedToPopup;
-    parent->GetAttr(kNameSpaceID_None, nsGkAtoms::sizetopopup, sizedToPopup);
-    // Don't generate child frame only if the property is set to none.
-    return sizedToPopup.EqualsLiteral("none");
-  }
-
-  return (!parentContent->IsElement() ||
-          !parentContent->AsElement()->HasAttr(kNameSpaceID_None,
-                                               nsGkAtoms::sizetopopup));
-}
-
 void nsMenuPopupFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
   nsBoxFrame::DidSetComputedStyle(aOldStyle);
 
@@ -529,7 +521,7 @@ void nsMenuPopupFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
 
 void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
                                    nsIFrame* aParentMenu, bool aSizedToPopup) {
-  if (IsLeaf() || IsNativeMenu()) {
+  if (IsNativeMenu()) {
     return;
   }
 
@@ -1787,17 +1779,6 @@ void nsMenuPopupFrame::WidgetPositionOrSizeDidChange() {
         browserParent->NotifyPositionUpdatedForContentsInPopup();
       }
     }
-  }
-}
-
-void nsMenuPopupFrame::GenerateFrames() {
-  const bool generateFrames = IsLeaf();
-  MOZ_ASSERT_IF(generateFrames, !mGeneratedChildren);
-  mGeneratedChildren = true;
-  if (generateFrames) {
-    MOZ_ASSERT(PrincipalChildList().IsEmpty());
-    RefPtr<mozilla::PresShell> presShell = PresContext()->PresShell();
-    presShell->FrameConstructor()->GenerateChildFrames(this);
   }
 }
 

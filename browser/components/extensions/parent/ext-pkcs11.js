@@ -49,7 +49,8 @@ this.pkcs11 = class extends ExtensionAPI {
         }
         if (
           manifestLib !== ctypes.libraryName("nssckbi") &&
-          manifestLib !== ctypes.libraryName("osclientcerts")
+          manifestLib !== ctypes.libraryName("osclientcerts") &&
+          manifestLib !== ctypes.libraryName("ipcclientcerts")
         ) {
           return hostInfo.manifest;
         }

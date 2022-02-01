@@ -55,6 +55,7 @@ class ChildDNSRecord : public nsIDNSAddrRecord {
   double mTrrFetchDurationNetworkOnly = 0;
   bool mIsTRR = false;
   uint32_t mEffectiveTRRMode = 0;
+  uint32_t mTTL = 0;
 };
 
 NS_IMPL_ISUPPORTS(ChildDNSRecord, nsIDNSRecord, nsIDNSAddrRecord)
@@ -70,6 +71,7 @@ ChildDNSRecord::ChildDNSRecord(const DNSRecord& reply, uint16_t flags)
   // A shame IPDL gives us no way to grab ownership of array: so copy it.
   const nsTArray<NetAddr>& addrs = reply.addrs();
   mAddresses = addrs.Clone();
+  mTTL = reply.ttl();
 }
 
 //-----------------------------------------------------------------------------
@@ -179,6 +181,12 @@ ChildDNSRecord::ReportUnusable(uint16_t aPort) {
 NS_IMETHODIMP
 ChildDNSRecord::GetEffectiveTRRMode(uint32_t* aMode) {
   *aMode = mEffectiveTRRMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ChildDNSRecord::GetTtl(uint32_t* aTtl) {
+  *aTtl = mTTL;
   return NS_OK;
 }
 

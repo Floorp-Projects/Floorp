@@ -6,6 +6,6 @@ devtools/client/debugger/node_modules/
 dom/tests/ajax/jquery/
 dom/tests/ajax/mochikit/
 node_modules/
+intl/components/src/UnicodeScriptCodes.h
 intl/unicharutil/util/nsSpecialCasingData.cpp
 intl/unicharutil/util/nsUnicodePropertyData.cpp
-intl/unicharutil/util/nsUnicodeScriptCodes.h

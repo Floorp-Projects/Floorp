@@ -61,9 +61,6 @@ static const TimeDuration kMaxCCLockedoutTime = TimeDuration::FromSeconds(30);
 // Trigger a CC if the purple buffer exceeds this size when we check it.
 static const uint32_t kCCPurpleLimit = 200;
 
-// How many cycle collected nodes to traverse between time checks.
-static const int64_t kNumCCNodesBetweenTimeChecks = 1000;
-
 // Actions performed by the GCRunner state machine.
 enum class GCRunnerAction {
   WaitToMajorGC,  // We want to start a new major GC
@@ -112,6 +109,8 @@ struct CCRunnerStep {
 
 class CCGCScheduler {
  public:
+  CCGCScheduler() : mInterruptRequested(false) {}
+
   static bool CCRunnerFired(TimeStamp aDeadline);
 
   // Parameter setting
@@ -153,6 +152,11 @@ class CCGCScheduler {
   void KillGCRunner();
   void KillCCRunner();
   void KillAllTimersAndRunners();
+
+  js::SliceBudget CreateGCSliceBudget(JS::GCReason aReason, int64_t aMillis) {
+    return js::SliceBudget(mozilla::TimeDuration::FromMilliseconds(aMillis),
+                           &mInterruptRequested);
+  }
 
   /*
    * aDelay is the delay before the first time the idle task runner runs.
@@ -437,6 +441,10 @@ class CCGCScheduler {
 
   // The parent process is ready for us to do a major GC.
   bool mReadyForMajorGC = false;
+
+  // Set when the IdleTaskRunner requests the current task be interrupted.
+  // Cleared when the GC slice budget has detected the interrupt request.
+  mozilla::Atomic<bool> mInterruptRequested;
 
   // When a shrinking GC has been requested but we back-out, if this is true
   // we run a non-shrinking GC.

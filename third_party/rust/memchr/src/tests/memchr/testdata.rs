@@ -160,7 +160,7 @@ impl MemchrTest {
         //
         // You might think this would cause most needles to not be found, but
         // we actually expand our tests to include corpus sizes all the way up
-        // to >500 bytes, so we should exericse most branches.
+        // to >500 bytes, so we should exercise most branches.
         for align in 0..130 {
             let corpus = self.corpus(align);
             assert_eq!(

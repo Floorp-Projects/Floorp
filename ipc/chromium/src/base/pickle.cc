@@ -79,6 +79,8 @@ struct Copier<T, sizeof(uint64_t), false> {
 template <typename T, size_t size>
 struct Copier<T, size, true> {
   static void Copy(T* dest, const char* iter) {
+    // The pointer ought to be properly aligned.
+    DCHECK_EQ((((uintptr_t)iter) & (MOZ_ALIGNOF(T) - 1)), 0);
     *dest = *reinterpret_cast<const T*>(iter);
   }
 };
@@ -86,7 +88,7 @@ struct Copier<T, size, true> {
 }  // anonymous namespace
 
 PickleIterator::PickleIterator(const Pickle& pickle)
-    : iter_(pickle.buffers_.Iter()), start_(mozilla::TimeStamp::Now()) {
+    : iter_(pickle.buffers_.Iter()) {
   iter_.Advance(pickle.buffers_, pickle.header_size_);
 }
 
@@ -458,17 +460,6 @@ bool Pickle::WriteSentinel(uint32_t sentinel) { return WriteUInt32(sentinel); }
 void Pickle::EndRead(PickleIterator& iter, uint32_t ipcMsgType) const {
   // FIXME: Deal with the footer somehow...
   // DCHECK(iter.iter_.Done());
-
-  if (NS_IsMainThread() && ipcMsgType != 0) {
-    uint32_t latencyMs =
-        round((mozilla::TimeStamp::Now() - iter.start_).ToMilliseconds());
-    if (latencyMs >= kMinTelemetryIPCReadLatencyMs) {
-      mozilla::Telemetry::Accumulate(
-          mozilla::Telemetry::IPC_READ_MAIN_THREAD_LATENCY_MS,
-          nsDependentCString(IPC::StringFromIPCMessageType(ipcMsgType)),
-          latencyMs);
-    }
-  }
 }
 
 void Pickle::Truncate(PickleIterator* iter) {
@@ -620,8 +611,22 @@ bool Pickle::WriteBytesZeroCopy(void* data, uint32_t data_len,
                                 uint32_t capacity) {
   BeginWrite(data_len, sizeof(memberAlignmentType));
 
+  uint32_t new_capacity = AlignInt(capacity);
+#ifndef MOZ_MEMORY
+  if (new_capacity > capacity) {
+    // If the buffer we were given is not large enough to contain padding
+    // after the data, reallocate it to make it so. When using jemalloc,
+    // we're guaranteed the buffer size is going to be at least 4-bytes
+    // aligned, so we skip realloc altogether. Even with other allocators,
+    // the realloc is likely not necessary, but we don't take chances.
+    // At least with ASan, it does matter to realloc to inform ASan we're
+    // going to use more data from the buffer (and let it actually realloc
+    // if it needs to).
+    data = realloc(data, new_capacity);
+  }
+#endif
   buffers_.WriteBytesZeroCopy(reinterpret_cast<char*>(data), data_len,
-                              capacity);
+                              new_capacity);
 
   EndWrite(data_len);
   return true;

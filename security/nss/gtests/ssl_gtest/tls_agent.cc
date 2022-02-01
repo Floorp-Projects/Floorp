@@ -228,7 +228,7 @@ bool TlsAgent::ConfigServerCert(const std::string& id, bool updateKeyBits,
 bool TlsAgent::EnsureTlsSetup(PRFileDesc* modelSocket) {
   // Don't set up twice
   if (ssl_fd_) return true;
-  NssManagePolicy policyManage(policy_);
+  NssManagePolicy policyManage(policy_, option_);
 
   ScopedPRFileDesc dummy_fd(adapter_->CreateFD());
   EXPECT_NE(nullptr, dummy_fd);

@@ -1165,8 +1165,10 @@ class ContentParent final
 
   bool DeallocPFileDescriptorSetParent(PFileDescriptorSetParent*);
 
+#ifdef MOZ_WEBRTC
   PWebrtcGlobalParent* AllocPWebrtcGlobalParent();
   bool DeallocPWebrtcGlobalParent(PWebrtcGlobalParent* aActor);
+#endif
 
   mozilla::ipc::IPCResult RecvUpdateDropEffect(const uint32_t& aDragAction,
                                                const uint32_t& aDropEffect);

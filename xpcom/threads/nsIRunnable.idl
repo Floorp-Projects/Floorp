@@ -21,18 +21,18 @@ interface nsIRunnable : nsISupports
 [scriptable, uuid(e75aa42a-80a9-11e6-afb5-e89d87348e2c)]
 interface nsIRunnablePriority : nsISupports
 {
-    const unsigned short PRIORITY_IDLE = 0;
-    const unsigned short PRIORITY_DEFERRED_TIMERS = 1;
+    const unsigned long PRIORITY_IDLE = 0;
+    const unsigned long PRIORITY_DEFERRED_TIMERS = 1;
     // INPUT_LOW isn't supposed to be used directly.
-    // const unsigned short PRIORITY_INPUT_LOW = 2;
-    const unsigned short PRIORITY_NORMAL = 3;
-    const unsigned short PRIORITY_MEDIUMHIGH = 4;
-    const unsigned short PRIORITY_INPUT_HIGH = 5;
-    const unsigned short PRIORITY_VSYNC = 6;
+    // const unsigned long PRIORITY_INPUT_LOW = 2;
+    const unsigned long PRIORITY_NORMAL = 3;
+    const unsigned long PRIORITY_MEDIUMHIGH = 4;
+    const unsigned long PRIORITY_INPUT_HIGH = 5;
+    const unsigned long PRIORITY_VSYNC = 6;
     // INPUT_HIGHEST is InputTaskManager's internal priority
-    //const unsigned short PRIORITY_INPUT_HIGHEST = 7;
-    const unsigned short PRIORITY_RENDER_BLOCKING = 8;
-    const unsigned short PRIORITY_CONTROL = 9;
+    //const unsigned long PRIORITY_INPUT_HIGHEST = 7;
+    const unsigned long PRIORITY_RENDER_BLOCKING = 8;
+    const unsigned long PRIORITY_CONTROL = 9;
 
     readonly attribute unsigned long priority;
 };

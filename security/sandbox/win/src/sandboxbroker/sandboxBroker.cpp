@@ -25,6 +25,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/WinDllServices.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
 #include "nsDirectoryServiceDefs.h"
@@ -441,13 +442,38 @@ static const Maybe<Vector<const wchar_t*>>& GetPrespawnCigExceptionModules() {
 static sandbox::ResultCode InitSignedPolicyRulesToBypassCig(
     sandbox::TargetPolicy* aPolicy,
     const Vector<const wchar_t*>& aExceptionModules) {
+  static UniquePtr<nsString> sInstallDir;
+  if (!sInstallDir) {
+    // Since this function is called before sBinDir is initialized,
+    // we cache the install path by ourselves.
+    UniquePtr<wchar_t[]> appDirStr;
+    if (GetInstallDirectory(appDirStr)) {
+      sInstallDir = MakeUnique<nsString>(appDirStr.get());
+      sInstallDir->Append(u"\\*");
+
+      auto setClearOnShutdown = [ptr = &sInstallDir]() -> void {
+        ClearOnShutdown(ptr);
+      };
+      if (NS_IsMainThread()) {
+        setClearOnShutdown();
+      } else {
+        SchedulerGroup::Dispatch(
+            TaskCategory::Other,
+            NS_NewRunnableFunction("InitSignedPolicyRulesToBypassCig",
+                                   std::move(setClearOnShutdown)));
+      }
+    }
+
+    if (!sInstallDir) {
+      return sandbox::SBOX_ERROR_GENERIC;
+    }
+  }
+
   // Allow modules in the directory containing the executable such as
   // mozglue.dll, nss3.dll, etc.
-  nsAutoString rulePath(*sBinDir);
-  rulePath.Append(u"\\*");
   auto result = aPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_SIGNED_BINARY,
                                  sandbox::TargetPolicy::SIGNED_ALLOW_LOAD,
-                                 rulePath.get());
+                                 sInstallDir->get());
   if (result != sandbox::SBOX_ALL_OK) {
     return result;
   }
@@ -1145,6 +1171,12 @@ bool SandboxBroker::SetSecurityLevelForSocketProcess() {
       sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP |
       sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
 
+  const Maybe<Vector<const wchar_t*>>& exceptionModules =
+      GetPrespawnCigExceptionModules();
+  if (exceptionModules.isSome()) {
+    mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
+  }
+
   if (StaticPrefs::security_sandbox_socket_shadow_stack_enabled()) {
     mitigations |= sandbox::MITIGATION_CET_COMPAT_MODE;
   }
@@ -1152,14 +1184,24 @@ bool SandboxBroker::SetSecurityLevelForSocketProcess() {
   result = mPolicy->SetProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result, "Invalid flags for SetProcessMitigations.");
 
+  if (exceptionModules.isSome()) {
+    // This needs to be called after MITIGATION_FORCE_MS_SIGNED_BINS is set
+    // because of DCHECK in PolicyBase::AddRuleInternal.
+    result = InitSignedPolicyRulesToBypassCig(mPolicy, exceptionModules.ref());
+    SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
+  }
+
   if (StaticPrefs::security_sandbox_socket_win32k_disable()) {
     result = AddWin32kLockdownPolicy(mPolicy, false);
     SANDBOX_ENSURE_SUCCESS(result, "Failed to add the win32k lockdown policy");
   }
 
   mitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
-                sandbox::MITIGATION_DLL_SEARCH_ORDER |
-                sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
+                sandbox::MITIGATION_DLL_SEARCH_ORDER;
+
+  if (exceptionModules.isNothing()) {
+    mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
+  }
 
   // TODO: MITIGATION_DYNAMIC_CODE_DISABLE will be always added to mitigations
   // in bug 1734470.

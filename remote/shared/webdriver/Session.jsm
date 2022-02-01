@@ -28,6 +28,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+XPCOMUtils.defineLazyGetter(
+  this,
+  "messageHandlerError",
+  () =>
+    ChromeUtils.import(
+      "chrome://remote/content/shared/messagehandler/Errors.jsm"
+    ).error
+);
 
 /**
  * Representation of WebDriver session.
@@ -219,23 +227,31 @@ class WebDriverSession {
     }
   }
 
-  execute(module, command, params) {
-    return this.messageHandler.handleCommand({
-      moduleName: module,
-      commandName: command,
-      params,
+  async execute(module, command, params) {
+    try {
+      return await this.messageHandler.handleCommand({
+        moduleName: module,
+        commandName: command,
+        params,
 
-      // XXX: At the moment, commands do not describe consistently their destination,
-      // so we will need a translation step based on a specific command and its params
-      // in order to extract a destination that can be understood by the MessageHandler.
-      //
-      // For now, an option is to send all commands to ROOT, and all BiDi MessageHandler
-      // modules will therefore need to implement this translation step in the root
-      // implementation of their module.
-      destination: {
-        type: RootMessageHandler.type,
-      },
-    });
+        // XXX: At the moment, commands do not describe consistently their destination,
+        // so we will need a translation step based on a specific command and its params
+        // in order to extract a destination that can be understood by the MessageHandler.
+        //
+        // For now, an option is to send all commands to ROOT, and all BiDi MessageHandler
+        // modules will therefore need to implement this translation step in the root
+        // implementation of their module.
+        destination: {
+          type: RootMessageHandler.type,
+        },
+      });
+    } catch (e) {
+      if (e instanceof messageHandlerError.UnsupportedCommandError) {
+        throw new error.UnknownCommandError(`${module}.${command}`);
+      }
+
+      throw e;
+    }
   }
 
   get a11yChecks() {

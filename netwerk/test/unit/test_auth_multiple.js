@@ -23,13 +23,10 @@ XPCOMUtils.defineLazyGetter(this, "PORT", function() {
 const FLAG_RETURN_FALSE = 1 << 0;
 const FLAG_WRONG_PASSWORD = 1 << 1;
 const FLAG_BOGUS_USER = 1 << 2;
-const FLAG_PREVIOUS_FAILED = 1 << 3;
+// const FLAG_PREVIOUS_FAILED = 1 << 3;
 const CROSS_ORIGIN = 1 << 4;
-const FLAG_NO_REALM = 1 << 5;
+// const FLAG_NO_REALM = 1 << 5;
 const FLAG_NON_ASCII_USER_PASSWORD = 1 << 6;
-
-const nsIAuthPrompt2 = Ci.nsIAuthPrompt2;
-const nsIAuthInformation = Ci.nsIAuthInformation;
 
 function AuthPrompt1(flags) {
   this.flags = flags;
@@ -261,12 +258,8 @@ function basic_auth(metadata, response) {
 // Digest functions
 //
 function bytesFromString(str) {
-  var converter = Cc[
-    "@mozilla.org/intl/scriptableunicodeconverter"
-  ].createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "UTF-8";
-  var data = converter.convertToByteArray(str);
-  return data;
+  const encoder = new TextEncoder("utf-8");
+  return encoder.encode(str);
 }
 
 // return the two-digit hexadecimal code for a byte
@@ -391,6 +384,10 @@ function setup() {
 setup();
 
 add_task(async function test_ntlm_first() {
+  Services.prefs.setBoolPref(
+    "network.auth.choose_most_secure_challenge",
+    false
+  );
   challenges = ["NTLM", `Basic realm="secret"`, digestChallenge];
   httpserv.identity.add("http", "ntlm.com", httpserv.identity.primaryPort);
   let chan = makeChan(URL("ntlm.com", "/path"));
@@ -406,6 +403,10 @@ add_task(async function test_ntlm_first() {
 });
 
 add_task(async function test_basic_first() {
+  Services.prefs.setBoolPref(
+    "network.auth.choose_most_secure_challenge",
+    false
+  );
   challenges = [`Basic realm="secret"`, "NTLM", digestChallenge];
   httpserv.identity.add("http", "basic.com", httpserv.identity.primaryPort);
   let chan = makeChan(URL("basic.com", "/path"));
@@ -421,6 +422,10 @@ add_task(async function test_basic_first() {
 });
 
 add_task(async function test_digest_first() {
+  Services.prefs.setBoolPref(
+    "network.auth.choose_most_secure_challenge",
+    false
+  );
   challenges = [digestChallenge, `Basic realm="secret"`, "NTLM"];
   httpserv.identity.add("http", "digest.com", httpserv.identity.primaryPort);
   let chan = makeChan(URL("digest.com", "/path"));
@@ -433,4 +438,26 @@ add_task(async function test_digest_first() {
   });
   Assert.equal(req.QueryInterface(Ci.nsIHttpChannel).responseStatus, 200);
   Assert.equal(buf, "digest");
+});
+
+add_task(async function test_choose_most_secure() {
+  // When the pref is true, we rank the challenges by how secure they are.
+  // In this case, NTLM should be the most secure.
+  Services.prefs.setBoolPref("network.auth.choose_most_secure_challenge", true);
+  challenges = [digestChallenge, `Basic realm="secret"`, "NTLM"];
+  httpserv.identity.add(
+    "http",
+    "ntlmstrong.com",
+    httpserv.identity.primaryPort
+  );
+  let chan = makeChan(URL("ntlmstrong.com", "/path"));
+
+  chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 2);
+  let [req, buf] = await new Promise(resolve => {
+    chan.asyncOpen(
+      new ChannelListener((req, buf) => resolve([req, buf]), null)
+    );
+  });
+  Assert.equal(req.QueryInterface(Ci.nsIHttpChannel).responseStatus, 200);
+  Assert.equal(buf, "OK");
 });

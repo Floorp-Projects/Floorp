@@ -22,10 +22,7 @@ add_task(async function() {
   await onHover;
 
   info("Press escape and wait for the picker to stop");
-  const onPickerStopped = toolbox.nodePicker.once("picker-node-canceled");
-  BrowserTestUtils.synthesizeKey("VK_ESCAPE", {}, gBrowser.selectedBrowser);
-
-  await onPickerStopped;
+  await stopPickerWithEscapeKey(toolbox);
 
   info("Press escape again and wait for the split console to open");
   const onSplitConsole = toolbox.once("split-console");

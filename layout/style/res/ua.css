@@ -195,6 +195,7 @@
   -moz-box-ordinal-group: inherit;
   overflow-clip-box: inherit;
   unicode-bidi: inherit;
+  user-select: inherit;
   text-overflow: inherit;
   /* The properties below here don't apply if our position is static,
      and we do want them to have an effect if it's not, so it's fine

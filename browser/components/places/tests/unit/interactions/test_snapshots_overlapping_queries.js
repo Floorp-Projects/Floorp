@@ -5,6 +5,11 @@
  * Tests for queries on overlapping snapshots (i.e. those whose interactions overlapped within a the given overlap limit)
  */
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  PageDataSchema: "resource:///modules/pagedata/PageDataSchema.jsm",
+  PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
+});
+
 const ONE_MINUTE = 1000 * 60;
 
 const overlapLimit = Services.prefs.getIntPref(
@@ -66,7 +71,7 @@ add_task(async function test_query_multiple_context_no_overlap() {
   for (let i = 0; i < 10; i++) {
     // Test each url as the context
     let context = { url: `https://example.com/${i}/` };
-    await assertSnapshotsWithContext([], context);
+    await assertOverlappingSnapshots([], context);
   }
 });
 
@@ -80,7 +85,7 @@ add_task(async function test_query_single_context_overlap() {
   // Use the first url as the context
   let context = { url: "https://example.com/0/" };
 
-  await assertSnapshotsWithContext(
+  await assertOverlappingSnapshots(
     [
       { url: "https://example.com/9/", overlappingVisitScoreGreaterThan: 0 },
       { url: "https://example.com/8/", overlappingVisitScoreGreaterThan: 0 },
@@ -107,7 +112,7 @@ add_task(async function test_query_context_not_a_snapshot_no_interaction() {
   await addInteractions([{ url: test_url, created_at: now, updated_at: now }]);
   await Snapshots.add({ url: test_url });
 
-  await assertSnapshotsWithContext([], { url: context_url });
+  await assertOverlappingSnapshots([], { url: context_url });
 });
 
 // Test finding snapshots where the context url is not a snapshot but had an overlapping interaction (the test snapshot should be found)
@@ -124,7 +129,7 @@ add_task(async function test_query_context_not_a_snapshot() {
   await addInteractions([{ url: test_url, created_at: now, updated_at: now }]);
   await Snapshots.add({ url: test_url });
 
-  await assertSnapshotsWithContext(
+  await assertOverlappingSnapshots(
     [{ url: "https://example.com/1/", overlappingVisitScoreGreaterThan: 0 }],
     { url: context_url }
   );
@@ -146,7 +151,7 @@ add_task(
       { url: test_url, created_at: now, updated_at: now },
     ]);
 
-    await assertSnapshotsWithContext([], { url: context_url });
+    await assertOverlappingSnapshots([], { url: context_url });
   }
 );
 
@@ -164,7 +169,7 @@ add_task(async function test_query_context_a_snapshot_test_not_a_snapshot() {
   let test_url = "https://example.com/1/";
   await addInteractions([{ url: test_url, created_at: now, updated_at: now }]);
 
-  await assertSnapshotsWithContext([], { url: context_url });
+  await assertOverlappingSnapshots([], { url: context_url });
 });
 
 // Test adding an interaction one minute before the overlap limit (should not be found)
@@ -185,7 +190,7 @@ add_task(async function test_query_interact_before_no_overlap() {
   ]);
   await Snapshots.add({ url: context_url });
 
-  await assertSnapshotsWithContext([], { url: context_url });
+  await assertOverlappingSnapshots([], { url: context_url });
 });
 
 // Test adding an interaction before the context url, within one minute of the overlap limit (should be found, with a low score)
@@ -206,7 +211,7 @@ add_task(async function test_query_interact_before_overlap() {
   ]);
   await Snapshots.add({ url: context_url });
 
-  await assertSnapshotsWithContext(
+  await assertOverlappingSnapshots(
     [
       {
         url: "https://example.com/1/",
@@ -237,7 +242,7 @@ add_task(async function test_query_interact_after_no_overlap() {
   ]);
   await Snapshots.add({ url: test_url });
 
-  await assertSnapshotsWithContext([], { url: context_url });
+  await assertOverlappingSnapshots([], { url: context_url });
 });
 
 // Test adding an interaction one minute less than the overlap limit (should be found, with a low score)
@@ -260,7 +265,7 @@ add_task(async function test_query_interact_after_overlap() {
   await Snapshots.add({ url: test_url });
 
   // The interaction should be near the lower end of the [0, 1] scoring range
-  await assertSnapshotsWithContext(
+  await assertOverlappingSnapshots(
     [
       {
         url: "https://example.com/1/",
@@ -292,7 +297,7 @@ add_task(async function test_query_interact_after_overlap() {
   await Snapshots.add({ url: test_url });
 
   // The interaction should be near the upper end of the [0, 1] scoring range
-  await assertSnapshotsWithContext(
+  await assertOverlappingSnapshots(
     [
       {
         url: "https://example.com/1/",
@@ -320,7 +325,7 @@ add_task(async function test_query_single_context_increasing() {
   for (let s of snapshots) {
     scores[s.url] = s.overlappingVisitScore;
   }
-  await assertSnapshotsWithContext(
+  await assertOverlappingSnapshots(
     [
       { url: "https://example.com/1/", overlappingVisitScoreGreaterThan: 0.0 },
       {
@@ -387,7 +392,7 @@ add_task(async function test_query_revisit() {
   await Snapshots.add({ url: "https://example.com/1/" });
 
   // The interaction should be near the lower end of the [0, 1] scoring range
-  await assertSnapshotsWithContext(
+  await assertOverlappingSnapshots(
     [
       {
         url: "https://example.com/1/",
@@ -414,7 +419,7 @@ add_task(async function test_query_revisit() {
   ]);
   await Snapshots.add({ url: "https://example.com/1/" });
 
-  await assertSnapshotsWithContext(
+  await assertOverlappingSnapshots(
     [
       {
         url: "https://example.com/1/",
@@ -441,7 +446,7 @@ add_task(async function test_query_revisit() {
   ]);
   await Snapshots.add({ url: "https://example.com/1/" });
 
-  await assertSnapshotsWithContext(
+  await assertOverlappingSnapshots(
     [
       {
         url: "https://example.com/1/",
@@ -473,7 +478,7 @@ add_task(async function test_query_numerous_revisit() {
   }
 
   // The interaction should be near the lower end of the [0, 1] scoring range
-  await assertSnapshotsWithContext(
+  await assertOverlappingSnapshots(
     [
       {
         url: "https://example.com/1/",
@@ -482,5 +487,58 @@ add_task(async function test_query_numerous_revisit() {
       },
     ],
     { url: context_url }
+  );
+});
+
+// Test that pagedata is correctly retrieved from an overlapping snapshot query
+add_task(async function test_query_pagedata() {
+  await reset_interactions_snapshots();
+
+  // Register some page data.
+  PageDataService.pageDataDiscovered({
+    url: "https://example.com/1/",
+    date: Date.now(),
+    siteName: "Example site name",
+    data: {
+      [PageDataSchema.DATA_TYPE.PRODUCT]: {
+        price: {
+          value: 276,
+          currency: "USD",
+        },
+      },
+    },
+  });
+
+  let now = Date.now();
+  let context_url = "https://example.com/0/";
+  await addInteractions([
+    { url: context_url, created_at: now, updated_at: now },
+  ]);
+  await Snapshots.add({ url: context_url });
+
+  for (let i = 0; i < 10; i++) {
+    let after = now + (overlapLimit / 10.0) * i;
+    await addInteractions([
+      { url: "https://example.com/1/", created_at: after, updated_at: after },
+    ]);
+    await Snapshots.add({ url: "https://example.com/1/" });
+  }
+
+  let snapshot = await Snapshots.queryOverlapping(context_url);
+  Assert.equal(snapshot.length, 1, "One shapshot should be found");
+  Assert.equal(
+    snapshot[0].url,
+    "https://example.com/1/",
+    "Correct snapshot should be found"
+  );
+  Assert.equal(
+    snapshot[0].siteName,
+    "Example site name",
+    "Site name should be found"
+  );
+  Assert.deepEqual(
+    snapshot[0].pageData.get(PageDataSchema.DATA_TYPE.PRODUCT),
+    { price: { value: 276, currency: "USD" } },
+    "Should have the right price."
   );
 });

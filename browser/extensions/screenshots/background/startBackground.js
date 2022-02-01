@@ -47,6 +47,7 @@ this.startBackground = (function() {
 
   const backgroundScripts = [
     "log.js",
+    "makeUuid.js",
     "catcher.js",
     "blobConverters.js",
     "background/selectorLoader.js",

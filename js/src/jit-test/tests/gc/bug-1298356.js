@@ -2,5 +2,5 @@
 
 /x/;
 oomTest(function(){
-    offThreadCompileScript('');
+    offThreadCompileToStencil('');
 })

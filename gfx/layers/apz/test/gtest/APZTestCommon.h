@@ -99,6 +99,10 @@ class ScopedGfxSetting {
   Storage mOldVal;
 };
 
+static inline constexpr auto kDefaultTouchBehavior =
+    AllowedTouchBehavior::VERTICAL_PAN | AllowedTouchBehavior::HORIZONTAL_PAN |
+    AllowedTouchBehavior::PINCH_ZOOM | AllowedTouchBehavior::DOUBLE_TAP_ZOOM;
+
 #define FRESH_PREF_VAR_PASTE(id, line) id##line
 #define FRESH_PREF_VAR_EXPAND(id, line) FRESH_PREF_VAR_PASTE(id, line)
 #define FRESH_PREF_VAR FRESH_PREF_VAR_EXPAND(pref, __LINE__)
@@ -259,13 +263,16 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
         mWaitForMainThread(false),
         mcc(aMcc) {}
 
-  APZEventResult ReceiveInputEvent(InputData& aEvent) {
+  APZEventResult ReceiveInputEvent(
+      InputData& aEvent,
+      const Maybe<nsTArray<uint32_t>>& aTouchBehaviors = Nothing()) {
     // This is a function whose signature matches exactly the ReceiveInputEvent
     // on APZCTreeManager. This allows us to templates for functions like
     // TouchDown, TouchUp, etc so that we can reuse the code for dispatching
     // events into both APZC and APZCTM.
     return GetInputQueue()->ReceiveInputEvent(
-        this, TargetConfirmationFlags{!mWaitForMainThread}, aEvent);
+        this, TargetConfirmationFlags{!mWaitForMainThread}, aEvent,
+        aTouchBehaviors);
   }
 
   void ContentReceivedInputBlock(uint64_t aInputBlockId, bool aPreventDefault) {
@@ -524,8 +531,7 @@ APZEventResult APZCTesterBase::Tap(const RefPtr<InputReceiver>& aTarget,
 
   // If touch-action is enabled then simulate the allowed touch behaviour
   // notification that the main thread is supposed to deliver.
-  if (StaticPrefs::layout_css_touch_action_enabled() &&
-      touchDownResult.GetStatus() != nsEventStatus_eConsumeNoDefault) {
+  if (touchDownResult.GetStatus() != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(aTarget, touchDownResult.mInputBlockId);
   }
 
@@ -604,7 +610,7 @@ void APZCTesterBase::Pan(const RefPtr<InputReceiver>& aTarget,
       EXPECT_EQ(1UL, aAllowedTouchBehaviors->Length());
       aTarget->SetAllowedTouchBehavior(*aOutInputBlockId,
                                        *aAllowedTouchBehaviors);
-    } else if (StaticPrefs::layout_css_touch_action_enabled()) {
+    } else {
       SetDefaultAllowedTouchBehavior(aTarget, *aOutInputBlockId);
     }
   }
@@ -697,8 +703,7 @@ void APZCTesterBase::DoubleTap(const RefPtr<InputReceiver>& aTarget,
 
   // If touch-action is enabled then simulate the allowed touch behaviour
   // notification that the main thread is supposed to deliver.
-  if (StaticPrefs::layout_css_touch_action_enabled() &&
-      result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
+  if (result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(aTarget, result.mInputBlockId);
   }
 
@@ -716,8 +721,7 @@ void APZCTesterBase::DoubleTap(const RefPtr<InputReceiver>& aTarget,
   }
   mcc->AdvanceByMillis(10);
 
-  if (StaticPrefs::layout_css_touch_action_enabled() &&
-      result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
+  if (result.GetStatus() != nsEventStatus_eConsumeNoDefault) {
     SetDefaultAllowedTouchBehavior(aTarget, result.mInputBlockId);
   }
 
@@ -793,7 +797,7 @@ void APZCTesterBase::PinchWithTouchInput(
     EXPECT_EQ(2UL, aAllowedTouchBehaviors->Length());
     aTarget->SetAllowedTouchBehavior(*aOutInputBlockId,
                                      *aAllowedTouchBehaviors);
-  } else if (StaticPrefs::layout_css_touch_action_enabled()) {
+  } else {
     SetDefaultAllowedTouchBehavior(aTarget, *aOutInputBlockId, 2);
   }
 

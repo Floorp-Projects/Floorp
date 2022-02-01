@@ -8,9 +8,6 @@
  */
 
 add_task(async function() {
-  // Using https-first for this test is blocked on Bug 1733420.
-  await pushPref("dom.security.https_first", false);
-
   const { tab, monitor, toolbox } = await initNetMonitor(CURL_URL, {
     requestCount: 1,
   });

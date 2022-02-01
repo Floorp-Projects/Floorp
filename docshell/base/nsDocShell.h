@@ -288,13 +288,23 @@ class nsDocShell final : public nsDocLoader,
   // subframes. It then simulates the completion of the toplevel load.
   nsresult RestoreFromHistory();
 
+  /**
+   * Parses the passed in header string and sets up a refreshURI if a "refresh"
+   * header is found. If docshell is busy loading a page currently, the request
+   * will be queued and executed when the current page finishes loading.
+   *
+   * @param aDocument    document to which the refresh header applies.
+   * @param aHeader      The meta refresh header string.
+   */
+  void SetupRefreshURIFromHeader(mozilla::dom::Document* aDocument,
+                                 const nsAString& aHeader);
+
   // Perform a URI load from a refresh timer. This is just like the
   // ForceRefreshURI method on nsIRefreshURI, but makes sure to take
   // the timer involved out of mRefreshURIList if it's there.
   // aTimer must not be null.
   nsresult ForceRefreshURIFromTimer(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                                    int32_t aDelay, bool aMetaRefresh,
-                                    nsITimer* aTimer);
+                                    uint32_t aDelay, nsITimer* aTimer);
 
   // We need dummy OnLocationChange in some cases to update the UI without
   // updating security info.
@@ -307,7 +317,8 @@ class nsDocShell final : public nsDocLoader,
   // set. As soon as the current DocShell knows itself can be treated as
   // background loading, it triggers the parent docshell to see if the parent
   // document can fire load event earlier.
-  void TriggerParentCheckDocShellIsEmpty();
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void TriggerParentCheckDocShellIsEmpty();
 
   nsresult HistoryEntryRemoved(int32_t aIndex);
 
@@ -943,17 +954,17 @@ class nsDocShell final : public nsDocLoader,
   // If aSkipCheckingDynEntries is true, it will not try to remove dynamic
   // subframe entries. This is to avoid redundant RemoveDynEntries calls in all
   // children docshells.
-  void FirePageHideNotificationInternal(bool aIsUnload,
-                                        bool aSkipCheckingDynEntries);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FirePageHideNotificationInternal(
+      bool aIsUnload, bool aSkipCheckingDynEntries);
 
   void ThawFreezeNonRecursive(bool aThaw);
-  void FirePageHideShowNonRecursive(bool aShow);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FirePageHideShowNonRecursive(bool aShow);
 
   nsresult Dispatch(mozilla::TaskCategory aCategory,
                     already_AddRefed<nsIRunnable>&& aRunnable);
 
-  void SetupReferrerInfoFromChannel(nsIChannel* aChannel);
-  void SetReferrerInfo(nsIReferrerInfo* aReferrerInfo);
   void ReattachEditorToWindow(nsISHEntry* aSHEntry);
   void ClearFrameHistory(nsISHEntry* aEntry);
   // Determine if this type of load should update history.

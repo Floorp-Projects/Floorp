@@ -84,48 +84,6 @@ class OcclusionUpdateRunnable : public CancelableRunnable {
   TimeStamp mTimeStamp;
 };
 
-class UpdateOcclusionStateRunnable : public Runnable {
- public:
-  UpdateOcclusionStateRunnable(std::unordered_map<HWND, OcclusionState>* aMap,
-                               bool aShowAllWindows)
-      : Runnable("UpdateOcclusionStateRunnable"),
-        mMap(aMap),
-        mShowAllWindows(aShowAllWindows) {}
-
-  NS_IMETHOD Run() override {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    auto* tracker = WinWindowOcclusionTracker::Get();
-    if (tracker) {
-      tracker->UpdateOcclusionState(mMap, mShowAllWindows);
-    }
-    return NS_OK;
-  }
-
- private:
-  std::unordered_map<HWND, OcclusionState>* const mMap;
-  const bool mShowAllWindows;
-};
-
-class SerializedRunnable : public Runnable {
- public:
-  SerializedRunnable(already_AddRefed<nsIRunnable> aTask,
-                     nsISerialEventTarget* aEventTarget)
-      : Runnable("SerializedRunnable"),
-        mEventTarget(aEventTarget),
-        mTask(aTask) {}
-
-  NS_IMETHOD Run() override {
-    mTask->Run();
-    return NS_OK;
-  }
-
-  RefPtr<nsISerialEventTarget> mEventTarget;
-
- private:
-  RefPtr<nsIRunnable> mTask;
-};
-
 // Used to serialize tasks related to mRootWindowHwndsOcclusionState.
 class SerializedTaskDispatcher {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SerializedTaskDispatcher)
@@ -144,7 +102,8 @@ class SerializedTaskDispatcher {
   ~SerializedTaskDispatcher();
 
   struct Data {
-    std::queue<RefPtr<SerializedRunnable>> mTasks;
+    std::queue<std::pair<RefPtr<nsIRunnable>, RefPtr<nsISerialEventTarget>>>
+        mTasks;
     bool mDestroyed = false;
     RefPtr<Runnable> mCurrentRunnable;
   };
@@ -155,7 +114,7 @@ class SerializedTaskDispatcher {
   void HandleTasks();
 
   // Hold current EventTarget during calling nsIRunnable::Run().
-  nsISerialEventTarget* mCurrentEventTarget = nullptr;
+  RefPtr<nsISerialEventTarget> mCurrentEventTarget = nullptr;
 
   DataMutex<Data> mData;
 };
@@ -185,7 +144,8 @@ void SerializedTaskDispatcher::Destroy() {
   }
 
   data->mDestroyed = true;
-  std::queue<RefPtr<SerializedRunnable>> empty;
+  std::queue<std::pair<RefPtr<nsIRunnable>, RefPtr<nsISerialEventTarget>>>
+      empty;
   std::swap(data->mTasks, empty);
 }
 
@@ -197,7 +157,7 @@ void SerializedTaskDispatcher::PostTaskToMain(
   }
 
   nsISerialEventTarget* eventTarget = GetMainThreadSerialEventTarget();
-  data->mTasks.push(new SerializedRunnable(std::move(aTask), eventTarget));
+  data->mTasks.push({std::move(aTask), eventTarget});
 
   MOZ_ASSERT_IF(!data->mCurrentRunnable, data->mTasks.size() == 1);
   PostTasksIfNecessary(eventTarget, data);
@@ -212,7 +172,7 @@ void SerializedTaskDispatcher::PostTaskToCalculator(
 
   nsISerialEventTarget* eventTarget =
       WinWindowOcclusionTracker::OcclusionCalculatorLoop()->SerialEventTarget();
-  data->mTasks.push(new SerializedRunnable(std::move(aTask), eventTarget));
+  data->mTasks.push({std::move(aTask), eventTarget});
 
   MOZ_ASSERT_IF(!data->mCurrentRunnable, data->mTasks.size() == 1);
   PostTasksIfNecessary(eventTarget, data);
@@ -263,14 +223,14 @@ void SerializedTaskDispatcher::HandleDelayedTask(
 
   nsISerialEventTarget* eventTarget =
       WinWindowOcclusionTracker::OcclusionCalculatorLoop()->SerialEventTarget();
-  data->mTasks.push(new SerializedRunnable(std::move(aTask), eventTarget));
+  data->mTasks.push({std::move(aTask), eventTarget});
 
   MOZ_ASSERT_IF(!data->mCurrentRunnable, data->mTasks.size() == 1);
   PostTasksIfNecessary(eventTarget, data);
 }
 
 void SerializedTaskDispatcher::HandleTasks() {
-  RefPtr<SerializedRunnable> frontTask;
+  RefPtr<nsIRunnable> frontTask;
 
   // Get front task
   {
@@ -281,10 +241,10 @@ void SerializedTaskDispatcher::HandleTasks() {
     MOZ_RELEASE_ASSERT(data->mCurrentRunnable);
     MOZ_RELEASE_ASSERT(!data->mTasks.empty());
 
-    frontTask = data->mTasks.front();
+    frontTask = data->mTasks.front().first;
 
     MOZ_RELEASE_ASSERT(!mCurrentEventTarget);
-    mCurrentEventTarget = frontTask->mEventTarget;
+    mCurrentEventTarget = data->mTasks.front().second;
   }
 
   while (frontTask) {
@@ -295,10 +255,10 @@ void SerializedTaskDispatcher::HandleTasks() {
     }
 
     MOZ_ASSERT_IF(NS_IsMainThread(),
-                  frontTask->mEventTarget == GetMainThreadSerialEventTarget());
+                  mCurrentEventTarget == GetMainThreadSerialEventTarget());
     MOZ_ASSERT_IF(
         !NS_IsMainThread(),
-        frontTask->mEventTarget == MessageLoop::current()->SerialEventTarget());
+        mCurrentEventTarget == MessageLoop::current()->SerialEventTarget());
 
     frontTask->Run();
 
@@ -310,8 +270,8 @@ void SerializedTaskDispatcher::HandleTasks() {
       data->mTasks.pop();
       // Check if next task could be handled on current thread
       if (!data->mTasks.empty() &&
-          data->mTasks.front()->mEventTarget == mCurrentEventTarget) {
-        frontTask = data->mTasks.front();
+          data->mTasks.front().second == mCurrentEventTarget) {
+        frontTask = data->mTasks.front().first;
       }
     }
   }
@@ -328,8 +288,7 @@ void SerializedTaskDispatcher::HandleTasks() {
       return;
     }
 
-    auto& frontTask = data->mTasks.front();
-    PostTasksIfNecessary(frontTask->mEventTarget, data);
+    PostTasksIfNecessary(data->mTasks.front().second, data);
   }
 }
 
@@ -423,7 +382,8 @@ void WinWindowOcclusionTracker::Enable(nsBaseWidget* aWindow, HWND aHwnd) {
     return;
   }
 
-  mHwndRootWindowMap.emplace(aHwnd, aWindow);
+  nsWeakPtr weak = do_GetWeakReference(aWindow);
+  mHwndRootWindowMap.emplace(aHwnd, weak);
 
   RefPtr<Runnable> runnable = WrapRunnable(
       RefPtr<WindowOcclusionCalculator>(
@@ -628,6 +588,18 @@ bool WinWindowOcclusionTracker::IsWindowVisibleAndFullyOpaque(
   return true;
 }
 
+// static
+void WinWindowOcclusionTracker::CallUpdateOcclusionState(
+    std::unordered_map<HWND, OcclusionState>* aMap, bool aShowAllWindows) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  auto* tracker = WinWindowOcclusionTracker::Get();
+  if (!tracker) {
+    return;
+  }
+  tracker->UpdateOcclusionState(aMap, aShowAllWindows);
+}
+
 void WinWindowOcclusionTracker::UpdateOcclusionState(
     std::unordered_map<HWND, OcclusionState>* aMap, bool aShowAllWindows) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -652,9 +624,13 @@ void WinWindowOcclusionTracker::UpdateOcclusionState(
     } else if (aShowAllWindows) {
       occlState = OcclusionState::VISIBLE;
     }
-    it->second->NotifyOcclusionState(occlState);
-
-    if (it->second->SizeMode() != nsSizeMode_Minimized) {
+    nsCOMPtr<nsIWidget> widget = do_QueryReferent(it->second);
+    if (!widget) {
+      continue;
+    }
+    auto* baseWidget = static_cast<nsBaseWidget*>(widget.get());
+    baseWidget->NotifyOcclusionState(occlState);
+    if (baseWidget->SizeMode() != nsSizeMode_Minimized) {
       mNumVisibleRootWindows++;
     }
   }
@@ -717,11 +693,16 @@ void WinWindowOcclusionTracker::MarkNonIconicWindowsOccluded() {
 
   // Set all visible root windows as occluded. If not visible,
   // set them as hidden.
-  for (auto& [hwnd, window] : mHwndRootWindowMap) {
-    auto state = (window->SizeMode() == nsSizeMode_Minimized)
+  for (auto& [hwnd, weak] : mHwndRootWindowMap) {
+    nsCOMPtr<nsIWidget> widget = do_QueryReferent(weak);
+    if (!widget) {
+      continue;
+    }
+    auto* baseWidget = static_cast<nsBaseWidget*>(widget.get());
+    auto state = (baseWidget->SizeMode() == nsSizeMode_Minimized)
                      ? OcclusionState::HIDDEN
                      : OcclusionState::OCCLUDED;
-    window->NotifyOcclusionState(state);
+    baseWidget->NotifyOcclusionState(state);
   }
 }
 
@@ -990,8 +971,14 @@ void WinWindowOcclusionTracker::WindowOcclusionCalculator::
     }
   }
 
-  RefPtr<Runnable> runnable = new UpdateOcclusionStateRunnable(
-      &mRootWindowHwndsOcclusionState, mShowingThumbnails);
+  std::unordered_map<HWND, OcclusionState>* map =
+      &mRootWindowHwndsOcclusionState;
+  bool showAllWindows = mShowingThumbnails;
+  RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+      "CallUpdateOcclusionState", [map, showAllWindows]() {
+        WinWindowOcclusionTracker::CallUpdateOcclusionState(map,
+                                                            showAllWindows);
+      });
   mSerializedTaskDispatcher->PostTaskToMain(runnable.forget());
 }
 
@@ -1207,8 +1194,14 @@ void WinWindowOcclusionTracker::WindowOcclusionCalculator::
                  "ProcessEventHookCallback() mShowingThumbnails = true");
         mShowingThumbnails = true;
 
-        RefPtr<Runnable> runnable = new UpdateOcclusionStateRunnable(
-            &mRootWindowHwndsOcclusionState, mShowingThumbnails);
+        std::unordered_map<HWND, OcclusionState>* map =
+            &mRootWindowHwndsOcclusionState;
+        bool showAllWindows = mShowingThumbnails;
+        RefPtr<Runnable> runnable = NS_NewRunnableFunction(
+            "CallUpdateOcclusionState", [map, showAllWindows]() {
+              WinWindowOcclusionTracker::CallUpdateOcclusionState(
+                  map, showAllWindows);
+            });
         mSerializedTaskDispatcher->PostTaskToMain(runnable.forget());
       }
     }
