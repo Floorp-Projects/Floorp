@@ -9,6 +9,7 @@
 #include "sdp/SdpMediaSection.h"
 #include "sdp/SdpHelper.h"
 #include "nsCRT.h"
+#include "nsString.h"
 #include "mozilla/net/DataChannelProtocol.h"
 
 namespace mozilla {
@@ -36,6 +37,19 @@ class JsepCodecDescription {
 
   bool GetPtAsInt(uint16_t* ptOutparam) const {
     return SdpHelper::GetPtAsInt(mDefaultPt, ptOutparam);
+  }
+
+  // The id used for codec stats, to uniquely identify this codec configuration
+  // within a transport.
+  const nsString& StatsId() const {
+    if (!mStatsId) {
+      mStatsId.emplace();
+      mStatsId->AppendPrintf(
+          "_%s_%s/%s_%u_%u_%s", mDefaultPt.c_str(),
+          Type() == SdpMediaSection::kVideo ? "video" : "audio", mName.c_str(),
+          mClock, mChannels, mSdpFmtpLine ? mSdpFmtpLine->c_str() : "nothing");
+    }
+    return *mStatsId;
   }
 
   virtual bool Matches(const std::string& fmt,
@@ -81,6 +95,8 @@ class JsepCodecDescription {
                          const SdpMediaSection& remoteMsection,
                          bool remoteIsOffer,
                          Maybe<const SdpMediaSection&> localMsection) {
+    // Configuration might change. Invalidate the stats id.
+    mStatsId = Nothing();
     if (mDirection == sdp::kSend || remoteIsOffer) {
       mDefaultPt = pt;
     }
@@ -152,6 +168,7 @@ class JsepCodecDescription {
   std::string mDefaultPt;
   std::string mName;
   Maybe<std::string> mSdpFmtpLine;
+  mutable Maybe<nsString> mStatsId;
   uint32_t mClock;
   uint32_t mChannels;
   bool mEnabled;
