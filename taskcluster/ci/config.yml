@@ -63,6 +63,7 @@ treeherder:
         'M-spi-nw-1proc': 'Mochitests with networking on socket process without e10s'
         'M-swr': 'Mochitests with software webrender enabled'
         'M-swr-a11y-checks': 'Mochitests with software webrender and accessibility checks enabled'
+        'M-swr-a11y-checks-fis': 'Mochitests with software webrender and accessibility checks enabled and fission'
         'M-swr-1proc': 'Mochitests with software webrender enabled without e10s'
         'M-swr-fis': 'Mochitests with software webrender and fission enabled'
         'M-swr-wayland': 'Mochitests with software webrender and Wayland backend enabled'
