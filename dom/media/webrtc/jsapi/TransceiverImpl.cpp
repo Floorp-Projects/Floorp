@@ -29,6 +29,7 @@
 #include "RTCDtlsTransport.h"
 #include "RTCRtpReceiver.h"
 #include "RTCDTMFSender.h"
+#include "systemservices/MediaUtils.h"
 #include "libwebrtcglue/WebrtcCallWrapper.h"
 #include "libwebrtcglue/WebrtcGmpVideoCodec.h"
 
@@ -833,6 +834,28 @@ nsresult TransceiverImpl::NegotiatedDetailsToAudioCodecConfigs(
   return NS_OK;
 }
 
+auto TransceiverImpl::GetActivePayloadTypes() const
+    -> RefPtr<ActivePayloadTypesPromise> {
+  if (!mConduit) {
+    return ActivePayloadTypesPromise::CreateAndResolve(PayloadTypes(),
+                                                       __func__);
+  }
+
+  if (!mCallWrapper) {
+    return ActivePayloadTypesPromise::CreateAndResolve(PayloadTypes(),
+                                                       __func__);
+  }
+
+  return InvokeAsync(mCallWrapper->mCallThread, __func__,
+                     [conduit = mConduit]() {
+                       PayloadTypes pts;
+                       pts.mSendPayloadType = conduit->ActiveSendPayloadType();
+                       pts.mRecvPayloadType = conduit->ActiveRecvPayloadType();
+                       return ActivePayloadTypesPromise::CreateAndResolve(
+                           std::move(pts), __func__);
+                     });
+}
+
 nsresult TransceiverImpl::UpdateAudioConduit() {
   MOZ_ASSERT(IsValid());
 
@@ -1105,8 +1128,174 @@ RefPtr<RTCStatsPromise> TransceiverImpl::ApplyCodecStats(
         std::tuple<TransceiverImpl*, RefPtr<RTCStatsPromise::AllPromiseType>>>
         aTransceiverStatsPromises) {
   MOZ_ASSERT(NS_IsMainThread());
-  // TODO: filter codec stats and flatten everything
-  return nullptr;
+  // The process here is roughly:
+  // - Gather all inputs to the codec filtering process, including:
+  //   - Each transceiver's transportIds
+  //   - Each transceiver's active payload types (resolved)
+  //   - Each transceiver's resolved stats
+  //
+  //   Waiting (async) for multiple promises of different types is not supported
+  //   by the MozPromise API (bug 1752318), so we are a bit finicky here. We
+  //   create media::Refcountables of the types we want to resolve, and let
+  //   these be shared across Then-functions through RefPtrs.
+  //
+  // - For each active payload type in a transceiver:
+  //   - Register the codec stats for this payload type and transport if we
+  //     haven't already done so
+  //   - If it was a send payload type, assign the codec stats id for this
+  //     payload type and transport to the transceiver's outbound-rtp and
+  //     remote-inbound-rtp stats as codecId
+  //   - If it was a recv payload type, assign the codec stats id for this
+  //     payload type and transport to the transceiver's inbound-rtp and
+  //     remote-outbound-rtp stats as codecId
+  //
+  // - Flatten all transceiver stats collections into one, and set the
+  //   registered codec stats on it
+
+  // Wrap codec stats in a Refcountable<> to allow sharing across promise
+  // handlers.
+  auto codecStats = MakeRefPtr<media::Refcountable<nsTArray<RTCCodecStats>>>();
+  *codecStats = std::move(aCodecStats);
+
+  struct IdComparator {
+    bool operator()(const RTCCodecStats& aA, const RTCCodecStats& aB) const {
+      return aA.mId.Value() < aB.mId.Value();
+    }
+  };
+
+  // Stores distinct codec stats by id; to avoid dupes within a transport.
+  auto finalCodecStats =
+      MakeRefPtr<media::Refcountable<std::set<RTCCodecStats, IdComparator>>>();
+
+  // All the transceiver rtp stream stats in a single array. These stats will,
+  // when resolved, contain codecIds.
+  nsTArray<RefPtr<RTCStatsPromise>> promises(
+      aTransceiverStatsPromises.Length());
+
+  for (const auto& [transceiver, allPromise] : aTransceiverStatsPromises) {
+    // Per transceiver, gather up what we need to assign codecId to this
+    // transceiver's rtp stream stats. Register codec stats while we're at it.
+    auto payloadTypes = MakeRefPtr<media::Refcountable<PayloadTypes>>();
+    promises.AppendElement(
+        transceiver->GetActivePayloadTypes()
+            ->Then(
+                GetMainThreadSerialEventTarget(), __func__,
+                [payloadTypes,
+                 allPromise = allPromise](PayloadTypes aPayloadTypes) {
+                  // Forward active payload types to the next Then-handler.
+                  *payloadTypes = std::move(aPayloadTypes);
+                  return allPromise;
+                },
+                [] {
+                  MOZ_CRASH("Unexpected reject");
+                  return RTCStatsPromise::AllPromiseType::CreateAndReject(
+                      NS_ERROR_UNEXPECTED, __func__);
+                })
+            ->Then(
+                GetMainThreadSerialEventTarget(), __func__,
+                [codecStats, finalCodecStats, payloadTypes,
+                 transportId =
+                     NS_ConvertASCIItoUTF16(transceiver->GetTransportId())](
+                    nsTArray<UniquePtr<RTCStatsCollection>>
+                        aTransceiverStats) mutable {
+                  // We have all the data we need to register codec stats and
+                  // assign codecIds for this transceiver's rtp stream stats.
+
+                  auto report = MakeUnique<RTCStatsCollection>();
+                  FlattenStats(std::move(aTransceiverStats), report.get());
+
+                  // Find the codec stats we are looking for, based on the
+                  // transportId and the active payload types.
+                  Maybe<RTCCodecStats&> sendCodec;
+                  Maybe<RTCCodecStats&> recvCodec;
+                  for (auto& codec : *codecStats) {
+                    if (payloadTypes->mSendPayloadType.isSome() ==
+                            sendCodec.isSome() &&
+                        payloadTypes->mRecvPayloadType.isSome() ==
+                            recvCodec.isSome()) {
+                      // We have found all the codec stats we were looking for.
+                      break;
+                    }
+                    if (codec.mTransportId != transportId) {
+                      continue;
+                    }
+                    if (payloadTypes->mSendPayloadType &&
+                        *payloadTypes->mSendPayloadType ==
+                            static_cast<int>(codec.mPayloadType) &&
+                        (!codec.mCodecType.WasPassed() ||
+                         codec.mCodecType.Value() == RTCCodecType::Encode)) {
+                      MOZ_ASSERT(!sendCodec,
+                                 "At most one send codec stat per transceiver");
+                      sendCodec = SomeRef(codec);
+                    }
+                    if (payloadTypes->mRecvPayloadType &&
+                        *payloadTypes->mRecvPayloadType ==
+                            static_cast<int>(codec.mPayloadType) &&
+                        (!codec.mCodecType.WasPassed() ||
+                         codec.mCodecType.Value() == RTCCodecType::Decode)) {
+                      MOZ_ASSERT(!recvCodec,
+                                 "At most one recv codec stat per transceiver");
+                      recvCodec = SomeRef(codec);
+                    }
+                  }
+
+                  // Register and assign codecIds for the found codec stats.
+                  if (sendCodec) {
+                    finalCodecStats->insert(*sendCodec);
+                    for (auto& stat : report->mOutboundRtpStreamStats) {
+                      stat.mCodecId.Construct(sendCodec->mId.Value());
+                    }
+                    for (auto& stat : report->mRemoteInboundRtpStreamStats) {
+                      stat.mCodecId.Construct(sendCodec->mId.Value());
+                    }
+                  }
+                  if (recvCodec) {
+                    finalCodecStats->insert(*recvCodec);
+                    for (auto& stat : report->mInboundRtpStreamStats) {
+                      stat.mCodecId.Construct(recvCodec->mId.Value());
+                    }
+                    for (auto& stat : report->mRemoteOutboundRtpStreamStats) {
+                      stat.mCodecId.Construct(recvCodec->mId.Value());
+                    }
+                  }
+
+                  return RTCStatsPromise::CreateAndResolve(std::move(report),
+                                                           __func__);
+                },
+                [] {
+                  MOZ_CRASH("Unexpected reject");
+                  return RTCStatsPromise::CreateAndReject(NS_ERROR_UNEXPECTED,
+                                                          __func__);
+                }));
+  }
+
+  return RTCStatsPromise::All(GetMainThreadSerialEventTarget(), promises)
+      ->Then(
+          GetMainThreadSerialEventTarget(), __func__,
+          [finalCodecStats = std::move(finalCodecStats)](
+              nsTArray<UniquePtr<RTCStatsCollection>> aStats) mutable {
+            auto finalStats = MakeUnique<RTCStatsCollection>();
+            FlattenStats(std::move(aStats), finalStats.get());
+            MOZ_ASSERT(finalStats->mCodecStats.IsEmpty());
+            if (!finalStats->mCodecStats.SetCapacity(finalCodecStats->size(),
+                                                     fallible)) {
+              mozalloc_handle_oom(0);
+            }
+            while (!finalCodecStats->empty()) {
+              auto node = finalCodecStats->extract(finalCodecStats->begin());
+              if (!finalStats->mCodecStats.AppendElement(
+                      std::move(node.value()), fallible)) {
+                mozalloc_handle_oom(0);
+              }
+            }
+            return RTCStatsPromise::CreateAndResolve(std::move(finalStats),
+                                                     __func__);
+          },
+          [] {
+            MOZ_CRASH("Unexpected reject");
+            return RTCStatsPromise::CreateAndReject(NS_ERROR_UNEXPECTED,
+                                                    __func__);
+          });
 }
 
 }  // namespace mozilla
