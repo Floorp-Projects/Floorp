@@ -811,6 +811,11 @@ table {
 }
 
 /* Provide extra spacing for images that may be aided with accompanying element such as <figcaption> */
-.moz-reader-block-img:not(:last-child){
+.moz-reader-block-img:not(:last-child) {
   margin-block-end: 12px;
+}
+
+.moz-reader-wide-table {
+  overflow-x: auto;
+  display: block;
 }
