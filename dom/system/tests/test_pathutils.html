@@ -8,6 +8,8 @@
   <title>PathUtils tests</title>
 </head>
 <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/WorkerHandler.js"></script>
 <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css">
 <script>
   "use strict";
@@ -471,34 +473,21 @@
   });
 
   add_task(async function test_getDirectories() {
-    const profile = await PathUtils.getProfileDir();
-    is(
-      profile,
-      Services.dirsvc.get("ProfD", Ci.nsIFile).path,
-      "PathUtils.getProfileDir() should match dirsvc"
-    );
-
-    const localProfile = await PathUtils.getLocalProfileDir();
-    is(
-      localProfile,
-      Services.dirsvc.get("ProfLD", Ci.nsIFile).path,
-      "PathUtils.getLocalProfileDir() should match dirsvc"
-    );
-
     // See: nsAppDirectoryServiceDefs.h
-    const tempDir = await PathUtils.getTempDir();
-    if (AppConstants.MOZ_SANDBOX) {
-      is(
-        tempDir,
-        Services.dirsvc.get("ContentTmpD", Ci.nsIFile).path,
-        "PathUtils.getTempDir() should match dirsvc"
-      );
-    } else {
-      is(
-        tempDir,
-        Services.dirsvc.get("TmpD", Ci.nsIFile).path,
-        "PathUtils.getTempDir() should match dirsvc"
-      );
+    const tests = [
+      ["profileDir", "getProfileDir", "ProfD"],
+      ["localProfileDir", "getLocalProfileDir", "ProfLD"],
+      ["tempDir", "getTempDir", AppConstants.MOZ_SANDBOX ? "ContentTmpD" : "TmpD"],
+    ];
+
+    for (const [attrName, methName, dirConstant] of tests) {
+      const expected = Services.dirsvc.get(dirConstant, Ci.nsIFile).path;
+
+      const attrValue = PathUtils[attrName];
+      is(attrValue, expected, `PathUtils.${attrName} == Services.dirsvc.get("${dirConstant}", Ci.nsIFile).path`);
+
+      const methValue = await PathUtils[methName]();
+      is(methValue, expected, `PathUtils.${methName}() == Services.dirsvc.get("${dirConstant}", Ci.nsIFile).path`);
     }
   });
 </script>

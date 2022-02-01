@@ -67,12 +67,19 @@ class PathUtils final {
 
   static bool IsAbsolute(const GlobalObject&, const nsAString& aPath);
 
-  static already_AddRefed<Promise> GetProfileDir(const GlobalObject& aGlobal,
-                                                 ErrorResult& aErr);
-  static already_AddRefed<Promise> GetLocalProfileDir(
+  static void GetProfileDirSync(const GlobalObject&, nsString& aResult,
+                                ErrorResult& aErr);
+  static void GetLocalProfileDirSync(const GlobalObject&, nsString& aResult,
+                                     ErrorResult& aErr);
+  static void GetTempDirSync(const GlobalObject&, nsString& aResult,
+                             ErrorResult& aErr);
+
+  static already_AddRefed<Promise> GetProfileDirAsync(
       const GlobalObject& aGlobal, ErrorResult& aErr);
-  static already_AddRefed<Promise> GetTempDir(const GlobalObject& aGlobal,
-                                              ErrorResult& aErr);
+  static already_AddRefed<Promise> GetLocalProfileDirAsync(
+      const GlobalObject& aGlobal, ErrorResult& aErr);
+  static already_AddRefed<Promise> GetTempDirAsync(const GlobalObject& aGlobal,
+                                                   ErrorResult& aErr);
 
  private:
   class DirectoryCache;
@@ -87,7 +94,8 @@ class PathUtils final {
 class PathUtils::DirectoryCache final {
  public:
   /**
-   * A directory that can be requested via |GetDirectory|.
+   * A directory that can be requested via |GetDirectorySync| or
+   * |GetDirectoryAsync|.
    */
   enum class Directory {
     /**
@@ -124,6 +132,9 @@ class PathUtils::DirectoryCache final {
    */
   static DirectoryCache& Ensure(Maybe<DirectoryCache>& aCache);
 
+  void GetDirectorySync(nsString& aResult, ErrorResult& aErr,
+                        const Directory aRequestedDir);
+
   /**
    * Request the path of a specific directory.
    *
@@ -136,9 +147,9 @@ class PathUtils::DirectoryCache final {
    *
    * @return A promise that resolves to the path of the requested directory.
    */
-  already_AddRefed<Promise> GetDirectory(const GlobalObject& aGlobalObject,
-                                         ErrorResult& aErr,
-                                         const Directory aRequestedDir);
+  already_AddRefed<Promise> GetDirectoryAsync(const GlobalObject& aGlobalObject,
+                                              ErrorResult& aErr,
+                                              const Directory aRequestedDir);
 
  private:
   using PopulateDirectoriesPromise = MozPromise<Ok, nsresult, false>;
