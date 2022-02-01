@@ -62,9 +62,8 @@ crashtest:
             webrender-sw:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
-                    linux.*64-(ccov|tsan)-qr/opt: []
-                    linux1804-32.*: []
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
             webrender-sw+fission:
                 by-test-platform:
@@ -77,10 +76,8 @@ crashtest:
             default:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    linux.*64-ccov-qr/opt: []
-                    linux1804-32.*: []
-                    .*-tsan-qr/opt: []
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android.*: built-projects
                     default: []
     max-run-time: 3600
@@ -140,10 +137,8 @@ jsreftest:
                     default: built-projects
             default:
                 by-test-platform:
-                    linux.*64-ccov-qr/opt: []
-                    linux1804-32.*: []
-                    .*-tsan-qr/opt: []
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android-hw-.*-aarch64(?:-shippable)?-qr/.*: ['mozilla-central', 'release']
                     android-hw-.*-arm7(?:-shippable)?-qr/.*: ['mozilla-central', 'release']
                     android.*: built-projects
@@ -189,9 +184,8 @@ reftest:
             webrender-sw:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
-                    linux.*64-(ccov|tsan)-qr/opt: []
-                    linux1804-32.*: []
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
             webrender-sw+fission:
                 by-test-platform:
@@ -204,10 +198,8 @@ reftest:
             default:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    linux.*64-ccov-qr/opt: []
-                    linux1804-32.*: []
-                    .*-tsan-qr/opt: []
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android.*: built-projects
                     default: []
     max-run-time:
