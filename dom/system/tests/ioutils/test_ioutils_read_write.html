@@ -21,8 +21,7 @@
     const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
     add_task(async function test_read_failure() {
-      const tmpDir = await PathUtils.getTempDir();
-      const doesNotExist = PathUtils.join(tmpDir, "does_not_exist.tmp");
+      const doesNotExist = PathUtils.join(PathUtils.tempDir, "does_not_exist.tmp");
       await Assert.rejects(
         IOUtils.read(doesNotExist),
         /Could not open the file at .*/,
@@ -31,10 +30,8 @@
     });
 
     add_task(async function test_write_no_overwrite() {
-      const tmpDir = await PathUtils.getTempDir();
-
       // Make a new file, and try to write to it with overwrites disabled.
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_overwrite.tmp");
+      const tmpFileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_overwrite.tmp");
       const untouchableContents = new TextEncoder().encode("Can't touch this!\n");
 
       let exists = await IOUtils.exists(tmpFileName);
@@ -75,10 +72,8 @@
     add_task(async function test_write_with_backup() {
       info("Test backup file option with non-existing file");
 
-      const tmpDir = await PathUtils.getTempDir();
-
       let fileContents = new TextEncoder().encode("Original file contents");
-      let destFileName = PathUtils.join(tmpDir, "test_write_with_backup_option.tmp");
+      let destFileName = PathUtils.join(PathUtils.tempDir, "test_write_with_backup_option.tmp");
       let backupFileName = destFileName + ".backup";
       let bytesWritten =
         await IOUtils.write(destFileName, fileContents, {
@@ -125,12 +120,10 @@
     add_task(async function test_write_with_backup_and_tmp() {
       info("Test backup with tmp and backup file options, non-existing destination");
 
-      const tmpDir = await PathUtils.getTempDir();
-
       let fileContents = new TextEncoder().encode("Original file contents");
-      let destFileName = PathUtils.join(tmpDir, "test_write_with_backup_and_tmp_options.tmp");
+      let destFileName = PathUtils.join(PathUtils.tempDir, "test_write_with_backup_and_tmp_options.tmp");
       let backupFileName = destFileName + ".backup";
-      let tmpFileName = PathUtils.join(tmpDir, "temp_file.tmp");
+      let tmpFileName = PathUtils.join(PathUtils.tempDir, "temp_file.tmp");
       let bytesWritten =
         await IOUtils.write(destFileName, fileContents, {
           backupFile: backupFileName,
@@ -204,9 +197,7 @@
     });
 
     add_task(async function test_partial_read() {
-      const tmpDir = await PathUtils.getTempDir();
-
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_partial_read.tmp");
+      const tmpFileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_partial_read.tmp");
       const bytes = Uint8Array.of(...new Array(50).keys());
       const bytesWritten = await IOUtils.write(tmpFileName, bytes);
       is(
@@ -234,10 +225,7 @@
     add_task(async function test_empty_read_and_write() {
       // Trying to write an empty file isn't very useful, but it should still
       // succeed.
-
-      const tmpDir = await PathUtils.getTempDir();
-
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_empty.tmp");
+      const tmpFileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_empty.tmp");
       const emptyByteArray = new Uint8Array(0);
       const bytesWritten = await IOUtils.write(
         tmpFileName,
@@ -260,10 +248,8 @@
     add_task(async function test_full_read_and_write() {
       // Write a file.
 
-      const tmpDir = await PathUtils.getTempDir();
-
       info("Test writing to a new binary file");
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_numbers.tmp");
+      const tmpFileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_numbers.tmp");
       const bytes = Uint8Array.of(...new Array(50).keys());
       const bytesWritten = await IOUtils.write(tmpFileName, bytes);
       is(
@@ -317,8 +303,7 @@
     });
 
     add_task(async function test_lz4() {
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_lz4.tmp");
+      const tmpFileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_lz4.tmp");
 
       info("Test writing lz4 encoded data");
       const varyingBytes = Uint8Array.of(...new Array(50).keys());
@@ -356,9 +341,8 @@
     });
 
     add_task(async function test_lz4_osfile_compat() {
-      const tmpDir = await PathUtils.getTempDir();
-      const osfileTmpFile = PathUtils.join(tmpDir, "test_ioutils_lz4_compat_osfile.tmp");
-      const ioutilsTmpFile = PathUtils.join(tmpDir, "test_ioutils_lz4_compat_ioutils.tmp");
+      const osfileTmpFile = PathUtils.join(PathUtils.tempDir, "test_ioutils_lz4_compat_osfile.tmp");
+      const ioutilsTmpFile = PathUtils.join(PathUtils.tempDir, "test_ioutils_lz4_compat_ioutils.tmp");
 
       info("Test OS.File and IOUtils write the same file with LZ4 compression enabled")
       const repeatedBytes = Uint8Array.of(...new Array(50).fill(1));
@@ -382,8 +366,7 @@
     });
 
     add_task(async function test_lz4_bad_call() {
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_lz4_bad_call.tmp");
+      const tmpFileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_lz4_bad_call.tmp");
 
       info("Test decompression with invalid options");
       const varyingBytes = Uint8Array.of(...new Array(50).keys());
@@ -399,8 +382,7 @@
     });
 
     add_task(async function test_lz4_failure() {
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_lz4_fail.tmp");
+      const tmpFileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_lz4_fail.tmp");
 
       info("Test decompression of non-lz4 data");
       const repeatedBytes = Uint8Array.of(...new Array(50).fill(1));
@@ -448,8 +430,7 @@
     });
 
     add_task(async function test_write_directory() {
-      const tmpDir = await PathUtils.getTempDir();
-      const fileName = PathUtils.join(tmpDir, "test_ioutils_write_directory.tmp");
+      const fileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_write_directory.tmp");
       const tmpPath = `${fileName}.tmp`;
       const bytes = Uint8Array.of(1, 2, 3, 4);
 
@@ -466,8 +447,7 @@
     });
 
     add_task(async function test_read_offset() {
-      const tmpDir = await PathUtils.getTempDir();
-      const tmpFileName = PathUtils.join(tmpDir, "test_ioutils_read_offset.tmp");
+      const tmpFileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_read_offset.tmp");
 
       const bytes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
       const byteArray = Uint8Array.of(...bytes);
@@ -515,8 +495,7 @@
     });
 
     add_task(async function test_write_append() {
-      const tmpDir = await PathUtils.getTempDir();
-      const fileName = PathUtils.join(tmpDir, "test_ioutils_write_append.tmp");
+      const fileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_write_append.tmp");
 
       await IOUtils.write(fileName, Uint8Array.of(0, 1, 2, 3, 4));
 
@@ -530,8 +509,7 @@
     });
 
     add_task(async function test_write_append_no_create() {
-      const tmpDir = await PathUtils.getTempDir();
-      const fileName = PathUtils.join(tmpDir, "test_ioutils_write_append_create.tmp");
+      const fileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_write_append_create.tmp");
 
       await Assert.rejects(
         IOUtils.write(fileName, Uint8Array.of(5, 6, 7, 8, 9), { mode: "append" }),
