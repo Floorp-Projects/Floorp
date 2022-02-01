@@ -608,8 +608,15 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
     // If some other thread Cancels/Inits after this, they're just too late.
     MutexAutoLock lock(mMutex);
     if (aGeneration != mGeneration) {
+      // This timer got rescheduled or cancelled before we fired, so ignore this
+      // firing
       return;
     }
+
+    // We modify mTimeout, so we must not be in the current TimerThread's
+    // mTimers list.  Adding to that list calls SetHolder(), so use mHolder
+    // as a proxy to know if we're in the list
+    MOZ_ASSERT(!mHolder);
 
     ++mFiring;
     callbackDuringFire = mCallback;
