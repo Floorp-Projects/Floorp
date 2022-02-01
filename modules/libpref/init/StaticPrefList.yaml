@@ -1124,7 +1124,7 @@
 # See bug 1710926
 - name: browser.download.improvements_to_download_panel
   type: bool
-  value: true
+  value: false
   mirror: always
 
 # See bug 1731668
