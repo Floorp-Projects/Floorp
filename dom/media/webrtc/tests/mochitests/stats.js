@@ -1185,7 +1185,7 @@ function PC_REMOTE_TEST_REMOTE_STATS(test) {
       test.pcRemote._pc.getSenders().map(async s => {
         checkSenderStats(
           await s.getStats(),
-          Math.max(1, s.getParameters()?.encodings?.length ?? 0)
+          s.track ? Math.max(1, s.getParameters()?.encodings?.length ?? 0) : 0
         );
       }),
     ]);
