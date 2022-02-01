@@ -734,8 +734,8 @@ RefPtr<MediaPipelineTransmit> TransceiverImpl::GetSendPipeline() {
 
 static nsresult JsepCodecDescToAudioCodecConfig(
     const JsepCodecDescription& aCodec, Maybe<AudioCodecConfig>* aConfig) {
-  MOZ_ASSERT(aCodec.mType == SdpMediaSection::kAudio);
-  if (aCodec.mType != SdpMediaSection::kAudio) return NS_ERROR_INVALID_ARG;
+  MOZ_ASSERT(aCodec.Type() == SdpMediaSection::kAudio);
+  if (aCodec.Type() != SdpMediaSection::kAudio) return NS_ERROR_INVALID_ARG;
 
   const JsepAudioCodecDescription& desc =
       static_cast<const JsepAudioCodecDescription&>(aCodec);
@@ -857,8 +857,8 @@ nsresult TransceiverImpl::UpdateAudioConduit() {
 
 static nsresult JsepCodecDescToVideoCodecConfig(
     const JsepCodecDescription& aCodec, Maybe<VideoCodecConfig>* aConfig) {
-  MOZ_ASSERT(aCodec.mType == SdpMediaSection::kVideo);
-  if (aCodec.mType != SdpMediaSection::kVideo) {
+  MOZ_ASSERT(aCodec.Type() == SdpMediaSection::kVideo);
+  if (aCodec.Type() != SdpMediaSection::kVideo) {
     MOZ_ASSERT(false, "JsepCodecDescription has wrong type");
     return NS_ERROR_INVALID_ARG;
   }

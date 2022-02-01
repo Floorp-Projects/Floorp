@@ -234,7 +234,7 @@ class JsepTrackTest : public JsepTrackTestBase {
     // it should not be possible for codecs to have a different type
     // than the track, but we'll check the codec here just in case.
     if (codecs.size() != expectedSize || codecIndex >= expectedSize ||
-        codecs[codecIndex]->mType != type) {
+        codecs[codecIndex]->Type() != type) {
       return nullptr;
     }
     return UniquePtr<JsepCodecDescription>(codecs[codecIndex]->Clone());
@@ -281,8 +281,8 @@ class JsepTrackTest : public JsepTrackTestBase {
 #define MSG                                                               \
   "For codecs " << a.mName << " (" << a.mDirection << ") and " << b.mName \
                 << " (" << b.mDirection << ")"
-    ASSERT_EQ(a.mType, b.mType) << MSG;
-    if (a.mType != SdpMediaSection::kApplication) {
+    ASSERT_EQ(a.Type(), b.Type()) << MSG;
+    if (a.Type() != SdpMediaSection::kApplication) {
       ASSERT_EQ(a.mDefaultPt, b.mDefaultPt) << MSG;
     }
     ASSERT_EQ(a.mName, b.mName);
@@ -293,7 +293,7 @@ class JsepTrackTest : public JsepTrackTestBase {
     ASSERT_EQ(a.mConstraints, b.mConstraints) << MSG;
 #undef MSG
 
-    if (a.mType == SdpMediaSection::kVideo) {
+    if (a.Type() == SdpMediaSection::kVideo) {
       SanityCheckRtcpFbs(static_cast<const JsepVideoCodecDescription&>(a),
                          static_cast<const JsepVideoCodecDescription&>(b));
     }
@@ -387,7 +387,7 @@ class CheckForCodecType {
       : mResult(result), mType(type) {}
 
   void operator()(const UniquePtr<JsepCodecDescription>& codec) {
-    if (codec->mType == mType) {
+    if (codec->Type() == mType) {
       *mResult = true;
     }
   }
@@ -1469,7 +1469,7 @@ TEST_F(JsepTrackTest, RtcpFbWithPayloadTypeAsymmetry) {
 
   // On offerer, configure to support remb and transport-cc on video codecs
   for (auto& codec : mOffCodecs) {
-    if (codec->mType == SdpMediaSection::kVideo) {
+    if (codec->Type() == SdpMediaSection::kVideo) {
       auto& videoCodec = static_cast<JsepVideoCodecDescription&>(*codec);
       videoCodec.EnableRemb();
       videoCodec.EnableTransportCC();
