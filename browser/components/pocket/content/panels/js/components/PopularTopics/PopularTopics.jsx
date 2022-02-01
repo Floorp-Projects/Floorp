@@ -7,7 +7,7 @@ import React from "react";
 function PopularTopics(props) {
   return (
     <ul className="stp_popular_topics">
-      {props.topics.map(topic => (
+      {props.topics?.map(topic => (
         <li key={`item-${topic.topic}`} className="stp_popular_topic">
           <a
             className="stp_popular_topic_link"
