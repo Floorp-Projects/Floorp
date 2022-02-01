@@ -189,6 +189,9 @@ class IOUtils final {
    * Dispatch a task on the event queue and resolve or reject the associated
    * promise based on the result.
    *
+   * NB: If the calling thread is a worker, this function takes care of keepting
+   *     it alive until the |IOPromise| can complete.
+   *
    * @param aPromise The promise corresponding to the task running on the event
    * queue.
    * @param aFunc The task to run.
@@ -486,6 +489,21 @@ class IOUtils::EventQueue final {
   EventQueue& operator=(const EventQueue&) = delete;
   EventQueue& operator=(EventQueue&&) = delete;
 
+  /**
+   * Dispatch a task on the event queue.
+   *
+   * NB: If using this directly from |IOUtils| instead of
+   *     |IOUtils::DispatchAndResolve| *and* the calling thread is a worker, you
+   *     *must* take care to keep the worker thread alive until the |IOPromise|
+   *     resolves or rejects. See the implementation of
+   *     |IOUtils::DispatchAndResolve| or |IOUtils::GetWindowsAttributes| for an
+   *     example.
+   *
+   * @param aFunc The task to dispatch on the event queue.
+   *
+   * @return A promise that resolves to the task's return value or rejects with
+   *         an error.
+   */
   template <typename OkT, typename Fn>
   RefPtr<IOPromise<OkT>> Dispatch(Fn aFunc);
 

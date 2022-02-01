@@ -32,6 +32,8 @@
 #include "mozilla/Utf8.h"
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/dom/WorkerRef.h"
 #include "PathUtils.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
@@ -290,13 +292,21 @@ already_AddRefed<Promise> IOUtils::WithPromiseAndState(GlobalObject& aGlobal,
 template <typename OkT, typename Fn>
 void IOUtils::DispatchAndResolve(IOUtils::EventQueue* aQueue, Promise* aPromise,
                                  Fn aFunc) {
+  RefPtr<StrongWorkerRef> workerRef;
+  if (!NS_IsMainThread()) {
+    // We need to manually keep the worker alive until the promise returned by
+    // Dispatch() resolves or rejects.
+    workerRef = StrongWorkerRef::CreateForcibly(GetCurrentThreadWorkerPrivate(),
+                                                __func__);
+  }
+
   if (RefPtr<IOPromise<OkT>> p = aQueue->Dispatch<OkT, Fn>(std::move(aFunc))) {
     p->Then(
         GetCurrentSerialEventTarget(), __func__,
-        [promise = RefPtr(aPromise)](OkT&& ok) {
+        [workerRef, promise = RefPtr(aPromise)](OkT&& ok) {
           ResolveJSPromise(promise, std::forward<OkT>(ok));
         },
-        [promise = RefPtr(aPromise)](const IOError& err) {
+        [workerRef, promise = RefPtr(aPromise)](const IOError& err) {
           RejectJSPromise(promise, err);
         });
   }
@@ -393,6 +403,14 @@ already_AddRefed<Promise> IOUtils::ReadJSON(GlobalObject& aGlobal,
     nsCOMPtr<nsIFile> file = new nsLocalFile();
     REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
+    RefPtr<StrongWorkerRef> workerRef;
+    if (!NS_IsMainThread()) {
+      // We need to manually keep the worker alive until the promise returned by
+      // Dispatch() resolves or rejects.
+      workerRef = StrongWorkerRef::CreateForcibly(
+          GetCurrentThreadWorkerPrivate(), __func__);
+    }
+
     state->mEventQueue
         ->template Dispatch<JsBuffer>(
             [file, decompress = aOptions.mDecompress]() {
@@ -400,7 +418,7 @@ already_AddRefed<Promise> IOUtils::ReadJSON(GlobalObject& aGlobal,
             })
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
-            [promise = RefPtr{promise}, file](JsBuffer&& aBuffer) {
+            [workerRef, promise = RefPtr{promise}, file](JsBuffer&& aBuffer) {
               AutoJSAPI jsapi;
               if (NS_WARN_IF(!jsapi.Init(promise->GetGlobalObject()))) {
                 promise->MaybeRejectWithUnknownError(
@@ -437,7 +455,7 @@ already_AddRefed<Promise> IOUtils::ReadJSON(GlobalObject& aGlobal,
 
               promise->MaybeResolve(val);
             },
-            [promise = RefPtr{promise}](const IOError& aErr) {
+            [workerRef, promise = RefPtr{promise}](const IOError& aErr) {
               RejectJSPromise(promise, aErr);
             });
   });
@@ -721,13 +739,21 @@ already_AddRefed<Promise> IOUtils::GetWindowsAttributes(
     nsCOMPtr<nsIFile> file = new nsLocalFile();
     REJECT_IF_INIT_PATH_FAILED(file, aPath, promise);
 
+    RefPtr<StrongWorkerRef> workerRef;
+    if (!NS_IsMainThread()) {
+      // We need to manually keep the worker alive until the promise returned by
+      // Dispatch() resolves or rejects.
+      workerRef = StrongWorkerRef::CreateForcibly(
+          GetCurrentThreadWorkerPrivate(), __func__);
+    }
+
     state->mEventQueue
         ->template Dispatch<uint32_t>([file = std::move(file)]() {
           return GetWindowsAttributesSync(file);
         })
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
-            [promise = RefPtr{promise}](const uint32_t aAttrs) {
+            [workerRef, promise = RefPtr{promise}](const uint32_t aAttrs) {
               WindowsFileAttributes attrs;
 
               attrs.mReadOnly.Construct(aAttrs & FILE_ATTRIBUTE_READONLY);
@@ -736,7 +762,7 @@ already_AddRefed<Promise> IOUtils::GetWindowsAttributes(
 
               promise->MaybeResolve(attrs);
             },
-            [promise = RefPtr{promise}](const IOError& aErr) {
+            [workerRef, promise = RefPtr{promise}](const IOError& aErr) {
               RejectJSPromise(promise, aErr);
             });
   });
