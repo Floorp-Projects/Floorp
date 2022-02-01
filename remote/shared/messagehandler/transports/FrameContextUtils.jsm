@@ -6,14 +6,12 @@
 
 const EXPORTED_SYMBOLS = ["isBrowsingContextCompatible"];
 
-function isParentProcess(browsingContext) {
+function getOsPid(browsingContext) {
   if (browsingContext instanceof CanonicalBrowsingContext) {
-    return browsingContext.currentWindowGlobal.osPid === -1;
+    return browsingContext.currentWindowGlobal.osPid;
   }
 
-  // If `browsingContext` is not a `CanonicalBrowsingContext`, then we are
-  // necessarily in a content process page.
-  return false;
+  return browsingContext.window.osPid;
 }
 
 /**
@@ -37,6 +35,11 @@ function isBrowsingContextCompatible(browsingContext, options = {}) {
     return false;
   }
 
-  // Skip privileged contexts until we support debugging Chrome context, see Bug 1713440.
-  return !isParentProcess(browsingContext);
+  // Skip window globals running in the parent process, unless we want to
+  // support debugging Chrome context, see Bug 1713440.
+  if (getOsPid(browsingContext) === -1) {
+    return false;
+  }
+
+  return true;
 }
