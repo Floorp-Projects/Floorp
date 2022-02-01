@@ -18,8 +18,7 @@
 
     add_task(async function test_make_directory() {
       info("Test creating a new directory");
-      const tmpDir = await PathUtils.getTempDir();
-      const newDirectoryName = PathUtils.join(tmpDir, "test_ioutils_new_dir.tmp.d");
+      const newDirectoryName = PathUtils.join(PathUtils.tempDir, "test_ioutils_new_dir.tmp.d");
       await IOUtils.makeDirectory(newDirectoryName);
       ok(
         await IOUtils.exists(newDirectoryName),
@@ -39,7 +38,7 @@
       )
 
       info("Test creating a nested directory");
-      const parentDirName = PathUtils.join(tmpDir, "test_ioutils_mkdir_parent.tmp.d");
+      const parentDirName = PathUtils.join(PathUtils.tempDir, "test_ioutils_mkdir_parent.tmp.d");
       const nestedDirName = PathUtils.join(
         parentDirName,
         "test_ioutils_mkdir_child.tmp.d"
@@ -61,8 +60,7 @@
 
     add_task(async function test_make_directory_failure() {
       info("Try to create a directory where a file already exists");
-      const tmpDir = await PathUtils.getTempDir();
-      const notADirFileName = PathUtils.join(tmpDir, "test_ioutils_not_a_dir.tmp");
+      const notADirFileName = PathUtils.join(PathUtils.tempDir, "test_ioutils_not_a_dir.tmp");
       await createFile(notADirFileName);
 
       await Assert.rejects(
@@ -88,8 +86,7 @@
         return;
       }
 
-      const tmpDir = await PathUtils.getTempDir();
-      const newDir = PathUtils.join(tmpDir, "test_ioutils_mkdir_perms.tmp.d");
+      const newDir = PathUtils.join(PathUtils.tempDir, "test_ioutils_mkdir_perms.tmp.d");
 
       ok(!await IOUtils.exists(newDir), "Directory does not exist before creation");
       await IOUtils.makeDirectory(newDir, { permissions: 0o751 });
