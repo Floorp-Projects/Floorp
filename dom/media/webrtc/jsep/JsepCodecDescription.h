@@ -78,9 +78,18 @@ class JsepCodecDescription {
   }
 
   virtual bool Negotiate(const std::string& pt,
-                         const SdpMediaSection& remoteMsection, bool isOffer) {
-    if (mDirection == sdp::kSend || isOffer) {
+                         const SdpMediaSection& remoteMsection,
+                         bool remoteIsOffer,
+                         Maybe<const SdpMediaSection&> localMsection) {
+    if (mDirection == sdp::kSend || remoteIsOffer) {
       mDefaultPt = pt;
+    }
+    if (localMsection) {
+      // Offer/answer is concluding. Update the sdpFmtpLine.
+      MOZ_ASSERT(mDirection == sdp::kSend || mDirection == sdp::kRecv);
+      const SdpMediaSection& msection =
+          mDirection == sdp::kSend ? remoteMsection : *localMsection;
+      UpdateSdpFmtpLine(ToMaybeRef(msection.FindFmtp(mDefaultPt)));
     }
     return true;
   }
@@ -129,8 +138,20 @@ class JsepCodecDescription {
     return false;
   }
 
+  // TODO Bug 1751671: Take a verbatim fmtp line (std::string or eq.) instead
+  // of fmtp parameters that have to be (re-)serialized.
+  void UpdateSdpFmtpLine(
+      const Maybe<const SdpFmtpAttributeList::Parameters&> aParams) {
+    mSdpFmtpLine = aParams.map([](const auto& aFmtp) {
+      std::stringstream ss;
+      aFmtp.Serialize(ss);
+      return ss.str();
+    });
+  }
+
   std::string mDefaultPt;
   std::string mName;
+  Maybe<std::string> mSdpFmtpLine;
   uint32_t mClock;
   uint32_t mChannels;
   bool mEnabled;
@@ -254,8 +275,10 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
   }
 
   bool Negotiate(const std::string& pt, const SdpMediaSection& remoteMsection,
-                 bool isOffer) override {
-    JsepCodecDescription::Negotiate(pt, remoteMsection, isOffer);
+                 bool remoteIsOffer,
+                 Maybe<const SdpMediaSection&> localMsection) override {
+    JsepCodecDescription::Negotiate(pt, remoteMsection, remoteIsOffer,
+                                    localMsection);
     if (mName == "opus" && mDirection == sdp::kSend) {
       SdpFmtpAttributeList::OpusParameters opusParams(
           GetOpusParameters(mDefaultPt, remoteMsection));
@@ -655,8 +678,10 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
 
   virtual bool Negotiate(const std::string& pt,
                          const SdpMediaSection& remoteMsection,
-                         bool isOffer) override {
-    JsepCodecDescription::Negotiate(pt, remoteMsection, isOffer);
+                         bool remoteIsOffer,
+                         Maybe<const SdpMediaSection&> localMsection) override {
+    JsepCodecDescription::Negotiate(pt, remoteMsection, remoteIsOffer,
+                                    localMsection);
     if (mName == "H264") {
       SdpFmtpAttributeList::H264Parameters h264Params(
           GetH264Parameters(mDefaultPt, remoteMsection));
@@ -698,7 +723,7 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
       }
     }
 
-    if (mRtxEnabled && (mDirection == sdp::kSend || isOffer)) {
+    if (mRtxEnabled && (mDirection == sdp::kSend || remoteIsOffer)) {
       Maybe<std::string> rtxPt = GetRtxPtByApt(mDefaultPt, remoteMsection);
       if (rtxPt.isSome()) {
         EnableRtx(*rtxPt);
@@ -1031,8 +1056,10 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
   }
 
   bool Negotiate(const std::string& pt, const SdpMediaSection& remoteMsection,
-                 bool isOffer) override {
-    JsepCodecDescription::Negotiate(pt, remoteMsection, isOffer);
+                 bool remoteIsOffer,
+                 Maybe<const SdpMediaSection&> localMsection) override {
+    JsepCodecDescription::Negotiate(pt, remoteMsection, remoteIsOffer,
+                                    localMsection);
 
     uint32_t message_size;
     mRemoteMMSSet = remoteMsection.GetMaxMessageSize(&message_size);

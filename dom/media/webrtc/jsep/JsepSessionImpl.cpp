@@ -1127,11 +1127,11 @@ nsresult JsepSessionImpl::MakeNegotiatedTransceiver(
   NS_ENSURE_SUCCESS(rv, rv);
 
   transceiver->mSendTrack.SetActive(sending);
-  transceiver->mSendTrack.Negotiate(answer, remote);
+  transceiver->mSendTrack.Negotiate(answer, remote, local);
 
   JsepTrack& recvTrack = transceiver->mRecvTrack;
   recvTrack.SetActive(receiving);
-  recvTrack.Negotiate(answer, remote);
+  recvTrack.Negotiate(answer, remote, local);
 
   if (transceiver->HasBundleLevel() && recvTrack.GetSsrcs().empty() &&
       recvTrack.GetMediaType() != SdpMediaSection::kApplication) {
