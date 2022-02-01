@@ -269,7 +269,7 @@ add_task(async function() {
     );
     processes[process].forEach(entry => {
       entry.listedPath = entry.path;
-      entry.path = expandPathWithDirServiceKey(entry.path, entry.canonicalize);
+      entry.path = expandPathWithDirServiceKey(entry.path);
     });
   }
 

@@ -21,7 +21,9 @@
 #include "AudioCaptureTrack.h"
 #include "AudioNodeTrack.h"
 #include "AudioNodeExternalInputTrack.h"
-#include "MediaEngineWebRTCAudio.h"
+#if defined(MOZ_WEBRTC)
+#  include "MediaEngineWebRTCAudio.h"
+#endif  // MOZ_WEBRTC
 #include "MediaTrackListener.h"
 #include "mozilla/dom/BaseAudioContextBinding.h"
 #include "mozilla/dom/WorkletThread.h"
@@ -788,11 +790,13 @@ void MediaTrackGraphImpl::NotifyOutputData(AudioDataValue* aBuffer,
   }
   MOZ_ASSERT(mNativeInputTrackOnGraph->mDeviceId == mInputDeviceID);
 
+#if defined(MOZ_WEBRTC)
   for (const auto& track : mTracks) {
     if (const auto& t = track->AsAudioProcessingTrack()) {
       t->NotifyOutputData(this, aBuffer, aFrames, aRate, aChannels);
     }
   }
+#endif
 }
 
 void MediaTrackGraphImpl::NotifyInputStopped() {

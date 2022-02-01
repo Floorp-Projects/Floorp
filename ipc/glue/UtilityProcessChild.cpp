@@ -28,9 +28,12 @@
 #endif
 
 #include "nsDebugImpl.h"
+#include "nsIXULRuntime.h"
 #include "nsThreadManager.h"
 
 #include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/FOGIPC.h"
+#include "mozilla/glean/GleanMetrics.h"
 
 namespace mozilla::ipc {
 
@@ -173,11 +176,29 @@ mozilla::ipc::IPCResult UtilityProcessChild::RecvInitSandboxTesting(
 }
 #endif
 
+mozilla::ipc::IPCResult UtilityProcessChild::RecvFlushFOGData(
+    FlushFOGDataResolver&& aResolver) {
+  glean::FlushFOGData(std::move(aResolver));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult UtilityProcessChild::RecvTestTriggerMetrics(
+    TestTriggerMetricsResolver&& aResolve) {
+  mozilla::glean::test_only_ipc::a_counter.Add(
+      nsIXULRuntime::PROCESS_TYPE_UTILITY);
+  aResolve(true);
+  return IPC_OK();
+}
+
 void UtilityProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
   if (AbnormalShutdown == aWhy) {
     NS_WARNING("Shutting down Utility process early due to a crash!");
     ipc::ProcessChild::QuickExit();
   }
+
+  // Send the last bits of Glean data over to the main process.
+  glean::FlushFOGData(
+      [](ByteBuf&& aBuf) { glean::SendFOGData(std::move(aBuf)); });
 
 #ifndef NS_FREE_PERMANENT_DATA
   ProcessChild::QuickExit();

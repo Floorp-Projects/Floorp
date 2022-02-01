@@ -15,8 +15,7 @@
     const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
     add_task(async function test_setPermissions() {
-      const tempDir = await PathUtils.getTempDir();
-      const tempFile = PathUtils.join(tempDir, "setPermissions.tmp");
+      const tempFile = PathUtils.join(PathUtils.tempDir, "setPermissions.tmp");
 
       await IOUtils.writeUTF8(tempFile, "");
       await IOUtils.setPermissions(tempFile, 0o421);
@@ -47,8 +46,7 @@
     });
 
     add_task(async function test_setPermissionsWithoutHonoringUmask() {
-      const tempDir = await PathUtils.getTempDir();
-      const tempFile = PathUtils.join(tempDir, "setPermissions.tmp");
+      const tempFile = PathUtils.join(PathUtils.tempDir, "setPermissions.tmp");
 
       await IOUtils.writeUTF8(tempFile, "");
       await IOUtils.setPermissions(tempFile, 0o421, false);

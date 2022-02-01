@@ -22,13 +22,6 @@ Assert.ok(
   /[^\x20-\x7f]/.test(file.path),
   "the profile path should contain a non-ASCII character"
 );
-if (mozinfo.os == "win") {
-  file.QueryInterface(Ci.nsILocalFileWin);
-  Assert.ok(
-    /[^\x20-\x7f]/.test(file.canonicalPath),
-    "the profile short path should contain a non-ASCII character"
-  );
-}
 
 // Restore the original value.
 env.set("XPCSHELL_TEST_PROFILE_DIR", profd);

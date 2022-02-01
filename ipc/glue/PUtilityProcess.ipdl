@@ -12,6 +12,8 @@ include protocol PProfiler;
 include protocol PSandboxTesting;
 #endif
 
+include "mozilla/ipc/ByteBufUtils.h";
+
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 
 namespace mozilla {
@@ -29,6 +31,11 @@ parent:
 
   async AddMemoryReport(MemoryReport aReport);
 
+  // Sent from time-to-time to limit the amount of telemetry vulnerable to loss
+  // Buffer contains bincoded Rust structs.
+  // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/ipc.html
+  async FOGData(ByteBuf buf);
+
 child:
   async Init(FileDescriptor? sandboxBroker, bool canRecordReleaseTelemetry);
 
@@ -41,6 +48,16 @@ child:
       returns (uint32_t aGeneration);
 
   async PreferenceUpdate(Pref pref);
+
+  // Tells the Utility process to flush any pending telemetry.
+  // Used in tests and ping assembly. Buffer contains bincoded Rust structs.
+  // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/ipc.html
+  async FlushFOGData() returns (ByteBuf buf);
+
+  // Test-only method.
+  // Asks the Utility process to trigger test-only instrumentation.
+  // The unused returned value is to have a promise we can await.
+  async TestTriggerMetrics() returns (bool unused);
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
   async InitSandboxTesting(Endpoint<PSandboxTestingChild> aEndpoint);

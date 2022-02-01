@@ -21,6 +21,9 @@
 #include "mozilla/RDDChild.h"
 #include "mozilla/RDDParent.h"
 #include "mozilla/RDDProcessManager.h"
+#include "mozilla/ipc/UtilityProcessChild.h"
+#include "mozilla/ipc/UtilityProcessManager.h"
+#include "mozilla/ipc/UtilityProcessParent.h"
 #include "mozilla/Unused.h"
 #include "GMPPlatform.h"
 #include "GMPServiceParent.h"
@@ -32,6 +35,9 @@ using mozilla::dom::ContentParent;
 using mozilla::gfx::GPUChild;
 using mozilla::gfx::GPUProcessManager;
 using mozilla::ipc::ByteBuf;
+using mozilla::ipc::UtilityProcessChild;
+using mozilla::ipc::UtilityProcessManager;
+using mozilla::ipc::UtilityProcessParent;
 using FlushFOGDataPromise = mozilla::dom::ContentParent::FlushFOGDataPromise;
 
 namespace mozilla {
@@ -138,6 +144,14 @@ void FlushAllChildData(
     gmps->SendFlushFOGData(promises);
   }
 
+  if (RefPtr<UtilityProcessManager> utilityManager =
+          UtilityProcessManager::GetSingleton()) {
+    if (UtilityProcessParent* utilityParent =
+            utilityManager->GetProcessParent()) {
+      promises.EmplaceBack(utilityParent->SendFlushFOGData());
+    }
+  }
+
   if (promises.Length() == 0) {
     // No child processes at the moment. Resolve synchronously.
     fog_ipc::flush_durations.Cancel(std::move(timerId));
@@ -198,6 +212,10 @@ void SendFOGData(ipc::ByteBuf&& buf) {
       Unused << net::SocketProcessChild::GetSingleton()->SendFOGData(
           std::move(buf));
       break;
+    case GeckoProcessType_Utility:
+      Unused << ipc::UtilityProcessChild::GetSingleton()->SendFOGData(
+          std::move(buf));
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsuppored process type");
   }
@@ -249,6 +267,15 @@ void TestTriggerMetrics(uint32_t aProcessType,
       break;
     case nsIXULRuntime::PROCESS_TYPE_SOCKET:
       Unused << net::SocketProcessParent::GetSingleton()
+                    ->SendTestTriggerMetrics()
+                    ->Then(
+                        GetCurrentSerialEventTarget(), __func__,
+                        [promise]() { promise->MaybeResolveWithUndefined(); },
+                        [promise]() { promise->MaybeRejectWithUndefined(); });
+      break;
+    case nsIXULRuntime::PROCESS_TYPE_UTILITY:
+      Unused << ipc::UtilityProcessManager::GetSingleton()
+                    ->GetProcessParent()
                     ->SendTestTriggerMetrics()
                     ->Then(
                         GetCurrentSerialEventTarget(), __func__,

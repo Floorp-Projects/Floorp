@@ -310,8 +310,8 @@ child:
   async SetSelected(uint64_t aID, bool aSelected);
 
   [Nested=inside_sync] sync DoAction(uint64_t aID, uint8_t aIndex) returns(bool aSuccess);
+  async DoActionAsync(uint64_t aID, uint8_t aIndex);
   [Nested=inside_sync] sync ActionCount(uint64_t aID) returns(uint8_t aCount);
-  [Nested=inside_sync] sync ActionDescriptionAt(uint64_t aID, uint8_t aIndex) returns(nsString aDescription);
   [Nested=inside_sync] sync ActionNameAt(uint64_t aID, uint8_t aIndex) returns(nsString aName);
   [Nested=inside_sync] sync AccessKey(uint64_t aID) returns(uint32_t aKey, uint32_t aModifierMask);
   [Nested=inside_sync] sync KeyboardShortcut(uint64_t aID) returns(uint32_t aKey, uint32_t aModifierMask);

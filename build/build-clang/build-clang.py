@@ -251,13 +251,23 @@ def build_one_stage(
             "-DCMAKE_INSTALL_PREFIX=%s" % inst_dir,
             "-DLLVM_TARGETS_TO_BUILD=%s" % machine_targets,
             "-DLLVM_ENABLE_ASSERTIONS=%s" % ("ON" if assertions else "OFF"),
-            "-DLLVM_TOOL_LIBCXX_BUILD=%s" % ("ON" if build_libcxx else "OFF"),
             "-DLLVM_ENABLE_BINDINGS=OFF",
             "-DLLVM_ENABLE_CURL=OFF",
         ]
         if "TASK_ID" in os.environ:
             cmake_args += [
                 "-DCLANG_REPOSITORY_STRING=taskcluster-%s" % os.environ["TASK_ID"],
+            ]
+        # libc++ doesn't build with MSVC because of the use of #include_next.
+        if is_final_stage and os.path.basename(cc[0]).lower() != "cl.exe":
+            cmake_args += [
+                "-DLLVM_FORCE_BUILD_RUNTIME=ON",
+                "-DLLVM_TOOL_LIBCXX_BUILD=%s" % ("ON" if build_libcxx else "OFF"),
+                # libc++abi has conflicting definitions between the shared and static
+                # library on Windows because of the import library for the dll having
+                # the same name as the static library. libc++abi is not necessary on
+                # Windows anyways.
+                "-DLLVM_TOOL_LIBCXXABI_BUILD=%s" % ("OFF" if is_windows() else "ON"),
             ]
         if not is_final_stage:
             cmake_args += [
@@ -775,8 +785,6 @@ if __name__ == "__main__":
         extra_cflags2 = []
         extra_cxxflags2 = [
             "-fms-compatibility-version=19.15.26726",
-            "-Xclang",
-            "-std=c++14",
         ]
         extra_asmflags = []
         extra_ldflags = []
