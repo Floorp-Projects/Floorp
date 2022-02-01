@@ -155,7 +155,8 @@
     max-width: 100% !important;
     flex-basis: 100%;
   }
-  .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url {
+  .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-url,
+  .urlbarView-results[wrap] > .urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-url {
     margin-top: 2px;
   }
   /* urlbarView-url is forced to be LTR for RTL locales, so set the padding based on the browser's directionality. */
@@ -170,6 +171,7 @@
   .urlbarView[actionoverride] .urlbarView-results[wrap] > .urlbarView-row[has-url] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
   .urlbarView-results[wrap] > .urlbarView-row[has-url]:not([type$=tab], [sponsored]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
   .urlbarView-results[wrap] > .urlbarView-row[has-url]:is([type=remotetab], [sponsored]):is(:hover, [selected]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
+  .urlbarView-results[wrap] > .urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap > .urlbarView-title-separator,
   .urlbarView-results[wrap] > .urlbarView-row[type=tabtosearch] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator {
     display: none;
   }
@@ -179,6 +181,13 @@
   .urlbarView-results[wrap] > .urlbarView-row[type=tabtosearch] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-action {
     flex-basis: 100%;
     margin-inline-start: calc(var(--urlbarView-item-inline-padding) + var(--identity-box-margin-inline) + var(--urlbarView-favicon-width));
+  }
+
+  .urlbarView-results[wrap] > .urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top {
+    flex-wrap: wrap;
+  }
+  .urlbarView-results[wrap] > .urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap {
+    flex-basis: 100%;
   }
 }
 
@@ -190,12 +199,14 @@
 }
 
 .urlbarView-row:not([type=tip], [type=dynamic]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow],
+.urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap > .urlbarView-title[overflow],
 .urlbarView-tags[overflow],
 .urlbarView-url[overflow] {
   mask-image: linear-gradient(to left, transparent, black 2em);
 }
 
 .urlbarView-row:not([type=tip], [type=dynamic]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title[overflow]:not([isurl]):-moz-locale-dir(rtl),
+.urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap > .urlbarView-title[overflow]:-moz-locale-dir(rtl),
 .urlbarView-tags[overflow]:-moz-locale-dir(rtl) {
   mask-image: linear-gradient(to right, transparent, black 2em);
 }
@@ -660,6 +671,67 @@
   padding: 0 4px;
   margin-inline-start: .4em;
   border-radius: 4px;
+}
+
+/* Best match */
+
+.urlbarView-row[type=bestmatch] > .urlbarView-row-inner {
+  align-items: center;
+  justify-content: start;
+}
+
+.urlbarView-row[type=bestmatch] > .urlbarView-row-inner,
+.urlbarView-results[wrap] > .urlbarView-row[type=bestmatch] > .urlbarView-row-inner {
+  flex-wrap: nowrap;
+}
+
+.urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-favicon {
+  width: 52px;
+  height: 52px;
+  flex-basis: 52px;
+  flex-shrink: 0;
+  flex-grow: 0;
+  border-radius: 2px;
+}
+
+.urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body {
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  align-items: center;
+  justify-content: start;
+}
+
+.urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  align-items: center;
+  justify-content: start;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.urlbarView-results:not([wrap]) > .urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-top > .urlbarView-row-body-top-no-wrap {
+  /* Limit the title (which is inside .urlbarView-row-body-top-no-wrap) to 70%
+     of the width so the URL is never completely hidden. */
+  max-width: 70%;
+}
+
+.urlbarView-row[type=bestmatch] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-bottom {
+  font-size: 0.73em;
+  opacity: 0.6;
+}
+
+.urlbarView-row[type=bestmatch][selected] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-bottom,
+.urlbarView-row[type=bestmatch] > .urlbarView-row-inner[selected] > .urlbarView-row-body > .urlbarView-row-body-bottom {
+  opacity: 1;
 }
 
 /* Search one-offs */

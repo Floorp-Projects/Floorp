@@ -1148,40 +1148,7 @@ class UrlbarView {
     item._content.appendChild(url);
     item._elements.set("url", url);
 
-    // Usually we create all child elements for the row regardless of whether
-    // the specific result will use them, but we don't expect the vast majority
-    // of results to have help URLs, so as an optimization, only create the help
-    // button if the result will use it.
-    if (result.payload.helpUrl) {
-      let helpButton = this._createElement("span");
-      helpButton.className = "urlbarView-help";
-      helpButton.setAttribute("role", "button");
-      if (result.payload.helpL10nId) {
-        helpButton.setAttribute("data-l10n-id", result.payload.helpL10nId);
-      }
-      item.appendChild(helpButton);
-      item._elements.set("helpButton", helpButton);
-      item._content.setAttribute("selectable", "true");
-
-      // If the content is marked as selectable, the screen reader will not be
-      // able to read the text directly child of the "urlbarView-row". As the
-      // group label is shown as pseudo element of urlbarView-row now, it isn't
-      // readable. To avoid it, we add an element for aria-label explictly,
-      // and set group label that should be read into it in _updateIndices().
-      const groupAriaLabel = this._createElement("span");
-      groupAriaLabel.className = "urlbarView-group-aria-label";
-      item._content.insertBefore(groupAriaLabel, item._content.firstChild);
-      item._elements.set("groupAriaLabel", groupAriaLabel);
-
-      // Remove role=option on the row and set it on row-inner since the latter
-      // is the selectable logical row element when the help button is present.
-      // Since row-inner is not a child of the role=listbox element (the row
-      // container, this._rows), screen readers will not automatically recognize
-      // it as a listbox option.  To compensate, set role=presentation on the
-      // row so that screen readers ignore it.
-      item.setAttribute("role", "presentation");
-      item._content.setAttribute("role", "option");
-    }
+    this._maybeCreateRowHelpButton(item, result);
   }
 
   _createRowContentForTip(item) {
@@ -1268,6 +1235,91 @@ class UrlbarView {
     }
   }
 
+  _createRowContentForBestMatch(item, result) {
+    let favicon = this._createElement("img");
+    favicon.className = "urlbarView-favicon";
+    item._content.appendChild(favicon);
+    item._elements.set("favicon", favicon);
+
+    let typeIcon = this._createElement("span");
+    typeIcon.className = "urlbarView-type-icon";
+    item._content.appendChild(typeIcon);
+
+    let body = this._createElement("span");
+    body.className = "urlbarView-row-body";
+    item._content.appendChild(body);
+
+    let top = this._createElement("div");
+    top.className = "urlbarView-row-body-top";
+    body.appendChild(top);
+
+    let noWrap = this._createElement("div");
+    noWrap.className = "urlbarView-row-body-top-no-wrap";
+    top.appendChild(noWrap);
+    item._elements.set("noWrap", noWrap);
+
+    let title = this._createElement("span");
+    title.className = "urlbarView-title";
+    noWrap.appendChild(title);
+    item._elements.set("title", title);
+
+    let titleSeparator = this._createElement("span");
+    titleSeparator.className = "urlbarView-title-separator";
+    noWrap.appendChild(titleSeparator);
+    item._elements.set("titleSeparator", titleSeparator);
+
+    let url = this._createElement("span");
+    url.className = "urlbarView-url";
+    top.appendChild(url);
+    item._elements.set("url", url);
+
+    let bottom = this._createElement("div");
+    bottom.className = "urlbarView-row-body-bottom";
+    body.appendChild(bottom);
+    item._elements.set("bottom", bottom);
+
+    this._maybeCreateRowHelpButton(item, result);
+  }
+
+  _maybeCreateRowHelpButton(item, result) {
+    // Usually we create all child elements for the row regardless of whether
+    // the specific result will use them, but we don't expect the vast majority
+    // of results to have help URLs, so as an optimization, only create the help
+    // button if the result will use it.
+    if (!result.payload.helpUrl) {
+      return;
+    }
+
+    let helpButton = this._createElement("span");
+    helpButton.className = "urlbarView-help";
+    helpButton.setAttribute("role", "button");
+    if (result.payload.helpL10nId) {
+      helpButton.setAttribute("data-l10n-id", result.payload.helpL10nId);
+    }
+    item.appendChild(helpButton);
+    item._elements.set("helpButton", helpButton);
+    item._content.setAttribute("selectable", "true");
+
+    // If the content is marked as selectable, the screen reader will not be
+    // able to read the text directly child of the "urlbarView-row". As the
+    // group label is shown as pseudo element of urlbarView-row now, it isn't
+    // readable. To avoid it, we add an element for aria-label explictly,
+    // and set group label that should be read into it in _updateIndices().
+    const groupAriaLabel = this._createElement("span");
+    groupAriaLabel.className = "urlbarView-group-aria-label";
+    item._content.insertBefore(groupAriaLabel, item._content.firstChild);
+    item._elements.set("groupAriaLabel", groupAriaLabel);
+
+    // Remove role=option on the row and set it on row-inner since the latter
+    // is the selectable logical row element when the help button is present.
+    // Since row-inner is not a child of the role=listbox element (the row
+    // container, this._rows), screen readers will not automatically recognize
+    // it as a listbox option.  To compensate, set role=presentation on the
+    // row so that screen readers ignore it.
+    item.setAttribute("role", "presentation");
+    item._content.setAttribute("role", "option");
+  }
+
   _updateRow(item, result) {
     let oldResult = item.result;
     let oldResultType = item.result && item.result.type;
@@ -1284,6 +1336,7 @@ class UrlbarView {
       (oldResultType == UrlbarUtils.RESULT_TYPE.DYNAMIC &&
         result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC &&
         oldResult.dynamicType != result.dynamicType) ||
+      oldResult.isBestMatch != result.isBestMatch ||
       !!result.payload.helpUrl != item._elements.has("helpButton");
 
     if (needsNewContent) {
@@ -1299,6 +1352,8 @@ class UrlbarView {
         this._createRowContentForTip(item);
       } else if (item.result.type == UrlbarUtils.RESULT_TYPE.DYNAMIC) {
         this._createRowContentForDynamicType(item, result);
+      } else if (item.result.isBestMatch) {
+        this._createRowContentForBestMatch(item, result);
       } else {
         this._createRowContent(item, result);
       }
@@ -1327,6 +1382,10 @@ class UrlbarView {
       return;
     } else if (result.providerName == "TabToSearch") {
       item.setAttribute("type", "tabtosearch");
+    } else if (result.isBestMatch) {
+      item.setAttribute("type", "bestmatch");
+      this._updateRowForBestMatch(item, result);
+      return;
     } else {
       item.removeAttribute("type");
     }
@@ -1659,6 +1718,48 @@ class UrlbarView {
     }
   }
 
+  _updateRowForBestMatch(item, result) {
+    let favicon = item._elements.get("favicon");
+    favicon.src = this._iconForResult(result);
+
+    let title = item._elements.get("title");
+    this._setResultTitle(result, title);
+    title._tooltip = result.title;
+    if (title.hasAttribute("overflow")) {
+      title.setAttribute("title", title._tooltip);
+    } else {
+      title.removeAttribute("title");
+    }
+
+    let url = item._elements.get("url");
+    this._addTextContentWithHighlights(
+      url,
+      result.payload.displayUrl,
+      result.payloadHighlights.displayUrl || []
+    );
+    url._tooltip = result.payload.displayUrl;
+    if (url.hasAttribute("overflow")) {
+      url.setAttribute("title", url._tooltip);
+    } else {
+      url.removeAttribute("title");
+    }
+
+    let bottom = item._elements.get("bottom");
+    if (result.payload.isSponsored) {
+      this._setElementL10n(bottom, { id: "urlbar-result-action-sponsored" });
+    } else {
+      this._removeElementL10n(bottom);
+    }
+
+    let helpButton = item._elements.get("helpButton");
+    if (helpButton) {
+      helpButton.id = item.id + "-help";
+      item.toggleAttribute("has-help", true);
+    } else {
+      item.removeAttribute("has-help");
+    }
+  }
+
   /**
    * Performs a final pass over all rows in the view after a view update, stale
    * rows are removed, and other changes to the number of rows. Sets `rowIndex`
@@ -1742,6 +1843,9 @@ class UrlbarView {
       this._queryContext?.searchString &&
       !row.result.heuristic
     ) {
+      if (row.result.isBestMatch) {
+        return { id: "urlbar-group-best-match" };
+      }
       switch (row.result.type) {
         case UrlbarUtils.RESULT_TYPE.KEYWORD:
         case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
@@ -1776,7 +1880,10 @@ class UrlbarView {
       // again, we'll get new overflow events if needed.
       this._setElementOverflowing(row._elements.get("title"), false);
       this._setElementOverflowing(row._elements.get("url"), false);
-      this._setElementOverflowing(row._elements.get("tagsContainer"), false);
+      let tagsContainer = row._elements.get("tagsContainer");
+      if (tagsContainer) {
+        this._setElementOverflowing(tagsContainer, false);
+      }
     }
   }
 
@@ -2176,7 +2283,12 @@ class UrlbarView {
     ];
 
     if (UrlbarPrefs.get("groupLabels.enabled")) {
-      idArgs.push({ id: "urlbar-group-firefox-suggest" });
+      idArgs.push(
+        ...[
+          { id: "urlbar-group-best-match" },
+          { id: "urlbar-group-firefox-suggest" },
+        ]
+      );
     }
 
     if (UrlbarPrefs.get("quickSuggestEnabled")) {
