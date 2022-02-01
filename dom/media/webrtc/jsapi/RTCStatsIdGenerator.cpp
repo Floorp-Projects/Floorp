@@ -10,6 +10,7 @@
 
 #include "mozilla/RandomNum.h"
 #include "RTCStatsReport.h"
+#include "WebrtcGlobal.h"
 
 namespace mozilla {
 
@@ -26,27 +27,9 @@ void RTCStatsIdGenerator::RewriteIds(
     }
   };
 
-  auto rewriteIds = [&](auto& aList) {
+  auto rewriteIds = [&](auto& aList, auto... aParam) {
     for (auto& stat : aList) {
-      rewriteId(stat.mId);
-    }
-  };
-
-  auto rewriteRemoteIds = [&](auto& aList) {
-    for (auto& stat : aList) {
-      rewriteId(stat.mRemoteId);
-    }
-  };
-
-  auto rewriteLocalIds = [&](auto& aList) {
-    for (auto& stat : aList) {
-      rewriteId(stat.mLocalId);
-    }
-  };
-
-  auto rewriteCodecIds = [&](auto& aList) {
-    for (auto& stat : aList) {
-      rewriteId(stat.mCodecId);
+      (rewriteId(stat.*aParam), ...);
     }
   };
 
@@ -58,34 +41,29 @@ void RTCStatsIdGenerator::RewriteIds(
   auto stats = MakeUnique<dom::RTCStatsCollection>();
   dom::FlattenStats(std::move(aFromStats), stats.get());
 
-  for (auto& stat : stats->mIceCandidatePairStats) {
-    rewriteId(stat.mLocalCandidateId);
-    rewriteId(stat.mRemoteCandidateId);
-  };
-  rewriteIds(stats->mIceCandidatePairStats);
+  using S = dom::RTCStats;
+  using ICPS = dom::RTCIceCandidatePairStats;
+  using RSS = dom::RTCRtpStreamStats;
+  using IRSS = dom::RTCInboundRtpStreamStats;
+  using ORSS = dom::RTCOutboundRtpStreamStats;
+  using RIRSS = dom::RTCRemoteInboundRtpStreamStats;
+  using RORSS = dom::RTCRemoteOutboundRtpStreamStats;
 
-  rewriteIds(stats->mIceCandidateStats);
-
-  rewriteRemoteIds(stats->mInboundRtpStreamStats);
-  rewriteCodecIds(stats->mInboundRtpStreamStats);
-  rewriteIds(stats->mInboundRtpStreamStats);
-
-  rewriteRemoteIds(stats->mOutboundRtpStreamStats);
-  rewriteCodecIds(stats->mOutboundRtpStreamStats);
-  rewriteIds(stats->mOutboundRtpStreamStats);
-
-  rewriteLocalIds(stats->mRemoteInboundRtpStreamStats);
-  rewriteCodecIds(stats->mRemoteInboundRtpStreamStats);
-  rewriteIds(stats->mRemoteInboundRtpStreamStats);
-
-  rewriteLocalIds(stats->mRemoteOutboundRtpStreamStats);
-  rewriteCodecIds(stats->mRemoteOutboundRtpStreamStats);
-  rewriteIds(stats->mRemoteOutboundRtpStreamStats);
-
-  rewriteIds(stats->mCodecStats);
-  rewriteIds(stats->mRtpContributingSourceStats);
-  rewriteIds(stats->mTrickledIceCandidateStats);
-  rewriteIds(stats->mDataChannelStats);
+  rewriteIds(stats->mIceCandidatePairStats, &S::mId, &ICPS::mLocalCandidateId,
+             &ICPS::mRemoteCandidateId);
+  rewriteIds(stats->mIceCandidateStats, &S::mId);
+  rewriteIds(stats->mInboundRtpStreamStats, &S::mId, &IRSS::mRemoteId,
+             &RSS::mCodecId);
+  rewriteIds(stats->mOutboundRtpStreamStats, &S::mId, &ORSS::mRemoteId,
+             &RSS::mCodecId);
+  rewriteIds(stats->mRemoteInboundRtpStreamStats, &S::mId, &RIRSS::mLocalId,
+             &RSS::mCodecId);
+  rewriteIds(stats->mRemoteOutboundRtpStreamStats, &S::mId, &RORSS::mLocalId,
+             &RSS::mCodecId);
+  rewriteIds(stats->mCodecStats, &S::mId);
+  rewriteIds(stats->mRtpContributingSourceStats, &S::mId);
+  rewriteIds(stats->mTrickledIceCandidateStats, &S::mId);
+  rewriteIds(stats->mDataChannelStats, &S::mId);
 
   dom::MergeStats(std::move(stats), aIntoReport);
 }

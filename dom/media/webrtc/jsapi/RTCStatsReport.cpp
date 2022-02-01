@@ -8,6 +8,7 @@
 #include "libwebrtcglue/SystemTime.h"
 #include "mozilla/dom/Performance.h"
 #include "nsRFPService.h"
+#include "WebrtcGlobal.h"
 
 namespace mozilla::dom {
 
@@ -114,16 +115,8 @@ JSObject* RTCStatsReport::WrapObject(JSContext* aCx,
 }
 
 void RTCStatsReport::Incorporate(RTCStatsCollection& aStats) {
-  SetRTCStats(aStats.mIceCandidatePairStats);
-  SetRTCStats(aStats.mIceCandidateStats);
-  SetRTCStats(aStats.mCodecStats);
-  SetRTCStats(aStats.mInboundRtpStreamStats);
-  SetRTCStats(aStats.mOutboundRtpStreamStats);
-  SetRTCStats(aStats.mRemoteInboundRtpStreamStats);
-  SetRTCStats(aStats.mRemoteOutboundRtpStreamStats);
-  SetRTCStats(aStats.mRtpContributingSourceStats);
-  SetRTCStats(aStats.mTrickledIceCandidateStats);
-  SetRTCStats(aStats.mDataChannelStats);
+  ForAllPublicRTCStatsCollectionMembers(
+      aStats, [&](auto... aMember) { (SetRTCStats(aMember), ...); });
 }
 
 void RTCStatsReport::Set(const nsAString& aKey, JS::Handle<JSObject*> aValue,
@@ -131,37 +124,40 @@ void RTCStatsReport::Set(const nsAString& aKey, JS::Handle<JSObject*> aValue,
   RTCStatsReport_Binding::MaplikeHelpers::Set(this, aKey, aValue, aRv);
 }
 
-void MergeStats(UniquePtr<dom::RTCStatsCollection> aFromStats,
-                dom::RTCStatsCollection* aIntoStats) {
-  auto move = [&](auto& aSource, auto& aDest) {
-    if (!aDest.AppendElements(std::move(aSource), fallible)) {
-      mozalloc_handle_oom(0);
-    }
-  };
-
-  move(aFromStats->mIceCandidatePairStats, aIntoStats->mIceCandidatePairStats);
-  move(aFromStats->mIceCandidateStats, aIntoStats->mIceCandidateStats);
-  move(aFromStats->mInboundRtpStreamStats, aIntoStats->mInboundRtpStreamStats);
-  move(aFromStats->mOutboundRtpStreamStats,
-       aIntoStats->mOutboundRtpStreamStats);
-  move(aFromStats->mRemoteInboundRtpStreamStats,
-       aIntoStats->mRemoteInboundRtpStreamStats);
-  move(aFromStats->mRemoteOutboundRtpStreamStats,
-       aIntoStats->mRemoteOutboundRtpStreamStats);
-  move(aFromStats->mCodecStats, aIntoStats->mCodecStats);
-  move(aFromStats->mRtpContributingSourceStats,
-       aIntoStats->mRtpContributingSourceStats);
-  move(aFromStats->mTrickledIceCandidateStats,
-       aIntoStats->mTrickledIceCandidateStats);
-  move(aFromStats->mDataChannelStats, aIntoStats->mDataChannelStats);
-  move(aFromStats->mRawLocalCandidates, aIntoStats->mRawLocalCandidates);
-  move(aFromStats->mRawRemoteCandidates, aIntoStats->mRawRemoteCandidates);
-  move(aFromStats->mVideoFrameHistories, aIntoStats->mVideoFrameHistories);
-  move(aFromStats->mBandwidthEstimations, aIntoStats->mBandwidthEstimations);
+namespace {
+template <size_t I, typename... Ts>
+bool MoveInto(std::tuple<Ts...>& aFrom, std::tuple<Ts*...>& aInto) {
+  return std::get<I>(aInto)->AppendElements(std::move(std::get<I>(aFrom)),
+                                            fallible);
 }
 
-void FlattenStats(nsTArray<UniquePtr<dom::RTCStatsCollection>> aFromStats,
-                  dom::RTCStatsCollection* aIntoStats) {
+template <size_t... Is, typename... Ts>
+bool MoveInto(std::tuple<Ts...>&& aFrom, std::tuple<Ts*...>& aInto,
+              std::index_sequence<Is...>) {
+  return (... && MoveInto<Is>(aFrom, aInto));
+}
+
+template <typename... Ts>
+bool MoveInto(std::tuple<Ts...>&& aFrom, std::tuple<Ts*...>& aInto) {
+  return MoveInto(std::move(aFrom), aInto, std::index_sequence_for<Ts...>());
+}
+}  // namespace
+
+void MergeStats(UniquePtr<RTCStatsCollection> aFromStats,
+                RTCStatsCollection* aIntoStats) {
+  auto fromTuple = ForAllRTCStatsCollectionMembers(
+      *aFromStats,
+      [&](auto&... aMember) { return std::make_tuple(std::move(aMember)...); });
+  auto intoTuple = ForAllRTCStatsCollectionMembers(
+      *aIntoStats,
+      [&](auto&... aMember) { return std::make_tuple(&aMember...); });
+  if (!MoveInto(std::move(fromTuple), intoTuple)) {
+    mozalloc_handle_oom(0);
+  }
+}
+
+void FlattenStats(nsTArray<UniquePtr<RTCStatsCollection>> aFromStats,
+                  RTCStatsCollection* aIntoStats) {
   for (auto& stats : aFromStats) {
     MergeStats(std::move(stats), aIntoStats);
   }

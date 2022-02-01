@@ -34,6 +34,41 @@ struct NotReallyMovableButLetsPretendItIsRTCStatsCollection
     RTCStatsCollection::operator=(aStats);
   }
 };
+
+// Calls aFunction with all public members of aStats.
+// Typical usage would have aFunction take a parameter pack.
+// To avoid inconsistencies, this should be the only explicit list of the
+// public RTCStatscollection members in C++.
+template <typename Collection, typename Function>
+static auto ForAllPublicRTCStatsCollectionMembers(Collection& aStats,
+                                                  Function aFunction) {
+  static_assert(std::is_same_v<typename std::remove_const<Collection>::type,
+                               RTCStatsCollection>,
+                "aStats must be a const or non-const RTCStatsCollection");
+  return aFunction(
+      aStats.mInboundRtpStreamStats, aStats.mOutboundRtpStreamStats,
+      aStats.mRemoteInboundRtpStreamStats, aStats.mRemoteOutboundRtpStreamStats,
+      aStats.mRtpContributingSourceStats, aStats.mIceCandidatePairStats,
+      aStats.mIceCandidateStats, aStats.mTrickledIceCandidateStats,
+      aStats.mDataChannelStats, aStats.mCodecStats);
+}
+
+// Calls aFunction with all members of aStats, including internal ones.
+// Typical usage would have aFunction take a parameter pack.
+// To avoid inconsistencies, this should be the only explicit list of the
+// internal RTCStatscollection members in C++.
+template <typename Collection, typename Function>
+static auto ForAllRTCStatsCollectionMembers(Collection& aStats,
+                                            Function aFunction) {
+  static_assert(std::is_same_v<typename std::remove_const<Collection>::type,
+                               RTCStatsCollection>,
+                "aStats must be a const or non-const RTCStatsCollection");
+  return ForAllPublicRTCStatsCollectionMembers(aStats, [&](auto&... aMember) {
+    return aFunction(aMember..., aStats.mRawLocalCandidates,
+                     aStats.mRawRemoteCandidates, aStats.mVideoFrameHistories,
+                     aStats.mBandwidthEstimations);
+  });
+}
 }  // namespace dom
 }  // namespace mozilla
 
@@ -96,13 +131,21 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCSdpParsingErrorInternal,
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCSdpHistoryEntryInternal,
                                   mTimestamp, mIsLocal, mSdp, mErrors);
 
-DEFINE_IPC_SERIALIZER_WITH_FIELDS(
-    mozilla::dom::RTCStatsCollection, mIceCandidatePairStats,
-    mIceCandidateStats, mInboundRtpStreamStats, mOutboundRtpStreamStats,
-    mRemoteInboundRtpStreamStats, mRemoteOutboundRtpStreamStats,
-    mRtpContributingSourceStats, mTrickledIceCandidateStats,
-    mRawLocalCandidates, mRawRemoteCandidates, mDataChannelStats,
-    mVideoFrameHistories, mBandwidthEstimations);
+template <>
+struct ParamTraits<mozilla::dom::RTCStatsCollection> {
+  static void Write(Message* aMsg,
+                    const mozilla::dom::RTCStatsCollection& aParam) {
+    mozilla::dom::ForAllRTCStatsCollectionMembers(
+        aParam, [&](const auto&... aMember) { WriteParams(aMsg, aMember...); });
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   mozilla::dom::RTCStatsCollection* aResult) {
+    return mozilla::dom::ForAllRTCStatsCollectionMembers(
+        *aResult,
+        [&](auto&... aMember) { return ReadParams(aMsg, aIter, aMember...); });
+  }
+};
 
 DEFINE_IPC_SERIALIZER_WITH_SUPER_CLASS_AND_FIELDS(
     mozilla::dom::RTCStatsReportInternal, mozilla::dom::RTCStatsCollection,
