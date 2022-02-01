@@ -375,7 +375,7 @@ fn prepare_interned_prim_for_render(
                             SubpixelMode::Conditional { allowed_rect } => {
                                 // Conditional mode allows subpixel AA to be enabled for this
                                 // text run, so long as it's inside the allowed rect.
-                                allowed_rect.contains_box(&prim_instance.vis.clip_chain.pic_clip_rect)
+                                allowed_rect.contains_box(&prim_instance.vis.clip_chain.pic_coverage_rect)
                             }
                         }
                     } else {
@@ -1155,12 +1155,12 @@ pub fn update_clip_task(
     let device_pixel_scale = frame_state.surfaces[pic_context.surface_index.0].device_pixel_scale;
 
     if instance.is_chased() {
-        info!("\tupdating clip task with pic rect {:?}", instance.vis.clip_chain.pic_clip_rect);
+        info!("\tupdating clip task with pic rect {:?}", instance.vis.clip_chain.pic_coverage_rect);
     }
 
     // Get the device space rect for the primitive if it was unclipped.
     let unclipped = match get_unclipped_device_rect(
-        instance.vis.clip_chain.pic_clip_rect,
+        instance.vis.clip_chain.pic_coverage_rect,
         &pic_state.map_pic_to_raster,
         device_pixel_scale,
     ) {
@@ -1277,7 +1277,7 @@ pub fn update_brush_segment_clip_task(
         return ClipMaskKind::None;
     }
 
-    let segment_world_rect = match pic_state.map_pic_to_world.map(&clip_chain.pic_clip_rect) {
+    let segment_world_rect = match pic_state.map_pic_to_world.map(&clip_chain.pic_coverage_rect) {
         Some(rect) => rect,
         None => return ClipMaskKind::Clipped,
     };
