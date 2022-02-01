@@ -2047,7 +2047,11 @@ nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
 
   if (aIndex < 0 || aIndex >= Length()) {
     MOZ_LOG(gSHistoryLog, LogLevel::Debug, ("Index out of range"));
-    // The index is out of range
+    // The index is out of range.
+    // Clear the requested index in case it had bogus value. This way the next
+    // load succeeds if the offset is reasonable.
+    mRequestedIndex = -1;
+
     return NS_ERROR_FAILURE;
   }
 
