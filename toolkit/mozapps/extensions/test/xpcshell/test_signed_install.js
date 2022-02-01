@@ -113,7 +113,11 @@ function serveUpdate(filename) {
   AddonTestUtils.registerJSON(testserver, "/update.json", RESPONSE);
 }
 
-async function test_install_broken(file, expectedError) {
+async function test_install_broken(
+  file,
+  expectedError,
+  expectNullAddon = true
+) {
   let install = await AddonManager.getInstallForFile(file);
   await Assert.rejects(
     install.install(),
@@ -123,7 +127,10 @@ async function test_install_broken(file, expectedError) {
 
   Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
   Assert.equal(install.error, expectedError);
-  Assert.equal(install.addon, null);
+
+  if (expectNullAddon) {
+    Assert.equal(install.addon, null);
+  }
 }
 
 async function test_install_working(file, expectedSignedState) {
@@ -223,6 +230,52 @@ add_task(async function test_install_valid() {
   let file = do_get_file(DATA + ADDONS.signed1);
   await test_install_working(file, AddonManager.SIGNEDSTATE_SIGNED);
 });
+
+add_task(
+  {
+    pref_set: [["xpinstall.signatures.dev-root", true]],
+  },
+  async function test_install_valid_file_with_different_root_cert() {
+    const TEST_CASES = [
+      {
+        title: "XPI without ID in manifest",
+        xpi: "data/webext-implicit-id.xpi",
+        expectedMessage: /Cannot find id for addon .+ Preference xpinstall.signatures.dev-root is set/,
+      },
+      {
+        title: "XPI with ID in manifest",
+        xpi: DATA + ADDONS.signed1,
+        expectedMessage: /Add-on test@somewhere.com is not correctly signed/,
+      },
+    ];
+
+    for (const { title, xpi, expectedMessage } of TEST_CASES) {
+      info(`test_install_valid_file_with_different_root_cert: ${title}`);
+
+      const file = do_get_file(xpi);
+
+      const awaitConsole = new Promise(resolve => {
+        Services.console.registerListener(function listener(message) {
+          if (expectedMessage.test(message.message)) {
+            Services.console.unregisterListener(listener);
+            resolve();
+          }
+        });
+      });
+
+      await test_install_broken(
+        file,
+        AddonManager.ERROR_CORRUPT_FILE,
+        // We don't expect the `addon` property on the `install` object to be
+        // `null` because that seems to happen later (when the signature is
+        // checked).
+        false
+      );
+
+      await awaitConsole;
+    }
+  }
+);
 
 // Try to install an add-on signed with SHA-256
 add_task(async function test_install_valid_sha256() {
