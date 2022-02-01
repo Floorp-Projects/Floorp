@@ -1356,6 +1356,12 @@ class nsDocShell final : public nsDocLoader,
   // Whether we have a pending encoding autodetection request from the
   // menu for all encodings.
   bool mForcedAutodetection : 1;
+
+  /*
+   * Set to true if we're checking session history (in the parent process) for
+   * a possible history load. Used only with iframes.
+   */
+  bool mCheckingSessionHistory : 1;
 };
 
 inline nsISupports* ToSupports(nsDocShell* aDocShell) {
