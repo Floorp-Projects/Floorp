@@ -12,6 +12,7 @@
 from __future__ import absolute_import
 
 import codecs
+import json
 import os
 import sys
 import tempfile
@@ -41,8 +42,15 @@ class GeckoInstance(object):
         # and causing false-positive test failures. See bug 1176798, bug 1177018,
         # bug 1210465.
         "apz.content_response_timeout": 60000,
+        # Disable geolocation ping (#1)
+        "browser.region.network.url": "",
         # Don't pull Top Sites content from the network
         "browser.topsites.contile.enabled": False,
+        # Disable UI tour
+        "browser.uitour.pinnedTabUrl": "http://%(server)s/uitour-dummy/pinnedTab",
+        "browser.uitour.url": "http://%(server)s/uitour-dummy/tour",
+        # Disable captive portal
+        "captivedetect.canonicalURL": "",
         # Defensively disable data reporting systems
         "datareporting.healthreport.documentServerURI": "http://%(server)s/dummy/healthreport/",
         "datareporting.healthreport.logging.consoleEnabled": False,
@@ -76,12 +84,29 @@ class GeckoInstance(object):
         # Turn off extension updates so they don't bother tests
         "extensions.update.enabled": False,
         "extensions.update.notifyUser": False,
+        # Redirect various extension update URLs
+        "extensions.blocklist.detailsURL": (
+            "http://%(server)s/extensions-dummy/blocklistDetailsURL"
+        ),
+        "extensions.blocklist.itemURL": "http://%(server)s/extensions-dummy/blocklistItemURL",
+        "extensions.hotfix.url": "http://%(server)s/extensions-dummy/hotfixURL",
+        "extensions.systemAddon.update.url": "http://%(server)s/dummy-system-addons.xml",
+        "extensions.update.background.url": (
+            "http://%(server)s/extensions-dummy/updateBackgroundURL"
+        ),
+        "extensions.update.url": "http://%(server)s/extensions-dummy/updateURL",
         # Make sure opening about:addons won"t hit the network
         "extensions.getAddons.discovery.api_url": "data:, ",
+        "extensions.getAddons.get.url": "http://%(server)s/extensions-dummy/repositoryGetURL",
+        "extensions.getAddons.search.browseURL": (
+            "http://%(server)s/extensions-dummy/repositoryBrowseURL"
+        ),
         # Allow the application to have focus even it runs in the background
         "focusmanager.testmode": True,
         # Disable useragent updates
         "general.useragent.updates.enabled": False,
+        # Disable geolocation ping (#2)
+        "geo.provider.network.url": "",
         # Always use network provider for geolocation tests
         # so we bypass the OSX dialog raised by the corelocation provider
         "geo.provider.testing": True,
@@ -92,11 +117,15 @@ class GeckoInstance(object):
         # Disable idle-daily notifications to avoid expensive operations
         # that may cause unexpected test timeouts.
         "idle.lastDailyNotification": -1,
+        # Disable Firefox accounts ping
+        "identity.fxaccounts.auth.uri": "https://{server}/dummy/fxa",
         # Disable download and usage of OpenH264, and Widevine plugins
         "media.gmp-manager.updateEnabled": False,
         # Disable the GFX sanity window
         "media.sanity-test.disabled": True,
         "media.volume_scale": "0.01",
+        # Disable connectivity service pings
+        "network.connectivity-service.enabled": False,
         # Do not prompt for temporary redirects
         "network.http.prompt-temp-redirect": False,
         # Do not automatically switch between offline and online
@@ -118,6 +147,8 @@ class GeckoInstance(object):
         "signon.rememberSignons": False,
         # Prevent starting into safe mode after application crashes
         "toolkit.startup.max_resumed_crashes": -1,
+        # Disable all telemetry pings
+        "toolkit.telemetry.server": "https://%(server)s/telemetry-dummy/",
     }
 
     def __init__(
@@ -327,6 +358,10 @@ class GeckoInstance(object):
 
         env = os.environ.copy()
 
+        # Store all required preferences for tests which need to create clean profiles.
+        required_prefs_keys = list(self.required_prefs.keys())
+        env["MOZ_MARIONETTE_REQUIRED_PREFS"] = json.dumps(required_prefs_keys)
+
         if self.headless:
             env["MOZ_HEADLESS"] = "1"
             env["DISPLAY"] = "77"  # Set a fake display.
@@ -390,12 +425,8 @@ class FennecInstance(GeckoInstance):
         # Enable output for dump() and chrome console API
         "browser.dom.window.dump.enabled": True,
         "devtools.console.stdout.chrome": True,
-        # Disable safebrowsing components
-        "browser.safebrowsing.blockedURIs.enabled": False,
-        "browser.safebrowsing.downloads.enabled": False,
-        "browser.safebrowsing.passwords.enabled": False,
-        "browser.safebrowsing.malware.enabled": False,
-        "browser.safebrowsing.phishing.enabled": False,
+        # Disable safe browsing / tracking protection updates
+        "browser.safebrowsing.update.enabled": False,
         # Do not restore the last open set of tabs if the browser has crashed
         "browser.sessionstore.resume_from_crash": False,
         # Disable e10s by default
@@ -546,12 +577,8 @@ class DesktopInstance(GeckoInstance):
         # Background thumbnails in particular cause grief, and disabling thumbnails
         # in general can"t hurt - we re-enable them when tests need them
         "browser.pagethumbnails.capturing_disabled": True,
-        # Disable safebrowsing components
-        "browser.safebrowsing.blockedURIs.enabled": False,
-        "browser.safebrowsing.downloads.enabled": False,
-        "browser.safebrowsing.passwords.enabled": False,
-        "browser.safebrowsing.malware.enabled": False,
-        "browser.safebrowsing.phishing.enabled": False,
+        # Disable safe browsing / tracking protection updates
+        "browser.safebrowsing.update.enabled": False,
         # Disable updates to search engines
         "browser.search.update": False,
         # Do not restore the last open set of tabs if the browser has crashed
