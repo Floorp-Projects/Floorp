@@ -33,6 +33,23 @@ class JsepTrackTest : public JsepTrackTestBase {
         mSendAns(SdpMediaSection::kAudio, sdp::kSend),
         mRecvAns(SdpMediaSection::kAudio, sdp::kRecv) {}
 
+  void TearDown() override {
+    if (::testing::UnitTest::GetInstance()
+            ->current_test_info()
+            ->result()
+            ->Failed()) {
+      if (mOffer) {
+        std::cerr << "Offer SDP: " << std::endl;
+        mOffer->Serialize(std::cerr);
+      }
+
+      if (mAnswer) {
+        std::cerr << "Answer SDP: " << std::endl;
+        mAnswer->Serialize(std::cerr);
+      }
+    }
+  }
+
   std::vector<UniquePtr<JsepCodecDescription>> MakeCodecs(
       bool addFecCodecs = false, bool preferRed = false,
       bool addDtmfCodec = false) const {
@@ -153,12 +170,6 @@ class JsepTrackTest : public JsepTrackTestBase {
   }
 
   void Negotiate() {
-    std::cerr << "Offer SDP: " << std::endl;
-    mOffer->Serialize(std::cerr);
-
-    std::cerr << "Answer SDP: " << std::endl;
-    mAnswer->Serialize(std::cerr);
-
     if (mRecvOff.GetMediaType() != SdpMediaSection::MediaType::kApplication) {
       mRecvOff.UpdateRecvTrack(*mAnswer, GetAnswer());
     }
@@ -267,17 +278,20 @@ class JsepTrackTest : public JsepTrackTestBase {
 
   void SanityCheckCodecs(const JsepCodecDescription& a,
                          const JsepCodecDescription& b) const {
-    ASSERT_EQ(a.mType, b.mType);
+#define MSG                                                               \
+  "For codecs " << a.mName << " (" << a.mDirection << ") and " << b.mName \
+                << " (" << b.mDirection << ")"
+    ASSERT_EQ(a.mType, b.mType) << MSG;
     if (a.mType != SdpMediaSection::kApplication) {
-      ASSERT_EQ(a.mDefaultPt, b.mDefaultPt);
+      ASSERT_EQ(a.mDefaultPt, b.mDefaultPt) << MSG;
     }
-    std::cerr << a.mName << " vs " << b.mName << std::endl;
     ASSERT_EQ(a.mName, b.mName);
-    ASSERT_EQ(a.mClock, b.mClock);
-    ASSERT_EQ(a.mChannels, b.mChannels);
-    ASSERT_NE(a.mDirection, b.mDirection);
+    ASSERT_EQ(a.mClock, b.mClock) << MSG;
+    ASSERT_EQ(a.mChannels, b.mChannels) << MSG;
+    ASSERT_NE(a.mDirection, b.mDirection) << MSG;
     // These constraints are for fmtp and rid, which _are_ signaled
-    ASSERT_EQ(a.mConstraints, b.mConstraints);
+    ASSERT_EQ(a.mConstraints, b.mConstraints) << MSG;
+#undef MSG
 
     if (a.mType == SdpMediaSection::kVideo) {
       SanityCheckRtcpFbs(static_cast<const JsepVideoCodecDescription&>(a),
@@ -1492,12 +1506,6 @@ TEST_F(JsepTrackTest, RtcpFbWithPayloadTypeAsymmetry) {
   UniquePtr<SdpParser> parser(new SipccSdpParser);
   mAnswer = std::move(parser->Parse(answer)->Sdp());
   ASSERT_TRUE(mAnswer);
-
-  std::cerr << "Offer SDP: " << std::endl;
-  mOffer->Serialize(std::cerr);
-
-  std::cerr << "Answer SDP: " << std::endl;
-  mAnswer->Serialize(std::cerr);
 
   mRecvOff.UpdateRecvTrack(*mAnswer, GetAnswer());
   mRecvOff.Negotiate(GetAnswer(), GetAnswer());
