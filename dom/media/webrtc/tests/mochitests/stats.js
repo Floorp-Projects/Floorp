@@ -13,6 +13,7 @@ const statsExpectedByType = {
       "ssrc",
       "mediaType",
       "kind",
+      "codecId",
       "packetsReceived",
       "packetsLost",
       "packetsDiscarded",
@@ -29,7 +30,6 @@ const statsExpectedByType = {
     unimplemented: [
       "mediaTrackId",
       "transportId",
-      "codecId",
       "associateStatsId",
       "sliCount",
       "packetsRepaired",
@@ -52,19 +52,14 @@ const statsExpectedByType = {
       "ssrc",
       "mediaType",
       "kind",
+      "codecId",
       "packetsSent",
       "bytesSent",
       "remoteId",
     ],
     optional: ["nackCount"],
     localVideoOnly: ["framesEncoded", "firCount", "pliCount", "qpSum"],
-    unimplemented: [
-      "mediaTrackId",
-      "transportId",
-      "codecId",
-      "sliCount",
-      "targetBitrate",
-    ],
+    unimplemented: ["mediaTrackId", "transportId", "sliCount", "targetBitrate"],
     deprecated: ["isRemote"],
   },
   "remote-inbound-rtp": {
@@ -75,6 +70,7 @@ const statsExpectedByType = {
       "ssrc",
       "mediaType",
       "kind",
+      "codecId",
       "packetsLost",
       "jitter",
       "localId",
@@ -83,7 +79,6 @@ const statsExpectedByType = {
     unimplemented: [
       "mediaTrackId",
       "transportId",
-      "codecId",
       "packetsDiscarded",
       "associateStatsId",
       "sliCount",
@@ -105,23 +100,32 @@ const statsExpectedByType = {
       "ssrc",
       "mediaType",
       "kind",
+      "codecId",
       "packetsSent",
       "bytesSent",
       "localId",
       "remoteTimestamp",
     ],
     optional: ["nackCount"],
-    unimplemented: [
-      "mediaTrackId",
-      "transportId",
-      "codecId",
-      "sliCount",
-      "targetBitrate",
-    ],
+    unimplemented: ["mediaTrackId", "transportId", "sliCount", "targetBitrate"],
     deprecated: ["isRemote"],
   },
   csrc: { skip: true },
-  codec: { skip: true },
+  codec: {
+    expected: [
+      "timestamp",
+      "type",
+      "id",
+      "payloadType",
+      "transportId",
+      "mimeType",
+      "clockRate",
+      "sdpFmtpLine",
+    ],
+    optional: ["codecType", "channels"],
+    unimplemented: [],
+    deprecated: [],
+  },
   "peer-connection": { skip: true },
   "data-channel": { skip: true },
   track: { skip: true },
@@ -348,6 +352,21 @@ function pedanticChecks(report) {
       );
 
       ok(stat.kind == stat.mediaType, "kind equals legacy mediaType");
+
+      // codecId
+      ok(stat.codecId, `${stat.type}.codecId has a value`);
+      ok(report.has(stat.codecId), `codecId ${stat.codecId} exists in report`);
+      is(
+        report.get(stat.codecId).type,
+        "codec",
+        `codecId ${stat.codecId} in report is codec type`
+      );
+      is(
+        report.get(stat.codecId).mimeType.slice(0, 5),
+        stat.kind,
+        `codecId ${stat.codecId} in report is for a mimeType of the same ` +
+          `media type as the referencing rtp stream stat`
+      );
 
       if (isRemote) {
         // local id
@@ -630,6 +649,184 @@ function pedanticChecks(report) {
           `${stat.type}.timestamp, and no older than 30 seconds. ` +
           `difference=${ageSeconds}s`
       );
+    } else if (stat.type == "codec") {
+      //
+      // Required fields
+      //
+
+      // mimeType & payloadType
+      switch (stat.mimeType) {
+        case "audio/opus":
+          is(stat.payloadType, 109, "codec.payloadType for opus");
+          break;
+        case "video/VP8":
+          is(stat.payloadType, 120, "codec.payloadType for VP8");
+          break;
+        case "video/VP9":
+          is(stat.payloadType, 121, "codec.payloadType for VP9");
+          break;
+        case "video/H264":
+          ok(
+            stat.payloadType == 97 || stat.payloadType == 126,
+            `codec.payloadType for H264 was ${stat.payloadType}, exp. 97 or 126`
+          );
+          break;
+        default:
+          ok(
+            false,
+            `Unexpected codec.mimeType ${stat.mimeType} for payloadType ` +
+              `${stat.payloadType}`
+          );
+          break;
+      }
+
+      // transportId
+      // (no transport stats yet)
+      ok(stat.transportId, "codec.transportId is set");
+
+      // clockRate
+      if (stat.mimeType.startsWith("audio")) {
+        is(stat.clockRate, 48000, "codec.clockRate for audio/opus");
+      } else if (stat.mimeType.startsWith("video")) {
+        is(stat.clockRate, 90000, "codec.clockRate for video");
+      }
+
+      // sdpFmtpLine
+      // (not technically mandated by spec, but expected here)
+      ok(stat.sdpFmtpLine, "codec.sdpFmtpLine is set");
+      const opusParams = [
+        "maxplaybackrate",
+        "maxaveragebitrate",
+        "usedtx",
+        "stereo",
+        "useinbandfec",
+        "cbr",
+        "ptime",
+        "minptime",
+        "maxptime",
+      ];
+      const vpxParams = ["max-fs", "max-fr"];
+      const h264Params = [
+        "packetization-mode",
+        "level-asymmetry-allowed",
+        "profile-level-id",
+        "max-fs",
+        "max-cpb",
+        "max-dpb",
+        "max-br",
+        "max-mbps",
+      ];
+      for (const param of stat.sdpFmtpLine.split(";")) {
+        const [key, value] = param.split("=");
+        if (stat.payloadType == 109) {
+          ok(
+            opusParams.includes(key),
+            `codec.sdpFmtpLine param ${key}=${value} for opus`
+          );
+        } else if (stat.payloadType == 120 || stat.payloadType == 121) {
+          ok(
+            vpxParams.includes(key),
+            `codec.sdpFmtpLine param ${key}=${value} for VPx`
+          );
+        } else if (stat.payloadType == 97 || stat.payloadType == 126) {
+          ok(
+            h264Params.includes(key),
+            `codec.sdpFmtpLine param ${key}=${value} for H264`
+          );
+          if (key == "packetization-mode") {
+            if (stat.payloadType == 97) {
+              is(value, "0", "codec.sdpFmtpLine: H264 (97) packetization-mode");
+            } else if (stat.payloadType == 126) {
+              is(
+                value,
+                "1",
+                "codec.sdpFmtpLine: H264 (126) packetization-mode"
+              );
+            }
+          }
+          if (key == "profile-level-id") {
+            is(value, "42e01f", "codec.sdpFmtpLine: H264 profile-level-id");
+          }
+        }
+      }
+
+      //
+      // Optional fields
+      //
+
+      // codecType
+      ok(
+        !Object.keys(stat).includes("codecType") ||
+          stat.codecType == "encode" ||
+          stat.codecType == "decode",
+        "codec.codecType (${codec.codecType}) is an expected value or absent"
+      );
+      let numRecvStreams = 0;
+      let numSendStreams = 0;
+      const counts = {
+        "inbound-rtp": 0,
+        "outbound-rtp": 0,
+        "remote-inbound-rtp": 0,
+        "remote-outbound-rtp": 0,
+      };
+      const [kind] = stat.mimeType.split("/");
+      report.forEach(other => {
+        if (other.type == "inbound-rtp" && other.kind == kind) {
+          numRecvStreams += 1;
+        } else if (other.type == "outbound-rtp" && other.kind == kind) {
+          numSendStreams += 1;
+        }
+        if (other.codecId == stat.id) {
+          counts[other.type] += 1;
+        }
+      });
+      const expectedCounts = {
+        encode: {
+          "inbound-rtp": 0,
+          "outbound-rtp": numSendStreams,
+          "remote-inbound-rtp": numSendStreams,
+          "remote-outbound-rtp": 0,
+        },
+        decode: {
+          "inbound-rtp": numRecvStreams,
+          "outbound-rtp": 0,
+          "remote-inbound-rtp": 0,
+          "remote-outbound-rtp": numRecvStreams,
+        },
+        absent: {
+          "inbound-rtp": numRecvStreams,
+          "outbound-rtp": numSendStreams,
+          "remote-inbound-rtp": numSendStreams,
+          "remote-outbound-rtp": numRecvStreams,
+        },
+      };
+      // Note that the logic above assumes at most one sender and at most one
+      // receiver was used to generate this stats report. If more senders or
+      // receivers are present, they'd be referring to not only this codec stat,
+      // skewing `numSendStreams` and `numRecvStreams` above.
+      // This could be fixed when we support `senderId` and `receiverId` in
+      // RTCOutboundRtpStreamStats and RTCInboundRtpStreamStats respectively.
+      for (const [key, value] of Object.entries(counts)) {
+        is(
+          value,
+          expectedCounts[stat.codecType || "absent"][key],
+          `codec.codecType ${stat.codecType || "absent"} ref from ${key} stat`
+        );
+      }
+
+      // channels
+      if (stat.mimeType.startsWith("audio")) {
+        ok(stat.channels, "codec.channels should exist for audio");
+        if (stat.channels) {
+          if (stat.sdpFmtpLine.includes("stereo=1")) {
+            is(stat.channels, 2, "codec.channels for stereo audio");
+          } else {
+            is(stat.channels, 1, "codec.channels for mono audio");
+          }
+        }
+      } else {
+        ok(!stat.channels, "codec.channels should not exist for video");
+      }
     } else if (stat.type == "candidate-pair") {
       info("candidate-pair is: " + JSON.stringify(stat));
       //
