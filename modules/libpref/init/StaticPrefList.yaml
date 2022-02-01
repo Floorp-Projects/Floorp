@@ -526,6 +526,32 @@
     value: true
     mirror: always
 
+# Mode to use when receiving kinetic scroll input.
+#
+#  * 0: Auto mode (uses the default behavior, subject to change).
+#  * 1: Page mode: Uses gtk deltas as a percentage of the page size to scroll. This mode matches:
+#
+#    https://gitlab.gnome.org/GNOME/gtk/blob/c734c7e9188b56f56c3a504abee05fa40c5475ac/gtk/gtkrange.c#L3063-3074
+#
+#  * 2: Pixel mode: Uses gtk deltas as a fixed pixel multiplier. This mode matches e.g. GNOME web.
+#
+#    https://webkit-search.igalia.com/webkit/rev/215039ef09d6bfd6e088175bfe30788d95b9705d/Source/WebKit/Shared/gtk/WebEventFactory.cpp#265-296
+#    (multiplied then by pixelsPerLineStep which in GNOME-web is 40).
+-   name: apz.gtk.kinetic_scroll.delta_mode
+    type: uint32_t
+    value: 0
+    mirror: always
+
+-   name: apz.gtk.kinetic_scroll.page_delta_mode_multiplier
+    type: float
+    value: 1.0f
+    mirror: always
+
+-   name: apz.gtk.kinetic_scroll.pixel_delta_mode_multiplier
+    type: float
+    value: 40.0f
+    mirror: always
+
 -   name: apz.gtk.touchpad_pinch.enabled
     type: RelaxedAtomicBool
     value: true
@@ -10485,6 +10511,12 @@
   type: String
   value: ""
   mirror: never
+
+# Enable HTTP/3
+- name: network.http.http3.enable
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
 
 # Receive buffer size of QUIC socket
 - name: network.http.http3.recvBufferSize

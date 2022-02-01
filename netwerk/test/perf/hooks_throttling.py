@@ -175,7 +175,7 @@ def before_cycle(metadata, env, cycle, script):
 
     # enabling http if needed
     if proto == "h3":
-        add_option(env, "firefox.preference", "network.http.http3.enabled:true")
+        add_option(env, "firefox.preference", "network.http.http3.enable:true")
 
     # prefix used to differenciate metrics
     name = throttler_settings["name"]

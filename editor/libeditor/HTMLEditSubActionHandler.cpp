@@ -3027,19 +3027,19 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
         CreateAndInsertElementWithTransaction(
             aListItemElementTagName,
             EditorDOMPoint(newListElementOrError.inspect(), 0));
-    if (newListElementOrError.isErr()) {
+    if (newListItemElementOrError.isErr()) {
       NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
-      return EditActionResult(newListElementOrError.unwrapErr());
+      return EditActionResult(newListItemElementOrError.unwrapErr());
     }
-    MOZ_ASSERT(newListElementOrError.inspect());
+    MOZ_ASSERT(newListItemElementOrError.inspect());
 
     // remember our new block for postprocessing
     TopLevelEditSubActionDataRef().mNewBlockElement =
-        newListElementOrError.inspect();
+        newListItemElementOrError.inspect();
     // Put selection in new list item and don't restore the Selection.
     restoreSelectionLater.Abort();
     nsresult rv = CollapseSelectionToStartOf(
-        MOZ_KnownLive(*newListElementOrError.inspect()));
+        MOZ_KnownLive(*newListItemElementOrError.inspect()));
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::CollapseSelectionToStartOf() failed");
     return EditActionResult(rv);

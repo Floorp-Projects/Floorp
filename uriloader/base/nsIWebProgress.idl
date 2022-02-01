@@ -8,6 +8,7 @@
 
 interface mozIDOMWindowProxy;
 interface nsIEventTarget;
+interface nsIRequest;
 interface nsIWebProgressListener;
 webidl BrowsingContext;
 
@@ -171,4 +172,14 @@ interface nsIWebProgress : nsISupports
    * corresponding to the tab requesting updates.
    */
   attribute nsIEventTarget target;
+
+  /**
+   * The request for the currently loading document. It is null if
+   * isLoadingDocument is false.
+   * Note, the request may not be the actual nsIChannel instance used for
+   * loading, but a dummy RemoteWebProgressRequest. And since redirects are
+   * hidden from the child processes, this may not reflect the complete
+   * redirect state of the load.
+   */
+  readonly attribute nsIRequest documentRequest;
 };

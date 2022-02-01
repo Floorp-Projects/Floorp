@@ -62,12 +62,3 @@ function hasSessionDataFlag(browser) {
     return content.hasSessionDataFlag;
   });
 }
-
-function createParentBrowserElement(tab, type) {
-  const parentBrowser = gBrowser.ownerDocument.createXULElement("browser");
-  parentBrowser.setAttribute("type", type);
-  const container = gBrowser.getBrowserContainer(tab.linkedBrowser);
-  container.appendChild(parentBrowser);
-
-  return parentBrowser;
-}
