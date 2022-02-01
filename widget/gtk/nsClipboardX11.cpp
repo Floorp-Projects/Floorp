@@ -303,7 +303,6 @@ GdkAtom* nsRetrievalContextX11::GetTargets(int32_t aWhichClipboard,
   *aTargetNums = mClipboardDataLength;
   GdkAtom* targets = static_cast<GdkAtom*>(mClipboardData);
 
-  // We don't hold the target list internally but we transfer the ownership.
   mClipboardData = nullptr;
   mClipboardDataLength = 0;
 
@@ -324,29 +323,33 @@ const char* nsRetrievalContextX11::GetClipboardData(const char* aMimeType,
   if (!WaitForClipboardData(CLIPBOARD_DATA, clipboard, aMimeType))
     return nullptr;
 
+  const char* data = (const char*)mClipboardData;
   *aContentLength = mClipboardDataLength;
-  return static_cast<const char*>(mClipboardData);
+
+  mClipboardDataLength = 0;
+  mClipboardData = nullptr;
+
+  return data;
 }
 
 const char* nsRetrievalContextX11::GetClipboardText(int32_t aWhichClipboard) {
   LOGCLIP("nsRetrievalContextX11::GetClipboardText(%s)\n",
           aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
                                                               : "clipboard");
-
   GtkClipboard* clipboard;
   clipboard = gtk_clipboard_get(GetSelectionAtom(aWhichClipboard));
 
   if (!WaitForClipboardData(CLIPBOARD_TEXT, clipboard)) return nullptr;
 
-  return static_cast<const char*>(mClipboardData);
-}
-
-void nsRetrievalContextX11::ReleaseClipboardData(const char* aClipboardData) {
-  LOGCLIP("nsRetrievalContextX11::ReleaseClipboardData\n");
-  NS_ASSERTION(aClipboardData == mClipboardData,
-               "Releasing unknown clipboard data!");
-  free((void*)aClipboardData);
+  const char* data = (const char*)mClipboardData;
 
   mClipboardData = nullptr;
   mClipboardDataLength = 0;
+
+  return data;
+}
+
+void nsRetrievalContextX11::ReleaseClipboardData(const char** aClipboardData) {
+  free((void*)*aClipboardData);
+  *aClipboardData = nullptr;
 }

@@ -38,7 +38,7 @@ class nsRetrievalContext {
                                        int32_t aWhichClipboard,
                                        uint32_t* aContentLength) = 0;
   virtual const char* GetClipboardText(int32_t aWhichClipboard) = 0;
-  virtual void ReleaseClipboardData(const char* aClipboardData) = 0;
+  virtual void ReleaseClipboardData(const char** aClipboardData) = 0;
 
   // Get data mime types which can be obtained from clipboard.
   // The returned array has to be released by g_free().
