@@ -490,6 +490,9 @@ pref("browser.urlbar.merino.providers", "");
 // Comma-separated list of client variants to send to Merino
 pref("browser.urlbar.merino.clientVariants", "");
 
+// Whether best match results are enabled in the urlbar.
+pref("browser.urlbar.bestMatch.enabled", true);
+
 pref("browser.altClickSave", false);
 
 // Enable logging downloads operations to the Console.
