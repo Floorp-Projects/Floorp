@@ -4826,15 +4826,18 @@ top_sites:
     extra_keys:
       type:
         description: |
-          The type of top site. Options are: "FRECENCY," "DEFAULT," or "PINNED."
+          The type of top site. Options are: "FRECENCY", "DEFAULT",
+          "PINNED", or "PROVIDED"
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/14565
+      - https://github.com/mozilla-mobile/fenix/issues/23526
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/15136
       - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/20517#pullrequestreview-718069041
       - https://github.com/mozilla-mobile/fenix/pull/21038#issuecomment-906757301
+      - https://github.com/mozilla-mobile/fenix/pull/23541
     data_sensitivity:
       - interaction
     notification_emails:
@@ -4930,6 +4933,61 @@ top_sites:
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/21845#issuecomment-944608568
       - https://github.com/mozilla-mobile/fenix/pull/23453#issuecomment-1024694220
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-02-01"
+  open_contile_top_site:
+    type: event
+    description: |
+      A user has opened a contile top site.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23526
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23541
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-02-01"
+  open_contile_in_private_tab:
+    type: event
+    description: |
+      A user has opened a contile top site in a private tab via the long
+      press context menu.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23526
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23541
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-02-01"
+  contile_settings:
+    type: event
+    description: |
+      A user has selected "Settings" via the contile top sites
+      longpress context menu.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23526
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23541
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-02-01"
+  contile_sponsors_and_privacy:
+    type: event
+    description: |
+      A user has selected "Our sponsors & your privacy" via the
+      contile top sites longpress context menu.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/23526
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/23541
     data_sensitivity:
       - interaction
     notification_emails:

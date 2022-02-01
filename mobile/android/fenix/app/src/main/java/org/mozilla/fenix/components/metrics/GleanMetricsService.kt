@@ -519,14 +519,26 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.TopSiteOpenPinned -> EventWrapper<NoExtraKeys>(
             { TopSites.openPinned.record(it) }
         )
+        is Event.TopSiteOpenProvided -> EventWrapper<NoExtraKeys>(
+            { TopSites.openContileTopSite.record(it) }
+        )
         is Event.TopSiteOpenInNewTab -> EventWrapper<NoExtraKeys>(
             { TopSites.openInNewTab.record(it) }
         )
         is Event.TopSiteOpenInPrivateTab -> EventWrapper<NoExtraKeys>(
             { TopSites.openInPrivateTab.record(it) }
         )
+        is Event.TopSiteOpenContileInPrivateTab -> EventWrapper<NoExtraKeys>(
+            { TopSites.openContileInPrivateTab.record(it) }
+        )
         is Event.TopSiteRemoved -> EventWrapper<NoExtraKeys>(
             { TopSites.remove.record(it) }
+        )
+        is Event.TopSiteContileSettings -> EventWrapper<NoExtraKeys>(
+            { TopSites.contileSettings.record(it) }
+        )
+        is Event.TopSiteContilePrivacy -> EventWrapper<NoExtraKeys>(
+            { TopSites.contileSponsorsAndPrivacy.record(it) }
         )
         is Event.GoogleTopSiteRemoved -> EventWrapper<NoExtraKeys>(
             { TopSites.googleTopSiteRemoved.record(it) }
