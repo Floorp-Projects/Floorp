@@ -64,7 +64,14 @@ class CustomTabRobot {
                     .textContains(title)
             )
         )
-        assertTrue(customTabToolbarTitle().text.equals(title))
+
+        assertTrue(
+            mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/mozac_browser_toolbar_title_view")
+                    .textContains(title)
+            ).waitForExists(waitingTime)
+        )
     }
 
     class Transition {
@@ -105,6 +112,3 @@ private fun forwardButton() = mDevice.findObject(UiSelector().description("Forwa
 private fun backButton() = mDevice.findObject(UiSelector().description("Back"))
 
 private fun closeButton() = onView(withContentDescription("Return to previous app"))
-
-private fun customTabToolbarTitle() =
-    mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_title_view"))

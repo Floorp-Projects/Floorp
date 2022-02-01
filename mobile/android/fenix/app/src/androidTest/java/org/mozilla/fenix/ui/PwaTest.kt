@@ -37,7 +37,7 @@ class PwaTest {
     @SmokeTest
     @Test
     fun externalLinkPWATest() {
-        val customTabTitle = "Mozilla - Google Search"
+        val customTabTitle = "Google"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(externalLinksPWAPage.toUri()) {
