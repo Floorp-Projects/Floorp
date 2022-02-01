@@ -44,11 +44,6 @@ if (getBuildConfiguration()['change-array-by-copy'] && getRealmConfiguration().e
     expectedKeys.push("withAt", "withReversed", "withSorted", "withSpliced");
 }
 
-if (!getBuildConfiguration().release_or_beta && getRealmConfiguration().enableArrayGrouping) {
-    expectedKeys.push("groupBy", "groupByToMap");
-    expectedKeys.sort();
-}
-
 assertDeepEq(keys, expectedKeys);
 
 for (let key of keys)
