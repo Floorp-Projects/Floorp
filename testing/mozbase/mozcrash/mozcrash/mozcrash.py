@@ -250,11 +250,10 @@ class CrashInfo(object):
         self._dump_files = None
 
     def _get_symbols(self):
-        # If no symbols path has been set create a temporary folder to let the
-        # minidump stackwalk download the symbols.
         if not self.symbols_path:
-            self.symbols_path = tempfile.mkdtemp()
-            self.remove_symbols = True
+            self.logger.warning(
+                "No local symbols_path provided, only http symbols will be used."
+            )
 
         # This updates self.symbols_path so we only download once.
         if mozfile.is_url(self.symbols_path):
@@ -332,8 +331,7 @@ class CrashInfo(object):
         reason = None
         java_stack = None
         if (
-            self.symbols_path
-            and self.stackwalk_binary
+            self.stackwalk_binary
             and os.path.exists(self.stackwalk_binary)
             and os.access(self.stackwalk_binary, os.X_OK)
         ):
@@ -390,7 +388,9 @@ class CrashInfo(object):
             # (in practice the CLI parsers are more permissive, but best not to
             # unecessarily play with fire).
             command.append(path)
-            command.append(self.symbols_path)
+
+            if self.symbols_path:
+                command.append(self.symbols_path)
 
             self.logger.info(u"Copy/paste: {}".format(" ".join(command)))
             # run minidump_stackwalk
@@ -437,8 +437,6 @@ class CrashInfo(object):
                 include_stderr = True
 
         else:
-            if not self.symbols_path:
-                errors.append("No symbols path given, can't process dump.")
             if not self.stackwalk_binary:
                 errors.append(
                     "MINIDUMP_STACKWALK not set, can't process dump. Either set "
