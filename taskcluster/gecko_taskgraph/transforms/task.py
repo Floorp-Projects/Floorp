@@ -1207,6 +1207,7 @@ def build_push_flatpak_payload(config, task, task_def):
     "push-msix",
     schema={
         Required("channel"): str,
+        Optional("publish-mode"): str,
         Required("upstream-artifacts"): [
             {
                 Required("taskId"): taskref_or_string,
@@ -1223,6 +1224,8 @@ def build_push_msix_payload(config, task, task_def):
         "channel": worker["channel"],
         "upstreamArtifacts": worker["upstream-artifacts"],
     }
+    if worker.get("publish-mode"):
+        task_def["payload"]["publishMode"] = worker["publish-mode"]
 
 
 @payload_builder(
