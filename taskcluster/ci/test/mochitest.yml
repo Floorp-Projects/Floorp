@@ -129,10 +129,8 @@ mochitest-plain:
             default:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    linux.*64-ccov-qr/opt: []
-                    linux1804-32.*: []
-                    .*-tsan-qr/opt: []
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux1804-64-qr/debug: ['trunk']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     android.*: built-projects
                     default: []
 
