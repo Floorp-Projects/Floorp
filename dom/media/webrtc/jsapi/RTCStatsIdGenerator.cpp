@@ -8,8 +8,8 @@
 
 #include <iostream>
 
-#include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/RandomNum.h"
+#include "RTCStatsReport.h"
 
 namespace mozilla {
 
@@ -17,7 +17,7 @@ RTCStatsIdGenerator::RTCStatsIdGenerator()
     : mSalt(RandomUint64().valueOr(0xa5a5a5a5)), mCounter(0) {}
 
 void RTCStatsIdGenerator::RewriteIds(
-    const nsTArray<UniquePtr<dom::RTCStatsCollection>>& aFromStats,
+    nsTArray<UniquePtr<dom::RTCStatsCollection>> aFromStats,
     dom::RTCStatsCollection* aIntoReport) {
   // Rewrite an Optional id
   auto rewriteId = [&](dom::Optional<nsString>& id) {
@@ -26,12 +26,9 @@ void RTCStatsIdGenerator::RewriteIds(
     }
   };
 
-  auto assignWithOpaqueIds = [&](auto& aSource, auto& aDest) {
-    for (auto& stat : aSource) {
+  auto rewriteIds = [&](auto& aList) {
+    for (auto& stat : aList) {
       rewriteId(stat.mId);
-    }
-    if (!aDest.AppendElements(aSource, fallible)) {
-      mozalloc_handle_oom(0);
     }
   };
 
@@ -49,54 +46,37 @@ void RTCStatsIdGenerator::RewriteIds(
 
   // Involves a lot of copying, since webidl dictionaries don't have
   // move semantics. Oh well.
-  for (const auto& stats : aFromStats) {
-    for (auto& stat : stats->mIceCandidatePairStats) {
-      rewriteId(stat.mLocalCandidateId);
-      rewriteId(stat.mRemoteCandidateId);
-    };
-    assignWithOpaqueIds(stats->mIceCandidatePairStats,
-                        aIntoReport->mIceCandidatePairStats);
 
-    assignWithOpaqueIds(stats->mIceCandidateStats,
-                        aIntoReport->mIceCandidateStats);
+  // Create a temporary to avoid double-rewriting any stats already in
+  // aIntoReport.
+  auto stats = MakeUnique<dom::RTCStatsCollection>();
+  dom::FlattenStats(std::move(aFromStats), stats.get());
 
-    rewriteRemoteIds(stats->mInboundRtpStreamStats);
-    assignWithOpaqueIds(stats->mInboundRtpStreamStats,
-                        aIntoReport->mInboundRtpStreamStats);
+  for (auto& stat : stats->mIceCandidatePairStats) {
+    rewriteId(stat.mLocalCandidateId);
+    rewriteId(stat.mRemoteCandidateId);
+  };
+  rewriteIds(stats->mIceCandidatePairStats);
 
-    rewriteRemoteIds(stats->mOutboundRtpStreamStats);
-    assignWithOpaqueIds(stats->mOutboundRtpStreamStats,
-                        aIntoReport->mOutboundRtpStreamStats);
+  rewriteIds(stats->mIceCandidateStats);
 
-    rewriteLocalIds(stats->mRemoteInboundRtpStreamStats);
-    assignWithOpaqueIds(stats->mRemoteInboundRtpStreamStats,
-                        aIntoReport->mRemoteInboundRtpStreamStats);
+  rewriteRemoteIds(stats->mInboundRtpStreamStats);
+  rewriteIds(stats->mInboundRtpStreamStats);
 
-    rewriteLocalIds(stats->mRemoteOutboundRtpStreamStats);
-    assignWithOpaqueIds(stats->mRemoteOutboundRtpStreamStats,
-                        aIntoReport->mRemoteOutboundRtpStreamStats);
+  rewriteRemoteIds(stats->mOutboundRtpStreamStats);
+  rewriteIds(stats->mOutboundRtpStreamStats);
 
-    assignWithOpaqueIds(stats->mRtpContributingSourceStats,
-                        aIntoReport->mRtpContributingSourceStats);
-    assignWithOpaqueIds(stats->mTrickledIceCandidateStats,
-                        aIntoReport->mTrickledIceCandidateStats);
-    assignWithOpaqueIds(stats->mDataChannelStats,
-                        aIntoReport->mDataChannelStats);
-    if (!aIntoReport->mRawLocalCandidates.AppendElements(
-            stats->mRawLocalCandidates, fallible) ||
-        !aIntoReport->mRawRemoteCandidates.AppendElements(
-            stats->mRawRemoteCandidates, fallible) ||
-        !aIntoReport->mVideoFrameHistories.AppendElements(
-            stats->mVideoFrameHistories, fallible) ||
-        !aIntoReport->mBandwidthEstimations.AppendElements(
-            stats->mBandwidthEstimations, fallible)) {
-      // XXX(Bug 1632090) Instead of extending the array 1-by-1
-      // (which might involve multiple reallocations) and
-      // potentially crashing here, SetCapacity could be called
-      // outside the loop once.
-      mozalloc_handle_oom(0);
-    }
-  }
+  rewriteLocalIds(stats->mRemoteInboundRtpStreamStats);
+  rewriteIds(stats->mRemoteInboundRtpStreamStats);
+
+  rewriteLocalIds(stats->mRemoteOutboundRtpStreamStats);
+  rewriteIds(stats->mRemoteOutboundRtpStreamStats);
+
+  rewriteIds(stats->mRtpContributingSourceStats);
+  rewriteIds(stats->mTrickledIceCandidateStats);
+  rewriteIds(stats->mDataChannelStats);
+
+  dom::MergeStats(std::move(stats), aIntoReport);
 }
 
 nsString RTCStatsIdGenerator::Id(const nsString& aKey) {
