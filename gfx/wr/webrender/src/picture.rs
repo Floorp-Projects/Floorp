@@ -2179,7 +2179,7 @@ impl TileCacheInstance {
             // clip rect is zero. This makes sure we don't register any occluders
             // that are actually off-screen.
             self.local_clip_rect = clip_chain_instance.map_or(PictureRect::zero(), |clip_chain_instance| {
-                clip_chain_instance.pic_clip_rect
+                clip_chain_instance.pic_coverage_rect
             });
         }
 
@@ -2579,7 +2579,7 @@ impl TileCacheInstance {
         flags: PrimitiveFlags,
         local_prim_rect: LayoutRect,
         prim_spatial_node_index: SpatialNodeIndex,
-        pic_clip_rect: PictureRect,
+        pic_coverage_rect: PictureRect,
         frame_context: &FrameVisibilityContext,
         image_dependencies: &[ImageDependency;3],
         api_keys: &[ImageKey; 3],
@@ -2610,7 +2610,7 @@ impl TileCacheInstance {
             flags,
             local_prim_rect,
             prim_spatial_node_index,
-            pic_clip_rect,
+            pic_coverage_rect,
             frame_context,
             ExternalSurfaceDependency::Yuv {
                 image_dependencies: *image_dependencies,
@@ -2633,7 +2633,7 @@ impl TileCacheInstance {
         flags: PrimitiveFlags,
         local_prim_rect: LayoutRect,
         prim_spatial_node_index: SpatialNodeIndex,
-        pic_clip_rect: PictureRect,
+        pic_coverage_rect: PictureRect,
         frame_context: &FrameVisibilityContext,
         image_dependency: ImageDependency,
         api_key: ImageKey,
@@ -2668,7 +2668,7 @@ impl TileCacheInstance {
             flags,
             local_prim_rect,
             prim_spatial_node_index,
-            pic_clip_rect,
+            pic_coverage_rect,
             frame_context,
             ExternalSurfaceDependency::Rgb {
                 image_dependency,
@@ -2690,7 +2690,7 @@ impl TileCacheInstance {
         flags: PrimitiveFlags,
         local_prim_rect: LayoutRect,
         prim_spatial_node_index: SpatialNodeIndex,
-        pic_clip_rect: PictureRect,
+        pic_coverage_rect: PictureRect,
         frame_context: &FrameVisibilityContext,
         dependency: ExternalSurfaceDependency,
         api_keys: &[ImageKey; 3],
@@ -2878,7 +2878,7 @@ impl TileCacheInstance {
 
         // Each compositor surface allocates a unique z-id
         sub_slice.compositor_surfaces.push(CompositorSurface {
-            prohibited_rect: pic_clip_rect,
+            prohibited_rect: pic_coverage_rect,
             is_opaque,
             descriptor: ExternalSurfaceDescriptor {
                 local_surface_size: local_prim_rect.size(),
@@ -2969,11 +2969,11 @@ impl TileCacheInstance {
         let prim_clip_chain = &prim_instance.vis.clip_chain;
 
         // If the primitive is directly drawn onto this picture cache surface, then
-        // the pic_clip_rect is in the same space. If not, we need to map it from
+        // the pic_coverage_rect is in the same space. If not, we need to map it from
         // the surface space into the picture cache space.
         let on_picture_surface = prim_surface_index == self.surface_index;
-        let pic_clip_rect = if on_picture_surface {
-            prim_clip_chain.pic_clip_rect
+        let pic_coverage_rect = if on_picture_surface {
+            prim_clip_chain.pic_coverage_rect
         } else {
             // We want to get the rect in the tile cache surface space that this primitive
             // occupies, in order to enable correct invalidation regions. Each surface
@@ -2982,7 +2982,7 @@ impl TileCacheInstance {
             // of nested blur elements). To account for this, step through the current
             // surface stack, mapping the primitive rect into each surface space, including
             // the inflation factor from each intermediate surface.
-            let mut current_pic_clip_rect = prim_clip_chain.pic_clip_rect;
+            let mut current_pic_coverage_rect = prim_clip_chain.pic_coverage_rect;
             let mut current_spatial_node_index = frame_context
                 .surfaces[prim_surface_index.0]
                 .surface_spatial_node_index;
@@ -3000,7 +3000,7 @@ impl TileCacheInstance {
                 // Map the rect into the parent surface, and inflate if this surface requires
                 // it. If the rect can't be mapping (e.g. due to an invalid transform) then
                 // just bail out from the dependencies and cull this primitive.
-                current_pic_clip_rect = match map_local_to_surface.map(&current_pic_clip_rect) {
+                current_pic_coverage_rect = match map_local_to_surface.map(&current_pic_coverage_rect) {
                     Some(rect) => {
                         rect.inflate(surface.inflation_factor, surface.inflation_factor)
                     }
@@ -3012,11 +3012,11 @@ impl TileCacheInstance {
                 current_spatial_node_index = surface.surface_spatial_node_index;
             }
 
-            current_pic_clip_rect
+            current_pic_coverage_rect
         };
 
         // Get the tile coordinates in the picture space.
-        let (p0, p1) = self.get_tile_coords_for_rect(&pic_clip_rect);
+        let (p0, p1) = self.get_tile_coords_for_rect(&pic_coverage_rect);
 
         // If the primitive is outside the tiling rects, it's known to not
         // be visible.
@@ -3027,7 +3027,7 @@ impl TileCacheInstance {
         // Build the list of resources that this primitive has dependencies on.
         let mut prim_info = PrimitiveDependencyInfo::new(
             prim_instance.uid(),
-            pic_clip_rect,
+            pic_coverage_rect,
         );
 
         let mut sub_slice_index = self.sub_slices.len() - 1;
@@ -3040,8 +3040,8 @@ impl TileCacheInstance {
                 let mut intersects_prohibited_region = false;
 
                 for surface in &mut sub_slice.compositor_surfaces {
-                    if pic_clip_rect.intersects(&surface.prohibited_rect) {
-                        surface.prohibited_rect = surface.prohibited_rect.union(&pic_clip_rect);
+                    if pic_coverage_rect.intersects(&surface.prohibited_rect) {
+                        surface.prohibited_rect = surface.prohibited_rect.union(&pic_coverage_rect);
 
                         intersects_prohibited_region = true;
                     }
@@ -3110,7 +3110,7 @@ impl TileCacheInstance {
                 };
                 if color.a >= 1.0 {
                     backdrop_candidate = Some(BackdropInfo {
-                        opaque_rect: pic_clip_rect,
+                        opaque_rect: pic_coverage_rect,
                         kind: Some(BackdropKind::Color { color }),
                     });
                 }
@@ -3154,7 +3154,7 @@ impl TileCacheInstance {
                        image_data.tile_spacing == LayoutSize::zero() &&
                        image_data.color.a >= 1.0 {
                         backdrop_candidate = Some(BackdropInfo {
-                            opaque_rect: pic_clip_rect,
+                            opaque_rect: pic_coverage_rect,
                             kind: None,
                         });
                     }
@@ -3167,7 +3167,7 @@ impl TileCacheInstance {
                         image_key.common.flags,
                         local_prim_rect,
                         prim_spatial_node_index,
-                        pic_clip_rect,
+                        pic_coverage_rect,
                         frame_context,
                         ImageDependency {
                             key: image_data.key,
@@ -3231,7 +3231,7 @@ impl TileCacheInstance {
                         prim_data.common.flags,
                         local_prim_rect,
                         prim_spatial_node_index,
-                        pic_clip_rect,
+                        pic_coverage_rect,
                         frame_context,
                         &image_dependencies,
                         &prim_data.kind.yuv_key,
@@ -3273,7 +3273,7 @@ impl TileCacheInstance {
             }
             PrimitiveInstanceKind::Clear { .. } => {
                 backdrop_candidate = Some(BackdropInfo {
-                    opaque_rect: pic_clip_rect,
+                    opaque_rect: pic_coverage_rect,
                     kind: Some(BackdropKind::Clear),
                 });
             }
@@ -3284,7 +3284,7 @@ impl TileCacheInstance {
                     && gradient_data.tile_spacing == LayoutSize::zero()
                 {
                     backdrop_candidate = Some(BackdropInfo {
-                        opaque_rect: pic_clip_rect,
+                        opaque_rect: pic_coverage_rect,
                         kind: None,
                     });
                 }
@@ -3295,7 +3295,7 @@ impl TileCacheInstance {
                     && gradient_data.tile_spacing == LayoutSize::zero()
                 {
                     backdrop_candidate = Some(BackdropInfo {
-                        opaque_rect: pic_clip_rect,
+                        opaque_rect: pic_coverage_rect,
                         kind: None,
                     });
                 }
@@ -3306,7 +3306,7 @@ impl TileCacheInstance {
                     && gradient_data.tile_spacing == LayoutSize::zero()
                 {
                     backdrop_candidate = Some(BackdropInfo {
-                        opaque_rect: pic_clip_rect,
+                        opaque_rect: pic_coverage_rect,
                         kind: None,
                     });
                 }
@@ -3421,7 +3421,7 @@ impl TileCacheInstance {
 
         prim_instance.vis.state = VisibilityState::Coarse {
             filter: BatchFilter {
-                rect_in_pic_space: pic_clip_rect,
+                rect_in_pic_space: pic_coverage_rect,
                 sub_slice_index: SubSliceIndex::new(sub_slice_index),
             },
             vis_flags,
