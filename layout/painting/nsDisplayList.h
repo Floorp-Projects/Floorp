@@ -4141,9 +4141,7 @@ class nsDisplayBackgroundImage : public nsPaintedDisplayItem {
   Maybe<nscolor> IsUniform(nsDisplayListBuilder* aBuilder) const override;
 
   bool CanApplyOpacity(WebRenderLayerManager* aManager,
-                       nsDisplayListBuilder* aBuilder) const override {
-    return CanBuildWebRenderDisplayItems(aManager, aBuilder);
-  }
+                       nsDisplayListBuilder* aBuilder) const override;
 
   /**
    * GetBounds() returns the background painting area.
