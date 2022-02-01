@@ -774,6 +774,9 @@ static mozilla::Atomic<bool> sPropertyErrorMessageFixEnabled(false);
 static mozilla::Atomic<bool> sWeakRefsEnabled(false);
 static mozilla::Atomic<bool> sWeakRefsExposeCleanupSome(false);
 static mozilla::Atomic<bool> sIteratorHelpersEnabled(false);
+#ifdef NIGHTLY_BUILD
+static mozilla::Atomic<bool> sArrayGroupingEnabled(true);
+#endif
 
 static JS::WeakRefSpecifier GetWeakRefsEnabled() {
   if (!sWeakRefsEnabled) {
@@ -800,6 +803,9 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
       .setPropertyErrorMessageFixEnabled(sPropertyErrorMessageFixEnabled)
       .setWeakRefsEnabled(GetWeakRefsEnabled())
       .setIteratorHelpersEnabled(sIteratorHelpersEnabled)
+#ifdef NIGHTLY_BUILD
+      .setArrayGroupingEnabled(sArrayGroupingEnabled)
+#endif
 #ifdef ENABLE_NEW_SET_METHODS
       .setNewSetMethodsEnabled(enableNewSetMethods)
 #endif
@@ -1003,6 +1009,8 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
 #ifdef NIGHTLY_BUILD
   sIteratorHelpersEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");
+  sArrayGroupingEnabled =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.array_grouping");
 #endif
 
 #ifdef ENABLE_NEW_SET_METHODS
