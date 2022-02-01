@@ -95,8 +95,7 @@ class CustomTabTest {
 
     @SmokeTest
     @Test
-    @Ignore("This test should be updated since kotlin extensions were migrated to view binding")
-    // https://github.com/mozilla-mobile/focus-android/issues/5767
+    @Ignore("Crashing, see: https://github.com/mozilla-mobile/focus-android/issues/5283")
     fun openCustomTabInFocusTest() {
         val browserPage = webServer.url("plain_test.html").toString()
         val customTabPage = webServer.url("tab1.html").toString()
