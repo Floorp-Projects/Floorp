@@ -29,6 +29,9 @@ struct DtmfEvent;
 class WebrtcAudioConduit : public AudioSessionConduit,
                            public webrtc::RtcpEventObserver {
  public:
+  Maybe<int> ActiveSendPayloadType() const override;
+  Maybe<int> ActiveRecvPayloadType() const override;
+
   void OnRtpReceived(MediaPacket&& aPacket, webrtc::RTPHeader&& aHeader);
   void OnRtcpReceived(MediaPacket&& aPacket);
 

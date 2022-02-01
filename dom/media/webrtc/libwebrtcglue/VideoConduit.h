@@ -71,6 +71,9 @@ class WebrtcVideoConduit
   // Returns true when both encoder and decoder are HW accelerated.
   static bool HasH264Hardware();
 
+  Maybe<int> ActiveSendPayloadType() const override;
+  Maybe<int> ActiveRecvPayloadType() const override;
+
   /**
    * Function to attach Renderer end-point for the Media-Video conduit.
    * @param aRenderer : Reference to the concrete mozilla Video renderer
