@@ -602,8 +602,12 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
 }
 
 - (NSNumber*)moxDisclosureLevel {
-  GroupPos groupPos = mGeckoAccessible->GroupPosition();
-
+  GroupPos groupPos;
+  if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
+    groupPos = acc->GroupPosition();
+  } else if (RemoteAccessible* proxy = mGeckoAccessible->AsRemote()) {
+    groupPos = proxy->GroupPosition();
+  }
   // mac expects 0-indexed levels, but groupPos.level is 1-indexed
   // so we subtract 1 here for levels above 0
   return groupPos.level > 0 ? @(groupPos.level - 1) : @(groupPos.level);
