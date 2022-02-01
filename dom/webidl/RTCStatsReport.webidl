@@ -199,9 +199,11 @@ dictionary RTCStatsCollection {
   sequence<RTCIceCandidatePairStats>        iceCandidatePairStats = [];
   sequence<RTCIceCandidateStats>            iceCandidateStats = [];
   sequence<RTCIceCandidateStats>            trickledIceCandidateStats = [];
+  sequence<RTCDataChannelStats>             dataChannelStats = [];
+
+  // For internal use only
   sequence<DOMString>                       rawLocalCandidates = [];
   sequence<DOMString>                       rawRemoteCandidates = [];
-  sequence<RTCDataChannelStats>             dataChannelStats = [];
   sequence<RTCVideoFrameHistoryInternal>    videoFrameHistories = [];
   sequence<RTCBandwidthEstimationInternal>  bandwidthEstimations = [];
 };
