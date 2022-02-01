@@ -411,6 +411,9 @@ class PeerConnectionImpl final
   // initialize telemetry for when calls start
   void StartCallTelem();
 
+  // Gets all codec stats for all transports, coalesced to transport level.
+  nsTArray<dom::RTCCodecStats> GetCodecStats(DOMHighResTimeStamp aNow);
+
   RefPtr<dom::RTCStatsReportPromise> GetStats(dom::MediaStreamTrack* aSelector,
                                               bool aInternalStats);
 

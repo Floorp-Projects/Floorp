@@ -44,6 +44,12 @@ void RTCStatsIdGenerator::RewriteIds(
     }
   };
 
+  auto rewriteCodecIds = [&](auto& aList) {
+    for (auto& stat : aList) {
+      rewriteId(stat.mCodecId);
+    }
+  };
+
   // Involves a lot of copying, since webidl dictionaries don't have
   // move semantics. Oh well.
 
@@ -61,17 +67,22 @@ void RTCStatsIdGenerator::RewriteIds(
   rewriteIds(stats->mIceCandidateStats);
 
   rewriteRemoteIds(stats->mInboundRtpStreamStats);
+  rewriteCodecIds(stats->mInboundRtpStreamStats);
   rewriteIds(stats->mInboundRtpStreamStats);
 
   rewriteRemoteIds(stats->mOutboundRtpStreamStats);
+  rewriteCodecIds(stats->mOutboundRtpStreamStats);
   rewriteIds(stats->mOutboundRtpStreamStats);
 
   rewriteLocalIds(stats->mRemoteInboundRtpStreamStats);
+  rewriteCodecIds(stats->mRemoteInboundRtpStreamStats);
   rewriteIds(stats->mRemoteInboundRtpStreamStats);
 
   rewriteLocalIds(stats->mRemoteOutboundRtpStreamStats);
+  rewriteCodecIds(stats->mRemoteOutboundRtpStreamStats);
   rewriteIds(stats->mRemoteOutboundRtpStreamStats);
 
+  rewriteIds(stats->mCodecStats);
   rewriteIds(stats->mRtpContributingSourceStats);
   rewriteIds(stats->mTrickledIceCandidateStats);
   rewriteIds(stats->mDataChannelStats);

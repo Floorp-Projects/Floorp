@@ -116,6 +116,7 @@ JSObject* RTCStatsReport::WrapObject(JSContext* aCx,
 void RTCStatsReport::Incorporate(RTCStatsCollection& aStats) {
   SetRTCStats(aStats.mIceCandidatePairStats);
   SetRTCStats(aStats.mIceCandidateStats);
+  SetRTCStats(aStats.mCodecStats);
   SetRTCStats(aStats.mInboundRtpStreamStats);
   SetRTCStats(aStats.mOutboundRtpStreamStats);
   SetRTCStats(aStats.mRemoteInboundRtpStreamStats);
