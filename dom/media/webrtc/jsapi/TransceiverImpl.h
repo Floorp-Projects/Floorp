@@ -126,6 +126,19 @@ class TransceiverImpl : public nsISupports,
            mJsepTransceiver->mRecvTrack.GetActive();
   }
 
+  Maybe<const std::vector<UniquePtr<JsepCodecDescription>>&>
+  GetNegotiatedSendCodecs() const;
+
+  Maybe<const std::vector<UniquePtr<JsepCodecDescription>>&>
+  GetNegotiatedRecvCodecs() const;
+
+  struct PayloadTypes {
+    Maybe<int> mSendPayloadType;
+    Maybe<int> mRecvPayloadType;
+  };
+  using ActivePayloadTypesPromise = MozPromise<PayloadTypes, nsresult, true>;
+  RefPtr<ActivePayloadTypesPromise> GetActivePayloadTypes() const;
+
   MediaSessionConduit* GetConduit() const { return mConduit; }
 
   // nsISupports
@@ -139,6 +152,19 @@ class TransceiverImpl : public nsISupports,
   static nsresult NegotiatedDetailsToVideoCodecConfigs(
       const JsepTrackNegotiatedDetails& aDetails,
       std::vector<VideoCodecConfig>* aConfigs);
+
+  /**
+   * Takes a set of codec stats (per-peerconnection) and a set of
+   * transceiver/transceiver-stats-promise tuples. Filters out all referenced
+   * codec stats based on the transceiver's transport and rtp stream stats.
+   * Finally returns the flattened stats containing the filtered codec stats and
+   * all given per-transceiver-stats.
+   */
+  static RefPtr<dom::RTCStatsPromise> ApplyCodecStats(
+      nsTArray<dom::RTCCodecStats> aCodecStats,
+      nsTArray<std::tuple<TransceiverImpl*,
+                          RefPtr<dom::RTCStatsPromise::AllPromiseType>>>
+          aTransceiverStatsPromises);
 
   AbstractCanonical<bool>* CanonicalReceiving() { return &mReceiving; }
   AbstractCanonical<bool>* CanonicalTransmitting() { return &mTransmitting; }

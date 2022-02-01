@@ -2884,24 +2884,54 @@ void PeerConnectionImpl::CollectConduitTelemetryData() {
   }
 }
 
+nsTArray<dom::RTCCodecStats> PeerConnectionImpl::GetCodecStats(
+    DOMHighResTimeStamp aNow) {
+  MOZ_ASSERT(NS_IsMainThread());
+  nsTArray<dom::RTCCodecStats> result;
+  // TODO: Populate codec stats
+  return result;
+}
+
 RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
     dom::MediaStreamTrack* aSelector, bool aInternalStats) {
   MOZ_ASSERT(NS_IsMainThread());
   nsTArray<RefPtr<dom::RTCStatsPromise>> promises;
   DOMHighResTimeStamp now = mTimestampMaker.GetNow();
 
+  nsTArray<dom::RTCCodecStats> codecStats = GetCodecStats(now);
+
   if (mMedia) {
+    nsTArray<
+        std::tuple<TransceiverImpl*, RefPtr<RTCStatsPromise::AllPromiseType>>>
+        transceiverStatsPromises;
     for (const auto& transceiver : mMedia->GetTransceivers()) {
-      if (transceiver->HasSendTrack(aSelector)) {
+      const bool sendSelected = transceiver->HasSendTrack(aSelector);
+      const bool recvSelected = transceiver->Receiver()->HasTrack(aSelector);
+      if (!sendSelected && !recvSelected) {
+        continue;
+      }
+      nsTArray<RefPtr<RTCStatsPromise>> rtpStreamPromises;
+      // Get all rtp stream stats for the given selector. Then filter away any
+      // codec stat not related to the selector, and assign codec ids to the
+      // stream stats.
+      if (sendSelected) {
         // TODO(bug 1616937): Use RTCRtpSender for these instead.
-        promises.AppendElements(GetSenderStats(transceiver));
+        rtpStreamPromises.AppendElements(GetSenderStats(transceiver));
       }
-      if (transceiver->Receiver()->HasTrack(aSelector)) {
-        // Right now, returns two promises; one for RTP/RTCP stats, and
-        // another for ICE stats.
-        promises.AppendElements(transceiver->Receiver()->GetStatsInternal());
+      if (recvSelected) {
+        // Right now, returns two promises; one for RTP/RTCP stats, and another
+        // for ICE stats.
+        rtpStreamPromises.AppendElements(
+            transceiver->Receiver()->GetStatsInternal());
       }
+      transceiverStatsPromises.AppendElement(
+          std::make_tuple(transceiver.get(),
+                          RTCStatsPromise::All(GetMainThreadSerialEventTarget(),
+                                               rtpStreamPromises)));
     }
+
+    promises.AppendElement(TransceiverImpl::ApplyCodecStats(
+        std::move(codecStats), std::move(transceiverStatsPromises)));
 
     // TODO(bug 1616937): We need to move this is RTCRtpSender, to make
     // getStats on those objects work properly. It might be worth optimizing
