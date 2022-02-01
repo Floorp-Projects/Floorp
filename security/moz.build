@@ -145,11 +145,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
     if CONFIG["CPU_ARCH"] == "x86":
         # This should really be the default.
         sandbox_vars["ASFLAGS"] = ["-safeseh"]
-
-    DELAYLOAD_DLLS += [
-        "winmm.dll",
-    ]
-
 if CONFIG["OS_TARGET"] == "Android":
     sandbox_vars["CFLAGS"] = [
         "-include",

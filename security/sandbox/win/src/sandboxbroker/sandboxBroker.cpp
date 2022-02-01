@@ -646,7 +646,7 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
   }
 
   if (aSandboxLevel > 4) {
-    result = mPolicy->SetAlternateDesktop(true);
+    result = mPolicy->SetAlternateDesktop(false);
     if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
       LOG_W("SetAlternateDesktop failed, result: %i, last error: %x", result,
             ::GetLastError());
