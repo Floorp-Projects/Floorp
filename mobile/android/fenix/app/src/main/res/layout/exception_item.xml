@@ -53,7 +53,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="16dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        app:srcCompat="@drawable/mozac_ic_close"
+        app:srcCompat="@drawable/ic_close"
         android:contentDescription="@string/history_delete_item"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

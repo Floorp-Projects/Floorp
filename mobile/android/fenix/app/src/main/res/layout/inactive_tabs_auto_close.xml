@@ -48,7 +48,7 @@
                 android:contentDescription="@string/tab_tray_inactive_auto_close_button_content_description"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/mozac_ic_close" />
+                app:srcCompat="@drawable/ic_close" />
 
             <TextView
                 android:id="@+id/message"

@@ -18,7 +18,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:tint="@color/primary_text_normal_theme"
-        app:srcCompat="@drawable/mozac_ic_search" />
+        app:srcCompat="@drawable/ic_search" />
 
     <TextView
         android:id="@+id/tab_group_title"

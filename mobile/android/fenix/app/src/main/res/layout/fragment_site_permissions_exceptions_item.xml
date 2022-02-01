@@ -18,7 +18,7 @@
             android:layout_height="24dp"
             android:importantForAccessibility="no"
             android:scaleType="fitCenter"
-            app:drawableStartCompat="@drawable/mozac_ic_globe"/>
+            app:drawableStartCompat="@drawable/ic_internet"/>
 
     <TextView
             android:id="@+id/exception_text"

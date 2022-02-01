@@ -5,7 +5,7 @@
 <animated-selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item
             android:id="@+id/enabled"
-            android:drawable="@drawable/mozac_ic_notification"
+            android:drawable="@drawable/ic_notifications_enabled"
             android:state_enabled="true" />
     <item
             android:id="@+id/disabled"

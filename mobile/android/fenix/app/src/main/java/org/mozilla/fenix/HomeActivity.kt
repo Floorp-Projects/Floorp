@@ -700,7 +700,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             setSupportActionBar(navigationToolbar)
             // Add ids to this that we don't want to have a toolbar back button
             setupNavigationToolbar()
-            setNavigationIcon(R.drawable.mozac_ic_back)
+            setNavigationIcon(R.drawable.ic_back_button)
 
             isToolbarInflated = true
         }

@@ -12,25 +12,25 @@
             android:summary="@string/preference_option_autoplay_blocked3"/>
 
     <androidx.preference.Preference
-            android:icon="@drawable/mozac_ic_video"
+            android:icon="@drawable/ic_camera_enabled"
             android:key="@string/pref_key_phone_feature_camera"
             android:title="@string/preference_phone_feature_camera"
             android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
 
     <androidx.preference.Preference
-            android:icon="@drawable/mozac_ic_location"
+            android:icon="@drawable/ic_location_enabled"
             android:key="@string/pref_key_phone_feature_location"
             android:title="@string/preference_phone_feature_location"
             android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
 
     <androidx.preference.Preference
-            android:icon="@drawable/mozac_ic_microphone"
+            android:icon="@drawable/ic_microphone_enabled"
             android:key="@string/pref_key_phone_feature_microphone"
             android:title="@string/preference_phone_feature_microphone"
             android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
 
     <androidx.preference.Preference
-            android:icon="@drawable/mozac_ic_notification"
+            android:icon="@drawable/ic_notifications_enabled"
             android:key="@string/pref_key_phone_feature_notification"
             android:title="@string/preference_phone_feature_notification"
             android:summary="@string/preference_option_phone_feature_ask_to_allow"
@@ -58,7 +58,7 @@
         app:allowDividerBelow="true"/>
 
     <androidx.preference.Preference
-            android:icon="@drawable/mozac_ic_globe"
+            android:icon="@drawable/ic_internet"
             android:key="@string/pref_key_show_site_exceptions"
             android:title="@string/preference_exceptions"
             app:allowDividerAbove="true"/>

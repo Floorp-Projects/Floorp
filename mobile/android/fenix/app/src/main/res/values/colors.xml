@@ -251,6 +251,10 @@
     <color name="bottom_bar_shadow">#1A000000</color>
     <color name="snackbar_error_color">#B52645</color>
 
+    <!-- Reader View colors -->
+    <color name="mozac_feature_readerview_text_color" tools:ignore="UnusedResources">@color/primary_text_light_theme</color>
+    <color name="mozac_feature_readerview_selected">@color/photonViolet40</color>
+
     <!-- Share UI -->
     <color name="default_share_background">#E3E2E3</color>
     <color name="device_type_desktop_background">#F091C3</color>
@@ -278,18 +282,13 @@
     <!-- SearchView Hint Color -->
     <color name="search_view_hint_color">@color/photonDarkGrey05</color>
 
+    <!-- Tab Counter colors -->
+    <color name="mozac_ui_tabcounter_default_tint" tools:ignore="UnusedResources">@color/primary_text_light_theme</color>
+    <color name="mozac_ui_tabcounter_default_text" tools:ignore="UnusedResources">@color/primary_text_light_theme</color>
+
     <!-- App Spinners colors -->
     <color name="spinner_selected_item">#1415141A</color>
 
     <!-- Toolbar menu icon colors -->
     <color name="toolbar_menu_transparent">@android:color/transparent</color>
-
-    <!-- Mozilla Android Component color variable overrides -->
-    <color name="mozac_ui_icons_fill" tools:ignore="UnusedResources">?primaryText</color>
-    <!-- Tab Counter colors -->
-    <color name="mozac_ui_tabcounter_default_tint" tools:ignore="UnusedResources">@color/primary_text_light_theme</color>
-    <color name="mozac_ui_tabcounter_default_text" tools:ignore="UnusedResources">@color/primary_text_light_theme</color>
-    <!-- Reader View colors -->
-    <color name="mozac_feature_readerview_text_color" tools:ignore="UnusedResources">@color/primary_text_light_theme</color>
-    <color name="mozac_feature_readerview_selected">@color/photonViolet40</color>
 </resources>

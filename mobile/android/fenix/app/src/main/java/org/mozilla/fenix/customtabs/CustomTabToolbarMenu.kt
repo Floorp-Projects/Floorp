@@ -133,7 +133,7 @@ class CustomTabToolbarMenu(
     }
 
     private val desktopMode = BrowserMenuImageSwitch(
-        imageResource = R.drawable.mozac_ic_device_desktop,
+        imageResource = R.drawable.ic_desktop,
         label = context.getString(R.string.browser_menu_desktop_site),
         initialState = { session?.content?.desktopMode ?: false }
     ) { checked ->

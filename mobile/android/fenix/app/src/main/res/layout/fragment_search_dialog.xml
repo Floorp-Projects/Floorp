@@ -186,7 +186,7 @@
         style="@style/search_pill"
         android:textOff="@string/search_engine_button"
         android:textOn="@string/search_engine_button"
-        app:drawableStartCompat="@drawable/mozac_ic_search"
+        app:drawableStartCompat="@drawable/ic_search"
         app:layout_constraintBottom_toBottomOf="@id/pill_wrapper"
         app:layout_constraintStart_toEndOf="@id/qr_scan_button"
         app:layout_constraintTop_toTopOf="@id/pill_wrapper" />

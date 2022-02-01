@@ -77,7 +77,7 @@
             android:layout_height="@dimen/glyph_button_height"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/content_description_menu"
-            app:srcCompat="@drawable/mozac_ic_menu"
+            app:srcCompat="@drawable/ic_menu"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"/>

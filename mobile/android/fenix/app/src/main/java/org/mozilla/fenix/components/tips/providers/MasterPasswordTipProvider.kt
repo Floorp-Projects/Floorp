@@ -68,7 +68,7 @@ class MasterPasswordTipProvider(
             title = context.getString(R.string.mp_homescreen_tip_title),
             description = context.getString(R.string.mp_homescreen_tip_message),
             learnMoreURL = null,
-            titleDrawable = AppCompatResources.getDrawable(context, R.drawable.mozac_ic_login)
+            titleDrawable = AppCompatResources.getDrawable(context, R.drawable.ic_login)
         )
 
     private fun showMasterPasswordMigration() {

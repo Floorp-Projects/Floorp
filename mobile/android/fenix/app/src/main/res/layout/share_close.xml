@@ -24,7 +24,7 @@
         app:iconTint="@color/neutral_text"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/mozac_ic_close" />
+        app:srcCompat="@drawable/ic_close" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/title"

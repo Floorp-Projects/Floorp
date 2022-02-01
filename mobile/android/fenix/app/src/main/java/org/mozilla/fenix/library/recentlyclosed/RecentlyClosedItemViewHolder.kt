@@ -25,7 +25,7 @@ class RecentlyClosedItemViewHolder(
 
     init {
         binding.historyLayout.overflowView.apply {
-            setImageResource(R.drawable.mozac_ic_close)
+            setImageResource(R.drawable.ic_close)
             contentDescription = view.context.getString(R.string.history_delete_item)
             setOnClickListener {
                 val item = item ?: return@setOnClickListener

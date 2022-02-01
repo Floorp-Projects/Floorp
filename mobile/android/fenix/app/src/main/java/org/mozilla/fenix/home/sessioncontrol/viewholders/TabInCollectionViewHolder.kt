@@ -51,7 +51,7 @@ class TabInCollectionViewHolder(
         }
 
         view.setSecondaryButton(
-            icon = R.drawable.mozac_ic_close,
+            icon = R.drawable.ic_close,
             contentDescription = R.string.remove_tab_from_collection
         ) {
             interactor.onCollectionRemoveTab(collection, tab, wasSwiped = false)
