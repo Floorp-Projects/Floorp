@@ -51,7 +51,17 @@ HomeOverlay.prototype = {
     if (layoutRefresh) {
       // Create actual content
       ReactDOM.render(
-        <Home pockethost={pockethost} />,
+        <Home
+          locale={locale}
+          articles={[]}
+          pockethost={pockethost}
+          topics={[
+            { title: "Self Improvement", topic: "self-improvement" },
+            { title: "Food", topic: "food" },
+            { title: "Entertainment", topic: "entertainment" },
+            { title: "Science", topic: "science" },
+          ]}
+        />,
         document.querySelector(`body`)
       );
     } else {
