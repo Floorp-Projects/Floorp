@@ -1,0 +1,37 @@
+<html>
+  <head>
+    <meta charset=UTF-8>
+    <title>“Amiri Quran Colored” test</title>
+    <style>
+      @font-face {
+        font-family: AmiriMonochrome;
+        font-style: normal;
+        font-weight: 400;
+        src: url('../fonts/AmiriQuran.otf');
+      }
+      .test {
+        float: left;
+        direction: rtl;
+        font-size: 330px;
+        line-height: 0;
+        margin: 10px;
+        padding: 0 50px;
+        background: blue;
+        color: blue;
+      }
+      .monochrome {
+        font-family: AmiriMonochrome;
+      }
+    </style>
+  </head>
+  <div>The Arabic glyphs should NOT be visible against the blue background in either box:</div>
+  <div class="test monochrome">
+    <p>اردو
+    </p>
+  </div>
+  <div class="test monochrome">
+    <p>اردو
+    </p>
+  </div>
+</html>
+
