@@ -171,6 +171,11 @@ already_AddRefed<gfxContext> nsDeviceContext::CreateRenderingContextCommon(
   MOZ_ASSERT(IsPrinterContext());
   MOZ_ASSERT(mWidth > 0 && mHeight > 0);
 
+  if (NS_WARN_IF(!mPrintTarget)) {
+    // Printing canceled already.
+    return nullptr;
+  }
+
   RefPtr<gfx::DrawTarget> dt;
   if (aWantReferenceContext) {
     dt = mPrintTarget->GetReferenceDrawTarget();
