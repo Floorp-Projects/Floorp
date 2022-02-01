@@ -3216,7 +3216,7 @@ already_AddRefed<Promise> nsFrameLoader::RequestTabStateFlush(
     ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise =
-      Promise::Create(xpc::NativeGlobal(xpc::PrivilegedJunkScope()), aRv);
+      Promise::Create(GetOwnerDoc()->GetOwnerGlobal(), aRv);
 
   if (aRv.Failed()) {
     return nullptr;
