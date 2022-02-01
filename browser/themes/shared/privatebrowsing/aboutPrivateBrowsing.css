@@ -4,7 +4,6 @@
 
 @import url("chrome://global/skin/in-content/info-pages.css");
 
-@media not (prefers-contrast) {
 html.private {
   --in-content-page-color: white;
   --in-content-text-color: white;
@@ -15,7 +14,6 @@ html.private {
   --in-content-banner-text-color: #0c0c0d;
   --in-content-button-background-hover: rgba(12,12,13,.1);
   --in-content-button-background-active: rgba(12,12,13,.15);
-}
 }
 
 /**
@@ -332,23 +330,6 @@ p {
 
 .promo-visible {
   display: flex;
-}
-
-.promo-dismiss {
-  padding: 10px;
-  min-width: 16px;
-  min-height: 16px;
-  display: inline flow-root;
-  background: url("chrome://global/skin/icons/close.svg") center no-repeat;
-  cursor: pointer;
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-@media not (prefers-contrast) {
-  .promo-dismiss {
-    opacity: 0.5;
-  }
 }
 
 .promo-content {
