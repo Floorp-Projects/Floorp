@@ -39,7 +39,7 @@ function run_test() {
   do_get_profile();
   prefs = Services.prefs;
 
-  prefs.setBoolPref("network.http.http3.enabled", true);
+  prefs.setBoolPref("network.http.http3.enable", true);
   prefs.setCharPref("network.dns.localDomains", "foo.example.com");
   prefs.setBoolPref("network.dns.disableIPv6", true);
 
@@ -131,7 +131,7 @@ function test_altsvc_pref() {
 }
 
 function testsDone() {
-  prefs.clearUserPref("network.http.http3.enabled");
+  prefs.clearUserPref("network.http.http3.enable");
   prefs.clearUserPref("network.dns.localDomains");
   prefs.clearUserPref("network.dns.disableIPv6");
   prefs.clearUserPref("network.http.http3.alt-svc-mapping-for-testing");
