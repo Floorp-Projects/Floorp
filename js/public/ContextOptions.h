@@ -51,9 +51,12 @@ class JS_PUBLIC_API ContextOptions {
         fuzzing_(false),
         privateClassFields_(false),
         privateClassMethods_(false),
- #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+#ifdef NIGHTLY_BUILD
+        arrayGrouping_(true),
+#endif
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
         changeArrayByCopy_(false),
- #endif
+#endif
         ergonomicBrandChecks_(false),
         classStaticBlocks_(false),
         importAssertions_(false) {
@@ -165,6 +168,14 @@ class JS_PUBLIC_API ContextOptions {
     ergonomicBrandChecks_ = enabled;
     return *this;
   }
+
+#ifdef NIGHTLY_BUILD
+  bool arrayGrouping() const { return arrayGrouping_; }
+  ContextOptions& setArrayGrouping(bool enabled) {
+    arrayGrouping_ = enabled;
+    return *this;
+  }
+#endif
 
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   bool changeArrayByCopy() const { return changeArrayByCopy_; }
@@ -295,6 +306,9 @@ class JS_PUBLIC_API ContextOptions {
   bool fuzzing_ : 1;
   bool privateClassFields_ : 1;
   bool privateClassMethods_ : 1;
+#ifdef NIGHTLY_BUILD
+  bool arrayGrouping_ : 1;
+#endif
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   bool changeArrayByCopy_ : 1;
 #endif

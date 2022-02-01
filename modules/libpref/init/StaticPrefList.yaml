@@ -6477,6 +6477,12 @@
     type: bool
     value: false
     mirror: always
+
+  # Experimental support for Array Grouping in JavaScript.
+-   name: javascript.options.experimental.array_grouping
+    type: bool
+    value: true
+    mirror: always
 #endif  // NIGHTLY_BUILD
 
 # Experimental support for class static blocks in JavaScript.
