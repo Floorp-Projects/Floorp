@@ -1528,8 +1528,15 @@ class AddonInstall {
       }
 
       if (!this.addon.id) {
-        let err = new Error(`Cannot find id for addon ${file.path}`);
-        return Promise.reject([AddonManager.ERROR_CORRUPT_FILE, err]);
+        let msg = `Cannot find id for addon ${file.path}.`;
+        if (Services.prefs.getBoolPref(PREF_XPI_SIGNATURES_DEV_ROOT, false)) {
+          msg += ` Preference ${PREF_XPI_SIGNATURES_DEV_ROOT} is set.`;
+        }
+
+        return Promise.reject([
+          AddonManager.ERROR_CORRUPT_FILE,
+          new Error(msg),
+        ]);
       }
 
       if (this.existingAddon) {
