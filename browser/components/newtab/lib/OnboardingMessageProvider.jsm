@@ -51,30 +51,6 @@ const ONBOARDING_MESSAGES = () => [
     },
     targeting: "true",
   },
-  {
-    id: "PB_NEWTAB_VPN_PROMO",
-    template: "pb_newtab",
-    content: {
-      promoEnabled: true,
-      infoEnabled: true,
-      infoIcon: "",
-      infoTitle: "",
-      infoBody: "fluent:about-private-browsing-info-description-private-window",
-      infoLinkText: "fluent:about-private-browsing-learn-more-link",
-      infoTitleEnabled: false,
-      promoLinkType: "button",
-      promoLinkText: "fluent:about-private-browsing-prominent-cta",
-      promoSectionStyle: "below-search",
-      promoHeader: "fluent:about-private-browsing-get-privacy",
-      promoTitle: "fluent:about-private-browsing-hide-activity-1",
-      promoTitleEnabled: true,
-      promoImageLarge: "chrome://browser/content/assets/moz-vpn.svg",
-    },
-    // Ensure this message is shown over others while frequency allows
-    priority: 2,
-    targeting: "region != 'CN' && !hasActiveEnterprisePolicies",
-    frequency: { lifetime: 3 },
-  },
 ];
 
 const OnboardingMessageProvider = {
