@@ -2888,7 +2888,113 @@ nsTArray<dom::RTCCodecStats> PeerConnectionImpl::GetCodecStats(
     DOMHighResTimeStamp aNow) {
   MOZ_ASSERT(NS_IsMainThread());
   nsTArray<dom::RTCCodecStats> result;
-  // TODO: Populate codec stats
+
+  if (!mMedia) {
+    return result;
+  }
+
+  struct CodecComparator {
+    bool operator()(const JsepCodecDescription* aA,
+                    const JsepCodecDescription* aB) const {
+      return aA->StatsId() < aB->StatsId();
+    }
+  };
+
+  // transportId -> codec; per direction (whether the codecType
+  // shall be "encode", "decode" or absent (if a codec exists in both maps for a
+  // transport)). These do the bookkeeping to ensure codec stats get coalesced
+  // to transport level.
+  std::map<std::string, std::set<JsepCodecDescription*, CodecComparator>>
+      sendCodecMap;
+  std::map<std::string, std::set<JsepCodecDescription*, CodecComparator>>
+      recvCodecMap;
+
+  // Find all JsepCodecDescription instances we want to turn into codec stats.
+  for (const auto& transceiver : mMedia->GetTransceivers()) {
+    auto sendCodecs = transceiver->GetNegotiatedSendCodecs();
+    auto recvCodecs = transceiver->GetNegotiatedRecvCodecs();
+
+    const std::string transportId = transceiver->GetTransportId();
+    // This ensures both codec maps have the same size.
+    auto& sendMap = sendCodecMap[transportId];
+    auto& recvMap = recvCodecMap[transportId];
+
+    sendCodecs.apply([&](const auto& aCodecs) {
+      for (const auto& codec : aCodecs) {
+        sendMap.insert(codec.get());
+      }
+    });
+    recvCodecs.apply([&](const auto& aCodecs) {
+      for (const auto& codec : aCodecs) {
+        recvMap.insert(codec.get());
+      }
+    });
+  }
+
+  auto createCodecStat = [&](const JsepCodecDescription* aCodec,
+                             const nsString& aTransportId,
+                             Maybe<RTCCodecType> aCodecType) {
+    uint16_t pt;
+    {
+      DebugOnly<bool> rv = aCodec->GetPtAsInt(&pt);
+      MOZ_ASSERT(rv);
+    }
+    nsString mimeType;
+    mimeType.AppendPrintf(
+        "%s/%s", aCodec->Type() == SdpMediaSection::kVideo ? "video" : "audio",
+        aCodec->mName.c_str());
+    nsString id = aTransportId;
+    id.Append(u"_");
+    id.Append(aCodec->StatsId());
+
+    dom::RTCCodecStats codec;
+    codec.mId.Construct(std::move(id));
+    codec.mTimestamp.Construct(aNow);
+    codec.mType.Construct(RTCStatsType::Codec);
+    codec.mPayloadType = pt;
+    if (aCodecType) {
+      codec.mCodecType.Construct(*aCodecType);
+    }
+    codec.mTransportId = aTransportId;
+    codec.mMimeType = std::move(mimeType);
+    codec.mClockRate.Construct(aCodec->mClock);
+    if (aCodec->Type() == SdpMediaSection::MediaType::kAudio) {
+      codec.mChannels.Construct(aCodec->mChannels);
+    }
+    if (aCodec->mSdpFmtpLine) {
+      codec.mSdpFmtpLine.Construct(
+          NS_ConvertUTF8toUTF16(aCodec->mSdpFmtpLine->c_str()));
+    }
+
+    result.AppendElement(std::move(codec));
+  };
+
+  // Create codec stats for the gathered codec descriptions, sorted primarily
+  // by transportId, secondarily by payload type (from StatsId()).
+  for (const auto& [transportId, sendCodecs] : sendCodecMap) {
+    const auto& recvCodecs = recvCodecMap[transportId];
+    const nsString tid = NS_ConvertASCIItoUTF16(transportId);
+    AutoTArray<JsepCodecDescription*, 16> bidirectionalCodecs;
+    AutoTArray<JsepCodecDescription*, 16> unidirectionalCodecs;
+    std::set_intersection(sendCodecs.cbegin(), sendCodecs.cend(),
+                          recvCodecs.cbegin(), recvCodecs.cend(),
+                          MakeBackInserter(bidirectionalCodecs),
+                          CodecComparator());
+    std::set_symmetric_difference(sendCodecs.cbegin(), sendCodecs.cend(),
+                                  recvCodecs.cbegin(), recvCodecs.cend(),
+                                  MakeBackInserter(unidirectionalCodecs),
+                                  CodecComparator());
+    for (const auto* codec : bidirectionalCodecs) {
+      createCodecStat(codec, tid, Nothing());
+    }
+    for (const auto* codec : unidirectionalCodecs) {
+      createCodecStat(
+          codec, tid,
+          Some(codec->mDirection == sdp::kSend ? RTCCodecType::Encode
+                                               : RTCCodecType::Decode));
+    }
+  }
+
   return result;
 }
 
@@ -2919,8 +3025,8 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
         rtpStreamPromises.AppendElements(GetSenderStats(transceiver));
       }
       if (recvSelected) {
-        // Right now, returns two promises; one for RTP/RTCP stats, and another
-        // for ICE stats.
+        // Right now, returns two promises; one for RTP/RTCP stats, and
+        // another for ICE stats.
         rtpStreamPromises.AppendElements(
             transceiver->Receiver()->GetStatsInternal());
       }

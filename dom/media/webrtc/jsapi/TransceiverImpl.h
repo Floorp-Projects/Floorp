@@ -204,7 +204,7 @@ class TransceiverImpl : public nsISupports,
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   const std::string mPCHandle;
   RefPtr<MediaTransportHandler> mTransportHandler;
-  RefPtr<JsepTransceiver> mJsepTransceiver;
+  const RefPtr<JsepTransceiver> mJsepTransceiver;
   bool mHaveSetupTransport;
   nsCOMPtr<nsISerialEventTarget> mMainThread;
   nsCOMPtr<nsISerialEventTarget> mStsThread;
