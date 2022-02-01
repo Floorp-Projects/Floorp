@@ -57,8 +57,8 @@ const statsExpectedByType = {
       "bytesSent",
       "remoteId",
     ],
-    optional: ["nackCount"],
-    localVideoOnly: ["framesEncoded", "firCount", "pliCount", "qpSum"],
+    optional: ["nackCount", "qpSum"],
+    localVideoOnly: ["framesEncoded", "firCount", "pliCount"],
     unimplemented: ["mediaTrackId", "transportId", "sliCount", "targetBitrate"],
     deprecated: ["isRemote"],
   },
@@ -571,6 +571,22 @@ function pedanticChecks(report) {
       // Optional fields
       //
 
+      // qpSum
+      // This is supported for all of our vpx codecs (on the encode side, see
+      // bug 1519590)
+      if (report.get(stat.codecId).mimeType.includes("VP")) {
+        ok(
+          stat.qpSum >= 0,
+          `${stat.type}.qpSum is a sane number (${stat.kind}) ` +
+            `for ${report.get(stat.codecId).mimeType}. value=${stat.qpSum}`
+        );
+      } else {
+        ok(
+          !stat.qpSum && !("qpSum" in stat),
+          `${stat.type}.qpSum absent for ${report.get(stat.codecId).mimeType}`
+        );
+      }
+
       //
       // Local video only stats
       //
@@ -596,15 +612,6 @@ function pedanticChecks(report) {
           stat.framesEncoded >= 0 && stat.framesEncoded < 100000,
           `${stat.type}.framesEncoded is a sane number for a short ` +
             `${stat.kind} test. value=${stat.framesEncoded}`
-        );
-
-        // qpSum
-        // techinically optional but should be supported for all of our
-        // codecs (on the encode side, see bug 1519590)
-        ok(
-          stat.qpSum >= 0,
-          `${stat.type} qpSum is a sane number (${stat.kind}). ` +
-            `value=${stat.qpSum}`
         );
       }
     } else if (stat.type == "remote-outbound-rtp") {
@@ -891,8 +898,8 @@ function pedanticChecks(report) {
 
         // bytesSent
         ok(
-          stat.bytesSent > 5000,
-          `${stat.type}.bytesSent is a sane number (>5,000) for a short ` +
+          stat.bytesSent > 1000,
+          `${stat.type}.bytesSent is a sane number (>1,000) for a short ` +
             `${stat.kind} test. value=${stat.bytesSent}`
         );
 
