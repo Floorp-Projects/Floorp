@@ -49,6 +49,53 @@ function Header(props) {
 }
 
 /* harmony default export */ const Header_Header = (Header);
+;// CONCATENATED MODULE: ./content/panels/js/components/ArticleList/ArticleList.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function ArticleList(props) {
+  return /*#__PURE__*/react.createElement("ul", {
+    className: "stp_article_list"
+  }, props.articles?.map(article => /*#__PURE__*/react.createElement("li", {
+    className: "stp_article_list_item"
+  }, /*#__PURE__*/react.createElement("a", {
+    className: "stp_article_list_link",
+    href: article.url
+  }, /*#__PURE__*/react.createElement("img", {
+    className: "stp_article_list_thumb",
+    src: article.thumbnail,
+    alt: article.alt
+  }), /*#__PURE__*/react.createElement("div", {
+    className: "stp_article_list_meta"
+  }, /*#__PURE__*/react.createElement("header", {
+    className: "stp_article_list_header"
+  }, article.title), /*#__PURE__*/react.createElement("p", {
+    className: "stp_article_list_publisher"
+  }, article.publisher))))));
+}
+
+/* harmony default export */ const ArticleList_ArticleList = (ArticleList);
+;// CONCATENATED MODULE: ./content/panels/js/components/PopularTopics/PopularTopics.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function PopularTopics(props) {
+  return /*#__PURE__*/react.createElement("ul", {
+    className: "stp_popular_topics"
+  }, props.topics?.map(topic => /*#__PURE__*/react.createElement("li", {
+    key: `item-${topic.topic}`,
+    className: "stp_popular_topic"
+  }, /*#__PURE__*/react.createElement("a", {
+    className: "stp_popular_topic_link",
+    href: `https://${props.pockethost}/explore/${topic.topic}?utm_source=${props.utmsource}`
+  }, topic.title))));
+}
+
+/* harmony default export */ const PopularTopics_PopularTopics = (PopularTopics);
 ;// CONCATENATED MODULE: ./content/panels/js/components/Home/Home.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -56,9 +103,34 @@ function Header(props) {
 
 
 
+
+
 function Home(props) {
-  return /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement("a", null, /*#__PURE__*/react.createElement("span", {
+  const {
+    articles,
+    locale,
+    topics,
+    pockethost
+  } = props;
+  return /*#__PURE__*/react.createElement("div", {
+    className: "stp_panel_container"
+  }, /*#__PURE__*/react.createElement("div", {
+    className: "stp_panel stp_panel_home"
+  }, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement("a", null, /*#__PURE__*/react.createElement("span", {
     "data-l10n-id": "pocket-panel-header-my-list"
+  }))), /*#__PURE__*/react.createElement("hr", null), articles?.length ? /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("p", {
+    "data-l10n-id": "pocket-panel-home-most-recent-saves"
+  }), /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
+    articles: articles
+  }), /*#__PURE__*/react.createElement("span", {
+    "data-l10n-id": "pocket-panel-button-show-all"
+  })) : /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("p", {
+    "data-l10n-id": "pocket-panel-home-new-user-cta"
+  }), /*#__PURE__*/react.createElement("p", {
+    "data-l10n-id": "pocket-panel-home-new-user-message"
+  })), /*#__PURE__*/react.createElement("hr", null), pockethost && locale?.startsWith("en") && topics?.length && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("div", null, "Explore popular topics:"), /*#__PURE__*/react.createElement(PopularTopics_PopularTopics, {
+    topics: topics,
+    pockethost: pockethost
   }))));
 }
 
@@ -173,7 +245,22 @@ HomeOverlay.prototype = {
     if (layoutRefresh) {
       // Create actual content
       react_dom.render( /*#__PURE__*/react.createElement(Home_Home, {
-        pockethost: pockethost
+        locale: locale,
+        articles: [],
+        pockethost: pockethost,
+        topics: [{
+          title: "Self Improvement",
+          topic: "self-improvement"
+        }, {
+          title: "Food",
+          topic: "food"
+        }, {
+          title: "Entertainment",
+          topic: "entertainment"
+        }, {
+          title: "Science",
+          topic: "science"
+        }]
       }), document.querySelector(`body`));
     } else {
       // For English, we have a discover topics link.
@@ -229,9 +316,24 @@ HomeOverlay.prototype = {
 
 
 function Signup(props) {
-  return /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement("a", null, /*#__PURE__*/react.createElement("span", {
+  const {
+    locale
+  } = props;
+  return /*#__PURE__*/react.createElement("div", {
+    className: "stp_panel_container"
+  }, /*#__PURE__*/react.createElement("div", {
+    className: "stp_panel stp_panel_home"
+  }, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement("a", null, /*#__PURE__*/react.createElement("span", {
     "data-l10n-id": "pocket-panel-header-sign-in"
-  }))));
+  }))), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("p", {
+    "data-l10n-id": "pocket-panel-signup-cta-a"
+  }), /*#__PURE__*/react.createElement("p", {
+    "data-l10n-id": "pocket-panel-signup-cta-b"
+  }), locale?.startsWith("en") ? /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("p", null, "Get thought-provoking article recommendations"), /*#__PURE__*/react.createElement("p", null, "Find stories that go deep into a subject or offer a new perspective.")) : /*#__PURE__*/react.createElement("p", {
+    "data-l10n-id": "pocket-panel-signup-cta-c"
+  }), /*#__PURE__*/react.createElement("hr", null), /*#__PURE__*/react.createElement("p", {
+    "data-l10n-id": "pocket-panel-button-activate"
+  })));
 }
 
 /* harmony default export */ const Signup_Signup = (Signup);
@@ -275,9 +377,10 @@ var SignupOverlay = function (options) {
     } = new URL(window.location.href);
     const isEmailSignupEnabled = searchParams.get(`emailButton`) === `true`;
     const pockethost = searchParams.get(`pockethost`) || `getpocket.com`;
+    const locale = searchParams.get(`locale`) || ``;
+    const language = locale.split(`-`)[0].toLowerCase();
     const utmCampaign = searchParams.get(`utmCampaign`) || `firefox_door_hanger_menu`;
     const utmSource = searchParams.get(`utmSource`) || `control`;
-    const language = searchParams.get(`locale`)?.split(`-`)[0].toLowerCase();
     const layoutRefresh = searchParams.get(`layoutRefresh`) === `true`;
 
     if (this.active) {
@@ -290,7 +393,8 @@ var SignupOverlay = function (options) {
       // Create actual content
       document.querySelector(`.pkt_ext_containersignup`)?.classList.remove(`pkt_ext_containersignup`);
       react_dom.render( /*#__PURE__*/react.createElement(Signup_Signup, {
-        pockethost: pockethost
+        pockethost: pockethost,
+        locale: locale
       }), document.querySelector(`body`));
     } else {
       const templateData = {
@@ -327,10 +431,29 @@ var SignupOverlay = function (options) {
 
 
 
+
 function Saved(props) {
-  return /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement("a", null, /*#__PURE__*/react.createElement("span", {
+  const {
+    similarRecs,
+    savedStory
+  } = props;
+  return /*#__PURE__*/react.createElement("div", {
+    className: "stp_panel_container"
+  }, /*#__PURE__*/react.createElement("div", {
+    className: "stp_panel stp_panel_home"
+  }, /*#__PURE__*/react.createElement(Header_Header, null, /*#__PURE__*/react.createElement("a", null, /*#__PURE__*/react.createElement("span", {
     "data-l10n-id": "pocket-panel-header-my-list"
-  }))));
+  }))), /*#__PURE__*/react.createElement("hr", null), savedStory && /*#__PURE__*/react.createElement(react.Fragment, null, /*#__PURE__*/react.createElement("p", {
+    "data-l10n-id": "pocket-panel-saved-page-saved"
+  }), /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
+    articles: [savedStory]
+  }), /*#__PURE__*/react.createElement("span", {
+    "data-l10n-id": "pocket-panel-button-add-tags"
+  }), /*#__PURE__*/react.createElement("span", {
+    "data-l10n-id": "pocket-panel-saved-remove-page"
+  })), /*#__PURE__*/react.createElement("hr", null), similarRecs?.length && /*#__PURE__*/react.createElement(ArticleList_ArticleList, {
+    articles: similarRecs
+  })));
 }
 
 /* harmony default export */ const Saved_Saved = (Saved);
@@ -860,7 +983,8 @@ SavedOverlay.prototype = {
     if (layoutRefresh) {
       // Create actual content
       react_dom.render( /*#__PURE__*/react.createElement(Saved_Saved, {
-        pockethost: pockethost
+        pockethost: pockethost,
+        savedStory: {}
       }), document.querySelector(`body`));
     } else {
       // set host
@@ -920,53 +1044,6 @@ SavedOverlay.prototype = {
 
 };
 /* harmony default export */ const saved_overlay = (SavedOverlay);
-;// CONCATENATED MODULE: ./content/panels/js/components/ArticleList/ArticleList.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-function ArticleList(props) {
-  return /*#__PURE__*/react.createElement("ul", {
-    className: "stp_article_list"
-  }, props.articles.map(article => /*#__PURE__*/react.createElement("li", {
-    className: "stp_article_list_item"
-  }, /*#__PURE__*/react.createElement("a", {
-    className: "stp_article_list_link",
-    href: article.url
-  }, /*#__PURE__*/react.createElement("img", {
-    className: "stp_article_list_thumb",
-    src: article.thumbnail,
-    alt: article.alt
-  }), /*#__PURE__*/react.createElement("div", {
-    className: "stp_article_list_meta"
-  }, /*#__PURE__*/react.createElement("header", {
-    className: "stp_article_list_header"
-  }, article.title), /*#__PURE__*/react.createElement("p", {
-    className: "stp_article_list_publisher"
-  }, article.publisher))))));
-}
-
-/* harmony default export */ const ArticleList_ArticleList = (ArticleList);
-;// CONCATENATED MODULE: ./content/panels/js/components/PopularTopics/PopularTopics.jsx
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-
-function PopularTopics(props) {
-  return /*#__PURE__*/react.createElement("ul", {
-    className: "stp_popular_topics"
-  }, props.topics.map(topic => /*#__PURE__*/react.createElement("li", {
-    key: `item-${topic.topic}`,
-    className: "stp_popular_topic"
-  }, /*#__PURE__*/react.createElement("a", {
-    className: "stp_popular_topic_link",
-    href: `https://${props.pockethost}/explore/${topic.topic}?utm_source=${props.utmsource}`
-  }, topic.title))));
-}
-
-/* harmony default export */ const PopularTopics_PopularTopics = (PopularTopics);
 ;// CONCATENATED MODULE: ./content/panels/js/style-guide/overlay.js
 
 

@@ -395,6 +395,20 @@ body {
   font: menu;
 }
 
+hr {
+  margin: 12px -8px;
+  color: #F0F0F4;
+}
+
+.stp_panel_container {
+  overflow: hidden;
+}
+
+.stp_panel {
+  padding: 0 16px;
+  margin: 16px 0 12px;
+}
+
 /*  saved.css
  *
  *  Description:
@@ -2015,8 +2029,7 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 0 16px;
-  padding: 10px 0;
+  margin: 16px 0 12px;
   font-size: 1em;
   font-weight: 600;
 }

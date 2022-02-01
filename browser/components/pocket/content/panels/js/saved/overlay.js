@@ -669,7 +669,7 @@ SavedOverlay.prototype = {
     if (layoutRefresh) {
       // Create actual content
       ReactDOM.render(
-        <Saved pockethost={pockethost} />,
+        <Saved pockethost={pockethost} savedStory={{}} />,
         document.querySelector(`body`)
       );
     } else {

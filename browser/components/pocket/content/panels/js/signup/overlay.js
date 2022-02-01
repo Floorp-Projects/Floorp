@@ -42,13 +42,11 @@ var SignupOverlay = function(options) {
     const { searchParams } = new URL(window.location.href);
     const isEmailSignupEnabled = searchParams.get(`emailButton`) === `true`;
     const pockethost = searchParams.get(`pockethost`) || `getpocket.com`;
+    const locale = searchParams.get(`locale`) || ``;
+    const language = locale.split(`-`)[0].toLowerCase();
     const utmCampaign =
       searchParams.get(`utmCampaign`) || `firefox_door_hanger_menu`;
     const utmSource = searchParams.get(`utmSource`) || `control`;
-    const language = searchParams
-      .get(`locale`)
-      ?.split(`-`)[0]
-      .toLowerCase();
     const layoutRefresh = searchParams.get(`layoutRefresh`) === `true`;
 
     if (this.active) {
@@ -62,7 +60,7 @@ var SignupOverlay = function(options) {
         .querySelector(`.pkt_ext_containersignup`)
         ?.classList.remove(`pkt_ext_containersignup`);
       ReactDOM.render(
-        <Signup pockethost={pockethost} />,
+        <Signup pockethost={pockethost} locale={locale} />,
         document.querySelector(`body`)
       );
     } else {

@@ -7,7 +7,7 @@ import React from "react";
 function ArticleList(props) {
   return (
     <ul className="stp_article_list">
-      {props.articles.map(article => (
+      {props.articles?.map(article => (
         <li className="stp_article_list_item">
           <a className="stp_article_list_link" href={article.url}>
             <img
