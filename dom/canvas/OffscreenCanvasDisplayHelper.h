@@ -41,7 +41,7 @@ class OffscreenCanvasDisplayHelper final {
 
   RefPtr<layers::ImageContainer> GetImageContainer() const;
 
-  void UpdateContext(CanvasContextType aType, int32_t aChildId);
+  void UpdateContext(CanvasContextType aType, const Maybe<int32_t>& aChildId);
 
   bool CommitFrameToCompositor(nsICanvasRenderingContextInternal* aContext,
                                layers::TextureType aTextureType,
@@ -57,16 +57,20 @@ class OffscreenCanvasDisplayHelper final {
   void MaybeQueueInvalidateElement();
   void InvalidateElement();
 
+  bool TransformSurface(const gfx::DataSourceSurface::ScopedMap& aSrcMap,
+                        const gfx::DataSourceSurface::ScopedMap& aDstMap,
+                        gfx::SurfaceFormat aFormat, const gfx::IntSize& aSize,
+                        bool aNeedsPremult, gl::OriginPos aOriginPos) const;
+
   mutable Mutex mMutex;
   HTMLCanvasElement* MOZ_NON_OWNING_REF mCanvasElement;
   RefPtr<layers::ImageContainer> mImageContainer;
   RefPtr<gfx::SourceSurface> mFrontBufferSurface;
-  Maybe<layers::SurfaceDescriptor> mFrontBufferDesc;
 
   OffscreenCanvasDisplayData mData;
   CanvasContextType mType = CanvasContextType::NoContext;
-  uint32_t mContextManagerId = 0;
-  int32_t mContextChildId = 0;
+  Maybe<uint32_t> mContextManagerId;
+  Maybe<int32_t> mContextChildId;
   mozilla::layers::ImageContainer::ProducerID mImageProducerID;
   mozilla::layers::ImageContainer::FrameID mLastFrameID = 0;
   bool mPendingInvalidate = false;
