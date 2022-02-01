@@ -2283,12 +2283,10 @@ class UrlbarView {
     ];
 
     if (UrlbarPrefs.get("groupLabels.enabled")) {
-      idArgs.push(
-        ...[
-          { id: "urlbar-group-best-match" },
-          { id: "urlbar-group-firefox-suggest" },
-        ]
-      );
+      idArgs.push({ id: "urlbar-group-firefox-suggest" });
+      if (UrlbarPrefs.get("bestMatchEnabled")) {
+        idArgs.push({ id: "urlbar-group-best-match" });
+      }
     }
 
     if (UrlbarPrefs.get("quickSuggestEnabled")) {

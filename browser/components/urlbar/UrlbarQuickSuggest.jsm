@@ -124,6 +124,7 @@ class Suggestions {
       return null;
     }
     return {
+      is_best_match: result._test_is_best_match,
       full_keyword: this.getFullKeyword(phrase, result.keywords),
       title: result.title,
       url: result.url,

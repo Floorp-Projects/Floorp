@@ -171,8 +171,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
     this._replaceSuggestionTemplates(suggestion);
 
     let payload = {
-      qsSuggestion: [suggestion.full_keyword, UrlbarUtils.HIGHLIGHT.SUGGESTED],
-      title: suggestion.title,
       url: suggestion.url,
       urlTimestampIndex: suggestion.urlTimestampIndex,
       icon: suggestion.icon,
@@ -187,13 +185,32 @@ class ProviderQuickSuggest extends UrlbarProvider {
       requestId: suggestion.request_id,
     };
 
+    let isBestMatch =
+      suggestion.is_best_match && UrlbarPrefs.get("bestMatchEnabled");
+    if (isBestMatch) {
+      // Show the result as a best match. Best match titles don't include the
+      // `full_keyword`, and the user's search string is highlighted.
+      payload.title = [suggestion.title, UrlbarUtils.HIGHLIGHT.TYPED];
+    } else {
+      // Show the result as a usual quick suggest. Include the `full_keyword`
+      // and highlight the parts that aren't in the search string.
+      payload.title = suggestion.title;
+      payload.qsSuggestion = [
+        suggestion.full_keyword,
+        UrlbarUtils.HIGHLIGHT.SUGGESTED,
+      ];
+    }
+
     let result = new UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.SEARCH,
       ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload)
     );
 
-    if (
+    if (isBestMatch) {
+      result.isBestMatch = true;
+      result.suggestedIndex = 1;
+    } else if (
       !isNaN(suggestion.position) &&
       UrlbarPrefs.get("quickSuggestAllowPositionInSuggestions")
     ) {
