@@ -1439,12 +1439,9 @@ MsaaAccessible::get_accDefaultAction(
   if (accessible) {
     return accessible->get_accDefaultAction(kVarChildIdSelf, pszDefaultAction);
   }
-  if (mAcc->IsRemote()) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
-  }
 
   nsAutoString defaultAction;
-  LocalAcc()->ActionNameAt(0, defaultAction);
+  mAcc->ActionNameAt(0, defaultAction);
 
   *pszDefaultAction =
       ::SysAllocStringLen(defaultAction.get(), defaultAction.Length());
@@ -1684,11 +1681,8 @@ MsaaAccessible::accDoDefaultAction(
   if (accessible) {
     return accessible->accDoDefaultAction(kVarChildIdSelf);
   }
-  if (mAcc->IsRemote()) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
-  }
 
-  return LocalAcc()->DoAction(0) ? S_OK : E_INVALIDARG;
+  return mAcc->DoAction(0) ? S_OK : E_INVALIDARG;
 }
 
 STDMETHODIMP

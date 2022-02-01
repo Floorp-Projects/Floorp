@@ -294,7 +294,11 @@ if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "WINNT":
     ]
 
 if CONFIG["ENABLE_TESTS"]:
-    DIRS += ["test/gtest"]
+    DIRS += [
+        "test/gtest",
+        "test/utility_process_xpcom",
+        "test/browser",
+    ]
 
 # Add libFuzzer configuration directives
 include("/tools/fuzzing/libfuzzer-config.mozbuild")

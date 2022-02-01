@@ -1674,12 +1674,11 @@ inline bool nsCocoaWindow::ShouldToggleNativeFullscreen(bool aFullScreen,
   return aFullScreen;
 }
 
-nsresult nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
+nsresult nsCocoaWindow::MakeFullScreen(bool aFullScreen) {
   return DoMakeFullScreen(aFullScreen, AlwaysUsesNativeFullScreen());
 }
 
-nsresult nsCocoaWindow::MakeFullScreenWithNativeTransition(bool aFullScreen,
-                                                           nsIScreen* aTargetScreen) {
+nsresult nsCocoaWindow::MakeFullScreenWithNativeTransition(bool aFullScreen) {
   return DoMakeFullScreen(aFullScreen, true);
 }
 

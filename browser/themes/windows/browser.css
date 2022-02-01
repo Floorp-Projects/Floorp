@@ -7,7 +7,6 @@
 %include ../shared/browser.inc.css
 %include ../shared/browser-custom-colors.inc.css
 %filter substitution
-%define glassShadowColor hsla(240,5%,5%,0.3)
 
 :root {
   --toolbar-non-lwt-bgcolor: -moz-dialog;

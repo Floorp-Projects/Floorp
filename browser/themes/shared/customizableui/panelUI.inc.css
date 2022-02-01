@@ -1228,7 +1228,6 @@ panelview .toolbarbutton-1 {
 
 panelview .toolbarbutton-1:focus-visible,
 toolbarbutton.subviewbutton:focus-visible,
-.navigable.subviewbutton:focus-visible,
 .widget-overflow-list .toolbarbutton-1:focus-visible,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton:focus-visible {
   outline: var(--focus-outline);
@@ -1237,7 +1236,6 @@ toolbarbutton.subviewbutton:focus-visible,
 
 panelview .toolbarbutton-1@buttonStateHover@,
 toolbarbutton.subviewbutton@buttonStateHover@,
-.navigable.subviewbutton@buttonStateHover@,
 menu.subviewbutton@menuStateHover@,
 #PlacesToolbar menuitem@menuStateHover@,
 #PlacesToolbar menu@menuStateHover@,
@@ -1255,7 +1253,6 @@ menuitem.subviewbutton@menuStateHover@,
 
 panelview .toolbarbutton-1@buttonStateActive@,
 toolbarbutton.subviewbutton@buttonStateActive@,
-.navigable.subviewbutton@buttonStateActive@,
 menu.subviewbutton@menuStateActive@,
 #PlacesToolbar menuitem@menuStateActive@,
 #PlacesToolbar menu@menuStateActive@,

@@ -1167,17 +1167,12 @@ class nsIWidget : public nsISupports {
 
   /**
    * Put the toplevel window into or out of fullscreen mode.
-   * If aTargetScreen is given, attempt to go fullscreen on that screen,
-   * if possible.  (If not, it behaves as if aTargetScreen is null.)
-   * If !aFullScreen, aTargetScreen is ignored.
-   * aTargetScreen support is currently only implemented on Windows.
    *
    * @return NS_OK if the widget is setup properly for fullscreen and
    * FullscreenChanged callback has been or will be called. If other
    * value is returned, the caller should continue the change itself.
    */
-  virtual nsresult MakeFullScreen(bool aFullScreen,
-                                  nsIScreen* aTargetScreen = nullptr) = 0;
+  virtual nsresult MakeFullScreen(bool aFullScreen) = 0;
 
   /**
    * Same as MakeFullScreen, except that, on systems which natively
@@ -1185,9 +1180,8 @@ class nsIWidget : public nsISupports {
    * requests that behavior.
    * It is currently only supported on macOS 10.7+.
    */
-  virtual nsresult MakeFullScreenWithNativeTransition(
-      bool aFullScreen, nsIScreen* aTargetScreen = nullptr) {
-    return MakeFullScreen(aFullScreen, aTargetScreen);
+  virtual nsresult MakeFullScreenWithNativeTransition(bool aFullScreen) {
+    return MakeFullScreen(aFullScreen);
   }
 
   /**

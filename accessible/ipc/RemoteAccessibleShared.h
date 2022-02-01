@@ -216,10 +216,6 @@ bool UnselectAll();
 void TakeSelection();
 void SetSelected(bool aSelect);
 
-bool DoAction(uint8_t aIndex);
-uint8_t ActionCount();
-void ActionDescriptionAt(uint8_t aIndex, nsString& aDescription);
-void ActionNameAt(uint8_t aIndex, nsString& aName);
 KeyBinding AccessKey();
 KeyBinding KeyboardShortcut();
 void AtkKeyBinding(nsString& aBinding);

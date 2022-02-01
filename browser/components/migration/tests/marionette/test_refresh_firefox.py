@@ -613,7 +613,9 @@ class TestFirefoxRefresh(MarionetteTestCase):
           // Now add the reset parameters:
           let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
           let prefsToKeep = Array.from(Services.prefs.getChildList("marionette."));
-          prefsToKeep.push("datareporting.policy.dataSubmissionPolicyBypassNotification");
+          // Add all the modified preferences set from geckoinstance.py to avoid
+          // non-local connections.
+          prefsToKeep = prefsToKeep.concat(JSON.parse(env.get("MOZ_MARIONETTE_REQUIRED_PREFS")));
           let prefObj = {};
           for (let pref of prefsToKeep) {
             prefObj[pref] = global.Preferences.get(pref);

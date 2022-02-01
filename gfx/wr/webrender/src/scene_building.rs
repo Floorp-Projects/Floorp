@@ -2238,7 +2238,30 @@ impl<'a> SceneBuilder<'a> {
             });
 
             let mut prim_list = PrimitiveList::empty();
+
+            // Web content often specifies `preserve-3d` on pages that don't actually need
+            // a 3d rendering context (as a hint / hack to convince other browsers to
+            // layerize these elements to an off-screen surface). Detect cases where the
+            // preserve-3d has no effect on correctness and convert them to pass-through
+            // pictures instead. This has two benefits for WR:
+            //
+            // (1) We get correct subpixel-snapping behavior between preserve-3d elements
+            //     that don't have complex transforms without additional complexity of
+            //     handling subpixel-snapping across different surfaces.
+            // (2) We can draw this content directly in to the parent surface / tile cache,
+            //     which is a performance win by avoiding allocating, drawing,
+            //     plane-splitting and blitting an off-screen surface.
+            let mut needs_3d_context = false;
+
             for ext_prim in prims.drain(..) {
+                // If all the preserve-3d elements are in the root coordinate system, we
+                // know that there is no need for a true 3d rendering context / plane-split.
+                // TODO(gw): We can expand this in future to handle this in more cases
+                //           (e.g. a non-root coord system that is 2d within the 3d context).
+                if !self.spatial_tree.is_root_coord_system(ext_prim.spatial_node_index) {
+                    needs_3d_context = true;
+                }
+
                 prim_list.add_prim(
                     ext_prim.instance,
                     LayoutRect::zero(),
@@ -2248,16 +2271,31 @@ impl<'a> SceneBuilder<'a> {
                 );
             }
 
+            let context_3d = if needs_3d_context {
+                Picture3DContext::In {
+                    root_data: Some(Vec::new()),
+                    ancestor_index,
+                    plane_splitter_index,
+                }
+            } else {
+                // If we didn't need a 3d rendering context, walk the child pictures
+                // that make up this context and disable the off-screen surface and
+                // 3d render context.
+                for child_pic_index in &prim_list.child_pictures {
+                    let child_pic = &mut self.prim_store.pictures[child_pic_index.0];
+                    child_pic.composite_mode = None;
+                    child_pic.context_3d = Picture3DContext::Out;
+                }
+
+                Picture3DContext::Out
+            };
+
             // This is the acttual picture representing our 3D hierarchy root.
             let pic_index = PictureIndex(self.prim_store.pictures
                 .alloc()
                 .init(PicturePrimitive::new_image(
                     None,
-                    Picture3DContext::In {
-                        root_data: Some(Vec::new()),
-                        ancestor_index,
-                        plane_splitter_index,
-                    },
+                    context_3d,
                     true,
                     stacking_context.prim_flags,
                     prim_list,

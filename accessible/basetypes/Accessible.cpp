@@ -8,6 +8,8 @@
 #include "ARIAMap.h"
 #include "States.h"
 #include "mozilla/a11y/HyperTextAccessibleBase.h"
+#include "mozilla/Components.h"
+#include "nsIStringBundle.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -247,4 +249,21 @@ void Accessible::GetPositionAndSetSize(int32_t* aPosInSet, int32_t* aSetSize) {
     *aPosInSet = groupInfo->PosInSet();
     *aSetSize = groupInfo->SetSize();
   }
+}
+
+void Accessible::TranslateString(const nsString& aKey, nsAString& aStringOut) {
+  nsCOMPtr<nsIStringBundleService> stringBundleService =
+      components::StringBundle::Service();
+  if (!stringBundleService) return;
+
+  nsCOMPtr<nsIStringBundle> stringBundle;
+  stringBundleService->CreateBundle(
+      "chrome://global-platform/locale/accessible.properties",
+      getter_AddRefs(stringBundle));
+  if (!stringBundle) return;
+
+  nsAutoString xsValue;
+  nsresult rv = stringBundle->GetStringFromName(
+      NS_ConvertUTF16toUTF8(aKey).get(), xsValue);
+  if (NS_SUCCEEDED(rv)) aStringOut.Assign(xsValue);
 }

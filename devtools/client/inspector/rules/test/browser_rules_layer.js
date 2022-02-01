@@ -9,22 +9,23 @@ const TEST_URI = `
   <style type="text/css">
     @import url(${URL_ROOT_COM_SSL}doc_imported_anonymous_layer.css) layer;
     @import url(${URL_ROOT_COM_SSL}doc_imported_named_layer.css) layer(importedLayer);
+    @import url(${URL_ROOT_COM_SSL}doc_imported_no_layer.css);
 
     @layer myLayer {
-      h1 {
+      h1, [test-hint=named-layer] {
         background-color: tomato;
         color: lightgreen;
       }
     }
 
     @layer {
-      h1 {
+      h1, [test-hint=anonymous-layer] {
         color: green;
         font-variant: small-caps
       }
     }
 
-    h1 {
+    h1, [test-hint=no-rule-layer] {
       color: pink;
     }
   </style>
@@ -40,43 +41,66 @@ add_task(async function() {
 
   await selectNode("h1", inspector);
 
+  const expectedRules = [
+    { selector: "element", ancestorRulesData: null },
+    { selector: `h1, [test-hint="no-rule-layer"]`, ancestorRulesData: null },
+    {
+      selector: `h1, [test-hint="imported-no-layer--no-rule-layer"]`,
+      ancestorRulesData: null,
+    },
+    {
+      selector: `h1, [test-hint="anonymous-layer"]`,
+      ancestorRulesData: ["@layer"],
+    },
+    {
+      selector: `h1, [test-hint="named-layer"]`,
+      ancestorRulesData: ["@layer myLayer"],
+    },
+    {
+      selector: `h1, [test-hint="imported-named-layer--no-rule-layer"]`,
+      ancestorRulesData: ["@layer importedLayer", "@media screen"],
+    },
+    {
+      selector: `h1, [test-hint="imported-named-layer--named-layer"]`,
+      ancestorRulesData: [
+        "@layer importedLayer",
+        "@media screen",
+        "@layer in-imported-stylesheet",
+      ],
+    },
+    {
+      selector: `h1, [test-hint="imported-anonymous-layer--no-rule-layer"]`,
+      ancestorRulesData: ["@layer"],
+    },
+  ];
+
+  const rulesInView = Array.from(view.element.children);
   is(
-    getRuleViewAncestorRulesDataElementByIndex(view, 1),
-    null,
-    "first rule displayed is the one without @layer"
+    rulesInView.length,
+    expectedRules.length,
+    "All expected rules are displayed"
   );
 
-  is(
-    getRuleViewAncestorRulesDataTextByIndex(view, 2),
-    "@layer",
-    "text at index 1 contains anonymous layer."
-  );
+  for (let i = 0; i < expectedRules.length; i++) {
+    const expectedRule = expectedRules[i];
+    info(`Checking rule #${i}: ${expectedRule.selector}`);
 
-  is(
-    getRuleViewAncestorRulesDataTextByIndex(view, 3),
-    "@layer myLayer",
-    "text at index 2 contains named layer."
-  );
+    const selector = rulesInView[i].querySelector(".ruleview-selectorcontainer")
+      .innerText;
+    is(selector, expectedRule.selector, `Expected selector for ${selector}`);
 
-  is(
-    getRuleViewAncestorRulesDataTextByIndex(view, 4),
-    ["@layer importedLayer", "@media screen"].join("\n"),
-    "text at index 3 contains imported stylesheet named layer and media query information."
-  );
-
-  is(
-    getRuleViewAncestorRulesDataTextByIndex(view, 5),
-    [
-      "@layer importedLayer",
-      "@media screen",
-      "@layer in-imported-stylesheet",
-    ].join("\n"),
-    "text at index 4 contains all the layers and media queries it's nested in"
-  );
-
-  is(
-    getRuleViewAncestorRulesDataTextByIndex(view, 6),
-    "@layer",
-    "text at index 5 contains imported stylesheet anonymous layer."
-  );
+    if (expectedRule.ancestorRulesData == null) {
+      is(
+        getRuleViewAncestorRulesDataElementByIndex(view, i),
+        null,
+        `No ancestor rules data displayed for ${selector}`
+      );
+    } else {
+      is(
+        getRuleViewAncestorRulesDataTextByIndex(view, i),
+        expectedRule.ancestorRulesData.join("\n"),
+        `Expected ancestor rules data displayed for ${selector}`
+      );
+    }
+  }
 });
