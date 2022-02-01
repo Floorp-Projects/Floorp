@@ -166,9 +166,9 @@ already_AddRefed<Promise> RTCRtpReceiver::GetStats() {
       ->Then(
           mMainThread, __func__,
           [promise, window = mWindow, idGen = mIdGenerator](
-              const nsTArray<UniquePtr<RTCStatsCollection>>& aStats) {
+              nsTArray<UniquePtr<RTCStatsCollection>> aStats) {
             RTCStatsCollection opaqueStats;
-            idGen->RewriteIds(aStats, &opaqueStats);
+            idGen->RewriteIds(std::move(aStats), &opaqueStats);
 
             RefPtr<RTCStatsReport> report(new RTCStatsReport(window));
             report->Incorporate(opaqueStats);

@@ -25,9 +25,8 @@ class RTCStatsIdGenerator {
   RTCStatsIdGenerator();
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RTCStatsIdGenerator);
 
-  void RewriteIds(
-      const nsTArray<UniquePtr<dom::RTCStatsCollection>>& aFromStats,
-      dom::RTCStatsCollection* aIntoReport);
+  void RewriteIds(nsTArray<UniquePtr<dom::RTCStatsCollection>> aFromStats,
+                  dom::RTCStatsCollection* aIntoReport);
 
  private:
   virtual ~RTCStatsIdGenerator(){};
