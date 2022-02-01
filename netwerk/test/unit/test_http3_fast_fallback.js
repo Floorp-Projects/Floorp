@@ -37,7 +37,7 @@ function setup() {
   trr_test_setup();
 
   Services.prefs.setIntPref("network.trr.mode", 2); // TRR first
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
   Services.prefs.setIntPref("network.http.speculative-parallel-limit", 6);
 }
 
@@ -50,7 +50,7 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.http3_echconfig.enabled");
   Services.prefs.clearUserPref("network.dns.echconfig.fallback_to_origin");
   Services.prefs.clearUserPref("network.dns.httpssvc.reset_exclustion_list");
-  Services.prefs.clearUserPref("network.http.http3.enabled");
+  Services.prefs.clearUserPref("network.http.http3.enable");
   Services.prefs.clearUserPref(
     "network.dns.httpssvc.http3_fast_fallback_timeout"
   );
@@ -146,7 +146,7 @@ async function fast_fallback_test() {
 // backup connection is ready, the http transaction is still in pending
 // queue because the h3 connection is never ready to accept transactions.
 add_task(async function test_fast_fallback_with_speculative_connection() {
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
   Services.prefs.setCharPref("network.dns.localDomains", "foo.example.com");
   // Set AltSvc to point to not existing HTTP3 server on port 443
   Services.prefs.setCharPref(
@@ -192,7 +192,7 @@ add_task(async function testFastfallback() {
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
 
   Services.prefs.setIntPref(
     "network.dns.httpssvc.http3_fast_fallback_timeout",
@@ -281,7 +281,7 @@ add_task(async function testFastfallback1() {
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
 
   Services.prefs.setIntPref(
     "network.dns.httpssvc.http3_fast_fallback_timeout",
@@ -371,7 +371,7 @@ add_task(async function testFastfallbackWithEchConfig() {
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
 
   Services.prefs.setIntPref(
     "network.dns.httpssvc.http3_fast_fallback_timeout",
@@ -476,7 +476,7 @@ add_task(async function testFastfallbackWithpartialEchConfig() {
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
 
   Services.prefs.setIntPref(
     "network.dns.httpssvc.http3_fast_fallback_timeout",
@@ -558,7 +558,7 @@ add_task(async function testFastfallbackWithoutEchConfig() {
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
 
   Services.prefs.setIntPref(
     "network.dns.httpssvc.http3_fast_fallback_timeout",
@@ -629,7 +629,7 @@ add_task(async function testH3FallbackWithMultipleTransactions() {
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
 
   // Disable fast fallback.
   Services.prefs.setIntPref(
@@ -700,7 +700,7 @@ add_task(async function testTwoFastFallbackTimers() {
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
 
   Services.prefs.setIntPref("network.http.speculative-parallel-limit", 6);
   Services.prefs.clearUserPref(
@@ -795,7 +795,7 @@ add_task(async function testH3FastFallbackWithMultipleTransactions() {
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
 
   Services.prefs.setIntPref("network.http.speculative-parallel-limit", 6);
   Services.prefs.clearUserPref(
@@ -857,7 +857,7 @@ add_task(async function testFastfallbackToTheSameRecord() {
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
-  Services.prefs.setBoolPref("network.http.http3.enabled", true);
+  Services.prefs.setBoolPref("network.http.http3.enable", true);
 
   Services.prefs.setIntPref(
     "network.dns.httpssvc.http3_fast_fallback_timeout",

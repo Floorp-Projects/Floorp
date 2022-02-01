@@ -10486,6 +10486,12 @@
   value: ""
   mirror: never
 
+# Enable HTTP/3
+- name: network.http.http3.enable
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Receive buffer size of QUIC socket
 - name: network.http.http3.recvBufferSize
   type: RelaxedAtomicInt32
