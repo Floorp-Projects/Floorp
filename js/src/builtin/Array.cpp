@@ -4128,6 +4128,15 @@ static bool array_proto_finish(JSContext* cx, JS::HandleObject ctor,
     return false;
   }
 
+#ifdef NIGHTLY_BUILD
+  if (cx->realm()->creationOptions().getArrayGroupingEnabled()) {
+    if (!DefineDataProperty(cx, unscopables, cx->names().groupBy, value) ||
+        !DefineDataProperty(cx, unscopables, cx->names().groupByToMap, value)) {
+      return false;
+    }
+  }
+#endif
+
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   if (cx->options().changeArrayByCopy()) {
     if (!DefineDataProperty(cx, unscopables, cx->names().withAt, value) ||
