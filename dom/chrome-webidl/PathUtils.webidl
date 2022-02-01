@@ -99,22 +99,37 @@ namespace PathUtils {
    * @return Whether or not the path is absolute.
    */
   boolean isAbsolute(DOMString path);
+};
 
+[Exposed=Window]
+partial namespace PathUtils {
+  [Throws, BinaryName="ProfileDirSync"]
+  readonly attribute DOMString profileDir;
+
+  [Throws, BinaryName="LocalProfileDirSync"]
+  readonly attribute DOMString localProfileDir;
+
+  [Throws, BinaryName="TempDirSync"]
+  readonly attribute DOMString tempDir;
+};
+
+[Exposed=(Window, Worker)]
+partial namespace PathUtils {
   /**
    * The profile directory.
    */
-  [Throws]
+  [Throws, BinaryName="GetProfileDirAsync"]
   Promise<DOMString> getProfileDir();
 
   /**
    * The local-specific profile directory.
    */
-  [Throws]
+  [Throws, BinaryName="GetProfileDirAsync"]
   Promise<DOMString> getLocalProfileDir();
 
   /**
    * The temporary directory for the process.
    */
-  [Throws]
+  [Throws, BinaryName="GetTempDirAsync"]
   Promise<DOMString> getTempDir();
 };

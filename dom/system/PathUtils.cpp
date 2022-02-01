@@ -39,6 +39,8 @@ static constexpr auto ERROR_INITIALIZE_PATH = "Could not initialize path"_ns;
 static constexpr auto ERROR_GET_PARENT = "Could not get parent path"_ns;
 static constexpr auto ERROR_JOIN = "Could not append to path"_ns;
 
+static constexpr auto COLON = ": "_ns;
+
 static void ThrowError(ErrorResult& aErr, const nsresult aResult,
                        const nsCString& aMessage) {
   nsAutoCStringN<32> errName;
@@ -46,7 +48,7 @@ static void ThrowError(ErrorResult& aErr, const nsresult aResult,
 
   nsAutoCStringN<256> formattedMsg;
   formattedMsg.Append(aMessage);
-  formattedMsg.Append(": "_ns);
+  formattedMsg.Append(COLON);
   formattedMsg.Append(errName);
 
   switch (aResult) {
@@ -347,25 +349,57 @@ bool PathUtils::IsAbsolute(const GlobalObject&, const nsAString& aPath) {
   return NS_SUCCEEDED(rv);
 }
 
-already_AddRefed<Promise> PathUtils::GetProfileDir(const GlobalObject& aGlobal,
-                                                   ErrorResult& aErr) {
+void PathUtils::GetProfileDirSync(const GlobalObject&, nsString& aResult,
+                                  ErrorResult& aErr) {
+  MOZ_ASSERT(NS_IsMainThread());
+
   auto guard = sDirCache.Lock();
-  return DirectoryCache::Ensure(guard.ref())
-      .GetDirectory(aGlobal, aErr, DirectoryCache::Directory::Profile);
+  DirectoryCache::Ensure(guard.ref())
+      .GetDirectorySync(aResult, aErr, DirectoryCache::Directory::Profile);
+}
+void PathUtils::GetLocalProfileDirSync(const GlobalObject&, nsString& aResult,
+                                       ErrorResult& aErr) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  auto guard = sDirCache.Lock();
+  DirectoryCache::Ensure(guard.ref())
+      .GetDirectorySync(aResult, aErr, DirectoryCache::Directory::LocalProfile);
+}
+void PathUtils::GetTempDirSync(const GlobalObject&, nsString& aResult,
+                               ErrorResult& aErr) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  auto guard = sDirCache.Lock();
+  DirectoryCache::Ensure(guard.ref())
+      .GetDirectorySync(aResult, aErr, DirectoryCache::Directory::Temp);
 }
 
-already_AddRefed<Promise> PathUtils::GetLocalProfileDir(
+already_AddRefed<Promise> PathUtils::GetProfileDirAsync(
     const GlobalObject& aGlobal, ErrorResult& aErr) {
+  // NB: This will eventually be off-main-thread only.
+
   auto guard = sDirCache.Lock();
   return DirectoryCache::Ensure(guard.ref())
-      .GetDirectory(aGlobal, aErr, DirectoryCache::Directory::LocalProfile);
+      .GetDirectoryAsync(aGlobal, aErr, DirectoryCache::Directory::Profile);
 }
 
-already_AddRefed<Promise> PathUtils::GetTempDir(const GlobalObject& aGlobal,
-                                                ErrorResult& aErr) {
+already_AddRefed<Promise> PathUtils::GetLocalProfileDirAsync(
+    const GlobalObject& aGlobal, ErrorResult& aErr) {
+  // NB: This will eventually be off-main-thread only.
+
   auto guard = sDirCache.Lock();
   return DirectoryCache::Ensure(guard.ref())
-      .GetDirectory(aGlobal, aErr, DirectoryCache::Directory::Temp);
+      .GetDirectoryAsync(aGlobal, aErr,
+                         DirectoryCache::Directory::LocalProfile);
+}
+
+already_AddRefed<Promise> PathUtils::GetTempDirAsync(
+    const GlobalObject& aGlobal, ErrorResult& aErr) {
+  // NB: This will eventually be off-main-thread only.
+
+  auto guard = sDirCache.Lock();
+  return DirectoryCache::Ensure(guard.ref())
+      .GetDirectoryAsync(aGlobal, aErr, DirectoryCache::Directory::Temp);
 }
 
 PathUtils::DirectoryCache::DirectoryCache() {
@@ -397,7 +431,28 @@ PathUtils::DirectoryCache& PathUtils::DirectoryCache::Ensure(
   return aCache.ref();
 }
 
-already_AddRefed<Promise> PathUtils::DirectoryCache::GetDirectory(
+void PathUtils::DirectoryCache::GetDirectorySync(
+    nsString& aResult, ErrorResult& aErr, const Directory aRequestedDir) {
+  MOZ_RELEASE_ASSERT(aRequestedDir < Directory::Count);
+
+  if (nsresult rv = PopulateDirectoriesImpl(aRequestedDir); NS_FAILED(rv)) {
+    nsAutoCStringN<32> errorName;
+    GetErrorName(rv, errorName);
+
+    nsAutoCStringN<256> msg;
+    msg.Append("Could not retrieve directory "_ns);
+    msg.Append(kDirectoryNames[aRequestedDir]);
+    msg.Append(COLON);
+    msg.Append(errorName);
+
+    aErr.ThrowUnknownError(msg);
+    return;
+  }
+
+  aResult = mDirectories[aRequestedDir];
+}
+
+already_AddRefed<Promise> PathUtils::DirectoryCache::GetDirectoryAsync(
     const GlobalObject& aGlobal, ErrorResult& aErr,
     const Directory aRequestedDir) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
@@ -481,10 +536,12 @@ nsresult PathUtils::DirectoryCache::PopulateDirectoriesImpl(
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(aRequestedDir < Directory::Count);
 
-  // We cannot have second request to populate any of these
-  // directories if the first request succeeded, so assert that the
-  // corresponding fields are void.
-  MOZ_RELEASE_ASSERT(mDirectories[aRequestedDir].IsVoid());
+  if (!mDirectories[aRequestedDir].IsVoid()) {
+    // In between when this promise was dispatched to the main thread and now,
+    // the directory cache has had this entry populated (via the on-main-thread
+    // sync method).
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIFile> path;
 
