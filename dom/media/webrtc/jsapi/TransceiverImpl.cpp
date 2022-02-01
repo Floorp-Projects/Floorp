@@ -762,6 +762,42 @@ static nsresult JsepCodecDescToAudioCodecConfig(
   return NS_OK;
 }
 
+Maybe<const std::vector<UniquePtr<JsepCodecDescription>>&>
+TransceiverImpl::GetNegotiatedSendCodecs() const {
+  if (!IsSending()) {
+    return Nothing();
+  }
+
+  const auto* details = mJsepTransceiver->mSendTrack.GetNegotiatedDetails();
+  if (!details) {
+    return Nothing();
+  }
+
+  if (details->GetEncodingCount() == 0) {
+    return Nothing();
+  }
+
+  return SomeRef(details->GetEncoding(0).GetCodecs());
+}
+
+Maybe<const std::vector<UniquePtr<JsepCodecDescription>>&>
+TransceiverImpl::GetNegotiatedRecvCodecs() const {
+  if (!IsReceiving()) {
+    return Nothing();
+  }
+
+  const auto* details = mJsepTransceiver->mRecvTrack.GetNegotiatedDetails();
+  if (!details) {
+    return Nothing();
+  }
+
+  if (details->GetEncodingCount() == 0) {
+    return Nothing();
+  }
+
+  return SomeRef(details->GetEncoding(0).GetCodecs());
+}
+
 // TODO: Maybe move this someplace else?
 /*static*/
 nsresult TransceiverImpl::NegotiatedDetailsToAudioCodecConfigs(
@@ -1060,6 +1096,17 @@ void TransceiverImpl::Stop() {
 
 bool TransceiverImpl::IsVideo() const {
   return mJsepTransceiver->GetMediaType() == SdpMediaSection::MediaType::kVideo;
+}
+
+/* static */
+RefPtr<RTCStatsPromise> TransceiverImpl::ApplyCodecStats(
+    nsTArray<RTCCodecStats> aCodecStats,
+    nsTArray<
+        std::tuple<TransceiverImpl*, RefPtr<RTCStatsPromise::AllPromiseType>>>
+        aTransceiverStatsPromises) {
+  MOZ_ASSERT(NS_IsMainThread());
+  // TODO: filter codec stats and flatten everything
+  return nullptr;
 }
 
 }  // namespace mozilla
