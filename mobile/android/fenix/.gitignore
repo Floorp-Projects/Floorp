@@ -84,6 +84,7 @@ gen-external-apklibs
 .sentry_token
 .mls_token
 .nimbus
+.wallpaper_url
 
 # Python Byte-compiled / optimized / DLL files
 __pycache__/

@@ -376,6 +376,21 @@ android.applicationVariants.all { variant ->
     } else {
         buildConfigField 'Boolean', 'MOZILLA_OFFICIAL', 'false'
     }
+
+// -------------------------------------------------------------------------------------------------
+// BuildConfig: Set remote wallpaper URL using local file if it exists
+// -------------------------------------------------------------------------------------------------
+
+    print("Wallpaper URL: ")
+
+    try {
+        def token = new File("${rootDir}/.wallpaper_url").text.trim()
+        buildConfigField 'String', 'WALLPAPER_URL', '"' + token + '"'
+        println "(Added from .wallpaper_url file)"
+    } catch (FileNotFoundException ignored) {
+        buildConfigField 'String', 'WALLPAPER_URL', '""'
+        println("--")
+    }
 }
 
 // Generate Kotlin code for the Fenix Glean metrics.

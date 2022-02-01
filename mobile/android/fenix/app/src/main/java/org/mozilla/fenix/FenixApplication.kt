@@ -127,6 +127,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
         setupInMainProcessOnly()
 
+        downloadWallpapers()
         // DO NOT MOVE ANYTHING BELOW THIS stop CALL.
         PerfStartup.applicationOnCreate.stopAndAccumulate(completeMethodDurationTimerId)
     }
@@ -781,4 +782,13 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     }
 
     override fun getWorkManagerConfiguration() = Builder().setMinimumLoggingLevel(INFO).build()
+
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun downloadWallpapers() {
+        if (FeatureFlags.showWallpapers) {
+            GlobalScope.launch {
+                components.wallpaperManager.downloadAllRemoteWallpapers()
+            }
+        }
+    }
 }

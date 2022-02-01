@@ -47,6 +47,7 @@ def add_shippable_secrets(config, tasks):
                 ('sentry_dsn', '.sentry_token'),
                 ('mls', '.mls_token'),
                 ('nimbus_url', '.nimbus'),
+                ('wallpaper_url', ".wallpaper_url")
             )])
         else:
             dummy_secrets.extend([{

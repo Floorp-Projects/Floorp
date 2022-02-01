@@ -70,7 +70,7 @@ import java.util.Locale
 fun WallpaperSettings(
     wallpapers: List<Wallpaper>,
     defaultWallpaper: Wallpaper,
-    loadWallpaperResource: (Wallpaper) -> Bitmap,
+    loadWallpaperResource: (Wallpaper) -> Bitmap?,
     selectedWallpaper: Wallpaper,
     onSelectWallpaper: (Wallpaper) -> Unit,
     onViewWallpaper: () -> Unit,
@@ -163,7 +163,7 @@ private fun WallpaperSnackbar(
 private fun WallpaperThumbnails(
     wallpapers: List<Wallpaper>,
     defaultWallpaper: Wallpaper,
-    loadWallpaperResource: (Wallpaper) -> Bitmap,
+    loadWallpaperResource: (Wallpaper) -> Bitmap?,
     selectedWallpaper: Wallpaper,
     numColumns: Int = 3,
     onSelectWallpaper: (Wallpaper) -> Unit,
@@ -199,7 +199,7 @@ private fun WallpaperThumbnails(
 private fun WallpaperThumbnailItem(
     wallpaper: Wallpaper,
     defaultWallpaper: Wallpaper,
-    loadWallpaperResource: (Wallpaper) -> Bitmap,
+    loadWallpaperResource: (Wallpaper) -> Bitmap?,
     isSelected: Boolean,
     aspectRatio: Float = 1.1f,
     onSelect: (Wallpaper) -> Unit
@@ -214,6 +214,9 @@ private fun WallpaperThumbnailItem(
         Modifier
     }
 
+    val bitmap = loadWallpaperResource(wallpaper)
+    // Completely avoid drawing the item if a bitmap cannot be loaded and is required
+    if (bitmap == null && wallpaper != defaultWallpaper) return
     Surface(
         elevation = 4.dp,
         shape = thumbnailShape,
@@ -225,15 +228,14 @@ private fun WallpaperThumbnailItem(
             .then(border)
             .clickable { onSelect(wallpaper) }
     ) {
-        if (wallpaper != defaultWallpaper) {
-            val contentDescription = stringResource(
-                R.string.wallpapers_item_name_content_description, wallpaper.name
-            )
+        if (bitmap != null) {
             Image(
-                bitmap = loadWallpaperResource(wallpaper).asImageBitmap(),
+                bitmap = bitmap.asImageBitmap(),
                 contentScale = ContentScale.FillBounds,
-                contentDescription = contentDescription,
-                modifier = Modifier.fillMaxSize()
+                contentDescription = stringResource(
+                    R.string.wallpapers_item_name_content_description, wallpaper.name
+                ),
+                modifier = Modifier.fillMaxSize(),
             )
         }
     }
@@ -288,7 +290,7 @@ private fun WallpaperThumbnailsPreview() {
         WallpaperSettings(
             defaultWallpaper = WallpaperManager.defaultWallpaper,
             loadWallpaperResource = {
-                wallpaperManager.loadWallpaperFromAssets(it, context)
+                wallpaperManager.loadSavedWallpaper(context, it)
             },
             wallpapers = wallpaperManager.availableWallpapers,
             selectedWallpaper = wallpaperManager.currentWallpaper,

@@ -42,10 +42,10 @@ class WallpapersAssetsStorage(private val context: Context) : WallpaperStorage {
                 isDark = getBoolean("isDark"),
                 themeCollection = Result.runCatching {
                     when (getString("themeCollection")) {
-                        "firefox" -> WallpaperThemeCollection.Firefox
-                        else -> WallpaperThemeCollection.None
+                        "firefox" -> WallpaperThemeCollection.FIREFOX
+                        else -> WallpaperThemeCollection.NONE
                     }
-                }.getOrDefault(WallpaperThemeCollection.None)
+                }.getOrDefault(WallpaperThemeCollection.NONE)
             )
         } catch (e: JSONException) {
             logger.error("unable to parse json for wallpaper $this", e)

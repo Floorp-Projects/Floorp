@@ -27,7 +27,7 @@ class WallpaperManagerTest {
         every { mockSettings.currentWallpaper = capture(currentCaptureSlot) } just runs
 
         val updatedWallpaper = WallpaperManager.defaultWallpaper
-        val wallpaperManager = WallpaperManager(mockSettings, mockStorage)
+        val wallpaperManager = WallpaperManager(mockSettings, mockStorage, mockk(), mockk())
         wallpaperManager.currentWallpaper = updatedWallpaper
 
         assertEquals(updatedWallpaper.name, currentCaptureSlot.captured)
