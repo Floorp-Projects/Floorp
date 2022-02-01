@@ -23,10 +23,6 @@ UtilityProcessImpl::~UtilityProcessImpl() { mUtility = nullptr; }
 
 bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
 #if defined(MOZ_SANDBOX) && defined(OS_WIN)
-  // We delay load winmm.dll so that its dependencies don't interfere with COM
-  // initialization when win32k is locked down. We need to load it before we
-  // lower the sandbox in processes where the policy will prevent loading.
-  ::LoadLibraryW(L"winmm.dll");
   mozilla::SandboxTarget::Instance()->StartSandbox();
 #endif
 
