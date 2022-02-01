@@ -251,6 +251,8 @@ AboutReader.prototype = {
     ".content .wp-caption img, " +
     ".content figure img",
 
+  _TABLES_SELECTOR: ".content table",
+
   FONT_SIZE_MIN: 1,
 
   FONT_SIZE_LEGACY_MAX: 9,
@@ -912,6 +914,23 @@ AboutReader.prototype = {
     }
   },
 
+  _updateWideTables() {
+    let windowWidth = this._win.innerWidth;
+
+    // Avoid horizontal overflow in the document by making tables that are wider than half browser window's size
+    // by making it scrollable.
+    let tables = this._doc.querySelectorAll(this._TABLES_SELECTOR);
+    for (let i = tables.length; --i >= 0; ) {
+      let table = tables[i];
+      let rect = table.getBoundingClientRect();
+      let tableWidth = rect.width;
+
+      if (windowWidth / 2 <= tableWidth) {
+        table.classList.add("moz-reader-wide-table");
+      }
+    }
+  },
+
   _maybeSetTextDirection: function Read_maybeSetTextDirection(article) {
     // Set the article's "dir" on the contents.
     // If no direction is specified, the contents should automatically be LTR
@@ -1020,6 +1039,7 @@ AboutReader.prototype = {
 
     this._contentElement.classList.add("reader-show-element");
     this._updateImageMargins();
+    this._updateWideTables();
 
     this._requestFavicon();
     this._doc.body.classList.add("loaded");
