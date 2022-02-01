@@ -66,25 +66,6 @@ function createFrameForUri(uri) {
   return `<iframe src="${encodeURI(uri)}"></iframe>`;
 }
 
-/**
- * Create a XUL browser element in the provided XUL tab, with the provided type.
- *
- * @param {xul:tab} tab
- *     The XUL tab in which the browser element should be inserted.
- * @param {String} type
- *     The type attribute of the browser element, "chrome" or "content".
- * @return {xul:browser}
- *     The created browser element.
- */
-function createParentBrowserElement(tab, type) {
-  const parentBrowser = gBrowser.ownerDocument.createXULElement("browser");
-  parentBrowser.setAttribute("type", type);
-  const container = gBrowser.getBrowserContainer(tab.linkedBrowser);
-  container.appendChild(parentBrowser);
-
-  return parentBrowser;
-}
-
 // Create a test page with 2 iframes:
 // - one with a different eTLD+1 (example.com)
 // - one with a nested iframe on a different eTLD+1 (example.net)
