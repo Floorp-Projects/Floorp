@@ -504,11 +504,29 @@ class LocalAccessible : public nsISupports, public Accessible {
   //////////////////////////////////////////////////////////////////////////////
   // ActionAccessible
 
-  virtual uint8_t ActionCount() const override;
+  /**
+   * Return the number of actions that can be performed on this accessible.
+   */
+  virtual uint8_t ActionCount() const;
 
-  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+  /**
+   * Return action name at given index.
+   */
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName);
 
-  virtual bool DoAction(uint8_t aIndex) const override;
+  /**
+   * Default to localized action name.
+   */
+  void ActionDescriptionAt(uint8_t aIndex, nsAString& aDescription) {
+    nsAutoString name;
+    ActionNameAt(aIndex, name);
+    TranslateString(name, aDescription);
+  }
+
+  /**
+   * Invoke the accessible action.
+   */
+  virtual bool DoAction(uint8_t aIndex) const;
 
   /**
    * Return access key, such as Alt+D.
@@ -661,6 +679,11 @@ class LocalAccessible : public nsISupports, public Accessible {
   bool IsActiveDescendant(LocalAccessible** aWidget = nullptr) const;
 
   /**
+   * Return the localized string for the given key.
+   */
+  static void TranslateString(const nsString& aKey, nsAString& aStringOut);
+
+  /**
    * Return true if the accessible is defunct.
    */
   bool IsDefunct() const;
@@ -782,13 +805,6 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   already_AddRefed<AccAttributes> BundleFieldsForCache(
       uint64_t aCacheDomain, CacheUpdateType aUpdateType);
-
-  /**
-   * Push fields to cache.
-   * aCacheDomain - describes which fields to bundle and ultimately send
-   * aUpdate - describes whether this is an initial or subsequent update
-   */
-  void SendCache(uint64_t aCacheDomain, CacheUpdateType aUpdate);
 
   virtual nsAtom* TagName() const override;
 
@@ -976,6 +992,13 @@ class LocalAccessible : public nsISupports, public Accessible {
 
   virtual void ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
                                  int32_t* aPosInSet) const override;
+
+  /**
+   * Push fields to cache.
+   * aCacheDomain - describes which fields to bundle and ultimately send
+   * aUpdate - describes whether this is an initial or subsequent update
+   */
+  void SendCache(uint64_t aCacheDomain, CacheUpdateType aUpdate);
 
   // Data Members
   // mContent can be null in a DocAccessible if the document has no body or
