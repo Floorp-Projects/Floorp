@@ -42,7 +42,7 @@ namespace IPC {
 template <>
 struct ParamTraits<mozilla::dom::RTCStatsType>
     : public ContiguousEnumSerializer<mozilla::dom::RTCStatsType,
-                                      mozilla::dom::RTCStatsType::Inbound_rtp,
+                                      mozilla::dom::RTCStatsType::Codec,
                                       mozilla::dom::RTCStatsType::EndGuard_> {};
 
 template <>
@@ -397,6 +397,17 @@ struct ParamTraits<mozilla::dom::RTCDataChannelState>
           mozilla::dom::RTCDataChannelState,
           mozilla::dom::RTCDataChannelState::Connecting,
           mozilla::dom::RTCDataChannelState::EndGuard_> {};
+
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCCodecStats, mTimestamp,
+                                  mType, mId, mPayloadType, mCodecType,
+                                  mTransportId, mMimeType, mClockRate,
+                                  mChannels, mSdpFmtpLine)
+
+template <>
+struct ParamTraits<mozilla::dom::RTCCodecType>
+    : public ContiguousEnumSerializer<mozilla::dom::RTCCodecType,
+                                      mozilla::dom::RTCCodecType::Encode,
+                                      mozilla::dom::RTCCodecType::EndGuard_> {};
 }  // namespace IPC
 
 #endif  // _WEBRTC_GLOBAL_H_
