@@ -1,4 +1,4 @@
-// |reftest| skip-if(release_or_beta)
+// |reftest| shell-option(--enable-array-grouping) skip-if(release_or_beta)
 
 var BUGNUMBER = 1739648;
 var summary = "Implement Array.prototype.groupByToMap || groupBy";
@@ -15,6 +15,7 @@ function isNeg(x) {
 {
   const a1 = [-Infinity, -2, -1, -0, 0, 1, 2, Infinity];
   const expectedObj = { neg: [-Infinity, -2, -1, -0], pos: [0, 1, 2, Infinity] };
+  Object.setPrototypeOf(expectedObj, null);
 
   const groupedArray = a1.groupBy(x => isNeg(x) ? 'neg' : 'pos');
   const mappedArray = a1.groupByToMap(x => isNeg(x) ? 'neg' : 'pos');
@@ -23,8 +24,11 @@ function isNeg(x) {
   assertDeepEq(mappedArray.get("neg"), expectedObj["neg"]);
   assertDeepEq(mappedArray.get("pos"), expectedObj["pos"]);
 
-  assertDeepEq([1,2,3].groupBy(() => {}), {"undefined": [1,2,3]});
-  assertDeepEq([].groupBy(() => {}), {});
+
+  const expectedObj2 = {"undefined": [1,2,3]}
+  Object.setPrototypeOf(expectedObj2, null);
+  assertDeepEq([1,2,3].groupBy(() => {}), expectedObj2);
+  assertDeepEq([].groupBy(() => {}), Object.create(null));
   assertDeepEq(([1,2,3].groupByToMap(() => {})).get(undefined), [1,2,3]);
   assertEq(([1,2,3].groupByToMap(() => {})).size, 1);
 
