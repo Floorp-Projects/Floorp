@@ -7,7 +7,7 @@
  * https://streams.spec.whatwg.org/#rs-byob-request-class-definition
  */
 
-[Exposed=(Window,Worker,Worklet), Pref="dom.streams.expose.ReadableStreamBYOBRequest"]
+[Exposed=(Window,Worker,Worklet), Pref="dom.streams.readable_stream_byob_request.enabled"]
 interface ReadableStreamBYOBRequest {
   readonly attribute ArrayBufferView? view;
 
