@@ -11,9 +11,8 @@ import org.junit.Test
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
-import org.mozilla.focus.ext.settings
+import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
-import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
 import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.getStringResource
@@ -28,13 +27,14 @@ class SafeBrowsingTest {
         getStringResource(R.string.mozac_browser_errorpages_safe_browsing_unwanted_uri_title)
     private val harmfulSiteWarning = getStringResource(R.string.mozac_browser_errorpages_safe_harmful_uri_title)
     private val tryAgainButton = getStringResource(R.string.mozac_browser_errorpages_page_refresh)
+    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get: Rule
     val mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
 
     @Before
     fun setUp() {
-        TestHelper.appContext.settings.isCfrForForShieldToolbarIconVisible = false
+        featureSettingsHelper.setShieldIconCFREnabled(false)
         webServer = MockWebServer()
         webServer.start()
     }
@@ -42,6 +42,7 @@ class SafeBrowsingTest {
     @After
     fun tearDown() {
         webServer.shutdown()
+        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @SmokeTest

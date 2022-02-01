@@ -15,7 +15,6 @@ class FeatureSettingsHelper {
     // saving default values of feature flags
     private var isShieldIconCFREnabled: Boolean = settings.isCfrForForShieldToolbarIconVisible
 
-
     fun setShieldIconCFREnabled(enabled: Boolean) {
         settings.isCfrForForShieldToolbarIconVisible = enabled
     }

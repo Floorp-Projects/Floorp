@@ -4,13 +4,14 @@
 package org.mozilla.focus.activity
 
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.robots.homeScreen
-import org.mozilla.focus.ext.settings
+import org.mozilla.focus.helpers.FeatureSettingsHelper
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper.appContext
 import org.mozilla.focus.helpers.TestHelper.exitToTop
@@ -19,12 +20,19 @@ import org.mozilla.focus.testAnnotations.SmokeTest
 // This test visits each About page and checks whether some essential elements are being displayed
 @RunWith(AndroidJUnit4ClassRunner::class)
 class MozillaSupportPagesTest {
+    private val featureSettingsHelper = FeatureSettingsHelper()
+
     @get: Rule
     val mActivityTestRule = MainActivityFirstrunTestRule(showFirstRun = false)
 
     @Before
     fun setUp() {
-        appContext.settings.isCfrForForShieldToolbarIconVisible = false
+        featureSettingsHelper.setShieldIconCFREnabled(false)
+    }
+
+    @After
+    fun tearDown() {
+        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @SmokeTest
