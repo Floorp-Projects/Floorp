@@ -683,16 +683,6 @@ nsresult PeerConnectionMedia::AddTransceiver(
   return NS_OK;
 }
 
-void PeerConnectionMedia::GetTransmitPipelinesMatching(
-    const MediaStreamTrack* aTrack,
-    nsTArray<RefPtr<MediaPipelineTransmit>>* aPipelines) {
-  for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
-    if (transceiver->HasSendTrack(aTrack)) {
-      aPipelines->AppendElement(transceiver->GetSendPipeline());
-    }
-  }
-}
-
 std::string PeerConnectionMedia::GetTransportIdMatchingSendTrack(
     const dom::MediaStreamTrack& aTrack) const {
   for (const RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
