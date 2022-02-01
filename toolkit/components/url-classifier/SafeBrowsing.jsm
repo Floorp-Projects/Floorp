@@ -420,13 +420,19 @@ var SafeBrowsing = {
       });
     }
 
+    // Allow to disable all feature updates with a single preference for tests.
+    let update = Services.prefs.getBoolPref(
+      "browser.safebrowsing.update.enabled",
+      true
+    );
+
     this.features = [];
     for (let i = 0; i < FEATURES.length; ++i) {
       this.features[i] = {
         name: FEATURES[i].name,
         list: [],
         enabled: FEATURES[i].enabled(),
-        update: FEATURES[i].update(),
+        update: FEATURES[i].update() && update,
       };
 
       FEATURES[i].list.forEach(pref => {
