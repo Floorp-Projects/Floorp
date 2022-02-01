@@ -19,11 +19,9 @@ namespace mozilla {
 // A single entry in our list of known codecs.
 class JsepCodecDescription {
  public:
-  JsepCodecDescription(mozilla::SdpMediaSection::MediaType type,
-                       const std::string& defaultPt, const std::string& name,
+  JsepCodecDescription(const std::string& defaultPt, const std::string& name,
                        uint32_t clock, uint32_t channels, bool enabled)
-      : mType(type),
-        mDefaultPt(defaultPt),
+      : mDefaultPt(defaultPt),
         mName(name),
         mClock(clock),
         mChannels(channels),
@@ -31,6 +29,8 @@ class JsepCodecDescription {
         mStronglyPreferred(false),
         mDirection(sdp::kSend) {}
   virtual ~JsepCodecDescription() {}
+
+  virtual SdpMediaSection::MediaType Type() const = 0;
 
   virtual JsepCodecDescription* Clone() const = 0;
 
@@ -41,7 +41,7 @@ class JsepCodecDescription {
   virtual bool Matches(const std::string& fmt,
                        const SdpMediaSection& remoteMsection) const {
     // note: fmt here is remote fmt (to go with remoteMsection)
-    if (mType != remoteMsection.GetMediaType()) {
+    if (Type() != remoteMsection.GetMediaType()) {
       return false;
     }
 
@@ -86,7 +86,7 @@ class JsepCodecDescription {
   }
 
   virtual void AddToMediaSection(SdpMediaSection& msection) const {
-    if (mEnabled && msection.GetMediaType() == mType) {
+    if (mEnabled && msection.GetMediaType() == Type()) {
       if (mDirection == sdp::kRecv) {
         msection.AddCodec(mDefaultPt, mName, mClock, mChannels);
       }
@@ -129,7 +129,6 @@ class JsepCodecDescription {
     return false;
   }
 
-  mozilla::SdpMediaSection::MediaType mType;
   std::string mDefaultPt;
   std::string mName;
   uint32_t mClock;
@@ -146,8 +145,7 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
   JsepAudioCodecDescription(const std::string& defaultPt,
                             const std::string& name, uint32_t clock,
                             uint32_t channels, bool enabled = true)
-      : JsepCodecDescription(mozilla::SdpMediaSection::kAudio, defaultPt, name,
-                             clock, channels, enabled),
+      : JsepCodecDescription(defaultPt, name, clock, channels, enabled),
         mMaxPlaybackRate(0),
         mForceMono(false),
         mFECEnabled(false),
@@ -158,6 +156,10 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
         mMinFrameSizeMs(0),
         mMaxFrameSizeMs(0),
         mCbrEnabled(false) {}
+
+  static constexpr SdpMediaSection::MediaType type = SdpMediaSection::kAudio;
+
+  SdpMediaSection::MediaType Type() const override { return type; }
 
   JSEP_CODEC_CLONE(JsepAudioCodecDescription)
 
@@ -276,8 +278,7 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
   JsepVideoCodecDescription(const std::string& defaultPt,
                             const std::string& name, uint32_t clock,
                             bool enabled = true)
-      : JsepCodecDescription(mozilla::SdpMediaSection::kVideo, defaultPt, name,
-                             clock, 0, enabled),
+      : JsepCodecDescription(defaultPt, name, clock, 0, enabled),
         mTmmbrEnabled(false),
         mRembEnabled(false),
         mFECEnabled(false),
@@ -290,6 +291,10 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
     mNackFbTypes.push_back(SdpRtcpFbAttributeList::pli);
     mCcmFbTypes.push_back(SdpRtcpFbAttributeList::fir);
   }
+
+  static constexpr SdpMediaSection::MediaType type = SdpMediaSection::kVideo;
+
+  SdpMediaSection::MediaType Type() const override { return type; }
 
   virtual void EnableTmmbr() {
     // EnableTmmbr can be called multiple times due to multiple calls to
@@ -826,8 +831,7 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
   virtual void UpdateRedundantEncodings(
       const std::vector<UniquePtr<JsepCodecDescription>>& codecs) {
     for (const auto& codec : codecs) {
-      if (codec->mType == SdpMediaSection::kVideo && codec->mEnabled &&
-          codec->mName != "red") {
+      if (codec->Type() == type && codec->mEnabled && codec->mName != "red") {
         uint16_t pt;
         if (!SdpHelper::GetPtAsInt(codec->mDefaultPt, &pt)) {
           continue;
@@ -877,20 +881,24 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
                                   uint16_t localPort,
                                   uint32_t localMaxMessageSize,
                                   bool enabled = true)
-      : JsepCodecDescription(mozilla::SdpMediaSection::kApplication, "", name,
-                             0, channels, enabled),
+      : JsepCodecDescription("", name, 0, channels, enabled),
         mLocalPort(localPort),
         mLocalMaxMessageSize(localMaxMessageSize),
         mRemotePort(0),
         mRemoteMaxMessageSize(0),
         mRemoteMMSSet(false) {}
 
+  static constexpr SdpMediaSection::MediaType type =
+      SdpMediaSection::kApplication;
+
+  SdpMediaSection::MediaType Type() const override { return type; }
+
   JSEP_CODEC_CLONE(JsepApplicationCodecDescription)
 
   // Override, uses sctpport or sctpmap instead of rtpmap
   virtual bool Matches(const std::string& fmt,
                        const SdpMediaSection& remoteMsection) const override {
-    if (mType != remoteMsection.GetMediaType()) {
+    if (type != remoteMsection.GetMediaType()) {
       return false;
     }
 
@@ -914,7 +922,7 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
   }
 
   virtual void AddToMediaSection(SdpMediaSection& msection) const override {
-    if (mEnabled && msection.GetMediaType() == mType) {
+    if (mEnabled && msection.GetMediaType() == type) {
       if (mDirection == sdp::kRecv) {
         msection.AddDataChannel(mName, mLocalPort, mChannels,
                                 mLocalMaxMessageSize);
