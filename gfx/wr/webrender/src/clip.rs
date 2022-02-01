@@ -760,7 +760,7 @@ pub struct ClipStore {
 
     active_clip_node_info: Vec<ClipNodeInfo>,
     active_local_clip_rect: Option<LayoutRect>,
-    active_pic_clip_rect: PictureRect,
+    active_pic_coverage_rect: PictureRect,
 
     // No malloc sizeof since it's not implemented for ops::Range, but these
     // allocations are tiny anyway.
@@ -792,8 +792,8 @@ pub struct ClipChainInstance {
     pub needs_mask: bool,
     // Combined clip rect in picture space (may
     // be more conservative that local_clip_rect).
-    pub pic_clip_rect: PictureRect,
-    // Space, in which the `pic_clip_rect` is defined.
+    pub pic_coverage_rect: PictureRect,
+    // Space, in which the `pic_coverage_rect` is defined.
     pub pic_spatial_node_index: SpatialNodeIndex,
 }
 
@@ -807,7 +807,7 @@ impl ClipChainInstance {
             local_clip_rect: LayoutRect::zero(),
             has_non_local_clips: false,
             needs_mask: false,
-            pic_clip_rect: PictureRect::zero(),
+            pic_coverage_rect: PictureRect::zero(),
             pic_spatial_node_index: SpatialNodeIndex::INVALID,
         }
     }
@@ -1012,7 +1012,7 @@ impl ClipStore {
             mask_tiles: Vec::new(),
             active_clip_node_info: Vec::new(),
             active_local_clip_rect: None,
-            active_pic_clip_rect: PictureRect::max_rect(),
+            active_pic_coverage_rect: PictureRect::max_rect(),
             templates,
             instances: Vec::with_capacity(stats.instances_capacity),
             chain_builder_stack: Vec::new(),
@@ -1164,7 +1164,7 @@ impl ClipStore {
     ) {
         self.active_clip_node_info.clear();
         self.active_local_clip_rect = None;
-        self.active_pic_clip_rect = PictureRect::max_rect();
+        self.active_pic_coverage_rect = PictureRect::max_rect();
 
         let mut local_clip_rect = local_prim_clip_rect;
 
@@ -1177,7 +1177,7 @@ impl ClipStore {
                 pic_spatial_node_index,
                 &mut local_clip_rect,
                 &mut self.active_clip_node_info,
-                &mut self.active_pic_clip_rect,
+                &mut self.active_pic_coverage_rect,
                 clip_data_store,
                 spatial_tree,
             ) {
@@ -1202,7 +1202,7 @@ impl ClipStore {
 
         self.active_clip_node_info.clear();
         self.active_local_clip_rect = Some(prim_clip_chain.local_clip_rect);
-        self.active_pic_clip_rect = prim_clip_chain.pic_clip_rect;
+        self.active_pic_coverage_rect = prim_clip_chain.pic_coverage_rect;
 
         let clip_instances = &self
             .clip_node_instances[prim_clip_chain.clips_range.to_range()];
@@ -1230,7 +1230,7 @@ impl ClipStore {
         clip_data_store: &ClipDataStore,
         spatial_tree: &SpatialTree,
     ) -> Option<PictureRect> {
-        let mut inner_rect = clip_chain.pic_clip_rect;
+        let mut inner_rect = clip_chain.pic_coverage_rect;
         let clip_instances = &self
             .clip_node_instances[clip_chain.clips_range.to_range()];
 
@@ -1251,7 +1251,7 @@ impl ClipStore {
                 ClipItemKind::RoundedRectangle { mode: ClipMode::ClipOut, .. } => {
                     return None;
                 }
-                // Normal Clip rects are already handled by the clip-chain pic_clip_rect,
+                // Normal Clip rects are already handled by the clip-chain pic_coverage_rect,
                 // no need to do anything here
                 ClipItemKind::Rectangle { mode: ClipMode::Clip, .. } => {}
                 ClipItemKind::RoundedRectangle { mode: ClipMode::Clip, rect, radius } => {
@@ -1306,8 +1306,8 @@ impl ClipStore {
         }
 
         let local_bounding_rect = local_prim_rect.intersection(&local_clip_rect)?;
-        let mut pic_clip_rect = prim_to_pic_mapper.map(&local_bounding_rect)?;
-        let world_clip_rect = pic_to_world_mapper.map(&pic_clip_rect)?;
+        let mut pic_coverage_rect = prim_to_pic_mapper.map(&local_bounding_rect)?;
+        let world_clip_rect = pic_to_world_mapper.map(&pic_coverage_rect)?;
 
         // Now, we've collected all the clip nodes that *potentially* affect this
         // primitive region, and reduced the size of the prim region as much as possible.
@@ -1409,15 +1409,15 @@ impl ClipStore {
         // reject checks above, so that we don't eliminate masks accidentally (since
         // we currently only support a local clip rect in the vertex shader).
         if needs_mask {
-            pic_clip_rect = pic_clip_rect.intersection(&self.active_pic_clip_rect)?;
+            pic_coverage_rect = pic_coverage_rect.intersection(&self.active_pic_coverage_rect)?;
         }
 
         // Return a valid clip chain instance
         Some(ClipChainInstance {
             clips_range,
             has_non_local_clips,
-            local_clip_rect: local_clip_rect,
-            pic_clip_rect: pic_clip_rect,
+            local_clip_rect,
+            pic_coverage_rect,
             pic_spatial_node_index: prim_to_pic_mapper.ref_spatial_node_index,
             needs_mask,
         })
@@ -2141,7 +2141,7 @@ fn add_clip_node_to_current_chain(
     pic_spatial_node_index: SpatialNodeIndex,
     local_clip_rect: &mut LayoutRect,
     clip_node_info: &mut Vec<ClipNodeInfo>,
-    current_pic_clip_rect: &mut PictureRect,
+    pic_coverage_rect: &mut PictureRect,
     clip_data_store: &ClipDataStore,
     spatial_tree: &SpatialTree,
 ) -> bool {
@@ -2199,8 +2199,8 @@ fn add_clip_node_to_current_chain(
                     );
 
                     if let Some(pic_clip_rect) = mapper.map(&clip_rect) {
-                        *current_pic_clip_rect = pic_clip_rect
-                            .intersection(current_pic_clip_rect)
+                        *pic_coverage_rect = pic_clip_rect
+                            .intersection(pic_coverage_rect)
                             .unwrap_or(PictureRect::zero());
                     }
                 }
