@@ -29,18 +29,24 @@ from mozbuild.vendor.moz_yaml import load_moz_yaml, MozYamlVerifyError
 @CommandArgument(
     "--add-to-exports",
     action="store_true",
-    help="Will attempt to add new header files into any relevant EXPORTS block",
+    help="Will attempt to add new header files into any relevant EXPORTS block.",
     default=False,
 )
 @CommandArgument(
     "--ignore-modified",
     action="store_true",
-    help="Ignore modified files in current checkout",
+    help="Ignore modified files in current checkout.",
     default=False,
 )
 @CommandArgument("-r", "--revision", help="Repository tag or commit to update to.")
 @CommandArgument(
-    "--verify", "-v", action="store_true", help="(Only) verify the manifest"
+    "--verify", "-v", action="store_true", help="(Only) verify the manifest."
+)
+@CommandArgument(
+    "--patch-mode",
+    help="Select how vendored patches will be imported. 'none' skips patch import, and"
+    "'only' imports patches and skips library vendoring.",
+    default="",
 )
 @CommandArgument("library", nargs=1, help="The moz.yaml file of the library to vendor.")
 def vendor(
@@ -51,6 +57,7 @@ def vendor(
     check_for_update=False,
     add_to_exports=False,
     verify=False,
+    patch_mode="",
 ):
     """
     Vendor third-party dependencies into the source repository.
@@ -75,6 +82,28 @@ def vendor(
         print(e)
         sys.exit(1)
 
+    if patch_mode and patch_mode not in ["none", "only"]:
+        print(
+            "Unknown patch mode given '%s'. Please use one of: 'none' or 'only'."
+            % patch_mode
+        )
+        sys.exit(1)
+    if (
+        manifest["vendoring"].get("patches", [])
+        and not patch_mode
+        and not check_for_update
+    ):
+        print(
+            "Patch mode was not given when required. Please use one of: 'none' or 'only'"
+        )
+        sys.exit(1)
+    if patch_mode == "only" and not manifest["vendoring"].get("patches", []):
+        print(
+            "Patch import was specified for %s but there are no vendored patches defined."
+            % library
+        )
+        sys.exit(1)
+
     if not ignore_modified and not check_for_update:
         check_modified_files(command_context)
     if not revision:
@@ -83,7 +112,14 @@ def vendor(
     from mozbuild.vendor.vendor_manifest import VendorManifest
 
     vendor_command = command_context._spawn(VendorManifest)
-    vendor_command.vendor(library, manifest, revision, check_for_update, add_to_exports)
+    vendor_command.vendor(
+        library,
+        manifest,
+        revision,
+        check_for_update,
+        add_to_exports,
+        patch_mode,
+    )
 
     sys.exit(0)
 

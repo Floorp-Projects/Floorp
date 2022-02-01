@@ -9,6 +9,55 @@ origin:
   description: "PNG reference library"
 
   url: "http://www.libpng.org/pub/png/libpng.html"
-  license: "libpng"
+  license: libpng
 
-  release: "1.6.37"
+  release: commit a40189cf881e9f0db80511c382292a5604c3c3d1 (2019-04-14T10:10:32:00Z).
+
+  revision: "v1.6.37"
+
+  license-file: LICENSE
+
+updatebot:
+  maintainer-phab: aosmond
+  maintainer-bz: aosmond@mozilla.com
+  tasks:
+    - type: vendoring
+      enabled: True
+
+vendoring:
+  url: https://github.com/glennrp/libpng
+  source-hosting: github
+  tracking: tag
+
+  exclude:
+    - "*"
+
+  include:
+    - arm
+    - contrib/arm-neon/linux.c
+    - intel
+    - mips
+    - powerpc
+    - ANNOUNCE
+    - AUTHORS
+    - CHANGES
+    - libpng-manual.txt
+    - LICENSE
+    - README
+    - TRADEMARK
+    - "*.c"
+    - "*.h"
+
+  keep:
+    - MOZCHANGES
+    - crashtests
+
+  update-actions:
+    - action: copy-file
+      from: 'contrib/arm-neon/linux.c'
+      to: 'arm/linux.c'
+    - action: delete-path
+      path: 'contrib'
+
+  patches:
+    - "*.patch"
