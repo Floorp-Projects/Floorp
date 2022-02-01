@@ -385,7 +385,7 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
       aTransferable->SetTransferData(flavorStr.get(), byteStream);
       LOGCLIP("    got %s MIME data\n", flavorStr.get());
 
-      mContext->ReleaseClipboardData(clipboardData);
+      mContext->ReleaseClipboardData(&clipboardData);
       return NS_OK;
     }
 
@@ -413,7 +413,7 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
 
       LOGCLIP("    got unicode data, length %zd\n", ucs2string.Length());
 
-      mContext->ReleaseClipboardData(clipboardData);
+      mContext->ReleaseClipboardData(&clipboardData);
       return NS_OK;
     }
 
@@ -443,7 +443,7 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
         }
       }
 
-      mContext->ReleaseClipboardData(clipboardData);
+      mContext->ReleaseClipboardData(&clipboardData);
       return NS_OK;
     }
 
@@ -476,7 +476,7 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
         if (!ConvertHTMLtoUCS2(clipboardData, clipboardDataLength, charset,
                                &htmlBody, htmlBodyLen)) {
           LOGCLIP("    failed to convert text/html to UCS2.\n");
-          mContext->ReleaseClipboardData(clipboardData);
+          mContext->ReleaseClipboardData(&clipboardData);
           continue;
         }
 
@@ -488,7 +488,7 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
                             clipboardDataLength);
       }
 
-      mContext->ReleaseClipboardData(clipboardData);
+      mContext->ReleaseClipboardData(&clipboardData);
       return NS_OK;
     }
   }
