@@ -206,11 +206,13 @@ mochitest-browser-chrome:
     variants:
         - dynamic-first-party-isolation+fission
         - fission
-        - socketprocess_networking
         - webrender-sw
-        - webrender-sw+a11y-checks
         - webrender-sw+fission
+        - webrender-sw+a11y-checks
+        - webrender-sw+a11y-checks+fission
         - webrender-sw+wayland
+        - socketprocess_networking
+        - socketprocess_networking+fission
     run-on-projects:
         by-variant:
             dynamic-first-party-isolation+fission:
@@ -219,13 +221,19 @@ mochitest-browser-chrome:
                     default: []
             fission:
                 by-test-platform:
-                    (windows10-64-2004|macosx.*64)(-shippable)?-qr/(opt|debug): ['trunk']
-                    default: []
-            socketprocess_networking:
-                by-test-platform:
-                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
-                    default: []
+                    android.*: []
+                    linux.*: []  # linux runs M-swr(bc), not M(bc)
+                    default: built-projects
             webrender-sw:
+                by-test-platform:
+                    linux.*64(-asan)?-qr/(opt|debug): ['all']
+                    linux.*64-tsan-qr/opt: ['trunk']
+                    linux.*64-shippable-qr/opt: ['release']
+                    linux.*64(-shippable)?-qr/opt: built-projects
+                    linux.*64-devedition-qr/opt: built-projects
+                    windows10-64-2004-qr/debug: built-projects
+                    default: []
+            webrender-sw+fission:
                 by-test-platform:
                     linux.*64(-asan)?-qr/(opt|debug): ['all']
                     linux.*64-tsan-qr/opt: ['trunk']
@@ -238,10 +246,17 @@ mochitest-browser-chrome:
                 by-test-platform:
                     linux.*64(-shippable)?-qr/opt: ['trunk']
                     default: []
-            webrender-sw+fission:
+            webrender-sw+a11y-checks+fission:
                 by-test-platform:
-                    linux.*64(-asan|-shippable)?-qr/(opt|debug): ['trunk']
-                    linux.*64-ccov-qr/opt: ['mozilla-central']
+                    linux.*64(-shippable)?-qr/opt: ['trunk']
+                    default: []
+            socketprocess_networking:
+                by-test-platform:
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
+                    default: []
+            socketprocess_networking+fission:
+                by-test-platform:
+                    (linux.*64|macosx.*64|windows10-64-2004)(-shippable)?-qr/(opt|debug): built-projects
                     default: []
             webrender-sw+wayland: []
             default:
@@ -251,10 +266,7 @@ mochitest-browser-chrome:
                     default: built-projects
     tier:
         by-variant:
-            fission(-xorigin)?:
-                by-test-platform:
-                    linux.*64-qr/debug: 1
-                    default: 2
+            fission(-xorigin)?: default
             webrender-sw:
                 by-test-platform:
                     linux.*64(-asan|-shippable)?-qr/(opt|debug): 1
