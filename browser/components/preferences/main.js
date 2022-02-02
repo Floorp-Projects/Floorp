@@ -175,6 +175,10 @@ if (AppConstants.MOZ_UPDATER) {
     { id: "app.update.disable_button.showUpdateHistory", type: "bool" },
   ]);
 
+  if (AppConstants.NIGHTLY_BUILD) {
+    Preferences.addAll([{ id: "app.update.suppressPrompts", type: "bool" }]);
+  }
+
   if (AppConstants.MOZ_MAINTENANCE_SERVICE) {
     Preferences.addAll([{ id: "app.update.service.enabled", type: "bool" }]);
   }

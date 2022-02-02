@@ -454,6 +454,10 @@ update-application-use-service =
     .label = Use a background service to install updates
     .accesskey = b
 
+update-application-suppress-prompts =
+    .label = Show fewer update notification prompts
+    .accesskey = n
+
 update-setting-write-failure-title2 = Error saving Update settings
 
 # Variables:
