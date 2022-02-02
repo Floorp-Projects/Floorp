@@ -114,11 +114,3 @@ debugging aids.
        PR_LOG( myLM, PR_LOG_NOTICE, "That's all folks\n");
 
    } /* end UserLogStuff() */
-
-.. _See_also:
-
-See also
-~~~~~~~~
-
-`NSPR Logging
-reference <http://www.mozilla.org/projects/nspr/reference/html/prlog.html>`__

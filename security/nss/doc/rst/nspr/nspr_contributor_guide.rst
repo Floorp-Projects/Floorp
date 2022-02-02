@@ -45,11 +45,8 @@ other language wrappers.
 
 NSPR does not have a documented coding style guide. Look at the extant
 code. Make yours look like that. Some guidelines concerning naming
-conventions can be found in `NSPR Naming
-Conventions <http://www.mozilla.org/projects/nspr/reference/html/printro.html>`__
-in the `NSPR
-Reference <http://www.mozilla.org/projects/nspr/reference/html/index.html>`__.
-See also: XXX
+conventions can be found in :ref:`NSPR_Naming_Conventions`.
+in the :ref:`NSPR API Reference`.
 
 .. _Ownership_of_your_contribution:
 
