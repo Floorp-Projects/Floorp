@@ -4271,6 +4271,12 @@ bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx, double aX,
                                              double aY,
                                              const CanvasWindingRule& aWinding,
                                              nsIPrincipal& aSubjectPrincipal) {
+  return IsPointInPath(aCx, aX, aY, aWinding, Some(&aSubjectPrincipal));
+}
+
+bool CanvasRenderingContext2D::IsPointInPath(
+    JSContext* aCx, double aX, double aY, const CanvasWindingRule& aWinding,
+    Maybe<nsIPrincipal*> aSubjectPrincipal) {
   if (!FloatValidate(aX, aY)) {
     return false;
   }
@@ -4282,6 +4288,9 @@ bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx, double aX,
                                                aSubjectPrincipal)) {
       return false;
     }
+  } else if (mOffscreenCanvas &&
+             mOffscreenCanvas->ShouldResistFingerprinting()) {
+    return false;
   }
 
   EnsureUserSpacePath(aWinding);
@@ -4300,7 +4309,15 @@ bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx,
                                              const CanvasPath& aPath, double aX,
                                              double aY,
                                              const CanvasWindingRule& aWinding,
-                                             nsIPrincipal&) {
+                                             nsIPrincipal& aSubjectPrincipal) {
+  return IsPointInPath(aCx, aPath, aX, aY, aWinding, Some(&aSubjectPrincipal));
+}
+
+bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx,
+                                             const CanvasPath& aPath, double aX,
+                                             double aY,
+                                             const CanvasWindingRule& aWinding,
+                                             Maybe<nsIPrincipal*>) {
   if (!FloatValidate(aX, aY)) {
     return false;
   }
@@ -4317,6 +4334,12 @@ bool CanvasRenderingContext2D::IsPointInPath(JSContext* aCx,
 
 bool CanvasRenderingContext2D::IsPointInStroke(
     JSContext* aCx, double aX, double aY, nsIPrincipal& aSubjectPrincipal) {
+  return IsPointInStroke(aCx, aX, aY, Some(&aSubjectPrincipal));
+}
+
+bool CanvasRenderingContext2D::IsPointInStroke(
+    JSContext* aCx, double aX, double aY,
+    Maybe<nsIPrincipal*> aSubjectPrincipal) {
   if (!FloatValidate(aX, aY)) {
     return false;
   }
@@ -4328,6 +4351,9 @@ bool CanvasRenderingContext2D::IsPointInStroke(
                                                aSubjectPrincipal)) {
       return false;
     }
+  } else if (mOffscreenCanvas &&
+             mOffscreenCanvas->ShouldResistFingerprinting()) {
+    return false;
   }
 
   EnsureUserSpacePath();
@@ -4348,10 +4374,16 @@ bool CanvasRenderingContext2D::IsPointInStroke(
                                     mTarget->GetTransform());
 }
 
+bool CanvasRenderingContext2D::IsPointInStroke(
+    JSContext* aCx, const CanvasPath& aPath, double aX, double aY,
+    nsIPrincipal& aSubjectPrincipal) {
+  return IsPointInStroke(aCx, aPath, aX, aY, Some(&aSubjectPrincipal));
+}
+
 bool CanvasRenderingContext2D::IsPointInStroke(JSContext* aCx,
                                                const CanvasPath& aPath,
                                                double aX, double aY,
-                                               nsIPrincipal&) {
+                                               Maybe<nsIPrincipal*>) {
   if (!FloatValidate(aX, aY)) {
     return false;
   }
@@ -5050,7 +5082,14 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
 already_AddRefed<ImageData> CanvasRenderingContext2D::GetImageData(
     JSContext* aCx, int32_t aSx, int32_t aSy, int32_t aSw, int32_t aSh,
     nsIPrincipal& aSubjectPrincipal, ErrorResult& aError) {
-  if (!mCanvasElement && !mDocShell) {
+  return GetImageData(aCx, aSx, aSy, aSw, aSh, Some(&aSubjectPrincipal),
+                      aError);
+}
+
+already_AddRefed<ImageData> CanvasRenderingContext2D::GetImageData(
+    JSContext* aCx, int32_t aSx, int32_t aSy, int32_t aSw, int32_t aSh,
+    Maybe<nsIPrincipal*> aSubjectPrincipal, ErrorResult& aError) {
+  if (!mCanvasElement && !mDocShell && !mOffscreenCanvas) {
     NS_ERROR("No canvas element and no docshell in GetImageData!!!");
     aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
@@ -5058,6 +5097,7 @@ already_AddRefed<ImageData> CanvasRenderingContext2D::GetImageData(
 
   // Check only if we have a canvas element; if we were created with a docshell,
   // then it's special internal use.
+  // FIXME(aosmond): OffscreenCanvas security check??!
   if (IsWriteOnly() ||
       (mCanvasElement && !mCanvasElement->CallerCanRead(aCx))) {
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
@@ -5105,7 +5145,7 @@ already_AddRefed<ImageData> CanvasRenderingContext2D::GetImageData(
 
 nsresult CanvasRenderingContext2D::GetImageDataArray(
     JSContext* aCx, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight,
-    nsIPrincipal& aSubjectPrincipal, JSObject** aRetval) {
+    Maybe<nsIPrincipal*> aSubjectPrincipal, JSObject** aRetval) {
   MOZ_ASSERT(aWidth && aHeight);
 
   // Restrict the typed array length to INT32_MAX because that's all we support
@@ -5170,6 +5210,8 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
     nsCOMPtr<Document> ownerDoc = mCanvasElement->OwnerDoc();
     usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(ownerDoc, aCx,
                                                             aSubjectPrincipal);
+  } else if (mOffscreenCanvas) {
+    usePlaceholder = mOffscreenCanvas->ShouldResistFingerprinting();
   }
 
   do {
