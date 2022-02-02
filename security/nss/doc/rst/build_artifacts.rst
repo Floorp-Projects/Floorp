@@ -43,9 +43,8 @@ Build artifacts
 
    ..
       Figure 1, below, shows a simplified view of the relationships among the three shared libraries
-      listed above and NSPR, which provides low-level cross platform support for operations such as
-      threading and I/O. (Note that NSPR is a separate Mozilla project; see `Netscape Portable
-      Runtime <https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSPR>`__ for details.)
+      listed above and :ref:`NSPR`, which provides low-level cross platform support for operations such as
+      threading and I/O. (Note that NSPR is a separate Mozilla project; see :ref:`NSPR` for details.)
 
       .. image:: /en-US/docs/Mozilla/Projects/NSS/Introduction_to_Network_Security_Services/nss.gif
          :alt: Diagram showing the relationships among core NSS libraries and NSPR.
@@ -174,5 +173,4 @@ Build artifacts
       :ref:`mozilla_projects_nss`.
 
       As mentioned above, NSS is built on top of NSPR. The API documentation for NSPR is available at
-      `NSPR API
-      Reference <https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSPR/Reference>`__.
+      :ref:`NSPR API Reference`.
