@@ -61,7 +61,6 @@ EXPORTS.mozilla.dom += [
     "ImageUtils.h",
     "OffscreenCanvas.h",
     "OffscreenCanvasDisplayHelper.h",
-    "OffscreenCanvasRenderingContext2D.h",
     "QueueParamTraits.h",
     "TextMetrics.h",
     "WebGLChild.h",
@@ -102,7 +101,6 @@ SOURCES += [
     "DrawTargetWebgl.cpp",  # Isolate Skia
     "ImageUtils.cpp",
     "OffscreenCanvasDisplayHelper.cpp",  # See bug 1745384
-    "OffscreenCanvasRenderingContext2D.cpp",  # See bug 1745384
 ]
 
 # WebGL Sources
