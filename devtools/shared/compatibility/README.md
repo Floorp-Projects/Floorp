@@ -12,7 +12,7 @@ The subsets from the dataset required by the Compatibility panel are:
 In order to download up-to-date data, you need to run the following commands:
 
 - `cd devtools/shared/compatibility`
-- `yarn install` and select the latest package version
+- `yarn install --no-lockfile` and select the latest package version for the `@mdn/browser-compat-data` package
 - `yarn update`
 
 This should save the JSON files directly in `devtools/shared/compatibility/dataset/`.
