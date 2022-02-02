@@ -270,6 +270,21 @@ To see more help for a specific command, run:
 
             raise MissingFileError(f"{path} does not exist")
 
+    def load_commands_from_spec(
+        self, spec: List[str], topsrcdir: str, missing_ok=False
+    ):
+        """Load mach commands based on the given spec.
+
+        Takes a list of paths to modules containing mach commands and
+        loads those commands.
+        """
+        for path in spec:
+            try:
+                self.load_commands_from_file(Path(topsrcdir) / path)
+            except MissingFileError:
+                if not missing_ok:
+                    raise
+
     def load_commands_from_entry_point(self, group="mach.providers"):
         """Scan installed packages for mach command provider entry points. An
         entry point is a function that returns a list of paths to files or

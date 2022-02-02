@@ -359,12 +359,7 @@ def initialize(topsrcdir):
         repo is not None and repo.sparse_checkout_present()
     ) or os.path.exists(os.path.join(topsrcdir, "INSTALL"))
 
-    for path in MACH_MODULES:
-        try:
-            driver.load_commands_from_file(os.path.join(topsrcdir, path))
-        except mach.base.MissingFileError:
-            if not missing_ok:
-                raise
+    driver.load_commands_from_spec(MACH_MODULES, topsrcdir, missing_ok=missing_ok)
 
     return driver
 
