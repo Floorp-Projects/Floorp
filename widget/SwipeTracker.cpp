@@ -9,6 +9,7 @@
 #include "InputData.h"
 #include "mozilla/FlushType.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
@@ -216,6 +217,10 @@ bool SwipeTracker::SendSwipeEvent(EventMessage aMsg, uint32_t aDirection,
 
 // static
 bool SwipeTracker::CanTriggerSwipe(const PanGestureInput& aPanInput) {
+  if (StaticPrefs::widget_disable_swipe_tracker()) {
+    return false;
+  }
+
   if (aPanInput.mType != PanGestureInput::PANGESTURE_START) {
     return false;
   }
