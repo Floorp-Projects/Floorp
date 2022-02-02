@@ -2997,48 +2997,6 @@ RefPtr<LocalDeviceSetPromise> MediaManager::EnumerateDevicesImpl(
           });
 }
 
-RefPtr<LocalDeviceSetPromise> MediaManager::EnumerateDevices(
-    nsPIDOMWindowInner* aWindow) {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (sHasShutdown) {
-    return LocalDeviceSetPromise::CreateAndReject(
-        MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError,
-                                  "In shutdown"),
-        __func__);
-  }
-  Document* doc = aWindow->GetExtantDoc();
-  MOZ_ASSERT(doc);
-
-  // Only expose devices which are allowed to use:
-  // https://w3c.github.io/mediacapture-main/#dom-mediadevices-enumeratedevices
-  MediaSourceEnum videoType =
-      FeaturePolicyUtils::IsFeatureAllowed(doc, u"camera"_ns)
-          ? MediaSourceEnum::Camera
-          : MediaSourceEnum::Other;
-  MediaSourceEnum audioType =
-      FeaturePolicyUtils::IsFeatureAllowed(doc, u"microphone"_ns)
-          ? MediaSourceEnum::Microphone
-          : MediaSourceEnum::Other;
-  EnumerationFlags flags;
-  if (Preferences::GetBool("media.setsinkid.enabled") &&
-      FeaturePolicyUtils::IsFeatureAllowed(doc, u"speaker-selection"_ns)) {
-    flags += EnumerationFlag::EnumerateAudioOutputs;
-  }
-
-  if (audioType == MediaSourceEnum::Other &&
-      videoType == MediaSourceEnum::Other && flags.isEmpty()) {
-    return LocalDeviceSetPromise::CreateAndResolve(
-        new LocalMediaDeviceSetRefCnt(), __func__);
-  }
-
-  bool resistFingerprinting = nsContentUtils::ShouldResistFingerprinting(doc);
-  if (resistFingerprinting) {
-    flags += EnumerationFlag::ForceFakes;
-  }
-
-  return EnumerateDevicesImpl(aWindow, videoType, audioType, flags);
-}
-
 RefPtr<LocalDevicePromise> MediaManager::SelectAudioOutput(
     nsPIDOMWindowInner* aWindow, const dom::AudioOutputOptions& aOptions,
     CallerType aCallerType) {

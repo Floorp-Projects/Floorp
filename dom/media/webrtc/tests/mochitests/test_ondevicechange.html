@@ -47,31 +47,29 @@ runTest(async () => {
       // Make fake devices count as real, permission-wise, or devicechange
       // events won't be exposed
       ["media.navigator.permission.fake", true],
-      // Initial state for gUM.
+      // For gUM.
       ["media.navigator.permission.disabled", true]
     ),
   ]);
   const topDevices = navigator.mediaDevices;
   const frameDevices = iframe.contentWindow.navigator.mediaDevices;
-  const streams = await Promise.all(
-    [topDevices, frameDevices].map(d => d.getUserMedia({video: true}))
-  );
-  const [topTrack, frameTrack] = streams.map(s => s.getVideoTracks()[0]);
-  topTrack.stop();
-  // permission.disabled would expose devicechange events without gUM
-  await pushPrefs(["media.navigator.permission.disabled", false]);
-
+  // Initialization of MediaDevices::mLastPhysicalDevices is triggered when
+  // ondevicechange is set but tests "media.getusermedia.fake-camera-name"
+  // asynchronously.  Wait for getUserMedia() completion to ensure that the
+  // pref has been read before doDevicechanges() changes it.
+  frameDevices.ondevicechange = () => {};
   const topEventPromise = resolveOnEvent(topDevices, "devicechange");
+  const frameStream = await frameDevices.getUserMedia({video: true});
+  frameStream.getVideoTracks()[0].stop();
+
   await doDevicechanges(frameDevices);
   ok(true,
-     "devicechange event is fired when gUM is in use without permanent " +
-     "permission granted");
+     "devicechange event is fired when gUM has been in use");
   // Race a settled Promise to check that the event has not been received in
   // the toplevel Window.
-  const racer = {type: "racer"};
+  const racer = {};
   is(await Promise.race([topEventPromise, racer]), racer,
-     "devicechange event is NOT fired when gUM is NO LONGER in use and " +
-     "permanent permission is NOT granted");
+     "devicechange event is NOT fired when gUM has NOT been in use");
 
   if (navigator.userAgent.includes("Android")) {
     todo(false, "test assumes Firefox-for-Desktop specific API and behavior");
@@ -95,10 +93,8 @@ runTest(async () => {
   is(document.visibilityState, 'hidden', 'visibilityState')
   const frameEventPromise = resolveOnEvent(frameDevices, "devicechange");
   const tabDevices = tab.navigator.mediaDevices;
-  const tabStream = await withPrefs(
-    [["media.navigator.permission.disabled", true]],
-    () => tabDevices.getUserMedia({video: true})
-  );
+  tabDevices.ondevicechange = () => {};
+  const tabStream = await tabDevices.getUserMedia({video: true});
   await doDevicechanges(tabDevices);
   is(await Promise.race([frameEventPromise, racer]), racer,
      "devicechange event is NOT fired while tab is in background");
@@ -107,13 +103,6 @@ runTest(async () => {
   is(document.visibilityState, 'visible', 'visibilityState')
   await frameEventPromise;
   ok(true, "devicechange event IS fired when tab returns to foreground");
-  frameTrack.stop();
-
-  await pushPrefs(["media.navigator.permission.disabled", true]);
-  await doDevicechanges(frameDevices);
-  is((await Promise.race([topEventPromise, racer])).type, "devicechange",
-     "devicechange event IS fired when gUM is NO LONGER in use and " +
-     "permanent permission IS granted");
 });
 
 </script>
