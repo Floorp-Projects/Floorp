@@ -16,8 +16,20 @@
 
     const SJS = new URL("file_bug1742865.sjs", location.href);
     const SJS_OUTER = new URL("file_bug1742865_outer.sjs", location.href);
+    const SCROLL = 500;
 
-    function openWindowAndCheckRefresh(url, shouldAddToHistory) {
+    function checkScrollPosition(scrollPosition, shouldKeepScrollPosition) {
+      is(scrollPosition, shouldKeepScrollPosition ? SCROLL : 0,
+         `Scroll position ${shouldKeepScrollPosition ? "should" : "shouldn't"} be maintained for meta refresh`);
+    }
+
+    function openWindowAndCheckRefresh(url, params, shouldAddToHistory, shouldKeepScrollPosition) {
+      info(`Running test for ${JSON.stringify(params)}`);
+
+      url = new URL(url);
+      Object.entries(params).forEach(([k, v]) => { url.searchParams.append(k, v) });
+      url.searchParams.append("scrollTo", SCROLL);
+
       let resetURL = new URL(SJS);
       resetURL.search = "?reset";
       return fetch(resetURL).then(() => {
@@ -41,14 +53,18 @@
 
             is(commandType, "pageShow", "Unknown command type");
 
-            let { inputValue } = commandData;
+            let { inputValue, scrollPosition } = commandData;
 
             switch (++count) {
               // file_bug1742865.sjs causes 3 loads:
               //  * first load, returns first meta refresh
               //  * second load, caused by first meta refresh, returns second meta refresh
               //  * third load, caused by second meta refresh, doesn't return a meta refresh
+              case 2:
+                checkScrollPosition(scrollPosition, shouldKeepScrollPosition);
+                break;
               case 3:
+                checkScrollPosition(scrollPosition, shouldKeepScrollPosition);
                 win.postMessage("changeInputValue", "*");
                 break;
               case 4:
@@ -56,6 +72,7 @@
                 break;
               case 5:
                 is(inputValue, "1234", "Entries for auto-refresh should be attached to session history");
+                checkScrollPosition(scrollPosition, shouldKeepScrollPosition);
                 removeEventListener("message", listener);
                 win.close();
                 resolve();
@@ -67,17 +84,14 @@
       });
     }
 
-    function doTest(seconds, crossOrigin, shouldAddToHistory) {
-      let url = new URL(SJS);
-      url.searchParams.append("seconds", seconds);
-      url.searchParams.append("crossorigin", crossOrigin);
+    function doTest(seconds, crossOrigin, shouldAddToHistory, shouldKeepScrollPosition) {
+      let params = {
+        seconds,
+        crossOrigin,
+      };
 
-      let urlOuter = new URL(SJS_OUTER);
-      urlOuter.searchParams.append("seconds", seconds);
-      urlOuter.searchParams.append("crossorigin", crossOrigin);
-
-      return openWindowAndCheckRefresh(url, shouldAddToHistory).then(() =>
-        openWindowAndCheckRefresh(urlOuter, shouldAddToHistory)
+      return openWindowAndCheckRefresh(SJS, params, shouldAddToHistory, shouldKeepScrollPosition).then(() =>
+        openWindowAndCheckRefresh(SJS_OUTER, params, shouldAddToHistory, shouldKeepScrollPosition)
       );
     }
 
@@ -85,16 +99,16 @@
       const FAST = Math.min(1, REFRESH_REDIRECT_TIMER);
       const SLOW = REFRESH_REDIRECT_TIMER + 1;
       let tests = [
-        // [ time, crossOrigin, shouldAddToHistory ]
-        [ FAST, false, false ],
-        [ FAST, true, false ],
-        [ SLOW, false, false ],
-        [ SLOW, true, true ],
+        // [ time, crossOrigin, shouldAddToHistory, shouldKeepScrollPosition ]
+        [ FAST, false, false, true ],
+        [ FAST, true, false, false ],
+        [ SLOW, false, false, true ],
+        [ SLOW, true, true, false ],
       ];
 
       let test = Promise.resolve();
-      for (let [ time, crossOrigin, shouldAddToHistory ] of tests) {
-        test = test.then(() => doTest(time, crossOrigin, shouldAddToHistory));
+      for (let [ time, crossOrigin, shouldAddToHistory, shouldKeepScrollPosition ] of tests) {
+        test = test.then(() => doTest(time, crossOrigin, shouldAddToHistory, shouldKeepScrollPosition));
       }
       test.then(() => SimpleTest.finish());
     }
