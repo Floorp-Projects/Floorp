@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import ArticleList from "../components/ArticleList/ArticleList";
+import Button from "../components/Button/Button";
 import PopularTopics from "../components/PopularTopics/PopularTopics";
 
 var StyleGuideOverlay = function(options) {};
@@ -11,6 +12,12 @@ StyleGuideOverlay.prototype = {
     ReactDOM.render(
       <div>
         <h3>JSX Components:</h3>
+        <h4 className="stp_styleguide_h4">Button</h4>
+        <Button label="Text Button" style="text" url="https://example.org" />
+        <br />
+        <Button label="Primary Button" style="primary" />
+        <br />
+        <Button label="Secondary Button" style="secondary" />
         <h4 className="stp_styleguide_h4">PopularTopics</h4>
         <PopularTopics
           pockethost={`getpocket.com`}
