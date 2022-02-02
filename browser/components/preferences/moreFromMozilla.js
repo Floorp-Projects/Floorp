@@ -35,15 +35,10 @@ var gMoreFromMozillaPane = {
     return this._option;
   },
 
-  // Return true if Send to Device emails are supported for user's locale(s).
+  // Return true if Send to Device emails are supported for user's locale
   sendToDeviceEmailsSupported() {
-    // Bedrock uses a request's Accept-Language header to determine if the user's locale(s) is supported. The value of that header is derived from window.navigator.languages.
-    const userLocales = window.navigator.languages.map(l => l.toLowerCase());
-    // See if any of the user's preferred locales are supported
-    let userSupportedLocales = this.emailSupportedLocales.filter(loc =>
-      userLocales.includes(loc)
-    );
-    return !!userSupportedLocales.length;
+    const userLocale = Services.locale.appLocaleAsBCP47.toLowerCase();
+    return this.emailSupportedLocales.includes(userLocale);
   },
 
   getURL(url, region, option, hasEmail) {
