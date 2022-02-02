@@ -26,7 +26,6 @@ job-defaults:
 jobs-from:
     - android.yml
     - cbindgen.yml
-    - cctools-port.yml
     - clang-tidy.yml
     - clang.yml
     - compiler-rt.yml

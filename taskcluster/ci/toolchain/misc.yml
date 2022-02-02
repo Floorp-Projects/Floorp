@@ -39,6 +39,23 @@ linux64-binutils:
         toolchain:
             - linux64-toolchain-sysroot
 
+linux64-cctools-port:
+    description: "cctools-port toolchain build"
+    treeherder:
+        symbol: TL(cctools-clang)
+    run:
+        script: build-cctools-port.sh
+        toolchain-artifact: public/build/cctools.tar.zst
+    fetches:
+        toolchain:
+            - linux64-clang-toolchain
+            - linux64-binutils
+            - linux64-toolchain-sysroot
+        fetch:
+            - cctools-port
+            - libtapi
+            - ldid
+
 linux64-hfsplus:
     description: "hfsplus toolchain build"
     treeherder:

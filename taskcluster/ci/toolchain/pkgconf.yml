@@ -35,7 +35,7 @@ macosx64-pkgconf:
     fetches:
         toolchain:
             - linux64-clang-toolchain
-            - linux64-cctools-port-clang-13
+            - linux64-cctools-port
             - macosx64-sdk-11.0
 
 macosx64-aarch64-pkgconf:
@@ -46,7 +46,7 @@ macosx64-aarch64-pkgconf:
     fetches:
         toolchain:
             - linux64-clang-toolchain
-            - linux64-cctools-port-clang-13
+            - linux64-cctools-port
             - macosx64-sdk-11.0
 
 win64-pkgconf:
