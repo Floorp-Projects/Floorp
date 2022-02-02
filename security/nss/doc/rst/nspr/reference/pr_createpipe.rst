@@ -1,0 +1,54 @@
+Creates an anonymous pipe and retrieves file descriptors for the read
+and write ends of the pipe.
+
+.. _Syntax:
+
+Syntax
+------
+
+.. code:: eval
+
+   #include <prio.h>
+
+   PRStatus PR_CreatePipe(
+     PRFileDesc **readPipe,
+     PRFileDesc **writePipe);
+
+.. _Parameters:
+
+Parameters
+~~~~~~~~~~
+
+The function has the following parameters:
+
+``readPipe``
+   A pointer to a ``PRFileDesc`` pointer. On return, this parameter
+   contains the file descriptor for the read end of the pipe.
+``writePipe``
+   A pointer to a ``PRFileDesc`` pointer. On return, this parameter
+   contains the file descriptor for the write end of the pipe.
+
+.. _Returns:
+
+Returns
+~~~~~~~
+
+The function returns one of these values:
+
+-  If the pipe is successfully created, ``PR_SUCCESS``.
+-  If the pipe is not successfully created, ``PR_FAILURE``. The error
+   code can be retrieved via ``PR_GetError``.
+
+.. _Description:
+
+Description
+-----------
+
+``PR_CreatePipe`` creates an anonymous pipe. Data written into the write
+end of the pipe can be read from the read end of the pipe. Pipes are
+useful for interprocess communication between a parent and a child
+process. When the pipe is no longer needed, both ends should be closed
+with calls to ``PR_Close``.
+
+``PR_CreatePipe`` is currently implemented on Unix, Linux, Mac OS X, and
+Win32 only.

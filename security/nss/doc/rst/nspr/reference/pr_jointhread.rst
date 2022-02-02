@@ -1,0 +1,58 @@
+Blocks the calling thread until a specified thread terminates.
+
+.. _Syntax:
+
+Syntax
+------
+
+.. code:: eval
+
+   #include <prthread.h>
+
+   PRStatus PR_JoinThread(PRThread *thread);
+
+.. _Parameter:
+
+Parameter
+~~~~~~~~~
+
+``PR_JoinThread`` has the following parameter:
+
+``thread``
+   A valid identifier for the thread that is to be joined.
+
+.. _Returns:
+
+Returns
+~~~~~~~
+
+The function returns one of the following values:
+
+-  If successful, ``PR_SUCCESS``
+-  If unsuccessful--for example, if no joinable thread can be found that
+   corresponds to the specified target thread, or if the target thread
+   is unjoinable--``PR_FAILURE``.
+
+.. _Description:
+
+Description
+-----------
+
+``PR_JoinThread`` is used to synchronize the termination of a thread.
+The function is synchronous in that it blocks the calling thread until
+the target thread is in a joinable state. ``PR_JoinThread`` returns to
+the caller only after the target thread returns from its root function.
+
+``PR_JoinThread`` must not be called until after ``PR_CreateThread`` has
+returned.  If ``PR_JoinThread`` is not called on the same thread as
+``PR_CreateThread``, then it is the caller's responsibility to ensure
+that ``PR_CreateThread`` has completed.
+
+Several threads cannot wait for the same thread to complete. One of the
+calling threads operates successfully, and the others terminate with the
+error ``PR_FAILURE``.
+
+The calling thread is not blocked if the target thread has already
+terminated.
+
+``PR_JoinThread`` is interruptable.
