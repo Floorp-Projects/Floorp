@@ -569,7 +569,7 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
 
 #ifdef MOZ_LOGGING
   if (LOGCLIP_ENABLED()) {
-    LOGCLIP("    Clipboard content (target nums %lu):\n",
+    LOGCLIP("    Clipboard content (target nums %zu):\n",
             targets.AsSpan().Length());
     for (const auto& target : targets.AsSpan()) {
       GUniquePtr<gchar> atom_name(gdk_atom_name(target));
