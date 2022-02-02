@@ -623,33 +623,64 @@ struct DisallowMemberArgsViaReferenceAlias2 {
 struct AllowMozKnownLiveMember {
 public:
   MOZ_KNOWN_LIVE RefCountedBase* mWhatever;
-  MOZ_CAN_RUN_SCRIPT void foo(RefCountedBase* aWhatever) {}
+  MOZ_KNOWN_LIVE RefPtr<RefCountedBase> mRefCountedWhatever;
+  MOZ_CAN_RUN_SCRIPT void fooPtr(RefCountedBase* aWhatever) {}
+  MOZ_CAN_RUN_SCRIPT void fooRef(RefCountedBase& aWhatever) {}
   MOZ_CAN_RUN_SCRIPT void bar() {
-    foo(mWhatever);
+    fooPtr(mWhatever);
+    fooRef(*mWhatever);
+    fooPtr(mRefCountedWhatever);
+    fooRef(*mRefCountedWhatever);
   }
 };
 
 struct AllowMozKnownLiveMemberParent : AllowMozKnownLiveMember {
   MOZ_CAN_RUN_SCRIPT void baz() {
-    foo(mWhatever);
+    fooPtr(mWhatever);
+    fooRef(*mWhatever);
+    fooPtr(mRefCountedWhatever);
+    fooRef(*mRefCountedWhatever);
   }
 };
 
 struct AllowMozKnownLiveParamMember {
 public:
   MOZ_CAN_RUN_SCRIPT void foo(AllowMozKnownLiveMember& aAllow) {
-    aAllow.foo(aAllow.mWhatever);
+    aAllow.fooPtr(aAllow.mWhatever);
+    aAllow.fooRef(*aAllow.mWhatever);
+    aAllow.fooPtr(aAllow.mRefCountedWhatever);
+    aAllow.fooRef(*aAllow.mRefCountedWhatever);
   }
   MOZ_CAN_RUN_SCRIPT void bar(AllowMozKnownLiveMemberParent& aAllowParent) {
-    aAllowParent.foo(aAllowParent.mWhatever);
+    aAllowParent.fooPtr(aAllowParent.mWhatever);
+    aAllowParent.fooRef(*aAllowParent.mWhatever);
+    aAllowParent.fooPtr(aAllowParent.mRefCountedWhatever);
+    aAllowParent.fooRef(*aAllowParent.mRefCountedWhatever);
   }
 };
 
+MOZ_CAN_RUN_SCRIPT void AllowMozKnownLiveMemberInAutoStorage() {
+  AllowMozKnownLiveMember inStack;
+  AllowMozKnownLiveMember* inHeap = new AllowMozKnownLiveMember();
+  inStack.fooPtr(inStack.mWhatever);
+  inStack.fooRef(*inStack.mWhatever);
+  inStack.fooPtr(inStack.mRefCountedWhatever);
+  inStack.fooRef(*inStack.mRefCountedWhatever);
+  inStack.fooPtr(inHeap->mWhatever); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'inHeap->mWhatever' is neither.}}
+  inStack.fooRef(*inHeap->mWhatever); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  '*inHeap->mWhatever' is neither.}}
+  inStack.fooPtr(inHeap->mRefCountedWhatever); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'inHeap->mRefCountedWhatever' is neither.}}
+  inStack.fooRef(*inHeap->mRefCountedWhatever); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  '*inHeap->mRefCountedWhatever' is neither.}}
+}
+
 struct DisallowMozKnownLiveMemberNotFromKnownLive {
   AllowMozKnownLiveMember* mMember;
-  MOZ_CAN_RUN_SCRIPT void foo(RefCountedBase* aWhatever) {}
+  MOZ_CAN_RUN_SCRIPT void fooPtr(RefCountedBase* aWhatever) {}
+  MOZ_CAN_RUN_SCRIPT void fooRef(RefCountedBase& aWhatever) {}
   MOZ_CAN_RUN_SCRIPT void bar() {
-    foo(mMember->mWhatever); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mMember->mWhatever' is neither.}}
+    fooPtr(mMember->mWhatever); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mMember->mWhatever' is neither.}}
+    fooRef(*mMember->mWhatever); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  '*mMember->mWhatever' is neither.}}
+    fooPtr(mMember->mRefCountedWhatever); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mMember->mRefCountedWhatever' is neither.}}
+    fooRef(*mMember->mRefCountedWhatever); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  '*mMember->mRefCountedWhatever' is neither.}}
   }
 };
 
