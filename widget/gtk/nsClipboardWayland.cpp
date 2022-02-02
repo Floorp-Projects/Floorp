@@ -113,14 +113,16 @@ void nsRetrievalContextWayland::TransferClipboardData(
       LOGCLIP("    getting %d bytes of text.\n", dataLength);
       mClipboardData->SetText(
           Span(static_cast<const char*>(aData), dataLength));
-      LOGCLIP("    done, mClipboardData = %p\n", mClipboardData->mData.get());
+      LOGCLIP("    done, mClipboardData = %p\n",
+              mClipboardData->AsSpan().data());
       break;
     }
     case ClipboardDataType::Data: {
       LOGCLIP("    getting %d bytes of data.\n", dataLength);
       mClipboardData->SetData(Span(
           gtk_selection_data_get_data((GtkSelectionData*)aData), dataLength));
-      LOGCLIP("    done, mClipboardData = %p\n", mClipboardData->mData.get());
+      LOGCLIP("    done, mClipboardData = %p\n",
+              mClipboardData->AsSpan().data());
       break;
     }
   }
@@ -194,9 +196,9 @@ GUniquePtr<char> nsRetrievalContextWayland::GetClipboardText(
   LOGCLIP("nsRetrievalContextWayland::GetClipboardText(), clipboard %s\n",
           (selection == GDK_SELECTION_PRIMARY) ? "Primary" : "Selection");
 
-  return WaitForClipboardData(ClipboardDataType::Text, aWhichClipboard).mData;
+  return WaitForClipboardData(ClipboardDataType::Text, aWhichClipboard)
+      .ExtractText();
 }
-
 
 ClipboardData nsRetrievalContextWayland::WaitForClipboardContent() {
   int iteration = 1;
