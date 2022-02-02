@@ -156,10 +156,7 @@ Where It's Headed
 ~~~~~~~~~~~~~~~~~
 
 NSPR is applicable as a platform on which to write threaded applications
-that need to be ported to multiple platforms. The current implementation
-supports Macintosh (PPC), WIN-32 (WinNT, Win9x) and 20 versions of UNIX
-and is still expanding. The basic API is stable and expected to remain
-that way.
+that need to be ported to multiple platforms.
 
 NSPR is functionally complete and has entered a mode of sustaining
 engineering. As operating system vendors issue new releases of their
