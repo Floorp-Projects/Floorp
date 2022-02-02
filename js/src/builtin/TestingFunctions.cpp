@@ -208,6 +208,14 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#ifdef NIGHTLY_BUILD
+  bool arrayGrouping = cx->options().arrayGrouping();
+  if (!JS_SetProperty(cx, info, "enableArrayGrouping",
+                      arrayGrouping ? TrueHandleValue : FalseHandleValue)) {
+    return false;
+  }
+#endif
+
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   bool changeArrayByCopy = cx->options().changeArrayByCopy();
   if (!JS_SetProperty(cx, info, "enableChangeArrayByCopy",
