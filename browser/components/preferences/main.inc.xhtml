@@ -581,6 +581,11 @@
             data-l10n-id="update-application-use-service"
             preference="app.update.service.enabled"/>
 #endif
+#ifdef NIGHTLY_BUILD
+  <checkbox id="showUpdatePrompts"
+            data-l10n-id="update-application-suppress-prompts"
+            preference="app.update.suppressPrompts"/>
+#endif
 #endif
 </groupbox>
 
