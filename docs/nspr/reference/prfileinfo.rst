@@ -4,7 +4,6 @@ PRFileInfo
 File information structure used with :ref:`PR_GetFileInfo` and
 :ref:`PR_GetOpenFileInfo`.
 
-.. _Syntax:
 
 Syntax
 ~~~~~~
@@ -22,9 +21,8 @@ Syntax
 
    typedef struct PRFileInfo PRFileInfo;
 
- 
+ 
 
-.. _Fields:
 
 Fields
 ~~~~~~
@@ -42,7 +40,6 @@ The structure has the following fields:
    Last modification time per definition of :ref:`PRTime`. See
    `prtime.h <https://dxr.mozilla.org/mozilla-central/source/nsprpub/pr/include/prtime.h>`__.
 
-.. _Description:
 
 Description
 -----------

@@ -1,4 +1,3 @@
-.. _Syntax:
 
 Syntax
 ------
@@ -9,7 +8,6 @@ Syntax
 
    typedef struct PLHashEntry PLHashEntry;
 
-.. _Description:
 
 Description
 -----------

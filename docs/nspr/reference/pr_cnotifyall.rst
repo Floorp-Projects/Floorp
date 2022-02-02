@@ -4,7 +4,6 @@ PR_CNotifyAll
 Notifies all the threads waiting for a change in the state of monitored
 data.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    PRStatus PR_CNotifyAll(void *address);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -26,7 +24,6 @@ The function has the following parameter:
    The address of the monitored object. The calling thread must be in
    the monitor at the time :ref:`PR_CNotifyAll` is called.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -36,7 +33,6 @@ Returns
  - :ref:`PR_FAILURE` indicates that the referenced monitor could not be
    located or that the calling thread was not in the monitor
 
-.. _Description:
 
 Description
 -----------

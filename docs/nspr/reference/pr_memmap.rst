@@ -3,7 +3,6 @@ PR_MemMap
 
 Maps a section of a file to memory.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
      PRInt64 offset,
      PRUint32 len);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -33,7 +31,6 @@ The function has the following parameters:
 ``len``
    Length of the section of the file to be mapped.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -41,7 +38,6 @@ Returns
 The starting address of the memory region to which the section of file
 is mapped. Returns ``NULL`` on error.
 
-.. _Description:
 
 Description
 -----------

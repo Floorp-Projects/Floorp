@@ -3,7 +3,6 @@ PR_CreateThreadPool
 
 Create a new hash table.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -19,7 +18,6 @@ Syntax
      PRUint32 stacksize
    );
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -34,14 +32,12 @@ The function has the following parameters:
 ``stacksize``
    Size of the stack allocated to each thread in the thread.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 Pointer to a :ref:`PRThreadPool` structure or ``NULL`` on error.
 
-.. _Description:
 
 Description
 ~~~~~~~~~~~

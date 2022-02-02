@@ -3,7 +3,6 @@ PR_PostSemaphore
 
 Increments the value of a specified semaphore.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    NSPR_API(PRStatus) PR_PostSemaphore(PRSem *sem);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -25,7 +23,6 @@ The function has the following parameter:
    A pointer to a ``PRSem`` structure returned from a call to
    :ref:`PR_OpenSemaphore`.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

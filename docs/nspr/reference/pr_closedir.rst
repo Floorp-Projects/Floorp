@@ -3,7 +3,6 @@ PR_CloseDir
 
 Closes the specified directory.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRStatus PR_CloseDir(PRDir *dir);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -25,7 +23,6 @@ The function has the following parameter:
    A pointer to a :ref:`PRDir` structure representing the directory to be
    closed.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -34,7 +31,6 @@ Returns
 -  If unsuccessful, ``PR_FAILURE``. The reason for the failure can be
    retrieved via :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------
@@ -44,7 +40,6 @@ with a call to :ref:`PR_CloseDir` call. Note that after a :ref:`PR_CloseDir`
 call, any ``PRDirEntry`` object returned by a previous :ref:`PR_ReadDir`
 call on the same :ref:`PRDir` object becomes invalid.
 
-.. _See_Also:
 
 See Also
 --------

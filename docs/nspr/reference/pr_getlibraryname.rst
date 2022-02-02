@@ -3,7 +3,6 @@ PR_GetLibraryName
 
 Constructs a full library path name.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
       const char *dir,
       const char *lib);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -29,7 +27,6 @@ The function has these parameters:
 ``lib``
    The leaf name of the library of interest.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -37,7 +34,6 @@ Returns
 If successful, returns a new character string containing a constructed
 path name. In case of error, returns ``NULL``.
 
-.. _Description:
 
 Description
 -----------

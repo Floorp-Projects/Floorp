@@ -3,7 +3,6 @@ PR_NewCondVar
 
 Creates a new condition variable.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRCondVar* PR_NewCondVar(PRLock *lock);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -25,7 +23,6 @@ Parameter
    The identity of the mutex that protects the monitored data, including
    this condition variable.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

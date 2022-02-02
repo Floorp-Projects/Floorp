@@ -4,7 +4,6 @@ PR_ProcessAttrSetInheritableFileMap
 Prepare filemap for export to my children processes via
 ``PR_CreateProcess``.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -20,7 +19,6 @@ Syntax
      const char      *shmname
    );
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -35,14 +33,12 @@ The function has the following parameters:
 ``shmname``
    Pointer to the name for the PRFileMap; used by child.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 :ref:`PRStatus`
 
-.. _Description:
 
 Description
 ~~~~~~~~~~~

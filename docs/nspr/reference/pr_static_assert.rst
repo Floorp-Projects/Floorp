@@ -4,7 +4,6 @@ PR_STATIC_ASSERT
 Prevents code from compiling when an expression has the value ``FALSE``
 at compile time.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    PR_STATIC_ASSERT ( expression );
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -28,14 +26,12 @@ expression
    will cause a compiler error; see :ref:`PR_ASSERT` for a runtime
    alternative.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 Nothing
 
-.. _Description:
 
 Description
 -----------

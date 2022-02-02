@@ -3,7 +3,6 @@ PRInt32
 
 Guaranteed to be a signed 32-bit integer on all platforms.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    typedefdefinition PRInt32;
 
-.. _Description:
 
 Description
 -----------

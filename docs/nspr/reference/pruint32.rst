@@ -3,7 +3,6 @@ PRUint32
 
 Guaranteed to be an unsigned 32-bit integer on all platforms.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    typedefdefinition PRUint32;
 
-.. _Description:
 
 Description
 -----------

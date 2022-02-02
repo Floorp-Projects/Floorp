@@ -3,7 +3,6 @@ PR_GetSockName
 
 Gets network address for a specified socket.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      PRFileDesc *fd,
      PRNetAddr *addr);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -28,7 +26,6 @@ The function has the following parameters:
 ``addr``
    On return, the address of the socket.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

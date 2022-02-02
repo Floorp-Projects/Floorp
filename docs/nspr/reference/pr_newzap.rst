@@ -4,7 +4,6 @@ PR_NEWZAP
 Allocates and clears memory from the heap for an instance of a given
 type.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    _type * PR_NEWZAP(_struct);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -23,7 +21,6 @@ Parameter
 ``_struct``
    The name of a type.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -33,7 +30,6 @@ allocation attempt fails, ``NULL``. The bytes in the buffer are all
 initialized to 0. Call ``PR_GetError()`` to retrieve the error returned
 by the libc function.
 
-.. _Description:
 
 Description
 -----------

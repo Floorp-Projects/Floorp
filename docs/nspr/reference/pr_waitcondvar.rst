@@ -3,7 +3,6 @@ PR_WaitCondVar
 
 Waits on a condition.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      PRCondVar *cvar,
      PRIntervalTime timeout);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -32,7 +30,6 @@ Parameters
    the lock, possibly causing a rescheduling within the runtime, then
    immediately attempt to reacquire the lock and resume.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -45,7 +42,6 @@ The function returns one of the following values:
    with :ref:`PR_Interrupt`), ``PR_FAILURE``. The details can be determined
    with :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

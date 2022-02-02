@@ -4,7 +4,6 @@ PR_GetAddrInfoByName
 Looks up a host by name. Equivalent to ``getaddrinfo(host, NULL, ...)``
 of RFC 3493.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -18,7 +17,6 @@ Syntax
      PRUint16 af,
      PRIntn flags);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -35,7 +33,6 @@ The function has the following parameters:
    ``PR_AI_NOCANONNAME`` to suppress the determination of the canonical
    name corresponding to ``hostname``
 
-.. _Returns:
 
 Returns
 ~~~~~~~

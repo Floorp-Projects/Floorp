@@ -3,7 +3,6 @@ PRCList
 
 A circular linked list.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -19,7 +18,6 @@ Syntax
      PRCList *previous;
    };
 
-.. _Description:
 
 Description
 -----------

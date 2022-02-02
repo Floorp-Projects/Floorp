@@ -4,7 +4,6 @@ PR_WaitForPollableEvent
 Blocks the calling thread until the pollable event is set, and then
 atomically unsetting the event before returning.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -13,7 +12,6 @@ Syntax
 
    NSPR_API(PRStatus) PR_WaitForPollableEvent(PRFileDesc *event);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ The function has the following parameter:
    Pointer to a :ref:`PRFileDesc` structure previously created via a call
    to :ref:`PR_NewPollableEvent`.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

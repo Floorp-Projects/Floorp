@@ -3,7 +3,6 @@ PR_Connect
 
 Initiates a connection on a specified socket.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
      const PRNetAddr *addr,
      PRIntervalTime timeout);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -33,7 +31,6 @@ The function has the following parameters:
    A value of type :ref:`PRIntervalTime` specifying the time limit for
    completion of the connect operation.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -44,7 +41,6 @@ The function returns one of the following values:
 -  If unsuccessful, ``PR_FAILURE``. Further information can be obtained
    by calling :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

@@ -1,4 +1,3 @@
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
    #define HT_ENUMERATE_REMOVE   2   /* remove and free the current entry */
    #define HT_ENUMERATE_UNHASH   4   /* just unhash the current entry */
 
-.. _Description:
 
 Description
 -----------
@@ -26,7 +24,6 @@ to a user-specified function of type ``PLHashEnumerator`` with the hash
 table entry, an integer index, and an arbitrary piece of user data as
 argument.
 
-.. _Remark:
 
 Remark
 ------
@@ -37,7 +34,6 @@ The entries are unlinked from the table, they are not freed, but the
 entry count (the ``nentries`` field of the ``PLHashTable`` structure) is
 not decremented.
 
-.. _See_Also:
 
 See Also
 --------

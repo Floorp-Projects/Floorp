@@ -4,7 +4,6 @@ PR_CALLBACKimplementation
 Used to define pointers to functions that will be implemented by the
 client but called from a (different) shared library.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -13,7 +12,6 @@ Syntax
 
    #include <prtypes.h>type PR_CALLBACKimplementation
 
-.. _Description:
 
 Description
 -----------

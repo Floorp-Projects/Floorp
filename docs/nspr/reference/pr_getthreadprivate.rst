@@ -3,7 +3,6 @@ PR_GetThreadPrivate
 
 Recovers the per-thread private data for the current thread.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    void* PR_GetThreadPrivate(PRUintn index);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,14 +22,12 @@ Parameter
 ``index``
    The index into the per-thread private data table.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 ``NULL`` if the data has not been set.
 
-.. _Description:
 
 Description
 -----------

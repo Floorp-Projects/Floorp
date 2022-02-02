@@ -4,7 +4,6 @@ PR_GetUniqueIdentity
 Asks the runtime to allocate a unique identity for a layer identified by
 the layer's name.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    PRDescIdentity PR_GetUniqueIdentity(const char *layer_name);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -25,7 +23,6 @@ The function has the following parameter:
 ``layer_name``
    The string associated with the creation of a layer's identity.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -38,7 +35,6 @@ The function returns one of the following values:
    returns the value ``PR_INVALID_IO_LAYER`` with the error code
    ``PR_OUT_OF_MEMORY_ERROR``.
 
-.. _Description:
 
 Description
 -----------

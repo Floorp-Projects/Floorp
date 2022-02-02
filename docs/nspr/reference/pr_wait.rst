@@ -3,7 +3,6 @@ PR_Wait
 
 Waits for an application-defined state of the monitored data to exist.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      PRMonitor *mon,
      PRIntervalTime ticks);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -32,7 +30,6 @@ The function has the following parameter:
    willing to wait for an explicit notification before being
    rescheduled.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -42,11 +39,10 @@ The function returns one of the following values:
  - :ref:`PR_SUCCESS`` means the thread is being resumed from the ``PR_Wait`
    call either because it was explicitly notified or because the time
    specified by the parameter ``ticks`` has expired.
- - :ref:`PR_FAILURE`` means ``PR_Wait` encountered a system error (such as
+ - :ref:`PR_FAILURE` means ``PR_Wait`` encountered a system error (such as
    an invalid monitor reference) or the thread was interrupted by
    another thread.
 
-.. _Description:
 
 Description
 -----------

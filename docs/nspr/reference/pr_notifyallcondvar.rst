@@ -3,7 +3,6 @@ PR_NotifyAllCondVar
 
 Notifies all of the threads waiting on a specified condition variable.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRStatus PR_NotifyAllCondVar(PRCondVar *cvar);
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -25,7 +23,6 @@ The function returns one of the following values:
 -  If unsuccessful (for example, if the caller has not locked the lock
    associated with the condition variable), ``PR_FAILURE``.
 
-.. _Description:
 
 Description
 -----------

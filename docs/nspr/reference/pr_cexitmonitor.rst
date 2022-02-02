@@ -3,7 +3,6 @@ PR_CExitMonitor
 
 Decrement the entry count associated with a cached monitor.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRStatus PR_CExitMonitor(void *address);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -25,7 +23,6 @@ The function has the following parameters:
    The address of the protected object--the same address previously
    passed to :ref:`PR_CEnterMonitor`.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -37,7 +34,6 @@ The function returns one of the following values:
    parameter is invalid or that the calling thread is not in the
    monitor.
 
-.. _Description:
 
 Description
 -----------

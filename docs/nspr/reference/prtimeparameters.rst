@@ -3,7 +3,6 @@ PRTimeParameters
 
 A representation of time zone information.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
         PRInt32 tp_dst_offset;
     } PRTimeParameters;
 
-.. _Description:
 
 Description
 -----------

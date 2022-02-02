@@ -5,7 +5,6 @@ PRFileType
 Type for enumerators used in the type field of the :ref:`PRFileInfo` and
 :ref:`PRFileInfo64` structures.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -20,7 +19,6 @@ Syntax
       PR_FILE_OTHER = 3
    } PRFileType;
 
-.. _Enumerators:
 
 Enumerators
 ~~~~~~~~~~~

@@ -3,7 +3,6 @@ PR_UnblockClockInterrupts
 
 Unblocks the timer signal used for preemptive scheduling.
 
-.. _Syntax:
 
 Syntax
 ------

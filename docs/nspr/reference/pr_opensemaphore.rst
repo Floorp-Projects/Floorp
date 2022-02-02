@@ -3,7 +3,6 @@ PR_OpenSemaphore
 
 Creates or opens a named semaphore with the specified name.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -23,7 +22,6 @@ Syntax
      PRUintn value
    );
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -39,14 +37,12 @@ The function has the following parameters:
 ``value``
    The initial value assigned to the semaphore.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 A pointer to a PRSem structure or ``NULL/code> on error.``
 
-.. _Description:
 
 Description
 ~~~~~~~~~~~

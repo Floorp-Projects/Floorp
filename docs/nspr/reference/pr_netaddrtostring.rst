@@ -3,7 +3,6 @@ PR_NetAddrToString
 
 Converts a character string to a network address.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
      char *string,
      PRUint32 size);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -31,7 +29,6 @@ The function has the following parameters:
 ``size``
    The size of the result buffer (``string``).
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -42,7 +39,6 @@ The function returns one of the following values:
 -  If unsuccessful, ``PR_FAILURE``. You can retrieve the reason for the
    failure by calling :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

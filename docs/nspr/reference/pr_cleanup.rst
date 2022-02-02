@@ -3,7 +3,6 @@ PR_Cleanup
 
 Coordinates a graceful shutdown of NSPR.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRStatus PR_Cleanup(void);
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -25,7 +23,6 @@ The function returns one of the following values:
 -  If the calling thread of this function is not the primordial thread,
    ``PR_FAILURE``.
 
-.. _Description:
 
 Description
 -----------

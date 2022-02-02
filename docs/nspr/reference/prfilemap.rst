@@ -4,7 +4,6 @@ PRFileMap
 Type returned by :ref:`PR_CreateFileMap` and passed to :ref:`PR_MemMap` and
 :ref:`PR_CloseFileMap`.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    typedef struct PRFileMap PRFileMap;
 
-.. _Description:
 
 Description
 -----------

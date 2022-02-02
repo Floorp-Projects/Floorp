@@ -3,7 +3,6 @@ PR_BlockClockInterrupts
 
 Blocks the timer signal used for preemptive scheduling.
 
-.. _Syntax:
 
 Syntax
 ------

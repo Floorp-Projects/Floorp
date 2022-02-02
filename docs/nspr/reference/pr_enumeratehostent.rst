@@ -4,7 +4,6 @@ PR_EnumerateHostEnt
 Evaluates each of the possible addresses of a :ref:`PRHostEnt` structure,
 acquired from :ref:`PR_GetHostByName` or :ref:`PR_GetHostByAddr`.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -19,7 +18,6 @@ Syntax
      PRUint16 port,
      PRNetAddr *address);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -43,7 +41,6 @@ The function has the following parameters:
    structure is filled in by the runtime if the result of the call is
    greater than 0.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -56,7 +53,6 @@ The function returns one of the following values:
 -  If unsuccessful, the function returns -1. You can retrieve the reason
    for the failure by calling :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

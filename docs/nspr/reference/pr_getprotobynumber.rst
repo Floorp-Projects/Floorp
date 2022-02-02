@@ -3,7 +3,6 @@ PR_GetProtoByNumber
 
 Looks up a protocol entry based on protocol's number.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -18,7 +17,6 @@ Syntax
      PRInt32 bufsize,
      PRProtoEnt* result);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -38,7 +36,6 @@ The function has the following parameters:
    structure is filled in by the runtime if the function returns
    ``PR_SUCCESS``.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

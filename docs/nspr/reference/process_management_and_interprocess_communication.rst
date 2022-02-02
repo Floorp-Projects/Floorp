@@ -21,7 +21,7 @@ Process Management Types and Constants
 
 The types defined for process management are:
 
- - :ref:`PRProcess` 
+ - :ref:`PRProcess` 
  - :ref:`PRProcessAttr`
 
 .. _Process_Management_Functions:
@@ -44,11 +44,11 @@ Setting the Attributes of a New Process
 The functions that create and manipulate attribute sets of new processes
 are:
 
- - :ref:`PR_NewProcessAttr` 
- - :ref:`PR_ResetProcessAttr` 
- - :ref:`PR_DestroyProcessAttr` 
- - :ref:`PR_ProcessAttrSetStdioRedirect` 
- - :ref:`PR_ProcessAttrSetCurrentDirectory` 
+ - :ref:`PR_NewProcessAttr` 
+ - :ref:`PR_ResetProcessAttr` 
+ - :ref:`PR_DestroyProcessAttr` 
+ - :ref:`PR_ProcessAttrSetStdioRedirect` 
+ - :ref:`PR_ProcessAttrSetCurrentDirectory` 
  - :ref:`PR_ProcessAttrSetInheritableFD`
 
 .. _Creating_and_Managing_Processes:
@@ -58,7 +58,7 @@ Creating and Managing Processes
 
 The functions that create and manage processes are:
 
- - :ref:`PR_CreateProcess` 
- - :ref:`PR_DetachProcess` 
- - :ref:`PR_WaitProcess` 
+ - :ref:`PR_CreateProcess` 
+ - :ref:`PR_DetachProcess` 
+ - :ref:`PR_WaitProcess` 
  - :ref:`PR_KillProcess`

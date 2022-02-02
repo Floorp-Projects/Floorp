@@ -3,7 +3,6 @@ PR_CallOnce
 
 Ensures that subsystem initialization occurs only once.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
      PRCallOnceType *once,
      PRCallOnceFN func);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~

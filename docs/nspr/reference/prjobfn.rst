@@ -1,7 +1,6 @@
 PRJobFn
 =======
 
-.. _Syntax:
 
 Syntax
 ------

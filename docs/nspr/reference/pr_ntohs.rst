@@ -3,7 +3,6 @@ PR_ntohs
 
 Performs 16-bit conversion from network byte order to host byte order.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRUint16 PR_ntohs(PRUint16 conversion);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ The function has the following parameter:
 ``conversion``
    The 16-bit unsigned integer, in network byte order, to be converted.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

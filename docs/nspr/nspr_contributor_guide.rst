@@ -13,12 +13,8 @@ NSPR contributor guide
    should help the contributor in crafting his contribution, increasing
    its likelihood for acceptance.
 
-.. _General_Guidelines:
-
 General Guidelines
 ~~~~~~~~~~~~~~~~~~
-
-.. _Downward_Compatibility:
 
 *Downward Compatibility*
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -30,15 +26,11 @@ NSPR cannot change. Should you need to have a similar API, with some
 slightly different behavior or different function prototype, then
 suggest a new API with a different name.
 
-.. _C_Language_API:
-
 *C Language API*
 ^^^^^^^^^^^^^^^^
 
 The NSPR API is a C Language API. Please do not contribute Java, C or
 other language wrappers.
-
-.. _Coding_Style:
 
 *Coding Style*
 ^^^^^^^^^^^^^^
@@ -47,8 +39,6 @@ NSPR does not have a documented coding style guide. Look at the extant
 code. Make yours look like that. Some guidelines concerning naming
 conventions can be found in :ref:`NSPR_Naming_Conventions`.
 in the :ref:`NSPR API Reference`.
-
-.. _Ownership_of_your_contribution:
 
 *Ownership of your contribution*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -61,15 +51,11 @@ pay close attention to the rights of your "Day-Job" employer. If you
 snatched it from somewhere else, tell us where; show us where the right
 to incorporate it into NSPR exists.
 
-.. _License_under_MPL_or_GPL:
-
 *License under MPL or GPL*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When you contribute material to NSPR, you agree to allow your
 contribution to be licensed under the MPL or GPL.
-
-.. _BugFixes:
 
 BugFixes
 ~~~~~~~~
@@ -81,8 +67,6 @@ doing and why.
 Include your changes as diffs in an attachment to the BugZilla report.
 
 Use a coding style consistent with the source file you are changing.
-
-.. _New_Features:
 
 New Features
 ~~~~~~~~~~~~
@@ -123,7 +107,7 @@ See:
 `prshm.h <http://lxr.mozilla.org/nspr/source/nsprpub/pr/include/prshm.h>`__
 as an example of how your header file(s) should be documented.
 
-**Source File Descriptions**. Provide descriptive documentation in your
+*Source File Descriptions*o. Provide descriptive documentation in your
 source (*.c) files. Alas, we have no source files documented as we think
 they should be.
 
@@ -135,15 +119,13 @@ features:
 -  You must provide test cases that test all APIs you are adding. See:
    [#TestCases Test Cases]
 
-.. _New_Libraries:
-
 New Libraries
 ~~~~~~~~~~~~~
 
 All the guidelines applicable to [#NewFeatures New Features] applies to
 new libraries.
 
-For purposes of this paper, a "new library" is defined as a libary under
+For purposes of this paper, a "new library" is defined as a library under
 the ``mozilla/nsprpub/lib`` directory tree and built as a separate
 library. These libraries exist, for the most part, as "legacy" code from
 NSPR 1.0. [Note that the current NSPR module owners do not now nor never
@@ -157,8 +139,6 @@ applications using NSPR, such as ``...nsprpub/lib/libc/plgetopt.*.``
 -  May rely on the NSPR API
 -  May NOT rely on any other library API
 
-.. _New_Platform_Ports:
-
 New Platform Ports
 ~~~~~~~~~~~~~~~~~~
 
@@ -166,8 +146,6 @@ New Platform Ports
 -  platform specific headers in ``pr/include/md/_platformname.[h!cfg]``
 -  platform specific code in ``pr/src/md/platform/*.c``
 -  make rules in ``config/_platform.mk``
-
-.. _Documentation:
 
 Documentation
 ~~~~~~~~~~~~~
@@ -177,8 +155,6 @@ word processing system [don't ask]. Document your work as described in
 [#NewFeatures New Features]. Use the style of other NSPR documentation.
 We will see that your documentation is transcribed into the appropriate
 word processor and the derived HTML shows up on mozilla.org
-
-.. _Test_Cases:
 
 Test Cases
 ~~~~~~~~~~
@@ -191,14 +167,12 @@ existing test case did not catch a bug it should have caught.
 The new test cases should be implemented in the style of other NSPR test
 cases.
 
-Test cases should prove that the added API items work as advertized.
+Test cases should prove that the added API items work as advertised.
 
 Test cases should serve as an example of how to use the API items.
 
 Test cases should provoke failure of every API item and report its
 failure.
-
-.. _Frequently_Asked_Questions_(FAQ):
 
 Frequently Asked Questions (FAQ)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

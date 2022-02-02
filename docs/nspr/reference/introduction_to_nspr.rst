@@ -155,15 +155,15 @@ scheduling algorithm to find the most appropriate thread. The chosen
 thread may be of higher priority, of the same priority, or even the same
 thread. It will not be a thread of lower priority.
 
-Some operating systems cannot be made preemptable (for example, Mac OS
+Some operating systems cannot be made preemptible (for example, Mac OS
 and Win 16). This puts them at some risk in supporting arbitrary code,
 even if the code is interpreted (Java). Other systems are not
 thread-aware, and their runtime libraries not thread-safe (most versions
 of Unix). These systems can support local level thread abstractions that
-can be made preemptable, but run the risk of library corruption
+can be made preemptible, but run the risk of library corruption
 (``libc``). Still other operating systems have a native notion of
 threads, and their libraries are thread-aware and support locking.
-However, if local threads are also present, and they are preemptable,
+However, if local threads are also present, and they are preemptible,
 they are subject to deadlock. At this time, the only safe solutions are
 to turn off preemption (a runtime decision) or to preempt global threads
 only.
@@ -173,7 +173,7 @@ only.
 Interrupting Threads
 ^^^^^^^^^^^^^^^^^^^^
 
-NSPR threads are interruptable, with some constraints and
+NSPR threads are interruptible, with some constraints and
 inconsistencies.
 
 To interrupt a thread, the caller of :ref:`PR_Interrupt` must have the NSPR

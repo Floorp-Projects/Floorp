@@ -3,7 +3,6 @@ PR_SetThreadPriority
 
 Sets the priority of a specified thread.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
       PRThread *thread,
       PRThreadPriority priority);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -28,7 +26,6 @@ Parameters
 ``priority``
    The priority you want to set.
 
-.. _Description:
 
 Description
 -----------

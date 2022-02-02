@@ -3,7 +3,6 @@ PR_TransmitFile
 
 Sends a complete file across a connected socket.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -20,7 +19,6 @@ Syntax
      PRTransmitFileFlags flags,
      PRIntervalTime timeout);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -48,7 +46,6 @@ The function has the following parameters:
 ``timeout``
    Time limit for completion of the transmit operation.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -59,7 +56,6 @@ Returns
    the file, the ``PR_TRANSMITFILE_CLOSE_SOCKET`` flag is ignored. The
    reason for the failure can be obtained by calling :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

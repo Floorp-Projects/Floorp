@@ -7,8 +7,6 @@ monitor for all objects. A hash table is used to quickly map addresses
 to their respective monitors. The system automatically enlarges the hash
 table as needed.
 
-.. _Important:
-
 Important
 ---------
 

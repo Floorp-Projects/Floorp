@@ -5,7 +5,6 @@ Compares the version of NSPR assumed by the caller (the imported
 version) with the version being offered by the runtime (the exported
 version).
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
 
    PRBool PR_VersionCheck(const char *importedVersion);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -26,7 +24,6 @@ Parameter
 ``importedVersion``
    The version of the shared library being imported.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -37,7 +34,6 @@ The function returns one of the following values:
    by the caller, ``PR_TRUE``.
 -  If the versions are not compatible, ``PR_FALSE``.
 
-.. _Description:
 
 Description
 -----------
@@ -47,7 +43,6 @@ imported (``importedVersion``) is compatible with the running version of
 the shared library. This is a string comparison of sorts, though the
 details of the comparison will vary over time.
 
-.. _See_Also:
 
 See Also
 --------

@@ -105,10 +105,10 @@ debugging aids.
        myLM = PR_NewLogModule( "userStuff" );
        PR_ASSERT( myLM );
 
-       PR_LOG( myLM, PR_LOG_NOTICE, ("Log a Notice %d\n", 999 ));
-       for (i = 0; i < 10 ; i++ )
+       PR_LOG( myLM, PR_LOG_NOTICE, ("Log a Notice %d\n", 999 ));
+       for (i = 0; i < 10 ; i++ )
        {
-           PR_LOG( myLM, PR_LOG_DEBUG, ("Log Debug number: %d\n", i));
+           PR_LOG( myLM, PR_LOG_DEBUG, ("Log Debug number: %d\n", i));
            PR_Sleep( 500 );
        }
        PR_LOG( myLM, PR_LOG_NOTICE, "That's all folks\n");

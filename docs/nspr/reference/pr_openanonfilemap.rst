@@ -3,7 +3,6 @@ PR_OpenAnonFileMap
 
 Creates or opens a named semaphore with the specified name
 
-.. _Syntax:
 
 Syntax
 ------
@@ -19,7 +18,6 @@ Syntax
      PRFileMapProtect prot
    );
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -33,14 +31,12 @@ The function has the following parameters:
 ``prot``
    How the shared memory is mapped.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 Pointer to :ref:`PRFileMap` or ``NULL`` on error.
 
-.. _Description:
 
 Description
 -----------

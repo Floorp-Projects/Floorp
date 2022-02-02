@@ -9,8 +9,6 @@ utility suite such as MKS Toolkit, Cygwin, and MSYS. The easiest way to
 get these tools is to install the
 :ref:`MozillaBuild` package.
 
-.. _Introduction:
-
 Introduction
 ~~~~~~~~~~~~
 
@@ -65,8 +63,6 @@ Specify these two options to generate an optimized (release) build.
 
 These two options can actually be used independently, but it's not
 recommended.
-
-.. _--enable-64bit:
 
 --enable-64bit
 ^^^^^^^^^^^^^^

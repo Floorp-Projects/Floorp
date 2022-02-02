@@ -3,7 +3,6 @@ PRStatus
 
 Type for status code returned by some functions.
 
-.. _Syntax:
 
 Syntax
 ------

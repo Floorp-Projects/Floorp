@@ -5,7 +5,6 @@ PR_EnumerateAddrInfo
 Enumerates each of the possible network addresses of a ``PRAddrInfo``
 structure, acquired from :ref:`PR_GetAddrInfoByName`.
 
-.. _Syntax:
 
 Syntax
 ~~~~~~
@@ -20,7 +19,6 @@ Syntax
      PRUint16 port,
      PRNetAddr *result);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -44,7 +42,6 @@ The function has the following parameters:
    structure is filled in by the runtime if the result of the call is
    not ``NULL``.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -53,7 +50,6 @@ The function returns the value you should specify in the ``enumPtr``
 parameter for the next call of the enumerator. If the function returns
 ``NULL``, the enumeration is ended.
 
-.. _Description:
 
 Description
 -----------

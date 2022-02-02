@@ -1,7 +1,6 @@
 PR_VERSION
 ==========
 
-.. _Syntax:
 
 Syntax
 ------
@@ -12,7 +11,6 @@ Syntax
 
    #define PR_VERSION "2.1 yyyymmdd"
 
-.. _Description:
 
 Description
 -----------

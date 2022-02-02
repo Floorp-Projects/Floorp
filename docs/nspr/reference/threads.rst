@@ -66,9 +66,9 @@ Creating, Joining, and Identifying Threads
    terminates.
  - :ref:`PR_GetCurrentThread` returns the current thread object for the
    currently running code.
- - :ref:`PR_AttachThread`` associates a ``PRThread` object with an existing
+ - :ref:`PR_AttachThread`` associates a :ref:`PRThread` object with an existing
    native thread.
- - :ref:`PR_DetachThread`` disassociates a ``PRThread` object from a native
+ - :ref:`PR_DetachThread`` disassociates a :ref:`PRThread` object from a native
    thread.
 
 .. _Controlling_Thread_Priorities:

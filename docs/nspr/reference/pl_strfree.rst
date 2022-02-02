@@ -3,7 +3,6 @@ PL_strfree
 
 Frees memory allocated by :ref:`PL_strdup`
 
-.. _Syntax:
 
 Syntax
 ~~~~~~
@@ -12,7 +11,6 @@ Syntax
 
    void PL_strfree(char *s);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~

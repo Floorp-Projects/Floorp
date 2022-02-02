@@ -4,7 +4,6 @@ PR_GetDescType
 Describes what type of file is referenced by a specified file
 descriptor.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    PRDescType PR_GetDescType(PRFileDesc *file);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -26,7 +24,6 @@ The function has the following parameter:
    A pointer to a :ref:`PRFileDesc` object whose descriptor type is to be
    returned.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -34,7 +31,6 @@ Returns
 The function returns a ``PRDescType`` enumeration constant that
 describes the type of file.
 
-.. _Description:
 
 Description
 -----------

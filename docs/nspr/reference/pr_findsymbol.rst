@@ -5,7 +5,6 @@ PR_FindSymbol
 particular library given the identity of the library and a textual
 representation of the symbol in question.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -18,7 +17,6 @@ Syntax
       PRLibrary *lib,
       const char *name);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -31,14 +29,12 @@ The function has these parameters:
 ``name``
    A textual representation of the symbol to resolve.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 An untyped pointer.
 
-.. _Description:
 
 Description
 -----------

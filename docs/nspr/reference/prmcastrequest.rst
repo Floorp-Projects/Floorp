@@ -5,7 +5,6 @@ Structure used to specify values for the ``PR_SockOpt_AddMember`` and
 ``PR_SockOpt_DropMember`` socket options that define a request to join
 or leave a multicast group.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -21,7 +20,6 @@ Syntax
 
    typedef struct PRMcastRequest PRMcastRequest;
 
-.. _Fields:
 
 Fields
 ~~~~~~
@@ -33,7 +31,6 @@ The structure has the following fields:
 ``ifaddr``
    Local IP address of interface.
 
-.. _Description:
 
 Description
 -----------

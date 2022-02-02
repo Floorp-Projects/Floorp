@@ -3,7 +3,6 @@ PR_GetLibraryPath
 
 Retrieves the current default library path.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,14 +13,12 @@ Syntax
 
    char* PR_GetLibraryPath(void);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
 
 The function has no parameters.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -29,7 +26,6 @@ Returns
 A copy of the default library pathname string. In case of error, returns
 NULL.
 
-.. _Description:
 
 Description
 -----------

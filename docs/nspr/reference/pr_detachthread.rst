@@ -10,7 +10,6 @@ PR_DetachThread
 
 Disassociates a PRThread object from a native thread.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -21,21 +20,18 @@ Syntax
 
    void PR_DetachThread(void);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
 
 PR_DetachThread has no parameters.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 The function returns nothing.
 
-.. _Description:
 
 Description
 -----------

@@ -1,4 +1,3 @@
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
    #define HT_FREE_VALUE 0 /* just free the entry's value */
    #define HT_FREE_ENTRY 1 /* free value and entire entry */
 
-.. _Description:
 
 Description
 -----------
@@ -34,7 +32,6 @@ to a memory pool used by the memory allocator.
 The ``freeEntry`` function does not need to free the value of the entry.
 If flag is ``HT_FREE_ENTRY``, the function frees the entry.
 
-.. _Remark:
 
 Remark
 ------

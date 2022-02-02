@@ -40,8 +40,6 @@ and cannot be reused.
 After you call :ref:`PR_DeleteSharedMemory`, any further use of the shared
 memory associated with the name may cause unpredictable results.
 
-.. _Filenames:
-
 Filenames
 ~~~~~~~~~
 

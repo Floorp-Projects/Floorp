@@ -3,7 +3,6 @@ PR_AcceptRead
 
 Accepts a new connection and receives a block of data.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -20,7 +19,6 @@ Syntax
      PRInt32 amount,
      PRIntervalTime timeout);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -57,7 +55,6 @@ The function has the following parameters:
    is accepted; the read will time out after the timeout interval
    elapses.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -66,7 +63,6 @@ Returns
 -  The value -1 indicates a failure. The reason for the failure can be
    obtained by calling :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

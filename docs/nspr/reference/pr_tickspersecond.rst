@@ -4,7 +4,6 @@ PR_TicksPerSecond
 Returns the number of ticks per second currently used to determine the
 value of :ref:`PRIntervalTime`.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
     PRUint32 PR_TicksPerSecond(void);
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -24,7 +22,6 @@ An integer between 1000 and 100000 indicating the number of ticks per
 second counted by :ref:`PRIntervalTime` on the current platform. This value
 is platform-dependent and does not change after NSPR is initialized.
 
-.. _Description:
 
 Description
 -----------

@@ -6,7 +6,6 @@ output from :ref:`PR_GetHostByName` and :ref:`PR_GetHostByAddr` and passed to
 :ref:`PR_EnumerateHostEnt`. Clients should avoid directly accessing any of
 the structure's fields.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -28,7 +27,6 @@ Syntax
      char **h_addr_list;
    } PRHostEnt;
 
-.. _Fields:
 
 Fields
 ~~~~~~
@@ -51,7 +49,6 @@ The structure has the following fields:
    Pointer to a pointer to a list of addresses from name server (in
    network byte order). The list is terminated with a ``NULL`` entry.
 
-.. _Description:
 
 Description
 -----------
@@ -63,8 +60,6 @@ addresses are passed in host order and returned in network order
 Use the network address functions to manipulate the :ref:`PRHostEnt`
 structure. To make the transition to IP version 6 easier, it's best to
 treat :ref:`PRHostEnt` as an opaque structure.
-
-.. _Note:
 
 Note
 ----

@@ -6,8 +6,6 @@ system level and libc-like functions. The API is used in the Mozilla
 clients, many of Red Hat's and Oracle's server applications, and other
 software offerings.
 
-.. _Documentation:
-
 Documentation
 -------------
 
@@ -47,8 +45,6 @@ your platform:
    -  *mozilla-nspr-debuginfo-32bit* : Debug information (including
       build symbols) for package *mozilla-nspr-32bit*
    -  *mozilla-nspr-debugsource* : Debug sources for all of the above
-
-.. _Community:
 
 Community
 ---------

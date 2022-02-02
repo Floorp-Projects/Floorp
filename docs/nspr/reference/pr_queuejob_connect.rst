@@ -3,7 +3,6 @@ PR_QueueJob_Connect
 
 Causes a job to be queued when a socket can be connected.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -22,7 +21,6 @@ Syntax
      PRBool joinable
    );
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -44,7 +42,6 @@ The function has the following parameters:
    If ``PR_TRUE``, the job is joinable. If ``PR_FALSE``, the job is not
    joinable. See :ref:`PR_JoinJob`.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

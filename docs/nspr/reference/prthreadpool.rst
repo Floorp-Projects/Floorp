@@ -1,7 +1,6 @@
 PRThreadPool
 ============
 
-.. _Syntax:
 
 Syntax
 ------

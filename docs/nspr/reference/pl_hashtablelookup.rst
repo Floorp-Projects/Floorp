@@ -3,7 +3,6 @@ PL_HashTableLookup
 
 Looks up the entry with the specified key and return its value.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      PLHashTable *ht,
      const void *key);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -29,7 +27,6 @@ The function has the following parameters:
 ``key``
    A pointer to the key for the entry to look up.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -37,7 +34,6 @@ Returns
 The value of the entry with the specified key, or ``NULL`` if there is
 no such entry.
 
-.. _Description:
 
 Description
 -----------

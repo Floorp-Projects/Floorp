@@ -4,7 +4,6 @@ PRPrimordialFn
 The type for the root function used by :ref:`PR_Initialize` is specified as
 follows:
 
-.. _Syntax:
 
 Syntax
 ------
@@ -13,7 +12,6 @@ Syntax
 
    typedef PRIntn (PR_CALLBACK *PRPrimordialFn)(PRIntn argc, char **argv);
 
-.. _See_Also:
 
 See Also
 --------

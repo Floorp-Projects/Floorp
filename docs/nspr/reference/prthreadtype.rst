@@ -4,7 +4,6 @@ PRThreadType
 The type of an NSPR thread, specified as a parameter to
 :ref:`PR_CreateThread`.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -18,7 +17,6 @@ Syntax
       PR_SYSTEM_THREAD
    } PRThreadType;
 
-.. _Enumerators:
 
 Enumerators
 ~~~~~~~~~~~
@@ -30,7 +28,6 @@ Enumerators
    NSPR ignores threads of type ``PR_SYSTEM_THREAD`` when determining
    when a call to :ref:`PR_Cleanup` should return.
 
-.. _Description:
 
 Description
 -----------

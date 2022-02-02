@@ -3,7 +3,6 @@ PR_GetHostByAddr
 
 Looks up a host entry by its network address.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -18,7 +17,6 @@ Syntax
      PRIntn bufsize,
      PRHostEnt *hostentry);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -39,7 +37,6 @@ The function has the following parameters:
    This structure is allocated by the caller. On output, this structure
    is filled in by the runtime if the function returns ``PR_SUCCESS``.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -50,7 +47,6 @@ The function returns one of the following values:
 -  If unsuccessful, ``PR_FAILURE``. You can retrieve the reason for the
    failure by calling :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 ~~~~~~~~~~~

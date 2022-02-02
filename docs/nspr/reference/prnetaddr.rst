@@ -5,7 +5,6 @@ Type used with `Socket Manipulation
 Functions <Socket_Manipulation_Functions>`__ to specify a network
 address.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -37,7 +36,6 @@ Syntax
 
    typedef union PRNetAddr PRNetAddr;
 
-.. _Fields:
 
 Fields
 ~~~~~~
@@ -60,7 +58,6 @@ The structure has the following fields:
 ``flowinfo``
    Routing information.
 
-.. _Description:
 
 Description
 -----------

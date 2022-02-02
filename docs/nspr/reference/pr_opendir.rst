@@ -3,7 +3,6 @@ PR_OpenDir
 
 Opens the directory with the specified pathname.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRDir* PR_OpenDir(const char *name);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ The function has the following parameter:
 ``name``
    The pathname of the directory to be opened.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -33,7 +30,6 @@ Returns
    dynamically allocated and the function returns a pointer to it.
 -  If the directory cannot be opened, the function returns ``NULL``.
 
-.. _Description:
 
 Description
 -----------

@@ -3,7 +3,6 @@ PR_Write
 
 Writes a buffer of data to a file or socket.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
      const void *buf,
      PRInt32 amount);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -31,7 +29,6 @@ The function has the following parameters:
 ``amount``
    The amount of data, in bytes, to be written from the buffer.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -42,7 +39,6 @@ One of the following values:
 -  The value -1 indicates that the operation failed. The reason for the
    failure is obtained by calling :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

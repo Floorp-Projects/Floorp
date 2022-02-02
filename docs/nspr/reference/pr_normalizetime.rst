@@ -4,7 +4,6 @@ PR_NormalizeTime
 Adjusts the fields of a clock/calendar time to their proper ranges,
 using a callback function.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
      PRExplodedTime *time,
      PRTimeParamFn params);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -29,14 +27,12 @@ The function has these parameters:
 ``params``
    A time parameter callback function.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 Nothing; the ``time`` parameter is altered by the callback function.
 
-.. _Description:
 
 Description
 -----------

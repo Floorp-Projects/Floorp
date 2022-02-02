@@ -4,7 +4,6 @@ PRFilePrivate
 
 Layer-dependent implementation data.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    typedef struct PRFilePrivate PRFilePrivate;
 
-.. _Description:
 
 Description
 -----------

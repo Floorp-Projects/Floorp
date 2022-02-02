@@ -4,7 +4,6 @@ PR_OpenSharedMemory
 Opens an existing shared memory segment or, if one with the specified
 name doesn't exist, creates a new one.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -25,7 +24,6 @@ Syntax
    #define PR_SHM_CREATE 0x1  /* create if not exist */
    #define PR_SHM_EXCL   0x2  /* fail if already exists */
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -41,7 +39,6 @@ flags
 mode
    Same as passed to :ref:`PR_Open`.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -50,7 +47,6 @@ Pointer to opaque structure ``PRSharedMemory``, or ``NULL`` if an error
 occurs. Retrieve the reason for the failure by calling :ref:`PR_GetError`
 and :ref:`PR_GetOSError`.
 
-.. _Description:
 
 Description
 -----------

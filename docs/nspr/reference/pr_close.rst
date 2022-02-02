@@ -3,7 +3,6 @@ PR_Close
 
 Closes a file descriptor.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRStatus PR_Close(PRFileDesc *fd);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -24,7 +22,6 @@ The function has the following parameters:
 ``fd``
    A pointer to a :ref:`PRFileDesc` object.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -34,7 +31,6 @@ One of the following values:
 -  If file descriptor is closed successfully, ``PR_SUCCESS``.
 -  If the file descriptor is not closed successfully, ``PR_FAILURE``.
 
-.. _Description:
 
 Description
 -----------

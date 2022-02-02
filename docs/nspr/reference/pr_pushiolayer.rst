@@ -3,7 +3,6 @@ PR_PushIOLayer
 
 Adds a layer onto the stack.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
      PRDescIdentity id,
      PRFileDesc *layer);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -33,7 +31,6 @@ The function has the following parameters:
    A pointer to a :ref:`PRFileDesc` object representing the new layer to be
    added to the stack.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -45,7 +42,6 @@ The function returns one of the following values:
    ``PR_FAILURE``. Use :ref:`PR_GetError` to get additional information
    regarding the reason for the failure.
 
-.. _Description:
 
 Description
 -----------
@@ -59,8 +55,6 @@ Even if the ``id`` parameter indicates the topmost layer of the stack,
 the value of the file descriptor describing the original stack will not
 change. In other words, ``stack`` continues to point to the top of the
 stack after the function returns.
-
-.. _Caution:
 
 Caution
 -------

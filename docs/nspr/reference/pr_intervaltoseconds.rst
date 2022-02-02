@@ -3,7 +3,6 @@ PR_IntervalToSeconds
 
 Converts platform-dependent intervals to standard clock seconds.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
     PRUint32 PR_IntervalToSeconds(PRIntervalTime ticks);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -22,14 +20,12 @@ Parameter
 ``ticks``
    The number of platform-dependent intervals to convert.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 Equivalent in seconds of the value passed in the ``ticks`` parameter.
 
-.. _Description:
 
 Description
 -----------

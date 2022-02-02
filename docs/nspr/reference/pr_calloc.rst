@@ -4,7 +4,6 @@ PR_Calloc
 Allocates zeroed memory from the heap for a number of objects of a given
 size.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
       PRUint32 nelem,
       PRUint32 elsize);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -27,7 +25,6 @@ Parameters
 ``elsize``
    The size of an individual element.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -36,7 +33,6 @@ An untyped pointer to the allocated memory, or if the allocation attempt
 fails, ``NULL``. Call ``PR_GetError()`` to retrieve the error returned
 by the libc function ``malloc()``.
 
-.. _Description:
 
 Description
 -----------

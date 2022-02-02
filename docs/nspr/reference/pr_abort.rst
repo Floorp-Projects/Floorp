@@ -3,7 +3,6 @@ PR_Abort
 
 Aborts the process in a nongraceful manner.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    void PR_Abort(void);
 
-.. _Description:
 
 Description
 -----------

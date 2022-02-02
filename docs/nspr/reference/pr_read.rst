@@ -3,7 +3,6 @@ PR_Read
 
 Reads bytes from a file or socket.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
                   void *buf,
                   PRInt32 amount);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -31,7 +29,6 @@ The function has the following parameters:
 ``amount``
    The size of ``buf`` (in bytes).
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -44,7 +41,6 @@ One of the following values:
 -  The value -1 indicates a failure. To get the reason for the failure,
    call :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

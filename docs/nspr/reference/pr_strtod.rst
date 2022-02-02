@@ -4,7 +4,6 @@ PR_strtod
 Converts the prefix of a decimal string to the nearest double-precision
 floating point number.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    PRFloat64 PR_strtod(const char *s00, char **se);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -28,7 +26,6 @@ The function has these parameters:
    A pointer that, if not ``NULL``, will be assigned the address of the
    last character scanned in the input string.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -37,7 +34,6 @@ The result of the conversion is a ``PRFloat64`` value equivalent to the
 input string. If the parameter ``se`` is not ``NULL`` the location it
 references is also set.
 
-.. _Description:
 
 Description
 -----------

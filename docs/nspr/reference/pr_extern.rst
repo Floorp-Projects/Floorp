@@ -4,7 +4,6 @@ PR_EXTERN
 Used to define the prototypes for functions or variables that are to be
 exported from a shared library.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    PR_EXTERN(type)prototype
 
-.. _Description:
 
 Description
 -----------

@@ -3,7 +3,6 @@ PRCondVar
 
 Structure for a condition variable.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    typedef struct PRCondVar PRCondVar;
 
-.. _Description:
 
 Description
 -----------

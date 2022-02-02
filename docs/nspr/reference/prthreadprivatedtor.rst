@@ -4,7 +4,6 @@ PRThreadPrivateDTOR
 The destructor function passed to PR_NewThreadPrivateIndex that is
 associated with the resulting thread private index.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    typedef void (PR_CALLBACK *PRThreadPrivateDTOR)(void *priv);
 
-.. _Description:
 
 Description
 ~~~~~~~~~~~

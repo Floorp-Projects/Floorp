@@ -4,7 +4,6 @@ PR_LocalTimeParameters
 Returns the time zone offset information that maps the specified
 :ref:`PRExplodedTime` to local time.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
    PRTimeParameters PR_LocalTimeParameters (
       const PRExplodedTime *gmt);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -25,7 +23,6 @@ Parameter
    A pointer to the clock/calendar time whose offsets are to be
    determined. This time should be specified in GMT.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -33,7 +30,6 @@ Returns
 A time parameters structure that expresses the time zone offsets at the
 specified time.
 
-.. _Description:
 
 Description
 -----------

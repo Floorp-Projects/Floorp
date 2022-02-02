@@ -4,7 +4,6 @@ PR_Realloc
 
 Resizes allocated memory on the heap.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
       void *ptr,
       PRUint32 size);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -27,7 +25,6 @@ Parameters
 ``size``
    The size of the new memory block.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -36,7 +33,6 @@ An untyped pointer to the allocated memory, or if the allocation attempt
 fails, ``NULL``. Call ``PR_GetError()`` to retrieve the error returned
 by the libc function ``realloc()``.
 
-.. _Description:
 
 Description
 ~~~~~~~~~~~

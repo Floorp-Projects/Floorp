@@ -3,7 +3,6 @@ PR_LIST_HEAD
 
 Returns the head of a circular list.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRCList *PR_LIST_HEAD (PRCList *listp);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -22,14 +20,12 @@ Parameter
 ``listp``
    A pointer to the linked list.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 A pointer to a list element.
 
-.. _Description:
 
 Description
 -----------

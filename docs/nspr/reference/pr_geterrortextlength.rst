@@ -3,7 +3,6 @@ PR_GetErrorTextLength
 
 Gets the length of the error text.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRInt32 PR_GetErrorTextLength(void)
 
-.. _Returns:
 
 Returns
 ~~~~~~~

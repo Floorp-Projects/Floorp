@@ -1,7 +1,6 @@
 PR_NAME
 =======
 
-.. _Syntax:
 
 Syntax
 ------
@@ -12,7 +11,6 @@ Syntax
 
    #define PR_NAME "NSPR"
 
-.. _Description:
 
 Description
 -----------

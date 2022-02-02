@@ -4,7 +4,6 @@ PR_DestroyPollableEvent
 Close the file descriptor associated with a pollable event and release
 related resources.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -13,7 +12,6 @@ Syntax
 
    NSPR_API(PRStatus) PR_DestroyPollableEvent(PRFileDesc *event);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ The function has the following parameter:
    Pointer to a :ref:`PRFileDesc` structure previously created via a call
    to :ref:`PR_NewPollableEvent`.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

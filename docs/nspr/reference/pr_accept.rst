@@ -3,7 +3,6 @@ PR_Accept
 
 Accepts a connection on a specified socket.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
      PRNetAddr *addr,
      PRIntervalTime timeout);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -34,7 +32,6 @@ The function has the following parameters:
    A value of type :ref:`PRIntervalTime` specifying the time limit for
    completion of the accept operation.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -46,7 +43,6 @@ The function returns one of the following values:
 -  If unsuccessful, ``NULL``. Further information can be obtained by
    calling :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

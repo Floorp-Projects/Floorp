@@ -3,7 +3,6 @@ PR_FamilyInet
 
 Gets the value of the address family for Internet Protocol.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRUint16 PR_FamilyInet(void);
 
-.. _Returns:
 
 Returns
 ~~~~~~~

@@ -3,7 +3,6 @@ PR_ExportFileMapAsString
 
 Creates a string identifying a :ref:`PRFileMap`.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -21,7 +20,6 @@ Syntax
 
 #. define PR_FILEMAP_STRING_BUFSIZE 128
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -35,14 +33,12 @@ The function has the following parameters:
 ``buf``
    A pointer to abuffer of length ``PR_FILEMAP_STRING_BUFSIZE``.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 :ref:`PRStatus`
 
-.. _Description:
 
 Description
 -----------

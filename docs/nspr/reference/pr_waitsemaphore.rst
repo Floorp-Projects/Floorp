@@ -3,7 +3,6 @@ PR_WaitSemaphore
 
 Returns the value of the environment variable.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    NSPR_API(PRStatus) PR_WaitSemaphore(PRSem *sem);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -25,14 +23,12 @@ The function has the following parameter:
    A pointer to a ``PRSem`` structure returned from a call to
    :ref:`PR_OpenSemaphore`.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 :ref:`PRStatus`
 
-.. _Description:
 
 Description
 -----------

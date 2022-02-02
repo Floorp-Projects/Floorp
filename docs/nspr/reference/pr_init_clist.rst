@@ -3,7 +3,6 @@ PR_INIT_CLIST
 
 Initializes a circular list.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PR_INIT_CLIST (PRCList *listp);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -22,7 +20,6 @@ Parameter
 ``listp``
    A pointer to the anchor of the linked list.
 
-.. _Description:
 
 Description
 -----------

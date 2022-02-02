@@ -3,7 +3,6 @@ PR_ReadDir
 
 Gets a pointer to the next entry in the directory.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      PRDir *dir,
      PRDirFlags flags);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -40,7 +38,6 @@ The function has the following parameters:
       attribute set. On Unix platform, this value identifies files whose
       names begin with a period (".").
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -49,7 +46,6 @@ Returns
 -  If the end of the directory is reached or an error occurs, ``NULL``.
    The reason can be retrieved via :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------
@@ -90,7 +86,6 @@ on the same :ref:`PRDir` object.
 If the end of the directory is reached, :ref:`PR_ReadDir` returns ``NULL``,
 and :ref:`PR_GetError` returns ``PR_NO_MORE_FILES_ERROR``.
 
-.. _See_Also:
 
 See Also
 --------

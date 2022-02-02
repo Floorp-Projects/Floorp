@@ -3,7 +3,6 @@ PRThreadState
 
 A thread's thread state is either joinable or unjoinable.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
       PR_UNJOINABLE_THREAD
    } PRThreadState;
 
-.. _Enumerators:
 
 Enumerators
 ~~~~~~~~~~~
@@ -33,7 +31,6 @@ Enumerators
    their root function until :ref:`PR_JoinThread` is called. This approach
    facilitates management of the process' critical resources.
 
-.. _Description:
 
 Description
 -----------
