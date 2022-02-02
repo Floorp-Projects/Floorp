@@ -1,0 +1,35 @@
+Gets the network address of the connected peer.
+
+.. _Syntax:
+
+Syntax
+------
+
+.. code:: eval
+
+   #include <prio.h>
+
+   PRStatus PR_GetPeerName(
+     PRFileDesc *fd,
+     PRNetAddr *addr);
+
+.. _Parameters:
+
+Parameters
+~~~~~~~~~~
+
+The function has the following parameters:
+
+``fd``
+   A pointer to a ``PRFileDesc`` object representing a socket.
+``addr``
+   On return, the address of the peer connected to the socket.
+
+.. _Returns:
+
+Returns
+~~~~~~~
+
+-  If successful, ``PR_SUCCESS``.
+-  If unsuccessful, ``PR_FAILURE``. The reason for the failure can be
+   obtained by calling ``PR_GetError``.

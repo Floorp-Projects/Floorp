@@ -1,0 +1,21 @@
+Gets the length of the error text.
+
+.. _Syntax:
+
+Syntax
+------
+
+.. code:: eval
+
+   #include <prerror.h>
+
+   PRInt32 PR_GetErrorTextLength(void)
+
+.. _Returns:
+
+Returns
+~~~~~~~
+
+If a zero is returned, no error text is currently set. Otherwise, the
+value returned is sufficient to contain the error text currently
+available.

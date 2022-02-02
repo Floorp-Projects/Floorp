@@ -1,0 +1,40 @@
+Retrieves the socket options set for a specified socket.
+
+.. _Syntax:
+
+Syntax
+------
+
+.. code:: eval
+
+   #include <prio.h>
+
+   PRStatus PR_GetSocketOption(
+     PRFileDesc *fd,
+     PRSocketOptionData *data);
+
+.. _Parameters:
+
+Parameters
+~~~~~~~~~~
+
+The function has the following parameters:
+
+``fd``
+   A pointer to a ``PRFileDesc`` object representing the socket whose
+   options are to be retrieved.
+``data``
+   A pointer to a structure of type ``PRSocketOptionData``. On input,
+   the ``option`` field of this structure must be set to indicate which
+   socket option to retrieve for the socket represented by the ``fd``
+   parameter. On output, this structure contains the requested socket
+   option data.
+
+.. _Returns:
+
+Returns
+~~~~~~~
+
+-  If successful, ``PR_SUCCESS``.
+-  If unsuccessful, ``PR_FAILURE``. The reason for the failure can be
+   obtained by calling ``PR_GetError``.

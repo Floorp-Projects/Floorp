@@ -1,0 +1,34 @@
+Ensures that subsystem initialization occurs only once.
+
+.. _Syntax:
+
+Syntax
+------
+
+.. code:: eval
+
+   PRStatus PR_CallOnce(
+     PRCallOnceType *once,
+     PRCallOnceFN func);
+
+.. _Parameters:
+
+Parameters
+~~~~~~~~~~
+
+``PR_CallOnce`` has these parameters:
+
+``once``
+   A pointer to an object of type ``PRCallOnceType``. Initially (before
+   any threading issues exist), the object must be initialized to all
+   zeros. From that time on, the client should consider the object
+   read-only (or even opaque) and allow the runtime to manipulate its
+   content appropriately.
+``func``
+   A pointer to the function the calling client has designed to perform
+   the subsystem initialization. The function will be called once, at
+   most, for each subsystem to be initialized. It should return a
+   ``PRStatus`` indicating the result of the initialization process.
+   While the first thread executes this function, other threads
+   attempting the same initialization will be blocked until it has been
+   completed.

@@ -1,0 +1,31 @@
+Gets the default I/O methods table.
+
+.. _Syntax:
+
+Syntax
+------
+
+.. code:: eval
+
+   #include <prio.h>
+
+   const PRIOMethods* PR_GetDefaultIOMethods(void);
+
+.. _Returns:
+
+Returns
+~~~~~~~
+
+If successful, the function returns a pointer to a ``PRIOMethods``
+structure.
+
+.. _Description:
+
+Description
+-----------
+
+After using ``PR_GetDefaultIOMethods`` to identify the default I/O
+methods table, you can select elements from that table with which to
+build your own layer's methods table. You may not modify the default I/O
+methods table directly. You can pass your own layer's methods table to
+``PR_CreateIOLayerStub`` to create your new layer.

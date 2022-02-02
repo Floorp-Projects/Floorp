@@ -1,0 +1,77 @@
+Sends a complete file across a connected socket.
+
+.. _Syntax:
+
+Syntax
+------
+
+.. code:: eval
+
+   #include <prio.h>
+
+   PRInt32 PR_TransmitFile(
+     PRFileDesc *networkSocket,
+     PRFileDesc *sourceFile,
+     const void *headers,
+     PRInt32 hlen,
+     PRTransmitFileFlags flags,
+     PRIntervalTime timeout);
+
+.. _Parameters:
+
+Parameters
+~~~~~~~~~~
+
+The function has the following parameters:
+
+``networkSocket``
+   A pointer to a ``PRFileDesc`` object representing the connected
+   socket to send data over.
+``sourceFile``
+   A pointer to a ``PRFileDesc`` object representing the file to send.
+``headers``
+   A pointer to the buffer holding the headers to be sent before sending
+   data.
+``hlen``
+   Length of the ``headers`` buffer in bytes.
+``flags``
+   One of the following flags:
+
+-  ``PR_TRANSMITFILE_KEEP_OPEN`` indicates that the socket will be kept
+   open after the data is sent.
+-  ``PR_TRANSMITFILE_CLOSE_SOCKET`` indicates that the connection should
+   be closed immediately after successful transfer of the file.
+
+``timeout``
+   Time limit for completion of the transmit operation.
+
+.. _Returns:
+
+Returns
+~~~~~~~
+
+-  A positive number indicates the number of bytes successfully written,
+   including both the headers and the file.
+-  The value -1 indicates a failure. If an error occurs while sending
+   the file, the ``PR_TRANSMITFILE_CLOSE_SOCKET`` flag is ignored. The
+   reason for the failure can be obtained by calling ``PR_GetError``.
+
+.. _Description:
+
+Description
+-----------
+
+The ``PR_TransmitFile`` function sends a complete file (``sourceFile``)
+across a connected socket (``networkSocket``). If ``headers`` is
+non-``NULL``, ``PR_TransmitFile`` sends the headers across the socket
+before sending the file.
+
+The enumeration ``PRTransmitFileFlags``, used in the ``flags``
+parameter, is defined as follows:
+
+.. code:: eval
+
+   typedef enum PRTransmitFileFlags {
+     PR_TRANSMITFILE_KEEP_OPEN = 0,
+     PR_TRANSMITFILE_CLOSE_SOCKET = 1
+   } PRTransmitFileFlags;
