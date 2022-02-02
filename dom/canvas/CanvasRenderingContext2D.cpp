@@ -1140,14 +1140,14 @@ nsresult CanvasRenderingContext2D::Redraw() {
 
   mIsEntireFrameInvalid = true;
 
-  if (!mCanvasElement) {
+  if (mCanvasElement) {
+    SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
+    mCanvasElement->InvalidateCanvasContent(nullptr);
+  } else if (mOffscreenCanvas) {
+    mOffscreenCanvas->QueueCommitToCompositor();
+  } else {
     NS_ASSERTION(mDocShell, "Redraw with no canvas element or docshell!");
-    return NS_OK;
   }
-
-  SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
-
-  mCanvasElement->InvalidateCanvasContent(nullptr);
 
   return NS_OK;
 }
@@ -1166,14 +1166,14 @@ void CanvasRenderingContext2D::Redraw(const gfx::Rect& aR) {
     return;
   }
 
-  if (!mCanvasElement) {
+  if (mCanvasElement) {
+    SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
+    mCanvasElement->InvalidateCanvasContent(&aR);
+  } else if (mOffscreenCanvas) {
+    mOffscreenCanvas->QueueCommitToCompositor();
+  } else {
     NS_ASSERTION(mDocShell, "Redraw with no canvas element or docshell!");
-    return;
   }
-
-  SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
-
-  mCanvasElement->InvalidateCanvasContent(&aR);
 }
 
 void CanvasRenderingContext2D::DidRefresh() {}
@@ -1561,6 +1561,14 @@ void CanvasRenderingContext2D::ClearTarget(int32_t aWidth, int32_t aHeight) {
       JS::AddAssociatedMemory(wrapper, BindingJSObjectMallocBytes(this),
                               JS::MemoryUse::DOMBinding);
     }
+  }
+
+  if (mOffscreenCanvas) {
+    OffscreenCanvasDisplayData data;
+    data.mSize = {mWidth, mHeight};
+    data.mIsOpaque = mOpaque;
+    data.mIsAlphaPremult = true;
+    mOffscreenCanvas->UpdateDisplayData(data);
   }
 
   if (!mCanvasElement || !mCanvasElement->IsInComposedDoc()) {
