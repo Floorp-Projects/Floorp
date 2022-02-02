@@ -3,7 +3,6 @@ PR_APPEND_LINK
 
 Appends an element to the end of a list.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      PRCList *elemp,
      PRCList *listp);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -26,7 +24,6 @@ Parameters
 ``listp``
    A pointer to the list.
 
-.. _Description:
 
 Description
 -----------

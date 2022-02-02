@@ -3,7 +3,6 @@ PR_JoinThread
 
 Blocks the calling thread until a specified thread terminates.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRStatus PR_JoinThread(PRThread *thread);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ Parameter
 ``thread``
    A valid identifier for the thread that is to be joined.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -36,7 +33,6 @@ The function returns one of the following values:
    corresponds to the specified target thread, or if the target thread
    is unjoinable--``PR_FAILURE``.
 
-.. _Description:
 
 Description
 -----------
@@ -47,7 +43,7 @@ the target thread is in a joinable state. :ref:`PR_JoinThread` returns to
 the caller only after the target thread returns from its root function.
 
 :ref:`PR_JoinThread` must not be called until after :ref:`PR_CreateThread` has
-returned.  If :ref:`PR_JoinThread` is not called on the same thread as
+returned.  If :ref:`PR_JoinThread` is not called on the same thread as
 :ref:`PR_CreateThread`, then it is the caller's responsibility to ensure
 that :ref:`PR_CreateThread` has completed.
 
@@ -58,4 +54,4 @@ error ``PR_FAILURE``.
 The calling thread is not blocked if the target thread has already
 terminated.
 
-:ref:`PR_JoinThread` is interruptable.
+:ref:`PR_JoinThread` is interruptible.

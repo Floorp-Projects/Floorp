@@ -3,7 +3,6 @@ PR_CloseFileMap
 
 Closes a file mapping.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRStatus PR_CloseFileMap(PRFileMap *fmap);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ The function has the following parameter:
 ``fmap``
    The file mapping to be closed.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -35,7 +32,6 @@ The function returns one of the following values:
 -  If the memory region is not successfully unmapped, ``PR_FAILURE``.
    The error code can be retrieved via :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

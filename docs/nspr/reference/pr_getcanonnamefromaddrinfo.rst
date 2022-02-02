@@ -4,7 +4,6 @@ PR_GetCanonNameFromAddrInfo
 Extracts the canonical name of the hostname passed to
 :ref:`PR_GetAddrInfoByName`.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    const char *PR_GetCanonNameFromAddrInfo(const PRAddrInfo *addrInfo);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -26,7 +24,6 @@ The function has the following parameters:
    A pointer to a ``PRAddrInfo`` structure returned by a successful call
    to :ref:`PR_GetAddrInfoByName`.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

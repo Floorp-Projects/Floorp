@@ -3,7 +3,6 @@ PR_GetConnectStatus
 
 Get the completion status of a nonblocking connection.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -12,7 +11,6 @@ Syntax
 
    PRStatus PR_GetConnectStatus(const PRPollDesc *pd);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ The function has the following parameter:
    socket and whose ``in_flags`` field must contain ``PR_POLL_WRITE``
    and ``PR_POLL_EXCEPT``.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -39,7 +36,6 @@ If :ref:`PR_GetError` returns ``PR_IN_PROGRESS_ERROR``, the nonblocking
 connection is still in progress and has not completed yet.Other errors
 indicate that the connection has failed.
 
-.. _Description:
 
 Description
 -----------

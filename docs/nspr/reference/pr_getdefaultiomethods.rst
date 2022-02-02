@@ -3,7 +3,6 @@ PR_GetDefaultIOMethods
 
 Gets the default I/O methods table.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    const PRIOMethods* PR_GetDefaultIOMethods(void);
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -22,7 +20,6 @@ Returns
 If successful, the function returns a pointer to a :ref:`PRIOMethods`
 structure.
 
-.. _Description:
 
 Description
 -----------

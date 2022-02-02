@@ -3,7 +3,6 @@ PR_SetErrorText
 
 Sets the text associated with an error.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    void PR_SetErrorText(PRIntn textLength, const char *text)
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -31,7 +29,6 @@ The function has these parameters:
 ``text``
    The text to associate with the error.
 
-.. _Description:
 
 Description
 -----------

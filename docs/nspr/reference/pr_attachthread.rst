@@ -10,7 +10,6 @@ PR_AttachThread
 
 Associates a :ref:`PRThread` object with an existing native thread.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -24,7 +23,6 @@ Syntax
       PRThreadPriority priority,
       PRThreadStack *stack);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -39,7 +37,6 @@ Parameters
 ``stack``
    The stack for the thread being attached.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -50,7 +47,6 @@ The function returns one of these values:
 -  If unsuccessful, for example if system resources are not available,
    ``NULL``.
 
-.. _Description:
 
 Description
 -----------

@@ -3,7 +3,6 @@ PR_ImportFileMapFromString
 
 Creates a :ref:`PRFileMap` from an identifying string.
 
-.. _Syntax:
 
 Syntax
 ~~~~~~
@@ -17,7 +16,6 @@ Syntax
      const char *fmstring
    );
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -27,14 +25,12 @@ The function has the following parameter:
 fmstring
    A pointer to string created by :ref:`PR_ExportFileMapAsString`.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 :ref:`PRFileMap` pointer or ``NULL`` on error.
 
-.. _Description:
 
 Description
 -----------

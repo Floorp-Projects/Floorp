@@ -3,7 +3,6 @@ PR_DetachSharedMemory
 
 Unmaps a shared memory segment identified by name.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -18,7 +17,6 @@ Syntax
         void  *addr
    );
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -30,7 +28,6 @@ shm
 addr
    The address to which the shared memory segment is mapped.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

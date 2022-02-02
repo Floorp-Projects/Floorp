@@ -4,7 +4,6 @@ PRSockOption
 Enumeration type used in the ``option`` field of :ref:`PRSocketOptionData`
 to form the name portion of a name-value pair.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -32,7 +31,6 @@ Syntax
      PR_SockOpt_Last
    } PRSockOption;
 
-.. _Enumerators:
 
 Enumerators
 ~~~~~~~~~~~
@@ -72,7 +70,6 @@ The enumeration has the following enumerators:
 ``PR_SockOpt_Last``
    Always one greater than the maximum valid socket option numerator.
 
-.. _Description:
 
 Description
 -----------

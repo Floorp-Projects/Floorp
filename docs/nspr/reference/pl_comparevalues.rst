@@ -3,7 +3,6 @@ PL_CompareValues
 
 Compares two ``void *`` values numerically.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      void *v1,
      const void *v2);
 
-.. _Description:
 
 Description
 -----------

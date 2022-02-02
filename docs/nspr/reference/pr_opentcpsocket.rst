@@ -3,7 +3,6 @@ PR_OpenTCPSocket
 
 Creates a new TCP socket of the specified address family.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRFileDesc* PR_OpenTCPSocket(PRIntn af);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -26,7 +24,6 @@ The function has the following parameters:
    (IPv4), ``PR_AF_INET6`` (IPv6), or ``PR_AF_LOCAL`` (Unix domain,
    supported on POSIX systems only).
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -37,7 +34,6 @@ The function returns one of the following values:
    created for the newly opened TCP socket.
 -  If the creation of a new TCP socket failed, ``NULL``.
 
-.. _Description:
 
 Description
 -----------

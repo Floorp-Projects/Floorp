@@ -3,7 +3,6 @@ PRThreadPriority
 
 A thread's priority setting.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -22,7 +21,6 @@ Syntax
       PR_PRIORITY_LAST    = 3
    } PRThreadPriority;
 
-.. _Enumerators:
 
 Enumerators
 ~~~~~~~~~~~
@@ -43,7 +41,6 @@ Enumerators
 ``PR_PRIORITY_LAST``
    Placeholder
 
-.. _Description:
 
 Description
 -----------
@@ -57,7 +54,6 @@ that a higher-priority thread might expect relative to a lower-priority
 thread. This preference is still subject to resource availability and
 must not be used in place of proper synchronization.
 
-.. _See_Also:
 
 See Also
 --------

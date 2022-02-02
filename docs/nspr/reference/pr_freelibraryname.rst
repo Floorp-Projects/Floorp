@@ -3,7 +3,6 @@ PR_FreeLibraryName
 
 Frees memory allocated by NSPR for library names and path names.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    void PR_FreeLibraryName(char *mem);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -25,14 +23,12 @@ The function has this parameter:
    A reference to a character array that was previously allocated by the
    dynamic library runtime.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 Nothing.
 
-.. _Description:
 
 Description
 -----------

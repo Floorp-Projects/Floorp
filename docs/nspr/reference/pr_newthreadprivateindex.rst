@@ -5,7 +5,6 @@ Returns a new index for a per-thread private data table and optionally
 associates a destructor with the data that will be assigned to the
 index.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -18,7 +17,6 @@ Syntax
       PRUintn *newIndex,
       PRThreadPrivateDTOR destructor);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -34,7 +32,6 @@ Parameters
    private data associated with the index. This function can be
    specified as ``NULL``.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -44,7 +41,6 @@ The function returns one of the following values:
 -  If successful, ``PR_SUCCESS``.
 -  If the total number of indices exceeds 128, ``PR_FAILURE``.
 
-.. _Description:
 
 Description
 -----------

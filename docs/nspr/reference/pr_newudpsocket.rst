@@ -3,7 +3,6 @@ PR_NewUDPSocket
 
 Creates a new UDP socket.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRFileDesc* PR_NewUDPSocket(void);
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -25,7 +23,6 @@ The function returns one of the following values:
    created for the newly opened UDP socket.
 -  If the creation of a new UDP socket failed, ``NULL``.
 
-.. _Description:
 
 Description
 -----------
@@ -39,7 +36,6 @@ a well-known port number with :ref:`PR_Bind`. Datagrams can be sent with
 :ref:`PR_SendTo` and received with :ref:`PR_RecvFrom`. When the socket is no
 longer needed, it should be closed with a call to :ref:`PR_Close`.
 
-.. _See_Also:
 
 See Also
 --------

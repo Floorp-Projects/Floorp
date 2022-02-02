@@ -3,7 +3,6 @@ PR_SetConcurrency
 
 Creates extra virtual processor threads. Generally used with MP systems.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    void PR_SetConcurrency(PRUintn numCPUs);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ Parameter
 ``numCPUs``
    The number of extra virtual processor threads to be created.
 
-.. _Description:
 
 Description
 -----------

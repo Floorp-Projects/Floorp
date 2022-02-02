@@ -11,8 +11,6 @@ below to run Firefox with cookie logging enabled.
 Enabling Cookie Logging
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. _Windows:
-
 Windows
 ^^^^^^^
 
@@ -25,8 +23,6 @@ normal installations of Windows).
 #. Type "set NSPR_LOG_MODULES=cookie:4" and press Enter
 #. Run Firefox by typing "firefox.exe" and pressing Enter.
 
-.. _Linux:
-
 Linux
 ^^^^^
 
@@ -38,8 +34,6 @@ already).
 #. Type "export NSPR_LOG_FILE=~/cookie-log.txt" and press Enter.
 #. Type "export NSPR_LOG_MODULES=cookie:4" and press Enter.
 #. Run Firefox by typing "./firefox" and pressing Enter
-
-.. _Mac_OS_X:
 
 Mac OS X
 ^^^^^^^^
@@ -56,8 +50,6 @@ modify these instructions already).
 #. Type "export NSPR_LOG_MODULES=cookie:4" and press Return.
 #. Run Firefox by typing "./firefox-bin" and pressing Return (note that
    Firefox will launch behind windows for other applications).
-
-.. _Creating_the_Log:
 
 Creating the Log
 ~~~~~~~~~~~~~~~~

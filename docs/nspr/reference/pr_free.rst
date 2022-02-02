@@ -3,7 +3,6 @@ PR_Free
 
 Frees allocated memory in the heap.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    void PR_Free(void *ptr);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -22,14 +20,12 @@ Parameter
 ``ptr``
    A pointer to the memory to be freed.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 Nothing.
 
-.. _Description:
 
 Description
 -----------

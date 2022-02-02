@@ -3,7 +3,6 @@ PR_IntervalNow
 
 Returns the value of NSPR's free-running interval timer.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,14 +13,12 @@ Syntax
 
     PRIntervalTime PR_IntervalNow(void);
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 A :ref:`PRIntervalTime` object.
 
-.. _Description:
 
 Description
 -----------
@@ -52,4 +49,4 @@ call ``PR_IntervalNow()`` in a sequence that looks like this:
     }
     PR_Unlock(data->mutex);
 
- 
+ 

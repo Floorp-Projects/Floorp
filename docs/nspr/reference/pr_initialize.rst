@@ -5,7 +5,6 @@ Provides an alternate form of explicit initialization. In addition to
 establishing the sequence of operations, :ref:`PR_Initialize` implicitly
 calls :ref:`PR_Cleanup` on exiting the primordial function.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -20,7 +19,6 @@ Syntax
      char **argv,
      PRUintn maxPTDs);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -41,14 +39,12 @@ Parameters
 ``maxPTDs``
    This parameter is ignored.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 The value returned from the root function, ``prmain``.
 
-.. _Description:
 
 Description
 -----------

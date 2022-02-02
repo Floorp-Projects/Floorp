@@ -3,7 +3,6 @@ PR_SetThreadPrivate
 
 Sets per-thread private data.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRStatus PR_SetThreadPrivate(PRUintn index, void *priv);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -26,7 +24,6 @@ Parameters
 ``priv``
    The per-thread private data, or more likely, a pointer to the data.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -36,7 +33,6 @@ The function returns one of the following values:
 -  If successful, ``PR_SUCCESS``.
 -  If the index is invalid, ``PR_FAILURE``.
 
-.. _Description:
 
 Description
 -----------
@@ -56,5 +52,5 @@ The only way to eliminate thread private data at an index prior to the
 thread's termination is to call :ref:`PR_SetThreadPrivate` with a ``NULL``
 argument. This causes the index's destructor function to be called, and
 afterwards assigns a ``NULL`` in the table. A client must not delete the
-referant object of a non-``NULL`` private data without first eliminating
+referent object of a non-``NULL`` private data without first eliminating
 it from the table.

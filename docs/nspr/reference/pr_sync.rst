@@ -4,7 +4,6 @@ PR_Sync
 Synchronizes any buffered data for a file descriptor to its backing
 device (disk).
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    PRStatus PR_Sync(PRFileDesc *fd);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -25,7 +23,6 @@ The function has the following parameter:
 ``fd``
    Pointer to a :ref:`PRFileDesc` object representing a file.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -35,7 +32,6 @@ The function returns one of the following values:
 -  On successful completion, ``PR_SUCCESS``.
 -  If the function fails, ``PR_FAILURE``.
 
-.. _Description:
 
 Description
 -----------

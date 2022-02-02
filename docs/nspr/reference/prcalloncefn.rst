@@ -3,7 +3,6 @@ PRCallOnceFN
 
 Defines the signature of the function a client must implement.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    typedef PRStatus (PR_CALLBACK *PRCallOnceFN)(void);
 
-.. _Description:
 
 Description
 -----------

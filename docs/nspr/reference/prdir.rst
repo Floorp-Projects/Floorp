@@ -4,7 +4,6 @@ PRDir
 Directory structure used with `Directory I/O
 Functions <I_O_Functions#Directory_I.2FO_Functions>`__.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    typedef struct PRDir PRDir;
 
-.. _Description:
 
 Description
 -----------

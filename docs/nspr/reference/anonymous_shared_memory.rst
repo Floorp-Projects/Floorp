@@ -17,7 +17,7 @@ type. The anonymous file-mapped shared memory provides an inheritable
 shared memory, as in: the child process inherits the shared memory.
 Compare the file-mapped anonymous shared memory to to a named shared
 memory described in prshm.h. The intent is to provide a shared memory
-that is accessbile only by parent and child processes. ... It's a
+that is accessible only by parent and child processes. ... It's a
 security thing.
 
 Depending on the underlying platform, the file-mapped shared memory may

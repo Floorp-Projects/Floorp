@@ -3,7 +3,6 @@ PRLock
 
 A mutual exclusion lock.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    typedef struct PRLock PRLock;
 
-.. _Description:
 
 Description
 -----------

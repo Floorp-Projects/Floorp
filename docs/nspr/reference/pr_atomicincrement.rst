@@ -3,7 +3,6 @@ PR_AtomicIncrement
 
 Atomically increments a 32-bit value.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRInt32 PR_AtomicIncrement(PRInt32 *val);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,14 +22,12 @@ The function has the following parameter:
 ``val``
    A pointer to the value to increment.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 The function returns the incremented value (i.e., the result).
 
-.. _Description:
 
 Description
 -----------

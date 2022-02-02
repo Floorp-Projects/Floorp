@@ -5,7 +5,6 @@ PL_strcpy
 Copies a string, up to and including the trailing ``'\0'``, into a
 destination buffer.
 
-.. _Syntax:
 
 Syntax
 ~~~~~~
@@ -14,7 +13,6 @@ Syntax
 
    char * PL_strcpy(char *dest, const char *src);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -27,7 +25,6 @@ The function has these parameters:
 ``src``
    Pointer to the string to be copied.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -35,7 +32,6 @@ Returns
 The function returns a pointer to the buffer specified by the ``dest``
 parameter.
 
-.. _Description:
 
 Description
 ~~~~~~~~~~~

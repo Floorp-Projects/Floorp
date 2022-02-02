@@ -3,7 +3,6 @@ PR_ImportTCPSocket
 
 Imports a native TCP socket into NSPR.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRFileDesc* PR_ImportTCPSocket(PROsfd osfd);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -25,7 +23,6 @@ The function has the following parameters:
    The native file descriptor for the TCP socket to import. On POSIX
    systems, this is an ``int``. On Windows, this is a ``SOCKET``.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -36,7 +33,6 @@ The function returns one of the following values:
    created for the newly imported native TCP socket.
 -  If the import of the native TCP socket failed, ``NULL``.
 
-.. _Description:
 
 Description
 -----------
@@ -59,8 +55,6 @@ NSPR will call socket functions such as ``recv``, ``send``, and ``poll``
 on the native file descriptor. The caller must not do anything to the
 native file descriptor before the :ref:`PR_ImportTCPSocket` call that will
 prevent the native file descriptor from working in non-blocking mode.
-
-.. _Warning:
 
 Warning
 -------

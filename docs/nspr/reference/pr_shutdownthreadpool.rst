@@ -3,7 +3,6 @@ PR_ShutdownThreadPool
 
 Notifies all threads in a thread pool to terminate.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    NSPR_API(PRStatus) PR_ShutdownThreadPool( PRThreadPool *tpool );
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -25,7 +23,6 @@ The function has the following parameter:
    A pointer to a :ref:`PRThreadPool` structure previously created by a
    call to :ref:`PR_CreateThreadPool`.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

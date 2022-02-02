@@ -4,7 +4,6 @@ PR_CreatePipe
 Creates an anonymous pipe and retrieves file descriptors for the read
 and write ends of the pipe.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
      PRFileDesc **readPipe,
      PRFileDesc **writePipe);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -31,7 +29,6 @@ The function has the following parameters:
    A pointer to a :ref:`PRFileDesc` pointer. On return, this parameter
    contains the file descriptor for the write end of the pipe.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -42,7 +39,6 @@ The function returns one of these values:
 -  If the pipe is not successfully created, ``PR_FAILURE``. The error
    code can be retrieved via :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

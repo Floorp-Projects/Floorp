@@ -5,7 +5,6 @@ Initializes or reinitializes a network address. The storage for the
 network address structure is allocated by, and remains the
 responsibility of, the calling client.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -19,7 +18,6 @@ Syntax
      PRUint16 port,
      PRNetAddr *addr);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -36,7 +34,6 @@ The function has the following parameters:
 ``addr``
    A pointer to the :ref:`PRNetAddr` structure to be manipulated.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -49,7 +46,6 @@ The function returns one of the following values:
    You can retrieve the reason for the failure by calling
    :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

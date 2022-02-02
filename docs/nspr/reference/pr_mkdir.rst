@@ -3,7 +3,6 @@ PR_MkDir
 
 Creates a directory with a specified name and access mode.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      const char *name,
      PRIntn mode);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -45,7 +43,6 @@ Possible values include the following:
  - :ref:`00002`. Write by others.
  - :ref:`00001`. Search by others.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -54,7 +51,6 @@ Returns
 -  If unsuccessful, ``PR_FAILURE``. The actual reason can be retrieved
    via :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------
@@ -64,7 +60,6 @@ path components up to but not including the leaf component must already
 exist. For example, if the pathname of the directory to be created is
 ``a/b/c/d``, the directory ``a/b/c`` must already exist.
 
-.. _See_Also:
 
 See Also
 --------

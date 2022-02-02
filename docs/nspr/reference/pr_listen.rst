@@ -3,7 +3,6 @@ PR_Listen
 
 Listens for connections on a specified socket.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      PRFileDesc *fd,
      PRIntn backlog);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -29,7 +27,6 @@ The function has the following parameters:
 ``backlog``
    The maximum length of the queue of pending connections.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -40,7 +37,6 @@ The function returns one of the following values:
 -  If unsuccessful, ``PR_FAILURE``. Further information can be obtained
    by calling :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

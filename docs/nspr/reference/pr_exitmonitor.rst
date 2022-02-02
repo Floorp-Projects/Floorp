@@ -4,7 +4,6 @@ PR_ExitMonitor
 Decrements the entry count associated with a specified monitor and, if
 the entry count reaches zero, releases the monitor's lock.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    PRStatus PR_ExitMonitor(PRMonitor *mon);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -27,7 +25,6 @@ The function has the following parameter:
    monitor object referenced must be one for which the calling thread
    currently holds the lock.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -38,7 +35,6 @@ The function returns one of the following values:
 -  If unsuccessful (the calling thread has not entered the monitor),
    ``PR_FAILURE``.
 
-.. _Description:
 
 Description
 -----------

@@ -3,7 +3,6 @@ PR_DeleteSemaphore
 
 Removes a semaphore specified by name from the system.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    NSPR_API(PRStatus) PR_DeleteSemaphore(const char *name);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -25,7 +23,6 @@ The function has the following parameter:
    The name of a semaphore that was previously created via a call to
    :ref:`PR_OpenSemaphore`.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

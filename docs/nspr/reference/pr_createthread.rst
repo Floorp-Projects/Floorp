@@ -3,7 +3,6 @@ PR_CreateThread
 
 Creates a new thread.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -21,7 +20,6 @@ Syntax
       PRThreadState state,
       PRUint32 stackSize);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -54,7 +52,6 @@ Parameters
    parameter, :ref:`PR_CreateThread` chooses the most favorable
    machine-specific stack size.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -66,7 +63,6 @@ The function returns one of the following values:
 -  If unsuccessful, (for example, if system resources are unavailable),
    ``NULL``.
 
-.. _Description:
 
 Description
 -----------

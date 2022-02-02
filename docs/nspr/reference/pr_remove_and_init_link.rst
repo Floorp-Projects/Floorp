@@ -3,7 +3,6 @@ PR_REMOVE_AND_INIT_LINK
 
 Removes an element from a circular list and initializes the linkage.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PR_REMOVE_AND_INIT_LINK (PRCList *elemp);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -22,7 +20,6 @@ Parameter
 ``elemp``
    A pointer to the element.
 
-.. _Description:
 
 Description
 -----------

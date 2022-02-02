@@ -4,7 +4,6 @@ PR_Seek64
 Moves the current read-write file pointer by an offset expressed as a
 64-bit integer.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -18,7 +17,6 @@ Syntax
      PRInt64 offset,
      PRSeekWhence whence);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -43,7 +41,6 @@ The function has the following parameters:
     - :ref:`PR_SEEK_END`. Sets the file pointer to the size of the file
       plus the value of the ``offset`` parameter.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -56,7 +53,6 @@ The function returns one of the following values:
    function returns -1. The error code can then be retrieved with
    :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------
@@ -70,7 +66,6 @@ If the operating system can handle only a 32-bit file offset,
 :ref:`PR_Seek64` may fail with the error code ``PR_FILE_TOO_BIG_ERROR`` if
 the ``offset`` parameter is out of the range of a 32-bit integer.
 
-.. _See_Also:
 
 See Also
 --------

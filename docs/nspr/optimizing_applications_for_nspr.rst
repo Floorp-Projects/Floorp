@@ -11,8 +11,6 @@ certainly surface.
 
    *This memo is by no way complete.*
 
-.. _Multiplatform:
-
 Multiplatform
 -------------
 

@@ -3,7 +3,6 @@ PR_Open
 
 Opens a file for reading, writing, or both. Also used to create a file.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
      PRIntn flags,
      PRIntn mode);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -37,7 +35,7 @@ The function has the following parameters:
 .. note::
 
    **NOTE**: The constants PR_RDWR and friends are not in any interface
-   (`bug 433295 <https://bugzilla.mozilla.org/show_bug.cgi?id=433295>`__).
+   (`bug 433295 <https://bugzilla.mozilla.org/show_bug.cgi?id=433295>`__).
    Thus they cannot be used in JavaScript, you have to use the octal
    constants (see `File I/O Snippets </en/Code_snippets:File_I/O>`__).
 
@@ -70,7 +68,7 @@ The function has the following parameters:
 |                    |       | and NULL is returned.                 |
 +--------------------+-------+---------------------------------------+
 
- 
+ 
 
 ``mode``
    When ``PR_CREATE_FILE`` flag is set and the file is created, these
@@ -97,7 +95,6 @@ Name         Value Description
 ``PR_IXOTH`` 0001  execute/search permission, others
 ============ ===== =====================================
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -109,7 +106,6 @@ The function returns one of the following values:
    :ref:`PRFileDesc` should be freed by calling :ref:`PR_Close`.
 -  If the file was not opened successfully, a ``NULL`` pointer.
 
-.. _Description:
 
 Description
 -----------

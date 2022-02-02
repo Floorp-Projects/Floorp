@@ -3,7 +3,6 @@ PRDescIdentity
 
 The identity of a file descriptor's layer.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    typedef PRUintn PRDescIdentity;
 
-.. _Description:
 
 Description
 -----------

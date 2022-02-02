@@ -3,7 +3,6 @@ PRInt64
 
 Guaranteed to be a signed 64-bit integer on all platforms.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    typedef definition PRInt64;
 
-.. _Description:
 
 Description
 -----------

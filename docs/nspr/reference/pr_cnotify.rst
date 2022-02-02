@@ -3,7 +3,6 @@ PR_CNotify
 
 Notify a thread waiting on a change in the state of monitored data.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRStatus PR_CNotify(void *address);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -25,7 +23,6 @@ The function has the following parameter:
    The address of the monitored object. The calling thread must be in
    the monitor defined by the value of the address.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -35,7 +32,6 @@ Returns
  - :ref:`PR_FAILURE` indicates that the monitor has not been entered by the
    calling thread.
 
-.. _Description:
 
 Description
 -----------

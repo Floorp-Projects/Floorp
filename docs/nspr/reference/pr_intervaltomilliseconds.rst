@@ -3,7 +3,6 @@ PR_IntervalToMilliseconds
 
 Converts platform-dependent intervals to standard clock milliseconds.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
     PRUint32 PR_IntervalToMilliseconds(PRIntervalTime ticks);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -22,7 +20,6 @@ Parameter
 ``ticks``
    The number of platform-dependent intervals to convert.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -30,7 +27,6 @@ Returns
 Equivalent in milliseconds of the value passed in the ``ticks``
 parameter.
 
-.. _Description:
 
 Description
 -----------

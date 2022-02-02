@@ -3,7 +3,6 @@ PR_Init
 
 Initializes the runtime.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
      PRThreadPriority priority,
      PRUintn maxPTDs);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -31,7 +29,6 @@ Parameters
 ``maxPTDs``
    This parameter is ignored.
 
-.. _Description:
 
 Description
 -----------

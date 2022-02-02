@@ -4,7 +4,6 @@ PRIntervalTime
 A platform-dependent type that represents a monotonically increasing
 integer--the NSPR runtime clock.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -21,7 +20,6 @@ Syntax
     #define PR_INTERVAL_NO_WAIT 0UL
     #define PR_INTERVAL_NO_TIMEOUT 0xffffffffUL
 
-.. _Description:
 
 Description
 -----------

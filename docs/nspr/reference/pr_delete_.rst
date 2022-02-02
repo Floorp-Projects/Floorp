@@ -4,7 +4,6 @@ PR_DELETE
 
 Allocates memory of a specified size from the heap.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    void PR_DELETE(_ptr);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -25,14 +23,12 @@ Parameter
    (an expression that can appear on the left side of an assignment
    statement).
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 Nothing.
 
-.. _Description:
 
 Description
 -----------

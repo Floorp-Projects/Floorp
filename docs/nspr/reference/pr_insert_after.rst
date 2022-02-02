@@ -3,7 +3,6 @@ PR_INSERT_AFTER
 
 Inserts an element after another element in a circular list.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
       PRCList *elemp1
       PRCList *elemp2);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -26,7 +24,6 @@ Parameters
 ``elemp2``
    A pointer to the element after which ``elemp1`` is to be inserted.
 
-.. _Description:
 
 Description
 -----------

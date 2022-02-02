@@ -3,7 +3,6 @@ PR_NewTCPSocket
 
 Creates a new IPv4 TCP socket.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRFileDesc* PR_NewTCPSocket(void);
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -25,7 +23,6 @@ The function returns one of the following values:
    created for the newly opened IPv4 TCP socket.
 -  If the creation of a new TCP socket failed, ``NULL``.
 
-.. _Description:
 
 Description
 -----------
@@ -49,7 +46,6 @@ read the client's first request in one function call.
 A TCP connection can be shut down by :ref:`PR_Shutdown`, and the sockets
 should be closed by :ref:`PR_Close`.
 
-.. _See_Also:
 
 See Also
 --------

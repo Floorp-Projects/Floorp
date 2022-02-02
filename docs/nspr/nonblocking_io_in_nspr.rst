@@ -129,8 +129,6 @@ native file descriptors (socket handles) cannot be added to
 <tt>PR_fd_set</tt>, i.e., the functions <tt>PR_FD_NSET</tt>,
 <tt>PR_FD_NCLR</tt>, <tt>PR_FD_NISSET</tt> do not work.
 
-.. _PR_Available():
-
 PR_Available()
 --------------
 

@@ -4,7 +4,6 @@ PR_GetIdentitiesLayer
 Finds the layer with the specified identity in the specified stack of
 layers.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
      PRFileDesc* stack,
      PRDescIdentity id);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -30,7 +28,6 @@ The function has the following parameters:
 ``id``
    The identity of the specified layer.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -41,7 +38,6 @@ The function returns one of the following values:
    specified identity in the given stack of layers.
 -  If not successful, ``NULL``.
 
-.. _Description:
 
 Description
 -----------

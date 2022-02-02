@@ -3,7 +3,6 @@ PR_ASSERT
 
 Terminates execution when a given expression is ``FALSE``.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    void PR_ASSERT ( expression );
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -25,14 +23,12 @@ expression
    Any valid C language expression that evaluates to ``TRUE`` or
    ``FALSE``.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 Nothing
 
-.. _Description:
 
 Description
 -----------

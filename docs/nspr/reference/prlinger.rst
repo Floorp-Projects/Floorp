@@ -5,7 +5,6 @@ Structure used with the ``PR_SockOpt_Linger`` socket option to specify
 the time interval (in :ref:`PRIntervalTime` units) to linger on closing a
 socket if any data remain in the socket send buffer.
 
-.. _Syntax:
 
 Syntax
 ~~~~~~
@@ -19,7 +18,6 @@ Syntax
      PRIntervalTime linger;
    } PRLinger;
 
-.. _Fields:
 
 Fields
 ~~~~~~
@@ -35,7 +33,6 @@ The structure has the following fields:
    Time (in :ref:`PRIntervalTime` units) to linger before closing if any
    data remain in the socket send buffer.
 
-.. _Description:
 
 Description
 ~~~~~~~~~~~

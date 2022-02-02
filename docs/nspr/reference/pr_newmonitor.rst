@@ -4,7 +4,6 @@ PR_NewMonitor
 Creates a new monitor object. The caller is responsible for the object
 and is expected to destroy it when appropriate.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    PRMonitor* PR_NewMonitor(void);
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -26,7 +24,6 @@ The function returns one of the following values:
 -  If unsuccessful (for example, if some operating system resource is
    unavailable), ``NULL``.
 
-.. _Description:
 
 Description
 -----------

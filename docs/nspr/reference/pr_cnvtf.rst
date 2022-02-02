@@ -3,7 +3,6 @@ PR_cnvtf
 
 Converts a floating point number to a string.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -18,7 +17,6 @@ Syntax
      PRIntn prcsn,
      PRFloat64 fval);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -35,7 +33,6 @@ The function has these parameters:
 ``fval``
    The double-precision floating point number to be converted.
 
-.. _Description:
 
 Description
 -----------

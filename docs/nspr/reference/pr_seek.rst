@@ -18,7 +18,6 @@ Moves the current read-write file pointer by an offset expressed as a
 
 Deprecated in favor of :ref:`PR_Seek64`.
 
-.. _Syntax:
 
 Syntax
 ~~~~~~
@@ -32,7 +31,6 @@ Syntax
      PRInt32 offset,
      PRSeekWhence whence);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -57,7 +55,6 @@ The function has the following parameters:
     - :ref:`PR_SEEK_END`. Sets the file pointer to the size of the file
       plus the value of the ``offset`` parameter.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -70,7 +67,6 @@ The function returns one of the following values:
    function returns -1. The error code can then be retrieved with
    :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------
@@ -80,7 +76,6 @@ for the file descriptor ``fd``:
 
 ``PR_Seek(fd, 0, PR_SEEK_CUR)``
 
-.. _See_Also:
 
 See Also
 --------

@@ -3,7 +3,6 @@ PR_Now
 
 Returns the current time.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,21 +13,18 @@ Syntax
 
    PRTime PR_Now(void);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
 
 None.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 The current time as a :ref:`PRTime` value.
 
-.. _Description:
 
 Description
 -----------

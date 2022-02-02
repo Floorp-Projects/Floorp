@@ -9,7 +9,6 @@ Returns the time zone offset information that maps the specified
    **Note:** Since this function requires GMT as input, its primary use
    is as "filler" for cases in which you need a do-nothing callback.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -21,7 +20,6 @@ Syntax
    PRTimeParameters PR_GMTParameters (
       const PRExplodedTime *gmt);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -30,7 +28,6 @@ Parameter
    A pointer to the clock/calendar time whose offsets are to be
    determined. This time should be specified in GMT.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -38,7 +35,6 @@ Returns
 A time parameters structure that expresses the time zone offsets at the
 specified time.
 
-.. _Description:
 
 Description
 -----------

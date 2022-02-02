@@ -3,7 +3,6 @@ PR_DestroyLock
 
 Destroys a specified lock object.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    void PR_DestroyLock(PRLock *lock);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -23,8 +21,6 @@ Parameter
 
 ``lock``
    A pointer to a lock object.
-
-.. _Caution:
 
 Caution
 -------

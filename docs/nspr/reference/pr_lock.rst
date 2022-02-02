@@ -3,7 +3,6 @@ PR_Lock
 
 Locks a specified lock object.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    void PR_Lock(PRLock *lock);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ Parameter
 ``lock``
    A pointer to a lock object to be locked.
 
-.. _Description:
 
 Description
 -----------
@@ -38,7 +35,6 @@ timeout mechanism.
 :ref:`PR_Lock` is not reentrant. Calling it twice on the same thread
 results in undefined behavior.
 
-.. _See_Also:
 
 See Also
 --------

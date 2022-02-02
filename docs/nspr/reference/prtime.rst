@@ -3,7 +3,6 @@ PRTime
 
 A representation of absolute times.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
     typedef PRInt64 PRTime;
 
-.. _Description:
 
 Description
 -----------

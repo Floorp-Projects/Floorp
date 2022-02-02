@@ -4,7 +4,6 @@ PR_GetFileInfo64
 Gets information about a file with a specified pathname. File size is
 expressed as a 64-bit integer.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
      const char *fn,
      PRFileInfo64 *info);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -31,7 +29,6 @@ The function has the following parameters:
    On output, :ref:`PR_GetFileInfo64` writes information about the given
    file to the file information object.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -41,7 +38,6 @@ One of the following values:
 -  If the file information is successfully obtained, ``PR_SUCCESS``.
 -  If the file information is not successfully obtained, ``PR_FAILURE``.
 
-.. _Description:
 
 Description
 -----------
@@ -50,7 +46,6 @@ Description
 specified pathname in the :ref:`PRFileInfo64` structure pointed to by
 ``info``. The file size is returned as an unsigned 64-bit integer.
 
-.. _See_Also:
 
 See Also
 --------

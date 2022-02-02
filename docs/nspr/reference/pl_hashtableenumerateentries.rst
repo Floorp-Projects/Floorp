@@ -4,7 +4,6 @@ PL_HashTableEnumerateEntries
 Enumerates all the entries in the hash table, invoking a specified
 function on each entry.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -18,7 +17,6 @@ Syntax
      PLHashEnumerator f,
      void *arg);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -32,14 +30,12 @@ The function has the following parameters:
 ``arg``
    Argument for function ``f``.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 The number of entries enumerated.
 
-.. _Description:
 
 Description
 -----------

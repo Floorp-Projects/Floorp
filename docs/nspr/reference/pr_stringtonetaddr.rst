@@ -3,7 +3,6 @@ PR_StringToNetAddr
 
 Converts a character string to a network address.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      const char *string,
      PRNetAddr *addr);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -28,7 +26,6 @@ The function has the following parameters:
 ``addr``
    On output, the equivalent network address.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -39,7 +36,6 @@ The function returns one of the following values:
 -  If unsuccessful, ``PR_FAILURE``. You can retrieve the reason for the
    failure by calling :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

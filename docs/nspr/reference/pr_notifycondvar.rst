@@ -4,7 +4,6 @@ PR_NotifyCondVar
 Notifies a condition variable of a change in its associated monitored
 data.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    PRStatus PR_NotifyCondVar(PRCondVar *cvar);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -25,7 +23,6 @@ Parameter
 ``cvar``
    The condition variable to notify.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -36,7 +33,6 @@ The function returns one of the following values:
 -  If unsuccessful (for example, if the caller has not locked the lock
    associated with the condition variable), ``PR_FAILURE``.
 
-.. _Description:
 
 Description
 -----------

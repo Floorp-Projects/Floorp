@@ -1,7 +1,6 @@
 PRJobIoDesc
 ===========
 
-.. _Syntax:
 
 Syntax
 ------

@@ -3,7 +3,6 @@ PR_Rename
 
 Renames a file.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      const char *from,
      const char *to);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -28,7 +26,6 @@ The function has the following parameters:
 ``to``
    The new name of the file.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -38,7 +35,6 @@ One of the following values:
 -  If file is successfully renamed, ``PR_SUCCESS``.
 -  If file is not successfully renamed, ``PR_FAILURE``.
 
-.. _Description:
 
 Description
 -----------

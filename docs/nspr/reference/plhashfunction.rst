@@ -1,4 +1,3 @@
-.. _Syntax:
 
 Syntax
 ------
@@ -9,7 +8,6 @@ Syntax
 
    typedef PLHashNumber (PR_CALLBACK *PLHashFunction)(const void *key);
 
-.. _Description:
 
 Description
 -----------
@@ -17,7 +15,6 @@ Description
 ``PLHashNumber`` is a function type that maps the key of a hash table
 entry to a hash number.
 
-.. _See_Also:
 
 See Also
 --------

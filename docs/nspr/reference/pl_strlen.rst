@@ -4,7 +4,6 @@ PL_strlen
 Returns the length of a specified string (not including the trailing
 ``'\0'``)
 
-.. _Syntax:
 
 Syntax
 ~~~~~~
@@ -13,7 +12,6 @@ Syntax
 
    PRUint32 PL_strlen(const char *str);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -23,7 +21,6 @@ The function has these parameter:
 ``str``
    Size in bytes of item to be allocated.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

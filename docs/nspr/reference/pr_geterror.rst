@@ -3,7 +3,6 @@ PR_GetError
 
 Returns the current thread's last set platform-independent error code.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRErrorCode PR_GetError(void)
 
-.. _Returns:
 
 Returns
 ~~~~~~~

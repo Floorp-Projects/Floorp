@@ -3,7 +3,6 @@ PL_NewHashTable
 
 Create a new hash table.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -21,7 +20,6 @@ Syntax
      void *allocPriv
    );
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -42,14 +40,12 @@ The function has the following parameters:
 ``allocPriv``
    Passed as the first argument (pool).
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 The new hash table.
 
-.. _Description:
 
 Description
 -----------

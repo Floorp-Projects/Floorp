@@ -4,7 +4,6 @@ PR_GetSpecialFD
 Gets the file descriptor that represents the standard input, output, or
 error stream.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    PRFileDesc* PR_GetSpecialFD(PRSpecialFD id);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -27,7 +25,6 @@ The function has the following parameter:
    type of I/O stream desired: ``PR_StandardInput``,
    ``PR_StandardOutput``, or ``PR_StandardError``.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -37,7 +34,6 @@ descriptor that represents the corresponding standard I/O stream.
 Otherwise, :ref:`PR_GetSpecialFD` returns ``NULL`` and sets the error to
 ``PR_INVALID_ARGUMENT_ERROR``.
 
-.. _Description:
 
 Description
 -----------
