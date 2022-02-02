@@ -166,6 +166,7 @@ CanvasRenderingContextHelper::CreateContextHelper(
   }
   MOZ_ASSERT(ret);
 
+  ret->Initialize();
   return ret.forget();
 }
 
