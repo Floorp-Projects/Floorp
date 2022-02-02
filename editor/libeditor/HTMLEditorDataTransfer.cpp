@@ -83,6 +83,7 @@ class nsILoadContext;
 namespace mozilla {
 
 using namespace dom;
+using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using LeafNodeType = HTMLEditUtils::LeafNodeType;
 
 #define kInsertCookie "_moz_Insert Here_moz_"
@@ -363,6 +364,18 @@ class MOZ_STACK_CLASS
       DocumentFragment& aDocumentFragmentForContext);
 
   static void RemoveHeadChildAndStealBodyChildsChildren(nsINode& aNode);
+
+  /**
+   * This is designed for a helper class to remove disturbing nodes at inserting
+   * the HTML fragment into the DOM tree.  This walks the children and if some
+   * elements do not have enough children, e.g., list elements not having
+   * another visible list elements nor list item elements,
+   * will be removed.
+   *
+   * @param aNode       Should not be a node whose mutation may be observed by
+   *                    JS.
+   */
+  static void RemoveIncompleteDescendantsFromInsertingFragment(nsINode& aNode);
 
   enum class NodesToRemove {
     eAll,
@@ -3239,6 +3252,51 @@ void HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
 }
 
 // static
+void HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
+    RemoveIncompleteDescendantsFromInsertingFragment(nsINode& aNode) {
+  nsIContent* child = aNode.GetFirstChild();
+  while (child) {
+    bool isEmptyNodeShouldNotInserted = false;
+    if (HTMLEditUtils::IsAnyListElement(child)) {
+      // Current limitation of HTMLEditor:
+      //   Cannot put caret in a list element which does not have list item
+      //   element even as a descendant.  I.e., HTMLEditor does not support
+      //   editing in such empty list element, and does not support to delete
+      //   it from outside.  Therefore, HTMLWithContextInserter should not
+      //   insert empty list element.
+      isEmptyNodeShouldNotInserted = HTMLEditUtils::IsEmptyNode(
+          *child,
+          {// Although we don't check relation between list item element
+           // and parent list element, but it should not be a problem in the
+           // wild because appearing such invalid list element is an edge case
+           // and anyway HTMLEditor supports editing in them.
+           EmptyCheckOption::TreatListItemAsVisible,
+           // Ignore editable state because non-editable list item element
+           // may make the list element visible.  Although HTMLEditor does not
+           // support to edit list elements which have only non-editable list
+           // item elements, but it should be deleted from outside.
+           // TODO: Currently, HTMLEditor does not support deleting such list
+           //       element with Backspace.  We should fix this.
+           EmptyCheckOption::IgnoreEditableState});
+    }
+    // TODO: Perhaps, we should delete <table>s if they have no <td>/<th>
+    //       element, or something other elements which must have specific
+    //       children but they don't.
+    if (isEmptyNodeShouldNotInserted) {
+      nsIContent* nextChild = child->GetNextSibling();
+      OwningNonNull<nsIContent> removingChild(*child);
+      removingChild->Remove();
+      child = nextChild;
+      continue;
+    }
+    if (child->HasChildNodes()) {
+      RemoveIncompleteDescendantsFromInsertingFragment(*child);
+    }
+    child = child->GetNextSibling();
+  }
+}
+
+// static
 bool HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
     IsInsertionCookie(const nsIContent& aContent) {
   // Is this child the magical cookie?
@@ -3389,6 +3447,9 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
   FragmentFromPasteCreator::RemoveHeadChildAndStealBodyChildsChildren(
       aDocumentFragmentForPastedHTML);
 
+  FragmentFromPasteCreator::RemoveIncompleteDescendantsFromInsertingFragment(
+      aDocumentFragmentForPastedHTML);
+
   // unite the two trees
   IgnoredErrorResult ignoredError;
   aTargetContentOfContextForPastedHTML.AppendChild(
@@ -3415,6 +3476,9 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
     PostProcessFragmentForPastedHTMLWithoutContext(
         DocumentFragment& aDocumentFragmentForPastedHTML) {
   FragmentFromPasteCreator::RemoveHeadChildAndStealBodyChildsChildren(
+      aDocumentFragmentForPastedHTML);
+
+  FragmentFromPasteCreator::RemoveIncompleteDescendantsFromInsertingFragment(
       aDocumentFragmentForPastedHTML);
 
   const nsresult rv = FragmentFromPasteCreator::

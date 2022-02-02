@@ -332,15 +332,15 @@ async function testCopyPaste(isXHTML) {
     var ul = $("ul1");
     var parent = ul.parentNode;
     r.setStart(parent, 0);
-    r.setEnd(parent.firstChild, 15); // the end of "Copy..."
-    sel.addRange(r);
+    r.setEnd(parent.firstChild, 15);
+    sel.addRange(r); // <div>{Copy1then Paste]<ul id="ul1"><li>LI</li>\n</ul></div>
 
     r = document.createRange();
-    r.setStart(ul, 1); // before the space inside the UL
-    r.setEnd(parent, 2); // after the UL
-    sel.addRange(r);
+    r.setStart(ul, 1);
+    r.setEnd(parent, 2);
+    sel.addRange(r); // <div>Copy1then Paste<ul id="ul1"><li>LI{</li>\n</ul>}</div>
     await copySelectionToClipboard(true);
-    testPasteHTML("contentEditable1", "Copy1then Paste");
+    testPasteHTML("contentEditable1", "Copy1then Paste"); // The <ul> should not appear because it has no <li>s
 
     // with text end node
     var sel = window.getSelection();
@@ -349,15 +349,15 @@ async function testCopyPaste(isXHTML) {
     var ul = $("ul2");
     var parent = ul.parentNode;
     r.setStart(parent, 0);
-    r.setEnd(ul, 1); // after the space
-    sel.addRange(r);
+    r.setEnd(ul, 1);
+    sel.addRange(r); // <div>{<ul id="ul2">\n}<li>LI</li></ul>Copy2then Paste</div>
 
     r = document.createRange();
-    r.setStart(parent.childNodes[1], 0); // the start of "Copy..."
+    r.setStart(parent.childNodes[1], 0);
     r.setEnd(parent, 2);
-    sel.addRange(r);
+    sel.addRange(r); // <div><ul id="ul2">\n<li>LI</li></ul>[Copy2then Paste}</div>
     await copySelectionToClipboard(true);
-    testPasteHTML("contentEditable2", "Copy2then Paste");
+    testPasteHTML("contentEditable2", "Copy2then Paste"); // The <ul> should not appear because it has no <li>s
 
     // with text end node and non-empty start
     var sel = window.getSelection();
@@ -366,17 +366,17 @@ async function testCopyPaste(isXHTML) {
     var ul = $("ul3");
     var parent = ul.parentNode;
     r.setStart(parent, 0);
-    r.setEnd(ul, 1); // after the space
-    sel.addRange(r);
+    r.setEnd(ul, 1);
+    sel.addRange(r); // <div>{<ul id="ul3"><li>\n</li>}<li>LI</li></ul>Copy3then Paste</div>
 
     r = document.createRange();
-    r.setStart(parent.childNodes[1], 0); // the start of "Copy..."
+    r.setStart(parent.childNodes[1], 0);
     r.setEnd(parent, 2);
-    sel.addRange(r);
+    sel.addRange(r); // <div><ul id="ul3"><li>\n</li><li>LI</li></ul>[Copy3then Paste}</div>
     await copySelectionToClipboard(true);
     testPasteHTML(
       "contentEditable3",
-      '<ul id="ul3"><li>\n<br></li></ul>Copy3then Paste'
+      '<ul id="ul3"><li>\n<br></li></ul>Copy3then Paste' // The <ul> should appear because it has a <li>
     );
 
     // with elements of different depth
