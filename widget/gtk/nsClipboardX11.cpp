@@ -205,7 +205,7 @@ void nsRetrievalContextX11::Complete(ClipboardDataType aDataType,
 #ifdef MOZ_LOGGING
       if (LOGCLIP_ENABLED()) {
         GdkAtom target = gtk_selection_data_get_target(selection);
-        LOGCLIP("  got data %p len %lu MIME %s\n",
+        LOGCLIP("  got data %p len %zu MIME %s\n",
                 mClipboardData->AsSpan().data(),
                 mClipboardData->AsSpan().Length(),
                 GUniquePtr<gchar>(gdk_atom_name(target)).get());
