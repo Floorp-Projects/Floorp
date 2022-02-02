@@ -98,6 +98,7 @@ class MediaDevices final : public DOMEventTargetHelper {
   // Connect/Disconnect on main thread only
   MediaEventListener mDeviceChangeListener;
   bool mIsDeviceChangeListenerSetUp = false;
+  bool mHaveUnprocessedDeviceListChange = false;
   bool mCanExposeMicrophoneInfo = false;
 
   void RecordAccessTelemetry(const UseCounter counter) const;

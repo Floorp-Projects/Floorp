@@ -72,6 +72,41 @@ runTest(async () => {
   is(await Promise.race([topEventPromise, racer]), racer,
      "devicechange event is NOT fired when gUM is NO LONGER in use and " +
      "permanent permission is NOT granted");
+
+  if (navigator.userAgent.includes("Android")) {
+    todo(false, "test assumes Firefox-for-Desktop specific API and behavior");
+    return;
+  }
+  // Open a new tab, which is expected to receive focus and hide the first tab.
+  const tab = window.open();
+  SimpleTest.registerCleanupFunction(() => tab.close());
+  await Promise.all([
+    resolveOnEvent(document, 'visibilitychange'),
+    resolveOnEvent(tab, 'focus'),
+  ]);
+  ok(tab.document.hasFocus(), "tab.document.hasFocus()");
+  await Promise.all([
+    resolveOnEvent(tab, 'blur'),
+    SpecialPowers.spawnChrome([], function focusUrlBar() {
+      this.browsingContext.topChromeWindow.gURLBar.focus();
+    }),
+  ]);
+  ok(!tab.document.hasFocus(), "!tab.document.hasFocus()");
+  is(document.visibilityState, 'hidden', 'visibilityState')
+  const frameEventPromise = resolveOnEvent(frameDevices, "devicechange");
+  const tabDevices = tab.navigator.mediaDevices;
+  const tabStream = await withPrefs(
+    [["media.navigator.permission.disabled", true]],
+    () => tabDevices.getUserMedia({video: true})
+  );
+  await doDevicechanges(tabDevices);
+  is(await Promise.race([frameEventPromise, racer]), racer,
+     "devicechange event is NOT fired while tab is in background");
+  tab.close();
+  await resolveOnEvent(document, 'visibilitychange');
+  is(document.visibilityState, 'visible', 'visibilityState')
+  await frameEventPromise;
+  ok(true, "devicechange event IS fired when tab returns to foreground");
   frameTrack.stop();
 
   await pushPrefs(["media.navigator.permission.disabled", true]);
