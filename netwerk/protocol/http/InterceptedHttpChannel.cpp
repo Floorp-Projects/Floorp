@@ -25,7 +25,8 @@ NS_IMPL_ISUPPORTS_INHERITED(InterceptedHttpChannel, HttpBaseChannel,
                             nsIInterceptedChannel, nsICacheInfoChannel,
                             nsIAsyncVerifyRedirectCallback, nsIRequestObserver,
                             nsIStreamListener, nsIThreadRetargetableRequest,
-                            nsIThreadRetargetableStreamListener)
+                            nsIThreadRetargetableStreamListener,
+                            nsIClassOfService)
 
 InterceptedHttpChannel::InterceptedHttpChannel(
     PRTime aCreationTime, const TimeStamp& aCreationTimestamp,
