@@ -124,6 +124,18 @@ pref("app.update.download.promptMaxAttempts", 2);
 // download a fresh installer.
 pref("app.update.elevation.promptMaxAttempts", 2);
 
+#ifdef NIGHTLY_BUILD
+  // Whether to delay popup notifications when an update is available and
+  // suppress them when an update is installed and waiting for user to restart.
+  // If set to true, these notifications will immediately be shown as banners in
+  // the app menu and as badges on the app menu button. Update available
+  // notifications will not create popup prompts until a week has passed without
+  // the user installing the update. Update restart notifications will not
+  // create popup prompts at all. This doesn't affect update notifications
+  // triggered by errors/failures or manual install prompts.
+  pref("app.update.suppressPrompts", false);
+#endif
+
 // If set to true, a message will be displayed in the hamburger menu while
 // an update is being downloaded.
 pref("app.update.notifyDuringDownload", false);

@@ -3108,6 +3108,10 @@ UpdateService.prototype = {
   _checkForBackgroundUpdates: function AUS__checkForBackgroundUpdates(
     isNotify
   ) {
+    if (!this.disabledByPolicy && AppConstants.NIGHTLY_BUILD) {
+      // Scalar ID: update.suppress_prompts
+      AUSTLMY.pingSuppressPrompts();
+    }
     if (this.disabledByPolicy || this.manualUpdateOnly) {
       // Return immediately if we are disabled by policy. Otherwise, just the
       // telemetry we try to collect below can potentially trigger a restart
