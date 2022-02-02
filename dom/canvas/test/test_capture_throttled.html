@@ -11,10 +11,16 @@
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("Ensuring nothing happens until timing out with good margin");
 
+const THROTTLED_THRESHOLD = 5;
+
 // CaptureStreamTestHelper holding utility test functions.
 const h = new CaptureStreamTestHelper2D();
+// Canvas element captured by streams.
+const c = h.createAndAppendElement('canvas', 'c');
+// Video element with captureStream stream in automatic mode.
+const v = h.createAndAppendElement('video', 'v');
 
-async function measureRequestAnimationFrameRate() {
+async function checkRequestAnimationFrameThrottled() {
   const frameRate = await new Promise(resolve => {
     let start;
     let count;
@@ -34,71 +40,27 @@ async function measureRequestAnimationFrameRate() {
     };
     window.requestAnimationFrame(tick);
   });
-  return frameRate;
+  ok(frameRate < THROTTLED_THRESHOLD, `rAF framerate is at ${frameRate} fps`);
 }
 
-async function measureSetTimeoutRate() {
+async function checkSetTimeoutNotThrottled() {
   const start = performance.now();
   const COUNT = 5;
   for(let i = 0; i < COUNT; ++i) {
     await new Promise(resolve => setTimeout(resolve, 0));
   }
-  return COUNT / ((performance.now() - start) / 1000);
+  const rate = COUNT / ((performance.now() - start) / 1000);
+  ok(rate > 30, `setTimeout rate is at ${rate} ticks per second`);
 }
 
-async function measureCanvasCaptureFrameRate(captureRate) {
-  // Canvas element captured by streams.
-  const c = h.createAndAppendElement('canvas', 'c');
-
-  // Since we are in a background tab, the video element won't get composited,
-  // so we cannot look for a frame count there. Instead we use RTCPeerConnection
-  // and RTCOutboundRtpStreamStats.framesEncoded.
-  const pc1 = new RTCPeerConnection();
-  const pc2 = new RTCPeerConnection();
-
-  // Add the canvas.captureStream track.
-  const ctx = c.getContext('2d');
-  const [track] = c.captureStream(captureRate).getTracks();
-  const sender = pc1.addTrack(track);
-
-  // Ice candidates signaling
-  for (const [local, remote] of [[pc1, pc2], [pc2, pc1]]) {
-    local.addEventListener("icecandidate", ({candidate}) => {
-      if (!candidate || remote.signalingState == "closed") {
-        return;
-      }
-      remote.addIceCandidate(candidate);
-    });
-  }
-
-  // Offer/Answer exchange
-  await pc1.setLocalDescription(await pc1.createOffer());
-  await pc2.setRemoteDescription(pc1.localDescription);
-  await pc2.setLocalDescription(await pc2.createAnswer());
-  await pc1.setRemoteDescription(pc2.localDescription);
-
-  // Wait for connection
-  while ([pc1, pc2].some(pc => pc.iceConnectionState == "new" ||
-                               pc.iceConnectionState == "checking")) {
-    await Promise.any(
-      [pc1, pc2].map(p => new Promise(r => p.oniceconnectionstatechange = r)));
-  }
-  for (const [pc, name] of [[pc1, "pc1"], [pc2, "pc2"]]) {
-    ok(["connected", "completed"].includes(pc.iceConnectionState),
-      `${name} connection established (${pc.iceConnectionState})`);
-  }
-
-  // Draw to the canvas
+async function checkCanvasCaptureNotThrottled() {
   const intervalMillis = 1000 / 60;
-  const getFrameCount = async () => {
-    const stats = await sender.getStats();
-    const outbound =
-      [...stats.values()].find(({type}) => type == "outbound-rtp");
-    return outbound.framesEncoded ?? 0;
-  };
-  is(await getFrameCount(), 0, "frame count starts at 0");
+  const ctx = c.getContext('2d');
+  v.srcObject = c.captureStream();
+  v.play();
   const start = performance.now();
   let end;
+  is(v.mozPaintedFrames, 0, "mozPaintedFrames starts at 0");
   while(true) {
     h.drawColor(c, h.green);
     await new Promise(resolve => setTimeout(resolve, intervalMillis));
@@ -107,10 +69,15 @@ async function measureCanvasCaptureFrameRate(captureRate) {
       break;
     }
   }
-  const framerate = (await getFrameCount()) / ((end - start) / 1000);
-  pc1.close();
-  pc2.close();
-  return framerate;
+  const frameRate = v.mozPaintedFrames / ((end - start) / 1000);
+  ok(frameRate > THROTTLED_THRESHOLD,
+    `captureStream() framerate is at ${frameRate} fps`);
+}
+
+function finish() {
+  ok(true, 'Test complete.');
+  SpecialPowers.wrap(window).browsingContext.isActive = true;
+  SimpleTest.finish();
 }
 
 (async () => {
@@ -121,29 +88,14 @@ async function measureCanvasCaptureFrameRate(captureRate) {
       ["dom.timeout.enable_budget_timer_throttling", false],
       ["dom.min_background_timeout_value", 0],
       ["dom.min_background_timeout_value_without_budget_throttling", 0],
-      ["browser.link.open_newwindow", 3], // window.open in new tab
     ],
   });
-  // Throttle the canvas' refresh driver by opening a new foreground tab
-  const foregroundTab = window.open("about:blank");
-
-  // Let the throttling take effect
-  await new Promise(r => setTimeout(r, 500));
-
-  const rAFRate = await measureRequestAnimationFrameRate();
-  ok(rAFRate < 5, `rAF framerate is at ${rAFRate} fps`);
-
-  const setTimeoutRate = await measureSetTimeoutRate();
-  ok(setTimeoutRate > 30, `setTimeout rate is at ${setTimeoutRate} tps`);
-
-  const autoRate = await measureCanvasCaptureFrameRate();
-  ok(autoRate > 5, `captureStream() framerate is at ${autoRate} fps`);
-
-  const cappedRate = await measureCanvasCaptureFrameRate(10);
-  ok(cappedRate > 5, `captureStream(10) framerate is at ${cappedRate} fps`);
-
-  foregroundTab.close();
-  SimpleTest.finish();
+  // Throttle the canvas' refresh driver
+  SpecialPowers.wrap(window).browsingContext.isActive = false;
+  await checkRequestAnimationFrameThrottled();
+  await checkSetTimeoutNotThrottled();
+  await checkCanvasCaptureNotThrottled();
+  finish();
 })();
 </script>
 
