@@ -26,7 +26,6 @@ var gEditItemOverlay = {
   // Array of PlacesTransactions accumulated by internal changes. It can be used
   // to wait for completion.
   transactionPromises: null,
-  _observersAdded: false,
   _staticFoldersListBuilt: false,
   _didChangeFolder: false,
 
@@ -347,23 +346,6 @@ var gEditItemOverlay = {
       );
     }
 
-    // Observe changes.
-    if (!this._observersAdded) {
-      PlacesUtils.bookmarks.addObserver(this);
-      this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
-      PlacesUtils.observers.addListener(
-        [
-          "bookmark-moved",
-          "bookmark-tags-changed",
-          "bookmark-title-changed",
-          "bookmark-url-changed",
-        ],
-        this.handlePlacesEvents
-      );
-      window.addEventListener("unload", this);
-      this._observersAdded = true;
-    }
-
     let focusElement = () => {
       // The focusedElement possible values are:
       //  * preferred: focus the field that the user touched first the last
@@ -555,8 +537,6 @@ var gEditItemOverlay = {
     }
   },
 
-  QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
-
   _element(aID) {
     return document.getElementById("editBMPanel_" + aID);
   },
@@ -574,21 +554,6 @@ var gEditItemOverlay = {
       if (!tagsSelectorRow.collapsed) {
         this.toggleTagsSelector().catch(Cu.reportError);
       }
-    }
-
-    if (this._observersAdded) {
-      PlacesUtils.bookmarks.removeObserver(this);
-      PlacesUtils.observers.removeListener(
-        [
-          "bookmark-moved",
-          "bookmark-tags-changed",
-          "bookmark-title-changed",
-          "bookmark-url-changed",
-        ],
-        this.handlePlacesEvents
-      );
-      window.removeEventListener("unload", this);
-      this._observersAdded = false;
     }
 
     if (this._folderMenuListListenerAdded) {
@@ -1160,64 +1125,6 @@ var gEditItemOverlay = {
     }
   },
 
-  async handlePlacesEvents(events) {
-    for (const event of events) {
-      switch (event.type) {
-        case "bookmark-moved":
-          if (!this._paneInfo.isItem || this._paneInfo.itemId != event.id) {
-            return;
-          }
-
-          this._paneInfo.parentGuid = event.parentGuid;
-
-          if (
-            !this._paneInfo.visibleRows.has("folderRow") ||
-            event.parentGuid === this._folderMenuList.selectedItem.folderGuid
-          ) {
-            return;
-          }
-
-          // Just setting selectItem _does not_ trigger oncommand, so we don't
-          // recurse.
-          const bm = await PlacesUtils.bookmarks.fetch(event.parentGuid);
-          this._folderMenuList.selectedItem = this._getFolderMenuItem(
-            event.parentGuid,
-            bm.title
-          );
-          break;
-        case "bookmark-tags-changed":
-          if (this._paneInfo.visibleRows.has("tagsRow")) {
-            this._onTagsChange(event.guid).catch(Cu.reportError);
-          }
-          break;
-        case "bookmark-title-changed":
-          if (this._paneInfo.isItem || this._paneInfo.isTag) {
-            // This also updates titles of folders in the folder menu list.
-            this._onItemTitleChange(event.id, event.title, event.guid);
-          }
-          break;
-        case "bookmark-url-changed":
-          if (!this._paneInfo.isItem || this._paneInfo.itemId != event.id) {
-            return;
-          }
-
-          const newURI = Services.io.newURI(event.url);
-          if (!newURI.equals(this._paneInfo.uri)) {
-            this._paneInfo.uri = newURI;
-            if (this._paneInfo.visibleRows.has("locationRow")) {
-              this._initLocationField();
-            }
-
-            if (this._paneInfo.visibleRows.has("tagsRow")) {
-              delete this._paneInfo._cachedCommonTags;
-              this._onTagsChange(event.guid, newURI).catch(Cu.reportError);
-            }
-          }
-          break;
-      }
-    }
-  },
-
   toggleItemCheckbox(item) {
     // Update the tags field when items are checked/unchecked in the listbox
     let tags = this._getTagsArrayFromTagsInputField();
@@ -1252,92 +1159,6 @@ var gEditItemOverlay = {
     }
 
     this._initTextField(this._tagsField, tags.join(", "));
-  },
-
-  async _onTagsChange(guid, changedURI = null) {
-    let paneInfo = this._paneInfo;
-    let updateTagsField = false;
-    if (paneInfo.isURI) {
-      if (paneInfo.isBookmark && guid == paneInfo.itemGuid) {
-        updateTagsField = true;
-      } else if (!paneInfo.isBookmark) {
-        if (!changedURI) {
-          let href = (await PlacesUtils.bookmarks.fetch(guid)).url.href;
-          changedURI = Services.io.newURI(href);
-        }
-        updateTagsField = changedURI.equals(paneInfo.uri);
-      }
-    } else if (paneInfo.bulkTagging) {
-      if (!changedURI) {
-        let href = (await PlacesUtils.bookmarks.fetch(guid)).url.href;
-        changedURI = Services.io.newURI(href);
-      }
-      if (paneInfo.uris.some(uri => uri.equals(changedURI))) {
-        updateTagsField = true;
-        delete this._paneInfo._cachedCommonTags;
-      }
-    } else {
-      throw new Error("_onTagsChange called unexpectedly");
-    }
-
-    if (updateTagsField) {
-      this._initTagsField();
-      // Any tags change should be reflected in the tags selector.
-      if (this._element("tagsSelector")) {
-        await this._rebuildTagsSelectorList();
-      }
-    }
-  },
-
-  _onItemTitleChange(aItemId, aNewTitle, aGuid) {
-    if (aItemId == this._paneInfo.itemId || aGuid == this._paneInfo.itemGuid) {
-      this._paneInfo.title = aNewTitle;
-      this._initTextField(this._namePicker, aNewTitle);
-    } else if (this._paneInfo.visibleRows.has("folderRow")) {
-      // If the title of a folder which is listed within the folders
-      // menulist has been changed, we need to update the label of its
-      // representing element.
-      let menupopup = this._folderMenuList.menupopup;
-      for (let menuitem of menupopup.children) {
-        if ("folderGuid" in menuitem && menuitem.folderGuid == aGuid) {
-          menuitem.label = aNewTitle;
-          break;
-        }
-      }
-    }
-    // We need to also update title of recent folders.
-    if (this._recentFolders) {
-      for (let folder of this._recentFolders) {
-        if (folder.folderGuid == aGuid) {
-          folder.title = aNewTitle;
-          break;
-        }
-      }
-    }
-  },
-
-  // nsINavBookmarkObserver
-  onItemChanged(
-    aItemId,
-    aProperty,
-    aIsAnnotationProperty,
-    aValue,
-    aLastModified,
-    aItemType,
-    aParentId,
-    aGuid
-  ) {
-    if (!this._paneInfo.isItem || this._paneInfo.itemId != aItemId) {
-      return;
-    }
-
-    switch (aProperty) {
-      case "keyword":
-        if (this._paneInfo.visibleRows.has("keywordRow")) {
-          this._initKeywordField(aValue).catch(Cu.reportError);
-        }
-        break;
-    }
   },
 };
 
