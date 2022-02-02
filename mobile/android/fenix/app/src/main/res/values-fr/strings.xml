@@ -1098,7 +1098,7 @@
     <string name="collection_menu_button_content_description">Menu de la collection</string>
 
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description2">Rassemblez ce qui compte pour vous\nCollectez des recherches, des sites et des onglets similaires pour un accès rapide plus tard.</string>
+    <string name="no_collections_description2">Rassemblez ce qui compte pour vous.\nCollectez des recherches, des sites et des onglets similaires pour un accès rapide plus tard.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Sélectionner des onglets</string>
 

@@ -20,8 +20,6 @@
     <string name="no_private_tabs_description">Сезнең хосусый таблар монда күрсәтеләчәк.</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string moz:removedIn="96" name="open_tab_tray_single" tools:ignore="UnusedResources">1 ачык таб. Табларны күчерү өчен басыгыз.</string>
-    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s ачык таб. Табларны күчерү өчен басыгыз.</string>
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d сайланган</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
@@ -109,8 +107,6 @@
     <string name="tab_tray_inactive_auto_close_title">Бер айдан соң автоматик рәвештә ябылсынмы?</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Ябу</string>
-    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
-    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">Автоматик рәвештә ябуны кабызу</string>
 
     <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_turn_on_auto_close_button_2">Автоматик рәвештә ябуны кабызу</string>
@@ -121,9 +117,6 @@
     <string name="home_screen_shortcut_open_new_tab_2">Яңа таб</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Яңа хосусый таб</string>
-
-    <!-- Heading for the Top Sites block -->
-    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Еш кулланылучылар</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -173,8 +166,6 @@
     <string name="browser_menu_refresh">Яңарту</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Туктату</string>
-    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Кыстыру</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string moz:removedIn="96" name="browser_menu_edit_bookmark" tools:ignore="UnusedResources">Кыстыргычны үзгәртү</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -466,6 +457,21 @@
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Фон рәсемнәр</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Иганәче ярлыклары</string>
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">Фон рәсем элементы: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">Фон рәсем яңартылды!</string>
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">Карау</string>
+    <!-- Label for switch which toggles the "tap-to-switch" behavior on home screen logo -->
+    <string name="wallpaper_tap_to_change_switch_label">Фон рәсемне үзгәртү өчен логотипка басыгыз</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">Кушымчаны кулланып булмый</string>
@@ -564,8 +570,6 @@
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Синхронлауны кабызу</string>
-    <!-- Preference for pairing -->
-    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Эш өстәле компьютерындагы Firefox-та ялгау кодын сканерлау</string>
     <!-- Preference for account login -->
     <string moz:removedIn="96" name="preferences_sync_sign_in" tools:ignore="UnusedResources">Керү</string>
 
@@ -758,8 +762,6 @@
     <string moz:removedIn="96" name="tab_tray_title" tools:ignore="UnusedResources">Ачык таблар</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string moz:removedIn="96" name="tab_tray_menu_item_save" tools:ignore="UnusedResources">Җыентыкка саклау</string>
-    <!-- Text shown in the menu for the collection selector -->
-    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Cайлау</string>
 
 
     <!-- Text shown in the menu for sharing all tabs -->
@@ -910,8 +912,6 @@
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
     <string moz:removedIn="96" name="bookmark_menu_content_description" tools:ignore="UnusedResources">Кыстыргычлар менюсы</string>
-    <!-- Screen title for editing bookmarks -->
-    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Кыстыргычны үзгәртү</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string moz:removedIn="96" name="bookmark_select_folder" tools:ignore="UnusedResources">Папка сайлау</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1192,7 +1192,7 @@
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">КИРЕ АЛУ</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string moz:removedIn="96" name="snackbar_top_site_removed" tools:ignore="UnusedResources">Сайт бетерелде</string>
+    <string name="snackbar_top_site_removed">Сайт бетерелде</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
     <string moz:removedIn="96" name="a11y_dialog_deleted_undo" tools:ignore="UnusedResources">Кире алу</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
@@ -1797,6 +1797,8 @@
     <string name="bookmark_deletion_confirmation">Бу кыстыргычны бетерүне раслыйсызмы?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
     <string name="browser_menu_add_to_top_sites">Төп сайтларга өстәү</string>
+    <!-- Browser menu button that removes a top site from the home fragment -->
+    <string name="browser_menu_remove_from_top_sites">Төп сайтлардан алып ату</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Раслаучы: %1$s</string>
@@ -1869,8 +1871,10 @@
     <string name="top_sites_max_limit_content_2">Яңа төп сайт өстәү өчен башка берсен бетерегез. Сайтка басып торыгыз һәм «Бетерү»-не сайлагыз.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Яхшы, аңладым</string>
-    <!-- Label for the preference to show the most visited top sites on the homepage -->
-    <string name="top_sites_toggle_top_recent_sites_3">Иң күп каралган төп сайтлар</string>
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string moz:removedIn="98" name="top_sites_toggle_top_recent_sites_3" tools:ignore="UnusedResources">Иң күп каралган төп сайтлар</string>
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">Ярлыклар</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Исем</string>
 	<!-- Hint for renaming title of a top site -->
@@ -1886,13 +1890,59 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Барлык актив булмаган табларны ябу</string>
 
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Бер айдан соң үзлегеннән ябылсынмы?</string>
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox соңгы айда каралмаган табларны яба ала.</string>
+    <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">АВТОЯБУНЫ КАБЫЗУ</string>
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">Автоябу кабызылды</string>
+
+    <!-- Inactive tabs survey -->
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header_1">Firefox-ны яхшыртырга ярдәм итегез</string>
+
+    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
+    <string name="inactive_tabs_survey_content">Нигә сез актив булмаган табларны сүндердегез?</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_do_not_understand">Аның ничек эшләвен аңламыйм</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option_1">Ике атналык вакыт периоды артык озын</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option_1">Ике атналык вакыт периоды артык кыска</string>
+    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
+    <string name="inactive_tabs_survey_send_button">Җибәрү</string>
+    <!-- Content description for inactive tabs survey close button -->
+    <string name="inactive_tabs_survey_close_button_content_description">Ябу</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Вебсайтлардан, эл. хатлардан һәм хәбәрләрдән сылтамаларны автоматик рәвештә Firefox-та ачылсын.</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Бетерү</string>
 
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">Күбрәк белү өчен басыгыз</string>
 
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Югарыга</string>
+
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Ябу</string>
 
-    </resources>
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">Уйландыра торган мәкаләләр</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_categories_header">Темалар буенча хикәяләр</string>
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">Күбрәген күрү</string>
+    <!-- Title of an app feature. Smaller than a heading.-->
+    <string name="pocket_stories_feature_title">Pocket нигезендә.</string>
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">Firefox гаиләсеннән. %s</string>
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">Күбрәк белү</string>
+</resources>
