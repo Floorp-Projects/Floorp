@@ -6,7 +6,6 @@
 
 #include "mozilla/SandboxSettings.h"
 #include "mozISandboxSettings.h"
-#include "nsIXULRuntime.h"
 #include "nsServiceManagerUtils.h"
 
 #include "mozilla/Components.h"
@@ -28,142 +27,73 @@ using namespace mozilla;
 namespace mozilla {
 
 const char* ContentWin32kLockdownStateToString(
-    ContentWin32kLockdownState aValue) {
+    nsIXULRuntime::ContentWin32kLockdownState aValue) {
   switch (aValue) {
-    case ContentWin32kLockdownState::LockdownEnabled:
+    case nsIXULRuntime::ContentWin32kLockdownState::LockdownEnabled:
       return "Win32k Lockdown enabled";
 
-    case ContentWin32kLockdownState::MissingWebRender:
+    case nsIXULRuntime::ContentWin32kLockdownState::MissingWebRender:
       return "Win32k Lockdown disabled -- Missing WebRender";
 
-    case ContentWin32kLockdownState::OperatingSystemNotSupported:
+    case nsIXULRuntime::ContentWin32kLockdownState::OperatingSystemNotSupported:
       return "Win32k Lockdown disabled -- Operating system not supported";
 
-    case ContentWin32kLockdownState::PrefNotSet:
+    case nsIXULRuntime::ContentWin32kLockdownState::PrefNotSet:
       return "Win32k Lockdown disabled -- Preference not set";
 
-    case ContentWin32kLockdownState::MissingRemoteWebGL:
+    case nsIXULRuntime::ContentWin32kLockdownState::MissingRemoteWebGL:
       return "Win32k Lockdown disabled -- Missing Remote WebGL";
 
-    case ContentWin32kLockdownState::MissingNonNativeTheming:
+    case nsIXULRuntime::ContentWin32kLockdownState::MissingNonNativeTheming:
       return "Win32k Lockdown disabled -- Missing Non-Native Theming";
 
-    case ContentWin32kLockdownState::DisabledByEnvVar:
+    case nsIXULRuntime::ContentWin32kLockdownState::DisabledByEnvVar:
       return "Win32k Lockdown disabled -- MOZ_ENABLE_WIN32K is set";
 
-    case ContentWin32kLockdownState::DisabledBySafeMode:
+    case nsIXULRuntime::ContentWin32kLockdownState::DisabledBySafeMode:
       return "Win32k Lockdown disabled -- Running in Safe Mode";
 
-    case ContentWin32kLockdownState::DisabledByE10S:
+    case nsIXULRuntime::ContentWin32kLockdownState::DisabledByE10S:
       return "Win32k Lockdown disabled -- E10S is disabled";
 
-    case ContentWin32kLockdownState::DisabledByUserPref:
+    case nsIXULRuntime::ContentWin32kLockdownState::DisabledByUserPref:
       return "Win32k Lockdown disabled -- manually set "
              "security.sandbox.content.win32k-disable to false";
 
-    case ContentWin32kLockdownState::EnabledByUserPref:
+    case nsIXULRuntime::ContentWin32kLockdownState::EnabledByUserPref:
       return "Win32k Lockdown enabled -- manually set "
              "security.sandbox.content.win32k-disable to true";
 
-    case ContentWin32kLockdownState::DisabledByControlGroup:
+    case nsIXULRuntime::ContentWin32kLockdownState::DisabledByControlGroup:
       return "Win32k Lockdown disabled -- user in Control Group";
 
-    case ContentWin32kLockdownState::EnabledByTreatmentGroup:
+    case nsIXULRuntime::ContentWin32kLockdownState::EnabledByTreatmentGroup:
       return "Win32k Lockdown enabled -- user in Treatment Group";
 
-    case ContentWin32kLockdownState::DisabledByDefault:
+    case nsIXULRuntime::ContentWin32kLockdownState::DisabledByDefault:
       return "Win32k Lockdown disabled -- default value is false";
 
-    case ContentWin32kLockdownState::EnabledByDefault:
+    case nsIXULRuntime::ContentWin32kLockdownState::EnabledByDefault:
       return "Win32k Lockdown enabled -- default value is true";
   }
 
   MOZ_CRASH("Should never reach here");
 }
 
-bool InSafeMode() {
-  static bool sSafeModeInitialized = false;
-  static bool sInSafeMode = false;
-
-  if (!sSafeModeInitialized) {
-    sSafeModeInitialized = true;
-    nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
-    if (xr) {
-      xr->GetInSafeMode(&sInSafeMode);
-    } else {
-      MOZ_CRASH("could not get service");
-    }
-  }
-  return sInSafeMode;
+bool GetContentWin32kLockdownEnabled() {
+  auto state = GetContentWin32kLockdownState();
+  return state ==
+             nsIXULRuntime::ContentWin32kLockdownState::EnabledByUserPref ||
+         state == nsIXULRuntime::ContentWin32kLockdownState::
+                      EnabledByTreatmentGroup ||
+         state == nsIXULRuntime::ContentWin32kLockdownState::EnabledByDefault;
 }
 
-ContentWin32kLockdownState GetContentWin32kLockdownState() {
+nsIXULRuntime::ContentWin32kLockdownState GetContentWin32kLockdownState() {
 #ifdef XP_WIN
-  static ContentWin32kLockdownState result = [] {
-    ContentWin32kLockdownState state = [] {
-      if (InSafeMode()) {
-        return ContentWin32kLockdownState::DisabledBySafeMode;
-      }
 
-      if (PR_GetEnv("MOZ_ENABLE_WIN32K")) {
-        return ContentWin32kLockdownState::DisabledByEnvVar;
-      }
-
-      if (!mozilla::BrowserTabsRemoteAutostart()) {
-        return ContentWin32kLockdownState::DisabledByE10S;
-      }
-
-      if (!IsWin8OrLater()) {
-        return ContentWin32kLockdownState::OperatingSystemNotSupported;
-      }
-
-      // Win32k Lockdown requires WebRender, but WR is not currently guaranteed
-      // on all computers. It can also fail to initialize and fallback to
-      // non-WR render path.
-      //
-      // We don't want a situation where "Win32k Lockdown + No WR" occurs
-      // without the user explicitly requesting unsupported behavior.
-      if (!gfx::gfxVars::UseWebRender()) {
-        return ContentWin32kLockdownState::MissingWebRender;
-      }
-
-      // Non-native theming is required as well
-      if (!StaticPrefs::widget_non_native_theme_enabled()) {
-        return ContentWin32kLockdownState::MissingNonNativeTheming;
-      }
-
-      // Win32k Lockdown requires Remote WebGL, but it may be disabled on
-      // certain hardware or virtual machines.
-      if (!gfx::gfxVars::AllowWebglOop() ||
-          !StaticPrefs::webgl_out_of_process()) {
-        return ContentWin32kLockdownState::MissingRemoteWebGL;
-      }
-
-      bool prefSetByUser =
-          Preferences::HasUserValue("security.sandbox.content.win32k-disable");
-      bool prefValue =
-          Preferences::GetBool("security.sandbox.content.win32k-disable", false,
-                               PrefValueKind::User);
-      bool defaultValue =
-          Preferences::GetBool("security.sandbox.content.win32k-disable", false,
-                               PrefValueKind::Default);
-
-      if (prefSetByUser) {
-        if (prefValue) {
-          return ContentWin32kLockdownState::EnabledByUserPref;
-        } else {
-          return ContentWin32kLockdownState::DisabledByUserPref;
-        }
-      }
-
-      // enrollment pref
-
-      if (defaultValue) {
-        return ContentWin32kLockdownState::EnabledByDefault;
-      } else {
-        return ContentWin32kLockdownState::DisabledByDefault;
-      }
-    }();
+  static auto getLockdownState = [] {
+    auto state = GetWin32kLockdownState();
 
     const char* stateStr = ContentWin32kLockdownStateToString(state);
     CrashReporter::AnnotateCrashReport(
@@ -171,13 +101,14 @@ ContentWin32kLockdownState GetContentWin32kLockdownState() {
         nsDependentCString(stateStr));
 
     return state;
-  }();
+  };
 
+  static nsIXULRuntime::ContentWin32kLockdownState result = getLockdownState();
   return result;
 
 #else  // XP_WIN
 
-  return ContentWin32kLockdownState::OperatingSystemNotSupported;
+  return nsIXULRuntime::ContentWin32kLockdownState::OperatingSystemNotSupported;
 
 #endif  // XP_WIN
 }
@@ -259,7 +190,7 @@ NS_IMETHODIMP SandboxSettings::GetContentWin32kLockdownState(int32_t* aRetVal) {
 
 NS_IMETHODIMP
 SandboxSettings::GetContentWin32kLockdownStateString(nsAString& aString) {
-  ContentWin32kLockdownState lockdownState =
+  nsIXULRuntime::ContentWin32kLockdownState lockdownState =
       mozilla::GetContentWin32kLockdownState();
   aString = NS_ConvertASCIItoUTF16(
       mozilla::ContentWin32kLockdownStateToString(lockdownState));
