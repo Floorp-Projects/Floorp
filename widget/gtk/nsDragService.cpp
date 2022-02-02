@@ -647,11 +647,11 @@ void nsDragService::GetDragFlavors(nsTArray<nsCString>& aFlavors) {
   for (GList* tmp = gdk_drag_context_list_targets(mTargetDragContext); tmp;
        tmp = tmp->next) {
     GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
-    gchar* name = gdk_atom_name(atom);
+    GUniquePtr<gchar> name(gdk_atom_name(atom));
     if (!name) {
       continue;
     }
-    aFlavors.AppendElement(nsCString(name));
+    aFlavors.AppendElement(nsCString(name.get()));
   }
 }
 
@@ -875,13 +875,8 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex) {
     }  // else we try one last ditch effort to find our data
 
     if (dataFound) {
-#if MOZ_LOGGING
-      char* name = gdk_atom_name(gdkFlavor);
-      if (name) {
-        LOGDRAGSERVICE(("  actual data found %s\n", name));
-        g_free(name);
-      }
-#endif
+      LOGDRAGSERVICE(("  actual data found %s\n",
+                      GUniquePtr<gchar>(gdk_atom_name(gdkFlavor)).get()));
 
       if (flavorStr.EqualsLiteral(kJPEGImageMime) ||
           flavorStr.EqualsLiteral(kJPGImageMime) ||
@@ -980,28 +975,27 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
   for (; tmp; tmp = tmp->next) {
     /* Bug 331198 */
     GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
-    gchar* name = nullptr;
-    name = gdk_atom_name(atom);
+    GUniquePtr<gchar> name(gdk_atom_name(atom));
     if (!name) {
       continue;
     }
 
-    if (strcmp(name, aDataFlavor) == 0) {
+    if (strcmp(name.get(), aDataFlavor) == 0) {
       *_retval = true;
     }
     // check for automatic text/uri-list -> text/x-moz-url mapping
-    else if (strcmp(name, gTextUriListType) == 0 &&
+    else if (strcmp(name.get(), gTextUriListType) == 0 &&
              (strcmp(aDataFlavor, kURLMime) == 0 ||
               strcmp(aDataFlavor, kFileMime) == 0)) {
       *_retval = true;
     }
     // check for automatic _NETSCAPE_URL -> text/x-moz-url mapping
-    else if (strcmp(name, gMozUrlType) == 0 &&
+    else if (strcmp(name.get(), gMozUrlType) == 0 &&
              (strcmp(aDataFlavor, kURLMime) == 0)) {
       *_retval = true;
     }
     // check for auto text/plain -> text/unicode mapping
-    else if (strcmp(name, kTextMime) == 0 &&
+    else if (strcmp(name.get(), kTextMime) == 0 &&
              ((strcmp(aDataFlavor, kUnicodeMime) == 0) ||
               (strcmp(aDataFlavor, kFileMime) == 0))) {
       *_retval = true;
@@ -1009,9 +1003,8 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
 
     if (*_retval) {
       LOGDRAGSERVICE(
-          ("  supported, with converting %s => %s", name, aDataFlavor));
+          ("  supported, with converting %s => %s", name.get(), aDataFlavor));
     }
-    g_free(name);
   }
 
   if (!*_retval) {
@@ -1070,9 +1063,8 @@ void nsDragService::TargetDataReceived(GtkWidget* aWidget,
   const guchar* data = gtk_selection_data_get_data(aSelectionData);
 
   GdkAtom target = gtk_selection_data_get_target(aSelectionData);
-  char* name = gdk_atom_name(target);
-  nsCString flavor(name);
-  g_free(name);
+  GUniquePtr<gchar> name(gdk_atom_name(target));
+  nsDependentCString flavor(name.get());
 
   LOGDRAGSERVICE(("  got data, MIME %s", flavor.get()));
 
@@ -1119,11 +1111,10 @@ bool nsDragService::IsTargetContextList(void) {
   for (; tmp; tmp = tmp->next) {
     /* Bug 331198 */
     GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
-    gchar* name = nullptr;
-    name = gdk_atom_name(atom);
-    if (name && strcmp(name, gMimeListType) == 0) retval = true;
-    g_free(name);
-    if (retval) break;
+    GUniquePtr<gchar> name(gdk_atom_name(atom));
+    if (name && !strcmp(name.get(), gMimeListType)) {
+      return true;
+    }
   }
 
   return retval;
@@ -1131,15 +1122,14 @@ bool nsDragService::IsTargetContextList(void) {
 
 void nsDragService::GetTargetDragData(GdkAtom aFlavor,
                                       nsTArray<nsCString>& aDropFlavors) {
-  LOGDRAGSERVICE(
-      ("nsDragService::GetTargetDragData '%s'\n", gdk_atom_name(aFlavor)));
+  LOGDRAGSERVICE(("nsDragService::GetTargetDragData '%s'\n",
+                  GUniquePtr<gchar>(gdk_atom_name(aFlavor)).get()));
 
   // reset our target data areas
   TargetResetData();
 
-  char* name = gdk_atom_name(aFlavor);
-  nsCString flavor(name);
-  g_free(name);
+  GUniquePtr<gchar> name(gdk_atom_name(aFlavor));
+  nsDependentCString flavor(name.get());
 
   // Return early when requested MIME is not offered by D&D.
   if (!aDropFlavors.Contains(flavor)) {
@@ -1635,14 +1625,13 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
                                   guint32 aTime) {
   LOGDRAGSERVICE(("nsDragService::SourceDataGet"));
   GdkAtom target = gtk_selection_data_get_target(aSelectionData);
-  gchar* typeName = gdk_atom_name(target);
+  GUniquePtr<gchar> typeName(gdk_atom_name(target));
   if (!typeName) {
     LOGDRAGSERVICE(("  failed to get atom name.\n"));
     return;
   }
 
-  LOGDRAGSERVICE(("  Type is %s\n", typeName));
-  auto freeTypeName = mozilla::MakeScopeExit([&] { g_free(typeName); });
+  LOGDRAGSERVICE(("  Type is %s\n", typeName.get()));
   // check to make sure that we have data items to return.
   if (!mSourceDataItems) {
     LOGDRAGSERVICE(("  Failed to get our data items\n"));
@@ -1666,27 +1655,27 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
   bool needToDoConversionToPlainText = false;
   bool needToDoConversionToImage = false;
 
-  nsDependentCSubstring mimeFlavor(typeName, strlen(typeName));
-  const char* actualFlavor;
+  nsDependentCString mimeFlavor(typeName.get());
+  const char* actualFlavor = nullptr;
   if (mimeFlavor.EqualsLiteral(kTextMime) ||
       mimeFlavor.EqualsLiteral(gTextPlainUTF8Type)) {
     actualFlavor = kUnicodeMime;
     needToDoConversionToPlainText = true;
-    LOGDRAGSERVICE(("  convert %s => %s", typeName, actualFlavor));
+    LOGDRAGSERVICE(("  convert %s => %s", typeName.get(), actualFlavor));
   }
   // if someone was asking for _NETSCAPE_URL we need to convert to
   // plain text but we also need to look for x-moz-url
   else if (mimeFlavor.EqualsLiteral(gMozUrlType)) {
     actualFlavor = kURLMime;
     needToDoConversionToPlainText = true;
-    LOGDRAGSERVICE(("  convert %s => %s", typeName, actualFlavor));
+    LOGDRAGSERVICE(("  convert %s => %s", typeName.get(), actualFlavor));
   }
   // if someone was asking for text/uri-list we need to convert to
   // plain text.
   else if (mimeFlavor.EqualsLiteral(gTextUriListType)) {
     actualFlavor = gTextUriListType;
     needToDoConversionToPlainText = true;
-    LOGDRAGSERVICE(("  convert %s => %s", typeName, actualFlavor));
+    LOGDRAGSERVICE(("  convert %s => %s", typeName.get(), actualFlavor));
 
     // The desktop or file manager expects for drags of promise-file data
     // the text/uri-list flavor set to a temporary file that contains the
@@ -1804,10 +1793,10 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
              mimeFlavor.EqualsLiteral(kGIFImageMime)) {
     actualFlavor = kNativeImageMime;
     needToDoConversionToImage = true;
-    LOGDRAGSERVICE(("  convert %s => %s", typeName, actualFlavor));
+    LOGDRAGSERVICE(("  convert %s => %s", typeName.get(), actualFlavor));
   } else {
-    actualFlavor = typeName;
-    LOGDRAGSERVICE(("  use %s", typeName));
+    actualFlavor = typeName.get();
+    LOGDRAGSERVICE(("  use %s", typeName.get()));
   }
   nsresult rv;
   nsCOMPtr<nsISupports> data;
@@ -1869,7 +1858,7 @@ void nsDragService::SourceDataGet(GtkWidget* aWidget, GdkDragContext* aContext,
   } else {
     if (mimeFlavor.EqualsLiteral(gTextUriListType)) {
       // fall back for text/uri-list
-      LOGDRAGSERVICE(("  fall back to %s\n", typeName));
+      LOGDRAGSERVICE(("  fall back to %s\n", typeName.get()));
       nsAutoCString list;
       CreateURIList(mSourceDataItems, list);
       gtk_selection_data_set(aSelectionData, target, 8, (guchar*)list.get(),
@@ -2010,8 +1999,8 @@ static gboolean invisibleSourceDragFailed(GtkWidget* aWidget,
     for (GList* tmp = gdk_drag_context_list_targets(aContext); tmp;
          tmp = tmp->next) {
       GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
-      gchar* name = gdk_atom_name(atom);
-      if (name && (strcmp(name, gTabDropType) == 0)) {
+      GUniquePtr<gchar> name(gdk_atom_name(atom));
+      if (name && !strcmp(name.get(), gTabDropType)) {
         aResult = MOZ_GTK_DRAG_RESULT_NO_TARGET;
         LOGDRAGSERVICE(("invisibleSourceDragFailed: Wayland tab drop\n"));
         break;
