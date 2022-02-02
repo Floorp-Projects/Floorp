@@ -154,7 +154,7 @@ class DefaultTopSitesStorageTest {
     }
 
     @Test
-    fun `getTopSites returns only default and pinned sites when frecencyConfig is null`() = runBlockingTest {
+    fun `GIVEN frecencyConfig and providerConfig are null WHEN getTopSites is called THEN only default and pinned sites are returned`() = runBlockingTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
@@ -183,41 +183,25 @@ class DefaultTopSitesStorageTest {
         )
         whenever(pinnedSitesStorage.getPinnedSitesCount()).thenReturn(2)
 
-        var topSites = defaultTopSitesStorage.getTopSites(
-            totalSites = 0,
-            fetchProvidedTopSites = false,
-            frecencyConfig = null
-        )
+        var topSites = defaultTopSitesStorage.getTopSites(totalSites = 0)
 
         assertTrue(topSites.isEmpty())
         assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
 
-        topSites = defaultTopSitesStorage.getTopSites(
-            totalSites = 1,
-            fetchProvidedTopSites = false,
-            frecencyConfig = null
-        )
+        topSites = defaultTopSitesStorage.getTopSites(totalSites = 1)
 
         assertEquals(1, topSites.size)
         assertEquals(defaultSite, topSites[0])
         assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
 
-        topSites = defaultTopSitesStorage.getTopSites(
-            totalSites = 2,
-            fetchProvidedTopSites = false,
-            frecencyConfig = null
-        )
+        topSites = defaultTopSitesStorage.getTopSites(totalSites = 2)
 
         assertEquals(2, topSites.size)
         assertEquals(defaultSite, topSites[0])
         assertEquals(pinnedSite, topSites[1])
         assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
 
-        topSites = defaultTopSitesStorage.getTopSites(
-            totalSites = 5,
-            fetchProvidedTopSites = false,
-            frecencyConfig = null
-        )
+        topSites = defaultTopSitesStorage.getTopSites(totalSites = 5)
 
         assertEquals(2, topSites.size)
         assertEquals(defaultSite, topSites[0])
@@ -226,7 +210,7 @@ class DefaultTopSitesStorageTest {
     }
 
     @Test
-    fun `GIVEN fetchProvidedTopSites is true WHEN getTopSites is called THEN default, pinned and provided top sites are returned`() = runBlockingTest {
+    fun `GIVEN providerConfig is specified WHEN getTopSites is called THEN default, pinned and provided top sites are returned`() = runBlockingTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
@@ -265,19 +249,16 @@ class DefaultTopSitesStorageTest {
         )
         whenever(topSitesProvider.getTopSites()).thenReturn(listOf(providedSite))
 
-        var topSites = defaultTopSitesStorage.getTopSites(
-            totalSites = 0,
-            fetchProvidedTopSites = false,
-            frecencyConfig = null
-        )
+        var topSites = defaultTopSitesStorage.getTopSites(totalSites = 0)
 
         assertTrue(topSites.isEmpty())
         assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 1,
-            fetchProvidedTopSites = true,
-            frecencyConfig = null
+            providerConfig = TopSitesProviderConfig(
+                showProviderTopSites = true
+            )
         )
 
         assertEquals(1, topSites.size)
@@ -286,8 +267,9 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 2,
-            fetchProvidedTopSites = true,
-            frecencyConfig = null
+            providerConfig = TopSitesProviderConfig(
+                showProviderTopSites = true
+            )
         )
 
         assertEquals(2, topSites.size)
@@ -297,19 +279,60 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 5,
-            fetchProvidedTopSites = true,
-            frecencyConfig = null
+            providerConfig = TopSitesProviderConfig(
+                showProviderTopSites = true
+            )
         )
 
         assertEquals(3, topSites.size)
+        assertEquals(providedSite, topSites[0])
+        assertEquals(defaultSite, topSites[1])
+        assertEquals(pinnedSite, topSites[2])
+        assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
+
+        topSites = defaultTopSitesStorage.getTopSites(
+            totalSites = 5,
+            providerConfig = TopSitesProviderConfig(
+                showProviderTopSites = false
+            )
+        )
+
+        assertEquals(2, topSites.size)
         assertEquals(defaultSite, topSites[0])
         assertEquals(pinnedSite, topSites[1])
-        assertEquals(providedSite, topSites[2])
+        assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
+
+        topSites = defaultTopSitesStorage.getTopSites(
+            totalSites = 5,
+            providerConfig = TopSitesProviderConfig(
+                showProviderTopSites = true,
+                maxThreshold = 8
+            )
+        )
+
+        assertEquals(3, topSites.size)
+        assertEquals(providedSite, topSites[0])
+        assertEquals(defaultSite, topSites[1])
+        assertEquals(pinnedSite, topSites[2])
+        assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
+
+        topSites = defaultTopSitesStorage.getTopSites(
+            totalSites = 5,
+            frecencyConfig = null,
+            providerConfig = TopSitesProviderConfig(
+                showProviderTopSites = true,
+                maxThreshold = 2
+            )
+        )
+
+        assertEquals(2, topSites.size)
+        assertEquals(defaultSite, topSites[0])
+        assertEquals(pinnedSite, topSites[1])
         assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
     }
 
     @Test
-    fun `GIVEN fetchProvidedTopSites is true and frecencyConfig is specified WHEN getTopSites is called THEN default, pinned, provided and frecent top sites are returned`() = runBlockingTest {
+    fun `GIVEN frecencyConfig and providerConfig are specified WHEN getTopSites is called THEN default, pinned, provided and frecent top sites are returned`() = runBlockingTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
             pinnedSitesStorage = pinnedSitesStorage,
             historyStorage = historyStorage,
@@ -353,16 +376,20 @@ class DefaultTopSitesStorageTest {
 
         var topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 0,
-            fetchProvidedTopSites = true,
-            frecencyConfig = FrecencyThresholdOption.NONE
+            frecencyConfig = FrecencyThresholdOption.NONE,
+            providerConfig = TopSitesProviderConfig(
+                showProviderTopSites = true
+            )
         )
 
         assertTrue(topSites.isEmpty())
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 1,
-            fetchProvidedTopSites = true,
-            frecencyConfig = FrecencyThresholdOption.NONE
+            frecencyConfig = FrecencyThresholdOption.NONE,
+            providerConfig = TopSitesProviderConfig(
+                showProviderTopSites = true
+            )
         )
 
         assertEquals(1, topSites.size)
@@ -371,8 +398,10 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 2,
-            fetchProvidedTopSites = true,
-            frecencyConfig = FrecencyThresholdOption.NONE
+            frecencyConfig = FrecencyThresholdOption.NONE,
+            providerConfig = TopSitesProviderConfig(
+                showProviderTopSites = true
+            )
         )
 
         assertEquals(2, topSites.size)
@@ -382,26 +411,30 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 3,
-            fetchProvidedTopSites = true,
-            frecencyConfig = FrecencyThresholdOption.NONE
+            frecencyConfig = FrecencyThresholdOption.NONE,
+            providerConfig = TopSitesProviderConfig(
+                showProviderTopSites = true
+            )
         )
 
         assertEquals(3, topSites.size)
-        assertEquals(defaultSite, topSites[0])
-        assertEquals(pinnedSite, topSites[1])
-        assertEquals(providedSite, topSites[2])
+        assertEquals(providedSite, topSites[0])
+        assertEquals(defaultSite, topSites[1])
+        assertEquals(pinnedSite, topSites[2])
         assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 5,
-            fetchProvidedTopSites = true,
-            frecencyConfig = FrecencyThresholdOption.NONE
+            frecencyConfig = FrecencyThresholdOption.NONE,
+            providerConfig = TopSitesProviderConfig(
+                showProviderTopSites = true
+            )
         )
 
         assertEquals(4, topSites.size)
-        assertEquals(defaultSite, topSites[0])
-        assertEquals(pinnedSite, topSites[1])
-        assertEquals(providedSite, topSites[2])
+        assertEquals(providedSite, topSites[0])
+        assertEquals(defaultSite, topSites[1])
+        assertEquals(pinnedSite, topSites[2])
         assertEquals(frecentSite1.toTopSite(), topSites[3])
         assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
     }
@@ -441,7 +474,6 @@ class DefaultTopSitesStorageTest {
 
         var topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 0,
-            fetchProvidedTopSites = false,
             frecencyConfig = FrecencyThresholdOption.NONE
         )
 
@@ -449,7 +481,6 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 1,
-            fetchProvidedTopSites = false,
             frecencyConfig = FrecencyThresholdOption.NONE
         )
 
@@ -459,7 +490,6 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 2,
-            fetchProvidedTopSites = false,
             frecencyConfig = FrecencyThresholdOption.NONE
         )
 
@@ -470,7 +500,6 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 5,
-            fetchProvidedTopSites = false,
             frecencyConfig = FrecencyThresholdOption.NONE
         )
 
@@ -492,7 +521,6 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 5,
-            fetchProvidedTopSites = false,
             frecencyConfig = FrecencyThresholdOption.NONE
         )
 
@@ -516,7 +544,6 @@ class DefaultTopSitesStorageTest {
 
         topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 5,
-            fetchProvidedTopSites = false,
             frecencyConfig = FrecencyThresholdOption.NONE
         )
 
@@ -582,7 +609,6 @@ class DefaultTopSitesStorageTest {
 
         val topSites = defaultTopSitesStorage.getTopSites(
             totalSites = 5,
-            fetchProvidedTopSites = false,
             frecencyConfig = FrecencyThresholdOption.NONE
         )
 
