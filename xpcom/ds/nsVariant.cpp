@@ -459,15 +459,6 @@ static nsresult CloneArray(uint16_t aInType, const nsIID* aInIID,
     *aResult = (Ctype_)tempData.u.mDoubleValue;           \
     return rv;
 
-#define CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX(Ctype_, min_, max_) \
-  case nsIDataType::VTYPE_DOUBLE: {                                 \
-    double value = tempData.u.mDoubleValue;                         \
-    if (value < min_ || value > max_)                               \
-      return NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;                     \
-    *aResult = (Ctype_)value;                                       \
-    return rv;                                                      \
-  }
-
 #define CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX_INT(Ctype_, min_, max_)       \
   case nsIDataType::VTYPE_DOUBLE: {                                           \
     double value = tempData.u.mDoubleValue;                                   \
@@ -518,7 +509,7 @@ CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(uint32_t)
 CASE__NUMERIC_CONVERSION_DOUBLE_MIN_MAX_INT(uint32_t, 0, 4294967295U)
 NUMERIC_CONVERSION_METHOD_END
 
-// XXX toFloat convertions need to be fixed!
+// XXX toFloat conversions need to be fixed!
 NUMERIC_CONVERSION_METHOD_BEGIN(VTYPE_FLOAT, float, Float)
 CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(float)
 CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(float)
@@ -531,14 +522,14 @@ CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(double)
 CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(double)
 NUMERIC_CONVERSION_METHOD_END
 
-// XXX toChar convertions need to be fixed!
+// XXX toChar conversions need to be fixed!
 NUMERIC_CONVERSION_METHOD_BEGIN(VTYPE_CHAR, char, Char)
 CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(char)
 CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(char)
 CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(char)
 NUMERIC_CONVERSION_METHOD_END
 
-// XXX toWChar convertions need to be fixed!
+// XXX toWChar conversions need to be fixed!
 NUMERIC_CONVERSION_METHOD_BEGIN(VTYPE_WCHAR, char16_t, WChar)
 CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(char16_t)
 CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(char16_t)
