@@ -1,0 +1,22 @@
+Checks whether the runtime has been initialized.
+
+.. _Syntax:
+
+Syntax
+------
+
+.. code:: eval
+
+   #include <prinit.h>
+
+   PRBool PR_Initialized(void);
+
+.. _Returns:
+
+Returns
+~~~~~~~
+
+The function returns one of the following values:
+
+-  If ``PR_Init`` has already been called, ``PR_TRUE``.
+-  If ``PR_Init`` has not already been called, ``PR_FALSE``.

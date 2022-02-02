@@ -1,0 +1,44 @@
+Attaches a memory segment previously opened with ``PR_OpenSharedMemory``
+and maps it into the process memory space.
+
+.. _Syntax:
+
+Syntax
+------
+
+.. code:: eval
+
+   #include <prshm.h>
+
+.. code:: eval
+
+   NSPR_API( void * )
+     PR_AttachSharedMemory(
+        PRSharedMemory *shm,
+        PRIntn flags
+   );
+
+   /* Define values for PR_AttachSharedMemory(...,flags) */
+   #define PR_SHM_READONLY 0x01
+
+.. _Parameters:
+
+Parameters
+~~~~~~~~~~
+
+The function has these parameters:
+
+shm
+   The handle returned from ``PR_OpenSharedMemory``.
+flags
+   Options for mapping the shared memory. ``PR_SHM_READONLY`` causes the
+   memory to be attached read-only.
+
+.. _Returns:
+
+Returns
+~~~~~~~
+
+Address where shared memory is mapped, or ``NULL`` if an error occurs.
+Retrieve the reason for the failure by calling ``PR_GetError`` and
+``PR_GetOSError``.

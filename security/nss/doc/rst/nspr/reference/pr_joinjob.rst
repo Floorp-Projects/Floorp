@@ -1,0 +1,30 @@
+Blocks the current thread until a job has completed.
+
+.. _Syntax:
+
+Syntax
+------
+
+.. code:: eval
+
+   #include <prtpool.h>
+
+   NSPR_API(PRStatus) PR_JoinJob(PRJob *job);
+
+.. _Parameter:
+
+Parameter
+~~~~~~~~~
+
+The function has the following parameter:
+
+``job``
+   A pointer to a ``PRJob`` structure returned by a ``PR_QueueJob``
+   function representing the job to be cancelled.
+
+.. _Returns:
+
+Returns
+~~~~~~~
+
+``PRStatus``

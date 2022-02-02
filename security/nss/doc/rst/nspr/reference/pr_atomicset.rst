@@ -1,0 +1,43 @@
+Atomically sets a 32-bit value and return its previous contents.
+
+.. _Syntax:
+
+Syntax
+------
+
+.. code:: eval
+
+   #include <pratom.h>
+
+   PRInt32 PR_AtomicSet(
+     PRInt32 *val,
+     PRInt32 newval);
+
+.. _Parameter:
+
+Parameters
+~~~~~~~~~~
+
+The function has the following parameter:
+
+``val``
+   A pointer to the value to be set.
+``newval``
+   The new value to assign to the ``val`` parameter.
+
+.. _Returns:
+
+Returns
+~~~~~~~
+
+The function returns the prior value of the referenced variable.
+
+.. _Description:
+
+Description
+-----------
+
+``PR_AtomicSet`` first reads the value of var, then updates it with the
+supplied value. The returned value is the value that was read\ *before*
+memory was updated. The memory modification is unconditional--that is,
+it isn't a test and set operation.

@@ -1,0 +1,21 @@
+Guaranteed to be an unsigned 32-bit integer on all platforms.
+
+.. _Syntax:
+
+Syntax
+------
+
+.. code:: eval
+
+   #include <prtypes.h>
+
+   typedefdefinition PRUint32;
+
+.. _Description:
+
+Description
+-----------
+
+May be defined as an unsigned ``int`` or an unsigned ``long``, depending
+on the platform. For syntax details for each platform, see
+`prtypes.h <https://dxr.mozilla.org/mozilla-central/source/nsprpub/pr/include/prtypes.h>`__.

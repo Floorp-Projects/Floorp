@@ -1,0 +1,40 @@
+Creates a process attributes structure.
+
+.. _Syntax:
+
+Syntax
+------
+
+.. code:: eval
+
+   #include <prlink.h>
+
+   PRProcessAttr *PR_NewProcessAttr(void);
+
+.. _Parameters:
+
+Parameters
+~~~~~~~~~~
+
+The function has no parameters.
+
+.. _Returns:
+
+Returns
+~~~~~~~
+
+A pointer to the new process attributes structure.
+
+.. _Description:
+
+Description
+-----------
+
+This function creates a new ``PRProcessAttr``\ structure that specifies
+the attributes of a new process, then returns a pointer to the
+structure. The new ``PRProcessAttr``\ structure is initialized with
+these default attributes:
+
+-  The standard I/O streams (standard input, standard output, and
+   standard error) are not redirected.
+-  No file descriptors are inherited by the new process.
