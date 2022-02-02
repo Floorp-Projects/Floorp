@@ -78,7 +78,7 @@ void nsRetrievalContextWayland::TransferClipboardData(
   MOZ_RELEASE_ASSERT(mClipboardData.isNothing(),
                      "Clipboard contains old data?");
 
-  uint32_t dataLength = 0;
+  gint dataLength = 0;
   if (aDataType == ClipboardDataType::Targets ||
       aDataType == ClipboardDataType::Data) {
     dataLength = gtk_selection_data_get_length((GtkSelectionData*)aData);
