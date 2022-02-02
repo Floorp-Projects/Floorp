@@ -19,14 +19,14 @@ operations.
 
 These functions operate on 32-bit integers:
 
--  ``PR_AtomicIncrement``
--  ``PR_AtomicDecrement``
--  ``PR_AtomicSet``
--  ``PR_AtomicAdd``
+-  :ref:`PR_AtomicIncrement`
+-  :ref:`PR_AtomicDecrement`
+-  :ref:`PR_AtomicSet`
+-  :ref:`PR_AtomicAdd`
 
 These functions implement a simple stack data structure:
 
--  ``PR_CreateStack``
--  ``PR_StackPush``
--  ``PR_StackPop``
--  ``PR_DestroyStack``
+-  :ref:`PR_CreateStack`
+-  :ref:`PR_StackPush`
+-  :ref:`PR_StackPop`
+-  :ref:`PR_DestroyStack`

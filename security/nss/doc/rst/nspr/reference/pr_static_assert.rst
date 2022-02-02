@@ -1,3 +1,6 @@
+PR_STATIC_ASSERT
+================
+
 Prevents code from compiling when an expression has the value ``FALSE``
 at compile time.
 
@@ -22,7 +25,7 @@ The macro has this parameter:
 expression
    Any valid expression which evaluates at compile-time to ``TRUE`` or
    ``FALSE``. An expression which cannot be evaluated at compile time
-   will cause a compiler error; see ``PR_ASSERT`` for a runtime
+   will cause a compiler error; see :ref:`PR_ASSERT` for a runtime
    alternative.
 
 .. _Returns:

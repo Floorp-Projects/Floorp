@@ -1,3 +1,6 @@
+PR_Open
+=======
+
 Opens a file for reading, writing, or both. Also used to create a file.
 
 .. _Syntax:
@@ -102,8 +105,8 @@ Returns
 The function returns one of the following values:
 
 -  If the file is successfully opened, a pointer to a dynamically
-   allocated ``PRFileDesc`` for the newly opened file. The
-   ``PRFileDesc`` should be freed by calling ``PR_Close``.
+   allocated :ref:`PRFileDesc` for the newly opened file. The
+   :ref:`PRFileDesc` should be freed by calling :ref:`PR_Close`.
 -  If the file was not opened successfully, a ``NULL`` pointer.
 
 .. _Description:
@@ -111,8 +114,8 @@ The function returns one of the following values:
 Description
 -----------
 
-``PR_Open`` creates a file descriptor (``PRFileDesc``) for the file with
+:ref:`PR_Open` creates a file descriptor (:ref:`PRFileDesc`) for the file with
 the pathname ``name`` and sets the file status flags of the file
 descriptor according to the value of ``flags``. If a new file is created
-as a result of the ``PR_Open`` call, its file mode bits are set
+as a result of the :ref:`PR_Open` call, its file mode bits are set
 according to the ``mode`` parameter.

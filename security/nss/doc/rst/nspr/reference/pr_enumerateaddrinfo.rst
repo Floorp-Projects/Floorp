@@ -1,5 +1,9 @@
+PR_EnumerateAddrInfo
+====================
+
+
 Enumerates each of the possible network addresses of a ``PRAddrInfo``
-structure, acquired from ``PR_GetAddrInfoByName``.
+structure, acquired from :ref:`PR_GetAddrInfoByName`.
 
 .. _Syntax:
 
@@ -31,12 +35,12 @@ The function has the following parameters:
    enumeration is complete when a value of ``NULL`` is returned.
 ``addrInfo``
    A pointer to a ``PRAddrInfo`` structure returned by
-   ``PR_GetAddrInfoByName``.
+   :ref:`PR_GetAddrInfoByName`.
 ``port``
-   The port number to be assigned as part of the ``PRNetAddr``
+   The port number to be assigned as part of the :ref:`PRNetAddr`
    structure. This parameter is not checked for validity.
 ``result``
-   On input, a pointer to a ``PRNetAddr`` structure. On output, this
+   On input, a pointer to a :ref:`PRNetAddr` structure. On output, this
    structure is filled in by the runtime if the result of the call is
    not ``NULL``.
 
@@ -54,5 +58,5 @@ parameter for the next call of the enumerator. If the function returns
 Description
 -----------
 
-``PR_EnumerateAddrInfo`` is a stateless enumerator. The principle input,
+:ref:`PR_EnumerateAddrInfo` is a stateless enumerator. The principle input,
 the ``PRAddrInfo`` structure, is not modified.

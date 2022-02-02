@@ -1,6 +1,9 @@
+PRSeekWhence
+============
+
 Specifies how to interpret the ``offset`` parameter in setting the file
-pointer associated with the ``fd`` parameter for the ``PR_Seek`` and
-``PR_Seek64`` functions.
+pointer associated with the ``fd`` parameter for the :ref:`PR_Seek` and
+:ref:`PR_Seek64` functions.
 
 .. _Syntax:
 

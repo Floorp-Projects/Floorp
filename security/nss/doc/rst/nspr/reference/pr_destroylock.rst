@@ -1,3 +1,6 @@
+PR_DestroyLock
+==============
+
 Destroys a specified lock object.
 
 .. _Syntax:
@@ -16,7 +19,7 @@ Syntax
 Parameter
 ~~~~~~~~~
 
-``PR_DestroyLock`` has one parameter:
+:ref:`PR_DestroyLock` has one parameter:
 
 ``lock``
    A pointer to a lock object.

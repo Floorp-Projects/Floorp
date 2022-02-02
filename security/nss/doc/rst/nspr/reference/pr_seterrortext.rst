@@ -1,3 +1,6 @@
+PR_SetErrorText
+===============
+
 Sets the text associated with an error.
 
 .. _Syntax:
@@ -34,10 +37,10 @@ Description
 -----------
 
 The text is copied into the thread structure and remains there until the
-next call to ``PR_SetError``. If there is error text already present in
+next call to :ref:`PR_SetError`. If there is error text already present in
 the thread, the previous value is first deleted. The new value is copied
 into storage allocated and owned by NSPR and remains there until the
-next call to ``PR_SetError`` or another call to ``PR_SetErrorText``.
+next call to :ref:`PR_SetError` or another call to :ref:`PR_SetErrorText`.
 
 NSPR makes no use of this function. Clients may use it for their own
 purposes.

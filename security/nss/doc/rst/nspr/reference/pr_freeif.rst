@@ -1,3 +1,6 @@
+PR_FREEIF
+=========
+
 Conditionally frees allocated memory.
 
 .. _Syntax:

@@ -1,3 +1,6 @@
+PR_IMPLEMENT
+============
+
 Used to define implementations of symbols that are to be exported from a
 shared library.
 
@@ -17,7 +20,7 @@ Syntax
 Description
 -----------
 
-``PR_IMPLEMENT`` is used to define implementations of externally visible
+:ref:`PR_IMPLEMENT` is used to define implementations of externally visible
 routines and globals. For syntax details for each platform, see
 `prtypes.h <https://dxr.mozilla.org/mozilla-central/source/nsprpub/pr/include/prtypes.h>`__.
 

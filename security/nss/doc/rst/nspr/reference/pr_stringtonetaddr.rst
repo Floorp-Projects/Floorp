@@ -1,3 +1,6 @@
+PR_StringToNetAddr
+==================
+
 Converts a character string to a network address.
 
 .. _Syntax:
@@ -34,7 +37,7 @@ The function returns one of the following values:
 
 -  If successful, ``PR_SUCCESS``.
 -  If unsuccessful, ``PR_FAILURE``. You can retrieve the reason for the
-   failure by calling ``PR_GetError``.
+   failure by calling :ref:`PR_GetError`.
 
 .. _Description:
 

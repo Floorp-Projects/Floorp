@@ -1,5 +1,8 @@
-Type returned by ``PR_CreateFileMap`` and passed to ``PR_MemMap`` and
-``PR_CloseFileMap``.
+PRFileMap
+=========
+
+Type returned by :ref:`PR_CreateFileMap` and passed to :ref:`PR_MemMap` and
+:ref:`PR_CloseFileMap`.
 
 .. _Syntax:
 
@@ -17,10 +20,10 @@ Syntax
 Description
 -----------
 
-The opaque structure ``PRFileMap`` represents a memory-mapped file
+The opaque structure :ref:`PRFileMap` represents a memory-mapped file
 object. Before actually mapping a file to memory, you must create a
-memory-mapped file object by calling ``PR_CreateFileMap``, which returns
-a pointer to ``PRFileMap``. Then sections of the file can be mapped into
-memory by passing the ``PRFileMap`` pointer to ``PR_MemMap``. The
-memory-mapped file object is closed by passing the ``PRFileMap`` pointer
-to ``PR_CloseFileMap``.
+memory-mapped file object by calling :ref:`PR_CreateFileMap`, which returns
+a pointer to :ref:`PRFileMap`. Then sections of the file can be mapped into
+memory by passing the :ref:`PRFileMap` pointer to :ref:`PR_MemMap`. The
+memory-mapped file object is closed by passing the :ref:`PRFileMap` pointer
+to :ref:`PR_CloseFileMap`.

@@ -22,11 +22,11 @@ Calling Convention Types
 These types are used to support cross-platform declarations of
 prototypes and implementations:
 
--  ``PR_EXTERN`` is used for declarations of external functions or
+ - :ref:`PR_EXTERN` is used for declarations of external functions or
    variables.
--  ``PR_IMPLEMENT`` is used for definitions of external functions or
+ - :ref:`PR_IMPLEMENT` is used for definitions of external functions or
    variables.
--  ``PR_CALLBACK`` is used for definitions and declarations of functions
+ - :ref:`PR_CALLBACK` is used for definitions and declarations of functions
    that are called via function pointers. A typical example is a
    function implemented in an application but called from a shared
    library.
@@ -81,18 +81,18 @@ platform-dependent bit widths:
 Signed Integers
 ^^^^^^^^^^^^^^^
 
--  ``PRInt8``
--  ``PRInt16``
--  ``PRInt32``
+ - :ref:`PRInt8`
+ - :ref:`PRInt16`
+ - :ref:`PRInt32`
 
 .. _Unsigned_Integers:
 
 Unsigned Integers
 ^^^^^^^^^^^^^^^^^
 
--  ``PRUint8``
--  ``PRUint16``
--  ``PRUint32``
+ - :ref:`PRUint8`
+ - :ref:`PRUint16`
+ - :ref:`PRUint32`
 
 .. _64-bit_Integer_Types:
 
@@ -108,8 +108,8 @@ manipulate 64-bit numeric fields. These macros are defined in
 code to all the platforms supported by NSPR and still provides optimal
 behavior on those systems that treat long long values directly.
 
--  ``PRInt64``
--  ``PRUint64``
+ - :ref:`PRInt64`
+ - :ref:`PRUint64`
 
 .. _Floating-Point_Number_Type:
 
@@ -118,7 +118,7 @@ Floating-Point Number Type
 
 The NSPR floating-point type is always 64 bits.
 
--  ``PRFloat64``
+ - :ref:`PRFloat64`
 
 .. _Native_OS_Integer_Types:
 
@@ -130,8 +130,8 @@ guaranteed to be at least 16 bits, though various architectures may
 define them to be wider (for example, 32 or even 64 bits). These types
 are never valid for fields of a structure.
 
--  ``PRIntn``
--  ``PRUintn``
+ - :ref:`PRIntn`
+ - :ref:`PRUintn`
 
 .. _Miscellaneous_Types:
 
@@ -148,7 +148,7 @@ Miscellaneous Types
 Size Type
 ~~~~~~~~~
 
--  ``PRSize``
+ - :ref:`PRSize`
 
 .. _Pointer_Difference_Types:
 
@@ -159,8 +159,8 @@ Types for pointer difference. Variables of these types are suitable for
 storing a pointer or pointer subtraction. These are the same as the
 corresponding types in ``libc``.
 
--  ``PRPtrdiff``
--  ``PRUptrdiff``
+ - :ref:`PRPtrdiff`
+ - :ref:`PRUptrdiff`
 
 .. _Boolean_Types:
 
@@ -169,12 +169,12 @@ Boolean Types
 
 Type and constants for Boolean values.
 
--  ``PRBool``
--  ``PRPackedBool``
+ - :ref:`PRBool`
+ - :ref:`PRPackedBool`
 
 .. _Status_Type_for_Return_Values:
 
 Status Type for Return Values
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
--  ``PRStatus``
+ - :ref:`PRStatus`

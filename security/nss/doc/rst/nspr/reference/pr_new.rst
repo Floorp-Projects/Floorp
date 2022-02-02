@@ -1,3 +1,6 @@
+PR_NEW
+======
+
 Allocates memory of a specified size from the heap.
 
 .. _Syntax:

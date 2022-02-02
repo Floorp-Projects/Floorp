@@ -1,3 +1,6 @@
+PR_OpenDir
+==========
+
 Opens the directory with the specified pathname.
 
 .. _Syntax:
@@ -26,7 +29,7 @@ The function has the following parameter:
 Returns
 ~~~~~~~
 
--  If the directory is successfully opened, a ``PRDir`` object is
+-  If the directory is successfully opened, a :ref:`PRDir` object is
    dynamically allocated and the function returns a pointer to it.
 -  If the directory cannot be opened, the function returns ``NULL``.
 
@@ -35,8 +38,8 @@ Returns
 Description
 -----------
 
-``PR_OpenDir`` opens the directory specified by the pathname ``name``
-and returns a pointer to a directory stream (a ``PRDir`` object) that
-can be passed to subsequent ``PR_ReadDir`` calls to get the directory
-entries (files and subdirectories) in the directory. The ``PRDir``
-pointer should eventually be closed by a call to ``PR_CloseDir``.
+:ref:`PR_OpenDir` opens the directory specified by the pathname ``name``
+and returns a pointer to a directory stream (a :ref:`PRDir` object) that
+can be passed to subsequent :ref:`PR_ReadDir` calls to get the directory
+entries (files and subdirectories) in the directory. The :ref:`PRDir`
+pointer should eventually be closed by a call to :ref:`PR_CloseDir`.

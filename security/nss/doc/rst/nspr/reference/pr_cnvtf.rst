@@ -1,3 +1,6 @@
+PR_cnvtf
+========
+
 Converts a floating point number to a string.
 
 .. _Syntax:
@@ -37,7 +40,7 @@ The function has these parameters:
 Description
 -----------
 
-``PR_cnvtf`` is a simpler interface to convert a floating point number
+:ref:`PR_cnvtf` is a simpler interface to convert a floating point number
 to a string. It conforms to the ECMA standard of Javascript
 (ECMAScript).
 

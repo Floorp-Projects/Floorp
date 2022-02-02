@@ -1,3 +1,6 @@
+PR_CreateThread
+===============
+
 Creates a new thread.
 
 .. _Syntax:
@@ -23,7 +26,7 @@ Syntax
 Parameters
 ~~~~~~~~~~
 
-``PR_CreateThread`` has the following parameters:
+:ref:`PR_CreateThread` has the following parameters:
 
 ``type``
    Specifies that the thread is either a user thread
@@ -48,7 +51,7 @@ Parameters
 ``stackSize``
    Specifies your preference for the size of the stack, in bytes,
    associated with the newly created thread. If you pass zero in this
-   parameter, ``PR_CreateThread`` chooses the most favorable
+   parameter, :ref:`PR_CreateThread` chooses the most favorable
    machine-specific stack size.
 
 .. _Returns:
@@ -76,5 +79,5 @@ thread synchronization, see `Introduction to
 NSPR <Introduction_to_NSPR>`__.
 
 If you want to detect the completion of the created thread, make it
-joinable. You can then use ``PR_JoinThread`` to synchronize the
+joinable. You can then use :ref:`PR_JoinThread` to synchronize the
 termination of another thread.

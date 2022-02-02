@@ -1,3 +1,6 @@
+PR_CExitMonitor
+===============
+
 Decrement the entry count associated with a cached monitor.
 
 .. _Syntax:
@@ -20,7 +23,7 @@ The function has the following parameters:
 
 ``address``
    The address of the protected object--the same address previously
-   passed to ``PR_CEnterMonitor``.
+   passed to :ref:`PR_CEnterMonitor`.
 
 .. _Returns:
 
@@ -40,6 +43,6 @@ Description
 -----------
 
 Using the value specified in the address parameter to find a monitor in
-the monitor cache, ``PR_CExitMonitor`` decrements the entry count
+the monitor cache, :ref:`PR_CExitMonitor` decrements the entry count
 associated with the monitor. If the decremented entry count is zero, the
 monitor is exited.

@@ -1,3 +1,6 @@
+PR_Init
+=======
+
 Initializes the runtime.
 
 .. _Syntax:
@@ -19,7 +22,7 @@ Syntax
 Parameters
 ~~~~~~~~~~
 
-``PR_Init`` has the following parameters:
+:ref:`PR_Init` has the following parameters:
 
 ``type``
    This parameter is ignored.
@@ -34,10 +37,10 @@ Description
 -----------
 
 NSPR is now implicitly initialized, usually by the first NSPR function
-called by a program. ``PR_Init`` is necessary only if a program has
+called by a program. :ref:`PR_Init` is necessary only if a program has
 specific initialization-sequencing requirements.
 
-Call ``PR_Init`` as follows:
+Call :ref:`PR_Init` as follows:
 
 .. code:: eval
 

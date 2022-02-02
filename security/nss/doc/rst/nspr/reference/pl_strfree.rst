@@ -1,4 +1,7 @@
-Frees memory allocated by `PL_strdup <en/PL_strdup>`__.
+PL_strfree
+==========
+
+Frees memory allocated by :ref:`PL_strdup`
 
 .. _Syntax:
 

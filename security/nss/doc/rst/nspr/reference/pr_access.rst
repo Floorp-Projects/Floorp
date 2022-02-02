@@ -1,3 +1,6 @@
+PR_Access
+=========
+
 Determines the accessibility of a file.
 
 .. _Syntax:
@@ -26,9 +29,9 @@ The function has the following parameters:
    Specifies which access permission to check for. Use one of the
    following values:
 
-   -  ``PR_ACCESS_READ_OK``. Test for read permission.
-   -  ``PR_ACCESS_WRITE_OK``. Test for write permission.
-   -  ``PR_ACCESS_EXISTS``. Check existence of file.
+    - :ref:`PR_ACCESS_READ_OK`. Test for read permission.
+    - :ref:`PR_ACCESS_WRITE_OK`. Test for write permission.
+    - :ref:`PR_ACCESS_EXISTS`. Check existence of file.
 
 .. _Returns:
 

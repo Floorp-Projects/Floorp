@@ -1,3 +1,6 @@
+PR_NewPollableEvent
+===================
+
 Create a pollable event file descriptor.
 
 .. _Syntax:
@@ -21,4 +24,4 @@ None.
 Returns
 ~~~~~~~
 
-Pointer to ``PRFileDesc`` or ``NULL``, on error.
+Pointer to :ref:`PRFileDesc` or ``NULL``, on error.

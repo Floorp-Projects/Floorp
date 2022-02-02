@@ -1,3 +1,6 @@
+PR_InitializeNetAddr
+====================
+
 Initializes or reinitializes a network address. The storage for the
 network address structure is allocated by, and remains the
 responsibility of, the calling client.
@@ -31,7 +34,7 @@ The function has the following parameters:
    The port number to be assigned in the network address structure. The
    value is specified in host byte order.
 ``addr``
-   A pointer to the ``PRNetAddr`` structure to be manipulated.
+   A pointer to the :ref:`PRNetAddr` structure to be manipulated.
 
 .. _Returns:
 
@@ -44,14 +47,14 @@ The function returns one of the following values:
 -  If unsuccessful, ``PR_FAILURE``. This may occur, for example, if the
    value of val is not within the ranges defined by ``PRNetAddrValue``.
    You can retrieve the reason for the failure by calling
-   ``PR_GetError``.
+   :ref:`PR_GetError`.
 
 .. _Description:
 
 Description
 -----------
 
-``PR_InitializeNetAddr`` allows the assignment of special network
+:ref:`PR_InitializeNetAddr` allows the assignment of special network
 address values and the port number, while also setting the state that
 indicates the version of the address being used.
 

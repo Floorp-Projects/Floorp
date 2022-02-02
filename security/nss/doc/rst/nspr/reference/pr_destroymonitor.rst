@@ -1,3 +1,6 @@
+PR_DestroyMonitor
+=================
+
 Destroys a monitor object.
 
 .. _Syntax:
@@ -19,7 +22,7 @@ Parameter
 The function has the following parameter:
 
 ``mon``
-   A reference to an existing structure of type ``PRMonitor``.
+   A reference to an existing structure of type :ref:`PRMonitor`.
 
 .. _Description:
 
@@ -27,5 +30,5 @@ Description
 -----------
 
 The caller is responsible for guaranteeing that the monitor is no longer
-in use before calling ``PR_DestroyMonitor``. There must be no thread
+in use before calling :ref:`PR_DestroyMonitor`. There must be no thread
 (including the calling thread) in the monitor or waiting on the monitor.

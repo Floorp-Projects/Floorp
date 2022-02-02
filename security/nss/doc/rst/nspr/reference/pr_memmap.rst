@@ -1,3 +1,6 @@
+PR_MemMap
+=========
+
 Maps a section of a file to memory.
 
 .. _Syntax:
@@ -43,9 +46,9 @@ is mapped. Returns ``NULL`` on error.
 Description
 -----------
 
-``PR_MemMap`` maps a section of the file represented by the file mapping
+:ref:`PR_MemMap` maps a section of the file represented by the file mapping
 ``fmap`` to memory. The section of the file starts at ``offset`` and has
 the length ``len``.
 
 When the file-mapping memory region is no longer needed, it should be
-unmapped with a call to ``PR_MemUnmap``.
+unmapped with a call to :ref:`PR_MemUnmap`.

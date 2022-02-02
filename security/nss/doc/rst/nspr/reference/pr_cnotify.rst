@@ -1,3 +1,6 @@
+PR_CNotify
+==========
+
 Notify a thread waiting on a change in the state of monitored data.
 
 .. _Syntax:
@@ -27,9 +30,9 @@ The function has the following parameter:
 Returns
 ~~~~~~~
 
--  ``PR_SUCCESS`` indicates that the calling thread is the holder of the
+ - :ref:`PR_SUCCESS` indicates that the calling thread is the holder of the
    mutex for the monitor referred to by the address parameter.
--  ``PR_FAILURE`` indicates that the monitor has not been entered by the
+ - :ref:`PR_FAILURE` indicates that the monitor has not been entered by the
    calling thread.
 
 .. _Description:
@@ -38,7 +41,7 @@ Description
 -----------
 
 Using the value specified in the ``address`` parameter to find a monitor
-in the monitor cache, ``PR_CNotify`` notifies single a thread waiting
+in the monitor cache, :ref:`PR_CNotify` notifies single a thread waiting
 for the monitor's state to change. If a thread is waiting on the monitor
-(having called ``PR_CWait``), then that thread is made ready. As soon as
+(having called :ref:`PR_CWait`), then that thread is made ready. As soon as
 the thread is scheduled, it attempts to reenter the monitor.

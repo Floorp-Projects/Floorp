@@ -14,19 +14,19 @@ Conventions <Introduction_to_NSPR#NSPR_Naming_Conventions>`__.
 Error Type
 ----------
 
--  ``PRErrorCode``
+ - :ref:`PRErrorCode`
 
 .. _Error_Functions:
 
 Error Functions
 ---------------
 
--  ``PR_SetError``
--  ``PR_SetErrorText``
--  ``PR_GetError``
--  ``PR_GetOSError``
--  ``PR_GetErrorTextLength``
--  ``PR_GetErrorText``
+ - :ref:`PR_SetError`
+ - :ref:`PR_SetErrorText`
+ - :ref:`PR_GetError`
+ - :ref:`PR_GetOSError`
+ - :ref:`PR_GetErrorTextLength`
+ - :ref:`PR_GetErrorText`
 
 .. _Error_Codes:
 
@@ -56,7 +56,7 @@ Error codes defined in ``prerror.h``:
    Some unknown error has occurred.
 ``PR_PENDING_INTERRUPT_ERROR``
    The operation terminated because another thread has interrupted it
-   with ``PR_Interrupt``.
+   with :ref:`PR_Interrupt`.
 ``PR_NOT_IMPLEMENTED_ERROR``
    The preceding function has not been implemented.
 ``PR_IO_ERROR``
@@ -73,7 +73,7 @@ Error codes defined in ``prerror.h``:
 ``PR_INVALID_ARGUMENT_ERROR``
    One or more of the arguments to the function is invalid.
 ``PR_ADDRESS_NOT_AVAILABLE_ERROR``
-   The network address (``PRNetAddr``) is not available (probably in
+   The network address (:ref:`PRNetAddr`) is not available (probably in
    use).
 ``PR_ADDRESS_NOT_SUPPORTED_ERROR``
    The type of network address specified is not supported.
@@ -84,7 +84,7 @@ Error codes defined in ``prerror.h``:
    The network address specified is invalid (as reported by the
    network).
 ``PR_ADDRESS_IN_USE_ERROR``
-   Network address specified (``PRNetAddr``) is in use.
+   Network address specified (:ref:`PRNetAddr`) is in use.
 ``PR_CONNECT_REFUSED_ERROR``
    The peer has refused to allow the connection to be established.
 ``PR_NETWORK_UNREACHABLE_ERROR``

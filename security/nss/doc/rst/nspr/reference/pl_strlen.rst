@@ -1,3 +1,6 @@
+PL_strlen
+=========
+
 Returns the length of a specified string (not including the trailing
 ``'\0'``)
 

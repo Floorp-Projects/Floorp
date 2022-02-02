@@ -1,3 +1,7 @@
+PR_DELETE
+=========
+
+
 Allocates memory of a specified size from the heap.
 
 .. _Syntax:

@@ -1,5 +1,8 @@
+PR_LocalTimeParameters
+======================
+
 Returns the time zone offset information that maps the specified
-``PRExplodedTime`` to local time.
+:ref:`PRExplodedTime` to local time.
 
 .. _Syntax:
 

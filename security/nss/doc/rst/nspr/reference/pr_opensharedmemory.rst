@@ -1,3 +1,6 @@
+PR_OpenSharedMemory
+===================
+
 Opens an existing shared memory segment or, if one with the specified
 name doesn't exist, creates a new one.
 
@@ -36,7 +39,7 @@ size
 flags
    Options for creating the shared memory.
 mode
-   Same as passed to ``PR_Open``.
+   Same as passed to :ref:`PR_Open`.
 
 .. _Returns:
 
@@ -44,15 +47,15 @@ Returns
 ~~~~~~~
 
 Pointer to opaque structure ``PRSharedMemory``, or ``NULL`` if an error
-occurs. Retrieve the reason for the failure by calling ``PR_GetError``
-and ``PR_GetOSError``.
+occurs. Retrieve the reason for the failure by calling :ref:`PR_GetError`
+and :ref:`PR_GetOSError`.
 
 .. _Description:
 
 Description
 -----------
 
-``PR_OpenSharedMemory`` creates a new shared memory segment or
+:ref:`PR_OpenSharedMemory` creates a new shared memory segment or
 associates a previously created memory segment with the specified name.
 When parameter ``create`` is (``PR_SHM_EXCL`` \| ``PR_SHM_CREATE``) and
 the shared memory already exists, the function returns ``NULL`` with the

@@ -1,3 +1,6 @@
+PR_REMOVE_AND_INIT_LINK
+=======================
+
 Removes an element from a circular list and initializes the linkage.
 
 .. _Syntax:
@@ -24,6 +27,6 @@ Parameter
 Description
 -----------
 
-``PR_REMOVE_AND_INIT_LINK`` removes the specified element from its
+:ref:`PR_REMOVE_AND_INIT_LINK` removes the specified element from its
 circular list and initializes the links of the element to point to
 itself.

@@ -1,3 +1,6 @@
+PR_SetPollableEvent
+===================
+
 Set a pollable event.
 
 .. _Syntax:
@@ -17,8 +20,8 @@ Parameter
 The function has the following parameter:
 
 ``event``
-   Pointer to a ``PRFileDesc`` structure previously created via a call
-   to ``PR_NewPollableEvent``.
+   Pointer to a :ref:`PRFileDesc` structure previously created via a call
+   to :ref:`PR_NewPollableEvent`.
 
 .. _Returns:
 
@@ -29,4 +32,4 @@ The function returns one of the following values:
 
 -  If successful, ``PR_SUCCESS``.
 -  If unsuccessful, ``PR_FAILURE``. The reason for the failure can be
-   retrieved via ``PR_GetError``.
+   retrieved via :ref:`PR_GetError`.

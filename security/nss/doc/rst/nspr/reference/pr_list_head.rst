@@ -1,3 +1,6 @@
+PR_LIST_HEAD
+============
+
 Returns the head of a circular list.
 
 .. _Syntax:
@@ -31,4 +34,4 @@ A pointer to a list element.
 Description
 -----------
 
-``PR_LIST_HEAD`` returns the head of the specified circular list.
+:ref:`PR_LIST_HEAD` returns the head of the specified circular list.

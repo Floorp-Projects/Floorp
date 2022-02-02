@@ -1,3 +1,6 @@
+PR_Delete
+=========
+
 .. _Syntax:
 
 Syntax
@@ -34,8 +37,8 @@ One of the following values:
 Description
 -----------
 
-``PR_Delete`` deletes a file with the specified pathname ``name``. If
+:ref:`PR_Delete` deletes a file with the specified pathname ``name``. If
 the function fails, the error code can then be retrieved via
-``PR_GetError``.
+:ref:`PR_GetError`.
 
  

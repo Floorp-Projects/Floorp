@@ -1,3 +1,6 @@
+PRSize
+======
+
 A type for representing the size of an object (not the size of a
 pointer). This is the same as the corresponding type in ``libc``.
 

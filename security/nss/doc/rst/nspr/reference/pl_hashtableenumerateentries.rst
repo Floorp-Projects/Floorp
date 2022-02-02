@@ -1,3 +1,6 @@
+PL_HashTableEnumerateEntries
+============================
+
 Enumerates all the entries in the hash table, invoking a specified
 function on each entry.
 

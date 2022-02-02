@@ -1,5 +1,8 @@
-File information structure used with ``PR_GetFileInfo64`` and
-``PR_GetOpenFileInfo64``.
+PRFileInfo64
+============
+
+File information structure used with :ref:`PR_GetFileInfo64` and
+:ref:`PR_GetOpenFileInfo64`.
 
 .. _Syntax:
 
@@ -27,14 +30,14 @@ Fields
 The structure has the following fields:
 
 ``type``
-   Type of file. See ``PRFileType``.
+   Type of file. See :ref:`PRFileType`.
 ``size``
    64-bit size, in bytes, of file's contents.
 ``creationTime``
-   Creation time per definition of ``PRTime``. See
+   Creation time per definition of :ref:`PRTime`. See
    `prtime.h <https://dxr.mozilla.org/mozilla-central/source/nsprpub/pr/include/prtime.h>`__.
 ``modifyTime``
-   Last modification time per definition of ``PRTime``. See
+   Last modification time per definition of :ref:`PRTime`. See
    `prtime.h <https://dxr.mozilla.org/mozilla-central/source/nsprpub/pr/include/prtime.h>`__.
 
 .. _Description:
@@ -42,6 +45,6 @@ The structure has the following fields:
 Description
 -----------
 
-The ``PRFileInfo64`` structure provides information about a file, a
+The :ref:`PRFileInfo64` structure provides information about a file, a
 directory, or some other kind of file system object, as specified by the
 ``type`` field.

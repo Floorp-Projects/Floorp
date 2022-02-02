@@ -1,3 +1,6 @@
+PR_NotifyAllCondVar
+===================
+
 Notifies all of the threads waiting on a specified condition variable.
 
 .. _Syntax:
@@ -30,6 +33,6 @@ Description
 The calling thread must hold the lock that protects the condition, as
 well as the invariants that are tightly bound to the condition.
 
-A call to ``PR_NotifyAllCondVar`` causes all of the threads waiting on
+A call to :ref:`PR_NotifyAllCondVar` causes all of the threads waiting on
 the specified condition variable to be promoted to a ready state. If no
 threads are waiting, the operation is no-op.

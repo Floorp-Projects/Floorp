@@ -1,3 +1,6 @@
+PR_Writev
+=========
+
 Writes data to a socket from multiple buffers.
 
 .. _Syntax:
@@ -25,7 +28,7 @@ Parameters
 The function has the following parameters:
 
 ``fd``
-   A pointer to a ``PRFileDesc`` object for a socket.
+   A pointer to a :ref:`PRFileDesc` object for a socket.
 ``iov``
    An array of ``PRIOVec`` structures that describe the buffers to write
    from.
@@ -35,7 +38,7 @@ The function has the following parameters:
    it is, the function will fail and the error will be set to
    ``PR_BUFFER_OVERFLOW_ERROR``.
 ``timeout``
-   A value of type ``PRIntervalTime`` describing the time limit for
+   A value of type :ref:`PRIntervalTime` describing the time limit for
    completion of the entire write operation.
 
 .. _Returns:
@@ -47,20 +50,20 @@ One of the following values:
 
 -  A positive number indicates the number of bytes successfully written.
 -  The value -1 indicates that the operation failed. The reason for the
-   failure can be obtained by calling ``PR_GetError``.
+   failure can be obtained by calling :ref:`PR_GetError`.
 
 .. _Description:
 
 Description
 -----------
 
-The thread calling ``PR_Writev`` blocks until all the data is written or
+The thread calling :ref:`PR_Writev` blocks until all the data is written or
 the write operation fails. Therefore, the return value is equal to
 either the sum of all the buffer lengths (on success) or -1 (on
-failure). Note that if ``PR_Writev`` returns -1, part of the data may
+failure). Note that if :ref:`PR_Writev` returns -1, part of the data may
 have been written before an error occurred. If the timeout parameter is
 not ``PR_INTERVAL_NO_TIMEOUT`` and all the data cannot be written in the
-specified interval, ``PR_Writev`` returns -1 with the error code
+specified interval, :ref:`PR_Writev` returns -1 with the error code
 ``PR_IO_TIMEOUT_ERROR``.
 
 This is the type definition for ``PRIOVec``:

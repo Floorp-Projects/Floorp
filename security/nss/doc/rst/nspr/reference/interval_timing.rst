@@ -1,6 +1,6 @@
-NSPR defines a platform-dependent type, ``PRIntervalTime``, for timing
+NSPR defines a platform-dependent type, :ref:`PRIntervalTime`, for timing
 intervals of fewer than approximately 6 hours. This chapter describes
-``PRIntervalTime`` and the functions that allow you to use it for timing
+:ref:`PRIntervalTime` and the functions that allow you to use it for timing
 purposes:
 
 -  `Interval Time Type and
@@ -14,7 +14,7 @@ Interval Time Type and Constants
 
 All timed functions in NSPR require a parameter that depicts the amount
 of time allowed to elapse before the operation is declared failed. The
-type of such arguments is ``PRIntervalTime``. Such parameters are common
+type of such arguments is :ref:`PRIntervalTime`. Such parameters are common
 in NSPR functions such as those used for I/O operations and operations
 on condition variables.
 
@@ -29,7 +29,7 @@ epoch, and an amount of time elapsed since that **epoch**, the
 **interval**. In almost all cases the epoch is defined as the value of
 the interval timer at the time it was sampled.
 
--  ``PRIntervalTime``
+ - :ref:`PRIntervalTime`
 
 .. _Interval_Functions:
 
@@ -50,23 +50,23 @@ Interval timing functions are divided into three groups:
 Getting the Current Interval and Ticks Per Second
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
--  ``PR_IntervalNow``
--  ``PR_TicksPerSecond``
+ - :ref:`PR_IntervalNow`
+ - :ref:`PR_TicksPerSecond`
 
 .. _Converting_Standard_Clock_Units_to_Platform-Dependent_Intervals:
 
 Converting Standard Clock Units to Platform-Dependent Intervals
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
--  ``PR_SecondsToInterval``
--  ``PR_MillisecondsToInterval``
--  ``PR_MicrosecondsToInterval``
+ - :ref:`PR_SecondsToInterval`
+ - :ref:`PR_MillisecondsToInterval`
+ - :ref:`PR_MicrosecondsToInterval`
 
 .. _Converting_Platform-Dependent_Intervals_to_Standard_Clock_Units:
 
 Converting Platform-Dependent Intervals to Standard Clock Units
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
--  ``PR_IntervalToSeconds``
--  ``PR_IntervalToMilliseconds``
--  ``PR_IntervalToMicroseconds``
+ - :ref:`PR_IntervalToSeconds`
+ - :ref:`PR_IntervalToMilliseconds`
+ - :ref:`PR_IntervalToMicroseconds`

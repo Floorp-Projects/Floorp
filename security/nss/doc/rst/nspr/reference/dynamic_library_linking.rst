@@ -1,3 +1,7 @@
+
+Dynamic Library Search Path
+===========================
+
 This section describes NSPR's programming interface to load, unload and
 resolve symbols in dynamic libraries. It also provides a method by which
 to condition symbols of statically linked code so that to other clients
@@ -10,8 +14,8 @@ Library Linking Types
 
 These data types are defined for dynamic library linking:
 
--  ``PRLibrary``
--  ``PRStaticLinkTable``
+ - :ref:`PRLibrary`
+ - :ref:`PRStaticLinkTable`
 
 .. _Library_Linking_Functions:
 
@@ -20,21 +24,21 @@ Library Linking Functions
 
 The library linking functions are:
 
--  ``PR_SetLibraryPath``
--  ``PR_GetLibraryPath``
--  ``PR_GetLibraryName``
--  ``PR_FreeLibraryName``
--  ``PR_LoadLibrary``
--  ``PR_UnloadLibrary``
--  ``PR_FindSymbol``
--  ``PR_FindSymbolAndLibrary``
+ - :ref:`PR_SetLibraryPath`
+ - :ref:`PR_GetLibraryPath`
+ - :ref:`PR_GetLibraryName`
+ - :ref:`PR_FreeLibraryName`
+ - :ref:`PR_LoadLibrary`
+ - :ref:`PR_UnloadLibrary`
+ - :ref:`PR_FindSymbol`
+ - :ref:`PR_FindSymbolAndLibrary`
 
 .. _Finding_Symbols_Defined_in_the_Main_Executable_Program:
 
 Finding Symbols Defined in the Main Executable Program
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``PR_LoadLibrary`` cannot open a handle that references the main
+:ref:`PR_LoadLibrary` cannot open a handle that references the main
 executable program. (This is admittedly an omission that should be
 fixed.) However, it is possible to look up symbols defined in the main
 executable program as follows.
@@ -46,10 +50,10 @@ executable program as follows.
 
    funcPtr = PR_FindSymbolAndLibrary("FunctionName", &lib);
 
-When ``PR_FindSymbolAndLibrary`` returns, ``funcPtr`` is the value of
+When :ref:`PR_FindSymbolAndLibrary` returns, ``funcPtr`` is the value of
 the function pointer you want to look up, and the variable lib
 references the main executable program. You can then call
-``PR_FindSymbol`` on lib to look up other symbols defined in the main
+:ref:`PR_FindSymbol` on lib to look up other symbols defined in the main
 program. Remember to call ``PR_UnloadLibrary(lib)`` to close the library
 handle when you are done.
 

@@ -1,3 +1,6 @@
+PL_HashTableRemove
+==================
+
 Removes the entry with the specified key from the hash table.
 
 .. _Syntax:
@@ -31,12 +34,12 @@ Description
 -----------
 
 If there is no entry in the table with the specified key,
-``PL_HashTableRemove`` returns ``PR_FALSE``. If the entry exists,
-``PL_HashTableRemove`` removes the entry from the table, invokes
+:ref:`PL_HashTableRemove` returns ``PR_FALSE``. If the entry exists,
+:ref:`PL_HashTableRemove` removes the entry from the table, invokes
 ``freeEntry`` with the ``HT_FREE_ENTRY`` flag to frees the entry, and
 returns ``PR_TRUE``.
 
-If the table is underloaded, ``PL_HashTableRemove`` also shrinks the
+If the table is underloaded, :ref:`PL_HashTableRemove` also shrinks the
 number of buckets by half.
 
 .. _Remark:
@@ -44,4 +47,4 @@ number of buckets by half.
 Remark
 ------
 
-This function should return ``PRStatus``.
+This function should return :ref:`PRStatus`.

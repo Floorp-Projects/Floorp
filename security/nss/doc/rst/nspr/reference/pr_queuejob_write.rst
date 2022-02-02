@@ -1,3 +1,6 @@
+PR_QueueJob_Write
+=================
+
 Causes a job to be queued when a socket becomes writable.
 
 .. _Syntax:
@@ -26,21 +29,21 @@ Parameters
 The function has the following parameters:
 
 ``tpool``
-   A pointer to a ``PRThreadPool`` structure previously created by a
-   call to ``PR_CreateThreadPool``.
+   A pointer to a :ref:`PRThreadPool` structure previously created by a
+   call to :ref:`PR_CreateThreadPool`.
 ``iod``
-   A pointer to a ``PRJobIoDesc`` structure.
+   A pointer to a :ref:`PRJobIoDesc` structure.
 ``fn``
    The function to be executed when the job is executed.
 ``arg``
    A pointer to an argument passed to ``fn``.
 ``joinable``
    If ``PR_TRUE``, the job is joinable. If ``PR_FALSE``, the job is not
-   joinable. See ``PR_JoinJob``.
+   joinable. See :ref:`PR_JoinJob`.
 
 .. _Returns:
 
 Returns
 ~~~~~~~
 
-Pointer to a ``PRJob`` structure or ``NULL`` on error.
+Pointer to a :ref:`PRJob` structure or ``NULL`` on error.

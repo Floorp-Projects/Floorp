@@ -1,3 +1,6 @@
+PR_DetachSharedMemory
+=====================
+
 Unmaps a shared memory segment identified by name.
 
 .. _Syntax:
@@ -23,7 +26,7 @@ Parameters
 The function has these parameters:
 
 shm
-   The handle returned from ``PR_OpenSharedMemory``.
+   The handle returned from :ref:`PR_OpenSharedMemory`.
 addr
    The address to which the shared memory segment is mapped.
 
@@ -32,4 +35,4 @@ addr
 Returns
 ~~~~~~~
 
-``PRStatus``.
+:ref:`PRStatus`.

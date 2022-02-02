@@ -16,8 +16,8 @@ platforms.
 IPC Semaphore Functions
 -----------------------
 
--  ``PR_OpenSemaphore``
--  ``PR_WaitSemaphore``
--  ``PR_PostSemaphore``
--  ``PR_CloseSemaphore``
--  ``PR_DeleteSemaphore``
+ - :ref:`PR_OpenSemaphore`
+ - :ref:`PR_WaitSemaphore`
+ - :ref:`PR_PostSemaphore`
+ - :ref:`PR_CloseSemaphore`
+ - :ref:`PR_DeleteSemaphore`

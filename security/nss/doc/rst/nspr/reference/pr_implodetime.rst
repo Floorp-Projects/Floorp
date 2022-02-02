@@ -1,3 +1,6 @@
+PR_ImplodeTime
+==============
+
 Converts a clock/calendar time to an absolute time.
 
 .. _Syntax:

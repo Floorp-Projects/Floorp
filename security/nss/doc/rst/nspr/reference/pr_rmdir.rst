@@ -1,3 +1,6 @@
+PR_RmDir
+========
+
 Removes a directory with a specified name.
 
 .. _Syntax:
@@ -28,16 +31,16 @@ Returns
 
 -  If successful, ``PR_SUCCESS``.
 -  If unsuccessful, ``PR_FAILURE``. The actual reason can be retrieved
-   via ``PR_GetError``.
+   via :ref:`PR_GetError`.
 
 .. _Description:
 
 Description
 -----------
 
-``PR_RmDir`` removes the directory specified by the pathname ``name``.
-The directory must be empty. If the directory is not empty, ``PR_RmDir``
-fails and ``PR_GetError`` returns the error code
+:ref:`PR_RmDir` removes the directory specified by the pathname ``name``.
+The directory must be empty. If the directory is not empty, :ref:`PR_RmDir`
+fails and :ref:`PR_GetError` returns the error code
 ``PR_DIRECTORY_NOT_EMPTY_ERROR``.
 
 .. _See_Also:
@@ -45,4 +48,4 @@ fails and ``PR_GetError`` returns the error code
 See Also
 --------
 
-``PR_MkDir``
+:ref:`PR_MkDir`

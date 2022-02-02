@@ -1,3 +1,6 @@
+PR_GetOSError
+=============
+
 Returns the current thread's last set OS-specific error code.
 
 .. _Syntax:

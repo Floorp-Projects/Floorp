@@ -1,3 +1,6 @@
+PR_OpenAnonFileMap
+==================
+
 Creates or opens a named semaphore with the specified name
 
 .. _Syntax:
@@ -35,7 +38,7 @@ The function has the following parameters:
 Returns
 ~~~~~~~
 
-Pointer to ``PRFileMap`` or ``NULL`` on error.
+Pointer to :ref:`PRFileMap` or ``NULL`` on error.
 
 .. _Description:
 
@@ -45,7 +48,7 @@ Description
 If the shared memory already exists, a handle is returned to that shared
 memory object.
 
-On Unix platforms, ``PR_OpenAnonFileMap`` uses ``dirName`` as a
+On Unix platforms, :ref:`PR_OpenAnonFileMap` uses ``dirName`` as a
 directory name, without the trailing '/', to contain the anonymous file.
 A filename is generated for the name.
 

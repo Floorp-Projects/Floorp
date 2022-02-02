@@ -1,3 +1,6 @@
+PRThreadStack
+=============
+
 .. container:: blockIndicator obsolete obsoleteHeader
 
    | **Obsolete**
@@ -5,11 +8,11 @@
      browsers, its use is discouraged since it could be removed at any
      time. Try to avoid using it.
 
-The opaque ``PRThreadStack`` structure is only used in the third
-argument "``PRThreadStack *stack``" to the ``PR_AttachThread`` function.
+The opaque :ref:`PRThreadStack` structure is only used in the third
+argument "``PRThreadStack *stack``" to the :ref:`PR_AttachThread` function.
 The '``stack``' argument is now obsolete and ignored by
-``PR_AttachThread``. You should pass ``NULL`` as the 'stack' argument to
-``PR_AttachThread``.
+:ref:`PR_AttachThread`. You should pass ``NULL`` as the 'stack' argument to
+:ref:`PR_AttachThread`.
 
 .. _Definition:
 

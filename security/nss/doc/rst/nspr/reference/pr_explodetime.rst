@@ -1,3 +1,6 @@
+PR_ExplodeTime
+==============
+
 Converts an absolute time to a clock/calendar time.
 
 .. _Syntax:
@@ -22,7 +25,7 @@ Parameters
 The function has these parameters:
 
 ``usecs``
-   An absolute time in the ``PRTime`` format.
+   An absolute time in the :ref:`PRTime` format.
 ``params``
    A time parameter callback function.
 ``exploded``

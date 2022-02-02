@@ -1,3 +1,6 @@
+PR_CreateThreadPool
+===================
+
 Create a new hash table.
 
 .. _Syntax:
@@ -36,7 +39,7 @@ The function has the following parameters:
 Returns
 ~~~~~~~
 
-Pointer to a ``PRThreadPool`` structure or ``NULL`` on error.
+Pointer to a :ref:`PRThreadPool` structure or ``NULL`` on error.
 
 .. _Description:
 

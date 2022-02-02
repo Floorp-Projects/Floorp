@@ -1,3 +1,6 @@
+PR_MkDir
+========
+
 Creates a directory with a specified name and access mode.
 
 .. _Syntax:
@@ -32,15 +35,15 @@ platforms. It may be applicable to other platforms in the future.
 
 Possible values include the following:
 
--  ``00400``. Read by owner.
--  ``00200``. Write by owner.
--  ``00100``. Search by owner.
--  ``00040``. Read by group.
--  ``00020``. Write by group.
--  ``00010``. Search by group.
--  ``00004``. Read by others.
--  ``00002``. Write by others.
--  ``00001``. Search by others.
+ - :ref:`00400`. Read by owner.
+ - :ref:`00200`. Write by owner.
+ - :ref:`00100`. Search by owner.
+ - :ref:`00040`. Read by group.
+ - :ref:`00020`. Write by group.
+ - :ref:`00010`. Search by group.
+ - :ref:`00004`. Read by others.
+ - :ref:`00002`. Write by others.
+ - :ref:`00001`. Search by others.
 
 .. _Returns:
 
@@ -49,14 +52,14 @@ Returns
 
 -  If successful, ``PR_SUCCESS``.
 -  If unsuccessful, ``PR_FAILURE``. The actual reason can be retrieved
-   via ``PR_GetError``.
+   via :ref:`PR_GetError`.
 
 .. _Description:
 
 Description
 -----------
 
-``PR_MkDir`` creates a new directory with the pathname ``name``. All the
+:ref:`PR_MkDir` creates a new directory with the pathname ``name``. All the
 path components up to but not including the leaf component must already
 exist. For example, if the pathname of the directory to be created is
 ``a/b/c/d``, the directory ``a/b/c`` must already exist.
@@ -66,4 +69,4 @@ exist. For example, if the pathname of the directory to be created is
 See Also
 --------
 
-``PR_RmDir``
+:ref:`PR_RmDir`

@@ -1,3 +1,6 @@
+PRThread
+========
+
 An NSPR thread.
 
 .. _Syntax:
@@ -17,7 +20,7 @@ Description
 ~~~~~~~~~~~
 
 In NSPR, a thread is represented by a pointer to an opaque structure of
-type ``PRThread``. This pointer is a required parameter for most of the
+type :ref:`PRThread`. This pointer is a required parameter for most of the
 functions that operate on threads.
 
 A ``PRThread*`` is the successful result of creating a new thread. The

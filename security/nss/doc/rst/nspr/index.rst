@@ -11,19 +11,14 @@ software offerings.
 Documentation
 -------------
 
-`About NSPR`__
+:ref:`About NSPR`
    This topic describes, in general terms, the goals of NSPR and a bit
    about how it does it.
-`NSPR API Reference </en-US/docs/NSPR_API_Reference>`__
+:ref:`NSPR API Reference`
    The reference describes each API public macro, structure and function
    in the NSPR API.
-`NSPR build instructions </en-US/docs/NSPR_build_instructions>`__
+:ref:`NSPR build instructions`
    How to checkout and build from source.
-`NSPR release process </en-US/docs/NSPR_release_process>`__
-   How to prepare an NSPR release.
-`Legacy NSPR Content <http://viewvc.svn.mozilla.org/vc/projects/mozilla.org/trunk/projects/nspr/>`__
-   Older NSPR content is available in SVN for browsing and/or migration
-   to this site
 
 .. _Getting_NSPR:
 
@@ -33,8 +28,8 @@ Getting NSPR
 NSPR is available in various source and binary packages, depending on
 your platform:
 
--  **Windows:** Build the source package, using the `NSPR build
-   instructions </en-US/docs/NSPR_build_instructions>`__.
+-  **Windows:** Build the source package, using the :ref:`NSPR build
+   instructions`.
 -  **Mac:** Install the `MacPorts <http://www.macports.org/>`__ *nspr*
    package, or the `Homebrew <http://brew.sh>`__ *nspr* package.
 -  **Ubuntu:** Install the *libnspr4-dev* package via ``apt-get.``
@@ -70,4 +65,4 @@ Community
 Related Topics
 --------------
 
--  `Necko </en-US/docs/Necko>`__, `NSS </en-US/docs/NSS>`__
+-  :ref:`Necko`, :ref:`NSS`

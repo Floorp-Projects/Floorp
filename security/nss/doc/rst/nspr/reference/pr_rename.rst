@@ -1,3 +1,6 @@
+PR_Rename
+=========
+
 Renames a file.
 
 .. _Syntax:
@@ -40,7 +43,7 @@ One of the following values:
 Description
 -----------
 
-``PR_Rename`` renames a file from its old name (``from``) to a new name
-(``to``). If a file with the new name already exists, ``PR_Rename``
+:ref:`PR_Rename` renames a file from its old name (``from``) to a new name
+(``to``). If a file with the new name already exists, :ref:`PR_Rename`
 fails with the error code ``PR_FILE_EXISTS_ERROR``. In this case,
-``PR_Rename`` does not overwrite the existing filename.
+:ref:`PR_Rename` does not overwrite the existing filename.

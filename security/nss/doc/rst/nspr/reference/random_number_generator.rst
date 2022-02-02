@@ -1,3 +1,6 @@
+Random Number Generator
+=======================
+
 This chapter describes the NSPR random number generator.
 
 .. _Random_Number_Generator_Function:
@@ -5,5 +8,5 @@ This chapter describes the NSPR random number generator.
 Random Number Generator Function
 --------------------------------
 
--  ``PR_GetRandomNoise`` - Produces a random value for use as a seed
+ - :ref:`PR_GetRandomNoise` - Produces a random value for use as a seed
    value for another random number generator.

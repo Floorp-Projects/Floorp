@@ -1,4 +1,7 @@
-The type for the root function used by ``PR_Initialize`` is specified as
+PRPrimordialFn
+==============
+
+The type for the root function used by :ref:`PR_Initialize` is specified as
 follows:
 
 .. _Syntax:
@@ -15,4 +18,4 @@ Syntax
 See Also
 --------
 
--  ``PR_Initialize``
+ - :ref:`PR_Initialize`

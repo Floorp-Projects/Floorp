@@ -1,4 +1,7 @@
-Enumeration type used in the ``option`` field of ``PRSocketOptionData``
+PRSockOption
+============
+
+Enumeration type used in the ``option`` field of :ref:`PRSocketOptionData`
 to form the name portion of a name-value pair.
 
 .. _Syntax:
@@ -74,6 +77,6 @@ The enumeration has the following enumerators:
 Description
 -----------
 
-The ``PRSockOption`` enumeration consists of all the socket options
-supported by NSPR. The ``option`` field of ``PRSocketOptionData`` should
-be set to an enumerator of type ``PRSockOption``.
+The :ref:`PRSockOption` enumeration consists of all the socket options
+supported by NSPR. The ``option`` field of :ref:`PRSocketOptionData` should
+be set to an enumerator of type :ref:`PRSockOption`.

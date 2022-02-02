@@ -1,3 +1,6 @@
+PR_Unlock
+=========
+
 Releases a specified lock object. Releasing an unlocked lock results in
 an error.
 
@@ -20,7 +23,7 @@ Syntax
 Parameter
 ~~~~~~~~~
 
-``PR_Unlock`` has one parameter:
+:ref:`PR_Unlock` has one parameter:
 
 ``lock``
    A pointer to a lock object to be released.

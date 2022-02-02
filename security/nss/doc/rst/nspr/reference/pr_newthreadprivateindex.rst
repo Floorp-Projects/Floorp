@@ -1,3 +1,6 @@
+PR_NewThreadPrivateIndex
+========================
+
 Returns a new index for a per-thread private data table and optionally
 associates a destructor with the data that will be assigned to the
 index.
@@ -20,14 +23,14 @@ Syntax
 Parameters
 ~~~~~~~~~~
 
-``PR_NewThreadPrivateIndex`` has the following parameters:
+:ref:`PR_NewThreadPrivateIndex` has the following parameters:
 
 ``newIndex``
    On output, an index that is valid for all threads in the process. You
-   use this index with ``PR_SetThreadPrivate`` and
-   ``PR_GetThreadPrivate``.
+   use this index with :ref:`PR_SetThreadPrivate` and
+   :ref:`PR_GetThreadPrivate`.
 ``destructor``
-   Specifies a destructor function ``PRThreadPrivateDTOR`` for the
+   Specifies a destructor function :ref:`PRThreadPrivateDTOR` for the
    private data associated with the index. This function can be
    specified as ``NULL``.
 
@@ -46,19 +49,19 @@ The function returns one of the following values:
 Description
 -----------
 
-If ``PR_NewThreadPrivateIndex`` is successful, every thread in the same
+If :ref:`PR_NewThreadPrivateIndex` is successful, every thread in the same
 process is capable of associating private data with the new index. Until
 the data for an index is actually set, the value of the private data at
-that index is ``NULL``. You pass this index to ``PR_SetThreadPrivate``
-and ``PR_GetThreadPrivate`` to set and retrieve data associated with the
+that index is ``NULL``. You pass this index to :ref:`PR_SetThreadPrivate`
+and :ref:`PR_GetThreadPrivate` to set and retrieve data associated with the
 index.
 
 When you allocate the index, you may also register a destructor function
-of type ``PRThreadPrivateDTOR``. If a destructor function is registered
+of type :ref:`PRThreadPrivateDTOR`. If a destructor function is registered
 with a new index, it will be called at one of two times, as long as the
 private data is not ``NULL``:
 
--  when replacement private data is set with ``PR_SetThreadPrivate``
+-  when replacement private data is set with :ref:`PR_SetThreadPrivate`
 -  when a thread exits
 
 The index maintains independent data values for each binding thread. A

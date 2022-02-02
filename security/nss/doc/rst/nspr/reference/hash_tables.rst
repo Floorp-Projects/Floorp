@@ -18,32 +18,25 @@ table (to speed up future lookups).
 Hash Table Types and Constants
 ------------------------------
 
--  ``PLHashEntry``
--  ``PLHashTable``
--  ``PLHashNumber``
--  ``PLHashFunction``
--  ``PLHashComparator``
--  ``PLHashEnumerator``
--  ``PLHashAllocOps``
+ - :ref:`PLHashEntry`
+ - :ref:`PLHashTable`
+ - :ref:`PLHashNumber`
+ - :ref:`PLHashFunction`
+ - :ref:`PLHashComparator`
+ - :ref:`PLHashEnumerator`
+ - :ref:`PLHashAllocOps`
 
 .. _Hash_Table_Functions:
 
 Hash Table Functions
 --------------------
 
--  ``PL_NewHashTable``
--  ``PL_HashTableDestroy``
--  ``PL_HashTableAdd``
--  ``PL_HashTableRemove``
--  ``PL_HashTableLookup``
--  ``PL_HashTableEnumerateEntries``
--  ``PL_HashString``
--  ``PL_CompareStrings``
--  ``PL_CompareValues``
-
-.. _See_also:
-
-See also
---------
-
--  `XPCOM hashtable guide </en-US/docs/XPCOM_hashtable_guide>`__
+ - :ref:`PL_NewHashTable`
+ - :ref:`PL_HashTableDestroy`
+ - :ref:`PL_HashTableAdd`
+ - :ref:`PL_HashTableRemove`
+ - :ref:`PL_HashTableLookup`
+ - :ref:`PL_HashTableEnumerateEntries`
+ - :ref:`PL_HashString`
+ - :ref:`PL_CompareStrings`
+ - :ref:`PL_CompareValues`

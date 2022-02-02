@@ -1,3 +1,6 @@
+PR_Calloc
+=========
+
 Allocates zeroed memory from the heap for a number of objects of a given
 size.
 

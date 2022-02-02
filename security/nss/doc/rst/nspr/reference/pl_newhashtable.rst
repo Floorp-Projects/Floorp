@@ -1,3 +1,6 @@
+PL_NewHashTable
+===============
+
 Create a new hash table.
 
 .. _Syntax:
@@ -51,10 +54,10 @@ The new hash table.
 Description
 -----------
 
-``PL_NewHashTable`` creates a new hash table. The table has at least 16
+:ref:`PL_NewHashTable` creates a new hash table. The table has at least 16
 buckets. You can pass a value of 0 as ``numBuckets`` to create the
 default number of buckets in the new table. The arguments ``keyCompare``
-and ``valueCompare`` are functions of type ``PLHashComparator`` that the
+and ``valueCompare`` are functions of type :ref:`PLHashComparator` that the
 hash table library functions use to compare the keys and the values of
 entries.
 

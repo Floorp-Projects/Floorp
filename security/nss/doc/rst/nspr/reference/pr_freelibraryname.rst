@@ -1,3 +1,6 @@
+PR_FreeLibraryName
+==================
+
 Frees memory allocated by NSPR for library names and path names.
 
 .. _Syntax:
