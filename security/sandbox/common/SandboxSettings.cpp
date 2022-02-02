@@ -42,6 +42,38 @@ const char* ContentWin32kLockdownStateToString(
 
     case ContentWin32kLockdownState::MissingRemoteWebGL:
       return "Win32k Lockdown disabled -- Missing Remote WebGL";
+
+    case ContentWin32kLockdownState::MissingNonNativeTheming:
+      return "Win32k Lockdown disabled -- Missing Non-Native Theming";
+
+    case ContentWin32kLockdownState::DisabledByEnvVar:
+      return "Win32k Lockdown disabled -- MOZ_ENABLE_WIN32K is set";
+
+    case ContentWin32kLockdownState::DisabledBySafeMode:
+      return "Win32k Lockdown disabled -- Running in Safe Mode";
+
+    case ContentWin32kLockdownState::DisabledByE10S:
+      return "Win32k Lockdown disabled -- E10S is disabled";
+
+    case ContentWin32kLockdownState::DisabledByUserPref:
+      return "Win32k Lockdown disabled -- manually set "
+             "security.sandbox.content.win32k-disable to false";
+
+    case ContentWin32kLockdownState::EnabledByUserPref:
+      return "Win32k Lockdown enabled -- manually set "
+             "security.sandbox.content.win32k-disable to true";
+
+    case ContentWin32kLockdownState::DisabledByControlGroup:
+      return "Win32k Lockdown disabled -- user in Control Group";
+
+    case ContentWin32kLockdownState::EnabledByTreatmentGroup:
+      return "Win32k Lockdown enabled -- user in Treatment Group";
+
+    case ContentWin32kLockdownState::DisabledByDefault:
+      return "Win32k Lockdown disabled -- default value is false";
+
+    case ContentWin32kLockdownState::EnabledByDefault:
+      return "Win32k Lockdown enabled -- default value is true";
   }
 
   MOZ_CRASH("Should never reach here");
