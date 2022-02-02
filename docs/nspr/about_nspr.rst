@@ -7,8 +7,6 @@ thread synchronization, normal file and network I/O, interval timing and
 calendar time, basic memory management (malloc and free) and shared
 library linking.
 
-.. _History:
-
 History
 ~~~~~~~
 
@@ -42,8 +40,6 @@ system environments. It strives to not export the *lowest common
 denominator*, but to exploit the best features of each operating system
 on which it runs, and still provide a uniform service across a wide
 range of host offerings.
-
-.. _Threads:
 
 Threads
 ^^^^^^^
@@ -100,8 +96,6 @@ IPv6. To that end it is possible to perform translations of ASCII
 strings (DNS names) into NSPR's network address structures, with no
 regard to whether the addressing technology is IPv4 or IPv6.
 
-.. _Time:
-
 Time
 ^^^^
 
@@ -141,16 +135,12 @@ functions. Depending on the platform, the functions may be implemented
 almost entirely in the NSPR runtime or simply shims that call
 immediately into the host operating system's offerings.
 
-.. _Linking:
-
 Linking
 ^^^^^^^
 
 Support for linking (shared library loading and unloading) is part of
 NSPR's feature set. In most cases this is simply a smoothing over of the
 facilities offered by the various platform providers.
-
-.. _Where_It.27s_Headed:
 
 Where It's Headed
 ~~~~~~~~~~~~~~~~~

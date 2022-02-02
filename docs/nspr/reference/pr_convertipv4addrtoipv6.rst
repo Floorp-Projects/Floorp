@@ -3,7 +3,6 @@ PR_ConvertIPv4AddrToIPv6
 
 Converts an IPv4 address into an (IPv4-mapped) IPv6 address.
 
-.. _Syntax:
 
 Syntax
 ~~~~~~
@@ -13,11 +12,10 @@ Syntax
    #include <prnetdb.h>
 
    void PR_ConvertIPv4AddrToIPv6(
-     PRUint32 v4addr,
-     PRIPv6Addr *v6addr
+     PRUint32 v4addr,
+     PRIPv6Addr *v6addr
    );
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~

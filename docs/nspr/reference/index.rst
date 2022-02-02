@@ -22,8 +22,6 @@ NSPR API Reference
 
 -  :ref:`NSPR_Sample_Code`
 
-.. _NSPR_Types:
-
 :ref:`NSPR_Types`
 -----------------
 

@@ -3,7 +3,6 @@ PR_GetSocketOption
 
 Retrieves the socket options set for a specified socket.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      PRFileDesc *fd,
      PRSocketOptionData *data);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -33,7 +31,6 @@ The function has the following parameters:
    parameter. On output, this structure contains the requested socket
    option data.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

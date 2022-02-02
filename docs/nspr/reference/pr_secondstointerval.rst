@@ -3,7 +3,6 @@ PR_SecondsToInterval
 
 Converts standard clock seconds to platform-dependent intervals.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
     PRIntervalTime PR_SecondsToInterval(PRUint32 seconds);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ The function has the following parameter:
 ``seconds``
    The number of seconds to convert to interval form.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

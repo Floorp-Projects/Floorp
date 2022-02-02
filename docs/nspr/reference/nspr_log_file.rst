@@ -4,7 +4,6 @@ NSPR_LOG_FILE
 This environment variable specifies the file to which log messages are
 directed.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -13,16 +12,15 @@ Syntax
 
    filespec
 
-*filespec* is a filename. The exact syntax is platform specific. 
+*filespec* is a filename. The exact syntax is platform specific. 
 
-.. _Description:
 
 Description
 -----------
 
 Use this environment variable to specify a log file other than the
 default. If :ref:`NSPR_LOG_FILE` is not in the environment, then log output
-is written to ``stdout`` or ``stderr``, depending on the platform.  Set
+is written to ``stdout`` or ``stderr``, depending on the platform.  Set
 :ref:`NSPR_LOG_FILE` to the name of the log file you want to use. NSPR
 logging, when enabled, writes to the file named in this environment
 variable.

@@ -3,7 +3,6 @@ PR_SetLibraryPath
 
 Registers a default library pathname with a runtime.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRStatus PR_SetLibraryPath(const char *path);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -27,7 +25,6 @@ The function has this parameter:
    is not defined, nor whether that pathname should be absolute or
    relative.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -38,7 +35,6 @@ The function returns one of the following values:
 -  If unsuccessful, ``PR_FAILURE``. This may indicate that the function
    cannot allocate sufficient storage to make a copy of the path string
 
-.. _Description:
 
 Description
 -----------

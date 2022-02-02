@@ -3,7 +3,6 @@ PR_CEnterMonitor
 
 Enters the lock associated with a cached monitor.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRMonitor* PR_CEnterMonitor(void *address);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -26,7 +24,6 @@ The function has the following parameter:
    reference must remain valid as long as there are monitoring
    operations being performed.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -38,7 +35,6 @@ The function returns one of the following values:
 -  If unsuccessful (the monitor cache needs to be expanded and the
    system is out of memory), the function returns ``NULL``.
 
-.. _Description:
 
 Description
 -----------

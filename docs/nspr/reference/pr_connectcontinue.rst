@@ -1,7 +1,6 @@
 PR_ConnectContinue
 ==================
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
      PRFileDesc *fd,
      PRInt16 out_flags);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -28,7 +26,6 @@ The function has the following parameters:
    The out_flags field of the poll descriptor returned by
    `PR_Poll() <PR_Poll>`__.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -36,14 +33,13 @@ Returns
 -  If the nonblocking connect has successfully completed,
    PR_ConnectContinue returns PR_SUCCESS.
 -  If PR_ConnectContinue() returns PR_FAILURE, call PR_GetError():
-        - PR_IN_PROGRESS_ERROR: the nonblocking connect is still in
+- PR_IN_PROGRESS_ERROR: the nonblocking connect is still in
    progress and has not completed yet. The caller should poll the file
    descriptor for the in_flags PR_POLL_WRITE|PR_POLL_EXCEPT and retry
    PR_ConnectContinue later when PR_Poll() returns.
-        - Other errors: the nonblocking connect has failed with this
+- Other errors: the nonblocking connect has failed with this
    error code.
 
-.. _Description:
 
 Description
 -----------
@@ -56,4 +52,4 @@ on the socket to determine whether the nonblocking connect has completed
 or is still in progress. Repeat the PR_Poll(), PR_ConnectContinue()
 sequence until the nonblocking connect has completed.
 
- 
+ 

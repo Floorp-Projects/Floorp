@@ -3,7 +3,6 @@ PRProcess
 
 Represents a process.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    typedef struct PRProcess PRProcess;
 
-.. _Description:
 
 Description
 -----------

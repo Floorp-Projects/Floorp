@@ -3,7 +3,6 @@ PR_LoadLibrary
 
 Loads a referenced library.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRLibrary* PR_LoadLibrary(const char *name);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -25,7 +23,6 @@ The function has this parameter:
    A platform-dependent character array that names the library to be
    loaded, as returned by :ref:`PR_GetLibraryName`.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -35,7 +32,6 @@ If successful, returns a reference to an opaque :ref:`PRLibrary` object.
 If the operation fails, returns ``NULL``. Use :ref:`PR_GetError` to find
 the reason for the failure.
 
-.. _Description:
 
 Description
 -----------

@@ -3,7 +3,6 @@ PR_QueueJob
 
 Queues a job to a thread pool for execution.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -20,7 +19,6 @@ Syntax
      PRBool joinable
    );
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -38,7 +36,6 @@ The function has the following parameters:
    If ``PR_TRUE``, the job is joinable. If ``PR_FALSE``, the job is not
    joinable. See :ref:`PR_JoinJob`.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

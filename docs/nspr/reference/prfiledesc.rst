@@ -5,7 +5,6 @@ A file descriptor used to represent any open file, such as a normal
 file, an end point of a pipe, or a socket (end point of network
 communication).
 
-.. _Syntax:
 
 Syntax
 ------
@@ -24,7 +23,6 @@ Syntax
 
    typedef struct PRFileDesc PRFileDesc;
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -42,7 +40,6 @@ Parameters
 ``identity``
    Identity of this particular layer. See :ref:`PRDescIdentity`.
 
-.. _Description:
 
 Description
 -----------

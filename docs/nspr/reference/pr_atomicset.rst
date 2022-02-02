@@ -3,7 +3,6 @@ PR_AtomicSet
 
 Atomically sets a 32-bit value and return its previous contents.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      PRInt32 *val,
      PRInt32 newval);
 
-.. _Parameter:
 
 Parameters
 ~~~~~~~~~~
@@ -28,14 +26,12 @@ The function has the following parameter:
 ``newval``
    The new value to assign to the ``val`` parameter.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 The function returns the prior value of the referenced variable.
 
-.. _Description:
 
 Description
 -----------

@@ -3,7 +3,6 @@ PRUint64
 
 Guaranteed to be an unsigned 64-bit integer on all platforms.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    typedef definition PRUint64;
 
-.. _Description:
 
 Description
 -----------

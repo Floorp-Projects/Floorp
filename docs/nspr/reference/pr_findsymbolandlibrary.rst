@@ -4,7 +4,6 @@ PR_FindSymbolAndLibrary
 Finds a symbol in one of the currently loaded libraries, and returns
 both the symbol and the library in which it was found.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
       const char *name,
       PRLibrary **lib);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -31,7 +29,6 @@ The function has these parameters:
    in which the symbol was discovered. This location must be
    pre-allocated by the caller.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -42,7 +39,6 @@ pointed to by lib.
 
 If the symbol could not be found, returns ``NULL``.
 
-.. _Description:
 
 Description
 -----------

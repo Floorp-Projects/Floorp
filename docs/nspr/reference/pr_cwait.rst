@@ -3,7 +3,6 @@ PR_CWait
 
 Wait for a notification that a monitor's state has changed.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
       void *address,
       PRIntervalTime timeout);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -32,7 +30,6 @@ The function has the following parameters:
    rescheduled. If you specify ``PR_INTERVAL_NO_TIMEOUT``, the function
    returns if and only if the object is notified.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -46,7 +43,6 @@ The function returns one of the following values:
    in the cache or that the monitor was located and the calling thread
    was not the thread that held the monitor's mutex.
 
-.. _Description:
 
 Description
 -----------

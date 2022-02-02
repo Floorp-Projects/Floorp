@@ -3,7 +3,6 @@ PR_DestroyCondVar
 
 Destroys a condition variable.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    void PR_DestroyCondVar(PRCondVar *cvar);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ Parameter
 ``cvar``
    A pointer to the condition variable object to be destroyed.
 
-.. _Description:
 
 Description
 -----------

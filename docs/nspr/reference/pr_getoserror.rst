@@ -3,7 +3,6 @@ PR_GetOSError
 
 Returns the current thread's last set OS-specific error code.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRInt32 PR_GetOSError(void)
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -22,7 +20,6 @@ Returns
 The value returned is a 32-bit signed number. Its interpretation is left
 to the caller.
 
-.. _Description:
 
 Description
 -----------

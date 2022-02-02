@@ -3,7 +3,6 @@ PR_GetHostByName
 
 Looks up a host by name.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -18,7 +17,6 @@ Syntax
      PRIntn bufsize,
      PRHostEnt *hostentry);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -39,7 +37,6 @@ The function has the following parameters:
    This structure is allocated by the caller. On output, this structure
    is filled in by the runtime if the function returns ``PR_SUCCESS``.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

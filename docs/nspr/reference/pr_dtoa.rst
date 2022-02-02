@@ -3,7 +3,6 @@ PR_dtoa
 
 Converts a floating point number to a string.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -22,7 +21,6 @@ Syntax
       char *buf,
       PRSize bufsz);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -50,8 +48,6 @@ The function has these parameters:
 ``bufsz``
    The size of the buffer provided to hold the result.
 
-.. _Results:
-
 Results
 ~~~~~~~
 
@@ -59,7 +55,6 @@ The principle output is the null-terminated string stored in ``buf``. If
 ``rve`` is not ``NULL``, ``*rve`` is set to point to the end of the
 returned value.
 
-.. _Description:
 
 Description
 -----------

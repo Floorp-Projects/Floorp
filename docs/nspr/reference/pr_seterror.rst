@@ -3,7 +3,6 @@ PR_SetError
 
 Sets error information within a thread context.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    void PR_SetError(PRErrorCode errorCode, PRInt32 oserr)
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -28,7 +26,6 @@ The function has these parameters:
    The platform-specific error. If there is no appropriate OS error
    number, a zero may be supplied.
 
-.. _Description:
 
 Description
 -----------

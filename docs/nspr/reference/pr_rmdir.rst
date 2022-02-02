@@ -3,7 +3,6 @@ PR_RmDir
 
 Removes a directory with a specified name.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRStatus PR_RmDir(const char *name);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ The function has the following parameter:
 ``name``
    The name of the directory to be removed.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -33,7 +30,6 @@ Returns
 -  If unsuccessful, ``PR_FAILURE``. The actual reason can be retrieved
    via :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------
@@ -43,7 +39,6 @@ The directory must be empty. If the directory is not empty, :ref:`PR_RmDir`
 fails and :ref:`PR_GetError` returns the error code
 ``PR_DIRECTORY_NOT_EMPTY_ERROR``.
 
-.. _See_Also:
 
 See Also
 --------

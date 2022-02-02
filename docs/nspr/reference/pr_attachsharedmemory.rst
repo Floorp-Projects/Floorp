@@ -4,7 +4,6 @@ PR_AttachSharedMemory
 Attaches a memory segment previously opened with :ref:`PR_OpenSharedMemory`
 and maps it into the process memory space.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -24,7 +23,6 @@ Syntax
    /* Define values for PR_AttachSharedMemory(...,flags) */
    #define PR_SHM_READONLY 0x01
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -37,7 +35,6 @@ flags
    Options for mapping the shared memory. ``PR_SHM_READONLY`` causes the
    memory to be attached read-only.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

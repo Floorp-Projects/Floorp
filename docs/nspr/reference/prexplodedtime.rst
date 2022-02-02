@@ -3,7 +3,6 @@ PRExplodedTime
 
 A clock/calendar representation of times.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -25,7 +24,6 @@ Syntax
         PRTimeParameters tm_params;
     } PRExplodedTime;
 
-.. _Description:
 
 Description
 -----------
@@ -52,7 +50,7 @@ The essential members of :ref:`PRExplodedTime` are:
    values 60 and 61 are for accommodating up to two leap seconds.
  - :ref:`tm_usec`: number of microseconds past tm_sec. The range is [0,
    999999].
- - :ref:`tm_params``: a ``PRTimeParameters` structure representing the
+ - :ref:`tm_params`: a `PRTimeParameters` structure representing the
    local time zone information.
 
 The nonessential members of :ref:`PRExplodedTime` are:

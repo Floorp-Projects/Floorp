@@ -5,7 +5,6 @@ Type for structure used with :ref:`PR_GetSocketOption` and
 :ref:`PR_SetSocketOption` to specify options for file descriptors that
 represent sockets.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -37,7 +36,6 @@ Syntax
      } value;
    } PRSocketOptionData;
 
-.. _Fields:
 
 Fields
 ~~~~~~
@@ -75,7 +73,6 @@ The structure has the following fields:
 ``mcast_if``
    IP multicast interface address.
 
-.. _Description:
 
 Description
 ~~~~~~~~~~~

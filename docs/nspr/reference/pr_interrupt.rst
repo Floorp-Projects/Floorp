@@ -3,7 +3,6 @@ PR_Interrupt
 
 Sets the interrupt request for a target thread.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRStatus PR_Interrupt(PRThread *thread);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ Parameter
 ``thread``
    The thread whose interrupt request you want to set.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -34,7 +31,6 @@ The function returns one of the following values:
 -  If the specified thread is currently blocked, ``PR_SUCCESS``.
 -  Otherwise, ``PR_FAILURE``.
 
-.. _Description:
 
 Description
 -----------
@@ -55,8 +51,6 @@ was interrupted, compare the result of :ref:`PR_GetError` with
 ``PR_PENDING_INTERRUPT_ERROR``.
 
 :ref:`PR_Interrupt` may itself fail if the target thread is invalid.
-
-.. _Bugs:
 
 Bugs
 ----

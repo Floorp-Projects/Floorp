@@ -4,7 +4,6 @@ PR_IMPLEMENT
 Used to define implementations of symbols that are to be exported from a
 shared library.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    PR_IMPLEMENT(type)implementation
 
-.. _Description:
 
 Description
 -----------

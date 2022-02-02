@@ -3,7 +3,6 @@ PR_SetSocketOption
 
 Retrieves the socket options set for a specified socket.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      PRFileDesc *fd,
      PRSocketOptionData *data);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -30,7 +28,6 @@ The function has the following parameters:
    A pointer to a structure of type :ref:`PRSocketOptionData` specifying
    the options to set.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -39,7 +36,6 @@ Returns
 -  If unsuccessful, ``PR_FAILURE``. The reason for the failure can be
    obtained by calling :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

@@ -7,7 +7,6 @@ an error.
 Attempting to release a lock that was locked by a different thread
 causes undefined behavior.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -18,7 +17,6 @@ Syntax
 
    PRStatus PR_Unlock(PRLock *lock);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -28,7 +26,6 @@ Parameter
 ``lock``
    A pointer to a lock object to be released.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -39,7 +36,6 @@ The function returns one of the following values:
 -  If unsuccessful (for example, if the caller does not own the lock),
    ``PR_FAILURE``.
 
-.. _See_Also:
 
 See Also
 --------

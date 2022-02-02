@@ -3,7 +3,6 @@ PR_Access
 
 Determines the accessibility of a file.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      const char *name,
      PRAccessHow how);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -33,7 +31,6 @@ The function has the following parameters:
     - :ref:`PR_ACCESS_WRITE_OK`. Test for write permission.
     - :ref:`PR_ACCESS_EXISTS`. Check existence of file.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

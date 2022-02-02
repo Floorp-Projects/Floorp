@@ -3,7 +3,6 @@ PR_Initialized
 
 Checks whether the runtime has been initialized.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRBool PR_Initialized(void);
 
-.. _Returns:
 
 Returns
 ~~~~~~~

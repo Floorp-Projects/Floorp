@@ -188,7 +188,7 @@ or unset.
 -  :ref:`PR_WaitForPollableEvent`
 
 One can call :ref:`PR_Poll` with the :ref:`PR_POLL_READ` flag on a pollable
-event. Whe the pollable event is set, :ref:`PR_Poll` returns the the
+event. When the pollable event is set, :ref:`PR_Poll` returns the the
 :ref:`PR_POLL_READ` flag set in the out_flags.
 
 .. _Manipulating_Layers:

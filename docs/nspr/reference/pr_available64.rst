@@ -5,7 +5,6 @@ Determines the number of bytes (expressed as a 32-bit integer) that are
 available for reading beyond the current read-write pointer in a
 specified file or socket.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
 
    PRInt64 PR_Available64(PRFileDesc *fd);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -26,7 +24,6 @@ The function has the following parameter:
 ``fd``
    Pointer to a :ref:`PRFileDesc` object representing a file or socket.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -39,7 +36,6 @@ The function returns one of the following values:
 -  If the function fails, it returns the value -1. The error code can
    then be retrieved via :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------
@@ -47,7 +43,6 @@ Description
 :ref:`PR_Available64` works on normal files and sockets. :ref:`PR_Available`
 does not work with pipes on Win32 platforms.
 
-.. _See_Also:
 
 See Also
 --------

@@ -3,7 +3,6 @@ PR_GetThreadPriority
 
 Returns the priority of a specified thread.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRThreadPriority PR_GetThreadPriority(PRThread *thread);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~

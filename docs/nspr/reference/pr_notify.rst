@@ -4,7 +4,6 @@ PR_Notify
 Notifies a monitor that a change in state of the monitored data has
 occurred.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -15,7 +14,6 @@ Syntax
 
    PRStatus PR_Notify(PRMonitor *mon);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -27,7 +25,6 @@ The function has the following parameter:
    monitor object referenced must be one for which the calling thread
    currently holds the lock.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -37,7 +34,6 @@ The function returns one of the following values:
 -  If successful, ``PR_SUCCESS``.
 -  If unsuccessful, ``PR_FAILURE``.
 
-.. _Description:
 
 Description
 -----------

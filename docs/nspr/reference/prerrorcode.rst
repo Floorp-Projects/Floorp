@@ -5,7 +5,6 @@ PRErrorCode
 Type for error codes that can be retrieved with :ref:`PR_GetError`. You can
 also set your own errors using :ref:`PR_SetError`.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
 
    typedef PRInt32 PRErrorCode
 
-.. _Description:
 
 Description
 -----------

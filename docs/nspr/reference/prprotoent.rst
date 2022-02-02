@@ -4,7 +4,6 @@ PRProtoEnt
 Protocol entry returned by :ref:`PR_GetProtoByName` and
 :ref:`PR_GetProtoByNumber`.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -23,7 +22,6 @@ Syntax
    #endif
    } PRProtoEnt;
 
-.. _Fields:
 
 Fields
 ~~~~~~

@@ -5,7 +5,6 @@ Recommended size to use when specifying a scratch buffer for
 :ref:`PR_GetHostByName`, :ref:`PR_GetHostByAddr`, :ref:`PR_GetProtoByName`, or
 :ref:`PR_GetProtoByNumber`.
 
-.. _Syntax:
 
 Syntax
 ------

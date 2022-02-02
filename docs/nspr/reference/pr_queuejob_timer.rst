@@ -3,7 +3,6 @@ PR_QueueJob_Timer
 
 Causes a job to be queued when a timer expires.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -21,7 +20,6 @@ Syntax
      PRBool joinable
    );
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -44,7 +42,6 @@ The function has the following parameters:
    If ``PR_TRUE``, the job is joinable. If ``PR_FALSE``, the job is not
    joinable. See :ref:`PR_JoinJob`.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

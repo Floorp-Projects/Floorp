@@ -3,7 +3,6 @@ PR_CreateFileMap
 
 Creates a file mapping object.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
      PRInt64 size,
      PRFileMapProtect prot);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -38,7 +36,6 @@ The function has the following parameters:
     - :ref:`PR_PROT_WRITECOPY`. Readable, and write is private
       (copy-on-write).
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -46,7 +43,6 @@ Returns
 -  If successful, a file mapping of type :ref:`PRFileMap`.
 -  If unsuccessful, ``NULL``.
 
-.. _Description:
 
 Description
 -----------

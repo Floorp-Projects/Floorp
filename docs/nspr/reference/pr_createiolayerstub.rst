@@ -3,7 +3,6 @@ PR_CreateIOLayerStub
 
 Creates a new layer.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      PRDescIdentity ident
      PRIOMethods const *methods);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -29,14 +27,12 @@ The function has the following parameters:
    A pointer to the :ref:`PRIOMethods` structure specifying the functions
    for the new layer.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 A new file descriptor for the specified layer.
 
-.. _Description:
 
 Description
 -----------

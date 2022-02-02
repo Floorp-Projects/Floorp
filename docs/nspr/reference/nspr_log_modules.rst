@@ -4,7 +4,6 @@ NSPR_LOG_MODULES
 This environment variable specifies which log modules have logging
 enabled.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -27,7 +26,6 @@ following meanings:
 -  4 = PR_LOG_DEBUG: debug messages, notices
 -  5: everything!
 
-.. _Description:
 
 Description
 -----------
@@ -36,12 +34,12 @@ Specify a ``moduleName`` that is associated with the ``name`` argument
 in a call to
 `:ref:`PR_NewLogModule` <http://www-archive.mozilla.org/projects/nspr/reference/html/prlog.html#25372>`__
 and a non-zero ``level`` value to enable logging for the named
-``moduleName``. 
+``moduleName``. 
 
 Special log module names are provided for controlling NSPR's log service
 at execution time. These controls should be set in the
 :ref:`NSPR_LOG_MODULES` environment variable at execution time to affect
-NSPR's log service for your application. 
+NSPR's log service for your application. 
 
 -  **all** The name ``all`` enables all log modules. To enable all log
    module calls to
@@ -56,18 +54,16 @@ NSPR's log service for your application. 
    form "2015-01-15 21:24:26.049906 UTC - " prefixing every logged line.
 
 -  **append** Including ``append`` results in log entries being appended
-   to the existing contents of the file referenced by NSPR_LOG_FILE.  If
+   to the existing contents of the file referenced by NSPR_LOG_FILE.  If
    not specified, the existing contents of NSPR_LOG_FILE will be lost as
    a new file is created with the same filename.
 
--  **sync** The name ``sync`` enables unbuffered logging.   This ensures
+-  **sync** The name ``sync`` enables unbuffered logging.   This ensures
    that all log messages are flushed to the operating system as they are
    written, but may slow the program down.
 
 -  **bufsize:size** The name ``bufsize:``\ *size* sets the log buffer to
    *size*.
-
-.. _Examples:
 
 Examples
 --------

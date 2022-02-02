@@ -3,7 +3,6 @@ PR_Poll
 
 Detects when I/O is ready for a set of socket file descriptors.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
      PRIntn npds,
      PRIntervalTime timeout);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -35,7 +33,6 @@ The function has the following parameters:
    If this time expires without any I/O becoming ready, :ref:`PR_Poll`
    returns zero.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -48,7 +45,6 @@ The function returns one of these values:
 -  The value -1 indicates the function failed. The reason for the
    failure can be obtained by calling :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 ~~~~~~~~~~~
@@ -96,9 +92,9 @@ The structure has the following fields:
 ``in_flags``
    A bitwise ``OR`` of the following bit flags:
 
- - :ref:`PR_POLL_READ``: ``fd` is readable.
- - :ref:`PR_POLL_WRITE``: ``fd` is writable.
- - :ref:`PR_POLL_EXCEPT``: ``fd` has an exception condition.
+ - :ref:`PR_POLL_READ`: ``fd`` is readable.
+ - :ref:`PR_POLL_WRITE`: ``fd`` is writable.
+ - :ref:`PR_POLL_EXCEPT`: ``fd`` has an exception condition.
 
 ``out_flags``
    A bitwise ``OR`` of the following bit flags:
@@ -106,8 +102,8 @@ The structure has the following fields:
  - :ref:`PR_POLL_READ`
  - :ref:`PR_POLL_WRITE`
  - :ref:`PR_POLL_EXCEPT`
- - :ref:`PR_POLL_ERR``: ``fd` has an error.
- - :ref:`PR_POLL_NVAL``: ``fd` is bad.
+ - :ref:`PR_POLL_ERR`: ``fd`` has an error.
+ - :ref:`PR_POLL_NVAL`: ``fd`` is bad.
 
 Note that the ``PR_POLL_ERR`` and ``PR_POLL_NVAL`` flags are used only
 in ``out_flags``. The ``PR_POLL_ERR`` and ``PR_POLL_NVAL`` events are

@@ -3,7 +3,6 @@ PR_MemUnmap
 
 Unmap a memory region that is backed by a memory-mapped file.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      void *addr,
      PRUint32 len);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -28,7 +26,6 @@ The function has the following parameters:
 ``len``
    The length, in bytes, of the memory region.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -39,7 +36,6 @@ The function returns one of the following values:
 -  If the memory region is not successfully unmapped, ``PR_FAILURE``.
    The error code can be retrieved via :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

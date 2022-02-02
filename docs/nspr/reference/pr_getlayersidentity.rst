@@ -3,7 +3,6 @@ PR_GetLayersIdentity
 
 Gets the unique identity for the layer of the specified file descriptor.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRDescIdentity PR_GetLayersIdentity(PRFileDesc* fd);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ The function has the following parameter:
 ``fd``
    A pointer to a file descriptor.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

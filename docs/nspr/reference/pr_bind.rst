@@ -3,7 +3,6 @@ PR_Bind
 
 Binds an address to a specified socket.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      PRFileDesc *fd,
      const PRNetAddr *addr);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -29,7 +27,6 @@ The function has the following parameters:
    A pointer to a :ref:`PRNetAddr` object representing the address to which
    the socket will be bound.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -40,7 +37,6 @@ The function returns one of the following values:
 -  If unsuccessful, ``PR_FAILURE``. Further information can be obtained
    by calling :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

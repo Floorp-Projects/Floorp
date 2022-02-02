@@ -3,7 +3,6 @@ PRIPv6Addr
 
 Type used in the ``ipv6.ip`` field of the :ref:`PRNetAddr` structure.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
       typedef struct in6_addr PRIPv6Addr;
    #endif /* defined(_PR_INET6) */
 
-.. _Description:
 
 Description
 -----------

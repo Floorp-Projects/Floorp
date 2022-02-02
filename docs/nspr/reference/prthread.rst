@@ -3,7 +3,6 @@ PRThread
 
 An NSPR thread.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    typedef struct PRThread PRThread;
 
-.. _Description:
 
 Description
 ~~~~~~~~~~~

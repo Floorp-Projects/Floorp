@@ -3,7 +3,6 @@ PL_HashTableRemove
 
 Removes the entry with the specified key from the hash table.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      PLHashTable *ht,
      const void *key);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -28,7 +26,6 @@ The function has the following parameters:
 ``key``
    A pointer to the key for the entry to be removed.
 
-.. _Description:
 
 Description
 -----------
@@ -42,7 +39,6 @@ returns ``PR_TRUE``.
 If the table is underloaded, :ref:`PL_HashTableRemove` also shrinks the
 number of buckets by half.
 
-.. _Remark:
 
 Remark
 ------

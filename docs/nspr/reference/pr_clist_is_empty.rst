@@ -3,7 +3,6 @@ PR_CLIST_IS_EMPTY
 
 Checks for an empty circular list.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRIntn PR_CLIST_IS_EMPTY (PRCList *listp);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -22,7 +20,6 @@ Parameter
 ``listp``
    A pointer to the linked list.
 
-.. _Description:
 
 Description
 -----------

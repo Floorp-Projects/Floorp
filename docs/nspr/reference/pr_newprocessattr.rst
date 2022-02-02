@@ -3,7 +3,6 @@ PR_NewProcessAttr
 
 Creates a process attributes structure.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,21 +13,18 @@ Syntax
 
    PRProcessAttr *PR_NewProcessAttr(void);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
 
 The function has no parameters.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 A pointer to the new process attributes structure.
 
-.. _Description:
 
 Description
 -----------

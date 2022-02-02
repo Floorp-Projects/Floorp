@@ -3,7 +3,6 @@ PR_AtomicDecrement
 
 Atomically decrements a 32-bit value.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRInt32 PR_AtomicDecrement(PRInt32 *val);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,14 +22,12 @@ The function has the following parameter:
 ``val``
    A pointer to the value to decrement.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 The function returns the decremented value (i.e., the result).
 
-.. _Description:
 
 Description
 -----------

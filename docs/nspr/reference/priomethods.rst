@@ -3,7 +3,6 @@ PRIOMethods
 
 The table of I/O methods used in a file descriptor.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -45,7 +44,6 @@ Syntax
 
    typedef struct PRIOMethods PRIOMethods;
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -108,7 +106,6 @@ Parameters
 ``setsockopt``
    Set value of specified socket option.
 
-.. _Description:
 
 Description
 -----------

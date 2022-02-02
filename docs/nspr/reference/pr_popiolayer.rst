@@ -3,7 +3,6 @@ PR_PopIOLayer
 
 Removes a layer from the stack.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      PRFileDesc *stack,
      PRDescIdentity id);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -29,7 +27,6 @@ The function has the following parameters:
 ``id``
    Identity of the layer to be removed from the stack.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -42,7 +39,6 @@ The function returns one of the following values:
    example, the bottommost layer), the function returns ``NULL`` with
    the error code ``PR_INVALID_ARGUMENT_ERROR``.
 
-.. _Description:
 
 Description
 -----------

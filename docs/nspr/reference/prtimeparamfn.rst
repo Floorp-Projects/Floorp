@@ -4,7 +4,6 @@ PRTimeParamFn
 This type defines a callback function to calculate and return the time
 parameter offsets from a calendar time object in GMT.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
     typedef PRTimeParameters (PR_CALLBACK_DECL *PRTimeParamFn)
        (const PRExplodedTime *gmt);
 
-.. _Description:
 
 Description
 -----------

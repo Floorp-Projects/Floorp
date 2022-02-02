@@ -3,7 +3,6 @@ PR_GetPeerName
 
 Gets the network address of the connected peer.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      PRFileDesc *fd,
      PRNetAddr *addr);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -28,7 +26,6 @@ The function has the following parameters:
 ``addr``
    On return, the address of the peer connected to the socket.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

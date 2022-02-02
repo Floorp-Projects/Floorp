@@ -3,7 +3,6 @@ PR_DestroyMonitor
 
 Destroys a monitor object.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    void PR_DestroyMonitor(PRMonitor *mon);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ The function has the following parameter:
 ``mon``
    A reference to an existing structure of type :ref:`PRMonitor`.
 
-.. _Description:
 
 Description
 -----------

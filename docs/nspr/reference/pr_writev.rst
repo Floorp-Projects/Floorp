@@ -3,7 +3,6 @@ PR_Writev
 
 Writes data to a socket from multiple buffers.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -20,7 +19,6 @@ Syntax
 
    #define PR_MAX_IOVECTOR_SIZE 16
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -41,7 +39,6 @@ The function has the following parameters:
    A value of type :ref:`PRIntervalTime` describing the time limit for
    completion of the entire write operation.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -52,7 +49,6 @@ One of the following values:
 -  The value -1 indicates that the operation failed. The reason for the
    failure can be obtained by calling :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

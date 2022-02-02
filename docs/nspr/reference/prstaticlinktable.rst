@@ -8,7 +8,6 @@ function that the library exports. If, during initialization, such
 entries are manually created, then future attempts to link to the
 symbols can be treated in a consistent fashion.
 
-.. _Syntax:
 
 Syntax
 ------

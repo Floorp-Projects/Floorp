@@ -3,7 +3,6 @@ PL_HashTableAdd
 
 Add a new entry with the specified key and value to the hash table.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
      const void *key,
      void *value);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -31,14 +29,12 @@ The function has the following parameters:
 ``value``
    A pointer to the value for the entry to be added.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 A pointer to the new entry.
 
-.. _Description:
 
 Description
 -----------

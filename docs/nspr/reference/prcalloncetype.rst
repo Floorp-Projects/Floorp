@@ -3,7 +3,6 @@ PRCallOnceType
 
 Structure for tracking initialization.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -18,7 +17,6 @@ Syntax
      PRStatus status;
    } PRCallOnceType;
 
-.. _Fields:
 
 Fields
 ~~~~~~
@@ -34,7 +32,6 @@ The structure has these fields:
 ``status``
    An indication of the outcome of the initialization process.
 
-.. _Description:
 
 Description
 -----------

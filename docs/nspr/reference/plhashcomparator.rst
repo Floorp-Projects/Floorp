@@ -1,7 +1,6 @@
 PLHashComparator
 ================
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
      const void *v1,
      const void *v2);
 
-.. _Description:
 
 Description
 -----------
@@ -29,7 +27,6 @@ For convenience, two comparator functions are provided.
 :ref:`PL_CompareValues` compares the values of the arguments v1 and v2
 numerically.
 
-.. _Remark:
 
 Remark
 ------
@@ -37,7 +34,6 @@ Remark
 The return value of :ref:`PLHashComparator` functions should be of type
 :ref:`PRBool`.
 
-.. _See_Also:
 
 See Also
 --------

@@ -4,7 +4,6 @@ PRThreadScope
 The scope of an NSPR thread, specified as a parameter to
 :ref:`PR_CreateThread` or returned by :ref:`PR_GetThreadScope`.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -19,7 +18,6 @@ Syntax
       PR_GLOBAL_BOUND_THREAD
    } PRThreadScope;
 
-.. _Enumerators:
 
 Enumerators
 ~~~~~~~~~~~
@@ -31,7 +29,6 @@ Enumerators
 ``PR_GLOBAL_BOUND_THREAD``
    A global bound (kernel) thread, scheduled by the host OS
 
-.. _Description:
 
 Description
 -----------

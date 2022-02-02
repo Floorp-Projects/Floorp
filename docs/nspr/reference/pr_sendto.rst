@@ -3,7 +3,6 @@ PR_SendTo
 
 Sends bytes a socket to a specified destination.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -20,7 +19,6 @@ Syntax
      const PRNetAddr *addr,
      PRIntervalTime timeout);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -41,7 +39,6 @@ The function has the following parameters:
    A value of type :ref:`PRIntervalTime` specifying the time limit for
    completion of the receive operation.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -52,7 +49,6 @@ The function returns one of the following values:
 -  The value -1 indicates a failure. The reason for the failure can be
    obtained by calling :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

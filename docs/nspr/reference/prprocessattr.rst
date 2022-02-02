@@ -3,7 +3,6 @@ PRProcessAttr
 
 Represents the attributes of a new process.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    typedef struct PRProcessAttr PRProcessAttr;
 
-.. _Description:
 
 Description
 -----------

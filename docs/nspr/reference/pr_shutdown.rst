@@ -3,7 +3,6 @@ PR_Shutdown
 
 Shuts down part of a full-duplex connection on a specified socket.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      PRFileDesc *fd,
      PRShutdownHow how);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -34,7 +32,6 @@ The function has the following parameters:
     - :ref:`PR_SHUTDOWN_BOTH`. Further sends and receives will be
       disallowed.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -45,7 +42,6 @@ The function returns one of the following values:
 -  If unsuccessful, ``PR_FAILURE``. Further information can be obtained
    by calling :ref:`PR_GetError`.
 
-.. _Description:
 
 Description
 -----------

@@ -3,7 +3,6 @@ PR_GetThreadScope
 
 Gets the scoping of the current thread.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRThreadScope PR_GetThreadScope(void);
 
-.. _Returns:
 
 Returns
 ~~~~~~~

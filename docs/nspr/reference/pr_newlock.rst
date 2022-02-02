@@ -3,7 +3,6 @@ PR_NewLock
 
 Creates a new lock.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRLock* PR_NewLock(void);
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -25,7 +23,6 @@ The function returns one of the following values:
 -  If unsuccessful (for example, the lock cannot be created because of
    resource constraints), ``NULL``.
 
-.. _Description:
 
 Description
 -----------

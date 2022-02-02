@@ -72,8 +72,6 @@ functions of this type are provided by NSPR:
 -  :ref:`PRTimeParamFn`
 -  :ref:`PR_LocalTimeParameters` and :ref:`PR_GMTParameters`
 
-.. _Functions:
-
 Functions
 ---------
 

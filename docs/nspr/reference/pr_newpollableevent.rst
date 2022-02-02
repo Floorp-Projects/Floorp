@@ -3,7 +3,6 @@ PR_NewPollableEvent
 
 Create a pollable event file descriptor.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -12,14 +11,12 @@ Syntax
 
    NSPR_API(PRFileDesc *) PR_NewPollableEvent( void);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
 
 None.
 
-.. _Returns:
 
 Returns
 ~~~~~~~

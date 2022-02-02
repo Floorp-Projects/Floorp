@@ -3,7 +3,6 @@ PL_HashTableDestroy
 
 Frees the table and all the entries.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    void PL_HashTableDestroy(PLHashTable *ht);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ The function has the following parameter:
 ``ht``
    A pointer to the hash table to be destroyed.
 
-.. _Description:
 
 Description
 -----------

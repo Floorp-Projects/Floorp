@@ -3,7 +3,6 @@ PR_FREEIF
 
 Conditionally frees allocated memory.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    void PR_FREEIF(_ptr);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -22,14 +20,12 @@ Parameter
 ``_ptr``
    The address of memory to be returned to the heap.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 Nothing.
 
-.. _Description:
 
 Description
 -----------

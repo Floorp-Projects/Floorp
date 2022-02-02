@@ -1,6 +1,5 @@
-
-Dynamic Library Search Path
-===========================
+Dynamic Library Search
+======================
 
 This section describes NSPR's programming interface to load, unload and
 resolve symbols in dynamic libraries. It also provides a method by which
@@ -75,10 +74,8 @@ for Win32.
 -  `Exporting Symbols from the Main Executable
    Program <#Exporting_Symbols_from_the_Main_Executable_Program>`__
 
-.. _Dynamic_Library_Search_Path:
-
 Dynamic Library Search Path
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The dynamic library search path is the list of directories in which to
 look for a dynamic library. Each platform has its own standard

@@ -3,7 +3,6 @@ PR_Sleep
 
 Causes the current thread to yield for a specified amount of time.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRStatus PR_Sleep(PRIntervalTime ticks);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -25,7 +23,6 @@ Parameter
    The number of ticks you want the thread to sleep for (see
    :ref:`PRIntervalTime`).
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -34,7 +31,6 @@ Calling :ref:`PR_Sleep` with a parameter equivalent to
 ``PR_INTERVAL_NO_TIMEOUT`` is an error and results in a ``PR_FAILURE``
 error.
 
-.. _Description:
 
 Description
 -----------

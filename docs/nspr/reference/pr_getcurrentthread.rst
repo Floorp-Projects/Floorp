@@ -3,7 +3,6 @@ PR_GetCurrentThread
 
 Returns the current thread object for the currently running code.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,14 +13,12 @@ Syntax
 
    PRThread* PR_GetCurrentThread(void);
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 Always returns a valid reference to the calling thread--a self-identity.
 
-.. _Description:
 
 Description
 ~~~~~~~~~~~

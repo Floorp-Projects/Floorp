@@ -3,7 +3,6 @@ PL_CompareStrings
 
 Compares two character strings.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -16,7 +15,6 @@ Syntax
      const void *v1,
      const void *v2);
 
-.. _Description:
 
 Description
 -----------

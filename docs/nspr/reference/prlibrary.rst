@@ -3,7 +3,6 @@ PRLibrary
 
 An opaque structure identifying a library.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    typedef struct PRLibrary PRLibrary;
 
-.. _Description:
 
 Description
 -----------

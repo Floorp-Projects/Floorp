@@ -3,7 +3,6 @@ PR_PREV_LINK
 
 Returns the preceding element in a list.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    PRCList *PR_PREV_LINK (PRCList *elemp);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -22,14 +20,12 @@ Parameter
 ``elemp``
    A pointer to the element.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
 
 A pointer to a list element.
 
-.. _Description:
 
 Description
 -----------

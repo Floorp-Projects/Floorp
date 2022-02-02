@@ -3,7 +3,6 @@ PR_ClearInterrupt
 
 Clears the interrupt request for the calling thread.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    void PR_ClearInterrupt(void);
 
-.. _Description:
 
 Description
 -----------

@@ -3,7 +3,6 @@ PR_GetNameForIdentity
 
 Gets the string associated with a layer's unique identity.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -14,7 +13,6 @@ Syntax
 
    const char* PR_GetNameForIdentity(PRDescIdentity ident);
 
-.. _Parameter:
 
 Parameter
 ~~~~~~~~~
@@ -24,7 +22,6 @@ The function has the following parameter:
 ``ident``
    A layer's identity.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -35,7 +32,6 @@ The function returns one of the following values:
    associated with the specified layer.
 -  If unsuccessful, the function returns ``NULL``.
 
-.. _Description:
 
 Description
 -----------

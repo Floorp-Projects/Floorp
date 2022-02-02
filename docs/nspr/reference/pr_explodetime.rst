@@ -3,7 +3,6 @@ PR_ExplodeTime
 
 Converts an absolute time to a clock/calendar time.
 
-.. _Syntax:
 
 Syntax
 ------
@@ -17,7 +16,6 @@ Syntax
       PRTimeParamFn params,
       PRExplodedTime *exploded);
 
-.. _Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -32,7 +30,6 @@ The function has these parameters:
    A pointer to a location where the converted time can be stored. This
    location must be preallocated by the caller.
 
-.. _Returns:
 
 Returns
 ~~~~~~~
@@ -40,7 +37,6 @@ Returns
 Nothing; the buffer pointed to by ``exploded`` is filled with the
 exploded time.
 
-.. _Description:
 
 Description
 -----------
