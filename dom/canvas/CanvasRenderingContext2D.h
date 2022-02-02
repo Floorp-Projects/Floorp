@@ -12,10 +12,8 @@
 #include "mozilla/intl/Bidi.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumeratedArray.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SurfaceFromElementResult.h"
 #include "mozilla/UniquePtr.h"
@@ -72,10 +70,9 @@ struct DOMMatrix2DInit;
 /**
  ** CanvasRenderingContext2D
  **/
-class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
-                                 public nsWrapperCache,
-                                 public BasicRenderingContext2D {
- protected:
+class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
+                                       public nsWrapperCache,
+                                       public BasicRenderingContext2D {
   virtual ~CanvasRenderingContext2D();
 
  public:
@@ -209,23 +206,13 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   bool IsPointInPath(JSContext* aCx, double aX, double aY,
                      const CanvasWindingRule& aWinding,
                      nsIPrincipal& aSubjectPrincipal);
-  bool IsPointInPath(JSContext* aCx, double aX, double aY,
-                     const CanvasWindingRule& aWinding,
-                     Maybe<nsIPrincipal*> aSubjectPrincipal);
   bool IsPointInPath(JSContext* aCx, const CanvasPath& aPath, double aX,
                      double aY, const CanvasWindingRule& aWinding,
                      nsIPrincipal&);
-  bool IsPointInPath(JSContext* aCx, const CanvasPath& aPath, double aX,
-                     double aY, const CanvasWindingRule& aWinding,
-                     Maybe<nsIPrincipal*>);
   bool IsPointInStroke(JSContext* aCx, double aX, double aY,
                        nsIPrincipal& aSubjectPrincipal);
-  bool IsPointInStroke(JSContext* aCx, double aX, double aY,
-                       Maybe<nsIPrincipal*> aSubjectPrincipal);
   bool IsPointInStroke(JSContext* aCx, const CanvasPath& aPath, double aX,
                        double aY, nsIPrincipal&);
-  bool IsPointInStroke(JSContext* aCx, const CanvasPath& aPath, double aX,
-                       double aY, Maybe<nsIPrincipal*>);
   void FillText(const nsAString& aText, double aX, double aY,
                 const Optional<double>& aMaxWidth,
                 mozilla::ErrorResult& aError);
@@ -265,9 +252,6 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
                                            int32_t aSw, int32_t aSh,
                                            nsIPrincipal& aSubjectPrincipal,
                                            ErrorResult&);
-  already_AddRefed<ImageData> GetImageData(
-      JSContext*, int32_t aSx, int32_t aSy, int32_t aSw, int32_t aSh,
-      Maybe<nsIPrincipal*> aSubjectPrincipal, ErrorResult&);
   void PutImageData(ImageData&, int32_t aDx, int32_t aDy, ErrorResult&);
   void PutImageData(ImageData&, int32_t aDx, int32_t aDy, int32_t aDirtyX,
                     int32_t aDirtyY, int32_t aDirtyWidth, int32_t aDirtyHeight,
@@ -425,7 +409,6 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
    * Gets the pres shell from either the canvas element or the doc shell
    */
   PresShell* GetPresShell() final;
-  void Initialize() override;
   NS_IMETHOD SetDimensions(int32_t aWidth, int32_t aHeight) override;
   NS_IMETHOD InitializeWithDrawTarget(
       nsIDocShell* aShell, NotNull<gfx::DrawTarget*> aTarget) override;
@@ -518,7 +501,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   // return true and fills in the bound rect if element has a hit region.
   bool GetHitRegionRect(Element* aElement, nsRect& aRect) override;
 
-  virtual void OnShutdown();
+  void OnShutdown();
 
   /**
    * Update CurrentState().filter with the filter description for
@@ -530,7 +513,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
  protected:
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,
                              uint32_t aWidth, uint32_t aHeight,
-                             Maybe<nsIPrincipal*> aSubjectPrincipal,
+                             nsIPrincipal& aSubjectPrincipal,
                              JSObject** aRetval);
 
   void PutImageData_explicit(int32_t aX, int32_t aY, ImageData&,
@@ -554,7 +537,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
    * The number of living nsCanvasRenderingContexts.  When this goes down to
    * 0, we free the premultiply and unpremultiply tables, if they exist.
    */
-  static mozilla::Atomic<uintptr_t> sNumLivingContexts;
+  static uintptr_t sNumLivingContexts;
 
   static mozilla::gfx::DrawTarget* sErrorTarget;
 
@@ -751,9 +734,8 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   RefPtr<mozilla::layers::PersistentBufferProvider> mBufferProvider;
 
   RefPtr<CanvasShutdownObserver> mShutdownObserver;
-  virtual void AddShutdownObserver();
-  virtual void RemoveShutdownObserver();
-  virtual bool AlreadyShutDown() const { return !mShutdownObserver; }
+  void RemoveShutdownObserver();
+  bool AlreadyShutDown() const { return !mShutdownObserver; }
 
   /**
    * Flag to avoid duplicate calls to InvalidateFrame. Set to true whenever
