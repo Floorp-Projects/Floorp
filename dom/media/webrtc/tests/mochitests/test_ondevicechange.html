@@ -19,7 +19,7 @@ async function resolveOnEvent(target, name) {
 let eventCount = 0;
 // Trigger and await two devicechanges on mediaDevices to wait long enough to
 // provide that a devicechange on another MediaDevices would be received.
-async function doDevicechanges(mediaDevices) {
+async function doVideoDevicechanges(mediaDevices) {
   for (let i = 0; i < 2; ++i) {
     ++eventCount;
     await Promise.all([
@@ -62,7 +62,7 @@ runTest(async () => {
   const frameStream = await frameDevices.getUserMedia({video: true});
   frameStream.getVideoTracks()[0].stop();
 
-  await doDevicechanges(frameDevices);
+  await doVideoDevicechanges(frameDevices);
   ok(true,
      "devicechange event is fired when gUM has been in use");
   // Race a settled Promise to check that the event has not been received in
@@ -95,7 +95,7 @@ runTest(async () => {
   const tabDevices = tab.navigator.mediaDevices;
   tabDevices.ondevicechange = () => {};
   const tabStream = await tabDevices.getUserMedia({video: true});
-  await doDevicechanges(tabDevices);
+  await doVideoDevicechanges(tabDevices);
   is(await Promise.race([frameEventPromise, racer]), racer,
      "devicechange event is NOT fired while tab is in background");
   tab.close();
@@ -103,6 +103,28 @@ runTest(async () => {
   is(document.visibilityState, 'visible', 'visibilityState')
   await frameEventPromise;
   ok(true, "devicechange event IS fired when tab returns to foreground");
+
+  const audioLoopbackDev =
+        SpecialPowers.getCharPref("media.audio_loopback_dev", "");
+  if (!navigator.userAgent.includes("Linux")) {
+    todo_isnot(audioLoopbackDev, "", "audio_loopback_dev");
+    return;
+  }
+  isnot(audioLoopbackDev, "", "audio_loopback_dev");
+  await Promise.all([
+    resolveOnEvent(topDevices, "devicechange"),
+    pushPrefs(["media.audio_loopback_dev", "none"]),
+  ]);
+  ok(true,
+     "devicechange event IS fired when last audio device is removed and " +
+     "gUM has NOT been in use");
+  await Promise.all([
+    resolveOnEvent(topDevices, "devicechange"),
+    pushPrefs(["media.audio_loopback_dev", audioLoopbackDev]),
+  ]);
+  ok(true,
+     "devicechange event IS fired when first audio device is added and " +
+     "gUM has NOT been in use");
 });
 
 </script>
