@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:expandtab:shiftwidth=4:tabstop=4:
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
  */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -66,12 +66,42 @@ void clipboard_get_cb(GtkClipboard* aGtkClipboard,
 // Callback when someone asks us to clear a clipboard
 void clipboard_clear_cb(GtkClipboard* aGtkClipboard, gpointer user_data);
 
-static bool ConvertHTMLtoUCS2(const char* data, int32_t dataLength,
+static bool ConvertHTMLtoUCS2(Span<const char> aData,
                               nsCString& charset, char16_t** unicodeData,
                               int32_t& outUnicodeLen);
 
-static bool GetHTMLCharset(const char* data, int32_t dataLength,
-                           nsCString& str);
+static bool GetHTMLCharset(Span<const char> aData, nsCString& str);
+
+void ClipboardData::SetData(Span<const uint8_t> aData) {
+  mData = nullptr;
+  mLength = aData.Length();
+  if (mLength) {
+    mData.reset(reinterpret_cast<char*>(g_malloc(sizeof(char) * mLength)));
+    memcpy(mData.get(), aData.data(), sizeof(char) * mLength);
+  }
+}
+
+void ClipboardData::SetText(Span<const char> aData) {
+  mData = nullptr;
+  mLength = aData.Length();
+  if (mLength) {
+    mData.reset(
+        reinterpret_cast<char*>(g_malloc(sizeof(char) * (mLength + 1))));
+    memcpy(mData.get(), aData.data(), sizeof(char) * mLength);
+    mData.get()[mLength] = '\0';
+  }
+}
+
+void ClipboardData::SetTargets(ClipboardTargets aTargets) {
+  mLength = aTargets.mCount;
+  mData.reset(reinterpret_cast<char*>(aTargets.mTargets.release()));
+}
+
+ClipboardTargets ClipboardData::ExtractTargets() {
+  GUniquePtr<GdkAtom> targets(reinterpret_cast<GdkAtom*>(mData.release()));
+  uint32_t length = std::exchange(mLength, 0);
+  return ClipboardTargets{std::move(targets), length};
+}
 
 GdkAtom GetSelectionAtom(int32_t aWhichClipboard) {
   if (aWhichClipboard == nsIClipboard::kGlobalClipboard)
@@ -269,17 +299,14 @@ bool nsClipboard::FilterImportedFlavors(int32_t aWhichClipboard,
                                         nsTArray<nsCString>& aFlavors) {
   LOGCLIP("nsClipboard::FilterImportedFlavors");
 
-  int targetNums;
-  GdkAtom* targets = mContext->GetTargets(aWhichClipboard, &targetNums);
-  auto releaseTargets = MakeScopeExit([&] { g_free(targets); });
-
-  if (!targets) {
+  auto targets = mContext->GetTargets(aWhichClipboard);
+  if (!targets.mTargets) {
     LOGCLIP("    X11: no targes at clipboard (null), quit.\n");
     return true;
   }
 
-  for (int i = 0; i < targetNums; i++) {
-    gchar* atom_name = gdk_atom_name(targets[i]);
+  for (const auto& atom : targets.AsSpan()) {
+    gchar* atom_name = gdk_atom_name(atom);
     if (!atom_name) {
       continue;
     }
@@ -305,8 +332,8 @@ bool nsClipboard::FilterImportedFlavors(int32_t aWhichClipboard,
 
   // So make sure we offer only types we have at clipboard.
   nsTArray<nsCString> clipboardFlavors;
-  for (int i = 0; i < targetNums; i++) {
-    gchar* atom_name = gdk_atom_name(targets[i]);
+  for (const auto& atom : targets.AsSpan()) {
+    gchar* atom_name = gdk_atom_name(atom);
     if (!atom_name) {
       continue;
     }
@@ -370,22 +397,18 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
 
       LOGCLIP("    Getting image %s MIME clipboard data\n", flavorStr.get());
 
-      uint32_t clipboardDataLength;
-      const char* clipboardData = mContext->GetClipboardData(
-          flavorStr.get(), aWhichClipboard, &clipboardDataLength);
+      auto clipboardData =
+          mContext->GetClipboardData(flavorStr.get(), aWhichClipboard);
       if (!clipboardData) {
         LOGCLIP("    %s type is missing\n", flavorStr.get());
         continue;
       }
 
       nsCOMPtr<nsIInputStream> byteStream;
-      NS_NewByteInputStream(getter_AddRefs(byteStream),
-                            Span(clipboardData, clipboardDataLength),
+      NS_NewByteInputStream(getter_AddRefs(byteStream), clipboardData.AsSpan(),
                             NS_ASSIGNMENT_COPY);
       aTransferable->SetTransferData(flavorStr.get(), byteStream);
       LOGCLIP("    got %s MIME data\n", flavorStr.get());
-
-      mContext->ReleaseClipboardData(&clipboardData);
       return NS_OK;
     }
 
@@ -394,7 +417,7 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
     if (flavorStr.EqualsLiteral(kUnicodeMime)) {
       LOGCLIP("    Getting unicode %s MIME clipboard data\n", flavorStr.get());
 
-      const char* clipboardData = mContext->GetClipboardText(aWhichClipboard);
+      auto clipboardData = mContext->GetClipboardText(aWhichClipboard);
       if (!clipboardData) {
         LOGCLIP("    failed to get unicode data\n");
         // If the type was text/unicode and we couldn't get
@@ -404,31 +427,26 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
       }
 
       // Convert utf-8 into our unicode format.
-      NS_ConvertUTF8toUTF16 ucs2string(clipboardData);
-      const char* unicodeData = (const char*)ToNewUnicode(ucs2string);
-      uint32_t unicodeDataLength = ucs2string.Length() * 2;
-      SetTransferableData(aTransferable, flavorStr, unicodeData,
-                          unicodeDataLength);
-      free((void*)unicodeData);
+      NS_ConvertUTF8toUTF16 ucs2string(clipboardData.get());
+      SetTransferableData(aTransferable, flavorStr,
+                          (const char*)ucs2string.BeginReading(),
+                          ucs2string.Length() * 2);
 
       LOGCLIP("    got unicode data, length %zd\n", ucs2string.Length());
-
-      mContext->ReleaseClipboardData(&clipboardData);
       return NS_OK;
     }
 
     if (flavorStr.EqualsLiteral(kFileMime)) {
       LOGCLIP("    Getting %s file clipboard data\n", flavorStr.get());
 
-      uint32_t clipboardDataLength;
-      const char* clipboardData = mContext->GetClipboardData(
-          kURIListMime, aWhichClipboard, &clipboardDataLength);
+      auto clipboardData =
+          mContext->GetClipboardData(kURIListMime, aWhichClipboard);
       if (!clipboardData) {
         LOGCLIP("    text/uri-list type is missing\n");
         continue;
       }
 
-      nsDependentCSubstring data(clipboardData, clipboardDataLength);
+      nsDependentCSubstring data(clipboardData.AsSpan());
       nsTArray<nsCString> uris = mozilla::widget::ParseTextURIList(data);
       if (!uris.IsEmpty()) {
         nsCOMPtr<nsIURI> fileURI;
@@ -442,16 +460,13 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
           }
         }
       }
-
-      mContext->ReleaseClipboardData(&clipboardData);
       return NS_OK;
     }
 
     LOGCLIP("    Getting %s MIME clipboard data\n", flavorStr.get());
 
-    uint32_t clipboardDataLength;
-    const char* clipboardData = mContext->GetClipboardData(
-        flavorStr.get(), aWhichClipboard, &clipboardDataLength);
+    auto clipboardData =
+        mContext->GetClipboardData(flavorStr.get(), aWhichClipboard);
 
 #ifdef MOZ_LOGGING
     if (!clipboardData) {
@@ -468,15 +483,14 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
         int32_t htmlBodyLen = 0;
         // Convert text/html into our unicode format
         nsAutoCString charset;
-        if (!GetHTMLCharset(clipboardData, clipboardDataLength, charset)) {
+        if (!GetHTMLCharset(clipboardData.AsSpan(), charset)) {
           // Fall back to utf-8 in case html/data is missing kHTMLMarkupPrefix.
           LOGCLIP("Failed to get html/text encoding, fall back to utf-8.\n");
           charset.AssignLiteral("utf-8");
         }
-        if (!ConvertHTMLtoUCS2(clipboardData, clipboardDataLength, charset,
+        if (!ConvertHTMLtoUCS2(clipboardData.AsSpan(), charset,
                                &htmlBody, htmlBodyLen)) {
           LOGCLIP("    failed to convert text/html to UCS2.\n");
-          mContext->ReleaseClipboardData(&clipboardData);
           continue;
         }
 
@@ -484,11 +498,9 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
                             htmlBodyLen * 2);
         free(htmlBody);
       } else {
-        SetTransferableData(aTransferable, flavorStr, clipboardData,
-                            clipboardDataLength);
+        SetTransferableData(aTransferable, flavorStr, clipboardData.mData.get(),
+                            clipboardData.mLength);
       }
-
-      mContext->ReleaseClipboardData(&clipboardData);
       return NS_OK;
     }
   }
@@ -548,9 +560,7 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
     return NS_ERROR_FAILURE;
   }
 
-  int targetNums;
-  GdkAtom* targets = mContext->GetTargets(aWhichClipboard, &targetNums);
-  auto releaseTargets = MakeScopeExit([&] { g_free(targets); });
+  auto targets = mContext->GetTargets(aWhichClipboard);
 
   if (!targets) {
     LOGCLIP("    no targes at clipboard (null)\n");
@@ -558,18 +568,20 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
   }
 
 #ifdef MOZ_LOGGING
-  LOGCLIP("    Clipboard content (target nums %d):\n", targetNums);
-  for (int32_t j = 0; j < targetNums; j++) {
-    gchar* atom_name = gdk_atom_name(targets[j]);
-    if (!atom_name) {
-      LOGCLIP("        failed to get MIME\n");
-      continue;
+  if (LOGCLIP_ENABLED()) {
+    LOGCLIP("    Clipboard content (target nums %d):\n", targets.mCount);
+    for (const auto& target : targets.AsSpan()) {
+      gchar* atom_name = gdk_atom_name(target);
+      if (!atom_name) {
+        LOGCLIP("        failed to get MIME\n");
+        continue;
+      }
+      LOGCLIP("        MIME %s\n", atom_name);
     }
-    LOGCLIP("        MIME %s\n", atom_name);
-  }
-  LOGCLIP("    Asking for content:\n");
-  for (auto& flavor : aFlavorList) {
-    LOGCLIP("        MIME %s\n", flavor.get());
+    LOGCLIP("    Asking for content:\n");
+    for (auto& flavor : aFlavorList) {
+      LOGCLIP("        MIME %s\n", flavor.get());
+    }
   }
 #endif
 
@@ -578,15 +590,17 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
   for (auto& flavor : aFlavorList) {
     // We special case text/unicode here.
     if (flavor.EqualsLiteral(kUnicodeMime) &&
-        gtk_targets_include_text(targets, targetNums)) {
+        gtk_targets_include_text(targets.mTargets.get(), targets.mCount)) {
       *_retval = true;
       LOGCLIP("    has kUnicodeMime\n");
       break;
     }
 
-    for (int32_t j = 0; j < targetNums; j++) {
-      gchar* atom_name = gdk_atom_name(targets[j]);
-      if (!atom_name) continue;
+    for (const auto& target : targets.AsSpan()) {
+      gchar* atom_name = gdk_atom_name(target);
+      if (!atom_name) {
+        continue;
+      }
 
       if (flavor.Equals(atom_name)) {
         *_retval = true;
@@ -870,13 +884,13 @@ void clipboard_clear_cb(GtkClipboard* aGtkClipboard, gpointer user_data) {
  * body      : pass to Mozilla
  * bodyLength: pass to Mozilla
  */
-bool ConvertHTMLtoUCS2(const char* data, int32_t dataLength, nsCString& charset,
+bool ConvertHTMLtoUCS2(Span<const char> aData, nsCString& charset,
                        char16_t** unicodeData, int32_t& outUnicodeLen) {
   if (charset.EqualsLiteral("UTF-16")) {  // current mozilla
-    outUnicodeLen = (dataLength / 2) - 1;
+    outUnicodeLen = (aData.Length() / 2) - 1;
     *unicodeData = reinterpret_cast<char16_t*>(
         moz_xmalloc((outUnicodeLen + sizeof('\0')) * sizeof(char16_t)));
-    memcpy(*unicodeData, data + sizeof(char16_t),
+    memcpy(*unicodeData, aData.data() + sizeof(char16_t),
            outUnicodeLen * sizeof(char16_t));
     (*unicodeData)[outUnicodeLen] = '\0';
     return true;
@@ -894,17 +908,16 @@ bool ConvertHTMLtoUCS2(const char* data, int32_t dataLength, nsCString& charset,
     return false;
   }
 
-  auto dataSpan = Span(data, dataLength);
   // Remove kHTMLMarkupPrefix again, it won't necessarily cause any
   // issues, but might confuse other users.
   const size_t prefixLen = ArrayLength(kHTMLMarkupPrefix) - 1;
-  if (dataSpan.Length() >= prefixLen &&
-      Substring(data, prefixLen).EqualsLiteral(kHTMLMarkupPrefix)) {
-    dataSpan = dataSpan.From(prefixLen);
+  if (aData.Length() >= prefixLen && nsDependentCSubstring(aData.To(prefixLen))
+                                         .EqualsLiteral(kHTMLMarkupPrefix)) {
+    aData = aData.From(prefixLen);
   }
 
   auto decoder = encoding->NewDecoder();
-  CheckedInt<size_t> needed = decoder->MaxUTF16BufferLength(dataSpan.Length());
+  CheckedInt<size_t> needed = decoder->MaxUTF16BufferLength(aData.Length());
   if (!needed.isValid() || needed.value() > INT32_MAX) {
     outUnicodeLen = 0;
     return false;
@@ -918,9 +931,9 @@ bool ConvertHTMLtoUCS2(const char* data, int32_t dataLength, nsCString& charset,
     size_t read;
     size_t written;
     std::tie(result, read, written, std::ignore) = decoder->DecodeToUTF16(
-        AsBytes(dataSpan), Span(*unicodeData, needed.value()), true);
+        AsBytes(aData), Span(*unicodeData, needed.value()), true);
     MOZ_ASSERT(result == kInputEmpty);
-    MOZ_ASSERT(read == size_t(dataSpan.Length()));
+    MOZ_ASSERT(read == size_t(aData.Length()));
     MOZ_ASSERT(written <= needed.value());
     outUnicodeLen = written;
     // null terminate.
@@ -937,16 +950,19 @@ bool ConvertHTMLtoUCS2(const char* data, int32_t dataLength, nsCString& charset,
  *  2. "UNKNOWN":     mozilla can't detect what encode it use
  *  3. other:         "text/html" with other charset than utf-16
  */
-bool GetHTMLCharset(const char* data, int32_t dataLength, nsCString& str) {
+bool GetHTMLCharset(Span<const char> aData, nsCString& str) {
   // if detect "FFFE" or "FEFF", assume UTF-16
-  char16_t* beginChar = (char16_t*)data;
-  if ((beginChar[0] == 0xFFFE) || (beginChar[0] == 0xFEFF)) {
-    str.AssignLiteral("UTF-16");
-    LOGCLIP("GetHTMLCharset: Charset of HTML is UTF-16\n");
-    return true;
+  {
+    char16_t* beginChar = (char16_t*)aData.data();
+    if ((beginChar[0] == 0xFFFE) || (beginChar[0] == 0xFEFF)) {
+      str.AssignLiteral("UTF-16");
+      LOGCLIP("GetHTMLCharset: Charset of HTML is UTF-16\n");
+      return true;
+    }
   }
+
   // no "FFFE" and "FEFF", assume ASCII first to find "charset" info
-  const nsDependentCSubstring htmlStr(data, dataLength);
+  const nsDependentCSubstring htmlStr(aData);
   nsACString::const_iterator start, end;
   htmlStr.BeginReading(start);
   htmlStr.EndReading(end);
