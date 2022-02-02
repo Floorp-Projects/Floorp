@@ -196,8 +196,11 @@ void nsRetrievalContextX11::Complete(ClipboardDataType aDataType,
     } break;
     case ClipboardDataType::Data: {
       auto* selection = static_cast<const GtkSelectionData*>(aData);
-      mClipboardData->SetData(Span(gtk_selection_data_get_data(selection),
-                                   gtk_selection_data_get_length(selection)));
+      gint len = gtk_selection_data_get_length(selection);
+      if (len > 0) {
+        mClipboardData->SetData(
+            Span(gtk_selection_data_get_data(selection), len));
+      }
 #ifdef MOZ_LOGGING
       if (LOGCLIP_ENABLED()) {
         GdkAtom target = gtk_selection_data_get_target(selection);
