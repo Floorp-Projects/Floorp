@@ -14,6 +14,11 @@ async function setupRegions(home, current) {
   Region._setCurrentRegion(current || "");
 }
 
+function setLocale(language) {
+  Services.locale.availableLocales = [language];
+  Services.locale.requestedLocales = [language];
+}
+
 add_task(async function test_VPN_promo_enabled() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -207,14 +212,10 @@ add_task(async function test_rally_promo_with_unapproved_current_region() {
 });
 
 add_task(async function test_rally_promo_with_unapproved_language() {
-  function setLanguage(language) {
-    Services.locale.availableLocales = [language];
-    Services.locale.requestedLocales = [language];
-  }
   // Rally promo should be hidden in the US for languages other than English
   setupRegions("US");
   const initialLanguage = Services.locale.appLocaleAsBCP47;
-  setLanguage("ko-KR");
+  setLocale("ko-KR");
 
   await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
     leaveOpen: true,
@@ -228,7 +229,7 @@ add_task(async function test_rally_promo_with_unapproved_language() {
 
   setupRegions(initialHomeRegion, intialCurrentRegion); // revert changes to regions
   // revert changes to language
-  setLanguage(initialLanguage);
+  setLocale(initialLanguage);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -263,11 +264,12 @@ add_task(async function test_aboutpreferences_partnerCNRepack() {
 
 add_task(async function test_send_to_device_email_link_for_supported_locale() {
   // Email is supported for Brazilian Portuguese
+  const supportedLocale = "pt-BR";
+  const initialLocale = Services.locale.appLocaleAsBCP47;
+  setLocale(supportedLocale);
+
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.preferences.moreFromMozilla.template", "simple"],
-      ["intl.accept_languages", "is_IS,pt-BR,af"], // pt-BR is still supported here, even if user has other unsupported locales
-    ],
+    set: [["browser.preferences.moreFromMozilla.template", "simple"]],
   });
 
   await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
@@ -281,16 +283,18 @@ add_task(async function test_send_to_device_email_link_for_supported_locale() {
 
   await SpecialPowers.popPrefEnv();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  setLocale(initialLocale); // revert changes to language
 });
 
 add_task(
   async function test_send_to_device_email_link_for_unsupported_locale() {
     // Email is not supported for Afrikaans
+    const unsupportedLocale = "af";
+    const initialLocale = Services.locale.appLocaleAsBCP47;
+    setLocale(unsupportedLocale);
+
     await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.preferences.moreFromMozilla.template", "simple"],
-        ["intl.accept_languages", "af"],
-      ],
+      set: [["browser.preferences.moreFromMozilla.template", "simple"]],
     });
 
     await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
@@ -304,5 +308,6 @@ add_task(
 
     await SpecialPowers.popPrefEnv();
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    setLocale(initialLocale); // revert changes to language
   }
 );
