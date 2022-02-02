@@ -1,3 +1,6 @@
+PRStaticLinkTable
+=================
+
 A static link table entry can be created by a client of the runtime so
 that other clients can access static or dynamic libraries transparently.
 The basic function on a dynamic library is to acquire a pointer to a

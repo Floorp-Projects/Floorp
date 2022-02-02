@@ -6,8 +6,8 @@ NSPR has a test suite in the ``mozilla/nsprpub/pr/tests`` directory.
 By default, we don't build the test programs. Running ``gmake`` in the
 top-level directory (``mozilla/nsprpub``) only builds the NSPR
 libraries. To build the test programs, you need to change directory to
-``mozilla/nsprpub/pr/tests`` and run ``gmake``. Refer to `NSPR build
-instructions <en/NSPR_build_instructions>`__ for details.
+``mozilla/nsprpub/pr/tests`` and run ``gmake``. Refer to :ref:`NSPR build
+instructions` for details.
 
 To run the test suite, run the shell script
 ``mozilla/nsprpub/pr/tests/runtests.sh`` in the directory where the test

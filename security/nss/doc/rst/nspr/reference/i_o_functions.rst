@@ -1,8 +1,11 @@
+I/O functions
+=============
+
 This chapter describes the NSPR functions used to perform operations
 such as system access, normal file I/O, and socket (network) I/O.
 
-For sample code that illustrates basic I/O operations, see `Introduction
-to NSPR <Introduction_to_NSPR>`__. For information about the types most
+For sample code that illustrates basic I/O operations, see :ref:`Introduction_to_NSPR>`.
+For information about the types most
 commonly used with the functions described in this chapter, see `I/O
 Types <I%2fO_Types>`__.
 
@@ -35,45 +38,45 @@ the native system calls.
 
 Some file systems also differentiate drives or volumes.
 
--  ``PR_Open``
--  ``PR_Delete``
--  ``PR_GetFileInfo``
--  ``PR_GetFileInfo64``
--  ``PR_Rename``
--  ``PR_Access``
+-  :ref:`PR_Open`
+-  :ref:`PR_Delete`
+-  :ref:`PR_GetFileInfo`
+-  :ref:`PR_GetFileInfo64`
+-  :ref:`PR_Rename`
+-  :ref:`PR_Access`
 
-   -  type ``PRAccessHow``
+   -  type :ref:`PRAccessHow`
 
 .. _Functions_that_Act_on_File_Descriptors:
 
 Functions that Act on File Descriptors
 --------------------------------------
 
--  ``PR_Close``
--  ``PR_Read``
--  ``PR_Write``
--  ``PR_Writev``
--  ``PR_GetOpenFileInfo``
--  ``PR_GetOpenFileInfo64``
--  ``PR_Seek``
--  ``PR_Seek64``
--  ``PR_Available``
--  ``PR_Available64``
--  ``PR_Sync``
--  ``PR_GetDescType``
--  ``PR_GetSpecialFD``
--  ``PR_CreatePipe``
+-  :ref:`PR_Close`
+-  :ref:`PR_Read`
+-  :ref:`PR_Write`
+-  :ref:`PR_Writev`
+-  :ref:`PR_GetOpenFileInfo`
+-  :ref:`PR_GetOpenFileInfo64`
+-  :ref:`PR_Seek`
+-  :ref:`PR_Seek64`
+-  :ref:`PR_Available`
+-  :ref:`PR_Available64`
+-  :ref:`PR_Sync`
+-  :ref:`PR_GetDescType`
+-  :ref:`PR_GetSpecialFD`
+-  :ref:`PR_CreatePipe`
 
 .. _Directory_I.2FO_Functions:
 
 Directory I/O Functions
 -----------------------
 
--  ``PR_OpenDir``
--  ``PR_ReadDir``
--  ``PR_CloseDir``
--  ``PR_MkDir``
--  ``PR_RmDir``
+-  :ref:`PR_OpenDir`
+-  :ref:`PR_ReadDir`
+-  :ref:`PR_CloseDir`
+-  :ref:`PR_MkDir`
+-  :ref:`PR_RmDir`
 
 .. _Socket_Manipulation_Functions:
 
@@ -84,44 +87,44 @@ The network programming interface presented here is a socket API modeled
 after the popular Berkeley sockets. Differences include the following:
 
 -  The blocking socket functions in NSPR take a timeout parameter.
--  Two new functions, ``PR_TransmitFile`` and ``PR_AcceptRead``, can
+-  Two new functions, :ref:`PR_TransmitFile` and :ref:`PR_AcceptRead`, can
    exploit the new system calls of some operating systems for higher
    performance.
 
 List of functions:
 
--  ``PR_OpenUDPSocket``
--  ``PR_NewUDPSocket`` ` <PR_NewUDPSocket>`__
--  ``PR_OpenTCPSocket``
--  ``PR_NewTCPSocket``
--  ``PR_ImportTCPSocket``
--  ``PR_Connect``
--  ``PR_ConnectContinue``
--  ``PR_Accept``
--  ``PR_Bind``
--  ``PR_Listen``
--  ``PR_Shutdown``
--  ``PR_Recv``
--  ``PR_Send``
--  ``PR_RecvFrom``
--  ``PR_SendTo``
--  ``PR_TransmitFile``
--  ``PR_AcceptRead``
--  ``PR_GetSockName``
--  ``PR_GetPeerName``
--  ``PR_GetSocketOption``
--  ``PR_SetSocketOption``
+-  :ref:`PR_OpenUDPSocket`
+-  :ref:`PR_NewUDPSocket`
+-  :ref:`PR_OpenTCPSocket`
+-  :ref:`PR_NewTCPSocket`
+-  :ref:`PR_ImportTCPSocket`
+-  :ref:`PR_Connect`
+-  :ref:`PR_ConnectContinue`
+-  :ref:`PR_Accept`
+-  :ref:`PR_Bind`
+-  :ref:`PR_Listen`
+-  :ref:`PR_Shutdown`
+-  :ref:`PR_Recv`
+-  :ref:`PR_Send`
+-  :ref:`PR_RecvFrom`
+-  :ref:`PR_SendTo`
+-  :ref:`PR_TransmitFile`
+-  :ref:`PR_AcceptRead`
+-  :ref:`PR_GetSockName`
+-  :ref:`PR_GetPeerName`
+-  :ref:`PR_GetSocketOption`
+-  :ref:`PR_SetSocketOption`
 
 .. _Converting_Between_Host_and_Network_Addresses:
 
 Converting Between Host and Network Addresses
 ---------------------------------------------
 
--  ``PR_ntohs``
--  ``PR_ntohl``
--  ``PR_htons``
--  ``PR_htonl``
--  ``PR_FamilyInet``
+-  :ref:`PR_ntohs`
+-  :ref:`PR_ntohl`
+-  :ref:`PR_htons`
+-  :ref:`PR_htonl`
+-  :ref:`PR_FamilyInet`
 
 .. _Memory-Mapped_I.2FO_Functions:
 
@@ -135,17 +138,17 @@ accomplished by normal memory accesses.
 Memory-mapped I/O functions are currently implemented for Unix, Linux,
 Mac OS X, and Win32 only.
 
--  ``PR_CreateFileMap``
--  ``PR_MemMap``
--  ``PR_MemUnmap``
--  ``PR_CloseFileMap``
+-  :ref:`PR_CreateFileMap`
+-  :ref:`PR_MemMap`
+-  :ref:`PR_MemUnmap`
+-  :ref:`PR_CloseFileMap`
 
 .. _Anonymous_Pipe_Function:
 
 Anonymous Pipe Function
 -----------------------
 
--  ``PR_CreatePipe``
+-  :ref:`PR_CreatePipe`
 
 .. _Polling_Functions:
 
@@ -155,8 +158,8 @@ Polling Functions
 This section describes two of the most important polling functions
 provided by NSPR:
 
--  ``PR_Poll``
--  ``PR_GetConnectStatus``
+-  :ref:`PR_Poll`
+-  :ref:`PR_GetConnectStatus`
 
 .. _Pollable_Events:
 
@@ -165,11 +168,11 @@ Pollable Events
 
 A pollable event is a special kind of file descriptor. The only I/O
 operation you can perform on a pollable event is to poll it with the
-``PR_POLL_READ`` flag. You cannot read from or write to a pollable
+:ref:`PR_POLL_READ` flag. You cannot read from or write to a pollable
 event.
 
 The purpose of a pollable event is to combine event waiting with I/O
-waiting in a single ``PR_Poll`` call. Pollable events are implemented
+waiting in a single :ref:`PR_Poll` call. Pollable events are implemented
 using a pipe or a pair of TCP sockets connected via the loopback
 address, therefore setting and/or waiting for pollable events are
 expensive operating system calls. Do not use pollable events for general
@@ -179,14 +182,14 @@ A pollable event has two states: set and unset. Events are not queued,
 so there is no notion of an event count. A pollable event is either set
 or unset.
 
--  ``PR_NewPollableEvent``
--  ``PR_DestroyPollableEvent``
--  ``PR_SetPollableEvent``
--  ``PR_WaitForPollableEvent``
+-  :ref:`PR_NewPollableEvent`
+-  :ref:`PR_DestroyPollableEvent`
+-  :ref:`PR_SetPollableEvent`
+-  :ref:`PR_WaitForPollableEvent`
 
-One can call ``PR_Poll`` with the ``PR_POLL_READ`` flag on a pollable
-event. Whe the pollable event is set, ``PR_Poll`` returns the the
-``PR_POLL_READ`` flag set in the out_flags.
+One can call :ref:`PR_Poll` with the :ref:`PR_POLL_READ` flag on a pollable
+event. Whe the pollable event is set, :ref:`PR_Poll` returns the the
+:ref:`PR_POLL_READ` flag set in the out_flags.
 
 .. _Manipulating_Layers:
 
@@ -215,23 +218,23 @@ NSPR defines three identities:
    #define PR_TOP_IO_LAYER (PRDescIdentity)-2
    #define PR_NSPR_IO_LAYER (PRDescIdentity)0
 
--  ``PR_INVALID_IO_LAYER``: An invalid layer identify (for error
+-  :ref:`PR_INVALID_IO_LAYER`: An invalid layer identify (for error
    return).
--  ``PR_TOP_IO_LAYER``: The identity of the top of the stack.
--  ``PR_NSPR_IO_LAYER``: The identity for the layer implemented by NSPR.
+-  :ref:`PR_TOP_IO_LAYER`: The identity of the top of the stack.
+-  :ref:`PR_NSPR_IO_LAYER`: The identity for the layer implemented by NSPR.
 
-``PR_TOP_IO_LAYER`` may be used as a shorthand for identifying the
+:ref:`PR_TOP_IO_LAYER` may be used as a shorthand for identifying the
 topmost layer of an existing stack. For example, the following lines of
 code are equivalent:
 
 | ``rv = PR_PushIOLayer(stack, PR_TOP_IO_LAYER, my_layer);``
 | ``rv = PR_PushIOLayer(stack, PR_GetLayersIdentity(stack), my_layer);``
 
--  ``PR_GetUniqueIdentity``
--  ``PR_GetNameForIdentity``
--  ``PR_GetLayersIdentity``
--  ``PR_GetIdentitiesLayer``
--  ``PR_GetDefaultIOMethods``
--  ``PR_CreateIOLayerStub``
--  ``PR_PushIOLayer``
--  ``PR_PopIOLayer``
+-  :ref:`PR_GetUniqueIdentity`
+-  :ref:`PR_GetNameForIdentity`
+-  :ref:`PR_GetLayersIdentity`
+-  :ref:`PR_GetIdentitiesLayer`
+-  :ref:`PR_GetDefaultIOMethods`
+-  :ref:`PR_CreateIOLayerStub`
+-  :ref:`PR_PushIOLayer`
+-  :ref:`PR_PopIOLayer`

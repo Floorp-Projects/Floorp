@@ -1,4 +1,7 @@
-Type used in the ``ipv6.ip`` field of the ``PRNetAddr`` structure.
+PRIPv6Addr
+==========
+
+Type used in the ``ipv6.ip`` field of the :ref:`PRNetAddr` structure.
 
 .. _Syntax:
 
@@ -19,7 +22,7 @@ Description
 -----------
 
 PRIPv6Addr represents a 128-bit IPv6 address. It is equivalent to struct
-``in6_addr`` in the Berkeley socket interface. ``PRIPv6Addr`` is always
+``in6_addr`` in the Berkeley socket interface. :ref:`PRIPv6Addr` is always
 manipulated as a byte array. Unlike the IPv4 address (a 4-byte unsigned
 integer) or the port number (a 2-byte unsigned integer), it has no
 network or host byte order.

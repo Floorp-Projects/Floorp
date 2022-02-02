@@ -1,3 +1,6 @@
+PRTimeParamFn
+=============
+
 This type defines a callback function to calculate and return the time
 parameter offsets from a calendar time object in GMT.
 
@@ -18,6 +21,6 @@ Syntax
 Description
 -----------
 
-The type ``PRTimeParamFn`` represents a callback function that, when
+The type :ref:`PRTimeParamFn` represents a callback function that, when
 given a time instant in GMT, returns the time zone information (offset
 from GMT and DST offset) at that time instant.

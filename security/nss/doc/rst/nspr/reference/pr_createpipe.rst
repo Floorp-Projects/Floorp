@@ -1,3 +1,6 @@
+PR_CreatePipe
+=============
+
 Creates an anonymous pipe and retrieves file descriptors for the read
 and write ends of the pipe.
 
@@ -22,10 +25,10 @@ Parameters
 The function has the following parameters:
 
 ``readPipe``
-   A pointer to a ``PRFileDesc`` pointer. On return, this parameter
+   A pointer to a :ref:`PRFileDesc` pointer. On return, this parameter
    contains the file descriptor for the read end of the pipe.
 ``writePipe``
-   A pointer to a ``PRFileDesc`` pointer. On return, this parameter
+   A pointer to a :ref:`PRFileDesc` pointer. On return, this parameter
    contains the file descriptor for the write end of the pipe.
 
 .. _Returns:
@@ -37,18 +40,18 @@ The function returns one of these values:
 
 -  If the pipe is successfully created, ``PR_SUCCESS``.
 -  If the pipe is not successfully created, ``PR_FAILURE``. The error
-   code can be retrieved via ``PR_GetError``.
+   code can be retrieved via :ref:`PR_GetError`.
 
 .. _Description:
 
 Description
 -----------
 
-``PR_CreatePipe`` creates an anonymous pipe. Data written into the write
+:ref:`PR_CreatePipe` creates an anonymous pipe. Data written into the write
 end of the pipe can be read from the read end of the pipe. Pipes are
 useful for interprocess communication between a parent and a child
 process. When the pipe is no longer needed, both ends should be closed
-with calls to ``PR_Close``.
+with calls to :ref:`PR_Close`.
 
-``PR_CreatePipe`` is currently implemented on Unix, Linux, Mac OS X, and
+:ref:`PR_CreatePipe` is currently implemented on Unix, Linux, Mac OS X, and
 Win32 only.

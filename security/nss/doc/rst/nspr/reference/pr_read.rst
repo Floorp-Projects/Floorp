@@ -1,3 +1,6 @@
+PR_Read
+=======
+
 Reads bytes from a file or socket.
 
 .. _Syntax:
@@ -21,7 +24,7 @@ Parameters
 The function has the following parameters:
 
 ``fd``
-   A pointer to a ``PRFileDesc`` object for the file or socket.
+   A pointer to a :ref:`PRFileDesc` object for the file or socket.
 ``buf``
    A pointer to a buffer to hold the data read in. On output, the buffer
    contains the data.
@@ -39,13 +42,13 @@ One of the following values:
 -  The value 0 means end of file is reached or the network connection is
    closed.
 -  The value -1 indicates a failure. To get the reason for the failure,
-   call ``PR_GetError``.
+   call :ref:`PR_GetError`.
 
 .. _Description:
 
 Description
 -----------
 
-The thread invoking ``PR_Read`` blocks until it encounters an
+The thread invoking :ref:`PR_Read` blocks until it encounters an
 end-of-stream indication, some positive number of bytes (but no more
 than ``amount`` bytes) are read in, or an error occurs.

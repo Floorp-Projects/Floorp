@@ -1,3 +1,6 @@
+PR_TransmitFile
+===============
+
 Sends a complete file across a connected socket.
 
 .. _Syntax:
@@ -25,10 +28,10 @@ Parameters
 The function has the following parameters:
 
 ``networkSocket``
-   A pointer to a ``PRFileDesc`` object representing the connected
+   A pointer to a :ref:`PRFileDesc` object representing the connected
    socket to send data over.
 ``sourceFile``
-   A pointer to a ``PRFileDesc`` object representing the file to send.
+   A pointer to a :ref:`PRFileDesc` object representing the file to send.
 ``headers``
    A pointer to the buffer holding the headers to be sent before sending
    data.
@@ -37,9 +40,9 @@ The function has the following parameters:
 ``flags``
    One of the following flags:
 
--  ``PR_TRANSMITFILE_KEEP_OPEN`` indicates that the socket will be kept
+ - :ref:`PR_TRANSMITFILE_KEEP_OPEN` indicates that the socket will be kept
    open after the data is sent.
--  ``PR_TRANSMITFILE_CLOSE_SOCKET`` indicates that the connection should
+ - :ref:`PR_TRANSMITFILE_CLOSE_SOCKET` indicates that the connection should
    be closed immediately after successful transfer of the file.
 
 ``timeout``
@@ -54,16 +57,16 @@ Returns
    including both the headers and the file.
 -  The value -1 indicates a failure. If an error occurs while sending
    the file, the ``PR_TRANSMITFILE_CLOSE_SOCKET`` flag is ignored. The
-   reason for the failure can be obtained by calling ``PR_GetError``.
+   reason for the failure can be obtained by calling :ref:`PR_GetError`.
 
 .. _Description:
 
 Description
 -----------
 
-The ``PR_TransmitFile`` function sends a complete file (``sourceFile``)
+The :ref:`PR_TransmitFile` function sends a complete file (``sourceFile``)
 across a connected socket (``networkSocket``). If ``headers`` is
-non-``NULL``, ``PR_TransmitFile`` sends the headers across the socket
+non-``NULL``, :ref:`PR_TransmitFile` sends the headers across the socket
 before sending the file.
 
 The enumeration ``PRTransmitFileFlags``, used in the ``flags``

@@ -1,8 +1,5 @@
-.. container:: prevnext
-
-   `«
-   Previous </en-US/docs/NSPR_API_Reference:Floating_Point_Number_to_String_Conversion>`__\ `Next
-   » </en-US/docs/NSPR_API_Reference:BitMaps>`__
+Long Long integers
+==================
 
 This chapter describes the global functions you use to perform 64-bit
 integer operations. The functions define a portable API that can be used
@@ -23,8 +20,8 @@ platform, if 64-bit integers are supported for that platform, define
 
 NSPR provides two types to represent 64-bit integers:
 
--  `PRInt64 <en/PRInt64>`__
--  `PRUint64 <en/PRUint64>`__
+-  :ref:`PRInt64`
+-  :ref:`PRUint64`
 
 .. _64-Bit_Integer_Functions:
 
@@ -33,10 +30,3 @@ NSPR provides two types to represent 64-bit integers:
 
 The API defined for the 64-bit integer functions is consistent across
 all supported platforms.
-
--  `Limits and Initialization <en/Limits_and_Initialization>`__
--  `Relational Operators <en/Relational_Operators>`__
--  `Logical Operators <en/Logical_Operators>`__
--  `Arithmetic Operators <en/Arithmetic_Operators>`__
--  `Shift Operators <en/Shift_Operators>`__
--  `Conversion Operators <en/Conversion_Operators>`__

@@ -1,5 +1,9 @@
-Type for enumerators used in the type field of the ``PRFileInfo`` and
-``PRFileInfo64`` structures.
+PRFileType
+==========
+
+
+Type for enumerators used in the type field of the :ref:`PRFileInfo` and
+:ref:`PRFileInfo64` structures.
 
 .. _Syntax:
 

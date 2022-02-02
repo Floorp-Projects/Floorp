@@ -1,3 +1,6 @@
+PR_NewCondVar
+=============
+
 Creates a new condition variable.
 
 .. _Syntax:
@@ -16,7 +19,7 @@ Syntax
 Parameter
 ~~~~~~~~~
 
-``PR_NewCondVar`` has one parameter:
+:ref:`PR_NewCondVar` has one parameter:
 
 ``lock``
    The identity of the mutex that protects the monitored data, including

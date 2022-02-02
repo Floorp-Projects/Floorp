@@ -1,3 +1,6 @@
+PL_HashTableAdd
+===============
+
 Add a new entry with the specified key and value to the hash table.
 
 .. _Syntax:
@@ -48,6 +51,6 @@ can write your ``freeEntry`` function to free the value of the specified
 entry if the old value should be freed. The default ``freeEntry``
 function does not free the value of the entry.
 
-``PL_HashTableAdd`` returns ``NULL`` if there is not enough memory to
+:ref:`PL_HashTableAdd` returns ``NULL`` if there is not enough memory to
 create a new entry. It doubles the number of buckets if the table is
 overloaded.

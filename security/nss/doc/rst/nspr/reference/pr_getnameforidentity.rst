@@ -1,3 +1,6 @@
+PR_GetNameForIdentity
+=====================
+
 Gets the string associated with a layer's unique identity.
 
 .. _Syntax:
@@ -38,5 +41,5 @@ Description
 -----------
 
 A string may be associated with a layer when the layer is created. The
-string is copied by the runtime, and ``PR_GetNameForIdentity`` returns a
+string is copied by the runtime, and :ref:`PR_GetNameForIdentity` returns a
 pointer to that copy.

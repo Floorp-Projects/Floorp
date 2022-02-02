@@ -1,3 +1,6 @@
+PR_JoinJob
+==========
+
 Blocks the current thread until a job has completed.
 
 .. _Syntax:
@@ -19,7 +22,7 @@ Parameter
 The function has the following parameter:
 
 ``job``
-   A pointer to a ``PRJob`` structure returned by a ``PR_QueueJob``
+   A pointer to a :ref:`PRJob` structure returned by a :ref:`PR_QueueJob`
    function representing the job to be cancelled.
 
 .. _Returns:
@@ -27,4 +30,4 @@ The function has the following parameter:
 Returns
 ~~~~~~~
 
-``PRStatus``
+:ref:`PRStatus`

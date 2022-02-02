@@ -1,3 +1,6 @@
+PR_ReadDir
+==========
+
 Gets a pointer to the next entry in the directory.
 
 .. _Syntax:
@@ -21,18 +24,18 @@ Parameters
 The function has the following parameters:
 
 ``dir``
-   A pointer to a ``PRDir`` object that designates an open directory.
+   A pointer to a :ref:`PRDir` object that designates an open directory.
 ``flags``
    Specifies which directory entries, if any, to skip. Values can
    include the following:
 
-   -  ``PR_SKIP_NONE``. Do not skip any files.
-   -  ``PR_SKIP_DOT``. Skip the directory entry "." representing the
+    - :ref:`PR_SKIP_NONE`. Do not skip any files.
+    - :ref:`PR_SKIP_DOT`. Skip the directory entry "." representing the
       current directory.
-   -  ``PR_SKIP_DOT_DOT``. Skip the directory entry ".." representing
+    - :ref:`PR_SKIP_DOT_DOT`. Skip the directory entry ".." representing
       the parent directory.
-   -  ``PR_SKIP_BOTH``. Skip both "." and ".."
-   -  ``PR_SKIP_HIDDEN``. Skip hidden files. On Windows platforms and
+    - :ref:`PR_SKIP_BOTH`. Skip both "." and ".."
+    - :ref:`PR_SKIP_HIDDEN`. Skip hidden files. On Windows platforms and
       the Mac OS, this value identifies files with the "hidden"
       attribute set. On Unix platform, this value identifies files whose
       names begin with a period (".").
@@ -44,14 +47,14 @@ Returns
 
 -  A pointer to the next entry in the directory.
 -  If the end of the directory is reached or an error occurs, ``NULL``.
-   The reason can be retrieved via ``PR_GetError``.
+   The reason can be retrieved via :ref:`PR_GetError`.
 
 .. _Description:
 
 Description
 -----------
 
-``PR_ReadDir`` returns a pointer to a directory entry structure:
+:ref:`PR_ReadDir` returns a pointer to a directory entry structure:
 
 .. code:: eval
 
@@ -80,16 +83,16 @@ The ``flags`` parameter is an enum of type ``PRDirFlags``:
 
 The memory associated with the returned PRDirEntry structure is managed
 by NSPR. The caller must not free the ``PRDirEntry`` structure.
-Moreover, the ``PRDirEntry`` structure returned by each ``PR_ReadDir``
-call is valid only until the next ``PR_ReadDir`` or ``PR_CloseDir`` call
-on the same ``PRDir`` object.
+Moreover, the ``PRDirEntry`` structure returned by each :ref:`PR_ReadDir`
+call is valid only until the next :ref:`PR_ReadDir` or :ref:`PR_CloseDir` call
+on the same :ref:`PRDir` object.
 
-If the end of the directory is reached, ``PR_ReadDir`` returns ``NULL``,
-and ``PR_GetError`` returns ``PR_NO_MORE_FILES_ERROR``.
+If the end of the directory is reached, :ref:`PR_ReadDir` returns ``NULL``,
+and :ref:`PR_GetError` returns ``PR_NO_MORE_FILES_ERROR``.
 
 .. _See_Also:
 
 See Also
 --------
 
-``PR_OpenDir``
+:ref:`PR_OpenDir`

@@ -1,3 +1,6 @@
+PR_Wait
+=======
+
 Waits for an application-defined state of the monitored data to exist.
 
 .. _Syntax:
@@ -21,11 +24,11 @@ Parameters
 The function has the following parameter:
 
 ``mon``
-   A reference to an existing structure of type ``PRMonitor``. The
+   A reference to an existing structure of type :ref:`PRMonitor`. The
    monitor object referenced must be one for which the calling thread
    currently holds the lock.
 ``ticks``
-   The amount of time (in ``PRIntervalTime`` units) that the thread is
+   The amount of time (in :ref:`PRIntervalTime` units) that the thread is
    willing to wait for an explicit notification before being
    rescheduled.
 
@@ -36,10 +39,10 @@ Returns
 
 The function returns one of the following values:
 
--  ``PR_SUCCESS`` means the thread is being resumed from the ``PR_Wait``
+ - :ref:`PR_SUCCESS`` means the thread is being resumed from the ``PR_Wait`
    call either because it was explicitly notified or because the time
    specified by the parameter ``ticks`` has expired.
--  ``PR_FAILURE`` means ``PR_Wait`` encountered a system error (such as
+ - :ref:`PR_FAILURE`` means ``PR_Wait` encountered a system error (such as
    an invalid monitor reference) or the thread was interrupted by
    another thread.
 
@@ -48,9 +51,9 @@ The function returns one of the following values:
 Description
 -----------
 
-A call to ``PR_Wait`` causes the thread to release the monitor's lock,
-just as if it had called ``PR_ExitMonitor`` as many times as it had
-called ``PR_EnterMonitor``. This has the effect of making the monitor
+A call to :ref:`PR_Wait` causes the thread to release the monitor's lock,
+just as if it had called :ref:`PR_ExitMonitor` as many times as it had
+called :ref:`PR_EnterMonitor`. This has the effect of making the monitor
 available to other threads. When the wait is over, the thread regains
 control of the monitor's lock with the same entry count it had before
 the wait began.
@@ -74,7 +77,7 @@ In pseudo-code, the sequence is as follows:
 
 A thread can be resumed from a wait for a variety of reasons. The most
 obvious is that it was notified by another thread. If the value of
-timeout is not ``PR_INTERVAL_NO_TIMEOUT``, ``PR_Wait`` resumes execution
+timeout is not ``PR_INTERVAL_NO_TIMEOUT``, :ref:`PR_Wait` resumes execution
 after the specified interval has expired. If a timeout value is used,
 the Boolean expression must include elapsed time as part of the
 monitored data.

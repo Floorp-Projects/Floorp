@@ -14,16 +14,16 @@ to manipulate the information.
 If used consistently, this API also eliminates the need to deal with the
 byte ordering of network addresses. Typically, the only numeric
 declarations required are the well-known port numbers that are part of
-the ``PRNetAddr`` structure.
+the :ref:`PRNetAddr` structure.
 
 .. _Network_Address_Types_and_Constants:
 
 Network Address Types and Constants
 -----------------------------------
 
--  ``PRHostEnt``
--  ``PRProtoEnt``
--  ``PR_NETDB_BUF_SIZE``
+ - :ref:`PRHostEnt`
+ - :ref:`PRProtoEnt`
+ - :ref:`PR_NETDB_BUF_SIZE`
 
 .. _Network_Address_Functions:
 
@@ -35,7 +35,7 @@ Network address functions
 Initializing a network address
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``PR_InitializeNetAddr`` facilitates the use of ``PRNetAddr``, the basic
+:ref:`PR_InitializeNetAddr` facilitates the use of :ref:`PRNetAddr`, the basic
 network address structure, in a polymorphic manner. By using these
 functions with other network address functions, clients can support
 either version 4 or version 6 of the Internet Protocol transparently.
@@ -43,40 +43,40 @@ either version 4 or version 6 of the Internet Protocol transparently.
 All NSPR functions that require `PRNetAddr <PRNetAddr>`__ as an argument
 accept either an IPv4 or IPv6 version of the address.
 
--  ``PR_InitializeNetAddr``
+ - :ref:`PR_InitializeNetAddr`
 
 .. _Converting_Between_a_String_and_a_Network_Address:
 
 Converting between a string and a network address
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
--  ``PR_StringToNetAddr``
--  ``PR_NetAddrToString``
+ - :ref:`PR_StringToNetAddr`
+ - :ref:`PR_NetAddrToString`
 
 .. _Getting_Host_Names_and_Addresses:
 
 Converting address formats
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
--  ``PR_ConvertIPv4AddrToIPv6``
+ - :ref:`PR_ConvertIPv4AddrToIPv6`
 
 .. _Getting_Host_Names_and_Addresses:
 
 Getting host names and addresses
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
--  ``PR_GetHostByName``
--  ``PR_GetHostByAddr``
--  ``PR_EnumerateHostEnt``
--  ``PR_GetAddrInfoByName``
--  ``PR_EnumerateAddrInfo``
--  ``PR_GetCanonNameFromAddrInfo``
--  ``PR_FreeAddrInfo``
+ - :ref:`PR_GetHostByName`
+ - :ref:`PR_GetHostByAddr`
+ - :ref:`PR_EnumerateHostEnt`
+ - :ref:`PR_GetAddrInfoByName`
+ - :ref:`PR_EnumerateAddrInfo`
+ - :ref:`PR_GetCanonNameFromAddrInfo`
+ - :ref:`PR_FreeAddrInfo`
 
 .. _Getting_Protocol_Entries:
 
 Getting protocol entries
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
--  ``PR_GetProtoByName``
--  ``PR_GetProtoByNumber``
+ - :ref:`PR_GetProtoByName`
+ - :ref:`PR_GetProtoByNumber`

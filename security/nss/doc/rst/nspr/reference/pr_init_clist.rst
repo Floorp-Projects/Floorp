@@ -1,3 +1,6 @@
+PR_INIT_CLIST
+=============
+
 Initializes a circular list.
 
 .. _Syntax:

@@ -1,3 +1,6 @@
+PRIntervalTime
+==============
+
 A platform-dependent type that represents a monotonically increasing
 integer--the NSPR runtime clock.
 
@@ -23,18 +26,18 @@ Syntax
 Description
 -----------
 
-The units of ``PRIntervalTime`` are platform-dependent. They are chosen
+The units of :ref:`PRIntervalTime` are platform-dependent. They are chosen
 to be appropriate for the host OS, yet provide sufficient resolution and
 period to be useful to clients.
 
-The increasing interval value represented by ``PRIntervalTime`` wraps.
+The increasing interval value represented by :ref:`PRIntervalTime` wraps.
 It should therefore never be used for intervals greater than
 approximately 6 hours. Interval times are accurate regardless of host
 processing requirements and are very cheap to acquire.
 
 The constants ``PR_INTERVAL_MIN`` and ``PR_INTERVAL_MAX`` define a range
 in ticks per second. These constants bound both the period and the
-resolution of a ``PRIntervalTime`` object.
+resolution of a :ref:`PRIntervalTime` object.
 
 The reserved constants ``PR_INTERVAL_NO_WAIT`` and
 ``PR_INTERVAL_NO_TIMEOUT`` have special meaning for NSPR. They indicate
@@ -57,11 +60,11 @@ proper coding style to test the expiration of an interval is as follows:
     <... interval has expired ...>
 
 As long as the interval and the elapsed time (now - epoch) do not exceed
-half the namespace allowed by a ``PRIntervalTime`` (2\ :sup:`31`-1), the
+half the namespace allowed by a :ref:`PRIntervalTime` (2\ :sup:`31`-1), the
 expression shown above provides the expected result even if the signs of
 now and epoch differ.
 
-The resolution of a ``PRIntervalTime`` object is defined by the API.
+The resolution of a :ref:`PRIntervalTime` object is defined by the API.
 NSPR guarantees that there will be at least 1000 ticks per second and
 not more than 100000. At the maximum resolution of 10000 ticks per
 second, each tick represents 1/100000 of a second. At that rate, a

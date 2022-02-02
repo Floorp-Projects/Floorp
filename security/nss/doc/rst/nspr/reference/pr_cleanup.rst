@@ -1,3 +1,6 @@
+PR_Cleanup
+==========
+
 Coordinates a graceful shutdown of NSPR.
 
 .. _Syntax:
@@ -27,10 +30,10 @@ The function returns one of the following values:
 Description
 -----------
 
-``PR_Cleanup`` must be called by the primordial thread near the end of
+:ref:`PR_Cleanup` must be called by the primordial thread near the end of
 the ``main`` function.
 
-``PR_Cleanup`` attempts to synchronize the natural termination of the
+:ref:`PR_Cleanup` attempts to synchronize the natural termination of the
 process. It does so by blocking the caller, if and only if it is the
 primordial thread, until all user threads have terminated. When the
 primordial thread returns from ``main``, the process immediately and

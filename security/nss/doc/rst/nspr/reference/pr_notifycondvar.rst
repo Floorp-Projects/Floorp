@@ -1,3 +1,6 @@
+PR_NotifyCondVar
+================
+
 Notifies a condition variable of a change in its associated monitored
 data.
 
@@ -17,7 +20,7 @@ Syntax
 Parameter
 ~~~~~~~~~
 
-``PR_NotifyCondVar`` has one parameter:
+:ref:`PR_NotifyCondVar` has one parameter:
 
 ``cvar``
    The condition variable to notify.

@@ -1,3 +1,6 @@
+PLHashComparator
+================
+
 .. _Syntax:
 
 Syntax
@@ -16,14 +19,14 @@ Syntax
 Description
 -----------
 
-``PLHashComparator`` is a function type that compares two values of an
+:ref:`PLHashComparator` is a function type that compares two values of an
 unspecified type. It returns a nonzero value if the two values are
-equal, and 0 if the two values are not equal. ``PLHashComparator``
+equal, and 0 if the two values are not equal. :ref:`PLHashComparator`
 defines the meaning of equality for the unspecified type.
 
 For convenience, two comparator functions are provided.
-``PL_CompareStrings`` compare two character strings using ``strcmp``.
-``PL_CompareValues`` compares the values of the arguments v1 and v2
+:ref:`PL_CompareStrings` compare two character strings using ``strcmp``.
+:ref:`PL_CompareValues` compares the values of the arguments v1 and v2
 numerically.
 
 .. _Remark:
@@ -31,12 +34,12 @@ numerically.
 Remark
 ------
 
-The return value of ``PLHashComparator`` functions should be of type
-``PRBool``.
+The return value of :ref:`PLHashComparator` functions should be of type
+:ref:`PRBool`.
 
 .. _See_Also:
 
 See Also
 --------
 
-``PL_CompareStrings``, ``PL_CompareValues``
+:ref:`PL_CompareStrings`, :ref:`PL_CompareValues`

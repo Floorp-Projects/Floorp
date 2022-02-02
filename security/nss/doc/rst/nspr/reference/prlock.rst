@@ -1,3 +1,6 @@
+PRLock
+======
+
 A mutual exclusion lock.
 
 .. _Syntax:

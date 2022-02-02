@@ -1,3 +1,6 @@
+PR_DestroyCondVar
+=================
+
 Destroys a condition variable.
 
 .. _Syntax:
@@ -16,7 +19,7 @@ Syntax
 Parameter
 ~~~~~~~~~
 
-``PR_DestroyCondVar`` has one parameter:
+:ref:`PR_DestroyCondVar` has one parameter:
 
 ``cvar``
    A pointer to the condition variable object to be destroyed.
@@ -26,5 +29,5 @@ Parameter
 Description
 -----------
 
-Before calling ``PR_DestroyCondVar``, the caller is responsible for
+Before calling :ref:`PR_DestroyCondVar`, the caller is responsible for
 ensuring that the condition variable is no longer in use.

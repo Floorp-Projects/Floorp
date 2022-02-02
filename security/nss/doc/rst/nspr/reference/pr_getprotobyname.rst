@@ -1,3 +1,6 @@
+PR_GetProtoByName
+=================
+
 Looks up a protocol entry based on the protocol's name.
 
 .. _Syntax:
@@ -29,9 +32,9 @@ The function has the following parameters:
    buffer is allocated by the caller.
 ``bufsize``
    Number of bytes in the ``buffer`` parameter. The buffer must be at
-   least ``PR_NETDB_BUF_SIZE`` bytes.
+   least :ref:`PR_NETDB_BUF_SIZE` bytes.
 ``result``
-   On input, a pointer to a ``PRProtoEnt`` structure. On output, this
+   On input, a pointer to a :ref:`PRProtoEnt` structure. On output, this
    structure is filled in by the runtime if the function returns
    ``PR_SUCCESS``.
 
@@ -44,4 +47,4 @@ The function returns one of the following values:
 
 -  If successful, ``PR_SUCCESS``.
 -  If unsuccessful, ``PR_FAILURE``. You can retrieve the reason for the
-   failure by calling ``PR_GetError``.
+   failure by calling :ref:`PR_GetError`.

@@ -1,3 +1,6 @@
+PL_CompareValues
+================
+
 Compares two ``void *`` values numerically.
 
 .. _Syntax:
@@ -18,9 +21,9 @@ Syntax
 Description
 -----------
 
-``PL_CompareValues`` compares the two ``void *`` values ``v1`` and
+:ref:`PL_CompareValues` compares the two ``void *`` values ``v1`` and
 ``v2`` numerically, i.e., it returns the value of the expression ``v1``
 == ``v2``.
 
-``PL_CompareValues`` can be used as the comparator function for integer
+:ref:`PL_CompareValues` can be used as the comparator function for integer
 or pointer-valued key or entry value.

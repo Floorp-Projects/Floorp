@@ -1,3 +1,6 @@
+PR_IntervalToSeconds
+====================
+
 Converts platform-dependent intervals to standard clock seconds.
 
 .. _Syntax:

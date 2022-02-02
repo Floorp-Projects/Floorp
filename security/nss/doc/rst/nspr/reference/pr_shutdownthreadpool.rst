@@ -1,3 +1,6 @@
+PR_ShutdownThreadPool
+=====================
+
 Notifies all threads in a thread pool to terminate.
 
 .. _Syntax:
@@ -19,12 +22,12 @@ Parameter
 The function has the following parameter:
 
 ``tpool``
-   A pointer to a ``PRThreadPool`` structure previously created by a
-   call to ``PR_CreateThreadPool``.
+   A pointer to a :ref:`PRThreadPool` structure previously created by a
+   call to :ref:`PR_CreateThreadPool`.
 
 .. _Returns:
 
 Returns
 ~~~~~~~
 
-``PRStatus``
+:ref:`PRStatus`

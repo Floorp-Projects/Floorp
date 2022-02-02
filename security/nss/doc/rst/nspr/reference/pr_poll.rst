@@ -1,3 +1,6 @@
+PR_Poll
+=======
+
 Detects when I/O is ready for a set of socket file descriptors.
 
 .. _Syntax:
@@ -26,10 +29,10 @@ The function has the following parameters:
    structures.
 ``npds``
    The number of elements in the ``pds`` array. If this parameter is
-   zero, ``PR_Poll`` is equivalent to ``PR_Sleep`` with a timeout.
+   zero, :ref:`PR_Poll` is equivalent to :ref:`PR_Sleep` with a timeout.
 ``timeout``
    Amount of time the call will block waiting for I/O to become ready.
-   If this time expires without any I/O becoming ready, ``PR_Poll``
+   If this time expires without any I/O becoming ready, :ref:`PR_Poll`
    returns zero.
 
 .. _Returns:
@@ -43,7 +46,7 @@ The function returns one of these values:
    number of ``PRPollDesc`` structures in ``pds`` that have events.
 -  The value 0 indicates the function timed out.
 -  The value -1 indicates the function failed. The reason for the
-   failure can be obtained by calling ``PR_GetError``.
+   failure can be obtained by calling :ref:`PR_GetError`.
 
 .. _Description:
 
@@ -59,8 +62,8 @@ set to the I/O events (readable, writable, exception, or some
 combination) that the caller is interested in. On successful return, the
 ``out_flags`` field of the ``PRPollDesc`` data structure is set to
 indicate what kind of I/O is ready on the respective descriptor.
-``PR_Poll`` uses the ``out_flags`` fields as scratch variables during
-the call. If ``PR_Poll`` returns 0 or -1, the ``out_flags`` fields do
+:ref:`PR_Poll` uses the ``out_flags`` fields as scratch variables during
+the call. If :ref:`PR_Poll` returns 0 or -1, the ``out_flags`` fields do
 not contain meaningful values and must not be used.
 
 The ``PRPollDesc`` structure is defined as follows:
@@ -78,34 +81,34 @@ The ``PRPollDesc`` structure is defined as follows:
 The structure has the following fields:
 
 ``fd``
-   A pointer to a ``PRFileDesc`` object representing a socket or a
+   A pointer to a :ref:`PRFileDesc` object representing a socket or a
    pollable event. This field can be set to ``NULL`` to indicate to
-   ``PR_Poll`` that this ``PRFileDesc object`` should be ignored.
+   :ref:`PR_Poll` that this ``PRFileDesc object`` should be ignored.
 
    .. note::
 
       On Unix, the ``fd`` field can be set to a pointer to any
-      ``PRFileDesc`` object, including one representing a file or a
+      :ref:`PRFileDesc` object, including one representing a file or a
       pipe. Cross-platform applications should only set the ``fd`` field
-      to a pointer to a ``PRFileDesc`` object representing a socket or a
+      to a pointer to a :ref:`PRFileDesc` object representing a socket or a
       pollable event because on Windows the ``select`` function can only
       be used with sockets.
 ``in_flags``
    A bitwise ``OR`` of the following bit flags:
 
--  ``PR_POLL_READ``: ``fd`` is readable.
--  ``PR_POLL_WRITE``: ``fd`` is writable.
--  ``PR_POLL_EXCEPT``: ``fd`` has an exception condition.
+ - :ref:`PR_POLL_READ``: ``fd` is readable.
+ - :ref:`PR_POLL_WRITE``: ``fd` is writable.
+ - :ref:`PR_POLL_EXCEPT``: ``fd` has an exception condition.
 
 ``out_flags``
    A bitwise ``OR`` of the following bit flags:
 
--  ``PR_POLL_READ``
--  ``PR_POLL_WRITE``
--  ``PR_POLL_EXCEPT``
--  ``PR_POLL_ERR``: ``fd`` has an error.
--  ``PR_POLL_NVAL``: ``fd`` is bad.
+ - :ref:`PR_POLL_READ`
+ - :ref:`PR_POLL_WRITE`
+ - :ref:`PR_POLL_EXCEPT`
+ - :ref:`PR_POLL_ERR``: ``fd` has an error.
+ - :ref:`PR_POLL_NVAL``: ``fd` is bad.
 
 Note that the ``PR_POLL_ERR`` and ``PR_POLL_NVAL`` flags are used only
 in ``out_flags``. The ``PR_POLL_ERR`` and ``PR_POLL_NVAL`` events are
-always reported by ``PR_Poll``.
+always reported by :ref:`PR_Poll`.

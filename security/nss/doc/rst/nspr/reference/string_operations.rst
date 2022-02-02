@@ -5,7 +5,7 @@ or examining strings for use by such libraries or freeing strings that
 were allocated by such libraries, you must use these NSPR functions
 rather than the libc equivalents.
 
--  ``PL_strlen``
--  ``PL_strcpy``
--  ``PL_strdup``
--  ``PL_strfree``
+ - :ref:`PL_strlen`
+ - :ref:`PL_strcpy`
+ - :ref:`PL_strdup`
+ - :ref:`PL_strfree`

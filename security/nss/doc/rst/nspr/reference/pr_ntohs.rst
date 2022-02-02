@@ -1,3 +1,6 @@
+PR_ntohs
+========
+
 Performs 16-bit conversion from network byte order to host byte order.
 
 .. _Syntax:

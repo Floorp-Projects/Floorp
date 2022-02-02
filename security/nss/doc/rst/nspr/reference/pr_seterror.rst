@@ -1,3 +1,6 @@
+PR_SetError
+===========
+
 Sets error information within a thread context.
 
 .. _Syntax:

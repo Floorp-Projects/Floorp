@@ -1,3 +1,6 @@
+PR_Free
+=======
+
 Frees allocated memory in the heap.
 
 .. _Syntax:

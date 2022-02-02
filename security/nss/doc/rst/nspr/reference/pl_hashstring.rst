@@ -1,3 +1,6 @@
+PL_HashString
+=============
+
 A general-purpose hash function for character strings.
 
 .. _Syntax:
@@ -33,5 +36,5 @@ The hash number for the specified key.
 Description
 -----------
 
-``PL_HashString`` can be used as the key hash function for a hash table
+:ref:`PL_HashString` can be used as the key hash function for a hash table
 if the key is a character string.

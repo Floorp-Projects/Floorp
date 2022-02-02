@@ -18,24 +18,24 @@ POSIX Threads* (Addison-Wesley, 1997).
 Thread Pool Types
 -----------------
 
--  ``PRJobIoDesc``
--  ``PRJobFn``
--  ``PRThreadPool``
--  ``PRJob``
+ - :ref:`PRJobIoDesc`
+ - :ref:`PRJobFn`
+ - :ref:`PRThreadPool`
+ - :ref:`PRJob`
 
 .. _Thread_Pool_Functions:
 
 Thread Pool Functions
 ---------------------
 
--  ``PR_CreateThreadPool``
--  ``PR_QueueJob``
--  ``PR_QueueJob_Read``
--  ``PR_QueueJob_Write``
--  ``PR_QueueJob_Accept``
--  ``PR_QueueJob_Connect``
--  ``PR_QueueJob_Timer``
--  ``PR_CancelJob``
--  ``PR_JoinJob``
--  ``PR_ShutdownThreadPool``
--  ``PR_JoinThreadPool``
+ - :ref:`PR_CreateThreadPool`
+ - :ref:`PR_QueueJob`
+ - :ref:`PR_QueueJob_Read`
+ - :ref:`PR_QueueJob_Write`
+ - :ref:`PR_QueueJob_Accept`
+ - :ref:`PR_QueueJob_Connect`
+ - :ref:`PR_QueueJob_Timer`
+ - :ref:`PR_CancelJob`
+ - :ref:`PR_JoinJob`
+ - :ref:`PR_ShutdownThreadPool`
+ - :ref:`PR_JoinThreadPool`

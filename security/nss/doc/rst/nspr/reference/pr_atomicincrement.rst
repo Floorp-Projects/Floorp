@@ -1,3 +1,6 @@
+PR_AtomicIncrement
+==================
+
 Atomically increments a 32-bit value.
 
 .. _Syntax:

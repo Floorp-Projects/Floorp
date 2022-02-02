@@ -1,3 +1,7 @@
+
+PR_Realloc
+==========
+
 Resizes allocated memory on the heap.
 
 .. _Syntax:

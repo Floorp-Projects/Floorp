@@ -1,3 +1,6 @@
+Process Management And Interprocess Communication
+=================================================
+
 This chapter describes the NSPR routines that deal with processes. A
 process is an instance of a program. NSPR provides routines to create a
 new process and to wait for the termination of another process.
@@ -18,8 +21,8 @@ Process Management Types and Constants
 
 The types defined for process management are:
 
--  ``PRProcess`` 
--  ``PRProcessAttr``
+ - :ref:`PRProcess` 
+ - :ref:`PRProcessAttr`
 
 .. _Process_Management_Functions:
 
@@ -41,12 +44,12 @@ Setting the Attributes of a New Process
 The functions that create and manipulate attribute sets of new processes
 are:
 
--  ``PR_NewProcessAttr`` 
--  ``PR_ResetProcessAttr`` 
--  ``PR_DestroyProcessAttr`` 
--  ``PR_ProcessAttrSetStdioRedirect`` 
--  ``PR_ProcessAttrSetCurrentDirectory`` 
--  ``PR_ProcessAttrSetInheritableFD``
+ - :ref:`PR_NewProcessAttr` 
+ - :ref:`PR_ResetProcessAttr` 
+ - :ref:`PR_DestroyProcessAttr` 
+ - :ref:`PR_ProcessAttrSetStdioRedirect` 
+ - :ref:`PR_ProcessAttrSetCurrentDirectory` 
+ - :ref:`PR_ProcessAttrSetInheritableFD`
 
 .. _Creating_and_Managing_Processes:
 
@@ -55,7 +58,7 @@ Creating and Managing Processes
 
 The functions that create and manage processes are:
 
--  ``PR_CreateProcess`` 
--  ``PR_DetachProcess`` 
--  ``PR_WaitProcess`` 
--  ``PR_KillProcess``
+ - :ref:`PR_CreateProcess` 
+ - :ref:`PR_DetachProcess` 
+ - :ref:`PR_WaitProcess` 
+ - :ref:`PR_KillProcess`

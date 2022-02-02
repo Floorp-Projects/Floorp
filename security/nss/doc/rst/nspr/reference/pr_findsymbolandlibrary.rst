@@ -1,3 +1,6 @@
+PR_FindSymbolAndLibrary
+=======================
+
 Finds a symbol in one of the currently loaded libraries, and returns
 both the symbol and the library in which it was found.
 
@@ -52,9 +55,9 @@ the caller.
 
 The function returns ``NULL`` if no such function can be found. The
 order in which the known libraries are searched in not specified. This
-function is equivalent to calling first ``PR_LoadLibrary``, then
-``PR_FindSymbol``.
+function is equivalent to calling first :ref:`PR_LoadLibrary`, then
+:ref:`PR_FindSymbol`.
 
 The identity returned from this function must be the target of a
-``PR_UnloadLibrary`` in order to return the runtime to its original
+:ref:`PR_UnloadLibrary` in order to return the runtime to its original
 state.

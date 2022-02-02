@@ -1,3 +1,6 @@
+PR_CloseFileMap
+===============
+
 Closes a file mapping.
 
 .. _Syntax:
@@ -30,12 +33,12 @@ The function returns one of the following values:
 
 -  If the memory region is successfully unmapped, ``PR_SUCCESS``.
 -  If the memory region is not successfully unmapped, ``PR_FAILURE``.
-   The error code can be retrieved via ``PR_GetError``.
+   The error code can be retrieved via :ref:`PR_GetError`.
 
 .. _Description:
 
 Description
 -----------
 
-When a file mapping created with a call to ``PR_CreateFileMap`` is no
-longer needed, it should be closed with a call to ``PR_CloseFileMap``.
+When a file mapping created with a call to :ref:`PR_CreateFileMap` is no
+longer needed, it should be closed with a call to :ref:`PR_CloseFileMap`.

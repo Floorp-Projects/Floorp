@@ -1,3 +1,6 @@
+PR_JoinThread
+=============
+
 Blocks the calling thread until a specified thread terminates.
 
 .. _Syntax:
@@ -16,7 +19,7 @@ Syntax
 Parameter
 ~~~~~~~~~
 
-``PR_JoinThread`` has the following parameter:
+:ref:`PR_JoinThread` has the following parameter:
 
 ``thread``
    A valid identifier for the thread that is to be joined.
@@ -38,15 +41,15 @@ The function returns one of the following values:
 Description
 -----------
 
-``PR_JoinThread`` is used to synchronize the termination of a thread.
+:ref:`PR_JoinThread` is used to synchronize the termination of a thread.
 The function is synchronous in that it blocks the calling thread until
-the target thread is in a joinable state. ``PR_JoinThread`` returns to
+the target thread is in a joinable state. :ref:`PR_JoinThread` returns to
 the caller only after the target thread returns from its root function.
 
-``PR_JoinThread`` must not be called until after ``PR_CreateThread`` has
-returned.  If ``PR_JoinThread`` is not called on the same thread as
-``PR_CreateThread``, then it is the caller's responsibility to ensure
-that ``PR_CreateThread`` has completed.
+:ref:`PR_JoinThread` must not be called until after :ref:`PR_CreateThread` has
+returned.  If :ref:`PR_JoinThread` is not called on the same thread as
+:ref:`PR_CreateThread`, then it is the caller's responsibility to ensure
+that :ref:`PR_CreateThread` has completed.
 
 Several threads cannot wait for the same thread to complete. One of the
 calling threads operates successfully, and the others terminate with the
@@ -55,4 +58,4 @@ error ``PR_FAILURE``.
 The calling thread is not blocked if the target thread has already
 terminated.
 
-``PR_JoinThread`` is interruptable.
+:ref:`PR_JoinThread` is interruptable.

@@ -1,3 +1,6 @@
+PR_Now
+======
+
 Returns the current time.
 
 .. _Syntax:
@@ -23,7 +26,7 @@ None.
 Returns
 ~~~~~~~
 
-The current time as a ``PRTime`` value.
+The current time as a :ref:`PRTime` value.
 
 .. _Description:
 

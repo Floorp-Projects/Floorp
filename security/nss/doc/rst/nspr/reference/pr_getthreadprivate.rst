@@ -1,3 +1,6 @@
+PR_GetThreadPrivate
+===================
+
 Recovers the per-thread private data for the current thread.
 
 .. _Syntax:
@@ -16,7 +19,7 @@ Syntax
 Parameter
 ~~~~~~~~~
 
-``PR_GetThreadPrivate`` has the following parameters:
+:ref:`PR_GetThreadPrivate` has the following parameters:
 
 ``index``
    The index into the per-thread private data table.
@@ -33,7 +36,7 @@ Returns
 Description
 -----------
 
-``PR_GetThreadPrivate`` may be called at any time during a thread's
+:ref:`PR_GetThreadPrivate` may be called at any time during a thread's
 execution. A thread can get access only to its own per-thread private
 data. Do not delete the object that the private data refers to without
 first clearing the thread's value.

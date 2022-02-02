@@ -1,5 +1,9 @@
+PR_FreeAddrInfo
+===============
+
+
 Destroys the ``PRAddrInfo`` structure returned by
-``PR_GetAddrInfoByName``.
+:ref:`PR_GetAddrInfoByName`.
 
 .. _Syntax:
 
@@ -21,7 +25,7 @@ The function has the following parameters:
 
 ``addrInfo``
    A pointer to a ``PRAddrInfo`` structure returned by a successful call
-   to ``PR_GetAddrInfoByName``.
+   to :ref:`PR_GetAddrInfoByName`.
 
 .. _Returns:
 

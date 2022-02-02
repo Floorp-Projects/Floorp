@@ -1,3 +1,6 @@
+PR_SetLibraryPath
+=================
+
 Registers a default library pathname with a runtime.
 
 .. _Syntax:

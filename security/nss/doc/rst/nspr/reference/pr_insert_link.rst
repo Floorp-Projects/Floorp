@@ -1,3 +1,6 @@
+PR_INSERT_LINK
+==============
+
 Inserts an element at the head of the list.
 
 .. _Syntax:

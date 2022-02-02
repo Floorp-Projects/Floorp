@@ -1,5 +1,9 @@
-Type for error codes that can be retrieved with ``PR_GetError``. You can
-also set your own errors using ``PR_SetError``.
+PRErrorCode
+===========
+
+
+Type for error codes that can be retrieved with :ref:`PR_GetError`. You can
+also set your own errors using :ref:`PR_SetError`.
 
 .. _Syntax:
 

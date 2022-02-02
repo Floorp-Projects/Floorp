@@ -1,3 +1,6 @@
+PR_GetFileInfo
+==============
+
 Gets information about a file with a specified pathname. File size is
 expressed as a 32-bit integer.
 
@@ -24,8 +27,8 @@ The function has the following parameters:
 ``fn``
    The pathname of the file to get information about.
 ``info``
-   A pointer to a file information object (see ``PRFileInfo``). On
-   output, ``PR_GetFileInfo`` writes information about the given file to
+   A pointer to a file information object (see :ref:`PRFileInfo`). On
+   output, :ref:`PR_GetFileInfo` writes information about the given file to
    the file information object.
 
 .. _Returns:
@@ -43,8 +46,8 @@ One of the following values:
 Description
 -----------
 
-``PR_GetFileInfo`` stores information about the file with the specified
-pathname in the ``PRFileInfo`` structure pointed to by ``info``. The
+:ref:`PR_GetFileInfo` stores information about the file with the specified
+pathname in the :ref:`PRFileInfo` structure pointed to by ``info``. The
 file size is returned as an unsigned 32-bit integer.
 
 .. _See_Also:
@@ -52,6 +55,6 @@ file size is returned as an unsigned 32-bit integer.
 See Also
 --------
 
-For the 64-bit version of this function, see ``PR_GetFileInfo64``. To
+For the 64-bit version of this function, see :ref:`PR_GetFileInfo64`. To
 get equivalent information on a file that's already open, use
-``PR_GetOpenFileInfo``.
+:ref:`PR_GetOpenFileInfo`.

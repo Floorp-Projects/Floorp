@@ -1,3 +1,6 @@
+PR_DisableClockInterrupts
+=========================
+
 Disables timer signals used for preemptive scheduling.
 
 .. _Syntax:

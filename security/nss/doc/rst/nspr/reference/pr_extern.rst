@@ -1,3 +1,6 @@
+PR_EXTERN
+=========
+
 Used to define the prototypes for functions or variables that are to be
 exported from a shared library.
 
@@ -17,7 +20,7 @@ Syntax
 Description
 -----------
 
-``PR_EXTERN`` is used to define externally visible routines and globals.
+:ref:`PR_EXTERN` is used to define externally visible routines and globals.
 For syntax details for each platform, see
 `prtypes.h <https://dxr.mozilla.org/mozilla-central/source/nsprpub/pr/include/prtypes.h>`__.
 The macro includes the proper specifications to declare the target

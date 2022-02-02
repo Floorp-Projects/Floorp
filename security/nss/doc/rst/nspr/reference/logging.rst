@@ -1,3 +1,6 @@
+NSPR Logging
+============
+
 This chapter describes the global functions you use to perform logging.
 NSPR provides a set of logging functions that conditionally write
 ``printf()`` style strings to the console or to a log file. NSPR uses
@@ -45,14 +48,14 @@ Log Types and Variables
 
 Two types supporting NSPR logging are exposed in the API:
 
--  ``PRLogModuleInfo``
--  ``PRLogModuleLevel``
+ - :ref:`PRLogModuleInfo`
+ - :ref:`PRLogModuleLevel`
 
 Two environment variables control the behavior of logging at execution
 time:
 
--  ``NSPR_LOG_MODULES``
--  ``NSPR_LOG_FILE``
+ - :ref:`NSPR_LOG_MODULES`
+ - :ref:`NSPR_LOG_FILE`
 
 .. _Logging_Functions_and_Macros:
 
@@ -61,17 +64,17 @@ Logging Functions and Macros
 
 The functions and macros for logging are:
 
--  ``PR_NewLogModule``
--  ``PR_SetLogFile``
--  ``PR_SetLogBuffering``
--  ``PR_LogPrint``
--  ``PR_LogFlush``
--  ``PR_LOG_TEST``
--  ``PR_LOG``
--  ``PR_Assert``
--  ``PR_STATIC_ASSERT`` (new in NSPR 4.6.6XXX this hasn't been released
+ - :ref:`PR_NewLogModule`
+ - :ref:`PR_SetLogFile`
+ - :ref:`PR_SetLogBuffering`
+ - :ref:`PR_LogPrint`
+ - :ref:`PR_LogFlush`
+ - :ref:`PR_LOG_TEST`
+ - :ref:`PR_LOG`
+ - :ref:`PR_Assert`
+ - :ref:`PR_STATIC_ASSERT` (new in NSPR 4.6.6XXX this hasn't been released
    yet; the number is a logical guess)
--  ``PR_NOT_REACHED``
+ - :ref:`PR_NOT_REACHED`
 
 .. note::
 

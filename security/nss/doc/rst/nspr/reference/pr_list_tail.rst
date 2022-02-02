@@ -1,3 +1,6 @@
+PR_LIST_TAIL
+============
+
 Returns the tail of a circular list.
 
 .. _Syntax:
@@ -31,4 +34,4 @@ A pointer to a list element.
 Description
 -----------
 
-``PR_LIST_TAIL`` returns the tail of the specified circular list.
+:ref:`PR_LIST_TAIL` returns the tail of the specified circular list.

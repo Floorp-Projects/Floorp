@@ -1,3 +1,6 @@
+PR_GetPeerName
+==============
+
 Gets the network address of the connected peer.
 
 .. _Syntax:
@@ -21,7 +24,7 @@ Parameters
 The function has the following parameters:
 
 ``fd``
-   A pointer to a ``PRFileDesc`` object representing a socket.
+   A pointer to a :ref:`PRFileDesc` object representing a socket.
 ``addr``
    On return, the address of the peer connected to the socket.
 
@@ -32,4 +35,4 @@ Returns
 
 -  If successful, ``PR_SUCCESS``.
 -  If unsuccessful, ``PR_FAILURE``. The reason for the failure can be
-   obtained by calling ``PR_GetError``.
+   obtained by calling :ref:`PR_GetError`.

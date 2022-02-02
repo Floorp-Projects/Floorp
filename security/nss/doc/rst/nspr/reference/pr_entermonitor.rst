@@ -1,3 +1,6 @@
+PR_EnterMonitor
+===============
+
 Enters the lock associated with a specified monitor.
 
 .. _Syntax:
@@ -19,7 +22,7 @@ Parameter
 The function has the following parameter:
 
 ``mon``
-   A reference to an existing structure of type ``PRMonitor``.
+   A reference to an existing structure of type :ref:`PRMonitor`.
 
 .. _Description:
 
@@ -32,7 +35,7 @@ other thread will result in the caller blocking. The operation is
 neither timed nor interruptible.
 
 If the monitor's entry count is greater than zero and the calling thread
-is recognized as the holder of the lock, ``PR_EnterMonitor`` increments
+is recognized as the holder of the lock, :ref:`PR_EnterMonitor` increments
 the entry count by one and returns. If the entry count is greater than
 zero and the calling thread is not recognized as the holder of the lock,
 the thread is blocked until the entry count reaches zero. When the entry

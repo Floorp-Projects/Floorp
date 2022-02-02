@@ -1,3 +1,6 @@
+PRTime
+======
+
 A representation of absolute times.
 
 .. _Syntax:
@@ -27,6 +30,6 @@ precise definitions, they can generally be treated as if they were.
 
 .. note::
 
-   **Note:** Keep in mind that while ``PRTime`` stores times in
+   **Note:** Keep in mind that while :ref:`PRTime` stores times in
    microseconds since epoch, JavaScript date objects store times in
    milliseconds since epoch.

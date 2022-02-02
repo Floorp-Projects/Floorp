@@ -1,3 +1,6 @@
+PR_USEC_PER_MSEC
+================
+
 A convenience macro to improve code readability as well as to avoid
 mistakes in counting the number of zeros; represents the number of
 microseconds in a millisecond.
