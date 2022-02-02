@@ -149,12 +149,6 @@ class GeckoChildProcessHost : public ChildProcessHost,
   }
 #endif
 
-  /**
-   * Must run on the IO thread.  Cause the OS process to exit and
-   * ensure its OS resources are cleaned up.
-   */
-  void Join();
-
   // For bug 943174: Skip the EnsureProcessTerminated call in the destructor.
   void SetAlreadyDead();
 
