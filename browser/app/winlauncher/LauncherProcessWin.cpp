@@ -242,7 +242,7 @@ namespace mozilla {
 Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
                         const StaticXREAppData& aAppData) {
   // Note: keep in sync with nsBrowserApp.
-  const wchar_t* acceptableParams[] = {L"url", nullptr};
+  const wchar_t* acceptableParams[] = {L"url", L"private-window", nullptr};
   EnsureCommandlineSafe(argc, argv, acceptableParams);
 
   SetLauncherErrorAppData(aAppData);
