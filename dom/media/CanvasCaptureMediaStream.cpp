@@ -46,9 +46,6 @@ void OutputStreamDriver::SetImage(RefPtr<layers::Image>&& aImage,
                                   const TimeStamp& aTime) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  TRACE_COMMENT("OutputStreamDriverSetImage", "SourceMediaTrack %p",
-                mSourceStream.get());
-
   VideoSegment segment;
   const auto size = aImage->GetSize();
   segment.AppendFrame(aImage.forget(), size, mPrincipalHandle, false, aTime);
@@ -86,6 +83,19 @@ class TimerDriver : public OutputStreamDriver {
 
   void NewFrame(already_AddRefed<Image> aImage,
                 const TimeStamp& aTime) override {
+    nsCString str;
+    if (profiler_thread_is_being_profiled_for_markers()) {
+      TimeDuration sinceLast =
+          aTime - (mLastFrameTime.IsNull() ? aTime : mLastFrameTime);
+      str.AppendPrintf(
+          "TimerDriver %staking frame (%sexplicitly requested; after %.2fms; "
+          "interval cap %.2fms)",
+          sinceLast >= mFrameInterval ? "" : "NOT ",
+          mExplicitCaptureRequested ? "" : "NOT ", sinceLast.ToMilliseconds(),
+          mFrameInterval.ToMilliseconds());
+    }
+    AUTO_PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {}, str);
+
     RefPtr<Image> image = aImage;
 
     if (!FrameCaptureRequested(aTime)) {
@@ -122,6 +132,9 @@ class AutoDriver : public OutputStreamDriver {
 
   void NewFrame(already_AddRefed<Image> aImage,
                 const TimeStamp& aTime) override {
+    AUTO_PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {},
+                              "AutoDriver taking frame"_ns);
+
     RefPtr<Image> image = aImage;
     SetImage(std::move(image), aTime);
   }
