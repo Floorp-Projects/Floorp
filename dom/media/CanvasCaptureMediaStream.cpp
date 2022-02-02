@@ -28,9 +28,6 @@ OutputStreamDriver::OutputStreamDriver(SourceMediaTrack* aSourceStream,
       mPrincipalHandle(aPrincipalHandle) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mSourceStream);
-
-  // All CanvasCaptureMediaStreams shall at least get one frame.
-  mFrameCaptureRequested = true;
 }
 
 OutputStreamDriver::~OutputStreamDriver() {
@@ -65,49 +62,48 @@ class TimerDriver : public OutputStreamDriver {
   explicit TimerDriver(SourceMediaTrack* aSourceStream, const double& aFPS,
                        const PrincipalHandle& aPrincipalHandle)
       : OutputStreamDriver(aSourceStream, aPrincipalHandle),
-        mFPS(aFPS),
-        mTimer(nullptr) {
-    if (mFPS == 0.0) {
-      return;
+        mFrameInterval(aFPS == 0.0 ? TimeDuration::Forever()
+                                   : TimeDuration::FromSeconds(1.0 / aFPS)) {}
+
+  void RequestFrameCapture() override { mExplicitCaptureRequested = true; }
+
+  bool FrameCaptureRequested(const TimeStamp& aTime) const override {
+    if (mLastFrameTime.IsNull()) {
+      // All CanvasCaptureMediaStreams shall at least get one frame.
+      return true;
     }
 
-    NS_NewTimerWithFuncCallback(
-        getter_AddRefs(mTimer), &TimerTick, this, int(1000 / mFPS),
-        nsITimer::TYPE_REPEATING_SLACK, "dom::TimerDriver::TimerDriver");
-  }
+    if (mExplicitCaptureRequested) {
+      return true;
+    }
 
-  static void TimerTick(nsITimer* aTimer, void* aClosure) {
-    MOZ_ASSERT(aClosure);
-    TimerDriver* driver = static_cast<TimerDriver*>(aClosure);
+    if ((aTime - mLastFrameTime) >= mFrameInterval) {
+      return true;
+    }
 
-    driver->RequestFrameCapture();
+    return false;
   }
 
   void NewFrame(already_AddRefed<Image> aImage,
                 const TimeStamp& aTime) override {
     RefPtr<Image> image = aImage;
 
-    if (!mFrameCaptureRequested) {
+    if (!FrameCaptureRequested(aTime)) {
       return;
     }
 
-    mFrameCaptureRequested = false;
+    mLastFrameTime = aTime;
+    mExplicitCaptureRequested = false;
     SetImage(std::move(image), aTime);
-  }
-
-  void Forget() override {
-    if (mTimer) {
-      mTimer->Cancel();
-      mTimer = nullptr;
-    }
   }
 
  protected:
   virtual ~TimerDriver() = default;
 
  private:
-  const double mFPS;
-  nsCOMPtr<nsITimer> mTimer;
+  const TimeDuration mFrameInterval;
+  bool mExplicitCaptureRequested = false;
+  TimeStamp mLastFrameTime;
 };
 
 // ----------------------------------------------------------------------
@@ -118,13 +114,14 @@ class AutoDriver : public OutputStreamDriver {
                       const PrincipalHandle& aPrincipalHandle)
       : OutputStreamDriver(aSourceStream, aPrincipalHandle) {}
 
+  void RequestFrameCapture() override {}
+
+  bool FrameCaptureRequested(const TimeStamp& aTime) const override {
+    return true;
+  }
+
   void NewFrame(already_AddRefed<Image> aImage,
                 const TimeStamp& aTime) override {
-    // Don't reset `mFrameCaptureRequested` since AutoDriver shall always have
-    // `mFrameCaptureRequested` set to true.
-    // This also means we should accept every frame as NewFrame is called only
-    // after something changed.
-
     RefPtr<Image> image = aImage;
     SetImage(std::move(image), aTime);
   }
@@ -148,11 +145,7 @@ CanvasCaptureMediaStream::CanvasCaptureMediaStream(nsPIDOMWindowInner* aWindow,
                                                    HTMLCanvasElement* aCanvas)
     : DOMMediaStream(aWindow), mCanvas(aCanvas) {}
 
-CanvasCaptureMediaStream::~CanvasCaptureMediaStream() {
-  if (mOutputStreamDriver) {
-    mOutputStreamDriver->Forget();
-  }
-}
+CanvasCaptureMediaStream::~CanvasCaptureMediaStream() = default;
 
 JSObject* CanvasCaptureMediaStream::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -195,7 +188,6 @@ void CanvasCaptureMediaStream::StopCapture() {
   }
 
   mOutputStreamDriver->EndTrack();
-  mOutputStreamDriver->Forget();
   mOutputStreamDriver = nullptr;
 }
 
