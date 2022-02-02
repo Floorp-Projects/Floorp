@@ -186,6 +186,7 @@ using dom::Promise;
 using dom::Sequence;
 using dom::UserActivation;
 using dom::WindowGlobalChild;
+using ConstDeviceSetPromise = MediaManager::ConstDeviceSetPromise;
 using LocalDevicePromise = MediaManager::LocalDevicePromise;
 using LocalDeviceSetPromise = MediaManager::LocalDeviceSetPromise;
 using LocalMediaDeviceSetRefCnt = MediaManager::LocalMediaDeviceSetRefCnt;
@@ -1929,6 +1930,39 @@ RefPtr<MediaManager::DeviceSetPromise> MediaManager::EnumerateRawDevices(
   return promise;
 }
 
+RefPtr<ConstDeviceSetPromise> MediaManager::GetPhysicalDevices() {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mPhysicalDevices) {
+    return ConstDeviceSetPromise::CreateAndResolve(mPhysicalDevices, __func__);
+  }
+  if (mPendingDevicesPromises) {
+    // Enumeration is already in progress.
+    return mPendingDevicesPromises->AppendElement()->Ensure(__func__);
+  }
+  mPendingDevicesPromises =
+      new Refcountable<nsTArray<MozPromiseHolder<ConstDeviceSetPromise>>>;
+  EnumerateRawDevices(MediaSourceEnum::Camera, MediaSourceEnum::Microphone,
+                      EnumerationFlag::EnumerateAudioOutputs)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr(this), this, promises = mPendingDevicesPromises](
+              RefPtr<MediaDeviceSetRefCnt> aDevices) mutable {
+            for (auto& promiseHolder : *promises) {
+              promiseHolder.Resolve(aDevices, __func__);
+            }
+            // mPendingDevicesPromises may have changed if devices have changed.
+            if (promises == mPendingDevicesPromises) {
+              mPendingDevicesPromises = nullptr;
+              mPhysicalDevices = std::move(aDevices);
+            }
+          },
+          [](RefPtr<MediaMgrError>&& reason) {
+            MOZ_ASSERT_UNREACHABLE("EnumerateRawDevices does not reject");
+          });
+
+  return mPendingDevicesPromises->AppendElement()->Ensure(__func__);
+}
+
 MediaManager::MediaManager(already_AddRefed<TaskQueue> aMediaThread)
     : mMediaThread(aMediaThread), mBackend(nullptr) {
   mPrefs.mFreq = 1000;  // 1KHz test tone
@@ -1942,7 +1976,6 @@ MediaManager::MediaManager(already_AddRefed<TaskQueue> aMediaThread)
   mPrefs.mNoiseOn = false;
   mPrefs.mTransientOn = false;
   mPrefs.mResidualEchoOn = false;
-  mPrefs.mFakeDeviceChangeEventOn = false;
   mPrefs.mAgc2Forced = false;
 #ifdef MOZ_WEBRTC
   mPrefs.mAgc =
@@ -1996,6 +2029,9 @@ static void ForeachObservedPref(const Function& aFunction) {
   aFunction("media.navigator.video.default_height"_ns);
   aFunction("media.navigator.video.default_fps"_ns);
   aFunction("media.navigator.audio.fake_frequency"_ns);
+  aFunction("media.audio_loopback_dev"_ns);
+  aFunction("media.video_loopback_dev"_ns);
+  aFunction("media.getusermedia.fake-camera-name"_ns);
 #ifdef MOZ_WEBRTC
   aFunction("media.getusermedia.aec_enabled"_ns);
   aFunction("media.getusermedia.aec"_ns);
@@ -2004,8 +2040,8 @@ static void ForeachObservedPref(const Function& aFunction) {
   aFunction("media.getusermedia.hpf_enabled"_ns);
   aFunction("media.getusermedia.noise_enabled"_ns);
   aFunction("media.getusermedia.noise"_ns);
-  aFunction("media.ondevicechange.fakeDeviceChangeEvent.enabled"_ns);
   aFunction("media.getusermedia.channels"_ns);
+  aFunction("media.navigator.streams.fake"_ns);
 #endif
 }
 
@@ -2187,7 +2223,9 @@ void MediaManager::DeviceListChanged() {
   if (sHasShutdown) {
     return;
   }
-  mDeviceListChangeEvent.Notify();
+  // Invalidate immediately to provide an up-to-date device list for future
+  // enumerations on platforms with sane device-list-changed events.
+  InvalidateDeviceCache();
 
   // Wait 200 ms, because
   // A) on some Windows machines, if we call EnumerateRawDevices immediately
@@ -2220,56 +2258,67 @@ void MediaManager::DeviceListChanged() {
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self, this] {
+            // Invalidate again for the sake of platforms with inconsistent
+            // timing between device-list-changed notification and enumeration.
+            InvalidateDeviceCache();
+
             mUnhandledDeviceChangeTime = TimeStamp();
             HandleDeviceListChanged();
           },
           [] { /* Timer was canceled by us, or we're in shutdown. */ });
 }
 
-void MediaManager::HandleDeviceListChanged() {
-  EnumerateRawDevices(MediaSourceEnum::Camera, MediaSourceEnum::Microphone,
-                      EnumerationFlag::EnumerateAudioOutputs)
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr(this), this](RefPtr<MediaDeviceSetRefCnt> aDevices) {
-            if (!MediaManager::GetIfExists()) {
-              return;
-            }
+void MediaManager::InvalidateDeviceCache() {
+  mPhysicalDevices = nullptr;
+  // Disconnect any in-progress enumeration, which may now be out of date,
+  // from updating mPhysicalDevices or resolving future device request
+  // promises.
+  mPendingDevicesPromises = nullptr;
+}
 
-            nsTHashSet<nsString> deviceIDs;
-            for (auto& device : *aDevices) {
-              deviceIDs.Insert(device->mRawID);
+void MediaManager::HandleDeviceListChanged() {
+  mDeviceListChangeEvent.Notify();
+
+  GetPhysicalDevices()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [self = RefPtr(this), this](RefPtr<const MediaDeviceSetRefCnt> aDevices) {
+        if (!MediaManager::GetIfExists()) {
+          return;
+        }
+
+        nsTHashSet<nsString> deviceIDs;
+        for (const auto& device : *aDevices) {
+          deviceIDs.Insert(device->mRawID);
+        }
+        // For any real removed cameras or microphones, notify their
+        // listeners cleanly that the source has stopped, so JS knows and
+        // usage indicators update.
+        // First collect the listeners in an array to stop them after
+        // iterating the hashtable. The StopRawID() method indirectly
+        // modifies the mActiveWindows and would assert-crash if the
+        // iterator were active while the table is being enumerated.
+        const auto windowListeners = ToArray(mActiveWindows.Values());
+        for (const RefPtr<GetUserMediaWindowListener>& l : windowListeners) {
+          const auto activeDevices = l->GetDevices();
+          for (const RefPtr<LocalMediaDevice>& device : *activeDevices) {
+            if (device->IsFake()) {
+              continue;
             }
-            // For any real removed cameras or microphones, notify their
-            // listeners cleanly that the source has stopped, so JS knows and
-            // usage indicators update.
-            // First collect the listeners in an array to stop them after
-            // iterating the hashtable. The StopRawID() method indirectly
-            // modifies the mActiveWindows and would assert-crash if the
-            // iterator were active while the table is being enumerated.
-            const auto windowListeners = ToArray(mActiveWindows.Values());
-            for (const RefPtr<GetUserMediaWindowListener>& l :
-                 windowListeners) {
-              const auto activeDevices = l->GetDevices();
-              for (const RefPtr<LocalMediaDevice>& device : *activeDevices) {
-                if (device->IsFake()) {
-                  continue;
-                }
-                MediaSourceEnum mediaSource = device->GetMediaSource();
-                if (mediaSource != MediaSourceEnum::Microphone &&
-                    mediaSource != MediaSourceEnum::Camera) {
-                  continue;
-                }
-                if (!deviceIDs.Contains(device->RawID())) {
-                  // Device has been removed
-                  l->StopRawID(device->RawID());
-                }
-              }
+            MediaSourceEnum mediaSource = device->GetMediaSource();
+            if (mediaSource != MediaSourceEnum::Microphone &&
+                mediaSource != MediaSourceEnum::Camera) {
+              continue;
             }
-          },
-          [](RefPtr<MediaMgrError>&& reason) {
-            MOZ_ASSERT_UNREACHABLE("EnumerateRawDevices does not reject");
-          });
+            if (!deviceIDs.Contains(device->RawID())) {
+              // Device has been removed
+              l->StopRawID(device->RawID());
+            }
+          }
+        }
+      },
+      [](RefPtr<MediaMgrError>&& reason) {
+        MOZ_ASSERT_UNREACHABLE("EnumerateRawDevices does not reject");
+      });
 }
 
 size_t MediaManager::AddTaskAndGetCount(uint64_t aWindowID,
@@ -3288,22 +3337,6 @@ void MediaManager::GetPrefs(nsIPrefBranch* aBranch, const char* aData) {
   GetPref(aBranch, "media.getusermedia.agc", aData, &mPrefs.mAgc);
   GetPref(aBranch, "media.getusermedia.noise", aData, &mPrefs.mNoise);
   GetPref(aBranch, "media.getusermedia.channels", aData, &mPrefs.mChannels);
-  bool oldFakeDeviceChangeEventOn = mPrefs.mFakeDeviceChangeEventOn;
-  GetPrefBool(aBranch, "media.ondevicechange.fakeDeviceChangeEvent.enabled",
-              aData, &mPrefs.mFakeDeviceChangeEventOn);
-  if (mPrefs.mFakeDeviceChangeEventOn != oldFakeDeviceChangeEventOn) {
-    // Dispatch directly to the media thread since we're guaranteed to not be in
-    // shutdown here. This is called either on construction, or when a pref has
-    // changed. The pref observers are disconnected during shutdown.
-    MOZ_DIAGNOSTIC_ASSERT(!sHasShutdown);
-    MOZ_ALWAYS_SUCCEEDS(mMediaThread->Dispatch(NS_NewRunnableFunction(
-        "MediaManager::SetFakeDeviceChangeEventsEnabled",
-        [enable = mPrefs.mFakeDeviceChangeEventOn] {
-          if (MediaManager* mm = MediaManager::GetIfExists()) {
-            mm->GetBackend()->SetFakeDeviceChangeEventsEnabled(enable);
-          }
-        })));
-  }
 #endif
 }
 
@@ -3386,7 +3419,6 @@ void MediaManager::Shutdown() {
       // started it from!
       {
         if (mManager->mBackend) {
-          mManager->mBackend->SetFakeDeviceChangeEventsEnabled(false);
           mManager->mBackend->Shutdown();  // idempotent
           mManager->mDeviceListChangeListener.DisconnectIfExists();
         }
@@ -3495,6 +3527,7 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       GetPrefs(branch, NS_ConvertUTF16toUTF8(aData).get());
       LOG("%s: %dx%d @%dfps", __FUNCTION__, mPrefs.mWidth, mPrefs.mHeight,
           mPrefs.mFPS);
+      DeviceListChanged();
     }
   } else if (!strcmp(aTopic, "last-pb-context-exited")) {
     // Clear memory of private-browsing-specific deviceIds. Fire and forget.

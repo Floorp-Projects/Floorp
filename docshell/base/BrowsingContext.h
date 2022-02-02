@@ -908,6 +908,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   static bool ShouldAddEntryForRefresh(nsIURI* aCurrentURI,
                                        const SessionHistoryInfo& aInfo);
+  static bool ShouldAddEntryForRefresh(nsIURI* aCurrentURI, nsIURI* aNewURI,
+                                       bool aHasPostData);
 
  private:
   void Attach(bool aFromIPC, ContentParent* aOriginProcess);

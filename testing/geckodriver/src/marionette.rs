@@ -455,13 +455,10 @@ impl MarionetteSession {
                         "Failed to interpret script timeout duration as u64"
                     ),
                 };
-                // Check for the spec-compliant "pageLoad", but also for "page load",
-                // which was sent by Firefox 52 and earlier.
                 let page_load = try_opt!(
                     try_opt!(
                         resp.result
-                            .get("pageLoad")
-                            .or_else(|| resp.result.get("page load")),
+                            .get("pageLoad"),
                         ErrorStatus::UnknownError,
                         "Missing field: pageLoad"
                     )

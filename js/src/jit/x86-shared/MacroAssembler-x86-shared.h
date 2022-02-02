@@ -401,6 +401,12 @@ class MacroAssemblerX86Shared : public Assembler {
                                                    FloatRegister),
                      void (MacroAssembler::*constOp)(const SimdConstant&,
                                                      FloatRegister));
+  void binarySimd128(
+      FloatRegister lhs, const SimdConstant& rhs, FloatRegister dest,
+      void (MacroAssembler::*regOp)(const Operand&, FloatRegister,
+                                    FloatRegister),
+      void (MacroAssembler::*constOp)(const SimdConstant&, FloatRegister,
+                                      FloatRegister));
   void binarySimd128(const SimdConstant& rhs, FloatRegister lhsDest,
                      void (MacroAssembler::*regOp)(const Operand&,
                                                    FloatRegister),
@@ -457,16 +463,16 @@ class MacroAssemblerX86Shared : public Assembler {
 
   void compareInt8x16(FloatRegister lhs, Operand rhs, Assembler::Condition cond,
                       FloatRegister output);
-  void compareInt8x16(Assembler::Condition cond, const SimdConstant& rhs,
-                      FloatRegister lhsDest);
+  void compareInt8x16(Assembler::Condition cond, FloatRegister lhs,
+                      const SimdConstant& rhs, FloatRegister dest);
   void compareInt16x8(FloatRegister lhs, Operand rhs, Assembler::Condition cond,
                       FloatRegister output);
-  void compareInt16x8(Assembler::Condition cond, const SimdConstant& rhs,
-                      FloatRegister lhsDest);
+  void compareInt16x8(Assembler::Condition cond, FloatRegister lhs,
+                      const SimdConstant& rhs, FloatRegister dest);
   void compareInt32x4(FloatRegister lhs, Operand rhs, Assembler::Condition cond,
                       FloatRegister output);
-  void compareInt32x4(Assembler::Condition cond, const SimdConstant& rhs,
-                      FloatRegister lhsDest);
+  void compareInt32x4(Assembler::Condition cond, FloatRegister lhs,
+                      const SimdConstant& rhs, FloatRegister dest);
   void compareForEqualityInt64x2(FloatRegister lhs, Operand rhs,
                                  Assembler::Condition cond,
                                  FloatRegister output);
@@ -475,12 +481,12 @@ class MacroAssemblerX86Shared : public Assembler {
                                  FloatRegister temp2, FloatRegister output);
   void compareFloat32x4(FloatRegister lhs, Operand rhs,
                         Assembler::Condition cond, FloatRegister output);
-  void compareFloat32x4(Assembler::Condition cond, const SimdConstant& rhs,
-                        FloatRegister lhsDest);
+  void compareFloat32x4(Assembler::Condition cond, FloatRegister lhs,
+                        const SimdConstant& rhs, FloatRegister dest);
   void compareFloat64x2(FloatRegister lhs, Operand rhs,
                         Assembler::Condition cond, FloatRegister output);
-  void compareFloat64x2(Assembler::Condition cond, const SimdConstant& rhs,
-                        FloatRegister lhsDest);
+  void compareFloat64x2(Assembler::Condition cond, FloatRegister lhs,
+                        const SimdConstant& rhs, FloatRegister dest);
 
   void minMaxFloat32x4(bool isMin, FloatRegister lhs, Operand rhs,
                        FloatRegister temp1, FloatRegister temp2,
@@ -573,7 +579,7 @@ class MacroAssemblerX86Shared : public Assembler {
       vmovdqa(src, dest);
     }
   }
-  FloatRegister reusedInputInt32x4(FloatRegister src, FloatRegister dest) {
+  FloatRegister moveSimd128IntIfNotAVX(FloatRegister src, FloatRegister dest) {
     MOZ_ASSERT(src.isSimd128() && dest.isSimd128());
     if (HasAVX()) {
       return src;
@@ -639,7 +645,8 @@ class MacroAssemblerX86Shared : public Assembler {
       vmovaps(src, dest);
     }
   }
-  FloatRegister reusedInputSimd128Float(FloatRegister src, FloatRegister dest) {
+  FloatRegister moveSimd128FloatIfNotAVX(FloatRegister src,
+                                         FloatRegister dest) {
     MOZ_ASSERT(src.isSimd128() && dest.isSimd128());
     if (HasAVX()) {
       return src;
@@ -647,9 +654,9 @@ class MacroAssemblerX86Shared : public Assembler {
     moveSimd128Float(src, dest);
     return dest;
   }
-  FloatRegister reusedInputSimd128FloatIfNotOther(FloatRegister src,
-                                                  FloatRegister dest,
-                                                  FloatRegister other) {
+  FloatRegister moveSimd128FloatIfNotAVXOrOther(FloatRegister src,
+                                                FloatRegister dest,
+                                                FloatRegister other) {
     MOZ_ASSERT(src.isSimd128() && dest.isSimd128());
     if (HasAVX() && src != other) {
       return src;
@@ -657,6 +664,7 @@ class MacroAssemblerX86Shared : public Assembler {
     moveSimd128Float(src, dest);
     return dest;
   }
+
   void loadUnalignedSimd128(const Operand& src, FloatRegister dest) {
     vmovups(src, dest);
   }
@@ -680,16 +688,6 @@ class MacroAssemblerX86Shared : public Assembler {
   void moveHighPairToLowPairFloat32(FloatRegister src, FloatRegister dest) {
     vmovhlps(src, dest, dest);
   }
-  void shuffleFloat32(uint32_t mask, FloatRegister src, FloatRegister dest) {
-    // The shuffle instruction on x86 is such that it moves 2 words from
-    // the dest and 2 words from the src operands. To simplify things, just
-    // clobber the output with the input and apply the instruction
-    // afterwards.
-    // Note: this is useAtStart-safe because src isn't read afterwards.
-    FloatRegister srcCopy = reusedInputSimd128Float(src, dest);
-    vshufps(mask, srcCopy, srcCopy, dest);
-  }
-
   void moveFloatAsDouble(Register src, FloatRegister dest) {
     vmovd(src, dest);
     vcvtss2sd(dest, dest, dest);

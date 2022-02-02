@@ -8,16 +8,19 @@
  <body>
    <h1> debugger test page2</h1>
    <script type="text/javascript">
+     var func;
      function a() {
        function render() {
          console.log('a');
        }
+       func = render;
      }
 
      function b() {
        function render() {
          console.log('b');
        }
+       func = render;
      }
    </script>
  </body>

@@ -535,6 +535,11 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
       return nullptr;
     }
     Unused << SetHistoryEntryCount(entry->BCHistoryLength());
+  } else if (aLoadState->LoadType() == LOAD_REFRESH &&
+             !ShouldAddEntryForRefresh(aLoadState->URI(),
+                                       aLoadState->PostDataStream()) &&
+             mActiveEntry) {
+    entry = mActiveEntry;
   } else {
     entry = new SessionHistoryEntry(aLoadState, aChannel);
     if (IsTop()) {

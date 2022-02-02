@@ -5710,6 +5710,27 @@ class BaseAssembler : public GenericAssembler {
       memoryModRM(address, reg);
     }
 
+    void threeByteRipOpVex(VexOperandType ty, ThreeByteOpcodeID opcode,
+                           ThreeByteEscape escape, int ripOffset,
+                           XMMRegisterID src0, int reg) {
+      int r = (reg >> 3), x = 0, b = 0;
+      int m = 0;
+      switch (escape) {
+        case ESCAPE_38:
+          m = 2;
+          break;
+        case ESCAPE_3A:
+          m = 3;
+          break;
+        default:
+          MOZ_CRASH("unexpected escape");
+      }
+      int w = 0, v = src0, l = 0;
+      threeOpVex(ty, r, x, b, m, w, v, l, opcode);
+      putModRm(ModRmMemoryNoDisp, noBase, reg);
+      m_buffer.putIntUnchecked(ripOffset);
+    }
+
     void vblendvOpVex(VexOperandType ty, ThreeByteOpcodeID opcode,
                       ThreeByteEscape escape, XMMRegisterID mask, RegisterID rm,
                       XMMRegisterID src0, int reg) {

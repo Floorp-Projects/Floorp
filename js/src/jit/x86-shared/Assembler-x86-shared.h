@@ -2724,33 +2724,33 @@ class AssemblerX86Shared : public AssemblerShared {
   void vcmpordps(const Operand& rhs, FloatRegister lhs, FloatRegister dest) {
     vcmpps(X86Encoding::ConditionCmp_ORD, rhs, lhs, dest);
   }
-  void vcmppd(uint8_t order, Operand rhs, FloatRegister srcDest) {
+  void vcmppd(uint8_t order, Operand rhs, FloatRegister lhs,
+              FloatRegister dest) {
     switch (rhs.kind()) {
       case Operand::FPREG:
-        masm.vcmppd_rr(order, rhs.fpu(), srcDest.encoding(),
-                       srcDest.encoding());
+        masm.vcmppd_rr(order, rhs.fpu(), lhs.encoding(), dest.encoding());
         break;
       default:
         MOZ_CRASH("NYI");
     }
   }
-  void vcmpeqpd(const Operand& rhs, FloatRegister srcDest) {
-    vcmppd(X86Encoding::ConditionCmp_EQ, rhs, srcDest);
+  void vcmpeqpd(const Operand& rhs, FloatRegister lhs, FloatRegister dest) {
+    vcmppd(X86Encoding::ConditionCmp_EQ, rhs, lhs, dest);
   }
-  void vcmpltpd(const Operand& rhs, FloatRegister srcDest) {
-    vcmppd(X86Encoding::ConditionCmp_LT, rhs, srcDest);
+  void vcmpltpd(const Operand& rhs, FloatRegister lhs, FloatRegister dest) {
+    vcmppd(X86Encoding::ConditionCmp_LT, rhs, lhs, dest);
   }
-  void vcmplepd(const Operand& rhs, FloatRegister srcDest) {
-    vcmppd(X86Encoding::ConditionCmp_LE, rhs, srcDest);
+  void vcmplepd(const Operand& rhs, FloatRegister lhs, FloatRegister dest) {
+    vcmppd(X86Encoding::ConditionCmp_LE, rhs, lhs, dest);
   }
-  void vcmpneqpd(const Operand& rhs, FloatRegister srcDest) {
-    vcmppd(X86Encoding::ConditionCmp_NEQ, rhs, srcDest);
+  void vcmpneqpd(const Operand& rhs, FloatRegister lhs, FloatRegister dest) {
+    vcmppd(X86Encoding::ConditionCmp_NEQ, rhs, lhs, dest);
   }
-  void vcmpordpd(const Operand& rhs, FloatRegister srcDest) {
-    vcmppd(X86Encoding::ConditionCmp_ORD, rhs, srcDest);
+  void vcmpordpd(const Operand& rhs, FloatRegister lhs, FloatRegister dest) {
+    vcmppd(X86Encoding::ConditionCmp_ORD, rhs, lhs, dest);
   }
-  void vcmpunordpd(const Operand& rhs, FloatRegister srcDest) {
-    vcmppd(X86Encoding::ConditionCmp_UNORD, rhs, srcDest);
+  void vcmpunordpd(const Operand& rhs, FloatRegister lhs, FloatRegister dest) {
+    vcmppd(X86Encoding::ConditionCmp_UNORD, rhs, lhs, dest);
   }
   void vrcpps(const Operand& src, FloatRegister dest) {
     MOZ_ASSERT(HasSSE2());

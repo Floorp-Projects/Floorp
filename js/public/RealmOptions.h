@@ -232,6 +232,14 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
+#ifdef NIGHTLY_BUILD
+  bool getArrayGroupingEnabled() const { return arrayGrouping_; }
+  RealmCreationOptions& setArrayGroupingEnabled(bool flag) {
+    arrayGrouping_ = flag;
+    return *this;
+  }
+#endif
+
 #ifdef ENABLE_NEW_SET_METHODS
   bool getNewSetMethodsEnabled() const { return newSetMethods_; }
   RealmCreationOptions& setNewSetMethodsEnabled(bool flag) {
@@ -278,6 +286,9 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool toSource_ = false;
   bool propertyErrorMessageFix_ = false;
   bool iteratorHelpers_ = false;
+#ifdef NIGHTLY_BUILD
+  bool arrayGrouping_ = true;
+#endif
 #ifdef ENABLE_NEW_SET_METHODS
   bool newSetMethods_ = false;
 #endif

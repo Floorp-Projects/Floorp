@@ -22,6 +22,32 @@ function codegenTestX64_v128xv128_v128_avxhack(inputs, options = {}) {
                               options);
      }
 }
+// (see codegenTestX64_v128xv128_v128_avxhack comment about AVX defect)
+// v128 OP const -> v128
+// inputs: [[complete-opname, const, expected-pattern], ...]
+function codegenTestX64_v128xLITERAL_v128_avxhack(inputs, options = {}) {
+     for ( let [op, const_, expected] of inputs ) {
+         codegenTestX64_adhoc(wrap(options, `
+         (func (export "f") (param v128 v128) (result v128)
+           (${op} (local.get 1) ${const_}))`),
+                              'f',
+                              expected,
+                              options);
+     }
+}
+// (see codegenTestX64_v128xv128_v128_avxhack comment about AVX defect)
+// const OP v128 -> v128
+// inputs: [[complete-opname, const, expected-pattern], ...]
+function codegenTestX64_LITERALxv128_v128_avxhack(inputs, options = {}) {
+     for ( let [op, const_, expected] of inputs ) {
+         codegenTestX64_adhoc(wrap(options, `
+         (func (export "f") (param v128 v128) (result v128)
+           (${op} ${const_} (local.get 1)))`),
+                              'f',
+                              expected,
+                              options);
+     }
+}
 
 // Utility function to test SIMD operations encoding, where the input argument
 // has the specified type (T).
@@ -174,3 +200,236 @@ codegenTestX64_adhoc(
 `
 66 0f 6f 0d ${RIPRADDR}   movdqax ${RIPR}, %xmm1
 c4 e3 69 4c c3 10         vpblendvb %xmm1, %xmm3, %xmm2, %xmm0`);
+
+// Constant arguments that are folded into the instruction
+codegenTestX64_v128xLITERAL_v128_avxhack(
+     [['i8x16.add', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 fc 05 ${RIPRADDR}   vpaddbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.sub', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 f8 05 ${RIPRADDR}   vpsubbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.add_sat_s', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 ec 05 ${RIPRADDR}   vpaddsbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.add_sat_u', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 dc 05 ${RIPRADDR}   vpaddusbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.sub_sat_s', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 e8 05 ${RIPRADDR}   vpsubsbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.sub_sat_u', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 d8 05 ${RIPRADDR}   vpsubusbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.min_s', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c4 e2 71 38 05 ${RIPRADDR} vpminsbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.min_u', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 da 05 ${RIPRADDR}   vpminubx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.max_s', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c4 e2 71 3c 05 ${RIPRADDR} vpmaxsbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.max_u', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 de 05 ${RIPRADDR}   vpmaxubx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.eq', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 74 05 ${RIPRADDR}   vpcmpeqbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.ne', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)', `
+ c5 f1 74 05 ${RIPRADDR}   vpcmpeqbx ${RIPR}, %xmm1, %xmm0
+ 66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+ 66 41 0f ef c7            pxor %xmm15, %xmm0`],
+      ['i8x16.gt_s', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 64 05 ${RIPRADDR}   vpcmpgtbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.le_s', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)', `
+ c5 f1 64 05 ${RIPRADDR}   vpcmpgtbx ${RIPR}, %xmm1, %xmm0
+ 66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+ 66 41 0f ef c7            pxor %xmm15, %xmm0`],
+      ['i8x16.narrow_i16x8_s', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 63 05 ${RIPRADDR}  vpacksswbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.narrow_i16x8_u', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 67 05 ${RIPRADDR}  vpackuswbx ${RIPR}, %xmm1, %xmm0`],
+ 
+      ['i16x8.add', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 fd 05 ${RIPRADDR}  vpaddwx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.sub', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 f9 05 ${RIPRADDR}  vpsubwx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.mul', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 d5 05 ${RIPRADDR}  vpmullwx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.add_sat_s', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 ed 05 ${RIPRADDR}  vpaddswx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.add_sat_u', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 dd 05 ${RIPRADDR}  vpadduswx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.sub_sat_s', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 e9 05 ${RIPRADDR}  vpsubswx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.sub_sat_u', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 d9 05 ${RIPRADDR}  vpsubuswx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.min_s', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 ea 05 ${RIPRADDR}  vpminswx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.min_u', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c4 e2 71 3a 05 ${RIPRADDR} vpminuwx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.max_s', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 ee 05 ${RIPRADDR}  vpmaxswx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.max_u', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c4 e2 71 3e 05 ${RIPRADDR} vpmaxuwx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.eq', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 75 05 ${RIPRADDR}  vpcmpeqwx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.ne', '(v128.const i16x8 1 2 1 2 1 2 1 2)', `
+ c5 f1 75 05 ${RIPRADDR}  vpcmpeqwx ${RIPR}, %xmm1, %xmm0
+ 66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+ 66 41 0f ef c7            pxor %xmm15, %xmm0`],
+      ['i16x8.gt_s', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 65 05 ${RIPRADDR}  vpcmpgtwx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.le_s', '(v128.const i16x8 1 2 1 2 1 2 1 2)', `
+ c5 f1 65 05 ${RIPRADDR}  vpcmpgtwx ${RIPR}, %xmm1, %xmm0
+ 66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+ 66 41 0f ef c7            pxor %xmm15, %xmm0`],
+      ['i16x8.narrow_i32x4_s', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 6b 05 ${RIPRADDR}  vpackssdwx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.narrow_i32x4_u', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c4 e2 71 2b 05 ${RIPRADDR} vpackusdwx ${RIPR}, %xmm1, %xmm0`],
+ 
+      ['i32x4.add', '(v128.const i32x4 1 2 1 2)',
+       `c5 f1 fe 05 ${RIPRADDR}  vpadddx ${RIPR}, %xmm1, %xmm0`],
+      ['i32x4.sub', '(v128.const i32x4 1 2 1 2)',
+       `c5 f1 fa 05 ${RIPRADDR}  vpsubdx ${RIPR}, %xmm1, %xmm0`],
+      ['i32x4.mul', '(v128.const i32x4 1 2 1 2)',
+       `c4 e2 71 40 05 ${RIPRADDR} vpmulldx ${RIPR}, %xmm1, %xmm0`],
+      ['i32x4.min_s', '(v128.const i32x4 1 2 1 2)',
+       `c4 e2 71 39 05 ${RIPRADDR} vpminsdx ${RIPR}, %xmm1, %xmm0`],
+      ['i32x4.min_u', '(v128.const i32x4 1 2 1 2)',
+       `c4 e2 71 3b 05 ${RIPRADDR} vpminudx ${RIPR}, %xmm1, %xmm0`],
+      ['i32x4.max_s', '(v128.const i32x4 1 2 1 2)',
+       `c4 e2 71 3d 05 ${RIPRADDR} vpmaxsdx ${RIPR}, %xmm1, %xmm0`],
+      ['i32x4.max_u', '(v128.const i32x4 1 2 1 2)',
+       `c4 e2 71 3f 05 ${RIPRADDR} vpmaxudx ${RIPR}, %xmm1, %xmm0`],
+      ['i32x4.eq', '(v128.const i32x4 1 2 1 2)',
+       `c5 f1 76 05 ${RIPRADDR}  vpcmpeqdx ${RIPR}, %xmm1, %xmm0`],
+      ['i32x4.ne', '(v128.const i32x4 1 2 1 2)', `
+ c5 f1 76 05 ${RIPRADDR}  vpcmpeqdx ${RIPR}, %xmm1, %xmm0
+ 66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+ 66 41 0f ef c7            pxor %xmm15, %xmm0`],
+      ['i32x4.gt_s', '(v128.const i32x4 1 2 1 2)',
+       `c5 f1 66 05 ${RIPRADDR}  vpcmpgtdx ${RIPR}, %xmm1, %xmm0`],
+      ['i32x4.le_s', '(v128.const i32x4 1 2 1 2)', `
+ c5 f1 66 05 ${RIPRADDR}  vpcmpgtdx ${RIPR}, %xmm1, %xmm0
+ 66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+ 66 41 0f ef c7            pxor %xmm15, %xmm0`],
+      ['i32x4.dot_i16x8_s', '(v128.const i32x4 1 2 1 2)',
+       `c5 f1 f5 05 ${RIPRADDR}  vpmaddwdx ${RIPR}, %xmm1, %xmm0`],
+ 
+      ['i64x2.add', '(v128.const i64x2 1 2)',
+       `c5 f1 d4 05 ${RIPRADDR}  vpaddqx ${RIPR}, %xmm1, %xmm0`],
+      ['i64x2.sub', '(v128.const i64x2 1 2)',
+       `c5 f1 fb 05 ${RIPRADDR}  vpsubqx ${RIPR}, %xmm1, %xmm0`],
+ 
+      ['v128.and', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 db 05 ${RIPRADDR}  vpandx ${RIPR}, %xmm1, %xmm0`],
+      ['v128.or', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 eb 05 ${RIPRADDR}  vporx ${RIPR}, %xmm1, %xmm0`],
+      ['v128.xor', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 ef 05 ${RIPRADDR}  vpxorx ${RIPR}, %xmm1, %xmm0`],
+ 
+      ['f32x4.add', '(v128.const f32x4 1 2 3 4)',
+       `c5 f0 58 05 ${RIPRADDR}      vaddpsx ${RIPR}, %xmm1, %xmm0`],
+      ['f32x4.sub', '(v128.const f32x4 1 2 3 4)',
+       `c5 f0 5c 05 ${RIPRADDR}      vsubpsx ${RIPR}, %xmm1, %xmm0`],
+      ['f32x4.mul', '(v128.const f32x4 1 2 3 4)',
+       `c5 f0 59 05 ${RIPRADDR}      vmulpsx ${RIPR}, %xmm1, %xmm0`],
+      ['f32x4.div', '(v128.const f32x4 1 2 3 4)',
+       `c5 f0 5e 05 ${RIPRADDR}      vdivpsx ${RIPR}, %xmm1, %xmm0`],
+ 
+      ['f64x2.add', '(v128.const f64x2 1 2)',
+       `c5 f1 58 05 ${RIPRADDR}      vaddpdx ${RIPR}, %xmm1, %xmm0`],
+      ['f64x2.sub', '(v128.const f64x2 1 2)',
+       `c5 f1 5c 05 ${RIPRADDR}      vsubpdx ${RIPR}, %xmm1, %xmm0`],
+      ['f64x2.mul', '(v128.const f64x2 1 2)',
+       `c5 f1 59 05 ${RIPRADDR}      vmulpdx ${RIPR}, %xmm1, %xmm0`],
+      ['f64x2.div', '(v128.const f64x2 1 2)',
+       `c5 f1 5e 05 ${RIPRADDR}      vdivpdx ${RIPR}, %xmm1, %xmm0`],
+
+      ['f32x4.eq', '(v128.const f32x4 1 2 3 4)',
+       `c5 f0 c2 05 ${RIPRADDR} 00   vcmppsx \\$0x00, ${RIPR}, %xmm1, %xmm0`],
+      ['f32x4.ne', '(v128.const f32x4 1 2 3 4)',
+       `c5 f0 c2 05 ${RIPRADDR} 04   vcmppsx \\$0x04, ${RIPR}, %xmm1, %xmm0`],
+      ['f32x4.lt', '(v128.const f32x4 1 2 3 4)',
+       `c5 f0 c2 05 ${RIPRADDR} 01   vcmppsx \\$0x01, ${RIPR}, %xmm1, %xmm0`],
+      ['f32x4.le', '(v128.const f32x4 1 2 3 4)',
+       `c5 f0 c2 05 ${RIPRADDR} 02   vcmppsx \\$0x02, ${RIPR}, %xmm1, %xmm0`],
+
+      ['f64x2.eq', '(v128.const f64x2 1 2)',
+       `c5 f1 c2 05 ${RIPRADDR} 00  vcmppdx \\$0x00, ${RIPR}, %xmm1, %xmm0`],
+      ['f64x2.ne', '(v128.const f64x2 1 2)',
+       `c5 f1 c2 05 ${RIPRADDR} 04  vcmppdx \\$0x04, ${RIPR}, %xmm1, %xmm0`],
+      ['f64x2.lt', '(v128.const f64x2 1 2)',
+       `c5 f1 c2 05 ${RIPRADDR} 01  vcmppdx \\$0x01, ${RIPR}, %xmm1, %xmm0`],
+      ['f64x2.le', '(v128.const f64x2 1 2)',
+       `c5 f1 c2 05 ${RIPRADDR} 02  vcmppdx \\$0x02, ${RIPR}, %xmm1, %xmm0`]]);
+ 
+ // Commutative operations with constants on the lhs should generate the same
+ // code as with the constant on the rhs.
+ codegenTestX64_LITERALxv128_v128_avxhack(
+     [['i8x16.add', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 fc 05 ${RIPRADDR}  vpaddbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.add_sat_s', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 ec 05 ${RIPRADDR}  vpaddsbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.add_sat_u', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 dc 05 ${RIPRADDR}  vpaddusbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.min_s', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c4 e2 71 38 05 ${RIPRADDR} vpminsbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.min_u', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 da 05 ${RIPRADDR}  vpminubx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.max_s', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c4 e2 71 3c 05 ${RIPRADDR} vpmaxsbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.max_u', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 de 05 ${RIPRADDR}  vpmaxubx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.eq', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 74 05 ${RIPRADDR}  vpcmpeqbx ${RIPR}, %xmm1, %xmm0`],
+      ['i8x16.ne', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)', `
+ c5 f1 74 05 ${RIPRADDR}  vpcmpeqbx ${RIPR}, %xmm1, %xmm0
+ 66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+ 66 41 0f ef c7            pxor %xmm15, %xmm0`],
+ 
+      ['i16x8.add', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 fd 05 ${RIPRADDR}  vpaddwx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.mul', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 d5 05 ${RIPRADDR}  vpmullwx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.add_sat_s', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 ed 05 ${RIPRADDR}  vpaddswx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.add_sat_u', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 dd 05 ${RIPRADDR}  vpadduswx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.min_s', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 ea 05 ${RIPRADDR}  vpminswx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.min_u', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c4 e2 71 3a 05 ${RIPRADDR} vpminuwx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.max_s', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 ee 05 ${RIPRADDR}  vpmaxswx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.max_u', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c4 e2 71 3e 05 ${RIPRADDR} vpmaxuwx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.eq', '(v128.const i16x8 1 2 1 2 1 2 1 2)',
+       `c5 f1 75 05 ${RIPRADDR}  vpcmpeqwx ${RIPR}, %xmm1, %xmm0`],
+      ['i16x8.ne', '(v128.const i16x8 1 2 1 2 1 2 1 2)', `
+ c5 f1 75 05 ${RIPRADDR}  vpcmpeqwx ${RIPR}, %xmm1, %xmm0
+ 66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+ 66 41 0f ef c7            pxor %xmm15, %xmm0`],
+ 
+      ['i32x4.add', '(v128.const i32x4 1 2 1 2)',
+       `c5 f1 fe 05 ${RIPRADDR}  vpadddx ${RIPR}, %xmm1, %xmm0`],
+      ['i32x4.mul', '(v128.const i32x4 1 2 1 2)',
+       `c4 e2 71 40 05 ${RIPRADDR} vpmulldx ${RIPR}, %xmm1, %xmm0`],
+      ['i32x4.min_s', '(v128.const i32x4 1 2 1 2)',
+       `c4 e2 71 39 05 ${RIPRADDR} vpminsdx ${RIPR}, %xmm1, %xmm0`],
+      ['i32x4.min_u', '(v128.const i32x4 1 2 1 2)',
+       `c4 e2 71 3b 05 ${RIPRADDR} vpminudx ${RIPR}, %xmm1, %xmm0`],
+      ['i32x4.max_s', '(v128.const i32x4 1 2 1 2)',
+       `c4 e2 71 3d 05 ${RIPRADDR} vpmaxsdx ${RIPR}, %xmm1, %xmm0`],
+      ['i32x4.max_u', '(v128.const i32x4 1 2 1 2)',
+       `c4 e2 71 3f 05 ${RIPRADDR} vpmaxudx ${RIPR}, %xmm1, %xmm0`],
+      ['i32x4.eq', '(v128.const i32x4 1 2 1 2)',
+       `c5 f1 76 05 ${RIPRADDR}  vpcmpeqdx ${RIPR}, %xmm1, %xmm0`],
+      ['i32x4.ne', '(v128.const i32x4 1 2 1 2)', `
+ c5 f1 76 05 ${RIPRADDR}  vpcmpeqdx ${RIPR}, %xmm1, %xmm0
+ 66 45 0f 75 ff            pcmpeqw %xmm15, %xmm15
+ 66 41 0f ef c7            pxor %xmm15, %xmm0`],
+      ['i32x4.dot_i16x8_s', '(v128.const i32x4 1 2 1 2)',
+       `c5 f1 f5 05 ${RIPRADDR}  vpmaddwdx ${RIPR}, %xmm1, %xmm0`],
+ 
+      ['i64x2.add', '(v128.const i64x2 1 2)',
+       `c5 f1 d4 05 ${RIPRADDR}  vpaddqx ${RIPR}, %xmm1, %xmm0`],
+ 
+      ['v128.and', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 db 05 ${RIPRADDR}  vpandx ${RIPR}, %xmm1, %xmm0`],
+      ['v128.or', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 eb 05 ${RIPRADDR}  vporx ${RIPR}, %xmm1, %xmm0`],
+      ['v128.xor', '(v128.const i8x16 1 2 1 2 1 2 1 2 1 2 1 2 1 2 1 2)',
+       `c5 f1 ef 05 ${RIPRADDR}  vpxorx ${RIPR}, %xmm1, %xmm0`]]);
