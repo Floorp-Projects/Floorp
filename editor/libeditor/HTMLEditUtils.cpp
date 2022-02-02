@@ -587,18 +587,22 @@ bool HTMLEditUtils::IsEmptyNode(nsPresContext* aPresContext,
                : !IsVisibleTextNode(*text);
   }
 
-  // if it's not a text node (handled above) and it's not a container,
-  // then we don't call it empty (it's an <hr>, or <br>, etc.).
-  // Also, if it's an anchor then don't treat it as empty - even though
-  // anchors are containers, named anchors are "empty" but we don't
-  // want to treat them as such.  Also, don't call ListItems or table
-  // cells empty if caller desires.  Form Widgets not empty.
   // XXX Why do we treat non-content node is not empty?
   // XXX Why do we treat non-text data node may be not empty?
-  if (!aNode.IsContent() || !IsContainerNode(*aNode.AsContent()) ||
-      IsNamedAnchor(&aNode) || IsFormWidget(&aNode) ||
+  if (!aNode.IsContent() ||
+      // If it's not a container such as an <hr> or <br>, etc, it should be
+      // treated as not empty.
+      !IsContainerNode(*aNode.AsContent()) ||
+      // If it's a named anchor, we shouldn't treat it as empty because it
+      // has special meaning even if invisible.
+      IsNamedAnchor(&aNode) ||
+      // Form widgets should be treated as not empty because they have special
+      // meaning even if invisible.
+      IsFormWidget(&aNode) ||
+      // If the caller treats a list item element as visible, respect it.
       (aOptions.contains(EmptyCheckOption::TreatListItemAsVisible) &&
        IsListItem(&aNode)) ||
+      // If the caller treats a table cell element as visible, respect it.
       (aOptions.contains(EmptyCheckOption::TreatTableCellAsVisible) &&
        IsTableCell(&aNode))) {
     return false;
@@ -607,13 +611,12 @@ bool HTMLEditUtils::IsEmptyNode(nsPresContext* aPresContext,
   const bool isListItem = IsListItem(&aNode);
   const bool isTableCell = IsTableCell(&aNode);
 
-  // loop over children of node. if no children, or all children are either
-  // empty text nodes or non-editable, then node qualifies as empty
   bool seenBR = aSeenBR && *aSeenBR;
   for (nsIContent* childContent = aNode.GetFirstChild(); childContent;
        childContent = childContent->GetNextSibling()) {
     // Is the child editable and non-empty?  if so, return false
-    if (!EditorUtils::IsEditableContent(*childContent, EditorType::HTML)) {
+    if (!aOptions.contains(EmptyCheckOption::IgnoreEditableState) &&
+        !EditorUtils::IsEditableContent(*childContent, EditorType::HTML)) {
       continue;
     }
 
