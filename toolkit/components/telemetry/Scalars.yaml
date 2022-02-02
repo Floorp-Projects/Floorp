@@ -2365,24 +2365,6 @@ media:
     record_in_processes:
       - 'content'
 
-  wmf_process_usage:
-    bug_numbers:
-      - 1690372
-      - 1720616
-    description: >
-      Record whether the WMF decoder module is used in content or chrome process.
-    expires: "99"
-    kind: boolean
-    notification_emails:
-      - alwu@mozilla.com
-      - bvandyk@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-      - 'content'
-
   video_hardware_decoding_support:
     bug_numbers:
       - 1733722
