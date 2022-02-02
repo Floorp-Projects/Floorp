@@ -155,10 +155,13 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
       return;
     }
 
-    TimeStamp next = mLastCaptureTime + TimeDuration::FromMilliseconds(
-                                            nsRefreshDriver::DefaultInterval());
     TimeStamp now = TimeStamp::Now();
-    if (mLastCaptureTime.IsNull() || next < now) {
+    TimeStamp next =
+        mLastCaptureTime.IsNull()
+            ? now
+            : mLastCaptureTime + TimeDuration::FromMilliseconds(
+                                     nsRefreshDriver::DefaultInterval());
+    if (mLastCaptureTime.IsNull() || next <= now) {
       AUTO_PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {},
                                 "CaptureFrame direct while throttled"_ns);
       CaptureFrame(now);
