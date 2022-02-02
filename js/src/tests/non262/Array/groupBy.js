@@ -20,6 +20,7 @@ function isNeg(x) {
   const groupedArray = a1.groupBy(x => isNeg(x) ? 'neg' : 'pos');
   const mappedArray = a1.groupByToMap(x => isNeg(x) ? 'neg' : 'pos');
 
+  assertEq(Object.getPrototypeOf(groupedArray), null)
   assertDeepEq(groupedArray, expectedObj);
   assertDeepEq(mappedArray.get("neg"), expectedObj["neg"]);
   assertDeepEq(mappedArray.get("pos"), expectedObj["pos"]);
