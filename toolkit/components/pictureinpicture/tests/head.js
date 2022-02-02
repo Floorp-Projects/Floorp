@@ -21,6 +21,7 @@ const TEST_PAGE_WITH_IFRAME = TEST_ROOT_2 + "test-page-with-iframe.html";
 const TEST_PAGE_WITH_SOUND = TEST_ROOT + "test-page-with-sound.html";
 const TEST_PAGE_WITH_NAN_VIDEO_DURATION =
   TEST_ROOT + "test-page-with-nan-video-duration.html";
+const TEST_PAGE_WITH_WEBVTT = TEST_ROOT + "test-page-with-webvtt.html";
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 const TOGGLE_POSITION_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.position";
