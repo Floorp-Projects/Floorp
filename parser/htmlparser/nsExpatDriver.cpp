@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsExpatDriver.h"
+#include "mozilla/fallible.h"
 #include "nsCOMPtr.h"
 #include "nsParserCIID.h"
 #include "CParserContext.h"
@@ -15,6 +16,7 @@
 #include "nsIUnicharInputStream.h"
 #include "nsIProtocolHandler.h"
 #include "nsNetUtil.h"
+#include "nsString.h"
 #include "nsTextFormatter.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsCRT.h"
@@ -46,6 +48,7 @@
 using mozilla::fallible;
 using mozilla::LogLevel;
 using mozilla::MakeStringSpan;
+using mozilla::Unused;
 using mozilla::dom::Document;
 
 // We only pass chunks of length sMaxChunkLength to Expat in the RLBOX sandbox.
@@ -1041,12 +1044,18 @@ nsresult nsExpatDriver::HandleError() {
                        1;
   uint32_t lineNumber = RLBOX_EXPAT_SAFE_MCALL(MOZ_XML_GetCurrentLineNumber,
                                                safe_unverified<XML_Size>);
-
+  const XML_Char* expatBase =
+      RLBOX_EXPAT_MCALL(MOZ_XML_GetBase)
+          .copy_and_verify_address(unverified_xml_string);
+  nsAutoString uri;
+  nsCOMPtr<nsIURI> baseURI;
+  if (expatBase && (baseURI = GetBaseURI(expatBase))) {
+    // Let's ignore if this fails, we're already reporting a parse error.
+    Unused << CopyUTF8toUTF16(baseURI->GetSpecOrDefault(), uri, fallible);
+  }
   nsAutoString errorText;
-  const auto* aBase = RLBOX_EXPAT_MCALL(MOZ_XML_GetBase)
-                          .copy_and_verify_address(unverified_xml_string);
-  CreateErrorText(description.get(), aBase, lineNumber, colNumber, errorText,
-                  spoofEnglish);
+  CreateErrorText(description.get(), uri.get(), lineNumber, colNumber,
+                  errorText, spoofEnglish);
 
   nsAutoString sourceText(mLastLine);
   AppendErrorPointer(colNumber, mLastLine.get(), sourceText);
