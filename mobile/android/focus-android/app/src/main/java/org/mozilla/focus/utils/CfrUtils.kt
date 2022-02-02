@@ -17,6 +17,11 @@ import org.mozilla.focus.ext.settings
 import kotlin.math.roundToInt
 
 class CfrUtils {
+    data class CFRForShieldToolbarIcon(
+        val toolbarShieldIconCfrBinding: ToolbarShieldIconCfrBinding,
+        val toolbarShieldIconCfrPopupWindow: PopupWindow
+    )
+
     companion object {
         private const val SHIELD_ICON_CFR_Y_OFFSET = -18f
 
@@ -32,7 +37,7 @@ class CfrUtils {
             rootView: View,
             context: Context,
             isContentSecure: Boolean
-        ): ToolbarShieldIconCfrBinding? {
+        ): CFRForShieldToolbarIcon? {
             val shieldToolbarIcon = rootView.findViewById<View>(
                 R.id.mozac_browser_toolbar_tracking_protection_indicator
             )
@@ -54,14 +59,16 @@ class CfrUtils {
                         true
                     )
 
-                toolbarShieldIconCfrPopupWindow.showAsDropDown(
-                    shieldToolbarIcon, 0,
-                    TypedValue.applyDimension(
-                        TypedValue.COMPLEX_UNIT_DIP, SHIELD_ICON_CFR_Y_OFFSET,
-                        context.resources.displayMetrics
-                    ).roundToInt(),
-                    Gravity.BOTTOM
-                )
+                shieldToolbarIcon.post {
+                    toolbarShieldIconCfrPopupWindow.showAsDropDown(
+                        shieldToolbarIcon, 0,
+                        TypedValue.applyDimension(
+                            TypedValue.COMPLEX_UNIT_DIP, SHIELD_ICON_CFR_Y_OFFSET,
+                            context.resources.displayMetrics
+                        ).roundToInt(),
+                        Gravity.BOTTOM
+                    )
+                }
 
                 toolbarShieldIconCfrBinding.closeInfoBanner.setOnClickListener {
                     toolbarShieldIconCfrPopupWindow.dismiss()
@@ -69,7 +76,7 @@ class CfrUtils {
                 toolbarShieldIconCfrPopupWindow.setOnDismissListener {
                     context.settings.isCfrForForShieldToolbarIconVisible = false
                 }
-                return toolbarShieldIconCfrBinding
+                return CFRForShieldToolbarIcon(toolbarShieldIconCfrBinding, toolbarShieldIconCfrPopupWindow)
             }
             return null
         }

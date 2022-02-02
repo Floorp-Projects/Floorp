@@ -18,6 +18,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
 import android.webkit.MimeTypeMap
+import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.preference.PreferenceManager
@@ -103,6 +104,7 @@ class BrowserFragment :
     private var _binding: FragmentBrowserBinding? = null
     private val binding get() = _binding!!
     private var _toolbarShieldIconCfrBinding: ToolbarShieldIconCfrBinding? = null
+    private var toolbarShieldIconCfrPopupWindow: PopupWindow? = null
 
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val fullScreenIntegration = ViewBoundFeatureWrapper<FullScreenIntegration>()
@@ -320,10 +322,16 @@ class BrowserFragment :
         }
 
         setSitePermissions(view)
-        _toolbarShieldIconCfrBinding = CfrUtils.shouldShowCFRForShieldToolbarIcon(
+        showCfrForShieldToolbarIcon()
+    }
+
+    private fun showCfrForShieldToolbarIcon() {
+        val cfrForShieldToolbarIcon = CfrUtils.shouldShowCFRForShieldToolbarIcon(
             rootView = binding.browserToolbar.rootView, context = requireContext(),
             isContentSecure = tab.content.securityInfo.secure
         )
+        _toolbarShieldIconCfrBinding = cfrForShieldToolbarIcon?.toolbarShieldIconCfrBinding
+        toolbarShieldIconCfrPopupWindow = cfrForShieldToolbarIcon?.toolbarShieldIconCfrPopupWindow
     }
 
     private fun setSitePermissions(rootView: View) {
@@ -438,6 +446,10 @@ class BrowserFragment :
         requireContext().accessibilityManager.removeAccessibilityStateChangeListener(this)
         _binding = null
         _toolbarShieldIconCfrBinding = null
+        // PopupWindow should be dismissed because it causes Static Field Leaked
+        if (toolbarShieldIconCfrPopupWindow != null && toolbarShieldIconCfrPopupWindow?.isShowing == true) {
+            toolbarShieldIconCfrPopupWindow?.dismiss()
+        }
     }
 
     override fun onDestroy() {
