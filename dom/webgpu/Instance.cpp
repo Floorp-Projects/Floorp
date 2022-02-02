@@ -12,7 +12,7 @@
 #include "ipc/WebGPUTypes.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/gfx/CanvasManagerChild.h"
 
 namespace mozilla {
 namespace webgpu {
@@ -24,7 +24,7 @@ already_AddRefed<Instance> Instance::Create(nsIGlobalObject* aOwner) {
   RefPtr<WebGPUChild> bridge;
 
   if (gfx::gfxConfig::IsEnabled(gfx::Feature::WEBGPU)) {
-    bridge = layers::CompositorBridgeChild::Get()->GetWebGPUChild();
+    bridge = gfx::CanvasManagerChild::Get()->GetWebGPUChild();
     if (NS_WARN_IF(!bridge)) {
       MOZ_CRASH("Failed to create an IPDL bridge for WebGPU!");
     }
