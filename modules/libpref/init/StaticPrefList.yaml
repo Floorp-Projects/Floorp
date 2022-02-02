@@ -10221,7 +10221,7 @@
 # If true, don't fallback to native DNS upon network errors.
 - name: network.trr.strict_native_fallback
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 # If false, the temporary blocklisting feature is disabled.
