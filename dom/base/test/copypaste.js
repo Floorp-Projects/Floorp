@@ -432,17 +432,17 @@ async function testCopyPaste(isXHTML) {
     var r = document.createRange();
     r.setStart(t1, 1);
     r.setEnd(e2, 0);
-    sel.addRange(r);
+    sel.addRange(r); // <div>\n<span id="1127835crash1">1[</span><div id="1127835crash2">}<div>\n</div></div><a href="..." id="1127835crash3">3</a>\n</div>
 
     r = document.createRange();
     r.setStart(e2, 1);
     r.setEnd(t3, 0);
-    sel.addRange(r);
+    sel.addRange(r); // <div>\n<span id="1127835crash1">1</span><div id="1127835crash2"><div>\n</div>{</div><a href="..." id="1127835crash3">]3</a>\n</div>
     await copySelectionToClipboard(true);
     testPasteHTML(
       "contentEditable6",
-      '<span id="1127835crash1"></span><div id="1127835crash2"><div>\n</div></div><br>'
-    );
+      '<span id="1127835crash1"></span><div id="1127835crash2"><div>\n</div></div><a href="http://www.mozilla.org/" id="1127835crash3"><br></a>'
+    ); // Don't strip the empty `<a href="...">` element because of avoiding any dataloss provided by the element
   }
 
   // ============ copy/paste test from/to a textarea
