@@ -17,7 +17,7 @@ import sys
 import traceback
 import uuid
 from collections.abc import Iterable
-from typing import Union, List
+from typing import Union, Dict, List
 from pathlib import Path
 
 from .base import (
@@ -174,6 +174,18 @@ class ContextWrapper(object):
         setattr(object.__getattribute__(self, "_context"), key, value)
 
 
+class MachCommandReference:
+    """A reference to a mach command.
+
+    Holds the metadata for a mach command.
+    """
+
+    module: Path
+
+    def __init__(self, module: Union[str, Path]):
+        self.module = Path(module)
+
+
 class Mach(object):
     """Main mach driver type.
 
@@ -271,16 +283,17 @@ To see more help for a specific command, run:
             raise MissingFileError(f"{path} does not exist")
 
     def load_commands_from_spec(
-        self, spec: List[str], topsrcdir: str, missing_ok=False
+        self, spec: Dict[str, MachCommandReference], topsrcdir: str, missing_ok=False
     ):
         """Load mach commands based on the given spec.
 
-        Takes a list of paths to modules containing mach commands and
-        loads those commands.
+        Takes a dictionary mapping command names to their metadata.
         """
-        for path in spec:
+        modules = set(spec[command].module for command in spec)
+
+        for path in modules:
             try:
-                self.load_commands_from_file(Path(topsrcdir) / path)
+                self.load_commands_from_file(topsrcdir / path)
             except MissingFileError:
                 if not missing_ok:
                     raise

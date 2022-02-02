@@ -46,17 +46,6 @@ SEARCH_PATHS = [
     "xpcshell",
 ]
 
-# Individual files providing mach commands.
-MACH_MODULES = [
-    "gtest/mach_test_package_commands.py",
-    "marionette/mach_test_package_commands.py",
-    "mochitest/mach_test_package_commands.py",
-    "reftest/mach_test_package_commands.py",
-    "tools/mach/mach/commands/commandinfo.py",
-    "web-platform/mach_test_package_commands.py",
-    "xpcshell/mach_test_package_commands.py",
-]
-
 
 CATEGORIES = {
     "testing": {
@@ -179,6 +168,35 @@ def bootstrap(test_package_root):
     sys.path[0:0] = [os.path.join(test_package_root, path) for path in SEARCH_PATHS]
     import mach.main
 
+    from mach.main import MachCommandReference
+
+    # Centralized registry of available mach commands
+    MACH_COMMANDS = {
+        "gtest": MachCommandReference("gtest/mach_test_package_commands.py"),
+        "marionette-test": MachCommandReference(
+            "marionette/mach_test_package_commands.py"
+        ),
+        "mochitest": MachCommandReference("mochitest/mach_test_package_commands.py"),
+        "geckoview-junit": MachCommandReference(
+            "mochitest/mach_test_package_commands.py"
+        ),
+        "reftest": MachCommandReference("reftest/mach_test_package_commands.py"),
+        "mach-commands": MachCommandReference(
+            "python/mach/mach/commands/commandinfo.py"
+        ),
+        "mach-debug-commands": MachCommandReference(
+            "python/mach/mach/commands/commandinfo.py"
+        ),
+        "mach-completion": MachCommandReference(
+            "python/mach/mach/commands/commandinfo.py"
+        ),
+        "web-platform-tests": MachCommandReference(
+            "web-platform/mach_test_package_commands.py"
+        ),
+        "wpt": MachCommandReference("web-platform/mach_test_package_commands.py"),
+        "xpcshell-test": MachCommandReference("xpcshell/mach_test_package_commands.py"),
+    }
+
     def populate_context(context, key=None):
         # These values will be set lazily, and cached after first being invoked.
         if key == "package_root":
@@ -229,6 +247,6 @@ def bootstrap(test_package_root):
 
     # Depending on which test zips were extracted,
     # the command module might not exist
-    mach.load_commands_from_spec(MACH_MODULES, test_package_root, missing_ok=True)
+    mach.load_commands_from_spec(MACH_COMMANDS, test_package_root, missing_ok=True)
 
     return mach
