@@ -427,7 +427,24 @@ This object contains data about the state of Firefox's sandbox.
 Specific keys are:
 
 - ``effectiveContentProcessLevel``: The meanings of the values are OS dependent. Details of the meanings can be found in the `Firefox prefs file <https://hg.mozilla.org/mozilla-central/file/tip/browser/app/profile/firefox.js>`_. The value here is the effective value, not the raw value, some platforms enforce a minimum sandbox level. If there is an error calculating this, it will be ``null``.
-- ``contentWin32kLockdownState``: The status of Win32k Lockdown for Content process. 1 = "Lockdown enabled", 2 = "Lockdown disabled -- Missing WebRender", 3 = "Lockdown disabled -- Unsupported OS", 4 = "Lockdown disabled -- User pref not set", 5 = "Lockdown disabled -- Missing Remote WebGL". If there is an error calculating this, it will be ``null``.
+- ``contentWin32kLockdownState``: The status of Win32k Lockdown for Content process. 
+
+  - LockdownEnabled = 1 - After Firefox 98, this value will no longer appear in Telemetry.
+  - MissingWebRender = 2
+  - OperatingSystemNotSupported = 3
+  - PrefNotSet = 4 - After Firefox 98, this value will no longer appear in Telemetry.
+  - MissingRemoteWebGL = 5
+  - MissingNonNativeTheming = 6
+  - DisabledByEnvVar = 7 - MOZ_ENABLE_WIN32K is set
+  - DisabledBySafeMode = 8
+  - DisabledByE10S = 9 - E10S is disabled for whatever reason
+  - DisabledByUserPref = 10 - The user manually set security.sandbox.content.win32k-disable to false
+  - EnabledByUserPref = 11 - The user manually set security.sandbox.content.win32k-disable to true
+  - DisabledByControlGroup = 12 - The user is in the Control Group, so it is disabled
+  - EnabledByTreatmentGroup = 13 - The user is in the Treatment Group, so it is enabled
+  - DisabledByDefault = 14 - The default value of the pref is false
+  - EnabledByDefault = 15 - The default value of the pref is true
+
 
 profile
 -------
