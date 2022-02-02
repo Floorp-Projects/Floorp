@@ -10,20 +10,20 @@
 
 #include <gtk/gtk.h>
 
+#include "mozilla/Maybe.h"
+#include "nsClipboard.h"
+
 class nsRetrievalContextX11 : public nsRetrievalContext {
  public:
-  enum State { INITIAL, COMPLETED, TIMED_OUT };
+  enum class State { Initial, Completed, TimedOut };
 
-  virtual const char* GetClipboardData(const char* aMimeType,
-                                       int32_t aWhichClipboard,
-                                       uint32_t* aContentLength) override;
-  virtual const char* GetClipboardText(int32_t aWhichClipboard) override;
-  virtual void ReleaseClipboardData(const char** aClipboardData) override;
+  ClipboardData GetClipboardData(const char* aMimeType,
+                                 int32_t aWhichClipboard) override;
+  mozilla::GUniquePtr<char> GetClipboardText(int32_t aWhichClipboard) override;
 
-  virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
-                              int* aTargetNums) override;
+  ClipboardTargets GetTargets(int32_t aWhichClipboard) override;
 
-  virtual bool HasSelectionSupport(void) override;
+  bool HasSelectionSupport(void) override;
 
   // Call this when data or text has been retrieved.
   void Complete(ClipboardDataType aDataType, const void* aData,
@@ -32,21 +32,20 @@ class nsRetrievalContextX11 : public nsRetrievalContext {
   nsRetrievalContextX11();
 
  private:
-  bool WaitForClipboardData(ClipboardDataType aDataType,
-                            GtkClipboard* clipboard,
-                            const char* aMimeType = nullptr);
+  ClipboardData WaitForClipboardData(ClipboardDataType aDataType,
+                                     GtkClipboard* clipboard,
+                                     const char* aMimeType = nullptr);
 
   /**
    * Spins X event loop until timing out or being completed. Returns
    * null if we time out, otherwise returns the completed data (passing
    * ownership to caller).
    */
-  bool WaitForX11Content();
+  ClipboardData WaitForX11Content();
 
-  State mState;
-  int mClipboardRequestNumber;
-  void* mClipboardData;
-  uint32_t mClipboardDataLength;
+  State mState = State::Initial;
+  int mClipboardRequestNumber = 0;
+  mozilla::Maybe<ClipboardData> mClipboardData;
   GdkAtom mTargetMIMEType;
 };
 
