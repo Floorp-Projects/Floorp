@@ -15,7 +15,6 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
-#include "mozilla/RandomNum.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/StaticPtr.h"
 #include "nsXULAppAPI.h"
@@ -458,39 +457,6 @@ static nsresult GetDownloadDirectory(nsIFile** _directory,
 
   NS_ASSERTION(dir, "Somehow we didn't get a download directory!");
   dir.forget(_directory);
-  return NS_OK;
-}
-
-/**
- * Helper for random bytes for the filename of downloaded part files.
- */
-nsresult GenerateRandomName(nsACString& result) {
-  // We will request raw random bytes, and transform that to a base64 string,
-  // using url-based base64 encoding so that all characters from the base64
-  // result will be acceptable for filenames.
-  // For each three bytes of random data, we will get four bytes of ASCII.
-  // Request a bit more, to be safe, then truncate in the end.
-
-  nsresult rv;
-  const uint32_t wantedFileNameLength = 8;
-  const uint32_t requiredBytesLength =
-      static_cast<uint32_t>((wantedFileNameLength + 1) / 4 * 3);
-
-  uint8_t buffer[requiredBytesLength];
-  if (!mozilla::GenerateRandomBytesFromOS(buffer, requiredBytesLength)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsAutoCString tempLeafName;
-  // We're forced to specify a padding policy, though this is guaranteed
-  // not to need padding due to requiredBytesLength being a multiple of 3.
-  rv = Base64URLEncode(requiredBytesLength, buffer,
-                       Base64URLEncodePaddingPolicy::Omit, tempLeafName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  tempLeafName.Truncate(wantedFileNameLength);
-
-  result.Assign(tempLeafName);
   return NS_OK;
 }
 
@@ -1590,9 +1556,36 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel* aChannel) {
   // At this point, we do not have a filename for the temp file.  For security
   // purposes, this cannot be predictable, so we must use a cryptographic
   // quality PRNG to generate one.
-  nsAutoCString tempLeafName;
-  rv = GenerateRandomName(tempLeafName);
+  // We will request raw random bytes, and transform that to a base64 string,
+  // as all characters from the base64 set are acceptable for filenames.  For
+  // each three bytes of random data, we will get four bytes of ASCII.  Request
+  // a bit more, to be safe, and truncate to the length we want in the end.
+
+  const uint32_t wantedFileNameLength = 8;
+  const uint32_t requiredBytesLength =
+      static_cast<uint32_t>((wantedFileNameLength + 1) / 4 * 3);
+
+  nsCOMPtr<nsIRandomGenerator> rg =
+      do_GetService("@mozilla.org/security/random-generator;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  uint8_t* buffer;
+  rv = rg->GenerateRandomBytes(requiredBytesLength, &buffer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString tempLeafName;
+  nsDependentCSubstring randomData(reinterpret_cast<const char*>(buffer),
+                                   requiredBytesLength);
+  rv = Base64Encode(randomData, tempLeafName);
+  free(buffer);
+  buffer = nullptr;
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  tempLeafName.Truncate(wantedFileNameLength);
+
+  // Base64 characters are alphanumeric (a-zA-Z0-9) and '+' and '/', so we need
+  // to replace illegal characters -- notably '/'
+  tempLeafName.ReplaceChar(KNOWN_PATH_SEPARATORS FILE_ILLEGAL_CHARACTERS, '_');
 
   // now append our extension.
   nsAutoCString ext;
@@ -2731,59 +2724,22 @@ nsresult nsExternalAppHandler::ContinueSave(nsIFile* aNewFileLocation) {
     nsCOMPtr<nsIFile> movedFile;
     mFinalFileDestination->Clone(getter_AddRefs(movedFile));
     if (movedFile) {
-      nsAutoCString randomChars;
-      rv = GenerateRandomName(randomChars);
-      if (NS_SUCCEEDED(rv)) {
-        // Get the leaf name, strip any extensions, then
-        // add random bytes, followed by the extensions and '.part'.
-        nsAutoString leafName;
-        mFinalFileDestination->GetLeafName(leafName);
-        auto nameWithoutExtensionLength = leafName.FindChar('.');
-        nsAutoString extensions(u"");
-        if (nameWithoutExtensionLength == kNotFound) {
-          nameWithoutExtensionLength = leafName.Length();
-        } else {
-          extensions = Substring(leafName, nameWithoutExtensionLength);
-        }
-        leafName.Truncate(nameWithoutExtensionLength);
+      // Get the old leaf name and append .part to it
+      nsAutoString name;
+      mFinalFileDestination->GetLeafName(name);
+      name.AppendLiteral(".part");
+      movedFile->SetLeafName(name);
 
-        nsAutoString suffix = u"."_ns + NS_ConvertASCIItoUTF16(randomChars) +
-                              extensions + u".part"_ns;
-#ifdef XP_WIN
-        // Deal with MAX_PATH on Windows. Worth noting that the original
-        // path for mFinalFileDestination must be valid for us to get
-        // here: either SetDownloadToLaunch or the caller of
-        // SaveDestinationAvailable has called CreateUnique or similar
-        // to ensure both a unique name and one that isn't too long.
-        // The only issue is we're making it longer to get the part
-        // file path...
+      rv = mSaver->SetTarget(movedFile, true);
+      if (NS_FAILED(rv)) {
         nsAutoString path;
-        mFinalFileDestination->GetPath(path);
-        CheckedInt<uint16_t> fullPathLength = uint32_t(path.Length()) + 1 +
-                                              randomChars.Length() +
-                                              ArrayLength(".part");
-        if (!fullPathLength.isValid()) {
-          leafName.Truncate();
-        } else if (fullPathLength.value() > MAX_PATH) {
-          int32_t leafNameRemaining =
-              leafName.Length() - (fullPathLength.value() - MAX_PATH);
-          leafName.Truncate(std::max(leafNameRemaining, 0));
-        }
-#endif
-        leafName.Append(suffix);
-        movedFile->SetLeafName(leafName);
-
-        rv = mSaver->SetTarget(movedFile, true);
-        if (NS_FAILED(rv)) {
-          nsAutoString path;
-          mTempFile->GetPath(path);
-          SendStatusChange(kWriteError, rv, nullptr, path);
-          Cancel(rv);
-          return NS_OK;
-        }
-
-        mTempFile = movedFile;
+        mTempFile->GetPath(path);
+        SendStatusChange(kWriteError, rv, nullptr, path);
+        Cancel(rv);
+        return NS_OK;
       }
+
+      mTempFile = movedFile;
     }
   }
 
