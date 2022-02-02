@@ -145,17 +145,28 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(ErrorResult& aRv) {
 }
 
 void MediaDevices::MaybeResumeDeviceExposure() {
-  if (mPendingEnumerateDevicesPromises.IsEmpty()) {
+  if (mPendingEnumerateDevicesPromises.IsEmpty() &&
+      !mHaveUnprocessedDeviceListChange) {
     return;
   }
   nsPIDOMWindowInner* window = GetOwner();
   if (!window || !window->IsFullyActive()) {
     return;
   }
+  // Device list changes are not exposed to unfocused contexts because the
+  // timing information would allow fingerprinting for content to identify
+  // concurrent browsing, even when pages are in different containers.
   BrowsingContext* bc = window->GetBrowsingContext();
   if (!bc->IsActive() ||                  // not foreground tab
       !bc->GetIsActiveBrowserWindow()) {  // browser window does not have focus
     return;
+  }
+  if (mHaveUnprocessedDeviceListChange) {
+    NS_DispatchToCurrentThread(
+        NS_NewRunnableFunction("devicechange", [self = RefPtr(this), this] {
+          DispatchTrustedEvent(u"devicechange"_ns);
+        }));
+    mHaveUnprocessedDeviceListChange = false;
   }
 
   auto pending = std::move(mPendingEnumerateDevicesPromises);
@@ -529,10 +540,8 @@ void MediaDevices::OnDeviceChange() {
     return;
   }
 
-  NS_DispatchToCurrentThread(
-      NS_NewRunnableFunction("devicechange", [self = RefPtr(this), this] {
-        DispatchTrustedEvent(u"devicechange"_ns);
-      }));
+  mHaveUnprocessedDeviceListChange = true;
+  MaybeResumeDeviceExposure();
 }
 
 mozilla::dom::EventHandlerNonNull* MediaDevices::GetOndevicechange() {
