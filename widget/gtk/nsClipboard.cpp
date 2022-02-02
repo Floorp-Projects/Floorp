@@ -66,9 +66,8 @@ void clipboard_get_cb(GtkClipboard* aGtkClipboard,
 // Callback when someone asks us to clear a clipboard
 void clipboard_clear_cb(GtkClipboard* aGtkClipboard, gpointer user_data);
 
-static bool ConvertHTMLtoUCS2(Span<const char> aData,
-                              nsCString& charset, char16_t** unicodeData,
-                              int32_t& outUnicodeLen);
+static bool ConvertHTMLtoUCS2(Span<const char> aData, nsCString& charset,
+                              char16_t** unicodeData, int32_t& outUnicodeLen);
 
 static bool GetHTMLCharset(Span<const char> aData, nsCString& str);
 
@@ -306,22 +305,22 @@ bool nsClipboard::FilterImportedFlavors(int32_t aWhichClipboard,
   }
 
   for (const auto& atom : targets.AsSpan()) {
-    gchar* atom_name = gdk_atom_name(atom);
+    GUniquePtr<gchar> atom_name(gdk_atom_name(atom));
     if (!atom_name) {
       continue;
     }
     // Filter out system MIME types.
-    if (strcmp(atom_name, "TARGETS") == 0 ||
-        strcmp(atom_name, "TIMESTAMP") == 0 ||
-        strcmp(atom_name, "SAVE_TARGETS") == 0 ||
-        strcmp(atom_name, "MULTIPLE") == 0) {
+    if (strcmp(atom_name.get(), "TARGETS") == 0 ||
+        strcmp(atom_name.get(), "TIMESTAMP") == 0 ||
+        strcmp(atom_name.get(), "SAVE_TARGETS") == 0 ||
+        strcmp(atom_name.get(), "MULTIPLE") == 0) {
       continue;
     }
     // Filter out types which can't be converted to text.
-    if (strncmp(atom_name, "image/", 6) == 0 ||
-        strncmp(atom_name, "application/", 12) == 0 ||
-        strncmp(atom_name, "audio/", 6) == 0 ||
-        strncmp(atom_name, "video/", 6) == 0) {
+    if (strncmp(atom_name.get(), "image/", 6) == 0 ||
+        strncmp(atom_name.get(), "application/", 12) == 0 ||
+        strncmp(atom_name.get(), "audio/", 6) == 0 ||
+        strncmp(atom_name.get(), "video/", 6) == 0) {
       continue;
     }
     // We have some other MIME type on clipboard which can be hopefully
@@ -333,12 +332,12 @@ bool nsClipboard::FilterImportedFlavors(int32_t aWhichClipboard,
   // So make sure we offer only types we have at clipboard.
   nsTArray<nsCString> clipboardFlavors;
   for (const auto& atom : targets.AsSpan()) {
-    gchar* atom_name = gdk_atom_name(atom);
+    GUniquePtr<gchar> atom_name(gdk_atom_name(atom));
     if (!atom_name) {
       continue;
     }
-    if (IsMIMEAtFlavourList(aFlavors, atom_name)) {
-      clipboardFlavors.AppendElement(nsCString(atom_name));
+    if (IsMIMEAtFlavourList(aFlavors, atom_name.get())) {
+      clipboardFlavors.AppendElement(nsCString(atom_name.get()));
     }
   }
   aFlavors.SwapElements(clipboardFlavors);
@@ -488,8 +487,8 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
           LOGCLIP("Failed to get html/text encoding, fall back to utf-8.\n");
           charset.AssignLiteral("utf-8");
         }
-        if (!ConvertHTMLtoUCS2(clipboardData.AsSpan(), charset,
-                               &htmlBody, htmlBodyLen)) {
+        if (!ConvertHTMLtoUCS2(clipboardData.AsSpan(), charset, &htmlBody,
+                               htmlBodyLen)) {
           LOGCLIP("    failed to convert text/html to UCS2.\n");
           continue;
         }
@@ -571,12 +570,12 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
   if (LOGCLIP_ENABLED()) {
     LOGCLIP("    Clipboard content (target nums %d):\n", targets.mCount);
     for (const auto& target : targets.AsSpan()) {
-      gchar* atom_name = gdk_atom_name(target);
+      GUniquePtr<gchar> atom_name(gdk_atom_name(target));
       if (!atom_name) {
         LOGCLIP("        failed to get MIME\n");
         continue;
       }
-      LOGCLIP("        MIME %s\n", atom_name);
+      LOGCLIP("        MIME %s\n", atom_name.get());
     }
     LOGCLIP("    Asking for content:\n");
     for (auto& flavor : aFlavorList) {
@@ -597,32 +596,35 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
     }
 
     for (const auto& target : targets.AsSpan()) {
-      gchar* atom_name = gdk_atom_name(target);
+      GUniquePtr<gchar> atom_name(gdk_atom_name(target));
       if (!atom_name) {
         continue;
       }
 
-      if (flavor.Equals(atom_name)) {
+      if (flavor.Equals(atom_name.get())) {
+        LOGCLIP("    has %s\n", atom_name.get());
         *_retval = true;
-        LOGCLIP("    has %s\n", atom_name);
+        break;
       }
       // X clipboard supports image/jpeg, but we want to emulate support
       // for image/jpg as well
-      else if (flavor.EqualsLiteral(kJPGImageMime) &&
-               !strcmp(atom_name, kJPEGImageMime)) {
-        *_retval = true;
+      if (flavor.EqualsLiteral(kJPGImageMime) &&
+          !strcmp(atom_name.get(), kJPEGImageMime)) {
         LOGCLIP("    has image/jpg\n");
+        *_retval = true;
+        break;
       }
       // application/x-moz-file should be treated like text/uri-list
-      else if (flavor.EqualsLiteral(kFileMime) &&
-               !strcmp(atom_name, kURIListMime)) {
-        *_retval = true;
+      if (flavor.EqualsLiteral(kFileMime) &&
+          !strcmp(atom_name.get(), kURIListMime)) {
         LOGCLIP("    has text/uri-list treating as application/x-moz-file");
+        *_retval = true;
+        break;
       }
+    }
 
-      g_free(atom_name);
-
-      if (*_retval) break;
+    if (*_retval) {
+      break;
     }
   }
 
@@ -691,7 +693,8 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
   nsCOMPtr<nsISupports> item;
 
   GdkAtom selectionTarget = gtk_selection_data_get_target(aSelectionData);
-  LOGCLIP("  selection target %s\n", gdk_atom_name(selectionTarget));
+  LOGCLIP("  selection target %s\n",
+          GUniquePtr<gchar>(gdk_atom_name(selectionTarget)).get());
 
   // Check to see if the selection data is some text type.
   if (gtk_targets_include_text(&selectionTarget, 1)) {
@@ -765,7 +768,7 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
     }
 
     LOGCLIP("    Setting pixbuf image data as %s\n",
-            gdk_atom_name(selectionTarget));
+            GUniquePtr<gchar>(gdk_atom_name(selectionTarget)).get());
     gtk_selection_data_set_pixbuf(aSelectionData, pixbuf);
     g_object_unref(pixbuf);
     return;
@@ -795,48 +798,45 @@ void nsClipboard::SelectionGetEvent(GtkClipboard* aClipboard,
     AppendUTF16toUTF8(ucs2string, html);
 
     LOGCLIP("  Setting %zd bytest of %s data\n", html.Length(),
-            gdk_atom_name(selectionTarget));
+            GUniquePtr<gchar>(gdk_atom_name(selectionTarget)).get());
     gtk_selection_data_set(aSelectionData, selectionTarget, 8,
                            (const guchar*)html.get(), html.Length());
     return;
   }
 
   LOGCLIP("  Try if we have anything at GetTransferData() for %s\n",
-          gdk_atom_name(selectionTarget));
+          GUniquePtr<gchar>(gdk_atom_name(selectionTarget)).get());
 
   // Try to match up the selection data target to something our
   // transferable provides.
-  gchar* target_name = gdk_atom_name(selectionTarget);
+  GUniquePtr<gchar> target_name(gdk_atom_name(selectionTarget));
   if (!target_name) {
     LOGCLIP("  Failed to get target name!\n");
     return;
   }
 
-  rv = trans->GetTransferData(target_name, getter_AddRefs(item));
+  rv = trans->GetTransferData(target_name.get(), getter_AddRefs(item));
   // nothing found?
   if (NS_FAILED(rv) || !item) {
     LOGCLIP("  Failed to get anything from GetTransferData()!\n");
-    g_free(target_name);
     return;
   }
 
   void* primitive_data = nullptr;
   uint32_t dataLen = 0;
-  nsPrimitiveHelpers::CreateDataFromPrimitive(nsDependentCString(target_name),
-                                              item, &primitive_data, &dataLen);
-
-  if (primitive_data) {
-    LOGCLIP("  Setting %s as a primitive data type, %d bytes\n", target_name,
-            dataLen);
-    gtk_selection_data_set(aSelectionData, selectionTarget,
-                           8, /* 8 bits in a unit */
-                           (const guchar*)primitive_data, dataLen);
-    free(primitive_data);
-  } else {
+  nsPrimitiveHelpers::CreateDataFromPrimitive(
+      nsDependentCString(target_name.get()), item, &primitive_data, &dataLen);
+  if (!primitive_data) {
     LOGCLIP("  Failed to get primitive data!\n");
+    return;
   }
 
-  g_free(target_name);
+  LOGCLIP("  Setting %s as a primitive data type, %d bytes\n",
+          target_name.get(), dataLen);
+  gtk_selection_data_set(aSelectionData, selectionTarget,
+                         8, /* 8 bits in a unit */
+                         (const guchar*)primitive_data, dataLen);
+  free(primitive_data);
 }
 
 void nsClipboard::SelectionClearEvent(GtkClipboard* aGtkClipboard) {
