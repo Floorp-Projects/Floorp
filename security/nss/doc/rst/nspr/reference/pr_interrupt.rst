@@ -75,6 +75,3 @@ Bugs
 -  In the NT implementation, :ref:`PR_Connect` cannot be interrupted.
 -  In the NT implementation, a file descriptor is not usable and must be
    closed after an I/O function on the file descriptor is interrupted.
-   See the memo `Using IO Timeout and Interrupt on
-   NT <http://www.mozilla.org/projects/nspr/tech-notes/ntiotimeoutinterrupt.html>`__
-   for details.

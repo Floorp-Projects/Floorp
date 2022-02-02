@@ -117,10 +117,8 @@ More Documentation
    .. rubric:: NSS is built on top of Netscape Portable Runtime (NSPR)
       :name: NSS_is_built_on_top_of_Netscape_Portable_Runtime_NSPR
 
-   `Netscape Portable Runtime <NSPR>`__
-      NSPR project page.
-   `NSPR Reference <https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSPR/Reference>`__
-      NSPR API documentation.
+   - :ref:`NSPR`
+   - :ref:`NSPR API Reference`
 
    .. rubric:: Additional Information
       :name: Additional_Information
