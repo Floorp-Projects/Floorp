@@ -338,8 +338,7 @@ interface mixin CanvasHitRegions {
   [Pref="canvas.hitregions.enabled"] void clearHitRegions();
 };
 
-[Exposed=(Window,Worker),
- Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
+[Exposed=Window]
 interface CanvasGradient {
   // opaque object
   [Throws]
@@ -347,8 +346,7 @@ interface CanvasGradient {
   void addColorStop(float offset, UTF8String color);
 };
 
-[Exposed=(Window,Worker),
- Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
+[Exposed=Window]
 interface CanvasPattern {
   // opaque object
   // [Throws, LenientFloat] - could not do this overload because of bug 1020975
@@ -399,8 +397,7 @@ interface TextMetrics {
 };
 
 [Pref="canvas.path.enabled",
- Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread",
- Exposed=(Window,Worker)]
+ Exposed=Window]
 interface Path2D
 {
   constructor();

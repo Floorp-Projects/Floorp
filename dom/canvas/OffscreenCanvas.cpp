@@ -9,7 +9,6 @@
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/OffscreenCanvasDisplayHelper.h"
-#include "mozilla/dom/OffscreenCanvasRenderingContext2D.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
@@ -119,9 +118,6 @@ void OffscreenCanvas::GetContext(
 
   CanvasContextType contextType;
   switch (aContextId) {
-    case OffscreenRenderingContextId::_2d:
-      contextType = CanvasContextType::OffscreenCanvas2D;
-      break;
     case OffscreenRenderingContextId::Bitmaprenderer:
       contextType = CanvasContextType::ImageBitmap;
       break;
@@ -152,11 +148,6 @@ void OffscreenCanvas::GetContext(
 
   MOZ_ASSERT(mCurrentContext);
   switch (mCurrentContextType) {
-    case CanvasContextType::OffscreenCanvas2D:
-      aResult.SetValue().SetAsOffscreenCanvasRenderingContext2D() =
-          *static_cast<OffscreenCanvasRenderingContext2D*>(
-              mCurrentContext.get());
-      break;
     case CanvasContextType::ImageBitmap:
       aResult.SetValue().SetAsImageBitmapRenderingContext() =
           *static_cast<ImageBitmapRenderingContext*>(mCurrentContext.get());
@@ -314,12 +305,6 @@ already_AddRefed<Promise> OffscreenCanvas::ConvertToBlob(
     return nullptr;
   }
 
-  if (mNeutered) {
-    aRv.ThrowInvalidStateError(
-        "Cannot get blob from placeholder canvas transferred to worker.");
-    return nullptr;
-  }
-
   nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
 
   RefPtr<Promise> promise = Promise::Create(global, aRv);
@@ -342,9 +327,6 @@ already_AddRefed<Promise> OffscreenCanvas::ConvertToBlob(
   CanvasRenderingContextHelper::ToBlob(callback, type, encodeOptions,
                                        /* aUsingCustomOptions */ false,
                                        usePlaceholder, aRv);
-  if (aRv.Failed()) {
-    promise->MaybeReject(std::move(aRv));
-  }
 
   return promise.forget();
 }
@@ -356,12 +338,6 @@ already_AddRefed<Promise> OffscreenCanvas::ToBlob(JSContext* aCx,
   // do a trust check if this is a write-only canvas
   if (mIsWriteOnly) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return nullptr;
-  }
-
-  if (mNeutered) {
-    aRv.ThrowInvalidStateError(
-        "Cannot get blob from placeholder canvas transferred to worker.");
     return nullptr;
   }
 

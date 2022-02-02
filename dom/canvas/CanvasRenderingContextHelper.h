@@ -25,7 +25,6 @@ class EncodeCompleteCallback;
 enum class CanvasContextType : uint8_t {
   NoContext,
   Canvas2D,
-  OffscreenCanvas2D,
   WebGL1,
   WebGL2,
   WebGPU,
