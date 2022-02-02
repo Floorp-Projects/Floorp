@@ -21,7 +21,7 @@ struct ErrorScopeStack {
 };
 
 class WebGPUParent final : public PWebGPUParent {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGPUParent)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebGPUParent, override)
 
  public:
   explicit WebGPUParent();
@@ -90,7 +90,7 @@ class WebGPUParent final : public PWebGPUParent {
   ipc::IPCResult RecvDevicePopErrorScope(
       RawId aSelfId, DevicePopErrorScopeResolver&& aResolver);
 
-  ipc::IPCResult RecvShutdown();
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
   virtual ~WebGPUParent();

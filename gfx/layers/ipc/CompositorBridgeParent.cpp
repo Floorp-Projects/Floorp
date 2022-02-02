@@ -57,7 +57,6 @@
 #include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/webrender/WebRenderAPI.h"
-#include "mozilla/webgpu/WebGPUParent.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/media/MediaSystemResourceService.h"  // for MediaSystemResourceService
 #include "mozilla/mozalloc.h"                          // for operator new, etc
@@ -1286,28 +1285,6 @@ bool CompositorBridgeParent::DeallocPWebRenderBridgeParent(
     }
   }
   parent->Release();  // IPDL reference
-  return true;
-}
-
-webgpu::PWebGPUParent* CompositorBridgeParent::AllocPWebGPUParent() {
-  // This should only ever get called in the GPU process.
-  MOZ_ASSERT(XRE_IsGPUProcess());
-  // Shouldn't re-initialize
-  MOZ_ASSERT(!mWebGPUBridge);
-  // We should only ever get this if WebGPU is enabled in this compositor.
-  MOZ_RELEASE_ASSERT(mOptions.UseWebGPU());
-
-  mWebGPUBridge = new webgpu::WebGPUParent();
-  mWebGPUBridge.get()->AddRef();  // IPDL reference
-  return mWebGPUBridge;
-}
-
-bool CompositorBridgeParent::DeallocPWebGPUParent(
-    webgpu::PWebGPUParent* aActor) {
-  webgpu::WebGPUParent* parent = static_cast<webgpu::WebGPUParent*>(aActor);
-  MOZ_ASSERT(mWebGPUBridge == parent);
-  parent->Release();  // IPDL reference
-  mWebGPUBridge = nullptr;
   return true;
 }
 

@@ -11,6 +11,7 @@
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/CompositorManagerChild.h"
+#include "mozilla/webgpu/WebGPUChild.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -129,6 +130,17 @@ void CanvasManagerChild::Destroy() {
   manager->SendInitialize(manager->Id());
   sLocalManager.set(manager);
   return manager;
+}
+
+RefPtr<webgpu::WebGPUChild> CanvasManagerChild::GetWebGPUChild() {
+  if (!mWebGPUChild) {
+    mWebGPUChild = MakeAndAddRef<webgpu::WebGPUChild>();
+    if (!SendPWebGPUConstructor(mWebGPUChild)) {
+      mWebGPUChild = nullptr;
+    }
+  }
+
+  return mWebGPUChild;
 }
 
 already_AddRefed<DataSourceSurface> CanvasManagerChild::GetSnapshot(
