@@ -9,6 +9,7 @@ import os
 import time
 from datetime import datetime
 from pprint import pformat
+from subprocess import CalledProcessError
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
@@ -60,22 +61,28 @@ base_schema = Schema(
 
 def _get_defaults(repo_root=None):
     repo = get_repository(repo_root or os.getcwd())
+    try:
+        repo_url = repo.get_url()
+        project = repo_url.rsplit("/", 1)[1]
+    except CalledProcessError:
+        repo_url = ""
+        project = ""
 
     return {
-        "base_repository": repo.get_url(),
+        "base_repository": repo_url,
         "build_date": int(time.time()),
         "do_not_optimize": [],
         "existing_tasks": {},
         "filters": ["target_tasks_method"],
         "head_ref": repo.head_ref,
-        "head_repository": repo.get_url(),
+        "head_repository": repo_url,
         "head_rev": repo.head_ref,
         "head_tag": "",
         "level": "3",
         "moz_build_date": datetime.now().strftime("%Y%m%d%H%M%S"),
         "optimize_target_tasks": True,
         "owner": "nobody@mozilla.com",
-        "project": repo.get_url().rsplit("/", 1)[1],
+        "project": project,
         "pushdate": int(time.time()),
         "pushlog_id": "0",
         "repository_type": repo.tool,

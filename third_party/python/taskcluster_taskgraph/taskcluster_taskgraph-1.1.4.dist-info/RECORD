@@ -10,7 +10,7 @@ taskgraph/graph.py,sha256=W7I-lfDiBMqSj5ZKgqVmebwTaNxdmbKLx2MqFT_cD_I,4666
 taskgraph/main.py,sha256=8R6zwOKzK7W4khjxeShbbHstubMOgznbi4QKgGjCKMc,22397
 taskgraph/morph.py,sha256=EH_kP5FAMb0F8Oap4VZeVpMNXGr0QhDVz_lxiY-ksgA,9562
 taskgraph/optimize.py,sha256=dxeS3BVaRpPrhC0oK4vmZpcSfdMQTeKiWqvb_Lnx1dM,12518
-taskgraph/parameters.py,sha256=zoyB1vDkapgCyFtiAggNzbX7pbwrYMw4T7Bk4JpYkME,10494
+taskgraph/parameters.py,sha256=zEPrnbnxnCX1riu2_aSgfxBcx2BGOCvFzz-3JRHxS6A,10661
 taskgraph/target_tasks.py,sha256=mspItlKD-HCuQR1x_UD6HT_Qd1v5kEHvgRWIUbweRDg,3166
 taskgraph/task.py,sha256=OiYCsYhVukqLdQR2olQSG-l7oP2Z_2XaIZxovBPqxCc,2733
 taskgraph/taskgraph.py,sha256=DfldF0Fp_hQeDK2lQs4SoWgrp_9tG6y2VfuBEp8C3OM,2397
@@ -93,8 +93,8 @@ taskgraph/util/vcs.py,sha256=xqBYwWjiuuRxtVEpA9n3pQJ9iJdyaayD1VtDn2NWPOI,6284
 taskgraph/util/verify.py,sha256=e0j_Ec2gDDIVlnEO9tHQ0gjxzGm00NJbPVI5q4BuiHc,5653
 taskgraph/util/workertypes.py,sha256=5g2mgIbEKMzDpZNnmPMoMNyy7Wahi-jmWcV1amDAcPo,2341
 taskgraph/util/yaml.py,sha256=hfKI_D8Q7dimq4_VvO3WEh8CJsTrsIMwN6set7HIQbY,990
-taskcluster_taskgraph-1.1.3.dist-info/METADATA,sha256=K0UlDdvrBrVZCeZDbLn5tQBpLpN-mBH45SPgxmfXQUc,730
-taskcluster_taskgraph-1.1.3.dist-info/WHEEL,sha256=G16H4A3IeoQmnOrYV4ueZGKSjhipXx8zc8nu9FGlvMA,92
-taskcluster_taskgraph-1.1.3.dist-info/entry_points.txt,sha256=VoXNtZpN4LvyXYB1wq47AU9CO-DMYMJ0VktKxjugzbY,51
-taskcluster_taskgraph-1.1.3.dist-info/top_level.txt,sha256=3JNeYn_hNiNXC7DrdH_vcv-WYSE7QdgGjdvUYvSjVp0,10
-taskcluster_taskgraph-1.1.3.dist-info/RECORD,,
+taskcluster_taskgraph-1.1.4.dist-info/METADATA,sha256=cxu851SrVK-cAJHhNguRF8yiCl4KHjJBYEeR9JFfKGE,730
+taskcluster_taskgraph-1.1.4.dist-info/WHEEL,sha256=G16H4A3IeoQmnOrYV4ueZGKSjhipXx8zc8nu9FGlvMA,92
+taskcluster_taskgraph-1.1.4.dist-info/entry_points.txt,sha256=VoXNtZpN4LvyXYB1wq47AU9CO-DMYMJ0VktKxjugzbY,51
+taskcluster_taskgraph-1.1.4.dist-info/top_level.txt,sha256=3JNeYn_hNiNXC7DrdH_vcv-WYSE7QdgGjdvUYvSjVp0,10
+taskcluster_taskgraph-1.1.4.dist-info/RECORD,,
