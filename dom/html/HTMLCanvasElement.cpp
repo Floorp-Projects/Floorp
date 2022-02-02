@@ -191,7 +191,7 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
 
     mOwningElement->ProcessDestroyedFrameListeners();
 
-    if (!mOwningElement->IsFrameCaptureRequested()) {
+    if (!mOwningElement->IsFrameCaptureRequested(aTime)) {
       return;
     }
 
@@ -1328,13 +1328,13 @@ nsresult HTMLCanvasElement::RegisterFrameCaptureListener(
   return NS_OK;
 }
 
-bool HTMLCanvasElement::IsFrameCaptureRequested() const {
+bool HTMLCanvasElement::IsFrameCaptureRequested(const TimeStamp& aTime) const {
   for (WeakPtr<FrameCaptureListener> listener : mRequestedFrameListeners) {
     if (!listener) {
       continue;
     }
 
-    if (listener->FrameCaptureRequested()) {
+    if (listener->FrameCaptureRequested(aTime)) {
       return true;
     }
   }
