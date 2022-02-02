@@ -408,7 +408,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
           features |= NSWindowStyleMaskClosable;
         }
       }
-      if (aBorderStyle & eBorderStyle_minimize) {
+      if (mPopupType != ePopupTypeTooltip && aBorderStyle & eBorderStyle_minimize) {
         features |= NSWindowStyleMaskMiniaturizable;
       }
       break;
