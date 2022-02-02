@@ -1,0 +1,167 @@
+#############################################
+# This file serves as the test case list for gen_win32k_tests.py
+
+#############################################
+# Only here for reference:
+
+# MissingWebRender = 2
+# OperatingSystemNotSupported = 3
+# MissingRemoteWebGL = 5
+# DisabledByEnvVar = 7
+# DisabledBySafeMode = 8
+# DisabledByE10S = 9
+# DisabledByUserPref = 10
+# EnabledByUserPref = 11
+# DisabledByControlGroup = 12
+# EnabledByTreatmentGroup = 13
+# DisabledByDefault = 14
+# EnabledByDefault = 15
+
+# UNENROLLED
+# ENROLLED_CONTROL
+# ENROLLED_TREATMENT
+# DISQUALIFIED
+
+#############################################
+# Assertion Mappings
+# Shorthand values for the test cases below.  Instead of writing out the whole thing
+# you can just do [A#5]
+
+ > 1  : [A S=DisabledByDefault SS=DisabledByDefault ES=UNENROLLED P=False ESP=UNENROLLED]
+ > 1T : [A S=EnabledByDefault SS=EnabledByDefault ES=UNENROLLED P=True ESP=UNENROLLED]
+ > 2  : [A S=EnabledByDefault SS=EnabledByDefault ES=UNENROLLED P=True ESP=UNENROLLED]
+ > 3  : [A S=EnabledByUserPref SS=DisabledByDefault ES=UNENROLLED P=True ESP=UNENROLLED]
+ > 3T : [A S=EnabledByDefault SS=EnabledByDefault ES=UNENROLLED P=True ESP=UNENROLLED]
+ > 4  : [A S=EnabledByUserPref SS=EnabledByUserPref ES=UNENROLLED P=True ESP=UNENROLLED]
+ > 4T : [A S=EnabledByDefault SS=EnabledByDefault ES=UNENROLLED P=True ESP=UNENROLLED]
+ > 5  : [A S=DisabledByDefault SS=DisabledByDefault ES=UNENROLLED P=False ESP=ENROLLED_CONTROL]
+ > 5T : [A S=EnabledByDefault SS=EnabledByDefault ES=UNENROLLED P=True ESP=ENROLLED_CONTROL]
+ > 6  : [A S=DisabledByControlGroup SS=DisabledByControlGroup ES=ENROLLED_CONTROL P=False ESP=ENROLLED_CONTROL]
+ > 6T : [A S=DisabledByControlGroup SS=DisabledByControlGroup ES=ENROLLED_CONTROL P=True ESP=ENROLLED_CONTROL]
+ > 7  : [A S=DisabledByDefault SS=DisabledByDefault ES=UNENROLLED P=False ESP=ENROLLED_TREATMENT]
+ > 7T : [A S=EnabledByDefault SS=EnabledByDefault ES=UNENROLLED P=True ESP=ENROLLED_TREATMENT]
+ > 8  : [A S=EnabledByTreatmentGroup SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=False ESP=ENROLLED_TREATMENT]
+ > 8T : [A S=EnabledByTreatmentGroup SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT]
+ > 9  : [A S=MissingRemoteWebGL SS=DisabledByDefault ES=UNENROLLED P=False ESP=UNENROLLED]
+ > 9T : [A S=MissingRemoteWebGL SS=EnabledByDefault ES=UNENROLLED P=True ESP=UNENROLLED]
+ > 10 : [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=UNENROLLED P=False ESP=UNENROLLED]
+ > 10T: [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=UNENROLLED P=True ESP=UNENROLLED]
+ 
+
+# TODO
+# - win32k env var tests
+
+
+#############################################
+# Tests
+
+# Syntax:
+#   [D=T] - is the default value for win32k lockdown pref 'false' or 'true'
+#   Action -> Action
+#       Valid Actions: 
+#             Nothing
+#             Enrolled Control/Treatment
+#             On/Off (changes win32k pref)
+#             Restart
+#             E10s (Restarts with E10s disabled)
+#             Header-On - Restart with MOZ_ENABLE_WIN32K set
+#             Header-Off - unset MOZ_ENABLE_WIN32K but do not restart
+#             Bad Requirements - sets webg out of process to false, invalidating win32k
+#             Enrolled /Control/Treatment]-C:
+#                   The enrollment pref is set by normandy on _every_ startup on the
+#                   default branch, where it doesn't persist.
+#                   This action represents normandy doing its normal set that
+#                   occurs after a restart.  If Normandy doesn't do it, the
+#                   startupEnrollmentPref is set back to 0 after restart, which is expected.
+#   [A S= SS= ES= P= ESP=] - trigger an assertion check for the listed values
+#        S  - 'Status' or the current value of calculating GetWin32kLockdownState()
+#        SS - 'Session Status' or the current value of set-once-at-startup static variable gWin32kStatus
+#        ES - 'Experiment Status' or the value of gWin32kExperimentStatus
+#        P  - 'Pref' or the value of security.sandbox.content.win32k-disable
+#        ESP- 'Enrollment Status Pref' or the value of security.sandbox.content.win32k-experiment.startupEnrollmentStatus
+#   [A#5] - trigger an assertion check from the mapping table above
+
+
+# Safe Mode tests are currently not generated, as I don't know how to make marionette restart in safe mode
+
+#################
+ - [D=F] Nothing [A#1] -> Enrolled Control [A S=DisabledByDefault SS=DisabledByDefault ES=UNENROLLED P=False ESP=ENROLLED_CONTROL] -> Restart [A S=DisabledByControlGroup SS=DisabledByControlGroup ES=ENROLLED_CONTROL P=False ESP=ENROLLED_CONTROL]
+ - [D=F] Nothing [A#1] -> Enrolled Treatment [A S=DisabledByDefault SS=DisabledByDefault ES=UNENROLLED P=False ESP=ENROLLED_TREATMENT] -> Restart [A S=EnabledByTreatmentGroup SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=False ESP=ENROLLED_TREATMENT]
+ - [D=F] Nothing [A#1] -> On [A S=EnabledByUserPref SS=DisabledByDefault ES=UNENROLLED P=True ESP=UNENROLLED] -> Restart [A S=EnabledByUserPref SS=EnabledByUserPref ES=UNENROLLED P=True ESP=UNENROLLED]
+ - [D=F] Nothing [A#1] -> Off [A#1] -> Restart [A#1]
+ - [D=F] Nothing [A#1] -> On -> Bad Requirements [A S=MissingRemoteWebGL SS=DisabledByDefault ES=UNENROLLED P=True ESP=UNENROLLED] -> Restart [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=UNENROLLED P=True ESP=UNENROLLED]
+ - [D=F] Nothing [A#1] -> On -> E10S [A S=DisabledByE10S SS=DisabledByE10S ES=UNENROLLED P=True ESP=UNENROLLED]
+ - [D=F] Nothing [A#1] -> On -> Header-On [A S=DisabledByEnvVar SS=DisabledByEnvVar ES=UNENROLLED P=True ESP=UNENROLLED] -> Header-Off [A S=EnabledByUserPref SS=DisabledByEnvVar ES=UNENROLLED P=True ESP=UNENROLLED]
+ - [D=F] Nothing [A#1] -> Safe Mode -> Restart
+
+#################
+ - [D=T] Nothing [A#1T] -> Enrolled Control [A S=EnabledByDefault SS=EnabledByDefault ES=UNENROLLED P=True ESP=ENROLLED_CONTROL] -> Restart [A S=DisabledByControlGroup SS=DisabledByControlGroup ES=ENROLLED_CONTROL P=True ESP=ENROLLED_CONTROL]
+ - [D=T] Nothing [A#1T] -> Enrolled Treatment [A S=EnabledByTreatmentGroup SS=EnabledByDefault ES=UNENROLLED P=True ESP=ENROLLED_TREATMENT] -> Restart [A S=EnabledByTreatmentGroup SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT]
+ - [D=T] Nothing [A#1T] -> On [A S=EnabledByDefault SS=EnabledByDefault ES=UNENROLLED P=True ESP=UNENROLLED] -> Restart [A S=EnabledByDefault SS=EnabledByDefault ES=UNENROLLED P=True ESP=UNENROLLED]
+ - [D=T] Nothing [A#1T] -> Off [A S=DisabledByUserPref SS=EnabledByDefault ES=UNENROLLED P=False ESP=UNENROLLED] -> Restart [A S=DisabledByUserPref SS=DisabledByUserPref ES=UNENROLLED P=False ESP=UNENROLLED]
+ - [D=T] Nothing [A#1T] -> On -> Bad Requirements [A S=MissingRemoteWebGL SS=EnabledByDefault ES=UNENROLLED P=True ESP=UNENROLLED] -> Restart [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=UNENROLLED P=True ESP=UNENROLLED]
+ - [D=T] Nothing [A#1T] -> On -> E10S [A S=DisabledByE10S SS=DisabledByE10S ES=UNENROLLED P=True ESP=UNENROLLED]
+ - [D=T] Nothing [A#1T] -> On -> Header-On [A S=DisabledByEnvVar SS=DisabledByEnvVar ES=UNENROLLED P=True ESP=UNENROLLED] -> Header-Off [A S=EnabledByDefault SS=DisabledByEnvVar ES=UNENROLLED P=True ESP=UNENROLLED]
+ - [D=T] Nothing [A#1T] -> Safe Mode -> Restart
+
+#################
+ - [D=F] On [A#3] -> Restart [A#4] -> Enrolled Control [A S=EnabledByUserPref SS=EnabledByUserPref ES=UNENROLLED P=True ESP=ENROLLED_CONTROL] -> Restart [A S=EnabledByUserPref SS=EnabledByUserPref ES=DISQUALIFIED P=True ESP=DISQUALIFIED]
+ - [D=F] On [A#3] -> Restart [A#4] -> Enrolled Treatment [A S=EnabledByUserPref SS=EnabledByUserPref ES=UNENROLLED P=True ESP=ENROLLED_TREATMENT] -> Restart [A S=EnabledByUserPref SS=EnabledByUserPref ES=DISQUALIFIED P=True ESP=DISQUALIFIED]
+ - [D=F] On [A#3] -> Restart [A#4] -> Off [A S=DisabledByDefault SS=EnabledByUserPref ES=UNENROLLED P=False ESP=UNENROLLED] -> Restart [A S=DisabledByDefault SS=DisabledByDefault ES=UNENROLLED P=False ESP=UNENROLLED]
+ - [D=F] On [A#3] -> Restart [A#4] -> Bad Requirements [A S=MissingRemoteWebGL SS=EnabledByUserPref ES=UNENROLLED P=True ESP=UNENROLLED]
+ - [D=F] On [A#3] -> Restart [A#4] -> E10S [A S=DisabledByE10S SS=DisabledByE10S ES=UNENROLLED P=True ESP=UNENROLLED] -> Restart [A#4]
+ - [D=F] On [A#3] -> Restart [A#4] -> Header-On [A S=DisabledByEnvVar SS=DisabledByEnvVar ES=UNENROLLED P=True ESP=UNENROLLED] -> Header-Off -> Restart [A#4]
+ - [D=F] On [A#3] -> Restart [A#4] -> Safe Mode
+
+#################
+ - [D=T] On [A#3T] -> Restart [A#4T] -> Enrolled Control [A S=EnabledByDefault SS=EnabledByDefault ES=UNENROLLED P=True ESP=ENROLLED_CONTROL] -> Restart [A S=DisabledByControlGroup SS=DisabledByControlGroup ES=ENROLLED_CONTROL P=True ESP=ENROLLED_CONTROL]
+ - [D=T] On [A#3T] -> Restart [A#4T] -> Enrolled Treatment [A S=EnabledByTreatmentGroup SS=EnabledByDefault ES=UNENROLLED P=True ESP=ENROLLED_TREATMENT] -> Restart [A S=EnabledByTreatmentGroup SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT]
+ - [D=T] On [A#3T] -> Restart [A#4T] -> Off [A S=DisabledByUserPref SS=EnabledByDefault ES=UNENROLLED P=False ESP=UNENROLLED] -> Restart [A S=DisabledByUserPref SS=DisabledByUserPref ES=UNENROLLED P=False ESP=UNENROLLED]
+ - [D=T] On [A#3T] -> Restart [A#4T] -> Bad Requirements [A S=MissingRemoteWebGL SS=EnabledByDefault ES=UNENROLLED P=True ESP=UNENROLLED]
+ - [D=T] On [A#3T] -> Restart [A#4T] -> E10S [A S=DisabledByE10S SS=DisabledByE10S ES=UNENROLLED P=True ESP=UNENROLLED] -> Restart [A#4T]
+ - [D=T] On [A#3T] -> Restart [A#4T] -> Header-On [A S=DisabledByEnvVar SS=DisabledByEnvVar ES=UNENROLLED P=True ESP=UNENROLLED] -> Header-Off -> Restart [A#4T]
+ - [D=T] On [A#3T] -> Restart [A#4T] -> Safe Mode
+
+#################
+ - [D=F] Enrolled Control [A#5] -> Restart [A#6] -> Enrolled Control-C -> On [A S=EnabledByUserPref SS=DisabledByControlGroup ES=ENROLLED_CONTROL P=True ESP=DISQUALIFIED] -> Restart [A S=EnabledByUserPref SS=EnabledByUserPref ES=DISQUALIFIED P=True ESP=DISQUALIFIED]
+ - [D=F] Enrolled Control [A#5] -> Restart [A#6] -> Off [A#6]
+ - [D=F] Enrolled Control [A#5] -> Restart [A#6] -> Enrolled Control-C -> Bad Requirements [A S=MissingRemoteWebGL SS=DisabledByControlGroup ES=ENROLLED_CONTROL P=False ESP=ENROLLED_CONTROL] -> Restart [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=DISQUALIFIED P=False ESP=DISQUALIFIED]
+ - [D=F] Enrolled Control [A#5] -> Restart [A#6] -> Enrolled Control-C -> E10S [A S=DisabledByE10S SS=DisabledByE10S ES=ENROLLED_CONTROL P=False ESP=ENROLLED_CONTROL] -> Enrolled Control-C -> Restart [A#6]
+ - [D=F] Enrolled Control [A#5] -> Restart [A#6] -> Enrolled Control-C -> Header-On [A S=DisabledByEnvVar SS=DisabledByEnvVar ES=ENROLLED_CONTROL P=False ESP=ENROLLED_CONTROL] -> Header-Off -> Enrolled Control-C -> Restart [A#6]
+ - [D=F] Enrolled Control [A#5] -> Restart [A#6] -> Safe Mode -> 
+
+#################
+ - [D=T] Enrolled Control [A#5T] -> Restart [A#6T] -> Enrolled Control-C -> On [A S=DisabledByControlGroup SS=DisabledByControlGroup ES=ENROLLED_CONTROL P=True ESP=ENROLLED_CONTROL] -> Restart [A S=DisabledByControlGroup SS=DisabledByControlGroup ES=ENROLLED_CONTROL P=True ESP=ENROLLED_CONTROL]
+ - [D=T] Enrolled Control [A#5T] -> Restart [A#6T] -> Off [A S=DisabledByUserPref SS=DisabledByControlGroup ES=DISQUALIFIED P=False ESP=DISQUALIFIED]
+ - [D=T] Enrolled Control [A#5T] -> Restart [A#6T] -> Enrolled Control-C -> Bad Requirements [A S=MissingRemoteWebGL SS=DisabledByControlGroup ES=UNENROLLED P=True ESP=ENROLLED_CONTROL] -> Restart [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=DISQUALIFIED P=True ESP=DISQUALIFIED]
+ - [D=T] Enrolled Control [A#5T] -> Restart [A#6T] -> Enrolled Control-C -> E10S [A S=DisabledByE10S SS=DisabledByE10S ES=ENROLLED_CONTROL P=True ESP=ENROLLED_CONTROL] -> Enrolled Control-C -> Restart [A#6T]
+ - [D=T] Enrolled Control [A#5T] -> Restart [A#6T] -> Enrolled Control-C -> Header-On [A S=DisabledByEnvVar SS=DisabledByEnvVar ES=ENROLLED_CONTROL P=True ESP=ENROLLED_CONTROL] -> Header-Off -> Enrolled Control-C -> Restart [A#6T]
+ - [D=T] Enrolled Control [A#5T] -> Restart [A#6T] -> Safe Mode -> 
+
+#################
+ - [D=F] Enrolled Treatment [A#7] -> Restart [A#8] -> Enrolled Treatment-C -> On [A S=EnabledByUserPref SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=True ESP=DISQUALIFIED] -> Restart [A S=EnabledByUserPref SS=EnabledByUserPref ES=DISQUALIFIED P=True ESP=DISQUALIFIED]
+ - [D=F] Enrolled Treatment [A#7] -> Restart [A#8] -> Enrolled Treatment-C -> Off [A#8] -> Restart [A#8]
+ - [D=F] Enrolled Treatment [A#7] -> Restart [A#8] -> Enrolled Treatment-C -> Bad Requirements [A S=MissingRemoteWebGL SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=False ESP=ENROLLED_TREATMENT] -> Restart [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=DISQUALIFIED P=False ESP=DISQUALIFIED]
+ - [D=F] Enrolled Treatment [A#7] -> Restart [A#8] -> Enrolled Treatment-C -> E10S [A S=DisabledByE10S SS=DisabledByE10S ES=ENROLLED_TREATMENT P=False ESP=ENROLLED_TREATMENT] -> Enrolled Treatment-C -> Restart [A#8]
+ - [D=F] Enrolled Treatment [A#7] -> Restart [A#8] -> Enrolled Treatment-C -> Header-On [A S=DisabledByEnvVar SS=DisabledByEnvVar ES=ENROLLED_TREATMENT P=False ESP=ENROLLED_TREATMENT] -> Header-Off -> Enrolled Treatment-C -> Restart [A#8]
+ - [D=F] Enrolled Treatment [A#7] -> Restart [A#8] -> Safe Mode ->
+
+#################
+ - [D=T] Enrolled Treatment [A#7T] -> Restart [A#8T] -> Enrolled Treatment-C -> On [A S=EnabledByTreatmentGroup SS=EnabledByTreatmentGroup ES=UNENROLLED P=True ESP=ENROLLED_TREATMENT] -> Restart [A S=EnabledByTreatmentGroup SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT]
+ - [D=T] Enrolled Treatment [A#7T] -> Restart [A#8T] -> Enrolled Treatment-C -> Off [A S=DisabledByUserPref SS=EnabledByTreatmentGroup ES=DISQUALIFIED P=False ESP=DISQUALIFIED] -> Restart [A S=DisabledByUserPref SS=DisabledByUserPref ES=DISQUALIFIED P=False ESP=DISQUALIFIED]
+ - [D=T] Enrolled Treatment [A#7T] -> Restart [A#8T] -> Enrolled Treatment-C -> Bad Requirements [A S=MissingRemoteWebGL SS=EnabledByTreatmentGroup ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT] -> Restart [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=DISQUALIFIED P=True ESP=DISQUALIFIED]
+ - [D=T] Enrolled Treatment [A#7T] -> Restart [A#8T] -> Enrolled Treatment-C -> E10S [A S=DisabledByE10S SS=DisabledByE10S ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT] -> Enrolled Treatment-C -> Restart [A#8T]
+ - [D=T] Enrolled Treatment [A#7T] -> Restart [A#8T] -> Enrolled Treatment-C -> Header-On [A S=DisabledByEnvVar SS=DisabledByEnvVar ES=ENROLLED_TREATMENT P=True ESP=ENROLLED_TREATMENT] -> Header-Off -> Enrolled Treatment-C -> Restart [A#8T]
+ - [D=T] Enrolled Treatment [A#7T] -> Restart [A#8T] -> Safe Mode ->
+
+#################
+ - [D=F] Bad Requirements [A#9] -> Restart [A#10] -> Enrolled Control [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=UNENROLLED P=False ESP=ENROLLED_CONTROL] -> Restart [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=DISQUALIFIED P=False ESP=DISQUALIFIED] 
+ - [D=F] Bad Requirements [A#9] -> Restart [A#10] -> Enrolled Treatment [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=UNENROLLED P=False ESP=ENROLLED_TREATMENT] -> Restart [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=DISQUALIFIED P=False ESP=DISQUALIFIED] 
+ - [D=F] Bad Requirements [A#9] -> Restart [A#10] -> On [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=UNENROLLED P=True ESP=UNENROLLED]
+ - [D=F] Bad Requirements [A#9] -> Restart [A#10] -> Off [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=UNENROLLED P=False ESP=UNENROLLED]
+
+#################
+ - [D=T] Bad Requirements [A#9T] -> Restart [A#10T] -> Enrolled Control [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=UNENROLLED P=True ESP=ENROLLED_CONTROL] -> Restart [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=DISQUALIFIED P=True ESP=DISQUALIFIED] 
+ - [D=T] Bad Requirements [A#9T] -> Restart [A#10T] -> Enrolled Treatment [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=UNENROLLED P=True ESP=ENROLLED_TREATMENT] -> Restart [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=DISQUALIFIED P=True ESP=DISQUALIFIED] 
+ - [D=T] Bad Requirements [A#9T] -> Restart [A#10T] -> On [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=UNENROLLED P=True ESP=UNENROLLED]
+ - [D=T] Bad Requirements [A#9T] -> Restart [A#10T] -> Off [A S=MissingRemoteWebGL SS=MissingRemoteWebGL ES=UNENROLLED P=False ESP=UNENROLLED]
