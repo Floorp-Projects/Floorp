@@ -309,5 +309,6 @@ GUniquePtr<char> nsRetrievalContextX11::GetClipboardText(
           aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
                                                               : "clipboard");
 
-  return WaitForClipboardData(ClipboardDataType::Text, aWhichClipboard).mData;
+  return WaitForClipboardData(ClipboardDataType::Text, aWhichClipboard)
+      .ExtractText();
 }

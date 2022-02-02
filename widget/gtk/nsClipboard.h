@@ -30,23 +30,37 @@ extern mozilla::LazyLogModule gClipboardLog;
 #  define LOGCLIP_ENABLED() false
 #endif /* MOZ_LOGGING */
 
-struct ClipboardTargets {
+class ClipboardTargets {
+  friend class ClipboardData;
+
   mozilla::GUniquePtr<GdkAtom> mTargets;
   uint32_t mCount = 0;
+
+ public:
+  ClipboardTargets() = default;
+  ClipboardTargets(mozilla::GUniquePtr<GdkAtom> aTargets, uint32_t aCount)
+      : mTargets(std::move(aTargets)), mCount(aCount) {}
 
   mozilla::Span<GdkAtom> AsSpan() const { return {mTargets.get(), mCount}; }
   explicit operator bool() const { return bool(mTargets); }
 };
 
-struct ClipboardData {
+class ClipboardData {
   mozilla::GUniquePtr<char> mData;
   uint32_t mLength = 0;
+
+ public:
+  ClipboardData() = default;
 
   void SetData(mozilla::Span<const uint8_t>);
   void SetText(mozilla::Span<const char>);
   void SetTargets(ClipboardTargets);
 
   ClipboardTargets ExtractTargets();
+  mozilla::GUniquePtr<char> ExtractText() {
+    mLength = 0;
+    return std::move(mData);
+  }
 
   mozilla::Span<char> AsSpan() const { return {mData.get(), mLength}; }
   explicit operator bool() const { return bool(mData); }
