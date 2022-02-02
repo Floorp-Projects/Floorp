@@ -147,7 +147,7 @@ class GeckoInstance(object):
         "signon.rememberSignons": False,
         # Prevent starting into safe mode after application crashes
         "toolkit.startup.max_resumed_crashes": -1,
-        # Disable all telemetry pings
+        # Disable most telemetry pings
         "toolkit.telemetry.server": "https://%(server)s/telemetry-dummy/",
     }
 
@@ -572,6 +572,8 @@ class DesktopInstance(GeckoInstance):
         "browser.download.panel.shown": True,
         # Do not show the EULA notification which can interfer with tests
         "browser.EULA.override": True,
+        # Disable Activity Stream telemetry pings
+        "browser.newtabpage.activity-stream.telemetry": False,
         # Always display a blank page
         "browser.newtabpage.enabled": False,
         # Background thumbnails in particular cause grief, and disabling thumbnails
