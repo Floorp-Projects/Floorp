@@ -94,7 +94,7 @@ async function measureCanvasCaptureFrameRate(captureRate) {
     const stats = await sender.getStats();
     const outbound =
       [...stats.values()].find(({type}) => type == "outbound-rtp");
-    return outbound.framesEncoded ?? 0;
+    return outbound?.framesEncoded ?? 0;
   };
   is(await getFrameCount(), 0, "frame count starts at 0");
   const start = performance.now();
