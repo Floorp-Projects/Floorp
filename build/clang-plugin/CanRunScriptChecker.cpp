@@ -84,7 +84,9 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
 
   auto KnownLiveMemberOfParam =
       memberExpr(hasKnownLiveAnnotation(),
-                 hasObjectExpression(ignoreTrivials(KnownLiveParam)));
+                 hasObjectExpression(anyOf(
+                     ignoreTrivials(KnownLiveParam),
+                     declRefExpr(to(varDecl(hasAutomaticStorageDuration()))))));
 
   // A matcher that matches various things that are known to be live directly,
   // without making any assumptions about operators.
@@ -111,11 +113,17 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
       // example).  For purposes of this analysis we are assuming the method
       // calls on smart ptrs all just return the pointer inside,
       cxxMemberCallExpr(
-          on(allOf(hasType(isSmartPtrToRefCounted()), KnownLiveBase))),
+          on(anyOf(allOf(hasType(isSmartPtrToRefCounted()), KnownLiveBase),
+                   // Allow it if calling a member method which is marked as
+                   // MOZ_KNOWN_LIVE
+                   KnownLiveMemberOfParam))),
       // operator* or operator-> on a thing that is already known to be live.
-      cxxOperatorCallExpr(anyOf(hasOverloadedOperatorName("*"),
-                                hasOverloadedOperatorName("->")),
-                          hasAnyArgument(KnownLiveBase), argumentCountIs(1)),
+      cxxOperatorCallExpr(
+          anyOf(hasOverloadedOperatorName("*"),
+                hasOverloadedOperatorName("->")),
+          hasAnyArgument(
+              anyOf(KnownLiveBase, ignoreTrivials(KnownLiveMemberOfParam))),
+          argumentCountIs(1)),
       // A dereference on a thing that is known to be live.  This is _not_
       // caught by the "operator* or operator->" clause above, because
       // cxxOperatorCallExpr() only catches cases when a class defines
