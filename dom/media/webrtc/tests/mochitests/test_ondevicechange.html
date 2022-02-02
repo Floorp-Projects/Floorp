@@ -13,50 +13,74 @@ createHTML({
   bug: "1152383"
 });
 
-const RESPONSE_WAIT_TIME_MS = 3000;
-
-async function maybeReceiveDevicechangeEvent() {
-  return Promise.race([
-    new Promise(r => navigator.mediaDevices.ondevicechange = () => r(true)),
-    wait(RESPONSE_WAIT_TIME_MS).then(() => false)
-  ]);
+async function resolveOnEvent(target, name) {
+  return new Promise(r => target.addEventListener(name, r, {once: true}));
+}
+let eventCount = 0;
+// Trigger and await two devicechanges on mediaDevices to wait long enough to
+// provide that a devicechange on another MediaDevices would be received.
+async function doDevicechanges(mediaDevices) {
+  for (let i = 0; i < 2; ++i) {
+    ++eventCount;
+    await Promise.all([
+      resolveOnEvent(mediaDevices, "devicechange"),
+      pushPrefs(["media.getusermedia.fake-camera-name",
+                 `devicechange ${eventCount}`]),
+    ]);
+  }
 }
 
 runTest(async () => {
-  SimpleTest.requestCompleteLog();
-
-  await pushPrefs(
-    // Ensure there are continuous fake devicechange events throughout this test
-    ["media.ondevicechange.fakeDeviceChangeEvent.enabled", true],
-    // Make fake devices count as real, permission-wise, or devicechange events
-    // won't be exposed
-    ["media.navigator.permission.fake", true],
-    // Ensure this precondition to the below tests
-    ["media.navigator.permission.disabled", true]
+  // A toplevel Window and an iframe Window are compared for devicechange
+  // events.
+  const iframe = document.createElement("iframe");
+  // Workaround for bug 1743933
+  const promiseIframeLoad = resolveOnEvent(iframe, "load");
+  document.documentElement.appendChild(iframe);
+  await Promise.all([
+    promiseIframeLoad,
+    pushPrefs(
+      // Use the fake video backend to trigger devicechange events.
+      ["media.navigator.streams.fake", true],
+      // Loopback would override fake.
+      ["media.video_loopback_dev", ""],
+      // Make fake devices count as real, permission-wise, or devicechange
+      // events won't be exposed
+      ["media.navigator.permission.fake", true],
+      // Initial state for gUM.
+      ["media.navigator.permission.disabled", true]
+    ),
+  ]);
+  const topDevices = navigator.mediaDevices;
+  const frameDevices = iframe.contentWindow.navigator.mediaDevices;
+  const streams = await Promise.all(
+    [topDevices, frameDevices].map(d => d.getUserMedia({video: true}))
   );
-
-  const stream = await getUserMedia({video: true, fake: true});
-  const [track] = stream.getVideoTracks();
+  const [topTrack, frameTrack] = streams.map(s => s.getVideoTracks()[0]);
+  topTrack.stop();
+  // permission.disabled would expose devicechange events without gUM
   await pushPrefs(["media.navigator.permission.disabled", false]);
-  try {
-    ok(await maybeReceiveDevicechangeEvent(),
-        "devicechange event is fired when gUM is in use without permanent " +
-        "permission granted");
-  } finally {
-    track.stop();
-  }
 
-  ok(!await maybeReceiveDevicechangeEvent(),
-     "devicechange event is NOT fired when gUM is NOT in use and " +
+  const topEventPromise = resolveOnEvent(topDevices, "devicechange");
+  await doDevicechanges(frameDevices);
+  ok(true,
+     "devicechange event is fired when gUM is in use without permanent " +
+     "permission granted");
+  // Race a settled Promise to check that the event has not been received in
+  // the toplevel Window.
+  const racer = {type: "racer"};
+  is(await Promise.race([topEventPromise, racer]), racer,
+     "devicechange event is NOT fired when gUM is NO LONGER in use and " +
      "permanent permission is NOT granted");
+  frameTrack.stop();
 
   await pushPrefs(["media.navigator.permission.disabled", true]);
-  ok(await maybeReceiveDevicechangeEvent(),
-     "devicechange event is fired when gUM is NOT in use and permanent "+
-     "permission is granted");
+  await doDevicechanges(frameDevices);
+  is((await Promise.race([topEventPromise, racer])).type, "devicechange",
+     "devicechange event IS fired when gUM is NO LONGER in use and " +
+     "permanent permission IS granted");
 });
 
 </script>
-</pre>
 </body>
 </html>

@@ -1976,7 +1976,6 @@ MediaManager::MediaManager(already_AddRefed<TaskQueue> aMediaThread)
   mPrefs.mNoiseOn = false;
   mPrefs.mTransientOn = false;
   mPrefs.mResidualEchoOn = false;
-  mPrefs.mFakeDeviceChangeEventOn = false;
   mPrefs.mAgc2Forced = false;
 #ifdef MOZ_WEBRTC
   mPrefs.mAgc =
@@ -2041,7 +2040,6 @@ static void ForeachObservedPref(const Function& aFunction) {
   aFunction("media.getusermedia.hpf_enabled"_ns);
   aFunction("media.getusermedia.noise_enabled"_ns);
   aFunction("media.getusermedia.noise"_ns);
-  aFunction("media.ondevicechange.fakeDeviceChangeEvent.enabled"_ns);
   aFunction("media.getusermedia.channels"_ns);
   aFunction("media.navigator.streams.fake"_ns);
 #endif
@@ -3339,22 +3337,6 @@ void MediaManager::GetPrefs(nsIPrefBranch* aBranch, const char* aData) {
   GetPref(aBranch, "media.getusermedia.agc", aData, &mPrefs.mAgc);
   GetPref(aBranch, "media.getusermedia.noise", aData, &mPrefs.mNoise);
   GetPref(aBranch, "media.getusermedia.channels", aData, &mPrefs.mChannels);
-  bool oldFakeDeviceChangeEventOn = mPrefs.mFakeDeviceChangeEventOn;
-  GetPrefBool(aBranch, "media.ondevicechange.fakeDeviceChangeEvent.enabled",
-              aData, &mPrefs.mFakeDeviceChangeEventOn);
-  if (mPrefs.mFakeDeviceChangeEventOn != oldFakeDeviceChangeEventOn) {
-    // Dispatch directly to the media thread since we're guaranteed to not be in
-    // shutdown here. This is called either on construction, or when a pref has
-    // changed. The pref observers are disconnected during shutdown.
-    MOZ_DIAGNOSTIC_ASSERT(!sHasShutdown);
-    MOZ_ALWAYS_SUCCEEDS(mMediaThread->Dispatch(NS_NewRunnableFunction(
-        "MediaManager::SetFakeDeviceChangeEventsEnabled",
-        [enable = mPrefs.mFakeDeviceChangeEventOn] {
-          if (MediaManager* mm = MediaManager::GetIfExists()) {
-            mm->GetBackend()->SetFakeDeviceChangeEventsEnabled(enable);
-          }
-        })));
-  }
 #endif
 }
 
@@ -3437,7 +3419,6 @@ void MediaManager::Shutdown() {
       // started it from!
       {
         if (mManager->mBackend) {
-          mManager->mBackend->SetFakeDeviceChangeEventsEnabled(false);
           mManager->mBackend->Shutdown();  // idempotent
           mManager->mDeviceListChangeListener.DisconnectIfExists();
         }
