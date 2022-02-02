@@ -178,10 +178,8 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
         Ok(true)
     }
 
-    fn web_socket_url(&mut self, caps: &Capabilities) -> WebDriverResult<bool> {
-        self.browser_version(caps)?
-            .map(|v| self.compare_browser_version(&v, ">=90"))
-            .unwrap_or(Ok(false))
+    fn web_socket_url(&mut self, _: &Capabilities) -> WebDriverResult<bool> {
+        Ok(true)
     }
 
     fn validate_custom(&mut self, name: &str, value: &Value) -> WebDriverResult<()> {
