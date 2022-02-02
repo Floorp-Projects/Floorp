@@ -3499,21 +3499,13 @@ bool BrowsingContext::IsPopupAllowed() {
 /* static */
 bool BrowsingContext::ShouldAddEntryForRefresh(
     nsIURI* aCurrentURI, const SessionHistoryInfo& aInfo) {
-  return ShouldAddEntryForRefresh(aCurrentURI, aInfo.GetURI(),
-                                  aInfo.GetPostData());
-}
-
-/* static */
-bool BrowsingContext::ShouldAddEntryForRefresh(nsIURI* aCurrentURI,
-                                               nsIURI* aNewURI,
-                                               bool aHasPostData) {
-  if (aHasPostData) {
+  if (aInfo.GetPostData()) {
     return true;
   }
 
   bool equalsURI = false;
   if (aCurrentURI) {
-    aCurrentURI->Equals(aNewURI, &equalsURI);
+    aCurrentURI->Equals(aInfo.GetURI(), &equalsURI);
   }
   return !equalsURI;
 }
