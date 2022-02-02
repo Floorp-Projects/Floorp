@@ -817,6 +817,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CanvasRenderingContext2D)
   // Make sure we remove ourselves from the list of demotable contexts (raw
   // pointers), since we're logically destructed at this point.
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCanvasElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOffscreenCanvas)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell)
   for (uint32_t i = 0; i < tmp->mStyleStack.Length(); i++) {
     ImplCycleCollectionUnlink(tmp->mStyleStack[i].patternStyles[Style::STROKE]);
@@ -845,6 +846,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CanvasRenderingContext2D)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCanvasElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOffscreenCanvas)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell)
   for (uint32_t i = 0; i < tmp->mStyleStack.Length(); i++) {
     ImplCycleCollectionTraverse(
@@ -960,7 +962,7 @@ void CanvasRenderingContext2D::ContextState::SetGradientStyle(
  **/
 
 // Initialize our static variables.
-uintptr_t CanvasRenderingContext2D::sNumLivingContexts = 0;
+Atomic<uintptr_t> CanvasRenderingContext2D::sNumLivingContexts(0);
 DrawTarget* CanvasRenderingContext2D::sErrorTarget = nullptr;
 
 CanvasRenderingContext2D::CanvasRenderingContext2D(
@@ -983,9 +985,6 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(
       mInvalidateCount(0),
       mWriteOnly(false) {
   sNumLivingContexts++;
-
-  mShutdownObserver = new CanvasShutdownObserver(this);
-  nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
 }
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D() {
@@ -998,6 +997,8 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D() {
     NS_IF_RELEASE(sErrorTarget);
   }
 }
+
+void CanvasRenderingContext2D::Initialize() { AddShutdownObserver(); }
 
 JSObject* CanvasRenderingContext2D::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
@@ -1070,6 +1071,14 @@ void CanvasRenderingContext2D::OnShutdown() {
   if (provider) {
     provider->OnShutdown();
   }
+}
+
+void CanvasRenderingContext2D::AddShutdownObserver() {
+  MOZ_ASSERT(!mShutdownObserver);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mShutdownObserver = new CanvasShutdownObserver(this);
+  nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
 }
 
 void CanvasRenderingContext2D::RemoveShutdownObserver() {
