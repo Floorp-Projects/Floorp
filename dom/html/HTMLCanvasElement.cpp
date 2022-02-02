@@ -218,6 +218,12 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
       return;
     }
 
+    // Mark the context already now, since if the frame capture state is DIRTY
+    // and we catch an early return below (not marking it CLEAN), the next draw
+    // will not trigger a capture state change from the
+    // Watchable<FrameCaptureState>.
+    mOwningElement->MarkContextCleanForFrameCapture();
+
     mOwningElement->ProcessDestroyedFrameListeners();
 
     if (!mOwningElement->IsFrameCaptureRequested(aTime)) {
@@ -265,7 +271,6 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
     mLastCaptureTime = aTime;
 
     mOwningElement->SetFrameCapture(copy.forget(), aTime);
-    mOwningElement->MarkContextCleanForFrameCapture();
   }
 
   void DetachFromRefreshDriver() {
