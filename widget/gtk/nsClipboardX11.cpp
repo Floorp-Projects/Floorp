@@ -242,9 +242,12 @@ static void clipboard_text_received(GtkClipboard* clipboard, const gchar* text,
 }
 
 ClipboardData nsRetrievalContextX11::WaitForClipboardData(
-    ClipboardDataType aDataType, GtkClipboard* clipboard,
+    ClipboardDataType aDataType, int32_t aWhichClipboard,
     const char* aMimeType) {
   LOGCLIP("nsRetrievalContextX11::WaitForClipboardData, MIME %s\n", aMimeType);
+
+  GtkClipboard* clipboard =
+      gtk_clipboard_get(GetSelectionAtom(aWhichClipboard));
 
   mState = State::Initial;
 
@@ -285,10 +288,7 @@ ClipboardTargets nsRetrievalContextX11::GetTargets(int32_t aWhichClipboard) {
           aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
                                                               : "clipboard");
 
-  GtkClipboard* clipboard =
-      gtk_clipboard_get(GetSelectionAtom(aWhichClipboard));
-
-  return WaitForClipboardData(ClipboardDataType::Targets, clipboard)
+  return WaitForClipboardData(ClipboardDataType::Targets, aWhichClipboard)
       .ExtractTargets();
 }
 
@@ -299,10 +299,8 @@ ClipboardData nsRetrievalContextX11::GetClipboardData(const char* aMimeType,
                                                               : "clipboard",
           aMimeType);
 
-  GtkClipboard* clipboard =
-      gtk_clipboard_get(GetSelectionAtom(aWhichClipboard));
-
-  return WaitForClipboardData(ClipboardDataType::Data, clipboard, aMimeType);
+  return WaitForClipboardData(ClipboardDataType::Data, aWhichClipboard,
+                              aMimeType);
 }
 
 GUniquePtr<char> nsRetrievalContextX11::GetClipboardText(
@@ -311,8 +309,5 @@ GUniquePtr<char> nsRetrievalContextX11::GetClipboardText(
           aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
                                                               : "clipboard");
 
-  GtkClipboard* clipboard =
-      gtk_clipboard_get(GetSelectionAtom(aWhichClipboard));
-
-  return WaitForClipboardData(ClipboardDataType::Text, clipboard).mData;
+  return WaitForClipboardData(ClipboardDataType::Text, aWhichClipboard).mData;
 }
