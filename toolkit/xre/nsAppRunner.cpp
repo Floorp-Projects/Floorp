@@ -25,10 +25,13 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_fission.h"
+#include "mozilla/StaticPrefs_webgl.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/JSONWriter.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "BaseProfiler.h"
 
 #include "nsAppRunner.h"
@@ -590,6 +593,84 @@ bool BrowserTabsRemoteAutostart() {
   return gBrowserTabsRemoteAutostart;
 }
 
+// Win32k Infrastructure ==============================================
+
+namespace mozilla {
+nsIXULRuntime::ContentWin32kLockdownState GetWin32kLockdownState() {
+#ifdef XP_WIN
+
+  // HasUserValue The Pref functions can only be called on main thread
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (gSafeMode) {
+    return nsIXULRuntime::ContentWin32kLockdownState::DisabledBySafeMode;
+  }
+
+  if (EnvHasValue("MOZ_ENABLE_WIN32K")) {
+    return nsIXULRuntime::ContentWin32kLockdownState::DisabledByEnvVar;
+  }
+
+  if (!mozilla::BrowserTabsRemoteAutostart()) {
+    return nsIXULRuntime::ContentWin32kLockdownState::DisabledByE10S;
+  }
+
+  if (!IsWin8OrLater()) {
+    return nsIXULRuntime::ContentWin32kLockdownState::
+        OperatingSystemNotSupported;
+  }
+
+  // Win32k Lockdown requires WebRender, but WR is not currently guaranteed
+  // on all computers. It can also fail to initialize and fallback to
+  // non-WR render path.
+  //
+  // We don't want a situation where "Win32k Lockdown + No WR" occurs
+  // without the user explicitly requesting unsupported behavior.
+  if (!gfx::gfxVars::UseWebRender()) {
+    return nsIXULRuntime::ContentWin32kLockdownState::MissingWebRender;
+  }
+
+  // Non-native theming is required as well
+  if (!StaticPrefs::widget_non_native_theme_enabled()) {
+    return nsIXULRuntime::ContentWin32kLockdownState::MissingNonNativeTheming;
+  }
+
+  // Win32k Lockdown requires Remote WebGL, but it may be disabled on
+  // certain hardware or virtual machines.
+  if (!gfx::gfxVars::AllowWebglOop() || !StaticPrefs::webgl_out_of_process()) {
+    return nsIXULRuntime::ContentWin32kLockdownState::MissingRemoteWebGL;
+  }
+
+  bool prefSetByUser =
+      Preferences::HasUserValue("security.sandbox.content.win32k-disable");
+  bool prefValue = Preferences::GetBool(
+      "security.sandbox.content.win32k-disable", false, PrefValueKind::User);
+  bool defaultValue = Preferences::GetBool(
+      "security.sandbox.content.win32k-disable", false, PrefValueKind::Default);
+
+  if (prefSetByUser) {
+    if (prefValue) {
+      return nsIXULRuntime::ContentWin32kLockdownState::EnabledByUserPref;
+    } else {
+      return nsIXULRuntime::ContentWin32kLockdownState::DisabledByUserPref;
+    }
+  }
+
+  if (defaultValue) {
+    return nsIXULRuntime::ContentWin32kLockdownState::EnabledByDefault;
+  } else {
+    return nsIXULRuntime::ContentWin32kLockdownState::DisabledByDefault;
+  }
+
+#else
+
+  return nsIXULRuntime::ContentWin32kLockdownState::OperatingSystemNotSupported;
+
+#endif
+}
+
+}  // namespace mozilla
+
+// End Win32k Infrastructure ==========================================
 bool FissionExperimentEnrolled() {
   MOZ_ASSERT(XRE_IsParentProcess());
   return gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusControl ||
