@@ -12553,6 +12553,15 @@
   mirror: always
 #endif
 
+# Whether to disable SwipeTracker (e.g. swipe-to-nav).
+- name: widget.disable-swipe-tracker
+  type: bool
+#ifdef XP_WIN
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
 
 #---------------------------------------------------------------------------
 # Prefs starting with "xul."

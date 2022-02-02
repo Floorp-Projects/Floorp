@@ -127,6 +127,7 @@ add_task(async () => {
     set: [
       ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
       ["browser.gesture.swipe.eight", "Browser:ForwardOrForwardDuplicate"],
+      ["widget.disable-swipe-tracker", false],
     ],
   });
 
@@ -201,9 +202,25 @@ add_task(async () => {
   // Now try to navigate backward again but with preventDefault-ed event
   // handler.
   wheelEventCount = 0;
-  tab.linkedBrowser.addEventListener("wheel", event => {
+  let wheelEventListener = event => {
     event.preventDefault();
+  };
+  tab.linkedBrowser.addEventListener("wheel", wheelEventListener);
+  await panLeftToRight(tab.linkedBrowser, 100, 100);
+  is(wheelEventCount, 3, "Received all wheel events");
+
+  await waitForWhile();
+  // Make sure any navigation didn't happen.
+  is(tab.linkedBrowser.currentURI.spec, secondPage);
+
+  // Now drop the event handler and disable the swipe tracker and try to swipe
+  // again.
+  wheelEventCount = 0;
+  tab.linkedBrowser.removeEventListener("wheel", wheelEventListener);
+  await SpecialPowers.pushPrefEnv({
+    set: [["widget.disable-swipe-tracker", true]],
   });
+
   await panLeftToRight(tab.linkedBrowser, 100, 100);
   is(wheelEventCount, 3, "Received all wheel events");
 
