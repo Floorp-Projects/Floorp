@@ -22,8 +22,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsQueryObject.h"
 
-#define DEVICECHANGE_HOLD_TIME_IN_MS 1000
-
 namespace mozilla::dom {
 
 using EnumerationFlag = MediaManager::EnumerationFlag;
@@ -34,9 +32,6 @@ MediaDevices::MediaDevices(nsPIDOMWindowInner* aWindow)
 
 MediaDevices::~MediaDevices() {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mFuzzTimer) {
-    mFuzzTimer->Cancel();
-  }
   mDeviceChangeListener.DisconnectIfExists();
 }
 
@@ -150,17 +145,28 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(ErrorResult& aRv) {
 }
 
 void MediaDevices::MaybeResumeDeviceExposure() {
-  if (mPendingEnumerateDevicesPromises.IsEmpty()) {
+  if (mPendingEnumerateDevicesPromises.IsEmpty() &&
+      !mHaveUnprocessedDeviceListChange) {
     return;
   }
   nsPIDOMWindowInner* window = GetOwner();
   if (!window || !window->IsFullyActive()) {
     return;
   }
+  // Device list changes are not exposed to unfocused contexts because the
+  // timing information would allow fingerprinting for content to identify
+  // concurrent browsing, even when pages are in different containers.
   BrowsingContext* bc = window->GetBrowsingContext();
   if (!bc->IsActive() ||                  // not foreground tab
       !bc->GetIsActiveBrowserWindow()) {  // browser window does not have focus
     return;
+  }
+  if (mHaveUnprocessedDeviceListChange) {
+    NS_DispatchToCurrentThread(
+        NS_NewRunnableFunction("devicechange", [self = RefPtr(this), this] {
+          DispatchTrustedEvent(u"devicechange"_ns);
+        }));
+    mHaveUnprocessedDeviceListChange = false;
   }
 
   auto pending = std::move(mPendingEnumerateDevicesPromises);
@@ -534,26 +540,8 @@ void MediaDevices::OnDeviceChange() {
     return;
   }
 
-  if (mFuzzTimer) {
-    // An event is already in flight.
-    return;
-  }
-
-  mFuzzTimer = NS_NewTimer();
-
-  if (!mFuzzTimer) {
-    MOZ_ASSERT(false);
-    return;
-  }
-
-  mFuzzTimer->InitWithNamedFuncCallback(
-      [](nsITimer*, void* aClosure) {
-        MediaDevices* md = static_cast<MediaDevices*>(aClosure);
-        md->DispatchTrustedEvent(u"devicechange"_ns);
-        md->mFuzzTimer = nullptr;
-      },
-      this, DEVICECHANGE_HOLD_TIME_IN_MS, nsITimer::TYPE_ONE_SHOT,
-      "MediaDevices::mFuzzTimer Callback");
+  mHaveUnprocessedDeviceListChange = true;
+  MaybeResumeDeviceExposure();
 }
 
 mozilla::dom::EventHandlerNonNull* MediaDevices::GetOndevicechange() {

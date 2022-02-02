@@ -268,6 +268,158 @@ class ExclusiveWaitableData : public ExclusiveData<T> {
   Guard lock() const { return Guard(*this); }
 };
 
+/**
+ * Multiple-readers / single-writer variant of ExclusiveData.
+ *
+ * Readers call readLock() to obtain a stack-only RAII reader lock, which will
+ * allow other readers to read concurrently but block writers; the yielded value
+ * is const.  Writers call writeLock() to obtain a ditto writer lock, which
+ * yields exclusive access to non-const data.
+ *
+ * See ExclusiveData and its implementation for more documentation.
+ */
+template <typename T>
+class RWExclusiveData {
+  mutable Mutex lock_;
+  mutable ConditionVariable cond_;
+  mutable T value_;
+  mutable int readers_;
+
+  // We maintain a count of active readers.  Writers may enter the critical
+  // section only when the reader count is zero, so the reader that decrements
+  // the count to zero must wake up any waiting writers.
+  //
+  // There can be multiple writers waiting, so a writer leaving the critical
+  // section must also wake up any other waiting writers.
+
+  void acquireReaderLock() const {
+    lock_.lock();
+    readers_++;
+    lock_.unlock();
+  }
+
+  void releaseReaderLock() const {
+    lock_.lock();
+    MOZ_ASSERT(readers_ > 0);
+    if (--readers_ == 0) {
+      cond_.notify_all();
+    }
+    lock_.unlock();
+  }
+
+  void acquireWriterLock() const {
+    lock_.lock();
+    while (readers_ > 0) {
+      cond_.wait(lock_);
+    }
+  }
+
+  void releaseWriterLock() const {
+    cond_.notify_all();
+    lock_.unlock();
+  }
+
+ public:
+  RWExclusiveData(const RWExclusiveData&) = delete;
+  RWExclusiveData& operator=(const RWExclusiveData&) = delete;
+
+  /**
+   * Create a new `RWExclusiveData`, constructing the protected value in place.
+   */
+  template <typename... Args>
+  explicit RWExclusiveData(const MutexId& id, Args&&... args)
+      : lock_(id), value_(std::forward<Args>(args)...), readers_(0) {}
+
+  class MOZ_STACK_CLASS ReadGuard {
+    const RWExclusiveData* parent_;
+    explicit ReadGuard(std::nullptr_t) : parent_(nullptr) {}
+
+   public:
+    ReadGuard(const ReadGuard&) = delete;
+    ReadGuard& operator=(const ReadGuard&) = delete;
+
+    explicit ReadGuard(const RWExclusiveData& parent) : parent_(&parent) {
+      parent_->acquireReaderLock();
+    }
+
+    ReadGuard(ReadGuard&& rhs) : parent_(rhs.parent_) {
+      MOZ_ASSERT(&rhs != this, "self-move disallowed!");
+      rhs.parent_ = nullptr;
+    }
+
+    ReadGuard& operator=(ReadGuard&& rhs) {
+      this->~ReadGuard();
+      new (this) ReadGuard(std::move(rhs));
+      return *this;
+    }
+
+    const T& get() const {
+      MOZ_ASSERT(parent_);
+      return parent_->value_;
+    }
+
+    operator const T&() const { return get(); }
+    const T* operator->() const { return &get(); }
+
+    const RWExclusiveData<T>* parent() const {
+      MOZ_ASSERT(parent_);
+      return parent_;
+    }
+
+    ~ReadGuard() {
+      if (parent_) {
+        parent_->releaseReaderLock();
+      }
+    }
+  };
+
+  class MOZ_STACK_CLASS WriteGuard {
+    const RWExclusiveData* parent_;
+    explicit WriteGuard(std::nullptr_t) : parent_(nullptr) {}
+
+   public:
+    WriteGuard(const WriteGuard&) = delete;
+    WriteGuard& operator=(const WriteGuard&) = delete;
+
+    explicit WriteGuard(const RWExclusiveData& parent) : parent_(&parent) {
+      parent_->acquireWriterLock();
+    }
+
+    WriteGuard(WriteGuard&& rhs) : parent_(rhs.parent_) {
+      MOZ_ASSERT(&rhs != this, "self-move disallowed!");
+      rhs.parent_ = nullptr;
+    }
+
+    WriteGuard& operator=(WriteGuard&& rhs) {
+      this->~WriteGuard();
+      new (this) WriteGuard(std::move(rhs));
+      return *this;
+    }
+
+    T& get() const {
+      MOZ_ASSERT(parent_);
+      return parent_->value_;
+    }
+
+    operator T&() const { return get(); }
+    T* operator->() const { return &get(); }
+
+    const RWExclusiveData<T>* parent() const {
+      MOZ_ASSERT(parent_);
+      return parent_;
+    }
+
+    ~WriteGuard() {
+      if (parent_) {
+        parent_->releaseWriterLock();
+      }
+    }
+  };
+
+  ReadGuard readLock() const { return ReadGuard(*this); }
+  WriteGuard writeLock() const { return WriteGuard(*this); }
+};
+
 }  // namespace js
 
 #endif  // threading_ExclusiveData_h

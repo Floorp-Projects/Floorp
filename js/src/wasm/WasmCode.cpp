@@ -680,6 +680,11 @@ bool LazyStubSegment::addIndirectStubs(
 }
 
 const CodeRange* LazyStubSegment::lookupRange(const void* pc) const {
+  // Do not search if the search will not find anything.  There can be many
+  // segments, each with many entries.
+  if (pc < base() || pc >= base() + length()) {
+    return nullptr;
+  }
   return LookupInSorted(codeRanges_,
                         CodeRange::OffsetInCode((uint8_t*)pc - base()));
 }
@@ -1322,7 +1327,7 @@ bool CodeTier::initialize(IsTier2 isTier2, const Code& code,
   MOZ_ASSERT(!initialized());
   code_ = &code;
 
-  MOZ_ASSERT(lazyStubs_.lock()->entryStubsEmpty());
+  MOZ_ASSERT(lazyStubs_.readLock()->entryStubsEmpty());
 
   // See comments in CodeSegment::initialize() for why this must be last.
   if (!segment_->initialize(isTier2, *this, linkData, metadata, *metadata_)) {
@@ -1372,7 +1377,7 @@ uint8_t* CodeTier::serialize(uint8_t* cursor, const LinkData& linkData) const {
 void CodeTier::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code,
                              size_t* data) const {
   segment_->addSizeOfMisc(mallocSizeOf, code, data);
-  lazyStubs_.lock()->addSizeOfMisc(mallocSizeOf, code, data);
+  lazyStubs_.readLock()->addSizeOfMisc(mallocSizeOf, code, data);
   *data += metadata_->sizeOfExcludingThis(mallocSizeOf);
 }
 
@@ -1594,7 +1599,7 @@ const CodeRange* Code::lookupIndirectStubRange(void* pc) const {
   // so if we pregenerate indirect stubs for all exported functions
   // we can eliminate the lock below.
   for (Tier tier : tiers()) {
-    auto stubs = codeTier(tier).lazyStubs().lock();
+    auto stubs = codeTier(tier).lazyStubs().readLock();
     const CodeRange* result = stubs->lookupRange(pc);
     if (result && result->isIndirectStub()) {
       return result;

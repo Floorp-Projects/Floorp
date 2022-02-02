@@ -50,10 +50,6 @@ class MediaEngine {
   virtual RefPtr<MediaEngineSource> CreateSource(
       const MediaDevice* aDevice) = 0;
 
-  virtual void SetFakeDeviceChangeEventsEnabled(bool aEnable) {
-    MOZ_DIAGNOSTIC_ASSERT(false, "Fake events may not have started/stopped");
-  }
-
   virtual MediaEventSource<void>& DeviceListChangeEvent() = 0;
   /**
    * Return true if devices returned from EnumerateDevices are emulated media

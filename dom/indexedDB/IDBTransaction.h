@@ -232,6 +232,8 @@ class IDBTransaction final
     return mMode;
   }
 
+  uint32_t GetPendingRequestCount() const { return mPendingRequestCount; }
+
   IDBDatabase* Database() const {
     AssertIsOnOwningThread();
     return mDatabase;

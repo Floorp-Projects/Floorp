@@ -777,13 +777,24 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
   // According to spec https://w3c.github.io/IndexedDB/#clone-value,
   // the transaction must be in inactive state during clone
   mTransaction->TransitionToInactive();
+
+#ifdef DEBUG
+  const uint32_t previousPendingRequestCount{
+      mTransaction->GetPendingRequestCount()};
+#endif
   GetAddInfo(aCx, aValueWrapper, aKey, cloneWriteInfo, key, updateInfos, aRv);
-  if (mTransaction
-          ->IsAborted()) {  // No error thrown, abort is a possible outcome
-    return nullptr;
+  // Check that new requests were rejected in the Inactive state
+  // and possibly in the Finished state, if the transaction has been aborted,
+  // during the structured cloning.
+  MOZ_ASSERT(mTransaction->GetPendingRequestCount() ==
+             previousPendingRequestCount);
+
+  if (!mTransaction->IsAborted()) {
+    mTransaction->TransitionToActive();
+  } else if (!aRv.Failed()) {
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
+    return nullptr;  // It is mandatory to return right after throw
   }
-  MOZ_ASSERT(mTransaction->IsInactive());
-  mTransaction->TransitionToActive();
 
   if (aRv.Failed()) {
     return nullptr;

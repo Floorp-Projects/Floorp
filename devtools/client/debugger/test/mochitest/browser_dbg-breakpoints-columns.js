@@ -122,7 +122,7 @@ async function removeFirstBreakpoint(dbg) {
 }
 
 async function removeAllBreakpoints(dbg, line, count) {
-  clickGutter(dbg, 32);
+  await clickGutter(dbg, 32);
   await waitForBreakpointCount(dbg, 0);
 
   ok(findAllElements(dbg, "columnBreakpoints").length == 0);

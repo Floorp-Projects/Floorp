@@ -212,6 +212,7 @@ mozilla::ipc::IPCResult GMPChild::RecvPreloadLibs(const nsCString& aLibs) {
       u"ole32.dll",        // required for OPM
       u"psapi.dll",        // For GetMappedFileNameW, see bug 1383611
       u"softokn3.dll",     // NSS for clearkey CDM
+      u"winmm.dll",        // Dependency for widevine
   };
   constexpr static bool (*IsASCII)(const char16_t*) =
       IsAsciiNullTerminated<char16_t>;

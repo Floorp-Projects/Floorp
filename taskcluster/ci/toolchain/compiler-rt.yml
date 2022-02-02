@@ -111,7 +111,7 @@ macosx64-x64-compiler-rt-13:
         fetch:
             - clang-13
         toolchain:
-            - linux64-cctools-port-clang-13
+            - linux64-cctools-port
             - linux64-clang-13-stage1
             - macosx64-sdk-11.0
 
@@ -129,7 +129,7 @@ macosx64-aarch64-compiler-rt-13:
         fetch:
             - clang-13
         toolchain:
-            - linux64-cctools-port-clang-13
+            - linux64-cctools-port
             - linux64-clang-13-stage1
             - macosx64-sdk-11.0
 

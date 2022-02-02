@@ -12,7 +12,7 @@
     // communicate with the opened windows works in xorigin tests. Otherwise,
     // the iframe containing this page is isolated from first-party storage access,
     // which isolates BroadcastChannel communication.
-    if (SimpleTest.xOrigin) {
+    if (isXOrigin) {
       SpecialPowers.wrap(document).notifyUserGestureActivation();
       await SpecialPowers.addPermission(
         "storageAccessAPI",

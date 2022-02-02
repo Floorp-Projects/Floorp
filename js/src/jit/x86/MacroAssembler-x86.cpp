@@ -79,7 +79,7 @@ void MacroAssemblerX86::loadConstantSimd128Float(const SimdConstant& v,
 }
 
 void MacroAssemblerX86::vpPatchOpSimd128(
-    const SimdConstant& v, FloatRegister reg,
+    const SimdConstant& v, FloatRegister src, FloatRegister dest,
     void (X86Encoding::BaseAssemblerX86::*op)(
         const void* address, X86Encoding::XMMRegisterID srcId,
         X86Encoding::XMMRegisterID destId)) {
@@ -87,12 +87,12 @@ void MacroAssemblerX86::vpPatchOpSimd128(
   if (!val) {
     return;
   }
-  (masm.*op)(nullptr, reg.encoding(), reg.encoding());
+  (masm.*op)(nullptr, src.encoding(), dest.encoding());
   propagateOOM(val->uses.append(CodeOffset(masm.size())));
 }
 
 void MacroAssemblerX86::vpPatchOpSimd128(
-    const SimdConstant& v, FloatRegister reg,
+    const SimdConstant& v, FloatRegister src, FloatRegister dest,
     size_t (X86Encoding::BaseAssemblerX86::*op)(
         const void* address, X86Encoding::XMMRegisterID srcId,
         X86Encoding::XMMRegisterID destId)) {
@@ -101,318 +101,324 @@ void MacroAssemblerX86::vpPatchOpSimd128(
     return;
   }
   size_t patchOffsetFromEnd =
-      (masm.*op)(nullptr, reg.encoding(), reg.encoding());
+      (masm.*op)(nullptr, src.encoding(), dest.encoding());
   propagateOOM(val->uses.append(CodeOffset(masm.size() - patchOffsetFromEnd)));
 }
 
-void MacroAssemblerX86::vpaddbSimd128(const SimdConstant& v,
-                                      FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpaddb_mr);
+void MacroAssemblerX86::vpaddbSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpaddb_mr);
 }
 
-void MacroAssemblerX86::vpaddwSimd128(const SimdConstant& v,
-                                      FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpaddw_mr);
+void MacroAssemblerX86::vpaddwSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpaddw_mr);
 }
 
-void MacroAssemblerX86::vpadddSimd128(const SimdConstant& v,
-                                      FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpaddd_mr);
+void MacroAssemblerX86::vpadddSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpaddd_mr);
 }
 
-void MacroAssemblerX86::vpaddqSimd128(const SimdConstant& v,
-                                      FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpaddq_mr);
+void MacroAssemblerX86::vpaddqSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpaddq_mr);
 }
 
-void MacroAssemblerX86::vpsubbSimd128(const SimdConstant& v,
-                                      FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpsubb_mr);
+void MacroAssemblerX86::vpsubbSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpsubb_mr);
 }
 
-void MacroAssemblerX86::vpsubwSimd128(const SimdConstant& v,
-                                      FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpsubw_mr);
+void MacroAssemblerX86::vpsubwSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpsubw_mr);
 }
 
-void MacroAssemblerX86::vpsubdSimd128(const SimdConstant& v,
-                                      FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpsubd_mr);
+void MacroAssemblerX86::vpsubdSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpsubd_mr);
 }
 
-void MacroAssemblerX86::vpsubqSimd128(const SimdConstant& v,
-                                      FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpsubq_mr);
+void MacroAssemblerX86::vpsubqSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpsubq_mr);
 }
 
-void MacroAssemblerX86::vpmullwSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpmullw_mr);
+void MacroAssemblerX86::vpmullwSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpmullw_mr);
 }
 
-void MacroAssemblerX86::vpmulldSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpmulld_mr);
+void MacroAssemblerX86::vpmulldSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpmulld_mr);
 }
 
-void MacroAssemblerX86::vpaddsbSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpaddsb_mr);
+void MacroAssemblerX86::vpaddsbSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpaddsb_mr);
 }
 
 void MacroAssemblerX86::vpaddusbSimd128(const SimdConstant& v,
-                                        FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpaddusb_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpaddusb_mr);
 }
 
-void MacroAssemblerX86::vpaddswSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpaddsw_mr);
+void MacroAssemblerX86::vpaddswSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpaddsw_mr);
 }
 
 void MacroAssemblerX86::vpadduswSimd128(const SimdConstant& v,
-                                        FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpaddusw_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpaddusw_mr);
 }
 
-void MacroAssemblerX86::vpsubsbSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpsubsb_mr);
+void MacroAssemblerX86::vpsubsbSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpsubsb_mr);
 }
 
 void MacroAssemblerX86::vpsubusbSimd128(const SimdConstant& v,
-                                        FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpsubusb_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpsubusb_mr);
 }
 
-void MacroAssemblerX86::vpsubswSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpsubsw_mr);
+void MacroAssemblerX86::vpsubswSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpsubsw_mr);
 }
 
 void MacroAssemblerX86::vpsubuswSimd128(const SimdConstant& v,
-                                        FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpsubusw_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpsubusw_mr);
 }
 
-void MacroAssemblerX86::vpminsbSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpminsb_mr);
+void MacroAssemblerX86::vpminsbSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpminsb_mr);
 }
 
-void MacroAssemblerX86::vpminubSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpminub_mr);
+void MacroAssemblerX86::vpminubSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpminub_mr);
 }
 
-void MacroAssemblerX86::vpminswSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpminsw_mr);
+void MacroAssemblerX86::vpminswSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpminsw_mr);
 }
 
-void MacroAssemblerX86::vpminuwSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpminuw_mr);
+void MacroAssemblerX86::vpminuwSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpminuw_mr);
 }
 
-void MacroAssemblerX86::vpminsdSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpminsd_mr);
+void MacroAssemblerX86::vpminsdSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpminsd_mr);
 }
 
-void MacroAssemblerX86::vpminudSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpminud_mr);
+void MacroAssemblerX86::vpminudSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpminud_mr);
 }
 
-void MacroAssemblerX86::vpmaxsbSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpmaxsb_mr);
+void MacroAssemblerX86::vpmaxsbSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpmaxsb_mr);
 }
 
-void MacroAssemblerX86::vpmaxubSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpmaxub_mr);
+void MacroAssemblerX86::vpmaxubSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpmaxub_mr);
 }
 
-void MacroAssemblerX86::vpmaxswSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpmaxsw_mr);
+void MacroAssemblerX86::vpmaxswSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpmaxsw_mr);
 }
 
-void MacroAssemblerX86::vpmaxuwSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpmaxuw_mr);
+void MacroAssemblerX86::vpmaxuwSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpmaxuw_mr);
 }
 
-void MacroAssemblerX86::vpmaxsdSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpmaxsd_mr);
+void MacroAssemblerX86::vpmaxsdSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpmaxsd_mr);
 }
 
-void MacroAssemblerX86::vpmaxudSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpmaxud_mr);
+void MacroAssemblerX86::vpmaxudSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpmaxud_mr);
 }
 
-void MacroAssemblerX86::vpandSimd128(const SimdConstant& v,
-                                     FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpand_mr);
+void MacroAssemblerX86::vpandSimd128(const SimdConstant& v, FloatRegister lhs,
+                                     FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpand_mr);
 }
 
-void MacroAssemblerX86::vpxorSimd128(const SimdConstant& v,
-                                     FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpxor_mr);
+void MacroAssemblerX86::vpxorSimd128(const SimdConstant& v, FloatRegister lhs,
+                                     FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpxor_mr);
 }
 
-void MacroAssemblerX86::vporSimd128(const SimdConstant& v,
-                                    FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpor_mr);
+void MacroAssemblerX86::vporSimd128(const SimdConstant& v, FloatRegister lhs,
+                                    FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpor_mr);
 }
 
-void MacroAssemblerX86::vaddpsSimd128(const SimdConstant& v,
-                                      FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vaddps_mr);
+void MacroAssemblerX86::vaddpsSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vaddps_mr);
 }
 
-void MacroAssemblerX86::vaddpdSimd128(const SimdConstant& v,
-                                      FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vaddpd_mr);
+void MacroAssemblerX86::vaddpdSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vaddpd_mr);
 }
 
-void MacroAssemblerX86::vsubpsSimd128(const SimdConstant& v,
-                                      FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vsubps_mr);
+void MacroAssemblerX86::vsubpsSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vsubps_mr);
 }
 
-void MacroAssemblerX86::vsubpdSimd128(const SimdConstant& v,
-                                      FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vsubpd_mr);
+void MacroAssemblerX86::vsubpdSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vsubpd_mr);
 }
 
-void MacroAssemblerX86::vdivpsSimd128(const SimdConstant& v,
-                                      FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vdivps_mr);
+void MacroAssemblerX86::vdivpsSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vdivps_mr);
 }
 
-void MacroAssemblerX86::vdivpdSimd128(const SimdConstant& v,
-                                      FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vdivpd_mr);
+void MacroAssemblerX86::vdivpdSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vdivpd_mr);
 }
 
-void MacroAssemblerX86::vmulpsSimd128(const SimdConstant& v,
-                                      FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vmulps_mr);
+void MacroAssemblerX86::vmulpsSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vmulps_mr);
 }
 
-void MacroAssemblerX86::vmulpdSimd128(const SimdConstant& v,
-                                      FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vmulpd_mr);
+void MacroAssemblerX86::vmulpdSimd128(const SimdConstant& v, FloatRegister lhs,
+                                      FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vmulpd_mr);
 }
 
 void MacroAssemblerX86::vpacksswbSimd128(const SimdConstant& v,
-                                         FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpacksswb_mr);
+                                         FloatRegister lhs,
+                                         FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpacksswb_mr);
 }
 
 void MacroAssemblerX86::vpackuswbSimd128(const SimdConstant& v,
-                                         FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpackuswb_mr);
+                                         FloatRegister lhs,
+                                         FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpackuswb_mr);
 }
 
 void MacroAssemblerX86::vpackssdwSimd128(const SimdConstant& v,
-                                         FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpackssdw_mr);
+                                         FloatRegister lhs,
+                                         FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpackssdw_mr);
 }
 
 void MacroAssemblerX86::vpackusdwSimd128(const SimdConstant& v,
-                                         FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpackusdw_mr);
+                                         FloatRegister lhs,
+                                         FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpackusdw_mr);
 }
 
-void MacroAssemblerX86::vpshufbSimd128(const SimdConstant& v,
-                                       FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpshufb_mr);
+void MacroAssemblerX86::vpshufbSimd128(const SimdConstant& v, FloatRegister lhs,
+                                       FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpshufb_mr);
 }
 
 void MacroAssemblerX86::vptestSimd128(const SimdConstant& v,
-                                      FloatRegister src) {
-  vpPatchOpSimd128(v, src, &X86Encoding::BaseAssemblerX86::vptest_mr);
+                                      FloatRegister lhs) {
+  vpPatchOpSimd128(v, lhs, &X86Encoding::BaseAssemblerX86::vptest_mr);
 }
 
 void MacroAssemblerX86::vpmaddwdSimd128(const SimdConstant& v,
-                                        FloatRegister srcDest) {
-  vpPatchOpSimd128(v, srcDest, &X86Encoding::BaseAssemblerX86::vpmaddwd_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpmaddwd_mr);
 }
 
 void MacroAssemblerX86::vpcmpeqbSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpPatchOpSimd128(v, src, &X86Encoding::BaseAssemblerX86::vpcmpeqb_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpcmpeqb_mr);
 }
 
 void MacroAssemblerX86::vpcmpgtbSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpPatchOpSimd128(v, src, &X86Encoding::BaseAssemblerX86::vpcmpgtb_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpcmpgtb_mr);
 }
 
 void MacroAssemblerX86::vpcmpeqwSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpPatchOpSimd128(v, src, &X86Encoding::BaseAssemblerX86::vpcmpeqw_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpcmpeqw_mr);
 }
 
 void MacroAssemblerX86::vpcmpgtwSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpPatchOpSimd128(v, src, &X86Encoding::BaseAssemblerX86::vpcmpgtw_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpcmpgtw_mr);
 }
 
 void MacroAssemblerX86::vpcmpeqdSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpPatchOpSimd128(v, src, &X86Encoding::BaseAssemblerX86::vpcmpeqd_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpcmpeqd_mr);
 }
 
 void MacroAssemblerX86::vpcmpgtdSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpPatchOpSimd128(v, src, &X86Encoding::BaseAssemblerX86::vpcmpgtd_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vpcmpgtd_mr);
 }
 
 void MacroAssemblerX86::vcmpeqpsSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpPatchOpSimd128(v, src, &X86Encoding::BaseAssemblerX86::vcmpeqps_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vcmpeqps_mr);
 }
 
 void MacroAssemblerX86::vcmpneqpsSimd128(const SimdConstant& v,
-                                         FloatRegister src) {
-  vpPatchOpSimd128(v, src, &X86Encoding::BaseAssemblerX86::vcmpneqps_mr);
+                                         FloatRegister lhs,
+                                         FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vcmpneqps_mr);
 }
 
 void MacroAssemblerX86::vcmpltpsSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpPatchOpSimd128(v, src, &X86Encoding::BaseAssemblerX86::vcmpltps_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vcmpltps_mr);
 }
 
 void MacroAssemblerX86::vcmplepsSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpPatchOpSimd128(v, src, &X86Encoding::BaseAssemblerX86::vcmpleps_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vcmpleps_mr);
 }
 
 void MacroAssemblerX86::vcmpeqpdSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpPatchOpSimd128(v, src, &X86Encoding::BaseAssemblerX86::vcmpeqpd_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vcmpeqpd_mr);
 }
 
 void MacroAssemblerX86::vcmpneqpdSimd128(const SimdConstant& v,
-                                         FloatRegister src) {
-  vpPatchOpSimd128(v, src, &X86Encoding::BaseAssemblerX86::vcmpneqpd_mr);
+                                         FloatRegister lhs,
+                                         FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vcmpneqpd_mr);
 }
 
 void MacroAssemblerX86::vcmpltpdSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpPatchOpSimd128(v, src, &X86Encoding::BaseAssemblerX86::vcmpltpd_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vcmpltpd_mr);
 }
 
 void MacroAssemblerX86::vcmplepdSimd128(const SimdConstant& v,
-                                        FloatRegister src) {
-  vpPatchOpSimd128(v, src, &X86Encoding::BaseAssemblerX86::vcmplepd_mr);
+                                        FloatRegister lhs, FloatRegister dest) {
+  vpPatchOpSimd128(v, lhs, dest, &X86Encoding::BaseAssemblerX86::vcmplepd_mr);
 }
 
 void MacroAssemblerX86::finish() {
