@@ -177,7 +177,7 @@ void nsRetrievalContextX11::Complete(ClipboardDataType aDataType,
         const char* text = static_cast<const char*>(aData);
         if (text) {
           mClipboardDataLength = sizeof(char) * (strlen(text) + 1);
-          mClipboardData = moz_xmalloc(mClipboardDataLength);
+          mClipboardData = g_malloc(mClipboardDataLength);
           memcpy(mClipboardData, text, mClipboardDataLength);
         }
       } break;
@@ -211,7 +211,7 @@ void nsRetrievalContextX11::Complete(ClipboardDataType aDataType,
 #endif
         if (dataLength > 0) {
           mClipboardDataLength = dataLength;
-          mClipboardData = moz_xmalloc(dataLength);
+          mClipboardData = g_malloc(dataLength);
           memcpy(mClipboardData, data, dataLength);
         }
       } break;
@@ -350,6 +350,6 @@ const char* nsRetrievalContextX11::GetClipboardText(int32_t aWhichClipboard) {
 }
 
 void nsRetrievalContextX11::ReleaseClipboardData(const char** aClipboardData) {
-  free((void*)*aClipboardData);
+  g_free((void*)*aClipboardData);
   *aClipboardData = nullptr;
 }
