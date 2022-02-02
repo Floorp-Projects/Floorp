@@ -22,8 +22,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsQueryObject.h"
 
-#define DEVICECHANGE_HOLD_TIME_IN_MS 1000
-
 namespace mozilla::dom {
 
 using EnumerationFlag = MediaManager::EnumerationFlag;
@@ -34,9 +32,6 @@ MediaDevices::MediaDevices(nsPIDOMWindowInner* aWindow)
 
 MediaDevices::~MediaDevices() {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mFuzzTimer) {
-    mFuzzTimer->Cancel();
-  }
   mDeviceChangeListener.DisconnectIfExists();
 }
 
@@ -534,26 +529,10 @@ void MediaDevices::OnDeviceChange() {
     return;
   }
 
-  if (mFuzzTimer) {
-    // An event is already in flight.
-    return;
-  }
-
-  mFuzzTimer = NS_NewTimer();
-
-  if (!mFuzzTimer) {
-    MOZ_ASSERT(false);
-    return;
-  }
-
-  mFuzzTimer->InitWithNamedFuncCallback(
-      [](nsITimer*, void* aClosure) {
-        MediaDevices* md = static_cast<MediaDevices*>(aClosure);
-        md->DispatchTrustedEvent(u"devicechange"_ns);
-        md->mFuzzTimer = nullptr;
-      },
-      this, DEVICECHANGE_HOLD_TIME_IN_MS, nsITimer::TYPE_ONE_SHOT,
-      "MediaDevices::mFuzzTimer Callback");
+  NS_DispatchToCurrentThread(
+      NS_NewRunnableFunction("devicechange", [self = RefPtr(this), this] {
+        DispatchTrustedEvent(u"devicechange"_ns);
+      }));
 }
 
 mozilla::dom::EventHandlerNonNull* MediaDevices::GetOndevicechange() {

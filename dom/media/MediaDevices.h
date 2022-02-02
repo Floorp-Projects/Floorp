@@ -14,7 +14,6 @@
 #include "nsCOMPtr.h"
 #include "nsID.h"
 #include "nsISupports.h"
-#include "nsITimer.h"
 #include "nsTHashSet.h"
 
 class AudioDeviceInfo;
@@ -95,7 +94,6 @@ class MediaDevices final : public DOMEventTargetHelper {
 
   nsTHashSet<nsString> mExplicitlyGrantedAudioOutputIds;
   nsTArray<RefPtr<Promise>> mPendingEnumerateDevicesPromises;
-  nsCOMPtr<nsITimer> mFuzzTimer;
 
   // Connect/Disconnect on main thread only
   MediaEventListener mDeviceChangeListener;

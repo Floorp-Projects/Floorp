@@ -2187,8 +2187,6 @@ void MediaManager::DeviceListChanged() {
   if (sHasShutdown) {
     return;
   }
-  mDeviceListChangeEvent.Notify();
-
   // Wait 200 ms, because
   // A) on some Windows machines, if we call EnumerateRawDevices immediately
   //    after receiving devicechange event, we'd get an outdated devices list.
@@ -2227,6 +2225,8 @@ void MediaManager::DeviceListChanged() {
 }
 
 void MediaManager::HandleDeviceListChanged() {
+  mDeviceListChangeEvent.Notify();
+
   EnumerateRawDevices(MediaSourceEnum::Camera, MediaSourceEnum::Microphone,
                       EnumerationFlag::EnumerateAudioOutputs)
       ->Then(
