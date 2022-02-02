@@ -19,4 +19,4 @@ Syntax
 Description
 -----------
 
-Use :ref:`PRPackedBool` within structures.
+Use :ref:`PRPackedBool` within structures where bit fields are not desirable but minimum and consistent overhead matters.
