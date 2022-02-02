@@ -2,7 +2,7 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 707:
+/***/ 861:
 /***/ ((__unused_webpack_module, __unused_webpack___webpack_exports__, __webpack_require__) => {
 
 
@@ -1044,7 +1044,22 @@ SavedOverlay.prototype = {
 
 };
 /* harmony default export */ const saved_overlay = (SavedOverlay);
+;// CONCATENATED MODULE: ./content/panels/js/components/Button/Button.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function Button(props) {
+  return /*#__PURE__*/react.createElement("a", {
+    href: props.url,
+    className: `stp_button${props?.style && ` stp_button_${props.style}`}`
+  }, props.label);
+}
+
+/* harmony default export */ const Button_Button = (Button);
 ;// CONCATENATED MODULE: ./content/panels/js/style-guide/overlay.js
+
 
 
 
@@ -1056,6 +1071,18 @@ StyleGuideOverlay.prototype = {
   create() {
     // TODO: Wrap popular topics component in JSX to work without needing an explicit container hierarchy for styling
     react_dom.render( /*#__PURE__*/react.createElement("div", null, /*#__PURE__*/react.createElement("h3", null, "JSX Components:"), /*#__PURE__*/react.createElement("h4", {
+      className: "stp_styleguide_h4"
+    }, "Button"), /*#__PURE__*/react.createElement(Button_Button, {
+      label: "Text Button",
+      style: "text",
+      url: "https://example.org"
+    }), /*#__PURE__*/react.createElement("br", null), /*#__PURE__*/react.createElement(Button_Button, {
+      label: "Primary Button",
+      style: "primary"
+    }), /*#__PURE__*/react.createElement("br", null), /*#__PURE__*/react.createElement(Button_Button, {
+      label: "Secondary Button",
+      style: "secondary"
+    }), /*#__PURE__*/react.createElement("h4", {
       className: "stp_styleguide_h4"
     }, "PopularTopics"), /*#__PURE__*/react.createElement(PopularTopics_PopularTopics, {
       pockethost: `getpocket.com`,
@@ -1347,7 +1374,7 @@ window.pktPanelMessaging = messages;
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(707)))
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, [736], () => (__webpack_require__(861)))
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()
