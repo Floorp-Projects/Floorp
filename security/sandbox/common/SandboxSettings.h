@@ -27,11 +27,25 @@ bool IsContentSandboxEnabled();
 // TelemetryEnvironmentTesting.jsm and record the new value in
 // environment.rst
 enum class ContentWin32kLockdownState : int32_t {
-  LockdownEnabled = 1,
-  MissingWebRender,
-  OperatingSystemNotSupported,
-  PrefNotSet,
-  MissingRemoteWebGL,
+  LockdownEnabled = 1,  // no longer used
+  MissingWebRender = 2,
+  OperatingSystemNotSupported = 3,
+  PrefNotSet = 4,  // no longer used
+  MissingRemoteWebGL = 5,
+  MissingNonNativeTheming = 6,
+  DisabledByEnvVar = 7,  // - MOZ_ENABLE_WIN32K is set
+  DisabledBySafeMode = 8,
+  DisabledByE10S = 9,       // - E10S is disabled for whatever reason
+  DisabledByUserPref = 10,  // - The user manually set
+                            // security.sandbox.content.win32k-disable to false
+  EnabledByUserPref = 11,   // The user manually set
+                            // security.sandbox.content.win32k-disable to true
+  DisabledByControlGroup =
+      12,  // The user is in the Control Group, so it is disabled
+  EnabledByTreatmentGroup =
+      13,  // The user is in the Treatment Group, so it is enabled
+  DisabledByDefault = 14,  // The default value of the pref is false
+  EnabledByDefault = 15    // The default value of the pref is true
 };
 
 const char* ContentWin32kLockdownStateToString(
