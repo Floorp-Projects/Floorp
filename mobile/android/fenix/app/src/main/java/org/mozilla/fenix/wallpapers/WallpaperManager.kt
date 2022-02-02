@@ -7,7 +7,6 @@ package org.mozilla.fenix.wallpapers
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.content.Context
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
@@ -30,7 +29,6 @@ import java.io.File
 @Suppress("TooManyFunctions")
 class WallpaperManager(
     private val settings: Settings,
-    private val wallpaperStorage: WallpaperStorage,
     private val downloader: WallpaperDownloader,
     private val crashReporter: CrashReporter,
 ) {
@@ -38,13 +36,10 @@ class WallpaperManager(
     private val remoteWallpapers = listOf(
         Wallpaper(
             "focus",
-            portraitPath = "",
-            landscapePath = "",
-            isDark = false,
             themeCollection = WallpaperThemeCollection.FOCUS
         ),
     )
-    var availableWallpapers: List<Wallpaper> = loadWallpapers() + remoteWallpapers
+    var availableWallpapers: List<Wallpaper> = localWallpapers + remoteWallpapers
         private set
 
     var currentWallpaper: Wallpaper = getCurrentWallpaperFromSettings()
@@ -114,22 +109,18 @@ class WallpaperManager(
      */
     fun loadSavedWallpaper(context: Context, wallpaper: Wallpaper): Bitmap? =
         if (wallpaper.themeCollection.origin == WallpaperOrigin.LOCAL) {
-            loadWallpaperFromAssets(context, wallpaper)
+            loadWallpaperFromDrawables(context, wallpaper)
         } else {
             loadWallpaperFromDisk(context, wallpaper)
         }
 
-    private fun loadWallpaperFromAssets(context: Context, wallpaper: Wallpaper): Bitmap? = Result.runCatching {
-        val path = if (isLandscape(context)) {
-            wallpaper.landscapePath
-        } else {
-            wallpaper.portraitPath
-        }
-        context.assets.open(path).use {
-            BitmapFactory.decodeStream(it)
-        }
+    private fun loadWallpaperFromDrawables(context: Context, wallpaper: Wallpaper): Bitmap? = Result.runCatching {
+        BitmapFactory.decodeResource(context.resources, wallpaper.drawableId)
     }.getOrNull()
 
+    /**
+     * Load a wallpaper from app-specific storage.
+     */
     private fun loadWallpaperFromDisk(context: Context, wallpaper: Wallpaper): Bitmap? = Result.runCatching {
         val path = wallpaper.getLocalPathFromContext(context)
         runBlockingIncrement {
@@ -139,19 +130,6 @@ class WallpaperManager(
             }
         }
     }.getOrNull()
-
-    private fun isLandscape(context: Context): Boolean {
-        return context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    }
-
-    private fun loadWallpapers(): List<Wallpaper> {
-        val wallpapersFromStorage = wallpaperStorage.loadAll()
-        return if (wallpapersFromStorage.isNotEmpty()) {
-            listOf(defaultWallpaper) + wallpapersFromStorage
-        } else {
-            listOf(defaultWallpaper)
-        }
-    }
 
     /**
      * Animates the Firefox logo, if it hasn't been animated before, otherwise nothing will happen.
@@ -189,11 +167,14 @@ class WallpaperManager(
     companion object {
         const val DEFAULT_RESOURCE = R.attr.homeBackground
         val defaultWallpaper = Wallpaper(
-            name = "default_wallpaper",
-            portraitPath = "",
-            landscapePath = "",
-            isDark = false,
+            name = "default",
             themeCollection = WallpaperThemeCollection.NONE
+        )
+        val localWallpapers = listOf(
+            defaultWallpaper,
+            Wallpaper("amethyst", themeCollection = WallpaperThemeCollection.FIREFOX),
+            Wallpaper("cerulean", themeCollection = WallpaperThemeCollection.FIREFOX),
+            Wallpaper("sunrise", themeCollection = WallpaperThemeCollection.FIREFOX),
         )
         private const val ANIMATION_DELAY_MS = 1500L
     }

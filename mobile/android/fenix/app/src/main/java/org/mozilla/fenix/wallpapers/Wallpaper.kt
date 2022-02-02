@@ -6,6 +6,7 @@ package org.mozilla.fenix.wallpapers
 
 import android.content.Context
 import android.content.res.Configuration
+import org.mozilla.fenix.R
 
 /**
  * A class that represents an available wallpaper and its state.
@@ -17,9 +18,6 @@ import android.content.res.Configuration
  */
 data class Wallpaper(
     val name: String,
-    val portraitPath: String,
-    val landscapePath: String,
-    val isDark: Boolean,
     val themeCollection: WallpaperThemeCollection,
 )
 
@@ -49,6 +47,13 @@ val WallpaperThemeCollection.directoryName: String get() = when (this) {
 enum class WallpaperOrigin {
     LOCAL,
     REMOTE,
+}
+
+val Wallpaper.drawableId: Int get() = when (name) {
+    "amethyst" -> R.drawable.amethyst
+    "cerulean" -> R.drawable.cerulean
+    "sunrise" -> R.drawable.sunrise
+    else -> -1
 }
 
 /**

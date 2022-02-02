@@ -13,9 +13,6 @@ import org.mozilla.fenix.utils.Settings
 class WallpaperManagerTest {
 
     private val mockSettings: Settings = mockk()
-    private val mockStorage: WallpaperStorage = mockk {
-        every { loadAll() } returns listOf()
-    }
     private val mockMetrics: MetricController = mockk()
 
     @Test
@@ -27,7 +24,7 @@ class WallpaperManagerTest {
         every { mockSettings.currentWallpaper = capture(currentCaptureSlot) } just runs
 
         val updatedWallpaper = WallpaperManager.defaultWallpaper
-        val wallpaperManager = WallpaperManager(mockSettings, mockStorage, mockk(), mockk())
+        val wallpaperManager = WallpaperManager(mockSettings, mockk(), mockk())
         wallpaperManager.currentWallpaper = updatedWallpaper
 
         assertEquals(updatedWallpaper.name, currentCaptureSlot.captured)

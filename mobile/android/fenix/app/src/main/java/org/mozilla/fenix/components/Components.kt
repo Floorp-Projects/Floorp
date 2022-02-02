@@ -38,7 +38,6 @@ import org.mozilla.fenix.utils.ClipboardHandler
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.wallpapers.WallpaperDownloader
 import org.mozilla.fenix.wallpapers.WallpaperManager
-import org.mozilla.fenix.wallpapers.WallpapersAssetsStorage
 import org.mozilla.fenix.wifi.WifiConnectionMonitor
 import java.util.concurrent.TimeUnit
 
@@ -148,7 +147,6 @@ class Components(private val context: Context) {
     val wallpaperManager by lazyMonitored {
         WallpaperManager(
             settings,
-            WallpapersAssetsStorage(context),
             WallpaperDownloader(context, core.client, analytics.crashReporter),
             analytics.crashReporter,
         )
