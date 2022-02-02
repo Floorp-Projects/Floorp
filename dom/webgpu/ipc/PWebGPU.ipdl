@@ -16,7 +16,7 @@ using MaybeScopedError from "mozilla/webgpu/WebGPUTypes.h";
 include "mozilla/ipc/ByteBufUtils.h";
 include "mozilla/webgpu/WebGPUSerialize.h";
 include "mozilla/layers/WebRenderMessageUtils.h";
-include protocol PCompositorBridge;
+include protocol PCanvasManager;
 
 namespace mozilla {
 namespace webgpu {
@@ -26,9 +26,9 @@ namespace webgpu {
  * command from the content process, and a WebGPUParent in the compositor
  * process that runs the commands.
  */
-async protocol PWebGPU
+[RefCounted] async protocol PWebGPU
 {
-  manager PCompositorBridge;
+  manager PCanvasManager;
 
 parent:
   async DeviceAction(RawId selfId, ByteBuf buf);
@@ -69,8 +69,6 @@ parent:
 
   async DevicePushErrorScope(RawId selfId);
   async DevicePopErrorScope(RawId selfId) returns (MaybeScopedError maybeError);
-
-  async Shutdown();
 
 child:
   async DeviceUncapturedError(RawId aDeviceId, nsCString message);

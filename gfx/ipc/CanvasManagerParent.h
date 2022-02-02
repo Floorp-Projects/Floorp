@@ -23,7 +23,10 @@ class CanvasManagerParent final : public PCanvasManagerParent {
 
   void Bind(Endpoint<PCanvasManagerParent>&& aEndpoint);
   void ActorDestroy(ActorDestroyReason aWhy) override;
+
   already_AddRefed<PWebGLParent> AllocPWebGLParent();
+  already_AddRefed<PWebGPUParent> AllocPWebGPUParent();
+
   mozilla::ipc::IPCResult RecvInitialize(const uint32_t& aId);
   mozilla::ipc::IPCResult RecvGetSnapshot(
       const uint32_t& aManagerId, const int32_t& aProtocolId,

@@ -738,7 +738,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainDestroy(
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvShutdown() {
+void WebGPUParent::ActorDestroy(ActorDestroyReason aWhy) {
   mTimer.Stop();
   for (const auto& p : mCanvasMap) {
     const wr::ExternalImageId extId = {p.first};
@@ -747,7 +747,6 @@ ipc::IPCResult WebGPUParent::RecvShutdown() {
   mCanvasMap.clear();
   ffi::wgpu_server_poll_all_devices(mContext, true);
   ffi::wgpu_server_delete(const_cast<ffi::WGPUGlobal*>(mContext));
-  return IPC_OK();
 }
 
 ipc::IPCResult WebGPUParent::RecvDeviceAction(RawId aSelf,
