@@ -227,12 +227,8 @@ def bootstrap(test_package_root):
     for category, meta in CATEGORIES.items():
         mach.define_category(category, meta["short"], meta["long"], meta["priority"])
 
-    for path in MACH_MODULES:
-        cmdfile = os.path.join(test_package_root, path)
-
-        # Depending on which test zips were extracted,
-        # the command module might not exist
-        if os.path.isfile(cmdfile):
-            mach.load_commands_from_file(cmdfile)
+    # Depending on which test zips were extracted,
+    # the command module might not exist
+    mach.load_commands_from_spec(MACH_MODULES, test_package_root, missing_ok=True)
 
     return mach
