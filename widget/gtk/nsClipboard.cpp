@@ -299,7 +299,7 @@ bool nsClipboard::FilterImportedFlavors(int32_t aWhichClipboard,
   LOGCLIP("nsClipboard::FilterImportedFlavors");
 
   auto targets = mContext->GetTargets(aWhichClipboard);
-  if (!targets.mTargets) {
+  if (!targets) {
     LOGCLIP("    X11: no targes at clipboard (null), quit.\n");
     return true;
   }
@@ -497,8 +497,9 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
                             htmlBodyLen * 2);
         free(htmlBody);
       } else {
-        SetTransferableData(aTransferable, flavorStr, clipboardData.mData.get(),
-                            clipboardData.mLength);
+        auto span = clipboardData.AsSpan();
+        SetTransferableData(aTransferable, flavorStr, span.data(),
+                            span.Length());
       }
       return NS_OK;
     }
@@ -568,7 +569,8 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
 
 #ifdef MOZ_LOGGING
   if (LOGCLIP_ENABLED()) {
-    LOGCLIP("    Clipboard content (target nums %d):\n", targets.mCount);
+    LOGCLIP("    Clipboard content (target nums %lu):\n",
+            targets.AsSpan().Length());
     for (const auto& target : targets.AsSpan()) {
       GUniquePtr<gchar> atom_name(gdk_atom_name(target));
       if (!atom_name) {
@@ -589,7 +591,8 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
   for (auto& flavor : aFlavorList) {
     // We special case text/unicode here.
     if (flavor.EqualsLiteral(kUnicodeMime) &&
-        gtk_targets_include_text(targets.mTargets.get(), targets.mCount)) {
+        gtk_targets_include_text(targets.AsSpan().data(),
+                                 targets.AsSpan().Length())) {
       *_retval = true;
       LOGCLIP("    has kUnicodeMime\n");
       break;
