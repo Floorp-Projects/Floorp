@@ -38,7 +38,7 @@ macosx64-fix-stacks:
         toolchain-artifact: public/build/fix-stacks.tar.zst
     fetches:
         toolchain:
-            - linux64-cctools-port-clang-13
+            - linux64-cctools-port
             - linux64-clang-toolchain
             - linux64-rust-macos-1.57
             - macosx64-sdk-11.0
@@ -51,7 +51,7 @@ macosx64-aarch64-fix-stacks:
         toolchain-artifact: public/build/fix-stacks.tar.zst
     fetches:
         toolchain:
-            - linux64-cctools-port-clang-13
+            - linux64-cctools-port
             - linux64-clang-toolchain
             - linux64-rust-macos-1.57
             - macosx64-sdk-11.0

@@ -124,7 +124,6 @@ pub struct Timeouts {
     #[serde(
         default,
         rename = "pageLoad",
-        alias = "page load",
         skip_serializing_if = "Option::is_none"
     )]
     pub page_load: Option<u64>,
@@ -220,10 +219,6 @@ mod tests {
         assert_ser_de(
             &data,
             json!({"implicit":1000,"pageLoad":200000,"script":60000}),
-        );
-        assert_de(
-            &data,
-            json!({"implicit":1000,"page load":200000,"script":60000}),
         );
     }
 

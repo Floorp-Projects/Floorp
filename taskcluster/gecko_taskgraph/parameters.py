@@ -65,7 +65,9 @@ def get_defaults(repo_root=None):
     return {
         "app_version": get_app_version(),
         "backstop": False,
+        "base_repository": "https://hg.mozilla.org/mozilla-unified",
         "build_number": 1,
+        "head_repository": "https://hg.mozilla.org/mozilla-central",
         "hg_branch": "default",
         "message": "",
         "next_version": None,

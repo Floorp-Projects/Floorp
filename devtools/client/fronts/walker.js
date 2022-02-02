@@ -338,6 +338,21 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
       return super.children(node, options);
     }
     const target = await node.connectToFrame();
+
+    // We had several issues in the past where `connectToFrame` was returning the same
+    // target as the owner document one, which led to the inspector being broken.
+    // Ultimately, we shouldn't get to this point (fix should happen in connectToFrame or
+    // on the server, e.g. for Bug 1752342), but at least this will serve as a safe guard
+    // so we don't freeze/crash the inspector.
+    if (target == this.targetFront) {
+      console.warn("connectToFrame returned an unexpected target");
+      return {
+        nodes: [],
+        hasFirst: true,
+        hasLast: true,
+      };
+    }
+
     const walker = (await target.getFront("inspector")).walker;
 
     // Finally retrieve the NodeFront of the remote frame's document

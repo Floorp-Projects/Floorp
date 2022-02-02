@@ -2162,6 +2162,15 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
     return true;
   }
 
+#ifdef NIGHTLY_BUILD
+  if (key == JSProto_Array &&
+      !cx->realm()->creationOptions().getArrayGroupingEnabled() &&
+      (id == NameToId(cx->names().groupBy) ||
+       id == NameToId(cx->names().groupByToMap))) {
+    return true;
+  }
+#endif
+
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   if (key == JSProto_Array && !cx->options().changeArrayByCopy() &&
       (id == NameToId(cx->names().withAt) ||

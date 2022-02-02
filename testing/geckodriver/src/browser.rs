@@ -287,9 +287,6 @@ fn set_prefs(
     prefs.insert("marionette.port", Pref::new(port));
     prefs.insert("remote.log.level", logging::max_level().into());
 
-    // Deprecated since Firefox 91.
-    prefs.insert("marionette.log.level", logging::max_level().into());
-
     prefs.write().map_err(|e| {
         WebDriverError::new(
             ErrorStatus::UnknownError,

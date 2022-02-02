@@ -464,9 +464,13 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void RemovePendingDiscard();
 
   bool ShouldAddEntryForRefresh(const SessionHistoryEntry* aEntry) {
+    return ShouldAddEntryForRefresh(aEntry->Info().GetURI(),
+                                    aEntry->Info().GetPostData());
+  }
+  bool ShouldAddEntryForRefresh(nsIURI* aNewURI, bool aHasPostData) {
     nsCOMPtr<nsIURI> currentURI = GetCurrentURI();
-    return BrowsingContext::ShouldAddEntryForRefresh(currentURI,
-                                                     aEntry->Info());
+    return BrowsingContext::ShouldAddEntryForRefresh(currentURI, aNewURI,
+                                                     aHasPostData);
   }
 
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
