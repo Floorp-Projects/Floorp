@@ -46,7 +46,7 @@ async function measureSetTimeoutRate() {
   return COUNT / ((performance.now() - start) / 1000);
 }
 
-async function measureCanvasCaptureFrameRate() {
+async function measureCanvasCaptureFrameRate(captureRate) {
   // Canvas element captured by streams.
   const c = h.createAndAppendElement('canvas', 'c');
 
@@ -58,7 +58,7 @@ async function measureCanvasCaptureFrameRate() {
 
   // Add the canvas.captureStream track.
   const ctx = c.getContext('2d');
-  const [track] = c.captureStream().getTracks();
+  const [track] = c.captureStream(captureRate).getTracks();
   const sender = pc1.addTrack(track);
 
   // Ice candidates signaling
@@ -138,6 +138,9 @@ async function measureCanvasCaptureFrameRate() {
 
   const autoRate = await measureCanvasCaptureFrameRate();
   ok(autoRate > 5, `captureStream() framerate is at ${autoRate} fps`);
+
+  const cappedRate = await measureCanvasCaptureFrameRate(10);
+  ok(cappedRate > 5, `captureStream(10) framerate is at ${cappedRate} fps`);
 
   foregroundTab.close();
   SimpleTest.finish();
