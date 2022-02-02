@@ -34,9 +34,8 @@ RUN apt-get update -qq \
                           expect \
                           git \
                           curl \
-                          python \
-                          python-pip \
                           python3 \
+                          python3-pip \
                           python3-yaml \
                           locales \
                           tzdata \
@@ -44,9 +43,8 @@ RUN apt-get update -qq \
 			  mercurial \
     && apt-get clean
 
-RUN pip install --upgrade pip
-# TODO update to python3 so we can use newer taskcluster
-RUN pip install taskcluster==44.2.2
+RUN pip3 install --upgrade pip
+RUN pip install taskcluster
 
 RUN locale-gen "$LANG"
 

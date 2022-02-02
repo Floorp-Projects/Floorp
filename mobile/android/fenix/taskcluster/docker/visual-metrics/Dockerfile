@@ -10,9 +10,7 @@ RUN apt-get update -qq && \
       imagemagick \
       pyssim \
       python \
-      python-pil \
-      python3 \
-      python3-pip
+      python-pil
 
 WORKDIR /builds/worker
 
