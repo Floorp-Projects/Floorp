@@ -1,5 +1,8 @@
+PRThreadType
+============
+
 The type of an NSPR thread, specified as a parameter to
-``PR_CreateThread``.
+:ref:`PR_CreateThread`.
 
 .. _Syntax:
 
@@ -21,11 +24,11 @@ Enumerators
 ~~~~~~~~~~~
 
 ``PR_USER_THREAD``
-   ``PR_Cleanup`` blocks until the last thread of type
+   :ref:`PR_Cleanup` blocks until the last thread of type
    ``PR_USER_THREAD`` terminates.
 ``PR_SYSTEM_THREAD``
    NSPR ignores threads of type ``PR_SYSTEM_THREAD`` when determining
-   when a call to ``PR_Cleanup`` should return.
+   when a call to :ref:`PR_Cleanup` should return.
 
 .. _Description:
 

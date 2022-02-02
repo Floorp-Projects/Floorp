@@ -1,3 +1,6 @@
+PR_GetCurrentThread
+===================
+
 Returns the current thread object for the currently running code.
 
 .. _Syntax:
@@ -24,7 +27,7 @@ Description
 ~~~~~~~~~~~
 
 The currently running thread may discover its own identity by calling
-``PR_GetCurrentThread``.
+:ref:`PR_GetCurrentThread`.
 
 .. note::
 

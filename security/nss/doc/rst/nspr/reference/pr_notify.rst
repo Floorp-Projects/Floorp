@@ -1,3 +1,6 @@
+PR_Notify
+=========
+
 Notifies a monitor that a change in state of the monitored data has
 occurred.
 
@@ -20,7 +23,7 @@ Parameters
 The function has the following parameter:
 
 ``mon``
-   A reference to an existing structure of type ``PRMonitor``. The
+   A reference to an existing structure of type :ref:`PRMonitor`. The
    monitor object referenced must be one for which the calling thread
    currently holds the lock.
 

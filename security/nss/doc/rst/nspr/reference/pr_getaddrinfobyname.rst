@@ -1,3 +1,6 @@
+PR_GetAddrInfoByName
+====================
+
 Looks up a host by name. Equivalent to ``getaddrinfo(host, NULL, ...)``
 of RFC 3493.
 
@@ -10,7 +13,7 @@ Syntax
 
    #include <prnetdb.h>
 
-   PRAddrInfo *PR GetAddrInfoByName(
+   PRAddrInfo *PR_GetAddrInfoByName(
      const char *hostname,
      PRUint16 af,
      PRIntn flags);
@@ -41,8 +44,8 @@ The function returns one of the following values:
 
 -  If successful, a pointer to the opaque ``PRAddrInfo`` structure
    containing the results of the host lookup. Use
-   ``PR_EnumerateAddrInfo`` to inspect the ``PRNetAddr`` values stored
+   :ref:`PR_EnumerateAddrInfo` to inspect the :ref:`PRNetAddr` values stored
    in this structure. When no longer needed, this pointer must be
-   destroyed with a call to ``PR_FreeAddrInfo``.
+   destroyed with a call to :ref:`PR_FreeAddrInfo`.
 -  If unsuccessful, ``NULL``. You can retrieve the reason for the
-   failure by calling ``PR_GetError``.
+   failure by calling :ref:`PR_GetError`.

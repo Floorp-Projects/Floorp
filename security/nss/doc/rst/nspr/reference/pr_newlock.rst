@@ -1,3 +1,6 @@
+PR_NewLock
+==========
+
 Creates a new lock.
 
 .. _Syntax:
@@ -27,4 +30,4 @@ The function returns one of the following values:
 Description
 -----------
 
-``PR_NewLock`` creates a new opaque lock.
+:ref:`PR_NewLock` creates a new opaque lock.

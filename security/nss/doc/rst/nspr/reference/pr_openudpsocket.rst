@@ -1,3 +1,6 @@
+PR_OpenUDPSocket
+================
+
 Creates a new UDP socket of the specified address family.
 
 .. _Syntax:
@@ -30,7 +33,7 @@ Returns
 
 The function returns one of the following values:
 
--  Upon successful completion, a pointer to the ``PRFileDesc`` object
+-  Upon successful completion, a pointer to the :ref:`PRFileDesc` object
    created for the newly opened UDP socket.
 -  If the creation of a new UDP socket failed, ``NULL``.
 
@@ -43,8 +46,8 @@ UDP (User Datagram Protocol) is a connectionless, unreliable datagram
 protocol of the TCP/IP protocol suite. UDP datagrams may be lost or
 delivered in duplicates or out of sequence.
 
-``PR_OpenUDPSocket`` creates a new UDP socket of the address family
+:ref:`PR_OpenUDPSocket` creates a new UDP socket of the address family
 ``af``. The socket may be bound to a well-known port number with
-``PR_Bind``. Datagrams can be sent with ``PR_SendTo`` and received with
-``PR_RecvFrom``. When the socket is no longer needed, it should be
-closed with a call to ``PR_Close``.
+:ref:`PR_Bind`. Datagrams can be sent with :ref:`PR_SendTo` and received with
+:ref:`PR_RecvFrom`. When the socket is no longer needed, it should be
+closed with a call to :ref:`PR_Close`.

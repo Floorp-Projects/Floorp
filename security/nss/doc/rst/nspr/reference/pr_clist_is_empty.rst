@@ -1,3 +1,6 @@
+PR_CLIST_IS_EMPTY
+=================
+
 Checks for an empty circular list.
 
 .. _Syntax:

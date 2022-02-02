@@ -1,3 +1,6 @@
+PRPackedBool
+============
+
 Packed Boolean value.
 
 .. _Syntax:
@@ -16,4 +19,4 @@ Syntax
 Description
 -----------
 
-Use ``PRPackedBool`` within structures.
+Use :ref:`PRPackedBool` within structures.

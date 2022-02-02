@@ -1,3 +1,6 @@
+PRIOMethods
+===========
+
 The table of I/O methods used in a file descriptor.
 
 .. _Syntax:
@@ -113,8 +116,8 @@ Description
 You don't need to know the type declaration for each function listed in
 the method table unless you are implementing a layer. For information
 about each function, see the corresponding function description in this
-document. For example, the ``write`` method in ``PRIOMethods``
-implements the ``PR_Write`` function. For type definition details, see
+document. For example, the ``write`` method in :ref:`PRIOMethods`
+implements the :ref:`PR_Write` function. For type definition details, see
 ``prio.h``.
 
 The I/O methods table provides procedural access to the functions of the

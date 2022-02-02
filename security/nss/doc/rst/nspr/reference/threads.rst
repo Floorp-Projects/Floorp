@@ -9,12 +9,12 @@ chapter describes the basic NSPR threading API.
 A thread has a limited number of resources that it truly owns. These
 resources include a stack and the CPU registers (including PC). To an
 NSPR client, a thread is represented by a pointer to an opaque structure
-of type ``PRThread``. A thread is created by an explicit client request
+of type :ref:`PRThread`. A thread is created by an explicit client request
 and remains a valid, independent execution entity until it returns from
 its root function or the process abnormally terminates. Threads are
 critical resources and therefore require some management. To synchronize
 the termination of a thread, you can **join** it with another thread
-(see ``PR_JoinThread``). Joining a thread provides definitive proof that
+(see :ref:`PR_JoinThread`). Joining a thread provides definitive proof that
 the target thread has terminated and has finished with both the
 resources to which the thread has access and the resources of the thread
 itself.
@@ -31,12 +31,12 @@ For API reference information related to thread synchronization, see
 Threading Types and Constants
 -----------------------------
 
--  ``PRThread``
--  ``PRThreadType``
--  ``PRThreadScope``
--  ``PRThreadState``
--  ``PRThreadPriority``
--  ``PRThreadPrivateDTOR``
+ - :ref:`PRThread`
+ - :ref:`PRThreadType`
+ - :ref:`PRThreadScope`
+ - :ref:`PRThreadState`
+ - :ref:`PRThreadPriority`
+ - :ref:`PRThreadPrivateDTOR`
 
 .. _Threading_Functions:
 
@@ -61,14 +61,14 @@ effects of these functions on invalid threads are undefined.
 Creating, Joining, and Identifying Threads
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
--  ``PR_CreateThread`` creates a new thread.
--  ``PR_JoinThread`` blocks the calling thread until a specified thread
+ - :ref:`PR_CreateThread` creates a new thread.
+ - :ref:`PR_JoinThread` blocks the calling thread until a specified thread
    terminates.
--  ``PR_GetCurrentThread`` returns the current thread object for the
+ - :ref:`PR_GetCurrentThread` returns the current thread object for the
    currently running code.
--  ``PR_AttachThread`` associates a ``PRThread`` object with an existing
+ - :ref:`PR_AttachThread`` associates a ``PRThread` object with an existing
    native thread.
--  ``PR_DetachThread`` disassociates a ``PRThread`` object from a native
+ - :ref:`PR_DetachThread`` disassociates a ``PRThread` object from a native
    thread.
 
 .. _Controlling_Thread_Priorities:
@@ -80,11 +80,11 @@ For an overview of the way NSPR controls thread priorities, see `Setting
 Thread Priorities <Introduction_to_NSPR#Setting_Thread_Priorities.>`__.
 
 You set a thread's NSPR priority when you create it with
-``PR_CreateThread``. After a thread has been created, you can get and
+:ref:`PR_CreateThread`. After a thread has been created, you can get and
 set its priority with these functions:
 
--  ``PR_GetThreadPriority``
--  ``PR_SetThreadPriority``
+ - :ref:`PR_GetThreadPriority`
+ - :ref:`PR_SetThreadPriority`
 
 .. _Controlling_Per-Thread_Private_Data:
 
@@ -94,23 +94,23 @@ Controlling Per-Thread Private Data
 You can use these functions to associate private data with each of the
 threads in a process:
 
--  ``PR_NewThreadPrivateIndex`` allocates a unique index. If the call is
+ - :ref:`PR_NewThreadPrivateIndex` allocates a unique index. If the call is
    successful, every thread in the same process is capable of
    associating private data with the new index.
--  ``PR_SetThreadPrivate`` associates private thread data with an index.
--  ``PR_GetThreadPrivate`` retrieves data associated with an index.
+ - :ref:`PR_SetThreadPrivate` associates private thread data with an index.
+ - :ref:`PR_GetThreadPrivate` retrieves data associated with an index.
 
 .. _Interrupting_and_Yielding:
 
 Interrupting and Yielding
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
--  ``PR_Interrupt`` requests an interrupt of another thread. Once the
+ - :ref:`PR_Interrupt` requests an interrupt of another thread. Once the
    target thread has been notified of the request, the request stays
    with the thread until the notification either has been delivered
    exactly once or is cleared.
--  ``PR_ClearInterrupt`` clears a previous interrupt request.
--  ``PR_Sleep`` causes a thread to yield to other threads for a
+ - :ref:`PR_ClearInterrupt` clears a previous interrupt request.
+ - :ref:`PR_Sleep` causes a thread to yield to other threads for a
    specified number of ticks.
 
 .. _Setting_Global_Thread_Concurrency:
@@ -118,7 +118,7 @@ Interrupting and Yielding
 Setting Global Thread Concurrency
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
--  ``PR_SetConcurrency`` sets the number of global threads used by NSPR
+ - :ref:`PR_SetConcurrency` sets the number of global threads used by NSPR
    to create local threads.
 
 .. _Getting_a_Thread.27s_Scope:
@@ -126,4 +126,4 @@ Setting Global Thread Concurrency
 Getting a Thread's Scope
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
--  ``PR_GetThreadScope`` gets the scoping of the current thread.
+ - :ref:`PR_GetThreadScope` gets the scoping of the current thread.

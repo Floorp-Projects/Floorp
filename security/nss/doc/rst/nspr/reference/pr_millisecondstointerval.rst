@@ -1,3 +1,6 @@
+PR_MillisecondsToInterval
+=========================
+
 Converts standard clock milliseconds to platform-dependent intervals.
 
 .. _Syntax:

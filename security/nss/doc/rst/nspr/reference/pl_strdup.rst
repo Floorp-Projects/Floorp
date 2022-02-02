@@ -1,3 +1,6 @@
+PL_strdup
+=========
+
 Returns a pointer to a new memory node in the NSPR heap containing a
 copy of a specified string.
 
@@ -47,5 +50,5 @@ memory containing the null value.
 Notes
 ~~~~~
 
-The memory allocated by ``PL_strdup`` should be freed with
+The memory allocated by :ref:`PL_strdup` should be freed with
 `PL_strfree </en/PL_strfree>`__.

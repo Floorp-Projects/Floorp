@@ -1,3 +1,6 @@
+PR_DeleteSemaphore
+==================
+
 Removes a semaphore specified by name from the system.
 
 .. _Syntax:
@@ -20,11 +23,11 @@ The function has the following parameter:
 
 ``name``
    The name of a semaphore that was previously created via a call to
-   ``PR_OpenSemaphore``.
+   :ref:`PR_OpenSemaphore`.
 
 .. _Returns:
 
 Returns
 ~~~~~~~
 
-``PRStatus``
+:ref:`PRStatus`

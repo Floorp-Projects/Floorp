@@ -1,3 +1,6 @@
+PRCallOnceType
+==============
+
 Structure for tracking initialization.
 
 .. _Syntax:
@@ -36,6 +39,6 @@ The structure has these fields:
 Description
 -----------
 
-The client is responsible for initializing the ``PRCallOnceType``
+The client is responsible for initializing the :ref:`PRCallOnceType`
 structure to all zeros. This initialization must be accomplished before
 any threading issues exist.

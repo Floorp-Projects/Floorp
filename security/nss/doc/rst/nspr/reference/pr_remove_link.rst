@@ -1,3 +1,6 @@
+PR_REMOVE_LINK
+==============
+
 Removes an element from a circular list.
 
 .. _Syntax:
@@ -24,4 +27,4 @@ Parameter
 Description
 -----------
 
-``PR_REMOVE_LINK`` removes the specified element from its circular list.
+:ref:`PR_REMOVE_LINK` removes the specified element from its circular list.

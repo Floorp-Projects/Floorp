@@ -1,3 +1,6 @@
+PL_CompareStrings
+=================
+
 Compares two character strings.
 
 .. _Syntax:
@@ -18,9 +21,9 @@ Syntax
 Description
 -----------
 
-``PL_CompareStrings`` compares ``v1`` and ``v2`` as character strings
+:ref:`PL_CompareStrings` compares ``v1`` and ``v2`` as character strings
 using ``strcmp``. If the two strings are equal, it returns 1. If the two
 strings are not equal, it returns 0.
 
-``PL_CompareStrings`` can be used as the comparator function for
+:ref:`PL_CompareStrings` can be used as the comparator function for
 string-valued key or entry value.

@@ -1,3 +1,6 @@
+PR_GetLayersIdentity
+====================
+
 Gets the unique identity for the layer of the specified file descriptor.
 
 .. _Syntax:
@@ -26,5 +29,5 @@ The function has the following parameter:
 Returns
 ~~~~~~~
 
-If successful, the function returns the ``PRDescIdentity`` for the layer
+If successful, the function returns the :ref:`PRDescIdentity` for the layer
 of the specified file descriptor.

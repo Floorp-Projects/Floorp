@@ -1,3 +1,6 @@
+PR_IntervalNow
+==============
+
 Returns the value of NSPR's free-running interval timer.
 
 .. _Syntax:
@@ -16,7 +19,7 @@ Syntax
 Returns
 ~~~~~~~
 
-A ``PRIntervalTime`` object.
+A :ref:`PRIntervalTime` object.
 
 .. _Description:
 

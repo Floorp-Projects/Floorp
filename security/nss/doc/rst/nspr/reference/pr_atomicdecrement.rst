@@ -1,3 +1,6 @@
+PR_AtomicDecrement
+==================
+
 Atomically decrements a 32-bit value.
 
 .. _Syntax:
@@ -33,6 +36,6 @@ The function returns the decremented value (i.e., the result).
 Description
 -----------
 
-``PR_AtomicDecrement`` first decrements the referenced variable by one.
+:ref:`PR_AtomicDecrement` first decrements the referenced variable by one.
 The value returned is the referenced variable's final value. The
 modification to memory is unconditional.

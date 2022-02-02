@@ -1,3 +1,6 @@
+PR_GetSpecialFD
+===============
+
 Gets the file descriptor that represents the standard input, output, or
 error stream.
 
@@ -29,9 +32,9 @@ The function has the following parameter:
 Returns
 ~~~~~~~
 
-If the ``id`` parameter is valid, ``PR_GetSpecialFD`` returns a file
+If the ``id`` parameter is valid, :ref:`PR_GetSpecialFD` returns a file
 descriptor that represents the corresponding standard I/O stream.
-Otherwise, ``PR_GetSpecialFD`` returns ``NULL`` and sets the error to
+Otherwise, :ref:`PR_GetSpecialFD` returns ``NULL`` and sets the error to
 ``PR_INVALID_ARGUMENT_ERROR``.
 
 .. _Description:
@@ -53,5 +56,5 @@ Type ``PRSpecialFD`` is defined as follows:
 ``#define PR_STDOUT PR_GetSpecialFD(PR_StandardOutput)``
 ``#define PR_STDERR PR_GetSpecialFD(PR_StandardError)``
 
-File descriptors returned by ``PR_GetSpecialFD`` are owned by the
+File descriptors returned by :ref:`PR_GetSpecialFD` are owned by the
 runtime and should not be closed by the caller.

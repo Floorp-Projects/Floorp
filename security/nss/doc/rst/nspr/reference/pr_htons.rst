@@ -1,3 +1,6 @@
+PR_htons
+========
+
 Performs 16-bit conversion from host byte order to network byte order.
 
 .. _Syntax:

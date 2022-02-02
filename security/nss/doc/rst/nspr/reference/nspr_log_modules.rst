@@ -1,3 +1,6 @@
+NSPR_LOG_MODULES
+================
+
 This environment variable specifies which log modules have logging
 enabled.
 
@@ -11,7 +14,7 @@ Syntax
    moduleName:level[, moduleName:level]*
 
 *moduleName* is the name specified in a
-```PR_NewLogModule`` <http://www-archive.mozilla.org/projects/nspr/reference/html/prlog.html#25372>`__
+`:ref:`PR_NewLogModule` <http://www-archive.mozilla.org/projects/nspr/reference/html/prlog.html#25372>`__
 call or one of the handy magic names listed below.
 
 *level* is a numeric value between 0 and 5, with the values having the
@@ -31,13 +34,13 @@ Description
 
 Specify a ``moduleName`` that is associated with the ``name`` argument
 in a call to
-```PR_NewLogModule`` <http://www-archive.mozilla.org/projects/nspr/reference/html/prlog.html#25372>`__
+`:ref:`PR_NewLogModule` <http://www-archive.mozilla.org/projects/nspr/reference/html/prlog.html#25372>`__
 and a non-zero ``level`` value to enable logging for the named
 ``moduleName``. 
 
 Special log module names are provided for controlling NSPR's log service
 at execution time. These controls should be set in the
-``NSPR_LOG_MODULES`` environment variable at execution time to affect
+:ref:`NSPR_LOG_MODULES` environment variable at execution time to affect
 NSPR's log service for your application. 
 
 -  **all** The name ``all`` enables all log modules. To enable all log
@@ -83,7 +86,7 @@ prefixing each line with the timestamp when it was logged to the file
 Logging with Try Server
 -----------------------
 
--  For **mochitest**, edit variable ``NSPR_LOG_MODULES`` in
+-  For **mochitest**, edit variable :ref:`NSPR_LOG_MODULES` in
    ``testing/mochitest/runtests.py`` before pushing to try. You would be
    able to download the log file as an artifact from the Log viewer.
 -  (other tests?)

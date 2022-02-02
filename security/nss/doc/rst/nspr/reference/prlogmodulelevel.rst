@@ -1,4 +1,7 @@
-The enumerated type ``PRLogModuleLevel`` defines levels of logging
+PRLogModuleLevel
+================
+
+The enumerated type :ref:`PRLogModuleLevel` defines levels of logging
 available to application programs.
 
 .. _Syntax:

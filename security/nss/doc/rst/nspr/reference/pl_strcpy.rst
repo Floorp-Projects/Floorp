@@ -1,3 +1,7 @@
+PL_strcpy
+=========
+
+
 Copies a string, up to and including the trailing ``'\0'``, into a
 destination buffer.
 

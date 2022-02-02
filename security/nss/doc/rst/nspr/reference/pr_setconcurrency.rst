@@ -1,3 +1,6 @@
+PR_SetConcurrency
+=================
+
 Creates extra virtual processor threads. Generally used with MP systems.
 
 .. _Syntax:
@@ -16,7 +19,7 @@ Syntax
 Parameter
 ~~~~~~~~~
 
-``PR_SetConcurrency`` has one parameter:
+:ref:`PR_SetConcurrency` has one parameter:
 
 ``numCPUs``
    The number of extra virtual processor threads to be created.
@@ -29,7 +32,7 @@ Description
 Setting concurrency controls the number of virtual processors that NSPR
 uses to implement its ``M x N`` threading model. The ``M x N`` model is
 not available on all host systems. On those where it is not available,
-``PR_SetConcurrency`` is ignored.
+:ref:`PR_SetConcurrency` is ignored.
 
 Virtual processors are actually\ *global* threads, each of which is
 designed to support an arbitrary number of\ *local* threads. Since

@@ -26,7 +26,7 @@ to NSPR <Introduction_to_NSPR>`__.
 Directory Type
 --------------
 
--  ``PRDir``
+ - :ref:`PRDir`
 
 .. _File_Descriptor_Types:
 
@@ -34,31 +34,31 @@ File Descriptor Types
 ---------------------
 
 NSPR represents I/O objects, such as open files and sockets, by file
-descriptors of type ``PRFileDesc``. This section introduces
-``PRFileDesc`` and related types.
+descriptors of type :ref:`PRFileDesc`. This section introduces
+:ref:`PRFileDesc` and related types.
 
--  ``PRFileDesc``
--  ``PRIOMethods``
--  ``PRFilePrivate``
--  ``PRDescIdentity``
+ - :ref:`PRFileDesc`
+ - :ref:`PRIOMethods`
+ - :ref:`PRFilePrivate`
+ - :ref:`PRDescIdentity`
 
 Note that the NSPR documentation follows the Unix convention of using
 the term\ *files* to refer to many kinds of I/O objects. To refer
 specifically to the files in a file system (that is, disk files), this
 documentation uses the term\ *normal files*.
 
-``PRFileDesc`` has an object-oriented flavor. An I/O function on a
-``PRFileDesc`` structure is carried out by invoking the corresponding
-"method" in the I/O methods table (a structure of type ``PRIOMethods``)
-of the ``PRFileDesc`` structure (the "object"). Different kinds of I/O
+:ref:`PRFileDesc` has an object-oriented flavor. An I/O function on a
+:ref:`PRFileDesc` structure is carried out by invoking the corresponding
+"method" in the I/O methods table (a structure of type :ref:`PRIOMethods`)
+of the :ref:`PRFileDesc` structure (the "object"). Different kinds of I/O
 objects (such as files and sockets) have different I/O methods tables,
 thus implementing different behavior in response to the same I/O
 function call.
 
 NSPR supports the implementation of layered I/O. Each layer is
-represented by a ``PRFileDesc`` structure, and the ``PRFileDesc``
-structures for the layers are chained together. Each ``PRFileDesc``
-structure has a field (of type ``PRDescIdentity``) to identify itself in
+represented by a :ref:`PRFileDesc` structure, and the :ref:`PRFileDesc`
+structures for the layers are chained together. Each :ref:`PRFileDesc`
+structure has a field (of type :ref:`PRDescIdentity`) to identify itself in
 the layers. For example, the Netscape implementation of the Secure
 Sockets Layer (SSL) protocol is implemented as an I/O layer on top of
 NSPR's socket layer.
@@ -68,38 +68,38 @@ NSPR's socket layer.
 File Info Types
 ---------------
 
--  ``PRFileInfo``
--  ``PRFileInfo64``
--  ``PRFileType``
+ - :ref:`PRFileInfo`
+ - :ref:`PRFileInfo64`
+ - :ref:`PRFileType`
 
 .. _Network_Address_Types:
 
 Network Address Types
 ---------------------
 
--  ``PRNetAddr``
--  ``PRIPv6Addr``
+ - :ref:`PRNetAddr`
+ - :ref:`PRIPv6Addr`
 
 .. _Types_Used_with_Socket_Options_Functions:
 
 Types Used with Socket Options Functions
 ----------------------------------------
 
--  ``PRSocketOptionData``
--  ``PRSockOption``
--  ``PRLinger``
--  ``PRMcastRequest``
+ - :ref:`PRSocketOptionData`
+ - :ref:`PRSockOption`
+ - :ref:`PRLinger`
+ - :ref:`PRMcastRequest`
 
 .. _Type_Used_with_Memory-Mapped_I.2FO:
 
 Type Used with Memory-Mapped I/O
 --------------------------------
 
--  ``PRFileMap``
+ - :ref:`PRFileMap`
 
 .. _Offset_Interpretation_for_Seek_Functions:
 
 Offset Interpretation for Seek Functions
 ----------------------------------------
 
--  ``PRSeekWhence``
+ - :ref:`PRSeekWhence`

@@ -1,3 +1,6 @@
+PR_DeleteSharedMemory
+=====================
+
 Deletes a shared memory segment identified by name.
 
 .. _Syntax:
@@ -22,11 +25,11 @@ Parameter
 The function has these parameter:
 
 shm
-   The handle returned from ``PR_OpenSharedMemory``.
+   The handle returned from :ref:`PR_OpenSharedMemory`.
 
 .. _Returns:
 
 Returns
 ~~~~~~~
 
-``PRStatus``.
+:ref:`PRStatus`.

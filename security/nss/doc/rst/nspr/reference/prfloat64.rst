@@ -1,3 +1,7 @@
+
+PRFloat64
+=========
+
 The NSPR floating-point type is always 64 bits.
 
 .. _Syntax:

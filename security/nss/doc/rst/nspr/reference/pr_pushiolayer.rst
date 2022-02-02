@@ -1,3 +1,6 @@
+PR_PushIOLayer
+==============
+
 Adds a layer onto the stack.
 
 .. _Syntax:
@@ -22,12 +25,12 @@ Parameters
 The function has the following parameters:
 
 ``stack``
-   A pointer to a ``PRFileDesc`` object representing the stack.
+   A pointer to a :ref:`PRFileDesc` object representing the stack.
 ``id``
-   A ``PRDescIdentity`` object for the layer on the stack above which
+   A :ref:`PRDescIdentity` object for the layer on the stack above which
    the new layer is to be added.
 ``layer``
-   A pointer to a ``PRFileDesc`` object representing the new layer to be
+   A pointer to a :ref:`PRFileDesc` object representing the new layer to be
    added to the stack.
 
 .. _Returns:
@@ -39,7 +42,7 @@ The function returns one of the following values:
 
 -  If the layer is successfully pushed onto the stack, ``PR_SUCCESS``.
 -  If the layer is not successfully pushed onto the stack,
-   ``PR_FAILURE``. Use ``PR_GetError`` to get additional information
+   ``PR_FAILURE``. Use :ref:`PR_GetError` to get additional information
    regarding the reason for the failure.
 
 .. _Description:
@@ -48,7 +51,7 @@ Description
 -----------
 
 A file descriptor for a layer (possibly allocated using
-``PR_CreateIOLayerStub``) may be pushed onto an existing stack of file
+:ref:`PR_CreateIOLayerStub`) may be pushed onto an existing stack of file
 descriptors at any time. The new layer is inserted into the stack just
 above the layer with the identity specified by ``id``.
 
@@ -75,16 +78,16 @@ ramifications:
    argument is relinquished to the runtime. Accessing the object via the
    pointer is not permitted while the runtime has ownership. The correct
    mechanism to access the object is to get a pointer to it by calling
-   ``PR_GetIdentitiesLayer``.
+   :ref:`PR_GetIdentitiesLayer`.
 
 -  The contents of the caller's object are swapped into another
    container, including the reference to the object's destructor. If the
    original container was allocated using a different mechanism than
    used by the runtime, the default calling of the layer's destructor by
-   the runtime will fail ``PR_CreateIOLayerStub`` is provided to
+   the runtime will fail :ref:`PR_CreateIOLayerStub` is provided to
    allocate layer objects and template implementations). The destructor
    will be called on all layers when the stack is closed (see
-   ``PR_Close``). If the containers are allocated by some method other
-   than ``PR_CreateIOLayerStub``, it may be required that the stack have
+   :ref:`PR_Close`). If the containers are allocated by some method other
+   than :ref:`PR_CreateIOLayerStub`, it may be required that the stack have
    the layers popped off (in reverse order that they were pushed) before
-   calling ``PR_Close``.
+   calling :ref:`PR_Close`.

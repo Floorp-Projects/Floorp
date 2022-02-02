@@ -1,3 +1,6 @@
+PL_HashTableLookup
+==================
+
 Looks up the entry with the specified key and return its value.
 
 .. _Syntax:
@@ -39,7 +42,7 @@ no such entry.
 Description
 -----------
 
-If there is no entry with the specified key, ``PL_HashTableLookup``
+If there is no entry with the specified key, :ref:`PL_HashTableLookup`
 returns ``NULL``. This means that one cannot tell whether a ``NULL``
 return value means the entry does not exist or the value of the entry is
 ``NULL``. Keep this ambiguity in mind if you want to store ``NULL``

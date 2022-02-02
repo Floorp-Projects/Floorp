@@ -1,5 +1,8 @@
-Protocol entry returned by ``PR_GetProtoByName`` and
-``PR_GetProtoByNumber``.
+PRProtoEnt
+==========
+
+Protocol entry returned by :ref:`PR_GetProtoByName` and
+:ref:`PR_GetProtoByNumber`.
 
 .. _Syntax:
 

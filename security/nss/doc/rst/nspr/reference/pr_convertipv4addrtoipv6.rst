@@ -1,3 +1,6 @@
+PR_ConvertIPv4AddrToIPv6
+========================
+
 Converts an IPv4 address into an (IPv4-mapped) IPv6 address.
 
 .. _Syntax:

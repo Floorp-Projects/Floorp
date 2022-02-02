@@ -1,3 +1,6 @@
+PR_CWait
+========
+
 Wait for a notification that a monitor's state has changed.
 
 .. _Syntax:
@@ -22,9 +25,9 @@ The function has the following parameters:
 
 ``address``
    The address of the protected object--the same address previously
-   passed to ``PR_CEnterMonitor``.
+   passed to :ref:`PR_CEnterMonitor`.
 ``timeout``
-   The amount of time (in ``PRIntervalTime`` units) that the thread is
+   The amount of time (in :ref:`PRIntervalTime` units) that the thread is
    willing to wait for an explicit notification before being
    rescheduled. If you specify ``PR_INTERVAL_NO_TIMEOUT``, the function
    returns if and only if the object is notified.
@@ -36,10 +39,10 @@ Returns
 
 The function returns one of the following values:
 
--  ``PR_SUCCESS`` indicates either that the monitored object has been
+ - :ref:`PR_SUCCESS` indicates either that the monitored object has been
    notified or that the interval specified in the timeout parameter has
    been exceeded.
--  ``PR_FAILURE`` indicates either that the monitor could not be located
+ - :ref:`PR_FAILURE` indicates either that the monitor could not be located
    in the cache or that the monitor was located and the calling thread
    was not the thread that held the monitor's mutex.
 
@@ -49,10 +52,10 @@ Description
 -----------
 
 Using the value specified in the ``address`` parameter to find a monitor
-in the monitor cache, ``PR_CWait`` waits for a notification that the
+in the monitor cache, :ref:`PR_CWait` waits for a notification that the
 monitor's state has changed. While the thread is waiting, it exits the
-monitor (just as if it had called ``PR_CExitMonitor`` as many times as
-it had called ``PR_CEnterMonitor``). When the wait has finished, the
+monitor (just as if it had called :ref:`PR_CExitMonitor` as many times as
+it had called :ref:`PR_CEnterMonitor`). When the wait has finished, the
 thread regains control of the monitor's lock with the same entry count
 as before the wait began.
 

@@ -1,3 +1,6 @@
+PR_GetErrorTextLength
+=====================
+
 Gets the length of the error text.
 
 .. _Syntax:

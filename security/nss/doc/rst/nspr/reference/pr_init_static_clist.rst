@@ -1,3 +1,6 @@
+PR_INIT_STATIC_CLIST
+====================
+
 Statically initializes a circular list.
 
 .. _Syntax:

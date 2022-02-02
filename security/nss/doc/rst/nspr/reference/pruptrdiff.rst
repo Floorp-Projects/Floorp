@@ -1,3 +1,6 @@
+PRUptrdiff
+==========
+
 Unsigned pointer difference type.
 
 .. _Syntax:

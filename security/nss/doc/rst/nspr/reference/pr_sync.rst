@@ -1,3 +1,6 @@
+PR_Sync
+=======
+
 Synchronizes any buffered data for a file descriptor to its backing
 device (disk).
 
@@ -20,7 +23,7 @@ Parameter
 The function has the following parameter:
 
 ``fd``
-   Pointer to a ``PRFileDesc`` object representing a file.
+   Pointer to a :ref:`PRFileDesc` object representing a file.
 
 .. _Returns:
 
@@ -37,5 +40,5 @@ The function returns one of the following values:
 Description
 -----------
 
-``PR_Sync`` writes all the in-memory buffered data of the specified file
+:ref:`PR_Sync` writes all the in-memory buffered data of the specified file
 to the disk.

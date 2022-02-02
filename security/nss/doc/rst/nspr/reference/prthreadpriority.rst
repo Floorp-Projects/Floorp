@@ -1,3 +1,6 @@
+PRThreadPriority
+================
+
 A thread's priority setting.
 
 .. _Syntax:

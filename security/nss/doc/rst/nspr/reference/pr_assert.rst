@@ -1,3 +1,6 @@
+PR_ASSERT
+=========
+
 Terminates execution when a given expression is ``FALSE``.
 
 .. _Syntax:

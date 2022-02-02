@@ -1,3 +1,6 @@
+PR_ConnectContinue
+==================
+
 .. _Syntax:
 
 Syntax
@@ -19,7 +22,7 @@ Parameters
 The function has the following parameters:
 
 ``fd``
-   A pointer to a ``PRFileDesc`` object representing a socket.
+   A pointer to a :ref:`PRFileDesc` object representing a socket.
 
 ``out_flags``
    The out_flags field of the poll descriptor returned by

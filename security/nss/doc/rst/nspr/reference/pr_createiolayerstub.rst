@@ -1,3 +1,6 @@
+PR_CreateIOLayerStub
+====================
+
 Creates a new layer.
 
 .. _Syntax:
@@ -23,7 +26,7 @@ The function has the following parameters:
 ``ident``
    The identity to be associated with the new layer.
 ``methods``
-   A pointer to the ``PRIOMethods`` structure specifying the functions
+   A pointer to the :ref:`PRIOMethods` structure specifying the functions
    for the new layer.
 
 .. _Returns:
@@ -38,7 +41,7 @@ A new file descriptor for the specified layer.
 Description
 -----------
 
-A new layer may be allocated by calling ``PR_CreateIOLayerStub``. The
+A new layer may be allocated by calling :ref:`PR_CreateIOLayerStub`. The
 file descriptor returned contains the pointer to the I/O methods table
 provided. The runtime neither modifies the table nor tests its
 correctness.

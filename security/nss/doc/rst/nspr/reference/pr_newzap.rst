@@ -1,3 +1,6 @@
+PR_NEWZAP
+=========
+
 Allocates and clears memory from the heap for an instance of a given
 type.
 

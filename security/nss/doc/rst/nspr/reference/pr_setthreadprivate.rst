@@ -1,3 +1,6 @@
+PR_SetThreadPrivate
+===================
+
 Sets per-thread private data.
 
 .. _Syntax:
@@ -16,7 +19,7 @@ Syntax
 Parameters
 ~~~~~~~~~~
 
-``PR_SetThreadPrivate`` has the following parameters:
+:ref:`PR_SetThreadPrivate` has the following parameters:
 
 ``index``
    An index into the per-thread private data table.
@@ -50,7 +53,7 @@ destructor is called with the runtime holding no locks. Synchronization
 is the client's responsibility.
 
 The only way to eliminate thread private data at an index prior to the
-thread's termination is to call ``PR_SetThreadPrivate`` with a ``NULL``
+thread's termination is to call :ref:`PR_SetThreadPrivate` with a ``NULL``
 argument. This causes the index's destructor function to be called, and
 afterwards assigns a ``NULL`` in the table. A client must not delete the
 referant object of a non-``NULL`` private data without first eliminating

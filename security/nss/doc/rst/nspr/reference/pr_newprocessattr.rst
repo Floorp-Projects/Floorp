@@ -1,3 +1,6 @@
+PR_NewProcessAttr
+=================
+
 Creates a process attributes structure.
 
 .. _Syntax:
@@ -30,9 +33,9 @@ A pointer to the new process attributes structure.
 Description
 -----------
 
-This function creates a new ``PRProcessAttr``\ structure that specifies
+This function creates a new :ref:`PRProcessAttr`\ structure that specifies
 the attributes of a new process, then returns a pointer to the
-structure. The new ``PRProcessAttr``\ structure is initialized with
+structure. The new :ref:`PRProcessAttr`\ structure is initialized with
 these default attributes:
 
 -  The standard I/O streams (standard input, standard output, and

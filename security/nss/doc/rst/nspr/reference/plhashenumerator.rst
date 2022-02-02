@@ -42,4 +42,4 @@ not decremented.
 See Also
 --------
 
-``PL_HashTableEnumerateEntries``
+:ref:`PL_HashTableEnumerateEntries`

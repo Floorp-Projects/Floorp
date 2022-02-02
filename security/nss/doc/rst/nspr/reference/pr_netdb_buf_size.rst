@@ -1,6 +1,9 @@
+PR_NETDB_BUF_SIZE
+=================
+
 Recommended size to use when specifying a scratch buffer for
-``PR_GetHostByName``, ``PR_GetHostByAddr``, ``PR_GetProtoByName``, or
-``PR_GetProtoByNumber``.
+:ref:`PR_GetHostByName`, :ref:`PR_GetHostByAddr`, :ref:`PR_GetProtoByName`, or
+:ref:`PR_GetProtoByNumber`.
 
 .. _Syntax:
 

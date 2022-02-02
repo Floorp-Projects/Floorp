@@ -1,3 +1,6 @@
+PR_ProcessExit
+==============
+
 Causes an immediate, nongraceful, forced termination of the process.
 
 .. _Syntax:
@@ -16,7 +19,7 @@ Syntax
 Parameter
 ~~~~~~~~~
 
-``PR_ProcessExit`` has one parameter:
+:ref:`PR_ProcessExit` has one parameter:
 
 status
    The exit status code of the process.

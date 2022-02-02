@@ -1,3 +1,6 @@
+PR_GetIdentitiesLayer
+=====================
+
 Finds the layer with the specified identity in the specified stack of
 layers.
 
@@ -22,7 +25,7 @@ Parameters
 The function has the following parameters:
 
 ``stack``
-   A pointer to a ``PRFileDesc`` object that is a layer in a stack of
+   A pointer to a :ref:`PRFileDesc` object that is a layer in a stack of
    layers.
 ``id``
    The identity of the specified layer.

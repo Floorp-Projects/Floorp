@@ -1,3 +1,6 @@
+PRInt64
+=======
+
 Guaranteed to be a signed 64-bit integer on all platforms.
 
 .. _Syntax:

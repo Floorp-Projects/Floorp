@@ -1,3 +1,6 @@
+PRProcess
+=========
+
 Represents a process.
 
 .. _Syntax:
@@ -16,4 +19,4 @@ Syntax
 Description
 -----------
 
-A pointer to the opaque ``PRProcess`` structure identifies a process.
+A pointer to the opaque :ref:`PRProcess` structure identifies a process.

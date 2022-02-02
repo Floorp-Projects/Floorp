@@ -1,3 +1,6 @@
+PRNetAddr
+=========
+
 Type used with `Socket Manipulation
 Functions <Socket_Manipulation_Functions>`__ to specify a network
 address.
@@ -62,20 +65,20 @@ The structure has the following fields:
 Description
 -----------
 
-The union ``PRNetAddr`` represents a network address. NSPR supports only
+The union :ref:`PRNetAddr` represents a network address. NSPR supports only
 the Internet address family. By default, NSPR is built to support only
 IPv4, but it's possible to build the NSPR library to support both IPv4
 and IPv6. Therefore, the ``family`` field can be ``PR_AF_INET`` only for
 default NSPR, and can also be ``PR_AF_INET6`` if the binary supports
 ``IPv6``.
 
-``PRNetAddr`` is binary-compatible with the socket address structures in
+:ref:`PRNetAddr` is binary-compatible with the socket address structures in
 the familiar Berkeley socket interface, although this fact should not be
 relied upon. The raw member of the union is equivalent to
 ``struct sockaddr``, the ``inet`` member is equivalent to
 ``struct sockaddr_in``, and if the binary is built with ``IPv6``
 support, the ``ipv6`` member is equivalent to ``struct sockaddr_in6``.
-(Note that ``PRNetAddr`` does not have the ``length`` field that is
+(Note that :ref:`PRNetAddr` does not have the ``length`` field that is
 present in ``struct sockaddr_in`` on some Unix platforms.)
 
 The macros ``PR_AF_INET``, ``PR_AF_INET6``, ``PR_INADDR_ANY``,

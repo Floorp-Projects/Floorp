@@ -1,3 +1,6 @@
+PR_strtod
+=========
+
 Converts the prefix of a decimal string to the nearest double-precision
 floating point number.
 
@@ -39,11 +42,11 @@ references is also set.
 Description
 -----------
 
-``PR_strtod`` converts the prefix of the input decimal string pointed to
+:ref:`PR_strtod` converts the prefix of the input decimal string pointed to
 by ``s00`` to a nearest double-precision floating point number. Ties are
 broken by the IEEE round-even rule. The string is scanned up to the
 first unrecognized character. If the value of ``se`` is not
-(``char **``) ``NULL``, ``PR_strtod`` stores a pointer to the character
+(``char **``) ``NULL``, :ref:`PR_strtod` stores a pointer to the character
 terminating the scan in ``*se``. If the answer would overflow, a
 properly signed ``HUGE_VAL`` (infinity) is returned. If the answer would
 underflow, a properly signed 0 is returned. In both cases,

@@ -1,3 +1,6 @@
+PR_ProcessAttrSetInheritableFileMap
+===================================
+
 Prepare filemap for export to my children processes via
 ``PR_CreateProcess``.
 
@@ -37,16 +40,16 @@ The function has the following parameters:
 Returns
 ~~~~~~~
 
-``PRStatus``
+:ref:`PRStatus`
 
 .. _Description:
 
 Description
 ~~~~~~~~~~~
 
-``PR_ProcessAttrSetInheritableFileMap`` connects the ``PRFileMap`` to
-``PRProcessAttr`` with ``shmname``. A subsequent call to
-``PR_CreateProcess`` makes the ``PRFileMap`` importable by the child
+:ref:`PR_ProcessAttrSetInheritableFileMap` connects the :ref:`PRFileMap` to
+:ref:`PRProcessAttr` with ``shmname``. A subsequent call to
+``PR_CreateProcess`` makes the :ref:`PRFileMap` importable by the child
 process.
 
 .. note::

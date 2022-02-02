@@ -38,11 +38,11 @@ Macros for Time Unit Conversion
 Macros for converting between seconds, milliseconds, microseconds, and
 nanoseconds.
 
--  ``PR_MSEC_PER_SEC``
--  ``PR_USEC_PER_SEC``
--  ``PR_NSEC_PER_SEC``
--  ``PR_USEC_PER_MSEC``
--  ``PR_NSEC_PER_MSEC``
+-  :ref:`PR_MSEC_PER_SEC`
+-  :ref:`PR_USEC_PER_SEC`
+-  :ref:`PR_NSEC_PER_SEC`
+-  :ref:`PR_USEC_PER_MSEC`
+-  :ref:`PR_NSEC_PER_MSEC`
 
 .. _Types_and_Constants:
 
@@ -51,9 +51,9 @@ Types and Constants
 
 Types and constants defined for NSPR dates and times are:
 
--  ``PRTime``
--  ``PRTimeParameters``
--  ``PRExplodedTime``
+-  :ref:`PRTime`
+-  :ref:`PRTimeParameters`
+-  :ref:`PRExplodedTime`
 
 .. _Time_Parameter_Callback_Functions:
 
@@ -66,11 +66,11 @@ a few times. Therefore, a callback function is used to determine time
 zone information.
 
 You can define your own time parameter callback functions, which must
-conform to the definition ``PRTimeParamFn``. Two often-used callback
+conform to the definition :ref:`PRTimeParamFn`. Two often-used callback
 functions of this type are provided by NSPR:
 
--  ``PRTimeParamFn``
--  ``PR_LocalTimeParameters`` and ``PR_GMTParameters``
+-  :ref:`PRTimeParamFn`
+-  :ref:`PR_LocalTimeParameters` and :ref:`PR_GMTParameters`
 
 .. _Functions:
 
@@ -79,7 +79,7 @@ Functions
 
 The functions that create and manipulate time and date values are:
 
--  ``PR_Now``
--  ``PR_ExplodeTime``
--  ``PR_ImplodeTime``
--  ``PR_NormalizeTime``
+-  :ref:`PR_Now`
+-  :ref:`PR_ExplodeTime`
+-  :ref:`PR_ImplodeTime`
+-  :ref:`PR_NormalizeTime`

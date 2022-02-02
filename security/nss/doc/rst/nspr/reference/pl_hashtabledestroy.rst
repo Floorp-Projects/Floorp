@@ -1,3 +1,6 @@
+PL_HashTableDestroy
+===================
+
 Frees the table and all the entries.
 
 .. _Syntax:
@@ -26,7 +29,7 @@ The function has the following parameter:
 Description
 -----------
 
-``PL_HashTableDestroy`` frees all the entries in the table and the table
+:ref:`PL_HashTableDestroy` frees all the entries in the table and the table
 itself. The entries are freed by the ``freeEntry`` function (with the
 ``HT_FREE_ENTRY`` flag) in the ``allocOps`` structure supplied when the
 table was created.

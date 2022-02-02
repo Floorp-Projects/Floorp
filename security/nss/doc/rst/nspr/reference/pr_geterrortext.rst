@@ -1,3 +1,6 @@
+PR_GetErrorText
+===============
+
 Copies the current thread's current error text without altering the text
 as stored in the thread's context.
 

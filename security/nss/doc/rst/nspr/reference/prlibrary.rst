@@ -1,3 +1,6 @@
+PRLibrary
+=========
+
 An opaque structure identifying a library.
 
 .. _Syntax:

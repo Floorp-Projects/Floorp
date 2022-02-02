@@ -1,3 +1,6 @@
+PR_Close
+========
+
 Closes a file descriptor.
 
 .. _Syntax:
@@ -19,7 +22,7 @@ Parameters
 The function has the following parameters:
 
 ``fd``
-   A pointer to a ``PRFileDesc`` object.
+   A pointer to a :ref:`PRFileDesc` object.
 
 .. _Returns:
 
@@ -37,5 +40,5 @@ Description
 -----------
 
 The file descriptor may represent a normal file, a socket, or an end
-point of a pipe. On successful return, ``PR_Close`` frees the dynamic
+point of a pipe. On successful return, :ref:`PR_Close` frees the dynamic
 memory and other resources identified by the ``fd`` parameter.
