@@ -169,6 +169,19 @@ void MacroAssemblerX86Shared::binarySimd128(
 }
 
 void MacroAssemblerX86Shared::binarySimd128(
+    FloatRegister lhs, const SimdConstant& rhs, FloatRegister dest,
+    void (MacroAssembler::*regOp)(const Operand&, FloatRegister, FloatRegister),
+    void (MacroAssembler::*constOp)(const SimdConstant&, FloatRegister,
+                                    FloatRegister)) {
+  ScratchSimd128Scope scratch(asMasm());
+  if (maybeInlineSimd128Int(rhs, scratch)) {
+    (asMasm().*regOp)(Operand(scratch), lhs, dest);
+  } else {
+    (asMasm().*constOp)(rhs, lhs, dest);
+  }
+}
+
+void MacroAssemblerX86Shared::binarySimd128(
     const SimdConstant& rhs, FloatRegister lhs,
     void (MacroAssembler::*regOp)(const Operand&, FloatRegister),
     void (MacroAssembler::*constOp)(const SimdConstant&, FloatRegister)) {
