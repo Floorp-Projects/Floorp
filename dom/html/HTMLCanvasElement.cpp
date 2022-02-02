@@ -132,48 +132,28 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
     Watchable<FrameCaptureState>* captureState =
         mOwningElement->GetFrameCaptureState();
     if (!captureState) {
-      PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {},
-                           "Abort: No capture state"_ns);
       return;
     }
 
     if (captureState->Ref() == FrameCaptureState::CLEAN) {
-      PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {},
-                           "Abort: CLEAN"_ns);
       return;
     }
 
     if (!mRefreshDriver) {
-      PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {},
-                           "Abort: no refresh driver"_ns);
       return;
     }
 
     if (!mRefreshDriver->IsThrottled()) {
-      PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {},
-                           "Abort: not throttled"_ns);
       return;
     }
 
+    TimeStamp next = mLastCaptureTime + TimeDuration::FromMilliseconds(
+                                            nsRefreshDriver::DefaultInterval());
     TimeStamp now = TimeStamp::Now();
-    TimeStamp next =
-        mLastCaptureTime.IsNull()
-            ? now
-            : mLastCaptureTime + TimeDuration::FromMilliseconds(
-                                     nsRefreshDriver::DefaultInterval());
-    if (mLastCaptureTime.IsNull() || next <= now) {
-      AUTO_PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {},
-                                "CaptureFrame direct while throttled"_ns);
+    if (mLastCaptureTime.IsNull() || next < now) {
       CaptureFrame(now);
       return;
     }
-
-    nsCString str;
-    if (profiler_thread_is_being_profiled_for_markers()) {
-      str.AppendPrintf("Delaying CaptureFrame by %.2fms",
-                       (next - now).ToMilliseconds());
-    }
-    AUTO_PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {}, str);
 
     mPendingThrottledCapture = true;
     AbstractThread::MainThread()->DelayedDispatch(
@@ -181,9 +161,6 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
             __func__,
             [this, self = RefPtr<RequestedFrameRefreshObserver>(this), next] {
               mPendingThrottledCapture = false;
-              AUTO_PROFILER_MARKER_TEXT(
-                  "Canvas CaptureStream", MEDIA_RT, {},
-                  "CaptureFrame after delay while throttled"_ns);
               CaptureFrame(next);
             }),
         // next >= now, so this is a guard for (next - now) flooring to 0.
@@ -191,89 +168,64 @@ class RequestedFrameRefreshObserver : public nsARefreshObserver {
             1, static_cast<uint32_t>((next - now).ToMilliseconds())));
   }
 
-  void WillRefresh(TimeStamp aTime) override {
-    AUTO_PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {},
-                              "CaptureFrame by refresh driver"_ns);
-
-    CaptureFrame(aTime);
-  }
+  void WillRefresh(TimeStamp aTime) override { CaptureFrame(aTime); }
 
   void CaptureFrame(TimeStamp aTime) {
     MOZ_ASSERT(NS_IsMainThread());
 
+    AUTO_PROFILER_LABEL("RequestedFrameRefreshObserver::WillRefresh", OTHER);
+
     if (!mOwningElement) {
-      PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {},
-                           "Abort: no owning element"_ns);
       return;
     }
 
     if (mOwningElement->IsWriteOnly()) {
-      PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {},
-                           "Abort: write only"_ns);
       return;
     }
 
     if (auto* captureStateWatchable = mOwningElement->GetFrameCaptureState();
         captureStateWatchable &&
         *captureStateWatchable == FrameCaptureState::CLEAN) {
-      PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {},
-                           "Abort: CLEAN"_ns);
       return;
     }
 
-    // Mark the context already now, since if the frame capture state is DIRTY
-    // and we catch an early return below (not marking it CLEAN), the next draw
-    // will not trigger a capture state change from the
-    // Watchable<FrameCaptureState>.
-    mOwningElement->MarkContextCleanForFrameCapture();
-
     mOwningElement->ProcessDestroyedFrameListeners();
 
-    if (!mOwningElement->IsFrameCaptureRequested(aTime)) {
-      PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {},
-                           "Abort: no capture requested"_ns);
+    if (!mOwningElement->IsFrameCaptureRequested()) {
       return;
     }
 
     RefPtr<SourceSurface> snapshot;
     {
-      AUTO_PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {},
-                                "GetSnapshot"_ns);
+      AUTO_PROFILER_LABEL(
+          "RequestedFrameRefreshObserver::WillRefresh:GetSnapshot", OTHER);
       snapshot = mOwningElement->GetSurfaceSnapshot(nullptr);
       if (!snapshot) {
-        PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {},
-                             "Abort: snapshot failed"_ns);
         return;
       }
     }
 
     RefPtr<DataSourceSurface> copy;
     {
-      AUTO_PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {},
-                                "CopySurface"_ns);
+      AUTO_PROFILER_LABEL(
+          "RequestedFrameRefreshObserver::WillRefresh:CopySurface", OTHER);
       copy = CopySurface(snapshot, mReturnPlaceholderData);
       if (!copy) {
-        PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {},
-                             "Abort: copy failed"_ns);
         return;
       }
     }
-
-    nsCString str;
-    if (profiler_thread_is_being_profiled_for_markers()) {
-      TimeDuration sinceLast =
-          aTime - (mLastCaptureTime.IsNull() ? aTime : mLastCaptureTime);
-      str.AppendPrintf("Forwarding captured frame %.2fms after last",
-                       sinceLast.ToMilliseconds());
-    }
-    AUTO_PROFILER_MARKER_TEXT("Canvas CaptureStream", MEDIA_RT, {}, str);
 
     if (!mLastCaptureTime.IsNull() && aTime <= mLastCaptureTime) {
       aTime = mLastCaptureTime + TimeDuration::FromMilliseconds(1);
     }
     mLastCaptureTime = aTime;
 
-    mOwningElement->SetFrameCapture(copy.forget(), aTime);
+    {
+      AUTO_PROFILER_LABEL("RequestedFrameRefreshObserver::WillRefresh:SetFrame",
+                          OTHER);
+      mOwningElement->SetFrameCapture(copy.forget(), aTime);
+      mOwningElement->MarkContextCleanForFrameCapture();
+    }
   }
 
   void DetachFromRefreshDriver() {
@@ -1376,13 +1328,13 @@ nsresult HTMLCanvasElement::RegisterFrameCaptureListener(
   return NS_OK;
 }
 
-bool HTMLCanvasElement::IsFrameCaptureRequested(const TimeStamp& aTime) const {
+bool HTMLCanvasElement::IsFrameCaptureRequested() const {
   for (WeakPtr<FrameCaptureListener> listener : mRequestedFrameListeners) {
     if (!listener) {
       continue;
     }
 
-    if (listener->FrameCaptureRequested(aTime)) {
+    if (listener->FrameCaptureRequested()) {
       return true;
     }
   }
