@@ -1,4 +1,4 @@
-[Exposed=(Window,Worker,Worklet),  Pref="dom.streams.expose.ReadableStreamBYOBReader"]
+[Exposed=(Window,Worker,Worklet),  Pref="dom.streams.readable_stream_byob_reader.enabled"]
 interface ReadableStreamBYOBReader {
   [Throws]
   constructor(ReadableStream stream);
