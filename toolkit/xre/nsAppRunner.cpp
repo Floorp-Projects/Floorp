@@ -476,52 +476,6 @@ static ArgResult CheckArgExists(const char* aArg) {
 bool gSafeMode = false;
 bool gFxREmbedded = false;
 
-// Fission enablement for the current session is determined once, at startup,
-// and then remains the same for the duration of the session.
-//
-// The following factors determine whether or not Fission is enabled for a
-// session, in order of precedence:
-//
-// - Safe mode: In safe mode, Fission is never enabled.
-//
-// - The MOZ_FORCE_ENABLE_FISSION environment variable: If set to any value,
-//   Fission will be enabled.
-//
-// - The 'fission.autostart' preference, if it has been configured by the user.
-static const char kPrefFissionAutostart[] = "fission.autostart";
-//
-// - The fission experiment enrollment status set during the previous run, which
-//   is controlled by the following preferences:
-//
-// The current enrollment status as controlled by Normandy. This value is only
-// stored in the default preference branch, and is not persisted across
-// sessions by the preference service. It therefore isn't available early
-// enough at startup, and needs to be synced to a preference in the user
-// branch which is persisted across sessions.
-static const char kPrefFissionExperimentEnrollmentStatus[] =
-    "fission.experiment.enrollmentStatus";
-//
-// The enrollment status to be used at browser startup. This automatically
-// synced from the above enrollmentStatus preference whenever the latter is
-// changed. It can have any of the values defined in the
-// `nsIXULRuntime_ExperimentStatus` enum. Meanings are documented in
-// the declaration of `nsIXULRuntime.fissionExperimentStatus`
-static const char kPrefFissionExperimentStartupEnrollmentStatus[] =
-    "fission.experiment.startupEnrollmentStatus";
-
-// The computed FissionAutostart value for the session, read by content
-// processes to initialize gFissionAutostart.
-//
-// This pref is locked, and only configured on the default branch, so should
-// never be persisted in a profile.
-static const char kPrefFissionAutostartSession[] = "fission.autostart.session";
-
-static nsIXULRuntime::ExperimentStatus gFissionExperimentStatus =
-    nsIXULRuntime::eExperimentStatusUnenrolled;
-static bool gFissionAutostart = false;
-static bool gFissionAutostartInitialized = false;
-static nsIXULRuntime::FissionDecisionStatus gFissionDecisionStatus;
-
 enum E10sStatus {
   kE10sEnabledByDefault,
   kE10sDisabledByUser,
@@ -593,14 +547,158 @@ bool BrowserTabsRemoteAutostart() {
   return gBrowserTabsRemoteAutostart;
 }
 
+}  // namespace mozilla
+
 // Win32k Infrastructure ==============================================
 
+// This bool tells us if we have initialized the following two statics
+// upon startup.
+
+static bool gWin32kInitialized = false;
+
+// Win32k Lockdown for the current session is determined once, at startup,
+// and then remains the same for the duration of the session.
+
+static nsIXULRuntime::ContentWin32kLockdownState gWin32kStatus;
+
+// The status of the win32k experiment. It is determined once, at startup,
+// and then remains the same for the duration of the session.
+
+static nsIXULRuntime::ExperimentStatus gWin32kExperimentStatus =
+    nsIXULRuntime::eExperimentStatusUnenrolled;
+
+#ifdef XP_WIN
+// The states for win32k lockdown can be generalized to:
+//  - User doesn't meet requirements (bad OS, webrender, remotegl) aka
+//  PersistentRequirement
+//  - User has Safe Mode enabled, Win32k Disabled by Env Var, or E10S disabled
+//  by Env Var aka TemporaryRequirement
+//  - User has set the win32k pref to something non-default aka NonDefaultPref
+//  - User has been enrolled in the experiment and does what it says aka
+//  Enrolled
+//  - User does the default aka Default
+//
+// We expect the below behvaior.  In the code, there may be references to these
+//     behaviors (e.g. [A]) but not always.
+//
+// [A] Becoming enrolled in the experiment while NonDefaultPref disqualifies
+//     you upon next browser start
+// [B] Becoming enrolled in the experiment while PersistentRequirement
+//     disqualifies you upon next browser start
+// [C] Becoming enrolled in the experiment while TemporaryRequirement does not
+//     disqualify you
+// [D] Becoming enrolled in the experiment will only take effect after restart
+// [E] While enrolled, becoming PersistentRequirement will not disqualify you
+//     until browser restart, but if the state is present at browser start,
+//     will disqualify you. Additionally, it will not affect the session value
+//     of gWin32kStatus.
+//     XXX(bobowen): I hope both webrender and wbgl.out-of-process require a
+//                   restart to take effect!
+// [F] While enrolled, becoming NonDefaultPref will disqualify you upon next
+//     browser start
+// [G] While enrolled, becoming TemporaryRequirement will _not_ disqualify you,
+//     but the session status will prevent win32k lockdown from taking effect.
+
+// The win32k pref
+static const char kPrefWin32k[] = "security.sandbox.content.win32k-disable";
+
+// The current enrollment status as controlled by Normandy. This value is only
+// stored in the default preference branch, and is not persisted across
+// sessions by the preference service. It therefore isn't available early
+// enough at startup, and needs to be synced to a preference in the user
+// branch which is persisted across sessions.
+static const char kPrefWin32kExperimentEnrollmentStatus[] =
+    "security.sandbox.content.win32k-experiment.enrollmentStatus";
+
+// The enrollment status to be used at browser startup. This automatically
+// synced from the above enrollmentStatus preference whenever the latter is
+// changed. We reused the Fission experiment enum - it can have any of the
+// values defined in the `nsIXULRuntime_ExperimentStatus` enum _except_ rollout.
+// Meanings are documented in the declaration of
+// `nsIXULRuntime.fissionExperimentStatus`
+static const char kPrefWin32kExperimentStartupEnrollmentStatus[] =
+    "security.sandbox.content.win32k-experiment.startupEnrollmentStatus";
+
 namespace mozilla {
-nsIXULRuntime::ContentWin32kLockdownState GetWin32kLockdownState() {
+
+bool Win32kExperimentEnrolled() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  return gWin32kExperimentStatus == nsIXULRuntime::eExperimentStatusControl ||
+         gWin32kExperimentStatus == nsIXULRuntime::eExperimentStatusTreatment;
+}
+
+}  // namespace mozilla
+
+static bool Win32kRequirementsUnsatisfied(
+    nsIXULRuntime::ContentWin32kLockdownState aStatus) {
+  return aStatus == nsIXULRuntime::ContentWin32kLockdownState::
+                        OperatingSystemNotSupported ||
+         aStatus ==
+             nsIXULRuntime::ContentWin32kLockdownState::MissingWebRender ||
+         aStatus ==
+             nsIXULRuntime::ContentWin32kLockdownState::MissingRemoteWebGL;
+}
+
+static void Win32kExperimentDisqualify() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  Preferences::SetUint(kPrefWin32kExperimentEnrollmentStatus,
+                       nsIXULRuntime::eExperimentStatusDisqualified);
+}
+
+static void OnWin32kEnrollmentStatusChanged(const char* aPref, void* aData) {
+  auto newStatusInt =
+      Preferences::GetUint(kPrefWin32kExperimentEnrollmentStatus,
+                           nsIXULRuntime::eExperimentStatusUnenrolled);
+  auto newStatus = newStatusInt < nsIXULRuntime::eExperimentStatusCount
+                       ? nsIXULRuntime::ExperimentStatus(newStatusInt)
+                       : nsIXULRuntime::eExperimentStatusDisqualified;
+
+  // Set the startup pref for next browser start [D]
+  Preferences::SetUint(kPrefWin32kExperimentStartupEnrollmentStatus, newStatus);
+}
+
+namespace {
+// This observer is notified during `profile-before-change`, and ensures that
+// the experiment enrollment status is synced over before the browser shuts
+// down, even if it was not modified since win32k was initialized.
+class Win32kEnrollmentStatusShutdownObserver final : public nsIObserver {
+ public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
+                     const char16_t* aData) override {
+    MOZ_ASSERT(!strcmp("profile-before-change", aTopic));
+    OnWin32kEnrollmentStatusChanged(kPrefWin32kExperimentEnrollmentStatus,
+                                    nullptr);
+    return NS_OK;
+  }
+
+ private:
+  ~Win32kEnrollmentStatusShutdownObserver() = default;
+};
+NS_IMPL_ISUPPORTS(Win32kEnrollmentStatusShutdownObserver, nsIObserver)
+}  // namespace
+
+static void OnWin32kChanged(const char* aPref, void* aData) {
+  // If we're actively enrolled in the Win32k experiment, disqualify the user
+  // from the experiment if the Win32k pref is modified. [F]
+  if (Win32kExperimentEnrolled() && Preferences::HasUserValue(kPrefWin32k)) {
+    Win32kExperimentDisqualify();
+  }
+}
+
+#endif  // XP_WIN
+
+namespace mozilla {
+void EnsureWin32kInitialized();
+}
+
+nsIXULRuntime::ContentWin32kLockdownState GetLiveWin32kLockdownState() {
 #ifdef XP_WIN
 
   // HasUserValue The Pref functions can only be called on main thread
   MOZ_ASSERT(NS_IsMainThread());
+  mozilla::EnsureWin32kInitialized();
 
   if (gSafeMode) {
     return nsIXULRuntime::ContentWin32kLockdownState::DisabledBySafeMode;
@@ -655,6 +753,14 @@ nsIXULRuntime::ContentWin32kLockdownState GetWin32kLockdownState() {
     }
   }
 
+  if (gWin32kExperimentStatus ==
+      nsIXULRuntime::ExperimentStatus::eExperimentStatusControl) {
+    return nsIXULRuntime::ContentWin32kLockdownState::DisabledByControlGroup;
+  } else if (gWin32kExperimentStatus ==
+             nsIXULRuntime::ExperimentStatus::eExperimentStatusTreatment) {
+    return nsIXULRuntime::ContentWin32kLockdownState::EnabledByTreatmentGroup;
+  }
+
   if (defaultValue) {
     return nsIXULRuntime::ContentWin32kLockdownState::EnabledByDefault;
   } else {
@@ -668,9 +774,140 @@ nsIXULRuntime::ContentWin32kLockdownState GetWin32kLockdownState() {
 #endif
 }
 
+namespace mozilla {
+
+void EnsureWin32kInitialized() {
+  if (gWin32kInitialized) {
+    return;
+  }
+  gWin32kInitialized = true;
+
+#ifdef XP_WIN
+
+  // Initialize the Win32k experiment, configuring win32k's
+  // default, before checking other overrides. This allows opting-out of a
+  // Win32k experiment through about:preferences or about:config from a
+  // safemode session.
+  uint32_t experimentRaw =
+      Preferences::GetUint(kPrefWin32kExperimentStartupEnrollmentStatus,
+                           nsIXULRuntime::eExperimentStatusUnenrolled);
+  gWin32kExperimentStatus =
+      experimentRaw < nsIXULRuntime::eExperimentStatusCount
+          ? nsIXULRuntime::ExperimentStatus(experimentRaw)
+          : nsIXULRuntime::eExperimentStatusDisqualified;
+
+  // Watch the experiment enrollment status pref to detect experiment
+  // disqualification, and ensure it is propagated for the next restart.
+  Preferences::RegisterCallback(&OnWin32kEnrollmentStatusChanged,
+                                kPrefWin32kExperimentEnrollmentStatus);
+  if (nsCOMPtr<nsIObserverService> observerService =
+          mozilla::services::GetObserverService()) {
+    nsCOMPtr<nsIObserver> shutdownObserver =
+        new Win32kEnrollmentStatusShutdownObserver();
+    observerService->AddObserver(shutdownObserver, "profile-before-change",
+                                 false);
+  }
+
+  // If the user no longer qualifies because they edited a required pref, check
+  // that. [B] [E]
+  auto tmpStatus = GetLiveWin32kLockdownState();
+  if (Win32kExperimentEnrolled() && Win32kRequirementsUnsatisfied(tmpStatus)) {
+    Win32kExperimentDisqualify();
+    gWin32kExperimentStatus = nsIXULRuntime::eExperimentStatusDisqualified;
+  }
+
+  // If the user has overridden an active experiment by setting a user value for
+  // "security.sandbox.content.win32k-disable", disqualify the user from the
+  // experiment. [A] [F]
+  if (Preferences::HasUserValue(kPrefWin32k) && Win32kExperimentEnrolled()) {
+    Win32kExperimentDisqualify();
+    gWin32kExperimentStatus = nsIXULRuntime::eExperimentStatusDisqualified;
+  }
+
+  // Unlike Fission, we do not configure the default branch based on experiment
+  // enrollment status.  Instead we check the startupEnrollmentPref in
+  // GetContentWin32kLockdownState()
+
+  Preferences::RegisterCallback(&OnWin32kChanged, kPrefWin32k);
+
+  // Set the state
+  gWin32kStatus = GetLiveWin32kLockdownState();
+
+#else
+  gWin32kStatus =
+      nsIXULRuntime::ContentWin32kLockdownState::OperatingSystemNotSupported;
+  gWin32kExperimentStatus = nsIXULRuntime::eExperimentStatusUnenrolled;
+
+#endif  // XP_WIN
+}
+
+nsIXULRuntime::ContentWin32kLockdownState GetWin32kLockdownState() {
+#ifdef XP_WIN
+
+  mozilla::EnsureWin32kInitialized();
+  return gWin32kStatus;
+
+#else
+
+  return nsIXULRuntime::ContentWin32kLockdownState::OperatingSystemNotSupported;
+
+#endif
+}
+
 }  // namespace mozilla
 
 // End Win32k Infrastructure ==========================================
+
+// Fission Infrastructure =============================================
+
+// Fission enablement for the current session is determined once, at startup,
+// and then remains the same for the duration of the session.
+//
+// The following factors determine whether or not Fission is enabled for a
+// session, in order of precedence:
+//
+// - Safe mode: In safe mode, Fission is never enabled.
+//
+// - The MOZ_FORCE_ENABLE_FISSION environment variable: If set to any value,
+//   Fission will be enabled.
+//
+// - The 'fission.autostart' preference, if it has been configured by the user.
+static const char kPrefFissionAutostart[] = "fission.autostart";
+//
+// - The fission experiment enrollment status set during the previous run, which
+//   is controlled by the following preferences:
+//
+// The current enrollment status as controlled by Normandy. This value is only
+// stored in the default preference branch, and is not persisted across
+// sessions by the preference service. It therefore isn't available early
+// enough at startup, and needs to be synced to a preference in the user
+// branch which is persisted across sessions.
+static const char kPrefFissionExperimentEnrollmentStatus[] =
+    "fission.experiment.enrollmentStatus";
+//
+// The enrollment status to be used at browser startup. This automatically
+// synced from the above enrollmentStatus preference whenever the latter is
+// changed. It can have any of the values defined in the
+// `nsIXULRuntime_ExperimentStatus` enum. Meanings are documented in
+// the declaration of `nsIXULRuntime.fissionExperimentStatus`
+static const char kPrefFissionExperimentStartupEnrollmentStatus[] =
+    "fission.experiment.startupEnrollmentStatus";
+
+// The computed FissionAutostart value for the session, read by content
+// processes to initialize gFissionAutostart.
+//
+// This pref is locked, and only configured on the default branch, so should
+// never be persisted in a profile.
+static const char kPrefFissionAutostartSession[] = "fission.autostart.session";
+
+static nsIXULRuntime::ExperimentStatus gFissionExperimentStatus =
+    nsIXULRuntime::eExperimentStatusUnenrolled;
+static bool gFissionAutostart = false;
+static bool gFissionAutostartInitialized = false;
+static nsIXULRuntime::FissionDecisionStatus gFissionDecisionStatus;
+
+namespace mozilla {
+
 bool FissionExperimentEnrolled() {
   MOZ_ASSERT(XRE_IsParentProcess());
   return gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusControl ||
@@ -844,6 +1081,12 @@ bool FissionAutostart() {
   EnsureFissionAutostartInitialized();
   return gFissionAutostart;
 }
+
+}  // namespace mozilla
+
+// End Fission Infrastructure =========================================
+
+namespace mozilla {
 
 bool SessionHistoryInParent() {
   return FissionAutostart() ||
@@ -1151,6 +1394,41 @@ nsXULAppInfo::GetLastAppBuildID(nsACString& aResult) {
 NS_IMETHODIMP
 nsXULAppInfo::GetFissionAutostart(bool* aResult) {
   *aResult = FissionAutostart();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetWin32kExperimentStatus(ExperimentStatus* aResult) {
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  EnsureWin32kInitialized();
+  *aResult = gWin32kExperimentStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetWin32kLiveStatusTestingOnly(
+    nsIXULRuntime::ContentWin32kLockdownState* aResult) {
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  EnsureWin32kInitialized();
+  *aResult = GetLiveWin32kLockdownState();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetWin32kSessionStatus(
+    nsIXULRuntime::ContentWin32kLockdownState* aResult) {
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  EnsureWin32kInitialized();
+  *aResult = gWin32kStatus;
   return NS_OK;
 }
 
